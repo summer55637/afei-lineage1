@@ -1261,3 +1261,73 @@ V0.29 已把 wa 的選擇與技能 ID 真實化，但特殊 PetSkill 效果仍�
 - NoGuard
 
 特殊魔法與後期擴充技能再另外拆層，避免用近似公式污染目前已驗證的普通物理核心。
+
+
+## V0.30 基礎攻擊型 PetSkill
+
+V0.30 開始真正執行 Enemy `wa` 抽到的特殊寵技，第一批只選能從原 `pet_skill.c + battle.c + battle_event.c` 精確映射到既有普通物理核心的技能。
+
+### 破除防禦 — PETSKILL_GuardBreak
+
+原 `BATTLE_S_GBreak()` 的規則不是「無視防禦的普通攻擊」，而是：
+
+- 只有目標本回合 `BATTLE_COM_GUARD` 時才會真正造成傷害
+- 目標沒有 Guard 時直接 `damage=0`
+- 目標 Guard 時，因 `BATTLE_DuckCheck` 對 Guard 直接不做閃避，所以不進一般敏捷閃避
+- `BATTLE_AttackSeq(..., BATTLE_COM_S_GBREAK)` 特別跳過一般 `BATTLE_GuardAdjust`，所以是直接打穿 Guard 的傷害
+- GuardBreak 對 Guard 後 `iRet=FALSE`，不接普通反擊鏈
+
+V0.30 完整照此行為。
+
+### 連續攻擊 — PETSKILL_ContinuationAttack
+
+原技能 option 第一個數字就是攻擊段數：
+
+- ID 10：2 段
+- ID 11：3 段
+- ID 12：4 段
+- ID 13：5 段
+
+原 `battle.c` 會設定：
+
+- `attack_max = N`
+- `gDamageDiv = N`
+
+每一段都重新跑普通物理的閃避／會心／傷害；`BATTLE_Attack()` 在每段 AttackSeq 回來後再把正傷害除以 N，若除完小於 1 則維持 1。
+
+反擊時機也已照原碼：不是每一段各觸發一次反擊，而是整個 N 段迴圈結束後，才使用最後一段留下的 `ContFlg` 進一次最多 5 段的 `BATTLE_Counter` 鏈。
+
+### 一擊必殺 — PETSKILL_Mighty
+
+直接解析 `petskill.txt` option：
+
+- 一擊必殺：`倍2 回避30`
+- 一擊必殺改：`倍3 回避15`
+
+對應原碼：
+
+- `gBattleDamageModyfy = 2.0 / 3.0`
+- `gBattleDuckModyfy = 30 / 15`
+
+額外回避率是在原 `BATTLE_DuckCheck` 算完敏捷差後加入，最後仍受 75% 最大閃避上限限制。
+
+傷害倍率的順序也保留原 AttackSeq：
+
+1. 先算普通／會心傷害
+2. 若目標 Guard，先跑 `BATTLE_GuardAdjust`
+3. 傷害 <1 時先 `RAND(0,1)`
+4. 再乘 Mighty 倍率
+5. 若同時存在 `gDamageDiv`，最後才做除法
+
+### 暫不假做的技能
+
+以下技能已可被 AI 正確抽中並取得真實 skill ID／option，但 V0.30 仍維持 no-action，而不是拿普通攻擊冒充：
+
+- ChargeAttack
+- PowerBalance
+- StatusChange（毒／眠／石／亂／醉）
+- NoGuard
+- AttackMagic
+- 後期擴充 PetSkill
+
+下一層會先建立「回合狀態／持續效果」資料結構，再接這些技能。
