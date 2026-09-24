@@ -1111,7 +1111,7 @@ function battleAttrMultiplier(attacker,defender){
   return (fire+water+earth+wind+none)/10000;
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱'
+  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set()}
@@ -1354,6 +1354,7 @@ function battleStatusTypeFromOption(option){
   if(t.includes('乱')||t.includes('亂'))return 'confusion';
   if(t.includes('醉'))return 'drunk';
   if(t.includes('障'))return 'barrier';
+  if(t.includes('默'))return 'nocast';
   return null;
 }
 function battleStatusTurnFromOption(option){
@@ -1516,7 +1517,9 @@ const ENEMY_SOURCE_SKILL_META={
   608:{n:'E旅程伙伴3',d:'目標寵物 FIXAI 低於 80 時必定帶走',f:'PETSKILL_Abduct',o:'80',field:1,target:7},
   // V0.56：光鏡吸收技；目前玩家側沒有 DamageReact work-int，精準走 ReactType=0 分支。
   610:{n:'破鏡重圓',d:'嘗試吸收對方 REFLEC；無鏡時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'REFLEC',field:1,target:7},
-  611:{n:'穿透術',d:'嘗試吸收對方 VANISH；無守時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'VANISH',field:1,target:7}
+  611:{n:'穿透術',d:'嘗試吸收對方 VANISH；無守時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'VANISH',field:1,target:7},
+  // V0.57：沉默只對非 PET 目標寫 WORKNOCAST=turn；不阻止普通移動／攻擊。
+  580:{n:'沉默',d:'敵全體無法使用咒術三回合',f:'PETSKILL_Nocast',o:'默 turn 3 成 50',field:1,target:3}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -2882,6 +2885,57 @@ function enemyBarrierSpec(meta){
     success:Math.max(0,Math.trunc(enemySkillNumber(option,/成\s*([+-]?\d+)/,0)))
   };
 }
+function performEnemyNocast(actor,unit,options,meta){
+  const label=meta?.n||'沉默';
+  const turns=battleStatusTurnFromOption(meta?.o);
+  const successMatch=String(meta?.o||'').match(/成\s*(\d+)/);
+  const success=successMatch?Math.max(0,Math.trunc(Number(successMatch[1])||0)):0;
+  const attackerDesc={kind:'enemy',unit,unitId:unit.id};
+  const targets=enemyPlayerSideLivingTargets();
+  const results=[];
+
+  addLog(unit.name+' 使用 '+label+'：對敵方整側進行沉默檢定；來源只會對非寵物目標寫入狀態。');
+
+  for(const target of targets){
+    // 原 C 的 && 順序是先跑 BATTLE_StatusAttackCheck，再判斷 target != PET。
+    // 因此即使 Active Pet 最終不會被沉默，仍保留一次狀態檢定路徑。
+    const check=battleStatusChance(
+      attackerDesc,target,'nocast',
+      {perOffset:success,range:30,bai:1,forceGeneral:true}
+    );
+
+    let applied=false;
+    let excludedPet=false;
+    if(target.kind==='pet'){
+      excludedPet=true;
+      addLog(label+' 對 '+battleStatusDescName(target)+' 不寫入狀態：原 BATTLE_S_Nocast 明確排除 CHAR_TYPEPET。');
+    }else if(check.allowed&&check.success){
+      // 原 BATTLE_S_Nocast 直接 CHAR_WORKNOCAST = turn，沒有 +1。
+      applied=battleStatusApplyRaw(target,'nocast',turns);
+      if(applied){
+        addLog(battleStatusDescName(target)+' 陷入沉默（原檢定 '+check.per.toFixed(1)+'%，raw turn '+turns+'）。','bad');
+      }
+    }
+
+    if(!excludedPet&&!applied){
+      if(check.reason==='existing'){
+        addLog(label+' 對 '+battleStatusDescName(target)+' 未生效：目標已有其他異常狀態。');
+      }else{
+        addLog(label+' 對 '+battleStatusDescName(target)+' 未成功（原檢定 '+n(check.per).toFixed(1)+'%）。');
+      }
+    }
+
+    results.push({
+      target:target.kind,petId:target.petId||null,
+      applied,excludedPet,per:check.per,
+      reason:excludedPet?'pet-excluded':(check.reason||(!applied?'roll':null))
+    });
+  }
+
+  // 沉默本身不造成傷害、不阻止普通行動，也不進 Counter。
+  // 現版尚無玩家咒術 command 可被封鎖，但 status 仍會佔用互斥異常槽並正常倒數／可被淨化。
+  return {kind:'skill',skillId:actor.skillId,turns,success,results};
+}
 function performEnemyBarrier(actor,unit,options,meta){
   const spec=enemyBarrierSpec(meta);
   const label=meta?.n||'魔障';
@@ -3791,6 +3845,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_MagicStatusChange')return performEnemyMagicStatusChange(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SetMagicPet')return performEnemySetMagicPet(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SetDuck')return performEnemySetDuck(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Nocast')return performEnemyNocast(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
@@ -4713,7 +4768,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.56 載入完成：接入 610 破鏡重圓／611 穿透術的現況來源分支；玩家側 DamageReact=0，因此以攻70%／防50%做特殊物理攻擊，不假造 REFLEC／VANISH 狀態。','good');
+    addLog('V0.57 載入完成：接入 580 沉默；依原 BATTLE_StatusAttackCheck 50/30/1.0 公式對敵側檢定，只對非寵物目標寫 raw turn=3，不阻止普通攻擊且可被淨化。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
