@@ -1384,3 +1384,80 @@ V0.31 繼續接 `PETSKILL_PowerBalance` 與 `PETSKILL_NoGuard`，並修正原版
 因此現在 Enemy 若本回合正在準備 Guard、Escape、GuardBreak 等，而玩家／寵物敏捷較高先打到牠，牠不會錯誤反擊。
 
 Mighty、ContinuationAttack、PowerBalance 這類在原 `battle.c` 進直接攻擊群組後會把 COM 改回 ATTACK 的技能，則從真正執行攻擊開始具備後續反擊／反反擊資格。
+
+
+## V0.32 StatusChange／中毒／睡眠／石化
+
+V0.32 建立第一版原服異常狀態框架，狀態只存在本場戰鬥，不寫入永久存檔；開新戰鬥時會清空，對齊原服的 CHAR_WORK* 戰鬥狀態。
+
+### 狀態抗性資料
+
+`stoneage_enemy_ai.json` 升級為 `stoneage-enemy-ai-v4`，每個 Enemy 新增：
+
+`z = [毒抗, 麻痺抗, 睡眠抗, 石化抗, 酒醉抗, 混亂抗]`
+
+來源直接是 `enemybase1.txt` 的 POISON / PARALYSIS / SLEEP / STONE / DRUNK / CONFUSION 六欄。
+
+捕獲成功時，這組先天抗性會一起複製到寵物資料。
+
+### StatusChange 物理部分
+
+`PETSKILL_StatusChange()` 在 AI 選好指令時就會先套 option 中的 `攻%`／`防%` 修正，因此 V0.32 也在 EntrySort 前套用。例如：
+
+- 毒攻擊：攻 -30%
+- 猛毒攻擊：攻 -50%
+- 石化／混亂／酒醉／催眠攻擊：攻 -30%
+
+真正輪到該 Enemy 行動時，仍是一發普通物理攻擊；只有該次實際傷害 >0 才進異常狀態判定。
+
+### 原 BATTLE_StatusAttackCheck
+
+目前非麻痺狀態完全照來源公式：
+
+- 目標若已有任何一種異常狀態：直接失敗，不可重疊
+- `VitalPenalty = (VITAL / (VITAL+STR+TOUGH+DEX)) / 0.25 × 10`
+- `Level = (攻方Lv - 守方Lv) × 2`
+- Level 限制在 -40～+40
+- `Per = 30 + Level + 攻方Luck - 抗性 - VitalPenalty`
+- 最大 80%
+- 成功條件是嚴格的 `RAND(1,100) < Per`
+
+玩家目前沒有裝備抗性，所以玩家六項抗性先為 0。
+
+### 回合計數
+
+來源命中後會寫入 `gBattleStausTurn + 1`。角色輪到行動時，`BATTLE_StatusSeq()` 先把 count 減 1，再執行該回合狀態效果。
+
+V0.32 同樣依此順序處理，因此不直接把技能寫的 turn 數當成簡化版倒數。
+
+### 中毒
+
+已接 `Compute_Down()`：
+
+`down = ((VITAL+STR+DEX+TOUGH)/100 - 20) / 4`
+
+全部使用 C 整數截斷語意；若結果 <1 則固定 1。
+
+若毒傷會讓 HP <=0，來源會把傷害限制成 `HP-1`，因此普通中毒 **不能致死，最低留下 1 HP**。
+
+### 睡眠
+
+- 睡眠期間 `BATTLE_CanMoveCheck = FALSE`，輪到自己時無法行動
+- 任一正物理傷害會先執行 `BATTLE_DamageWakeUp`，立即清除睡眠
+- StatusChange 本身若是催眠攻擊，來源順序是「傷害先喚醒舊睡眠 → 再判定並寫入新睡眠」，V0.32 也維持此順序
+- 睡眠成功後，若目標原本還沒行動，該回合 command 會失效，也不能反擊
+
+### 石化
+
+- 石化期間不能行動
+- 原 `BATTLE_DamageCalc()` 會令石化目標 defense ×2
+- V0.32 的 player / pet / enemy battle view 都已套用此倍率
+- 石化目標也因 `BATTLE_CanMoveCheck = FALSE` 無法進反擊
+
+### 酒醉與混亂
+
+V0.32 已能辨識這兩種 StatusChange 的真實技能 ID／option，但特殊回合行為暫不啟用。
+
+原因是來源版酒醉存在一段明顯不對稱程式：套用時把 `CHAR_WORKDRUNK` 本身除以 2，解除時卻把 `CHAR_WORKQUICK` 乘 2；目前尚未找到對稱的「套用時 QUICK /2」程式，因此不直接複製可能造成永久敏捷翻倍的來源異常。
+
+混亂則會在 `BATTLE_StatusSeq` 中以 80% 機率強制改成普通攻擊，並隨機攻擊敵我任一存活單位，需要先把友軍傷害／亂打選目標完整接好後再啟用。
