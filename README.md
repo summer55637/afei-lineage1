@@ -2621,3 +2621,109 @@ V0.45 對應為：
 - `PETSKILL_Refresh`
 
 它們不會先依技能文字猜效果，等各自 battle command／狀態欄位確認完整後再接。
+
+## V0.46 追跡／回旋／音波／屬性攻擊
+
+V0.46 接入五組不依賴 MP／AttackMagic 的正權重 Enemy PetSkill：
+
+- `PETSKILL_Retrace`：713 追跡攻擊
+- `PETSKILL_Gyrate`：619／653 回旋攻擊
+- `PETSKILL_Sonic`：618 音波衝擊
+- `PETSKILL_Modifyattack`：544／545／546／825～828 屬性強化攻擊
+- `PETSKILL_Mdfyattack`：548～551 屬性轉換攻擊
+
+### 713 追跡攻擊
+
+同序列資料的 option 是 `攻%+100`，但原 `PETSKILL_Retrace()` 內解析攻擊百分比的整段程式被註解掉，因此首擊完全不吃 +100%。
+
+真正規則在 `battle.c`：
+
+- 先做一次普通物理攻擊
+- 只有第一發回傳 `BATTLE_RET_DODGE` 時才檢查追擊
+- 判定為嚴格 `RAND(1,100) < 80`，也就是成功值 1～79
+- 成功後把攻擊力硬編碼為 `FIXSTR + FIXSTR × 0.2`
+- 對同一目標再做第二次 `BATTLE_Attack()`
+
+第二發的 `BATTLE_Attack()` 回傳值沒有覆寫原本的 `ContFlg`，所以後面的普通 Counter loop 仍以第一發結果為準。V0.46 保留這個不對稱。
+
+### 619／653 回旋攻擊
+
+`PETSKILL_Gyrate()` 會先依 option 修改本回合攻擊力：
+
+- 619：`攻%-50`
+- 653：`攻%+20`
+
+之後原 `battle.c` 不走單體 TargetAdjust，而是依原目標所在 slot 判定前／後排，掃該五格所有存活單位並各呼叫一次 `BATTLE_Attack()`。
+
+目前 web 玩家側只有 Player + Active Pet：Player 對應人物排、Active Pet 對應寵物排，因此現階段每排最多只有一個目標；仍保留原排別語意，沒有把技能擴成錯誤的全體攻擊。
+
+這個特殊分支處理完直接離開 command case，不進共用 Counter loop。
+
+### 618 音波衝擊
+
+原版先對正常目標做 `BATTLE_COM_S_SONIC`。
+
+若目標 slot 是寵物列 5～9／15～19，接著固定取 `defNo - 5` 找主人，再做一次 `BATTLE_COM_S_SONIC2`。
+
+`SONIC2` 在 `BATTLE_AttackSeq()` 內的順序是：
+
+1. 正常算出物理傷害
+2. `damage ×= 0.5`
+3. 之後才套 GuardAdjust
+
+因此 V0.46 用 `preGuardDamageMultiplier = 0.5`，不是在最終傷害階段才除二。即使第一發閃避／MISS，只要主人仍存在，來源仍會執行第二發；web 版同樣如此。
+
+### 544～546／825～828 屬性強化攻擊
+
+`PETSKILL_Modifyattack()` 本身只下特殊 command；真正追加傷害在 `BATTLE_S_Modifyattack()`。
+
+普通 `BATTLE_AttackSeq()` 已先完成原本物理傷害與屬性修正，若結果 `damage > 0`，再依 option：
+
+`屬性碼 | 百分比`
+
+取得目標指定屬性值 `ModNum`。只有 `ModNum > 0` 才加成：
+
+`def = optionPercent / 100 + (rand() % (ModNum + 5)) / 100`
+
+`damage += damage × def`
+
+其中 damage 是 int，所以最後仍以 C 整數轉型語意截斷。
+
+因此 825～828 的 `9999` 不是『攻擊力 +9999%』，而是普通傷害算完後追加約 99.99 倍以上的指定屬性特攻；V0.46 不把它誤做成攻擊能力值倍率。
+
+### 548～551 屬性轉換攻擊
+
+`PETSKILL_Mdfyattack()` 解析：
+
+- EA → 地
+- WA → 水
+- FI → 火
+- WI → 風
+
+以及第二欄數值。目前四筆都是 100。
+
+原 `BATTLE_AttrAdjust()` 在 command 是 `MDFYATTACK` 時會把攻方四屬全部清 0，再只把指定屬性設成 option 數值；也就是只對**本次物理攻擊**使用純 100 指定屬性，不永久改角色屬性。
+
+V0.46 以一次性 attacker battle view 做相同覆寫。
+
+### 正權重覆蓋
+
+| Skill | distinct Enemy ID | 正權重總和 |
+| --- | ---: | ---: |
+| 544 | 1 | 3 |
+| 545 | 1 | 3 |
+| 546 | 1 | 3 |
+| 548 | 2 | 4 |
+| 549 | 2 | 4 |
+| 550 | 1 | 1 |
+| 551 | 3 | 7 |
+| 618 | 2 | 6 |
+| 619 | 1 | 2 |
+| 653 | 5 | 6 |
+| 713 | 4 | 4 |
+| 825 | 4 | 16 |
+| 826 | 1 | 4 |
+| 827 | 1 | 4 |
+| 828 | 1 | 4 |
+
+以上五組皆為獨立特殊 command；除 713 追跡攻擊本身落入原 direct-attack 共用流程外，其餘不額外人工加入普通 Counter loop。
