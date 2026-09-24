@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.18</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.19</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -59,7 +59,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；Encounter 兩角座標也已依 ENCOUNT_initEncount() 做 min/max 正規化；Enemy 10 格掉落已依 _FIX_ITEMPROB 在建立時逐格生成。</div>
+          <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；Encounter 兩角座標也已依 ENCOUNT_initEncount() 做 min/max 正規化；Enemy 10 格掉落已依 _FIX_ITEMPROB 在建立時逐格生成；一般野怪 EXP 也改走 enemy1／enemybase1／enemyexptbl 與原戰鬥等級差衰減。</div>
         </article>
 
         <article class="card">
@@ -156,8 +156,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.18：</b>
-      Encounter runtime 升級為 v4：除 V0.17 的原版能力生成外，Enemy 模板再保留 ENEMY_ITEM1～10／ITEMPROB1～10；每隻 Enemy 建立時逐格依 _FIX_ITEMPROB 生成戰利品，單人戰鬥依原 BATTLE_GetExpGold 最終最多保留 3 格。
+      <b>V0.19：</b>
+      Encounter runtime 升級為 v5：延續原版能力與 10 格掉落，再加入 Enemy 原始 EXP、等級差衰減與 setup.cf battleexp=100；移除先前一般戰鬥固定亂數石幣獎勵。
     </article>
   </main>
 

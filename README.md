@@ -809,3 +809,65 @@ runtime 升級為 `stoneage-general-encounter-runtime-v4`，每個可解析 Enem
 4. 所以每場一般 Enemy 掉落最終最多取得 3 件
 
 RandomEnemy 仍先把 placeholder 換成真正 EnemyID，再使用替代 Enemy 的 `enemyItems/itemProbs`；RandomChange 只改外觀／屬性／技能，不改掉落表。
+
+
+## V0.19 Enemy 原版 EXP／等級差衰減／移除假石幣
+
+V0.19 繼續把 `ENEMY_createEnemy → BATTLE_AddExpItem → BATTLE_GetExp` 的經驗流程接回一般野外 dynamicFormation。
+
+### Enemy 自身 EXP
+
+重新核對 `enemy.c::ENEMY_getExp()`：
+
+- 若 `ENEMY_DUELPOINT <= 0`
+- 且 `enemy1.txt::ENEMY_EXP != -1`
+  - 直接使用 `ENEMY_EXP`
+- 否則依 `enemybaseexptbl[level-1]` 與 EnemyBase 特性計算：
+  - Rank 依 BASE VITAL+STR+TGH+DEX 總和決定
+  - Rank bonus = 2.5 / 2 / 1.5 / 1 / 0.5 / 0
+  - `alpha = (CRITICAL + COUNTER + GET + POISON + PARALYSIS + SLEEP + STONE + DRUNK + CONFUSION) / 100 + RARE`
+  - `EXP = trunc(enemybaseexptbl[level-1] + (rankBonus + alpha) * level)`
+  - 最低 1
+
+runtime 升級為 `stoneage-general-encounter-runtime-v5`，並加入：
+
+- `enemyExpOverride`
+- `enemyDuelPoint`
+- `enemyExpRankIndex`
+- `enemyExpRankBonus`
+- `enemyExpAlpha`
+- 完整 200 級 `enemybaseexptbl`
+
+目前 818 個唯一 EnemyID 中：
+
+- 665 個使用公式 EXP
+- 152 個使用 `ENEMY_EXP` override
+- 1 個無完整 EnemyBase，維持 unresolved / fallback
+
+### BATTLE_AddExpItem 等級差衰減
+
+原服對每一隻死亡 Enemy，玩家／參戰寵物各自依自己的等級重新算：
+
+- `角色等級 - Enemy 等級 <= 5`：全額 EXP
+- 高超過 5 級後開始衰減
+- 原式核心為 `EXP * (20 - 等級差) / 15`
+- 以 C int 規則截斷
+- 衰減後最低 1
+
+之後 `BATTLE_GetExp()` 因目前來源版本開啟 `_GET_BATTLE_EXP`，再乘上現行 `setup.cf`：
+
+`battleexp=100`
+
+V0.19 也讓目前出戰寵物使用自己的等級獨立計算同一套 EXP；不再使用先前放置版暫定的「角色 EXP ×1.5」。
+
+### 一般戰鬥不再自動發石幣
+
+重新核對 `BATTLE_GetExpGold()`／`BATTLE_AddExpItem()`，一般 PVE 戰勝處理的是 EXP 與 Enemy 攜帶戰利品，沒有「每隻怪固定掉 2～6 石幣」這條規則。
+
+因此 V0.19 已移除先前放置版的：
+
+`rnd(2,6) * enemyCount`
+
+石幣仍保留在角色資料中，供任務／商店等後續系統使用；正式石幣取得來源之後再依原服資料接入，不再用戰鬥憑空生成。
+
+> 目前角色升級所需 EXP 與寵物升級門檻仍是放置版暫定 progression；V0.19 先把「一場戰鬥應取得多少 EXP」還原，升級表會再獨立處理。

@@ -587,6 +587,47 @@ function resolveEnemyCarriedLoot(defeatedEnemy){
   }
   return result;
 }
+function enemyServerBaseExp(raw,level){
+  if(!raw||raw?.enemyDuelPoint>0||raw?.enemyExpResolvable===false)return null;
+  const override=Number(raw?.enemyExpOverride);
+  if(Number.isFinite(override)&&override!==-1)return Math.trunc(override);
+  const table=encounterRuntime?.enemyExp?.baseTable||[];
+  const idx=Math.trunc(n(level))-1;
+  if(idx<0||idx>=table.length)return 0;
+  const rankBonus=Number(raw?.enemyExpRankBonus);
+  const alpha=Number(raw?.enemyExpAlpha);
+  if(!Number.isFinite(rankBonus)||!Number.isFinite(alpha))return null;
+  const sum=Math.fround(Math.fround(rankBonus)+Math.fround(alpha));
+  const scaled=Math.fround(sum*Math.trunc(n(level)));
+  const ret=Math.trunc(Math.fround(Number(table[idx])+scaled));
+  return ret<1?1:ret;
+}
+function serverBattleExpForRecipient(unit,recipientLevel){
+  if(unit?.serverExpBase==null)return null;
+  const cfg=encounterRuntime?.enemyExp||{};
+  const maxGap=Math.trunc(n(cfg.expGetMaxLevel)||5);
+  const div=Math.trunc(n(cfg.expGetDiv)||15);
+  const diff=Math.trunc(n(recipientLevel))-Math.trunc(n(unit.level));
+  let nowExp=Math.trunc(n(unit.serverExpBase));
+  if(diff>maxGap){
+    let factor=maxGap+div-diff;
+    if(factor>div)factor=div;
+    if(factor<=0)nowExp=1;
+    else{
+      nowExp=Math.trunc(nowExp*factor/div);
+      if(nowExp<1)nowExp=1;
+    }
+  }
+  const multiplier=Math.max(1,Math.trunc(n(cfg.battleExpMultiplier)||1));
+  return Math.trunc(nowExp*multiplier);
+}
+function fallbackBattleExp(defeated){
+  const growth=(defeated?.dynamicGroup&&Array.isArray(defeated?.units)&&defeated.units.length)
+    ?defeated.units.reduce((s,u)=>s+Math.max(1,n(u.wildGrowth)||1),0)/defeated.units.length
+    :Math.max(1,n(defeated?.entry?.variant?.wildGrowth)||1);
+  const unitCount=Math.max(1,Array.isArray(defeated?.units)?defeated.units.length:1);
+  return Math.max(6,Math.round((7+growth*2.2)*unitCount));
+}
 function makeEnemyUnit(raw,fallbackEntry,index=0){
   const base=fallbackEntry?.variant||{};
   const baseStats=Object.assign({},base.stats||{},raw?.stats||{});
@@ -617,6 +658,7 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
 
   // 原 enemy.c 會在 CHAR_initCharOneArray() 後、RandomChange 前生成 10 格 Enemy 戰利品。
   const enemyDropRoll=rollEnemyDropSlots(raw);
+  const serverExpBase=enemyServerBaseExp(raw,level);
   const change=applyEnemyRandomChange(
     raw,
     Object.assign({},raw?.elements||base.elements||{}),
@@ -645,6 +687,11 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     questDrop:raw?.questDrop||null,
     enemyDrops:enemyDropRoll.drops,
     serverDropTable:enemyDropRoll.resolved,
+    serverExpBase,
+    enemyExpOverride:raw?.enemyExpOverride??null,
+    enemyExpRankIndex:raw?.enemyExpRankIndex??null,
+    enemyExpRankBonus:raw?.enemyExpRankBonus??null,
+    enemyExpAlpha:raw?.enemyExpAlpha??null,
     size:n(raw?.size),
     isBig:!!raw?.isBig
   };
@@ -800,7 +847,7 @@ function spawnEnemy(context=null){
     render();return;
   }
   const unit=makeEnemyUnit(null,entry,0);
-  enemy={entry,level:unit.level,name:unit.name,hp:unit.hp,maxHp:unit.maxHp,attack:unit.attack,defense:unit.defense,enemyDrops:unit.enemyDrops,serverDropTable:unit.serverDropTable};
+  enemy={entry,level:unit.level,name:unit.name,hp:unit.hp,maxHp:unit.maxHp,attack:unit.attack,defense:unit.defense,enemyDrops:unit.enemyDrops,serverDropTable:unit.serverDropTable,serverExpBase:unit.serverExpBase};
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
   render();
@@ -1030,17 +1077,24 @@ function captureTurn(manual=false){
 }
 function winBattle(){
   const defeated=enemy;
-  const growth=(defeated.dynamicGroup&&Array.isArray(defeated.units)&&defeated.units.length)
-    ?defeated.units.reduce((s,u)=>s+Math.max(1,n(u.wildGrowth)||1),0)/defeated.units.length
-    :Math.max(1,n(defeated.entry.variant.wildGrowth)||1);
-  const unitCount=Math.max(1,Array.isArray(defeated.units)?defeated.units.length:1);
-  const exp=Math.max(6,Math.round((7+growth*2.2)*unitCount));
-  const gold=rnd(2,6)*unitCount;
+  const units=(Array.isArray(defeated?.units)&&defeated.units.length)?defeated.units:[defeated];
+  const unitCount=Math.max(1,units.length);
+  const serverResolved=units.length>0&&units.every(u=>u?.serverExpBase!=null);
+  let exp=0,petExp=0;
+  const pet=activePet();
+  if(serverResolved){
+    for(const unit of units){
+      exp+=Math.max(0,n(serverBattleExpForRecipient(unit,state.level)));
+      if(pet)petExp+=Math.max(0,n(serverBattleExpForRecipient(unit,pet.level)));
+    }
+  }else{
+    exp=fallbackBattleExp(defeated);
+    if(pet)petExp=Math.max(4,Math.round(exp*1.5));
+  }
   state.wins++;
   state.exp+=exp;
-  state.gold+=gold;
-  awardActivePetExp(Math.max(4,Math.round(exp*1.5)));
-  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP、'+gold+' 石幣。','good');
+  if(pet&&petExp>0)awardActivePetExp(petExp);
+  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP。'+(serverResolved?'（原 Enemy EXP／等級差衰減／battleexp ×'+Math.max(1,n(encounterRuntime?.enemyExp?.battleExpMultiplier)||1)+'）':'（手工任務編成沿用暫定 EXP）'),'good');
   const drops=rollVerifiedDrops(defeated);
   for(const item of drops){
     addLog('掉落：'+item.name+' ×1。','pet');
@@ -1531,7 +1585,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.18 載入完成：ENEMY_ITEM1～10／ITEMPROB1～10 已接入；Enemy 建立時逐格依 RAND(0,999) 抽取，單人戰勝依原 BATTLE_GetExpGold 最多保留 3 格戰利品。','good');
+    addLog('V0.19 載入完成：Enemy 原始 EXP、BATTLE_AddExpItem 等級差衰減與 setup.cf battleexp=100 已接入；一般 PVE 不再憑空發固定石幣。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
