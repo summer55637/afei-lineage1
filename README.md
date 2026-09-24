@@ -469,3 +469,36 @@ Event83 已接入可玩核心：
   - 固定 Boss formation 仍維持整隊不可捕獲
 - 動態群組的任務掉落改為逐隻判定；若同一戰生成多隻 1792／1793／1788，每一隻都依自己的 5%／5%／10% 機率獨立判定
 - 一般 166 組野外 Lv1 資料尚未全面切到 dynamicFormation；V0.12 先套 Event82／83 已驗證任務區，避免一次改動所有抓寵區
+
+
+## V0.13 一般野外 Lv1 ENCOUNT／GROUP 動態群戰
+
+- 166 個一般野外 Lv1 外觀種仍維持原正式資料範圍，不把清洗時排除的特殊 floor 加回來。
+- 現行資料實際包含：
+  - 190 條 Lv1 抓寵 route
+  - 164 個唯一 GroupID
+  - 198 條 route → Group 關係
+  - 176 個唯一 Encounter → Group 組合
+  - 318 個 Group 成員 Enemy 模板
+- 164 個 Group 全部重新直接讀取現行 `gmsv/data/group1.txt`：
+  - EnemyID
+  - `CREATEPROB` 權重
+  - 出現道具／禁止出現道具條件
+- 每個 Group 成員再由現行 `enemy1.txt + enemybase1.txt` 補齊：
+  - TempNo
+  - Lv 範圍
+  - `CREATEMAXNUM`
+  - 可捕獲旗標
+  - 四圍、屬性、E_T_GET、動畫群組
+- 一般野外戰鬥不再把 route 代表寵物直接生成成單體；現在會：
+  1. 依該 route 對應的原 Encounter Group 權重選 Group
+  2. 依 `enemyMax` 與各成員 `CREATEMAXNUM` 決定本戰最大人數
+  3. 亂數決定本戰人數
+  4. 依 Group 的 `CREATEPROB` 逐隻抽 Enemy
+  5. 超過該 Enemy 的 `CREATEMAXNUM` 時重抽
+- 一般野外 dynamicFormation 與 Event82／83 共用同一套多人戰核心：
+  - 每個存活敵人都會反擊
+  - 目前第一個存活目標可依原捕獲條件逐隻捕獲
+  - 捕獲成功後只移除該成員，其餘敵人照常反擊並繼續戰鬥
+  - 掉落按實際擊敗的 Enemy 逐隻判定
+- 批量驗證結果：164/164 Group、318/318 成員都能對到現行服務端資料，缺 Group / Enemy / EnemyBase / 空群組皆為 0。
