@@ -47,7 +47,8 @@
           "encounterSource": "gmsv/data/encount.txt",
           "dropProbabilityRaw": 30,
           "dropRule": "_FIX_ITEMPROB",
-          "summary": "海藍之棒由加魯卡的威威系野生怪物掉落；原 enemy.txt 掉落參數為 30。Lv1 威威群組也包含此掉落來源。"
+          "summary": "海藍之棒由加魯卡威威系野生怪物掉落；服務端 _FIX_ITEMPROB 開啟，原參數 30 = 3% 掉落率。Lv1 威威 EnemyID 372 已可在目前放置版實際掉落。",
+          "dropProbabilityPercent": 3
         }
       ],
       "externalEvidence": []
@@ -82,7 +83,8 @@
           "encounterSource": "gmsv/data/encount.txt",
           "dropProbabilityRaw": 30,
           "dropRule": "_FIX_ITEMPROB",
-          "summary": "海藍之兜由加魯卡較高等級的威威系野生怪物掉落；原 enemy.txt 掉落參數為 30。"
+          "summary": "海藍之兜由加魯卡較高等級威威系野生怪物掉落；服務端 _FIX_ITEMPROB 開啟，原參數 30 = 3% 掉落率。高等威威內容尚未接入目前 Lv1 版。",
+          "dropProbabilityPercent": 3
         }
       ],
       "externalEvidence": []
