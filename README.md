@@ -731,3 +731,36 @@ RandomChange：
 - 68 個寵物型
 
 因此未來接入 Group 424～429 等含 RandomEnemy placeholder 的區域時，兩層規則可以直接串起來。
+
+
+### Encounter 兩角座標正規化修正
+
+V0.17 回歸時重新核對 `ENCOUNT_initEncount()`，確認 `encount.txt` 第 3～6 欄是：
+
+`x1, y1, x2, y2`
+
+服務端不假設第二個角一定比較大，而是：
+
+- `rect.x = min(x1,x2)`
+- `rect.width = max(x1,x2)-min(x1,x2)`
+- `rect.y = min(y1,y2)`
+- `rect.height = max(y1,y2)-min(y1,y2)`
+
+再由 `PointInRect()` 做 inclusive 邊界判定。
+
+先前 V0.14～V0.16 runtime 直接把第 1 角當 min、第 2 角當 max；V0.17 已修正。
+
+85 個一般 Lv1 Floor 的 479 個 Encounter 中：
+
+- 35 列原始角點至少有一軸反向
+- 其中 15 列就是 161 個 Lv1 目標 Encounter
+
+修正後重新跑 16,100 次目標區座標／zorder 驗證：
+
+- zorder 判定錯誤：0
+- 由重疊區切換到其他有效 Encounter：820 次
+- 同 zorder 保留原檔較早資料列
+- 抽樣可實際成為 winner 的 Encounter：198 個
+- 其中無可生成 Group 的 winner：0
+
+另外，部分特殊 Enemy（例如木、礦石、釣竿）原始 STR／TGH／DEX 可為 0；經 `RAND(0,4)-2` 後，原服務端衍生攻防確實可能暫時為負值。V0.17 不擅自 clamp 模板衍生值；現有網頁戰鬥層仍以最低實際傷害 1 處理。
