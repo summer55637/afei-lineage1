@@ -2818,3 +2818,80 @@ V0.47 以 Enemy 專屬 `skillDuckTurns / skillDuckPower` 保存，不把它錯�
 | 595 | 2 | 5 |
 
 本輪仍未接 580「沉默」：雖然其狀態命中公式已可確認，但原效果核心是禁止非寵物使用咒術頁／施法；在 web 的正式咒術 command 尚未完成前，先不造一個沒有實際作用的假沉默。
+
+## V0.48 淨化／浴血狂襲／排序回歸
+
+V0.48 接入兩個不依賴 MP／AttackMagic、且原 C 路徑完整的正權重技能：
+
+- 592「淨化」：`PETSKILL_Refresh`，option `全`，target=2（ALLMYSIDE）
+- 659「T浴血狂襲」：`PETSKILL_DamageToHp2`，option `100`
+
+同時修正前版兩個出手排序差異：
+
+- 542 疾速攻擊：`BATTLE_DexCalc()` 專用 `work + 30%`
+- 659 浴血狂襲：`BATTLE_DexCalc()` 專用 `work + 20%`
+
+### 592 淨化
+
+`aszStatus[0]` 明確是「全」。`BATTLE_S_Refresh()` 解析到 status=0 後呼叫 `BATTLE_MultiStatusRecovery()`。
+
+592 的 target=2 對應 `PETSKILL_TARGET_ALLMYSIDE`，因此 Enemy 使用時只處理自己這一側。
+
+`BATTLE_MultiStatusRecovery()` 逐一檢查同側目標目前的 StatusTbl 異常並清 0。原戰鬥系統的異常互斥使同一目標通常只會有一個主要 StatusTbl 異常，因此 web 版直接清除該 Enemy 的目前 battle status。
+
+這個技能不造成傷害，也不進普通 Counter loop。
+
+### 659 T浴血狂襲
+
+同序列資料：
+
+`T浴血狂袭, ... PETSKILL_DamageToHp2,100`
+
+原 `PETSKILL_DamageToHp2()` 本身只下 `BATTLE_COM_S_DAMAGETOHP2`；真正特例分散在排序、AttackSeq 與吸血函式。
+
+#### 出手排序
+
+`BATTLE_DexCalc()`：
+
+`work = CHAR_WORKQUICK + 20`
+
+`dex = work + work * 0.2`
+
+這個 command 不走普通 default 的 `work - RAND(0, work*0.3)`。
+
+#### 會心與攻擊
+
+`BATTLE_AttackSeq()` 先做普通閃避與 Guardian，再先計算正常 `BATTLE_CriticalCheck()`。之後若 command 是 DamageToHp2：
+
+- `perCri = perCri + perCri*0.3`
+- `WORKATTACKPOWER = FIXSTR + FIXSTR*0.2`
+- `WORKQUICK = FIXDEX + FIXDEX*0.2`
+
+CriticalCheck 本身讀的是 `FIXDEX`，所以 +20% QUICK 不會再反過來提高基礎會心；真正會心增幅就是已算好的 perCri 再 ×1.3。
+
+另外 `BATTLE_CriticalCheck()` 會先把 per 上限壓到 10000，DamageToHp2 再乘 1.3，來源並沒有再次 cap。V0.48 同樣不重新封頂。
+
+#### 吸血
+
+`BATTLE_S_DamageToHp2()` 直接把 option 轉百分比：
+
+`heal = Damage * atoi(option) / 100`
+
+659 option=100，所以回復本次傷害的 100%，最高不超過自身 maxHP。
+
+此技能是 `BATTLE_S_AttackDamage()` 的獨立 command case，battle.c 執行後直接 break，因此不人工加入普通 Counter loop。
+
+### 排序回歸修正
+
+前版曾依 `PETSKILL_SpeedyAttack()` 沒有解析「敏%」而保持 QUICK 不變；重新追到 `BATTLE_DexCalc()` 後確認，542 疾速攻擊仍有 command 專用排序：
+
+`dex = (WORKQUICK + 20) + 30%`
+
+所以 V0.48 新增 command-specific dex mode，只影響回合排序，不把 +30% 當成永久 QUICK buff。
+
+另外 V0.47 的虛弱雖已讓 battle view 攻／防／敏 ×0.8，但 Enemy 排序原本仍直接讀 raw unit.quick。V0.48 改成排序讀當前 enemy battle view，讓虛弱確實影響 Enemy 出手順序。
+
+### 本輪明確暫緩
+
+- 573 救援：HP 公式已確認，但 Enemy AI 對 `PETSKILL_TARGET_OTHER` 的實際敵我側選目標仍需再對齊，不猜目標。
+- 582 自爆攻擊：來源 `version.h` 直接標註 `_SKILL_SELFEXPLODE // (不可开) ... 自爆(缺图)`，且本來源沒有可執行函式，因此不按資料文字硬做。
