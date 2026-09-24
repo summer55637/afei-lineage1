@@ -63,3 +63,6 @@ select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10p
 .quest-actions .wide{grid-column:1/-1}
 .quest-card .dev-btn{margin-top:10px}
 @media(max-width:700px){.quest-actions{grid-template-columns:1fr}}
+
+.quest-actions button[data-zoo-action="dev71"]{border-style:dashed;color:#d8c98f}
+.quest-line strong{color:var(--accent)}
