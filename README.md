@@ -1875,3 +1875,269 @@ ID 200「加工」雖然出現在 Enemy AI 資料，而且 Enemy 2213 對它有�
 
 到 V0.38 為止，目前「有可辨識函式名、而且 Enemy AI 有實際權重」的 PetSkill，除了需要外部 `magic.txt / attmagic.bin` 才能精準還原的 `PETSKILL_AttackMagic` 外，其餘這一批已知核心分支都已有對應處理或原版 no-op 判定。
 
+## V0.39 Enemy 專屬復活／回復／招喚與嗜血技
+
+V0.39 開始補目前 `stoneage_petskill_runtime.json` 尚未收錄、但 `enemy1` AI 已實際引用的技能 ID。
+
+這一輪先接：
+
+- ID 121「T地球一周」：`PETSKILL_EarthRound`，option `攻%+200`
+- ID 500「E復活術」：`ENEMYSKILL_ReLife`
+- ID 501「E回復技」：`ENEMYSKILL_ReHP`
+- ID 502「E招喚」：`ENEMYSKILL_EnemyHelp`
+- ID 503「嗜血技」：`PETSKILL_DamageToHp`，option `30|50`
+
+### petskill2.txt 同序列資料對齊
+
+原 `gavinlinasd/StoneAge` GitHub 沒有附完整執行時 `petskill.txt / petskill2.txt`，因此部分條件編譯技能只有 header 巨集 ID，沒有名稱與 option。
+
+本輪另外找到 `zii/pet-sim/bin/data/petskill2.txt`，並沒有直接把它整份視為目前版本，而是先用本專案已經確認的技能做 ID 空間比對。
+
+已比對一致的錨點包含：
+
+- 20 忠犬
+- 30 突擊
+- 31 雙重突擊
+- 40 一擊必殺
+- 50／51／52 背水之戰
+- 60／61 毒攻擊
+- 80 石化攻擊
+- 90 混亂攻擊
+- 100 泥醉攻擊
+- 110 催眠攻擊
+- 120 地球一周
+- 130 旅程伙伴
+- 140 偷竊
+- 150 不防守戰法
+- 200 加工
+- 210 落馬術
+- 301／312 AttackMagic
+
+上述 ID、函式與 option 幾乎全部一致；個別後期數值存在版本修訂差異，因此後續仍以「目前 runtime + C 原碼 + 同序列資料三方交叉」為原則，不會只靠 header 巨集猜 ID。
+
+### ID 121 T地球一周
+
+同序列資料確認：
+
+`T地球一周,PETSKILL_EarthRound,攻%+200,...,121`
+
+它與 ID 120 使用同一個 `PETSKILL_EarthRound` 函式，只是攻擊倍率不同。
+
+V0.36 已經完成 EarthRound 的兩階段狀態機，因此 V0.39 只需補 metadata，即可完整沿用：
+
+1. 本回合繞背並暫時不可被指定
+2. 下一個自身回合重新現身
+3. `攻%+200` 對應最終 `×3.00` 傷害
+4. 原鎖定目標無效時沿用現有目標調整規則
+
+目前 AI 中 ID 121 實際出現在 **12 個 distinct Enemy ID**，總權重 73。
+
+### ID 500 E復活術
+
+原 `BATTLE_E_ENEMYREFILE()` 會從同側倒地成員隨機挑一名。
+
+基礎復活量：
+
+`pow = maxHP / 2`
+
+之後 `BATTLE_MultiRessurect()` 再做：
+
+`RAND(pow × 0.9, pow × 1.1)`
+
+並：
+
+- 最低 1 HP
+- 最高不超過 maxHP
+- 原 Battle Entry 不重新編號
+- 復活者不會插進已建立的當回合速度排序，因此下一回合才恢復行動
+
+V0.39 保留這些規則。
+
+目前 AI 中 ID 500 實際出現在 **22 個 distinct Enemy ID**，總權重 121。
+
+### ID 501 E回復技
+
+原 `BATTLE_E_ENEMYREHP()` 候選條件是：
+
+`HP < maxHP × 2 / 3`
+
+只從符合條件的存活敵方中隨機挑一名。
+
+回復 power：
+
+`RAND(100, maxHP)`
+
+實際 HP 上限仍為 maxHP。
+
+V0.39 已接入同樣的「低於 2/3 才可被選中」與隨機回復流程。
+
+目前 AI 中 ID 501 實際出現在 **72 個 distinct Enemy ID**，總權重 344；它是目前最常見的未解析 Enemy 專屬技能之一。
+
+### ID 502 E招喚
+
+原 `BATTLE_E_ENEMYHELP()`：
+
+1. 先找敵方 10 格 Entry 是否有空位
+2. 以施術者自己的 Enemy template / PetID 找回原 Enemy array
+3. 生成相同模板
+4. 等級為：
+
+`RAND(LV × 0.8, LV × 1.2)`
+
+5. 再用 `BATTLE_NewEntry()` 塞進第一個空位
+
+V0.39 的 web runtime 已保存每隻 Enemy 的 `sourceTemplate`，援軍建立時重新走現有 `makeEnemyUnit()`，因此會一起套用：
+
+- 原 Enemy 能力生成
+- RandomChange
+- PetSkill
+- AI
+- 掉落生成
+- EXP 基礎資料
+
+而不是複製當前 HP／能力成一個假 clone。
+
+battleSlot 會找第一個真正空位；倒地 Enemy 仍占原 slot，已離場／捕獲而從 `enemy.units` 移除的 slot 才可重新使用。
+
+目前 AI 中 ID 502 實際只出現在 **2 個 distinct Enemy ID**，總權重 7。
+
+### 500／501／502 失敗時不是空過回合
+
+原 `battle.c` 的三個分支都有同一個容易漏掉的 fallback：
+
+若：
+
+- 500 沒有可復活的倒地目標
+- 501 沒有 HP < 2/3 的存活目標
+- 502 沒有空位／招喚失敗
+
+特殊函式回傳 FALSE 後，原碼會立刻：
+
+`BATTLE_Attack(...)`
+
+也就是改做普通物理攻擊，而不是浪費整回合。
+
+V0.39 已在第二輪回歸補回這個 fallback。
+
+### ID 503 嗜血技
+
+同序列 option：
+
+`30|50`
+
+資料說明是「攻擊力下降 30%，將傷害 50% 轉為己用」。
+
+但這個來源版 `PETSKILL_DamageToHp()` 有一個實際 C 整數除法行為：
+
+`def = (atoi(buf1) / 100)`
+
+其中 `atoi(buf1)` 與 `100` 都是整數，所以：
+
+`30 / 100 == 0`
+
+之後才把 0 指派給 float。
+
+因此這個來源的 503 **實際不會套到 -30% 攻擊**，雖然技能文字如此描述。
+
+V0.39 選擇忠實保留程式實際行為：
+
+- 物理攻擊力不因第一欄 30 而下降
+- 正傷害後：
+  `heal = damage × 50 / 100`
+- 回復不超過自身 maxHP
+- 先完成吸血，再進原本的 Counter loop
+- 技能 command 本身不是普通 ATTACK，因此對手可反擊，但施術者不能再反反擊
+
+目前 AI 中 ID 503 實際出現在 **23 個 distinct Enemy ID**，總權重 76。
+
+## V0.40 狂暴攻擊／破除防禦之2
+
+V0.40 再接兩個高使用量純物理技能：
+
+- ID 541「狂暴攻擊」：`PETSKILL_WildViolentAttack`
+- ID 543「破除防禦之2」：`PETSKILL_GuardBreak2`
+
+### ID 541 狂暴攻擊
+
+同序列資料：
+
+`攻%+80 防%-35 回避30`
+
+原 `PETSKILL_WildViolentAttack()` 直接修改本回合：
+
+- 攻擊：FIXSTR +80%
+- 防禦：FIXTOUGH -35%
+- `回避30` 被存成 `gBattleDuckModyfy`
+
+而 `BATTLE_DuckCheck()` 會：
+
+`per += gBattleDuckModyfy`
+
+所以這不是「自己回避 +30」，而是**被攻擊目標的閃避率額外 +30 個百分點**，也就是技能命中率下降。
+
+更重要的是，原 `battle.c` 在此 command 下：
+
+`attack_max = RAND(3,10)`
+
+`gDamageDiv = attack_max`
+
+因此狂暴攻擊會：
+
+- 隨機 3～10 段
+- 每段都走普通物理 Attack
+- 每段正傷害最後再除以本次總段數
+- 目標死亡時後續段數可經 TargetAdjust 改打其他存活目標
+- 全部多段處理完後，才使用最後一次 `BATTLE_Attack` 的結果進一次 Counter chain
+
+另外原 direct-attack 群組會在真正攻擊前把 command 改回 `BATTLE_COM_ATTACK`，所以使用狂暴攻擊的單位在反擊鏈中仍具備普通 ATTACK 的反反擊資格。
+
+V0.40 已對齊以上行為。
+
+目前 AI 中 ID 541 實際出現在 **21 個 distinct Enemy ID**，總權重 78。
+
+### ID 543 破除防禦之2
+
+同序列說明：
+
+「敵防禦時攻 +30%，敵非防禦時攻 -30%」
+
+原 `BATTLE_AttackSeq(..., BATTLE_COM_S_GBREAK2)` 的真正順序是：
+
+1. 先完成普通閃避／Guardian／會心／基礎傷害
+2. 若目標 command 是 GUARD：
+   `damage ×= 1.3`
+3. 否則：
+   `damage ×= 0.7`
+4. **之後**才檢查一般 GUARD，並套 `BATTLE_GuardAdjust()`
+
+所以它不是「防禦時無視防禦」；防禦目標雖先得到 ×1.3，但仍會再被防禦減傷。
+
+為了不破壞既有技能，V0.40 在 `resolveNormalAttack()` 新增可選的：
+
+`preGuardDamageMultiplier`
+
+只有需要這種 AttackSeq 順序的技能才會傳入，原有所有技能預設仍為 1。
+
+反擊規則也依 `BATTLE_S_GBreak2()` 保留：
+
+- 非防禦目標：MISS／DODGE／NORMAL 可進一次對方反擊
+- CRITICAL 不進
+- 防禦中會把 iRet 強制 FALSE，不進反擊
+- GBreak2 command 本身不是 ATTACK，因此施術者被反擊後不能再反反擊
+
+目前 AI 中 ID 543 實際出現在 **16 個 distinct Enemy ID**，總權重 41。
+
+### 目前下一批高優先技能
+
+經 V0.40 後，已確認同序列且 AI 使用量高的下一批包括：
+
+- ID 508「MP攻擊3」：47 個 distinct Enemy，總權重 127
+- ID 640「憾甲一擊」：43 個 distinct Enemy，總權重 130
+- ID 616「撕裂傷口2」：25 個 distinct Enemy，總權重 47
+- ID 580「沉默」：21 個 distinct Enemy，總權重 47
+- ID 613「狂亂暴走」：20 個 distinct Enemy，總權重 42
+
+508 雖然使用量高，但目前 web 玩家／寵物戰鬥模型尚未建立 MP，因此暫不以假 MP 數值硬接。
+
+640／616 都已有名稱、函式與 option，下一輪可直接往其 C 戰鬥分支繼續還原。
+
