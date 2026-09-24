@@ -561,3 +561,68 @@ Event83 已接入可玩核心：
   - 多個矩形重疊時取較高 zorder
   - zorder 相同時保留原 `encount.txt` 較早出現的那一列
 - 另發現 Group 125（`sai_n_013_9/11`）雖存在於現行 `group1.txt`，但唯一 EnemyID 161 沒有正值 `CREATEPROB`；runtime 保留原資料，遊戲抽 Group 時把這種「無有效生成權重」群組視為不可用，避免產生空戰鬥。\n- 戰鬥畫面現在會顯示實際命中的 Encounter、Group 與漫遊座標；大型怪會標示「大型」。
+
+
+## V0.16 RandomEnemy／samecount／CEP 遇敵節奏
+
+### ENEMY_RandomEnemyArray
+
+原 `enemy.c` 的特殊 EnemyID：
+
+- 945～956
+- 964～969
+
+不是最終怪物，而是「本場建立 Group slot 時先隨機替換」的 placeholder。
+
+V0.16 已完整資料化原 18 個 placeholder 對應池，合計 **92 個唯一替代 EnemyID**。替代方式依原碼：
+
+1. Group slot 先讀原 EnemyID。
+2. 若命中 RandomEnemy placeholder，從該 placeholder 的固定陣列等機率抽 1 個 EnemyID。
+3. 此 slot 在本場後續生成期間固定使用該替代結果，不會每生成一隻重新抽。
+4. Group 原本的 `CREATEPROB` 權重不變；`CREATEMAXNUM`、大小、等級與模板資料改用替代後 Enemy。
+
+目前 85 個一般 Lv1 Floor 的 705 個可解析 Group 本身沒有引用 945～956／964～969，因此一般 Lv1 當前內容不會突然換怪；引擎與資料已先完整接好，未來接入 Group 424～429 等區域時會直接生效。
+
+### samecount × CREATEMAXNUM
+
+原 `ENEMY_getEnemy()` 在 RandomEnemy 替換後，會計算有幾個 Group slot 指向同一個 Enemy array：
+
+`實際上限 = ENEMY_CREATEMAXNUM × samecount`
+
+V0.16 已改成相同規則。這也處理了未來兩個 RandomEnemy slot 剛好抽到同一 EnemyID 時的上限倍率。
+
+另外修正一個 V0.15 還沒完全對齊的細節：
+
+- Group 中 **權重為 0 但 Enemy 有效**的 slot，原碼仍會加入 `createenemynum`
+- 它不會被權重抽中，但可能拉高 `entrymax`
+- 若因此抽到超過可實際填滿的數量，最後由原版 **100 次 loop guard** 截斷
+
+因此 runtime v2 現在保存完整 **1167 個 Group slot**，不再只保存正權重成員。
+
+### CEP 走路遇敵
+
+原 `char_walk.c` 的一般野外遇敵不是固定每次直接開戰，而是每走一步：
+
+`rand() % 120 < CEP`
+
+流程：
+
+1. 先把 CEP clamp 到目前 Encounter 的 `encounterMin / encounterMax`
+2. 若 `rand()%120 < CEP`：
+   - 觸發遇敵
+   - CEP 重設為 `encounterMin`
+3. 若沒遇敵：
+   - CEP 未到 max 時 +1
+4. 下一步重複
+
+V0.16 已正式接入此狀態機。
+
+放置版沒有原客戶端實際走路封包速度，因此**只還原每一步的機率演算法，不宣稱牆鐘時間等同原版**。目前轉譯參數：
+
+- 原戰鬥 tick 維持 900ms
+- 沒有戰鬥時，每個 tick 模擬 **3 個虛擬走路步驟**
+- 即約 300ms / 虛擬步，只是放置版節奏參數，不是服務端資料常數
+- UI 會顯示目前 CEP、min/max、累積虛擬步數
+- 真正觸發戰鬥時會顯示該次 `CEP / Roll`
+
+任務固定戰鬥區（Event81／82／83）不走 CEP，仍維持任務按鈕／固定狩獵區立即生成，避免把 NPC／腳本戰鬥錯套成一般走路遇敵。
