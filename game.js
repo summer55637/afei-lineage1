@@ -1483,8 +1483,6 @@ function captureTurn(manual=false){
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
       if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -1631,6 +1629,7 @@ function attackTurn(){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -1680,6 +1679,7 @@ function guardTurn(){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
