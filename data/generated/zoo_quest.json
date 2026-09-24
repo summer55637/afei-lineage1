@@ -1,8 +1,14 @@
 {
   "_meta": {
-    "format": "stoneage-zoo-quest-v1",
+    "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "Only source-backed quest rules are marked verified. Event 81 gameplay and the full Event 83 chain are not yet fully implemented."
+    "note": "Event 82 and the verified core path of Event 83 are playable. Active server tables follow setup.cf: enemy1.txt, enemybase1.txt, group1.txt, encount.txt. Event 71 + Item 2414 still use an explicitly marked development prerequisite.",
+    "activeTables": {
+      "enemy": "gmsv/data/enemy1.txt",
+      "enemybase": "gmsv/data/enemybase1.txt",
+      "group": "gmsv/data/group1.txt",
+      "encounter": "gmsv/data/encount.txt"
+    }
   },
   "events": {
     "81": {
@@ -32,8 +38,8 @@
           "requiredItemId": 19733,
           "requiredItemName": "雷爾胖專用飼料",
           "source": [
-            "gmsv/data/enemy.txt",
-            "gmsv/data/group.txt",
+            "gmsv/data/enemy1.txt",
+            "gmsv/data/group1.txt",
             "gmsv/data/encount.txt",
             "gmsv/data/npc/eden1/zoo1/employee82_01"
           ]
@@ -48,8 +54,8 @@
           "requiredItemId": 19723,
           "requiredItemName": "肉食性飼料二號",
           "source": [
-            "gmsv/data/enemy.txt",
-            "gmsv/data/group.txt",
+            "gmsv/data/enemy1.txt",
+            "gmsv/data/group1.txt",
             "gmsv/data/encount.txt",
             "gmsv/data/npc/eden1/zoo1/barrel82_04"
           ]
@@ -60,7 +66,7 @@
           "enemyId": 1733,
           "obtainedByEvent": 83,
           "source": [
-            "gmsv/data/enemy.txt",
+            "gmsv/data/enemy1.txt",
             "gmsv/data/npc/eden1/zoo2/event83_19"
           ]
         }
@@ -72,20 +78,21 @@
       },
       "rewardSource": [
         "gmsv/data/npc/eden1/zoo1/manager82_01",
-        "gmsv/data/enemy.txt"
+        "gmsv/data/enemy1.txt"
       ]
     },
     "83": {
       "name": "尋回拉斯基",
       "serverEventId": 83,
       "verified": true,
-      "implementationStatus": "researched_not_playable",
+      "implementationStatus": "playable_core",
       "requires": [
         "Event 81 complete",
         "Event 82 active",
         "Event 71 current",
         "Item 2414",
-        "Item 19714"
+        "Item 12093 + Item 19703 for the gardener exchange",
+        "Item 19718 to challenge Sig"
       ],
       "sources": [
         "gmsv/data/npc/eden1/zoo2/event83_1a",
@@ -103,10 +110,318 @@
         "enemyId": 1733,
         "tempNo": 854,
         "name": "動物園養的拉斯基"
-      }
+      },
+      "itemChain": [
+        {
+          "step": 1,
+          "action": "園丁借鏟子",
+          "get": 19701,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_2a"
+        },
+        {
+          "step": 2,
+          "action": "挖白蘿蔔",
+          "random": [
+            {
+              "id": 19702,
+              "weight": 9
+            },
+            {
+              "id": 19703,
+              "weight": 1
+            }
+          ],
+          "source": "gmsv/data/npc/eden1/zoo2/event83_7"
+        },
+        {
+          "step": 3,
+          "action": "柯奧特產品商店",
+          "get": 12093,
+          "floorId": 1100,
+          "shop": "gmsv/data/npc/genout/ss_1100_59_49",
+          "price": {
+            "stone": 25,
+            "status": "historical_corroborated"
+          }
+        },
+        {
+          "step": 4,
+          "action": "園丁交換",
+          "needs": [
+            12093,
+            19703
+          ],
+          "get": 19704,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_2a"
+        },
+        {
+          "step": 5,
+          "action": "里拉拉連續線索",
+          "from": 19704,
+          "to": 19711,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+        },
+        {
+          "step": 6,
+          "action": "格爾希洛B掉落項圈",
+          "needs": [
+            19711
+          ],
+          "drop": 19716,
+          "enemyId": 1792,
+          "encounterId": 809,
+          "probabilityPercent": 5
+        },
+        {
+          "step": 7,
+          "action": "里拉拉收項圈",
+          "needs": [
+            19711,
+            19716
+          ],
+          "get": 19712,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+        },
+        {
+          "step": 8,
+          "action": "里拉拉指向大雕像",
+          "needs": [
+            19712
+          ],
+          "get": 19713,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+        },
+        {
+          "step": 9,
+          "action": "不良少年C掉落怪衣",
+          "needs": [
+            19713
+          ],
+          "drop": 19717,
+          "enemyId": 1793,
+          "encounterId": 808,
+          "probabilityPercent": 5
+        },
+        {
+          "step": 10,
+          "action": "里拉拉收怪衣",
+          "needs": [
+            19713,
+            19717
+          ],
+          "get": 19714,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+        },
+        {
+          "step": 11,
+          "action": "地下洞窟不良少年A掉落黑旗",
+          "needs": [
+            19714
+          ],
+          "drop": 19718,
+          "enemyId": 1788,
+          "groupId": 962,
+          "probabilityPercent": 10
+        },
+        {
+          "step": 12,
+          "action": "席格戰",
+          "needs": [
+            19718
+          ],
+          "consumeOnBattleStart": [
+            19718
+          ],
+          "getPetEnemyId": 1733,
+          "getPetTempNo": 854,
+          "source": "gmsv/data/npc/eden1/zoo2/event83_18.arg|event83_19"
+        }
+      ]
     }
   },
   "items": [
+    {
+      "id": 2414,
+      "name": "Event71 前置道具 2414",
+      "sourceStatus": "unresolved",
+      "source": "Event83 scripts require ITEM=2414; exact acquisition/name still pending."
+    },
+    {
+      "id": 12090,
+      "name": "普通紅蘿蔔（任務採集）",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_3"
+    },
+    {
+      "id": 12091,
+      "name": "大紅蘿蔔（任務採集）",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_3"
+    },
+    {
+      "id": 12092,
+      "name": "上等紅蘿蔔（任務採集）",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_3"
+    },
+    {
+      "id": 12093,
+      "name": "柯奧產的紅蘿蔔",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/genout/ss_1100_59_49",
+      "priceStone": 25,
+      "priceStatus": "historical_corroborated"
+    },
+    {
+      "id": 19701,
+      "name": "園丁的鏟子",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_2a"
+    },
+    {
+      "id": 19702,
+      "name": "普通白蘿蔔",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_7"
+    },
+    {
+      "id": 19703,
+      "name": "上等白蘿蔔",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_7"
+    },
+    {
+      "id": 19704,
+      "name": "最上等白蘿蔔",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_2a"
+    },
+    {
+      "id": 19705,
+      "name": "里拉拉線索 1",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19706,
+      "name": "里拉拉線索 2",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19707,
+      "name": "里拉拉線索 3",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19708,
+      "name": "里拉拉線索 4",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19709,
+      "name": "里拉拉線索 5",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19710,
+      "name": "里拉拉線索 6",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19711,
+      "name": "里拉拉線索 7",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19712,
+      "name": "里拉拉線索 8",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19713,
+      "name": "大雕像線索",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19714,
+      "name": "地下據點線索",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19715,
+      "name": "拉斯基歸還線索",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
+    {
+      "id": 19716,
+      "name": "凶悍格爾希洛的項圈",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/enemy1.txt",
+      "sources": [
+        {
+          "type": "enemy_drop",
+          "enemyIds": [
+            1792
+          ],
+          "dropProbabilityRaw": 50,
+          "dropProbabilityPercent": 5,
+          "dropRule": "_FIX_ITEMPROB",
+          "summary": "EnemyID 1792 凶悍的格爾希洛B；enemy1.txt 參數 50 = 5%。"
+        }
+      ]
+    },
+    {
+      "id": 19717,
+      "name": "不良少年的怪衣",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/enemy1.txt",
+      "sources": [
+        {
+          "type": "enemy_drop",
+          "enemyIds": [
+            1793
+          ],
+          "dropProbabilityRaw": 50,
+          "dropProbabilityPercent": 5,
+          "dropRule": "_FIX_ITEMPROB",
+          "summary": "EnemyID 1793 不良少年C；enemy1.txt 參數 50 = 5%。"
+        }
+      ]
+    },
+    {
+      "id": 19718,
+      "name": "黑色旗幟",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/enemy1.txt",
+      "sources": [
+        {
+          "type": "enemy_drop",
+          "enemyIds": [
+            1788
+          ],
+          "dropProbabilityRaw": 100,
+          "dropProbabilityPercent": 10,
+          "dropRule": "_FIX_ITEMPROB",
+          "summary": "EnemyID 1788 不良少年A；enemy1.txt 參數 100 = 10%。席格 NPC 要求此物且 steal=1。"
+        }
+      ]
+    },
+    {
+      "id": 19719,
+      "name": "里拉拉的謝禮",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo2/event83_1a"
+    },
     {
       "id": 19720,
       "name": "草食性飼料一號",
@@ -223,6 +538,177 @@
             "str": 30,
             "tgh": 19,
             "dex": 17
+          }
+        }
+      ]
+    },
+    {
+      "id": "zoo-collar",
+      "name": "伊甸園・格爾希洛項圈區",
+      "floorId": 7000,
+      "encounterId": 809,
+      "groupId": 966,
+      "description": "Event83：Group 966，持有 19711 才出現；EnemyID 1792 掉落 19716，現行 enemy1.txt 機率 5%。",
+      "requireItems": [
+        19711
+      ],
+      "entries": [
+        {
+          "name": "凶悍的格爾希洛B",
+          "tempNo": 897,
+          "enemyIds": [
+            1792
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 80,
+          "levelMax": 90,
+          "wildGrowth": 100,
+          "animationGroupId": 100861,
+          "stats": {
+            "vital": 60,
+            "str": 30,
+            "tgh": 30,
+            "dex": 40
+          },
+          "questDrop": {
+            "id": 19716,
+            "name": "凶悍格爾希洛的項圈",
+            "probability": 0.05
+          }
+        }
+      ]
+    },
+    {
+      "id": "zoo-black-clothes",
+      "name": "伊甸園・不良少年怪衣區",
+      "floorId": 7000,
+      "encounterId": 808,
+      "groupId": 965,
+      "description": "Event83：Group 965，持有 19713 才出現；EnemyID 1793 掉落 19717，現行 enemy1.txt 機率 5%。",
+      "requireItems": [
+        19713
+      ],
+      "entries": [
+        {
+          "name": "不良少年C",
+          "tempNo": 898,
+          "enemyIds": [
+            1793
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 80,
+          "wildGrowth": 150,
+          "animationGroupId": 100439,
+          "stats": {
+            "vital": 38,
+            "str": 29,
+            "tgh": 34,
+            "dex": 20
+          },
+          "questDrop": {
+            "id": 19717,
+            "name": "不良少年的怪衣",
+            "probability": 0.05
+          }
+        }
+      ]
+    },
+    {
+      "id": "zoo-underground-flag",
+      "name": "地下洞窟・黑旗區",
+      "floorId": 60042,
+      "encounterId": 806,
+      "groupId": 962,
+      "description": "Event83：地下洞窟 Group 962。持有 19714 可進；拿到 19718 後此群組依 group1.txt 的 NOTAPPEARBYITEM 停止出現。",
+      "requireItems": [
+        19714
+      ],
+      "forbidItems": [
+        19718
+      ],
+      "entries": [
+        {
+          "name": "不良少年A",
+          "tempNo": 898,
+          "enemyIds": [
+            1788
+          ],
+          "weight": 10,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 80,
+          "wildGrowth": 150,
+          "animationGroupId": 100439,
+          "stats": {
+            "vital": 38,
+            "str": 29,
+            "tgh": 34,
+            "dex": 20
+          },
+          "questDrop": {
+            "id": 19718,
+            "name": "黑色旗幟",
+            "probability": 0.1
+          }
+        },
+        {
+          "name": "不良少年B",
+          "tempNo": 898,
+          "enemyIds": [
+            1789
+          ],
+          "weight": 20,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 80,
+          "wildGrowth": 150,
+          "animationGroupId": 100439,
+          "stats": {
+            "vital": 38,
+            "str": 29,
+            "tgh": 34,
+            "dex": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "zoo-sig",
+      "name": "地下洞窟・席格戰",
+      "floorId": 60044,
+      "encounterId": null,
+      "description": "Event83 席格戰。原 NPC 編成為席格×1、不良少年B×4、凶悍格爾希洛×5；目前單體戰鬥核心以席格代表整隊，黑旗在開戰時依 steal=1 收走。",
+      "requireItems": [
+        19718
+      ],
+      "entries": [
+        {
+          "name": "席格",
+          "tempNo": 900,
+          "enemyIds": [
+            1791
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 80,
+          "wildGrowth": 250,
+          "animationGroupId": 101160,
+          "stats": {
+            "vital": 60,
+            "str": 35,
+            "tgh": 60,
+            "dex": 60
+          },
+          "consumeOnSpawnItemId": 19718,
+          "questOnWin": "event83-complete",
+          "bossComposition": {
+            "1787": 5,
+            "1789": 4,
+            "1791": 1
           }
         }
       ]
