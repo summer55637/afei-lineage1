@@ -15,13 +15,13 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:4,
+    schemaVersion:5,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event71Current:false,event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event71Current:false,event2:{active:false,complete:false},event71Prep:{stage:0},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -47,6 +47,8 @@ function normalizeState(raw){
   const s=Object.assign(base,raw||{});
   s.inventory=(raw&&raw.inventory&&typeof raw.inventory==='object')?raw.inventory:{};
   s.quest=Object.assign({},base.quest,raw?.quest||{});
+  s.quest.event2=Object.assign({},base.quest.event2,raw?.quest?.event2||{});
+  s.quest.event71Prep=Object.assign({},base.quest.event71Prep,raw?.quest?.event71Prep||{});
   s.quest.event82=Object.assign({},base.quest.event82,raw?.quest?.event82||{});
   s.quest.event83=Object.assign({},base.quest.event83,raw?.quest?.event83||{});
   s.team=Array.isArray(raw?.team)?raw.team.slice(0,TEAM_SIZE):Array(TEAM_SIZE).fill(null);
@@ -62,7 +64,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=4;
+  s.schemaVersion=5;
   delete s.pets;
   return s;
 }
@@ -307,6 +309,28 @@ function addEvent83Pet(){
   if(!state.activePetId)state.activePetId=p.id;
   return p;
 }
+function addMarefiaPet(){
+  let p=state.petBox.find(x=>Number(x.tempNo)===718);
+  if(p)return p;
+  p={id:uid(),name:'瑪蕾菲雅',animationGroupId:null,tempNo:718,level:79,exp:0,wildGrowth:1,
+    stats:{vital:18,str:12,tgh:14,dex:18},elements:{earth:100,water:0,fire:0,wind:0},
+    capturedAt:Date.now(),questReward:true,event71Prerequisite:true};
+  state.petBox.push(p);
+  const open=state.team.findIndex(x=>!x);
+  if(open>=0)state.team[open]=p.id;
+  if(!state.activePetId)state.activePetId=p.id;
+  return p;
+}
+function petExpToNext(level){return 18+Math.max(0,n(level)-1)*4}
+function awardActivePetExp(amount){
+  const p=activePet();if(!p||Number(p.tempNo)===718)return;
+  p.exp=n(p.exp)+Math.max(1,Math.round(amount));
+  let up=false;
+  while(p.level<99&&p.exp>=petExpToNext(p.level)){
+    p.exp-=petExpToNext(p.level);p.level++;up=true;
+  }
+  if(up)addLog(p.name+' 升到 Lv.'+p.level+'。','pet');
+}
 function clearEvent83Chain(extra=[]){
   for(let id=19702;id<=19715;id++){
     while(hasItem(id))consumeItem(id,1);
@@ -435,6 +459,7 @@ function winBattle(){
   state.wins++;
   state.exp+=exp;
   state.gold+=gold;
+  awardActivePetExp(Math.max(4,Math.round(exp*1.5)));
   addLog('擊敗 '+defeated.name+'，獲得 '+exp+' EXP、'+gold+' 石幣。','good');
   const drops=rollVerifiedDrops(defeated);
   for(const item of drops){
@@ -496,7 +521,7 @@ function renderMapOptions(){
   select.value=selected;
 }
 function renderZooQuest(){
-  const q=state.quest,e82=q.event82,e83=q.event83;
+  const q=state.quest,e2=q.event2,prep=q.event71Prep,e82=q.event82,e83=q.event83;
   const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854);
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
@@ -505,7 +530,7 @@ function renderZooQuest(){
     lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已回報':'')+'</div>');
     lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已確認':'')+'</div>');
     lines.push('<div class="quest-line '+(has854?'done':'')+'">任務版拉斯基 854：'+(has854?'已取得':(e83.active?'Event 83 進行中':'尚未取得'))+'</div>');
-    lines.push('<div class="quest-line '+(q.event71Current&&hasItem(2414)?'done':'blocked')+'">Event83 前置：Event71 '+(q.event71Current?'進行中':'未設')+' / Item2414 '+(hasItem(2414)?'持有':'缺少')+'</div>');
+    lines.push('<div class="quest-line '+(q.event71Current&&hasItem(2414)?'done':'blocked')+'">Event83 前置：Event71 '+(q.event71Current?'進行中':'未開旗')+' / 不可思議的貝殼 2414 '+(hasItem(2414)?'持有':'缺少')+'</div>');
     if(e83.active){
       const chain=[19704,19705,19706,19707,19708,19709,19710,19711,19712,19713,19714,19716,19717,19718].filter(id=>hasItem(id));
       lines.push('<div class="quest-line done">Event 83：進行中'+(chain.length?' · 持有 '+chain.join(' / '):'')+'</div>');
@@ -527,9 +552,16 @@ function renderZooQuest(){
     if(has905&&!e82.raelpangReported)actions.push('<button data-zoo-action="report-raelpang">回報雷爾胖</button>');
     if(has786&&!e82.popodonReported)actions.push('<button data-zoo-action="report-popodon">確認波波頓</button>');
 
-    if(!q.event71Current||!hasItem(2414)){
-      actions.push('<button data-zoo-action="dev71" class="wide">開發前置：Event71 進行中＋Item2414</button>');
-    }else if(!e83.active&&!e83.complete&&!has854){
+    if(!hasItem(2414)){
+      if(!e2.active)actions.push('<button data-zoo-action="event2-start" class="wide">日美子：接 Event 2 送花委託</button>');
+      else if(hasItem(2415))actions.push('<button data-zoo-action="event2-finish" class="wide">把花 2415 交給彌生 → 貝殼 2414</button>');
+    }
+    if(!q.event71Current){
+      if(prep.stage===0)actions.push('<button data-zoo-action="event69-start" class="wide">願藏祖父：開始精靈少女 Event 69</button>');
+      if(prep.stage===1)actions.push('<button data-zoo-action="event69-rescue" class="wide">蛙洞救出新藏 → 完成 Event69／開 Event70</button>');
+      if(prep.stage===2)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv79 瑪蕾菲雅</button>');
+      if(prep.stage===3)actions.push('<button data-zoo-action="pet-trans" class="wide">精靈王：讓出戰 Lv80+ 寵物接受轉生祝福</button>');
+    }else if(hasItem(2414)&&!e83.active&&!e83.complete&&!has854){
       actions.push('<button data-zoo-action="start83" class="wide">向里拉拉開始 Event 83</button>');
     }
 
@@ -729,7 +761,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.7 載入完成：Event83 核心流程已接入，現行 enemy1/group1 掉落規則生效。','good');
+    addLog('V0.7 載入完成：Event2 貝殼與 Event71 寵物轉生前置已接入，dev71 已移除。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -737,7 +769,7 @@ async function boot(){
   }
 }
 function handleZooAction(action){
-  const q=state.quest,e82=q.event82,e83=q.event83;
+  const q=state.quest,e2=q.event2,prep=q.event71Prep,e82=q.event82,e83=q.event83;
   if(action==='accept82'){
     if(!q.event81Complete)return;
     e82.active=true;addLog('已向園長接取 Event 82：尋回雷爾胖、波波頓與拉斯基。','good');
@@ -754,10 +786,40 @@ function handleZooAction(action){
     e82.popodonReported=true;addLog('飼育員確認這是 Lv1 波波頓。','good');
   }
 
-  if(action==='dev71'){
-    q.event71Current=true;
-    if(!hasItem(2414))giveItem(2414,1);
-    addLog('開發前置：Event71 標記為進行中，加入 Item 2414。此步不是正式 Event71 實裝。','pet');
+  if(action==='event2-start'&&!hasItem(2414)&&!e2.active){
+    e2.active=true;giveItem(2415,1);
+    addLog('Event 2：日美子請你把花 2415 送給彌生。','good');
+  }
+  if(action==='event2-finish'&&e2.active&&hasItem(2415)){
+    consumeItem(2415,1);giveItem(2414,1);e2.active=false;e2.complete=true;
+    addLog('Event 2 完成：彌生收下花，回贈不可思議的貝殼 2414。','good');
+  }
+  if(action==='event69-start'&&!q.event71Current&&prep.stage===0){
+    prep.stage=1;addLog('Event 69：願藏祖父委託你尋找失蹤的新藏。','good');
+  }
+  if(action==='event69-rescue'&&!q.event71Current&&prep.stage===1){
+    prep.stage=2;addLog('依精靈少女前傳完成蛙洞救援：Event69 完成，Event70 開始。','good');
+  }
+  if(action==='event70-finish'&&!q.event71Current&&prep.stage===2){
+    const p=addMarefiaPet();prep.stage=3;
+    addLog('Event70 完成：願藏祖母把瑪蕾菲雅（TempNo 718）交給你；本版把 10～79 級回憶巡禮壓成前置摘要，避免再用測試旗標。','good');
+    if(!state.team.includes(p.id)){const open=state.team.findIndex(x=>!x);if(open>=0)state.team[open]=p.id;}
+  }
+  if(action==='pet-trans'&&!q.event71Current&&prep.stage===3){
+    const marefia=state.petBox.find(p=>Number(p.tempNo)===718),p=activePet();
+    if(state.level<80)addLog('精靈王：角色必須 Lv80 以上。','bad');
+    else if(!marefia||n(marefia.level)!==79)addLog('精靈王：必須帶著 Lv79 瑪蕾菲雅。','bad');
+    else if(!p||Number(p.tempNo)===718)addLog('請先把要接受祝福的另一隻寵物設為出戰。','bad');
+    else if(n(p.level)<80)addLog('接受轉生祝福的寵物必須 Lv80 以上。','bad');
+    else if(n(p.transmigration)>0)addLog('這隻寵物已經接受過轉生祝福。','bad');
+    else{
+      const mid=marefia.id;
+      state.petBox=state.petBox.filter(x=>x.id!==mid);
+      state.team=state.team.map(x=>x===mid?null:x);
+      p.transmigration=1;p.level=1;p.exp=0;
+      prep.stage=4;q.event71Current=true;
+      addLog(p.name+' 接受精靈王祝福完成轉生；依 npc_transmigration.c 正式設為 NOWEV=71。','good');
+    }
   }
   if(action==='start83'&&q.event71Current&&hasItem(2414)&&e82.active&&!e83.complete){
     e83.active=true;addLog('已向里拉拉開始 Event 83：尋回拉斯基。','good');
