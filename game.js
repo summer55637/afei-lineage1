@@ -302,7 +302,8 @@ function buildQuestMaps(){
         consumeOnSpawnItemId:raw.consumeOnSpawnItemId||null,
         questOnWin:raw.questOnWin||null,
         bossComposition:raw.bossComposition||null,
-        formation:Array.isArray(raw.formation)?raw.formation:null
+        formation:Array.isArray(raw.formation)?raw.formation:null,
+        dynamicFormation:raw.dynamicFormation||null
       };
       if(raw.useMainDbTempNo){
         const hit=findMainVariant(raw.useMainDbTempNo);
@@ -314,9 +315,9 @@ function buildQuestMaps(){
       const route={
         encounterId:zone.encounterId,floorId:zone.floorId,mapName:zone.name,
         battleAppearanceChance:Number(raw.weight)||1,
-        appearanceInventoryItemIds:zone.requireItems||[],
-        appearanceInventoryItems:(zone.requireItems||[]).map(id=>questItemMeta(id)||{id,name:'Item '+id}),
-        notAppearanceInventoryItemIds:zone.forbidItems||[],
+        appearanceInventoryItemIds:[...(zone.requireItems||[]),...(raw.requireItems||[])],
+        appearanceInventoryItems:[...(zone.requireItems||[]),...(raw.requireItems||[])].map(id=>questItemMeta(id)||{id,name:'Item '+id}),
+        notAppearanceInventoryItemIds:[...(zone.forbidItems||[]),...(raw.forbidItems||[])],
         questRequirement:zone.questRequirement||null,
         questZone:true
       };
@@ -372,8 +373,35 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     level,hp,maxHp:hp,
     attack:Math.max(3,Math.round(3+str*.62)),
     defense:Math.max(0,Math.round(tgh*.28)),
-    stats:st
+    stats:st,
+    elements:Object.assign({},raw?.elements||base.elements||{}),
+    animationGroupId:raw?.animationGroupId??fallbackEntry?.species?.animationGroupId??null,
+    wildGrowth:n(raw?.wildGrowth)||n(base.wildGrowth)||1,
+    captureBase:raw?.captureBase!=null?n(raw.captureBase):n(base.captureBase),
+    captureRule:raw?.captureRule??base.captureRule??null,
+    capturable:raw?.capturable!=null?raw.capturable:(base.capturable!==false),
+    questDrop:raw?.questDrop||null
   };
+}
+function buildDynamicFormation(spec,entry){
+  const members=(spec?.members||[]).filter(x=>n(x.weight)>0&&n(x.createMax)>0);
+  if(!members.length)return [];
+  const maxByMembers=members.reduce((s,x)=>s+Math.max(0,Math.floor(n(x.createMax))),0);
+  const maxCount=Math.max(1,Math.min(Math.floor(n(spec.encounterMax)||1),maxByMembers));
+  const targetCount=rnd(1,maxCount);
+  const counts=new Map(),units=[];
+  let guard=0;
+  while(units.length<targetCount&&guard<200){
+    guard++;
+    const total=members.reduce((s,x)=>s+Math.max(0,n(x.weight)),0);
+    let roll=Math.random()*total,pick=members[members.length-1];
+    for(const m of members){roll-=Math.max(0,n(m.weight));if(roll<=0){pick=m;break}}
+    const used=counts.get(pick)||0;
+    if(used>=Math.max(0,Math.floor(n(pick.createMax))))continue;
+    counts.set(pick,used+1);
+    units.push(makeEnemyUnit(pick,entry,units.length));
+  }
+  return units;
 }
 function livingEnemyUnits(){
   if(!enemy)return [];
@@ -397,20 +425,28 @@ function spawnEnemy(){
     addLog('依原 NPC steal 規則，開戰收走 Item '+consumeId+'。','pet');
   }
   const formation=Array.isArray(entry.variant.formation)?entry.variant.formation:[];
-  if(formation.length){
-    const units=[];
-    let idx=0;
-    for(const member of formation){
-      const count=Math.max(1,Math.floor(n(member.count)||1));
-      for(let i=0;i<count;i++)units.push(makeEnemyUnit(member,entry,idx++));
+  const dynamicSpec=entry.variant.dynamicFormation;
+  if(formation.length||dynamicSpec){
+    let units=[],label='';
+    if(dynamicSpec){
+      units=buildDynamicFormation(dynamicSpec,entry);
+      label='Group '+(dynamicSpec.groupId??'—')+' · '+units.length+' 隻';
+    }else{
+      let idx=0;
+      for(const member of formation){
+        const count=Math.max(1,Math.floor(n(member.count)||1));
+        for(let i=0;i<count;i++)units.push(makeEnemyUnit(member,entry,idx++));
+      }
+      label=formation.map(x=>(x.name||('Enemy '+x.enemyId))+' ×'+Math.max(1,Math.floor(n(x.count)||1))).join('、');
     }
+    if(!units.length)return;
     const first=units[0];
     enemy={
-      entry,units,groupBattle:true,
+      entry,units,groupBattle:true,dynamicGroup:!!dynamicSpec,
       level:first.level,name:first.name,hp:first.hp,maxHp:first.maxHp,attack:first.attack,defense:first.defense
     };
     state.battles++;
-    addLog('遭遇任務編成：'+formation.map(x=>(x.name||('Enemy '+x.enemyId))+' ×'+Math.max(1,Math.floor(n(x.count)||1))).join('、')+'。');
+    addLog((dynamicSpec?'遭遇原始遇敵群組：':'遭遇任務編成：')+label+'。');
     render();return;
   }
   const unit=makeEnemyUnit(null,entry,0);
@@ -534,8 +570,16 @@ function levelCheck(){
   }
   if(leveled)addLog('升級！目前 Lv.'+state.level+'，HP 已補滿。','good');
 }
-function createCapturedPet(){
+function createCapturedPet(target=targetEnemyUnit()){
   const v=enemy.entry.variant;
+  if(enemy.dynamicGroup&&target){
+    return {
+      id:uid(),name:target.name,animationGroupId:target.animationGroupId,
+      tempNo:target.tempNo,level:target.level||1,exp:0,wildGrowth:n(target.wildGrowth),
+      stats:Object.assign({},target.stats||{}),elements:Object.assign({},target.elements||{}),
+      capturedAt:Date.now()
+    };
+  }
   return {
     id:uid(),name:enemy.name,animationGroupId:enemy.entry.species.animationGroupId,
     tempNo:v.tempNo,level:enemy.level||1,exp:0,wildGrowth:n(v.wildGrowth),
@@ -543,8 +587,8 @@ function createCapturedPet(){
     capturedAt:Date.now()
   };
 }
-function addCapturedPet(){
-  const pet=createCapturedPet();
+function addCapturedPet(target=targetEnemyUnit()){
+  const pet=createCapturedPet(target);
   state.petBox.push(pet);
   if(!state.team.some(Boolean)){
     state.team[0]=pet.id;
@@ -559,30 +603,33 @@ function addCapturedPet(){
   }
   return pet;
 }
-function captureRequirements(){
-  const rule=enemy?.entry?.variant?.captureRule;
+function captureRequirements(target=targetEnemyUnit()){
+  const rule=enemy?.dynamicGroup?target?.captureRule:enemy?.entry?.variant?.captureRule;
   const items=rule?.requiresAllItems||[];
   const missing=items.filter(x=>!hasItem(x.id));
   return {rule,items,missing,allowed:missing.length===0};
 }
 function captureChance(){
   if(!enemy)return {raw:0,display:0,allowed:false,missing:[]};
-  if(enemy.groupBattle)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true,groupBattle:true};
-  if(enemy.entry?.variant?.capturable===false)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true};
-  const req=captureRequirements();
-  if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items};
-  if(state.level+5<enemy.level)return {raw:0,display:0,allowed:false,missing:[],requirements:req.items};
+  const target=targetEnemyUnit();
+  if(!target)return {raw:0,display:0,allowed:false,missing:[]};
+  if(enemy.groupBattle&&!enemy.dynamicGroup)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true,groupBattle:true};
+  const capturable=enemy.dynamicGroup?target.capturable:(enemy.entry?.variant?.capturable!==false);
+  if(!capturable)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true,groupBattle:enemy.groupBattle,targetName:target.name};
+  const req=captureRequirements(target);
+  if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items,targetName:target.name};
+  if(state.level+5<target.level)return {raw:0,display:0,allowed:false,missing:[],requirements:req.items,targetName:target.name};
 
-  const enemyDex=Math.max(0,n(enemy.entry.variant?.stats?.dex));
-  const captureBase=n(enemy.entry.variant?.captureBase);
-  const maxHp=Math.max(1,enemy.maxHp);
-  const hpTerm=10-(enemy.hp*enemy.hp)/maxHp;
-  const levelTerm=state.level/2-enemy.level/2;
+  const enemyDex=Math.max(0,n(enemy.dynamicGroup?target.stats?.dex:enemy.entry.variant?.stats?.dex));
+  const captureBase=enemy.dynamicGroup?n(target.captureBase):n(enemy.entry.variant?.captureBase);
+  const maxHp=Math.max(1,target.maxHp);
+  const hpTerm=10-(target.hp*target.hp)/maxHp;
+  const levelTerm=state.level/2-target.level/2;
   const dexTerm=state.dex/15-enemyDex/15;
   let raw=(hpTerm+levelTerm+dexTerm+(captureBase+state.luck))*state.charm/50;
   raw=Math.min(99,raw);
   return {
-    raw,display:clamp(raw,0,99),allowed:true,missing:[],requirements:req.items,
+    raw,display:clamp(raw,0,99),allowed:true,missing:[],requirements:req.items,targetName:target.name,
     detail:{hpTerm,levelTerm,dexTerm,captureBase}
   };
 }
@@ -607,9 +654,14 @@ function captureTurn(manual=false){
   }
   const success=Math.random()*100<c.raw;
   if(success){
-    const pet=addCapturedPet();
+    const target=targetEnemyUnit();
+    const pet=addCapturedPet(target);
     for(const item of c.requirements||[])consumeItem(item.id,1);
     addLog('捕獲成功：'+pet.name+'（'+c.display.toFixed(1)+'%）。','good');
+    if(enemy.dynamicGroup&&Array.isArray(enemy.units)){
+      enemy.units=enemy.units.filter(u=>u.id!==target.id);
+      if(enemy.units.length){syncEnemyTarget();save();render();return true;}
+    }
     enemy=null;
     save();render();
     return true;
@@ -927,16 +979,16 @@ function renderEnemy(){
   if(!c.allowed){
     if(c.missing?.length){
       $('#captureInfo').textContent='缺少條件道具：'+c.missing.map(x=>x.name||('Item '+x.id)).join('、');
-    }else if(c.groupBattle){
-      $('#captureInfo').textContent='目前為多敵人任務編成，整隊不可捕獲。';
+    }else if(c.groupBattle&&!enemy.dynamicGroup){
+      $('#captureInfo').textContent='目前為固定多敵人任務編成，整隊不可捕獲。';
     }else if(c.uncapturable){
-      $('#captureInfo').textContent='此為任務干擾怪，原服務端設定不可捕獲。';
+      $('#captureInfo').textContent=(c.targetName?('目前鎖定 '+c.targetName+'；'):'')+'此敵人原服務端設定不可捕獲。';
     }else{
       $('#captureInfo').textContent='目前條件無法捕獲。';
     }
     capBtn.disabled=true;
   }else{
-    $('#captureInfo').textContent=(c.requirements?.length?'特殊捕獲條件已滿足。':'一般 Lv1 可捕獲。')+' HP 越低越容易成功。';
+    $('#captureInfo').textContent=(c.targetName?('目前鎖定 '+c.targetName+'。 '):'')+(c.requirements?.length?'特殊捕獲條件已滿足。':'可捕獲。')+' HP 越低越容易成功。';
     capBtn.disabled=false;
   }
 }
@@ -1039,7 +1091,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.11 載入完成：Event69 蛙王戰與 Event83 席格戰也已套用真正多敵人編成。','good');
+    addLog('V0.12 載入完成：Event82／83 任務狩獵區已依原 ENCOUNT／GROUP 規則動態生成整隊，群戰中可捕獲指定成員。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
