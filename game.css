@@ -53,3 +53,13 @@ select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10p
 .item-tag.unresolved{border-color:#5a5040;color:#cbbd9a}
 
 .item-tag.corroborated{border-color:#6b6350;color:#d3c58f}
+
+.quest-status{display:grid;gap:7px;font-size:12px;line-height:1.5}
+.quest-line{border:1px solid #35402e;border-radius:9px;background:#141911;padding:8px}
+.quest-line.done{border-color:#5f754a;color:#b6d58d}
+.quest-line.blocked{border-color:#5a4339;color:#d7a491}
+.quest-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.quest-actions button{min-height:36px;font-size:11px;padding:5px}
+.quest-actions .wide{grid-column:1/-1}
+.quest-card .dev-btn{margin-top:10px}
+@media(max-width:700px){.quest-actions{grid-template-columns:1fr}}
