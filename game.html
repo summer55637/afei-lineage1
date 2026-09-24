@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.23</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.26</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -129,6 +129,7 @@
           </div>
           <div class="capture-actions">
             <button id="captureBtn" class="capture-btn" disabled>捕獲</button>
+            <button id="guardBtn">防禦</button>
             <button id="autoCaptureBtn">自動捕獲：開</button>
           </div>
         </div>
@@ -167,8 +168,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.23：</b>
-      普通物理回合已接入原 BATTLE_DexCalc＋EntrySort：玩家、出戰寵物與每隻 Enemy 都以「敏捷+20，再扣 0～30% 隨機值」算本回合行動值並由高到低行動；目前尚無裝備，因此 _EQUIT_SEQUENCE 的順序加成為 0。
+      <b>V0.26：</b>
+      捕獲已正式併入 BATTLE_DexCalc＋EntrySort；玩家↔Enemy 普通物理已接原版最多 5 段反擊鏈；並新增 BATTLE_COM_GUARD 防禦回合，防禦時不閃避、不反擊，傷害依原 BATTLE_GuardAdjust 隨機降到 0～50%。
     </article>
   </main>
 
