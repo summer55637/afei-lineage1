@@ -1377,6 +1377,7 @@ const ENEMY_SOURCE_SKILL_META={
   543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
+  633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
   616:{n:'撕裂傷口2',d:'撕裂舊傷口，增加已損失 HP 50% 的傷害',f:'PETSKILL_BattleTearDamage',o:'50',field:1,target:1},
   640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7},
   651:{n:'撕裂傷口4',d:'依技能 option 增加已損失 HP 傷害',f:'PETSKILL_BattleTearDamage',o:'150',field:1,target:1},
@@ -2292,6 +2293,43 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function enemyPlayerSideLivingTargets(){
+  const list=[];
+  if(state.hp>0)list.push({kind:'player'});
+  const pet=activePet();
+  if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
+  return list;
+}
+function performEnemyBatFly(actor,unit,options,meta){
+  const label=meta?.n||'群蝠四竄';
+  const targets=enemyPlayerSideLivingTargets();
+  if(!targets.length)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  let drained=0;
+  const results=[];
+  for(const target of targets){
+    const before=battleStatusHp(target);
+    if(before<=0)continue;
+    // 原 BATTLE_BatFly：未騎乘的每個 Battle Entry 各扣目前 HP 的 10%；
+    // HP < 10 時固定扣 1。放置版 Player / Active Pet 是獨立 Entry，所以各自套一次。
+    const damage=before<10?1:Math.trunc(before/10);
+    battleStatusSetHp(target,before-damage);
+    battleStatusWakeOnDamage(target,damage);
+    drained+=damage;
+    results.push({target:target.kind,damage,hp:battleStatusHp(target)});
+    addLog(unit.name+' 的'+label+'吸取 '+battleStatusDescName(target)+' '+damage+' HP。','bad');
+    if(target.kind==='pet'&&battleStatusHp(target)<=0)addLog(battleStatusDescName(target)+' 倒下了，本場後續回合不再行動。','bad');
+  }
+
+  const beforeSelf=n(unit.hp);
+  unit.hp=Math.min(Math.max(1,Math.trunc(n(unit.maxHp))),beforeSelf+drained);
+  const healed=Math.max(0,unit.hp-beforeSelf);
+  addLog(unit.name+' 由 '+label+' 回復 '+healed+' HP'+(healed<drained?'（超出上限部分捨棄）':'')+'。','bad');
+
+  // 原 BATTLE_COM_S_BAT_FLY 直接呼叫 BATTLE_BatFly() 後 break；
+  // 無 BATTLE_AttackSeq、無閃避／會心／Guard，也不進普通 Counter loop。
+  return {kind:'skill',skillId:actor.skillId,targets:results,drained,healed};
+}
 function enemyRandomPlayerSideTarget(){
   const candidates=[];
   if(state.hp>0)candidates.push({kind:'player'});
@@ -2889,6 +2927,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
@@ -3780,7 +3819,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.42 載入完成：補齊 504／505 嗜血、615／651／656 撕裂、666 T憾甲同函式變體，並接入 613 狂亂暴走與 542 疾速攻擊原碼行為。','good');
+    addLog('V0.43 載入完成：接入 633 群蝠四竄；敵方整側各扣目前 HP 10%（低於 10 固定 1），總吸血回復施術者，且不走物理命中／反擊鏈。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
