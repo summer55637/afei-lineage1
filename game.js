@@ -1534,6 +1534,12 @@ const ENEMY_SOURCE_MISSING_SKILL_IDS=new Set([
   558,559,560,588,589,645,729,745
 ]);
 
+// V0.59：資料列存在，但這個 build 的 PETSKILL_functbl 沒有可被該字串命中的函式。
+// 502 是大小寫不一致：資料 ENEMYSKILL_EnemyHELP，functbl ENEMYSKILL_EnemyHelp。
+// 582 則完全沒有 PETSKILL_SelfExplodeAttack 函式／註冊項，version.h 也標成不可開。
+// 兩者都會在 PETSKILL_getPetskillFuncPointer() 得到 NULL，PETSKILL_Use() return FALSE。
+const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
+
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
   return petSkillDb?.byId?.[String(skillId)]||ENEMY_SOURCE_SKILL_META[Number(skillId)]||null;
@@ -1582,6 +1588,14 @@ function enemyChooseAction(unit){
         kind:'none',spec,
         skillSlot:picked.skillSlot,skillId:picked.skillId,
         sourceSkillMissing:true
+      };
+    }
+    if(ENEMY_SOURCE_UNREGISTERED_SKILL_IDS.has(Number(picked.skillId))){
+      return {
+        kind:'none',spec,
+        skillSlot:picked.skillSlot,skillId:picked.skillId,
+        sourceSkillUnregistered:true,
+        sourceCWaitReason:'unregistered-function'
       };
     }
     const meta=enemyPetSkillMeta(picked.skillId);
@@ -4195,6 +4209,7 @@ function normalBattleOrder(){
       kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
       enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
       sourceSkillMissing:!!action.sourceSkillMissing,
+      sourceSkillUnregistered:!!action.sourceSkillUnregistered,
       sourceSkillRejected:!!action.sourceSkillRejected,
       sourceCWaitReason:action.sourceCWaitReason||null,
       targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
@@ -4207,11 +4222,13 @@ function normalBattleOrder(){
   return order;
 }
 function sourceEnemyCWait(actor){
-  if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillRejected))return false;
+  if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillUnregistered&&!actor.sourceSkillRejected))return false;
   const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
   if(unit){
     if(actor.sourceSkillMissing){
       addLog(unit.name+' 的 Enemy AI 抽到來源未定義 PetSkill '+actor.skillId+'；原服 PETSKILL_Use() 會失敗並停在 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
+    }else if(actor.sourceSkillUnregistered){
+      addLog(unit.name+' 的 Enemy AI 抽到 PetSkill '+actor.skillId+'，但原 build 找不到可註冊的技能函式；PETSKILL_Use() 回 FALSE，維持 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
     }else if(actor.sourceCWaitReason==='sacrifice-low-hp'){
       addLog(unit.name+' 嘗試使用救援，但目前 HP 不高於最大 HP 的 20%；原 PETSKILL_Sacrifice() 直接失敗並停在 C_WAIT，本回合不跑自身 StatusSeq。');
     }
@@ -4798,7 +4815,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.58 載入完成：接入 574 E嚙齒術的現況來源分支；無玩家裝備耐久時只執行特殊物理傷害，不產生假裝備破壞，也不進普通 Counter。','good');
+    addLog('V0.59 載入完成：還原 502 E招喚與 582 自爆攻擊的原 build 函式註冊失敗；PETSKILL_Use() 回 FALSE，Enemy 維持 C_WAIT，整回合不行動且不跑自身 StatusSeq。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
