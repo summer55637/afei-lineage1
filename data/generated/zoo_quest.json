@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "V0.11: Event81, Event69 frog king, and Event83 Sig boss fights now use real multi-enemy formations. General wild Lv1 capture encounters remain single-enemy.",
+    "note": "V0.12: Event82/83 hunt areas now reproduce ENCOUNT group selection plus GROUP weighted dynamic party generation; capturable members can be captured inside multi-enemy battles, and quest drops roll per spawned enemy.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -965,13 +965,46 @@
       "rewardSource": [
         "gmsv/data/npc/eden1/zoo1/manager82_01",
         "gmsv/data/enemy1.txt"
-      ]
+      ],
+      "implementationStatus": "playable_dynamic_encounter_groups",
+      "encounterGroupRestoration": {
+        "raelpang": {
+          "encounterId": 778,
+          "groupId": 927,
+          "enemyMax": 5,
+          "members": [
+            {
+              "enemyId": 1741,
+              "weight": 99,
+              "createMax": 5
+            },
+            {
+              "enemyId": 1798,
+              "weight": 1,
+              "createMax": 5
+            }
+          ],
+          "battleAppearancePercent": 2.9602988020000054
+        },
+        "popodon": {
+          "encounterId": 780,
+          "groupId": 942,
+          "enemyMax": 10,
+          "members": [
+            {
+              "enemyId": 1762,
+              "weight": 1,
+              "createMax": 5
+            }
+          ]
+        }
+      }
     },
     "83": {
       "name": "尋回拉斯基",
       "serverEventId": 83,
       "verified": true,
-      "implementationStatus": "playable_core_full_formation",
+      "implementationStatus": "playable_dynamic_encounter_groups_full_boss_formation",
       "requires": [
         "Event 81 complete",
         "Event 82 active",
@@ -1149,7 +1182,76 @@
           "getPetTempNo": 854,
           "source": "gmsv/data/npc/eden1/zoo2/event83_18.arg|event83_19"
         }
-      ]
+      ],
+      "encounterGroupRestoration": {
+        "collar": {
+          "encounterId": 809,
+          "groupId": 966,
+          "enemyMax": 10,
+          "memberEnemyId": 1792,
+          "memberCreateMax": 10,
+          "dropPerMember": {
+            "itemId": 19716,
+            "probabilityPercent": 5
+          }
+        },
+        "clothes": {
+          "encounterId": 808,
+          "groupId": 965,
+          "enemyMax": 10,
+          "memberEnemyId": 1793,
+          "memberCreateMax": 5,
+          "dropPerMember": {
+            "itemId": 19717,
+            "probabilityPercent": 5
+          }
+        },
+        "underground": {
+          "encounterId": 806,
+          "enemyMax": 10,
+          "groups": [
+            {
+              "groupId": 962,
+              "encounterWeight": 10,
+              "notAppearByItemId": 19718,
+              "members": [
+                {
+                  "enemyId": 1788,
+                  "weight": 10,
+                  "createMax": 5
+                },
+                {
+                  "enemyId": 1789,
+                  "weight": 20,
+                  "createMax": 5
+                }
+              ]
+            },
+            {
+              "groupId": 963,
+              "encounterWeight": 10,
+              "members": [
+                {
+                  "enemyId": 1787,
+                  "weight": 10,
+                  "createMax": 5
+                }
+              ]
+            },
+            {
+              "groupId": 964,
+              "encounterWeight": 10,
+              "members": [
+                {
+                  "enemyId": 1789,
+                  "weight": 20,
+                  "createMax": 5
+                }
+              ]
+            }
+          ]
+        }
+      }
     }
   },
   "items": [
@@ -1846,36 +1948,76 @@
       "name": "伊甸園・雷爾胖任務區",
       "floorId": 7000,
       "encounterId": 778,
-      "description": "員工宿舍後方一帶。需要雷爾胖專用飼料。",
+      "description": "Encounter 778 / Group 927。持有雷爾胖專用飼料 19733 時，服務端每戰先隨機生成 1～5 隻；群組內布伊胖 EnemyID1741 權重99、雷爾胖 EnemyID1798 權重1，因此至少出現一隻雷爾胖的原始戰鬥機率約 2.9603%。",
       "requireItems": [
         19733
       ],
       "entries": [
         {
-          "name": "雷爾胖",
+          "name": "Group 927・雷爾胖沙地群",
           "tempNo": 905,
           "enemyIds": [
+            1741,
             1798
           ],
-          "weight": 0.029602988020000054,
-          "useMainDbTempNo": 905,
-          "capturable": true
-        },
-        {
-          "name": "布伊胖",
-          "tempNo": 855,
-          "enemyIds": [
-            1741
-          ],
-          "weight": 0.97039701198,
-          "wildGrowth": 27,
-          "captureBase": -1,
+          "weight": 1,
           "capturable": false,
-          "stats": {
-            "vital": 34,
-            "str": 29,
-            "tgh": 25,
-            "dex": 23
+          "dynamicFormation": {
+            "groupId": 927,
+            "encounterMax": 5,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "布伊胖",
+                "enemyId": 1741,
+                "tempNo": 855,
+                "weight": 99,
+                "createMax": 5,
+                "levelMin": 1,
+                "levelMax": 70,
+                "wildGrowth": 27,
+                "captureBase": -1,
+                "capturable": false,
+                "animationGroupId": 100825,
+                "stats": {
+                  "vital": 34,
+                  "str": 29,
+                  "tgh": 25,
+                  "dex": 23
+                },
+                "elements": {
+                  "earth": 0,
+                  "water": 0,
+                  "fire": 60,
+                  "wind": 40
+                }
+              },
+              {
+                "name": "雷爾胖",
+                "enemyId": 1798,
+                "tempNo": 905,
+                "weight": 1,
+                "createMax": 5,
+                "levelMin": 1,
+                "levelMax": 1,
+                "wildGrowth": 4.5,
+                "captureBase": -1,
+                "capturable": true,
+                "animationGroupId": 100826,
+                "stats": {
+                  "vital": 34,
+                  "str": 29,
+                  "tgh": 25,
+                  "dex": 23
+                },
+                "elements": {
+                  "earth": 0,
+                  "water": 0,
+                  "fire": 60,
+                  "wind": 40
+                }
+              }
+            ]
           }
         }
       ]
@@ -1885,7 +2027,7 @@
       "name": "伊甸園・波波頓任務區",
       "floorId": 7000,
       "encounterId": 780,
-      "description": "伊甸園東南水池附近。只帶肉食性飼料二號時對應 Group 942。",
+      "description": "Encounter 780 / Group 942。只帶肉食性飼料二號 19723 時選到 Group942；EnemyID1762 的 CREATEMAXNUM=5，因此每戰依原 ENEMY_getEnemy() 動態生成 1～5 隻波波頓，群戰中可逐隻捕獲。",
       "requireItems": [
         19723
       ],
@@ -1898,21 +2040,44 @@
       ],
       "entries": [
         {
-          "name": "波波頓",
+          "name": "Group 942・波波頓群",
           "tempNo": 786,
           "enemyIds": [
             1762
           ],
           "weight": 1,
-          "wildGrowth": 19,
-          "captureBase": 11,
-          "capturable": true,
-          "animationGroupId": 100881,
-          "stats": {
-            "vital": 33,
-            "str": 30,
-            "tgh": 19,
-            "dex": 17
+          "capturable": false,
+          "dynamicFormation": {
+            "groupId": 942,
+            "encounterMax": 10,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "波波頓",
+                "enemyId": 1762,
+                "tempNo": 786,
+                "weight": 1,
+                "createMax": 5,
+                "levelMin": 1,
+                "levelMax": 70,
+                "wildGrowth": 19,
+                "captureBase": 11,
+                "capturable": true,
+                "animationGroupId": 100881,
+                "stats": {
+                  "vital": 33,
+                  "str": 30,
+                  "tgh": 19,
+                  "dex": 17
+                },
+                "elements": {
+                  "earth": 80,
+                  "water": 20,
+                  "fire": 0,
+                  "wind": 0
+                }
+              }
+            ]
           }
         }
       ]
@@ -1923,33 +2088,49 @@
       "floorId": 7000,
       "encounterId": 809,
       "groupId": 966,
-      "description": "Event83：Group 966，持有 19711 才出現；EnemyID 1792 掉落 19716，現行 enemy1.txt 機率 5%。",
+      "description": "Event83 / Encounter809 / Group966。持有19711才出現；EnemyID1792 CREATEMAXNUM=10，服務端每戰動態生成 1～10 隻凶悍格爾希洛B，每一隻各自有 5% 機率攜帶 19716。",
       "requireItems": [
         19711
       ],
       "entries": [
         {
-          "name": "凶悍的格爾希洛B",
+          "name": "Group 966・凶悍格爾希洛B群",
           "tempNo": 897,
           "enemyIds": [
             1792
           ],
-          "weight": 1,
+          "weight": 10,
           "capturable": false,
-          "levelMin": 80,
-          "levelMax": 90,
-          "wildGrowth": 100,
-          "animationGroupId": 100861,
-          "stats": {
-            "vital": 60,
-            "str": 30,
-            "tgh": 30,
-            "dex": 40
-          },
-          "questDrop": {
-            "id": 19716,
-            "name": "凶悍格爾希洛的項圈",
-            "probability": 0.05
+          "dynamicFormation": {
+            "groupId": 966,
+            "encounterMax": 10,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "凶悍的格爾希洛B",
+                "enemyId": 1792,
+                "tempNo": 897,
+                "weight": 1,
+                "createMax": 10,
+                "levelMin": 80,
+                "levelMax": 90,
+                "wildGrowth": 100,
+                "captureBase": 0,
+                "capturable": false,
+                "animationGroupId": 100861,
+                "stats": {
+                  "vital": 60,
+                  "str": 30,
+                  "tgh": 30,
+                  "dex": 40
+                },
+                "questDrop": {
+                  "id": 19716,
+                  "name": "凶悍格爾希洛的項圈",
+                  "probability": 0.05
+                }
+              }
+            ]
           }
         }
       ]
@@ -1960,33 +2141,49 @@
       "floorId": 7000,
       "encounterId": 808,
       "groupId": 965,
-      "description": "Event83：Group 965，持有 19713 才出現；EnemyID 1793 掉落 19717，現行 enemy1.txt 機率 5%。",
+      "description": "Event83 / Encounter808 / Group965。持有19713才出現；EnemyID1793 CREATEMAXNUM=5，服務端每戰動態生成 1～5 隻不良少年C，每一隻各自有 5% 機率攜帶 19717。",
       "requireItems": [
         19713
       ],
       "entries": [
         {
-          "name": "不良少年C",
+          "name": "Group 965・不良少年C群",
           "tempNo": 898,
           "enemyIds": [
             1793
           ],
-          "weight": 1,
+          "weight": 10,
           "capturable": false,
-          "levelMin": 70,
-          "levelMax": 80,
-          "wildGrowth": 150,
-          "animationGroupId": 100439,
-          "stats": {
-            "vital": 38,
-            "str": 29,
-            "tgh": 34,
-            "dex": 20
-          },
-          "questDrop": {
-            "id": 19717,
-            "name": "不良少年的怪衣",
-            "probability": 0.05
+          "dynamicFormation": {
+            "groupId": 965,
+            "encounterMax": 10,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "不良少年C",
+                "enemyId": 1793,
+                "tempNo": 898,
+                "weight": 20,
+                "createMax": 5,
+                "levelMin": 70,
+                "levelMax": 80,
+                "wildGrowth": 150,
+                "captureBase": 0,
+                "capturable": false,
+                "animationGroupId": 100439,
+                "stats": {
+                  "vital": 38,
+                  "str": 29,
+                  "tgh": 34,
+                  "dex": 20
+                },
+                "questDrop": {
+                  "id": 19717,
+                  "name": "不良少年的怪衣",
+                  "probability": 0.05
+                }
+              }
+            ]
           }
         }
       ]
@@ -1997,55 +2194,143 @@
       "floorId": 60042,
       "encounterId": 806,
       "groupId": 962,
-      "description": "Event83：地下洞窟 Group 962。持有 19714 可進；拿到 19718 後此群組依 group1.txt 的 NOTAPPEARBYITEM 停止出現。",
+      "description": "Event83 / Encounter806。原 encounter 會以相同權重10在 Group962／963／964 間抽一組。Group962 在持有19718後依 NOTAPPEARBYITEM 停止出現；V0.12 起三組都已還原並各自依 ENEMY_getEnemy() 動態決定 1～N 隻。",
       "requireItems": [
         19714
       ],
-      "forbidItems": [
-        19718
-      ],
+      "forbidItems": [],
       "entries": [
         {
-          "name": "不良少年A",
+          "name": "Group 962・不良少年A/B混合群",
           "tempNo": 898,
           "enemyIds": [
-            1788
+            1788,
+            1789
           ],
           "weight": 10,
           "capturable": false,
-          "levelMin": 70,
-          "levelMax": 80,
-          "wildGrowth": 150,
-          "animationGroupId": 100439,
-          "stats": {
-            "vital": 38,
-            "str": 29,
-            "tgh": 34,
-            "dex": 20
-          },
-          "questDrop": {
-            "id": 19718,
-            "name": "黑色旗幟",
-            "probability": 0.1
+          "forbidItems": [
+            19718
+          ],
+          "dynamicFormation": {
+            "groupId": 962,
+            "encounterMax": 10,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "不良少年A",
+                "enemyId": 1788,
+                "tempNo": 898,
+                "weight": 10,
+                "createMax": 5,
+                "levelMin": 70,
+                "levelMax": 80,
+                "wildGrowth": 150,
+                "captureBase": 0,
+                "capturable": false,
+                "animationGroupId": 100439,
+                "stats": {
+                  "vital": 38,
+                  "str": 29,
+                  "tgh": 34,
+                  "dex": 20
+                },
+                "questDrop": {
+                  "id": 19718,
+                  "name": "黑色旗幟",
+                  "probability": 0.1
+                }
+              },
+              {
+                "name": "不良少年B",
+                "enemyId": 1789,
+                "tempNo": 898,
+                "weight": 20,
+                "createMax": 5,
+                "levelMin": 70,
+                "levelMax": 80,
+                "wildGrowth": 150,
+                "captureBase": 0,
+                "capturable": false,
+                "animationGroupId": 100439,
+                "stats": {
+                  "vital": 38,
+                  "str": 29,
+                  "tgh": 34,
+                  "dex": 20
+                }
+              }
+            ]
           }
         },
         {
-          "name": "不良少年B",
+          "name": "Group 963・凶悍格爾希洛群",
+          "tempNo": 897,
+          "enemyIds": [
+            1787
+          ],
+          "weight": 10,
+          "capturable": false,
+          "dynamicFormation": {
+            "groupId": 963,
+            "encounterMax": 10,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "凶悍的格爾希洛",
+                "enemyId": 1787,
+                "tempNo": 897,
+                "weight": 10,
+                "createMax": 5,
+                "levelMin": 70,
+                "levelMax": 80,
+                "wildGrowth": 100,
+                "captureBase": 0,
+                "capturable": false,
+                "animationGroupId": 100861,
+                "stats": {
+                  "vital": 60,
+                  "str": 30,
+                  "tgh": 30,
+                  "dex": 40
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Group 964・不良少年B群",
           "tempNo": 898,
           "enemyIds": [
             1789
           ],
-          "weight": 20,
+          "weight": 10,
           "capturable": false,
-          "levelMin": 70,
-          "levelMax": 80,
-          "wildGrowth": 150,
-          "animationGroupId": 100439,
-          "stats": {
-            "vital": 38,
-            "str": 29,
-            "tgh": 34,
-            "dex": 20
+          "dynamicFormation": {
+            "groupId": 964,
+            "encounterMax": 10,
+            "source": "gmsv/data/group1.txt + gmsv/data/encount.txt + gmsv/src/char/enemy.c::ENEMY_getEnemy",
+            "members": [
+              {
+                "name": "不良少年B",
+                "enemyId": 1789,
+                "tempNo": 898,
+                "weight": 20,
+                "createMax": 5,
+                "levelMin": 70,
+                "levelMax": 80,
+                "wildGrowth": 150,
+                "captureBase": 0,
+                "capturable": false,
+                "animationGroupId": 100439,
+                "stats": {
+                  "vital": 38,
+                  "str": 29,
+                  "tgh": 34,
+                  "dex": 20
+                }
+              }
+            ]
           }
         }
       ]
