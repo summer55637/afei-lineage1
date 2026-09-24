@@ -3220,3 +3220,74 @@ V0.52 新增 `ENEMY_SOURCE_MISSING_SKILL_IDS`，當 Enemy AI 抽中以上 ID 時
 在這個 build 裡，它們就是 **Enemy 資料引用了不存在的 PetSkill ID**。
 
 因此後續不再為這批 ID 猜名稱、猜函式或嘗試補假效果。
+
+## V0.53 救援／EnemyHELP
+
+V0.53 接入 ID 573「救援」並補正 502 `ENEMYSKILL_EnemyHELP` 的原函式大小寫。
+
+### 573 救援
+
+原 petskill2：
+
+`救援,牺牲自己50%的HP　　补至他人身上,PETSKILL_Sacrifice,,,Af,573,1,1,2,10000,PETSKILL_SACRIFICE`
+
+`PETSKILL_Sacrifice()` 先檢查：
+
+`CHAR_HP > CHAR_WORKMAXHP * 0.2`
+
+只有嚴格大於 20% maxHP 才會成功把 command 設為 `BATTLE_COM_S_SACRIFICE`。
+
+若 HP 不高於 20%，函式直接 `return FALSE`。
+
+對 Enemy AI 而言這個 FALSE 發生在 `BATTLE_ai_all()` 階段；因此和 V0.52 缺表技能相同，Enemy 不會從 C_WAIT 變成 C_OK，該回合在 StatusSeq 前直接被跳過。
+
+V0.53 因此新增 `sourceSkillRejected / sacrifice-low-hp` C_WAIT 分支，而不是把它當成普通「技能失敗動畫」。
+
+### Enemy 使用救援的目標方向
+
+原 `BATTLE_ai_normal()` 先從**對手側 Entry**依 tactics 選出 `result->target`，之後才呼叫：
+
+`PETSKILL_Use(charaindex, skillSlot, result->target, NULL)`
+
+`PETSKILL_Sacrifice()` 本身完全不重選友軍，也不檢查同側。
+
+所以 Enemy AI 抽到 573 時，來源實際上會把玩家或玩家出戰寵物當作救援目標。
+
+這個結果雖然和技能文字直覺相反，但 V0.53 以原執行路徑為準，不改成「自動補 Enemy 隊友」。
+
+### 成功時 HP 公式
+
+`BATTLE_S_Sacrifice()`：
+
+`attacker HP = attacker HP * 0.5`
+
+接著：
+
+`target HP = min(attacker new HP + target HP, target maxHP)`
+
+最後 `Damage = attacker new HP`，也就是畫面顯示／轉移基準用的是**施術者對半後剩餘 HP**。
+
+例如施術者目前 101 HP：
+
+- 施術後自身變 50 HP（C int 截斷）
+- 轉移基準也是 50
+- 目標最多增加 50 HP，仍受 maxHP 上限限制
+
+即使目標已滿血，施術者仍照樣先損失一半目前 HP。
+
+此技能沒有物理攻擊，也不進普通 Counter loop。
+
+### 502 EnemyHELP 大小寫
+
+原 petskill2 的函式字串是：
+
+`ENEMYSKILL_EnemyHELP`
+
+先前 fallback 寫成 `ENEMYSKILL_EnemyHelp`。目前 generated runtime 沒有 500～502，所以實際遊戲仍會使用 fallback，功能沒有中斷；但若未來 runtime 補齊 502 原字串，舊 dispatch 會因大小寫不符而漏接。
+
+V0.53 已改為：
+
+- fallback 使用原字串 `ENEMYSKILL_EnemyHELP`
+- dispatch 同時接受 `EnemyHelp` 與 `EnemyHELP`
+
+避免未來資料補齊後反而失效。
