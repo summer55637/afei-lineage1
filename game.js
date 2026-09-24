@@ -40,7 +40,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), state=null, enemy=null, timer=null;
+let db=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -361,6 +361,42 @@ function weightedEntry(entries){
   return entries[entries.length-1];
 }
 
+function buildDynamicGroupCatalog(){
+  dynamicGroupCatalog=new Map(Object.entries(db?.dynamicGroups||{}).map(([id,g])=>[String(id),g]));
+}
+function dynamicGroupUnlocked(spec){
+  if(!spec)return false;
+  const need=n(spec.appearByItemId), block=n(spec.notAppearByItemId);
+  if(need&&!hasItem(need))return false;
+  if(block&&hasItem(block))return false;
+  return true;
+}
+function routeDynamicFormation(entry){
+  if(!entry||entry.route?.questZone)return null;
+  const details=Array.isArray(entry.route?.groupDetails)?entry.route.groupDetails:[];
+  if(!details.length||!dynamicGroupCatalog.size)return null;
+  const choices=[];
+  for(const detail of details){
+    const spec=dynamicGroupCatalog.get(String(detail.groupId));
+    if(!spec||!dynamicGroupUnlocked(spec))continue;
+    choices.push({detail,spec,weight:Math.max(0,n(detail.encounterWeight))});
+  }
+  if(!choices.length)return null;
+  let total=choices.reduce((s,x)=>s+x.weight,0);
+  let picked=choices[choices.length-1];
+  if(total>0){
+    let roll=Math.random()*total;
+    for(const choice of choices){
+      roll-=choice.weight;
+      if(roll<=0){picked=choice;break}
+    }
+  }
+  return Object.assign({},picked.spec,{
+    encounterId:entry.route.encounterId,
+    encounterMax:Math.max(1,Math.floor(n(entry.route.enemyMax)||1))
+  });
+}
+
 function makeEnemyUnit(raw,fallbackEntry,index=0){
   const base=fallbackEntry?.variant||{};
   const st=Object.assign({},base.stats||{},raw?.stats||{});
@@ -431,12 +467,12 @@ function spawnEnemy(){
     addLog('依原 NPC steal 規則，開戰收走 Item '+consumeId+'。','pet');
   }
   const formation=Array.isArray(entry.variant.formation)?entry.variant.formation:[];
-  const dynamicSpec=entry.variant.dynamicFormation;
+  const dynamicSpec=entry.variant.dynamicFormation||routeDynamicFormation(entry);
   if(formation.length||dynamicSpec){
     let units=[],label='';
     if(dynamicSpec){
       units=buildDynamicFormation(dynamicSpec,entry);
-      label='Group '+(dynamicSpec.groupId??'—')+' · '+units.length+' 隻';
+      label=(dynamicSpec.encounterId!=null?('Encounter '+dynamicSpec.encounterId+' / '):'')+'Group '+(dynamicSpec.groupId??'—')+' · '+units.length+' 隻';
     }else{
       let idx=0;
       for(const member of formation){
@@ -684,7 +720,9 @@ function captureTurn(manual=false){
 }
 function winBattle(){
   const defeated=enemy;
-  const growth=Math.max(1,n(defeated.entry.variant.wildGrowth)||1);
+  const growth=(defeated.dynamicGroup&&Array.isArray(defeated.units)&&defeated.units.length)
+    ?defeated.units.reduce((s,u)=>s+Math.max(1,n(u.wildGrowth)||1),0)/defeated.units.length
+    :Math.max(1,n(defeated.entry.variant.wildGrowth)||1);
   const unitCount=Math.max(1,Array.isArray(defeated.units)?defeated.units.length:1);
   const exp=Math.max(6,Math.round((7+growth*2.2)*unitCount));
   const gold=rnd(2,6)*unitCount;
@@ -1094,6 +1132,7 @@ async function boot(){
     if(!itemR.ok)throw new Error('條件道具資料 HTTP '+itemR.status);
     if(!zooR.ok)throw new Error('動物園任務資料 HTTP '+zooR.status);
     db=await r.json();
+    buildDynamicGroupCatalog();
     zooQuest=await zooR.json();
     buildSourceCatalog(await itemR.json());
     buildConditionItems();
@@ -1102,7 +1141,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.12 載入完成：Event82／83 任務狩獵區已依原 ENCOUNT／GROUP 規則動態生成整隊，群戰中可捕獲指定成員。','good');
+    addLog('V0.13 載入完成：166 種一般野外 Lv1 路線已接入原 ENCOUNT／GROUP 動態群戰；Event82／83 沿用同一套核心。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
