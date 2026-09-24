@@ -1110,8 +1110,14 @@ function petBattleView(pet){
 }
 function enemyBattleView(unit){
   return {
-    type:'enemy',attack:n(unit?.attack),defense:n(unit?.defense),quick:n(unit?.quick),
-    luck:0,level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
+    type:'enemy',
+    attack:n(unit?.roundAttack??unit?.attack),
+    defense:n(unit?.roundDefense??unit?.defense),
+    quick:n(unit?.quick),
+    luck:0,
+    counterBonus:n(unit?.noGuardCounterBonus),
+    duckBonus:n(unit?.noGuardDuckBonus),
+    level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
   };
 }
 function enemyAiAttackSpec(unit){
@@ -1165,6 +1171,39 @@ function enemyChooseAction(unit){
     return Object.assign({},picked,{spec,skillMeta:meta});
   }
   return Object.assign({},picked,{spec});
+}
+function enemySignedSkillPercent(option,key){
+  const m=String(option||'').match(new RegExp(key+'([+-]?\\d+(?:\\.\\d+)?)'));
+  const v=m?Number(m[1]):0;
+  return Number.isFinite(v)?v:0;
+}
+function enemyPrepareRoundAction(unit,action){
+  unit.roundAttack=Math.trunc(n(unit.attack));
+  unit.roundDefense=Math.trunc(n(unit.defense));
+  unit.noGuardDuckBonus=0;
+  unit.noGuardCounterBonus=0;
+  unit.noGuardThisTurn=false;
+  unit.counterEligibleThisTurn=action?.kind==='attack';
+  unit.roundSkillFunction=null;
+
+  if(action?.kind!=='skill')return;
+  const meta=action.skillMeta||enemyPetSkillMeta(action.skillId);
+  unit.roundSkillFunction=meta?.f||null;
+
+  if(meta?.f==='PETSKILL_PowerBalance'){
+    const attackPct=enemySignedSkillPercent(meta.o,'攻%');
+    const defensePct=enemySignedSkillPercent(meta.o,'防%');
+    const baseAttack=Math.trunc(n(unit.attack));
+    const baseDefense=Math.trunc(n(unit.defense));
+    unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+    unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+  }else if(meta?.f==='PETSKILL_NoGuard'){
+    unit.noGuardThisTurn=true;
+    unit.noGuardDuckBonus=Math.max(0,enemySignedSkillPercent(meta.o,'回避%'));
+    unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
+    // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
+    unit.counterEligibleThisTurn=true;
+  }
 }
 function battleTargetSnapshot(kind,pet=null){
   if(kind==='pet'&&pet){
@@ -1366,8 +1405,9 @@ function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge;
   let duck=disableDodge?0:battleDuckChance(attacker,defender);
-  if(!disableDodge&&n(options.duckBonusPercent)!==0){
-    duck=clamp(duck+n(options.duckBonusPercent)*100,1,7500);
+  if(!disableDodge){
+    const bonus=n(options.duckBonusPercent)+n(defender?.duckBonus);
+    if(bonus!==0)duck=clamp(duck+bonus*100,1,7500);
   }
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
@@ -1421,8 +1461,12 @@ function battleCounterChance(attacker,defender){
 
   // 無裝備時 Player 視為 FIST vs FIST，CounterTbl=10，
   // 所以 CriPer*10*0.1 仍等於 CriPer，再加玩家 Luck。
-  if(attacker?.type==='player')per+=n(attacker?.luck);
-  else if(per>100)per=100;
+  if(attacker?.type==='player'){
+    per+=n(attacker?.luck);
+  }else{
+    per+=n(attacker?.counterBonus);
+    if(per>100)per=100;
+  }
   return per;
 }
 function battleCounterCheck(attacker,defender){
@@ -1453,6 +1497,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   for(let depth=0;depth<5;depth++){
     if(!enemy||state.hp<=0||unit.hp<=0)break;
 
+    if(counterer==='enemy'&&!unit.counterEligibleThisTurn)break;
     const countererView=counterer==='player'?playerBattleView():enemyBattleView(unit);
     const targetView=target==='player'?playerBattleView():enemyBattleView(unit);
     const chk=battleCounterCheck(countererView,targetView);
@@ -1496,6 +1541,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
   for(let depth=0;depth<5;depth++){
     if(!enemy||!petIsAlive(pet)||unit.hp<=0)break;
+    if(counterer==='enemy'&&!unit.counterEligibleThisTurn)break;
     const countererView=counterer==='pet'?petBattleView(pet):enemyBattleView(unit);
     const targetView=target==='pet'?petBattleView(pet):enemyBattleView(unit);
     if(!countererView||!targetView)break;
@@ -1639,7 +1685,24 @@ function performEnemyGuardBreak(actor,unit,options,meta){
   // BATTLE_S_GBreak 對 GUARD 最後會 iRet=FALSE，不接反擊鏈。
   return {kind:'skill',skillId:actor.skillId,target:'player',r};
 }
+function performEnemyPowerBalance(actor,unit,options,meta){
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  const defensePct=enemySignedSkillPercent(meta?.o,'防%');
+  addLog(unit.name+' 使用 '+(meta?.n||'背水之戰')+'（攻 '+(attackPct>=0?'+':'')+attackPct+'%／防 '+(defensePct>=0?'+':'')+defensePct+'%）。');
+  // 原直接攻擊群組在執行前會把 COM 改回 ATTACK，之後具備反擊資格。
+  unit.counterEligibleThisTurn=true;
+  return Object.assign(
+    {kind:'skill',skillId:actor.skillId},
+    performEnemyPrimaryAttack(actor,unit,options)||{}
+  );
+}
+function performEnemyNoGuard(actor,unit,options,meta){
+  addLog(unit.name+' 使用 '+(meta?.n||'不防守戰法')+'：本回合不主動攻擊，回避 +'+n(unit.noGuardDuckBonus)+'、反擊 +'+n(unit.noGuardCounterBonus)+'。');
+  // 原 BATTLE_COM_S_NOGUARD 自己 NoAction，但 BATTLE_Counter() 明確允許它反擊。
+  return {kind:'skill',skillId:actor.skillId,noGuard:true};
+}
 function performEnemyMighty(actor,unit,options,meta){
+  unit.counterEligibleThisTurn=true;
   const multiplier=Math.max(0,enemySkillNumber(meta?.o,/倍\s*([0-9.]+)/,2));
   const duckBonus=Math.max(0,enemySkillNumber(meta?.o,/回避\s*([0-9.]+)/,0));
   addLog(unit.name+' 使用 '+(meta?.n||'一擊必殺')+'（傷害 ×'+multiplier+'／目標回避 +'+duckBonus+'）。');
@@ -1651,6 +1714,7 @@ function performEnemyMighty(actor,unit,options,meta){
   );
 }
 function performEnemyContinuation(actor,unit,options,meta){
+  unit.counterEligibleThisTurn=true;
   const count=clamp(Math.trunc(enemySkillNumber(meta?.o,/^\s*(\d+)/,1)),1,10);
   const label=meta?.n||'連續攻擊';
   addLog(unit.name+' 使用 '+label+'（'+count+' 段）。');
@@ -1715,6 +1779,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_GuardBreak')return performEnemyGuardBreak(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ContinuationAttack')return performEnemyContinuation(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Mighty')return performEnemyMighty(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_PowerBalance')return performEnemyPowerBalance(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_NoGuard')return performEnemyNoGuard(actor,unit,options,meta);
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
@@ -1969,6 +2035,7 @@ function normalBattleOrder(){
   for(const unit of livingEnemyUnits()){
     const quick=n(unit?.quick);
     const action=enemyChooseAction(unit);
+    enemyPrepareRoundAction(unit,action);
     unit.guardThisTurn=action.kind==='guard';
     const needsTarget=action.kind==='attack'||action.kind==='skill'||action.kind==='magic';
     const chosen=needsTarget?enemyChooseTarget(unit):null;
@@ -2525,7 +2592,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.30 載入完成：Enemy wa 已正式接入破除防禦、連續攻擊與一擊必殺；連擊依原 gDamageDiv 分段，整套打完後才判定一次反擊。','good');
+    addLog('V0.31 載入完成：背水之戰已在 AI 選令時套用整回合攻防修正；不防守戰法依來源版實際啟用回避／反擊加成（會心程式為 #if 0），並校正 BATTLE_Counter 指令資格。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
