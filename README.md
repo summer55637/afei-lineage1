@@ -1649,3 +1649,88 @@ V0.36 因此把繞背中的 Enemy 從可指定目標集合排除，但仍保留�
 
 目前 `stoneage_enemy_ai.json` 中共有 **27** 個 Enemy 模板帶有 Skill 120 欄位，其中 **12** 個模板的對應 AI 權重大於 0，會在目前 Enemy AI 權重抽選中實際使用地球一周。
 
+## V0.37 落馬術／偷竊
+
+V0.37 接入兩個目前 Enemy AI 會實際抽到、且原版資料足夠完整的 PetSkill：
+
+- ID 210「落馬術」：`PETSKILL_FallGround`，option `攻%-30`
+- ID 140「偷竊」：`PETSKILL_Steal`
+
+### 落馬術
+
+`PETSKILL_FallGround()` 先把本回合攻擊力改成：
+
+`FIXSTR + FIXSTR × (-30%)`
+
+之後進入獨立的 `BATTLE_S_FallGround()`，仍使用原普通物理 AttackSeq，因此保留：
+
+- 閃避
+- 會心
+- 防禦減傷
+- 屬性修正
+- 睡眠受傷喚醒
+
+但它不是普通 ATTACK case；來源在 `BATTLE_COM_S_FALLRIDE` 的獨立分支處理完就 break，沒有接普通攻擊區後段的 Counter loop。因此 V0.37 **不讓落馬術進普通反擊鏈**。
+
+只有本次實際 `damage > 0` 才做落馬判定。無裝備落馬抗性時來源是：
+
+`RAND(0,100) > 50`
+
+也就是 0～100 共 101 個整數中有 50 個成功值，實際為 **50/101**。
+
+目前網頁放置版尚未建立正式騎乘系統，所以現階段這個技能會完整執行 -30% 物理傷害與落馬亂數，但玩家沒有騎乘狀態時自然不會發生「打落坐騎」。程式已保留未來 `state.ridePetId` 的清除接點，不另外捏造騎乘規則。
+
+目前 Enemy AI 中：
+
+- 32 個 Enemy 模板帶有 Skill 210
+- 其中 **23 個 Enemy 模板**對應技能權重大於 0，實戰會抽到
+
+### 偷竊
+
+原 `BATTLE_Steal()` 對玩家目標才給偷竊率：
+
+`per = 50`
+
+而成功條件是嚴格：
+
+`RAND(1,100) < 50`
+
+因此不是 50%，而是 **49%**。
+
+成功後再做第二次同樣的嚴格 `RAND(1,100) < 50`：
+
+- 成功：偷石幣
+- 否則：偷背包道具
+
+石幣量為：
+
+`gold × RAND(8,12) × 0.01`
+
+並用 C 整數截斷。若算出 0 石幣，該次視為沒有偷到。
+
+道具分支原版會從玩家非裝備背包槽隨機挑一個項目移除。網頁版背包是 itemId → count 的堆疊模型，因此 V0.37 以目前有數量的 itemId 作為可偷槽，隨機選一種後扣 1 個。
+
+Enemy 使用偷竊成功後，原版並沒有把石幣／道具塞進 Enemy 可持有背包；玩家端資源只會被扣除。V0.37 維持這個效果。
+
+若 Enemy AI 原本選到出戰寵物，原版因目標不是 `CHAR_TYPEPLAYER`，偷竊率直接是 0；V0.37 同樣會失敗，不會改成偷寵物。
+
+目前 Enemy AI 中：
+
+- 28 個 Enemy 模板帶有 Skill 140
+- 其中 **14 個 Enemy 模板**至少有一個 Skill 140 權重大於 0，實戰會抽到
+
+### AttackMagic 暫緩
+
+本輪也檢查了目前最常見的未接函式 `PETSKILL_AttackMagic`。
+
+Skill runtime 已能取得像：
+
+`magic 312 item 19658`
+
+以及原 `TargetIndex` 的單體／橫列／全體範圍，但正式傷害仍依賴來源啟動時另外載入的：
+
+- `data/magic.txt`
+- `data/attmagic.bin`
+
+其中 `magic.txt` 提供屬性、Power、MagicLv；`attmagic.bin` 還包含真正的範圍遮罩與動畫攻擊型態。這兩份檔案目前不在來源 GitHub，也不在本專案資料層，因此 V0.37 沒有先用猜測值實作 AttackMagic。
+
