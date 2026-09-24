@@ -83,6 +83,30 @@ function consumeItem(id,count=1){
   state.inventory[key]=Math.max(0,n(state.inventory[key])-count);
   if(state.inventory[key]<=0)delete state.inventory[key];
 }
+function giveItem(id,count=1){
+  const key=String(id);
+  state.inventory[key]=n(state.inventory[key])+count;
+}
+function rollVerifiedDrops(defeatedEnemy){
+  if(!defeatedEnemy)return [];
+  const enemyIds=new Set((defeatedEnemy.entry?.variant?.enemyIds||[]).map(Number));
+  const drops=[];
+  for(const item of conditionItems){
+    for(const src of item.sources||[]){
+      if(src.type!=='enemy_drop')continue;
+      if(!Array.isArray(src.enemyIds)||!src.enemyIds.some(id=>enemyIds.has(Number(id))))continue;
+      let chance=0;
+      if(src.dropRule==='_FIX_ITEMPROB')chance=n(src.dropProbabilityRaw)/1000;
+      else if(Number.isFinite(Number(src.dropProbabilityPercent)))chance=n(src.dropProbabilityPercent)/100;
+      if(chance>0&&Math.random()<chance){
+        giveItem(item.id,1);
+        drops.push(item);
+        break;
+      }
+    }
+  }
+  return drops;
+}
 function routeUnlocked(route){
   const ids=route?.appearanceInventoryItemIds||[];
   return ids.every(id=>hasItem(id));
@@ -292,13 +316,18 @@ function captureTurn(manual=false){
   return false;
 }
 function winBattle(){
-  const growth=Math.max(1,n(enemy.entry.variant.wildGrowth)||1);
+  const defeated=enemy;
+  const growth=Math.max(1,n(defeated.entry.variant.wildGrowth)||1);
   const exp=Math.max(6,Math.round(7+growth*2.2));
   const gold=rnd(2,6);
   state.wins++;
   state.exp+=exp;
   state.gold+=gold;
-  addLog('擊敗 '+enemy.name+'，獲得 '+exp+' EXP、'+gold+' 石幣。','good');
+  addLog('擊敗 '+defeated.name+'，獲得 '+exp+' EXP、'+gold+' 石幣。','good');
+  const drops=rollVerifiedDrops(defeated);
+  for(const item of drops){
+    addLog('掉落：'+item.name+' ×1。','pet');
+  }
   enemy=null;
   levelCheck();
   save();render();
@@ -506,7 +535,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.4 載入完成：條件道具 '+conditionItems.length+' 種，其中 '+conditionItems.filter(x=>x.sourceStatus==='verified').length+' 種正式來源已確認。','good');
+    addLog('V0.5 載入完成：正式來源 '+conditionItems.filter(x=>x.sourceStatus==='verified').length+'/'+conditionItems.length+'；已啟用服務端掉落率規則。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
