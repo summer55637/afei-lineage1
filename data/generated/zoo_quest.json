@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "Event 82/83 core is playable. Event 2 Item 2414, Event 4 adult ceremony, Event 69/70 prelude, Marefia Lv1→79 memory route, and the Event71 NOWEV gate are now source-backed playable prerequisites.",
+    "note": "Event 82/83 core is playable. Event 2 Item 2414, Event 4 adult ceremony, the full Event69/70 frog-cave rescue chain, Marefia Lv1→79 memories, and the Event71 NOWEV gate are source-backed playable prerequisites.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -42,34 +42,66 @@
       "completionFlag": "ENDEV=4"
     },
     "69": {
-      "name": "尋找新藏",
+      "name": "尋找新藏／蛙洞救援",
       "serverEventId": 69,
       "verified": true,
-      "implementationStatus": "playable_compact",
-      "sources": [
-        "gmsv/data/npc/king/event69_3",
-        "gmsv/data/npc/king/event69_4",
-        "gmsv/data/npc/king/event69_5.arg",
-        "gmsv/data/npc/king/event69_6"
-      ],
+      "implementationStatus": "playable_full_core",
       "requiresEndEvents": [
         4
       ],
-      "prerequisiteSource": "gmsv/data/npc/king/event69_3 EVENT:ENDEV=4"
+      "sources": [
+        "gmsv/data/npc/king/event69_1",
+        "gmsv/data/npc/king/event69_2",
+        "gmsv/data/npc/king/event69_3",
+        "gmsv/data/npc/king/event69_4",
+        "gmsv/data/npc/king/event69_5.arg",
+        "gmsv/data/npc/king/event69_6",
+        "gmsv/data/npc/king/event69_alpha.create"
+      ],
+      "route": [
+        "願藏祖父：ENDEV=4 → EventNo:69 TYPE:REQUEST，開 NOWEV=69",
+        "庫伊爺爺：NOWEV=69 且 ITEM!=19621 → GetItem:19621",
+        "卡卡金寶：NOWEV=69 + ITEM=19621 → DelItem:19621，Warp Floor 30601",
+        "新藏 Floor 30602：NOWEV=69 → GetItem:19622",
+        "里昂蛙王 Floor 30605：event69_5.arg 要求 Item 19622，EnemyID 1685 + 1681×9",
+        "戰後蛙王 Floor 30607：ITEM=19622 → DelItem:19622 + GetItem:19623",
+        "新藏：ITEM=19623 → EventNo:70 TYPE:REQUEST + DelItem:19623，開 NOWEV=70",
+        "新藏：NOWEV=69&NOWEV=70 → EndSetFlg:69"
+      ],
+      "frogKingBattle": {
+        "floorId": 30605,
+        "postBattleFloorId": 30607,
+        "requiredItemId": 19622,
+        "bossEnemyId": 1685,
+        "bossTempNo": 842,
+        "addEnemyId": 1681,
+        "addTempNo": 841,
+        "composition": {
+          "1681": 9,
+          "1685": 1
+        },
+        "source": "gmsv/data/npc/king/event69_5.arg"
+      }
     },
     "70": {
       "name": "接回瑪蕾菲雅",
       "serverEventId": 70,
       "verified": true,
-      "implementationStatus": "playable_compact_with_full_marefia_memory",
+      "implementationStatus": "playable_full_core",
       "source": "gmsv/data/npc/king/event69_7",
+      "requiresEndEvents": [
+        4,
+        69
+      ],
+      "requiresNowEvent": 70,
       "reward": {
         "petEnemyId": 1479,
         "petTempNo": 718,
-        "itemId": 19624,
         "petInitialLevel": 1,
-        "petInitialLevelSource": "gmsv/data/enemy1.txt EnemyID 1479 / TempNo 718 level 1"
+        "petInitialLevelSource": "gmsv/data/enemy1.txt EnemyID 1479 / TempNo 718 level 1",
+        "itemId": 19624
       },
+      "completion": "GetPet:1479 + GetItem:19624 + EndSetFlg:70",
       "memorySource": "gmsv/data/npc/pettalk/ptalk01.arg"
     },
     "71": {
@@ -95,7 +127,7 @@
         "phrase": "地為界水為憑火為引風為信",
         "source": "gmsv/data/npc/king/event69_9"
       },
-      "note": "Event83 requires NOWEV=71, not ENDEV=71. Event4 adult ceremony is now playable and Event69 is gated by ENDEV=4; Marefia memory checkpoints are individually playable from ptalk01.arg before the pet-transmigration gate.",
+      "note": "Event83 requires NOWEV=71, not ENDEV=71. Event4, Event69 and Event70 are now playable source-backed gates; Marefia memory checkpoints remain individually playable from ptalk01.arg before pet transmigration.",
       "marefiaMemoryRoute": [
         {
           "level": 10,
@@ -498,6 +530,58 @@
       "priceStatus": "historical_corroborated"
     },
     {
+      "id": 19621,
+      "name": "發亮護身符",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/king/event69_1",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "庫伊爺爺",
+          "summary": "NOWEV=69 且未持有 19621 時 GetItem:19621；對話稱為可吸引飛天蛙的護身符。"
+        }
+      ]
+    },
+    {
+      "id": 19622,
+      "name": "金珠",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/king/event69_4",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "新藏",
+          "summary": "第一次在蛙洞找到新藏時 GetItem:19622；對話明確稱其為金珠。"
+        }
+      ]
+    },
+    {
+      "id": 19623,
+      "name": "黑玉",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/king/event69_6",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "里昂蛙王",
+          "summary": "交還金珠 19622 後 GetItem:19623；對話明確稱其為黑玉。"
+        }
+      ]
+    },
+    {
+      "id": 19624,
+      "name": "瑪蕾菲雅的項鍊",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/king/event69_7",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "願藏祖母",
+          "summary": "Event70 完成時與 GetPet:1479 同時 GetItem:19624；對話稱為瑪蕾菲雅喜歡的項鍊。"
+        }
+      ]
+    },
+    {
       "id": 19688,
       "name": "Item 19688（瑪蕾菲雅 Lv65 回憶獎勵）",
       "sourceStatus": "verified_id",
@@ -704,6 +788,42 @@
     }
   ],
   "huntingZones": [
+    {
+      "id": "event69-frog-king",
+      "name": "蛙洞・里昂蛙王戰",
+      "floorId": 30605,
+      "encounterId": null,
+      "description": "Event69：帶著金珠 19622 挑戰里昂蛙王。原 event69_5.arg 編成為黑蛙王 EnemyID 1685 ×1、黑蛙 EnemyID 1681 ×9；目前單體戰鬥核心以黑蛙王代表整隊。",
+      "requireItems": [
+        19622
+      ],
+      "entries": [
+        {
+          "name": "里昂蛙王",
+          "tempNo": 842,
+          "enemyIds": [
+            1685
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 90,
+          "levelMax": 90,
+          "wildGrowth": 200,
+          "animationGroupId": 100886,
+          "stats": {
+            "vital": 65,
+            "str": 30,
+            "tgh": 34,
+            "dex": 40
+          },
+          "questOnWin": "event69-frog-king-defeated",
+          "bossComposition": {
+            "1681": 9,
+            "1685": 1
+          }
+        }
+      ]
+    },
     {
       "id": "zoo-raelpang",
       "name": "伊甸園・雷爾胖任務區",
