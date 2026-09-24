@@ -51,6 +51,13 @@ function normalizeState(raw){
   s.quest.event71Prep=Object.assign({},base.quest.event71Prep,raw?.quest?.event71Prep||{});
   s.quest.event82=Object.assign({},base.quest.event82,raw?.quest?.event82||{});
   s.quest.event83=Object.assign({},base.quest.event83,raw?.quest?.event83||{});
+  const legacyDev71=n(raw?.schemaVersion)<5&&raw?.quest?.event71Current===true&&!raw?.quest?.event83?.active&&!raw?.quest?.event83?.complete;
+  if(legacyDev71){
+    s.quest.event71Current=false;
+    s.quest.event71Prep={stage:0};
+    s.quest.event2={active:false,complete:false};
+    if(n(s.inventory['2414'])>0)delete s.inventory['2414'];
+  }
   s.team=Array.isArray(raw?.team)?raw.team.slice(0,TEAM_SIZE):Array(TEAM_SIZE).fill(null);
   while(s.team.length<TEAM_SIZE)s.team.push(null);
   migrateLegacyPets(raw,s);
