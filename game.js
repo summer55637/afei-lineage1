@@ -15,13 +15,13 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:3,
+    schemaVersion:4,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event71Current:false,event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -62,7 +62,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=3;
+  s.schemaVersion=4;
   delete s.pets;
   return s;
 }
@@ -97,10 +97,16 @@ function rollVerifiedDrops(defeatedEnemy){
   if(!defeatedEnemy)return [];
   const enemyIds=new Set((defeatedEnemy.entry?.variant?.enemyIds||[]).map(Number));
   const drops=[];
+  const qd=defeatedEnemy.entry?.variant?.questDrop;
+  if(qd&&n(qd.probability)>0&&Math.random()<n(qd.probability)){
+    giveItem(qd.id,1);
+    drops.push(questItemMeta(qd.id)||{id:qd.id,name:qd.name||('Item '+qd.id)});
+  }
   for(const item of conditionItems){
     for(const src of item.sources||[]){
       if(src.type!=='enemy_drop')continue;
       if(!Array.isArray(src.enemyIds)||!src.enemyIds.some(id=>enemyIds.has(Number(id))))continue;
+      if(qd&&Number(qd.id)===Number(item.id))continue;
       let chance=0;
       if(src.dropRule==='_FIX_ITEMPROB')chance=n(src.dropProbabilityRaw)/1000;
       else if(Number.isFinite(Number(src.dropProbabilityPercent)))chance=n(src.dropProbabilityPercent)/100;
@@ -182,7 +188,12 @@ function buildQuestMaps(){
       let variant={
         tempNo:raw.tempNo,enemyIds:raw.enemyIds||[],wildGrowth:raw.wildGrowth||1,
         captureBase:raw.captureBase||0,stats:Object.assign({},raw.stats||{}),elements:{},
-        capturable:raw.capturable!==false
+        capturable:raw.capturable!==false,
+        levelMin:raw.levelMin||1,levelMax:raw.levelMax||raw.levelMin||1,
+        questDrop:raw.questDrop||null,
+        consumeOnSpawnItemId:raw.consumeOnSpawnItemId||null,
+        questOnWin:raw.questOnWin||null,
+        bossComposition:raw.bossComposition||null
       };
       if(raw.useMainDbTempNo){
         const hit=findMainVariant(raw.useMainDbTempNo);
@@ -238,21 +249,27 @@ function spawnEnemy(){
   const entries=eligibleEntries(map);
   if(!map||!entries.length)return;
   const entry=weightedEntry(entries);
+  const consumeId=n(entry.variant.consumeOnSpawnItemId);
+  if(consumeId){
+    if(!hasItem(consumeId))return;
+    consumeItem(consumeId,1);
+    addLog('依原 NPC steal 規則，開戰收走 Item '+consumeId+'。','pet');
+  }
   const st=entry.variant.stats||{};
   const vit=Math.max(1,n(st.vital)||8);
   const str=Math.max(1,n(st.str)||6);
   const tgh=Math.max(1,n(st.tgh)||6);
+  const level=rnd(Math.max(1,n(entry.variant.levelMin)||1),Math.max(1,n(entry.variant.levelMax)||n(entry.variant.levelMin)||1));
   const hp=Math.max(35,Math.round(28+vit*5.5));
   enemy={
-    entry,
-    level:1,
+    entry,level,
     name:entry.species.clientLabel||entry.variant.serverName||('TempNo '+entry.variant.tempNo),
     hp,maxHp:hp,
     attack:Math.max(3,Math.round(3+str*.62)),
     defense:Math.max(0,Math.round(tgh*.28))
   };
   state.battles++;
-  addLog('遭遇 Lv1 '+enemy.name+'。');
+  addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
   render();
 }
 function activePet(){return state.petBox.find(p=>p.id===state.activePetId)||null}
@@ -276,6 +293,27 @@ function addQuestRewardPet(){
   if(open>=0)state.team[open]=p.id;
   if(!state.activePetId)state.activePetId=p.id;
   return p;
+}
+function addEvent83Pet(){
+  if(hasPetTempNo(854))return state.petBox.find(p=>Number(p.tempNo)===854);
+  const p={
+    id:uid(),name:'動物園養的拉斯基',animationGroupId:100853,tempNo:854,level:1,exp:0,wildGrowth:10,
+    stats:{vital:20,str:23,tgh:21,dex:26},elements:{earth:60,water:40,fire:0,wind:0},
+    capturedAt:Date.now(),questReward:true,event83:true
+  };
+  state.petBox.push(p);
+  const open=state.team.findIndex(x=>!x);
+  if(open>=0)state.team[open]=p.id;
+  if(!state.activePetId)state.activePetId=p.id;
+  return p;
+}
+function clearEvent83Chain(extra=[]){
+  for(let id=19702;id<=19715;id++){
+    while(hasItem(id))consumeItem(id,1);
+  }
+  for(const id of extra){
+    while(hasItem(id))consumeItem(id,1);
+  }
 }
 function playerDamage(){return Math.max(1,Math.round(state.attack-enemy.defense+rnd(-2,4)))}
 function petDamage(pet){
@@ -309,7 +347,7 @@ function createCapturedPet(){
   const v=enemy.entry.variant;
   return {
     id:uid(),name:enemy.name,animationGroupId:enemy.entry.species.animationGroupId,
-    tempNo:v.tempNo,level:1,exp:0,wildGrowth:n(v.wildGrowth),
+    tempNo:v.tempNo,level:enemy.level||1,exp:0,wildGrowth:n(v.wildGrowth),
     stats:Object.assign({},v.stats||{}),elements:Object.assign({},v.elements||{}),
     capturedAt:Date.now()
   };
@@ -402,6 +440,12 @@ function winBattle(){
   for(const item of drops){
     addLog('掉落：'+item.name+' ×1。','pet');
   }
+  if(defeated.entry?.variant?.questOnWin==='event83-complete'){
+    const p=addEvent83Pet();
+    state.quest.event83.active=false;
+    state.quest.event83.complete=true;
+    addLog('Event 83 完成：席格戰結束，取得 '+p.name+'（TempNo 854）。','good');
+  }
   enemy=null;
   levelCheck();
   save();render();
@@ -452,20 +496,27 @@ function renderMapOptions(){
   select.value=selected;
 }
 function renderZooQuest(){
-  const q=state.quest;
-  const e82=q.event82;
+  const q=state.quest,e82=q.event82,e83=q.event83;
   const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854);
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
   lines.push('<div class="quest-line '+(q.event81Complete?'done':'blocked')+'">Event 81 金飛航空：'+(q.event81Complete?'已完成':'尚未完成／目前僅能用開發測試旗標')+'</div>');
   if(e82.active||e82.complete){
-    lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 TempNo 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已向布伊太郎回報':'')+'</div>');
-    lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 TempNo 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已向飼育員確認':'')+'</div>');
-    lines.push('<div class="quest-line '+(has854?'done':'blocked')+'">動物園養的拉斯基 TempNo 854：'+(has854?'已取得':'Event 83 完整支線尚未開放')+'</div>');
+    lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已回報':'')+'</div>');
+    lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已確認':'')+'</div>');
+    lines.push('<div class="quest-line '+(has854?'done':'')+'">任務版拉斯基 854：'+(has854?'已取得':(e83.active?'Event 83 進行中':'尚未取得'))+'</div>');
+    lines.push('<div class="quest-line '+(q.event71Current&&hasItem(2414)?'done':'blocked')+'">Event83 前置：Event71 '+(q.event71Current?'進行中':'未設')+' / Item2414 '+(hasItem(2414)?'持有':'缺少')+'</div>');
+    if(e83.active){
+      const chain=[19704,19705,19706,19707,19708,19709,19710,19711,19712,19713,19714,19716,19717,19718].filter(id=>hasItem(id));
+      lines.push('<div class="quest-line done">Event 83：進行中'+(chain.length?' · 持有 '+chain.join(' / '):'')+'</div>');
+    }else if(e83.complete){
+      lines.push('<div class="quest-line done">Event 83：已完成，席格已交出任務版拉斯基。</div>');
+    }
   }else{
-    lines.push('<div class="quest-line">Event 82：園長沙利斯要求尋回雷爾胖、波波頓、任務版拉斯基。</div>');
+    lines.push('<div class="quest-line">Event 82：園長要求尋回雷爾胖、波波頓、任務版拉斯基。</div>');
   }
   $('#zooQuestStatus').innerHTML=lines.join('');
+
   const actions=[];
   if(q.event81Complete&&!e82.active&&!e82.complete)actions.push('<button data-zoo-action="accept82" class="wide">向園長接 Event 82</button>');
   if(e82.active&&!e82.complete){
@@ -473,10 +524,40 @@ function renderZooQuest(){
     actions.push('<button data-zoo-action="feed19723">飼料桶拿 19723</button>');
     actions.push('<button data-zoo-action="goto-raelpang">前往雷爾胖任務區</button>');
     actions.push('<button data-zoo-action="goto-popodon">前往波波頓任務區</button>');
-    if(has905&&!e82.raelpangReported)actions.push('<button data-zoo-action="report-raelpang">向布伊太郎回報雷爾胖</button>');
-    if(has786&&!e82.popodonReported)actions.push('<button data-zoo-action="report-popodon">向飼育員確認波波頓</button>');
+    if(has905&&!e82.raelpangReported)actions.push('<button data-zoo-action="report-raelpang">回報雷爾胖</button>');
+    if(has786&&!e82.popodonReported)actions.push('<button data-zoo-action="report-popodon">確認波波頓</button>');
+
+    if(!q.event71Current||!hasItem(2414)){
+      actions.push('<button data-zoo-action="dev71" class="wide">開發前置：Event71 進行中＋Item2414</button>');
+    }else if(!e83.active&&!e83.complete&&!has854){
+      actions.push('<button data-zoo-action="start83" class="wide">向里拉拉開始 Event 83</button>');
+    }
+
+    if(e83.active){
+      if(!hasItem(19701))actions.push('<button data-zoo-action="get-shovel">向園丁借 19701 鏟子</button>');
+      if(hasItem(19701)&&![19702,19703,19704,19705,19706,19707,19708,19709,19710,19711,19712,19713,19714,19715].some(hasItem)){
+        actions.push('<button data-zoo-action="pull-white">挖白蘿蔔（19703 約10%）</button>');
+        actions.push('<button data-zoo-action="pull-red">挖紅蘿蔔（支線採集）</button>');
+      }
+      if(hasItem(19702)||hasItem(12090)||hasItem(12091)||hasItem(12092))actions.push('<button data-zoo-action="discard-bad">帶給里拉拉踩爛次等蘿蔔</button>');
+      if(!hasItem(12093)&&!hasItem(19704)&&!hasItem(19705)&&!hasItem(19706)&&!hasItem(19707)&&!hasItem(19708)&&!hasItem(19709)&&!hasItem(19710)&&!hasItem(19711)&&!hasItem(19712)&&!hasItem(19713)&&!hasItem(19714)){
+        actions.push('<button data-zoo-action="buy12093">柯奧特產商買 12093（25 石）</button>');
+      }
+      if(hasItem(19703)&&hasItem(12093))actions.push('<button data-zoo-action="exchange19704">園丁交換最上等白蘿蔔 19704</button>');
+      if([19704,19705,19706,19707,19708,19709,19710].some(hasItem))actions.push('<button data-zoo-action="lala-next">跟里拉拉推進下一段線索</button>');
+      if(hasItem(19711)&&!hasItem(19716))actions.push('<button data-zoo-action="goto-collar">去打格爾希洛B（19716 5%）</button>');
+      if(hasItem(19711)&&hasItem(19716))actions.push('<button data-zoo-action="exchange19712">把項圈交給里拉拉 → 19712</button>');
+      if(hasItem(19712))actions.push('<button data-zoo-action="next19713">里拉拉指向大雕像 → 19713</button>');
+      if(hasItem(19713)&&!hasItem(19717))actions.push('<button data-zoo-action="goto-clothes">去打不良少年C（19717 5%）</button>');
+      if(hasItem(19713)&&hasItem(19717))actions.push('<button data-zoo-action="exchange19714">把怪衣交給里拉拉 → 19714</button>');
+      if(hasItem(19714)&&!hasItem(19718))actions.push('<button data-zoo-action="goto-flag">進地下洞窟找黑旗（10%）</button>');
+      if(hasItem(19714)&&hasItem(19718))actions.push('<button data-zoo-action="goto-sig" class="wide">帶黑旗挑戰席格</button>');
+    }
+
+    if(e83.complete&&has854&&hasItem(19714)&&!hasItem(19715))actions.push('<button data-zoo-action="after83">帶拉斯基回里拉拉 → 19715</button>');
     if(has905&&has786&&has854)actions.push('<button data-zoo-action="finish82" class="wide">向園長交回三隻動物</button>');
   }
+  if(e82.complete&&e83.complete&&hasItem(19715)&&!hasItem(19719))actions.push('<button data-zoo-action="reward19719" class="wide">向里拉拉領 Event83 後續謝禮 19719</button>');
   $('#zooQuestActions').innerHTML=actions.join('');
 }
 function render(){
@@ -527,7 +608,7 @@ function renderEnemy(){
   const v=enemy.entry.variant;
   const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
   box.className='enemy';
-  box.innerHTML='<div class="enemy-name">Lv1 '+escapeHtml(enemy.name)+'</div>'+
+  box.innerHTML='<div class="enemy-name">Lv'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
     '<div class="enemy-meta"><span class="pill">TempNo '+v.tempNo+'</span><span class="pill">EnemyID '+(v.enemyIds||[]).join(', ')+'</span><span class="pill">E_T_GET '+n(v.captureBase)+'</span></div>'+
     '<div class="enemy-hp">HP '+enemy.hp+' / '+enemy.maxHp+'</div>'+
     '<div class="progress"><i style="width:'+hpPct+'%"></i></div>';
@@ -648,7 +729,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.6 載入完成：伊甸動物園 Event 82 已接入；服務端資料以 setup.cf 指定的 enemy1/group1 為準。','good');
+    addLog('V0.7 載入完成：Event83 核心流程已接入，現行 enemy1/group1 掉落規則生效。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -656,36 +737,89 @@ async function boot(){
   }
 }
 function handleZooAction(action){
-  const q=state.quest,e82=q.event82;
+  const q=state.quest,e82=q.event82,e83=q.event83;
   if(action==='accept82'){
     if(!q.event81Complete)return;
     e82.active=true;addLog('已向園長接取 Event 82：尋回雷爾胖、波波頓與拉斯基。','good');
   }
-  if(action==='feed19733'){
-    giveItem(19733,1);addLog('布伊太郎交給你雷爾胖專用飼料 19733。','pet');
-  }
-  if(action==='feed19723'){
-    giveItem(19723,1);addLog('從飼料桶取得肉食性飼料二號 19723。','pet');
-  }
-  if(action==='goto-raelpang'){
-    state.mapId='zoo-raelpang';enemy=null;addLog('前往伊甸園雷爾胖任務區。');
-  }
-  if(action==='goto-popodon'){
-    state.mapId='zoo-popodon';enemy=null;addLog('前往伊甸園波波頓任務區。');
-  }
+  if(action==='feed19733'){giveItem(19733,1);addLog('布伊太郎交給你雷爾胖專用飼料 19733。','pet');}
+  if(action==='feed19723'){giveItem(19723,1);addLog('從飼料桶取得肉食性飼料二號 19723。','pet');}
+  if(action==='goto-raelpang'){state.mapId='zoo-raelpang';enemy=null;addLog('前往伊甸園雷爾胖任務區。');}
+  if(action==='goto-popodon'){state.mapId='zoo-popodon';enemy=null;addLog('前往伊甸園波波頓任務區。');}
   if(action==='report-raelpang'&&hasPetTempNo(905)){
-    e82.raelpangReported=true;
-    if(hasItem(19733))consumeItem(19733,1);
+    e82.raelpangReported=true;if(hasItem(19733))consumeItem(19733,1);
     addLog('布伊太郎確認你帶回雷爾胖，並收回專用飼料。','good');
   }
   if(action==='report-popodon'&&hasPetTempNo(786)){
     e82.popodonReported=true;addLog('飼育員確認這是 Lv1 波波頓。','good');
   }
+
+  if(action==='dev71'){
+    q.event71Current=true;
+    if(!hasItem(2414))giveItem(2414,1);
+    addLog('開發前置：Event71 標記為進行中，加入 Item 2414。此步不是正式 Event71 實裝。','pet');
+  }
+  if(action==='start83'&&q.event71Current&&hasItem(2414)&&e82.active&&!e83.complete){
+    e83.active=true;addLog('已向里拉拉開始 Event 83：尋回拉斯基。','good');
+  }
+  if(action==='get-shovel'&&e83.active&&!hasItem(19701)){
+    giveItem(19701,1);addLog('園丁借給你鏟子 19701。','pet');
+  }
+  if(action==='pull-white'&&e83.active&&hasItem(19701)){
+    if([19702,19703,19704,19705,19706,19707,19708,19709,19710,19711,19712,19713,19714,19715].some(hasItem)){
+      addLog('身上已有白蘿蔔／線索道具，不能再挖。','bad');
+    }else{
+      const id=Math.random()<0.1?19703:19702;giveItem(id,1);
+      addLog('挖到 '+(id===19703?'上等白蘿蔔 19703':'普通白蘿蔔 19702')+'。','pet');
+    }
+  }
+  if(action==='pull-red'&&e83.active&&hasItem(19701)){
+    if([12090,12091,12092,12093].some(hasItem)){addLog('身上已有紅蘿蔔，先處理掉再挖。','bad');}
+    else{
+      const r=Math.floor(Math.random()*9),id=r<5?12090:(r<8?12091:12092);giveItem(id,1);
+      addLog('挖到任務紅蘿蔔 Item '+id+'。','pet');
+    }
+  }
+  if(action==='discard-bad'){
+    for(const id of [19702,12090,12091,12092])while(hasItem(id))consumeItem(id,1);
+    addLog('里拉拉把次等蘿蔔全踩爛了。','pet');
+  }
+  if(action==='buy12093'&&!hasItem(12093)){
+    if(state.gold<25)addLog('石幣不足 25。','bad');
+    else{state.gold-=25;giveItem(12093,1);addLog('在柯奧特產品商店購買 12093 柯奧產紅蘿蔔，花費 25 石幣。價格採歷史價目交叉資料。','pet');}
+  }
+  if(action==='exchange19704'&&hasItem(19703)&&hasItem(12093)){
+    consumeItem(19703,1);consumeItem(12093,1);giveItem(19704,1);
+    addLog('園丁收下 12093＋19703，交給你最上等白蘿蔔 19704。','good');
+  }
+  if(action==='lala-next'){
+    const cur=[19704,19705,19706,19707,19708,19709,19710].find(hasItem);
+    if(cur){clearEvent83Chain();giveItem(cur+1,1);addLog('里拉拉線索推進：'+cur+' → '+(cur+1)+'。','good');}
+  }
+  if(action==='goto-collar'&&hasItem(19711)){state.mapId='zoo-collar';enemy=null;addLog('前往格爾希洛項圈區。');}
+  if(action==='exchange19712'&&hasItem(19711)&&hasItem(19716)){
+    clearEvent83Chain([19716]);giveItem(19712,1);addLog('里拉拉收下項圈，線索變為 19712。','good');
+  }
+  if(action==='next19713'&&hasItem(19712)){
+    clearEvent83Chain();giveItem(19713,1);addLog('里拉拉指示前往大雕像，取得線索 19713。','good');
+  }
+  if(action==='goto-clothes'&&hasItem(19713)){state.mapId='zoo-black-clothes';enemy=null;addLog('前往不良少年怪衣區。');}
+  if(action==='exchange19714'&&hasItem(19713)&&hasItem(19717)){
+    clearEvent83Chain([19717]);giveItem(19714,1);addLog('里拉拉收下怪衣，取得地下據點線索 19714。','good');
+  }
+  if(action==='goto-flag'&&hasItem(19714)){state.mapId='zoo-underground-flag';enemy=null;addLog('進入地下洞窟 Group 962，尋找黑旗 19718。');}
+  if(action==='goto-sig'&&hasItem(19714)&&hasItem(19718)){state.mapId='zoo-sig';enemy=null;addLog('前往 Floor 60044 挑戰席格。','good');}
+  if(action==='after83'&&e83.complete&&hasPetTempNo(854)&&hasItem(19714)){
+    clearEvent83Chain();giveItem(19715,1);addLog('帶任務版拉斯基回見里拉拉，19714 → 19715。','good');
+  }
+
   if(action==='finish82'&&hasPetTempNo(905)&&hasPetTempNo(786)&&hasPetTempNo(854)){
     removeOnePetTempNo(905);removeOnePetTempNo(786);removeOnePetTempNo(854);
-    const reward=addQuestRewardPet();
-    e82.active=false;e82.complete=true;
+    const reward=addQuestRewardPet();e82.active=false;e82.complete=true;
     addLog('Event 82 完成：三隻動物已交回，獲得 '+reward.name+'（TempNo 730）。','good');
+  }
+  if(action==='reward19719'&&e82.complete&&e83.complete&&hasItem(19715)&&!hasItem(19719)){
+    clearEvent83Chain();giveItem(19719,1);addLog('里拉拉交給你後續謝禮 19719。','good');
   }
   save();render();
 }
@@ -715,11 +849,8 @@ $('#zooQuestActions').addEventListener('click',e=>{
   handleZooAction(b.dataset.zooAction);
 });
 $('#testSupplyBtn').addEventListener('click',()=>{
-  for(const item of conditionItems){
-    const key=String(item.id);
-    state.inventory[key]=n(state.inventory[key])+1;
-  }
-  addLog('開發測試補給：目前條件／任務道具各加入 1 個。','pet');
+  for(const key of sourceCatalog.keys())giveItem(key,1);
+  addLog('開發測試補給：只加入原 9 種特殊出現／捕獲條件道具，不再灌入 Event83 任務鏈。','pet');
   save();render();
 });
 $('#petBox').addEventListener('click',e=>{
