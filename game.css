@@ -51,3 +51,5 @@ select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10p
 .inventory-source.verified{color:#b6d58d}
 .item-tag.verified{border-color:#5f754a;color:#b6d58d}
 .item-tag.unresolved{border-color:#5a5040;color:#cbbd9a}
+
+.item-tag.corroborated{border-color:#6b6350;color:#d3c58f}
