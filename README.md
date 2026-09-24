@@ -432,3 +432,40 @@ Event83 已接入可玩核心：
   - 必須 10 隻全滅後才會觸發 `event83-complete` 並取得任務版拉斯基
 - 一般 Lv1 野怪仍不使用 `formation`，所以既有抓寵流程與捕獲率不受影響
 - Event81／69／83 三類多人任務現在都共用同一套 formation 戰鬥核心
+
+## V0.12 Event82／83 原始 ENCOUNT／GROUP 動態群組
+
+- 這一版開始區分兩種多人戰：
+  - `formation`：Boss／固定編成，成員與數量固定
+  - `dynamicFormation`：一般 ENCOUNT／GROUP，先決定本戰人數，再按 Group 權重逐隻生成
+- 動態群組生成直接對齊 `gmsv/src/char/enemy.c::ENEMY_getEnemy()` 的核心規則：
+  - 先由 encounter 的 `enemymaxnum` 與各 Enemy 的 `CREATEMAXNUM` 決定本戰最大可生成數
+  - 實際本戰人數為 `RAND(1, enemyentrymax)`
+  - 每一格再按 `group1.txt` 的 `CREATEPROB` 權重抽 EnemyID
+  - 若某 Enemy 已達自己的 `CREATEMAXNUM`，該次抽選作廢並重抽
+- Event82 雷爾胖：Encounter 778 / Group 927
+  - 布伊胖 EnemyID 1741：權重 99、CREATEMAX 5
+  - 雷爾胖 EnemyID 1798：權重 1、CREATEMAX 5
+  - 本戰人數 1～5
+  - 至少出現一隻雷爾胖的理論戰鬥機率約 **2.960298802%**，與先前重建值一致
+- Event82 波波頓：Encounter 780 / Group 942
+  - EnemyID 1762 唯一成員
+  - encounter enemymax=10，但 EnemyID1762 的 CREATEMAX=5，所以實際每戰 1～5 隻
+- Event83 項圈：Encounter 809 / Group 966
+  - EnemyID1792 每戰 1～10 隻
+  - 每一隻各自以 5% 判定掉落 19716
+- Event83 怪衣：Encounter 808 / Group 965
+  - EnemyID1793 每戰 1～5 隻
+  - 每一隻各自以 5% 判定掉落 19717
+- Event83 地下 Encounter 806：
+  - Group962／963／964 的 encounter 權重都是 10，因此符合條件時先以相同權重選組
+  - Group962：不良少年A EnemyID1788 權重10、不良少年B EnemyID1789 權重20；兩者各 CREATEMAX 5
+  - Group962 在持有 19718 後依 `NOTAPPEARBYITEM=19718` 停止出現
+  - Group963：凶悍格爾希洛 EnemyID1787，CREATEMAX 5
+  - Group964：不良少年B EnemyID1789，CREATEMAX 5
+- 動態群戰現在支援捕獲：
+  - 只針對目前第一個存活目標判定
+  - 目標可捕獲時，捕獲成功後只移除該成員，其他敵人繼續戰鬥
+  - 固定 Boss formation 仍維持整隊不可捕獲
+- 動態群組的任務掉落改為逐隻判定；若同一戰生成多隻 1792／1793／1788，每一隻都依自己的 5%／5%／10% 機率獨立判定
+- 一般 166 組野外 Lv1 資料尚未全面切到 dynamicFormation；V0.12 先套 Event82／83 已驗證任務區，避免一次改動所有抓寵區
