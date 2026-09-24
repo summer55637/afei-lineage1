@@ -2370,3 +2370,147 @@ V0.43 已依此接入。
 
 後續仍遵守「能完整還原才接入；缺底層系統就先標記依賴，不用猜數值」的原則。
 
+## V0.44 BattleModel 分身攻擊
+
+V0.44 接入共用函式 `PETSKILL_BattleModel`，目前啟用 Enemy AI 有正權重的三筆：
+
+- 590「虎虎生威」：`5|5|石|3|30|攻%15|100871 100872`
+- 655「虎虎生威」：同上
+- 689「Q雷分身術」：`5|5|障|3|30|攻%10|101996`
+
+### option 格式
+
+原 `PETSKILL_BattleModel()` 依序解析：
+
+1. 攻擊 type
+2. 攻擊物件數
+3. 異常狀態
+4. 狀態 turn
+5. 狀態命中基準
+6. 能力修正
+7. 動畫圖號
+
+這三筆的 type 都是 5。
+
+`5 & 0x4 != 0`，因此是**物理攻擊**；同時 `5 & 0x1 != 0`，所以攻擊物件比目標少時仍要覆蓋全部目標。
+
+目前三筆 objectNum 都是 5。
+
+### 5 發目標分配
+
+原 `BATTLE_BattleModel()` 先取得敵方整側 Entry 列表。
+
+當 objectNum >= 存活目標數時：
+
+1. 每個目標先各分配一發
+2. 剩餘攻擊物件再從原始目標列表隨機挑選
+
+目前 web 玩家側是 Player + Active Pet。
+
+兩者都存活時：
+
+- 第 1 發 → Player
+- 第 2 發 → Active Pet
+- 第 3～5 發 → 在最初兩個目標中隨機
+
+若中途目標已死亡，原 `BATTLE_BattleModel_ATTACK()` 的 TargetCheck 會直接略過該次攻擊，不重新抽另一個目標；web 版也保留此行為。
+
+### 每發都是獨立物理 AttackSeq
+
+每一個 AttackObject 都會獨立：
+
+- 閃避
+- 會心
+- 物理傷害
+- GuardAdjust
+- 傷害後解除睡眠
+- 狀態命中檢定
+
+但整個 `BATTLE_COM_S_BATTLE_MODEL` 是獨立 command，結束後直接 break，因此**不進普通 BATTLE_Counter loop**。
+
+### 攻擊能力修正
+
+590／655：
+
+`攻%15`
+
+所以本回合 BattleModel 攻擊力為基礎攻擊 +15%。
+
+689：
+
+`攻%10`
+
+所以本回合攻擊 +10%。
+
+### BattleModel 狀態命中公式
+
+原碼呼叫：
+
+`BATTLE_StatusAttackCheck(attacker,target,status,effectHit,30,1.0,...)`
+
+與一般 StatusChange 的參數不同。
+
+V0.44 因此把 status chance helper 擴充成可傳：
+
+- `perOffset = effectHit` → 目前三筆都是 30
+- `range = 30`
+- `bai = 1.0`
+
+並保留：
+
+- 目標已有其他異常狀態時不再套
+- 體力占四圍比例造成的抗性項
+- 攻守等級差
+- 上限 80%
+
+每一發傷害 > 0 且目標仍存活時，都各自做一次狀態檢定。
+
+### 石化與魔障
+
+590／655：
+
+- 狀態：石化
+- turn = 3
+- 原命中基準 = 30
+
+689：
+
+- 狀態：魔障
+- turn = 3
+- 原命中基準 = 30
+
+V0.44 新增 `barrier` battle status，與原 `BATTLE_CanMoveCheck()` 一樣視為不能行動。
+
+### BattleModel 的 turn 不可直接用一般 StatusChange
+
+一般狀態攻擊來源會寫：
+
+`StatusTbl[...] = gBattleStausTurn + 1`
+
+但 `BATTLE_BattleModel_ATTACK()` 寫的是：
+
+`StatusTbl[iEffect] = iTurn`
+
+沒有 +1。
+
+因此 V0.44 新增 `battleStatusApplyRaw()`，讓 BattleModel 直接保存原始 turn 值，不套一般 StatusChange 的 +1 轉譯。
+
+原 `BATTLE_StatusSeq()` 會先以舊狀態值決定本回合能否行動，再扣倒數，因此 raw turn=3 仍能正確對應來源的封鎖行動流程。
+
+魔障在來源 `BATTLE_StatusSeq()` 看似會把倒數加回去，是因為同一來源在能力重算路徑另有 `CHAR_WORKBARRIER - 1`；web 沒有兩條重複倒數路徑，所以由 battle status 單一路徑每次扣 1 是等價轉譯。
+
+### 同一個 5-hit 內的 Guard 清除
+
+`BATTLE_BattleModel_ATTACK()` 若成功套用：
+
+- 石化
+- 魔障
+- 麻痺
+- 睡眠
+
+會立即把目標 command 改為 NONE。
+
+因此若 Player 原本本回合選擇 Guard，第一發成功石化／魔障後，後續分身再打 Player 時已不應繼續套 GuardAdjust。
+
+V0.44 第二輪回歸已把這個同回合狀態帶入後續攻擊物件。
+
