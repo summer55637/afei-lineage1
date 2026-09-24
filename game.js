@@ -119,7 +119,7 @@ function normalizeState(raw){
   if(n(raw?.schemaVersion)<9){
     const hadDownstream=!!(s.quest.event82.active||s.quest.event82.complete||s.quest.event83.active||s.quest.event83.complete);
     if(raw?.quest?.event81Complete===true&&hadDownstream){
-      s.quest.event81={active:false,complete:true,stage:8,deliveredTempNo:null,arrivedEden:false,postReward:false,legacyAccepted:true,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0};
+      s.quest.event81={active:false,complete:true,stage:8,deliveredTempNo:null,arrivedEden:false,postReward:false,legacyAccepted:true,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]};
       s.quest.event81Complete=true;
     }else if(raw?.quest?.event81Complete===true){
       s.quest.event81=Object.assign({},base.quest.event81);
