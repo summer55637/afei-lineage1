@@ -52,9 +52,10 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:13,
-    level:1,exp:0,expNext:2,hp:120,maxHp:120,
-    attack:18,defense:5,dex:30,charm:50,luck:0,skillPoints:0,duelPoint:0,
+    schemaVersion:14,
+    level:1,exp:0,expNext:2,hp:35,maxHp:35,
+    attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
+    playerStats:{vital:5,str:5,tgh:5,dex:5},
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
@@ -157,7 +158,15 @@ function normalizeState(raw){
     s.skillPoints=Math.max(0,Math.floor(n(raw?.skillPoints)));
     s.duelPoint=Math.max(0,Math.floor(n(raw?.duelPoint)));
   }
-  s.schemaVersion=13;
+  if(n(raw?.schemaVersion)<14){
+    const earned=Math.max(0,(Math.max(1,Math.floor(n(s.level)||1))-1)*3);
+    s.skillPoints=Math.max(Math.max(0,Math.floor(n(s.skillPoints))),earned);
+    s.playerStats={vital:5,str:5,tgh:5,dex:5};
+    s.charm=Math.min(100,Math.max(0,n(s.charm))+10);
+  }
+  s.playerStats=Object.assign({vital:5,str:5,tgh:5,dex:5},s.playerStats||{});
+  for(const k of ['vital','str','tgh','dex'])s.playerStats[k]=Math.max(0,Math.floor(n(s.playerStats[k])));
+  s.schemaVersion=14;
   delete s.pets;
   return s;
 }
@@ -418,6 +427,32 @@ function petServerCombat(stats){
     quick:Math.trunc(dex*.01),
     maxHp:Math.trunc((vital*4+str+tgh+dex)*.01)
   };
+}
+function playerComplianceParameter(target=state){
+  if(!target)return null;
+  const p=target.playerStats||{vital:5,str:5,tgh:5,dex:5};
+  const vital=Math.max(0,Math.floor(n(p.vital))),str=Math.max(0,Math.floor(n(p.str)));
+  const tgh=Math.max(0,Math.floor(n(p.tgh))),dex=Math.max(0,Math.floor(n(p.dex)));
+  target.playerStats={vital,str,tgh,dex};
+  target.attack=Math.trunc(str+tgh*.1+vital*.1+dex*.05);
+  target.defense=Math.trunc(tgh+str*.1+vital*.1+dex*.05);
+  target.dex=Math.trunc(dex);
+  target.maxHp=Math.max(1,Math.trunc(vital*4+str+tgh+dex));
+  target.hp=Math.min(Math.max(0,n(target.hp)),target.maxHp);
+  return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp};
+}
+function allocatePlayerStat(key){
+  const labels={vital:'體力 VITAL',str:'腕力 STR',tgh:'耐力 TOUGH',dex:'速度 DEX'};
+  if(!labels[key]||!state)return false;
+  const points=Math.max(0,Math.floor(n(state.skillPoints)));
+  if(points<=0){addLog('目前沒有可分配的能力點。','bad');return false;}
+  state.playerStats=Object.assign({vital:5,str:5,tgh:5,dex:5},state.playerStats||{});
+  state.playerStats[key]=Math.max(0,Math.floor(n(state.playerStats[key])))+1;
+  state.skillPoints=points-1;
+  playerComplianceParameter(state);
+  addLog(labels[key]+' +1；剩餘能力點 '+state.skillPoints+'。','good');
+  save();render();
+  return true;
 }
 function serverPetLevelUp(pet){
   if(pet?.petRank==null)return false;
@@ -1468,6 +1503,12 @@ function render(){
   $('#charm').textContent=state.charm;
   $('#luck').textContent=state.luck;
   $('#skillPoints').textContent=Math.max(0,Math.floor(n(state.skillPoints)));
+  const ps=state.playerStats||{};
+  $('#paramVital').textContent=Math.floor(n(ps.vital));
+  $('#paramStr').textContent=Math.floor(n(ps.str));
+  $('#paramTgh').textContent=Math.floor(n(ps.tgh));
+  $('#paramDex').textContent=Math.floor(n(ps.dex));
+  document.querySelectorAll('#playerParamGrid button[data-player-stat]').forEach(b=>b.disabled=Math.floor(n(state.skillPoints))<=0);
   $('#wins').textContent=state.wins;
   $('#hpBar').style.width=clamp(state.hp/state.maxHp*100,0,100)+'%';
   $('#autoBtn').textContent='自動戰鬥：'+(state.auto?'開':'關');
@@ -1661,10 +1702,11 @@ async function boot(){
     buildConditionItems();
     buildMaps();
     state=loadState();
+    playerComplianceParameter(state);
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.20 載入完成：exp.txt 原升級門檻、CHAR_HandleExp、玩家每級 3 能力點與新捕獲寵物 CHAR_PetLevelUp 原服成長已接入。','good');
+    addLog('V0.21 載入完成：CHAR_SkillUp 四圍配點與 CHAR_complianceParameter 玩家 HP／攻／防／敏已接入；舊存檔未分配升級點已按等級補回。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -1944,6 +1986,10 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;addLog('休息完成，HP 已補滿。','good');save();render();
+});
+$('#playerParamGrid').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-player-stat]');if(!b)return;
+  allocatePlayerStat(b.dataset.playerStat);
 });
 $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;

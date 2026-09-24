@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.20</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.21</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -29,8 +29,8 @@
 
     <section class="status-grid">
       <article class="card stat-card"><small>等級</small><strong id="level">1</strong></article>
-      <article class="card stat-card"><small>經驗</small><strong id="exp">0 / 100</strong></article>
-      <article class="card stat-card"><small>HP</small><strong id="hp">120 / 120</strong></article>
+      <article class="card stat-card"><small>經驗</small><strong id="exp">0 / 2</strong></article>
+      <article class="card stat-card"><small>HP</small><strong id="hp">35 / 35</strong></article>
       <article class="card stat-card"><small>石幣</small><strong id="gold">0</strong></article>
     </section>
 
@@ -70,13 +70,23 @@
             </div>
           </div>
           <div class="stats">
-            <div><span>攻擊</span><b id="attack">18</b></div>
-            <div><span>防禦</span><b id="defense">5</b></div>
-            <div><span>敏捷</span><b id="dex">30</b></div>
-            <div><span>魅力</span><b id="charm">50</b></div>
+            <div><span>攻擊</span><b id="attack">6</b></div>
+            <div><span>防禦</span><b id="defense">6</b></div>
+            <div><span>敏捷</span><b id="dex">5</b></div>
+            <div><span>魅力</span><b id="charm">60</b></div>
             <div><span>運</span><b id="luck">0</b></div>
             <div><span>能力點</span><b id="skillPoints">0</b></div>
             <div><span>勝場</span><b id="wins">0</b></div>
+          </div>
+          <div class="player-param-panel">
+            <div class="player-param-head"><b>原服能力配點</b><span>1 點 = CHAR 參數 +100</span></div>
+            <div id="playerParamGrid" class="player-param-grid">
+              <button data-player-stat="vital"><span>體力 VITAL</span><b id="paramVital">5</b><small>+1</small></button>
+              <button data-player-stat="str"><span>腕力 STR</span><b id="paramStr">5</b><small>+1</small></button>
+              <button data-player-stat="tgh"><span>耐力 TOUGH</span><b id="paramTgh">5</b><small>+1</small></button>
+              <button data-player-stat="dex"><span>速度 DEX</span><b id="paramDex">5</b><small>+1</small></button>
+            </div>
+            <div class="muted player-param-note">配點後立即重算 HP／攻／防／敏；提高 MaxHP 不會免費補血。</div>
           </div>
           <div class="progress"><i id="hpBar"></i></div>
           <div class="button-row">
@@ -157,8 +167,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.20：</b>
-      Encounter runtime 升級為 v6：接入 exp.txt／CHAR_HandleExp 升級門檻；玩家升級改為每級 +3 能力點、一次戰鬥升級魅力 +2；新捕獲一般野寵開始套用原 CHAR_PetLevelUp 四圍成長。
+      <b>V0.21：</b>
+      Encounter runtime 升級為 v7：玩家能力點已接入 CHAR_SkillUp；VITAL／STR／TOUGH／DEX 每次 +1 後立即依 CHAR_complianceParameter 重算 HP／攻／防／敏，舊存檔按等級補回尚未能使用的升級點。
     </article>
   </main>
 
