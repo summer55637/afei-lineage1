@@ -1513,7 +1513,10 @@ const ENEMY_SOURCE_SKILL_META={
   // 但 BECOMEFOX command 仍走完整普通物理攻擊與 Counter 鏈。
   625:{n:'媚惑術',d:'來源玩家寵物 PETFLG=0；Enemy 使用時等價普通物理攻擊',f:'PETSKILL_BecomeFox',o:'',field:1,target:1},
   // V0.55：_BATTLE_ABDUCTII 旅程伙伴3；以玩家寵物 FIXAI 與 option 80 判定。
-  608:{n:'E旅程伙伴3',d:'目標寵物 FIXAI 低於 80 時必定帶走',f:'PETSKILL_Abduct',o:'80',field:1,target:7}
+  608:{n:'E旅程伙伴3',d:'目標寵物 FIXAI 低於 80 時必定帶走',f:'PETSKILL_Abduct',o:'80',field:1,target:7},
+  // V0.56：光鏡吸收技；目前玩家側沒有 DamageReact work-int，精準走 ReactType=0 分支。
+  610:{n:'破鏡重圓',d:'嘗試吸收對方 REFLEC；無鏡時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'REFLEC',field:1,target:7},
+  611:{n:'穿透術',d:'嘗試吸收對方 VANISH；無守時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'VANISH',field:1,target:7}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -1681,6 +1684,12 @@ function enemyPrepareRoundAction(unit,action){
     // battle.c 把 BATTLE_COM_S_BECOMEFOX 放在一般物理攻擊群組，
     // 並在 BATTLE_Attack 前改回 BATTLE_COM_ATTACK，因此可參與完整 Counter 鏈。
     unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_Lighttakeed'){
+    // 原 PETSKILL_Lighttakeed：攻=FIXSTR*0.7、防=FIXTOUGH*0.5；QUICK 修正已註解。
+    unit.roundAttack=Math.trunc(n(unit.attack)*.7);
+    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.5);
+    // battle.c 走 BATTLE_S_AttackDamage 特殊 case，沒有一般攻擊分支的 Counter loop。
+    unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
@@ -3188,6 +3197,27 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
 }
+function performEnemyLighttakeed(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  const label=meta?.n||'採光術';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+
+  // 目前 Player + Active Pet 沒有 WORKDAMAGEVANISH / ABSROB / REFLEC。
+  // 因此原 BATTLE_GetDamageReact() 必定回 0，BATTLE_S_AttackDamage 照普通物理傷害結算，
+  // LIGHTTAKE 的狀態搬移 switch 也找不到可複製的 Typenum。
+  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  enemyApplySkillHit(unit,chosen,r,label);
+  addLog(unit.name+' 的 '+label+' 沒有找到可吸收的 '+String(meta?.o||'DamageReact')+' 狀態；保留本次物理傷害。');
+
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,
+    requestedReact:String(meta?.o||''),reactType:0,absorbed:false
+  };
+}
 function performEnemyBecomeFox(actor,unit,options,meta){
   // 原 BECOMEFOX 先做一發普通 BATTLE_Attack；變狐判定在攻擊／Counter 鏈之後。
   // 附加變狐要求：target != PLAYER 且 target CHAR_WORK_PETFLG != 0。
@@ -3744,6 +3774,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sacrifice')return performEnemySacrifice(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTimid')return performEnemyBattleTimid(actor,unit,options,meta);
@@ -4682,7 +4713,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.55 載入完成：接入 608 E旅程伙伴3；由原 enemybase1 TempNo→MODAI 重算寵物 FIXAI，FIXAI <80 時 per=200 必定帶走，否則 per=0；施術 Enemy 無論成敗都離場。','good');
+    addLog('V0.56 載入完成：接入 610 破鏡重圓／611 穿透術的現況來源分支；玩家側 DamageReact=0，因此以攻70%／防50%做特殊物理攻擊，不假造 REFLEC／VANISH 狀態。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
