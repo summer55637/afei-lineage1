@@ -1364,18 +1364,40 @@ function battleGuardAdjust(damage){
 }
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
-  const duck=guarding?0:battleDuckChance(attacker,defender);
+  const disableDodge=guarding||!!options.disableDodge;
+  let duck=disableDodge?0:battleDuckChance(attacker,defender);
+  if(!disableDodge&&n(options.duckBonusPercent)!==0){
+    duck=clamp(duck+n(options.duckBonusPercent)*100,1,7500);
+  }
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
-  if(!guarding&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:false,duckRaw:duck};
+  if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
+
   const criticalRaw=battleCriticalChance(attacker,defender);
   const critical=cRand(1,10000)<criticalRaw;
   let damage=battleDamageCore(attacker,defender);
   if(critical){
     damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
   }
+
+  // AttackSeq：先 GuardAdjust，再把 <1 的傷害 RAND(0,1)，最後才乘 gBattleDamageModyfy。
   if(guarding)damage=battleGuardAdjust(damage);
   if(damage<1)damage=cRand(0,1);
-  return {damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,guarded:guarding,duckRaw:duck,criticalRaw};
+
+  const multiplier=Number.isFinite(Number(options.damageMultiplier))?Number(options.damageMultiplier):1;
+  damage=Math.trunc(damage*multiplier);
+
+  // BATTLE_Attack() 在 AttackSeq 回來後才套 gDamageDiv，正傷害最低維持 1。
+  const divisor=Number(options.damageDivisor);
+  if(Number.isFinite(divisor)&&divisor>0&&damage>0){
+    damage=Math.trunc(damage/divisor);
+    if(damage<=0)damage=1;
+  }
+
+  return {
+    damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,
+    guarded:guarding,duckRaw:duck,criticalRaw,
+    damageMultiplier:multiplier,damageDivisor:Number.isFinite(divisor)&&divisor>0?divisor:1
+  };
 }
 function battleCounterChance(attacker,defender){
   let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.08;
@@ -1524,18 +1546,19 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 function enemyAttackResult(unit=targetEnemyUnit(),options={}){
   return resolveNormalAttack(enemyBattleView(unit),playerBattleView(),options);
 }
-function enemyAttackPetResult(unit,pet){
-  return resolveNormalAttack(enemyBattleView(unit),petBattleView(pet));
+function enemyAttackPetResult(unit,pet,options={}){
+  return resolveNormalAttack(enemyBattleView(unit),petBattleView(pet),options);
 }
 function performEnemyPrimaryAttack(actor,unit,options={}){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
   const playerGuarding=!!options.playerGuarding;
   const allowPlayerCounter=!!options.allowPlayerCounter;
+  const attackOptions=Object.assign({},options.attackOptions||{});
 
   if(chosen.kind==='pet'&&chosen.pet&&petIsAlive(chosen.pet)){
     const pet=chosen.pet;
-    const r=enemyAttackPetResult(unit,pet);
+    const r=enemyAttackPetResult(unit,pet,attackOptions);
     if(r.dodged){
       addLog(pet.name+' 閃避了 '+unit.name+' 的攻擊。','pet');
     }else if(r.miss){
@@ -1550,7 +1573,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     return {target:'pet',pet,r};
   }
 
-  const r=enemyAttackResult(unit,{guarding:playerGuarding});
+  const r=enemyAttackResult(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
   if(playerGuarding){
     if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
     else{
@@ -1567,6 +1590,110 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   }
   if(allowPlayerCounter&&state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
   return {target:'player',r};
+}
+function enemySkillNumber(option,pattern,fallback=0){
+  const m=String(option||'').match(pattern);
+  const v=m?Number(m[1]):NaN;
+  return Number.isFinite(v)?v:fallback;
+}
+function enemyApplySkillHit(unit,chosen,r,label){
+  if(chosen.kind==='pet'&&chosen.pet){
+    const pet=chosen.pet;
+    if(r.dodged){
+      addLog(pet.name+' 閃避了 '+unit.name+' 的'+label+'。','pet');
+    }else if(r.miss){
+      addLog(unit.name+' 的'+label+'沒有造成傷害。');
+    }else{
+      const before=n(pet.hp);
+      pet.hp=Math.max(0,before-r.damage);
+      addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'命中 '+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
+      if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
+    }
+    return;
+  }
+
+  if(r.dodged){
+    addLog('你閃避了 '+unit.name+' 的'+label+'。','good');
+  }else if(r.miss){
+    addLog(unit.name+' 的'+label+'沒有造成傷害。');
+  }else{
+    state.hp=Math.max(0,state.hp-r.damage);
+    addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'造成 '+r.damage+' 傷害。',state.hp<=0?'bad':'');
+  }
+}
+function performEnemyGuardBreak(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId};
+  const label=meta?.n||'破除防禦';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding;
+
+  // 原 BATTLE_S_GBreak：目標不是 GUARD 時直接 damage=0；只有 GUARD 才真正攻擊，
+  // 且 opt==GBREAK 會跳過 BATTLE_GuardAdjust。
+  if(!guarding){
+    addLog(unit.name+' 使用 '+label+'，但目標沒有防禦，技能沒有造成傷害。');
+    return {kind:'skill',skillId:actor.skillId,guardBreakMiss:true};
+  }
+
+  const r=resolveNormalAttack(enemyBattleView(unit),playerBattleView(),{disableDodge:true});
+  enemyApplySkillHit(unit,chosen,r,label);
+  // BATTLE_S_GBreak 對 GUARD 最後會 iRet=FALSE，不接反擊鏈。
+  return {kind:'skill',skillId:actor.skillId,target:'player',r};
+}
+function performEnemyMighty(actor,unit,options,meta){
+  const multiplier=Math.max(0,enemySkillNumber(meta?.o,/倍\s*([0-9.]+)/,2));
+  const duckBonus=Math.max(0,enemySkillNumber(meta?.o,/回避\s*([0-9.]+)/,0));
+  addLog(unit.name+' 使用 '+(meta?.n||'一擊必殺')+'（傷害 ×'+multiplier+'／目標回避 +'+duckBonus+'）。');
+  return Object.assign(
+    {kind:'skill',skillId:actor.skillId},
+    performEnemyPrimaryAttack(actor,unit,Object.assign({},options,{
+      attackOptions:{damageMultiplier:multiplier,duckBonusPercent:duckBonus}
+    }))||{}
+  );
+}
+function performEnemyContinuation(actor,unit,options,meta){
+  const count=clamp(Math.trunc(enemySkillNumber(meta?.o,/^\s*(\d+)/,1)),1,10);
+  const label=meta?.n||'連續攻擊';
+  addLog(unit.name+' 使用 '+label+'（'+count+' 段）。');
+
+  let chosen=enemyActorTarget(actor,unit);
+  let lastResult=null,lastChosen=null,hits=0;
+  for(let i=0;i<count;i++){
+    if(!enemy||unit.hp<=0||state.hp<=0)break;
+
+    if(!chosen
+      ||(chosen.kind==='pet'&&(!chosen.pet||!petIsAlive(chosen.pet)))
+      ||(chosen.kind==='player'&&state.hp<=0)){
+      chosen=enemyActorTarget(actor,unit);
+    }
+    if(!chosen)break;
+
+    let r;
+    if(chosen.kind==='pet'&&chosen.pet){
+      r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count});
+    }else{
+      r=enemyAttackResult(unit,{guarding:!!options.playerGuarding,damageDivisor:count});
+    }
+
+    hits++;
+    lastResult=r;
+    lastChosen=chosen;
+    enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+
+    if(state.hp<=0)break;
+    if(chosen.kind==='pet'&&chosen.pet&&!petIsAlive(chosen.pet)){
+      chosen=null;
+    }
+  }
+
+  // 原 battle.c：N 段全部處理完後，才拿最後一次 BATTLE_Attack 的 ContFlg 進一次反擊鏈。
+  if(lastResult&&unit.hp>0&&enemy){
+    if(lastChosen?.kind==='pet'&&lastChosen.pet&&petIsAlive(lastChosen.pet)){
+      resolvePetEnemyCounterChain('enemy',lastChosen.pet,unit,lastResult);
+    }else if(lastChosen?.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,hits,lastResult};
 }
 function performEnemyAction(actor,unit,options={}){
   const kind=actor?.enemyAction||'attack';
@@ -1585,6 +1712,10 @@ function performEnemyAction(actor,unit,options={}){
   }
   if(kind==='skill'){
     const meta=enemyPetSkillMeta(actor.skillId);
+    if(meta?.f==='PETSKILL_GuardBreak')return performEnemyGuardBreak(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_ContinuationAttack')return performEnemyContinuation(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Mighty')return performEnemyMighty(actor,unit,options,meta);
+
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
     return {kind:'skill',unsupported:true,skillId:actor.skillId};
@@ -2394,7 +2525,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.29 載入完成：Enemy 已依 enemy1 的 at/gu/es/wa 權重先選行動；Guard 全回合生效，Escape 接入原 BATTLE_EscapeCheck，wa 保留正確技能槽且不再假裝成普通攻擊。','good');
+    addLog('V0.30 載入完成：Enemy wa 已正式接入破除防禦、連續攻擊與一擊必殺；連擊依原 gDamageDiv 分段，整套打完後才判定一次反擊。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
