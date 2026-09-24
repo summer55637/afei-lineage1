@@ -1279,13 +1279,31 @@ function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
 
-  // 原 BATTLE_StatusSeq 尾端會逐回合遞減 CHAR_MYSKILLDUCK；
-  // 技能施放當回合是在 StatusSeq 之後才寫入，因此從下一次自己的行動開始倒數。
-  if(desc.kind==='enemy'&&n(desc.unit?.skillDuckTurns)>0){
-    desc.unit.skillDuckTurns=Math.max(0,Math.trunc(n(desc.unit.skillDuckTurns))-1);
-    if(desc.unit.skillDuckTurns<=0){
-      desc.unit.skillDuckPower=0;
-      addLog(desc.unit.name+' 的閃避術效果結束。');
+  if(desc.kind==='enemy'){
+    // 原 BATTLE_StatusSeq 尾端：SetDuck / SetMagicPet 各自按「輪到該角色行動」扣 1。
+    if(n(desc.unit?.skillDuckTurns)>0){
+      desc.unit.skillDuckTurns=Math.max(0,Math.trunc(n(desc.unit.skillDuckTurns))-1);
+      if(desc.unit.skillDuckTurns<=0){
+        desc.unit.skillDuckPower=0;
+        addLog(desc.unit.name+' 的閃避術效果結束。');
+      }
+    }
+    if(n(desc.unit?.mySkillTghTurns)>0){
+      desc.unit.mySkillTghTurns=Math.max(0,Math.trunc(n(desc.unit.mySkillTghTurns))-1);
+      if(desc.unit.mySkillTghTurns<=0){
+        desc.unit.mySkillTghPower=0;
+        addLog(desc.unit.name+' 的大地鎧甲效果結束。');
+      }
+    }
+
+    // 原主迴圈在 BATTLE_StatusSeq 後緊接 BATTLE_MagicStatusSeq；
+    // 鐵壁 MagicTbl 倒數同樣在角色自己的行動開始前遞減。
+    if(n(desc.unit?.superWallTurns)>0){
+      desc.unit.superWallTurns=Math.max(0,Math.trunc(n(desc.unit.superWallTurns))-1);
+      if(desc.unit.superWallTurns<=0){
+        desc.unit.superWallPower=0;
+        addLog(desc.unit.name+' 的鐵壁效果結束。');
+      }
     }
   }
 
@@ -1396,6 +1414,7 @@ function enemyBattleView(unit){
     drunk,
     canMove:battleStatusCanMove(desc),
     skillDuckPower:n(unit?.skillDuckTurns)>0?n(unit?.skillDuckPower):0,
+    superWallPower:n(unit?.superWallTurns)>0?n(unit?.superWallPower):0,
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
     level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
@@ -1477,7 +1496,11 @@ const ENEMY_SOURCE_SKILL_META={
   595:{n:'閃避術',d:'三回合內啟用獨立回避判定',f:'PETSKILL_SetDuck',o:'3|60',field:1,target:0},
   // V0.48：支援技與暗月狂狼變體；只接原 C 可完整還原者。
   592:{n:'淨化',d:'解除我方全體異常狀態',f:'PETSKILL_Refresh',o:'全',field:1,target:2},
-  659:{n:'T浴血狂襲',d:'攻敏上升、會心提升並將傷害轉為 HP',f:'PETSKILL_DamageToHp2',o:'100',field:1,target:6}
+  659:{n:'T浴血狂襲',d:'攻敏上升、會心提升並將傷害轉為 HP',f:'PETSKILL_DamageToHp2',o:'100',field:1,target:6},
+  // V0.49：來源自帶狀態欄位的防禦支援技，不依賴 magic.txt / attmagic.bin。
+  552:{n:'鐵壁',d:'我方全體獲得 3 回合鐵壁',f:'PETSKILL_MagicStatusChange',o:'铁壁|3|30|全',field:1,target:2},
+  565:{n:'銅牆',d:'我方全體獲得 5 回合強化鐵壁',f:'PETSKILL_MagicStatusChange',o:'铁壁|5|40|全',field:1,target:2},
+  601:{n:'大地鎧甲',d:'我方全體 TGH 強化 3 回合',f:'PETSKILL_SetMagicPet',o:'3|15|TGH',field:1,target:2}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1553,7 +1576,15 @@ function enemyGuardianFor(target,attackerUnit=null){
 }
 function enemyPrepareRoundAction(unit,action){
   unit.roundAttack=Math.trunc(n(unit.attack));
-  unit.roundDefense=Math.trunc(n(unit.defense));
+
+  // 原每回合 BATTLE_Pr ... CHAR_complianceParameter() 會先用當下 CHAR_MYSKILLTGH
+  // 重算 FIXTOUGH，再交給 BATTLE_TurnParam。故大地鎧甲是「回合開始快照」：
+  // 同回合中途才被套用，不會倒灌改變已建立好的本回合 WORKDEFENCEPOWER。
+  const tghBuffPower=n(unit?.mySkillTghTurns)>0?Math.max(0,n(unit?.mySkillTghPower)):0;
+  const baseDefense=Math.trunc(n(unit.defense));
+  unit.roundDefense=baseDefense+Math.trunc(baseDefense*tghBuffPower/100);
+  unit.roundTghBuffPower=tghBuffPower;
+
   unit.noGuardDuckBonus=0;
   unit.noGuardCounterBonus=0;
   unit.noGuardThisTurn=false;
@@ -1572,16 +1603,16 @@ function enemyPrepareRoundAction(unit,action){
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_BattleTearDamage'){
     unit.roundAttack=Math.trunc(n(unit.attack)*.9);
-    unit.roundDefense=Math.trunc(n(unit.defense)*.8);
+    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.8);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_AttackCrazed'){
     // 原 PETSKILL_AttackCrazed 固定攻 80%、防 70%，option 只決定攻擊次數。
     unit.roundAttack=Math.trunc(n(unit.attack)*.8);
-    unit.roundDefense=Math.trunc(n(unit.defense)*.7);
+    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.7);
     unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_SpeedyAttack'){
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
-    unit.roundDefense=Math.trunc(n(unit.defense)+n(unit.defense)*defensePct/100);
+    unit.roundDefense=Math.trunc(n(unit.roundDefense)+n(unit.roundDefense)*defensePct/100);
     // PETSKILL_SpeedyAttack() 本身沒有改 QUICK，但 BATTLE_DexCalc 對此 command
     // 另有 work=(WORKQUICK+20); dex=work+work*0.3 的專用排序公式。
     unit.roundDexMode='speedy';
@@ -1594,9 +1625,9 @@ function enemyPrepareRoundAction(unit,action){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
-    const baseDefense=Math.trunc(n(unit.defense));
+    const skillBaseDefense=Math.trunc(n(unit.roundDefense));
     unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
-    unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+    unit.roundDefense=skillBaseDefense+Math.trunc(skillBaseDefense*defensePct/100);
   }else if(meta?.f==='PETSKILL_NoGuard'){
     unit.noGuardThisTurn=true;
     unit.noGuardDuckBonus=Math.max(0,enemySignedSkillPercent(meta.o,'回避%'));
@@ -1607,9 +1638,9 @@ function enemyPrepareRoundAction(unit,action){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
-    const baseDefense=Math.trunc(n(unit.defense));
+    const skillBaseDefense=Math.trunc(n(unit.roundDefense));
     unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
-    unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+    unit.roundDefense=skillBaseDefense+Math.trunc(skillBaseDefense*defensePct/100);
     if(meta?.f==='PETSKILL_WildViolentAttack'){
       // battle.c 會在真正 BATTLE_Attack 前把此 command 改回 ATTACK，因此可參與反擊鏈。
       unit.counterEligibleThisTurn=true;
@@ -1799,6 +1830,15 @@ function battleCriticalChance(attacker,defender){
 function battleDamageCore(attacker,defender,options={}){
   let attack=n(attacker?.attack);
   let defense=options.useFixedToughDefense?n(defender?.fixedTough):n(defender?.defense)*.70;
+
+  // 原 BATTLE_DamageCalc：鐵壁在 NPCENEMY_ADDPOWER 之前生效。
+  // defense += defense * ((CHAR_OTHERSTATUSNUMS + rand()%20) / 100)
+  let superWallRoll=null;
+  if(n(defender?.superWallPower)>0){
+    superWallRoll=cRand(0,19);
+    defense+=defense*(n(defender.superWallPower)+superWallRoll)/100;
+  }
+
   if(defender?.type==='enemy')defense+=(defense*Math.floor(Math.random()*10)+2)/100;
   if(attacker?.type==='enemy')attack+=(attack*Math.floor(Math.random()*10)+2)/100;
   let damage=0;
@@ -2698,6 +2738,60 @@ function performEnemyDeepPoison(actor,unit,options,meta){
   }
   return {kind:'skill',skillId:actor.skillId,spec,results};
 }
+function performEnemyMagicStatusChange(actor,unit,options,meta){
+  const p=String(meta?.o||'').split('|');
+  const status=String(p[0]||'').trim();
+  const turns=Math.max(0,Math.trunc(Number(p[1])||0));
+  const power=Math.max(0,Math.trunc(Number(p[2])||0));
+  const targets=livingEnemyUnits();
+  const results=[];
+
+  // 目前正權重 552/565 的 status 都是「鐵壁」且 target=ALLMYSIDE。
+  // 原 BATTLE_MultiMagicStatusChange：任一 MagicTbl 狀態已存在時就跳過，不刷新。
+  if(!(status==='铁壁'||status==='鐵壁')){
+    addLog(unit.name+' 使用 '+(meta?.n||'魔法狀態技')+'，但此 MagicStatus 尚未建模；不猜效果。');
+    return {kind:'skill',skillId:actor.skillId,unsupportedStatus:status};
+  }
+
+  for(const target of targets){
+    if(n(target.superWallTurns)>0){
+      results.push({unitId:target.id,applied:false,existing:true});
+      continue;
+    }
+    target.superWallTurns=turns;
+    target.superWallPower=power;
+    results.push({unitId:target.id,applied:true,turns,power});
+  }
+  addLog(unit.name+' 使用 '+(meta?.n||'鐵壁')+'：我方全體取得 '+turns+' 回合鐵壁（基準 +'+power+'%，每次受物理傷害另加原 C rand()%20）。','bad');
+  return {kind:'skill',skillId:actor.skillId,status:'superWall',turns,power,results};
+}
+function performEnemySetMagicPet(actor,unit,options,meta){
+  const p=String(meta?.o||'').split('|');
+  const turns=Math.max(0,Math.trunc(Number(p[0])||0));
+  const power=Math.max(0,Math.trunc(Number(p[1])||0));
+  const stat=String(p[2]||'').trim().toUpperCase();
+  const results=[];
+
+  if(stat!=='TGH'){
+    addLog(unit.name+' 使用 '+(meta?.n||'能力強化')+'，但目前正權重資料不是 TGH；不猜其他屬性效果。');
+    return {kind:'skill',skillId:actor.skillId,unsupportedStat:stat};
+  }
+
+  // 原 PETSKILL_SetMagicPet_Battle：ALLMYSIDE；若 Duck/STR/TGH/DEX 任一 MySkill 已存在則跳過。
+  // 本專案目前已建模 Duck 與 TGH，正權重 601 只使用 TGH。
+  for(const target of livingEnemyUnits()){
+    const busy=n(target.skillDuckTurns)>0||n(target.mySkillTghTurns)>0;
+    if(busy){
+      results.push({unitId:target.id,applied:false,existing:true});
+      continue;
+    }
+    target.mySkillTghTurns=turns;
+    target.mySkillTghPower=power;
+    results.push({unitId:target.id,applied:true,turns,power});
+  }
+  addLog(unit.name+' 使用 '+(meta?.n||'大地鎧甲')+'：可套用的我方成員取得 '+turns+' 回合 TGH +'+power+'%。','bad');
+  return {kind:'skill',skillId:actor.skillId,stat:'TGH',turns,power,results};
+}
 function performEnemySetDuck(actor,unit,options,meta){
   const p=String(meta?.o||'').split('|');
   const turns=Math.max(0,Math.trunc(Number(p[0])||0));
@@ -3440,6 +3534,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Retrace')return performEnemyRetrace(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Weaken')return performEnemyWeaken(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Deeppoison')return performEnemyDeepPoison(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_MagicStatusChange')return performEnemyMagicStatusChange(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_SetMagicPet')return performEnemySetMagicPet(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SetDuck')return performEnemySetDuck(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
@@ -4342,7 +4438,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.48 載入完成：接入 592 淨化與 659 T浴血狂襲；並補正疾速攻擊／浴血狂襲的原 C 專用出手速度公式，以及虛弱對 Enemy 排序 QUICK 的影響。','good');
+    addLog('V0.49 載入完成：接入 552 鐵壁、565 銅牆、601 大地鎧甲；鐵壁依原 C 每次受擊以基準值 + rand()%20 強化防禦，大地鎧甲依每回合 compliance 快照套用 TGH。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
