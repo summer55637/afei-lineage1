@@ -5,10 +5,10 @@
     "note": "Only appearance/capture condition items are included. Acquisition source remains unresolved until original NPC/quest/shop data is decoded.",
     "count": 9,
     "sourceResearch": {
-      "verifiedCount": 6,
-      "unresolvedCount": 3,
-      "externalCorroboratedCount": 3,
-      "note": "Verified = backed by original server code/data. externalEvidence is kept separate and never promoted to verified without server evidence."
+      "verifiedCount": 4,
+      "unresolvedCount": 5,
+      "externalCorroboratedCount": 5,
+      "note": "Verified = backed by files actually loaded by setup.cf or by source code independent of inactive data tables. enemy1.txt/group1.txt are active server tables."
     }
   },
   "items": [
@@ -23,35 +23,15 @@
         "夏普德"
       ],
       "floors": [],
-      "sourceStatus": "verified",
-      "sources": [
+      "sourceStatus": "unresolved",
+      "sources": [],
+      "externalEvidence": [
         {
-          "type": "enemy_drop",
-          "label": "加魯卡野生威威掉落",
-          "floorId": 200,
-          "mapName": "加魯卡",
-          "enemyIds": [
-            372,
-            373,
-            374
-          ],
-          "groupIds": [
-            229,
-            230,
-            231,
-            232,
-            233
-          ],
-          "enemySource": "gmsv/data/enemy.txt",
-          "groupSource": "gmsv/data/group.txt",
-          "encounterSource": "gmsv/data/encount.txt",
-          "dropProbabilityRaw": 30,
-          "dropRule": "_FIX_ITEMPROB",
-          "summary": "海藍之棒由加魯卡威威系野生怪物掉落；服務端 _FIX_ITEMPROB 開啟，原參數 30 = 3% 掉落率。Lv1 威威 EnemyID 372 已可在目前放置版實際掉落。",
-          "dropProbabilityPercent": 3
+          "type": "superseded_server_table",
+          "status": "do_not_use_as_current_source",
+          "summary": "舊 enemy.txt 曾把此道具掛在加魯卡威威掉落，但目前 setup.cf 實際載入 enemy1.txt；對應威威現行掉落為 Item 1234、參數 300，因此不能再把 1690 當成現行正式掉落來源。"
         }
-      ],
-      "externalEvidence": []
+      ]
     },
     {
       "id": 1691,
@@ -64,30 +44,15 @@
         "夏普德"
       ],
       "floors": [],
-      "sourceStatus": "verified",
-      "sources": [
+      "sourceStatus": "unresolved",
+      "sources": [],
+      "externalEvidence": [
         {
-          "type": "enemy_drop",
-          "label": "加魯卡野生威威掉落",
-          "floorId": 200,
-          "mapName": "加魯卡",
-          "enemyIds": [
-            436
-          ],
-          "groupIds": [
-            311,
-            313
-          ],
-          "enemySource": "gmsv/data/enemy.txt",
-          "groupSource": "gmsv/data/group.txt",
-          "encounterSource": "gmsv/data/encount.txt",
-          "dropProbabilityRaw": 30,
-          "dropRule": "_FIX_ITEMPROB",
-          "summary": "海藍之兜由加魯卡較高等級威威系野生怪物掉落；服務端 _FIX_ITEMPROB 開啟，原參數 30 = 3% 掉落率。高等威威內容尚未接入目前 Lv1 版。",
-          "dropProbabilityPercent": 3
+          "type": "superseded_server_table",
+          "status": "do_not_use_as_current_source",
+          "summary": "舊 enemy.txt 曾把此道具掛在加魯卡威威掉落，但目前 setup.cf 實際載入 enemy1.txt；對應威威現行掉落為 Item 1235、參數 300，因此不能再把 1691 當成現行正式掉落來源。"
         }
-      ],
-      "externalEvidence": []
+      ]
     },
     {
       "id": 1692,
