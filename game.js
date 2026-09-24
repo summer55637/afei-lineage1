@@ -1039,7 +1039,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.10 載入完成：任務戰鬥核心已支援真正多敵人編成，Event81 金剛陣與老大戰不再以單體代替。','good');
+    addLog('V0.11 載入完成：Event69 蛙王戰與 Event83 席格戰也已套用真正多敵人編成。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
