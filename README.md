@@ -764,3 +764,48 @@ V0.17 回歸時重新核對 `ENCOUNT_initEncount()`，確認 `encount.txt` 第 3
 - 其中無可生成 Group 的 winner：0
 
 另外，部分特殊 Enemy（例如木、礦石、釣竿）原始 STR／TGH／DEX 可為 0；經 `RAND(0,4)-2` 後，原服務端衍生攻防確實可能暫時為負值。V0.17 不擅自 clamp 模板衍生值；現有網頁戰鬥層仍以最低實際傷害 1 處理。
+
+
+## V0.18 ENEMY_ITEM1～10／ITEMPROB1～10 原版掉落生成
+
+V0.18 繼續沿用目前完整鏈：
+
+`Floor → Encounter → Group → Enemy → RandomEnemy → ENEMY_createEnemy → RandomChange → CHAR_complianceParameter`
+
+這一版把 `enemy1.txt` 的 10 組 Enemy 掉落欄位正式接入：
+
+- `ENEMY_ITEM1～10`
+- `ENEMY_ITEMPROB1～10`
+
+已重新核對 `enemy.h`、`enemy.c`、`version.h`：
+
+- `_FIX_ITEMPROB` 在目前來源版本為開啟
+- 每一格掉落彼此獨立判定
+- 原式為 `RAND(0,999) < ENEMY_ITEMPROB`
+- 判定是在 Enemy instance 建立時完成，不是戰勝後才抽
+- 成功的物品先掛在該 Enemy 的 `CHAR_STARTITEMARRAY + slot`
+
+因此 `ITEMPROB=300` 就是每格 30%，而 `1000` 以上依原碼為必定成立；V0.18 不擅自 clamp 來源值。
+
+runtime 升級為 `stoneage-general-encounter-runtime-v4`，每個可解析 Enemy template 都保留完整兩組 10 格整數陣列：
+
+- `enemyItems[10]`
+- `itemProbs[10]`
+
+範圍統計（一般 85 Floor runtime + RandomEnemy 92 個替代目標）：
+
+- 818 個唯一 EnemyID 全部可對回現行 `enemy1.txt`
+- 558 個 EnemyID 至少有一格非 0 掉落率
+- 754 個非 0 掉落格
+- 223 個唯一 ItemID
+- 8 格原始 `ITEMPROB >= 1000`
+- 最大原始值為 `3300`，依原服務端仍視為必掉，不改寫成 1000
+
+另外同步核對 `battle.c::BATTLE_GetExpGold()`。原服不是把所有成功生成的 Enemy 物品無限制塞給玩家，而是每位玩家有 3 格戰鬥取得欄；單人版因此對齊為：
+
+1. 先由每隻死亡 Enemy 的 10 格 carried item 收集戰利品
+2. 前 3 件依序放入結果槽
+3. 超過 3 件時，原碼 50% 機率丟棄新物品，50% 機率隨機替換既有 3 格其中一格
+4. 所以每場一般 Enemy 掉落最終最多取得 3 件
+
+RandomEnemy 仍先把 placeholder 換成真正 EnemyID，再使用替代 Enemy 的 `enemyItems/itemProbs`；RandomChange 只改外觀／屬性／技能，不改掉落表。

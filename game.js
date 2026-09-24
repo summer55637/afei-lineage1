@@ -187,9 +187,20 @@ function giveItem(id,count=1){
 function rollVerifiedDrops(defeatedEnemy){
   if(!defeatedEnemy)return [];
   const drops=[];
+  const carriedLoot=resolveEnemyCarriedLoot(defeatedEnemy);
+  for(const carried of carriedLoot){
+    const itemId=Number(carried.itemId);
+    if(!Number.isFinite(itemId))continue;
+    giveItem(itemId,1);
+    const meta=questItemMeta(itemId);
+    drops.push(meta
+      ?Object.assign({},meta,{enemyDrop:true,enemyDropSlot:carried.slot,dropProbabilityRaw:carried.probabilityRaw})
+      :{id:itemId,name:'Item '+itemId,enemyDrop:true,enemyDropSlot:carried.slot,dropProbabilityRaw:carried.probabilityRaw});
+  }
+
   const subjects=(Array.isArray(defeatedEnemy.units)&&defeatedEnemy.units.length)
-    ?defeatedEnemy.units.map(u=>({enemyIds:[u.enemyId].filter(Boolean),questDrop:u.questDrop||null,name:u.name}))
-    :[{enemyIds:(defeatedEnemy.entry?.variant?.enemyIds||[]).map(Number),questDrop:defeatedEnemy.entry?.variant?.questDrop||null,name:defeatedEnemy.name}];
+    ?defeatedEnemy.units.map(u=>({enemyIds:[u.enemyId].filter(Boolean),questDrop:u.questDrop||null,serverDropTable:!!u.serverDropTable,name:u.name}))
+    :[{enemyIds:(defeatedEnemy.entry?.variant?.enemyIds||[]).map(Number),questDrop:defeatedEnemy.entry?.variant?.questDrop||null,serverDropTable:!!defeatedEnemy.serverDropTable,name:defeatedEnemy.name}];
 
   for(const subject of subjects){
     const enemyIds=new Set((subject.enemyIds||[]).map(Number));
@@ -198,6 +209,9 @@ function rollVerifiedDrops(defeatedEnemy){
       giveItem(qd.id,1);
       drops.push(questItemMeta(qd.id)||{id:qd.id,name:qd.name||('Item '+qd.id)});
     }
+    // 有完整 enemy1 10 格掉落表時，以 Enemy 建立時已抽好的 carried loot 為準；
+    // 舊 conditionItems enemy_drop 只保留給沒有 server drop table 的手工任務 Enemy。
+    if(subject.serverDropTable)continue;
     for(const item of conditionItems){
       for(const src of item.sources||[]){
         if(src.type!=='enemy_drop')continue;
@@ -540,6 +554,39 @@ function applyEnemyRandomChange(raw,elements,petSkills){
   }
   return result;
 }
+function rollEnemyDropSlots(raw){
+  const items=Array.isArray(raw?.enemyItems)?raw.enemyItems:[];
+  const probs=Array.isArray(raw?.itemProbs)?raw.itemProbs:[];
+  const resolved=items.length>=10&&probs.length>=10;
+  const drops=[];
+  if(!resolved)return {resolved:false,drops};
+  for(let i=0;i<10;i++){
+    const probabilityRaw=Math.trunc(n(probs[i]));
+    if(!probabilityRaw)continue;
+    // 原 _FIX_ITEMPROB：RAND(0,999) < ITEMPROB。大於 1000 的原始值不 clamp。
+    if(Math.floor(Math.random()*1000)<probabilityRaw){
+      drops.push({slot:i+1,itemId:Math.trunc(n(items[i])),probabilityRaw});
+    }
+  }
+  return {resolved:true,drops};
+}
+function resolveEnemyCarriedLoot(defeatedEnemy){
+  const units=(Array.isArray(defeatedEnemy?.units)&&defeatedEnemy.units.length)
+    ?defeatedEnemy.units
+    :[defeatedEnemy].filter(Boolean);
+  const result=[];
+  for(const unit of units){
+    for(const drop of unit?.enemyDrops||[]){
+      const item={itemId:Math.trunc(n(drop?.itemId)),slot:Math.trunc(n(drop?.slot)),probabilityRaw:Math.trunc(n(drop?.probabilityRaw))};
+      if(result.length<3){
+        result.push(item);
+      }else if(Math.floor(Math.random()*2)){
+        result[Math.floor(Math.random()*3)]=item;
+      }
+    }
+  }
+  return result;
+}
 function makeEnemyUnit(raw,fallbackEntry,index=0){
   const base=fallbackEntry?.variant||{};
   const baseStats=Object.assign({},base.stats||{},raw?.stats||{});
@@ -568,6 +615,8 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     quick=Math.max(0,Math.round(n(st.dex)||0));
   }
 
+  // 原 enemy.c 會在 CHAR_initCharOneArray() 後、RandomChange 前生成 10 格 Enemy 戰利品。
+  const enemyDropRoll=rollEnemyDropSlots(raw);
   const change=applyEnemyRandomChange(
     raw,
     Object.assign({},raw?.elements||base.elements||{}),
@@ -594,6 +643,8 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     captureRule:raw?.captureRule??base.captureRule??null,
     capturable:raw?.capturable!=null?raw.capturable:(base.capturable!==false),
     questDrop:raw?.questDrop||null,
+    enemyDrops:enemyDropRoll.drops,
+    serverDropTable:enemyDropRoll.resolved,
     size:n(raw?.size),
     isBig:!!raw?.isBig
   };
@@ -749,7 +800,7 @@ function spawnEnemy(context=null){
     render();return;
   }
   const unit=makeEnemyUnit(null,entry,0);
-  enemy={entry,level:unit.level,name:unit.name,hp:unit.hp,maxHp:unit.maxHp,attack:unit.attack,defense:unit.defense};
+  enemy={entry,level:unit.level,name:unit.name,hp:unit.hp,maxHp:unit.maxHp,attack:unit.attack,defense:unit.defense,enemyDrops:unit.enemyDrops,serverDropTable:unit.serverDropTable};
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
   render();
@@ -1480,7 +1531,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.17 載入完成：Enemy 四圍隨機生成與 CHAR_complianceParameter 衍生 HP／攻／防／敏已還原；RandomChange 規則已接入。','good');
+    addLog('V0.18 載入完成：ENEMY_ITEM1～10／ITEMPROB1～10 已接入；Enemy 建立時逐格依 RAND(0,999) 抽取，單人戰勝依原 BATTLE_GetExpGold 最多保留 3 格戰利品。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
