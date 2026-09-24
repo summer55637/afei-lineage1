@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.2</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -22,8 +22,9 @@
         <span class="pill">純前端單機</span>
         <span class="pill">PC＋手機</span>
         <span class="pill">LocalStorage 存檔</span>
+        <span class="pill">服務端捕獲公式骨架</span>
       </div>
-      <p>目前為第一版可玩核心：選地圖 → 自動遭遇 → 自動戰鬥 → 升級 → 測試收服 Lv1 寵物。</p>
+      <p>選地圖 → 自動遭遇 → 戰鬥削血 → 捕獲 Lv1 寵物 → 編入 5 格隊伍 → 指定一隻出戰。</p>
     </section>
 
     <section class="status-grid">
@@ -57,14 +58,29 @@
           <div class="stats">
             <div><span>攻擊</span><b id="attack">18</b></div>
             <div><span>防禦</span><b id="defense">5</b></div>
+            <div><span>敏捷</span><b id="dex">30</b></div>
+            <div><span>魅力</span><b id="charm">50</b></div>
+            <div><span>運</span><b id="luck">0</b></div>
             <div><span>勝場</span><b id="wins">0</b></div>
-            <div><span>戰鬥</span><b id="battles">0</b></div>
           </div>
           <div class="progress"><i id="hpBar"></i></div>
           <div class="button-row">
             <button id="autoBtn" class="primary">自動戰鬥：開</button>
             <button id="healBtn">休息補滿</button>
           </div>
+          <div class="muted mini-note">敏捷／魅力／運目前為放置版初始角色參數；捕獲公式本身依原服務端結構計算。</div>
+        </article>
+
+        <article class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">PET TEAM</div>
+              <h2>寵物隊伍</h2>
+            </div>
+            <span class="muted">5 格</span>
+          </div>
+          <div id="teamGrid" class="team-grid"></div>
+          <div id="activePetInfo" class="active-pet-info muted">尚未指定出戰寵物。</div>
         </article>
       </div>
 
@@ -80,6 +96,18 @@
           <div class="enemy-name">尚未遭遇敵人</div>
           <div class="muted">開啟自動戰鬥後會依目前地圖的 Lv1 資料出現。</div>
         </div>
+
+        <div class="capture-panel">
+          <div>
+            <b id="captureChance">捕獲率：—</b>
+            <div id="captureInfo" class="muted">遭遇 Lv1 寵物後顯示條件。</div>
+          </div>
+          <div class="capture-actions">
+            <button id="captureBtn" class="capture-btn" disabled>捕獲</button>
+            <button id="autoCaptureBtn">自動捕獲：開</button>
+          </div>
+        </div>
+
         <div class="log-wrap">
           <h3>戰鬥紀錄</h3>
           <div id="battleLog" class="battle-log"></div>
@@ -101,8 +129,8 @@
     </section>
 
     <article class="card note">
-      <b>目前規則：</b>
-      166 種／169 TempNo／171 EnemyID／85 floor 使用正式整理資料；角色傷害、獎勵與收服率仍是第一版放置玩法參數，後續會再逐項替換成正式遊戲規則。
+      <b>V0.2：</b>
+      捕獲率已改用原服務端 <code>BATTLE_CaptureCheck</code> 的結構：敵方 HP、等級差、敏捷差、E_T_GET、運、魅力。資料庫中的特殊捕獲條件也會檢查；目前尚未加入任務／商店取得那些特殊道具，所以缺少條件道具時會禁止捕獲。
     </article>
   </main>
 
