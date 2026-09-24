@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.16</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.17</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -59,7 +59,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">一般野外已進一步接入原走路遇敵 CEP：每個虛擬步驟使用 rand()%120 < CEP，失敗 CEP+1、成功重設 min；另已加入 ENEMY_RandomEnemyArray 替代池與 samecount × CREATEMAXNUM。</div>
+          <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；RandomChange 規則也已接入。</div>
         </article>
 
         <article class="card">
@@ -156,8 +156,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.16：</b>
-      Encounter runtime 升級為 v2：保留完整 Group slot（含權重 0），加入 18 個 RandomEnemy placeholder、92 個替代 Enemy 模板，並接入原 CEP 遇敵累進規則。
+      <b>V0.17：</b>
+      Encounter runtime 升級為 v3：Enemy 模板加入 INITNUM、atoi(LVUPPOINT)、七格技能、Style；一般野怪改用原 ENEMY_createEnemy 與 CHAR_complianceParameter 的能力生成／衍生公式。
     </article>
   </main>
 
