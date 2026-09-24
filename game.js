@@ -1110,7 +1110,7 @@ function battleAttrMultiplier(attacker,defender){
   return (fire+water+earth+wind+none)/10000;
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障'
+  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set()}
@@ -1277,11 +1277,39 @@ function battleStatusPoisonDamage(desc){
 }
 function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
+  if(!desc)return {skip:false,desc:null,status:null};
+
+  // 原 BATTLE_StatusSeq 尾端會逐回合遞減 CHAR_MYSKILLDUCK；
+  // 技能施放當回合是在 StatusSeq 之後才寫入，因此從下一次自己的行動開始倒數。
+  if(desc.kind==='enemy'&&n(desc.unit?.skillDuckTurns)>0){
+    desc.unit.skillDuckTurns=Math.max(0,Math.trunc(n(desc.unit.skillDuckTurns))-1);
+    if(desc.unit.skillDuckTurns<=0){
+      desc.unit.skillDuckPower=0;
+      addLog(desc.unit.name+' 的閃避術效果結束。');
+    }
+  }
+
   const st=battleStatusGet(desc);
-  if(!desc||!st||st.turns<=0)return {skip:false,desc,status:null};
+  if(!st||st.turns<=0)return {skip:false,desc,status:null};
 
   const blockedBefore=battleStatusCanMove(desc)===false;
   st.turns--;
+
+  if(st.type==='deepPoison'){
+    const hp=battleStatusHp(desc);
+    const name=desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標';
+    // 原 StatusSeq：HP<=1 直接死亡；否則倒數降到 <=1 時也直接死亡。
+    if(hp<=1||st.turns<=1){
+      battleStatusSetHp(desc,0);
+      battleStatusClear(desc,'deepPoison');
+      addLog(name+' 身中劇毒未解而倒下了！','bad');
+      return {skip:true,desc,status:st,deepPoisonDeath:true};
+    }
+    const down=battleStatusPoisonDamage(desc);
+    if(down>0)addLog(name+' 因劇毒受到 '+down+' 傷害。','bad');
+    return {skip:false,desc,status:st};
+  }
+
   if(st.turns<=0){
     battleStatusClear(desc);
     addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
@@ -1299,7 +1327,9 @@ function processBattleStatusTurn(actor){
 }
 function battleStatusTypeFromOption(option){
   const t=String(option||'');
+  if(t.includes('剧')||t.includes('劇'))return 'deepPoison';
   if(t.includes('毒'))return 'poison';
+  if(t.includes('虚')||t.includes('虛'))return 'weaken';
   if(t.includes('石'))return 'stone';
   if(t.includes('眠'))return 'sleep';
   if(t.includes('乱')||t.includes('亂'))return 'confusion';
@@ -1321,8 +1351,12 @@ function playerBattleView(){
   const desc={kind:'player'};
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
+  const weaken=battleStatusActive(desc,'weaken');
+  const attack=weaken?Math.trunc(n(state.attack)*.8):n(state.attack);
+  const defenseBase=weaken?Math.trunc(n(state.defense)*.8):n(state.defense);
+  const quickBase=weaken?Math.trunc(n(state.dex)*.8):n(state.dex);
   return {
-    type:'player',attack:n(state.attack),defense:n(state.defense)*(stone?2:1),fixedTough:n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,state.dex),
+    type:'player',attack,defense:defenseBase*(stone?2:1),fixedTough:n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,quickBase),
     luck:n(state.luck),drunk,
     level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
   };
@@ -1334,10 +1368,14 @@ function petBattleView(pet){
   const desc={kind:'pet',pet,petId:pet.id};
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
+  const weaken=battleStatusActive(desc,'weaken');
+  const attack=weaken?Math.trunc(n(combat?.attack)*.8):n(combat?.attack);
+  const defenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
+  const quickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
   return {
-    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense)*(stone?2:1),
+    type:'pet',attack,defense:defenseBase*(stone?2:1),
     fixedTough:pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh),
-    quick:battleDrunkQuick(desc,combat?.quick),
+    quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,
     level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
   };
@@ -1345,13 +1383,19 @@ function petBattleView(pet){
 function enemyBattleView(unit){
   const desc={kind:'enemy',unit,unitId:unit?.id};
   const drunk=battleStatusActive(desc,'drunk');
+  const weaken=battleStatusActive(desc,'weaken');
+  const attackBase=n(unit?.roundAttack??unit?.attack);
+  const defenseRaw=n(unit?.roundDefense??unit?.defense);
+  const quickRaw=n(unit?.quick);
   return {
     type:'enemy',
-    attack:n(unit?.roundAttack??unit?.attack),
-    defense:n(unit?.roundDefense??unit?.defense)*(battleStatusActive(desc,'stone')?2:1),
-    quick:battleDrunkQuick(desc,unit?.quick),
+    attack:weaken?Math.trunc(attackBase*.8):attackBase,
+    defense:(weaken?Math.trunc(defenseRaw*.8):defenseRaw)*(battleStatusActive(desc,'stone')?2:1),
+    quick:battleDrunkQuick(desc,weaken?Math.trunc(quickRaw*.8):quickRaw),
     luck:0,
     drunk,
+    canMove:battleStatusCanMove(desc),
+    skillDuckPower:n(unit?.skillDuckTurns)>0?n(unit?.skillDuckPower):0,
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
     level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
@@ -1424,7 +1468,13 @@ const ENEMY_SOURCE_SKILL_META={
   825:{n:'地屬性強化攻擊',d:'對地屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'EA|9999',field:1,target:6},
   826:{n:'水屬性強化攻擊',d:'對水屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'WA|9999',field:1,target:6},
   827:{n:'火屬性強化攻擊',d:'對火屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'FI|9999',field:1,target:6},
-  828:{n:'風屬性強化攻擊',d:'對風屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'WI|9999',field:1,target:6}
+  828:{n:'風屬性強化攻擊',d:'對風屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'WI|9999',field:1,target:6},
+  // V0.47：狀態／自體回避技能，皆由原 C 的 battle_event / battle_magic / StatusSeq 還原。
+  575:{n:'虛弱',d:'三回合內攻防敏下降 20%',f:'PETSKILL_Weaken',o:'虚 turn 3 成 50',field:1,target:6},
+  576:{n:'全體虛弱',d:'敵全體三回合內攻防敏下降 20%',f:'PETSKILL_Weaken',o:'虚 turn 3 成 50',field:1,target:3},
+  577:{n:'劇毒',d:'中劇毒五回合，未解除則死亡',f:'PETSKILL_Deeppoison',o:'剧 turn 5 成 50',field:1,target:6},
+  578:{n:'全體劇毒',d:'敵全體中劇毒五回合，未解除則死亡',f:'PETSKILL_Deeppoison',o:'剧 turn 5 成 50',field:1,target:3},
+  595:{n:'閃避術',d:'三回合內啟用獨立回避判定',f:'PETSKILL_SetDuck',o:'3|60',field:1,target:0}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1766,6 +1816,13 @@ function battleGuardAdjust(damage){
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge;
+  if(!disableDodge&&defender?.canMove!==false&&n(defender?.skillDuckPower)>0){
+    const power=Math.trunc(n(defender.skillDuckPower));
+    const roll=cRand(0,99);
+    if(roll<=power){
+      return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,skillDuck:true,skillDuckPower:power,skillDuckRoll:roll};
+    }
+  }
   let duck=disableDodge?0:battleDuckChance(attacker,defender);
   if(!disableDodge&&attacker?.drunk)duck=clamp(duck+cRand(20,30)*100,1,7500);
   if(!disableDodge){
@@ -2090,6 +2147,17 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
     :(!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'));
   const disableDodge=originalGuarding||!!options.disableDodge;
   const originalView=enemyBattleView(target);
+  if(!disableDodge&&originalView?.canMove!==false&&n(originalView?.skillDuckPower)>0){
+    const power=Math.trunc(n(originalView.skillDuckPower));
+    const roll=cRand(0,99);
+    if(roll<=power){
+      return {
+        damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
+        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,
+        actualTarget:target,originalTarget:target
+      };
+    }
+  }
   let duck=disableDodge?0:battleDuckChance(attacker,originalView);
   if(!disableDodge&&attacker?.drunk)duck=clamp(duck+cRand(20,30)*100,1,7500);
   if(!disableDodge){
@@ -2567,6 +2635,67 @@ function performEnemyRetrace(actor,unit,options,meta){
     }
   }
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,first,second,retraceRoll};
+}
+function enemyWideStatusSpec(meta){
+  const option=String(meta?.o||'');
+  return {
+    turns:battleStatusTurnFromOption(option),
+    success:Math.max(0,Math.trunc(enemySkillNumber(option,/成\s*([+-]?\d+)/,0)))
+  };
+}
+function enemyStatusSkillTargets(actor,unit,meta){
+  if(Math.trunc(n(meta?.target))===3)return enemyPlayerSideLivingTargets();
+  const chosen=enemyActorTarget(actor,unit);
+  if(chosen?.kind==='pet'&&chosen.pet)return [{kind:'pet',pet:chosen.pet,petId:chosen.pet.id}];
+  if(chosen?.kind==='player')return [{kind:'player'}];
+  return [];
+}
+function performEnemyWeaken(actor,unit,options,meta){
+  const spec=enemyWideStatusSpec(meta);
+  const targets=enemyStatusSkillTargets(actor,unit,meta);
+  const attacker={kind:'enemy',unit,unitId:unit.id};
+  const results=[];
+  addLog(unit.name+' 使用 '+(meta?.n||'虛弱')+'。');
+  for(const target of targets){
+    const check=battleStatusChance(attacker,target,'weaken',{perOffset:spec.success,range:30,bai:1,forceGeneral:true});
+    const applied=check.allowed&&check.success&&battleStatusApply(target,'weaken',spec.turns);
+    if(applied)addLog(battleStatusDescName(target)+' 陷入虛弱，攻／防／敏下降 20%（原檢定 '+check.per.toFixed(1)+'%）。','bad');
+    else if(check.reason==='existing')addLog((meta?.n||'虛弱')+' 對 '+battleStatusDescName(target)+' 未生效：目標已有其他異常狀態。');
+    else addLog((meta?.n||'虛弱')+' 對 '+battleStatusDescName(target)+' 未成功（原檢定 '+n(check.per).toFixed(1)+'%）。');
+    results.push({target:target.kind,petId:target.petId||null,applied,per:check.per});
+  }
+  return {kind:'skill',skillId:actor.skillId,spec,results};
+}
+function performEnemyDeepPoison(actor,unit,options,meta){
+  const spec=enemyWideStatusSpec(meta);
+  const targets=enemyStatusSkillTargets(actor,unit,meta);
+  const attacker={kind:'enemy',unit,unitId:unit.id};
+  const results=[];
+  addLog(unit.name+' 使用 '+(meta?.n||'劇毒')+'。');
+  for(const target of targets){
+    const check=battleStatusChance(attacker,target,'deepPoison',{perOffset:spec.success,range:30,bai:1,forceGeneral:true});
+    // 原 BATTLE_S_Deeppoison 傳入 turn+2；MultiStatusChange 直接保存該值。
+    const applied=check.allowed&&check.success&&battleStatusApplyRaw(target,'deepPoison',spec.turns+2);
+    if(applied)addLog(battleStatusDescName(target)+' 陷入劇毒；若持續到第六次狀態行動將倒下（原檢定 '+check.per.toFixed(1)+'%）。','bad');
+    else if(check.reason==='existing')addLog((meta?.n||'劇毒')+' 對 '+battleStatusDescName(target)+' 未生效：目標已有其他異常狀態。');
+    else addLog((meta?.n||'劇毒')+' 對 '+battleStatusDescName(target)+' 未成功（原檢定 '+n(check.per).toFixed(1)+'%）。');
+    results.push({target:target.kind,petId:target.petId||null,applied,per:check.per});
+  }
+  return {kind:'skill',skillId:actor.skillId,spec,results};
+}
+function performEnemySetDuck(actor,unit,options,meta){
+  const p=String(meta?.o||'').split('|');
+  const turns=Math.max(0,Math.trunc(Number(p[0])||0));
+  const power=Math.max(0,Math.trunc(Number(p[1])||0));
+  // 原 PETSKILL_SetDuckChange_Battle 只允許對自己使用；已有 CHAR_MYSKILLDUCK 時不刷新。
+  if(n(unit.skillDuckTurns)>0){
+    addLog(unit.name+' 再次使用 '+(meta?.n||'閃避術')+'，但原版效果尚在時不刷新回合。');
+    return {kind:'skill',skillId:actor.skillId,alreadyActive:true,turns:unit.skillDuckTurns,power:unit.skillDuckPower};
+  }
+  unit.skillDuckTurns=turns;
+  unit.skillDuckPower=power;
+  addLog(unit.name+' 使用 '+(meta?.n||'閃避術')+'：'+turns+' 回合內先做獨立回避判定（rand()%100 <= '+power+'）。');
+  return {kind:'skill',skillId:actor.skillId,turns,power};
 }
 function enemyBarrierSpec(meta){
   const option=String(meta?.o||'');
@@ -3236,6 +3365,9 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Sonic')return performEnemySonic(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Gyrate')return performEnemyGyrate(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Retrace')return performEnemyRetrace(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Weaken')return performEnemyWeaken(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Deeppoison')return performEnemyDeepPoison(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_SetDuck')return performEnemySetDuck(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
@@ -4129,7 +4261,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.46 載入完成：接入追跡攻擊、回旋攻擊、音波衝擊、屬性強化攻擊與屬性轉換攻擊；全部依原 C 的特殊 command／屬性公式，不借用 MP 或 AttackMagic。','good');
+    addLog('V0.47 載入完成：接入虛弱、劇毒與閃避術；虛弱按原 C 將攻防敏乘 0.8，劇毒保留第六次狀態行動死亡規則，閃避術使用獨立 rand()%100 判定。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
