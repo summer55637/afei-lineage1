@@ -3463,3 +3463,70 @@ V0.54 625 媚惑術的 Player/Pet 判斷再次由 `PET_createPetFromCharaIndex()
 - 不複製 Enemy 的 `CHAR_WORK_PETFLG`
 
 因此一般玩家寵物確實無法滿足 BecomeFox 的 `WORK_PETFLG != 0` 條件。
+
+## V0.56 光鏡系 no-react 分支
+
+V0.56 接入：
+
+- 610「破鏡重圓」：`PETSKILL_Lighttakeed`，option `REFLEC`
+- 611「穿透術」：`PETSKILL_Lighttakeed`，option `VANISH`
+
+`version.h` 已啟用：
+
+`#define _BATTLE_LIGHTTAKE`
+
+### 技能前置能力
+
+`PETSKILL_Lighttakeed()` 直接：
+
+- `WORKATTACKPOWER = FIXSTR × 0.7`
+- `WORKDEFENCEPOWER = FIXTOUGH × 0.5`
+
+原本 QUICK ×0.95 的程式已被註解，所以不改敏捷。
+
+### DamageReact 判斷
+
+`BATTLE_S_AttackDamage()` 一開始呼叫：
+
+`ReactType = BATTLE_GetDamageReact(defindex)`
+
+`BATTLE_GetDamageReact()` 順序檢查：
+
+1. `CHAR_WORKDAMAGEVANISH > 0` → VANISH
+2. `CHAR_WORKDAMAGEABSROB > 0` → ABSROB
+3. `CHAR_WORKDAMAGEREFLEC > 0` → REFLEC
+
+若三者皆 0，回傳 0。
+
+Lighttakeed 只有當目標確實已有 DamageReact，且種類和 option 相同時，才保留 LIGHTTAKE command 並在攻擊後把該反應剩餘次數複製到施術者。
+
+若種類不同，來源把 `skill_type=-1`；目標原本的 DamageReact 仍照一般傷害反應規則處理。
+
+### 現版玩家側的來源等價狀態
+
+目前 Player + Active Pet 沒有：
+
+- WORKDAMAGEVANISH
+- WORKDAMAGEABSROB
+- WORKDAMAGEREFLEC
+
+也沒有任何已接技能／裝備會建立這三個 work-int。
+
+因此在目前戰鬥模型中，`BATTLE_GetDamageReact()` 對玩家與玩家寵物必定是 0。
+
+這時 610／611 的原 C 實際行為就是：
+
+- 用攻 70%、防 50% 的施術者
+- 執行一次 `BATTLE_S_AttackDamage()` 普通物理傷害
+- 不吸收任何 REFLEC／VANISH
+- 不進一般物理攻擊分支的 Counter loop
+
+V0.56 精準接這個 no-react 分支。
+
+### 為什麼現在不建立假的 REFLEC／VANISH
+
+技能名稱雖然叫「破鏡重圓／穿透術」，但 610／611 本身不是建立光鏡守的技能，而是**吸收目標已存在的 DamageReact**。
+
+目前沒有來源會讓玩家側先取得這些 work-int，所以若現在自行建立 reflect／vanish status，就會改變原資料可到達狀態。
+
+等正式接入能建立 `WORKDAMAGEREFLEC / VANISH / ABSROB` 的來源技能或裝備時，再擴充同一 handler 的 transfer 分支。
