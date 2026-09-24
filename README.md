@@ -3669,3 +3669,70 @@ V0.58 接入 ID 574「E嚙齒術」在目前 web 戰鬥模型可到達的原 C �
 沒有自行建立假的武器或耐久值。
 
 等正式裝備系統與 ITEM_DAMAGECRUSHE 底層存在後，再把同一 handler 的 crush 分支補上。
+
+## V0.59 未註冊 PetSkill／C_WAIT
+
+V0.59 修正兩個「petskill2.txt 有資料列，但原 build 實際找不到函式指標」的 Enemy PetSkill：
+
+- 502「E招喚」
+- 582「自爆攻擊」
+
+### 502 E招喚
+
+`petskill2.txt` 的函式字串是：
+
+`ENEMYSKILL_EnemyHELP`
+
+但 `PETSKILL_functbl[]` 註冊的是：
+
+`ENEMYSKILL_EnemyHelp`
+
+`PETSKILL_getPetskillFuncPointer()` 用 `hashpjw()` 後仍會再做：
+
+`strcmp(PETSKILL_functbl[i].functionname, name) == 0`
+
+`strcmp` 區分大小寫，所以 `EnemyHELP` 不會命中 `EnemyHelp`。
+
+結果：
+
+- `func == NULL`
+- `PETSKILL_Use()` 回 FALSE
+- `BATTLE_ai_normal()` 回 FALSE
+- Enemy 不會被設成 C_OK
+- 本回合維持 C_WAIT
+- 在 `BATTLE_StatusSeq()` 前就被跳過
+
+因此 V0.53 曾保留的 `performEnemyHelp()` 只作為未來若修正資料字串時的可用 handler；**這個原 build 的 502 不會實際進到它**。
+
+### 582 自爆攻擊
+
+`petskill2.txt`：
+
+`自爆攻击,...,PETSKILL_SelfExplodeAttack,倍3 回避-50,...,582,...`
+
+但本來源：
+
+- `pet_skill.c` 沒有 `PETSKILL_SelfExplodeAttack()`
+- `PETSKILL_functbl[]` 也沒有 `PETSKILL_SelfExplodeAttack` 註冊項
+- `version.h` 只有被註解掉的：
+
+`//#define _SKILL_SELFEXPLODE // (不可开) ... 自爆(缺图)`
+
+所以 582 同樣會在 `PETSKILL_getPetskillFuncPointer()` 得到 NULL，`PETSKILL_Use()` 回 FALSE。
+
+### V0.59 Web 對應
+
+新增：
+
+`ENEMY_SOURCE_UNREGISTERED_SKILL_IDS = {502, 582}`
+
+Enemy AI 抽中這兩個 ID 時：
+
+- 標記 `sourceSkillUnregistered`
+- 不執行 handler
+- 保持來源 C_WAIT
+- 不攻擊
+- 不跑自身 StatusSeq／MagicStatusSeq
+- 不推進毒、劇毒、虛弱、鐵壁、大地鎧甲等自身行動點倒數
+
+這和 V0.52 的「技能 ID 根本不存在」是不同資料錯誤，但最終 battle 行為相同。
