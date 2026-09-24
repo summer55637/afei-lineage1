@@ -6,6 +6,7 @@ const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
+const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
   [[5579,14,11],[5579,14,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,49],[7000,103,49]],
@@ -51,10 +52,10 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:11,
+    schemaVersion:12,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
-    gold:0,battles:0,wins:0,mapId:null,encounterId:null,auto:true,autoCapture:true,
+    gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
     quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
@@ -147,7 +148,12 @@ function normalizeState(raw){
     s.activePetId=s.petBox[0].id;
   }
   if(n(raw?.schemaVersion)<11)s.encounterId=null;
-  s.schemaVersion=11;
+  if(n(raw?.schemaVersion)<12){
+    s.encounterCep=Math.max(0,n(raw?.encounterCep));
+    s.virtualWalkSteps=Math.max(0,Math.floor(n(raw?.virtualWalkSteps)));
+    s.lastEncounterRoll=null;
+  }
+  s.schemaVersion=12;
   delete s.pets;
   return s;
 }
@@ -429,7 +435,7 @@ function encounterDynamicFormation(encounter){
   for(const ref of encounter.groups||[]){
     const spec=dynamicGroupCatalog.get(String(ref.groupId));
     if(!ref.resolved||!spec||!dynamicGroupUnlocked(spec))continue;
-    if(!(spec.members||[]).some(m=>n(m.weight)>0&&n(m.createMax)>0))continue;
+    if(!(spec.members||[]).some(m=>n(m.weight)>0&&n(m.createMax)>0&&m.validTemplate!==false))continue;
     choices.push({ref,spec,weight:Math.max(0,n(ref.weight))});
   }
   if(!choices.length)return null;
@@ -479,25 +485,66 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     isBig:!!raw?.isBig
   };
 }
+function randomEnemyReplacement(member){
+  const sourceId=Number(member?.enemyId)||0;
+  const pool=encounterRuntime?.randomEnemy?.tables?.[String(sourceId)];
+  if(!Array.isArray(pool)||!pool.length)return Object.assign({},member,{sourceEnemyId:sourceId,resolvedEnemyId:sourceId});
+  const targetId=Number(pool[Math.floor(Math.random()*pool.length)]);
+  const template=encounterRuntime?.randomEnemy?.templates?.[String(targetId)];
+  if(!template)return Object.assign({},member,{sourceEnemyId:sourceId,resolvedEnemyId:targetId,enemyId:targetId,validTemplate:false,randomEnemy:true});
+  return Object.assign({},member,template,{
+    slot:member.slot,
+    weight:n(member.weight),
+    sourceEnemyId:sourceId,
+    resolvedEnemyId:targetId,
+    enemyId:targetId,
+    randomEnemy:true
+  });
+}
 function buildDynamicFormation(spec,entry){
-  const members=(spec?.members||[]).filter(x=>n(x.weight)>0&&n(x.createMax)>0);
-  if(!members.length)return [];
-  const maxByMembers=members.reduce((s,x)=>s+Math.max(0,Math.floor(n(x.createMax))),0);
-  const maxCount=Math.max(1,Math.min(Math.floor(n(spec.encounterMax)||1),maxByMembers));
-  let entrymax=rnd(1,maxCount);
+  // 原 ENEMY_getEnemy() 先對每個 Group slot 執行一次 RandomEnemy 替換，
+  // 同一 slot 在整場生成期間固定使用該替代 Enemy。
+  const slots=(spec?.members||[]).map(randomEnemyReplacement);
+  const validSlots=slots.filter(x=>x.validTemplate!==false&&n(x.createMax)>0);
+  const selectable=validSlots.filter(x=>n(x.weight)>0);
+  if(!validSlots.length||!selectable.length)return [];
+
+  // createenemynum 會計入權重 0 的有效 slot；這可能使 entrymax 高於實際可抽滿數量，
+  // 原碼最後由 100 次 loop guard 自然截斷。
+  const createenemynum=validSlots.reduce((sum,x)=>sum+Math.max(0,Math.floor(n(x.createMax))),0);
+  const enemyentrymax=Math.min(Math.max(1,Math.floor(n(spec.encounterMax)||1)),createenemynum);
+  if(enemyentrymax<1)return [];
+  let entrymax=rnd(1,enemyentrymax);
+
+  // RandomEnemy 替換後，多個 slot 可能指向同一 Enemy array。
+  // 原碼限制 = ENEMY_CREATEMAXNUM * samecount。
+  const sameCounts=new Map();
+  for(const slot of validSlots){
+    const key=Number(slot.enemyId);
+    sameCounts.set(key,(sameCounts.get(key)||0)+1);
+  }
+
+  const totalWeight=selectable.reduce((sum,x)=>sum+Math.max(0,n(x.weight)),0);
+  if(totalWeight<=0)return [];
   const counts=new Map(),units=[];
   let bigcnt=0,guard=0;
   while(units.length<entrymax&&guard<100){
     guard++;
-    const total=members.reduce((s,x)=>s+Math.max(0,n(x.weight)),0);
-    let roll=Math.random()*total,pick=members[members.length-1];
-    for(const m of members){roll-=Math.max(0,n(m.weight));if(roll<=0){pick=m;break}}
-    const key=Number(pick.enemyId)||pick;
+    let roll=Math.random()*totalWeight,pick=selectable[selectable.length-1];
+    for(const slot of selectable){
+      roll-=Math.max(0,n(slot.weight));
+      if(roll<=0){pick=slot;break}
+    }
+    const key=Number(pick.enemyId);
     const used=counts.get(key)||0;
-    if(used>=Math.max(0,Math.floor(n(pick.createMax))))continue;
-    if(pick.validTemplate===false)continue;
+    const samecount=sameCounts.get(key)||1;
+    const limit=Math.max(0,Math.floor(n(pick.createMax)))*samecount;
+    if(used>=limit)continue;
 
     const unit=makeEnemyUnit(pick,entry,units.length);
+    unit.sourceEnemyId=pick.sourceEnemyId??pick.enemyId;
+    unit.randomEnemy=!!pick.randomEnemy;
+
     if(unit.isBig){
       if(bigcnt>=5){
         entrymax--;
@@ -530,8 +577,8 @@ function syncEnemyTarget(){
   const t=targetEnemyUnit();if(!enemy||!t)return;
   enemy.level=t.level;enemy.name=t.name;enemy.hp=t.hp;enemy.maxHp=t.maxHp;enemy.attack=t.attack;enemy.defense=t.defense;
 }
-function spawnEnemy(){
-  const map=currentMap();
+function spawnEnemy(context=null){
+  const map=context?.map||currentMap();
   if(!map)return;
   let entry=null,dynamicSpec=null;
   if(map.questZone){
@@ -539,10 +586,10 @@ function spawnEnemy(){
     if(!entries.length)return;
     entry=weightedEntry(entries);
   }else{
-    const selected=currentEncounter(map);
+    const selected=context?.selected||currentEncounter(map);
     if(!selected)return;
-    const point=randomPointInEncounter(selected);
-    const encounter=resolveEncounterAt(map,point.x,point.y);
+    const point=context?.point||randomPointInEncounter(selected);
+    const encounter=context?.encounter||resolveEncounterAt(map,point.x,point.y);
     if(!encounter)return;
     entry=runtimeEntryForEncounter(map,encounter);
     dynamicSpec=encounterDynamicFormation(encounter);
@@ -550,6 +597,8 @@ function spawnEnemy(){
     dynamicSpec.roamX=point.x;
     dynamicSpec.roamY=point.y;
     dynamicSpec.selectedEncounterId=selected.encounterId;
+    dynamicSpec.encounterCep=context?.cepUsed??null;
+    dynamicSpec.encounterRoll=context?.roll??null;
   }
   const consumeId=map.questZone?n(entry.variant.consumeOnSpawnItemId):0;
   if(consumeId){
@@ -579,6 +628,7 @@ function spawnEnemy(){
       encounterId:dynamicSpec?.encounterId??null,groupId:dynamicSpec?.groupId??null,
       selectedEncounterId:dynamicSpec?.selectedEncounterId??dynamicSpec?.encounterId??null,
       roamX:dynamicSpec?.roamX??null,roamY:dynamicSpec?.roamY??null,
+      encounterCep:dynamicSpec?.encounterCep??null,encounterRoll:dynamicSpec?.encounterRoll??null,
       level:first.level,name:first.name,hp:first.hp,maxHp:first.maxHp,attack:first.attack,defense:first.defense
     };
     state.battles++;
@@ -885,10 +935,52 @@ function attackTurn(){
   if(enemy)syncEnemyTarget();
   render();
 }
+function walkEncounterStep(){
+  const map=currentMap();
+  if(!map)return false;
+  if(map.questZone){
+    spawnEnemy();
+    return !!enemy;
+  }
+  const selected=currentEncounter(map);
+  if(!selected)return false;
+  const point=randomPointInEncounter(selected);
+  const encounter=resolveEncounterAt(map,point.x,point.y);
+  if(!encounter)return false;
+
+  let min=clamp(n(encounter.encounterMin),0,100);
+  let max=clamp(n(encounter.encounterMax),0,100);
+  if(min>max){const t=min;min=max;max=t}
+  let cep=n(state.encounterCep);
+  if(cep<min)cep=min;
+  if(cep>max)cep=max;
+
+  // 原 char_walk.c：每走一步 if(rand()%120 < cep)，失敗則 cep++，成功重設 minep。
+  const roll=Math.floor(Math.random()*120);
+  state.virtualWalkSteps=Math.max(0,Math.floor(n(state.virtualWalkSteps)))+1;
+  state.lastEncounterRoll={roll,cep,min,max,encounterId:encounter.encounterId,x:point.x,y:point.y};
+  if(roll<cep){
+    state.encounterCep=min;
+    spawnEnemy({map,selected,encounter,point,cepUsed:cep,roll});
+    return !!enemy;
+  }
+  if(cep<max)cep++;
+  state.encounterCep=cep;
+  return false;
+}
 function tick(){
   if(!state||!state.auto)return;
   if(state.hp<=0){defeat();return}
-  if(!enemy){spawnEnemy();return}
+  if(!enemy){
+    const map=currentMap();
+    if(map?.questZone){
+      spawnEnemy();
+      return;
+    }
+    for(let i=0;i<IDLE_WALK_STEPS_PER_TICK&&!enemy;i++)walkEncounterStep();
+    if(!enemy)render();
+    return;
+  }
   const c=captureChance();
   const target=targetEnemyUnit();
   const hpRatio=n(target?.hp)/Math.max(1,n(target?.maxHp));
@@ -1099,7 +1191,7 @@ function render(){
       const a=encounter?.area||{},groups=encounter?.groups||[],resolved=groups.filter(g=>g.resolved).length;
       $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種 Lv1';
       $('#mapInfo').textContent=encounter
-        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+'；每戰會在此矩形隨機漫遊並套用最高 zorder；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
+        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+' · 遇敵CEP '+n(state.encounterCep)+'（min '+encounter.encounterMin+' / max '+encounter.encounterMax+'） · 虛擬步數 '+Math.floor(n(state.virtualWalkSteps))+'；每 900ms 放置 tick 模擬 '+IDLE_WALK_STEPS_PER_TICK+' 步，逐步使用原 rand()%120<CEP 規則；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
         :'此 Floor 沒有可用的 Encounter。';
     }
   }
@@ -1131,7 +1223,7 @@ function renderEnemy(){
     const rows=units.map((u,i)=>{
       const hpPct=clamp(u.hp/u.maxHp*100,0,100),dead=u.hp<=0;
       return '<div class="enemy-unit '+(dead?'defeated':'')+'">'+
-        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+(u.isBig?' · 大型':'')+'</b><span>EnemyID '+(u.enemyId??'—')+'</span></div>'+
+        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+(u.isBig?' · 大型':'')+(u.randomEnemy?' · RandomEnemy':'')+'</b><span>EnemyID '+(u.enemyId??'—')+(u.randomEnemy&&u.sourceEnemyId!=null?' ← '+u.sourceEnemyId:'')+'</span></div>'+
         '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+'</div>'+
         '<div class="progress"><i style="width:'+hpPct+'%"></i></div></div>';
     }).join('');
@@ -1139,7 +1231,8 @@ function renderEnemy(){
       '<div class="enemy-meta"><span class="pill">多敵人戰鬥</span><span class="pill">依序鎖定第一個存活敵人</span>'+
       (enemy.encounterId!=null?'<span class="pill">Encounter '+enemy.encounterId+'</span>':'')+
       (enemy.groupId!=null?'<span class="pill">Group '+enemy.groupId+'</span>':'')+
-      (enemy.roamX!=null?'<span class="pill">座標 '+enemy.roamX+','+enemy.roamY+'</span>':'')+'</div>'+
+      (enemy.roamX!=null?'<span class="pill">座標 '+enemy.roamX+','+enemy.roamY+'</span>':'')+
+      (enemy.encounterCep!=null?'<span class="pill">CEP '+enemy.encounterCep+' / Roll '+enemy.encounterRoll+'</span>':'')+'</div>'+
       '<div class="enemy-units">'+rows+'</div>';
   }else{
     const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
@@ -1272,7 +1365,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.15 載入完成：Encounter 隨機座標已套用 zorder；Enemy 生成加入大型怪最多 5 隻與原碼 100 次保護。','good');
+    addLog('V0.16 載入完成：走路遇敵 CEP（rand()%120）已接入；RandomEnemy slot 替代與 samecount×CREATEMAXNUM 已還原。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
