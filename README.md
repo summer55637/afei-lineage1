@@ -2895,3 +2895,88 @@ CriticalCheck 本身讀的是 `FIXDEX`，所以 +20% QUICK 不會再反過來提
 
 - 573 救援：HP 公式已確認，但 Enemy AI 對 `PETSKILL_TARGET_OTHER` 的實際敵我側選目標仍需再對齊，不猜目標。
 - 582 自爆攻擊：來源 `version.h` 直接標註 `_SKILL_SELFEXPLODE // (不可开) ... 自爆(缺图)`，且本來源沒有可執行函式，因此不按資料文字硬做。
+
+## V0.49 鐵壁／銅牆／大地鎧甲
+
+V0.49 接入三個 Enemy AI 有正權重、且效果完全由 battle 狀態欄位完成、不依賴外部 magic.txt / attmagic.bin 的防禦支援技：
+
+- 552「鐵壁」：`PETSKILL_MagicStatusChange`，`铁壁|3|30|全`
+- 565「銅牆」：`PETSKILL_MagicStatusChange`，`铁壁|5|40|全`
+- 601「大地鎧甲」：`PETSKILL_SetMagicPet`，`3|15|TGH`
+
+### 552／565 鐵壁系
+
+`PETSKILL_MagicStatusChange_Battle()` 直接解析 option：狀態／turn／nums／單全，並呼叫 `BATTLE_MultiMagicStatusChange()`。
+
+來源 `MagicStatus[]` 中「鐵壁」對應 `CHAR_MAGICSUPERWALL`。對 ALLMYSIDE 每個目標：
+
+- 若任何 MagicTbl 狀態已存在，跳過，不刷新
+- 否則 `CHAR_MAGICSUPERWALL = turn`
+- `CHAR_OTHERSTATUSNUMS = nums`
+
+物理傷害的真正效果在 `BATTLE_DamageCalc()`：
+
+`def = (CHAR_OTHERSTATUSNUMS + rand()%20) / 100`
+
+`defense += defense * def`
+
+因此：
+
+- 552 不是固定 +30% 防，而是每次物理傷害計算時 **+30～49%**
+- 565 不是固定 +40% 防，而是每次物理傷害計算時 **+40～59%**
+
+而且順序是先以 WORKDEFENCEPOWER ×0.70 取得防禦，再套鐵壁，之後才套來源的 Enemy 隨機防禦浮動。V0.49 已照此順序接入。
+
+`BATTLE_MagicStatusSeq()` 在每名角色行動開始前把 MagicTbl 倒數 -1；降到 0 就清除。因此同回合早於目標行動前套上的鐵壁，會在該目標輪到行動時先扣一次，保留原始行動序時序。
+
+### 601 大地鎧甲
+
+`PETSKILL_SetMagicPet_Battle()` 對 ALLMYSIDE 解析：
+
+- turn = 3
+- nums = 15
+- type = TGH
+
+對每個目標先檢查 `CHAR_MYSKILLDUCK / STR / TGH / DEX`；任一已存在就跳過，不覆寫也不刷新。
+
+成功目標寫入：
+
+`CHAR_MYSKILLTGH = 3`
+
+`CHAR_MYSKILLTGHPOWER = 15`
+
+真正能力加成不在施法函式內。`CHAR_complianceParameter()` 會呼叫 `Other_DefcharWorkInt()`，其中：
+
+`FIXTOUGH += baseTough * 15 / 100`
+
+而 battle 每回合建立參數時會對場上每個角色重新呼叫 `CHAR_complianceParameter()`，再用 `BATTLE_TurnParam()` 建立 WORKDEFENCEPOWER。
+
+因此來源實際時序是：
+
+- 技能在某回合中途套上後，不會倒灌重算該回合已建立的 WORKDEFENCEPOWER
+- 下一次 battle turn 建表時才把 TGH +15% 算進防禦
+- `BATTLE_StatusSeq()` 尾端在角色自己行動時再把 `CHAR_MYSKILLTGH` 倒數 -1
+
+V0.49 因此用「回合建表快照」保存大地鎧甲，而不是施放瞬間直接永久修改 unit.defense。
+
+### 與虛弱／其他技能的順序
+
+來源 `Other_DefcharWorkInt()` 先處理 MySkill TGH，再處理虛弱 ×0.8。V0.49 保留相同概念：先建立含大地鎧甲的本回合防禦，再由 battle view 套虛弱。
+
+同時把本回合防禦型技能修正建立在大地鎧甲快照之上，避免疾速攻擊／狂亂暴走／撕裂／背水等技能把 TGH Buff 無意覆寫掉。
+
+### 正權重覆蓋
+
+| Skill | distinct Enemy ID | 正權重總和 |
+| --- | ---: | ---: |
+| 552 | 1 | 1 |
+| 565 | 20 | 20 |
+| 601 | 6 | 6 |
+
+565 銅牆是目前剩餘支援技中使用面相對高的一筆。
+
+### 仍不硬接
+
+- 573 救援：公式已知，但 Enemy AI 的 `TARGET_OTHER` 實際側別目標仍需再確認。
+- 582 自爆攻擊：此來源 `version.h` 明確標成不可開／缺圖，且缺可執行技能函式。
+- 580 沉默：狀態本身可解析，但 web 尚未有正式咒術 command 可被禁止。
