@@ -7,7 +7,7 @@
     "sourceResearch": {
       "verifiedCount": 5,
       "unresolvedCount": 4,
-      "note": "Acquisition sources are recorded only when backed by original NPC/event scripts."
+      "note": "Acquisition sources are recorded only when backed by original NPC/event/enemy/group/encounter data."
     }
   },
   "items": [
@@ -25,11 +25,10 @@
       "sourceStatus": "verified",
       "sources": [
         {
-          "type": "monster_drop",
-          "label": "加魯卡野生威威 Lv1–4",
+          "type": "enemy_drop",
+          "label": "加魯卡野生威威掉落",
           "floorId": 200,
           "mapName": "加魯卡",
-          "tempNo": 32,
           "enemyIds": [
             372,
             373,
@@ -42,19 +41,12 @@
             232,
             233
           ],
-          "encounterIds": [
-            87,
-            88,
-            89,
-            90,
-            91
-          ],
-          "rawItemProb": 30,
-          "probabilityBase": 1000,
-          "dropChance": 0.03,
-          "buildFlag": "_FIX_ITEMPROB",
-          "sourceFile": "gmsv/data/enemy.txt",
-          "summary": "加魯卡野生威威 Lv1–4 掉落；原資料 ITEMPROB=30，服務端啟用 _FIX_ITEMPROB 後為 30/1000＝3%。"
+          "enemySource": "gmsv/data/enemy.txt",
+          "groupSource": "gmsv/data/group.txt",
+          "encounterSource": "gmsv/data/encount.txt",
+          "dropProbabilityRaw": 30,
+          "dropRule": "_FIX_ITEMPROB",
+          "summary": "海藍之棒由加魯卡的威威系野生怪物掉落；原 enemy.txt 掉落參數為 30。Lv1 威威群組也包含此掉落來源。"
         }
       ]
     },
@@ -72,11 +64,10 @@
       "sourceStatus": "verified",
       "sources": [
         {
-          "type": "monster_drop",
-          "label": "加魯卡野生威威 Lv10–12",
+          "type": "enemy_drop",
+          "label": "加魯卡野生威威掉落",
           "floorId": 200,
           "mapName": "加魯卡",
-          "tempNo": 32,
           "enemyIds": [
             436
           ],
@@ -84,28 +75,12 @@
             311,
             313
           ],
-          "encounterIds": [
-            189,
-            190,
-            191,
-            192,
-            193,
-            194,
-            195,
-            196,
-            197,
-            198,
-            199,
-            200,
-            201,
-            202
-          ],
-          "rawItemProb": 30,
-          "probabilityBase": 1000,
-          "dropChance": 0.03,
-          "buildFlag": "_FIX_ITEMPROB",
-          "sourceFile": "gmsv/data/enemy.txt",
-          "summary": "加魯卡野生威威 Lv10–12 掉落；原資料 ITEMPROB=30，服務端啟用 _FIX_ITEMPROB 後為 30/1000＝3%。"
+          "enemySource": "gmsv/data/enemy.txt",
+          "groupSource": "gmsv/data/group.txt",
+          "encounterSource": "gmsv/data/encount.txt",
+          "dropProbabilityRaw": 30,
+          "dropRule": "_FIX_ITEMPROB",
+          "summary": "海藍之兜由加魯卡較高等級的威威系野生怪物掉落；原 enemy.txt 掉落參數為 30。"
         }
       ]
     },
