@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.3</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.4</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -132,18 +132,18 @@
               <div class="eyebrow">CONDITION ITEMS</div>
               <h2>條件道具背包</h2>
             </div>
-            <strong id="inventoryKinds">0 / 9</strong>
+            <div class="inventory-head-stats"><strong id="inventoryKinds">0 / 9</strong><span id="sourceProgress" class="source-progress">來源 3 / 9</span></div>
           </div>
           <div id="inventoryList" class="inventory-list"></div>
           <button id="testSupplyBtn" class="dev-btn">開發測試補給：每種 +1</button>
-          <div class="muted dev-note">僅供目前開發驗證。原始取得來源尚未解出前，不把這個按鈕當成正式遊戲內容。</div>
+          <div class="muted dev-note">僅供目前開發驗證。已確認 3 種正式來源；其餘來源尚未解出。此按鈕仍只供開發驗證，不視為正式取得方式。</div>
         </div>
       </article>
     </section>
 
     <article class="card note">
-      <b>V0.3：</b>
-      捕獲率已改用原服務端 <code>BATTLE_CaptureCheck</code> 的結構：敵方 HP、等級差、敏捷差、E_T_GET、運、魅力。資料庫中的特殊捕獲條件也會檢查；目前尚未加入任務／商店取得那些特殊道具，所以缺少條件道具時會禁止捕獲。
+      <b>V0.4：</b>
+      捕獲率已改用原服務端 <code>BATTLE_CaptureCheck</code> 的結構：敵方 HP、等級差、敏捷差、E_T_GET、運、魅力。資料庫中的特殊捕獲條件也會檢查；目前 19720、19733、20259 的正式取得來源已由原 NPC 腳本確認；完整任務鏈與材料來源仍在逐步接入。
     </article>
   </main>
 
