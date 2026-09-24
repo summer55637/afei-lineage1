@@ -455,26 +455,139 @@ function encounterDynamicFormation(encounter){
   });
 }
 
+function rollEnemyCreateStats(rawStats){
+  // enemy.c：四圍各自 RAND(0,4)-2，再額外隨機分配 10 點。
+  const st={
+    vital:n(rawStats?.vital)+rnd(-2,2),
+    str:n(rawStats?.str)+rnd(-2,2),
+    tgh:n(rawStats?.tgh)+rnd(-2,2),
+    dex:n(rawStats?.dex)+rnd(-2,2)
+  };
+  const allocatedFrom=Object.assign({},st);
+  const keys=['vital','str','tgh','dex'];
+  for(let i=0;i<10;i++)st[keys[rnd(0,3)]]++;
+  return {stats:st,allocatedFrom};
+}
+function serverEnemyDerived(raw,level,rolledStats){
+  const init=n(raw?.serverInitNum);
+  const lvup=Math.trunc(n(raw?.serverLvUpPoint));
+  const factor=(level-1)*lvup+init;
+  const charStats={
+    vital:Math.trunc(factor*n(rolledStats.vital)),
+    str:Math.trunc(factor*n(rolledStats.str)),
+    tgh:Math.trunc(factor*n(rolledStats.tgh)),
+    dex:Math.trunc(factor*n(rolledStats.dex))
+  };
+  // char.c CHAR_initcharWorkInt() 的 C int 截斷規則。
+  const attack=Math.trunc(
+    charStats.str*.01+
+    charStats.tgh*.001+
+    charStats.vital*.001+
+    charStats.dex*.0005
+  );
+  const defense=Math.trunc(
+    charStats.tgh*.01+
+    charStats.str*.001+
+    charStats.vital*.001+
+    charStats.dex*.0005
+  );
+  const quick=Math.trunc(charStats.dex*.01);
+  const maxHp=Math.trunc((charStats.vital*4+charStats.str+charStats.tgh+charStats.dex)*.01);
+  return {factor,charStats,attack,defense,quick,maxHp};
+}
+function enemyRandomChangeType(enemyId){
+  enemyId=Number(enemyId);
+  const cfg=encounterRuntime?.randomChange||{};
+  const inRanges=ranges=>(ranges||[]).some(([a,b])=>enemyId>=Number(a)&&enemyId<=Number(b));
+  if(inRanges(cfg.humanEnemyRanges))return 'human';
+  if(inRanges(cfg.petEnemyRanges))return 'pet';
+  return null;
+}
+function applyEnemyRandomChange(raw,elements,petSkills){
+  const enemyId=Number(raw?.enemyId)||0;
+  const type=raw?.randomChangeType||enemyRandomChangeType(enemyId);
+  const result={
+    type:type||null,
+    elements:Object.assign({},elements||{}),
+    petSkills:Array.isArray(petSkills)?petSkills.slice():[],
+    gymBodySymbol:null,
+    dojoWeapon:null,
+    skillRule:null
+  };
+  if(!type)return result;
+  const cfg=encounterRuntime?.randomChange||{};
+  if(type==='human'){
+    const bodies=cfg.gymBodySymbols||[];
+    if(bodies.length)result.gymBodySymbol=bodies[Math.floor(Math.random()*bodies.length)];
+    const work=(rnd(0,20)-10)*10;
+    let work2=100-Math.abs(work);
+    if(rnd(0,1))work2*=-1;
+    result.elements={earth:work,water:work2,fire:-work,wind:-work2};
+
+    const weapons=cfg.weaponPool||['none','fist','axe','club','spear','bow','boomerang','boundthrow','breakthrow'];
+    result.dojoWeapon=weapons[Math.floor(Math.random()*weapons.length)]||'none';
+    const normal=new Set(['fist','bow','boomerang','boundthrow','breakthrow']);
+    if(normal.has(result.dojoWeapon)){
+      result.petSkills[0]=1;result.petSkills[1]=1;
+      result.skillRule='normal-attack';
+    }else{
+      result.petSkills[0]='EnemyGymSkill';result.petSkills[1]='EnemyGymSkill';
+      result.skillRule='compile-time EnemyGymSkill pool';
+    }
+  }else if(type==='pet'){
+    result.petSkills[0]='EnemyGymSkill';result.petSkills[1]='EnemyGymSkill';
+    result.skillRule='compile-time EnemyGymSkill pool';
+  }
+  return result;
+}
 function makeEnemyUnit(raw,fallbackEntry,index=0){
   const base=fallbackEntry?.variant||{};
-  const st=Object.assign({},base.stats||{},raw?.stats||{});
-  const vit=Math.max(1,n(st.vital)||8);
-  const str=Math.max(1,n(st.str)||6);
-  const tgh=Math.max(1,n(st.tgh)||6);
+  const baseStats=Object.assign({},base.stats||{},raw?.stats||{});
   const levelMin=Math.max(1,n(raw?.levelMin)||n(base.levelMin)||1);
   const levelMax=Math.max(levelMin,n(raw?.levelMax)||n(base.levelMax)||levelMin);
   const level=rnd(levelMin,levelMax);
-  const hp=Math.max(35,Math.round(28+vit*5.5));
+  const hasServerCreate=raw?.validTemplate!==false&&raw?.serverInitNum!=null&&raw?.serverLvUpPoint!=null;
+
+  let st=Object.assign({},baseStats),allocatedFrom=null,server=null;
+  let hp,attack,defense,quick=0;
+  if(hasServerCreate){
+    const rolled=rollEnemyCreateStats(baseStats);
+    st=rolled.stats;allocatedFrom=rolled.allocatedFrom;
+    server=serverEnemyDerived(raw,level,st);
+    hp=Math.max(1,server.maxHp);
+    attack=server.attack;
+    defense=server.defense;
+    quick=server.quick;
+  }else{
+    const vit=Math.max(1,n(st.vital)||8);
+    const str=Math.max(1,n(st.str)||6);
+    const tgh=Math.max(1,n(st.tgh)||6);
+    hp=Math.max(35,Math.round(28+vit*5.5));
+    attack=Math.max(3,Math.round(3+str*.62));
+    defense=Math.max(0,Math.round(tgh*.28));
+    quick=Math.max(0,Math.round(n(st.dex)||0));
+  }
+
+  const change=applyEnemyRandomChange(
+    raw,
+    Object.assign({},raw?.elements||base.elements||{}),
+    Array.isArray(raw?.petSkills)?raw.petSkills:[]
+  );
   return {
     id:'unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7),
     name:raw?.name||fallbackEntry?.species?.clientLabel||base.serverName||('Enemy '+(raw?.enemyId??'')),
     enemyId:Number(raw?.enemyId??base.enemyIds?.[0]??0)||null,
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
-    level,hp,maxHp:hp,
-    attack:Math.max(3,Math.round(3+str*.62)),
-    defense:Math.max(0,Math.round(tgh*.28)),
+    level,hp,maxHp:hp,attack,defense,quick,
     stats:st,
-    elements:Object.assign({},raw?.elements||base.elements||{}),
+    sourceBaseStats:Object.assign({},baseStats),
+    allocatedFrom,
+    serverDerived:server,
+    serverInitNum:raw?.serverInitNum??null,
+    serverLvUpPoint:raw?.serverLvUpPoint??null,
+    elements:change.elements,
+    petSkills:change.petSkills,
+    randomChange:change.type?change:null,
     animationGroupId:raw?.animationGroupId??fallbackEntry?.species?.animationGroupId??null,
     wildGrowth:n(raw?.wildGrowth)||n(base.wildGrowth)||1,
     captureBase:raw?.captureBase!=null?n(raw.captureBase):n(base.captureBase),
@@ -763,6 +876,8 @@ function createCapturedPet(target=targetEnemyUnit()){
       id:uid(),name:target.name,animationGroupId:target.animationGroupId,
       tempNo:target.tempNo,level:target.level||1,exp:0,wildGrowth:n(target.wildGrowth),
       stats:Object.assign({},target.stats||{}),elements:Object.assign({},target.elements||{}),
+      petSkills:Array.isArray(target.petSkills)?target.petSkills.slice():[],
+      serverInitNum:target.serverInitNum??null,serverLvUpPoint:target.serverLvUpPoint??null,
       capturedAt:Date.now()
     };
   }
@@ -1224,7 +1339,7 @@ function renderEnemy(){
       const hpPct=clamp(u.hp/u.maxHp*100,0,100),dead=u.hp<=0;
       return '<div class="enemy-unit '+(dead?'defeated':'')+'">'+
         '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+(u.isBig?' · 大型':'')+(u.randomEnemy?' · RandomEnemy':'')+'</b><span>EnemyID '+(u.enemyId??'—')+(u.randomEnemy&&u.sourceEnemyId!=null?' ← '+u.sourceEnemyId:'')+'</span></div>'+
-        '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+'</div>'+
+        '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+' · 攻 '+u.attack+' · 防 '+u.defense+' · 敏 '+n(u.quick)+(u.serverDerived?' · Server公式':'')+(u.randomChange?' · RandomChange '+u.randomChange.type:'')+'</div>'+
         '<div class="progress"><i style="width:'+hpPct+'%"></i></div></div>';
     }).join('');
     box.innerHTML='<div class="enemy-name">'+(enemy.dynamicGroup?'動態群組':'任務編成')+' · '+alive+' / '+total+' 存活</div>'+
@@ -1365,7 +1480,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.16 載入完成：走路遇敵 CEP（rand()%120）已接入；RandomEnemy slot 替代與 samecount×CREATEMAXNUM 已還原。','good');
+    addLog('V0.17 載入完成：Enemy 四圍隨機生成與 CHAR_complianceParameter 衍生 HP／攻／防／敏已還原；RandomChange 規則已接入。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
