@@ -3736,3 +3736,108 @@ Enemy AI 抽中這兩個 ID 時：
 - 不推進毒、劇毒、虛弱、鐵壁、大地鎧甲等自身行動點倒數
 
 這和 V0.52 的「技能 ID 根本不存在」是不同資料錯誤，但最終 battle 行為相同。
+
+## V0.60 黑烏力化
+
+V0.60 接入 ID 635「黑烏力化」：
+
+- 函式：`PETSKILL_BecomePig`
+- option：`30 180 100388`
+- Enemy AI：1 個 distinct Enemy，正權重總和 1
+
+### 原技能流程
+
+`PETSKILL_BecomePig()` 本身只設定 `BATTLE_COM_S_BECOMEPIG`、target、C_OK 與 skill array。
+
+`battle.c` 把 BECOMEPIG 放在普通物理攻擊 command 群組，所以會先完整執行：
+
+- 普通命中／閃避／會心
+- 物理傷害
+- 普通 Counter／反 Counter 鏈
+
+之後才檢查黑烏力化附加效果。
+
+### 只有玩家本人能被黑烏力化
+
+附加效果要求：
+
+- 本次不是 MISS
+- 不是 DODGE
+- 不是 ALLGUARD
+- 不是 ARRANGE
+- 目標仍存活
+- 目標 `CHAR_WHICHTYPE == CHAR_TYPEPLAYER`
+- 非同隊
+
+所以打中玩家寵物時只有普通物理攻擊，不會套黑烏力化。
+
+### option `30 180 100388`
+
+原碼解析為：
+
+- `petrate = 30`
+- `pettime = 180` 秒
+- `pigbbi = 100388`
+
+成功判定是：
+
+`rand()%100 < 30`
+
+也就是 0～29，共 30/100。
+
+第一次成功時原 `CHAR_BECOMEPIG` 初值為 -1：
+
+`pettime + 1 + (-1) = 180`
+
+若已有狀態，再次成功：
+
+`CHAR_BECOMEPIG = pettime + current`
+
+所以剩餘秒數會直接再加 180 秒。
+
+### 真正限制哪些戰鬥指令
+
+黑烏力化期間，原 `battle.c` 明確允許：
+
+- ATTACK
+- GUARD
+- NONE
+- ITEM
+- ESCAPE
+- CAPTURE
+- WAIT
+- PETIN
+- PETOUT
+
+只有其他指令才會被強制改成 GUARD，訊息寫的是「變成烏力後不能使用咒術和職業技能」。
+
+此外武器會被視為 FIST，回力標也被改回一般攻擊。
+
+目前 web 沒有武器系統、咒術 command、職業技能 command、騎寵系統；而玩家目前可用的攻擊／防禦／捕捉都在原允許清單。
+
+因此 V0.60 **不添加任何攻擊／防禦／敏捷 debuff**，只保存真正存在的黑烏力秒數狀態。
+
+### 秒數與戰鬥結束時序
+
+來源 `net.c` 每秒把 `CHAR_BECOMEPIG` 減 1。
+
+當倒數要降到 0：
+
+- 先把值設為 0
+- 若當時不在戰鬥，立刻設回 -1 並解除
+- 若仍在戰鬥，不設 -1
+
+`battle.c` 判定黑烏力化用的是 `CHAR_BECOMEPIG > -1`，所以**戰鬥中即使秒數已經倒到 0，狀態仍持續到離開戰鬥後才解除**。
+
+V0.60 用 `playerPigUntilMs` 保存 wall-clock 到期時間；若時間已到但戰鬥仍存在，`playerPigActive()` 仍回 true，直到戰鬥離開後才清除。
+
+這個欄位寫入存檔，故 180 秒狀態可以跨重新整理保留。
+
+### Save schema
+
+V0.60 將 `schemaVersion` 15 升為 16，新增：
+
+- `playerPigUntilMs`
+- `playerPigImage`
+
+舊存檔透過 fresh-state merge 自動取得預設值，不需要破壞既有角色／寵物／任務資料。
