@@ -4052,3 +4052,20 @@ V0.61 已把這套進度持久化到 save。
 - 688 → magic 435：MAGIC_Weaken
 
 這兩筆 V0.61 不會拿 AttackMagic 傷害公式硬套；下一步分別接 FieldAttChange 與正式 Magic Weaken。
+
+### V0.61 MP／item runtime 補充確認
+
+後續追 `MAGIC_DirectUse()` 時確認，PetSkill option 內的 `item 19647～19671` 對非玩家施術者會直接當成全域 `ITEM_item[]` existing-item index，並讀 `ITEM_MAGICUSEMP`。
+
+若該 existing-item index 無效，`ITEM_getInt()` 會回 `-1`；`MAGIC_DirectUse()` 的 `if (mp < 0) {}` 區塊是空的，仍會把 `mp=-1` 傳進 magic function。
+
+但這**不影響 V0.61 已接的 301～325**，因為原 `MAGIC_AttMagic_Battle(charaindex,toNo,marray,mp)` 從頭到尾完全沒有讀取 `mp`：
+
+- 不做 `CHAR_MP < mp` 檢查
+- 不扣 MP
+- 直接解析 attr／Power／MagicLv／attidx
+- 直接呼叫 `BATTLE_MultiAttMagic()`
+
+所以 301～325 的原 build 行為確實與 dynamic item slot 內容、Enemy MP 都無關；V0.61 目前直接執行 AttackMagic 是正確的。
+
+相對地，magic 204 `MAGIC_FieldAttChange` 與 magic 435 `MAGIC_Weaken` 都會檢查並扣傳入的 mp，因此 676／688 仍不能沿用 301～325 的無 MP 路徑，必須另外處理。
