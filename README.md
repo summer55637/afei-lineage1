@@ -3022,3 +3022,103 @@ V0.50 接入 ID 707「劇毒攻擊」：
 否則 `per = 0`。
 
 目前 web 寵物資料沒有 `CHAR_WORKFIXAI`／忠誠／AI 的可對應欄位，因此不能拿等級或其他數值冒充。608 暫不接入，繼續遵守『缺底層就不猜』。
+
+## V0.51 怯戰／狂獅怒吼
+
+V0.51 接入兩個 Enemy AI 有正權重、且原 C 特殊攻擊分支已完整可還原的技能：
+
+- 606「怯戰」：`PETSKILL_BattleTimid`，target=6
+- 636「狂獅怒吼」：`PETSKILL_2BattleTimid`，option `-攻%50+敏%30命%60`，target=7
+
+### 606 怯戰
+
+`PETSKILL_BattleTimid()` 不是按資料文字做一般百分比差值，而是直接覆寫本回合戰鬥能力：
+
+- `WORKATTACKPOWER = FIXSTR × 0.7`
+- `WORKDEFENCEPOWER = FIXTOUGH × 0.4`
+- `WORKQUICK = FIXDEX × 0.8`
+
+因此資料文字雖寫「防禦力 50% 下降」，本來源程式實際只剩 **40% 防禦**；V0.51 以 C 程式為準。
+
+此 command 沒有自己的 `BATTLE_DexCalc()` case，所以排序仍走 default：
+
+`work = modifiedQuick + 20`
+
+`dex = work - RAND(0, work*0.3)`
+
+真正攻擊在 `BATTLE_S_AttackDamage()`。傷害結算完成後：
+
+`timid = rand()%100`
+
+`timid < 15 && damage > 1`
+
+才觸發怯戰效果。
+
+若目標是寵物：
+
+- `BATTLE_PetDefaultExit()`
+- `CHAR_DEFAULTPET = -1`
+
+也就是寵物直接退出本場戰鬥。
+
+若目標不是寵物（目前玩家側即 Player）：
+
+- `BATTLE_Exit(defindex,battleindex)`
+- `CHAR_DischargePartyNoMsg(defindex)`
+
+也就是玩家本人被迫離開整場戰鬥。
+
+Web 對應為：
+
+- 寵物：加入 `battlePetOutIds`，本場不再出戰
+- 玩家：直接結束目前 battle，不計勝利、EXP 或掉落，保留本次已受到的傷害
+
+此技能是獨立 `BATTLE_S_AttackDamage` case，結束後直接 break，不進普通 Counter loop。
+
+### 636 狂獅怒吼
+
+`PETSKILL_2BattleTimid()` 的 option parser 對：
+
+`-攻%50+敏%30命%60`
+
+實際處理為：
+
+- `-攻%50` → `WORKATTACKPOWER = FIXSTR × 0.50`
+- `+敏%30` → `WORKQUICK = FIXDEX + FIXDEX×0.30`
+- `命%60` → 退寵判定基準 60
+
+沒有防禦 token，所以本回合防禦維持原值。
+
+它同樣沒有專用 DexCalc case，因此用 **130% QUICK** 再走普通 default 隨機排序。
+
+傷害後：
+
+`rand()%100 < 60 && damage > 1`
+
+才進特殊效果；但來源只有 `CHAR_TYPEPET` 分支真正執行。
+
+對寵物會呼叫：
+
+`BATTLE_PetIn(battleindex, defNo-5)`
+
+而原 `BATTLE_PetIn()` 內部確實會：
+
+- `BATTLE_PetDefaultExit(owner,battleindex)`
+- `CHAR_DEFAULTPET = -1`
+
+所以它就是把出戰寵物收回寵物欄。
+
+對玩家本人，即使 60% 判定成功，也沒有 `BATTLE_Exit` 或其他附加效果，只保留本次傷害。
+
+### 正權重覆蓋
+
+| Skill | distinct Enemy ID | 正權重總和 |
+| --- | ---: | ---: |
+| 606 | 1 | 3 |
+| 636 | 2 | 2 |
+
+### 仍未接入
+
+- 211 捐獻：`BATTLE_StealMoney()` 一開始要求攻方存在有效 `CHAR_WORKPLAYERINDEX` 主人；Enemy 是否永遠在這裡直接 return 還需再把 work-int 初始化值對齊，暫不武斷當 no-op。
+- 574 嚙齒術：物理攻擊本身可還原，但核心附加效果是玩家裝備 durability／損壞／消失；web 尚未有對等耐久系統。
+- 610／611 光鏡系：依賴 VANISH／REFLEC 等 DamageReact 狀態，尚未建模。
