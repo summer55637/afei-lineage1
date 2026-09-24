@@ -1442,7 +1442,7 @@ const ENEMY_SOURCE_SKILL_META={
   121:{n:'T地球一周',d:'一回合從敵人背後以更高攻擊力攻擊',f:'PETSKILL_EarthRound',o:'攻%+200',field:1,target:6},
   500:{n:'E復活術',d:'ENEMY 專屬復活術 LV1',f:'ENEMYSKILL_ReLife',o:'',field:1,target:2},
   501:{n:'E回復技',d:'ENEMY 專屬回復技 LV1',f:'ENEMYSKILL_ReHP',o:'',field:1,target:2},
-  502:{n:'E招喚',d:'ENEMY 專屬招喚 LV1',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:2},
+  502:{n:'E招喚',d:'ENEMY 專屬招喚 LV1',f:'ENEMYSKILL_EnemyHELP',o:'',field:1,target:2},
   503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6},
   504:{n:'嗜血技2',d:'傷害的 70% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'20|70',field:1,target:6},
   505:{n:'嗜血技3',d:'傷害的 100% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'10|100',field:1,target:6},
@@ -3697,7 +3697,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_GuardBreak2')return performEnemyGuardBreak2(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReHP')return performEnemyReHP(actor,unit,options,meta);
-    if(meta?.f==='ENEMYSKILL_EnemyHelp')return performEnemyHelp(actor,unit,options,meta);
+    if(meta?.f==='ENEMYSKILL_EnemyHelp'||meta?.f==='ENEMYSKILL_EnemyHELP')return performEnemyHelp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Abduct')return performEnemyAbduct(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Guardian')return performEnemyGuardianAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Merge'){
