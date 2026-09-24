@@ -2727,3 +2727,94 @@ V0.46 以一次性 attacker battle view 做相同覆寫。
 | 828 | 1 | 4 |
 
 以上五組皆為獨立特殊 command；除 713 追跡攻擊本身落入原 direct-attack 共用流程外，其餘不額外人工加入普通 Counter loop。
+
+## V0.47 虛弱／劇毒／閃避術
+
+V0.47 接入三組不依賴 MP／AttackMagic 的正權重 Enemy PetSkill：
+
+- 575「虛弱」：`PETSKILL_Weaken`，`虚 turn 3 成 50`
+- 576「全體虛弱」：同函式／同 option，目標為敵方整側
+- 577「劇毒」：`PETSKILL_Deeppoison`，`剧 turn 5 成 50`
+- 578「全體劇毒」：同函式／同 option，目標為敵方整側
+- 595「閃避術」：`PETSKILL_SetDuck`，`3|60`
+
+### 575／576 虛弱
+
+原 `BATTLE_S_Weaken()` 解析 `turn` 與 `成` 後，呼叫：
+
+`BATTLE_MultiParamChangeTurn(..., status, ..., turn, Success)`
+
+`BATTLE_MultiParamChangeTurn()` 對每個目標各做：
+
+`BATTLE_StatusAttackCheck(attacker,target,status,Success,30,1.0,...)`
+
+成功後寫入：
+
+`CHAR_WORKWEAKEN = turn + 1`
+
+原能力重算路徑在虛弱存在時會：
+
+- `FIXSTR × 0.8`
+- `FIXTOUGH × 0.8`
+- `FIXDEX × 0.8`
+
+然後再把這三項寫入戰鬥攻擊／防禦／敏捷。V0.47 因此只在 battle view 套 0.8，不污染永久角色能力值。
+
+575 使用單體目標；576 依 skill target=3 對玩家側所有存活 Battle Entry 逐一判定。
+
+### 577／578 劇毒
+
+原 `PETSKILL_Deeppoison()` 不是一般 Poison StatusChange，而是呼叫：
+
+`BATTLE_MultiStatusChange(..., status, turn + 2, ..., Success)`
+
+所以 `turn 5` 實際寫入的狀態值是 7。
+
+原 `BATTLE_StatusSeq()` 每次輪到該單位時會先把狀態值減 1，再處理劇毒：
+
+- 狀態值 6、5、4、3、2：各做一次與普通中毒相同的扣血公式
+- 狀態值降到 1：若仍未解除，直接令 HP=0
+- 若進入劇毒處理時 HP 已 <=1，也直接令 HP=0
+
+因此資料文字『中毒5回合，第六回合前未解則陣亡』與 C 程式實際行為一致。
+
+V0.47 用 raw `turn+2` 倒數保留這個節奏；不是簡化成套五回合後瞬間死亡。
+
+577 為單體；578 為敵方整側。命中判定同樣使用 `Success=50 / range=30 / bai=1.0`。
+
+### 595 閃避術
+
+`PETSKILL_SetDuckChange_Battle()` 明確要求施術目標就是自己；若已有 `CHAR_MYSKILLDUCK > 0`，再次施放不刷新。
+
+option `3|60` 代表：
+
+- 回合數：3
+- power：60
+
+真正回避判定在 `BATTLE_CheckMySkillDuck()`，而且發生在普通 DEX 回避公式之前：
+
+`rad = rand() % 100`
+
+`rad > power` → 失敗
+
+`rad <= power` → 直接回避
+
+所以 power=60 的成功值為 0～60，共 **61/100**，不是 60%。
+
+若這個獨立判定失敗，才繼續原本的普通回避公式。
+
+回合數在 `BATTLE_StatusSeq()` 尾端每次自己行動時減 1；技能施放當回合是在 StatusSeq 後才寫入，因此有效區間涵蓋施放回合與之後兩輪，第三次未來自身行動開始前歸零。
+
+V0.47 以 Enemy 專屬 `skillDuckTurns / skillDuckPower` 保存，不把它錯誤轉成一般 `duckBonus +60`。
+
+### 正權重覆蓋
+
+| Skill | distinct Enemy ID | 正權重總和 |
+| --- | ---: | ---: |
+| 575 | 6 | 9 |
+| 576 | 1 | 3 |
+| 577 | 1 | 3 |
+| 578 | 2 | 6 |
+| 595 | 2 | 5 |
+
+本輪仍未接 580「沉默」：雖然其狀態命中公式已可確認，但原效果核心是禁止非寵物使用咒術頁／施法；在 web 的正式咒術 command 尚未完成前，先不造一個沒有實際作用的假沉默。
