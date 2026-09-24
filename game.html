@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#15190f">
+  <title>阿肥石器時代放置版｜遊戲</title>
+  <link rel="stylesheet" href="game.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE</div>
+      <h1>阿肥石器時代放置版</h1>
+    </div>
+    <a class="link-btn" href="index.html">資料圖鑑</a>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <span class="pill">純前端單機</span>
+        <span class="pill">PC＋手機</span>
+        <span class="pill">LocalStorage 存檔</span>
+      </div>
+      <p>目前為第一版可玩核心：選地圖 → 自動遭遇 → 自動戰鬥 → 升級 → 測試收服 Lv1 寵物。</p>
+    </section>
+
+    <section class="status-grid">
+      <article class="card stat-card"><small>等級</small><strong id="level">1</strong></article>
+      <article class="card stat-card"><small>經驗</small><strong id="exp">0 / 100</strong></article>
+      <article class="card stat-card"><small>HP</small><strong id="hp">120 / 120</strong></article>
+      <article class="card stat-card"><small>石幣</small><strong id="gold">0</strong></article>
+    </section>
+
+    <section class="main-grid">
+      <div class="left-col">
+        <article class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">HUNTING AREA</div>
+              <h2>狩獵地圖</h2>
+            </div>
+            <span id="mapPetCount" class="muted"></span>
+          </div>
+          <select id="mapSelect"></select>
+          <div id="mapInfo" class="map-info"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">PLAYER</div>
+              <h2>角色</h2>
+            </div>
+          </div>
+          <div class="stats">
+            <div><span>攻擊</span><b id="attack">18</b></div>
+            <div><span>防禦</span><b id="defense">5</b></div>
+            <div><span>勝場</span><b id="wins">0</b></div>
+            <div><span>戰鬥</span><b id="battles">0</b></div>
+          </div>
+          <div class="progress"><i id="hpBar"></i></div>
+          <div class="button-row">
+            <button id="autoBtn" class="primary">自動戰鬥：開</button>
+            <button id="healBtn">休息補滿</button>
+          </div>
+        </article>
+      </div>
+
+      <article class="card battle-card">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">AUTO BATTLE</div>
+            <h2>戰鬥</h2>
+          </div>
+          <span id="battleState" class="pill">等待中</span>
+        </div>
+        <div id="enemyBox" class="enemy empty">
+          <div class="enemy-name">尚未遭遇敵人</div>
+          <div class="muted">開啟自動戰鬥後會依目前地圖的 Lv1 資料出現。</div>
+        </div>
+        <div class="log-wrap">
+          <h3>戰鬥紀錄</h3>
+          <div id="battleLog" class="battle-log"></div>
+        </div>
+      </article>
+
+      <article class="card pets-card">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">PET BOX</div>
+            <h2>已收服寵物</h2>
+          </div>
+          <strong id="petTotal">0</strong>
+        </div>
+        <div id="petBox" class="pet-box">
+          <div class="empty-note">目前還沒有寵物。</div>
+        </div>
+      </article>
+    </section>
+
+    <article class="card note">
+      <b>目前規則：</b>
+      166 種／169 TempNo／171 EnemyID／85 floor 使用正式整理資料；角色傷害、獎勵與收服率仍是第一版放置玩法參數，後續會再逐項替換成正式遊戲規則。
+    </article>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
