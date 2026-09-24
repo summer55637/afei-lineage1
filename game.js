@@ -52,7 +52,7 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:14,
+    schemaVersion:15,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
@@ -166,7 +166,9 @@ function normalizeState(raw){
   }
   s.playerStats=Object.assign({vital:5,str:5,tgh:5,dex:5},s.playerStats||{});
   for(const k of ['vital','str','tgh','dex'])s.playerStats[k]=Math.max(0,Math.floor(n(s.playerStats[k])));
-  s.schemaVersion=14;
+  const legacyPetHp=n(raw?.schemaVersion)<15;
+  for(const p of s.petBox)syncPetBattleHp(p,legacyPetHp||!Number.isFinite(Number(p.hp)));
+  s.schemaVersion=15;
   delete s.pets;
   return s;
 }
@@ -428,6 +430,40 @@ function petServerCombat(stats){
     maxHp:Math.trunc((vital*4+str+tgh+dex)*.01)
   };
 }
+function petFallbackCombat(pet){
+  const stats=pet?.stats||{};
+  const vital=n(stats.vital),str=n(stats.str),tgh=n(stats.tgh),dex=n(stats.dex);
+  return {
+    attack:Math.max(1,Math.trunc(str+tgh*.1+vital*.1+dex*.05)),
+    defense:Math.max(1,Math.trunc(tgh+str*.1+vital*.1+dex*.05)),
+    quick:Math.max(0,Math.trunc(dex)),
+    maxHp:Math.max(1,Math.trunc(vital*4+str+tgh+dex))
+  };
+}
+function petMaxHp(pet){
+  if(!pet)return 1;
+  if(pet.serverStats){
+    pet.serverCombat=petServerCombat(pet.serverStats);
+    if(n(pet.serverCombat?.maxHp)>0)return Math.max(1,Math.trunc(n(pet.serverCombat.maxHp)));
+  }
+  if(n(pet.serverCombat?.maxHp)>0)return Math.max(1,Math.trunc(n(pet.serverCombat.maxHp)));
+  if(n(pet.maxHp)>0)return Math.max(1,Math.trunc(n(pet.maxHp)));
+  return petFallbackCombat(pet).maxHp;
+}
+function syncPetBattleHp(pet,fillIfMissing=false){
+  if(!pet)return null;
+  const maxHp=petMaxHp(pet);
+  pet.maxHp=maxHp;
+  const hasHp=Number.isFinite(Number(pet.hp));
+  if(!hasHp&&fillIfMissing)pet.hp=maxHp;
+  else pet.hp=clamp(Math.trunc(n(pet.hp)),0,maxHp);
+  return {hp:pet.hp,maxHp};
+}
+function petIsAlive(pet){
+  if(!pet)return false;
+  syncPetBattleHp(pet,true);
+  return n(pet.hp)>0;
+}
 function playerComplianceParameter(target=state){
   if(!target)return null;
   const p=target.playerStats||{vital:5,str:5,tgh:5,dex:5};
@@ -471,6 +507,7 @@ function serverPetLevelUp(pet){
     pet.serverStats[key]=Math.trunc(n(pet.serverStats[key]))+Math.trunc(Math.fround(a+b));
   }
   pet.serverCombat=petServerCombat(pet.serverStats);
+  syncPetBattleHp(pet,false);
   return true;
 }
 function eligibleEntries(map,encounterId=null){
@@ -957,7 +994,7 @@ function removeOnePetTempNo(tempNo){
   const id=state.petBox[idx].id;
   state.petBox.splice(idx,1);
   state.team=state.team.map(x=>x===id?null:x);
-  if(state.activePetId===id)state.activePetId=state.team.find(Boolean)||null;
+  if(state.activePetId===id)state.activePetId=state.team.find(pid=>pid&&petIsAlive(state.petBox.find(p=>p.id===pid)))||null;
   return true;
 }
 function addQuestRewardPet(){
@@ -965,6 +1002,7 @@ function addQuestRewardPet(){
     id:uid(),name:'布伊胖',animationGroupId:100825,tempNo:730,level:1,exp:0,wildGrowth:27,
     stats:{vital:34,str:29,tgh:25,dex:23},elements:{},capturedAt:Date.now(),questReward:true
   };
+  syncPetBattleHp(p,true);
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
@@ -978,6 +1016,7 @@ function addEvent83Pet(){
     stats:{vital:20,str:23,tgh:21,dex:26},elements:{earth:60,water:40,fire:0,wind:0},
     capturedAt:Date.now(),questReward:true,event83:true
   };
+  syncPetBattleHp(p,true);
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
@@ -990,6 +1029,7 @@ function addMarefiaPet(){
   p={id:uid(),name:'瑪蕾菲雅',animationGroupId:null,tempNo:718,level:1,exp:0,levelCap:10,wildGrowth:1,
     stats:{vital:18,str:12,tgh:14,dex:18},elements:{earth:100,water:0,fire:0,wind:0},
     capturedAt:Date.now(),questReward:true,event71Prerequisite:true,memoryRoute:true};
+  syncPetBattleHp(p,true);
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
@@ -1056,10 +1096,11 @@ function playerBattleView(){
   };
 }
 function petBattleView(pet){
-  if(!pet?.serverStats)return null;
-  pet.serverCombat=petServerCombat(pet.serverStats);
+  if(!pet)return null;
+  const combat=pet.serverStats?(pet.serverCombat=petServerCombat(pet.serverStats)):petFallbackCombat(pet);
+  syncPetBattleHp(pet,true);
   return {
-    type:'pet',attack:n(pet.serverCombat?.attack),defense:n(pet.serverCombat?.defense),quick:n(pet.serverCombat?.quick),
+    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense),quick:n(combat?.quick),
     luck:0,level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
   };
 }
@@ -1234,6 +1275,51 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     target=next;
   }
 }
+function resolvePetEnemyCounterChain(pet,unit,primaryResult){
+  if(!pet||!unit||!enemy||!petIsAlive(pet)||unit.hp<=0)return;
+  if(primaryResult?.critical||primaryResult?.guarded)return;
+
+  let counterer='enemy',target='pet';
+  for(let depth=0;depth<5;depth++){
+    if(!enemy||!petIsAlive(pet)||unit.hp<=0)break;
+    const countererView=counterer==='pet'?petBattleView(pet):enemyBattleView(unit);
+    const targetView=target==='pet'?petBattleView(pet):enemyBattleView(unit);
+    if(!countererView||!targetView)break;
+    const chk=battleCounterCheck(countererView,targetView);
+    if(!chk.success)break;
+
+    const r=counterScaledResult(countererView,targetView);
+    if(counterer==='pet'){
+      if(r.dodged){
+        addLog(unit.name+' 閃避了 '+pet.name+' 的反擊。','pet');
+      }else if(r.miss){
+        addLog(pet.name+' 的反擊沒有造成傷害。','pet');
+      }else{
+        unit.hp=Math.max(0,unit.hp-r.damage);
+        addLog(pet.name+' 反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
+      }
+    }else{
+      if(r.dodged){
+        addLog(pet.name+' 閃避了 '+unit.name+' 的反擊。','pet');
+      }else if(r.miss){
+        addLog(unit.name+' 對 '+pet.name+' 的反擊沒有造成傷害。');
+      }else{
+        const before=n(pet.hp);
+        pet.hp=Math.max(0,before-r.damage);
+        addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
+        if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
+      }
+    }
+
+    if(enemy)syncEnemyTarget();
+    if(!petIsAlive(pet)||unit.hp<=0)break;
+    if(r.miss||r.critical)break;
+
+    const next=counterer;
+    counterer=target;
+    target=next;
+  }
+}
 function playerAttackResult(target=targetEnemyUnit()){
   return resolveNormalAttack(playerBattleView(),enemyBattleView(target));
 }
@@ -1265,29 +1351,29 @@ function levelCheck(){
   }
 }
 function createCapturedPet(target=targetEnemyUnit()){
-  const v=enemy.entry.variant;
-  if(enemy.dynamicGroup&&target){
-    return {
-      id:uid(),name:target.name,animationGroupId:target.animationGroupId,
-      tempNo:target.tempNo,level:target.level||1,exp:0,wildGrowth:n(target.wildGrowth),
-      stats:Object.assign({},target.stats||{}),
-      serverStats:target.serverDerived?.charStats?Object.assign({},target.serverDerived.charStats):null,
-      serverCombat:target.serverDerived?{attack:target.attack,defense:target.defense,quick:target.quick,maxHp:target.maxHp}:null,
-      allocPointPacked:target.allocatedFrom?packPetAllocPoint(target.allocatedFrom):null,
-      petRank:target.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))?Math.trunc(Number(target.enemyExpRankIndex)):null,
-      serverProgression:!!(target.serverDerived&&target.allocatedFrom&&target.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))),
-      elements:Object.assign({},target.elements||{}),
-      petSkills:Array.isArray(target.petSkills)?target.petSkills.slice():[],
-      serverInitNum:target.serverInitNum??null,serverLvUpPoint:target.serverLvUpPoint??null,
-      capturedAt:Date.now()
-    };
-  }
-  return {
-    id:uid(),name:enemy.name,animationGroupId:enemy.entry.species.animationGroupId,
-    tempNo:v.tempNo,level:enemy.level||1,exp:0,wildGrowth:n(v.wildGrowth),
-    stats:Object.assign({},v.stats||{}),elements:Object.assign({},v.elements||{}),
+  const v=enemy?.entry?.variant||{};
+  const pet={
+    id:uid(),
+    name:target?.name||enemy?.name||v.serverName||'寵物',
+    animationGroupId:target?.animationGroupId??enemy?.entry?.species?.animationGroupId??null,
+    tempNo:target?.tempNo??v.tempNo??null,
+    level:target?.level||enemy?.level||1,exp:0,
+    wildGrowth:n(target?.wildGrowth??v.wildGrowth),
+    stats:Object.assign({},target?.stats||v.stats||{}),
+    elements:Object.assign({},target?.elements||v.elements||{}),
+    petSkills:Array.isArray(target?.petSkills)?target.petSkills.slice():[],
+    serverStats:target?.serverDerived?.charStats?Object.assign({},target.serverDerived.charStats):null,
+    serverCombat:target?.serverDerived?{attack:target.attack,defense:target.defense,quick:target.quick,maxHp:target.maxHp}:null,
+    allocPointPacked:target?.allocatedFrom?packPetAllocPoint(target.allocatedFrom):null,
+    petRank:target?.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))?Math.trunc(Number(target.enemyExpRankIndex)):null,
+    serverProgression:!!(target?.serverDerived&&target?.allocatedFrom&&target?.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))),
+    serverInitNum:target?.serverInitNum??null,serverLvUpPoint:target?.serverLvUpPoint??null,
     capturedAt:Date.now()
   };
+  if(n(target?.maxHp)>0)pet.maxHp=Math.max(1,Math.trunc(n(target.maxHp)));
+  syncPetBattleHp(pet,true);
+  if(target&&Number.isFinite(Number(target.hp)))pet.hp=clamp(Math.trunc(n(target.hp)),0,pet.maxHp);
+  return pet;
 }
 function addCapturedPet(target=targetEnemyUnit()){
   const pet=createCapturedPet(target);
@@ -1396,6 +1482,9 @@ function captureTurn(manual=false){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -1491,7 +1580,7 @@ function normalBattleOrder(){
   order.push({kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++});
 
   const pet=activePet();
-  if(pet){
+  if(pet&&petIsAlive(pet)){
     const pv=petBattleView(pet);
     const quick=pv?n(pv.quick):n(pet?.stats?.dex);
     order.push({kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++});
@@ -1954,7 +2043,8 @@ function renderTeam(){
     return '<div class="team-slot '+(active?'active':'')+'" data-pet-id="'+p.id+'"><div><small>'+(active?'出戰':'槽位 '+(i+1))+'</small><b>'+escapeHtml(p.name)+'</b></div></div>';
   }).join('');
   const p=activePet();
-  $('#activePetInfo').textContent=p?'出戰：'+p.name+' · Lv.'+p.level+(Number(p.tempNo)===718?' / 上限 '+n(p.levelCap):'')+' · 腕力 '+n(p.serverStats?.str??p.stats?.str)+' · 敏捷 '+n(p.serverStats?.dex??p.stats?.dex)+(p.serverProgression?' · 原服成長':''):'尚未指定出戰寵物。';
+  if(p)syncPetBattleHp(p,true);
+  $('#activePetInfo').textContent=p?'出戰：'+p.name+' · Lv.'+p.level+(Number(p.tempNo)===718?' / 上限 '+n(p.levelCap):'')+' · HP '+n(p.hp)+' / '+n(p.maxHp)+(petIsAlive(p)?'':' · 已倒下')+' · 腕力 '+n(p.serverStats?.str??p.stats?.str)+' · 敏捷 '+n(p.serverStats?.dex??p.stats?.dex)+(p.serverProgression?' · 原服成長':''):'尚未指定出戰寵物。';
 }
 function renderPets(){
   const teamSet=new Set(state.team.filter(Boolean));
@@ -1969,8 +2059,9 @@ function renderPets(){
     if(!inTeam)actions.push('<button data-action="join" data-id="'+p.id+'">加入隊伍</button>');
     if(inTeam&&!active)actions.push('<button class="active-action" data-action="active" data-id="'+p.id+'">設為出戰</button>');
     if(inTeam)actions.push('<button data-action="leave" data-id="'+p.id+'">退隊</button>');
-    return '<div class="pet-row '+(active?'active':'')+'"><b>'+escapeHtml(p.name)+(active?' · 出戰':'')+'</b>'+
-      '<span>Lv.'+n(p.level)+' · TempNo '+(p.tempNo??'舊存檔')+' · Animation '+(p.animationGroupId??'—')+'</span>'+
+    syncPetBattleHp(p,true);
+    return '<div class="pet-row '+(active?'active':'')+'"><b>'+escapeHtml(p.name)+(active?' · 出戰':'')+(petIsAlive(p)?'':' · 倒下')+'</b>'+
+      '<span>Lv.'+n(p.level)+' · HP '+n(p.hp)+' / '+n(p.maxHp)+' · TempNo '+(p.tempNo??'舊存檔')+' · Animation '+(p.animationGroupId??'—')+'</span>'+
       '<div class="pet-actions">'+actions.join('')+'</div></div>';
   }).join(''):'<div class="empty-note">目前還沒有寵物。把野生 Lv1 削到低 HP 後嘗試捕獲。</div>';
 }
@@ -2008,6 +2099,10 @@ function addToTeam(id){
   save();render();return true;
 }
 function setActivePet(id){
+  const chosen=state.petBox.find(p=>p.id===id);
+  if(!chosen)return;
+  syncPetBattleHp(chosen,true);
+  if(!petIsAlive(chosen)){addLog(chosen.name+' 已倒下，休息補滿後才能設為出戰。','bad');render();return;}
   if(!state.team.includes(id)&&!addToTeam(id))return;
   state.activePetId=id;
   const p=activePet();
@@ -2050,7 +2145,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.26 載入完成：捕獲回合已禁止玩家反擊；新增原 BATTLE_COM_GUARD／BATTLE_GuardAdjust 防禦回合，防禦時不閃避、不反擊並依原 0～50% 傷害倍率減傷。','good');
+    addLog('V0.27 載入完成：寵物已加入持久 HP／倒下狀態；捕獲保留野怪當下 HP，Enemy↔Pet 已接入原版最多 5 段反擊鏈，休息可恢復倒下寵物。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -2330,7 +2425,13 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#guardBtn').addEventListener('click',()=>guardTurn());
 $('#healBtn').addEventListener('click',()=>{
-  state.hp=state.maxHp;addLog('休息完成，HP 已補滿。','good');save();render();
+  state.hp=state.maxHp;
+  let healedPets=0;
+  for(const p of state.petBox){
+    syncPetBattleHp(p,true);
+    if(n(p.hp)<n(p.maxHp)){p.hp=p.maxHp;healedPets++;}
+  }
+  addLog('休息完成，角色 HP 已補滿'+(healedPets?'，並恢復 '+healedPets+' 隻寵物。':'。'),'good');save();render();
 });
 $('#playerParamGrid').addEventListener('click',e=>{
   const b=e.target.closest('button[data-player-stat]');if(!b)return;
