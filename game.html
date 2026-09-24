@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.14</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.15</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -59,7 +59,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">一般野外已改為 Floor → Encounter 狩獵區 → Group → Enemy：同一 Encounter 不再因多隻 Lv1 route 被重複加權。可直接選 Encounter 座標區域；群組權重、道具條件、CREATEMAXNUM 與 enemyMax 依現行服務端資料生成。</div>
+          <div class="muted dev-note">一般野外已改為 Floor → Encounter 狩獵區 → 座標/zorder → Group → Enemy。每戰會在所選 Encounter 矩形內隨機漫遊；重疊區依原碼取最高 zorder。敵群生成加入大型怪最多 5 隻與 100 次生成保護。</div>
         </article>
 
         <article class="card">
@@ -156,8 +156,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.14：</b>
-      一般野外 161 個 Encounter 已展開完整現行 Group 引用；520 個 GroupID 引用中 506 個可由 group1.txt 解析，14 個失聯引用保留為 unresolved、不使用舊檔臆補。
+      <b>V0.15：</b>
+      85 個一般 Lv1 Floor 已展開該 Floor 全部 479 個 Encounter，用來做真正 zorder 判定；705 個可解析 Group、1165 個成員模板已寫入獨立 runtime 資料。
     </article>
   </main>
 
