@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1c2119">
+  <title>阿肥石器時代放置版</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">STONE AGE IDLE PROJECT</div>
+      <h1>阿肥石器時代放置版</h1>
+    </div>
+    <div id="dbStatus" class="status">讀取資料中…</div>
+  </header>
+
+  <main class="layout">
+    <nav class="tabs" aria-label="主功能">
+      <button class="tab active" data-tab="codex">寵物圖鑑</button>
+      <button class="tab" data-tab="maps">抓寵地圖</button>
+      <button class="tab" data-tab="about">資料狀態</button>
+    </nav>
+
+    <section id="codex" class="panel active">
+      <div class="toolbar">
+        <label class="search">
+          <span>搜尋</span>
+          <input id="searchInput" autocomplete="off" placeholder="寵物名、TempNo、EnemyID、地圖…">
+        </label>
+        <select id="mapFilter" aria-label="地圖篩選">
+          <option value="">全部地圖</option>
+        </select>
+      </div>
+      <div id="summary" class="summary-grid"></div>
+      <div id="petGrid" class="pet-grid"></div>
+    </section>
+
+    <section id="maps" class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">LV1 CAPTURE ROUTES</div>
+          <h2>抓寵地圖</h2>
+        </div>
+        <div class="muted">依服務端 encounter / group 規則整理</div>
+      </div>
+      <div id="mapList" class="map-list"></div>
+    </section>
+
+    <section id="about" class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">DATA VALIDATION</div>
+          <h2>資料狀態</h2>
+        </div>
+      </div>
+      <div id="validation" class="validation"></div>
+      <article class="note">
+        <h3>目前資料層</h3>
+        <p>AnimationGroupId 是外觀／動畫身分；TempNo 是寵物數值模板；EnemyID 是實際野外遇敵身分。三者不混用。</p>
+        <p>出現道具門檻與真正捕獲時的道具門檻分開保存；E_T_GET 負值也保留原值。</p>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="petDialog">
+    <button id="closeDialog" class="dialog-close" aria-label="關閉">×</button>
+    <div id="petDetail"></div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
