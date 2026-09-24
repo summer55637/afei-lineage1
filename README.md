@@ -183,3 +183,47 @@
   - 但屬較高等級威威，目前 Lv1 放置版尚未開放，因此只保留正式來源資料，等高等內容接入後自動可用
 
 遊戲掉落改為從 `capture_items.json -> sources[type=enemy_drop]` 資料驅動，不把個別物品 ID 寫死在戰鬥函式內。
+
+
+## V0.6 伊甸動物園任務
+
+新增 `data/generated/zoo_quest.json`，把原服務端 Event 81 / 82 / 83 的已驗證規則獨立資料化。
+
+目前正式接入：
+
+- Event 81
+  - 服務端 `npc_eventaction.c` 明確標示事件 81 = 金飛任務
+  - 完整金飛流程尚未實裝
+  - 遊戲暫時只提供明確標示的「開發測試：完成 Event 81」按鈕
+- Event 82
+  - 原腳本：`eden1/zoo1/manager82_01`
+  - 前置：Event 81 完成
+  - 目標：
+    - 雷爾胖 TempNo 905 / EnemyID 1798
+    - 波波頓 TempNo 786 / EnemyID 1762
+    - 動物園養的拉斯基 TempNo 854 / EnemyID 1733
+  - 園長獎勵 `GetPet:1563` 已確認為 EnemyID 1563 → TempNo 730 布伊胖
+- 正式飼料 NPC
+  - 19720～19725 六個飼料桶
+  - 19733 雷爾胖專用飼料由布伊太郎給予
+- 任務狩獵區
+  - 雷爾胖：Encounter 778 / Group 927 / 19733
+    - 加入 EnemyID 1741 / TempNo 855 不可捕獲布伊胖作為原群組干擾
+    - 雷爾胖採已重建的 2.960298802% 戰鬥出現率
+  - 波波頓：Encounter 780 / Group 942 / 19723
+    - Group 942 只有可捕獲波波頓 EnemyID 1762
+    - 同 encounter 其他飼料群組會依道具條件排除
+- 捕獲後任務面板會自動檢查 TempNo 905 / 786 / 854
+- 雷爾胖回報時依 `employee82_01` 收回 19733
+- 波波頓可向飼育員確認 Lv1 個體
+
+Event 83 已確認：
+
+- `zoo2/event83a.create` 為拉斯基後半任務
+- 地下入口：`event83_17`
+- 席格戰鬥：Floor 60044 / `event83_18.arg`
+- 戰後席格：Floor 60045 / `event83_19`
+- `GetPet:1733` → EnemyID 1733 → TempNo 854「動物園養的拉斯基」
+- `19714` 由里拉拉物品鏈正式產出
+
+完整 Event 83 物品鏈與 Event 71 前置仍未開放，因此 V0.6 不會用假按鈕冒充正式拉斯基取得流程。
