@@ -1519,7 +1519,9 @@ const ENEMY_SOURCE_SKILL_META={
   610:{n:'破鏡重圓',d:'嘗試吸收對方 REFLEC；無鏡時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'REFLEC',field:1,target:7},
   611:{n:'穿透術',d:'嘗試吸收對方 VANISH；無守時仍以攻70%／防50%物理攻擊',f:'PETSKILL_Lighttakeed',o:'VANISH',field:1,target:7},
   // V0.57：沉默只對非 PET 目標寫 WORKNOCAST=turn；不阻止普通移動／攻擊。
-  580:{n:'沉默',d:'敵全體無法使用咒術三回合',f:'PETSKILL_Nocast',o:'默 turn 3 成 50',field:1,target:3}
+  580:{n:'沉默',d:'敵全體無法使用咒術三回合',f:'PETSKILL_Nocast',o:'默 turn 3 成 50',field:1,target:3},
+  // V0.58：現版玩家無裝備耐久；ToothCrushe 的額外破壞分支不可達，但特殊物理傷害仍成立。
+  574:{n:'E嚙齒術',d:'破壞對方裝備武器；現況無裝備時只保留特殊物理攻擊',f:'PETSKILL_ToothCrushe',o:'',field:1,target:6}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -1692,6 +1694,10 @@ function enemyPrepareRoundAction(unit,action){
     unit.roundAttack=Math.trunc(n(unit.attack)*.7);
     unit.roundDefense=Math.trunc(n(unit.roundDefense)*.5);
     // battle.c 走 BATTLE_S_AttackDamage 特殊 case，沒有一般攻擊分支的 Counter loop。
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_ToothCrushe'){
+    // PETSKILL_ToothCrushe 沒有生效中的攻防敏修正；註解區塊不執行。
+    // battle.c 直接呼叫 BATTLE_S_AttackDamage 後 break，不進普通 Counter loop。
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
@@ -3251,6 +3257,29 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
 }
+function performEnemyToothCrushe(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  const label=meta?.n||'嚙齒術';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  enemyApplySkillHit(unit,chosen,r,label);
+
+  // 原 BATTLE_S_ToothCrushe：
+  // - 非 PLAYER 目標直接 return；
+  // - PLAYER 也必須 BATTLE_ItemCrushCheck(defindex,1) 找到裝備才會改耐久；
+  // 現版尚無玩家裝備／耐久系統，因此額外破壞分支不可達。
+  const equipmentCrushReachable=false;
+  addLog(unit.name+' 的 '+label+' 沒有可破壞裝備；依目前來源等價狀態只保留本次物理傷害。');
+
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,
+    equipmentCrushReachable,crushed:false
+  };
+}
 function performEnemyLighttakeed(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -3828,6 +3857,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_ToothCrushe')return performEnemyToothCrushe(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sacrifice')return performEnemySacrifice(actor,unit,options,meta);
@@ -4768,7 +4798,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.57 載入完成：接入 580 沉默；依原 BATTLE_StatusAttackCheck 50/30/1.0 公式對敵側檢定，只對非寵物目標寫 raw turn=3，不阻止普通攻擊且可被淨化。','good');
+    addLog('V0.58 載入完成：接入 574 E嚙齒術的現況來源分支；無玩家裝備耐久時只執行特殊物理傷害，不產生假裝備破壞，也不進普通 Counter。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
