@@ -3,6 +3,7 @@
 const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
 const ENCOUNTER_RUNTIME_URL='data/generated/stoneage_general_encounter_runtime.json';
 const ENEMY_AI_URL='data/generated/stoneage_enemy_ai.json';
+const PETSKILL_RUNTIME_URL='data/generated/stoneage_petskill_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -43,7 +44,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1118,11 +1119,52 @@ function enemyAiAttackSpec(unit){
   const a=Array.isArray(ai?.a)?ai.a:[0,1,1];
   return {
     tactics:Math.trunc(n(ai?.t)||1),
-    weight:Math.max(0,Math.trunc(n(a[0]))),
+    attackWeight:Math.max(0,Math.trunc(n(a[0]))),
     targetType:Math.trunc(n(a[1]))||1,
     selectMode:Math.trunc(n(a[2]))||1,
+    guardWeight:Math.max(0,Math.trunc(n(ai?.g))),
+    magicWeight:Math.max(0,Math.trunc(n(ai?.m))),
+    escapeWeight:Math.max(0,Math.trunc(n(ai?.e))),
+    skillWeights:Array.isArray(ai?.w)?ai.w.slice(0,7).map(x=>Math.max(0,Math.trunc(n(x)))):Array(7).fill(0),
+    skillIds:Array.isArray(ai?.p)?ai.p.slice(0,7):Array(7).fill(null),
+    rare:Math.trunc(n(ai?.q)),
     rn:Object.prototype.hasOwnProperty.call(ai||{},'r')?Math.max(0,Math.trunc(n(ai.r))):1
   };
+}
+function enemyPetSkillMeta(skillId){
+  if(skillId==null)return null;
+  return petSkillDb?.byId?.[String(skillId)]||null;
+}
+function enemyChooseAction(unit){
+  const spec=enemyAiAttackSpec(unit);
+  const weights=[
+    {kind:'attack',weight:spec.attackWeight},
+    {kind:'guard',weight:spec.guardWeight},
+    {kind:'magic',weight:spec.magicWeight},
+    {kind:'escape',weight:spec.escapeWeight}
+  ];
+  for(let i=0;i<7;i++)weights.push({kind:'skill',weight:spec.skillWeights[i]||0,skillSlot:i,skillId:spec.skillIds[i]});
+
+  const total=weights.reduce((sum,x)=>sum+x.weight,0);
+  if(total<=0)return {kind:'none',spec};
+
+  let roll=cRand(0,total-1);
+  let picked=null;
+  for(const x of weights){
+    if(x.weight<=0)continue;
+    if(roll<x.weight){picked=x;break}
+    roll-=x.weight;
+  }
+  if(!picked)return {kind:'none',spec};
+
+  if(picked.kind==='skill'){
+    const meta=enemyPetSkillMeta(picked.skillId);
+    if(meta?.f==='PETSKILL_None')return {kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
+    if(meta?.f==='PETSKILL_NormalAttack')return {kind:'attack',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
+    if(meta?.f==='PETSKILL_NormalGuard')return {kind:'guard',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
+    return Object.assign({},picked,{spec,skillMeta:meta});
+  }
+  return Object.assign({},picked,{spec});
 }
 function battleTargetSnapshot(kind,pet=null){
   if(kind==='pet'&&pet){
@@ -1155,6 +1197,60 @@ function targetElementValue(target,attr){
   if(attr===3)return n(e.fire);
   if(attr===4)return n(e.wind);
   return 0;
+}
+function enemyEscapeChance(unit){
+  const spec=enemyAiAttackSpec(unit);
+  const rare=spec.rare;
+  const luck=rare===0?1:(rare===1?3:5);
+  const levels=[Math.max(1,Math.trunc(n(state.level)))];
+  const pet=activePet();
+  if(pet)levels.push(Math.max(1,Math.trunc(n(pet.level))));
+  const avgLevel=levels.length?levels.reduce((a,b)=>a+b,0)/levels.length:0;
+
+  unit.escapeAttempts=Math.max(0,Math.trunc(n(unit.escapeAttempts)))+1;
+  const escapeCnt=unit.escapeAttempts+1;
+  let esc=100;
+  if(levels.length){
+    if(luck>=5)esc=95*escapeCnt;
+    else if(luck>=4)esc=60*escapeCnt-2*(avgLevel-n(unit.level));
+    else if(luck>=3)esc=50*escapeCnt-2*(avgLevel-n(unit.level));
+    else if(luck>=2)esc=40*escapeCnt-2*(avgLevel-n(unit.level));
+    else esc=30*escapeCnt-2*(avgLevel-n(unit.level));
+  }
+  if(esc<1)esc=1;
+  return {esc,luck,escapeCnt,avgLevel};
+}
+function finishEnemyEscape(unit){
+  if(!enemy||!unit)return {battleEnded:false};
+  if(Array.isArray(enemy.units)){
+    enemy.units=enemy.units.filter(u=>u.id!==unit.id);
+    if(enemy.units.length===0){
+      state.wins++;
+      addLog('敵方全數逃離，戰鬥結束；沒有擊殺 EXP 或掉落。','good');
+      enemy=null;save();render();
+      return {battleEnded:true,noReward:true};
+    }
+    if(!livingEnemyUnits().length){
+      winBattle();
+      return {battleEnded:true};
+    }
+    syncEnemyTarget();
+    return {battleEnded:false};
+  }
+  state.wins++;
+  addLog(unit.name+' 成功逃離戰鬥；沒有擊殺 EXP 或掉落。','good');
+  enemy=null;save();render();
+  return {battleEnded:true,noReward:true};
+}
+function enemyEscapeAttempt(unit){
+  const c=enemyEscapeChance(unit);
+  const success=cRand(1,100)<c.esc;
+  if(success){
+    addLog(unit.name+' 逃跑成功（原服逃跑值 '+Math.trunc(c.esc)+'）。');
+    return Object.assign({escaped:true},finishEnemyEscape(unit),c);
+  }
+  addLog(unit.name+' 嘗試逃跑但失敗（原服逃跑值 '+Math.trunc(c.esc)+'）。');
+  return Object.assign({escaped:false,battleEnded:false},c);
 }
 function enemyChooseTarget(unit){
   const spec=enemyAiAttackSpec(unit);
@@ -1417,11 +1513,11 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
   }
 }
 function playerAttackResult(target=targetEnemyUnit()){
-  return resolveNormalAttack(playerBattleView(),enemyBattleView(target));
+  return resolveNormalAttack(playerBattleView(),enemyBattleView(target),{guarding:!!target?.guardThisTurn});
 }
 function petAttackResult(pet,target=targetEnemyUnit()){
   const attacker=petBattleView(pet);
-  if(attacker)return resolveNormalAttack(attacker,enemyBattleView(target));
+  if(attacker)return resolveNormalAttack(attacker,enemyBattleView(target),{guarding:!!target?.guardThisTurn});
   const str=Math.max(1,n(pet?.stats?.str)||6);
   return {damage:Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2))),dodged:false,critical:false,miss:false,legacy:true};
 }
@@ -1471,6 +1567,29 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   }
   if(allowPlayerCounter&&state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
   return {target:'player',r};
+}
+function performEnemyAction(actor,unit,options={}){
+  const kind=actor?.enemyAction||'attack';
+  if(kind==='guard'){
+    addLog(unit.name+' 採取防禦姿勢。');
+    return {kind:'guard'};
+  }
+  if(kind==='escape')return Object.assign({kind:'escape'},enemyEscapeAttempt(unit));
+  if(kind==='none'){
+    addLog(unit.name+' 這回合沒有行動。');
+    return {kind:'none'};
+  }
+  if(kind==='magic'){
+    addLog(unit.name+' 的 enemy1 魔法 AI 被抽中，但來源資料未配置 ma 技能效果；本回合不行動。');
+    return {kind:'magic',unsupported:true};
+  }
+  if(kind==='skill'){
+    const meta=enemyPetSkillMeta(actor.skillId);
+    const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
+    addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
+    return {kind:'skill',unsupported:true,skillId:actor.skillId};
+  }
+  return Object.assign({kind:'attack'},performEnemyPrimaryAttack(actor,unit,options)||{});
 }
 function levelCheck(){
   let upCount=0;
@@ -1626,7 +1745,7 @@ function captureTurn(manual=false){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyPrimaryAttack(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
+      performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
     }
 
     if(enemy)syncEnemyTarget();
@@ -1718,10 +1837,14 @@ function normalBattleOrder(){
 
   for(const unit of livingEnemyUnits()){
     const quick=n(unit?.quick);
-    const chosen=enemyChooseTarget(unit);
+    const action=enemyChooseAction(unit);
+    unit.guardThisTurn=action.kind==='guard';
+    const needsTarget=action.kind==='attack'||action.kind==='skill'||action.kind==='magic';
+    const chosen=needsTarget?enemyChooseTarget(unit):null;
     order.push({
       kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
-      targetKind:chosen?.kind||'player',targetPetId:chosen?.petId||null
+      enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
+      targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
     });
   }
 
@@ -1769,12 +1892,12 @@ function attackTurn(){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyPrimaryAttack(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
+      performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
     }
 
     if(enemy)syncEnemyTarget();
     if(state.hp<=0){defeat();return}
-    if(!livingEnemyUnits().length){winBattle();return}
+    if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
   if(enemy)syncEnemyTarget();
@@ -1810,7 +1933,7 @@ function guardTurn(){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyPrimaryAttack(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
+      performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
     }
 
     if(enemy)syncEnemyTarget();
@@ -2242,21 +2365,24 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
       fetch(ZOO_QUEST_URL,{cache:'no-store'}),
-      fetch(ENEMY_AI_URL,{cache:'no-store'})
+      fetch(ENEMY_AI_URL,{cache:'no-store'}),
+      fetch(PETSKILL_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
     if(!itemR.ok)throw new Error('條件道具資料 HTTP '+itemR.status);
     if(!zooR.ok)throw new Error('動物園任務資料 HTTP '+zooR.status);
     if(!aiR.ok)throw new Error('Enemy AI 資料 HTTP '+aiR.status);
+    if(!petSkillR.ok)throw new Error('PetSkill runtime HTTP '+petSkillR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
     enemyAiDb=await aiR.json();
+    petSkillDb=await petSkillR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -2268,7 +2394,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.28 載入完成：Enemy 普通攻擊已讀取 enemy1 at/rn AI，依原服目標類型與隨機、HP、STR、DEX、屬性規則在玩家／出戰寵物間選擇目標。','good');
+    addLog('V0.29 載入完成：Enemy 已依 enemy1 的 at/gu/es/wa 權重先選行動；Guard 全回合生效，Escape 接入原 BATTLE_EscapeCheck，wa 保留正確技能槽且不再假裝成普通攻擊。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
