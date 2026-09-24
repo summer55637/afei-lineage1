@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.12</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.13</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -58,7 +58,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">Event82／83 任務狩獵區已還原原始 ENCOUNT／GROUP 動態組隊：每戰人數會亂數決定，再依 Group 權重逐隻生成；可捕獲成員能在群戰中直接捕捉，任務掉落則按每一隻實際生成的敵人各自判定。</div>
+          <div class="muted dev-note">一般野外 166 種 Lv1 正式路線已批量接入 ENCOUNT／GROUP 動態組隊：現行 190 條 route 對應 164 個唯一 GroupID；每戰依原 Group 權重、CREATEMAXNUM 與 enemyMax 生成整隊，群戰中可逐隻捕獲。</div>
         </article>
 
         <article class="card">
@@ -155,8 +155,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.12：</b>
-      Event82／83 狩獵區開始依原服務端 ENCOUNT／GROUP 規則動態生成整隊：雷爾胖 Group927、波波頓 Group942、項圈 Group966、怪衣 Group965，以及地下 Encounter806 的 Group962／963／964 都已還原。
+      <b>V0.13：</b>
+      一般野外 166 種 Lv1 寵物資料已全面接到 dynamicFormation 群戰核心；164 個唯一 GroupID、318 個 Enemy 成員模板均直接取自現行 group1.txt / enemy1.txt / enemybase1.txt。
     </article>
   </main>
 
