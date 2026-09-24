@@ -1110,7 +1110,7 @@ function battleAttrMultiplier(attacker,defender){
   return (fire+water+earth+wind+none)/10000;
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂'
+  poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set()}
@@ -1139,7 +1139,7 @@ function battleStatusClear(desc,type=null){
 }
 function battleStatusCanMove(desc){
   const st=battleStatusGet(desc);
-  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'));
+  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'||st.type==='dizzy'));
 }
 function battleStatusRawStats(desc){
   if(desc?.kind==='player'){
@@ -1311,7 +1311,7 @@ function playerBattleView(){
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
   return {
-    type:'player',attack:n(state.attack),defense:n(state.defense)*(stone?2:1),quick:battleDrunkQuick(desc,state.dex),
+    type:'player',attack:n(state.attack),defense:n(state.defense)*(stone?2:1),fixedTough:n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,state.dex),
     luck:n(state.luck),drunk,
     level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
   };
@@ -1324,7 +1324,9 @@ function petBattleView(pet){
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
   return {
-    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense)*(stone?2:1),quick:battleDrunkQuick(desc,combat?.quick),
+    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense)*(stone?2:1),
+    fixedTough:pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh),
+    quick:battleDrunkQuick(desc,combat?.quick),
     luck:0,drunk,
     level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
   };
@@ -1369,7 +1371,9 @@ const ENEMY_SOURCE_SKILL_META={
   502:{n:'E招喚',d:'ENEMY 專屬招喚 LV1',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:2},
   503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6},
   541:{n:'狂暴攻擊',d:'多段狂暴攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+80 防%-35 回避30',field:1,target:6},
-  543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6}
+  543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
+  616:{n:'撕裂傷口2',d:'撕裂舊傷口，增加已損失 HP 50% 的傷害',f:'PETSKILL_BattleTearDamage',o:'50',field:1,target:1},
+  640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1456,7 +1460,11 @@ function enemyPrepareRoundAction(unit,action){
   const meta=action.skillMeta||enemyPetSkillMeta(action.skillId);
   unit.roundSkillFunction=meta?.f||null;
 
-  if(meta?.f==='PETSKILL_PowerBalance'){
+  if(meta?.f==='PETSKILL_BattleTearDamage'){
+    unit.roundAttack=Math.trunc(n(unit.attack)*.9);
+    unit.roundDefense=Math.trunc(n(unit.defense)*.8);
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
@@ -1469,7 +1477,7 @@ function enemyPrepareRoundAction(unit,action){
     unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
     // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
     unit.counterEligibleThisTurn=true;
-  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'||meta?.f==='PETSKILL_WildViolentAttack'){
+  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'||meta?.f==='PETSKILL_WildViolentAttack'||meta?.f==='PETSKILL_Regret'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
@@ -1479,6 +1487,10 @@ function enemyPrepareRoundAction(unit,action){
     if(meta?.f==='PETSKILL_WildViolentAttack'){
       // battle.c 會在真正 BATTLE_Attack 前把此 command 改回 ATTACK，因此可參與反擊鏈。
       unit.counterEligibleThisTurn=true;
+    }
+    if(meta?.f==='PETSKILL_Regret'){
+      // Regret 維持特殊 command；可被對方反擊，但本身不能再反反擊。
+      unit.counterEligibleThisTurn=false;
     }
     if(meta?.f==='PETSKILL_Guardian'&&!String(meta.o||'').includes('COM:防')){
       unit.guardianReadyThisTurn=true;
@@ -1658,9 +1670,9 @@ function battleCriticalChance(attacker,defender){
   if(per>10000)per=10000;
   return Math.trunc(per);
 }
-function battleDamageCore(attacker,defender){
+function battleDamageCore(attacker,defender,options={}){
   let attack=n(attacker?.attack);
-  let defense=n(defender?.defense)*.70;
+  let defense=options.useFixedToughDefense?n(defender?.fixedTough):n(defender?.defense)*.70;
   if(defender?.type==='enemy')defense+=(defense*Math.floor(Math.random()*10)+2)/100;
   if(attacker?.type==='enemy')attack+=(attack*Math.floor(Math.random()*10)+2)/100;
   let damage=0;
@@ -1699,7 +1711,7 @@ function resolveNormalAttack(attacker,defender,options={}){
 
   const criticalRaw=battleCriticalChance(attacker,defender);
   const critical=cRand(1,10000)<criticalRaw;
-  let damage=battleDamageCore(attacker,defender);
+  let damage=battleDamageCore(attacker,defender,options);
   if(critical){
     damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
   }
@@ -2262,6 +2274,98 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function enemySkillTargetDesc(chosen){
+  if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
+  if(chosen?.kind==='player')return {kind:'player'};
+  return null;
+}
+function enemyTryRegretDizzy(chosen,successPct,label){
+  const desc=enemySkillTargetDesc(chosen);
+  if(!desc||!battleStatusDescAlive(desc)||battleStatusGet(desc))return false;
+  if(cRand(1,100)>=successPct)return false;
+  if(!battleStatusApply(desc,'dizzy',1))return false;
+  addLog(battleStatusDescName(desc)+' 被 '+label+' 擊暈，下一次行動無法動作。','bad');
+  return true;
+}
+function performEnemyTear(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const tearPct=Math.max(0,Math.trunc(Number(String(meta?.o||'').match(/-?\d+/)?.[0])||0));
+  const targetDesc=enemySkillTargetDesc(chosen);
+  const beforeHp=battleStatusHp(targetDesc);
+  const maxHp=chosen.kind==='pet'?n(chosen.pet?.maxHp):n(state.maxHp);
+  const missingHp=Math.max(0,maxHp-beforeHp);
+
+  let r;
+  if(chosen.kind==='pet'&&chosen.pet){
+    r=enemyAttackPetResult(unit,chosen.pet);
+  }else{
+    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    r=enemyAttackResult(unit,{guarding});
+  }
+
+  if(!r.dodged){
+    const tearBonus=Math.trunc(missingHp*tearPct/100);
+    if(tearBonus<=0){
+      r.damage=0;r.miss=true;
+    }else{
+      r.damage=Math.max(0,Math.trunc(n(r.damage)+tearBonus));
+      r.miss=r.damage<=0;
+      r.tearBonus=tearBonus;
+    }
+  }
+  enemyApplySkillHit(unit,chosen,r,meta?.n||'撕裂傷口2');
+
+  if(unit.hp>0&&enemy){
+    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
+    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
+      resolvePlayerEnemyCounterChain('enemy',unit,r);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,tearPct,missingHp};
+}
+function performEnemyRegret(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'憾甲一擊';
+  const successPct=Math.max(0,enemySkillNumber(meta?.o,/命%([+-]?\d+)/,0));
+  const attackOpts={useFixedToughDefense:true};
+
+  function hitOne(target,secondary=false){
+    if(!target)return null;
+    let r;
+    if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
+      r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOpts,{
+        damageMultiplier:secondary?.8:1
+      }));
+    }else if(target.kind==='player'&&state.hp>0){
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=enemyAttackResult(unit,Object.assign({},attackOpts,{
+        guarding,damageMultiplier:secondary?.8:1
+      }));
+    }else return null;
+    enemyApplySkillHit(unit,target,r,label+(secondary?'貫穿段':''));
+    const dizzy=enemyTryRegretDizzy(target,successPct,label);
+    return {target:target.kind,r,dizzy,secondary};
+  }
+
+  const primary=hitOne(chosen,false);
+  let secondary=null;
+  // 原 battle.c：只有命中 5..9 / 15..19 後排時，才追加同欄前排 defNo-5。
+  // 放置版目前每側只具名 Player + Active Pet，因此「選到寵物」對應追加主人。
+  if(chosen.kind==='pet'&&state.hp>0)secondary=hitOne({kind:'player'},true);
+
+  const last=secondary||primary;
+  if(last&&unit.hp>0&&enemy){
+    if(last.target==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,last.r);
+    }else if(last.target==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
+      resolvePlayerEnemyCounterChain('enemy',unit,last.r);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,primary,secondary,successPct};
+}
 function performEnemyWildViolent(actor,unit,options,meta){
   const option=String(meta?.o||'');
   const duckMatch=option.match(/回?避([+-]?\d+)/);
@@ -2751,6 +2855,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_WildViolentAttack')return performEnemyWildViolent(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_GuardBreak2')return performEnemyGuardBreak2(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
@@ -3638,7 +3744,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.40 載入完成：在 V0.39 的 121／500～503 基礎上，再接入 541 狂暴攻擊與 543 破除防禦之2，保留原多段、回避與防禦前倍率順序。','good');
+    addLog('V0.41 載入完成：接入 616 撕裂傷口2 與 640 憾甲一擊；撕裂依已損 HP 加傷，憾甲使用 FIXTOUGH、防後排貫穿主人並各自檢定暈眩。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
