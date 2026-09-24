@@ -1092,3 +1092,33 @@ V0.26 新增可操作的「防禦」回合，並修正 V0.25 捕獲回合不應�
 另外 `BATTLE_DuckCheck()` 在 defender 為 GUARD 時直接不做閃避，所以防禦中不會同時享有敏捷閃避；`BATTLE_Attack()` 也會把 GUARD 的 ContFlg 關閉，因此該回合玩家不會進入反擊鏈。
 
 V0.26 同步修正：玩家指令若是 CAPTURE，不符合 `BATTLE_Counter()` 只接受 ATTACK／NOGUARD 的條件，所以捕獲回合中被 Enemy 攻擊後不再觸發玩家反擊。
+
+
+## V0.27 寵物 HP／Enemy ↔ Pet 反擊
+
+V0.27 補上出戰寵物真正的戰鬥 HP 狀態，並解鎖先前刻意保留的 Enemy ↔ Pet 反擊。
+
+重新核對原 `pet.c::PET_createPetFromCharaIndex()` 後確認：捕獲成功時，新寵物會直接複製野怪當下的 `CHAR_HP`，並不是捕獲後自動補滿。因此網頁版現在也會保留捕獲瞬間 HP。
+
+目前規格：
+
+- 每隻寵物持久保存 `hp / maxHp`
+- 原服 serverStats 寵物以 `CHAR_complianceParameter` 同一套四圍換算得到 MaxHP
+- 舊版／任務手工寵物沒有完整 serverStats 時，使用相同四圍比例的 fallback combat
+- 舊存檔升級到 schemaVersion 15 時，既有寵物安全初始化為滿血
+- 寵物升級增加 MaxHP 時不免費補血，只保留目前 HP 並重新 clamp
+- HP = 0 視為倒下，本場後續回合不再進 EntrySort
+- 倒下寵物不能重新設為出戰，對齊原 `PET_SelectBattleEntryPet()` 的死亡檢查
+- 「休息補滿」現在同時恢復角色與所有寵物
+
+反擊部分：
+
+- Pet 攻擊 Enemy 後，只要原普通攻擊回傳仍允許 ContFlg，就可由 Enemy 依原 `BATTLE_CounterCheckPet()` 嘗試反擊
+- Enemy 反擊 Pet 時使用 `divpara = 10`、不開平方
+- Pet 反擊 Enemy 時，Enemy DEX ×0.8 後再走原 CounterCalc
+- 成功反擊傷害仍為普通 AttackSeq 結果 ×0.75，正傷害最低 1
+- 最多交替反擊 5 段
+- 會心、MISS、任一方死亡會依原 ContFlg 規則中止後續鏈
+- 普通攻擊、玩家捕獲回合、玩家防禦回合中的「寵物普通攻擊」都各自只掛一個 Enemy ↔ Pet 反擊入口
+
+另外，V0.27 把單體捕獲也改成保留 target 上完整的 serverDerived／allocatedFrom／petRank 等資料，不再只有 dynamic group 捕獲才保留原服成長 metadata。
