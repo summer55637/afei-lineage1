@@ -1110,7 +1110,7 @@ function battleAttrMultiplier(attacker,defender){
   return (fire+water+earth+wind+none)/10000;
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩'
+  poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set()}
@@ -1139,7 +1139,7 @@ function battleStatusClear(desc,type=null){
 }
 function battleStatusCanMove(desc){
   const st=battleStatusGet(desc);
-  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'||st.type==='dizzy'));
+  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'||st.type==='dizzy'||st.type==='barrier'));
 }
 function battleStatusRawStats(desc){
   if(desc?.kind==='player'){
@@ -1183,27 +1183,37 @@ function battleStatusLevel(desc){
 function battleStatusLuck(desc){
   return desc?.kind==='player'?n(state.luck):0;
 }
-function battleStatusChance(attackerDesc,targetDesc,type){
+function battleStatusChance(attackerDesc,targetDesc,type,rules={}){
   if(battleStatusGet(targetDesc))return {allowed:false,per:0,reason:'existing'};
   const resist=battleStatusResist(targetDesc,type);
-  if(type==='paralysis'){
+  if(type==='paralysis'&&!rules.forceGeneral){
     const per=20-resist;
     return {allowed:true,per,success:cRand(1,100)<per,resist};
   }
   const raw=battleStatusRawStats(targetDesc);
   const total=n(raw.vital)+n(raw.str)+n(raw.tgh)+n(raw.dex);
   const vitalPenalty=total>0?(n(raw.vital)/total)/.25*10:0;
-  let level=(battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*2;
-  level=clamp(level,-40,40);
-  let per=30+level+battleStatusLuck(attackerDesc)-resist-vitalPenalty;
+  const bai=Number.isFinite(Number(rules.bai))?Number(rules.bai):2;
+  const range=Number.isFinite(Number(rules.range))?Math.max(0,Number(rules.range)):40;
+  const perOffset=Number.isFinite(Number(rules.perOffset))?Number(rules.perOffset):30;
+  let level=(battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*bai;
+  level=clamp(level,-range,range);
+  let per=perOffset+level+battleStatusLuck(attackerDesc)-resist-vitalPenalty;
   if(per>80)per=80;
-  return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level};
+  return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset};
 }
 function battleStatusApply(targetDesc,type,turns){
   if(battleStatusGet(targetDesc))return false;
   const key=battleStatusKey(targetDesc);
   if(!key)return false;
   battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns))+1)});
+  return true;
+}
+function battleStatusApplyRaw(targetDesc,type,turns){
+  if(battleStatusGet(targetDesc))return false;
+  const key=battleStatusKey(targetDesc);
+  if(!key)return false;
+  battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns)))});
   return true;
 }
 function battleStatusWakeOnDamage(targetDesc,damage){
@@ -1294,6 +1304,7 @@ function battleStatusTypeFromOption(option){
   if(t.includes('眠'))return 'sleep';
   if(t.includes('乱')||t.includes('亂'))return 'confusion';
   if(t.includes('醉'))return 'drunk';
+  if(t.includes('障'))return 'barrier';
   return null;
 }
 function battleStatusTurnFromOption(option){
@@ -1378,11 +1389,14 @@ const ENEMY_SOURCE_SKILL_META={
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
+  590:{n:'虎虎生威',d:'5 個物理攻擊物件並附加石化',f:'PETSKILL_BattleModel',o:'5|5|石|3|30|攻%15|100871 100872',field:1,target:3},
   616:{n:'撕裂傷口2',d:'撕裂舊傷口，增加已損失 HP 50% 的傷害',f:'PETSKILL_BattleTearDamage',o:'50',field:1,target:1},
   640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7},
   651:{n:'撕裂傷口4',d:'依技能 option 增加已損失 HP 傷害',f:'PETSKILL_BattleTearDamage',o:'150',field:1,target:1},
+  655:{n:'虎虎生威',d:'5 個物理攻擊物件並附加石化',f:'PETSKILL_BattleModel',o:'5|5|石|3|30|攻%15|100871 100872',field:1,target:3},
   656:{n:'撕裂傷口3',d:'撕裂舊傷口，增加已損失 HP 70% 的傷害',f:'PETSKILL_BattleTearDamage',o:'70',field:1,target:1},
-  666:{n:'T憾甲一擊',d:'憾甲一擊強化版',f:'PETSKILL_Regret',o:'命%30 攻%60 防-20%',field:1,target:7}
+  666:{n:'T憾甲一擊',d:'憾甲一擊強化版',f:'PETSKILL_Regret',o:'命%30 攻%60 防-20%',field:1,target:7},
+  689:{n:'Q雷分身術',d:'5 個物理攻擊物件並附加魔障',f:'PETSKILL_BattleModel',o:'5|5|障|3|30|攻%10|101996',field:1,target:3}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1469,7 +1483,12 @@ function enemyPrepareRoundAction(unit,action){
   const meta=action.skillMeta||enemyPetSkillMeta(action.skillId);
   unit.roundSkillFunction=meta?.f||null;
 
-  if(meta?.f==='PETSKILL_BattleTearDamage'){
+  if(meta?.f==='PETSKILL_BattleModel'){
+    const parts=String(meta.o||'').split('|');
+    const attackPct=enemySignedSkillPercent(parts[5]||'','攻%');
+    unit.roundAttack=Math.trunc(n(unit.attack)+n(unit.attack)*attackPct/100);
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_BattleTearDamage'){
     unit.roundAttack=Math.trunc(n(unit.attack)*.9);
     unit.roundDefense=Math.trunc(n(unit.defense)*.8);
     unit.counterEligibleThisTurn=false;
@@ -2293,6 +2312,72 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function enemyBattleModelSpec(meta){
+  const p=String(meta?.o||'').split('|');
+  const type=Math.max(0,Math.trunc(Number(p[0])||0));
+  const objectNum=clamp(Math.trunc(Number(p[1])||0)||1,1,10);
+  const statusToken=p[2]||'';
+  const statusType=statusToken.includes('石')?'stone':(statusToken.includes('障')?'barrier':null);
+  const turns=Math.max(0,Math.trunc(Number(p[3])||0));
+  const effectHit=Math.max(0,Math.trunc(Number(p[4])||0));
+  return {type,objectNum,statusType,turns,effectHit,physical:(type&4)!==0,coverAll:(type&1)!==0};
+}
+function performEnemyBattleModel(actor,unit,options,meta){
+  const spec=enemyBattleModelSpec(meta);
+  const label=meta?.n||'BattleModel';
+  const initial=enemyPlayerSideLivingTargets();
+  if(!initial.length)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  if(!spec.physical){
+    addLog(unit.name+' 使用 '+label+'，但目前這筆 BattleModel 不是物理 type；未以猜測傷害替代。');
+    return {kind:'skill',skillId:actor.skillId,unsupportedType:spec.type};
+  }
+
+  const sequence=[];
+  if(spec.objectNum>=initial.length){
+    for(const t of initial)sequence.push(t);
+    while(sequence.length<spec.objectNum)sequence.push(initial[cRand(0,initial.length-1)]);
+  }else{
+    for(let i=0;i<spec.objectNum&&i<initial.length;i++)sequence.push(initial[i]);
+    if(spec.coverAll)for(let i=spec.objectNum;i<initial.length;i++)sequence.push(initial[i]);
+  }
+
+  addLog(unit.name+' 使用 '+label+'：'+sequence.length+' 個物理攻擊物件'+(spec.statusType?'，每擊可附加'+BATTLE_STATUS_NAMES[spec.statusType]:'')+'。');
+  const results=[];
+  for(let i=0;i<sequence.length;i++){
+    const target=sequence[i];
+    if(!battleStatusDescAlive(target)){
+      results.push({target:target.kind,skippedDead:true});
+      continue;
+    }
+    let r;
+    if(target.kind==='pet'&&target.pet){
+      r=enemyAttackPetResult(unit,target.pet);
+    }else{
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=enemyAttackResult(unit,{guarding});
+    }
+    enemyApplySkillHit(unit,target,r,label+'分身 '+(i+1)+'/'+sequence.length);
+
+    let status=null;
+    if(spec.statusType&&r.damage>0&&battleStatusDescAlive(target)){
+      const check=battleStatusChance(
+        {kind:'enemy',unit,unitId:unit.id},target,spec.statusType,
+        {perOffset:spec.effectHit,range:30,bai:1,forceGeneral:true}
+      );
+      if(check.allowed&&check.success&&battleStatusApplyRaw(target,spec.statusType,spec.turns)){
+        status={applied:true,type:spec.statusType,per:check.per,turns:spec.turns};
+        addLog(battleStatusDescName(target)+' 陷入'+BATTLE_STATUS_NAMES[spec.statusType]+'（BattleModel 原檢定 '+check.per.toFixed(1)+'%）。','bad');
+      }else{
+        status={applied:false,type:spec.statusType,per:check.per,reason:check.reason||'roll'};
+      }
+    }
+    results.push({target:target.kind,r,status});
+  }
+
+  // 原 BATTLE_COM_S_BATTLE_MODEL 直接呼叫 BATTLE_BattleModel() 後 break；每個 AttackObject
+  // 雖各自跑 AttackSeq / DamageSub，但整個 command 不進 battle.c 的普通 Counter loop。
+  return {kind:'skill',skillId:actor.skillId,spec,results};
+}
 function enemyPlayerSideLivingTargets(){
   const list=[];
   if(state.hp>0)list.push({kind:'player'});
@@ -2927,6 +3012,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_BattleModel')return performEnemyBattleModel(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
@@ -3819,7 +3905,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.43 載入完成：接入 633 群蝠四竄；敵方整側各扣目前 HP 10%（低於 10 固定 1），總吸血回復施術者，且不走物理命中／反擊鏈。','good');
+    addLog('V0.44 載入完成：接入 PETSKILL_BattleModel，啟用 590／655 虎虎生威與 689 Q雷分身術；5 發物理分身各自傷害並依原 30% 檢定附加石化／魔障。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
