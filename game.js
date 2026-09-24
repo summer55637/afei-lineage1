@@ -1210,6 +1210,24 @@ function battleStatusSetHp(desc,hp){
   else if(desc?.kind==='pet'&&desc.pet)desc.pet.hp=hp;
   else if(desc?.kind==='enemy'&&desc.unit)desc.unit.hp=hp;
 }
+function battleStatusDescAlive(desc){
+  if(desc?.kind==='player')return state.hp>0;
+  if(desc?.kind==='pet')return !!desc.pet&&petIsAlive(desc.pet);
+  if(desc?.kind==='enemy')return !!desc.unit&&n(desc.unit.hp)>0;
+  return false;
+}
+function battleStatusDescName(desc){
+  if(desc?.kind==='player')return '你';
+  if(desc?.kind==='pet')return desc.pet?.name||'寵物';
+  if(desc?.kind==='enemy')return desc.unit?.name||'敵人';
+  return '目標';
+}
+function battleStatusDescView(desc){
+  if(desc?.kind==='player')return playerBattleView();
+  if(desc?.kind==='pet')return petBattleView(desc.pet);
+  if(desc?.kind==='enemy')return enemyBattleView(desc.unit);
+  return null;
+}
 function battleStatusActorDesc(actor){
   if(actor?.kind==='player')return {kind:'player'};
   if(actor?.kind==='pet'){
@@ -1249,6 +1267,9 @@ function processBattleStatusTurn(actor){
   if(st.type==='poison'){
     const down=battleStatusPoisonDamage(desc);
     if(down>0)addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 因中毒受到 '+down+' 傷害。','bad');
+  }
+  if(st.type==='confusion'&&cRand(1,100)<=80){
+    return {skip:false,desc,status:st,confusionAttack:true};
   }
   return {skip:blockedBefore,desc,status:st};
 }
@@ -1683,6 +1704,125 @@ function counterScaledResult(attacker,defender){
   }
   return r;
 }
+function battleConfusionSideTargets(side,attackerDesc){
+  const list=[];
+  if(side===0){
+    if(state.hp>0)list.push({kind:'player'});
+    const pet=activePet();
+    if(pet&&petIsAlive(pet))list.push({kind:'pet',pet,petId:pet.id});
+  }else{
+    for(const unit of livingEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
+  }
+  const selfKey=battleStatusKey(attackerDesc);
+  return list.filter(x=>battleStatusKey(x)!==selfKey);
+}
+function battleConfusionFallbackTarget(attackerDesc){
+  if(attackerDesc?.kind==='enemy'){
+    const chosen=enemyChooseTarget(attackerDesc.unit);
+    if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
+    if(chosen?.kind==='player')return {kind:'player'};
+    return null;
+  }
+  const unit=targetEnemyUnit();
+  return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+}
+function battleConfusionChooseTarget(attackerDesc){
+  // 原 BATTLE_StatusSeq 先 RAND(0,1) 選戰場其中一側，再從該側隨機起點循環找存活目標並排除自己。
+  // 放置版沒有 0..9 的實體站位，因此保留「先選側」語意，再在該側存活單位中均勻抽一名。
+  const side=cRand(0,1);
+  const candidates=battleConfusionSideTargets(side,attackerDesc);
+  if(candidates.length)return {target:candidates[cRand(0,candidates.length-1)],side,fallback:false};
+  // 原碼找不到該側目標會把 COM2 設 -1，之後 BATTLE_TargetAdjust 退回正常敵對側目標。
+  return {target:battleConfusionFallbackTarget(attackerDesc),side,fallback:true};
+}
+function battleConfusionGuarding(targetDesc,options){
+  if(battleStatusActive(targetDesc,'confusion'))return false;
+  if(targetDesc?.kind==='player')return !!options?.playerGuarding;
+  if(targetDesc?.kind==='enemy')return !!targetDesc.unit?.guardThisTurn;
+  return false;
+}
+function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false}={}){
+  const attackerName=battleStatusDescName(attackerDesc);
+  const targetName=battleStatusDescName(targetDesc);
+  const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
+  if(r.dodged){
+    addLog(targetName+' 閃避了 '+attackerName+' 的'+action+'。',targetDesc?.kind==='player'?'good':'');
+    return;
+  }
+  if(r.miss){
+    addLog(attackerName+' '+action+' '+targetName+'，但沒有造成傷害。');
+    return;
+  }
+
+  const before=battleStatusHp(targetDesc);
+  battleStatusSetHp(targetDesc,before-r.damage);
+  battleStatusWakeOnDamage(targetDesc,r.damage);
+  const after=battleStatusHp(targetDesc);
+  addLog(attackerName+' '+action+' '+targetName+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',after<=0?'bad':(attackerDesc?.kind==='pet'?'pet':''));
+  if(before>0&&after<=0&&targetDesc?.kind==='pet')addLog(targetName+' 倒下了，本場後續回合不再行動。','bad');
+}
+function battleConfusionCounterEligible(desc,options,forcedAttackerKey){
+  if(!battleStatusDescAlive(desc)||!battleStatusCanMove(desc))return false;
+  if(desc.kind==='enemy')return !!desc.unit?.counterEligibleThisTurn;
+  if(desc.kind==='pet')return true;
+  if(desc.kind==='player')return battleStatusKey(desc)===forcedAttackerKey||!!options?.allowPlayerCounter;
+  return false;
+}
+function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,options={}){
+  if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded)return;
+  const forcedAttackerKey=battleStatusKey(attackerDesc);
+  let counterer=targetDesc,target=attackerDesc;
+  for(let depth=0;depth<5;depth++){
+    if(!battleStatusDescAlive(counterer)||!battleStatusDescAlive(target))break;
+    if(!battleConfusionCounterEligible(counterer,options,forcedAttackerKey))break;
+    const countererView=battleStatusDescView(counterer);
+    const targetView=battleStatusDescView(target);
+    if(!countererView||!targetView)break;
+    const chk=battleCounterCheck(countererView,targetView);
+    if(!chk.success)break;
+
+    const r=counterScaledResult(countererView,targetView);
+    battleApplyPhysicalHit(counterer,target,r,{counter:true});
+    if(!battleStatusDescAlive(counterer)||!battleStatusDescAlive(target))break;
+    if(r.miss||r.critical)break;
+
+    const next=counterer;
+    counterer=target;
+    target=next;
+  }
+}
+function performConfusionAttack(actor,statusTurn,options={}){
+  const attackerDesc=statusTurn?.desc||battleStatusActorDesc(actor);
+  if(!attackerDesc||!battleStatusDescAlive(attackerDesc))return true;
+
+  if(attackerDesc.kind==='enemy'&&attackerDesc.unit){
+    if(attackerDesc.unit.chargeState){
+      attackerDesc.unit.chargeState=null;
+      addLog(attackerDesc.unit.name+' 因混亂中斷了蓄力。');
+    }
+    attackerDesc.unit.guardThisTurn=false;
+    attackerDesc.unit.counterEligibleThisTurn=true;
+  }
+
+  const pick=battleConfusionChooseTarget(attackerDesc);
+  const targetDesc=pick.target;
+  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
+    addLog(battleStatusDescName(attackerDesc)+' 受到混亂影響改為普通攻擊，但沒有可攻擊的目標。');
+    return true;
+  }
+
+  const attackerView=battleStatusDescView(attackerDesc);
+  const defenderView=battleStatusDescView(targetDesc);
+  if(!attackerView||!defenderView)return true;
+  const guarding=battleConfusionGuarding(targetDesc,options);
+  const r=resolveNormalAttack(attackerView,defenderView,{guarding});
+  addLog(battleStatusDescName(attackerDesc)+' 的混亂發作：改為普通攻擊 '+battleStatusDescName(targetDesc)+'。');
+  battleApplyPhysicalHit(attackerDesc,targetDesc,r,{confusion:true});
+  if(battleStatusDescAlive(attackerDesc)&&battleStatusDescAlive(targetDesc)){
+    resolveConfusionCounterChain(attackerDesc,targetDesc,r,options);
+  }
+  return true;
+}
 function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
@@ -1781,11 +1921,13 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
   }
 }
 function playerAttackResult(target=targetEnemyUnit()){
-  return resolveNormalAttack(playerBattleView(),enemyBattleView(target),{guarding:!!target?.guardThisTurn});
+  const targetDesc={kind:'enemy',unit:target,unitId:target?.id};
+  return resolveNormalAttack(playerBattleView(),enemyBattleView(target),{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
 }
 function petAttackResult(pet,target=targetEnemyUnit()){
   const attacker=petBattleView(pet);
-  if(attacker)return resolveNormalAttack(attacker,enemyBattleView(target),{guarding:!!target?.guardThisTurn});
+  const targetDesc={kind:'enemy',unit:target,unitId:target?.id};
+  if(attacker)return resolveNormalAttack(attacker,enemyBattleView(target),{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
   const str=Math.max(1,n(pet?.stats?.str)||6);
   return {damage:Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2))),dodged:false,critical:false,miss:false,legacy:true};
 }
@@ -1798,7 +1940,7 @@ function enemyAttackPetResult(unit,pet,options={}){
 function performEnemyPrimaryAttack(actor,unit,options={}){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
-  const playerGuarding=!!options.playerGuarding;
+  const playerGuarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   const allowPlayerCounter=!!options.allowPlayerCounter;
   const attackOptions=Object.assign({},options.attackOptions||{});
 
@@ -1920,7 +2062,7 @@ function performEnemyGuardBreak(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId};
   const label=meta?.n||'破除防禦';
-  const guarding=chosen.kind==='player'&&!!options.playerGuarding;
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
 
   // 原 BATTLE_S_GBreak：目標不是 GUARD 時直接 damage=0；只有 GUARD 才真正攻擊，
   // 且 opt==GBREAK 會跳過 BATTLE_GuardAdjust。
@@ -1946,7 +2088,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
   if(chosen.kind==='pet'&&chosen.pet){
     r=enemyAttackPetResult(unit,chosen.pet);
   }else{
-    r=enemyAttackResult(unit,{guarding:!!options.playerGuarding});
+    r=enemyAttackResult(unit,{guarding:!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion')});
   }
   enemyApplySkillHit(unit,chosen,r,label);
 
@@ -1956,7 +2098,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
   if(r.damage>0){
     // 原 BATTLE_DamageWakeUp 先解除既有睡眠，之後才做本次 StatusChange 判定。
     battleStatusWakeOnDamage(targetDesc,r.damage);
-    if(type==='poison'||type==='sleep'||type==='stone'){
+    if(type==='poison'||type==='sleep'||type==='stone'||type==='confusion'){
       const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
       if(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn)){
         addLog((chosen.kind==='pet'?chosen.pet.name:'你')+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
@@ -2028,7 +2170,7 @@ function performEnemyContinuation(actor,unit,options,meta){
     if(chosen.kind==='pet'&&chosen.pet){
       r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count});
     }else{
-      r=enemyAttackResult(unit,{guarding:!!options.playerGuarding,damageDivisor:count});
+      r=enemyAttackResult(unit,{guarding:!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion'),damageDivisor:count});
     }
 
     hits++;
@@ -2201,6 +2343,13 @@ function captureTurn(manual=false){
       }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
+      continue;
+    }
+    if(statusTurn.confusionAttack){
+      performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
+      if(enemy)syncEnemyTarget();
+      if(state.hp<=0){defeat();return captured}
+      if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
       continue;
     }
 
@@ -2379,6 +2528,13 @@ function attackTurn(){
       if(enemy)syncEnemyTarget();
       continue;
     }
+    if(statusTurn.confusionAttack){
+      performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
+      if(enemy)syncEnemyTarget();
+      if(state.hp<=0){defeat();return}
+      if(enemy&&!livingEnemyUnits().length){winBattle();return}
+      continue;
+    }
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
@@ -2440,6 +2596,13 @@ function guardTurn(){
       }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
+      continue;
+    }
+    if(statusTurn.confusionAttack){
+      performConfusionAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
+      if(enemy)syncEnemyTarget();
+      if(state.hp<=0){defeat();return}
+      if(enemy&&!livingEnemyUnits().length){winBattle();return}
       continue;
     }
 
@@ -2924,7 +3087,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.33 載入完成：突擊／雙重突擊已接原 BATTLE_Charge 狀態機；蓄力期間不重抽 AI，空過 N 回合後以攻擊 +90%／+110% 釋放，異常不能行動會中斷蓄力。','good');
+    addLog('V0.34 載入完成：混亂攻擊已接原 BATTLE_StatusSeq；每次有效狀態行動有 80% 強制普通攻擊，先隨機選敵我側再選存活目標，找不到該側目標時依原 TargetAdjust 退回敵對側。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
