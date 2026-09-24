@@ -178,25 +178,31 @@ function giveItem(id,count=1){
 }
 function rollVerifiedDrops(defeatedEnemy){
   if(!defeatedEnemy)return [];
-  const enemyIds=new Set((defeatedEnemy.entry?.variant?.enemyIds||[]).map(Number));
   const drops=[];
-  const qd=defeatedEnemy.entry?.variant?.questDrop;
-  if(qd&&n(qd.probability)>0&&Math.random()<n(qd.probability)){
-    giveItem(qd.id,1);
-    drops.push(questItemMeta(qd.id)||{id:qd.id,name:qd.name||('Item '+qd.id)});
-  }
-  for(const item of conditionItems){
-    for(const src of item.sources||[]){
-      if(src.type!=='enemy_drop')continue;
-      if(!Array.isArray(src.enemyIds)||!src.enemyIds.some(id=>enemyIds.has(Number(id))))continue;
-      if(qd&&Number(qd.id)===Number(item.id))continue;
-      let chance=0;
-      if(src.dropRule==='_FIX_ITEMPROB')chance=n(src.dropProbabilityRaw)/1000;
-      else if(Number.isFinite(Number(src.dropProbabilityPercent)))chance=n(src.dropProbabilityPercent)/100;
-      if(chance>0&&Math.random()<chance){
-        giveItem(item.id,1);
-        drops.push(item);
-        break;
+  const subjects=(Array.isArray(defeatedEnemy.units)&&defeatedEnemy.units.length)
+    ?defeatedEnemy.units.map(u=>({enemyIds:[u.enemyId].filter(Boolean),questDrop:u.questDrop||null,name:u.name}))
+    :[{enemyIds:(defeatedEnemy.entry?.variant?.enemyIds||[]).map(Number),questDrop:defeatedEnemy.entry?.variant?.questDrop||null,name:defeatedEnemy.name}];
+
+  for(const subject of subjects){
+    const enemyIds=new Set((subject.enemyIds||[]).map(Number));
+    const qd=subject.questDrop;
+    if(qd&&n(qd.probability)>0&&Math.random()<n(qd.probability)){
+      giveItem(qd.id,1);
+      drops.push(questItemMeta(qd.id)||{id:qd.id,name:qd.name||('Item '+qd.id)});
+    }
+    for(const item of conditionItems){
+      for(const src of item.sources||[]){
+        if(src.type!=='enemy_drop')continue;
+        if(!Array.isArray(src.enemyIds)||!src.enemyIds.some(id=>enemyIds.has(Number(id))))continue;
+        if(qd&&Number(qd.id)===Number(item.id))continue;
+        let chance=0;
+        if(src.dropRule==='_FIX_ITEMPROB')chance=n(src.dropProbabilityRaw)/1000;
+        else if(Number.isFinite(Number(src.dropProbabilityPercent)))chance=n(src.dropProbabilityPercent)/100;
+        if(chance>0&&Math.random()<chance){
+          giveItem(item.id,1);
+          drops.push(item);
+          break;
+        }
       }
     }
   }
