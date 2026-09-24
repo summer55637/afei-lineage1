@@ -1507,7 +1507,10 @@ const ENEMY_SOURCE_SKILL_META={
   606:{n:'怯戰',d:'攻 70%、防 40%、敏 80%；命中後可能使目標逃離',f:'PETSKILL_BattleTimid',o:'',field:1,target:6},
   636:{n:'狂獅怒吼',d:'攻 50%、敏 130%；可能使敵方寵物回到寵物欄',f:'PETSKILL_2BattleTimid',o:'-攻%50+敏%30命%60',field:1,target:7},
   // V0.53：Enemy AI 會把既有對手側 target 直接傳給 Sacrifice，因此來源會替玩家／寵物補血。
-  573:{n:'救援',d:'自身目前 HP 對半，將對半後的 HP 加到目標',f:'PETSKILL_Sacrifice',o:'',field:1,target:1}
+  573:{n:'救援',d:'自身目前 HP 對半，將對半後的 HP 加到目標',f:'PETSKILL_Sacrifice',o:'',field:1,target:1},
+  // V0.54：Enemy 對玩家側使用時，來源 PETFLG 條件使變狐附加效果永遠不成立；
+  // 但 BECOMEFOX command 仍走完整普通物理攻擊與 Counter 鏈。
+  625:{n:'媚惑術',d:'來源玩家寵物 PETFLG=0；Enemy 使用時等價普通物理攻擊',f:'PETSKILL_BecomeFox',o:'',field:1,target:1}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -1671,6 +1674,10 @@ function enemyPrepareRoundAction(unit,action){
     unit.roundAttack=Math.trunc(n(unit.attack)*attackRemain/100);
     unit.roundQuick=Math.trunc(n(unit.quick)+n(unit.quick)*quickPlus/100);
     unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_BecomeFox'){
+    // battle.c 把 BATTLE_COM_S_BECOMEFOX 放在一般物理攻擊群組，
+    // 並在 BATTLE_Attack 前改回 BATTLE_COM_ATTACK，因此可參與完整 Counter 鏈。
+    unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
@@ -3178,6 +3185,19 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
 }
+function performEnemyBecomeFox(actor,unit,options,meta){
+  // 原 BECOMEFOX 先做一發普通 BATTLE_Attack；變狐判定在攻擊／Counter 鏈之後。
+  // 附加變狐要求：target != PLAYER 且 target CHAR_WORK_PETFLG != 0。
+  // 玩家擁有寵物由 PET_createPetFromCharaIndex / PET_initCharOneArray 建立，
+  // CHAR_getDefaultChar 將所有 workint 清 0，且來源只有 ENEMY_createEnemy 會設定 WORK_PETFLG。
+  // 因此目前 Player + Active Pet 模型中，玩家必定因 type PLAYER 失敗，
+  // 玩家寵物必定因 PETFLG=0 失敗；唯一來源效果就是普通攻擊。
+  addLog(unit.name+' 使用 '+(meta?.n||'媚惑術')+'；來源玩家側不符合 PETFLG 變狐條件，本次依原碼執行普通物理攻擊。');
+  return Object.assign(
+    {kind:'skill',skillId:actor.skillId,transformEligible:false,sourcePetFlg:0},
+    performEnemyPrimaryAttack(actor,unit,options)||{}
+  );
+}
 function performEnemySacrifice(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -3672,6 +3692,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sacrifice')return performEnemySacrifice(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTimid')return performEnemyBattleTimid(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_2BattleTimid')return performEnemy2BattleTimid(actor,unit,options,meta);
@@ -4606,7 +4627,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.53 載入完成：接入 573 救援；Enemy AI 依原碼會把對手側 target 傳入，施術者目前 HP 對半後把剩餘 HP 加給玩家／寵物；HP ≤20% 時保留 PETSKILL_Use 失敗的 C_WAIT 行為。','good');
+    addLog('V0.54 載入完成：接入 625 媚惑術的 Enemy 來源行為；玩家側 PETFLG 條件不成立，因此保留普通物理攻擊與完整 Counter 鏈，不製造假的變狐狀態。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
