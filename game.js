@@ -1132,6 +1132,95 @@ function resolveNormalAttack(attacker,defender){
   if(damage<1)damage=cRand(0,1);
   return {damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,duckRaw:duck,criticalRaw};
 }
+function battleCounterChance(attacker,defender){
+  let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.08;
+  if(attacker?.type==='enemy'&&defender?.type==='pet'){
+    div=10;root=false;
+  }else if(attacker?.type==='pet'&&defender?.type==='enemy'){
+    dfDex*=.8;
+  }else if(attacker?.type!=='player'&&defender?.type==='player'){
+    div=10;root=false;
+  }else if(attacker?.type==='player'&&defender?.type!=='player'){
+    dfDex*=.6;
+  }
+
+  let big,small,wari;
+  if(atDex>=dfDex){big=atDex;small=dfDex;wari=1}
+  else{big=dfDex;small=atDex;wari=big<=0?0:small/big}
+
+  let work=(big-small)/div;
+  if(work<=0)work=0;
+  let per=(root?Math.sqrt(work):work)*wari;
+
+  // 無裝備時 Player 視為 FIST vs FIST，CounterTbl=10，
+  // 所以 CriPer*10*0.1 仍等於 CriPer，再加玩家 Luck。
+  if(attacker?.type==='player')per+=n(attacker?.luck);
+  else if(per>100)per=100;
+  return per;
+}
+function battleCounterCheck(attacker,defender){
+  const raw=battleCounterChance(attacker,defender);
+  if(attacker?.type==='player'){
+    if(raw<=0)return {success:false,raw:0};
+    return {success:cRand(1,10000)<raw*100,raw};
+  }
+  let rollPer=raw*100;
+  if(rollPer<=0)rollPer=1; // 原 BATTLE_CounterCheckPet 的 1/10000 下限
+  return {success:cRand(1,10000)<=rollPer,raw};
+}
+function counterScaledResult(attacker,defender){
+  const r=resolveNormalAttack(attacker,defender);
+  if(!r.dodged&&!r.miss&&r.damage>0){
+    r.damage=Math.trunc(r.damage*.75);
+    if(r.damage<1)r.damage=1;
+  }
+  return r;
+}
+function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
+  if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
+  // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
+  if(primaryResult?.critical)return;
+
+  let counterer=primaryAttackerKind==='player'?'enemy':'player';
+  let target=primaryAttackerKind;
+  for(let depth=0;depth<5;depth++){
+    if(!enemy||state.hp<=0||unit.hp<=0)break;
+
+    const countererView=counterer==='player'?playerBattleView():enemyBattleView(unit);
+    const targetView=target==='player'?playerBattleView():enemyBattleView(unit);
+    const chk=battleCounterCheck(countererView,targetView);
+    if(!chk.success)break;
+
+    const r=counterScaledResult(countererView,targetView);
+    if(counterer==='player'){
+      if(r.dodged){
+        addLog(unit.name+' 閃避了你的反擊。');
+      }else if(r.miss){
+        addLog('你的反擊沒有造成傷害。');
+      }else{
+        unit.hp=Math.max(0,unit.hp-r.damage);
+        addLog('你反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',r.critical?'good':'');
+      }
+    }else{
+      if(r.dodged){
+        addLog('你閃避了 '+unit.name+' 的反擊。','good');
+      }else if(r.miss){
+        addLog(unit.name+' 的反擊沒有造成傷害。');
+      }else{
+        state.hp=Math.max(0,state.hp-r.damage);
+        addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+      }
+    }
+
+    if(enemy)syncEnemyTarget();
+    if(state.hp<=0||unit.hp<=0)break;
+    if(r.miss||r.critical)break;
+
+    const next=counterer;
+    counterer=target;
+    target=next;
+  }
+}
 function playerAttackResult(target=targetEnemyUnit()){
   return resolveNormalAttack(playerBattleView(),enemyBattleView(target));
 }
@@ -1331,6 +1420,7 @@ function captureTurn(manual=false){
         state.hp=Math.max(0,state.hp-r.damage);
         addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
+      if(state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
     }
 
     if(enemy)syncEnemyTarget();
@@ -1450,6 +1540,7 @@ function attackTurn(){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog('你對 '+target.name+(r.critical?' 發動會心一擊，造成 ':' 造成 ')+r.damage+' 傷害。',r.critical?'good':'');
       }
+      if(state.hp>0&&target.hp>0)resolvePlayerEnemyCounterChain('player',target,r);
     }else if(actor.kind==='pet'){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId)continue;
@@ -1476,6 +1567,7 @@ function attackTurn(){
         state.hp=Math.max(0,state.hp-r.damage);
         addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
+      if(state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
     }
 
     if(enemy)syncEnemyTarget();
@@ -1924,7 +2016,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.24 載入完成：BATTLE_COM_CAPTURE 已接入同一份 BATTLE_DexCalc＋EntrySort；捕獲成功或失敗都會真正消耗玩家本回合順位。','good');
+    addLog('V0.25 載入完成：玩家↔Enemy 已接入原 BATTLE_CounterCheck／BATTLE_Counter 最多 5 段反擊鏈；反擊傷害為普通攻擊結果的 75%。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
