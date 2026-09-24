@@ -2980,3 +2980,45 @@ V0.49 因此用「回合建表快照」保存大地鎧甲，而不是施放瞬�
 - 573 救援：公式已知，但 Enemy AI 的 `TARGET_OTHER` 實際側別目標仍需再確認。
 - 582 自爆攻擊：此來源 `version.h` 明確標成不可開／缺圖，且缺可執行技能函式。
 - 580 沉默：狀態本身可解析，但 web 尚未有正式咒術 command 可被禁止。
+
+## V0.50 劇毒攻擊
+
+V0.50 接入 ID 707「劇毒攻擊」：
+
+- `PETSKILL_StatusChange`
+- option：`剧 turn 6  攻%+20`
+- Enemy AI：2 個 distinct Enemy ID，正權重總和 13
+
+### 與 577／578 劇毒的差異
+
+707 不是 `PETSKILL_Deeppoison`，而是一般 `PETSKILL_StatusChange`。
+
+原流程先在技能準備階段解析 `攻%+20`，因此本回合攻擊力為基礎攻擊 +20%。接著走普通 `BATTLE_Attack()`。
+
+只有物理攻擊造成正傷害後，`BATTLE_Attack()` 才呼叫一般：
+
+`BATTLE_StatusAttackCheck(attacker,target,status,30,40,2.0,...)`
+
+成功後寫：
+
+`StatusTbl[deepPoison] = gBattleStausTurn + 1`
+
+所以 `turn 6` 實際保存 raw 7。
+
+577／578 則是獨立 `BATTLE_S_Deeppoison()`，會先把資料的 `turn 5` 改成 `turn + 2 = 7` 再交給 MultiStatusChange。
+
+兩條路徑最後都可能得到 raw 7，但來源原因不同；V0.50 保留各自的原 C 路徑，不把兩種技能合併成一個假規則。
+
+707 成功套上後仍沿用 V0.47 已完成的劇毒 StatusSeq：前五次狀態行動扣血，第六次仍未解除則倒下。
+
+### 608 E旅程伙伴3 暫緩
+
+608 已確認 option `80` 在 `_BATTLE_ABDUCTII` 下不是裝飾值。
+
+當目標是寵物時，來源改用：
+
+`CHAR_WORKFIXAI < 80` → `per = 200`
+
+否則 `per = 0`。
+
+目前 web 寵物資料沒有 `CHAR_WORKFIXAI`／忠誠／AI 的可對應欄位，因此不能拿等級或其他數值冒充。608 暫不接入，繼續遵守『缺底層就不猜』。
