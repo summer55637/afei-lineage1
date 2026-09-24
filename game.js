@@ -1042,7 +1042,7 @@ function battleAttrMultiplier(attacker,defender){
   const a=normalizedElements(attacker?.elements),d=normalizedElements(defender?.elements);
   if(!a||!d)return 1;
   const same=1,up=1.5,down=.6;
-  const fire=a.fire*(d.none*up+d.fire*same+d.water*up+d.earth*same+d.wind*up);
+  const fire=a.fire*(d.none*up+d.fire*same+d.water*down+d.earth*same+d.wind*up);
   const water=a.water*(d.none*up+d.fire*up+d.water*same+d.earth*down+d.wind*same);
   const earth=a.earth*(d.none*up+d.fire*same+d.water*up+d.earth*same+d.wind*down);
   const wind=a.wind*(d.none*up+d.fire*down+d.water*same+d.earth*up+d.wind*same);
