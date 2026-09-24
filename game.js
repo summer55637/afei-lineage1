@@ -1432,7 +1432,7 @@ function enemyPrepareRoundAction(unit,action){
     unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
     // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
     unit.counterEligibleThisTurn=true;
-  }else if(meta?.f==='PETSKILL_StatusChange'){
+  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
@@ -2082,6 +2082,88 @@ function performEnemyChargeState(actor,unit,options={}){
   unit.chargeState=null;
   return Object.assign({kind:'charge',released:true},result);
 }
+function battleStealableInventoryKeys(){
+  return Object.keys(state.inventory||{}).filter(key=>n(state.inventory[key])>0);
+}
+function battleInventoryItemLabel(key){
+  const id=Number(key);
+  const meta=Number.isFinite(id)?questItemMeta(id):null;
+  return meta?.name||('Item '+key);
+}
+function performEnemySteal(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  const label=meta?.n||'偷竊';
+  if(!chosen){
+    addLog(unit.name+' 使用 '+label+'，但沒有可偷竊的目標。');
+    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+  }
+
+  // 原 BATTLE_Steal：只有 CHAR_TYPEPLAYER 的目標 per=50；
+  // 寵物／Enemy 目標 per=0，而且判定是嚴格 RAND(1,100) < per。
+  if(chosen.kind!=='player'){
+    addLog(unit.name+' 對 '+(chosen.pet?.name||'寵物')+' 使用 '+label+'，但原版只允許從玩家身上偷竊。');
+    return {kind:'skill',skillId:actor.skillId,success:false,invalidTarget:true};
+  }
+  if(cRand(1,100)>=50){
+    addLog(unit.name+' 使用 '+label+'，但沒有偷到任何東西。');
+    return {kind:'skill',skillId:actor.skillId,success:false};
+  }
+
+  // 成功後再用嚴格 RAND(1,100) < 50 決定石幣或背包道具。
+  if(cRand(1,100)<50){
+    const amount=Math.trunc(Math.max(0,n(state.gold))*cRand(8,12)*.01);
+    if(amount<=0){
+      addLog(unit.name+' 想偷石幣，但你身上沒有可被偷走的石幣。');
+      return {kind:'skill',skillId:actor.skillId,success:false,mode:'gold'};
+    }
+    state.gold=Math.max(0,Math.trunc(n(state.gold))-amount);
+    addLog(unit.name+' 從你身上偷走 '+amount+' 石幣。','bad');
+    return {kind:'skill',skillId:actor.skillId,success:true,mode:'gold',amount};
+  }
+
+  const keys=battleStealableInventoryKeys();
+  if(!keys.length){
+    addLog(unit.name+' 想偷道具，但你的背包沒有可偷取的道具。');
+    return {kind:'skill',skillId:actor.skillId,success:false,mode:'item'};
+  }
+  const key=keys[cRand(0,keys.length-1)];
+  const itemName=battleInventoryItemLabel(key);
+  consumeItem(key,1);
+  // 原 Enemy 使用 BATTLE_Steal 時不會把物品放進 Enemy 背包；被偷的物品直接從玩家持有物移除。
+  addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
+  return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
+}
+function performEnemyFallGround(actor,unit,options,meta){
+  unit.counterEligibleThisTurn=false;
+  const chosen=enemyActorTarget(actor,unit);
+  const label=meta?.n||'落馬術';
+  if(!chosen)return {kind:'skill',skillId:actor.skillId};
+
+  let r;
+  if(chosen.kind==='pet'&&chosen.pet){
+    r=enemyAttackPetResult(unit,chosen.pet);
+  }else{
+    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    r=enemyAttackResult(unit,{guarding});
+  }
+  enemyApplySkillHit(unit,chosen,r,label);
+
+  let fallRoll=null,fallSuccess=false;
+  if(r.damage>0&&!r.dodged&&!r.miss){
+    fallRoll=cRand(0,100);
+    // 原版無落馬抗性時：RAND(0,100) > 50，共 50/101。
+    if(fallRoll>50&&chosen.kind==='player'){
+      // 目前放置版尚未建立騎乘系統；若未來以 state.ridePetId 接入，
+      // 這裡已保留與 CHAR_RIDEPET >= 0 對應的清除點。
+      if(state.ridePetId!=null){
+        state.ridePetId=null;
+        fallSuccess=true;
+        addLog('落馬術發動成功：你被 '+unit.name+' 打落騎乘寵物。','bad');
+      }
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,fallRoll,fallSuccess};
+}
 function performEnemyEarthRoundStart(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
@@ -2282,6 +2364,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_StatusChange')return performEnemyStatusChange(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ChargeAttack')return performEnemyChargeAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_EarthRound')return performEnemyEarthRoundStart(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
@@ -3181,7 +3265,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.36 載入完成：地球一周已接原兩段式狀態機；第一回合繞背隱身且不可被指定，下一回合自動現身以 ×1.90 最終傷害攻擊，期間 Enemy AI 不重抽。','good');
+    addLog('V0.37 載入完成：落馬術與偷竊已接入 Enemy PetSkill；落馬術為攻擊 -30% 物理技，命中後依原 RAND(0,100)>50 判定落馬；偷竊依原 49% 成功判定再抽石幣／背包道具。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
