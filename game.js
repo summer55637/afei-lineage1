@@ -502,12 +502,22 @@ function enemyDamage(unit=targetEnemyUnit()){return Math.max(1,Math.round(n(unit
 function enemyCounter(){
   if(!enemy)return;
   const attackers=livingEnemyUnits();
-  for(const unit of attackers){
+  if(attackers.length<=1){
+    const unit=attackers[0];if(!unit)return;
     const back=enemyDamage(unit);
     state.hp=Math.max(0,state.hp-back);
     addLog(unit.name+' 反擊 '+back+'。',state.hp<=0?'bad':'');
-    if(state.hp<=0){defeat();return}
+    if(state.hp<=0)defeat();
+    return;
   }
+  let total=0,acted=0;
+  for(const unit of attackers){
+    const back=enemyDamage(unit);
+    total+=back;acted++;
+  }
+  state.hp=Math.max(0,state.hp-total);
+  addLog('敵方 '+acted+' 名存活成員依序反擊，合計 '+total+' 傷害。',state.hp<=0?'bad':'');
+  if(state.hp<=0)defeat();
 }
 function levelCheck(){
   let leveled=false;
