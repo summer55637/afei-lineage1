@@ -55,8 +55,9 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:15,
+    schemaVersion:16,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,
+    playerPigUntilMs:0,playerPigImage:100388,
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
@@ -171,7 +172,9 @@ function normalizeState(raw){
   for(const k of ['vital','str','tgh','dex'])s.playerStats[k]=Math.max(0,Math.floor(n(s.playerStats[k])));
   const legacyPetHp=n(raw?.schemaVersion)<15;
   for(const p of s.petBox)syncPetBattleHp(p,legacyPetHp||!Number.isFinite(Number(p.hp)));
-  s.schemaVersion=15;
+  s.playerPigUntilMs=Math.max(0,n(s.playerPigUntilMs));
+  s.playerPigImage=Math.trunc(n(s.playerPigImage)||100388);
+  s.schemaVersion=16;
   delete s.pets;
   return s;
 }
@@ -1521,7 +1524,10 @@ const ENEMY_SOURCE_SKILL_META={
   // V0.57：沉默只對非 PET 目標寫 WORKNOCAST=turn；不阻止普通移動／攻擊。
   580:{n:'沉默',d:'敵全體無法使用咒術三回合',f:'PETSKILL_Nocast',o:'默 turn 3 成 50',field:1,target:3},
   // V0.58：現版玩家無裝備耐久；ToothCrushe 的額外破壞分支不可達，但特殊物理傷害仍成立。
-  574:{n:'E嚙齒術',d:'破壞對方裝備武器；現況無裝備時只保留特殊物理攻擊',f:'PETSKILL_ToothCrushe',o:'',field:1,target:6}
+  574:{n:'E嚙齒術',d:'破壞對方裝備武器；現況無裝備時只保留特殊物理攻擊',f:'PETSKILL_ToothCrushe',o:'',field:1,target:6},
+  // V0.60：黑烏力化；保留 30%／180 秒／重複累加與普通物理 Counter 鏈。
+  // 現版玩家可用指令都在原允許清單內，因此不虛構攻防 debuff。
+  635:{n:'黑烏力化',d:'命中玩家後 30% 變黑烏力 180 秒；現況不改攻防數值',f:'PETSKILL_BecomePig',o:'30 180 100388',field:1,target:7}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -1699,9 +1705,9 @@ function enemyPrepareRoundAction(unit,action){
     unit.roundAttack=Math.trunc(n(unit.attack)*attackRemain/100);
     unit.roundQuick=Math.trunc(n(unit.quick)+n(unit.quick)*quickPlus/100);
     unit.counterEligibleThisTurn=false;
-  }else if(meta?.f==='PETSKILL_BecomeFox'){
-    // battle.c 把 BATTLE_COM_S_BECOMEFOX 放在一般物理攻擊群組，
-    // 並在 BATTLE_Attack 前改回 BATTLE_COM_ATTACK，因此可參與完整 Counter 鏈。
+  }else if(meta?.f==='PETSKILL_BecomeFox'||meta?.f==='PETSKILL_BecomePig'){
+    // BecomeFox / BecomePig 都在 battle.c 的一般物理攻擊群組；
+    // 真正 BATTLE_Attack 前會改回 BATTLE_COM_ATTACK，因此參與完整 Counter 鏈。
     unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_Lighttakeed'){
     // 原 PETSKILL_Lighttakeed：攻=FIXSTR*0.7、防=FIXTOUGH*0.5；QUICK 修正已註解。
@@ -3315,6 +3321,57 @@ function performEnemyLighttakeed(actor,unit,options,meta){
     requestedReact:String(meta?.o||''),reactType:0,absorbed:false
   };
 }
+function playerPigRemainingSeconds(now=Date.now()){
+  const until=Math.max(0,n(state?.playerPigUntilMs));
+  if(until<=0)return 0;
+  return Math.max(0,Math.ceil((until-now)/1000));
+}
+function playerPigActive(now=Date.now()){
+  if(!state||n(state.playerPigUntilMs)<=0)return false;
+  if(n(state.playerPigUntilMs)>now)return true;
+  // 原 net.c：倒數至 0 時若仍在 battle，不設回 -1；
+  // 而 battle.c 用 >-1 判定，所以戰鬥結束前仍保持黑烏力化。
+  if(enemy)return true;
+  state.playerPigUntilMs=0;
+  return false;
+}
+function applyPlayerPigDuration(seconds,imageNo){
+  const now=Date.now();
+  const sec=Math.max(0,Math.trunc(n(seconds)));
+  const currentUntil=Math.max(0,n(state.playerPigUntilMs));
+  // 原碼第一次 -1 → 180；已有剩餘時間則直接 +180；
+  // battle 中已倒數到 0 再命中，也從 0 重新加 180。
+  const base=currentUntil>now?currentUntil:now;
+  state.playerPigUntilMs=base+sec*1000;
+  state.playerPigImage=Math.trunc(n(imageNo)||100388);
+  return playerPigRemainingSeconds(now);
+}
+function performEnemyBecomePig(actor,unit,options,meta){
+  // 原 battle.c：BECOMEPIG 先完成普通 BATTLE_Attack + Counter 鏈，
+  // 再以該次攻擊結果判斷是否套黑烏力化。
+  const result=performEnemyPrimaryAttack(actor,unit,options)||{};
+  const parts=String(meta?.o||'').trim().split(/\s+/);
+  const rate=Math.max(0,Math.trunc(Number(parts[0])||0));
+  const seconds=Math.max(0,Math.trunc(Number(parts[1])||0));
+  const imageNo=Math.trunc(Number(parts[2])||100388);
+
+  let roll=null,applied=false,remaining=playerPigRemainingSeconds();
+  if(result.target==='player'&&state.hp>0&&result.r&&!result.r.dodged&&!result.r.miss){
+    roll=cRand(0,99);
+    if(roll<rate){
+      remaining=applyPlayerPigDuration(seconds,imageNo);
+      applied=true;
+      addLog(unit.name+' 的 '+(meta?.n||'黑烏力化')+' 成功：你進入黑烏力化 '+remaining+' 秒。現版可用的攻擊／防禦／捕捉均屬原碼允許指令，不額外降低能力。','bad');
+    }else{
+      addLog(unit.name+' 的 '+(meta?.n||'黑烏力化')+' 未成功（rand()%100='+roll+'，需 < '+rate+'）。');
+    }
+  }
+
+  return Object.assign({
+    kind:'skill',skillId:actor.skillId,rate,seconds,imageNo,roll,applied,
+    pigRemainingSeconds:remaining
+  },result);
+}
 function performEnemyBecomeFox(actor,unit,options,meta){
   // 原 BECOMEFOX 先做一發普通 BATTLE_Attack；變狐判定在攻擊／Counter 鏈之後。
   // 附加變狐要求：target != PLAYER 且 target CHAR_WORK_PETFLG != 0。
@@ -3873,6 +3930,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ToothCrushe')return performEnemyToothCrushe(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_BecomePig')return performEnemyBecomePig(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sacrifice')return performEnemySacrifice(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTimid')return performEnemyBattleTimid(actor,unit,options,meta);
@@ -4632,6 +4690,10 @@ function render(){
   renderMapOptions();
   renderEncounterOptions();
   renderEnemy();
+  if(playerPigActive()){
+    const pigRemain=playerPigRemainingSeconds();
+    $('#battleState').textContent+=' · 黑烏力化'+(pigRemain>0?' '+pigRemain+'秒':' · 戰鬥結束後解除');
+  }
   renderTeam();
   renderPets();
   renderInventory();
@@ -4815,7 +4877,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.59 載入完成：還原 502 E招喚與 582 自爆攻擊的原 build 函式註冊失敗；PETSKILL_Use() 回 FALSE，Enemy 維持 C_WAIT，整回合不行動且不跑自身 StatusSeq。','good');
+    addLog('V0.60 載入完成：接入 635 黑烏力化；普通物理攻擊與 Counter 後，命中玩家以 rand()%100<30 判定 180 秒狀態，重複成功累加秒數；現有指令皆為原碼允許項，不虛構能力 debuff。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
