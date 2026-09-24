@@ -1323,6 +1323,14 @@ function enemyPetSkillMeta(skillId){
 }
 function enemyChooseAction(unit){
   const spec=enemyAiAttackSpec(unit);
+  if(unit?.chargeState){
+    return {
+      kind:'charge',spec,
+      skillId:unit.chargeState.skillId,
+      skillSlot:unit.chargeState.skillSlot,
+      skillMeta:enemyPetSkillMeta(unit.chargeState.skillId)
+    };
+  }
   const weights=[
     {kind:'attack',weight:spec.attackWeight},
     {kind:'guard',weight:spec.guardWeight},
@@ -1863,6 +1871,51 @@ function enemyApplySkillHit(unit,chosen,r,label){
     addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'造成 '+r.damage+' 傷害。',state.hp<=0?'bad':'');
   }
 }
+function enemyChargeSpec(meta){
+  const option=String(meta?.o||'');
+  const nMatch=option.match(/^\s*(\d+)/);
+  const turns=clamp(nMatch?Math.trunc(Number(nMatch[1])):1,1,10);
+  const attackPct=enemySignedSkillPercent(option,'攻%');
+  return {turns,attackPct};
+}
+function performEnemyChargeAttack(actor,unit,options,meta){
+  const spec=enemyChargeSpec(meta);
+  const chosen=enemyActorTarget(actor,unit);
+  unit.chargeState={
+    remaining:Math.max(0,spec.turns-1),
+    attackPct:spec.attackPct,
+    targetKind:chosen?.kind||null,
+    targetPetId:chosen?.petId||null,
+    skillId:actor.skillId,
+    skillSlot:actor.skillSlot??null,
+    label:meta?.n||'蓄力攻擊'
+  };
+  unit.counterEligibleThisTurn=false;
+  addLog(unit.name+' 開始使用 '+unit.chargeState.label+'，蓄力 '+spec.turns+' 回合。');
+  return {kind:'skill',skillId:actor.skillId,charging:true,remaining:unit.chargeState.remaining};
+}
+function performEnemyChargeState(actor,unit,options={}){
+  const charge=unit?.chargeState;
+  if(!charge)return {kind:'charge',missing:true};
+
+  if(charge.remaining>0){
+    charge.remaining--;
+    unit.counterEligibleThisTurn=false;
+    addLog(unit.name+' 持續蓄力中（尚餘 '+charge.remaining+' 回合）。');
+    return {kind:'charge',charging:true,remaining:charge.remaining};
+  }
+
+  unit.roundAttack=Math.trunc(n(unit.attack))+Math.trunc(n(unit.attack)*n(charge.attackPct)/100);
+  unit.counterEligibleThisTurn=false;
+  const releaseActor=Object.assign({},actor,{
+    targetKind:charge.targetKind,
+    targetPetId:charge.targetPetId
+  });
+  addLog(unit.name+' 釋放 '+charge.label+'（攻擊 +'+charge.attackPct+'%）。');
+  const result=performEnemyPrimaryAttack(releaseActor,unit,options)||{};
+  unit.chargeState=null;
+  return Object.assign({kind:'charge',released:true},result);
+}
 function performEnemyGuardBreak(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId};
@@ -2001,6 +2054,7 @@ function performEnemyContinuation(actor,unit,options,meta){
 }
 function performEnemyAction(actor,unit,options={}){
   const kind=actor?.enemyAction||'attack';
+  if(kind==='charge')return performEnemyChargeState(actor,unit,options);
   if(kind==='guard'){
     addLog(unit.name+' 採取防禦姿勢。');
     return {kind:'guard'};
@@ -2022,6 +2076,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_PowerBalance')return performEnemyPowerBalance(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_NoGuard')return performEnemyNoGuard(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_StatusChange')return performEnemyStatusChange(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_ChargeAttack')return performEnemyChargeAttack(actor,unit,options,meta);
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
@@ -2139,6 +2194,11 @@ function captureTurn(manual=false){
     if(state.hp<=0){defeat();return captured}
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
+      if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
+        statusTurn.desc.unit.chargeState=null;
+        statusTurn.desc.unit.counterEligibleThisTurn=false;
+        addLog(statusTurn.desc.unit.name+' 的蓄力被異常狀態中斷。');
+      }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
       continue;
@@ -2310,6 +2370,11 @@ function attackTurn(){
     if(state.hp<=0){defeat();return}
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
+      if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
+        statusTurn.desc.unit.chargeState=null;
+        statusTurn.desc.unit.counterEligibleThisTurn=false;
+        addLog(statusTurn.desc.unit.name+' 的蓄力被異常狀態中斷。');
+      }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
       continue;
@@ -2368,6 +2433,11 @@ function guardTurn(){
     if(state.hp<=0){defeat();return}
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
+      if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
+        statusTurn.desc.unit.chargeState=null;
+        statusTurn.desc.unit.counterEligibleThisTurn=false;
+        addLog(statusTurn.desc.unit.name+' 的蓄力被異常狀態中斷。');
+      }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
       continue;
@@ -2854,7 +2924,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.32 載入完成：StatusChange 已接入原狀態命中公式；中毒、睡眠、石化加入戰鬥暫存回合效果，毒不致死、睡眠受正傷害喚醒、石化防禦×2且不能行動。','good');
+    addLog('V0.33 載入完成：突擊／雙重突擊已接原 BATTLE_Charge 狀態機；蓄力期間不重抽 AI，空過 N 回合後以攻擊 +90%／+110% 釋放，異常不能行動會中斷蓄力。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
