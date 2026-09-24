@@ -635,7 +635,7 @@ function renderZooQuest(){
   $('#zooQuestStatus').innerHTML=lines.join('');
 
   const actions=[];
-  if(!e4.complete&&!e81.active&&!e81.complete){
+  if(!e4.complete){
     if(!e4.active)actions.push('<button data-zoo-action="event4-start" class="wide">Floor 10204：接受成人儀式</button>');
     else if(!hasItem(2417,15))actions.push('<button data-zoo-action="event4-get-jade" class="wide">儀式審判差使：領取儀玉 2417 ×15</button>');
     else actions.push('<button data-zoo-action="event4-finish" class="wide">儀式的審判：交出儀玉 ×15 完成成人式</button>');
@@ -900,7 +900,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.7 載入完成：Event2 貝殼與 Event71 寵物轉生前置已接入，開發灌旗入口已移除。','good');
+    addLog('V0.8 載入完成：Event81 金飛航空已正式接入，舊 Event81 開發測試入口已移除。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
