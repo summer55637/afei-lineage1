@@ -59,7 +59,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；RandomChange 規則也已接入。</div>
+          <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；Encounter 兩角座標也已依 ENCOUNT_initEncount() 做 min/max 正規化。</div>
         </article>
 
         <article class="card">
