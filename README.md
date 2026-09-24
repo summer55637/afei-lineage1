@@ -2141,3 +2141,232 @@ V0.40 已對齊以上行為。
 
 640／616 都已有名稱、函式與 option，下一輪可直接往其 C 戰鬥分支繼續還原。
 
+## V0.41 撕裂傷口2／憾甲一擊
+
+V0.41 接入兩個 Enemy AI 高使用量純戰鬥技能：
+
+- ID 616「撕裂傷口2」：`PETSKILL_BattleTearDamage`，option `50`
+- ID 640「憾甲一擊」：`PETSKILL_Regret`，option `命%20 攻%30 防%-50`
+
+### 616 撕裂傷口2
+
+原 `PETSKILL_BattleTearDamage()` 不是單純「普攻傷害 ×1.5」。
+
+技能下達時會先把本回合能力改成：
+
+- 攻擊：`FIXSTR × 0.9`
+- 防禦：`FIXTOUGH × 0.8`
+
+之後 `BATTLE_S_AttackDamage()` 先做普通 `BATTLE_AttackSeq()`，再計算：
+
+`missingHP = maxHP - currentHP`
+
+`tearBonus = missingHP × atoi(option) / 100`
+
+ID 616 的 option 是 50，因此追加的是「目標目前已損失 HP 的 50%」。
+
+來源還有一個很特殊的判定：
+
+`if(userhp <= 0) damage = 0;`
+
+也就是目標滿血、沒有舊傷時，撕裂傷口會把原本的物理傷害一起歸零，而不是照常打一發普通攻擊。
+
+V0.41 已依這個實際 C 行為接入。
+
+### 640 憾甲一擊
+
+原 `PETSKILL_Regret()` 讀取：
+
+- `攻%30`
+- `防%-50`
+- `命%20`
+
+傷害公式另有專用特例。
+
+一般 `BATTLE_DamageCalc()` 會以戰鬥防禦力計算；但攻擊者 command 是 REGRET / REGRET2 時，來源直接改成：
+
+`defense = CHAR_WORKFIXTOUGH`
+
+因此「無視裝備防禦」不是把防禦變成 0，而是只保留 FIXTOUGH 基礎耐力防禦。
+
+Web 版新增 `useFixedToughDefense`，只供這類技能使用，不改其他攻擊公式。
+
+### 前後排貫穿
+
+原 battle slot 5～9 / 15～19 是後排；憾甲命中後排時會再取：
+
+`defNo2 = defNo - 5`
+
+也就是再打同欄前排。
+
+目前放置版的玩家側以「Player + Active Pet」作為兩個獨立戰鬥單位，因此：
+
+- 選中 Player：只打一段
+- 選中 Active Pet：先打 Pet，再貫穿 Player
+
+第二段 REGRET2 會在 **GuardAdjust 前**先：
+
+`damage ×= 0.8`
+
+V0.41 初版曾把這個倍率放在最終傷害階段，第二輪 C 原碼回歸後已修正為 `preGuardDamageMultiplier = 0.8`。
+
+### 憾甲暈眩
+
+REGRET 與 REGRET2 都各自解析 `命%`。
+
+它使用的是 `PROFESSION_BATTLE_StatusAttackCheck`，不是一般毒／睡眠的等級與抗性公式：
+
+- 目標已有其他異常狀態 → 失敗
+- 否則固定做 `RAND(1,100) < Success`
+- 640 Success = 20
+- 成功後設為暈眩 1 回合，並把當前 command 清成 NONE
+
+來源這段判定沒有要求物理傷害成功，因此 MISS／DODGE 後仍可能暈眩。
+
+Web battle status 已增加 `dizzy`，並依目前倒數模型校正成只跳過 **一次**未來行動。
+
+### 特殊技能反擊回歸修正
+
+重新搜尋完整 `battle.c` 後確認，普通 `BATTLE_Counter()` loop 只存在 direct-attack 群組後方。
+
+下列特殊 command 都是呼叫專用函式後直接 `break`：
+
+- `BATTLE_COM_S_DAMAGETOHP`
+- `BATTLE_COM_S_PETSKILLTEAR`
+- `BATTLE_COM_S_REGRET`
+- `BATTLE_COM_S_GBREAK2`
+
+因此 V0.41 第二個修正 commit 統一移除了：
+
+- 503 嗜血技的人工作用反擊
+- 616 撕裂傷口的人工作用反擊
+- 640 憾甲一擊的人工作用反擊
+- 543 破除防禦之2的人工作用反擊
+
+避免把特殊事件函式錯當成普通 BATTLE_Attack 分支。
+
+## V0.42 同函式變體／狂亂暴走／疾速攻擊
+
+V0.42 利用已驗證的同序列 `petskill2.txt`，把已完成函式的其他實際 AI ID 一起補齊。
+
+### 嗜血變體
+
+- 504「嗜血技2」：`PETSKILL_DamageToHp`，option `20|70`
+- 505「嗜血技3」：`PETSKILL_DamageToHp`，option `10|100`
+
+來源 `atoi(buf1)/100` 的 C 整數除法 bug 同樣存在，因此 20/100、10/100 仍先得到 0。
+
+實際有效差異是吸血比例：
+
+- 504：傷害 70%
+- 505：傷害 100%
+
+### 撕裂傷口變體
+
+共用 V0.41 的 Tear 狀態機：
+
+- 615 撕裂傷口1：option `20`
+- 616 撕裂傷口2：option `50`
+- 656 撕裂傷口3：option `70`
+- 651 撕裂傷口4：option **`150`**
+
+651 的說明文字與 option 不完全一致；來源戰鬥函式實際只做 `atoi(option)`，因此 web 版依資料實值 150，不自行改寫成文字描述的 100。
+
+### 666 T憾甲一擊
+
+同序列 option：
+
+`命%30 攻%60 防-20%`
+
+原 `PETSKILL_Regret()` 搜尋的是字面 `防%`，但這筆資料寫成 `防-20%`，因此來源本身不會解析到防禦修正。
+
+V0.42 同樣保留：
+
+- 攻 +60%
+- 暈眩固定 30%
+- 不額外猜測防禦 -20%
+
+### 613 狂亂暴走
+
+`PETSKILL_AttackCrazed`，option `3`。
+
+來源技能下達時固定：
+
+- 攻擊 80%
+- 防禦 70%
+- 攻擊次數 = option → 3
+
+`BATTLE_TargetListSet()` 會為每一擊從敵方存活成員隨機取目標。
+
+它位於 direct-attack 群組，因此三次攻擊全部完成後，再使用最後一擊的目標／結果進普通 Counter loop。
+
+Web 版目前玩家側只有 Player + Active Pet，因此每一擊在兩個仍存活單位中隨機挑選。
+
+### 542 疾速攻擊
+
+同序列資料寫：
+
+`防%-30 敏%+30`
+
+但這個來源的 `PETSKILL_SpeedyAttack()` 實際只搜尋並套用 `防%`，完全沒有讀取 `敏%`。
+
+因此 V0.42 忠實保留 C 行為：
+
+- 防禦 -30%
+- QUICK 不增加
+- 接著進 direct-attack 普通物理攻擊流程
+
+不以技能說明文字補一個來源程式沒有執行的敏捷 Buff。
+
+## V0.43 群蝠四竄
+
+ID 633「群蝠四竄」：
+
+- `PETSKILL_BatFly`
+- 原 command：`BATTLE_COM_S_BAT_FLY`
+- 原處理：`BATTLE_BatFly()`
+
+這是一個完全獨立於普通物理傷害系統的百分比吸血技能。
+
+### 原 BATTLE_BatFly 規則
+
+它先取得敵方整側所有 Battle Entry。
+
+對每個未騎乘的獨立戰鬥單位：
+
+- HP >= 10：
+  `damage = floor(currentHP / 10)`
+- HP < 10：
+  `damage = 1`
+
+扣掉的 HP 全部累加進 `addhp`，最後回復施術者：
+
+`attackerHP = min(maxHP, attackerHP + addhp)`
+
+來源若超過 maxHP，實際 HP 仍直接設為 maxHP。
+
+目前 web 的 Player 與 Active Pet 本來就是兩個獨立 Battle Entry，不是原版 RidePet 綁定狀態，因此 V0.43 對兩者各自套用一次 10% 規則。
+
+這個 command 直接呼叫 `BATTLE_BatFly()` 後 `break`，不經：
+
+- `BATTLE_AttackSeq`
+- 普通閃避
+- 會心
+- 屬性物理公式
+- GuardAdjust
+- 普通 Counter loop
+
+V0.43 已依此接入。
+
+目前 Enemy AI 中 ID 633 有 **5 個 distinct Enemy ID** 帶正權重，總權重 40。
+
+### 目前暫不硬接的高使用技能
+
+以下技能資料與 C 原碼都已找到，但各自依賴目前 web 尚未建立的正式系統，因此不做假的簡化版：
+
+- **508 MP攻擊3**：會直接傷害 MP；目前 Player／Pet battle model 沒有 MP
+- **634 分身地裂**：先使玩家 MP 減半，再做整側百分比 HP 傷害；缺正式 MP
+- **624 火線獵殺**：80% 物理攻擊後，再呼叫 `BATTLE_MultiAttMagic_Fire(...,2,200)` 做火屬性範圍魔法；需要魔法攻擊等級、抗性與魔法閃避演算法
+
+後續仍遵守「能完整還原才接入；缺底層系統就先標記依賴，不用猜數值」的原則。
+
