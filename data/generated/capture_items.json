@@ -1,0 +1,148 @@
+{
+  "_meta": {
+    "format": "stoneage-condition-items-v1",
+    "generatedFrom": "stoneage_general_lv1_pets.json",
+    "note": "Only appearance/capture condition items are included. Acquisition source remains unresolved until original NPC/quest/shop data is decoded.",
+    "count": 9
+  },
+  "items": [
+    {
+      "id": 1690,
+      "name": "海蓝之棒",
+      "description": "攻+55                       昏睡的精灵Lv3",
+      "kinds": [
+        "capture"
+      ],
+      "usedByPets": [
+        "夏普德"
+      ],
+      "floors": [],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 1691,
+      "name": "海蓝之兜",
+      "description": "防+28  敏-6",
+      "kinds": [
+        "capture"
+      ],
+      "usedByPets": [
+        "夏普德"
+      ],
+      "floors": [],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 1692,
+      "name": "海蓝之铠",
+      "description": "防+53  敏-14                滋润的精灵 Lv4",
+      "kinds": [
+        "appearance",
+        "capture"
+      ],
+      "usedByPets": [
+        "夏普德"
+      ],
+      "floors": [
+        817
+      ],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 12636,
+      "name": "香喷喷面包",
+      "description": "耐70回复(1体)               刚出炉的香喷喷面包",
+      "kinds": [
+        "appearance"
+      ],
+      "usedByPets": [
+        "乌力",
+        "乌力斯坦"
+      ],
+      "floors": [
+        11304,
+        11305
+      ],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 13062,
+      "name": "精灵的羽毛",
+      "description": "可单人瞬间飞行至玛丽娜丝渔村",
+      "kinds": [
+        "appearance"
+      ],
+      "usedByPets": [
+        "克雷多",
+        "培罗多"
+      ],
+      "floors": [
+        21007,
+        30008
+      ],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 19720,
+      "name": "草食性饲料一号",
+      "description": "动物园喂养草食性动物的饲料",
+      "kinds": [
+        "appearance"
+      ],
+      "usedByPets": [
+        "布依胖"
+      ],
+      "floors": [
+        7000
+      ],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 19733,
+      "name": "雷尔胖专用饲料",
+      "description": "雷尔胖专用饲料",
+      "kinds": [
+        "appearance"
+      ],
+      "usedByPets": [
+        "布依胖"
+      ],
+      "floors": [
+        7000
+      ],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 20247,
+      "name": "魔法钻戒[地LV3-1]",
+      "description": "封印了地魔法LV3-1的戒指",
+      "kinds": [
+        "appearance",
+        "capture"
+      ],
+      "usedByPets": [
+        "嘎吱拉"
+      ],
+      "floors": [
+        60052
+      ],
+      "sourceStatus": "unresolved"
+    },
+    {
+      "id": 20259,
+      "name": "会员捕宠结晶石",
+      "description": "可以捕捉特殊宠物的结晶石头",
+      "kinds": [
+        "appearance",
+        "capture"
+      ],
+      "usedByPets": [
+        "斑尼迪克"
+      ],
+      "floors": [
+        60054
+      ],
+      "sourceStatus": "unresolved"
+    }
+  ]
+}
