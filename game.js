@@ -31,7 +31,7 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:7,
+    schemaVersion:8,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
@@ -91,6 +91,11 @@ function normalizeState(raw){
     const hadPostAdultProgress=s.quest.event71Current||n(s.quest.event71Prep.stage)>0||s.quest.event83.active||s.quest.event83.complete;
     if(hadPostAdultProgress)s.quest.event4={active:false,complete:true,stage:3};
   }
+  if(n(raw?.schemaVersion)<8){
+    const oldStage=n(s.quest.event71Prep.stage);
+    const migratedStage={2:8,3:9,4:10,5:11}[oldStage];
+    if(migratedStage!=null)s.quest.event71Prep.stage=migratedStage;
+  }
   const ids=new Set(s.petBox.map(p=>p.id));
   s.team=s.team.map(id=>ids.has(id)?id:null);
   if(!ids.has(s.activePetId))s.activePetId=null;
@@ -101,7 +106,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=7;
+  s.schemaVersion=8;
   delete s.pets;
   return s;
 }
@@ -517,6 +522,11 @@ function winBattle(){
     state.quest.event83.complete=true;
     addLog('Event 83 完成：席格戰結束，取得 '+p.name+'（TempNo 854）。','good');
   }
+  if(defeated.entry?.variant?.questOnWin==='event69-frog-king-defeated'&&n(state.quest.event71Prep.stage)===4){
+    state.quest.event71Prep.stage=5;
+    state.mapId=maps.find(m=>!m.questZone)?.id||maps[0]?.id||state.mapId;
+    addLog('里昂蛙王戰勝利：依 event69_5.arg 被傳送到 Floor 30607，可把金珠 19622 還給蛙王。','good');
+  }
   enemy=null;
   levelCheck();
   save();render();
@@ -577,6 +587,11 @@ function renderZooQuest(){
     lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已確認':'')+'</div>');
     lines.push('<div class="quest-line '+(has854?'done':'')+'">任務版拉斯基 854：'+(has854?'已取得':(e83.active?'Event 83 進行中':'尚未取得'))+'</div>');
     lines.push('<div class="quest-line '+(e4.complete?'done':'blocked')+'">Event 4 成人式：'+(e4.complete?'已完成（ENDEV=4）':(e4.active?'進行中 · 儀玉 2417 '+n(state.inventory['2417'])+'/15':'尚未完成'))+'</div>');
+    if(e4.complete&&!q.event71Current){
+      const ps=n(prep.stage);
+      const ptext=ps===0?'尚未開始':ps===1?'已接 Event69，前往庫伊爺爺':ps===2?'持有護身符 19621，準備進蛙洞':ps===3?'已進蛙洞，尋找新藏':ps===4?'持有金珠 19622，準備挑戰里昂蛙王':ps===5?'蛙王已敗，準備歸還金珠':ps===6?'持有黑玉 19623，返回新藏':ps===7?'Event70 已開，與新藏確認託付':ps===8?'Event69 已完成，前往願藏祖母':ps>=9?'Event69／70 已完成':'進行中';
+      lines.push('<div class="quest-line '+(ps>=9?'done':'')+'">Event69／70 精靈少女前傳：'+ptext+'</div>');
+    }
     lines.push('<div class="quest-line '+(q.event71Current&&hasItem(2414)?'done':'blocked')+'">Event83 前置：Event71 '+(q.event71Current?'進行中':'未開旗')+' / 不可思議的貝殼 2414 '+(hasItem(2414)?'持有':'缺少')+'</div>');
     if(marefia&&!q.event71Current){
       const mi=Math.max(0,Math.floor(n(prep.memoryIndex))),node=MAREFIA_MEMORY_ROUTE[mi];
@@ -616,10 +631,16 @@ function renderZooQuest(){
         else actions.push('<button data-zoo-action="event4-finish" class="wide">儀式的審判：交出儀玉 ×15 完成成人式</button>');
       }else{
         if(prep.stage===0)actions.push('<button data-zoo-action="event69-start" class="wide">願藏祖父：開始精靈少女 Event 69</button>');
-        if(prep.stage===1)actions.push('<button data-zoo-action="event69-rescue" class="wide">蛙洞救出新藏 → 完成 Event69／開 Event70</button>');
-        if(prep.stage===2)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv1 瑪蕾菲雅</button>');
+        if(prep.stage===1)actions.push('<button data-zoo-action="event69-kui" class="wide">拜訪庫伊爺爺：取得發亮護身符 19621</button>');
+        if(prep.stage===2)actions.push('<button data-zoo-action="event69-enter-cave" class="wide">把護身符交給卡卡金寶 → 進入蛙洞</button>');
+        if(prep.stage===3)actions.push('<button data-zoo-action="event69-shinzo-gold" class="wide">找到新藏：接下金珠 19622</button>');
+        if(prep.stage===4)actions.push('<button data-zoo-action="goto-frog-king" class="wide">帶金珠前往 Floor 30605 挑戰里昂蛙王</button>');
+        if(prep.stage===5)actions.push('<button data-zoo-action="event69-frog-exchange" class="wide">Floor 30607：把金珠還給蛙王 → 黑玉 19623</button>');
+        if(prep.stage===6)actions.push('<button data-zoo-action="event70-start-shinzo" class="wide">回找新藏：用黑玉交換精靈情報 → 開 Event70</button>');
+        if(prep.stage===7)actions.push('<button data-zoo-action="event69-finish-shinzo" class="wide">新藏託付瑪蕾菲雅 → 完成 Event69</button>');
+        if(prep.stage===8)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv1 瑪蕾菲雅＋19624 項鍊</button>');
       }
-      if(prep.stage===3&&marefia){
+      if(prep.stage===9&&marefia){
         const mi=Math.max(0,Math.floor(n(prep.memoryIndex))),node=MAREFIA_MEMORY_ROUTE[mi];
         if(node){
           if(n(marefia.level)===node.level)actions.push('<button data-zoo-action="marefia-memory-'+mi+'" class="wide">回憶 '+(mi+1)+'/'+MAREFIA_MEMORY_ROUTE.length+'：Floor '+node.floor+' · '+escapeHtml(node.clue)+'</button>');
@@ -630,7 +651,7 @@ function renderZooQuest(){
           actions.push('<button class="wide" disabled>最後回憶已完成，將瑪蕾菲雅訓練到 Lv79（目前 Lv'+n(marefia.level)+'）</button>');
         }
       }
-      if(prep.stage===4&&prep.memoryReady)actions.push('<button data-zoo-action="pet-trans" class="wide">精靈王：讓出戰 Lv80+ 寵物接受轉生祝福</button>');
+      if(prep.stage===10&&prep.memoryReady)actions.push('<button data-zoo-action="pet-trans" class="wide">精靈王：讓出戰 Lv80+ 寵物接受轉生祝福</button>');
     }else if(hasItem(2414)&&!e83.active&&!e83.complete&&!has854){
       actions.push('<button data-zoo-action="start83" class="wide">向里拉拉開始 Event 83</button>');
     }
@@ -880,18 +901,47 @@ function handleZooAction(action){
     addLog('Event 4 成人式完成：交出儀玉 2417 ×15，取得 Item 2418；依 event04_1 正式設為 ENDEV=4。','good');
   }
   if(action==='event69-start'&&!q.event71Current&&e4.complete&&prep.stage===0){
-    prep.stage=1;addLog('Event 69：願藏祖父委託你尋找失蹤的新藏。','good');
+    prep.stage=1;addLog('Event 69：願藏祖父委託你尋找失蹤的新藏，正式設為 NOWEV=69。','good');
   }
-  if(action==='event69-rescue'&&!q.event71Current&&prep.stage===1){
-    prep.stage=2;addLog('依精靈少女前傳完成蛙洞救援：Event69 完成，Event70 開始。','good');
+  if(action==='event69-kui'&&!q.event71Current&&e4.complete&&prep.stage===1){
+    if(!hasItem(19621))giveItem(19621,1);
+    prep.stage=2;
+    addLog('庫伊爺爺把發亮護身符 19621 交給你，建議拿它吸引卡卡金寶。','pet');
   }
-  if(action==='event70-finish'&&!q.event71Current&&prep.stage===2){
-    const p=addMarefiaPet();prep.stage=3;prep.memoryIndex=0;prep.memoryReady=false;
-    addLog('Event70 完成：願藏祖母把 Lv1 瑪蕾菲雅（EnemyID 1479／TempNo 718）交給你。接下來依 ptalk01.arg 逐段找回 14 個回憶。','good');
+  if(action==='event69-enter-cave'&&!q.event71Current&&prep.stage===2&&hasItem(19621)){
+    consumeItem(19621,1);prep.stage=3;
+    addLog('卡卡金寶被護身符吸引；依 event69_2 收走 19621，進入蛙洞 Floor 30601。','good');
+  }
+  if(action==='event69-shinzo-gold'&&!q.event71Current&&prep.stage===3){
+    if(!hasItem(19622))giveItem(19622,1);
+    prep.stage=4;
+    addLog('在 Floor 30602 找到新藏；他把惹怒里昂蛙群的金珠 19622 交給你。','pet');
+  }
+  if(action==='goto-frog-king'&&!q.event71Current&&prep.stage===4&&hasItem(19622)){
+    state.mapId='event69-frog-king';enemy=null;
+    addLog('帶著金珠 19622 前往 Floor 30605 挑戰里昂蛙王。','good');
+  }
+  if(action==='event69-frog-exchange'&&!q.event71Current&&prep.stage===5&&hasItem(19622)){
+    consumeItem(19622,1);giveItem(19623,1);prep.stage=6;
+    addLog('里昂蛙王收回金珠 19622，依 event69_6 送你黑玉 19623 作為和解證明。','good');
+  }
+  if(action==='event70-start-shinzo'&&!q.event71Current&&prep.stage===6&&hasItem(19623)){
+    consumeItem(19623,1);prep.stage=7;
+    addLog('新藏用精靈情報交換黑玉 19623；依 event69_4 的 EventNo 70 REQUEST 正式開啟 NOWEV=70。','good');
+  }
+  if(action==='event69-finish-shinzo'&&!q.event71Current&&prep.stage===7){
+    prep.stage=8;
+    addLog('新藏把失憶的瑪蕾菲雅託付給你照顧；依 event69_4 正式 EndSetFlg:69。','good');
+  }
+  if(action==='event70-finish'&&!q.event71Current&&prep.stage===8){
+    const p=addMarefiaPet();
+    if(!hasItem(19624))giveItem(19624,1);
+    prep.stage=9;prep.memoryIndex=0;prep.memoryReady=false;
+    addLog('Event70 完成：願藏祖母交給你 Lv1 瑪蕾菲雅（EnemyID 1479／TempNo 718）與項鍊 19624，正式 EndSetFlg:70。','good');
     if(!state.team.includes(p.id)){const open=state.team.findIndex(x=>!x);if(open>=0)state.team[open]=p.id;}
   }
   const memoryMatch=/^marefia-memory-(\d+)$/.exec(action);
-  if(memoryMatch&&!q.event71Current&&prep.stage===3){
+  if(memoryMatch&&!q.event71Current&&prep.stage===9){
     const idx=Number(memoryMatch[1]),node=MAREFIA_MEMORY_ROUTE[idx],marefia=marefiaPet();
     if(!node||idx!==Math.floor(n(prep.memoryIndex)))addLog('這個回憶節點目前尚未開放。','bad');
     else if(!marefia)addLog('隊伍中沒有瑪蕾菲雅。','bad');
@@ -906,16 +956,16 @@ function handleZooAction(action){
       addLog('瑪蕾菲雅回憶 '+(idx+1)+'/'+MAREFIA_MEMORY_ROUTE.length+'：Floor '+node.floor+'（'+node.clue+'），等級上限開放至 Lv'+node.nextCap+'。','good');
     }
   }
-  if(action==='marefia-final'&&!q.event71Current&&prep.stage===3){
+  if(action==='marefia-final'&&!q.event71Current&&prep.stage===9){
     const marefia=marefiaPet();
     if(!marefia||Math.floor(n(prep.memoryIndex))<MAREFIA_MEMORY_ROUTE.length||n(marefia.level)!==79){
       addLog('必須完成 14 段回憶並把瑪蕾菲雅練到 Lv79。','bad');
     }else{
-      prep.memoryReady=true;prep.stage=4;
+      prep.memoryReady=true;prep.stage=10;
       addLog('Lv79 瑪蕾菲雅：已完全了解自己的使命，必須前往拯救被困的精靈王。','good');
     }
   }
-  if(action==='pet-trans'&&!q.event71Current&&prep.stage===4&&prep.memoryReady){
+  if(action==='pet-trans'&&!q.event71Current&&prep.stage===10&&prep.memoryReady){
     const marefia=marefiaPet(),p=activePet();
     if(!e4.complete)addLog('精靈王：必須先完成 Event 4 成人式。','bad');
     else if(state.level<80)addLog('精靈王：角色必須 Lv80 以上。','bad');
@@ -928,7 +978,7 @@ function handleZooAction(action){
       state.petBox=state.petBox.filter(x=>x.id!==mid);
       state.team=state.team.map(x=>x===mid?null:x);
       p.transmigration=1;p.level=1;p.exp=0;
-      prep.stage=5;q.event71Current=true;
+      prep.stage=11;q.event71Current=true;
       addLog(p.name+' 接受精靈王祝福完成轉生；依 npc_transmigration.c 正式設為 NOWEV=71。','good');
     }
   }
