@@ -1461,3 +1461,55 @@ V0.32 已能辨識這兩種 StatusChange 的真實技能 ID／option，但特殊
 原因是來源版酒醉存在一段明顯不對稱程式：套用時把 `CHAR_WORKDRUNK` 本身除以 2，解除時卻把 `CHAR_WORKQUICK` 乘 2；目前尚未找到對稱的「套用時 QUICK /2」程式，因此不直接複製可能造成永久敏捷翻倍的來源異常。
 
 混亂則會在 `BATTLE_StatusSeq` 中以 80% 機率強制改成普通攻擊，並隨機攻擊敵我任一存活單位，需要先把友軍傷害／亂打選目標完整接好後再啟用。
+
+
+## V0.33 突擊／雙重突擊 BATTLE_Charge
+
+V0.33 接入 `PETSKILL_ChargeAttack`，目前來源 petskill 有兩種：
+
+- ID 30「突擊」：`1 攻%+90`
+- ID 31「雙重突擊」：`2 攻%+110`
+
+### 原 BATTLE_Charge 狀態機
+
+`PETSKILL_ChargeAttack()` 先把 command 設成 `BATTLE_COM_S_CHARGE`，並把：
+
+- low COM3 = 蓄力回合數 N
+- high COM3 = 攻擊百分比
+
+每次輪到該單位：
+
+- low > 0：low - 1，執行 `BATTLE_NoAction`
+- low <= 0：攻擊力改成 FIXSTR + FIXSTR × 百分比，command 改為 `BATTLE_COM_S_CHARGE_OK`
+
+同一個 action 後段會重新讀取 command，因此切成 `CHARGE_OK` 的那一回合會立刻完成真正物理攻擊，不會再多等一回合。
+
+所以實際行為是：
+
+- 突擊：空過 1 回合，下一回合 +90% 攻擊出手
+- 雙重突擊：空過 2 回合，第三回合 +110% 攻擊出手
+
+### AI 鎖定
+
+原 `BATTLE_ai_all()` 會先檢查 `BATTLE_IsCharge()`。只要目前 command 是 `S_CHARGE`，Enemy AI 就直接保留既有 command，不重新抽 at／gu／es／wa。
+
+V0.33 的 Enemy 也會把 chargeState 跨回合保留，直到倒數完成。
+
+第一次開始蓄力時鎖定的目標會一起保存；若釋放前該目標已失效，才回退到目前 Enemy AI 的有效目標補正。
+
+### 反擊
+
+`CHARGE_OK` 在原直接攻擊流程開始前會把 command 清成 NONE。
+
+因此：
+
+- 被蓄力攻擊的目標仍可依自己的 command 嘗試反擊
+- 但蓄力 Enemy 在被反擊後不符合 `BATTLE_Counter()` 的 ATTACK／NoGuard 資格，不會再反反擊
+
+V0.33 也保留此限制。
+
+### 異常狀態中斷
+
+原 `BATTLE_StatusSeq()` 若發現睡眠、石化、麻痺等不能行動狀態，會把目前 command 清成 NONE。
+
+所以 V0.33 中，正在蓄力的 Enemy 若在自己行動時被判定無法行動，chargeState 會直接取消，而不是等異常解除後繼續剩餘蓄力。
