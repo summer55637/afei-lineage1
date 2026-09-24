@@ -761,7 +761,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.7 載入完成：Event2 貝殼與 Event71 寵物轉生前置已接入，dev71 已移除。','good');
+    addLog('V0.7 載入完成：Event2 貝殼與 Event71 寵物轉生前置已接入，開發灌旗入口已移除。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
