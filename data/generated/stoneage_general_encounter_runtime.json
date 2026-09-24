@@ -3,10 +3,12 @@
     "format": "stoneage-general-encounter-runtime-v3",
     "source": "encount.txt + group1.txt + enemy1.txt + enemybase1.txt + enemy.c + char.c",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "parserNote": "enemybase integer fields are loaded by atoi(); source '4.50' LVUPPOINT becomes server integer 4",
+    "parserNote": "enemybase integer fields use atoi(); encount x1/y1/x2/y2 are normalized with min/max exactly like ENCOUNT_initEncount()",
     "floorCount": 85,
     "targetEncounterCount": 161,
     "allEncounterCount": 479,
+    "reversedCornerRows": 35,
+    "reversedCornerTargetRows": 15,
     "referencedGroupIds": 728,
     "resolvedGroupIds": 705,
     "unresolvedGroupIds": [
@@ -75,7 +77,7 @@
     },
     "invalidRandomTargets": [],
     "enemyCreateRule": "base V/S/T/D += RAND(0,4)-2 individually; then 10 points each RAND(0,3); PARAM=(level-1)*atoi(LVUPPOINT)+INITNUM",
-    "complianceRule": "atk=floor(STR*.01+TGH*.001+VIT*.001+DEX*.0005); def=floor(TGH*.01+STR*.001+VIT*.001+DEX*.0005); quick=floor(DEX*.01); hp=floor((VIT*4+STR+TGH+DEX)*.01)"
+    "complianceRule": "atk=trunc(STR*.01+TGH*.001+VIT*.001+DEX*.0005); def=trunc(TGH*.01+STR*.001+VIT*.001+DEX*.0005); quick=trunc(DEX*.01); hp=trunc((VIT*4+STR+TGH+DEX)*.01)"
   },
   "randomChange": {
     "humanEnemyRanges": [
@@ -4363,6 +4365,12 @@
           "sourceOrder": 210,
           "encounterId": 406,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 3,
+            "y1": 6,
+            "x2": 33,
+            "y2": 19
+          },
           "area": {
             "xMin": 3,
             "yMin": 6,
@@ -4401,6 +4409,12 @@
           "sourceOrder": 211,
           "encounterId": 407,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 3,
+            "y1": 6,
+            "x2": 17,
+            "y2": 34
+          },
           "area": {
             "xMin": 3,
             "yMin": 6,
@@ -4439,6 +4453,12 @@
           "sourceOrder": 212,
           "encounterId": 408,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 36,
+            "y1": 51,
+            "x2": 65,
+            "y2": 63
+          },
           "area": {
             "xMin": 36,
             "yMin": 51,
@@ -4482,6 +4502,12 @@
           "sourceOrder": 213,
           "encounterId": 409,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 51,
+            "y1": 36,
+            "x2": 65,
+            "y2": 63
+          },
           "area": {
             "xMin": 51,
             "yMin": 36,
@@ -4520,6 +4546,12 @@
           "sourceOrder": 214,
           "encounterId": 410,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 4,
+            "y1": 36,
+            "x2": 17,
+            "y2": 49
+          },
           "area": {
             "xMin": 4,
             "yMin": 36,
@@ -4558,6 +4590,12 @@
           "sourceOrder": 215,
           "encounterId": 411,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 20,
+            "y1": 51,
+            "x2": 33,
+            "y2": 63
+          },
           "area": {
             "xMin": 20,
             "yMin": 51,
@@ -4596,6 +4634,12 @@
           "sourceOrder": 216,
           "encounterId": 412,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 36,
+            "y1": 6,
+            "x2": 49,
+            "y2": 19
+          },
           "area": {
             "xMin": 36,
             "yMin": 6,
@@ -4634,6 +4678,12 @@
           "sourceOrder": 217,
           "encounterId": 413,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 51,
+            "y1": 21,
+            "x2": 65,
+            "y2": 34
+          },
           "area": {
             "xMin": 51,
             "yMin": 21,
@@ -4672,6 +4722,12 @@
           "sourceOrder": 218,
           "encounterId": 414,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 3,
+            "y1": 51,
+            "x2": 17,
+            "y2": 64
+          },
           "area": {
             "xMin": 3,
             "yMin": 51,
@@ -4710,6 +4766,12 @@
           "sourceOrder": 219,
           "encounterId": 415,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 52,
+            "y1": 7,
+            "x2": 64,
+            "y2": 18
+          },
           "area": {
             "xMin": 52,
             "yMin": 7,
@@ -4748,6 +4810,12 @@
           "sourceOrder": 220,
           "encounterId": 416,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 19,
+            "y1": 21,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 19,
             "yMin": 21,
@@ -4776,6 +4844,12 @@
           "sourceOrder": 474,
           "encounterId": 1046,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 6,
+            "y1": 19,
+            "x2": 19,
+            "y2": 47
+          },
           "area": {
             "xMin": 6,
             "yMin": 19,
@@ -4819,6 +4893,12 @@
           "sourceOrder": 475,
           "encounterId": 1047,
           "floorId": 41,
+          "sourceCorners": {
+            "x1": 54,
+            "y1": 19,
+            "x2": 66,
+            "y2": 46
+          },
           "area": {
             "xMin": 54,
             "yMin": 19,
@@ -4881,6 +4961,12 @@
           "sourceOrder": 0,
           "encounterId": 21,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 582,
+            "y1": 399,
+            "x2": 783,
+            "y2": 560
+          },
           "area": {
             "xMin": 582,
             "yMin": 399,
@@ -4924,6 +5010,12 @@
           "sourceOrder": 1,
           "encounterId": 22,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 591,
+            "y1": 552,
+            "x2": 685,
+            "y2": 695
+          },
           "area": {
             "xMin": 591,
             "yMin": 552,
@@ -4972,6 +5064,12 @@
           "sourceOrder": 2,
           "encounterId": 23,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 423,
+            "y1": 552,
+            "x2": 594,
+            "y2": 788
+          },
           "area": {
             "xMin": 423,
             "yMin": 552,
@@ -5010,6 +5108,12 @@
           "sourceOrder": 3,
           "encounterId": 24,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 541,
+            "y1": 375,
+            "x2": 592,
+            "y2": 554
+          },
           "area": {
             "xMin": 541,
             "yMin": 375,
@@ -5063,6 +5167,12 @@
           "sourceOrder": 4,
           "encounterId": 25,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 479,
+            "y1": 355,
+            "x2": 541,
+            "y2": 557
+          },
           "area": {
             "xMin": 479,
             "yMin": 355,
@@ -5106,6 +5216,12 @@
           "sourceOrder": 5,
           "encounterId": 26,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 425,
+            "y1": 387,
+            "x2": 480,
+            "y2": 554
+          },
           "area": {
             "xMin": 425,
             "yMin": 387,
@@ -5139,6 +5255,12 @@
           "sourceOrder": 6,
           "encounterId": 27,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 403,
+            "y1": 316,
+            "x2": 526,
+            "y2": 391
+          },
           "area": {
             "xMin": 403,
             "yMin": 316,
@@ -5177,6 +5299,12 @@
           "sourceOrder": 7,
           "encounterId": 28,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 11,
+            "y1": 567,
+            "x2": 155,
+            "y2": 707
+          },
           "area": {
             "xMin": 11,
             "yMin": 567,
@@ -5215,6 +5343,12 @@
           "sourceOrder": 8,
           "encounterId": 29,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 208,
+            "y1": 524,
+            "x2": 308,
+            "y2": 682
+          },
           "area": {
             "xMin": 208,
             "yMin": 524,
@@ -5253,6 +5387,12 @@
           "sourceOrder": 9,
           "encounterId": 30,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 63,
+            "y1": 392,
+            "x2": 308,
+            "y2": 524
+          },
           "area": {
             "xMin": 63,
             "yMin": 392,
@@ -5291,6 +5431,12 @@
           "sourceOrder": 10,
           "encounterId": 31,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 308,
+            "y1": 524,
+            "x2": 426,
+            "y2": 691
+          },
           "area": {
             "xMin": 308,
             "yMin": 524,
@@ -5329,6 +5475,12 @@
           "sourceOrder": 11,
           "encounterId": 32,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 128,
+            "y1": 315,
+            "x2": 202,
+            "y2": 392
+          },
           "area": {
             "xMin": 128,
             "yMin": 315,
@@ -5362,6 +5514,12 @@
           "sourceOrder": 12,
           "encounterId": 33,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 308,
+            "y1": 387,
+            "x2": 426,
+            "y2": 524
+          },
           "area": {
             "xMin": 308,
             "yMin": 387,
@@ -5395,6 +5553,12 @@
           "sourceOrder": 13,
           "encounterId": 34,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 444,
+            "y1": 299,
+            "x2": 494,
+            "y2": 315
+          },
           "area": {
             "xMin": 444,
             "yMin": 299,
@@ -5433,6 +5597,12 @@
           "sourceOrder": 14,
           "encounterId": 36,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 799,
+            "y2": 799
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -5450,6 +5620,12 @@
           "sourceOrder": 15,
           "encounterId": 37,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 365,
+            "y1": 440,
+            "x2": 416,
+            "y2": 486
+          },
           "area": {
             "xMin": 365,
             "yMin": 440,
@@ -5518,6 +5694,12 @@
           "sourceOrder": 16,
           "encounterId": 38,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 547,
+            "y1": 115,
+            "x2": 699,
+            "y2": 241
+          },
           "area": {
             "xMin": 547,
             "yMin": 115,
@@ -5581,6 +5763,12 @@
           "sourceOrder": 17,
           "encounterId": 39,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 547,
+            "y1": 241,
+            "x2": 679,
+            "y2": 331
+          },
           "area": {
             "xMin": 547,
             "yMin": 241,
@@ -5634,6 +5822,12 @@
           "sourceOrder": 18,
           "encounterId": 40,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 539,
+            "y1": 297,
+            "x2": 587,
+            "y2": 374
+          },
           "area": {
             "xMin": 539,
             "yMin": 297,
@@ -5672,6 +5866,12 @@
           "sourceOrder": 19,
           "encounterId": 41,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 587,
+            "y1": 331,
+            "x2": 630,
+            "y2": 343
+          },
           "area": {
             "xMin": 587,
             "yMin": 331,
@@ -5720,6 +5920,12 @@
           "sourceOrder": 20,
           "encounterId": 42,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 532,
+            "y1": 332,
+            "x2": 595,
+            "y2": 361
+          },
           "area": {
             "xMin": 532,
             "yMin": 332,
@@ -5768,6 +5974,12 @@
           "sourceOrder": 21,
           "encounterId": 43,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 524,
+            "y1": 325,
+            "x2": 546,
+            "y2": 346
+          },
           "area": {
             "xMin": 524,
             "yMin": 325,
@@ -5816,6 +6028,12 @@
           "sourceOrder": 22,
           "encounterId": 44,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 504,
+            "y1": 298,
+            "x2": 547,
+            "y2": 325
+          },
           "area": {
             "xMin": 504,
             "yMin": 298,
@@ -5849,6 +6067,12 @@
           "sourceOrder": 23,
           "encounterId": 45,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 434,
+            "y1": 237,
+            "x2": 547,
+            "y2": 298
+          },
           "area": {
             "xMin": 434,
             "yMin": 237,
@@ -5912,6 +6136,12 @@
           "sourceOrder": 24,
           "encounterId": 46,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 434,
+            "y1": 176,
+            "x2": 547,
+            "y2": 237
+          },
           "area": {
             "xMin": 434,
             "yMin": 176,
@@ -5980,6 +6210,12 @@
           "sourceOrder": 25,
           "encounterId": 47,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 434,
+            "y1": 115,
+            "x2": 547,
+            "y2": 176
+          },
           "area": {
             "xMin": 434,
             "yMin": 115,
@@ -6028,6 +6264,12 @@
           "sourceOrder": 26,
           "encounterId": 48,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 180,
+            "y1": 25,
+            "x2": 434,
+            "y2": 120
+          },
           "area": {
             "xMin": 180,
             "yMin": 25,
@@ -6061,6 +6303,12 @@
           "sourceOrder": 27,
           "encounterId": 49,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 180,
+            "y1": 120,
+            "x2": 315,
+            "y2": 200
+          },
           "area": {
             "xMin": 180,
             "yMin": 120,
@@ -6104,6 +6352,12 @@
           "sourceOrder": 28,
           "encounterId": 50,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 315,
+            "y1": 120,
+            "x2": 434,
+            "y2": 200
+          },
           "area": {
             "xMin": 315,
             "yMin": 120,
@@ -6137,6 +6391,12 @@
           "sourceOrder": 29,
           "encounterId": 51,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 180,
+            "y1": 200,
+            "x2": 360,
+            "y2": 282
+          },
           "area": {
             "xMin": 180,
             "yMin": 200,
@@ -6185,6 +6445,12 @@
           "sourceOrder": 30,
           "encounterId": 52,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 360,
+            "y1": 200,
+            "x2": 433,
+            "y2": 314
+          },
           "area": {
             "xMin": 360,
             "yMin": 200,
@@ -6223,6 +6489,12 @@
           "sourceOrder": 31,
           "encounterId": 54,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 556,
+            "y1": 345,
+            "x2": 621,
+            "y2": 393
+          },
           "area": {
             "xMin": 556,
             "yMin": 345,
@@ -6251,6 +6523,12 @@
           "sourceOrder": 32,
           "encounterId": 55,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 614,
+            "y1": 393,
+            "x2": 621,
+            "y2": 403
+          },
           "area": {
             "xMin": 614,
             "yMin": 393,
@@ -6279,6 +6557,12 @@
           "sourceOrder": 33,
           "encounterId": 56,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 621,
+            "y1": 341,
+            "x2": 645,
+            "y2": 412
+          },
           "area": {
             "xMin": 621,
             "yMin": 341,
@@ -6312,6 +6596,12 @@
           "sourceOrder": 34,
           "encounterId": 57,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 633,
+            "y1": 329,
+            "x2": 662,
+            "y2": 403
+          },
           "area": {
             "xMin": 633,
             "yMin": 329,
@@ -6340,6 +6630,12 @@
           "sourceOrder": 35,
           "encounterId": 58,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 273,
+            "y1": 282,
+            "x2": 353,
+            "y2": 366
+          },
           "area": {
             "xMin": 273,
             "yMin": 282,
@@ -6388,6 +6684,12 @@
           "sourceOrder": 36,
           "encounterId": 64,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 11,
+            "y1": 524,
+            "x2": 208,
+            "y2": 708
+          },
           "area": {
             "xMin": 11,
             "yMin": 524,
@@ -6431,6 +6733,12 @@
           "sourceOrder": 37,
           "encounterId": 65,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 568,
+            "y1": 538,
+            "x2": 610,
+            "y2": 578
+          },
           "area": {
             "xMin": 568,
             "yMin": 538,
@@ -6464,6 +6772,12 @@
           "sourceOrder": 38,
           "encounterId": 66,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 432,
+            "y1": 236,
+            "x2": 546,
+            "y2": 315
+          },
           "area": {
             "xMin": 432,
             "yMin": 236,
@@ -6527,6 +6841,12 @@
           "sourceOrder": 39,
           "encounterId": 67,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 433,
+            "y1": 306,
+            "x2": 446,
+            "y2": 315
+          },
           "area": {
             "xMin": 433,
             "yMin": 306,
@@ -6570,6 +6890,12 @@
           "sourceOrder": 40,
           "encounterId": 68,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 433,
+            "y1": 310,
+            "x2": 499,
+            "y2": 315
+          },
           "area": {
             "xMin": 433,
             "yMin": 310,
@@ -6613,6 +6939,12 @@
           "sourceOrder": 41,
           "encounterId": 70,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 520,
+            "y1": 323,
+            "x2": 538,
+            "y2": 338
+          },
           "area": {
             "xMin": 520,
             "yMin": 323,
@@ -6666,6 +6998,12 @@
           "sourceOrder": 164,
           "encounterId": 223,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 363,
+            "y1": 122,
+            "x2": 430,
+            "y2": 198
+          },
           "area": {
             "xMin": 363,
             "yMin": 122,
@@ -6704,6 +7042,12 @@
           "sourceOrder": 165,
           "encounterId": 224,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 363,
+            "y1": 202,
+            "x2": 430,
+            "y2": 252
+          },
           "area": {
             "xMin": 363,
             "yMin": 202,
@@ -6742,6 +7086,12 @@
           "sourceOrder": 175,
           "encounterId": 265,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 463,
+            "y1": 294,
+            "x2": 480,
+            "y2": 300
+          },
           "area": {
             "xMin": 463,
             "yMin": 294,
@@ -6780,6 +7130,12 @@
           "sourceOrder": 440,
           "encounterId": 980,
           "floorId": 100,
+          "sourceCorners": {
+            "x1": 245,
+            "y1": 174,
+            "x2": 277,
+            "y2": 196
+          },
           "area": {
             "xMin": 245,
             "yMin": 174,
@@ -6812,6 +7168,12 @@
           "sourceOrder": 221,
           "encounterId": 431,
           "floorId": 119,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 199,
+            "y2": 199
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -6884,6 +7246,12 @@
           "sourceOrder": 43,
           "encounterId": 87,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 550,
+            "y1": 282,
+            "x2": 652,
+            "y2": 403
+          },
           "area": {
             "xMin": 550,
             "yMin": 282,
@@ -6932,6 +7300,12 @@
           "sourceOrder": 44,
           "encounterId": 88,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 516,
+            "y1": 238,
+            "x2": 772,
+            "y2": 452
+          },
           "area": {
             "xMin": 516,
             "yMin": 238,
@@ -6970,6 +7344,12 @@
           "sourceOrder": 45,
           "encounterId": 89,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 384,
+            "y1": 42,
+            "x2": 605,
+            "y2": 238
+          },
           "area": {
             "xMin": 384,
             "yMin": 42,
@@ -7008,6 +7388,12 @@
           "sourceOrder": 46,
           "encounterId": 90,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 384,
+            "y1": 42,
+            "x2": 605,
+            "y2": 238
+          },
           "area": {
             "xMin": 384,
             "yMin": 42,
@@ -7056,6 +7442,12 @@
           "sourceOrder": 47,
           "encounterId": 91,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 384,
+            "y1": 238,
+            "x2": 516,
+            "y2": 415
+          },
           "area": {
             "xMin": 384,
             "yMin": 238,
@@ -7104,6 +7496,12 @@
           "sourceOrder": 48,
           "encounterId": 92,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 384,
+            "y1": 415,
+            "x2": 516,
+            "y2": 528
+          },
           "area": {
             "xMin": 384,
             "yMin": 415,
@@ -7137,6 +7535,12 @@
           "sourceOrder": 49,
           "encounterId": 93,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 467,
+            "y1": 156,
+            "x2": 506,
+            "y2": 197
+          },
           "area": {
             "xMin": 467,
             "yMin": 156,
@@ -7170,10 +7574,16 @@
           "sourceOrder": 50,
           "encounterId": 94,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 441,
+            "y1": 123,
+            "x2": 177,
+            "y2": 480
+          },
           "area": {
-            "xMin": 441,
+            "xMin": 177,
             "yMin": 123,
-            "xMax": 177,
+            "xMax": 441,
             "yMax": 480
           },
           "encounterMin": 2,
@@ -7203,6 +7613,12 @@
           "sourceOrder": 51,
           "encounterId": 95,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 262,
+            "y1": 565,
+            "x2": 333,
+            "y2": 686
+          },
           "area": {
             "xMin": 262,
             "yMin": 565,
@@ -7246,6 +7662,12 @@
           "sourceOrder": 52,
           "encounterId": 96,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 95,
+            "y1": 499,
+            "x2": 304,
+            "y2": 565
+          },
           "area": {
             "xMin": 95,
             "yMin": 499,
@@ -7284,6 +7706,12 @@
           "sourceOrder": 53,
           "encounterId": 97,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 30,
+            "y1": 327,
+            "x2": 251,
+            "y2": 502
+          },
           "area": {
             "xMin": 30,
             "yMin": 327,
@@ -7312,6 +7740,12 @@
           "sourceOrder": 54,
           "encounterId": 98,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 333,
+            "y1": 565,
+            "x2": 401,
+            "y2": 666
+          },
           "area": {
             "xMin": 333,
             "yMin": 565,
@@ -7350,6 +7784,12 @@
           "sourceOrder": 55,
           "encounterId": 99,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 304,
+            "y1": 494,
+            "x2": 401,
+            "y2": 565
+          },
           "area": {
             "xMin": 304,
             "yMin": 494,
@@ -7388,6 +7828,12 @@
           "sourceOrder": 56,
           "encounterId": 100,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 401,
+            "y1": 506,
+            "x2": 433,
+            "y2": 617
+          },
           "area": {
             "xMin": 401,
             "yMin": 506,
@@ -7426,6 +7872,12 @@
           "sourceOrder": 57,
           "encounterId": 101,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 401,
+            "y1": 506,
+            "x2": 433,
+            "y2": 617
+          },
           "area": {
             "xMin": 401,
             "yMin": 506,
@@ -7464,6 +7916,12 @@
           "sourceOrder": 58,
           "encounterId": 102,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 430,
+            "y1": 526,
+            "x2": 439,
+            "y2": 544
+          },
           "area": {
             "xMin": 430,
             "yMin": 526,
@@ -7502,6 +7960,12 @@
           "sourceOrder": 59,
           "encounterId": 103,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 231,
+            "y1": 248,
+            "x2": 314,
+            "y2": 327
+          },
           "area": {
             "xMin": 231,
             "yMin": 248,
@@ -7530,6 +7994,12 @@
           "sourceOrder": 60,
           "encounterId": 104,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 314,
+            "y1": 278,
+            "x2": 320,
+            "y2": 296
+          },
           "area": {
             "xMin": 314,
             "yMin": 278,
@@ -7558,6 +8028,12 @@
           "sourceOrder": 61,
           "encounterId": 105,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 320,
+            "y1": 287,
+            "x2": 326,
+            "y2": 296
+          },
           "area": {
             "xMin": 320,
             "yMin": 287,
@@ -7586,6 +8062,12 @@
           "sourceOrder": 62,
           "encounterId": 106,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 422,
+            "y1": 325,
+            "x2": 428,
+            "y2": 359
+          },
           "area": {
             "xMin": 422,
             "yMin": 325,
@@ -7614,6 +8096,12 @@
           "sourceOrder": 63,
           "encounterId": 107,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 402,
+            "y1": 320,
+            "x2": 414,
+            "y2": 327
+          },
           "area": {
             "xMin": 402,
             "yMin": 320,
@@ -7642,6 +8130,12 @@
           "sourceOrder": 64,
           "encounterId": 108,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 384,
+            "y1": 314,
+            "x2": 402,
+            "y2": 327
+          },
           "area": {
             "xMin": 384,
             "yMin": 314,
@@ -7670,6 +8164,12 @@
           "sourceOrder": 65,
           "encounterId": 109,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 367,
+            "y1": 305,
+            "x2": 384,
+            "y2": 327
+          },
           "area": {
             "xMin": 367,
             "yMin": 305,
@@ -7698,6 +8198,12 @@
           "sourceOrder": 66,
           "encounterId": 110,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 410,
+            "y1": 367,
+            "x2": 417,
+            "y2": 377
+          },
           "area": {
             "xMin": 410,
             "yMin": 367,
@@ -7726,6 +8232,12 @@
           "sourceOrder": 67,
           "encounterId": 111,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 407,
+            "y1": 367,
+            "x2": 410,
+            "y2": 393
+          },
           "area": {
             "xMin": 407,
             "yMin": 367,
@@ -7754,6 +8266,12 @@
           "sourceOrder": 68,
           "encounterId": 112,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 407,
+            "y1": 325,
+            "x2": 422,
+            "y2": 367
+          },
           "area": {
             "xMin": 407,
             "yMin": 325,
@@ -7782,6 +8300,12 @@
           "sourceOrder": 69,
           "encounterId": 113,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 332,
+            "y1": 327,
+            "x2": 407,
+            "y2": 446
+          },
           "area": {
             "xMin": 332,
             "yMin": 327,
@@ -7810,6 +8334,12 @@
           "sourceOrder": 70,
           "encounterId": 114,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 251,
+            "y1": 446,
+            "x2": 396,
+            "y2": 499
+          },
           "area": {
             "xMin": 251,
             "yMin": 446,
@@ -7848,6 +8378,12 @@
           "sourceOrder": 71,
           "encounterId": 115,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 251,
+            "y1": 327,
+            "x2": 332,
+            "y2": 446
+          },
           "area": {
             "xMin": 251,
             "yMin": 327,
@@ -7896,6 +8432,12 @@
           "sourceOrder": 72,
           "encounterId": 116,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 91,
+            "y1": 564,
+            "x2": 250,
+            "y2": 671
+          },
           "area": {
             "xMin": 91,
             "yMin": 564,
@@ -7924,6 +8466,12 @@
           "sourceOrder": 73,
           "encounterId": 117,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 194,
+            "y1": 551,
+            "x2": 250,
+            "y2": 577
+          },
           "area": {
             "xMin": 194,
             "yMin": 551,
@@ -7947,6 +8495,12 @@
           "sourceOrder": 74,
           "encounterId": 118,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 91,
+            "y1": 557,
+            "x2": 158,
+            "y2": 572
+          },
           "area": {
             "xMin": 91,
             "yMin": 557,
@@ -7970,6 +8524,12 @@
           "sourceOrder": 75,
           "encounterId": 119,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 314,
+            "y1": 296,
+            "x2": 367,
+            "y2": 327
+          },
           "area": {
             "xMin": 314,
             "yMin": 296,
@@ -8008,6 +8568,12 @@
           "sourceOrder": 76,
           "encounterId": 126,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 500,
+            "y1": 402,
+            "x2": 513,
+            "y2": 458
+          },
           "area": {
             "xMin": 500,
             "yMin": 402,
@@ -8041,6 +8607,12 @@
           "sourceOrder": 77,
           "encounterId": 127,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 497,
+            "y1": 409,
+            "x2": 517,
+            "y2": 444
+          },
           "area": {
             "xMin": 497,
             "yMin": 409,
@@ -8074,6 +8646,12 @@
           "sourceOrder": 78,
           "encounterId": 128,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 515,
+            "y1": 428,
+            "x2": 527,
+            "y2": 435
+          },
           "area": {
             "xMin": 515,
             "yMin": 428,
@@ -8107,6 +8685,12 @@
           "sourceOrder": 79,
           "encounterId": 129,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 515,
+            "y1": 416,
+            "x2": 522,
+            "y2": 428
+          },
           "area": {
             "xMin": 515,
             "yMin": 416,
@@ -8140,6 +8724,12 @@
           "sourceOrder": 80,
           "encounterId": 130,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 513,
+            "y1": 435,
+            "x2": 520,
+            "y2": 444
+          },
           "area": {
             "xMin": 513,
             "yMin": 435,
@@ -8173,6 +8763,12 @@
           "sourceOrder": 81,
           "encounterId": 131,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 513,
+            "y1": 444,
+            "x2": 520,
+            "y2": 458
+          },
           "area": {
             "xMin": 513,
             "yMin": 444,
@@ -8206,6 +8802,12 @@
           "sourceOrder": 82,
           "encounterId": 132,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 503,
+            "y1": 455,
+            "x2": 527,
+            "y2": 488
+          },
           "area": {
             "xMin": 503,
             "yMin": 455,
@@ -8239,6 +8841,12 @@
           "sourceOrder": 83,
           "encounterId": 133,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 503,
+            "y1": 462,
+            "x2": 619,
+            "y2": 618
+          },
           "area": {
             "xMin": 503,
             "yMin": 462,
@@ -8282,6 +8890,12 @@
           "sourceOrder": 84,
           "encounterId": 134,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 486,
+            "y1": 498,
+            "x2": 496,
+            "y2": 512
+          },
           "area": {
             "xMin": 486,
             "yMin": 498,
@@ -8325,6 +8939,12 @@
           "sourceOrder": 85,
           "encounterId": 135,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 471,
+            "y1": 506,
+            "x2": 493,
+            "y2": 514
+          },
           "area": {
             "xMin": 471,
             "yMin": 506,
@@ -8368,6 +8988,12 @@
           "sourceOrder": 86,
           "encounterId": 136,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 466,
+            "y1": 513,
+            "x2": 507,
+            "y2": 618
+          },
           "area": {
             "xMin": 466,
             "yMin": 513,
@@ -8411,6 +9037,12 @@
           "sourceOrder": 87,
           "encounterId": 137,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 481,
+            "y1": 616,
+            "x2": 695,
+            "y2": 807
+          },
           "area": {
             "xMin": 481,
             "yMin": 616,
@@ -8464,6 +9096,12 @@
           "sourceOrder": 88,
           "encounterId": 138,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 602,
+            "y1": 616,
+            "x2": 695,
+            "y2": 722
+          },
           "area": {
             "xMin": 602,
             "yMin": 616,
@@ -8527,6 +9165,12 @@
           "sourceOrder": 89,
           "encounterId": 139,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 451,
+            "y1": 694,
+            "x2": 493,
+            "y2": 922
+          },
           "area": {
             "xMin": 451,
             "yMin": 694,
@@ -8575,6 +9219,12 @@
           "sourceOrder": 90,
           "encounterId": 140,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 77,
+            "y1": 806,
+            "x2": 553,
+            "y2": 1068
+          },
           "area": {
             "xMin": 77,
             "yMin": 806,
@@ -8643,6 +9293,12 @@
           "sourceOrder": 91,
           "encounterId": 141,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 365,
+            "y1": 805,
+            "x2": 452,
+            "y2": 932
+          },
           "area": {
             "xMin": 365,
             "yMin": 805,
@@ -8691,6 +9347,12 @@
           "sourceOrder": 92,
           "encounterId": 142,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 339,
+            "y1": 844,
+            "x2": 365,
+            "y2": 944
+          },
           "area": {
             "xMin": 339,
             "yMin": 844,
@@ -8739,6 +9401,12 @@
           "sourceOrder": 93,
           "encounterId": 143,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 238,
+            "y1": 859,
+            "x2": 340,
+            "y2": 982
+          },
           "area": {
             "xMin": 238,
             "yMin": 859,
@@ -8802,6 +9470,12 @@
           "sourceOrder": 94,
           "encounterId": 144,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 155,
+            "y1": 900,
+            "x2": 237,
+            "y2": 964
+          },
           "area": {
             "xMin": 155,
             "yMin": 900,
@@ -8850,6 +9524,12 @@
           "sourceOrder": 95,
           "encounterId": 145,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 212,
+            "y1": 964,
+            "x2": 237,
+            "y2": 999
+          },
           "area": {
             "xMin": 212,
             "yMin": 964,
@@ -8898,6 +9578,12 @@
           "sourceOrder": 96,
           "encounterId": 146,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 63,
+            "y1": 1067,
+            "x2": 112,
+            "y2": 1168
+          },
           "area": {
             "xMin": 63,
             "yMin": 1067,
@@ -8941,6 +9627,12 @@
           "sourceOrder": 97,
           "encounterId": 147,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 346,
+            "y1": 667,
+            "x2": 360,
+            "y2": 743
+          },
           "area": {
             "xMin": 346,
             "yMin": 667,
@@ -9009,6 +9701,12 @@
           "sourceOrder": 98,
           "encounterId": 148,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 360,
+            "y1": 667,
+            "x2": 365,
+            "y2": 735
+          },
           "area": {
             "xMin": 360,
             "yMin": 667,
@@ -9072,6 +9770,12 @@
           "sourceOrder": 99,
           "encounterId": 149,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 365,
+            "y1": 667,
+            "x2": 372,
+            "y2": 713
+          },
           "area": {
             "xMin": 365,
             "yMin": 667,
@@ -9135,6 +9839,12 @@
           "sourceOrder": 100,
           "encounterId": 150,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 419,
+            "y1": 619,
+            "x2": 485,
+            "y2": 644
+          },
           "area": {
             "xMin": 419,
             "yMin": 619,
@@ -9203,6 +9913,12 @@
           "sourceOrder": 101,
           "encounterId": 151,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 372,
+            "y1": 639,
+            "x2": 473,
+            "y2": 713
+          },
           "area": {
             "xMin": 372,
             "yMin": 639,
@@ -9266,6 +9982,12 @@
           "sourceOrder": 102,
           "encounterId": 152,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 244,
+            "y1": 687,
+            "x2": 332,
+            "y2": 814
+          },
           "area": {
             "xMin": 244,
             "yMin": 687,
@@ -9314,6 +10036,12 @@
           "sourceOrder": 103,
           "encounterId": 153,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 226,
+            "y1": 745,
+            "x2": 244,
+            "y2": 790
+          },
           "area": {
             "xMin": 226,
             "yMin": 745,
@@ -9362,6 +10090,12 @@
           "sourceOrder": 104,
           "encounterId": 154,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 230,
+            "y1": 790,
+            "x2": 244,
+            "y2": 796
+          },
           "area": {
             "xMin": 230,
             "yMin": 790,
@@ -9410,6 +10144,12 @@
           "sourceOrder": 105,
           "encounterId": 155,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 236,
+            "y1": 796,
+            "x2": 244,
+            "y2": 803
+          },
           "area": {
             "xMin": 236,
             "yMin": 796,
@@ -9458,6 +10198,12 @@
           "sourceOrder": 106,
           "encounterId": 156,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 250,
+            "y1": 814,
+            "x2": 327,
+            "y2": 819
+          },
           "area": {
             "xMin": 250,
             "yMin": 814,
@@ -9506,6 +10252,12 @@
           "sourceOrder": 107,
           "encounterId": 157,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 284,
+            "y1": 819,
+            "x2": 320,
+            "y2": 830
+          },
           "area": {
             "xMin": 284,
             "yMin": 819,
@@ -9554,6 +10306,12 @@
           "sourceOrder": 108,
           "encounterId": 158,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 320,
+            "y1": 819,
+            "x2": 324,
+            "y2": 825
+          },
           "area": {
             "xMin": 320,
             "yMin": 819,
@@ -9602,6 +10360,12 @@
           "sourceOrder": 109,
           "encounterId": 159,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 270,
+            "y1": 819,
+            "x2": 284,
+            "y2": 826
+          },
           "area": {
             "xMin": 270,
             "yMin": 819,
@@ -9650,6 +10414,12 @@
           "sourceOrder": 110,
           "encounterId": 160,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 332,
+            "y1": 750,
+            "x2": 339,
+            "y2": 805
+          },
           "area": {
             "xMin": 332,
             "yMin": 750,
@@ -9698,6 +10468,12 @@
           "sourceOrder": 111,
           "encounterId": 161,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 339,
+            "y1": 741,
+            "x2": 345,
+            "y2": 775
+          },
           "area": {
             "xMin": 339,
             "yMin": 741,
@@ -9746,6 +10522,12 @@
           "sourceOrder": 112,
           "encounterId": 162,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 345,
+            "y1": 744,
+            "x2": 352,
+            "y2": 761
+          },
           "area": {
             "xMin": 345,
             "yMin": 744,
@@ -9794,6 +10576,12 @@
           "sourceOrder": 113,
           "encounterId": 163,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 150,
+            "y1": 750,
+            "x2": 226,
+            "y2": 806
+          },
           "area": {
             "xMin": 150,
             "yMin": 750,
@@ -9827,6 +10615,12 @@
           "sourceOrder": 114,
           "encounterId": 164,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 39,
+            "y1": 656,
+            "x2": 150,
+            "y2": 804
+          },
           "area": {
             "xMin": 39,
             "yMin": 656,
@@ -9870,6 +10664,12 @@
           "sourceOrder": 115,
           "encounterId": 165,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 151,
+            "y1": 673,
+            "x2": 243,
+            "y2": 749
+          },
           "area": {
             "xMin": 151,
             "yMin": 673,
@@ -9908,6 +10708,12 @@
           "sourceOrder": 116,
           "encounterId": 166,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 40,
+            "y1": 666,
+            "x2": 94,
+            "y2": 719
+          },
           "area": {
             "xMin": 40,
             "yMin": 666,
@@ -9946,6 +10752,12 @@
           "sourceOrder": 117,
           "encounterId": 167,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 311,
+            "y1": 211,
+            "x2": 441,
+            "y2": 345
+          },
           "area": {
             "xMin": 311,
             "yMin": 211,
@@ -9984,6 +10796,12 @@
           "sourceOrder": 118,
           "encounterId": 168,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 340,
+            "y1": 170,
+            "x2": 410,
+            "y2": 211
+          },
           "area": {
             "xMin": 340,
             "yMin": 170,
@@ -10017,6 +10835,12 @@
           "sourceOrder": 119,
           "encounterId": 169,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 410,
+            "y1": 192,
+            "x2": 422,
+            "y2": 211
+          },
           "area": {
             "xMin": 410,
             "yMin": 192,
@@ -10045,6 +10869,12 @@
           "sourceOrder": 120,
           "encounterId": 170,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 422,
+            "y1": 203,
+            "x2": 430,
+            "y2": 211
+          },
           "area": {
             "xMin": 422,
             "yMin": 203,
@@ -10073,6 +10903,12 @@
           "sourceOrder": 121,
           "encounterId": 171,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 441,
+            "y1": 257,
+            "x2": 466,
+            "y2": 324
+          },
           "area": {
             "xMin": 441,
             "yMin": 257,
@@ -10101,6 +10937,12 @@
           "sourceOrder": 122,
           "encounterId": 172,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 441,
+            "y1": 324,
+            "x2": 454,
+            "y2": 338
+          },
           "area": {
             "xMin": 441,
             "yMin": 324,
@@ -10129,6 +10971,12 @@
           "sourceOrder": 123,
           "encounterId": 173,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 454,
+            "y1": 324,
+            "x2": 461,
+            "y2": 334
+          },
           "area": {
             "xMin": 454,
             "yMin": 324,
@@ -10157,6 +11005,12 @@
           "sourceOrder": 124,
           "encounterId": 174,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 441,
+            "y1": 226,
+            "x2": 451,
+            "y2": 257
+          },
           "area": {
             "xMin": 441,
             "yMin": 226,
@@ -10185,6 +11039,12 @@
           "sourceOrder": 125,
           "encounterId": 175,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 451,
+            "y1": 236,
+            "x2": 458,
+            "y2": 257
+          },
           "area": {
             "xMin": 451,
             "yMin": 236,
@@ -10213,6 +11073,12 @@
           "sourceOrder": 126,
           "encounterId": 176,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 456,
+            "y1": 253,
+            "x2": 461,
+            "y2": 261
+          },
           "area": {
             "xMin": 456,
             "yMin": 253,
@@ -10241,6 +11107,12 @@
           "sourceOrder": 127,
           "encounterId": 177,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 189,
+            "y1": 787,
+            "x2": 205,
+            "y2": 875
+          },
           "area": {
             "xMin": 189,
             "yMin": 787,
@@ -10289,6 +11161,12 @@
           "sourceOrder": 128,
           "encounterId": 178,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 205,
+            "y1": 780,
+            "x2": 213,
+            "y2": 864
+          },
           "area": {
             "xMin": 205,
             "yMin": 780,
@@ -10337,6 +11215,12 @@
           "sourceOrder": 129,
           "encounterId": 179,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 213,
+            "y1": 783,
+            "x2": 219,
+            "y2": 847
+          },
           "area": {
             "xMin": 213,
             "yMin": 783,
@@ -10385,6 +11269,12 @@
           "sourceOrder": 130,
           "encounterId": 180,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 219,
+            "y1": 783,
+            "x2": 232,
+            "y2": 841
+          },
           "area": {
             "xMin": 219,
             "yMin": 783,
@@ -10433,6 +11323,12 @@
           "sourceOrder": 131,
           "encounterId": 181,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 232,
+            "y1": 800,
+            "x2": 243,
+            "y2": 836
+          },
           "area": {
             "xMin": 232,
             "yMin": 800,
@@ -10481,6 +11377,12 @@
           "sourceOrder": 132,
           "encounterId": 182,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 243,
+            "y1": 815,
+            "x2": 249,
+            "y2": 826
+          },
           "area": {
             "xMin": 243,
             "yMin": 815,
@@ -10529,6 +11431,12 @@
           "sourceOrder": 133,
           "encounterId": 183,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 167,
+            "y1": 791,
+            "x2": 189,
+            "y2": 869
+          },
           "area": {
             "xMin": 167,
             "yMin": 791,
@@ -10577,6 +11485,12 @@
           "sourceOrder": 134,
           "encounterId": 184,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 150,
+            "y1": 805,
+            "x2": 167,
+            "y2": 869
+          },
           "area": {
             "xMin": 150,
             "yMin": 805,
@@ -10625,6 +11539,12 @@
           "sourceOrder": 135,
           "encounterId": 185,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 94,
+            "y1": 805,
+            "x2": 150,
+            "y2": 875
+          },
           "area": {
             "xMin": 94,
             "yMin": 805,
@@ -10673,6 +11593,12 @@
           "sourceOrder": 136,
           "encounterId": 186,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 590,
+            "y1": 438,
+            "x2": 617,
+            "y2": 479
+          },
           "area": {
             "xMin": 590,
             "yMin": 438,
@@ -10711,6 +11637,12 @@
           "sourceOrder": 137,
           "encounterId": 187,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 594,
+            "y1": 453,
+            "x2": 661,
+            "y2": 514
+          },
           "area": {
             "xMin": 594,
             "yMin": 453,
@@ -10754,6 +11686,12 @@
           "sourceOrder": 138,
           "encounterId": 188,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 588,
+            "y1": 507,
+            "x2": 598,
+            "y2": 519
+          },
           "area": {
             "xMin": 588,
             "yMin": 507,
@@ -10792,6 +11730,12 @@
           "sourceOrder": 139,
           "encounterId": 189,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 521,
+            "y1": 435,
+            "x2": 527,
+            "y2": 454
+          },
           "area": {
             "xMin": 521,
             "yMin": 435,
@@ -10830,6 +11774,12 @@
           "sourceOrder": 140,
           "encounterId": 190,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 527,
+            "y1": 425,
+            "x2": 568,
+            "y2": 475
+          },
           "area": {
             "xMin": 527,
             "yMin": 425,
@@ -10868,6 +11818,12 @@
           "sourceOrder": 141,
           "encounterId": 191,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 532,
+            "y1": 475,
+            "x2": 561,
+            "y2": 484
+          },
           "area": {
             "xMin": 532,
             "yMin": 475,
@@ -10906,6 +11862,12 @@
           "sourceOrder": 142,
           "encounterId": 192,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 548,
+            "y1": 400,
+            "x2": 565,
+            "y2": 480
+          },
           "area": {
             "xMin": 548,
             "yMin": 400,
@@ -10944,6 +11906,12 @@
           "sourceOrder": 143,
           "encounterId": 193,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 523,
+            "y1": 416,
+            "x2": 617,
+            "y2": 427
+          },
           "area": {
             "xMin": 523,
             "yMin": 416,
@@ -10982,6 +11950,12 @@
           "sourceOrder": 144,
           "encounterId": 194,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 540,
+            "y1": 409,
+            "x2": 619,
+            "y2": 416
+          },
           "area": {
             "xMin": 540,
             "yMin": 409,
@@ -11020,6 +11994,12 @@
           "sourceOrder": 145,
           "encounterId": 195,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 600,
+            "y1": 383,
+            "x2": 626,
+            "y2": 406
+          },
           "area": {
             "xMin": 600,
             "yMin": 383,
@@ -11058,6 +12038,12 @@
           "sourceOrder": 146,
           "encounterId": 196,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 561,
+            "y1": 402,
+            "x2": 623,
+            "y2": 409
+          },
           "area": {
             "xMin": 561,
             "yMin": 402,
@@ -11096,6 +12082,12 @@
           "sourceOrder": 147,
           "encounterId": 197,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 582,
+            "y1": 392,
+            "x2": 591,
+            "y2": 404
+          },
           "area": {
             "xMin": 582,
             "yMin": 392,
@@ -11134,6 +12126,12 @@
           "sourceOrder": 148,
           "encounterId": 198,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 591,
+            "y1": 387,
+            "x2": 600,
+            "y2": 406
+          },
           "area": {
             "xMin": 591,
             "yMin": 387,
@@ -11172,6 +12170,12 @@
           "sourceOrder": 149,
           "encounterId": 199,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 588,
+            "y1": 425,
+            "x2": 616,
+            "y2": 441
+          },
           "area": {
             "xMin": 588,
             "yMin": 425,
@@ -11210,6 +12214,12 @@
           "sourceOrder": 150,
           "encounterId": 200,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 568,
+            "y1": 423,
+            "x2": 577,
+            "y2": 467
+          },
           "area": {
             "xMin": 568,
             "yMin": 423,
@@ -11248,6 +12258,12 @@
           "sourceOrder": 151,
           "encounterId": 201,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 575,
+            "y1": 421,
+            "x2": 590,
+            "y2": 460
+          },
           "area": {
             "xMin": 575,
             "yMin": 421,
@@ -11286,6 +12302,12 @@
           "sourceOrder": 152,
           "encounterId": 202,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 582,
+            "y1": 438,
+            "x2": 595,
+            "y2": 448
+          },
           "area": {
             "xMin": 582,
             "yMin": 438,
@@ -11324,6 +12346,12 @@
           "sourceOrder": 163,
           "encounterId": 222,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 371,
+            "y1": 866,
+            "x2": 450,
+            "y2": 926
+          },
           "area": {
             "xMin": 371,
             "yMin": 866,
@@ -11377,6 +12405,12 @@
           "sourceOrder": 174,
           "encounterId": 257,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 327,
+            "y1": 708,
+            "x2": 457,
+            "y2": 813
+          },
           "area": {
             "xMin": 327,
             "yMin": 708,
@@ -11435,6 +12469,12 @@
           "sourceOrder": 209,
           "encounterId": 398,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 360,
+            "y1": 213,
+            "x2": 424,
+            "y2": 284
+          },
           "area": {
             "xMin": 360,
             "yMin": 213,
@@ -11478,6 +12518,12 @@
           "sourceOrder": 446,
           "encounterId": 998,
           "floorId": 200,
+          "sourceCorners": {
+            "x1": 43,
+            "y1": 425,
+            "x2": 271,
+            "y2": 494
+          },
           "area": {
             "xMin": 43,
             "yMin": 425,
@@ -11530,6 +12576,12 @@
           "sourceOrder": 177,
           "encounterId": 305,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 159,
+            "y1": 205,
+            "x2": 252,
+            "y2": 383
+          },
           "area": {
             "xMin": 159,
             "yMin": 205,
@@ -11558,6 +12610,12 @@
           "sourceOrder": 178,
           "encounterId": 306,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 198,
+            "y1": 383,
+            "x2": 322,
+            "y2": 469
+          },
           "area": {
             "xMin": 198,
             "yMin": 383,
@@ -11586,6 +12644,12 @@
           "sourceOrder": 179,
           "encounterId": 307,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 252,
+            "y1": 276,
+            "x2": 319,
+            "y2": 383
+          },
           "area": {
             "xMin": 252,
             "yMin": 276,
@@ -11614,6 +12678,12 @@
           "sourceOrder": 180,
           "encounterId": 308,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 223,
+            "y1": 348,
+            "x2": 246,
+            "y2": 374
+          },
           "area": {
             "xMin": 223,
             "yMin": 348,
@@ -11642,6 +12712,12 @@
           "sourceOrder": 181,
           "encounterId": 309,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 161,
+            "y1": 331,
+            "x2": 191,
+            "y2": 361
+          },
           "area": {
             "xMin": 161,
             "yMin": 331,
@@ -11670,6 +12746,12 @@
           "sourceOrder": 182,
           "encounterId": 310,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 322,
+            "y1": 383,
+            "x2": 496,
+            "y2": 540
+          },
           "area": {
             "xMin": 322,
             "yMin": 383,
@@ -11703,6 +12785,12 @@
           "sourceOrder": 183,
           "encounterId": 311,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 319,
+            "y1": 231,
+            "x2": 486,
+            "y2": 383
+          },
           "area": {
             "xMin": 319,
             "yMin": 231,
@@ -11736,6 +12824,12 @@
           "sourceOrder": 184,
           "encounterId": 312,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 425,
+            "y1": 78,
+            "x2": 564,
+            "y2": 238
+          },
           "area": {
             "xMin": 425,
             "yMin": 78,
@@ -11764,6 +12858,12 @@
           "sourceOrder": 185,
           "encounterId": 313,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 318,
+            "y1": 146,
+            "x2": 425,
+            "y2": 221
+          },
           "area": {
             "xMin": 318,
             "yMin": 146,
@@ -11792,6 +12892,12 @@
           "sourceOrder": 186,
           "encounterId": 314,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 490,
+            "y1": 78,
+            "x2": 529,
+            "y2": 108
+          },
           "area": {
             "xMin": 490,
             "yMin": 78,
@@ -11825,6 +12931,12 @@
           "sourceOrder": 187,
           "encounterId": 315,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 427,
+            "y1": 100,
+            "x2": 459,
+            "y2": 126
+          },
           "area": {
             "xMin": 427,
             "yMin": 100,
@@ -11858,6 +12970,12 @@
           "sourceOrder": 188,
           "encounterId": 316,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 85,
+            "y1": 37,
+            "x2": 233,
+            "y2": 195
+          },
           "area": {
             "xMin": 85,
             "yMin": 37,
@@ -11911,6 +13029,12 @@
           "sourceOrder": 189,
           "encounterId": 317,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 233,
+            "y1": 106,
+            "x2": 276,
+            "y2": 165
+          },
           "area": {
             "xMin": 233,
             "yMin": 106,
@@ -11954,6 +13078,12 @@
           "sourceOrder": 190,
           "encounterId": 318,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 221,
+            "y1": 85,
+            "x2": 251,
+            "y2": 112
+          },
           "area": {
             "xMin": 221,
             "yMin": 85,
@@ -11997,6 +13127,12 @@
           "sourceOrder": 193,
           "encounterId": 330,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 449,
+            "y1": 517,
+            "x2": 466,
+            "y2": 531
+          },
           "area": {
             "xMin": 449,
             "yMin": 517,
@@ -12035,6 +13171,12 @@
           "sourceOrder": 194,
           "encounterId": 331,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 367,
+            "y1": 456,
+            "x2": 380,
+            "y2": 469
+          },
           "area": {
             "xMin": 367,
             "yMin": 456,
@@ -12078,6 +13220,12 @@
           "sourceOrder": 195,
           "encounterId": 332,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 393,
+            "y1": 267,
+            "x2": 406,
+            "y2": 280
+          },
           "area": {
             "xMin": 393,
             "yMin": 267,
@@ -12116,6 +13264,12 @@
           "sourceOrder": 196,
           "encounterId": 333,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 403,
+            "y1": 346,
+            "x2": 418,
+            "y2": 363
+          },
           "area": {
             "xMin": 403,
             "yMin": 346,
@@ -12154,6 +13308,12 @@
           "sourceOrder": 205,
           "encounterId": 378,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 112,
+            "y1": 37,
+            "x2": 162,
+            "y2": 74
+          },
           "area": {
             "xMin": 112,
             "yMin": 37,
@@ -12192,6 +13352,12 @@
           "sourceOrder": 206,
           "encounterId": 379,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 93,
+            "y1": 121,
+            "x2": 117,
+            "y2": 157
+          },
           "area": {
             "xMin": 93,
             "yMin": 121,
@@ -12235,6 +13401,12 @@
           "sourceOrder": 224,
           "encounterId": 470,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 279,
+            "y1": 56,
+            "x2": 424,
+            "y2": 148
+          },
           "area": {
             "xMin": 279,
             "yMin": 56,
@@ -12263,6 +13435,12 @@
           "sourceOrder": 225,
           "encounterId": 471,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 257,
+            "y1": 148,
+            "x2": 318,
+            "y2": 270
+          },
           "area": {
             "xMin": 257,
             "yMin": 148,
@@ -12291,6 +13469,12 @@
           "sourceOrder": 226,
           "encounterId": 472,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 257,
+            "y1": 56,
+            "x2": 279,
+            "y2": 108
+          },
           "area": {
             "xMin": 257,
             "yMin": 56,
@@ -12319,6 +13503,12 @@
           "sourceOrder": 227,
           "encounterId": 473,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 228,
+            "y1": 58,
+            "x2": 262,
+            "y2": 80
+          },
           "area": {
             "xMin": 228,
             "yMin": 58,
@@ -12352,6 +13542,12 @@
           "sourceOrder": 228,
           "encounterId": 474,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 318,
+            "y1": 148,
+            "x2": 322,
+            "y2": 215
+          },
           "area": {
             "xMin": 318,
             "yMin": 148,
@@ -12380,6 +13576,12 @@
           "sourceOrder": 229,
           "encounterId": 475,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 322,
+            "y1": 148,
+            "x2": 327,
+            "y2": 200
+          },
           "area": {
             "xMin": 322,
             "yMin": 148,
@@ -12408,6 +13610,12 @@
           "sourceOrder": 230,
           "encounterId": 476,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 327,
+            "y1": 148,
+            "x2": 332,
+            "y2": 187
+          },
           "area": {
             "xMin": 327,
             "yMin": 148,
@@ -12436,6 +13644,12 @@
           "sourceOrder": 231,
           "encounterId": 477,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 332,
+            "y1": 148,
+            "x2": 341,
+            "y2": 173
+          },
           "area": {
             "xMin": 332,
             "yMin": 148,
@@ -12464,11 +13678,17 @@
           "sourceOrder": 232,
           "encounterId": 478,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 341,
+            "y1": 178,
+            "x2": 356,
+            "y2": 164
+          },
           "area": {
             "xMin": 341,
-            "yMin": 178,
+            "yMin": 164,
             "xMax": 356,
-            "yMax": 164
+            "yMax": 178
           },
           "encounterMin": 1,
           "encounterMax": 3,
@@ -12492,6 +13712,12 @@
           "sourceOrder": 233,
           "encounterId": 479,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 356,
+            "y1": 148,
+            "x2": 374,
+            "y2": 154
+          },
           "area": {
             "xMin": 356,
             "yMin": 148,
@@ -12520,6 +13746,12 @@
           "sourceOrder": 239,
           "encounterId": 564,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 303,
+            "y1": 218,
+            "x2": 331,
+            "y2": 251
+          },
           "area": {
             "xMin": 303,
             "yMin": 218,
@@ -12548,6 +13780,12 @@
           "sourceOrder": 243,
           "encounterId": 607,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 55,
+            "y1": 197,
+            "x2": 190,
+            "y2": 267
+          },
           "area": {
             "xMin": 55,
             "yMin": 197,
@@ -12576,6 +13814,12 @@
           "sourceOrder": 244,
           "encounterId": 608,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 55,
+            "y1": 267,
+            "x2": 158,
+            "y2": 386
+          },
           "area": {
             "xMin": 55,
             "yMin": 267,
@@ -12604,6 +13848,12 @@
           "sourceOrder": 245,
           "encounterId": 609,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 158,
+            "y1": 267,
+            "x2": 186,
+            "y2": 315
+          },
           "area": {
             "xMin": 158,
             "yMin": 267,
@@ -12632,6 +13882,12 @@
           "sourceOrder": 246,
           "encounterId": 610,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 158,
+            "y1": 315,
+            "x2": 169,
+            "y2": 328
+          },
           "area": {
             "xMin": 158,
             "yMin": 315,
@@ -12660,10 +13916,16 @@
           "sourceOrder": 360,
           "encounterId": 853,
           "floorId": 300,
+          "sourceCorners": {
+            "x1": 232,
+            "y1": 83,
+            "x2": 101,
+            "y2": 262
+          },
           "area": {
-            "xMin": 232,
+            "xMin": 101,
             "yMin": 83,
-            "xMax": 101,
+            "xMax": 232,
             "yMax": 262
           },
           "encounterMin": 1,
@@ -12697,6 +13959,12 @@
           "sourceOrder": 476,
           "encounterId": 1282,
           "floorId": 400,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 149,
+            "y2": 77
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -12765,6 +14033,12 @@
           "sourceOrder": 477,
           "encounterId": 1283,
           "floorId": 400,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 77,
+            "x2": 149,
+            "y2": 148
+          },
           "area": {
             "xMin": 0,
             "yMin": 77,
@@ -12818,6 +14092,12 @@
           "sourceOrder": 478,
           "encounterId": 1284,
           "floorId": 400,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 77,
+            "x2": 149,
+            "y2": 148
+          },
           "area": {
             "xMin": 0,
             "yMin": 77,
@@ -12890,10 +14170,16 @@
           "sourceOrder": 253,
           "encounterId": 638,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 270,
+            "y1": 192,
+            "x2": 241,
+            "y2": 460
+          },
           "area": {
-            "xMin": 270,
+            "xMin": 241,
             "yMin": 192,
-            "xMax": 241,
+            "xMax": 270,
             "yMax": 460
           },
           "encounterMin": 1,
@@ -12923,6 +14209,12 @@
           "sourceOrder": 254,
           "encounterId": 639,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 800,
+            "y2": 800
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -12976,10 +14268,16 @@
           "sourceOrder": 256,
           "encounterId": 652,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 614,
+            "y1": 409,
+            "x2": 481,
+            "y2": 621
+          },
           "area": {
-            "xMin": 614,
+            "xMin": 481,
             "yMin": 409,
-            "xMax": 481,
+            "xMax": 614,
             "yMax": 621
           },
           "encounterMin": 1,
@@ -13029,10 +14327,16 @@
           "sourceOrder": 260,
           "encounterId": 659,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 233,
+            "y1": 299,
+            "x2": 197,
+            "y2": 341
+          },
           "area": {
-            "xMin": 233,
+            "xMin": 197,
             "yMin": 299,
-            "xMax": 197,
+            "xMax": 233,
             "yMax": 341
           },
           "encounterMin": 1,
@@ -13062,10 +14366,16 @@
           "sourceOrder": 261,
           "encounterId": 660,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 222,
+            "y1": 307,
+            "x2": 188,
+            "y2": 350
+          },
           "area": {
-            "xMin": 222,
+            "xMin": 188,
             "yMin": 307,
-            "xMax": 188,
+            "xMax": 222,
             "yMax": 350
           },
           "encounterMin": 1,
@@ -13095,10 +14405,16 @@
           "sourceOrder": 262,
           "encounterId": 661,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 191,
+            "y1": 281,
+            "x2": 125,
+            "y2": 343
+          },
           "area": {
-            "xMin": 191,
+            "xMin": 125,
             "yMin": 281,
-            "xMax": 125,
+            "xMax": 191,
             "yMax": 343
           },
           "encounterMin": 1,
@@ -13128,6 +14444,12 @@
           "sourceOrder": 263,
           "encounterId": 662,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 60,
+            "y2": 60
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -13145,6 +14467,12 @@
           "sourceOrder": 390,
           "encounterId": 915,
           "floorId": 500,
+          "sourceCorners": {
+            "x1": 205,
+            "y1": 304,
+            "x2": 212,
+            "y2": 312
+          },
           "area": {
             "xMin": 205,
             "yMin": 304,
@@ -13189,6 +14517,12 @@
           "sourceOrder": 275,
           "encounterId": 706,
           "floorId": 700,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 400,
+            "y2": 400
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -13232,6 +14566,12 @@
           "sourceOrder": 276,
           "encounterId": 707,
           "floorId": 700,
+          "sourceCorners": {
+            "x1": 300,
+            "y1": 72,
+            "x2": 300,
+            "y2": 89
+          },
           "area": {
             "xMin": 300,
             "yMin": 72,
@@ -13260,10 +14600,16 @@
           "sourceOrder": 277,
           "encounterId": 708,
           "floorId": 700,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 200,
+            "x2": 75,
+            "y2": 220
+          },
           "area": {
-            "xMin": 80,
+            "xMin": 75,
             "yMin": 200,
-            "xMax": 75,
+            "xMax": 80,
             "yMax": 220
           },
           "encounterMin": 1,
@@ -13298,6 +14644,12 @@
           "sourceOrder": 278,
           "encounterId": 709,
           "floorId": 700,
+          "sourceCorners": {
+            "x1": 130,
+            "y1": 65,
+            "x2": 130,
+            "y2": 80
+          },
           "area": {
             "xMin": 130,
             "yMin": 65,
@@ -13338,6 +14690,12 @@
           "sourceOrder": 279,
           "encounterId": 710,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 381,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 381,
             "yMin": 1,
@@ -13381,6 +14739,12 @@
           "sourceOrder": 280,
           "encounterId": 711,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -13414,6 +14778,12 @@
           "sourceOrder": 281,
           "encounterId": 712,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 290,
+            "y1": 184,
+            "x2": 325,
+            "y2": 215
+          },
           "area": {
             "xMin": 290,
             "yMin": 184,
@@ -13452,6 +14822,12 @@
           "sourceOrder": 282,
           "encounterId": 713,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 270,
+            "y1": 200,
+            "x2": 310,
+            "y2": 235
+          },
           "area": {
             "xMin": 270,
             "yMin": 200,
@@ -13490,6 +14866,12 @@
           "sourceOrder": 283,
           "encounterId": 714,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 1,
+            "x2": 334,
+            "y2": 35
+          },
           "area": {
             "xMin": 80,
             "yMin": 1,
@@ -13523,6 +14905,12 @@
           "sourceOrder": 284,
           "encounterId": 715,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 35,
+            "x2": 310,
+            "y2": 55
+          },
           "area": {
             "xMin": 80,
             "yMin": 35,
@@ -13556,6 +14944,12 @@
           "sourceOrder": 285,
           "encounterId": 716,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 55,
+            "x2": 306,
+            "y2": 61
+          },
           "area": {
             "xMin": 80,
             "yMin": 55,
@@ -13589,6 +14983,12 @@
           "sourceOrder": 286,
           "encounterId": 717,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 61,
+            "x2": 290,
+            "y2": 75
+          },
           "area": {
             "xMin": 80,
             "yMin": 61,
@@ -13622,6 +15022,12 @@
           "sourceOrder": 287,
           "encounterId": 718,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 75,
+            "x2": 286,
+            "y2": 83
+          },
           "area": {
             "xMin": 80,
             "yMin": 75,
@@ -13655,6 +15061,12 @@
           "sourceOrder": 288,
           "encounterId": 719,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 83,
+            "x2": 280,
+            "y2": 89
+          },
           "area": {
             "xMin": 80,
             "yMin": 83,
@@ -13688,6 +15100,12 @@
           "sourceOrder": 289,
           "encounterId": 720,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 89,
+            "x2": 272,
+            "y2": 93
+          },
           "area": {
             "xMin": 80,
             "yMin": 89,
@@ -13721,6 +15139,12 @@
           "sourceOrder": 290,
           "encounterId": 721,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 93,
+            "x2": 264,
+            "y2": 99
+          },
           "area": {
             "xMin": 80,
             "yMin": 93,
@@ -13754,6 +15178,12 @@
           "sourceOrder": 291,
           "encounterId": 722,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 99,
+            "x2": 254,
+            "y2": 104
+          },
           "area": {
             "xMin": 80,
             "yMin": 99,
@@ -13787,6 +15217,12 @@
           "sourceOrder": 292,
           "encounterId": 723,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 104,
+            "x2": 250,
+            "y2": 111
+          },
           "area": {
             "xMin": 80,
             "yMin": 104,
@@ -13820,6 +15256,12 @@
           "sourceOrder": 293,
           "encounterId": 724,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 111,
+            "x2": 237,
+            "y2": 118
+          },
           "area": {
             "xMin": 80,
             "yMin": 111,
@@ -13853,6 +15295,12 @@
           "sourceOrder": 294,
           "encounterId": 725,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 118,
+            "x2": 223,
+            "y2": 128
+          },
           "area": {
             "xMin": 80,
             "yMin": 118,
@@ -13886,6 +15334,12 @@
           "sourceOrder": 295,
           "encounterId": 726,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 128,
+            "x2": 217,
+            "y2": 130
+          },
           "area": {
             "xMin": 80,
             "yMin": 128,
@@ -13919,6 +15373,12 @@
           "sourceOrder": 296,
           "encounterId": 727,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 130,
+            "x2": 204,
+            "y2": 138
+          },
           "area": {
             "xMin": 80,
             "yMin": 130,
@@ -13952,6 +15412,12 @@
           "sourceOrder": 297,
           "encounterId": 728,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 80,
+            "y1": 138,
+            "x2": 196,
+            "y2": 145
+          },
           "area": {
             "xMin": 80,
             "yMin": 138,
@@ -13990,6 +15456,12 @@
           "sourceOrder": 298,
           "encounterId": 729,
           "floorId": 701,
+          "sourceCorners": {
+            "x1": 91,
+            "y1": 18,
+            "x2": 97,
+            "y2": 24
+          },
           "area": {
             "xMin": 91,
             "yMin": 18,
@@ -14038,6 +15510,12 @@
           "sourceOrder": 299,
           "encounterId": 730,
           "floorId": 702,
+          "sourceCorners": {
+            "x1": 106,
+            "y1": 22,
+            "x2": 385,
+            "y2": 285
+          },
           "area": {
             "xMin": 106,
             "yMin": 22,
@@ -14076,6 +15554,12 @@
           "sourceOrder": 300,
           "encounterId": 731,
           "floorId": 702,
+          "sourceCorners": {
+            "x1": 385,
+            "y1": 42,
+            "x2": 399,
+            "y2": 98
+          },
           "area": {
             "xMin": 385,
             "yMin": 42,
@@ -14109,6 +15593,12 @@
           "sourceOrder": 301,
           "encounterId": 732,
           "floorId": 702,
+          "sourceCorners": {
+            "x1": 382,
+            "y1": 229,
+            "x2": 399,
+            "y2": 287
+          },
           "area": {
             "xMin": 382,
             "yMin": 229,
@@ -14142,6 +15632,12 @@
           "sourceOrder": 302,
           "encounterId": 733,
           "floorId": 702,
+          "sourceCorners": {
+            "x1": 141,
+            "y1": 46,
+            "x2": 142,
+            "y2": 55
+          },
           "area": {
             "xMin": 141,
             "yMin": 46,
@@ -14185,6 +15681,12 @@
           "sourceOrder": 303,
           "encounterId": 734,
           "floorId": 702,
+          "sourceCorners": {
+            "x1": 306,
+            "y1": 49,
+            "x2": 309,
+            "y2": 57
+          },
           "area": {
             "xMin": 306,
             "yMin": 49,
@@ -14240,6 +15742,12 @@
           "sourceOrder": 304,
           "encounterId": 735,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -14278,6 +15786,12 @@
           "sourceOrder": 305,
           "encounterId": 736,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 101
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -14321,6 +15835,12 @@
           "sourceOrder": 306,
           "encounterId": 737,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 54,
+            "x2": 221,
+            "y2": 149
+          },
           "area": {
             "xMin": 1,
             "yMin": 54,
@@ -14354,6 +15874,12 @@
           "sourceOrder": 307,
           "encounterId": 738,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 34,
+            "y1": 91,
+            "x2": 45,
+            "y2": 104
+          },
           "area": {
             "xMin": 34,
             "yMin": 91,
@@ -14392,6 +15918,12 @@
           "sourceOrder": 308,
           "encounterId": 739,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 30,
+            "y1": 70,
+            "x2": 38,
+            "y2": 75
+          },
           "area": {
             "xMin": 30,
             "yMin": 70,
@@ -14430,6 +15962,12 @@
           "sourceOrder": 309,
           "encounterId": 740,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 54,
+            "x2": 221,
+            "y2": 335
+          },
           "area": {
             "xMin": 1,
             "yMin": 54,
@@ -14463,6 +16001,12 @@
           "sourceOrder": 310,
           "encounterId": 741,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 14,
+            "y1": 213,
+            "x2": 18,
+            "y2": 218
+          },
           "area": {
             "xMin": 14,
             "yMin": 213,
@@ -14501,6 +16045,12 @@
           "sourceOrder": 311,
           "encounterId": 742,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 155,
+            "y1": 178,
+            "x2": 163,
+            "y2": 193
+          },
           "area": {
             "xMin": 155,
             "yMin": 178,
@@ -14539,10 +16089,16 @@
           "sourceOrder": 355,
           "encounterId": 835,
           "floorId": 703,
+          "sourceCorners": {
+            "x1": 225,
+            "y1": 68,
+            "x2": 32,
+            "y2": 299
+          },
           "area": {
-            "xMin": 225,
+            "xMin": 32,
             "yMin": 68,
-            "xMax": 32,
+            "xMax": 225,
             "yMax": 299
           },
           "encounterMin": 1,
@@ -14587,6 +16143,12 @@
           "sourceOrder": 312,
           "encounterId": 743,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -14620,6 +16182,12 @@
           "sourceOrder": 313,
           "encounterId": 744,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 244,
+            "y1": 272,
+            "x2": 248,
+            "y2": 277
+          },
           "area": {
             "xMin": 244,
             "yMin": 272,
@@ -14648,6 +16216,12 @@
           "sourceOrder": 314,
           "encounterId": 745,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 45,
+            "y1": 255,
+            "x2": 80,
+            "y2": 320
+          },
           "area": {
             "xMin": 45,
             "yMin": 255,
@@ -14681,6 +16255,12 @@
           "sourceOrder": 315,
           "encounterId": 746,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 94,
+            "y1": 331,
+            "x2": 246,
+            "y2": 379
+          },
           "area": {
             "xMin": 94,
             "yMin": 331,
@@ -14719,6 +16299,12 @@
           "sourceOrder": 316,
           "encounterId": 747,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 67,
+            "y1": 340,
+            "x2": 95,
+            "y2": 370
+          },
           "area": {
             "xMin": 67,
             "yMin": 340,
@@ -14757,6 +16343,12 @@
           "sourceOrder": 317,
           "encounterId": 748,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 180,
+            "y1": 324,
+            "x2": 220,
+            "y2": 356
+          },
           "area": {
             "xMin": 180,
             "yMin": 324,
@@ -14795,6 +16387,12 @@
           "sourceOrder": 318,
           "encounterId": 749,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 246,
+            "y1": 345,
+            "x2": 285,
+            "y2": 380
+          },
           "area": {
             "xMin": 246,
             "yMin": 345,
@@ -14833,6 +16431,12 @@
           "sourceOrder": 319,
           "encounterId": 750,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 284,
+            "y1": 337,
+            "x2": 300,
+            "y2": 360
+          },
           "area": {
             "xMin": 284,
             "yMin": 337,
@@ -14871,6 +16475,12 @@
           "sourceOrder": 320,
           "encounterId": 751,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 287,
+            "y1": 326,
+            "x2": 311,
+            "y2": 380
+          },
           "area": {
             "xMin": 287,
             "yMin": 326,
@@ -14909,6 +16519,12 @@
           "sourceOrder": 321,
           "encounterId": 752,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 295,
+            "y1": 322,
+            "x2": 320,
+            "y2": 380
+          },
           "area": {
             "xMin": 295,
             "yMin": 322,
@@ -14947,6 +16563,12 @@
           "sourceOrder": 322,
           "encounterId": 753,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 14,
+            "y1": 267,
+            "x2": 55,
+            "y2": 348
+          },
           "area": {
             "xMin": 14,
             "yMin": 267,
@@ -14985,6 +16607,12 @@
           "sourceOrder": 323,
           "encounterId": 754,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 311,
+            "y1": 290,
+            "x2": 334,
+            "y2": 348
+          },
           "area": {
             "xMin": 311,
             "yMin": 290,
@@ -15023,6 +16651,12 @@
           "sourceOrder": 324,
           "encounterId": 755,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 346,
+            "y1": 173,
+            "x2": 384,
+            "y2": 333
+          },
           "area": {
             "xMin": 346,
             "yMin": 173,
@@ -15061,6 +16695,12 @@
           "sourceOrder": 325,
           "encounterId": 756,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 367,
+            "y1": 128,
+            "x2": 396,
+            "y2": 209
+          },
           "area": {
             "xMin": 367,
             "yMin": 128,
@@ -15099,6 +16739,12 @@
           "sourceOrder": 326,
           "encounterId": 757,
           "floorId": 704,
+          "sourceCorners": {
+            "x1": 160,
+            "y1": 350,
+            "x2": 165,
+            "y2": 355
+          },
           "area": {
             "xMin": 160,
             "yMin": 350,
@@ -15151,6 +16797,12 @@
           "sourceOrder": 327,
           "encounterId": 758,
           "floorId": 705,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -15184,6 +16836,12 @@
           "sourceOrder": 328,
           "encounterId": 759,
           "floorId": 705,
+          "sourceCorners": {
+            "x1": 134,
+            "y1": 221,
+            "x2": 140,
+            "y2": 226
+          },
           "area": {
             "xMin": 134,
             "yMin": 221,
@@ -15222,6 +16880,12 @@
           "sourceOrder": 329,
           "encounterId": 760,
           "floorId": 705,
+          "sourceCorners": {
+            "x1": 34,
+            "y1": 8,
+            "x2": 307,
+            "y2": 157
+          },
           "area": {
             "xMin": 34,
             "yMin": 8,
@@ -15255,6 +16919,12 @@
           "sourceOrder": 330,
           "encounterId": 761,
           "floorId": 705,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 45,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -15298,6 +16968,12 @@
           "sourceOrder": 331,
           "encounterId": 762,
           "floorId": 705,
+          "sourceCorners": {
+            "x1": 95,
+            "y1": 315,
+            "x2": 356,
+            "y2": 398
+          },
           "area": {
             "xMin": 95,
             "yMin": 315,
@@ -15342,6 +17018,12 @@
           "sourceOrder": 332,
           "encounterId": 763,
           "floorId": 706,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -15385,6 +17067,12 @@
           "sourceOrder": 333,
           "encounterId": 764,
           "floorId": 706,
+          "sourceCorners": {
+            "x1": 69,
+            "y1": 268,
+            "x2": 72,
+            "y2": 273
+          },
           "area": {
             "xMin": 69,
             "yMin": 268,
@@ -15433,6 +17121,12 @@
           "sourceOrder": 334,
           "encounterId": 765,
           "floorId": 706,
+          "sourceCorners": {
+            "x1": 101,
+            "y1": 289,
+            "x2": 103,
+            "y2": 293
+          },
           "area": {
             "xMin": 101,
             "yMin": 289,
@@ -15481,6 +17175,12 @@
           "sourceOrder": 335,
           "encounterId": 766,
           "floorId": 706,
+          "sourceCorners": {
+            "x1": 121,
+            "y1": 312,
+            "x2": 125,
+            "y2": 316
+          },
           "area": {
             "xMin": 121,
             "yMin": 312,
@@ -15539,6 +17239,12 @@
           "sourceOrder": 336,
           "encounterId": 767,
           "floorId": 707,
+          "sourceCorners": {
+            "x1": 95,
+            "y1": 185,
+            "x2": 104,
+            "y2": 191
+          },
           "area": {
             "xMin": 95,
             "yMin": 185,
@@ -15587,6 +17293,12 @@
           "sourceOrder": 337,
           "encounterId": 768,
           "floorId": 707,
+          "sourceCorners": {
+            "x1": 335,
+            "y1": 129,
+            "x2": 341,
+            "y2": 133
+          },
           "area": {
             "xMin": 335,
             "yMin": 129,
@@ -15635,6 +17347,12 @@
           "sourceOrder": 338,
           "encounterId": 769,
           "floorId": 707,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -15678,6 +17396,12 @@
           "sourceOrder": 339,
           "encounterId": 770,
           "floorId": 707,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 318,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 318,
@@ -15733,6 +17457,12 @@
           "sourceOrder": 340,
           "encounterId": 771,
           "floorId": 708,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -15771,6 +17501,12 @@
           "sourceOrder": 341,
           "encounterId": 772,
           "floorId": 708,
+          "sourceCorners": {
+            "x1": 101,
+            "y1": 91,
+            "x2": 108,
+            "y2": 97
+          },
           "area": {
             "xMin": 101,
             "yMin": 91,
@@ -15814,6 +17550,12 @@
           "sourceOrder": 342,
           "encounterId": 773,
           "floorId": 708,
+          "sourceCorners": {
+            "x1": 205,
+            "y1": 144,
+            "x2": 212,
+            "y2": 148
+          },
           "area": {
             "xMin": 205,
             "yMin": 144,
@@ -15857,6 +17599,12 @@
           "sourceOrder": 343,
           "encounterId": 774,
           "floorId": 708,
+          "sourceCorners": {
+            "x1": 334,
+            "y1": 213,
+            "x2": 340,
+            "y2": 220
+          },
           "area": {
             "xMin": 334,
             "yMin": 213,
@@ -15900,6 +17648,12 @@
           "sourceOrder": 344,
           "encounterId": 775,
           "floorId": 708,
+          "sourceCorners": {
+            "x1": 245,
+            "y1": 317,
+            "x2": 251,
+            "y2": 324
+          },
           "area": {
             "xMin": 245,
             "yMin": 317,
@@ -15943,6 +17697,12 @@
           "sourceOrder": 345,
           "encounterId": 776,
           "floorId": 708,
+          "sourceCorners": {
+            "x1": 370,
+            "y1": 350,
+            "x2": 399,
+            "y2": 399
+          },
           "area": {
             "xMin": 370,
             "yMin": 350,
@@ -15995,6 +17755,12 @@
           "sourceOrder": 386,
           "encounterId": 909,
           "floorId": 816,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 180,
+            "y2": 180
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -16028,6 +17794,12 @@
           "sourceOrder": 387,
           "encounterId": 910,
           "floorId": 816,
+          "sourceCorners": {
+            "x1": 14,
+            "y1": 78,
+            "x2": 109,
+            "y2": 169
+          },
           "area": {
             "xMin": 14,
             "yMin": 78,
@@ -16051,6 +17823,12 @@
           "sourceOrder": 457,
           "encounterId": 1027,
           "floorId": 816,
+          "sourceCorners": {
+            "x1": 60,
+            "y1": 79,
+            "x2": 106,
+            "y2": 93
+          },
           "area": {
             "xMin": 60,
             "yMin": 79,
@@ -16105,6 +17883,12 @@
           "sourceOrder": 391,
           "encounterId": 919,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 141,
+            "y1": 18,
+            "x2": 148,
+            "y2": 26
+          },
           "area": {
             "xMin": 141,
             "yMin": 18,
@@ -16153,6 +17937,12 @@
           "sourceOrder": 392,
           "encounterId": 920,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 140,
+            "y1": 31,
+            "x2": 153,
+            "y2": 45
+          },
           "area": {
             "xMin": 140,
             "yMin": 31,
@@ -16201,6 +17991,12 @@
           "sourceOrder": 393,
           "encounterId": 921,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 142,
+            "y1": 51,
+            "x2": 155,
+            "y2": 63
+          },
           "area": {
             "xMin": 142,
             "yMin": 51,
@@ -16249,6 +18045,12 @@
           "sourceOrder": 394,
           "encounterId": 922,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 96,
+            "y1": 84,
+            "x2": 172,
+            "y2": 93
+          },
           "area": {
             "xMin": 96,
             "yMin": 84,
@@ -16297,6 +18099,12 @@
           "sourceOrder": 395,
           "encounterId": 923,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 142,
+            "y1": 69,
+            "x2": 163,
+            "y2": 83
+          },
           "area": {
             "xMin": 142,
             "yMin": 69,
@@ -16350,6 +18158,12 @@
           "sourceOrder": 396,
           "encounterId": 924,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 173,
+            "y1": 91,
+            "x2": 176,
+            "y2": 95
+          },
           "area": {
             "xMin": 173,
             "yMin": 91,
@@ -16398,6 +18212,12 @@
           "sourceOrder": 397,
           "encounterId": 925,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 176,
+            "y1": 96,
+            "x2": 183,
+            "y2": 99
+          },
           "area": {
             "xMin": 176,
             "yMin": 96,
@@ -16446,6 +18266,12 @@
           "sourceOrder": 398,
           "encounterId": 926,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 183,
+            "y1": 100,
+            "x2": 201,
+            "y2": 104
+          },
           "area": {
             "xMin": 183,
             "yMin": 100,
@@ -16494,6 +18320,12 @@
           "sourceOrder": 399,
           "encounterId": 927,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 191,
+            "y1": 81,
+            "x2": 222,
+            "y2": 99
+          },
           "area": {
             "xMin": 191,
             "yMin": 81,
@@ -16542,6 +18374,12 @@
           "sourceOrder": 400,
           "encounterId": 928,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 223,
+            "y1": 64,
+            "x2": 256,
+            "y2": 110
+          },
           "area": {
             "xMin": 223,
             "yMin": 64,
@@ -16580,6 +18418,12 @@
           "sourceOrder": 401,
           "encounterId": 929,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 215,
+            "y1": 121,
+            "x2": 256,
+            "y2": 182
+          },
           "area": {
             "xMin": 215,
             "yMin": 121,
@@ -16618,6 +18462,12 @@
           "sourceOrder": 402,
           "encounterId": 930,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 257,
+            "y1": 101,
+            "x2": 281,
+            "y2": 124
+          },
           "area": {
             "xMin": 257,
             "yMin": 101,
@@ -16656,6 +18506,12 @@
           "sourceOrder": 403,
           "encounterId": 931,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 282,
+            "y1": 101,
+            "x2": 310,
+            "y2": 111
+          },
           "area": {
             "xMin": 282,
             "yMin": 101,
@@ -16694,6 +18550,12 @@
           "sourceOrder": 404,
           "encounterId": 932,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 299,
+            "y1": 112,
+            "x2": 317,
+            "y2": 128
+          },
           "area": {
             "xMin": 299,
             "yMin": 112,
@@ -16732,6 +18594,12 @@
           "sourceOrder": 405,
           "encounterId": 933,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 303,
+            "y1": 124,
+            "x2": 321,
+            "y2": 132
+          },
           "area": {
             "xMin": 303,
             "yMin": 124,
@@ -16770,6 +18638,12 @@
           "sourceOrder": 406,
           "encounterId": 934,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 261,
+            "y1": 38,
+            "x2": 270,
+            "y2": 77
+          },
           "area": {
             "xMin": 261,
             "yMin": 38,
@@ -16808,6 +18682,12 @@
           "sourceOrder": 407,
           "encounterId": 935,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 234,
+            "y1": 35,
+            "x2": 371,
+            "y2": 130
+          },
           "area": {
             "xMin": 234,
             "yMin": 35,
@@ -16846,6 +18726,12 @@
           "sourceOrder": 408,
           "encounterId": 936,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 272,
+            "y1": 39,
+            "x2": 321,
+            "y2": 87
+          },
           "area": {
             "xMin": 272,
             "yMin": 39,
@@ -16884,6 +18770,12 @@
           "sourceOrder": 409,
           "encounterId": 937,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 322,
+            "y1": 22,
+            "x2": 342,
+            "y2": 96
+          },
           "area": {
             "xMin": 322,
             "yMin": 22,
@@ -16922,6 +18814,12 @@
           "sourceOrder": 410,
           "encounterId": 938,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 132,
+            "y1": 177,
+            "x2": 214,
+            "y2": 211
+          },
           "area": {
             "xMin": 132,
             "yMin": 177,
@@ -16960,6 +18858,12 @@
           "sourceOrder": 411,
           "encounterId": 939,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 343,
+            "y1": 131,
+            "x2": 379,
+            "y2": 192
+          },
           "area": {
             "xMin": 343,
             "yMin": 131,
@@ -16998,6 +18902,12 @@
           "sourceOrder": 412,
           "encounterId": 940,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 369,
+            "y1": 193,
+            "x2": 387,
+            "y2": 204
+          },
           "area": {
             "xMin": 369,
             "yMin": 193,
@@ -17036,6 +18946,12 @@
           "sourceOrder": 413,
           "encounterId": 941,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 328,
+            "y1": 204,
+            "x2": 370,
+            "y2": 237
+          },
           "area": {
             "xMin": 328,
             "yMin": 204,
@@ -17074,10 +18990,16 @@
           "sourceOrder": 414,
           "encounterId": 942,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 254,
+            "y1": 234,
+            "x2": 237,
+            "y2": 265
+          },
           "area": {
-            "xMin": 254,
+            "xMin": 237,
             "yMin": 234,
-            "xMax": 237,
+            "xMax": 254,
             "yMax": 265
           },
           "encounterMin": 1,
@@ -17112,6 +19034,12 @@
           "sourceOrder": 415,
           "encounterId": 943,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 62,
+            "y1": 139,
+            "x2": 134,
+            "y2": 176
+          },
           "area": {
             "xMin": 62,
             "yMin": 139,
@@ -17150,6 +19078,12 @@
           "sourceOrder": 416,
           "encounterId": 944,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 168,
+            "y1": 255,
+            "x2": 253,
+            "y2": 265
+          },
           "area": {
             "xMin": 168,
             "yMin": 255,
@@ -17193,6 +19127,12 @@
           "sourceOrder": 417,
           "encounterId": 945,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 99,
+            "y1": 256,
+            "x2": 167,
+            "y2": 292
+          },
           "area": {
             "xMin": 99,
             "yMin": 256,
@@ -17236,6 +19176,12 @@
           "sourceOrder": 418,
           "encounterId": 946,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 43,
+            "y1": 293,
+            "x2": 104,
+            "y2": 343
+          },
           "area": {
             "xMin": 43,
             "yMin": 293,
@@ -17279,6 +19225,12 @@
           "sourceOrder": 419,
           "encounterId": 947,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 46,
+            "y1": 344,
+            "x2": 105,
+            "y2": 373
+          },
           "area": {
             "xMin": 46,
             "yMin": 344,
@@ -17322,6 +19274,12 @@
           "sourceOrder": 420,
           "encounterId": 948,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 105,
+            "y1": 373,
+            "x2": 143,
+            "y2": 428
+          },
           "area": {
             "xMin": 105,
             "yMin": 373,
@@ -17365,6 +19323,12 @@
           "sourceOrder": 421,
           "encounterId": 949,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 39,
+            "y1": 128,
+            "x2": 67,
+            "y2": 152
+          },
           "area": {
             "xMin": 39,
             "yMin": 128,
@@ -17408,6 +19372,12 @@
           "sourceOrder": 422,
           "encounterId": 950,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 144,
+            "y1": 383,
+            "x2": 208,
+            "y2": 428
+          },
           "area": {
             "xMin": 144,
             "yMin": 383,
@@ -17451,6 +19421,12 @@
           "sourceOrder": 423,
           "encounterId": 951,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 160,
+            "y1": 321,
+            "x2": 213,
+            "y2": 382
+          },
           "area": {
             "xMin": 160,
             "yMin": 321,
@@ -17494,6 +19470,12 @@
           "sourceOrder": 424,
           "encounterId": 952,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 144,
+            "y1": 428,
+            "x2": 197,
+            "y2": 478
+          },
           "area": {
             "xMin": 144,
             "yMin": 428,
@@ -17537,6 +19519,12 @@
           "sourceOrder": 425,
           "encounterId": 953,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 96,
+            "y1": 429,
+            "x2": 143,
+            "y2": 492
+          },
           "area": {
             "xMin": 96,
             "yMin": 429,
@@ -17580,6 +19568,12 @@
           "sourceOrder": 426,
           "encounterId": 954,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 22,
+            "y1": 120,
+            "x2": 45,
+            "y2": 129
+          },
           "area": {
             "xMin": 22,
             "yMin": 120,
@@ -17623,6 +19617,12 @@
           "sourceOrder": 427,
           "encounterId": 955,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 19,
+            "y1": 115,
+            "x2": 29,
+            "y2": 119
+          },
           "area": {
             "xMin": 19,
             "yMin": 115,
@@ -17666,6 +19666,12 @@
           "sourceOrder": 428,
           "encounterId": 956,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 154,
+            "y1": 53,
+            "x2": 155,
+            "y2": 59
+          },
           "area": {
             "xMin": 154,
             "yMin": 53,
@@ -17709,6 +19715,12 @@
           "sourceOrder": 429,
           "encounterId": 957,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 97,
+            "y1": 88,
+            "x2": 104,
+            "y2": 92
+          },
           "area": {
             "xMin": 97,
             "yMin": 88,
@@ -17752,6 +19764,12 @@
           "sourceOrder": 430,
           "encounterId": 958,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 223,
+            "y1": 114,
+            "x2": 238,
+            "y2": 117
+          },
           "area": {
             "xMin": 223,
             "yMin": 114,
@@ -17795,6 +19813,12 @@
           "sourceOrder": 431,
           "encounterId": 959,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 309,
+            "y1": 133,
+            "x2": 321,
+            "y2": 137
+          },
           "area": {
             "xMin": 309,
             "yMin": 133,
@@ -17838,6 +19862,12 @@
           "sourceOrder": 432,
           "encounterId": 960,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 316,
+            "y1": 88,
+            "x2": 321,
+            "y2": 96
+          },
           "area": {
             "xMin": 316,
             "yMin": 88,
@@ -17881,6 +19911,12 @@
           "sourceOrder": 433,
           "encounterId": 961,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 375,
+            "y1": 205,
+            "x2": 380,
+            "y2": 209
+          },
           "area": {
             "xMin": 375,
             "yMin": 205,
@@ -17924,6 +19960,12 @@
           "sourceOrder": 434,
           "encounterId": 962,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 46,
+            "y1": 155,
+            "x2": 61,
+            "y2": 163
+          },
           "area": {
             "xMin": 46,
             "yMin": 155,
@@ -17967,6 +20009,12 @@
           "sourceOrder": 435,
           "encounterId": 963,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 68,
+            "y1": 121,
+            "x2": 73,
+            "y2": 133
+          },
           "area": {
             "xMin": 68,
             "yMin": 121,
@@ -18010,6 +20058,12 @@
           "sourceOrder": 436,
           "encounterId": 964,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 209,
+            "y1": 383,
+            "x2": 217,
+            "y2": 391
+          },
           "area": {
             "xMin": 209,
             "yMin": 383,
@@ -18053,6 +20107,12 @@
           "sourceOrder": 437,
           "encounterId": 965,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 149,
+            "y1": 319,
+            "x2": 159,
+            "y2": 332
+          },
           "area": {
             "xMin": 149,
             "yMin": 319,
@@ -18096,6 +20156,12 @@
           "sourceOrder": 445,
           "encounterId": 996,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 142,
+            "y1": 72,
+            "x2": 153,
+            "y2": 84
+          },
           "area": {
             "xMin": 142,
             "yMin": 72,
@@ -18134,6 +20200,12 @@
           "sourceOrder": 447,
           "encounterId": 999,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 177,
+            "y1": 114,
+            "x2": 260,
+            "y2": 206
+          },
           "area": {
             "xMin": 177,
             "yMin": 114,
@@ -18162,6 +20234,12 @@
           "sourceOrder": 455,
           "encounterId": 1025,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 158,
+            "y1": 82,
+            "x2": 164,
+            "y2": 92
+          },
           "area": {
             "xMin": 158,
             "yMin": 82,
@@ -18200,6 +20278,12 @@
           "sourceOrder": 456,
           "encounterId": 1026,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 49,
+            "y1": 157,
+            "x2": 57,
+            "y2": 161
+          },
           "area": {
             "xMin": 49,
             "yMin": 157,
@@ -18238,6 +20322,12 @@
           "sourceOrder": 458,
           "encounterId": 1028,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 325,
+            "y1": 25,
+            "x2": 329,
+            "y2": 35
+          },
           "area": {
             "xMin": 325,
             "yMin": 25,
@@ -18271,6 +20361,12 @@
           "sourceOrder": 459,
           "encounterId": 1029,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 359,
+            "y1": 107,
+            "x2": 368,
+            "y2": 116
+          },
           "area": {
             "xMin": 359,
             "yMin": 107,
@@ -18304,6 +20400,12 @@
           "sourceOrder": 460,
           "encounterId": 1030,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 356,
+            "y1": 163,
+            "x2": 360,
+            "y2": 170
+          },
           "area": {
             "xMin": 356,
             "yMin": 163,
@@ -18337,6 +20439,12 @@
           "sourceOrder": 461,
           "encounterId": 1031,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 331,
+            "y1": 226,
+            "x2": 337,
+            "y2": 234
+          },
           "area": {
             "xMin": 331,
             "yMin": 226,
@@ -18370,6 +20478,12 @@
           "sourceOrder": 462,
           "encounterId": 1032,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 116,
+            "y1": 273,
+            "x2": 122,
+            "y2": 280
+          },
           "area": {
             "xMin": 116,
             "yMin": 273,
@@ -18403,6 +20517,12 @@
           "sourceOrder": 463,
           "encounterId": 1033,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 74,
+            "y1": 359,
+            "x2": 80,
+            "y2": 371
+          },
           "area": {
             "xMin": 74,
             "yMin": 359,
@@ -18436,6 +20556,12 @@
           "sourceOrder": 470,
           "encounterId": 1042,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 299,
+            "y1": 122,
+            "x2": 309,
+            "y2": 125
+          },
           "area": {
             "xMin": 299,
             "yMin": 122,
@@ -18474,6 +20600,12 @@
           "sourceOrder": 471,
           "encounterId": 1043,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 234,
+            "y1": 44,
+            "x2": 242,
+            "y2": 59
+          },
           "area": {
             "xMin": 234,
             "yMin": 44,
@@ -18512,6 +20644,12 @@
           "sourceOrder": 472,
           "encounterId": 1044,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 323,
+            "y1": 22,
+            "x2": 336,
+            "y2": 39
+          },
           "area": {
             "xMin": 323,
             "yMin": 22,
@@ -18555,6 +20693,12 @@
           "sourceOrder": 473,
           "encounterId": 1045,
           "floorId": 817,
+          "sourceCorners": {
+            "x1": 146,
+            "y1": 431,
+            "x2": 161,
+            "y2": 438
+          },
           "area": {
             "xMin": 146,
             "yMin": 431,
@@ -18607,6 +20751,12 @@
           "sourceOrder": 255,
           "encounterId": 648,
           "floorId": 5507,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -18640,10 +20790,16 @@
           "sourceOrder": 259,
           "encounterId": 658,
           "floorId": 5507,
+          "sourceCorners": {
+            "x1": 47,
+            "y1": 20,
+            "x2": 41,
+            "y2": 27
+          },
           "area": {
-            "xMin": 47,
+            "xMin": 41,
             "yMin": 20,
-            "xMax": 41,
+            "xMax": 47,
             "yMax": 27
           },
           "encounterMin": 1,
@@ -18698,10 +20854,16 @@
           "sourceOrder": 257,
           "encounterId": 654,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 462,
+            "y1": 287,
+            "x2": 252,
+            "y2": 620
+          },
           "area": {
-            "xMin": 462,
+            "xMin": 252,
             "yMin": 287,
-            "xMax": 252,
+            "xMax": 462,
             "yMax": 620
           },
           "encounterMin": 1,
@@ -18726,6 +20888,12 @@
           "sourceOrder": 264,
           "encounterId": 663,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 799,
+            "y2": 799
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -18754,10 +20922,16 @@
           "sourceOrder": 265,
           "encounterId": 664,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 233,
+            "y1": 299,
+            "x2": 197,
+            "y2": 341
+          },
           "area": {
-            "xMin": 233,
+            "xMin": 197,
             "yMin": 299,
-            "xMax": 197,
+            "xMax": 233,
             "yMax": 341
           },
           "encounterMin": 1,
@@ -18782,10 +20956,16 @@
           "sourceOrder": 266,
           "encounterId": 665,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 222,
+            "y1": 307,
+            "x2": 188,
+            "y2": 350
+          },
           "area": {
-            "xMin": 222,
+            "xMin": 188,
             "yMin": 307,
-            "xMax": 188,
+            "xMax": 222,
             "yMax": 350
           },
           "encounterMin": 1,
@@ -18810,10 +20990,16 @@
           "sourceOrder": 267,
           "encounterId": 666,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 191,
+            "y1": 281,
+            "x2": 125,
+            "y2": 343
+          },
           "area": {
-            "xMin": 191,
+            "xMin": 125,
             "yMin": 281,
-            "xMax": 125,
+            "xMax": 191,
             "yMax": 343
           },
           "encounterMin": 1,
@@ -18838,10 +21024,16 @@
           "sourceOrder": 382,
           "encounterId": 905,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 237,
+            "y1": 348,
+            "x2": 197,
+            "y2": 390
+          },
           "area": {
-            "xMin": 237,
+            "xMin": 197,
             "yMin": 348,
-            "xMax": 197,
+            "xMax": 237,
             "yMax": 390
           },
           "encounterMin": 1,
@@ -18876,10 +21068,16 @@
           "sourceOrder": 383,
           "encounterId": 906,
           "floorId": 5540,
+          "sourceCorners": {
+            "x1": 484,
+            "y1": 492,
+            "x2": 446,
+            "y2": 538
+          },
           "area": {
-            "xMin": 484,
+            "xMin": 446,
             "yMin": 492,
-            "xMax": 446,
+            "xMax": 484,
             "yMax": 538
           },
           "encounterMin": 1,
@@ -18924,6 +21122,12 @@
           "sourceOrder": 346,
           "encounterId": 777,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 119,
+            "y1": 57,
+            "x2": 132,
+            "y2": 82
+          },
           "area": {
             "xMin": 119,
             "yMin": 57,
@@ -18972,6 +21176,12 @@
           "sourceOrder": 347,
           "encounterId": 778,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 72,
+            "y1": 167,
+            "x2": 94,
+            "y2": 186
+          },
           "area": {
             "xMin": 72,
             "yMin": 167,
@@ -19025,6 +21235,12 @@
           "sourceOrder": 348,
           "encounterId": 779,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 98,
+            "y1": 146,
+            "x2": 118,
+            "y2": 171
+          },
           "area": {
             "xMin": 98,
             "yMin": 146,
@@ -19073,6 +21289,12 @@
           "sourceOrder": 349,
           "encounterId": 780,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 162,
+            "y1": 170,
+            "x2": 184,
+            "y2": 183
+          },
           "area": {
             "xMin": 162,
             "yMin": 170,
@@ -19121,6 +21343,12 @@
           "sourceOrder": 350,
           "encounterId": 781,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 92,
+            "y1": 46,
+            "x2": 113,
+            "y2": 54
+          },
           "area": {
             "xMin": 92,
             "yMin": 46,
@@ -19169,6 +21397,12 @@
           "sourceOrder": 351,
           "encounterId": 782,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 136,
+            "y1": 132,
+            "x2": 161,
+            "y2": 143
+          },
           "area": {
             "xMin": 136,
             "yMin": 132,
@@ -19217,6 +21451,12 @@
           "sourceOrder": 352,
           "encounterId": 808,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 98,
+            "y1": 140,
+            "x2": 118,
+            "y2": 149
+          },
           "area": {
             "xMin": 98,
             "yMin": 140,
@@ -19240,6 +21480,12 @@
           "sourceOrder": 353,
           "encounterId": 809,
           "floorId": 7000,
+          "sourceCorners": {
+            "x1": 18,
+            "y1": 150,
+            "x2": 32,
+            "y2": 164
+          },
           "area": {
             "xMin": 18,
             "yMin": 150,
@@ -19272,6 +21518,12 @@
           "sourceOrder": 356,
           "encounterId": 836,
           "floorId": 7352,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -19310,10 +21562,16 @@
           "sourceOrder": 364,
           "encounterId": 857,
           "floorId": 7352,
+          "sourceCorners": {
+            "x1": 86,
+            "y1": 11,
+            "x2": 73,
+            "y2": 18
+          },
           "area": {
-            "xMin": 86,
+            "xMin": 73,
             "yMin": 11,
-            "xMax": 73,
+            "xMax": 86,
             "yMax": 18
           },
           "encounterMin": 1,
@@ -19348,10 +21606,16 @@
           "sourceOrder": 365,
           "encounterId": 858,
           "floorId": 7352,
+          "sourceCorners": {
+            "x1": 18,
+            "y1": 24,
+            "x2": 11,
+            "y2": 26
+          },
           "area": {
-            "xMin": 18,
+            "xMin": 11,
             "yMin": 24,
-            "xMax": 11,
+            "xMax": 18,
             "yMax": 26
           },
           "encounterMin": 1,
@@ -19396,6 +21660,12 @@
           "sourceOrder": 362,
           "encounterId": 855,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 200,
+            "y2": 150
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -19434,10 +21704,16 @@
           "sourceOrder": 363,
           "encounterId": 856,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 79,
+            "y1": 49,
+            "x2": 77,
+            "y2": 51
+          },
           "area": {
-            "xMin": 79,
+            "xMin": 77,
             "yMin": 49,
-            "xMax": 77,
+            "xMax": 79,
             "yMax": 51
           },
           "encounterMin": 1,
@@ -19477,10 +21753,16 @@
           "sourceOrder": 366,
           "encounterId": 859,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 20,
+            "y1": 118,
+            "x2": 18,
+            "y2": 121
+          },
           "area": {
-            "xMin": 20,
+            "xMin": 18,
             "yMin": 118,
-            "xMax": 18,
+            "xMax": 20,
             "yMax": 121
           },
           "encounterMin": 1,
@@ -19520,10 +21802,16 @@
           "sourceOrder": 367,
           "encounterId": 860,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 179,
+            "y1": 42,
+            "x2": 114,
+            "y2": 103
+          },
           "area": {
-            "xMin": 179,
+            "xMin": 114,
             "yMin": 42,
-            "xMax": 114,
+            "xMax": 179,
             "yMax": 103
           },
           "encounterMin": 1,
@@ -19563,10 +21851,16 @@
           "sourceOrder": 368,
           "encounterId": 861,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 75,
+            "y1": 66,
+            "x2": 31,
+            "y2": 112
+          },
           "area": {
-            "xMin": 75,
+            "xMin": 31,
             "yMin": 66,
-            "xMax": 31,
+            "xMax": 75,
             "yMax": 112
           },
           "encounterMin": 1,
@@ -19606,10 +21900,16 @@
           "sourceOrder": 369,
           "encounterId": 862,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 127,
+            "y1": 78,
+            "x2": 83,
+            "y2": 132
+          },
           "area": {
-            "xMin": 127,
+            "xMin": 83,
             "yMin": 78,
-            "xMax": 83,
+            "xMax": 127,
             "yMax": 132
           },
           "encounterMin": 1,
@@ -19639,10 +21939,16 @@
           "sourceOrder": 370,
           "encounterId": 863,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 182,
+            "y1": 102,
+            "x2": 128,
+            "y2": 134
+          },
           "area": {
-            "xMin": 182,
+            "xMin": 128,
             "yMin": 102,
-            "xMax": 128,
+            "xMax": 182,
             "yMax": 134
           },
           "encounterMin": 1,
@@ -19672,10 +21978,16 @@
           "sourceOrder": 371,
           "encounterId": 864,
           "floorId": 7402,
+          "sourceCorners": {
+            "x1": 114,
+            "y1": 64,
+            "x2": 78,
+            "y2": 77
+          },
           "area": {
-            "xMin": 114,
+            "xMin": 78,
             "yMin": 64,
-            "xMax": 78,
+            "xMax": 114,
             "yMax": 77
           },
           "encounterMin": 1,
@@ -19715,6 +22027,12 @@
           "sourceOrder": 464,
           "encounterId": 1034,
           "floorId": 8000,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -19748,6 +22066,12 @@
           "sourceOrder": 465,
           "encounterId": 1035,
           "floorId": 8000,
+          "sourceCorners": {
+            "x1": 25,
+            "y1": 32,
+            "x2": 29,
+            "y2": 37
+          },
           "area": {
             "xMin": 25,
             "yMin": 32,
@@ -19781,6 +22105,12 @@
           "sourceOrder": 466,
           "encounterId": 1036,
           "floorId": 8000,
+          "sourceCorners": {
+            "x1": 41,
+            "y1": 14,
+            "x2": 45,
+            "y2": 18
+          },
           "area": {
             "xMin": 41,
             "yMin": 14,
@@ -19828,6 +22158,12 @@
           "sourceOrder": 442,
           "encounterId": 987,
           "floorId": 8003,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 80,
+            "y2": 60
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -19866,6 +22202,12 @@
           "sourceOrder": 444,
           "encounterId": 992,
           "floorId": 8003,
+          "sourceCorners": {
+            "x1": 10,
+            "y1": 31,
+            "x2": 24,
+            "y2": 51
+          },
           "area": {
             "xMin": 10,
             "yMin": 31,
@@ -19919,6 +22261,12 @@
           "sourceOrder": 467,
           "encounterId": 1037,
           "floorId": 8009,
+          "sourceCorners": {
+            "x1": 32,
+            "y1": 22,
+            "x2": 39,
+            "y2": 26
+          },
           "area": {
             "xMin": 32,
             "yMin": 22,
@@ -19952,6 +22300,12 @@
           "sourceOrder": 468,
           "encounterId": 1038,
           "floorId": 8009,
+          "sourceCorners": {
+            "x1": 12,
+            "y1": 28,
+            "x2": 17,
+            "y2": 31
+          },
           "area": {
             "xMin": 12,
             "yMin": 28,
@@ -19990,6 +22344,12 @@
           "sourceOrder": 469,
           "encounterId": 1039,
           "floorId": 8009,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20032,6 +22392,12 @@
           "sourceOrder": 441,
           "encounterId": 984,
           "floorId": 8014,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 80,
+            "y2": 90
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -20070,6 +22436,12 @@
           "sourceOrder": 443,
           "encounterId": 991,
           "floorId": 8014,
+          "sourceCorners": {
+            "x1": 4,
+            "y1": 8,
+            "x2": 10,
+            "y2": 15
+          },
           "area": {
             "xMin": 4,
             "yMin": 8,
@@ -20122,6 +22494,12 @@
           "sourceOrder": 438,
           "encounterId": 976,
           "floorId": 8016,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 60,
+            "y2": 60
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -20169,6 +22547,12 @@
           "sourceOrder": 439,
           "encounterId": 977,
           "floorId": 8017,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 50,
+            "y2": 50
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -20216,6 +22600,12 @@
           "sourceOrder": 448,
           "encounterId": 1003,
           "floorId": 8220,
+          "sourceCorners": {
+            "x1": 60,
+            "y1": 65,
+            "x2": 115,
+            "y2": 99
+          },
           "area": {
             "xMin": 60,
             "yMin": 65,
@@ -20244,6 +22634,12 @@
           "sourceOrder": 449,
           "encounterId": 1004,
           "floorId": 8220,
+          "sourceCorners": {
+            "x1": 120,
+            "y1": 0,
+            "x2": 159,
+            "y2": 69
+          },
           "area": {
             "xMin": 120,
             "yMin": 0,
@@ -20272,6 +22668,12 @@
           "sourceOrder": 450,
           "encounterId": 1005,
           "floorId": 8220,
+          "sourceCorners": {
+            "x1": 59,
+            "y1": 0,
+            "x2": 93,
+            "y2": 39
+          },
           "area": {
             "xMin": 59,
             "yMin": 0,
@@ -20335,6 +22737,12 @@
           "sourceOrder": 451,
           "encounterId": 1006,
           "floorId": 8220,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 42,
+            "y2": 35
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20368,6 +22776,12 @@
           "sourceOrder": 452,
           "encounterId": 1007,
           "floorId": 8220,
+          "sourceCorners": {
+            "x1": 4,
+            "y1": 62,
+            "x2": 46,
+            "y2": 97
+          },
           "area": {
             "xMin": 4,
             "yMin": 62,
@@ -20410,6 +22824,12 @@
           "sourceOrder": 42,
           "encounterId": 79,
           "floorId": 10101,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -20462,6 +22882,12 @@
           "sourceOrder": 153,
           "encounterId": 203,
           "floorId": 10201,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20495,6 +22921,12 @@
           "sourceOrder": 156,
           "encounterId": 207,
           "floorId": 10201,
+          "sourceCorners": {
+            "x1": 18,
+            "y1": 27,
+            "x2": 31,
+            "y2": 41
+          },
           "area": {
             "xMin": 18,
             "yMin": 27,
@@ -20542,6 +22974,12 @@
           "sourceOrder": 154,
           "encounterId": 205,
           "floorId": 10203,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20580,6 +23018,12 @@
           "sourceOrder": 155,
           "encounterId": 206,
           "floorId": 10203,
+          "sourceCorners": {
+            "x1": 6,
+            "y1": 27,
+            "x2": 18,
+            "y2": 36
+          },
           "area": {
             "xMin": 6,
             "yMin": 27,
@@ -20618,6 +23062,12 @@
           "sourceOrder": 354,
           "encounterId": 829,
           "floorId": 10203,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 40,
+            "y2": 60
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -20650,6 +23100,12 @@
           "sourceOrder": 172,
           "encounterId": 252,
           "floorId": 10406,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20692,6 +23148,12 @@
           "sourceOrder": 173,
           "encounterId": 253,
           "floorId": 10407,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20734,6 +23196,12 @@
           "sourceOrder": 168,
           "encounterId": 237,
           "floorId": 10601,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20791,6 +23259,12 @@
           "sourceOrder": 169,
           "encounterId": 238,
           "floorId": 10602,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20863,6 +23337,12 @@
           "sourceOrder": 170,
           "encounterId": 243,
           "floorId": 10702,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20905,6 +23385,12 @@
           "sourceOrder": 171,
           "encounterId": 245,
           "floorId": 10704,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20947,6 +23433,12 @@
           "sourceOrder": 166,
           "encounterId": 234,
           "floorId": 11003,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -20999,6 +23491,12 @@
           "sourceOrder": 167,
           "encounterId": 235,
           "floorId": 11004,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21056,6 +23554,12 @@
           "sourceOrder": 238,
           "encounterId": 513,
           "floorId": 11210,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21089,6 +23593,12 @@
           "sourceOrder": 389,
           "encounterId": 914,
           "floorId": 11210,
+          "sourceCorners": {
+            "x1": 38,
+            "y1": 27,
+            "x2": 45,
+            "y2": 37
+          },
           "area": {
             "xMin": 38,
             "yMin": 27,
@@ -21136,6 +23646,12 @@
           "sourceOrder": 252,
           "encounterId": 637,
           "floorId": 11304,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21188,6 +23704,12 @@
           "sourceOrder": 258,
           "encounterId": 655,
           "floorId": 11305,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 59,
+            "y2": 50
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -21235,6 +23757,12 @@
           "sourceOrder": 159,
           "encounterId": 212,
           "floorId": 20102,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 69
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21287,6 +23815,12 @@
           "sourceOrder": 160,
           "encounterId": 214,
           "floorId": 20104,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 39
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21339,6 +23873,12 @@
           "sourceOrder": 157,
           "encounterId": 209,
           "floorId": 20301,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 299,
+            "y2": 149
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21362,6 +23902,12 @@
           "sourceOrder": 158,
           "encounterId": 210,
           "floorId": 20301,
+          "sourceCorners": {
+            "x1": 140,
+            "y1": 10,
+            "x2": 210,
+            "y2": 140
+          },
           "area": {
             "xMin": 140,
             "yMin": 10,
@@ -21414,6 +23960,12 @@
           "sourceOrder": 236,
           "encounterId": 501,
           "floorId": 20307,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 99,
+            "y2": 99
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21471,6 +24023,12 @@
           "sourceOrder": 237,
           "encounterId": 502,
           "floorId": 20308,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 99,
+            "y2": 99
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21528,6 +24086,12 @@
           "sourceOrder": 161,
           "encounterId": 219,
           "floorId": 20404,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21570,6 +24134,12 @@
           "sourceOrder": 162,
           "encounterId": 220,
           "floorId": 20405,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21612,6 +24182,12 @@
           "sourceOrder": 176,
           "encounterId": 274,
           "floorId": 20507,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 60,
+            "y2": 60
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21659,6 +24235,12 @@
           "sourceOrder": 222,
           "encounterId": 441,
           "floorId": 21007,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21687,6 +24269,12 @@
           "sourceOrder": 453,
           "encounterId": 1016,
           "floorId": 21007,
+          "sourceCorners": {
+            "x1": 53,
+            "y1": 46,
+            "x2": 57,
+            "y2": 57
+          },
           "area": {
             "xMin": 53,
             "yMin": 46,
@@ -21734,6 +24322,12 @@
           "sourceOrder": 223,
           "encounterId": 447,
           "floorId": 21013,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 39
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21786,6 +24380,12 @@
           "sourceOrder": 240,
           "encounterId": 595,
           "floorId": 21308,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 39
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21828,6 +24428,12 @@
           "sourceOrder": 234,
           "encounterId": 487,
           "floorId": 30008,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 99,
+            "y2": 99
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21866,6 +24472,12 @@
           "sourceOrder": 454,
           "encounterId": 1017,
           "floorId": 30008,
+          "sourceCorners": {
+            "x1": 78,
+            "y1": 12,
+            "x2": 85,
+            "y2": 20
+          },
           "area": {
             "xMin": 78,
             "yMin": 12,
@@ -21918,6 +24530,12 @@
           "sourceOrder": 235,
           "encounterId": 489,
           "floorId": 30010,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 29,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -21970,6 +24588,12 @@
           "sourceOrder": 268,
           "encounterId": 673,
           "floorId": 30601,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22007,6 +24631,12 @@
           "sourceOrder": 269,
           "encounterId": 674,
           "floorId": 30602,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22044,6 +24674,12 @@
           "sourceOrder": 270,
           "encounterId": 675,
           "floorId": 30603,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22081,6 +24717,12 @@
           "sourceOrder": 271,
           "encounterId": 676,
           "floorId": 30604,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22118,6 +24760,12 @@
           "sourceOrder": 272,
           "encounterId": 677,
           "floorId": 30606,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 100,
+            "y2": 100
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22155,6 +24803,12 @@
           "sourceOrder": 273,
           "encounterId": 695,
           "floorId": 30692,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 80,
+            "y2": 80
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -22187,6 +24841,12 @@
           "sourceOrder": 274,
           "encounterId": 696,
           "floorId": 30693,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 80,
+            "y2": 80
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -22219,6 +24879,12 @@
           "sourceOrder": 241,
           "encounterId": 604,
           "floorId": 30701,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22242,10 +24908,16 @@
           "sourceOrder": 381,
           "encounterId": 904,
           "floorId": 30701,
+          "sourceCorners": {
+            "x1": 39,
+            "y1": 39,
+            "x2": 22,
+            "y2": 55
+          },
           "area": {
-            "xMin": 39,
+            "xMin": 22,
             "yMin": 39,
-            "xMax": 22,
+            "xMax": 39,
             "yMax": 55
           },
           "encounterMin": 1,
@@ -22284,6 +24956,12 @@
           "sourceOrder": 242,
           "encounterId": 605,
           "floorId": 30702,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22321,6 +24999,12 @@
           "sourceOrder": 191,
           "encounterId": 327,
           "floorId": 31203,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22354,6 +25038,12 @@
           "sourceOrder": 388,
           "encounterId": 913,
           "floorId": 31203,
+          "sourceCorners": {
+            "x1": 4,
+            "y1": 34,
+            "x2": 9,
+            "y2": 43
+          },
           "area": {
             "xMin": 4,
             "yMin": 34,
@@ -22401,6 +25091,12 @@
           "sourceOrder": 192,
           "encounterId": 328,
           "floorId": 31204,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22453,6 +25149,12 @@
           "sourceOrder": 197,
           "encounterId": 334,
           "floorId": 31301,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 39,
+            "y2": 119
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22506,10 +25208,16 @@
           "sourceOrder": 384,
           "encounterId": 907,
           "floorId": 31301,
+          "sourceCorners": {
+            "x1": 38,
+            "y1": 24,
+            "x2": 31,
+            "y2": 48
+          },
           "area": {
-            "xMin": 38,
+            "xMin": 31,
             "yMin": 24,
-            "xMax": 31,
+            "xMax": 38,
             "yMax": 48
           },
           "encounterMin": 1,
@@ -22558,6 +25266,12 @@
           "sourceOrder": 198,
           "encounterId": 336,
           "floorId": 31401,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 119,
+            "y2": 39
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22601,6 +25315,12 @@
           "sourceOrder": 199,
           "encounterId": 337,
           "floorId": 31401,
+          "sourceCorners": {
+            "x1": 45,
+            "y1": 27,
+            "x2": 52,
+            "y2": 35
+          },
           "area": {
             "xMin": 45,
             "yMin": 27,
@@ -22649,6 +25369,12 @@
           "sourceOrder": 200,
           "encounterId": 361,
           "floorId": 31806,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 49,
+            "y2": 49
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22687,6 +25413,12 @@
           "sourceOrder": 201,
           "encounterId": 362,
           "floorId": 31806,
+          "sourceCorners": {
+            "x1": 3,
+            "y1": 5,
+            "x2": 7,
+            "y2": 9
+          },
           "area": {
             "xMin": 3,
             "yMin": 5,
@@ -22725,6 +25457,12 @@
           "sourceOrder": 202,
           "encounterId": 363,
           "floorId": 31806,
+          "sourceCorners": {
+            "x1": 36,
+            "y1": 36,
+            "x2": 39,
+            "y2": 39
+          },
           "area": {
             "xMin": 36,
             "yMin": 36,
@@ -22772,6 +25510,12 @@
           "sourceOrder": 203,
           "encounterId": 370,
           "floorId": 31904,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 69
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22800,6 +25544,12 @@
           "sourceOrder": 208,
           "encounterId": 381,
           "floorId": 31904,
+          "sourceCorners": {
+            "x1": 18,
+            "y1": 13,
+            "x2": 24,
+            "y2": 20
+          },
           "area": {
             "xMin": 18,
             "yMin": 13,
@@ -22842,6 +25592,12 @@
           "sourceOrder": 204,
           "encounterId": 372,
           "floorId": 31906,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22870,6 +25626,12 @@
           "sourceOrder": 207,
           "encounterId": 380,
           "floorId": 31906,
+          "sourceCorners": {
+            "x1": 21,
+            "y1": 25,
+            "x2": 29,
+            "y2": 33
+          },
           "area": {
             "xMin": 21,
             "yMin": 25,
@@ -22912,6 +25674,12 @@
           "sourceOrder": 247,
           "encounterId": 615,
           "floorId": 32005,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -22964,6 +25732,12 @@
           "sourceOrder": 248,
           "encounterId": 619,
           "floorId": 32009,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -23016,6 +25790,12 @@
           "sourceOrder": 249,
           "encounterId": 621,
           "floorId": 32011,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -23068,6 +25848,12 @@
           "sourceOrder": 250,
           "encounterId": 628,
           "floorId": 32018,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -23120,6 +25906,12 @@
           "sourceOrder": 251,
           "encounterId": 629,
           "floorId": 32019,
+          "sourceCorners": {
+            "x1": 0,
+            "y1": 0,
+            "x2": 59,
+            "y2": 59
+          },
           "area": {
             "xMin": 0,
             "yMin": 0,
@@ -23177,6 +25969,12 @@
           "sourceOrder": 378,
           "encounterId": 887,
           "floorId": 60009,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 60,
+            "y2": 128
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23220,6 +26018,12 @@
           "sourceOrder": 379,
           "encounterId": 888,
           "floorId": 60009,
+          "sourceCorners": {
+            "x1": 30,
+            "y1": 32,
+            "x2": 46,
+            "y2": 51
+          },
           "area": {
             "xMin": 30,
             "yMin": 32,
@@ -23268,6 +26072,12 @@
           "sourceOrder": 375,
           "encounterId": 881,
           "floorId": 60052,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 60,
+            "y2": 70
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23306,10 +26116,16 @@
           "sourceOrder": 376,
           "encounterId": 882,
           "floorId": 60052,
+          "sourceCorners": {
+            "x1": 25,
+            "y1": 38,
+            "x2": 20,
+            "y2": 59
+          },
           "area": {
-            "xMin": 25,
+            "xMin": 20,
             "yMin": 38,
-            "xMax": 20,
+            "xMax": 25,
             "yMax": 59
           },
           "encounterMin": 1,
@@ -23349,10 +26165,16 @@
           "sourceOrder": 377,
           "encounterId": 883,
           "floorId": 60052,
+          "sourceCorners": {
+            "x1": 12,
+            "y1": 44,
+            "x2": 6,
+            "y2": 61
+          },
           "area": {
-            "xMin": 12,
+            "xMin": 6,
             "yMin": 44,
-            "xMax": 6,
+            "xMax": 12,
             "yMax": 61
           },
           "encounterMin": 1,
@@ -23402,6 +26224,12 @@
           "sourceOrder": 372,
           "encounterId": 875,
           "floorId": 60054,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 90,
+            "y2": 90
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23440,10 +26268,16 @@
           "sourceOrder": 373,
           "encounterId": 876,
           "floorId": 60054,
+          "sourceCorners": {
+            "x1": 62,
+            "y1": 60,
+            "x2": 55,
+            "y2": 75
+          },
           "area": {
-            "xMin": 62,
+            "xMin": 55,
             "yMin": 60,
-            "xMax": 55,
+            "xMax": 62,
             "yMax": 75
           },
           "encounterMin": 1,
@@ -23483,10 +26317,16 @@
           "sourceOrder": 374,
           "encounterId": 877,
           "floorId": 60054,
+          "sourceCorners": {
+            "x1": 48,
+            "y1": 14,
+            "x2": 43,
+            "y2": 28
+          },
           "area": {
-            "xMin": 48,
+            "xMin": 43,
             "yMin": 14,
-            "xMax": 43,
+            "xMax": 48,
             "yMax": 28
           },
           "encounterMin": 1,
@@ -23535,6 +26375,12 @@
           "sourceOrder": 380,
           "encounterId": 898,
           "floorId": 60065,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 80,
+            "y2": 70
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23578,10 +26424,16 @@
           "sourceOrder": 385,
           "encounterId": 908,
           "floorId": 60065,
+          "sourceCorners": {
+            "x1": 76,
+            "y1": 4,
+            "x2": 71,
+            "y2": 17
+          },
           "area": {
-            "xMin": 76,
+            "xMin": 71,
             "yMin": 4,
-            "xMax": 71,
+            "xMax": 76,
             "yMax": 17
           },
           "encounterMin": 1,
@@ -23625,6 +26477,12 @@
           "sourceOrder": 359,
           "encounterId": 847,
           "floorId": 60300,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 60,
+            "y2": 40
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23677,6 +26535,12 @@
           "sourceOrder": 358,
           "encounterId": 846,
           "floorId": 60301,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 100,
+            "y2": 40
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23729,6 +26593,12 @@
           "sourceOrder": 357,
           "encounterId": 845,
           "floorId": 60341,
+          "sourceCorners": {
+            "x1": 1,
+            "y1": 1,
+            "x2": 50,
+            "y2": 50
+          },
           "area": {
             "xMin": 1,
             "yMin": 1,
@@ -23772,10 +26642,16 @@
           "sourceOrder": 361,
           "encounterId": 854,
           "floorId": 60341,
+          "sourceCorners": {
+            "x1": 29,
+            "y1": 14,
+            "x2": 26,
+            "y2": 16
+          },
           "area": {
-            "xMin": 29,
+            "xMin": 26,
             "yMin": 14,
-            "xMax": 26,
+            "xMax": 29,
             "yMax": 16
           },
           "encounterMin": 1,
