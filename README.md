@@ -3125,3 +3125,98 @@ Web 對應為：
 - 625 媚惑術：成功條件與 31% 判定已確認；主要效果是把寵物變成小狐狸並限制只能攻擊／防禦／待機。來源 `BATTLE_DexCalc()` 雖先寫 fox dex ×0.8，但後續普通 command 的 default 分支會再次賦值而覆蓋它；目前 web Active Pet 本來就只有普通攻擊，尚無可被禁用的 PetSkill 指令，因此先不製造假的「敏 -20%」效果。
 - 635 黑烏力化：只作用玩家，option `30 180 100388` 對應 30%／180 秒／圖號；核心限制是禁止咒術與職業技能，且持續時間走即時秒數。web 尚無正式咒術／職業技能 command 與跨戰鬥秒數變身系統，暫緩。
 - 627／632／637／705 `PETSKILL_Combined`：同序列 option 分別為 `综合法|6|21|139|159|169|179|189`、`综合法|1|240`、`综合法|1|61`、`综合法|1|230`。原 `PETSKILL_Combined()` 不自行執行名稱描述的效果，而是隨機／直接取其中一個數字寫入 `CHAR_WORKBATTLECOM3`，並把 command 設為 `BATTLE_COM_JYUJYUTU`；因此它們本質上直接依賴咒術／魔法底層，不能把「淨化之舞／逆轉／調和」文字拿來仿造效果。
+
+## V0.52 缺失 PetSkill／C_WAIT
+
+V0.52 處理的是原資料裡一批長期被誤認為「未知技能」的 Enemy AI PetSkill。
+
+重新對照本專案採用的原 C build：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `version.h` 明確啟用 `_PETSKILL_OPTIMUM`
+- `setup.cf` 在 `_PETSKILL2_TXT` 下讀 `gmsv/data/petskill2.txt`
+
+### `_PETSKILL_OPTIMUM` 真正行為
+
+`PETSKILL_initPetskill()` 讀每一列時，直接把該列的 `PETSKILL_ID` 當成 `PETSKILL_petskill[]` 的 array index。
+
+不存在的 ID 槽位會保持初始化值 `-1`。
+
+`PETSKILL_getPetskillArray(petskillid)` 在此 build 內：
+
+`return PETSKILL_petskill[petskillid].data[PETSKILL_ID]`
+
+因此如果 Enemy 的 PetSkill 欄位引用一個 `petskill2.txt` 根本沒有的 ID，回傳就是 `-1`。
+
+`PETSKILL_Use()` 隨後：
+
+`array = PETSKILL_getPetskillArray(petskillid)`
+
+`if (array == -1) return FALSE`
+
+### AI 抽到缺表技能時不是普通待機
+
+`BATTLE_AllCharaCWaitSet()` 每回合先把所有角色：
+
+- `COM1 = BATTLE_COM_NONE`
+- `BATTLEMODE = BATTLE_CHARMODE_C_WAIT`
+
+Enemy AI 之後才呼叫 `PETSKILL_Use()`。
+
+若缺表技能令 `PETSKILL_Use()` 回 FALSE，`BATTLE_ai_normal()` 也回 FALSE；`BATTLE_ai_all()` 不會把該 Enemy 改成 `BATTLE_CHARMODE_C_OK`。
+
+`BATTLE_Battling()` 建立行動序列時雖仍會算 Dex，但真正輪到該角色時先檢查：
+
+`if (CHAR_WORKBATTLEMODE != BATTLE_CHARMODE_C_OK) continue;`
+
+這個判斷位於 `BATTLE_StatusSeq()` 與 `BATTLE_MagicStatusSeq()` **之前**。
+
+所以來源實際效果是：
+
+- 該 Enemy 本回合完全不行動
+- 不執行普通 `BATTLE_COM_NONE` 動畫流程
+- 不執行自身 StatusSeq
+- 不遞減毒／劇毒／虛弱／魔障等 battle status
+- 不遞減鐵壁／大地鎧甲等在角色行動點處理的倒數
+
+這和「合法 PETSKILL_None」不同；合法 None 會先成為 C_OK，之後才在 BATTLE_Battling 內走 StatusSeq + NoAction。
+
+### 原 petskill2.txt 缺失、但 Enemy AI 有正權重的 ID
+
+| ID | distinct Enemy ID | 正權重總和 | 正權重槽位 |
+| ---: | ---: | ---: | ---: |
+| -1 | 110 | 227 | 221 |
+| 515 | 11 | 44 | 20 |
+| 513 | 5 | 25 | 5 |
+| 589 | 9 | 21 | 10 |
+| 512 | 5 | 20 | 5 |
+| 518 | 2 | 20 | 6 |
+| 114 | 12 | 16 | 16 |
+| 111 | 3 | 16 | 5 |
+| 511 | 5 | 15 | 5 |
+| 112 | 3 | 15 | 3 |
+| 645 | 10 | 10 | 10 |
+| 510 | 5 | 10 | 5 |
+| 113 | 1 | 6 | 1 |
+| 560 | 1 | 6 | 2 |
+| 509 | 5 | 5 | 5 |
+| 18 | 1 | 5 | 2 |
+| 729 | 4 | 4 | 4 |
+| 745 | 4 | 4 | 4 |
+| 559 | 1 | 4 | 2 |
+| 65 | 3 | 3 | 3 |
+| 558 | 1 | 3 | 3 |
+| 588 | 1 | 1 | 1 |
+
+V0.52 新增 `ENEMY_SOURCE_MISSING_SKILL_IDS`，當 Enemy AI 抽中以上 ID 時，直接標記為 `sourceSkillMissing`。
+
+在 attack／guard／capture 三條 normalBattleOrder 路徑中，會在 `processBattleStatusTurn()` 前跳過該 Enemy，對齊原 C 的 C_WAIT 行為。
+
+### 這次也釐清了先前的「未知技能」誤區
+
+515／513／589／512／518 等不是另一張尚未找到的技能表，也不是可以用編號推算的隱藏技能。
+
+在這個 build 裡，它們就是 **Enemy 資料引用了不存在的 PetSkill ID**。
+
+因此後續不再為這批 ID 猜名稱、猜函式或嘗試補假效果。
