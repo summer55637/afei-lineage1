@@ -1181,3 +1181,83 @@ Enemy 若主動選中寵物：
 - 玩家本回合若選 GUARD，只有 Enemy 真正打到玩家時才套 `BATTLE_GuardAdjust`；Enemy 打寵物時不會錯把玩家防禦套到寵物
 
 目前仍未接入 `at/gu/es/wa` 的「行動種類權重」、Enemy 自己的 GUARD、逃跑與 pet skill 執行；V0.28 只先完成普通攻擊時的原服選目標。
+
+
+## V0.29 enemy1 行動權重／Enemy Guard／Escape
+
+V0.29 從 V0.28 的「普通攻擊選目標」往前補齊原 `BATTLE_ai_normal()` 的行動抽選。
+
+### AI runtime v3
+
+`data/generated/stoneage_enemy_ai.json` 升級為 `stoneage-enemy-ai-v3`，來源仍是原服 `enemy1.txt + enemybase1.txt`，現在每個 Enemy ID 會保留：
+
+- `a`：`at:[weight,targetType,selectMode]`
+- `g`：`gu` 權重
+- `m`：`ma` 權重
+- `e`：`es` 權重
+- `w`：`wa[0..6]` 七格寵技權重
+- `p`：對應 `PETSKILL1..7` 的技能 ID
+- `q`：EnemyBase 的 `RARE`
+- `r`：`rn`
+- `t`：TACTICS
+
+來源資料中 `ma` 權重目前全部為 0，因此這版實際會抽到的是 Attack／Guard／Escape／wa。
+
+另新增 `data/generated/stoneage_petskill_runtime.json`，直接由原 `petskill.txt` 生成技能 ID → 名稱／函式／option 的執行索引。
+
+### 原權重抽選
+
+現在每回合建立 EntryList 前，每隻 Enemy 先依原碼順序：
+
+`at → gu → ma → es → wa0..wa6`
+
+把所有權重相加，再做一次 `RAND(0, total-1)` 決定本回合 command。
+
+如果 `wa` 抽到：
+
+- `PETSKILL_None` → NONE
+- `PETSKILL_NormalAttack` → ATTACK
+- `PETSKILL_NormalGuard` → GUARD
+- 其他特殊技能保留真正 skill slot／skill ID，但 V0.29 尚未把效果硬翻成普通攻擊；未接技能會明確走 no-action 暫代，避免產生假的戰鬥結果
+
+### Enemy Guard
+
+Enemy 若本回合 command 是 GUARD，會在 `normalBattleOrder()` 建 Entry 時就標記為 guarding。
+
+這點對齊原服：AI command 是在 `BATTLE_DexCalc / EntrySort` 前就決定，因此即使 Enemy 的實際行動順位比玩家晚，玩家先打牠時 GUARD 已經有效。
+
+玩家／寵物攻擊正在 Guard 的 Enemy 時：
+
+- 不做一般敏捷閃避判定
+- 傷害走既有 `BATTLE_GuardAdjust` 0～50% 原倍率
+- Guard 造成的 ContFlg 中止仍會阻止反擊鏈
+
+### Enemy Escape
+
+Escape 接入原 `BATTLE_EscapeCheck()`：
+
+- Enemy RARE 0 → luck 1
+- RARE 1 → luck 3
+- 其他 RARE → luck 5
+- 使用 Enemy 自身等級與玩家側平均等級
+- 保留原 `escape count` 累積
+- 原碼是 `BATTLE_Escape()` 先把 Entry.escape +1，進 `BATTLE_EscapeCheck()` 時再使用 `escape+1`；V0.29 也照這個順序
+- 成功條件保留原 `RAND(1,100) < Esc`
+
+逃跑成功的 Enemy 會直接從戰場資料移除，不計入之後的擊殺 EXP／掉落。
+
+若群戰中部分 Enemy 已被擊殺、最後存活 Enemy 逃跑，結算只會保留真正被擊殺的那些 Enemy；如果整隊都只是逃走，戰鬥結束但沒有擊殺收益。
+
+### 尚待接入
+
+V0.29 已把 wa 的選擇與技能 ID 真實化，但特殊 PetSkill 效果仍需逐類實作。下一層會從原 `pet_skill.c / battle.c` 能直接映射到既有物理核心的技能開始，例如：
+
+- GuardBreak
+- ContinuationAttack
+- Mighty
+- PowerBalance
+- StatusChange
+- ChargeAttack
+- NoGuard
+
+特殊魔法與後期擴充技能再另外拆層，避免用近似公式污染目前已驗證的普通物理核心。
