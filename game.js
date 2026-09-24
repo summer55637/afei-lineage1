@@ -2519,6 +2519,10 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Abduct')return performEnemyAbduct(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Guardian')return performEnemyGuardianAttack(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Merge'){
+      addLog(unit.name+' 嘗試使用 '+(meta?.n||'加工')+'，但原 PETSKILL_Merge 在戰鬥中會直接 return FALSE；本回合沒有戰鬥效果。');
+      return {kind:'skill',skillId:actor.skillId,sourceRejected:true};
+    }
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
