@@ -44,7 +44,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -806,6 +806,7 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     name:raw?.name||fallbackEntry?.species?.clientLabel||base.serverName||('Enemy '+(raw?.enemyId??'')),
     enemyId:resolvedEnemyId,
     ai:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null,
+    statusResist:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]?.z?.slice?.(0,6)||[0,0,0,0,0,0]):[0,0,0,0,0,0],
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
     level,hp,maxHp:hp,attack,defense,quick,
     stats:st,
@@ -929,6 +930,7 @@ function syncEnemyTarget(){
 function spawnEnemy(context=null){
   const map=context?.map||currentMap();
   if(!map)return;
+  resetBattleStatuses();
   let entry=null,dynamicSpec=null;
   if(map.questZone){
     const entries=eligibleEntries(map);
@@ -1093,28 +1095,205 @@ function battleAttrMultiplier(attacker,defender){
   const none=a.none*(d.none*same+d.fire*down+d.water*down+d.earth*down+d.wind*down);
   return (fire+water+earth+wind+none)/10000;
 }
+const BATTLE_STATUS_NAMES=Object.freeze({
+  poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂'
+});
+const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
+function resetBattleStatuses(){battleStatuses=new Map()}
+function battleStatusKey(desc){
+  if(!desc)return null;
+  if(desc.kind==='player')return 'player';
+  if(desc.kind==='pet')return 'pet:'+String(desc.pet?.id??desc.petId??'');
+  if(desc.kind==='enemy')return 'enemy:'+String(desc.unit?.id??desc.unitId??'');
+  return null;
+}
+function battleStatusGet(desc){
+  const key=battleStatusKey(desc);
+  return key?battleStatuses.get(key)||null:null;
+}
+function battleStatusActive(desc,type=null){
+  const st=battleStatusGet(desc);
+  return !!(st&&st.turns>0&&(!type||st.type===type));
+}
+function battleStatusClear(desc,type=null){
+  const key=battleStatusKey(desc);
+  if(!key)return false;
+  const st=battleStatuses.get(key);
+  if(!st||type&&st.type!==type)return false;
+  battleStatuses.delete(key);
+  return true;
+}
+function battleStatusCanMove(desc){
+  const st=battleStatusGet(desc);
+  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'));
+}
+function battleStatusRawStats(desc){
+  if(desc?.kind==='player'){
+    const p=state?.playerStats||{};
+    return {vital:n(p.vital)*100,str:n(p.str)*100,tgh:n(p.tgh)*100,dex:n(p.dex)*100};
+  }
+  if(desc?.kind==='pet'){
+    const p=desc.pet||state?.petBox?.find(x=>x.id===desc.petId);
+    const src=p?.serverStats||p?.stats||{};
+    const scale=p?.serverStats?1:100;
+    return {vital:n(src.vital)*scale,str:n(src.str)*scale,tgh:n(src.tgh)*scale,dex:n(src.dex)*scale};
+  }
+  if(desc?.kind==='enemy'){
+    const u=desc.unit||livingEnemyUnits().find(x=>x.id===desc.unitId);
+    const src=u?.serverDerived?.charStats||u?.stats||{};
+    const scale=u?.serverDerived?.charStats?1:100;
+    return {vital:n(src.vital)*scale,str:n(src.str)*scale,tgh:n(src.tgh)*scale,dex:n(src.dex)*scale};
+  }
+  return {vital:0,str:0,tgh:0,dex:0};
+}
+function battleStatusResist(desc,type){
+  const idx=BATTLE_STATUS_INDEX[type];
+  if(idx==null)return 0;
+  if(desc?.kind==='player')return 0;
+  if(desc?.kind==='pet'){
+    const p=desc.pet||state?.petBox?.find(x=>x.id===desc.petId);
+    return Math.trunc(n(p?.statusResist?.[idx]));
+  }
+  if(desc?.kind==='enemy'){
+    const u=desc.unit||livingEnemyUnits().find(x=>x.id===desc.unitId);
+    return Math.trunc(n(u?.statusResist?.[idx]??u?.ai?.z?.[idx]));
+  }
+  return 0;
+}
+function battleStatusLevel(desc){
+  if(desc?.kind==='player')return Math.max(1,Math.trunc(n(state.level)));
+  if(desc?.kind==='pet')return Math.max(1,Math.trunc(n((desc.pet||{}).level)));
+  if(desc?.kind==='enemy')return Math.max(1,Math.trunc(n((desc.unit||{}).level)));
+  return 1;
+}
+function battleStatusLuck(desc){
+  return desc?.kind==='player'?n(state.luck):0;
+}
+function battleStatusChance(attackerDesc,targetDesc,type){
+  if(battleStatusGet(targetDesc))return {allowed:false,per:0,reason:'existing'};
+  const resist=battleStatusResist(targetDesc,type);
+  if(type==='paralysis'){
+    const per=20-resist;
+    return {allowed:true,per,success:cRand(1,100)<per,resist};
+  }
+  const raw=battleStatusRawStats(targetDesc);
+  const total=n(raw.vital)+n(raw.str)+n(raw.tgh)+n(raw.dex);
+  const vitalPenalty=total>0?(n(raw.vital)/total)/.25*10:0;
+  let level=(battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*2;
+  level=clamp(level,-40,40);
+  let per=30+level+battleStatusLuck(attackerDesc)-resist-vitalPenalty;
+  if(per>80)per=80;
+  return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level};
+}
+function battleStatusApply(targetDesc,type,turns){
+  if(battleStatusGet(targetDesc))return false;
+  const key=battleStatusKey(targetDesc);
+  if(!key)return false;
+  battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns))+1)});
+  return true;
+}
+function battleStatusWakeOnDamage(targetDesc,damage){
+  if(n(damage)>0&&battleStatusActive(targetDesc,'sleep')){
+    battleStatusClear(targetDesc,'sleep');
+    addLog((targetDesc.kind==='player'?'你':targetDesc.pet?.name||targetDesc.unit?.name||'目標')+' 被攻擊喚醒了。');
+  }
+}
+function battleStatusHp(desc){
+  if(desc?.kind==='player')return n(state.hp);
+  if(desc?.kind==='pet')return n((desc.pet||{}).hp);
+  if(desc?.kind==='enemy')return n((desc.unit||{}).hp);
+  return 0;
+}
+function battleStatusSetHp(desc,hp){
+  hp=Math.max(0,Math.trunc(n(hp)));
+  if(desc?.kind==='player')state.hp=hp;
+  else if(desc?.kind==='pet'&&desc.pet)desc.pet.hp=hp;
+  else if(desc?.kind==='enemy'&&desc.unit)desc.unit.hp=hp;
+}
+function battleStatusActorDesc(actor){
+  if(actor?.kind==='player')return {kind:'player'};
+  if(actor?.kind==='pet'){
+    const pet=state.petBox.find(p=>p.id===actor.petId);
+    return pet?{kind:'pet',pet,petId:pet.id}:null;
+  }
+  if(actor?.kind==='enemy'){
+    const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+    return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+  }
+  return null;
+}
+function battleStatusPoisonDamage(desc){
+  const raw=battleStatusRawStats(desc);
+  const total=Math.trunc(n(raw.vital)+n(raw.str)+n(raw.dex)+n(raw.tgh));
+  let down=Math.trunc((Math.trunc(total/100)-20)/4);
+  if(down<1)down=1;
+  const hp=battleStatusHp(desc);
+  if(hp<=down)down=hp-1;
+  if(down<0)down=0;
+  battleStatusSetHp(desc,Math.max(1,hp-down));
+  return down;
+}
+function processBattleStatusTurn(actor){
+  const desc=battleStatusActorDesc(actor);
+  const st=battleStatusGet(desc);
+  if(!desc||!st||st.turns<=0)return {skip:false,desc,status:null};
+
+  const blockedBefore=battleStatusCanMove(desc)===false;
+  st.turns--;
+  if(st.turns<=0){
+    battleStatusClear(desc);
+    addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
+    return {skip:blockedBefore,desc,status:st,expired:true};
+  }
+
+  if(st.type==='poison'){
+    const down=battleStatusPoisonDamage(desc);
+    if(down>0)addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 因中毒受到 '+down+' 傷害。','bad');
+  }
+  return {skip:blockedBefore,desc,status:st};
+}
+function battleStatusTypeFromOption(option){
+  const t=String(option||'');
+  if(t.includes('毒'))return 'poison';
+  if(t.includes('石'))return 'stone';
+  if(t.includes('眠'))return 'sleep';
+  if(t.includes('乱')||t.includes('亂'))return 'confusion';
+  if(t.includes('醉'))return 'drunk';
+  return null;
+}
+function battleStatusTurnFromOption(option){
+  const m=String(option||'').match(/turn\s*(\d+)/i);
+  return m?Math.max(0,Math.trunc(Number(m[1]))):0;
+}
 function playerBattleView(){
+  const desc={kind:'player'};
+  const stone=battleStatusActive(desc,'stone');
   return {
-    type:'player',attack:n(state.attack),defense:n(state.defense),quick:n(state.dex),
-    luck:n(state.luck),level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
+    type:'player',attack:n(state.attack),defense:n(state.defense)*(stone?2:1),quick:n(state.dex),
+    luck:n(state.luck),drunk:battleStatusActive(desc,'drunk'),
+    level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
   };
 }
 function petBattleView(pet){
   if(!pet)return null;
   const combat=pet.serverStats?(pet.serverCombat=petServerCombat(pet.serverStats)):petFallbackCombat(pet);
   syncPetBattleHp(pet,true);
+  const desc={kind:'pet',pet,petId:pet.id};
+  const stone=battleStatusActive(desc,'stone');
   return {
-    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense),quick:n(combat?.quick),
-    luck:0,level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
+    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense)*(stone?2:1),quick:n(combat?.quick),
+    luck:0,drunk:battleStatusActive(desc,'drunk'),
+    level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
   };
 }
 function enemyBattleView(unit){
   return {
     type:'enemy',
     attack:n(unit?.roundAttack??unit?.attack),
-    defense:n(unit?.roundDefense??unit?.defense),
+    defense:n(unit?.roundDefense??unit?.defense)*(battleStatusActive({kind:'enemy',unit,unitId:unit?.id},'stone')?2:1),
     quick:n(unit?.quick),
     luck:0,
+    drunk:battleStatusActive({kind:'enemy',unit,unitId:unit?.id},'drunk'),
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
     level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
@@ -1134,6 +1313,7 @@ function enemyAiAttackSpec(unit){
     skillWeights:Array.isArray(ai?.w)?ai.w.slice(0,7).map(x=>Math.max(0,Math.trunc(n(x)))):Array(7).fill(0),
     skillIds:Array.isArray(ai?.p)?ai.p.slice(0,7):Array(7).fill(null),
     rare:Math.trunc(n(ai?.q)),
+    statusResist:Array.isArray(ai?.z)?ai.z.slice(0,6).map(x=>Math.trunc(n(x))):Array(6).fill(0),
     rn:Object.prototype.hasOwnProperty.call(ai||{},'r')?Math.max(0,Math.trunc(n(ai.r))):1
   };
 }
@@ -1203,6 +1383,13 @@ function enemyPrepareRoundAction(unit,action){
     unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
     // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
     unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_StatusChange'){
+    const attackPct=enemySignedSkillPercent(meta.o,'攻%');
+    const defensePct=enemySignedSkillPercent(meta.o,'防%');
+    const baseAttack=Math.trunc(n(unit.attack));
+    const baseDefense=Math.trunc(n(unit.defense));
+    unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+    unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
   }
 }
 function battleTargetSnapshot(kind,pet=null){
@@ -1405,6 +1592,7 @@ function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge;
   let duck=disableDodge?0:battleDuckChance(attacker,defender);
+  if(!disableDodge&&attacker?.drunk)duck=clamp(duck+cRand(20,30)*100,1,7500);
   if(!disableDodge){
     const bonus=n(options.duckBonusPercent)+n(defender?.duckBonus);
     if(bonus!==0)duck=clamp(duck+bonus*100,1,7500);
@@ -1498,6 +1686,8 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     if(!enemy||state.hp<=0||unit.hp<=0)break;
 
     if(counterer==='enemy'&&!unit.counterEligibleThisTurn)break;
+    const counterDesc=counterer==='player'?{kind:'player'}:{kind:'enemy',unit,unitId:unit.id};
+    if(!battleStatusCanMove(counterDesc))break;
     const countererView=counterer==='player'?playerBattleView():enemyBattleView(unit);
     const targetView=target==='player'?playerBattleView():enemyBattleView(unit);
     const chk=battleCounterCheck(countererView,targetView);
@@ -1542,6 +1732,8 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
   for(let depth=0;depth<5;depth++){
     if(!enemy||!petIsAlive(pet)||unit.hp<=0)break;
     if(counterer==='enemy'&&!unit.counterEligibleThisTurn)break;
+    const counterDesc=counterer==='pet'?{kind:'pet',pet,petId:pet.id}:{kind:'enemy',unit,unitId:unit.id};
+    if(!battleStatusCanMove(counterDesc))break;
     const countererView=counterer==='pet'?petBattleView(pet):enemyBattleView(unit);
     const targetView=target==='pet'?petBattleView(pet):enemyBattleView(unit);
     if(!countererView||!targetView)break;
@@ -1612,6 +1804,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     }else{
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
+      battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
       addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
     }
@@ -1632,6 +1825,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     addLog(unit.name+' 的攻擊沒有造成傷害。');
   }else{
     state.hp=Math.max(0,state.hp-r.damage);
+    battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
   if(allowPlayerCounter&&state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
@@ -1652,6 +1846,7 @@ function enemyApplySkillHit(unit,chosen,r,label){
     }else{
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
+      battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
       addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'命中 '+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
     }
@@ -1664,6 +1859,7 @@ function enemyApplySkillHit(unit,chosen,r,label){
     addLog(unit.name+' 的'+label+'沒有造成傷害。');
   }else{
     state.hp=Math.max(0,state.hp-r.damage);
+    battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'造成 '+r.damage+' 傷害。',state.hp<=0?'bad':'');
   }
 }
@@ -1684,6 +1880,50 @@ function performEnemyGuardBreak(actor,unit,options,meta){
   enemyApplySkillHit(unit,chosen,r,label);
   // BATTLE_S_GBreak 對 GUARD 最後會 iRet=FALSE，不接反擊鏈。
   return {kind:'skill',skillId:actor.skillId,target:'player',r};
+}
+function performEnemyStatusChange(actor,unit,options,meta){
+  unit.counterEligibleThisTurn=true;
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId};
+  const type=battleStatusTypeFromOption(meta?.o);
+  const turn=battleStatusTurnFromOption(meta?.o);
+  const label=meta?.n||'狀態攻擊';
+
+  let r;
+  if(chosen.kind==='pet'&&chosen.pet){
+    r=enemyAttackPetResult(unit,chosen.pet);
+  }else{
+    r=enemyAttackResult(unit,{guarding:!!options.playerGuarding});
+  }
+  enemyApplySkillHit(unit,chosen,r,label);
+
+  const targetDesc=chosen.kind==='pet'
+    ?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}
+    :{kind:'player'};
+  if(r.damage>0){
+    // 原 BATTLE_DamageWakeUp 先解除既有睡眠，之後才做本次 StatusChange 判定。
+    battleStatusWakeOnDamage(targetDesc,r.damage);
+    if(type==='poison'||type==='sleep'||type==='stone'){
+      const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
+      if(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn)){
+        addLog((chosen.kind==='pet'?chosen.pet.name:'你')+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
+      }else{
+        addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'效果未成功'+(check.reason==='existing'?'：目標已有其他異常狀態。':'（原檢定 '+n(check.per).toFixed(1)+'%）。'));
+      }
+    }else if(type){
+      addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'資料已辨識；該狀態的特殊回合行為留待下一層接入。');
+    }
+  }
+
+  // StatusChange 的異常套用發生在 BATTLE_Attack() 返回之前；睡眠／石化成功後目標已不能反擊。
+  if(unit.hp>0&&enemy){
+    if(chosen.kind==='pet'&&chosen.pet&&petIsAlive(chosen.pet)&&battleStatusCanMove(targetDesc)){
+      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
+    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding&&battleStatusCanMove(targetDesc)){
+      resolvePlayerEnemyCounterChain('enemy',unit,r);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,statusType:type};
 }
 function performEnemyPowerBalance(actor,unit,options,meta){
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
@@ -1781,6 +2021,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Mighty')return performEnemyMighty(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_PowerBalance')return performEnemyPowerBalance(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_NoGuard')return performEnemyNoGuard(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_StatusChange')return performEnemyStatusChange(actor,unit,options,meta);
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
@@ -1818,6 +2059,7 @@ function createCapturedPet(target=targetEnemyUnit()){
     stats:Object.assign({},target?.stats||v.stats||{}),
     elements:Object.assign({},target?.elements||v.elements||{}),
     petSkills:Array.isArray(target?.petSkills)?target.petSkills.slice():[],
+    statusResist:Array.isArray(target?.statusResist)?target.statusResist.slice(0,6):[0,0,0,0,0,0],
     serverStats:target?.serverDerived?.charStats?Object.assign({},target.serverDerived.charStats):null,
     serverCombat:target?.serverDerived?{attack:target.attack,defense:target.defense,quick:target.quick,maxHp:target.maxHp}:null,
     allocPointPacked:target?.allocatedFrom?packPetAllocPoint(target.allocatedFrom):null,
@@ -1895,6 +2137,12 @@ function captureTurn(manual=false){
   for(const actor of order){
     if(!enemy)return captured;
     if(state.hp<=0){defeat();return captured}
+    const statusTurn=processBattleStatusTurn(actor);
+    if(statusTurn.skip){
+      addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
+      if(enemy)syncEnemyTarget();
+      continue;
+    }
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
@@ -2002,6 +2250,7 @@ function winBattle(){
     addLog('PC團老大已被擊敗；依 event81_3f.arg 被傳送到 Floor 5580 (58,20)，可向老大取得悔過書。','good');
   }
   enemy=null;
+  resetBattleStatuses();
   levelCheck();
   save();render();
 }
@@ -2009,6 +2258,7 @@ function defeat(){
   addLog('角色體力不足，已自動回村休息並補滿 HP。','bad');
   state.hp=state.maxHp;
   enemy=null;
+  resetBattleStatuses();
   save();render();
 }
 function battleDexRoll(quick){
@@ -2058,6 +2308,12 @@ function attackTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
+    const statusTurn=processBattleStatusTurn(actor);
+    if(statusTurn.skip){
+      addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
+      if(enemy)syncEnemyTarget();
+      continue;
+    }
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
@@ -2110,6 +2366,12 @@ function guardTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
+    const statusTurn=processBattleStatusTurn(actor);
+    if(statusTurn.skip){
+      addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
+      if(enemy)syncEnemyTarget();
+      continue;
+    }
 
     if(actor.kind==='player'){
       addLog('你採取防禦姿勢。','good');
@@ -2592,7 +2854,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.31 載入完成：背水之戰已在 AI 選令時套用整回合攻防修正；不防守戰法依來源版實際啟用回避／反擊加成（會心程式為 #if 0），並校正 BATTLE_Counter 指令資格。','good');
+    addLog('V0.32 載入完成：StatusChange 已接入原狀態命中公式；中毒、睡眠、石化加入戰鬥暫存回合效果，毒不致死、睡眠受正傷害喚醒、石化防禦×2且不能行動。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
