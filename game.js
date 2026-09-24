@@ -1,6 +1,7 @@
 'use strict';
 
 const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
+const ENCOUNTER_RUNTIME_URL='data/generated/stoneage_general_encounter_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -40,7 +41,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
+let db=null, encounterRuntime=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -339,15 +340,17 @@ function buildMaps(){
     for(const variant of species.wildLv1Variants||[]){
       for(const route of variant.routes||[]){
         const id=String(route.floorId);
-        if(!m.has(id))m.set(id,{id,floorId:Number(route.floorId),name:route.mapName||('Floor '+id),entries:[],encounters:[]});
+        if(!m.has(id))m.set(id,{id,floorId:Number(route.floorId),name:route.mapName||('Floor '+id),entries:[],encounters:[],runtimeEncounters:[]});
         m.get(id).entries.push({species,variant,route});
       }
     }
   }
   maps=[...m.values()].sort((a,b)=>Number(a.id)-Number(b.id));
   for(const map of maps){
-    const ids=[...new Set(map.entries.map(x=>Number(x.route.encounterId)))];
+    const floorRuntime=encounterRuntime?.floors?.[String(map.floorId)]||null;
+    const ids=floorRuntime?.targetEncounterIds||[...new Set(map.entries.map(x=>Number(x.route.encounterId)))];
     map.encounters=ids.map(id=>encounterCatalog.get(String(id))).filter(Boolean).sort((a,b)=>a.encounterId-b.encounterId);
+    map.runtimeEncounters=(floorRuntime?.encounters||map.encounters).slice().sort((a,b)=>n(a.sourceOrder)-n(b.sourceOrder));
   }
   buildQuestMaps();
 }
@@ -366,6 +369,31 @@ function currentEncounter(map=currentMap()){
   }
   return hit;
 }
+function pointInEncounter(encounter,x,y){
+  const a=encounter?.area||{};
+  return n(a.xMin)<=x&&x<=n(a.xMax)&&n(a.yMin)<=y&&y<=n(a.yMax);
+}
+function randomPointInEncounter(encounter){
+  const a=encounter?.area||{};
+  return {x:rnd(n(a.xMin),n(a.xMax)),y:rnd(n(a.yMin),n(a.yMax))};
+}
+function resolveEncounterAt(map,x,y){
+  let hit=null;
+  for(const encounter of map?.runtimeEncounters||[]){
+    if(n(encounter.zorder)<=0||!pointInEncounter(encounter,x,y))continue;
+    if(!hit||n(encounter.zorder)>n(hit.zorder))hit=encounter;
+  }
+  return hit;
+}
+function runtimeEntryForEncounter(map,encounter){
+  const direct=(map?.entries||[]).find(x=>Number(x.route?.encounterId)===Number(encounter?.encounterId));
+  if(direct)return direct;
+  return {
+    species:{clientLabel:'Encounter '+(encounter?.encounterId??'—'),animationGroupId:null},
+    variant:{serverName:'原始野外群組',enemyIds:[],wildGrowth:1,captureBase:0,stats:{},elements:{},capturable:false},
+    route:{encounterId:encounter?.encounterId,floorId:encounter?.floorId,mapName:map?.name||''}
+  };
+}
 function weightedEntry(entries){
   if(!entries.length)return null;
   const weights=entries.map(x=>Math.max(.000001,n(x.route.battleAppearanceChance)||.000001));
@@ -379,10 +407,14 @@ function weightedEntry(entries){
 }
 
 function buildDynamicGroupCatalog(){
-  dynamicGroupCatalog=new Map(Object.entries(db?.dynamicGroups||{}).map(([id,g])=>[String(id),g]));
+  const source=encounterRuntime?.groups||db?.dynamicGroups||{};
+  dynamicGroupCatalog=new Map(Object.entries(source).map(([id,g])=>[String(id),g]));
 }
 function buildEncounterCatalog(){
-  encounterCatalog=new Map((db?.encounters||[]).map(e=>[String(e.encounterId),e]));
+  const all=[];
+  for(const floor of Object.values(encounterRuntime?.floors||{}))all.push(...(floor.encounters||[]));
+  if(!all.length)all.push(...(db?.encounters||[]));
+  encounterCatalog=new Map(all.map(e=>[String(e.encounterId),e]));
 }
 function dynamicGroupUnlocked(spec){
   if(!spec)return false;
@@ -441,7 +473,9 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     captureBase:raw?.captureBase!=null?n(raw.captureBase):n(base.captureBase),
     captureRule:raw?.captureRule??base.captureRule??null,
     capturable:raw?.capturable!=null?raw.capturable:(base.capturable!==false),
-    questDrop:raw?.questDrop||null
+    questDrop:raw?.questDrop||null,
+    size:n(raw?.size),
+    isBig:!!raw?.isBig
   };
 }
 function buildDynamicFormation(spec,entry){
@@ -449,18 +483,39 @@ function buildDynamicFormation(spec,entry){
   if(!members.length)return [];
   const maxByMembers=members.reduce((s,x)=>s+Math.max(0,Math.floor(n(x.createMax))),0);
   const maxCount=Math.max(1,Math.min(Math.floor(n(spec.encounterMax)||1),maxByMembers));
-  const targetCount=rnd(1,maxCount);
+  let entrymax=rnd(1,maxCount);
   const counts=new Map(),units=[];
-  let guard=0;
-  while(units.length<targetCount&&guard<200){
+  let bigcnt=0,guard=0;
+  while(units.length<entrymax&&guard<100){
     guard++;
     const total=members.reduce((s,x)=>s+Math.max(0,n(x.weight)),0);
     let roll=Math.random()*total,pick=members[members.length-1];
     for(const m of members){roll-=Math.max(0,n(m.weight));if(roll<=0){pick=m;break}}
-    const used=counts.get(pick)||0;
+    const key=Number(pick.enemyId)||pick;
+    const used=counts.get(key)||0;
     if(used>=Math.max(0,Math.floor(n(pick.createMax))))continue;
-    counts.set(pick,used+1);
-    units.push(makeEnemyUnit(pick,entry,units.length));
+    if(pick.validTemplate===false)continue;
+
+    const unit=makeEnemyUnit(pick,entry,units.length);
+    if(unit.isBig){
+      if(bigcnt>=5){
+        entrymax--;
+        continue;
+      }
+      if(units.length>4){
+        const normalIndex=units.slice(0,5).findIndex(u=>!u.isBig);
+        if(normalIndex<0)continue;
+        const displaced=units[normalIndex];
+        units[normalIndex]=unit;
+        units.push(displaced);
+      }else{
+        units.push(unit);
+      }
+      bigcnt++;
+    }else{
+      units.push(unit);
+    }
+    counts.set(key,used+1);
   }
   return units;
 }
@@ -483,13 +538,17 @@ function spawnEnemy(){
     if(!entries.length)return;
     entry=weightedEntry(entries);
   }else{
-    const encounter=currentEncounter(map);
+    const selected=currentEncounter(map);
+    if(!selected)return;
+    const point=randomPointInEncounter(selected);
+    const encounter=resolveEncounterAt(map,point.x,point.y);
     if(!encounter)return;
-    const allInArea=(map.entries||[]).filter(x=>Number(x.route?.encounterId)===Number(encounter.encounterId));
-    const unlocked=allInArea.filter(x=>routeUnlocked(x.route));
-    entry=unlocked[0]||allInArea[0]||null;
+    entry=runtimeEntryForEncounter(map,encounter);
     dynamicSpec=encounterDynamicFormation(encounter);
-    if(!entry||!dynamicSpec)return;
+    if(!dynamicSpec)return;
+    dynamicSpec.roamX=point.x;
+    dynamicSpec.roamY=point.y;
+    dynamicSpec.selectedEncounterId=selected.encounterId;
   }
   const consumeId=map.questZone?n(entry.variant.consumeOnSpawnItemId):0;
   if(consumeId){
@@ -503,7 +562,7 @@ function spawnEnemy(){
     let units=[],label='';
     if(dynamicSpec){
       units=buildDynamicFormation(dynamicSpec,entry);
-      label=(dynamicSpec.encounterId!=null?('Encounter '+dynamicSpec.encounterId+' / '):'')+'Group '+(dynamicSpec.groupId??'—')+' · '+units.length+' 隻';
+      label=(dynamicSpec.encounterId!=null?('Encounter '+dynamicSpec.encounterId+' / '):'')+'Group '+(dynamicSpec.groupId??'—')+' · '+units.length+' 隻'+(dynamicSpec.roamX!=null?' @ ('+dynamicSpec.roamX+','+dynamicSpec.roamY+')':'');
     }else{
       let idx=0;
       for(const member of formation){
@@ -517,6 +576,8 @@ function spawnEnemy(){
     enemy={
       entry,units,groupBattle:true,dynamicGroup:!!dynamicSpec,
       encounterId:dynamicSpec?.encounterId??null,groupId:dynamicSpec?.groupId??null,
+      selectedEncounterId:dynamicSpec?.selectedEncounterId??dynamicSpec?.encounterId??null,
+      roamX:dynamicSpec?.roamX??null,roamY:dynamicSpec?.roamY??null,
       level:first.level,name:first.name,hp:first.hp,maxHp:first.maxHp,attack:first.attack,defense:first.defense
     };
     state.battles++;
@@ -859,7 +920,7 @@ function renderEncounterOptions(){
   select.disabled=!list.length;
   select.innerHTML=list.map(e=>{
     const a=e.area||{},unresolved=(e.groups||[]).filter(g=>!g.resolved).length;
-    return '<option value="'+e.encounterId+'">Encounter '+e.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · Max '+e.enemyMax+(unresolved?' · '+unresolved+'失聯Group':'')+'</option>';
+    return '<option value="'+e.encounterId+'">Encounter '+e.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · Z '+e.zorder+' · Max '+e.enemyMax+(unresolved?' · '+unresolved+'失聯Group':'')+'</option>';
   }).join('');
   if(encounter)select.value=String(encounter.encounterId);
 }
@@ -1037,7 +1098,7 @@ function render(){
       const a=encounter?.area||{},groups=encounter?.groups||[],resolved=groups.filter(g=>g.resolved).length;
       $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種 Lv1';
       $('#mapInfo').textContent=encounter
-        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+'；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
+        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+'；每戰會在此矩形隨機漫遊並套用最高 zorder；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
         :'此 Floor 沒有可用的 Encounter。';
     }
   }
@@ -1069,12 +1130,15 @@ function renderEnemy(){
     const rows=units.map((u,i)=>{
       const hpPct=clamp(u.hp/u.maxHp*100,0,100),dead=u.hp<=0;
       return '<div class="enemy-unit '+(dead?'defeated':'')+'">'+
-        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+'</b><span>EnemyID '+(u.enemyId??'—')+'</span></div>'+
+        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+(u.isBig?' · 大型':'')+'</b><span>EnemyID '+(u.enemyId??'—')+'</span></div>'+
         '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+'</div>'+
         '<div class="progress"><i style="width:'+hpPct+'%"></i></div></div>';
     }).join('');
     box.innerHTML='<div class="enemy-name">'+(enemy.dynamicGroup?'動態群組':'任務編成')+' · '+alive+' / '+total+' 存活</div>'+
-      '<div class="enemy-meta"><span class="pill">多敵人戰鬥</span><span class="pill">依序鎖定第一個存活敵人</span></div>'+
+      '<div class="enemy-meta"><span class="pill">多敵人戰鬥</span><span class="pill">依序鎖定第一個存活敵人</span>'+
+      (enemy.encounterId!=null?'<span class="pill">Encounter '+enemy.encounterId+'</span>':'')+
+      (enemy.groupId!=null?'<span class="pill">Group '+enemy.groupId+'</span>':'')+
+      (enemy.roamX!=null?'<span class="pill">座標 '+enemy.roamX+','+enemy.roamY+'</span>':'')+'</div>'+
       '<div class="enemy-units">'+rows+'</div>';
   }else{
     const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
@@ -1185,15 +1249,18 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,itemR,zooR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
+      fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
       fetch(ZOO_QUEST_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
+    if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
     if(!itemR.ok)throw new Error('條件道具資料 HTTP '+itemR.status);
     if(!zooR.ok)throw new Error('動物園任務資料 HTTP '+zooR.status);
     db=await r.json();
+    encounterRuntime=await runtimeR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -1204,7 +1271,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.14 載入完成：一般野外改為唯一 Encounter 狩獵區 → 原 Group 權重 → Enemy 動態群戰；不再用寵物 route 權重抽戰鬥。','good');
+    addLog('V0.15 載入完成：Encounter 隨機座標已套用 zorder；Enemy 生成加入大型怪最多 5 隻與原碼 100 次保護。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
