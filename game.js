@@ -1404,7 +1404,7 @@ function enemyBattleView(unit){
   const weaken=battleStatusActive(desc,'weaken');
   const attackBase=n(unit?.roundAttack??unit?.attack);
   const defenseRaw=n(unit?.roundDefense??unit?.defense);
-  const quickRaw=n(unit?.quick);
+  const quickRaw=n(unit?.roundQuick??unit?.quick);
   return {
     type:'enemy',
     attack:weaken?Math.trunc(attackBase*.8):attackBase,
@@ -1502,7 +1502,10 @@ const ENEMY_SOURCE_SKILL_META={
   565:{n:'銅牆',d:'我方全體獲得 5 回合強化鐵壁',f:'PETSKILL_MagicStatusChange',o:'铁壁|5|40|全',field:1,target:2},
   601:{n:'大地鎧甲',d:'我方全體 TGH 強化 3 回合',f:'PETSKILL_SetMagicPet',o:'3|15|TGH',field:1,target:2},
   // V0.50：一般 BATTLE_Attack 型劇毒攻擊；與 Deeppoison 獨立技的 turn+2 路徑不同。
-  707:{n:'劇毒攻擊',d:'攻擊 +20%，命中後附加劇毒',f:'PETSKILL_StatusChange',o:'剧 turn 6  攻%+20',field:1,target:6}
+  707:{n:'劇毒攻擊',d:'攻擊 +20%，命中後附加劇毒',f:'PETSKILL_StatusChange',o:'剧 turn 6  攻%+20',field:1,target:6},
+  // V0.51：原 BATTLE_S_AttackDamage 的怯戰系；成功後依來源把目標趕離／收回戰場。
+  606:{n:'怯戰',d:'攻 70%、防 40%、敏 80%；命中後可能使目標逃離',f:'PETSKILL_BattleTimid',o:'',field:1,target:6},
+  636:{n:'狂獅怒吼',d:'攻 50%、敏 130%；可能使敵方寵物回到寵物欄',f:'PETSKILL_2BattleTimid',o:'-攻%50+敏%30命%60',field:1,target:7}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1578,6 +1581,7 @@ function enemyGuardianFor(target,attackerUnit=null){
 }
 function enemyPrepareRoundAction(unit,action){
   unit.roundAttack=Math.trunc(n(unit.attack));
+  unit.roundQuick=Math.trunc(n(unit.quick));
 
   // 原每回合 BATTLE_Pr ... CHAR_complianceParameter() 會先用當下 CHAR_MYSKILLTGH
   // 重算 FIXTOUGH，再交給 BATTLE_TurnParam。故大地鎧甲是「回合開始快照」：
@@ -1622,6 +1626,22 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_DamageToHp2'){
     // 暗月狂狼變體：BATTLE_DexCalc 專用排序為 work +20%，無 default 的隨機扣速。
     unit.roundDexMode='damageToHp2';
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_BattleTimid'){
+    // 原 PETSKILL_BattleTimid：直接把本回合 WORKATTACK/DEFENCE/QUICK
+    // 改成 FIXSTR*0.7 / FIXTOUGH*0.4 / FIXDEX*0.8。
+    unit.roundAttack=Math.trunc(n(unit.attack)*.7);
+    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.4);
+    unit.roundQuick=Math.trunc(n(unit.quick)*.8);
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_2BattleTimid'){
+    // 636 option「-攻%50+敏%30命%60」的 C parser：
+    // -攻% 不是「再減 50%」寫法，而是 WORKATTACKPOWER = FIXSTR * 0.50；
+    // +敏% 才是 FIXDEX + 30%。
+    const attackRemain=Math.max(0,enemySkillNumber(meta.o,/-攻%([0-9.]+)/,100));
+    const quickPlus=Math.max(0,enemySkillNumber(meta.o,/\+敏%([0-9.]+)/,0));
+    unit.roundAttack=Math.trunc(n(unit.attack)*attackRemain/100);
+    unit.roundQuick=Math.trunc(n(unit.quick)+n(unit.quick)*quickPlus/100);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
@@ -3066,6 +3086,70 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
 function enemyOptionParts(option){
   return String(option||'').split('|').map(x=>x.trim());
 }
+function finishPlayerForcedBattleExit(sourceLabel){
+  if(!enemy)return {battleEnded:true,playerExited:true};
+  addLog('你被'+sourceLabel+'迫使離開戰鬥；本場不計勝利、EXP 或掉落。','bad');
+  enemy=null;
+  resetBattleStatuses();
+  save();
+  render();
+  return {battleEnded:true,playerExited:true,noReward:true};
+}
+function performEnemyBattleTimid(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'怯戰';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  enemyApplySkillHit(unit,chosen,r,label);
+
+  let timidRoll=null,forced=false,playerExited=false;
+  if(r.damage>1){
+    timidRoll=cRand(0,99);
+    // 原 BATTLE_S_AttackDamage：rand()%100 < 15。
+    if(timidRoll<15){
+      if(chosen.kind==='pet'&&chosen.pet){
+        battlePetOutIds.add(chosen.pet.id);
+        forced=true;
+        addLog(chosen.pet.name+' 被 '+label+' 嚇退，本場不再出戰。','bad');
+      }else if(chosen.kind==='player'&&state.hp>0){
+        forced=true;
+        playerExited=true;
+        finishPlayerForcedBattleExit(unit.name+' 的'+label);
+      }
+    }
+  }
+
+  // BATTLE_COM_S_TIMID 是特殊 BATTLE_S_AttackDamage case，battle.c 直接 break，不進普通 Counter loop。
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timidRoll,forced,playerExited};
+}
+function performEnemy2BattleTimid(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'狂獅怒吼';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  enemyApplySkillHit(unit,chosen,r,label);
+
+  const timid=Math.max(0,Math.trunc(enemySkillNumber(meta?.o,/命%([0-9.]+)/,0)));
+  let timidRoll=null,recalled=false;
+  if(r.damage>1){
+    timidRoll=cRand(0,99);
+    // 原 BATTLE_COM_S_2TIMID：成功判定後只有 CHAR_TYPEPET 分支有實際處理；
+    // 玩家目標即使命中 roll 成功也不會 BATTLE_Exit。
+    if(timidRoll<timid&&chosen.kind==='pet'&&chosen.pet){
+      battlePetOutIds.add(chosen.pet.id);
+      recalled=true;
+      addLog(chosen.pet.name+' 被 '+label+' 嚇回寵物欄，本場不再出戰。','bad');
+    }
+  }
+
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
+}
 function performEnemyDamageToHp2(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -3527,6 +3611,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_BattleTimid')return performEnemyBattleTimid(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_2BattleTimid')return performEnemy2BattleTimid(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Refresh')return performEnemyRefresh(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleModel')return performEnemyBattleModel(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Modifyattack')return performEnemyModifyAttack(actor,unit,options,meta);
@@ -4440,7 +4526,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.50 載入完成：接入 707 劇毒攻擊；沿用一般 StatusChange 的攻擊命中後狀態流程，劇毒寫 turn+1，不混用 577／578 獨立劇毒技的 turn+2。','good');
+    addLog('V0.51 載入完成：接入 606 怯戰與 636 狂獅怒吼；保留技能本身的攻防敏修正、default 出手排序，以及命中後玩家退場／寵物收回的原 C 分支。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
