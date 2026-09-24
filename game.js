@@ -5,6 +5,11 @@ const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
+const EVENT81_AIR_ROUTES=Object.freeze([
+  [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
+  [[5579,14,11],[5579,14,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,49],[7000,103,49]],
+  [[5579,10,11],[5579,10,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,49],[7000,109,52],[7000,103,52]]
+]);
 const EVENT81_MAZE_WARPS=Object.freeze({
   24:[
     {floor:5576,x:28,y:88},{floor:5576,x:24,y:86},{floor:5576,x:24,y:87},{floor:5576,x:28,y:87},{floor:5576,x:24,y:88},
@@ -51,7 +56,7 @@ function freshState(){
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -654,7 +659,8 @@ function renderZooQuest(){
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
   const mazePos=e81.stage===3?('Floor '+n(e81.mazeFloor)+' ('+n(e81.mazeX)+','+n(e81.mazeY)+') · 已戰 '+n(e81.mazeBattles)+' 場'):'';
-  const e81text=e81.complete?('已完成（ENDEV=81）'+(e81.postReward?' · 伊甸總教練獎勵已領':' · 研究報告待送伊甸')):(e81.stage===0?'尚未開始':e81.stage===1?'持有推薦函 19696':e81.stage===2?'捕捉飛龍並持有證明書 19697':e81.stage===3?'NOWEV=81 · PC團金剛陣 '+mazePos:e81.stage===6?'已傳送到 Floor 5582 · 挑戰老大':e81.stage===7?'PC團老大已敗 · 取得悔過書':e81.stage===8?'回報霍特雷敦':'進行中');
+  const flightText=e81.arrivedEden&&e81.flightRouteNo?(' · 已搭 '+e81.flightRouteNo+' 號線到伊甸'):'';
+  const e81text=e81.complete?('已完成（ENDEV=81）'+(e81.postReward?' · 伊甸總教練獎勵已領':(' · 研究報告待送伊甸'+flightText))):(e81.stage===0?'尚未開始':e81.stage===1?'持有推薦函 19696':e81.stage===2?'捕捉飛龍並持有證明書 19697':e81.stage===3?'NOWEV=81 · PC團金剛陣 '+mazePos:e81.stage===6?'已傳送到 Floor 5582 · 挑戰老大':e81.stage===7?'PC團老大已敗 · 取得悔過書':e81.stage===8?'回報霍特雷敦':'進行中');
   lines.push('<div class="quest-line '+(e81.complete?'done':'blocked')+'">Event 81 金飛航空：'+e81text+'</div>');
   if(e82.active||e82.complete){
     lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已回報':'')+'</div>');
@@ -713,7 +719,11 @@ function renderZooQuest(){
     if(e81.stage===8&&hasItem(19698))actions.push('<button data-zoo-action="event81-complete" class="wide">回霍特雷敦：交悔過書並完成 Event81</button>');
   }
   if(e81.complete&&!e81.postReward){
-    if(!e81.arrivedEden&&hasItem(19699))actions.push('<button data-zoo-action="event81-fly-eden" class="wide">搭朵拉比斯飛往伊甸（10,000 石幣）</button>');
+    if(!e81.arrivedEden&&hasItem(19699)){
+      actions.push('<button data-zoo-action="event81-fly-eden-1">飛龍航空 1 號線（10,000 石幣）</button>');
+      actions.push('<button data-zoo-action="event81-fly-eden-2">飛龍航空 2 號線（10,000 石幣）</button>');
+      actions.push('<button data-zoo-action="event81-fly-eden-3">飛龍航空 3 號線（10,000 石幣）</button>');
+    }
     if(e81.arrivedEden&&hasItem(19699))actions.push('<button data-zoo-action="event81-bruce" class="wide">飛龍總教練布魯斯：交研究報告 → 200,000 石幣</button>');
   }
   if(q.event81Complete&&!e82.active&&!e82.complete)actions.push('<button data-zoo-action="accept82" class="wide">向園長接 Event 82</button>');
@@ -1049,11 +1059,17 @@ function handleZooAction(action){
     e81.active=false;e81.complete=true;q.event81Complete=true;
     addLog('霍特雷敦確認布蘭恩002已歸還，交給你研究報告 19699；依 eden81_2 正式 EndSetFlg:81。','good');
   }
-  if(action==='event81-fly-eden'&&e81.complete&&!e81.arrivedEden&&hasItem(19699)){
+  const flightMatch=/^event81-fly-eden-(1|2|3)$/.exec(action);
+  if(flightMatch&&e81.complete&&!e81.arrivedEden&&hasItem(19699)){
     const denied=[2402,2403,2404,2405,2406,2407,2408,2409,2410,2411,2412,2413].filter(id=>hasItem(id));
     if(denied.length)addLog('飛龍航空拒絕搭載目前持有的禁運道具：'+denied.join('、')+'。','bad');
     else if(state.gold<10000)addLog('飛龍航空旅費需要 10,000 石幣。','bad');
-    else{state.gold-=10000;e81.arrivedEden=true;addLog('支付 10,000 石幣，搭乘朵拉比斯由波拉飛往伊甸。','good');}
+    else{
+      const routeNo=Number(flightMatch[1]),route=EVENT81_AIR_ROUTES[routeNo-1]||[];
+      state.gold-=10000;e81.arrivedEden=true;e81.flightRouteNo=routeNo;e81.flightWaypoints=route.map(p=>p.slice());
+      const floors=[...new Set(route.map(p=>p[0]))].join(' → ');
+      addLog('支付 10,000 石幣，搭乘飛龍航空 '+routeNo+' 號線；依原 routeto1 經過 '+route.length+' 個座標節點，Floor '+floors+'，抵達伊甸。','good');
+    }
   }
   if(action==='event81-bruce'&&e81.complete&&e81.arrivedEden&&!e81.postReward&&hasItem(19699)){
     consumeItem(19699,1);state.gold+=200000;e81.postReward=true;
