@@ -5,6 +5,22 @@ const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
+const MAREFIA_MEMORY_ROUTE=Object.freeze([
+  {level:10,floor:1000,nextCap:15,clue:'薩姆吉爾村的大石像'},
+  {level:15,floor:1400,nextCap:20,clue:'西北方沙漠中的村落'},
+  {level:20,floor:1200,nextCap:25,clue:'黃昏可看見繁星的山頂'},
+  {level:25,floor:5542,nextCap:30,clue:'波拉島胡椒林與加美訓練場遺跡'},
+  {level:30,floor:4000,nextCap:35,clue:'加魯卡水上漁村的燈塔'},
+  {level:35,floor:20301,nextCap:40,clue:'棲息大量加美的洞窟'},
+  {level:40,floor:3300,nextCap:45,clue:'尼斯大陸矮小人族的聚落'},
+  {level:45,floor:21201,nextCap:50,clue:'加魯卡南方可在海上行走之地'},
+  {level:50,floor:20105,nextCap:55,clue:'山崖密林與血紅大花'},
+  {level:55,floor:6000,nextCap:60,clue:'村旁有日夜雙入口的巨藤洞窟'},
+  {level:60,floor:31901,nextCap:65,clue:'盛產好石頭、精靈曾聚居之地'},
+  {level:65,floor:30703,nextCap:70,clue:'岩石高原北方的花之洞窟',rewardItem:19688,rewardCount:3},
+  {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
+  {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
+]);
 let db=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
@@ -15,13 +31,13 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:5,
+    schemaVersion:6,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event71Current:false,event2:{active:false,complete:false},event71Prep:{stage:0},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event71Current:false,event2:{active:false,complete:false},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -61,6 +77,15 @@ function normalizeState(raw){
   s.team=Array.isArray(raw?.team)?raw.team.slice(0,TEAM_SIZE):Array(TEAM_SIZE).fill(null);
   while(s.team.length<TEAM_SIZE)s.team.push(null);
   migrateLegacyPets(raw,s);
+  if(n(raw?.schemaVersion)<6&&!s.quest.event71Current&&n(s.quest.event71Prep.stage)===3){
+    const legacyMarefia=s.petBox.find(p=>Number(p.tempNo)===718);
+    if(legacyMarefia&&n(legacyMarefia.level)>=79){
+      legacyMarefia.level=79;legacyMarefia.exp=0;legacyMarefia.levelCap=79;legacyMarefia.memoryRoute=true;
+      s.quest.event71Prep.memoryIndex=MAREFIA_MEMORY_ROUTE.length;
+      s.quest.event71Prep.memoryReady=true;
+      s.quest.event71Prep.stage=4;
+    }
+  }
   const ids=new Set(s.petBox.map(p=>p.id));
   s.team=s.team.map(id=>ids.has(id)?id:null);
   if(!ids.has(s.activePetId))s.activePetId=null;
@@ -71,7 +96,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=5;
+  s.schemaVersion=6;
   delete s.pets;
   return s;
 }
@@ -319,24 +344,33 @@ function addEvent83Pet(){
 function addMarefiaPet(){
   let p=state.petBox.find(x=>Number(x.tempNo)===718);
   if(p)return p;
-  p={id:uid(),name:'瑪蕾菲雅',animationGroupId:null,tempNo:718,level:79,exp:0,wildGrowth:1,
+  p={id:uid(),name:'瑪蕾菲雅',animationGroupId:null,tempNo:718,level:1,exp:0,levelCap:10,wildGrowth:1,
     stats:{vital:18,str:12,tgh:14,dex:18},elements:{earth:100,water:0,fire:0,wind:0},
-    capturedAt:Date.now(),questReward:true,event71Prerequisite:true};
+    capturedAt:Date.now(),questReward:true,event71Prerequisite:true,memoryRoute:true};
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
   if(!state.activePetId)state.activePetId=p.id;
   return p;
 }
+function marefiaPet(){return state.petBox.find(p=>Number(p.tempNo)===718)||null}
 function petExpToNext(level){return 18+Math.max(0,n(level)-1)*4}
 function awardActivePetExp(amount){
-  const p=activePet();if(!p||Number(p.tempNo)===718)return;
+  const p=activePet();if(!p)return;
+  const isMarefia=Number(p.tempNo)===718;
+  const maxLevel=isMarefia?Math.max(1,n(p.levelCap)||10):99;
   p.exp=n(p.exp)+Math.max(1,Math.round(amount));
   let up=false;
-  while(p.level<99&&p.exp>=petExpToNext(p.level)){
+  while(p.level<maxLevel&&p.exp>=petExpToNext(p.level)){
     p.exp-=petExpToNext(p.level);p.level++;up=true;
   }
-  if(up)addLog(p.name+' 升到 Lv.'+p.level+'。','pet');
+  if(isMarefia&&p.level>=maxLevel){
+    p.exp=Math.min(p.exp,Math.max(0,petExpToNext(p.level)-1));
+  }
+  if(up){
+    addLog(p.name+' 升到 Lv.'+p.level+'。','pet');
+    if(isMarefia&&p.level===maxLevel&&p.level<79)addLog('瑪蕾菲雅到達目前回憶門檻 Lv.'+maxLevel+'，可前往下一個記憶地點。','pet');
+  }
 }
 function clearEvent83Chain(extra=[]){
   for(let id=19702;id<=19715;id++){
@@ -529,7 +563,7 @@ function renderMapOptions(){
 }
 function renderZooQuest(){
   const q=state.quest,e2=q.event2,prep=q.event71Prep,e82=q.event82,e83=q.event83;
-  const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854);
+  const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854),marefia=marefiaPet();
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
   lines.push('<div class="quest-line '+(q.event81Complete?'done':'blocked')+'">Event 81 金飛航空：'+(q.event81Complete?'已完成':'尚未完成／目前僅能用開發測試旗標')+'</div>');
@@ -538,6 +572,12 @@ function renderZooQuest(){
     lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已確認':'')+'</div>');
     lines.push('<div class="quest-line '+(has854?'done':'')+'">任務版拉斯基 854：'+(has854?'已取得':(e83.active?'Event 83 進行中':'尚未取得'))+'</div>');
     lines.push('<div class="quest-line '+(q.event71Current&&hasItem(2414)?'done':'blocked')+'">Event83 前置：Event71 '+(q.event71Current?'進行中':'未開旗')+' / 不可思議的貝殼 2414 '+(hasItem(2414)?'持有':'缺少')+'</div>');
+    if(marefia&&!q.event71Current){
+      const mi=Math.max(0,Math.floor(n(prep.memoryIndex))),node=MAREFIA_MEMORY_ROUTE[mi];
+      const memoryText=node?('回憶 '+(mi+1)+'/'+MAREFIA_MEMORY_ROUTE.length+' · 下一站 Floor '+node.floor+' · 需 Lv'+node.level):
+        (prep.memoryReady?'14/14 已完成 · 已理解拯救精靈王的使命':'14/14 已完成 · 請訓練至 Lv79');
+      lines.push('<div class="quest-line '+(prep.memoryReady?'done':'')+'">瑪蕾菲雅：Lv'+n(marefia.level)+' / 上限 Lv'+n(marefia.levelCap)+' · '+memoryText+'</div>');
+    }
     if(e83.active){
       const chain=[19704,19705,19706,19707,19708,19709,19710,19711,19712,19713,19714,19716,19717,19718].filter(id=>hasItem(id));
       lines.push('<div class="quest-line done">Event 83：進行中'+(chain.length?' · 持有 '+chain.join(' / '):'')+'</div>');
@@ -566,8 +606,19 @@ function renderZooQuest(){
     if(!q.event71Current){
       if(prep.stage===0)actions.push('<button data-zoo-action="event69-start" class="wide">願藏祖父：開始精靈少女 Event 69</button>');
       if(prep.stage===1)actions.push('<button data-zoo-action="event69-rescue" class="wide">蛙洞救出新藏 → 完成 Event69／開 Event70</button>');
-      if(prep.stage===2)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv79 瑪蕾菲雅</button>');
-      if(prep.stage===3)actions.push('<button data-zoo-action="pet-trans" class="wide">精靈王：讓出戰 Lv80+ 寵物接受轉生祝福</button>');
+      if(prep.stage===2)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv1 瑪蕾菲雅</button>');
+      if(prep.stage===3&&marefia){
+        const mi=Math.max(0,Math.floor(n(prep.memoryIndex))),node=MAREFIA_MEMORY_ROUTE[mi];
+        if(node){
+          if(n(marefia.level)===node.level)actions.push('<button data-zoo-action="marefia-memory-'+mi+'" class="wide">回憶 '+(mi+1)+'/'+MAREFIA_MEMORY_ROUTE.length+'：Floor '+node.floor+' · '+escapeHtml(node.clue)+'</button>');
+          else actions.push('<button class="wide" disabled>先讓瑪蕾菲雅出戰並訓練到 Lv'+node.level+'（目前 Lv'+n(marefia.level)+'）</button>');
+        }else if(n(marefia.level)===79){
+          actions.push('<button data-zoo-action="marefia-final" class="wide">Lv79：聽瑪蕾菲雅說明拯救精靈王的使命</button>');
+        }else{
+          actions.push('<button class="wide" disabled>最後回憶已完成，將瑪蕾菲雅訓練到 Lv79（目前 Lv'+n(marefia.level)+'）</button>');
+        }
+      }
+      if(prep.stage===4&&prep.memoryReady)actions.push('<button data-zoo-action="pet-trans" class="wide">精靈王：讓出戰 Lv80+ 寵物接受轉生祝福</button>');
     }else if(hasItem(2414)&&!e83.active&&!e83.complete&&!has854){
       actions.push('<button data-zoo-action="start83" class="wide">向里拉拉開始 Event 83</button>');
     }
@@ -678,7 +729,7 @@ function renderTeam(){
     return '<div class="team-slot '+(active?'active':'')+'" data-pet-id="'+p.id+'"><div><small>'+(active?'出戰':'槽位 '+(i+1))+'</small><b>'+escapeHtml(p.name)+'</b></div></div>';
   }).join('');
   const p=activePet();
-  $('#activePetInfo').textContent=p?'出戰：'+p.name+' · Lv.'+p.level+' · 腕力 '+n(p.stats?.str)+' · 敏捷 '+n(p.stats?.dex):'尚未指定出戰寵物。';
+  $('#activePetInfo').textContent=p?'出戰：'+p.name+' · Lv.'+p.level+(Number(p.tempNo)===718?' / 上限 '+n(p.levelCap):'')+' · 腕力 '+n(p.stats?.str)+' · 敏捷 '+n(p.stats?.dex):'尚未指定出戰寵物。';
 }
 function renderPets(){
   const teamSet=new Set(state.team.filter(Boolean));
@@ -808,12 +859,37 @@ function handleZooAction(action){
     prep.stage=2;addLog('依精靈少女前傳完成蛙洞救援：Event69 完成，Event70 開始。','good');
   }
   if(action==='event70-finish'&&!q.event71Current&&prep.stage===2){
-    const p=addMarefiaPet();prep.stage=3;
-    addLog('Event70 完成：願藏祖母把瑪蕾菲雅（TempNo 718）交給你；本版把 10～79 級回憶巡禮壓成前置摘要，避免再用測試旗標。','good');
+    const p=addMarefiaPet();prep.stage=3;prep.memoryIndex=0;prep.memoryReady=false;
+    addLog('Event70 完成：願藏祖母把 Lv1 瑪蕾菲雅（EnemyID 1479／TempNo 718）交給你。接下來依 ptalk01.arg 逐段找回 14 個回憶。','good');
     if(!state.team.includes(p.id)){const open=state.team.findIndex(x=>!x);if(open>=0)state.team[open]=p.id;}
   }
-  if(action==='pet-trans'&&!q.event71Current&&prep.stage===3){
-    const marefia=state.petBox.find(p=>Number(p.tempNo)===718),p=activePet();
+  const memoryMatch=/^marefia-memory-(\d+)$/.exec(action);
+  if(memoryMatch&&!q.event71Current&&prep.stage===3){
+    const idx=Number(memoryMatch[1]),node=MAREFIA_MEMORY_ROUTE[idx],marefia=marefiaPet();
+    if(!node||idx!==Math.floor(n(prep.memoryIndex)))addLog('這個回憶節點目前尚未開放。','bad');
+    else if(!marefia)addLog('隊伍中沒有瑪蕾菲雅。','bad');
+    else if(n(marefia.level)!==node.level)addLog('瑪蕾菲雅必須正好 Lv'+node.level+' 才能觸發這段原始回憶。','bad');
+    else{
+      marefia.levelCap=node.nextCap;
+      prep.memoryIndex=idx+1;
+      if(node.rewardItem){
+        giveItem(node.rewardItem,node.rewardCount||1);
+        addLog('Floor '+node.floor+' 回憶完成，依 EVENTRUN7 取得 Item '+node.rewardItem+' ×'+(node.rewardCount||1)+'。','pet');
+      }
+      addLog('瑪蕾菲雅回憶 '+(idx+1)+'/'+MAREFIA_MEMORY_ROUTE.length+'：Floor '+node.floor+'（'+node.clue+'），等級上限開放至 Lv'+node.nextCap+'。','good');
+    }
+  }
+  if(action==='marefia-final'&&!q.event71Current&&prep.stage===3){
+    const marefia=marefiaPet();
+    if(!marefia||Math.floor(n(prep.memoryIndex))<MAREFIA_MEMORY_ROUTE.length||n(marefia.level)!==79){
+      addLog('必須完成 14 段回憶並把瑪蕾菲雅練到 Lv79。','bad');
+    }else{
+      prep.memoryReady=true;prep.stage=4;
+      addLog('Lv79 瑪蕾菲雅：已完全了解自己的使命，必須前往拯救被困的精靈王。','good');
+    }
+  }
+  if(action==='pet-trans'&&!q.event71Current&&prep.stage===4&&prep.memoryReady){
+    const marefia=marefiaPet(),p=activePet();
     if(state.level<80)addLog('精靈王：角色必須 Lv80 以上。','bad');
     else if(!marefia||n(marefia.level)!==79)addLog('精靈王：必須帶著 Lv79 瑪蕾菲雅。','bad');
     else if(!p||Number(p.tempNo)===718)addLog('請先把要接受祝福的另一隻寵物設為出戰。','bad');
@@ -824,7 +900,7 @@ function handleZooAction(action){
       state.petBox=state.petBox.filter(x=>x.id!==mid);
       state.team=state.team.map(x=>x===mid?null:x);
       p.transmigration=1;p.level=1;p.exp=0;
-      prep.stage=4;q.event71Current=true;
+      prep.stage=5;q.event71Current=true;
       addLog(p.name+' 接受精靈王祝福完成轉生；依 npc_transmigration.c 正式設為 NOWEV=71。','good');
     }
   }
