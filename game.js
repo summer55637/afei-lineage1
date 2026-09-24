@@ -2405,7 +2405,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
 
   // StatusChange 的異常套用發生在 BATTLE_Attack() 返回之前；睡眠／石化成功後目標已不能反擊。
   if(unit.hp>0&&enemy){
-    if(chosen.kind==='pet'&&chosen.pet&&petIsAlive(chosen.pet)&&battleStatusCanMove(targetDesc)){
+    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)&&battleStatusCanMove(targetDesc)){
       resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
     }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding&&battleStatusCanMove(targetDesc)){
       resolvePlayerEnemyCounterChain('enemy',unit,r);
@@ -2453,7 +2453,7 @@ function performEnemyContinuation(actor,unit,options,meta){
     if(!enemy||unit.hp<=0||state.hp<=0)break;
 
     if(!chosen
-      ||(chosen.kind==='pet'&&(!chosen.pet||!petIsAlive(chosen.pet)))
+      ||(chosen.kind==='pet'&&(!chosen.pet||!petIsBattleActive(chosen.pet)))
       ||(chosen.kind==='player'&&state.hp<=0)){
       chosen=enemyActorTarget(actor,unit);
     }
@@ -2472,14 +2472,14 @@ function performEnemyContinuation(actor,unit,options,meta){
     enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
 
     if(state.hp<=0)break;
-    if(chosen.kind==='pet'&&chosen.pet&&!petIsAlive(chosen.pet)){
+    if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet)){
       chosen=null;
     }
   }
 
   // 原 battle.c：N 段全部處理完後，才拿最後一次 BATTLE_Attack 的 ContFlg 進一次反擊鏈。
   if(lastResult&&unit.hp>0&&enemy){
-    if(lastChosen?.kind==='pet'&&lastChosen.pet&&petIsAlive(lastChosen.pet)){
+    if(lastChosen?.kind==='pet'&&lastChosen.pet&&petIsBattleActive(lastChosen.pet)){
       resolvePetEnemyCounterChain('enemy',lastChosen.pet,unit,lastResult);
     }else if(lastChosen?.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
       resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
