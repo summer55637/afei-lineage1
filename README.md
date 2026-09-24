@@ -1038,3 +1038,57 @@ V0.23 繼續把 V0.22 已完成的普通物理「閃避 → 傷害 → 會心」
 - 騎寵敏捷修正
 
 先把「普通攻擊回合」的原服順序獨立驗證穩定，再接下一層。
+
+
+## V0.24 BATTLE_COM_CAPTURE 回合排序
+
+V0.24 把既有捕獲從「額外插入動作」改回原服回合指令。
+
+原 `battle.c` 的 `BATTLE_COM_CAPTURE` 與普通攻擊一樣，先被收進同一份 EntryList，再由 `BATTLE_DexCalc()` 與 `EntrySort()` 決定本回合順位。捕獲本身沒有特殊敏捷分支，因此仍使用普通 default：
+
+- `work = CHAR_WORKQUICK + 20`
+- `dex = work - RAND(0, work*0.3)`
+- 最低 1
+
+因此目前手動／自動捕獲都真正消耗玩家這一回合的行動。捕獲失敗後，出戰寵物與每隻 Enemy 仍依已排好的本回合順位繼續行動；捕獲成功後，被捕獲 Enemy 立即退出戰鬥，群戰中的後續單位繼續按原順位行動。最後一隻 Enemy 被捕獲時不發放擊殺 EXP／掉落。
+
+
+## V0.25 BATTLE_Counter 反擊鏈
+
+V0.25 接入玩家與 Enemy 之間的原服普通物理反擊鏈。
+
+重新核對 `BATTLE_CounterCalc()`、`BATTLE_CounterCheckPlayer()`、`BATTLE_CounterCheckPet()` 與 `battle.c` 在普通攻擊後的反擊迴圈：
+
+- `gCounterPara = 0.08`
+- Player 反擊非 Player 時，目標 DEX ×0.6
+- 非 Player 反擊 Player 時使用 `divpara=10` 且不開平方
+- Enemy 反擊 Pet 同樣使用非 sqrt 分支；Pet 反擊 Enemy 時目標 DEX ×0.8
+- 玩家目前沒有武器，雙方視為 FIST；`CounterTbl[FIST,FIST]=10`，所以玩家基礎反擊率等於 CounterCalc 再加 Luck
+- Enemy／Pet 分支最高 100%
+- 原 `BATTLE_Counter()` 成功後再次走普通 AttackSeq，但最終傷害乘 0.75，正傷害最低 1
+- 普通攻擊後最多交替反擊 5 次
+- 會心、死亡、GUARD 等會關閉後續 ContFlg；MISS 會停止該次反擊，DODGE／NORMAL 可繼續鏈
+
+目前網頁尚未建立寵物「戰鬥中當前 HP」，所以 V0.25 只先啟用 Player ↔ Enemy 反擊；Enemy ↔ Pet 反擊等寵物戰鬥 HP 狀態完成後再接。
+
+
+## V0.26 BATTLE_COM_GUARD／BATTLE_GuardAdjust
+
+V0.26 新增可操作的「防禦」回合，並修正 V0.25 捕獲回合不應具有玩家反擊資格的細節。
+
+原服在回合開始前就已把玩家指令寫入 `CHAR_WORKBATTLECOM1`，因此即使 Enemy 的敏捷排序比玩家快，只要本回合選的是 GUARD，防禦效果在 Enemy 攻擊時就已成立；並不是等到玩家自己的排序順位才開始防禦。
+
+`BATTLE_GuardAdjust()` 每次受擊重新擲 `RAND(1,100)`：
+
+- 1～25：傷害 ×0
+- 26～50：×0.10
+- 51～70：×0.20
+- 71～85：×0.30
+- 86～95：×0.40
+- 96～100：×0.50
+
+之後若傷害 <1，仍依原 AttackSeq 最後規則再 `RAND(0,1)`。
+
+另外 `BATTLE_DuckCheck()` 在 defender 為 GUARD 時直接不做閃避，所以防禦中不會同時享有敏捷閃避；`BATTLE_Attack()` 也會把 GUARD 的 ContFlg 關閉，因此該回合玩家不會進入反擊鏈。
+
+V0.26 同步修正：玩家指令若是 CAPTURE，不符合 `BATTLE_Counter()` 只接受 ATTACK／NOGUARD 的條件，所以捕獲回合中被 Enemy 攻擊後不再觸發玩家反擊。
