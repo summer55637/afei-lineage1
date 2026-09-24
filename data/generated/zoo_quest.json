@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "V0.9: Event81 PC gang maze now reproduces the source random-warp tables from event81_6f/7f/8f.arg instead of guaranteed linear three-battle progression. Event81/82/83 and prerequisite chains remain playable.",
+    "note": "V0.11: Event81, Event69 frog king, and Event83 Sig boss fights now use real multi-enemy formations. General wild Lv1 capture encounters remain single-enemy.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -45,7 +45,7 @@
       "name": "尋找新藏／蛙洞救援",
       "serverEventId": 69,
       "verified": true,
-      "implementationStatus": "playable_full_core",
+      "implementationStatus": "playable_full_formation",
       "requiresEndEvents": [
         4
       ],
@@ -80,7 +80,24 @@
           "1681": 9,
           "1685": 1
         },
-        "source": "gmsv/data/npc/king/event69_5.arg"
+        "source": "gmsv/data/npc/king/event69_5.arg",
+        "runtimeFormation": [
+          {
+            "enemyId": 1685,
+            "tempNo": 842,
+            "name": "黑蛙王",
+            "count": 1,
+            "level": 90
+          },
+          {
+            "enemyId": 1681,
+            "tempNo": 841,
+            "name": "黑蛙",
+            "count": 9,
+            "level": 50
+          }
+        ],
+        "note": "V0.11 起不再以黑蛙王單體代表整隊；實際生成黑蛙王×1＋黑蛙×9，全部擊倒後才觸發戰後 Floor 30607 流程。"
       }
     },
     "70": {
@@ -954,7 +971,7 @@
       "name": "尋回拉斯基",
       "serverEventId": 83,
       "verified": true,
-      "implementationStatus": "playable_core",
+      "implementationStatus": "playable_core_full_formation",
       "requires": [
         "Event 81 complete",
         "Event 82 active",
@@ -973,7 +990,34 @@
       "finalBattle": {
         "npc": "席格",
         "floorId": 60044,
-        "afterFloorId": 60045
+        "afterFloorId": 60045,
+        "runtimeFormation": [
+          {
+            "enemyId": 1791,
+            "tempNo": 900,
+            "name": "席格",
+            "count": 1,
+            "levelMin": 70,
+            "levelMax": 80
+          },
+          {
+            "enemyId": 1789,
+            "tempNo": 898,
+            "name": "不良少年B",
+            "count": 4,
+            "levelMin": 70,
+            "levelMax": 80
+          },
+          {
+            "enemyId": 1787,
+            "tempNo": 897,
+            "name": "凶悍格爾希洛",
+            "count": 5,
+            "levelMin": 70,
+            "levelMax": 80
+          }
+        ],
+        "note": "V0.11 起席格戰使用真正 10 人 formation；黑旗在 spawn 前由 consumeOnSpawnItemId=19718 收走，只有全員倒下才觸發 event83-complete。"
       },
       "reward": {
         "enemyId": 1733,
@@ -1734,7 +1778,7 @@
       "name": "蛙洞・里昂蛙王戰",
       "floorId": 30605,
       "encounterId": null,
-      "description": "Event69：帶著金珠 19622 挑戰里昂蛙王。原 event69_5.arg 編成為黑蛙王 EnemyID 1685 ×1、黑蛙 EnemyID 1681 ×9；目前單體戰鬥核心以黑蛙王代表整隊。",
+      "description": "Event69：帶著金珠 19622 挑戰里昂蛙王。V0.11 起依 event69_5.arg 真正生成黑蛙王 EnemyID 1685×1＋黑蛙 EnemyID 1681×9；全員擊倒後才進 Floor 30607。",
       "requireItems": [
         19622
       ],
@@ -1761,7 +1805,39 @@
           "bossComposition": {
             "1681": 9,
             "1685": 1
-          }
+          },
+          "formation": [
+            {
+              "name": "黑蛙王",
+              "enemyId": 1685,
+              "tempNo": 842,
+              "count": 1,
+              "levelMin": 90,
+              "levelMax": 90,
+              "stats": {
+                "vital": 65,
+                "str": 30,
+                "tgh": 34,
+                "dex": 40
+              },
+              "animationGroupId": 100886
+            },
+            {
+              "name": "黑蛙",
+              "enemyId": 1681,
+              "tempNo": 841,
+              "count": 9,
+              "levelMin": 50,
+              "levelMax": 50,
+              "stats": {
+                "vital": 38,
+                "str": 29,
+                "tgh": 34,
+                "dex": 20
+              },
+              "animationGroupId": 100886
+            }
+          ]
         }
       ]
     },
@@ -1979,7 +2055,7 @@
       "name": "地下洞窟・席格戰",
       "floorId": 60044,
       "encounterId": null,
-      "description": "Event83 席格戰。原 NPC 編成為席格×1、不良少年B×4、凶悍格爾希洛×5；目前單體戰鬥核心以席格代表整隊，黑旗在開戰時依 steal=1 收走。",
+      "description": "Event83 席格戰。V0.11 起依 event83_18.arg 真正生成席格×1、不良少年B×4、凶悍格爾希洛×5；黑旗 19718 仍在開戰時依 steal=1 收走，全員擊倒後才完成戰鬥。",
       "requireItems": [
         19718
       ],
@@ -2008,7 +2084,54 @@
             "1787": 5,
             "1789": 4,
             "1791": 1
-          }
+          },
+          "formation": [
+            {
+              "name": "席格",
+              "enemyId": 1791,
+              "tempNo": 900,
+              "count": 1,
+              "levelMin": 70,
+              "levelMax": 80,
+              "stats": {
+                "vital": 60,
+                "str": 35,
+                "tgh": 60,
+                "dex": 60
+              },
+              "animationGroupId": 101160
+            },
+            {
+              "name": "不良少年B",
+              "enemyId": 1789,
+              "tempNo": 898,
+              "count": 4,
+              "levelMin": 70,
+              "levelMax": 80,
+              "stats": {
+                "vital": 38,
+                "str": 29,
+                "tgh": 34,
+                "dex": 20
+              },
+              "animationGroupId": 100439
+            },
+            {
+              "name": "凶悍格爾希洛",
+              "enemyId": 1787,
+              "tempNo": 897,
+              "count": 5,
+              "levelMin": 70,
+              "levelMax": 80,
+              "stats": {
+                "vital": 60,
+                "str": 30,
+                "tgh": 30,
+                "dex": 40
+              },
+              "animationGroupId": 100861
+            }
+          ]
         }
       ]
     }
