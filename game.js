@@ -944,7 +944,7 @@ function spawnEnemy(context=null){
     render();return;
   }
   const unit=makeEnemyUnit(null,entry,0);
-  enemy={entry,level:unit.level,name:unit.name,hp:unit.hp,maxHp:unit.maxHp,attack:unit.attack,defense:unit.defense,enemyDrops:unit.enemyDrops,serverDropTable:unit.serverDropTable,serverExpBase:unit.serverExpBase};
+  enemy=Object.assign({entry,groupBattle:false,dynamicGroup:false},unit);
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
   render();
@@ -1358,38 +1358,90 @@ function defeat(){
   enemy=null;
   save();render();
 }
-function attackTurn(){
-  if(!enemy)return;
-  let target=targetEnemyUnit();
-  if(!target){winBattle();return}
-  const pr=playerAttackResult(target);
-  if(pr.dodged){
-    addLog(target.name+' 閃避了你的攻擊。');
-  }else if(pr.miss){
-    addLog('你攻擊 '+target.name+'，但沒有造成傷害。');
-  }else{
-    target.hp=Math.max(0,target.hp-pr.damage);
-    addLog('你對 '+target.name+(pr.critical?' 發動會心一擊，造成 ':' 造成 ')+pr.damage+' 傷害。',pr.critical?'good':'');
-  }
-  syncEnemyTarget();
-  if(!livingEnemyUnits().length){winBattle();return}
+function battleDexRoll(quick){
+  // 原 BATTLE_DexCalc() 的普通攻擊 default 分支：
+  // work = CHAR_WORKQUICK + 20; dex = work - RAND(0, work * 0.3); 最低 1。
+  const work=Math.trunc(n(quick))+20;
+  let dex=work-cRand(0,work*.3);
+  if(dex<=0)dex=1;
+  return Math.trunc(dex);
+}
+function normalBattleOrder(){
+  const order=[];
+  let orderIndex=0;
+  const player=playerBattleView();
+  order.push({kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++});
 
   const pet=activePet();
   if(pet){
-    target=targetEnemyUnit();
-    const rr=petAttackResult(pet,target);
-    if(rr.dodged){
-      addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
-    }else if(rr.miss){
-      addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
-    }else{
-      target.hp=Math.max(0,target.hp-rr.damage);
-      addLog(pet.name+' 追擊 '+target.name+(rr.critical?'，會心一擊 ':'，造成 ')+rr.damage+' 傷害。','pet');
+    const pv=petBattleView(pet);
+    const quick=pv?n(pv.quick):n(pet?.stats?.dex);
+    order.push({kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++});
+  }
+
+  for(const unit of livingEnemyUnits()){
+    const quick=n(unit?.quick);
+    order.push({kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++});
+  }
+
+  // 原 EntrySort() 會依 dex + CHAR_WORKSEQUENCEPOWER 由高到低排序。
+  // 目前尚無裝備系統，所以 sequence 固定等同 0；同值時保留建表順序。
+  order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
+  return order;
+}
+function attackTurn(){
+  if(!enemy)return;
+  const order=normalBattleOrder();
+
+  for(const actor of order){
+    if(!enemy)return;
+    if(state.hp<=0){defeat();return}
+
+    if(actor.kind==='player'){
+      const target=targetEnemyUnit();
+      if(!target){winBattle();return}
+      const r=playerAttackResult(target);
+      if(r.dodged){
+        addLog(target.name+' 閃避了你的攻擊。');
+      }else if(r.miss){
+        addLog('你攻擊 '+target.name+'，但沒有造成傷害。');
+      }else{
+        target.hp=Math.max(0,target.hp-r.damage);
+        addLog('你對 '+target.name+(r.critical?' 發動會心一擊，造成 ':' 造成 ')+r.damage+' 傷害。',r.critical?'good':'');
+      }
+    }else if(actor.kind==='pet'){
+      const pet=activePet();
+      if(!pet||pet.id!==actor.petId)continue;
+      const target=targetEnemyUnit();
+      if(!target){winBattle();return}
+      const r=petAttackResult(pet,target);
+      if(r.dodged){
+        addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
+      }else if(r.miss){
+        addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
+      }else{
+        target.hp=Math.max(0,target.hp-r.damage);
+        addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
+      }
+    }else if(actor.kind==='enemy'){
+      const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+      if(!unit)continue;
+      const r=enemyAttackResult(unit);
+      if(r.dodged){
+        addLog('你閃避了 '+unit.name+' 的攻擊。','good');
+      }else if(r.miss){
+        addLog(unit.name+' 的攻擊沒有造成傷害。');
+      }else{
+        state.hp=Math.max(0,state.hp-r.damage);
+        addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+      }
     }
-    syncEnemyTarget();
+
+    if(enemy)syncEnemyTarget();
+    if(state.hp<=0){defeat();return}
     if(!livingEnemyUnits().length){winBattle();return}
   }
-  enemyCounter();
+
   if(enemy)syncEnemyTarget();
   render();
 }
@@ -1831,7 +1883,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.22 載入完成：普通物理攻擊已接入 BATTLE_DuckCheck、_BATTLE_NEWPOWER 版 BATTLE_DamageCalc 核心與 BATTLE_CriticalCheck／CriDamageCalc。','good');
+    addLog('V0.23 載入完成：普通物理回合已接入 BATTLE_DexCalc＋EntrySort，玩家、出戰寵物與每隻 Enemy 依本回合敏捷亂數排序後逐一行動。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
