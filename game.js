@@ -301,7 +301,8 @@ function buildQuestMaps(){
         questDrop:raw.questDrop||null,
         consumeOnSpawnItemId:raw.consumeOnSpawnItemId||null,
         questOnWin:raw.questOnWin||null,
-        bossComposition:raw.bossComposition||null
+        bossComposition:raw.bossComposition||null,
+        formation:Array.isArray(raw.formation)?raw.formation:null
       };
       if(raw.useMainDbTempNo){
         const hit=findMainVariant(raw.useMainDbTempNo);
@@ -353,6 +354,37 @@ function weightedEntry(entries){
   return entries[entries.length-1];
 }
 
+function makeEnemyUnit(raw,fallbackEntry,index=0){
+  const base=fallbackEntry?.variant||{};
+  const st=Object.assign({},base.stats||{},raw?.stats||{});
+  const vit=Math.max(1,n(st.vital)||8);
+  const str=Math.max(1,n(st.str)||6);
+  const tgh=Math.max(1,n(st.tgh)||6);
+  const levelMin=Math.max(1,n(raw?.levelMin)||n(base.levelMin)||1);
+  const levelMax=Math.max(levelMin,n(raw?.levelMax)||n(base.levelMax)||levelMin);
+  const level=rnd(levelMin,levelMax);
+  const hp=Math.max(35,Math.round(28+vit*5.5));
+  return {
+    id:'unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7),
+    name:raw?.name||fallbackEntry?.species?.clientLabel||base.serverName||('Enemy '+(raw?.enemyId??'')),
+    enemyId:Number(raw?.enemyId??base.enemyIds?.[0]??0)||null,
+    tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
+    level,hp,maxHp:hp,
+    attack:Math.max(3,Math.round(3+str*.62)),
+    defense:Math.max(0,Math.round(tgh*.28)),
+    stats:st
+  };
+}
+function livingEnemyUnits(){
+  if(!enemy)return [];
+  if(Array.isArray(enemy.units)&&enemy.units.length)return enemy.units.filter(u=>u.hp>0);
+  return enemy.hp>0?[enemy]:[];
+}
+function targetEnemyUnit(){return livingEnemyUnits()[0]||null}
+function syncEnemyTarget(){
+  const t=targetEnemyUnit();if(!enemy||!t)return;
+  enemy.level=t.level;enemy.name=t.name;enemy.hp=t.hp;enemy.maxHp=t.maxHp;enemy.attack=t.attack;enemy.defense=t.defense;
+}
 function spawnEnemy(){
   const map=currentMap();
   const entries=eligibleEntries(map);
@@ -364,19 +396,25 @@ function spawnEnemy(){
     consumeItem(consumeId,1);
     addLog('依原 NPC steal 規則，開戰收走 Item '+consumeId+'。','pet');
   }
-  const st=entry.variant.stats||{};
-  const vit=Math.max(1,n(st.vital)||8);
-  const str=Math.max(1,n(st.str)||6);
-  const tgh=Math.max(1,n(st.tgh)||6);
-  const level=rnd(Math.max(1,n(entry.variant.levelMin)||1),Math.max(1,n(entry.variant.levelMax)||n(entry.variant.levelMin)||1));
-  const hp=Math.max(35,Math.round(28+vit*5.5));
-  enemy={
-    entry,level,
-    name:entry.species.clientLabel||entry.variant.serverName||('TempNo '+entry.variant.tempNo),
-    hp,maxHp:hp,
-    attack:Math.max(3,Math.round(3+str*.62)),
-    defense:Math.max(0,Math.round(tgh*.28))
-  };
+  const formation=Array.isArray(entry.variant.formation)?entry.variant.formation:[];
+  if(formation.length){
+    const units=[];
+    let idx=0;
+    for(const member of formation){
+      const count=Math.max(1,Math.floor(n(member.count)||1));
+      for(let i=0;i<count;i++)units.push(makeEnemyUnit(member,entry,idx++));
+    }
+    const first=units[0];
+    enemy={
+      entry,units,groupBattle:true,
+      level:first.level,name:first.name,hp:first.hp,maxHp:first.maxHp,attack:first.attack,defense:first.defense
+    };
+    state.battles++;
+    addLog('遭遇任務編成：'+formation.map(x=>(x.name||('Enemy '+x.enemyId))+' ×'+Math.max(1,Math.floor(n(x.count)||1))).join('、')+'。');
+    render();return;
+  }
+  const unit=makeEnemyUnit(null,entry,0);
+  enemy={entry,level:unit.level,name:unit.name,hp:unit.hp,maxHp:unit.maxHp,attack:unit.attack,defense:unit.defense};
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
   render();
@@ -455,18 +493,21 @@ function clearEvent83Chain(extra=[]){
     while(hasItem(id))consumeItem(id,1);
   }
 }
-function playerDamage(){return Math.max(1,Math.round(state.attack-enemy.defense+rnd(-2,4)))}
-function petDamage(pet){
+function playerDamage(target=targetEnemyUnit()){return Math.max(1,Math.round(state.attack-n(target?.defense)+rnd(-2,4)))}
+function petDamage(pet,target=targetEnemyUnit()){
   const str=Math.max(1,n(pet?.stats?.str)||6);
-  return Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-enemy.defense*.28+rnd(-1,2)));
+  return Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2)));
 }
-function enemyDamage(){return Math.max(1,Math.round(enemy.attack-state.defense*.45+rnd(-2,2)))}
+function enemyDamage(unit=targetEnemyUnit()){return Math.max(1,Math.round(n(unit?.attack)-state.defense*.45+rnd(-2,2)))}
 function enemyCounter(){
   if(!enemy)return;
-  const back=enemyDamage();
-  state.hp=Math.max(0,state.hp-back);
-  addLog(enemy.name+' 反擊 '+back+'。',state.hp<=0?'bad':'');
-  if(state.hp<=0)defeat();
+  const attackers=livingEnemyUnits();
+  for(const unit of attackers){
+    const back=enemyDamage(unit);
+    state.hp=Math.max(0,state.hp-back);
+    addLog(unit.name+' 反擊 '+back+'。',state.hp<=0?'bad':'');
+    if(state.hp<=0){defeat();return}
+  }
 }
 function levelCheck(){
   let leveled=false;
@@ -516,6 +557,7 @@ function captureRequirements(){
 }
 function captureChance(){
   if(!enemy)return {raw:0,display:0,allowed:false,missing:[]};
+  if(enemy.groupBattle)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true,groupBattle:true};
   if(enemy.entry?.variant?.capturable===false)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true};
   const req=captureRequirements();
   if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items};
@@ -570,13 +612,14 @@ function captureTurn(manual=false){
 function winBattle(){
   const defeated=enemy;
   const growth=Math.max(1,n(defeated.entry.variant.wildGrowth)||1);
-  const exp=Math.max(6,Math.round(7+growth*2.2));
-  const gold=rnd(2,6);
+  const unitCount=Math.max(1,Array.isArray(defeated.units)?defeated.units.length:1);
+  const exp=Math.max(6,Math.round((7+growth*2.2)*unitCount));
+  const gold=rnd(2,6)*unitCount;
   state.wins++;
   state.exp+=exp;
   state.gold+=gold;
   awardActivePetExp(Math.max(4,Math.round(exp*1.5)));
-  addLog('擊敗 '+defeated.name+'，獲得 '+exp+' EXP、'+gold+' 石幣。','good');
+  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP、'+gold+' 石幣。','good');
   const drops=rollVerifiedDrops(defeated);
   for(const item of drops){
     addLog('掉落：'+item.name+' ×1。','pet');
@@ -616,19 +659,25 @@ function defeat(){
 }
 function attackTurn(){
   if(!enemy)return;
-  const dmg=playerDamage();
-  enemy.hp=Math.max(0,enemy.hp-dmg);
-  addLog('你對 '+enemy.name+' 造成 '+dmg+' 傷害。');
-  if(enemy.hp<=0){winBattle();return}
+  let target=targetEnemyUnit();
+  if(!target){winBattle();return}
+  const dmg=playerDamage(target);
+  target.hp=Math.max(0,target.hp-dmg);
+  addLog('你對 '+target.name+' 造成 '+dmg+' 傷害。');
+  syncEnemyTarget();
+  if(!livingEnemyUnits().length){winBattle();return}
 
   const pet=activePet();
   if(pet){
-    const pd=petDamage(pet);
-    enemy.hp=Math.max(0,enemy.hp-pd);
-    addLog(pet.name+' 追擊造成 '+pd+' 傷害。','pet');
-    if(enemy.hp<=0){winBattle();return}
+    target=targetEnemyUnit();
+    const pd=petDamage(pet,target);
+    target.hp=Math.max(0,target.hp-pd);
+    addLog(pet.name+' 追擊 '+target.name+'，造成 '+pd+' 傷害。','pet');
+    syncEnemyTarget();
+    if(!livingEnemyUnits().length){winBattle();return}
   }
   enemyCounter();
+  if(enemy)syncEnemyTarget();
   render();
 }
 function tick(){
@@ -636,7 +685,8 @@ function tick(){
   if(state.hp<=0){defeat();return}
   if(!enemy){spawnEnemy();return}
   const c=captureChance();
-  const hpRatio=enemy.hp/Math.max(1,enemy.maxHp);
+  const target=targetEnemyUnit();
+  const hpRatio=n(target?.hp)/Math.max(1,n(target?.maxHp));
   if(state.autoCapture&&c.allowed&&c.display>0&&hpRatio<=.20){
     captureTurn(false);
     return;
@@ -840,19 +890,35 @@ function renderEnemy(){
     return;
   }
   const v=enemy.entry.variant;
-  const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
   box.className='enemy';
-  box.innerHTML='<div class="enemy-name">Lv'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
-    '<div class="enemy-meta"><span class="pill">TempNo '+v.tempNo+'</span><span class="pill">EnemyID '+(v.enemyIds||[]).join(', ')+'</span><span class="pill">E_T_GET '+n(v.captureBase)+'</span></div>'+
-    '<div class="enemy-hp">HP '+enemy.hp+' / '+enemy.maxHp+'</div>'+
-    '<div class="progress"><i style="width:'+hpPct+'%"></i></div>';
-  $('#battleState').textContent='戰鬥中';
+  if(enemy.groupBattle){
+    const units=enemy.units||[],alive=units.filter(u=>u.hp>0).length,total=units.length;
+    const rows=units.map((u,i)=>{
+      const hpPct=clamp(u.hp/u.maxHp*100,0,100),dead=u.hp<=0;
+      return '<div class="enemy-unit '+(dead?'defeated':'')+'">'+
+        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+'</b><span>EnemyID '+(u.enemyId??'—')+'</span></div>'+
+        '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+'</div>'+
+        '<div class="progress"><i style="width:'+hpPct+'%"></i></div></div>';
+    }).join('');
+    box.innerHTML='<div class="enemy-name">任務編成 · '+alive+' / '+total+' 存活</div>'+
+      '<div class="enemy-meta"><span class="pill">多敵人戰鬥</span><span class="pill">依序鎖定第一個存活敵人</span></div>'+
+      '<div class="enemy-units">'+rows+'</div>';
+  }else{
+    const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
+    box.innerHTML='<div class="enemy-name">Lv'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
+      '<div class="enemy-meta"><span class="pill">TempNo '+v.tempNo+'</span><span class="pill">EnemyID '+(v.enemyIds||[]).join(', ')+'</span><span class="pill">E_T_GET '+n(v.captureBase)+'</span></div>'+
+      '<div class="enemy-hp">HP '+enemy.hp+' / '+enemy.maxHp+'</div>'+
+      '<div class="progress"><i style="width:'+hpPct+'%"></i></div>';
+  }
+  $('#battleState').textContent=enemy.groupBattle?'編成戰鬥中':'戰鬥中';
 
   const c=captureChance();
   $('#captureChance').textContent='捕獲率：'+c.display.toFixed(1)+'%';
   if(!c.allowed){
     if(c.missing?.length){
       $('#captureInfo').textContent='缺少條件道具：'+c.missing.map(x=>x.name||('Item '+x.id)).join('、');
+    }else if(c.groupBattle){
+      $('#captureInfo').textContent='目前為多敵人任務編成，整隊不可捕獲。';
     }else if(c.uncapturable){
       $('#captureInfo').textContent='此為任務干擾怪，原服務端設定不可捕獲。';
     }else{
@@ -963,7 +1029,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.9 載入完成：Event81 PC團金剛陣已改為原腳本亂數傳送機制。','good');
+    addLog('V0.10 載入完成：任務戰鬥核心已支援真正多敵人編成，Event81 金剛陣與老大戰不再以單體代替。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
