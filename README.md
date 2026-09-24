@@ -3369,3 +3369,97 @@ V0.54 接入 ID 625「媚惑術」在 **Enemy AI → 玩家側** 的原 C 實際
 V0.54 沒有建立假的 fox status，也沒有套用資料文字推測的變身效果；直接沿用 `performEnemyPrimaryAttack()`，並把 `counterEligibleThisTurn=true`，保留普通 Counter 鏈。
 
 如果未來 web 加入來源中的 Enemy-side PETFLG 寵物／特殊 NPC 寵物成為玩家側目標，再另外接真正變狐狀態即可；目前不提前猜。
+
+## V0.55 旅程伙伴3／FIXAI
+
+V0.55 接入 ID 608「E旅程伙伴3」，並新增一張只服務於原忠誠 AI 計算的小型 runtime：
+
+`data/generated/stoneage_pet_modai.json`
+
+來源：
+
+- repo：`gavinlinasd/StoneAge`
+- ref：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/enemybase1.txt`
+- 欄位：`E_T_MODAI`
+
+原 `enemybase1.txt` 有 1,816 筆可解析列、1,813 個唯一 TempNo；同 TempNo 的重複列沒有 MODAI 衝突。
+
+### FIXAI 原公式
+
+`CHAR_initcharWorkInt()` 對 `CHAR_TYPEPET`：
+
+1. `WORKFIXAI = 0`
+2. 取得主人 `CHAR_WORKPLAYERINDEX`
+3. `modai = CHAR_MODAI`；若 `modai <= 0` 則改 100
+4. `R = 1.10`
+5. `ai = ((主人等級 × 主人 WORKFIXCHARM × R) / (寵物等級 × modai)) × 100`
+6. 指派到 C int，所以先截斷
+7. `ai > 100` 時先壓到 100
+8. 再加 `CHAR_VARIABLEAI × 0.01`
+9. 若主人有轉生再套轉生補正
+10. 最後 clamp 0～100
+
+目前 web 沒有玩家轉生系統，捕獲／任務寵也沒有 VariableAI 調整，所以現況兩項等價來源值 0；不是自行省略數值。
+
+玩家的 `state.charm` 對應目前無裝備修正下的 `WORKFIXCHARM`。
+
+### 608 `_BATTLE_ABDUCTII`
+
+原 petskill2：
+
+`E旅程伙伴3,...,PETSKILL_Abduct,80,...,608,...`
+
+且 `version.h` 明確：
+
+`#define _BATTLE_ABDUCTII`
+
+`BATTLE_Abduct()` 在 option >0 且目標為 `CHAR_TYPEPET` 時，不再走普通旅程伙伴的等級差成功率。
+
+來源改成：
+
+`AiPer = atoi(option)`
+
+`per = 0`
+
+`if (target WORKFIXAI < AiPer) per = 200`
+
+608 的 AiPer=80，因此：
+
+- FIXAI <80 → per=200
+- FIXAI ≥80 → per=0
+
+真正成功判定仍是：
+
+`RAND(1,100) < per`
+
+所以 200 是實質必成功，0 是實質必失敗。
+
+### 目標與離場
+
+若 AI 原本選到玩家本人，`BATTLE_Abduct()` 對 `CHAR_TYPEPLAYER` 直接 return；施術者也不離場。
+
+若目標是玩家出戰寵物：
+
+- FIXAI 依上述公式計算
+- 成功時把寵物退出本場
+- 失敗時寵物留下
+- **不論成功或失敗，施術 Enemy 最後都 `BATTLE_Exit()`**
+
+V0.55 保留這個來源行為。
+
+### 舊存檔／無 TempNo 防護
+
+若舊版 legacy pet 沒有 TempNo，或 TempNo 無法對回 `enemybase1.txt`，web 無法安全重建 MODAI。
+
+這種情況 V0.55 不猜 FIXAI 成敗：不擅自帶走寵物，但仍執行來源已確定的施術 Enemy 離場。
+
+### V0.54 補充確認
+
+V0.54 625 媚惑術的 Player/Pet 判斷再次由 `PET_createPetFromCharaIndex()` 驗證：
+
+- 捕獲後玩家寵物重新建 Char
+- work-int 全由 default char 初始化成 0
+- 不複製 Enemy 的 `CHAR_WORK_PETFLG`
+
+因此一般玩家寵物確實無法滿足 BecomeFox 的 `WORK_PETFLG != 0` 條件。
