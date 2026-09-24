@@ -1120,17 +1120,30 @@ function battleDamageCore(attacker,defender){
   damage=Math.trunc(damage*battleAttrMultiplier(attacker,defender));
   return damage;
 }
-function resolveNormalAttack(attacker,defender){
-  const duck=battleDuckChance(attacker,defender);
-  if(cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,duckRaw:duck};
+function battleGuardAdjust(damage){
+  const roll=cRand(1,100);
+  if(roll<=25)damage*=0;
+  else if(roll<=50)damage*=.10;
+  else if(roll<=70)damage*=.20;
+  else if(roll<=85)damage*=.30;
+  else if(roll<=95)damage*=.40;
+  else damage*=.50;
+  return Math.trunc(damage);
+}
+function resolveNormalAttack(attacker,defender,options={}){
+  const guarding=!!options.guarding;
+  const duck=guarding?0:battleDuckChance(attacker,defender);
+  // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
+  if(!guarding&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:false,duckRaw:duck};
   const criticalRaw=battleCriticalChance(attacker,defender);
   const critical=cRand(1,10000)<criticalRaw;
   let damage=battleDamageCore(attacker,defender);
   if(critical){
     damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
   }
+  if(guarding)damage=battleGuardAdjust(damage);
   if(damage<1)damage=cRand(0,1);
-  return {damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,duckRaw:duck,criticalRaw};
+  return {damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,guarded:guarding,duckRaw:duck,criticalRaw};
 }
 function battleCounterChance(attacker,defender){
   let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.08;
@@ -1179,7 +1192,7 @@ function counterScaledResult(attacker,defender){
 function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
-  if(primaryResult?.critical)return;
+  if(primaryResult?.critical||primaryResult?.guarded)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -1230,8 +1243,8 @@ function petAttackResult(pet,target=targetEnemyUnit()){
   const str=Math.max(1,n(pet?.stats?.str)||6);
   return {damage:Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2))),dodged:false,critical:false,miss:false,legacy:true};
 }
-function enemyAttackResult(unit=targetEnemyUnit()){
-  return resolveNormalAttack(enemyBattleView(unit),playerBattleView());
+function enemyAttackResult(unit=targetEnemyUnit(),options={}){
+  return resolveNormalAttack(enemyBattleView(unit),playerBattleView(),options);
 }
 function enemyCounter(){
   if(!enemy)return;
@@ -1420,7 +1433,6 @@ function captureTurn(manual=false){
         state.hp=Math.max(0,state.hp-r.damage);
         addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
-      if(state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
     }
 
     if(enemy)syncEnemyTarget();
@@ -1577,6 +1589,53 @@ function attackTurn(){
 
   if(enemy)syncEnemyTarget();
   render();
+}
+function guardTurn(){
+  if(!enemy)return;
+  const order=normalBattleOrder();
+
+  // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；
+  // 所以即使敵人的排序在玩家之前，防禦減傷也已生效。
+  for(const actor of order){
+    if(!enemy)return;
+    if(state.hp<=0){defeat();return}
+
+    if(actor.kind==='player'){
+      addLog('你採取防禦姿勢。','good');
+    }else if(actor.kind==='pet'){
+      const pet=activePet();
+      if(!pet||pet.id!==actor.petId)continue;
+      const target=targetEnemyUnit();
+      if(!target){winBattle();return}
+      const r=petAttackResult(pet,target);
+      if(r.dodged){
+        addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
+      }else if(r.miss){
+        addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
+      }else{
+        target.hp=Math.max(0,target.hp-r.damage);
+        addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
+      }
+    }else if(actor.kind==='enemy'){
+      const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+      if(!unit)continue;
+      const r=enemyAttackResult(unit,{guarding:true});
+      if(r.damage<=0){
+        addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
+      }else{
+        state.hp=Math.max(0,state.hp-r.damage);
+        addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+      }
+      // GUARD 會讓原 BATTLE_Attack() 的 ContFlg=FALSE，因此不進反擊鏈。
+    }
+
+    if(enemy)syncEnemyTarget();
+    if(state.hp<=0){defeat();return}
+    if(enemy&&!livingEnemyUnits().length){winBattle();return}
+  }
+
+  if(enemy)syncEnemyTarget();
+  save();render();
 }
 function walkEncounterStep(){
   const map=currentMap();
@@ -2016,7 +2075,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.25 載入完成：玩家↔Enemy 已接入原 BATTLE_CounterCheck／BATTLE_Counter 最多 5 段反擊鏈；反擊傷害為普通攻擊結果的 75%。','good');
+    addLog('V0.26 載入完成：捕獲回合已禁止玩家反擊；新增原 BATTLE_COM_GUARD／BATTLE_GuardAdjust 防禦回合，防禦時不閃避、不反擊並依原 0～50% 傷害倍率減傷。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -2294,6 +2353,7 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
   addLog('自動捕獲已'+(state.autoCapture?'開啟。':'關閉。'));save();render();
 });
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
+$('#guardBtn').addEventListener('click',()=>guardTurn());
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;addLog('休息完成，HP 已補滿。','good');save();render();
 });
