@@ -2514,3 +2514,110 @@ V0.44 新增 `barrier` battle status，與原 `BATTLE_CanMoveCheck()` 一樣視�
 
 V0.44 第二輪回歸已把這個同回合狀態帶入後續攻擊物件。
 
+
+## V0.45 魔障／正權重同函式變體
+
+V0.45 繼續只掃 **Enemy AI 對應權重大於 0** 的 PetSkill，並維持：
+
+- 原 C 實際程式規則優先
+- `stoneage_petskill_runtime.json` 可直接確認時優先使用
+- runtime 缺資料時，以已對齊 ID 空間的 `petskill2.txt` 補名稱／函式／option，再回原 C 驗證
+- 需要 MP、AttackMagic 或尚未建立的魔法底層時暫緩
+- 找不到函式／option 對應時不猜技能效果
+
+### 同函式變體補齊
+
+下列技能的函式已在前版完成，所以 V0.45 只補來源 metadata，直接沿用同一套 C 規則：
+
+- ID 14「T六段攻擊」：`PETSKILL_ContinuationAttack`，option `6`
+- ID 15「T七段攻擊」：option `7`
+- ID 16「T八段攻擊」：option `8`
+- ID 17「T九段攻擊」：option `9`
+- ID 53「背水之戰之其３」：`攻%+70 防%-65`
+- ID 54「T背水之戰之其４」：`攻%+100 防%-70`
+- ID 605「三重突擊」：`3 攻%+150`
+- ID 671「暴走」：`攻%+115 防%-25 回避10`
+- ID 708「石化攻擊」：`石 turn 9 攻%-30`
+
+目前 Enemy AI 正權重統計：
+
+| Skill | distinct Enemy ID | 正權重總和 |
+| --- | ---: | ---: |
+| 14 | 5 | 13 |
+| 15 | 4 | 12 |
+| 16 | 1 | 15 |
+| 17 | 6 | 33 |
+| 53 | 4 | 4 |
+| 54 | 9 | 28 |
+| 605 | 6 | 8 |
+| 671 | 1 | 4 |
+| 708 | 1 | 1 |
+
+#### 671 仍以 option 為準
+
+同序列資料的技能說明寫「攻擊力加 120%」，但真正 option 是 `攻%+115 防%-25 回避10`。
+原 `PETSKILL_WildViolentAttack()` 是直接解析 option，因此 V0.45 使用 **+115%**，不把說明文字自行改成 +120%。
+
+### ID 579／594 魔障
+
+- 579「魔障」：`PETSKILL_Barrier`，`障 turn 1 成 50`
+- 594「究極魔障」：`PETSKILL_Barrier`，`障 turn 3 成 50`
+
+AI 正權重：
+
+- 579：2 個 distinct Enemy ID，總權重 4
+- 594：10 個 distinct Enemy ID，總權重 23
+
+原 `PETSKILL_Barrier()` 本身只下達 `BATTLE_COM_S_BARRIER`，並把技能 array 留在 COM3；真正效果在 `BATTLE_S_Barrier()`。
+
+### 原 BATTLE_S_Barrier 精確流程
+
+來源會從 option 解析 `turn` 與 `成`（Success），接著：
+
+1. `BATTLE_MultiList(battleindex, defNo, ToList)` 取得目標整側
+2. 對每個目標各自呼叫 `BATTLE_StatusAttackCheck(attacker, target, BATTLE_ST_BARRIER, Success, 30, 1.0, ...)`
+3. 成功時寫入 `CHAR_WORKBARRIER = turn + 1`
+
+因此 579／594 **不是 AttackMagic，也沒有魔法傷害數值**；它們只是使用特殊 command 對整側做狀態檢定。
+
+V0.45 對應為：
+
+- 目標：目前 Player + Active Pet 的所有存活 Battle Entry
+- `perOffset = Success`
+- `range = 30`
+- `bai = 1.0`
+- 使用一般異常狀態互斥規則
+- 成功後沿用既有 `battleStatusApply()` 的 `turn + 1` 倒數
+- barrier 存續期間沿用 V0.44 已接的「不能行動」
+
+579 Success=50、turn=1；594 Success=50、turn=3。
+
+### 魔障不走攻擊與反擊
+
+原 `BATTLE_COM_S_BARRIER` 不呼叫 `BATTLE_AttackSeq`、不造成物理／AttackMagic 傷害；執行 `BATTLE_S_Barrier()` 後直接 break，也不進普通 Counter loop。V0.45 同樣不把魔障偽裝成普通攻擊。
+
+### 這輪掃到但仍暫緩的項目
+
+仍明確依賴目前尚未建立底層的技能：
+
+- 508「MP攻擊3」：需要正式 MP
+- 580「沉默」：效果是禁止咒術；正式施法／咒術 command 尚未接入前不做假的替代效果
+- 624「火線獵殺」：物理攻擊後還會接 `BATTLE_MultiAttMagic_Fire`
+- 634「分身地裂」：會處理 MP
+- 301～325 `PETSKILL_AttackMagic`：仍缺正式 `magic.txt / attmagic.bin` 對應
+
+另外有一批 Enemy AI 正權重 ID 在目前 runtime 與已驗證同序列資料中仍沒有可可靠對上的函式／option，例如 515、513、589、512、518、114、111、112、645、510、113、560、18、729、745、65、558、588；這些仍維持 **未知即不猜**。
+
+本輪後續掃描也已找到一些「不依賴 MP／AttackMagic、但需要再逐條核對其專用 C command」的候選：
+
+- `PETSKILL_Modifyattack`
+- `PETSKILL_Mdfyattack`
+- `PETSKILL_Weaken`
+- `PETSKILL_Gyrate`
+- `PETSKILL_Sonic`
+- `PETSKILL_SetDuck`
+- `PETSKILL_Retrace`
+- `PETSKILL_Sacrifice`
+- `PETSKILL_Refresh`
+
+它們不會先依技能文字猜效果，等各自 battle command／狀態欄位確認完整後再接。
