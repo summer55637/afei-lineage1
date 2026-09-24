@@ -1500,7 +1500,9 @@ const ENEMY_SOURCE_SKILL_META={
   // V0.49：來源自帶狀態欄位的防禦支援技，不依賴 magic.txt / attmagic.bin。
   552:{n:'鐵壁',d:'我方全體獲得 3 回合鐵壁',f:'PETSKILL_MagicStatusChange',o:'铁壁|3|30|全',field:1,target:2},
   565:{n:'銅牆',d:'我方全體獲得 5 回合強化鐵壁',f:'PETSKILL_MagicStatusChange',o:'铁壁|5|40|全',field:1,target:2},
-  601:{n:'大地鎧甲',d:'我方全體 TGH 強化 3 回合',f:'PETSKILL_SetMagicPet',o:'3|15|TGH',field:1,target:2}
+  601:{n:'大地鎧甲',d:'我方全體 TGH 強化 3 回合',f:'PETSKILL_SetMagicPet',o:'3|15|TGH',field:1,target:2},
+  // V0.50：一般 BATTLE_Attack 型劇毒攻擊；與 Deeppoison 獨立技的 turn+2 路徑不同。
+  707:{n:'劇毒攻擊',d:'攻擊 +20%，命中後附加劇毒',f:'PETSKILL_StatusChange',o:'剧 turn 6  攻%+20',field:1,target:6}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -3398,7 +3400,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
   if(r.damage>0){
     // 原 BATTLE_DamageWakeUp 先解除既有睡眠，之後才做本次 StatusChange 判定。
     battleStatusWakeOnDamage(targetDesc,r.damage);
-    if(type==='poison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'){
+    if(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'){
       const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
       if(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn)){
         addLog((chosen.kind==='pet'?chosen.pet.name:'你')+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
@@ -4438,7 +4440,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.49 載入完成：接入 552 鐵壁、565 銅牆、601 大地鎧甲；鐵壁依原 C 每次受擊以基準值 + rand()%20 強化防禦，大地鎧甲依每回合 compliance 快照套用 TGH。','good');
+    addLog('V0.50 載入完成：接入 707 劇毒攻擊；沿用一般 StatusChange 的攻擊命中後狀態流程，劇毒寫 turn+1，不混用 577／578 獨立劇毒技的 turn+2。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
