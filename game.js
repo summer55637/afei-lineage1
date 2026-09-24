@@ -44,7 +44,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map();
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -465,6 +465,9 @@ function petIsAlive(pet){
   if(!pet)return false;
   syncPetBattleHp(pet,true);
   return n(pet.hp)>0;
+}
+function petIsBattleActive(pet){
+  return !!pet&&petIsAlive(pet)&&!battlePetOutIds.has(pet.id);
 }
 function playerComplianceParameter(target=state){
   if(!target)return null;
@@ -975,6 +978,7 @@ function spawnEnemy(context=null){
       label=formation.map(x=>(x.name||('Enemy '+x.enemyId))+' ×'+Math.max(1,Math.floor(n(x.count)||1))).join('、');
     }
     if(!units.length)return;
+    for(let i=0;i<units.length;i++)units[i].battleSlot=i;
     const first=units[0];
     enemy={
       entry,units,groupBattle:true,dynamicGroup:!!dynamicSpec,
@@ -989,6 +993,7 @@ function spawnEnemy(context=null){
     render();return;
   }
   const unit=makeEnemyUnit(null,entry,0);
+  unit.battleSlot=0;
   enemy=Object.assign({entry,groupBattle:false,dynamicGroup:false},unit);
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
@@ -1101,7 +1106,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map()}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set()}
 function battleStatusKey(desc){
   if(!desc)return null;
   if(desc.kind==='player')return 'player';
@@ -1214,7 +1219,7 @@ function battleStatusSetHp(desc,hp){
 }
 function battleStatusDescAlive(desc){
   if(desc?.kind==='player')return state.hp>0;
-  if(desc?.kind==='pet')return !!desc.pet&&petIsAlive(desc.pet);
+  if(desc?.kind==='pet')return !!desc.pet&&petIsBattleActive(desc.pet);
   if(desc?.kind==='enemy')return !!desc.unit&&n(desc.unit.hp)>0;
   return false;
 }
@@ -1406,6 +1411,22 @@ function enemySignedSkillPercent(option,key){
   const v=m?Number(m[1]):0;
   return Number.isFinite(v)?v:0;
 }
+function enemyGuardianOwner(unit){
+  if(!enemy||!Array.isArray(enemy.units))return null;
+  const slot=Math.trunc(n(unit?.battleSlot));
+  if(slot<5||slot>9)return null;
+  const ownerSlot=slot-5;
+  return livingEnemyUnits().find(u=>Math.trunc(n(u.battleSlot))===ownerSlot)||null;
+}
+function enemyGuardianFor(target,attackerUnit=null){
+  const guardianId=target?.guardedByUnitId;
+  if(!guardianId)return null;
+  const guardian=livingEnemyUnits().find(u=>u.id===guardianId);
+  if(!guardian||guardian===target||guardian===attackerUnit||!guardian.guardianReadyThisTurn)return null;
+  const desc={kind:'enemy',unit:guardian,unitId:guardian.id};
+  if(!battleStatusCanMove(desc)||battleStatusActive(desc,'confusion'))return null;
+  return guardian;
+}
 function enemyPrepareRoundAction(unit,action){
   unit.roundAttack=Math.trunc(n(unit.attack));
   unit.roundDefense=Math.trunc(n(unit.defense));
@@ -1432,13 +1453,19 @@ function enemyPrepareRoundAction(unit,action){
     unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
     // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
     unit.counterEligibleThisTurn=true;
-  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'){
+  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
     const baseDefense=Math.trunc(n(unit.defense));
     unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
     unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+    if(meta?.f==='PETSKILL_Guardian'&&!String(meta.o||'').includes('COM:防')){
+      unit.guardianReadyThisTurn=true;
+      unit.counterEligibleThisTurn=true;
+      const owner=enemyGuardianOwner(unit);
+      if(owner&&owner.id!==unit.id)owner.guardedByUnitId=unit.id;
+    }
   }
 }
 function battleTargetSnapshot(kind,pet=null){
@@ -1479,7 +1506,7 @@ function enemyEscapeChance(unit){
   const luck=rare===0?1:(rare===1?3:5);
   const levels=[Math.max(1,Math.trunc(n(state.level)))];
   const pet=activePet();
-  if(pet)levels.push(Math.max(1,Math.trunc(n(pet.level))));
+  if(pet&&petIsBattleActive(pet))levels.push(Math.max(1,Math.trunc(n(pet.level))));
   const avgLevel=levels.length?levels.reduce((a,b)=>a+b,0)/levels.length:0;
 
   unit.escapeAttempts=Math.max(0,Math.trunc(n(unit.escapeAttempts)))+1;
@@ -1532,7 +1559,7 @@ function enemyChooseTarget(unit){
   const all=[];
   if(state.hp>0)all.push(battleTargetSnapshot('player'));
   const pet=activePet();
-  if(pet&&petIsAlive(pet))all.push(battleTargetSnapshot('pet',pet));
+  if(pet&&petIsBattleActive(pet))all.push(battleTargetSnapshot('pet',pet));
   if(!all.length)return null;
 
   let candidates;
@@ -1570,7 +1597,7 @@ function enemyChooseTarget(unit){
 function enemyActorTarget(actor,unit){
   if(actor?.targetKind==='pet'){
     const pet=state.petBox.find(p=>p.id===actor.targetPetId);
-    if(pet&&petIsAlive(pet))return battleTargetSnapshot('pet',pet);
+    if(pet&&petIsBattleActive(pet))return battleTargetSnapshot('pet',pet);
   }else if(actor?.targetKind==='player'&&state.hp>0){
     return battleTargetSnapshot('player');
   }
@@ -1729,7 +1756,7 @@ function battleConfusionSideTargets(side,attackerDesc){
   if(side===0){
     if(state.hp>0)list.push({kind:'player'});
     const pet=activePet();
-    if(pet&&petIsAlive(pet))list.push({kind:'pet',pet,petId:pet.id});
+    if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
   }else{
     for(const unit of targetableEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
   }
@@ -1789,7 +1816,7 @@ function battleConfusionCounterEligible(desc,options,forcedAttackerKey){
   return false;
 }
 function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,options={}){
-  if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded)return;
+  if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian)return;
   const forcedAttackerKey=battleStatusKey(attackerDesc);
   let counterer=targetDesc,target=attackerDesc;
   for(let depth=0;depth<5;depth++){
@@ -1839,18 +1866,24 @@ function performConfusionAttack(actor,statusTurn,options={}){
   const defenderView=battleStatusDescView(targetDesc);
   if(!attackerView||!defenderView)return true;
   const guarding=battleConfusionGuarding(targetDesc,options);
-  const r=resolveNormalAttack(attackerView,defenderView,{guarding});
+  const r=targetDesc.kind==='enemy'
+    ?resolveAttackToEnemyWithGuardian(attackerView,targetDesc.unit,{guarding,attackerUnit:attackerDesc.kind==='enemy'?attackerDesc.unit:null})
+    :resolveNormalAttack(attackerView,defenderView,{guarding});
   addLog(battleStatusDescName(attackerDesc)+' 的混亂發作：改為普通攻擊 '+battleStatusDescName(targetDesc)+'。');
-  battleApplyPhysicalHit(attackerDesc,targetDesc,r,{confusion:true});
-  if(battleStatusDescAlive(attackerDesc)&&battleStatusDescAlive(targetDesc)){
-    resolveConfusionCounterChain(attackerDesc,targetDesc,r,options);
+  const resolvedTarget=r.guardian
+    ?{kind:'enemy',unit:r.actualTarget,unitId:r.actualTarget.id}
+    :targetDesc;
+  if(r.guardian)addLog(r.guardian.name+' 發動忠犬，代替 '+targetDesc.unit.name+' 承受這次混亂攻擊。');
+  battleApplyPhysicalHit(attackerDesc,resolvedTarget,r,{confusion:true});
+  if(battleStatusDescAlive(attackerDesc)&&battleStatusDescAlive(resolvedTarget)){
+    resolveConfusionCounterChain(attackerDesc,resolvedTarget,r,options);
   }
   return true;
 }
 function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
-  if(primaryResult?.critical||primaryResult?.guarded)return;
+  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -1896,13 +1929,13 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   }
 }
 function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult){
-  if(!pet||!unit||!enemy||!petIsAlive(pet)||unit.hp<=0)return;
-  if(primaryResult?.critical||primaryResult?.guarded)return;
+  if(!pet||!unit||!enemy||!petIsBattleActive(pet)||unit.hp<=0)return;
+  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian)return;
 
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
   for(let depth=0;depth<5;depth++){
-    if(!enemy||!petIsAlive(pet)||unit.hp<=0)break;
+    if(!enemy||!petIsBattleActive(pet)||unit.hp<=0)break;
     if(counterer==='enemy'&&!unit.counterEligibleThisTurn)break;
     const counterDesc=counterer==='pet'?{kind:'pet',pet,petId:pet.id}:{kind:'enemy',unit,unitId:unit.id};
     if(!battleStatusCanMove(counterDesc))break;
@@ -1936,7 +1969,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
     }
 
     if(enemy)syncEnemyTarget();
-    if(!petIsAlive(pet)||unit.hp<=0)break;
+    if(!petIsBattleActive(pet)||unit.hp<=0)break;
     if(r.miss||r.critical)break;
 
     const next=counterer;
@@ -1944,14 +1977,83 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
     target=next;
   }
 }
+function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
+  if(!target)return {damage:0,dodged:false,critical:false,miss:true,guarded:false,actualTarget:null};
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const originalGuarding=Object.prototype.hasOwnProperty.call(options,'guarding')
+    ?!!options.guarding
+    :(!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'));
+  const disableDodge=originalGuarding||!!options.disableDodge;
+  const originalView=enemyBattleView(target);
+  let duck=disableDodge?0:battleDuckChance(attacker,originalView);
+  if(!disableDodge&&attacker?.drunk)duck=clamp(duck+cRand(20,30)*100,1,7500);
+  if(!disableDodge){
+    const bonus=n(options.duckBonusPercent)+n(originalView?.duckBonus);
+    if(bonus!==0)duck=clamp(duck+bonus*100,1,7500);
+    if(cRand(1,10000)<=duck){
+      return {
+        damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
+        duckRaw:duck,actualTarget:target,originalTarget:target
+      };
+    }
+  }
+
+  // 原 BATTLE_AttackSeq：先讓原目標做 DuckCheck，成功命中後才 GuardianCheck。
+  // Guardian 接手後用 Guardian 自身防禦／會心／屬性結算，且不再做第二次閃避。
+  const guardian=enemyGuardianFor(target,options.attackerUnit||null);
+  const actual=guardian||target;
+  const actualDesc={kind:'enemy',unit:actual,unitId:actual.id};
+  const actualGuarding=guardian
+    ?(!!actual.guardThisTurn&&!battleStatusActive(actualDesc,'confusion'))
+    :originalGuarding;
+  const r=resolveNormalAttack(attacker,enemyBattleView(actual),Object.assign({},options,{
+    guarding:actualGuarding,disableDodge:true
+  }));
+  r.duckRaw=duck;
+  r.actualTarget=actual;
+  r.originalTarget=target;
+  if(guardian){
+    // BATTLE_AttackSeq 的 Guardian 分支即使原計算傷害為 0，也會強制 NORMAL / damage=1。
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardian=guardian;
+    r.protectedTarget=target;
+  }
+  return r;
+}
+function applyFriendlyEnemyHit(attackerKind,attackerName,target,r){
+  const actual=r?.actualTarget||target;
+  if(!actual)return null;
+  const style=attackerKind==='pet'?'pet':(r.critical?'good':'');
+  if(r.dodged){
+    addLog(target.name+' 閃避了 '+attackerName+' 的攻擊。',attackerKind==='pet'?'pet':'');
+    return target;
+  }
+  if(r.miss){
+    addLog(attackerName+' 攻擊 '+target.name+'，但沒有造成傷害。',attackerKind==='pet'?'pet':'');
+    return actual;
+  }
+
+  const before=n(actual.hp);
+  actual.hp=Math.max(0,before-r.damage);
+  battleStatusWakeOnDamage({kind:'enemy',unit:actual,unitId:actual.id},r.damage);
+  if(r.guardian){
+    addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
+  }else if(attackerKind==='pet'){
+    addLog(attackerName+' 攻擊 '+actual.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
+  }else{
+    addLog('你對 '+actual.name+(r.critical?' 發動會心一擊，造成 ':' 造成 ')+r.damage+' 傷害。',r.critical?'good':'');
+  }
+  if(before>0&&actual.hp<=0)addLog(actual.name+' 倒下了，本場後續回合不再行動。','bad');
+  return actual;
+}
 function playerAttackResult(target=targetEnemyUnit()){
   const targetDesc={kind:'enemy',unit:target,unitId:target?.id};
-  return resolveNormalAttack(playerBattleView(),enemyBattleView(target),{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
+  return resolveAttackToEnemyWithGuardian(playerBattleView(),target,{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
 }
 function petAttackResult(pet,target=targetEnemyUnit()){
   const attacker=petBattleView(pet);
   const targetDesc={kind:'enemy',unit:target,unitId:target?.id};
-  if(attacker)return resolveNormalAttack(attacker,enemyBattleView(target),{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
+  if(attacker)return resolveAttackToEnemyWithGuardian(attacker,target,{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
   const str=Math.max(1,n(pet?.stats?.str)||6);
   return {damage:Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2))),dodged:false,critical:false,miss:false,legacy:true};
 }
@@ -1968,7 +2070,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   const allowPlayerCounter=!!options.allowPlayerCounter;
   const attackOptions=Object.assign({},options.attackOptions||{});
 
-  if(chosen.kind==='pet'&&chosen.pet&&petIsAlive(chosen.pet)){
+  if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
     const pet=chosen.pet;
     const r=enemyAttackPetResult(unit,pet,attackOptions);
     if(r.dodged){
@@ -1982,7 +2084,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
       addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
     }
-    if(petIsAlive(pet)&&unit.hp>0)resolvePetEnemyCounterChain('enemy',pet,unit,r);
+    if(petIsBattleActive(pet)&&unit.hp>0)resolvePetEnemyCounterChain('enemy',pet,unit,r);
     return {target:'pet',pet,r};
   }
 
@@ -2132,6 +2234,54 @@ function performEnemySteal(actor,unit,options,meta){
   // 原 Enemy 使用 BATTLE_Steal 時不會把物品放進 Enemy 背包；被偷的物品直接從玩家持有物移除。
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
+}
+function performEnemyAbduct(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  const label=meta?.n||'旅程伙伴';
+  if(!chosen){
+    addLog(unit.name+' 使用 '+label+'，但沒有可帶走的目標。');
+    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+  }
+
+  // 原 BATTLE_Abduct 對 CHAR_TYPEPLAYER 直接 return FALSE：
+  // 玩家本人不能被帶走，而且此時施術者也不會退出戰鬥。
+  if(chosen.kind==='player'){
+    addLog(unit.name+' 使用 '+label+'，但原版不能把玩家本人帶離戰鬥。');
+    return {kind:'skill',skillId:actor.skillId,success:false,invalidTarget:true};
+  }
+
+  const pet=chosen.pet;
+  if(!pet||!petIsBattleActive(pet)){
+    addLog(unit.name+' 使用 '+label+'，但目標已不在本場戰鬥。');
+    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+  }
+
+  const per=Math.max((n(pet.level)-n(unit.level))*.6+30,50);
+  const roll=cRand(1,100);
+  const success=roll<per;
+  if(success){
+    battlePetOutIds.add(pet.id);
+    addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per.toFixed(1)+'）。','bad');
+  }else{
+    addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per.toFixed(1)+'）。');
+  }
+
+  // 原版只要目標不是玩家，無論帶走成功或失敗，施術者本身都會 BATTLE_Exit。
+  addLog(unit.name+' 隨後也離開了戰鬥。');
+  const exit=finishEnemyEscape(unit);
+  return Object.assign({
+    kind:'skill',skillId:actor.skillId,success,per,roll,
+    target:'pet',petId:pet.id,attackerExited:true
+  },exit);
+}
+function performEnemyGuardianAttack(actor,unit,options,meta){
+  const owner=enemyGuardianOwner(unit);
+  if(owner&&owner.guardedByUnitId===unit.id){
+    addLog(unit.name+' 使用 '+(meta?.n||'忠犬')+'，本回合保護 '+owner.name+' 並以攻擊修正後出手。');
+  }else{
+    addLog(unit.name+' 使用 '+(meta?.n||'忠犬')+'，但目前沒有對應的前排主人可保護。');
+  }
+  return Object.assign({kind:'skill',skillId:actor.skillId},performEnemyPrimaryAttack(actor,unit,options)||{});
 }
 function performEnemyFallGround(actor,unit,options,meta){
   unit.counterEligibleThisTurn=false;
@@ -2366,6 +2516,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_EarthRound')return performEnemyEarthRoundStart(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Abduct')return performEnemyAbduct(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Guardian')return performEnemyGuardianAttack(actor,unit,options,meta);
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
@@ -2538,22 +2690,15 @@ function captureTurn(manual=false){
       }
     }else if(actor.kind==='pet'){
       const pet=activePet();
-      if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
+      if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
       const target=targetEnemyUnit();
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return captured
       }
       const r=petAttackResult(pet,target);
-      if(r.dodged){
-        addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
-      }else if(r.miss){
-        addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
-      }else{
-        target.hp=Math.max(0,target.hp-r.damage);
-        addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
-      }
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain('pet',pet,target,r);
+      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+      if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -2575,7 +2720,8 @@ function winBattle(){
   const unitCount=Math.max(1,units.length);
   const serverResolved=units.length>0&&units.every(u=>u?.serverExpBase!=null);
   let exp=0,petExp=0;
-  const pet=activePet();
+  const active=activePet();
+  const pet=active&&petIsBattleActive(active)?active:null;
   if(serverResolved){
     for(const unit of units){
       exp+=Math.max(0,n(serverBattleExpForRecipient(unit,state.level)));
@@ -2639,11 +2785,15 @@ function battleDexRoll(quick){
 function normalBattleOrder(){
   const order=[];
   let orderIndex=0;
+  for(const unit of livingEnemyUnits()){
+    unit.guardianReadyThisTurn=false;
+    unit.guardedByUnitId=null;
+  }
   const player=playerBattleView();
   order.push({kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++});
 
   const pet=activePet();
-  if(pet&&petIsAlive(pet)){
+  if(pet&&petIsBattleActive(pet)){
     const pv=petBattleView(pet);
     const quick=pv?n(pv.quick):n(pet?.stats?.dex);
     order.push({kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++});
@@ -2707,33 +2857,19 @@ function attackTurn(){
         winBattle();return
       }
       const r=playerAttackResult(target);
-      if(r.dodged){
-        addLog(target.name+' 閃避了你的攻擊。');
-      }else if(r.miss){
-        addLog('你攻擊 '+target.name+'，但沒有造成傷害。');
-      }else{
-        target.hp=Math.max(0,target.hp-r.damage);
-        addLog('你對 '+target.name+(r.critical?' 發動會心一擊，造成 ':' 造成 ')+r.damage+' 傷害。',r.critical?'good':'');
-      }
-      if(state.hp>0&&target.hp>0)resolvePlayerEnemyCounterChain('player',target,r);
+      const actual=applyFriendlyEnemyHit('player','你',target,r);
+      if(state.hp>0&&actual?.hp>0)resolvePlayerEnemyCounterChain('player',actual,r);
     }else if(actor.kind==='pet'){
       const pet=activePet();
-      if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
+      if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
       const target=targetEnemyUnit();
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
       }
       const r=petAttackResult(pet,target);
-      if(r.dodged){
-        addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
-      }else if(r.miss){
-        addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
-      }else{
-        target.hp=Math.max(0,target.hp-r.damage);
-        addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
-      }
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain('pet',pet,target,r);
+      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+      if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -2785,22 +2921,15 @@ function guardTurn(){
       addLog('你採取防禦姿勢。','good');
     }else if(actor.kind==='pet'){
       const pet=activePet();
-      if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
+      if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
       const target=targetEnemyUnit();
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
       }
       const r=petAttackResult(pet,target);
-      if(r.dodged){
-        addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
-      }else if(r.miss){
-        addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
-      }else{
-        target.hp=Math.max(0,target.hp-r.damage);
-        addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
-      }
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain('pet',pet,target,r);
+      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+      if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -3265,7 +3394,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.37 載入完成：落馬術與偷竊已接入 Enemy PetSkill；落馬術為攻擊 -30% 物理技，命中後依原 RAND(0,100)>50 判定落馬；偷竊依原 49% 成功判定再抽石幣／背包道具。','good');
+    addLog('V0.38 載入完成：旅程伙伴與忠犬已接入 Enemy PetSkill；旅程伙伴可把寵物帶離本場且施術者隨後退出，忠犬依原 5 格站位配對代擋主人受到的普通攻擊。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
