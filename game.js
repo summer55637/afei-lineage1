@@ -922,7 +922,9 @@ function livingEnemyUnits(){
   if(Array.isArray(enemy.units)&&enemy.units.length)return enemy.units.filter(u=>u.hp>0);
   return enemy.hp>0?[enemy]:[];
 }
-function targetEnemyUnit(){return livingEnemyUnits()[0]||null}
+function enemyUnitHidden(unit){return !!unit?.earthRoundState?.hidden}
+function targetableEnemyUnits(){return livingEnemyUnits().filter(u=>!enemyUnitHidden(u))}
+function targetEnemyUnit(){return targetableEnemyUnits()[0]||null}
 function syncEnemyTarget(){
   const t=targetEnemyUnit();if(!enemy||!t)return;
   enemy.level=t.level;enemy.name=t.name;enemy.hp=t.hp;enemy.maxHp=t.maxHp;enemy.attack=t.attack;enemy.defense=t.defense;
@@ -1362,6 +1364,14 @@ function enemyChooseAction(unit){
       skillMeta:enemyPetSkillMeta(unit.chargeState.skillId)
     };
   }
+  if(unit?.earthRoundState){
+    return {
+      kind:'earthround',spec,
+      skillId:unit.earthRoundState.skillId,
+      skillSlot:unit.earthRoundState.skillSlot,
+      skillMeta:enemyPetSkillMeta(unit.earthRoundState.skillId)
+    };
+  }
   const weights=[
     {kind:'attack',weight:spec.attackWeight},
     {kind:'guard',weight:spec.guardWeight},
@@ -1721,7 +1731,7 @@ function battleConfusionSideTargets(side,attackerDesc){
     const pet=activePet();
     if(pet&&petIsAlive(pet))list.push({kind:'pet',pet,petId:pet.id});
   }else{
-    for(const unit of livingEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
+    for(const unit of targetableEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
   }
   const selfKey=battleStatusKey(attackerDesc);
   return list.filter(x=>battleStatusKey(x)!==selfKey);
@@ -1809,6 +1819,10 @@ function performConfusionAttack(actor,statusTurn,options={}){
     if(attackerDesc.unit.chargeState){
       attackerDesc.unit.chargeState=null;
       addLog(attackerDesc.unit.name+' 因混亂中斷了蓄力。');
+    }
+    if(attackerDesc.unit.earthRoundState){
+      attackerDesc.unit.earthRoundState=null;
+      addLog(attackerDesc.unit.name+' 因混亂中斷地球一周，重新現身。');
     }
     attackerDesc.unit.guardThisTurn=false;
     attackerDesc.unit.counterEligibleThisTurn=true;
@@ -2068,6 +2082,43 @@ function performEnemyChargeState(actor,unit,options={}){
   unit.chargeState=null;
   return Object.assign({kind:'charge',released:true},result);
 }
+function performEnemyEarthRoundStart(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  unit.earthRoundState={
+    hidden:true,
+    attackPct,
+    targetKind:chosen?.kind||null,
+    targetPetId:chosen?.petId||null,
+    skillId:actor.skillId,
+    skillSlot:actor.skillSlot??null,
+    label:meta?.n||'地球一周'
+  };
+  unit.counterEligibleThisTurn=false;
+  unit.guardThisTurn=false;
+  addLog(unit.name+' 使用 '+unit.earthRoundState.label+'，本回合繞到敵人背後並暫時消失。');
+  return {kind:'skill',skillId:actor.skillId,earthRound:true,hidden:true};
+}
+function performEnemyEarthRoundRelease(actor,unit,options={}){
+  const round=unit?.earthRoundState;
+  if(!round)return {kind:'earthround',missing:true};
+
+  // 原 BATTLE_COM_S_EARTHROUND0 進普通攻擊區時會先把 CHAR_ISATTACKED 恢復，
+  // 並在真正 BATTLE_Attack 前把 command 清成 NONE。
+  // 因此從這一刻開始重新可被鎖定，但施術者不具備後續反反擊資格。
+  unit.earthRoundState=null;
+  unit.counterEligibleThisTurn=false;
+  const releaseActor=Object.assign({},actor,{
+    targetKind:round.targetKind,
+    targetPetId:round.targetPetId
+  });
+  const multiplier=1+n(round.attackPct)/100;
+  addLog(unit.name+' 從背後現身完成 '+round.label+'（最終傷害 ×'+multiplier.toFixed(2)+'）。');
+  const result=performEnemyPrimaryAttack(releaseActor,unit,Object.assign({},options,{
+    attackOptions:Object.assign({},options.attackOptions||{}, {damageMultiplier:multiplier})
+  }))||{};
+  return Object.assign({kind:'earthround',released:true,multiplier},result);
+}
 function performEnemyGuardBreak(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId};
@@ -2207,6 +2258,7 @@ function performEnemyContinuation(actor,unit,options,meta){
 function performEnemyAction(actor,unit,options={}){
   const kind=actor?.enemyAction||'attack';
   if(kind==='charge')return performEnemyChargeState(actor,unit,options);
+  if(kind==='earthround')return performEnemyEarthRoundRelease(actor,unit,options);
   if(kind==='guard'){
     addLog(unit.name+' 採取防禦姿勢。');
     return {kind:'guard'};
@@ -2229,6 +2281,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_NoGuard')return performEnemyNoGuard(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_StatusChange')return performEnemyStatusChange(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ChargeAttack')return performEnemyChargeAttack(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_EarthRound')return performEnemyEarthRoundStart(actor,unit,options,meta);
 
     const label=meta?.n||('PetSkill '+(actor.skillId??'—'));
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
@@ -2351,6 +2404,11 @@ function captureTurn(manual=false){
         statusTurn.desc.unit.counterEligibleThisTurn=false;
         addLog(statusTurn.desc.unit.name+' 的蓄力被異常狀態中斷。');
       }
+      if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.earthRoundState){
+        statusTurn.desc.unit.earthRoundState=null;
+        statusTurn.desc.unit.counterEligibleThisTurn=false;
+        addLog(statusTurn.desc.unit.name+' 的地球一周被異常狀態中斷，重新現身。');
+      }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
       continue;
@@ -2365,7 +2423,10 @@ function captureTurn(manual=false){
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
-      if(!target){winBattle();return captured}
+      if(!target){
+        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
+        winBattle();return captured
+      }
       const c=captureChance();
       if(!c.allowed||c.display<=0){
         addLog('捕獲失敗：目前捕獲率為 '+Math.max(0,n(c.display)).toFixed(1)+'%。','bad');
@@ -2395,7 +2456,10 @@ function captureTurn(manual=false){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
       const target=targetEnemyUnit();
-      if(!target){winBattle();return captured}
+      if(!target){
+        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
+        winBattle();return captured
+      }
       const r=petAttackResult(pet,target);
       if(r.dodged){
         addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
@@ -2535,6 +2599,11 @@ function attackTurn(){
         statusTurn.desc.unit.counterEligibleThisTurn=false;
         addLog(statusTurn.desc.unit.name+' 的蓄力被異常狀態中斷。');
       }
+      if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.earthRoundState){
+        statusTurn.desc.unit.earthRoundState=null;
+        statusTurn.desc.unit.counterEligibleThisTurn=false;
+        addLog(statusTurn.desc.unit.name+' 的地球一周被異常狀態中斷，重新現身。');
+      }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
       continue;
@@ -2549,7 +2618,10 @@ function attackTurn(){
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
-      if(!target){winBattle();return}
+      if(!target){
+        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
+        winBattle();return
+      }
       const r=playerAttackResult(target);
       if(r.dodged){
         addLog(target.name+' 閃避了你的攻擊。');
@@ -2564,7 +2636,10 @@ function attackTurn(){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
       const target=targetEnemyUnit();
-      if(!target){winBattle();return}
+      if(!target){
+        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
+        winBattle();return
+      }
       const r=petAttackResult(pet,target);
       if(r.dodged){
         addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
@@ -2605,6 +2680,11 @@ function guardTurn(){
         statusTurn.desc.unit.counterEligibleThisTurn=false;
         addLog(statusTurn.desc.unit.name+' 的蓄力被異常狀態中斷。');
       }
+      if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.earthRoundState){
+        statusTurn.desc.unit.earthRoundState=null;
+        statusTurn.desc.unit.counterEligibleThisTurn=false;
+        addLog(statusTurn.desc.unit.name+' 的地球一周被異常狀態中斷，重新現身。');
+      }
       addLog((statusTurn.desc?.kind==='player'?'你':statusTurn.desc?.pet?.name||statusTurn.desc?.unit?.name||'目標')+' 因'+(BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態')+'無法行動。');
       if(enemy)syncEnemyTarget();
       continue;
@@ -2623,7 +2703,10 @@ function guardTurn(){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
       const target=targetEnemyUnit();
-      if(!target){winBattle();return}
+      if(!target){
+        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
+        winBattle();return
+      }
       const r=petAttackResult(pet,target);
       if(r.dodged){
         addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
@@ -3098,7 +3181,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.35 載入完成：泥醉攻擊已接入酒醉狀態；沿用原版攻擊者酒醉時目標回避 +20～30%，並以非破壞式戰鬥 QUICK 50% 轉譯原碼不對稱的 QUICK 還原邏輯。','good');
+    addLog('V0.36 載入完成：地球一周已接原兩段式狀態機；第一回合繞背隱身且不可被指定，下一回合自動現身以 ×1.90 最終傷害攻擊，期間 Enemy AI 不重抽。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
