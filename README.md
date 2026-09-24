@@ -502,3 +502,28 @@ Event83 已接入可玩核心：
   - 捕獲成功後只移除該成員，其餘敵人照常反擊並繼續戰鬥
   - 掉落按實際擊敗的 Enemy 逐隻判定
 - 批量驗證結果：164/164 Group、318/318 成員都能對到現行服務端資料，缺 Group / Enemy / EnemyBase / 空群組皆為 0。
+
+
+## V0.14 Floor → Encounter → Group → Enemy
+
+- V0.13 已完成 Group → Enemy 動態群戰；V0.14 再把外層 route 抽選拿掉。
+- 原服務端遇敵順序重新核對 `encount.c + enemy.c`：
+  1. 角色座標先命中 Encounter 矩形。
+  2. Encounter 矩形重疊時，以較高 `zorder` 為有效區域。
+  3. 該 Encounter 依 Group 權重抽一個可出現 Group。
+  4. Group 再依 `CREATEPROB`、`CREATEMAXNUM`、`enemyMax` 生成敵方整隊。
+- 放置版沒有原地圖逐格行走座標，因此 V0.14 改為讓玩家直接選擇 Encounter 狩獵區：
+  - 顯示 EncounterID
+  - 顯示 X / Y 原始矩形範圍
+  - 顯示 `enemyMax`
+  - 不再用「某隻寵物的 battleAppearanceChance」當作選戰鬥權重
+- 166 種一般 Lv1 清洗資料共對應：
+  - 85 個 Floor
+  - 161 個唯一 Encounter
+  - 520 個 Encounter → GroupID 引用
+- 現行 `group1.txt` 可解析其中 **506 個 GroupID**，合計 **865 個 Enemy 成員模板**。
+- `encount.txt` 另有 14 個 GroupID 在現行 `group1.txt` 找不到：
+  - 791、794、795、796、799、802、804、808、809、824、826、827、1230、1327
+- 這 14 個只標記為 unresolved；遊戲生成時排除，不使用舊 `group.txt` 或其他版本補造。
+- 原 164 個 Lv1 目標 Group 全部仍可解析，缺失數為 0。
+- Event82／83 任務區仍使用已驗證的任務 dynamicFormation，不受一般野外 Encounter 選擇器影響。
