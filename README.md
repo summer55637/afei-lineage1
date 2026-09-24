@@ -1122,3 +1122,62 @@ V0.27 補上出戰寵物真正的戰鬥 HP 狀態，並解鎖先前刻意保留�
 - 普通攻擊、玩家捕獲回合、玩家防禦回合中的「寵物普通攻擊」都各自只掛一個 Enemy ↔ Pet 反擊入口
 
 另外，V0.27 把單體捕獲也改成保留 target 上完整的 serverDerived／allocatedFrom／petRank 等資料，不再只有 dynamic group 捕獲才保留原服成長 metadata。
+
+
+## V0.28 enemy1 at/rn 普通攻擊 AI
+
+V0.28 開始把原 `battle_ai.c::BATTLE_ai_normal()` 的 Enemy 選目標規則接進網頁戰鬥。
+
+新增 `data/generated/stoneage_enemy_ai.json`：
+
+- 來源：原服 `gmsv/data/enemy1.txt`
+- 共 2,958 個 Enemy ID
+- 初版資料壓縮後約 86 KB
+- `t` = ENEMY_TACTICS
+- `a` = `at:[weight,targetType,selectMode]`
+- `r` = `rn`
+
+目前先接「普通攻擊的選目標」，尚未把 AI 的攻擊／防禦／逃跑／技能權重一起打開。
+
+### 目標類型
+
+依原 `battle_ai.c`：
+
+- 1：ALL，玩家與目前出戰寵物都可成為目標
+- 2：PLAYER，只選玩家
+- 3：PET，只選出戰寵物
+- 4：LEADER；單人放置版以玩家為 leader，並保留原碼讓非 leader 以 1/3 機率加入候選的行為
+- 其他值：原 switch 會走 default，因此視為 ALL
+
+如果指定類型目前沒有可用目標，例如設定 PET 但出戰寵物已倒下，會依原 while fallback 改回 ALL。
+
+### 選擇方式
+
+已接：
+
+1. RANDOM
+2. HP MAX
+3. HP MIN
+4. STR MAX
+5. DEX MAX
+6. DEX MIN
+7. ATT SUBDUE
+
+HP 直接使用戰鬥當下 HP。STR／DEX 以目前玩家與寵物四圍做同尺度比較；屬性模式複刻 `GetSubdueAttribute()` 的比較樹，再選目標相對應屬性值。
+
+`_ENEMY_ATTACK_AI` 在來源版有開，因此 HP／STR／DEX／屬性模式也會依原 `rn` 規則偶爾改成隨機目標；未寫 rn 時沿用原陣列預設值 1。
+
+### 與回合排序的關係
+
+原服是在進 `EntrySort` 前先跑 `BATTLE_ai_all()` 決定 `CHAR_WORKBATTLECOM2`。
+
+網頁版 V0.28 因此也在 `normalBattleOrder()` 建立 action entry 時就先為每隻 Enemy 固定本回合目標，再算 `BATTLE_DexCalc` 排序。若該目標在 Enemy 真正行動前已倒下，才重新依 AI 選一個有效目標，對應原 `BATTLE_TargetAdjust` 的補正概念。
+
+Enemy 若主動選中寵物：
+
+- 使用 Enemy → Pet 的原普通物理閃避／傷害／會心
+- 寵物 HP 可被直接打到 0 並倒下
+- 若原 ContFlg 允許，Pet 可依 `BATTLE_CounterCheckPet` 立刻反擊 Enemy
+- 玩家本回合若選 GUARD，只有 Enemy 真正打到玩家時才套 `BATTLE_GuardAdjust`；Enemy 打寵物時不會錯把玩家防禦套到寵物
+
+目前仍未接入 `at/gu/es/wa` 的「行動種類權重」、Enemy 自己的 GUARD、逃跑與 pet skill 執行；V0.28 只先完成普通攻擊時的原服選目標。
