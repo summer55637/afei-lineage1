@@ -504,7 +504,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.4 載入完成：條件道具 '+conditionItems.length+' 種，其中 '+conditionItems.filter(x=>x.sourceStatus===\'verified\').length+' 種正式來源已確認。','good');
+    addLog('V0.4 載入完成：條件道具 '+conditionItems.length+' 種，其中 '+conditionItems.filter(x=>x.sourceStatus==='verified').length+' 種正式來源已確認。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
