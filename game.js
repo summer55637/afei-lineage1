@@ -1286,12 +1286,19 @@ function battleStatusTurnFromOption(option){
   const m=String(option||'').match(/turn\s*(\d+)/i);
   return m?Math.max(0,Math.trunc(Number(m[1]))):0;
 }
+function battleDrunkQuick(desc,quick){
+  // 原碼解除酒醉時會把 QUICK 還原為 ×2，但 StatusChange 命中處誤把 DRUNK 倒數值 /2。
+  // 這裡採用對稱且不污染永久能力值的轉譯：酒醉期間戰鬥 QUICK 取一半，解除後自然回到基礎值。
+  const base=n(quick);
+  return battleStatusActive(desc,'drunk')?Math.trunc(base/2):base;
+}
 function playerBattleView(){
   const desc={kind:'player'};
   const stone=battleStatusActive(desc,'stone');
+  const drunk=battleStatusActive(desc,'drunk');
   return {
-    type:'player',attack:n(state.attack),defense:n(state.defense)*(stone?2:1),quick:n(state.dex),
-    luck:n(state.luck),drunk:battleStatusActive(desc,'drunk'),
+    type:'player',attack:n(state.attack),defense:n(state.defense)*(stone?2:1),quick:battleDrunkQuick(desc,state.dex),
+    luck:n(state.luck),drunk,
     level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
   };
 }
@@ -1301,20 +1308,23 @@ function petBattleView(pet){
   syncPetBattleHp(pet,true);
   const desc={kind:'pet',pet,petId:pet.id};
   const stone=battleStatusActive(desc,'stone');
+  const drunk=battleStatusActive(desc,'drunk');
   return {
-    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense)*(stone?2:1),quick:n(combat?.quick),
-    luck:0,drunk:battleStatusActive(desc,'drunk'),
+    type:'pet',attack:n(combat?.attack),defense:n(combat?.defense)*(stone?2:1),quick:battleDrunkQuick(desc,combat?.quick),
+    luck:0,drunk,
     level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
   };
 }
 function enemyBattleView(unit){
+  const desc={kind:'enemy',unit,unitId:unit?.id};
+  const drunk=battleStatusActive(desc,'drunk');
   return {
     type:'enemy',
     attack:n(unit?.roundAttack??unit?.attack),
-    defense:n(unit?.roundDefense??unit?.defense)*(battleStatusActive({kind:'enemy',unit,unitId:unit?.id},'stone')?2:1),
-    quick:n(unit?.quick),
+    defense:n(unit?.roundDefense??unit?.defense)*(battleStatusActive(desc,'stone')?2:1),
+    quick:battleDrunkQuick(desc,unit?.quick),
     luck:0,
-    drunk:battleStatusActive({kind:'enemy',unit,unitId:unit?.id},'drunk'),
+    drunk,
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
     level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
@@ -2098,7 +2108,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
   if(r.damage>0){
     // 原 BATTLE_DamageWakeUp 先解除既有睡眠，之後才做本次 StatusChange 判定。
     battleStatusWakeOnDamage(targetDesc,r.damage);
-    if(type==='poison'||type==='sleep'||type==='stone'||type==='confusion'){
+    if(type==='poison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'){
       const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
       if(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn)){
         addLog((chosen.kind==='pet'?chosen.pet.name:'你')+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
@@ -2492,7 +2502,8 @@ function normalBattleOrder(){
   }
 
   for(const unit of livingEnemyUnits()){
-    const quick=n(unit?.quick);
+    const desc={kind:'enemy',unit,unitId:unit.id};
+    const quick=battleDrunkQuick(desc,unit?.quick);
     const action=enemyChooseAction(unit);
     enemyPrepareRoundAction(unit,action);
     unit.guardThisTurn=action.kind==='guard';
@@ -3087,7 +3098,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.34 載入完成：混亂攻擊已接原 BATTLE_StatusSeq；每次有效狀態行動有 80% 強制普通攻擊，先隨機選敵我側再選存活目標，找不到該側目標時依原 TargetAdjust 退回敵對側。','good');
+    addLog('V0.35 載入完成：泥醉攻擊已接入酒醉狀態；沿用原版攻擊者酒醉時目標回避 +20～30%，並以非破壞式戰鬥 QUICK 50% 轉譯原碼不對稱的 QUICK 還原邏輯。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
