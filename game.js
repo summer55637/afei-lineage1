@@ -1408,7 +1408,23 @@ const ENEMY_SOURCE_SKILL_META={
   594:{n:'究極魔障',d:'敵方全體三回合無法行動',f:'PETSKILL_Barrier',o:'障 turn 3 成 50',field:1,target:3},
   605:{n:'三重突擊',d:'蓄力 3 回合後攻擊 +150%',f:'PETSKILL_ChargeAttack',o:'3 攻%+150',field:1,target:6},
   671:{n:'暴走',d:'多段暴走攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+115 防%-25 回避10',field:1,target:6},
-  708:{n:'石化攻擊',d:'攻擊 -30% 並嘗試石化 9 回合',f:'PETSKILL_StatusChange',o:'石 turn 9  攻%-30',field:1,target:6}
+  708:{n:'石化攻擊',d:'攻擊 -30% 並嘗試石化 9 回合',f:'PETSKILL_StatusChange',o:'石 turn 9  攻%-30',field:1,target:6},
+  // V0.46：原 C 已確認的純物理／屬性特殊技；不碰 MP / AttackMagic。
+  544:{n:'地屬性強化攻擊',d:'對地屬性目標追加傷害',f:'PETSKILL_Modifyattack',o:'EA|20',field:1,target:6},
+  545:{n:'水屬性強化攻擊',d:'對水屬性目標追加傷害',f:'PETSKILL_Modifyattack',o:'WA|20',field:1,target:6},
+  546:{n:'火屬性強化攻擊',d:'對火屬性目標追加傷害',f:'PETSKILL_Modifyattack',o:'FI|20',field:1,target:6},
+  548:{n:'地屬性轉換攻擊',d:'本次攻擊轉成 100 地屬性',f:'PETSKILL_Mdfyattack',o:'EA|100',field:1,target:6},
+  549:{n:'水屬性轉換攻擊',d:'本次攻擊轉成 100 水屬性',f:'PETSKILL_Mdfyattack',o:'WA|100',field:1,target:6},
+  550:{n:'火屬性轉換攻擊',d:'本次攻擊轉成 100 火屬性',f:'PETSKILL_Mdfyattack',o:'FI|100',field:1,target:6},
+  551:{n:'風屬性轉換攻擊',d:'本次攻擊轉成 100 風屬性',f:'PETSKILL_Mdfyattack',o:'WI|100',field:1,target:6},
+  618:{n:'音波衝擊',d:'攻擊寵物時再以半傷貫穿主人',f:'PETSKILL_Sonic',o:'',field:1,target:1},
+  619:{n:'回旋攻擊',d:'攻擊 -50%，攻擊目標所在一排',f:'PETSKILL_Gyrate',o:'攻%-50',field:1,target:1},
+  653:{n:'T回旋攻擊',d:'攻擊 +20%，攻擊目標所在一排',f:'PETSKILL_Gyrate',o:'攻%+20',field:1,target:1},
+  713:{n:'追跡攻擊',d:'首擊被閃避時有機會追擊',f:'PETSKILL_Retrace',o:'攻%+100',field:1,target:1},
+  825:{n:'地屬性強化攻擊',d:'對地屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'EA|9999',field:1,target:6},
+  826:{n:'水屬性強化攻擊',d:'對水屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'WA|9999',field:1,target:6},
+  827:{n:'火屬性強化攻擊',d:'對火屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'FI|9999',field:1,target:6},
+  828:{n:'風屬性強化攻擊',d:'對風屬性目標追加大量傷害',f:'PETSKILL_Modifyattack',o:'WI|9999',field:1,target:6}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -2400,6 +2416,158 @@ function enemyPlayerSideLivingTargets(){
   if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
   return list;
 }
+function enemySkillTargetResult(unit,chosen,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
+  if(chosen?.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+    return resolveNormalAttack(attacker,petBattleView(chosen.pet),options);
+  }
+  if(chosen?.kind==='player'&&state.hp>0){
+    const guarding=Object.prototype.hasOwnProperty.call(options,'guarding')
+      ?!!options.guarding
+      :false;
+    return resolveNormalAttack(attacker,playerBattleView(),Object.assign({},options,{guarding}));
+  }
+  return null;
+}
+function enemySkillAttrSpec(meta){
+  const p=String(meta?.o||'').split('|');
+  const code=String(p[0]||'').trim().toUpperCase();
+  const amount=Number(p[1]);
+  const key=code==='EA'?'earth':(code==='WA'?'water':(code==='FI'?'fire':(code==='WI'?'wind':null)));
+  return {code,key,amount:Number.isFinite(amount)?amount:0};
+}
+function performEnemyModifyAttack(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const spec=enemySkillAttrSpec(meta);
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  let attr=0,bonusRoll=0,bonus=0;
+  if(r.damage>0&&spec.key){
+    const targetElements=normalizedElements(chosen.elements||(
+      chosen.kind==='pet'?chosen.pet?.elements:state.elements
+    ));
+    attr=Math.max(0,Math.trunc(n(targetElements?.[spec.key])));
+    if(attr>0){
+      // 原 BATTLE_S_Modifyattack：
+      // def = option/100 + (rand()%(targetAttr+5))/100;
+      // damage += damage*def；damage 是 int，最後以 C 整數規則截斷。
+      bonusRoll=cRand(0,attr+4);
+      const factor=n(spec.amount)/100+bonusRoll/100;
+      const before=Math.trunc(n(r.damage));
+      r.damage=Math.trunc(before+before*factor);
+      bonus=r.damage-before;
+    }
+  }
+
+  enemyApplySkillHit(unit,chosen,r,meta?.n||'屬性強化攻擊');
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec,targetAttr:attr,bonusRoll,bonus};
+}
+function performEnemyMdfyAttack(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const spec=enemySkillAttrSpec(meta);
+  const elements={earth:0,water:0,fire:0,wind:0};
+  if(spec.key)elements[spec.key]=spec.amount;
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+
+  // 原 BATTLE_AttrAdjust 在 command=MDFYATTACK 時，先把攻方四屬清 0，
+  // 再只寫入 option 指定屬性與數值；只影響本次攻擊。
+  const r=enemySkillTargetResult(unit,chosen,{guarding},{elements});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  enemyApplySkillHit(unit,chosen,r,meta?.n||'屬性轉換攻擊');
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec};
+}
+function performEnemySonic(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'音波衝擊';
+  const results=[];
+
+  const firstGuarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const first=enemySkillTargetResult(unit,chosen,{guarding:firstGuarding});
+  if(first){
+    enemyApplySkillHit(unit,chosen,first,label);
+    results.push({target:chosen.kind,r:first});
+  }
+
+  // 原 battle.c 只有目標是 5..9 / 15..19 的寵物格時才 defNo-5 貫穿主人；
+  // SONIC2 在 AttackSeq 內先把傷害 ×0.5，之後才做 GuardAdjust。
+  if(chosen.kind==='pet'&&state.hp>0){
+    const owner={kind:'player'};
+    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    const second=enemySkillTargetResult(unit,owner,{guarding,preGuardDamageMultiplier:.5});
+    if(second){
+      enemyApplySkillHit(unit,owner,second,label+'貫穿');
+      results.push({target:'player',r:second,through:true});
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,results};
+}
+function performEnemyGyrate(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  const baseAttack=Math.trunc(n(unit.attack));
+  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  const label=meta?.n||'回旋攻擊';
+
+  // 原版玩家在 0..4、寵物在 5..9；Gyrate 只掃目標所在的五格橫排。
+  // 目前單機 battle side 只有一名 Player + 一隻 Active Pet，因此每排最多一個可打單位。
+  const targets=enemyPlayerSideLivingTargets().filter(t=>t.kind===chosen.kind);
+  const results=[];
+  addLog(unit.name+' 使用 '+label+'（攻 '+(attackPct>=0?'+':'')+attackPct+'%，攻擊目標所在一排）。');
+  for(const target of targets){
+    const guarding=target.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    const r=enemySkillTargetResult(unit,target,{guarding},{attack});
+    if(!r)continue;
+    enemyApplySkillHit(unit,target,r,label);
+    results.push({target:target.kind,r});
+  }
+  return {kind:'skill',skillId:actor.skillId,attackPct,results};
+}
+function performEnemyRetrace(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'追跡攻擊';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+
+  unit.counterEligibleThisTurn=true;
+  const first=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!first)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  enemyApplySkillHit(unit,chosen,first,label+'首擊');
+
+  let second=null,retraceRoll=null;
+  const targetStillAlive=chosen.kind==='pet'
+    ?!!chosen.pet&&petIsBattleActive(chosen.pet)
+    :state.hp>0;
+  if(first.dodged&&targetStillAlive){
+    retraceRoll=cRand(1,100);
+    // 原碼是 RAND(1,100) < 80，所以實際成功值 1..79。
+    if(retraceRoll<80){
+      const baseAttack=Math.trunc(n(unit.attack));
+      const attack=baseAttack+Math.trunc(baseAttack*.2);
+      second=enemySkillTargetResult(unit,chosen,{guarding},{attack});
+      if(second)enemyApplySkillHit(unit,chosen,second,label+'追擊');
+    }
+  }
+
+  // 原 battle.c 第二發 BATTLE_Attack() 的回傳值沒有覆寫 ContFlg；
+  // 後面的 Counter loop 仍使用第一發結果。技能進 common direct-attack 路徑後 command 已轉 ATTACK。
+  const aliveAfter=chosen.kind==='pet'
+    ?!!chosen.pet&&petIsBattleActive(chosen.pet)
+    :state.hp>0;
+  if(aliveAfter&&unit.hp>0&&enemy){
+    if(chosen.kind==='pet'&&chosen.pet){
+      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,first);
+    }else if(chosen.kind==='player'&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,first);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,first,second,retraceRoll};
+}
 function enemyBarrierSpec(meta){
   const option=String(meta?.o||'');
   return {
@@ -3063,6 +3231,11 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleModel')return performEnemyBattleModel(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Modifyattack')return performEnemyModifyAttack(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Mdfyattack')return performEnemyMdfyAttack(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Sonic')return performEnemySonic(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Gyrate')return performEnemyGyrate(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Retrace')return performEnemyRetrace(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
@@ -3956,7 +4129,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.45 載入完成：補齊正權重同函式變體 14～17／53～54／605／671／708，並接入 579／594 魔障；依原 C 對敵方整側逐一做 Success／30／1.0 狀態檢定。','good');
+    addLog('V0.46 載入完成：接入追跡攻擊、回旋攻擊、音波衝擊、屬性強化攻擊與屬性轉換攻擊；全部依原 C 的特殊 command／屬性公式，不借用 MP 或 AttackMagic。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
