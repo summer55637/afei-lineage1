@@ -3119,6 +3119,8 @@ Web 對應為：
 
 ### 仍未接入
 
-- 211 捐獻：`BATTLE_StealMoney()` 一開始要求攻方存在有效 `CHAR_WORKPLAYERINDEX` 主人；Enemy 是否永遠在這裡直接 return 還需再把 work-int 初始化值對齊，暫不武斷當 no-op。
+- 211 捐獻：已追到 `CHAR_getDefaultChar()`，所有 work-int 預設其實是 **0**，不是 -1；而 `CHAR_WORKPLAYERINDEX` 正好共用 `CHAR_NPCWORKINT1`。Enemy 建立流程沒有另行覆寫它，所以 `BATTLE_StealMoney()` 讀到的 masterindex 是 0。若伺服器 runtime 的 character index 0 當下有有效玩家，來源甚至可能把該玩家誤當主人；若 index 0 無效才會早退。這是依賴伺服器配置／連線分配的來源 bug，web 沒有可等價的 server character index，因此不能武斷固定成 no-op 或偷錢。
 - 574 嚙齒術：物理攻擊本身可還原，但核心附加效果是玩家裝備 durability／損壞／消失；web 尚未有對等耐久系統。
 - 610／611 光鏡系：依賴 VANISH／REFLEC 等 DamageReact 狀態，尚未建模。
+- 625 媚惑術：成功條件與 31% 判定已確認；主要效果是把寵物變成小狐狸並限制只能攻擊／防禦／待機。來源 `BATTLE_DexCalc()` 雖先寫 fox dex ×0.8，但後續普通 command 的 default 分支會再次賦值而覆蓋它；目前 web Active Pet 本來就只有普通攻擊，尚無可被禁用的 PetSkill 指令，因此先不製造假的「敏 -20%」效果。
+- 635 黑烏力化：只作用玩家，option `30 180 100388` 對應 30%／180 秒／圖號；核心限制是禁止咒術與職業技能，且持續時間走即時秒數。web 尚無正式咒術／職業技能 command 與跨戰鬥秒數變身系統，暫緩。
