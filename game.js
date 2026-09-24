@@ -1260,46 +1260,87 @@ function captureChance(){
 }
 function captureTurn(manual=false){
   if(!enemy)return false;
-  const c=captureChance();
-  if(!c.allowed){
-    if(c.missing?.length){
-      addLog('無法捕獲 '+enemy.name+'：缺少 '+c.missing.map(x=>x.name||('Item '+x.id)).join('、')+'。','bad');
+  const initial=captureChance();
+  if(!initial.allowed){
+    if(initial.missing?.length){
+      addLog('無法捕獲 '+enemy.name+'：缺少 '+initial.missing.map(x=>x.name||('Item '+x.id)).join('、')+'。','bad');
     }else{
       addLog('目前條件無法捕獲 '+enemy.name+'。','bad');
     }
-    if(manual)enemyCounter();
     render();
     return false;
   }
-  if(c.display<=0){
-    if(manual)addLog('捕獲失敗：目前捕獲率為 0%，先削低 HP。','bad');
-    if(manual)enemyCounter();
-    render();
-    return false;
-  }
-  const success=Math.random()*100<c.raw;
-  if(success){
-    const target=targetEnemyUnit();
-    const pet=addCapturedPet(target);
-    for(const item of c.requirements||[])consumeItem(item.id,1);
-    addLog('捕獲成功：'+pet.name+'（'+c.display.toFixed(1)+'%）。','good');
-    if(enemy.dynamicGroup&&Array.isArray(enemy.units)){
-      enemy.units=enemy.units.filter(u=>u.id!==target.id);
-      if(enemy.units.length){
-        syncEnemyTarget();
-        enemyCounter();
-        if(enemy){syncEnemyTarget();save();render();}
-        return true;
+
+  const order=normalBattleOrder();
+  let captured=false;
+  for(const actor of order){
+    if(!enemy)return captured;
+    if(state.hp<=0){defeat();return captured}
+
+    if(actor.kind==='player'){
+      const target=targetEnemyUnit();
+      if(!target){winBattle();return captured}
+      const c=captureChance();
+      if(!c.allowed||c.display<=0){
+        addLog('捕獲失敗：目前捕獲率為 '+Math.max(0,n(c.display)).toFixed(1)+'%。','bad');
+      }else if(Math.random()*100<c.raw){
+        const pet=addCapturedPet(target);
+        for(const item of c.requirements||[])consumeItem(item.id,1);
+        addLog('捕獲成功：'+pet.name+'（'+c.display.toFixed(1)+'%）。','good');
+        captured=true;
+
+        if(enemy.dynamicGroup&&Array.isArray(enemy.units)){
+          enemy.units=enemy.units.filter(u=>u.id!==target.id);
+          if(!enemy.units.length){
+            enemy=null;
+            save();render();
+            return true;
+          }
+          syncEnemyTarget();
+        }else{
+          enemy=null;
+          save();render();
+          return true;
+        }
+      }else{
+        addLog('捕獲失敗：'+target.name+'（'+c.display.toFixed(1)+'%）。','bad');
+      }
+    }else if(actor.kind==='pet'){
+      const pet=activePet();
+      if(!pet||pet.id!==actor.petId)continue;
+      const target=targetEnemyUnit();
+      if(!target){winBattle();return captured}
+      const r=petAttackResult(pet,target);
+      if(r.dodged){
+        addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
+      }else if(r.miss){
+        addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
+      }else{
+        target.hp=Math.max(0,target.hp-r.damage);
+        addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
+      }
+    }else if(actor.kind==='enemy'){
+      const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+      if(!unit)continue;
+      const r=enemyAttackResult(unit);
+      if(r.dodged){
+        addLog('你閃避了 '+unit.name+' 的攻擊。','good');
+      }else if(r.miss){
+        addLog(unit.name+' 的攻擊沒有造成傷害。');
+      }else{
+        state.hp=Math.max(0,state.hp-r.damage);
+        addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
     }
-    enemy=null;
-    save();render();
-    return true;
+
+    if(enemy)syncEnemyTarget();
+    if(state.hp<=0){defeat();return captured}
+    if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
   }
-  addLog('捕獲失敗：'+enemy.name+'（'+c.display.toFixed(1)+'%）。','bad');
-  enemyCounter();
+
+  if(enemy)syncEnemyTarget();
   save();render();
-  return false;
+  return captured;
 }
 function winBattle(){
   const defeated=enemy;
@@ -1883,7 +1924,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.23 載入完成：普通物理回合已接入 BATTLE_DexCalc＋EntrySort，玩家、出戰寵物與每隻 Enemy 依本回合敏捷亂數排序後逐一行動。','good');
+    addLog('V0.24 載入完成：BATTLE_COM_CAPTURE 已接入同一份 BATTLE_DexCalc＋EntrySort；捕獲成功或失敗都會真正消耗玩家本回合順位。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
