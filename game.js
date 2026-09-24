@@ -666,7 +666,12 @@ function captureTurn(manual=false){
     addLog('捕獲成功：'+pet.name+'（'+c.display.toFixed(1)+'%）。','good');
     if(enemy.dynamicGroup&&Array.isArray(enemy.units)){
       enemy.units=enemy.units.filter(u=>u.id!==target.id);
-      if(enemy.units.length){syncEnemyTarget();save();render();return true;}
+      if(enemy.units.length){
+        syncEnemyTarget();
+        enemyCounter();
+        if(enemy){syncEnemyTarget();save();render();}
+        return true;
+      }
     }
     enemy=null;
     save();render();
