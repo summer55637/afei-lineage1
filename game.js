@@ -124,7 +124,8 @@ function buildConditionItems(){
       kinds:[...x.kinds].sort(),usedByPets:[...x.usedByPets].sort(),
       floors:[...x.floors].sort((a,b)=>a-b),
       sourceStatus:src.sourceStatus||'unresolved',
-      sources:Array.isArray(src.sources)?src.sources:[]
+      sources:Array.isArray(src.sources)?src.sources:[],
+      externalEvidence:Array.isArray(src.externalEvidence)?src.externalEvidence:[]
     };
   }).sort((a,b)=>a.id-b.id);
 }
@@ -448,12 +449,13 @@ function renderInventory(){
     const tags=item.kinds.map(k=>'<span class="item-tag">'+(k==='capture'?'捕獲條件':'出現條件')+'</span>').join('');
     const floors=item.floors.length?' · Floor '+item.floors.join(', '):'';
     const verified=item.sourceStatus==='verified';
-    const sourceTag='<span class="item-tag '+(verified?'verified':'unresolved')+'">'+(verified?'正式來源已確認':'正式來源待解')+'</span>';
+    const corroborated=!verified&&(item.externalEvidence?.length>0);
+    const sourceTag='<span class="item-tag '+(verified?'verified':(corroborated?'corroborated':'unresolved'))+'">'+(verified?'正式來源已確認':(corroborated?'外部資料已交叉確認':'正式來源待解'))+'</span>';
     return '<div class="inventory-row '+(count>0?'have':'')+'">'+
       '<div class="inventory-row-top"><b>'+escapeHtml(item.name)+'</b><span class="inventory-count">×'+count+'</span></div>'+
       '<div class="inventory-meta">ID '+item.id+' · 用於 '+item.usedByPets.map(escapeHtml).join('、')+floors+'</div>'+
       '<div class="item-tags">'+tags+sourceTag+'</div>'+
-      '<div class="inventory-source '+(verified?'verified':'')+'">'+escapeHtml(sourceSummary(item))+'</div>'+
+      '<div class="inventory-source '+(verified?'verified':'')+'">'+escapeHtml(verified?sourceSummary(item):(corroborated?item.externalEvidence[0].summary:sourceSummary(item)))+'</div>'+
     '</div>';
   }).join('');
 }
