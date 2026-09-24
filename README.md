@@ -3291,3 +3291,81 @@ V0.53 已改為：
 - dispatch 同時接受 `EnemyHelp` 與 `EnemyHELP`
 
 避免未來資料補齊後反而失效。
+
+## V0.54 媚惑術／PETFLG
+
+V0.54 接入 ID 625「媚惑術」在 **Enemy AI → 玩家側** 的原 C 實際行為。
+
+原 petskill2：
+
+`媚惑术,使宠物变成小狐狸,PETSKILL_BecomeFox,,,Ae,625,1,1,2,3000,PETSKILL_NONE`
+
+### 先攻擊，再判定是否變狐
+
+`PETSKILL_BecomeFox()` 本身只設定：
+
+- `BATTLE_COM_S_BECOMEFOX`
+- 原 AI 已選定 target
+- skill array
+
+`battle.c` 把 `BATTLE_COM_S_BECOMEFOX` 放在普通物理攻擊群組中。
+
+進入真正 `BATTLE_Attack()` 前，除 Charge／EarthRound 等少數例外外，command 會被改回：
+
+`BATTLE_COM_ATTACK`
+
+因此它會正常：
+
+- 物理命中／閃避／會心
+- 造成普通物理傷害
+- 進入 `BATTLE_Counter()` 反擊／反反擊鏈
+
+變成小狐狸的判定是在整段普通攻擊／Counter 流程之後才做。
+
+### 變狐必要條件
+
+來源要求同時成立：
+
+- 本次結果不是 MISS
+- 不是 DODGE
+- 不是 ALLGUARD
+- 不是 ARRANGE
+- 目標仍存活
+- `rand()%100 < 31`
+- 目標 `CHAR_WHICHTYPE != CHAR_TYPEPLAYER`
+- 目標 `CHAR_WORK_PETFLG != 0`
+
+因此玩家本人一定不可能被 625 變狐。
+
+### 玩家寵物的 PETFLG 為什麼也是 0
+
+`CHAR_WORK_PETFLG` 與 `CHAR_NPCWORKINT1` 共用 work-int。
+
+來源全域搜尋顯示，真正寫入 `CHAR_WORK_PETFLG` 的戰鬥資料流程是 `ENEMY_createEnemy()`：
+
+`CHAR_setWorkInt(newindex, CHAR_WORK_PETFLG, ENEMY_PETFLG)`
+
+而玩家捕獲後的寵物是透過 `PET_createPetFromCharaIndex()` 重新建立一個新的 `CharNew`：
+
+- `CHAR_getDefaultChar(&CharNew,31010)`
+- `CHAR_getDefaultChar()` 把所有 `workint[]` 初始化為 0
+- 再複製 HP／能力／屬性／PetSkill 等 data
+- **沒有複製 Enemy 的 work-int / PETFLG**
+- 後續只設定 `CHAR_WORKPLAYERINDEX` 等玩家寵物欄位
+
+整個來源也找不到其他會替一般玩家寵物補設 `CHAR_WORK_PETFLG` 的路徑。
+
+所以玩家出戰寵物的 `CHAR_WORK_PETFLG` 是 0。
+
+### Web 對應
+
+目前玩家側正是 Player + Active Pet：
+
+- Player：因 `CHAR_TYPEPLAYER` 條件失敗
+- Active Pet：因來源等價 `PETFLG=0` 條件失敗
+
+因此 Enemy 使用 625 時，來源可觀察到的效果就是 **一發普通物理攻擊**。
+
+V0.54 沒有建立假的 fox status，也沒有套用資料文字推測的變身效果；直接沿用 `performEnemyPrimaryAttack()`，並把 `counterEligibleThisTurn=true`，保留普通 Counter 鏈。
+
+如果未來 web 加入來源中的 Enemy-side PETFLG 寵物／特殊 NPC 寵物成為玩家側目標，再另外接真正變狐狀態即可；目前不提前猜。
