@@ -2283,7 +2283,7 @@ function enemyTryRegretDizzy(chosen,successPct,label){
   const desc=enemySkillTargetDesc(chosen);
   if(!desc||!battleStatusDescAlive(desc)||battleStatusGet(desc))return false;
   if(cRand(1,100)>=successPct)return false;
-  if(!battleStatusApply(desc,'dizzy',1))return false;
+  if(!battleStatusApply(desc,'dizzy',0))return false;
   addLog(battleStatusDescName(desc)+' 被 '+label+' 擊暈，下一次行動無法動作。','bad');
   return true;
 }
@@ -2316,13 +2316,7 @@ function performEnemyTear(actor,unit,options,meta){
   }
   enemyApplySkillHit(unit,chosen,r,meta?.n||'撕裂傷口2');
 
-  if(unit.hp>0&&enemy){
-    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
-    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
-      resolvePlayerEnemyCounterChain('enemy',unit,r);
-    }
-  }
+  // 原 BATTLE_COM_S_PETSKILLTEAR 走 BATTLE_S_AttackDamage 後直接 break，不進普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,tearPct,missingHp};
 }
 function performEnemyRegret(actor,unit,options,meta){
@@ -2337,12 +2331,12 @@ function performEnemyRegret(actor,unit,options,meta){
     let r;
     if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
       r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOpts,{
-        damageMultiplier:secondary?.8:1
+        preGuardDamageMultiplier:secondary?.8:1
       }));
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=enemyAttackResult(unit,Object.assign({},attackOpts,{
-        guarding,damageMultiplier:secondary?.8:1
+        guarding,preGuardDamageMultiplier:secondary?.8:1
       }));
     }else return null;
     enemyApplySkillHit(unit,target,r,label+(secondary?'貫穿段':''));
@@ -2356,14 +2350,7 @@ function performEnemyRegret(actor,unit,options,meta){
   // 放置版目前每側只具名 Player + Active Pet，因此「選到寵物」對應追加主人。
   if(chosen.kind==='pet'&&state.hp>0)secondary=hitOne({kind:'player'},true);
 
-  const last=secondary||primary;
-  if(last&&unit.hp>0&&enemy){
-    if(last.target==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,last.r);
-    }else if(last.target==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
-      resolvePlayerEnemyCounterChain('enemy',unit,last.r);
-    }
-  }
+  // REGRET / REGRET2 都是 BATTLE_S_AttackDamage 特殊分支；原 battle.c 不接普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,primary,secondary,successPct};
 }
 function performEnemyWildViolent(actor,unit,options,meta){
@@ -2429,15 +2416,7 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
   }
   enemyApplySkillHit(unit,chosen,r,label+(guarding?'（防禦目標 ×1.3）':'（非防禦目標 ×0.7）'));
 
-  // BATTLE_S_GBreak2：非防禦時 MISS/DODGE/NORMAL 的 iRet 可進一次反擊；
-  // 防禦中會把 iRet 強制 FALSE；技能 command 本身也不能反反擊。
-  if(!guarding&&unit.hp>0&&enemy&&!r.critical){
-    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
-    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
-      resolvePlayerEnemyCounterChain('enemy',unit,r);
-    }
-  }
+  // BATTLE_COM_S_GBREAK2 是獨立特殊分支；BATTLE_S_GBreak2 回傳後直接 break，不進普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,guarding,preGuardDamageMultiplier};
 }
 function enemyOptionParts(option){
@@ -2476,15 +2455,7 @@ function performEnemyDamageToHp(actor,unit,options,meta){
     if(healed>0)addLog(unit.name+' 由 '+(meta?.n||'嗜血技')+' 吸收 '+healed+' HP。','bad');
   }
 
-  // BATTLE_S_AttackDamage 回傳後才進普通 Counter loop；
-  // 技能使用者本身 command 不是 ATTACK，所以可被反擊一次，但不能反反擊。
-  if(unit.hp>0&&enemy){
-    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
-    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
-      resolvePlayerEnemyCounterChain('enemy',unit,r);
-    }
-  }
+  // BATTLE_COM_S_DAMAGETOHP 是獨立的 BATTLE_S_AttackDamage 分支，原 battle.c 不接普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,healed,absorbPct,attackReduceRaw};
 }
 function enemyDeadBattleUnits(){
@@ -3744,7 +3715,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.41 載入完成：接入 616 撕裂傷口2 與 640 憾甲一擊；撕裂依已損 HP 加傷，憾甲使用 FIXTOUGH、防後排貫穿主人並各自檢定暈眩。','good');
+    addLog('V0.41 載入完成：616 撕裂傷口2、640 憾甲一擊已接入；並校正特殊 BATTLE_S_AttackDamage／GBreak2 分支不進普通反擊鏈、暈眩一次行動與 REGRET2 防禦前 ×0.8。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
