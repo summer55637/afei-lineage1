@@ -227,3 +227,23 @@ Event 83 已確認：
 - `19714` 由里拉拉物品鏈正式產出
 
 完整 Event 83 物品鏈與 Event 71 前置仍未開放，因此 V0.6 不會用假按鈕冒充正式拉斯基取得流程。
+
+
+## 2026-09-24 資料版本修正
+
+重新核對 `gmsv/setup.cf` 後確認目前服務端實際載入：
+
+- `enemyfile=./data/enemy1.txt`
+- `enemybasefile=./data/enemybase1.txt`
+- `groupfile=./data/group1.txt`
+- `encountfile=./data/encount.txt`
+
+因此先前用舊 `enemy.txt` 推導的兩個來源必須撤回：
+
+- `1690 海藍之棒`：舊 enemy.txt 曾掛在威威掉落，但現行 enemy1.txt 的同一批威威 EnemyID 372/373/374 掉落 Item 1234，參數 300（30%）
+- `1691 海藍之兜`：舊 enemy.txt 曾掛在高等威威掉落，但現行 enemy1.txt 的 EnemyID 436 掉落 Item 1235，參數 300（30%）
+
+所以 1690／1691 不再標記為現行 server verified，也不再由遊戲戰鬥掉落。
+正式來源數由 6/9 修正為 **4/9**（19720、19733、20259、13062）。
+
+後續所有怪物／群組掉落研究以 setup.cf 實際載入檔為準。
