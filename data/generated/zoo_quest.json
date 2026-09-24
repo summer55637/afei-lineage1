@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "Event 82 and the verified core path of Event 83 are playable. Active server tables follow setup.cf: enemy1.txt, enemybase1.txt, group1.txt, encount.txt. Event 71 + Item 2414 still use an explicitly marked development prerequisite.",
+    "note": "Event 82/83 core is playable. Event 71 and Item 2414 now use source-backed prerequisite flows; Event69/70 are represented as a compact playable prelude instead of a development flag.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -11,6 +11,67 @@
     }
   },
   "events": {
+    "2": {
+      "name": "送花與不可思議的貝殼",
+      "serverEventId": 2,
+      "verified": true,
+      "implementationStatus": "playable",
+      "sources": [
+        "gmsv/data/npc/sainasu/event/event02.create",
+        "gmsv/data/npc/sainasu/event/event02_1",
+        "gmsv/data/npc/sainasu/event/event02_2"
+      ],
+      "route": "日美子 GetItem:2415 → 彌生 DelItem:2415 + GetItem:2414 + EndSetFlg:2"
+    },
+    "69": {
+      "name": "尋找新藏",
+      "serverEventId": 69,
+      "verified": true,
+      "implementationStatus": "playable_compact",
+      "sources": [
+        "gmsv/data/npc/king/event69_3",
+        "gmsv/data/npc/king/event69_4",
+        "gmsv/data/npc/king/event69_5.arg",
+        "gmsv/data/npc/king/event69_6"
+      ]
+    },
+    "70": {
+      "name": "接回瑪蕾菲雅",
+      "serverEventId": 70,
+      "verified": true,
+      "implementationStatus": "playable_compact",
+      "source": "gmsv/data/npc/king/event69_7",
+      "reward": {
+        "petEnemyId": 1479,
+        "petTempNo": 718,
+        "itemId": 19624
+      }
+    },
+    "71": {
+      "name": "精靈王傳說／寵物轉生後續",
+      "serverEventId": 71,
+      "verified": true,
+      "implementationStatus": "formal_gate_playable",
+      "serverRequirements": {
+        "playerMinLevel": 80,
+        "requiresEndEvents": [
+          4,
+          69,
+          70
+        ],
+        "marefiaTempNo": 718,
+        "marefiaExactLevel": 79,
+        "targetPetMinLevel": 80
+      },
+      "flagSource": "gmsv/src/npc/npc_transmigration.c",
+      "onPetTransSuccess": "NPC_NowEventSetFlg(toindex, 71)",
+      "mazeEntrance": {
+        "floorId": 40,
+        "phrase": "地為界水為憑火為引風為信",
+        "source": "gmsv/data/npc/king/event69_9"
+      },
+      "note": "Event83 requires NOWEV=71, not ENDEV=71. Event4 adult ceremony is not rebuilt yet; the standalone V0.7 prelude compresses that upstream legacy content rather than exposing a development flag."
+    },
     "81": {
       "name": "金飛航空任務",
       "serverEventId": 81,
@@ -242,9 +303,16 @@
   "items": [
     {
       "id": 2414,
-      "name": "Event71 前置道具 2414",
-      "sourceStatus": "unresolved",
-      "source": "Event83 scripts require ITEM=2414; exact acquisition/name still pending."
+      "name": "不可思議的貝殼",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/sainasu/event/event02_1",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "Event 2 彌生",
+          "summary": "日美子交付花 2415 後，彌生腳本 DelItem:2415、GetItem:2414、EndSetFlg:2。"
+        }
+      ]
     },
     {
       "id": 12090,
@@ -463,6 +531,19 @@
       "name": "雷爾胖專用飼料",
       "sourceStatus": "verified",
       "source": "gmsv/data/npc/eden1/zoo1/employee82_01"
+    },
+    {
+      "id": 2415,
+      "name": "花（Event 2 送信物）",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/sainasu/event/event02_2",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "Event 2 日美子",
+          "summary": "送花分支正式取得 Item 2415，交給彌生後換得 Item 2414。"
+        }
+      ]
     }
   ],
   "huntingZones": [
