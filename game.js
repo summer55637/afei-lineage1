@@ -1462,7 +1462,8 @@ function enemyPrepareRoundAction(unit,action){
     unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
     if(meta?.f==='PETSKILL_Guardian'&&!String(meta.o||'').includes('COM:防')){
       unit.guardianReadyThisTurn=true;
-      unit.counterEligibleThisTurn=true;
+      // 原 BATTLE_Counter 只接受 ATTACK / NOGUARD；GUARDIAN_ATTACK 本身不能反反擊。
+      unit.counterEligibleThisTurn=false;
       const owner=enemyGuardianOwner(unit);
       if(owner&&owner.id!==unit.id)owner.guardedByUnitId=unit.id;
     }
