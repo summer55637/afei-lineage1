@@ -5,9 +5,10 @@
     "note": "Only appearance/capture condition items are included. Acquisition source remains unresolved until original NPC/quest/shop data is decoded.",
     "count": 9,
     "sourceResearch": {
-      "verifiedCount": 5,
-      "unresolvedCount": 4,
-      "note": "Acquisition sources are recorded only when backed by original NPC/event/enemy/group/encounter data."
+      "verifiedCount": 6,
+      "unresolvedCount": 3,
+      "externalCorroboratedCount": 3,
+      "note": "Verified = backed by original server code/data. externalEvidence is kept separate and never promoted to verified without server evidence."
     }
   },
   "items": [
@@ -48,7 +49,8 @@
           "dropRule": "_FIX_ITEMPROB",
           "summary": "海藍之棒由加魯卡的威威系野生怪物掉落；原 enemy.txt 掉落參數為 30。Lv1 威威群組也包含此掉落來源。"
         }
-      ]
+      ],
+      "externalEvidence": []
     },
     {
       "id": 1691,
@@ -82,7 +84,8 @@
           "dropRule": "_FIX_ITEMPROB",
           "summary": "海藍之兜由加魯卡較高等級的威威系野生怪物掉落；原 enemy.txt 掉落參數為 30。"
         }
-      ]
+      ],
+      "externalEvidence": []
     },
     {
       "id": 1692,
@@ -99,7 +102,15 @@
         817
       ],
       "sourceStatus": "unresolved",
-      "sources": []
+      "sources": [],
+      "externalEvidence": [
+        {
+          "type": "historical_item_guide",
+          "status": "corroborated",
+          "summary": "歷史資料確認海藍之鎧屬海藍全套；早期原始取得方式記載為官方包／來吉卡獎項。此資料未作為目前服務端可重複取得流程。",
+          "url": "https://forum.gamer.com.tw/G2.php?bsn=1571&sn=1362"
+        }
+      ]
     },
     {
       "id": 12636,
@@ -117,7 +128,15 @@
         11305
       ],
       "sourceStatus": "unresolved",
-      "sources": []
+      "sources": [],
+      "externalEvidence": [
+        {
+          "type": "historical_recipe_guide",
+          "status": "corroborated",
+          "summary": "舊版石器時代料理資料記載：香噴噴麵包＝橡樹果2＋炭2；服務端也確認料理由寵物料理技能執行，但原 itemset 成品配方仍待舊編碼解碼。",
+          "url": "https://games.sina.com.cn/zhuanqu/stoneage3/liaoli.shtml"
+        }
+      ]
     },
     {
       "id": 13062,
@@ -134,8 +153,18 @@
         21007,
         30008
       ],
-      "sourceStatus": "unresolved",
-      "sources": []
+      "sourceStatus": "verified",
+      "sources": [
+        {
+          "type": "event_random_reward",
+          "label": "聖誕紅襪隨機獎勵",
+          "source": "gmsv/src/item/item_event.c",
+          "function": "ITEM_useMaxRedSocks",
+          "action": "present[] includes 13062",
+          "summary": "服務端 ITEM_useMaxRedSocks 的聖誕紅襪獎勵池直接包含 13062 精靈的羽毛。此為可確認來源之一，不代表唯一來源。"
+        }
+      ],
+      "externalEvidence": []
     },
     {
       "id": 19720,
@@ -164,7 +193,8 @@
           "action": "GetItem:19720",
           "summary": "動物園事件81完成、事件82進行中時，可從飼料桶取得草食性飼料一號。"
         }
-      ]
+      ],
+      "externalEvidence": []
     },
     {
       "id": 19733,
@@ -194,7 +224,8 @@
           "cleanupAction": "DelItem:19733 when PET=1-905",
           "summary": "動物園事件81完成、事件82進行中時，布伊系飼育員會給雷爾胖專用飼料。"
         }
-      ]
+      ],
+      "externalEvidence": []
     },
     {
       "id": 20247,
@@ -211,7 +242,15 @@
         60052
       ],
       "sourceStatus": "unresolved",
-      "sources": []
+      "sources": [],
+      "externalEvidence": [
+        {
+          "type": "historical_capture_guide",
+          "status": "corroborated",
+          "summary": "攻略資料確認魔法鑽戒[地LV3-1]是嘎吱拉捕獲條件，且必須是封印後戒指；服務端 battle_event.c 亦確認 Enemy 796 捕獲需要 Item 20247。正式製作來源仍待舊資料檔解碼。",
+          "url": "https://1.shiqimod.cc/pet/gazhila.htm"
+        }
+      ]
     },
     {
       "id": 20259,
@@ -272,7 +311,8 @@
           "action": "GetRandItem:20259",
           "summary": "VIP會員可由寶石提煉師支付10萬石幣，並消耗7種材料提煉會員捕寵結晶石。"
         }
-      ]
+      ],
+      "externalEvidence": []
     }
   ]
 }
