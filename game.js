@@ -15,7 +15,7 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:2,
+    schemaVersion:3,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
@@ -535,8 +535,14 @@ function renderEnemy(){
 
   const c=captureChance();
   $('#captureChance').textContent='捕獲率：'+c.display.toFixed(1)+'%';
-  if(c.missing?.length){
-    $('#captureInfo').textContent='缺少條件道具：'+c.missing.map(x=>x.name||('Item '+x.id)).join('、');
+  if(!c.allowed){
+    if(c.missing?.length){
+      $('#captureInfo').textContent='缺少條件道具：'+c.missing.map(x=>x.name||('Item '+x.id)).join('、');
+    }else if(c.uncapturable){
+      $('#captureInfo').textContent='此為任務干擾怪，原服務端設定不可捕獲。';
+    }else{
+      $('#captureInfo').textContent='目前條件無法捕獲。';
+    }
     capBtn.disabled=true;
   }else{
     $('#captureInfo').textContent=(c.requirements?.length?'特殊捕獲條件已滿足。':'一般 Lv1 可捕獲。')+' HP 越低越容易成功。';
@@ -713,7 +719,7 @@ $('#testSupplyBtn').addEventListener('click',()=>{
     const key=String(item.id);
     state.inventory[key]=n(state.inventory[key])+1;
   }
-  addLog('開發測試補給：九種條件道具各加入 1 個。','pet');
+  addLog('開發測試補給：目前條件／任務道具各加入 1 個。','pet');
   save();render();
 });
 $('#petBox').addEventListener('click',e=>{
