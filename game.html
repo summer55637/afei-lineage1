@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.8</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.9</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -58,7 +58,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">Event81 金飛航空已改走正式來源流程：Lv81+ 成人角色取得推薦函、交付飛龍、突破 PC團三層金剛陣與老大戰，取得研究報告後正式完成 ENDEV=81。Event4、Event69／70、Event71／Item2414 也都已改走正式來源鏈。</div>
+          <div class="muted dev-note">Event81 已進一步還原原始機制：PC團金剛陣勝利後會依 event81_6f／7f／8f.arg 原座標表亂數傳送，可能前進、停留或倒退；只有第三區抽到 Floor 5582 (33,87) 才能見到老大。飛龍航空三條原始 routeto1 路線也可直接選擇。</div>
         </article>
 
         <article class="card">
@@ -155,8 +155,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.8：</b>
-      Event81 金飛航空正式接入：19696 推薦函 → 19697 捕捉證明 → 四種飛龍任一隻 → PC團三層金剛陣 → Floor 5582 老大戰 → 19698 悔過書 → 19699 研究報告 → ENDEV=81；之後可付 10,000 石幣飛往伊甸並向總教練領 200,000 石幣。Event82／83、Event4、Event69／70、Event71 正式前置維持串接。
+      <b>V0.9：</b>
+      Event81 金剛陣已改為原腳本亂數傳送：第一區前進 2/10、第二區前進 2/11、第三區只有 1/11 會進 Floor 5582 老大區，且可能被傳回前區。完成 Event81 後可從三條原始飛龍航空 routeto1 中選一路，保留 10,000 石幣旅費、禁運道具與實際座標節點。
     </article>
   </main>
 
