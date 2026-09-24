@@ -2393,7 +2393,7 @@ function captureTurn(manual=false){
       }
     }else if(actor.kind==='pet'){
       const pet=activePet();
-      if(!pet||pet.id!==actor.petId)continue;
+      if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
       const target=targetEnemyUnit();
       if(!target){winBattle();return captured}
       const r=petAttackResult(pet,target);
@@ -2562,7 +2562,7 @@ function attackTurn(){
       if(state.hp>0&&target.hp>0)resolvePlayerEnemyCounterChain('player',target,r);
     }else if(actor.kind==='pet'){
       const pet=activePet();
-      if(!pet||pet.id!==actor.petId)continue;
+      if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
       const target=targetEnemyUnit();
       if(!target){winBattle();return}
       const r=petAttackResult(pet,target);
@@ -2621,7 +2621,7 @@ function guardTurn(){
       addLog('你採取防禦姿勢。','good');
     }else if(actor.kind==='pet'){
       const pet=activePet();
-      if(!pet||pet.id!==actor.petId)continue;
+      if(!pet||pet.id!==actor.petId||!petIsAlive(pet))continue;
       const target=targetEnemyUnit();
       if(!target){winBattle();return}
       const r=petAttackResult(pet,target);
