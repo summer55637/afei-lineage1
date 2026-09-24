@@ -52,9 +52,9 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:12,
-    level:1,exp:0,expNext:100,hp:120,maxHp:120,
-    attack:18,defense:5,dex:30,charm:50,luck:0,
+    schemaVersion:13,
+    level:1,exp:0,expNext:2,hp:120,maxHp:120,
+    attack:18,defense:5,dex:30,charm:50,luck:0,skillPoints:0,duelPoint:0,
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
@@ -153,7 +153,11 @@ function normalizeState(raw){
     s.virtualWalkSteps=Math.max(0,Math.floor(n(raw?.virtualWalkSteps)));
     s.lastEncounterRoll=null;
   }
-  s.schemaVersion=12;
+  if(n(raw?.schemaVersion)<13){
+    s.skillPoints=Math.max(0,Math.floor(n(raw?.skillPoints)));
+    s.duelPoint=Math.max(0,Math.floor(n(raw?.duelPoint)));
+  }
+  s.schemaVersion=13;
   delete s.pets;
   return s;
 }
@@ -375,7 +379,65 @@ function buildMaps(){
   buildQuestMaps();
 }
 function currentMap(){return maps.find(x=>String(x.id)===String(state.mapId))||maps[0]}
-function expToNext(level){return 100+Math.max(0,level-1)*45}
+function levelExpNeed(targetLevel){
+  const arr=encounterRuntime?.progression?.userExpNeedByTargetLevel;
+  const i=Math.trunc(n(targetLevel));
+  if(Array.isArray(arr)&&i>=0&&i<arr.length&&Number.isFinite(Number(arr[i])))return Math.max(0,Math.trunc(Number(arr[i])));
+  return null;
+}
+function playerLevelCap(){return Math.max(1,Math.trunc(n(encounterRuntime?.progression?.ybLevel)||140))}
+function petServerLevelCap(){return Math.max(1,Math.trunc(n(encounterRuntime?.progression?.loadedMaxLevel)||160))}
+function expToNext(level){
+  level=Math.max(1,Math.trunc(n(level)||1));
+  if(level>=playerLevelCap())return 0;
+  const need=levelExpNeed(level+1);
+  return need!=null?need:(100+Math.max(0,level-1)*45);
+}
+function petExpToNext(level){
+  level=Math.max(1,Math.trunc(n(level)||1));
+  if(level>=petServerLevelCap())return 0;
+  const need=levelExpNeed(level+1);
+  return need!=null?need:(18+Math.max(0,level-1)*4);
+}
+function packPetAllocPoint(stats){
+  if(!stats)return null;
+  const v=Math.trunc(n(stats.vital))&255,s=Math.trunc(n(stats.str))&255,t=Math.trunc(n(stats.tgh))&255,d=Math.trunc(n(stats.dex))&255;
+  return ((v<<24)|(s<<16)|(t<<8)|d)|0;
+}
+function unpackPetAllocPoint(packed){
+  if(!Number.isFinite(Number(packed)))return null;
+  const x=Math.trunc(Number(packed))|0;
+  return {vital:(x>>>24)&255,str:(x>>>16)&255,tgh:(x>>>8)&255,dex:x&255};
+}
+function petServerCombat(stats){
+  if(!stats)return null;
+  const vital=n(stats.vital),str=n(stats.str),tgh=n(stats.tgh),dex=n(stats.dex);
+  return {
+    attack:Math.trunc(str*.01+tgh*.001+vital*.001+dex*.0005),
+    defense:Math.trunc(tgh*.01+str*.001+vital*.001+dex*.0005),
+    quick:Math.trunc(dex*.01),
+    maxHp:Math.trunc((vital*4+str+tgh+dex)*.01)
+  };
+}
+function serverPetLevelUp(pet){
+  if(pet?.petRank==null)return false;
+  const alloc=unpackPetAllocPoint(pet?.allocPointPacked),stats=pet?.serverStats;
+  const rank=Math.trunc(Number(pet.petRank));
+  const range=(encounterRuntime?.progression?.petGrowthRankRand||[]).find(x=>Math.trunc(n(x.rank))===rank);
+  if(!alloc||!stats||!range)return false;
+  const param=[0,0,0,0];
+  for(let i=0;i<10;i++)param[rnd(0,3)]++;
+  const roll=rnd(Math.trunc(n(range.min)),Math.trunc(n(range.max)));
+  const fRand=Math.fround(Math.fround(roll)*Math.fround(.01));
+  const keys=['vital','str','tgh','dex'];
+  for(let i=0;i<keys.length;i++){
+    const key=keys[i];
+    const a=Math.fround(Math.fround(alloc[key])*fRand),b=Math.fround(Math.fround(param[i])*fRand);
+    pet.serverStats[key]=Math.trunc(n(pet.serverStats[key]))+Math.trunc(Math.fround(a+b));
+  }
+  pet.serverCombat=petServerCombat(pet.serverStats);
+  return true;
+}
 function eligibleEntries(map,encounterId=null){
   return (map?.entries||[]).filter(x=>routeUnlocked(x.route)&&(encounterId==null||Number(x.route?.encounterId)===Number(encounterId)));
 }
@@ -900,21 +962,24 @@ function addMarefiaPet(){
   return p;
 }
 function marefiaPet(){return state.petBox.find(p=>Number(p.tempNo)===718)||null}
-function petExpToNext(level){return 18+Math.max(0,n(level)-1)*4}
 function awardActivePetExp(amount){
   const p=activePet();if(!p)return;
   const isMarefia=Number(p.tempNo)===718;
-  const maxLevel=isMarefia?Math.max(1,n(p.levelCap)||10):99;
+  const maxLevel=isMarefia?Math.max(1,n(p.levelCap)||10):petServerLevelCap();
   p.exp=n(p.exp)+Math.max(1,Math.round(amount));
-  let up=false;
-  while(p.level<maxLevel&&p.exp>=petExpToNext(p.level)){
-    p.exp-=petExpToNext(p.level);p.level++;up=true;
+  let upCount=0,growthCount=0;
+  while(p.level<maxLevel){
+    const need=petExpToNext(p.level);
+    if(need<=0||p.exp<need)break;
+    p.exp-=need;p.level++;upCount++;
+    if(serverPetLevelUp(p))growthCount++;
   }
   if(isMarefia&&p.level>=maxLevel){
-    p.exp=Math.min(p.exp,Math.max(0,petExpToNext(p.level)-1));
+    const next=petExpToNext(p.level);
+    if(next>0)p.exp=Math.min(p.exp,Math.max(0,next-1));
   }
-  if(up){
-    addLog(p.name+' 升到 Lv.'+p.level+'。','pet');
+  if(upCount){
+    addLog(p.name+' 升到 Lv.'+p.level+'（'+upCount+' 級）'+(growthCount?'，已套用原 CHAR_PetLevelUp 成長 '+growthCount+' 次。':'。'),'pet');
     if(isMarefia&&p.level===maxLevel&&p.level<79)addLog('瑪蕾菲雅到達目前回憶門檻 Lv.'+maxLevel+'，可前往下一個記憶地點。','pet');
   }
 }
@@ -928,6 +993,10 @@ function clearEvent83Chain(extra=[]){
 }
 function playerDamage(target=targetEnemyUnit()){return Math.max(1,Math.round(state.attack-n(target?.defense)+rnd(-2,4)))}
 function petDamage(pet,target=targetEnemyUnit()){
+  if(pet?.serverStats){
+    pet.serverCombat=petServerCombat(pet.serverStats);
+    return Math.max(1,Math.round(n(pet.serverCombat?.attack)-n(target?.defense)*.28+rnd(-1,2)));
+  }
   const str=Math.max(1,n(pet?.stats?.str)||6);
   return Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2)));
 }
@@ -953,19 +1022,22 @@ function enemyCounter(){
   if(state.hp<=0)defeat();
 }
 function levelCheck(){
-  let leveled=false;
-  while(state.exp>=state.expNext){
-    state.exp-=state.expNext;
-    state.level++;
-    state.expNext=expToNext(state.level);
-    state.maxHp+=18;
-    state.hp=state.maxHp;
-    state.attack+=3;
-    state.defense+=1;
-    state.dex+=1;
-    leveled=true;
+  let upCount=0;
+  const cap=playerLevelCap();
+  while(state.level<cap){
+    const need=expToNext(state.level);
+    if(need<=0||state.exp<need)break;
+    state.exp-=need;state.level++;
+    state.duelPoint=Math.max(0,Math.trunc(n(state.duelPoint)))+state.level*10;
+    upCount++;
   }
-  if(leveled)addLog('升級！目前 Lv.'+state.level+'，HP 已補滿。','good');
+  state.expNext=expToNext(state.level);
+  if(upCount){
+    const perLevel=Math.max(0,Math.trunc(n(encounterRuntime?.progression?.playerSkillPointsPerLevel)||3));
+    state.skillPoints=Math.max(0,Math.trunc(n(state.skillPoints)))+upCount*perLevel;
+    state.charm=Math.min(100,Math.max(0,n(state.charm))+Math.max(0,Math.trunc(n(encounterRuntime?.progression?.playerCharmPerBattleWithLevelup)||2)));
+    addLog('升級！目前 Lv.'+state.level+'；取得能力點 '+(upCount*perLevel)+'，魅力調整為 '+state.charm+'。','good');
+  }
 }
 function createCapturedPet(target=targetEnemyUnit()){
   const v=enemy.entry.variant;
@@ -973,7 +1045,13 @@ function createCapturedPet(target=targetEnemyUnit()){
     return {
       id:uid(),name:target.name,animationGroupId:target.animationGroupId,
       tempNo:target.tempNo,level:target.level||1,exp:0,wildGrowth:n(target.wildGrowth),
-      stats:Object.assign({},target.stats||{}),elements:Object.assign({},target.elements||{}),
+      stats:Object.assign({},target.stats||{}),
+      serverStats:target.serverDerived?.charStats?Object.assign({},target.serverDerived.charStats):null,
+      serverCombat:target.serverDerived?{attack:target.attack,defense:target.defense,quick:target.quick,maxHp:target.maxHp}:null,
+      allocPointPacked:target.allocatedFrom?packPetAllocPoint(target.allocatedFrom):null,
+      petRank:target.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))?Math.trunc(Number(target.enemyExpRankIndex)):null,
+      serverProgression:!!(target.serverDerived&&target.allocatedFrom&&target.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))),
+      elements:Object.assign({},target.elements||{}),
       petSkills:Array.isArray(target.petSkills)?target.petSkills.slice():[],
       serverInitNum:target.serverInitNum??null,serverLvUpPoint:target.serverLvUpPoint??null,
       capturedAt:Date.now()
@@ -1381,7 +1459,7 @@ function renderZooQuest(){
 function render(){
   if(!state)return;
   $('#level').textContent=state.level;
-  $('#exp').textContent=state.exp+' / '+state.expNext;
+  $('#exp').textContent=state.level>=playerLevelCap()?(state.exp+' / MAX'):(state.exp+' / '+state.expNext);
   $('#hp').textContent=state.hp+' / '+state.maxHp;
   $('#gold').textContent=state.gold;
   $('#attack').textContent=state.attack;
@@ -1389,6 +1467,7 @@ function render(){
   $('#dex').textContent=state.dex;
   $('#charm').textContent=state.charm;
   $('#luck').textContent=state.luck;
+  $('#skillPoints').textContent=Math.max(0,Math.floor(n(state.skillPoints)));
   $('#wins').textContent=state.wins;
   $('#hpBar').style.width=clamp(state.hp/state.maxHp*100,0,100)+'%';
   $('#autoBtn').textContent='自動戰鬥：'+(state.auto?'開':'關');
@@ -1490,7 +1569,7 @@ function renderTeam(){
     return '<div class="team-slot '+(active?'active':'')+'" data-pet-id="'+p.id+'"><div><small>'+(active?'出戰':'槽位 '+(i+1))+'</small><b>'+escapeHtml(p.name)+'</b></div></div>';
   }).join('');
   const p=activePet();
-  $('#activePetInfo').textContent=p?'出戰：'+p.name+' · Lv.'+p.level+(Number(p.tempNo)===718?' / 上限 '+n(p.levelCap):'')+' · 腕力 '+n(p.stats?.str)+' · 敏捷 '+n(p.stats?.dex):'尚未指定出戰寵物。';
+  $('#activePetInfo').textContent=p?'出戰：'+p.name+' · Lv.'+p.level+(Number(p.tempNo)===718?' / 上限 '+n(p.levelCap):'')+' · 腕力 '+n(p.serverStats?.str??p.stats?.str)+' · 敏捷 '+n(p.serverStats?.dex??p.stats?.dex)+(p.serverProgression?' · 原服成長':''):'尚未指定出戰寵物。';
 }
 function renderPets(){
   const teamSet=new Set(state.team.filter(Boolean));
@@ -1585,7 +1664,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.19 載入完成：Enemy 原始 EXP、BATTLE_AddExpItem 等級差衰減與 setup.cf battleexp=100 已接入；一般 PVE 不再憑空發固定石幣。','good');
+    addLog('V0.20 載入完成：exp.txt 原升級門檻、CHAR_HandleExp、玩家每級 3 能力點與新捕獲寵物 CHAR_PetLevelUp 原服成長已接入。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

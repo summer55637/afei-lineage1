@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.19</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.20</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -75,6 +75,7 @@
             <div><span>敏捷</span><b id="dex">30</b></div>
             <div><span>魅力</span><b id="charm">50</b></div>
             <div><span>運</span><b id="luck">0</b></div>
+            <div><span>能力點</span><b id="skillPoints">0</b></div>
             <div><span>勝場</span><b id="wins">0</b></div>
           </div>
           <div class="progress"><i id="hpBar"></i></div>
@@ -156,8 +157,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.19：</b>
-      Encounter runtime 升級為 v5：延續原版能力與 10 格掉落，再加入 Enemy 原始 EXP、等級差衰減與 setup.cf battleexp=100；移除先前一般戰鬥固定亂數石幣獎勵。
+      <b>V0.20：</b>
+      Encounter runtime 升級為 v6：接入 exp.txt／CHAR_HandleExp 升級門檻；玩家升級改為每級 +3 能力點、一次戰鬥升級魅力 +2；新捕獲一般野寵開始套用原 CHAR_PetLevelUp 四圍成長。
     </article>
   </main>
 
