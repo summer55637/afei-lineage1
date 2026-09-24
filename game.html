@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.5</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.6</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -46,6 +46,20 @@
           </div>
           <select id="mapSelect"></select>
           <div id="mapInfo" class="map-info"></div>
+        </article>
+
+        <article class="card quest-card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">QUEST</div>
+              <h2>伊甸動物園任務</h2>
+            </div>
+            <span id="zooQuestBadge" class="pill">未解鎖</span>
+          </div>
+          <div id="zooQuestStatus" class="quest-status"></div>
+          <div id="zooQuestActions" class="quest-actions"></div>
+          <button id="testEvent81Btn" class="dev-btn">開發測試：標記金飛 Event 81 完成</button>
+          <div class="muted dev-note">Event 81 的完整金飛航空流程尚未實裝；此按鈕只讓目前已驗證的 Event 82 動物園流程可以先測試。</div>
         </article>
 
         <article class="card">
@@ -142,8 +156,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.5：</b>
-      捕獲率已改用原服務端 <code>BATTLE_CaptureCheck</code> 的結構：敵方 HP、等級差、敏捷差、E_T_GET、運、魅力。資料庫中的特殊捕獲條件也會檢查；目前 1690、1691、19720、19733、20259 的正式來源已確認；1690 已接入實際戰鬥掉落，其餘任務鏈與材料來源仍在逐步接入。
+      <b>V0.6：</b>
+      伊甸動物園 Event 82 已接入任務狀態、正式飼料 NPC、雷爾胖／波波頓任務狩獵區；Event 83 的席格與任務版拉斯基來源已驗證但完整支線尚未開放。Event 81 目前僅提供明確標示的開發測試解鎖。
     </article>
   </main>
 
