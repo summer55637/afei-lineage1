@@ -3530,3 +3530,77 @@ V0.56 精準接這個 no-react 分支。
 目前沒有來源會讓玩家側先取得這些 work-int，所以若現在自行建立 reflect／vanish status，就會改變原資料可到達狀態。
 
 等正式接入能建立 `WORKDAMAGEREFLEC / VANISH / ABSROB` 的來源技能或裝備時，再擴充同一 handler 的 transfer 分支。
+
+## V0.57 沉默／NOCAST
+
+V0.57 接入 ID 580「沉默」：
+
+`沉默,敌全体无法使用咒术三回合,PETSKILL_Nocast,默 turn 3 成 50,...`
+
+此技能不依賴 AttackMagic 傷害表；它是獨立 battle status。
+
+### 原 `BATTLE_S_Nocast()`
+
+技能解析：
+
+- `turn = 3`
+- `Success = 50`
+- `BATTLE_MultiList()` 取目標整側
+
+每個目標先呼叫：
+
+`BATTLE_StatusAttackCheck(attacker,target,BATTLE_ST_NOCAST,50,30,1.0,&perStatus)`
+
+也就是：
+
+- PerOffset = 50
+- Range = 30
+- Bai = 1.0
+- 仍受既有異常互斥、等級差、VITAL 比例、LUCK／抗性公式影響
+- 最終成功仍是嚴格 `< per`
+
+接著原碼還要求：
+
+`CHAR_WHICHTYPE != CHAR_TYPEPET`
+
+所以即使 BATTLE_MultiList 包含玩家出戰寵物，寵物也不會被寫入沉默。
+
+V0.57 保留原 C 的 `&&` 評估順序：寵物仍會先走一次 StatusAttackCheck 路徑，再因 type=PET 被排除。
+
+### turn 不是 `turn+1`
+
+這點和 Barrier／一般 StatusChange 不同。
+
+`BATTLE_S_Nocast()` 成功後直接：
+
+`CHAR_WORKNOCAST = turn`
+
+也就是 raw 值直接寫 3。
+
+因此 V0.57 使用 `battleStatusApplyRaw(...,'nocast',3)`，不是一般 `battleStatusApply()` 的 `turn+1`。
+
+若施術者在本回合比玩家早出手，玩家同一回合輪到自己時 `BATTLE_StatusSeq()` 就會先把沉默 3 減成 2。
+
+### 沉默不會讓角色停止行動
+
+`BATTLE_StatusSeq()` 的 `CHAR_WORKNOCAST` case 只負責通知客戶端咒術頁維持禁用。
+
+它不屬於麻痺／睡眠／石化／魔障等不能行動類型，也不把普通 Attack／Guard 改成 NONE。
+
+因此 web 的 `battleStatusCanMove()` **沒有**把 nocast 加入阻擋清單。
+
+目前玩家本來就沒有正式咒術 command 可按，所以 V0.57 不製造假的按鈕禁用效果；但沉默仍有來源可觀察意義：
+
+- 佔用異常狀態互斥槽
+- 阻止其他異常在沉默期間覆蓋
+- 正常依玩家行動點倒數
+- 到 0 自動解除
+- 可被 592 淨化移除
+
+### 玩家寵物
+
+來源明確排除 `CHAR_TYPEPET`，所以 Active Pet 即使在「敵全體」範圍中也不會取得 nocast status。
+
+### Counter
+
+580 不造成物理傷害，也不走普通 Attack，因此沒有 Counter／反反擊鏈。
