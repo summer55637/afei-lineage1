@@ -5,6 +5,20 @@ const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
+const EVENT81_MAZE_WARPS=Object.freeze({
+  24:[
+    {floor:5576,x:28,y:88},{floor:5576,x:24,y:86},{floor:5576,x:24,y:87},{floor:5576,x:28,y:87},{floor:5576,x:24,y:88},
+    {floor:5576,x:24,y:89},{floor:5576,x:24,y:89},{floor:5576,x:24,y:86},{floor:5576,x:24,y:86},{floor:5576,x:24,y:87}
+  ],
+  28:[
+    {floor:5576,x:24,y:89},{floor:5576,x:28,y:88},{floor:5576,x:28,y:88},{floor:5576,x:28,y:89},{floor:5576,x:32,y:88},
+    {floor:5576,x:28,y:86},{floor:5576,x:28,y:87},{floor:5576,x:32,y:87},{floor:5576,x:28,y:88},{floor:5576,x:28,y:89},{floor:5576,x:24,y:89}
+  ],
+  32:[
+    {floor:5576,x:28,y:88},{floor:5576,x:32,y:88},{floor:5576,x:32,y:86},{floor:5576,x:32,y:88},{floor:5576,x:32,y:89},
+    {floor:5576,x:32,y:86},{floor:5576,x:32,y:87},{floor:5576,x:32,y:88},{floor:5576,x:32,y:89},{floor:5582,x:33,y:87},{floor:5576,x:28,y:88}
+  ]
+});
 const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:10,floor:1000,nextCap:15,clue:'薩姆吉爾村的大石像'},
   {level:15,floor:1400,nextCap:20,clue:'西北方沙漠中的村落'},
@@ -31,13 +45,13 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:9,
+    schemaVersion:10,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -100,12 +114,20 @@ function normalizeState(raw){
   if(n(raw?.schemaVersion)<9){
     const hadDownstream=!!(s.quest.event82.active||s.quest.event82.complete||s.quest.event83.active||s.quest.event83.complete);
     if(raw?.quest?.event81Complete===true&&hadDownstream){
-      s.quest.event81={active:false,complete:true,stage:8,deliveredTempNo:null,arrivedEden:false,postReward:false,legacyAccepted:true};
+      s.quest.event81={active:false,complete:true,stage:8,deliveredTempNo:null,arrivedEden:false,postReward:false,legacyAccepted:true,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0};
       s.quest.event81Complete=true;
     }else if(raw?.quest?.event81Complete===true){
       s.quest.event81=Object.assign({},base.quest.event81);
       s.quest.event81Complete=false;
     }
+  }
+  if(n(raw?.schemaVersion)<10&&!s.quest.event81.complete){
+    const old=n(s.quest.event81.stage);
+    if(old===3){s.quest.event81.mazeFloor=5576;s.quest.event81.mazeX=24;s.quest.event81.mazeY=86;}
+    if(old===4){s.quest.event81.stage=3;s.quest.event81.mazeFloor=5576;s.quest.event81.mazeX=28;s.quest.event81.mazeY=86;}
+    if(old===5){s.quest.event81.stage=3;s.quest.event81.mazeFloor=5576;s.quest.event81.mazeX=32;s.quest.event81.mazeY=86;}
+    if(old===6){s.quest.event81.mazeFloor=5582;s.quest.event81.mazeX=33;s.quest.event81.mazeY=87;}
+    s.quest.event81.mazeBattles=Math.max(0,n(s.quest.event81.mazeBattles));
   }
   s.quest.event81Complete=!!s.quest.event81.complete;
   const ids=new Set(s.petBox.map(p=>p.id));
@@ -118,7 +140,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=9;
+  s.schemaVersion=10;
   delete s.pets;
   return s;
 }
@@ -180,7 +202,30 @@ function routeUnlocked(route){
   const noids=route?.notAppearanceInventoryItemIds||[];
   const req=route?.questRequirement||null;
   if(req?.event81Stage!=null&&n(state?.quest?.event81?.stage)!==n(req.event81Stage))return false;
+  if(req?.event81MazeX!=null&&n(state?.quest?.event81?.mazeX)!==n(req.event81MazeX))return false;
+  if(req?.event81MazeFloor!=null&&n(state?.quest?.event81?.mazeFloor)!==n(req.event81MazeFloor))return false;
   return ids.every(id=>hasItem(id))&&noids.every(id=>!hasItem(id));
+}
+function event81MazeZone(x){
+  x=n(x);
+  return x===24?'event81-thief-1':(x===28?'event81-thief-2':(x===32?'event81-thief-3':null));
+}
+function event81MazeWarp(sourceX){
+  const e81=state.quest.event81,list=EVENT81_MAZE_WARPS[n(sourceX)]||[];
+  if(!list.length)return false;
+  const dest=list[Math.floor(Math.random()*list.length)];
+  e81.mazeBattles=n(e81.mazeBattles)+1;
+  e81.mazeFloor=dest.floor;e81.mazeX=dest.x;e81.mazeY=dest.y;
+  if(dest.floor===5582){
+    e81.stage=6;state.mapId='event81-boss';
+    addLog('金剛陣亂數傳送命中原版唯一出口：Floor 5582 ('+dest.x+','+dest.y+')，抵達 PC團老大區。','good');
+  }else{
+    e81.stage=3;
+    const zone=event81MazeZone(dest.x);
+    if(zone)state.mapId=zone;
+    addLog('金剛陣依原腳本亂數傳送到 Floor '+dest.floor+' ('+dest.x+','+dest.y+')。','pet');
+  }
+  return true;
 }
 function buildSourceCatalog(raw){
   sourceCatalog=new Map((raw?.items||[]).map(item=>[String(item.id),item]));
@@ -543,12 +588,16 @@ function winBattle(){
     addLog('里昂蛙王戰勝利：依 event69_5.arg 被傳送到 Floor 30607，可把金珠 19622 還給蛙王。','good');
   }
   const e81win=defeated.entry?.variant?.questOnWin;
-  const e81stageMap={'event81-thief-1-win':4,'event81-thief-2-win':5,'event81-thief-3-win':6,'event81-boss-win':7};
-  if(e81stageMap[e81win]!=null&&n(state.quest.event81.stage)===e81stageMap[e81win]-1){
-    state.quest.event81.stage=e81stageMap[e81win];
+  if(n(state.quest.event81.stage)===3){
+    if(e81win==='event81-thief-1-win')event81MazeWarp(24);
+    if(e81win==='event81-thief-2-win')event81MazeWarp(28);
+    if(e81win==='event81-thief-3-win')event81MazeWarp(32);
+  }
+  if(e81win==='event81-boss-win'&&n(state.quest.event81.stage)===6){
+    state.quest.event81.stage=7;
+    state.quest.event81.mazeFloor=5580;state.quest.event81.mazeX=58;state.quest.event81.mazeY=20;
     state.mapId=maps.find(m=>!m.questZone)?.id||maps[0]?.id||state.mapId;
-    if(e81win==='event81-boss-win')addLog('PC團老大已被擊敗；依 event81_3f.arg 被送到 Floor 5580，可向老大取得悔過書。','good');
-    else addLog('PC團盜賊金剛陣突破一層，繼續深入據點。','good');
+    addLog('PC團老大已被擊敗；依 event81_3f.arg 被傳送到 Floor 5580 (58,20)，可向老大取得悔過書。','good');
   }
   enemy=null;
   levelCheck();
@@ -604,7 +653,8 @@ function renderZooQuest(){
   const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854),marefia=marefiaPet();
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
-  const e81text=e81.complete?('已完成（ENDEV=81）'+(e81.postReward?' · 伊甸總教練獎勵已領':' · 研究報告待送伊甸')):(e81.stage===0?'尚未開始':e81.stage===1?'持有推薦函 19696':e81.stage===2?'捕捉飛龍並持有證明書 19697':e81.stage===3?'NOWEV=81 · 準備闖 PC團金剛陣':e81.stage===4?'金剛陣第一層已破':e81.stage===5?'金剛陣第二層已破':e81.stage===6?'金剛陣第三層已破 · 挑戰老大':e81.stage===7?'PC團老大已敗 · 取得悔過書':e81.stage===8?'回報霍特雷敦':'進行中');
+  const mazePos=e81.stage===3?('Floor '+n(e81.mazeFloor)+' ('+n(e81.mazeX)+','+n(e81.mazeY)+') · 已戰 '+n(e81.mazeBattles)+' 場'):'';
+  const e81text=e81.complete?('已完成（ENDEV=81）'+(e81.postReward?' · 伊甸總教練獎勵已領':' · 研究報告待送伊甸')):(e81.stage===0?'尚未開始':e81.stage===1?'持有推薦函 19696':e81.stage===2?'捕捉飛龍並持有證明書 19697':e81.stage===3?'NOWEV=81 · PC團金剛陣 '+mazePos:e81.stage===6?'已傳送到 Floor 5582 · 挑戰老大':e81.stage===7?'PC團老大已敗 · 取得悔過書':e81.stage===8?'回報霍特雷敦':'進行中');
   lines.push('<div class="quest-line '+(e81.complete?'done':'blocked')+'">Event 81 金飛航空：'+e81text+'</div>');
   if(e82.active||e82.complete){
     lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已回報':'')+'</div>');
@@ -652,10 +702,13 @@ function renderZooQuest(){
       if(candidate)actions.push('<button data-zoo-action="event81-submit-dragon" class="wide">交出 '+escapeHtml(candidate.name)+'（TempNo '+candidate.tempNo+'）開始救援布蘭恩002</button>');
       else actions.push('<button data-zoo-action="event81-goto-dragon" class="wide">前往已確認 Lv1 加寶格恩 273 出沒地捕捉飛龍</button>');
     }
-    if(e81.stage===3)actions.push('<button data-zoo-action="event81-thief-1" class="wide">PC團金剛陣・第一層</button>');
-    if(e81.stage===4)actions.push('<button data-zoo-action="event81-thief-2" class="wide">PC團金剛陣・第二層</button>');
-    if(e81.stage===5)actions.push('<button data-zoo-action="event81-thief-3" class="wide">PC團金剛陣・第三層</button>');
-    if(e81.stage===6)actions.push('<button data-zoo-action="event81-boss" class="wide">Floor 5582：挑戰 PC團老大</button>');
+    if(e81.stage===3){
+      const mx=n(e81.mazeX),zone=event81MazeZone(mx);
+      const layer=mx===24?'第一區':(mx===28?'第二區':(mx===32?'第三區':'未知位置'));
+      if(zone)actions.push('<button data-zoo-action="event81-maze-battle" class="wide">金剛陣 '+layer+'：Floor '+n(e81.mazeFloor)+' ('+mx+','+n(e81.mazeY)+') 挑戰 PC團盜賊</button>');
+      else actions.push('<button data-zoo-action="event81-maze-reset" class="wide">金剛陣座標異常：回到入口</button>');
+    }
+    if(e81.stage===6)actions.push('<button data-zoo-action="event81-boss" class="wide">Floor 5582 (33,87)：挑戰 PC團老大</button>');
     if(e81.stage===7)actions.push('<button data-zoo-action="event81-confession" class="wide">Floor 5580：向 PC團老大取得悔過書 19698</button>');
     if(e81.stage===8&&hasItem(19698))actions.push('<button data-zoo-action="event81-complete" class="wide">回霍特雷敦：交悔過書並完成 Event81</button>');
   }
@@ -900,7 +953,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.8 載入完成：Event81 金飛航空已正式接入，舊 Event81 開發測試入口已移除。','good');
+    addLog('V0.9 載入完成：Event81 PC團金剛陣已改為原腳本亂數傳送機制。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -972,14 +1025,20 @@ function handleZooAction(action){
       state.petBox=state.petBox.filter(x=>x.id!==id);
       state.team=state.team.map(x=>x===id?null:x);
       if(state.activePetId===id)state.activePetId=state.team.find(Boolean)||null;
-      consumeItem(19697,1);e81.stage=3;
-      addLog('霍特雷敦收下 '+p.name+' 與捕捉證明書；發現布蘭恩002失蹤，正式進入 NOWEV=81。','good');
+      consumeItem(19697,1);e81.stage=3;e81.mazeFloor=5576;e81.mazeX=24;e81.mazeY=86;e81.mazeBattles=0;
+      addLog('霍特雷敦收下 '+p.name+' 與捕捉證明書；發現布蘭恩002失蹤，正式進入 NOWEV=81。PC團金剛陣從 Floor 5576 (24,86) 開始。','good');
     }
   }
-  if(action==='event81-thief-1'&&e81.stage===3){state.mapId='event81-thief-1';enemy=null;addLog('闖入 PC團盜賊金剛陣第一層。');}
-  if(action==='event81-thief-2'&&e81.stage===4){state.mapId='event81-thief-2';enemy=null;addLog('闖入 PC團盜賊金剛陣第二層。');}
-  if(action==='event81-thief-3'&&e81.stage===5){state.mapId='event81-thief-3';enemy=null;addLog('闖入 PC團盜賊金剛陣第三層。');}
-  if(action==='event81-boss'&&e81.stage===6){state.mapId='event81-boss';enemy=null;addLog('前往 Floor 5582 挑戰 PC團老大。','good');}
+  if(action==='event81-maze-battle'&&e81.stage===3){
+    const zone=event81MazeZone(e81.mazeX);
+    if(zone){state.mapId=zone;enemy=null;addLog('在 Floor '+n(e81.mazeFloor)+' ('+n(e81.mazeX)+','+n(e81.mazeY)+') 挑戰 PC團盜賊。');}
+    else addLog('目前金剛陣座標無法對應原始戰鬥區。','bad');
+  }
+  if(action==='event81-maze-reset'&&e81.stage===3){
+    e81.mazeFloor=5576;e81.mazeX=24;e81.mazeY=86;state.mapId='event81-thief-1';enemy=null;
+    addLog('金剛陣座標已重置到 Floor 5576 (24,86)。','pet');
+  }
+  if(action==='event81-boss'&&e81.stage===6){state.mapId='event81-boss';enemy=null;addLog('前往 Floor 5582 (33,87) 挑戰 PC團老大。','good');}
   if(action==='event81-confession'&&e81.stage===7){
     if(!hasItem(19698))giveItem(19698,1);
     e81.stage=8;
