@@ -5,6 +5,7 @@ const ENCOUNTER_RUNTIME_URL='data/generated/stoneage_general_encounter_runtime.j
 const ENEMY_AI_URL='data/generated/stoneage_enemy_ai.json';
 const PETSKILL_RUNTIME_URL='data/generated/stoneage_petskill_runtime.json';
 const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
+const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -45,7 +46,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set();
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -55,9 +56,10 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:16,
+    schemaVersion:17,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,
     playerPigUntilMs:0,playerPigImage:100388,
+    magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
@@ -174,7 +176,14 @@ function normalizeState(raw){
   for(const p of s.petBox)syncPetBattleHp(p,legacyPetHp||!Number.isFinite(Number(p.hp)));
   s.playerPigUntilMs=Math.max(0,n(s.playerPigUntilMs));
   s.playerPigImage=Math.trunc(n(s.playerPigImage)||100388);
-  s.schemaVersion=16;
+  const normMagic4=a=>Array.from({length:4},(_,i)=>Math.max(0,Math.trunc(n(Array.isArray(a)?a[i]:0))));
+  s.magicResist=normMagic4(s.magicResist);
+  s.magicResistExp=normMagic4(s.magicResistExp);
+  for(const p of s.petBox){
+    p.magicResist=normMagic4(p.magicResist);
+    p.magicResistExp=normMagic4(p.magicResistExp);
+  }
+  s.schemaVersion=17;
   delete s.pets;
   return s;
 }
@@ -1112,6 +1121,180 @@ function battleAttrMultiplier(attacker,defender){
   const wind=a.wind*(d.none*up+d.fire*down+d.water*same+d.earth*up+d.wind*same);
   const none=a.none*(d.none*same+d.fire*down+d.water*down+d.earth*down+d.wind*down);
   return (fire+water+earth+wind+none)/10000;
+}
+const MAGIC_ATTR_KEYS=Object.freeze(['earth','water','fire','wind']);
+const MAGIC_CHAR_TABLE=Object.freeze([
+  Object.freeze([13,11,10,12,14]),
+  Object.freeze([18,16,15,17,19]),
+  Object.freeze([8,6,5,7,9]),
+  Object.freeze([3,1,0,2,4])
+]);
+const MAGIC_CHAR_TABLE_IDX=Object.freeze([
+  [3,2],[3,1],[3,3],[3,0],[3,4],
+  [2,2],[2,1],[2,3],[2,0],[2,4],
+  [0,2],[0,1],[0,3],[0,0],[0,4],
+  [1,2],[1,1],[1,3],[1,0],[1,4]
+]);
+function magicProgressArray(v){
+  return Array.from({length:4},(_,i)=>Math.max(0,Math.trunc(n(Array.isArray(v)?v[i]:0))));
+}
+function magicTargetStore(desc){
+  if(desc?.kind==='player')return state;
+  if(desc?.kind==='pet'&&desc.pet)return desc.pet;
+  return null;
+}
+function magicTargetResist(desc,attrIndex){
+  const store=magicTargetStore(desc);
+  if(!store)return 0;
+  store.magicResist=magicProgressArray(store.magicResist);
+  store.magicResistExp=magicProgressArray(store.magicResistExp);
+  return Math.max(0,Math.trunc(n(store.magicResist[attrIndex])));
+}
+function magicComputeDefExp(desc,attrIndex,magicLv,damage){
+  const store=magicTargetStore(desc);
+  if(!store||damage<200)return null;
+  store.magicResist=magicProgressArray(store.magicResist);
+  store.magicResistExp=magicProgressArray(store.magicResistExp);
+
+  let lv=Math.max(0,Math.trunc(n(store.magicResist[attrIndex])));
+  let exp=Math.max(0,Math.trunc(n(store.magicResistExp[attrIndex])));
+  const addEx=Math.trunc(n(damage)/20)*(Math.trunc(n(magicLv))*2);
+  exp+=addEx;
+  let raised=false,lowered=false;
+  if(exp>100){
+    exp=0;
+    if(lv<100){lv++;raised=true;}
+  }
+  lv=clamp(lv,0,100);
+  store.magicResist[attrIndex]=lv;
+  store.magicResistExp[attrIndex]=Math.max(0,exp);
+
+  const sub=(attrIndex+1)%4;
+  let subLv=Math.max(0,Math.trunc(n(store.magicResist[sub])));
+  let subExp=Math.max(0,Math.trunc(n(store.magicResistExp[sub])));
+  if(subLv>1){
+    subExp-=2;
+    if(subExp<0){
+      subExp=90;
+      subLv=Math.max(0,subLv-1);
+      lowered=true;
+    }
+    store.magicResist[sub]=subLv;
+    store.magicResistExp[sub]=subExp;
+  }
+  return {addEx,raised,lowered,level:lv,exp:store.magicResistExp[attrIndex],subIndex:sub,subLevel:subLv,subExp};
+}
+function magicAttrCalcRaw(a,d){
+  const same=1,up=1.5,down=.6;
+  const fire=Math.trunc(n(a.fire)*(n(d.none)*up+n(d.fire)*same+n(d.water)*down+n(d.earth)*same+n(d.wind)*up));
+  const water=Math.trunc(n(a.water)*(n(d.none)*up+n(d.fire)*up+n(d.water)*same+n(d.earth)*down+n(d.wind)*same));
+  const earth=Math.trunc(n(a.earth)*(n(d.none)*up+n(d.fire)*same+n(d.water)*up+n(d.earth)*same+n(d.wind)*down));
+  const wind=Math.trunc(n(a.wind)*(n(d.none)*up+n(d.fire)*down+n(d.water)*same+n(d.earth)*up+n(d.wind)*same));
+  const none=Math.trunc(n(a.none)*(n(d.none)*same+n(d.fire)*down+n(d.water)*down+n(d.earth)*down+n(d.wind)*down));
+  return Math.trunc((fire+water+earth+wind+none)/10000);
+}
+function enemyMagicAttrDamage(unit,targetDesc,magic,aPower){
+  const source=normalizedElements(unit?.elements||{})||{earth:0,water:0,fire:0,wind:0,none:100};
+  const targetView=battleStatusDescView(targetDesc);
+  const def=normalizedElements(targetView?.elements||{})||{earth:0,water:0,fire:0,wind:0,none:100};
+  const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
+  const scaled=Math.trunc(n(magic.magicLv))*10;
+  const attack={earth:0,water:0,fire:0,wind:0,none:Math.trunc(n(source.none)*n(aPower))};
+  const sourceAttr=Math.trunc(n(source[magic.attr]));
+  attack[magic.attr]=Math.trunc((scaled+scaled*Math.trunc(sourceAttr/50))*n(aPower));
+  // BattleArray.field_att starts NONE. The current web has no field-attribute changer yet,
+  // so BATTLE_FieldAttAdjust returns .5 for both sides and the ratio is exactly 1.
+  return {damage:magicAttrCalcRaw(attack,def),attrIndex,attackVector:attack,defVector:def};
+}
+function magicDescForSlot(slot){
+  if(slot===0&&state.hp>0)return {kind:'player'};
+  if(slot===5){
+    const pet=activePet();
+    if(pet&&petIsBattleActive(pet))return {kind:'pet',pet,petId:pet.id};
+  }
+  return null;
+}
+function enemyAttackMagicTargets(chosen,magic,pattern){
+  const selectedSlot=chosen?.kind==='pet'?5:0;
+  let toNo=selectedSlot;
+  const rewrite=Number(magic?.targetRewrite);
+  if(rewrite===20)toNo=20;
+  else if(Number.isFinite(rewrite)&&rewrite!==-1)toNo=(selectedSlot>=0&&selectedSlot<=4)?rewrite:rewrite-1;
+
+  const slots=new Set();
+  const addSlot=slot=>{if((slot===0||slot===5)&&magicDescForSlot(slot))slots.add(slot);};
+  const field=pattern?.field||[[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]];
+
+  if(toNo<20){
+    const idx=MAGIC_CHAR_TABLE_IDX[toNo];
+    if(idx){
+      const basey=idx[0],basex=idx[1];
+      for(let i=0,j=basey-1;j<=basey+1;i++,j++){
+        if(toNo<10&&(j<2||j>3))continue;
+        if(toNo>=10&&(j<0||j>1))continue;
+        for(let k=0;k<5;k++){
+          const x=basex-2+k;
+          if(x<0||x>4)continue;
+          if(n(field?.[i]?.[k])&&MAGIC_CHAR_TABLE[j])addSlot(MAGIC_CHAR_TABLE[j][x]);
+        }
+      }
+    }
+  }else if(toNo===20){
+    for(let i=0;i<2;i++)for(let j=0;j<5;j++){
+      if(n(field?.[i]?.[j]))addSlot(MAGIC_CHAR_TABLE[i+2][j]);
+    }
+  }else if(toNo===21){
+    // Enemy attack magic does not normally target its own side, but keep source shape complete.
+  }else if(toNo>=23&&toNo<=26){
+    const basey=toNo-23;
+    for(let i=0,j=basey-1;j<=basey+1;i++,j++){
+      if((toNo===25||toNo===26)&&(j<2||j>3))continue;
+      if((toNo===23||toNo===24)&&(j<0||j>1))continue;
+      for(let k=0;k<5;k++){
+        if(n(field?.[i]?.[k])&&MAGIC_CHAR_TABLE[j])addSlot(MAGIC_CHAR_TABLE[j][k]);
+      }
+    }
+  }
+  // Original list is location-sorted; on side 0 row 3 (player) precedes row 2 (pet).
+  return [...slots].sort((a,b)=>(a===0?-1:(b===0?1:a-b))).map(magicDescForSlot).filter(Boolean);
+}
+function enemyMagicDodge(targetDesc,attrIndex){
+  let fLuck=0;
+  if(targetDesc?.kind==='player'){
+    fLuck=n(state.luck)*3+magicTargetResist(targetDesc,attrIndex)*.15;
+  }else if(targetDesc?.kind==='pet'){
+    fLuck=Math.min(30,n(targetDesc.pet?.level)*.2);
+  }
+  const threshold=Math.trunc(fLuck);
+  const roll=cRand(1,100);
+  return {dodged:roll<=threshold,roll,threshold};
+}
+function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic){
+  const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
+  if(attrIndex<0)return {damage:0,invalidAttr:true};
+  const dodge=enemyMagicDodge(targetDesc,attrIndex);
+  if(dodge.dodged)return {damage:0,dodged:true,dodge};
+
+  const attMagicLv=Math.trunc(n(unit.level)*.9);
+  const resist=magicTargetResist(targetDesc,attrIndex);
+  let kmagic=attMagicLv*1.4-resist;
+  if(kmagic<0)kmagic=0;
+  const mmagic=Math.max(1,attMagicLv);
+  const randomAmp=cRand(0,19);
+  const amagic=(kmagic*kmagic)/(mmagic*mmagic)+randomAmp/100;
+  const aPower=Math.trunc(n(magic.power)*(1+n(magic.magicLv)/10)*amagic);
+  const adjusted=enemyMagicAttrDamage(unit,targetDesc,magic,aPower);
+  let damage=Math.max(0,Math.trunc(n(adjusted.damage)));
+  if(!trueMagic)damage=Math.trunc(damage*.7);
+
+  const hpBefore=battleStatusHp(targetDesc);
+  battleStatusSetHp(targetDesc,Math.max(0,hpBefore-damage));
+  const exp=magicComputeDefExp(targetDesc,attrIndex,Math.trunc(n(magic.magicLv)),damage);
+  if(battleStatusActive(targetDesc,'sleep')){
+    battleStatusClear(targetDesc,'sleep');
+    addLog(battleStatusDescName(targetDesc)+' 被魔法命中，睡眠解除。');
+  }
+  return {damage,dodged:false,dodge,attMagicLv,resist,randomAmp,amagic,aPower,adjusted,trueMagic,exp,hpBefore,hpAfter:battleStatusHp(targetDesc)};
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
@@ -3300,6 +3483,48 @@ function performEnemyToothCrushe(actor,unit,options,meta){
     equipmentCrushReachable,crushed:false
   };
 }
+function performEnemyAttackMagic(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  const match=String(meta?.o||'').match(/magic\s+(\d+)/i);
+  const magicId=match?Number(match[1]):313;
+  const magic=attackMagicDb?.byMagicId?.[String(magicId)];
+  if(!magic){
+    addLog(unit.name+' 使用 '+(meta?.n||'攻擊魔法')+'，但 magic '+magicId+' 尚不在 AttackMagic runtime；本回合不猜魔法效果。');
+    return {kind:'skill',skillId:actor.skillId,magicId,unsupportedMagic:true};
+  }
+  const pattern=attackMagicDb?.byAttIdx?.[String(magic.attIdx)]?.enemySide;
+  if(!pattern){
+    addLog(unit.name+' 使用 '+magic.name+'，但 attmagic idx '+magic.attIdx+' 缺少原始範圍資料；本回合不猜範圍。');
+    return {kind:'skill',skillId:actor.skillId,magicId,missingPattern:true};
+  }
+
+  const attMagicLv=Math.trunc(n(unit.level)*.9);
+  const trueRoll=cRand(0,99);
+  const trueMagic=!(trueRoll>attMagicLv);
+  const targets=enemyAttackMagicTargets(chosen,magic,pattern);
+  const results=[];
+
+  addLog(unit.name+' 使用 '+magic.name+'（'+magic.attr+'，Power '+magic.power+'，MagicLv '+magic.magicLv+'）。');
+  for(const target of targets){
+    if(!battleStatusDescAlive(target))continue;
+    const r=enemyMagicDamageOne(unit,target,magic,trueMagic);
+    results.push({target:target.kind,petId:target.petId||null,r});
+    if(r.dodged){
+      addLog(battleStatusDescName(target)+' 閃過 '+magic.name+'（魔法閃避 '+r.dodge.roll+' ≤ '+r.dodge.threshold+'）。','good');
+    }else{
+      addLog(magic.name+' 命中 '+battleStatusDescName(target)+'，造成 '+r.damage+' 魔法傷害'+(trueMagic?'':'（施法判定失敗 ×0.7）')+'。',battleStatusHp(target)<=0?'bad':'');
+      if(r.exp?.raised)addLog(battleStatusDescName(target)+' 的'+magic.attr+'魔抗提升到 '+r.exp.level+'。','good');
+      if(r.exp?.lowered)addLog(battleStatusDescName(target)+' 的相克魔抗下降到 '+r.exp.subLevel+'。');
+    }
+  }
+  return {
+    kind:'skill',skillId:actor.skillId,magicId,magicName:magic.name,
+    trueRoll,attMagicLv,trueMagic,targets:results,
+    attIdx:magic.attIdx,targetRewrite:magic.targetRewrite,attackType:pattern.attackType
+  };
+}
 function performEnemyLighttakeed(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -3929,6 +4154,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ToothCrushe')return performEnemyToothCrushe(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_AttackMagic')return performEnemyAttackMagic(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomePig')return performEnemyBecomePig(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
@@ -4845,14 +5071,15 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
       fetch(ZOO_QUEST_URL,{cache:'no-store'}),
       fetch(ENEMY_AI_URL,{cache:'no-store'}),
       fetch(PETSKILL_RUNTIME_URL,{cache:'no-store'}),
-      fetch(PET_MODAI_URL,{cache:'no-store'})
+      fetch(PET_MODAI_URL,{cache:'no-store'}),
+      fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
@@ -4861,11 +5088,13 @@ async function boot(){
     if(!aiR.ok)throw new Error('Enemy AI 資料 HTTP '+aiR.status);
     if(!petSkillR.ok)throw new Error('PetSkill runtime HTTP '+petSkillR.status);
     if(!modAiR.ok)throw new Error('Pet MODAI runtime HTTP '+modAiR.status);
+    if(!attackMagicR.ok)throw new Error('AttackMagic runtime HTTP '+attackMagicR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
     enemyAiDb=await aiR.json();
     petSkillDb=await petSkillR.json();
     petModAiDb=await modAiR.json();
+    attackMagicDb=await attackMagicR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -4877,7 +5106,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.60 載入完成：接入 635 黑烏力化；普通物理攻擊與 Counter 後，命中玩家以 rand()%100<30 判定 180 秒狀態，重複成功累加秒數；現有指令皆為原碼允許項，不虛構能力 debuff。','good');
+    addLog('V0.61 載入完成：正式接入 magic 301～325 Enemy AttackMagic；由原 magic.txt + attmagic.bin 還原範圍、_FIX_MAGICDAMAGE 傷害、魔法閃避、睡眠解除與玩家／寵物魔抗成長。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
