@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "Event 82/83 core is playable. Event 71 and Item 2414 now use source-backed prerequisite flows; Event69/70 are represented as a compact playable prelude instead of a development flag.",
+    "note": "Event 82/83 core is playable. Event 71 and Item 2414 use source-backed prerequisite flows; Marefia TempNo 718 now starts at Lv1 and follows the 14 verified ptalk01.arg memory checkpoints through Lv79.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -39,13 +39,16 @@
       "name": "接回瑪蕾菲雅",
       "serverEventId": 70,
       "verified": true,
-      "implementationStatus": "playable_compact",
+      "implementationStatus": "playable_compact_with_full_marefia_memory",
       "source": "gmsv/data/npc/king/event69_7",
       "reward": {
         "petEnemyId": 1479,
         "petTempNo": 718,
-        "itemId": 19624
-      }
+        "itemId": 19624,
+        "petInitialLevel": 1,
+        "petInitialLevelSource": "gmsv/data/enemy1.txt EnemyID 1479 / TempNo 718 level 1"
+      },
+      "memorySource": "gmsv/data/npc/pettalk/ptalk01.arg"
     },
     "71": {
       "name": "精靈王傳說／寵物轉生後續",
@@ -70,7 +73,100 @@
         "phrase": "地為界水為憑火為引風為信",
         "source": "gmsv/data/npc/king/event69_9"
       },
-      "note": "Event83 requires NOWEV=71, not ENDEV=71. Event4 adult ceremony is not rebuilt yet; the standalone V0.7 prelude compresses that upstream legacy content rather than exposing a development flag."
+      "note": "Event83 requires NOWEV=71, not ENDEV=71. Marefia memory checkpoints are now individually playable from source. Event4 adult ceremony is still not rebuilt; the standalone V0.7 prelude compresses that older upstream requirement rather than exposing a development flag.",
+      "marefiaMemoryRoute": [
+        {
+          "level": 10,
+          "floorId": 1000,
+          "nextLimitLevel": 15,
+          "clue": "薩姆吉爾村的大石像"
+        },
+        {
+          "level": 15,
+          "floorId": 1400,
+          "nextLimitLevel": 20,
+          "clue": "西北方沙漠中的村落"
+        },
+        {
+          "level": 20,
+          "floorId": 1200,
+          "nextLimitLevel": 25,
+          "clue": "黃昏可看見繁星的山頂"
+        },
+        {
+          "level": 25,
+          "floorId": 5542,
+          "nextLimitLevel": 30,
+          "clue": "波拉島胡椒林與加美訓練場遺跡"
+        },
+        {
+          "level": 30,
+          "floorId": 4000,
+          "nextLimitLevel": 35,
+          "clue": "加魯卡水上漁村的燈塔"
+        },
+        {
+          "level": 35,
+          "floorId": 20301,
+          "nextLimitLevel": 40,
+          "clue": "棲息大量加美的洞窟"
+        },
+        {
+          "level": 40,
+          "floorId": 3300,
+          "nextLimitLevel": 45,
+          "clue": "尼斯大陸矮小人族的聚落"
+        },
+        {
+          "level": 45,
+          "floorId": 21201,
+          "nextLimitLevel": 50,
+          "clue": "加魯卡南方可在海上行走之地"
+        },
+        {
+          "level": 50,
+          "floorId": 20105,
+          "nextLimitLevel": 55,
+          "clue": "山崖密林與血紅大花"
+        },
+        {
+          "level": 55,
+          "floorId": 6000,
+          "nextLimitLevel": 60,
+          "clue": "村旁有日夜雙入口的巨藤洞窟"
+        },
+        {
+          "level": 60,
+          "floorId": 31901,
+          "nextLimitLevel": 65,
+          "clue": "盛產好石頭、精靈曾聚居之地"
+        },
+        {
+          "level": 65,
+          "floorId": 30703,
+          "nextLimitLevel": 70,
+          "clue": "岩石高原北方的花之洞窟",
+          "rewardItemId": 19688,
+          "rewardCount": 3
+        },
+        {
+          "level": 70,
+          "floorId": 31201,
+          "nextLimitLevel": 75,
+          "clue": "精靈王祭壇附近的沒落礦坑"
+        },
+        {
+          "level": 75,
+          "floorId": 40,
+          "nextLimitLevel": 79,
+          "clue": "沙姆海底通路的地下水池"
+        }
+      ],
+      "marefiaFinalDialogue": {
+        "level": 79,
+        "source": "gmsv/data/npc/pettalk/ptalk01.arg EVENTRUN2",
+        "summary": "瑪蕾菲雅確認使命：前往拯救被困的精靈王。"
+      }
     },
     "81": {
       "name": "金飛航空任務",
@@ -542,6 +638,19 @@
           "type": "quest_npc",
           "label": "Event 2 日美子",
           "summary": "送花分支正式取得 Item 2415，交給彌生後換得 Item 2414。"
+        }
+      ]
+    },
+    {
+      "id": 19688,
+      "name": "Item 19688（瑪蕾菲雅 Lv65 回憶獎勵）",
+      "sourceStatus": "verified_id",
+      "source": "gmsv/data/npc/pettalk/ptalk01.arg EVENTRUN7",
+      "sources": [
+        {
+          "type": "pet_talk_reward",
+          "label": "瑪蕾菲雅 Floor 30703 回憶",
+          "summary": "PET Lv65、Floor 30703 時，EVENTRUN7 設定 LimitLevel:70 並 AddItem:19688,19688,19688。正式物品名稱尚未由現行資料表解出。"
         }
       ]
     }
