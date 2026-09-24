@@ -429,6 +429,7 @@ function encounterDynamicFormation(encounter){
   for(const ref of encounter.groups||[]){
     const spec=dynamicGroupCatalog.get(String(ref.groupId));
     if(!ref.resolved||!spec||!dynamicGroupUnlocked(spec))continue;
+    if(!(spec.members||[]).some(m=>n(m.weight)>0&&n(m.createMax)>0))continue;
     choices.push({ref,spec,weight:Math.max(0,n(ref.weight))});
   }
   if(!choices.length)return null;
