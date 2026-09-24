@@ -626,3 +626,108 @@ V0.16 已正式接入此狀態機。
 - 真正觸發戰鬥時會顯示該次 `CEP / Roll`
 
 任務固定戰鬥區（Event81／82／83）不走 CEP，仍維持任務按鈕／固定狩獵區立即生成，避免把 NPC／腳本戰鬥錯套成一般走路遇敵。
+
+
+## V0.17 ENEMY_createEnemy／RandomChange／原衍生能力
+
+### enemybase1 的真正整數解析
+
+重新核對 `ENEMYTEMP_initEnemy()` 後確認：`enemybase1.txt` 的整數欄位全部經 `atoi()` 載入。
+
+因此像：
+
+`E_T_LVUPPOINT = "4.50"`
+
+服務端實際得到的是：
+
+`4`
+
+不是 4.5。
+
+V0.17 runtime v3 因此同時保留：
+
+- `sourceLvUpPointText`：原始文字
+- `serverLvUpPoint`：依 C `atoi()` 真正進服務端記憶體的整數
+- `serverInitNum`
+- 原七格 PetSkill
+- Enemy Style
+
+### ENEMY_createEnemy 四圍生成
+
+一般野怪每一個 Enemy instance 現在依原 `enemy.c`：
+
+1. VITAL / STR / TGH / DEX 各自先加 `RAND(0,4)-2`
+2. 保存該階段的 allocation seed
+3. 再做 10 次 `RAND(0,3)`
+4. 每次把 1 點加到四圍其中一項
+
+也就是每一隻同 EnemyID、同等級的野怪，能力不再完全相同。
+
+之後套原式：
+
+`factor = (level - 1) * atoi(E_T_LVUPPOINT) + E_T_INITNUM`
+
+`CHAR_VITAL = factor * rolledVital`
+
+`CHAR_STR = factor * rolledStr`
+
+`CHAR_TOUGH = factor * rolledTgh`
+
+`CHAR_DEX = factor * rolledDex`
+
+### CHAR_complianceParameter 衍生值
+
+V0.17 一般野怪的 HP／攻／防／敏改用原 `CHAR_initcharWorkInt()`：
+
+`Attack = trunc(STR*0.01 + TOUGH*0.001 + VITAL*0.001 + DEX*0.0005)`
+
+`Defense = trunc(TOUGH*0.01 + STR*0.001 + VITAL*0.001 + DEX*0.0005)`
+
+`Quick = trunc(DEX*0.01)`
+
+`MaxHP = trunc((VITAL*4 + STR + TOUGH + DEX) * 0.01)`
+
+其中 trunc 對應 C 寫入 int 的截斷行為。
+
+這套 server derived 數值只套在有完整 `enemy1 + enemybase1` template 的 dynamicFormation Enemy；Event81／82／83 等手工任務編成若沒有完整 server create 欄位，仍保留既有安全估算，避免把任務測試流程一起打壞。
+
+### ENEMY_RandomChange
+
+`ENEMY_RandomChange()` 與 V0.16 的 `ENEMY_RandomEnemyArray()` 是兩套不同機制。
+
+RandomEnemyArray：
+- 先把 placeholder EnemyID 換成真正 EnemyID。
+
+RandomChange：
+- Enemy instance 建立完成後再改它的外觀／屬性／技能設定。
+- 不再更換 EnemyID。
+
+人型範圍：
+- 564～580
+- 739～750
+- 895～906
+
+會：
+- 從 48 個 `gymbody` sprite symbol 隨機選外觀
+- 重骰四屬性，且保持 Earth/Fire、Water/Wind 對向
+- 從 9 種道場武器類型隨機選擇
+- 依武器決定前兩格為普通攻擊，或使用 `EnemyGymSkill` 隨機池
+
+寵物型範圍：
+- 655～720
+- 859～894
+- 907～940
+
+會：
+- 把前兩格技能改為 `EnemyGymSkill` 隨機池
+
+已確認固定核心 EnemyGymSkill 至少包含：
+`3,10,11,12,30,31,40,41,50,51,52,60,61,80,90,100,110,150,151,152`
+
+其餘成員受 C 編譯 feature flag 控制。由於目前網頁戰鬥尚未完整實作原 PetSkill 系統，V0.17 **只保留並顯示 RandomChange 技能規則 metadata，不偽造技能傷害效果**。
+
+目前 85 個一般 Lv1 Floor 的 705 個 Group 直接 RandomChange slot 數仍為 **0**；但 V0.16 的 92 個 RandomEnemy 替代目標全部會命中 RandomChange：
+- 24 個人型
+- 68 個寵物型
+
+因此未來接入 Group 424～429 等含 RandomEnemy placeholder 的區域時，兩層規則可以直接串起來。
