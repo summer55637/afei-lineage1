@@ -1505,7 +1505,9 @@ const ENEMY_SOURCE_SKILL_META={
   707:{n:'劇毒攻擊',d:'攻擊 +20%，命中後附加劇毒',f:'PETSKILL_StatusChange',o:'剧 turn 6  攻%+20',field:1,target:6},
   // V0.51：原 BATTLE_S_AttackDamage 的怯戰系；成功後依來源把目標趕離／收回戰場。
   606:{n:'怯戰',d:'攻 70%、防 40%、敏 80%；命中後可能使目標逃離',f:'PETSKILL_BattleTimid',o:'',field:1,target:6},
-  636:{n:'狂獅怒吼',d:'攻 50%、敏 130%；可能使敵方寵物回到寵物欄',f:'PETSKILL_2BattleTimid',o:'-攻%50+敏%30命%60',field:1,target:7}
+  636:{n:'狂獅怒吼',d:'攻 50%、敏 130%；可能使敵方寵物回到寵物欄',f:'PETSKILL_2BattleTimid',o:'-攻%50+敏%30命%60',field:1,target:7},
+  // V0.53：Enemy AI 會把既有對手側 target 直接傳給 Sacrifice，因此來源會替玩家／寵物補血。
+  573:{n:'救援',d:'自身目前 HP 對半，將對半後的 HP 加到目標',f:'PETSKILL_Sacrifice',o:'',field:1,target:1}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -1569,6 +1571,14 @@ function enemyChooseAction(unit){
       };
     }
     const meta=enemyPetSkillMeta(picked.skillId);
+    if(meta?.f==='PETSKILL_Sacrifice'&&n(unit?.hp)<=n(unit?.maxHp)*.2){
+      // 原 PETSKILL_Sacrifice() 在 AI 階段直接 return FALSE；
+      // BATTLE_ai_all() 不設 C_OK，因此本回合在 StatusSeq 前被跳過。
+      return {
+        kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta,
+        sourceSkillRejected:true,sourceCWaitReason:'sacrifice-low-hp'
+      };
+    }
     if(meta?.f==='PETSKILL_None')return {kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
     if(meta?.f==='PETSKILL_NormalAttack')return {kind:'attack',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
     if(meta?.f==='PETSKILL_NormalGuard')return {kind:'guard',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
@@ -3168,6 +3178,39 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
 }
+function performEnemySacrifice(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  const beforeCaster=Math.max(0,Math.trunc(n(unit.hp)));
+  // 原 BATTLE_S_Sacrifice：CHAR_HP = CHAR_HP * 0.5，int 截斷。
+  unit.hp=Math.max(0,Math.trunc(beforeCaster*.5));
+  const transfer=Math.max(0,Math.trunc(n(unit.hp)));
+
+  let beforeTarget=0,afterTarget=0,targetName='你',targetKind=chosen.kind;
+  if(chosen.kind==='pet'&&chosen.pet){
+    const pet=chosen.pet;
+    beforeTarget=Math.max(0,Math.trunc(n(pet.hp)));
+    const maxHp=Math.max(1,Math.trunc(n(pet.maxHp)));
+    pet.hp=Math.min(maxHp,beforeTarget+transfer);
+    afterTarget=pet.hp;
+    targetName=pet.name;
+  }else{
+    beforeTarget=Math.max(0,Math.trunc(n(state.hp)));
+    const maxHp=Math.max(1,Math.trunc(n(state.maxHp)));
+    state.hp=Math.min(maxHp,beforeTarget+transfer);
+    afterTarget=state.hp;
+  }
+
+  const healed=Math.max(0,afterTarget-beforeTarget);
+  addLog(unit.name+' 使用 '+(meta?.n||'救援')+'：自身 HP '+beforeCaster+' → '+unit.hp+'，並替 '+targetName+' 回復 '+healed+' HP（來源轉移值 '+transfer+'）。','bad');
+
+  // 原 BATTLE_S_Sacrifice 沒有物理攻擊，也沒有 Counter loop。
+  return {
+    kind:'skill',skillId:actor.skillId,target:targetKind,
+    beforeCaster,afterCaster:unit.hp,transfer,healed
+  };
+}
 function performEnemyDamageToHp2(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -3629,6 +3672,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Sacrifice')return performEnemySacrifice(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTimid')return performEnemyBattleTimid(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_2BattleTimid')return performEnemy2BattleTimid(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Refresh')return performEnemyRefresh(actor,unit,options,meta);
@@ -3775,7 +3819,7 @@ function captureTurn(manual=false){
   for(const actor of order){
     if(!enemy)return captured;
     if(state.hp<=0){defeat();return captured}
-    if(sourceMissingEnemyWait(actor))continue;
+    if(sourceEnemyCWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -3962,6 +4006,8 @@ function normalBattleOrder(){
       kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
       enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
       sourceSkillMissing:!!action.sourceSkillMissing,
+      sourceSkillRejected:!!action.sourceSkillRejected,
+      sourceCWaitReason:action.sourceCWaitReason||null,
       targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
     });
   }
@@ -3971,11 +4017,15 @@ function normalBattleOrder(){
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
   return order;
 }
-function sourceMissingEnemyWait(actor){
-  if(actor?.kind!=='enemy'||!actor.sourceSkillMissing)return false;
+function sourceEnemyCWait(actor){
+  if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillRejected))return false;
   const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
   if(unit){
-    addLog(unit.name+' 的 Enemy AI 抽到來源未定義 PetSkill '+actor.skillId+'；原服 PETSKILL_Use() 會失敗並停在 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
+    if(actor.sourceSkillMissing){
+      addLog(unit.name+' 的 Enemy AI 抽到來源未定義 PetSkill '+actor.skillId+'；原服 PETSKILL_Use() 會失敗並停在 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
+    }else if(actor.sourceCWaitReason==='sacrifice-low-hp'){
+      addLog(unit.name+' 嘗試使用救援，但目前 HP 不高於最大 HP 的 20%；原 PETSKILL_Sacrifice() 直接失敗並停在 C_WAIT，本回合不跑自身 StatusSeq。');
+    }
   }
   return true;
 }
@@ -3986,7 +4036,7 @@ function attackTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
-    if(sourceMissingEnemyWait(actor))continue;
+    if(sourceEnemyCWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -4054,7 +4104,7 @@ function guardTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
-    if(sourceMissingEnemyWait(actor))continue;
+    if(sourceEnemyCWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -4556,7 +4606,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.52 載入完成：還原 Enemy AI 引用缺失 PetSkill 的原服行為；缺表 ID 抽中時 PETSKILL_Use 失敗，Enemy 維持 C_WAIT，整回合不行動且不跑自身 StatusSeq。','good');
+    addLog('V0.53 載入完成：接入 573 救援；Enemy AI 依原碼會把對手側 target 傳入，施術者目前 HP 對半後把剩餘 HP 加給玩家／寵物；HP ≤20% 時保留 PETSKILL_Use 失敗的 C_WAIT 行為。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
