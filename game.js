@@ -1367,7 +1367,9 @@ const ENEMY_SOURCE_SKILL_META={
   500:{n:'E復活術',d:'ENEMY 專屬復活術 LV1',f:'ENEMYSKILL_ReLife',o:'',field:1,target:2},
   501:{n:'E回復技',d:'ENEMY 專屬回復技 LV1',f:'ENEMYSKILL_ReHP',o:'',field:1,target:2},
   502:{n:'E招喚',d:'ENEMY 專屬招喚 LV1',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:2},
-  503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6}
+  503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6},
+  541:{n:'狂暴攻擊',d:'多段狂暴攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+80 防%-35 回避30',field:1,target:6},
+  543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1467,13 +1469,17 @@ function enemyPrepareRoundAction(unit,action){
     unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
     // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
     unit.counterEligibleThisTurn=true;
-  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'){
+  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'||meta?.f==='PETSKILL_WildViolentAttack'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
     const baseDefense=Math.trunc(n(unit.defense));
     unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
     unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+    if(meta?.f==='PETSKILL_WildViolentAttack'){
+      // battle.c 會在真正 BATTLE_Attack 前把此 command 改回 ATTACK，因此可參與反擊鏈。
+      unit.counterEligibleThisTurn=true;
+    }
     if(meta?.f==='PETSKILL_Guardian'&&!String(meta.o||'').includes('COM:防')){
       unit.guardianReadyThisTurn=true;
       // 原 BATTLE_Counter 只接受 ATTACK / NOGUARD；GUARDIAN_ATTACK 本身不能反反擊。
@@ -1698,7 +1704,12 @@ function resolveNormalAttack(attacker,defender,options={}){
     damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
   }
 
-  // AttackSeq：先 GuardAdjust，再把 <1 的傷害 RAND(0,1)，最後才乘 gBattleDamageModyfy。
+  // GuardBreak2 類技能會在 GuardAdjust 前先修正原始傷害。
+  const preGuardMultiplier=Number.isFinite(Number(options.preGuardDamageMultiplier))
+    ?Number(options.preGuardDamageMultiplier):1;
+  damage=Math.trunc(damage*preGuardMultiplier);
+
+  // AttackSeq：技能前置倍率後才 GuardAdjust，再把 <1 的傷害 RAND(0,1)，最後乘 gBattleDamageModyfy。
   if(guarding)damage=battleGuardAdjust(damage);
   if(damage<1)damage=cRand(0,1);
 
@@ -1715,6 +1726,7 @@ function resolveNormalAttack(attacker,defender,options={}){
   return {
     damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,
     guarded:guarding,duckRaw:duck,criticalRaw,
+    preGuardDamageMultiplier:preGuardMultiplier,
     damageMultiplier:multiplier,damageDivisor:Number.isFinite(divisor)&&divisor>0?divisor:1
   };
 }
@@ -2250,6 +2262,80 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function performEnemyWildViolent(actor,unit,options,meta){
+  const option=String(meta?.o||'');
+  const duckMatch=option.match(/回?避([+-]?\d+)/);
+  const duckBonus=duckMatch?Math.max(0,Number(duckMatch[1])||0):0;
+  const count=cRand(3,10);
+  const label=meta?.n||'狂暴攻擊';
+  unit.counterEligibleThisTurn=true;
+  addLog(unit.name+' 使用 '+label+'：隨機 '+count+' 段，單段傷害 ÷'+count+'，目標回避 +'+duckBonus+'。');
+
+  let chosen=enemyActorTarget(actor,unit);
+  let lastResult=null,lastChosen=null,hits=0;
+  for(let i=0;i<count;i++){
+    if(!enemy||unit.hp<=0||state.hp<=0)break;
+    if(!chosen
+      ||(chosen.kind==='pet'&&(!chosen.pet||!petIsBattleActive(chosen.pet)))
+      ||(chosen.kind==='player'&&state.hp<=0)){
+      chosen=enemyActorTarget(actor,unit);
+    }
+    if(!chosen)break;
+
+    let r;
+    if(chosen.kind==='pet'&&chosen.pet){
+      r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count,duckBonusPercent:duckBonus});
+    }else{
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=enemyAttackResult(unit,{guarding,damageDivisor:count,duckBonusPercent:duckBonus});
+    }
+    hits++;
+    lastResult=r;lastChosen=chosen;
+    enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+
+    if(state.hp<=0)break;
+    if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet))chosen=null;
+  }
+
+  // 原 battle.c 完成所有多段攻擊後，才以最後一次 BATTLE_Attack 的 ContFlg 進反擊鏈。
+  if(lastResult&&unit.hp>0&&enemy){
+    if(lastChosen?.kind==='pet'&&lastChosen.pet&&petIsBattleActive(lastChosen.pet)){
+      resolvePetEnemyCounterChain('enemy',lastChosen.pet,unit,lastResult);
+    }else if(lastChosen?.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,hits,attackCount:count,duckBonus,lastResult};
+}
+function performEnemyGuardBreak2(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'破除防禦之2';
+  const guarding=chosen.kind==='player'
+    &&!!options.playerGuarding
+    &&!battleStatusActive({kind:'player'},'confusion');
+  const preGuardDamageMultiplier=guarding?1.3:.7;
+  unit.counterEligibleThisTurn=false;
+
+  let r;
+  if(chosen.kind==='pet'&&chosen.pet){
+    r=enemyAttackPetResult(unit,chosen.pet,{preGuardDamageMultiplier});
+  }else{
+    r=enemyAttackResult(unit,{guarding,preGuardDamageMultiplier});
+  }
+  enemyApplySkillHit(unit,chosen,r,label+(guarding?'（防禦目標 ×1.3）':'（非防禦目標 ×0.7）'));
+
+  // BATTLE_S_GBreak2：非防禦時 MISS/DODGE/NORMAL 的 iRet 可進一次反擊；
+  // 防禦中會把 iRet 強制 FALSE；技能 command 本身也不能反反擊。
+  if(!guarding&&unit.hp>0&&enemy&&!r.critical){
+    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
+    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,r);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,guarding,preGuardDamageMultiplier};
+}
 function enemyOptionParts(option){
   return String(option||'').split('|').map(x=>x.trim());
 }
@@ -2665,6 +2751,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_WildViolentAttack')return performEnemyWildViolent(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_GuardBreak2')return performEnemyGuardBreak2(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReHP')return performEnemyReHP(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_EnemyHelp')return performEnemyHelp(actor,unit,options,meta);
@@ -3550,7 +3638,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.39 載入完成：補齊 T地球一周 121、嗜血技 503，以及 Enemy Skill 500／501／502 的復活、補血、援軍與失敗轉普通攻擊。','good');
+    addLog('V0.40 載入完成：在 V0.39 的 121／500～503 基礎上，再接入 541 狂暴攻擊與 543 破除防禦之2，保留原多段、回避與防禦前倍率順序。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
