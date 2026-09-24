@@ -4,6 +4,7 @@ const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
 const ENCOUNTER_RUNTIME_URL='data/generated/stoneage_general_encounter_runtime.json';
 const ENEMY_AI_URL='data/generated/stoneage_enemy_ai.json';
 const PETSKILL_RUNTIME_URL='data/generated/stoneage_petskill_runtime.json';
+const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -44,7 +45,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set();
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1510,7 +1511,9 @@ const ENEMY_SOURCE_SKILL_META={
   573:{n:'救援',d:'自身目前 HP 對半，將對半後的 HP 加到目標',f:'PETSKILL_Sacrifice',o:'',field:1,target:1},
   // V0.54：Enemy 對玩家側使用時，來源 PETFLG 條件使變狐附加效果永遠不成立；
   // 但 BECOMEFOX command 仍走完整普通物理攻擊與 Counter 鏈。
-  625:{n:'媚惑術',d:'來源玩家寵物 PETFLG=0；Enemy 使用時等價普通物理攻擊',f:'PETSKILL_BecomeFox',o:'',field:1,target:1}
+  625:{n:'媚惑術',d:'來源玩家寵物 PETFLG=0；Enemy 使用時等價普通物理攻擊',f:'PETSKILL_BecomeFox',o:'',field:1,target:1},
+  // V0.55：_BATTLE_ABDUCTII 旅程伙伴3；以玩家寵物 FIXAI 與 option 80 判定。
+  608:{n:'E旅程伙伴3',d:'目標寵物 FIXAI 低於 80 時必定帶走',f:'PETSKILL_Abduct',o:'80',field:1,target:7}
 };
 
 // V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
@@ -3409,6 +3412,34 @@ function performEnemyHelp(actor,unit,options,meta){
   addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，Lv.'+summoned.level+' '+summoned.name+' 加入 slot '+slot+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,summonedUnitId:summoned.id,battleSlot:slot,level:summoned.level};
 }
+function petSourceModAi(pet){
+  const tempNo=Number(pet?.tempNo);
+  if(!Number.isFinite(tempNo))return null;
+  const raw=petModAiDb?.byTempNo?.[String(tempNo)];
+  const modAi=Number(raw);
+  return Number.isFinite(modAi)?modAi:null;
+}
+function petFixedAi(pet){
+  if(!pet||!state)return null;
+  const sourceModAi=petSourceModAi(pet);
+  if(sourceModAi==null)return null;
+
+  // CHAR_initcharWorkInt()：
+  // modai<=0 時改 100；
+  // ai=((hostLV*WORKFIXCHARM*1.10)/(petLV*modai))*100，指定給 int 時截斷；
+  // 然後 cap 100，再加 VARIABLEAI*0.01，最後再 clamp 0..100。
+  // 本 web 尚無轉生系統；捕獲／任務寵也沒有 VariableAI 改寫，等價來源初值 0。
+  const modAi=sourceModAi<=0?100:sourceModAi;
+  const hostLv=Math.max(1,Math.trunc(n(state.level)));
+  const petLv=Math.max(1,Math.trunc(n(pet.level)));
+  const fixCharm=n(state.charm);
+  let ai=Math.trunc(((hostLv*fixCharm*1.10)/(petLv*modAi))*100);
+  if(ai>100)ai=100;
+  ai+=n(pet.variableAi)*.01;
+  if(ai<0)ai=0;
+  if(ai>100)ai=100;
+  return {ai,modAi,sourceModAi,hostLv,petLv,fixCharm,variableAi:n(pet.variableAi)};
+}
 function performEnemyAbduct(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   const label=meta?.n||'旅程伙伴';
@@ -3430,14 +3461,34 @@ function performEnemyAbduct(actor,unit,options,meta){
     return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
   }
 
-  const per=Math.max(Math.trunc((n(pet.level)-n(unit.level))*.6+30),50);
-  const roll=cRand(1,100);
-  const success=roll<per;
-  if(success){
-    battlePetOutIds.add(pet.id);
-    addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per+'）。','bad');
+  const aiPer=Math.max(0,Math.trunc(Number(String(meta?.o||'').trim())||0));
+  let per,fixAiInfo=null,sourceDataMissing=false;
+  if(aiPer>0){
+    // _BATTLE_ABDUCTII：option >0 且目標為 CHAR_TYPEPET 時，不走等級公式。
+    // WORKFIXAI < option => per=200，否則 per=0。
+    fixAiInfo=petFixedAi(pet);
+    if(!fixAiInfo){
+      sourceDataMissing=true;
+      per=null;
+    }else{
+      per=fixAiInfo.ai<aiPer?200:0;
+    }
   }else{
-    addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per+'）。');
+    per=Math.max(Math.trunc((n(pet.level)-n(unit.level))*.6+30),50);
+  }
+
+  let roll=null,success=false;
+  if(per!=null){
+    roll=cRand(1,100);
+    success=roll<per;
+    if(success){
+      battlePetOutIds.add(pet.id);
+      addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per+(fixAiInfo?'；FIXAI '+fixAiInfo.ai+' < '+aiPer:'')+'）。','bad');
+    }else{
+      addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per+(fixAiInfo?'；FIXAI '+fixAiInfo.ai+(fixAiInfo.ai<aiPer?' < ':' ≥ ')+aiPer:'')+'）。');
+    }
+  }else{
+    addLog(unit.name+' 使用 '+label+'：'+pet.name+' 缺少可對回 enemybase1 的 TempNo／MODAI，無法猜測 FIXAI 成敗；只保留來源已確定的施術者退場。');
   }
 
   // 原版只要目標不是玩家，無論帶走成功或失敗，施術者本身都會 BATTLE_Exit。
@@ -3445,7 +3496,8 @@ function performEnemyAbduct(actor,unit,options,meta){
   const exit=finishEnemyEscape(unit);
   return Object.assign({
     kind:'skill',skillId:actor.skillId,success,per,roll,
-    target:'pet',petId:pet.id,attackerExited:true
+    aiPer,fixAi:fixAiInfo?.ai??null,modAi:fixAiInfo?.modAi??null,
+    sourceDataMissing,target:'pet',petId:pet.id,attackerExited:true
   },exit);
 }
 function performEnemyGuardianAttack(actor,unit,options,meta){
@@ -4598,13 +4650,14 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
       fetch(ZOO_QUEST_URL,{cache:'no-store'}),
       fetch(ENEMY_AI_URL,{cache:'no-store'}),
-      fetch(PETSKILL_RUNTIME_URL,{cache:'no-store'})
+      fetch(PETSKILL_RUNTIME_URL,{cache:'no-store'}),
+      fetch(PET_MODAI_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
@@ -4612,10 +4665,12 @@ async function boot(){
     if(!zooR.ok)throw new Error('動物園任務資料 HTTP '+zooR.status);
     if(!aiR.ok)throw new Error('Enemy AI 資料 HTTP '+aiR.status);
     if(!petSkillR.ok)throw new Error('PetSkill runtime HTTP '+petSkillR.status);
+    if(!modAiR.ok)throw new Error('Pet MODAI runtime HTTP '+modAiR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
     enemyAiDb=await aiR.json();
     petSkillDb=await petSkillR.json();
+    petModAiDb=await modAiR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -4627,7 +4682,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.54 載入完成：接入 625 媚惑術的 Enemy 來源行為；玩家側 PETFLG 條件不成立，因此保留普通物理攻擊與完整 Counter 鏈，不製造假的變狐狀態。','good');
+    addLog('V0.55 載入完成：接入 608 E旅程伙伴3；由原 enemybase1 TempNo→MODAI 重算寵物 FIXAI，FIXAI <80 時 per=200 必定帶走，否則 per=0；施術 Enemy 無論成敗都離場。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
