@@ -3,7 +3,7 @@
 const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
-let db=null, maps=[], state=null, enemy=null, timer=null;
+let db=null, maps=[], conditionItems=[], state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -85,6 +85,34 @@ function consumeItem(id,count=1){
 function routeUnlocked(route){
   const ids=route?.appearanceInventoryItemIds||[];
   return ids.every(id=>hasItem(id));
+}
+function buildConditionItems(){
+  const map=new Map();
+  const put=(item,kind,pet,floor)=>{
+    if(!item||item.id==null)return;
+    const key=String(item.id);
+    if(!map.has(key))map.set(key,{
+      id:Number(item.id),name:item.name||('Item '+item.id),description:item.description||'',
+      kinds:new Set(),usedByPets:new Set(),floors:new Set()
+    });
+    const x=map.get(key);
+    x.kinds.add(kind);
+    if(pet)x.usedByPets.add(pet);
+    if(floor!=null)x.floors.add(Number(floor));
+  };
+  for(const species of db.species){
+    for(const variant of species.wildLv1Variants||[]){
+      for(const item of variant.captureRule?.requiresAllItems||[])put(item,'capture',species.clientLabel,null);
+      for(const route of variant.routes||[]){
+        for(const item of route.appearanceInventoryItems||[])put(item,'appearance',species.clientLabel,route.floorId);
+      }
+    }
+  }
+  conditionItems=[...map.values()].map(x=>({
+    id:x.id,name:x.name,description:x.description,
+    kinds:[...x.kinds].sort(),usedByPets:[...x.usedByPets].sort(),
+    floors:[...x.floors].sort((a,b)=>a-b)
+  })).sort((a,b)=>a.id-b.id);
 }
 function buildMaps(){
   const m=new Map();
@@ -297,8 +325,12 @@ function tick(){
 }
 function renderMapOptions(){
   const select=$('#mapSelect');
-  select.innerHTML=maps.map(m=>'<option value="'+m.id+'">'+escapeHtml(m.name)+' · Floor '+m.id+'</option>').join('');
-  select.value=String(state.mapId);
+  const selected=String(state.mapId);
+  select.innerHTML=maps.map(m=>{
+    const ok=eligibleEntries(m).length,total=m.entries.length;
+    return '<option value="'+m.id+'">'+escapeHtml(m.name)+' · Floor '+m.id+' · '+ok+'/'+total+' 路線</option>';
+  }).join('');
+  select.value=selected;
 }
 function render(){
   if(!state)return;
@@ -325,9 +357,11 @@ function render(){
     $('#mapInfo').textContent='目前可遇 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+
       (okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要出現條件道具。':'');
   }
+  renderMapOptions();
   renderEnemy();
   renderTeam();
   renderPets();
+  renderInventory();
   renderLog();
 }
 function renderEnemy(){
@@ -390,6 +424,20 @@ function renderPets(){
       '<div class="pet-actions">'+actions.join('')+'</div></div>';
   }).join(''):'<div class="empty-note">目前還沒有寵物。把野生 Lv1 削到低 HP 後嘗試捕獲。</div>';
 }
+function renderInventory(){
+  const held=conditionItems.filter(x=>hasItem(x.id)).length;
+  $('#inventoryKinds').textContent=held+' / '+conditionItems.length;
+  $('#inventoryList').innerHTML=conditionItems.map(item=>{
+    const count=n(state.inventory[String(item.id)]);
+    const tags=item.kinds.map(k=>'<span class="item-tag">'+(k==='capture'?'捕獲條件':'出現條件')+'</span>').join('');
+    const floors=item.floors.length?' · Floor '+item.floors.join(', '):'';
+    return '<div class="inventory-row '+(count>0?'have':'')+'">'+
+      '<div class="inventory-row-top"><b>'+escapeHtml(item.name)+'</b><span class="inventory-count">×'+count+'</span></div>'+
+      '<div class="inventory-meta">ID '+item.id+' · 用於 '+item.usedByPets.map(escapeHtml).join('、')+floors+'</div>'+
+      '<div class="item-tags">'+tags+'<span class="item-tag">正式來源待解</span></div>'+
+    '</div>';
+  }).join('');
+}
 function renderLog(){
   if(!state)return;
   $('#battleLog').innerHTML=(state.log||[]).map(x=>'<div class="log-line '+(x.type||'')+'">'+escapeHtml(x.text)+'</div>').join('');
@@ -426,12 +474,13 @@ async function boot(){
     const r=await fetch(DATA_URL,{cache:'no-store'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     db=await r.json();
+    buildConditionItems();
     buildMaps();
     state=loadState();
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.2 載入完成：正式 Lv1 資料 '+db.species.length+' 種，捕獲／隊伍系統已啟用。','good');
+    addLog('V0.3 載入完成：正式 Lv1 資料 '+db.species.length+' 種，條件道具 '+conditionItems.length+' 種已接入背包。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -453,6 +502,14 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;addLog('休息完成，HP 已補滿。','good');save();render();
+});
+$('#testSupplyBtn').addEventListener('click',()=>{
+  for(const item of conditionItems){
+    const key=String(item.id);
+    state.inventory[key]=n(state.inventory[key])+1;
+  }
+  addLog('開發測試補給：九種條件道具各加入 1 個。','pet');
+  save();render();
 });
 $('#petBox').addEventListener('click',e=>{
   const b=e.target.closest('button[data-action]');if(!b)return;
