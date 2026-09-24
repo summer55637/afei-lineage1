@@ -2,6 +2,7 @@
 
 const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
 const ENCOUNTER_RUNTIME_URL='data/generated/stoneage_general_encounter_runtime.json';
+const ENEMY_AI_URL='data/generated/stoneage_enemy_ai.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -42,7 +43,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
+let db=null, encounterRuntime=null, enemyAiDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -798,10 +799,12 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     Object.assign({},raw?.elements||base.elements||{}),
     Array.isArray(raw?.petSkills)?raw.petSkills:[]
   );
+  const resolvedEnemyId=Number(raw?.enemyId??base.enemyIds?.[0]??0)||null;
   return {
     id:'unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7),
     name:raw?.name||fallbackEntry?.species?.clientLabel||base.serverName||('Enemy '+(raw?.enemyId??'')),
-    enemyId:Number(raw?.enemyId??base.enemyIds?.[0]??0)||null,
+    enemyId:resolvedEnemyId,
+    ai:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null,
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
     level,hp,maxHp:hp,attack,defense,quick,
     stats:st,
@@ -1110,6 +1113,98 @@ function enemyBattleView(unit){
     luck:0,level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
   };
 }
+function enemyAiAttackSpec(unit){
+  const ai=unit?.ai||enemyAiDb?.byEnemyId?.[String(unit?.enemyId)]||null;
+  const a=Array.isArray(ai?.a)?ai.a:[0,1,1];
+  return {
+    tactics:Math.trunc(n(ai?.t)||1),
+    weight:Math.max(0,Math.trunc(n(a[0]))),
+    targetType:Math.trunc(n(a[1]))||1,
+    selectMode:Math.trunc(n(a[2]))||1,
+    rn:Object.prototype.hasOwnProperty.call(ai||{},'r')?Math.max(0,Math.trunc(n(ai.r))):1
+  };
+}
+function battleTargetSnapshot(kind,pet=null){
+  if(kind==='pet'&&pet){
+    const view=petBattleView(pet);
+    const rawStr=pet.serverStats?n(pet.serverStats.str):n(pet.stats?.str)*100;
+    const rawDex=pet.serverStats?n(pet.serverStats.dex):n(pet.stats?.dex)*100;
+    return {
+      kind:'pet',petId:pet.id,pet,view,
+      hp:n(pet.hp),maxHp:n(pet.maxHp),str:rawStr,dex:rawDex,elements:pet.elements||{}
+    };
+  }
+  return {
+    kind:'player',petId:null,pet:null,view:playerBattleView(),
+    hp:n(state.hp),maxHp:n(state.maxHp),
+    str:n(state.playerStats?.str)*100,dex:n(state.playerStats?.dex)*100,elements:state.elements||{}
+  };
+}
+function enemySubdueAttribute(unit){
+  const e=unit?.elements||{};
+  const a=n(e.earth),b=n(e.water),c=n(e.fire),d=n(e.wind);
+  // 原 GetSubdueAttribute() 的同一個比較樹：1地、2水、3火、4風。
+  return (a>c)
+    ?((b>d)?((a>b)?2:3):((a>d)?2:1))
+    :((b>d)?((c>b)?4:3):((c>d)?4:1));
+}
+function targetElementValue(target,attr){
+  const e=target?.elements||{};
+  if(attr===1)return n(e.earth);
+  if(attr===2)return n(e.water);
+  if(attr===3)return n(e.fire);
+  if(attr===4)return n(e.wind);
+  return 0;
+}
+function enemyChooseTarget(unit){
+  const spec=enemyAiAttackSpec(unit);
+  const all=[];
+  if(state.hp>0)all.push(battleTargetSnapshot('player'));
+  const pet=activePet();
+  if(pet&&petIsAlive(pet))all.push(battleTargetSnapshot('pet',pet));
+  if(!all.length)return null;
+
+  let candidates;
+  if(spec.targetType===2)candidates=all.filter(x=>x.kind==='player');
+  else if(spec.targetType===3)candidates=all.filter(x=>x.kind==='pet');
+  else if(spec.targetType===4){
+    // 單人放置版只有玩家是 party leader；原碼另有 1/3 機率把非 leader 加進候選。
+    candidates=all.filter(x=>x.kind==='player');
+    for(const x of all)if(x.kind!=='player'&&cRand(0,2)===0)candidates.push(x);
+  }else candidates=all.slice();
+  if(!candidates.length)candidates=all.slice();
+
+  if(spec.selectMode===1||candidates.length===1){
+    return candidates[cRand(0,candidates.length-1)];
+  }
+
+  let selected=candidates[0];
+  const attr=spec.selectMode===7?enemySubdueAttribute(unit):0;
+  const value=x=>{
+    if(spec.selectMode===2||spec.selectMode===3)return n(x.hp);
+    if(spec.selectMode===4)return n(x.str);
+    if(spec.selectMode===5||spec.selectMode===6)return n(x.dex);
+    if(spec.selectMode===7)return targetElementValue(x,attr);
+    return 0;
+  };
+  for(let i=1;i<candidates.length;i++){
+    const cur=value(candidates[i]),top=value(selected);
+    if((spec.selectMode===3||spec.selectMode===6)?cur<top:cur>top)selected=candidates[i];
+  }
+
+  // _ENEMY_ATTACK_AI：HP/STR/DEX/屬性選擇仍依 rn 有機率改成隨機目標。
+  if(cRand(0,spec.rn)===0)return candidates[cRand(0,candidates.length-1)];
+  return selected;
+}
+function enemyActorTarget(actor,unit){
+  if(actor?.targetKind==='pet'){
+    const pet=state.petBox.find(p=>p.id===actor.targetPetId);
+    if(pet&&petIsAlive(pet))return battleTargetSnapshot('pet',pet);
+  }else if(actor?.targetKind==='player'&&state.hp>0){
+    return battleTargetSnapshot('player');
+  }
+  return enemyChooseTarget(unit);
+}
 function battleDuckChance(attacker,defender){
   let atDex=n(attacker?.quick),dfDex=n(defender?.quick);
   const dfLuck=defender?.type==='player'?n(defender?.luck):0;
@@ -1275,11 +1370,12 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     target=next;
   }
 }
-function resolvePetEnemyCounterChain(pet,unit,primaryResult){
+function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult){
   if(!pet||!unit||!enemy||!petIsAlive(pet)||unit.hp<=0)return;
   if(primaryResult?.critical||primaryResult?.guarded)return;
 
-  let counterer='enemy',target='pet';
+  let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
+  let target=primaryAttackerKind==='enemy'?'enemy':'pet';
   for(let depth=0;depth<5;depth++){
     if(!enemy||!petIsAlive(pet)||unit.hp<=0)break;
     const countererView=counterer==='pet'?petBattleView(pet):enemyBattleView(unit);
@@ -1331,6 +1427,50 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 }
 function enemyAttackResult(unit=targetEnemyUnit(),options={}){
   return resolveNormalAttack(enemyBattleView(unit),playerBattleView(),options);
+}
+function enemyAttackPetResult(unit,pet){
+  return resolveNormalAttack(enemyBattleView(unit),petBattleView(pet));
+}
+function performEnemyPrimaryAttack(actor,unit,options={}){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return null;
+  const playerGuarding=!!options.playerGuarding;
+  const allowPlayerCounter=!!options.allowPlayerCounter;
+
+  if(chosen.kind==='pet'&&chosen.pet&&petIsAlive(chosen.pet)){
+    const pet=chosen.pet;
+    const r=enemyAttackPetResult(unit,pet);
+    if(r.dodged){
+      addLog(pet.name+' 閃避了 '+unit.name+' 的攻擊。','pet');
+    }else if(r.miss){
+      addLog(unit.name+' 攻擊 '+pet.name+'，但沒有造成傷害。');
+    }else{
+      const before=n(pet.hp);
+      pet.hp=Math.max(0,before-r.damage);
+      addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
+      if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
+    }
+    if(petIsAlive(pet)&&unit.hp>0)resolvePetEnemyCounterChain('enemy',pet,unit,r);
+    return {target:'pet',pet,r};
+  }
+
+  const r=enemyAttackResult(unit,{guarding:playerGuarding});
+  if(playerGuarding){
+    if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
+    else{
+      state.hp=Math.max(0,state.hp-r.damage);
+      addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+    }
+  }else if(r.dodged){
+    addLog('你閃避了 '+unit.name+' 的攻擊。','good');
+  }else if(r.miss){
+    addLog(unit.name+' 的攻擊沒有造成傷害。');
+  }else{
+    state.hp=Math.max(0,state.hp-r.damage);
+    addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+  }
+  if(allowPlayerCounter&&state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
+  return {target:'player',r};
 }
 function levelCheck(){
   let upCount=0;
@@ -1482,19 +1622,11 @@ function captureTurn(manual=false){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain('pet',pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      const r=enemyAttackResult(unit);
-      if(r.dodged){
-        addLog('你閃避了 '+unit.name+' 的攻擊。','good');
-      }else if(r.miss){
-        addLog(unit.name+' 的攻擊沒有造成傷害。');
-      }else{
-        state.hp=Math.max(0,state.hp-r.damage);
-        addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-      }
+      performEnemyPrimaryAttack(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
     }
 
     if(enemy)syncEnemyTarget();
@@ -1586,7 +1718,11 @@ function normalBattleOrder(){
 
   for(const unit of livingEnemyUnits()){
     const quick=n(unit?.quick);
-    order.push({kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++});
+    const chosen=enemyChooseTarget(unit);
+    order.push({
+      kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
+      targetKind:chosen?.kind||'player',targetPetId:chosen?.petId||null
+    });
   }
 
   // 原 EntrySort() 會依 dex + CHAR_WORKSEQUENCEPOWER 由高到低排序。
@@ -1629,20 +1765,11 @@ function attackTurn(){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain('pet',pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      const r=enemyAttackResult(unit);
-      if(r.dodged){
-        addLog('你閃避了 '+unit.name+' 的攻擊。','good');
-      }else if(r.miss){
-        addLog(unit.name+' 的攻擊沒有造成傷害。');
-      }else{
-        state.hp=Math.max(0,state.hp-r.damage);
-        addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-      }
-      if(state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
+      performEnemyPrimaryAttack(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
     }
 
     if(enemy)syncEnemyTarget();
@@ -1679,18 +1806,11 @@ function guardTurn(){
         target.hp=Math.max(0,target.hp-r.damage);
         addLog(pet.name+' 攻擊 '+target.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
-      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain(pet,target,r);
+      if(petIsAlive(pet)&&target.hp>0)resolvePetEnemyCounterChain('pet',pet,target,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      const r=enemyAttackResult(unit,{guarding:true});
-      if(r.damage<=0){
-        addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
-      }else{
-        state.hp=Math.max(0,state.hp-r.damage);
-        addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-      }
-      // GUARD 會讓原 BATTLE_Attack() 的 ContFlg=FALSE，因此不進反擊鏈。
+      performEnemyPrimaryAttack(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
     }
 
     if(enemy)syncEnemyTarget();
@@ -2122,18 +2242,21 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
-      fetch(ZOO_QUEST_URL,{cache:'no-store'})
+      fetch(ZOO_QUEST_URL,{cache:'no-store'}),
+      fetch(ENEMY_AI_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
     if(!itemR.ok)throw new Error('條件道具資料 HTTP '+itemR.status);
     if(!zooR.ok)throw new Error('動物園任務資料 HTTP '+zooR.status);
+    if(!aiR.ok)throw new Error('Enemy AI 資料 HTTP '+aiR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
+    enemyAiDb=await aiR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -2145,7 +2268,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.27 載入完成：寵物已加入持久 HP／倒下狀態；捕獲保留野怪當下 HP，Enemy↔Pet 已接入原版最多 5 段反擊鏈，休息可恢復倒下寵物。','good');
+    addLog('V0.28 載入完成：Enemy 普通攻擊已讀取 enemy1 at/rn AI，依原服目標類型與隨機、HP、STR、DEX、屬性規則在玩家／出戰寵物間選擇目標。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
