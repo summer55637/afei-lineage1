@@ -3604,3 +3604,68 @@ V0.57 保留原 C 的 `&&` 評估順序：寵物仍會先走一次 StatusAttackC
 ### Counter
 
 580 不造成物理傷害，也不走普通 Attack，因此沒有 Counter／反反擊鏈。
+
+## V0.58 嚙齒術／無裝備分支
+
+V0.58 接入 ID 574「E嚙齒術」在目前 web 戰鬥模型可到達的原 C 分支。
+
+原 petskill2：
+
+`E啮齿术,破坏对方装备武器,PETSKILL_ToothCrushe,,,Ed,574,1,6,2,0,PETSKILL_TOOTHCRUSHE`
+
+`version.h` 已啟用：
+
+`#define _SKILL_TOOTH`
+
+### `PETSKILL_ToothCrushe()`
+
+函式只設定特殊 command／target／skill array。
+
+原本曾有一段降低施術者攻擊力的 option parser，但整段被 `/* ... */` 註解，所以本 build **沒有攻擊力修正**。
+
+### 戰鬥路徑
+
+`battle.c` 對 `BATTLE_COM_S_TOOTHCRUSHE`：
+
+1. `BATTLE_TargetAdjust()`
+2. `BATTLE_S_AttackDamage(...,BATTLE_COM_S_TOOTHCRUSHE,skill)`
+3. 直接 `break`
+
+所以它是特殊 AttackDamage case，不是普通 `BATTLE_COM_ATTACK`，不接一般 Counter／反反擊鏈。
+
+物理命中／閃避／會心／傷害則仍由 `BATTLE_AttackSeq()` 正常計算。
+
+### 額外裝備破壞
+
+只有 damage >0 時 `skill_type` 才能維持 TOOTHCRUSHE；接著輸出階段才呼叫：
+
+`BATTLE_S_ToothCrushe(battleindex, attackindex, defindex, damage, skill)`
+
+而 `BATTLE_S_ToothCrushe()` 第一個條件就是：
+
+`if (target WHICHTYPE != CHAR_TYPEPLAYER) return;`
+
+即使是玩家，仍要：
+
+`BATTLE_ItemCrushCheck(defindex,1) >= 0`
+
+找到可破壞裝備後才會讀 ITEM_DAMAGECRUSHE／MAXDAMAGECRUSHE、調降耐久，甚至耐久歸零時刪除裝備。
+
+### 現版 web 的來源等價狀態
+
+目前玩家沒有正式武器／防具裝備欄與耐久資料。
+
+因此：
+
+- 目標若是 Active Pet：來源本來就直接 return，不破壞任何東西
+- 目標若是 Player：等價於 `BATTLE_ItemCrushCheck()` 找不到可破壞裝備
+
+所以 V0.58 精準保留：
+
+- 一次特殊物理攻擊
+- 無裝備破壞
+- 無普通 Counter loop
+
+沒有自行建立假的武器或耐久值。
+
+等正式裝備系統與 ITEM_DAMAGECRUSHE 底層存在後，再把同一 handler 的 crush 分支補上。
