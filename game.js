@@ -1370,10 +1370,18 @@ const ENEMY_SOURCE_SKILL_META={
   501:{n:'E回復技',d:'ENEMY 專屬回復技 LV1',f:'ENEMYSKILL_ReHP',o:'',field:1,target:2},
   502:{n:'E招喚',d:'ENEMY 專屬招喚 LV1',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:2},
   503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6},
+  504:{n:'嗜血技2',d:'傷害的 70% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'20|70',field:1,target:6},
+  505:{n:'嗜血技3',d:'傷害的 100% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'10|100',field:1,target:6},
   541:{n:'狂暴攻擊',d:'多段狂暴攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+80 防%-35 回避30',field:1,target:6},
+  542:{n:'疾速攻擊',d:'防禦下降；此來源函式未實作資料描述的敏捷增加',f:'PETSKILL_SpeedyAttack',o:'防%-30 敏%+30',field:1,target:6},
   543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
+  613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
+  615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   616:{n:'撕裂傷口2',d:'撕裂舊傷口，增加已損失 HP 50% 的傷害',f:'PETSKILL_BattleTearDamage',o:'50',field:1,target:1},
-  640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7}
+  640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7},
+  651:{n:'撕裂傷口4',d:'依技能 option 增加已損失 HP 傷害',f:'PETSKILL_BattleTearDamage',o:'150',field:1,target:1},
+  656:{n:'撕裂傷口3',d:'撕裂舊傷口，增加已損失 HP 70% 的傷害',f:'PETSKILL_BattleTearDamage',o:'70',field:1,target:1},
+  666:{n:'T憾甲一擊',d:'憾甲一擊強化版',f:'PETSKILL_Regret',o:'命%30 攻%60 防-20%',field:1,target:7}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1464,6 +1472,16 @@ function enemyPrepareRoundAction(unit,action){
     unit.roundAttack=Math.trunc(n(unit.attack)*.9);
     unit.roundDefense=Math.trunc(n(unit.defense)*.8);
     unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_AttackCrazed'){
+    // 原 PETSKILL_AttackCrazed 固定攻 80%、防 70%，option 只決定攻擊次數。
+    unit.roundAttack=Math.trunc(n(unit.attack)*.8);
+    unit.roundDefense=Math.trunc(n(unit.defense)*.7);
+    unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_SpeedyAttack'){
+    const defensePct=enemySignedSkillPercent(meta.o,'防%');
+    unit.roundDefense=Math.trunc(n(unit.defense)+n(unit.defense)*defensePct/100);
+    // 此來源 PETSKILL_SpeedyAttack() 沒有讀「敏%」，所以不改 QUICK。
+    unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
@@ -2274,6 +2292,51 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function enemyRandomPlayerSideTarget(){
+  const candidates=[];
+  if(state.hp>0)candidates.push({kind:'player'});
+  const pet=activePet();
+  if(pet&&petIsBattleActive(pet))candidates.push({kind:'pet',pet,petId:pet.id});
+  return candidates.length?candidates[cRand(0,candidates.length-1)]:null;
+}
+function performEnemyAttackCrazed(actor,unit,options,meta){
+  const count=Math.max(1,Math.trunc(Number(String(meta?.o||'').match(/\d+/)?.[0])||3));
+  const label=meta?.n||'狂亂暴走';
+  unit.counterEligibleThisTurn=true;
+  addLog(unit.name+' 使用 '+label+'：攻 80%／防 70%，隨機攻擊 '+count+' 次。');
+
+  let lastTarget=null,lastResult=null,hits=0;
+  for(let i=0;i<count;i++){
+    if(!enemy||unit.hp<=0||state.hp<=0)break;
+    const target=enemyRandomPlayerSideTarget();
+    if(!target)break;
+    let r;
+    if(target.kind==='pet'&&target.pet){
+      r=enemyAttackPetResult(unit,target.pet);
+    }else{
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=enemyAttackResult(unit,{guarding});
+    }
+    hits++;lastTarget=target;lastResult=r;
+    enemyApplySkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
+  }
+
+  // ATTCRAZED 位於原 direct-attack 群組；全部攻擊後只以最後一擊的 defNo / ContFlg 進普通反擊鏈。
+  if(lastTarget&&lastResult&&unit.hp>0&&enemy){
+    if(lastTarget.kind==='pet'&&lastTarget.pet&&petIsBattleActive(lastTarget.pet)){
+      resolvePetEnemyCounterChain('enemy',lastTarget.pet,unit,lastResult);
+    }else if(lastTarget.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
+      resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,hits,attackCount:count,lastTarget:lastTarget?.kind||null,lastResult};
+}
+function performEnemySpeedyAttack(actor,unit,options,meta){
+  const defensePct=enemySignedSkillPercent(meta?.o,'防%');
+  addLog(unit.name+' 使用 '+(meta?.n||'疾速攻擊')+'（防 '+defensePct+'%；原來源未套用 option 內的敏捷增加）。');
+  unit.counterEligibleThisTurn=true;
+  return Object.assign({kind:'skill',skillId:actor.skillId},performEnemyPrimaryAttack(actor,unit,options)||{});
+}
 function enemySkillTargetDesc(chosen){
   if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
   if(chosen?.kind==='player')return {kind:'player'};
@@ -2826,6 +2889,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_WildViolentAttack')return performEnemyWildViolent(actor,unit,options,meta);
@@ -3715,7 +3780,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.41 載入完成：616 撕裂傷口2、640 憾甲一擊已接入；並校正特殊 BATTLE_S_AttackDamage／GBreak2 分支不進普通反擊鏈、暈眩一次行動與 REGRET2 防禦前 ×0.8。','good');
+    addLog('V0.42 載入完成：補齊 504／505 嗜血、615／651／656 撕裂、666 T憾甲同函式變體，並接入 613 狂亂暴走與 542 疾速攻擊原碼行為。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
