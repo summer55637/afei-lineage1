@@ -2,9 +2,10 @@
 
 const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
+const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
-let db=null, maps=[], conditionItems=[], sourceCatalog=new Map(), state=null, enemy=null, timer=null;
+let db=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -19,7 +20,9 @@ function freshState(){
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
-    inventory:{},log:[],savedAt:Date.now()
+    inventory:{},
+    quest:{event81Complete:false,event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    log:[],savedAt:Date.now()
   };
 }
 function migrateLegacyPets(raw,s){
@@ -43,6 +46,9 @@ function normalizeState(raw){
   const base=freshState();
   const s=Object.assign(base,raw||{});
   s.inventory=(raw&&raw.inventory&&typeof raw.inventory==='object')?raw.inventory:{};
+  s.quest=Object.assign({},base.quest,raw?.quest||{});
+  s.quest.event82=Object.assign({},base.quest.event82,raw?.quest?.event82||{});
+  s.quest.event83=Object.assign({},base.quest.event83,raw?.quest?.event83||{});
   s.team=Array.isArray(raw?.team)?raw.team.slice(0,TEAM_SIZE):Array(TEAM_SIZE).fill(null);
   while(s.team.length<TEAM_SIZE)s.team.push(null);
   migrateLegacyPets(raw,s);
@@ -56,7 +62,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=2;
+  s.schemaVersion=3;
   delete s.pets;
   return s;
 }
@@ -109,7 +115,8 @@ function rollVerifiedDrops(defeatedEnemy){
 }
 function routeUnlocked(route){
   const ids=route?.appearanceInventoryItemIds||[];
-  return ids.every(id=>hasItem(id));
+  const noids=route?.notAppearanceInventoryItemIds||[];
+  return ids.every(id=>hasItem(id))&&noids.every(id=>!hasItem(id));
 }
 function buildSourceCatalog(raw){
   sourceCatalog=new Map((raw?.items||[]).map(item=>[String(item.id),item]));
@@ -118,6 +125,9 @@ function sourceSummary(item){
   const src=item.sources?.[0];
   if(!src)return '正式來源待解';
   return src.summary||src.label||'正式來源已確認';
+}
+function questItemMeta(id){
+  return (zooQuest?.items||[]).find(x=>Number(x.id)===Number(id))||null;
 }
 function buildConditionItems(){
   const map=new Map();
@@ -141,17 +151,58 @@ function buildConditionItems(){
       }
     }
   }
+  for(const item of zooQuest?.items||[]){
+    put(item,'quest','伊甸動物園',7000);
+  }
   conditionItems=[...map.values()].map(x=>{
-    const src=sourceCatalog.get(String(x.id))||{};
+    const src=sourceCatalog.get(String(x.id))||questItemMeta(x.id)||{};
     return {
       id:x.id,name:x.name,description:x.description,
       kinds:[...x.kinds].sort(),usedByPets:[...x.usedByPets].sort(),
       floors:[...x.floors].sort((a,b)=>a-b),
       sourceStatus:src.sourceStatus||'unresolved',
-      sources:Array.isArray(src.sources)?src.sources:[],
+      sources:Array.isArray(src.sources)?src.sources:(src.source?[{type:'quest_npc',label:src.name||x.name,summary:'原任務腳本：'+src.source}]:[]),
       externalEvidence:Array.isArray(src.externalEvidence)?src.externalEvidence:[]
     };
   }).sort((a,b)=>a.id-b.id);
+}
+function findMainVariant(tempNo){
+  for(const species of db.species){
+    for(const variant of species.wildLv1Variants||[]){
+      if(Number(variant.tempNo)===Number(tempNo))return {species,variant};
+    }
+  }
+  return null;
+}
+function buildQuestMaps(){
+  for(const zone of zooQuest?.huntingZones||[]){
+    const entries=[];
+    for(const raw of zone.entries||[]){
+      let species={clientLabel:raw.name,animationGroupId:raw.animationGroupId||null};
+      let variant={
+        tempNo:raw.tempNo,enemyIds:raw.enemyIds||[],wildGrowth:raw.wildGrowth||1,
+        captureBase:raw.captureBase||0,stats:Object.assign({},raw.stats||{}),elements:{},
+        capturable:raw.capturable!==false
+      };
+      if(raw.useMainDbTempNo){
+        const hit=findMainVariant(raw.useMainDbTempNo);
+        if(hit){
+          species=Object.assign({},hit.species,{clientLabel:raw.name});
+          variant=Object.assign({},hit.variant,{enemyIds:raw.enemyIds||hit.variant.enemyIds,capturable:raw.capturable!==false});
+        }
+      }
+      const route={
+        encounterId:zone.encounterId,floorId:zone.floorId,mapName:zone.name,
+        battleAppearanceChance:Number(raw.weight)||1,
+        appearanceInventoryItemIds:zone.requireItems||[],
+        appearanceInventoryItems:(zone.requireItems||[]).map(id=>questItemMeta(id)||{id,name:'Item '+id}),
+        notAppearanceInventoryItemIds:zone.forbidItems||[],
+        questZone:true
+      };
+      entries.push({species,variant,route});
+    }
+    maps.push({id:zone.id,floorId:zone.floorId,name:zone.name,entries,questZone:true,description:zone.description||''});
+  }
 }
 function buildMaps(){
   const m=new Map();
@@ -165,6 +216,7 @@ function buildMaps(){
     }
   }
   maps=[...m.values()].sort((a,b)=>Number(a.id)-Number(b.id));
+  buildQuestMaps();
 }
 function currentMap(){return maps.find(x=>String(x.id)===String(state.mapId))||maps[0]}
 function expToNext(level){return 100+Math.max(0,level-1)*45}
@@ -204,6 +256,27 @@ function spawnEnemy(){
   render();
 }
 function activePet(){return state.petBox.find(p=>p.id===state.activePetId)||null}
+function hasPetTempNo(tempNo){return state.petBox.some(p=>Number(p.tempNo)===Number(tempNo))}
+function removeOnePetTempNo(tempNo){
+  const idx=state.petBox.findIndex(p=>Number(p.tempNo)===Number(tempNo));
+  if(idx<0)return false;
+  const id=state.petBox[idx].id;
+  state.petBox.splice(idx,1);
+  state.team=state.team.map(x=>x===id?null:x);
+  if(state.activePetId===id)state.activePetId=state.team.find(Boolean)||null;
+  return true;
+}
+function addQuestRewardPet(){
+  const p={
+    id:uid(),name:'布伊胖',animationGroupId:100825,tempNo:730,level:1,exp:0,wildGrowth:27,
+    stats:{vital:34,str:29,tgh:25,dex:23},elements:{},capturedAt:Date.now(),questReward:true
+  };
+  state.petBox.push(p);
+  const open=state.team.findIndex(x=>!x);
+  if(open>=0)state.team[open]=p.id;
+  if(!state.activePetId)state.activePetId=p.id;
+  return p;
+}
 function playerDamage(){return Math.max(1,Math.round(state.attack-enemy.defense+rnd(-2,4)))}
 function petDamage(pet){
   const str=Math.max(1,n(pet?.stats?.str)||6);
@@ -265,6 +338,7 @@ function captureRequirements(){
 }
 function captureChance(){
   if(!enemy)return {raw:0,display:0,allowed:false,missing:[]};
+  if(enemy.entry?.variant?.capturable===false)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true};
   const req=captureRequirements();
   if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items};
   if(state.level+5<enemy.level)return {raw:0,display:0,allowed:false,missing:[],requirements:req.items};
@@ -372,9 +446,38 @@ function renderMapOptions(){
   const selected=String(state.mapId);
   select.innerHTML=maps.map(m=>{
     const ok=eligibleEntries(m).length,total=m.entries.length;
-    return '<option value="'+m.id+'">'+escapeHtml(m.name)+' · Floor '+m.id+' · '+ok+'/'+total+' 路線</option>';
+    const floor=m.floorId??m.id;
+    return '<option value="'+m.id+'">'+escapeHtml(m.name)+' · Floor '+floor+' · '+ok+'/'+total+' 路線</option>';
   }).join('');
   select.value=selected;
+}
+function renderZooQuest(){
+  const q=state.quest;
+  const e82=q.event82;
+  const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854);
+  $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
+  const lines=[];
+  lines.push('<div class="quest-line '+(q.event81Complete?'done':'blocked')+'">Event 81 金飛航空：'+(q.event81Complete?'已完成':'尚未完成／目前僅能用開發測試旗標')+'</div>');
+  if(e82.active||e82.complete){
+    lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 TempNo 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已向布伊太郎回報':'')+'</div>');
+    lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 TempNo 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已向飼育員確認':'')+'</div>');
+    lines.push('<div class="quest-line '+(has854?'done':'blocked')+'">動物園養的拉斯基 TempNo 854：'+(has854?'已取得':'Event 83 完整支線尚未開放')+'</div>');
+  }else{
+    lines.push('<div class="quest-line">Event 82：園長沙利斯要求尋回雷爾胖、波波頓、任務版拉斯基。</div>');
+  }
+  $('#zooQuestStatus').innerHTML=lines.join('');
+  const actions=[];
+  if(q.event81Complete&&!e82.active&&!e82.complete)actions.push('<button data-zoo-action="accept82" class="wide">向園長接 Event 82</button>');
+  if(e82.active&&!e82.complete){
+    actions.push('<button data-zoo-action="feed19733">向布伊太郎領 19733</button>');
+    actions.push('<button data-zoo-action="feed19723">飼料桶拿 19723</button>');
+    actions.push('<button data-zoo-action="goto-raelpang">前往雷爾胖任務區</button>');
+    actions.push('<button data-zoo-action="goto-popodon">前往波波頓任務區</button>');
+    if(has905&&!e82.raelpangReported)actions.push('<button data-zoo-action="report-raelpang">向布伊太郎回報雷爾胖</button>');
+    if(has786&&!e82.popodonReported)actions.push('<button data-zoo-action="report-popodon">向飼育員確認波波頓</button>');
+    if(has905&&has786&&has854)actions.push('<button data-zoo-action="finish82" class="wide">向園長交回三隻動物</button>');
+  }
+  $('#zooQuestActions').innerHTML=actions.join('');
 }
 function render(){
   if(!state)return;
@@ -398,7 +501,7 @@ function render(){
     const allNames=[...new Set(map.entries.map(x=>x.species.clientLabel))];
     const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
     $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種可遇';
-    $('#mapInfo').textContent='目前可遇 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+
+    $('#mapInfo').textContent=(map.questZone?(map.description+'；'):'')+'目前可遇 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+
       (okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要出現條件道具。':'');
   }
   renderMapOptions();
@@ -406,6 +509,7 @@ function render(){
   renderTeam();
   renderPets();
   renderInventory();
+  renderZooQuest();
   renderLog();
 }
 function renderEnemy(){
@@ -521,13 +625,16 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,itemR]=await Promise.all([
+    const [r,itemR,zooR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
-      fetch(CONDITION_ITEM_URL,{cache:'no-store'})
+      fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
+      fetch(ZOO_QUEST_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!itemR.ok)throw new Error('條件道具資料 HTTP '+itemR.status);
+    if(!zooR.ok)throw new Error('動物園任務資料 HTTP '+zooR.status);
     db=await r.json();
+    zooQuest=await zooR.json();
     buildSourceCatalog(await itemR.json());
     buildConditionItems();
     buildMaps();
@@ -535,12 +642,46 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.5 載入完成：正式來源 '+conditionItems.filter(x=>x.sourceStatus==='verified').length+'/'+conditionItems.length+'；已啟用服務端掉落率規則。','good');
+    addLog('V0.6 載入完成：伊甸動物園 Event 82 已接入任務面板與兩個正式狩獵區。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
     document.body.innerHTML='<main class="shell"><article class="card">資料讀取失敗：'+escapeHtml(err.message)+'</article></main>';
   }
+}
+function handleZooAction(action){
+  const q=state.quest,e82=q.event82;
+  if(action==='accept82'){
+    if(!q.event81Complete)return;
+    e82.active=true;addLog('已向園長接取 Event 82：尋回雷爾胖、波波頓與拉斯基。','good');
+  }
+  if(action==='feed19733'){
+    giveItem(19733,1);addLog('布伊太郎交給你雷爾胖專用飼料 19733。','pet');
+  }
+  if(action==='feed19723'){
+    giveItem(19723,1);addLog('從飼料桶取得肉食性飼料二號 19723。','pet');
+  }
+  if(action==='goto-raelpang'){
+    state.mapId='zoo-raelpang';enemy=null;addLog('前往伊甸園雷爾胖任務區。');
+  }
+  if(action==='goto-popodon'){
+    state.mapId='zoo-popodon';enemy=null;addLog('前往伊甸園波波頓任務區。');
+  }
+  if(action==='report-raelpang'&&hasPetTempNo(905)){
+    e82.raelpangReported=true;
+    if(hasItem(19733))consumeItem(19733,1);
+    addLog('布伊太郎確認你帶回雷爾胖，並收回專用飼料。','good');
+  }
+  if(action==='report-popodon'&&hasPetTempNo(786)){
+    e82.popodonReported=true;addLog('飼育員確認這是 Lv1 波波頓。','good');
+  }
+  if(action==='finish82'&&hasPetTempNo(905)&&hasPetTempNo(786)&&hasPetTempNo(854)){
+    removeOnePetTempNo(905);removeOnePetTempNo(786);removeOnePetTempNo(854);
+    const reward=addQuestRewardPet();
+    e82.active=false;e82.complete=true;
+    addLog('Event 82 完成：三隻動物已交回，獲得 '+reward.name+'（TempNo 730）。','good');
+  }
+  save();render();
 }
 $('#mapSelect').addEventListener('change',e=>{
   state.mapId=e.target.value;enemy=null;
@@ -557,6 +698,15 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;addLog('休息完成，HP 已補滿。','good');save();render();
+});
+$('#testEvent81Btn').addEventListener('click',()=>{
+  state.quest.event81Complete=true;
+  addLog('開發測試旗標：Event 81 金飛任務標記為已完成。','pet');
+  save();render();
+});
+$('#zooQuestActions').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-zoo-action]');if(!b)return;
+  handleZooAction(b.dataset.zooAction);
 });
 $('#testSupplyBtn').addEventListener('click',()=>{
   for(const item of conditionItems){
