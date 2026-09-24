@@ -1363,9 +1363,11 @@ function enemyAiAttackSpec(unit){
   };
 }
 const ENEMY_SOURCE_SKILL_META={
-  500:{n:'敵人復活',d:'隨機復活一名倒地敵方',f:'ENEMYSKILL_ReLife',o:'',field:1,target:7},
-  501:{n:'敵人補血',d:'隨機治療一名 HP 低於 2/3 的敵方',f:'ENEMYSKILL_ReHP',o:'',field:1,target:7},
-  502:{n:'敵人招人',d:'召喚一名與施術者相同模板的 Enemy 加入戰鬥',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:7}
+  121:{n:'T地球一周',d:'一回合從敵人背後以更高攻擊力攻擊',f:'PETSKILL_EarthRound',o:'攻%+200',field:1,target:6},
+  500:{n:'E復活術',d:'ENEMY 專屬復活術 LV1',f:'ENEMYSKILL_ReLife',o:'',field:1,target:2},
+  501:{n:'E回復技',d:'ENEMY 專屬回復技 LV1',f:'ENEMYSKILL_ReHP',o:'',field:1,target:2},
+  502:{n:'E招喚',d:'ENEMY 專屬招喚 LV1',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:2},
+  503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -2248,6 +2250,53 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function enemyOptionParts(option){
+  return String(option||'').split('|').map(x=>x.trim());
+}
+function performEnemyDamageToHp(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const parts=enemyOptionParts(meta?.o);
+  const attackReduceRaw=Math.trunc(Number(parts[0]))||0;
+  const absorbPct=Math.trunc(Number(parts[1]))||0;
+
+  // 原 PETSKILL_DamageToHp 寫成 def = (atoi(buf1) / 100)；
+  // 這是 C 的整數除法，因此 30/100、20/100、10/100 都會先變 0。
+  // 503 的說明雖寫攻擊 -30%，此來源實際 FIXSTR 不變。
+  const cIntegerDivision=Math.trunc(attackReduceRaw/100);
+  const baseAttack=Math.trunc(n(unit.attack));
+  unit.roundAttack=baseAttack-Math.trunc(baseAttack*cIntegerDivision);
+  unit.counterEligibleThisTurn=false;
+
+  let r;
+  if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+    r=enemyAttackPetResult(unit,chosen.pet);
+  }else{
+    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    r=enemyAttackResult(unit,{guarding});
+  }
+  enemyApplySkillHit(unit,chosen,r,meta?.n||'嗜血技');
+
+  let healed=0;
+  if(r.damage>0&&!r.dodged&&!r.miss&&absorbPct>0){
+    const before=n(unit.hp);
+    healed=Math.trunc(n(r.damage)*absorbPct/100);
+    unit.hp=Math.min(Math.max(1,Math.trunc(n(unit.maxHp))),before+healed);
+    healed=Math.max(0,unit.hp-before);
+    if(healed>0)addLog(unit.name+' 由 '+(meta?.n||'嗜血技')+' 吸收 '+healed+' HP。','bad');
+  }
+
+  // BATTLE_S_AttackDamage 回傳後才進普通 Counter loop；
+  // 技能使用者本身 command 不是 ATTACK，所以可被反擊一次，但不能反反擊。
+  if(unit.hp>0&&enemy){
+    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
+    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
+      resolvePlayerEnemyCounterChain('enemy',unit,r);
+    }
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,healed,absorbPct,attackReduceRaw};
+}
 function enemyDeadBattleUnits(){
   if(!enemy)return [];
   if(Array.isArray(enemy.units))return enemy.units.filter(u=>n(u.hp)<=0);
@@ -2256,8 +2305,11 @@ function enemyDeadBattleUnits(){
 function performEnemyReLife(actor,unit,options,meta){
   const dead=enemyDeadBattleUnits();
   if(!dead.length){
-    addLog(unit.name+' 使用 '+(meta?.n||'敵人復活')+'，但敵方沒有倒地成員。');
-    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人復活')+'，但敵方沒有倒地成員；依原 battle.c 改為普通攻擊。');
+    return Object.assign(
+      {kind:'skill',skillId:actor.skillId,success:false,noTarget:true,fallbackAttack:true},
+      performEnemyPrimaryAttack(actor,unit,options)||{}
+    );
   }
   const target=dead[cRand(0,dead.length-1)];
   const base=Math.trunc(Math.max(1,n(target.maxHp))/2);
@@ -2270,8 +2322,11 @@ function performEnemyReLife(actor,unit,options,meta){
 function performEnemyReHP(actor,unit,options,meta){
   const candidates=livingEnemyUnits().filter(u=>n(u.hp)<Math.trunc(n(u.maxHp)*2/3));
   if(!candidates.length){
-    addLog(unit.name+' 使用 '+(meta?.n||'敵人補血')+'，但沒有 HP 低於 2/3 的存活敵方。');
-    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人補血')+'，但沒有 HP 低於 2/3 的存活敵方；依原 battle.c 改為普通攻擊。');
+    return Object.assign(
+      {kind:'skill',skillId:actor.skillId,success:false,noTarget:true,fallbackAttack:true},
+      performEnemyPrimaryAttack(actor,unit,options)||{}
+    );
   }
   const target=candidates[cRand(0,candidates.length-1)];
   const power=cRand(100,Math.max(100,Math.trunc(n(target.maxHp))));
@@ -2300,13 +2355,19 @@ function enemyHelpSourceTemplate(unit){
 function performEnemyHelp(actor,unit,options,meta){
   const slot=enemyFirstFreeBattleSlot();
   if(slot<0){
-    addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，但敵方 10 個戰鬥位置都已被占用。');
-    return {kind:'skill',skillId:actor.skillId,success:false,full:true};
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，但敵方 10 個戰鬥位置都已被占用；依原 battle.c 改為普通攻擊。');
+    return Object.assign(
+      {kind:'skill',skillId:actor.skillId,success:false,full:true,fallbackAttack:true},
+      performEnemyPrimaryAttack(actor,unit,options)||{}
+    );
   }
   const raw=enemyHelpSourceTemplate(unit);
   if(!raw){
-    addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，但此 Enemy 缺少可重建的原始模板，未用猜測資料生成援軍。');
-    return {kind:'skill',skillId:actor.skillId,success:false,missingTemplate:true};
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，但此 Enemy 缺少可重建的原始模板；不猜援軍資料，依原失敗分支改為普通攻擊。');
+    return Object.assign(
+      {kind:'skill',skillId:actor.skillId,success:false,missingTemplate:true,fallbackAttack:true},
+      performEnemyPrimaryAttack(actor,unit,options)||{}
+    );
   }
 
   // 原 BATTLE_E_ENEMYHELP：ENEMY_createEnemy(array, RAND(LV*0.8, LV*1.2)).
@@ -2603,6 +2664,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_EarthRound')return performEnemyEarthRoundStart(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReHP')return performEnemyReHP(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_EnemyHelp')return performEnemyHelp(actor,unit,options,meta);
@@ -3488,7 +3550,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.39 載入完成：Enemy Skill 500／501／502 已依原 _PRO_BATTLEENEMYSKILL 接入，包含敵方復活、低血補血與同模板援軍召喚。','good');
+    addLog('V0.39 載入完成：補齊 T地球一周 121、嗜血技 503，以及 Enemy Skill 500／501／502 的復活、補血、援軍與失敗轉普通攻擊。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
