@@ -1,9 +1,10 @@
 'use strict';
 
 const DATA_URL='data/generated/stoneage_general_lv1_pets.json';
+const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
-let db=null, maps=[], conditionItems=[], state=null, enemy=null, timer=null;
+let db=null, maps=[], conditionItems=[], sourceCatalog=new Map(), state=null, enemy=null, timer=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -86,6 +87,14 @@ function routeUnlocked(route){
   const ids=route?.appearanceInventoryItemIds||[];
   return ids.every(id=>hasItem(id));
 }
+function buildSourceCatalog(raw){
+  sourceCatalog=new Map((raw?.items||[]).map(item=>[String(item.id),item]));
+}
+function sourceSummary(item){
+  const src=item.sources?.[0];
+  if(!src)return '正式來源待解';
+  return src.summary||src.label||'正式來源已確認';
+}
 function buildConditionItems(){
   const map=new Map();
   const put=(item,kind,pet,floor)=>{
@@ -108,11 +117,16 @@ function buildConditionItems(){
       }
     }
   }
-  conditionItems=[...map.values()].map(x=>({
-    id:x.id,name:x.name,description:x.description,
-    kinds:[...x.kinds].sort(),usedByPets:[...x.usedByPets].sort(),
-    floors:[...x.floors].sort((a,b)=>a-b)
-  })).sort((a,b)=>a.id-b.id);
+  conditionItems=[...map.values()].map(x=>{
+    const src=sourceCatalog.get(String(x.id))||{};
+    return {
+      id:x.id,name:x.name,description:x.description,
+      kinds:[...x.kinds].sort(),usedByPets:[...x.usedByPets].sort(),
+      floors:[...x.floors].sort((a,b)=>a-b),
+      sourceStatus:src.sourceStatus||'unresolved',
+      sources:Array.isArray(src.sources)?src.sources:[]
+    };
+  }).sort((a,b)=>a.id-b.id);
 }
 function buildMaps(){
   const m=new Map();
@@ -426,15 +440,20 @@ function renderPets(){
 }
 function renderInventory(){
   const held=conditionItems.filter(x=>hasItem(x.id)).length;
+  const verified=conditionItems.filter(x=>x.sourceStatus==='verified').length;
   $('#inventoryKinds').textContent=held+' / '+conditionItems.length;
+  $('#sourceProgress').textContent='來源 '+verified+' / '+conditionItems.length;
   $('#inventoryList').innerHTML=conditionItems.map(item=>{
     const count=n(state.inventory[String(item.id)]);
     const tags=item.kinds.map(k=>'<span class="item-tag">'+(k==='capture'?'捕獲條件':'出現條件')+'</span>').join('');
     const floors=item.floors.length?' · Floor '+item.floors.join(', '):'';
+    const verified=item.sourceStatus==='verified';
+    const sourceTag='<span class="item-tag '+(verified?'verified':'unresolved')+'">'+(verified?'正式來源已確認':'正式來源待解')+'</span>';
     return '<div class="inventory-row '+(count>0?'have':'')+'">'+
       '<div class="inventory-row-top"><b>'+escapeHtml(item.name)+'</b><span class="inventory-count">×'+count+'</span></div>'+
       '<div class="inventory-meta">ID '+item.id+' · 用於 '+item.usedByPets.map(escapeHtml).join('、')+floors+'</div>'+
-      '<div class="item-tags">'+tags+'<span class="item-tag">正式來源待解</span></div>'+
+      '<div class="item-tags">'+tags+sourceTag+'</div>'+
+      '<div class="inventory-source '+(verified?'verified':'')+'">'+escapeHtml(sourceSummary(item))+'</div>'+
     '</div>';
   }).join('');
 }
@@ -471,16 +490,21 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const r=await fetch(DATA_URL,{cache:'no-store'});
-    if(!r.ok)throw new Error('HTTP '+r.status);
+    const [r,itemR]=await Promise.all([
+      fetch(DATA_URL,{cache:'no-store'}),
+      fetch(CONDITION_ITEM_URL,{cache:'no-store'})
+    ]);
+    if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
+    if(!itemR.ok)throw new Error('條件道具資料 HTTP '+itemR.status);
     db=await r.json();
+    buildSourceCatalog(await itemR.json());
     buildConditionItems();
     buildMaps();
     state=loadState();
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.3 載入完成：正式 Lv1 資料 '+db.species.length+' 種，條件道具 '+conditionItems.length+' 種已接入背包。','good');
+    addLog('V0.4 載入完成：條件道具 '+conditionItems.length+' 種，其中 '+conditionItems.filter(x=>x.sourceStatus===\'verified\').length+' 種正式來源已確認。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
