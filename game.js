@@ -31,13 +31,13 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:8,
+    schemaVersion:9,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -63,6 +63,7 @@ function normalizeState(raw){
   const s=Object.assign(base,raw||{});
   s.inventory=(raw&&raw.inventory&&typeof raw.inventory==='object')?raw.inventory:{};
   s.quest=Object.assign({},base.quest,raw?.quest||{});
+  s.quest.event81=Object.assign({},base.quest.event81,raw?.quest?.event81||{});
   s.quest.event2=Object.assign({},base.quest.event2,raw?.quest?.event2||{});
   s.quest.event4=Object.assign({},base.quest.event4,raw?.quest?.event4||{});
   s.quest.event71Prep=Object.assign({},base.quest.event71Prep,raw?.quest?.event71Prep||{});
@@ -96,6 +97,17 @@ function normalizeState(raw){
     const migratedStage={2:8,3:9,4:10,5:11}[oldStage];
     if(migratedStage!=null)s.quest.event71Prep.stage=migratedStage;
   }
+  if(n(raw?.schemaVersion)<9){
+    const hadDownstream=!!(s.quest.event82.active||s.quest.event82.complete||s.quest.event83.active||s.quest.event83.complete);
+    if(raw?.quest?.event81Complete===true&&hadDownstream){
+      s.quest.event81={active:false,complete:true,stage:8,deliveredTempNo:null,arrivedEden:false,postReward:false,legacyAccepted:true};
+      s.quest.event81Complete=true;
+    }else if(raw?.quest?.event81Complete===true){
+      s.quest.event81=Object.assign({},base.quest.event81);
+      s.quest.event81Complete=false;
+    }
+  }
+  s.quest.event81Complete=!!s.quest.event81.complete;
   const ids=new Set(s.petBox.map(p=>p.id));
   s.team=s.team.map(id=>ids.has(id)?id:null);
   if(!ids.has(s.activePetId))s.activePetId=null;
@@ -106,7 +118,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=8;
+  s.schemaVersion=9;
   delete s.pets;
   return s;
 }
@@ -166,6 +178,8 @@ function rollVerifiedDrops(defeatedEnemy){
 function routeUnlocked(route){
   const ids=route?.appearanceInventoryItemIds||[];
   const noids=route?.notAppearanceInventoryItemIds||[];
+  const req=route?.questRequirement||null;
+  if(req?.event81Stage!=null&&n(state?.quest?.event81?.stage)!==n(req.event81Stage))return false;
   return ids.every(id=>hasItem(id))&&noids.every(id=>!hasItem(id));
 }
 function buildSourceCatalog(raw){
@@ -252,6 +266,7 @@ function buildQuestMaps(){
         appearanceInventoryItemIds:zone.requireItems||[],
         appearanceInventoryItems:(zone.requireItems||[]).map(id=>questItemMeta(id)||{id,name:'Item '+id}),
         notAppearanceInventoryItemIds:zone.forbidItems||[],
+        questRequirement:zone.questRequirement||null,
         questZone:true
       };
       entries.push({species,variant,route});
@@ -527,6 +542,14 @@ function winBattle(){
     state.mapId=maps.find(m=>!m.questZone)?.id||maps[0]?.id||state.mapId;
     addLog('里昂蛙王戰勝利：依 event69_5.arg 被傳送到 Floor 30607，可把金珠 19622 還給蛙王。','good');
   }
+  const e81win=defeated.entry?.variant?.questOnWin;
+  const e81stageMap={'event81-thief-1-win':4,'event81-thief-2-win':5,'event81-thief-3-win':6,'event81-boss-win':7};
+  if(e81stageMap[e81win]!=null&&n(state.quest.event81.stage)===e81stageMap[e81win]-1){
+    state.quest.event81.stage=e81stageMap[e81win];
+    state.mapId=maps.find(m=>!m.questZone)?.id||maps[0]?.id||state.mapId;
+    if(e81win==='event81-boss-win')addLog('PC團老大已被擊敗；依 event81_3f.arg 被送到 Floor 5580，可向老大取得悔過書。','good');
+    else addLog('PC團盜賊金剛陣突破一層，繼續深入據點。','good');
+  }
   enemy=null;
   levelCheck();
   save();render();
@@ -577,11 +600,12 @@ function renderMapOptions(){
   select.value=selected;
 }
 function renderZooQuest(){
-  const q=state.quest,e2=q.event2,e4=q.event4,prep=q.event71Prep,e82=q.event82,e83=q.event83;
+  const q=state.quest,e81=q.event81,e2=q.event2,e4=q.event4,prep=q.event71Prep,e82=q.event82,e83=q.event83;
   const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854),marefia=marefiaPet();
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
-  lines.push('<div class="quest-line '+(q.event81Complete?'done':'blocked')+'">Event 81 金飛航空：'+(q.event81Complete?'已完成':'尚未完成／目前僅能用開發測試旗標')+'</div>');
+  const e81text=e81.complete?('已完成（ENDEV=81）'+(e81.postReward?' · 伊甸總教練獎勵已領':' · 研究報告待送伊甸')):(e81.stage===0?'尚未開始':e81.stage===1?'持有推薦函 19696':e81.stage===2?'捕捉飛龍並持有證明書 19697':e81.stage===3?'NOWEV=81 · 準備闖 PC團金剛陣':e81.stage===4?'金剛陣第一層已破':e81.stage===5?'金剛陣第二層已破':e81.stage===6?'金剛陣第三層已破 · 挑戰老大':e81.stage===7?'PC團老大已敗 · 取得悔過書':e81.stage===8?'回報霍特雷敦':'進行中');
+  lines.push('<div class="quest-line '+(e81.complete?'done':'blocked')+'">Event 81 金飛航空：'+e81text+'</div>');
   if(e82.active||e82.complete){
     lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已回報':'')+'</div>');
     lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已確認':'')+'</div>');
@@ -611,6 +635,34 @@ function renderZooQuest(){
   $('#zooQuestStatus').innerHTML=lines.join('');
 
   const actions=[];
+  if(!e4.complete&&!e81.active&&!e81.complete){
+    if(!e4.active)actions.push('<button data-zoo-action="event4-start" class="wide">Floor 10204：接受成人儀式</button>');
+    else if(!hasItem(2417,15))actions.push('<button data-zoo-action="event4-get-jade" class="wide">儀式審判差使：領取儀玉 2417 ×15</button>');
+    else actions.push('<button data-zoo-action="event4-finish" class="wide">儀式的審判：交出儀玉 ×15 完成成人式</button>');
+  }
+  if(e4.complete&&!e81.complete){
+    if(e81.stage===0){
+      if(state.level>80)actions.push('<button data-zoo-action="event81-start" class="wide">打工名人克拉克：領取推薦函 19696</button>');
+      else actions.push('<button class="wide" disabled>Event81 需要角色 Lv81+（目前 Lv'+n(state.level)+'）</button>');
+    }
+    if(e81.stage===1)actions.push('<button data-zoo-action="event81-trainer" class="wide">霍特雷敦：推薦函 19696 → 捕捉證明書 19697</button>');
+    if(e81.stage===2){
+      const dragons=[271,272,273,274],active=activePet();
+      const candidate=(active&&dragons.includes(Number(active.tempNo)))?active:state.petBox.find(p=>dragons.includes(Number(p.tempNo)));
+      if(candidate)actions.push('<button data-zoo-action="event81-submit-dragon" class="wide">交出 '+escapeHtml(candidate.name)+'（TempNo '+candidate.tempNo+'）開始救援布蘭恩002</button>');
+      else actions.push('<button data-zoo-action="event81-goto-dragon" class="wide">前往已確認 Lv1 加寶格恩 273 出沒地捕捉飛龍</button>');
+    }
+    if(e81.stage===3)actions.push('<button data-zoo-action="event81-thief-1" class="wide">PC團金剛陣・第一層</button>');
+    if(e81.stage===4)actions.push('<button data-zoo-action="event81-thief-2" class="wide">PC團金剛陣・第二層</button>');
+    if(e81.stage===5)actions.push('<button data-zoo-action="event81-thief-3" class="wide">PC團金剛陣・第三層</button>');
+    if(e81.stage===6)actions.push('<button data-zoo-action="event81-boss" class="wide">Floor 5582：挑戰 PC團老大</button>');
+    if(e81.stage===7)actions.push('<button data-zoo-action="event81-confession" class="wide">Floor 5580：向 PC團老大取得悔過書 19698</button>');
+    if(e81.stage===8&&hasItem(19698))actions.push('<button data-zoo-action="event81-complete" class="wide">回霍特雷敦：交悔過書並完成 Event81</button>');
+  }
+  if(e81.complete&&!e81.postReward){
+    if(!e81.arrivedEden&&hasItem(19699))actions.push('<button data-zoo-action="event81-fly-eden" class="wide">搭朵拉比斯飛往伊甸（10,000 石幣）</button>');
+    if(e81.arrivedEden&&hasItem(19699))actions.push('<button data-zoo-action="event81-bruce" class="wide">飛龍總教練布魯斯：交研究報告 → 200,000 石幣</button>');
+  }
   if(q.event81Complete&&!e82.active&&!e82.complete)actions.push('<button data-zoo-action="accept82" class="wide">向園長接 Event 82</button>');
   if(e82.active&&!e82.complete){
     actions.push('<button data-zoo-action="feed19733">向布伊太郎領 19733</button>');
@@ -625,11 +677,7 @@ function renderZooQuest(){
       else if(hasItem(2415))actions.push('<button data-zoo-action="event2-finish" class="wide">把花 2415 交給彌生 → 貝殼 2414</button>');
     }
     if(!q.event71Current){
-      if(!e4.complete){
-        if(!e4.active)actions.push('<button data-zoo-action="event4-start" class="wide">Floor 10204：接受成人儀式</button>');
-        else if(!hasItem(2417,15))actions.push('<button data-zoo-action="event4-get-jade" class="wide">儀式審判差使：領取儀玉 2417 ×15</button>');
-        else actions.push('<button data-zoo-action="event4-finish" class="wide">儀式的審判：交出儀玉 ×15 完成成人式</button>');
-      }else{
+      if(e4.complete){
         if(prep.stage===0)actions.push('<button data-zoo-action="event69-start" class="wide">願藏祖父：開始精靈少女 Event 69</button>');
         if(prep.stage===1)actions.push('<button data-zoo-action="event69-kui" class="wide">拜訪庫伊爺爺：取得發亮護身符 19621</button>');
         if(prep.stage===2)actions.push('<button data-zoo-action="event69-enter-cave" class="wide">把護身符交給卡卡金寶 → 進入蛙洞</button>');
@@ -860,7 +908,7 @@ async function boot(){
   }
 }
 function handleZooAction(action){
-  const q=state.quest,e2=q.event2,e4=q.event4,prep=q.event71Prep,e82=q.event82,e83=q.event83;
+  const q=state.quest,e81=q.event81,e2=q.event2,e4=q.event4,prep=q.event71Prep,e82=q.event82,e83=q.event83;
   if(action==='accept82'){
     if(!q.event81Complete)return;
     e82.active=true;addLog('已向園長接取 Event 82：尋回雷爾胖、波波頓與拉斯基。','good');
@@ -899,6 +947,58 @@ function handleZooAction(action){
     consumeItem(2417,15);giveItem(2418,1);
     e4.active=false;e4.complete=true;e4.stage=3;
     addLog('Event 4 成人式完成：交出儀玉 2417 ×15，取得 Item 2418；依 event04_1 正式設為 ENDEV=4。','good');
+  }
+  if(action==='event81-start'&&e4.complete&&!e81.complete&&e81.stage===0&&state.level>80){
+    if(!hasItem(19696))giveItem(19696,1);
+    e81.active=true;e81.stage=1;
+    addLog('Event81：打工名人克拉克確認 Lv81+ 與成人式資格，交給你推薦函 19696。','good');
+  }
+  if(action==='event81-trainer'&&e81.stage===1&&hasItem(19696)){
+    consumeItem(19696,1);giveItem(19697,1);e81.stage=2;
+    addLog('霍特雷敦收下推薦函，交給你飛龍捕捉證明書 19697；四種飛龍任選一隻即可。','pet');
+  }
+  if(action==='event81-goto-dragon'&&e81.stage===2){
+    const map=maps.find(m=>m.entries.some(x=>Number(x.variant?.tempNo)===273));
+    if(map){state.mapId=map.id;enemy=null;addLog('前往 '+map.name+' 捕捉加寶格恩（TempNo 273）。','good');}
+    else addLog('目前資料中找不到可直接前往的飛龍 Lv1 路線。','bad');
+  }
+  if(action==='event81-submit-dragon'&&e81.stage===2&&hasItem(19697)){
+    const dragons=[271,272,273,274],active=activePet();
+    const p=(active&&dragons.includes(Number(active.tempNo)))?active:state.petBox.find(x=>dragons.includes(Number(x.tempNo)));
+    if(!p)addLog('霍特雷敦需要帖拉格恩271／洛卡倫恩272／加寶格恩273／朵拉比斯274其中一隻。','bad');
+    else{
+      e81.deliveredTempNo=Number(p.tempNo);
+      const id=p.id;
+      state.petBox=state.petBox.filter(x=>x.id!==id);
+      state.team=state.team.map(x=>x===id?null:x);
+      if(state.activePetId===id)state.activePetId=state.team.find(Boolean)||null;
+      consumeItem(19697,1);e81.stage=3;
+      addLog('霍特雷敦收下 '+p.name+' 與捕捉證明書；發現布蘭恩002失蹤，正式進入 NOWEV=81。','good');
+    }
+  }
+  if(action==='event81-thief-1'&&e81.stage===3){state.mapId='event81-thief-1';enemy=null;addLog('闖入 PC團盜賊金剛陣第一層。');}
+  if(action==='event81-thief-2'&&e81.stage===4){state.mapId='event81-thief-2';enemy=null;addLog('闖入 PC團盜賊金剛陣第二層。');}
+  if(action==='event81-thief-3'&&e81.stage===5){state.mapId='event81-thief-3';enemy=null;addLog('闖入 PC團盜賊金剛陣第三層。');}
+  if(action==='event81-boss'&&e81.stage===6){state.mapId='event81-boss';enemy=null;addLog('前往 Floor 5582 挑戰 PC團老大。','good');}
+  if(action==='event81-confession'&&e81.stage===7){
+    if(!hasItem(19698))giveItem(19698,1);
+    e81.stage=8;
+    addLog('PC團老大承認偷走布蘭恩002，交給你悔過書 19698；布蘭恩002由其部下送回。','pet');
+  }
+  if(action==='event81-complete'&&e81.stage===8&&hasItem(19698)){
+    if(!hasItem(19699))giveItem(19699,1);
+    e81.active=false;e81.complete=true;q.event81Complete=true;
+    addLog('霍特雷敦確認布蘭恩002已歸還，交給你研究報告 19699；依 eden81_2 正式 EndSetFlg:81。','good');
+  }
+  if(action==='event81-fly-eden'&&e81.complete&&!e81.arrivedEden&&hasItem(19699)){
+    const denied=[2402,2403,2404,2405,2406,2407,2408,2409,2410,2411,2412,2413].filter(id=>hasItem(id));
+    if(denied.length)addLog('飛龍航空拒絕搭載目前持有的禁運道具：'+denied.join('、')+'。','bad');
+    else if(state.gold<10000)addLog('飛龍航空旅費需要 10,000 石幣。','bad');
+    else{state.gold-=10000;e81.arrivedEden=true;addLog('支付 10,000 石幣，搭乘朵拉比斯由波拉飛往伊甸。','good');}
+  }
+  if(action==='event81-bruce'&&e81.complete&&e81.arrivedEden&&!e81.postReward&&hasItem(19699)){
+    consumeItem(19699,1);state.gold+=200000;e81.postReward=true;
+    addLog('飛龍總教練布魯斯收下研究報告 19699，依 eden81_10 給予 200,000 石幣。','good');
   }
   if(action==='event69-start'&&!q.event71Current&&e4.complete&&prep.stage===0){
     prep.stage=1;addLog('Event 69：願藏祖父委託你尋找失蹤的新藏，正式設為 NOWEV=69。','good');
@@ -1061,11 +1161,6 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;addLog('休息完成，HP 已補滿。','good');save();render();
-});
-$('#testEvent81Btn').addEventListener('click',()=>{
-  state.quest.event81Complete=true;
-  addLog('開發測試旗標：Event 81 金飛任務標記為已完成。','pet');
-  save();render();
 });
 $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;
