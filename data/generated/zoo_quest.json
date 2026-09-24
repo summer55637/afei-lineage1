@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "Event 82/83 core is playable. Event 2 Item 2414, Event 4 adult ceremony, the full Event69/70 frog-cave rescue chain, Marefia Lv1→79 memories, and the Event71 NOWEV gate are source-backed playable prerequisites.",
+    "note": "Event 81/82/83 core is playable. Event 2 Item 2414, Event 4 adult ceremony, Event69/70, formal Event81 dragon-airway rescue, Marefia Lv1→79 memories, and the Event71 NOWEV gate are source-backed playable prerequisites.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -223,12 +223,132 @@
       }
     },
     "81": {
-      "name": "金飛航空任務",
+      "name": "金飛航空／伊甸尋根飛龍任務",
       "serverEventId": 81,
-      "source": "gmsv/src/npc/npc_eventaction.c",
       "verified": true,
-      "implementationStatus": "prerequisite_only",
-      "note": "服務端事件清單明確將 81 標為金飛任務；目前放置版尚未實裝完整 Event 81 流程。"
+      "implementationStatus": "playable_full_core",
+      "sources": [
+        "gmsv/data/npc/eden1/init/eden81.create",
+        "gmsv/data/npc/eden1/init/eden81_1",
+        "gmsv/data/npc/eden1/init/eden81_2",
+        "gmsv/data/npc/eden1/init/eden81_4",
+        "gmsv/data/npc/eden1/init/event81_3f.arg",
+        "gmsv/data/npc/eden1/init/event81_6f.arg",
+        "gmsv/data/npc/eden1/init/event81_7f.arg",
+        "gmsv/data/npc/eden1/init/event81_8f.arg",
+        "gmsv/data/npc/eden1/eden_airway_1.arg",
+        "gmsv/data/npc/eden1/init/eden81_10",
+        "gmsv/src/npc/npc_eventaction.c"
+      ],
+      "prerequisite": {
+        "playerLevelRule": "LV>80",
+        "playerMinLevel": 81,
+        "requiresEndEvents": [
+          4
+        ]
+      },
+      "acceptedDragons": [
+        {
+          "tempNo": 271,
+          "name": "帖拉格恩"
+        },
+        {
+          "tempNo": 272,
+          "name": "洛卡倫恩"
+        },
+        {
+          "tempNo": 273,
+          "name": "加寶格恩"
+        },
+        {
+          "tempNo": 274,
+          "name": "朵拉比斯"
+        }
+      ],
+      "route": [
+        "打工名人克拉克：LV>80 & ENDEV=4 → GetItem:19696",
+        "霍特雷敦：ITEM=19696 → DelItem:19696 + GetItem:19697",
+        "交出 TempNo 271/272/273/274 任一飛龍 + 19697 → 進 NOWEV=81，開始找回布蘭恩002",
+        "Floor 5576：PC團盜賊金剛陣三層，EnemyID 1704",
+        "Floor 5582：PC團老大 EnemyID 1705 + EnemyID 1704×9",
+        "戰後 Floor 5580：PC團老大 GetItem:19698",
+        "霍特雷敦：NOWEV=81 & ITEM=19698 → GetItem:19699 + EndSetFlg:81",
+        "完成後可搭波拉～伊甸園航線，needstone=10000",
+        "飛龍總教練布魯斯：ENDEV=81 & ITEM=19699 → DelItem:19699 + GetStone:200000"
+      ],
+      "thiefBattles": [
+        {
+          "stage": 1,
+          "floorId": 5576,
+          "enemyId": 1704,
+          "tempNo": 714,
+          "count": 2,
+          "levelMin": 70,
+          "levelMax": 75,
+          "source": "gmsv/data/npc/eden1/init/event81_6f.arg"
+        },
+        {
+          "stage": 2,
+          "floorId": 5576,
+          "enemyId": 1704,
+          "tempNo": 714,
+          "count": 2,
+          "levelMin": 70,
+          "levelMax": 75,
+          "source": "gmsv/data/npc/eden1/init/event81_7f.arg"
+        },
+        {
+          "stage": 3,
+          "floorId": 5576,
+          "enemyId": 1704,
+          "tempNo": 714,
+          "count": 2,
+          "levelMin": 70,
+          "levelMax": 75,
+          "source": "gmsv/data/npc/eden1/init/event81_8f.arg"
+        }
+      ],
+      "bossBattle": {
+        "floorId": 5582,
+        "postBattleFloorId": 5580,
+        "bossEnemyId": 1705,
+        "bossTempNo": 713,
+        "bossLevel": 100,
+        "composition": {
+          "1704": 9,
+          "1705": 1
+        },
+        "source": "gmsv/data/npc/eden1/init/event81_3f.arg"
+      },
+      "airway": {
+        "fromFloorId": 5579,
+        "destination": "伊甸園",
+        "destinationFloorId": 7000,
+        "costStone": 10000,
+        "deniedItemIds": [
+          2402,
+          2403,
+          2404,
+          2405,
+          2406,
+          2407,
+          2408,
+          2409,
+          2410,
+          2411,
+          2412,
+          2413
+        ],
+        "source": "gmsv/data/npc/eden1/eden_airway_1.arg"
+      },
+      "finalReward": {
+        "npc": "飛龍總教練布魯斯",
+        "floorId": 7016,
+        "consumeItemId": 19699,
+        "stone": 200000,
+        "source": "gmsv/data/npc/eden1/init/eden81_10"
+      },
+      "note": "標準 ENDEV=81 分支的 eden81_2 會給 19699，但沒有 DelItem:19698；放置版保留這個原腳本行為。"
     },
     "82": {
       "name": "伊甸動物園尋回三寵",
@@ -595,6 +715,58 @@
       ]
     },
     {
+      "id": 19696,
+      "name": "推薦函",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/eden1/init/eden81_1",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "打工名人克拉克",
+          "summary": "LV>80 且 ENDEV=4 時 GetItem:19696；對話明確稱為推薦函。"
+        }
+      ]
+    },
+    {
+      "id": 19697,
+      "name": "飛龍捕捉證明書",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/eden1/init/eden81_2",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "霍特雷敦",
+          "summary": "交推薦函 19696 後 GetItem:19697；腳本對話稱為捕捉說明書／捕捉證明書，用於交付四種飛龍任一隻。"
+        }
+      ]
+    },
+    {
+      "id": 19698,
+      "name": "PC團老大的悔過書",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/eden1/init/eden81_4",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "PC團老大",
+          "summary": "NOWEV=81 且戰敗後，老大承認偷走布蘭恩002並 GetItem:19698；對話明確稱為悔過書。"
+        }
+      ]
+    },
+    {
+      "id": 19699,
+      "name": "飛龍研究報告",
+      "sourceStatus": "verified_semantic_name",
+      "source": "gmsv/data/npc/eden1/init/eden81_2",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "霍特雷敦",
+          "summary": "持 19698 回報後 GetItem:19699 並 EndSetFlg:81；對話明確稱為研究報告。"
+        }
+      ]
+    },
+    {
       "id": 19701,
       "name": "園丁的鏟子",
       "sourceStatus": "verified",
@@ -788,6 +960,147 @@
     }
   ],
   "huntingZones": [
+    {
+      "id": "event81-boss",
+      "name": "PC團據點・老大戰",
+      "floorId": 5582,
+      "encounterId": null,
+      "description": "Event81：PC團老大戰。原 event81_3f.arg 編成為 EnemyID 1705×1 + 1704×9；目前單體戰鬥核心以老大代表整隊。",
+      "questRequirement": {
+        "event81Stage": 6
+      },
+      "entries": [
+        {
+          "name": "PC團老大",
+          "tempNo": 713,
+          "enemyIds": [
+            1705
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 100,
+          "levelMax": 100,
+          "wildGrowth": 20,
+          "animationGroupId": 100401,
+          "stats": {
+            "vital": 50,
+            "str": 50,
+            "tgh": 45,
+            "dex": 50
+          },
+          "questOnWin": "event81-boss-win",
+          "bossComposition": {
+            "1704": 9,
+            "1705": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "event81-thief-3",
+      "name": "PC團據點・金剛陣第三層",
+      "floorId": 5576,
+      "encounterId": null,
+      "description": "Event81：第三層。原 event81_8f.arg 為 PC團盜賊×2；目前單體戰鬥核心以 EnemyID 1704 代表該層。",
+      "questRequirement": {
+        "event81Stage": 5
+      },
+      "entries": [
+        {
+          "name": "PC團盜賊・第三層",
+          "tempNo": 714,
+          "enemyIds": [
+            1704
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 75,
+          "wildGrowth": 20,
+          "animationGroupId": 100400,
+          "stats": {
+            "vital": 50,
+            "str": 40,
+            "tgh": 20,
+            "dex": 50
+          },
+          "questOnWin": "event81-thief-3-win",
+          "bossComposition": {
+            "1704": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "event81-thief-2",
+      "name": "PC團據點・金剛陣第二層",
+      "floorId": 5576,
+      "encounterId": null,
+      "description": "Event81：第二層。原 event81_7f.arg 為 PC團盜賊×2；目前單體戰鬥核心以 EnemyID 1704 代表該層。",
+      "questRequirement": {
+        "event81Stage": 4
+      },
+      "entries": [
+        {
+          "name": "PC團盜賊・第二層",
+          "tempNo": 714,
+          "enemyIds": [
+            1704
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 75,
+          "wildGrowth": 20,
+          "animationGroupId": 100400,
+          "stats": {
+            "vital": 50,
+            "str": 40,
+            "tgh": 20,
+            "dex": 50
+          },
+          "questOnWin": "event81-thief-2-win",
+          "bossComposition": {
+            "1704": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "event81-thief-1",
+      "name": "PC團據點・金剛陣第一層",
+      "floorId": 5576,
+      "encounterId": null,
+      "description": "Event81：第一層。原 event81_6f.arg 為 PC團盜賊×2；目前單體戰鬥核心以 EnemyID 1704 代表該層。",
+      "questRequirement": {
+        "event81Stage": 3
+      },
+      "entries": [
+        {
+          "name": "PC團盜賊・第一層",
+          "tempNo": 714,
+          "enemyIds": [
+            1704
+          ],
+          "weight": 1,
+          "capturable": false,
+          "levelMin": 70,
+          "levelMax": 75,
+          "wildGrowth": 20,
+          "animationGroupId": 100400,
+          "stats": {
+            "vital": 50,
+            "str": 40,
+            "tgh": 20,
+            "dex": 50
+          },
+          "questOnWin": "event81-thief-1-win",
+          "bossComposition": {
+            "1704": 2
+          }
+        }
+      ]
+    },
     {
       "id": "event69-frog-king",
       "name": "蛙洞・里昂蛙王戰",
