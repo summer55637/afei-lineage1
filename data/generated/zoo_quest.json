@@ -1,0 +1,231 @@
+{
+  "_meta": {
+    "format": "stoneage-zoo-quest-v1",
+    "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "note": "Only source-backed quest rules are marked verified. Event 81 gameplay and the full Event 83 chain are not yet fully implemented."
+  },
+  "events": {
+    "81": {
+      "name": "金飛航空任務",
+      "serverEventId": 81,
+      "source": "gmsv/src/npc/npc_eventaction.c",
+      "verified": true,
+      "implementationStatus": "prerequisite_only",
+      "note": "服務端事件清單明確將 81 標為金飛任務；目前放置版尚未實裝完整 Event 81 流程。"
+    },
+    "82": {
+      "name": "伊甸動物園尋回三寵",
+      "serverEventId": 82,
+      "source": "gmsv/data/npc/eden1/zoo1/manager82_01",
+      "verified": true,
+      "requiresEndEvents": [
+        81
+      ],
+      "targets": [
+        {
+          "name": "雷爾胖",
+          "tempNo": 905,
+          "enemyId": 1798,
+          "floorId": 7000,
+          "encounterId": 778,
+          "groupId": 927,
+          "requiredItemId": 19733,
+          "requiredItemName": "雷爾胖專用飼料",
+          "source": [
+            "gmsv/data/enemy.txt",
+            "gmsv/data/group.txt",
+            "gmsv/data/encount.txt",
+            "gmsv/data/npc/eden1/zoo1/employee82_01"
+          ]
+        },
+        {
+          "name": "波波頓",
+          "tempNo": 786,
+          "enemyId": 1762,
+          "floorId": 7000,
+          "encounterId": 780,
+          "groupId": 942,
+          "requiredItemId": 19723,
+          "requiredItemName": "肉食性飼料二號",
+          "source": [
+            "gmsv/data/enemy.txt",
+            "gmsv/data/group.txt",
+            "gmsv/data/encount.txt",
+            "gmsv/data/npc/eden1/zoo1/barrel82_04"
+          ]
+        },
+        {
+          "name": "動物園養的拉斯基",
+          "tempNo": 854,
+          "enemyId": 1733,
+          "obtainedByEvent": 83,
+          "source": [
+            "gmsv/data/enemy.txt",
+            "gmsv/data/npc/eden1/zoo2/event83_19"
+          ]
+        }
+      ],
+      "reward": {
+        "enemyId": 1563,
+        "tempNo": 730,
+        "name": "布伊胖"
+      },
+      "rewardSource": [
+        "gmsv/data/npc/eden1/zoo1/manager82_01",
+        "gmsv/data/enemy.txt"
+      ]
+    },
+    "83": {
+      "name": "尋回拉斯基",
+      "serverEventId": 83,
+      "verified": true,
+      "implementationStatus": "researched_not_playable",
+      "requires": [
+        "Event 81 complete",
+        "Event 82 active",
+        "Event 71 current",
+        "Item 2414",
+        "Item 19714"
+      ],
+      "sources": [
+        "gmsv/data/npc/eden1/zoo2/event83_1a",
+        "gmsv/data/npc/eden1/zoo2/event83_2a",
+        "gmsv/data/npc/eden1/zoo2/event83_17",
+        "gmsv/data/npc/eden1/zoo2/event83_18.arg",
+        "gmsv/data/npc/eden1/zoo2/event83_19"
+      ],
+      "finalBattle": {
+        "npc": "席格",
+        "floorId": 60044,
+        "afterFloorId": 60045
+      },
+      "reward": {
+        "enemyId": 1733,
+        "tempNo": 854,
+        "name": "動物園養的拉斯基"
+      }
+    }
+  },
+  "items": [
+    {
+      "id": 19720,
+      "name": "草食性飼料一號",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/barrel82_01"
+    },
+    {
+      "id": 19721,
+      "name": "草食性飼料二號",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/barrel82_02"
+    },
+    {
+      "id": 19722,
+      "name": "肉食性飼料一號",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/barrel82_03"
+    },
+    {
+      "id": 19723,
+      "name": "肉食性飼料二號",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/barrel82_04"
+    },
+    {
+      "id": 19724,
+      "name": "雜食性飼料一號",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/barrel82_05"
+    },
+    {
+      "id": 19725,
+      "name": "雜食性飼料二號",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/barrel82_06"
+    },
+    {
+      "id": 19733,
+      "name": "雷爾胖專用飼料",
+      "sourceStatus": "verified",
+      "source": "gmsv/data/npc/eden1/zoo1/employee82_01"
+    }
+  ],
+  "huntingZones": [
+    {
+      "id": "zoo-raelpang",
+      "name": "伊甸園・雷爾胖任務區",
+      "floorId": 7000,
+      "encounterId": 778,
+      "description": "員工宿舍後方一帶。需要雷爾胖專用飼料。",
+      "requireItems": [
+        19733
+      ],
+      "entries": [
+        {
+          "name": "雷爾胖",
+          "tempNo": 905,
+          "enemyIds": [
+            1798
+          ],
+          "weight": 0.029602988020000054,
+          "useMainDbTempNo": 905,
+          "capturable": true
+        },
+        {
+          "name": "布伊胖",
+          "tempNo": 855,
+          "enemyIds": [
+            1741
+          ],
+          "weight": 0.97039701198,
+          "wildGrowth": 27,
+          "captureBase": -1,
+          "capturable": false,
+          "stats": {
+            "vital": 34,
+            "str": 29,
+            "tgh": 25,
+            "dex": 23
+          }
+        }
+      ]
+    },
+    {
+      "id": "zoo-popodon",
+      "name": "伊甸園・波波頓任務區",
+      "floorId": 7000,
+      "encounterId": 780,
+      "description": "伊甸園東南水池附近。只帶肉食性飼料二號時對應 Group 942。",
+      "requireItems": [
+        19723
+      ],
+      "forbidItems": [
+        19720,
+        19721,
+        19722,
+        19724,
+        19725
+      ],
+      "entries": [
+        {
+          "name": "波波頓",
+          "tempNo": 786,
+          "enemyIds": [
+            1762
+          ],
+          "weight": 1,
+          "wildGrowth": 19,
+          "captureBase": 11,
+          "capturable": true,
+          "animationGroupId": 100881,
+          "stats": {
+            "vital": 33,
+            "str": 30,
+            "tgh": 19,
+            "dex": 17
+          }
+        }
+      ]
+    }
+  ]
+}
