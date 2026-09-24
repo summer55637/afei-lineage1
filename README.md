@@ -300,6 +300,14 @@ Event83 已接入可玩核心：
 - Item 2414 已解出正式名稱與來源：**不可思議的貝殼**
   - Event 2 日美子先給 Item 2415
   - 彌生腳本正式執行 `DelItem:2415`、`GetItem:2414`、`EndSetFlg:2`
+- Event 4 成人式已正式接入，不再壓縮略過：
+  - NPC 位置：Floor 10204
+  - 「儀式的審判」以 EventNo 4 / TYPE:REQUEST 開始成人禮
+  - 「儀式審判的差使」在 NOWEV=4 且未持有 2417 時正式給 `GetItem:2417*15`
+  - 原對話把 Item 2417 稱為「儀玉」
+  - 交回 15 個 2417 後，審判腳本執行 `DelItem:2417*15`、`GetItem:2418`、`EndSetFlg:4`
+  - Item 2418 的 ID 與用途已確認，但現行來源內尚未解出精確正式物品名稱
+  - Event69 起點 `event69_3` 明確要求 `ENDEV=4`，現在遊戲也會照此阻擋
 - Event69／70 的精靈少女前傳已接成可玩的精簡前置，不再直接灌 Event71 旗標
 - 願藏祖母的原腳本會交付 EnemyID 1479；服務端程式已確認它對應瑪蕾菲雅 TempNo 718
 - `npc_transmigration.c` 的正式寵物轉生檢查已確認：
