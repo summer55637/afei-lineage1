@@ -648,7 +648,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.6 載入完成：伊甸動物園 Event 82 已接入任務面板與兩個正式狩獵區。','good');
+    addLog('V0.6 載入完成：伊甸動物園 Event 82 已接入；服務端資料以 setup.cf 指定的 enemy1/group1 為準。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
