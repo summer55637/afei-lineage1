@@ -1507,6 +1507,17 @@ const ENEMY_SOURCE_SKILL_META={
   606:{n:'怯戰',d:'攻 70%、防 40%、敏 80%；命中後可能使目標逃離',f:'PETSKILL_BattleTimid',o:'',field:1,target:6},
   636:{n:'狂獅怒吼',d:'攻 50%、敏 130%；可能使敵方寵物回到寵物欄',f:'PETSKILL_2BattleTimid',o:'-攻%50+敏%30命%60',field:1,target:7}
 };
+
+// V0.52：原 gavinlinasd/StoneAge 這個 build 已開 _PETSKILL_OPTIMUM。
+// 以下 ID 被 Enemy AI 正權重引用，但在該 build 的 gmsv/data/petskill2.txt 完全沒有定義。
+// PETSKILL_getPetskillArray() 對這些槽位返回 -1，PETSKILL_Use() FALSE；
+// BATTLE_ai_all() 因此不把 Enemy 從 C_WAIT 改成 C_OK，該角色整回合在 StatusSeq 前就被跳過。
+const ENEMY_SOURCE_MISSING_SKILL_IDS=new Set([
+  -1,18,65,111,112,113,114,
+  509,510,511,512,513,515,518,
+  558,559,560,588,589,645,729,745
+]);
+
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
   return petSkillDb?.byId?.[String(skillId)]||ENEMY_SOURCE_SKILL_META[Number(skillId)]||null;
@@ -1550,6 +1561,13 @@ function enemyChooseAction(unit){
   if(!picked)return {kind:'none',spec};
 
   if(picked.kind==='skill'){
+    if(ENEMY_SOURCE_MISSING_SKILL_IDS.has(Number(picked.skillId))){
+      return {
+        kind:'none',spec,
+        skillSlot:picked.skillSlot,skillId:picked.skillId,
+        sourceSkillMissing:true
+      };
+    }
     const meta=enemyPetSkillMeta(picked.skillId);
     if(meta?.f==='PETSKILL_None')return {kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
     if(meta?.f==='PETSKILL_NormalAttack')return {kind:'attack',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
@@ -3757,6 +3775,7 @@ function captureTurn(manual=false){
   for(const actor of order){
     if(!enemy)return captured;
     if(state.hp<=0){defeat();return captured}
+    if(sourceMissingEnemyWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -3942,6 +3961,7 @@ function normalBattleOrder(){
     order.push({
       kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
       enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
+      sourceSkillMissing:!!action.sourceSkillMissing,
       targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
     });
   }
@@ -3951,6 +3971,14 @@ function normalBattleOrder(){
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
   return order;
 }
+function sourceMissingEnemyWait(actor){
+  if(actor?.kind!=='enemy'||!actor.sourceSkillMissing)return false;
+  const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+  if(unit){
+    addLog(unit.name+' 的 Enemy AI 抽到來源未定義 PetSkill '+actor.skillId+'；原服 PETSKILL_Use() 會失敗並停在 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
+  }
+  return true;
+}
 function attackTurn(){
   if(!enemy)return;
   const order=normalBattleOrder();
@@ -3958,6 +3986,7 @@ function attackTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
+    if(sourceMissingEnemyWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -4025,6 +4054,7 @@ function guardTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
+    if(sourceMissingEnemyWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -4526,7 +4556,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.51 載入完成：接入 606 怯戰與 636 狂獅怒吼；保留技能本身的攻防敏修正、default 出手排序，以及命中後玩家退場／寵物收回的原 C 分支。','good');
+    addLog('V0.52 載入完成：還原 Enemy AI 引用缺失 PetSkill 的原服行為；缺表 ID 抽中時 PETSKILL_Use 失敗，Enemy 維持 C_WAIT，整回合不行動且不跑自身 StatusSeq。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
