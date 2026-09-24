@@ -226,7 +226,7 @@
       "name": "金飛航空／伊甸尋根飛龍任務",
       "serverEventId": 81,
       "verified": true,
-      "implementationStatus": "playable_full_core_random_warp_maze_and_air_routes",
+      "implementationStatus": "playable_full_formation_random_warp_maze_and_air_routes",
       "sources": [
         "gmsv/data/npc/eden1/init/eden81.create",
         "gmsv/data/npc/eden1/init/eden81_1",
@@ -286,7 +286,15 @@
           "count": 2,
           "levelMin": 70,
           "levelMax": 75,
-          "source": "gmsv/data/npc/eden1/init/event81_6f.arg"
+          "source": "gmsv/data/npc/eden1/init/event81_6f.arg",
+          "runtimeFormation": [
+            {
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 2,
+              "name": "PC團盜賊"
+            }
+          ]
         },
         {
           "stage": 2,
@@ -296,7 +304,15 @@
           "count": 2,
           "levelMin": 70,
           "levelMax": 75,
-          "source": "gmsv/data/npc/eden1/init/event81_7f.arg"
+          "source": "gmsv/data/npc/eden1/init/event81_7f.arg",
+          "runtimeFormation": [
+            {
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 2,
+              "name": "PC團盜賊"
+            }
+          ]
         },
         {
           "stage": 3,
@@ -306,7 +322,15 @@
           "count": 2,
           "levelMin": 70,
           "levelMax": 75,
-          "source": "gmsv/data/npc/eden1/init/event81_8f.arg"
+          "source": "gmsv/data/npc/eden1/init/event81_8f.arg",
+          "runtimeFormation": [
+            {
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 2,
+              "name": "PC團盜賊"
+            }
+          ]
         }
       ],
       "bossBattle": {
@@ -319,7 +343,21 @@
           "1704": 9,
           "1705": 1
         },
-        "source": "gmsv/data/npc/eden1/init/event81_3f.arg"
+        "source": "gmsv/data/npc/eden1/init/event81_3f.arg",
+        "runtimeFormation": [
+          {
+            "enemyId": 1705,
+            "tempNo": 713,
+            "count": 1,
+            "name": "PC團老大"
+          },
+          {
+            "enemyId": 1704,
+            "tempNo": 714,
+            "count": 9,
+            "name": "PC團盜賊"
+          }
+        ]
       },
       "airway": {
         "fromFloorId": 5579,
@@ -633,7 +671,7 @@
         "stone": 200000,
         "source": "gmsv/data/npc/eden1/init/eden81_10"
       },
-      "note": "金剛陣現在直接使用原始 WARP 候選表等權抽取；第一區進第二區為 2/10，第二區進第三區為 2/11，第三區進老大區為 1/11。原腳本仍可能把玩家送回前區，因此遊戲也保留倒退。標準 ENDEV=81 完成分支給 19699 時未寫 DelItem:19698，放置版保留該原始行為。",
+      "note": "V0.10 起金剛陣三區不再以單體代表整隊：每戰實際生成 PC團盜賊×2；老大戰實際生成 PC團老大×1＋盜賊×9。玩家與出戰寵依序攻擊第一個存活敵人，所有存活敵人各自反擊一次；全員倒下才觸發原始 WARP／任務勝利。亂數傳送與三條航空路線維持 V0.9 規則。",
       "maze": {
         "floorId": 5576,
         "initial": {
@@ -1465,7 +1503,7 @@
       "name": "PC團據點・老大戰",
       "floorId": 5582,
       "encounterId": null,
-      "description": "Event81 PC團老大戰。原 event81_3f.arg：EnemyID 1705×1 + 1704×9；勝利固定 warp Floor 5580 (58,20)。目前單體戰鬥核心以老大代表整隊。",
+      "description": "Event81 PC團老大戰。依 event81_3f.arg 真正生成 EnemyID 1705 PC團老大×1 + EnemyID 1704 PC團盜賊×9；全員擊倒後才會 warp Floor 5580 (58,20)。",
       "questRequirement": {
         "event81Stage": 6,
         "event81MazeFloor": 5582
@@ -1493,7 +1531,39 @@
           "bossComposition": {
             "1704": 9,
             "1705": 1
-          }
+          },
+          "formation": [
+            {
+              "name": "PC團老大",
+              "enemyId": 1705,
+              "tempNo": 713,
+              "count": 1,
+              "levelMin": 100,
+              "levelMax": 100,
+              "stats": {
+                "vital": 50,
+                "str": 50,
+                "tgh": 45,
+                "dex": 50
+              },
+              "animationGroupId": 100401
+            },
+            {
+              "name": "PC團盜賊",
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 9,
+              "levelMin": 70,
+              "levelMax": 75,
+              "stats": {
+                "vital": 50,
+                "str": 40,
+                "tgh": 20,
+                "dex": 50
+              },
+              "animationGroupId": 100400
+            }
+          ]
         }
       ]
     },
@@ -1530,7 +1600,24 @@
           "questOnWin": "event81-thief-3-win",
           "bossComposition": {
             "1704": 2
-          }
+          },
+          "formation": [
+            {
+              "name": "PC團盜賊",
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 2,
+              "levelMin": 70,
+              "levelMax": 75,
+              "stats": {
+                "vital": 50,
+                "str": 40,
+                "tgh": 20,
+                "dex": 50
+              },
+              "animationGroupId": 100400
+            }
+          ]
         }
       ]
     },
@@ -1567,7 +1654,24 @@
           "questOnWin": "event81-thief-2-win",
           "bossComposition": {
             "1704": 2
-          }
+          },
+          "formation": [
+            {
+              "name": "PC團盜賊",
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 2,
+              "levelMin": 70,
+              "levelMax": 75,
+              "stats": {
+                "vital": 50,
+                "str": 40,
+                "tgh": 20,
+                "dex": 50
+              },
+              "animationGroupId": 100400
+            }
+          ]
         }
       ]
     },
@@ -1604,7 +1708,24 @@
           "questOnWin": "event81-thief-1-win",
           "bossComposition": {
             "1704": 2
-          }
+          },
+          "formation": [
+            {
+              "name": "PC團盜賊",
+              "enemyId": 1704,
+              "tempNo": 714,
+              "count": 2,
+              "levelMin": 70,
+              "levelMax": 75,
+              "stats": {
+                "vital": 50,
+                "str": 40,
+                "tgh": 20,
+                "dex": 50
+              },
+              "animationGroupId": 100400
+            }
+          ]
         }
       ]
     },
