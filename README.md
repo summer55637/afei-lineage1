@@ -3841,3 +3841,22 @@ V0.60 將 `schemaVersion` 15 升為 16，新增：
 - `playerPigImage`
 
 舊存檔透過 fresh-state merge 自動取得預設值，不需要破壞既有角色／寵物／任務資料。
+
+### V0.60 正權重非 MP／魔法掃描邊界
+
+以原 `gmsv/data/petskill2.txt`、`version.h`、實際 `PETSKILL_functbl[]` 與目前 Enemy AI 正權重重新交叉掃描後，V0.60 已沒有其他可在「不補 MP／AttackMagic／咒術底層」前提下安全新增的技能。
+
+目前仍有正權重但未接入的來源函式只剩：
+
+| 類型 | ID | 正權重總和 | 暫緩原因 |
+| --- | --- | ---: | --- |
+| `PETSKILL_AttackMagic` | 27 個（301～325 等） | 504 | 直接指定 magic ID + item ID，需正式 magic／attmagic 執行層 |
+| `PETSKILL_MpDamage` | 506／507／508 | 196 | 技能本身會做物理攻擊，但核心附加結果直接修改目標 MP；玩家／寵物正式 MP 尚未建模 |
+| `PETSKILL_Firekill` | 624 | 32 | 先做 80% 物理攻擊，再固定呼叫 `BATTLE_MultiAttMagic_Fire(...,2,200)`；不能只截掉後半魔法 |
+| `PETSKILL_StealMoney` | 211 | 8 | Enemy 的 `CHAR_WORKPLAYERINDEX` 預設為 0；index 0 是否有效取決於原伺服器全域 Char runtime，前端沒有等價配置 |
+| `PETSKILL_Combined` | 627／632／637／705 | 6 | 只是挑 option 內的咒術編號後改成 `BATTLE_COM_JYUJYUTU`，效果完全依賴咒術底層 |
+| `PETSKILL_DivideAttack` | 634 | 5 | `BATTLE_DivideAttack()` 先把敵方所有玩家 MP 扣半，再做全側 HP 比例傷害並處理騎寵分攤 |
+
+另外 502／582 雖有 petskill2 資料列，但原 build 的 functbl 無法取得函式指標，已由 V0.59 正式還原為 C_WAIT；V0.52 的缺 ID 引用也已同樣完成。
+
+因此下一階段若繼續擴技能，應先建正式 MP／magic／JYUJYUTU 底層，而不是再從技能名稱猜效果。
