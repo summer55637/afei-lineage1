@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.13</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.14</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -45,6 +45,7 @@
             <span id="mapPetCount" class="muted"></span>
           </div>
           <select id="mapSelect"></select>
+          <select id="encounterSelect" class="encounter-select" aria-label="Encounter 狩獵區"></select>
           <div id="mapInfo" class="map-info"></div>
         </article>
 
@@ -58,7 +59,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">一般野外 166 種 Lv1 正式路線已批量接入 ENCOUNT／GROUP 動態組隊：現行 190 條 route 對應 164 個唯一 GroupID；每戰依原 Group 權重、CREATEMAXNUM 與 enemyMax 生成整隊，群戰中可逐隻捕獲。</div>
+          <div class="muted dev-note">一般野外已改為 Floor → Encounter 狩獵區 → Group → Enemy：同一 Encounter 不再因多隻 Lv1 route 被重複加權。可直接選 Encounter 座標區域；群組權重、道具條件、CREATEMAXNUM 與 enemyMax 依現行服務端資料生成。</div>
         </article>
 
         <article class="card">
@@ -155,8 +156,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.13：</b>
-      一般野外 166 種 Lv1 寵物資料已全面接到 dynamicFormation 群戰核心；164 個唯一 GroupID、318 個 Enemy 成員模板均直接取自現行 group1.txt / enemy1.txt / enemybase1.txt。
+      <b>V0.14：</b>
+      一般野外 161 個 Encounter 已展開完整現行 Group 引用；520 個 GroupID 引用中 506 個可由 group1.txt 解析，14 個失聯引用保留為 unresolved、不使用舊檔臆補。
     </article>
   </main>
 
