@@ -1734,3 +1734,144 @@ Skill runtime 已能取得像：
 
 其中 `magic.txt` 提供屬性、Power、MagicLv；`attmagic.bin` 還包含真正的範圍遮罩與動畫攻擊型態。這兩份檔案目前不在來源 GitHub，也不在本專案資料層，因此 V0.37 沒有先用猜測值實作 AttackMagic。
 
+## V0.38 旅程伙伴／忠犬
+
+V0.38 接入兩個目前 Enemy AI 會實際抽到、而且原始程式流程已能完整確認的 PetSkill：
+
+- ID 130「旅程伙伴」：`PETSKILL_Abduct`
+- ID 20「忠犬」：`PETSKILL_Guardian`，option `攻%-20  COM:攻击`
+
+另外把 ID 200「加工」`PETSKILL_Merge` 明確標記為原版戰鬥外技能，不再列成「尚未接入」。
+
+### 旅程伙伴
+
+原 `BATTLE_Abduct()` 對目標類型有非常明確的分流。
+
+若目標是 **PLAYER**：
+
+- `per = 0`
+- 函式直接 `return FALSE`
+- 玩家本人不會被帶離
+- 施術者也不會因此退出戰鬥
+
+若目標是 **PET / ENEMY**，成功率為：
+
+`per = max((目標等級 - 施術者等級) × 0.6 + 30, 50)`
+
+來源中的 `per` 是 `int`，所以小數會先以 C 整數規則截斷；V0.38 也先 `Math.trunc()` 再套最低 50。
+
+真正成功條件仍是嚴格：
+
+`RAND(1,100) < per`
+
+因此最低 `per=50` 時不是 50%，而是 **49%**。
+
+對目前 Enemy → 玩家側的戰鬥而言，真正有意義的目標是出戰寵物：
+
+- 成功：寵物退出**本場戰鬥**
+- 寵物不會被刪除、不會消失，也不改永久 HP / 寵物箱資料
+- 本場後續不再排回合、不再被 Enemy 指定、不再反擊
+- 本場勝利結算時，被帶離的寵物不取得該場 EXP
+- 下一場戰鬥重新建立 battle state 後，該寵物可正常再次出戰
+
+原碼還有一個重要規則：只要 Abduct 已進入「非 PLAYER 目標」流程，**不論帶走成功或失敗，施術者本身最後都會 `BATTLE_Exit`**。
+
+因此 V0.38 會在判定完成後把使用旅程伙伴的 Enemy 從本場移除；若敵方因此全數離場，沿用現有「敵方逃離」結算，不給擊殺 EXP 與掉落。
+
+原碼在 `BattleArray[battleindex].WinFunc != NULL` 時還會把 `per` 強制設為 0。現在網頁 runtime 尚未匯入可與該欄位一一對應的 Battle WinFunc 資料，所以沒有用任務名稱或 `questOnWin` 去猜這個條件；等 WinFunc 資料層正式匯入後再精準接上。
+
+目前 Enemy AI 中：
+
+- 33 個 Enemy 模板資料帶有 Skill 130
+- 其中 **3 個 Enemy 模板**對應 AI 權重大於 0，會實際使用旅程伙伴
+- 目前可實際抽到的 Enemy ID：1097、1790、2470
+
+### 忠犬
+
+ID 20 的資料為：
+
+`攻%-20  COM:攻击`
+
+所以忠犬不是單純「被動代擋」；PetSkill 下達時會：
+
+1. 把自己本回合攻擊力依 `攻%-20` 修正
+2. command 設成 `BATTLE_COM_S_GUARDIAN_ATTACK`
+3. 登記自己為 guardian
+4. 找到同側「自己站位 - 5」的主人，將該主人的 `guardian` 指向自己
+5. 自己仍會在本回合正常發動修正後的物理攻擊
+
+原 `BATTLE_NewEntry()` 的站位規則是：
+
+- 玩家：同側 Entry 0～4
+- 玩家寵物：固定在主人位置 +5
+- Enemy：同側 Entry 0～9 由前往後塞入第一個空位
+
+因此 Guardian attack-mode 的 `pos - 5` 規則可等價成：
+
+- slot 5 保護 slot 0
+- slot 6 保護 slot 1
+- …
+- slot 9 保護 slot 4
+
+V0.38 在 Enemy 編成建立完成後保存穩定 `battleSlot`；即使之後有 Enemy 死亡、捕獲或離場，也不重新編號，對應原版 Battle Entry 留空洞的語意。
+
+每一回合開始時，原 `BATTLE_PreCommandSeq` 會先把所有 guardian 清成 -1，再由這一回合選到 Guardian 的單位重新登記。V0.38 同樣在 `normalBattleOrder()` 開始時清除上一回合的 guardian link。
+
+### 忠犬代擋順序
+
+原 `BATTLE_AttackSeq()` 的順序不是先把目標直接換成忠犬，而是：
+
+1. 先用**原本被攻擊的目標**做 `BATTLE_DuckCheck`
+2. 原目標如果成功閃避，忠犬不會代擋
+3. 原目標沒有閃掉，才做 `BATTLE_GuardianCheck`
+4. 若 Guardian 有效，改用忠犬本身的防禦、屬性與會心判定計算傷害
+5. 不會再對忠犬做第二次閃避判定
+
+V0.38 依照這個順序接入，而不是簡化成「攻擊一開始就換目標」。
+
+Guardian 無效條件目前已對齊可由現有狀態系統表達的部分：
+
+- 忠犬已死亡
+- 忠犬就是本次攻擊者
+- 忠犬睡眠
+- 忠犬麻痺
+- 忠犬石化
+- 忠犬混亂
+
+原版另有 Barrier 與投擲武器限制；目前網頁版尚未接 Barrier／武器類型資料，因此不先造假判定。
+
+原 AttackSeq 還有一個 Guardian 特例：如果代擋後計算傷害恰好是 0，會強制改成 NORMAL 並給 **1 點傷害**。V0.38 已保留。
+
+### 忠犬與反擊
+
+原普通 `BATTLE_Attack()` 一旦 Guardian 成功代擋，就會把回傳 `iRet` 設為 FALSE，所以該次直接攻擊之後**不進普通 Counter loop**。V0.38 同樣在 guardian interception 發生後停止反擊鏈。
+
+另一方面，`BATTLE_Counter()` 明確只允許：
+
+- `BATTLE_COM_ATTACK`
+- `BATTLE_COM_S_NOGUARD`
+
+作為反擊者。
+
+`BATTLE_COM_S_GUARDIAN_ATTACK` 不在允許清單，所以忠犬自己使用技能攻擊別人後，對方仍可能先反擊牠，但忠犬不能再反反擊回去。V0.38 已將 Guardian skill 的 `counterEligibleThisTurn` 保持關閉。
+
+來源的 `BATTLE_Counter()` 雖然也呼叫 `BATTLE_AttackSeq`，但之後沒有像 `BATTLE_Attack()` 一樣用回傳 Guardian 去替換真正扣 HP 的 defindex，這段原碼本身存在不對稱。V0.38 不額外猜測修補這個 counter-only 行為；忠犬的正式代擋目前精準套用在普通 `BATTLE_Attack` 路徑，包括玩家／寵物普通攻擊與混亂強制普通攻擊。
+
+目前 Enemy AI 中：
+
+- 12 個 Enemy 模板資料帶有 Skill 20
+- 其中 **2 個 Enemy 模板**對應 AI 權重大於 0
+- 實際會抽到忠犬的 Enemy ID：657、861
+
+### 加工為何不接戰鬥效果
+
+ID 200「加工」雖然出現在 Enemy AI 資料，而且 Enemy 2213 對它有實際權重，但原 `PETSKILL_Merge()` 一開始會取得主人後檢查：
+
+`CHAR_WORKBATTLEMODE != BATTLE_CHARMODE_NONE`
+
+只要正在戰鬥就直接 `return FALSE`。
+
+因此把加工硬改成攻擊、Buff 或合成戰鬥技反而會偏離來源。V0.38 現在對這個 AI 結果明確記錄「原版戰鬥中拒絕執行，本回合沒有效果」，不再把它列成未知技能。
+
+到 V0.38 為止，目前「有可辨識函式名、而且 Enemy AI 有實際權重」的 PetSkill，除了需要外部 `magic.txt / attmagic.bin` 才能精準還原的 `PETSKILL_AttackMagic` 外，其餘這一批已知核心分支都已有對應處理或原版 no-op 判定。
+
