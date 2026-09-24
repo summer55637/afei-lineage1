@@ -2,7 +2,7 @@
   "_meta": {
     "format": "stoneage-zoo-quest-v2",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
-    "note": "Event 81/82/83 core is playable. Event 2 Item 2414, Event 4 adult ceremony, Event69/70, formal Event81 dragon-airway rescue, Marefia Lv1→79 memories, and the Event71 NOWEV gate are source-backed playable prerequisites.",
+    "note": "V0.9: Event81 PC gang maze now reproduces the source random-warp tables from event81_6f/7f/8f.arg instead of guaranteed linear three-battle progression. Event81/82/83 and prerequisite chains remain playable.",
     "activeTables": {
       "enemy": "gmsv/data/enemy1.txt",
       "enemybase": "gmsv/data/enemybase1.txt",
@@ -226,7 +226,7 @@
       "name": "金飛航空／伊甸尋根飛龍任務",
       "serverEventId": 81,
       "verified": true,
-      "implementationStatus": "playable_full_core",
+      "implementationStatus": "playable_full_core_random_warp_maze",
       "sources": [
         "gmsv/data/npc/eden1/init/eden81.create",
         "gmsv/data/npc/eden1/init/eden81_1",
@@ -269,9 +269,10 @@
         "打工名人克拉克：LV>80 & ENDEV=4 → GetItem:19696",
         "霍特雷敦：ITEM=19696 → DelItem:19696 + GetItem:19697",
         "交出 TempNo 271/272/273/274 任一飛龍 + 19697 → 進 NOWEV=81，開始找回布蘭恩002",
-        "Floor 5576：PC團盜賊金剛陣三層，EnemyID 1704",
+        "Floor 5576：PC團金剛陣不是固定三連戰；每次打贏 EnemyID 1704 後依 event81_6f/7f/8f.arg 的 WARP 表亂數傳送，可能前進、停留或退回",
+        "第三區只有原表中的 Floor 5582,33,87 會進入 PC團老大區",
         "Floor 5582：PC團老大 EnemyID 1705 + EnemyID 1704×9",
-        "戰後 Floor 5580：PC團老大 GetItem:19698",
+        "戰後固定傳送 Floor 5580,58,20：PC團老大 GetItem:19698",
         "霍特雷敦：NOWEV=81 & ITEM=19698 → GetItem:19699 + EndSetFlg:81",
         "完成後可搭波拉～伊甸園航線，needstone=10000",
         "飛龍總教練布魯斯：ENDEV=81 & ITEM=19699 → DelItem:19699 + GetStone:200000"
@@ -348,7 +349,222 @@
         "stone": 200000,
         "source": "gmsv/data/npc/eden1/init/eden81_10"
       },
-      "note": "標準 ENDEV=81 分支的 eden81_2 會給 19699，但沒有 DelItem:19698；放置版保留這個原腳本行為。"
+      "note": "金剛陣現在直接使用原始 WARP 候選表等權抽取；第一區進第二區為 2/10，第二區進第三區為 2/11，第三區進老大區為 1/11。原腳本仍可能把玩家送回前區，因此遊戲也保留倒退。標準 ENDEV=81 完成分支給 19699 時未寫 DelItem:19698，放置版保留該原始行為。",
+      "maze": {
+        "floorId": 5576,
+        "initial": {
+          "floor": 5576,
+          "x": 24,
+          "y": 86
+        },
+        "zones": [
+          {
+            "x": 24,
+            "label": "第一區",
+            "enemyId": 1704,
+            "tempNo": 714,
+            "source": "gmsv/data/npc/eden1/init/event81_6f.arg",
+            "warpTable": [
+              [
+                5576,
+                28,
+                88
+              ],
+              [
+                5576,
+                24,
+                86
+              ],
+              [
+                5576,
+                24,
+                87
+              ],
+              [
+                5576,
+                28,
+                87
+              ],
+              [
+                5576,
+                24,
+                88
+              ],
+              [
+                5576,
+                24,
+                89
+              ],
+              [
+                5576,
+                24,
+                89
+              ],
+              [
+                5576,
+                24,
+                86
+              ],
+              [
+                5576,
+                24,
+                86
+              ],
+              [
+                5576,
+                24,
+                87
+              ]
+            ],
+            "forwardOutcomes": 2,
+            "totalOutcomes": 10
+          },
+          {
+            "x": 28,
+            "label": "第二區",
+            "enemyId": 1704,
+            "tempNo": 714,
+            "source": "gmsv/data/npc/eden1/init/event81_7f.arg",
+            "warpTable": [
+              [
+                5576,
+                24,
+                89
+              ],
+              [
+                5576,
+                28,
+                88
+              ],
+              [
+                5576,
+                28,
+                88
+              ],
+              [
+                5576,
+                28,
+                89
+              ],
+              [
+                5576,
+                32,
+                88
+              ],
+              [
+                5576,
+                28,
+                86
+              ],
+              [
+                5576,
+                28,
+                87
+              ],
+              [
+                5576,
+                32,
+                87
+              ],
+              [
+                5576,
+                28,
+                88
+              ],
+              [
+                5576,
+                28,
+                89
+              ],
+              [
+                5576,
+                24,
+                89
+              ]
+            ],
+            "forwardOutcomes": 2,
+            "backwardOutcomes": 2,
+            "totalOutcomes": 11
+          },
+          {
+            "x": 32,
+            "label": "第三區",
+            "enemyId": 1704,
+            "tempNo": 714,
+            "source": "gmsv/data/npc/eden1/init/event81_8f.arg",
+            "warpTable": [
+              [
+                5576,
+                28,
+                88
+              ],
+              [
+                5576,
+                32,
+                88
+              ],
+              [
+                5576,
+                32,
+                86
+              ],
+              [
+                5576,
+                32,
+                88
+              ],
+              [
+                5576,
+                32,
+                89
+              ],
+              [
+                5576,
+                32,
+                86
+              ],
+              [
+                5576,
+                32,
+                87
+              ],
+              [
+                5576,
+                32,
+                88
+              ],
+              [
+                5576,
+                32,
+                89
+              ],
+              [
+                5582,
+                33,
+                87
+              ],
+              [
+                5576,
+                28,
+                88
+              ]
+            ],
+            "bossOutcomes": 1,
+            "backwardOutcomes": 2,
+            "totalOutcomes": 11
+          }
+        ],
+        "bossEntry": {
+          "floor": 5582,
+          "x": 33,
+          "y": 87
+        },
+        "bossExit": {
+          "floor": 5580,
+          "x": 58,
+          "y": 20
+        }
+      }
     },
     "82": {
       "name": "伊甸動物園尋回三寵",
@@ -965,9 +1181,10 @@
       "name": "PC團據點・老大戰",
       "floorId": 5582,
       "encounterId": null,
-      "description": "Event81：PC團老大戰。原 event81_3f.arg 編成為 EnemyID 1705×1 + 1704×9；目前單體戰鬥核心以老大代表整隊。",
+      "description": "Event81 PC團老大戰。原 event81_3f.arg：EnemyID 1705×1 + 1704×9；勝利固定 warp Floor 5580 (58,20)。目前單體戰鬥核心以老大代表整隊。",
       "questRequirement": {
-        "event81Stage": 6
+        "event81Stage": 6,
+        "event81MazeFloor": 5582
       },
       "entries": [
         {
@@ -1001,9 +1218,11 @@
       "name": "PC團據點・金剛陣第三層",
       "floorId": 5576,
       "encounterId": null,
-      "description": "Event81：第三層。原 event81_8f.arg 為 PC團盜賊×2；目前單體戰鬥核心以 EnemyID 1704 代表該層。",
+      "description": "Event81 金剛陣第三區。勝利後按 event81_8f.arg 的 11 個 WARP 候選等權亂數傳送；只有 Floor 5582 (33,87) 會進 PC團老大區。",
       "questRequirement": {
-        "event81Stage": 5
+        "event81Stage": 3,
+        "event81MazeFloor": 5576,
+        "event81MazeX": 32
       },
       "entries": [
         {
@@ -1036,9 +1255,11 @@
       "name": "PC團據點・金剛陣第二層",
       "floorId": 5576,
       "encounterId": null,
-      "description": "Event81：第二層。原 event81_7f.arg 為 PC團盜賊×2；目前單體戰鬥核心以 EnemyID 1704 代表該層。",
+      "description": "Event81 金剛陣第二區。勝利後按 event81_7f.arg 的 11 個 WARP 候選等權亂數傳送；可能退回 x=24、留在 x=28，或前進 x=32。",
       "questRequirement": {
-        "event81Stage": 4
+        "event81Stage": 3,
+        "event81MazeFloor": 5576,
+        "event81MazeX": 28
       },
       "entries": [
         {
@@ -1071,9 +1292,11 @@
       "name": "PC團據點・金剛陣第一層",
       "floorId": 5576,
       "encounterId": null,
-      "description": "Event81：第一層。原 event81_6f.arg 為 PC團盜賊×2；目前單體戰鬥核心以 EnemyID 1704 代表該層。",
+      "description": "Event81 金剛陣第一區。勝利後按 event81_6f.arg 的 10 個 WARP 候選等權亂數傳送；只有 2 個結果前進到 x=28。",
       "questRequirement": {
-        "event81Stage": 3
+        "event81Stage": 3,
+        "event81MazeFloor": 5576,
+        "event81MazeX": 24
       },
       "entries": [
         {
