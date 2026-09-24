@@ -527,3 +527,37 @@ Event83 已接入可玩核心：
 - 這 14 個只標記為 unresolved；遊戲生成時排除，不使用舊 `group.txt` 或其他版本補造。
 - 原 164 個 Lv1 目標 Group 全部仍可解析，缺失數為 0。
 - Event82／83 任務區仍使用已驗證的任務 dynamicFormation，不受一般野外 Encounter 選擇器影響。
+
+
+## V0.15 zorder／大型怪／100 次生成保護
+
+- 新增 `data/generated/stoneage_general_encounter_runtime.json`，專門保存一般 Lv1 所在 85 個 Floor 的完整遇敵 runtime。
+- 不是只保存 161 個 Lv1 目標 Encounter，而是把這 85 個 Floor 上的 **479 個 Encounter** 全部納入 zorder 判定。
+- 共引用 728 個 GroupID：
+  - 705 個可由現行 `group1.txt` 解析
+  - 23 個為現行 `encount.txt` 的失聯 Group 引用，維持 unresolved，不從舊檔補造
+- 705 個 Group 共整理 **1165 個 Enemy 成員模板**。
+- 其中現行資料發現 1 個不完整成員：
+  - Group 1297
+  - EnemyID 2455
+  - TempNo 145
+  - `enemybase1.txt` 無 TempNo 145
+  - runtime 保留其 Group 權重與 Enemy 欄位，但標記 `validTemplate=false`；抽中時不生成，並照原流程消耗一次 100 次保護迴圈。
+- `E_T_SIZE` 已依 `enemy.h` 與 `enemybase1.txt` 對齊：
+  - CSV 整數欄位 38
+  - 0 = normal
+  - 1 = big
+- `buildDynamicFormation()` 現在依原 `ENEMY_getEnemy()` 還原：
+  - `entrymax = RAND(1, min(enemyMax, sum(CREATEMAXNUM)))`
+  - 每個 Enemy 受自身 `CREATEMAXNUM` 限制
+  - 大型怪最多 5 隻
+  - 第 6 隻大型怪被抽到時，會縮減本戰目標人數
+  - 大型怪若在第 6 格以後生成，會依原碼與前 5 格普通怪交換位置
+  - 整個生成迴圈最多 **100 次**
+- Encounter 選擇改為原 `ENCOUNT_getEncountAreaArray()` 邏輯：
+  - 每戰先在玩家選定的 Encounter 矩形內隨機取得一個漫遊座標
+  - 掃描該 Floor 全部 Encounter
+  - 只接受 `zorder > 0`
+  - 多個矩形重疊時取較高 zorder
+  - zorder 相同時保留原 `encount.txt` 較早出現的那一列
+- 戰鬥畫面現在會顯示實際命中的 Encounter、Group 與漫遊座標；大型怪會標示「大型」。
