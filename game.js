@@ -2343,6 +2343,7 @@ function performEnemyBattleModel(actor,unit,options,meta){
 
   addLog(unit.name+' 使用 '+label+'：'+sequence.length+' 個物理攻擊物件'+(spec.statusType?'，每擊可附加'+BATTLE_STATUS_NAMES[spec.statusType]:'')+'。');
   const results=[];
+  let playerGuardingActive=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   for(let i=0;i<sequence.length;i++){
     const target=sequence[i];
     if(!battleStatusDescAlive(target)){
@@ -2353,8 +2354,7 @@ function performEnemyBattleModel(actor,unit,options,meta){
     if(target.kind==='pet'&&target.pet){
       r=enemyAttackPetResult(unit,target.pet);
     }else{
-      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-      r=enemyAttackResult(unit,{guarding});
+      r=enemyAttackResult(unit,{guarding:playerGuardingActive});
     }
     enemyApplySkillHit(unit,target,r,label+'分身 '+(i+1)+'/'+sequence.length);
 
@@ -2366,6 +2366,9 @@ function performEnemyBattleModel(actor,unit,options,meta){
       );
       if(check.allowed&&check.success&&battleStatusApplyRaw(target,spec.statusType,spec.turns)){
         status={applied:true,type:spec.statusType,per:check.per,turns:spec.turns};
+        // 原 BATTLE_BattleModel_ATTACK 在石化／魔障成功時會立即把該目標 COM1 清成 NONE。
+        // 同一個 5-hit 模組後續再次命中 Player 時，不能繼續沿用本回合 Guard。
+        if(target.kind==='player'&&(spec.statusType==='stone'||spec.statusType==='barrier'))playerGuardingActive=false;
         addLog(battleStatusDescName(target)+' 陷入'+BATTLE_STATUS_NAMES[spec.statusType]+'（BattleModel 原檢定 '+check.per.toFixed(1)+'%）。','bad');
       }else{
         status={applied:false,type:spec.statusType,per:check.per,reason:check.reason||'roll'};
