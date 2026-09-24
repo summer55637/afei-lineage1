@@ -1,9 +1,14 @@
 {
   "_meta": {
-    "format": "stoneage-condition-items-v1",
+    "format": "stoneage-condition-items-v2",
     "generatedFrom": "stoneage_general_lv1_pets.json",
     "note": "Only appearance/capture condition items are included. Acquisition source remains unresolved until original NPC/quest/shop data is decoded.",
-    "count": 9
+    "count": 9,
+    "sourceResearch": {
+      "verifiedCount": 3,
+      "unresolvedCount": 6,
+      "note": "Acquisition sources are recorded only when backed by original NPC/event scripts."
+    }
   },
   "items": [
     {
@@ -17,7 +22,8 @@
         "夏普德"
       ],
       "floors": [],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "unresolved",
+      "sources": []
     },
     {
       "id": 1691,
@@ -30,7 +36,8 @@
         "夏普德"
       ],
       "floors": [],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "unresolved",
+      "sources": []
     },
     {
       "id": 1692,
@@ -46,7 +53,8 @@
       "floors": [
         817
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "unresolved",
+      "sources": []
     },
     {
       "id": 12636,
@@ -63,7 +71,8 @@
         11304,
         11305
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "unresolved",
+      "sources": []
     },
     {
       "id": 13062,
@@ -80,7 +89,8 @@
         21007,
         30008
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "unresolved",
+      "sources": []
     },
     {
       "id": 19720,
@@ -95,7 +105,21 @@
       "floors": [
         7000
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "verified",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "伊甸動物園飼料桶",
+          "floorId": 7001,
+          "script": "gmsv/data/npc/eden1/zoo1/barrel82_01",
+          "conditions": [
+            "ENDEV=81",
+            "NOWEV=82"
+          ],
+          "action": "GetItem:19720",
+          "summary": "動物園事件81完成、事件82進行中時，可從飼料桶取得草食性飼料一號。"
+        }
+      ]
     },
     {
       "id": 19733,
@@ -110,7 +134,22 @@
       "floors": [
         7000
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "verified",
+      "sources": [
+        {
+          "type": "quest_npc",
+          "label": "伊甸動物園布伊系飼育員",
+          "floorId": 7001,
+          "script": "gmsv/data/npc/eden1/zoo1/employee82_01",
+          "conditions": [
+            "ENDEV=81",
+            "NOWEV=82"
+          ],
+          "action": "GetItem:19733",
+          "cleanupAction": "DelItem:19733 when PET=1-905",
+          "summary": "動物園事件81完成、事件82進行中時，布伊系飼育員會給雷爾胖專用飼料。"
+        }
+      ]
     },
     {
       "id": 20247,
@@ -126,7 +165,8 @@
       "floors": [
         60052
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "unresolved",
+      "sources": []
     },
     {
       "id": 20259,
@@ -142,7 +182,52 @@
       "floors": [
         60054
       ],
-      "sourceStatus": "unresolved"
+      "sourceStatus": "verified",
+      "sources": [
+        {
+          "type": "recipe",
+          "label": "寶石提煉師",
+          "script": "gmsv/data/npc/my/chongwu/vip.arg",
+          "conditions": [
+            "VIP=1",
+            "GOLD>=100000",
+            "reITEM>=1"
+          ],
+          "costGold": 100000,
+          "ingredients": [
+            {
+              "id": 21885,
+              "count": 1
+            },
+            {
+              "id": 20636,
+              "count": 1
+            },
+            {
+              "id": 20637,
+              "count": 1
+            },
+            {
+              "id": 20638,
+              "count": 1
+            },
+            {
+              "id": 20639,
+              "count": 1
+            },
+            {
+              "id": 20640,
+              "count": 1
+            },
+            {
+              "id": 20641,
+              "count": 1
+            }
+          ],
+          "action": "GetRandItem:20259",
+          "summary": "VIP會員可由寶石提煉師支付10萬石幣，並消耗7種材料提煉會員捕寵結晶石。"
+        }
+      ]
     }
   ]
 }
