@@ -5,8 +5,8 @@
     "note": "Only appearance/capture condition items are included. Acquisition source remains unresolved until original NPC/quest/shop data is decoded.",
     "count": 9,
     "sourceResearch": {
-      "verifiedCount": 3,
-      "unresolvedCount": 6,
+      "verifiedCount": 5,
+      "unresolvedCount": 4,
       "note": "Acquisition sources are recorded only when backed by original NPC/event scripts."
     }
   },
@@ -22,8 +22,41 @@
         "夏普德"
       ],
       "floors": [],
-      "sourceStatus": "unresolved",
-      "sources": []
+      "sourceStatus": "verified",
+      "sources": [
+        {
+          "type": "monster_drop",
+          "label": "加魯卡野生威威 Lv1–4",
+          "floorId": 200,
+          "mapName": "加魯卡",
+          "tempNo": 32,
+          "enemyIds": [
+            372,
+            373,
+            374
+          ],
+          "groupIds": [
+            229,
+            230,
+            231,
+            232,
+            233
+          ],
+          "encounterIds": [
+            87,
+            88,
+            89,
+            90,
+            91
+          ],
+          "rawItemProb": 30,
+          "probabilityBase": 1000,
+          "dropChance": 0.03,
+          "buildFlag": "_FIX_ITEMPROB",
+          "sourceFile": "gmsv/data/enemy.txt",
+          "summary": "加魯卡野生威威 Lv1–4 掉落；原資料 ITEMPROB=30，服務端啟用 _FIX_ITEMPROB 後為 30/1000＝3%。"
+        }
+      ]
     },
     {
       "id": 1691,
@@ -36,8 +69,45 @@
         "夏普德"
       ],
       "floors": [],
-      "sourceStatus": "unresolved",
-      "sources": []
+      "sourceStatus": "verified",
+      "sources": [
+        {
+          "type": "monster_drop",
+          "label": "加魯卡野生威威 Lv10–12",
+          "floorId": 200,
+          "mapName": "加魯卡",
+          "tempNo": 32,
+          "enemyIds": [
+            436
+          ],
+          "groupIds": [
+            311,
+            313
+          ],
+          "encounterIds": [
+            189,
+            190,
+            191,
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199,
+            200,
+            201,
+            202
+          ],
+          "rawItemProb": 30,
+          "probabilityBase": 1000,
+          "dropChance": 0.03,
+          "buildFlag": "_FIX_ITEMPROB",
+          "sourceFile": "gmsv/data/enemy.txt",
+          "summary": "加魯卡野生威威 Lv10–12 掉落；原資料 ITEMPROB=30，服務端啟用 _FIX_ITEMPROB 後為 30/1000＝3%。"
+        }
+      ]
     },
     {
       "id": 1692,
