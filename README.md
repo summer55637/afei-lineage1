@@ -1592,3 +1592,60 @@ V0.35 已沿用這條公式，因此酒醉會同時造成：
 
 這兩項都只在酒醉狀態存續期間生效。
 
+## V0.36 地球一周
+
+V0.36 接入 ID 120「地球一周」：
+
+`PETSKILL_EarthRound`
+
+`攻%+90`
+
+來源說明文字為「一回合從敵人背後以兩倍攻擊力攻擊」，但實際程式不是當回合直接打出兩倍傷害，而是一個跨回合的兩段式 command。
+
+### 第一回合：繞背／隱身
+
+`PETSKILL_EarthRound()` 先把 command 設成 `BATTLE_COM_S_EARTHROUND1`，並把 `攻%+90` 寫入 COM3。
+
+真正輪到該單位時，`BATTLE_EarthRoundHide()` 會：
+
+- 播放繞背／消失流程
+- 把 `CHAR_ISATTACKED` 設為 0
+- 把 command 改成 `BATTLE_COM_S_EARTHROUND0`
+- 本回合不做物理攻擊
+
+原 `BATTLE_TargetCheck()` 會拒絕 `CHAR_ISATTACKED == FALSE` 的目標，所以繞背中的單位不能被一般攻擊指定；魔法路徑也另外檢查 `EARTHROUND0` 並直接視為 Miss。
+
+V0.36 因此把繞背中的 Enemy 從可指定目標集合排除，但仍保留在存活 Enemy 集合內，避免單隻 Enemy 繞背時被誤判成戰鬥勝利。
+
+### 第二回合：現身攻擊
+
+`BATTLE_IsCharge()` 會把 `EARTHROUND1`／`EARTHROUND0` 都視為需跨回合保留的 command，所以 Enemy AI 不會在下一回合重抽行動。
+
+第二回合進入攻擊流程時：
+
+- `gBattleDamageModyfy = 1.0 + COM3 × 0.01`
+- ID 120 的 `攻%+90` 因此實際倍率為 **1.90**
+- 真正攻擊前 command 會先清成 NONE
+- 之後走一般 `BATTLE_Attack`，所以仍會進普通閃避、會心、防禦與反擊判定
+
+這不是「攻擊力先乘 1.9」；來源是在普通傷害算完後用 `gBattleDamageModyfy` 乘最終傷害。V0.36 也使用現有 `damageMultiplier` 在同一層套用 ×1.90。
+
+### 目標與反擊
+
+第一回合選定的目標會跨回合保存；若第二回合釋放前原目標已失效，則依現有 `TargetAdjust` 語意回退到有效敵對目標。
+
+因為原版在 EarthRound0 真正出手前會把 command 清成 NONE：
+
+- 被地球一周命中的玩家／寵物仍可依自身條件反擊
+- 地球一周施術者不具備後續反反擊資格
+
+### 混亂／不能行動異常
+
+若繞背期間混亂 80% 成功改寫成普通 ATTACK，地球一周會被中斷並立刻重新現身。
+
+若睡眠、石化、麻痺等不能行動狀態在該單位行動時生效，V0.36 也會取消 EarthRound 狀態並恢復可指定，避免來源 `CHAR_ISATTACKED` 與 command 清除不同步造成永久隱身類異常。
+
+### Enemy AI 覆蓋
+
+目前 `stoneage_enemy_ai.json` 中共有 **27** 個 Enemy 模板帶有 Skill 120 欄位，其中 **12** 個模板的對應 AI 權重大於 0，會在目前 Enemy AI 權重抽選中實際使用地球一周。
+
