@@ -1331,3 +1331,56 @@ V0.30 完整照此行為。
 - 後期擴充 PetSkill
 
 下一層會先建立「回合狀態／持續效果」資料結構，再接這些技能。
+
+
+## V0.31 背水之戰／不防守戰法／反擊資格
+
+V0.31 繼續接 `PETSKILL_PowerBalance` 與 `PETSKILL_NoGuard`，並修正原版反擊 command 限制。
+
+### 背水之戰 — PETSKILL_PowerBalance
+
+原 `PETSKILL_PowerBalance()` 在 AI 選好 command 時就直接改：
+
+- `CHAR_WORKATTACKPOWER`
+- `CHAR_WORKDEFENCEPOWER`
+
+並不是等到該 Enemy 自己的敏捷順位才改。因此 V0.31 也在建立本回合 EntryList、進 `BATTLE_DexCalc / EntrySort` 前就套用。
+
+目前三個原技能 option：
+
+- 背水之戰 1：`攻%+25 防%-35`
+- 背水之戰 2：`攻%+45 防%-55`
+- 背水之戰 3：`攻%+80 防%-50`
+
+百分比使用和原 C 程式一致的「基礎值 + trunc(基礎值 × 百分比)」方式。
+
+效果只存在本回合；下一回合 AI 重新選 command 時會先回到 Enemy 基礎攻防再套新指令。
+
+### 不防守戰法 — PETSKILL_NoGuard
+
+原技能本身設定 `BATTLE_COM_S_NOGUARD`，到了 battle switch 會 `BATTLE_NoAction`，所以使用者這回合不主動攻擊。
+
+真正生效的效果：
+
+- NoGuard 1：回避 +30、反擊 +50
+- NoGuard 2：回避 +40、反擊 +60
+- NoGuard 3：回避 +50、反擊 +70
+
+回避加成直接進原 `BATTLE_DuckCheck`，最後仍受 75% 最大閃避率限制。
+
+反擊加成進原 `BATTLE_CounterCheckPet`，加在敏捷差算出的反擊率上，最後最高 100%。
+
+`petskill.txt` 雖然 option 還寫了 `会心%+20/+30/+40`，但此來源版處理 NoGuard 會心加成的 `BATTLE_CriticalCheckPet()` 整段被 `#if 0` 編譯關閉，而目前啟用的 `BATTLE_CriticalCheck()` 對 Pet／Enemy 都轉到 Player 版公式。因此 V0.31 **不套這個會心加成**，以實際編譯路徑為準。
+
+### BATTLE_Counter command 資格
+
+重新核對 `BATTLE_Counter()` 後，反擊方只有目前 command 是：
+
+- `BATTLE_COM_ATTACK`
+- `BATTLE_COM_S_NOGUARD`
+
+才允許進反擊。
+
+因此現在 Enemy 若本回合正在準備 Guard、Escape、GuardBreak 等，而玩家／寵物敏捷較高先打到牠，牠不會錯誤反擊。
+
+Mighty、ContinuationAttack、PowerBalance 這類在原 `battle.c` 進直接攻擊群組後會把 COM 改回 ATTACK 的技能，則從真正執行攻擊開始具備後續反擊／反反擊資格。
