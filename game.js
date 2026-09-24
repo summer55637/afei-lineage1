@@ -818,6 +818,13 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     serverDerived:server,
     serverInitNum:raw?.serverInitNum??null,
     serverLvUpPoint:raw?.serverLvUpPoint??null,
+    sourceTemplate:raw?Object.assign({},raw,{
+      stats:Object.assign({},raw.stats||{}),
+      elements:Object.assign({},raw.elements||{}),
+      petSkills:Array.isArray(raw.petSkills)?raw.petSkills.slice():[],
+      enemyItems:Array.isArray(raw.enemyItems)?raw.enemyItems.slice():[],
+      itemProbs:Array.isArray(raw.itemProbs)?raw.itemProbs.slice():[]
+    }):null,
     elements:change.elements,
     petSkills:change.petSkills,
     randomChange:change.type?change:null,
@@ -1355,9 +1362,14 @@ function enemyAiAttackSpec(unit){
     rn:Object.prototype.hasOwnProperty.call(ai||{},'r')?Math.max(0,Math.trunc(n(ai.r))):1
   };
 }
+const ENEMY_SOURCE_SKILL_META={
+  500:{n:'敵人復活',d:'隨機復活一名倒地敵方',f:'ENEMYSKILL_ReLife',o:'',field:1,target:7},
+  501:{n:'敵人補血',d:'隨機治療一名 HP 低於 2/3 的敵方',f:'ENEMYSKILL_ReHP',o:'',field:1,target:7},
+  502:{n:'敵人招人',d:'召喚一名與施術者相同模板的 Enemy 加入戰鬥',f:'ENEMYSKILL_EnemyHelp',o:'',field:1,target:7}
+};
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
-  return petSkillDb?.byId?.[String(skillId)]||null;
+  return petSkillDb?.byId?.[String(skillId)]||ENEMY_SOURCE_SKILL_META[Number(skillId)]||null;
 }
 function enemyChooseAction(unit){
   const spec=enemyAiAttackSpec(unit);
@@ -2236,6 +2248,80 @@ function performEnemySteal(actor,unit,options,meta){
   addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
   return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
 }
+function enemyDeadBattleUnits(){
+  if(!enemy)return [];
+  if(Array.isArray(enemy.units))return enemy.units.filter(u=>n(u.hp)<=0);
+  return n(enemy.hp)<=0?[enemy]:[];
+}
+function performEnemyReLife(actor,unit,options,meta){
+  const dead=enemyDeadBattleUnits();
+  if(!dead.length){
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人復活')+'，但敵方沒有倒地成員。');
+    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+  }
+  const target=dead[cRand(0,dead.length-1)];
+  const base=Math.trunc(Math.max(1,n(target.maxHp))/2);
+  const low=Math.trunc(base*.9),high=Math.trunc(base*1.1);
+  const amount=Math.max(1,cRand(low,high));
+  target.hp=Math.min(Math.max(1,Math.trunc(n(target.maxHp))),amount);
+  addLog(unit.name+' 使用 '+(meta?.n||'敵人復活')+'，'+target.name+' 以 '+target.hp+' / '+target.maxHp+' HP 復活。','bad');
+  return {kind:'skill',skillId:actor.skillId,success:true,targetUnitId:target.id,amount:target.hp};
+}
+function performEnemyReHP(actor,unit,options,meta){
+  const candidates=livingEnemyUnits().filter(u=>n(u.hp)<Math.trunc(n(u.maxHp)*2/3));
+  if(!candidates.length){
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人補血')+'，但沒有 HP 低於 2/3 的存活敵方。');
+    return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
+  }
+  const target=candidates[cRand(0,candidates.length-1)];
+  const power=cRand(100,Math.max(100,Math.trunc(n(target.maxHp))));
+  const before=n(target.hp);
+  target.hp=Math.min(Math.max(1,Math.trunc(n(target.maxHp))),before+power);
+  const healed=Math.max(0,target.hp-before);
+  addLog(unit.name+' 使用 '+(meta?.n||'敵人補血')+'，'+target.name+' 回復 '+healed+' HP。','bad');
+  return {kind:'skill',skillId:actor.skillId,success:true,targetUnitId:target.id,rolledPower:power,healed};
+}
+function enemyFirstFreeBattleSlot(){
+  if(!enemy||!Array.isArray(enemy.units))return -1;
+  const used=new Set(enemy.units.map(u=>Math.trunc(n(u.battleSlot))).filter(x=>x>=0&&x<10));
+  for(let i=0;i<10;i++)if(!used.has(i))return i;
+  return -1;
+}
+function enemyHelpSourceTemplate(unit){
+  if(unit?.sourceTemplate)return Object.assign({},unit.sourceTemplate,{
+    stats:Object.assign({},unit.sourceTemplate.stats||{}),
+    elements:Object.assign({},unit.sourceTemplate.elements||{}),
+    petSkills:Array.isArray(unit.sourceTemplate.petSkills)?unit.sourceTemplate.petSkills.slice():[],
+    enemyItems:Array.isArray(unit.sourceTemplate.enemyItems)?unit.sourceTemplate.enemyItems.slice():[],
+    itemProbs:Array.isArray(unit.sourceTemplate.itemProbs)?unit.sourceTemplate.itemProbs.slice():[]
+  });
+  return null;
+}
+function performEnemyHelp(actor,unit,options,meta){
+  const slot=enemyFirstFreeBattleSlot();
+  if(slot<0){
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，但敵方 10 個戰鬥位置都已被占用。');
+    return {kind:'skill',skillId:actor.skillId,success:false,full:true};
+  }
+  const raw=enemyHelpSourceTemplate(unit);
+  if(!raw){
+    addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，但此 Enemy 缺少可重建的原始模板，未用猜測資料生成援軍。');
+    return {kind:'skill',skillId:actor.skillId,success:false,missingTemplate:true};
+  }
+
+  // 原 BATTLE_E_ENEMYHELP：ENEMY_createEnemy(array, RAND(LV*0.8, LV*1.2)).
+  const low=Math.trunc(n(unit.level)*.8),high=Math.trunc(n(unit.level)*1.2);
+  const summonLv=Math.max(1,cRand(low,Math.max(low,high)));
+  raw.levelMin=summonLv;
+  raw.levelMax=summonLv;
+  const summoned=makeEnemyUnit(raw,enemy.entry,enemy.units.length);
+  summoned.battleSlot=slot;
+  summoned.sourceEnemyId=unit.sourceEnemyId??unit.enemyId;
+  summoned.randomEnemy=!!unit.randomEnemy;
+  enemy.units.push(summoned);
+  addLog(unit.name+' 使用 '+(meta?.n||'敵人招人')+'，Lv.'+summoned.level+' '+summoned.name+' 加入 slot '+slot+'。','bad');
+  return {kind:'skill',skillId:actor.skillId,success:true,summonedUnitId:summoned.id,battleSlot:slot,level:summoned.level};
+}
 function performEnemyAbduct(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   const label=meta?.n||'旅程伙伴';
@@ -2517,6 +2603,9 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_EarthRound')return performEnemyEarthRoundStart(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
+    if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
+    if(meta?.f==='ENEMYSKILL_ReHP')return performEnemyReHP(actor,unit,options,meta);
+    if(meta?.f==='ENEMYSKILL_EnemyHelp')return performEnemyHelp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Abduct')return performEnemyAbduct(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Guardian')return performEnemyGuardianAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Merge'){
@@ -3399,7 +3488,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.38 載入完成：旅程伙伴與忠犬已接入 Enemy PetSkill；旅程伙伴可把寵物帶離本場且施術者隨後退出，忠犬依原 5 格站位配對代擋主人受到的普通攻擊。','good');
+    addLog('V0.39 載入完成：Enemy Skill 500／501／502 已依原 _PRO_BATTLEENEMYSKILL 接入，包含敵方復活、低血補血與同模板援軍召喚。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
