@@ -560,4 +560,4 @@ Event83 已接入可玩核心：
   - 只接受 `zorder > 0`
   - 多個矩形重疊時取較高 zorder
   - zorder 相同時保留原 `encount.txt` 較早出現的那一列
-- 戰鬥畫面現在會顯示實際命中的 Encounter、Group 與漫遊座標；大型怪會標示「大型」。
+- 另發現 Group 125（`sai_n_013_9/11`）雖存在於現行 `group1.txt`，但唯一 EnemyID 161 沒有正值 `CREATEPROB`；runtime 保留原資料，遊戲抽 Group 時把這種「無有效生成權重」群組視為不可用，避免產生空戰鬥。\n- 戰鬥畫面現在會顯示實際命中的 Encounter、Group 與漫遊座標；大型怪會標示「大型」。
