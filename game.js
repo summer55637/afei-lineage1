@@ -1246,31 +1246,6 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 function enemyAttackResult(unit=targetEnemyUnit(),options={}){
   return resolveNormalAttack(enemyBattleView(unit),playerBattleView(),options);
 }
-function enemyCounter(){
-  if(!enemy)return;
-  const attackers=livingEnemyUnits();
-  if(attackers.length<=1){
-    const unit=attackers[0];if(!unit)return;
-    const r=enemyAttackResult(unit);
-    if(r.dodged){addLog('你閃避了 '+unit.name+' 的攻擊。','good');return}
-    if(r.miss){addLog(unit.name+' 的攻擊沒有造成傷害。');return}
-    state.hp=Math.max(0,state.hp-r.damage);
-    addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-    if(state.hp<=0)defeat();
-    return;
-  }
-  let total=0,acted=0,dodged=0,critical=0,miss=0;
-  for(const unit of attackers){
-    const r=enemyAttackResult(unit);acted++;
-    if(r.dodged){dodged++;continue}
-    if(r.miss){miss++;continue}
-    if(r.critical)critical++;
-    total+=r.damage;
-  }
-  state.hp=Math.max(0,state.hp-total);
-  addLog('敵方 '+acted+' 名行動：傷害 '+total+'，閃避 '+dodged+'，無傷 '+miss+'，會心 '+critical+'。',state.hp<=0?'bad':'');
-  if(state.hp<=0)defeat();
-}
 function levelCheck(){
   let upCount=0;
   const cap=playerLevelCap();
