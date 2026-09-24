@@ -1009,3 +1009,32 @@ Enemy 與 V0.20 後新捕獲的正式野寵都有 earth/water/fire/wind，因此
 - 玩家創角元素
 
 先把普通物理「閃避 → 傷害 → 會心」核心驗證穩定後，再逐層往外接。
+
+
+## V0.23 BATTLE_DexCalc／EntrySort 行動順序
+
+V0.23 繼續把 V0.22 已完成的普通物理「閃避 → 傷害 → 會心」往外接到原服回合順序。
+
+重新核對 `battle.c::BATTLE_DexCalc()`、`EntrySort()` 與 `BATTLE_Attack()` 建表流程後，目前普通攻擊回合改成：
+
+1. 玩家、出戰寵物、每一隻存活 Enemy 都各自建立一筆本回合 action entry。
+2. 普通攻擊走 `BATTLE_DexCalc()` default 分支：
+   - `work = CHAR_WORKQUICK + 20`
+   - `dex = work - RAND(0, work * 0.3)`
+   - 若結果 <= 0，固定為 1
+3. 目前來源版有開 `_EQUIT_SEQUENCE`，原 `EntrySort()` 實際比較 `dex + CHAR_WORKSEQUENCEPOWER`。
+4. 網頁版尚未接裝備，因此現階段所有 sequence 都視為 0，只依本回合 dex 由高到低排序。
+5. 排序完成後逐一行動；先被擊倒的 Enemy 到自己順位時會直接跳過，若玩家在自己順位前被擊倒則本回合立即結束。
+
+這次也修正單體 Enemy instance：之前非群戰 Enemy 從 `makeEnemyUnit()` 建立後只複製 HP／攻／防，會遺失 quick／elements／serverDerived 等資料；V0.23 改為保留完整 unit，讓 V0.22 的閃避、會心、元素與 V0.23 的行動排序在單體戰也能使用同一份 Enemy instance。
+
+目前仍刻意未混入：
+
+- `BATTLE_COM_CAPTURE` 的排序與完整捕獲回合
+- Guard
+- Counter
+- 裝備 sequence
+- 技能與異常狀態對 BATTLE_DexCalc 的分支修正
+- 騎寵敏捷修正
+
+先把「普通攻擊回合」的原服順序獨立驗證穩定，再接下一層。
