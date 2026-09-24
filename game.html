@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.31</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.32</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -168,8 +168,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.31：</b>
-      背水之戰已在 AI 選令時立即套用整回合攻防修正，因此即使 Enemy 還沒輪到行動，被先手攻擊時降防已生效；不防守戰法本回合不主動攻擊，依此來源版實際程式只增加回避與反擊（會心加成程式被 #if 0 關閉）。反擊也已限制只有 ATTACK／NoGuard 能發動。
+      <b>V0.32：</b>
+      StatusChange 狀態攻擊已接入原 BATTLE_StatusAttackCheck：只有物理傷害 >0 才檢定，已有任一異常狀態就不重疊。中毒依原 Compute_Down 每回合扣血且最低保留 1 HP；睡眠受正傷害會喚醒；石化不能行動且防禦力 ×2。
     </article>
   </main>
 
