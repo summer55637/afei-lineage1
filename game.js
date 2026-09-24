@@ -1239,7 +1239,7 @@ function battleStatusActorDesc(actor){
   if(actor?.kind==='player')return {kind:'player'};
   if(actor?.kind==='pet'){
     const pet=state.petBox.find(p=>p.id===actor.petId);
-    return pet?{kind:'pet',pet,petId:pet.id}:null;
+    return pet&&petIsBattleActive(pet)?{kind:'pet',pet,petId:pet.id}:null;
   }
   if(actor?.kind==='enemy'){
     const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
@@ -2256,14 +2256,14 @@ function performEnemyAbduct(actor,unit,options,meta){
     return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
   }
 
-  const per=Math.max((n(pet.level)-n(unit.level))*.6+30,50);
+  const per=Math.max(Math.trunc((n(pet.level)-n(unit.level))*.6+30),50);
   const roll=cRand(1,100);
   const success=roll<per;
   if(success){
     battlePetOutIds.add(pet.id);
-    addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per.toFixed(1)+'）。','bad');
+    addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per+'）。','bad');
   }else{
-    addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per.toFixed(1)+'）。');
+    addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per+'）。');
   }
 
   // 原版只要目標不是玩家，無論帶走成功或失敗，施術者本身都會 BATTLE_Exit。
