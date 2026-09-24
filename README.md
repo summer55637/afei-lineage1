@@ -3860,3 +3860,195 @@ V0.60 將 `schemaVersion` 15 升為 16，新增：
 另外 502／582 雖有 petskill2 資料列，但原 build 的 functbl 無法取得函式指標，已由 V0.59 正式還原為 C_WAIT；V0.52 的缺 ID 引用也已同樣完成。
 
 因此下一階段若繼續擴技能，應先建正式 MP／magic／JYUJYUTU 底層，而不是再從技能名稱猜效果。
+
+## V0.61 AttackMagic 正式底層
+
+V0.61 開始正式接入原版攻擊魔法，不再把 `PETSKILL_AttackMagic` 視為缺資料技能。
+
+本輪新增：
+
+`data/generated/stoneage_attack_magic_runtime.json`
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/magic.txt`
+- `gmsv/data/attmagic.bin`
+
+原 build 明確開啟：
+
+- `__ATTACK_MAGIC`
+- `_FIX_MAGICDAMAGE`
+- `_MAGIC_OPTIMUM`
+
+因此 V0.61 使用新版 FIX_MAGICDAMAGE 公式。
+
+### attmagic.bin
+
+`AttMagic` struct 全部由 32-bit 欄位組成：18 個 scalar + `siField[3][5]` 共 33 個欄位，每筆 132 bytes。
+
+`attmagic.bin` 為 7128 bytes：
+
+- 7128 / 132 = 54 raw records
+- loader 再要求偶數並除 2
+- 得到 27 個 attack-magic idx
+
+每個 idx 兩筆：
+
+- Enemy／左上方施法者 `attackNo >= 10` → `idx*2`
+- Player／右下方施法者 `attackNo < 10` → `idx*2+1`
+
+V0.61 runtime 已保存兩側 sprite、attackType 與原 `siField[3][5]`。
+
+### magic 301～325
+
+目前正式接入 25 個原 `MAGIC_AttMagic_Battle`：
+
+- 301～306 地
+- 307～312 水
+- 313～318 火
+- 319～324 風
+- 325 毀天滅地（火，Power 350，MagicLv 5）
+
+每筆直接保存 magic.txt 的：
+
+- Magic ID
+- name
+- option
+- field / target / deadFlag
+- AttMagic idx
+- 屬性
+- Power
+- MagicLv
+- `TargetIndex` 特殊範圍 rewrite
+
+### 範圍還原
+
+不是只把魔法粗分成單體／全體。
+
+V0.61 同時移植來源：
+
+- `CharTable[4][5]`
+- `CharTableIdx[20][2]`
+- `attmagic.bin -> siField[3][5]`
+- `TargetIndex[25][2]`
+
+因此目前 Player slot 0 + Active Pet slot 5 能保留原格位語意。
+
+回歸例：
+
+- 301 岩石撞擊：選玩家只打玩家；選寵物只打寵物
+- 303 土石流：整排；目前每排各只有一個可見單位
+- 304 巨岩撞擊：十字範圍，無論選玩家或同欄寵物，Player + Active Pet 都會被波及
+- 305 地震：敵方全體，Player + Active Pet 都受影響
+- 321 龍捲風：整排
+- 325 毀天滅地：敵方全體
+
+### Enemy 魔法熟練度
+
+原 `BATTLE_MultiAttMagic()` 對 `CHAR_TYPEENEMY`：
+
+`att_magic_lv[attr] = CHAR_LV * 0.9`
+
+寫入 int，所以 V0.61 使用截斷值。
+
+每次施法共用一次：
+
+`Check = rand()%100`
+
+`TrueMagic = !(Check > att_magic_lv[attr])`
+
+也就是 `Check <= attMagicLv` 才是 TrueMagic。
+
+False 時，最後魔法傷害會再：
+
+`attvalue *= 0.7`
+
+並以 C int 規則截斷。
+
+### 魔法閃避
+
+玩家：
+
+`fLuck = LUCK*3 + 해당屬性魔抗*0.15`
+
+目前沒有裝備魔法迴避，所以 equipment 部分為來源等價 0。
+
+寵物：
+
+`fLuck = level*0.2`，上限 30。
+
+真正判定：
+
+`rand()%100 + 1 <= (int)fLuck`
+
+成功則該目標本次魔法傷害為 0，且不進後續魔抗成長。
+
+### `_FIX_MAGICDAMAGE` Power
+
+對每一個沒有閃過的目標：
+
+`Kmagic = attackerMagicLv*1.4 - defenderResist`
+
+`Mmagic = max(attackerMagicLv,1)`
+
+`Amagic = (Kmagic² / Mmagic²) + (rand()%20)/100`
+
+`APower = int(Power * (1 + MagicLv/10) * Amagic)`
+
+### 魔法屬性相剋
+
+V0.61 沒直接重用物理 `normalizedElements()`。
+
+原因是 `BATTLE_getMagicAdjustInt()` 會建立一個**非正規化攻擊屬性向量**：
+
+- `MagicLv *= 10`
+- 指定魔法屬性 = `MagicLv + MagicLv*(施術者該屬性/50)`
+- `/50` 是 C int division
+- 其他四屬中的三屬清 0
+- 原本的 None 屬性仍保留
+- 接著所有攻方屬性都乘 APower
+
+再交給原 `BATTLE_AttrCalc()` 的 1.5／1.0／0.6 四屬相剋矩陣。
+
+V0.61 新增 `magicAttrCalcRaw()`，逐項以 C int 截斷還原，不把魔法向量錯誤重新正規化回 100。
+
+目前尚未接入 676 的戰場屬性改變，因此 `BattleArray.field_att` 在現況等價 NONE；`BATTLE_FieldAttAdjust()` 攻守雙方都是 0.5，比例正好為 1。
+
+### 睡眠解除
+
+原 `BATTLE_MultiAttMagic()` 只要目標沒有魔法閃避，就會加入 `def_be_hit`；整段結束後若該目標正在睡眠，直接清除睡眠。
+
+V0.61 同樣在魔法未閃避時解除 sleep，即使最後傷害為 0 也不自行改規則。
+
+### 魔抗成長
+
+Save schema 由 16 升到 17。
+
+玩家新增：
+
+- `magicResist[4]`：地／水／火／風
+- `magicResistExp[4]`
+
+每隻寵物同樣保存這兩個陣列。
+
+來源 default char 的整數欄位初始化為 0，且捕獲寵建立流程沒有額外複製魔抗，因此舊存檔與新寵預設四屬魔抗都為 0。
+
+`Magic_ComputeDefExp()`：
+
+- 單次傷害 <200：不成長
+- `addEx = (Damage/20) * (MagicLv*2)`，`Damage/20` 為 C int division
+- exp >100 時清 0，該屬性魔抗 +1，最高 100
+- 同時處理 `(attr+1)%4` 的相克魔抗：若其 level >1，exp -2；若跌破 0，exp 設 90、level -1
+
+V0.61 已把這套進度持久化到 save。
+
+### 尚未包含
+
+`PETSKILL_AttackMagic` 還有兩筆不是 `MAGIC_AttMagic_Battle`：
+
+- 676 → magic 204：戰場水屬性改變
+- 688 → magic 435：MAGIC_Weaken
+
+這兩筆 V0.61 不會拿 AttackMagic 傷害公式硬套；下一步分別接 FieldAttChange 與正式 Magic Weaken。
