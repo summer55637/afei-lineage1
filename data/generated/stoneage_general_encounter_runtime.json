@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "format": "stoneage-general-encounter-runtime-v7",
+    "format": "stoneage-general-encounter-runtime-v8",
     "source": "encount.txt + group1.txt + enemy1.txt + enemybase1.txt + enemyexptbl.h + exp.txt + enemy.c + battle.c + char.c + char_data.c + setup.cf",
     "serverRef": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
     "parserNote": "enemybase integer fields use atoi(); enemy1 ENEMY_ITEM1..10 / ITEMPROB1..10 are preserved as 10-slot integer arrays; encount x1/y1/x2/y2 are normalized with min/max exactly like ENCOUNT_initEncount()",
@@ -99,7 +99,9 @@
     "petLevelProgressionRule": "CHAR_PetLevelUp uses packed CHAR_ALLOCPOINT bytes, CHAR_PETRANK RankRandTbl, ten random allocation points, and inclusive RAND(min,max)*0.01 growth",
     "playerStatRule": "CHAR_SkillUp spends 1 CHAR_SKILLUPPOINT, adds 100 to one of CHAR_VITAL/CHAR_STR/CHAR_TOUGH/CHAR_DEX, then calls CHAR_complianceParameter",
     "playerCreationNeutralBaseline": "web no-create-screen fallback: VITAL/STR/TOUGH/DEX 5/5/5/5 = legal 20-point neutral baseline",
-    "playerProfessionCapsDeferred": true
+    "playerProfessionCapsDeferred": true,
+    "combatRule": "normal physical attacks now use BATTLE_DuckCheck + BATTLE_DamageCalc core + BATTLE_CriticalCheck/BATTLE_CriDamageCalc under enabled _BATTLE_NEWPOWER and _NPCENEMY_ADDPOWER; attributes apply when both sides have resolved element data",
+    "combatDeferred": "turn sequencing/counter/guard/equipment/skills/status/profession and player creation element allocation remain deferred"
   },
   "randomChange": {
     "humanEnemyRanges": [
@@ -126399,5 +126401,18 @@
         "hpClamp": "min(currentHP,maxHP)"
       }
     }
+  },
+  "combat": {
+    "battleNewPower": true,
+    "npcEnemyAddPower": true,
+    "defenseRate": 0.7,
+    "damageRate": 2,
+    "d16": 0.0625,
+    "d8": 0.125,
+    "duckPara": 0.02,
+    "duckMaxRate": 75,
+    "criticalPara": 0.09,
+    "normalDamageModifier": 1,
+    "attributeRule": "BATTLE_AttrCalc applied only when both attacker and defender have resolved earth/water/fire/wind values; neutral battle field keeps field ratio 1"
   }
 }

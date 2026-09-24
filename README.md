@@ -928,3 +928,84 @@ V0.21 把 V0.20 已經正確取得的 `CHAR_SKILLUPPOINT` 正式變成可操作�
 schema 14 migration：V0.21 前沒有配點介面，所以舊存檔無法花掉升級點，會以 `(目前等級-1)×3` 補足最低應有未分配點；舊版魅力從 50 起算的固定差值也補 +10。四圍使用 5/5/5/5 migration baseline，不從先前假的攻防敏反推。
 
 來源開啟 `_CHAR_PROFESSION`，原 CHAR_SkillUp 有職業專屬能力上限；目前放置版尚未建立正式職業系統，因此這一版不假定職業，等職業資料正式接入後再啟用限制。
+
+
+## V0.22 BATTLE_DuckCheck／BATTLE_DamageCalc／會心
+
+V0.22 把 V0.21 已經落地的玩家四圍，正式接進來源版本的普通物理戰鬥核心。
+
+目前 `version.h` 確認：
+
+- `_BATTLE_NEWPOWER`：開啟
+- `_NPCENEMY_ADDPOWER`：開啟
+- `_BATTLE_PROPERTY`：開啟
+- `_EQUIT_HITRIGHT`：開啟，但裝備尚未接入，因此目前命中裝備修正為 0
+
+runtime 升級為 `stoneage-general-encounter-runtime-v8`。
+
+### BATTLE_DamageCalc 核心
+
+一般未騎寵、未裝備特殊效果、未使用技能時：
+
+1. attack = `CHAR_WORKATTACKPOWER`
+2. 因 `_BATTLE_NEWPOWER` 開啟，defense = `CHAR_WORKDEFENCEPOWER × 0.70`
+3. 若防守方是 Enemy，依 `_NPCENEMY_ADDPOWER` 對 defense 加入原 `rand()%10` 浮動
+4. 若攻擊方是 Enemy，同樣對 attack 加入原浮動
+5. 三段式原傷害：
+   - `defense <= attack < defense×8/7`：`RAND(0, attack/16)`
+   - `defense > attack`：`RAND(0,1)`
+   - `attack >= defense×8/7`：`int((attack-defense)×2 + RAND(0,attack/8) - attack/16)`
+6. 最後小於 1 時，原 `BATTLE_AttackSeq()` 仍會再 `RAND(0,1)`，所以普通攻擊現在可以真正出現 0 傷／MISS，不再強制至少 1 傷。
+
+JS 的 `cRand()` 依原 `RAND(x,y)` 宏的 `int((y-x+1)*rand)` 語意處理浮點上限，不用一般整數亂數函式硬取 floor。
+
+### BATTLE_DuckCheck
+
+普通攻擊現在先做原敏捷閃避判定：
+
+- 基礎 `gKawashiPara = 0.02`
+- 玩家 → 非玩家：防守方 DEX ×0.6
+- 非玩家 → 玩家：攻擊方 DEX ×0.6
+- Enemy → Pet：攻擊方 DEX ×0.8
+- 非 Enemy → Pet：防守方 DEX ×0.8
+- 依 Big/Small、sqrt 與比值計算
+- 最大閃避率 75%
+- 玩家防守時會加 `Luck`
+
+目前沒有武器／命中裝備／異常狀態，所以弓類額外修正、HITRIGHT 與狀態修正暫時都是 0。
+
+### 會心一擊
+
+普通攻擊通過閃避後，再接 `BATTLE_CriticalCheckPlayer()`：
+
+- 基礎 `gCriticalPara = 0.09`
+- 玩家 Luck 會加入會心判定
+- 玩家打非玩家時，目標 DEX ×0.6
+- Pet 打 Enemy 時，目標 DEX ×0.8
+- Enemy 打 Player／Pet 時使用來源中的非 sqrt 分支
+- 無裝備，所以 ITEM_CRITICAL = 0
+
+成功會心後使用 `BATTLE_CriDamageCalc()`：
+
+`普通傷害 + defender DEF × attacker Lv / defender Lv × 0.5`
+
+### 元素相剋
+
+Enemy 與 V0.20 後新捕獲的正式野寵都有 earth/water/fire/wind，因此兩邊元素資料都存在時，V0.22 會套原 `BATTLE_AttrCalc()`。
+
+玩家目前還沒有原創角元素分配資料。原服創角要求元素總量 10、最多兩種且不能選互剋組合；V0.22 不猜 25/25/25/25，也不假造無屬性，所以**只要其中一方元素資料缺失，就暫時以倍率 1 跳過元素層**。玩家元素創角／migration 會另版處理。
+
+### 尚未在 V0.22 混入
+
+這一版刻意不一次塞入：
+
+- 行動順序／敏捷排序
+- Counter 反擊鏈
+- Guard 防禦
+- 裝備與武器種類
+- 技能
+- 異常狀態
+- 職業
+- 玩家創角元素
+
+先把普通物理「閃避 → 傷害 → 會心」核心驗證穩定後，再逐層往外接。

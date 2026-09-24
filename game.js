@@ -1026,34 +1026,147 @@ function clearEvent83Chain(extra=[]){
     while(hasItem(id))consumeItem(id,1);
   }
 }
-function playerDamage(target=targetEnemyUnit()){return Math.max(1,Math.round(state.attack-n(target?.defense)+rnd(-2,4)))}
-function petDamage(pet,target=targetEnemyUnit()){
-  if(pet?.serverStats){
-    pet.serverCombat=petServerCombat(pet.serverStats);
-    return Math.max(1,Math.round(n(pet.serverCombat?.attack)-n(target?.defense)*.28+rnd(-1,2)));
-  }
-  const str=Math.max(1,n(pet?.stats?.str)||6);
-  return Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2)));
+function cRand(min,max){
+  min=Number(min);max=Number(max);
+  if(!Number.isFinite(min)||!Number.isFinite(max))return 0;
+  return Math.trunc(min+(max-min+1)*Math.random());
 }
-function enemyDamage(unit=targetEnemyUnit()){return Math.max(1,Math.round(n(unit?.attack)-state.defense*.45+rnd(-2,2)))}
+function normalizedElements(elements){
+  if(!elements)return null;
+  const earth=Math.max(0,n(elements.earth)),water=Math.max(0,n(elements.water));
+  const fire=Math.max(0,n(elements.fire)),wind=Math.max(0,n(elements.wind));
+  const none=Math.max(0,100-earth-water-fire-wind);
+  return {earth,water,fire,wind,none};
+}
+function battleAttrMultiplier(attacker,defender){
+  const a=normalizedElements(attacker?.elements),d=normalizedElements(defender?.elements);
+  if(!a||!d)return 1;
+  const same=1,up=1.5,down=.6;
+  const fire=a.fire*(d.none*up+d.fire*same+d.water*up+d.earth*same+d.wind*up);
+  const water=a.water*(d.none*up+d.fire*up+d.water*same+d.earth*down+d.wind*same);
+  const earth=a.earth*(d.none*up+d.fire*same+d.water*up+d.earth*same+d.wind*down);
+  const wind=a.wind*(d.none*up+d.fire*down+d.water*same+d.earth*up+d.wind*same);
+  const none=a.none*(d.none*same+d.fire*down+d.water*down+d.earth*down+d.wind*down);
+  return (fire+water+earth+wind+none)/10000;
+}
+function playerBattleView(){
+  return {
+    type:'player',attack:n(state.attack),defense:n(state.defense),quick:n(state.dex),
+    luck:n(state.luck),level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
+  };
+}
+function petBattleView(pet){
+  if(!pet?.serverStats)return null;
+  pet.serverCombat=petServerCombat(pet.serverStats);
+  return {
+    type:'pet',attack:n(pet.serverCombat?.attack),defense:n(pet.serverCombat?.defense),quick:n(pet.serverCombat?.quick),
+    luck:0,level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
+  };
+}
+function enemyBattleView(unit){
+  return {
+    type:'enemy',attack:n(unit?.attack),defense:n(unit?.defense),quick:n(unit?.quick),
+    luck:0,level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
+  };
+}
+function battleDuckChance(attacker,defender){
+  let atDex=n(attacker?.quick),dfDex=n(defender?.quick);
+  const dfLuck=defender?.type==='player'?n(defender?.luck):0;
+  if(attacker?.type==='enemy'&&defender?.type==='pet')atDex*=.8;
+  else if(attacker?.type!=='enemy'&&defender?.type==='pet')dfDex*=.8;
+  else if(attacker?.type!=='player'&&defender?.type==='player')atDex*=.6;
+  else if(attacker?.type==='player'&&defender?.type!=='player')dfDex*=.6;
+  let big,small,wari;
+  if(dfDex>=atDex){big=dfDex;small=atDex;wari=1}
+  else{big=atDex;small=dfDex;wari=big<=0?0:small/big}
+  let work=(big-small)/.02;if(work<=0)work=0;
+  let per=Math.sqrt(work)*wari+dfLuck;
+  per*=100;
+  if(per>7500)per=7500;
+  if(per<=0)per=1;
+  return per;
+}
+function battleCriticalChance(attacker,defender){
+  let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.09;
+  const atLuck=attacker?.type==='player'?n(attacker?.luck):0;
+  if(attacker?.type==='pet'&&defender?.type==='enemy')dfDex*=.8;
+  else if(attacker?.type==='enemy'&&defender?.type==='pet'){div=10;root=false}
+  else if(attacker?.type!=='player'&&defender?.type==='player'){div=10;root=false}
+  else if(attacker?.type==='player'&&defender?.type!=='player')dfDex*=.6;
+  let big,small,wari;
+  if(atDex>=dfDex){big=atDex;small=dfDex;wari=1}
+  else{big=dfDex;small=atDex;wari=big<=0?0:small/big}
+  let work=(big-small)/div;if(work<=0)work=0;
+  let per=(root?Math.sqrt(work):work)*wari+atLuck;
+  per*=100;
+  if(per<0)per=1;
+  if(per>10000)per=10000;
+  return Math.trunc(per);
+}
+function battleDamageCore(attacker,defender){
+  let attack=n(attacker?.attack);
+  let defense=n(defender?.defense)*.70;
+  if(defender?.type==='enemy')defense+=(defense*Math.floor(Math.random()*10)+2)/100;
+  if(attacker?.type==='enemy')attack+=(attack*Math.floor(Math.random()*10)+2)/100;
+  let damage=0;
+  if(defense<=attack&&attack<defense*8/7){
+    damage=cRand(0,attack/16);
+  }else if(defense>attack){
+    damage=cRand(0,1);
+  }else if(attack>=defense*8/7){
+    const k0=cRand(0,attack/8)-attack/16;
+    damage=Math.trunc((attack-defense)*2+k0);
+  }
+  damage=Math.trunc(damage*battleAttrMultiplier(attacker,defender));
+  return damage;
+}
+function resolveNormalAttack(attacker,defender){
+  const duck=battleDuckChance(attacker,defender);
+  if(cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,duckRaw:duck};
+  const criticalRaw=battleCriticalChance(attacker,defender);
+  const critical=cRand(1,10000)<criticalRaw;
+  let damage=battleDamageCore(attacker,defender);
+  if(critical){
+    damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
+  }
+  if(damage<1)damage=cRand(0,1);
+  return {damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,duckRaw:duck,criticalRaw};
+}
+function playerAttackResult(target=targetEnemyUnit()){
+  return resolveNormalAttack(playerBattleView(),enemyBattleView(target));
+}
+function petAttackResult(pet,target=targetEnemyUnit()){
+  const attacker=petBattleView(pet);
+  if(attacker)return resolveNormalAttack(attacker,enemyBattleView(target));
+  const str=Math.max(1,n(pet?.stats?.str)||6);
+  return {damage:Math.max(1,Math.round(2+str*.42+n(pet.level)*1.2-n(target?.defense)*.28+rnd(-1,2))),dodged:false,critical:false,miss:false,legacy:true};
+}
+function enemyAttackResult(unit=targetEnemyUnit()){
+  return resolveNormalAttack(enemyBattleView(unit),playerBattleView());
+}
 function enemyCounter(){
   if(!enemy)return;
   const attackers=livingEnemyUnits();
   if(attackers.length<=1){
     const unit=attackers[0];if(!unit)return;
-    const back=enemyDamage(unit);
-    state.hp=Math.max(0,state.hp-back);
-    addLog(unit.name+' 反擊 '+back+'。',state.hp<=0?'bad':'');
+    const r=enemyAttackResult(unit);
+    if(r.dodged){addLog('你閃避了 '+unit.name+' 的攻擊。','good');return}
+    if(r.miss){addLog(unit.name+' 的攻擊沒有造成傷害。');return}
+    state.hp=Math.max(0,state.hp-r.damage);
+    addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
     if(state.hp<=0)defeat();
     return;
   }
-  let total=0,acted=0;
+  let total=0,acted=0,dodged=0,critical=0,miss=0;
   for(const unit of attackers){
-    const back=enemyDamage(unit);
-    total+=back;acted++;
+    const r=enemyAttackResult(unit);acted++;
+    if(r.dodged){dodged++;continue}
+    if(r.miss){miss++;continue}
+    if(r.critical)critical++;
+    total+=r.damage;
   }
   state.hp=Math.max(0,state.hp-total);
-  addLog('敵方 '+acted+' 名存活成員依序反擊，合計 '+total+' 傷害。',state.hp<=0?'bad':'');
+  addLog('敵方 '+acted+' 名行動：傷害 '+total+'，閃避 '+dodged+'，無傷 '+miss+'，會心 '+critical+'。',state.hp<=0?'bad':'');
   if(state.hp<=0)defeat();
 }
 function levelCheck(){
@@ -1249,18 +1362,30 @@ function attackTurn(){
   if(!enemy)return;
   let target=targetEnemyUnit();
   if(!target){winBattle();return}
-  const dmg=playerDamage(target);
-  target.hp=Math.max(0,target.hp-dmg);
-  addLog('你對 '+target.name+' 造成 '+dmg+' 傷害。');
+  const pr=playerAttackResult(target);
+  if(pr.dodged){
+    addLog(target.name+' 閃避了你的攻擊。');
+  }else if(pr.miss){
+    addLog('你攻擊 '+target.name+'，但沒有造成傷害。');
+  }else{
+    target.hp=Math.max(0,target.hp-pr.damage);
+    addLog('你對 '+target.name+(pr.critical?' 發動會心一擊，造成 ':' 造成 ')+pr.damage+' 傷害。',pr.critical?'good':'');
+  }
   syncEnemyTarget();
   if(!livingEnemyUnits().length){winBattle();return}
 
   const pet=activePet();
   if(pet){
     target=targetEnemyUnit();
-    const pd=petDamage(pet,target);
-    target.hp=Math.max(0,target.hp-pd);
-    addLog(pet.name+' 追擊 '+target.name+'，造成 '+pd+' 傷害。','pet');
+    const rr=petAttackResult(pet,target);
+    if(rr.dodged){
+      addLog(target.name+' 閃避了 '+pet.name+' 的攻擊。','pet');
+    }else if(rr.miss){
+      addLog(pet.name+' 攻擊 '+target.name+'，但沒有造成傷害。','pet');
+    }else{
+      target.hp=Math.max(0,target.hp-rr.damage);
+      addLog(pet.name+' 追擊 '+target.name+(rr.critical?'，會心一擊 ':'，造成 ')+rr.damage+' 傷害。','pet');
+    }
     syncEnemyTarget();
     if(!livingEnemyUnits().length){winBattle();return}
   }
@@ -1706,7 +1831,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.21 載入完成：CHAR_SkillUp 四圍配點與 CHAR_complianceParameter 玩家 HP／攻／防／敏已接入；舊存檔未分配升級點已按等級補回。','good');
+    addLog('V0.22 載入完成：普通物理攻擊已接入 BATTLE_DuckCheck、_BATTLE_NEWPOWER 版 BATTLE_DamageCalc 核心與 BATTLE_CriticalCheck／CriDamageCalc。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
