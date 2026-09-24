@@ -1396,7 +1396,19 @@ const ENEMY_SOURCE_SKILL_META={
   655:{n:'虎虎生威',d:'5 個物理攻擊物件並附加石化',f:'PETSKILL_BattleModel',o:'5|5|石|3|30|攻%15|100871 100872',field:1,target:3},
   656:{n:'撕裂傷口3',d:'撕裂舊傷口，增加已損失 HP 70% 的傷害',f:'PETSKILL_BattleTearDamage',o:'70',field:1,target:1},
   666:{n:'T憾甲一擊',d:'憾甲一擊強化版',f:'PETSKILL_Regret',o:'命%30 攻%60 防-20%',field:1,target:7},
-  689:{n:'Q雷分身術',d:'5 個物理攻擊物件並附加魔障',f:'PETSKILL_BattleModel',o:'5|5|障|3|30|攻%10|101996',field:1,target:3}
+  689:{n:'Q雷分身術',d:'5 個物理攻擊物件並附加魔障',f:'PETSKILL_BattleModel',o:'5|5|障|3|30|攻%10|101996',field:1,target:3},
+  // V0.45：同序列 petskill2.txt 與原 C 函式都已交叉確認；只補可沿用既有戰鬥底層的正權重技能。
+  14:{n:'T六段攻擊',d:'6 段連續攻擊',f:'PETSKILL_ContinuationAttack',o:'6',field:1,target:6},
+  15:{n:'T七段攻擊',d:'7 段連續攻擊',f:'PETSKILL_ContinuationAttack',o:'7',field:1,target:6},
+  16:{n:'T八段攻擊',d:'8 段連續攻擊',f:'PETSKILL_ContinuationAttack',o:'8',field:1,target:6},
+  17:{n:'T九段攻擊',d:'9 段連續攻擊',f:'PETSKILL_ContinuationAttack',o:'9',field:1,target:6},
+  53:{n:'背水之戰之其３',d:'攻擊 +70%、防禦 -65%',f:'PETSKILL_PowerBalance',o:'攻%+70 防%-65',field:1,target:6},
+  54:{n:'T背水之戰之其４',d:'攻擊 +100%、防禦 -70%',f:'PETSKILL_PowerBalance',o:'攻%+100 防%-70',field:1,target:6},
+  579:{n:'魔障',d:'敵方全體一回合無法行動',f:'PETSKILL_Barrier',o:'障 turn 1 成 50',field:1,target:3},
+  594:{n:'究極魔障',d:'敵方全體三回合無法行動',f:'PETSKILL_Barrier',o:'障 turn 3 成 50',field:1,target:3},
+  605:{n:'三重突擊',d:'蓄力 3 回合後攻擊 +150%',f:'PETSKILL_ChargeAttack',o:'3 攻%+150',field:1,target:6},
+  671:{n:'暴走',d:'多段暴走攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+115 防%-25 回避10',field:1,target:6},
+  708:{n:'石化攻擊',d:'攻擊 -30% 並嘗試石化 9 回合',f:'PETSKILL_StatusChange',o:'石 turn 9  攻%-30',field:1,target:6}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -2388,6 +2400,41 @@ function enemyPlayerSideLivingTargets(){
   if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
   return list;
 }
+function enemyBarrierSpec(meta){
+  const option=String(meta?.o||'');
+  return {
+    turns:battleStatusTurnFromOption(option),
+    success:Math.max(0,Math.trunc(enemySkillNumber(option,/成\s*([+-]?\d+)/,0)))
+  };
+}
+function performEnemyBarrier(actor,unit,options,meta){
+  const spec=enemyBarrierSpec(meta);
+  const label=meta?.n||'魔障';
+  const targets=enemyPlayerSideLivingTargets();
+  const attackerDesc={kind:'enemy',unit,unitId:unit.id};
+  const results=[];
+
+  // 原 BATTLE_S_Barrier：BATTLE_MultiList 取敵方整側，逐一呼叫
+  // BATTLE_StatusAttackCheck(attacker,target,BARRIER,Success,30,1.0)，成功後寫 turn+1。
+  // 這是獨立特殊 command，沒有物理／魔法傷害，也不進普通 Counter loop。
+  addLog(unit.name+' 使用 '+label+'：對敵方整側嘗試附加魔障。');
+  for(const target of targets){
+    const check=battleStatusChance(
+      attackerDesc,target,'barrier',
+      {perOffset:spec.success,range:30,bai:1,forceGeneral:true}
+    );
+    const applied=check.allowed&&check.success&&battleStatusApply(target,'barrier',spec.turns);
+    if(applied){
+      addLog(battleStatusDescName(target)+' 陷入魔障（原檢定 '+check.per.toFixed(1)+'%）。','bad');
+    }else if(check.reason==='existing'){
+      addLog(label+' 對 '+battleStatusDescName(target)+' 未生效：目標已有其他異常狀態。');
+    }else{
+      addLog(label+' 對 '+battleStatusDescName(target)+' 未成功（原檢定 '+n(check.per).toFixed(1)+'%）。');
+    }
+    results.push({target:target.kind,petId:target.petId||null,applied,per:check.per,reason:check.reason||(!applied?'roll':null)});
+  }
+  return {kind:'skill',skillId:actor.skillId,spec,results};
+}
 function performEnemyBatFly(actor,unit,options,meta){
   const label=meta?.n||'群蝠四竄';
   const targets=enemyPlayerSideLivingTargets();
@@ -3016,6 +3063,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleModel')return performEnemyBattleModel(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
@@ -3908,7 +3956,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.44 載入完成：接入 PETSKILL_BattleModel，啟用 590／655 虎虎生威與 689 Q雷分身術；5 發物理分身各自傷害並依原 30% 檢定附加石化／魔障。','good');
+    addLog('V0.45 載入完成：補齊正權重同函式變體 14～17／53～54／605／671／708，並接入 579／594 魔障；依原 C 對敵方整側逐一做 Success／30／1.0 狀態檢定。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
