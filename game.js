@@ -31,13 +31,13 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:6,
+    schemaVersion:7,
     level:1,exp:0,expNext:100,hp:120,maxHp:120,
     attack:18,defense:5,dex:30,charm:50,luck:0,
     gold:0,battles:0,wins:0,mapId:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
-    quest:{event81Complete:false,event71Current:false,event2:{active:false,complete:false},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -64,6 +64,7 @@ function normalizeState(raw){
   s.inventory=(raw&&raw.inventory&&typeof raw.inventory==='object')?raw.inventory:{};
   s.quest=Object.assign({},base.quest,raw?.quest||{});
   s.quest.event2=Object.assign({},base.quest.event2,raw?.quest?.event2||{});
+  s.quest.event4=Object.assign({},base.quest.event4,raw?.quest?.event4||{});
   s.quest.event71Prep=Object.assign({},base.quest.event71Prep,raw?.quest?.event71Prep||{});
   s.quest.event82=Object.assign({},base.quest.event82,raw?.quest?.event82||{});
   s.quest.event83=Object.assign({},base.quest.event83,raw?.quest?.event83||{});
@@ -86,6 +87,10 @@ function normalizeState(raw){
       s.quest.event71Prep.stage=4;
     }
   }
+  if(n(raw?.schemaVersion)<7){
+    const hadPostAdultProgress=s.quest.event71Current||n(s.quest.event71Prep.stage)>0||s.quest.event83.active||s.quest.event83.complete;
+    if(hadPostAdultProgress)s.quest.event4={active:false,complete:true,stage:3};
+  }
   const ids=new Set(s.petBox.map(p=>p.id));
   s.team=s.team.map(id=>ids.has(id)?id:null);
   if(!ids.has(s.activePetId))s.activePetId=null;
@@ -96,7 +101,7 @@ function normalizeState(raw){
     s.team[0]=s.petBox[0].id;
     s.activePetId=s.petBox[0].id;
   }
-  s.schemaVersion=6;
+  s.schemaVersion=7;
   delete s.pets;
   return s;
 }
@@ -562,7 +567,7 @@ function renderMapOptions(){
   select.value=selected;
 }
 function renderZooQuest(){
-  const q=state.quest,e2=q.event2,prep=q.event71Prep,e82=q.event82,e83=q.event83;
+  const q=state.quest,e2=q.event2,e4=q.event4,prep=q.event71Prep,e82=q.event82,e83=q.event83;
   const has905=hasPetTempNo(905),has786=hasPetTempNo(786),has854=hasPetTempNo(854),marefia=marefiaPet();
   $('#zooQuestBadge').textContent=e82.complete?'Event 82 完成':(e82.active?'Event 82 進行中':(q.event81Complete?'可接取':'前置未完成'));
   const lines=[];
@@ -571,6 +576,7 @@ function renderZooQuest(){
     lines.push('<div class="quest-line '+(has905?'done':'')+'">雷爾胖 905：'+(has905?'已捕獲':'未捕獲')+(e82.raelpangReported?' · 已回報':'')+'</div>');
     lines.push('<div class="quest-line '+(has786?'done':'')+'">波波頓 786：'+(has786?'已捕獲':'未捕獲')+(e82.popodonReported?' · 已確認':'')+'</div>');
     lines.push('<div class="quest-line '+(has854?'done':'')+'">任務版拉斯基 854：'+(has854?'已取得':(e83.active?'Event 83 進行中':'尚未取得'))+'</div>');
+    lines.push('<div class="quest-line '+(e4.complete?'done':'blocked')+'">Event 4 成人式：'+(e4.complete?'已完成（ENDEV=4）':(e4.active?'進行中 · 儀玉 2417 '+n(state.inventory['2417'])+'/15':'尚未完成'))+'</div>');
     lines.push('<div class="quest-line '+(q.event71Current&&hasItem(2414)?'done':'blocked')+'">Event83 前置：Event71 '+(q.event71Current?'進行中':'未開旗')+' / 不可思議的貝殼 2414 '+(hasItem(2414)?'持有':'缺少')+'</div>');
     if(marefia&&!q.event71Current){
       const mi=Math.max(0,Math.floor(n(prep.memoryIndex))),node=MAREFIA_MEMORY_ROUTE[mi];
@@ -604,9 +610,15 @@ function renderZooQuest(){
       else if(hasItem(2415))actions.push('<button data-zoo-action="event2-finish" class="wide">把花 2415 交給彌生 → 貝殼 2414</button>');
     }
     if(!q.event71Current){
-      if(prep.stage===0)actions.push('<button data-zoo-action="event69-start" class="wide">願藏祖父：開始精靈少女 Event 69</button>');
-      if(prep.stage===1)actions.push('<button data-zoo-action="event69-rescue" class="wide">蛙洞救出新藏 → 完成 Event69／開 Event70</button>');
-      if(prep.stage===2)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv1 瑪蕾菲雅</button>');
+      if(!e4.complete){
+        if(!e4.active)actions.push('<button data-zoo-action="event4-start" class="wide">Floor 10204：接受成人儀式</button>');
+        else if(!hasItem(2417,15))actions.push('<button data-zoo-action="event4-get-jade" class="wide">儀式審判差使：領取儀玉 2417 ×15</button>');
+        else actions.push('<button data-zoo-action="event4-finish" class="wide">儀式的審判：交出儀玉 ×15 完成成人式</button>');
+      }else{
+        if(prep.stage===0)actions.push('<button data-zoo-action="event69-start" class="wide">願藏祖父：開始精靈少女 Event 69</button>');
+        if(prep.stage===1)actions.push('<button data-zoo-action="event69-rescue" class="wide">蛙洞救出新藏 → 完成 Event69／開 Event70</button>');
+        if(prep.stage===2)actions.push('<button data-zoo-action="event70-finish" class="wide">願藏祖母：接回 Lv1 瑪蕾菲雅</button>');
+      }
       if(prep.stage===3&&marefia){
         const mi=Math.max(0,Math.floor(n(prep.memoryIndex))),node=MAREFIA_MEMORY_ROUTE[mi];
         if(node){
@@ -827,7 +839,7 @@ async function boot(){
   }
 }
 function handleZooAction(action){
-  const q=state.quest,e2=q.event2,prep=q.event71Prep,e82=q.event82,e83=q.event83;
+  const q=state.quest,e2=q.event2,e4=q.event4,prep=q.event71Prep,e82=q.event82,e83=q.event83;
   if(action==='accept82'){
     if(!q.event81Complete)return;
     e82.active=true;addLog('已向園長接取 Event 82：尋回雷爾胖、波波頓與拉斯基。','good');
@@ -852,7 +864,22 @@ function handleZooAction(action){
     consumeItem(2415,1);giveItem(2414,1);e2.active=false;e2.complete=true;
     addLog('Event 2 完成：彌生收下花，回贈不可思議的貝殼 2414。','good');
   }
-  if(action==='event69-start'&&!q.event71Current&&prep.stage===0){
+  if(action==='event4-start'&&!e4.complete&&!e4.active){
+    e4.active=true;e4.stage=1;
+    addLog('Event 4：Floor 10204 的儀式審判開始成人禮，要求取得 15 個儀玉 2417。','good');
+  }
+  if(action==='event4-get-jade'&&e4.active&&!e4.complete&&!hasItem(2417,15)){
+    const need=Math.max(0,15-n(state.inventory['2417']));
+    if(need>0)giveItem(2417,need);
+    e4.stage=2;
+    addLog('儀式審判的差使交給你儀玉 2417，共補足至 15 個。','pet');
+  }
+  if(action==='event4-finish'&&e4.active&&!e4.complete&&hasItem(2417,15)){
+    consumeItem(2417,15);giveItem(2418,1);
+    e4.active=false;e4.complete=true;e4.stage=3;
+    addLog('Event 4 成人式完成：交出儀玉 2417 ×15，取得 Item 2418；依 event04_1 正式設為 ENDEV=4。','good');
+  }
+  if(action==='event69-start'&&!q.event71Current&&e4.complete&&prep.stage===0){
     prep.stage=1;addLog('Event 69：願藏祖父委託你尋找失蹤的新藏。','good');
   }
   if(action==='event69-rescue'&&!q.event71Current&&prep.stage===1){
@@ -890,7 +917,8 @@ function handleZooAction(action){
   }
   if(action==='pet-trans'&&!q.event71Current&&prep.stage===4&&prep.memoryReady){
     const marefia=marefiaPet(),p=activePet();
-    if(state.level<80)addLog('精靈王：角色必須 Lv80 以上。','bad');
+    if(!e4.complete)addLog('精靈王：必須先完成 Event 4 成人式。','bad');
+    else if(state.level<80)addLog('精靈王：角色必須 Lv80 以上。','bad');
     else if(!marefia||n(marefia.level)!==79)addLog('精靈王：必須帶著 Lv79 瑪蕾菲雅。','bad');
     else if(!p||Number(p.tempNo)===718)addLog('請先把要接受祝福的另一隻寵物設為出戰。','bad');
     else if(n(p.level)<80)addLog('接受轉生祝福的寵物必須 Lv80 以上。','bad');
