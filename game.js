@@ -1474,7 +1474,10 @@ const ENEMY_SOURCE_SKILL_META={
   576:{n:'全體虛弱',d:'敵全體三回合內攻防敏下降 20%',f:'PETSKILL_Weaken',o:'虚 turn 3 成 50',field:1,target:3},
   577:{n:'劇毒',d:'中劇毒五回合，未解除則死亡',f:'PETSKILL_Deeppoison',o:'剧 turn 5 成 50',field:1,target:6},
   578:{n:'全體劇毒',d:'敵全體中劇毒五回合，未解除則死亡',f:'PETSKILL_Deeppoison',o:'剧 turn 5 成 50',field:1,target:3},
-  595:{n:'閃避術',d:'三回合內啟用獨立回避判定',f:'PETSKILL_SetDuck',o:'3|60',field:1,target:0}
+  595:{n:'閃避術',d:'三回合內啟用獨立回避判定',f:'PETSKILL_SetDuck',o:'3|60',field:1,target:0},
+  // V0.48：支援技與暗月狂狼變體；只接原 C 可完整還原者。
+  592:{n:'淨化',d:'解除我方全體異常狀態',f:'PETSKILL_Refresh',o:'全',field:1,target:2},
+  659:{n:'T浴血狂襲',d:'攻敏上升、會心提升並將傷害轉為 HP',f:'PETSKILL_DamageToHp2',o:'100',field:1,target:6}
 };
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -1556,6 +1559,7 @@ function enemyPrepareRoundAction(unit,action){
   unit.noGuardThisTurn=false;
   unit.counterEligibleThisTurn=action?.kind==='attack';
   unit.roundSkillFunction=null;
+  unit.roundDexMode=null;
 
   if(action?.kind!=='skill')return;
   const meta=action.skillMeta||enemyPetSkillMeta(action.skillId);
@@ -1578,8 +1582,14 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_SpeedyAttack'){
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     unit.roundDefense=Math.trunc(n(unit.defense)+n(unit.defense)*defensePct/100);
-    // 此來源 PETSKILL_SpeedyAttack() 沒有讀「敏%」，所以不改 QUICK。
+    // PETSKILL_SpeedyAttack() 本身沒有改 QUICK，但 BATTLE_DexCalc 對此 command
+    // 另有 work=(WORKQUICK+20); dex=work+work*0.3 的專用排序公式。
+    unit.roundDexMode='speedy';
     unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_DamageToHp2'){
+    // 暗月狂狼變體：BATTLE_DexCalc 專用排序為 work +20%，無 default 的隨機扣速。
+    unit.roundDexMode='damageToHp2';
+    unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
@@ -1832,7 +1842,12 @@ function resolveNormalAttack(attacker,defender,options={}){
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
 
-  const criticalRaw=battleCriticalChance(attacker,defender);
+  const baseCriticalRaw=battleCriticalChance(attacker,defender);
+  const criticalChanceMultiplier=Number.isFinite(Number(options.criticalChanceMultiplier))
+    ?Number(options.criticalChanceMultiplier):1;
+  // 原 DamageToHp2 是在 BATTLE_CriticalCheck() 已完成 10000 上限後，再把 perCri ×1.3；
+  // 因此這裡不重新 cap，保留 >10000 時必定會心的來源行為。
+  const criticalRaw=baseCriticalRaw*criticalChanceMultiplier;
   const critical=cRand(1,10000)<criticalRaw;
   let damage=battleDamageCore(attacker,defender,options);
   if(critical){
@@ -1860,7 +1875,7 @@ function resolveNormalAttack(attacker,defender,options={}){
 
   return {
     damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,
-    guarded:guarding,duckRaw:duck,criticalRaw,
+    guarded:guarding,duckRaw:duck,criticalRaw,baseCriticalRaw,criticalChanceMultiplier,
     preGuardDamageMultiplier:preGuardMultiplier,
     damageMultiplier:multiplier,damageDivisor:Number.isFinite(divisor)&&divisor>0?divisor:1
   };
@@ -2955,6 +2970,62 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
 function enemyOptionParts(option){
   return String(option||'').split('|').map(x=>x.trim());
 }
+function performEnemyDamageToHp2(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  const absorbPct=Math.max(0,Math.trunc(Number(String(meta?.o||'').trim())||0));
+  const baseAttack=Math.trunc(n(unit.attack));
+  const attack=baseAttack+Math.trunc(baseAttack*.2);
+
+  // 原 BATTLE_AttackSeq(DAMAGETOHP2)：
+  // 1) 先以 FIXDEX 做正常會心率；
+  // 2) perCri 再 ×1.3；
+  // 3) WORKATTACKPOWER 改為 FIXSTR +20% 後才進 DamageCalc。
+  // QUICK +20% 只屬於 BATTLE_DexCalc 的回合排序，並不改 CriticalCheck 使用的 FIXDEX。
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemySkillTargetResult(
+    unit,chosen,
+    {guarding,criticalChanceMultiplier:1.3},
+    {attack}
+  );
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  enemyApplySkillHit(unit,chosen,r,meta?.n||'浴血狂襲');
+
+  let healed=0;
+  if(r.damage>0&&!r.dodged&&!r.miss&&absorbPct>0){
+    const before=n(unit.hp);
+    const amount=Math.trunc(n(r.damage)*absorbPct/100);
+    unit.hp=Math.min(Math.max(1,Math.trunc(n(unit.maxHp))),before+amount);
+    healed=Math.max(0,unit.hp-before);
+    if(healed>0)addLog(unit.name+' 由 '+(meta?.n||'浴血狂襲')+' 吸收 '+healed+' HP。','bad');
+  }
+
+  // BATTLE_COM_S_DAMAGETOHP2 是 BATTLE_S_AttackDamage 的獨立 case，結束後直接 break。
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,healed,absorbPct,attackPct:20};
+}
+function performEnemyRefresh(actor,unit,options,meta){
+  const targets=livingEnemyUnits().map(target=>({kind:'enemy',unit:target,unitId:target.id}));
+  const results=[];
+  for(const target of targets){
+    const st=battleStatusGet(target);
+    if(!st){
+      results.push({unitId:target.unitId,cleared:false});
+      continue;
+    }
+    const type=st.type;
+    battleStatusClear(target);
+    addLog(unit.name+' 使用 '+(meta?.n||'淨化')+'，解除 '+target.unit.name+' 的'+(BATTLE_STATUS_NAMES[type]||type)+'。','bad');
+    results.push({unitId:target.unitId,cleared:true,type});
+  }
+  if(!results.some(x=>x.cleared)){
+    addLog(unit.name+' 使用 '+(meta?.n||'淨化')+'，但我方目前沒有異常狀態。');
+  }
+  // option「全」在來源 aszStatus[0] 對應 status=0；
+  // BATTLE_MultiStatusRecovery 對 ALLMYSIDE 逐一解除當前 StatusTbl 異常。
+  return {kind:'skill',skillId:actor.skillId,results};
+}
 function performEnemyDamageToHp(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -3359,6 +3430,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Refresh')return performEnemyRefresh(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleModel')return performEnemyBattleModel(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Modifyattack')return performEnemyModifyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Mdfyattack')return performEnemyMdfyAttack(actor,unit,options,meta);
@@ -3641,11 +3714,19 @@ function defeat(){
   resetBattleStatuses();
   save();render();
 }
-function battleDexRoll(quick){
-  // 原 BATTLE_DexCalc() 的普通攻擊 default 分支：
-  // work = CHAR_WORKQUICK + 20; dex = work - RAND(0, work * 0.3); 最低 1。
+function battleDexRoll(quick,mode=null){
   const work=Math.trunc(n(quick))+20;
-  let dex=work-cRand(0,work*.3);
+  let dex;
+  if(mode==='speedy'){
+    // BATTLE_COM_S_SPEEDYATTACK：dex = work + work*0.3。
+    dex=work+work*.3;
+  }else if(mode==='damageToHp2'){
+    // BATTLE_COM_S_DAMAGETOHP2：dex = work + work*0.2。
+    dex=work+work*.2;
+  }else{
+    // 普通 default：dex = work - RAND(0, work*0.3)。
+    dex=work-cRand(0,work*.3);
+  }
   if(dex<=0)dex=1;
   return Math.trunc(dex);
 }
@@ -3667,15 +3748,15 @@ function normalBattleOrder(){
   }
 
   for(const unit of livingEnemyUnits()){
-    const desc={kind:'enemy',unit,unitId:unit.id};
-    const quick=battleDrunkQuick(desc,unit?.quick);
     const action=enemyChooseAction(unit);
     enemyPrepareRoundAction(unit,action);
     unit.guardThisTurn=action.kind==='guard';
+    // 排序 QUICK 應使用當前狀態後的 battle view；V0.47 的 weaken 也因此會正確影響出手順序。
+    const quick=n(enemyBattleView(unit)?.quick);
     const needsTarget=action.kind==='attack'||action.kind==='skill'||action.kind==='magic';
     const chosen=needsTarget?enemyChooseTarget(unit):null;
     order.push({
-      kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
+      kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
       enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
       targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
     });
@@ -4261,7 +4342,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.47 載入完成：接入虛弱、劇毒與閃避術；虛弱按原 C 將攻防敏乘 0.8，劇毒保留第六次狀態行動死亡規則，閃避術使用獨立 rand()%100 判定。','good');
+    addLog('V0.48 載入完成：接入 592 淨化與 659 T浴血狂襲；並補正疾速攻擊／浴血狂襲的原 C 專用出手速度公式，以及虛弱對 Enemy 排序 QUICK 的影響。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
