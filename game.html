@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.9</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.10</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -58,7 +58,7 @@
           </div>
           <div id="zooQuestStatus" class="quest-status"></div>
           <div id="zooQuestActions" class="quest-actions"></div>
-          <div class="muted dev-note">Event81 已進一步還原原始機制：PC團金剛陣勝利後會依 event81_6f／7f／8f.arg 原座標表亂數傳送，可能前進、停留或倒退；只有第三區抽到 Floor 5582 (33,87) 才能見到老大。飛龍航空三條原始 routeto1 路線也可直接選擇。</div>
+          <div class="muted dev-note">Event81 已支援真正多敵人編成：金剛陣每戰生成 PC團盜賊×2；老大戰生成 PC團老大×1＋盜賊×9。玩家與出戰寵依序攻擊第一個存活敵人，所有存活敵人都會反擊；全員倒下後才套用原始亂數 WARP 或老大戰後流程。</div>
         </article>
 
         <article class="card">
@@ -155,8 +155,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.9：</b>
-      Event81 金剛陣已改為原腳本亂數傳送：第一區前進 2/10、第二區前進 2/11、第三區只有 1/11 會進 Floor 5582 老大區，且可能被傳回前區。完成 Event81 後可從三條原始飛龍航空 routeto1 中選一路，保留 10,000 石幣旅費、禁運道具與實際座標節點。
+      <b>V0.10：</b>
+      任務戰鬥核心已支援真正多敵人編成；Event81 金剛陣為 PC團盜賊×2，Floor 5582 老大戰為 PC團老大×1＋盜賊×9。一般野怪仍維持原單體捕捉流程，不受影響。
     </article>
   </main>
 
