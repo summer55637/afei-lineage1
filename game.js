@@ -5675,6 +5675,79 @@ function sourcePerformPetGuardianSkill(pet,action,options={}){
   };
 }
 
+function sourcePetEnemyTargetFromAction(action){
+  let target=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  if(target&&n(target.hp)>0&&!enemyUnitHidden(target))return target;
+  const list=targetableEnemyUnits();
+  return list.length?list[cRand(0,list.length-1)]:null;
+}
+function sourcePerformPetContinuationSkill(pet,action,options={}){
+  const meta=action?.meta;
+  const m=String(meta?.o||'').match(/^\s*(\d+)/);
+  let count=m?Math.trunc(Number(m[1])):1;
+  if(count<1||count>10)count=1;
+
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'連續攻擊')+'」（'+count+' 段）。','pet');
+  let target=sourcePetEnemyTargetFromAction(action);
+  let lastResult=null,lastActual=null,hits=0;
+
+  // 玩家捕獲寵沒有 CHAR_ARM；fixed TargetListSet 對 non-BOW 先把整個 aDefList 填成原 COM2。
+  // 每段後仍會 TargetAdjust，所以原目標倒下時下一段改抓同 side 的其他存活目標。
+  for(let step=0;step<count;step++){
+    if(!petIsBattleActive(pet)||!enemy)break;
+    if(!target||n(target.hp)<=0||enemyUnitHidden(target)){
+      const list=targetableEnemyUnits();
+      target=list.length?list[cRand(0,list.length-1)]:null;
+    }
+    if(!target)break;
+
+    const attacker=petBattleView(pet);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+      guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
+      damageDivisor:count
+    });
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+    hits++;
+    lastResult=r;
+    lastActual=actual;
+    if(!petIsBattleActive(pet))break;
+    if(n(target.hp)<=0)target=null;
+  }
+
+  // fixed 共用 direct-attack loop 只在所有 attack_count 完成後，用最後一次 ContFlg 進 Counter。
+  if(lastResult&&lastActual?.hp>0&&petIsBattleActive(pet)){
+    resolvePetEnemyCounterChain('pet',pet,lastActual,lastResult);
+  }
+  return {handled:true,skillId:action?.skillId,hits,count,lastResult};
+}
+function sourcePerformPetMightySkill(pet,action,options={}){
+  const meta=action?.meta;
+  const multMatch=String(meta?.o||'').match(/倍\s*([0-9.]+)/);
+  const duckMatch=String(meta?.o||'').match(/回避\s*([0-9.]+)/);
+  const multiplier=multMatch?Math.max(0,Number(multMatch[1])||0):2;
+  const duckBonus=duckMatch?Math.max(0,Number(duckMatch[1])||0):0;
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'一擊必殺')+'」，但沒有可攻擊目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'一擊必殺')+'」（傷害 ×'+multiplier+'／目標回避 +'+duckBonus+'）。','pet');
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
+    damageMultiplier:multiplier,
+    duckBonusPercent:duckBonus
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  if(petIsBattleActive(pet)&&actual?.hp>0){
+    resolvePetEnemyCounterChain('pet',pet,actual,r);
+  }
+  return {handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,multiplier,duckBonus,r};
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'};
   const ai=loyalty?.ai;
@@ -5742,6 +5815,12 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     }
     if(meta?.f==='PETSKILL_NormalGuard'){
       return sourcePerformPetNormalGuard(pet,action);
+    }
+    if(meta?.f==='PETSKILL_ContinuationAttack'){
+      return sourcePerformPetContinuationSkill(pet,action,options);
+    }
+    if(meta?.f==='PETSKILL_Mighty'){
+      return sourcePerformPetMightySkill(pet,action,options);
     }
     addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');
     return {handled:true,skillId:action.skillId,sourceRuntimePending:true};

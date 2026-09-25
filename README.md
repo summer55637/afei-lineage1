@@ -10064,3 +10064,73 @@ fixed 普通 StatusAttack、`BATTLE_MultiStatusChange()`、BattleModel 都會在
 - V1.03 Firekill/BattleModel true Guardian substitution 保留
 - V1.02 / V1.01 Guardian 舊 bug 語意保留
 - save schema 21
+
+
+## V1.05 low-loyalty Pet ContinuationAttack 10 / Mighty 40
+
+V1.05 接續 169 個 wild Lv1 variant 的實際未接清單：
+
+- skill 10「連續攻擊」：1 個 variant（卡梅蘭恩）
+- skill 40「一擊必殺」：3 個 variant（多薩金格／奧卡洛斯／沙瓦克）
+
+fixed source 不變：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### skill 10 ContinuationAttack
+
+`PETSKILL_ContinuationAttack()`：
+
+- `COM1=BATTLE_COM_S_RENZOKU`
+- `LOW(COM3)=N`
+
+`battle.c`：
+
+```c
+attack_max = LOW(COM3);
+gDamageDiv = attack_max;
+```
+
+而 `BATTLE_TargetListSet()` 對 non-BOW 會先把整個 `aDefList` 填成原 COM2。
+目前捕獲 Pet 沒有 CHAR_ARM，因此玩家寵這條固定走 non-BOW：
+
+- skill 10 的 option=2 -> 2 段。
+- 每段普通 AttackSeq 傷害後再除以 2，正傷害最低 1。
+- 原目標仍活著時兩段都打原目標。
+- 原目標中途倒下，下一段的 TargetAdjust 改抓同 enemy side 其他存活目標。
+- Guardian / dodge / guard 每一段各自重跑。
+- 所有段數完成後才用最後一次 `ContFlg` 進普通 Counter chain，不是每段反擊。
+
+### skill 40 Mighty
+
+`PETSKILL_Mighty()` option：
+
+```
+倍2 回避30
+```
+
+source 在真正 attack 前：
+
+```c
+gBattleDamageModyfy = LOW(COM3) * 0.01; // 2.00
+gBattleDuckModyfy = HIGH(COM3);          // +30
+```
+
+因此 V1.05：
+
+- 最終物理 damage multiplier = ×2。
+- 目標 DuckCheck 額外 +30。
+- 仍走普通 BATTLE_Attack 的 Guardian / guard / critical / Counter lifecycle。
+- 不把「回避30」誤當成攻擊者自己的回避。
+
+### V1.05 regression
+
+- `game.js` syntax PASS
+- skill 10 dispatcher
+- skill 10 option N clamp 1..10
+- skill 10 每段 `damageDivisor=N`
+- non-BOW target list 保留原目標直到失效
+- skill 10 只在末段結果進 Counter
+- skill 40 dispatcher
+- skill 40 damage ×2 / target dodge +30
+- skill 40 走 ordinary Guardian / Counter
+- V1.04 NormalGuard 保留
+- save schema 21
