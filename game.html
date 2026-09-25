@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.78</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.79</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.78：</b>
-      PETSKILL_StatusChange 與本輪能力覆寫順序接回 fixed C：毒／猛毒／石化／混亂／酒醉／催眠攻擊會先依 option 的 攻% 改 WORKATTACKPOWER；WEAKEN 則先在 PreCommand 建立 0.8 FIX 快照，再由各 PetSkill 基於該快照覆寫本輪攻防敏，保留 C 的整數截斷順序。
+      <b>V0.79：</b>
+      跨回合技能生命週期接回 fixed C：突擊／雙重突擊在釋放回合重新使用當輪 FIXSTR 計算 +90%／+110%；地球一周進入 EARTHROUND0 隱身後，下一輪 PreCommand 會跳過 complianceParameter／TurnParam／屬性重建，完整保留隱身前的 WORK／FIX、WEAKEN／BARRIER 與酒醉解除暫存，現身攻擊仍使用原最終傷害倍率 +90%。
     </article>
   </main>
 
