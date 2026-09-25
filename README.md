@@ -7579,3 +7579,159 @@ V0.81 實際捕獲改為 `cRand(1,100) < raw`，完整保留 strict-less-than。
 - Capture success 使用 `RAND(1,100) < WorkGet`
 - V0.73～V0.80 回歸標記保留
 
+
+
+## V0.82 FIXDEX integer combat math
+
+V0.82 繼續校正 fixed C 的核心物理戰鬥算術，重點不是改公式，而是補上 C `int` 變數的實際截斷時點。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+
+原常數：
+
+```c
+float gKawashiPara = 0.02;
+float gCounterPara = 0.08;
+float gCriticalPara = 0.09;
+#define KAWASHI_MAX_RATE (75)
+```
+
+這些常數在 web 版原本已經正確；V0.82 沒有改它們。
+
+### Duck 的 int FIXDEX compound assignment
+
+`BATTLE_DuckCheck()`：
+
+```c
+int Df_Dex, At_Dex;
+...
+At_Dex = CHAR_getWorkInt(... CHAR_WORKFIXDEX);
+Df_Dex = CHAR_getWorkInt(... CHAR_WORKFIXDEX);
+
+if(enemy -> pet) At_Dex *= 0.8;
+else if(non-enemy -> pet) Df_Dex *= 0.8;
+else if(non-player -> player) At_Dex *= 0.6;
+else if(player -> non-player) Df_Dex *= 0.6;
+```
+
+因為 `At_Dex / Df_Dex` 是 `int`，所以 C 的：
+
+`Df_Dex *= 0.8`
+
+不是保留 `.8` 小數，而是算完後立刻截斷回整數。
+
+V0.81 雖已改讀 FIXDEX，但 JS 仍讓小數一路進 `sqrt()`。
+
+V0.82 改成：
+
+```js
+dfDex = Math.trunc(dfDex * .8)
+```
+
+同理處理 `.6` 與 attacker scaling。
+
+### Critical 的 int FIXDEX scaling
+
+`BATTLE_CriticalCheckPlayer()` 中：
+
+- `At_Dex`：int
+- `Df_Dex`：int
+- `At_Luck`：int
+- `At_Soubi`：int
+- `Work`：float
+
+因此 V0.82：
+
+- FIXDEX 的 `.8 / .6` 先按 int 截斷
+- Luck / weapon critical 以 int 讀入
+- `Work=(Big-Small)/gCriticalPara` 仍保持 float，不額外截斷
+
+這是和 Counter 不同的地方。
+
+### Counter 的第二層 int truncation
+
+`BATTLE_CounterCalc()`：
+
+```c
+int Df_Dex, At_Dex, Work;
+float per, Big, Small, wari, divpara;
+...
+Work = ( Big - Small ) / divpara;
+```
+
+所以 Counter 除了 FIXDEX 的 `.8 / .6` 要先截斷外，
+
+`(Big-Small)/divpara`
+
+在指派給 `int Work` 時還要再截斷一次。
+
+V0.82 改成：
+
+```js
+let work = Math.trunc((big-small)/div);
+```
+
+之後才依原碼：
+
+- root path：`sqrt(Work)`
+- non-root path：直接 `Work`
+
+### 可觀察差異
+
+固定測例：
+
+```text
+attacker FIXDEX = 101
+defender FIXDEX = 99
+Enemy -> Pet
+```
+
+Duck：
+
+- 舊 JS 浮點：約 `3016.6206`
+- fixed C int：約 `3082.2070`
+
+Counter：
+
+- 舊 JS 浮點：`0.2`
+- fixed C：`0`
+
+原因是 Counter 的：
+
+`(Big-Small)/10`
+
+最後指派到 `int Work` 時被截斷為 0。
+
+### V0.82 保留項目
+
+V0.82 沒有改：
+
+- gKawashiPara 0.02
+- gCounterPara 0.08
+- gCriticalPara 0.09
+- KAWASHI_MAX_RATE 75%
+- V0.73 BOW Duck +20 重複兩次的來源 bug
+- V0.76 DRUNK lifecycle bug
+- V0.77 WEAKEN / BARRIER lifecycle
+- V0.78 StatusChange pre-command stat ordering
+- V0.79 CHARGE / EARTHROUND lifecycle
+- V0.80 FIXSTR consumers
+- V0.81 FIXDEX / WORKQUICK separation
+- save schema 21
+
+### V0.82 regression
+
+已確認：
+
+- `game.js` JavaScript syntax：PASS
+- Duck FIXDEX scaling 使用 int truncation
+- Critical FIXDEX scaling 使用 int truncation
+- Counter FIXDEX scaling 使用 int truncation
+- Counter `Work` 使用 int truncation
+- 公式常數與 fixed C 相同
+- save schema：21
+
