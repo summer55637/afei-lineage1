@@ -11729,3 +11729,105 @@ CHAR_createNewChar 在 config PET slot 0 為 -1 時，會依 CHAR_LASTTALKELDER 
 - BATTLE_StealMoney 使用 sourcePlayerMaxGold
 - CaptureCheck +5 規則不改
 - V1.27 DuelPoint 舊存檔 migration 仍只 +100 一次
+
+
+## V1.29 hometown / LASTTALKELDER / starter Pet creation
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+### fixed build 的出生模式
+
+version.h 中 _MUSEUM 為關閉；_DELBORNPLACE 的實際 define 位在 #ifdef _MUSEUM 內，因此本固定 build 同樣未啟用。
+
+CHAR_getInitElderPosition() 走標準四村分支，hometown 必須 0..3：
+
+- 0 -> elder0 -> Floor 1006 (15,22)
+- 1 -> elder1 -> Floor 2006 (20,16)
+- 2 -> elder2 -> Floor 3006 (21,16)
+- 3 -> elder3 -> Floor 4006 (14,20)
+
+並設定 LASTTALKELDER=hometown、SAVEPOINT |= 1<<hometown。
+
+### _NEW_PLAYER_CF 起始寵
+
+固定 setup.cf PET1 為空，因此 getNewplayergivepet(0)==-1。
+CHAR_createNewChar 按 LASTTALKELDER 寫入第一個新手寵：
+
+- hometown 0 -> EnemyID 1 -> 烏力烏力 / TempNo 2
+- hometown 1 -> EnemyID 2 -> 凱比 / TempNo 112
+- hometown 2 -> EnemyID 3 -> 克克爾 / TempNo 102
+- hometown 3 -> EnemyID 4 -> 威伯 / TempNo 34
+
+四筆都已在現行 Group 1127 找到完整 valid template，固定 Lv1、INITNUM 20、LVUPPOINT 4、PetSkill [0,0,0,0,0,0,1]。
+
+### ENEMY_createPetFromEnemyIndex RNG / progression
+
+V1.29 sourceCreateStarterPet 保留原 statement order：
+
+1. RAND(LV_MIN,LV_MAX)；本資料是 RAND(1,1)，仍消耗 call
+2. VITAL/STR/TOUGH/DEX 各 RAND(0,4)-2
+3. 先把這四個值 pack 成 ALLOCPOINT
+4. 10 次 RAND(0,3) 分配額外成長點
+5. 用 ((level-1)*LVUPPOINT+INITNUM)*base 建 CHAR 四圍
+6. VariableAI=0
+7. 複製元素／七格 PetSkill／status resist
+8. ENEMY_getRank 對應 runtime enemyExpRankIndex
+9. PETMAIL_EFFECT RAND(0,1)
+10. compliance 後 HP=MAXHP
+
+不走 BATTLE_Capture 的「忠誠最多 60」修正，因為這是創角 GetPet，不是捕獲。
+
+### 不自動出戰
+
+固定 CHAR_createNewChar 在 ENEMY_createPetFromEnemyIndex 後沒有設定 CHAR_DEFAULTPET。
+
+Web 對應：
+
+- petBox 新增起始寵
+- team 第一個空格加入起始寵，代表第一個持有 Pet slot
+- activePetId 不變，fresh 狀態仍為 null
+- 玩家要自行按「設為出戰」
+
+### 舊存檔
+
+schema26 以前沒有 hometown / LASTTALKELDER，也沒有保存「原本那隻起始寵後來是否已被放生」。
+
+因此不做任何歷史倒推：
+
+- hometown=null
+- hometownLegacyUnknown=true
+- playerHometownConfigured=true，讓既有角色可繼續遊玩
+- starterPetGranted=false
+- **不補任何起始寵**
+
+只有真正 schema26 新角色可執行一次 hometown 確認並領取 source starter。
+
+### Web map 與 source home floor
+
+V1.29 保存 homeFloor/homeX/homeY/hometownSavePointMask 作來源角色資料，但不把這些 Floor 強塞進目前放置版的狩獵 map router。
+兩者是不同層；等正式世界移動層接入再對接。
+
+### Creation gate
+
+真正新角色的自動戰鬥現在同時要求：
+
+- hometown 已確認
+- 原服 10 點元素已確認
+
+schema26 前舊角色以 hometownLegacyUnknown 通過 hometown gate，不會因無法還原歷史出生村而被卡住。
+
+### Regression targets
+
+- game.js syntax PASS
+- Group1127 EnemyID1..4 template 全存在且 Lv1
+- hometown0/1/2/3 -> EnemyID1/2/3/4 + 正確 elder/floor/x/y
+- starter level RNG call 保留，即使 RAND(1,1)
+- 四圍 ±2 + 10 allocation + PETMAIL_EFFECT RNG 保留
+- starter VariableAI=0，不套 capture initial AI cap
+- starter 加入第一個 team slot，但 activePetId 保持 null
+- 二次 hometown confirm 被拒絕，不重複給寵
+- normalizeState(null) 是 schema26 新角色、hometown 未確認、沒有起始寵
+- pre-schema26 舊存檔 hometownLegacyUnknown=true，沒有補寵
+- schema26 已確認 hometown 正規化回 source elder/座標
+- battle tick 新角色需 hometown+elements；舊存檔 legacy unknown 不被 hometown gate 卡住
+- V1.28 1轉／30,000／Item24114 與 fresh migration 分流不回退

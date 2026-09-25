@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.28</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.29</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -88,6 +88,21 @@
               <button data-player-stat="dex"><span>速度 DEX</span><b id="paramDex">5</b><small>+1</small></button>
             </div>
             <div class="muted player-param-note">配點後立即重算 HP／攻／防／敏；提高 MaxHP 不會免費補血。</div>
+          </div>
+          <div id="playerHometownPanel" class="player-element-panel">
+            <div class="player-param-head"><b>原服出生村／起始寵</b><span>確認後永久鎖定</span></div>
+            <label>
+              <span class="muted">hometown</span>
+              <select id="playerHometownSelect">
+                <option value="0">0 號出生村 · Floor 1006 · 烏力烏力</option>
+                <option value="1">瑪麗娜絲 · Floor 2006 · 凱比</option>
+                <option value="2">加加 · Floor 3006 · 克克爾</option>
+                <option value="3">卡魯它那 · Floor 4006 · 威伯</option>
+              </select>
+            </label>
+            <div id="playerHometownStatus" class="player-element-status good">請選擇原服 hometown 0～3。</div>
+            <button id="playerHometownConfirmBtn">確認出生村並建立起始寵</button>
+            <div class="muted player-param-note">固定 build 未開 _MUSEUM／_DELBORNPLACE；hometown 決定 LASTTALKELDER、出生座標與 EnemyID 1～4 起始寵。原 C 給寵後不會自動設定 CHAR_DEFAULTPET。</div>
           </div>
           <div id="playerElementPanel" class="player-element-panel">
             <div class="player-param-head"><b>原服創角元素</b><span>10 點 · 確認後永久鎖定</span></div>
@@ -181,8 +196,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.28：</b>
-      對齊固定 setup.cf 新手設定：真正新存檔為 1 轉、30,000 石幣並持有 Item 24114 ×1；舊存檔只補可唯一重建的 1 轉，不補可能已花掉的石幣／道具。
+      <b>V1.29：</b>
+      接回固定四村創角：hometown 0～3 對應 LASTTALKELDER、出生座標與 EnemyID 1～4 起始寵；新角色確認後建立 Lv1 起始寵但不自動出戰，舊存檔不倒推、不補領。
     </article>
   </main>
 

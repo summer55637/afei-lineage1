@@ -407,8 +407,105 @@ function sourcePlayerElementStoredPoints(elements){
   const checked=sourcePlayerElementValidate(points);
   return checked.valid?checked.points:null;
 }
+const SOURCE_HOMETOWN_STARTERS=Object.freeze({
+  0:Object.freeze({hometown:0,elder:0,floor:1006,x:15,y:22,enemyId:1,label:'0 號出生村'}),
+  1:Object.freeze({hometown:1,elder:1,floor:2006,x:20,y:16,enemyId:2,label:'瑪麗娜絲'}),
+  2:Object.freeze({hometown:2,elder:2,floor:3006,x:21,y:16,enemyId:3,label:'加加'}),
+  3:Object.freeze({hometown:3,elder:3,floor:4006,x:14,y:20,enemyId:4,label:'卡魯它那'})
+});
 function sourcePlayerElementsConfigured(target=state){
   return !!(target?.playerElementsConfigured&&sourcePlayerElementStoredPoints(target?.elements));
+}
+function sourceHometownMeta(value){
+  const h=Number(value);
+  if(!Number.isInteger(h)||h<0||h>3)return null;
+  return SOURCE_HOMETOWN_STARTERS[h]||null;
+}
+function sourcePlayerHometownReady(target=state){
+  if(target?.hometownLegacyUnknown===true)return true;
+  return !!(target?.playerHometownConfigured&&sourceHometownMeta(target?.hometown));
+}
+function sourceStarterEnemyTemplate(hometown){
+  const meta=sourceHometownMeta(hometown);
+  if(!meta)return null;
+  const rows=encounterRuntime?.groups?.['1127']?.members;
+  if(!Array.isArray(rows))return null;
+  return rows.find(row=>Number(row?.enemyId)===meta.enemyId&&row?.validTemplate!==false)||null;
+}
+function sourceCreateStarterPet(hometown){
+  const meta=sourceHometownMeta(hometown);
+  const template=sourceStarterEnemyTemplate(hometown);
+  if(!meta||!template)return null;
+
+  // fixed ENEMY_createPetFromEnemyIndex statement/RNG order:
+  // level RAND -> four ±2 rolls -> ten allocation rolls -> PETMAIL_EFFECT RAND(0,1).
+  const level=rnd(Math.max(1,Math.trunc(n(template.levelMin))||1),Math.max(1,Math.trunc(n(template.levelMax))||1));
+  const rolled=rollEnemyCreateStats(template.stats||{});
+  const derived=serverEnemyDerived(template,level,rolled.stats);
+  const petMailEffect=rnd(0,1);
+  const rank=Number(template.enemyExpRankIndex);
+  const statusResist=enemyAiDb?.byEnemyId?.[String(meta.enemyId)]?.z;
+
+  const pet={
+    id:uid(),name:template.name||('Enemy '+meta.enemyId),
+    animationGroupId:template.animationGroupId??null,tempNo:template.tempNo??null,
+    level,exp:0,wildGrowth:n(template.wildGrowth),
+    stats:Object.assign({},rolled.stats),
+    elements:Object.assign({},template.elements||{}),
+    petSkills:Array.isArray(template.petSkills)?template.petSkills.slice(0,7):[],
+    statusResist:Array.isArray(statusResist)?statusResist.slice(0,6):[0,0,0,0,0,0],
+    serverStats:Object.assign({},derived.charStats),
+    serverCombat:{attack:derived.attack,defense:derived.defense,quick:derived.quick,maxHp:derived.maxHp},
+    allocPointPacked:packPetAllocPoint(rolled.allocatedFrom),
+    petRank:Number.isFinite(rank)?Math.trunc(rank):null,
+    serverProgression:Number.isFinite(rank),
+    serverInitNum:template.serverInitNum??null,serverLvUpPoint:template.serverLvUpPoint??null,
+    sourceEnemyId:meta.enemyId,variableAi:0,petMailEffect,
+    maxHp:Math.max(1,Math.trunc(n(derived.maxHp))),hp:Math.max(1,Math.trunc(n(derived.maxHp))),
+    starterPet:true,starterHometown:meta.hometown,createdAt:Date.now()
+  };
+  return pet;
+}
+function confirmPlayerHometown(value){
+  if(!state)return {ok:false,reason:'state-missing'};
+  if(sourcePlayerHometownReady(state)){
+    addLog(state.hometownLegacyUnknown
+      ?'此角色是舊存檔，歷史出生村無法可靠倒推，因此不補領起始寵。'
+      :'出生村已依原服創角流程鎖定，不能重新選擇。','bad');
+    return {ok:false,reason:'already-configured'};
+  }
+  const meta=sourceHometownMeta(value);
+  if(!meta){
+    addLog('出生村必須是原服 hometown 0～3。','bad');
+    return {ok:false,reason:'invalid-hometown'};
+  }
+  const open=Array.isArray(state.team)?state.team.findIndex(x=>!x):-1;
+  if(open<0){
+    addLog('目前 5 個持有寵位置都已佔用，無法完成原服創角起始寵建立。','bad');
+    return {ok:false,reason:'no-pet-slot'};
+  }
+  const pet=sourceCreateStarterPet(meta.hometown);
+  if(!pet){
+    addLog('找不到 Group 1127 對應的原服起始寵模板；不猜資料。','bad');
+    return {ok:false,reason:'starter-template-missing'};
+  }
+
+  state.hometown=meta.hometown;
+  state.lastTalkElder=meta.elder;
+  state.homeFloor=meta.floor;
+  state.homeX=meta.x;
+  state.homeY=meta.y;
+  state.hometownSavePointMask=(1<<meta.hometown);
+  state.playerHometownConfigured=true;
+  state.hometownLegacyUnknown=false;
+  state.starterPetGranted=true;
+  state.petBox.push(pet);
+  state.team[open]=pet.id;
+  // fixed CHAR_createNewChar never writes CHAR_DEFAULTPET after ENEMY_createPetFromEnemyIndex.
+  // Therefore the first owned slot is filled, but activePetId remains untouched/null.
+  addLog('原服出生村已確認：hometown '+meta.hometown+'／Floor '+meta.floor+' ('+meta.x+','+meta.y+')；取得 Lv'+pet.level+' '+pet.name+'，但未自動設為出戰寵。','good');
+  save();render();
+  return {ok:true,meta:Object.assign({},meta),pet};
 }
 function confirmPlayerElements(points=playerElementDraft){
   if(!state)return {ok:false,reason:'state-missing'};
@@ -431,12 +528,14 @@ function confirmPlayerElements(points=playerElementDraft){
 }
 function freshState(){
   return {
-    schemaVersion:25,
+    schemaVersion:26,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:100,
     transmigration:1,
+    hometown:null,lastTalkElder:null,homeFloor:null,homeX:null,homeY:null,hometownSavePointMask:0,
+    playerHometownConfigured:false,hometownLegacyUnknown:false,starterPetGranted:false,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
     elements:null,playerElementsConfigured:false,
     gold:30000,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
@@ -579,6 +678,30 @@ function normalizeState(raw){
   // transmigration field or mutation path, so all existing saves are exactly missing this baseline.
   if(n(raw?.schemaVersion)<25)s.transmigration=1;
   else s.transmigration=Math.max(0,Math.trunc(n(s.transmigration)));
+
+  // V1.29: pre-schema26 web saves never stored creation hometown/LASTTALKELDER.
+  // A starter Pet may have been captured/released/rearranged since then, so do not invent history
+  // and do not grant a retroactive starter. Mark the creation step as legacy-unknown but gameplay-ready.
+  if(n(raw?.schemaVersion)<26){
+    s.hometown=null;s.lastTalkElder=null;s.homeFloor=null;s.homeX=null;s.homeY=null;s.hometownSavePointMask=0;
+    s.playerHometownConfigured=true;
+    s.hometownLegacyUnknown=true;
+    s.starterPetGranted=false;
+  }else if(s.hometownLegacyUnknown===true){
+    s.hometown=null;s.lastTalkElder=null;s.homeFloor=null;s.homeX=null;s.homeY=null;s.hometownSavePointMask=0;
+    s.playerHometownConfigured=true;
+    s.starterPetGranted=!!s.starterPetGranted;
+  }else{
+    const home=sourceHometownMeta(s.hometown);
+    if(s.playerHometownConfigured===true&&home){
+      s.hometown=home.hometown;s.lastTalkElder=home.elder;
+      s.homeFloor=home.floor;s.homeX=home.x;s.homeY=home.y;s.hometownSavePointMask=(1<<home.hometown);
+      s.playerHometownConfigured=true;s.hometownLegacyUnknown=false;s.starterPetGranted=!!s.starterPetGranted;
+    }else{
+      s.hometown=null;s.lastTalkElder=null;s.homeFloor=null;s.homeX=null;s.homeY=null;s.hometownSavePointMask=0;
+      s.playerHometownConfigured=false;s.hometownLegacyUnknown=false;s.starterPetGranted=false;
+    }
+  }
   if(n(raw?.schemaVersion)<14){
     const earned=Math.max(0,(Math.max(1,Math.floor(n(s.level)||1))-1)*3);
     s.skillPoints=Math.max(Math.max(0,Math.floor(n(s.skillPoints))),earned);
@@ -642,7 +765,7 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=25;
+  s.schemaVersion=26;
   delete s.pets;
   return s;
 }
@@ -8339,6 +8462,7 @@ function walkEncounterStep(){
 }
 function tick(){
   if(!state||!state.auto)return;
+  if(!sourcePlayerHometownReady(state))return;
   if(!sourcePlayerElementsConfigured(state))return;
   if(state.hp<=0){defeat();return}
   if(!enemy){
@@ -8528,6 +8652,36 @@ function renderZooQuest(){
   if(e82.complete&&e83.complete&&hasItem(19715)&&!hasItem(19719))actions.push('<button data-zoo-action="reward19719" class="wide">向里拉拉領 Event83 後續謝禮 19719</button>');
   $('#zooQuestActions').innerHTML=actions.join('');
 }
+function renderPlayerHometown(){
+  const panel=$('#playerHometownPanel');
+  const select=$('#playerHometownSelect');
+  const status=$('#playerHometownStatus');
+  const button=$('#playerHometownConfirmBtn');
+  if(!panel||!select||!status||!button||!state)return;
+
+  if(state.hometownLegacyUnknown===true){
+    select.disabled=true;button.disabled=true;button.textContent='舊存檔不補領';
+    status.textContent='舊存檔：歷史 hometown／LASTTALKELDER 未保存，為避免憑空多一隻寵，本版不倒推、不補起始寵。';
+    status.className='player-element-status good';
+    return;
+  }
+
+  const ready=sourcePlayerHometownReady(state);
+  const meta=ready?sourceHometownMeta(state.hometown):sourceHometownMeta(select.value);
+  if(ready&&meta){
+    select.value=String(meta.hometown);select.disabled=true;button.disabled=true;button.textContent='出生村已確認';
+    const starter=state.petBox.find(p=>p?.starterPet===true&&Number(p?.starterHometown)===meta.hometown);
+    status.textContent='已鎖定：hometown '+meta.hometown+' · Floor '+meta.floor+' ('+meta.x+','+meta.y+') · 起始寵 '+(starter?.name||'已依原服建立／後續可能已不在持有欄');
+    status.className='player-element-status good';
+    return;
+  }
+
+  select.disabled=false;button.disabled=false;button.textContent='確認出生村並建立起始寵';
+  const preview=meta||SOURCE_HOMETOWN_STARTERS[0];
+  const template=sourceStarterEnemyTemplate(preview.hometown);
+  status.textContent='將設定 hometown '+preview.hometown+' · Floor '+preview.floor+' ('+preview.x+','+preview.y+')，並建立 Lv1 '+(template?.name||('EnemyID '+preview.enemyId))+'；原 C 不會自動設為 DEFAULTPET。';
+  status.className='player-element-status good';
+}
 function renderPlayerElements(){
   const panel=$('#playerElementPanel');
   if(!panel||!state)return;
@@ -8580,6 +8734,7 @@ function render(){
   $('#paramTgh').textContent=Math.floor(n(ps.tgh));
   $('#paramDex').textContent=Math.floor(n(ps.dex));
   document.querySelectorAll('#playerParamGrid button[data-player-stat]').forEach(b=>b.disabled=Math.floor(n(state.skillPoints))<=0);
+  renderPlayerHometown();
   renderPlayerElements();
   $('#wins').textContent=state.wins;
   $('#hpBar').style.width=clamp(state.hp/state.maxHp*100,0,100)+'%';
@@ -8625,11 +8780,18 @@ function renderEnemy(){
   const capBtn=$('#captureBtn');
   if(!enemy){
     box.className='enemy empty';
+    const hometownReady=sourcePlayerHometownReady(state);
     const elementReady=sourcePlayerElementsConfigured(state);
-    box.innerHTML=elementReady
-      ?'<div class="enemy-name">等待下一次遭遇</div><div class="muted">'+(state.auto?'自動戰鬥運作中。':'目前已暫停。')+'</div>'
-      :'<div class="enemy-name">等待原服創角元素配點</div><div class="muted">舊存檔沒有保存原始地／水／火／風，因此不猜無屬性；請先在角色面板確認合法的 10 點元素。</div>';
-    $('#battleState').textContent=elementReady?(state.auto?'自動中':'已暫停'):'等待元素配點';
+    if(!hometownReady){
+      box.innerHTML='<div class="enemy-name">等待原服出生村選擇</div><div class="muted">請先確認 hometown 0～3；確認後才依原 C 建立對應 Lv1 起始寵。</div>';
+      $('#battleState').textContent='等待出生村';
+    }else if(!elementReady){
+      box.innerHTML='<div class="enemy-name">等待原服創角元素配點</div><div class="muted">舊存檔沒有保存原始地／水／火／風，因此不猜無屬性；請先在角色面板確認合法的 10 點元素。</div>';
+      $('#battleState').textContent='等待元素配點';
+    }else{
+      box.innerHTML='<div class="enemy-name">等待下一次遭遇</div><div class="muted">'+(state.auto?'自動戰鬥運作中。':'目前已暫停。')+'</div>';
+      $('#battleState').textContent=state.auto?'自動中':'已暫停';
+    }
     $('#captureChance').textContent='捕獲率：—';
     $('#captureInfo').textContent='遭遇 Lv1 寵物後顯示條件。';
     capBtn.disabled=true;
@@ -8809,7 +8971,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.28 載入完成：固定 setup.cf 新角色出生為 1 轉／30,000 石幣／Item 24114；舊存檔只安全補 1 轉，且 _FIX_MAX_GOLD 改讀轉生數。','good');
+    addLog('V1.29 載入完成：固定四村 hometown／LASTTALKELDER 與 EnemyID 1～4 起始寵創角流程已接回；舊存檔不倒推、不補領。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -9111,6 +9273,8 @@ $('#playerElementGrid').addEventListener('input',e=>{
   renderPlayerElements();
 });
 $('#playerElementConfirmBtn').addEventListener('click',()=>confirmPlayerElements(playerElementDraft));
+$('#playerHometownSelect').addEventListener('change',()=>renderPlayerHometown());
+$('#playerHometownConfirmBtn').addEventListener('click',()=>confirmPlayerHometown($('#playerHometownSelect').value));
 $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;
   handleZooAction(b.dataset.zooAction);
