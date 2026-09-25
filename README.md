@@ -12452,3 +12452,102 @@ Crushs = rand()%100;
 - no guessed durability values / no conditional durability-loss RAND
 - schema 27 unchanged
 - V1.36 HitRight / V1.35 DamageCalc / V1.34 AttackCount regressions unchanged
+
+
+## V1.38 special physical critical-death Ultimate RNG target type
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source distinction
+
+V1.37 回歸 ItemCrush 時重新比對死亡收尾，確認普通 `BATTLE_Attack()` 與部分特殊物理函式的 critical-death Ultimate 條件其實不同。
+
+普通 `BATTLE_Attack()` / `BATTLE_Counter()` 使用：
+
+```c
+CHAR_getInt(defindex, CHAR_WHICHTYPE) != CHAR_TYPEPLAYER
+```
+
+所以普通物理攻擊會心打死 Pet 或 Enemy，都可能消耗 `RAND(1,100) < 50`。
+
+但 fixed 的：
+
+- `BATTLE_DefDieType()`（`BATTLE_S_AttackDamage` 共用）
+- `BATTLE_S_GBreak()`
+- `BATTLE_S_GBreak2()`
+- `BATTLE_S_FallGround()`
+- `BATTLE_Combo()`
+
+條件是：
+
+```c
+CHAR_getInt(defindex, CHAR_WHICHTYPE) == CHAR_TYPEENEMY
+```
+
+也就是只有死亡目標真的是 Enemy，才做 critical 50% RNG；Pet 死亡不抽。
+
+### Previous web mismatch
+
+`sourceTrackDamageSubUltimate()` 本來預設採普通 `BATTLE_Attack` 的「非 Player」條件。
+
+因此 Enemy 使用上述特殊技能打死 Active Pet 且該擊為 critical 時，Web 會錯誤多消耗：
+
+```
+cRand(1,100)
+```
+
+這不只影響 Ultimate 標記，也會把後面的 ItemCrush、技能追加判定與下一次戰鬥 RNG 全部向後錯一顆。
+
+### V1.38 correction
+
+現有 `sourceTrackDamageSubUltimate()` 已支援 `result.ultimateCriticalEnemyOnly`，V1.38 將正確旗標接到：
+
+- 所有 `BATTLE_S_AttackDamage` Web 路徑
+  - ModifyAttack / MdfyAttack
+  - Sonic / Sonic2
+  - Tear
+  - BattleTimid / 2BattleTimid
+  - Lighttakeed
+  - DamageToHp / DamageToHp2
+  - MpDamage
+  - ToothCrushe
+- Regret / Regret2 的自訂雙段 helper
+- GuardBreak
+- GuardBreak2
+- FallGround
+
+`BATTLE_Combo` 在先前版本本來就已使用 `ultimateCriticalEnemyOnly:true`，保持不變。
+
+普通 `BATTLE_Attack`、Counter、Gyrate（實際逐目標呼叫 `BATTLE_Attack`）、一般 ranged weapon loop 則繼續使用「非 Player」規則，因此 Pet critical death 仍會依來源消耗 50% RNG。
+
+### Reachable effect
+
+目前 Enemy 技能的正常敵對目標是 Player / Active Pet，因此這輪最直接的可達修正是：
+
+- 特殊 AttackDamage / GBreak / FallGround critical 打死 Active Pet：
+  - 原 C：不抽 50% Ultimate RNG
+  - V1.37 Web：可能誤抽
+  - V1.38：不再誤抽
+
+FallGround 的可達 RNG 順序因此也回到：
+
+1. AttackSeq / Damage
+2. HP / death deterministic work
+3. FallGround `RAND(0,100)`
+4. （只有目標為 CHAR_TYPEENEMY 才可能有 critical-death 50% RAND；正常 Enemy→Player/Pet 不會）
+5. ItemCrush defender `rand()%100`
+
+本輪不新增 save 欄位，schemaVersion 維持 27。
+
+### V1.38 regression targets
+
+- game.js syntax PASS
+- BATTLE_S_AttackDamage critical-kill Pet => no Ultimate 50% RNG
+- GBreak / GBreak2 critical-kill Pet => no Ultimate 50% RNG
+- FallGround critical-kill Pet => Fall RAND then ItemCrush, no extra Ultimate RNG
+- ordinary BATTLE_Attack critical-kill Pet => still keeps 50% RNG
+- Counter critical-kill Pet => still keeps 50% RNG
+- Gyrate -> BATTLE_Attack critical-kill Pet => still keeps 50% RNG
+- Combo remains Enemy-only as before
+- V1.37 ItemCrush guaranteed RNG unchanged
+- schema 27 unchanged

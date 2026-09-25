@@ -5007,10 +5007,13 @@ function enemyAttackSeqBugTargetResult(unit,chosen,options={},attackerOverride=n
     }));
     r.sourcePetGuardCommand=guardCommand;
     r.sourcePetGuardAdjust=guarding;
+    r.ultimateCriticalEnemyOnly=true;
     return r;
   }
   if(chosen?.kind==='player'&&state.hp>0){
-    return resolveEnemyAttackSeqBugToPlayer(unit,options,attackerOverride);
+    const r=resolveEnemyAttackSeqBugToPlayer(unit,options,attackerOverride);
+    if(r)r.ultimateCriticalEnemyOnly=true;
+    return r;
   }
   return null;
 }
@@ -5624,6 +5627,7 @@ function performEnemyRegret(actor,unit,options,meta){
         guarding,preGuardDamageMultiplier:secondary?.8:1
       }));
     }else return null;
+    r.ultimateCriticalEnemyOnly=true;
     enemyApplySkillHit(unit,target,r,label+(secondary?'貫穿段':''));
   sourceBattleFinalizeItemCrushRng(r);
     const dizzy=enemyTryRegretDizzy(target,successPct,label);
@@ -5715,6 +5719,7 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
     r=resolveEnemyGuardBreak2BugToPlayer(unit,guarding);
     multiplier=n(r?.guardBreak2Multiplier)||(guarding?1.3:.7);
   }
+  r.ultimateCriticalEnemyOnly=true;
   enemyApplySkillHit(unit,chosen,r,label+'（local defindex 倍率 ×'+multiplier.toFixed(1)+'）');
   sourceBattleFinalizeItemCrushRng(r);
   return {
@@ -7488,6 +7493,7 @@ function performEnemyFallGround(actor,unit,options,meta){
       guardianSourceBug:'BATTLE_S_FallGround-defindex-not-updated'
     });
   }
+  r.ultimateCriticalEnemyOnly=true;
   enemyApplySkillHit(unit,chosen,r,label);
 
   let fallRoll=null,fallSuccess=false;
@@ -7573,6 +7579,7 @@ function performEnemyGuardBreak(actor,unit,options,meta){
       guardianSourceBug:'BATTLE_S_GBreak-defindex-not-updated'
     });
   }
+  r.ultimateCriticalEnemyOnly=true;
   enemyApplySkillHit(unit,chosen,r,label);
   sourceBattleFinalizeItemCrushRng(r);
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r};
