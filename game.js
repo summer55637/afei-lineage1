@@ -2306,6 +2306,9 @@ function enemyPrepareRoundAction(unit,action){
     sourceFixQuick=Math.trunc(sourceFixQuick*.8);
   }
 
+  unit.roundFixAttack=sourceFixAttack;
+  unit.roundFixDefense=sourceFixDefense;
+  unit.roundFixQuick=sourceFixQuick;
   unit.roundAttack=sourceFixAttack;
   unit.roundDefense=sourceFixDefense;
   unit.roundQuick=sourceFixQuick;
@@ -2338,6 +2341,11 @@ function enemyPrepareRoundAction(unit,action){
       unit.roundDefense=fixedDefense+Math.trunc(fixedDefense*defensePct/100);
     }
     unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_Gyrate'){
+    // PETSKILL_Gyrate 在 AI 階段直接以當輪 FIXSTR 寫 WORKATTACKPOWER。
+    const attackPct=enemySignedSkillPercent(meta.o,'攻%');
+    unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*attackPct/100);
+    unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_BattleModel'){
     const parts=String(meta.o||'').split('|');
     const attackPct=enemySignedSkillPercent(parts[5]||'','攻%');
@@ -3465,7 +3473,7 @@ function performEnemyChargeState(actor,unit,options={}){
   // fixed BATTLE_Charge release：使用「釋放回合」已完成 complianceParameter 的 FIXSTR，
   // 再加 COM3 high 的攻擊百分比。當前正權重 Enemy 沒有可達 WORKMODATTACK 來源，
   // 因此此 runtime 的額外 MODATTACK 等價 0，不自行建立猜測值。
-  const releaseFixAttack=Math.trunc(n(unit.roundAttack??unit.attack));
+  const releaseFixAttack=Math.trunc(n(unit.roundFixAttack??unit.roundAttack??unit.attack));
   unit.roundAttack=releaseFixAttack+Math.trunc(releaseFixAttack*n(charge.attackPct)/100);
   unit.counterEligibleThisTurn=false;
   const releaseActor=Object.assign({},actor,{
@@ -3698,8 +3706,8 @@ function performEnemyGyrate(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
-  const baseAttack=Math.trunc(n(unit.attack));
-  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  // 攻擊修正已在 enemyPrepareRoundAction() 依當輪 FIXSTR 套好。
+  const attack=Math.trunc(n(unit.roundAttack??unit.roundFixAttack??unit.attack));
   const label=meta?.n||'回旋攻擊';
 
   // 原版玩家在 0..4、寵物在 5..9；Gyrate 只掃目標所在的五格橫排。
@@ -3735,7 +3743,8 @@ function performEnemyRetrace(actor,unit,options,meta){
     retraceRoll=cRand(1,100);
     // 原碼是 RAND(1,100) < 80，所以實際成功值 1..79。
     if(retraceRoll<80){
-      const baseAttack=Math.trunc(n(unit.attack));
+      // fixed battle.c 的追擊硬寫 FIXSTR +20%；PETSKILL_Retrace option 的 攻%+100 parser 被整段註解。
+      const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
       const attack=baseAttack+Math.trunc(baseAttack*.2);
       second=enemySkillTargetResult(unit,chosen,{guarding},{attack});
       if(second)enemyApplySkillHit(unit,chosen,second,label+'追擊');
@@ -4685,7 +4694,8 @@ function performEnemyDamageToHp2(actor,unit,options,meta){
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   const absorbPct=Math.max(0,Math.trunc(Number(String(meta?.o||'').trim())||0));
-  const baseAttack=Math.trunc(n(unit.attack));
+  // BATTLE_AttackSeq(DAMAGETOHP2) 在傷害計算前直接以當輪 FIXSTR +20% 覆寫 WORKATTACKPOWER。
+  const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
   const attack=baseAttack+Math.trunc(baseAttack*.2);
 
   // 原 BATTLE_AttackSeq(DAMAGETOHP2)：
@@ -4747,7 +4757,9 @@ function performEnemyDamageToHp(actor,unit,options,meta){
   // 這是 C 的整數除法，因此 30/100、20/100、10/100 都會先變 0。
   // 503 的說明雖寫攻擊 -30%，此來源實際 FIXSTR 不變。
   const cIntegerDivision=Math.trunc(attackReduceRaw/100);
-  const baseAttack=Math.trunc(n(unit.attack));
+  // PETSKILL_DamageToHp 的來源基底是當輪 FIXSTR；30/20/10 除以 100 的 C int bug 使減幅為 0，
+  // 但仍不能把已被 WEAKEN 等 compliance 修過的 FIXSTR 換回永久 base attack。
+  const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
   unit.roundAttack=baseAttack-Math.trunc(baseAttack*cIntegerDivision);
   unit.counterEligibleThisTurn=false;
 
@@ -6473,7 +6485,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.79 載入完成：跨回合 Charge／EarthRound 的 PreCommand 邊界已接回 fixed C；突擊以釋放回合 FIXSTR 計算，地球一周隱身期間跳過 compliance 並保留上一輪 WORK／FIX 快照。','good');
+    addLog('V0.80 載入完成：FIXSTR 專用技能改讀每輪 roundFix snapshot；Gyrate、Retrace 追擊、DamageToHp／DamageToHp2 不再誤用永久 base attack，並保留 Retrace option parser 被註解的來源行為。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
