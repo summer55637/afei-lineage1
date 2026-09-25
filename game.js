@@ -2340,9 +2340,10 @@ function sourceEnemyFoxStatusSeq(unit){
   return {active:true,recovered:false,currentTurn,startTurn};
 }
 function sourceEnemyFoxCommandGate(unit,actor){
-  if(!sourceEnemyFoxFormActive(unit))return {active:false,blocked:false};
+  if(!sourceEnemyFoxFormActive(unit))return {active:false,blocked:false,forceFist:false};
   const kind=actor?.enemyAction||'attack';
-  if(kind==='attack'||kind==='guard'||kind==='none')return {active:true,blocked:false};
+  if(kind==='attack')return {active:true,blocked:false,forceFist:true};
+  if(kind==='guard'||kind==='none')return {active:true,blocked:false,forceFist:false};
   unit.counterEligibleThisTurn=false;
   unit.guardThisTurn=false;
   unit.noGuardThisTurn=false;
@@ -3215,12 +3216,18 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
   // 原 BATTLE_DuckCheck 的實際順序：
   // base -> gBattleDuckModyfy -> 酒醉 -> BOW +20 -> NoGuard -> BOW +20 -> ×100 / cap 75%。
   // fixed ref 裡 BOW +20 明確重複兩次；V0.73 保留這個來源 bug，不自行去重。
+  // 注意 BATTLE_DuckCheck 讀的是 battle loop 的 global gWeponType，不是再次 BATTLE_GetWepon()。
+  // BecomeFox 會把這個 global 強制成 FIST；但 critical / Guardian / Counter 仍會重新讀實際裝備。
+  const sourceOuterWeaponType=Number(options.sourceOuterWeaponType);
+  const duckWeaponType=Number.isFinite(sourceOuterWeaponType)
+    ?Math.trunc(sourceOuterWeaponType)
+    :Math.trunc(n(attacker?.weaponType));
   let duck=battleDuckChance(attacker,defender);
   duck+=n(options.duckBonusPercent)*100;
   if(attacker?.drunk)duck+=cRand(20,30)*100;
-  if(Math.trunc(n(attacker?.weaponType))===4)duck+=20*100;
+  if(duckWeaponType===4)duck+=20*100;
   duck+=n(defender?.duckBonus)*100;
-  if(Math.trunc(n(attacker?.weaponType))===4)duck+=20*100;
+  if(duckWeaponType===4)duck+=20*100;
   return clamp(duck,1,7500);
 }
 function resolveNormalAttack(attacker,defender,options={}){
@@ -3832,6 +3839,26 @@ function sourceEnemyTargetFromBattleSlot(slot){
   }
   return null;
 }
+function sourceFoxPlayerSideTargetFromBattleSlot(slot){
+  const no=Math.trunc(Number(slot));
+  if(no===0&&state.hp>0)return battleTargetSnapshot('player');
+  if(no===5){
+    const pet=activePet();
+    if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))return battleTargetSnapshot('pet',pet);
+  }
+  return null;
+}
+function sourceFoxDefaultPlayerSideTarget(){
+  const list=[];
+  if(state.hp>0)list.push(battleTargetSnapshot('player'));
+  const pet=activePet();
+  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))list.push(battleTargetSnapshot('pet',pet));
+  if(!list.length)return null;
+  return list[cRand(0,list.length-1)];
+}
+function sourceFoxTargetAdjust(slot){
+  return sourceFoxPlayerSideTargetFromBattleSlot(slot)||sourceFoxDefaultPlayerSideTarget();
+}
 function sourceBowTargetList(actor,unit,target){
   const defNo=sourceEnemyCommandTargetBattleSlot(actor,target);
   if(defNo<0||defNo>19)return {defNo,random:null,slots:[-1]};
@@ -4002,8 +4029,66 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
   };
 }
 
+function performEnemyFoxFistRangedAttack(actor,unit,options={}){
+  const actualWeaponType=Math.trunc(n(unit?.weaponType));
+  const attackMax=sourceEnemyBattleAttackMax(unit);
+  const commandSlot=sourceEnemyCommandTargetBattleSlot(actor,null);
+
+  // Source order is important: BATTLE_GetAttackCount() is evaluated before
+  // BATTLE_TargetListSet(); an actually equipped bow then consumes its RAND(0,1)
+  // even though fox already forced global gWeponType to FIST.
+  const bowPlan=actualWeaponType===4?sourceBowTargetList(actor,unit,null):null;
+  let target=sourceFoxTargetAdjust(commandSlot);
+  const attackOptions=Object.assign({},options.attackOptions||{},{
+    damageDivisor:attackMax,
+    sourceOuterWeaponType:0
+  });
+  const hits=[];
+  let attackCount=0;
+  let k=0;
+
+  while(target&&attackCount<attackMax&&n(unit.hp)>0){
+    const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
+    if(!hit)break;
+    hits.push(Object.assign({
+      battleSlot:sourceEnemyTargetBattleSlot(target),
+      sourceCommandSlot:attackCount===0?commandSlot:(actualWeaponType===4?bowPlan?.slots?.[k]:commandSlot)
+    },hit));
+    attackCount++;
+    if(attackCount>=attackMax||n(unit.hp)<=0)break;
+
+    if(actualWeaponType===4){
+      // fixed loop starts k=0 and only after the first BATTLE_Attack does ++k,
+      // so fox+bow never uses aDefList[0] as its first target.
+      k++;
+      const nextSlot=bowPlan?.slots?.[k];
+      if(nextSlot==null||nextSlot<0)break;
+      target=sourceFoxTargetAdjust(nextSlot);
+    }else{
+      // Non-bow TargetListSet is COM2 repeated; an invalid/dead COM2 is adjusted
+      // through BATTLE_DefaultAttacker on every later hit.
+      target=sourceFoxTargetAdjust(commandSlot);
+    }
+  }
+
+  return {
+    target:hits[0]?.target||target?.kind||null,
+    pet:hits[0]?.pet||null,
+    r:hits.length?hits[hits.length-1].r:null,
+    weaponCommand:'FIST',protocol:'BH',weaponItemId:unit.equippedWeaponId,
+    sourceFoxFist:true,sourceActualWeaponType:actualWeaponType,
+    attackMax,attackCount,
+    bowRandom:bowPlan?.random??null,
+    bowTargetSlots:bowPlan?.slots?.slice?.()||null,
+    breakthrowStatus:false,
+    hits
+  };
+}
 function performEnemyPrimaryAttack(actor,unit,options={}){
   const weaponType=Math.trunc(n(unit?.weaponType));
+  if(options.sourceForceFist&&(weaponType===4||weaponType===17||weaponType===18||weaponType===19)){
+    return performEnemyFoxFistRangedAttack(actor,unit,options);
+  }
   // 原 battle.c：只有普通 BATTLE_COM_ATTACK 會把 BOOMERANG 改成 BATTLE_COM_BOOMERANG；
   // BOW／BOUNDTHROW／BREAKTHROW 則仍走共用物理攻擊 loop。
   if(weaponType===17&&actor?.enemyAction==='attack')return performEnemyBoomerangWeaponAttack(actor,unit,options);
@@ -7190,7 +7275,8 @@ function performEnemyAction(actor,unit,options={}){
     addLog(unit.name+' 使用 '+label+'；此特殊寵技效果尚未接入，保留原 AI 權重但本回合不以普通攻擊替代。');
     return {kind:'skill',unsupported:true,skillId:actor.skillId};
   }
-  return Object.assign({kind:'attack'},performEnemyPrimaryAttack(actor,unit,options)||{});
+  const attackOptions=foxGate.forceFist?Object.assign({},options,{sourceForceFist:true}):options;
+  return Object.assign({kind:'attack'},performEnemyPrimaryAttack(actor,unit,attackOptions)||{});
 }
 function levelCheck(){
   let upCount=0;
@@ -8576,7 +8662,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.24 載入完成：_PETSKILL_BECOMEFOX 已接入 ENEMY_PETFLG、31% 命中後判定、WORKFOXROUND 三回合 lifecycle、80% 攻防敏與指令限制。','good');
+    addLog('V1.25 載入完成：BecomeFox 遠距武器混合規則已對齊；外層強制 FIST，但 AttackNum／弓 TargetList／裝備型 critical、Guardian、Counter 仍依實際武器。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

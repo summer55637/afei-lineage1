@@ -11380,3 +11380,92 @@ AI / PetSkill 仍先在 PreCommand 選好；到該 Enemy 真正執行自己的 a
 - active fox：FIX attack / defense / quick 各 80% int truncate
 - active fox：特殊 command -> NONE；ATTACK / GUARD / NONE 保留
 - V1.18 Ultimate / death branch regression 不回退
+
+
+## V1.25 BecomeFox ranged-weapon mixed semantics
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+V1.24 已接回 WORKFOXROUND 核心；V1.25 補齊 battle.c 中「實際裝備」與 battle loop global gWeponType 分離造成的遠距武器特殊行為。
+
+### Source order
+
+角色進 BATTLE_Battling 後：
+
+1. gWeponType = BATTLE_GetWepon(charaindex)
+2. 若 WORKFOXROUND != -1 或圖號 101749，gWeponType 強制改成 ITEM_FIST
+3. attack_max = BATTLE_GetAttackCount(charaindex)
+4. BATTLE_GetAttackCount 仍直接讀 CHAR_ARM 的 ITEM_ATTACKNUM_MIN/MAX
+5. 若 attack_max > 0 且 global gWeponType == FIST，gDamageDiv = attack_max
+6. BREAKTHROW 麻痺只在 global gWeponType == ITEM_BREAKTHROW 時啟用，因此 fox 狀態不啟用
+7. BATTLE_TargetListSet 再次直接呼叫 BATTLE_GetWepon(charaindex)，並不讀 global gWeponType
+
+這造成一個刻意保留的混合狀態：外層像拳頭，但部分底層仍看真正裝備。
+
+### Current reachable weapon data
+
+目前 stoneage_enemy_weapon_runtime 的來源武器：
+
+- AXE：AttackNum 1
+- CLUB：AttackNum 1
+- SPEAR：來源 0，BATTLE_GetAttackCount 會修正為 1
+- BOW 400：AttackNum 1..3
+- BOW 2498：AttackNum 3..5
+- BOOMERANG：AttackNum 1
+- BOUNDTHROW：AttackNum 1
+- BREAKTHROW：AttackNum 1
+
+因此現行真正會因 fox + AttackNum 產生多段差異的是 Bow；其他遠距仍需要取消其專用 command / status 語意。
+
+### Fox + actual Bow
+
+固定原 C 的 RNG / target 順序：
+
+1. 先 RAND(actual ITEM_ATTACKNUM_MIN, MAX)
+2. 再由 BATTLE_TargetListSet 因「實際裝備是 Bow」做 RAND(0,1)，生成 aBowW 10 格序列
+3. 真正執行時 global gWeponType 已是 FIST，因此第一擊不是用 aDefList[0]，而是對原 COM2 做 BATTLE_TargetAdjust
+4. 第一擊後 k 由 0 變 1，才開始讀 aDefList[1]、[2]...
+5. 每個候選格若無效，BATTLE_TargetAdjust 會呼叫 BATTLE_DefaultAttacker，從對方存活 Entry 均勻 RAND 一名
+6. 每次正傷害在 BATTLE_Attack() 尾端除以 attack_max，最低 1
+7. 動作封包分支是 BH / FIST，不是 BB-w0
+
+V1.25 以 sourceFoxTargetAdjust / sourceFoxDefaultPlayerSideTarget 保留這個空格重抽行為，不把 bow list 的空格直接 skip。
+
+### Which rules still use the actual equipped item
+
+即使 fox 強制 global gWeponType=FIST，下列來源仍重新讀實際 CHAR_ARM：
+
+- BATTLE_GetAttackCount
+- BATTLE_TargetListSet 的 Bow 判定
+- BATTLE_GuardianCheck 的 BATTLE_IsThrowWepon
+- BATTLE_CounterCheckPlayer/Pet 的 BATTLE_IsThrowWepon
+- BATTLE_CriticalCheckPlayer 的 ITEM_CRITICAL
+- BATTLE_AttackSeq critical damage 內的 local gWeponType = BATTLE_GetWepon()
+
+因此 V1.25 不修改 unit.weaponType / throwWeapon 本體，而是只把 BATTLE_DuckCheck 對應的 outer weapon type 覆寫為 FIST。
+
+特別是 actual Bow：
+- global gWeponType 已不是 Bow，所以 BATTLE_DuckCheck 不再吃原 Bow 的 +20 / +20 回避加成
+- critical damage 仍因 local BATTLE_GetWepon()==Bow 而不加 CriDamageCalc 的額外防禦傷害
+- Guardian / Counter 仍因實際遠距武器而被阻止
+
+### Other actual ranged weapons
+
+- Boomerang：不再把 ATTACK 轉成 BATTLE_COM_BOOMERANG，不走 30% 橫掃；改走 FIST/BH 單目標
+- BoundThrow：改走 FIST/BH；現行 AttackNum=1
+- BreakThrow：改走 FIST/BH，且不建立 paralysis；現行 AttackNum=1
+
+### Regression targets
+
+- game.js syntax PASS
+- fox gate：ATTACK forceFist=true；GUARD/NONE 不阻擋也不 force
+- normal non-fox ranged behavior完全不變
+- fox + Bow：AttackNum RNG 在 Bow target-list RNG 之前
+- fox + Bow：第一擊使用原 COM2；後續從 aDefList[1] 開始
+- bow list 空／死格走 BATTLE_DefaultAttacker uniform fallback，而不是 skip
+- fox + Bow：sourceOuterWeaponType=FIST，所以 DuckCheck 不加 Bow +40%
+- actual Bow critical 判定／critical damage仍讀 actual weaponType=4
+- fox + Boomerang 不走 BOOMERANG 30% 橫掃
+- fox + BreakThrow 不做 paralysis
+- V1.24 BecomeFox lifecycle / 31% RNG regression 不回退
+- V1.18 Ultimate / death branch regression 不回退
