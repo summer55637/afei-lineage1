@@ -3792,27 +3792,34 @@ function performEnemyBattleModel(actor,unit,options,meta){
     if(target.kind==='pet'&&target.pet){
       r=enemyAttackPetResult(unit,target.pet);
     }else{
-      r=enemyAttackResult(unit,{guarding:playerGuardingActive});
+      r=resolveEnemyDirectAttackToPlayer(unit,{guarding:playerGuardingActive});
     }
-    enemyApplySkillHit(unit,target,r,label+'分身 '+(i+1)+'/'+sequence.length);
+    const actualTarget=enemyApplyDirectGuardianSkillHit(unit,target,r,label+'分身 '+(i+1)+'/'+sequence.length);
 
     let status=null;
-    if(spec.statusType&&r.damage>0&&battleStatusDescAlive(target)){
+    // fixed BATTLE_BattleModel_ATTACK：physical type 先把 iDefindex 換成 Guardian，
+    // 後面的死亡判定與 StatusAttackCheck / StatusTbl 全部使用真正 iDefindex。
+    if(spec.statusType&&r.damage>0&&battleStatusDescAlive(actualTarget)){
       const check=battleStatusChance(
-        {kind:'enemy',unit,unitId:unit.id},target,spec.statusType,
+        {kind:'enemy',unit,unitId:unit.id},actualTarget,spec.statusType,
         {perOffset:spec.effectHit,range:30,bai:1,forceGeneral:true}
       );
-      if(check.allowed&&check.success&&battleStatusApplyRaw(target,spec.statusType,spec.turns)){
+      if(check.allowed&&check.success&&battleStatusApplyRaw(actualTarget,spec.statusType,spec.turns)){
         status={applied:true,type:spec.statusType,per:check.per,turns:spec.turns};
-        // 原 BATTLE_BattleModel_ATTACK 在石化／魔障成功時會立即把該目標 COM1 清成 NONE。
-        // 同一個 5-hit 模組後續再次命中 Player 時，不能繼續沿用本回合 Guard。
-        if(target.kind==='player'&&(spec.statusType==='stone'||spec.statusType==='barrier'))playerGuardingActive=false;
-        addLog(battleStatusDescName(target)+' 陷入'+BATTLE_STATUS_NAMES[spec.statusType]+'（BattleModel 原檢定 '+check.per.toFixed(1)+'%）。','bad');
+        // 只有真正被狀態命中的 Player 才會失去本輪 GUARD；
+        // 若忠犬代擋後石化/魔障落在 Pet，主人 GUARD 仍保留。
+        if(actualTarget.kind==='player'&&(spec.statusType==='stone'||spec.statusType==='barrier'))playerGuardingActive=false;
+        addLog(battleStatusDescName(actualTarget)+' 陷入'+BATTLE_STATUS_NAMES[spec.statusType]+'（BattleModel 原檢定 '+check.per.toFixed(1)+'%）。','bad');
       }else{
         status={applied:false,type:spec.statusType,per:check.per,reason:check.reason||'roll'};
       }
     }
-    results.push({target:target.kind,r,status});
+    results.push({
+      target:target.kind,
+      actualTarget:actualTarget?.kind||target.kind,
+      guardianPetId:r?.guardianPetId||null,
+      r,status
+    });
   }
 
   // 原 BATTLE_COM_S_BATTLE_MODEL 直接呼叫 BATTLE_BattleModel() 後 break；每個 AttackObject
@@ -4826,6 +4833,21 @@ function performEnemyAttackMagic(actor,unit,options,meta){
     attIdx:magic.attIdx,targetRewrite:magic.targetRewrite,attackType:pattern.attackType
   };
 }
+function enemyDirectActualTarget(chosen,r){
+  if(r?.guardian&&chosen?.kind==='player'){
+    return {kind:'pet',pet:r.guardian,petId:r.guardian.id};
+  }
+  return chosen;
+}
+function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label){
+  const actual=enemyDirectActualTarget(chosen,r);
+  if(r?.guardian&&chosen?.kind==='player'){
+    addLog(r.guardian.name+' 發動忠犬，代替你承受 '+unit.name+' 的'+label+'。','pet');
+  }
+  enemyApplySkillHit(unit,actual,r,label);
+  return actual;
+}
+
 function performEnemyFirekill(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -4833,9 +4855,15 @@ function performEnemyFirekill(actor,unit,options,meta){
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
 
   // 原 battle.c：先以 FIXSTR*0.8 走 BATTLE_Attack_FIREKILL。
-  // 該專用 case 不進普通 BATTLE_Counter loop；DamageReact 在 BATTLE_DamageSub_FIREKILL 內被強制 NONE。
-  const physical=enemySkillTargetResult(unit,chosen,{guarding});
-  if(physical)enemyApplySkillHit(unit,chosen,physical,label+'物理段');
+  // BATTLE_Attack_FIREKILL 會在 AttackSeq 後把 defindex 真正換成 Guardian；
+  // 但 battle.c 緊接著的 BATTLE_MultiAttMagic_Fire 仍使用原始 defNo。
+  let physical;
+  if(chosen.kind==='pet'&&chosen.pet){
+    physical=enemySkillTargetResult(unit,chosen,{guarding:false});
+  }else{
+    physical=resolveEnemyDirectAttackToPlayer(unit,{guarding});
+  }
+  const physicalActual=physical?enemyApplyDirectGuardianSkillHit(unit,chosen,physical,label+'物理段'):chosen;
 
   // 隨後固定呼叫 BATTLE_MultiAttMagic_Fire(...,2,200)。該函式 MagicLv 固定 4。
   // 它仍會消耗一次 rand()%100 的 TrueMagic 檢定，但 _FIX_MAGICDAMAGE 下的 ×0.7 行在此專用函式已被註解，
@@ -4862,6 +4890,8 @@ function performEnemyFirekill(actor,unit,options,meta){
 
   return {
     kind:'skill',skillId:actor.skillId,target:chosen.kind,physical,
+    physicalActualTarget:physicalActual?.kind||chosen.kind,
+    physicalGuardianPetId:physical?.guardianPetId||null,
     fire:{fieldAttr:2,power:200,magicLv:4,trueRoll,attMagicLv,trueMagic,targets:magicResults}
   };
 }

@@ -9873,3 +9873,95 @@ FallGround 同樣保留 calc-only Guardian bug；後面的落馬條件仍以 cal
 - Counter Guardian=-2 不改
 - V1.01 AttackDamage bug、V1.00 normal Guardian substitution、V0.99 Charge、V0.98 StatusChange、V0.97 Loyalty 保留
 - save schema 21
+
+
+## V1.03 Firekill / BattleModel real Guardian substitution
+
+V1.03 繼續按 fixed `BATTLE_AttackSeq()` caller 分類，這次補的是「來源會真的把受傷者改成 Guardian」的專用路徑。
+
+固定來源：
+
+- `BATTLE_Attack_FIREKILL()`
+- `BATTLE_BattleModel_ATTACK()`
+- `battle.c` 的 `BATTLE_COM_S_FIREKILL` caller
+- fixed commit：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+### Firekill：物理段改忠犬，火魔法仍打原 target
+
+`BATTLE_Attack_FIREKILL()`：
+
+```c
+iWork = BATTLE_AttackSeq(..., &Guardian, ...);
+if (Guardian >= 0)
+    defindex = BATTLE_No2Index(battleindex, Guardian);
+...
+BATTLE_DamageSub_FIREKILL(attackindex, defindex, ...);
+```
+
+所以物理段忠犬成立時，HP／死亡／喚醒等都作用在忠犬。
+
+但 caller 隨後仍用原本的 `defNo`：
+
+```c
+BATTLE_Attack_FIREKILL(battleindex, attackNo, defNo);
+BATTLE_MultiAttMagic_Fire(battleindex, attackNo, defNo, 2, 200);
+```
+
+因此原版可以出現：
+
+- 火線獵殺物理段被忠犬真正擋下。
+- 接著固定 200 火魔法仍命中原主人。
+
+V1.03 保留這個分段 target，不把火魔法錯轉給忠犬。
+
+### BattleModel：狀態也跟著 Guardian
+
+`BATTLE_BattleModel_ATTACK()` 在 physical type 明確：
+
+```c
+iDefState = BATTLE_AttackSeq(..., &iGuardian, -1);
+if (iType & 0x00000004) {
+    if (BATTLE_TargetCheck(battleindex, iGuardian))
+        if (iGuardian >= 0)
+            iDefindex = BATTLE_No2Index(battleindex, iGuardian);
+}
+```
+
+來源註解也直接寫：「在這之後的 iDefindex 才是真正會受傷的目標」。
+
+後面這些都使用 `iDefindex`：
+
+- `BATTLE_DamageSub`
+- DamageWakeUp
+- death / ultimate
+- `BATTLE_StatusAttackCheck`
+- `StatusTbl[iEffect] = iTurn`
+- 石化／魔障等成功後清 COM1
+
+目前有實際 Enemy runtime 的 BattleModel 為：
+
+- 590 / 655「虎虎生威」：5 個物理 AttackObject + 石化
+- 689「Q雷分身術」：5 個物理 AttackObject + 魔障
+
+沒有需要額外猜測的 drunk parser。
+
+V1.03 因此把每個 Player AttackObject 改走正常 real-Guardian substitution；若忠犬代擋：
+
+- damage 扣 Pet。
+- status chance 用 Pet level / resist / stats。
+- stone / barrier 落在 Pet。
+- 主人的 `playerGuardingActive` 不會因 Pet 中狀態而被錯清。
+- Guardian 若被前一個 AttackObject 打死，後續 AttackObject 會自然回到 Player。
+
+### V1.03 regression
+
+- `game.js` syntax PASS
+- Firekill physical：Player dodge → GuardianCheck → actual Pet damage
+- Firekill magic：仍鎖原 chosen target
+- Firekill Guardian 死亡不把 magic target 改成 Pet
+- BattleModel physical Player target 支援 real Guardian substitution
+- BattleModel status target = actual Guardian target
+- BattleModel Guardian death 後下一物件重新判斷
+- BattleModel Pet 中 stone/barrier 不清 Player GUARD
+- V1.02 calc-only GBreak/FallGround、V1.01 AttackDamage bug、V1.00 normal Guardian 保留
+- save schema 21
