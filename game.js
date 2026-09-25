@@ -247,12 +247,21 @@ function sourceFinalizeOwnedPetsBattleExit(){
   }
   return {revived,petIds};
 }
+function sourceFinalizePlayerBattleExit(){
+  const pets=sourceFinalizeOwnedPetsBattleExit();
+  // fixed _BATTLE_Exit under _PETSKILL_BECOMEPIG:
+  // PLAYER CHAR_BECOMEPIG > -1 immediately restores the pre-pig appearance/compliance,
+  // regardless of how many seconds remain. net.c later turns the outside-battle 0 into -1.
+  const pigActive=!!state&&n(state.playerPigUntilMs)>0;
+  if(pigActive)state.playerPigUntilMs=0;
+  return Object.assign({pigCleared:pigActive},pets);
+}
 function clearEnemyBattleNoReward(){
   const hadBattle=!!enemy;
   if(enemy)releaseBattleEnemyRuntimeItems(enemy);
   // Full battle teardown is equivalent to the Player's final BATTLE_Exit.
   // Do not call this from mid-battle Pet BATTLE_Exit paths (LostEscape / Ultimate Pet).
-  if(hadBattle)sourceFinalizeOwnedPetsBattleExit();
+  if(hadBattle)sourceFinalizePlayerBattleExit();
   enemy=null;
   resetBattleStatuses();
 }
@@ -7419,8 +7428,9 @@ function winBattle(){
     state.mapId=maps.find(m=>!m.questZone)?.id||maps[0]?.id||state.mapId;
     addLog('PC團老大已被擊敗；依 event81_3f.arg 被傳送到 Floor 5580 (58,20)，可向老大取得悔過書。','good');
   }
-  const exitPets=sourceFinalizeOwnedPetsBattleExit();
+  const exitPets=sourceFinalizePlayerBattleExit();
   if(exitPets.revived)addLog('戰鬥離場：'+exitPets.revived+' 隻倒下的持有寵依原 BATTLE_Exit 回復到 HP 1。','pet');
+  if(exitPets.pigCleared)addLog('戰鬥離場：黑烏力化依原 _BATTLE_Exit 立即解除，不把剩餘秒數帶到戰鬥外。','good');
   enemy=null;
   resetBattleStatuses();
   levelCheck();
@@ -7436,8 +7446,9 @@ function defeat(){
   }
   addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
   releaseBattleEnemyRuntimeItems(enemy);
-  const exitPets=hadBattle?sourceFinalizeOwnedPetsBattleExit():{revived:0,petIds:[]};
+  const exitPets=hadBattle?sourceFinalizePlayerBattleExit():{revived:0,petIds:[],pigCleared:false};
   if(exitPets.revived)addLog('戰鬥離場：'+exitPets.revived+' 隻倒下的持有寵依原 BATTLE_Exit 回復到 HP 1。','pet');
+  if(exitPets.pigCleared)addLog('戰鬥離場：黑烏力化依原 _BATTLE_Exit 立即解除。','good');
   state.hp=state.maxHp;
   state.mp=state.maxMp;
   enemy=null;
@@ -8466,7 +8477,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.22 載入完成：玩家整場離開戰鬥時，所有 HP<=0 的持有寵依 _BATTLE_Exit 回復到 HP 1；死亡寵仍先跳過本場 EXP。','good');
+    addLog('V1.23 載入完成：_PETSKILL_BECOMEPIG 的戰鬥離場 lifecycle 已對齊；無論剩餘秒數多少，玩家 _BATTLE_Exit 都會立即解除黑烏力化。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

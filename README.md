@@ -11252,3 +11252,55 @@ fixed _BATTLE_Exit 對玩家自身死亡的 HP 處理不是本輪範圍；V1.22 
 - after final exit, activePetId explicit null stays null
 - capture / enemy escape / direct exit full teardown also runs cleanup
 - clearEnemyBattleNoReward with no active enemy does not mutate Pet HP
+
+
+## V1.23 BecomePig battle-exit lifecycle
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+本輪延續 V1.22 的 _BATTLE_Exit 稽核，修正 _PETSKILL_BECOMEPIG（黑烏力化）的最終離場語意。
+
+### net.c 每秒倒數
+
+fixed CONNECT_SysEvent_Loop 每秒檢查 CHAR_BECOMEPIG > -1：
+
+- 剩餘值 - 1 > 0：減 1
+- 剩餘值 - 1 <= 0：先設 CHAR_BECOMEPIG = 0
+- 只有 WORKBATTLEMODE == BATTLE_CHARMODE_NONE 時，才再設成 -1、compliance 並顯示失效
+
+因此倒數在戰鬥中到 0 時，狀態仍保留到戰鬥離場。現有 playerPigActive(enemy exists => expired timer still active) 保留。
+
+### _BATTLE_Exit 強制復原
+
+fixed _BATTLE_Exit 在 _PETSKILL_BECOMEPIG 開啟時：
+
+- CHAR_BECOMEPIG > -1
+- 且角色為 PLAYER
+
+就立刻恢復 BECOMEPIG_BBI 外觀並 CHAR_complianceParameter；不檢查剩餘秒數。
+
+所以即使還剩 150 秒，只要整場 battle exit，就立即解除。
+
+### V1.23
+
+新增 sourceFinalizePlayerBattleExit：
+
+1. 先執行 V1.22 的全部持有死亡 Pet HP=1 cleanup
+2. 若 playerPigUntilMs > 0，整場離場時立即清為 0
+
+完整 Player battle teardown 改走此 helper：
+
+- winBattle
+- defeat
+- clearEnemyBattleNoReward（捕獲結束、敵方全逃／直接離場、切地圖中止整場）
+
+Pet 自己 LostEscape / Ultimate mid-battle 不觸發 Player BecomePig cleanup。
+
+### Regression
+
+- pig timer positive + win => immediately clear
+- pig timer positive + defeat => immediately clear
+- pig timer positive + capture/enemy escape full teardown => clear
+- timer expires while battle continues => remains pig until exit
+- Pet LostEscape / Ultimate mid-battle => does not clear player pig
+- V1.22 dead-Pet HP=1 cleanup remains
