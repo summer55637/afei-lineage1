@@ -6976,7 +6976,7 @@ if ((pszP = strstr(pszOption, "攻%")) != NULL) {
 
 因為原傷害公式對 attack / defense 是非線性的，這兩種做法不能互換。
 
-### fixed data 的 6 種正權重 StatusChange
+### fixed data 的 7 種正權重 StatusChange
 
 重新掃 `stoneage_petskill_runtime.json` 與 `stoneage_enemy_ai.json`：
 
@@ -6986,15 +6986,16 @@ if ((pszP = strstr(pszOption, "攻%")) != NULL) {
 - 90 混亂攻擊：`亂 turn 3 攻%-30` — 50 個 Enemy
 - 100 泥醉攻擊：`醉 turn 3 攻%-30` — 22 個 Enemy
 - 110 催眠攻擊：`眠 turn 3 攻%-30` — 34 個 Enemy
+- 708 石化攻擊：`石 turn 9 攻%-30` — Enemy 5129 正權重使用
 
-六種全部是目前實際可抽到的 AI 行為。
+七種全部是目前實際可抽到的 AI 行為。
 
 V0.78 的 `enemyPrepareRoundAction()` 現在會在 EntrySort 前依 source option 建立本輪：
 
 - `roundAttack`
 - 若來源 option 有 `防%`，也同樣建立 `roundDefense`
 
-目前正權重六種 StatusChange 都只有攻擊修正，但保留來源的防禦 parser，未猜任何額外數值。
+目前正權重七種 StatusChange 都只有攻擊修正，但保留來源的防禦 parser，未猜任何額外數值。
 
 ### WEAKEN 與 PetSkill 的正確先後
 
@@ -7106,6 +7107,7 @@ V0.79 校正兩個 fixed data 已實際可達的跨回合 PetSkill：
 
 - 30 突擊：`1 攻%+90`，62 個正權重 Enemy。
 - 31 雙重突擊：`2 攻%+110`，23 個正權重 Enemy。
+- 605 三重突擊：`3 攻%+150`，fixed AI 中實際有正權重引用。
 - 120 地球一周：`攻%+90`，12 個正權重 Enemy。
 
 固定來源仍為：
@@ -7262,6 +7264,7 @@ V0.79 回歸確認這條仍保留。
 - dispatcher gap：0
 - Charge 30：62 個 Enemy
 - Charge 31：23 個 Enemy
+- Charge 605：fixed AI 正權重可達，3 回合後 +150%
 - EarthRound 120：12 個 Enemy
 - Charge release 使用 release-round FIX snapshot
 - EarthRound hidden round 跳過 WEAKEN/BARRIER compliance tick
