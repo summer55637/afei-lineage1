@@ -9291,3 +9291,118 @@ V0.96 改為：
 - V0.95 dead Entry sort / ComboCheck semantics 保留
 - V0.94 Enemy EscapeCheck int-average semantics 保留
 - save schema：21
+
+
+## V0.97 BATTLE_PetLoyalCheck core / low-loyalty action override
+
+V0.97 接回 fixed `BATTLE_PetLoyalCheck()` 的玩家出戰寵忠誠核心，並把它放回原 C 的 action lifecycle 時點。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`：`BATTLE_PetLoyalCheck()` / `BATTLE_PetRandomSkill()` / `ComboCheck2()`
+- `gmsv/src/battle/battle_event.c`：`BATTLE_LostEscape()`
+- `gmsv/src/char/char.c`：`CHAR_initcharWorkInt()` 的 `CHAR_WORKFIXAI`
+- `gmsv/src/char/pet.c`：捕獲時 7 格 PetSkill 原樣複製
+- `gmsv/data/petskill.txt`
+
+### FIXAI 最終仍是 int
+
+來源先把忠誠算進 int：
+
+```c
+ai = ((hostLV * FIXCHARM * 1.10) / (petLV * modai) * 100);
+if (ai > 100) ai = 100;
+ai += CHAR_VARIABLEAI * 0.01;
+...
+CHAR_setWorkInt(index, CHAR_WORKFIXAI, ai);
+```
+
+`ai += double` 的 compound assignment 最後仍寫回 C `int`，所以 V0.97 把 `VARIABLEAI*0.01` 加完後再次向 0 截整數。
+目前捕獲／任務寵的 VariableAI 初值仍是 0，但先把型別語意校正，避免未來接 VariableAI 後出現小數忠誠。
+
+### 忠誠門檻保留 strict <
+
+`Rand = RAND(1,100)`，來源是嚴格小於：
+
+- FIXAI >= 80：正常。
+- 70..79：roll < 10 才 TARGETRANDOM，也就是 9%。
+- 60..69：roll < 20，19%。
+- 50..59：roll < 35，34%。
+- 40..49：roll < 50，49%。
+- 30..39 / 20..29：roll < 70 時 RANDOMACT，69%；其餘正常。
+- 10..19：roll < 80 打主人（79%），否則隨機打敵方（21%）。
+- <10：roll < 60 打主人（59%），否則逃離本場（41%）。
+
+不改成直覺的 10/20/35/50/70/80/60%。
+
+### action lifecycle 時點
+
+fixed `BATTLE_Battling()` 的順序是：
+
+1. `BATTLE_StatusSeq()`
+2. `BATTLE_CanMoveCheck()`
+3. Surprise side 時跳過 LoyaltyCheck
+4. `BATTLE_PetLoyalCheck()`
+5. 讀取 COM，若是 COMBO 再跑 `ComboCheck2()`
+6. 真正執行 action
+
+因此 V0.97：
+
+- 睡眠／石化等不能動時不做忠誠亂數。
+- Surprise 首輪仍保留 V0.93 行為：confusion 可把原 NONE 改成 ATTACK，但 Surprise 分支本身不再做 LoyaltyCheck。
+- 非 Surprise 的混亂寵：先產生混亂目標，再做 LoyaltyCheck；低忠誠仍可覆蓋混亂指定。
+- Pet 是 combo leader 時：LoyaltyCheck 先跑。只要進非 NORMAL mode，就等價設 AIBAD，該 leader 的 `ComboCheck2()` 失敗；後面的 combo member 仍可在自己的 Entry 重新嘗試。
+- 被前一位 combo leader 吃掉的 follower 維持 V0.96：不會再跑 LoyaltyCheck。
+
+### 低忠誠 action
+
+V0.97 已接：
+
+- TARGETRANDOM：依原本 COM2 所在 side 用 `BATTLE_DefaultAttacker` 語意重抽。
+- OWNERATTACK：出戰寵直接普通攻擊主人。
+- ENEMYATTACK：隨機普通攻擊敵方。
+- ESCAPE：等價 `BATTLE_LostEscape()`：
+  - 寵物只退出本場，不刪除 pet。
+  - `CHAR_DEFAULTPET=-1` 等價為取消 `activePetId`。
+  - 魅力 -1，下限 0。
+  - `battlePetOutIds` 標成真正 `BATTLE_Exit`，後續 Escape 平均等 Entry 規則會排除。
+- RANDOMACT：
+  - 保留 `RAND(0,6)` raw slot。
+  - 保留 `BATTLE_PetRandomSkill()`「掃描 i、最後卻 PETSKILL_Use(iNum)」的舊索引語意。
+  - skill 0 `PETSKILL_None`：待機。
+  - skill 1 `PETSKILL_NormalAttack`：普通攻擊。
+  - 來源 PetSkill array 不存在時，不猜 C 的越界記憶體讀取。
+  - 忠犬 20／突擊 30／毒攻 60／酒醉攻 100 已辨識，但玩家側專用 guardian / charge / status lifecycle 尚未在 V0.97 偷換成普通攻擊；抽中時明確保留為 pending no-effect boundary，下一輪繼續接。
+
+### 原版 NOACT bug 保留
+
+`BATTLE_PetLoyalCheck()` 想用：
+
+```c
+if (CHAR_getCharHaveSkill(charaindex, i)) break;
+```
+
+檢查 Pet 是否有技能，但 `CHAR_getCharHaveSkill()` 回的是角色 haveSkill slot 指標，不是 `CHAR_getPetSkill()`。
+合法 index 0 幾乎直接非 NULL，因此 `PETAI_MODE_NOACT` 在一般合法 Pet 上不可達。
+
+V0.97 不把這個來源 bug「修正」成自創的無技能判斷。
+
+### V0.97 regression
+
+- `game.js` JavaScript syntax：PASS
+- FIXAI VariableAI compound-assignment 後 int truncation
+- 70/60/50/40 門檻維持 strict `<`
+- 30/20 RANDOMACT 69% 邊界
+- 10..19 OWNER 79% / ENEMY 21%
+- <10 OWNER 59% / ESCAPE 41%
+- Surprise branch 不做 LoyaltyCheck；confusion override 仍可行動
+- 非 Surprise confusion Pet 會先 StatusSeq 再 LoyaltyCheck
+- Pet combo leader AIBAD 可阻斷自己的 ComboCheck2
+- combo-consumed follower 不重複 LoyaltyCheck
+- LostEscape：退出本場、取消 active pet、charm -1、不刪 Pet
+- random skill 0 / 1 已接
+- random skill 20 / 30 / 60 / 100 明確 pending，不猜效果
+- V0.96 combo follower StatusSeq consumption 保留
+- V0.95 dead Entry sort / ComboCheck semantics 保留
+- save schema：21

@@ -5026,7 +5026,8 @@ function petFixedAi(pet){
   // CHAR_initcharWorkInt()：
   // modai<=0 時改 100；
   // ai=((hostLV*WORKFIXCHARM*1.10)/(petLV*modai))*100，指定給 int 時截斷；
-  // 然後 cap 100，再加 VARIABLEAI*0.01，最後再 clamp 0..100。
+  // 然後 cap 100，再做 ai += VARIABLEAI*0.01。ai 本身仍是 C int，
+  // 因此 compound assignment 後還會再截整數，最後才 clamp 0..100。
   // 本 web 尚無轉生系統；捕獲／任務寵也沒有 VariableAI 改寫，等價來源初值 0。
   const modAi=sourceModAi<=0?100:sourceModAi;
   const hostLv=Math.max(1,Math.trunc(n(state.level)));
@@ -5034,10 +5035,265 @@ function petFixedAi(pet){
   const fixCharm=n(state.charm);
   let ai=Math.trunc(((hostLv*fixCharm*1.10)/(petLv*modAi))*100);
   if(ai>100)ai=100;
-  ai+=n(pet.variableAi)*.01;
+  ai=Math.trunc(ai+n(pet.variableAi)*.01);
   if(ai<0)ai=0;
   if(ai>100)ai=100;
   return {ai,modAi,sourceModAi,hostLv,petLv,fixCharm,variableAi:n(pet.variableAi)};
+}
+
+function sourcePetEnemyTargetDesc(unit=targetEnemyUnit()){
+  return {kind:'enemy',unit:unit||null,unitId:unit?.id||null};
+}
+function sourcePetRandomSideTarget(side,pet){
+  if(side===1){
+    const list=targetableEnemyUnits().map(unit=>({kind:'enemy',unit,unitId:unit.id}));
+    return list.length?list[cRand(0,list.length-1)]:null;
+  }
+  // fixed BATTLE_DefaultAttacker() 只看該 side 的 BATTLE_TargetCheck；
+  // 自己也是合法 Battle Entry，所以低忠誠 TARGETRANDOM 在己方 side 可能抽到自己，
+  // 後續 normal attack 會因 defNo==attackNo 而 NoAction。
+  const list=[];
+  if(state.hp>0)list.push({kind:'player'});
+  if(pet&&petIsBattleActive(pet))list.push({kind:'self',pet,petId:pet.id});
+  return list.length?list[cRand(0,list.length-1)]:null;
+}
+function sourcePetRandomEnemyTarget(){
+  const list=targetableEnemyUnits();
+  if(!list.length)return null;
+  const unit=list[cRand(0,list.length-1)];
+  return {kind:'enemy',unit,unitId:unit.id};
+}
+function sourcePetConfusionIntent(statusTurn){
+  const attackerDesc=statusTurn?.desc;
+  if(!attackerDesc)return {confusion:true,targetDesc:null};
+  const pick=battleConfusionChooseTarget(attackerDesc);
+  return {confusion:true,targetDesc:pick?.target||null,side:pick?.side??null,fallback:!!pick?.fallback};
+}
+function sourcePetRandomSkillPlan(pet){
+  const skills=Array(7).fill(-1);
+  for(let i=0;i<7;i++){
+    if(Array.isArray(pet?.petSkills)&&i<pet.petSkills.length)skills[i]=Math.trunc(n(pet.petSkills[i]));
+  }
+
+  let iNum=cRand(0,6);
+  // fixed _FIXWOLF：PetID 981..984 抽到 skill 600 時重抽。
+  // 現有捕獲資料沒有可證明的 CHAR_PETID 欄；只有真的帶 petId 時才套，不由 tempNo 猜。
+  const petId=Number(pet?.petId);
+  if(Number.isFinite(petId)&&petId>=981&&petId<=984&&skills[iNum]===600){
+    let guard=0;
+    do{
+      iNum=cRand(0,6);
+      guard++;
+    }while(skills[iNum]===600&&guard<100);
+    if(skills[iNum]===600){
+      return {kind:'blocked',reason:'fixwolf-reroll-nonterminating',slot:iNum,skillId:600};
+    }
+  }
+
+  // fixed BATTLE_PetRandomSkill 有一個很舊的索引怪癖：
+  // 掃描 i 來計數 battle/all skill，最後 PETSKILL_Use() 卻傳原始 iNum slot。
+  // 對目前常見 [0,0,0,0,0,0,1] 等全 Battle skill 陣列，結果等價直接抽 slot iNum。
+  let i=0,j=0;
+  for(let k=0;k<50;k++,i++){
+    if(i>=7)i=0;
+    const scanId=skills[i];
+    const scanMeta=petSkillDb?.byId?.[String(scanId)]||null;
+    if(!scanMeta){
+      // 原 C 此處會 PETSKILL_getInt(-1, FIELD)，屬未定義記憶體讀取。
+      // 不把 UB 猜成任何固定技能效果。
+      return {kind:'blocked',reason:'source-invalid-petskill-array',scanSlot:i,scanSkillId:scanId,slot:iNum,skillId:skills[iNum]};
+    }
+    const field=Math.trunc(n(scanMeta.field));
+    if(field!==0&&field!==1)continue; // PETSKILL_FIELD_ALL / BATTLE
+    if(j<iNum){j++;continue;}
+
+    const skillId=skills[iNum];
+    const meta=petSkillDb?.byId?.[String(skillId)]||null;
+    if(!meta){
+      // PETSKILL_Use() 會因 array==-1 return FALSE；安全可確定為 NoAction。
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,targetDesc:sourcePetRandomEnemyTarget()};
+    }
+    return {kind:'skill',slot:iNum,skillId,meta,targetDesc:sourcePetRandomEnemyTarget()};
+  }
+  return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc:null};
+}
+function sourcePetLoyalCheck(actor,pet,intent){
+  const fixed=petFixedAi(pet);
+  if(!fixed){
+    return {changed:false,mode:'normal',sourceUnknownAi:true,ai:null,roll:null,intent};
+  }
+  const ai=Math.trunc(n(fixed.ai));
+  const roll=cRand(1,100);
+  let mode='normal';
+
+  if(ai>=80){
+    mode='normal';
+  }else if(ai>=70){
+    if(roll<10)mode='targetrandom';
+  }else if(ai>=60){
+    if(roll<20)mode='targetrandom';
+  }else if(ai>=50){
+    if(roll<35)mode='targetrandom';
+  }else if(ai>=40){
+    if(roll<50)mode='targetrandom';
+  }else if(ai>=30){
+    if(roll<70)mode='randomact';
+  }else if(ai>=20){
+    if(roll<70)mode='randomact';
+  }else if(ai>=10){
+    mode=roll<80?'ownerattack':'enemyattack';
+  }else{
+    mode=roll<60?'ownerattack':'escape';
+  }
+
+  if(mode==='normal')return {changed:false,mode,ai,roll,fixed,intent};
+
+  // BATTLE_PetLoyalCheck 對合法 PET 用 CHAR_getCharHaveSkill(pet,i) 判斷有無技能，
+  // 但該 API 對 0..6 回傳固定 haveSkill slot 指標，不是 pet skill 是否存在；
+  // 因而 PETAI_MODE_NOACT 幾乎不可達。這裡保留來源 bug，不自行新增「無技能就不動」。
+  const initial=intent?.targetDesc||sourcePetEnemyTargetDesc();
+  const initialSide=initial?.kind==='enemy'?1:0;
+  const type=(initial?.kind==='self')?1:0;
+
+  if(mode==='targetrandom'){
+    return {
+      changed:true,aibad:true,mode,ai,roll,fixed,
+      action:type===1?{kind:'none',reason:'self-or-guard'}:{kind:'attack',targetDesc:sourcePetRandomSideTarget(initialSide,pet)},
+      intent
+    };
+  }
+  if(mode==='randomact'){
+    if(type===1){
+      return {changed:true,aibad:true,mode,ai,roll,fixed,action:{kind:'none',reason:'self-target'},intent};
+    }
+    return {changed:true,aibad:true,mode,ai,roll,fixed,action:sourcePetRandomSkillPlan(pet),intent};
+  }
+  if(mode==='ownerattack'){
+    return {changed:true,aibad:true,mode,ai,roll,fixed,action:{kind:'attack',targetDesc:state.hp>0?{kind:'player'}:null},intent};
+  }
+  if(mode==='enemyattack'){
+    return {changed:true,aibad:true,mode,ai,roll,fixed,action:{kind:'attack',targetDesc:sourcePetRandomEnemyTarget()},intent};
+  }
+  if(mode==='escape'){
+    return {changed:true,aibad:true,mode,ai,roll,fixed,action:{kind:'escape'},intent};
+  }
+  return {changed:true,aibad:true,mode,ai,roll,fixed,action:{kind:'none'},intent};
+}
+function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  if(!targetDesc){
+    addLog(pet.name+' 沒有可攻擊的目標。','pet');
+    return {handled:true,noTarget:true};
+  }
+  if(targetDesc.kind==='self'){
+    addLog(pet.name+' 因忠誠不足把自己選成目標，原 BATTLE_TargetAdjust 之後因 defNo==attackNo 而沒有行動。','pet');
+    return {handled:true,selfTarget:true};
+  }
+  if(targetDesc.kind==='enemy'){
+    const target=targetDesc.unit&&n(targetDesc.unit.hp)>0?targetDesc.unit:null;
+    if(!target){
+      addLog(pet.name+' 沒有可攻擊的敵方目標。','pet');
+      return {handled:true,noTarget:true};
+    }
+    if(meta.confusion)addLog(pet.name+' 的混亂發作：改為普通攻擊 '+target.name+'。','pet');
+    const r=petAttackResult(pet,target);
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+    if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
+    return {handled:true,target:'enemy',targetUnitId:target.id,actualTargetUnitId:actual?.id||null,r};
+  }
+  if(targetDesc.kind==='player'){
+    if(state.hp<=0)return {handled:true,noTarget:true};
+    if(meta.confusion)addLog(pet.name+' 的混亂發作：改為普通攻擊你。','bad');
+    const attackerDesc={kind:'pet',pet,petId:pet.id};
+    const playerDesc={kind:'player'};
+    const attacker=petBattleView(pet);
+    const defender=playerBattleView();
+    const r=resolveNormalAttack(attacker,defender,{guarding:!!options.playerGuarding});
+    battleApplyPhysicalHit(attackerDesc,playerDesc,r,{confusion:!!meta.confusion});
+    if(petIsBattleActive(pet)&&state.hp>0&&!r.critical&&!r.guarded){
+      resolveConfusionCounterChain(attackerDesc,playerDesc,r,{allowPlayerCounter:!!options.allowPlayerCounter,playerGuarding:!!options.playerGuarding});
+    }
+    return {handled:true,target:'player',r};
+  }
+  return {handled:true,unsupportedTarget:true};
+}
+function sourcePerformPetLoyalAction(pet,loyalty,options={}){
+  const action=loyalty?.action||{kind:'none'};
+  const ai=loyalty?.ai;
+  const roll=loyalty?.roll;
+  if(loyalty?.mode==='targetrandom'){
+    addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
+  }else if(loyalty?.mode==='randomact'){
+    addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機行動。','pet');
+  }else if(loyalty?.mode==='ownerattack'){
+    addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），轉頭攻擊主人。','bad');
+  }else if(loyalty?.mode==='enemyattack'){
+    addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），仍改為隨機攻擊敵方。','pet');
+  }else if(loyalty?.mode==='escape'){
+    battlePetOutIds.add(pet.id);
+    if(state.activePetId===pet.id)state.activePetId=null;
+    state.charm=Math.max(0,Math.trunc(n(state.charm))-1);
+    addLog(pet.name+' 因忠誠過低離開本場戰鬥並取消出戰；魅力 -1。','bad');
+    return {handled:true,escaped:true};
+  }
+
+  if(action.kind==='attack'){
+    return sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true});
+  }
+  if(action.kind==='none'){
+    if(action.sourceUseFailed){
+      addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
+    }else{
+      addLog(pet.name+' 本回合沒有行動。','pet');
+    }
+    return {handled:true,none:true};
+  }
+  if(action.kind==='blocked'){
+    addLog(pet.name+' 的原 C 隨機技能流程碰到未定義的 PetSkill array 讀取；不猜記憶體結果，本回合不行動。','pet');
+    return {handled:true,sourceUndefinedBoundary:true};
+  }
+  if(action.kind==='skill'){
+    const meta=action.meta;
+    if(meta?.f==='PETSKILL_None'){
+      addLog(pet.name+' 隨機使用「'+(meta.n||'待機')+'」，本回合不行動。','pet');
+      return {handled:true,skillId:action.skillId,wait:true};
+    }
+    if(meta?.f==='PETSKILL_NormalAttack'){
+      addLog(pet.name+' 隨機使用「'+(meta.n||'攻擊')+'」。','pet');
+      return sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true,skillId:action.skillId});
+    }
+    // V0.97 只先接能完全沿用現有玩家側普通攻擊核心的 random skill。
+    // 忠犬/突擊/狀態攻擊需要玩家側 guardian/charge/status command lifecycle；
+    // 已辨識來源，但不能把它們偷換成普通攻擊。
+    addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；玩家側此 PetSkill lifecycle 尚未接入，保留原抽籤但本回合不猜效果、不替換成普通攻擊。','pet');
+    return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
+  }
+  return {handled:true,none:true};
+}
+function sourcePetPreCommandAction(actor,statusTurn,options={}){
+  if(actor?.kind!=='pet')return {handled:false};
+  const pet=activePet();
+  if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+
+  const confusionIntent=statusTurn?.confusionAttack?sourcePetConfusionIntent(statusTurn):null;
+  // V0.93：Surprise 的 NONE 可被 StatusSeq 的 confusion ATTACK 覆蓋；
+  // 但 fixed BATTLE_PetLoyalCheck 本身位於「非 Surprise side」分支，所以此時不再做忠誠判定。
+  if(sourceSurpriseSkipAction(actor)){
+    if(confusionIntent){
+      return sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true,surpriseOverride:true});
+    }
+    return {handled:true,surpriseSkip:true};
+  }
+
+  const intent=confusionIntent||{confusion:false,targetDesc:sourcePetEnemyTargetDesc()};
+  const loyalty=sourcePetLoyalCheck(actor,pet,intent);
+  if(loyalty.changed){
+    return Object.assign({loyalty},sourcePerformPetLoyalAction(pet,loyalty,options));
+  }
+  if(confusionIntent){
+    return Object.assign({loyalty},sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true}));
+  }
+  return {handled:false,loyalty};
 }
 function performEnemyAbduct(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
@@ -5608,14 +5864,24 @@ function captureTurn(manual=false){
       if(enemy)syncEnemyTarget();
       continue;
     }
-    if(statusTurn.confusionAttack){
-      performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
-      if(enemy)syncEnemyTarget();
-      if(state.hp<=0){defeat();return captured}
-      if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
-      continue;
+    if(actor.kind==='pet'){
+      const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
+      if(petPre.handled){
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return captured}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
+        continue;
+      }
+    }else{
+      if(statusTurn.confusionAttack){
+        performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return captured}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
+        continue;
+      }
+      if(sourceSurpriseSkipAction(actor))continue;
     }
-    if(sourceSurpriseSkipAction(actor))continue;
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
@@ -6135,14 +6401,24 @@ function attackTurn(){
       if(enemy)syncEnemyTarget();
       continue;
     }
-    if(statusTurn.confusionAttack){
-      performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
-      if(enemy)syncEnemyTarget();
-      if(state.hp<=0){defeat();return}
-      if(enemy&&!livingEnemyUnits().length){winBattle();return}
-      continue;
+    if(actor.kind==='pet'){
+      const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
+      if(petPre.handled){
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        continue;
+      }
+    }else{
+      if(statusTurn.confusionAttack){
+        performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        continue;
+      }
+      if(sourceSurpriseSkipAction(actor))continue;
     }
-    if(sourceSurpriseSkipAction(actor))continue;
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
       if(combo){
@@ -6217,14 +6493,24 @@ function guardTurn(){
       if(enemy)syncEnemyTarget();
       continue;
     }
-    if(statusTurn.confusionAttack){
-      performConfusionAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
-      if(enemy)syncEnemyTarget();
-      if(state.hp<=0){defeat();return}
-      if(enemy&&!livingEnemyUnits().length){winBattle();return}
-      continue;
+    if(actor.kind==='pet'){
+      const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
+      if(petPre.handled){
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        continue;
+      }
+    }else{
+      if(statusTurn.confusionAttack){
+        performConfusionAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        continue;
+      }
+      if(sourceSurpriseSkipAction(actor))continue;
     }
-    if(sourceSurpriseSkipAction(actor))continue;
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:true});
       if(combo){
