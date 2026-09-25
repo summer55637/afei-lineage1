@@ -1594,26 +1594,67 @@ function addMarefiaPet(){
   return p;
 }
 function marefiaPet(){return state.petBox.find(p=>Number(p.tempNo)===718)||null}
+function sourceMarefiaLevelLimitPenalty(pet,currentLevel){
+  if(!pet||Number(pet.tempNo)!==718||Math.trunc(n(currentLevel))%20!==0)return null;
+  const alloc=unpackPetAllocPoint(pet.allocPointPacked);
+  if(!alloc)return null;
+
+  // fixed CHAR_CheckPetDoLimitlevel()：718 在「升級前目前 level % 20 == 0」時，
+  // 先做 3 次 RAND(0,3)，每次讓對應 ALLOCPOINT -1，再 clamp >=0。
+  // 這發生在 CHAR_LevelUpCheck 內，早於 BATTLE_GetExpGold 後面的 CHAR_PetLevelUp loop。
+  const keys=['vital','str','tgh','dex'];
+  const before=Object.assign({},alloc);
+  const rolls=[];
+  for(let j=0;j<3;j++){
+    const k=cRand(0,3);
+    rolls.push(k);
+    const key=keys[k];
+    alloc[key]=Math.max(0,Math.trunc(n(alloc[key]))-1);
+  }
+  pet.allocPointPacked=packPetAllocPoint(alloc);
+  return {level:Math.trunc(n(currentLevel)),before,after:Object.assign({},alloc),rolls};
+}
+
 function awardPetExp(p,amount){
   if(!p)return;
   const isMarefia=Number(p.tempNo)===718;
   const maxLevel=isMarefia?Math.max(1,n(p.levelCap)||10):petServerLevelCap();
   p.exp=n(p.exp)+Math.max(1,Math.round(amount));
-  let upCount=0,growthCount=0;
+
+  // fixed BATTLE_GetExpGold 順序：
+  // 1) CHAR_LevelUpCheck 先把這次可升的所有 level 一口氣處理完；
+  // 2) 然後才 for(j=0;j<UpLevel;j++) CHAR_PetLevelUp + AI_FIX_PETLEVELUP。
+  let upCount=0;
+  const marefiaPenalties=[];
   while(p.level<maxLevel){
     const need=petExpToNext(p.level);
     if(need<=0||p.exp<need)break;
-    p.exp-=need;p.level++;upCount++;
+
+    // CHAR_CheckPetDoLimitlevel(pet, owner, level) 在 level++ 前執行。
+    // 單機版沒有不同 owner/轉手路徑，因此只接目前可達的 level%20 分支。
+    if(isMarefia){
+      const penalty=sourceMarefiaLevelLimitPenalty(p,p.level);
+      if(penalty)marefiaPenalties.push(penalty);
+    }
+
+    p.exp-=need;
+    p.level++;
+    upCount++;
+  }
+
+  let growthCount=0;
+  for(let j=0;j<upCount;j++){
     if(serverPetLevelUp(p))growthCount++;
-    // fixed BATTLE result loop：每次 CHAR_PetLevelUp 後緊接 AI_FIX_PETLEVELUP (+5*100)。
     sourcePetAddVariableAi(p,500);
   }
+
   if(isMarefia&&p.level>=maxLevel){
     const next=petExpToNext(p.level);
     if(next>0)p.exp=Math.min(p.exp,Math.max(0,next-1));
   }
   if(upCount){
-    addLog(p.name+' 升到 Lv.'+p.level+'（'+upCount+' 級）'+(growthCount?'，已套用原 CHAR_PetLevelUp 成長 '+growthCount+' 次。':'。'),'pet');
+    addLog(p.name+' 升到 Lv.'+p.level+'（'+upCount+' 級）'+(growthCount?'，已套用原 CHAR_PetLevelUp 成長 '+growthCount+' 次。':'。')
+      +(marefiaPenalties.length?'；瑪蕾菲雅跨 20 級倍數時已先套 CHAR_CheckPetDoLimitlevel 成長底值衰減 '+marefiaPenalties.length+' 次。':''),'pet');
     if(isMarefia&&p.level===maxLevel&&p.level<79)addLog('瑪蕾菲雅到達目前回憶門檻 Lv.'+maxLevel+'，可前往下一個記憶地點。','pet');
   }
 }
@@ -8399,7 +8440,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.20 載入完成：原 BATTLE_AddExpItem 的 getitem[3] carried-loot 池改在 Enemy 死亡當下處理，含 attack-list RAND 與滿格 50% 替換。','good');
+    addLog('V1.21 載入完成：瑪蕾菲雅 718 的 CHAR_CheckPetDoLimitlevel 20級倍數成長衰減與 BATTLE_GetExpGold 批次升級順序已接回原 C。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

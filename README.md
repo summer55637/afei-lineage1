@@ -11049,3 +11049,99 @@ Regression：
 - defeat/no-reward reset frees unclaimed battle-getitem indices
 - player/pet Combo uses allnum=2 RNG while still mapping to one owner pool
 - source getitem handling remains before Pet win AI
+
+
+## V1.21 Marefia CHAR_CheckPetDoLimitlevel / batch level-up order
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+本輪繼續沿 BATTLE_GetExpGold → CHAR_LevelUpCheck 往下補 Pet 升級 lifecycle。
+
+### 原始順序
+
+BATTLE_GetExpGold 對有 WORKGETEXP 的 Pet：
+
+1. BATTLE_GetExp(pet)
+2. UpLevel = CHAR_LevelUpCheck(pet, owner)
+3. 若 UpLevel > 0：
+   - for(j=0; j<UpLevel; j++)
+   - CHAR_PetLevelUp(pet)
+   - CHAR_PetAddVariableAi(pet, AI_FIX_PETLEVELUP)
+
+也就是「先一次算完整個 UpLevel，再做 UpLevel 次成長」，不是每升一級就立刻插一個 CHAR_PetLevelUp。
+
+一般 Pet 這兩種寫法目前核心四圍結果等價；718 的 _PET_LIMITLEVEL 特殊規則則不等價。
+
+### CHAR_CheckPetDoLimitlevel
+
+fixed version.h 已開啟 _PET_LIMITLEVEL。
+
+CHAR_LevelUpCheck 每次準備從目前 level 升到下一級前，對 Pet 呼叫：
+
+CHAR_CheckPetDoLimitlevel(petindex, owner, level)
+
+TempNo 718 瑪蕾菲雅在：
+
+current level % 20 == 0
+
+時會：
+
+- 連續 3 次 RAND(0,3)
+- 0 => VITAL -1
+- 1 => STR -1
+- 2 => TOUGH -1
+- 3 => DEX -1
+- 每項下限 0
+- pack 回 CHAR_ALLOCPOINT
+
+因此實際發生在：
+
+- Lv20 → 21 前
+- Lv40 → 41 前
+- Lv60 → 61 前
+
+來源 LIMITLEVEL=79，所以正常任務路徑不會進到 Lv80 → 81。
+
+### RNG / 多級順序
+
+這 3 次 RAND 發生在 CHAR_LevelUpCheck 內，而所有 CHAR_PetLevelUp 的 10 次 Param 分配 RNG + PETRANK growth RNG 都在 LevelUpCheck 完成後才開始。
+
+因此若一場戰鬥讓瑪蕾菲雅一次從 Lv19 升到 Lv22：
+
+- 先判 19→20
+- 判 20→21 時先扣 3 次 ALLOCPOINT
+- 再判 21→22
+- 最後才用「已扣過的 ALLOCPOINT」連續跑 3 次 CHAR_PetLevelUp
+
+V1.21 把 awardPetExp 改成同一順序，避免舊 Web 的「先做一次成長、再遇到 20 級門檻」造成 RNG 與能力值錯位。
+
+### 放置版回憶 levelCap 保留
+
+瑪蕾菲雅既有 Lv10 / 15 / 20 / 25 / ... / 75 / 79 回憶巡禮是依 ptalk01.arg EVENTRUN 節點做的可玩流程控制；V1.21 不取消這些關卡。
+
+所以只有在回憶已解鎖到可跨過 20 / 40 / 60 時，才會觸發 source 的 level%20 成長底值衰減。
+
+### Owner mismatch 分支暫不接
+
+CHAR_CheckPetDoLimitlevel 另有「Pet owner 與目前帶領玩家不同」時四圍各 RAND(2,10) 扣減的分支。
+
+目前純單機 Web 沒有寵物交易／轉手，也沒有第二玩家 owner identity 可達，因此 V1.21 不創造假的 owner mismatch；等對應系統真的存在時再接。
+
+### 舊存檔
+
+V1.21 不對已經跨過 20/40/60 的舊瑪蕾菲雅補抽歷史 RNG。
+
+原因是舊存檔沒有保存當時的 rand sequence，也可能已經發生過 V1.15 的死亡 ALLOCPOINT 懲罰；現在硬補會改變原本應有的 RNG 時序與 clamp 順序。
+
+只從 V1.21 之後「實際發生的新 level transition」按 source 規則處理，不猜歷史數值。
+
+### Regression targets
+
+- non-718 Pet：UpLevel batch order 不新增 limit penalty
+- 718 current level 20 / 40 / 60：升下一級前恰好 3 次 RAND(0,3)
+- 718 current level 10/15/25/...：不觸發 level%20 penalty
+- penalty 先改 allocPointPacked，之後才跑全部 UpLevel 次 serverPetLevelUp
+- 每次真正升級仍 AI_FIX_PETLEVELUP +500
+- 一次連升多級時所有 PetLevelUp 都在 LevelUpCheck phase 完成後執行
+- 現有 memory levelCap 流程保留
+- owner-mismatch 不在不可達的單機模型中猜實作
