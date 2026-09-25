@@ -2555,6 +2555,18 @@ function battleGuardAdjust(damage){
   else damage*=.50;
   return Math.trunc(damage);
 }
+function sourceBattleDuckTotal(attacker,defender,options={}){
+  // 原 BATTLE_DuckCheck 的實際順序：
+  // base -> gBattleDuckModyfy -> 酒醉 -> BOW +20 -> NoGuard -> BOW +20 -> ×100 / cap 75%。
+  // fixed ref 裡 BOW +20 明確重複兩次；V0.73 保留這個來源 bug，不自行去重。
+  let duck=battleDuckChance(attacker,defender);
+  duck+=n(options.duckBonusPercent)*100;
+  if(attacker?.drunk)duck+=cRand(20,30)*100;
+  if(Math.trunc(n(attacker?.weaponType))===4)duck+=20*100;
+  duck+=n(defender?.duckBonus)*100;
+  if(Math.trunc(n(attacker?.weaponType))===4)duck+=20*100;
+  return clamp(duck,1,7500);
+}
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge;
@@ -2565,12 +2577,7 @@ function resolveNormalAttack(attacker,defender,options={}){
       return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,skillDuck:true,skillDuckPower:power,skillDuckRoll:roll};
     }
   }
-  let duck=disableDodge?0:battleDuckChance(attacker,defender);
-  if(!disableDodge&&attacker?.drunk)duck=clamp(duck+cRand(20,30)*100,1,7500);
-  if(!disableDodge){
-    const bonus=n(options.duckBonusPercent)+n(defender?.duckBonus);
-    if(bonus!==0)duck=clamp(duck+bonus*100,1,7500);
-  }
+  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
 
@@ -2930,11 +2937,8 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
       };
     }
   }
-  let duck=disableDodge?0:battleDuckChance(attacker,originalView);
-  if(!disableDodge&&attacker?.drunk)duck=clamp(duck+cRand(20,30)*100,1,7500);
+  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,originalView,options);
   if(!disableDodge){
-    const bonus=n(options.duckBonusPercent)+n(originalView?.duckBonus);
-    if(bonus!==0)duck=clamp(duck+bonus*100,1,7500);
     if(cRand(1,10000)<=duck){
       return {
         damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
@@ -2945,7 +2949,9 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
 
   // 原 BATTLE_AttackSeq：先讓原目標做 DuckCheck，成功命中後才 GuardianCheck。
   // Guardian 接手後用 Guardian 自身防禦／會心／屬性結算，且不再做第二次閃避。
-  const guardian=enemyGuardianFor(target,options.attackerUnit||null);
+  // 原 BATTLE_GuardianCheck：攻擊者使用 BOW／BOOMERANG／BOUNDTHROW／BREAKTHROW 時，
+  // 忠犬／Guardian 直接無法代擋。這對混亂後 Enemy 打同側 Enemy 也同樣成立。
+  const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,options.attackerUnit||null);
   const actual=guardian||target;
   const actualDesc={kind:'enemy',unit:actual,unitId:actual.id};
   const actualGuarding=guardian
@@ -6052,7 +6058,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.72 載入完成：BATTLE_GetAttackCount、BOW 目標表／多發、BOOMERANG 30% 橫掃、BOUNDTHROW／BREAKTHROW 投擲指令與投石麻痺已接入。','good');
+    addLog('V0.73 載入完成：原 BATTLE_DuckCheck 的弓回避 +20 重複兩次（總 +40）已保留；所有投射武器亦依 BATTLE_GuardianCheck 禁止忠犬代擋。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
