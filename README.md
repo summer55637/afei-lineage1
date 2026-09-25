@@ -11604,3 +11604,128 @@ save schema 23 -> 24：
 - level-up from Lv1 adds 20; Lv2 adds 30, matching (oldLevel+1)*10
 - V1.26 player element gate / migration unchanged
 - V1.25 / V1.24 / V1.18 combat regression unchanged
+
+
+## V1.28 fixed setup.cf new-player baseline / _FIX_MAX_GOLD
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+V1.27 補回 defaultPlayer.h 的 DuelPoint 100 後，本輪繼續對帳 CHAR_createNewChar / CHAR_makeCharFromOptionAtCreate 與固定 gmsv/setup.cf。
+
+### 固定 build feature
+
+version.h 明確開啟：
+
+- _NEW_PLAYER_CF
+- _HELP_NEWHAND
+- _FIX_MAX_GOLD
+
+因此創角不能只看 defaultPlayer.h 的 GOLD=0 / TRANSMIGRATION=0；CHAR_makeCharFromOptionAtCreate 會用 setup.cf 覆寫。
+
+固定 setup.cf：
+
+- TRANS=1
+- LV=1
+- GOLD=30000
+- PETLV=1
+- ITEM1=24114
+- ITEM2..ITEM15 空
+- PET1..PET4 空
+
+### Fresh state
+
+V1.28 真正新建存檔改為：
+
+- level 1
+- transmigration 1
+- gold 30000
+- inventory Item 24114 ×1
+- DuelPoint 100 維持 V1.27
+- charm 60 維持 CHAR_createNewChar
+
+Item 24114 的「存在與 ID」由 setup.cf + _HELP_NEWHAND 唯一證明。
+固定 itemset6.txt 為舊編碼，而目前 generated item runtime 尚無 24114 可唯一解析的名稱／效果，因此 Web 只保存 ItemID 24114 的持有數，不猜名稱、功能，也不偽造 existing-item template。
+
+### normalizeState(null) 修正
+
+舊 normalizeState(null) 會把「沒有任何存檔」誤當 schema 0：
+
+- V1.27 DuelPoint migration 可能在 fresh 100 上再 +100
+- 更早的 charm migration 也可能在 fresh 60 上再加舊版補值
+
+V1.28 明確分流：
+
+- raw save 不存在：直接 return freshState()
+- raw save 存在：才進 legacy migration
+
+所以新角色不再吃任何歷史 migration。
+
+### 舊存檔 migration 邊界
+
+player transmigration 在 schema25 以前根本不存在，也沒有玩家轉生修改路徑。
+所以舊 Web 存檔可唯一判斷為「少了固定出生 TRANS=1」：
+
+- pre-schema25：transmigration = 1
+- schema25+：保留實際保存值
+
+但 GOLD 與 Item 24114 都是可變資產：
+
+- 石幣可能已取得、花費或被偷
+- Item 24114 可能已使用、丟棄或被偷
+
+因此 **舊存檔不追補 30,000 與 24114**，避免偽造歷史。
+若罕見舊存檔連 gold 欄都不存在，保留舊 Web 出生基準 0，不套新角色 30,000。
+
+### _FIX_MAX_GOLD
+
+fixed char_base.c：
+
+MaxGold = 1000000 + CHAR_TRANSMIGRATION * 1800000
+
+新增：
+
+- sourcePlayerTransmigration()
+- sourcePlayerMaxGold()
+
+目前 fixed starter TRANS=1，因此新角色金錢上限為 2,800,000。
+
+既有 BATTLE_StealMoney / 「捐獻」原先把 MaxGold 寫死成 1,000,000；V1.28 改為 sourcePlayerMaxGold(state)。
+
+### CaptureCheck 不修改
+
+本輪重新核對 fixed battle_event.c::BATTLE_CaptureCheck。
+
+它的 Lv+5 限制是：
+
+- CHAR_WORK_PickAllPet != TRUE
+- attacker LV + 5 < defender LV => FALSE
+
+這裡 **沒有 CHAR_TRANSMIGRATION 條件**。
+
+先前在其他寵物持有／交易程式看到的 TRANSMIGRATION <= 0 不能套進 CaptureCheck，因此 V1.28 明確不改現有捕獲 +5 規則。
+
+### 起始寵暫不猜
+
+CHAR_createNewChar 在 config PET slot 0 為 -1 時，會依 CHAR_LASTTALKELDER / hometown 選 EnemyID 1/2/3/4 之一做起始寵。
+
+目前 Web 尚未建立可一一對應的創角 hometown 選擇，因此 V1.28 不自行指定其中一隻。
+待 hometown / elder creation layer 接入後再照原碼補，不由名稱或常見版本猜。
+
+### Regression targets
+
+- game.js syntax PASS
+- freshState schema25
+- freshState transmigration=1
+- freshState gold=30000
+- freshState inventory 24114=1
+- normalizeState(null) 不跑 legacy migrations
+- fresh DuelPoint=100，不變 200
+- fresh charm=60，不變 70
+- legacy schema24 gold / inventory 原值完全保留
+- legacy schema24 不補 24114
+- legacy schema24 transmigration 精準補 1
+- schema25 transmigration 保存值保留
+- maxGold: trans0=1,000,000 / trans1=2,800,000 / trans5=10,000,000
+- BATTLE_StealMoney 使用 sourcePlayerMaxGold
+- CaptureCheck +5 規則不改
+- V1.27 DuelPoint 舊存檔 migration 仍只 +100 一次

@@ -431,16 +431,18 @@ function confirmPlayerElements(points=playerElementDraft){
 }
 function freshState(){
   return {
-    schemaVersion:24,
+    schemaVersion:25,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:100,
+    transmigration:1,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
     elements:null,playerElementsConfigured:false,
-    gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
+    gold:30000,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
-    inventory:{},
+    // fixed setup.cf + _HELP_NEWHAND: ITEM1=24114; exact item name/effect is not guessed.
+    inventory:{'24114':1},
     itemRuntime:freshItemRuntime(),
     quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
@@ -465,8 +467,16 @@ function migrateLegacyPets(raw,s){
 }
 function normalizeState(raw){
   const base=freshState();
-  const s=Object.assign(base,raw||{});
-  s.inventory=(raw&&raw.inventory&&typeof raw.inventory==='object')?raw.inventory:{};
+  // A missing save is a brand-new character, not a schema-0 legacy save.
+  // Returning here prevents historical migrations (e.g. old charm / DuelPoint repairs)
+  // from being applied on top of the fixed creation baseline.
+  if(!raw||typeof raw!=='object')return base;
+  const s=Object.assign(base,raw);
+  // Prior web versions started GOLD at 0. If an unusual legacy save omitted the field,
+  // preserve that historical web baseline instead of backfilling setup.cf's 30000.
+  if(!Object.prototype.hasOwnProperty.call(raw,'gold'))s.gold=0;
+  // Likewise, do not backfill the consumable starter Item 24114 into existing saves.
+  s.inventory=(raw.inventory&&typeof raw.inventory==='object')?raw.inventory:{};
   s.quest=Object.assign({},base.quest,raw?.quest||{});
   s.quest.event81=Object.assign({},base.quest.event81,raw?.quest?.event81||{});
   s.quest.event2=Object.assign({},base.quest.event2,raw?.quest?.event2||{});
@@ -565,6 +575,10 @@ function normalizeState(raw){
   }else{
     s.duelPoint=Math.max(0,Math.floor(n(s.duelPoint)));
   }
+  // V1.28: fixed setup.cf TRANS=1. Before schema25 the web had no player-level
+  // transmigration field or mutation path, so all existing saves are exactly missing this baseline.
+  if(n(raw?.schemaVersion)<25)s.transmigration=1;
+  else s.transmigration=Math.max(0,Math.trunc(n(s.transmigration)));
   if(n(raw?.schemaVersion)<14){
     const earned=Math.max(0,(Math.max(1,Math.floor(n(s.level)||1))-1)*3);
     s.skillPoints=Math.max(Math.max(0,Math.floor(n(s.skillPoints))),earned);
@@ -628,7 +642,7 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=24;
+  s.schemaVersion=25;
   delete s.pets;
   return s;
 }
@@ -5405,6 +5419,13 @@ function performEnemyToothCrushe(actor,unit,options,meta){
     equipmentCrushReachable,crushed:false
   };
 }
+function sourcePlayerTransmigration(target=state){
+  return Math.max(0,Math.trunc(n(target?.transmigration)));
+}
+function sourcePlayerMaxGold(target=state){
+  // fixed char_base.c under _FIX_MAX_GOLD.
+  return 1000000+sourcePlayerTransmigration(target)*1800000;
+}
 function performEnemyStealMoney(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -5429,7 +5450,7 @@ function performEnemyStealMoney(actor,unit,options,meta){
   let success=roll<per;
   let goldRoll=null,stolen=0;
   const goldBefore=Math.max(0,Math.trunc(n(state.gold)));
-  const maxGold=1000000; // _FIX_MAX_GOLD 已開；單機角色轉生數目前為 0 => 1,000,000。
+  const maxGold=sourcePlayerMaxGold(state);
   if(success&&chosen.kind==='player'){
     goldRoll=cRand(1,15);
     stolen=Math.trunc(goldBefore*goldRoll*.01);
@@ -8788,7 +8809,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.27 載入完成：原 defaultPlayer 的 CHAR_DUELPOINT 出生 100 已補回；舊存檔一次性 +100，升級加點規則維持原 CHAR_LevelUpCheck。','good');
+    addLog('V1.28 載入完成：固定 setup.cf 新角色出生為 1 轉／30,000 石幣／Item 24114；舊存檔只安全補 1 轉，且 _FIX_MAX_GOLD 改讀轉生數。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
