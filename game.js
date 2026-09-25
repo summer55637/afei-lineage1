@@ -2832,6 +2832,9 @@ function battleCounterChance(attacker,defender){
   let work=Math.trunc((big-small)/div);
   if(work<=0)work=0;
   let per=(root?Math.sqrt(work):work)*wari;
+  // fixed BATTLE_CounterCalc() 的回傳型別是 int。
+  // 函式內 per 雖是 float，但 return per 時會先截斷，再交給 Player/Pet CounterCheck 後續計算。
+  per=Math.trunc(per);
 
   if(attacker?.type==='player'){
     // BATTLE_CounterCheckPlayer：CriPer * CounterTbl * 0.1 + Luck。

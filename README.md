@@ -8432,3 +8432,122 @@ unit.roundDefense =
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+
+## V0.89 CounterCalc int return truncation
+
+V0.89 校正所有普通反擊共用的 `BATTLE_CounterCalc()` 回傳型別語意。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `BATTLE_CounterCalc()`
+- `BATTLE_CounterCheckPlayer()`
+- `BATTLE_CounterCheckPet()`
+
+來源函式宣告是：
+
+```c
+int BATTLE_CounterCalc( int attackindex, int defindex )
+```
+
+函式內雖然：
+
+```c
+float per;
+...
+per = (float)( (double)sqrt( Work ) );
+per *= wari;
+return per;
+```
+
+但回傳型別是 `int`，所以 `return per` 會先把 float 向 0 截斷。
+
+之後：
+
+```c
+CriPer = BATTLE_CounterCalc( attackindex, defindex );
+```
+
+或：
+
+```c
+per = BATTLE_CounterCalc( attackindex, defindex );
+```
+
+拿到的都已經是被截斷過的整數基礎反擊率。
+
+### V0.88 以前的差異
+
+web 已在 V0.82 正確處理：
+
+- FIXDEX 的 0.8 / 0.6 int compound assignment
+- `Work = (Big-Small)/divpara` 指派到 int 的截斷
+
+但漏掉了**函式本身回傳 int 的最後一層截斷**。
+
+例如 Pet 攻擊 Enemy：
+
+```text
+attacker FIXDEX = 101
+defender FIXDEX = 99
+```
+
+來源先做：
+
+```text
+Df_Dex = int(99 × 0.8) = 79
+Work = int((101 - 79) / 0.08) = 275
+sqrt(275) = 16.583...
+BATTLE_CounterCalc return int => 16
+```
+
+所以 Pet/Enemy 的後續反擊判定使用 16%，不是 16.583...%。
+
+V0.88 web 則把 16.583... 直接保留到 `RAND(1,10000)` 門檻，會多出來源不存在的反擊機率。
+
+V0.89 改成：
+
+```js
+let per=(root?Math.sqrt(work):work)*wari;
+per=Math.trunc(per);
+```
+
+而且截斷位置是在：
+
+- Player 的 CounterTbl / Luck 加成**之前**
+- Pet / Enemy 的 NoGuard counter bonus **之前**
+
+與原函式邊界一致。
+
+### 可達性
+
+這不是單一 PetSkill 的特殊路徑。
+
+`BATTLE_CounterCalc()` 是：
+
+- 玩家普通反擊
+- 寵物普通反擊
+- Enemy 普通反擊
+
+共用的基礎計算，因此只要武器／command 沒有禁止反擊、且 CounterCheck 成功條件可成立，就能實際走到這條路徑。
+
+### V0.89 regression
+
+- `game.js` JavaScript syntax：PASS
+- Counter `Work` int truncation 保留
+- `BATTLE_CounterCalc()` float `per` 在函式邊界新增 int truncation
+- Pet vs Enemy：FIXDEX 101 / 99 → base counter 16，不再是 16.583...
+- Player CounterTbl / Luck 在 base int return 後才套用
+- Pet / Enemy counter bonus 在 base int return 後才套用
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
+

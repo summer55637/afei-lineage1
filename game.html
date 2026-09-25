@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.88</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.89</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.88：</b>
-      校正疾速攻擊 SpeedyAttack 的防禦 -30% 整數截斷順序：原 C 會先把 FIXTOUGH × -0.30 指派到 int strdef，再與 FIXTOUGH 相加；web 不再把整個和式最後才截斷。
+      <b>V0.89：</b>
+      校正反擊率的函式回傳整數語意：原 C 的 BATTLE_CounterCalc() 宣告回傳 int，內部 float per 會在 return 時先截斷，再進玩家／寵物反擊判定；web 不再保留來源不存在的小數反擊率。
     </article>
   </main>
 
