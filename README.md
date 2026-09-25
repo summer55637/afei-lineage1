@@ -8348,3 +8348,87 @@ const criticalRaw=Math.trunc(baseCriticalRaw*criticalChanceMultiplier);
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+
+## V0.88 SpeedyAttack negative defense int truncation
+
+V0.88 校正正權重 Skill 542「疾速攻擊」在 `PETSKILL_SpeedyAttack()` 的防禦修正整數截斷順序。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/pet_skill.c`
+- `PETSKILL_SpeedyAttack()`
+
+來源對 `防%` 的有效處理是：
+
+```c
+fPer = (fPer / 100);
+strdef = CHAR_getWorkInt(charaindex, CHAR_WORKFIXTOUGH);
+strdef = (int)(strdef * fPer);
+CHAR_setWorkInt(
+    charaindex,
+    CHAR_WORKDEFENCEPOWER,
+    CHAR_getWorkInt(charaindex, CHAR_WORKFIXTOUGH) + strdef
+);
+```
+
+Skill 542 的 option 是：
+
+```text
+防%-30 敏%+30
+```
+
+這個來源函式只解析 `防%`；`敏%+30` 不會直接改寫 QUICK。疾速攻擊的 +30% 出手效果仍只來自 `BATTLE_DexCalc()` 的 command 專用排序公式。
+
+### V0.87 以前的差異
+
+原 C 的 `strdef` 是 `int`，因此負百分比會先對 delta 做向 0 截斷，再加回 FIXTOUGH。
+
+例如 FIXTOUGH = 101：
+
+- fixed C：`(int)(101 * -0.30) = -30`，最後防禦 = `101 - 30 = 71`
+- V0.87 web：`Math.trunc(101 + 101 * -0.30) = Math.trunc(70.7) = 70`
+
+兩者會在部分非整除防禦值產生 1 點實戰差異。
+
+V0.88 改成：
+
+```js
+const baseDefense = sourceFixDefense;
+unit.roundDefense =
+  baseDefense + Math.trunc(baseDefense * defensePct / 100);
+```
+
+也就是忠實保留「先截斷 delta，再相加」的 C 指派順序。
+
+### fixed data 可達性
+
+`data/generated/stoneage_enemy_ai.json` 已確認：
+
+- Skill 542「疾速攻擊」
+- Enemy 2537
+- positive weight 1
+
+因此這不是註解區塊或死路徑，而是真正可在目前 Enemy AI 戰鬥中抽到的差異。
+
+另外重新確認：
+
+- `PETSKILL_ToothCrushe` 裡的 `atoi(...)/100` 攻防敏 parser 位於 `/* ... */` 註解內，不執行。
+- `PETSKILL_Modifyattack` AI 階段同型 `atoi(...)/100` parser 也位於註解內；V0.85 修正的是實際可達的 `BATTLE_S_Modifyattack()` 傷害階段整數除法 bug，而不是這段註解碼。
+
+### V0.88 regression
+
+- `game.js` JavaScript syntax：PASS
+- SpeedyAttack 防禦修正：`base + trunc(base * pct / 100)`
+- FIXTOUGH 101、-30%：fixed / web 都得到 71
+- SpeedyAttack QUICK 仍不直接增加
+- `roundDexMode='speedy'` 保留，`BATTLE_DexCalc()` 專用 +30% 排序保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack integer-division / base attribute semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21

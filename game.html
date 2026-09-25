@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.87</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.88</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.87：</b>
-      校正浴血狂襲 DamageToHp2 的會心率 30% 強化：原 C 的 perCri 是 int，×1.3 後會先截斷再進 RAND(1,10000) 比較；web 不再保留來源不存在的小數會心門檻。
+      <b>V0.88：</b>
+      校正疾速攻擊 SpeedyAttack 的防禦 -30% 整數截斷順序：原 C 會先把 FIXTOUGH × -0.30 指派到 int strdef，再與 FIXTOUGH 相加；web 不再把整個和式最後才截斷。
     </article>
   </main>
 

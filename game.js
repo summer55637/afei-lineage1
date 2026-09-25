@@ -2389,7 +2389,10 @@ function enemyPrepareRoundAction(unit,action){
     unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_SpeedyAttack'){
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
-    unit.roundDefense=Math.trunc(n(unit.roundDefense)+n(unit.roundDefense)*defensePct/100);
+    const baseDefense=sourceFixDefense;
+    // fixed PETSKILL_SpeedyAttack：先把 FIXTOUGH * fPer 指派到 int strdef，
+    // 再做 FIXTOUGH + strdef。負百分比不能把整個和式最後才 trunc。
+    unit.roundDefense=baseDefense+Math.trunc(baseDefense*defensePct/100);
     // PETSKILL_SpeedyAttack() 本身沒有改 QUICK，但 BATTLE_DexCalc 對此 command
     // 另有 work=(WORKQUICK+20); dex=work+work*0.3 的專用排序公式。
     unit.roundDexMode='speedy';
