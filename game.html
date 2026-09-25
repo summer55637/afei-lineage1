@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.31</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.32</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.31：</b>
-      對齊 fixed battle_ai.c 的 Enemy 選目標 RNG：HP／STR／DEX／相剋屬性模式即使只剩 1 個候選仍保留 RAND(0,rn)；TARGET_LEADER 在目前無組隊系統下也不再把單機玩家直接視為隊長。
+      <b>V1.32：</b>
+      對齊 EarthRound／隱身與 TargetAdjust：隱身中的出戰寵仍會進 Enemy AI 候選，但實際執行一般攻擊時會被 TargetCheck 擋下，再由 DefaultAttacker 依原 RNG 改抓目前可攻擊目標；弓與迴旋標保留原 C 的特殊選目標流程。
     </article>
   </main>
 

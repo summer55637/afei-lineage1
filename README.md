@@ -12006,3 +12006,45 @@ battle_ai.c 對敵方每個 BATTLE_ENTRY：
 - targetType 4：若全部未入選，fallback ALL
 - EnemyID1798 / TempNo905 現行兩條 Floor7000 路線保留 source HP_MAX RNG 時序
 - schema 27 / V1.30 creation gate / V1.29 starter Pet regressions unchanged
+
+
+## V1.32 EarthRound hidden target / BATTLE_TargetAdjust
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+本輪確認 Enemy AI 初選目標與真正執行攻擊是兩個不同階段。原 `battle_ai.c / BATTLE_ai_normal()` 建 target[] 時只排除無效 index、`CHAR_ISDIE` 與 `BATTLE_CHARMODE_RESCUE`，沒有檢查 `CHAR_ISATTACKED`。因此玩家出戰 Pet 即使進入 EarthRound 隱身，仍保留在 TARGET_ALL / TARGET_PET / TARGET_LEADER 候選中，也仍參與 V1.31 已對齊的 selectMode 與 RNG 次序。
+
+原 `battle_event.c / BATTLE_EarthRoundHide()` 會把 `CHAR_ISATTACKED` 設為 0，並把 COM1 設成 `BATTLE_COM_S_EARTHROUND0`，但不會把 Battle Entry 移出戰場。因此 AI 可以先把隱身 Pet 寫進 COM2；真正執行一般非 BOW 攻擊時，`BATTLE_TargetAdjust()` 再透過 `BATTLE_TargetCheck()` 擋掉該 Pet，接著只呼叫 `BATTLE_DefaultAttacker()` 在目前合法目標中 `RAND(0,cnt-1)` 重選。
+
+TargetAdjust 不會重新執行 Enemy AI 的 targetType / selectMode，也不會重新消耗 `RAND(0,rn)` 或 TARGET_LEADER 的 `RAND(0,2)`。即使只剩玩家一個合法目標，DefaultAttacker 仍保留來源的 `RAND(0,0)`。
+
+Web 現已拆成：
+
+- `enemyChooseTarget()`：AI 初選；EarthRound 隱身 Pet 仍在候選
+- `enemyActorCommandTarget()`：保存原 COM2，不先驗證
+- `enemyActorTarget()`：對應 BATTLE_TargetAdjust；COM2 無效才走 `sourceEnemyDefaultAttacker()`
+
+同步對齊來源特例：
+
+- BOW：不先跑 TargetAdjust；由原 COM2 建 aBowW，逐 slot 以 TargetCheck 跳過 EarthRound 目標
+- BOOMERANG：保留原 COM2 所在五格列；整列沒有合法目標才用 DefaultAttacker 隨機換列，不再重新跑 Enemy AI
+- BOUNDTHROW / BREAKTHROW 與非 BOW 連續段：每個後續段依原 aDefList 還原原 COM2，再跑一次 TargetAdjust
+- CHARGE / EarthRound 起手：只保存原 COM2，留到釋放攻擊時依攻擊路徑驗證
+- GYRATE：直接依原 COM2 所在列掃 TargetCheck，不套泛用 TargetAdjust
+- FIREKILL：COM2 無效／EarthRound 時從同 side 由低 slot 找第一個合法目標，不使用隨機 DefaultAttacker
+
+本輪不改存檔 schema，仍為 27。
+
+### V1.32 regression targets
+
+- game.js syntax PASS
+- EarthRound hidden Pet 仍進 Enemy AI candidates
+- TARGET_PET / TARGET_ALL / TARGET_LEADER 的 AI RNG 不因隱身提前消失
+- non-BOW COM2 指到 hidden Pet：TargetAdjust 改走 DefaultAttacker，不重跑 Enemy AI
+- DefaultAttacker 單一候選仍消耗 RAND(0,0)
+- BOW raw COM2 / aBowW 次序保留，hidden slot 由 TargetCheck 跳過
+- BOOMERANG hidden-only row 改由 DefaultAttacker 換列
+- BOUNDTHROW / BREAKTHROW / RENZOKU 後續段逐段 TargetAdjust
+- EarthRound / CHARGE release 保留原 COM2 lifecycle
+- GYRATE / FIREKILL source exception 保留
+- schema 27 / V1.31 target RNG / V1.30 creation / V1.29 starter Pet regressions unchanged

@@ -3390,7 +3390,10 @@ function enemyChooseTarget(unit){
   const spec=enemyAiAttackSpec(unit),all=[];
   if(state.hp>0)all.push(battleTargetSnapshot('player'));
   const pet=activePet();
-  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))all.push(battleTargetSnapshot('pet',pet));
+  // fixed battle_ai.c builds the Enemy AI candidate list without checking CHAR_ISATTACKED.
+  // EarthRound hide clears CHAR_ISATTACKED, but the hidden battle entry still participates in
+  // targetType/selectMode selection and therefore still consumes the same source RNG here.
+  if(pet&&petIsBattleActive(pet))all.push(battleTargetSnapshot('pet',pet));
   if(!all.length)return null;
   let candidates;
   if(spec.targetType===2)candidates=all.filter(x=>x.kind==='player');
@@ -3431,14 +3434,49 @@ function enemyChooseTarget(unit){
   if(cRand(0,spec.rn)===0)return candidates[cRand(0,candidates.length-1)];
   return selected;
 }
-function enemyActorTarget(actor,unit){
+function enemyActorCommandTarget(actor){
+  // Raw CHAR_WORKBATTLECOM2 equivalent. Do not validate it here: several source commands
+  // (EarthRound start, Bow target-list construction, Boomerang row choice) intentionally
+  // preserve the originally selected slot even when it later becomes untargetable.
   if(actor?.targetKind==='pet'){
     const pet=state.petBox.find(p=>p.id===actor.targetPetId);
-    if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))return battleTargetSnapshot('pet',pet);
-  }else if(actor?.targetKind==='player'&&state.hp>0){
-    return battleTargetSnapshot('player');
+    return pet?battleTargetSnapshot('pet',pet):null;
   }
-  return enemyChooseTarget(unit);
+  if(actor?.targetKind==='player')return battleTargetSnapshot('player');
+  return null;
+}
+function sourceEnemyTargetCheck(target){
+  // fixed BATTLE_TargetCheck: alive / present plus CHAR_ISATTACKED.
+  // In this Web model EarthRound hidden == CHAR_ISATTACKED false.
+  if(target?.kind==='player')return state.hp>0;
+  if(target?.kind==='pet'){
+    return !!target.pet&&petIsBattleActive(target.pet)&&!sourcePlayerPetHidden(target.pet);
+  }
+  return false;
+}
+function sourceEnemyDefaultAttacker(){
+  // fixed BATTLE_DefaultAttacker walks battle slots in order, retains only TargetCheck-valid
+  // entries, then always consumes RAND(0,cnt-1) -- including RAND(0,0).
+  const list=[];
+  if(state.hp>0)list.push(battleTargetSnapshot('player'));
+  const pet=activePet();
+  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))list.push(battleTargetSnapshot('pet',pet));
+  if(!list.length)return null;
+  return list[cRand(0,list.length-1)];
+}
+function sourceEnemyFirstTargetablePlayerSide(){
+  // FIREKILL is a source exception: on an invalid/EarthRound COM2 it scans the side from
+  // the lowest slot and takes the first TargetCheck-valid entry; it does not randomize.
+  if(state.hp>0)return battleTargetSnapshot('player');
+  const pet=activePet();
+  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))return battleTargetSnapshot('pet',pet);
+  return null;
+}
+function enemyActorTarget(actor,unit){
+  // fixed BATTLE_TargetAdjust: validate the stored COM2 once; if invalid, call
+  // BATTLE_DefaultAttacker. Never rerun battle_ai.c targetType/selectMode here.
+  const commandTarget=enemyActorCommandTarget(actor);
+  return sourceEnemyTargetCheck(commandTarget)?commandTarget:sourceEnemyDefaultAttacker();
 }
 function battleDuckChance(attacker,defender){
   // fixed BATTLE_DuckCheck：At_Dex / Df_Dex / Df_Luck 都是 int。
@@ -4155,6 +4193,10 @@ function sourceEnemyTargetFromBattleSlot(slot){
   }
   return null;
 }
+function sourceEnemyTargetableFromBattleSlot(slot){
+  const target=sourceEnemyTargetFromBattleSlot(slot);
+  return sourceEnemyTargetCheck(target)?target:null;
+}
 function sourceFoxPlayerSideTargetFromBattleSlot(slot){
   const no=Math.trunc(Number(slot));
   if(no===0&&state.hp>0)return battleTargetSnapshot('player');
@@ -4249,7 +4291,9 @@ function sourceBreakthrowParalysis(unit,hit){
   return {attempted:true,check,applied};
 }
 function performEnemyBowWeaponAttack(actor,unit,options={}){
-  const chosen=enemyActorTarget(actor,unit);
+  // Source BOW skips BATTLE_TargetAdjust. aBowW is built from raw COM2, then every slot is
+  // gated by BATTLE_TargetCheck; an EarthRound-hidden pet therefore shapes the list but is skipped.
+  const chosen=enemyActorCommandTarget(actor);
   if(!chosen)return null;
   const overrideMax=Number(options.attackMaxOverride);
   const attackMax=Number.isFinite(overrideMax)&&overrideMax>0?Math.trunc(overrideMax):sourceEnemyBattleAttackMax(unit);
@@ -4260,7 +4304,7 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
   let attackCount=0;
   for(const slot of plan.slots){
     if(slot<0)break;
-    const target=sourceEnemyTargetFromBattleSlot(slot);
+    const target=sourceEnemyTargetableFromBattleSlot(slot);
     if(!target)continue;
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)continue;
@@ -4278,13 +4322,19 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
   };
 }
 function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
-  let chosen=enemyActorTarget(actor,unit);
-  if(!chosen)return null;
+  // fixed BATTLE_COM_BOOMERANG starts from raw COM2's five-slot row.
+  // It does not rerun Enemy AI when that row becomes invalid.
+  let chosen=enemyActorCommandTarget(actor);
   let defNo=sourceEnemyCommandTargetBattleSlot(actor,chosen);
+  if(defNo<0){
+    chosen=sourceEnemyDefaultAttacker();
+    if(!chosen)return null;
+    defNo=sourceEnemyTargetBattleSlot(chosen);
+  }
   let row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
-  const rowHasTarget=r=>r>=0&&r<SOURCE_BOOMERANG_VS_TBL.length&&SOURCE_BOOMERANG_VS_TBL[r].some(slot=>!!sourceEnemyTargetFromBattleSlot(slot));
+  const rowHasTarget=r=>r>=0&&r<SOURCE_BOOMERANG_VS_TBL.length&&SOURCE_BOOMERANG_VS_TBL[r].some(slot=>!!sourceEnemyTargetableFromBattleSlot(slot));
   if(!rowHasTarget(row)){
-    chosen=enemyChooseTarget(unit);
+    chosen=sourceEnemyDefaultAttacker();
     if(!chosen)return null;
     defNo=sourceEnemyTargetBattleSlot(chosen);
     row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
@@ -4297,7 +4347,7 @@ function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
   const order=SOURCE_BOOMERANG_VS_TBL[row].slice().reverse(); // Enemy myside==1：k=4, j=-1
   const hits=[];
   for(const slot of order){
-    const target=sourceEnemyTargetFromBattleSlot(slot);
+    const target=sourceEnemyTargetableFromBattleSlot(slot);
     if(!target)continue;
     const hit=enemyWeaponApplyHit(unit,target,options,baseOptions);
     if(hit)hits.push(Object.assign({battleSlot:slot},hit));
@@ -4328,13 +4378,9 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     if(afterHit)hit.afterHit=afterHit(hit,target);
     hits.push(Object.assign({paralysis},hit));
     if(i+1>=attackMax||n(unit.hp)<=0)break;
-    // 非 BOW 的 aDefList 原本重複 COM2；目標倒下後才由 BATTLE_TargetAdjust 改抓同側存活目標。
-    if(hit.target==='player'&&state.hp<=0){
-      const pet=activePet();
-      target=pet&&petIsBattleActive(pet)?battleTargetSnapshot('pet',pet):null;
-    }else if(hit.target==='pet'&&!petIsBattleActive(hit.pet)){
-      target=state.hp>0?battleTargetSnapshot('player'):null;
-    }
+    // Non-BOW TargetListSet prefilled every later aDefList entry with the original COM2.
+    // Each later segment writes that raw slot back to COM2 and runs BATTLE_TargetAdjust again.
+    target=enemyActorTarget(actor,unit);
   }
   const type=Math.trunc(n(unit.weaponType));
   return {
@@ -4514,7 +4560,7 @@ function enemyChargeSpec(meta){
 }
 function performEnemyChargeAttack(actor,unit,options,meta){
   const spec=enemyChargeSpec(meta);
-  const chosen=enemyActorTarget(actor,unit);
+  const chosen=enemyActorCommandTarget(actor);
   unit.chargeState={
     remaining:Math.max(0,spec.turns-1),
     attackPct:spec.attackPct,
@@ -4911,7 +4957,8 @@ function performEnemySonic(actor,unit,options,meta){
   return {kind:'skill',skillId:actor.skillId,results};
 }
 function performEnemyGyrate(actor,unit,options,meta){
-  const chosen=enemyActorTarget(actor,unit);
+  // GYRATE derives its five-slot row directly from raw COM2 and then TargetChecks that row.
+  const chosen=enemyActorCommandTarget(actor);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
   // 攻擊修正已在 enemyPrepareRoundAction() 依當輪 FIXSTR 套好。
@@ -5775,7 +5822,10 @@ function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label){
 }
 
 function performEnemyFirekill(actor,unit,options,meta){
-  const chosen=enemyActorTarget(actor,unit);
+  // FIREKILL does not call TargetAdjust: invalid / EarthRound COM2 falls back to the first
+  // TargetCheck-valid slot on the same side, with no random draw.
+  let chosen=enemyActorCommandTarget(actor);
+  if(!sourceEnemyTargetCheck(chosen))chosen=sourceEnemyFirstTargetablePlayerSide();
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const label=meta?.n||'火線獵殺';
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
@@ -7267,7 +7317,8 @@ function performEnemyFallGround(actor,unit,options,meta){
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,fallRoll,fallSuccess};
 }
 function performEnemyEarthRoundStart(actor,unit,options,meta){
-  const chosen=enemyActorTarget(actor,unit);
+  // BATTLE_EarthRoundHide does not validate COM2; it only clears CHAR_ISATTACKED and keeps COM2.
+  const chosen=enemyActorCommandTarget(actor);
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
   unit.earthRoundState={
     hidden:true,
@@ -7464,16 +7515,15 @@ function performEnemyContinuation(actor,unit,options,meta){
 
   // BOOMERANG 不會被前置 ATTACK-only switch 轉成 BATTLE_COM_BOOMERANG，
   // 因而和近戰相同：固定目標連續 N 段、每段 /N；最後一次結果才決定 Counter loop。
-  let chosen=enemyActorTarget(actor,unit);
+  let chosen=null;
   let lastResult=null,lastChosen=null,hits=0;
   for(let step=0;step<count;step++){
     if(!enemy||unit.hp<=0||state.hp<=0)break;
 
-    if(!chosen
-      ||(chosen.kind==='pet'&&(!chosen.pet||!petIsBattleActive(chosen.pet)))
-      ||(chosen.kind==='player'&&state.hp<=0)){
-      chosen=enemyActorTarget(actor,unit);
-    }
+    // TargetListSet filled non-BOW aDefList with the original COM2; every segment restores
+    // that slot and executes TargetAdjust. If the raw target is hidden/dead, each segment
+    // therefore consumes its own BATTLE_DefaultAttacker RAND.
+    chosen=enemyActorTarget(actor,unit);
     if(!chosen)break;
 
     let r;
