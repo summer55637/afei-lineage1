@@ -6321,3 +6321,294 @@ V0.74 同樣在 `sourcePerformCombo()` 對後續成員呼叫目前等價的 `pro
 
 V0.74 至此把普通攻擊從「每個 Entry 各自執行」推進到原 C 的排序後合擊編組與合擊結算流程。
 
+
+
+## V0.75 ranged PetSkill / shared weapon loop
+
+V0.75 不是再新增一種武器，而是修正「PetSkill 已經進原 battle.c 共用物理攻擊區後，仍必須服從目前 CHAR_ARM」這一層。
+
+來源固定：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+
+### 為什麼 V0.72 還不夠
+
+V0.72 已讓普通 ATTACK 正確使用：
+
+- BOW / `aBowW`
+- BOOMERANG
+- BOUNDTHROW
+- BREAKTHROW
+- `BATTLE_GetAttackCount()`
+
+但原 C 有一批 PetSkill 並不是自己完成傷害，而是先設定：
+
+- command
+- attack / defense modifier
+- status / attack count
+
+最後仍落入 battle.c 的同一個 weapon attack loop。
+
+因此同一個 Skill 若 Enemy 手上是弓，不能被 web 簡化成「固定打一個目標一次」。
+
+### fixed data 的實際可達案例
+
+重新掃 `stoneage_enemy_ai.json` 的 STYLE 與正權重 Skill，確認這不是理論分支。
+
+#### Enemy 961
+
+- `STYLE=4`
+- STYLE 4 → Item 400 小的弓箭
+- Item 400 → BOW
+- AttackNum = **1～3**
+
+正權重：
+
+- 61 猛毒攻擊
+- 80 石化攻擊
+- 90 混亂攻擊
+- 100 酒醉攻擊
+- 110 催眠攻擊
+
+五個全部是：
+
+`PETSKILL_StatusChange`
+
+所以原服確實存在：
+
+**狀態攻擊 + 弓 1～3 發 + aBowW 多目標**
+
+的可達組合。
+
+#### Enemy 2332
+
+- `STYLE=4`
+- Item 400 BOW
+
+正權重包含：
+
+- 13 T五段攻擊 → `PETSKILL_ContinuationAttack`
+
+原 `BATTLE_COM_S_RENZOKU` 會把：
+
+```text
+attack_max = 技能段數
+gDamageDiv = 技能段數
+```
+
+之後仍進同一 BOW target-list loop。
+
+因此五段攻擊拿弓時不是對同一人固定打五次，而是：
+
+- `attack_max = 5`
+- 每次物理傷害再 /5
+- 候選目標由 `aBowW` 決定
+- 空格／死人仍不消耗實際 attack_count
+- target list 用完即可提前結束
+
+### StatusChange × BOW
+
+原順序：
+
+1. 每回合初始化 `gBattleStausChange`。
+2. 若武器是 BREAKTHROW，先暫設 PARALYSIS。
+3. command 是 `BATTLE_COM_S_STATUSCHANGE` 時：
+   - 再把 `gBattleStausChange` 改成技能自己的 status
+   - 寫入技能 turn
+4. `BATTLE_TargetListSet()`
+5. 進共用 BOW attack loop
+6. 每次真正 `BATTLE_Attack()` 造成 `damage > 0`：
+   - 先 `BATTLE_DamageWakeUp()`
+   - 再 `BATTLE_StatusAttackCheck()`
+   - 成功才寫入本次技能異常
+
+V0.75 現在同樣讓 StatusChange 在 BOW 時：
+
+- 使用 Item 400 的 1～3 AttackNum
+- 使用原 `aBowW[50]`
+- 每一個實際命中的 slot 各自做狀態判定
+- 被睡眠中的目標會先因正傷害醒來，再重新做本次狀態判定
+
+不再把整個弓狀態技硬縮成單一目標一擊。
+
+### StatusChange × BREAKTHROW 的覆寫順序
+
+這裡保留一個容易寫錯的來源細節。
+
+battle.c 一開始：
+
+`ITEM_BREAKTHROW -> gBattleStausChange = PARALYSIS`
+
+但稍後：
+
+`BATTLE_COM_S_STATUSCHANGE`
+
+又會把同一個 global：
+
+`gBattleStausChange`
+
+覆寫成：
+
+- 毒
+- 石
+- 亂
+- 醉
+- 眠
+- 劇毒
+
+因此若未來／其他 fixed data 出現：
+
+**StatusChange + 投石**
+
+它不是「技能異常 + 額外投石麻痺」兩種都判定。
+
+實際只保留最後覆寫後的 **技能異常**。
+
+V0.75 的 ranged StatusChange 因此會以：
+
+`breakthrowStatus:false`
+
+進共用投擲 loop，再由 StatusChange callback 套技能異常。
+
+### ContinuationAttack × ranged weapon
+
+原 `BATTLE_COM_S_RENZOKU`：
+
+```c
+attack_max = CHAR_GETWORKINT_LOW(...);
+gDamageDiv = attack_max;
+```
+
+並不建立自己的傷害迴圈，而是繼續落入共用 weapon loop。
+
+V0.75 的 ranged helper 現在支援：
+
+- `attackMaxOverride`
+- 共用 `attackOptions.damageDivisor`
+- 每擊 callback
+- BREAKTHROW status 是否啟用的來源控制
+
+因此：
+
+#### BOW + 連續攻擊
+
+- attack_max = 技能段數
+- 每段 / 技能段數
+- 走 aBowW
+- 不使用武器本身 1～3 的 AttackNum，因 RENZOKU 已在 battle.c 後面覆寫 attack_max
+
+#### BOUNDTHROW + 連續攻擊
+
+- attack_max = 技能段數
+- 同一合法目標重複投擲
+- 目標倒下後才依原非 BOW TargetAdjust 語意換下一個目標
+
+#### BREAKTHROW + 連續攻擊
+
+與 BOUNDTHROW 相同，但原：
+
+- RENZOKU 沒有覆寫 `gBattleStausChange`
+- 所以先前 BREAKTHROW 設定的 PARALYSIS 仍保留
+
+故每次正傷害都可各自進原：
+
+`20 - paralysis resistance`
+
+麻痺檢定。
+
+fixed data 也確實有可達案例：
+
+- Enemy 11003
+- `STYLE=6`
+- STYLE 6 → Item 700 小的石
+- Type 19 BREAKTHROW
+- 正權重反覆使用 16／17：
+  - T八段攻擊
+  - T九段攻擊
+
+也就是原資料中真的存在「投石 8／9 段、每一段皆可觸發投石麻痺」的路徑。
+
+### BOOMERANG 的特殊邊界
+
+BOOMERANG 不是「只要手上拿回力標就一定橫掃」。
+
+battle.c 前置轉換只在：
+
+`COM == BATTLE_COM_ATTACK`
+
+時才：
+
+`ATTACK -> BATTLE_COM_BOOMERANG`
+
+所以：
+
+- 普通 ATTACK + 回力標 → 30% 橫掃
+- StatusChange + 回力標 → 不轉換，仍單一目標
+- ContinuationAttack + 回力標 → 不轉換，仍對單一目標 N 段
+
+V0.75 保留這個差異，沒有因為 `weaponType===BOOMERANG` 就把所有特殊物理技誤改成橫掃。
+
+fixed data 同樣有：
+
+- Enemy 2329 / 2335 / 10001 / 10004 / 10007 / 10010
+- `STYLE=5`
+- 回力標
+- 其中多隻會使用 ContinuationAttack / StatusChange / PowerBalance 等
+
+因此這個 ATTACK-only boomerang 轉換也是可達規則，不是純理論保護。
+
+### V0.74 校正：Combo wake timing
+
+在 V0.75 開始前也重新逐行對過原 `BATTLE_Combo()`。
+
+來源其實是：
+
+- 每一 member 先算自己的 damage
+- 正常合擊傷害先累加
+- 最後一 member 才用 `BATTLE_DamageSub2` 一次扣總 HP
+- **但每一 member 只要自己的 damage > 0，就立即呼叫 `BATTLE_DamageWakeUp()`**
+
+因此 V0.74 已補一筆精準校正：
+
+- 不再等總傷害扣血後才醒
+- 每一段正傷害算出後就先解除睡眠
+- 總 HP 傷害仍最後一次寫入
+
+這不改 V0.74 的合擊傷害模型，只修正 source timing。
+
+### V0.75 回歸
+
+目前確認：
+
+- `game.js` JavaScript 語法：PASS
+- Enemy 961：
+  - STYLE 4
+  - 正權重 StatusChange 61/80/90/100/110
+  - 已走 BOW shared weapon loop
+- Enemy 2332：
+  - STYLE 4
+  - Skill 13 五段攻擊
+  - 已以 5 覆寫 attack_max 並使用 BOW target list
+- Enemy 11003：
+  - STYLE 6
+  - Skill 16/17 八／九段攻擊
+  - STYLE 6 → Item 700 BREAKTHROW
+  - 已保留逐擊麻痺
+- STYLE mapping 再驗：
+  - 4 → Item 400 BOW
+  - 5 → Item 500 BOOMERANG
+  - 6 → Item 700 BREAKTHROW
+  - 7 → Item 600 BOUNDTHROW
+- Item 400 AttackNum：1～3
+- Item 700 AttackNum：1～1
+- Item 600 AttackNum：1～1
+- StatusChange 的 BREAKTHROW 預設麻痺：會被技能 status 覆寫
+- ContinuationAttack 的 BREAKTHROW 麻痺：保留
+- schema：仍為 **21**
+
+V0.75 至此把「武器只影響普通 ATTACK」再往前推成原 C 的正確模型：**任何實際落入 shared weapon loop 的 command，都要服從該回合的武器 target / attack-count 規則；但 BOOMERANG 的特殊 command 轉換仍只屬於普通 ATTACK。**
+
