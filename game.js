@@ -3137,9 +3137,11 @@ function sourceBreakthrowParalysis(unit,hit){
 function performEnemyBowWeaponAttack(actor,unit,options={}){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
-  const attackMax=sourceEnemyBattleAttackMax(unit);
+  const overrideMax=Number(options.attackMaxOverride);
+  const attackMax=Number.isFinite(overrideMax)&&overrideMax>0?Math.trunc(overrideMax):sourceEnemyBattleAttackMax(unit);
   const plan=sourceBowTargetList(actor,unit,chosen);
   const attackOptions=Object.assign({},options.attackOptions||{});
+  const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
   const hits=[];
   let attackCount=0;
   for(const slot of plan.slots){
@@ -3148,6 +3150,7 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
     if(!target)continue;
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)continue;
+    if(afterHit)hit.afterHit=afterHit(hit,target);
     hits.push(Object.assign({battleSlot:slot},hit));
     attackCount++;
     // 原 battle.c 的 attack_count 只在真正呼叫 BATTLE_Attack() 後遞增；
@@ -3195,8 +3198,11 @@ function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
 function performEnemyThrowWeaponAttack(actor,unit,options={}){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
-  const attackMax=sourceEnemyBattleAttackMax(unit);
+  const overrideMax=Number(options.attackMaxOverride);
+  const attackMax=Number.isFinite(overrideMax)&&overrideMax>0?Math.trunc(overrideMax):sourceEnemyBattleAttackMax(unit);
   const attackOptions=Object.assign({},options.attackOptions||{});
+  const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
+  const useBreakthrowStatus=options.breakthrowStatus!==false;
   const hits=[];
   let target=chosen;
   for(let i=0;i<attackMax;i++){
@@ -3204,7 +3210,8 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)break;
     let paralysis=null;
-    if(Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
+    if(useBreakthrowStatus&&Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
+    if(afterHit)hit.afterHit=afterHit(hit,target);
     hits.push(Object.assign({paralysis},hit));
     if(i+1>=attackMax||n(unit.hp)<=0)break;
     // 非 BOW 的 aDefList 原本重複 COM2；目標倒下後才由 BATTLE_TargetAdjust 改抓同側存活目標。
