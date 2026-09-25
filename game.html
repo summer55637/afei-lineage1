@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.79</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.80</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.79：</b>
-      跨回合技能生命週期接回 fixed C：突擊／雙重突擊／三重突擊在釋放回合重新使用當輪 FIXSTR 計算 +90%／+110%／+150%；地球一周進入 EARTHROUND0 隱身後，下一輪 PreCommand 會跳過 complianceParameter／TurnParam／屬性重建，完整保留隱身前的 WORK／FIX、WEAKEN／BARRIER 與酒醉解除暫存，現身攻擊仍使用原最終傷害倍率 +90%。
+      <b>V0.80：</b>
+      原碼明確讀 FIXSTR 的特殊技能改成共用每輪 roundFix snapshot：回旋攻擊依當輪 FIXSTR 套攻擊修正；追跡攻擊首擊保留原註解掉的 +100% parser、只有閃避後追擊硬寫 FIXSTR +20%；嗜血技 503～505 保留 C 整數除法 bug 但仍從當輪 FIXSTR 起算，浴血狂襲 659 同樣以 FIXSTR +20% 結算。
     </article>
   </main>
 
