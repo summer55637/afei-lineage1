@@ -12961,3 +12961,123 @@ BattleModel 狀態判定仍維持：
 - FIREKILL shared direct helper unchanged by default
 - REGRET PROFESSION status RNG behavior unchanged
 - schema 27 unchanged
+
+
+## V1.43 BATTLE_BattleModel random-target RNG interleaving
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source order
+
+fixed `BATTLE_BattleModel()` 先建立一次初始 `iToList`。
+
+當 `iObjectNum >= initial target count` 時：
+
+```c
+for (i=0; i<iObjectNum; i++) {
+    if (iToList[i] == -1) break;
+    AAttackObject[i].target = iToList[i];
+    BATTLE_BattleModel_ATTACK(...);
+}
+
+for (; i<iObjectNum; i++) {
+    AAttackObject[i].target = iToList[RAND(0,i0-1)];
+    BATTLE_BattleModel_ATTACK(...);
+}
+```
+
+關鍵是第二段迴圈每一次都是：
+
+1. 抽一顆 `RAND(0,i0-1)`
+2. 立刻執行該分身的完整 `BATTLE_BattleModel_ATTACK`
+3. 下一個多餘分身才再抽下一顆 target RNG
+
+所以 target RNG 會和下列 RNG **交錯**：
+
+- Duck / SetDuck
+- Critical
+- DamageCalc
+- GuardAdjust
+- DamageCalc 的 fixed 裝備 RNG
+- critical-death Ultimate
+- V1.42 BattleModel ItemCrush
+- BattleModel StatusAttackCheck
+
+### Previous Web mismatch
+
+V1.42 前 Web 先建立完整 `sequence`：
+
+```js
+while(sequence.length < spec.objectNum)
+  sequence.push(initial[cRand(...)]);
+```
+
+然後才開始逐一攻擊。
+
+例如 2 個初始目標、5 個 AttackObject：
+
+來源：
+
+```
+attack target0
+attack target1
+target RNG #1 -> attack
+target RNG #2 -> attack
+target RNG #3 -> attack
+```
+
+舊 Web：
+
+```
+target RNG #1
+target RNG #2
+target RNG #3
+attack target0
+attack target1
+attack
+attack
+attack
+```
+
+因此雖然抽 target 的顆數相同，整場 RNG 序列的位置完全不同。
+
+### V1.43 correction
+
+BattleModel 的 `sequence` 現在只先建立：
+
+- 固定 initial target entries
+- 額外 AttackObject 的 random placeholders
+
+真正進 attack loop 時，遇到 random placeholder 才：
+
+```js
+randomTargetRoll=cRand(0,initial.length-1);
+target=initial[randomTargetRoll];
+```
+
+然後立即執行該次攻擊。
+
+這也自然保留原 C 的另一個行為：
+
+- 隨機池是 command 開始時建立的原始 `iToList`
+- 前面的攻擊即使已把某目標打死，後面的 RAND 仍可能再次抽到那個原始 slot
+- 抽中後 `BATTLE_BattleModel_ATTACK` 會因 TargetCheck 失敗直接 return
+- 但「選到死目標的那顆 target RNG」本身仍已消耗
+
+Web 現在同樣會先抽，再以即時 `battleStatusDescAlive()` 決定是否跳過攻擊。
+
+當 `objectNum < initial target count` 時，來源沒有額外 target RAND；既有固定／coverAll 流程保持不變。
+
+本輪 schemaVersion 維持 27。
+
+### V1.43 regression targets
+
+- game.js syntax PASS
+- BattleModel extra target RNG is drawn inside the attack loop, not during plan construction
+- initial targets attack before first extra target RNG
+- each extra target RNG is immediately followed by that object's attack path
+- random pool remains the command-start initial target list
+- a later random selection may select a target killed by an earlier object; RNG still consumed, attack skipped
+- objectNum < initial count => no added target RNG
+- V1.42 alive-only BattleModel ItemCrush lifecycle unchanged
+- schema 27 unchanged

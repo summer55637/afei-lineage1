@@ -4830,22 +4830,38 @@ function performEnemyBattleModel(actor,unit,options,meta){
     return {kind:'skill',skillId:actor.skillId,unsupportedType:spec.type};
   }
 
+  // fixed BATTLE_BattleModel() does NOT pre-roll the extra random targets.
+  // It first attacks every target from the original iToList, then for each remaining
+  // AttackObject performs RAND(0,i0-1) immediately before that object's attack.
+  // Keep random slots as placeholders so target RNG stays interleaved with AttackSeq RNG.
   const sequence=[];
   if(spec.objectNum>=initial.length){
-    for(const t of initial)sequence.push(t);
-    while(sequence.length<spec.objectNum)sequence.push(initial[cRand(0,initial.length-1)]);
+    for(const t of initial)sequence.push({target:t,random:false});
+    while(sequence.length<spec.objectNum)sequence.push({target:null,random:true});
   }else{
-    for(let i=0;i<spec.objectNum&&i<initial.length;i++)sequence.push(initial[i]);
-    if(spec.coverAll)for(let i=spec.objectNum;i<initial.length;i++)sequence.push(initial[i]);
+    for(let i=0;i<spec.objectNum&&i<initial.length;i++)sequence.push({target:initial[i],random:false});
+    if(spec.coverAll){
+      for(let i=spec.objectNum;i<initial.length;i++)sequence.push({target:initial[i],random:false});
+    }
   }
 
   addLog(unit.name+' 使用 '+label+'：'+sequence.length+' 個物理攻擊物件'+(spec.statusType?'，每擊可附加'+BATTLE_STATUS_NAMES[spec.statusType]:'')+'。');
   const results=[];
   let playerGuardingActive=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   for(let i=0;i<sequence.length;i++){
-    const target=sequence[i];
+    const step=sequence[i];
+    let randomTargetRoll=null;
+    let target=step.target;
+    if(step.random){
+      randomTargetRoll=cRand(0,initial.length-1);
+      target=initial[randomTargetRoll];
+    }
+    if(!target){
+      results.push({target:null,noTarget:true,randomTargetRoll});
+      continue;
+    }
     if(!battleStatusDescAlive(target)){
-      results.push({target:target.kind,skippedDead:true});
+      results.push({target:target.kind,petId:target.petId||target.pet?.id||null,skippedDead:true,randomTargetRoll});
       continue;
     }
     let r;
@@ -4888,7 +4904,7 @@ function performEnemyBattleModel(actor,unit,options,meta){
       target:target.kind,
       actualTarget:actualTarget?.kind||target.kind,
       guardianPetId:r?.guardianPetId||null,
-      itemCrushRoll,r,status
+      randomTargetRoll,itemCrushRoll,r,status
     });
   }
 
