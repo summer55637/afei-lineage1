@@ -10338,3 +10338,124 @@ V0.99「完全不進 Counter」少了第一層。V1.09 把 Charge release 與 Ea
 - 61 / 80 / 90 / 110 confirmed covered by common StatusChange
 - V1.08 and earlier low-loyalty handlers retained
 - save schema 21
+
+
+## V1.10 low-loyalty Pet FallGround 210
+
+V1.10 接回正式 wild Lv1 清單中最後一個「runtime 有正式 handler、player RANDOMACT 尚未接」的技能：
+
+- 210 落馬術
+- `PETSKILL_FallGround`
+- option：`攻%-30`
+
+fixed build 同時開啟：
+- `_PSKILL_FALLGROUND`
+- `_ENEMY_FALLGROUND`
+
+來源固定：
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### 攻擊力
+
+`PETSKILL_FallGround()`：
+
+```c
+fPer = attackPercent / 100;
+strdef = (int)(FIXSTR * fPer);
+WORKATTACKPOWER = FIXSTR + strdef;
+```
+
+skill 210 為 -30%，所以 V1.10：
+
+```
+attack = FIXSTR + trunc(FIXSTR * -0.30)
+```
+
+不是最終 damage ×0.7。
+
+### Guardian caller-defindex bug
+
+`BATTLE_S_FallGround()`：
+
+```c
+Guardian = -1;
+iWork = BATTLE_AttackSeq(attackindex, defindex, &damage, &Guardian, FALLRIDE);
+BATTLE_DamageSub(attackindex, defindex, ...);
+```
+
+和 V1.02 的 Enemy->Player FallGround 一樣，caller 沒有把 defindex 更新成 Guardian。
+
+因此 player Pet 攻擊 Enemy 時若敵方忠犬成立：
+
+1. 原 target 先做 DuckCheck。
+2. AttackSeq local defindex 改成 Guardian。
+3. critical / defense / element / guard adjustment 用 Guardian 計算。
+4. Guardian 若讓 damage 算到 0，AttackSeq 仍依 GuardianIndex 強制 NORMAL / 1。
+5. 回到 BATTLE_S_FallGround 後，HP 仍扣原 target。
+6. 落馬判定也仍讀原 target。
+
+V1.10 以 `guardianCalcOnly` 保留，不把 HP 錯扣到 Guardian。
+
+### 落馬 RNG
+
+固定來源：
+
+```c
+if (damage > 0 && react == 0) {
+    fallflg = RAND(0,100);
+    if (fallflg > 50) { ... }
+}
+```
+
+沒有裝備抗性時成功門檻是 50/101，不是整數 50%。
+
+V1.10 在有效正傷害後仍消耗這次 `RAND(0,100)`，即使目前 target 沒有 ride runtime，以維持 RNG 次序。
+
+### _ENEMY_FALLGROUND 現況
+
+原 C 對 Enemy target 只有：
+
+```c
+if (CHAR_RIDEPET > 0) {
+    CHAR_RIDEPET = -1;
+    STR *= 0.7;
+    TOUGH *= 0.7;
+    VITAL *= 0.7;
+    complianceParameter();
+}
+```
+
+目前 `makeEnemyUnit()` 與 generated encounter runtime 沒有任何可證明的 `CHAR_RIDEPET` 對應欄位。
+
+因此 V1.10：
+- 不替野怪虛構騎乘寵。
+- 不無條件把 Enemy 三能力 ×0.7。
+- 只保留一個未來若 source-derived `ridePetId>0` 真正出現才可達的分支。
+
+### CHAR_ISATTACKED
+
+FallGround 是 battle.c 的獨立 special case，不經一般 direct-attack 群組的：
+`CHAR_setFlg(charaindex, CHAR_ISATTACKED, 1)`。
+
+所以若 Pet 因 V1.09 EarthRound command 被覆寫而留下 hidden flag，接著 RANDOMACT 抽到 FallGround，本技能不擅自讓它現身。
+
+### Counter
+
+`BATTLE_COM_S_FALLRIDE` 呼叫 `BATTLE_S_FallGround()` 後直接 break，不進普通 direct-attack Counter loop。
+
+V1.10 不呼叫 `resolvePetEnemyCounterChain()`。
+
+### V1.10 regression
+- game.js syntax PASS
+- 210 RANDOMACT dispatcher
+- FIXSTR + trunc(FIXSTR * -30%)
+- original target DuckCheck
+- Enemy Guardian calc-only bug
+- HP / fall target remains original Enemy
+- positive damage consumes RAND(0,100)
+- >50 threshold = 50/101
+- no fabricated Enemy mount state
+- no ordinary Counter chain
+- no forced CHAR_ISATTACKED restore
+- V1.09 EarthRound / Charge first-counter correction retained
+- save schema 21

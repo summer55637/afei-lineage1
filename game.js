@@ -5960,6 +5960,74 @@ function sourcePerformPetNoGuardSkill(pet,action){
   return {handled:true,skillId:action?.skillId,noAction:true,duckBonus,counterBonus,criticalBonusIgnored:parsedCritical};
 }
 
+function sourcePerformPetFallGroundSkill(pet,action,options={}){
+  const meta=action?.meta;
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'落馬術')+'」，但沒有可攻擊目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  // PETSKILL_FallGround: WORKATTACKPOWER = FIXSTR + trunc(FIXSTR * 攻%/100).
+  const attackPct=sourcePetStatusSkillAttackPct(meta);
+  const base=petBattleView(pet);
+  const baseAttack=Math.trunc(n(base?.attack));
+  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  const attacker=Object.assign({},base,{attack});
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const guarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
+
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'落馬術')+'」（攻擊修正 '+attackPct+'%）。','pet');
+
+  // BATTLE_S_FallGround passes Guardian=-1 into AttackSeq, but unlike BATTLE_Attack
+  // it never updates caller defindex to Guardian before DamageSub.
+  // So Guardian may be used for dodge-after-substitution/critical/damage calculation,
+  // while HP and the fall check remain on the original target.
+  const calc=resolveAttackToEnemyWithGuardian(attacker,target,{guarding});
+  const guardian=calc?.guardian||null;
+  const r=Object.assign({},calc,{
+    actualTarget:target,
+    originalTarget:target,
+    guardianCalcOnly:guardian||null,
+    guardianPetId:guardian?.id||null
+  });
+  if(guardian)delete r.guardian;
+
+  if(guardian){
+    addLog(guardian.name+' 嘗試忠犬代擋落馬術；依原 BATTLE_S_FallGround caller-defindex bug，只用其能力算傷害，HP 與落馬判定仍留在 '+target.name+'。','pet');
+  }
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+
+  let fallRoll=null,fallSuccess=false,enemyRideRuntime=false;
+  if(r.damage>0&&!r.dodged&&!r.miss){
+    // fixed source consumes RAND(0,100) regardless of whether the Enemy actually has a ride pet.
+    fallRoll=cRand(0,100);
+    if(fallRoll>50){
+      // _ENEMY_FALLGROUND is compiled on, but current generated Enemy runtime exposes no
+      // CHAR_RIDEPET-equivalent field. Do not invent a mount and do not apply the STR/TOUGH/VITAL *0.7 branch.
+      enemyRideRuntime=Number.isFinite(Number(target?.ridePetId))&&Number(target.ridePetId)>0;
+      if(enemyRideRuntime){
+        target.ridePetId=-1;
+        // This branch is future-proof only when a real source-derived ridePetId exists.
+        // Current generated runtime has none, so it is presently unreachable.
+        if(Number.isFinite(Number(target.str)))target.str=Math.trunc(Number(target.str)*.7);
+        if(Number.isFinite(Number(target.tough)))target.tough=Math.trunc(Number(target.tough)*.7);
+        if(Number.isFinite(Number(target.vital)))target.vital=Math.trunc(Number(target.vital)*.7);
+        fallSuccess=true;
+        addLog(target.name+' 被落馬並依原 _ENEMY_FALLGROUND 將 STR／TOUGH／VITAL ×0.7。','pet');
+      }
+    }
+  }
+
+  // BATTLE_COM_S_FALLRIDE is a dedicated case; battle.c breaks after BATTLE_S_FallGround
+  // and does not enter the ordinary direct-attack Counter loop.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
+    attackPct,baseAttack,attack,guardianCalcOnly:guardian?.id||null,
+    fallRoll,fallSuccess,enemyRideRuntime,r
+  };
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
   if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
@@ -6006,6 +6074,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_PowerBalance')result=sourcePerformPetPowerBalanceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_GuardBreak')result=sourcePerformPetGuardBreakSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_NoGuard')result=sourcePerformPetNoGuardSkill(pet,action);
+    else if(meta?.f==='PETSKILL_FallGround')result=sourcePerformPetFallGroundSkill(pet,action,options);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
