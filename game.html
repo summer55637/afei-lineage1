@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.92</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.93</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.92：</b>
-      還原 _CAPTURE_FREES 的條件道具消耗 bug：BATTLE_CaptureItemDelAll() 成功捕獲後會掃完整個背包，對每個必要 ItemId 刪除所有同 ID 道具；web 不再只吃 1 個。
+      <b>V0.93：</b>
+      接回原 C 的 BATTLE_SurpriseCheck 首回合先制／偷襲：一般 encounter 開戰只擲一次，敵方被先制時首輪 AI 不執行；玩家遭偷襲時玩家與出戰寵首輪不能正常行動，並保留 <= / < 造成的原版機率邊界。
     </article>
   </main>
 

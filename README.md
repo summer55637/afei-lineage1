@@ -8943,4 +8943,99 @@ V0.92 改成先讀取該 ItemId 的目前總數，再全部交給既有 `consume
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+## V0.93 BATTLE_SurpriseCheck first-round initiative / ambush
+
+V0.93 接回固定來源 `BATTLE_SurpriseCheck()` 的首回合先制／偷襲流程。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`：`BATTLE_SurpriseCheck()`
+- `gmsv/src/battle/battle.c`：`BATTLE_Init()` / `BATTLE_Command()`
+- `gmsv/src/battle/battle_ai.c`：`BATTLE_ai_all()`
+- `gmsv/src/battle/battle_command.c`：Surprise side menu flags
+
+### fixed C 判定
+
+`BATTLE_Init()` 每場只呼叫一次 `BATTLE_SurpriseCheck()`。若 Battle 有 `WinFunc`，來源直接不做 Surprise。
+
+一般 PVE 以 Side 0 的第一位角色 FIXLUCK 決定 a / b：
+
+| Luck | a | b | 敵方首輪不能動 | 玩家首輪不能動 |
+|---:|---:|---:|---:|---:|
+| 5 | 20 | 0 | 20% | 0% |
+| 4 | 15 | 2 | 15% | 1% |
+| 3 | 10 | 3 | 10% | 2% |
+| 2 | 5 | 5 | 5% | 4% |
+| 其他 | 0 | 7 | 0% | 6% |
+
+來源不是直覺的兩段 `<=`：
+
+```c
+Rnd = RAND(1,100);
+if( Rnd <= a ) iRet = 1;
+else if( Rnd < a + b ) iRet = 2;
+```
+
+所以第二段會少一個邊界。例如 Luck 4 時：
+
+- roll 1..15：敵方被先制
+- roll 16：玩家遭偷襲
+- roll 17..100：正常
+
+不是 15% + 2%。
+
+### 首輪行為
+
+`iRet == 1` 時固定來源把 Side 1（Enemy）設成 `BSIDE_FLG_SURPRISE`。
+`BATTLE_ai_all()` 看到 Enemy side Surprise 後直接寫 `COM_NONE + C_OK`，**不呼叫 `BATTLE_ai_normal()`**。
+因此不能先抽 Enemy skill 再把行動丟掉；整個 Enemy AI 選招階段都不應發生。
+
+`iRet == 2` 時 Side 0（Player）被標 Surprise，客戶端把 Player / Pet 操作關閉；首輪等價普通命令為 NONE。
+
+兩側 Surprise flag 都在第一次 `BATTLE_Battling()` 後清掉，只影響首輪。
+
+### StatusSeq 仍會跑
+
+被 Surprise 的 actor 不是 C_WAIT 死路徑，而是正常進戰鬥處理但 command 為 NONE。
+因此 V0.93 仍先跑 `processBattleStatusTurn()`，之後才跳過普通 command。
+
+這也保留一個來源細節：若混亂 StatusSeq 在該時點把 COM 改成 ATTACK，混亂攻擊仍可覆蓋原本的 NONE；所以 Surprise skip 放在 confusionAttack 處理之後。
+
+### Web 接法
+
+- 一般非 questZone encounter：開戰時擲一次 Surprise。
+- questZone：目前視為腳本／任務戰邊界；來源 `WinFunc != NULL` 會禁用 Surprise，而 web 沒有足夠資料把每一場腳本戰逐一證明為 WinFunc=NULL，因此不猜。
+- 敵方被先制：首輪不呼叫 `enemyChooseAction()` / `enemyPrepareRoundAction()`。
+- 玩家遭偷襲：開戰後直接自動結算 Enemy 首輪，玩家不用按一個假的「攻擊」按鈕才能讓偷襲發生。
+- ComboCheck 把 Surprise actor 視為非普通攻擊，避免被錯誤拉進合擊。
+
+### V0.93 regression
+
+- `game.js` JavaScript syntax：PASS
+- Surprise 每場一般 encounter 只擲一次
+- Luck 4：Enemy surprise 15%、Player surprise 1% 邊界保留
+- Luck 3：10% / 2%
+- Luck 2：5% / 4%
+- Luck 0/1/default：0% / 6%
+- Enemy surprise 首輪不呼叫 Enemy AI
+- Player surprise 首輪 Player / Active Pet normal command = NONE
+- Surprise actor 仍先跑 StatusSeq
+- confusionAttack 可在 Surprise 首輪覆蓋 NONE
+- 首輪後 one-shot Surprise 狀態清除
+- questZone 不猜 Surprise
+- V0.92 CAPTURE_FREES 全刪條件道具保留
+- V0.91 CaptureCheck float pipeline / sleep +15 保留
+- V0.90 StatusAttackCheck int semantics 保留
+- V0.89 CounterCalc int return truncation 保留
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
 

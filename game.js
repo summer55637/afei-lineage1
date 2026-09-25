@@ -1228,6 +1228,42 @@ function syncEnemyTarget(){
   const t=targetEnemyUnit();if(!enemy||!t)return;
   enemy.level=t.level;enemy.name=t.name;enemy.hp=t.hp;enemy.maxHp=t.maxHp;enemy.attack=t.attack;enemy.defense=t.defense;
 }
+function sourceBattleSurpriseRoll(){
+  const luck=Math.trunc(n(state?.luck));
+  let a=0,b=7;
+  if(luck===5){a=20;b=0}
+  else if(luck===4){a=15;b=2}
+  else if(luck===3){a=10;b=3}
+  else if(luck===2){a=5;b=5}
+  const roll=cRand(1,100);
+  let side=null;
+  if(roll<=a)side='enemy';
+  else if(roll<a+b)side='player';
+  return {luck,a,b,roll,side};
+}
+function sourceInitBattleSurprise(map){
+  if(!enemy)return {eligible:false,side:null};
+  enemy.sourceSurprisePending=false;
+  enemy.sourceSurpriseSide=null;
+  enemy.sourceSurpriseRoll=null;
+  enemy.sourceSurpriseLuck=Math.trunc(n(state?.luck));
+  // fixed BATTLE_SurpriseCheck：BattleArray.WinFunc != NULL 直接 return 0。
+  // 現行 questZone 都是腳本／任務戰，沒有足夠證據一律當成普通 WinFunc=NULL，
+  // 因此只在原始一般 encounter（非 questZone）啟用，避免對腳本 Boss 猜先制。
+  if(map?.questZone)return {eligible:false,side:null};
+  const result=sourceBattleSurpriseRoll();
+  enemy.sourceSurpriseRoll=result.roll;
+  enemy.sourceSurpriseLuck=result.luck;
+  enemy.sourceSurpriseSide=result.side;
+  enemy.sourceSurprisePending=!!result.side;
+  return Object.assign({eligible:true},result);
+}
+function sourceSurpriseSkipAction(actor){
+  if(!actor?.sourceSurpriseSkip)return false;
+  if(actor.kind==='enemy')addLog((actor.label||'敵人')+' 因你取得先制，本回合無法行動。','good');
+  else addLog((actor.kind==='player'?'你':actor.label||'出戰寵物')+' 因遭到偷襲，本回合無法行動。','bad');
+  return true;
+}
 function spawnEnemy(context=null){
   const map=context?.map||currentMap();
   if(!map)return;
@@ -1286,6 +1322,14 @@ function spawnEnemy(context=null){
     };
     state.battles++;
     addLog((dynamicSpec?'遭遇原始遇敵群組：':'遭遇任務編成：')+label+'。');
+    const surprise=sourceInitBattleSurprise(map);
+    if(surprise.side==='enemy'){
+      addLog('先制成功：原 BATTLE_SurpriseCheck roll '+surprise.roll+'，敵方首回合不能正常行動。','good');
+    }else if(surprise.side==='player'){
+      addLog('遭到偷襲：原 BATTLE_SurpriseCheck roll '+surprise.roll+'，你與出戰寵首回合不能正常行動。','bad');
+      attackTurn();
+      return;
+    }
     render();return;
   }
   const unit=makeEnemyUnit(null,entry,0);
@@ -1293,6 +1337,14 @@ function spawnEnemy(context=null){
   enemy=Object.assign({entry,groupBattle:false,dynamicGroup:false},unit);
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
+  const surprise=sourceInitBattleSurprise(map);
+  if(surprise.side==='enemy'){
+    addLog('先制成功：原 BATTLE_SurpriseCheck roll '+surprise.roll+'，敵方首回合不能正常行動。','good');
+  }else if(surprise.side==='player'){
+    addLog('遭到偷襲：原 BATTLE_SurpriseCheck roll '+surprise.roll+'，你與出戰寵首回合不能正常行動。','bad');
+    attackTurn();
+    return;
+  }
   render();
 }
 function activePet(){return state.petBox.find(p=>p.id===state.activePetId)||null}
@@ -5532,6 +5584,7 @@ function captureTurn(manual=false){
       if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
       continue;
     }
+    if(sourceSurpriseSkipAction(actor))continue;
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
@@ -5690,6 +5743,7 @@ function battleDexRoll(quick,mode=null){
 }
 function sourceComboActorInfo(actor,playerCommand='attack'){
   if(!actor)return {normalAttack:false,move:false,throwWeapon:false,side:-1,targetKey:null,per:0};
+  if(actor.sourceSurpriseSkip)return {normalAttack:false,move:false,throwWeapon:false,side:actor.kind==='enemy'?1:0,targetKey:null,per:0};
 
   if(actor.kind==='player'){
     const desc={kind:'player'};
@@ -5894,6 +5948,7 @@ function sourcePerformCombo(order,index,options={}){
 }
 
 function normalBattleOrder(options={}){
+  const surpriseSide=enemy?.sourceSurprisePending?enemy.sourceSurpriseSide:null;
   // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；
   // EARTHROUND0 是明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
   sourcePreCommandResetTransient();
@@ -5911,7 +5966,7 @@ function normalBattleOrder(options={}){
   const player=playerBattleView();
   order.push({
     kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++,
-    targetUnitId:friendlyTarget?.id||null
+    targetUnitId:friendlyTarget?.id||null,sourceSurpriseSkip:surpriseSide==='player'
   });
 
   const pet=activePet();
@@ -5920,11 +5975,24 @@ function normalBattleOrder(options={}){
     const quick=pv?n(pv.quick):n(pet?.stats?.dex);
     order.push({
       kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
-      targetUnitId:friendlyTarget?.id||null
+      targetUnitId:friendlyTarget?.id||null,sourceSurpriseSkip:surpriseSide==='player'
     });
   }
 
   for(const unit of livingEnemyUnits()){
+    // fixed BATTLE_ai_all：Enemy 所在 side 有 BSIDE_FLG_SURPRISE 時，
+    // 直接 COM_NONE + C_OK，不呼叫 BATTLE_ai_normal()；因此本輪不能先抽 skill 再丟掉。
+    if(surpriseSide==='enemy'){
+      unit.guardThisTurn=false;
+      const quick=n(enemyBattleView(unit)?.quick);
+      order.push({
+        kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
+        enemyAction:'none',skillSlot:null,skillId:null,
+        sourceSkillMissing:false,sourceSkillUnregistered:false,sourceSkillRejected:false,sourceMagicCWait:false,
+        sourceCWaitReason:null,targetKind:null,targetPetId:null,sourceSurpriseSkip:true
+      });
+      continue;
+    }
     const action=enemyChooseAction(unit);
     enemyPrepareRoundAction(unit,action);
     unit.guardThisTurn=action.kind==='guard';
@@ -5949,6 +6017,9 @@ function normalBattleOrder(options={}){
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
   // 原 battle.c：EntrySort() 後立刻 ComboCheck()，再開始逐角色 StatusSeq／行動。
   sourceComboCheck(order,{playerCommand:String(options.playerCommand||'attack')});
+  // fixed BATTLE_Command() 在第一輪 BATTLE_Battling() 後立刻清除兩側 SURPRISE flag。
+  // 這裡 actor 已帶 sourceSurpriseSkip 快照，所以可在回傳前消耗 one-shot 狀態。
+  if(enemy?.sourceSurprisePending)enemy.sourceSurprisePending=false;
   return order;
 }
 function sourceEnemyCWait(actor){
@@ -5998,6 +6069,7 @@ function attackTurn(){
       if(enemy&&!livingEnemyUnits().length){winBattle();return}
       continue;
     }
+    if(sourceSurpriseSkipAction(actor))continue;
     if(actor.sourceComboConsumed)continue;
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
@@ -6076,6 +6148,7 @@ function guardTurn(){
       if(enemy&&!livingEnemyUnits().length){winBattle();return}
       continue;
     }
+    if(sourceSurpriseSkipAction(actor))continue;
     if(actor.sourceComboConsumed)continue;
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:true});
