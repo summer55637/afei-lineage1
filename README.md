@@ -4773,3 +4773,129 @@ V0.66 補正：
 - 對應 battle runtime ownership
 
 在沒有這一層之前，硬指定任何結果都會違反「不猜 runtime」原則。
+
+
+## V0.67 捐獻／StealMoney
+
+V0.67 將正權重 PetSkill 211「捐獻」由 runtime-blocked 正式接入。
+
+來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/char/char_base.c`
+- `gmsv/src/include/version.h`
+
+### 單機 CHAR runtime 對應
+
+原 Enemy 建立後 `CHAR_WORKPLAYERINDEX` 保持 default 0。
+
+原 `CHAR_initCharOneArray()` 的 Player pool：
+
+- `startcnt = 0`
+- 第一名 Player 可直接配置在 char index 0
+
+本專案是單機單玩家 runtime，因此 V0.67 將唯一玩家明確對應成「空 server 的第一名 Player」＝ char slot 0。
+
+這不是把 Enemy owner 改成玩家；只是讓原 `BATTLE_StealMoney()` 對 `masterindex=0` 的有效性檢查，在單機 runtime 有確定答案。
+
+### Battle no. 映射與原 bug
+
+`BATTLE_NewEntry()`：
+
+- Player side = side 0
+- Enemy side = side 1
+- Enemy slot i 的 `bid = i + 10`
+
+所以 web：
+
+- `battleSlot 0 -> bid 10`
+- `battleSlot 1 -> bid 11`
+- 依此類推
+
+`BATTLE_StealMoney()` 內有：
+
+`if (attackNo > 10) safeSide = 1;`
+
+因此 **bid 10 不會進入這個分支**。
+
+對 Player target（defNo 0）：
+
+- bid 10：被錯判為同側，`per = 0`
+- bid 11～19：才走不同側偷錢機率
+
+V0.67 保留這個來源 bug。
+
+### 成功率
+
+不同側 Player target：
+
+`per = 50;`
+`per = (((per + LV) / 4) + 10) >> 1;`
+
+全部保持 C int 截斷。
+
+實際成功條件：
+
+`RAND(1,100) < per`
+
+不是 `<=`。
+
+### 偷取金額
+
+成功命中 Player 後：
+
+`GOLD = (int)(playerGold * RAND(1,15) * 0.01)`
+
+也就是目前石幣的 1～15%。
+
+此 build 已開 `_FIX_MAX_GOLD`：
+
+`MaxGold = 1000000 + transmigration * 1800000`
+
+目前 web 尚無轉生系統，單機角色對應初始轉生 0，因此 V0.67 的原服上限是：
+
+**1,000,000**
+
+原函式會在真正從 defender 扣錢前，先以 master slot 0 的 Gold 做上限 clamp。
+
+單機 runtime 中 master slot 0 與唯一 Player 是同一角色，因此這個原本很怪的 clamp 也保留。
+
+### Enemy 成功後
+
+若攻擊者是 Pet：
+
+- owner 得到 GOLD
+- Pet 離場
+
+但 Enemy 不是 Pet，因此成功後走：
+
+`BATTLE_Exit(attackindex,battleindex)`
+
+結果：
+
+- Player 被扣石幣
+- 沒有任何 owner 收到石幣
+- 使用捐獻的 Enemy 直接離開戰鬥
+- 該離場不視為擊殺，不給該 Enemy 的 EXP／掉落
+
+若它是最後一名 Enemy，戰鬥因敵側無存活 Entry 而結束；web 同樣不產生擊殺獎勵。
+
+### Pet target
+
+原函式只對 Player / Enemy 明確設定 `per`。
+
+Active Pet 作為目標時 `per` 保持 0，因此捐獻必定失敗，不會偷寵物、也不轉成普通攻擊。
+
+### runtime-blocked 更新
+
+V0.67：
+
+- 211 → 已實作
+- 676 → 仍 runtime-blocked
+- 688 → 仍 runtime-blocked
+
+676／688 接下來要由最小 ITEM existing-index runtime 解決。
