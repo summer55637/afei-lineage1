@@ -1269,7 +1269,7 @@ function enemyMagicDodge(targetDesc,attrIndex){
   const roll=cRand(1,100);
   return {dodged:roll<=threshold,roll,threshold};
 }
-function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic){
+function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPenalty=true){
   const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
   if(attrIndex<0)return {damage:0,invalidAttr:true};
   const dodge=enemyMagicDodge(targetDesc,attrIndex);
@@ -1285,7 +1285,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic){
   const aPower=Math.trunc(n(magic.power)*(1+n(magic.magicLv)/10)*amagic);
   const adjusted=enemyMagicAttrDamage(unit,targetDesc,magic,aPower);
   let damage=Math.max(0,Math.trunc(n(adjusted.damage)));
-  if(!trueMagic)damage=Math.trunc(damage*.7);
+  if(applyFalseMagicPenalty&&!trueMagic)damage=Math.trunc(damage*.7);
 
   const hpBefore=battleStatusHp(targetDesc);
   battleStatusSetHp(targetDesc,Math.max(0,hpBefore-damage));
@@ -1698,6 +1698,8 @@ const ENEMY_SOURCE_SKILL_META={
   573:{n:'救援',d:'自身目前 HP 對半，將對半後的 HP 加到目標',f:'PETSKILL_Sacrifice',o:'',field:1,target:1},
   // V0.54：Enemy 對玩家側使用時，來源 PETFLG 條件使變狐附加效果永遠不成立；
   // 但 BECOMEFOX command 仍走完整普通物理攻擊與 Counter 鏈。
+  // V0.62：火線獵殺；原 battle.c 固定物理攻 80%，再對目標所在一排施放火屬性 Power 200 / MagicLv 4。
+  624:{n:'火線獵殺',d:'攻擊 80% 特殊物理攻擊後，對目標所在一排追加火屬性 Power 200／MagicLv 4',f:'PETSKILL_Firekill',o:'',field:1,target:1},
   625:{n:'媚惑術',d:'來源玩家寵物 PETFLG=0；Enemy 使用時等價普通物理攻擊',f:'PETSKILL_BecomeFox',o:'',field:1,target:1},
   // V0.55：_BATTLE_ABDUCTII 旅程伙伴3；以玩家寵物 FIXAI 與 option 80 判定。
   608:{n:'E旅程伙伴3',d:'目標寵物 FIXAI 低於 80 時必定帶走',f:'PETSKILL_Abduct',o:'80',field:1,target:7},
@@ -1892,6 +1894,11 @@ function enemyPrepareRoundAction(unit,action){
     // BecomeFox / BecomePig 都在 battle.c 的一般物理攻擊群組；
     // 真正 BATTLE_Attack 前會改回 BATTLE_COM_ATTACK，因此參與完整 Counter 鏈。
     unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_Firekill'){
+    // 原 BATTLE_COM_S_FIREKILL 在進入 BATTLE_Attack_FIREKILL 前固定 WORKATTACKPOWER=FIXSTR*0.8；
+    // 專用 case 做完物理＋火魔法後直接 break，不進普通 Counter loop。
+    unit.roundAttack=Math.trunc(n(unit.attack)*.8);
+    unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_Lighttakeed'){
     // 原 PETSKILL_Lighttakeed：攻=FIXSTR*0.7、防=FIXTOUGH*0.5；QUICK 修正已註解。
     unit.roundAttack=Math.trunc(n(unit.attack)*.7);
@@ -3525,6 +3532,45 @@ function performEnemyAttackMagic(actor,unit,options,meta){
     attIdx:magic.attIdx,targetRewrite:magic.targetRewrite,attackType:pattern.attackType
   };
 }
+function performEnemyFirekill(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'火線獵殺';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+
+  // 原 battle.c：先以 FIXSTR*0.8 走 BATTLE_Attack_FIREKILL。
+  // 該專用 case 不進普通 BATTLE_Counter loop；DamageReact 在 BATTLE_DamageSub_FIREKILL 內被強制 NONE。
+  const physical=enemySkillTargetResult(unit,chosen,{guarding});
+  if(physical)enemyApplySkillHit(unit,chosen,physical,label+'物理段');
+
+  // 隨後固定呼叫 BATTLE_MultiAttMagic_Fire(...,2,200)。該函式 MagicLv 固定 4。
+  // 它仍會消耗一次 rand()%100 的 TrueMagic 檢定，但 _FIX_MAGICDAMAGE 下的 ×0.7 行在此專用函式已被註解，
+  // 因此 Enemy 使用時這個 roll 不改傷害，只保留原 RNG 次序。
+  const magic={attr:'fire',power:200,magicLv:4};
+  const attMagicLv=Math.trunc(n(unit.level)*.9);
+  const trueRoll=cRand(0,99);
+  const trueMagic=!(trueRoll>attMagicLv);
+  const target={kind:chosen.kind};
+  if(chosen.kind==='pet'){target.pet=chosen.pet;target.petId=chosen.pet?.id||chosen.petId||null;}
+  const magicResults=[];
+
+  if(battleStatusDescAlive(target)){
+    const r=enemyMagicDamageOne(unit,target,magic,trueMagic,false);
+    magicResults.push({target:target.kind,petId:target.petId||null,r});
+    if(r.dodged){
+      addLog(battleStatusDescName(target)+' 閃過 '+label+' 的火焰追加（魔法閃避 '+r.dodge.roll+' ≤ '+r.dodge.threshold+'）。','good');
+    }else{
+      addLog(label+' 火焰追加命中 '+battleStatusDescName(target)+'，造成 '+r.damage+' 魔法傷害。',battleStatusHp(target)<=0?'bad':'');
+      if(r.exp?.raised)addLog(battleStatusDescName(target)+' 的火魔抗提升到 '+r.exp.level+'。','good');
+      if(r.exp?.lowered)addLog(battleStatusDescName(target)+' 的相克魔抗下降到 '+r.exp.subLevel+'。');
+    }
+  }
+
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,physical,
+    fire:{fieldAttr:2,power:200,magicLv:4,trueRoll,attMagicLv,trueMagic,targets:magicResults}
+  };
+}
 function performEnemyLighttakeed(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -4155,6 +4201,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ToothCrushe')return performEnemyToothCrushe(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackMagic')return performEnemyAttackMagic(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Firekill')return performEnemyFirekill(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomePig')return performEnemyBecomePig(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
@@ -5106,7 +5153,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.61 載入完成：正式接入 magic 301～325 Enemy AttackMagic；由原 magic.txt + attmagic.bin 還原範圍、_FIX_MAGICDAMAGE 傷害、魔法閃避、睡眠解除與玩家／寵物魔抗成長。','good');
+    addLog('V0.62 載入完成：接入 Enemy 624 火線獵殺；依原 C 先以攻擊 80% 做專用物理段，再對目標所在一排追加火屬性 Power 200／MagicLv 4，且不套一般 Counter 或 FalseMagic ×0.7。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
