@@ -6612,3 +6612,165 @@ fixed data 同樣有：
 
 V0.75 至此把「武器只影響普通 ATTACK」再往前推成原 C 的正確模型：**任何實際落入 shared weapon loop 的 command，都要服從該回合的武器 target / attack-count 規則；但 BOOMERANG 的特殊 command 轉換仍只屬於普通 ATTACK。**
 
+
+
+## V0.76 DRUNK lifecycle source bug
+
+V0.76 校正的是 fixed C 的酒醉實際生命週期，不採資料說明文字推測。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle_magic.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/char/char.c`
+
+### 一般物理 StatusChange 的原 bug
+
+`BATTLE_Attack()` 在酒醉命中成功後先做：
+
+```c
+CHAR_setWorkInt(defindex, StatusTbl[BATTLE_ST_DRUNK],
+    gBattleStausTurn + 1);
+```
+
+緊接著原碼不是把 QUICK 減半，而是：
+
+```c
+CHAR_setWorkInt(defindex, CHAR_WORKDRUNK,
+    CHAR_getWorkInt(defindex, CHAR_WORKDRUNK) / 2);
+```
+
+也就是 **把酒醉倒數本身除以 2**。
+
+fixed ref 全域搜尋沒有另一條一般 DRUNK 命中時把 `CHAR_WORKQUICK` 除 2 的路徑。
+
+所以 Skill 100：
+
+`醉 turn 3 攻%-30`
+
+在一般 `BATTLE_Attack()` 成功附加後實際是：
+
+```text
+turn 3
+→ 先存 4
+→ CHAR_WORKDRUNK = 4 / 2
+→ 最終 stored turn = 2
+```
+
+V0.76 的 `sourceEnemyApplyStatusAttackHit()` 現在保留這個 bug。
+
+### 酒醉期間 QUICK 不下降
+
+`_CHAR_complianceParameter()` 每輪會：
+
+```c
+WORKQUICK = WORKFIXDEX
+```
+
+而且函式完全不讀 `CHAR_WORKDRUNK`。
+
+`BATTLE_StatusSeq()` 的 `CHAR_WORKDRUNK` case 本身也沒有降低 QUICK。
+
+因此 V0.75 以前 web 用「酒醉期間 QUICK /2」做對稱轉譯，雖然看起來合理，但不是這個 fixed build 的真實行為。
+
+V0.76 改為：
+
+- 酒醉 active 時 QUICK 維持原值
+- 酒醉者攻擊時仍依 `BATTLE_DuckCheck()` 讓目標回避額外 `RAND(20,30)`
+- 不再虛構敏捷減半
+
+### 酒醉解除反而 QUICK ×2
+
+原 `BATTLE_StatusSeq()` 在倒數減到 0 時：
+
+```c
+if(StatusTbl[i] == CHAR_WORKDRUNK){
+    CHAR_setWorkInt(charaindex, CHAR_WORKQUICK,
+        CHAR_getWorkInt(charaindex, CHAR_WORKQUICK) * 2);
+}
+```
+
+也就是來源因前面的 bug 沒有真的把 QUICK 減半，卻仍執行「還原」：
+
+**酒醉解除的該回合 QUICK 反而翻倍。**
+
+下一個 battle turn 的：
+
+`BATTLE_PreCommandSeq() -> CHAR_complianceParameter()`
+
+會再把：
+
+`WORKQUICK = FIXDEX`
+
+所以這個 2× 不是永久能力增加，而是只存在於「酒醉剛解除的剩餘當回合」。
+
+V0.76 新增：
+
+`battleDrunkReleaseBoostKeys`
+
+用途：
+
+1. 每輪 `normalBattleOrder()` 開始時清空，等價下一輪 PreCommandSeq 重建 QUICK。
+2. `processBattleStatusTurn()` 若 DRUNK 倒數剛歸 0，把該角色加入 transient set。
+3. 該回合後續 `battleDrunkQuick()` 對這個角色回傳 base QUICK ×2。
+4. 下一輪自動清除。
+
+排序本身發生在 StatusSeq 前，所以解除當次的 2× QUICK 不會倒灌改變已完成的 EntrySort；但會影響該次行動後續使用 WORKQUICK 的命中／回避／會心等計算，符合原流程。
+
+### 魔法酒醉不能套物理 /2 bug
+
+`BATTLE_MultiStatusChange()` 是另一條獨立路徑。
+
+成功時只做：
+
+```c
+CHAR_setWorkInt(toindex, StatusTbl[status], turn);
+```
+
+沒有：
+
+`CHAR_WORKDRUNK / 2`
+
+因此 Combined 的酒醉精靈 magic 179：
+
+- 原 magic turn = 5
+- web 仍用 `battleStatusApplyRaw(..., 5)`
+- 不套一般物理 `(turn+1)/2`
+
+但它倒數歸零時仍經同一個 `BATTLE_StatusSeq()`，因此同樣會出現解除當回合 QUICK ×2 的來源 bug。
+
+### fixed data 可達性
+
+這不是只為理論相容性。
+
+正權重 Enemy AI 中：
+
+- Skill 100「泥醉攻擊」
+- `PETSKILL_StatusChange`
+- option：`醉 turn 3 攻%-30`
+- 共有 **22 個 Enemy** 正權重引用
+- 包含 V0.75 已驗證的 Enemy 961：
+  - STYLE 4
+  - BOW
+  - 酒醉攻擊可進 aBowW 多發流程
+
+所以 V0.76 會直接改變目前可實際遇到的戰鬥結果。
+
+### V0.76 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- Skill 100 fixed option：`醉 turn 3 攻%-30`
+- 物理酒醉 stored turn：`(3+1)/2 = 2`
+- magic 179 stored turn：5
+- 酒醉 active：不再 QUICK /2
+- 酒醉解除：當回合 transient QUICK ×2
+- 下一輪 `normalBattleOrder()` 清 transient boost
+- `BATTLE_DuckCheck` 的 DRUNK +20～30 回避懲罰保留
+- V0.75 ranged StatusChange / Continuation weapon flow 保留
+- save schema：仍為 **21**
+
