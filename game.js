@@ -2378,8 +2378,8 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'||meta?.f==='PETSKILL_WildViolentAttack'||meta?.f==='PETSKILL_Regret'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
-    const baseAttack=Math.trunc(n(unit.attack));
-    const skillBaseDefense=Math.trunc(n(unit.roundDefense));
+    const baseAttack=sourceFixAttack;
+    const skillBaseDefense=sourceFixDefense;
     unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
     unit.roundDefense=skillBaseDefense+Math.trunc(skillBaseDefense*defensePct/100);
     if(meta?.f==='PETSKILL_WildViolentAttack'){
