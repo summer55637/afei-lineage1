@@ -64,7 +64,14 @@ function normalizeItemRuntime(rt){
   for(const [k,v] of Object.entries(slots)){
     const idx=Math.trunc(Number(k));
     if(!Number.isFinite(idx)||idx<=0||idx>=out.itemnum||!v||v.use!==true)continue;
-    out.slots[String(idx)]={use:true,itemId:Number.isFinite(Number(v.itemId))?Math.trunc(Number(v.itemId)):null,magicUseMp:Math.trunc(n(v.magicUseMp))};
+    out.slots[String(idx)]={
+      use:true,
+      itemId:Number.isFinite(Number(v.itemId))?Math.trunc(Number(v.itemId)):null,
+      magicUseMp:v.magicUseMp==null?null:(Number.isFinite(Number(v.magicUseMp))?Math.trunc(Number(v.magicUseMp)):null),
+      owner:typeof v.owner==='string'?v.owner:null,
+      source:typeof v.source==='string'?v.source:null,
+      enemySlot:Number.isFinite(Number(v.enemySlot))?Math.trunc(Number(v.enemySlot)):null
+    };
   }
   return out;
 }
@@ -73,9 +80,23 @@ function sourceItemRuntimeMagicUseMp(index){
   const idx=Math.trunc(Number(index));
   if(!rt||!Number.isFinite(idx)||idx<0||idx>=25000)return -1;
   const slot=rt.slots?.[String(idx)];
-  return slot?.use===true?Math.trunc(n(slot.magicUseMp)):-1;
+  if(slot?.use!==true)return -1;
+  return slot.magicUseMp==null?null:Math.trunc(Number(slot.magicUseMp));
 }
-function sourceItemRuntimeAlloc(itemId=null,magicUseMp=0){
+function sourceItemRuntimeSlot(index){
+  const idx=Math.trunc(Number(index));
+  if(!state?.itemRuntime||!Number.isFinite(idx)||idx<0||idx>=25000)return null;
+  const slot=state.itemRuntime.slots?.[String(idx)];
+  return slot?.use===true?slot:null;
+}
+function sourceItemRuntimeSetOwner(index,owner,source=null){
+  const slot=sourceItemRuntimeSlot(index);
+  if(!slot)return false;
+  slot.owner=typeof owner==='string'?owner:null;
+  if(source!==null)slot.source=source;
+  return true;
+}
+function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
   if(!state)return -1;
   state.itemRuntime=normalizeItemRuntime(state.itemRuntime);
   const rt=state.itemRuntime;
@@ -84,7 +105,14 @@ function sourceItemRuntimeAlloc(itemId=null,magicUseMp=0){
     if(rt.sindex>=rt.itemnum)rt.sindex=1;
     const key=String(rt.sindex);
     if(rt.slots[key]?.use===true)continue;
-    rt.slots[key]={use:true,itemId:Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null,magicUseMp:Math.trunc(n(magicUseMp))};
+    rt.slots[key]={
+      use:true,
+      itemId:Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null,
+      magicUseMp:magicUseMp==null?null:(Number.isFinite(Number(magicUseMp))?Math.trunc(Number(magicUseMp)):null),
+      owner:typeof meta?.owner==='string'?meta.owner:null,
+      source:typeof meta?.source==='string'?meta.source:null,
+      enemySlot:Number.isFinite(Number(meta?.enemySlot))?Math.trunc(Number(meta.enemySlot)):null
+    };
     return rt.sindex;
   }
   return -1;
@@ -97,9 +125,47 @@ function sourceItemRuntimeFree(index){
   delete state.itemRuntime.slots[key];
   return true;
 }
+function sourceTrackedPlayerItems(itemId=null){
+  const out=[];
+  const slots=state?.itemRuntime?.slots||{};
+  for(const [k,v] of Object.entries(slots)){
+    if(v?.use!==true||v.owner!=='player')continue;
+    if(itemId!=null&&Number(v.itemId)!==Number(itemId))continue;
+    out.push({index:Number(k),slot:v});
+  }
+  out.sort((a,b)=>a.index-b.index);
+  return out;
+}
+function giveTrackedItemFromExisting(itemId,itemIndex){
+  const slot=sourceItemRuntimeSlot(itemIndex);
+  if(!slot)return false;
+  const key=String(itemId);
+  state.inventory[key]=n(state.inventory[key])+1;
+  slot.itemId=Math.trunc(Number(itemId));
+  slot.owner='player';slot.source='battle-getitem';slot.enemySlot=null;
+  return true;
+}
+function releaseEnemyRuntimeItems(unit){
+  if(!unit)return 0;
+  let freed=0;
+  for(const drop of unit.enemyDrops||[]){
+    const idx=Math.trunc(Number(drop?.itemIndex));
+    const slot=sourceItemRuntimeSlot(idx);
+    if(slot&&slot.owner==='enemy:'+unit.id){if(sourceItemRuntimeFree(idx))freed++;}
+  }
+  const styleIdx=Math.trunc(Number(unit.styleItemIndex));
+  const styleSlot=sourceItemRuntimeSlot(styleIdx);
+  if(styleSlot&&styleSlot.owner==='enemy:'+unit.id){if(sourceItemRuntimeFree(styleIdx))freed++;}
+  return freed;
+}
+function releaseBattleEnemyRuntimeItems(battleEnemy=enemy){
+  if(!battleEnemy)return 0;
+  const units=(Array.isArray(battleEnemy.units)&&battleEnemy.units.length)?battleEnemy.units:[battleEnemy];
+  return units.reduce((sum,u)=>sum+releaseEnemyRuntimeItems(u),0);
+}
 function freshState(){
   return {
-    schemaVersion:19,
+    schemaVersion:20,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -236,7 +302,8 @@ function normalizeState(raw){
   // migration 從 source server 啟動後的空 pool 狀態開始，之後才依原 Sindex allocator 持續記錄。
   if(n(raw?.schemaVersion)<19)s.itemRuntime=freshItemRuntime();
   else s.itemRuntime=normalizeItemRuntime(s.itemRuntime);
-  s.schemaVersion=19;
+  // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
+  s.schemaVersion=20;
   delete s.pets;
   return s;
 }
@@ -260,7 +327,21 @@ function addLog(text,type){
 function hasItem(id,count=1){return n(state.inventory[String(id)])>=count}
 function consumeItem(id,count=1){
   const key=String(id);
-  state.inventory[key]=Math.max(0,n(state.inventory[key])-count);
+  const want=Math.max(0,Math.trunc(n(count)));
+  const before=Math.max(0,Math.trunc(n(state.inventory[key])));
+  const actual=Math.min(before,want);
+  if(actual<=0)return;
+
+  // 舊版／任務 giveItem 沒有 source existing-index；先消耗 untracked，避免捏造舊 allocation。
+  const tracked=sourceTrackedPlayerItems(id);
+  const untracked=Math.max(0,before-tracked.length);
+  let trackedNeed=Math.max(0,actual-untracked);
+  for(const x of tracked){
+    if(trackedNeed<=0)break;
+    sourceItemRuntimeFree(x.index);trackedNeed--;
+  }
+
+  state.inventory[key]=before-actual;
   if(state.inventory[key]<=0)delete state.inventory[key];
 }
 function giveItem(id,count=1){
@@ -274,11 +355,15 @@ function rollVerifiedDrops(defeatedEnemy){
   for(const carried of carriedLoot){
     const itemId=Number(carried.itemId);
     if(!Number.isFinite(itemId))continue;
-    giveItem(itemId,1);
+    if(Number.isFinite(Number(carried.itemIndex))&&sourceItemRuntimeSlot(carried.itemIndex)){
+      giveTrackedItemFromExisting(itemId,carried.itemIndex);
+    }else{
+      giveItem(itemId,1);
+    }
     const meta=questItemMeta(itemId);
     drops.push(meta
       ?Object.assign({},meta,{enemyDrop:true,enemyDropSlot:carried.slot,dropProbabilityRaw:carried.probabilityRaw})
-      :{id:itemId,name:'Item '+itemId,enemyDrop:true,enemyDropSlot:carried.slot,dropProbabilityRaw:carried.probabilityRaw});
+      :{id:itemId,name:'Item '+itemId,enemyDrop:true,enemyDropSlot:carried.slot,dropProbabilityRaw:carried.probabilityRaw,itemIndex:carried.itemIndex});
   }
 
   const subjects=(Array.isArray(defeatedEnemy.units)&&defeatedEnemy.units.length)
@@ -782,11 +867,22 @@ function resolveEnemyCarriedLoot(defeatedEnemy){
   const result=[];
   for(const unit of units){
     for(const drop of unit?.enemyDrops||[]){
-      const item={itemId:Math.trunc(n(drop?.itemId)),slot:Math.trunc(n(drop?.slot)),probabilityRaw:Math.trunc(n(drop?.probabilityRaw))};
+      const item={
+        itemId:Math.trunc(n(drop?.itemId)),slot:Math.trunc(n(drop?.slot)),
+        probabilityRaw:Math.trunc(n(drop?.probabilityRaw)),itemIndex:Math.trunc(Number(drop?.itemIndex)),unitId:unit.id
+      };
+      const runtimeSlot=sourceItemRuntimeSlot(item.itemIndex);
+      if(runtimeSlot&&runtimeSlot.owner==='enemy:'+unit.id)sourceItemRuntimeSetOwner(item.itemIndex,'battle-getitem','battle-getitem');
+
       if(result.length<3){
         result.push(item);
       }else if(Math.floor(Math.random()*2)){
-        result[Math.floor(Math.random()*3)]=item;
+        const replace=Math.floor(Math.random()*3);
+        const old=result[replace];
+        if(Number.isFinite(old?.itemIndex))sourceItemRuntimeFree(old.itemIndex);
+        result[replace]=item;
+      }else if(Number.isFinite(item.itemIndex)){
+        sourceItemRuntimeFree(item.itemIndex);
       }
     }
   }
@@ -870,11 +966,22 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     Array.isArray(raw?.petSkills)?raw.petSkills:[]
   );
   const resolvedEnemyId=Number(raw?.enemyId??base.enemyIds?.[0]??0)||null;
+  const unitId='unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7);
+  const aiRow=resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null;
+
+  // 原 ENEMY_createEnemy：10 格 carried item 先 allocate，STYLE 武器再 allocate；RandomChange 在兩者之後。
+  const runtimeDrops=enemyDropRoll.drops.map(drop=>Object.assign({},drop,{
+    itemIndex:sourceItemRuntimeAlloc(drop.itemId,null,{owner:'enemy:'+unitId,source:'enemy-drop',enemySlot:drop.slot})
+  }));
+  const style=Math.max(0,Math.trunc(n(aiRow?.sty)));
+  const styleWeaponId=({1:0,2:100,3:200,4:400,5:500,6:700,7:600})[style]??null;
+  const styleItemIndex=styleWeaponId==null?-1:sourceItemRuntimeAlloc(styleWeaponId,null,{owner:'enemy:'+unitId,source:'enemy-style'});
+
   return {
-    id:'unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7),
+    id:unitId,
     name:raw?.name||fallbackEntry?.species?.clientLabel||base.serverName||('Enemy '+(raw?.enemyId??'')),
     enemyId:resolvedEnemyId,
-    ai:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null,
+    ai:aiRow,
     statusResist:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]?.z?.slice?.(0,6)||[0,0,0,0,0,0]):[0,0,0,0,0,0],
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
     // 原 ENEMY_createEnemy 由 CHAR_getDefaultChar(31010) 的 defaultPlayer 建立；其 CHAR_MP / CHAR_MAXMP 都是 0，Enemy 流程沒有覆寫。
@@ -901,8 +1008,9 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     captureRule:raw?.captureRule??base.captureRule??null,
     capturable:raw?.capturable!=null?raw.capturable:(base.capturable!==false),
     questDrop:raw?.questDrop||null,
-    enemyDrops:enemyDropRoll.drops,
+    enemyDrops:runtimeDrops,
     serverDropTable:enemyDropRoll.resolved,
+    style,styleWeaponId,styleItemIndex,
     serverExpBase,
     enemyExpOverride:raw?.enemyExpOverride??null,
     enemyExpRankIndex:raw?.enemyExpRankIndex??null,
