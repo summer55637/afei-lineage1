@@ -431,11 +431,11 @@ function confirmPlayerElements(points=playerElementDraft){
 }
 function freshState(){
   return {
-    schemaVersion:23,
+    schemaVersion:24,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
-    attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
+    attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:100,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
     elements:null,playerElementsConfigured:false,
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
@@ -557,6 +557,14 @@ function normalizeState(raw){
     s.skillPoints=Math.max(0,Math.floor(n(raw?.skillPoints)));
     s.duelPoint=Math.max(0,Math.floor(n(raw?.duelPoint)));
   }
+  // V1.27: fixed defaultPlayer.h starts CHAR_DUELPOINT at 100.
+  // This web has no PvP / duel-point mutation path, so every pre-schema24 save is
+  // deterministically short by exactly this creation constant. Add it once.
+  if(n(raw?.schemaVersion)<24){
+    s.duelPoint=Math.max(0,Math.floor(n(s.duelPoint)))+100;
+  }else{
+    s.duelPoint=Math.max(0,Math.floor(n(s.duelPoint)));
+  }
   if(n(raw?.schemaVersion)<14){
     const earned=Math.max(0,(Math.max(1,Math.floor(n(s.level)||1))-1)*3);
     s.skillPoints=Math.max(Math.max(0,Math.floor(n(s.skillPoints))),earned);
@@ -620,7 +628,7 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=23;
+  s.schemaVersion=24;
   delete s.pets;
   return s;
 }
@@ -8780,7 +8788,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.26 載入完成：玩家原服創角元素已接入；舊存檔不猜元素，需自行合法分配 10 點後才啟動戰鬥。','good');
+    addLog('V1.27 載入完成：原 defaultPlayer 的 CHAR_DUELPOINT 出生 100 已補回；舊存檔一次性 +100，升級加點規則維持原 CHAR_LevelUpCheck。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

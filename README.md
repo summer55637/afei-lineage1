@@ -11544,3 +11544,63 @@ V1.26 確認成功後才持久化：
 - V1.25 fox ranged regression unchanged
 - V1.24 BecomeFox lifecycle / 31% regression unchanged
 - V1.18 Ultimate / death branch regression unchanged
+
+
+## V1.27 Default CHAR_DUELPOINT = 100
+
+固定來源：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+### Creation value
+
+gmsv/src/char/defaultPlayer.h 的 player template：
+
+- CHAR_CHARM = 0（之後 CHAR_createNewChar 明確改成 60）
+- CHAR_LUCK = 0
+- CHAR_DUELPOINT = 100
+
+CHAR_createNewChar 沒有覆寫 CHAR_LUCK 或 CHAR_DUELPOINT，因此新角色實際出生：
+
+- Luck = 0
+- DuelPoint = 100
+
+現行 Web 的 luck:0 原本就是正確來源值；舊 UI「沿用放置版初始參數」文字改正。
+
+### Level-up DuelPoint
+
+fixed gmsv/src/char/char_data.c 的 CHAR_LevelUpCheck：
+
+CHAR_DUELPOINT += (level + 1) * 10
+
+這裡 level 是升級前等級。
+
+Web levelCheck() 是先 state.level++，再：
+
+state.duelPoint += state.level * 10
+
+兩者數值完全等價，因此升級公式不修改。
+
+### Why old saves can migrate exactly
+
+截至 V1.26，Web 對 duelPoint 的 mutation 只有：
+
+1. save migration / normalize
+2. levelCheck 的升級加點
+
+目前沒有 PvP、duel result 或其他 DuelPoint 增減系統。
+
+因此所有舊 Web 存檔都只是從錯誤的 0 起算，而不是原服的 100；不論已升幾級，差值固定都是 +100。
+
+save schema 23 -> 24：
+- fresh duelPoint = 100
+- schema < 24：既有 duelPoint + 100 一次
+- schema >= 24：只正規化，不再重複補
+
+### Regression targets
+
+- fresh schema24 DuelPoint = 100
+- schema23 duelPoint 0 -> 100
+- schema23 duelPoint 540 -> 640
+- schema24 duelPoint 640 stays 640
+- level-up from Lv1 adds 20; Lv2 adds 30, matching (oldLevel+1)*10
+- V1.26 player element gate / migration unchanged
+- V1.25 / V1.24 / V1.18 combat regression unchanged

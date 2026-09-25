@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.26</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.27</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -106,7 +106,7 @@
             <button id="autoBtn" class="primary">自動戰鬥：開</button>
             <button id="healBtn">休息補滿</button>
           </div>
-          <div class="muted mini-note">VITAL／STR／TOUGH／DEX、攻防敏與初始魅力已接原服；運目前仍沿用放置版初始參數。</div>
+          <div class="muted mini-note">VITAL／STR／TOUGH／DEX、攻防敏、初始魅力與運已接原服；固定 defaultPlayer 的 CHAR_LUCK 初始值為 0。</div>
         </article>
 
         <article class="card">
@@ -181,8 +181,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.26：</b>
-      接回原服創角元素配點：地／水／火／風共 10 點、最多兩屬且禁止地火／水風；舊存檔不猜歷史元素，玩家確認後才寫入 CHAR 百分值並啟動戰鬥。
+      <b>V1.27：</b>
+      修正角色 DuelPoint 出生底值：固定原 defaultPlayer.h 為 100；舊存檔因 Web 從 0 起算而一律少 100，本版只補一次，升級仍依原 CHAR_LevelUpCheck 加「升級後等級 ×10」。
     </article>
   </main>
 
