@@ -8863,4 +8863,84 @@ WorkGet += CHAR_getWorkInt( attackindex, CHAR_WORKMODCAPTURE );
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+## V0.92 CAPTURE_FREES deletes all matching requirement items
+
+V0.92 還原固定來源 `_CAPTURE_FREES` 的條件捕獲道具消耗語意。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/include/version.h`
+- `gmsv/src/battle/battle_event.c`
+- `BATTLE_CaptureItemCheck()`
+- `BATTLE_CaptureItemDelAll()`
+
+固定 build 的 `version.h` 明確開啟：
+
+```c
+#define _CAPTURE_FREES
+#define _WOLF_TAKE_AXE
+```
+
+### 檢查只要求「至少有一個」
+
+捕獲前的 `BATTLE_CaptureItemCheck()` 對每個必要 ItemId 掃背包；找到一個匹配就 `break`。
+因此每種必要道具只要至少存在一個就能通過捕獲前置。
+
+### 成功後卻把同 ID 全部刪掉
+
+成功捕獲後 `BATTLE_CaptureItemDelAll()` 會對每個必要 ItemId 再掃完整個背包。
+命中後會 `CHAR_DelItem()`，但原本可以停止掃描的 `break` 被註解掉，旁邊還保留「最後還是決定全刪」的來源註解。
+
+所以來源實際語意是：
+
+- 捕獲前：每種必要道具有 **1 個以上**即可。
+- 捕獲失敗：不刪。
+- 捕獲成功：每一種必要 ItemId 在背包中的**全部副本都刪除**。
+
+V0.92 不自行把這個來源行為修成比較合理的「只吃一個」。
+
+### V0.91 以前的差異
+
+舊 web 成功捕獲後只做：
+
+```js
+for(const item of c.requirements||[]) consumeItem(item.id,1);
+```
+
+因此即使背包有 5 個必要道具，也只會消耗 1 個。
+
+V0.92 改成先讀取該 ItemId 的目前總數，再全部交給既有 `consumeItem()`；tracked existing-index 的釋放流程仍由 `consumeItem()` 負責。
+
+### fixed data 可達性
+
+目前 web 的 capture condition 資料已包含實際條件道具，例如：
+
+- 夏普德：1690 海藍之棒、1691 海藍之兜、1692 海藍之鎧
+- 嘎吱拉：20247 魔法鑽戒[地LV3-1]
+- 斑尼迪克：20259 會員捕寵結晶石
+
+所以只要玩家持有同一必要道具兩份以上並成功捕獲，就能觀察 V0.91 與 fixed C 的差異。
+
+### V0.92 regression
+
+- `game.js` JavaScript syntax：PASS
+- capture requirement pre-check 仍只要求每種至少 1 個
+- 捕獲失敗不消耗條件道具
+- 捕獲成功改為刪除每種必要 ItemId 的全部現有數量
+- tracked ITEM existing-index 仍透過 `consumeItem()` 正常釋放
+- 多種必要道具會各自全刪
+- V0.91 CaptureCheck float pipeline / sleep +15 保留
+- V0.90 StatusAttackCheck int semantics 保留
+- V0.89 CounterCalc int return truncation 保留
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
 

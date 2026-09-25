@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.91</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.92</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.91：</b>
-      校正捕獲率 BATTLE_CaptureCheck() 的 float 管線：HP²／MAXHP、等級差／2、敏捷差／15 與 Charm／50 都保留小數，不再逐段錯誤截成 int；同時補回原 C 對睡眠目標的捕獲率 +15。
+      <b>V0.92：</b>
+      還原 _CAPTURE_FREES 的條件道具消耗 bug：BATTLE_CaptureItemDelAll() 成功捕獲後會掃完整個背包，對每個必要 ItemId 刪除所有同 ID 道具；web 不再只吃 1 個。
     </article>
   </main>
 

@@ -5548,7 +5548,20 @@ function captureTurn(manual=false){
         const pet=addCapturedPet(target);
         // 原 PET_createPetFromCharaIndex 不複製 Enemy item；Enemy BATTLE_Exit/清理後其 carried/style 全釋放。
         releaseEnemyRuntimeItems(target);
-        for(const item of c.requirements||[])consumeItem(item.id,1);
+        // fixed _CAPTURE_FREES -> BATTLE_CaptureItemDelAll：
+        // 成功捕獲後會掃完整個道具欄，對每個必要 ItemId 刪除所有匹配 slot；
+        // 原碼刻意沒有 break（註解也寫「最後還是決定全刪」），不是只消耗 1 個。
+        const consumedCaptureItems=[];
+        for(const item of c.requirements||[]){
+          const before=Math.max(0,Math.trunc(n(state.inventory[String(item.id)])));
+          if(before>0){
+            consumeItem(item.id,before);
+            consumedCaptureItems.push({id:item.id,name:item.name||('Item '+item.id),count:before});
+          }
+        }
+        if(consumedCaptureItems.length){
+          addLog('原版捕獲條件道具全部消耗：'+consumedCaptureItems.map(x=>x.name+' ×'+x.count).join('、')+'。');
+        }
         addLog('捕獲成功：'+pet.name+'（'+c.display.toFixed(1)+'%）。','good');
         captured=true;
 
