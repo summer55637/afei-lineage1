@@ -4310,3 +4310,98 @@ V0.63 保留這個來源行為，不依技能文字自行修成 -50%。
 - 627／632／637／705 → `PETSKILL_Combined`：依賴 JYUJYUTU／咒術底層
 
 繼續維持「原 C 規則優先、不猜數值」。
+
+
+## V0.64 分身地裂
+
+V0.64 接入 Enemy 正權重 PetSkill 634「分身地裂」。
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/petskill2.txt`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+
+原資料：
+
+- ID 634
+- 名稱：分身地裂
+- function：`PETSKILL_DivideAttack`
+- target：敵方全體
+- option：空
+
+`PETSKILL_DivideAttack()` 只把 command 設成 `BATTLE_COM_S_DIVIDE_ATTACK`；真正效果完全位於 `BATTLE_DivideAttack()`。
+
+### 第一階段：玩家 MP
+
+原函式先以 `BATTLE_MultiList()` 取得敵方整側，第一輪只處理 `CHAR_TYPEPLAYER`：
+
+`CHAR_MP = charmp - (charmp >> 1)`
+
+也就是扣掉：
+
+`floor(currentMP / 2)`
+
+所以奇數值不是直接除成較小一半，例如：
+
+- 100 → 50
+- 25 → 13
+- 1 → 1
+
+因為 `1 >> 1 = 0`。
+
+### 第二階段：HP
+
+接著重新掃同一整側。
+
+若 Battle Entry 沒有騎寵：
+
+- 目前 HP >= 5：扣 `floor(currentHP/5)`
+- 目前 HP < 5：固定扣 1
+
+即一般情況為目前 HP 的 20%。
+
+若該 Entry 是「玩家騎寵」：
+
+- 玩家扣目前 HP 10%
+- 騎寵也扣目前 HP 10%
+
+但目前放置版的 Player slot 0 與 Active Pet slot 5 是兩個獨立 Battle Entry，沒有建立 `CHAR_RIDEPET` 騎乘關係。因此 V0.64 不能因為有 Active Pet 就擅自套騎寵分支；兩個 Entry 都依原碼落入「沒有騎寵」：
+
+- Player 各自扣目前 HP 20%
+- Active Pet 各自扣目前 HP 20%
+
+低於 5 HP 時各自固定扣 1，因此此技能可以把 1 HP 目標直接降到 0。
+
+### 不經一般戰鬥判定
+
+`BATTLE_COM_S_DIVIDE_ATTACK` 直接呼叫 `BATTLE_DivideAttack()` 後結束，沒有：
+
+- `BATTLE_AttackSeq`
+- 命中／閃避
+- Guard
+- 屬性傷害
+- `BATTLE_DamageWakeUp`
+- 普通 Counter loop
+
+V0.64 因此也不讓分身地裂喚醒睡眠或觸發反擊。
+
+### Save schema
+
+沒有新增持久化欄位，schema 維持 **18**。
+
+### 正權重掃描更新
+
+634 原正權重總和 5，V0.64 後已正式接入。
+
+接入後剩餘正權重未處理技能：
+
+- 676：AttackMagic → magic 204 FieldAttChange
+- 688：AttackMagic → magic 435 MAGIC_Weaken
+- 211：StealMoney
+- 627／632／637／705：Combined → JYUJYUTU
+
+仍維持「原 C 規則優先、不猜數值」。
