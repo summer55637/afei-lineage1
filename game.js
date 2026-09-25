@@ -1649,6 +1649,8 @@ const ENEMY_SOURCE_SKILL_META={
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
+  // V0.64：分身地裂；直接操作敵方整側 MP／HP，不走命中、屬性、Guard 或 Counter。
+  634:{n:'分身地裂',d:'敵方玩家先扣當下 MP 的一半，再對敵方整側各自扣目前 HP 20%',f:'PETSKILL_DivideAttack',o:'',field:1,target:3},
   590:{n:'虎虎生威',d:'5 個物理攻擊物件並附加石化',f:'PETSKILL_BattleModel',o:'5|5|石|3|30|攻%15|100871 100872',field:1,target:3},
   616:{n:'撕裂傷口2',d:'撕裂舊傷口，增加已損失 HP 50% 的傷害',f:'PETSKILL_BattleTearDamage',o:'50',field:1,target:1},
   640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7},
@@ -3224,6 +3226,35 @@ function performEnemyBatFly(actor,unit,options,meta){
   // 無 BATTLE_AttackSeq、無閃避／會心／Guard，也不進普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,targets:results,drained,healed};
 }
+function performEnemyDivideAttack(actor,unit,options,meta){
+  const label=meta?.n||'分身地裂';
+  const targets=enemyPlayerSideLivingTargets();
+  if(!targets.length)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  // 原 BATTLE_DivideAttack 第一輪只處理 CHAR_TYPEPLAYER 的 MP，且使用 charmp>>1：
+  // 扣除 floor(currentMP/2)，所以奇數 MP 會保留 ceil(currentMP/2)。
+  const mpBefore=Math.max(0,Math.trunc(n(state.mp)));
+  const mpDamage=Math.trunc(mpBefore/2);
+  state.mp=Math.max(0,mpBefore-mpDamage);
+  if(mpDamage>0)addLog(unit.name+' 的 '+label+' 先削減你 '+mpDamage+' MP（'+mpBefore+' → '+state.mp+'）。','bad');
+
+  const results=[];
+  // 原函式第二輪逐一處理敵方 Battle Entry。只有「玩家正在騎寵」才改成人與騎寵各扣 10%。
+  // 放置版目前 Player slot 0 與 Active Pet slot 5 是兩個獨立 Entry，沒有騎寵關係，
+  // 因此兩者都精準落在「未騎寵」分支：各扣目前 HP 的 20%；HP<5 時固定扣 1。
+  for(const target of targets){
+    const before=battleStatusHp(target);
+    if(before<=0)continue;
+    const damage=Math.trunc(before/5)===0?1:Math.trunc(before/5);
+    battleStatusSetHp(target,before-damage);
+    results.push({target:target.kind,petId:target.petId||null,hpBefore:before,damage,hpAfter:battleStatusHp(target)});
+    addLog(unit.name+' 的 '+label+' 對 '+battleStatusDescName(target)+' 造成 '+damage+' 直接 HP 傷害。',battleStatusHp(target)<=0?'bad':'');
+    if(target.kind==='pet'&&battleStatusHp(target)<=0)addLog(battleStatusDescName(target)+' 倒下了，本場後續回合不再行動。','bad');
+  }
+
+  // 此來源函式沒有 BATTLE_AttackSeq / DamageSub / DamageWakeUp，也不進普通 Counter loop。
+  return {kind:'skill',skillId:actor.skillId,mpBefore,mpDamage,mpAfter:Math.max(0,Math.trunc(n(state.mp))),targets:results};
+}
 function enemyRandomPlayerSideTarget(){
   const candidates=[];
   if(state.hp>0)candidates.push({kind:'player'});
@@ -4260,6 +4291,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Nocast')return performEnemyNocast(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_DivideAttack')return performEnemyDivideAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
@@ -5191,7 +5223,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.63 載入完成：加入原版玩家 MP 100／100 與 Enemy 506～508 MP攻擊；保留原 C 50/100 整數除法 bug，所以物理攻擊不降，命中玩家後才按當下 MP 扣 50%／75%／100%。','good');
+    addLog('V0.64 載入完成：接入 Enemy 634 分身地裂；先將玩家當下 MP 扣除 floor(1/2)，再依原 BATTLE_DivideAttack 對 Player／Active Pet 各扣目前 HP 20%，不走命中、Guard、睡眠喚醒或 Counter。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
