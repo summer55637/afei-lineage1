@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.80</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.81</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.80：</b>
-      原碼明確讀 FIXSTR 的特殊技能改成共用每輪 roundFix snapshot：回旋攻擊依當輪 FIXSTR 套攻擊修正；追跡攻擊首擊保留原註解掉的 +100% parser、只有閃避後追擊硬寫 FIXSTR +20%；嗜血技 503～505 保留 C 整數除法 bug 但仍從當輪 FIXSTR 起算，浴血狂襲 659 同樣以 FIXSTR +20% 結算。
+      <b>V0.81：</b>
+      FIXDEX 與 WORKQUICK 正式拆開：行動排序仍使用本輪 QUICK，但回避／會心／反擊／捕獲一律依 fixed C 使用 FIXDEX；麻痺、石化、睡眠、魔障、暈眩等不可行動目標不再能普通閃避。捕獲公式亦改回 C 的逐步 int 除法與 RAND(1,100) &lt; WorkGet 嚴格判定。
     </article>
   </main>
 
