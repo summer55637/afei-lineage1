@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.30</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.31</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -30,7 +30,7 @@
     <section class="status-grid">
       <article class="card stat-card"><small>等級</small><strong id="level">1</strong></article>
       <article class="card stat-card"><small>經驗</small><strong id="exp">0 / 2</strong></article>
-      <article class="card stat-card"><small>HP</small><strong id="hp">35 / 35</strong></article>
+      <article class="card stat-card"><small>HP</small><strong id="hp">0 / 0</strong></article>
       <article class="card stat-card"><small>MP</small><strong id="mp">100 / 100</strong></article>
       <article class="card stat-card"><small>石幣</small><strong id="gold">30000</strong></article>
     </section>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.30：</b>
-      接回固定 _NEW_PLAYER_CF 創角四圍：VITAL／STR／TOUGH／DEX 各 0～20、合計 ≤20；真正新角色先自行確認，不再猜固定 5/5/5/5，舊存檔保留既有累積四圍。
+      <b>V1.31：</b>
+      對齊 fixed battle_ai.c 的 Enemy 選目標 RNG：HP／STR／DEX／相剋屬性模式即使只剩 1 個候選仍保留 RAND(0,rn)；TARGET_LEADER 在目前無組隊系統下也不再把單機玩家直接視為隊長。
     </article>
   </main>
 
