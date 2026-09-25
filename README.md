@@ -6114,3 +6114,210 @@ V0.73 後下一個已確認的大缺口是原 `EntrySort() -> ComboCheck()` 的*
 
 這塊牽涉目前 Player / Pet / Enemy 三種 command 在排序後的合併，所以留作下一層，不用普通多段攻擊硬冒充。
 
+
+
+## V0.74 EntrySort / ComboCheck / BATTLE_Combo
+
+V0.74 從 V0.73 的 weapon command 邊界往後，正式接回原 battle turn 在排序後立即執行的合擊生命週期。
+
+來源固定：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/include/version.h`
+
+### 原呼叫順序
+
+原 battle turn：
+
+```text
+EntrySort()
+→ ComboCheck()
+→ 逐 Entry：StatusSeq / CanMove / command execution
+```
+
+因此合擊分組使用的是**排序完成後、但該角色本回合 StatusSeq 尚未執行前**的 command / target 狀態。
+
+V0.74 的 `normalBattleOrder()` 現在同樣：
+
+1. 建立 Player / Active Pet / Enemy entry。
+2. 依原 `BATTLE_DexCalc` 等價 dex 排序。
+3. 呼叫 `sourceComboCheck()`。
+4. 才開始逐角色執行 StatusSeq 與 action。
+
+### ComboCheck 起始機率
+
+原 `ComboCheck()`：
+
+- Enemy：`per = 20`
+- 非 Enemy：`per = 50`
+
+目前單機沒有 Player/Pet 的正式裝備 argument `合击...`，因此 `_ITEM_ADDCOMBO` 的裝備額外機率不可達，不自行猜值。
+
+起始條件必須同時：
+
+- command == `BATTLE_COM_ATTACK`
+- 非投射武器
+- 存活且可行動
+- 有有效目標
+- `RAND(1,100) <= per`
+
+### 連續成員條件
+
+一旦某個排序 Entry 成為 starter，後面的**相鄰 Entry**只有同時符合：
+
+- command 仍是普通 ATTACK
+- 同一個 `CHAR_WORKBATTLECOM2` 目標
+- 同一 side
+- 非投射武器
+- 可行動
+
+才加入同一 ComboId。
+
+加入後不再重新擲 20% / 50%。
+
+任一條件不符會中斷目前鏈；該不相容 Entry 若自身符合 starter 條件，仍可以再擲一次並成為下一組起點。
+
+### 投射武器完全排除
+
+`ComboCheck()` 會先用：
+
+`BATTLE_IsThrowWepon(CHAR_ARM)`
+
+標記：
+
+- BOW
+- BOOMERANG
+- BOUNDTHROW
+- BREAKTHROW
+
+四種皆：
+
+`armtype = 1`
+
+而 starter / member 都要求：
+
+`armtype != 1`
+
+所以 V0.72 / V0.73 接好的遠距武器不會錯誤加入合擊。
+
+### Enemy skill 與 COM_ATTACK 邊界
+
+fixed ref 的 `pet_skill.c` 搜描確認，明確寫入 `BATTLE_COM_ATTACK` 的 PetSkill 路徑有：
+
+- `PETSKILL_NormalAttack`
+- `PETSKILL_Explode` 在非 PvP 時退回普通 ATTACK
+
+但 fixed ref `version.h`：
+
+```c
+//#define _PETSKILL_EXPLODE
+```
+
+明確是關閉狀態。
+
+因此此固定 build 的目前 Enemy 可達範圍，`enemyAction === 'attack'` 可精確對應原 `BATTLE_COM_ATTACK`；不把其他直接傷害 Skill 擅自算成普通合擊成員。
+
+### Player command 不混淆
+
+V0.74 額外把共用排序的 Player command 明確拆開：
+
+- attackTurn → `playerCommand:'attack'`
+- guardTurn → `playerCommand:'guard'`
+- captureTurn → `playerCommand:'capture'`
+
+原因是原 `ComboCheck()` 僅接受：
+
+`BATTLE_COM_ATTACK`
+
+所以捕獲與防禦不能因共用 `normalBattleOrder()` 而被誤算成 Player 50% 合擊 starter。
+
+Pet 仍依目前放置版設計在三種回合中自動普通攻擊；若 Player 本人不是 ATTACK，Player 會自然切斷 Player/Pet 的同側合擊鏈。
+
+### ComboCheck2 / 失效後退回普通攻擊
+
+原執行到 `BATTLE_COM_COMBO` 時還會呼叫：
+
+`ComboCheck2()`
+
+若目前 Entry 後面已沒有同 ComboId 且仍可行動的成員，就把它改回普通 ATTACK。
+
+V0.74 的：
+
+- `sourceComboHasLater()`
+- `sourceComboConsumed`
+
+保留這個語意。
+
+例如兩人合擊中第一人被異常狀態阻止：
+
+- 第一人不動
+- 第二人已沒有後續有效 combo member
+- 第二人改走自己的普通 ATTACK
+
+若原本三人合擊第一人失效，而第二、第三仍有效：
+
+- 第二、第三仍可繼續成為實際合擊。
+
+### BATTLE_Combo
+
+原 `BATTLE_Combo()` 對每一名有效 member 呼叫：
+
+`BATTLE_AttackSeq(..., BATTLE_COM_COMBO)`
+
+這帶來幾個和普通攻擊不同的關鍵差異：
+
+1. `opt == BATTLE_COM_COMBO` → **跳過 DuckCheck**。
+2. `Guardian = -2` → **不執行 GuardianCheck**。
+3. Critical 判定仍執行。
+4. Guard damage adjust 仍執行。
+5. 每名 member 的 AttackSeq 若 damage <= 0，合擊層再強制成 1。
+6. 一般傷害先累積為 `AllDamage`。
+7. 最後一名 member 才以 `BATTLE_DamageSub2` 一次扣除累積傷害。
+8. 主 battle.c 的一般 Counter loop 不會執行。
+
+V0.74 的 `sourcePerformCombo()` 因此：
+
+- 使用 `disableDodge:true`
+- 不跑 Guardian
+- 每段最低 1
+- 先累計
+- 最後一次寫入 HP
+- 不接 `resolvePlayerEnemyCounterChain` / `resolvePetEnemyCounterChain`
+
+### 後續 member 的 StatusSeq
+
+原 combo branch 在收後續 member 時會先：
+
+- `BATTLE_StatusSeq()`
+- `BATTLE_MagicStatusSeq()`
+- 再檢查 `BATTLE_CanMoveCheck()` / HP
+
+V0.74 同樣在 `sourcePerformCombo()` 對後續成員呼叫目前等價的 `processBattleStatusTurn()`。
+
+若後續 member 因異常不能動，就跳過該 member。
+
+若 Confusion 在這個 StatusSeq 中把其 command / target 改成亂打，來源 combo branch 並沒有重新讀新 target，而只是確認它是否仍可移動，之後仍使用既定 combo `defNo`；V0.74 保留這個來源流程，不把後續 member 額外拆成一次混亂攻擊。
+
+### V0.74 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- Player ATTACK + Active Pet 同目標：starter roll <= 50 可成組
+- Player starter roll 51：不成組
+- CAPTURE：Player 不可當 combo starter/member
+- GUARD：Player 不可當 combo starter/member
+- Enemy 同目標普通攻擊：starter roll <= 20 可成組
+- Enemy starter roll 21：不成組
+- Throw weapon：斷鏈且自身不可成為 starter
+- 不同 target：斷鏈；後方相容成員可重新建立新 group
+- `PETSKILL_Explode`：fixed build compile flag 關閉，不納入可達 command
+- V0.72 / V0.73 遠距規則仍保留
+- schema：仍為 **21**
+
+V0.74 至此把普通攻擊從「每個 Entry 各自執行」推進到原 C 的排序後合擊編組與合擊結算流程。
+
