@@ -1128,6 +1128,46 @@ function serverBattleExpForRecipient(unit,recipientLevel){
   const multiplier=Math.max(1,Math.trunc(n(cfg.battleExpMultiplier)||1));
   return Math.trunc(nowExp*multiplier);
 }
+function sourceRewardActor(actor){
+  if(!actor)return null;
+  if(actor.kind==='player')return {kind:'player'};
+  if(actor.kind==='pet'){
+    const petId=actor.petId??actor.pet?.id??null;
+    return petId?{kind:'pet',petId}:null;
+  }
+  return {kind:String(actor.kind||'other')};
+}
+function sourceMarkEnemyDeathCredit(unit,actors=[]){
+  if(!unit||n(unit.hp)>0||unit.sourceRewardProcessed)return null;
+  // fixed BATTLE_AddExpItem sets CHAR_ISDIE immediately after this scan, so reward ownership is fixed once.
+  unit.sourceRewardProcessed=true;
+
+  const credits=[],seen=new Set();
+  for(const raw of actors||[]){
+    const a=sourceRewardActor(raw);
+    if(!a||(a.kind!=='player'&&a.kind!=='pet'))continue;
+    const key=a.kind==='pet'?('pet:'+String(a.petId)):'player';
+    if(seen.has(key))continue;
+    seen.add(key);credits.push(a);
+  }
+  unit.sourceRewardCredits=credits;
+  unit.sourceRewardPlayerSide=credits.length>0;
+
+  // AI_FIX_PETWIN / PETGOLDWIN happens here in BATTLE_AddExpItem, not at battle finish.
+  const aiChanges=[];
+  for(const credit of credits){
+    if(credit.kind!=='pet')continue;
+    const pet=state?.petBox?.find?.(p=>p.id===credit.petId)||null;
+    if(!pet)continue;
+    const change=sourcePetWinVariableAi(pet,unit.level,pet.level);
+    aiChanges.push({petId:pet.id,delta:change.delta});
+  }
+  unit.sourceRewardPetAi=aiChanges;
+  return {credits,aiChanges};
+}
+function sourceEnemyRewardCredits(unit){
+  return Array.isArray(unit?.sourceRewardCredits)?unit.sourceRewardCredits:[];
+}
 function fallbackBattleExp(defeated){
   const growth=(defeated?.dynamicGroup&&Array.isArray(defeated?.units)&&defeated.units.length)
     ?defeated.units.reduce((s,u)=>s+Math.max(1,n(u.wildGrowth)||1),0)/defeated.units.length
@@ -1520,8 +1560,8 @@ function addMarefiaPet(){
   return p;
 }
 function marefiaPet(){return state.petBox.find(p=>Number(p.tempNo)===718)||null}
-function awardActivePetExp(amount){
-  const p=activePet();if(!p)return;
+function awardPetExp(p,amount){
+  if(!p)return;
   const isMarefia=Number(p.tempNo)===718;
   const maxLevel=isMarefia?Math.max(1,n(p.levelCap)||10):petServerLevelCap();
   p.exp=n(p.exp)+Math.max(1,Math.round(amount));
@@ -1542,6 +1582,10 @@ function awardActivePetExp(amount){
     addLog(p.name+' 升到 Lv.'+p.level+'（'+upCount+' 級）'+(growthCount?'，已套用原 CHAR_PetLevelUp 成長 '+growthCount+' 次。':'。'),'pet');
     if(isMarefia&&p.level===maxLevel&&p.level<79)addLog('瑪蕾菲雅到達目前回憶門檻 Lv.'+maxLevel+'，可前往下一個記憶地點。','pet');
   }
+}
+function awardActivePetExp(amount){
+  const p=activePet();if(!p)return;
+  return awardPetExp(p,amount);
 }
 function clearEvent83Chain(extra=[]){
   for(let id=19702;id<=19715;id++){
@@ -3216,6 +3260,9 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   battleStatusWakeOnDamage(targetDesc,r.damage);
   const after=battleStatusHp(targetDesc);
+  if(before>0&&after<=0&&targetDesc?.kind==='enemy'&&targetDesc.unit){
+    sourceMarkEnemyDeathCredit(targetDesc.unit,[attackerDesc]);
+  }
   addLog(attackerName+' '+action+' '+targetName+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',after<=0?'bad':(attackerDesc?.kind==='pet'?'pet':''));
   if(before>0&&after<=0&&targetDesc?.kind==='pet')addLog(targetName+' 倒下了，本場後續回合不再行動。','bad');
 }
@@ -3319,6 +3366,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
         const sourceUltimateBefore=n(unit.hp);
         unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
         sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
+        if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[{kind:'player'}]);
         addLog('你反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',r.critical?'good':'');
       }
     }else{
@@ -3367,6 +3415,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
         const sourceUltimateBefore=n(unit.hp);
         unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
         sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
+        if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[{kind:'pet',petId:pet.id}]);
         addLog(pet.name+' 反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
     }else{
@@ -3439,7 +3488,7 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
   }
   return r;
 }
-function applyFriendlyEnemyHit(attackerKind,attackerName,target,r){
+function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=null){
   const actual=r?.actualTarget||target;
   if(!actual)return null;
   const style=attackerKind==='pet'?'pet':(r.critical?'good':'');
@@ -3463,7 +3512,10 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r){
   }else{
     addLog('你對 '+actual.name+(r.critical?' 發動會心一擊，造成 ':' 造成 ')+r.damage+' 傷害。',r.critical?'good':'');
   }
-  if(before>0&&actual.hp<=0)addLog(actual.name+' 倒下了，本場後續回合不再行動。','bad');
+  if(before>0&&actual.hp<=0){
+    sourceMarkEnemyDeathCredit(actual,[attackerKind==='pet'?{kind:'pet',petId:attackerPetId}:{kind:'player'}]);
+    addLog(actual.name+' 倒下了，本場後續回合不再行動。','bad');
+  }
   return actual;
 }
 function playerAttackResult(target=targetEnemyUnit()){
@@ -5806,7 +5858,7 @@ function sourcePerformPetChargeState(pet,options={},targetOverride=undefined){
   const r=resolveAttackToEnemyWithGuardian(attacker,target,{
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   addLog(pet.name+' 釋放 '+charge.label+'（FIXSTR 攻擊 '+baseAttack+' → '+releaseAttack+'，攻擊修正 '+charge.attackPct+'%）。','pet');
 
   // k=0 still lets the defender counter; k=1 would ask this Pet to counter-counter,
@@ -5863,7 +5915,7 @@ function sourcePerformPetEarthRoundState(pet,options={},targetOverride=undefined
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
     damageMultiplier:multiplier
   });
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   addLog(pet.name+' 從背後完成 '+st.label+'（來源最終傷害 ×'+multiplier.toFixed(2)+'）。','pet');
   if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r,{maxDepth:1});
   if(battlePetEarthRoundStates.get(pet.id)===st)battlePetEarthRoundStates.delete(pet.id);
@@ -5957,7 +6009,7 @@ function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
     }
     if(meta.confusion)addLog(pet.name+' 的混亂發作：改為普通攻擊 '+target.name+'。','pet');
     const r=petAttackResult(pet,target);
-    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
     if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     return {handled:true,target:'enemy',targetUnitId:target.id,actualTargetUnitId:actual?.id||null,r};
   }
@@ -6045,7 +6097,7 @@ function sourcePerformPetStatusSkill(pet,action,options={}){
   const r=resolveAttackToEnemyWithGuardian(attacker,target,{
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   const actualDesc=actual?{kind:'enemy',unit:actual,unitId:actual.id}:targetDesc;
   const status=sourcePetApplyStatusAttackHit(pet,actualDesc,r,type,turn,meta?.n||'狀態攻擊');
 
@@ -6085,7 +6137,7 @@ function sourcePerformPetGuardianSkill(pet,action,options={}){
   const r=resolveAttackToEnemyWithGuardian(attacker,target,{
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
 
   // GUARDIAN_ATTACK 位於 fixed direct-attack 群組；進 BATTLE_Attack 前會被改回 COM_ATTACK，
   // 所以若對方沒有被 Guardian 代擋等條件阻斷，仍可進普通 Counter chain。
@@ -6131,7 +6183,7 @@ function sourcePerformPetContinuationSkill(pet,action,options={}){
       guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
       damageDivisor:count
     });
-    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
     hits++;
     lastResult=r;
     lastActual=actual;
@@ -6166,7 +6218,7 @@ function sourcePerformPetMightySkill(pet,action,options={}){
     damageMultiplier:multiplier,
     duckBonusPercent:duckBonus
   });
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   if(petIsBattleActive(pet)&&actual?.hp>0){
     resolvePetEnemyCounterChain('pet',pet,actual,r);
   }
@@ -6197,7 +6249,7 @@ function sourcePerformPetPowerBalanceSkill(pet,action,options={}){
   const r=resolveAttackToEnemyWithGuardian(attacker,target,{
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   if(petIsBattleActive(pet)&&actual?.hp>0){
     // Counter chain 會再次 petBattleView()；battlePetPowerMods 因此同時保留本輪攻／防。
     resolvePetEnemyCounterChain('pet',pet,actual,r);
@@ -6257,7 +6309,7 @@ function sourcePerformPetGuardBreakSkill(pet,action,options={}){
     addLog(guardian.name+' 嘗試忠犬代擋破防；依原 BATTLE_S_GBreak 舊 bug，只用其能力計算傷害，HP 仍扣 '+target.name+'。','pet');
   }
 
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   // caller 在原 defindex GUARD 時最後固定 iRet=FALSE，因此不進普通 Counter。
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
@@ -6338,7 +6390,7 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
   }
 
   addLog(pet.name+' 隨機使用「'+(meta?.n||'破除防禦之2')+'」（local defindex 倍率 ×'+Number(multiplier).toFixed(1)+'）。','pet');
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
 
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
@@ -6382,7 +6434,7 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   if(guardian){
     addLog(guardian.name+' 嘗試忠犬代擋落馬術；依原 BATTLE_S_FallGround caller-defindex bug，只用其能力算傷害，HP 與落馬判定仍留在 '+target.name+'。','pet');
   }
-  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
 
   let fallRoll=null,fallSuccess=false,enemyRideRuntime=false;
   if(r.damage>0&&!r.dodged&&!r.miss){
@@ -7170,7 +7222,7 @@ function captureTurn(manual=false){
       }
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
-      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
@@ -7195,32 +7247,53 @@ function winBattle(){
   const unitCount=Math.max(1,units.length);
   const serverResolved=units.length>0&&units.every(u=>u?.serverExpBase!=null);
   let exp=0,petExp=0;
+  const petExpById=new Map();
   const active=activePet();
-  const pet=active&&petIsBattleActive(active)?active:null;
+  const fallbackPet=active&&petIsBattleActive(active)?active:null;
+
   if(serverResolved){
+    // fixed BATTLE_AddExpItem: each newly dead Enemy pays EXP only to the current pBidList.
     for(const unit of units){
-      exp+=Math.max(0,n(serverBattleExpForRecipient(unit,state.level)));
-      if(pet)petExp+=Math.max(0,n(serverBattleExpForRecipient(unit,pet.level)));
+      for(const credit of sourceEnemyRewardCredits(unit)){
+        if(credit.kind==='player'){
+          exp+=Math.max(0,n(serverBattleExpForRecipient(unit,state.level)));
+        }else if(credit.kind==='pet'){
+          const p=state.petBox.find(x=>x.id===credit.petId);
+          if(!p)continue;
+          const amount=Math.max(0,n(serverBattleExpForRecipient(unit,p.level)));
+          petExpById.set(p.id,n(petExpById.get(p.id))+amount);
+        }
+      }
     }
   }else{
+    // Hand-authored quest formation still has no source per-unit EXP table; retain the existing explicit fallback.
     exp=fallbackBattleExp(defeated);
-    if(pet)petExp=Math.max(4,Math.round(exp*1.5));
+    if(fallbackPet)petExp=Math.max(4,Math.round(exp*1.5));
   }
+
   state.wins++;
   state.exp+=exp;
-  let petWinAiDelta=0;
-  if(pet){
-    // fixed BATTLE_AddExp 在寵物升級前，逐隻被擊倒 Enemy 增加 VARIABLEAI；
-    // 等級比較因此全部使用本場結算前的 Pet level snapshot。
-    const petLevelSnapshot=Math.max(1,Math.trunc(n(pet.level)));
-    for(const unit of units){
-      const change=sourcePetWinVariableAi(pet,unit?.level,petLevelSnapshot);
-      petWinAiDelta+=Math.trunc(n(change.delta));
+
+  if(serverResolved){
+    for(const [petId,amount] of petExpById){
+      const p=state.petBox.find(x=>x.id===petId);
+      // fixed battle result skips CHAR_ISDIE pets, but an alive Pet that LostEscape'd can still receive WORKGETEXP.
+      if(p&&n(p.hp)>0&&amount>0)awardPetExp(p,amount);
     }
-    if(petExp>0)awardActivePetExp(petExp);
+  }else if(fallbackPet&&petExp>0){
+    awardPetExp(fallbackPet,petExp);
   }
-  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP。'+(serverResolved?'（原 Enemy EXP／等級差衰減／battleexp ×'+Math.max(1,n(encounterRuntime?.enemyExp?.battleExpMultiplier)||1)+'）':'（手工任務編成沿用暫定 EXP）')+(pet&&petWinAiDelta?'；出戰寵忠誠修正 +'+(petWinAiDelta/100).toFixed(2):''),'good');
-  const drops=rollVerifiedDrops(defeated);
+
+  const rewardUnits=units.filter(u=>u?.sourceRewardPlayerSide===true);
+  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP。'
+    +(serverResolved
+      ?'（原 BATTLE_AddExpItem kill-credit；'+rewardUnits.length+'/'+units.length+' 隻由玩家側取得獎勵）'
+      :'（手工任務編成沿用暫定 EXP）'),'good');
+
+  const rewardDefeated=rewardUnits.length
+    ?(Array.isArray(defeated?.units)?Object.assign({},defeated,{units:rewardUnits}):defeated)
+    :null;
+  const drops=rewardDefeated?rollVerifiedDrops(rewardDefeated):[];
   // 被挑進 getitem 的 existing index 已轉為 player；其餘仍屬 Enemy 的 carried/style item 在 CHAR_endCharOneArray 等價清理。
   releaseBattleEnemyRuntimeItems(defeated);
   for(const item of drops){
@@ -7427,7 +7500,7 @@ function sourceComboTargetGuarding(target,playerGuarding=false){
   }
   return false;
 }
-function sourceComboApplyDamage(target,total,lastResult=null){
+function sourceComboApplyDamage(target,total,lastResult=null,rewardActors=[]){
   const damage=Math.max(0,Math.trunc(n(total)));
   if(!target||damage<=0)return 0;
   if(target.kind==='player'){
@@ -7446,6 +7519,7 @@ function sourceComboApplyDamage(target,total,lastResult=null){
     const before=n(target.unit.hp);
     target.unit.hp=Math.max(0,before-damage);
     sourceTrackDamageSubUltimate({kind:'enemy',unit:target.unit,unitId:target.unit.id},damage,before,lastResult||{});
+    if(before>0&&target.unit.hp<=0)sourceMarkEnemyDeathCredit(target.unit,rewardActors);
     return Math.max(0,before-target.unit.hp);
   }
   return 0;
@@ -7494,7 +7568,10 @@ function sourcePerformCombo(order,index,options={}){
   const lastComboResult=hits[hits.length-1]?.r
     ?Object.assign({},hits[hits.length-1].r,{ultimateCriticalEnemyOnly:true})
     :{ultimateCriticalEnemyOnly:true};
-  const actual=sourceComboApplyDamage(target,total,lastComboResult);
+  const actual=sourceComboApplyDamage(
+    target,total,lastComboResult,
+    hits.map(x=>({kind:x.kind,petId:x.petId||null}))
+  );
   const names=hits.map(x=>x.label).join('、');
   addLog(names+' 發動合擊，對 '+battleStatusDescName(target)+' 合計造成 '+actual+' 傷害。',target.kind==='enemy'?'good':'bad');
   return {comboId,target,totalDamage:actual,rawTotal:total,hits};
@@ -7714,7 +7791,7 @@ function attackTurn(){
       }
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
-      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
@@ -7804,7 +7881,7 @@ function guardTurn(){
       }
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
-      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+      const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
@@ -8288,7 +8365,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.18 載入完成：BATTLE_DamageSub Ultimate／打飛判定與 UltimateExtra 玩家／寵物死亡懲罰已接入主要物理路徑。','good');
+    addLog('V1.19 載入完成：BATTLE_AddExpItem 改依死亡當下 pBidList 做 kill-credit；來源 EXP、掉落與 Pet 勝利忠誠不再全隊共享。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

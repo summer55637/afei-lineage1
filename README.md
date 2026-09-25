@@ -10964,3 +10964,45 @@ Regression：
 - Ultimate Player charm -4 / low-level -2；Pet -1000 / low-level -500
 - normal death仍保留 V1.15 數值
 - battle reset 清空 Ultimate work/flags
+
+
+## V1.19 BATTLE_AddExpItem kill-credit
+
+固定來源：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+BATTLE_AddExpItem 不會在整場勝利後把每隻 Enemy EXP 平均或共享給所有出戰者。它在每次 BATTLE_AddProfit 被呼叫時掃描「HP<=0 且 ISDIE==FALSE」的 Enemy，然後只對這一次傳入的 pBidList 累加 CHAR_WORKGETEXP。
+
+普通攻擊／Counter 的 pBidList 通常只有目前攻擊者；Combo 的 pAttackList 則可以同時包含玩家與 Pet，因此 Combo 成員各自取得完整的該 Enemy EXP。
+
+同一段程式裡 AI_FIX_PETWIN / AI_FIX_PETGOLDWIN 也只對 pBidList 中 CHAR_TYPEPET 的成員執行。因此 V1.14 先前「只要 Pet 出戰，整場每隻死怪都增加忠誠」過寬。
+
+V1.19 新增 Enemy death credit：
+- Enemy 第一次 HP 歸 0 時固定 sourceRewardProcessed
+- 記錄當次 player-side attack list 到 sourceRewardCredits
+- Pet credit 在死亡當下立即執行 AI_FIX_PETWIN / PETGOLDWIN
+- 後續 battle finish 不再補整場 Pet win AI
+- Enemy 自己因 poison/status 或 enemy-side confusion 死亡時沒有 player-side credit，不補 EXP／掉落
+
+一般 source-resolved encounter：
+- 玩家只取得自己在 death pBidList 中的 Enemy EXP
+- Pet 只取得自己在 death pBidList 中的 Enemy EXP
+- Combo 中玩家＋Pet 都在 attack list 時兩者各拿完整 EXP
+- Pet 若之後死亡，原 battle result 會因 CHAR_ISDIE 跳過 Pet EXP；Web 同樣不發
+- Pet 若只是 LostEscape 而仍存活，原 CHAR_WORKGETEXP 仍可在結算時領取；Web 改用 petId credit，因此不要求 activePetId 仍存在
+
+掉落也沿用 BATTLE_AddExpItem 的 proflg：
+- 只有 sourceRewardPlayerSide=true 的死 Enemy 進戰利品池
+- enemy-side 自滅不產生玩家戰利品
+- 既有全場最多 3 格 getitem 等價池仍保留
+
+手工任務編成目前缺少可信的逐 Enemy 原始 EXP，因此 V1.19 不把 fallbackBattleExp 硬拆成猜測值；這些戰鬥暫時維持原本明確標示的 fallback EXP。Pet 勝利忠誠仍依真實 kill-credit 即時處理。
+
+Regression：
+- player kill => player source EXP only
+- Pet kill => Pet source EXP only + immediate AI_FIX_PETWIN/GOLDWIN
+- player+Pet Combo kill => both get full source EXP
+- enemy-side self/status death => no source EXP/drop
+- Pet death after earlier kill => AI already retained, but Pet EXP skipped
+- LostEscape after earlier kill => alive Pet may still receive accumulated EXP
+- source-resolved drop pool only contains player-side credited Enemy
+- fallback quest EXP remains explicit fallback, no invented per-unit values
