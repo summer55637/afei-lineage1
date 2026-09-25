@@ -10228,3 +10228,42 @@ V1.07 regression：
 - GUARD path no ordinary Counter
 - V1.06 PowerBalance 保留
 - save schema 21
+
+
+## V1.08 low-loyalty Pet NoGuard 150
+
+V1.08 接回 wild Lv1 清單中的 skill 150「不防守戰法」（沙瓦克）。
+
+source option：`回避%+30 反击%+50 会心%+20`。
+
+固定原 C 中真正生效的是：
+
+- `BATTLE_DuckCheck()`：defender COM=NOGUARD 時 + high(COM3) 回避。
+- `BATTLE_CounterCheckPet()`：attacker COM=NOGUARD 時 + (low(COM3)>>8) 反擊率。
+- `BATTLE_Counter()`：明確允許 COM_ATTACK 或 COM_S_NOGUARD 當反擊者。
+
+「會心 +20」則是來源死資料：唯一讀取該 low-byte 的 `BATTLE_CriticalCheckPet()` 整段被 `#if 0`，現行 `BATTLE_CriticalCheck()` 對 Pet 也改走 `BATTLE_CriticalCheckPlayer()`，後者不讀 NoGuard critical bonus。
+
+因此 V1.08：
+
+- 回避 +30 生效。
+- 反擊 +50 生效。
+- 會心 +20 保留解析與 log，但不套入 critical。
+- 技能本身 NoAction。
+- 從 Pet 真正使用後維持本輪剩餘時間。
+- 下一 round 清除。
+- paralysis/sleep/stone/barrier 覆寫 COM 時立即清除。
+- 不寫 save。
+
+V1.08 regression：
+
+- game.js syntax PASS
+- NoGuard battle state reset
+- petBattleView duckBonus / counterBonus
+- existing sourceBattleDuckTotal consumes +30
+- existing battleCounterChance consumes +50
+- critical +20 intentionally ignored
+- command-clearing status removes NoGuard
+- next round removes NoGuard
+- V1.07 GuardBreak retained
+- save schema 21

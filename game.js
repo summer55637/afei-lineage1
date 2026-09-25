@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1692,7 +1692,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -1896,6 +1896,7 @@ function sourceStatusClearsBattleCommand(type){
 function sourceClearPetBattleCommand(targetDesc,type){
   if(!sourceStatusClearsBattleCommand(type)||targetDesc?.kind!=='pet'||!targetDesc.pet)return;
   battlePetGuardIds.delete(targetDesc.pet.id);
+  battlePetNoGuardStates.delete(targetDesc.pet.id);
   sourceCancelPetCharge(targetDesc.pet);
 }
 function sourcePlayerPetGuardCommand(pet){
@@ -2122,11 +2123,13 @@ function petBattleView(pet){
   const defenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
   const quickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
   const powerMod=battlePetPowerMods.get(pet.id)||null;
+  const noGuard=battlePetNoGuardStates.get(pet.id)||null;
   const attack=powerMod&&Number.isFinite(Number(powerMod.attack))?Math.trunc(Number(powerMod.attack)):attackBase;
   const defense=powerMod&&Number.isFinite(Number(powerMod.defense))?Math.trunc(Number(powerMod.defense)):defenseBase;
   const fixedToughBase=pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh);
   return {
     type:'pet',attack,defense,stone,
+    duckBonus:n(noGuard?.duckBonus),counterBonus:n(noGuard?.counterBonus),
     fixedTough:weaken?Math.trunc(fixedToughBase*.8):fixedToughBase,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
@@ -5842,6 +5845,28 @@ function sourcePerformPetGuardBreakSkill(pet,action,options={}){
   };
 }
 
+function sourcePerformPetNoGuardSkill(pet,action){
+  const meta=action?.meta;
+  const option=String(meta?.o||'');
+  const readSigned=(label)=>{
+    const m=option.match(new RegExp(label+'%([+-]?\\d+)'));
+    return m?Math.trunc(Number(m[1])||0):0;
+  };
+  const duckBonus=readSigned('回避');
+  const counterBonus=readSigned('反击')||readSigned('反擊');
+  const parsedCritical=readSigned('会心')||readSigned('會心');
+
+  // fixed PETSKILL_NoGuard stores all three in COM3. However the only function
+  // reading the critical low byte is BATTLE_CriticalCheckPet inside #if 0.
+  battlePetNoGuardStates.set(pet.id,{duckBonus,counterBonus,parsedCritical,skillId:action?.skillId});
+
+  addLog(
+    pet.name+' 隨機使用「'+(meta?.n||'不防守戰法')+'」：本輪回避 +'+duckBonus+'、反擊 +'+counterBonus+
+    '；來源雖寫會心 '+(parsedCritical>=0?'+':'')+parsedCritical+'，但固定原 C 的讀取函式被 #if 0，實際不生效。','pet'
+  );
+  return {handled:true,skillId:action?.skillId,noAction:true,duckBonus,counterBonus,criticalBonusIgnored:parsedCritical};
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'};
   const ai=loyalty?.ai;
@@ -5921,6 +5946,9 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     }
     if(meta?.f==='PETSKILL_GuardBreak'){
       return sourcePerformPetGuardBreakSkill(pet,action,options);
+    }
+    if(meta?.f==='PETSKILL_NoGuard'){
+      return sourcePerformPetNoGuardSkill(pet,action);
     }
     addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');
     return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
@@ -6939,6 +6967,7 @@ function normalBattleOrder(options={}){
   battlePetGuardIds.clear();
   // complianceParameter 會在新 round 以 FIXSTR/FIXTOUGH 重建 WORK attack/defense。
   battlePetPowerMods.clear();
+  battlePetNoGuardStates.clear();
   battlePlayerGuardianPetId=null;
   // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；
   // EARTHROUND0 是明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
