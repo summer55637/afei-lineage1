@@ -2169,6 +2169,9 @@ function enemyChooseAction(unit){
     if(meta?.f==='PETSKILL_NormalGuard')return {kind:'guard',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
     return Object.assign({},picked,{spec,skillMeta:meta});
   }
+  // 原 BATTLE_ai_normal() 會把 ma 權重納入抽籤，但沒有 B_AI_MAGICMODE handler；
+  // 抽中後一路 return FALSE，BATTLE_ai_all() 不設 C_OK，因此本回合停在 C_WAIT、StatusSeq 也不跑。
+  if(picked.kind==='magic')return {kind:'none',spec,sourceMagicCWait:true,sourceCWaitReason:'magic-mode-unhandled'};
   return Object.assign({},picked,{spec});
 }
 function enemySignedSkillPercent(option,key){
@@ -5204,6 +5207,7 @@ function normalBattleOrder(){
       sourceSkillMissing:!!action.sourceSkillMissing,
       sourceSkillUnregistered:!!action.sourceSkillUnregistered,
       sourceSkillRejected:!!action.sourceSkillRejected,
+      sourceMagicCWait:!!action.sourceMagicCWait,
       sourceCWaitReason:action.sourceCWaitReason||null,
       targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
     });
@@ -5215,7 +5219,7 @@ function normalBattleOrder(){
   return order;
 }
 function sourceEnemyCWait(actor){
-  if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillUnregistered&&!actor.sourceSkillRejected))return false;
+  if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillUnregistered&&!actor.sourceSkillRejected&&!actor.sourceMagicCWait))return false;
   const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
   if(unit){
     if(actor.sourceSkillMissing){
@@ -5224,6 +5228,8 @@ function sourceEnemyCWait(actor){
       addLog(unit.name+' 的 Enemy AI 抽到 PetSkill '+actor.skillId+'，但原 build 找不到可註冊的技能函式；PETSKILL_Use() 回 FALSE，維持 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
     }else if(actor.sourceCWaitReason==='sacrifice-low-hp'){
       addLog(unit.name+' 嘗試使用救援，但目前 HP 不高於最大 HP 的 20%；原 PETSKILL_Sacrifice() 直接失敗並停在 C_WAIT，本回合不跑自身 StatusSeq。');
+    }else if(actor.sourceMagicCWait){
+      addLog(unit.name+' 的 Enemy AI 抽中 ma／B_AI_MAGICMODE；原 BATTLE_ai_normal() 沒有 magic case 並直接 return FALSE，因此維持 C_WAIT，本回合不行動且不跑自身 StatusSeq。');
     }
   }
   return true;
