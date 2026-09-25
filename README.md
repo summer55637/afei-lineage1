@@ -5432,3 +5432,373 @@ V0.70：
 - `game.js` JavaScript 語法解析：通過。
 
 V0.70 至此把 V0.68／V0.69 的 ITEM existing-index allocator 從「只知道 occupancy／ownership」推進成「existing item 同時帶有原 itemset6 的正式 MAGICUSEMP 資料」，讓 allocator history 可以真正改變 676／688 的施法結果。
+
+
+## V0.71 Enemy 武器 runtime / compliance
+
+V0.71 把 V0.69 已建立的 Enemy STYLE existing item 從「只追蹤 ownership／生命週期」推進成原 `CHAR_complianceParameter()` 會真正讀取的戰鬥裝備。
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/itemset6.txt`
+- `gmsv/src/char/enemy.c`
+- `gmsv/src/char/char.c`
+- `gmsv/src/item/item.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle_ai.c`
+
+新增：
+
+`data/generated/stoneage_enemy_weapon_runtime.json`
+
+### STYLE 武器與 itemset6
+
+原 `ENEMY_createEnemy()`：
+
+1. 建立 Enemy Char。
+2. 先建立 10 格 carried item。
+3. 依 `ENEMY_STYLE` 建立 `CHAR_ARM` 武器。
+4. 呼叫 `ENEMY_RandomChange()`。
+5. 最後才呼叫 `CHAR_complianceParameter()`。
+
+STYLE 對應仍為：
+
+- 1 → Item 0 小斧頭
+- 2 → Item 100 小棍棒
+- 3 → Item 200 小的槍
+- 4 → Item 400 小的弓箭
+- 5 → Item 500 小的回旋標
+- 6 → Item 700 小的石
+- 7 → Item 600 小的投擲斧頭
+
+目前 2958 筆 Enemy 中：
+
+- STYLE=0：2899
+- STYLE=1：7
+- STYLE=2：12
+- STYLE=3：4
+- STYLE=4：11
+- STYLE=5：8
+- STYLE=6：5
+- STYLE=7：12
+
+也就是 **59 隻 Enemy 的 STYLE 武器會實際改變戰鬥能力**。
+
+### 八個 Enemy 自動武器模板
+
+除七種 STYLE 武器外，`ENEMY_RandomChange()` 人形分支還會用：
+
+- Item 2498「敵人專用弓箭」
+
+V0.71 runtime 共保存 8 個原 itemset6 模板。
+
+和目前 battle 直接相關的來源值：
+
+| Item | 名稱 | Type | 攻 | 防 | 敏 | Critical | AttackNum |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 0 | 小斧頭 | AXE | +9 | -3 | -3 | 0 | 1～1 |
+| 100 | 小棍棒 | CLUB | +4 | 0 | 0 | +1 | 1～1 |
+| 200 | 小的槍 | SPEAR | +5 | 0 | -1 | +1 | 0～0 |
+| 400 | 小的弓箭 | BOW | +2 | -1 | 0 | 0 | 1～3 |
+| 500 | 小的回旋標 | BOOMERANG | +3 | 0 | 0 | 0 | 1～1 |
+| 600 | 小的投擲斧頭 | BOUNDTHROW | +4 | 0 | 0 | +3 | 1～1 |
+| 700 | 小的石 | BREAKTHROW | +3 | -1 | 0 | 0 | 1～1 |
+| 2498 | 敵人專用弓箭 | BOW | 0 | 0 | 0 | 0 | 3～5 |
+
+這批會進 `ITEM_equipEffect()` 的裝備 modifier pair 全部都是 min=max，所以 V0.71 可以精確套值，不需要自行增加建立道具時的猜測 RNG。
+
+### CHAR compliance
+
+原：
+
+`CHAR_complianceParameter()`
+
+先：
+
+`CHAR_initcharWorkInt()`
+
+建立裸：
+
+- WORKFIXSTR
+- WORKFIXTOUGH
+- WORKFIXDEX
+- WORKMAXHP / WORKMAXMP
+
+再：
+
+`ITEM_equipEffect()`
+
+把裝備 modifier 加進 work 值。
+
+V0.71 新增：
+
+- `sourceEnemyWeaponTemplate()`
+- `sourceEnemyWeaponCompliance()`
+
+Enemy 最終：
+
+- attack += weapon modifyAttack，最低 0
+- defense += weapon modifyDefense，最低 -100
+- quick += weapon modifyQuick，最低 -100
+- maxHp / maxMp 同樣保留 equip-effect clamp
+- weapon critical、type、attackNum 另保存於 Enemy battle runtime
+
+所以例如 STYLE 1 的小斧頭不再只是 existing item：
+
+- 攻 +9
+- 防 -3
+- 敏 -3
+
+都會真正改變 Enemy 戰鬥值與出手排序。
+
+### RandomChange 人形換武器
+
+原 `ENEMY_RandomChange()` 的人形 Enemy 範圍：
+
+- 564～580
+- 739～750
+- 895～906
+
+目前資料共 41 隻。
+
+它會呼叫：
+
+`DoujyouRandomWeponSet()`
+
+原流程不是覆蓋一個武器 ID 而已：
+
+1. 先讀目前 `CHAR_ARM`。
+2. 若 existing index 有效，先 `ITEM_endExistItemsOne()`。
+3. 抽九種：
+   - none
+   - FIST
+   - AXE
+   - CLUB
+   - SPEAR
+   - BOW
+   - BOOMERANG
+   - BOUNDTHROW
+   - BREAKTHROW
+4. 有實體武器才再 `ITEM_makeItemAndRegist()`。
+5. 新 existing index 寫回 `CHAR_ARM`。
+
+V0.71 現在同樣：
+
+- 先釋放原 STYLE existing slot
+- 再配置新的 `enemy-dojo-weapon`
+- `releaseEnemyRuntimeItems()` 同時認得最終 `weaponItemIndex`
+- 不會因 RandomChange 換武器而漏 existing slot
+
+特別注意原道場 BOW：
+
+**BOW → Item 2498**
+
+不是 STYLE 的 Item 400。
+
+none／FIST 不建立新 Item；來源會留下已失效的舊 ARM index，之後 `ITEM_CHECKINDEX` 失敗，戰鬥上等價空手。web 以無有效 weapon slot 表示同一語意。
+
+目前這 41 隻人形 RandomChange 剛好 STYLE 全為 0，但仍完整保留上述流程，避免未來資料變更後行為錯誤。
+
+寵物型 RandomChange：
+
+- 655～720
+- 859～894
+- 907～940
+
+目前共 136 隻，只換技能、不換武器；V0.71 同樣保留。
+
+### 武器 Critical
+
+原 `BATTLE_CriticalCheck()` 對 Player / Pet / Enemy 最後都實際呼叫同一個：
+
+`BATTLE_CriticalCheckPlayer()`
+
+它會直接從 `CHAR_ARM` existing item 讀：
+
+`ITEM_CRITICAL`
+
+公式中的裝備值：
+
+`At_Soubi * 0.5`
+
+是在乘 `wari` **之前**加入。
+
+V0.71 的 `battleCriticalChance()` 已補上這個順序。
+
+因此：
+
+- CLUB +1
+- SPEAR +1
+- BOUNDTHROW +3
+
+都會真正影響 Enemy 會心率。
+
+### 弓的會心傷害例外
+
+原 `BATTLE_AttackSeq()` 即使弓箭通過 Critical 判定，若：
+
+`gWeponType == ITEM_BOW`
+
+不呼叫 `BATTLE_CriDamageCalc()`，而只走普通：
+
+`BATTLE_DamageCalc()`
+
+因此弓仍可帶 critical flag，但**不取得一般會心的額外防禦補傷**。
+
+V0.71 已保留此例外。
+
+### 投射武器禁止反擊
+
+原 `BATTLE_IsThrowWepon()`：
+
+- BOW
+- BOOMERANG
+- BREAKTHROW
+- BOUNDTHROW
+
+皆為 TRUE。
+
+`BATTLE_CounterCheckPlayer()` 與 `BATTLE_CounterCheckPet()` 都先檢查：
+
+- 反擊者是否拿投射武器
+- 被反擊者是否拿投射武器
+
+任一成立直接 return FALSE。
+
+V0.71 的 counter path 現在同樣在最前面阻擋，因此 Enemy 拿弓／回力標／投斧／石頭時，不再錯誤觸發玩家或寵物的近身反擊鏈。
+
+### CounterTbl 與原 SPEAR bug
+
+Player 反擊使用：
+
+`CriPer * CounterTbl * 0.1 + Luck`
+
+V0.71 正式接回原 `CounterTbl`。
+
+因此先前 web 註解假設的「FIST vs FIST = 10」並不正確；原：
+
+- FIST → `BATTLE_C_CLAW`
+- FIST vs FIST 的表值實際是 **9**
+
+另外原 `BATTLE_ItemType2ItemMap()` 明確有：
+
+- FIST
+- AXE
+- CLUB
+- BOW
+- BOOMERANG / BOUNDTHROW / BREAKTHROW
+
+卻**漏掉 SPEAR**。
+
+因此 SPEAR 會保持預設：
+
+`BATTLE_C_NONE = 0`
+
+V0.71 故意保留這個來源 bug，不自行幫原 C 修正。
+
+Enemy / Pet 作為反擊者走 `BATTLE_CounterCheckPet()`，來源本來就不使用 CounterTbl；web 沒有錯套 Player 表。
+
+### 捕獲不繼承 Enemy 武器
+
+原 `PET_createPetFromCharaIndex()` 會複製 Enemy 的角色能力／技能等，但不複製 item slots。
+
+因此被捕獲 Enemy 的 STYLE／道場武器不能變成新 Pet 的永久能力。
+
+V0.71：
+
+- Enemy 戰鬥時使用完成 equip compliance 的 attack / defense / quick
+- 捕獲時 `serverCombat` 明確取 `serverDerived` 裸能力
+- Pet 後續 `petBattleView()` 也會由 `serverStats` 重算裸 combat
+- Enemy 武器 existing item 照原離場流程釋放
+
+同時修正捕獲率中的 Enemy DEX：
+
+原 `BATTLE_CaptureCheck()` 使用：
+
+`CHAR_WORKFIXDEX`
+
+所以 V0.71 改用已完成 compliance 的 `target.quick`，STYLE／道場武器的敏捷修正會正確進捕獲公式；不是再使用未縮放的 raw template DEX。
+
+### ma / B_AI_MAGICMODE 的來源 C_WAIT
+
+V0.71 追查另一個舊邊界：
+
+`BATTLE_ai_normal()` 會讀：
+
+`ma`
+
+並把 `B_AI_MAGICMODE` 納入權重抽籤。
+
+但來源函式後半只有：
+
+- ATTACK
+- GUARD
+- ESCAPE
+- WAZA
+
+沒有任何 `B_AI_MAGICMODE` case。
+
+所以若抽中 magic：
+
+- 函式一路落到 `return FALSE`
+- `BATTLE_ai_all()` 不把角色設成 C_OK
+- Enemy 保持 C_WAIT
+- 本回合連自己的 StatusSeq 都不執行
+
+V0.71 已把舊的「magic effect 未配置，所以空過」改成正式 source C_WAIT。
+
+目前 `stoneage_enemy_ai.json` 2958 隻 Enemy 的 `m > 0` 數量為 **0**，所以此 bug 在目前資料不可達；保留這個 handler 是為了未來 source 資料若出現 ma 時仍不偏離原 C。
+
+### Save schema
+
+V0.71 **不升 schema**，仍為 **21**。
+
+原因：
+
+- weapon template 是靜態 generated runtime
+- Enemy unit / equipped weapon 是單場 battle runtime
+- existing item ownership 仍沿用 schema 21 的 `itemRuntime`
+- 沒有新增需持久化的玩家欄位
+
+### 尚未在 V0.71 展開的 weapon command
+
+V0.71 已接「裝備與 compliance」，但沒有把所有武器 command 一次混進來。
+
+原 `BATTLE_GetAttackCount()` 與 battle command 還包含：
+
+- BOW 的 AttackNum 多段／多 target 流程
+- Item 2498 的 3～5 次弓攻擊
+- STYLE Item 400 的 1～3 次弓攻擊
+- BOOMERANG 將普通 ATTACK 改成 `BATTLE_COM_BOOMERANG`
+- BREAKTHROW 的麻痺附加狀態
+- 遠距武器的完整 target list / command 細節
+
+這些屬於下一層「weapon battle command」，V0.71 不用單體普通攻擊硬冒充完整弓／回力標流程。
+
+### V0.71 回歸
+
+目前確認：
+
+- `game.js` 完整 JavaScript 語法解析：PASS
+- 8 個 Enemy 自動武器模板：全部存在
+- equip modifier pair：全部 deterministic
+- STYLE mapping：改由 runtime data 驅動
+- RandomChange：在 STYLE allocation 之後
+- human RandomChange：舊 ARM existing slot 先 free，再建 dojo weapon
+- dojo BOW：Item 2498
+- Enemy 結束：final weapon slot 可釋放
+- 攻／防／敏 compliance：接入
+- ITEM_CRITICAL：接入
+- BOW critical damage 例外：接入
+- throw weapon counter block：接入
+- CounterTbl：接入，SPEAR 原 mapping bug 保留
+- 捕獲：不繼承裝備，FIXDEX 使用 final compliance 值
+- ma：source C_WAIT
+- schema：維持 21
+
+V0.71 至此把 Enemy STYLE 從「存在一把 item」推進成「原 C 真正會影響 WORKFIX 與物理戰鬥判定的裝備」。
+
+下一個最直接的來源缺口是 **BATTLE_GetAttackCount + BOW / BOOMERANG / BREAKTHROW weapon command**。
