@@ -10631,3 +10631,131 @@ V1.13 新增共用 `sourceCreateQuestGetPet()`：
 - quest pet server progression 可進 `serverPetLevelUp()`
 - schema 22 one-time migration
 - Marefia memory levelCap lifecycle 保留
+
+
+## V1.14 captured Pet loyalty / VARIABLEAI lifecycle
+
+V1.14 繼續沿用固定原 C：
+
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+本輪不是新增自訂忠誠規則，而是把一般捕獲寵目前漏掉的原服務端 lifecycle 接回來。
+
+### 1. PET_createPetFromCharaIndex 會複製原 Enemy 的寵物欄位
+
+`gmsv/src/char/pet.c::PET_createPetFromCharaIndex()` 會把被捕獲 Enemy 的：
+
+- VITAL / STR / TOUGH / DEX
+- LUCK
+- 四屬性
+- SLOT / MODAI / LV
+- 六種異常抗性
+- RARE / PETRANK / PETID / CRITICAL / COUNTER
+- PETSKILL1..7
+- ALLOCPOINT
+
+複製進新 Pet。
+
+`char_base.h` 中 Pet alias 又明確定義：
+
+- `CHAR_MODAI = CHAR_CHARM`
+- `CHAR_VARIABLEAI = CHAR_LUCK`
+
+fixed Enemy 預設 `CHAR_LUCK=0`，因此一般捕獲寵建立後 VariableAI 的來源初值為 0。
+
+### 2. 捕獲成功後有效忠誠最高 60
+
+`battle_event.c::BATTLE_Capture()` 在 `PET_createPetFromCharaIndex()` 成功後會：
+
+1. 設 `CHAR_PETGETLV = 當下 Pet Lv`
+2. `CHAR_complianceParameter(pindex)`
+3. 強制 `CHAR_VARIABLEAI = 0`
+4. 計算 `CHAR_DEFAULTMAXAI(60) - CHAR_WORKFIXAI`
+5. 若結果 < 0，加入 `差值 * 100` 的負 VariableAI
+
+所以如果捕獲當下原公式會算出 FIXAI 100：
+
+- 差值 = 60 - 100 = -40
+- VariableAI = -4000
+- 最終有效 FIXAI = 60
+
+如果原 FIXAI 本來只有 48，就不會補正，仍維持 48。
+
+V1.14 新增 `sourceApplyCapturedPetInitialAi()`，只在**新捕獲**當下依目前玩家等級、魅力、Pet 等級與 source MODAI 做這個修正。
+
+舊存檔不強制回推，因為舊資料沒有保存「當初捕獲時」的玩家等級與魅力；用現在狀態倒算會是假資料，違反「原 C 規則優先、不猜數值」。
+
+新捕獲 Pet 同時保存 `petGetLv`，對應原 `CHAR_PETGETLV`。
+
+### 3. 擊倒 Enemy 會增加 VariableAI
+
+固定 `battle.c::BATTLE_AddExp()` 對有參戰並存活的 Pet，每一名被擊倒 Enemy 都會：
+
+- Enemy Lv > Pet Lv：`AI_FIX_PETGOLDWIN = +20`
+- 否則：`AI_FIX_PETWIN = +1`
+
+VariableAI 的單位是百分之一，所以分別等於：
+
+- +0.20 有效忠誠
+- +0.01 有效忠誠
+
+比較使用的是戰鬥獎勵處理當下的 Pet 等級；原版是先做每隻 Enemy 的獎勵，再處理 Pet 升級，因此 V1.14 對整場所有 Enemy 都使用**升級前 Pet Lv snapshot**。
+
+### 4. 每升一級再 +5 忠誠
+
+固定戰鬥結果流程：
+
+```c
+for (j = 0; j < UpLevel; j++) {
+    CHAR_PetLevelUp(petindex);
+    CHAR_PetAddVariableAi(petindex, AI_FIX_PETLEVELUP);
+}
+```
+
+而：
+
+```c
+#define AI_FIX_PETLEVELUP (+5*100)
+```
+
+因此 V1.14 的 `awardActivePetExp()` 每升一級除了既有 `CHAR_PetLevelUp` 等價能力成長，也同步：
+
+`VariableAI += 500`
+
+即有效忠誠 +5。
+
+這也適用於 Event reward Pet；`GetPet` 本身不套「捕獲上限 60」，但之後正常參戰／升級仍依相同 VariableAI lifecycle 成長。
+
+### 5. Clamp
+
+fixed `CHAR_PetAddVariableAi()`：
+
+- 最大 `+100*100 = +10000`
+- 最小 `-100*100 = -10000`
+
+V1.14 的 `sourcePetAddVariableAi()` 完全使用同一範圍。
+
+### 本輪刻意未擴充
+
+來源另有玩家死亡、Pet 死亡、必殺飛出、復活、騎乘等 VariableAI 增減。
+
+這些行為只有在對應 Web lifecycle 能完整對齊時才接；V1.14 先處理目前可完整證明且正常流程直接可達的：
+
+- 捕獲
+- 擊倒 Enemy
+- Pet 升級
+
+不為未完整建模的系統猜補效果。
+
+### V1.14 regression targets
+
+- new capture：先 VariableAI=0，再把 FIXAI >60 的部分壓到 60
+- FIXAI <=60 的捕獲寵不被硬抬到 60
+- capture petGetLv 保存
+- 每 defeated Enemy：EnemyLv>PetLv => +20；否則 +1
+- 多敵人戰逐隻累積
+- victory AI 比較使用升級前 Pet Lv
+- 每升 1 級 VariableAI +500
+- VariableAI clamp -10000..10000
+- quest GetPet 不套 capture 60 cap
+- 舊存檔不以現在玩家狀態偽造歷史 capture offset

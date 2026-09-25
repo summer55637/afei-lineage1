@@ -1524,6 +1524,8 @@ function awardActivePetExp(amount){
     if(need<=0||p.exp<need)break;
     p.exp-=need;p.level++;upCount++;
     if(serverPetLevelUp(p))growthCount++;
+    // fixed BATTLE result loop：每次 CHAR_PetLevelUp 後緊接 AI_FIX_PETLEVELUP (+5*100)。
+    sourcePetAddVariableAi(p,500);
   }
   if(isMarefia&&p.level>=maxLevel){
     const next=petExpToNext(p.level);
@@ -5405,6 +5407,44 @@ function petSourceModAi(pet){
   const modAi=Number(raw);
   return Number.isFinite(modAi)?modAi:null;
 }
+const SOURCE_PET_VARIABLE_AI_MIN=-10000;
+const SOURCE_PET_VARIABLE_AI_MAX=10000;
+const SOURCE_CAPTURE_MAX_FIXAI=60;
+function sourcePetAddVariableAi(pet,delta){
+  if(!pet)return {before:0,delta:0,after:0};
+  const before=clamp(Math.trunc(n(pet.variableAi)),SOURCE_PET_VARIABLE_AI_MIN,SOURCE_PET_VARIABLE_AI_MAX);
+  const after=clamp(before+Math.trunc(n(delta)),SOURCE_PET_VARIABLE_AI_MIN,SOURCE_PET_VARIABLE_AI_MAX);
+  pet.variableAi=after;
+  return {before,delta:after-before,after};
+}
+function sourceApplyCapturedPetInitialAi(pet){
+  if(!pet)return null;
+  // BATTLE_Capture() 在 PET_createPetFromCharaIndex() 後重新 compliance，
+  // 接著明確把 CHAR_VARIABLEAI 清成 0；若 FIXAI > CHAR_DEFAULTMAXAI(60)，
+  // 再補 (60-FIXAI)*100 的負修正，使剛捕獲時的有效忠誠最高正好 60。
+  pet.variableAi=0;
+  const raw=petFixedAi(pet);
+  if(!raw)return {resolved:false,reason:'missing-modai'};
+  const over=Math.trunc(n(raw.ai))-SOURCE_CAPTURE_MAX_FIXAI;
+  let adjust={before:0,delta:0,after:0};
+  if(over>0)adjust=sourcePetAddVariableAi(pet,-over*100);
+  const final=petFixedAi(pet);
+  pet.captureAiInit={
+    source:'BATTLE_Capture',
+    rawFixAi:Math.trunc(n(raw.ai)),
+    variableAi:Math.trunc(n(pet.variableAi)),
+    finalFixAi:final?Math.trunc(n(final.ai)):null
+  };
+  return {resolved:true,raw,adjust,final};
+}
+function sourcePetWinVariableAi(pet,enemyLevel,petLevelSnapshot=null){
+  if(!pet)return {before:0,delta:0,after:0};
+  // BATTLE_AddExp：敵人等級 > 寵物等級時 AI_FIX_PETGOLDWIN=+20，
+  // 否則 AI_FIX_PETWIN=+1。這些是 VARIABLEAI 的百分之一單位。
+  const petLv=Math.max(1,Math.trunc(n(petLevelSnapshot??pet.level)));
+  const foeLv=Math.max(1,Math.trunc(n(enemyLevel)));
+  return sourcePetAddVariableAi(pet,foeLv>petLv?20:1);
+}
 function petFixedAi(pet){
   if(!pet||!state)return null;
   const sourceModAi=petSourceModAi(pet);
@@ -5415,7 +5455,7 @@ function petFixedAi(pet){
   // ai=((hostLV*WORKFIXCHARM*1.10)/(petLV*modai))*100，指定給 int 時截斷；
   // 然後 cap 100，再做 ai += VARIABLEAI*0.01。ai 本身仍是 C int，
   // 因此 compound assignment 後還會再截整數，最後才 clamp 0..100。
-  // 本 web 尚無轉生系統；捕獲／任務寵也沒有 VariableAI 改寫，等價來源初值 0。
+  // 本 web 尚無玩家轉生系統；VariableAI 則由捕獲、擊倒與升級 lifecycle 依 fixed C 累積。
   const modAi=sourceModAi<=0?100:sourceModAi;
   const hostLv=Math.max(1,Math.trunc(n(state.level)));
   const petLv=Math.max(1,Math.trunc(n(pet.level)));
@@ -6762,11 +6802,14 @@ function createCapturedPet(target=targetEnemyUnit()){
     petRank:target?.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))?Math.trunc(Number(target.enemyExpRankIndex)):null,
     serverProgression:!!(target?.serverDerived&&target?.allocatedFrom&&target?.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))),
     serverInitNum:target?.serverInitNum??null,serverLvUpPoint:target?.serverLvUpPoint??null,
+    petGetLv:target?.level||enemy?.level||1,
+    variableAi:0,
     capturedAt:Date.now()
   };
   if(n(target?.maxHp)>0)pet.maxHp=Math.max(1,Math.trunc(n(target.maxHp)));
   syncPetBattleHp(pet,true);
   if(target&&Number.isFinite(Number(target.hp)))pet.hp=clamp(Math.trunc(n(target.hp)),0,pet.maxHp);
+  sourceApplyCapturedPetInitialAi(pet);
   return pet;
 }
 function addCapturedPet(target=targetEnemyUnit()){
@@ -6990,8 +7033,18 @@ function winBattle(){
   }
   state.wins++;
   state.exp+=exp;
-  if(pet&&petExp>0)awardActivePetExp(petExp);
-  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP。'+(serverResolved?'（原 Enemy EXP／等級差衰減／battleexp ×'+Math.max(1,n(encounterRuntime?.enemyExp?.battleExpMultiplier)||1)+'）':'（手工任務編成沿用暫定 EXP）'),'good');
+  let petWinAiDelta=0;
+  if(pet){
+    // fixed BATTLE_AddExp 在寵物升級前，逐隻被擊倒 Enemy 增加 VARIABLEAI；
+    // 等級比較因此全部使用本場結算前的 Pet level snapshot。
+    const petLevelSnapshot=Math.max(1,Math.trunc(n(pet.level)));
+    for(const unit of units){
+      const change=sourcePetWinVariableAi(pet,unit?.level,petLevelSnapshot);
+      petWinAiDelta+=Math.trunc(n(change.delta));
+    }
+    if(petExp>0)awardActivePetExp(petExp);
+  }
+  addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP。'+(serverResolved?'（原 Enemy EXP／等級差衰減／battleexp ×'+Math.max(1,n(encounterRuntime?.enemyExp?.battleExpMultiplier)||1)+'）':'（手工任務編成沿用暫定 EXP）')+(pet&&petWinAiDelta?'；出戰寵忠誠修正 +'+(petWinAiDelta/100).toFixed(2):''),'good');
   const drops=rollVerifiedDrops(defeated);
   // 被挑進 getitem 的 existing index 已轉為 player；其餘仍屬 Enemy 的 carried/style item 在 CHAR_endCharOneArray 等價清理。
   releaseBattleEnemyRuntimeItems(defeated);
@@ -8043,7 +8096,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.83 載入完成：普通物理 BATTLE_AttrAdjust 改依 fixed C 分段 int 截斷；五個屬性分量、AttrCalc /10000、戰場倍率各自按原型別落地。','good');
+    addLog('V1.14 載入完成：捕獲寵初始忠誠上限、擊倒與升級 VariableAI lifecycle 已依 fixed C 接入。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
