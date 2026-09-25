@@ -1607,14 +1607,36 @@ const BATTLE_STATUS_NAMES=Object.freeze({
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function sourceEnemySkipsPreCommandCompliance(unit){
+  // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
+  // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
+  return !!unit?.earthRoundState?.hidden;
+}
+function sourcePreCommandKeySkipsCompliance(key){
+  if(!String(key||'').startsWith('enemy:'))return false;
+  const id=String(key).slice(6);
+  const unit=livingEnemyUnits().find(u=>String(u.id)===id);
+  return !!(unit&&sourceEnemySkipsPreCommandCompliance(unit));
+}
+function sourcePreCommandResetTransient(){
+  // Most actors rebuild WORKQUICK from FIXDEX here. EARTHROUND0 skips that rebuild,
+  // so a DRUNK-expiry ×2 from the previous turn must survive while hidden.
+  const keep=new Set();
+  for(const key of battleDrunkReleaseBoostKeys){
+    if(sourcePreCommandKeySkipsCompliance(key))keep.add(key);
+  }
+  battleDrunkReleaseBoostKeys=keep;
+}
 function sourcePreCommandStatusTick(){
   // fixed C: _CHAR_complianceParameter -> Other_DefcharWorkInt runs before EntrySort.
+  // EARTHROUND0 is the explicit exception and skips this entire compliance stage.
   // WEAKEN applies FIXSTR/FIXTOUGH/FIXDEX * 0.8 and then decrements WORKWEAKEN.
   // BARRIER only decrements WORKBARRIER here. BATTLE_StatusSeq later protects positive
   // WEAKEN/BARRIER counters from a second net decrement.
   battleWeakenRoundKeys=new Set();
   for(const [key,st] of [...battleStatuses.entries()]){
     if(!st||st.turns<=0)continue;
+    if(sourcePreCommandKeySkipsCompliance(key))continue;
     if(st.type==='weaken'){
       battleWeakenRoundKeys.add(key);
       st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
@@ -1654,7 +1676,8 @@ function battleElementsForDesc(desc){
   return battleBaseElements(desc);
 }
 function battlePrepareElementWork(){
-  battleElementWork=new Map();
+  const previous=battleElementWork;
+  const next=new Map();
   const list=[];
   if(state)list.push({kind:'player'});
   const pet=activePet();
@@ -1662,10 +1685,17 @@ function battlePrepareElementWork(){
   for(const unit of livingEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
   for(const desc of list){
     const key=battleStatusKey(desc);
+    if(desc.kind==='enemy'&&sourceEnemySkipsPreCommandCompliance(desc.unit)&&key&&previous.has(key)){
+      // EARTHROUND0 does not run complianceParameter nor BATTLE_AttReverse:
+      // preserve the exact previous FIX attribute snapshot.
+      next.set(key,previous.get(key));
+      continue;
+    }
     let work=battleBaseElements(desc);
     if(key&&battleReverseKeys.has(key))work=battleReverseElements(work);
-    if(key)battleElementWork.set(key,work);
+    if(key)next.set(key,work);
   }
+  battleElementWork=next;
 }
 function battleToggleAttributeReverse(desc){
   const key=battleStatusKey(desc);
@@ -2246,6 +2276,17 @@ function enemyGuardianFor(target,attackerUnit=null){
 }
 function enemyPrepareRoundAction(unit,action){
   const desc={kind:'enemy',unit,unitId:unit?.id};
+
+  if(action?.kind==='earthround'&&sourceEnemySkipsPreCommandCompliance(unit)){
+    // EARTHROUND0 的 release round 在 fixed C 於 PreCommandSeq 直接 continue。
+    // 不重建 FIX/WORK，不衰減 TurnParam，也不重新套 WEAKEN；沿用隱身前一輪快照。
+    unit.counterEligibleThisTurn=false;
+    unit.noGuardDuckBonus=0;
+    unit.noGuardCounterBonus=0;
+    unit.noGuardThisTurn=false;
+    return;
+  }
+
   const weakened=battleWeakenRoundActive(desc);
 
   // fixed C 的 PreCommandSeq -> complianceParameter -> Other_DefcharWorkInt：
@@ -3421,7 +3462,11 @@ function performEnemyChargeState(actor,unit,options={}){
     return {kind:'charge',charging:true,remaining:charge.remaining};
   }
 
-  unit.roundAttack=Math.trunc(n(unit.attack))+Math.trunc(n(unit.attack)*n(charge.attackPct)/100);
+  // fixed BATTLE_Charge release：使用「釋放回合」已完成 complianceParameter 的 FIXSTR，
+  // 再加 COM3 high 的攻擊百分比。當前正權重 Enemy 沒有可達 WORKMODATTACK 來源，
+  // 因此此 runtime 的額外 MODATTACK 等價 0，不自行建立猜測值。
+  const releaseFixAttack=Math.trunc(n(unit.roundAttack??unit.attack));
+  unit.roundAttack=releaseFixAttack+Math.trunc(releaseFixAttack*n(charge.attackPct)/100);
   unit.counterEligibleThisTurn=false;
   const releaseActor=Object.assign({},actor,{
     targetKind:charge.targetKind,
@@ -5741,12 +5786,12 @@ function sourcePerformCombo(order,index,options={}){
 }
 
 function normalBattleOrder(options={}){
-  // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；這也會清掉上一輪
-  // 酒醉解除時錯誤留下的 WORKQUICK ×2。
-  battleDrunkReleaseBoostKeys=new Set();
+  // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；
+  // EARTHROUND0 是明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
+  sourcePreCommandResetTransient();
   // Other_DefcharWorkInt 同一階段處理 WEAKEN / BARRIER 的真正倒數與 WEAKEN 0.8 FIX 快照。
   sourcePreCommandStatusTick();
-  // 再依 REVERSE flag 套 BATTLE_AttReverse。
+  // 再依 REVERSE flag 套 BATTLE_AttReverse；EARTHROUND0 同樣保留舊 FIX 屬性快照。
   battlePrepareElementWork();
   const order=[];
   let orderIndex=0;
@@ -6428,7 +6473,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.78 載入完成：PETSKILL_StatusChange 的 攻%／防% 已依 fixed C 在 EntrySort 前覆寫本回合 WORK 能力；毒／石／亂／醉／眠不再用普通攻擊力結算。','good');
+    addLog('V0.79 載入完成：跨回合 Charge／EarthRound 的 PreCommand 邊界已接回 fixed C；突擊以釋放回合 FIXSTR 計算，地球一周隱身期間跳過 compliance 並保留上一輪 WORK／FIX 快照。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
