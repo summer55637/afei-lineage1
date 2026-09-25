@@ -6339,7 +6339,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.74 載入完成：EntrySort 後的 ComboCheck／BATTLE_Combo 已接入；Enemy 起始 20%、Player/Pet 50%，同側同目標相鄰普通攻擊可合擊，遠距武器排除。','good');
+    addLog('V0.75 載入完成：StatusChange／ContinuationAttack 已接回原共用 weapon loop；弓技能使用 aBowW 多目標，連擊覆寫 attack_max，投石連擊逐擊麻痺，狀態技則覆寫投石麻痺。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
