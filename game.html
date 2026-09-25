@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.72</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.73</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.72：</b>
-      Enemy 武器戰鬥指令接回原 C：BATTLE_GetAttackCount、Item 400 的 1～3 發、Item 2498 的 3～5 發與 aBowW 目標表、回力標 30% 橫掃、投擲斧／投石遠距指令，以及投石命中後的原版麻痺檢定。
+      <b>V0.73：</b>
+      武器命中細節續接原 C：BATTLE_DuckCheck 內 BOW +20 被原碼重複執行兩次，故弓攻擊實際讓守方回避額外 +40（再套 75% 上限）；四種投射武器亦依 BATTLE_GuardianCheck 禁止忠犬／Guardian 代擋。
     </article>
   </main>
 
