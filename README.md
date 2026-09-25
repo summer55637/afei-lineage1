@@ -4405,3 +4405,241 @@ V0.64 因此也不讓分身地裂喚醒睡眠或觸發反擊。
 - 627／632／637／705：Combined → JYUJYUTU
 
 仍維持「原 C 規則優先、不猜數值」。
+
+
+## V0.65 Combined／綜合魔法
+
+V0.65 接入目前正權重的四個 `PETSKILL_Combined`：
+
+- 627 難得糊塗 → `综合法|6|21|139|159|169|179|189`
+- 632 逆轉 → `综合法|1|240`
+- 637 淨化之舞 → `综合法|1|61`
+- 705 調和 → `综合法|1|230`
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/petskill2.txt`
+- `gmsv/data/magic.txt`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_magic.c`
+- `gmsv/src/magic/magic.c`
+- `gmsv/src/item/item.c`
+- `gmsv/src/char/char_data.c`
+- `gmsv/src/char/defaultPlayer.h`
+
+### Combined 的 magic 選擇
+
+原 `PETSKILL_Combined()`：
+
+1. 解析 `综合法|count|magic1|...`
+2. 最多取 10 個 magic ID
+3. 用 `kill[rand()%count]` 選一個
+4. command 設為 `BATTLE_COM_JYUJYUTU`
+5. `BATTLECOM3 low = magic ID`
+6. **`BATTLECOM3 high = 0`**
+
+battle.c 的 JYUJYUTU case 再呼叫：
+
+`MAGIC_DirectUse(charaindex, magicId, toNo, 0)`
+
+### item index 0 與 mp=-1
+
+對非 Player 施術者，`MAGIC_DirectUse()` 直接把第四參數當成 global existing-item index，不經玩家背包轉換。
+
+因此 Combined 固定查：
+
+`ITEM_getInt(0, ITEM_MAGICUSEMP)`
+
+原 existing-item allocator：
+
+- static `Sindex = 1`
+- 每次建立前先 `Sindex++`
+- 正常從 index 2 開始
+- wrap 後回 1
+- **永遠不配置 index 0**
+
+所以 `ITEM_CHECKINDEX(0)` 固定失敗，`ITEM_getInt()` 固定回 **-1**。
+
+相關 MAGIC 函式的 MP 流程都是：
+
+`if (CHAR_MP < mp) return FALSE;`
+`CHAR_MP = CHAR_MP - mp;`
+
+當 `mp=-1`：
+
+- MP 不足判定必定通過
+- Enemy MP 實際變成 `MP + 1`
+
+### Enemy 初始 MP
+
+`ENEMY_createEnemy()`：
+
+- memset `CharNew`
+- `CHAR_getDefaultChar(&CharNew,31010)`
+- 後續沒有覆寫 `CHAR_MP / CHAR_MAXMP`
+
+`CHAR_getDefaultChar()` 使用的 default player template 在 `defaultPlayer.h`：
+
+- `CHAR_MP = 0`
+- `CHAR_MAXMP = 0`
+
+所以 V0.65 Enemy runtime 正式補：
+
+- `mp = 0`
+- `maxMp = 0`
+
+Combined 每次成功進入 magic function 都可使 MP 從 0→1→2...；原碼這裡沒有 MaxMP clamp。
+
+### 627 難得糊塗
+
+隨機六選一：
+
+- 21 恩惠的精靈 Lv2
+- 139 毒霧的精靈 Lv5
+- 159 石化精靈 Lv5
+- 169 混亂精靈 Lv5
+- 179 酒醉精靈 Lv5
+- 189 睡眠精靈 Lv5
+
+#### magic 21
+
+magic.txt：
+
+- function `MAGIC_Recovery`
+- option `100`
+- 範圍為對方整側
+
+`BATTLE_MultiRecovery()` 對每個目標分別：
+
+`RAND(100*0.9,100*1.1)`
+
+也就是 90～110，再乘 `GetRecoveryRate()`：
+
+- Player：`1 + VITAL * 0.00010`
+- 非 Player：`1 + VITAL * 0.00005`
+
+結果以 int 截斷，最後 cap MaxHP。
+
+V0.65 使用目前 web 已有的原 raw VITAL 對 Player / Active Pet 各自計算，不把「100」誤做固定回血值。
+
+#### magic 139／159／169／179／189
+
+共同：
+
+- turn 5
+- Success 25
+- `BATTLE_MultiStatusChange()`
+- 每個對方存活目標各自跑 `BATTLE_StatusAttackCheck(...,25,30,1.0)`
+
+V0.65 沿用既有正式 StatusAttackCheck port：
+
+- 已有任何異常則不再套
+- 等級差 ×1
+- range ±30
+- VITAL 比例抗性
+- status resist
+- 上限 80%
+- 嚴格 `RAND(1,100) < per`
+
+成功後狀態直接寫 **5**，不是 PetSkill StatusChange 路徑的 turn+1，因此使用 raw-turn storage。
+
+### 637 淨化之舞
+
+magic 61：
+
+- 高等淨化精靈 Lv2
+- `MAGIC_StatusRecovery`
+- option `全`
+- 我方整側
+
+原 `BATTLE_MultiStatusRecovery()` 的「全」並不是清除所有後來新增的狀態。
+
+條件明確限制：
+
+`tostatus <= CHAR_WORKCONFUSION`
+
+所以只涵蓋原基本六異常：
+
+- 毒
+- 麻痺
+- 睡眠
+- 石化
+- 酒醉
+- 混亂
+
+V0.65 **不會**用 637 清除後來的劇毒、虛弱、魔障、沉默等狀態。
+
+### 632 逆轉
+
+magic 240：
+
+- 彩虹的精靈
+- `MAGIC_AttReverse`
+
+`BATTLE_MultiAttReverse()` 先 XOR `CHAR_BATTLEFLG_REVERSE`，開啟時 `BATTLE_AttReverse()` 將 FIX 屬性：
+
+- Earth ← Fire
+- Water ← Wind
+- Fire ← Earth
+- Wind ← Water
+
+即：
+
+- 地 ↔ 火
+- 水 ↔ 風
+
+這是 battle-only work state，不修改角色原始屬性。
+
+另外有一個重要時序：
+
+- 第一次施放：flag OFF→ON，當下立即 swap
+- 第二次施放：flag ON→OFF，`BATTLE_AttReverse()` 因 flag 已關而直接 return
+- 所以**同一回合剩餘時間仍保持先前反轉的 FIX 值**
+- 下一輪 `BATTLE_PreCommandSeq()` 先 `CHAR_complianceParameter()` 重建 base FIX，因 flag 已 OFF 才正式恢復
+
+V0.65 新增 battle-only reverse flag + element work map，每輪開始重建，完整保留上述時序；不污染 save 內永久 `state.elements / pet.elements`。
+
+### 705 調和
+
+magic 230：
+
+- 調和的精靈
+- `MAGIC_FieldAttChange`
+- option `无`
+
+原 parser 得：
+
+- field_att = NONE
+- power 預設 30
+- turn 預設 3
+
+目前已接技能中仍沒有任何能成功把 field_att 改成非 NONE 的路徑；676 水的精靈仍受 dynamic existing-item index 的 MP cost 限制。
+
+因此 V0.65 現有可達狀態下 705 是來源等價的：
+
+`NONE → NONE`
+
+仍記錄原 Power 30 / turn 3，但不虛構額外效果。
+
+### Save schema
+
+V0.65 新增的 Enemy MP、反轉 flag、FIX element work 都是單場 battle runtime，不持久化。
+
+Save schema 維持 **18**。
+
+### 剩餘正權重邊界
+
+V0.65 後未接入正權重只剩：
+
+- 676 → AttackMagic / magic 204 FieldAttChange
+- 688 → AttackMagic / magic 435 MAGIC_Weaken
+- 211 → StealMoney
+
+676／688 的 PetSkill option 分別寫 `item 20900` / `item 20912`。對 Enemy 而言這不是 item ID，而是 **當下 ITEM_item[] existing index**；其內容取決於 server runtime 的全域物件配置，不能由靜態資料安全寫死 MP cost。
+
+211 則在 `BATTLE_StealMoney()` 開頭直接讀 Enemy `CHAR_WORKPLAYERINDEX` 並要求 `CHAR_CHECKINDEX(masterindex)`。Enemy 建立流程沒有配置 owner，default work-int 為 0；而全域 char index 0 是否正好有效取決於原 server 當下角色配置，web 沒有等價全域 Char runtime。
+
+因此這三項仍不能在「不猜 runtime」原則下硬接。
