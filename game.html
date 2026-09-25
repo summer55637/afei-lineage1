@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.38</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.39</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.38：</b>
-      修正特殊物理技能的會心擊殺 Ultimate RNG 條件：BATTLE_S_AttackDamage、GBreak／GBreak2、FallGround 原 C 只對 CHAR_TYPEENEMY 死亡目標做 50% RAND；Enemy 技能打死玩家出戰寵時不再誤吃這顆 RNG。
+      <b>V1.39：</b>
+      對齊 BATTLE_S_AttackDamage 後段 RNG：TIMID／2TIMID 在 damage=1 時仍會先消耗 rand()%100；TOOTHCRUSHE 命中 Player 後還會額外再做一次 BATTLE_ItemCrushCheck 的 rand()%100。
     </article>
   </main>
 

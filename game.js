@@ -5751,10 +5751,11 @@ function performEnemyBattleTimid(actor,unit,options,meta){
   sourceBattleFinalizeItemCrushRng(r);
 
   let timidRoll=null,forced=false,playerExited=false;
-  if(r.damage>1){
+  if(r.damage>0){
     timidRoll=cRand(0,99);
-    // 原 BATTLE_S_AttackDamage：rand()%100 < 15。
-    if(timidRoll<15){
+    // 原 BATTLE_S_AttackDamage：先無條件 rand()%100，再判斷 timid < 15 && damage > 1。
+    // 因此 damage == 1 也必須消耗這顆 RNG，只是怯戰效果不能成立。
+    if(timidRoll<15&&r.damage>1){
       if(chosen.kind==='pet'&&chosen.pet){
         battlePetOutIds.add(chosen.pet.id);
         forced=true;
@@ -5783,11 +5784,11 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   const timid=Math.max(0,Math.trunc(enemySkillNumber(meta?.o,/命%([0-9.]+)/,0)));
   let timidRoll=null,recalled=false;
-  if(r.damage>1){
+  if(r.damage>0){
     timidRoll=cRand(0,99);
-    // 原 BATTLE_COM_S_2TIMID：成功判定後只有 CHAR_TYPEPET 分支有實際處理；
-    // 玩家目標即使命中 roll 成功也不會 BATTLE_Exit。
-    if(timidRoll<timid&&chosen.kind==='pet'&&chosen.pet){
+    // 原 C 寫成 rand()%100 < timid && damage > 1；依 C 左到右求值，
+    // damage == 1 時仍先消耗 RNG，但不會進實際召回分支。
+    if(timidRoll<timid&&r.damage>1&&chosen.kind==='pet'&&chosen.pet){
       battlePetOutIds.add(chosen.pet.id);
       recalled=true;
       addLog(chosen.pet.name+' 被 '+label+' 嚇回寵物欄，本場不再出戰。','bad');
@@ -5831,16 +5832,23 @@ function performEnemyToothCrushe(actor,unit,options,meta){
   enemyApplySkillHit(unit,chosen,r,label);
   sourceBattleFinalizeItemCrushRng(r);
 
-  // 原 BATTLE_S_ToothCrushe：
-  // - 非 PLAYER 目標直接 return；
-  // - PLAYER 也必須 BATTLE_ItemCrushCheck(defindex,1) 找到裝備才會改耐久；
-  // 現版尚無玩家裝備／耐久系統，因此額外破壞分支不可達。
+  // fixed BATTLE_S_AttackDamage 先跑通用 BATTLE_ItemCrushSeq；
+  // 隨後 TOOTHCRUSHE 本身若目標是 PLAYER，還會再呼叫一次
+  // BATTLE_ItemCrushCheck(defindex,1)，函式一進去便先 rand()%100。
+  // 即使最後找不到任何裝備，這第二顆 RNG 仍已經消耗。
+  let toothCrushCheckRoll=null;
+  if(r.damage>0&&chosen.kind==='player'){
+    toothCrushCheckRoll=cRand(0,99);
+  }
+
+  // 真正耐久改寫仍需要實際裝備的 DAMAGECRUSHE / MAXDAMAGECRUSHE；
+  // 現版沒有可靠 runtime，所以只還原可確定的第二次部位選擇 RNG。
   const equipmentCrushReachable=false;
   addLog(unit.name+' 的 '+label+' 沒有可破壞裝備；依目前來源等價狀態只保留本次物理傷害。');
 
   return {
     kind:'skill',skillId:actor.skillId,target:chosen.kind,r,
-    equipmentCrushReachable,crushed:false
+    toothCrushCheckRoll,equipmentCrushReachable,crushed:false
   };
 }
 function sourcePlayerTransmigration(target=state){

@@ -12551,3 +12551,110 @@ FallGround 的可達 RNG 順序因此也回到：
 - Combo remains Enemy-only as before
 - V1.37 ItemCrush guaranteed RNG unchanged
 - schema 27 unchanged
+
+
+## V1.39 BATTLE_S_AttackDamage tail RNG lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### 1. TIMID / 2TIMID damage == 1 still consumes RNG
+
+fixed `BATTLE_S_AttackDamage()` 在完成 DamageSub、death 與通用 ItemCrush 後才進技能 switch。
+
+若最後 `damage <= 0`，TIMID 類 command 會先被改成 `skill_type = -1`，因此不進 TIMID switch。
+
+但只要 `damage > 0`，TIMID switch 會執行。原碼：
+
+```c
+int timid = rand()%100;
+if( timid < 15 && damage > 1 ) {
+    ...
+}
+```
+
+2TIMID 原碼：
+
+```c
+if( rand()%100 < timid && damage > 1 ) {
+    ...
+}
+```
+
+C 的 `&&` 是由左到右求值，所以：
+
+- damage <= 0：不進技能 switch，不抽
+- damage == 1：**仍先抽 rand()%100**，但效果必定不能成立
+- damage > 1：抽 rand()%100，再依成功率決定效果
+
+V1.38 Web 把 RNG 包在 `damage > 1` 裡，因此 1 傷害時少吃一顆 RNG。V1.39 改成 `damage > 0` 就先抽，再把 `damage > 1` 留在效果條件裡。
+
+### 2. TOOTHCRUSHE has a second ItemCrushCheck RNG
+
+fixed `BATTLE_S_AttackDamage()` 對所有正傷害先跑：
+
+```c
+BATTLE_ItemCrushSeq(attackindex, defindex, damage)
+```
+
+在 V1.37 已還原其中受擊方 `BATTLE_ItemCrushCheck(defindex,1)` 的第一顆 `rand()%100`。
+
+但 `BATTLE_COM_S_TOOTHCRUSHE` 隨後又呼叫：
+
+```c
+BATTLE_S_ToothCrushe(...)
+```
+
+而 `BATTLE_S_ToothCrushe()`：
+
+```c
+if (CHAR_getInt(defindex, CHAR_WHICHTYPE) != CHAR_TYPEPLAYER)
+    return;
+
+if ((crushindex = BATTLE_ItemCrushCheck(defindex,1)) >= 0) {
+    ...
+}
+```
+
+所以當目標是 Player 且 damage > 0：
+
+1. 通用 ItemCrushSeq 先吃一顆 `rand()%100`
+2. ToothCrushe 再吃第二顆 `rand()%100`
+3. 第二次才依部位搜尋真正裝備
+4. 若沒有裝備，第二顆 RNG 仍已消耗
+
+目前 Web 沒有可可靠對回原版 `ITEM_DAMAGECRUSHE / ITEM_MAXDAMAGECRUSHE` 的玩家裝備耐久資料，所以 V1.39 只還原這個**必定可確定的第二次部位選擇 RNG**，記為 `toothCrushCheckRoll`；不猜後續耐久值。
+
+Pet 目標會在原 `BATTLE_S_ToothCrushe` 一開始直接 return，因此不吃這第二顆。
+
+### V1.39 ordering
+
+TIMID / 2TIMID 正傷害：
+
+1. Damage / HP
+2. special Enemy-only critical-death Ultimate RNG（若條件成立）
+3. generic ItemCrush defender rand()%100
+4. TIMID / 2TIMID rand()%100
+5. damage > 1 時才可能產生退場／召回效果
+
+TOOTHCRUSHE 正傷害 Player：
+
+1. Damage / HP
+2. special Enemy-only critical-death Ultimate RNG（Player 不會）
+3. generic ItemCrush defender rand()%100
+4. ToothCrushe second ItemCrushCheck rand()%100
+5. only if real equipment exists: durability modification branch
+
+本輪 schemaVersion 維持 27。
+
+### V1.39 regression targets
+
+- game.js syntax PASS
+- TIMID damage=0 => no TIMID RNG
+- TIMID damage=1 => one TIMID rand()%100 after generic ItemCrush
+- TIMID damage>1 => same RNG plus normal success logic
+- 2TIMID damage=1 => one rand()%100 even though recall cannot trigger
+- TOOTHCRUSHE positive Player hit => generic ItemCrush RNG + second ToothCrushe rand()%100
+- TOOTHCRUSHE positive Pet hit => generic ItemCrush RNG only
+- no guessed durability values
+- V1.38 special critical-death target rules unchanged
+- schema 27 unchanged
