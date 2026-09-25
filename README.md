@@ -6932,3 +6932,169 @@ BARRIER：
 - V0.76 DRUNK lifecycle 保留
 - save schema：仍為 **21**
 
+
+
+## V0.78 StatusChange stat modifiers / PreCommand FIX ordering
+
+V0.78 修正的是兩個彼此相連、而且 fixed data 已大量可達的本輪能力值時序：
+
+1. `PETSKILL_StatusChange()` 的 `攻%` / `防%` 不是文字說明，而是真的在 AI 決定技能時改寫本回合 WORK 能力。
+2. WEAKEN 必須先在 `BATTLE_PreCommandSeq() -> complianceParameter()` 形成 0.8 FIX 快照，再讓後續 PetSkill 以這個快照計算自己的能力修正。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/item/item.c`
+
+### PETSKILL_StatusChange 的真實攻擊力修正
+
+原 `PETSKILL_StatusChange()` 會解析 option：
+
+```c
+if ((pszP = strstr(pszOption, "攻%")) != NULL) {
+    sscanf(pszP+3, "%f", &fPer);
+    fPer = fPer / 100;
+    strdef = CHAR_getWorkInt(charaindex, CHAR_WORKFIXSTR);
+    strdef = (int)(strdef * fPer);
+    CHAR_setWorkInt(charaindex, CHAR_WORKATTACKPOWER,
+        CHAR_getWorkInt(charaindex, CHAR_WORKFIXSTR) + strdef);
+}
+```
+
+所以這不是：
+
+`最後傷害 × 0.7`
+
+而是：
+
+`WORKATTACKPOWER = FIXSTR + trunc(FIXSTR * pct / 100)`
+
+之後才進 `BATTLE_DamageCalc()`。
+
+因為原傷害公式對 attack / defense 是非線性的，這兩種做法不能互換。
+
+### fixed data 的 6 種正權重 StatusChange
+
+重新掃 `stoneage_petskill_runtime.json` 與 `stoneage_enemy_ai.json`：
+
+- 60 毒攻擊：`毒 turn 3 攻%-30` — 31 個 Enemy
+- 61 猛毒攻擊：`毒 turn 5 攻%-50` — 26 個 Enemy
+- 80 石化攻擊：`石 turn 3 攻%-30` — 48 個 Enemy
+- 90 混亂攻擊：`亂 turn 3 攻%-30` — 50 個 Enemy
+- 100 泥醉攻擊：`醉 turn 3 攻%-30` — 22 個 Enemy
+- 110 催眠攻擊：`眠 turn 3 攻%-30` — 34 個 Enemy
+
+六種全部是目前實際可抽到的 AI 行為。
+
+V0.78 的 `enemyPrepareRoundAction()` 現在會在 EntrySort 前依 source option 建立本輪：
+
+- `roundAttack`
+- 若來源 option 有 `防%`，也同樣建立 `roundDefense`
+
+目前正權重六種 StatusChange 都只有攻擊修正，但保留來源的防禦 parser，未猜任何額外數值。
+
+### WEAKEN 與 PetSkill 的正確先後
+
+V0.77 已把 WEAKEN 真正倒數位置移回：
+
+`PreCommandSeq -> complianceParameter -> Other_DefcharWorkInt`
+
+V0.78 再補上更深一層的順序。
+
+原 `Other_DefcharWorkInt()`：
+
+1. 先重建 / 套裝備與既有 battle buff 的 FIXSTR / FIXTOUGH / FIXDEX。
+2. 大地鎧甲等 FIX buff 先套用。
+3. 若 `CHAR_WORKWEAKEN > 0`：
+   - FIXSTR ×0.8
+   - FIXTOUGH ×0.8
+   - FIXDEX ×0.8
+   - WEAKEN counter -1
+4. 最後：
+   - WORKATTACKPOWER = FIXSTR
+   - WORKDEFENCEPOWER = FIXTOUGH
+   - WORKQUICK = FIXDEX
+5. 之後才執行 Enemy AI / `PETSKILL_*`，讓技能再基於這個 FIX 值覆寫本回合 WORK。
+
+所以正確模型不是：
+
+`Skill modifier -> 最後再 ×0.8`
+
+而是：
+
+`PreCommand WEAKEN ×0.8 -> C int truncation -> Skill modifier -> C int truncation`
+
+兩者在很多整數值上會差 1。
+
+### Enemy 本輪 FIX snapshot
+
+V0.78 的 `enemyPrepareRoundAction()` 現在先建立：
+
+- `sourceFixAttack`
+- `sourceFixDefense`
+- `sourceFixQuick`
+
+順序：
+
+1. 基礎 Enemy compliant stats
+2. 大地鎧甲等已存在 FIX buff
+3. WEAKEN 0.8
+4. 各 PetSkill 自己的本輪 stat write
+
+並讓：
+
+- StatusChange
+- BattleModel
+- BattleTearDamage
+- AttackCrazed
+- SpeedyAttack
+- BattleTimid
+- 2BattleTimid
+- Firekill
+- Lighttakeed
+- PowerBalance
+- FallGround
+- Guardian
+- WildViolentAttack
+- Regret
+
+等會改本回合能力值的來源分支，都從同一份 PreCommand FIX snapshot 起算。
+
+### Enemy battle view 不再二次套 WEAKEN
+
+V0.77 以前 web 仍在 `enemyBattleView()` 最後再檢查 WEAKEN 並 ×0.8。
+
+V0.78 改為：
+
+- Enemy 的 WEAKEN 已經在 `enemyPrepareRoundAction()` 前置 snapshot 正確套過一次。
+- `enemyBattleView()` 只讀已完成的 `roundAttack / roundDefense / roundQuick`。
+- 不再二次 0.8。
+
+Player / Active Pet 因目前沒有相同的 Enemy AI PetSkill stat-write 流程，仍由各自 battle view 使用 V0.77 的 round snapshot 語意。
+
+### V0.78 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- 正權重 Skill ID：158
+- 已執行 handler：134
+- 原資料缺失：22
+- 原 build 未註冊：2
+- dispatcher gap：0
+- StatusChange 正權重六種 option 全部可解析 `攻%`
+- 猛毒：-50%
+- 其餘五種：-30%
+- WEAKEN 先於 Skill modifier
+- Enemy battle view 不再二次 WEAKEN
+- StatusChange 專用 branch：僅一條
+- V0.77 WEAKEN / BARRIER lifecycle 保留
+- V0.76 DRUNK lifecycle bug 保留
+- V0.75 ranged StatusChange / Continuation weapon flow 保留
+- V0.74 Combo lifecycle 保留
+- V0.73 BOW DuckCheck / Guardian rules 保留
+- save schema：仍為 **21**
+
