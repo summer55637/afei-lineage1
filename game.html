@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.76</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.77</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.76：</b>
-      酒醉狀態改為保留 fixed C 的實際 bug：酒醉存續期間不降低 QUICK；物理 StatusChange 會先寫 turn+1 再誤把 DRUNK 倒數 /2；倒數歸零的當次行動反而暫時 QUICK ×2，下一輪 PreCommandSeq 重建回 FIXDEX。魔法酒醉維持原 magic turn，不套物理 /2。
+      <b>V0.77：</b>
+      WEAKEN／BARRIER 生命週期改回 fixed C 的 PreCommand 模型：虛弱與魔障都由每輪 complianceParameter 階段先扣回合；虛弱同時把本輪 FIXSTR／FIXTOUGH／FIXDEX ×0.8，命中同回合不會提前降能力；StatusSeq 對仍大於 1 的計數不再二次扣除。
     </article>
   </main>
 
