@@ -10523,3 +10523,111 @@ fixed `gmsv/src/battle/battle_event.c` 共有 13 個實際 caller（不含 `BATT
 - Profession 兩種不同 Guardian caller 語意記錄完成，但不在尚不存在的 Web profession runtime 上猜實作
 - 一般野外 Lv1 捕獲寵 PetSkill function coverage：無新增缺口
 - save schema：21
+
+
+## V1.13 quest GetPet source template / progression
+
+V1.13 從實際可達的任務獎勵寵回查 fixed C，修正三隻先前以手寫物件建立、沒有走原 `GetPet` 建立核心的寵物：
+
+- Event 70：EnemyID 1479 → TempNo 718 瑪蕾菲雅
+- Event 82：EnemyID 1563 → TempNo 730 布伊胖
+- Event 83：EnemyID 1733 → TempNo 854 動物園養的拉斯基
+
+固定來源仍是：
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+### GetPet 真正建立路徑
+
+`npc_eventaction.c::NPC_ActionAddPet()` 對 `GetPet` 參數是 **EnemyID**，找到 `enemy1.txt` 對應列後直接：
+
+```c
+ret = ENEMY_createPetFromEnemyIndex(talker, i);
+```
+
+`enemy.c::ENEMY_createPetFromEnemyIndex()` 再從該 Enemy 的 `enemybase1.txt` template 建 CHAR_TYPEPET；不是只拿名稱／四圍手寫一隻寵。
+
+固定函式明確會：
+
+- 四項 base stat 各自 `RAND(0,4)-2`
+- 將這四項存入 `CHAR_ALLOCPOINT`
+- 再把 10 點逐點 `RAND(0,3)` 分到四項
+- 用 `((level-1)*atoi(LVUPPOINT)+INITNUM) * stat` 建立 CHAR 能力
+- 複製四屬性
+- 複製六項異常抗性
+- 複製 `PETSKILL1..7`
+- 由原始 base stat 總和算 `CHAR_PETRANK`
+- 後續升級走 `CHAR_PetLevelUp`
+
+三個 reward Enemy 在 `enemy1.txt` 都是 Lv1～Lv1，因此初次取得等級仍固定 Lv1。
+
+### fixed enemybase1 模板
+
+TempNo 718 瑪蕾菲雅：
+
+- INITNUM 20
+- LVUPPOINT `5.00` → fixed loader / C 計算為 5
+- base V/S/T/D = 25/25/25/25
+- 地100 水0 火0 風0
+- 抗性 = 10/10/10/50/10/10
+- PetSkill = 1 攻擊、2 防禦、其餘 -1
+- image = 100451
+- PETRANK = 0（base sum 100）
+- source LIMITLEVEL = 79
+
+TempNo 730 布伊胖：
+
+- INITNUM 27
+- LVUPPOINT 原字串 `4.50`；`ENEMYTEMP_initEnemy()` 用 `atoi()` 載入，因此 server progression 實際值為 4
+- 資料展示保留 raw growth 4.5
+- base V/S/T/D = 34/29/25/23
+- 地0 水0 火60 風40
+- 六抗全 0
+- PetSkill = 1 攻擊、2 防禦；空白欄因 loader 預設 -1，所以其餘五格 = -1
+- image = 100825
+- PETRANK = 0（base sum 111）
+
+TempNo 854 動物園養的拉斯基：
+
+- INITNUM 10
+- LVUPPOINT = 4
+- base V/S/T/D = 20/23/21/26
+- 地0 水0 火60 風40
+- 六抗全 0
+- PetSkill = 1 攻擊、2 防禦，其餘 -1
+- image = 100853
+- PETRANK = 2（base sum 90）
+- source LIMITLEVEL = 10
+
+### 修正內容
+
+V1.13 新增共用 `sourceCreateQuestGetPet()`：
+
+- 三個任務獎勵不再各自手寫不完整 Pet object。
+- 直接使用 fixed template 常數。
+- 初次建立重新使用既有 `rollEnemyCreateStats()` / `serverEnemyDerived()`，與 Enemy create 的來源 RNG 相同。
+- 寫入 `serverStats / serverCombat / allocPointPacked / petRank / serverProgression`。
+- 後續升級因此真正能進既有 `serverPetLevelUp()`，不再只有 level 增加、能力不成長。
+
+舊版三隻任務寵因沒有 server progression，V1.13 將 save schema 21 → 22，載入舊存檔時只做一次 source migration：
+
+- 保留原本 level / exp。
+- 重新依原 C 產生 Lv1 建立 RNG。
+- 按目前 level 重播對應次數的 `CHAR_PetLevelUp` 等價成長。
+- 保留現有 HP 數值，僅在新 maxHP 下 clamp，不自行猜 HP 比例。
+- 補回 source skills / resist / elements / image / progression metadata。
+- 只處理帶 quest reward 標記且 TempNo 為 718 / 730 / 854 的舊寵，不碰玩家正常捕獲的同 TempNo 物件。
+
+瑪蕾菲雅的放置版回憶巡禮門檻仍維持既有 `levelCap=10 → 15 → … → 79` 流程；V1.13 只修底層 Pet 能力與升級，不改 Event 69/70/71/83 任務狀態機。
+
+### V1.13 regression targets
+
+- quest GetPet 730 / 854 / 718 都走共用 source builder
+- PetSkill 皆為 `[1,2,-1,-1,-1,-1,-1]`
+- 718 抗性 `[10,10,10,50,10,10]`
+- 730 / 854 火60風40
+- 718 image 100451
+- 730 raw growth 4.5 + server LVUPPOINT 4 的 atoi 差異保留
+- PETRANK：718=0、730=0、854=2
+- quest pet server progression 可進 `serverPetLevelUp()`
+- schema 22 one-time migration
+- Marefia memory levelCap lifecycle 保留

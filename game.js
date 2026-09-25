@@ -234,9 +234,111 @@ function clearEnemyBattleNoReward(){
   enemy=null;
   resetBattleStatuses();
 }
+const SOURCE_QUEST_GETPET=Object.freeze({
+  718:Object.freeze({
+    enemyId:1479,name:'瑪蕾菲雅',animationGroupId:100451,wildGrowth:5,
+    serverInitNum:20,serverLvUpPoint:5,sourceLimitLevel:79,
+    baseStats:Object.freeze({vital:25,str:25,tgh:25,dex:25}),
+    elements:Object.freeze({earth:100,water:0,fire:0,wind:0}),
+    statusResist:Object.freeze([10,10,10,50,10,10]),
+    petSkills:Object.freeze([1,2,-1,-1,-1,-1,-1])
+  }),
+  730:Object.freeze({
+    enemyId:1563,name:'布伊胖',animationGroupId:100825,wildGrowth:4.5,
+    serverInitNum:27,serverLvUpPoint:4,sourceLimitLevel:null,
+    baseStats:Object.freeze({vital:34,str:29,tgh:25,dex:23}),
+    elements:Object.freeze({earth:0,water:0,fire:60,wind:40}),
+    statusResist:Object.freeze([0,0,0,0,0,0]),
+    petSkills:Object.freeze([1,2,-1,-1,-1,-1,-1])
+  }),
+  854:Object.freeze({
+    enemyId:1733,name:'動物園養的拉斯基',animationGroupId:100853,wildGrowth:4,
+    serverInitNum:10,serverLvUpPoint:4,sourceLimitLevel:10,
+    baseStats:Object.freeze({vital:20,str:23,tgh:21,dex:26}),
+    elements:Object.freeze({earth:0,water:0,fire:60,wind:40}),
+    statusResist:Object.freeze([0,0,0,0,0,0]),
+    petSkills:Object.freeze([1,2,-1,-1,-1,-1,-1])
+  })
+});
+function sourceQuestPetRank(baseStats){
+  const sum=Math.trunc(n(baseStats?.vital))+Math.trunc(n(baseStats?.str))+Math.trunc(n(baseStats?.tgh))+Math.trunc(n(baseStats?.dex));
+  if(sum>=100)return 0;
+  if(sum>=95)return 1;
+  if(sum>=90)return 2;
+  if(sum>=85)return 3;
+  if(sum>=80)return 4;
+  return 5;
+}
+function sourceQuestPetTemplate(tempNo){
+  return SOURCE_QUEST_GETPET[String(Math.trunc(n(tempNo)))]||SOURCE_QUEST_GETPET[Math.trunc(n(tempNo))]||null;
+}
+function sourceInitQuestPetProgression(pet,template,replayLevels=0){
+  if(!pet||!template)return false;
+  const oldHp=Number.isFinite(Number(pet.hp))?Math.max(0,Math.trunc(Number(pet.hp))):null;
+  const rolled=rollEnemyCreateStats(template.baseStats);
+  const derived=serverEnemyDerived(template,1,rolled.stats);
+  pet.stats=Object.assign({},rolled.stats);
+  pet.allocPointPacked=packPetAllocPoint(rolled.allocatedFrom);
+  pet.petRank=sourceQuestPetRank(template.baseStats);
+  pet.serverStats=Object.assign({},derived.charStats);
+  pet.serverCombat={attack:derived.attack,defense:derived.defense,quick:derived.quick,maxHp:derived.maxHp};
+  pet.serverProgression=true;
+  pet.serverInitNum=template.serverInitNum;
+  pet.serverLvUpPoint=template.serverLvUpPoint;
+  for(let i=0;i<Math.max(0,Math.trunc(n(replayLevels)));i++)serverPetLevelUp(pet);
+  const maxHp=petMaxHp(pet);
+  pet.maxHp=maxHp;
+  pet.hp=oldHp==null?maxHp:clamp(oldHp,0,maxHp);
+  return true;
+}
+function sourceApplyQuestPetTemplate(pet,{rebuildProgression=false}={}){
+  const template=sourceQuestPetTemplate(pet?.tempNo);
+  if(!pet||!template)return false;
+  pet.animationGroupId=template.animationGroupId;
+  pet.wildGrowth=template.wildGrowth;
+  pet.elements=Object.assign({},template.elements);
+  pet.statusResist=Array.from(template.statusResist);
+  if(!Array.isArray(pet.petSkills)||pet.petSkills.length<7)pet.petSkills=Array.from(template.petSkills);
+  pet.serverInitNum=template.serverInitNum;
+  pet.serverLvUpPoint=template.serverLvUpPoint;
+  pet.sourceEnemyId=template.enemyId;
+  pet.sourceLimitLevel=template.sourceLimitLevel;
+  if(rebuildProgression||!pet.serverProgression||!pet.serverStats||pet.petRank==null||pet.allocPointPacked==null){
+    const savedLevel=Math.max(1,Math.trunc(n(pet.level)||1));
+    const savedExp=Math.max(0,Math.trunc(n(pet.exp)));
+    sourceInitQuestPetProgression(pet,template,savedLevel-1);
+    pet.level=savedLevel;
+    pet.exp=savedExp;
+  }else{
+    pet.serverProgression=true;
+    pet.petRank=sourceQuestPetRank(template.baseStats);
+    pet.serverCombat=petServerCombat(pet.serverStats);
+    syncPetBattleHp(pet,false);
+  }
+  return true;
+}
+function sourceCreateQuestGetPet(tempNo,extra={}){
+  const template=sourceQuestPetTemplate(tempNo);
+  if(!template)return null;
+  const pet=Object.assign({
+    id:uid(),name:template.name,animationGroupId:template.animationGroupId,tempNo:Number(tempNo),
+    level:1,exp:0,wildGrowth:template.wildGrowth,
+    stats:Object.assign({},template.baseStats),
+    elements:Object.assign({},template.elements),
+    statusResist:Array.from(template.statusResist),
+    petSkills:Array.from(template.petSkills),
+    serverInitNum:template.serverInitNum,serverLvUpPoint:template.serverLvUpPoint,
+    sourceEnemyId:template.enemyId,sourceLimitLevel:template.sourceLimitLevel,
+    capturedAt:Date.now(),questReward:true
+  },extra);
+  sourceInitQuestPetProgression(pet,template,0);
+  syncPetBattleHp(pet,true);
+  return pet;
+}
+
 function freshState(){
   return {
-    schemaVersion:21,
+    schemaVersion:22,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -288,6 +390,15 @@ function normalizeState(raw){
   s.team=Array.isArray(raw?.team)?raw.team.slice(0,TEAM_SIZE):Array(TEAM_SIZE).fill(null);
   while(s.team.length<TEAM_SIZE)s.team.push(null);
   migrateLegacyPets(raw,s);
+  // V1.13: fixed NPC_ActionAddPet(GetPet) -> ENEMY_createPetFromEnemyIndex copies the enemybase template
+  // and creates the Pet with the same source RNG/progression fields. Old hand-written quest pets lacked them.
+  if(n(raw?.schemaVersion)<22){
+    for(const p of s.petBox){
+      const isSourceQuestPet=!!(p?.questReward||p?.event83||p?.event71Prerequisite)
+        &&(Number(p?.tempNo)===718||Number(p?.tempNo)===730||Number(p?.tempNo)===854);
+      if(isSourceQuestPet)sourceApplyQuestPetTemplate(p,{rebuildProgression:true});
+    }
+  }
   if(n(raw?.schemaVersion)<6&&!s.quest.event71Current&&n(s.quest.event71Prep.stage)===3){
     const legacyMarefia=s.petBox.find(p=>Number(p.tempNo)===718);
     if(legacyMarefia&&n(legacyMarefia.level)>=79){
@@ -391,7 +502,7 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=21;
+  s.schemaVersion=22;
   delete s.pets;
   return s;
 }
@@ -1372,11 +1483,8 @@ function removeOnePetTempNo(tempNo){
   return true;
 }
 function addQuestRewardPet(){
-  const p={
-    id:uid(),name:'布伊胖',animationGroupId:100825,tempNo:730,level:1,exp:0,wildGrowth:27,
-    stats:{vital:34,str:29,tgh:25,dex:23},elements:{},capturedAt:Date.now(),questReward:true
-  };
-  syncPetBattleHp(p,true);
+  const p=sourceCreateQuestGetPet(730);
+  if(!p)return null;
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
@@ -1385,12 +1493,8 @@ function addQuestRewardPet(){
 }
 function addEvent83Pet(){
   if(hasPetTempNo(854))return state.petBox.find(p=>Number(p.tempNo)===854);
-  const p={
-    id:uid(),name:'動物園養的拉斯基',animationGroupId:100853,tempNo:854,level:1,exp:0,wildGrowth:10,
-    stats:{vital:20,str:23,tgh:21,dex:26},elements:{earth:60,water:40,fire:0,wind:0},
-    capturedAt:Date.now(),questReward:true,event83:true
-  };
-  syncPetBattleHp(p,true);
+  const p=sourceCreateQuestGetPet(854,{event83:true});
+  if(!p)return null;
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
@@ -1400,10 +1504,8 @@ function addEvent83Pet(){
 function addMarefiaPet(){
   let p=state.petBox.find(x=>Number(x.tempNo)===718);
   if(p)return p;
-  p={id:uid(),name:'瑪蕾菲雅',animationGroupId:null,tempNo:718,level:1,exp:0,levelCap:10,wildGrowth:1,
-    stats:{vital:18,str:12,tgh:14,dex:18},elements:{earth:100,water:0,fire:0,wind:0},
-    capturedAt:Date.now(),questReward:true,event71Prerequisite:true,memoryRoute:true};
-  syncPetBattleHp(p,true);
+  p=sourceCreateQuestGetPet(718,{levelCap:10,event71Prerequisite:true,memoryRoute:true});
+  if(!p)return null;
   state.petBox.push(p);
   const open=state.team.findIndex(x=>!x);
   if(open>=0)state.team[open]=p.id;
