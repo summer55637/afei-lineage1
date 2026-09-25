@@ -3008,7 +3008,224 @@ function enemyAttackResult(unit=targetEnemyUnit(),options={}){
 function enemyAttackPetResult(unit,pet,options={}){
   return resolveNormalAttack(enemyBattleView(unit),petBattleView(pet),options);
 }
+
+const SOURCE_BOW_W=Object.freeze([
+  0,2,1,4,3, 0,1,2,3,4,
+  1,0,3,2,4, 1,3,0,2,4,
+  2,4,0,1,3, 2,0,4,1,3,
+  3,1,0,2,4, 3,1,0,2,4,
+  4,2,0,1,3, 4,2,0,1,3
+]);
+const SOURCE_BOOMERANG_VS_TBL=Object.freeze([
+  Object.freeze([4,2,0,1,3]),
+  Object.freeze([9,7,5,6,8]),
+  Object.freeze([14,12,10,11,13]),
+  Object.freeze([19,17,15,16,18])
+]);
+function sourceBattleGetAttackCount(unit){
+  const itemIndex=Math.trunc(Number(unit?.weaponItemIndex));
+  if(!Number.isFinite(itemIndex)||itemIndex<0)return 0;
+  const runtimeSlot=sourceItemRuntimeSlot(itemIndex);
+  if(!runtimeSlot)return 0;
+  const template=sourceEnemyWeaponTemplate(runtimeSlot.itemId);
+  const min=Math.trunc(n(template?.attackNum?.[0]??unit?.weaponAttackNumMin));
+  const max=Math.trunc(n(template?.attackNum?.[1]??unit?.weaponAttackNumMax));
+  let count=cRand(min,max);
+  if(count<=0)count=1;
+  return count;
+}
+function sourceEnemyBattleAttackMax(unit){
+  const count=sourceBattleGetAttackCount(unit);
+  // 原 battle.c：沒有有效 CHAR_ARM 時 BATTLE_GetAttackCount() 回 0；
+  // 非 PLAYER（Enemy/Pet）隨後固定退回 1 擊，不進玩家等級／Luck 的空手連擊表。
+  return count<=0?1:count;
+}
+function sourceEnemyTargetBattleSlot(target){
+  if(target?.kind==='player')return 0;
+  if(target?.kind==='pet')return 5;
+  return -1;
+}
+function sourceEnemyCommandTargetBattleSlot(actor,target){
+  // 原 CHAR_WORKBATTLECOM2 在回合建表後不會因目標中途倒下而先改寫。
+  if(actor?.targetKind==='player')return 0;
+  if(actor?.targetKind==='pet')return 5;
+  return sourceEnemyTargetBattleSlot(target);
+}
+function sourceEnemyTargetFromBattleSlot(slot){
+  const no=Math.trunc(Number(slot));
+  if(no===0&&state.hp>0)return battleTargetSnapshot('player');
+  if(no===5){
+    const pet=activePet();
+    if(pet&&petIsBattleActive(pet))return battleTargetSnapshot('pet',pet);
+  }
+  return null;
+}
+function sourceBowTargetList(actor,unit,target){
+  const defNo=sourceEnemyCommandTargetBattleSlot(actor,target);
+  if(defNo<0||defNo>19)return {defNo,random:null,slots:[-1]};
+  const defsub=defNo%5;
+  const deftop=defNo-defsub;
+  const random=cRand(0,1);
+  const attackNo=10+Math.max(0,Math.trunc(n(unit?.battleSlot)));
+  const slots=[];
+  for(let j=0;j<5;j++){
+    let first=SOURCE_BOW_W[defsub*10+random*5+j]+deftop;
+    let second=(deftop===0||deftop===10)?first+5:first-5;
+    if(first===attackNo)first=-1;
+    if(second===attackNo)second=-1;
+    slots.push(first,second);
+  }
+  slots.push(-1);
+  return {defNo,defsub,deftop,random,attackNo,slots};
+}
+function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
+  if(!target)return null;
+  const playerGuarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+
+  if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
+    const pet=target.pet;
+    const r=enemyAttackPetResult(unit,pet,attackOptions);
+    if(r.dodged){
+      addLog(pet.name+' 閃避了 '+unit.name+' 的攻擊。','pet');
+    }else if(r.miss){
+      addLog(unit.name+' 攻擊 '+pet.name+'，但沒有造成傷害。');
+    }else{
+      const before=n(pet.hp);
+      pet.hp=Math.max(0,before-r.damage);
+      battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
+      addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
+      if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
+    }
+    return {target:'pet',pet,targetDesc:{kind:'pet',pet,petId:pet.id},r};
+  }
+
+  if(target.kind!=='player'||state.hp<=0)return null;
+  const r=enemyAttackResult(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
+  if(playerGuarding){
+    if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
+    else{
+      state.hp=Math.max(0,state.hp-r.damage);
+      battleStatusWakeOnDamage({kind:'player'},r.damage);
+      addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+    }
+  }else if(r.dodged){
+    addLog('你閃避了 '+unit.name+' 的攻擊。','good');
+  }else if(r.miss){
+    addLog(unit.name+' 的攻擊沒有造成傷害。');
+  }else{
+    state.hp=Math.max(0,state.hp-r.damage);
+    battleStatusWakeOnDamage({kind:'player'},r.damage);
+    addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+  }
+  return {target:'player',targetDesc:{kind:'player'},r};
+}
+function sourceBreakthrowParalysis(unit,hit){
+  if(!hit?.targetDesc||!hit?.r||n(hit.r.damage)<=0)return {attempted:false,applied:false};
+  const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},hit.targetDesc,'paralysis');
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(hit.targetDesc,'paralysis',0));
+  if(applied){
+    addLog(battleStatusDescName(hit.targetDesc)+' 被 '+(unit.weaponName||'投石')+' 打中後陷入麻痺 1 回合。','bad');
+  }
+  return {attempted:true,check,applied};
+}
+function performEnemyBowWeaponAttack(actor,unit,options={}){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return null;
+  const attackMax=sourceEnemyBattleAttackMax(unit);
+  const plan=sourceBowTargetList(actor,unit,chosen);
+  const attackOptions=Object.assign({},options.attackOptions||{});
+  const hits=[];
+  let attackCount=0;
+  for(const slot of plan.slots){
+    if(slot<0)break;
+    const target=sourceEnemyTargetFromBattleSlot(slot);
+    if(!target)continue;
+    const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
+    if(!hit)continue;
+    hits.push(Object.assign({battleSlot:slot},hit));
+    attackCount++;
+    // 原 battle.c 的 attack_count 只在真正呼叫 BATTLE_Attack() 後遞增；
+    // 空格／死亡格不消耗弓的 AttackNum。
+    if(attackCount>=attackMax||n(unit.hp)<=0)break;
+  }
+  return {
+    target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
+    weaponCommand:'BOW',protocol:'BB-w0',weaponItemId:unit.equippedWeaponId,
+    attackMax,attackCount,bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits
+  };
+}
+function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
+  let chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return null;
+  let defNo=sourceEnemyCommandTargetBattleSlot(actor,chosen);
+  let row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
+  const rowHasTarget=r=>r>=0&&r<SOURCE_BOOMERANG_VS_TBL.length&&SOURCE_BOOMERANG_VS_TBL[r].some(slot=>!!sourceEnemyTargetFromBattleSlot(slot));
+  if(!rowHasTarget(row)){
+    chosen=enemyChooseTarget(unit);
+    if(!chosen)return null;
+    defNo=sourceEnemyTargetBattleSlot(chosen);
+    row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
+  }
+  if(row<0||row>=SOURCE_BOOMERANG_VS_TBL.length)return null;
+
+  const baseOptions=Object.assign({},options.attackOptions||{});
+  const baseMultiplier=Number.isFinite(Number(baseOptions.damageMultiplier))?Number(baseOptions.damageMultiplier):1;
+  baseOptions.damageMultiplier=baseMultiplier*.3;
+  const order=SOURCE_BOOMERANG_VS_TBL[row].slice().reverse(); // Enemy myside==1：k=4, j=-1
+  const hits=[];
+  for(const slot of order){
+    const target=sourceEnemyTargetFromBattleSlot(slot);
+    if(!target)continue;
+    const hit=enemyWeaponApplyHit(unit,target,options,baseOptions);
+    if(hit)hits.push(Object.assign({battleSlot:slot},hit));
+    if(n(unit.hp)<=0)break;
+  }
+  return {
+    target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
+    weaponCommand:'BOOMERANG',protocol:'BO',weaponItemId:unit.equippedWeaponId,
+    damageMultiplier:.3,row,targetSlots:order,hits
+  };
+}
+function performEnemyThrowWeaponAttack(actor,unit,options={}){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return null;
+  const attackMax=sourceEnemyBattleAttackMax(unit);
+  const attackOptions=Object.assign({},options.attackOptions||{});
+  const hits=[];
+  let target=chosen;
+  for(let i=0;i<attackMax;i++){
+    if(!target)break;
+    const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
+    if(!hit)break;
+    let paralysis=null;
+    if(Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
+    hits.push(Object.assign({paralysis},hit));
+    if(i+1>=attackMax||n(unit.hp)<=0)break;
+    // 非 BOW 的 aDefList 原本重複 COM2；目標倒下後才由 BATTLE_TargetAdjust 改抓同側存活目標。
+    if(hit.target==='player'&&state.hp<=0){
+      const pet=activePet();
+      target=pet&&petIsBattleActive(pet)?battleTargetSnapshot('pet',pet):null;
+    }else if(hit.target==='pet'&&!petIsBattleActive(hit.pet)){
+      target=state.hp>0?battleTargetSnapshot('player'):null;
+    }
+  }
+  const type=Math.trunc(n(unit.weaponType));
+  return {
+    target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
+    weaponCommand:type===19?'BREAKTHROW':'BOUNDTHROW',
+    protocol:type===19?'BB-w2':'BB-w1',weaponItemId:unit.equippedWeaponId,
+    attackMax,attackCount:hits.length,hits
+  };
+}
+
 function performEnemyPrimaryAttack(actor,unit,options={}){
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  // 原 battle.c：只有普通 BATTLE_COM_ATTACK 會把 BOOMERANG 改成 BATTLE_COM_BOOMERANG；
+  // BOW／BOUNDTHROW／BREAKTHROW 則仍走共用物理攻擊 loop。
+  if(weaponType===17&&actor?.enemyAction==='attack')return performEnemyBoomerangWeaponAttack(actor,unit,options);
+  if(weaponType===4)return performEnemyBowWeaponAttack(actor,unit,options);
+  if(weaponType===18||weaponType===19)return performEnemyThrowWeaponAttack(actor,unit,options);
+
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
   const playerGuarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
@@ -5835,7 +6052,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.71 載入完成：Enemy STYLE／RandomChange 道場武器已接入 existing-item 換裝與 CHAR compliance；攻防敏、武器會心、弓會心傷害規則與投射武器反擊限制生效。','good');
+    addLog('V0.72 載入完成：BATTLE_GetAttackCount、BOW 目標表／多發、BOOMERANG 30% 橫掃、BOUNDTHROW／BREAKTHROW 投擲指令與投石麻痺已接入。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
