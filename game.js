@@ -1387,6 +1387,16 @@ function normalizedElements(elements){
   const none=Math.max(0,100-earth-water-fire-wind);
   return {earth,water,fire,wind,none};
 }
+function sourceBattleElements(elements){
+  if(!elements)return null;
+  // fixed BATTLE_GetAttr() 的 T_pow[] 全是 int；負值歸 0，none 由 100 減四屬後下限 0。
+  const earth=Math.max(0,Math.trunc(n(elements.earth)));
+  const water=Math.max(0,Math.trunc(n(elements.water)));
+  const fire=Math.max(0,Math.trunc(n(elements.fire)));
+  const wind=Math.max(0,Math.trunc(n(elements.wind)));
+  const none=Math.max(0,100-earth-water-fire-wind);
+  return {earth,water,fire,wind,none};
+}
 function battleFieldPower(elements){
   const e=normalizedElements(elements)||{earth:0,water:0,fire:0,wind:0,none:100};
   const attr=String(battleFieldState?.attr||'none');
@@ -1412,17 +1422,28 @@ function battleFieldTick(){
   }
   return battleFieldState;
 }
-function battleAttrMultiplier(attacker,defender){
-  const a=normalizedElements(attacker?.elements),d=normalizedElements(defender?.elements);
-  if(!a||!d)return 1;
-  const same=1,up=1.5,down=.6;
-  const fire=a.fire*(d.none*up+d.fire*same+d.water*down+d.earth*same+d.wind*up);
-  const water=a.water*(d.none*up+d.fire*up+d.water*same+d.earth*down+d.wind*same);
-  const earth=a.earth*(d.none*up+d.fire*same+d.water*up+d.earth*same+d.wind*down);
-  const wind=a.wind*(d.none*up+d.fire*down+d.water*same+d.earth*up+d.wind*same);
-  const none=a.none*(d.none*same+d.fire*down+d.water*down+d.earth*down+d.wind*down);
-  const base=(fire+water+earth+wind+none)/10000;
-  return base*battleFieldRatio(a,d);
+function battleAttrDamage(attacker,defender,rawDamage){
+  const damage=Math.max(0,Math.trunc(n(rawDamage)));
+  const a=sourceBattleElements(attacker?.elements),d=sourceBattleElements(defender?.elements);
+  if(!a||!d)return damage;
+
+  // fixed BATTLE_AttrAdjust：At_pow[] 是 int，先各自 *= damage。
+  const attackVector={
+    earth:Math.trunc(a.earth*damage),
+    water:Math.trunc(a.water*damage),
+    fire:Math.trunc(a.fire*damage),
+    wind:Math.trunc(a.wind*damage),
+    none:Math.trunc(a.none*damage)
+  };
+
+  // BATTLE_AttrCalc 的 My_* 參數 / iRet / return 全是 int：
+  // 五個屬性分量各自截斷，再 /10000 截斷。
+  const attrDamage=magicAttrCalcRaw(attackVector,d);
+
+  // BATTLE_AttrAdjust 回來後才 damage *= At_FieldPow / Df_FieldPow；
+  // damage 是 int，因此這一步還要再截一次，不能和 AttrCalc 合併成單次 multiplier。
+  const fieldRatio=battleFieldRatio(a,d);
+  return Math.trunc(attrDamage*fieldRatio);
 }
 const MAGIC_ATTR_KEYS=Object.freeze(['earth','water','fire','wind']);
 const MAGIC_CHAR_TABLE=Object.freeze([
@@ -2674,7 +2695,7 @@ function battleDamageCore(attacker,defender,options={}){
     const k0=cRand(0,attack/8)-attack/16;
     damage=Math.trunc((attack-defense)*2+k0);
   }
-  damage=Math.trunc(damage*battleAttrMultiplier(attacker,defender));
+  damage=battleAttrDamage(attacker,defender,damage);
   return damage;
 }
 function battleGuardAdjust(damage){
@@ -6506,7 +6527,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.82 載入完成：Duck／Critical／Counter 補齊 fixed C 的 int FIXDEX 算術；0.8／0.6 類型倍率會立即截斷，Counter 的 int Work 也在除法後截斷。','good');
+    addLog('V0.83 載入完成：普通物理 BATTLE_AttrAdjust 改依 fixed C 分段 int 截斷；五個屬性分量、AttrCalc /10000、戰場倍率各自按原型別落地。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
