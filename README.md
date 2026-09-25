@@ -12244,3 +12244,44 @@ Enemy AI 若 `PETSKILL_Use()` 失敗或 B_AI_MAGICMODE 無 handler，來源 Batt
 - RENZOKU explicit attackMax override 優先於 primed value
 - AttackCount RNG 發生在 TargetAdjust / AttackMagic MultiList / command effect 之前
 - schema 27 / V1.33 AttackMagic / V1.32 TargetAdjust regressions unchanged
+
+
+## V1.35 _ADD_DEAMGEDEFC / BATTLE_DamageCalc RNG lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `version.h` 啟用 `_ADD_DEAMGEDEFC`。原 `BATTLE_DamageCalc()` 在基礎攻防 RNG 與 `BATTLE_AttrAdjust()` 完成後、return 前固定執行：
+
+```c
+apower = CHAR_getWorkInt( attackindex, CHAR_WORKOTHERDMAGE);
+dpower = CHAR_getWorkInt( defindex, CHAR_WORKOTHERDEFC);
+otherpower = RAND( apower*0.3, apower) - RAND( dpower*0.3, dpower);
+```
+
+`CHAR_initcharWorkInt()` 會先把 `CHAR_WORKOTHERDMAGE` / `CHAR_WORKOTHERDEFC` 初始化成 0。現有 Web weapon runtime 沒有可由原資料可靠還原的 other damage / defense 欄位；`itemset6.txt` 又是 GB18030，這一輪不猜任何非 0 裝備值。
+
+### Web correction
+
+`battleDamageCore()` 在 `battleAttrDamage()` 後新增 fixed `_ADD_DEAMGEDEFC` lifecycle：
+
+- 目前 `sourceOtherDamage = 0`
+- 目前 `sourceOtherDefense = 0`
+- 每次 DamageCalc 無條件執行兩次 `cRand(0,0)`
+- 兩個值皆為 0，所以 `sourceOtherPower` 必為 0，現有傷害數值不改變
+- 仍保留原 C 的 `damage < 0 => 0` 收尾
+- 不新增猜測的裝備欄位，不改 save schema
+
+重點是 RNG lifecycle：現有 `cRand(0,0)` 仍會呼叫一次 `Math.random()`，所以兩顆固定 0 RNG 不能省略。
+
+### V1.35 regression targets
+
+- game.js syntax PASS
+- 每次真正進入 `battleDamageCore()` 固定多消耗兩顆 RNG
+- 兩顆 RNG 的位置在基礎 DamageCalc RNG + AttrAdjust 之後
+- critical bonus / GuardAdjust / damage<1 fallback 等後續 RNG 順序相對來源一致
+- 0 / 0 current values 不改變實際 damage
+- dodge / skill-dodge 在 DamageCalc 前返回時不誤吃這兩顆 RNG
+- schema 27 維持不變
+- V1.34 AttackCount / V1.33 AttackMagic / V1.32 TargetAdjust regressions unchanged

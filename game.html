@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.34</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.35</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.34：</b>
-      對齊 BATTLE_Battling 的全域 AttackCount RNG 時序：Enemy 只要 CHAR_ARM 有有效武器，每個真正進入執行階段的回合都先做 BATTLE_GetAttackCount；Guard／Escape／無法行動等沒有揮武器的回合也會照原 C 消耗武器 RAND，物理攻擊則重用這次結果避免二次抽取。
+      <b>V1.35：</b>
+      對齊 fixed _ADD_DEAMGEDEFC 的 BATTLE_DamageCalc RNG 生命週期：目前 runtime 沒有可驗證的 other damage／defense 非 0 裝備欄位，因此維持兩者為初始化 0，不猜數值；但每次 DamageCalc 仍照原 C 固定消耗兩顆 RAND(0,0)，保持整場 RNG 序列一致。
     </article>
   </main>
 

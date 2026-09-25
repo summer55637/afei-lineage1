@@ -3617,6 +3617,17 @@ function battleDamageCore(attacker,defender,options={}){
     damage=Math.trunc((attack-defense)*2+k0);
   }
   damage=battleAttrDamage(attacker,defender,damage);
+
+  // fixed _ADD_DEAMGEDEFC is enabled. CHAR_initcharWorkInt() initializes
+  // CHAR_WORKOTHERDMAGE / CHAR_WORKOTHERDEFC to 0, and the current web runtime has no
+  // sourced non-zero equipment fields for either value. Do not invent them; however,
+  // BATTLE_DamageCalc() still unconditionally consumes both RAND calls even at 0..0.
+  const sourceOtherDamage=0;
+  const sourceOtherDefense=0;
+  const sourceOtherPower=cRand(sourceOtherDamage*.3,sourceOtherDamage)
+    -cRand(sourceOtherDefense*.3,sourceOtherDefense);
+  if(sourceOtherPower!==0)damage+=sourceOtherPower;
+  if(damage<0)damage=0;
   return damage;
 }
 function battleGuardAdjust(damage){
