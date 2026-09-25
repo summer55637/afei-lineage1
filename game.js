@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePetGuardIds=new Set(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1692,7 +1692,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePetGuardIds=new Set();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -1887,13 +1887,39 @@ function battleStatusApply(targetDesc,type,turns){
   const key=battleStatusKey(targetDesc);
   if(!key)return false;
   battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns))+1)});
+  sourceClearPetBattleCommand(targetDesc,type);
   return true;
 }
+function sourceStatusClearsBattleCommand(type){
+  return type==='paralysis'||type==='sleep'||type==='stone'||type==='barrier';
+}
+function sourceClearPetBattleCommand(targetDesc,type){
+  if(!sourceStatusClearsBattleCommand(type)||targetDesc?.kind!=='pet'||!targetDesc.pet)return;
+  battlePetGuardIds.delete(targetDesc.pet.id);
+  sourceCancelPetCharge(targetDesc.pet);
+}
+function sourcePlayerPetGuardCommand(pet){
+  return !!pet&&petIsBattleActive(pet)&&petIsAlive(pet)&&battlePetGuardIds.has(pet.id);
+}
+function sourcePlayerPetGuardAdjust(pet){
+  if(!sourcePlayerPetGuardCommand(pet))return false;
+  const desc={kind:'pet',pet,petId:pet.id};
+  // fixed: DuckCheck 只看 COM_GUARD；GuardAdjust 另外要求 WORKCONFUSION<=0。
+  return !battleStatusActive(desc,'confusion');
+}
+function sourcePerformPetNormalGuard(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  battlePetGuardIds.add(pet.id);
+  addLog(pet.name+' 隨機使用「'+(action?.meta?.n||'防禦')+'」，本輪剩餘時間進入防禦姿勢。','pet');
+  return {handled:true,skillId:action?.skillId,guarding:true};
+}
+
 function battleStatusApplyRaw(targetDesc,type,turns){
   if(battleStatusGet(targetDesc))return false;
   const key=battleStatusKey(targetDesc);
   if(!key)return false;
   battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns)))});
+  sourceClearPetBattleCommand(targetDesc,type);
   return true;
 }
 function battleStatusWakeOnDamage(targetDesc,damage){
@@ -3081,7 +3107,7 @@ function performConfusionAttack(actor,statusTurn,options={}){
 function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
-  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian)return;
+  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian||primaryResult?.sourcePetGuardCommand)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -3128,7 +3154,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
 }
 function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult){
   if(!pet||!unit||!enemy||!petIsBattleActive(pet)||unit.hp<=0)return;
-  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian)return;
+  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian||primaryResult?.sourcePetGuardCommand)return;
 
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
@@ -3338,7 +3364,15 @@ function enemyAttackResult(unit=targetEnemyUnit(),options={}){
   return resolveNormalAttack(enemyBattleView(unit),playerBattleView(),options);
 }
 function enemyAttackPetResult(unit,pet,options={}){
-  return resolveNormalAttack(enemyBattleView(unit),petBattleView(pet),options);
+  const guardCommand=sourcePlayerPetGuardCommand(pet);
+  const guarding=sourcePlayerPetGuardAdjust(pet);
+  const r=resolveNormalAttack(enemyBattleView(unit),petBattleView(pet),Object.assign({},options,{
+    guarding,
+    disableDodge:!!options.disableDodge||guardCommand
+  }));
+  r.sourcePetGuardCommand=guardCommand;
+  r.sourcePetGuardAdjust=guarding;
+  return r;
 }
 
 const SOURCE_BOW_W=Object.freeze([
@@ -3836,7 +3870,15 @@ function enemyPlayerSideLivingTargets(){
 function enemySkillTargetResult(unit,chosen,options={},attackerOverride=null){
   const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   if(chosen?.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-    return resolveNormalAttack(attacker,petBattleView(chosen.pet),options);
+    const guardCommand=sourcePlayerPetGuardCommand(chosen.pet);
+    const guarding=sourcePlayerPetGuardAdjust(chosen.pet);
+    const r=resolveNormalAttack(attacker,petBattleView(chosen.pet),Object.assign({},options,{
+      guarding,
+      disableDodge:!!options.disableDodge||guardCommand
+    }));
+    r.sourcePetGuardCommand=guardCommand;
+    r.sourcePetGuardAdjust=guarding;
+    return r;
   }
   if(chosen?.kind==='player'&&state.hp>0){
     const guarding=Object.prototype.hasOwnProperty.call(options,'guarding')
@@ -3913,9 +3955,16 @@ function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
 function enemyAttackSeqBugTargetResult(unit,chosen,options={},attackerOverride=null){
   const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   if(chosen?.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-    // Guardian is attached to the owner's Entry; a Pet that was already the original
-    // target does not get redirected through its owner's Guardian mapping.
-    return resolveNormalAttack(attacker,petBattleView(chosen.pet),options);
+    // Owner Guardian 不會重導本來就指向 Pet 的攻擊；但 Pet 自己的 COM_GUARD 仍參與 AttackSeq。
+    const guardCommand=sourcePlayerPetGuardCommand(chosen.pet);
+    const guarding=sourcePlayerPetGuardAdjust(chosen.pet);
+    const r=resolveNormalAttack(attacker,petBattleView(chosen.pet),Object.assign({},options,{
+      guarding,
+      disableDodge:!!options.disableDodge||guardCommand
+    }));
+    r.sourcePetGuardCommand=guardCommand;
+    r.sourcePetGuardAdjust=guarding;
+    return r;
   }
   if(chosen?.kind==='player'&&state.hp>0){
     return resolveEnemyAttackSeqBugToPlayer(unit,options,attackerOverride);
@@ -4590,8 +4639,21 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
 
   let r,multiplier;
   if(chosen.kind==='pet'&&chosen.pet){
-    multiplier=.7;
-    r=enemyAttackPetResult(unit,chosen.pet,{preGuardDamageMultiplier:multiplier});
+    const guardCommand=sourcePlayerPetGuardCommand(chosen.pet);
+    multiplier=guardCommand?1.3:.7;
+    const attacker=enemyBattleView(unit);
+    const defender=petBattleView(chosen.pet);
+    if(!guardCommand){
+      const dodge=sourceInitialDodgeOnly(attacker,defender,{guarding:false});
+      if(dodge.dodged)r=dodge;
+    }
+    if(!r){
+      r=resolveNormalAttack(attacker,defender,{
+        guarding:false,disableDodge:true,preGuardDamageMultiplier:multiplier
+      });
+    }
+    r.sourcePetGuardCommand=guardCommand;
+    r.guardBreak2Multiplier=multiplier;
   }else{
     r=resolveEnemyGuardBreak2BugToPlayer(unit,guarding);
     multiplier=n(r?.guardBreak2Multiplier)||(guarding?1.3:.7);
@@ -4859,7 +4921,7 @@ function performEnemyFirekill(actor,unit,options,meta){
   // 但 battle.c 緊接著的 BATTLE_MultiAttMagic_Fire 仍使用原始 defNo。
   let physical;
   if(chosen.kind==='pet'&&chosen.pet){
-    physical=enemySkillTargetResult(unit,chosen,{guarding:false});
+    physical=enemySkillTargetResult(unit,chosen,{});
   }else{
     physical=resolveEnemyDirectAttackToPlayer(unit,{guarding});
   }
@@ -5678,6 +5740,9 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     if(meta?.f==='PETSKILL_Guardian'){
       return sourcePerformPetGuardianSkill(pet,action,options);
     }
+    if(meta?.f==='PETSKILL_NormalGuard'){
+      return sourcePerformPetNormalGuard(pet,action);
+    }
     addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');
     return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
   }
@@ -5864,23 +5929,32 @@ function performEnemyGuardBreak(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId};
   const label=meta?.n||'破除防禦';
-  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const guarding=chosen.kind==='player'
+    ?(!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion'))
+    :(chosen.kind==='pet'&&chosen.pet?sourcePlayerPetGuardAdjust(chosen.pet):false);
 
-  // 原 BATTLE_S_GBreak：目標不是 GUARD 時直接 damage=0；只有 GUARD 才真正攻擊，
-  // 且 opt==GBREAK 會跳過 BATTLE_GuardAdjust。
+  // fixed BATTLE_S_GBreak：原 defindex 最後必須仍是有效 GUARD，否則 caller 強制 damage=0。
   if(!guarding){
-    addLog(unit.name+' 使用 '+label+'，但目標沒有防禦，技能沒有造成傷害。');
+    addLog(unit.name+' 使用 '+label+'，但目標沒有有效防禦，技能沒有造成傷害。');
     return {kind:'skill',skillId:actor.skillId,guardBreakMiss:true};
   }
 
-  const r=resolveEnemyAttackSeqBugToPlayer(unit,{
-    guarding:false,
-    disableDodge:true,
-    guardianSourceBug:'BATTLE_S_GBreak-defindex-not-updated'
-  });
+  let r;
+  if(chosen.kind==='pet'&&chosen.pet){
+    // COM_GUARD 讓 DuckCheck 直接 FALSE；opt=GBREAK 又刻意跳過普通 GuardAdjust。
+    r=resolveNormalAttack(enemyBattleView(unit),petBattleView(chosen.pet),{
+      guarding:false,disableDodge:true
+    });
+    r.sourcePetGuardCommand=true;
+  }else{
+    r=resolveEnemyAttackSeqBugToPlayer(unit,{
+      guarding:false,
+      disableDodge:true,
+      guardianSourceBug:'BATTLE_S_GBreak-defindex-not-updated'
+    });
+  }
   enemyApplySkillHit(unit,chosen,r,label);
-  // BATTLE_S_GBreak 對 GUARD 最後會 iRet=FALSE，不接反擊鏈。
-  return {kind:'skill',skillId:actor.skillId,target:'player',r};
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r};
 }
 function sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label){
   if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
@@ -6681,8 +6755,9 @@ function sourcePerformCombo(order,index,options={}){
 
 function normalBattleOrder(options={}){
   const surpriseSide=enemy?.sourceSurprisePending?enemy.sourceSurpriseSide:null;
-  // fixed BATTLE_PreCommandSeq 每輪先把所有 Entry.guardian=-1 並清 GUARDIAN flag；
-  // 忠犬保護只存在於「本輪 skill 20 實際發動之後」到本輪結束。
+  // fixed BATTLE_AllCharaCWaitSet 只保留 Charge 類 command；普通 GUARD 新一輪前清回 NONE。
+  // PreCommandSeq 同時清掉上一輪 Guardian mapping。
+  battlePetGuardIds.clear();
   battlePlayerGuardianPetId=null;
   // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；
   // EARTHROUND0 是明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。

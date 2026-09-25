@@ -9965,3 +9965,102 @@ V1.03 因此把每個 Player AttackObject 改走正常 real-Guardian substitutio
 - BattleModel Pet 中 stone/barrier 不清 Player GUARD
 - V1.02 calc-only GBreak/FallGround、V1.01 AttackDamage bug、V1.00 normal Guardian 保留
 - save schema 21
+
+
+## V1.04 low-loyalty Pet NormalGuard 2
+
+V1.04 直接從正式捕獲資料 `data/generated/stoneage_general_lv1_pets.json`（166 species / 169 wild Lv1 variants）統計實際 PetSkill。
+169 個 variant 共只使用 19 個 PetSkill ID；目前玩家側 RANDOMACT 最大未接缺口是 **skill 2「防禦」**，出現在 **151 / 169** 個 variant。
+
+fixed source：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### 原 PETSKILL_NormalGuard
+
+`gmsv/src/battle/pet_skill.c` 只做：
+
+```c
+COM1 = BATTLE_COM_GUARD;
+COM2 = toindex;
+MODE = C_OK;
+```
+
+因此 V1.04 新增 battle-only `battlePetGuardIds`：
+
+- Pet 真正輪到低忠誠 RANDOMACT 並抽中 skill 2 後才開始防禦。
+- 同輪較早打到 Pet 的 Enemy 不受影響。
+- 同輪後續物理攻擊會讀到 Pet 自己的 GUARD。
+- fixed `BATTLE_AllCharaCWaitSet()` 只保留 Charge，所以下一輪開頭清除 NormalGuard。
+- 不寫入永久 save。
+
+### COM_GUARD 與實際減傷分開
+
+fixed `BATTLE_DuckCheck()` 只要看到 `COM_GUARD` 就直接不閃避。
+但 AttackSeq 的 `BATTLE_GuardAdjust()` 還要求 `WORKCONFUSION<=0`。
+
+因此若 Pet 先 GUARD 後又混亂：
+
+- COM 仍是 GUARD，因此不能 dodge。
+- 不吃 GuardAdjust。
+- COM 不是 ATTACK / NOGUARD，因此不能進普通 Counter。
+
+V1.04 以 `sourcePlayerPetGuardCommand()` 與 `sourcePlayerPetGuardAdjust()` 分開模擬。
+
+### 共用 Pet-target 物理入口
+
+已接入：
+
+- `enemyAttackPetResult()`
+- `enemySkillTargetResult()`
+- `enemyAttackSeqBugTargetResult()`
+
+所以普通攻擊、連續攻擊、狀態攻擊、狂暴、回旋、追跡、Firekill 物理段、BattleModel 物理 object 等現有共用路徑都能讀到 Pet GUARD。
+
+### GBreak / GBreak2
+
+`BATTLE_S_GBreak()`：
+
+- Pet 必須是有效 GUARD 才保留傷害。
+- COM_GUARD 不 dodge。
+- opt=GBREAK 跳過普通 GuardAdjust，因此破防命中時不再吃 1/2 防禦減傷。
+
+`BATTLE_S_GBreak2()`：
+
+- multiplier 直接看 local Pet 的 `COM_GUARD`。
+- Pet GUARD -> ×1.3。
+- Pet 非 GUARD -> ×0.7。
+- opt=GBREAK2 本身不再進普通 GuardAdjust。
+
+### 禁行動狀態覆寫 command
+
+fixed 普通 StatusAttack、`BATTLE_MultiStatusChange()`、BattleModel 都會在成功施加：
+
+- paralysis
+- sleep
+- stone
+- barrier
+
+後寫 `COM1=NONE`。
+
+因此 V1.04 在 `battleStatusApply()` / `battleStatusApplyRaw()` 成功時同步清除 Pet 的：
+
+- NormalGuard battle state
+- Charge battle state
+
+只限上述四種；poison / confusion / drunk / deepPoison / nocast 不清 command。
+
+### V1.04 regression
+
+- `game.js` syntax PASS
+- battle-only Pet Guard 每場 reset
+- 每新 round 清 GUARD
+- low-loyalty RANDOMACT skill 2 dispatcher
+- ordinary Pet target：GUARD 禁 dodge + GuardAdjust
+- confused GUARD：禁 dodge但不 GuardAdjust
+- Pet COM_GUARD 不進 Counter
+- GBreak Pet GUARD 專用路徑
+- GBreak2 Pet GUARD ×1.3 / 非 GUARD ×0.7
+- Firekill Pet physical 讀 Pet GUARD
+- paralysis/sleep/stone/barrier 成功時清 Guard / Charge
+- V1.03 Firekill/BattleModel true Guardian substitution 保留
+- V1.02 / V1.01 Guardian 舊 bug 語意保留
+- save schema 21
