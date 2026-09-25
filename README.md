@@ -4178,3 +4178,135 @@ V0.62 沒有新增持久化欄位，因此 schema **維持 17**。
 - 627／632／637／705：`PETSKILL_Combined`，依賴 JYUJYUTU／咒術底層
 
 繼續維持「原 C 規則優先、不猜數值」；在正式 MP／JYUJYUTU 或可驗證 runtime 尚未建立前，不把這些技能偷換成普通攻擊或自行猜效果。
+
+
+## V0.63 玩家 MP 與 MP攻擊
+
+V0.63 建立最小但正式的玩家 MP runtime，並接入 Enemy 正權重 PetSkill 506／507／508。
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/char/char.c`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/data/petskill2.txt`
+
+### 玩家 MP 初始化
+
+原 `CHAR_createNewChar()` 明確：
+
+`ch.data[CHAR_MAXMP] = ch.data[CHAR_MP] = 100;`
+
+而 `CHAR_initcharWorkInt()` 直接：
+
+`CHAR_WORKMAXMP = CHAR_MAXMP`
+
+現版 web 尚無 `ITEM_MODIFYMP` 裝備效果，因此 V0.63 不猜額外成長或職業公式，玩家固定：
+
+- MP = 100
+- MaxMP = 100
+
+Save schema 由 17 升到 18，新增：
+
+- `mp`
+- `maxMp`
+
+舊存檔因先前沒有 MP 系統，升級時安全初始化為 100／100。
+
+休息補滿同步參照原 Healer 行為，把角色 HP 與 MP 都補滿。
+
+### 506／507／508 原資料
+
+`petskill2.txt`：
+
+- 506 MP攻擊 → `PETSKILL_MpDamage` → `50|50`
+- 507 MP攻擊2 → `PETSKILL_MpDamage` → `50|75`
+- 508 MP攻擊3 → `PETSKILL_MpDamage` → `50|100`
+
+第一欄看似是「物理攻擊力下降 50%」，第二欄是 MP 損害比例。
+
+### 原 C 的整數除法 bug
+
+`PETSKILL_MpDamage()` 實際寫法：
+
+`def = (float)(atoi(buf1)/100);`
+
+對三個技能第一欄都是 50，因此 C 會先做：
+
+`50 / 100 = 0`
+
+再轉為 float 0.0。
+
+後續：
+
+`strdef = strdef - (int)(strdef * def);`
+
+所以這個來源 build 的 506／507／508 **實際不降低物理攻擊力**。
+
+V0.63 保留這個來源行為，不依技能文字自行修成 -50%。
+
+### MP 傷害條件
+
+原 battle path：
+
+`BATTLE_COM_S_MPDAMAGE -> BATTLE_S_AttackDamage() -> BATTLE_S_MpDamage()`
+
+`BATTLE_S_MpDamage()` 只在以下條件成立時生效：
+
+- 本次物理 `damage >= 1`
+- 目標不是 Enemy
+- 目標不是 Pet
+- 也就是實際上只對 Player 生效
+- 目標目前 MP > 0
+- `BATTLE_GetDamageReact(defindex) == 0`
+
+目前 web 玩家沒有光／鏡／守 DamageReact work-int，所以最後一項在現況來源等價為 true。
+
+真正扣除：
+
+`D_MP = (int)(currentMP * percent)`
+
+然後：
+
+`MP = MP - D_MP`
+
+所以 506／507／508 分別扣「**當下剩餘 MP**」的：
+
+- 50%
+- 75%
+- 100%
+
+不是 MaxMP 百分比。
+
+例如 100 MP 連續吃兩次 506：
+
+- 第一次：100 → 50
+- 第二次：50 → 25
+
+### 物理與反擊
+
+506／507／508 在 `battle.c` 走 `BATTLE_S_AttackDamage()` 專用 case，處理完直接 break，不進普通 `BATTLE_Attack` 的 Counter loop。
+
+因此 V0.63：
+
+- 保留正常物理命中／閃避／防禦
+- 不額外建立普通 Counter
+- 只有物理 damage > 0 時才接 MP 削減
+- 打 Active Pet 時只造成物理傷害，不扣玩家 MP
+
+### 正權重掃描更新
+
+506／507／508 原正權重合計 196，V0.63 後已正式接入。
+
+下一批仍需處理的重點：
+
+- 676 → `PETSKILL_AttackMagic -> magic 204`：FieldAttChange，會檢查並扣 MP
+- 688 → `PETSKILL_AttackMagic -> magic 435`：MAGIC_Weaken，會檢查並扣 MP
+- 634 → `PETSKILL_DivideAttack`：會先把玩家 MP 減半，再處理 HP
+- 211 → `PETSKILL_StealMoney`：仍受 Enemy `CHAR_WORKPLAYERINDEX` 無有效 owner 限制
+- 627／632／637／705 → `PETSKILL_Combined`：依賴 JYUJYUTU／咒術底層
+
+繼續維持「原 C 規則優先、不猜數值」。
