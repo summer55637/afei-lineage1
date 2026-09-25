@@ -7735,3 +7735,180 @@ V0.82 沒有改：
 - 公式常數與 fixed C 相同
 - save schema：21
 
+
+
+## V0.83 physical attribute integer pipeline
+
+V0.83 校正普通物理傷害的四屬計算，讓 web 路徑對齊 fixed C 的分段 `int` 截斷。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+
+原流程：
+
+```text
+BATTLE_DamageCalc
+→ BATTLE_AttrAdjust
+→ At_pow[i] *= damage
+→ BATTLE_AttrCalc
+→ damage *= At_FieldPow / Df_FieldPow
+```
+
+### BATTLE_GetAttr / At_pow 都是 int
+
+來源：
+
+```c
+int At_pow[5];
+int Dt_pow[5];
+```
+
+四屬由 FIX 屬性讀入，負值歸 0，無屬性：
+
+```text
+none = max(0, 100 - earth - water - fire - wind)
+```
+
+V0.83 新增 `sourceBattleElements()`，明確以 `Math.trunc` 對齊來源 int。
+
+### At_pow *= damage
+
+來源會先：
+
+```c
+for(i=0;i<5;i++){
+    At_pow[i] *= damage;
+}
+```
+
+因此進 `BATTLE_AttrCalc()` 的攻方五屬已經是：
+
+`element * rawDamage`
+
+的 int 值。
+
+### BATTLE_AttrCalc 的分量逐一截斷
+
+`BATTLE_AttrCalc()` 的參數：
+
+```c
+int My_Fire,
+int My_Water,
+int My_Earth,
+int My_Wind,
+int My_None
+```
+
+而每個 My_* 又會接收含 1.5 / 0.6 的浮點加權式。
+
+因為左值仍是 int，所以：
+
+- Fire component 先截斷
+- Water component 先截斷
+- Earth component 先截斷
+- Wind component 先截斷
+- None component 先截斷
+
+之後才加總。
+
+函式本身也是：
+
+```c
+static int BATTLE_AttrCalc(...)
+```
+
+最後：
+
+```c
+return (iRet * D_ATTR);
+```
+
+其中：
+
+```c
+#define D_ATTR (1.0/(100*100))
+```
+
+所以 `/10000` 的結果還會因 return int 再截一次。
+
+V0.83 直接復用現有魔法路徑已驗證過的：
+
+`magicAttrCalcRaw()`
+
+來保留這些截斷節點。
+
+### 戰場屬性在 AttrCalc 之後才乘
+
+來源：
+
+```c
+damage = BATTLE_AttrCalc(...);
+damage *= (At_FieldPow / Df_FieldPow);
+```
+
+`damage` 是 int，所以場地倍率乘完又截斷。
+
+V0.82 以前普通物理是：
+
+```text
+rawDamage
+× attrMultiplier
+× fieldRatio
+→ 最後只 trunc 一次
+```
+
+V0.83 改成：
+
+```text
+rawDamage
+→ 五屬分量逐一 trunc
+→ /10000 trunc
+→ fieldRatio
+→ 再 trunc
+```
+
+### 可觀察差異
+
+固定整數測例：
+
+```text
+raw damage = 89
+
+攻方：
+地 18 / 水 41 / 火 15 / 風 26
+
+守方：
+地 3 / 水 45 / 火 43 / 風 9
+```
+
+舊 web 單次 multiplier：
+
+`94`
+
+fixed C 分段 int：
+
+`93`
+
+因此這是實際可改變傷害結果的差異，不只是內部重構。
+
+### V0.83 regression
+
+已確認：
+
+- `game.js` JavaScript syntax：PASS
+- 普通物理使用 `sourceBattleElements()`
+- `At_pow * rawDamage` 以 int 表示
+- 屬性核心使用 `magicAttrCalcRaw()` 的 fixed C 分量截斷
+- field ratio 在 AttrCalc 後獨立套用
+- V0.82 FIXDEX int 截斷保留
+- V0.76 DRUNK lifecycle 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
+
