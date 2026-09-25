@@ -437,14 +437,21 @@ function normalizeState(raw){
   }
   s.quest.event81Complete=!!s.quest.event81.complete;
   const ids=new Set(s.petBox.map(p=>p.id));
+  const rawHasActivePetId=!!raw&&Object.prototype.hasOwnProperty.call(raw,'activePetId');
+  const rawHasTeam=!!raw&&Array.isArray(raw.team);
   s.team=s.team.map(id=>ids.has(id)?id:null);
   if(!ids.has(s.activePetId))s.activePetId=null;
-  if(!s.activePetId){
+
+  // fixed BATTLE_LostEscape 只把 CHAR_DEFAULTPET 設為 -1，寵本身仍留在持有欄。
+  // 現行存檔若明確保存 activePetId:null，這個「休息／未出戰」狀態必須跨 reload 保留；
+  // 只有舊格式根本沒有 activePetId 欄位時，才沿用 legacy convenience 自動挑第一隻。
+  if(!s.activePetId&&!rawHasActivePetId){
     s.activePetId=s.team.find(Boolean)||null;
   }
-  if(!s.team.some(Boolean)&&s.petBox.length){
+  if(!s.team.some(Boolean)&&s.petBox.length&&!rawHasTeam){
+    // 舊格式沒有 team 欄位時才替它建立第一格；現行玩家明確空隊伍不可被偷偷補回。
     s.team[0]=s.petBox[0].id;
-    s.activePetId=s.petBox[0].id;
+    if(!rawHasActivePetId)s.activePetId=s.petBox[0].id;
   }
   if(n(raw?.schemaVersion)<11)s.encounterId=null;
   if(n(raw?.schemaVersion)<12){
@@ -8185,7 +8192,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.16 載入完成：主人攻擊自己的寵物會依 BATTLE_AttackSeq 套 AI_FIX_SEKKAN 忠誠 -2，包含混亂與反擊鏈。','good');
+    addLog('V1.17 載入完成：低忠誠逃跑後 CHAR_DEFAULTPET=-1 等價狀態可跨存檔保留，不再 reload 自動把第一隻寵叫回出戰。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

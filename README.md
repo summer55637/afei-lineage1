@@ -10884,3 +10884,40 @@ VariableAI 仍沿用 V1.14 的 -10000..10000 source clamp。
 - pet -> player does not apply AI_FIX_SEKKAN
 - enemy -> player/pet does not apply AI_FIX_SEKKAN
 - clamp continues through sourcePetAddVariableAi
+
+
+## V1.17 persist BATTLE_LostEscape default-pet rest state
+
+固定來源仍是 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+原 battle_event.c::BATTLE_LostEscape 在低忠誠 Pet 逃跑時：
+
+- BATTLE_Exit(pet, battleindex)
+- CHAR_setInt(owner, CHAR_DEFAULTPET, -1)
+- CHAR_AddCharm(owner, CH_FIX_PETESCAPE)
+
+目前 Web 的即時戰鬥流程早已做到：
+
+- battlePetOutIds.add(pet.id)
+- activePetId = null
+- charm -1
+- Pet 本身仍留在 petBox / team
+
+但 normalizeState 以前只要看到 activePetId 為 null，就會在 reload 時把 team 第一隻自動指定成 activePetId，等於把原 CHAR_DEFAULTPET=-1 狀態消掉。
+
+V1.17 改成：
+
+- 如果舊存檔根本沒有 activePetId 欄位，才做 legacy 自動補選
+- 如果現行存檔明確保存 activePetId:null，就保留 null
+- 如果舊存檔根本沒有 team 欄位，才自動把第一隻 Pet 放入 team
+- 現行存檔若明確保存空 team，不再偷偷補第一隻
+
+因此低忠誠逃跑後，即使重新整理頁面，該 Pet 仍只是留在持有欄／隊伍欄，不會自動重新變成出戰 Pet；玩家必須自己再次選「設為出戰」。
+
+### Regression targets
+
+- current save activePetId:null + team has Pet => reload keeps null
+- legacy save missing activePetId + team has Pet => first team Pet may still auto-select
+- current save explicit empty team + petBox nonempty => reload keeps empty team
+- legacy save missing team + petBox nonempty => first Pet migrates into team
+- BATTLE_LostEscape current flow still charm -1 and battle exit
