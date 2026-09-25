@@ -10921,3 +10921,46 @@ V1.17 改成：
 - current save explicit empty team + petBox nonempty => reload keeps empty team
 - legacy save missing team + petBox nonempty => first Pet migrates into team
 - BATTLE_LostEscape current flow still charm -1 and battle exit
+
+
+## V1.18 Ultimate / knock-away death lifecycle
+
+固定來源：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+本輪對齊 BATTLE_DamageSub / DamageSub2 / Attack / Counter / Combo 與 BATTLE_UltimateExtra。
+
+原 DamageSub：
+- 單次 damage >= MAXHP * 1.2 + 20 => Ultimate type 2
+- 否則只有 HP 打成負值的 overkill addpoint 累積到 CHAR_WORKULTIMATE
+- 累積 addpoint >= 同門檻 => type 1
+- Ultimate 成立後 WORKULTIMATE 清 0
+
+BATTLE_Attack / Counter 對死亡的非 PLAYER 目標，若本擊 critical，另做嚴格 RAND(1,100)<50；成功值 1..49，會把 ultimate 指定成 type 1，連原本 type 2 都可能被覆寫成 1。 BATTLE_Combo 的同類判定更窄，只在死亡目標是 CHAR_TYPEENEMY 時做，因此 V1.18 的 Combo tracker 使用 enemy-only critical 模式。
+
+V1.18 用 battleUltimateWork / battleUltimateFlags 重建 battle-local WORKULTIMATE / BENT_FLG_ULTIMATE。
+
+固定 _PETSKILL_LER 只以 CHAR_BASEBASEIMAGENUMBER 101813/101814 禁止打飛。Web 現有資料通常只有 animationGroupId，因此不從 TempNo 或名稱猜；只有物件真的提供 exact baseBase image 欄位時才套例外。
+
+Ultimate Player：
+- Lv1～10：魅力 -2、DEFAULTPET VariableAI -500
+- Lv11+：魅力 -4、DEFAULTPET VariableAI -1000
+
+Ultimate Pet：
+- owner Lv1～10：VariableAI -500
+- owner Lv11+：VariableAI -1000
+- DEFAULTPET=-1 等價為 activePetId=null
+- 本場 BATTLE_Exit 等價為 battlePetOutIds
+
+普通死亡與 UltimateExtra 互斥。Marefia 718 的 Pet_Check_Die 在原流程先於兩個死亡分支，所以被打飛時仍先套 ALLOCPOINT / MODAI 死亡懲罰。
+
+已接入目前可明確對應 DamageSub / DamageSub2 的普通物理、Counter、Guardian 代擋、Bow/Boomerang/BoundThrow/BreakThrow、混亂物理、已接 Enemy 物理 PetSkill，以及 Combo aggregate damage。純 attack magic／直接 HP 傷害不套 Ultimate。
+
+Regression：
+- damage >= maxHp*1.2+20 => type2
+- overkill 才累積 WORKULTIMATE
+- non-player lethal critical strict <50
+- player critical 不做該 50% roll
+- Ultimate Pet -1000 / low-level -500 + activePetId=null
+- Ultimate Player charm -4 / low-level -2；Pet -1000 / low-level -500
+- normal death仍保留 V1.15 數值
+- battle reset 清空 Ultimate work/flags

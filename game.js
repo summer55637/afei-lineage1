@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1803,7 +1803,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -1862,6 +1862,64 @@ function battleStatusKey(desc){
   if(desc.kind==='pet')return 'pet:'+String(desc.pet?.id??desc.petId??'');
   if(desc.kind==='enemy')return 'enemy:'+String(desc.unit?.id??desc.unitId??'');
   return null;
+}
+function sourceUltimateMaxHp(desc){
+  if(desc?.kind==='player')return Math.max(1,Math.trunc(n(state?.maxHp)));
+  if(desc?.kind==='pet'&&desc.pet)return Math.max(1,Math.trunc(n(desc.pet.maxHp)||petMaxHp(desc.pet)));
+  if(desc?.kind==='enemy'&&desc.unit)return Math.max(1,Math.trunc(n(desc.unit.maxHp)));
+  return 1;
+}
+function sourceUltimateBaseImage(desc){
+  const obj=desc?.kind==='pet'?desc.pet:desc?.kind==='enemy'?desc.unit:null;
+  const value=Number(obj?.baseBaseImageNumber??obj?.baseBaseImage??obj?.sourceBaseBaseImageNumber);
+  return Number.isFinite(value)?Math.trunc(value):null;
+}
+function sourceUltimateImmune(desc){
+  const image=sourceUltimateBaseImage(desc);
+  return image===101813||image===101814;
+}
+function sourceUltimateType(desc){
+  const key=battleStatusKey(desc);
+  return key?Math.trunc(n(battleUltimateFlags.get(key))):0;
+}
+function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
+  const key=battleStatusKey(desc);
+  if(!key)return {type:0,reason:'no-key'};
+  const damage=Math.max(0,Math.trunc(n(rawDamage)));
+  if(damage<=0)return {type:0,reason:'no-damage'};
+  const before=Math.max(0,Math.trunc(n(beforeHp)));
+  const after=battleStatusHp(desc);
+  const maxHp=sourceUltimateMaxHp(desc);
+  const threshold=maxHp*1.2+20;
+  const rawAfter=before-damage;
+  const overkill=rawAfter<0?-rawAfter:0;
+  let work=Math.max(0,Math.trunc(n(battleUltimateWork.get(key))));
+  let type=0;
+
+  if(damage>=threshold){
+    type=2;
+  }else if(overkill>0){
+    work+=overkill;
+    battleUltimateWork.set(key,work);
+    if(work>=threshold)type=1;
+  }
+
+  let criticalRoll=null;
+  const criticalTargetAllowed=result?.ultimateCriticalEnemyOnly
+    ?desc.kind==='enemy'
+    :desc.kind!=='player';
+  if(after<=0&&criticalTargetAllowed&&result?.critical){
+    criticalRoll=cRand(1,100);
+    if(criticalRoll<50)type=1;
+  }
+
+  if(sourceUltimateImmune(desc))type=0;
+  if(type>0){
+    battleUltimateFlags.set(key,type);
+    battleUltimateWork.delete(key);
+    addLog(battleStatusDescName(desc)+' 達成原版 Ultimate／打飛條件（type '+type+'）。','bad');
+  }
+  return {type,damage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
 function battleBaseElements(desc){
   if(desc?.kind==='player')return Object.assign({},state?.elements||{});
@@ -3155,6 +3213,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
 
   const before=battleStatusHp(targetDesc);
   battleStatusSetHp(targetDesc,before-r.damage);
+  sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   battleStatusWakeOnDamage(targetDesc,r.damage);
   const after=battleStatusHp(targetDesc);
   addLog(attackerName+' '+action+' '+targetName+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',after<=0?'bad':(attackerDesc?.kind==='pet'?'pet':''));
@@ -3257,7 +3316,9 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
       }else if(r.miss){
         addLog('你的反擊沒有造成傷害。');
       }else{
-        unit.hp=Math.max(0,unit.hp-r.damage);
+        const sourceUltimateBefore=n(unit.hp);
+        unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
+        sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
         addLog('你反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',r.critical?'good':'');
       }
     }else{
@@ -3266,7 +3327,9 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
       }else if(r.miss){
         addLog(unit.name+' 的反擊沒有造成傷害。');
       }else{
-        state.hp=Math.max(0,state.hp-r.damage);
+        const sourceUltimateBefore=n(state.hp);
+    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
     }
@@ -3301,7 +3364,9 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
       if(r.dodged)addLog(unit.name+' 閃避了 '+pet.name+' 的反擊。','pet');
       else if(r.miss)addLog(pet.name+' 的反擊沒有造成傷害。','pet');
       else{
-        unit.hp=Math.max(0,unit.hp-r.damage);
+        const sourceUltimateBefore=n(unit.hp);
+        unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
+        sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
         addLog(pet.name+' 反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
     }else{
@@ -3310,6 +3375,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
       else{
         const before=n(pet.hp);
         pet.hp=Math.max(0,before-r.damage);
+      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
         if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
       }
@@ -3388,6 +3454,7 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r){
 
   const before=n(actual.hp);
   actual.hp=Math.max(0,before-r.damage);
+  sourceTrackDamageSubUltimate({kind:'enemy',unit:actual,unitId:actual.id},r.damage,before,r);
   battleStatusWakeOnDamage({kind:'enemy',unit:actual,unitId:actual.id},r.damage);
   if(r.guardian){
     addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
@@ -3586,6 +3653,7 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
     }else{
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
+      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
       battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
       addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -3598,7 +3666,9 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   if(playerGuarding){
     if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
     else{
-      state.hp=Math.max(0,state.hp-r.damage);
+      const sourceUltimateBefore=n(state.hp);
+    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
       battleStatusWakeOnDamage({kind:'player'},r.damage);
       addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
     }
@@ -3607,7 +3677,9 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   }else if(r.miss){
     addLog(unit.name+' 的攻擊沒有造成傷害。');
   }else{
-    state.hp=Math.max(0,state.hp-r.damage);
+    const sourceUltimateBefore=n(state.hp);
+    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
     battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
@@ -3743,6 +3815,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     }else{
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
+      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
       battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
       addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -3756,13 +3829,16 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     const pet=r.guardian;
     const before=n(pet.hp);
     pet.hp=Math.max(0,before-r.damage);
+      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
     battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
     addLog(pet.name+' 發動忠犬，代替你承受 '+unit.name+(r.critical?' 的會心一擊 ':' 的攻擊 ')+r.damage+' 傷害。',pet.hp<=0?'bad':'pet');
     if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
   }else if(playerGuarding){
     if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
     else{
-      state.hp=Math.max(0,state.hp-r.damage);
+      const sourceUltimateBefore=n(state.hp);
+    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
       addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
     }
   }else if(r.dodged){
@@ -3770,7 +3846,9 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   }else if(r.miss){
     addLog(unit.name+' 的攻擊沒有造成傷害。');
   }else{
-    state.hp=Math.max(0,state.hp-r.damage);
+    const sourceUltimateBefore=n(state.hp);
+    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
     battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
@@ -3792,6 +3870,7 @@ function enemyApplySkillHit(unit,chosen,r,label){
     }else{
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
+      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
       battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
       addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'命中 '+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -3807,7 +3886,9 @@ function enemyApplySkillHit(unit,chosen,r,label){
   }else if(r.miss){
     addLog(unit.name+' 的'+label+'沒有造成傷害。');
   }else{
-    state.hp=Math.max(0,state.hp-r.damage);
+    const sourceUltimateBefore=n(state.hp);
+    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
     battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'造成 '+r.damage+' 傷害。',state.hp<=0?'bad':'');
   }
@@ -5499,14 +5580,22 @@ function sourceBattlePlayerPets(){
 function sourceProcessPetBattleDeath(pet){
   if(!pet||n(pet.hp)>0||battlePetDeathProcessedIds.has(pet.id))return null;
   battlePetDeathProcessedIds.add(pet.id);
-  // fixed _PET_LIMITLEVEL Pet_Check_Die runs before BATTLE_NormalDeadExtra.
+  // fixed _PET_LIMITLEVEL Pet_Check_Die runs before UltimateExtra / NormalDeadExtra.
   const marefia=sourceMarefiaDeathPenalty(pet);
   const levelDiv=Math.trunc(n(state?.level))<=10?2:1;
-  const ai=sourcePetAddVariableAi(pet,Math.trunc(-500/levelDiv));
+  const ultimate=sourceUltimateType({kind:'pet',pet,petId:pet.id});
+  const ai=sourcePetAddVariableAi(pet,Math.trunc((ultimate?-1000:-500)/levelDiv));
   pet.battleDeathCount=Math.max(0,Math.trunc(n(pet.battleDeathCount)))+1;
-  addLog(pet.name+' 戰鬥倒下：依原 C 忠誠修正 '+(ai.delta/100).toFixed(2)
-    +(marefia?'；瑪蕾菲雅另套 _PET_LIMITLEVEL 成長底值／MODAI 死亡懲罰':'')+'。','bad');
-  return {petId:pet.id,levelDiv,ai,marefia};
+  if(ultimate){
+    if(state.activePetId===pet.id)state.activePetId=null;
+    battlePetOutIds.add(pet.id);
+    addLog(pet.name+' 被打飛：依 BATTLE_UltimateExtra 忠誠修正 '+(ai.delta/100).toFixed(2)
+      +(marefia?'；並先套瑪蕾菲雅 _PET_LIMITLEVEL 死亡懲罰':'')+'。','bad');
+  }else{
+    addLog(pet.name+' 戰鬥倒下：依原 C 忠誠修正 '+(ai.delta/100).toFixed(2)
+      +(marefia?'；瑪蕾菲雅另套 _PET_LIMITLEVEL 成長底值／MODAI 死亡懲罰':'')+'。','bad');
+  }
+  return {petId:pet.id,levelDiv,ai,marefia,ultimate};
 }
 function sourceProcessPendingPetBattleDeaths(){
   const results=[];
@@ -5519,12 +5608,13 @@ function sourceProcessPendingPetBattleDeaths(){
 function sourceProcessPlayerBattleDeath(){
   if(!state)return null;
   const levelDiv=Math.trunc(n(state.level))<=10?2:1;
+  const ultimate=sourceUltimateType({kind:'player'});
   const charmBefore=clamp(Math.trunc(n(state.charm)),0,100);
-  const charmDelta=Math.trunc(-2/levelDiv);
+  const charmDelta=Math.trunc((ultimate?-4:-2)/levelDiv);
   state.charm=clamp(charmBefore+charmDelta,0,100);
   const pet=activePet();
-  const petAi=pet?sourcePetAddVariableAi(pet,Math.trunc(-100/levelDiv)):null;
-  return {levelDiv,charmBefore,charmDelta,charmAfter:state.charm,petId:pet?.id||null,petAi};
+  const petAi=pet?sourcePetAddVariableAi(pet,Math.trunc((ultimate?-1000:-100)/levelDiv)):null;
+  return {levelDiv,ultimate,charmBefore,charmDelta,charmAfter:state.charm,petId:pet?.id||null,petAi};
 }
 
 function petFixedAi(pet){
@@ -7169,7 +7259,7 @@ function defeat(){
   if(hadBattle)sourceProcessPendingPetBattleDeaths();
   const death=hadBattle?sourceProcessPlayerBattleDeath():null;
   if(death){
-    addLog('角色戰鬥倒下：依原 C 魅力 '+death.charmDelta
+    addLog((death.ultimate?'角色被打飛：依 BATTLE_UltimateExtra 魅力 ':'角色戰鬥倒下：依原 C 魅力 ')+death.charmDelta
       +(death.petAi?'，出戰寵忠誠修正 '+(death.petAi.delta/100).toFixed(2):'')+'。','bad');
   }
   addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
@@ -7337,22 +7427,25 @@ function sourceComboTargetGuarding(target,playerGuarding=false){
   }
   return false;
 }
-function sourceComboApplyDamage(target,total){
+function sourceComboApplyDamage(target,total,lastResult=null){
   const damage=Math.max(0,Math.trunc(n(total)));
   if(!target||damage<=0)return 0;
   if(target.kind==='player'){
     const before=n(state.hp);
     state.hp=Math.max(0,before-damage);
+    sourceTrackDamageSubUltimate({kind:'player'},damage,before,lastResult||{});
     return Math.max(0,before-state.hp);
   }
   if(target.kind==='pet'&&target.pet){
     const before=n(target.pet.hp);
     target.pet.hp=Math.max(0,before-damage);
+    sourceTrackDamageSubUltimate({kind:'pet',pet:target.pet,petId:target.pet.id},damage,before,lastResult||{});
     return Math.max(0,before-target.pet.hp);
   }
   if(target.kind==='enemy'&&target.unit){
     const before=n(target.unit.hp);
     target.unit.hp=Math.max(0,before-damage);
+    sourceTrackDamageSubUltimate({kind:'enemy',unit:target.unit,unitId:target.unit.id},damage,before,lastResult||{});
     return Math.max(0,before-target.unit.hp);
   }
   return 0;
@@ -7398,7 +7491,10 @@ function sourcePerformCombo(order,index,options={}){
   }
 
   if(!hits.length)return null;
-  const actual=sourceComboApplyDamage(target,total);
+  const lastComboResult=hits[hits.length-1]?.r
+    ?Object.assign({},hits[hits.length-1].r,{ultimateCriticalEnemyOnly:true})
+    :{ultimateCriticalEnemyOnly:true};
+  const actual=sourceComboApplyDamage(target,total,lastComboResult);
   const names=hits.map(x=>x.label).join('、');
   addLog(names+' 發動合擊，對 '+battleStatusDescName(target)+' 合計造成 '+actual+' 傷害。',target.kind==='enemy'?'good':'bad');
   return {comboId,target,totalDamage:actual,rawTotal:total,hits};
@@ -8192,7 +8288,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.17 載入完成：低忠誠逃跑後 CHAR_DEFAULTPET=-1 等價狀態可跨存檔保留，不再 reload 自動把第一隻寵叫回出戰。','good');
+    addLog('V1.18 載入完成：BATTLE_DamageSub Ultimate／打飛判定與 UltimateExtra 玩家／寵物死亡懲罰已接入主要物理路徑。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
