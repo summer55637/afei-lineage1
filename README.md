@@ -10459,3 +10459,19 @@ V1.10 不呼叫 `resolvePetEnemyCounterChain()`。
 - no forced CHAR_ISATTACKED restore
 - V1.09 EarthRound / Charge first-counter correction retained
 - save schema 21
+
+## V1.11 fixed petskill2.txt runtime + player Pet GuardBreak2 543
+
+V1.11 修正 PetSkill runtime 的根資料源。fixed version.h 開啟 _PETSKILL2_TXT、_CFREE_petskill、_PETSKILL_OPTIMUM；configfile.c 因此讀 setup.cf 的 petskillfile2=./data/petskill2.txt，而不是舊的 petskill.txt。
+
+舊 stoneage_petskill_runtime.json 只來自 petskill.txt 56 筆。V1.11 改為 fixed petskill2.txt 全表：282 筆、ID 0～841、無重複 ID，並保留 name/description/function/option/free/kind/field/target/useType/cost/illegal。
+
+illegal 依 fixed loader 規則由 raw line 是否以 ASCII E 開頭決定；PETSKILL_Use 對 CHAR_TYPEPET 遇 PETSKILL_ILLEGAL 直接 return FALSE。player RANDOMACT 已同步。
+
+fixed petskill2.txt 明確記錄 541=PETSKILL_WildViolentAttack、542=PETSKILL_SpeedyAttack、543=PETSKILL_GuardBreak2、573=PETSKILL_Sacrifice。wild 戈登爾頓 tempNo 768 / Enemy 1601 的 543 因此確實是破除防禦之2。
+
+PETSKILL_GuardBreak2 本身只設 BATTLE_COM_S_GBREAK2 / target / C_OK。真正效果在 BATTLE_AttackSeq：GuardianCheck 後的 local defindex 若為 GUARD，damage ×1.3，否則 ×0.7；BATTLE_S_GBreak2 caller 又沒有把 defindex 更新成 Guardian，因此忠犬可參與 local 傷害計算，但最後 HP 仍扣原 target。
+
+V1.11 的 sourcePerformPetGuardBreak2Skill 保留：原 target 先做 DuckCheck；GUARD 時不可 dodge；Guardian substitution 後才決定 ×1.3/×0.7；Guardian calc-only；HP 原 target；專用 case 不進普通 Counter；也不強制清除 V1.09 EarthRound 殘留 hidden flag。
+
+Regression: game.js syntax PASS；runtime 282 unique IDs；min 0 / max 841；543 handler 正確；illegal gate 正確；GuardBreak2 dispatcher / local multiplier / calc-only / no-Counter 全部靜態檢查通過；save schema 21。

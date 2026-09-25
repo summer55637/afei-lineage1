@@ -5389,6 +5389,10 @@ function sourcePetRandomSkillPlan(pet){
       // PETSKILL_Use() 會因 array==-1 return FALSE；安全可確定為 NoAction。
       return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,targetDesc:sourcePetRandomEnemyTarget()};
     }
+    if(Math.trunc(n(meta.illegal))!==0){
+      // fixed PETSKILL_Use：CHAR_TYPEPET 遇 PETSKILL_ILLEGAL 直接 return FALSE。
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceIllegal:true,targetDesc:sourcePetRandomEnemyTarget()};
+    }
     return {kind:'skill',slot:iNum,skillId,meta,targetDesc:sourcePetRandomEnemyTarget()};
   }
   return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc:null};
@@ -5960,6 +5964,65 @@ function sourcePerformPetNoGuardSkill(pet,action){
   return {handled:true,skillId:action?.skillId,noAction:true,duckBonus,counterBonus,criticalBonusIgnored:parsedCritical};
 }
 
+function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
+  const meta=action?.meta;
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'破除防禦之2')+'」，但沒有可攻擊目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const originalGuarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
+  const originalView=enemyBattleView(target);
+  const dodge=sourceInitialDodgeOnly(attacker,originalView,{guarding:originalGuarding});
+
+  let r,guardian=null,localGuarding=originalGuarding;
+  let multiplier=originalGuarding?1.3:.7;
+
+  if(dodge.dodged){
+    r=dodge;
+    r.actualTarget=target;
+    r.originalTarget=target;
+    r.guardBreak2Multiplier=multiplier;
+  }else{
+    guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,null);
+    const calcTarget=guardian||target;
+    const calcDesc={kind:'enemy',unit:calcTarget,unitId:calcTarget.id};
+    localGuarding=guardian
+      ?(!!calcTarget.guardThisTurn&&!battleStatusActive(calcDesc,'confusion'))
+      :originalGuarding;
+    multiplier=localGuarding?1.3:.7;
+
+    r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),{
+      guarding:false,
+      disableDodge:true,
+      preGuardDamageMultiplier:multiplier
+    });
+    r.duckRaw=dodge.duckRaw;
+    r.actualTarget=target;
+    r.originalTarget=target;
+    r.guardBreak2Multiplier=multiplier;
+    r.guardBreak2LocalGuarding=localGuarding;
+
+    if(guardian){
+      if(r.damage<=0){r.damage=1;r.miss=false}
+      r.guardianCalcOnly=guardian;
+      r.guardianPetId=guardian.id;
+      addLog(guardian.name+' 嘗試忠犬代擋破除防禦之2；原 BATTLE_S_GBreak2 未更新 caller defindex，只用其能力與 GUARD 狀態算傷害，HP 仍扣 '+target.name+'。','pet');
+    }
+  }
+
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'破除防禦之2')+'」（local defindex 倍率 ×'+Number(multiplier).toFixed(1)+'）。','pet');
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
+    originalGuarding,localGuarding,multiplier,guardianCalcOnly:guardian?.id||null,r
+  };
+}
+
 function sourcePerformPetFallGroundSkill(pet,action,options={}){
   const meta=action?.meta;
   const target=sourcePetEnemyTargetFromAction(action);
@@ -6052,7 +6115,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   if(action.kind==='earthround')return finish(sourcePerformPetEarthRoundState(pet,options,action.targetDesc));
   if(action.kind==='attack')return finish(sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true}));
   if(action.kind==='none'){
-    if(action.sourceUseFailed)addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
+    if(action.sourceIllegal)addLog(pet.name+' 隨機抽到原表標記為 PETSKILL_ILLEGAL 的技能；原 PETSKILL_Use() 對玩家寵直接失敗，本回合不行動。','pet');
+    else if(action.sourceUseFailed)addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
     else addLog(pet.name+' 本回合沒有行動。','pet');
     return finish({handled:true,none:true});
   }
@@ -6075,6 +6139,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_GuardBreak')result=sourcePerformPetGuardBreakSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_NoGuard')result=sourcePerformPetNoGuardSkill(pet,action);
     else if(meta?.f==='PETSKILL_FallGround')result=sourcePerformPetFallGroundSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_GuardBreak2')result=sourcePerformPetGuardBreak2Skill(pet,action,options);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
