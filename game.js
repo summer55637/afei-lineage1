@@ -163,6 +163,11 @@ function releaseBattleEnemyRuntimeItems(battleEnemy=enemy){
   const units=(Array.isArray(battleEnemy.units)&&battleEnemy.units.length)?battleEnemy.units:[battleEnemy];
   return units.reduce((sum,u)=>sum+releaseEnemyRuntimeItems(u),0);
 }
+function clearEnemyBattleNoReward(){
+  if(enemy)releaseBattleEnemyRuntimeItems(enemy);
+  enemy=null;
+  resetBattleStatuses();
+}
 function freshState(){
   return {
     schemaVersion:20,
@@ -970,9 +975,12 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
   const aiRow=resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null;
 
   // 原 ENEMY_createEnemy：10 格 carried item 先 allocate，STYLE 武器再 allocate；RandomChange 在兩者之後。
-  const runtimeDrops=enemyDropRoll.drops.map(drop=>Object.assign({},drop,{
-    itemIndex:sourceItemRuntimeAlloc(drop.itemId,null,{owner:'enemy:'+unitId,source:'enemy-drop',enemySlot:drop.slot})
-  }));
+  const runtimeDrops=[];
+  for(const drop of enemyDropRoll.drops){
+    const itemIndex=sourceItemRuntimeAlloc(drop.itemId,null,{owner:'enemy:'+unitId,source:'enemy-drop',enemySlot:drop.slot});
+    // ITEM_makeItemAndRegist 失敗時 source CHAR slot 會是 -1，該物品實際不存在。
+    if(itemIndex>=0)runtimeDrops.push(Object.assign({},drop,{itemIndex}));
+  }
   const style=Math.max(0,Math.trunc(n(aiRow?.sty)));
   const styleWeaponId=({1:0,2:100,3:200,4:400,5:500,6:700,7:600})[style]??null;
   const styleItemIndex=styleWeaponId==null?-1:sourceItemRuntimeAlloc(styleWeaponId,null,{owner:'enemy:'+unitId,source:'enemy-style'});
@@ -3804,8 +3812,7 @@ function enemyOptionParts(option){
 function finishPlayerForcedBattleExit(sourceLabel){
   if(!enemy)return {battleEnded:true,playerExited:true};
   addLog('你被'+sourceLabel+'迫使離開戰鬥；本場不計勝利、EXP 或掉落。','bad');
-  enemy=null;
-  resetBattleStatuses();
+  clearEnemyBattleNoReward();
   save();
   render();
   return {battleEnded:true,playerExited:true,noReward:true};
@@ -5691,8 +5698,8 @@ function handleZooAction(action){
   }
   if(action==='feed19733'){giveItem(19733,1);addLog('布伊太郎交給你雷爾胖專用飼料 19733。','pet');}
   if(action==='feed19723'){giveItem(19723,1);addLog('從飼料桶取得肉食性飼料二號 19723。','pet');}
-  if(action==='goto-raelpang'){state.mapId='zoo-raelpang';enemy=null;addLog('前往伊甸園雷爾胖任務區。');}
-  if(action==='goto-popodon'){state.mapId='zoo-popodon';enemy=null;addLog('前往伊甸園波波頓任務區。');}
+  if(action==='goto-raelpang'){state.mapId='zoo-raelpang';clearEnemyBattleNoReward();addLog('前往伊甸園雷爾胖任務區。');}
+  if(action==='goto-popodon'){state.mapId='zoo-popodon';clearEnemyBattleNoReward();addLog('前往伊甸園波波頓任務區。');}
   if(action==='report-raelpang'&&hasPetTempNo(905)){
     e82.raelpangReported=true;if(hasItem(19733))consumeItem(19733,1);
     addLog('布伊太郎確認你帶回雷爾胖，並收回專用飼料。','good');
@@ -5735,7 +5742,7 @@ function handleZooAction(action){
   }
   if(action==='event81-goto-dragon'&&e81.stage===2){
     const map=maps.find(m=>m.entries.some(x=>Number(x.variant?.tempNo)===273));
-    if(map){state.mapId=map.id;enemy=null;addLog('前往 '+map.name+' 捕捉加寶格恩（TempNo 273）。','good');}
+    if(map){state.mapId=map.id;clearEnemyBattleNoReward();addLog('前往 '+map.name+' 捕捉加寶格恩（TempNo 273）。','good');}
     else addLog('目前資料中找不到可直接前往的飛龍 Lv1 路線。','bad');
   }
   if(action==='event81-submit-dragon'&&e81.stage===2&&hasItem(19697)){
@@ -5754,14 +5761,14 @@ function handleZooAction(action){
   }
   if(action==='event81-maze-battle'&&e81.stage===3){
     const zone=event81MazeZone(e81.mazeX);
-    if(zone){state.mapId=zone;enemy=null;addLog('在 Floor '+n(e81.mazeFloor)+' ('+n(e81.mazeX)+','+n(e81.mazeY)+') 挑戰 PC團盜賊。');}
+    if(zone){state.mapId=zone;clearEnemyBattleNoReward();addLog('在 Floor '+n(e81.mazeFloor)+' ('+n(e81.mazeX)+','+n(e81.mazeY)+') 挑戰 PC團盜賊。');}
     else addLog('目前金剛陣座標無法對應原始戰鬥區。','bad');
   }
   if(action==='event81-maze-reset'&&e81.stage===3){
-    e81.mazeFloor=5576;e81.mazeX=24;e81.mazeY=86;state.mapId='event81-thief-1';enemy=null;
+    e81.mazeFloor=5576;e81.mazeX=24;e81.mazeY=86;state.mapId='event81-thief-1';clearEnemyBattleNoReward();
     addLog('金剛陣座標已重置到 Floor 5576 (24,86)。','pet');
   }
-  if(action==='event81-boss'&&e81.stage===6){state.mapId='event81-boss';enemy=null;addLog('前往 Floor 5582 (33,87) 挑戰 PC團老大。','good');}
+  if(action==='event81-boss'&&e81.stage===6){state.mapId='event81-boss';clearEnemyBattleNoReward();addLog('前往 Floor 5582 (33,87) 挑戰 PC團老大。','good');}
   if(action==='event81-confession'&&e81.stage===7){
     if(!hasItem(19698))giveItem(19698,1);
     e81.stage=8;
@@ -5806,7 +5813,7 @@ function handleZooAction(action){
     addLog('在 Floor 30602 找到新藏；他把惹怒里昂蛙群的金珠 19622 交給你。','pet');
   }
   if(action==='goto-frog-king'&&!q.event71Current&&prep.stage===4&&hasItem(19622)){
-    state.mapId='event69-frog-king';enemy=null;
+    state.mapId='event69-frog-king';clearEnemyBattleNoReward();
     addLog('帶著金珠 19622 前往 Floor 30605 挑戰里昂蛙王。','good');
   }
   if(action==='event69-frog-exchange'&&!q.event71Current&&prep.stage===5&&hasItem(19622)){
@@ -5907,19 +5914,19 @@ function handleZooAction(action){
     const cur=[19704,19705,19706,19707,19708,19709,19710].find(hasItem);
     if(cur){clearEvent83Chain();giveItem(cur+1,1);addLog('里拉拉線索推進：'+cur+' → '+(cur+1)+'。','good');}
   }
-  if(action==='goto-collar'&&hasItem(19711)){state.mapId='zoo-collar';enemy=null;addLog('前往格爾希洛項圈區。');}
+  if(action==='goto-collar'&&hasItem(19711)){state.mapId='zoo-collar';clearEnemyBattleNoReward();addLog('前往格爾希洛項圈區。');}
   if(action==='exchange19712'&&hasItem(19711)&&hasItem(19716)){
     clearEvent83Chain([19716]);giveItem(19712,1);addLog('里拉拉收下項圈，線索變為 19712。','good');
   }
   if(action==='next19713'&&hasItem(19712)){
     clearEvent83Chain();giveItem(19713,1);addLog('里拉拉指示前往大雕像，取得線索 19713。','good');
   }
-  if(action==='goto-clothes'&&hasItem(19713)){state.mapId='zoo-black-clothes';enemy=null;addLog('前往不良少年怪衣區。');}
+  if(action==='goto-clothes'&&hasItem(19713)){state.mapId='zoo-black-clothes';clearEnemyBattleNoReward();addLog('前往不良少年怪衣區。');}
   if(action==='exchange19714'&&hasItem(19713)&&hasItem(19717)){
     clearEvent83Chain([19717]);giveItem(19714,1);addLog('里拉拉收下怪衣，取得地下據點線索 19714。','good');
   }
-  if(action==='goto-flag'&&hasItem(19714)){state.mapId='zoo-underground-flag';enemy=null;addLog('進入地下洞窟 Group 962，尋找黑旗 19718。');}
-  if(action==='goto-sig'&&hasItem(19714)&&hasItem(19718)){state.mapId='zoo-sig';enemy=null;addLog('前往 Floor 60044 挑戰席格。','good');}
+  if(action==='goto-flag'&&hasItem(19714)){state.mapId='zoo-underground-flag';clearEnemyBattleNoReward();addLog('進入地下洞窟 Group 962，尋找黑旗 19718。');}
+  if(action==='goto-sig'&&hasItem(19714)&&hasItem(19718)){state.mapId='zoo-sig';clearEnemyBattleNoReward();addLog('前往 Floor 60044 挑戰席格。','good');}
   if(action==='after83'&&e83.complete&&hasPetTempNo(854)&&hasItem(19714)){
     clearEvent83Chain();giveItem(19715,1);addLog('帶任務版拉斯基回見里拉拉，19714 → 19715。','good');
   }
@@ -5935,12 +5942,12 @@ function handleZooAction(action){
   save();render();
 }
 $('#mapSelect').addEventListener('change',e=>{
-  state.mapId=e.target.value;state.encounterId=null;enemy=null;
+  state.mapId=e.target.value;state.encounterId=null;clearEnemyBattleNoReward();
   const map=currentMap(),enc=currentEncounter(map);
   addLog('前往 '+map.name+(enc?' · Encounter '+enc.encounterId:'')+'。');save();render();
 });
 $('#encounterSelect').addEventListener('change',e=>{
-  state.encounterId=Number(e.target.value)||null;enemy=null;
+  state.encounterId=Number(e.target.value)||null;clearEnemyBattleNoReward();
   const enc=currentEncounter();
   if(enc)addLog('移動到 Encounter '+enc.encounterId+' 狩獵區。');
   save();render();
