@@ -4899,3 +4899,199 @@ V0.67：
 - 688 → 仍 runtime-blocked
 
 676／688 接下來要由最小 ITEM existing-index runtime 解決。
+
+
+## V0.68 ITEM existing-index runtime 與最後正權重 AttackMagic
+
+V0.68 接入最後兩個 runtime-blocked 正權重 Enemy PetSkill：
+
+- 676 E水的精靈 → `PETSKILL_AttackMagic` → `magic 204 item 20900`
+- 688 E咒靈術 → `PETSKILL_AttackMagic` → `magic 435 item 20912`
+
+來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/setup.cf`
+- `gmsv/src/item/item.c`
+- `gmsv/src/magic/magic.c`
+- `gmsv/src/battle/battle_magic.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/data/magic.txt`
+
+### 最小 ITEM_item[] runtime
+
+原 `setup.cf`：
+
+`itemnum=25000`
+
+所以 20900／20912 都在合法 array 範圍。
+
+但 `ITEM_CHECKINDEX()` 不只檢查範圍，也要求：
+
+`ITEM_item[index].use == TRUE`
+
+未配置的 existing slot：
+
+- `ITEM_CHECKINDEX == FALSE`
+- `ITEM_getInt(..., ITEM_MAGICUSEMP) == -1`
+
+原 allocator `ITEM_initExistItemsOne()`：
+
+- static `Sindex = 1`
+- 每次搜尋前先 `Sindex++`
+- 到 25000 時 wrap 到 1
+- index 0 永不配置
+
+V0.68 在 save 中新增最小：
+
+`itemRuntime = { itemnum:25000, sindex:1, slots:{} }`
+
+並提供 source-equivalent：
+
+- existing slot MP lookup
+- Sindex allocation
+- free slot
+
+目前不把舊 web inventory count map 反推成不存在的歷史 `ITEM_item[]` allocation。
+
+V0.67 以前的 web 根本沒有 existing-item pool，因此 schema 18 → 19 migration 明確從**空 pool**開始；這比猜測過去 allocation history 更符合「不猜 runtime」原則。
+
+### 676：magic 204 水的精靈 Lv5
+
+magic.txt：
+
+- ID 204
+- `MAGIC_FieldAttChange`
+- option：`水 100 turn 5`
+
+Enemy 的 `MAGIC_DirectUse()`：
+
+- itemnum 直接當 global existing index
+- 目前新 runtime 中 20900 未配置
+- `ITEM_getInt -> -1`
+- MP 不足檢查：`0 < -1` 為 false
+- `MP -= -1`
+- Enemy MP 因此 +1
+
+成功後 BattleArray：
+
+- `field_att = WATER`
+- `att_pow = 100`
+- `att_count = 5`
+
+V0.68 新增 battle-only field state。
+
+原每個 battle round 結尾：
+
+- 若 field_att != NONE，`att_count--`
+- <=0 時回復 NONE
+
+因此在施放當回合結尾就會由 5 → 4，時序照原 battle.c。
+
+### 戰場屬性倍率
+
+原 `BATTLE_FieldAttAdjust()`：
+
+`0.5 + pAt(field) * att_pow * 0.01 * 0.01 * 0.5`
+
+實際傷害再乘：
+
+`AttackerFieldPower / DefenderFieldPower`
+
+V0.68 已接到兩條來源路徑：
+
+1. 一般物理屬性傷害
+2. `_FIX_MAGICDAMAGE` AttackMagic
+
+AttackMagic 特別保留原時序：
+
+- 先由 MagicLv 將攻方四屬牽引到該魔法屬性
+- **先以這個尚未乘 damage 的向量算 FieldAttAdjust**
+- 再把向量乘魔法 power / damage
+- 做四屬相剋
+- 最後乘 field ratio
+
+不是直接拿最終魔法傷害向量算 field power。
+
+### 705 調和同步升級
+
+V0.65 的 705 在當時沒有非 NONE field setter，所以只記錄來源資料。
+
+V0.68 已有正式 field runtime 後：
+
+- magic 230「調和的精靈」會真正把 field_att 改回 NONE
+- 原 att_pow=30、att_count=3 仍記錄
+- 但 battle.c 只有 `field_att != NONE` 才遞減 count，所以 NONE 本身不再 tick
+
+因此現在 705 可以真正解除 676 建立的水戰場。
+
+### 688：magic 435 癱瘓的精靈 Lv3
+
+magic.txt：
+
+- ID 435
+- `MAGIC_Weaken`
+- option：`虛 turn 7 成 50`
+- 單體
+
+同樣透過 item 20912 查 MP。
+
+目前 slot 20912 未配置：
+
+- MP cost = -1
+- Enemy MP +1
+
+之後 `MAGIC_ParamChange_Turn_Battle()`：
+
+- status = WEAKEN
+- turn = 7
+- Success = 50
+- Range = 30
+- Bai = 1.0
+
+逐目標呼叫：
+
+`BATTLE_StatusAttackCheck(attacker,target,WEAKEN,50,30,1.0)`
+
+成功後原碼：
+
+`CHAR_WORKWEAKEN = turn + 1`
+
+即寫入 8。
+
+web 既有 weaken battle view 已依來源降低：
+
+- attack 20%
+- defense 20%
+- quick 20%
+
+V0.68 使用現有標準 StatusAttackCheck port，成功後以 7 作邏輯回合數、內部 storage 等價 8，保持原 StatusSeq 時序。
+
+### Save schema 19
+
+新增：
+
+- `itemRuntime.itemnum`
+- `itemRuntime.sindex`
+- `itemRuntime.slots`
+
+Battle field state 不持久化，因為原 BattleArray 也是單場 runtime；戰鬥結束／新戰鬥時回 NONE。
+
+### 正權重 Enemy PetSkill 狀態
+
+V0.68 後：
+
+- 211 已於 V0.67 接入
+- 676 已接入
+- 688 已接入
+
+原本 V0.66 的 runtime-blocked 集合現在為空。
+
+後續正權重掃描應只剩三類：
+
+- implemented
+- source missing
+- unregistered function
+
+不再存在一般未分類或 runtime-blocked PetSkill。
