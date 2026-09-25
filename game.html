@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.36</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.37</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.36：</b>
-      對齊 fixed _EQUIT_HITRIGHT 的 BATTLE_DuckCheck RNG 生命週期：Player 攻擊者在普通閃避最終判定前固定執行一次命中修正 RAND；目前沒有可驗證的非 0 ITEM_HITRIGHT runtime 欄位，因此維持初始化 0，不猜裝備數值，但仍保留 RAND(0,0) 的 RNG 消耗。
+      <b>V1.37：</b>
+      對齊 fixed _TAKE_ITEMDAMAGE 的 BATTLE_ItemCrushSeq RNG 生命週期：每次正傷害物理命中都先執行受擊方裝備部位 rand()%100，即使受擊者不是玩家或沒有防具也照樣消耗；目前未接可靠耐久欄位，因此只還原這顆必定 RNG，不猜實際耐久扣除。
     </article>
   </main>
 

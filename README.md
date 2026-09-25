@@ -12346,3 +12346,109 @@ SetDuck / `BATTLE_CheckMySkillDuck()` 成功時會在這之前直接返回，因
 - 目前 HitRight=0 不改變實際 dodge threshold
 - schema 27 維持不變
 - V1.35 DamageCalc RNG / V1.34 AttackCount regressions unchanged
+
+
+## V1.37 _TAKE_ITEMDAMAGE / BATTLE_ItemCrushSeq guaranteed RNG lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `version.h` 明確啟用 `_TAKE_ITEMDAMAGE`。所有已建模的正傷害物理路徑在完成 HP / death / status 等處理後，會進：
+
+```c
+BATTLE_ItemCrushSeq( attackindex, defindex, damage )
+```
+
+而該函式第一步固定呼叫：
+
+```c
+BATTLE_ItemCrushCheck( defindex, 1 )
+```
+
+fixed `BATTLE_ItemCrushCheck(..., flg=1)` 一進函式就先執行：
+
+```c
+Crushs = rand()%100;
+```
+
+再依 0..99 決定從 BODY / HEAD / DECORATION1 / DECORATION2 哪一格開始找裝備。
+
+這顆 RNG 的關鍵是：它發生在「確認受擊者是不是 Player」與「找到有效裝備」之前。因此只要最後物理 damage > 0：
+
+- Player 被打：吃一顆
+- Pet 被打：仍吃一顆
+- Enemy 被打：仍吃一顆
+- 受擊者沒有任何可損壞防具：仍吃一顆
+
+### What is intentionally NOT guessed
+
+若真的找到可損壞裝備，`BATTLE_ItemCrush()` 還可能再依：
+
+- `ITEM_DAMAGECRUSHE`
+- `ITEM_MAXDAMAGECRUSHE`
+- 實際裝備位置與 item runtime
+
+執行後續耐久扣除 RAND。
+
+目前 Web 尚未有完整、可由來源可靠還原的 Player 裝備耐久 runtime，因此 V1.37 **不建立假的耐久值，也不補第二顆條件式 RNG**。本輪只恢復無論裝備是否存在都能確定的第一顆 `rand()%100`。
+
+### Web correction
+
+新增 `sourceBattleFinalizeItemCrushRng(r)`：
+
+- 只有最終正傷害物理 hit 才執行
+- dodge / miss / damage <= 0 不消耗
+- 每個 hit 最多執行一次，避免 wrapper 重複結算
+- 使用 `cRand(0,99)` 對應 fixed `rand()%100`
+- 僅記錄 `sourceItemCrushDefenderRoll`，不虛構實際裝備損壞
+
+本輪已接到目前可達的主要物理生命週期：
+
+- Player / Pet 普通攻擊 Enemy
+- Enemy 普通近戰
+- BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW 多段
+- BecomeFox ranged physical loop
+- Player / Pet / Enemy Counter
+- confusion physical hit / counter
+- Combo：每一段各自一顆；最後一段特別保持在合計 HP / death / critical-Ultimate RNG 後
+- StatusChange：狀態命中 RNG 先完成，再進 ItemCrush RNG
+- GuardBreak / GuardBreak2
+- ModifyAttack / MdfyAttack / Sonic / Gyrate / Retrace
+- AttackCrazed / Tear / Regret / WildViolent / Continuation
+- BattleTimid / 2BattleTimid / MpDamage / ToothCrushe / Lighttakeed
+- DamageToHp / DamageToHp2
+- FIREKILL physical segment
+- FallGround：保留來源特例，落馬 RAND 先於 ItemCrush
+
+### Ordering notes
+
+普通 `BATTLE_Attack()` 的關鍵順序維持：
+
+1. AttackSeq / DamageCalc
+2. DamageSub / HP
+3. DamageWakeUp
+4. death + critical Ultimate 50% RAND
+5. status-attack RNG（若有）
+6. ItemCrush defender `rand()%100`
+
+`BATTLE_Counter()` 則在 death block 後直接進 ItemCrush。
+
+`BATTLE_Combo()` 每段都會跑 ItemCrush；最後一段因為該段同時套用合計傷害，所以 V1.37 特別把最後一顆 ItemCrush RNG 放在合計 HP / death 判定之後。
+
+本輪不新增持久化欄位，schemaVersion 維持 27。
+
+### V1.37 regression targets
+
+- game.js syntax PASS
+- positive physical hit => exactly one guaranteed defender ItemCrush RNG
+- dodge / miss / damage<=0 => zero ItemCrush RNG
+- weapon multi-hit => each successful positive hit owns one ItemCrush RNG
+- StatusChange => status RNG before ItemCrush RNG
+- BREAKTHROW paralysis RNG before ItemCrush RNG
+- FallGround RAND before ItemCrush RNG
+- Counter => ItemCrush before any next counter iteration
+- Combo last segment => death/critical-Ultimate RNG before final ItemCrush RNG
+- no guessed durability values / no conditional durability-loss RAND
+- schema 27 unchanged
+- V1.36 HitRight / V1.35 DamageCalc / V1.34 AttackCount regressions unchanged

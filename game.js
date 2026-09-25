@@ -2444,6 +2444,21 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
   }
   return {type,damage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
+function sourceBattleFinalizeItemCrushRng(r){
+  if(!r||r.dodged||r.miss||n(r.damage)<=0)return null;
+  if(Object.prototype.hasOwnProperty.call(r,'sourceItemCrushDefenderRoll')){
+    return r.sourceItemCrushDefenderRoll;
+  }
+  // fixed _TAKE_ITEMDAMAGE:
+  // BATTLE_ItemCrushSeq() first calls BATTLE_ItemCrushCheck(defender, flg=1).
+  // That function executes rand()%100 before it knows whether the defender is a Player
+  // or owns any valid armor. Therefore every positive physical hit consumes this RNG.
+  // Actual durability loss is intentionally NOT modeled yet: the later BATTLE_ItemCrush()
+  // RAND requires sourced ITEM_DAMAGECRUSHE / ITEM_MAXDAMAGECRUSHE equipment data.
+  const roll=cRand(0,99);
+  r.sourceItemCrushDefenderRoll=roll;
+  return roll;
+}
 function battleBaseElements(desc){
   if(desc?.kind==='player')return sourcePlayerElementsConfigured(state)?Object.assign({},state.elements):null;
   if(desc?.kind==='pet')return Object.assign({},desc.pet?.elements||{});
@@ -3865,6 +3880,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   battleStatusSetHp(targetDesc,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   battleStatusWakeOnDamage(targetDesc,r.damage);
+  sourceBattleFinalizeItemCrushRng(r);
   const after=battleStatusHp(targetDesc);
   if(before>0&&after<=0&&targetDesc?.kind==='enemy'&&targetDesc.unit){
     sourceMarkEnemyDeathCredit(targetDesc.unit,[attackerDesc]);
@@ -3972,6 +3988,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
         const sourceUltimateBefore=n(unit.hp);
         unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
         sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
+        sourceBattleFinalizeItemCrushRng(r);
         if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[{kind:'player'}]);
         addLog('你反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',r.critical?'good':'');
       }
@@ -3984,6 +4001,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
         const sourceUltimateBefore=n(state.hp);
     state.hp=Math.max(0,sourceUltimateBefore-r.damage);
     sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
+    sourceBattleFinalizeItemCrushRng(r);
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
     }
@@ -4021,6 +4039,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
         const sourceUltimateBefore=n(unit.hp);
         unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
         sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
+        sourceBattleFinalizeItemCrushRng(r);
         if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[{kind:'pet',petId:pet.id}]);
         addLog(pet.name+' 反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
@@ -4031,6 +4050,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
         const before=n(pet.hp);
         pet.hp=Math.max(0,before-r.damage);
       sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
+      sourceBattleFinalizeItemCrushRng(r);
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
         if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
       }
@@ -4111,6 +4131,7 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   actual.hp=Math.max(0,before-r.damage);
   sourceTrackDamageSubUltimate({kind:'enemy',unit:actual,unitId:actual.id},r.damage,before,r);
   battleStatusWakeOnDamage({kind:'enemy',unit:actual,unitId:actual.id},r.damage);
+  sourceBattleFinalizeItemCrushRng(r);
   if(r.guardian){
     addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
   }else if(attackerKind==='pet'){
@@ -4414,6 +4435,7 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)continue;
     if(afterHit)hit.afterHit=afterHit(hit,target);
+    sourceBattleFinalizeItemCrushRng(hit.r);
     hits.push(Object.assign({battleSlot:slot},hit));
     attackCount++;
     // 原 battle.c 的 attack_count 只在真正呼叫 BATTLE_Attack() 後遞增；
@@ -4455,7 +4477,10 @@ function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
     const target=sourceEnemyTargetableFromBattleSlot(slot);
     if(!target)continue;
     const hit=enemyWeaponApplyHit(unit,target,options,baseOptions);
-    if(hit)hits.push(Object.assign({battleSlot:slot},hit));
+    if(hit){
+      sourceBattleFinalizeItemCrushRng(hit.r);
+      hits.push(Object.assign({battleSlot:slot},hit));
+    }
     if(n(unit.hp)<=0)break;
   }
   return {
@@ -4484,6 +4509,7 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     let paralysis=null;
     if(useBreakthrowStatus&&Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
     if(afterHit)hit.afterHit=afterHit(hit,target);
+    sourceBattleFinalizeItemCrushRng(hit.r);
     hits.push(Object.assign({paralysis},hit));
     if(i+1>=attackMax||n(unit.hp)<=0)break;
     // Non-BOW TargetListSet prefilled every later aDefList entry with the original COM2.
@@ -4521,6 +4547,7 @@ function performEnemyFoxFistRangedAttack(actor,unit,options={}){
   while(target&&attackCount<attackMax&&n(unit.hp)>0){
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)break;
+    sourceBattleFinalizeItemCrushRng(hit.r);
     hits.push(Object.assign({
       battleSlot:sourceEnemyTargetBattleSlot(target),
       sourceCommandSlot:attackCount===0?commandSlot:(actualWeaponType===4?bowPlan?.slots?.[k]:commandSlot)
@@ -4583,6 +4610,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
       sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
+      sourceBattleFinalizeItemCrushRng(r);
       battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
       addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -4597,6 +4625,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     const before=n(pet.hp);
     pet.hp=Math.max(0,before-r.damage);
       sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
+      sourceBattleFinalizeItemCrushRng(r);
     battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
     addLog(pet.name+' 發動忠犬，代替你承受 '+unit.name+(r.critical?' 的會心一擊 ':' 的攻擊 ')+r.damage+' 傷害。',pet.hp<=0?'bad':'pet');
     if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -4606,6 +4635,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
       const sourceUltimateBefore=n(state.hp);
     state.hp=Math.max(0,sourceUltimateBefore-r.damage);
     sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
+    sourceBattleFinalizeItemCrushRng(r);
       addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
     }
   }else if(r.dodged){
@@ -4616,6 +4646,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     const sourceUltimateBefore=n(state.hp);
     state.hp=Math.max(0,sourceUltimateBefore-r.damage);
     sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
+    sourceBattleFinalizeItemCrushRng(r);
     battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
@@ -5022,6 +5053,7 @@ function performEnemyModifyAttack(actor,unit,options,meta){
   }
 
   enemyApplySkillHit(unit,chosen,r,meta?.n||'屬性強化攻擊');
+  sourceBattleFinalizeItemCrushRng(r);
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec,targetAttr:attr,bonusRoll,bonusStep,bonus};
 }
 function performEnemyMdfyAttack(actor,unit,options,meta){
@@ -5037,6 +5069,7 @@ function performEnemyMdfyAttack(actor,unit,options,meta){
   const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding},{elements});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   enemyApplySkillHit(unit,chosen,r,meta?.n||'屬性轉換攻擊');
+  sourceBattleFinalizeItemCrushRng(r);
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec};
 }
 function performEnemySonic(actor,unit,options,meta){
@@ -5049,6 +5082,7 @@ function performEnemySonic(actor,unit,options,meta){
   const first=enemyAttackSeqBugTargetResult(unit,chosen,{guarding:firstGuarding});
   if(first){
     enemyApplySkillHit(unit,chosen,first,label);
+    sourceBattleFinalizeItemCrushRng(first);
     results.push({target:chosen.kind,r:first});
   }
 
@@ -5060,6 +5094,7 @@ function performEnemySonic(actor,unit,options,meta){
     const second=enemyAttackSeqBugTargetResult(unit,owner,{guarding,preGuardDamageMultiplier:.5});
     if(second){
       enemyApplySkillHit(unit,owner,second,label+'貫穿');
+      sourceBattleFinalizeItemCrushRng(second);
       results.push({target:'player',r:second,through:true});
     }
   }
@@ -5084,6 +5119,7 @@ function performEnemyGyrate(actor,unit,options,meta){
     const r=enemySkillTargetResult(unit,target,{guarding},{attack});
     if(!r)continue;
     enemyApplySkillHit(unit,target,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
     results.push({target:target.kind,r});
   }
   return {kind:'skill',skillId:actor.skillId,attackPct,results};
@@ -5098,6 +5134,7 @@ function performEnemyRetrace(actor,unit,options,meta){
   const first=enemySkillTargetResult(unit,chosen,{guarding});
   if(!first)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   enemyApplySkillHit(unit,chosen,first,label+'首擊');
+  sourceBattleFinalizeItemCrushRng(first);
 
   let second=null,retraceRoll=null;
   const targetStillAlive=chosen.kind==='pet'
@@ -5111,7 +5148,10 @@ function performEnemyRetrace(actor,unit,options,meta){
       const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
       const attack=baseAttack+Math.trunc(baseAttack*.2);
       second=enemySkillTargetResult(unit,chosen,{guarding},{attack});
-      if(second)enemyApplySkillHit(unit,chosen,second,label+'追擊');
+      if(second){
+        enemyApplySkillHit(unit,chosen,second,label+'追擊');
+        sourceBattleFinalizeItemCrushRng(second);
+      }
     }
   }
 
@@ -5504,6 +5544,7 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
     }
     hits++;lastTarget=target;lastResult=r;
     enemyApplySkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
+  sourceBattleFinalizeItemCrushRng(r);
   }
 
   // ATTCRAZED 位於原 direct-attack 群組；全部攻擊後只以最後一擊的 defNo / ContFlg 進普通反擊鏈。
@@ -5558,6 +5599,7 @@ function performEnemyTear(actor,unit,options,meta){
     }
   }
   enemyApplySkillHit(unit,chosen,r,meta?.n||'撕裂傷口2');
+  sourceBattleFinalizeItemCrushRng(r);
 
   // 原 BATTLE_COM_S_PETSKILLTEAR 走 BATTLE_S_AttackDamage 後直接 break，不進普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,tearPct,missingHp};
@@ -5583,6 +5625,7 @@ function performEnemyRegret(actor,unit,options,meta){
       }));
     }else return null;
     enemyApplySkillHit(unit,target,r,label+(secondary?'貫穿段':''));
+  sourceBattleFinalizeItemCrushRng(r);
     const dizzy=enemyTryRegretDizzy(target,successPct,label);
     return {target:target.kind,r,dizzy,secondary};
   }
@@ -5626,6 +5669,7 @@ function performEnemyWildViolent(actor,unit,options,meta){
     hits++;
     lastResult=r;lastChosen=chosen;
     enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+  sourceBattleFinalizeItemCrushRng(r);
 
     if(state.hp<=0)break;
     if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet))chosen=null;
@@ -5672,6 +5716,7 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
     multiplier=n(r?.guardBreak2Multiplier)||(guarding?1.3:.7);
   }
   enemyApplySkillHit(unit,chosen,r,label+'（local defindex 倍率 ×'+multiplier.toFixed(1)+'）');
+  sourceBattleFinalizeItemCrushRng(r);
   return {
     kind:'skill',skillId:actor.skillId,target:chosen.kind,r,guarding,
     preGuardDamageMultiplier:multiplier,
@@ -5698,6 +5743,7 @@ function performEnemyBattleTimid(actor,unit,options,meta){
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
 
   let timidRoll=null,forced=false,playerExited=false;
   if(r.damage>1){
@@ -5728,6 +5774,7 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
 
   const timid=Math.max(0,Math.trunc(enemySkillNumber(meta?.o,/命%([0-9.]+)/,0)));
   let timidRoll=null,recalled=false;
@@ -5753,6 +5800,7 @@ function performEnemyMpDamage(actor,unit,options,meta){
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
 
   const parts=String(meta?.o||'').split('|');
   const mpPercent=Math.max(0,Math.trunc(Number(parts[1])||0));
@@ -5776,6 +5824,7 @@ function performEnemyToothCrushe(actor,unit,options,meta){
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
 
   // 原 BATTLE_S_ToothCrushe：
   // - 非 PLAYER 目標直接 return；
@@ -5955,6 +6004,7 @@ function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label){
     addLog(r.guardian.name+' 發動忠犬，代替你承受 '+unit.name+' 的'+label+'。','pet');
   }
   enemyApplySkillHit(unit,actual,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
   return actual;
 }
 
@@ -6022,6 +6072,7 @@ function performEnemyLighttakeed(actor,unit,options,meta){
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
   addLog(unit.name+' 的 '+label+' 沒有找到可吸收的 '+String(meta?.o||'DamageReact')+' 狀態；保留本次物理傷害。');
 
   return {
@@ -6149,6 +6200,7 @@ function performEnemyDamageToHp2(actor,unit,options,meta){
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,meta?.n||'浴血狂襲');
+  sourceBattleFinalizeItemCrushRng(r);
 
   let healed=0;
   if(r.damage>0&&!r.dodged&&!r.miss&&absorbPct>0){
@@ -6203,6 +6255,7 @@ function performEnemyDamageToHp(actor,unit,options,meta){
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   enemyApplySkillHit(unit,chosen,r,meta?.n||'嗜血技');
+  sourceBattleFinalizeItemCrushRng(r);
 
   let healed=0;
   if(r.damage>0&&!r.dodged&&!r.miss&&absorbPct>0){
@@ -7451,6 +7504,7 @@ function performEnemyFallGround(actor,unit,options,meta){
       }
     }
   }
+  sourceBattleFinalizeItemCrushRng(r);
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,fallRoll,fallSuccess};
 }
 function performEnemyEarthRoundStart(actor,unit,options,meta){
@@ -7520,6 +7574,7 @@ function performEnemyGuardBreak(actor,unit,options,meta){
     });
   }
   enemyApplySkillHit(unit,chosen,r,label);
+  sourceBattleFinalizeItemCrushRng(r);
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r};
 }
 function sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label){
@@ -7586,6 +7641,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
     ?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}
     :{kind:'player'};
   const statusResult=sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label);
+  sourceBattleFinalizeItemCrushRng(r);
 
   // StatusChange 的異常套用發生在 BATTLE_Attack() 返回之前；睡眠／石化成功後目標已不能反擊。
   if(unit.hp>0&&enemy){
@@ -7674,6 +7730,7 @@ function performEnemyContinuation(actor,unit,options,meta){
     lastResult=r;
     lastChosen=chosen;
     enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+  sourceBattleFinalizeItemCrushRng(r);
 
     if(state.hp<=0)break;
     if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet)){
@@ -8360,7 +8417,8 @@ function sourcePerformCombo(order,index,options={}){
   const guarding=sourceComboTargetGuarding(target,!!options.playerGuarding);
   const hits=[];
   let total=0;
-  for(const actor of members){
+  for(let memberIndex=0;memberIndex<members.length;memberIndex++){
+    const actor=members[memberIndex];
     const attacker=sourceComboAttackerView(actor);
     if(!attacker)continue;
     // 原 BATTLE_Combo -> BATTLE_AttackSeq(..., BATTLE_COM_COMBO)：
@@ -8370,6 +8428,7 @@ function sourcePerformCombo(order,index,options={}){
     // 原 BATTLE_Combo 每一段在 DamageSubCale / DamageSub 後，只要本段 damage > 0
     // 就立刻 BATTLE_DamageWakeUp；一般合擊總傷害仍到最後一段才由 DamageSub2 一次扣 HP。
     battleStatusWakeOnDamage(target,r.damage);
+    if(memberIndex+1<members.length)sourceBattleFinalizeItemCrushRng(r);
     total+=Math.max(1,Math.trunc(n(r.damage)));
     hits.push({kind:actor.kind,unitId:actor.unitId||null,petId:actor.petId||null,label:actor.label||actor.kind,r});
   }
@@ -8382,6 +8441,7 @@ function sourcePerformCombo(order,index,options={}){
     target,total,lastComboResult,
     hits.map(x=>({kind:x.kind,petId:x.petId||null}))
   );
+  sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
   const names=hits.map(x=>x.label).join('、');
   addLog(names+' 發動合擊，對 '+battleStatusDescName(target)+' 合計造成 '+actual+' 傷害。',target.kind==='enemy'?'good':'bad');
   return {comboId,target,totalDamage:actual,rawTotal:total,hits};
