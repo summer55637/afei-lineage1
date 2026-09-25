@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.25</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.26</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -88,6 +88,18 @@
               <button data-player-stat="dex"><span>速度 DEX</span><b id="paramDex">5</b><small>+1</small></button>
             </div>
             <div class="muted player-param-note">配點後立即重算 HP／攻／防／敏；提高 MaxHP 不會免費補血。</div>
+          </div>
+          <div id="playerElementPanel" class="player-element-panel">
+            <div class="player-param-head"><b>原服創角元素</b><span>10 點 · 確認後永久鎖定</span></div>
+            <div id="playerElementGrid" class="player-element-grid">
+              <label><span>地 EARTH</span><input id="elementEarth" data-player-element="earth" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+              <label><span>水 WATER</span><input id="elementWater" data-player-element="water" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+              <label><span>火 FIRE</span><input id="elementFire" data-player-element="fire" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+              <label><span>風 WIND</span><input id="elementWind" data-player-element="wind" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+            </div>
+            <div id="playerElementStatus" class="player-element-status bad">四屬性合計必須剛好 10 點。</div>
+            <button id="playerElementConfirmBtn" disabled>確認並永久鎖定</button>
+            <div class="muted player-param-note">原 C：各 0～10、合計 10、最多兩屬；地＋火禁止、水＋風禁止。儲存值為點數 ×10。V1.25 以前的存檔沒有歷史元素資料，因此本版不倒推、不預設。</div>
           </div>
           <div class="progress"><i id="hpBar"></i></div>
           <div class="button-row">
@@ -169,8 +181,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.25：</b>
-      補齊 BecomeFox 遠距武器混合規則：變狐時 battle loop 強制視為拳頭，但實際裝備仍供 AttackNum、弓 TargetList、critical／Guardian／Counter 使用；弓多段傷害依 AttackNum 分攤，BreakThrow 不再附加麻痺。
+      <b>V1.26：</b>
+      接回原服創角元素配點：地／水／火／風共 10 點、最多兩屬且禁止地火／水風；舊存檔不猜歷史元素，玩家確認後才寫入 CHAR 百分值並啟動戰鬥。
     </article>
   </main>
 

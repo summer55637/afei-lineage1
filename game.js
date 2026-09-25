@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -367,14 +367,77 @@ function sourceCreateQuestGetPet(tempNo,extra={}){
   return pet;
 }
 
+function sourcePlayerElementValidate(points){
+  const keys=['earth','water','fire','wind'];
+  const clean={};
+  for(const key of keys){
+    const value=Number(points?.[key]);
+    if(!Number.isFinite(value)||!Number.isInteger(value)){
+      return {valid:false,reason:'四屬性點數都必須是整數。'};
+    }
+    if(value<0||value>10){
+      return {valid:false,reason:'每一種屬性都必須介於 0～10 點。'};
+    }
+    clean[key]=value;
+  }
+  const total=keys.reduce((sum,key)=>sum+clean[key],0);
+  if(total!==10)return {valid:false,reason:'四屬性合計必須剛好 10 點。',points:clean,total};
+  const nonzero=keys.filter(key=>clean[key]>0);
+  if(nonzero.length>2)return {valid:false,reason:'原服創角最多只能同時擁有兩種屬性。',points:clean,total};
+  if(clean.earth>0&&clean.fire>0)return {valid:false,reason:'原服創角禁止同時選擇地＋火。',points:clean,total};
+  if(clean.water>0&&clean.wind>0)return {valid:false,reason:'原服創角禁止同時選擇水＋風。',points:clean,total};
+  return {
+    valid:true,reason:'合法原服創角元素配點。',points:clean,total,
+    elements:{
+      earth:clean.earth*10,
+      water:clean.water*10,
+      fire:clean.fire*10,
+      wind:clean.wind*10
+    }
+  };
+}
+function sourcePlayerElementStoredPoints(elements){
+  if(!elements||typeof elements!=='object')return null;
+  const keys=['earth','water','fire','wind'],points={};
+  for(const key of keys){
+    const raw=Number(elements[key]);
+    if(!Number.isFinite(raw)||!Number.isInteger(raw)||raw<0||raw>100||raw%10!==0)return null;
+    points[key]=raw/10;
+  }
+  const checked=sourcePlayerElementValidate(points);
+  return checked.valid?checked.points:null;
+}
+function sourcePlayerElementsConfigured(target=state){
+  return !!(target?.playerElementsConfigured&&sourcePlayerElementStoredPoints(target?.elements));
+}
+function confirmPlayerElements(points=playerElementDraft){
+  if(!state)return {ok:false,reason:'state-missing'};
+  if(sourcePlayerElementsConfigured(state)){
+    addLog('角色元素已依原服創角規則鎖定，不能在創角後重新配點。','bad');
+    return {ok:false,reason:'already-configured'};
+  }
+  const checked=sourcePlayerElementValidate(points);
+  if(!checked.valid){
+    addLog('元素配點無法確認：'+checked.reason,'bad');
+    renderPlayerElements();
+    return {ok:false,reason:'invalid',validation:checked};
+  }
+  state.elements=Object.assign({},checked.elements);
+  state.playerElementsConfigured=true;
+  playerElementDraft=Object.assign({},checked.points);
+  addLog('原服創角元素已確認：地 '+checked.elements.earth+'／水 '+checked.elements.water+'／火 '+checked.elements.fire+'／風 '+checked.elements.wind+'。此配點已永久鎖定。','good');
+  save();render();
+  return {ok:true,points:checked.points,elements:checked.elements};
+}
 function freshState(){
   return {
-    schemaVersion:22,
+    schemaVersion:23,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
     playerStats:{vital:5,str:5,tgh:5,dex:5},
+    elements:null,playerElementsConfigured:false,
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
@@ -502,6 +565,23 @@ function normalizeState(raw){
   }
   s.playerStats=Object.assign({vital:5,str:5,tgh:5,dex:5},s.playerStats||{});
   for(const k of ['vital','str','tgh','dex'])s.playerStats[k]=Math.max(0,Math.floor(n(s.playerStats[k])));
+
+  // V1.26: old saves never persisted the original creation element allocation.
+  // Do not turn the previous empty-object/no-attribute fallback into historical data.
+  if(n(raw?.schemaVersion)<23){
+    s.elements=null;
+    s.playerElementsConfigured=false;
+  }else{
+    const storedPoints=sourcePlayerElementStoredPoints(s.elements);
+    if(s.playerElementsConfigured===true&&storedPoints){
+      const checked=sourcePlayerElementValidate(storedPoints);
+      s.elements=Object.assign({},checked.elements);
+      s.playerElementsConfigured=true;
+    }else{
+      s.elements=null;
+      s.playerElementsConfigured=false;
+    }
+  }
   const legacyPetHp=n(raw?.schemaVersion)<15;
   for(const p of s.petBox)syncPetBattleHp(p,legacyPetHp||!Number.isFinite(Number(p.hp)));
   s.playerPigUntilMs=Math.max(0,n(s.playerPigUntilMs));
@@ -540,7 +620,7 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=22;
+  s.schemaVersion=23;
   delete s.pets;
   return s;
 }
@@ -2080,7 +2160,7 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
   return {type,damage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
 function battleBaseElements(desc){
-  if(desc?.kind==='player')return Object.assign({},state?.elements||{});
+  if(desc?.kind==='player')return sourcePlayerElementsConfigured(state)?Object.assign({},state.elements):null;
   if(desc?.kind==='pet')return Object.assign({},desc.pet?.elements||{});
   if(desc?.kind==='enemy')return Object.assign({},desc.unit?.elements||{});
   return {};
@@ -8230,6 +8310,7 @@ function walkEncounterStep(){
 }
 function tick(){
   if(!state||!state.auto)return;
+  if(!sourcePlayerElementsConfigured(state))return;
   if(state.hp<=0){defeat();return}
   if(!enemy){
     const map=currentMap();
@@ -8418,6 +8499,39 @@ function renderZooQuest(){
   if(e82.complete&&e83.complete&&hasItem(19715)&&!hasItem(19719))actions.push('<button data-zoo-action="reward19719" class="wide">向里拉拉領 Event83 後續謝禮 19719</button>');
   $('#zooQuestActions').innerHTML=actions.join('');
 }
+function renderPlayerElements(){
+  const panel=$('#playerElementPanel');
+  if(!panel||!state)return;
+  const configured=sourcePlayerElementsConfigured(state);
+  const stored=configured?sourcePlayerElementStoredPoints(state.elements):null;
+  const values=stored||playerElementDraft||{earth:0,water:0,fire:0,wind:0};
+  const ids={earth:'#elementEarth',water:'#elementWater',fire:'#elementFire',wind:'#elementWind'};
+  for(const [key,selector] of Object.entries(ids)){
+    const input=$(selector);
+    if(!input)continue;
+    input.value=String(values[key]??0);
+    input.disabled=configured;
+  }
+  const checked=configured
+    ?sourcePlayerElementValidate(stored)
+    :sourcePlayerElementValidate(values);
+  const status=$('#playerElementStatus');
+  const button=$('#playerElementConfirmBtn');
+  if(configured){
+    const e=state.elements;
+    status.textContent='已鎖定：地 '+e.earth+'／水 '+e.water+'／火 '+e.fire+'／風 '+e.wind;
+    status.className='player-element-status good';
+    button.textContent='元素已確認';
+    button.disabled=true;
+  }else{
+    status.textContent=checked.valid
+      ?'可確認：'+checked.points.earth+'／'+checked.points.water+'／'+checked.points.fire+'／'+checked.points.wind+' 點 → CHAR 屬性 '+checked.elements.earth+'／'+checked.elements.water+'／'+checked.elements.fire+'／'+checked.elements.wind
+      :checked.reason;
+    status.className='player-element-status '+(checked.valid?'good':'bad');
+    button.textContent='確認並永久鎖定';
+    button.disabled=!checked.valid;
+  }
+}
 function render(){
   if(!state)return;
   $('#level').textContent=state.level;
@@ -8437,6 +8551,7 @@ function render(){
   $('#paramTgh').textContent=Math.floor(n(ps.tgh));
   $('#paramDex').textContent=Math.floor(n(ps.dex));
   document.querySelectorAll('#playerParamGrid button[data-player-stat]').forEach(b=>b.disabled=Math.floor(n(state.skillPoints))<=0);
+  renderPlayerElements();
   $('#wins').textContent=state.wins;
   $('#hpBar').style.width=clamp(state.hp/state.maxHp*100,0,100)+'%';
   $('#autoBtn').textContent='自動戰鬥：'+(state.auto?'開':'關');
@@ -8481,8 +8596,11 @@ function renderEnemy(){
   const capBtn=$('#captureBtn');
   if(!enemy){
     box.className='enemy empty';
-    box.innerHTML='<div class="enemy-name">等待下一次遭遇</div><div class="muted">'+(state.auto?'自動戰鬥運作中。':'目前已暫停。')+'</div>';
-    $('#battleState').textContent=state.auto?'自動中':'已暫停';
+    const elementReady=sourcePlayerElementsConfigured(state);
+    box.innerHTML=elementReady
+      ?'<div class="enemy-name">等待下一次遭遇</div><div class="muted">'+(state.auto?'自動戰鬥運作中。':'目前已暫停。')+'</div>'
+      :'<div class="enemy-name">等待原服創角元素配點</div><div class="muted">舊存檔沒有保存原始地／水／火／風，因此不猜無屬性；請先在角色面板確認合法的 10 點元素。</div>';
+    $('#battleState').textContent=elementReady?(state.auto?'自動中':'已暫停'):'等待元素配點';
     $('#captureChance').textContent='捕獲率：—';
     $('#captureInfo').textContent='遭遇 Lv1 寵物後顯示條件。';
     capBtn.disabled=true;
@@ -8662,7 +8780,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.25 載入完成：BecomeFox 遠距武器混合規則已對齊；外層強制 FIST，但 AttackNum／弓 TargetList／裝備型 critical、Guardian、Counter 仍依實際武器。','good');
+    addLog('V1.26 載入完成：玩家原服創角元素已接入；舊存檔不猜元素，需自行合法分配 10 點後才啟動戰鬥。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -8955,6 +9073,15 @@ $('#playerParamGrid').addEventListener('click',e=>{
   const b=e.target.closest('button[data-player-stat]');if(!b)return;
   allocatePlayerStat(b.dataset.playerStat);
 });
+$('#playerElementGrid').addEventListener('input',e=>{
+  const input=e.target.closest('input[data-player-element]');if(!input||sourcePlayerElementsConfigured(state))return;
+  const key=input.dataset.playerElement;
+  if(!Object.prototype.hasOwnProperty.call(playerElementDraft,key))return;
+  const raw=input.value.trim();
+  playerElementDraft[key]=raw===''?NaN:Number(raw);
+  renderPlayerElements();
+});
+$('#playerElementConfirmBtn').addEventListener('click',()=>confirmPlayerElements(playerElementDraft));
 $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;
   handleZooAction(b.dataset.zooAction);

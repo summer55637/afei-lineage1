@@ -11469,3 +11469,78 @@ V1.25 以 sourceFoxTargetAdjust / sourceFoxDefaultPlayerSideTarget 保留這個�
 - fox + BreakThrow 不做 paralysis
 - V1.24 BecomeFox lifecycle / 31% RNG regression 不回退
 - V1.18 Ultimate / death branch regression 不回退
+
+
+## V1.26 Player creation elements / no guessed NONE attribute
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+V1.25 以前沒有保存玩家創角時的 CHAR_EARTHAT / WATERAT / FIREAT / WINDAT。
+舊 web 的 battleBaseElements() 對缺值會回空 object，後續 BATTLE_GetAttr 等價成 none=100。
+這個 fallback 雖可讓戰鬥繼續，但不是固定原 C 能證明的玩家創角值。
+
+V1.26 移除這個猜值：舊存檔元素保持 unknown，直到玩家自己依原創角規則確認。
+
+### Fixed CHAR_makeCharFromOptionAtCreate rules
+
+原 gmsv/src/char/char.c：
+
+- earth / water / fire / wind 每項必須 0..10
+- 四項總和必須剛好 10
+- 非 0 屬性最多兩種
+- Earth + Fire 禁止
+- Water + Wind 禁止
+- 寫入角色時各自乘 10：
+  - CHAR_EARTHAT = earth * 10
+  - CHAR_WATERAT = water * 10
+  - CHAR_FIREAT = fire * 10
+  - CHAR_WINDAT = wind * 10
+
+因此合法例子包含：
+- 10/0/0/0 => Earth 100
+- 5/5/0/0 => Earth 50 / Water 50
+- 0/5/5/0 => Water 50 / Fire 50
+- 0/0/5/5 => Fire 50 / Wind 50
+- 5/0/0/5 => Earth 50 / Wind 50
+
+而 5/0/5/0、0/5/0/5、三屬並存、總和不是 10 都是原 C invalid。
+
+### Save migration
+
+save schema 22 -> 23。
+
+對 schema < 23：
+- elements = null
+- playerElementsConfigured = false
+- 不從等級、能力值、寵物、地圖或既有戰鬥倒推元素
+
+V1.26 確認成功後才持久化：
+- playerElementsConfigured = true
+- elements 使用原 CHAR 百分值 0..100
+
+確認後 UI 永久鎖定，不提供免費重配，對齊「創角 option」而不是一般能力點。
+
+### Battle gate
+
+玩家元素未設定時：
+- 自動遇敵 / 戰鬥 tick 等待
+- UI 明確顯示「等待元素配點」
+- 不再把 unknown player element 偷換成 none=100
+
+確認後 existing physical / magic element pipeline 直接讀 state.elements，不另寫第二套公式。
+
+### Regression targets
+
+- game.js syntax PASS
+- schema 23 fresh save => unconfigured / elements null
+- schema 22 migration => unconfigured / elements null even if unrelated old state exists
+- valid pure / adjacent dual allocations PASS
+- invalid total, fractional, >10, >2 elements, Earth+Fire, Water+Wind FAIL
+- stored CHAR values must be multiples of 10 and map back to a valid 10-point creation allocation
+- confirmation writes point*10 and locks permanently
+- unconfigured player battleBaseElements returns null, not NONE=100
+- configured player battleBaseElements returns exact stored source values
+- tick does not spawn/fight before configuration
+- V1.25 fox ranged regression unchanged
+- V1.24 BecomeFox lifecycle / 31% regression unchanged
+- V1.18 Ultimate / death branch regression unchanged
