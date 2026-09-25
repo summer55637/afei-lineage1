@@ -5407,14 +5407,16 @@ function captureChance(){
   // fixed BATTLE_CaptureCheck 使用雙方 CHAR_WORKFIXDEX。
   // 實際捕獲判定在 normalBattleOrder() 的 PreCommand snapshot 後再次計算，因此 Enemy 可直接讀 roundFixQuick；
   // 顯示用的預先查詢尚未建立本輪 snapshot 時則退回 compliant quick。
-  const enemyDex=n(target.roundFixQuick??target.quick);
-  const playerDex=n(playerBattleView().fixedDex);
-  const captureBase=enemy.dynamicGroup?n(target.captureBase):n(enemy.entry.variant?.captureBase);
-  const maxHp=Math.max(1,target.maxHp);
-  const hpTerm=10-(target.hp*target.hp)/maxHp;
-  const levelTerm=state.level/2-target.level/2;
-  const dexTerm=playerDex/15-enemyDex/15;
-  let raw=(hpTerm+levelTerm+dexTerm+(captureBase+state.luck))*state.charm/50;
+  const enemyDex=Math.trunc(n(target.roundFixQuick??target.quick));
+  const playerDex=Math.trunc(n(playerBattleView().fixedDex));
+  const captureBase=Math.trunc(enemy.dynamicGroup?n(target.captureBase):n(enemy.entry.variant?.captureBase));
+  const maxHp=Math.max(1,Math.trunc(n(target.maxHp)));
+  // BATTLE_CaptureCheck 的全部中間變數都是 int：每一個 / 都要依 C 整數除法截斷。
+  const hpTerm=10-Math.trunc((Math.trunc(n(target.hp))*Math.trunc(n(target.hp)))/maxHp);
+  const levelTerm=Math.trunc(Math.trunc(n(state.level))/2)-Math.trunc(Math.trunc(n(target.level))/2);
+  const dexTerm=Math.trunc(playerDex/15)-Math.trunc(enemyDex/15);
+  const workSum=hpTerm+levelTerm+dexTerm+(captureBase+Math.trunc(n(state.luck)));
+  let raw=Math.trunc(workSum*Math.trunc(n(state.charm))/50);
   raw=Math.min(99,raw);
   return {
     raw,display:clamp(raw,0,99),allowed:true,missing:[],requirements:req.items,targetName:target.name,
@@ -5473,7 +5475,9 @@ function captureTurn(manual=false){
       const c=captureChance();
       if(!c.allowed||c.display<=0){
         addLog('捕獲失敗：目前捕獲率為 '+Math.max(0,n(c.display)).toFixed(1)+'%。','bad');
-      }else if(Math.random()*100<c.raw){
+      }else if(cRand(1,100)<c.raw){
+        // fixed BATTLE_CaptureCheck：RAND(1,100) < WorkGet，為嚴格小於；
+        // 例如 WorkGet=20 實際成功 roll 是 1..19。
         const pet=addCapturedPet(target);
         // 原 PET_createPetFromCharaIndex 不複製 Enemy item；Enemy BATTLE_Exit/清理後其 carried/style 全釋放。
         releaseEnemyRuntimeItems(target);
