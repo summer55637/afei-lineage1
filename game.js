@@ -5548,19 +5548,16 @@ function sourceComboApplyDamage(target,total){
   if(target.kind==='player'){
     const before=n(state.hp);
     state.hp=Math.max(0,before-damage);
-    battleStatusWakeOnDamage({kind:'player'},damage);
     return Math.max(0,before-state.hp);
   }
   if(target.kind==='pet'&&target.pet){
     const before=n(target.pet.hp);
     target.pet.hp=Math.max(0,before-damage);
-    battleStatusWakeOnDamage({kind:'pet',pet:target.pet,petId:target.pet.id},damage);
     return Math.max(0,before-target.pet.hp);
   }
   if(target.kind==='enemy'&&target.unit){
     const before=n(target.unit.hp);
     target.unit.hp=Math.max(0,before-damage);
-    battleStatusWakeOnDamage({kind:'enemy',unit:target.unit,unitId:target.unit.id},damage);
     return Math.max(0,before-target.unit.hp);
   }
   return 0;
@@ -5598,6 +5595,9 @@ function sourcePerformCombo(order,index,options={}){
     // 完全跳過 DuckCheck，Guardian 初值 -2 也使 GuardianCheck 不執行。
     const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true});
     if(n(r.damage)<=0){r.damage=1;r.miss=false}
+    // 原 BATTLE_Combo 每一段在 DamageSubCale / DamageSub 後，只要本段 damage > 0
+    // 就立刻 BATTLE_DamageWakeUp；一般合擊總傷害仍到最後一段才由 DamageSub2 一次扣 HP。
+    battleStatusWakeOnDamage(target,r.damage);
     total+=Math.max(1,Math.trunc(n(r.damage)));
     hits.push({kind:actor.kind,unitId:actor.unitId||null,petId:actor.petId||null,label:actor.label||actor.kind,r});
   }
