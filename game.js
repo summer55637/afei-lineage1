@@ -5234,7 +5234,7 @@ function captureTurn(manual=false){
     return false;
   }
 
-  const order=normalBattleOrder();
+  const order=normalBattleOrder({playerGuarding:false});
   let captured=false;
   for(const actor of order){
     if(!enemy)return captured;
@@ -5404,7 +5404,212 @@ function battleDexRoll(quick,mode=null){
   if(dex<=0)dex=1;
   return Math.trunc(dex);
 }
-function normalBattleOrder(){
+function sourceComboActorInfo(actor,playerGuarding=false){
+  if(!actor)return {normalAttack:false,move:false,throwWeapon:false,side:-1,targetKey:null,per:0};
+
+  if(actor.kind==='player'){
+    const desc={kind:'player'};
+    const targetId=actor.targetUnitId||null;
+    return {
+      normalAttack:!playerGuarding,
+      move:state.hp>0&&battleStatusCanMove(desc),
+      throwWeapon:false,side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
+    };
+  }
+
+  if(actor.kind==='pet'){
+    const pet=state.petBox.find(p=>p.id===actor.petId);
+    const desc=pet?{kind:'pet',pet,petId:pet.id}:null;
+    const targetId=actor.targetUnitId||null;
+    return {
+      normalAttack:!!(pet&&petIsBattleActive(pet)),
+      move:!!(desc&&battleStatusCanMove(desc)),
+      throwWeapon:false,side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
+    };
+  }
+
+  if(actor.kind==='enemy'){
+    const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+    const desc=unit?{kind:'enemy',unit,unitId:unit.id}:null;
+    const blocked=!!(actor.sourceSkillMissing||actor.sourceSkillUnregistered||actor.sourceSkillRejected||actor.sourceMagicCWait);
+    const targetKey=actor.targetKind==='pet'
+      ?('pet:'+String(actor.targetPetId||''))
+      :(actor.targetKind==='player'?'player':null);
+    return {
+      // 目前 source 中會在 PVE 把 skill command 改成 ATTACK 的另一條是 PETSKILL_Explode；
+      // 該 skill 尚未註冊進目前 Enemy runtime。已註冊範圍內，enemyAction=attack 即精確對應 COM_ATTACK。
+      normalAttack:!!(unit&&actor.enemyAction==='attack'&&!blocked),
+      move:!!(desc&&battleStatusCanMove(desc)&&n(unit.hp)>0),
+      throwWeapon:!!unit?.throwWeapon,side:1,targetKey,per:20
+    };
+  }
+
+  return {normalAttack:false,move:false,throwWeapon:false,side:-1,targetKey:null,per:0};
+}
+function sourceComboCheck(order,options={}){
+  const playerGuarding=!!options.playerGuarding;
+  let start=-1,oldSide=-3,oldTarget=null,comboId=1;
+  for(const actor of order){
+    actor.sourceComboId=0;
+    actor.sourceComboConsumed=false;
+  }
+
+  for(let i=0;i<order.length;i++){
+    const actor=order[i];
+    const info=sourceComboActorInfo(actor,playerGuarding);
+
+    if(start!==-1){
+      if(!info.normalAttack||info.targetKey!==oldTarget||info.side!==oldSide||info.throwWeapon||!info.move){
+        start=-1;
+        oldSide=info.side;
+      }else{
+        actor.sourceComboId=comboId;
+        order[start].sourceComboId=comboId;
+      }
+    }
+
+    if(start===-1){
+      if(info.normalAttack&&!info.throwWeapon&&info.move&&info.targetKey&&cRand(1,100)<=info.per){
+        start=i;
+        oldTarget=info.targetKey;
+        oldSide=info.side;
+        comboId++;
+      }
+    }
+  }
+  return order;
+}
+function sourceComboActorAliveAndMovable(actor){
+  if(!actor)return false;
+  if(actor.kind==='player')return state.hp>0&&battleStatusCanMove({kind:'player'});
+  if(actor.kind==='pet'){
+    const pet=state.petBox.find(p=>p.id===actor.petId);
+    return !!(pet&&petIsBattleActive(pet)&&battleStatusCanMove({kind:'pet',pet,petId:pet.id}));
+  }
+  if(actor.kind==='enemy'){
+    const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+    return !!(unit&&n(unit.hp)>0&&battleStatusCanMove({kind:'enemy',unit,unitId:unit.id}));
+  }
+  return false;
+}
+function sourceComboHasLater(order,index){
+  const id=Math.trunc(n(order[index]?.sourceComboId));
+  if(id<=0)return false;
+  for(let i=index+1;i<order.length&&Math.trunc(n(order[i]?.sourceComboId))===id;i++){
+    if(sourceComboActorAliveAndMovable(order[i]))return true;
+  }
+  return false;
+}
+function sourceComboResolveTarget(actor){
+  if(!actor)return null;
+  if(actor.kind==='player'||actor.kind==='pet'){
+    const unit=livingEnemyUnits().find(u=>u.id===actor.targetUnitId&&!u.earthRoundState);
+    const target=unit||targetEnemyUnit();
+    return target?{kind:'enemy',unit,unitId:unit.id}:null;
+  }
+  if(actor.kind==='enemy'){
+    const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+    if(!unit)return null;
+    const chosen=enemyActorTarget(actor,unit);
+    if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
+    if(chosen?.kind==='player')return {kind:'player'};
+  }
+  return null;
+}
+function sourceComboAttackerView(actor){
+  if(actor.kind==='player')return playerBattleView();
+  if(actor.kind==='pet'){
+    const pet=state.petBox.find(p=>p.id===actor.petId);
+    return pet&&petIsBattleActive(pet)?petBattleView(pet):null;
+  }
+  if(actor.kind==='enemy'){
+    const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
+    return unit?enemyBattleView(unit):null;
+  }
+  return null;
+}
+function sourceComboTargetView(target){
+  if(target?.kind==='player')return playerBattleView();
+  if(target?.kind==='pet'&&target.pet)return petBattleView(target.pet);
+  if(target?.kind==='enemy'&&target.unit)return enemyBattleView(target.unit);
+  return null;
+}
+function sourceComboTargetGuarding(target,playerGuarding=false){
+  if(target?.kind==='player')return !!playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  if(target?.kind==='enemy'){
+    const desc={kind:'enemy',unit:target.unit,unitId:target.unitId};
+    return !!target.unit?.guardThisTurn&&!battleStatusActive(desc,'confusion');
+  }
+  return false;
+}
+function sourceComboApplyDamage(target,total){
+  const damage=Math.max(0,Math.trunc(n(total)));
+  if(!target||damage<=0)return 0;
+  if(target.kind==='player'){
+    const before=n(state.hp);
+    state.hp=Math.max(0,before-damage);
+    battleStatusWakeOnDamage({kind:'player'},damage);
+    return Math.max(0,before-state.hp);
+  }
+  if(target.kind==='pet'&&target.pet){
+    const before=n(target.pet.hp);
+    target.pet.hp=Math.max(0,before-damage);
+    battleStatusWakeOnDamage({kind:'pet',pet:target.pet,petId:target.pet.id},damage);
+    return Math.max(0,before-target.pet.hp);
+  }
+  if(target.kind==='enemy'&&target.unit){
+    const before=n(target.unit.hp);
+    target.unit.hp=Math.max(0,before-damage);
+    battleStatusWakeOnDamage({kind:'enemy',unit:target.unit,unitId:target.unit.id},damage);
+    return Math.max(0,before-target.unit.hp);
+  }
+  return 0;
+}
+function sourcePerformCombo(order,index,options={}){
+  const first=order[index];
+  const comboId=Math.trunc(n(first?.sourceComboId));
+  if(comboId<=0||!sourceComboHasLater(order,index))return null;
+
+  const target=sourceComboResolveTarget(first);
+  if(!target)return null;
+
+  const members=[first];
+  for(let i=index+1;i<order.length&&Math.trunc(n(order[i]?.sourceComboId))===comboId;i++){
+    order[i].sourceComboConsumed=true;
+    const actor=order[i];
+    // 原 BATTLE_COM_COMBO 分支會在收進後續成員前，才對該成員執行 StatusSeq / MagicStatusSeq。
+    const statusTurn=processBattleStatusTurn(actor);
+    if(statusTurn.skip)continue;
+    // Confusion 在 StatusSeq 內雖會把 COM/COM2 改成普通攻擊＋亂數目標，
+    // 但 combo 分支此處只重新檢查 CanMove，仍把該成員加入既定 defNo；因此不另跑 confusionAttack。
+    if(!sourceComboActorAliveAndMovable(actor))continue;
+    members.push(actor);
+  }
+
+  const targetView=sourceComboTargetView(target);
+  if(!targetView)return null;
+  const guarding=sourceComboTargetGuarding(target,!!options.playerGuarding);
+  const hits=[];
+  let total=0;
+  for(const actor of members){
+    const attacker=sourceComboAttackerView(actor);
+    if(!attacker)continue;
+    // 原 BATTLE_Combo -> BATTLE_AttackSeq(..., BATTLE_COM_COMBO)：
+    // 完全跳過 DuckCheck，Guardian 初值 -2 也使 GuardianCheck 不執行。
+    const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true});
+    if(n(r.damage)<=0){r.damage=1;r.miss=false}
+    total+=Math.max(1,Math.trunc(n(r.damage)));
+    hits.push({kind:actor.kind,unitId:actor.unitId||null,petId:actor.petId||null,label:actor.label||actor.kind,r});
+  }
+
+  if(!hits.length)return null;
+  const actual=sourceComboApplyDamage(target,total);
+  const names=hits.map(x=>x.label).join('、');
+  addLog(names+' 發動合擊，對 '+battleStatusDescName(target)+' 合計造成 '+actual+' 傷害。',target.kind==='enemy'?'good':'bad');
+  return {comboId,target,totalDamage:actual,rawTotal:total,hits};
+}
+
+function normalBattleOrder(options={}){
   // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性，再依 REVERSE flag 套 BATTLE_AttReverse。
   battlePrepareElementWork();
   const order=[];
@@ -5413,14 +5618,21 @@ function normalBattleOrder(){
     unit.guardianReadyThisTurn=false;
     unit.guardedByUnitId=null;
   }
+  const friendlyTarget=targetEnemyUnit();
   const player=playerBattleView();
-  order.push({kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++});
+  order.push({
+    kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++,
+    targetUnitId:friendlyTarget?.id||null
+  });
 
   const pet=activePet();
   if(pet&&petIsBattleActive(pet)){
     const pv=petBattleView(pet);
     const quick=pv?n(pv.quick):n(pet?.stats?.dex);
-    order.push({kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++});
+    order.push({
+      kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
+      targetUnitId:friendlyTarget?.id||null
+    });
   }
 
   for(const unit of livingEnemyUnits()){
@@ -5446,6 +5658,8 @@ function normalBattleOrder(){
   // 原 EntrySort() 會依 dex + CHAR_WORKSEQUENCEPOWER 由高到低排序。
   // V0.71 Enemy 自動武器 runtime 的 sequence 全為 0，Player/Pet 也尚無正式裝備，因此目前仍等價 0；同值保留建表順序。
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
+  // 原 battle.c：EntrySort() 後立刻 ComboCheck()，再開始逐角色 StatusSeq／行動。
+  sourceComboCheck(order,{playerGuarding:!!options.playerGuarding});
   return order;
 }
 function sourceEnemyCWait(actor){
@@ -5495,6 +5709,16 @@ function attackTurn(){
       if(enemy&&!livingEnemyUnits().length){winBattle();return}
       continue;
     }
+    if(actor.sourceComboConsumed)continue;
+    if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
+      const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
+      if(combo){
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        continue;
+      }
+    }
 
     if(actor.kind==='player'){
       const target=targetEnemyUnit();
@@ -5532,7 +5756,7 @@ function attackTurn(){
 }
 function guardTurn(){
   if(!enemy)return;
-  const order=normalBattleOrder();
+  const order=normalBattleOrder({playerGuarding:true});
 
   // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；
   // 所以即使敵人的排序在玩家之前，防禦減傷也已生效。
@@ -5562,6 +5786,16 @@ function guardTurn(){
       if(state.hp<=0){defeat();return}
       if(enemy&&!livingEnemyUnits().length){winBattle();return}
       continue;
+    }
+    if(actor.sourceComboConsumed)continue;
+    if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
+      const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:true});
+      if(combo){
+        if(enemy)syncEnemyTarget();
+        if(state.hp<=0){defeat();return}
+        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        continue;
+      }
     }
 
     if(actor.kind==='player'){
@@ -6058,7 +6292,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.73 載入完成：原 BATTLE_DuckCheck 的弓回避 +20 重複兩次（總 +40）已保留；所有投射武器亦依 BATTLE_GuardianCheck 禁止忠犬代擋。','good');
+    addLog('V0.74 載入完成：EntrySort 後的 ComboCheck／BATTLE_Combo 已接入；Enemy 起始 20%、Player/Pet 50%，同側同目標相鄰普通攻擊可合擊，遠距武器排除。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
