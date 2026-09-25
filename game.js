@@ -1986,8 +1986,11 @@ function playerBattleView(){
   const defenseBase=weaken?Math.trunc(n(state.defense)*.8):n(state.defense);
   const quickBase=weaken?Math.trunc(n(state.dex)*.8):n(state.dex);
   return {
-    type:'player',attack,defense:defenseBase*(stone?2:1),fixedTough:weaken?Math.trunc(n(state.playerStats?.tgh)*.8):n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,quickBase),
+    type:'player',attack,defense:defenseBase*(stone?2:1),
+    fixedTough:weaken?Math.trunc(n(state.playerStats?.tgh)*.8):n(state.playerStats?.tgh),
+    fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(state.luck),drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
+    canMove:battleStatusCanMove(desc),
     level:Math.max(1,Math.trunc(n(state.level))),elements:battleElementsForDesc(desc)
   };
 }
@@ -2006,8 +2009,9 @@ function petBattleView(pet){
   return {
     type:'pet',attack,defense:defenseBase*(stone?2:1),
     fixedTough:weaken?Math.trunc(fixedToughBase*.8):fixedToughBase,
-    quick:battleDrunkQuick(desc,quickBase),
+    fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
+    canMove:battleStatusCanMove(desc),
     level:Math.max(1,Math.trunc(n(pet.level))),elements:battleElementsForDesc(desc)
   };
 }
@@ -2021,6 +2025,7 @@ function enemyBattleView(unit){
     type:'enemy',
     attack:attackBase,
     defense:defenseRaw*(battleStatusActive(desc,'stone')?2:1),
+    fixedDex:n(unit?.roundFixQuick??unit?.quick),
     quick:battleDrunkQuick(desc,quickRaw),
     luck:0,
     weaponType:Math.trunc(n(unit?.weaponType)),weaponCritical:n(unit?.weaponCritical),throwWeapon:!!unit?.throwWeapon,
@@ -2604,7 +2609,8 @@ function enemyActorTarget(actor,unit){
   return enemyChooseTarget(unit);
 }
 function battleDuckChance(attacker,defender){
-  let atDex=n(attacker?.quick),dfDex=n(defender?.quick);
+  // fixed BATTLE_DuckCheck reads CHAR_WORKFIXDEX for both sides.
+  let atDex=n(attacker?.fixedDex??attacker?.quick),dfDex=n(defender?.fixedDex??defender?.quick);
   const dfLuck=defender?.type==='player'?n(defender?.luck):0;
   if(attacker?.type==='enemy'&&defender?.type==='pet')atDex*=.8;
   else if(attacker?.type!=='enemy'&&defender?.type==='pet')dfDex*=.8;
@@ -2621,7 +2627,8 @@ function battleDuckChance(attacker,defender){
   return per;
 }
 function battleCriticalChance(attacker,defender){
-  let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.09;
+  // fixed BATTLE_CriticalCheckPlayer reads CHAR_WORKFIXDEX, even for Pet/Enemy.
+  let atDex=n(attacker?.fixedDex??attacker?.quick),dfDex=n(defender?.fixedDex??defender?.quick),root=true,div=.09;
   const atLuck=attacker?.type==='player'?n(attacker?.luck):0;
   if(attacker?.type==='pet'&&defender?.type==='enemy')dfDex*=.8;
   else if(attacker?.type==='enemy'&&defender?.type==='pet'){div=10;root=false}
@@ -2691,8 +2698,9 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
 }
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
-  const disableDodge=guarding||!!options.disableDodge;
-  if(!disableDodge&&defender?.canMove!==false&&n(defender?.skillDuckPower)>0){
+  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD or BATTLE_CanMoveCheck()==FALSE.
+  const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
+  if(!disableDodge&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
@@ -2765,7 +2773,8 @@ function sourceCounterWeaponFactor(attackerType,defenderType){
   return n(SOURCE_COUNTER_TBL[a*8+d]);
 }
 function battleCounterChance(attacker,defender){
-  let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.08;
+  // fixed BATTLE_CounterCalc reads CHAR_WORKFIXDEX; WORKQUICK-only skill modifiers do not affect counter rate.
+  let atDex=n(attacker?.fixedDex??attacker?.quick),dfDex=n(defender?.fixedDex??defender?.quick),root=true,div=.08;
   if(attacker?.type==='enemy'&&defender?.type==='pet'){
     div=10;root=false;
   }else if(attacker?.type==='pet'&&defender?.type==='enemy'){
@@ -5395,13 +5404,16 @@ function captureChance(){
   if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items,targetName:target.name};
   if(state.level+5<target.level)return {raw:0,display:0,allowed:false,missing:[],requirements:req.items,targetName:target.name};
 
-  // 原 BATTLE_CaptureCheck 使用 CHAR_WORKFIXDEX；V0.71 起直接使用完成 CHAR_complianceParameter 後的 Enemy quick（含 STYLE／道場武器敏捷）。 
-  const enemyDex=n(target.quick);
+  // fixed BATTLE_CaptureCheck 使用雙方 CHAR_WORKFIXDEX。
+  // 實際捕獲判定在 normalBattleOrder() 的 PreCommand snapshot 後再次計算，因此 Enemy 可直接讀 roundFixQuick；
+  // 顯示用的預先查詢尚未建立本輪 snapshot 時則退回 compliant quick。
+  const enemyDex=n(target.roundFixQuick??target.quick);
+  const playerDex=n(playerBattleView().fixedDex);
   const captureBase=enemy.dynamicGroup?n(target.captureBase):n(enemy.entry.variant?.captureBase);
   const maxHp=Math.max(1,target.maxHp);
   const hpTerm=10-(target.hp*target.hp)/maxHp;
   const levelTerm=state.level/2-target.level/2;
-  const dexTerm=state.dex/15-enemyDex/15;
+  const dexTerm=playerDex/15-enemyDex/15;
   let raw=(hpTerm+levelTerm+dexTerm+(captureBase+state.luck))*state.charm/50;
   raw=Math.min(99,raw);
   return {
@@ -6485,7 +6497,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.80 載入完成：FIXSTR 專用技能改讀每輪 roundFix snapshot；Gyrate、Retrace 追擊、DamageToHp／DamageToHp2 不再誤用永久 base attack，並保留 Retrace option parser 被註解的來源行為。','good');
+    addLog('V0.81 載入完成：Duck／Critical／Counter／Capture 全部改讀 FIXDEX；WORKQUICK 只留給行動排序。麻痺／石化／睡眠／魔障／暈眩等不可行動目標亦依 fixed DuckCheck 完全不能閃避。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
