@@ -4643,3 +4643,133 @@ V0.65 後未接入正權重只剩：
 211 則在 `BATTLE_StealMoney()` 開頭直接讀 Enemy `CHAR_WORKPLAYERINDEX` 並要求 `CHAR_CHECKINDEX(masterindex)`。Enemy 建立流程沒有配置 owner，default work-int 為 0；而全域 char index 0 是否正好有效取決於原 server 當下角色配置，web 沒有等價全域 Char runtime。
 
 因此這三項仍不能在「不猜 runtime」原則下硬接。
+
+
+## V0.66 正權重 Enemy PetSkill runtime 邊界
+
+V0.66 完成目前 Enemy AI 正權重 PetSkill 的靜態來源掃描收尾。
+
+V0.65 後只剩：
+
+- 211 捐獻／`PETSKILL_StealMoney`
+- 676 E水的精靈／`PETSKILL_AttackMagic -> magic 204 item 20900`
+- 688 E咒靈術／`PETSKILL_AttackMagic -> magic 435 item 20912`
+
+這三個不是缺 petskill 資料、也不是函式未註冊；它們的 `PETSKILL_Use()` 本身都能成功建立 battle command。
+
+真正無法由固定 source snapshot 唯一決定的是後續使用到的**原 server 全域 runtime index 狀態**。
+
+### 211：CHAR_WORKPLAYERINDEX = 0 不是固定無效
+
+`ENEMY_createEnemy()` 先經 `CHAR_getDefaultChar()`，所有 work-int 清為 0；後續 Enemy 建立流程沒有配置 `CHAR_WORKPLAYERINDEX`。
+
+因此 211 進 `BATTLE_StealMoney()` 時：
+
+`masterindex = 0`
+
+接著原碼立刻：
+
+`if (!CHAR_CHECKINDEX(masterindex)) return;`
+
+V0.60 邊界原本還不能確定 char index 0 是否一定無效。V0.66 追到 `CHAR_initCharOneArray()` 後可確認：
+
+- Player pool `startcnt = 0`
+- 第一個 Player 就可以配置在 char index 0
+- index 0 **不是保留位**
+
+所以：
+
+- 若原 server 當下有有效玩家佔住 char slot 0，211 可繼續執行。
+- 若 slot 0 無有效玩家，211 直接 return。
+- 這取決於原 server 當時全域在線角色／allocator 狀態，不能從 Enemy 靜態資料推導。
+
+因此 web 不把自己的單機 Player 擅自視為原 server char index 0。
+
+### 676／688：20900／20912 是 existing-item index，不是 item ID
+
+兩筆 petskill option：
+
+- 676：`magic 204 item 20900`
+- 688：`magic 435 item 20912`
+
+`MAGIC_DirectUse()` 對非 Player 施術者不做玩家背包 slot → existing index 轉換，而是直接：
+
+`itemindex = itemnum`
+
+所以實際查的是：
+
+- `ITEM_item[20900]`
+- `ITEM_item[20912]`
+
+不是「道具 ID 20900／20912」。
+
+`ITEM_item[]` 是原 server 的全域動態 existing-item pool。其 slot 是否正在使用、當下是哪一個 existing item，取決於：
+
+- server 啟動後建立／銷毀物件的歷史
+- NPC／Enemy／Player／掉落等所有 item allocation
+- 當下 runtime occupancy
+
+若 slot 無效，`ITEM_getInt()` 回 -1；若 slot 有效，則會讀**那個當下 existing item** 的 `ITEM_MAGICUSEMP`。
+
+因此不能從 source repo 靜態斷言 20900／20912 的 MP cost。
+
+### 為何 Combined 的 item 0 可以、676／688 不可以
+
+V0.65 的 Combined 固定 itemnum=0 可以精確還原，是因為 ITEM allocator 已證明：
+
+- static Sindex 初值 1
+- 建立前先 ++
+- 正常從 2 開始
+- wrap 回 1
+- **永遠不配置 index 0**
+
+所以 index 0 固定 invalid → mp=-1。
+
+相反地，20900／20912 位於正常 existing-item pool 範圍內，可能有效也可能無效，不能類推成固定 -1。
+
+### V0.66 web 行為
+
+新增：
+
+`ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS = {211,676,688}`
+
+三者：
+
+- 保留 Enemy AI 原正權重
+- `PETSKILL_Use` 語意視為成功，因此仍正常跑該角色自身 StatusSeq
+- battle action 時明確記錄是哪一個 runtime dependency 缺失
+- 不套普通攻擊
+- 不標成 source missing
+- 不標成 unregistered function
+- 不猜 MP cost
+- 不把 web Player 假設成原 server char index 0
+
+這比泛用「特殊寵技尚未接入」更精確，也避免未來掃描把它們誤當成漏做。
+
+### V0.63 MP 回歸補正
+
+V0.63 已讓手動「休息補滿」同時補滿 HP／MP，但戰敗自動回村仍只補 HP。
+
+V0.66 補正：
+
+- 戰敗自動回村：HP → MaxHP
+- MP → MaxMP
+- 日誌同步顯示「補滿 HP／MP」
+
+不新增 save 欄位，schema 維持 **18**。
+
+### 目前邊界結論
+
+在「原 C 規則優先、不猜數值、不猜原 server 全域 allocator 狀態」標準下：
+
+- 靜態可唯一還原的正權重 Enemy PetSkill 已接完。
+- 剩餘 211／676／688 已正式分類為 **source runtime-dependent boundary**，不是一般未完成技能。
+
+若下一階段要讓這三個也能完全模擬，就不是再補單一 PetSkill handler，而是要建立原 server 等價的：
+
+- 全域 CHAR slot allocator／occupancy
+- 全域 ITEM existing-item pool
+- item create／destroy allocation history
+- 對應 battle runtime ownership
+
+在沒有這一層之前，硬指定任何結果都會違反「不猜 runtime」原則。
