@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1606,7 +1606,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
 function battleStatusKey(desc){
   if(!desc)return null;
   if(desc.kind==='player')return 'player';
@@ -1867,9 +1867,15 @@ function processBattleStatusTurn(actor){
   }
 
   if(st.turns<=0){
+    if(st.type==='drunk'){
+      // fixed C BATTLE_StatusSeq：酒醉歸零時直接 WORKQUICK *= 2（無騎乘）。
+      // 命中時其實沒有把 QUICK /2，所以這是「解除當回合暫時 2x QUICK」的來源 bug。
+      const key=battleStatusKey(desc);
+      if(key)battleDrunkReleaseBoostKeys.add(key);
+    }
     battleStatusClear(desc);
     addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
-    return {skip:blockedBefore,desc,status:st,expired:true};
+    return {skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'};
   }
 
   if(st.type==='poison'){
@@ -1899,10 +1905,13 @@ function battleStatusTurnFromOption(option){
   return m?Math.max(0,Math.trunc(Number(m[1]))):0;
 }
 function battleDrunkQuick(desc,quick){
-  // 原碼解除酒醉時會把 QUICK 還原為 ×2，但 StatusChange 命中處誤把 DRUNK 倒數值 /2。
-  // 這裡採用對稱且不污染永久能力值的轉譯：酒醉期間戰鬥 QUICK 取一半，解除後自然回到基礎值。
   const base=n(quick);
-  return battleStatusActive(desc,'drunk')?Math.trunc(base/2):base;
+  const key=battleStatusKey(desc);
+  // fixed C 的 StatusChange 命中酒醉時除的是 CHAR_WORKDRUNK 倒數，不是 WORKQUICK。
+  // 因此酒醉存續期間 QUICK 維持原值；倒數歸零的 StatusSeq 反而 WORKQUICK *= 2，
+  // 並在下一輪 BATTLE_PreCommandSeq -> complianceParameter 才恢復 FIXDEX。
+  if(key&&battleDrunkReleaseBoostKeys.has(key))return Math.trunc(base*2);
+  return base;
 }
 function playerBattleView(){
   const desc={kind:'player'};
@@ -4930,13 +4939,24 @@ function sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label){
   }
   // BATTLE_Attack() 已先 DamageWakeUp，再進 gBattleStausChange 的 StatusAttackCheck。
   const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
-  const applied=!!(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn));
+  let applied=false,storedTurns=0;
+  if(check.allowed&&check.success){
+    if(type==='drunk'){
+      // BATTLE_Attack：先 StatusTbl[DRUNK] = gBattleStausTurn + 1，
+      // 接著誤把 CHAR_WORKDRUNK 本身 /2；C int division 對正整數直接截斷。
+      storedTurns=Math.trunc((Math.max(0,Math.trunc(n(turn)))+1)/2);
+      if(storedTurns>0)applied=battleStatusApplyRaw(targetDesc,type,storedTurns);
+    }else{
+      storedTurns=Math.max(1,Math.trunc(n(turn))+1);
+      applied=battleStatusApply(targetDesc,type,turn);
+    }
+  }
   if(applied){
     addLog(battleStatusDescName(targetDesc)+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
   }else{
     addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'效果未成功'+(check.reason==='existing'?'：目標已有其他異常狀態。':'（原檢定 '+n(check.per).toFixed(1)+'%）。'));
   }
-  return {attempted:true,check,applied,type,turn};
+  return {attempted:true,check,applied,type,turn,storedTurns};
 }
 function performEnemyStatusChange(actor,unit,options,meta){
   unit.counterEligibleThisTurn=true;
@@ -5657,7 +5677,10 @@ function sourcePerformCombo(order,index,options={}){
 }
 
 function normalBattleOrder(options={}){
-  // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性，再依 REVERSE flag 套 BATTLE_AttReverse。
+  // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；這也會清掉上一輪
+  // 酒醉解除時錯誤留下的 WORKQUICK ×2。
+  battleDrunkReleaseBoostKeys=new Set();
+  // 再依 REVERSE flag 套 BATTLE_AttReverse。
   battlePrepareElementWork();
   const order=[];
   let orderIndex=0;
@@ -6339,7 +6362,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.75 載入完成：StatusChange／ContinuationAttack 已接回原共用 weapon loop；弓技能使用 aBowW 多目標，連擊覆寫 attack_max，投石連擊逐擊麻痺，狀態技則覆寫投石麻痺。','good');
+    addLog('V0.76 載入完成：酒醉生命週期已依 fixed C bug 校正；酒醉不再減半 QUICK，物理酒醉倒數會被 /2，解除當回合反而暫時 QUICK ×2，下一輪重建。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
