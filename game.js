@@ -5436,8 +5436,8 @@ function sourceComboActorInfo(actor,playerGuarding=false){
       ?('pet:'+String(actor.targetPetId||''))
       :(actor.targetKind==='player'?'player':null);
     return {
-      // 目前 source 中會在 PVE 把 skill command 改成 ATTACK 的另一條是 PETSKILL_Explode；
-      // 該 skill 尚未註冊進目前 Enemy runtime。已註冊範圍內，enemyAction=attack 即精確對應 COM_ATTACK。
+      // pet_skill.c 另一條可能在 PVE 改成 ATTACK 的 PETSKILL_Explode 被 fixed ref version.h 明確註解關閉；
+      // 因此本 build 可達範圍內，enemyAction=attack 可精確對應 COM_ATTACK。
       normalAttack:!!(unit&&actor.enemyAction==='attack'&&!blocked),
       move:!!(desc&&battleStatusCanMove(desc)&&n(unit.hp)>0),
       throwWeapon:!!unit?.throwWeapon,side:1,targetKey,per:20
@@ -5680,7 +5680,7 @@ function sourceEnemyCWait(actor){
 }
 function attackTurn(){
   if(!enemy)return;
-  const order=normalBattleOrder();
+  const order=normalBattleOrder({playerGuarding:false});
 
   for(const actor of order){
     if(!enemy)return;
