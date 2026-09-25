@@ -6,6 +6,7 @@ const ENEMY_AI_URL='data/generated/stoneage_enemy_ai.json';
 const PETSKILL_RUNTIME_URL='data/generated/stoneage_petskill_runtime.json';
 const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
 const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.json';
+const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -46,7 +47,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -55,6 +56,13 @@ const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8));
 
 function freshItemRuntime(){return {itemnum:25000,sindex:1,slots:{}}}
+function sourceItemTemplateMagicUseMp(itemId){
+  const id=Math.trunc(Number(itemId));
+  if(!Number.isFinite(id)||!itemMagicDb?.byItemId)return null;
+  if(!Object.prototype.hasOwnProperty.call(itemMagicDb.byItemId,String(id)))return null;
+  const value=Number(itemMagicDb.byItemId[String(id)]);
+  return Number.isFinite(value)?Math.trunc(value):null;
+}
 function normalizeItemRuntime(rt){
   const out=freshItemRuntime();
   if(!rt||typeof rt!=='object')return out;
@@ -64,10 +72,13 @@ function normalizeItemRuntime(rt){
   for(const [k,v] of Object.entries(slots)){
     const idx=Math.trunc(Number(k));
     if(!Number.isFinite(idx)||idx<=0||idx>=out.itemnum||!v||v.use!==true)continue;
+    const itemId=Number.isFinite(Number(v.itemId))?Math.trunc(Number(v.itemId)):null;
+    const sourceMu=sourceItemTemplateMagicUseMp(itemId);
     out.slots[String(idx)]={
       use:true,
-      itemId:Number.isFinite(Number(v.itemId))?Math.trunc(Number(v.itemId)):null,
-      magicUseMp:v.magicUseMp==null?null:(Number.isFinite(Number(v.magicUseMp))?Math.trunc(Number(v.magicUseMp)):null),
+      itemId,
+      // V0.70：V0.69 已存在的 null slot 可由原 itemset6 第 58 欄安全回填；來源不存在才保留 unknown。
+      magicUseMp:v.magicUseMp==null?sourceMu:(Number.isFinite(Number(v.magicUseMp))?Math.trunc(Number(v.magicUseMp)):sourceMu),
       owner:typeof v.owner==='string'?v.owner:null,
       source:typeof v.source==='string'?v.source:null,
       enemySlot:Number.isFinite(Number(v.enemySlot))?Math.trunc(Number(v.enemySlot)):null
@@ -98,6 +109,11 @@ function sourceItemRuntimeSetOwner(index,owner,source=null){
 }
 function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
   if(!state)return -1;
+  const normalizedItemId=Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null;
+  const sourceMu=sourceItemTemplateMagicUseMp(normalizedItemId);
+  // 原 ITEM_makeItem() 對不存在 ITEM_tbl 的 itemId 直接失敗；runtime 已載入時也維持這個邊界。
+  if(normalizedItemId!=null&&itemMagicDb?.byItemId&&!Object.prototype.hasOwnProperty.call(itemMagicDb.byItemId,String(normalizedItemId)))return -1;
+  const resolvedMu=magicUseMp==null?sourceMu:(Number.isFinite(Number(magicUseMp))?Math.trunc(Number(magicUseMp)):sourceMu);
   state.itemRuntime=normalizeItemRuntime(state.itemRuntime);
   const rt=state.itemRuntime;
   for(let guard=0;guard<rt.itemnum;guard++){
@@ -107,8 +123,8 @@ function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
     if(rt.slots[key]?.use===true)continue;
     rt.slots[key]={
       use:true,
-      itemId:Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null,
-      magicUseMp:magicUseMp==null?null:(Number.isFinite(Number(magicUseMp))?Math.trunc(Number(magicUseMp)):null),
+      itemId:normalizedItemId,
+      magicUseMp:resolvedMu,
       owner:typeof meta?.owner==='string'?meta.owner:null,
       source:typeof meta?.source==='string'?meta.source:null,
       enemySlot:Number.isFinite(Number(meta?.enemySlot))?Math.trunc(Number(meta.enemySlot)):null
@@ -170,7 +186,7 @@ function clearEnemyBattleNoReward(){
 }
 function freshState(){
   return {
-    schemaVersion:20,
+    schemaVersion:21,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -308,7 +324,8 @@ function normalizeState(raw){
   if(n(raw?.schemaVersion)<19)s.itemRuntime=freshItemRuntime();
   else s.itemRuntime=normalizeItemRuntime(s.itemRuntime);
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
-  s.schemaVersion=20;
+  // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
+  s.schemaVersion=21;
   delete s.pets;
   return s;
 }
@@ -5649,7 +5666,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -5657,7 +5674,8 @@ async function boot(){
       fetch(ENEMY_AI_URL,{cache:'no-store'}),
       fetch(PETSKILL_RUNTIME_URL,{cache:'no-store'}),
       fetch(PET_MODAI_URL,{cache:'no-store'}),
-      fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'})
+      fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'}),
+      fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
@@ -5667,12 +5685,14 @@ async function boot(){
     if(!petSkillR.ok)throw new Error('PetSkill runtime HTTP '+petSkillR.status);
     if(!modAiR.ok)throw new Error('Pet MODAI runtime HTTP '+modAiR.status);
     if(!attackMagicR.ok)throw new Error('AttackMagic runtime HTTP '+attackMagicR.status);
+    if(!itemMagicR.ok)throw new Error('Item MAGICUSEMP runtime HTTP '+itemMagicR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
     enemyAiDb=await aiR.json();
     petSkillDb=await petSkillR.json();
     petModAiDb=await modAiR.json();
     attackMagicDb=await attackMagicR.json();
+    itemMagicDb=await itemMagicR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -5684,7 +5704,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.69 載入完成：ITEM existing-index runtime 接上 Enemy 10 格攜帶物與 STYLE 武器的建立／getitem 轉移／消耗／逃跑／捕獲／戰敗釋放生命週期；未知 itemset6 mu 不猜 MP cost。','good');
+    addLog('V0.70 載入完成：原 itemset6.txt 10,737 筆 ITEM_MAGICUSEMP 已接入 existing-item 建立流程；Enemy carried loot／STYLE 與 V0.69 舊 null slot 會依真實 Item ID 帶入 MP cost。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
