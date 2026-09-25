@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.73</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.74</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.73：</b>
-      武器命中細節續接原 C：BATTLE_DuckCheck 內 BOW +20 被原碼重複執行兩次，故弓攻擊實際讓守方回避額外 +40（再套 75% 上限）；四種投射武器亦依 BATTLE_GuardianCheck 禁止忠犬／Guardian 代擋。
+      <b>V0.74：</b>
+      原 EntrySort → ComboCheck → BATTLE_Combo 合擊生命週期已接入：Enemy 起始 20%、Player/Pet 50%，僅排序後相鄰、同側、同目標、可行動的普通攻擊者可成組；四種投射武器全部排除，合擊本身跳過 DuckCheck、Guardian 與一般 Counter loop。
     </article>
   </main>
 
