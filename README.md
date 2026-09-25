@@ -9624,3 +9624,129 @@ V0.99 因此：
 - V0.97 LoyaltyCheck strict thresholds 保留
 - V0.96 combo follower lifecycle 保留
 - save schema：21
+
+
+## V1.00 low-loyalty Pet RANDOMACT Guardian 20 core
+
+V1.00 接回可捕獲寵低忠誠 RANDOMACT 的 skill 20「忠犬」核心。
+
+固定來源：
+
+- `gmsv/data/petskill.txt`：skill 20 `忠犬`，option `攻%-20 COM:攻击`
+- `gmsv/src/battle/pet_skill.c`：`PETSKILL_Guardian()`
+- `gmsv/src/battle/battle_event.c`：`BATTLE_GuardianCheck()` / `BATTLE_AttackSeq()` / `BATTLE_Attack()`
+- `gmsv/src/battle/battle.c`：`BATTLE_PreCommandSeq()`
+- fixed source commit：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+### 忠犬只保護「本輪後半段」
+
+每輪 `BATTLE_PreCommandSeq()` 都先：
+
+```c
+Entry[i].guardian = -1;
+flg &= ~CHAR_BATTLEFLG_GUARDIAN;
+```
+
+skill 20 真正被 `PETSKILL_Use()` 選中後才：
+
+- Pet 設 `CHAR_BATTLEFLG_GUARDIAN`
+- 主人 Entry.guardian 指向 Pet slot
+- Pet 自己以 `FIXSTR + trunc(FIXSTR * -20 / 100)` 攻擊
+
+因此：
+
+- 若 Enemy 比 Pet 快、先打主人：本輪忠犬尚未啟動，不能代擋。
+- Pet 用完忠犬後，才保護同輪後續攻擊。
+- 下一輪 PreCommandSeq 一開始自動清掉，必須再次使用才會再保護。
+
+V1.00 用 battle-only `battlePlayerGuardianPetId` 對齊，不寫入 save。
+
+### 代擋順序不是「直接把目標換寵物」
+
+fixed `BATTLE_AttackSeq()`：
+
+1. 原目標（主人）先做 `BATTLE_DuckCheck()`。
+2. 主人成功閃避：直接 DODGE，忠犬不出場。
+3. 主人沒閃掉：才 `BATTLE_GuardianCheck()`。
+4. 代擋成功後，defindex 換成 Pet。
+5. Critical、DamageCalc、GuardAdjust、屬性等全部以 Pet 自身能力結算。
+6. 不再讓 Pet 做第二次 dodge。
+
+V1.00 新增 `sourceInitialDodgeOnly()` + `resolveEnemyDirectAttackToPlayer()`，照相同順序執行。
+
+### 忠犬成立條件
+
+fixed `BATTLE_GuardianCheck()` 會拒絕：
+
+- Guardian 已死亡。
+- Guardian flag 不存在。
+- sleep / confusion / paralysis / stone / barrier / dizzy 等無法守人的狀態。
+- Guardian 就是攻擊者。
+- 攻擊者使用投擲／遠距武器：
+  - BOW
+  - BOOMERANG
+  - BREAKTHROW
+  - BOUNDTHROW
+
+玩家側目前 Guardian 與 Enemy 不可能是同一 actor；其餘已由現有 battle status / weaponType runtime 對應。
+
+### 0 傷害的來源怪規則
+
+`BATTLE_AttackSeq()`：
+
+```c
+if (*pDamage == 0) {
+    iRet = BATTLE_RET_MISS;
+    if (GuardianIndex != -1) {
+        iRet = BATTLE_RET_NORMAL;
+        *pDamage = 1;
+    }
+}
+```
+
+也就是忠犬一旦成功代擋，若計算傷害掉到 0，原 C 反而強制成 1 點 NORMAL。
+
+V1.00 保留，不改成 MISS。
+
+### Guardian 成功時不進普通 Counter chain
+
+`BATTLE_Attack()` 在 Guardian 成功時最後固定：
+
+```c
+iRet = FALSE;
+flg |= BCF_GUARDIAN;
+```
+
+外層普通 Counter loop 依 `ContFlg` 決定是否繼續，因此成功代擋不會再讓主人／忠犬接普通反擊。
+
+Web 既有 `resolvePlayerEnemyCounterChain()` 已對 `primaryResult.guardian` 直接 return。
+
+### V1.00 範圍邊界
+
+這版先完成 **skill 20 本身 + 一般近戰 BATTLE_Attack 對主人** 的完整 Guardian substitution。
+
+本輪另外確認固定原 C 有一個特殊舊 bug：
+
+- `BATTLE_S_AttackDamage()` 也會呼叫 `BATTLE_AttackSeq()`，所以會用 Guardian 的防禦算 damage。
+- 但它沒有像 `BATTLE_Attack()` 一樣把 caller 的 defindex 更新成 Guardian。
+- 因此某些特殊 PetSkill 可能出現「用忠犬能力算傷害，血卻扣原目標」的怪行為。
+
+V1.00 不把這兩條路徑錯誤合併；特殊 `BATTLE_S_AttackDamage` Guardian bug 留待下一版逐類對齊。
+
+### V1.00 regression
+
+- `game.js` JavaScript syntax：PASS
+- skill 20 RANDOMACT dispatcher 已接
+- Guardian attack = FIX attack + trunc(FIX attack * -20 / 100)
+- 每輪 PreCommandSeq 等價清 Guardian mapping
+- 主人 dodge 在 GuardianCheck 前
+- Guardian 不做第二次 dodge
+- Guardian damage/critical 用 Pet view
+- 主人 GUARD 不會套到代擋 Pet
+- BOW / BOOMERANG / BREAKTHROW / BOUNDTHROW 不可代擋
+- Guardian damage 0 強制 1
+- Guardian 成功不進普通 Counter
+- V0.99 Charge 30 保留
+- V0.98 StatusChange 60 / 100 保留
+- V0.97 LoyaltyCheck core 保留
+- save schema：21
