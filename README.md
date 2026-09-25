@@ -7275,3 +7275,181 @@ V0.79 回歸確認這條仍保留。
 - V0.73～V0.78 回歸標記保留
 - save schema：仍為 **21**
 
+
+
+## V0.80 FIXSTR consumers / roundFix snapshot
+
+V0.80 把一批「原 C 明確讀 `CHAR_WORKFIXSTR`」的可達技能，從永久 base attack 改回每輪 PreCommand 已完成 compliance 後的 FIX snapshot。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+
+### roundFix snapshot
+
+V0.78 已在 `enemyPrepareRoundAction()` 算出：
+
+- `sourceFixAttack`
+- `sourceFixDefense`
+- `sourceFixQuick`
+
+V0.80 將它們明確保存為：
+
+- `roundFixAttack`
+- `roundFixDefense`
+- `roundFixQuick`
+
+之後只要原 C 寫的是 `CHAR_WORKFIXSTR / FIXTOUGH / FIXDEX`，web 就可以直接讀同一輪 `roundFix*`，不再把永久 `unit.attack / defense / quick` 冒充 FIX。
+
+EARTHROUND0 因 V0.79 會跳過 PreCommand，因此隱身者也會自然保留上一輪的 roundFix snapshot。
+
+### Gyrate / 回旋攻擊
+
+原 `PETSKILL_Gyrate()` 在 AI 階段就解析：
+
+`攻%`
+
+並以：
+
+`FIXSTR + trunc(FIXSTR * pct / 100)`
+
+直接寫本輪 `WORKATTACKPOWER`。
+
+正權重：
+
+- 619 回旋攻擊：`攻%-50` — 1 個 Enemy
+- 653 T回旋攻擊：`攻%+20` — 5 個 Enemy
+
+V0.80 現在在 `enemyPrepareRoundAction()` 先以當輪 `sourceFixAttack` 完成這個覆寫；`performEnemyGyrate()` 只讀已完成的 `roundAttack`。
+
+因此若同輪已有 WEAKEN 或其他 compliance FIX 修正，Gyrate 不會再錯誤回到永久 base attack。
+
+### Retrace / 追跡攻擊
+
+資料：
+
+- 713 追跡攻擊
+- option：`攻%+100`
+- 4 個 Enemy 正權重使用
+
+但 fixed `PETSKILL_Retrace()` 裡解析 `攻%` 的整段程式被：
+
+```c
+/*
+ ...
+*/
+```
+
+完整註解掉。
+
+所以首擊**不吃 option 的 +100%**。
+
+battle.c 只有在首擊被 DODGE 後：
+
+- `RAND(1,100) < 80`，實際成功值 1～79
+- 成功才硬寫：
+
+```c
+WORKATTACKPOWER =
+    FIXSTR + FIXSTR * 0.2;
+```
+
+再做第二擊。
+
+V0.80 保留：
+
+- 首擊：正常當輪 WORK attack，不套 +100%
+- 追擊：當輪 `roundFixAttack +20%`
+- Counter loop：仍依原碼使用第一擊的回傳狀態
+
+### DamageToHp 503～505
+
+正權重：
+
+- 503 嗜血技：23 個 Enemy
+- 504 嗜血技2：8 個 Enemy
+- 505 嗜血技3：24 個 Enemy
+
+原 parser：
+
+```c
+def = (atoi(buf1) / 100);
+strdef = FIXSTR - (int)(FIXSTR * def);
+```
+
+因為 `atoi(buf1)` 與 `100` 都是 int：
+
+- 30 / 100 = 0
+- 20 / 100 = 0
+- 10 / 100 = 0
+
+所以資料描述中的攻擊下降實際不生效。
+
+但原結果仍是：
+
+`WORKATTACKPOWER = 當輪 FIXSTR`
+
+而不是永久 base STR。
+
+V0.80 因此：
+
+- 保留 C integer-division bug
+- reduction 仍為 0
+- 但基底改成 `roundFixAttack`
+
+這樣 WEAKEN 等 PreCommand FIX 修正不會被 handler 意外洗掉。
+
+### DamageToHp2 / 浴血狂襲
+
+659 T浴血狂襲有正權重 Enemy 使用。
+
+原 `BATTLE_AttackSeq(..., BATTLE_COM_S_DAMAGETOHP2)`：
+
+1. 先完成正常 CriticalCheck
+2. perCri ×1.3
+3. 再硬寫：
+   `WORKATTACKPOWER = FIXSTR + FIXSTR * 0.2`
+4. QUICK +20% 只屬 `BATTLE_DexCalc` 排序，不改 CriticalCheck 所使用的 FIXDEX
+
+V0.80 現在 DamageToHp2 的傷害攻擊力改為：
+
+`roundFixAttack +20%`
+
+不再用永久 `unit.attack +20%`。
+
+### Charge 也改用明確 roundFix
+
+V0.79 已確認 `BATTLE_Charge()` 釋放時讀的是釋放回合：
+
+`CHAR_WORKFIXSTR`
+
+V0.80 因此再把 release 基底由泛用 `roundAttack` 改成明確：
+
+`roundFixAttack`
+
+避免未來其他 WORKATTACKPOWER 型技能修正混入 Charge 的 FIXSTR 基底。
+
+### V0.80 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- 正權重 Skill ID：158
+- 已執行 handler：134
+- 原資料缺失：22
+- 原 build 未註冊：2
+- dispatcher gap：0
+- `roundFixAttack / Defense / Quick` 每輪建立
+- Gyrate：Prep 階段以 FIXSTR 套 option
+- Retrace：首擊不套 +100%；追擊 FIXSTR +20%
+- DamageToHp2：FIXSTR +20%
+- DamageToHp 503～505：保留 int division 0，但基底為 FIXSTR
+- Charge：release 使用 roundFixAttack
+- EarthRound：V0.79 hidden snapshot 行為保留
+- 永久 `unit.attack` 的直接整數讀取，只剩 PreCommand 建立 sourceFixAttack 的合法入口
+- V0.73～V0.79 回歸標記保留
+- save schema：仍為 **21**
+
