@@ -11006,3 +11006,46 @@ Regression：
 - LostEscape after earlier kill => alive Pet may still receive accumulated EXP
 - source-resolved drop pool only contains player-side credited Enemy
 - fallback quest EXP remains explicit fallback, no invented per-unit values
+
+
+## V1.20 source-timed getitem[3] carried-loot pool
+
+固定來源：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+V1.19 已把 Enemy reward ownership 改回死亡當下的 pBidList。V1.20 繼續把 BATTLE_AddExpItem 中 carried item 的 getitem 時序接回來。
+
+Enemy ENEMY_ITEM1..10 / ITEMPROB1..10 是否生成 existing item，仍在 Enemy 建立時決定；V1.20 不改這個既有來源規則。
+
+真正 Enemy 死亡且 proflg==1、玩家側 pBidList 有效時，原碼對每一個 Enemy carried item 依序：
+
+1. CHAR_setItemIndex(enemy,item,-1)
+2. k = RAND(0, allnum-1)
+3. 嘗試放入 pEntryPlayer[k]->getitem[0..2] 第一個空格
+4. 若 3 格已滿：
+   - RAND(0,1) 為真：RAND(0,2) 選一格替換，舊 item existing index 釋放
+   - 否則：新 item existing index 直接釋放
+
+本專案是單玩家模型；玩家與自己的 Pet 在原 pEntryPlayer 對映都回到同一個玩家 Entry，所以實際只有一個 3 格池。但 k = RAND(0,allnum-1) 仍會消耗原始 RNG：
+- 普通 player / Pet kill：allnum=1，仍會呼叫一次 RAND(0,0)
+- Player + Pet Combo kill：allnum=2，會呼叫 RAND(0,1)，即使最後仍落到同一玩家池
+
+V1.20 新增 battleGetItemPool，並在 sourceMarkEnemyDeathCredit 內、Pet win AI 之前立即執行 sourceQueueEnemyCarriedLoot。這保持原 BATTLE_AddExpItem 的 statement order：getitem -> EXP/kill count -> Pet AI。
+
+勝利結算時 rollVerifiedDrops 不再重新跑 carried-item reservoir RNG，只取 sourceTakeBattleGetItemPool 中已經決定留下的最多 3 件 existing item，再轉成 player ownership。
+
+敗北／捕獲／逃離／無獎勵清場等沒有把 getitem 移入玩家背包的情況，resetBattleStatuses 會以 sourceDiscardBattleGetItemPool 釋放暫存 existing item，對應 BATTLE_DeleteItem。
+
+原 BATTLE_GetExpGold 也確認：只有 CHAR_ISDIE==FALSE 的玩家才會把 pEntryChara->getitem 移進正式背包；玩家死亡時不領取，稍後 DeleteItem 清掉。因此 Web 戰敗不保留先前暫存 getitem 是來源一致行為。
+
+手工 questDrop / conditionItems 的非 server carried-loot fallback 仍維持既有邏輯；V1.20 只改有 existing-index 證據的 Enemy carried item，不替任務 fallback 猜來源時序。
+
+Regression：
+- source carried loot reservoir RNG happens at enemy death, not win
+- every carried item consumes owner RAND(0, allnum-1), including allnum=1
+- first three items fill getitem[0..2] in order
+- full pool uses RAND(0,1), then optional RAND(0,2) replacement
+- replaced/rejected existing item index is immediately freed
+- win takes pool without rerolling reservoir
+- defeat/no-reward reset frees unclaimed battle-getitem indices
+- player/pet Combo uses allnum=2 RNG while still mapping to one owner pool
+- source getitem handling remains before Pet win AI

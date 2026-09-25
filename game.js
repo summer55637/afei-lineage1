@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -557,7 +557,7 @@ function giveItem(id,count=1){
 function rollVerifiedDrops(defeatedEnemy){
   if(!defeatedEnemy)return [];
   const drops=[];
-  const carriedLoot=resolveEnemyCarriedLoot(defeatedEnemy);
+  const carriedLoot=sourceTakeBattleGetItemPool();
   for(const carried of carriedLoot){
     const itemId=Number(carried.itemId);
     if(!Number.isFinite(itemId))continue;
@@ -1066,33 +1066,62 @@ function rollEnemyDropSlots(raw){
   }
   return {resolved:true,drops};
 }
-function resolveEnemyCarriedLoot(defeatedEnemy){
-  const units=(Array.isArray(defeatedEnemy?.units)&&defeatedEnemy.units.length)
-    ?defeatedEnemy.units
-    :[defeatedEnemy].filter(Boolean);
-  const result=[];
-  for(const unit of units){
-    for(const drop of unit?.enemyDrops||[]){
-      const item={
-        itemId:Math.trunc(n(drop?.itemId)),slot:Math.trunc(n(drop?.slot)),
-        probabilityRaw:Math.trunc(n(drop?.probabilityRaw)),itemIndex:Math.trunc(Number(drop?.itemIndex)),unitId:unit.id
-      };
-      const runtimeSlot=sourceItemRuntimeSlot(item.itemIndex);
-      if(runtimeSlot&&runtimeSlot.owner==='enemy:'+unit.id)sourceItemRuntimeSetOwner(item.itemIndex,'battle-getitem','battle-getitem');
-
-      if(result.length<3){
-        result.push(item);
-      }else if(Math.floor(Math.random()*2)){
-        const replace=Math.floor(Math.random()*3);
-        const old=result[replace];
-        if(Number.isFinite(old?.itemIndex))sourceItemRuntimeFree(old.itemIndex);
-        result[replace]=item;
-      }else if(Number.isFinite(item.itemIndex)){
-        sourceItemRuntimeFree(item.itemIndex);
-      }
-    }
+function sourceDiscardBattleGetItemPool(){
+  let freed=0;
+  for(const item of battleGetItemPool||[]){
+    const idx=Math.trunc(Number(item?.itemIndex));
+    if(!Number.isFinite(idx))continue;
+    const slot=sourceItemRuntimeSlot(idx);
+    if(slot&&slot.owner==='battle-getitem'&&sourceItemRuntimeFree(idx))freed++;
   }
-  return result;
+  battleGetItemPool=[];
+  return freed;
+}
+function sourceTakeBattleGetItemPool(){
+  const out=Array.isArray(battleGetItemPool)?battleGetItemPool.slice():[];
+  battleGetItemPool=[];
+  return out;
+}
+function sourceQueueEnemyCarriedLoot(unit,attackListCount=1){
+  if(!unit)return [];
+  const queued=[];
+  const allnum=Math.max(1,Math.trunc(n(attackListCount)||1));
+
+  for(const drop of unit.enemyDrops||[]){
+    const item={
+      itemId:Math.trunc(n(drop?.itemId)),slot:Math.trunc(n(drop?.slot)),
+      probabilityRaw:Math.trunc(n(drop?.probabilityRaw)),
+      itemIndex:Math.trunc(Number(drop?.itemIndex)),unitId:unit.id
+    };
+
+    const runtimeSlot=sourceItemRuntimeSlot(item.itemIndex);
+    if(!runtimeSlot||runtimeSlot.owner!=='enemy:'+unit.id)continue;
+
+    // fixed BATTLE_AddExpItem always consumes RAND(0, allnum-1) to choose pEntryPlayer[k].
+    // This single-player web maps Player and owned Pet back to the same player getitem[3],
+    // but the RAND call itself still belongs to the source RNG sequence.
+    item.sourceOwnerRoll=cRand(0,allnum-1);
+
+    // Equivalent of CHAR_setItemIndex(enemy,item,-1): ownership leaves Enemy immediately.
+    sourceItemRuntimeSetOwner(item.itemIndex,'battle-getitem','battle-getitem');
+
+    if(battleGetItemPool.length<3){
+      battleGetItemPool.push(item);
+      item.sourceGetItemAction='fill';
+    }else if(cRand(0,1)){
+      const replace=cRand(0,2);
+      const old=battleGetItemPool[replace];
+      if(Number.isFinite(Number(old?.itemIndex)))sourceItemRuntimeFree(old.itemIndex);
+      battleGetItemPool[replace]=item;
+      item.sourceGetItemAction='replace';
+      item.sourceReplaceSlot=replace;
+    }else{
+      sourceItemRuntimeFree(item.itemIndex);
+      item.sourceGetItemAction='discard';
+    }
+    queued.push(item);
+  }
+  return queued;
 }
 function enemyServerBaseExp(raw,level){
   if(!raw||raw?.enemyDuelPoint>0||raw?.enemyExpResolvable===false)return null;
@@ -1152,6 +1181,11 @@ function sourceMarkEnemyDeathCredit(unit,actors=[]){
   }
   unit.sourceRewardCredits=credits;
   unit.sourceRewardPlayerSide=credits.length>0;
+
+  // fixed BATTLE_AddExpItem handles Enemy carried item getitem[] before EXP / Pet AI.
+  unit.sourceRewardCarriedLoot=credits.length
+    ?sourceQueueEnemyCarriedLoot(unit,credits.length)
+    :[];
 
   // AI_FIX_PETWIN / PETGOLDWIN happens here in BATTLE_AddExpItem, not at battle finish.
   const aiChanges=[];
@@ -1847,7 +1881,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -8365,7 +8399,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.19 載入完成：BATTLE_AddExpItem 改依死亡當下 pBidList 做 kill-credit；來源 EXP、掉落與 Pet 勝利忠誠不再全隊共享。','good');
+    addLog('V1.20 載入完成：原 BATTLE_AddExpItem 的 getitem[3] carried-loot 池改在 Enemy 死亡當下處理，含 attack-list RAND 與滿格 50% 替換。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
