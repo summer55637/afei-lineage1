@@ -3685,18 +3685,23 @@ function performEnemyModifyAttack(actor,unit,options,meta){
   const r=enemySkillTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
-  let attr=0,bonusRoll=0,bonus=0;
+  let attr=0,bonusRoll=0,bonusStep=0,bonus=0;
   if(r.damage>0&&spec.key){
-    const targetElements=normalizedElements(battleElementsForDesc(
-      chosen.kind==='pet'?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}:{kind:'player'}
-    ));
+    const targetDesc=chosen.kind==='pet'
+      ?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}
+      :{kind:'player'};
+    // fixed BATTLE_S_Modifyattack reads CHAR_EARTHAT/WATERAT/FIREAT/WINDAT,
+    // not WORKFIX*; attribute reversal only changes the battle FIX snapshot and must not alter ModNum.
+    const targetElements=battleBaseElements(targetDesc);
     attr=Math.max(0,Math.trunc(n(targetElements?.[spec.key])));
     if(attr>0){
-      // 原 BATTLE_S_Modifyattack：
-      // def = option/100 + (rand()%(targetAttr+5))/100;
-      // damage += damage*def；damage 是 int，最後以 C 整數規則截斷。
+      // Source bug must be preserved exactly:
+      //   (float)((rand() % (ModNum+5)) / 100)
+      // The division happens as C integer division before the float cast.
+      // For ModNum <= 95 this random term is always 0; at very high attributes it jumps by whole 1.0 steps.
       bonusRoll=cRand(0,attr+4);
-      const factor=n(spec.amount)/100+bonusRoll/100;
+      bonusStep=Math.trunc(bonusRoll/100);
+      const factor=n(spec.amount)/100+bonusStep;
       const before=Math.trunc(n(r.damage));
       r.damage=Math.trunc(before+before*factor);
       bonus=r.damage-before;
@@ -3704,7 +3709,7 @@ function performEnemyModifyAttack(actor,unit,options,meta){
   }
 
   enemyApplySkillHit(unit,chosen,r,meta?.n||'屬性強化攻擊');
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec,targetAttr:attr,bonusRoll,bonus};
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec,targetAttr:attr,bonusRoll,bonusStep,bonus};
 }
 function performEnemyMdfyAttack(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);

@@ -8042,3 +8042,136 @@ V0.84 改為：
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+
+
+## V0.85 Modifyattack integer-division / base-attribute semantics
+
+V0.85 校正正權重 `PETSKILL_Modifyattack`（544～546）的兩個 fixed C 細節。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `BATTLE_S_Modifyattack()`
+
+### random attribute term 先做 C int division
+
+來源：
+
+```c
+def = ((float)(atoi(buf2))/100);
+
+if((ModNum = CHAR_getInt(defindex, KModKind[i].Kind)) > 0){
+    def += (float)((rand()%(ModNum+5))/100);
+    *damage += *damage * def;
+}
+```
+
+關鍵是：
+
+```c
+(rand() % (ModNum+5)) / 100
+```
+
+左右兩邊都是 `int`，所以 **先做整數除法**，結果才 cast 成 float。
+
+V0.84 以前 web 誤寫成：
+
+```js
+bonusRoll / 100
+```
+
+造成每個 roll 都可產生 0.01、0.02、0.03... 的連續倍率。
+
+V0.85 改成：
+
+```js
+bonusStep = Math.trunc(bonusRoll / 100)
+factor = optionPercent / 100 + bonusStep
+```
+
+因此：
+
+- target attribute 1～95：`rand()%(ModNum+5)` 最大不超過 99，random term 永遠為 0。
+- target attribute 96～100：只有 modulo 結果實際到 100 以上時，random term 才會跳成 1。
+- 不再產生來源不存在的 0.01～0.99 平滑加成。
+
+例如 Skill 544 `EA|20`、目標地屬性 50：
+
+```text
+fixed C:
+rand()%55 = 0..54
+0..54 / 100 (int) = 0
+factor = 0.20
+
+舊 web:
+factor = 0.20 .. 0.74
+
+V0.85:
+factor = 0.20
+```
+
+### ModNum 讀 base CHAR attribute，不讀戰鬥 FIX attribute
+
+同一函式使用：
+
+```c
+CHAR_getInt(defindex, CHAR_EARTHAT)
+CHAR_getInt(defindex, CHAR_WATERAT)
+CHAR_getInt(defindex, CHAR_FIREAT)
+CHAR_getInt(defindex, CHAR_WINDAT)
+```
+
+它沒有讀：
+
+```text
+CHAR_WORKFIXEARTHAT
+CHAR_WORKFIXWATERAT
+CHAR_WORKFIXFIREAT
+CHAR_WORKFIXWINDAT
+```
+
+這和前面的普通物理 `BATTLE_AttrAdjust()` 不同；普通物理本體會透過 `BATTLE_GetAttr()` 使用 WORKFIX 屬性。
+
+因此 Attribute Reverse 的正確結果是：
+
+1. 本次普通物理傷害：使用反轉後的 battle FIX 屬性。
+2. `Modifyattack` 額外段的 `ModNum`：仍使用未反轉的 base CHAR 屬性。
+
+V0.84 以前 web 的額外段使用 `battleElementsForDesc()`，會把反轉後 FIX 屬性錯當成 `ModNum`。
+
+V0.85 改為額外段明確讀 `battleBaseElements()`。
+
+### fixed data 可達性
+
+目前正權重 Enemy AI：
+
+- Skill 544「地屬性強化攻擊」`EA|20`：Enemy 2238，weight 3
+- Skill 545「水屬性強化攻擊」`WA|20`：Enemy 2237，weight 3
+- Skill 546「火屬性強化攻擊」`FI|20`：Enemy 2236，weight 3
+
+三條都是真正可達的 battle path。
+
+### V0.85 regression
+
+已確認：
+
+- `game.js` JavaScript syntax：PASS
+- Modifyattack random term 使用 `Math.trunc(bonusRoll/100)`
+- 不再使用 `bonusRoll/100` 當連續小數倍率
+- Modifyattack `ModNum` 使用 `battleBaseElements()`
+- 普通物理 `battleAttrDamage()` 仍使用 battle FIX / reverse 後屬性
+- Skill 544 / 545 / 546 正權重可達
+- V0.84 STONE / REGRET DamageCalc ordering 保留
+- V0.83 physical attribute integer pipeline 保留
+- V0.82 FIXDEX integer combat math 保留
+- V0.81 FIXDEX / WORKQUICK separation 保留
+- V0.77 WEAKEN / BARRIER lifecycle 保留
+- V0.76 DRUNK lifecycle bug 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
