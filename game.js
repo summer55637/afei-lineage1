@@ -46,7 +46,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map();
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -54,9 +54,52 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8));
 
+function freshItemRuntime(){return {itemnum:25000,sindex:1,slots:{}}}
+function normalizeItemRuntime(rt){
+  const out=freshItemRuntime();
+  if(!rt||typeof rt!=='object')return out;
+  out.itemnum=25000;
+  out.sindex=clamp(Math.trunc(n(rt.sindex)||1),1,out.itemnum-1);
+  const slots=rt.slots&&typeof rt.slots==='object'?rt.slots:{};
+  for(const [k,v] of Object.entries(slots)){
+    const idx=Math.trunc(Number(k));
+    if(!Number.isFinite(idx)||idx<=0||idx>=out.itemnum||!v||v.use!==true)continue;
+    out.slots[String(idx)]={use:true,itemId:Number.isFinite(Number(v.itemId))?Math.trunc(Number(v.itemId)):null,magicUseMp:Math.trunc(n(v.magicUseMp))};
+  }
+  return out;
+}
+function sourceItemRuntimeMagicUseMp(index){
+  const rt=state?.itemRuntime;
+  const idx=Math.trunc(Number(index));
+  if(!rt||!Number.isFinite(idx)||idx<0||idx>=25000)return -1;
+  const slot=rt.slots?.[String(idx)];
+  return slot?.use===true?Math.trunc(n(slot.magicUseMp)):-1;
+}
+function sourceItemRuntimeAlloc(itemId=null,magicUseMp=0){
+  if(!state)return -1;
+  state.itemRuntime=normalizeItemRuntime(state.itemRuntime);
+  const rt=state.itemRuntime;
+  for(let guard=0;guard<rt.itemnum;guard++){
+    rt.sindex++;
+    if(rt.sindex>=rt.itemnum)rt.sindex=1;
+    const key=String(rt.sindex);
+    if(rt.slots[key]?.use===true)continue;
+    rt.slots[key]={use:true,itemId:Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null,magicUseMp:Math.trunc(n(magicUseMp))};
+    return rt.sindex;
+  }
+  return -1;
+}
+function sourceItemRuntimeFree(index){
+  const idx=Math.trunc(Number(index));
+  if(!state?.itemRuntime||!Number.isFinite(idx))return false;
+  const key=String(idx);
+  if(state.itemRuntime.slots?.[key]?.use!==true)return false;
+  delete state.itemRuntime.slots[key];
+  return true;
+}
 function freshState(){
   return {
-    schemaVersion:18,
+    schemaVersion:19,
     level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -65,6 +108,7 @@ function freshState(){
     gold:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     inventory:{},
+    itemRuntime:freshItemRuntime(),
     quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
@@ -188,7 +232,11 @@ function normalizeState(raw){
     p.magicResist=normMagic4(p.magicResist);
     p.magicResistExp=normMagic4(p.magicResistExp);
   }
-  s.schemaVersion=18;
+  // V0.68 前的 web 並不存在原 ITEM_item[] existing pool，因此舊存檔不能虛構歷史 allocation；
+  // migration 從 source server 啟動後的空 pool 狀態開始，之後才依原 Sindex allocator 持續記錄。
+  if(n(raw?.schemaVersion)<19)s.itemRuntime=freshItemRuntime();
+  else s.itemRuntime=normalizeItemRuntime(s.itemRuntime);
+  s.schemaVersion=19;
   delete s.pets;
   return s;
 }
@@ -1117,6 +1165,31 @@ function normalizedElements(elements){
   const none=Math.max(0,100-earth-water-fire-wind);
   return {earth,water,fire,wind,none};
 }
+function battleFieldPower(elements){
+  const e=normalizedElements(elements)||{earth:0,water:0,fire:0,wind:0,none:100};
+  const attr=String(battleFieldState?.attr||'none');
+  if(attr==='none'||!Object.prototype.hasOwnProperty.call(e,attr))return .5;
+  // 原 BATTLE_FieldAttAdjust：0.5 + pAt * att_pow * .01 * .01 * .5。
+  return .5+n(e[attr])*n(battleFieldState?.power)*.00005;
+}
+function battleFieldRatio(attackerElements,defenderElements){
+  const at=battleFieldPower(attackerElements),df=battleFieldPower(defenderElements);
+  return df===0?1:at/df;
+}
+function battleSetField(attr,power,turns){
+  battleFieldState={attr:String(attr||'none'),power:Math.trunc(n(power)),turns:Math.max(0,Math.trunc(n(turns)))};
+  return Object.assign({},battleFieldState);
+}
+function battleFieldTick(){
+  if(!battleFieldState||battleFieldState.attr==='none')return battleFieldState;
+  battleFieldState.turns=Math.max(0,Math.trunc(n(battleFieldState.turns))-1);
+  if(battleFieldState.turns<=0){
+    const old=battleFieldState.attr;
+    battleFieldState={attr:'none',power:0,turns:0};
+    addLog('戰場'+({earth:'地',water:'水',fire:'火',wind:'風'}[old]||old)+'屬性效果結束，回復無屬性。');
+  }
+  return battleFieldState;
+}
 function battleAttrMultiplier(attacker,defender){
   const a=normalizedElements(attacker?.elements),d=normalizedElements(defender?.elements);
   if(!a||!d)return 1;
@@ -1126,7 +1199,8 @@ function battleAttrMultiplier(attacker,defender){
   const earth=a.earth*(d.none*up+d.fire*same+d.water*up+d.earth*same+d.wind*down);
   const wind=a.wind*(d.none*up+d.fire*down+d.water*same+d.earth*up+d.wind*same);
   const none=a.none*(d.none*same+d.fire*down+d.water*down+d.earth*down+d.wind*down);
-  return (fire+water+earth+wind+none)/10000;
+  const base=(fire+water+earth+wind+none)/10000;
+  return base*battleFieldRatio(a,d);
 }
 const MAGIC_ATTR_KEYS=Object.freeze(['earth','water','fire','wind']);
 const MAGIC_CHAR_TABLE=Object.freeze([
@@ -1205,12 +1279,16 @@ function enemyMagicAttrDamage(unit,targetDesc,magic,aPower){
   const def=normalizedElements(targetView?.elements||{})||{earth:0,water:0,fire:0,wind:0,none:100};
   const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
   const scaled=Math.trunc(n(magic.magicLv))*10;
-  const attack={earth:0,water:0,fire:0,wind:0,none:Math.trunc(n(source.none)*n(aPower))};
+  const magicVector={earth:0,water:0,fire:0,wind:0,none:Math.trunc(n(source.none))};
   const sourceAttr=Math.trunc(n(source[magic.attr]));
-  attack[magic.attr]=Math.trunc((scaled+scaled*Math.trunc(sourceAttr/50))*n(aPower));
-  // BattleArray.field_att starts NONE. The current web has no field-attribute changer yet,
-  // so BATTLE_FieldAttAdjust returns .5 for both sides and the ratio is exactly 1.
-  return {damage:magicAttrCalcRaw(attack,def),attrIndex,attackVector:attack,defVector:def};
+  magicVector[magic.attr]=scaled+scaled*Math.trunc(sourceAttr/50);
+  // 原 _FIX_MAGICDAMAGE：FieldAttAdjust 在乘 damage 前先看 MagicLv 牽引後的四屬向量。
+  const fieldRatio=battleFieldRatio(magicVector,def);
+  const attack={earth:0,water:0,fire:0,wind:0,none:Math.trunc(n(magicVector.none)*n(aPower))};
+  attack[magic.attr]=Math.trunc(n(magicVector[magic.attr])*n(aPower));
+  const baseDamage=magicAttrCalcRaw(attack,def);
+  const damage=Math.trunc(baseDamage*fieldRatio);
+  return {damage,attrIndex,attackVector:attack,magicVector,defVector:def,fieldRatio,fieldState:Object.assign({},battleFieldState)};
 }
 function magicDescForSlot(slot){
   if(slot===0&&state.hp>0)return {kind:'player'};
@@ -1306,7 +1384,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map()}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleFieldState={attr:'none',power:0,turns:0}}
 function battleStatusKey(desc){
   if(!desc)return null;
   if(desc.kind==='player')return 'player';
@@ -1800,7 +1878,7 @@ const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
 // V0.66：這些 PetSkill 在來源中不是 missing / unregistered；PETSKILL_Use 本身會成功，
 // 但實際 battle effect 依賴本前端沒有的原 server 全域 runtime 狀態，不能靜態決定。
 // 必須保留 AI 權重與正常 StatusSeq，但不可猜效果、也不可改成普通攻擊。
-const ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS=new Set([676,688]);
+const ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS=new Set([]);
 
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -3382,11 +3460,10 @@ function performEnemyCombined(actor,unit,options,meta){
   }
 
   if(magicId===230){
-    // 調和的精靈 option「无」：BATTLE_FieldAttChange 設 field_att=NONE、att_pow=30、att_count=3。
-    // 目前尚沒有可成功建立非 NONE 戰場屬性的已接技能（676 仍受 dynamic item index MP cost 限制），
-    // 因此現有可達狀態下它是來源等價的 NONE→NONE；仍記錄原 power/turn，不虛構其他效果。
-    addLog(unit.name+' 使用調和的精靈：戰場維持無屬性（Power 30，turn 3）。');
-    return Object.assign(base,{effect:'fieldAttChange',fieldAttr:'none',power:30,turns:3});
+    // 調和的精靈會立刻把現有 BattleArray.field_att 清為 NONE；因 NONE 不進 battle.c 的 att_count-- 分支。
+    const field=battleSetField('none',30,3);
+    addLog(unit.name+' 使用調和的精靈：戰場回復無屬性（原 att_pow 30／att_count 3；NONE 狀態不遞減）。');
+    return Object.assign(base,{effect:'fieldAttChange',fieldAttr:'none',power:30,turns:3,field});
   }
 
   addLog(unit.name+' 的 Combined 抽到 magic '+magicId+'，目前沒有對應的原碼 handler；本回合不猜效果。');
@@ -3772,6 +3849,35 @@ function performEnemyAttackMagic(actor,unit,options,meta){
 
   const match=String(meta?.o||'').match(/magic\s+(\d+)/i);
   const magicId=match?Number(match[1]):313;
+  const itemMatch=String(meta?.o||'').match(/item\s+(\d+)/i);
+  const itemIndex=itemMatch?Number(itemMatch[1]):-1;
+
+  // Enemy 的 MAGIC_DirectUse 直接把 option itemnum 當 global ITEM_item[] existing index。
+  // V0.68 minimal runtime 對 ITEM_CHECKINDEX 同時檢查範圍與 use；未配置 slot 回 -1。
+  if(magicId===204||magicId===435){
+    const mp=sourceItemRuntimeMagicUseMp(itemIndex);
+    const mpBefore=Math.trunc(n(unit.mp));
+    if(mpBefore<mp){
+      addLog(unit.name+' 的 '+(meta?.n||('magic '+magicId))+' 因 MP 不足失敗（需要 '+mp+'，目前 '+mpBefore+'）。');
+      return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:mpBefore,mpFailed:true};
+    }
+    unit.mp=mpBefore-mp;
+
+    if(magicId===204){
+      const field=battleSetField('water',100,5);
+      addLog(unit.name+' 使用水的精靈 Lv5：戰場變為水屬性 Power 100／5 回合；ITEM_item['+itemIndex+'] '+(mp<0?'未配置，原 ITEM_getInt 回 -1，因此 Enemy MP +1。':'MP cost '+mp+'。'),'bad');
+      return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'fieldAttChange',field};
+    }
+
+    const target=chosen.kind==='pet'?{kind:'pet',pet:chosen.pet,petId:chosen.petId}:{kind:'player'};
+    const attacker={kind:'enemy',unit,unitId:unit.id};
+    const check=battleStatusChance(attacker,target,'weaken',{perOffset:50,range:30,bai:1,forceGeneral:true});
+    let applied=false;
+    if(check.allowed&&check.success)applied=battleStatusApply(target,'weaken',7); // source 寫 WORKWEAKEN=turn+1=8
+    addLog(unit.name+' 使用癱瘓的精靈 Lv3：'+battleStatusDescName(target)+(applied?' 陷入虛弱 7 回合。':' 未中虛弱。')+'（原成功值 '+Number(check.per||0).toFixed(1)+'）',applied?'bad':'');
+    return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'weaken',target:chosen.kind,petId:chosen.petId||null,check,applied,turn:7,storedTurn:applied?8:0};
+  }
+
   const magic=attackMagicDb?.byMagicId?.[String(magicId)];
   if(!magic){
     addLog(unit.name+' 使用 '+(meta?.n||'攻擊魔法')+'，但 magic '+magicId+' 尚不在 AttackMagic runtime；本回合不猜魔法效果。');
@@ -4724,7 +4830,7 @@ function captureTurn(manual=false){
     if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
   }
 
-  if(enemy)syncEnemyTarget();
+  if(enemy){syncEnemyTarget();battleFieldTick();}
   save();render();
   return captured;
 }
@@ -4925,7 +5031,7 @@ function attackTurn(){
     if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
-  if(enemy)syncEnemyTarget();
+  if(enemy){syncEnemyTarget();battleFieldTick();}
   render();
 }
 function guardTurn(){
@@ -4986,7 +5092,7 @@ function guardTurn(){
     if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
-  if(enemy)syncEnemyTarget();
+  if(enemy){syncEnemyTarget();battleFieldTick();}
   save();render();
 }
 function walkEncounterStep(){
@@ -5450,7 +5556,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.67 載入完成：以單機空 server 的原 CHAR allocator 模型接入 211 捐獻；玩家固定為第一個 Player slot 0，並保留 Enemy bid 10 的同側判定 bug、石幣百分比與成功後直接離場。','good');
+    addLog('V0.68 載入完成：加入最小 ITEM existing-index runtime，接入 676 水的精靈 Lv5／688 癱瘓的精靈 Lv3，並正式建立 BattleArray field_att/power/count 對物理與攻擊魔法的屬性倍率。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
