@@ -4919,13 +4919,14 @@ function captureTurn(manual=false){
         if(enemy.dynamicGroup&&Array.isArray(enemy.units)){
           enemy.units=enemy.units.filter(u=>u.id!==target.id);
           if(!enemy.units.length){
-            enemy=null;
+            clearEnemyBattleNoReward();
             save();render();
             return true;
           }
           syncEnemyTarget();
         }else{
-          enemy=null;
+          // 靜態 formation 捕獲會直接結束整場；除 target 外，其餘 Enemy 也必須走 CHAR_endCharOneArray 等價釋放。
+          clearEnemyBattleNoReward();
           save();render();
           return true;
         }
