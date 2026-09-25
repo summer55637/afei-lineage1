@@ -6774,3 +6774,161 @@ CHAR_setWorkInt(toindex, StatusTbl[status], turn);
 - V0.75 ranged StatusChange / Continuation weapon flow 保留
 - save schema：仍為 **21**
 
+
+
+## V0.77 WEAKEN / BARRIER PreCommand lifecycle
+
+V0.77 校正兩個已可達、但倒數位置不同於一般 StatusTbl 的狀態：
+
+- WEAKEN / 虛弱
+- BARRIER / 魔障
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle_magic.c`
+- `gmsv/src/char/char.c`
+- `gmsv/src/item/item.c`
+
+### 為何不能用一般 StatusSeq 倒數
+
+原 `BATTLE_StatusSeq()` 會先：
+
+```c
+cnt = StatusTbl[i];
+StatusTbl[i] = --cnt;
+```
+
+但 WEAKEN / BARRIER 立刻有特殊保護：
+
+```c
+if (CHAR_WORKWEAKEN > 0)
+    StatusTbl[i] = cnt + 1;
+
+if (CHAR_WORKBARRIER > 0)
+    StatusTbl[i] = cnt + 1;
+```
+
+因此只要 decrement 後仍 >0，StatusSeq 的這次 -1 會被加回去。
+
+真正的持續時間消耗發生在每輪：
+
+`BATTLE_PreCommandSeq() -> CHAR_complianceParameter() -> Other_DefcharWorkInt()`
+
+且發生在 `EntrySort()` 之前。
+
+### WEAKEN
+
+原 `BATTLE_MultiParamChangeTurn()` 成功後：
+
+```c
+CHAR_WORKWEAKEN = turn + 1;
+```
+
+每次下一輪 complianceParameter：
+
+```c
+if (CHAR_WORKWEAKEN > 0) {
+    FIXSTR   *= 0.8;
+    FIXTOUGH *= 0.8;
+    FIXDEX   *= 0.8;
+    CHAR_WORKWEAKEN--;
+}
+```
+
+所以：
+
+- 技能命中同一輪，不會立刻把攻／防／敏乘 0.8。
+- 下一次 PreCommandSeq 才建立被虛弱的本輪 FIX 快照。
+- QUICK 在 EntrySort 前已被降為 80%，所以會影響出手排序。
+- FIXTOUGH 同樣是 80%，不只是顯示用 defense。
+- 每輪都先從基礎能力重建 FIX，再乘 0.8，因此不會發生 0.8 × 0.8 × 0.8 的永久累乘。
+
+V0.77 新增 `battleWeakenRoundKeys`：
+
+- 每個 PreCommandSeq 重新建立。
+- 只代表「本輪 FIX 已被 WEAKEN 乘過 0.8」。
+- 即使 WEAKEN 在該角色行動時剛好歸零，本輪已經生成的 0.8 FIX 仍保留到下一輪，符合原 C。
+
+### BARRIER
+
+原 `BATTLE_S_Barrier()` 成功：
+
+```c
+CHAR_WORKBARRIER = turn + 1;
+```
+
+真正 -1 同樣位於 complianceParameter：
+
+```c
+if (CHAR_WORKBARRIER > 0)
+    CHAR_WORKBARRIER--;
+```
+
+而 `BATTLE_CanMoveCheck()` 只要 BARRIER >0 就禁止行動。
+
+因此 BARRIER 的實際時序會保留施法先後差異：
+
+- 若施法者先出手、目標本輪尚未行動：
+  - 目標同輪就會被 BARRIER 擋住。
+  - 這一輪沒有再經 PreCommand，因此 stored `turn+1` 正好保留。
+- 若目標已先行動：
+  - 第一次真正消耗發生在下一輪 PreCommandSeq。
+
+例如 `turn 1`：
+
+- stored = 2
+- 下一輪 PreCommand → 1
+- 該輪行動開始時仍被擋
+- StatusSeq 將 1 減成 0 並解除
+
+V0.77 不再像一般異常那樣每次角色行動直接扣一次 BARRIER。
+
+### StatusSeq 的最後一格
+
+WEAKEN / BARRIER 若進 StatusSeq 時：
+
+- turns >1：來源 `--cnt` 後仍 >0，因此又寫回 `cnt+1`，淨值不變。
+- turns ==1：來源先降成 0，特殊保護條件已不成立，因此真正解除。
+
+web 現在同樣：
+
+- >1：保持不變
+- ==1：在該次行動解除
+- 若 PreCommand 已先把 1 扣成 0，則直接在 PreCommand 階段視為失效
+
+### 可達 fixed data
+
+WEAKEN：
+
+- 575 虛弱：`虚 turn 3 成 50`
+- 576 全體虛弱：`虚 turn 3 成 50`
+- 正權重 AI 引用共 8 個 slot reference
+
+BARRIER：
+
+- 579 魔障：`障 turn 1 成 50`
+- 594 究極魔障：`障 turn 3 成 50`
+- 正權重 AI 引用共 14 個 slot reference
+
+所以這不是未使用相容碼，而是目前遊戲會實際抽到的 Enemy 行為。
+
+### V0.77 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- WEAKEN 命中同輪：不立即 0.8
+- WEAKEN turn 3：接下來三個 PreCommand round 套 0.8
+- WEAKEN round snapshot：Attack / Defense / Quick / FixedTough 均依來源縮減
+- Pet FixedTough ×0.8：整數截斷
+- BARRIER turn 1 / turn 3：依 PreCommand 扣回合
+- 施法者比目標快時：目標同輪可立即被 BARRIER 阻止
+- 施法者比目標慢時：不會倒扣已經結束的目標行動
+- StatusSeq 不會對 >1 的 WEAKEN / BARRIER 再多扣一次
+- V0.76 DRUNK lifecycle 保留
+- save schema：仍為 **21**
+
