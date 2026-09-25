@@ -9507,3 +9507,120 @@ skill 100 的 turn=3 因此實際存成：
 - V0.97 BATTLE_PetLoyalCheck core 保留
 - V0.96 combo follower lifecycle 保留
 - save schema：21
+
+
+## V0.99 low-loyalty Pet RANDOMACT ChargeAttack 30
+
+V0.99 接回低忠誠 `BATTLE_PetRandomSkill()` 可抽到的 skill 30「突擊」。
+
+固定來源：
+
+- `gmsv/data/petskill.txt`：`突擊 ... PETSKILL_ChargeAttack,1 攻%+90,30`
+- `gmsv/src/battle/pet_skill.c`：`PETSKILL_ChargeAttack()`
+- `gmsv/src/battle/battle_event.c`：`BATTLE_Charge()`
+- `gmsv/src/battle/battle.c`：`BATTLE_AllCharaCWaitSet()` / `BATTLE_IsCharge()` / LoyaltyCheck / direct attack
+- `gmsv/src/battle/battle_command.c`：Charge 時 Pet menu off，但 preserved COM 可繼續
+- fixed source commit：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+### PETSKILL_ChargeAttack 寫入的狀態
+
+skill 30：
+
+```c
+COM1 = BATTLE_COM_S_CHARGE;
+COM2 = target;
+LOW(COM3) = 1;
+HIGH(COM3) = 90;
+```
+
+同一個 action 馬上進 `BATTLE_Charge()`：
+
+- low > 0：low--，本回合 NoAction。
+- low <= 0：以「釋放當輪」的 FIXSTR 做 `FIXSTR + trunc(FIXSTR*90/100)`，改成 CHARGE_OK 並攻擊。
+
+因此 skill 30 是：
+
+- 第一次抽到：1 → 0，蓄力，不攻擊。
+- 下一次輪到且 command 沒被改掉：直接釋放 +90%。
+
+不是「抽到後隔一個完整額外空白回合再打」。
+
+### CHARGE 跨回合保留
+
+`BATTLE_AllCharaCWaitSet()`：
+
+```c
+if (BATTLE_IsCharge(charaindex)) {
+} else {
+    COM1 = NONE;
+}
+MODE = C_WAIT;
+```
+
+而 `BATTLE_IsCharge()` 明確包含 `BATTLE_COM_S_CHARGE`。
+
+所以 V0.99 用 battle-only `battlePetChargeStates` 保存 charge；每場開戰 reset，不寫進永久 save。
+
+### LoyaltyCheck 對蓄力的特殊影響
+
+LoyaltyCheck 發生在 `BATTLE_Charge()` 前。
+
+- NORMAL：COM 不變，蓄力繼續。
+- TARGETRANDOM：來源只覆寫 COM2，**不改 COM1**；所以仍是 CHARGE，只是目標重抽。
+- RANDOMACT：`BATTLE_PetRandomSkill()` 覆寫 COM1，舊 charge 中斷。
+- OWNERATTACK / ENEMYATTACK：改 COM1=ATTACK，舊 charge 中斷。
+- ESCAPE：改 COM1=LOSTESCAPE，舊 charge 中斷並離場。
+- CONFUSION 發作：StatusSeq 在 LoyaltyCheck 前先把 COM1 改成 ATTACK，charge 中斷。
+- CanMove=false：主迴圈把 COM1 改 NONE，charge 中斷。
+
+V0.99 全部照此順序。
+
+### Charge 不能參與 Combo
+
+ComboCheck 在 LoyaltyCheck 前，看的仍是本輪原 COM。
+
+持續蓄力中的 Pet 是 `COM_S_CHARGE`，不是普通 `COM_ATTACK`，因此不能當 combo candidate。
+V0.99 的 `sourceComboActorInfo()` 在 charge state 存在時會回 `normalAttack=false`。
+
+第一次 RANDOMACT 當輪抽到 Charge 時，ComboCheck 已先跑過；若該 Pet 原本是 combo leader，Loyalty non-normal 會帶 AIBAD，等價原 `ComboCheck2()` 讓該 leader combo 失敗，再執行新 Charge command。
+
+### 釋放不進普通 Counter
+
+fixed direct-attack group：
+
+```c
+if (COM == BATTLE_COM_S_CHARGE_OK) {
+    COM1 = BATTLE_COM_NONE;
+}
+BATTLE_Attack(...);
+...
+BATTLE_Counter(...);
+```
+
+而 `BATTLE_Counter()` 只允許原攻擊者目前 COM 是 ATTACK / NOGUARD。
+
+所以 Charge release 雖走普通物理傷害與 Guardian／dodge，但原攻擊者 COM 已是 NONE，不能觸發後續普通 Counter chain。
+
+V0.99 因此：
+
+- 仍走 Enemy dodge / Guardian / damage。
+- **不呼叫** `resolvePetEnemyCounterChain()`。
+
+### V0.99 regression
+
+- `game.js` JavaScript syntax：PASS
+- battle-only charge runtime 每場 reset
+- skill 30：first action low 1→0 no attack
+- next preserved action：release +90%
+- release 使用當輪 pet FIX/compliance attack
+- invalid/dead old COM2：release 時才做 enemy-side fallback target
+- TARGETRANDOM：只更新 charge target，charge 不取消
+- RANDOMACT / OWNERATTACK / ENEMYATTACK / ESCAPE：取消舊 charge
+- confusion 發作：StatusSeq 時點取消 charge
+- status/CanMove skip：取消 charge
+- charge state 不進 ComboCheck normalAttack
+- CHARGE_OK release 不進普通 Counter
+- V0.98 poison/drunk StatusChange 保留
+- V0.97 LoyaltyCheck strict thresholds 保留
+- V0.96 combo follower lifecycle 保留
+- save schema：21

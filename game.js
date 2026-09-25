@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1692,7 +1692,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -5117,6 +5117,101 @@ function sourcePetRandomSkillPlan(pet){
   }
   return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc:null};
 }
+function sourcePetChargeSpec(meta){
+  // 與 fixed PETSKILL_ChargeAttack 相同：option 開頭 N，攻% 寫入 COM3 high。
+  const spec=enemyChargeSpec(meta);
+  return {turns:clamp(Math.trunc(n(spec.turns))||1,1,10),attackPct:n(spec.attackPct)};
+}
+function sourcePetChargeTargetDesc(pet){
+  const charge=pet?battlePetChargeStates.get(pet.id):null;
+  if(!charge)return null;
+  const unit=Array.isArray(enemy?.units)?enemy.units.find(u=>u.id===charge.targetUnitId):null;
+  // 即使原 COM2 指向的角色已死，LoyaltyCheck 的 toSide 仍是原敵方 side；
+  // 所以保留 kind='enemy'，真正 release 才做 TargetAdjust。
+  return {kind:'enemy',unit:unit||null,unitId:charge.targetUnitId||null};
+}
+function sourceCancelPetCharge(pet,reason=null){
+  if(!pet||!battlePetChargeStates.has(pet.id))return false;
+  battlePetChargeStates.delete(pet.id);
+  if(reason)addLog(pet.name+' 的突擊蓄力被'+reason+'中斷。','pet');
+  return true;
+}
+function sourceCancelPetChargeFromStatus(statusTurn){
+  if(statusTurn?.desc?.kind!=='pet')return false;
+  const pet=statusTurn.desc.pet;
+  return sourceCancelPetCharge(pet,BATTLE_STATUS_NAMES[statusTurn.status?.type]||'異常狀態');
+}
+function sourceStartPetCharge(pet,action){
+  const meta=action?.meta;
+  const spec=sourcePetChargeSpec(meta);
+  const target=action?.targetDesc?.kind==='enemy'?action.targetDesc:null;
+  // PETSKILL_ChargeAttack 先寫 low=N；同一個 action 隨即進 BATTLE_Charge，
+  // N>0 立刻 --。因此跨到下一輪時保存的是 N-1。
+  const stateCharge={
+    remaining:Math.max(0,spec.turns-1),
+    attackPct:spec.attackPct,
+    targetUnitId:target?.unitId||target?.unit?.id||null,
+    skillId:action?.skillId??null,
+    skillSlot:action?.slot??null,
+    label:meta?.n||'突擊'
+  };
+  battlePetChargeStates.set(pet.id,stateCharge);
+  addLog(pet.name+' 開始使用 '+stateCharge.label+'，本回合蓄力（COM3 low '+spec.turns+' → '+stateCharge.remaining+'）。','pet');
+  return {handled:true,skillId:action?.skillId,charging:true,remaining:stateCharge.remaining,attackPct:stateCharge.attackPct};
+}
+function sourcePerformPetChargeState(pet,options={},targetOverride=undefined){
+  const charge=pet?battlePetChargeStates.get(pet.id):null;
+  if(!pet||!charge)return {handled:false};
+
+  // Loyalty TARGETRANDOM 只改 COM2，不改 COM1=CHARGE；所以蓄力繼續但目標可被重抽。
+  if(targetOverride!==undefined){
+    charge.targetUnitId=targetOverride?.kind==='enemy'
+      ?(targetOverride.unitId||targetOverride.unit?.id||null)
+      :null;
+  }
+
+  if(charge.remaining>0){
+    charge.remaining--;
+    addLog(pet.name+' 持續 '+charge.label+' 蓄力（COM3 low → '+charge.remaining+'）。','pet');
+    return {handled:true,charging:true,remaining:charge.remaining};
+  }
+
+  // BATTLE_Charge release 使用「釋放當輪」的 FIXSTR，再加 high(COM3)%；
+  // 玩家寵目前沒有可證明的 WORKMODATTACK 來源，因此維持 0，不猜裝備/BUFF 值。
+  const base=petBattleView(pet);
+  const baseAttack=Math.trunc(n(base?.attack));
+  const releaseAttack=baseAttack+Math.trunc(baseAttack*n(charge.attackPct)/100);
+
+  const targetable=targetableEnemyUnits();
+  let target=charge.targetUnitId?targetable.find(u=>u.id===charge.targetUnitId):null;
+  if(!target){
+    // fixed direct-attack branch 的 BATTLE_TargetAdjust：原 COM2 無效時，
+    // 退回 BATTLE_DefaultAttacker(敵方 side)。
+    target=targetable.length?targetable[cRand(0,targetable.length-1)]:null;
+  }
+
+  battlePetChargeStates.delete(pet.id);
+  if(!target){
+    addLog(pet.name+' 釋放 '+charge.label+'，但已沒有可攻擊目標。','pet');
+    return {handled:true,released:true,noTarget:true};
+  }
+
+  const attacker=Object.assign({},base,{attack:releaseAttack});
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  addLog(pet.name+' 釋放 '+charge.label+'（FIXSTR 攻擊 '+baseAttack+' → '+releaseAttack+'，攻擊修正 '+charge.attackPct+'%）。','pet');
+
+  // fixed direct-attack group 對 CHARGE_OK 會在 BATTLE_Attack() 前先把 COM1 改成 NONE；
+  // 後面的 BATTLE_Counter() 只接受 ATTACK / NOGUARD，因此此釋放不進普通 Counter chain。
+  return {
+    handled:true,released:true,skillId:charge.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||null,baseAttack,releaseAttack,attackPct:charge.attackPct,r
+  };
+}
+
 function sourcePetLoyalCheck(actor,pet,intent){
   const fixed=petFixedAi(pet);
   if(!fixed){
@@ -5156,9 +5251,13 @@ function sourcePetLoyalCheck(actor,pet,intent){
   const type=(initial?.kind==='self')?1:0;
 
   if(mode==='targetrandom'){
+    const targetDesc=type===1?null:sourcePetRandomSideTarget(initialSide,pet);
     return {
       changed:true,aibad:true,mode,ai,roll,fixed,
-      action:type===1?{kind:'none',reason:'self-or-guard'}:{kind:'attack',targetDesc:sourcePetRandomSideTarget(initialSide,pet)},
+      // fixed 只覆寫 COM2；若原 COM1 是 CHARGE，就不能把它錯改成普通 ATTACK。
+      action:type===1
+        ?{kind:'none',reason:'self-or-guard'}
+        :(intent?.commandKind==='charge'?{kind:'charge',targetDesc}:{kind:'attack',targetDesc}),
       intent
     };
   }
@@ -5309,6 +5408,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   }else if(loyalty?.mode==='enemyattack'){
     addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），仍改為隨機攻擊敵方。','pet');
   }else if(loyalty?.mode==='escape'){
+    sourceCancelPetCharge(pet);
     battlePetOutIds.add(pet.id);
     if(state.activePetId===pet.id)state.activePetId=null;
     state.charm=Math.max(0,Math.trunc(n(state.charm))-1);
@@ -5316,6 +5416,14 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     return {handled:true,escaped:true};
   }
 
+  // 除 TARGETRANDOM 外，這些 bad-AI mode 都會覆寫 COM1，因此會中斷既有 CHARGE。
+  if(loyalty?.mode==='randomact'||loyalty?.mode==='ownerattack'||loyalty?.mode==='enemyattack'){
+    sourceCancelPetCharge(pet);
+  }
+
+  if(action.kind==='charge'){
+    return sourcePerformPetChargeState(pet,options,action.targetDesc);
+  }
   if(action.kind==='attack'){
     return sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true});
   }
@@ -5345,8 +5453,11 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
       addLog(pet.name+' 隨機使用「'+(meta.n||'狀態攻擊')+'」。','pet');
       return sourcePerformPetStatusSkill(pet,action,options);
     }
-    // 忠犬 20 / 突擊 30 仍需要玩家側 guardian / charge lifecycle；
-    // 已辨識來源，但不能偷換成普通攻擊。
+    if(meta?.f==='PETSKILL_ChargeAttack'){
+      addLog(pet.name+' 隨機使用「'+(meta.n||'突擊')+'」。','pet');
+      return sourceStartPetCharge(pet,action);
+    }
+    // 忠犬 20 仍需要玩家側 guardian lifecycle；已辨識來源，但不偷換普通攻擊。
     addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；玩家側此 PetSkill lifecycle 尚未接入，保留原抽籤但本回合不猜效果、不替換成普通攻擊。','pet');
     return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
   }
@@ -5358,6 +5469,12 @@ function sourcePetPreCommandAction(actor,statusTurn,options={}){
   if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))return {handled:true,missingPet:true};
 
   const confusionIntent=statusTurn?.confusionAttack?sourcePetConfusionIntent(statusTurn):null;
+  const charge=battlePetChargeStates.get(pet.id)||null;
+
+  // fixed StatusSeq 的 CONFUSION 發作會把 COM1 直接改成 ATTACK；
+  // 這發生在 LoyaltyCheck 前，所以原本的 CHARGE 在這一刻就被蓋掉。
+  if(confusionIntent&&charge)sourceCancelPetCharge(pet,'混亂');
+
   // V0.93：Surprise 的 NONE 可被 StatusSeq 的 confusion ATTACK 覆蓋；
   // 但 fixed BATTLE_PetLoyalCheck 本身位於「非 Surprise side」分支，所以此時不再做忠誠判定。
   if(sourceSurpriseSkipAction(actor)){
@@ -5367,13 +5484,19 @@ function sourcePetPreCommandAction(actor,statusTurn,options={}){
     return {handled:true,surpriseSkip:true};
   }
 
-  const intent=confusionIntent||{confusion:false,targetDesc:sourcePetEnemyTargetDesc()};
+  const liveCharge=battlePetChargeStates.get(pet.id)||null;
+  const intent=confusionIntent
+    ||(liveCharge?{confusion:false,commandKind:'charge',targetDesc:sourcePetChargeTargetDesc(pet)}
+    :{confusion:false,commandKind:'attack',targetDesc:sourcePetEnemyTargetDesc()});
   const loyalty=sourcePetLoyalCheck(actor,pet,intent);
   if(loyalty.changed){
     return Object.assign({loyalty},sourcePerformPetLoyalAction(pet,loyalty,options));
   }
   if(confusionIntent){
     return Object.assign({loyalty},sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true}));
+  }
+  if(liveCharge){
+    return Object.assign({loyalty},sourcePerformPetChargeState(pet,options));
   }
   return {handled:false,loyalty};
 }
@@ -5932,6 +6055,7 @@ function captureTurn(manual=false){
     if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
+      sourceCancelPetChargeFromStatus(statusTurn);
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
         statusTurn.desc.unit.chargeState=null;
         statusTurn.desc.unit.counterEligibleThisTurn=false;
@@ -6139,7 +6263,9 @@ function sourceComboActorInfo(actor,playerCommand='attack'){
     const desc=pet?{kind:'pet',pet,petId:pet.id}:null;
     const targetId=actor.targetUnitId||null;
     return {
-      normalAttack:!!(pet&&petIsBattleActive(pet)),
+      // fixed BATTLE_IsCharge / ComboCheck：COM_S_CHARGE 不是 COM_ATTACK，
+      // 蓄力中的 Pet 不能被當成普通攻擊候選拉進合擊。
+      normalAttack:!!(pet&&petIsBattleActive(pet)&&!battlePetChargeStates.has(pet.id)),
       move:!!(desc&&battleStatusCanMove(desc)),
       throwWeapon:false,side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
     };
@@ -6469,6 +6595,7 @@ function attackTurn(){
     if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
+      sourceCancelPetChargeFromStatus(statusTurn);
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
         statusTurn.desc.unit.chargeState=null;
         statusTurn.desc.unit.counterEligibleThisTurn=false;
@@ -6561,6 +6688,7 @@ function guardTurn(){
     if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
+      sourceCancelPetChargeFromStatus(statusTurn);
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
         statusTurn.desc.unit.chargeState=null;
         statusTurn.desc.unit.counterEligibleThisTurn=false;
