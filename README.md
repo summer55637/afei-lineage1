@@ -4069,3 +4069,112 @@ V0.61 已把這套進度持久化到 save。
 所以 301～325 的原 build 行為確實與 dynamic item slot 內容、Enemy MP 都無關；V0.61 目前直接執行 AttackMagic 是正確的。
 
 相對地，magic 204 `MAGIC_FieldAttChange` 與 magic 435 `MAGIC_Weaken` 都會檢查並扣傳入的 mp，因此 676／688 仍不能沿用 301～325 的無 MP 路徑，必須另外處理。
+
+
+## V0.62 火線獵殺
+
+V0.62 接入 Enemy 正權重 PetSkill 624「火線獵殺」。
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/petskill2.txt`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle_magic.c`
+
+### PetSkill 資料
+
+原 `petskill2.txt`：
+
+- ID：624
+- 名稱：火線獵殺
+- function：`PETSKILL_Firekill`
+- target：1
+- option：空
+
+`PETSKILL_Firekill()` 本身只設定 `BATTLE_COM_S_FIREKILL`、target、C_OK 與 skill array，不從 option 猜任何額外數值。
+
+### 物理段
+
+原 `battle.c` 的 `BATTLE_COM_S_FIREKILL`：
+
+1. 先確認／調整有效目標。
+2. 同隊目標直接拒絕。
+3. 固定：
+   `CHAR_WORKATTACKPOWER = CHAR_WORKFIXSTR * 0.8`
+4. 呼叫 `BATTLE_Attack_FIREKILL()`。
+5. 接著呼叫 `BATTLE_MultiAttMagic_Fire(battleindex,attackNo,defNo,2,200)`。
+6. 直接結束該 command。
+
+因此 V0.62 的物理段固定使用原攻擊力 80%，而且**不進普通物理攻擊的 Counter／反 Counter loop**。
+
+`BATTLE_DamageSub_FIREKILL()` 內即使前面讀了 DamageReact，隨後也明確：
+
+`react = BATTLE_MD_NONE`
+
+所以目前 web 沒有額外自行加入鏡／守／吸收等反應。
+
+### 火魔法段
+
+`BATTLE_MultiAttMagic_Fire(...,2,200)` 的固定參數：
+
+- `FieldAttr = 2` → 火
+- `Power = 200`
+- 函式內 `MagicLv = 4`
+- 作用範圍為原目標所在的 5 格橫排
+
+目前 web 戰鬥模型只有 Player slot 0 與 Active Pet slot 5，兩者位於不同排，因此現況：
+
+- 選到玩家 → 火焰追加打玩家所在排
+- 選到 Active Pet → 火焰追加打寵物所在排
+
+不把它錯誤擴成 Player + Pet 全體。
+
+### Enemy 魔法公式
+
+Enemy 施術者仍依原碼：
+
+`att_magic_lv = int(level * 0.9)`
+
+每次火魔法段仍會先消耗一次：
+
+`Check = rand()%100`
+
+並計算 `TrueMagic`。
+
+但 Firekill 專用 `BATTLE_MultiAttMagic_Fire()` 中，原本可能套用的：
+
+`attvalue *= 0.7`
+
+在 `_FIX_MAGICDAMAGE` 路徑實際上是註解碼，故 **FalseMagic 不降低 Firekill 傷害**。V0.62 保留該 RNG 消耗，但不自行加上 0.7。
+
+真正傷害仍沿用 V0.61 已還原的：
+
+- Enemy 魔法熟練度
+- 玩家／寵物魔法閃避
+- `_FIX_MAGICDAMAGE` 的 Kmagic / Mmagic / Amagic / APower
+- 火屬性相剋
+- 玩家／寵物魔抗成長
+- 魔法命中後解除睡眠
+
+### Save schema
+
+V0.62 沒有新增持久化欄位，因此 schema **維持 17**。
+
+### 正權重掃描更新
+
+接入 624 後，V0.60 邊界中原先因缺正式 magic 底層而暫緩的 Firekill 已解除。
+
+仍需後續處理的正權重技能集中在：
+
+- 506／507／508：`PETSKILL_MpDamage`，需要正式 MP
+- 676：`PETSKILL_AttackMagic -> magic 204`，FieldAttChange 且會檢查／扣 MP
+- 688：`PETSKILL_AttackMagic -> magic 435`，Magic Weaken 且會檢查／扣 MP
+- 211：`PETSKILL_StealMoney`
+- 634：`PETSKILL_DivideAttack`，包含玩家 MP 減半
+- 627／632／637／705：`PETSKILL_Combined`，依賴 JYUJYUTU／咒術底層
+
+繼續維持「原 C 規則優先、不猜數值」；在正式 MP／JYUJYUTU 或可驗證 runtime 尚未建立前，不把這些技能偷換成普通攻擊或自行猜效果。
