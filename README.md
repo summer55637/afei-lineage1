@@ -5095,3 +5095,176 @@ V0.68 後：
 - unregistered function
 
 不再存在一般未分類或 runtime-blocked PetSkill。
+## V0.69 Enemy ITEM existing-index allocator 生命週期
+
+V0.69 把 V0.68 的最小 \`ITEM_item[]\` existing-index runtime 延伸到 Enemy 真正會建立與銷毀的物品生命週期。
+
+來源固定為：
+
+- \`gavinlinasd/StoneAge\`
+- ref \`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56\`
+- \`gmsv/setup.cf\`
+- \`gmsv/src/item/item.c\`
+- \`gmsv/src/char/enemy.c\`
+- \`gmsv/src/char/char_base.c\`
+- \`gmsv/src/char/pet.c\`
+- \`gmsv/src/battle/battle.c\`
+
+### Enemy 建立時的 existing item 配置
+
+原 \`ENEMY_createEnemy()\` 在 \`CHAR_initCharOneArray()\` 成功之後，依固定順序：
+
+1. 掃 \`ENEMY_ITEM1～10\`。
+2. 對應 \`ITEMPROB1～10\` 以本 build 的 \`_FIX_ITEMPROB\`：
+   \`RAND(0,999) < ITEMPROB\`。
+3. 命中才呼叫 \`ITEM_makeItemAndRegist(itemId)\`。
+4. 成功取得 existing index 後放入 Enemy 的 10 格 carried item。
+5. 10 格全部處理完，才依 \`ENEMY_STYLE\` 建立 \`CHAR_ARM\` 武器。
+6. STYLE 武器建立完成後才進 \`ENEMY_RandomChange()\`。
+
+STYLE 對應完全照原 C：
+
+- 1 → Item 0
+- 2 → Item 100
+- 3 → Item 200
+- 4 → Item 400
+- 5 → Item 500
+- 6 → Item 700
+- 7 → Item 600
+
+web 的 V0.69 同樣讓 carried loot 先走 existing allocator，再建立 STYLE 武器；若 \`ITEM_makeItemAndRegist\` 等價配置失敗，該物品不會被留下成不存在的 carried item。
+
+### existing slot ownership
+
+schema 20 起，每個 runtime slot 除原本的：
+
+- \`use\`
+- \`itemId\`
+- \`magicUseMp\`
+
+再記錄：
+
+- \`owner\`
+- \`source\`
+- \`enemySlot\`
+
+Enemy 建立出的 carried item 使用：
+
+\`owner = enemy:<unit id>\`
+
+STYLE 武器也屬於同一 Enemy。
+
+這些欄位只用來讓 web 能安全重現 source 中「哪個 CHAR 持有哪個 existing index」的生命週期，不把舊存檔反推成不存在的歷史配置。
+
+### 戰利品：Enemy carried item → Battle getitem
+
+原 \`BATTLE_AddExpItem()\` 只掃 Enemy 的 10 格 carried item，不會把 \`CHAR_ARM\` 的 STYLE 武器當戰利品。
+
+對戰敗 Enemy：
+
+1. carried item 先從 Enemy item slot 拔掉。
+2. existing item 本身不重新建立，原 index 直接進 Player 的 \`BATTLE_ENTRY.getitem[]\`。
+3. 每名 Player 的 \`GETITEM_MAX = 3\`。
+4. 前 3 個直接放入空 getitem。
+5. 已滿後，每個新物品先 \`RAND(0,1)\`：
+   - 成功：\`RAND(0,2)\` 隨機替換舊 getitem，舊 existing item 立即釋放。
+   - 失敗：新 incoming existing item 立即釋放。
+
+目前是單機單 Player，所以 V0.69 以一組 3 格 getitem 完整保留這段替換規則。
+
+結果畫面結算時，若 getitem 成功進入 web 玩家背包，仍保留**同一個 existing index**，只把 owner 改成 Player；不是銷毀後再建立另一份。
+
+### Enemy 離場與 slot 釋放
+
+原 \`BATTLE_Exit()\` 對 \`CHAR_TYPEENEMY\` 會呼叫：
+
+\`CHAR_endCharOneArray()\`
+
+而 \`CHAR_endCharData()\` 會逐格 \`ITEM_endExistItemsOne()\`，所以 Enemy 身上仍留著的：
+
+- 未進 getitem 的 carried item
+- STYLE 武器
+
+都必須釋放。
+
+V0.69 已接到下列路徑：
+
+- Enemy 正常被擊敗後的戰鬥結算
+- Enemy 逃跑
+- Enemy 技能／特殊流程直接離場
+- 玩家戰敗
+- 玩家被強制退出戰鬥
+- 切換地圖／Encounter／任務戰區時的無獎勵清場
+- 捕獲成功
+- 戰鬥結束
+
+無獎勵結束目前統一經 \`clearEnemyBattleNoReward()\`，同時：
+
+- 釋放仍由 Enemy 持有的 existing slots
+- 清空 Enemy battle object
+- 清除 battle-only status / reverse / element work / field state
+
+### 捕獲
+
+原 \`PET_createPetFromCharaIndex()\` 會從 Enemy 複製角色／寵物能力與 PetSkill，但沒有把 Enemy 的 item slots 複製進新 Pet。
+
+因此捕獲後 Enemy 原 carried item 與 STYLE 武器仍走 Enemy 離場清理，不會跟著變成寵物物品。
+
+V0.69 回歸時另外修正一個靜態 formation 邊界：
+
+- 捕獲其中一隻後，該類 formation 的現有遊戲流程會直接結束整場。
+- 舊碼只釋放被捕獲 target，其他 formation 成員的 existing slots 可能留在 pool。
+- 現在改為整場走 \`clearEnemyBattleNoReward()\`，其餘 Enemy 一併做 \`CHAR_endCharOneArray\` 等價清理。
+
+動態群戰只移除被捕獲的那一隻；若它是最後一隻，同樣走統一清場。
+
+### 玩家取得後再消耗
+
+從 battle getitem 取得的物品會保持 tracked existing index。
+
+玩家後續真的消耗到這類 tracked item 時，V0.69 才釋放其 existing slot；舊版／任務直接 \`giveItem()\` 產生、沒有可證明 existing-index 歷史的數量仍視為 untracked，優先消耗 untracked，避免替舊資料虛構 allocation。
+
+### \`ITEM_MAGICUSEMP\`：未知值仍然不猜
+
+V0.69 不把舊編碼 \`itemset6.txt\` 無法精確還原的 \`ITEM_MAGICUSEMP\` 填成 0 或其他猜測值。
+
+runtime 規則維持：
+
+- slot invalid / 未配置 → 原 \`ITEM_getInt()\` 等價回 \`-1\`
+- slot valid 且 \`magicUseMp\` 已有可靠值 → 使用該值
+- slot valid，但該 item 的 \`ITEM_MAGICUSEMP\` 無法可靠解碼 → runtime 記為 \`null\`
+
+676／688 若剛好查到一個 valid、但 \`magicUseMp = null\` 的 20900／20912 slot：
+
+- 不猜 MP cost
+- 不扣／加 MP
+- 不套 magic 204／435 的效果
+- 日誌明確標記 source item MP unknown
+
+這樣可以讓 allocator occupancy 真正影響 676／688，又不破壞「原 C 規則優先、不猜數值」。
+
+### Save schema 20
+
+V0.69：
+
+- schema 19 → **20**
+- V0.68 以前仍從空 existing pool migration
+- V0.68 已存在但沒有 ownership 的 slot 保留其 \`use/index/itemId/magicUseMp\`
+- 不替舊 slot 猜 owner
+
+### V0.69 回歸結果
+
+完成生命週期後重新檢查：
+
+- \`game.js\` JavaScript 語法：通過
+- Enemy 10 格 carried item：接入 existing allocator
+- 2958 Enemy STYLE：接入 STYLE weapon allocation
+- getitem 3 格轉移／替換／釋放：接入
+- Enemy 逃跑／直接離場：釋放
+- 玩家戰敗／強制離場：釋放
+- 捕獲：釋放；靜態 formation 額外殘留已修
+- 無獎勵戰鬥清場：統一入口
+- 戰鬥勝利：保留轉給 Player 的 existing index，只清 Enemy 尚持有項目
+- \`ITEM_MAGICUSEMP\` source-unknown：維持 unknown，不猜
+
+V0.69 至此把 Enemy carried loot + STYLE 武器的 existing-index allocator 生命週期接成可持續影響 20900／20912 occupancy 的 runtime。
