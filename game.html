@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.29</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.30</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -71,21 +71,33 @@
             </div>
           </div>
           <div class="stats">
-            <div><span>攻擊</span><b id="attack">6</b></div>
-            <div><span>防禦</span><b id="defense">6</b></div>
-            <div><span>敏捷</span><b id="dex">5</b></div>
+            <div><span>攻擊</span><b id="attack">0</b></div>
+            <div><span>防禦</span><b id="defense">0</b></div>
+            <div><span>敏捷</span><b id="dex">0</b></div>
             <div><span>魅力</span><b id="charm">60</b></div>
             <div><span>運</span><b id="luck">0</b></div>
             <div><span>能力點</span><b id="skillPoints">0</b></div>
             <div><span>勝場</span><b id="wins">0</b></div>
           </div>
+          <div id="playerCreationStatsPanel" class="player-element-panel">
+            <div class="player-param-head"><b>原服創角四圍</b><span>各 0～20 · 合計 ≤20 · 確認後永久鎖定</span></div>
+            <div id="playerCreationStatsGrid" class="player-element-grid">
+              <label><span>體力 VITAL</span><input id="creationVital" data-player-create-stat="vital" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+              <label><span>腕力 STR</span><input id="creationStr" data-player-create-stat="str" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+              <label><span>耐力 TOUGH</span><input id="creationTgh" data-player-create-stat="tgh" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+              <label><span>速度 DEX</span><input id="creationDex" data-player-create-stat="dex" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+            </div>
+            <div id="playerCreationStatsStatus" class="player-element-status good">固定 _NEW_PLAYER_CF build 允許四圍合計 0～20；不要求一定用滿。</div>
+            <button id="playerCreationStatsConfirmBtn">確認創角四圍並永久鎖定</button>
+            <div class="muted player-param-note">原 C CHAR_makeCharFromOptionAtCreate：每項 0～20，_NEW_PLAYER_CF 下只拒絕合計 &gt;20；寫入 CHAR_VITAL／STR／TOUGH／DEX 時每點 ×100。全 0 也是服務端合法輸入，因此本版不擅自改成固定 5/5/5/5。</div>
+          </div>
           <div class="player-param-panel">
-            <div class="player-param-head"><b>原服能力配點</b><span>1 點 = CHAR 參數 +100</span></div>
+            <div class="player-param-head"><b>升級能力配點</b><span>1 點 = CHAR 參數 +100</span></div>
             <div id="playerParamGrid" class="player-param-grid">
-              <button data-player-stat="vital"><span>體力 VITAL</span><b id="paramVital">5</b><small>+1</small></button>
-              <button data-player-stat="str"><span>腕力 STR</span><b id="paramStr">5</b><small>+1</small></button>
-              <button data-player-stat="tgh"><span>耐力 TOUGH</span><b id="paramTgh">5</b><small>+1</small></button>
-              <button data-player-stat="dex"><span>速度 DEX</span><b id="paramDex">5</b><small>+1</small></button>
+              <button data-player-stat="vital"><span>體力 VITAL</span><b id="paramVital">0</b><small>+1</small></button>
+              <button data-player-stat="str"><span>腕力 STR</span><b id="paramStr">0</b><small>+1</small></button>
+              <button data-player-stat="tgh"><span>耐力 TOUGH</span><b id="paramTgh">0</b><small>+1</small></button>
+              <button data-player-stat="dex"><span>速度 DEX</span><b id="paramDex">0</b><small>+1</small></button>
             </div>
             <div class="muted player-param-note">配點後立即重算 HP／攻／防／敏；提高 MaxHP 不會免費補血。</div>
           </div>
@@ -196,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.29：</b>
-      接回固定四村創角：hometown 0～3 對應 LASTTALKELDER、出生座標與 EnemyID 1～4 起始寵；新角色確認後建立 Lv1 起始寵但不自動出戰，舊存檔不倒推、不補領。
+      <b>V1.30：</b>
+      接回固定 _NEW_PLAYER_CF 創角四圍：VITAL／STR／TOUGH／DEX 各 0～20、合計 ≤20；真正新角色先自行確認，不再猜固定 5/5/5/5，舊存檔保留既有累積四圍。
     </article>
   </main>
 
