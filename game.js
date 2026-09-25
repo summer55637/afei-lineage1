@@ -3129,6 +3129,14 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
+
+  // fixed BATTLE_AttackSeq() 在 DuckCheck / Critical / Damage 前就處理主人打自己的 Pet：
+  // CHAR_PetAddVariableAi(defindex, AI_FIX_SEKKAN), AI_FIX_SEKKAN = -2*100。
+  // 因此就算本次之後 DODGE / MISS，忠誠懲罰仍已發生；Counter 鏈每次 owner->pet 攻擊也各算一次。
+  if(attackerDesc?.kind==='player'&&targetDesc?.kind==='pet'&&targetDesc.pet){
+    const sekkann=sourcePetAddVariableAi(targetDesc.pet,-200);
+    addLog('你攻擊自己的 '+targetName+'：依原 BATTLE_AttackSeq 忠誠修正 '+(sekkann.delta/100).toFixed(2)+'。','bad');
+  }
   if(r.dodged){
     addLog(targetName+' 閃避了 '+attackerName+' 的'+action+'。',targetDesc?.kind==='player'?'good':'');
     return;
@@ -8177,7 +8185,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.15 載入完成：玩家／寵物死亡忠誠與魅力 lifecycle、瑪蕾菲雅 _PET_LIMITLEVEL 死亡懲罰已依 fixed C 接入。','good');
+    addLog('V1.16 載入完成：主人攻擊自己的寵物會依 BATTLE_AttackSeq 套 AI_FIX_SEKKAN 忠誠 -2，包含混亂與反擊鏈。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

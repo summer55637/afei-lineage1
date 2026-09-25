@@ -10823,3 +10823,64 @@ MODAI 是 Pet instance 可變欄位，因此 V1.15 新增 modAiOverride；petSou
 - Marefia ALLOCPOINT clamp 0～50
 - Marefia MODAI 每次死亡衰減 5% 並 int 截斷
 - pending Pet death 在 win / defeat early-return 前仍會被處理
+
+
+## V1.16 owner attacks own Pet / AI_FIX_SEKKAN
+
+固定來源：
+
+gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+本輪對齊 battle_event.c 的 BATTLE_AttackSeq。
+
+原 C 在真正做 DuckCheck、CriticalCheck、DamageCalc 之前先判斷：
+
+- defender 是 CHAR_TYPEPET
+- battle norisk == 0
+- battle type == BATTLE_TYPE_P_vs_E
+- Pet 的 CHAR_WORKPLAYERINDEX == attackindex
+
+成立時直接：
+
+CHAR_PetAddVariableAi(defindex, AI_FIX_SEKKAN)
+
+而 battle.h 定義：
+
+AI_FIX_SEKKAN = -2*100
+
+所以主人每一次物理攻擊自己的 Pet，都會讓 VariableAI -200，也就是有效忠誠 -2。
+
+### V1.16 對應目前 Web 可達路徑
+
+目前玩家正常指令只攻擊敵方；但混亂 BATTLE_StatusSeq 已能把玩家改成普通攻擊己方 Pet。
+
+另外混亂 Counter chain 也可能讓玩家在反擊階段再次攻擊自己的 Pet。
+
+V1.16 因此把 source penalty 放進共用 battleApplyPhysicalHit 的 player -> pet 路徑。
+
+順序刻意在 dodged / miss 判斷之前，對齊 BATTLE_AttackSeq：
+
+1. owner/pet relationship check
+2. AI_FIX_SEKKAN -200
+3. DuckCheck
+4. critical / damage
+5. DamageSub
+
+因此：
+
+- Pet 閃避仍會扣忠誠
+- 物理結果 MISS 仍會扣忠誠
+- 每一次 Counter owner -> pet 都各自再扣一次
+- Pet -> owner 不會反向套這個規則
+
+VariableAI 仍沿用 V1.14 的 -10000..10000 source clamp。
+
+### Regression targets
+
+- player -> own pet primary confusion attack => VariableAI -200
+- player -> own pet counter => VariableAI -200 per AttackSeq
+- dodge still applies -200
+- miss still applies -200
+- pet -> player does not apply AI_FIX_SEKKAN
+- enemy -> player/pet does not apply AI_FIX_SEKKAN
+- clamp continues through sourcePetAddVariableAi
