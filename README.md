@@ -10134,3 +10134,42 @@ gBattleDuckModyfy = HIGH(COM3);          // +30
 - skill 40 走 ordinary Guardian / Counter
 - V1.04 NormalGuard 保留
 - save schema 21
+
+
+## V1.06 low-loyalty Pet PowerBalance 50 / 51
+
+V1.06 接入實際 wild Lv1 捕獲清單中的：
+
+- 50 背水之戰其之1：`攻%+25 防%-35`
+- 51 背水之戰其之2：`攻%+45 防%-55`
+
+fixed `PETSKILL_PowerBalance()` 不是最終 damage multiplier，而是直接重寫：
+
+```c
+WORKATTACKPOWER = FIXSTR + (int)(FIXSTR * attackPercent);
+WORKDEFENCEPOWER = FIXTOUGH + (int)(FIXTOUGH * defensePercent);
+```
+
+所以 V1.06 新增 battle-only `battlePetPowerMods`：
+
+- skill 發動時以當輪 Pet battle FIX 等價 attack/defense 為基底。
+- 百分比乘積按 C int 向 0 截斷。
+- 修改後的 attack 用於本次普通 BATTLE_Attack。
+- 修改後的 defense 會保留到本輪後續 Enemy 攻擊。
+- Counter / counter-counter 再讀 `petBattleView()` 時也沿用修改後攻防。
+- `fixedTough` / `fixedDex` 不被 PowerBalance 改寫。
+- 下一 round PreCommand/compliance 等價重建時清掉 power override。
+- 不寫入 save。
+
+V1.06 regression：
+
+- game.js syntax PASS
+- 50 / 51 共用 `PETSKILL_PowerBalance` dispatcher
+- signed attack / defense percent from source option
+- C-int truncation before add-back
+- attack + defense persist for remainder of current round
+- counter chain uses modified WORK values
+- next round clears to FIX-equivalent values
+- V1.05 Continuation/Mighty 保留
+- V1.04 NormalGuard 保留
+- save schema 21
