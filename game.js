@@ -2264,6 +2264,7 @@ function enemyEscapeChance(unit){
 }
 function finishEnemyEscape(unit){
   if(!enemy||!unit)return {battleEnded:false};
+  releaseEnemyRuntimeItems(unit);
   if(Array.isArray(enemy.units)){
     enemy.units=enemy.units.filter(u=>u.id!==unit.id);
     if(enemy.units.length===0){
@@ -2286,6 +2287,7 @@ function finishEnemyEscape(unit){
 }
 function finishEnemyDirectExit(unit,reason='離開戰鬥'){
   if(!enemy||!unit)return {battleEnded:false};
+  releaseEnemyRuntimeItems(unit);
   if(Array.isArray(enemy.units)){
     enemy.units=enemy.units.filter(u=>u.id!==unit.id);
     if(enemy.units.length===0){
@@ -3965,6 +3967,11 @@ function performEnemyAttackMagic(actor,unit,options,meta){
   if(magicId===204||magicId===435){
     const mp=sourceItemRuntimeMagicUseMp(itemIndex);
     const mpBefore=Math.trunc(n(unit.mp));
+    if(mp===null){
+      const slot=sourceItemRuntimeSlot(itemIndex);
+      addLog(unit.name+' 的 '+(meta?.n||('magic '+magicId))+' 讀到 ITEM_item['+itemIndex+'] 已被 Item '+(slot?.itemId??'未知')+' 佔用，但正式 itemset6 的 mu 尚未解碼；本次不猜 MP cost，也不套魔法效果。');
+      return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp:null,mpBefore,mpAfter:mpBefore,sourceItemMpUnknown:true,itemId:slot?.itemId??null};
+    }
     if(mpBefore<mp){
       addLog(unit.name+' 的 '+(meta?.n||('magic '+magicId))+' 因 MP 不足失敗（需要 '+mp+'，目前 '+mpBefore+'）。');
       return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:mpBefore,mpFailed:true};
@@ -4896,6 +4903,8 @@ function captureTurn(manual=false){
         addLog('捕獲失敗：目前捕獲率為 '+Math.max(0,n(c.display)).toFixed(1)+'%。','bad');
       }else if(Math.random()*100<c.raw){
         const pet=addCapturedPet(target);
+        // 原 PET_createPetFromCharaIndex 不複製 Enemy item；Enemy BATTLE_Exit/清理後其 carried/style 全釋放。
+        releaseEnemyRuntimeItems(target);
         for(const item of c.requirements||[])consumeItem(item.id,1);
         addLog('捕獲成功：'+pet.name+'（'+c.display.toFixed(1)+'%）。','good');
         captured=true;
@@ -4964,6 +4973,8 @@ function winBattle(){
   if(pet&&petExp>0)awardActivePetExp(petExp);
   addLog('擊敗 '+(defeated.groupBattle?('敵方編成 '+unitCount+' 名'):defeated.name)+'，獲得 '+exp+' EXP。'+(serverResolved?'（原 Enemy EXP／等級差衰減／battleexp ×'+Math.max(1,n(encounterRuntime?.enemyExp?.battleExpMultiplier)||1)+'）':'（手工任務編成沿用暫定 EXP）'),'good');
   const drops=rollVerifiedDrops(defeated);
+  // 被挑進 getitem 的 existing index 已轉為 player；其餘仍屬 Enemy 的 carried/style item 在 CHAR_endCharOneArray 等價清理。
+  releaseBattleEnemyRuntimeItems(defeated);
   for(const item of drops){
     addLog('掉落：'+item.name+' ×1。','pet');
   }
@@ -4997,6 +5008,7 @@ function winBattle(){
 }
 function defeat(){
   addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
+  releaseBattleEnemyRuntimeItems(enemy);
   state.hp=state.maxHp;
   state.mp=state.maxMp;
   enemy=null;
@@ -5664,7 +5676,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.68 載入完成：加入最小 ITEM existing-index runtime，接入 676 水的精靈 Lv5／688 癱瘓的精靈 Lv3，並正式建立 BattleArray field_att/power/count 對物理與攻擊魔法的屬性倍率。','good');
+    addLog('V0.69 載入完成：ITEM existing-index runtime 接上 Enemy 10 格攜帶物與 STYLE 武器的建立／getitem 轉移／消耗／逃跑／捕獲／戰敗釋放生命週期；未知 itemset6 mu 不猜 MP cost。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
