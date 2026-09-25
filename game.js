@@ -56,8 +56,8 @@ const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)
 
 function freshState(){
   return {
-    schemaVersion:17,
-    level:1,exp:0,expNext:2,hp:35,maxHp:35,
+    schemaVersion:18,
+    level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
     attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:0,
@@ -179,11 +179,16 @@ function normalizeState(raw){
   const normMagic4=a=>Array.from({length:4},(_,i)=>Math.max(0,Math.trunc(n(Array.isArray(a)?a[i]:0))));
   s.magicResist=normMagic4(s.magicResist);
   s.magicResistExp=normMagic4(s.magicResistExp);
+  // 原 CHAR_createNewChar 將 CHAR_MAXMP 與 CHAR_MP 都固定初始化為 100；
+  // CHAR_initcharWorkInt 再直接令 WORKMAXMP = CHAR_MAXMP。現版尚無 MP 裝備修正，因此上限維持 100。
+  if(n(raw?.schemaVersion)<18){s.maxMp=100;s.mp=100;}
+  s.maxMp=Math.max(0,Math.trunc(n(s.maxMp)||100));
+  s.mp=clamp(Math.trunc(n(s.mp)),0,s.maxMp);
   for(const p of s.petBox){
     p.magicResist=normMagic4(p.magicResist);
     p.magicResistExp=normMagic4(p.magicResistExp);
   }
-  s.schemaVersion=17;
+  s.schemaVersion=18;
   delete s.pets;
   return s;
 }
@@ -1634,6 +1639,10 @@ const ENEMY_SOURCE_SKILL_META={
   503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6},
   504:{n:'嗜血技2',d:'傷害的 70% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'20|70',field:1,target:6},
   505:{n:'嗜血技3',d:'傷害的 100% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'10|100',field:1,target:6},
+  // V0.63：原 PETSKILL_MpDamage 第一參數存在 C 整數除法 bug：50/100 先算成 0，因此物理攻擊力實際不下降。
+  506:{n:'MP攻擊',d:'物理命中玩家後扣除當下 MP 50%；原 C 的攻擊力-50% parser 實際不生效',f:'PETSKILL_MpDamage',o:'50|50',field:1,target:6},
+  507:{n:'MP攻擊2',d:'物理命中玩家後扣除當下 MP 75%；原 C 的攻擊力-50% parser 實際不生效',f:'PETSKILL_MpDamage',o:'50|75',field:1,target:6},
+  508:{n:'MP攻擊3',d:'物理命中玩家後扣除當下 MP 100%；原 C 的攻擊力-50% parser 實際不生效',f:'PETSKILL_MpDamage',o:'50|100',field:1,target:6},
   541:{n:'狂暴攻擊',d:'多段狂暴攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+80 防%-35 回避30',field:1,target:6},
   542:{n:'疾速攻擊',d:'防禦下降；此來源函式未實作資料描述的敏捷增加',f:'PETSKILL_SpeedyAttack',o:'防%-30 敏%+30',field:1,target:6},
   543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
@@ -1873,6 +1882,11 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_DamageToHp2'){
     // 暗月狂狼變體：BATTLE_DexCalc 專用排序為 work +20%，無 default 的隨機扣速。
     unit.roundDexMode='damageToHp2';
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_MpDamage'){
+    // 原 PETSKILL_MpDamage：def=(float)(atoi(buf1)/100)，50/100 先走 C int division = 0，
+    // 所以 506/507/508 的「攻擊力下降50%」在此 build 實際不生效。
+    // battle.c 走 BATTLE_S_AttackDamage 專用 case，沒有普通 Counter loop。
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_BattleTimid'){
     // 原 PETSKILL_BattleTimid：直接把本回合 WORKATTACK/DEFENCE/QUICK
@@ -3467,6 +3481,28 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
 }
+function performEnemyMpDamage(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  const label=meta?.n||'MP攻擊';
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  enemyApplySkillHit(unit,chosen,r,label);
+
+  const parts=String(meta?.o||'').split('|');
+  const mpPercent=Math.max(0,Math.trunc(Number(parts[1])||0));
+  let mpBefore=Math.max(0,Math.trunc(n(state.mp))),mpDamage=0;
+  // 原 BATTLE_S_MpDamage：只有 damage>=1、目標為 PLAYER、MP>0 且沒有 DamageReact 才生效。
+  // 現版玩家尚無光／鏡／守 DamageReact work-int，因此該來源條件等價為 0。
+  if(r.damage>0&&chosen.kind==='player'&&mpBefore>0){
+    mpDamage=Math.trunc(mpBefore*mpPercent/100);
+    state.mp=Math.max(0,mpBefore-mpDamage);
+    if(mpDamage>0)addLog(unit.name+' 的 '+label+' 額外削減 '+mpDamage+' MP（'+mpBefore+' → '+state.mp+'）。','bad');
+  }
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,mpPercent,mpBefore,mpDamage,mpAfter:Math.max(0,Math.trunc(n(state.mp)))};
+}
 function performEnemyToothCrushe(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -4199,6 +4235,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Steal')return performEnemySteal(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp')return performEnemyDamageToHp(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_MpDamage')return performEnemyMpDamage(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ToothCrushe')return performEnemyToothCrushe(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackMagic')return performEnemyAttackMagic(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Firekill')return performEnemyFirekill(actor,unit,options,meta);
@@ -4921,6 +4958,7 @@ function render(){
   $('#level').textContent=state.level;
   $('#exp').textContent=state.level>=playerLevelCap()?(state.exp+' / MAX'):(state.exp+' / '+state.expNext);
   $('#hp').textContent=state.hp+' / '+state.maxHp;
+  $('#mp').textContent=Math.max(0,Math.trunc(n(state.mp)))+' / '+Math.max(0,Math.trunc(n(state.maxMp)));
   $('#gold').textContent=state.gold;
   $('#attack').textContent=state.attack;
   $('#defense').textContent=state.defense;
@@ -5153,7 +5191,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.62 載入完成：接入 Enemy 624 火線獵殺；依原 C 先以攻擊 80% 做專用物理段，再對目標所在一排追加火屬性 Power 200／MagicLv 4，且不套一般 Counter 或 FalseMagic ×0.7。','good');
+    addLog('V0.63 載入完成：加入原版玩家 MP 100／100 與 Enemy 506～508 MP攻擊；保留原 C 50/100 整數除法 bug，所以物理攻擊不降，命中玩家後才按當下 MP 扣 50%／75%／100%。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -5434,12 +5472,13 @@ $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#guardBtn').addEventListener('click',()=>guardTurn());
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;
+  state.mp=state.maxMp;
   let healedPets=0;
   for(const p of state.petBox){
     syncPetBattleHp(p,true);
     if(n(p.hp)<n(p.maxHp)){p.hp=p.maxHp;healedPets++;}
   }
-  addLog('休息完成，角色 HP 已補滿'+(healedPets?'，並恢復 '+healedPets+' 隻寵物。':'。'),'good');save();render();
+  addLog('休息完成，角色 HP／MP 已補滿'+(healedPets?'，並恢復 '+healedPets+' 隻寵物。':'。'),'good');save();render();
 });
 $('#playerParamGrid').addEventListener('click',e=>{
   const b=e.target.closest('button[data-player-stat]');if(!b)return;
