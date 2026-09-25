@@ -7453,3 +7453,129 @@ V0.80 因此再把 release 基底由泛用 `roundAttack` 改成明確：
 - V0.73～V0.79 回歸標記保留
 - save schema：仍為 **21**
 
+
+
+## V0.81 FIXDEX / WORKQUICK separation
+
+V0.81 把 fixed C 中「FIXDEX」與「WORKQUICK」的用途正式拆開。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+
+### 哪些地方讀 FIXDEX
+
+原碼：
+
+- `BATTLE_DuckCheck()`
+- `BATTLE_CriticalCheckPlayer()`
+- `BATTLE_CounterCalc()`
+- `BATTLE_CaptureCheck()`
+
+全部直接讀 `CHAR_WORKFIXDEX`，不是 `CHAR_WORKQUICK`。
+
+但 `BATTLE_DexCalc()` 的 EntrySort 則讀本回合 WORKQUICK。
+
+因此 SpeedyAttack、本輪怯戰敏捷覆寫、酒醉解除 QUICK ×2、DamageToHp2 的 WORKQUICK +20% 等，可以改變行動順序，卻不應直接改變回避／會心／反擊公式。
+
+### battle view 的雙敏捷欄位
+
+V0.81 現在每個 battle view 同時提供：
+
+- `quick`：WORKQUICK 語意，給 EntrySort 與真正讀 WORKQUICK 的流程。
+- `fixedDex`：FIXDEX 語意，給 Duck / Critical / Counter / Capture。
+
+Player / Active Pet 的 `fixedDex` 為該輪 PreCommand 後 dex snapshot；Enemy 的 `fixedDex = roundFixQuick`。
+
+### DuckCheck：不能行動就不能閃避
+
+fixed `BATTLE_DuckCheck()` 在一般回避公式之前先檢查 `BATTLE_CanMoveCheck(defender)`。
+
+若為 FALSE，直接 return FALSE。
+
+因此麻痺、石化、睡眠、魔障、暈眩等不可行動狀態，都不能再靠普通 DuckCheck 閃避。
+
+V0.81 的 `resolveNormalAttack()` 現在在 `defender.canMove === false` 時直接禁用整個普通 dodge 判定；GUARD 仍同樣直接禁用 DuckCheck。
+
+### Duck / Critical / Counter 全改 FIXDEX
+
+V0.81 的：
+
+- `battleDuckChance()`
+- `battleCriticalChance()`
+- `battleCounterChance()`
+
+現在都優先讀 `fixedDex`；只有非 battle-view fallback 才退回 `quick`。
+
+所以若 FIXDEX=100、WORKQUICK=200：
+
+- 出手排序用 200
+- 回避／會心／反擊仍用 100
+
+### CaptureCheck 也改回 FIXDEX
+
+原 `BATTLE_CaptureCheck()`：
+
+```c
+At_Dex = CHAR_getWorkInt(attackindex, CHAR_WORKFIXDEX);
+Df_Dex = CHAR_getWorkInt(defindex, CHAR_WORKFIXDEX);
+```
+
+V0.81：
+
+- Player 用 `playerBattleView().fixedDex`
+- Enemy 用 `roundFixQuick`
+- UI 預覽尚未建立當輪 snapshot 時，Enemy 才退回 compliant `quick`
+
+實際 capture roll 發生在 `normalBattleOrder()` 完成 PreCommand snapshot 後，因此真正判定會讀到當輪 FIXDEX。
+
+### CaptureCheck 的 C int arithmetic
+
+原碼相關變數全部是 int：
+
+```c
+Df_HpPer = 10 - (HP * HP) / MaxHP;
+Df_Level = At_Level/2 - Df_Level/2;
+Df_Dex = At_Dex/15 - Df_Dex/15;
+WorkGet =
+  (Df_HpPer + Df_Level + Df_Dex + Df_Ge + At_Luck)
+  * At_Charm / 50;
+```
+
+V0.81 已改成逐步 `Math.trunc`，不再用 JavaScript 浮點一路算到底。
+
+原碼只限制 `WorkGet > 99`，沒有把負數強制改成 0；web 同樣保留 raw 負值，只在 UI 顯示時 clamp 到 0～99。
+
+### Capture success 的 strict less-than
+
+來源：
+
+```c
+if (RAND(1,100) < WorkGet)
+```
+
+因此 WorkGet=20 時成功 roll 是 1～19，不是 1～20。
+
+V0.81 實際捕獲改為 `cRand(1,100) < raw`，完整保留 strict-less-than。
+
+### V0.81 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- save schema：21
+- 正權重 Skill coverage：158 / 134 / 22 / 2 / gap 0
+- Player / Pet / Enemy 都有 `fixedDex`
+- Enemy `fixedDex = roundFixQuick`
+- Duck 使用 FIXDEX
+- Critical 使用 FIXDEX
+- Counter 使用 FIXDEX
+- EntrySort 仍使用 WORKQUICK
+- CannotMove defender 不再普通閃避
+- Capture 使用雙方 FIXDEX
+- Capture HP / level / dex / charm 全部 C int truncation
+- Capture success 使用 `RAND(1,100) < WorkGet`
+- V0.73～V0.80 回歸標記保留
+
