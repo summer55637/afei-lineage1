@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.33</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.34</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.33：</b>
-      對齊 Enemy AttackMagic 的 raw COM2／TargetIndex／BATTLE_MultiList 生命週期：單體魔法失效目標改用原版 rand()%10 rejection fallback；排攻擊只換前後排；全體魔法不再多吃 DefaultAttacker RNG，EarthRound 隱身目標由最終 TargetCheck 過濾。
+      <b>V1.34：</b>
+      對齊 BATTLE_Battling 的全域 AttackCount RNG 時序：Enemy 只要 CHAR_ARM 有有效武器，每個真正進入執行階段的回合都先做 BATTLE_GetAttackCount；Guard／Escape／無法行動等沒有揮武器的回合也會照原 C 消耗武器 RAND，物理攻擊則重用這次結果避免二次抽取。
     </article>
   </main>
 

@@ -4236,6 +4236,22 @@ function sourceEnemyBattleAttackMax(unit){
   // 非 PLAYER（Enemy/Pet）隨後固定退回 1 擊，不進玩家等級／Luck 的空手連擊表。
   return count<=0?1:count;
 }
+function sourceEnemyPrimeExecutionAttackCount(actor){
+  if(actor?.kind!=='enemy')return null;
+  // BATTLE_Battling() owns Battle Entry lifetime, so look through the full unit array rather
+  // than livingEnemyUnits(): StatusSeq can make the actor unable to move (or even die) and the
+  // source still reaches BATTLE_GetAttackCount before switching on COM.
+  const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+  const unit=units.find(u=>u&&u.id===actor.unitId)||null;
+  if(!unit)return null;
+  const itemIndex=Math.trunc(Number(unit.weaponItemIndex));
+  const slot=Number.isFinite(itemIndex)&&itemIndex>=0?sourceItemRuntimeSlot(itemIndex):null;
+  const validArm=!!slot;
+  const attackMax=sourceEnemyBattleAttackMax(unit);
+  actor.sourceAttackMax=attackMax;
+  actor.sourceAttackCountWeaponRoll=validArm;
+  return {attackMax,validArm,itemIndex:validArm?itemIndex:-1};
+}
 function sourceEnemyTargetBattleSlot(target){
   if(target?.kind==='player')return 0;
   if(target?.kind==='pet')return 5;
@@ -4359,7 +4375,10 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
   const chosen=enemyActorCommandTarget(actor);
   if(!chosen)return null;
   const overrideMax=Number(options.attackMaxOverride);
-  const attackMax=Number.isFinite(overrideMax)&&overrideMax>0?Math.trunc(overrideMax):sourceEnemyBattleAttackMax(unit);
+  const primedMax=Number(actor?.sourceAttackMax);
+  const attackMax=Number.isFinite(overrideMax)&&overrideMax>0
+    ?Math.trunc(overrideMax)
+    :(Number.isFinite(primedMax)&&primedMax>0?Math.trunc(primedMax):sourceEnemyBattleAttackMax(unit));
   const plan=sourceBowTargetList(actor,unit,chosen);
   const attackOptions=Object.assign({},options.attackOptions||{});
   const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
@@ -4426,7 +4445,10 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
   const overrideMax=Number(options.attackMaxOverride);
-  const attackMax=Number.isFinite(overrideMax)&&overrideMax>0?Math.trunc(overrideMax):sourceEnemyBattleAttackMax(unit);
+  const primedMax=Number(actor?.sourceAttackMax);
+  const attackMax=Number.isFinite(overrideMax)&&overrideMax>0
+    ?Math.trunc(overrideMax)
+    :(Number.isFinite(primedMax)&&primedMax>0?Math.trunc(primedMax):sourceEnemyBattleAttackMax(unit));
   const attackOptions=Object.assign({},options.attackOptions||{});
   const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
   const useBreakthrowStatus=options.breakthrowStatus!==false;
@@ -4456,7 +4478,8 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
 
 function performEnemyFoxFistRangedAttack(actor,unit,options={}){
   const actualWeaponType=Math.trunc(n(unit?.weaponType));
-  const attackMax=sourceEnemyBattleAttackMax(unit);
+  const primedMax=Number(actor?.sourceAttackMax);
+  const attackMax=Number.isFinite(primedMax)&&primedMax>0?Math.trunc(primedMax):sourceEnemyBattleAttackMax(unit);
   const commandSlot=sourceEnemyCommandTargetBattleSlot(actor,null);
 
   // Source order is important: BATTLE_GetAttackCount() is evaluated before
@@ -7881,6 +7904,10 @@ function captureTurn(manual=false){
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
+    // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
+    // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
+    // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
+    if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);
@@ -8488,6 +8515,10 @@ function attackTurn(){
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
+    // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
+    // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
+    // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
+    if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);
@@ -8585,6 +8616,10 @@ function guardTurn(){
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
+    // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
+    // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
+    // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
+    if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);

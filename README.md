@@ -12146,3 +12146,101 @@ V1.33 新增 `sourceEnemyAttackMagicMultiList()`，保留這個 rejection RNG li
 - 318 最終 TargetCheck 排除 hidden Pet，只命中合法 side targets
 - 204 FieldAttChange 不因 raw COM2 invalid 多吃 targeting RNG
 - schema 27 / V1.32 TargetAdjust / V1.31 target AI RNG regressions unchanged
+
+
+## V1.34 BATTLE_GetAttackCount pre-command RNG lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+本輪從 V1.33 AttackMagic 繼續往 `BATTLE_Battling()` 的實際執行順序掃描，確認一個會影響整場 RNG 序列、而且目前 85-floor runtime 已實際可達的差異。
+
+### Source order
+
+fixed `battle.c` 每個可執行 Battle Entry 在：
+
+- `BATTLE_StatusSeq()`
+- `BATTLE_CanMoveCheck()`
+- 本輪武器型別整理
+
+之後，尚未進入真正的 command switch 前，就無條件執行：
+
+```c
+attack_max = BATTLE_GetAttackCount(charaindex);
+```
+
+`BATTLE_GetAttackCount()` 只要 `CHAR_ARM` 是有效 existing item，就一定呼叫：
+
+```c
+RAND(ITEM_ATTACKNUM_MIN, ITEM_ATTACKNUM_MAX)
+```
+
+這和最後 command 是否真的用武器無關。
+
+因此 Enemy 本回合抽到：
+
+- GUARD
+- ESCAPE
+- NONE
+- AttackMagic
+- 其他不使用 weapon attack loop 的技能
+- StatusSeq 後已不能行動、COM 被改成 NONE
+
+只要身上仍有有效 `CHAR_ARM`，來源都已先消耗一次 AttackNum RNG。
+
+另外 `util.h` 的 `RAND(x,y)` 宏本身直接呼叫 `rand()`。所以即使武器是固定 `1..1` 或 `0..0`，`RAND(1,1)` / `RAND(0,0)` 仍然會消耗一顆原 RNG，不可因 min==max 省略。
+
+### Current reachable proof
+
+把目前 85-floor encounter group 與 Enemy AI / STYLE 武器交叉後，至少下列可達 Enemy 自帶 STYLE weapon 且存在非 Attack action：
+
+- 1098：BREAKTHROW，AttackNum 1..1，Guard
+- 1099：BOW，AttackNum 1..3，Guard
+- 1100：CLUB，AttackNum 1..1，Guard
+- 1101：SPEAR，AttackNum 0..0，Guard
+- 1102：AXE，AttackNum 1..1，Guard
+- 1104：BOUNDTHROW，AttackNum 1..1，Guard
+- 1112：CLUB，AttackNum 1..1，Guard / Escape
+- 1113：BOW，AttackNum 1..3，Guard / Escape
+- 1115：BREAKTHROW，AttackNum 1..1，Guard / Escape
+- 1116：BOUNDTHROW，AttackNum 1..1，Guard / Escape
+
+所以這不是不可達的歷史規則；正常 85 張地圖戰鬥已會遇到。
+
+### Web correction
+
+新增 `sourceEnemyPrimeExecutionAttackCount(actor)`：
+
+- 在每個 battle loop 的 StatusSeq 後執行
+- 使用完整 Enemy Battle Entry unit，而不是只找 living unit
+- 無有效武器時保持原 Enemy fallback attackMax=1，且不額外抽 RNG
+- 有有效武器時立刻執行 `sourceBattleGetAttackCount()`
+- 把結果保存到 `actor.sourceAttackMax`
+
+BOW / BOUNDTHROW / BREAKTHROW / fox ranged 後續真正進物理攻擊時：
+
+- 優先重用 `actor.sourceAttackMax`
+- 不再第二次呼叫 `BATTLE_GetAttackCount`
+- RENZOKU 等來源本來會在之後覆寫 attack_max 的技能，仍由技能自己的 override 優先
+
+這同時修正了 throw weapon 舊順序：來源是 AttackCount RNG 在 TargetAdjust 之前；現在 Web 也不會先因失效 COM2 消耗 DefaultAttacker RNG，再去抽 AttackNum。
+
+### C_WAIT exception
+
+Enemy AI 若 `PETSKILL_Use()` 失敗或 B_AI_MAGICMODE 無 handler，來源 Battle mode 仍停在 C_WAIT，`BATTLE_Battling()` 在進 StatusSeq 前就 continue。
+
+因此 Web 仍維持 `sourceEnemyCWait(actor)` 提前跳過；這類 actor 不應消耗 AttackCount RNG。
+
+本輪不新增持久化欄位，schemaVersion 維持 27。
+
+### V1.34 regression targets
+
+- game.js syntax PASS
+- valid CHAR_ARM + Guard：仍消耗一次 RAND(AttackNum min,max)
+- valid CHAR_ARM + Escape：仍消耗一次 AttackNum RAND
+- fixed 1..1 / 0..0 weapon：仍有一次 RNG call
+- immobilized Enemy：StatusSeq 後仍先消耗 AttackCount RNG，再跳過 action
+- C_WAIT Enemy：不消耗 AttackCount RNG
+- normal BOW / THROW：重用 primed attackMax，不二次抽取
+- RENZOKU explicit attackMax override 優先於 primed value
+- AttackCount RNG 發生在 TargetAdjust / AttackMagic MultiList / command effect 之前
+- schema 27 / V1.33 AttackMagic / V1.32 TargetAdjust regressions unchanged
