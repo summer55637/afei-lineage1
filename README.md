@@ -8551,3 +8551,148 @@ per=Math.trunc(per);
 - dispatcher gaps：0
 - save schema：21
 
+## V0.90 StatusAttackCheck integer chance semantics
+
+V0.90 校正共用異常狀態命中函式 `BATTLE_StatusAttackCheck()` 的 C 整數指派語意。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `BATTLE_StatusAttackCheck()`
+
+來源宣告：
+
+```c
+int Df_Reg = 0, level = 0, per = 0, i;
+float templP = 0.0;
+float fVitalP = 0.0;
+```
+
+非麻痺的共用命中率會先算：
+
+```c
+templP = (float)VITAL / (VITAL + STR + TOUGH + DEX);
+fVitalP = templP / 0.25;
+fVitalP *= 10.0;
+```
+
+接著：
+
+```c
+level = attackLv - defendLv;
+level *= Bai;
+
+per = PerOffset + level + FIXLUCK
+    - Df_Reg - fVitalP;
+
+if( per > 80 ) per = 80;
+
+if( RAND(1,100) < per )
+    return TRUE;
+```
+
+### 兩個 C int 邊界
+
+`level` 是 `int`，所以 `level *= Bai` 若產生小數，會在 compound assignment 時先向 0 截斷。
+
+更重要的是 `per` 也是 `int`。最後一條公式包含 `float fVitalP`，但整個結果在指派給 `per` 時會立刻向 0 截斷。
+
+V0.89 以前 web 會把這個小數一路保留到：
+
+```js
+cRand(1,100) < per
+```
+
+因此可能多出原 C 不存在的一個 RAND 成功邊界。
+
+### 可觀察差異
+
+固定例：
+
+```text
+PerOffset = 30
+level = 0
+luck = 0
+resist = 0
+
+VITAL / total stats = 0.33
+fVitalP = 0.33 / 0.25 * 10 = 13.2
+```
+
+則：
+
+```text
+fixed C:
+per = int(30 - 13.2) = 16
+RAND(1,100) < 16
+成功 roll = 1..15
+
+V0.89 web:
+per = 16.8
+RAND(1,100) < 16.8
+成功 roll = 1..16
+```
+
+所以 roll=16 在舊 web 會成功，但 fixed C 會失敗。
+
+V0.90 改成：
+
+```js
+let level=Math.trunc((attackLevel-defendLevel)*bai);
+...
+let per=Math.trunc(perOffset+level+luck-resist-vitalPenalty);
+if(per>80)per=80;
+```
+
+並保留來源的嚴格 `RAND(1,100) < per`。
+
+### fixed data 可達性
+
+這是共用狀態命中公式，不只一個技能會走到。
+
+目前正權重 Enemy AI 已確認：
+
+| Skill | 類型 | distinct Enemy | 正權重總和 |
+|---|---|---:|---:|
+| 575 | 虛弱 | 6 | 9 |
+| 576 | 全體虛弱 | 1 | 3 |
+| 577 | 劇毒 | 1 | 3 |
+| 578 | 全體劇毒 | 2 | 6 |
+| 580 | 沉默 | 21 | 47 |
+| 590 | BattleModel 狀態 | 1 | 4 |
+| 655 | BattleModel 狀態 | 6 | 6 |
+| 707 | 劇毒攻擊 | 2 | 13 |
+| 708 | 石化攻擊 | 1 | 1 |
+
+另外 Combined 狀態精靈與已接入的 AttackMagic 狀態路徑也共用同一個 web helper，因此一併取得正確的 int 門檻。
+
+麻痺的來源特殊分支：
+
+```c
+per = 20 - RegTbl[PARALYSIS];
+```
+
+本來就是純整數，V0.90 不改它的機率語意。
+
+### V0.90 regression
+
+- `game.js` JavaScript syntax：PASS
+- `level *= Bai` 對齊 int compound-assignment truncation
+- 最終 `per = ... - fVitalP` 對齊 int assignment truncation
+- `per > 80` cap 維持在截斷之後
+- RAND 判定仍維持嚴格 `<`
+- 例：`30 - 13.2` → fixed/web 都得到 16
+- 麻痺特殊 `20 - resist` 分支不受影響
+- V0.89 CounterCalc int return truncation 保留
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
+

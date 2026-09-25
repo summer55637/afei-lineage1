@@ -1805,11 +1805,15 @@ function battleStatusChance(attackerDesc,targetDesc,type,rules={}){
   const total=n(raw.vital)+n(raw.str)+n(raw.tgh)+n(raw.dex);
   const vitalPenalty=total>0?(n(raw.vital)/total)/.25*10:0;
   const bai=Number.isFinite(Number(rules.bai))?Number(rules.bai):2;
-  const range=Number.isFinite(Number(rules.range))?Math.max(0,Number(rules.range)):40;
-  const perOffset=Number.isFinite(Number(rules.perOffset))?Number(rules.perOffset):30;
-  let level=(battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*bai;
+  const range=Number.isFinite(Number(rules.range))?Math.max(0,Math.trunc(Number(rules.range))):40;
+  const perOffset=Number.isFinite(Number(rules.perOffset))?Math.trunc(Number(rules.perOffset)):30;
+  // fixed BATTLE_StatusAttackCheck：level / per 都是 int。
+  // level *= Bai 會先向 0 截斷；最終含 float fVitalP 的整條命中率公式
+  // 指派回 int per 時也會再截斷，之後才 cap 80 並做 RAND(1,100) < per。
+  let level=Math.trunc((battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*bai);
   level=clamp(level,-range,range);
-  let per=perOffset+level+battleStatusLuck(attackerDesc)-resist-vitalPenalty;
+  const luck=Math.trunc(n(battleStatusLuck(attackerDesc)));
+  let per=Math.trunc(perOffset+level+luck-resist-vitalPenalty);
   if(per>80)per=80;
   return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset};
 }
