@@ -5268,3 +5268,167 @@ V0.69：
 - \`ITEM_MAGICUSEMP\` source-unknown：維持 unknown，不猜
 
 V0.69 至此把 Enemy carried loot + STYLE 武器的 existing-index allocator 生命週期接成可持續影響 20900／20912 occupancy 的 runtime。
+
+
+## V0.70 itemset6 ITEM_MAGICUSEMP runtime
+
+V0.70 把 V0.68／V0.69 最後保留的 `ITEM_MAGICUSEMP = unknown` 邊界正式解開，讓 Enemy 建立出的 existing item 能帶入原 `itemset6.txt` 的真實 MP cost。
+
+來源固定為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/data/itemset6.txt`
+- `gmsv/src/item/item.c`
+- `gmsv/src/include/item.h`
+- `gmsv/src/include/version.h`
+- `gmsv/data/enemy1.txt`
+- `gmsv/src/char/enemy.c`
+
+### itemset6 欄位已由原 C parser 對齊
+
+這個 build 同時開啟 `_ITEMSET2_ITEM`、`_ITEM_INSLAY`、`_Item_ReLifeAct`、`_ITEM_MAXUSERNUM`、`_ITEMSET4_TXT`、`_TAKE_ITEMDAMAGE`、`_ADD_DEAMGEDEFC`、`_SUIT_ITEM`、`_ITEMSET5_TXT`、`_ITEMSET6_TXT` 等相關欄位。
+
+依 `ITEM_itemconfentries[]` 與 `ITEM_readItemConfFile()`：
+
+- 每筆有效 `itemset6.txt` 資料固定 94 欄。
+- `ITEM_ID_TOKEN_INDEX = 17`。
+- `ITEM_MAGICID` = 第 56 欄。
+- `ITEM_MAGICPROB` = 第 57 欄。
+- `ITEM_MAGICUSEMP` = 第 **58 欄**。
+- 空的 `magicusemp` 欄不是 unknown；`ITEM_getDefaultItemSetting()` 先給預設值 0，只有 token 非空才用 `atoi()` 覆寫，所以空欄正式等價 **0**。
+
+完整來源掃描：
+
+- 10,737 筆有效 Item。
+- 10,737 個唯一 Item ID，無 duplicate。
+- Item ID 範圍 0～23009。
+- 228 筆 `magicusemp` token 為空，依原 parser 為 0。
+- 5,082 筆 `ITEM_MAGICUSEMP` 非 0。
+- 非負 MP cost 整體範圍 0～100。
+
+產物：
+
+`data/generated/stoneage_item_magic_runtime.json`
+
+內含來源 ref／blob、parser token 定義、統計與完整 `itemId -> magicUseMp` 對照。
+
+### ITEM_makeItemAndRegist 的 MP cost 可以安全由模板回填
+
+原 `ITEM_makeItem()`：
+
+1. 從 `ITEM_tbl[itemId]` 複製完整 `ITEM_Item`。
+2. 只對帶有 `randomdata[]` width 的欄位做 `RAND(0,width)`。
+3. `ITEM_MAGICUSEMP` 在 parser 中是普通 `ITEM_INTENTRY`，不是 `ITEM_INTFUNC / ITEM_getRandomValue`，所以其 random width 為 0。
+4. `ITEM_makeItemAndRegist()` 再把這份 Item 丟進 existing-index allocator。
+
+全 source 搜描也沒有找到普通 Enemy `ITEM_makeItemAndRegist()` 建立路徑會在 init 時重新隨機改寫 `ITEM_MAGICUSEMP`；找到的 `ITEM_setInt(... ITEM_MAGICUSEMP ...)` 是鑲嵌／合成時把既有 Item 的 MP 值複製到另一件 Item，不屬於 Enemy carried loot／STYLE 的建立流程。
+
+因此 V0.70 可以由 Item ID 唯一回填 Enemy 新建 existing item 的 MP cost，不需要猜值。
+
+### existing allocator 接入
+
+新增：
+
+- `ITEM_MAGIC_RUNTIME_URL`
+- `itemMagicDb`
+- `sourceItemTemplateExists(itemId)`
+- `sourceItemTemplateMagicUseMp(itemId)`
+
+`sourceItemRuntimeAlloc()` 現在：
+
+- 先驗證 Item ID 是否真的存在於原 `ITEM_tbl` 對應資料。
+- 不存在 → 等價原 `ITEM_makeItem()` 失敗，return -1。
+- 存在 → 若呼叫端沒有另外提供可靠 MP 值，就從原 `itemset6` runtime 取得真實 `ITEM_MAGICUSEMP`。
+- existing slot 仍保留原 V0.69 的 `itemId / owner / source / enemySlot` 生命週期。
+
+因此 Enemy 的：
+
+- 10 格 carried loot
+- STYLE 武器
+
+都不再把 `magicUseMp` 寫成 null，而是建立當下直接帶入正式來源值。
+
+### 676／688 的 runtime 現在有四種精確結果
+
+676：
+
+- `magic 204 item 20900`
+
+688：
+
+- `magic 435 item 20912`
+
+這裡的 20900／20912 仍是 **global existing index**，不是 Item ID。
+
+`MAGIC_DirectUse()` 等價流程現在可以區分：
+
+1. existing slot 未配置：
+   - `ITEM_getInt -> -1`
+   - Enemy `MP < -1` 為 false
+   - `MP -= -1`
+   - Enemy MP +1
+   - 魔法繼續執行
+
+2. slot 已配置，該 Item `MAGICUSEMP = 0`：
+   - 不改 MP
+   - 魔法正常執行
+
+3. slot 已配置，`MAGICUSEMP > 0` 且 Enemy MP 不足：
+   - 原 `MAGIC_DirectUse()` 失敗
+   - 不扣 MP
+   - 不套魔法效果
+
+4. slot 已配置，`MAGICUSEMP > 0` 且 MP 足夠：
+   - 扣除正式 MP cost
+   - 再執行 magic 204／435
+
+若 legacy slot 連可唯一辨識的 Item ID 都沒有，仍維持 unknown／不猜效果；這是資料真的不足，不再是 itemset6 無法解碼。
+
+### Enemy 掉落表與缺失 Item template
+
+直接用同一 fixed ref 的 `enemy1.txt` 重新掃 2958 筆 Enemy：
+
+- 正掉落機率欄：1,447 格。
+- 掉落＋STYLE 共引用 470 種 Item ID。
+- 有 52 種被 `enemy1.txt` 引用的 Item ID 在 `itemset6.txt` 根本不存在。
+- 這 52 種缺失 ID 共出現在 115 個正機率掉落格。
+
+原 C 對這些資料會：
+
+`ITEM_CHECKITEMTABLE == FALSE -> ITEM_makeItem() FALSE -> ITEM_makeItemAndRegist() = -1`
+
+所以 V0.70 同樣不建立該 carried item；不再像 V0.69 因缺少 Item template 表而可能暫時產生 phantom existing item。
+
+目前 Enemy 實際引用且 `MAGICUSEMP > 0` 的來源 Item 至少包含：
+
+- 2165 → 20
+- 2329 → 16
+- 21048 → 24
+- 21170 → 10
+- 21171 → 10
+- 21172 → 10
+- 21173 → 20
+
+因此 676／688 的 existing-index occupancy 現在確實會被 Enemy allocation history 帶入非零 MP cost，不只是理論上的資料欄位。
+
+### Save schema 21
+
+V0.70：
+
+- schema 20 → **21**
+- V0.69 已存在、`itemId` 可由 source 唯一識別且 `magicUseMp = null` 的 slot，自動由第 58 欄回填。
+- 若 V0.69 曾建立出原 `itemset6` 不存在的 phantom Item slot，migration 會移除。
+- 若該 phantom 已是 `owner=player / source=battle-getitem`，只從 inventory 扣掉這一份 tracked 數量；不碰任務／舊版 `giveItem()` 產生的 untracked 同 ID 道具。
+
+### V0.70 回歸結果
+
+- `stoneage_item_magic_runtime.json`：10,737 個唯一 Item ID。
+- 所有資料列 94 欄規格驗證完成。
+- 空 `magicusemp` token 的 C default=0 已保留。
+- Enemy missing Item template 的 source failure 已保留。
+- Enemy carried loot／STYLE allocation 已改為真實 MP cost。
+- 676／688 原 existing-index 語意未改成 Item ID 查詢。
+- `game.js` JavaScript 語法解析：通過。
+
+V0.70 至此把 V0.68／V0.69 的 ITEM existing-index allocator 從「只知道 occupancy／ownership」推進成「existing item 同時帶有原 itemset6 的正式 MAGICUSEMP 資料」，讓 allocator history 可以真正改變 676／688 的施法結果。
