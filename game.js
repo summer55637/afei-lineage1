@@ -3637,6 +3637,9 @@ function enemyApplySkillHit(unit,chosen,r,label){
     return;
   }
 
+  if(r.guardianCalcOnly){
+    addLog(r.guardianCalcOnly.name+' 嘗試發動忠犬；此招走原 BATTLE_S_AttackDamage 舊 bug，傷害用忠犬能力計算但仍落在你身上。','bad');
+  }
   if(r.dodged){
     addLog('你閃避了 '+unit.name+' 的'+label+'。','good');
   }else if(r.miss){
@@ -3836,6 +3839,51 @@ function enemySkillTargetResult(unit,chosen,options={},attackerOverride=null){
   }
   return null;
 }
+function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
+  const original=playerBattleView();
+  const guarding=Object.prototype.hasOwnProperty.call(options,'guarding')?!!options.guarding:false;
+  const dodge=sourceInitialDodgeOnly(attacker,original,Object.assign({},options,{guarding}));
+  if(dodge.dodged){
+    dodge.originalTargetDesc={kind:'player'};
+    dodge.actualTargetDesc={kind:'player'};
+    return dodge;
+  }
+
+  const guardian=attacker?.throwWeapon?null:sourcePlayerGuardianPetForAttack(unit);
+  const calcDefender=guardian?petBattleView(guardian):original;
+
+  // fixed BATTLE_S_AttackDamage bug:
+  // BATTLE_AttackSeq() local defindex changes to Guardian for critical/damage/guard,
+  // but caller defindex is never updated, so DamageSub still hits the original Player.
+  const r=resolveNormalAttack(attacker,calcDefender,Object.assign({},options,{
+    guarding:guardian?false:guarding,
+    disableDodge:true
+  }));
+  r.duckRaw=dodge.duckRaw;
+  r.originalTargetDesc={kind:'player'};
+  r.actualTargetDesc={kind:'player'};
+
+  if(guardian){
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardianCalcOnly=guardian;
+    r.guardianPetId=guardian.id;
+    r.guardianSourceBug='BATTLE_S_AttackDamage-defindex-not-updated';
+  }
+  return r;
+}
+function enemyAttackSeqBugTargetResult(unit,chosen,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
+  if(chosen?.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+    // Guardian is attached to the owner's Entry; a Pet that was already the original
+    // target does not get redirected through its owner's Guardian mapping.
+    return resolveNormalAttack(attacker,petBattleView(chosen.pet),options);
+  }
+  if(chosen?.kind==='player'&&state.hp>0){
+    return resolveEnemyAttackSeqBugToPlayer(unit,options,attackerOverride);
+  }
+  return null;
+}
 function enemySkillAttrSpec(meta){
   const p=String(meta?.o||'').split('|');
   const code=String(p[0]||'').trim().toUpperCase();
@@ -3848,7 +3896,7 @@ function performEnemyModifyAttack(actor,unit,options,meta){
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const spec=enemySkillAttrSpec(meta);
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   let attr=0,bonusRoll=0,bonusStep=0,bonus=0;
@@ -3887,7 +3935,7 @@ function performEnemyMdfyAttack(actor,unit,options,meta){
 
   // 原 BATTLE_AttrAdjust 在 command=MDFYATTACK 時，先把攻方四屬清 0，
   // 再只寫入 option 指定屬性與數值；只影響本次攻擊。
-  const r=enemySkillTargetResult(unit,chosen,{guarding},{elements});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding},{elements});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   enemyApplySkillHit(unit,chosen,r,meta?.n||'屬性轉換攻擊');
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,spec};
@@ -3899,7 +3947,7 @@ function performEnemySonic(actor,unit,options,meta){
   const results=[];
 
   const firstGuarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const first=enemySkillTargetResult(unit,chosen,{guarding:firstGuarding});
+  const first=enemyAttackSeqBugTargetResult(unit,chosen,{guarding:firstGuarding});
   if(first){
     enemyApplySkillHit(unit,chosen,first,label);
     results.push({target:chosen.kind,r:first});
@@ -3910,7 +3958,7 @@ function performEnemySonic(actor,unit,options,meta){
   if(chosen.kind==='pet'&&state.hp>0){
     const owner={kind:'player'};
     const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-    const second=enemySkillTargetResult(unit,owner,{guarding,preGuardDamageMultiplier:.5});
+    const second=enemyAttackSeqBugTargetResult(unit,owner,{guarding,preGuardDamageMultiplier:.5});
     if(second){
       enemyApplySkillHit(unit,owner,second,label+'貫穿');
       results.push({target:'player',r:second,through:true});
@@ -4396,13 +4444,8 @@ function performEnemyTear(actor,unit,options,meta){
   const maxHp=chosen.kind==='pet'?n(chosen.pet?.maxHp):n(state.maxHp);
   const missingHp=Math.max(0,maxHp-beforeHp);
 
-  let r;
-  if(chosen.kind==='pet'&&chosen.pet){
-    r=enemyAttackPetResult(unit,chosen.pet);
-  }else{
-    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-    r=enemyAttackResult(unit,{guarding});
-  }
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
 
   if(!r.dodged){
     const tearBonus=Math.trunc(missingHp*tearPct/100);
@@ -4435,7 +4478,7 @@ function performEnemyRegret(actor,unit,options,meta){
       }));
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-      r=enemyAttackResult(unit,Object.assign({},attackOpts,{
+      r=resolveEnemyAttackSeqBugToPlayer(unit,Object.assign({},attackOpts,{
         guarding,preGuardDamageMultiplier:secondary?.8:1
       }));
     }else return null;
@@ -4535,7 +4578,7 @@ function performEnemyBattleTimid(actor,unit,options,meta){
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const label=meta?.n||'怯戰';
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
@@ -4565,7 +4608,7 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const label=meta?.n||'狂獅怒吼';
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
@@ -4590,7 +4633,7 @@ function performEnemyMpDamage(actor,unit,options,meta){
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const label=meta?.n||'MP攻擊';
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
@@ -4613,7 +4656,7 @@ function performEnemyToothCrushe(actor,unit,options,meta){
 
   const label=meta?.n||'嚙齒術';
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
@@ -4798,7 +4841,7 @@ function performEnemyLighttakeed(actor,unit,options,meta){
   // 目前 Player + Active Pet 沒有 WORKDAMAGEVANISH / ABSROB / REFLEC。
   // 因此原 BATTLE_GetDamageReact() 必定回 0，BATTLE_S_AttackDamage 照普通物理傷害結算，
   // LIGHTTAKE 的狀態搬移 switch 也找不到可複製的 Typenum。
-  const r=enemySkillTargetResult(unit,chosen,{guarding});
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   enemyApplySkillHit(unit,chosen,r,label);
@@ -4921,7 +4964,7 @@ function performEnemyDamageToHp2(actor,unit,options,meta){
   // 3) WORKATTACKPOWER 改為 FIXSTR +20% 後才進 DamageCalc。
   // QUICK +20% 只屬於 BATTLE_DexCalc 的回合排序，並不改 CriticalCheck 使用的 FIXDEX。
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-  const r=enemySkillTargetResult(
+  const r=enemyAttackSeqBugTargetResult(
     unit,chosen,
     {guarding,criticalChanceMultiplier:1.3},
     {attack}
@@ -4980,13 +5023,8 @@ function performEnemyDamageToHp(actor,unit,options,meta){
   unit.roundAttack=baseAttack-Math.trunc(baseAttack*cIntegerDivision);
   unit.counterEligibleThisTurn=false;
 
-  let r;
-  if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
-    r=enemyAttackPetResult(unit,chosen.pet);
-  }else{
-    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-    r=enemyAttackResult(unit,{guarding});
-  }
+  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   enemyApplySkillHit(unit,chosen,r,meta?.n||'嗜血技');
 
   let healed=0;

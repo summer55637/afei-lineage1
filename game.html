@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.00</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.01</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.00：</b>
-      接回低忠誠 RANDOMACT 忠犬 20 核心：技能本身攻擊 -20%、本輪保護主人；一般近戰先判主人閃避，再由忠犬代擋並用寵物自身防禦／屬性結算，遠距投擲武器不能代擋。
+      <b>V1.01：</b>
+      對齊 BATTLE_S_AttackDamage 的忠犬舊 bug：特殊技仍先讓主人閃避，再用忠犬能力算會心／傷害，但函式未更新 caller defindex，最終 HP 與後續效果仍落在原主人。
     </article>
   </main>
 

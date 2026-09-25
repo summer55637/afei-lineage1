@@ -9750,3 +9750,96 @@ V1.00 不把這兩條路徑錯誤合併；特殊 `BATTLE_S_AttackDamage` Guardia
 - V0.98 StatusChange 60 / 100 保留
 - V0.97 LoyaltyCheck core 保留
 - save schema：21
+
+
+## V1.01 BATTLE_S_AttackDamage Guardian defindex bug
+
+V1.01 專門對齊 fixed C 的 `BATTLE_S_AttackDamage()` 忠犬 bug，避免把 V1.00 一般 `BATTLE_Attack()` 的正常代擋邏輯錯套到所有特殊技。
+
+固定來源：
+
+- `gmsv/src/battle/battle_event.c`
+  - `BATTLE_AttackSeq()`
+  - `BATTLE_Attack()`
+  - `BATTLE_S_AttackDamage()`
+- `gmsv/src/battle/battle.c` 對 `BATTLE_S_AttackDamage()` 的 command dispatch
+- fixed commit：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+### 一般 BATTLE_Attack 與特殊 BATTLE_S_AttackDamage 不一樣
+
+正常 `BATTLE_Attack()` 在 `BATTLE_AttackSeq()` 返回後明確：
+
+```c
+if (Guardian >= 0)
+    defindex = BATTLE_No2Index(battleindex, Guardian);
+BATTLE_DamageSub(..., defindex, ...);
+```
+
+所以 V1.00 正常把傷害改扣忠犬。
+
+但 `BATTLE_S_AttackDamage()`：
+
+```c
+iWork = BATTLE_AttackSeq(attackindex, defindex, &damage, &Guardian, skill_type);
+...
+BATTLE_DamageSub(attackindex, defindex, &damage, ...);
+```
+
+中間沒有把 caller 的 `defindex` 更新為 Guardian。
+
+`BATTLE_AttackSeq()` 的 `defindex` 又只是傳值 local，所以來源實際流程是：
+
+1. 原主人先做 DuckCheck。
+2. 沒閃掉時 GuardianCheck 可以成功。
+3. AttackSeq local defindex 換成忠犬。
+4. Critical / DamageCalc / GuardAdjust 等以忠犬能力計算。
+5. 若傷害算成 0，因 GuardianIndex 存在仍強制成 NORMAL / 1。
+6. 返回 `BATTLE_S_AttackDamage()` 後，caller defindex 還是主人。
+7. `BATTLE_DamageSub()` 與該技能後續效果仍落在原主人。
+
+這是 fixed source 可直接證明的老 bug，不做合理化修正。
+
+### V1.01 已切換的現有 handler
+
+明確 dispatch 到 `BATTLE_S_AttackDamage()` 的現有 web handler：
+
+- BattleTimid / 2BattleTimid
+- Lighttakeed
+- DamageToHp / DamageToHp2
+- MpDamage
+- ToothCrushe
+- Modifyattack / Mdfyattack
+- BattleTearDamage
+- Sonic 主段與 SONIC2 貫穿段
+- Regret 主段與 REGRET2 貫穿段
+
+玩家目標改走 `resolveEnemyAttackSeqBugToPlayer()` / `enemyAttackSeqBugTargetResult()`。
+
+原目標本來就是 Pet 時不經「主人 Entry 的 Guardian」替換，維持原 Pet path。
+
+### 後續效果仍使用原 target
+
+因 caller defindex 未更新：
+
+- DamageToHp 吸血量依實際對原 target 的 damage。
+- MpDamage 的 MP 扣除仍以原 Player 判定。
+- Tear 的 missing HP bonus 仍讀原 target。
+- Modifyattack 的目標屬性 bonus 仍讀原 target。
+- Timid 的擊退／退出判定仍落原 target。
+- Sonic / Regret 的原 primary / secondary target 結構不變。
+
+### V1.01 regression
+
+- `game.js` JavaScript syntax：PASS
+- V1.00 一般 `BATTLE_Attack` Guardian 真正代擋不變
+- `BATTLE_S_AttackDamage`：主人先 dodge
+- Guardian 成功後 critical / damage 使用 Pet view
+- Guardian 成功後主人 Guard 不套到 damage
+- Guardian calc damage 0 強制 1
+- HP 仍扣原 Player
+- skill 後續效果仍落原 Player
+- throw weapon 仍阻止 GuardianCheck
+- Sonic primary + through 兩段都使用同一 source bug pipeline
+- Regret primary + through 玩家段都使用同一 source bug pipeline
+- V0.99 Charge / V0.98 StatusChange / V0.97 Loyalty core 保留
+- save schema：21
