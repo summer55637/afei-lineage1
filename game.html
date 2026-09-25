@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.41</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.42</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.41：</b>
-      對齊 Player 反擊率 <= 0 的 RNG 生命週期：BATTLE_CounterCheckPlayer 原 C 仍會把內部 per 設為 1 並執行 RAND(1,10000)<1；結果必定失敗，但不能省略這顆 RNG。
+      <b>V1.42：</b>
+      對齊 BATTLE_BattleModel_ATTACK 的特殊 ItemCrush RNG：目標存活時即使 DODGE／MISS／0 傷害也照樣做一次受擊部位 rand()%100；若該擊致死則直接走 death 分支，反而完全不做 ItemCrush。
     </article>
   </main>
 

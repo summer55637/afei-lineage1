@@ -12840,3 +12840,124 @@ Pet / Enemy 分支沒有改動，仍依 fixed `BATTLE_CounterCheckPet()` 使用�
 - V1.40 REGRET status RNG unchanged
 - V1.39 TIMID / ToothCrushe RNG unchanged
 - schema 27 unchanged
+
+
+## V1.42 BATTLE_BattleModel_ATTACK alive-only ItemCrush RNG
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `BATTLE_BattleModel_ATTACK()` 和普通 `BATTLE_Attack()` 的 ItemCrush 呼叫條件不同。
+
+BattleModel 在完成 AttackSeq / DamageSub / return-state / wake-up 後：
+
+```c
+if (CHAR_getInt(iDefindex, CHAR_HP) <= 0) {
+    // death / critical Ultimate
+}
+else {
+    BATTLE_ItemCrushSeq(charaindex, iDefindex, iDamage);
+
+    if (iDamage > 0 &&
+        BATTLE_StatusAttackCheck(...)) {
+        ...
+    }
+}
+```
+
+因此 BattleModel 的規則是：
+
+- **目標死亡：完全不呼叫 ItemCrushSeq**
+- **目標存活：一定呼叫 ItemCrushSeq**
+- ItemCrushSeq 在這裡沒有 `damage > 0` 外層條件
+- 所以 DODGE / MISS / 0 damage 只要目標仍活著，也照樣進 ItemCrushSeq
+
+### Why one guaranteed RNG still exists
+
+fixed `BATTLE_ItemCrushSeq()` 先做：
+
+```c
+BATTLE_ItemCrushCheck(defender, 1)
+```
+
+`flg=1` 的 `BATTLE_ItemCrushCheck()` 一進去固定：
+
+```c
+Crushs = rand()%100;
+```
+
+之後才找 BODY / HEAD / DECORATION1 / DECORATION2。
+
+ItemCrushSeq 接著還會呼叫：
+
+```c
+BATTLE_ItemCrushCheck(attacker, 2)
+```
+
+但 `flg=2` 只直接檢查 CHAR_ARM，**沒有 RNG**。因此在沒有可靠裝備耐久 runtime 的現況下，可確定的固定 RNG 仍只有受擊方這一顆。
+
+### Previous Web mismatch
+
+V1.37 的通用 `sourceBattleFinalizeItemCrushRng()` 正確描述普通物理路徑：
+
+- positive damage => defender rand()%100
+- dodge / miss / damage<=0 => no ItemCrush RNG
+
+但 `enemyApplyDirectGuardianSkillHit()` 是共用 helper，BattleModel 也經過它，因此 V1.41 前會錯成：
+
+- BattleModel 致死正傷害 => **誤吃一顆 ItemCrush RNG**
+- BattleModel 存活但 DODGE / MISS / 0 damage => **少吃一顆 ItemCrush RNG**
+
+兩邊都會讓後續 BattleModel 攻擊物件與整場 RNG 序列錯位。
+
+### V1.42 correction
+
+新增 `sourceBattleModelAliveItemCrushRng(r,targetDesc)`，只服務 BattleModel：
+
+- actual target 已死亡 => 0 顆
+- actual target 存活 => 固定 1 顆 `cRand(0,99)`
+- 不看 dodge / miss / damage
+- 記錄到既有 `sourceItemCrushDefenderRoll`
+- 不虛構後續耐久扣除
+
+`enemyApplyDirectGuardianSkillHit()` 增加可選的 `finalizeItemCrush:false`，BattleModel 先關掉共用正傷害 ItemCrush，再依自己的 source lifecycle 結算。
+
+FIREKILL 等其他使用同 helper 的路徑維持預設行為，不受影響。
+
+### Status check clarification
+
+本輪也重新確認 BattleModel 用的是普通：
+
+```c
+BATTLE_StatusAttackCheck(...)
+```
+
+不是 REGRET 用的：
+
+```c
+PROFESSION_BATTLE_StatusAttackCheck(...)
+```
+
+所以 BattleModel 的 existing-status early return 本來就應該發生在 status RNG 之前；V1.40 的「先抽 RNG」規則**不能套到 BattleModel**。
+
+BattleModel 狀態判定仍維持：
+
+1. target 必須存活
+2. damage > 0
+3. ItemCrush RNG 已完成
+4. existing abnormal status 先拒絕
+5. 通過後才做 StatusAttackCheck RAND
+
+### V1.42 regression targets
+
+- game.js syntax PASS
+- BattleModel lethal positive hit => no ItemCrush RNG
+- BattleModel surviving positive hit => exactly one defender rand()%100
+- BattleModel surviving MISS / DODGE / 0 damage => still exactly one defender rand()%100
+- BattleModel ItemCrush RNG occurs before optional status RNG
+- Guardian substitution uses actual protected target for alive/death decision
+- generic BATTLE_Attack positive-hit ItemCrush behavior unchanged
+- FIREKILL shared direct helper unchanged by default
+- REGRET PROFESSION status RNG behavior unchanged
+- schema 27 unchanged

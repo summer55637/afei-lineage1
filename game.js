@@ -2459,6 +2459,20 @@ function sourceBattleFinalizeItemCrushRng(r){
   r.sourceItemCrushDefenderRoll=roll;
   return roll;
 }
+function sourceBattleModelAliveItemCrushRng(r,targetDesc){
+  if(!r||!targetDesc||!battleStatusDescAlive(targetDesc))return null;
+  if(Object.prototype.hasOwnProperty.call(r,'sourceItemCrushDefenderRoll')){
+    return r.sourceItemCrushDefenderRoll;
+  }
+  // fixed BATTLE_BattleModel_ATTACK is a special caller:
+  // its ItemCrushSeq is inside the target-alive else branch, with NO damage>0 guard.
+  // Therefore DODGE / MISS / zero-damage hits still consume defender flg=1 rand()%100
+  // as long as the actual target survived. A lethal hit skips ItemCrush entirely.
+  const roll=cRand(0,99);
+  r.sourceItemCrushDefenderRoll=roll;
+  r.sourceBattleModelAliveItemCrush=true;
+  return roll;
+}
 function battleBaseElements(desc){
   if(desc?.kind==='player')return sourcePlayerElementsConfigured(state)?Object.assign({},state.elements):null;
   if(desc?.kind==='pet')return Object.assign({},desc.pet?.elements||{});
@@ -4840,11 +4854,21 @@ function performEnemyBattleModel(actor,unit,options,meta){
     }else{
       r=resolveEnemyDirectAttackToPlayer(unit,{guarding:playerGuardingActive});
     }
-    const actualTarget=enemyApplyDirectGuardianSkillHit(unit,target,r,label+'分身 '+(i+1)+'/'+sequence.length);
+    const actualTarget=enemyApplyDirectGuardianSkillHit(
+      unit,target,r,label+'分身 '+(i+1)+'/'+sequence.length,
+      {finalizeItemCrush:false}
+    );
+
+    // fixed BATTLE_BattleModel_ATTACK:
+    // death / alive branches are mutually exclusive. Only the alive branch calls
+    // BATTLE_ItemCrushSeq, and it does so even for DODGE / MISS / zero damage.
+    // This must happen before the optional status check.
+    const itemCrushRoll=sourceBattleModelAliveItemCrushRng(r,actualTarget);
 
     let status=null;
-    // fixed BATTLE_BattleModel_ATTACK：physical type 先把 iDefindex 換成 Guardian，
-    // 後面的死亡判定與 StatusAttackCheck / StatusTbl 全部使用真正 iDefindex。
+    // physical type 先把 iDefindex 換成 Guardian；後續 ItemCrush / StatusTbl
+    // 全部使用真正 iDefindex。普通 BATTLE_StatusAttackCheck 仍是 existing-status
+    // early return first，不沿用 REGRET 的 PROFESSION status RNG 規則。
     if(spec.statusType&&r.damage>0&&battleStatusDescAlive(actualTarget)){
       const check=battleStatusChance(
         {kind:'enemy',unit,unitId:unit.id},actualTarget,spec.statusType,
@@ -4864,7 +4888,7 @@ function performEnemyBattleModel(actor,unit,options,meta){
       target:target.kind,
       actualTarget:actualTarget?.kind||target.kind,
       guardianPetId:r?.guardianPetId||null,
-      r,status
+      itemCrushRoll,r,status
     });
   }
 
@@ -6021,13 +6045,13 @@ function enemyDirectActualTarget(chosen,r){
   }
   return chosen;
 }
-function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label){
+function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label,options={}){
   const actual=enemyDirectActualTarget(chosen,r);
   if(r?.guardian&&chosen?.kind==='player'){
     addLog(r.guardian.name+' 發動忠犬，代替你承受 '+unit.name+' 的'+label+'。','pet');
   }
   enemyApplySkillHit(unit,actual,r,label);
-  sourceBattleFinalizeItemCrushRng(r);
+  if(options.finalizeItemCrush!==false)sourceBattleFinalizeItemCrushRng(r);
   return actual;
 }
 
