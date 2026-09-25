@@ -5021,9 +5021,30 @@ function performEnemyContinuation(actor,unit,options,meta){
   const label=meta?.n||'連續攻擊';
   addLog(unit.name+' 使用 '+label+'（'+count+' 段）。');
 
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  if(weaponType===4||weaponType===18||weaponType===19){
+    // 原 BATTLE_COM_S_RENZOKU 在共用 weapon loop 前把：
+    // attack_max = 技能段數；gDamageDiv = 技能段數。
+    // BOW 因此仍走 aBowW，BOUND/BREAKTHROW 則沿同一目標重複投擲；
+    // BREAKTHROW 的預設麻痺沒有被 RENZOKU 覆寫，所以每次正傷害都可嘗試麻痺。
+    const seqOptions=Object.assign({},options,{
+      attackMaxOverride:count,
+      attackOptions:Object.assign({},options.attackOptions||{},{damageDivisor:count})
+    });
+    const seq=weaponType===4
+      ?performEnemyBowWeaponAttack(actor,unit,seqOptions)
+      :performEnemyThrowWeaponAttack(actor,unit,seqOptions);
+    return {
+      kind:'skill',skillId:actor.skillId,hits:seq?.attackCount??seq?.hits?.length??0,
+      lastResult:seq?.r||null,weaponSequence:true,sequence:seq
+    };
+  }
+
+  // BOOMERANG 不會被前置 ATTACK-only switch 轉成 BATTLE_COM_BOOMERANG，
+  // 因而和近戰相同：固定目標連續 N 段、每段 /N；最後一次結果才決定 Counter loop。
   let chosen=enemyActorTarget(actor,unit);
   let lastResult=null,lastChosen=null,hits=0;
-  for(let i=0;i<count;i++){
+  for(let step=0;step<count;step++){
     if(!enemy||unit.hp<=0||state.hp<=0)break;
 
     if(!chosen
@@ -5051,7 +5072,6 @@ function performEnemyContinuation(actor,unit,options,meta){
     }
   }
 
-  // 原 battle.c：N 段全部處理完後，才拿最後一次 BATTLE_Attack 的 ContFlg 進一次反擊鏈。
   if(lastResult&&unit.hp>0&&enemy){
     if(lastChosen?.kind==='pet'&&lastChosen.pet&&petIsBattleActive(lastChosen.pet)){
       resolvePetEnemyCounterChain('enemy',lastChosen.pet,unit,lastResult);
