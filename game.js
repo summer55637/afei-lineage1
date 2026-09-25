@@ -2278,7 +2278,7 @@ function finishEnemyEscape(unit){
     if(enemy.units.length===0){
       state.wins++;
       addLog('敵方全數逃離，戰鬥結束；沒有擊殺 EXP 或掉落。','good');
-      enemy=null;save();render();
+      clearEnemyBattleNoReward();save();render();
       return {battleEnded:true,noReward:true};
     }
     if(!livingEnemyUnits().length){
@@ -2290,7 +2290,7 @@ function finishEnemyEscape(unit){
   }
   state.wins++;
   addLog(unit.name+' 成功逃離戰鬥；沒有擊殺 EXP 或掉落。','good');
-  enemy=null;save();render();
+  clearEnemyBattleNoReward();save();render();
   return {battleEnded:true,noReward:true};
 }
 function finishEnemyDirectExit(unit,reason='離開戰鬥'){
@@ -2301,7 +2301,7 @@ function finishEnemyDirectExit(unit,reason='離開戰鬥'){
     if(enemy.units.length===0){
       state.wins++;
       addLog('敵方最後一名成員因'+reason+'離場，戰鬥結束；該離場不產生擊殺 EXP 或掉落。','good');
-      enemy=null;resetBattleStatuses();save();render();
+      clearEnemyBattleNoReward();save();render();
       return {battleEnded:true,noReward:true};
     }
     syncEnemyTarget();
@@ -2309,7 +2309,7 @@ function finishEnemyDirectExit(unit,reason='離開戰鬥'){
   }
   state.wins++;
   addLog(unit.name+' 因'+reason+'離場，戰鬥結束；沒有擊殺 EXP 或掉落。','good');
-  enemy=null;resetBattleStatuses();save();render();
+  clearEnemyBattleNoReward();save();render();
   return {battleEnded:true,noReward:true};
 }
 function enemyEscapeAttempt(unit){
