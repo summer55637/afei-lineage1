@@ -5589,6 +5589,9 @@ function captureTurn(manual=false){
     if(state.hp<=0){defeat();return captured}
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
+    // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
+    // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
+    if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -6113,6 +6116,9 @@ function attackTurn(){
     if(state.hp<=0){defeat();return}
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
+    // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
+    // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
+    if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -6137,7 +6143,6 @@ function attackTurn(){
       continue;
     }
     if(sourceSurpriseSkipAction(actor))continue;
-    if(actor.sourceComboConsumed)continue;
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
       if(combo){
@@ -6193,6 +6198,9 @@ function guardTurn(){
     if(state.hp<=0){defeat();return}
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
+    // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
+    // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
+    if(actor.sourceComboConsumed)continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
@@ -6217,7 +6225,6 @@ function guardTurn(){
       continue;
     }
     if(sourceSurpriseSkipAction(actor))continue;
-    if(actor.sourceComboConsumed)continue;
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:true});
       if(combo){

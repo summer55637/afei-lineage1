@@ -9242,3 +9242,52 @@ V0.95 改為：
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+
+
+## V0.96 Combo member outer-loop consumption
+
+V0.96 繼續沿 fixed `BATTLE_Command()` 掃共用戰鬥核心，修正合擊隊員被重複跑 `StatusSeq` 的生命週期差異。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`
+- `case BATTLE_COM_COMBO`
+
+原 C 在 leader 執行合擊時不是只留下標記，而是直接操作外層同一個 `i`：
+
+```c
+ComboId = EntryList[i].combo;
+aAttackList[0] = EntryList[i].num;
+i++;
+for( ; EntryList[i].combo == ComboId && i < entrynum; i++ ){
+    BATTLE_StatusSeq( EntryList[i].charaindex );
+    ...
+    aAttackList[k++] = EntryList[i].num;
+}
+i--;
+BATTLE_Combo(...);
+```
+
+因此 leader 已經把後續 combo member 的 `BATTLE_StatusSeq()` 處理完，外層 `for` 下一次遞增後會直接跳到 combo 鏈後面的 Entry；那些 member 不會再進一次主迴圈 StatusSeq。
+
+V0.95 web 的 `sourcePerformCombo()` 已經在 leader 階段對 follower 執行 `processBattleStatusTurn()`，也會設 `sourceComboConsumed=true`，
+但外層 attack / guard / capture loop 原本是在再次跑完 `processBattleStatusTurn(actor)` 之後才檢查 `sourceComboConsumed`。
+這會讓 combo follower 的毒、睡眠、石化、酒醉、混亂、WEAKEN/BARRIER lifecycle 等多推進一次。
+
+V0.96 改為：
+
+- `sourceDeadBattleEntry` / source C_WAIT 檢查後，立即檢查 `sourceComboConsumed`。
+- 已被 leader 合擊流程吃掉的 Entry 在外層不再進第二次 `processBattleStatusTurn()`。
+- leader 內的 `sourcePerformCombo()` 仍維持原本對每名 follower 執行一次 StatusSeq / CanMove / HP 檢查。
+- surprise、dead Battle Entry、V0.95 ComboCheck dead-entry interrupt 規則不變。
+
+### V0.96 regression
+
+- `game.js` JavaScript syntax：PASS
+- attack / guard / capture 三條 action loop：combo-consumed check 均位於 StatusSeq 前
+- attack / guard 不再保留 StatusSeq 後的重複 consumed check
+- `sourcePerformCombo()` follower StatusSeq 保留
+- V0.95 dead Entry sort / ComboCheck semantics 保留
+- V0.94 Enemy EscapeCheck int-average semantics 保留
+- save schema：21
