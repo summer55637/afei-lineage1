@@ -10759,3 +10759,67 @@ V1.14 的 `sourcePetAddVariableAi()` 完全使用同一範圍。
 - VariableAI clamp -10000..10000
 - quest GetPet 不套 capture 60 cap
 - 舊存檔不以現在玩家狀態偽造歷史 capture offset
+
+
+## V1.15 battle death loyalty / Marefia _PET_LIMITLEVEL
+
+固定來源仍是 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+本輪對齊 battle.c 的 BATTLE_AddProfit、BATTLE_NormalDeadExtra 與 Pet_Check_Die。
+
+### 死亡只處理一次
+
+原 BATTLE_AddExpItem 每次只處理 HP <= 0 且 CHAR_ISDIE == FALSE 的 Battle Entry，然後立刻把 CHAR_ISDIE 設為 TRUE。因此同一隻角色即使被多段技能打到 0 HP，死亡 lifecycle 也只執行一次。
+
+V1.15 新增每場 battlePetDeathProcessedIds，於 battle reset 時清空。
+
+### 一般 Pet 戰鬥死亡
+
+AI_FIX_PETDEAD = -5*100。
+
+- 玩家 Lv1～10：VariableAI -250，也就是有效忠誠 -2.5
+- 玩家 Lv11+：VariableAI -500，也就是有效忠誠 -5
+
+### 玩家戰鬥死亡
+
+CH_FIX_PLAYERDEAD = -2，AI_FIX_PLAYERDEAD = -1*100，玩家 Lv<=10 時兩者除以 2。
+
+- Lv1～10：魅力 -1；當前出戰寵 VariableAI -50
+- Lv11+：魅力 -2；當前出戰寵 VariableAI -100
+
+CHAR_AddCharm 的原範圍是 0～100，V1.15 同樣 clamp。
+
+如果同一場 Pet 先倒下、玩家之後也倒下，兩種效果依原 C 疊加。
+
+### Marefia 718 的 _PET_LIMITLEVEL
+
+固定 version.h 明確開啟 _PET_LIMITLEVEL。
+
+Pet_Check_Die 對 TempNo 718：
+- 從 CHAR_ALLOCPOINT 解四個 byte
+- VITAL 扣 RAND(1,8)
+- STR / TOUGH / DEX 各扣 RAND(1,4)
+- 四項各 clamp 0～50
+- 重新 pack 回 ALLOCPOINT
+- MODAI 減少 5%，寫回 int 時截斷
+
+這裡改的是未來成長使用的 ALLOCPOINT，不是直接倒扣目前已生成的 VITAL/STR/TOUGH/DEX。因此 Web 只更新 allocPointPacked；serverStats 不倒退。
+
+MODAI 是 Pet instance 可變欄位，因此 V1.15 新增 modAiOverride；petSourceModAi 先讀 override，再退回 TempNo 原始表。
+
+同一次 Marefia 死亡順序保持原 C：
+1. Pet_Check_Die 的 ALLOCPOINT / MODAI
+2. BATTLE_NormalDeadExtra 的一般 Pet VariableAI 死亡扣減
+
+### Regression targets
+
+- battle reset 清空 death processed set
+- 同一 Pet HP 歸零只處理一次
+- Pet death：Lv<=10 -250；Lv11+ -500
+- Player death：Lv<=10 charm -1 / active Pet -50；Lv11+ charm -2 / active Pet -100
+- charm clamp 0～100
+- Marefia VITAL RAND(1,8)
+- Marefia STR/TGH/DEX RAND(1,4)
+- Marefia ALLOCPOINT clamp 0～50
+- Marefia MODAI 每次死亡衰減 5% 並 int 截斷
+- pending Pet death 在 win / defeat early-return 前仍會被處理

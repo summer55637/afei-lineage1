@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1796,7 +1796,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -5401,6 +5401,8 @@ function performEnemyHelp(actor,unit,options,meta){
   return {kind:'skill',skillId:actor.skillId,success:true,summonedUnitId:summoned.id,battleSlot:slot,level:summoned.level};
 }
 function petSourceModAi(pet){
+  const override=Number(pet?.modAiOverride);
+  if(Number.isFinite(override))return Math.trunc(override);
   const tempNo=Number(pet?.tempNo);
   if(!Number.isFinite(tempNo))return null;
   const raw=petModAiDb?.byTempNo?.[String(tempNo)];
@@ -5445,6 +5447,71 @@ function sourcePetWinVariableAi(pet,enemyLevel,petLevelSnapshot=null){
   const foeLv=Math.max(1,Math.trunc(n(enemyLevel)));
   return sourcePetAddVariableAi(pet,foeLv>petLv?20:1);
 }
+function sourceMarefiaDeathPenalty(pet){
+  if(!pet||Number(pet.tempNo)!==718)return null;
+  const beforeAlloc=unpackPetAllocPoint(pet.allocPointPacked);
+  let afterAlloc=null,rolls=null;
+  if(beforeAlloc){
+    rolls={vital:cRand(1,8),str:cRand(1,4),tgh:cRand(1,4),dex:cRand(1,4)};
+    afterAlloc={
+      vital:clamp(Math.trunc(n(beforeAlloc.vital))-rolls.vital,0,50),
+      str:clamp(Math.trunc(n(beforeAlloc.str))-rolls.str,0,50),
+      tgh:clamp(Math.trunc(n(beforeAlloc.tgh))-rolls.tgh,0,50),
+      dex:clamp(Math.trunc(n(beforeAlloc.dex))-rolls.dex,0,50)
+    };
+    pet.allocPointPacked=packPetAllocPoint(afterAlloc);
+  }
+  const modBefore=petSourceModAi(pet);
+  let modAfter=null;
+  if(modBefore!=null){
+    modAfter=Math.trunc(n(modBefore)-(n(modBefore)*5)/100);
+    pet.modAiOverride=modAfter;
+  }
+  return {beforeAlloc,afterAlloc,rolls,modBefore,modAfter};
+}
+function sourceBattlePlayerPets(){
+  const ids=[];
+  const entries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+  for(const entry of entries){
+    if(entry?.kind==='pet'&&entry.petId!=null&&!ids.includes(entry.petId))ids.push(entry.petId);
+  }
+  if(!ids.length){
+    const p=activePet();
+    if(p)ids.push(p.id);
+  }
+  return ids.map(id=>state?.petBox?.find?.(p=>p.id===id)).filter(Boolean);
+}
+function sourceProcessPetBattleDeath(pet){
+  if(!pet||n(pet.hp)>0||battlePetDeathProcessedIds.has(pet.id))return null;
+  battlePetDeathProcessedIds.add(pet.id);
+  // fixed _PET_LIMITLEVEL Pet_Check_Die runs before BATTLE_NormalDeadExtra.
+  const marefia=sourceMarefiaDeathPenalty(pet);
+  const levelDiv=Math.trunc(n(state?.level))<=10?2:1;
+  const ai=sourcePetAddVariableAi(pet,Math.trunc(-500/levelDiv));
+  pet.battleDeathCount=Math.max(0,Math.trunc(n(pet.battleDeathCount)))+1;
+  addLog(pet.name+' 戰鬥倒下：依原 C 忠誠修正 '+(ai.delta/100).toFixed(2)
+    +(marefia?'；瑪蕾菲雅另套 _PET_LIMITLEVEL 成長底值／MODAI 死亡懲罰':'')+'。','bad');
+  return {petId:pet.id,levelDiv,ai,marefia};
+}
+function sourceProcessPendingPetBattleDeaths(){
+  const results=[];
+  for(const pet of sourceBattlePlayerPets()){
+    const r=sourceProcessPetBattleDeath(pet);
+    if(r)results.push(r);
+  }
+  return results;
+}
+function sourceProcessPlayerBattleDeath(){
+  if(!state)return null;
+  const levelDiv=Math.trunc(n(state.level))<=10?2:1;
+  const charmBefore=clamp(Math.trunc(n(state.charm)),0,100);
+  const charmDelta=Math.trunc(-2/levelDiv);
+  state.charm=clamp(charmBefore+charmDelta,0,100);
+  const pet=activePet();
+  const petAi=pet?sourcePetAddVariableAi(pet,Math.trunc(-100/levelDiv)):null;
+  return {levelDiv,charmBefore,charmDelta,charmAfter:state.charm,petId:pet?.id||null,petAi};
+}
+
 function petFixedAi(pet){
   if(!pet||!state)return null;
   const sourceModAi=petSourceModAi(pet);
@@ -6894,6 +6961,7 @@ function captureTurn(manual=false){
   const order=normalBattleOrder({playerCommand:'capture'});
   let captured=false;
   for(const actor of order){
+    sourceProcessPendingPetBattleDeaths();
     if(!enemy)return captured;
     if(state.hp<=0){defeat();return captured}
     if(sourceDeadBattleEntry(actor))continue;
@@ -7010,11 +7078,13 @@ function captureTurn(manual=false){
     if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
   }
 
+  sourceProcessPendingPetBattleDeaths();
   if(enemy){syncEnemyTarget();battleFieldTick();}
   save();render();
   return captured;
 }
 function winBattle(){
+  sourceProcessPendingPetBattleDeaths();
   const defeated=enemy;
   const units=(Array.isArray(defeated?.units)&&defeated.units.length)?defeated.units:[defeated];
   const unitCount=Math.max(1,units.length);
@@ -7080,6 +7150,13 @@ function winBattle(){
   save();render();
 }
 function defeat(){
+  const hadBattle=!!enemy;
+  if(hadBattle)sourceProcessPendingPetBattleDeaths();
+  const death=hadBattle?sourceProcessPlayerBattleDeath():null;
+  if(death){
+    addLog('角色戰鬥倒下：依原 C 魅力 '+death.charmDelta
+      +(death.petAi?'，出戰寵忠誠修正 '+(death.petAi.delta/100).toFixed(2):'')+'。','bad');
+  }
   addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
   releaseBattleEnemyRuntimeItems(enemy);
   state.hp=state.maxHp;
@@ -7453,6 +7530,7 @@ function attackTurn(){
   const order=normalBattleOrder({playerCommand:'attack'});
 
   for(const actor of order){
+    sourceProcessPendingPetBattleDeaths();
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
     if(sourceDeadBattleEntry(actor))continue;
@@ -7538,6 +7616,7 @@ function attackTurn(){
     if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
+  sourceProcessPendingPetBattleDeaths();
   if(enemy){syncEnemyTarget();battleFieldTick();}
   render();
 }
@@ -7548,6 +7627,7 @@ function guardTurn(){
   // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；
   // 所以即使敵人的排序在玩家之前，防禦減傷也已生效。
   for(const actor of order){
+    sourceProcessPendingPetBattleDeaths();
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
     if(sourceDeadBattleEntry(actor))continue;
@@ -7626,6 +7706,7 @@ function guardTurn(){
     if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
+  sourceProcessPendingPetBattleDeaths();
   if(enemy){syncEnemyTarget();battleFieldTick();}
   save();render();
 }
@@ -8096,7 +8177,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.14 載入完成：捕獲寵初始忠誠上限、擊倒與升級 VariableAI lifecycle 已依 fixed C 接入。','good');
+    addLog('V1.15 載入完成：玩家／寵物死亡忠誠與魅力 lifecycle、瑪蕾菲雅 _PET_LIMITLEVEL 死亡懲罰已依 fixed C 接入。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
