@@ -1685,6 +1685,8 @@ const ENEMY_SOURCE_SKILL_META={
   503:{n:'嗜血技',d:'傷害的一部分轉為自身 HP',f:'PETSKILL_DamageToHp',o:'30|50',field:1,target:6},
   504:{n:'嗜血技2',d:'傷害的 70% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'20|70',field:1,target:6},
   505:{n:'嗜血技3',d:'傷害的 100% 轉為自身 HP',f:'PETSKILL_DamageToHp',o:'10|100',field:1,target:6},
+  // V0.66 runtime 邊界：資料與函式都存在，但結果依賴原 server 全域 Char / ITEM existing-index 當下配置。
+  211:{n:'捐獻',d:'StealMoney；Enemy WORKPLAYERINDEX 預設 0，是否有效取決於原 server 當下 char slot 0',f:'PETSKILL_StealMoney',o:'',field:1,target:7},
   // V0.63：原 PETSKILL_MpDamage 第一參數存在 C 整數除法 bug：50/100 先算成 0，因此物理攻擊力實際不下降。
   506:{n:'MP攻擊',d:'物理命中玩家後扣除當下 MP 50%；原 C 的攻擊力-50% parser 實際不生效',f:'PETSKILL_MpDamage',o:'50|50',field:1,target:6},
   507:{n:'MP攻擊2',d:'物理命中玩家後扣除當下 MP 75%；原 C 的攻擊力-50% parser 實際不生效',f:'PETSKILL_MpDamage',o:'50|75',field:1,target:6},
@@ -1721,6 +1723,8 @@ const ENEMY_SOURCE_SKILL_META={
   594:{n:'究極魔障',d:'敵方全體三回合無法行動',f:'PETSKILL_Barrier',o:'障 turn 3 成 50',field:1,target:3},
   605:{n:'三重突擊',d:'蓄力 3 回合後攻擊 +150%',f:'PETSKILL_ChargeAttack',o:'3 攻%+150',field:1,target:6},
   671:{n:'暴走',d:'多段暴走攻擊',f:'PETSKILL_WildViolentAttack',o:'攻%+115 防%-25 回避10',field:1,target:6},
+  676:{n:'E水的精靈',d:'AttackMagic magic 204；item 20900 對 Enemy 是動態 ITEM existing index',f:'PETSKILL_AttackMagic',o:'magic 204 item 20900',field:1,target:7},
+  688:{n:'E咒靈術',d:'AttackMagic magic 435；item 20912 對 Enemy 是動態 ITEM existing index',f:'PETSKILL_AttackMagic',o:'magic 435 item 20912',field:1,target:7},
   708:{n:'石化攻擊',d:'攻擊 -30% 並嘗試石化 9 回合',f:'PETSKILL_StatusChange',o:'石 turn 9  攻%-30',field:1,target:6},
   // V0.46：原 C 已確認的純物理／屬性特殊技；不碰 MP / AttackMagic。
   544:{n:'地屬性強化攻擊',d:'對地屬性目標追加傷害',f:'PETSKILL_Modifyattack',o:'EA|20',field:1,target:6},
@@ -1792,6 +1796,11 @@ const ENEMY_SOURCE_MISSING_SKILL_IDS=new Set([
 // 582 則完全沒有 PETSKILL_SelfExplodeAttack 函式／註冊項，version.h 也標成不可開。
 // 兩者都會在 PETSKILL_getPetskillFuncPointer() 得到 NULL，PETSKILL_Use() return FALSE。
 const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
+
+// V0.66：這些 PetSkill 在來源中不是 missing / unregistered；PETSKILL_Use 本身會成功，
+// 但實際 battle effect 依賴本前端沒有的原 server 全域 runtime 狀態，不能靜態決定。
+// 必須保留 AI 權重與正常 StatusSeq，但不可猜效果、也不可改成普通攻擊。
+const ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS=new Set([211,676,688]);
 
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -4393,6 +4402,19 @@ function performEnemyAction(actor,unit,options={}){
   }
   if(kind==='skill'){
     const meta=enemyPetSkillMeta(actor.skillId);
+    if(ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS.has(Number(actor.skillId))){
+      const id=Number(actor.skillId);
+      let reason='需要原 server 全域 runtime，現版不能靜態唯一決定效果。';
+      if(id===211){
+        reason='原 Enemy WORKPLAYERINDEX 預設為 0；CHAR allocator 的玩家區從 index 0 開始，因此 slot 0 當下是否為有效玩家取決於原 server 在線角色配置。';
+      }else if(id===676){
+        reason='原 option 的 item 20900 對 Enemy 直接當 ITEM_item[20900] existing index；該 slot 的 ITEM_MAGICUSEMP 取決於原 server 當下全域物件配置。';
+      }else if(id===688){
+        reason='原 option 的 item 20912 對 Enemy 直接當 ITEM_item[20912] existing index；該 slot 的 ITEM_MAGICUSEMP 取決於原 server 當下全域物件配置。';
+      }
+      addLog(unit.name+' 使用 '+(meta?.n||('PetSkill '+id))+'；'+reason+' 保留原 AI 權重與本回合 StatusSeq，但不猜效果、不替換成普通攻擊。');
+      return {kind:'skill',skillId:id,sourceRuntimeBlocked:true,reason};
+    }
     if(meta?.f==='PETSKILL_GuardBreak')return performEnemyGuardBreak(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ContinuationAttack')return performEnemyContinuation(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Mighty')return performEnemyMighty(actor,unit,options,meta);
@@ -4698,8 +4720,9 @@ function winBattle(){
   save();render();
 }
 function defeat(){
-  addLog('角色體力不足，已自動回村休息並補滿 HP。','bad');
+  addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
   state.hp=state.maxHp;
+  state.mp=state.maxMp;
   enemy=null;
   resetBattleStatuses();
   save();render();
@@ -5365,7 +5388,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.65 載入完成：接入 Enemy Combined 627／632／637／705；保留 item index 0 → mp=-1 的原 runtime 行為、恩惠回復倍率、Lv5 狀態檢定、基本六異常淨化與地火／水風反轉時序。','good');
+    addLog('V0.66 載入完成：正權重 Enemy PetSkill 靜態可還原部分已掃至 runtime 邊界；211／676／688 正式標記為依賴原 server 全域 Char／ITEM existing-index 狀態，不猜效果也不替換成普通攻擊。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
