@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.90</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.91</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.90：</b>
-      校正異常狀態命中率的 C int 語意：BATTLE_StatusAttackCheck() 的 level 與 per 都是 int，體力抗性 fVitalP 的小數會在最終命中率指派時截斷；中毒、石化、睡眠、混亂、酒醉、虛弱、沉默、魔障等不再保留來源不存在的小數門檻。
+      <b>V0.91：</b>
+      校正捕獲率 BATTLE_CaptureCheck() 的 float 管線：HP²／MAXHP、等級差／2、敏捷差／15 與 Charm／50 都保留小數，不再逐段錯誤截成 int；同時補回原 C 對睡眠目標的捕獲率 +15。
     </article>
   </main>
 

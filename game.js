@@ -5460,20 +5460,34 @@ function captureChance(){
   // fixed BATTLE_CaptureCheck 使用雙方 CHAR_WORKFIXDEX。
   // 實際捕獲判定在 normalBattleOrder() 的 PreCommand snapshot 後再次計算，因此 Enemy 可直接讀 roundFixQuick；
   // 顯示用的預先查詢尚未建立本輪 snapshot 時則退回 compliant quick。
+  // fixed BATTLE_CaptureCheck 雖然來源值來自 CHAR int/work-int，
+  // 但 Df_HpPer / At_Level / Df_Level / At_Dex / Df_Dex / WorkGet 全都宣告為 float。
+  // 因此 HP²/MAXHP、等級 /2、敏捷 /15 與最後 *Charm/50 都必須保留小數。
   const enemyDex=Math.trunc(n(target.roundFixQuick??target.quick));
   const playerDex=Math.trunc(n(playerBattleView().fixedDex));
   const captureBase=Math.trunc(enemy.dynamicGroup?n(target.captureBase):n(enemy.entry.variant?.captureBase));
   const maxHp=Math.max(1,Math.trunc(n(target.maxHp)));
-  // BATTLE_CaptureCheck 的全部中間變數都是 int：每一個 / 都要依 C 整數除法截斷。
-  const hpTerm=10-Math.trunc((Math.trunc(n(target.hp))*Math.trunc(n(target.hp)))/maxHp);
-  const levelTerm=Math.trunc(Math.trunc(n(state.level))/2)-Math.trunc(Math.trunc(n(target.level))/2);
-  const dexTerm=Math.trunc(playerDex/15)-Math.trunc(enemyDex/15);
-  const workSum=hpTerm+levelTerm+dexTerm+(captureBase+Math.trunc(n(state.luck)));
-  let raw=Math.trunc(workSum*Math.trunc(n(state.charm))/50);
-  raw=Math.min(99,raw);
+  const hp=Math.trunc(n(target.hp));
+  const playerLevel=Math.trunc(n(state.level));
+  const targetLevel=Math.trunc(n(target.level));
+  const luck=Math.trunc(n(state.luck));
+  const charm=Math.trunc(n(state.charm));
+
+  const hpTerm=10-(hp*hp)/maxHp;
+  const levelTerm=playerLevel/2-targetLevel/2;
+  const dexTerm=playerDex/15-enemyDex/15;
+  const workSum=hpTerm+levelTerm+dexTerm+(captureBase+luck);
+
+  // 現行 web 尚未有 CHAR_WORKMODCAPTURE 的可靠來源，等價 fixed runtime 預設 0。
+  const captureMod=0;
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const sleepBonus=battleStatusActive(targetDesc,'sleep')?15:0;
+  let raw=workSum*charm/50+captureMod+sleepBonus;
+  if(raw>99)raw=99;
+
   return {
     raw,display:clamp(raw,0,99),allowed:true,missing:[],requirements:req.items,targetName:target.name,
-    detail:{hpTerm,levelTerm,dexTerm,captureBase}
+    detail:{hpTerm,levelTerm,dexTerm,captureBase,captureMod,sleepBonus}
   };
 }
 function captureTurn(manual=false){

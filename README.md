@@ -8696,3 +8696,171 @@ per = 20 - RegTbl[PARALYSIS];
 - dispatcher gaps：0
 - save schema：21
 
+## V0.91 CaptureCheck float pipeline / sleep bonus
+
+V0.91 校正核心捕獲公式 `BATTLE_CaptureCheck()` 的型別語意。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `BATTLE_CaptureCheck()`
+
+來源一開始明確宣告：
+
+```c
+float
+    Df_MaxHp = 0,
+    Df_HpPer = 0,
+    At_Charm = 0,
+    At_Level = 0,
+    At_Dex = 0,
+    At_Luck = 0,
+    Df_Level = 0,
+    Df_Dex = 0,
+    Df_Ge = 30;
+float WorkGet;
+```
+
+雖然這些值大多由 `CHAR_getInt()`／`CHAR_getWorkInt()` 讀入，
+**後續運算是在 float 變數上進行**，不是 C 整數除法。
+
+來源公式：
+
+```c
+Df_HpPer = 10 - ( Df_HpPer * Df_HpPer ) / Df_MaxHp;
+Df_Level = ( At_Level/2 - Df_Level/2 );
+Df_Dex = At_Dex / 15 - Df_Dex / 15;
+
+WorkGet =
+    ( Df_HpPer + Df_Level + Df_Dex + ( Df_Ge + At_Luck ) )
+    * At_Charm / 50;
+
+WorkGet += CHAR_getWorkInt( attackindex, CHAR_WORKMODCAPTURE );
+
+if( CHAR_getWorkInt( defindex, CHAR_WORKSLEEP ) > 0 ){
+    WorkGet += 15;
+}
+
+if( WorkGet > 99 ) WorkGet = 99;
+```
+
+### V0.90 以前的差異
+
+舊 web 誤把捕獲公式當成「全部中間值都是 int」，因此逐段做：
+
+```js
+trunc(HP*HP/MAXHP)
+trunc(level/2)
+trunc(dex/15)
+trunc(workSum*charm/50)
+```
+
+這不是 fixed C。
+
+V0.91 改成：
+
+```js
+const hpTerm=10-(hp*hp)/maxHp;
+const levelTerm=playerLevel/2-targetLevel/2;
+const dexTerm=playerDex/15-enemyDex/15;
+const workSum=hpTerm+levelTerm+dexTerm+(captureBase+luck);
+let raw=workSum*charm/50;
+```
+
+也就是來源值先按 int 讀入，但公式本身保留 float 小數直到最後 RAND 判定。
+
+### 可觀察差異
+
+固定例：
+
+```text
+Player Lv = 10
+Enemy Lv  = 10
+Player FIXDEX = 30
+Enemy FIXDEX  = 20
+Enemy HP/MAXHP = 9/100
+captureBase = 30
+Luck = 0
+Charm = 100
+```
+
+fixed C：
+
+```text
+HP term    = 10 - 81/100 = 9.19
+Level term = 10/2 - 10/2 = 0
+Dex term   = 30/15 - 20/15 = 0.666666...
+WorkGet    = (9.19 + 0 + 0.666666... + 30) * 100/50
+           = 79.713333...
+```
+
+V0.90 web 則因逐段截斷得到：
+
+```text
+HP term = 10
+Dex term = 1
+WorkGet = 82
+```
+
+差異不是單純顯示小數，而是直接改變 `RAND(1,100) < WorkGet` 的成功邊界。
+
+### 睡眠 +15
+
+來源還有：
+
+```c
+if( CHAR_getWorkInt( defindex, CHAR_WORKSLEEP ) > 0 ){
+    WorkGet += 15;
+}
+```
+
+V0.90 web 完全漏掉這一段。
+
+V0.91 已接回：
+
+```js
+const sleepBonus=battleStatusActive(targetDesc,'sleep')?15:0;
+raw += sleepBonus;
+```
+
+目前玩家側尚未建立完整主動睡眠 PetSkill 指令，因此這個 +15 在現行玩家操作中不是主要可達來源；
+但保留它可以避免未來接玩家寵技後捕獲公式再次偏離 fixed C。
+
+### WORKMODCAPTURE
+
+來源另有：
+
+```c
+WorkGet += CHAR_getWorkInt( attackindex, CHAR_WORKMODCAPTURE );
+```
+
+現行 web 尚未建立可驗證的 `CHAR_WORKMODCAPTURE` 來源，所以 V0.91 明確維持等價預設 0，
+不自行新增捕獲加成數值。
+
+### V0.91 regression
+
+- `game.js` JavaScript syntax：PASS
+- 捕獲 HP² / MAXHP 使用 float division
+- Player / Enemy level /2 使用 float division
+- FIXDEX /15 使用 float division
+- WorkGet × Charm /50 保留 float
+- 不再對最終 WorkGet 做 `Math.trunc`
+- WorkGet 上限仍為 99
+- 捕獲判定仍維持嚴格 `RAND(1,100) < WorkGet`
+- 睡眠目標 +15 已補回
+- WORKMODCAPTURE 在缺可驗證來源時保持 0
+- 固定例：舊 web 82；fixed/V0.91 約 79.713333
+- V0.90 StatusAttackCheck int semantics 保留
+- V0.89 CounterCalc int return truncation 保留
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
+
