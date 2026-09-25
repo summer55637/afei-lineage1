@@ -3638,7 +3638,7 @@ function enemyApplySkillHit(unit,chosen,r,label){
   }
 
   if(r.guardianCalcOnly){
-    addLog(r.guardianCalcOnly.name+' 嘗試發動忠犬；此招走原 BATTLE_S_AttackDamage 舊 bug，傷害用忠犬能力計算但仍落在你身上。','bad');
+    addLog(r.guardianCalcOnly.name+' 嘗試發動忠犬；此招走原 '+(r.guardianSourceBug||'Guardian defindex')+' 舊 bug，傷害用忠犬能力計算但仍落在你身上。','bad');
   }
   if(r.dodged){
     addLog('你閃避了 '+unit.name+' 的'+label+'。','good');
@@ -3868,10 +3868,41 @@ function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null)
     if(r.damage<=0){r.damage=1;r.miss=false}
     r.guardianCalcOnly=guardian;
     r.guardianPetId=guardian.id;
-    r.guardianSourceBug='BATTLE_S_AttackDamage-defindex-not-updated';
+    r.guardianSourceBug=String(options.guardianSourceBug||'BATTLE_S_AttackDamage-defindex-not-updated');
   }
   return r;
 }
+function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
+  const attacker=enemyBattleView(unit);
+  const original=playerBattleView();
+  const dodge=sourceInitialDodgeOnly(attacker,original,{guarding:!!originalGuarding});
+  if(dodge.dodged){
+    dodge.originalTargetDesc={kind:'player'};
+    dodge.actualTargetDesc={kind:'player'};
+    dodge.guardBreak2Multiplier=originalGuarding?1.3:.7;
+    return dodge;
+  }
+  const guardian=attacker?.throwWeapon?null:sourcePlayerGuardianPetForAttack(unit);
+  const calcDefender=guardian?petBattleView(guardian):original;
+  const localGuarding=guardian?false:!!originalGuarding;
+  const multiplier=localGuarding?1.3:.7;
+  const r=resolveNormalAttack(attacker,calcDefender,{
+    guarding:false,disableDodge:true,preGuardDamageMultiplier:multiplier
+  });
+  r.duckRaw=dodge.duckRaw;
+  r.originalTargetDesc={kind:'player'};
+  r.actualTargetDesc={kind:'player'};
+  r.guardBreak2Multiplier=multiplier;
+  r.guardBreak2LocalGuarding=localGuarding;
+  if(guardian){
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardianCalcOnly=guardian;
+    r.guardianPetId=guardian.id;
+    r.guardianSourceBug='BATTLE_S_GBreak2-defindex-not-updated';
+  }
+  return r;
+}
+
 function enemyAttackSeqBugTargetResult(unit,chosen,options={},attackerOverride=null){
   const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   if(chosen?.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
@@ -4548,19 +4579,22 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
   const guarding=chosen.kind==='player'
     &&!!options.playerGuarding
     &&!battleStatusActive({kind:'player'},'confusion');
-  const preGuardDamageMultiplier=guarding?1.3:.7;
   unit.counterEligibleThisTurn=false;
 
-  let r;
+  let r,multiplier;
   if(chosen.kind==='pet'&&chosen.pet){
-    r=enemyAttackPetResult(unit,chosen.pet,{preGuardDamageMultiplier});
+    multiplier=.7;
+    r=enemyAttackPetResult(unit,chosen.pet,{preGuardDamageMultiplier:multiplier});
   }else{
-    r=enemyAttackResult(unit,{guarding,preGuardDamageMultiplier});
+    r=resolveEnemyGuardBreak2BugToPlayer(unit,guarding);
+    multiplier=n(r?.guardBreak2Multiplier)||(guarding?1.3:.7);
   }
-  enemyApplySkillHit(unit,chosen,r,label+(guarding?'（防禦目標 ×1.3）':'（非防禦目標 ×0.7）'));
-
-  // BATTLE_COM_S_GBREAK2 是獨立特殊分支；BATTLE_S_GBreak2 回傳後直接 break，不進普通 Counter loop。
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,guarding,preGuardDamageMultiplier};
+  enemyApplySkillHit(unit,chosen,r,label+'（local defindex 倍率 ×'+multiplier.toFixed(1)+'）');
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,guarding,
+    preGuardDamageMultiplier:multiplier,
+    guardianCalcOnly:!!r?.guardianCalcOnly
+  };
 }
 function enemyOptionParts(option){
   return String(option||'').split('|').map(x=>x.trim());
@@ -5736,7 +5770,10 @@ function performEnemyFallGround(actor,unit,options,meta){
     r=enemyAttackPetResult(unit,chosen.pet);
   }else{
     const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-    r=enemyAttackResult(unit,{guarding});
+    r=resolveEnemyAttackSeqBugToPlayer(unit,{
+      guarding,
+      guardianSourceBug:'BATTLE_S_FallGround-defindex-not-updated'
+    });
   }
   enemyApplySkillHit(unit,chosen,r,label);
 
@@ -5806,7 +5843,11 @@ function performEnemyGuardBreak(actor,unit,options,meta){
     return {kind:'skill',skillId:actor.skillId,guardBreakMiss:true};
   }
 
-  const r=resolveNormalAttack(enemyBattleView(unit),playerBattleView(),{disableDodge:true});
+  const r=resolveEnemyAttackSeqBugToPlayer(unit,{
+    guarding:false,
+    disableDodge:true,
+    guardianSourceBug:'BATTLE_S_GBreak-defindex-not-updated'
+  });
   enemyApplySkillHit(unit,chosen,r,label);
   // BATTLE_S_GBreak 對 GUARD 最後會 iRet=FALSE，不接反擊鏈。
   return {kind:'skill',skillId:actor.skillId,target:'player',r};

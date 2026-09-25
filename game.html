@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.01</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.02</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.01：</b>
-      對齊 BATTLE_S_AttackDamage 的忠犬舊 bug：特殊技仍先讓主人閃避，再用忠犬能力算會心／傷害，但函式未更新 caller defindex，最終 HP 與後續效果仍落在原主人。
+      <b>V1.02：</b>
+      對齊 GBreak／GBreak2／FallGround 的忠犬 local-defindex 舊規則：忠犬可參與傷害計算但 caller 仍扣原主人；GBreak2 的 ×1.3／×0.7 也改為看 Guardian substitution 後的 local 目標。
     </article>
   </main>
 

@@ -9843,3 +9843,33 @@ BATTLE_DamageSub(attackindex, defindex, &damage, ...);
 - Regret primary + through 玩家段都使用同一 source bug pipeline
 - V0.99 Charge / V0.98 StatusChange / V0.97 Loyalty core 保留
 - save schema：21
+
+
+## V1.02 GBreak / GBreak2 / FallGround Guardian local-defindex semantics
+
+V1.02 繼續逐函式掃 fixed `BATTLE_AttackSeq()` 呼叫者，補齊 `BATTLE_S_GBreak()`、`BATTLE_S_GBreak2()`、`BATTLE_S_FallGround()` 的忠犬 local-defindex 語意。固定來源仍是 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+fixed `BATTLE_DuckCheck()` 對 `COM_GUARD` 直接 return FALSE，所以防禦中的原主人本來就不做一般閃避；V1.02 不改這點。
+
+三個專用函式都以 `Guardian=-1` 呼叫 `BATTLE_AttackSeq()`，但 caller 沒有像正常 `BATTLE_Attack()` 那樣把自己的 `defindex` 更新成 Guardian。因此 Guardian 成功時，AttackSeq local defindex 會用忠犬做 critical / damage 計算，最後 `BATTLE_DamageSub()` 仍作用在原主人。
+
+GBreak 只有原 caller defindex 自己是 GUARD 時才真的扣血，且 opt=GBREAK 跳過普通 GuardAdjust。V1.02 因此保留「原主人 GUARD → 不 dodge」，但 damage 可由忠犬 stats 計算、HP 仍扣主人。
+
+GBreak2 的 ×1.3／×0.7 判定在 GuardianCheck 之後：沒有 Guardian 時，原主人 GUARD ×1.3，非 GUARD ×0.7；Guardian 成功時 local defindex 已換成 skill20 忠犬，而忠犬 command 是 GUARDIAN_ATTACK 不是 GUARD，因此改走 ×0.7，最後仍扣原主人。GBreak2 本身不再額外套普通 GuardAdjust。
+
+FallGround 同樣保留 calc-only Guardian bug；後面的落馬條件仍以 caller 原主人為 target，因此忠犬不會把落馬效果轉移到自己。
+
+本輪也額外確認 `BATTLE_Counter()` 使用 `Guardian=-2`，而 AttackSeq 只有 `*pGuardian==-1` 才呼叫 GuardianCheck，所以反擊刻意不允許忠犬介入，不做修改。
+
+### V1.02 regression
+
+- `game.js` syntax PASS
+- GuardBreak 非 GUARD 仍 0 damage
+- GuardBreak GUARD 不 dodge、無普通 GuardAdjust
+- GuardBreak Guardian calc-only / HP 原主人
+- GuardBreak2 無 Guardian：GUARD ×1.3、非 GUARD ×0.7
+- GuardBreak2 有 Guardian：local Guardian 非 GUARD → ×0.7，HP 原主人
+- FallGround Guardian calc-only，落馬 target 仍原主人
+- Counter Guardian=-2 不改
+- V1.01 AttackDamage bug、V1.00 normal Guardian substitution、V0.99 Charge、V0.98 StatusChange、V0.97 Loyalty 保留
+- save schema 21
