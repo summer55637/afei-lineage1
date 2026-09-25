@@ -1984,15 +1984,14 @@ function petBattleView(pet){
 function enemyBattleView(unit){
   const desc={kind:'enemy',unit,unitId:unit?.id};
   const drunk=battleStatusActive(desc,'drunk');
-  const weaken=battleWeakenRoundActive(desc);
   const attackBase=n(unit?.roundAttack??unit?.attack);
   const defenseRaw=n(unit?.roundDefense??unit?.defense);
   const quickRaw=n(unit?.roundQuick??unit?.quick);
   return {
     type:'enemy',
-    attack:weaken?Math.trunc(attackBase*.8):attackBase,
-    defense:(weaken?Math.trunc(defenseRaw*.8):defenseRaw)*(battleStatusActive(desc,'stone')?2:1),
-    quick:battleDrunkQuick(desc,weaken?Math.trunc(quickRaw*.8):quickRaw),
+    attack:attackBase,
+    defense:defenseRaw*(battleStatusActive(desc,'stone')?2:1),
+    quick:battleDrunkQuick(desc,quickRaw),
     luck:0,
     weaponType:Math.trunc(n(unit?.weaponType)),weaponCritical:n(unit?.weaponCritical),throwWeapon:!!unit?.throwWeapon,
     drunk,
@@ -2246,15 +2245,30 @@ function enemyGuardianFor(target,attackerUnit=null){
   return guardian;
 }
 function enemyPrepareRoundAction(unit,action){
-  unit.roundAttack=Math.trunc(n(unit.attack));
-  unit.roundQuick=Math.trunc(n(unit.quick));
+  const desc={kind:'enemy',unit,unitId:unit?.id};
+  const weakened=battleWeakenRoundActive(desc);
 
-  // 原每回合 BATTLE_Pr ... CHAR_complianceParameter() 會先用當下 CHAR_MYSKILLTGH
-  // 重算 FIXTOUGH，再交給 BATTLE_TurnParam。故大地鎧甲是「回合開始快照」：
-  // 同回合中途才被套用，不會倒灌改變已建立好的本回合 WORKDEFENCEPOWER。
+  // fixed C 的 PreCommandSeq -> complianceParameter -> Other_DefcharWorkInt：
+  // 先套持續中的能力 buff，再套 WEAKEN 0.8 到 FIXSTR/FIXTOUGH/FIXDEX，
+  // 最後才進 AI / PETSKILL_*，因此所有技能都必須從「本輪 FIX 快照」起算。
+  let sourceFixAttack=Math.trunc(n(unit.attack));
+  let sourceFixQuick=Math.trunc(n(unit.quick));
+
+  // 大地鎧甲在 Other_DefcharWorkInt 裡早於 WEAKEN 套到 FIXTOUGH。
   const tghBuffPower=n(unit?.mySkillTghTurns)>0?Math.max(0,n(unit?.mySkillTghPower)):0;
   const baseDefense=Math.trunc(n(unit.defense));
-  unit.roundDefense=baseDefense+Math.trunc(baseDefense*tghBuffPower/100);
+  let sourceFixDefense=baseDefense+Math.trunc(baseDefense*tghBuffPower/100);
+
+  if(weakened){
+    sourceFixAttack=Math.trunc(sourceFixAttack*.8);
+    sourceFixDefense=Math.trunc(sourceFixDefense*.8);
+    sourceFixQuick=Math.trunc(sourceFixQuick*.8);
+  }
+
+  unit.roundAttack=sourceFixAttack;
+  unit.roundDefense=sourceFixDefense;
+  unit.roundQuick=sourceFixQuick;
+  unit.roundWeakenApplied=weakened;
   unit.roundTghBuffPower=tghBuffPower;
 
   unit.noGuardDuckBonus=0;
@@ -2276,8 +2290,8 @@ function enemyPrepareRoundAction(unit,action){
     // 不能用「最後傷害 ×倍率」代替，因為 BATTLE_DamageCalc 對攻防是非線性的。
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
-    const fixedAttack=Math.trunc(n(unit.attack));
-    const fixedDefense=Math.trunc(n(unit.roundDefense));
+    const fixedAttack=sourceFixAttack;
+    const fixedDefense=sourceFixDefense;
     unit.roundAttack=fixedAttack+Math.trunc(fixedAttack*attackPct/100);
     if(String(meta.o||'').includes('防%')){
       unit.roundDefense=fixedDefense+Math.trunc(fixedDefense*defensePct/100);
@@ -2286,16 +2300,16 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_BattleModel'){
     const parts=String(meta.o||'').split('|');
     const attackPct=enemySignedSkillPercent(parts[5]||'','攻%');
-    unit.roundAttack=Math.trunc(n(unit.attack)+n(unit.attack)*attackPct/100);
+    unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*attackPct/100);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_BattleTearDamage'){
-    unit.roundAttack=Math.trunc(n(unit.attack)*.9);
+    unit.roundAttack=Math.trunc(sourceFixAttack*.9);
     unit.roundDefense=Math.trunc(n(unit.roundDefense)*.8);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_AttackCrazed'){
     // 原 PETSKILL_AttackCrazed 固定攻 80%、防 70%，option 只決定攻擊次數。
-    unit.roundAttack=Math.trunc(n(unit.attack)*.8);
-    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.7);
+    unit.roundAttack=Math.trunc(sourceFixAttack*.8);
+    unit.roundDefense=Math.trunc(sourceFixDefense*.7);
     unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_SpeedyAttack'){
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
@@ -2316,9 +2330,9 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_BattleTimid'){
     // 原 PETSKILL_BattleTimid：直接把本回合 WORKATTACK/DEFENCE/QUICK
     // 改成 FIXSTR*0.7 / FIXTOUGH*0.4 / FIXDEX*0.8。
-    unit.roundAttack=Math.trunc(n(unit.attack)*.7);
-    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.4);
-    unit.roundQuick=Math.trunc(n(unit.quick)*.8);
+    unit.roundAttack=Math.trunc(sourceFixAttack*.7);
+    unit.roundDefense=Math.trunc(sourceFixDefense*.4);
+    unit.roundQuick=Math.trunc(sourceFixQuick*.8);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_2BattleTimid'){
     // 636 option「-攻%50+敏%30命%60」的 C parser：
@@ -2326,8 +2340,8 @@ function enemyPrepareRoundAction(unit,action){
     // +敏% 才是 FIXDEX + 30%。
     const attackRemain=Math.max(0,enemySkillNumber(meta.o,/-攻%([0-9.]+)/,100));
     const quickPlus=Math.max(0,enemySkillNumber(meta.o,/\+敏%([0-9.]+)/,0));
-    unit.roundAttack=Math.trunc(n(unit.attack)*attackRemain/100);
-    unit.roundQuick=Math.trunc(n(unit.quick)+n(unit.quick)*quickPlus/100);
+    unit.roundAttack=Math.trunc(sourceFixAttack*attackRemain/100);
+    unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*quickPlus/100);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_BecomeFox'||meta?.f==='PETSKILL_BecomePig'){
     // BecomeFox / BecomePig 都在 battle.c 的一般物理攻擊群組；
@@ -2336,12 +2350,12 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_Firekill'){
     // 原 BATTLE_COM_S_FIREKILL 在進入 BATTLE_Attack_FIREKILL 前固定 WORKATTACKPOWER=FIXSTR*0.8；
     // 專用 case 做完物理＋火魔法後直接 break，不進普通 Counter loop。
-    unit.roundAttack=Math.trunc(n(unit.attack)*.8);
+    unit.roundAttack=Math.trunc(sourceFixAttack*.8);
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_Lighttakeed'){
     // 原 PETSKILL_Lighttakeed：攻=FIXSTR*0.7、防=FIXTOUGH*0.5；QUICK 修正已註解。
-    unit.roundAttack=Math.trunc(n(unit.attack)*.7);
-    unit.roundDefense=Math.trunc(n(unit.roundDefense)*.5);
+    unit.roundAttack=Math.trunc(sourceFixAttack*.7);
+    unit.roundDefense=Math.trunc(sourceFixDefense*.5);
     // battle.c 走 BATTLE_S_AttackDamage 特殊 case，沒有一般攻擊分支的 Counter loop。
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_ToothCrushe'){
@@ -2351,8 +2365,8 @@ function enemyPrepareRoundAction(unit,action){
   }else if(meta?.f==='PETSKILL_PowerBalance'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
-    const baseAttack=Math.trunc(n(unit.attack));
-    const skillBaseDefense=Math.trunc(n(unit.roundDefense));
+    const baseAttack=sourceFixAttack;
+    const skillBaseDefense=sourceFixDefense;
     unit.roundAttack=baseAttack+Math.trunc(baseAttack*attackPct/100);
     unit.roundDefense=skillBaseDefense+Math.trunc(skillBaseDefense*defensePct/100);
   }else if(meta?.f==='PETSKILL_NoGuard'){
@@ -2361,7 +2375,7 @@ function enemyPrepareRoundAction(unit,action){
     unit.noGuardCounterBonus=Math.max(0,enemySignedSkillPercent(meta.o,'反击%'));
     // 此來源版 NoGuard 的「會心%」處理函式位於 #if 0，因此不生效。
     unit.counterEligibleThisTurn=true;
-  }else if(meta?.f==='PETSKILL_StatusChange'||meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'||meta?.f==='PETSKILL_WildViolentAttack'||meta?.f==='PETSKILL_Regret'){
+  }else if(meta?.f==='PETSKILL_FallGround'||meta?.f==='PETSKILL_Guardian'||meta?.f==='PETSKILL_WildViolentAttack'||meta?.f==='PETSKILL_Regret'){
     const attackPct=enemySignedSkillPercent(meta.o,'攻%');
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseAttack=Math.trunc(n(unit.attack));
