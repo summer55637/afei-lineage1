@@ -2268,7 +2268,22 @@ function enemyPrepareRoundAction(unit,action){
   const meta=action.skillMeta||enemyPetSkillMeta(action.skillId);
   unit.roundSkillFunction=meta?.f||null;
 
-  if(meta?.f==='PETSKILL_BattleModel'){
+  if(meta?.f==='PETSKILL_StatusChange'){
+    // fixed PETSKILL_StatusChange() 在 AI 決定技能時、EntrySort 之前就直接覆寫本回合
+    // WORKATTACKPOWER / WORKDEFENCEPOWER：
+    //   FIXSTR + trunc(FIXSTR * 攻% / 100)
+    //   FIXTOUGH + trunc(FIXTOUGH * 防% / 100)
+    // 不能用「最後傷害 ×倍率」代替，因為 BATTLE_DamageCalc 對攻防是非線性的。
+    const attackPct=enemySignedSkillPercent(meta.o,'攻%');
+    const defensePct=enemySignedSkillPercent(meta.o,'防%');
+    const fixedAttack=Math.trunc(n(unit.attack));
+    const fixedDefense=Math.trunc(n(unit.roundDefense));
+    unit.roundAttack=fixedAttack+Math.trunc(fixedAttack*attackPct/100);
+    if(String(meta.o||'').includes('防%')){
+      unit.roundDefense=fixedDefense+Math.trunc(fixedDefense*defensePct/100);
+    }
+    unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_BattleModel'){
     const parts=String(meta.o||'').split('|');
     const attackPct=enemySignedSkillPercent(parts[5]||'','攻%');
     unit.roundAttack=Math.trunc(n(unit.attack)+n(unit.attack)*attackPct/100);
@@ -6399,7 +6414,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.77 載入完成：WEAKEN／BARRIER 改依 fixed C 在 PreCommandSeq 的 complianceParameter 階段扣回合；虛弱 0.8 FIX 快照不再命中同回合立刻生效。','good');
+    addLog('V0.78 載入完成：PETSKILL_StatusChange 的 攻%／防% 已依 fixed C 在 EntrySort 前覆寫本回合 WORK 能力；毒／石／亂／醉／眠不再用普通攻擊力結算。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
