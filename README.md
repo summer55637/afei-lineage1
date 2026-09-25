@@ -5802,3 +5802,195 @@ V0.71 已接「裝備與 compliance」，但沒有把所有武器 command 一次
 V0.71 至此把 Enemy STYLE 從「存在一把 item」推進成「原 C 真正會影響 WORKFIX 與物理戰鬥判定的裝備」。
 
 下一個最直接的來源缺口是 **BATTLE_GetAttackCount + BOW / BOOMERANG / BREAKTHROW weapon command**。
+
+
+## V0.72 BATTLE_GetAttackCount / weapon battle command
+
+V0.72 延續 V0.71 的 Enemy existing-item／CHAR compliance，開始把 `CHAR_ARM` 真正帶進原 battle command。
+
+來源仍固定：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/data/itemset6.txt`
+
+### BATTLE_GetAttackCount
+
+原：
+
+`BATTLE_GetAttackCount(charaindex)`
+
+規則：
+
+1. `CHAR_ARM` existing index 無效 → 回傳 0。
+2. existing item 有效 → `RAND(ITEM_ATTACKNUM_MIN, ITEM_ATTACKNUM_MAX)`。
+3. 抽出值 <= 0 → 強制改為 1。
+4. battle 主流程若收到 0，而角色不是 Player → `attack_max = 1`。
+
+因此 Enemy 的正式結果：
+
+- Item 400 小的弓箭：**1～3**
+- Item 2498 敵人專用弓箭：**3～5**
+- Item 200 小的槍雖然資料是 0～0，但因有效 existing item，最後仍為 **1**
+- 空手／無有效 ARM 的 Enemy：**1**
+
+V0.72 新增 `sourceBattleGetAttackCount()` 與 Enemy non-player fallback；每次出手都從目前有效 `weaponItemIndex` 查 existing slot，再讀 weapon template，不把 AttackNum 固定寫死成某個 Enemy 常數。
+
+### BOW：aBowW / target list
+
+原 `BATTLE_TargetListSet()` 的弓不是「對同一隻重複射 N 次」。
+
+固定 `aBowW[50]`：
+
+```text
+0 2 1 4 3 | 0 1 2 3 4
+1 0 3 2 4 | 1 3 0 2 4
+2 4 0 1 3 | 2 0 4 1 3
+3 1 0 2 4 | 3 1 0 2 4
+4 2 0 1 3 | 4 2 0 1 3
+```
+
+會依：
+
+- 原始 `defNo % 5`
+- 一次 `RAND(0,1)`
+- 前／後列對應位置
+
+展開最多 10 個候選 battle slot。
+
+原攻擊 loop 只有在候選 slot 仍存活、真的呼叫 `BATTLE_Attack()` 後才：
+
+`++attack_count`
+
+所以：
+
+- 空格不消耗發數
+- 已死亡目標不消耗發數
+- 同一份 bow target list 不會為了湊滿 AttackNum 無限重複同一格
+- 若場上存活候選數少於抽到的 AttackNum，實際攻擊次數可以少於 AttackNum
+
+單機目前仍維持既有 battle slot：
+
+- Player = 0
+- Active Pet = 5
+- Enemy = 10 + `battleSlot`
+
+因此弓會照原 target list 在玩家／出戰寵物的實際 slot 間尋找可攻擊目標，而不是把 Item 2498 的 3～5 發硬灌到同一個角色。
+
+遠距 command metadata 同原：
+
+- BOW → `BB ... w0`
+
+### BOOMERANG
+
+原普通：
+
+`BATTLE_COM_ATTACK`
+
+若 `gWeponType == ITEM_BOOMERANG`，先改成：
+
+`BATTLE_COM_BOOMERANG`
+
+V0.72 保留這個邊界：只有普通 ATTACK 轉換；其他直接攻擊 PetSkill 不會因拿回力標而提前誤轉 command。
+
+原 `BoomerangVsTbl`：
+
+```text
+4  2  0  1  3
+9  7  5  6  8
+14 12 10 11 13
+19 17 15 16 18
+```
+
+並固定：
+
+`gBattleDamageModyfy = 0.3`
+
+Enemy 位於 side 1，原 loop 使用：
+
+- `k = 4`
+- `j = -1`
+
+所以 V0.72 同樣反向掃該 5-slot row，對每個仍存活的 slot 各做一次 30% 物理傷害。
+
+command metadata：
+
+- BOOMERANG → `BO`
+
+### BOUNDTHROW / BREAKTHROW
+
+原普通物理流程的遠距 command：
+
+- BOUNDTHROW → `BB ... w1`
+- BREAKTHROW → `BB ... w2`
+
+Item 600、700 的 AttackNum 都是 1～1，所以目前各為一擊；仍由同一 `BATTLE_GetAttackCount` 路徑取得，不另外猜固定次數。
+
+四種遠距武器：
+
+- BOW
+- BOOMERANG
+- BOUNDTHROW
+- BREAKTHROW
+
+在 V0.71 已依 `BATTLE_IsThrowWepon()` 阻擋近身反擊；V0.72 延續此規則。
+
+### BREAKTHROW 麻痺
+
+原 battle turn 在判定武器型別後直接設定：
+
+```c
+gBattleStausChange = BATTLE_ST_PARALYSIS;
+gBattleStausTurn = 0;
+```
+
+真正套狀態是在 `BATTLE_Attack()` 造成：
+
+`damage > 0`
+
+之後。
+
+原 `BATTLE_StatusAttackCheck()` 對麻痺的特殊分支不是一般等級／VITAL 公式，而是：
+
+`per = 20 - paralysis resistance`
+
+成功條件仍是：
+
+`RAND(1,100) < per`
+
+且目標若已有任何 StatusTbl 異常，直接失敗。
+
+成功後：
+
+`gBattleStausTurn + 1 = 1`
+
+所以投石造成正傷害後會嘗試套 **1 回合麻痺**。
+
+V0.72 直接復用現有 `battleStatusChance(..., 'paralysis')` 與 `battleStatusApply(..., 0)`，沒有另外發明麻痺機率。
+
+### V0.72 回歸
+
+確認：
+
+- `game.js` 完整 JavaScript 語法解析：PASS
+- Item 400 AttackNum：1～3
+- Item 2498 AttackNum：3～5
+- Item 500 Type：BOOMERANG 17
+- Item 600 Type：BOUNDTHROW 18
+- Item 700 Type：BREAKTHROW 19
+- `aBowW` Player slot 0 的兩組候選序列：
+  - RAND 0 → `0,5,2,7,1,6,4,9,3,8`
+  - RAND 1 → `0,5,1,6,2,7,3,8,4,9`
+- `aBowW` Pet slot 5 的兩組候選序列：
+  - RAND 0 → `5,0,7,2,6,1,9,4,8,3`
+  - RAND 1 → `5,0,6,1,7,2,8,3,9,4`
+- BOOMERANG：Enemy side 反向 5-slot traversal + 0.3 damage multiplier
+- BOUNDTHROW：w1 投擲流程
+- BREAKTHROW：w2 + 正傷害後原麻痺檢定
+- throw weapon counter block：仍生效
+- schema：仍為 21
+
+V0.72 至此把 V0.71 已存在的 Enemy 武器，從「會影響能力／會心／反擊資格」推進成「真正依原 C 的 AttackNum、遠距 target list 與 weapon command 執行」。
+
