@@ -4825,8 +4825,9 @@ function performEnemyAction(actor,unit,options={}){
     return {kind:'none'};
   }
   if(kind==='magic'){
-    addLog(unit.name+' 的 enemy1 魔法 AI 被抽中，但來源資料未配置 ma 技能效果；本回合不行動。');
-    return {kind:'magic',unsupported:true};
+    // 正常 enemyChooseAction 已把 B_AI_MAGICMODE 精確轉成 source C_WAIT；此分支只保留防禦性 fallback。
+    addLog(unit.name+' 收到非來源流程的 magic action；原 BATTLE_ai_normal() 沒有 B_AI_MAGICMODE handler，本回合不執行魔法。');
+    return {kind:'magic',sourceUnhandledMagicMode:true};
   }
   if(kind==='skill'){
     const meta=enemyPetSkillMeta(actor.skillId);
