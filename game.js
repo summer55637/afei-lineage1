@@ -1240,6 +1240,14 @@ function fallbackBattleExp(defeated){
   const unitCount=Math.max(1,Array.isArray(defeated?.units)?defeated.units.length:1);
   return Math.max(6,Math.round((7+growth*2.2)*unitCount));
 }
+function sourceEnemyPetFlg(enemyId){
+  const id=Number(enemyId);
+  if(!Number.isFinite(id)||!encounterRuntime?.enemyPetFlg)return null;
+  const key=String(Math.trunc(id));
+  if(!Object.prototype.hasOwnProperty.call(encounterRuntime.enemyPetFlg,key))return null;
+  const value=Number(encounterRuntime.enemyPetFlg[key]);
+  return Number.isFinite(value)?Math.trunc(value):null;
+}
 function makeEnemyUnit(raw,fallbackEntry,index=0){
   const base=fallbackEntry?.variant||{};
   const baseStats=Object.assign({},base.stats||{},raw?.stats||{});
@@ -1313,7 +1321,7 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
   return {
     id:unitId,
     name:raw?.name||fallbackEntry?.species?.clientLabel||base.serverName||('Enemy '+(raw?.enemyId??'')),
-    enemyId:resolvedEnemyId,
+    enemyId:resolvedEnemyId,sourcePetFlg:sourceEnemyPetFlg(resolvedEnemyId),sourceFoxTurn:null,sourceFoxImage:false,
     ai:aiRow,
     statusResist:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]?.z?.slice?.(0,6)||[0,0,0,0,0,0]):[0,0,0,0,0,0],
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
@@ -1547,7 +1555,7 @@ function spawnEnemy(context=null){
     for(let i=0;i<units.length;i++)units[i].battleSlot=i;
     const first=units[0];
     enemy={
-      entry,units,groupBattle:true,dynamicGroup:!!dynamicSpec,
+      entry,units,groupBattle:true,dynamicGroup:!!dynamicSpec,sourceBattleTurn:0,
       encounterId:dynamicSpec?.encounterId??null,groupId:dynamicSpec?.groupId??null,
       selectedEncounterId:dynamicSpec?.selectedEncounterId??dynamicSpec?.encounterId??null,
       roamX:dynamicSpec?.roamX??null,roamY:dynamicSpec?.roamY??null,
@@ -1569,7 +1577,7 @@ function spawnEnemy(context=null){
   }
   const unit=makeEnemyUnit(null,entry,0);
   unit.battleSlot=0;
-  enemy=Object.assign({entry,groupBattle:false,dynamicGroup:false},unit);
+  enemy=Object.assign({entry,groupBattle:false,dynamicGroup:false,sourceBattleTurn:0},unit);
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
   sourceInitPlayerSideEntrySnapshot();
@@ -2306,6 +2314,50 @@ function battleStatusPoisonDamage(desc){
   battleStatusSetHp(desc,Math.max(1,hp-down));
   return down;
 }
+function sourceEnemyFoxRoundActive(unit){
+  return !!unit&&unit.sourceFoxTurn!=null&&Number.isFinite(Number(unit.sourceFoxTurn));
+}
+function sourceEnemyFoxFormActive(unit){
+  return sourceEnemyFoxRoundActive(unit)||unit?.sourceFoxImage===true;
+}
+function sourceEnemyFoxStatusSeq(unit){
+  if(!sourceEnemyFoxRoundActive(unit))return {active:false,recovered:false};
+  const currentTurn=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+  const startTurn=Math.trunc(Number(unit.sourceFoxTurn));
+  unit.sourceFoxImage=true;
+  if(currentTurn-startTurn>2){
+    unit.sourceFoxTurn=null;
+    unit.sourceFoxImage=false;
+    unit.roundAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
+    unit.roundDefense=Math.trunc(n(unit.roundFixDefense??unit.defense));
+    unit.roundQuick=Math.trunc(n(unit.roundFixQuick??unit.quick));
+    addLog(unit.name+' 的媚惑術小狐狸狀態解除。');
+    return {active:false,recovered:true,currentTurn,startTurn};
+  }
+  unit.roundAttack=Math.trunc(n(unit.roundFixAttack??unit.attack)*.8);
+  unit.roundDefense=Math.trunc(n(unit.roundFixDefense??unit.defense)*.8);
+  unit.roundQuick=Math.trunc(n(unit.roundFixQuick??unit.quick)*.8);
+  return {active:true,recovered:false,currentTurn,startTurn};
+}
+function sourceEnemyFoxCommandGate(unit,actor){
+  if(!sourceEnemyFoxFormActive(unit))return {active:false,blocked:false};
+  const kind=actor?.enemyAction||'attack';
+  if(kind==='attack'||kind==='guard'||kind==='none')return {active:true,blocked:false};
+  unit.counterEligibleThisTurn=false;
+  unit.guardThisTurn=false;
+  unit.noGuardThisTurn=false;
+  unit.noGuardDuckBonus=0;
+  unit.noGuardCounterBonus=0;
+  if(unit.guardianReadyThisTurn){
+    const owner=enemyGuardianOwner(unit);
+    if(owner?.guardedByUnitId===unit.id)owner.guardedByUnitId=null;
+    unit.guardianReadyThisTurn=false;
+  }
+  if(unit.chargeState)unit.chargeState=null;
+  if(unit.earthRoundState)unit.earthRoundState=null;
+  addLog(unit.name+' 仍是小狐狸，只能攻擊、防禦或待機；本回合特殊指令取消。');
+  return {active:true,blocked:true};
+}
 function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
@@ -2336,6 +2388,7 @@ function processBattleStatusTurn(actor){
         addLog(desc.unit.name+' 的鐵壁效果結束。');
       }
     }
+    sourceEnemyFoxStatusSeq(desc.unit);
   }
 
   const st=battleStatusGet(desc);
@@ -6504,6 +6557,48 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
   };
 }
 
+function sourcePerformPetBecomeFoxSkill(pet,action,options={}){
+  const meta=action?.meta;
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'媚惑術')+'」，但沒有可攻擊目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'媚惑術')+'」。','pet');
+  const result=sourcePerformPetAttackTarget(
+    pet,{kind:'enemy',unit:target,unitId:target.id},options,{loyalty:true,skillId:action?.skillId}
+  );
+  const r=result?.r;
+  let roll=null,applied=false,dismounted=false,sourceDataMissing=false;
+  const primaryEligible=!!r&&!r.dodged&&!r.miss&&!r.allGuard&&!r.arranged&&n(target.hp)>0;
+  if(primaryEligible){
+    roll=cRand(0,99);
+    const petFlg=target.sourcePetFlg;
+    sourceDataMissing=petFlg==null;
+    if(roll<31&&!sourceDataMissing&&Math.trunc(Number(petFlg))!==0){
+      target.sourceFoxTurn=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+      target.sourceFoxImage=true;
+      if(Number.isFinite(Number(target.ridePetId))&&Number(target.ridePetId)>=0){
+        target.ridePetId=-1;
+        target.sourcePetFall=true;
+        dismounted=true;
+      }
+      applied=true;
+      addLog(target.name+' 被媚惑成小狐狸；狀態從 battle turn '+target.sourceFoxTurn+' 開始。','pet');
+    }else if(sourceDataMissing){
+      addLog(target.name+' 缺少可對回 enemy1 ENEMY_PETFLG 的來源值；保留 RNG 時序但不猜是否變狐。');
+    }else if(roll>=31){
+      addLog((meta?.n||'媚惑術')+' 的變狐判定未成功（rand()%100='+roll+'，需 < 31）。');
+    }
+  }
+
+  return Object.assign({},result,{
+    skillId:action?.skillId,foxRoll:roll,foxApplied:applied,
+    foxStartTurn:applied?target.sourceFoxTurn:null,
+    sourcePetFlg:target.sourcePetFlg??null,sourceDataMissing,dismounted,foxImage:applied?101749:null
+  });
+}
 function sourcePerformPetFallGroundSkill(pet,action,options={}){
   const meta=action?.meta;
   const target=sourcePetEnemyTargetFromAction(action);
@@ -6619,6 +6714,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_PowerBalance')result=sourcePerformPetPowerBalanceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_GuardBreak')result=sourcePerformPetGuardBreakSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_NoGuard')result=sourcePerformPetNoGuardSkill(pet,action);
+    else if(meta?.f==='PETSKILL_BecomeFox')result=sourcePerformPetBecomeFoxSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_FallGround')result=sourcePerformPetFallGroundSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_GuardBreak2')result=sourcePerformPetGuardBreak2Skill(pet,action,options);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
@@ -7001,6 +7097,8 @@ function performEnemyContinuation(actor,unit,options,meta){
 }
 function performEnemyAction(actor,unit,options={}){
   const kind=actor?.enemyAction||'attack';
+  const foxGate=sourceEnemyFoxCommandGate(unit,actor);
+  if(foxGate.blocked)return {kind:'none',foxBlocked:true,sourceFoxTurn:unit.sourceFoxTurn};
   if(kind==='charge')return performEnemyChargeState(actor,unit,options);
   if(kind==='earthround')return performEnemyEarthRoundRelease(actor,unit,options);
   if(kind==='guard'){
@@ -7690,6 +7788,7 @@ function sourcePerformCombo(order,index,options={}){
 }
 
 function normalBattleOrder(options={}){
+  if(enemy)enemy.sourceBattleTurn=Math.max(0,Math.trunc(n(enemy.sourceBattleTurn)))+1;
   const surpriseSide=enemy?.sourceSurprisePending?enemy.sourceSurpriseSide:null;
   // fixed BATTLE_AllCharaCWaitSet 只保留 Charge 類 command；普通 GUARD 新一輪前清回 NONE。
   // PreCommandSeq 同時清掉上一輪 Guardian mapping。
@@ -8477,7 +8576,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.23 載入完成：_PETSKILL_BECOMEPIG 的戰鬥離場 lifecycle 已對齊；無論剩餘秒數多少，玩家 _BATTLE_Exit 都會立即解除黑烏力化。','good');
+    addLog('V1.24 載入完成：_PETSKILL_BECOMEFOX 已接入 ENEMY_PETFLG、31% 命中後判定、WORKFOXROUND 三回合 lifecycle、80% 攻防敏與指令限制。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){

@@ -11304,3 +11304,79 @@ Pet 自己 LostEscape / Ultimate mid-battle 不觸發 Player BecomePig cleanup�
 - timer expires while battle continues => remains pig until exit
 - Pet LostEscape / Ultimate mid-battle => does not clear player pig
 - V1.22 dead-Pet HP=1 cleanup remains
+
+
+## V1.24 BecomeFox / ENEMY_PETFLG core lifecycle
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+本輪接回 _PETSKILL_BECOMEFOX（PetSkill 625 媚惑術）的可達核心，不猜 PETFLG。
+
+### ENEMY_PETFLG
+
+fixed version.h 開啟 _BATTLENPC_WARP_PLAYER，因此 enemy.c 的 ENEMY_STARTINTNUM=4。
+依 enemy.h 的 ENEMY_DATAINT 排序，ENEMY_PETFLG 對應 enemy1.txt 第 14 欄（1-based）。
+
+從固定 commit 的 gmsv/data/enemy1.txt 解析：
+
+- 2,958 個 EnemyID
+- 0 個同 ID PETFLG 衝突
+- 現行 encounter runtime 使用的 818 個 EnemyID 全部有對應值
+- 其中 567 個 PETFLG != 0
+
+結果寫入 stoneage_general_encounter_runtime.json 的 enemyPetFlg；makeEnemyUnit 只按最終 resolved EnemyID 查表，缺值回 null，不猜 0/1。
+
+### 命中後判定
+
+fixed battle.c 的順序是：
+
+1. 先完成普通 BATTLE_Attack
+2. 完成 Counter chain
+3. 原始 defNo 仍存活
+4. primary attack 不是 MISS / DODGE / ALLGUARD / ARRANGE
+5. 先執行 rand()%100 < 31
+6. target 不是 PLAYER
+7. target CHAR_WORK_PETFLG != 0
+8. caster 沒有 BECOMEPIG
+
+Enemy 對玩家／玩家持有 Pet 的附加條件仍不可達；真正可達的是玩家出戰 Pet 在低忠誠 random-act 抽到 skill 625 後攻擊 Enemy。
+
+V1.24 新增 sourcePerformPetBecomeFoxSkill，保留普通物理攻擊 + Counter，再按上述順序做變狐判定。PETFLG=0 時仍先消耗 31% roll，維持原 RNG 時序。
+
+### WORKFOXROUND / battle turn
+
+fixed pBattle->turn 每個 BATTLE_Command round 在 AI 前 +1。
+
+V1.24 為每場 battle 加入 sourceBattleTurn，normalBattleOrder 每輪 +1；成功變狐時把當下 turn 寫到 sourceFoxTurn。
+
+Enemy 自己進 StatusSeq 時：
+
+- currentTurn - sourceFoxTurn <= 2：保持
+- currentTurn - sourceFoxTurn > 2：解除
+
+因此 T / T+1 / T+2 仍有效，T+3 的該 Enemy StatusSeq 恢復。
+
+### 能力與指令
+
+變狐有效時，依 fixed battle.c：
+
+- WORKATTACKPOWER = WORKFIXSTR * 0.8
+- WORKDEFENCEPOWER = WORKFIXTOUGH * 0.8
+- WORKQUICK = WORKFIXDEX * 0.8
+- int 寫回直接截斷
+
+AI / PetSkill 仍先在 PreCommand 選好；到該 Enemy 真正執行自己的 action 時，只有 ATTACK / GUARD / NONE 保留，其餘特殊 command 改成 NONE。
+
+### Regression targets
+
+- game.js syntax PASS
+- enemy1 PETFLG 2,958 IDs / 0 conflicts
+- current runtime 818/818 EnemyID 有 PETFLG
+- primary MISS / DODGE / ALLGUARD / ARRANGE 不 roll
+- primary hit + target alive：PETFLG=0 仍消耗 roll，但不變狐
+- PETFLG!=0 + roll 0..30 成功；31..99 失敗
+- Counter 後 caster Pet 即使倒下，只要原始 target 仍活著仍可完成判定
+- T / T+1 / T+2 active；T+3 StatusSeq recovery
+- active fox：FIX attack / defense / quick 各 80% int truncate
+- active fox：特殊 command -> NONE；ATTACK / GUARD / NONE 保留
+- V1.18 Ultimate / death branch regression 不回退
