@@ -3656,7 +3656,19 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
   if(duckWeaponType===4)duck+=20*100;
   duck+=n(defender?.duckBonus)*100;
   if(duckWeaponType===4)duck+=20*100;
-  return clamp(duck,1,7500);
+  duck=clamp(duck,1,7500);
+
+  // fixed _EQUIT_HITRIGHT is enabled. BATTLE_DuckCheck() performs this roll only for
+  // PLAYER attackers, after the 75% dodge cap and before the final RAND(1,10000).
+  // CHAR_initcharWorkInt() initializes CHAR_WORKHITRIGHT to 0; current web equipment
+  // runtime has no sourced non-zero ITEM_HITRIGHT field, so do not invent one.
+  // RAND(0,0) still consumes one RNG call and must be preserved for lifecycle parity.
+  if(attacker?.type==='player'){
+    const sourceHitRight=0;
+    duck-=cRand(sourceHitRight*.8,sourceHitRight*1.2);
+    if(duck<0)duck=0;
+  }
+  return duck;
 }
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;

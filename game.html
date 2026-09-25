@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.35</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.36</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.35：</b>
-      對齊 fixed _ADD_DEAMGEDEFC 的 BATTLE_DamageCalc RNG 生命週期：目前 runtime 沒有可驗證的 other damage／defense 非 0 裝備欄位，因此維持兩者為初始化 0，不猜數值；但每次 DamageCalc 仍照原 C 固定消耗兩顆 RAND(0,0)，保持整場 RNG 序列一致。
+      <b>V1.36：</b>
+      對齊 fixed _EQUIT_HITRIGHT 的 BATTLE_DuckCheck RNG 生命週期：Player 攻擊者在普通閃避最終判定前固定執行一次命中修正 RAND；目前沒有可驗證的非 0 ITEM_HITRIGHT runtime 欄位，因此維持初始化 0，不猜裝備數值，但仍保留 RAND(0,0) 的 RNG 消耗。
     </article>
   </main>
 

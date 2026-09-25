@@ -12285,3 +12285,64 @@ otherpower = RAND( apower*0.3, apower) - RAND( dpower*0.3, dpower);
 - dodge / skill-dodge 在 DamageCalc 前返回時不誤吃這兩顆 RNG
 - schema 27 維持不變
 - V1.34 AttackCount / V1.33 AttackMagic / V1.32 TargetAdjust regressions unchanged
+
+
+## V1.36 _EQUIT_HITRIGHT / BATTLE_DuckCheck RNG lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `version.h` 明確啟用 `_EQUIT_HITRIGHT`，且 `CHAR_initcharWorkInt()` 在 `_ITEMSET5_TXT` 區段先執行：
+
+```c
+CHAR_setWorkInt( index, CHAR_WORKHITRIGHT, 0);
+```
+
+之後 `ITEM_equipEffect()` 才可能從 `ITEM_HITRIGHT` 疊加非 0 裝備值。
+
+原 `BATTLE_DuckCheck()` 在基礎 Duck 計算、酒醉／BOW／NoGuard 修正與 75% cap 後，若攻擊者是 Player，固定執行：
+
+```c
+int AddHit = CHAR_getWorkInt( attackindex, CHAR_WORKHITRIGHT);
+per -= RAND( AddHit*0.8, AddHit*1.2);
+if( per < 0 ) per = 0;
+```
+
+接著才做 profession duck / chaos 修正與最後的 `RAND(1,10000)` 閃避判定。
+
+### Current data boundary
+
+現有 Web equipment runtime 沒有可由已接資料可靠還原的 `ITEM_HITRIGHT` 非 0 欄位，因此本輪：
+
+- 不猜 ITEM_HITRIGHT 裝備數值
+- `sourceHitRight` 維持來源初始化值 0
+- 但 Player 攻擊者每次真正進入普通 `BATTLE_DuckCheck` 時，仍固定執行一顆 `cRand(0,0)`
+
+這和 V1.35 的原則相同：數值保持 0，不代表 RNG call 可以省略。
+
+### Web correction
+
+`sourceBattleDuckTotal()` 現在：
+
+1. 先完成 base duck / drunk / BOW / NoGuard / BOW
+2. 先 cap 到來源的 1..7500
+3. 僅 Player attacker 執行 HitRight RNG
+4. 目前 0 值不改變 duck 數值，但實際消耗一顆 RNG
+5. 再由 caller 執行最後 `cRand(1,10000)`
+
+SetDuck / `BATTLE_CheckMySkillDuck()` 成功時會在這之前直接返回，因此不會誤吃 HitRight RNG；Guard / cannot-move 等來源本來就不進普通 Duck RNG 的情況也維持不消耗。
+
+本輪不新增持久化欄位，schemaVersion 維持 27。
+
+### V1.36 regression targets
+
+- game.js syntax PASS
+- Player attacker + normal DuckCheck：HitRight 0..0 RNG 恰好一顆
+- HitRight RNG 位於 75% duck cap 後、最終 dodge RAND 前
+- Enemy / Pet attacker 不額外消耗 HitRight RNG
+- SetDuck 成功提前返回時不消耗 HitRight RNG
+- Guard / disableDodge / cannot-move 路徑不誤吃 HitRight RNG
+- 目前 HitRight=0 不改變實際 dodge threshold
+- schema 27 維持不變
+- V1.35 DamageCalc RNG / V1.34 AttackCount regressions unchanged
