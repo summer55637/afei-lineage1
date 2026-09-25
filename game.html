@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.81</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.82</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.81：</b>
-      FIXDEX 與 WORKQUICK 正式拆開：行動排序仍使用本輪 QUICK，但回避／會心／反擊／捕獲一律依 fixed C 使用 FIXDEX；麻痺、石化、睡眠、魔障、暈眩等不可行動目標不再能普通閃避。捕獲公式亦改回 C 的逐步 int 除法與 RAND(1,100) &lt; WorkGet 嚴格判定。
+      <b>V0.82：</b>
+      FIXDEX 戰鬥數學再補齊 C 的整數語意：Duck／Critical／Counter 的 0.8、0.6 類型倍率現在會像 int compound assignment 一樣立即截斷；Counter 的 Work 也依原 int 變數在除法後截斷。公式常數不變，只修正 JS 浮點與 fixed C 的差異。
     </article>
   </main>
 
