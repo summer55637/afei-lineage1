@@ -13081,3 +13081,103 @@ Web 現在同樣會先抽，再以即時 `battleStatusDescAlive()` 決定是否�
 - objectNum < initial count => no added target RNG
 - V1.42 alive-only BattleModel ItemCrush lifecycle unchanged
 - schema 27 unchanged
+
+
+## V1.44 BECOMEFOX post-attack rand()%100 evaluation order
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `battle.c` 在普通 BATTLE_Attack 與最多 5 次 Counter 鏈完成後，才處理 BECOMEFOX：
+
+```c
+if (
+    COM == BATTLE_COM_S_BECOMEFOX
+    && ReturnData != BATTLE_RET_MISS
+    && ReturnData != BATTLE_RET_DODGE
+    && ReturnData != BATTLE_RET_ALLGUARD
+    && ReturnData != BATTLE_RET_ARRANGE
+    && BATTLE_TargetCheck(battleindex, defNo)
+    && (rand()%100 < 31)
+    && targetType != CHAR_TYPEPLAYER
+    && targetPetFlg != 0
+    ...
+) {
+    // apply fox transform
+}
+```
+
+C 的 `&&` 由左到右短路求值，因此順序非常重要：
+
+1. 先確認攻擊 return code 不是 MISS / DODGE / ALLGUARD / ARRANGE
+2. 再確認**原始 defNo** 經 Counter 鏈後仍存活
+3. **接著立刻執行 rand()%100**
+4. 只有 roll < 31 才繼續檢查 target type
+5. 再檢查 `CHAR_WORK_PETFLG != 0`
+
+### Reachable current-data behavior
+
+目前 Enemy BECOMEFOX 的敵對目標只有 Player / Active Pet：
+
+- Player：在 RNG 之後才因 `CHAR_TYPEPLAYER` 被排除
+- 玩家擁有的 Active Pet：type 條件可過，但其 `CHAR_WORK_PETFLG` 來源初始化為 0，因此仍被排除
+
+所以「變狐效果本身不可達」不代表 RNG 不可達。
+
+只要前面的普通攻擊符合 return-code 條件，而且原始目標在整條 Counter 鏈後仍活著，fixed source 就會消耗：
+
+```
+rand()%100
+```
+
+即使之後必然因 type / PETFLG 失敗。
+
+### Previous Web mismatch
+
+舊 `performEnemyBecomeFox()` 因已知玩家側 transform 條件永遠不成立，直接只執行普通物理攻擊，完全跳過後置 RNG。
+
+這會使每次合格的 BECOMEFOX 行動少一顆 RNG，進而影響下一名角色的：
+
+- target selection
+- Duck / Critical
+- DamageCalc
+- ItemCrush
+- status / AI RNG
+
+### V1.44 correction
+
+`performEnemyBecomeFox()` 現在：
+
+1. 先完整執行 `performEnemyPrimaryAttack()`，包含來源 Counter 鏈
+2. 依原始 target 檢查 Counter 後是否仍存活
+3. 排除 Web 可表達的 DODGE / MISS（ALLGUARD 的 0 傷害目前落在 miss；ARRANGE runtime 尚不可達）
+4. 通過後固定執行 `cRand(0,99)`
+5. 記錄 `foxRoll` / `foxRollPassed`
+6. 然後才套用現有來源資料邊界：Player type 或 Player-owned Pet 的 PETFLG=0 使 transform 不成立
+
+Guardian 代擋不改變 source 的原目標 defNo 存活檢查；若原目標是 Player 且忠犬承傷，只要 Player 在 Counter 後仍活著，仍會依來源消耗 fox RNG。
+
+### BECOMEPIG contrast
+
+同一段 source 的 BECOMEPIG 順序不同：
+
+- 先檢查 target 必須是 `CHAR_TYPEPLAYER`
+- 再進技能 block
+- block 內才 `rand()%100 < petrate`
+
+因此 Pet 目標不應為 BECOMEPIG 消耗該 RNG。現有 Web 的 Player-only roll 保留不動。
+
+本輪 schemaVersion 維持 27。
+
+### V1.44 regression targets
+
+- game.js syntax PASS
+- BECOMEFOX successful non-dodge/non-miss hit + original Player alive after Counter => one cRand(0,99)
+- same with original Active Pet alive => one cRand(0,99)
+- original target dead after attack / Counter => no fox RNG
+- DODGE / MISS / ALLGUARD-equivalent => no fox RNG
+- roll occurs only after full primary attack + Counter chain
+- Player / player-owned Pet transform remains unavailable with current source data
+- V1.43 BattleModel target interleaving unchanged
+- schema 27 unchanged

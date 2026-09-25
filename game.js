@@ -6195,17 +6195,40 @@ function performEnemyBecomePig(actor,unit,options,meta){
   },result);
 }
 function performEnemyBecomeFox(actor,unit,options,meta){
-  // 原 BECOMEFOX 先做一發普通 BATTLE_Attack；變狐判定在攻擊／Counter 鏈之後。
-  // 附加變狐要求：target != PLAYER 且 target CHAR_WORK_PETFLG != 0。
-  // 玩家擁有寵物由 PET_createPetFromCharaIndex / PET_initCharOneArray 建立，
-  // CHAR_getDefaultChar 將所有 workint 清 0，且來源只有 ENEMY_createEnemy 會設定 WORK_PETFLG。
-  // 因此目前 Player + Active Pet 模型中，玩家必定因 type PLAYER 失敗，
-  // 玩家寵物必定因 PETFLG=0 失敗；唯一來源效果就是普通攻擊。
-  addLog(unit.name+' 使用 '+(meta?.n||'媚惑術')+'；來源玩家側不符合 PETFLG 變狐條件，本次依原碼執行普通物理攻擊。');
-  return Object.assign(
-    {kind:'skill',skillId:actor.skillId,transformEligible:false,sourcePetFlg:0},
-    performEnemyPrimaryAttack(actor,unit,options)||{}
+  // 原 BECOMEFOX 先完成普通 BATTLE_Attack + Counter 鏈，再跑一串 && 後置條件。
+  // C 的求值順序把 rand()%100 < 31 放在 target type / PETFLG 檢查之前，
+  // 所以效果即使注定因玩家側資料失敗，合格的活著命中仍必須先消耗這顆 RNG。
+  const result=performEnemyPrimaryAttack(actor,unit,options)||{};
+  const sourceTargetAlive=result.target==='pet'
+    ?!!result.pet&&petIsBattleActive(result.pet)
+    :(result.target==='player'?state.hp>0:false);
+  const sourceReturnEligible=!!result.r
+    &&!result.r.dodged
+    &&!result.r.miss
+    &&!result.r.arranged;
+  let foxRoll=null;
+  if(sourceReturnEligible&&sourceTargetAlive){
+    foxRoll=cRand(0,99);
+  }
+
+  // fixed condition order after the roll:
+  // 1) target != PLAYER
+  // 2) target WORK_PETFLG != 0
+  // 玩家擁有寵物的 WORK_PETFLG 來源初始化為 0；玩家本身又先被 type 條件排除。
+  // 因此目前仍沒有可成立的變狐效果，但不能因此省略前面的 rand()%100。
+  const sourcePetFlg=0;
+  const transformEligible=false;
+  addLog(
+    unit.name+' 使用 '+(meta?.n||'媚惑術')+'；'
+    +(foxRoll==null
+      ?'本次攻擊未通過原版變狐後置判定的前置條件，不抽變狐 RNG。'
+      :'原版先消耗變狐 rand()%100='+foxRoll+'，但玩家側仍因 target type／PETFLG 條件不成立而不變狐。')
   );
+  return Object.assign({
+    kind:'skill',skillId:actor.skillId,transformEligible,sourcePetFlg,
+    foxRoll,foxRollPassed:foxRoll!=null&&foxRoll<31,
+    sourceTargetAlive,sourceReturnEligible
+  },result);
 }
 function performEnemySacrifice(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);

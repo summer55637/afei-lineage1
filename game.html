@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.43</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.44</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.43：</b>
-      對齊 BATTLE_BattleModel 額外分身的目標 RNG 時點：先完成原始目標攻擊，再對每個多出的 AttackObject 逐一 RAND(0,i0-1) 後立刻攻擊，不再預先把所有隨機目標一次抽完。
+      <b>V1.44：</b>
+      對齊 BECOMEFOX／媚惑術後置 && 求值順序：普通攻擊與 Counter 結束後，只要原目標仍活著且不是 MISS／DODGE／ALLGUARD／ARRANGE，原 C 會先消耗 rand()%100，再檢查玩家／PETFLG；即使效果注定失敗也不能省略。
     </article>
   </main>
 
