@@ -3803,8 +3803,13 @@ function battleCounterCheck(attacker,defender){
   if(attacker?.throwWeapon||defender?.throwWeapon)return {success:false,raw:0,throwWeaponBlocked:true};
   const raw=battleCounterChance(attacker,defender);
   if(attacker?.type==='player'){
-    if(raw<=0)return {success:false,raw:0};
-    return {success:cRand(1,10000)<raw*100,raw};
+    // fixed BATTLE_CounterCheckPlayer：per<=0 時不是 return；
+    // 會先把內部 per 改成 1、顯示用 pPar 改 0，仍然執行 RAND(1,10000)<1。
+    // 因為 RAND 最小為 1，所以結果必定 false，但 RNG 生命週期仍消耗一顆。
+    let rollPer=raw*100;
+    const displayRaw=raw<=0?0:raw;
+    if(rollPer<=0)rollPer=1;
+    return {success:cRand(1,10000)<rollPer,raw:displayRaw};
   }
   let rollPer=raw*100;
   if(rollPer<=0)rollPer=1; // 原 BATTLE_CounterCheckPet 的 1/10000 下限

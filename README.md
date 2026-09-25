@@ -12755,3 +12755,88 @@ REGRET / REGRET2：
 - successful valid target still uses the same roll for success comparison
 - V1.39 TIMID / ToothCrushe RNG unchanged
 - schema 27 unchanged
+
+
+## V1.41 BATTLE_CounterCheckPlayer zero-rate RNG
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `BATTLE_CounterCheckPlayer()` 在算完：
+
+```c
+per = CriPer * At_Soubi * 0.1 + At_Luck ...
+*pPar = per;
+per *= 100;
+```
+
+之後對 `per <= 0` 的處理不是 return，而是：
+
+```c
+if (per <= 0) {
+    per = 1;
+    *pPar = 0;
+}
+
+if (RAND(1,10000) < per) {
+    flg = TRUE;
+}
+```
+
+因為 `RAND(1,10000)` 的最小值是 1：
+
+- `per <= 0` 時，實際成功率仍是 0%
+- 但 **RAND 仍固定消耗一顆**
+- 判定為 `1 < 1`，永遠不成立
+
+### Previous web mismatch
+
+舊 `battleCounterCheck()` 的 Player 分支：
+
+```js
+if(raw<=0)return {success:false,raw:0};
+```
+
+因此 Player 反擊率為 0 或負數時，Web 少消耗一顆 RNG，導致後面的：
+
+- Counter AttackSeq
+- 下一名角色行動
+- 狀態判定
+- ItemCrush
+- AI / target RNG
+
+全部可能向前錯一顆。
+
+### V1.41 correction
+
+Player 分支現在：
+
+1. `rollPer = raw * 100`
+2. 若 `rollPer <= 0`，改成 1
+3. 顯示用 raw 維持 0
+4. **固定執行 `cRand(1,10000) < rollPer`**
+
+所以：
+- raw <= 0：吃 RNG，但必定失敗
+- raw > 0：沿用原本嚴格 `<` 判定
+
+Pet / Enemy 分支沒有改動，仍依 fixed `BATTLE_CounterCheckPet()` 使用：
+- per <= 0 => 內部 per=1
+- `RAND(1,10000) <= 1`
+- 真正保留 1/10000 下限
+
+這個「Player 0%、Pet 仍有 1/10000」是原 C 本身的不對稱行為，V1.41 保留。
+
+本輪 schemaVersion 維持 27。
+
+### V1.41 regression targets
+
+- game.js syntax PASS
+- Player counter raw<=0 => consumes exactly one RAND, success always false
+- Player counter raw>0 => strict RAND < threshold unchanged
+- Pet/Enemy counter raw<=0 => existing 1/10000 <= behavior unchanged
+- throw-weapon blocked counter => still returns before RNG
+- V1.40 REGRET status RNG unchanged
+- V1.39 TIMID / ToothCrushe RNG unchanged
+- schema 27 unchanged
