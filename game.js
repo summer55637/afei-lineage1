@@ -1972,9 +1972,10 @@ function petBattleView(pet){
   const attack=weaken?Math.trunc(n(combat?.attack)*.8):n(combat?.attack);
   const defenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
   const quickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
+  const fixedToughBase=pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh);
   return {
     type:'pet',attack,defense:defenseBase*(stone?2:1),
-    fixedTough:(pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh))*(weaken?.8:1),
+    fixedTough:weaken?Math.trunc(fixedToughBase*.8):fixedToughBase,
     quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     level:Math.max(1,Math.trunc(n(pet.level))),elements:battleElementsForDesc(desc)
