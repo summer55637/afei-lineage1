@@ -46,7 +46,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set();
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -829,7 +829,8 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     ai:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null,
     statusResist:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]?.z?.slice?.(0,6)||[0,0,0,0,0,0]):[0,0,0,0,0,0],
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
-    level,hp,maxHp:hp,attack,defense,quick,
+    // 原 ENEMY_createEnemy 由 CHAR_getDefaultChar(31010) 的 defaultPlayer 建立；其 CHAR_MP / CHAR_MAXMP 都是 0，Enemy 流程沒有覆寫。
+    level,hp,maxHp:hp,mp:0,maxMp:0,attack,defense,quick,
     stats:st,
     sourceBaseStats:Object.assign({},baseStats),
     allocatedFrom,
@@ -1199,7 +1200,7 @@ function magicAttrCalcRaw(a,d){
   return Math.trunc((fire+water+earth+wind+none)/10000);
 }
 function enemyMagicAttrDamage(unit,targetDesc,magic,aPower){
-  const source=normalizedElements(unit?.elements||{})||{earth:0,water:0,fire:0,wind:0,none:100};
+  const source=normalizedElements(battleElementsForDesc({kind:'enemy',unit,unitId:unit?.id}))||{earth:0,water:0,fire:0,wind:0,none:100};
   const targetView=battleStatusDescView(targetDesc);
   const def=normalizedElements(targetView?.elements||{})||{earth:0,water:0,fire:0,wind:0,none:100};
   const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
@@ -1305,13 +1306,58 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set()}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map()}
 function battleStatusKey(desc){
   if(!desc)return null;
   if(desc.kind==='player')return 'player';
   if(desc.kind==='pet')return 'pet:'+String(desc.pet?.id??desc.petId??'');
   if(desc.kind==='enemy')return 'enemy:'+String(desc.unit?.id??desc.unitId??'');
   return null;
+}
+function battleBaseElements(desc){
+  if(desc?.kind==='player')return Object.assign({},state?.elements||{});
+  if(desc?.kind==='pet')return Object.assign({},desc.pet?.elements||{});
+  if(desc?.kind==='enemy')return Object.assign({},desc.unit?.elements||{});
+  return {};
+}
+function battleReverseElements(elements){
+  const e=elements||{};
+  return Object.assign({},e,{
+    earth:n(e.fire),water:n(e.wind),fire:n(e.earth),wind:n(e.water)
+  });
+}
+function battleElementsForDesc(desc){
+  const key=battleStatusKey(desc);
+  if(key&&battleElementWork.has(key))return battleElementWork.get(key);
+  return battleBaseElements(desc);
+}
+function battlePrepareElementWork(){
+  battleElementWork=new Map();
+  const list=[];
+  if(state)list.push({kind:'player'});
+  const pet=activePet();
+  if(pet)list.push({kind:'pet',pet,petId:pet.id});
+  for(const unit of livingEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
+  for(const desc of list){
+    const key=battleStatusKey(desc);
+    let work=battleBaseElements(desc);
+    if(key&&battleReverseKeys.has(key))work=battleReverseElements(work);
+    if(key)battleElementWork.set(key,work);
+  }
+}
+function battleToggleAttributeReverse(desc){
+  const key=battleStatusKey(desc);
+  if(!key)return {active:false,changed:false};
+  if(battleReverseKeys.has(key)){
+    // 原 BATTLE_MultiAttReverse 第二次 XOR 關閉 flag 後，BATTLE_AttReverse() 立即 return；
+    // 本回合已反轉的 FIX 屬性不立刻換回，等下一輪 complianceParameter 重建。
+    battleReverseKeys.delete(key);
+    return {active:false,changed:true,elements:battleElementsForDesc(desc)};
+  }
+  battleReverseKeys.add(key);
+  const reversed=battleReverseElements(battleElementsForDesc(desc));
+  battleElementWork.set(key,reversed);
+  return {active:true,changed:true,elements:reversed};
 }
 function battleStatusGet(desc){
   const key=battleStatusKey(desc);
@@ -1569,7 +1615,7 @@ function playerBattleView(){
   return {
     type:'player',attack,defense:defenseBase*(stone?2:1),fixedTough:n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,quickBase),
     luck:n(state.luck),drunk,
-    level:Math.max(1,Math.trunc(n(state.level))),elements:state.elements||null
+    level:Math.max(1,Math.trunc(n(state.level))),elements:battleElementsForDesc(desc)
   };
 }
 function petBattleView(pet){
@@ -1588,7 +1634,7 @@ function petBattleView(pet){
     fixedTough:pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh),
     quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,
-    level:Math.max(1,Math.trunc(n(pet.level))),elements:pet.elements||null
+    level:Math.max(1,Math.trunc(n(pet.level))),elements:battleElementsForDesc(desc)
   };
 }
 function enemyBattleView(unit){
@@ -1610,7 +1656,7 @@ function enemyBattleView(unit){
     superWallPower:n(unit?.superWallTurns)>0?n(unit?.superWallPower):0,
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
-    level:Math.max(1,Math.trunc(n(unit?.level))),elements:unit?.elements||null
+    level:Math.max(1,Math.trunc(n(unit?.level))),elements:battleElementsForDesc(desc)
   };
 }
 function enemyAiAttackSpec(unit){
@@ -1651,6 +1697,11 @@ const ENEMY_SOURCE_SKILL_META={
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
   // V0.64：分身地裂；直接操作敵方整側 MP／HP，不走命中、屬性、Guard 或 Counter。
   634:{n:'分身地裂',d:'敵方玩家先扣當下 MP 的一半，再對敵方整側各自扣目前 HP 20%',f:'PETSKILL_DivideAttack',o:'',field:1,target:3},
+  // V0.65：Combined 固定把 COM3 high 清 0；MAGIC_DirectUse 對非玩家將 itemnum=0 當 ITEM existing index，index 0 永遠未配置，因此 mp=-1。
+  627:{n:'難得糊塗',d:'隨機施放恩惠／毒／石／亂／醉／眠 Lv5 系列之一',f:'PETSKILL_Combined',o:'综合法|6|21|139|159|169|179|189',field:1,target:3},
+  632:{n:'逆轉',d:'施放 magic 240 彩虹精靈，切換目標地火／水風反轉',f:'PETSKILL_Combined',o:'综合法|1|240',field:1,target:1},
+  637:{n:'淨化之舞',d:'施放 magic 61，高等淨化精靈 Lv2',f:'PETSKILL_Combined',o:'综合法|1|61',field:1,target:2},
+  705:{n:'調和',d:'施放 magic 230，將戰場屬性設為無',f:'PETSKILL_Combined',o:'综合法|1|230',field:1,target:2},
   590:{n:'虎虎生威',d:'5 個物理攻擊物件並附加石化',f:'PETSKILL_BattleModel',o:'5|5|石|3|30|攻%15|100871 100872',field:1,target:3},
   616:{n:'撕裂傷口2',d:'撕裂舊傷口，增加已損失 HP 50% 的傷害',f:'PETSKILL_BattleTearDamage',o:'50',field:1,target:1},
   640:{n:'憾甲一擊',d:'忽略裝備防禦並貫穿前後排',f:'PETSKILL_Regret',o:'命%20 攻%30 防%-50',field:1,target:7},
@@ -1969,13 +2020,13 @@ function battleTargetSnapshot(kind,pet=null){
     const rawDex=pet.serverStats?n(pet.serverStats.dex):n(pet.stats?.dex)*100;
     return {
       kind:'pet',petId:pet.id,pet,view,
-      hp:n(pet.hp),maxHp:n(pet.maxHp),str:rawStr,dex:rawDex,elements:pet.elements||{}
+      hp:n(pet.hp),maxHp:n(pet.maxHp),str:rawStr,dex:rawDex,elements:battleElementsForDesc({kind:'pet',pet,petId:pet.id})
     };
   }
   return {
     kind:'player',petId:null,pet:null,view:playerBattleView(),
     hp:n(state.hp),maxHp:n(state.maxHp),
-    str:n(state.playerStats?.str)*100,dex:n(state.playerStats?.dex)*100,elements:state.elements||{}
+    str:n(state.playerStats?.str)*100,dex:n(state.playerStats?.dex)*100,elements:battleElementsForDesc({kind:'player'})
   };
 }
 function enemySubdueAttribute(unit){
@@ -2873,8 +2924,8 @@ function performEnemyModifyAttack(actor,unit,options,meta){
 
   let attr=0,bonusRoll=0,bonus=0;
   if(r.damage>0&&spec.key){
-    const targetElements=normalizedElements(chosen.elements||(
-      chosen.kind==='pet'?chosen.pet?.elements:state.elements
+    const targetElements=normalizedElements(battleElementsForDesc(
+      chosen.kind==='pet'?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}:{kind:'player'}
     ));
     attr=Math.max(0,Math.trunc(n(targetElements?.[spec.key])));
     if(attr>0){
@@ -3225,6 +3276,94 @@ function performEnemyBatFly(actor,unit,options,meta){
   // 原 BATTLE_COM_S_BAT_FLY 直接呼叫 BATTLE_BatFly() 後 break；
   // 無 BATTLE_AttackSeq、無閃避／會心／Guard，也不進普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,targets:results,drained,healed};
+}
+function combinedRecoveryRate(target){
+  const raw=battleStatusRawStats(target);
+  // 原 GetRecoveryRate：PLAYER 為 1 + VITAL*0.00010，其餘為 1 + VITAL*0.00005。
+  return 1+n(raw.vital)*(target?.kind==='player'?.00010:.00005);
+}
+function combinedEnemySideTargets(){
+  return livingEnemyUnits().map(unit=>({kind:'enemy',unit,unitId:unit.id}));
+}
+function performEnemyCombined(actor,unit,options,meta){
+  const parts=String(meta?.o||'').split('|');
+  if(String(parts[0]||'').trim()!=='综合法')return {kind:'skill',skillId:actor.skillId,unsupportedCombined:true};
+  const count=clamp(Math.trunc(Number(parts[1])||0),0,10);
+  const ids=parts.slice(2,2+count).map(Number).filter(Number.isFinite);
+  if(!ids.length)return {kind:'skill',skillId:actor.skillId,unsupportedCombined:true};
+  const pickIndex=cRand(0,ids.length-1);
+  const magicId=ids[pickIndex];
+
+  // PETSKILL_Combined 將 COM3 high 固定清成 0。MAGIC_DirectUse 對 Enemy 直接以 itemnum=0 查 ITEM_item[0]；
+  // allocator 從 index 2 開始且永不配置 0，所以 ITEM_getInt(...MAGICUSEMP) 固定 -1。
+  // 各相關 MAGIC_* 都做 MP -= mp，因此每次 Combined 都讓 Enemy MP +1；Enemy 初始 MP/MAXMP 為 0/0，且此處沒有上限 clamp。
+  const mpBefore=Math.trunc(n(unit.mp));
+  unit.mp=mpBefore+1;
+  const base={kind:'skill',skillId:actor.skillId,magicId,pickIndex,enemyMpBefore:mpBefore,enemyMpAfter:unit.mp,itemIndex:0,mpCost:-1};
+
+  if(magicId===21){
+    // 恩惠的精靈 Lv2：BATTLE_MultiRecovery，Power 100，敵方整側；每個目標各自 RAND(90,110) 再乘 GetRecoveryRate。
+    const results=[];
+    for(const target of enemyPlayerSideLivingTargets()){
+      const before=battleStatusHp(target);
+      const maxHp=target.kind==='player'?Math.max(0,n(state.maxHp)):Math.max(0,n(target.pet?.maxHp));
+      const roll=cRand(90,110);
+      const rate=combinedRecoveryRate(target);
+      const heal=Math.trunc(roll*rate);
+      battleStatusSetHp(target,Math.min(maxHp,before+heal));
+      const actual=battleStatusHp(target)-before;
+      results.push({target:target.kind,petId:target.petId||null,roll,rate,heal,actual,hpBefore:before,hpAfter:battleStatusHp(target)});
+      addLog(unit.name+' 的恩惠精靈 Lv2 回復 '+battleStatusDescName(target)+' '+actual+' HP。',actual>0?'good':'');
+    }
+    return Object.assign(base,{effect:'recovery',targets:results});
+  }
+
+  const statusByMagic={139:'poison',159:'stone',169:'confusion',179:'drunk',189:'sleep'};
+  if(statusByMagic[magicId]){
+    const type=statusByMagic[magicId],results=[],attacker={kind:'enemy',unit,unitId:unit.id};
+    for(const target of enemyPlayerSideLivingTargets()){
+      const check=battleStatusChance(attacker,target,type,{perOffset:25,range:30,bai:1,forceGeneral:true});
+      let applied=false;
+      if(check.allowed&&check.success)applied=battleStatusApplyRaw(target,type,5);
+      results.push({target:target.kind,petId:target.petId||null,type,check,applied});
+      if(applied)addLog(unit.name+' 的 '+(BATTLE_STATUS_NAMES[type]||type)+'精靈使 '+battleStatusDescName(target)+' 陷入'+(BATTLE_STATUS_NAMES[type]||type)+' 5 回合。','bad');
+      else addLog(unit.name+' 的 '+(BATTLE_STATUS_NAMES[type]||type)+'精靈未能使 '+battleStatusDescName(target)+' 中招。');
+    }
+    return Object.assign(base,{effect:'status',statusType:type,turns:5,successBase:25,targets:results});
+  }
+
+  if(magicId===61){
+    // 高等淨化精靈 Lv2：status=0 的 MultiStatusRecovery 只解除原 StatusTbl 1..CHAR_WORKCONFUSION 的六種基本異常。
+    const basic=new Set(['poison','paralysis','sleep','stone','drunk','confusion']);
+    const results=[];
+    for(const target of combinedEnemySideTargets()){
+      const st=battleStatusGet(target);
+      const cleared=!!(st&&basic.has(st.type)&&battleStatusClear(target,st.type));
+      results.push({target:'enemy',unitId:target.unitId,status:st?.type||null,cleared});
+      if(cleared)addLog(unit.name+' 的高等淨化精靈 Lv2 解除了 '+target.unit.name+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'。','good');
+    }
+    return Object.assign(base,{effect:'statusRecovery',targets:results});
+  }
+
+  if(magicId===240){
+    const target=enemyActorTarget(actor,unit);
+    if(!target)return Object.assign(base,{effect:'attReverse',noTarget:true});
+    const desc=target.kind==='pet'?{kind:'pet',pet:target.pet,petId:target.petId}:{kind:'player'};
+    const toggled=battleToggleAttributeReverse(desc);
+    addLog(unit.name+' 的彩虹精靈使 '+battleStatusDescName(desc)+' 的地↔火、水↔風反轉'+(toggled.active?'啟用':'關閉（本回合 FIX 屬性到下輪才重建）')+'。',toggled.active?'bad':'');
+    return Object.assign(base,{effect:'attReverse',target:target.kind,petId:target.petId||null,active:toggled.active,elements:toggled.elements});
+  }
+
+  if(magicId===230){
+    // 調和的精靈 option「无」：BATTLE_FieldAttChange 設 field_att=NONE、att_pow=30、att_count=3。
+    // 目前尚沒有可成功建立非 NONE 戰場屬性的已接技能（676 仍受 dynamic item index MP cost 限制），
+    // 因此現有可達狀態下它是來源等價的 NONE→NONE；仍記錄原 power/turn，不虛構其他效果。
+    addLog(unit.name+' 使用調和的精靈：戰場維持無屬性（Power 30，turn 3）。');
+    return Object.assign(base,{effect:'fieldAttChange',fieldAttr:'none',power:30,turns:3});
+  }
+
+  addLog(unit.name+' 的 Combined 抽到 magic '+magicId+'，目前沒有對應的原碼 handler；本回合不猜效果。');
+  return Object.assign(base,{unsupportedMagic:true});
 }
 function performEnemyDivideAttack(actor,unit,options,meta){
   const label=meta?.n||'分身地裂';
@@ -4291,6 +4430,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Nocast')return performEnemyNocast(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Barrier')return performEnemyBarrier(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BatFly')return performEnemyBatFly(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Combined')return performEnemyCombined(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DivideAttack')return performEnemyDivideAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
@@ -4581,6 +4721,8 @@ function battleDexRoll(quick,mode=null){
   return Math.trunc(dex);
 }
 function normalBattleOrder(){
+  // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性，再依 REVERSE flag 套 BATTLE_AttReverse。
+  battlePrepareElementWork();
   const order=[];
   let orderIndex=0;
   for(const unit of livingEnemyUnits()){
@@ -5223,7 +5365,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.64 載入完成：接入 Enemy 634 分身地裂；先將玩家當下 MP 扣除 floor(1/2)，再依原 BATTLE_DivideAttack 對 Player／Active Pet 各扣目前 HP 20%，不走命中、Guard、睡眠喚醒或 Counter。','good');
+    addLog('V0.65 載入完成：接入 Enemy Combined 627／632／637／705；保留 item index 0 → mp=-1 的原 runtime 行為、恩惠回復倍率、Lv5 狀態檢定、基本六異常淨化與地火／水風反轉時序。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
