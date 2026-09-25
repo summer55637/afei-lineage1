@@ -11145,3 +11145,110 @@ V1.21 不對已經跨過 20/40/60 的舊瑪蕾菲雅補抽歷史 RNG。
 - 一次連升多級時所有 PetLevelUp 都在 LevelUpCheck phase 完成後執行
 - 現有 memory levelCap 流程保留
 - owner-mismatch 不在不可達的單機模型中猜實作
+
+
+## V1.22 _BATTLE_Exit owned Pet HP=1 recovery
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+本輪沿 BATTLE_Finish → BATTLE_GetProfit → BATTLE_Exit 繼續補最終戰鬥離場 lifecycle。
+
+### 原始 Player BATTLE_Exit
+
+fixed _BATTLE_Exit() 在處理 CHAR_TYPEPLAYER 時，會再掃玩家全部 CHAR_MAXPETHAVE Pet slot。
+
+對每一隻持有 Pet：
+
+- 若 CHAR_ISDIE == TRUE，或
+- CHAR_HP <= 0
+
+就：
+
+- CHAR_ISDIE = FALSE
+- CHAR_HP = 1
+
+接著清 Battle mode / battle index / battle bad status 並重新 compliance。
+
+因此「寵物在戰鬥中倒下」不是永久保留 0 HP；玩家真正離開整場戰鬥時，倒下寵會回到 **HP 1**。
+
+### 順序非常重要
+
+BATTLE_Finish 對每個 Battle Entry：
+
+1. BATTLE_GetProfit / BATTLE_GetExpGold
+2. BATTLE_Exit
+
+而 BATTLE_GetExpGold 在掃持有 Pet 時先：
+
+- CHAR_ISDIE == TRUE => continue
+
+所以死亡寵在本場：
+
+- **先拿不到 EXP**
+- 之後 Player BATTLE_Exit 才回復到 HP 1
+
+V1.22 保留這個順序：winBattle 先完成 V1.19 的 Pet EXP 判定，再做 sourceFinalizeOwnedPetsBattleExit。
+
+### 全部持有寵，不只 active/team
+
+原碼掃的是 CHAR_MAXPETHAVE，不只 DEFAULTPET。
+
+V1.22 因此遍歷完整 state.petBox：
+
+- active Pet
+- team 內其他 Pet
+- 未放入 team 的持有 Pet
+
+只要 HP<=0，在整場離場時都改成 HP 1。
+
+### 中途 BATTLE_Exit 不立即復活
+
+下列流程只是單隻 Pet 在戰鬥中離場，不是玩家整場離場：
+
+- BATTLE_LostEscape 低忠誠逃跑
+- BATTLE_UltimateExtra Pet 被打飛
+
+V1.22 不在這兩條 mid-battle 路徑直接回 HP。
+
+如果被打飛 Pet 的 HP 已是 0，它會保持 0 到整場戰鬥真正 teardown；此時才由 Player BATTLE_Exit 等價 cleanup 回到 1。
+
+### activePetId 不自動恢復
+
+BATTLE_Exit 的 HP=1 掃描不會替 owner 重新設定 CHAR_DEFAULTPET。
+
+因此 V1.17 / V1.18 的語意保留：
+
+- LostEscape / Ultimate Pet 可把 activePetId 設成 null
+- 整場結束把 Pet HP 從 0 改成 1
+- **不會因此自動把 activePetId 指回該 Pet**
+- reload 仍保留 explicit null
+
+### Web 的整場 teardown
+
+V1.22 在以下整場結束路徑做同一個 final cleanup：
+
+- 勝利 winBattle
+- 戰敗 defeat
+- 捕獲使整場結束
+- 敵方全逃／最後成員直接離場
+- UI 切換地圖／任務區時若當下仍有 battle，clearEnemyBattleNoReward
+
+clearEnemyBattleNoReward 只有 hadBattle=true 才跑 cleanup；單純沒戰鬥時切地圖不會碰 Pet HP。
+
+### 玩家本人的 defeat full-heal
+
+目前放置版 defeat() 仍保留既有「回村後玩家 HP/MP 補滿」的遊戲便利規則。
+
+fixed _BATTLE_Exit 對玩家自身死亡的 HP 處理不是本輪範圍；V1.22 只修明確缺漏且會影響持有寵後續可用性的 Pet HP=1 lifecycle，不順手改玩家回村設計。
+
+### Regression targets
+
+- Pet HP=0 at win: no Pet EXP, then final exit => HP 1
+- Pet HP=0 at defeat: death/loyalty penalty first, then HP 1
+- all owned Pet slots are scanned, not only active/team
+- alive Pet HP remains unchanged
+- LostEscape does not heal mid-battle
+- Ultimate Pet does not heal mid-battle
+- after final exit, activePetId explicit null stays null
+- capture / enemy escape / direct exit full teardown also runs cleanup
+- clearEnemyBattleNoReward with no active enemy does not mutate Pet HP
