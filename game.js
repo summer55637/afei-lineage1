@@ -4030,7 +4030,8 @@ function performEnemyBatFly(actor,unit,options,meta){
     // HP < 10 時固定扣 1。放置版 Player / Active Pet 是獨立 Entry，所以各自套一次。
     const damage=before<10?1:Math.trunc(before/10);
     battleStatusSetHp(target,before-damage);
-    battleStatusWakeOnDamage(target,damage);
+    // fixed BATTLE_BatFly directly writes CHAR_HP and never calls BATTLE_DamageWakeUp.
+    // Direct drain therefore does not wake SLEEP even though HP was lost.
     drained+=damage;
     results.push({target:target.kind,damage,hp:battleStatusHp(target)});
     addLog(unit.name+' 的'+label+'吸取 '+battleStatusDescName(target)+' '+damage+' HP。','bad');

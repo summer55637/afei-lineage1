@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.85</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.86</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.85：</b>
-      校正屬性強化攻擊 Modifyattack：額外倍率的隨機項保留原 C「先整數除以 100、再轉 float」的跳階 bug，且技能判斷目標屬性改讀未反轉的 CHAR 基礎屬性；普通物理本體仍照戰鬥中的 FIX 屬性結算。
+      <b>V0.86：</b>
+      校正群蝠四竄 BatFly 的直接 HP 吸取生命週期：原 C 只直接改寫 HP，完全不呼叫 BATTLE_DamageWakeUp，因此被吸血的睡眠目標不會因 BatFly 提前醒來。
     </article>
   </main>
 

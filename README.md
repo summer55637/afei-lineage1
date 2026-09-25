@@ -8150,8 +8150,12 @@ V0.85 改為額外段明確讀 `battleBaseElements()`。
 - Skill 544「地屬性強化攻擊」`EA|20`：Enemy 2238，weight 3
 - Skill 545「水屬性強化攻擊」`WA|20`：Enemy 2237，weight 3
 - Skill 546「火屬性強化攻擊」`FI|20`：Enemy 2236，weight 3
+- Skill 825「地屬性強化攻擊」`EA|9999`：4 個 Enemy，正權重總和 12
+- Skill 826「水屬性強化攻擊」`WA|9999`：1 個 Enemy，weight 3
+- Skill 827「火屬性強化攻擊」`FI|9999`：1 個 Enemy，weight 3
+- Skill 828「風屬性強化攻擊」`WI|9999`：1 個 Enemy，weight 3
 
-三條都是真正可達的 battle path。
+七條都是真正可達的 battle path；V0.85 的同一個 Modifyattack handler 已同時涵蓋 544～546 與 825～828。
 
 ### V0.85 regression
 
@@ -8167,6 +8171,120 @@ V0.85 改為額外段明確讀 `battleBaseElements()`。
 - V0.83 physical attribute integer pipeline 保留
 - V0.82 FIXDEX integer combat math 保留
 - V0.81 FIXDEX / WORKQUICK separation 保留
+- V0.77 WEAKEN / BARRIER lifecycle 保留
+- V0.76 DRUNK lifecycle bug 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
+
+
+## V0.86 BatFly direct-HP drain does not wake SLEEP
+
+V0.86 校正正權重 Skill 633「群蝠四竄」的直接 HP 吸取生命週期。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `BATTLE_BatFly()`
+- `BATTLE_DamageWakeUp()`
+
+### BatFly 不走 DamageSub / DamageWakeUp
+
+原 `BATTLE_BatFly()` 對敵方整側逐一直接：
+
+```c
+charhp = CHAR_getInt(toindex, CHAR_HP);
+
+if((charhp/10) == 0){
+    CHAR_setInt(toindex, CHAR_HP, charhp - 1);
+    charhp = 1;
+}else{
+    CHAR_setInt(toindex, CHAR_HP, charhp - (charhp/10));
+    charhp /= 10;
+}
+```
+
+未騎乘時：
+
+- 目前 HP >= 10：扣 `floor(currentHP/10)`
+- 目前 HP 1～9：固定扣 1
+- 吸取量累加到 `addhp`
+- 最後回復施術者，且不超過 MAXHP
+
+整個 `BATTLE_BatFly()` 沒有呼叫：
+
+```c
+BATTLE_AttackSeq
+BATTLE_DamageSub
+BATTLE_DamageWakeUp
+```
+
+而 fixed `BATTLE_DamageWakeUp()` 的可見戰鬥效果是：
+
+```c
+if(CHAR_getWorkInt(defindex, CHAR_WORKSLEEP) > 0){
+    CHAR_setWorkInt(defindex, CHAR_WORKSLEEP, 0);
+}
+```
+
+所以「失去 HP」本身不代表一定會被喚醒；只有實際經過來源 wake 路徑才會解除 SLEEP。
+
+### V0.85 以前 web 的偏差
+
+原 web BatFly 在直接扣 HP 後額外做：
+
+```js
+battleStatusWakeOnDamage(target, damage)
+```
+
+因此睡眠中的 Player / Active Pet 只要被 BatFly 吸到 HP，就會被提前喚醒。
+
+這不是 fixed C 行為。
+
+V0.86 移除這個 wake 呼叫。
+
+現在：
+
+- BatFly 仍照目前 HP 的 10% / 最低 1 直接吸取
+- BatFly 仍回復施術者 HP
+- BatFly 不做 Duck / Critical / Guard / Counter
+- **BatFly 不解除 SLEEP**
+- 一般物理、Combo、BattleModel 等真正呼叫 wake 的路徑不受影響
+- DivideAttack 原本就沒有錯誤 wake，維持不變
+
+### fixed data 可達性
+
+Skill 633「群蝠四竄」有 5 個正權重 Enemy：
+
+- Enemy 2510：weight 4
+- Enemy 5122：weight 1
+- Enemy 6054：weight 2
+- Enemy 6056：weight 2
+- Enemy 14031：weight 3
+
+正權重總和：12。
+
+因此這是目前遊戲能實際遇到的狀態生命週期差異。
+
+### V0.86 regression
+
+已確認：
+
+- `game.js` JavaScript syntax：PASS
+- BatFly handler 不再呼叫 `battleStatusWakeOnDamage()`
+- 通用 `battleStatusWakeOnDamage()` 仍保留，且只解除 SLEEP
+- DivideAttack 維持 direct-HP / no-wake
+- Skill 633 正權重可達：5 Enemy / weight 12
+- V0.85 Modifyattack integer-division bug 保留
+- V0.85 reachability 文件補齊 Skill 825～828
+- V0.84 STONE / REGRET ordering 保留
+- V0.83 physical attribute integer pipeline 保留
+- V0.82 FIXDEX integer combat math 保留
 - V0.77 WEAKEN / BARRIER lifecycle 保留
 - V0.76 DRUNK lifecycle bug 保留
 - positive Enemy PetSkill coverage：158
