@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -367,6 +367,55 @@ function sourceCreateQuestGetPet(tempNo,extra={}){
   return pet;
 }
 
+function sourcePlayerCreationStatsValidate(points){
+  const keys=['vital','str','tgh','dex'];
+  const clean={};
+  for(const key of keys){
+    const value=Number(points?.[key]);
+    if(!Number.isFinite(value)||!Number.isInteger(value)){
+      return {valid:false,reason:'VITAL／STR／TOUGH／DEX 都必須是整數。'};
+    }
+    if(value<0||value>20){
+      return {valid:false,reason:'原服創角四圍每一項都必須介於 0～20 點。'};
+    }
+    clean[key]=value;
+  }
+  const total=keys.reduce((sum,key)=>sum+clean[key],0);
+  if(total>20)return {valid:false,reason:'固定 _NEW_PLAYER_CF build 只允許四圍合計 ≤20 點。',points:clean,total};
+  return {valid:true,reason:'合法原服創角四圍。',points:clean,total,remaining:20-total};
+}
+function sourcePlayerCreationStatsReady(target=state){
+  if(target?.playerCreationStatsLegacyUnknown===true)return true;
+  const checked=sourcePlayerCreationStatsValidate(target?.creationPlayerStats);
+  return !!(target?.playerCreationStatsConfigured&&checked.valid);
+}
+function confirmPlayerCreationStats(points=playerCreationStatsDraft){
+  if(!state)return {ok:false,reason:'state-missing'};
+  if(sourcePlayerCreationStatsReady(state)){
+    addLog(state.playerCreationStatsLegacyUnknown
+      ?'此角色是舊存檔，歷史創角四圍無法可靠倒推；保留既有累積四圍，不重新建立。'
+      :'角色創角四圍已依原服規則鎖定，不能重新選擇。','bad');
+    return {ok:false,reason:'already-configured'};
+  }
+  const checked=sourcePlayerCreationStatsValidate(points);
+  if(!checked.valid){
+    addLog('創角四圍無法確認：'+checked.reason,'bad');
+    renderPlayerCreationStats();
+    return {ok:false,reason:'invalid',validation:checked};
+  }
+  state.creationPlayerStats=Object.assign({},checked.points);
+  state.playerStats=Object.assign({},checked.points);
+  state.playerCreationStatsConfigured=true;
+  state.playerCreationStatsLegacyUnknown=false;
+  playerCreationStatsDraft=Object.assign({},checked.points);
+  playerComplianceParameter(state);
+  // CHAR_createNewChar 先把 CHAR_HP 設成 0x7fffffff；登入 compliance 後會被 MaxHP 截斷，
+  // 所以真正新角色完成創角四圍時以滿 HP 開始。
+  state.hp=state.maxHp;
+  addLog('原服創角四圍已確認：VITAL '+checked.points.vital+'／STR '+checked.points.str+'／TOUGH '+checked.points.tgh+'／DEX '+checked.points.dex+'（合計 '+checked.total+'，未使用 '+checked.remaining+'）。此創角基底已永久鎖定。','good');
+  save();render();
+  return {ok:true,points:Object.assign({},checked.points),total:checked.total,remaining:checked.remaining};
+}
 function sourcePlayerElementValidate(points){
   const keys=['earth','water','fire','wind'];
   const clean={};
@@ -528,15 +577,16 @@ function confirmPlayerElements(points=playerElementDraft){
 }
 function freshState(){
   return {
-    schemaVersion:26,
-    level:1,exp:0,expNext:2,hp:35,maxHp:35,mp:100,maxMp:100,
+    schemaVersion:27,
+    level:1,exp:0,expNext:2,hp:0,maxHp:0,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
-    attack:6,defense:6,dex:5,charm:60,luck:0,skillPoints:0,duelPoint:100,
+    attack:0,defense:0,dex:0,charm:60,luck:0,skillPoints:0,duelPoint:100,
     transmigration:1,
     hometown:null,lastTalkElder:null,homeFloor:null,homeX:null,homeY:null,hometownSavePointMask:0,
     playerHometownConfigured:false,hometownLegacyUnknown:false,starterPetGranted:false,
-    playerStats:{vital:5,str:5,tgh:5,dex:5},
+    creationPlayerStats:null,playerCreationStatsConfigured:false,playerCreationStatsLegacyUnknown:false,
+    playerStats:{vital:0,str:0,tgh:0,dex:0},
     elements:null,playerElementsConfigured:false,
     gold:30000,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
@@ -708,8 +758,34 @@ function normalizeState(raw){
     s.playerStats={vital:5,str:5,tgh:5,dex:5};
     s.charm=Math.min(100,Math.max(0,n(s.charm))+10);
   }
-  s.playerStats=Object.assign({vital:5,str:5,tgh:5,dex:5},s.playerStats||{});
+  s.playerStats=Object.assign({vital:0,str:0,tgh:0,dex:0},s.playerStats||{});
   for(const k of ['vital','str','tgh','dex'])s.playerStats[k]=Math.max(0,Math.floor(n(s.playerStats[k])));
+
+  // V1.30: old saves have only cumulative Web playerStats. They do not preserve the original
+  // CHAR_makeCharFromOptionAtCreate allocation separately, so do not pretend the historical
+  // fixed 5/5/5/5 Web baseline was the source creation choice. Preserve their current stats
+  // and let them pass the creation gate as legacy-unknown.
+  if(n(raw?.schemaVersion)<27){
+    s.creationPlayerStats=null;
+    s.playerCreationStatsConfigured=true;
+    s.playerCreationStatsLegacyUnknown=true;
+  }else if(s.playerCreationStatsLegacyUnknown===true){
+    s.creationPlayerStats=null;
+    s.playerCreationStatsConfigured=true;
+  }else{
+    const creation=sourcePlayerCreationStatsValidate(s.creationPlayerStats);
+    if(s.playerCreationStatsConfigured===true&&creation.valid){
+      s.creationPlayerStats=Object.assign({},creation.points);
+      s.playerCreationStatsConfigured=true;
+      s.playerCreationStatsLegacyUnknown=false;
+    }else{
+      s.creationPlayerStats=null;
+      s.playerCreationStatsConfigured=false;
+      s.playerCreationStatsLegacyUnknown=false;
+      s.playerStats={vital:0,str:0,tgh:0,dex:0};
+      s.attack=0;s.defense=0;s.dex=0;s.maxHp=0;s.hp=0;
+    }
+  }
 
   // V1.26: old saves never persisted the original creation element allocation.
   // Do not turn the previous empty-object/no-attribute fallback into historical data.
@@ -765,7 +841,7 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=26;
+  s.schemaVersion=27;
   delete s.pets;
   return s;
 }
@@ -1084,23 +1160,24 @@ function petIsBattleActive(pet){
 }
 function playerComplianceParameter(target=state){
   if(!target)return null;
-  const p=target.playerStats||{vital:5,str:5,tgh:5,dex:5};
+  const p=target.playerStats||{vital:0,str:0,tgh:0,dex:0};
   const vital=Math.max(0,Math.floor(n(p.vital))),str=Math.max(0,Math.floor(n(p.str)));
   const tgh=Math.max(0,Math.floor(n(p.tgh))),dex=Math.max(0,Math.floor(n(p.dex)));
   target.playerStats={vital,str,tgh,dex};
   target.attack=Math.trunc(str+tgh*.1+vital*.1+dex*.05);
   target.defense=Math.trunc(tgh+str*.1+vital*.1+dex*.05);
   target.dex=Math.trunc(dex);
-  target.maxHp=Math.max(1,Math.trunc(vital*4+str+tgh+dex));
+  target.maxHp=Math.max(0,Math.trunc(vital*4+str+tgh+dex));
   target.hp=Math.min(Math.max(0,n(target.hp)),target.maxHp);
   return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp};
 }
 function allocatePlayerStat(key){
   const labels={vital:'體力 VITAL',str:'腕力 STR',tgh:'耐力 TOUGH',dex:'速度 DEX'};
   if(!labels[key]||!state)return false;
+  if(!sourcePlayerCreationStatsReady(state)){addLog('請先確認原服創角四圍，再使用升級取得的能力點。','bad');return false;}
   const points=Math.max(0,Math.floor(n(state.skillPoints)));
   if(points<=0){addLog('目前沒有可分配的能力點。','bad');return false;}
-  state.playerStats=Object.assign({vital:5,str:5,tgh:5,dex:5},state.playerStats||{});
+  state.playerStats=Object.assign({vital:0,str:0,tgh:0,dex:0},state.playerStats||{});
   state.playerStats[key]=Math.max(0,Math.floor(n(state.playerStats[key])))+1;
   state.skillPoints=points-1;
   playerComplianceParameter(state);
@@ -8462,6 +8539,7 @@ function walkEncounterStep(){
 }
 function tick(){
   if(!state||!state.auto)return;
+  if(!sourcePlayerCreationStatsReady(state))return;
   if(!sourcePlayerHometownReady(state))return;
   if(!sourcePlayerElementsConfigured(state))return;
   if(state.hp<=0){defeat();return}
@@ -8652,6 +8730,45 @@ function renderZooQuest(){
   if(e82.complete&&e83.complete&&hasItem(19715)&&!hasItem(19719))actions.push('<button data-zoo-action="reward19719" class="wide">向里拉拉領 Event83 後續謝禮 19719</button>');
   $('#zooQuestActions').innerHTML=actions.join('');
 }
+function renderPlayerCreationStats(){
+  const panel=$('#playerCreationStatsPanel');
+  const status=$('#playerCreationStatsStatus');
+  const button=$('#playerCreationStatsConfirmBtn');
+  if(!panel||!status||!button||!state)return;
+  const ids={vital:'#creationVital',str:'#creationStr',tgh:'#creationTgh',dex:'#creationDex'};
+
+  if(state.playerCreationStatsLegacyUnknown===true){
+    for(const selector of Object.values(ids)){const input=$(selector);if(input)input.disabled=true;}
+    button.disabled=true;button.textContent='舊存檔保留既有四圍';
+    const p=state.playerStats||{};
+    status.textContent='舊存檔：歷史創角四圍沒有獨立保存，不倒推；保留目前累積 VITAL '+Math.floor(n(p.vital))+'／STR '+Math.floor(n(p.str))+'／TOUGH '+Math.floor(n(p.tgh))+'／DEX '+Math.floor(n(p.dex))+'。';
+    status.className='player-element-status good';
+    return;
+  }
+
+  const ready=sourcePlayerCreationStatsReady(state);
+  const values=ready?state.creationPlayerStats:(playerCreationStatsDraft||{vital:0,str:0,tgh:0,dex:0});
+  for(const [key,selector] of Object.entries(ids)){
+    const input=$(selector);
+    if(!input)continue;
+    input.value=String(values?.[key]??0);
+    input.disabled=ready;
+  }
+  const checked=sourcePlayerCreationStatsValidate(values);
+  if(ready){
+    status.textContent='已鎖定創角基底：VITAL '+checked.points.vital+'／STR '+checked.points.str+'／TOUGH '+checked.points.tgh+'／DEX '+checked.points.dex+'（合計 '+checked.total+'）。';
+    status.className='player-element-status good';
+    button.textContent='創角四圍已確認';
+    button.disabled=true;
+  }else{
+    status.textContent=checked.valid
+      ?'可確認：合計 '+checked.total+' / 20，尚可不用 '+checked.remaining+' 點'+(checked.total===0?'；原 C 確實允許全 0，但 MaxHP 也會是 0。':'。')
+      :checked.reason;
+    status.className='player-element-status '+(checked.valid?'good':'bad');
+    button.textContent='確認創角四圍並永久鎖定';
+    button.disabled=!checked.valid;
+  }
+}
 function renderPlayerHometown(){
   const panel=$('#playerHometownPanel');
   const select=$('#playerHometownSelect');
@@ -8733,11 +8850,12 @@ function render(){
   $('#paramStr').textContent=Math.floor(n(ps.str));
   $('#paramTgh').textContent=Math.floor(n(ps.tgh));
   $('#paramDex').textContent=Math.floor(n(ps.dex));
-  document.querySelectorAll('#playerParamGrid button[data-player-stat]').forEach(b=>b.disabled=Math.floor(n(state.skillPoints))<=0);
+  document.querySelectorAll('#playerParamGrid button[data-player-stat]').forEach(b=>b.disabled=!sourcePlayerCreationStatsReady(state)||Math.floor(n(state.skillPoints))<=0);
+  renderPlayerCreationStats();
   renderPlayerHometown();
   renderPlayerElements();
   $('#wins').textContent=state.wins;
-  $('#hpBar').style.width=clamp(state.hp/state.maxHp*100,0,100)+'%';
+  $('#hpBar').style.width=(n(state.maxHp)>0?clamp(state.hp/state.maxHp*100,0,100):0)+'%';
   $('#autoBtn').textContent='自動戰鬥：'+(state.auto?'開':'關');
   $('#autoCaptureBtn').textContent='自動捕獲：'+(state.autoCapture?'開':'關');
 
@@ -8780,9 +8898,13 @@ function renderEnemy(){
   const capBtn=$('#captureBtn');
   if(!enemy){
     box.className='enemy empty';
+    const creationStatsReady=sourcePlayerCreationStatsReady(state);
     const hometownReady=sourcePlayerHometownReady(state);
     const elementReady=sourcePlayerElementsConfigured(state);
-    if(!hometownReady){
+    if(!creationStatsReady){
+      box.innerHTML='<div class="enemy-name">等待原服創角四圍</div><div class="muted">固定 _NEW_PLAYER_CF build：VITAL／STR／TOUGH／DEX 各 0～20、合計 ≤20；不再替新角色猜固定 5/5/5/5。</div>';
+      $('#battleState').textContent='等待創角四圍';
+    }else if(!hometownReady){
       box.innerHTML='<div class="enemy-name">等待原服出生村選擇</div><div class="muted">請先確認 hometown 0～3；確認後才依原 C 建立對應 Lv1 起始寵。</div>';
       $('#battleState').textContent='等待出生村';
     }else if(!elementReady){
@@ -8971,7 +9093,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.29 載入完成：固定四村 hometown／LASTTALKELDER 與 EnemyID 1～4 起始寵創角流程已接回；舊存檔不倒推、不補領。','good');
+    addLog('V1.30 載入完成：固定 _NEW_PLAYER_CF 創角四圍改為玩家確認，各項 0～20、合計 ≤20；新角色不再猜 5/5/5/5，舊存檔保留既有累積四圍。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
@@ -9264,6 +9386,15 @@ $('#playerParamGrid').addEventListener('click',e=>{
   const b=e.target.closest('button[data-player-stat]');if(!b)return;
   allocatePlayerStat(b.dataset.playerStat);
 });
+$('#playerCreationStatsGrid').addEventListener('input',e=>{
+  const input=e.target.closest('input[data-player-create-stat]');if(!input||sourcePlayerCreationStatsReady(state))return;
+  const key=input.dataset.playerCreateStat;
+  if(!Object.prototype.hasOwnProperty.call(playerCreationStatsDraft,key))return;
+  const raw=input.value.trim();
+  playerCreationStatsDraft[key]=raw===''?NaN:Number(raw);
+  renderPlayerCreationStats();
+});
+$('#playerCreationStatsConfirmBtn').addEventListener('click',()=>confirmPlayerCreationStats(playerCreationStatsDraft));
 $('#playerElementGrid').addEventListener('input',e=>{
   const input=e.target.closest('input[data-player-element]');if(!input||sourcePlayerElementsConfigured(state))return;
   const key=input.dataset.playerElement;
