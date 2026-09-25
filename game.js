@@ -1800,7 +1800,7 @@ const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
 // V0.66：這些 PetSkill 在來源中不是 missing / unregistered；PETSKILL_Use 本身會成功，
 // 但實際 battle effect 依賴本前端沒有的原 server 全域 runtime 狀態，不能靜態決定。
 // 必須保留 AI 權重與正常 StatusSeq，但不可猜效果、也不可改成普通攻擊。
-const ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS=new Set([211,676,688]);
+const ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS=new Set([676,688]);
 
 function enemyPetSkillMeta(skillId){
   if(skillId==null)return null;
@@ -2096,6 +2096,24 @@ function finishEnemyEscape(unit){
   state.wins++;
   addLog(unit.name+' 成功逃離戰鬥；沒有擊殺 EXP 或掉落。','good');
   enemy=null;save();render();
+  return {battleEnded:true,noReward:true};
+}
+function finishEnemyDirectExit(unit,reason='離開戰鬥'){
+  if(!enemy||!unit)return {battleEnded:false};
+  if(Array.isArray(enemy.units)){
+    enemy.units=enemy.units.filter(u=>u.id!==unit.id);
+    if(enemy.units.length===0){
+      state.wins++;
+      addLog('敵方最後一名成員因'+reason+'離場，戰鬥結束；該離場不產生擊殺 EXP 或掉落。','good');
+      enemy=null;resetBattleStatuses();save();render();
+      return {battleEnded:true,noReward:true};
+    }
+    syncEnemyTarget();
+    return {battleEnded:false,noReward:true};
+  }
+  state.wins++;
+  addLog(unit.name+' 因'+reason+'離場，戰鬥結束；沒有擊殺 EXP 或掉落。','good');
+  enemy=null;resetBattleStatuses();save();render();
   return {battleEnded:true,noReward:true};
 }
 function enemyEscapeAttempt(unit){
@@ -3705,6 +3723,49 @@ function performEnemyToothCrushe(actor,unit,options,meta){
     equipmentCrushReachable,crushed:false
   };
 }
+function performEnemyStealMoney(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+
+  // 單機 runtime：原 CHAR player pool 從 index 0 開始；本遊戲只有一名玩家，因此她/他就是有效 masterindex 0。
+  // Enemy side 是 side 1，battleSlot 0..9 對應原 bid 10..19。
+  const attackNo=10+Math.max(0,Math.trunc(n(unit?.battleSlot)));
+  const defNo=chosen.kind==='player'?0:(chosen.kind==='pet'?5:0);
+  let per=0;
+  if(chosen.kind==='player'){
+    let safeSide=0;
+    // 原 bug：attackNo == 10 不滿足 >10，因此第一格 Enemy 誤把玩家視為同側，per 維持 0。
+    if(attackNo>10)safeSide=1;
+    const sameSide=defNo>=safeSide*10&&defNo<(safeSide*10+10);
+    if(!sameSide){
+      const lv=Math.max(1,Math.trunc(n(state.level)));
+      per=Math.trunc((Math.trunc((50+lv)/4)+10)/2);
+    }
+  }
+
+  const roll=cRand(1,100);
+  let success=roll<per;
+  let goldRoll=null,stolen=0;
+  const goldBefore=Math.max(0,Math.trunc(n(state.gold)));
+  const maxGold=1000000; // _FIX_MAX_GOLD 已開；單機角色轉生數目前為 0 => 1,000,000。
+  if(success&&chosen.kind==='player'){
+    goldRoll=cRand(1,15);
+    stolen=Math.trunc(goldBefore*goldRoll*.01);
+    // 原碼先以 master slot 0 的目前 GOLD 做持有上限 clamp；單機 master 與被偷玩家是同一人。
+    if(goldBefore+stolen>=maxGold)stolen=maxGold-goldBefore;
+    if(stolen<=0){stolen=0;success=false;}
+  }
+
+  if(success){
+    state.gold=Math.max(0,goldBefore-stolen);
+    addLog(unit.name+' 的 '+(meta?.n||'捐獻')+' 成功：偷走 '+stolen+' 石幣（'+goldBefore+' → '+state.gold+'），並依原 BATTLE_StealMoney 直接離開戰鬥。','bad');
+    const exit=finishEnemyDirectExit(unit,'捐獻成功');
+    return {kind:'skill',skillId:actor.skillId,target:chosen.kind,attackNo,defNo,per,roll,goldRoll,stolen,goldBefore,goldAfter:state.gold,success:true,exit};
+  }
+
+  addLog(unit.name+' 的 '+(meta?.n||'捐獻')+' 失敗（原成功值 '+per+'，RAND '+roll+'；判定為 RAND < per）。');
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,attackNo,defNo,per,roll,goldRoll,stolen:0,goldBefore,goldAfter:state.gold,success:false};
+}
 function performEnemyAttackMagic(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -4429,6 +4490,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_DamageToHp2')return performEnemyDamageToHp2(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_MpDamage')return performEnemyMpDamage(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ToothCrushe')return performEnemyToothCrushe(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_StealMoney')return performEnemyStealMoney(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackMagic')return performEnemyAttackMagic(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Firekill')return performEnemyFirekill(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
@@ -5388,7 +5450,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.66 載入完成：正權重 Enemy PetSkill 靜態可還原部分已掃至 runtime 邊界；211／676／688 正式標記為依賴原 server 全域 Char／ITEM existing-index 狀態，不猜效果也不替換成普通攻擊。','good');
+    addLog('V0.67 載入完成：以單機空 server 的原 CHAR allocator 模型接入 211 捐獻；玩家固定為第一個 Player slot 0，並保留 Enemy bid 10 的同側判定 bug、石幣百分比與成功後直接離場。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
