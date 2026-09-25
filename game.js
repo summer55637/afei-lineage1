@@ -2609,13 +2609,15 @@ function enemyActorTarget(actor,unit){
   return enemyChooseTarget(unit);
 }
 function battleDuckChance(attacker,defender){
-  // fixed BATTLE_DuckCheck reads CHAR_WORKFIXDEX for both sides.
-  let atDex=n(attacker?.fixedDex??attacker?.quick),dfDex=n(defender?.fixedDex??defender?.quick);
-  const dfLuck=defender?.type==='player'?n(defender?.luck):0;
-  if(attacker?.type==='enemy'&&defender?.type==='pet')atDex*=.8;
-  else if(attacker?.type!=='enemy'&&defender?.type==='pet')dfDex*=.8;
-  else if(attacker?.type!=='player'&&defender?.type==='player')atDex*=.6;
-  else if(attacker?.type==='player'&&defender?.type!=='player')dfDex*=.6;
+  // fixed BATTLE_DuckCheck：At_Dex / Df_Dex / Df_Luck 都是 int。
+  // 因此 *=0.8 / *=0.6 的 compound assignment 會立即截斷，不能讓 JS 浮點一路帶到 sqrt。
+  let atDex=Math.trunc(n(attacker?.fixedDex??attacker?.quick));
+  let dfDex=Math.trunc(n(defender?.fixedDex??defender?.quick));
+  const dfLuck=defender?.type==='player'?Math.trunc(n(defender?.luck)):0;
+  if(attacker?.type==='enemy'&&defender?.type==='pet')atDex=Math.trunc(atDex*.8);
+  else if(attacker?.type!=='enemy'&&defender?.type==='pet')dfDex=Math.trunc(dfDex*.8);
+  else if(attacker?.type!=='player'&&defender?.type==='player')atDex=Math.trunc(atDex*.6);
+  else if(attacker?.type==='player'&&defender?.type!=='player')dfDex=Math.trunc(dfDex*.6);
   let big,small,wari;
   if(dfDex>=atDex){big=dfDex;small=atDex;wari=1}
   else{big=atDex;small=dfDex;wari=big<=0?0:small/big}
@@ -2627,20 +2629,21 @@ function battleDuckChance(attacker,defender){
   return per;
 }
 function battleCriticalChance(attacker,defender){
-  // fixed BATTLE_CriticalCheckPlayer reads CHAR_WORKFIXDEX, even for Pet/Enemy.
-  let atDex=n(attacker?.fixedDex??attacker?.quick),dfDex=n(defender?.fixedDex??defender?.quick),root=true,div=.09;
-  const atLuck=attacker?.type==='player'?n(attacker?.luck):0;
-  if(attacker?.type==='pet'&&defender?.type==='enemy')dfDex*=.8;
+  // fixed BATTLE_CriticalCheckPlayer：FIXDEX / Luck / equipment critical 都以 C int 讀入。
+  let atDex=Math.trunc(n(attacker?.fixedDex??attacker?.quick));
+  let dfDex=Math.trunc(n(defender?.fixedDex??defender?.quick)),root=true,div=.09;
+  const atLuck=attacker?.type==='player'?Math.trunc(n(attacker?.luck)):0;
+  if(attacker?.type==='pet'&&defender?.type==='enemy')dfDex=Math.trunc(dfDex*.8);
   else if(attacker?.type==='enemy'&&defender?.type==='pet'){div=10;root=false}
   else if(attacker?.type!=='player'&&defender?.type==='player'){div=10;root=false}
-  else if(attacker?.type==='player'&&defender?.type!=='player')dfDex*=.6;
+  else if(attacker?.type==='player'&&defender?.type!=='player')dfDex=Math.trunc(dfDex*.6);
   let big,small,wari;
   if(atDex>=dfDex){big=atDex;small=dfDex;wari=1}
   else{big=dfDex;small=atDex;wari=big<=0?0:small/big}
   let work=(big-small)/div;if(work<=0)work=0;
-  // 原 BATTLE_CriticalCheckPlayer：裝備 ITEM_CRITICAL*0.5 在乘 wari 之前加入；
-  // 非 Player 也走同一函式。弓仍可出現 critical flag，但後面的 CriDamage 不加防禦補傷。
-  let per=(root?Math.sqrt(work):work)+n(attacker?.weaponCritical)*.5;
+  // Work 在來源是 float，這裡不提早截斷；只有上面的 int compound assignment 要截。
+  // 裝備 ITEM_CRITICAL*0.5 在乘 wari 之前加入；非 Player 也走同一函式。
+  let per=(root?Math.sqrt(work):work)+Math.trunc(n(attacker?.weaponCritical))*.5;
   per*=wari;
   per+=atLuck;
   per*=100;
@@ -2773,23 +2776,25 @@ function sourceCounterWeaponFactor(attackerType,defenderType){
   return n(SOURCE_COUNTER_TBL[a*8+d]);
 }
 function battleCounterChance(attacker,defender){
-  // fixed BATTLE_CounterCalc reads CHAR_WORKFIXDEX; WORKQUICK-only skill modifiers do not affect counter rate.
-  let atDex=n(attacker?.fixedDex??attacker?.quick),dfDex=n(defender?.fixedDex??defender?.quick),root=true,div=.08;
+  // fixed BATTLE_CounterCalc：At_Dex / Df_Dex / Work 都是 int。
+  // FIXDEX 類型倍率先截斷；(Big-Small)/divpara 指派給 int Work 時再截斷一次。
+  let atDex=Math.trunc(n(attacker?.fixedDex??attacker?.quick));
+  let dfDex=Math.trunc(n(defender?.fixedDex??defender?.quick)),root=true,div=.08;
   if(attacker?.type==='enemy'&&defender?.type==='pet'){
     div=10;root=false;
   }else if(attacker?.type==='pet'&&defender?.type==='enemy'){
-    dfDex*=.8;
+    dfDex=Math.trunc(dfDex*.8);
   }else if(attacker?.type!=='player'&&defender?.type==='player'){
     div=10;root=false;
   }else if(attacker?.type==='player'&&defender?.type!=='player'){
-    dfDex*=.6;
+    dfDex=Math.trunc(dfDex*.6);
   }
 
   let big,small,wari;
   if(atDex>=dfDex){big=atDex;small=dfDex;wari=1}
   else{big=dfDex;small=atDex;wari=big<=0?0:small/big}
 
-  let work=(big-small)/div;
+  let work=Math.trunc((big-small)/div);
   if(work<=0)work=0;
   let per=(root?Math.sqrt(work):work)*wari;
 
@@ -6501,7 +6506,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.81 載入完成：Duck／Critical／Counter／Capture 全部改讀 FIXDEX；WORKQUICK 只留給行動排序。麻痺／石化／睡眠／魔障／暈眩等不可行動目標亦依 fixed DuckCheck 完全不能閃避。','good');
+    addLog('V0.82 載入完成：Duck／Critical／Counter 補齊 fixed C 的 int FIXDEX 算術；0.8／0.6 類型倍率會立即截斷，Counter 的 int Work 也在除法後截斷。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
