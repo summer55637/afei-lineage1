@@ -5994,3 +5994,123 @@ V0.72 直接復用現有 `battleStatusChance(..., 'paralysis')` 與 `battleStatu
 
 V0.72 至此把 V0.71 已存在的 Enemy 武器，從「會影響能力／會心／反擊資格」推進成「真正依原 C 的 AttackNum、遠距 target list 與 weapon command 執行」。
 
+
+
+## V0.73 BOW DuckCheck / throw Guardian
+
+V0.73 繼續追 V0.72 weapon command 之後，補兩個原 C 會直接改變實戰結果的遠距武器分支。
+
+來源仍固定：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle.c`
+
+### BATTLE_DuckCheck 的 BOW 重複 +20
+
+fixed ref 的 `BATTLE_DuckCheck()` 在同一函式裡實際存在兩段：
+
+```c
+if( gWeponType == ITEM_BOW ){
+    per += 20;
+}
+```
+
+第一段位於酒醉修正後，第二段位於 NoGuard 修正後。
+
+因此原版真正順序是：
+
+1. DEX / Luck 算基礎回避。
+2. `gBattleDuckModyfy`。
+3. 酒醉攻擊者：`RAND(20,30)`。
+4. BOW：`+20`。
+5. NoGuard 防守者的 duck bonus。
+6. BOW：再 `+20`。
+7. `×100`。
+8. 最後套 `KAWASHI_MAX_RATE = 75%` 上限。
+
+也就是弓攻擊會讓守方回避率在 cap 前額外 **+40 個百分點**。
+
+這是 fixed ref 的真實重複程式，不把它當筆誤修掉。
+
+V0.73 新增：
+
+`sourceBattleDuckTotal()`
+
+並讓：
+
+- 一般 `resolveNormalAttack()`
+- Enemy Guardian 前置 DuckCheck
+
+都走同一個來源順序。
+
+### 投射武器不能被 Guardian／忠犬代擋
+
+原 `BATTLE_GuardianCheck()` 在確認 Guardian 有效後，還會再檢查攻擊者：
+
+`BATTLE_IsThrowWepon(CHAR_ARM)`
+
+若攻擊者使用：
+
+- BOW
+- BOOMERANG
+- BOUNDTHROW
+- BREAKTHROW
+
+直接：
+
+`return -1`
+
+也就是遠距攻擊不會被 Guardian 轉移。
+
+單機目前 Player side 沒有獨立 Guardian 站位，但 Enemy side 的忠犬／Guardian 已存在；特別是混亂狀態會使 Enemy 可能攻擊同側 Enemy，因此這個原版限制仍然是可達邏輯。
+
+V0.73 的 `resolveAttackToEnemyWithGuardian()` 現在會在：
+
+`attacker.throwWeapon === true`
+
+時完全跳過 `enemyGuardianFor()`。
+
+### 與 V0.71 / V0.72 的關係
+
+目前四種遠距武器已同時保留：
+
+- V0.71：禁止近身 Counter
+- V0.72：正式 weapon command / AttackNum / target list
+- V0.73：BOW 原版雙重回避懲罰
+- V0.73：遠距攻擊禁止 Guardian 代擋
+
+其中 BOW 目前來源行為為：
+
+- Item 400：1～3 發
+- Item 2498：3～5 發
+- `aBowW[50]` 決定候選 slot
+- 每次實際命中前的 DuckCheck 都有 BOW +40
+- Critical flag 仍可出現
+- Critical 不取得一般武器的額外防禦補傷
+- 不可觸發近身 Counter
+- 不可被 Guardian 代擋
+
+### V0.73 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- fixed ref `BATTLE_DuckCheck()` 內 BOW `per += 20`：兩次
+- web runtime：同樣兩次各 +2000 raw duck
+- 最終仍 clamp 1～7500
+- Guardian：`throwWeapon=true` 時不再轉移目標
+- V0.72 BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW handlers 保留
+- schema：維持 21
+
+V0.73 後下一個已確認的大缺口是原 `EntrySort() -> ComboCheck()` 的**合擊生命週期**：
+
+- Enemy 普通攻擊起始機率 20%
+- 非 Enemy 起始機率 50%
+- 必須是排序後相鄰、同側、同目標、可行動的普通攻擊者
+- BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW 全部不得進合擊
+- 合擊走 `BATTLE_Combo()`，會跳過普通 DuckCheck，且不走一般 Counter loop
+
+這塊牽涉目前 Player / Pet / Enemy 三種 command 在排序後的合併，所以留作下一層，不用普通多段攻擊硬冒充。
+
