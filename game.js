@@ -56,11 +56,13 @@ const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const uid=()=>('p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8));
 
 function freshItemRuntime(){return {itemnum:25000,sindex:1,slots:{}}}
-function sourceItemTemplateMagicUseMp(itemId){
+function sourceItemTemplateExists(itemId){
   const id=Math.trunc(Number(itemId));
-  if(!Number.isFinite(id)||!itemMagicDb?.byItemId)return null;
-  if(!Object.prototype.hasOwnProperty.call(itemMagicDb.byItemId,String(id)))return null;
-  const value=Number(itemMagicDb.byItemId[String(id)]);
+  return Number.isFinite(id)&&!!itemMagicDb?.byItemId&&Object.prototype.hasOwnProperty.call(itemMagicDb.byItemId,String(id));
+}
+function sourceItemTemplateMagicUseMp(itemId){
+  if(!sourceItemTemplateExists(itemId))return null;
+  const value=Number(itemMagicDb.byItemId[String(Math.trunc(Number(itemId)))]);
   return Number.isFinite(value)?Math.trunc(value):null;
 }
 function normalizeItemRuntime(rt){
@@ -73,6 +75,8 @@ function normalizeItemRuntime(rt){
     const idx=Math.trunc(Number(k));
     if(!Number.isFinite(idx)||idx<=0||idx>=out.itemnum||!v||v.use!==true)continue;
     const itemId=Number.isFinite(Number(v.itemId))?Math.trunc(Number(v.itemId)):null;
+    // 原 ITEM_makeItem() 對 ITEM_tbl 不存在的 ID 會失敗；V0.69 曾無法驗證模板，V0.70 起不再保留 phantom existing item。
+    if(itemId!=null&&itemMagicDb?.byItemId&&!sourceItemTemplateExists(itemId))continue;
     const sourceMu=sourceItemTemplateMagicUseMp(itemId);
     out.slots[String(idx)]={
       use:true,
@@ -322,7 +326,23 @@ function normalizeState(raw){
   // V0.68 前的 web 並不存在原 ITEM_item[] existing pool，因此舊存檔不能虛構歷史 allocation；
   // migration 從 source server 啟動後的空 pool 狀態開始，之後才依原 Sindex allocator 持續記錄。
   if(n(raw?.schemaVersion)<19)s.itemRuntime=freshItemRuntime();
-  else s.itemRuntime=normalizeItemRuntime(s.itemRuntime);
+  else{
+    // V0.69 無 itemset6 模板表時可能曾追蹤到原 C 其實建立失敗的 missing Item ID。
+    // 若該 phantom 已轉給玩家，只扣除「battle-getitem tracked」那一份，不碰同 ID 的任務／舊版 untracked 數量。
+    if(n(raw?.schemaVersion)<21&&s.itemRuntime?.slots&&itemMagicDb?.byItemId){
+      const invalidTracked={};
+      for(const slot of Object.values(s.itemRuntime.slots)){
+        const itemId=Number.isFinite(Number(slot?.itemId))?Math.trunc(Number(slot.itemId)):null;
+        if(slot?.use!==true||itemId==null||sourceItemTemplateExists(itemId))continue;
+        if(slot.owner==='player'&&slot.source==='battle-getitem')invalidTracked[String(itemId)]=n(invalidTracked[String(itemId)])+1;
+      }
+      for(const [key,count] of Object.entries(invalidTracked)){
+        const left=Math.max(0,Math.trunc(n(s.inventory[key]))-Math.trunc(n(count)));
+        if(left>0)s.inventory[key]=left;else delete s.inventory[key];
+      }
+    }
+    s.itemRuntime=normalizeItemRuntime(s.itemRuntime);
+  }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
   s.schemaVersion=21;
