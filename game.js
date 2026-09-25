@@ -71,6 +71,12 @@ function sourceEnemyWeaponTemplate(itemId){
   if(!Number.isFinite(id)||!enemyWeaponDb?.byItemId)return null;
   return enemyWeaponDb.byItemId[String(id)]||null;
 }
+function sourceEnemyStyleWeaponItemId(style){
+  const key=String(Math.trunc(n(style)));
+  if(!enemyWeaponDb?.styleItemByStyle||!Object.prototype.hasOwnProperty.call(enemyWeaponDb.styleItemByStyle,key))return null;
+  const value=enemyWeaponDb.styleItemByStyle[key];
+  return value==null?null:Math.trunc(Number(value));
+}
 function sourceEnemyDojoWeaponItemId(weapon){
   if(!enemyWeaponDb?.dojoItemByWeapon)return null;
   const key=String(weapon||'none');
@@ -1053,7 +1059,7 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
   }
 
   const style=Math.max(0,Math.trunc(n(aiRow?.sty)));
-  const styleWeaponId=({1:0,2:100,3:200,4:400,5:500,6:700,7:600})[style]??null;
+  const styleWeaponId=sourceEnemyStyleWeaponItemId(style);
   const styleItemIndex=styleWeaponId==null?-1:sourceItemRuntimeAlloc(styleWeaponId,null,{owner:'enemy:'+unitId,source:'enemy-style'});
   let weaponItemIndex=styleItemIndex;
   let equippedWeaponId=styleItemIndex>=0?styleWeaponId:null;
@@ -5214,7 +5220,7 @@ function normalBattleOrder(){
   }
 
   // 原 EntrySort() 會依 dex + CHAR_WORKSEQUENCEPOWER 由高到低排序。
-  // 目前尚無裝備系統，所以 sequence 固定等同 0；同值時保留建表順序。
+  // V0.71 Enemy 自動武器 runtime 的 sequence 全為 0，Player/Pet 也尚無正式裝備，因此目前仍等價 0；同值保留建表順序。
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
   return order;
 }
