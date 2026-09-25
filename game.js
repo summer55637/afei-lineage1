@@ -5217,6 +5217,85 @@ function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
   }
   return {handled:true,unsupportedTarget:true};
 }
+function sourcePetStatusSkillType(meta){
+  const option=String(meta?.o||'');
+  if(option.includes('毒'))return 'poison';
+  if(option.includes('醉'))return 'drunk';
+  if(option.includes('眠'))return 'sleep';
+  if(option.includes('石'))return 'stone';
+  if(option.includes('乱')||option.includes('亂'))return 'confusion';
+  return null;
+}
+function sourcePetStatusSkillTurn(meta){
+  const m=String(meta?.o||'').match(/turn\s*(-?\d+)/i);
+  return m?Math.max(0,Math.trunc(Number(m[1])||0)):3;
+}
+function sourcePetStatusSkillAttackPct(meta){
+  const m=String(meta?.o||'').match(/攻%([+-]?\d+(?:\.\d+)?)/);
+  return m?(Number(m[1])||0):0;
+}
+function sourcePetApplyStatusAttackHit(pet,targetDesc,r,type,turn,label){
+  if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
+  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk')){
+    return {attempted:false,applied:false,unsupportedType:type||null};
+  }
+  const attackerDesc={kind:'pet',pet,petId:pet.id};
+  const check=battleStatusChance(attackerDesc,targetDesc,type);
+  let applied=false,storedTurns=0;
+  if(check.allowed&&check.success){
+    if(type==='drunk'){
+      // fixed BATTLE_Attack：先寫 gBattleStausTurn+1，再把 WORKDRUNK 自己 /2。
+      storedTurns=Math.trunc((Math.max(0,Math.trunc(n(turn)))+1)/2);
+      if(storedTurns>0)applied=battleStatusApplyRaw(targetDesc,type,storedTurns);
+    }else{
+      storedTurns=Math.max(1,Math.trunc(n(turn))+1);
+      applied=battleStatusApply(targetDesc,type,turn);
+    }
+  }
+  if(applied){
+    addLog(battleStatusDescName(targetDesc)+' 被 '+label+' 附加'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','pet');
+  }else{
+    addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'效果未成功'+(check.reason==='existing'?'：目標已有其他異常狀態。':'（原檢定 '+n(check.per).toFixed(1)+'%）。'),'pet');
+  }
+  return {attempted:true,check,applied,type,turn,storedTurns};
+}
+function sourcePerformPetStatusSkill(pet,action,options={}){
+  const meta=action?.meta;
+  const target=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  if(!target||n(target.hp)<=0){
+    addLog(pet.name+' 使用 '+(meta?.n||'狀態攻擊')+'，但沒有可攻擊的敵方目標。','pet');
+    return {handled:true,noTarget:true,skillId:action?.skillId};
+  }
+
+  const type=sourcePetStatusSkillType(meta);
+  const turn=sourcePetStatusSkillTurn(meta);
+  const attackPct=sourcePetStatusSkillAttackPct(meta);
+  const base=petBattleView(pet);
+  if(!base||!type){
+    addLog(pet.name+' 抽到 '+(meta?.n||('PetSkill '+action?.skillId))+'，但來源狀態字串無法唯一解析；不猜效果。','pet');
+    return {handled:true,sourceRuntimePending:true,skillId:action?.skillId};
+  }
+
+  // fixed PETSKILL_StatusChange：WORKATTACKPOWER = FIXSTR + trunc(FIXSTR * 攻% / 100)。
+  // 低忠誠 RANDOMACT 發生在 EntrySort 後，因此只影響真正物理攻擊，不回頭重算 dex。
+  const attack=Math.trunc(n(base.attack))+Math.trunc(Math.trunc(n(base.attack))*attackPct/100);
+  const attacker=Object.assign({},base,{attack});
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  const actualDesc=actual?{kind:'enemy',unit:actual,unitId:actual.id}:targetDesc;
+  const status=sourcePetApplyStatusAttackHit(pet,actualDesc,r,type,turn,meta?.n||'狀態攻擊');
+
+  // fixed BATTLE_Attack：StatusChange 已在 Counter 判定前寫進目標 WORK status。
+  // 若因此變成不能動（例如睡/石），就不能反擊。毒/醉仍可照原規則反擊。
+  if(petIsBattleActive(pet)&&actual?.hp>0&&battleStatusCanMove(actualDesc)){
+    resolvePetEnemyCounterChain('pet',pet,actual,r);
+  }
+  return {handled:true,skillId:action.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,r,status,type,turn,attackPct};
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'};
   const ai=loyalty?.ai;
@@ -5262,9 +5341,12 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
       addLog(pet.name+' 隨機使用「'+(meta.n||'攻擊')+'」。','pet');
       return sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true,skillId:action.skillId});
     }
-    // V0.97 只先接能完全沿用現有玩家側普通攻擊核心的 random skill。
-    // 忠犬/突擊/狀態攻擊需要玩家側 guardian/charge/status command lifecycle；
-    // 已辨識來源，但不能把它們偷換成普通攻擊。
+    if(meta?.f==='PETSKILL_StatusChange'){
+      addLog(pet.name+' 隨機使用「'+(meta.n||'狀態攻擊')+'」。','pet');
+      return sourcePerformPetStatusSkill(pet,action,options);
+    }
+    // 忠犬 20 / 突擊 30 仍需要玩家側 guardian / charge lifecycle；
+    // 已辨識來源，但不能偷換成普通攻擊。
     addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；玩家側此 PetSkill lifecycle 尚未接入，保留原抽籤但本回合不猜效果、不替換成普通攻擊。','pet');
     return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
   }

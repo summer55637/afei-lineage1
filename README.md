@@ -9406,3 +9406,104 @@ V0.97 不把這個來源 bug「修正」成自創的無技能判斷。
 - V0.96 combo follower StatusSeq consumption 保留
 - V0.95 dead Entry sort / ComboCheck semantics 保留
 - save schema：21
+
+
+## V0.98 low-loyalty Pet RANDOMACT StatusChange 60 / 100
+
+V0.98 接續 V0.97 的 `BATTLE_PetRandomSkill()`，先完成可捕獲寵實際可抽到的玩家側 `PETSKILL_StatusChange`：
+
+- skill 60：毒攻擊，`毒 turn 3 攻%-30`
+- skill 100：泥醉攻擊，`醉 turn 3 攻%-30`
+
+固定來源：
+
+- `gmsv/data/petskill.txt`
+- `gmsv/src/battle/pet_skill.c`：`PETSKILL_StatusChange()`
+- `gmsv/src/battle/battle_event.c`：`BATTLE_AttackSeq()` / `BATTLE_StatusAttackCheck()`
+- fixed source commit 不變：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+### 攻擊力不是最後傷害乘 0.7
+
+來源：
+
+```c
+strdef = CHAR_getWorkInt(charaindex, CHAR_WORKFIXSTR);
+strdef = (int)(strdef * fPer);
+CHAR_setWorkInt(charaindex, CHAR_WORKATTACKPOWER,
+    CHAR_getWorkInt(charaindex, CHAR_WORKFIXSTR) + strdef);
+```
+
+所以 -30% 是：
+
+```
+FIXSTR + trunc(FIXSTR * -0.30)
+```
+
+不是把最終傷害乘 0.7。
+
+V0.98 直接從當輪 `petBattleView()` 的 FIX/compliance 等價 attack 起算，再做同一個 C int 截斷。
+
+### Guardian 先換真正 defindex，再做狀態檢定
+
+fixed `BATTLE_AttackSeq()`：
+
+1. 原目標先做 dodge。
+2. `BATTLE_GuardianCheck()` 成功時把 local `defindex` 改成 Guardian。
+3. 傷害結算。
+4. `BATTLE_StatusAttackCheck(attackindex, defindex, ...)` 使用已替換後的 `defindex`。
+
+因此若敵方忠犬代擋，毒／酒醉必須套在真正代擋者。
+
+Web 的 `resolveAttackToEnemyWithGuardian()` 已回傳 `actualTarget`，V0.98 直接用它做 status target。
+
+### StatusAttackCheck 與酒醉 bug
+
+沿用 V0.90 已校正的 int pipeline：
+
+- base perOffset 30
+- level difference × 2
+- range ±40
+- target resist / vital penalty
+- 最終 int truncation
+- cap 80
+- `RAND(1,100) < per` 嚴格小於
+
+一般 status 來源會先寫 `turn+1`。
+酒醉再立刻：
+
+```c
+WORKDRUNK = WORKDRUNK / 2;
+```
+
+skill 100 的 turn=3 因此實際存成：
+
+```
+(3 + 1) / 2 = 2
+```
+
+維持 V0.76 之後已確認的酒醉 lifecycle bug。
+
+### Counter 時點
+
+狀態是在 `BATTLE_Attack()` 內、普通 Counter chain 前就寫入。
+
+所以：
+
+- 若將來抽到 sleep/stone 類 StatusChange，成功後目標已不能反擊。
+- 目前 skill 60 poison / 100 drunk 不會禁止移動，仍可正常進 Counter。
+- Guardian 代擋後由 actual Guardian 判斷是否能反擊。
+
+### V0.98 regression
+
+- `game.js` JavaScript syntax：PASS
+- skill 60 / 100 從 RANDOMACT dispatcher 進玩家側 StatusChange
+- attack = FIX attack + trunc(FIX attack * -30 / 100)
+- Guardian actualTarget 接 status
+- StatusAttackCheck 使用 Pet attacker level/luck 與 Enemy resist/stats
+- poison turn 3 lifecycle
+- drunk turn 3 -> stored 2
+- status 在 Counter 前套用
+- skill 20 Guardian / 30 Charge 仍 pending，不猜
+- V0.97 BATTLE_PetLoyalCheck core 保留
+- V0.96 combo follower lifecycle 保留
+- save schema：21
