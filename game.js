@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1606,7 +1606,29 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function sourcePreCommandStatusTick(){
+  // fixed C: _CHAR_complianceParameter -> Other_DefcharWorkInt runs before EntrySort.
+  // WEAKEN applies FIXSTR/FIXTOUGH/FIXDEX * 0.8 and then decrements WORKWEAKEN.
+  // BARRIER only decrements WORKBARRIER here. BATTLE_StatusSeq later protects positive
+  // WEAKEN/BARRIER counters from a second net decrement.
+  battleWeakenRoundKeys=new Set();
+  for(const [key,st] of [...battleStatuses.entries()]){
+    if(!st||st.turns<=0)continue;
+    if(st.type==='weaken'){
+      battleWeakenRoundKeys.add(key);
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      if(st.turns<=0)battleStatuses.delete(key);
+    }else if(st.type==='barrier'){
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      if(st.turns<=0)battleStatuses.delete(key);
+    }
+  }
+}
+function battleWeakenRoundActive(desc){
+  const key=battleStatusKey(desc);
+  return !!(key&&battleWeakenRoundKeys.has(key));
+}
 function battleStatusKey(desc){
   if(!desc)return null;
   if(desc.kind==='player')return 'player';
@@ -1849,6 +1871,18 @@ function processBattleStatusTurn(actor){
   if(!st||st.turns<=0)return {skip:false,desc,status:null};
 
   const blockedBefore=battleStatusCanMove(desc)===false;
+
+  if(st.type==='weaken'||st.type==='barrier'){
+    // Source BATTLE_StatusSeq does --cnt, then if the same WORK value is still >0
+    // immediately writes cnt+1 back. Net result: >1 stays unchanged; 1 becomes 0.
+    if(Math.trunc(n(st.turns))<=1){
+      battleStatusClear(desc,st.type);
+      addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
+      return {skip:blockedBefore,desc,status:st,expired:true,preCommandStatus:true};
+    }
+    return {skip:blockedBefore,desc,status:st,preCommandStatus:true};
+  }
+
   st.turns--;
 
   if(st.type==='deepPoison'){
@@ -1917,12 +1951,12 @@ function playerBattleView(){
   const desc={kind:'player'};
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
-  const weaken=battleStatusActive(desc,'weaken');
+  const weaken=battleWeakenRoundActive(desc);
   const attack=weaken?Math.trunc(n(state.attack)*.8):n(state.attack);
   const defenseBase=weaken?Math.trunc(n(state.defense)*.8):n(state.defense);
   const quickBase=weaken?Math.trunc(n(state.dex)*.8):n(state.dex);
   return {
-    type:'player',attack,defense:defenseBase*(stone?2:1),fixedTough:n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,quickBase),
+    type:'player',attack,defense:defenseBase*(stone?2:1),fixedTough:weaken?Math.trunc(n(state.playerStats?.tgh)*.8):n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,quickBase),
     luck:n(state.luck),drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     level:Math.max(1,Math.trunc(n(state.level))),elements:battleElementsForDesc(desc)
   };
@@ -1934,13 +1968,13 @@ function petBattleView(pet){
   const desc={kind:'pet',pet,petId:pet.id};
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
-  const weaken=battleStatusActive(desc,'weaken');
+  const weaken=battleWeakenRoundActive(desc);
   const attack=weaken?Math.trunc(n(combat?.attack)*.8):n(combat?.attack);
   const defenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
   const quickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
   return {
     type:'pet',attack,defense:defenseBase*(stone?2:1),
-    fixedTough:pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh),
+    fixedTough:(pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh))*(weaken?.8:1),
     quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     level:Math.max(1,Math.trunc(n(pet.level))),elements:battleElementsForDesc(desc)
@@ -1949,7 +1983,7 @@ function petBattleView(pet){
 function enemyBattleView(unit){
   const desc={kind:'enemy',unit,unitId:unit?.id};
   const drunk=battleStatusActive(desc,'drunk');
-  const weaken=battleStatusActive(desc,'weaken');
+  const weaken=battleWeakenRoundActive(desc);
   const attackBase=n(unit?.roundAttack??unit?.attack);
   const defenseRaw=n(unit?.roundDefense??unit?.defense);
   const quickRaw=n(unit?.roundQuick??unit?.quick);
@@ -3670,7 +3704,7 @@ function performEnemyWeaken(actor,unit,options,meta){
   for(const target of targets){
     const check=battleStatusChance(attacker,target,'weaken',{perOffset:spec.success,range:30,bai:1,forceGeneral:true});
     const applied=check.allowed&&check.success&&battleStatusApply(target,'weaken',spec.turns);
-    if(applied)addLog(battleStatusDescName(target)+' 陷入虛弱，攻／防／敏下降 20%（原檢定 '+check.per.toFixed(1)+'%）。','bad');
+    if(applied)addLog(battleStatusDescName(target)+' 陷入虛弱；自下一次 PreCommandSeq 起攻／防／敏下降 20%（原檢定 '+check.per.toFixed(1)+'%）。','bad');
     else if(check.reason==='existing')addLog((meta?.n||'虛弱')+' 對 '+battleStatusDescName(target)+' 未生效：目標已有其他異常狀態。');
     else addLog((meta?.n||'虛弱')+' 對 '+battleStatusDescName(target)+' 未成功（原檢定 '+n(check.per).toFixed(1)+'%）。');
     results.push({target:target.kind,petId:target.petId||null,applied,per:check.per});
@@ -5680,6 +5714,8 @@ function normalBattleOrder(options={}){
   // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；這也會清掉上一輪
   // 酒醉解除時錯誤留下的 WORKQUICK ×2。
   battleDrunkReleaseBoostKeys=new Set();
+  // Other_DefcharWorkInt 同一階段處理 WEAKEN / BARRIER 的真正倒數與 WEAKEN 0.8 FIX 快照。
+  sourcePreCommandStatusTick();
   // 再依 REVERSE flag 套 BATTLE_AttReverse。
   battlePrepareElementWork();
   const order=[];
@@ -6362,7 +6398,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.76 載入完成：酒醉生命週期已依 fixed C bug 校正；酒醉不再減半 QUICK，物理酒醉倒數會被 /2，解除當回合反而暫時 QUICK ×2，下一輪重建。','good');
+    addLog('V0.77 載入完成：WEAKEN／BARRIER 改依 fixed C 在 PreCommandSeq 的 complianceParameter 階段扣回合；虛弱 0.8 FIX 快照不再命中同回合立刻生效。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
