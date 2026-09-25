@@ -9141,3 +9141,104 @@ fixed Enemy AI 已確認：
 - dispatcher gaps：0
 - save schema：21
 
+
+
+## V0.95 EntrySort / ComboCheck dead Battle Entry semantics
+
+V0.95 繼續掃固定來源的共用戰鬥核心與 `BATTLE_DexCalc()`，修正「死亡角色太早從排序陣列消失」造成的合擊差異。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`：`BATTLE_PreCommandSeq()` / `BATTLE_DexCalc()` / `EntrySort()` / `ComboCheck()` / `BATTLE_Command()`
+- `gmsv/src/include/util.h`：`RAND(x,y)`
+
+### HP=0 不會在 EntrySort 前自動移除
+
+fixed `BATTLE_Command()` 建立 EntryList 時只排除真正已經沒有 Battle Entry 的 slot：
+
+```c
+if( pEntry[j][i].charaindex == -1 ) continue;
+EntryList[entrynum].charaindex = pEntry[j][i].charaindex;
+EntryList[entrynum].dex = BATTLE_DexCalc(pEntry[j][i].charaindex);
+entrynum++;
+```
+
+這裡沒有 HP / ISDIE 篩選。
+
+一般死亡處理會把 HP=0 的角色標成 `CHAR_ISDIE`，但不等價於立刻 `BATTLE_Exit()` 把 Entry 設成 -1。
+下一輪 `BATTLE_PreCommandSeq()` 也仍會走該 Entry 的 complianceParameter。
+
+所以原 C 的順序是：
+
+1. 死亡但未 Exit 的 Entry 仍做 `BATTLE_DexCalc()`。
+2. 一起進 `EntrySort()`。
+3. 一起進 `ComboCheck()`。
+4. 到真正 action loop 才因 `CHAR_ISDIE` / `HP <= 0` continue。
+
+### 死亡 Entry 會中斷 ComboCheck
+
+`ComboCheck()` 對每個已排序 Entry 都會先判斷：
+
+```c
+if( CHAR_getInt(charaindex, CHAR_HP) <= 0
+ || BATTLE_CanMoveCheck(charaindex) == FALSE ){
+    move = 0;
+}
+```
+
+若前面已經有一個候選普通攻擊者，下一個 Entry 的 `move == 0` 會讓：
+
+```c
+start = -1;
+```
+
+也就是說，倒下角色即使自己不出手，仍可能位在兩個活角色中間，阻斷原本正在形成的合擊鏈。
+
+V0.94 web 在排序前就用 `livingEnemyUnits()` / `petIsBattleActive()` 移除 HP=0 角色，
+會把兩側原本不相鄰的活角色直接接在一起，產生來源不存在的合擊機會。
+
+V0.95 改為：
+
+- Enemy：只要還存在於本場 `enemy.units` Entry 集合，即使 HP=0 仍建立排序 actor。
+- Active Pet：沿用 V0.94 的 `sourcePlayerSideEntries` snapshot；HP=0 仍保留，只有真正等價 `BATTLE_Exit` 的 `battlePetOutIds` 才排除。
+- 死亡 Entry 使用 default `BATTLE_DexCalc` 路徑參與排序。
+- `sourceComboCheck()` 會把死亡 Entry 視為不可移動，正確中斷 combo。
+- attack / guard / capture 的真正 action loop 在 StatusSeq 前跳過 `sourceDeadEntry`，對齊 fixed C「排序後才檢查死亡」的時點。
+
+### BATTLE_DexCalc 同輪審核結果
+
+本輪也重新核對了幾個容易誤修的點，**沒有為了改版而硬改**：
+
+- fixed `RAND(x,y)` 巨集允許 `y` 是小數運算式；`RAND(0, work*0.3)` 不是先把 `work*0.3` 截成 int。現行 `cRand()` 這點是正確的。
+- `PETSKILL_SpeedyAttack` 的 `work + work*0.3` 與 `DamageToHp2` 的 `work + work*0.2` 已正確在最後回傳 int 時截斷。
+- `enemyPrepareRoundAction()` 每輪都先把 `roundDexMode=null`，所以疾速／浴血的排序模式不會洩漏到下一輪。
+- `_EQUIT_SEQUENCE` 在 fixed build 雖然開啟，但目前 web 尚沒有可證明的非 0 runtime sequence 資料；維持 0，不猜裝備順序值。
+- 同 dex 時 fixed 使用 C `qsort`，其相等元素順序沒有可攜式保證；V0.95 不虛構一個「原版固定 tie-break」。
+
+### V0.95 regression
+
+- `game.js` JavaScript syntax：PASS
+- dead Enemy Entry 仍進 `BATTLE_DexCalc` / sort / ComboCheck
+- dead Active Pet Entry 仍進 sort / ComboCheck
+- 真正 `BATTLE_Exit` 的 Pet 仍排除
+- dead Entry 在 source ComboCheck 中 `move=false`
+- attack / guard / capture 都在 StatusSeq 前跳過 dead Entry
+- SpeedyAttack / DamageToHp2 Dex 模式不跨回合殘留
+- RAND fractional upper-bound 語意維持，不做錯誤的預先 int 截斷
+- V0.94 Enemy EscapeCheck dead-entry average 保留
+- V0.93 SurpriseCheck 首回合流程保留
+- V0.92 CAPTURE_FREES 全刪條件道具保留
+- V0.91 CaptureCheck float pipeline / sleep +15 保留
+- V0.90 StatusAttackCheck int semantics 保留
+- V0.89 CounterCalc int return truncation 保留
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21

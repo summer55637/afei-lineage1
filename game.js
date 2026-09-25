@@ -5587,6 +5587,7 @@ function captureTurn(manual=false){
   for(const actor of order){
     if(!enemy)return captured;
     if(state.hp<=0){defeat();return captured}
+    if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
@@ -5985,7 +5986,8 @@ function normalBattleOrder(options={}){
   battlePrepareElementWork();
   const order=[];
   let orderIndex=0;
-  for(const unit of livingEnemyUnits()){
+  const enemyEntryUnits=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units.slice():(enemy?[enemy]:[]);
+  for(const unit of enemyEntryUnits){
     unit.guardianReadyThisTurn=false;
     unit.guardedByUnitId=null;
   }
@@ -5996,24 +5998,55 @@ function normalBattleOrder(options={}){
     targetUnitId:friendlyTarget?.id||null,sourceSurpriseSkip:surpriseSide==='player'
   });
 
-  const pet=activePet();
-  if(pet&&petIsBattleActive(pet)){
+  // fixed Battle Entry：HP=0 不會自動等於 BATTLE_Exit。
+  // 因此倒下但仍留在 side Entry 的出戰寵，仍要先進 EntrySort / ComboCheck，
+  // 真正執行行動時才因 ISDIE / HP<=0 被跳過。
+  const playerEntries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+  const petEntry=playerEntries.find(x=>x?.kind==='pet'&&!battlePetOutIds.has(x.petId));
+  let pet=petEntry?state.petBox.find(p=>p.id===petEntry.petId):null;
+  if(!playerEntries.length){
+    const fallback=activePet();
+    if(fallback&&!battlePetOutIds.has(fallback.id))pet=fallback;
+  }
+  if(pet){
     const pv=petBattleView(pet);
     const quick=pv?n(pv.quick):n(pet?.stats?.dex);
     order.push({
       kind:'pet',label:pet.name,petId:pet.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
-      targetUnitId:friendlyTarget?.id||null,sourceSurpriseSkip:surpriseSide==='player'
+      targetUnitId:friendlyTarget?.id||null,sourceSurpriseSkip:surpriseSide==='player',
+      sourceDeadEntry:!petIsAlive(pet)
     });
   }
 
-  for(const unit of livingEnemyUnits()){
+  for(const unit of enemyEntryUnits){
+    const dead=n(unit?.hp)<=0;
+    if(dead){
+      // fixed BATTLE_AllCharaCWaitSet 會先把一般死亡 Entry 的 COM 清回 NONE；
+      // PreCommandSeq 仍 complianceParameter，所以 DexCalc 使用本輪重建的 QUICK，
+      // 但之後 action loop 才因 ISDIE / HP<=0 continue。
+      const desc={kind:'enemy',unit,unitId:unit?.id};
+      let quick=Math.trunc(n(unit?.quick));
+      if(battleWeakenRoundActive(desc))quick=Math.trunc(quick*.8);
+      quick=battleDrunkQuick(desc,quick);
+      unit.guardThisTurn=false;
+      unit.roundDexMode=null;
+      order.push({
+        kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
+        enemyAction:'none',skillSlot:null,skillId:null,
+        sourceSkillMissing:false,sourceSkillUnregistered:false,sourceSkillRejected:false,sourceMagicCWait:false,
+        sourceCWaitReason:null,targetKind:null,targetPetId:null,sourceSurpriseSkip:false,sourceDeadEntry:true
+      });
+      continue;
+    }
+
     // fixed BATTLE_ai_all：Enemy 所在 side 有 BSIDE_FLG_SURPRISE 時，
     // 直接 COM_NONE + C_OK，不呼叫 BATTLE_ai_normal()；因此本輪不能先抽 skill 再丟掉。
     if(surpriseSide==='enemy'){
       unit.guardThisTurn=false;
+      unit.roundDexMode=null;
       const quick=n(enemyBattleView(unit)?.quick);
       order.push({
-        kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
+        kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
         enemyAction:'none',skillSlot:null,skillId:null,
         sourceSkillMissing:false,sourceSkillUnregistered:false,sourceSkillRejected:false,sourceMagicCWait:false,
         sourceCWaitReason:null,targetKind:null,targetPetId:null,sourceSurpriseSkip:true
@@ -6041,13 +6074,19 @@ function normalBattleOrder(options={}){
 
   // 原 EntrySort() 會依 dex + CHAR_WORKSEQUENCEPOWER 由高到低排序。
   // V0.71 Enemy 自動武器 runtime 的 sequence 全為 0，Player/Pet 也尚無正式裝備，因此目前仍等價 0；同值保留建表順序。
+  // 重要：HP=0 但仍有 Battle Entry 的角色也在這裡一起排序，不能提早從陣列刪除。
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
-  // 原 battle.c：EntrySort() 後立刻 ComboCheck()，再開始逐角色 StatusSeq／行動。
+  // 原 battle.c：EntrySort() 後立刻 ComboCheck()；死亡 Entry 的 move=0，
+  // 因此會中斷正在建立的合擊鏈。真正執行時才跳過 sourceDeadEntry。
   sourceComboCheck(order,{playerCommand:String(options.playerCommand||'attack')});
   // fixed BATTLE_Command() 在第一輪 BATTLE_Battling() 後立刻清除兩側 SURPRISE flag。
   // 這裡 actor 已帶 sourceSurpriseSkip 快照，所以可在回傳前消耗 one-shot 狀態。
   if(enemy?.sourceSurprisePending)enemy.sourceSurprisePending=false;
   return order;
+}
+function sourceDeadBattleEntry(actor){
+  // fixed BATTLE_Command：EntrySort / ComboCheck 之後才檢查 ISDIE / HP<=0。
+  return !!actor?.sourceDeadEntry;
 }
 function sourceEnemyCWait(actor){
   if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillUnregistered&&!actor.sourceSkillRejected&&!actor.sourceMagicCWait))return false;
@@ -6072,6 +6111,7 @@ function attackTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
+    if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
@@ -6151,6 +6191,7 @@ function guardTurn(){
   for(const actor of order){
     if(!enemy)return;
     if(state.hp<=0){defeat();return}
+    if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
