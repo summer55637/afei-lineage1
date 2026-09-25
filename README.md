@@ -7912,3 +7912,133 @@ fixed C 分段 int：
 - dispatcher gaps：0
 - save schema：21
 
+
+
+## V0.84 DamageCalc STONE / REGRET defense ordering
+
+V0.84 校正 fixed C `BATTLE_DamageCalc()` 內兩個共用同一條防禦時序、且目前資料可直接觸發的差異。
+
+固定來源：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`
+
+### STONE ×2 只屬 BATTLE_DamageCalc 區域 defense
+
+來源先建立：
+
+```c
+float defense;
+defense = CHAR_getWorkInt(defindex, CHAR_WORKDEFENCEPOWER) * 0.70;
+...
+if(CHAR_getWorkInt(defindex, CHAR_WORKSTONE) > 0) defense *= 2.0;
+```
+
+這個 `defense *= 2` 沒有寫回 `CHAR_WORKDEFENCEPOWER`。
+
+而會心額外傷害 `BATTLE_CriDamageCalc()` 在普通 DamageCalc 完成後重新讀：
+
+```c
+damage += CHAR_getWorkInt(defindex, CHAR_WORKDEFENCEPOWER)
+    * attackerLevel / defenderLevel * 0.5;
+```
+
+所以石化目標：
+
+- 普通物理的 DamageCalc 防禦會 ×2
+- 會心額外段仍使用原 WORKDEFENCEPOWER
+- 會心額外段不能再 ×2
+
+V0.83 以前 web 把石化提前乘進 battle view 的 `defense`，因此 DamageCalc 本體雖得到雙防，critical bonus 也誤讀到雙倍 defense。
+
+V0.84 改為：
+
+- Player / Pet / Enemy battle view 的 `defense` 保持 WORKDEFENCEPOWER 語意
+- 另外攜帶 `stone` flag
+- `battleDamageCore()` 在 fixed C 的正確位置才做 `defense *= 2`
+- `resolveNormalAttack()` 的 critical bonus 因而重新讀到未石化加倍的 WORKDEFENCEPOWER
+
+固定例：
+
+```text
+WORKDEFENCEPOWER = 100
+attacker level = defender level
+STONE = active
+```
+
+會心額外段：
+
+- fixed C：100 × 1 × 0.5 = 50
+- 舊 web：200 × 1 × 0.5 = 100
+- V0.84：50
+
+### REGRET / 憾甲一擊是後置 FIXTOUGH 覆寫
+
+原 `BATTLE_DamageCalc()` 的順序：
+
+```text
+WORKDEFENCEPOWER × 0.70
+→ SuperWall
+→ NPCENEMY_ADDPOWER
+→ STONE ×2
+→ REGRET / REGRET2: defense = WORKFIXTOUGH
+→ 後續傷害公式
+```
+
+因此 REGRET 的 `defense = FIXTOUGH` 是覆寫，不是「一開始就改用 FIXTOUGH 再繼續套防禦修正」。
+
+V0.83 以前 web 在進 DamageCalc 時直接：
+
+```text
+useFixedToughDefense ? FIXTOUGH : WORKDEFENCEPOWER ×0.70
+```
+
+接著仍會套 SuperWall / Enemy add-power，和 fixed C 時序不同。
+
+V0.84 改為：
+
+1. 一律先走正常 WORKDEFENCEPOWER ×0.70。
+2. 照來源順序套 SuperWall / Enemy add-power / STONE。
+3. 若為 REGRET，再以 FIXTOUGH 最後覆寫 defense。
+
+因此 REGRET 會正確洗掉它之前的：
+
+- SuperWall 防禦加成
+- Enemy defender add-power
+- 石化 ×2
+
+### fixed data 可達性
+
+正權重 Enemy AI：
+
+- Skill 590「虎虎生威／石化 BattleModel」：1 個 Enemy
+- Skill 655「虎虎生威／石化 BattleModel」：6 個 Enemy
+- Skill 708「石化攻擊」：1 個 Enemy
+- Skill 627「難得糊塗」：1 個 Enemy，候選 magic 159 可造成石化
+- Skill 640「憾甲一擊」：43 個 Enemy，正權重總和 58
+- Skill 666「T憾甲一擊」：10 個 Enemy，正權重總和 19
+
+所以兩個修正都不是不可達的理論分支。
+
+### V0.84 regression
+
+已確認：
+
+- `game.js` JavaScript syntax：PASS
+- battle view 不再把 STONE ×2 寫進 `defense`
+- Player / Pet / Enemy 都攜帶獨立 `stone` flag
+- `battleDamageCore()` 順序為 SuperWall → NPC add-power → STONE → REGRET FIXTOUGH
+- critical bonus 重新使用未石化加倍的 WORKDEFENCEPOWER
+- REGRET 不再把 SuperWall / Enemy add-power / STONE 套到 FIXTOUGH
+- V0.83 physical attribute int pipeline 保留
+- V0.82 FIXDEX int combat math 保留
+- V0.81 FIXDEX / WORKQUICK separation 保留
+- V0.77 WEAKEN / BARRIER lifecycle 保留
+- V0.76 DRUNK lifecycle bug 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21

@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.83</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.84</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.83：</b>
-      普通物理的四屬傷害改回 fixed C 分段 int 流程：攻方五屬先乘 raw damage，BATTLE_AttrCalc 的五個分量各自截斷、/10000 再截斷，最後才乘戰場屬性比值並再次截斷；不再把屬性與場地合成單一浮點 multiplier。
+      <b>V0.84：</b>
+      校正 fixed C 的 DamageCalc 防禦時序：石化 ×2 只作用於 DamageCalc 區域 defense，不再污染會心額外傷害；REGRET／憾甲一擊則在 SuperWall、Enemy add-power、石化之後以 FIXTOUGH 覆寫 defense。
     </article>
   </main>
 

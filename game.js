@@ -2007,7 +2007,7 @@ function playerBattleView(){
   const defenseBase=weaken?Math.trunc(n(state.defense)*.8):n(state.defense);
   const quickBase=weaken?Math.trunc(n(state.dex)*.8):n(state.dex);
   return {
-    type:'player',attack,defense:defenseBase*(stone?2:1),
+    type:'player',attack,defense:defenseBase,stone,
     fixedTough:weaken?Math.trunc(n(state.playerStats?.tgh)*.8):n(state.playerStats?.tgh),
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(state.luck),drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
@@ -2028,7 +2028,7 @@ function petBattleView(pet){
   const quickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
   const fixedToughBase=pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh);
   return {
-    type:'pet',attack,defense:defenseBase*(stone?2:1),
+    type:'pet',attack,defense:defenseBase,stone,
     fixedTough:weaken?Math.trunc(fixedToughBase*.8):fixedToughBase,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
@@ -2038,6 +2038,7 @@ function petBattleView(pet){
 }
 function enemyBattleView(unit){
   const desc={kind:'enemy',unit,unitId:unit?.id};
+  const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
   const attackBase=n(unit?.roundAttack??unit?.attack);
   const defenseRaw=n(unit?.roundDefense??unit?.defense);
@@ -2045,7 +2046,7 @@ function enemyBattleView(unit){
   return {
     type:'enemy',
     attack:attackBase,
-    defense:defenseRaw*(battleStatusActive(desc,'stone')?2:1),
+    defense:defenseRaw,stone,
     fixedDex:n(unit?.roundFixQuick??unit?.quick),
     quick:battleDrunkQuick(desc,quickRaw),
     luck:0,
@@ -2674,7 +2675,10 @@ function battleCriticalChance(attacker,defender){
 }
 function battleDamageCore(attacker,defender,options={}){
   let attack=n(attacker?.attack);
-  let defense=options.useFixedToughDefense?n(defender?.fixedTough):n(defender?.defense)*.70;
+  // fixed BATTLE_DamageCalc always starts from WORKDEFENCEPOWER * 0.70.
+  // STONE and REGRET are local DamageCalc transforms; keep them out of the battle view
+  // so BATTLE_CriDamageCalc can still read the original WORKDEFENCEPOWER.
+  let defense=n(defender?.defense)*.70;
 
   // 原 BATTLE_DamageCalc：鐵壁在 NPCENEMY_ADDPOWER 之前生效。
   // defense += defense * ((CHAR_OTHERSTATUSNUMS + rand()%20) / 100)
@@ -2686,6 +2690,12 @@ function battleDamageCore(attacker,defender,options={}){
 
   if(defender?.type==='enemy')defense+=(defense*Math.floor(Math.random()*10)+2)/100;
   if(attacker?.type==='enemy')attack+=(attack*Math.floor(Math.random()*10)+2)/100;
+
+  // Source order is exact: NPCENEMY_ADDPOWER -> STONE *2 -> REGRET overwrite to FIXTOUGH.
+  // Therefore REGRET intentionally discards SuperWall / Enemy add-power / Stone defense changes.
+  if(defender?.stone)defense*=2;
+  if(options.useFixedToughDefense)defense=n(defender?.fixedTough);
+
   let damage=0;
   if(defense<=attack&&attack<defense*8/7){
     damage=cRand(0,attack/16);
