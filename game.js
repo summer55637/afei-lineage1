@@ -5572,9 +5572,14 @@ function enemySkillTargetDesc(chosen){
   return null;
 }
 function enemyTryRegretDizzy(chosen,successPct,label){
+  // fixed PROFESSION_BATTLE_StatusAttackCheck() 的第一行就是 RAND(1,100)；
+  // HP<=0 / ISDIE / 已有其他異常的 early return 都發生在這顆 RNG 之後。
+  // REGRET / REGRET2 的 caller 又會在 damage=0 時保留 skill_type，
+  // 所以 miss / dodge / kill / existing-status 都必須先消耗同一顆。
+  const roll=cRand(1,100);
   const desc=enemySkillTargetDesc(chosen);
   if(!desc||!battleStatusDescAlive(desc)||battleStatusGet(desc))return false;
-  if(cRand(1,100)>=successPct)return false;
+  if(roll>=successPct)return false;
   if(!battleStatusApply(desc,'dizzy',0))return false;
   addLog(battleStatusDescName(desc)+' 被 '+label+' 擊暈，下一次行動無法動作。','bad');
   return true;

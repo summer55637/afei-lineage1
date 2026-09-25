@@ -12658,3 +12658,100 @@ TOOTHCRUSHE 正傷害 Player：
 - no guessed durability values
 - V1.38 special critical-death target rules unchanged
 - schema 27 unchanged
+
+
+## V1.40 REGRET / PROFESSION_BATTLE_StatusAttackCheck early RNG
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+`REGRET / REGRET2` 在 fixed `BATTLE_S_AttackDamage()` 有特殊例外：
+
+```c
+if (damage <= 0) {
+    if (skill_type != BATTLE_COM_S_SONIC &&
+        skill_type != BATTLE_COM_S_SONIC2 &&
+        skill_type != BATTLE_COM_S_REGRET &&
+        skill_type != BATTLE_COM_S_REGRET2)
+        skill_type = -1;
+}
+```
+
+所以 REGRET 即使物理段最後 damage=0，仍會進技能尾段並呼叫：
+
+```c
+PROFESSION_BATTLE_StatusAttackCheck(attackindex, defindex, 12, Success)
+```
+
+更重要的是該函式第一行：
+
+```c
+int rand_num = RAND(1,100);
+```
+
+之後才依序檢查：
+
+- status 是否有效
+- target HP <= 0
+- CHAR_ISDIE
+- 是否已有其他異常狀態
+
+因此這顆 RNG 的真實規則是「**呼叫就先吃**」，不是「通過前置條件才吃」。
+
+### Previous web mismatch
+
+舊 `enemyTryRegretDizzy()` 先做：
+
+- 目標存在
+- 目標存活
+- 目標目前沒有異常
+
+全部通過後才 `cRand(1,100)`。
+
+因此下列情況 Web 會少吃一顆 RNG：
+
+- REGRET 物理段直接把目標打死
+- REGRET 目標本來已有其他異常
+- 其他任何在原 `PROFESSION_BATTLE_StatusAttackCheck` 內部 early return 的情況
+
+### V1.40 correction
+
+`enemyTryRegretDizzy()` 現在一進函式就先：
+
+```js
+const roll=cRand(1,100);
+```
+
+再檢查 alive / existing status / success threshold。
+
+實際眩暈效果仍只在原條件允許時成立；本輪修的是 RNG 生命週期，不放寬技能效果。
+
+### Ordering
+
+REGRET / REGRET2：
+
+1. AttackSeq / Damage
+2. DamageSub / HP
+3. special Enemy-only critical-death Ultimate RNG（若條件成立）
+4. generic ItemCrush defender rand()%100（damage>0 才有）
+5. `PROFESSION_BATTLE_StatusAttackCheck` RAND(1,100) — **呼叫即消耗**
+6. 再判斷目標死亡 / 已有異常 / roll success
+
+所以：
+- dodge / miss：沒有 ItemCrush，但仍有 REGRET status RNG
+- positive nonlethal：ItemCrush 後再 status RNG
+- lethal hit：death 處理 → ItemCrush → status RNG；status 因 HP<=0 不生效，但 RNG 已吃
+- existing abnormal status：status 不生效，但 RNG 已吃
+
+本輪 schemaVersion 維持 27。
+
+### V1.40 regression targets
+
+- game.js syntax PASS
+- REGRET miss / dodge => still consumes one status RAND
+- REGRET lethal hit => consumes status RAND after death + ItemCrush
+- REGRET target with existing status => consumes RAND before early return
+- successful valid target still uses the same roll for success comparison
+- V1.39 TIMID / ToothCrushe RNG unchanged
+- schema 27 unchanged

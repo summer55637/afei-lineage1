@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.39</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.40</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.39：</b>
-      對齊 BATTLE_S_AttackDamage 後段 RNG：TIMID／2TIMID 在 damage=1 時仍會先消耗 rand()%100；TOOTHCRUSHE 命中 Player 後還會額外再做一次 BATTLE_ItemCrushCheck 的 rand()%100。
+      <b>V1.40：</b>
+      對齊 REGRET／REGRET2 的 PROFESSION_BATTLE_StatusAttackCheck RNG：原 C 進函式第一行就先 RAND(1,100)，即使目標已死、已有異常或本次物理段 MISS／DODGE，也仍會先消耗這顆 RNG。
     </article>
   </main>
 
