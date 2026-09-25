@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.77</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.78</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.77：</b>
-      WEAKEN／BARRIER 生命週期改回 fixed C 的 PreCommand 模型：虛弱與魔障都由每輪 complianceParameter 階段先扣回合；虛弱同時把本輪 FIXSTR／FIXTOUGH／FIXDEX ×0.8，命中同回合不會提前降能力；StatusSeq 對仍大於 1 的計數不再二次扣除。
+      <b>V0.78：</b>
+      PETSKILL_StatusChange 與本輪能力覆寫順序接回 fixed C：毒／猛毒／石化／混亂／酒醉／催眠攻擊會先依 option 的 攻% 改 WORKATTACKPOWER；WEAKEN 則先在 PreCommand 建立 0.8 FIX 快照，再由各 PetSkill 基於該快照覆寫本輪攻防敏，保留 C 的整數截斷順序。
     </article>
   </main>
 
