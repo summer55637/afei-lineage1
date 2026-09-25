@@ -9038,4 +9038,106 @@ else if( Rnd < a + b ) iRet = 2;
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+## V0.94 Enemy EscapeCheck integer average / dead-entry semantics
+
+V0.94 校正 Enemy 逃跑共用公式 `BATTLE_EscapeCheck()` 的對手平均等級來源語意。
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle_event.c`：`BATTLE_EscapeCheck()` / `BATTLE_Escape()`
+- `gmsv/src/battle/battle.c`：Battle Entry / death cleanup
+
+### 平均等級是 C int division
+
+來源宣告：
+
+```c
+int mylevel, enemylevel = 0, enemycnt = 0;
+```
+
+掃完整個對手 Side 後：
+
+```c
+enemylevel += CHAR_getInt(enemyindex, CHAR_LV);
+enemycnt++;
+...
+enemylevel /= enemycnt;
+```
+
+所以 `enemylevel / enemycnt` 是整數除法。
+
+例如 Player Lv10 + Pet Lv11：
+
+- fixed C：`(10 + 11) / 2 = 10`
+- V0.93 web：`21 / 2 = 10.5`
+
+以 rare=0 的 Enemy、第一次逃跑（來源實際 `escape_cnt=2`）、Enemy Lv10 為例：
+
+- fixed C：`Esc = 30*2 - 2*(10-10) = 60`
+- 舊 web：`Esc = 60 - 2*(10.5-10) = 59`
+
+而來源判定是嚴格 `RAND(1,100) < Esc`，所以 roll=59 會產生實戰差異。
+
+### HP=0 不等於已離開 Battle Entry
+
+`BATTLE_EscapeCheck()` 掃對手 Entry 時只做：
+
+```c
+enemyindex = pEntry[i].charaindex;
+if( CHAR_CHECKINDEX(enemyindex) == FALSE ) continue;
+```
+
+沒有檢查 HP 或 `CHAR_ISDIE`。
+
+因此 Active Pet 在戰鬥中倒下後，只要 Entry 尚未經 `BATTLE_Exit()` 移除，其等級仍算在 enemycnt。
+`BATTLE_Command()` 的一般 death cleanup 也不是把 pet side slot 立即全部移除；Pet 的 Battle Entry 可在倒下後繼續存在。
+
+V0.93 web 原本用：
+
+```js
+if(pet&&petIsBattleActive(pet)) levels.push(pet.level);
+```
+
+`petIsBattleActive()` 會在 HP=0 時直接 false，等於把死寵比 fixed C 更早排除。
+
+V0.94 在開戰時保存 Player side Entry snapshot；之後：
+
+- HP=0：仍保留在 Escape 平均。
+- `BattleTimid` / `2BattleTimid` / `Abduct` 等真正等價 `BATTLE_Exit` 的寵：`battlePetOutIds` 會把該 Entry 排除。
+
+### 可達性
+
+fixed Enemy AI 已確認：
+
+- `escapeWeight > 0` 的 Enemy：596 個
+- escape 正權重總和：843
+
+因此這是大量一般 Enemy 都能實際走到的共用公式，不是單一特殊技能。
+
+### V0.94 regression
+
+- `game.js` JavaScript syntax：PASS
+- Player Lv10 + Pet Lv11 → opponent average = 10，不是 10.5
+- rare0 / first escape / Enemy Lv10 → Esc 60，不是 59
+- battle 中 HP=0 的 Active Pet Entry 仍計入平均
+- `battlePetOutIds` 的真正退出寵不計入平均
+- 第一次 `BATTLE_Escape()` 的 `escape++` + `EscapeCheck escape+1` 語意維持，仍從 multiplier 2 開始
+- Enemy rare 0/1/other → luck 1/3/5 映射保留
+- RAND 判定維持嚴格 `< Esc`
+- V0.93 SurpriseCheck 首回合流程保留
+- V0.92 CAPTURE_FREES 全刪條件道具保留
+- V0.91 CaptureCheck float pipeline / sleep +15 保留
+- V0.90 StatusAttackCheck int semantics 保留
+- V0.89 CounterCalc int return truncation 保留
+- V0.88 SpeedyAttack defense int truncation 保留
+- V0.87 DamageToHp2 critical int truncation 保留
+- V0.86 BatFly no-wake lifecycle 保留
+- V0.85 Modifyattack semantics 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21
 

@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.93</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V0.94</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V0.93：</b>
-      接回原 C 的 BATTLE_SurpriseCheck 首回合先制／偷襲：一般 encounter 開戰只擲一次，敵方被先制時首輪 AI 不執行；玩家遭偷襲時玩家與出戰寵首輪不能正常行動，並保留 <= / < 造成的原版機率邊界。
+      <b>V0.94：</b>
+      校正 Enemy BATTLE_EscapeCheck 對手平均等級：原 C 的 enemylevel / enemycnt 是 int division，且會計入 HP=0 但尚未 BATTLE_Exit 的出戰寵；web 不再用小數平均，也不再把倒下寵物提前排除。
     </article>
   </main>
 

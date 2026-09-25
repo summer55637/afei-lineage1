@@ -1228,6 +1228,17 @@ function syncEnemyTarget(){
   const t=targetEnemyUnit();if(!enemy||!t)return;
   enemy.level=t.level;enemy.name=t.name;enemy.hp=t.hp;enemy.maxHp=t.maxHp;enemy.attack=t.attack;enemy.defense=t.defense;
 }
+function sourceInitPlayerSideEntrySnapshot(){
+  if(!enemy)return [];
+  const entries=[{kind:'player',level:Math.max(1,Math.trunc(n(state?.level)))}];
+  const pet=activePet();
+  // 原 Battle Entry 建立時只有實際出戰的寵會進 side entry；之後 HP=0 不會自動等於 BATTLE_Exit。
+  if(pet&&petIsBattleActive(pet)){
+    entries.push({kind:'pet',petId:pet.id,level:Math.max(1,Math.trunc(n(pet.level)))});
+  }
+  enemy.sourcePlayerSideEntries=entries;
+  return entries;
+}
 function sourceBattleSurpriseRoll(){
   const luck=Math.trunc(n(state?.luck));
   let a=0,b=7;
@@ -1322,6 +1333,7 @@ function spawnEnemy(context=null){
     };
     state.battles++;
     addLog((dynamicSpec?'遭遇原始遇敵群組：':'遭遇任務編成：')+label+'。');
+    sourceInitPlayerSideEntrySnapshot();
     const surprise=sourceInitBattleSurprise(map);
     if(surprise.side==='enemy'){
       addLog('先制成功：原 BATTLE_SurpriseCheck roll '+surprise.roll+'，敵方首回合不能正常行動。','good');
@@ -1337,6 +1349,7 @@ function spawnEnemy(context=null){
   enemy=Object.assign({entry,groupBattle:false,dynamicGroup:false},unit);
   state.battles++;
   addLog('遭遇 Lv'+enemy.level+' '+enemy.name+'。');
+  sourceInitPlayerSideEntrySnapshot();
   const surprise=sourceInitBattleSurprise(map);
   if(surprise.side==='enemy'){
     addLog('先制成功：原 BATTLE_SurpriseCheck roll '+surprise.roll+'，敵方首回合不能正常行動。','good');
@@ -2570,10 +2583,24 @@ function enemyEscapeChance(unit){
   const spec=enemyAiAttackSpec(unit);
   const rare=spec.rare;
   const luck=rare===0?1:(rare===1?3:5);
-  const levels=[Math.max(1,Math.trunc(n(state.level)))];
-  const pet=activePet();
-  if(pet&&petIsBattleActive(pet))levels.push(Math.max(1,Math.trunc(n(pet.level))));
-  const avgLevel=levels.length?levels.reduce((a,b)=>a+b,0)/levels.length:0;
+
+  // fixed BATTLE_EscapeCheck 掃對手 Side 的每個 BATTLE_ENTRY：
+  // 只檢查 CHAR_CHECKINDEX，沒有 HP/ISDIE 篩選；因此出戰寵即使 HP=0，
+  // 只要尚未 BATTLE_Exit，等級仍會算進 enemycnt / enemylevel。
+  // BattleTimid / Abduct 等真正 BATTLE_Exit 的寵則由 battlePetOutIds 排除。
+  let entries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+  if(!entries.length){
+    entries=[{kind:'player',level:Math.max(1,Math.trunc(n(state.level)))}];
+    const pet=activePet();
+    if(pet&&petIsBattleActive(pet))entries.push({kind:'pet',petId:pet.id,level:Math.max(1,Math.trunc(n(pet.level)))});
+  }
+  const levels=entries
+    .filter(x=>x.kind!=='pet'||!battlePetOutIds.has(x.petId))
+    .map(x=>Math.max(1,Math.trunc(n(x.level))));
+
+  // enemylevel / enemycnt 在來源兩邊都是 int，所以平均值先做 C int division 截斷。
+  const levelSum=levels.reduce((a,b)=>a+b,0);
+  const avgLevel=levels.length?Math.trunc(levelSum/levels.length):0;
 
   unit.escapeAttempts=Math.max(0,Math.trunc(n(unit.escapeAttempts)))+1;
   const escapeCnt=unit.escapeAttempts+1;
@@ -2586,7 +2613,7 @@ function enemyEscapeChance(unit){
     else esc=30*escapeCnt-2*(avgLevel-n(unit.level));
   }
   if(esc<1)esc=1;
-  return {esc,luck,escapeCnt,avgLevel};
+  return {esc,luck,escapeCnt,avgLevel,levelSum,enemyCnt:levels.length,opponentLevels:levels.slice()};
 }
 function finishEnemyEscape(unit){
   if(!enemy||!unit)return {battleEnded:false};
