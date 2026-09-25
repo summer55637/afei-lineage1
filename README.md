@@ -11831,3 +11831,98 @@ schema26 前舊角色以 hometownLegacyUnknown 通過 hometown gate，不會因�
 - schema26 已確認 hometown 正規化回 source elder/座標
 - battle tick 新角色需 hometown+elements；舊存檔 legacy unknown 不被 hometown gate 卡住
 - V1.28 1轉／30,000／Item24114 與 fresh migration 分流不回退
+
+
+## V1.30 fixed _NEW_PLAYER_CF player creation parameters
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
+
+V1.29 已接回 hometown / LASTTALKELDER / starter Pet；本輪繼續沿 CHAR_createNewChar → CHAR_makeCharFromOptionAtCreate 對帳，發現 Web freshState 的 VITAL/STR/TOUGH/DEX 固定 5/5/5/5 並不是固定原 C 的創角規則。
+
+### 固定 build 的創角四圍驗證
+
+version.h 啟用 _NEW_PLAYER_CF，因此 CHAR_makeCharFromOptionAtCreate 的實際規則是：
+
+- VITAL / STR / TOUGH / DEX 每項必須是 0..20
+- 四項合計若 >20 才失敗
+- 不要求一定合計 20
+- 寫入 CHAR 時每一點乘 100：
+  - CHAR_VITAL = vital * 100
+  - CHAR_STR = str * 100
+  - CHAR_TOUGH = tgh * 100
+  - CHAR_DEX = dex * 100
+
+也就是 5/5/5/5 只是其中一個合法選擇，不是 source default。甚至 0/0/0/0 也通過這個固定 server validation；因此 Web 不再自行替新角色填 5/5/5/5。
+
+### 派生戰鬥值
+
+fixed CHAR_initcharWorkInt 使用：
+
+- FIXSTR = STR + TOUGH*0.1 + VITAL*0.1 + DEX*0.05
+- FIXTOUGH = TOUGH + STR*0.1 + VITAL*0.1 + DEX*0.05
+- FIXDEX = DEX
+- MaxHP = VITAL*4 + STR + TOUGH + DEX
+
+上述來源 CHAR 值本身是創角點數 *100，服務端計算時再 *0.01；因此 Web 直接以「點數單位」保存 playerStats，公式數值等價。
+
+原 CHAR_createNewChar 在建立角色前先把 CHAR_HP 設成 0x7fffffff，之後 compliance 會把 HP 截到 MaxHP；因此真正新角色確認創角四圍後，Web 也以滿 HP 開始。
+
+特別保留 source edge case：全 0 時 MaxHP=0，不再用 Math.max(1, ...) 偷補 1 HP。
+
+### Save schema 27
+
+真正 schema27 新角色：
+
+- creationPlayerStats=null
+- playerCreationStatsConfigured=false
+- playerStats 先為 0/0/0/0
+- HP/MaxHP、攻、防、敏先為 0
+- 玩家確認合法創角四圍後：
+  - creationPlayerStats 保存不可變創角基底
+  - playerStats 由同一配點起始，後續升級能力點只改 playerStats
+  - playerCreationStatsConfigured=true
+  - battle gate 才放行這一層
+
+creationPlayerStats 與 playerStats 分開保存，是因為後者會隨升級能力點增加，不能拿「目前累積四圍」反推歷史創角基底。
+
+### 舊存檔
+
+schema27 前只保存 cumulative playerStats，沒有獨立保存原始 creation allocation。
+
+因此不把歷史 Web 5/5/5/5 宣稱成原服選擇，也不重算玩家已經投入的升級能力點：
+
+- creationPlayerStats=null
+- playerCreationStatsLegacyUnknown=true
+- playerCreationStatsConfigured=true
+- 現有 playerStats / HP / 攻防敏照存檔保留
+- 舊角色直接通過 creation-stat gate
+
+### Creation gate
+
+真正新角色現在自動戰鬥依序需要：
+
+- 創角四圍已確認
+- hometown 已確認
+- 原服 10 點元素已確認
+
+三者都屬於固定原 C CHAR_createNewChar 的輸入，不再由 Web 猜值。
+
+### Regression targets
+
+- game.js syntax PASS
+- freshState schema27
+- fresh creationPlayerStats=null / configured=false / legacyUnknown=false
+- fresh playerStats=0/0/0/0，derived combat=0
+- 0/0/0/0 valid，total=0
+- 20/0/0/0 valid，total=20
+- 5/5/5/5 valid，total=20
+- 20/1/0/0 invalid，total=21
+- 任一負數、>20、非整數 invalid
+- confirm 5/5/5/5 => attack 6 / defense 6 / quick 5 / MaxHP 35 / HP 35
+- confirm 20/0/0/0 => attack 2 / defense 2 / quick 0 / MaxHP 80 / HP 80
+- confirm 0/0/0/0 => MaxHP 0，不偷補 1
+- creationPlayerStats 鎖定後，升級能力點只改 playerStats
+- pre-schema27 舊存檔保留 cumulative playerStats，不倒推 creation base
+- battle tick 新角色需 creation stats + hometown + elements
+- V1.29 starter Pet / hometown migration 不回退
+- V1.28 setup.cf 1轉／30,000／Item24114 不回退
