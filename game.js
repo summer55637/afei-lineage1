@@ -5234,7 +5234,7 @@ function captureTurn(manual=false){
     return false;
   }
 
-  const order=normalBattleOrder({playerGuarding:false});
+  const order=normalBattleOrder({playerCommand:'capture'});
   let captured=false;
   for(const actor of order){
     if(!enemy)return captured;
@@ -5404,14 +5404,14 @@ function battleDexRoll(quick,mode=null){
   if(dex<=0)dex=1;
   return Math.trunc(dex);
 }
-function sourceComboActorInfo(actor,playerGuarding=false){
+function sourceComboActorInfo(actor,playerCommand='attack'){
   if(!actor)return {normalAttack:false,move:false,throwWeapon:false,side:-1,targetKey:null,per:0};
 
   if(actor.kind==='player'){
     const desc={kind:'player'};
     const targetId=actor.targetUnitId||null;
     return {
-      normalAttack:!playerGuarding,
+      normalAttack:playerCommand==='attack',
       move:state.hp>0&&battleStatusCanMove(desc),
       throwWeapon:false,side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
     };
@@ -5447,7 +5447,7 @@ function sourceComboActorInfo(actor,playerGuarding=false){
   return {normalAttack:false,move:false,throwWeapon:false,side:-1,targetKey:null,per:0};
 }
 function sourceComboCheck(order,options={}){
-  const playerGuarding=!!options.playerGuarding;
+  const playerCommand=String(options.playerCommand||'attack');
   let start=-1,oldSide=-3,oldTarget=null,comboId=1;
   for(const actor of order){
     actor.sourceComboId=0;
@@ -5456,7 +5456,7 @@ function sourceComboCheck(order,options={}){
 
   for(let i=0;i<order.length;i++){
     const actor=order[i];
-    const info=sourceComboActorInfo(actor,playerGuarding);
+    const info=sourceComboActorInfo(actor,playerCommand);
 
     if(start!==-1){
       if(!info.normalAttack||info.targetKey!==oldTarget||info.side!==oldSide||info.throwWeapon||!info.move){
@@ -5659,7 +5659,7 @@ function normalBattleOrder(options={}){
   // V0.71 Enemy 自動武器 runtime 的 sequence 全為 0，Player/Pet 也尚無正式裝備，因此目前仍等價 0；同值保留建表順序。
   order.sort((a,b)=>(b.dex-a.dex)||(a.orderIndex-b.orderIndex));
   // 原 battle.c：EntrySort() 後立刻 ComboCheck()，再開始逐角色 StatusSeq／行動。
-  sourceComboCheck(order,{playerGuarding:!!options.playerGuarding});
+  sourceComboCheck(order,{playerCommand:String(options.playerCommand||'attack')});
   return order;
 }
 function sourceEnemyCWait(actor){
@@ -5680,7 +5680,7 @@ function sourceEnemyCWait(actor){
 }
 function attackTurn(){
   if(!enemy)return;
-  const order=normalBattleOrder({playerGuarding:false});
+  const order=normalBattleOrder({playerCommand:'attack'});
 
   for(const actor of order){
     if(!enemy)return;
@@ -5756,7 +5756,7 @@ function attackTurn(){
 }
 function guardTurn(){
   if(!enemy)return;
-  const order=normalBattleOrder({playerGuarding:true});
+  const order=normalBattleOrder({playerCommand:'guard'});
 
   // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；
   // 所以即使敵人的排序在玩家之前，防禦減傷也已生效。
