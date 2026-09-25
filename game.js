@@ -4923,6 +4923,21 @@ function performEnemyGuardBreak(actor,unit,options,meta){
   // BATTLE_S_GBreak 對 GUARD 最後會 iRet=FALSE，不接反擊鏈。
   return {kind:'skill',skillId:actor.skillId,target:'player',r};
 }
+function sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label){
+  if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
+  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk')){
+    return {attempted:false,applied:false,unsupportedType:type||null};
+  }
+  // BATTLE_Attack() 已先 DamageWakeUp，再進 gBattleStausChange 的 StatusAttackCheck。
+  const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn));
+  if(applied){
+    addLog(battleStatusDescName(targetDesc)+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
+  }else{
+    addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'效果未成功'+(check.reason==='existing'?'：目標已有其他異常狀態。':'（原檢定 '+n(check.per).toFixed(1)+'%）。'));
+  }
+  return {attempted:true,check,applied,type,turn};
+}
 function performEnemyStatusChange(actor,unit,options,meta){
   unit.counterEligibleThisTurn=true;
   const chosen=enemyActorTarget(actor,unit);
@@ -4930,7 +4945,25 @@ function performEnemyStatusChange(actor,unit,options,meta){
   const type=battleStatusTypeFromOption(meta?.o);
   const turn=battleStatusTurnFromOption(meta?.o);
   const label=meta?.n||'狀態攻擊';
+  const weaponType=Math.trunc(n(unit?.weaponType));
 
+  // 原 BATTLE_COM_S_STATUSCHANGE 先把 gBattleStausChange 改成技能狀態，
+  // 再落入和普通攻擊共用的 BOW / BOUNDTHROW / BREAKTHROW weapon loop。
+  // 因此弓會依 aBowW + attack_max 打多個目標；BREAKTHROW 原先設定的 PARALYSIS
+  // 已被這裡的技能狀態覆蓋，不能再額外套投石麻痺。
+  if(weaponType===4||weaponType===18||weaponType===19){
+    const afterHit=hit=>sourceEnemyApplyStatusAttackHit(unit,hit.targetDesc,hit.r,type,turn,label);
+    const seq=weaponType===4
+      ?performEnemyBowWeaponAttack(actor,unit,Object.assign({},options,{afterHit}))
+      :performEnemyThrowWeaponAttack(actor,unit,Object.assign({},options,{afterHit,breakthrowStatus:false}));
+    return {
+      kind:'skill',skillId:actor.skillId,statusType:type,weaponSequence:true,
+      target:chosen.kind,sequence:seq,hits:seq?.hits||[]
+    };
+  }
+
+  // BOOMERANG 只有原 command 本來就是 ATTACK 才會被前置 switch 改成 BATTLE_COM_BOOMERANG。
+  // StatusChange 不會轉換，因此持回力標時仍是單一目標的一般物理命中。
   let r;
   if(chosen.kind==='pet'&&chosen.pet){
     r=enemyAttackPetResult(unit,chosen.pet);
@@ -4942,20 +4975,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
   const targetDesc=chosen.kind==='pet'
     ?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}
     :{kind:'player'};
-  if(r.damage>0){
-    // 原 BATTLE_DamageWakeUp 先解除既有睡眠，之後才做本次 StatusChange 判定。
-    battleStatusWakeOnDamage(targetDesc,r.damage);
-    if(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'){
-      const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
-      if(check.allowed&&check.success&&battleStatusApply(targetDesc,type,turn)){
-        addLog((chosen.kind==='pet'?chosen.pet.name:'你')+' 陷入'+BATTLE_STATUS_NAMES[type]+'（原檢定 '+check.per.toFixed(1)+'%）。','bad');
-      }else{
-        addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'效果未成功'+(check.reason==='existing'?'：目標已有其他異常狀態。':'（原檢定 '+n(check.per).toFixed(1)+'%）。'));
-      }
-    }else if(type){
-      addLog(label+' 的'+BATTLE_STATUS_NAMES[type]+'資料已辨識；該狀態的特殊回合行為留待下一層接入。');
-    }
-  }
+  const statusResult=sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label);
 
   // StatusChange 的異常套用發生在 BATTLE_Attack() 返回之前；睡眠／石化成功後目標已不能反擊。
   if(unit.hp>0&&enemy){
@@ -4965,7 +4985,7 @@ function performEnemyStatusChange(actor,unit,options,meta){
       resolvePlayerEnemyCounterChain('enemy',unit,r);
     }
   }
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,statusType:type};
+  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,statusType:type,statusResult};
 }
 function performEnemyPowerBalance(actor,unit,options,meta){
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
