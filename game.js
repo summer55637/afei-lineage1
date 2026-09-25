@@ -3313,6 +3313,15 @@ function sourceInitialDodgeOnly(attacker,defender,options={}){
   }
   return {dodged:false,duckRaw:duck};
 }
+// fixed BATTLE_AttackSeq() Guardian caller audit (V1.12):
+// - real substitution: BATTLE_Attack, BATTLE_Attack_FIREKILL, BATTLE_BattleModel_ATTACK,
+//   and the later multi-target branch inside battle_profession_status_chang_fun.
+// - calc-only caller-defindex bug: BATTLE_S_GBreak, BATTLE_S_GBreak2, BATTLE_S_FallGround,
+//   BATTLE_S_AttackDamage, battle_profession_attack_fun, and the shield-attack branch inside
+//   battle_profession_status_chang_fun.
+// - Guardian intentionally disabled by caller seed -2: BATTLE_Counter and BATTLE_Combo.
+// - BATTLE_S_Explode would be calc-only too, but fixed version.h leaves _PETSKILL_EXPLODE disabled.
+// Do not globalize Guardian substitution: each caller owns whether its defindex is rewritten.
 function sourcePlayerGuardianPetForAttack(unit){
   if(!battlePlayerGuardianPetId)return null;
   const pet=state?.petBox?.find?.(p=>p.id===battlePlayerGuardianPetId)||null;

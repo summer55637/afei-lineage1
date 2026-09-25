@@ -10475,3 +10475,51 @@ PETSKILL_GuardBreak2 本身只設 BATTLE_COM_S_GBREAK2 / target / C_OK。真正�
 V1.11 的 sourcePerformPetGuardBreak2Skill 保留：原 target 先做 DuckCheck；GUARD 時不可 dodge；Guardian substitution 後才決定 ×1.3/×0.7；Guardian calc-only；HP 原 target；專用 case 不進普通 Counter；也不強制清除 V1.09 EarthRound 殘留 hidden flag。
 
 Regression: game.js syntax PASS；runtime 282 unique IDs；min 0 / max 841；543 handler 正確；illegal gate 正確；GuardBreak2 dispatcher / local multiplier / calc-only / no-Counter 全部靜態檢查通過；save schema 21。
+
+## V1.12 BATTLE_AttackSeq Guardian caller audit complete
+
+V1.12 從 V1.02 指定的方向把 fixed `BATTLE_AttackSeq()` caller 全部掃完。固定來源仍是：
+
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `gmsv/src/battle/battle_event.c` 共有 13 個實際 caller（不含 `BATTLE_AttackSeq` 自身）：
+
+| caller | Guardian seed / caller 行為 | fixed 語意 | Web 狀態 |
+| --- | --- | --- | --- |
+| `BATTLE_Attack` | `Guardian=-1`，caller 會把 `defindex` 換成 Guardian | 真正代擋 | V1.00 |
+| `BATTLE_Attack_FIREKILL` | `Guardian=-1`，物理段改 `defindex` | 物理真正代擋；後續固定火魔法仍用原 `defNo` | V1.03 |
+| `BATTLE_Counter` | `Guardian=-2` | AttackSeq 不呼叫 GuardianCheck | 已確認，不改 |
+| `BATTLE_S_GBreak` | `Guardian=-1`，caller 不改 `defindex` | calc-only；HP 原 target | V1.02 / V1.07 player |
+| `BATTLE_S_GBreak2` | `Guardian=-1`，caller 不改 `defindex` | calc-only；×1.3/×0.7 看 local defindex | V1.02 / V1.11 player |
+| `BATTLE_Combo` | 每段先設 `Guardian=-2` | 合擊明確不允許忠犬介入 | V0.74 |
+| `BATTLE_S_FallGround` | `Guardian=-1`，caller 不改 `defindex` | calc-only；HP / 落馬 target 原目標 | V1.02 / V1.10 player |
+| `BATTLE_S_Explode` | `Guardian=-1`，caller 不改 `defindex` | 若編譯會是 calc-only | fixed `_PETSKILL_EXPLODE` 關閉，不接 |
+| `BATTLE_S_AttackDamage` | `Guardian=-1`，caller 不改 `defindex` | calc-only；後續效果仍原 target | V1.01 |
+| `battle_profession_attack_fun` | `Guardian=-1`，caller 不改 `defindex` | calc-only | fixed 有編譯；Web 尚無職業技能 runtime |
+| `battle_profession_status_chang_fun` 盾擊分支 | `Guardian=-1`，caller 不改 `defindex` | calc-only；傷害/狀態仍原 target | fixed 有編譯；Web 尚無職業技能 runtime |
+| `battle_profession_status_chang_fun` 後段多目標分支 | `Guardian=-1`，AttackSeq 後明確改 `defindex=Guardian` | 真正代擋；DamageSub / 狀態跟 Guardian | fixed 有編譯；Web 尚無職業技能 runtime |
+| `BATTLE_BattleModel_ATTACK` | physical type 才在 AttackSeq 後改 `iDefindex` | 物理傷害、死亡、StatusAttackCheck 全跟 Guardian | V1.03 |
+
+固定 `version.h` 同時確認：
+
+- `_PROFESSION_SKILL`：開啟。
+- `_PETSKILL_FIREKILL`：開啟。
+- `_PETSKILL_BATTLE_MODEL`：開啟。
+- `_PETSKILL_EXPLODE`：關閉，且來源註記「不可開」。
+
+因此目前 Guardian 核心不能再做任何「所有 AttackSeq caller 一律換 target」的全域處理。來源本身就同時存在 real substitution、calc-only 舊 bug、Guardian=-2 明確禁用與未編譯死碼四種語意。
+
+另外用 V1.11 改成的 fixed `petskill2.txt` runtime 重新交叉檢查目前 166 組一般野外 Lv1 可捕獲資料：其實際 `skillIds` 所對應的 PetSkill function 已全部落在目前 player RANDOMACT 已支援集合（NormalAttack / NormalGuard / StatusChange / Mighty / Guardian / PowerBalance / GuardBreak / ContinuationAttack / ChargeAttack / EarthRound / GuardBreak2 / FallGround / NoGuard）。目前一般野外 Lv1 捕獲寵沒有新的 RANDOMACT function 缺口。
+
+### V1.12 regression / audit
+
+- main 基準：V1.11 `919abe99bd5621adacd6d16b88bd649ae23476da`
+- fixed source：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- 13 個 AttackSeq caller 全數分類
+- Firekill / BattleModel real substitution 保留
+- GBreak / GBreak2 / FallGround / AttackDamage calc-only 保留
+- Counter / Combo Guardian=-2 保留
+- Explode fixed build disabled，不人工打開
+- Profession 兩種不同 Guardian caller 語意記錄完成，但不在尚不存在的 Web profession runtime 上猜實作
+- 一般野外 Lv1 捕獲寵 PetSkill function coverage：無新增缺口
+- save schema：21
