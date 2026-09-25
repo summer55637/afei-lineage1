@@ -4007,13 +4007,13 @@ function performEnemyAttackMagic(actor,unit,options,meta){
   const itemIndex=itemMatch?Number(itemMatch[1]):-1;
 
   // Enemy 的 MAGIC_DirectUse 直接把 option itemnum 當 global ITEM_item[] existing index。
-  // V0.68 minimal runtime 對 ITEM_CHECKINDEX 同時檢查範圍與 use；未配置 slot 回 -1。
+  // V0.70：ITEM_CHECKINDEX 同時檢查範圍與 use；未配置 slot 回 -1，已配置 slot 則讀該 existing item 從 itemset6 帶入的真實 MAGICUSEMP。
   if(magicId===204||magicId===435){
     const mp=sourceItemRuntimeMagicUseMp(itemIndex);
     const mpBefore=Math.trunc(n(unit.mp));
     if(mp===null){
       const slot=sourceItemRuntimeSlot(itemIndex);
-      addLog(unit.name+' 的 '+(meta?.n||('magic '+magicId))+' 讀到 ITEM_item['+itemIndex+'] 已被 Item '+(slot?.itemId??'未知')+' 佔用，但正式 itemset6 的 mu 尚未解碼；本次不猜 MP cost，也不套魔法效果。');
+      addLog(unit.name+' 的 '+(meta?.n||('magic '+magicId))+' 讀到 ITEM_item['+itemIndex+'] 已被 Item '+(slot?.itemId??'未知')+' 佔用，但該 existing slot 沒有可由原 itemset6 唯一回填的 Item ID／MAGICUSEMP；本次仍不猜 MP cost，也不套魔法效果。');
       return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp:null,mpBefore,mpAfter:mpBefore,sourceItemMpUnknown:true,itemId:slot?.itemId??null};
     }
     if(mpBefore<mp){
