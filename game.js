@@ -2170,20 +2170,83 @@ function enemyMagicAttrDamage(unit,targetDesc,magic,aPower){
   return {damage,attrIndex,attackVector:attack,magicVector,defVector:def,fieldRatio,fieldState:Object.assign({},battleFieldState)};
 }
 function magicDescForSlot(slot){
-  if(slot===0&&state.hp>0)return {kind:'player'};
-  if(slot===5){
-    const pet=activePet();
-    if(pet&&petIsBattleActive(pet))return {kind:'pet',pet,petId:pet.id};
-  }
+  // BATTLE_MultiAttMagic's final field scan always uses BATTLE_TargetCheck.
+  // EarthRound hidden Pet therefore remains a raw COM2 anchor but is not a hittable magic target.
+  const target=sourceEnemyTargetableFromBattleSlot(slot);
+  if(target?.kind==='player')return {kind:'player'};
+  if(target?.kind==='pet')return {kind:'pet',pet:target.pet,petId:target.petId};
   return null;
 }
-function enemyAttackMagicTargets(chosen,magic,pattern){
-  const selectedSlot=chosen?.kind==='pet'?5:0;
-  let toNo=selectedSlot;
+function sourceEnemyAttackMagicRewriteToNo(actor,magic){
+  // battle.c BATTLE_COM_S_ATTACK_MAGIC starts from raw CHAR_WORKBATTLECOM2.
+  const rawToNo=sourceEnemyCommandTargetBattleSlot(actor,null);
+  if(rawToNo<0)return {rawToNo,toNo:-1};
   const rewrite=Number(magic?.targetRewrite);
+  let toNo=rawToNo;
   if(rewrite===20)toNo=20;
-  else if(Number.isFinite(rewrite)&&rewrite!==-1)toNo=(selectedSlot>=0&&selectedSlot<=4)?rewrite:rewrite-1;
+  else if(Number.isFinite(rewrite)&&rewrite!==-1){
+    toNo=(rawToNo>=0&&rawToNo<=4)?rewrite:rewrite-1;
+  }
+  return {rawToNo,toNo};
+}
+function sourceEnemyAttackMagicMultiList(toNo){
+  // fixed __ATTACK_MAGIC BATTLE_MultiList().
+  // Single invalid targets use the original compact nLifeArea[10] + rand()%10 rejection loop,
+  // which is intentionally NOT BATTLE_DefaultAttacker / RAND(0,cnt-1).
+  const no=Math.trunc(Number(toNo));
+  const targetableSlots=(start,end)=>{
+    const out=[];
+    for(let slot=start;slot<end;slot++){
+      if(sourceEnemyTargetableFromBattleSlot(slot))out.push(slot);
+    }
+    return out;
+  };
 
+  if(no>=0&&no<=19){
+    if(sourceEnemyTargetableFromBattleSlot(no)){
+      return {ok:true,toNo:no,fallback:false,rolls:[]};
+    }
+    const sideStart=no<10?0:10;
+    const compact=targetableSlots(sideStart,sideStart+10);
+    if(!compact.length)return {ok:false,toNo:-1,fallback:true,rolls:[],reason:'all-die'};
+    const rolls=[];
+    for(;;){
+      const roll=cRand(0,9); // source: rand()%10
+      rolls.push(roll);
+      const picked=compact[roll];
+      if(picked!=null)return {ok:true,toNo:picked,fallback:true,rolls,compact:compact.slice()};
+    }
+  }
+
+  // Right-lower side row constants from battle.h:
+  // 26 = SIDE_0_B_ROW (slots 0..4), 25 = SIDE_0_F_ROW (slots 5..9).
+  if(no===26){
+    if(targetableSlots(0,5).length)return {ok:true,toNo:26,rowFallback:false,rolls:[]};
+    if(targetableSlots(5,10).length)return {ok:true,toNo:25,rowFallback:true,rolls:[]};
+    return {ok:false,toNo:-1,rowFallback:true,rolls:[],reason:'all-die'};
+  }
+  if(no===25){
+    if(targetableSlots(5,10).length)return {ok:true,toNo:25,rowFallback:false,rolls:[]};
+    if(targetableSlots(0,5).length)return {ok:true,toNo:26,rowFallback:true,rolls:[]};
+    return {ok:false,toNo:-1,rowFallback:true,rolls:[],reason:'all-die'};
+  }
+
+  // Opposite side equivalents kept for source completeness.
+  if(no===23){
+    if(targetableSlots(10,15).length)return {ok:true,toNo:23,rowFallback:false,rolls:[]};
+    if(targetableSlots(15,20).length)return {ok:true,toNo:24,rowFallback:true,rolls:[]};
+    return {ok:false,toNo:-1,rowFallback:true,rolls:[],reason:'all-die'};
+  }
+  if(no===24){
+    if(targetableSlots(15,20).length)return {ok:true,toNo:24,rowFallback:false,rolls:[]};
+    if(targetableSlots(10,15).length)return {ok:true,toNo:23,rowFallback:true,rolls:[]};
+    return {ok:false,toNo:-1,rowFallback:true,rolls:[],reason:'all-die'};
+  }
+
+  // TARGET_SIDE_0 / TARGET_SIDE_1 / TARGET_ALL do not perform random retargeting here.
+  return {ok:true,toNo:no,fallback:false,rolls:[]};
+}
+function enemyAttackMagicTargets(toNo,pattern){
   const slots=new Set();
   const addSlot=slot=>{if((slot===0||slot===5)&&magicDescForSlot(slot))slots.add(slot);};
   const field=pattern?.field||[[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]];
@@ -5731,8 +5794,11 @@ function performEnemyStealMoney(actor,unit,options,meta){
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,attackNo,defNo,per,roll,goldRoll,stolen:0,goldBefore,goldAfter:state.gold,success:false};
 }
 function performEnemyAttackMagic(actor,unit,options,meta){
-  const chosen=enemyActorTarget(actor,unit);
-  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  // PETSKILL_Use already fixed raw COM2 during Enemy AI selection.
+  // BATTLE_COM_S_ATTACK_MAGIC does not call BATTLE_TargetAdjust.
+  const rawChosen=enemyActorCommandTarget(actor);
+  const rawToNo=sourceEnemyCommandTargetBattleSlot(actor,null);
+  if(rawToNo<0)return {kind:'skill',skillId:actor.skillId,noTarget:true};
 
   const match=String(meta?.o||'').match(/magic\s+(\d+)/i);
   const magicId=match?Number(match[1]):313;
@@ -5756,18 +5822,29 @@ function performEnemyAttackMagic(actor,unit,options,meta){
     unit.mp=mpBefore-mp;
 
     if(magicId===204){
+      // TargetIndex has no 204 entry and MAGIC_FieldAttChange ignores toindex:
+      // do not consume any TargetAdjust / MultiList retarget RNG.
       const field=battleSetField('water',100,5);
       addLog(unit.name+' 使用水的精靈 Lv5：戰場變為水屬性 Power 100／5 回合；ITEM_item['+itemIndex+'] '+(mp<0?'未配置，原 ITEM_getInt 回 -1，因此 Enemy MP +1。':'MP cost '+mp+'。'),'bad');
-      return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'fieldAttChange',field};
+      return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'fieldAttChange',field,rawToNo};
     }
 
-    const target=chosen.kind==='pet'?{kind:'pet',pet:chosen.pet,petId:chosen.petId}:{kind:'player'};
+    // magic 435 -> MAGIC_Weaken -> MAGIC_ParamChange_Turn_Battle -> BATTLE_MultiList.
+    // It is not currently reachable from the 85-floor encounter set, but this is the same
+    // exact raw-COM2 helper used by reachable AttackMagic and avoids a generic TargetAdjust.
+    const multi=sourceEnemyAttackMagicMultiList(rawToNo);
+    if(!multi.ok){
+      addLog(unit.name+' 使用癱瘓的精靈 Lv3，但原 BATTLE_MultiList 找不到可作用目標。');
+      return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'weaken',noTarget:true,rawToNo,multi};
+    }
+    const target=magicDescForSlot(multi.toNo);
+    if(!target)return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'weaken',noTarget:true,rawToNo,multi};
     const attacker={kind:'enemy',unit,unitId:unit.id};
     const check=battleStatusChance(attacker,target,'weaken',{perOffset:50,range:30,bai:1,forceGeneral:true});
     let applied=false;
     if(check.allowed&&check.success)applied=battleStatusApply(target,'weaken',7); // source 寫 WORKWEAKEN=turn+1=8
     addLog(unit.name+' 使用癱瘓的精靈 Lv3：'+battleStatusDescName(target)+(applied?' 陷入虛弱 7 回合。':' 未中虛弱。')+'（原成功值 '+Number(check.per||0).toFixed(1)+'）',applied?'bad':'');
-    return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'weaken',target:chosen.kind,petId:chosen.petId||null,check,applied,turn:7,storedTurn:applied?8:0};
+    return {kind:'skill',skillId:actor.skillId,magicId,itemIndex,mp,mpBefore,mpAfter:unit.mp,effect:'weaken',target:target.kind,petId:target.petId||null,check,applied,turn:7,storedTurn:applied?8:0,rawToNo,multi};
   }
 
   const magic=attackMagicDb?.byMagicId?.[String(magicId)];
@@ -5781,10 +5858,22 @@ function performEnemyAttackMagic(actor,unit,options,meta){
     return {kind:'skill',skillId:actor.skillId,magicId,missingPattern:true};
   }
 
+  // Source order:
+  // raw COM2 -> TargetIndex rewrite -> BATTLE_MultiList -> then the one rand()%100 TrueMagic roll.
+  const rewritten=sourceEnemyAttackMagicRewriteToNo(actor,magic);
+  const multi=sourceEnemyAttackMagicMultiList(rewritten.toNo);
+  if(!multi.ok){
+    addLog(unit.name+' 使用 '+magic.name+'，但原 BATTLE_MultiList 找不到可攻擊目標。');
+    return {
+      kind:'skill',skillId:actor.skillId,magicId,magicName:magic.name,noTarget:true,
+      rawToNo:rewritten.rawToNo,rewrittenToNo:rewritten.toNo,adjustedToNo:multi.toNo,multi
+    };
+  }
+
   const attMagicLv=Math.trunc(n(unit.level)*.9);
   const trueRoll=cRand(0,99);
   const trueMagic=!(trueRoll>attMagicLv);
-  const targets=enemyAttackMagicTargets(chosen,magic,pattern);
+  const targets=enemyAttackMagicTargets(multi.toNo,pattern);
   const results=[];
 
   addLog(unit.name+' 使用 '+magic.name+'（'+magic.attr+'，Power '+magic.power+'，MagicLv '+magic.magicLv+'）。');
@@ -5803,7 +5892,9 @@ function performEnemyAttackMagic(actor,unit,options,meta){
   return {
     kind:'skill',skillId:actor.skillId,magicId,magicName:magic.name,
     trueRoll,attMagicLv,trueMagic,targets:results,
-    attIdx:magic.attIdx,targetRewrite:magic.targetRewrite,attackType:pattern.attackType
+    attIdx:magic.attIdx,targetRewrite:magic.targetRewrite,attackType:pattern.attackType,
+    rawToNo:rewritten.rawToNo,rewrittenToNo:rewritten.toNo,adjustedToNo:multi.toNo,
+    multiFallback:!!multi.fallback,rowFallback:!!multi.rowFallback,multiRolls:(multi.rolls||[]).slice()
   };
 }
 function enemyDirectActualTarget(chosen,r){

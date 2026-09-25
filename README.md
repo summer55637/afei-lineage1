@@ -12048,3 +12048,101 @@ Web 現已拆成：
 - EarthRound / CHARGE release 保留原 COM2 lifecycle
 - GYRATE / FIREKILL source exception 保留
 - schema 27 / V1.31 target RNG / V1.30 creation / V1.29 starter Pet regressions unchanged
+
+
+## V1.33 Enemy AttackMagic raw COM2 / BATTLE_MultiList
+
+固定來源：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `version.h`：`__ATTACK_MAGIC` 已開啟
+- 維持「原 C 規則優先、不猜數值」
+
+V1.32 對齊了普通物理攻擊的 `BATTLE_TargetAdjust()`，本輪繼續往下掃後確認：Enemy 的 `BATTLE_COM_S_ATTACK_MAGIC` 是另一條獨立目標生命週期，不能套用泛用 TargetAdjust。
+
+### Source command order
+
+固定 `battle.c` 的 AttackMagic 流程是：
+
+1. 直接讀 `CHAR_WORKBATTLECOM2`（Enemy AI 先前寫入的 raw COM2）
+2. 用固定 `TargetIndex[25]` 依 magic id 改寫範圍
+3. 呼叫 `MAGIC_DirectUse()`
+4. `MAGIC_AttMagic_Battle()` 進 `BATTLE_MultiAttMagic()`
+5. `BATTLE_MultiAttMagic()` 第一件事就是 `BATTLE_MultiList()`
+6. MultiList 完成目標修正後，才消耗一次 `rand()%100` 的 TrueMagic 判定
+
+因此這條路徑不會先跑 `BATTLE_TargetAdjust()`。
+
+### Single-target BATTLE_MultiList old behavior
+
+在 fixed `__ATTACK_MAGIC` 下，若 toNo 是 0..19 而原目標已死亡／離場／EarthRound `CHAR_ISATTACKED=0`：
+
+- 先把同 side 所有 `BATTLE_TargetCheck()==TRUE` 的 slot 壓縮存進 `nLifeArea[10]`
+- 其餘元素保持 -1
+- 然後反覆執行 `nLifeArea[rand()%10]`
+- 抽到 -1 就重抽，直到抽中一個有效 compact index
+
+這和 `BATTLE_DefaultAttacker()->RAND(0,cnt-1)` 完全不同。
+
+例如單機模型只剩玩家 slot 0 可被攻擊時，compact array 是：
+
+- `nLifeArea[0]=0`
+- `nLifeArea[1..9]=-1`
+
+所以來源會一直消耗 `rand()%10`，直到 roll 恰好為 0，而不是直接做 `RAND(0,0)`。
+
+V1.33 新增 `sourceEnemyAttackMagicMultiList()`，保留這個 rejection RNG lifecycle。
+
+### Row / all-target behavior
+
+固定 battle.h：
+
+- `TARGET_SIDE_0_B_ROW = 26`：先掃 slots 0..4，整排無合法目標才換到 25
+- `TARGET_SIDE_0_F_ROW = 25`：先掃 slots 5..9，整排無合法目標才換到 26
+- 前後排互換不消耗隨機數
+- `TARGET_SIDE_0 = 20`：直接掃整個 side，不做 DefaultAttacker random fallback
+
+因此：
+
+- magic 311 / 暴風雪：raw COM2 在 slot 0..4 時 rewrite 26；在 slot 5..9 時 rewrite 25。若原本那排只有 EarthRound 隱身 Pet，MultiList 只換到另一排，不吃 RNG。
+- magic 318 / 火山爆發：直接 rewrite 20；即使 raw COM2 原本指向 EarthRound Pet，也不該先吃任何 DefaultAttacker RNG。
+- 最終魔法 field 掃描仍使用 `BATTLE_TargetCheck()`，所以 EarthRound 隱身 Pet 不會被實際命中。
+
+### Current 85-floor reachable proof
+
+把 `stoneage_general_encounter_runtime.json` 的正權重 group members 與 `stoneage_enemy_ai.json` 交叉後，現階段 85-floor runtime 真正有正權重可達的 AttackMagic 包含：
+
+- 302 `E落石撞击`：EnemyID 1793
+- 308 `E水刃`：EnemyID 1678
+- 311 `E暴风雪`：EnemyID 2239
+- 314 `E火焰连弹`：EnemyID 1679
+- 318 `E火山爆发`：EnemyID 1972
+
+其中 302 / 308 / 314 是單體、311 是排攻擊、318 是全體，剛好涵蓋本輪三種目標生命週期。
+
+完整 Enemy AI 裡另有 204 / 435 的 AttackMagic 技能，但不在目前 85-floor 正常 encounter group 可達集合。本輪沒有拿技能說明文字猜行為；204 只保留來源「不使用 target 的 FieldAttChange」，435 則只沿來源 `MAGIC_Weaken -> BATTLE_MultiList` 套同一個 raw-COM2 helper。
+
+### Web changes
+
+- AttackMagic 不再從 `enemyActorTarget()` 起手
+- 改由 `enemyActorCommandTarget()` / raw battle slot 保存 COM2
+- 新增 `sourceEnemyAttackMagicRewriteToNo()`
+- 新增 `sourceEnemyAttackMagicMultiList()`
+- `enemyAttackMagicTargets()` 改吃 MultiList 已修正後的 toNo
+- `magicDescForSlot()` 最終以 TargetCheck 語意排除 EarthRound hidden Pet
+- MultiList fallback 必須發生在 TrueMagic `rand()%100` 之前
+
+本輪不新增持久化資料，`schemaVersion` 維持 27。
+
+### V1.33 regression targets
+
+- game.js syntax PASS
+- 302/308/314：raw hidden Pet COM2 不走 DefaultAttacker
+- 單體 invalid COM2：`rand()%10` 可連續抽空並重試
+- 單體 fallback 完成後才進 TrueMagic `rand()%100`
+- 311：raw Pet row hidden-only -> 25 無 RNG fallback 到 26
+- 311：raw Player row -> 26 保持原排
+- 318：raw hidden Pet 仍直接 rewrite 20，不吃 retarget RNG
+- 318 最終 TargetCheck 排除 hidden Pet，只命中合法 side targets
+- 204 FieldAttChange 不因 raw COM2 invalid 多吃 targeting RNG
+- schema 27 / V1.32 TargetAdjust / V1.31 target AI RNG regressions unchanged

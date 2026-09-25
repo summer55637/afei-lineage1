@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.32</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.33</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.32：</b>
-      對齊 EarthRound／隱身與 TargetAdjust：隱身中的出戰寵仍會進 Enemy AI 候選，但實際執行一般攻擊時會被 TargetCheck 擋下，再由 DefaultAttacker 依原 RNG 改抓目前可攻擊目標；弓與迴旋標保留原 C 的特殊選目標流程。
+      <b>V1.33：</b>
+      對齊 Enemy AttackMagic 的 raw COM2／TargetIndex／BATTLE_MultiList 生命週期：單體魔法失效目標改用原版 rand()%10 rejection fallback；排攻擊只換前後排；全體魔法不再多吃 DefaultAttacker RNG，EarthRound 隱身目標由最終 TargetCheck 過濾。
     </article>
   </main>
 
