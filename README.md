@@ -10267,3 +10267,74 @@ V1.08 regression：
 - next round removes NoGuard
 - V1.07 GuardBreak retained
 - save schema 21
+
+
+## V1.09 low-loyalty Pet EarthRound 120 + direct-release Counter correction
+
+V1.09 接回 wild Lv1 skill 120「地球一周」(`PETSKILL_EarthRound`, `攻%+90`)。
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### StatusChange 清單先校正
+
+正式 runtime 已確認 61 猛毒、80 石化、90 混亂、110 催眠全部是 `PETSKILL_StatusChange`。V0.98 之後 player RANDOMACT 已按 handler 共用 dispatch，parser 也已支援 poison / stone / confusion / sleep，因此四筆已實際覆蓋，不另複製四套技能。
+
+### EarthRound lifecycle
+
+`PETSKILL_EarthRound()` 寫 EARTHROUND1 / COM2 / COM3；skill 120 的 COM3 為 90。第一回合 `BATTLE_EarthRoundHide()` 把 `CHAR_ISATTACKED=0`，並把 COM1 改為 EARTHROUND0，所以 Pet 不攻擊且 `BATTLE_TargetCheck()` 不能選中它。
+
+V1.09 用 `battlePetEarthRoundStates` 保存 command / target / WORK-FIX snapshot，用獨立 `battlePetHiddenIds` 保存 CHAR_ISATTACKED 語意。Enemy 即使排序前已選到 Pet，真正行動時也會重新驗證 hidden 狀態並 fallback target。
+
+EARTHROUND0 被 `BATTLE_IsCharge()` 保留到下一輪；`BATTLE_PreCommandSeq()` 對它直接 continue，所以 release round 不重新 complianceParameter、TurnParam、AttReverse。Web 因此沿用隱身前一輪的 attack / defense / fixedDex / quick base / fixedTough / element snapshot。
+
+### 傷害倍率
+
+來源：
+```c
+gBattleDamageModyfy = 1.0 + 0.01 * COM3;
+```
+COM3=90，因此實際最終傷害倍率是 **×1.90**，不是文案近似的 2.00。
+
+### Loyalty 覆寫
+
+EARTHROUND0 下一輪仍跑 `BATTLE_PetLoyalCheck()`：
+- NORMAL：現身釋放。
+- TARGETRANDOM：只改 COM2，EarthRound 繼續。
+- RANDOMACT / OWNERATTACK / ENEMYATTACK / confusion / blocking status：覆寫或清除 COM1，EarthRound command 中斷。
+- ESCAPE：離場。
+
+重要：EarthRound command 中斷不等於立即 `CHAR_ISATTACKED=1`。原 C 只有真正進 direct-attack 區才恢復這個旗標。因此被改成 GUARD / NONE / NOGUARD / CHARGE 等非直接動作時，hidden flag 可繼續殘留；之後普通攻擊、狀態攻擊、忠犬攻擊、多段、Mighty、PowerBalance、Charge release、EarthRound release 等 direct path 才重新現身。
+
+### Combo
+
+EARTHROUND0 不是 COM_ATTACK，因此 active EarthRound command 不可成為 Combo candidate。若 command 已被覆寫而 hidden flag 因來源 bug 殘留，後續 COM_ATTACK 仍照來源可進 Combo；`BATTLE_Combo()` 本身沒有恢復 CHAR_ISATTACKED，本版不自行修漂亮。
+
+### Charge / EarthRound 第一層 Counter
+
+重新核對 direct-attack 後的 fixed Counter loop：
+k=0 的反擊者其實是原 defender；k=1 才輪到原 attacker。
+
+CHARGE_OK / EARTHROUND0 在 `BATTLE_Attack()` 前把原 Pet COM1 改 NONE，所以：
+- defender 仍可做第一下 Counter；
+- 下一層 Pet counter-counter 因 COM1=NONE 失敗。
+
+V0.99「完全不進 Counter」少了第一層。V1.09 把 Charge release 與 EarthRound release 都改成最多執行一層 defender Counter。
+
+### V1.09 regression
+- game.js syntax PASS
+- battle-only EarthRound state + hidden flag reset
+- skill 120 RANDOMACT dispatcher
+- EARTHROUND1 no damage + untargetable
+- action-time Enemy target revalidation
+- EARTHROUND0 cross-round preservation
+- release uses frozen WORK/FIX snapshot
+- final damage ×1.90
+- TARGETRANDOM preserves command, changes target only
+- non-direct override may retain hidden flag
+- direct attack restores targetability
+- active EarthRound excluded from Combo
+- Charge release first Counter only
+- EarthRound release first Counter only
+- 61 / 80 / 90 / 110 confirmed covered by common StatusChange
+- V1.08 and earlier low-loyalty handlers retained
+- save schema 21

@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -1692,17 +1692,25 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){battleStatuses=new Map();battlePetOutIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
   return !!unit?.earthRoundState?.hidden;
 }
 function sourcePreCommandKeySkipsCompliance(key){
-  if(!String(key||'').startsWith('enemy:'))return false;
-  const id=String(key).slice(6);
-  const unit=livingEnemyUnits().find(u=>String(u.id)===id);
-  return !!(unit&&sourceEnemySkipsPreCommandCompliance(unit));
+  const value=String(key||'');
+  if(value.startsWith('enemy:')){
+    const id=value.slice(6);
+    const unit=livingEnemyUnits().find(u=>String(u.id)===id);
+    return !!(unit&&sourceEnemySkipsPreCommandCompliance(unit));
+  }
+  if(value.startsWith('pet:')){
+    const id=value.slice(4);
+    const pet=state?.petBox?.find?.(p=>String(p.id)===id)||null;
+    return !!(pet&&sourcePetEarthRoundCommandActive(pet));
+  }
+  return false;
 }
 function sourcePreCommandResetTransient(){
   // Most actors rebuild WORKQUICK from FIXDEX here. EARTHROUND0 skips that rebuild,
@@ -1762,18 +1770,14 @@ function battleElementsForDesc(desc){
   return battleBaseElements(desc);
 }
 function battlePrepareElementWork(){
-  const previous=battleElementWork;
-  const next=new Map();
-  const list=[];
+  const previous=battleElementWork,next=new Map(),list=[];
   if(state)list.push({kind:'player'});
   const pet=activePet();
   if(pet)list.push({kind:'pet',pet,petId:pet.id});
   for(const unit of livingEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
   for(const desc of list){
     const key=battleStatusKey(desc);
-    if(desc.kind==='enemy'&&sourceEnemySkipsPreCommandCompliance(desc.unit)&&key&&previous.has(key)){
-      // EARTHROUND0 does not run complianceParameter nor BATTLE_AttReverse:
-      // preserve the exact previous FIX attribute snapshot.
+    if(key&&sourcePreCommandKeySkipsCompliance(key)&&previous.has(key)){
       next.set(key,previous.get(key));
       continue;
     }
@@ -1898,6 +1902,7 @@ function sourceClearPetBattleCommand(targetDesc,type){
   battlePetGuardIds.delete(targetDesc.pet.id);
   battlePetNoGuardStates.delete(targetDesc.pet.id);
   sourceCancelPetCharge(targetDesc.pet);
+  if(battlePetEarthRoundStates.has(targetDesc.pet.id))battlePetEarthRoundStates.delete(targetDesc.pet.id);
 }
 function sourcePlayerPetGuardCommand(pet){
   return !!pet&&petIsBattleActive(pet)&&petIsAlive(pet)&&battlePetGuardIds.has(pet.id);
@@ -2119,22 +2124,29 @@ function petBattleView(pet){
   const stone=battleStatusActive(desc,'stone');
   const drunk=battleStatusActive(desc,'drunk');
   const weaken=battleWeakenRoundActive(desc);
-  const attackBase=weaken?Math.trunc(n(combat?.attack)*.8):n(combat?.attack);
-  const defenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
-  const quickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
+  const earth=battlePetEarthRoundStates.get(pet.id)||null;
+  const frozen=earth?.snapshot||null;
+  const normalAttackBase=weaken?Math.trunc(n(combat?.attack)*.8):n(combat?.attack);
+  const normalDefenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
+  const normalQuickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
   const powerMod=battlePetPowerMods.get(pet.id)||null;
   const noGuard=battlePetNoGuardStates.get(pet.id)||null;
-  const attack=powerMod&&Number.isFinite(Number(powerMod.attack))?Math.trunc(Number(powerMod.attack)):attackBase;
-  const defense=powerMod&&Number.isFinite(Number(powerMod.defense))?Math.trunc(Number(powerMod.defense)):defenseBase;
+  const attack=frozen?Math.trunc(n(frozen.attack))
+    :(powerMod&&Number.isFinite(Number(powerMod.attack))?Math.trunc(Number(powerMod.attack)):normalAttackBase);
+  const defense=frozen?Math.trunc(n(frozen.defense))
+    :(powerMod&&Number.isFinite(Number(powerMod.defense))?Math.trunc(Number(powerMod.defense)):normalDefenseBase);
   const fixedToughBase=pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh);
+  const fixedTough=frozen?Number(frozen.fixedTough):weaken?Math.trunc(fixedToughBase*.8):fixedToughBase;
+  const fixedDex=frozen?Number(frozen.fixedDex):normalQuickBase;
+  const workQuickBase=frozen?Number(frozen.workQuickBase??frozen.fixedDex??frozen.quick):normalQuickBase;
+  const elements=frozen?.elements?Object.assign({},frozen.elements):battleElementsForDesc(desc);
   return {
     type:'pet',attack,defense,stone,
     duckBonus:n(noGuard?.duckBonus),counterBonus:n(noGuard?.counterBonus),
-    fixedTough:weaken?Math.trunc(fixedToughBase*.8):fixedToughBase,
-    fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
+    fixedTough,fixedDex,workQuickBase,quick:battleDrunkQuick(desc,workQuickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     canMove:battleStatusCanMove(desc),
-    level:Math.max(1,Math.trunc(n(pet.level))),elements:battleElementsForDesc(desc)
+    level:Math.max(1,Math.trunc(n(pet.level))),elements
   };
 }
 function enemyBattleView(unit){
@@ -2700,27 +2712,20 @@ function enemyEscapeAttempt(unit){
   return Object.assign({escaped:false,battleEnded:false},c);
 }
 function enemyChooseTarget(unit){
-  const spec=enemyAiAttackSpec(unit);
-  const all=[];
+  const spec=enemyAiAttackSpec(unit),all=[];
   if(state.hp>0)all.push(battleTargetSnapshot('player'));
   const pet=activePet();
-  if(pet&&petIsBattleActive(pet))all.push(battleTargetSnapshot('pet',pet));
+  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))all.push(battleTargetSnapshot('pet',pet));
   if(!all.length)return null;
-
   let candidates;
   if(spec.targetType===2)candidates=all.filter(x=>x.kind==='player');
   else if(spec.targetType===3)candidates=all.filter(x=>x.kind==='pet');
   else if(spec.targetType===4){
-    // 單人放置版只有玩家是 party leader；原碼另有 1/3 機率把非 leader 加進候選。
     candidates=all.filter(x=>x.kind==='player');
     for(const x of all)if(x.kind!=='player'&&cRand(0,2)===0)candidates.push(x);
   }else candidates=all.slice();
   if(!candidates.length)candidates=all.slice();
-
-  if(spec.selectMode===1||candidates.length===1){
-    return candidates[cRand(0,candidates.length-1)];
-  }
-
+  if(spec.selectMode===1||candidates.length===1)return candidates[cRand(0,candidates.length-1)];
   let selected=candidates[0];
   const attr=spec.selectMode===7?enemySubdueAttribute(unit):0;
   const value=x=>{
@@ -2734,15 +2739,13 @@ function enemyChooseTarget(unit){
     const cur=value(candidates[i]),top=value(selected);
     if((spec.selectMode===3||spec.selectMode===6)?cur<top:cur>top)selected=candidates[i];
   }
-
-  // _ENEMY_ATTACK_AI：HP/STR/DEX/屬性選擇仍依 rn 有機率改成隨機目標。
   if(cRand(0,spec.rn)===0)return candidates[cRand(0,candidates.length-1)];
   return selected;
 }
 function enemyActorTarget(actor,unit){
   if(actor?.targetKind==='pet'){
     const pet=state.petBox.find(p=>p.id===actor.targetPetId);
-    if(pet&&petIsBattleActive(pet))return battleTargetSnapshot('pet',pet);
+    if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))return battleTargetSnapshot('pet',pet);
   }else if(actor?.targetKind==='player'&&state.hp>0){
     return battleTargetSnapshot('player');
   }
@@ -3158,13 +3161,13 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     target=next;
   }
 }
-function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult){
+function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,options={}){
   if(!pet||!unit||!enemy||!petIsBattleActive(pet)||unit.hp<=0)return;
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian||primaryResult?.sourcePetGuardCommand)return;
-
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
-  for(let depth=0;depth<5;depth++){
+  const maxDepth=Number.isFinite(Number(options.maxDepth))?clamp(Math.trunc(Number(options.maxDepth)),0,5):5;
+  for(let depth=0;depth<maxDepth;depth++){
     if(!enemy||!petIsBattleActive(pet)||unit.hp<=0)break;
     if(counterer==='enemy'&&!unit.counterEligibleThisTurn)break;
     const counterDesc=counterer==='pet'?{kind:'pet',pet,petId:pet.id}:{kind:'enemy',unit,unitId:unit.id};
@@ -3174,37 +3177,28 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult)
     if(!countererView||!targetView)break;
     const chk=battleCounterCheck(countererView,targetView);
     if(!chk.success)break;
-
     const r=counterScaledResult(countererView,targetView);
     if(counterer==='pet'){
-      if(r.dodged){
-        addLog(unit.name+' 閃避了 '+pet.name+' 的反擊。','pet');
-      }else if(r.miss){
-        addLog(pet.name+' 的反擊沒有造成傷害。','pet');
-      }else{
+      if(r.dodged)addLog(unit.name+' 閃避了 '+pet.name+' 的反擊。','pet');
+      else if(r.miss)addLog(pet.name+' 的反擊沒有造成傷害。','pet');
+      else{
         unit.hp=Math.max(0,unit.hp-r.damage);
         addLog(pet.name+' 反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
       }
     }else{
-      if(r.dodged){
-        addLog(pet.name+' 閃避了 '+unit.name+' 的反擊。','pet');
-      }else if(r.miss){
-        addLog(unit.name+' 對 '+pet.name+' 的反擊沒有造成傷害。');
-      }else{
+      if(r.dodged)addLog(pet.name+' 閃避了 '+unit.name+' 的反擊。','pet');
+      else if(r.miss)addLog(unit.name+' 對 '+pet.name+' 的反擊沒有造成傷害。');
+      else{
         const before=n(pet.hp);
         pet.hp=Math.max(0,before-r.damage);
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
         if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
       }
     }
-
     if(enemy)syncEnemyTarget();
     if(!petIsBattleActive(pet)||unit.hp<=0)break;
     if(r.miss||r.critical)break;
-
-    const next=counterer;
-    counterer=target;
-    target=next;
+    const next=counterer;counterer=target;target=next;
   }
 }
 function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
@@ -3322,7 +3316,7 @@ function sourceInitialDodgeOnly(attacker,defender,options={}){
 function sourcePlayerGuardianPetForAttack(unit){
   if(!battlePlayerGuardianPetId)return null;
   const pet=state?.petBox?.find?.(p=>p.id===battlePlayerGuardianPetId)||null;
-  if(!pet||!petIsBattleActive(pet)||!petIsAlive(pet))return null;
+  if(!pet||!petIsBattleActive(pet)||!petIsAlive(pet)||sourcePlayerPetHidden(pet))return null;
 
   // fixed BATTLE_GuardianCheck：投擲/遠距武器直接無法忠犬代擋。
   const wt=Math.trunc(n(unit?.weaponType));
@@ -3866,11 +3860,47 @@ function performEnemyBattleModel(actor,unit,options,meta){
   // 雖各自跑 AttackSeq / DamageSub，但整個 command 不進 battle.c 的普通 Counter loop。
   return {kind:'skill',skillId:actor.skillId,spec,results};
 }
+function sourcePlayerPetHidden(pet){return !!pet&&battlePetHiddenIds.has(pet.id)}
+function sourceRevealPetForDirectAttack(pet,reason=null){
+  if(!pet||!battlePetHiddenIds.has(pet.id))return false;
+  battlePetHiddenIds.delete(pet.id);
+  if(reason)addLog(pet.name+' '+reason+'，重新現身。','pet');
+  return true;
+}
+function sourcePetEarthRoundCommandActive(pet){
+  const st=pet?battlePetEarthRoundStates.get(pet.id):null;
+  return !!(st&&!st.interrupted);
+}
+function sourcePetEarthRoundTargetDesc(pet){
+  const st=pet?battlePetEarthRoundStates.get(pet.id):null;
+  if(!st)return null;
+  const unit=Array.isArray(enemy?.units)?enemy.units.find(u=>u.id===st.targetUnitId):null;
+  return {kind:'enemy',unit:unit||null,unitId:st.targetUnitId||null};
+}
+function sourceInterruptPetEarthRound(pet,reason=null){
+  const st=pet?battlePetEarthRoundStates.get(pet.id):null;
+  if(!st||st.interrupted)return st||null;
+  st.interrupted=true;
+  if(reason)addLog(pet.name+' 的地球一周 command 被'+reason+'覆寫；隱身旗標會保留到真正直接攻擊重新設回。','pet');
+  return st;
+}
+function sourceFinishPetEarthRoundOverride(pet,result){
+  const st=pet?battlePetEarthRoundStates.get(pet.id):null;
+  if(st?.interrupted)battlePetEarthRoundStates.delete(pet.id);
+  return result;
+}
+function sourceCancelPetEarthRoundFromStatus(statusTurn){
+  if(statusTurn?.desc?.kind!=='pet'||!statusTurn.desc.pet)return false;
+  const pet=statusTurn.desc.pet;
+  if(!battlePetEarthRoundStates.has(pet.id))return false;
+  battlePetEarthRoundStates.delete(pet.id);
+  return true;
+}
 function enemyPlayerSideLivingTargets(){
   const list=[];
   if(state.hp>0)list.push({kind:'player'});
   const pet=activePet();
-  if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
+  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))list.push({kind:'pet',pet,petId:pet.id});
   return list;
 }
 function enemySkillTargetResult(unit,chosen,options={},attackerOverride=null){
@@ -5300,7 +5330,7 @@ function sourcePetRandomSideTarget(side,pet){
   // 後續 normal attack 會因 defNo==attackNo 而 NoAction。
   const list=[];
   if(state.hp>0)list.push({kind:'player'});
-  if(pet&&petIsBattleActive(pet))list.push({kind:'self',pet,petId:pet.id});
+  if(pet&&petIsBattleActive(pet)&&!sourcePlayerPetHidden(pet))list.push({kind:'self',pet,petId:pet.id});
   return list.length?list[cRand(0,list.length-1)]:null;
 }
 function sourcePetRandomEnemyTarget(){
@@ -5422,6 +5452,8 @@ function sourcePerformPetChargeState(pet,options={},targetOverride=undefined){
     return {handled:true,charging:true,remaining:charge.remaining};
   }
 
+  sourceRevealPetForDirectAttack(pet);
+
   // BATTLE_Charge release 使用「釋放當輪」的 FIXSTR，再加 high(COM3)%；
   // 玩家寵目前沒有可證明的 WORKMODATTACK 來源，因此維持 0，不猜裝備/BUFF 值。
   const base=petBattleView(pet);
@@ -5450,12 +5482,65 @@ function sourcePerformPetChargeState(pet,options={},targetOverride=undefined){
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
   addLog(pet.name+' 釋放 '+charge.label+'（FIXSTR 攻擊 '+baseAttack+' → '+releaseAttack+'，攻擊修正 '+charge.attackPct+'%）。','pet');
 
-  // fixed direct-attack group 對 CHARGE_OK 會在 BATTLE_Attack() 前先把 COM1 改成 NONE；
-  // 後面的 BATTLE_Counter() 只接受 ATTACK / NOGUARD，因此此釋放不進普通 Counter chain。
+  // k=0 still lets the defender counter; k=1 would ask this Pet to counter-counter,
+  // but CHARGE_OK already changed its COM1 to NONE.
+  if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r,{maxDepth:1});
   return {
     handled:true,released:true,skillId:charge.skillId,targetUnitId:target.id,
     actualTargetUnitId:actual?.id||null,baseAttack,releaseAttack,attackPct:charge.attackPct,r
   };
+}
+
+function sourceStartPetEarthRound(pet,action){
+  const meta=action?.meta;
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  const target=action?.targetDesc?.kind==='enemy'?action.targetDesc:null;
+  const view=petBattleView(pet);
+  if(!view)return {handled:true,missingPet:true};
+  const snapshot=Object.assign({},view,{
+    elements:Object.assign({},view.elements||{}),
+    workQuickBase:Number(view.workQuickBase??view.fixedDex??view.quick)
+  });
+  battlePetEarthRoundStates.set(pet.id,{
+    hiddenCommand:true,interrupted:false,attackPct,
+    targetUnitId:target?.unitId||target?.unit?.id||null,
+    skillId:action?.skillId??null,skillSlot:action?.slot??null,
+    label:meta?.n||'地球一周',snapshot
+  });
+  battlePetHiddenIds.add(pet.id);
+  battlePetGuardIds.delete(pet.id);
+  battlePetNoGuardStates.delete(pet.id);
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'地球一周')+'」，繞到敵人背後暫時消失。','pet');
+  return {handled:true,skillId:action?.skillId,earthRound:true,hidden:true,attackPct};
+}
+function sourcePerformPetEarthRoundState(pet,options={},targetOverride=undefined){
+  const st=pet?battlePetEarthRoundStates.get(pet.id):null;
+  if(!pet||!st||st.interrupted)return {handled:false};
+  if(targetOverride!==undefined){
+    st.targetUnitId=targetOverride?.kind==='enemy'?(targetOverride.unitId||targetOverride.unit?.id||null):null;
+  }
+  sourceRevealPetForDirectAttack(pet,'從背後現身');
+  st.hiddenCommand=false;st.releasing=true;
+  const list=targetableEnemyUnits();
+  let target=st.targetUnitId?list.find(u=>u.id===st.targetUnitId):null;
+  if(!target)target=list.length?list[cRand(0,list.length-1)]:null;
+  const multiplier=1+n(st.attackPct)/100;
+  if(!target){
+    battlePetEarthRoundStates.delete(pet.id);
+    addLog(pet.name+' 現身完成 '+st.label+'，但已沒有可攻擊目標。','pet');
+    return {handled:true,released:true,noTarget:true,multiplier};
+  }
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
+    damageMultiplier:multiplier
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  addLog(pet.name+' 從背後完成 '+st.label+'（來源最終傷害 ×'+multiplier.toFixed(2)+'）。','pet');
+  if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r,{maxDepth:1});
+  if(battlePetEarthRoundStates.get(pet.id)===st)battlePetEarthRoundStates.delete(pet.id);
+  return {handled:true,released:true,skillId:st.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,attackPct:st.attackPct,multiplier,r};
 }
 
 function sourcePetLoyalCheck(actor,pet,intent){
@@ -5503,7 +5588,9 @@ function sourcePetLoyalCheck(actor,pet,intent){
       // fixed 只覆寫 COM2；若原 COM1 是 CHARGE，就不能把它錯改成普通 ATTACK。
       action:type===1
         ?{kind:'none',reason:'self-or-guard'}
-        :(intent?.commandKind==='charge'?{kind:'charge',targetDesc}:{kind:'attack',targetDesc}),
+        :(intent?.commandKind==='charge'
+          ?{kind:'charge',targetDesc}
+          :(intent?.commandKind==='earthround'?{kind:'earthround',targetDesc}:{kind:'attack',targetDesc})),
       intent
     };
   }
@@ -5526,6 +5613,7 @@ function sourcePetLoyalCheck(actor,pet,intent){
 }
 function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
   if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  sourceRevealPetForDirectAttack(pet);
   if(!targetDesc){
     addLog(pet.name+' 沒有可攻擊的目標。','pet');
     return {handled:true,noTarget:true};
@@ -5605,6 +5693,7 @@ function sourcePetApplyStatusAttackHit(pet,targetDesc,r,type,turn,label){
   return {attempted:true,check,applied,type,turn,storedTurns};
 }
 function sourcePerformPetStatusSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
   const target=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
   if(!target||n(target.hp)<=0){
@@ -5642,6 +5731,7 @@ function sourcePerformPetStatusSkill(pet,action,options={}){
 }
 
 function sourcePerformPetGuardianSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
   const attackPct=sourcePetStatusSkillAttackPct(meta);
   const base=petBattleView(pet);
@@ -5688,6 +5778,7 @@ function sourcePetEnemyTargetFromAction(action){
   return list.length?list[cRand(0,list.length-1)]:null;
 }
 function sourcePerformPetContinuationSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
   const m=String(meta?.o||'').match(/^\s*(\d+)/);
   let count=m?Math.trunc(Number(m[1])):1;
@@ -5728,6 +5819,7 @@ function sourcePerformPetContinuationSkill(pet,action,options={}){
   return {handled:true,skillId:action?.skillId,hits,count,lastResult};
 }
 function sourcePerformPetMightySkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
   const multMatch=String(meta?.o||'').match(/倍\s*([0-9.]+)/);
   const duckMatch=String(meta?.o||'').match(/回避\s*([0-9.]+)/);
@@ -5755,6 +5847,7 @@ function sourcePerformPetMightySkill(pet,action,options={}){
 }
 
 function sourcePerformPetPowerBalanceSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
   const defensePct=enemySignedSkillPercent(meta?.o,'防%');
@@ -5868,128 +5961,87 @@ function sourcePerformPetNoGuardSkill(pet,action){
 }
 
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
-  const action=loyalty?.action||{kind:'none'};
-  const ai=loyalty?.ai;
-  const roll=loyalty?.roll;
-  if(loyalty?.mode==='targetrandom'){
-    addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
-  }else if(loyalty?.mode==='randomact'){
-    addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機行動。','pet');
-  }else if(loyalty?.mode==='ownerattack'){
-    addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），轉頭攻擊主人。','bad');
-  }else if(loyalty?.mode==='enemyattack'){
-    addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），仍改為隨機攻擊敵方。','pet');
-  }else if(loyalty?.mode==='escape'){
+  const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
+  if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
+  else if(loyalty?.mode==='randomact')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機行動。','pet');
+  else if(loyalty?.mode==='ownerattack')addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），轉頭攻擊主人。','bad');
+  else if(loyalty?.mode==='enemyattack')addLog(pet.name+' 忠誠過低（FIXAI '+ai+'，roll '+roll+'），仍改為隨機攻擊敵方。','pet');
+  else if(loyalty?.mode==='escape'){
     sourceCancelPetCharge(pet);
+    battlePetEarthRoundStates.delete(pet.id);battlePetHiddenIds.delete(pet.id);
     battlePetOutIds.add(pet.id);
     if(state.activePetId===pet.id)state.activePetId=null;
     state.charm=Math.max(0,Math.trunc(n(state.charm))-1);
     addLog(pet.name+' 因忠誠過低離開本場戰鬥並取消出戰；魅力 -1。','bad');
     return {handled:true,escaped:true};
   }
-
-  // 除 TARGETRANDOM 外，這些 bad-AI mode 都會覆寫 COM1，因此會中斷既有 CHARGE。
   if(loyalty?.mode==='randomact'||loyalty?.mode==='ownerattack'||loyalty?.mode==='enemyattack'){
     sourceCancelPetCharge(pet);
+    sourceInterruptPetEarthRound(pet,'低忠誠行動');
   }
-
-  if(action.kind==='charge'){
-    return sourcePerformPetChargeState(pet,options,action.targetDesc);
-  }
-  if(action.kind==='attack'){
-    return sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true});
-  }
+  const finish=result=>sourceFinishPetEarthRoundOverride(pet,result);
+  if(action.kind==='charge')return finish(sourcePerformPetChargeState(pet,options,action.targetDesc));
+  if(action.kind==='earthround')return finish(sourcePerformPetEarthRoundState(pet,options,action.targetDesc));
+  if(action.kind==='attack')return finish(sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true}));
   if(action.kind==='none'){
-    if(action.sourceUseFailed){
-      addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
-    }else{
-      addLog(pet.name+' 本回合沒有行動。','pet');
-    }
-    return {handled:true,none:true};
+    if(action.sourceUseFailed)addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
+    else addLog(pet.name+' 本回合沒有行動。','pet');
+    return finish({handled:true,none:true});
   }
   if(action.kind==='blocked'){
     addLog(pet.name+' 的原 C 隨機技能流程碰到未定義的 PetSkill array 讀取；不猜記憶體結果，本回合不行動。','pet');
-    return {handled:true,sourceUndefinedBoundary:true};
+    return finish({handled:true,sourceUndefinedBoundary:true});
   }
   if(action.kind==='skill'){
-    const meta=action.meta;
-    if(meta?.f==='PETSKILL_None'){
-      addLog(pet.name+' 隨機使用「'+(meta.n||'待機')+'」，本回合不行動。','pet');
-      return {handled:true,skillId:action.skillId,wait:true};
-    }
-    if(meta?.f==='PETSKILL_NormalAttack'){
-      addLog(pet.name+' 隨機使用「'+(meta.n||'攻擊')+'」。','pet');
-      return sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true,skillId:action.skillId});
-    }
-    if(meta?.f==='PETSKILL_StatusChange'){
-      addLog(pet.name+' 隨機使用「'+(meta.n||'狀態攻擊')+'」。','pet');
-      return sourcePerformPetStatusSkill(pet,action,options);
-    }
-    if(meta?.f==='PETSKILL_ChargeAttack'){
-      addLog(pet.name+' 隨機使用「'+(meta.n||'突擊')+'」。','pet');
-      return sourceStartPetCharge(pet,action);
-    }
-    if(meta?.f==='PETSKILL_Guardian'){
-      return sourcePerformPetGuardianSkill(pet,action,options);
-    }
-    if(meta?.f==='PETSKILL_NormalGuard'){
-      return sourcePerformPetNormalGuard(pet,action);
-    }
-    if(meta?.f==='PETSKILL_ContinuationAttack'){
-      return sourcePerformPetContinuationSkill(pet,action,options);
-    }
-    if(meta?.f==='PETSKILL_Mighty'){
-      return sourcePerformPetMightySkill(pet,action,options);
-    }
-    if(meta?.f==='PETSKILL_PowerBalance'){
-      return sourcePerformPetPowerBalanceSkill(pet,action,options);
-    }
-    if(meta?.f==='PETSKILL_GuardBreak'){
-      return sourcePerformPetGuardBreakSkill(pet,action,options);
-    }
-    if(meta?.f==='PETSKILL_NoGuard'){
-      return sourcePerformPetNoGuardSkill(pet,action);
-    }
-    addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');
-    return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
+    const meta=action.meta;let result;
+    if(meta?.f==='PETSKILL_None'){addLog(pet.name+' 隨機使用「'+(meta.n||'待機')+'」，本回合不行動。','pet');result={handled:true,skillId:action.skillId,wait:true};}
+    else if(meta?.f==='PETSKILL_NormalAttack'){addLog(pet.name+' 隨機使用「'+(meta.n||'攻擊')+'」。','pet');result=sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true,skillId:action.skillId});}
+    else if(meta?.f==='PETSKILL_StatusChange'){addLog(pet.name+' 隨機使用「'+(meta.n||'狀態攻擊')+'」。','pet');result=sourcePerformPetStatusSkill(pet,action,options);}
+    else if(meta?.f==='PETSKILL_ChargeAttack'){addLog(pet.name+' 隨機使用「'+(meta.n||'突擊')+'」。','pet');result=sourceStartPetCharge(pet,action);}
+    else if(meta?.f==='PETSKILL_EarthRound')result=sourceStartPetEarthRound(pet,action);
+    else if(meta?.f==='PETSKILL_Guardian')result=sourcePerformPetGuardianSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_NormalGuard')result=sourcePerformPetNormalGuard(pet,action);
+    else if(meta?.f==='PETSKILL_ContinuationAttack')result=sourcePerformPetContinuationSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Mighty')result=sourcePerformPetMightySkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_PowerBalance')result=sourcePerformPetPowerBalanceSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_GuardBreak')result=sourcePerformPetGuardBreakSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_NoGuard')result=sourcePerformPetNoGuardSkill(pet,action);
+    else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
+    return finish(result);
   }
-  return {handled:true,none:true};
+  return finish({handled:true,none:true});
 }
 function sourcePetPreCommandAction(actor,statusTurn,options={}){
   if(actor?.kind!=='pet')return {handled:false};
   const pet=activePet();
   if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))return {handled:true,missingPet:true};
-
   const confusionIntent=statusTurn?.confusionAttack?sourcePetConfusionIntent(statusTurn):null;
   const charge=battlePetChargeStates.get(pet.id)||null;
-
-  // fixed StatusSeq 的 CONFUSION 發作會把 COM1 直接改成 ATTACK；
-  // 這發生在 LoyaltyCheck 前，所以原本的 CHARGE 在這一刻就被蓋掉。
+  const earth=battlePetEarthRoundStates.get(pet.id)||null;
   if(confusionIntent&&charge)sourceCancelPetCharge(pet,'混亂');
-
-  // V0.93：Surprise 的 NONE 可被 StatusSeq 的 confusion ATTACK 覆蓋；
-  // 但 fixed BATTLE_PetLoyalCheck 本身位於「非 Surprise side」分支，所以此時不再做忠誠判定。
+  if(confusionIntent&&earth)sourceInterruptPetEarthRound(pet,'混亂');
   if(sourceSurpriseSkipAction(actor)){
     if(confusionIntent){
-      return sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true,surpriseOverride:true});
+      const result=sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true,surpriseOverride:true});
+      return sourceFinishPetEarthRoundOverride(pet,result);
     }
     return {handled:true,surpriseSkip:true};
   }
-
   const liveCharge=battlePetChargeStates.get(pet.id)||null;
+  const earthNow=battlePetEarthRoundStates.get(pet.id)||null;
+  const liveEarth=earthNow&&!earthNow.interrupted?earthNow:null;
   const intent=confusionIntent
     ||(liveCharge?{confusion:false,commandKind:'charge',targetDesc:sourcePetChargeTargetDesc(pet)}
-    :{confusion:false,commandKind:'attack',targetDesc:sourcePetEnemyTargetDesc()});
+    :(liveEarth?{confusion:false,commandKind:'earthround',targetDesc:sourcePetEarthRoundTargetDesc(pet)}
+    :{confusion:false,commandKind:'attack',targetDesc:sourcePetEnemyTargetDesc()}));
   const loyalty=sourcePetLoyalCheck(actor,pet,intent);
-  if(loyalty.changed){
-    return Object.assign({loyalty},sourcePerformPetLoyalAction(pet,loyalty,options));
-  }
+  if(loyalty.changed)return Object.assign({loyalty},sourcePerformPetLoyalAction(pet,loyalty,options));
   if(confusionIntent){
-    return Object.assign({loyalty},sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true}));
+    const result=sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true});
+    return Object.assign({loyalty},sourceFinishPetEarthRoundOverride(pet,result));
   }
-  if(liveCharge){
-    return Object.assign({loyalty},sourcePerformPetChargeState(pet,options));
-  }
+  if(liveCharge)return Object.assign({loyalty},sourcePerformPetChargeState(pet,options));
+  if(liveEarth)return Object.assign({loyalty},sourcePerformPetEarthRoundState(pet,options));
   return {handled:false,loyalty};
 }
 function performEnemyAbduct(actor,unit,options,meta){
@@ -6564,6 +6616,7 @@ function captureTurn(manual=false){
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
+      sourceCancelPetEarthRoundFromStatus(statusTurn);
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
         statusTurn.desc.unit.chargeState=null;
         statusTurn.desc.unit.counterEligibleThisTurn=false;
@@ -6654,6 +6707,7 @@ function captureTurn(manual=false){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return captured
       }
+      sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
@@ -6773,7 +6827,7 @@ function sourceComboActorInfo(actor,playerCommand='attack'){
     return {
       // fixed BATTLE_IsCharge / ComboCheck：COM_S_CHARGE 不是 COM_ATTACK，
       // 蓄力中的 Pet 不能被當成普通攻擊候選拉進合擊。
-      normalAttack:!!(pet&&petIsBattleActive(pet)&&!battlePetChargeStates.has(pet.id)),
+      normalAttack:!!(pet&&petIsBattleActive(pet)&&!battlePetChargeStates.has(pet.id)&&!sourcePetEarthRoundCommandActive(pet)),
       move:!!(desc&&battleStatusCanMove(desc)),
       throwWeapon:false,side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
     };
@@ -7111,6 +7165,7 @@ function attackTurn(){
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
+      sourceCancelPetEarthRoundFromStatus(statusTurn);
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
         statusTurn.desc.unit.chargeState=null;
         statusTurn.desc.unit.counterEligibleThisTurn=false;
@@ -7170,6 +7225,7 @@ function attackTurn(){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
       }
+      sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
@@ -7204,6 +7260,7 @@ function guardTurn(){
     const statusTurn=processBattleStatusTurn(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
+      sourceCancelPetEarthRoundFromStatus(statusTurn);
       if(statusTurn.desc?.kind==='enemy'&&statusTurn.desc.unit?.chargeState){
         statusTurn.desc.unit.chargeState=null;
         statusTurn.desc.unit.counterEligibleThisTurn=false;
@@ -7256,6 +7313,7 @@ function guardTurn(){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
       }
+      sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
