@@ -8293,3 +8293,58 @@ Skill 633「群蝠四竄」有 5 個正權重 Enemy：
 - source unregistered：2
 - dispatcher gaps：0
 - save schema：21
+
+
+## V0.87 DamageToHp2 critical 30% int truncation
+
+V0.87 校正正權重 Skill 659「T浴血狂襲」的會心率強化邊界。
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，
+`gmsv/src/battle/battle_event.c` 的 `BATTLE_AttackSeq()`。
+
+來源先取得整數會心門檻，再做：
+
+```c
+perCri = perCri + (perCri*0.3);
+if( RAND(1,10000) < perCri )
+```
+
+`perCri` 是 `int`，所以 +30% 指派回去時會立刻截斷。
+
+例如 base `101`：
+
+- fixed C：`101 + 30.3 -> 131`，判定 `RAND < 131`
+- V0.86 web：`131.3`，判定 `RAND < 131.3`
+
+因此 RAND=131 在舊 web 會多出一次來源不存在的成功邊界。
+
+V0.87 改成：
+
+```js
+const criticalRaw=Math.trunc(baseCriticalRaw*criticalChanceMultiplier);
+```
+
+仍保留來源「先 cap 10000、後 ×1.3」的順序，不重新 cap。
+
+### fixed data 可達性
+
+- Skill 659「T浴血狂襲」
+- option `100`
+- Enemy 5546
+- positive weight 1
+
+### V0.87 regression
+
+- `game.js` syntax：PASS
+- DamageToHp2 +30% critical 後立即 int truncation
+- critical RAND 維持嚴格 `<`
+- 不重新 cap 10000
+- V0.86 BatFly no-wake 保留
+- V0.85 Modifyattack semantics 保留
+- V0.84 STONE / REGRET ordering 保留
+- positive Enemy PetSkill coverage：158
+- handled：134
+- source missing：22
+- source unregistered：2
+- dispatcher gaps：0
+- save schema：21

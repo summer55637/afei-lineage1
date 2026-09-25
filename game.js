@@ -2748,9 +2748,10 @@ function resolveNormalAttack(attacker,defender,options={}){
   const baseCriticalRaw=battleCriticalChance(attacker,defender);
   const criticalChanceMultiplier=Number.isFinite(Number(options.criticalChanceMultiplier))
     ?Number(options.criticalChanceMultiplier):1;
-  // 原 DamageToHp2 是在 BATTLE_CriticalCheck() 已完成 10000 上限後，再把 perCri ×1.3；
-  // 因此這裡不重新 cap，保留 >10000 時必定會心的來源行為。
-  const criticalRaw=baseCriticalRaw*criticalChanceMultiplier;
+  // 原 DamageToHp2 是在 BATTLE_CriticalCheck() 已完成 10000 上限後，再做：
+  //   int perCri = perCri + (perCri * 0.3)
+  // assignment 回 int 會立刻截斷；同時不重新 cap，保留 >10000 時必定會心的來源行為。
+  const criticalRaw=Math.trunc(baseCriticalRaw*criticalChanceMultiplier);
   const critical=cRand(1,10000)<criticalRaw;
   let damage=battleDamageCore(attacker,defender,options);
   if(critical&&Math.trunc(n(attacker?.weaponType))!==4){
