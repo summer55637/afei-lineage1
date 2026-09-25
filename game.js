@@ -3396,11 +3396,21 @@ function enemyChooseTarget(unit){
   if(spec.targetType===2)candidates=all.filter(x=>x.kind==='player');
   else if(spec.targetType===3)candidates=all.filter(x=>x.kind==='pet');
   else if(spec.targetType===4){
-    candidates=all.filter(x=>x.kind==='player');
-    for(const x of all)if(x.kind!=='player'&&cRand(0,2)===0)candidates.push(x);
+    // fixed _ENEMY_ATTACK_AI / B_AI_NORMAL_TARGET_LEADER:
+    // every non-leader BATTLE_ENTRY independently consumes RAND(0,2) and is accepted only on 0.
+    // This Web has no player-party system, so the solo player and owned Pet both correspond to
+    // CHAR_PARTY_NONE here; neither may be promoted to "leader" just because the player is solo.
+    candidates=[];
+    for(const x of all)if(cRand(0,2)===0)candidates.push(x);
   }else candidates=all.slice();
+
+  // Source loops once more with TARGET_ALL when the requested target class produced no entry.
+  // The fallback itself consumes no extra target-filter RNG.
   if(!candidates.length)candidates=all.slice();
-  if(spec.selectMode===1||candidates.length===1)return candidates[cRand(0,candidates.length-1)];
+
+  // B_AI_NORMAL_SELECT_RANDOM only consumes RAND(0,cnt-1).
+  if(spec.selectMode===1)return candidates[cRand(0,candidates.length-1)];
+
   let selected=candidates[0];
   const attr=spec.selectMode===7?enemySubdueAttribute(unit):0;
   const value=x=>{
@@ -3414,6 +3424,10 @@ function enemyChooseTarget(unit){
     const cur=value(candidates[i]),top=value(selected);
     if((spec.selectMode===3||spec.selectMode===6)?cur<top:cur>top)selected=candidates[i];
   }
+
+  // Important source RNG order: HP/STR/DEX/attribute selectors do this even when cnt==1.
+  // if(!RAND(0,rn)) target = target[RAND(0,cnt-1)]; else target = top;
+  // Do not early-return a single candidate: RAND(0,rn), and sometimes RAND(0,0), must still be consumed.
   if(cRand(0,spec.rn)===0)return candidates[cRand(0,candidates.length-1)];
   return selected;
 }
@@ -9093,7 +9107,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.30 載入完成：固定 _NEW_PLAYER_CF 創角四圍改為玩家確認，各項 0～20、合計 ≤20；新角色不再猜 5/5/5/5，舊存檔保留既有累積四圍。','good');
+    addLog('V1.31 載入完成：Enemy AI 選目標已對齊 fixed battle_ai.c 的單候選 RAND(0,rn) 時序與 TARGET_LEADER 非隊長抽選。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
