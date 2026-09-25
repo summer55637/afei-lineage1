@@ -10173,3 +10173,58 @@ V1.06 regression：
 - V1.05 Continuation/Mighty 保留
 - V1.04 NormalGuard 保留
 - save schema 21
+
+
+## V1.07 low-loyalty Pet GuardBreak 3
+
+V1.07 接回 wild Lv1 實際可捕獲清單中的 skill 3「破除防禦」（布伊比）。
+
+fixed `PETSKILL_GuardBreak()` 設 `COM_S_GBREAK`；`BATTLE_S_GBreak()` 有兩條很不直覺的來源行為。
+
+### 原目標沒有 GUARD
+
+source 並不是一開始就 NoAction：
+
+1. 先完整呼叫 `BATTLE_AttackSeq()`。
+2. 原 defindex 若不是有效 `COM_GUARD && !CONFUSION`：
+   `damage=0; iWork=MISS`。
+3. `BATTLE_S_GBreak()` 對 MISS 回 `TRUE`。
+4. battle.c 外層因此仍用 `ContFlg=TRUE` 進普通 Counter loop。
+
+所以低忠誠 RANDOMACT 拿破防打普通攻擊中的 Enemy 時：
+
+- Pet 本身造成 0。
+- AttackSeq 的 dodge / critical / Guardian 等 RNG 仍先被消耗。
+- Enemy 若具備反擊條件，仍可能反擊 Pet。
+
+V1.07 保留這個怪行為。
+
+### 原目標正在 GUARD
+
+`BATTLE_DuckCheck()` 對 COM_GUARD 直接 FALSE。
+而 opt=GBREAK 在 AttackSeq 中明確跳過普通 `BATTLE_GuardAdjust()`，所以破防命中不再吃防禦減傷。
+
+### Enemy Guardian 的 calc-only bug
+
+`BATTLE_S_GBreak()` 傳 `Guardian=-1`，所以 AttackSeq 可以找到 Enemy Guardian；
+但 caller 沒有像 `BATTLE_Attack()` 一樣更新自己的 defindex。
+
+因此 Guardian 成功時：
+
+- critical / DamageCalc 用 Guardian。
+- 0 damage 可因 GuardianIndex 被強制成 1。
+- 最後 DamageSub 仍扣原本正在 GUARD 的 Enemy。
+- 原 GUARD target 使函式回 FALSE，因此不進 Counter。
+
+V1.07 regression：
+
+- game.js syntax PASS
+- skill 3 dispatcher
+- non-GUARD target：AttackSeq RNG + forced 0/MISS
+- non-GUARD target：ContFlg TRUE 可進 Counter
+- GUARD target：no dodge
+- GUARD target：GBREAK skips GuardAdjust
+- Enemy Guardian：calc-only / HP stays original target
+- GUARD path no ordinary Counter
+- V1.06 PowerBalance 保留
+- save schema 21

@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.06</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.07</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -169,8 +169,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.06：</b>
-      接回 skill 50/51「背水之戰」：依原 C int 截斷重算 Pet WORKATTACKPOWER／WORKDEFENCEPOWER，攻防修改從技能發動後維持本輪剩餘時間，會實際影響反擊與後續承傷，下一輪 compliance 重建。
+      <b>V1.07：</b>
+      接回 skill 3「破除防禦」：目標非 GUARD 時仍先跑 AttackSeq 再強制 0 傷害，且原 ContFlg 允許敵人反擊；目標 GUARD 時跳過 GuardAdjust，Enemy Guardian 只參與傷害計算、HP 仍扣原目標的老 bug 也保留。
     </article>
   </main>
 

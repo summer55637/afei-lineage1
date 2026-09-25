@@ -5785,6 +5785,63 @@ function sourcePerformPetPowerBalanceSkill(pet,action,options={}){
   };
 }
 
+function sourcePerformPetGuardBreakSkill(pet,action,options={}){
+  const meta=action?.meta;
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'破除防禦')+'」，但沒有可攻擊目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const attackPct=sourcePetStatusSkillAttackPct(meta);
+  const base=petBattleView(pet);
+  const attack=Math.trunc(n(base?.attack))+Math.trunc(Math.trunc(n(base?.attack))*attackPct/100);
+  const attacker=Object.assign({},base,{attack});
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const guarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
+
+  addLog(pet.name+' 隨機使用「'+(meta?.n||'破除防禦')+'」。','pet');
+
+  if(!guarding){
+    // fixed BATTLE_S_GBreak 仍先執行完整 AttackSeq，再由 caller 因原 defindex 非 GUARD
+    // 把 damage=0 / iWork=MISS。這裡先消耗同一套 dodge/critical/damage/Guardian RNG，但不套 HP。
+    resolveAttackToEnemyWithGuardian(attacker,target,{guarding:false});
+    addLog(target.name+' 沒有採取有效防禦；'+(meta?.n||'破除防禦')+' 被原 C 強制視為 MISS、傷害 0。','pet');
+
+    const pseudo={damage:0,dodged:false,critical:false,miss:true,guarded:false};
+    // BATTLE_S_GBreak 在這條路徑回 TRUE，所以外層仍會進 Counter。
+    if(petIsBattleActive(pet)&&target.hp>0){
+      resolvePetEnemyCounterChain('pet',pet,target,pseudo);
+    }
+    return {handled:true,skillId:action?.skillId,targetUnitId:target.id,guardBreakMiss:true,counterEligible:true};
+  }
+
+  // 原 defindex 正在 GUARD：DuckCheck 直接 FALSE。
+  // GuardianCheck 若成功，只在 AttackSeq local defindex 用 Guardian 算 critical/damage；
+  // BATTLE_S_GBreak caller 沒把 defindex 更新，DamageSub 最後仍扣原 GUARD 目標。
+  const guardian=enemyGuardianFor(target,null);
+  const calcTarget=guardian||target;
+  const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),{
+    guarding:false,disableDodge:true
+  });
+  if(guardian&&r.damage<=0){r.damage=1;r.miss=false}
+  r.actualTarget=target;
+  r.originalTarget=target;
+  r.guardBreakTargetGuard=true;
+  if(guardian){
+    r.guardianCalcOnly=guardian;
+    r.guardianPetId=guardian.id;
+    addLog(guardian.name+' 嘗試忠犬代擋破防；依原 BATTLE_S_GBreak 舊 bug，只用其能力計算傷害，HP 仍扣 '+target.name+'。','pet');
+  }
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r);
+  // caller 在原 defindex GUARD 時最後固定 iRet=FALSE，因此不進普通 Counter。
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
+    guarding:true,guardianCalcOnly:guardian?.id||null,attackPct,r
+  };
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'};
   const ai=loyalty?.ai;
@@ -5861,6 +5918,9 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     }
     if(meta?.f==='PETSKILL_PowerBalance'){
       return sourcePerformPetPowerBalanceSkill(pet,action,options);
+    }
+    if(meta?.f==='PETSKILL_GuardBreak'){
+      return sourcePerformPetGuardBreakSkill(pet,action,options);
     }
     addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');
     return {handled:true,skillId:action.skillId,sourceRuntimePending:true};
