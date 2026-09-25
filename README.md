@@ -11926,3 +11926,83 @@ schema27 前只保存 cumulative playerStats，沒有獨立保存原始 creation
 - battle tick 新角色需 creation stats + hometown + elements
 - V1.29 starter Pet / hometown migration 不回退
 - V1.28 setup.cf 1轉／30,000／Item24114 不回退
+
+
+## V1.31 Enemy AI target-selection RNG / TARGET_LEADER
+
+固定來源仍為 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56，本輪直接對照 gmsv/src/battle/battle_ai.c，且 fixed version.h 已開啟 _ENEMY_ATTACK_AI。
+
+### Single-candidate RNG order
+
+BATTLE_ai_normal 對一般隨機選目標（select mode 1）只做：
+
+- RAND(0, cnt-1)
+
+但 HP_MAX / HP_MIN / STR_MAX / DEX_MAX / DEX_MIN / ATT_SUBDUE（select mode 2..7）在先找出 top 後，固定還會做：
+
+- RAND(0, rn)
+- 若結果為 0，再做 RAND(0, cnt-1)
+- 否則使用 top
+
+這個流程 **沒有 cnt==1 的捷徑**。
+
+V1.30 以前 Web 的 enemyChooseTarget() 在 candidates.length===1 時直接回傳 RAND(0,0)，因此 mode 2..7 會少掉來源 RAND(0,rn)，而且 RAND(0,rn)==0 時也少掉後續來源 RAND(0,0)。
+
+這不只影響「選到誰」；更重要的是會讓同一場戰鬥後續的技能、命中、迴避、傷害等 RNG 序列整體錯位。
+
+### Current reachable proof: EnemyID 1798
+
+現行一般 Lv1 catalog 中 EnemyID 1798 / TempNo 905 布依胖的 AI attack option 是：
+
+- attack weight 1
+- targetType 2 = PLAYER
+- selectMode 2 = HP_MAX
+- rn 未指定，因此 fixed battle_ai.c 預設 rn=1
+
+它目前有兩條可達路線：
+
+- Floor 7000 伊甸園 / Encounter 777，條件 Item 19720
+- Floor 7000 伊甸園 / Encounter 778，條件 Item 19733
+
+targetType=PLAYER 在單機模型中正常只有玩家一個 candidate，因此這正是 V1.30 以前必定少吃 RNG 的可達案例。
+
+V1.31 移除 candidates.length===1 的提前 return。mode 2..7 現在即使只有一個候選，也依 source 消耗 RAND(0,rn)，必要時再消耗 RAND(0,0)。
+
+### TARGET_LEADER
+
+fixed _ENEMY_ATTACK_AI 的 targetType 4 並不是「永遠鎖玩家」。
+
+battle_ai.c 對敵方每個 BATTLE_ENTRY：
+
+- CHAR_WORKPARTYMODE == CHAR_PARTY_LEADER：直接加入候選
+- 否則各自 RAND(0,2)，只有結果 0 才加入
+- 若整輪沒有候選，才把 target type 改成 ALL 再掃一次
+
+目前 Web 沒有玩家組隊系統；fixed CHAR_LoginBesideSetWorkInt 的單機/非組隊狀態是 CHAR_PARTY_NONE，而 CHAR_PARTY_NONE=0、CHAR_PARTY_LEADER=1。
+
+因此 V1.31 不再把 solo player 自動視為 leader。玩家與出戰 Pet 都按非 leader 分支，各自保留 RAND(0,2)；若全部落空，再依 source fallback 到 ALL。
+
+這條目前不是 166 組一般 Lv1 的主要可達案例，但它是同一個 fixed AI core 的確定規則，且 runtime 已存在 targetType 4 Enemy，因此一併修正，不猜 party leader。
+
+### No save migration
+
+本輪只修每回合 Enemy AI 的即時 target/RNG 行為，不新增持久化欄位：
+
+- schemaVersion 維持 27
+- 舊存檔不需 migration
+- V1.30 創角四圍不變
+- V1.29 hometown / starter Pet 不變
+
+### Regression targets
+
+- game.js syntax PASS
+- selectMode 1 / cnt1：只消耗 RAND(0,0)，不額外跑 rn
+- selectMode 2..7 / cnt1：必定先消耗 RAND(0,rn)
+- selectMode 2..7 / cnt1 / rn roll=0：再消耗 RAND(0,0)
+- selectMode 2..7 / cnt>1：top 比較與 rn random override 保持來源順序
+- targetType 2/3 找不到指定類型時 fallback ALL
+- targetType 4：solo player 不視為 CHAR_PARTY_LEADER
+- targetType 4：每個非 leader candidate 各自 RAND(0,2)
+- targetType 4：若全部未入選，fallback ALL
+- EnemyID1798 / TempNo905 現行兩條 Floor7000 路線保留 source HP_MAX RNG 時序
+- schema 27 / V1.30 creation gate / V1.29 starter Pet regressions unchanged
