@@ -7,6 +7,7 @@ const PETSKILL_RUNTIME_URL='data/generated/stoneage_petskill_runtime.json';
 const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
 const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.json';
 const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
+const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
@@ -47,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, battleStatuses=new Map(), battlePetOutIds=new Set(), battleReverseKeys=new Set(), battleElementWork=new Map(), battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -64,6 +65,44 @@ function sourceItemTemplateMagicUseMp(itemId){
   if(!sourceItemTemplateExists(itemId))return null;
   const value=Number(itemMagicDb.byItemId[String(Math.trunc(Number(itemId)))]);
   return Number.isFinite(value)?Math.trunc(value):null;
+}
+function sourceEnemyWeaponTemplate(itemId){
+  const id=Math.trunc(Number(itemId));
+  if(!Number.isFinite(id)||!enemyWeaponDb?.byItemId)return null;
+  return enemyWeaponDb.byItemId[String(id)]||null;
+}
+function sourceEnemyDojoWeaponItemId(weapon){
+  if(!enemyWeaponDb?.dojoItemByWeapon)return null;
+  const key=String(weapon||'none');
+  if(!Object.prototype.hasOwnProperty.call(enemyWeaponDb.dojoItemByWeapon,key))return null;
+  const value=enemyWeaponDb.dojoItemByWeapon[key];
+  return value==null?null:Math.trunc(Number(value));
+}
+function sourceEnemyWeaponIsThrowType(type){
+  const t=Math.trunc(Number(type));
+  return Array.isArray(enemyWeaponDb?.throwWeaponTypes)&&enemyWeaponDb.throwWeaponTypes.map(Number).includes(t);
+}
+function sourceEnemyWeaponCompliance(base,weaponId){
+  const template=sourceEnemyWeaponTemplate(weaponId);
+  const initial={
+    attack:Math.trunc(n(base?.attack)),defense:Math.trunc(n(base?.defense)),quick:Math.trunc(n(base?.quick)),
+    maxHp:Math.trunc(n(base?.maxHp)),maxMp:Math.trunc(n(base?.maxMp)),
+    weaponId:null,weaponName:null,weaponType:0,weaponCritical:0,throwWeapon:false,attackNumMin:0,attackNumMax:0
+  };
+  if(!template)return initial;
+  const fixed=pair=>Array.isArray(pair)&&Number.isFinite(Number(pair[0]))?Math.trunc(Number(pair[0])):0;
+  const attack=Math.max(0,initial.attack+fixed(template.modifyAttack));
+  const defense=Math.max(-100,initial.defense+fixed(template.modifyDefense));
+  const quick=Math.max(-100,initial.quick+fixed(template.modifyQuick));
+  const maxHp=Math.max(0,initial.maxHp+fixed(template.modifyHp));
+  const maxMp=clamp(initial.maxMp+fixed(template.modifyMp),0,1000);
+  const type=Math.trunc(n(template.type));
+  return {
+    attack,defense,quick,maxHp,maxMp,
+    weaponId:Math.trunc(Number(template.itemId)),weaponName:template.name||null,weaponType:type,
+    weaponCritical:fixed(template.critical),throwWeapon:sourceEnemyWeaponIsThrowType(type),
+    attackNumMin:Math.trunc(n(template.attackNum?.[0])),attackNumMax:Math.trunc(n(template.attackNum?.[1]))
+  };
 }
 function normalizeItemRuntime(rt){
   const out=freshItemRuntime();
@@ -168,14 +207,15 @@ function giveTrackedItemFromExisting(itemId,itemIndex){
 function releaseEnemyRuntimeItems(unit){
   if(!unit)return 0;
   let freed=0;
-  for(const drop of unit.enemyDrops||[]){
-    const idx=Math.trunc(Number(drop?.itemIndex));
+  const indices=new Set();
+  for(const drop of unit.enemyDrops||[])indices.add(Math.trunc(Number(drop?.itemIndex)));
+  indices.add(Math.trunc(Number(unit.styleItemIndex)));
+  indices.add(Math.trunc(Number(unit.weaponItemIndex)));
+  for(const idx of indices){
+    if(!Number.isFinite(idx)||idx<0)continue;
     const slot=sourceItemRuntimeSlot(idx);
     if(slot&&slot.owner==='enemy:'+unit.id){if(sourceItemRuntimeFree(idx))freed++;}
   }
-  const styleIdx=Math.trunc(Number(unit.styleItemIndex));
-  const styleSlot=sourceItemRuntimeSlot(styleIdx);
-  if(styleSlot&&styleSlot.owner==='enemy:'+unit.id){if(sourceItemRuntimeFree(styleIdx))freed++;}
   return freed;
 }
 function releaseBattleEnemyRuntimeItems(battleEnemy=enemy){
@@ -999,28 +1039,47 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     quick=Math.max(0,Math.round(n(st.dex)||0));
   }
 
-  // 原 enemy.c 會在 CHAR_initCharOneArray() 後、RandomChange 前生成 10 格 Enemy 戰利品。
+  // 原 enemy.c：先決定 carried item 掉落，再建立 STYLE 武器，之後才 ENEMY_RandomChange + CHAR_complianceParameter。
   const enemyDropRoll=rollEnemyDropSlots(raw);
   const serverExpBase=enemyServerBaseExp(raw,level);
+  const resolvedEnemyId=Number(raw?.enemyId??base.enemyIds?.[0]??0)||null;
+  const unitId='unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7);
+  const aiRow=resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null;
+
+  const runtimeDrops=[];
+  for(const drop of enemyDropRoll.drops){
+    const itemIndex=sourceItemRuntimeAlloc(drop.itemId,null,{owner:'enemy:'+unitId,source:'enemy-drop',enemySlot:drop.slot});
+    if(itemIndex>=0)runtimeDrops.push(Object.assign({},drop,{itemIndex}));
+  }
+
+  const style=Math.max(0,Math.trunc(n(aiRow?.sty)));
+  const styleWeaponId=({1:0,2:100,3:200,4:400,5:500,6:700,7:600})[style]??null;
+  const styleItemIndex=styleWeaponId==null?-1:sourceItemRuntimeAlloc(styleWeaponId,null,{owner:'enemy:'+unitId,source:'enemy-style'});
+  let weaponItemIndex=styleItemIndex;
+  let equippedWeaponId=styleItemIndex>=0?styleWeaponId:null;
+
+  // 原 ENEMY_RandomChange() 在 STYLE 建立後執行。人形分支 DoujyouRandomWeponSet()
+  // 一律先 ITEM_endExistItemsOne(CHAR_ARM)，再視抽中的武器建立新的 existing item。
   const change=applyEnemyRandomChange(
     raw,
     Object.assign({},raw?.elements||base.elements||{}),
     Array.isArray(raw?.petSkills)?raw.petSkills:[]
   );
-  const resolvedEnemyId=Number(raw?.enemyId??base.enemyIds?.[0]??0)||null;
-  const unitId='unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7);
-  const aiRow=resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null;
-
-  // 原 ENEMY_createEnemy：10 格 carried item 先 allocate，STYLE 武器再 allocate；RandomChange 在兩者之後。
-  const runtimeDrops=[];
-  for(const drop of enemyDropRoll.drops){
-    const itemIndex=sourceItemRuntimeAlloc(drop.itemId,null,{owner:'enemy:'+unitId,source:'enemy-drop',enemySlot:drop.slot});
-    // ITEM_makeItemAndRegist 失敗時 source CHAR slot 會是 -1，該物品實際不存在。
-    if(itemIndex>=0)runtimeDrops.push(Object.assign({},drop,{itemIndex}));
+  if(change.type==='human'){
+    const oldSlot=sourceItemRuntimeSlot(styleItemIndex);
+    if(oldSlot&&oldSlot.owner==='enemy:'+unitId)sourceItemRuntimeFree(styleItemIndex);
+    weaponItemIndex=-1;equippedWeaponId=null;
+    const dojoWeaponId=sourceEnemyDojoWeaponItemId(change.dojoWeapon);
+    if(dojoWeaponId!=null){
+      const replacement=sourceItemRuntimeAlloc(dojoWeaponId,null,{owner:'enemy:'+unitId,source:'enemy-dojo-weapon'});
+      if(replacement>=0){weaponItemIndex=replacement;equippedWeaponId=dojoWeaponId;}
+    }
   }
-  const style=Math.max(0,Math.trunc(n(aiRow?.sty)));
-  const styleWeaponId=({1:0,2:100,3:200,4:400,5:500,6:700,7:600})[style]??null;
-  const styleItemIndex=styleWeaponId==null?-1:sourceItemRuntimeAlloc(styleWeaponId,null,{owner:'enemy:'+unitId,source:'enemy-style'});
+
+  // 原 CHAR_complianceParameter()：CHAR_initcharWorkInt() 後 ITEM_equipEffect()。
+  // 這批 Enemy 自動武器的裝備 modifier min=max，因此可直接套來源值，不新增猜測 RNG。
+  const equipped=sourceEnemyWeaponCompliance({attack,defense,quick,maxHp:hp,maxMp:0},equippedWeaponId);
+  attack=equipped.attack;defense=equipped.defense;quick=equipped.quick;hp=Math.max(1,equipped.maxHp);
 
   return {
     id:unitId,
@@ -1029,12 +1088,13 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     ai:aiRow,
     statusResist:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]?.z?.slice?.(0,6)||[0,0,0,0,0,0]):[0,0,0,0,0,0],
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
-    // 原 ENEMY_createEnemy 由 CHAR_getDefaultChar(31010) 的 defaultPlayer 建立；其 CHAR_MP / CHAR_MAXMP 都是 0，Enemy 流程沒有覆寫。
-    level,hp,maxHp:hp,mp:0,maxMp:0,attack,defense,quick,
+    // Enemy 原始 MP/MAXMP=0；目前這批自動武器 modifyMp 皆 0。
+    level,hp,maxHp:hp,mp:0,maxMp:equipped.maxMp,attack,defense,quick,
     stats:st,
     sourceBaseStats:Object.assign({},baseStats),
     allocatedFrom,
     serverDerived:server,
+    serverEquipped:equipped,
     serverInitNum:raw?.serverInitNum??null,
     serverLvUpPoint:raw?.serverLvUpPoint??null,
     sourceTemplate:raw?Object.assign({},raw,{
@@ -1056,6 +1116,9 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     enemyDrops:runtimeDrops,
     serverDropTable:enemyDropRoll.resolved,
     style,styleWeaponId,styleItemIndex,
+    equippedWeaponId,weaponItemIndex,
+    weaponType:equipped.weaponType,weaponCritical:equipped.weaponCritical,throwWeapon:equipped.throwWeapon,
+    weaponAttackNumMin:equipped.attackNumMin,weaponAttackNumMax:equipped.attackNumMax,weaponName:equipped.weaponName,
     serverExpBase,
     enemyExpOverride:raw?.enemyExpOverride??null,
     enemyExpRankIndex:raw?.enemyExpRankIndex??null,
@@ -1845,7 +1908,7 @@ function playerBattleView(){
   const quickBase=weaken?Math.trunc(n(state.dex)*.8):n(state.dex);
   return {
     type:'player',attack,defense:defenseBase*(stone?2:1),fixedTough:n(state.playerStats?.tgh),quick:battleDrunkQuick(desc,quickBase),
-    luck:n(state.luck),drunk,
+    luck:n(state.luck),drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     level:Math.max(1,Math.trunc(n(state.level))),elements:battleElementsForDesc(desc)
   };
 }
@@ -1864,7 +1927,7 @@ function petBattleView(pet){
     type:'pet',attack,defense:defenseBase*(stone?2:1),
     fixedTough:pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh),
     quick:battleDrunkQuick(desc,quickBase),
-    luck:0,drunk,
+    luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     level:Math.max(1,Math.trunc(n(pet.level))),elements:battleElementsForDesc(desc)
   };
 }
@@ -1881,6 +1944,7 @@ function enemyBattleView(unit){
     defense:(weaken?Math.trunc(defenseRaw*.8):defenseRaw)*(battleStatusActive(desc,'stone')?2:1),
     quick:battleDrunkQuick(desc,weaken?Math.trunc(quickRaw*.8):quickRaw),
     luck:0,
+    weaponType:Math.trunc(n(unit?.weaponType)),weaponCritical:n(unit?.weaponCritical),throwWeapon:!!unit?.throwWeapon,
     drunk,
     canMove:battleStatusCanMove(desc),
     skillDuckPower:n(unit?.skillDuckTurns)>0?n(unit?.skillDuckPower):0,
@@ -2436,7 +2500,11 @@ function battleCriticalChance(attacker,defender){
   if(atDex>=dfDex){big=atDex;small=dfDex;wari=1}
   else{big=dfDex;small=atDex;wari=big<=0?0:small/big}
   let work=(big-small)/div;if(work<=0)work=0;
-  let per=(root?Math.sqrt(work):work)*wari+atLuck;
+  // 原 BATTLE_CriticalCheckPlayer：裝備 ITEM_CRITICAL*0.5 在乘 wari 之前加入；
+  // 非 Player 也走同一函式。弓仍可出現 critical flag，但後面的 CriDamage 不加防禦補傷。
+  let per=(root?Math.sqrt(work):work)+n(attacker?.weaponCritical)*.5;
+  per*=wari;
+  per+=atLuck;
   per*=100;
   if(per<0)per=1;
   if(per>10000)per=10000;
@@ -2505,7 +2573,7 @@ function resolveNormalAttack(attacker,defender,options={}){
   const criticalRaw=baseCriticalRaw*criticalChanceMultiplier;
   const critical=cRand(1,10000)<criticalRaw;
   let damage=battleDamageCore(attacker,defender,options);
-  if(critical){
+  if(critical&&Math.trunc(n(attacker?.weaponType))!==4){
     damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
   }
 
@@ -2535,6 +2603,29 @@ function resolveNormalAttack(attacker,defender,options={}){
     damageMultiplier:multiplier,damageDivisor:Number.isFinite(divisor)&&divisor>0?divisor:1
   };
 }
+function sourceCounterWeaponMap(type){
+  const t=Math.trunc(n(type));
+  if(t===0)return 1; // FIST -> BATTLE_C_CLAW
+  if(t===1)return 2; // AXE
+  if(t===2)return 3; // CLUB
+  // 原 BATTLE_ItemType2ItemMap() 漏掉 ITEM_SPEAR，故槍維持 BATTLE_C_NONE=0。
+  if(t===4)return 5; // BOW
+  if(t===17||t===18||t===19)return 6; // THROU
+  return 0;
+}
+const SOURCE_COUNTER_TBL=[
+  10,9,8,8,5,0,0,0,
+  10,9,7,7,6,0,0,0,
+  9,8,10,10,7,0,0,0,
+  8,8,10,10,7,0,0,0,
+  6,6,8,8,9,0,0,0,
+  0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0
+];
+function sourceCounterWeaponFactor(attackerType,defenderType){
+  const a=sourceCounterWeaponMap(attackerType),d=sourceCounterWeaponMap(defenderType);
+  return n(SOURCE_COUNTER_TBL[a*8+d]);
+}
 function battleCounterChance(attacker,defender){
   let atDex=n(attacker?.quick),dfDex=n(defender?.quick),root=true,div=.08;
   if(attacker?.type==='enemy'&&defender?.type==='pet'){
@@ -2555,17 +2646,19 @@ function battleCounterChance(attacker,defender){
   if(work<=0)work=0;
   let per=(root?Math.sqrt(work):work)*wari;
 
-  // 無裝備時 Player 視為 FIST vs FIST，CounterTbl=10，
-  // 所以 CriPer*10*0.1 仍等於 CriPer，再加玩家 Luck。
   if(attacker?.type==='player'){
-    per+=n(attacker?.luck);
+    // BATTLE_CounterCheckPlayer：CriPer * CounterTbl * 0.1 + Luck。
+    per=per*sourceCounterWeaponFactor(attacker?.weaponType,defender?.weaponType)*.1+n(attacker?.luck);
   }else{
+    // Pet/Enemy 使用 BATTLE_CounterCheckPet，不套 CounterTbl；NoGuard 額外反擊率已由 counterBonus 帶入。
     per+=n(attacker?.counterBonus);
     if(per>100)per=100;
   }
   return per;
 }
 function battleCounterCheck(attacker,defender){
+  // 原 BATTLE_IsThrowWepon：任一方為弓／回力標／投斧／投石時，反擊直接失敗。
+  if(attacker?.throwWeapon||defender?.throwWeapon)return {success:false,raw:0,throwWeaponBlocked:true};
   const raw=battleCounterChance(attacker,defender);
   if(attacker?.type==='player'){
     if(raw<=0)return {success:false,raw:0};
@@ -4835,7 +4928,8 @@ function createCapturedPet(target=targetEnemyUnit()){
     petSkills:Array.isArray(target?.petSkills)?target.petSkills.slice():[],
     statusResist:Array.isArray(target?.statusResist)?target.statusResist.slice(0,6):[0,0,0,0,0,0],
     serverStats:target?.serverDerived?.charStats?Object.assign({},target.serverDerived.charStats):null,
-    serverCombat:target?.serverDerived?{attack:target.attack,defense:target.defense,quick:target.quick,maxHp:target.maxHp}:null,
+    // 原 PET_createPetFromCharaIndex 不複製 Enemy 裝備；捕獲寵只保留裸 CHAR 能力，不把 STYLE／道場武器加成帶走。
+    serverCombat:target?.serverDerived?{attack:target.serverDerived.attack,defense:target.serverDerived.defense,quick:target.serverDerived.quick,maxHp:target.serverDerived.maxHp}:null,
     allocPointPacked:target?.allocatedFrom?packPetAllocPoint(target.allocatedFrom):null,
     petRank:target?.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))?Math.trunc(Number(target.enemyExpRankIndex)):null,
     serverProgression:!!(target?.serverDerived&&target?.allocatedFrom&&target?.enemyExpRankIndex!=null&&Number.isFinite(Number(target.enemyExpRankIndex))),
@@ -4880,7 +4974,8 @@ function captureChance(){
   if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items,targetName:target.name};
   if(state.level+5<target.level)return {raw:0,display:0,allowed:false,missing:[],requirements:req.items,targetName:target.name};
 
-  const enemyDex=Math.max(0,n(enemy.dynamicGroup?target.stats?.dex:enemy.entry.variant?.stats?.dex));
+  // 原 BATTLE_CaptureCheck 使用 CHAR_WORKFIXDEX；V0.71 起直接使用完成 CHAR_complianceParameter 後的 Enemy quick（含 STYLE／道場武器敏捷）。 
+  const enemyDex=n(target.quick);
   const captureBase=enemy.dynamicGroup?n(target.captureBase):n(enemy.entry.variant?.captureBase);
   const maxHp=Math.max(1,target.maxHp);
   const hpTerm=10-(target.hp*target.hp)/maxHp;
@@ -5686,7 +5781,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,enemyWeaponR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -5695,7 +5790,8 @@ async function boot(){
       fetch(PETSKILL_RUNTIME_URL,{cache:'no-store'}),
       fetch(PET_MODAI_URL,{cache:'no-store'}),
       fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'}),
-      fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'})
+      fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'}),
+      fetch(ENEMY_WEAPON_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
     if(!runtimeR.ok)throw new Error('Encounter runtime HTTP '+runtimeR.status);
@@ -5706,6 +5802,7 @@ async function boot(){
     if(!modAiR.ok)throw new Error('Pet MODAI runtime HTTP '+modAiR.status);
     if(!attackMagicR.ok)throw new Error('AttackMagic runtime HTTP '+attackMagicR.status);
     if(!itemMagicR.ok)throw new Error('Item MAGICUSEMP runtime HTTP '+itemMagicR.status);
+    if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
     enemyAiDb=await aiR.json();
@@ -5713,6 +5810,7 @@ async function boot(){
     petModAiDb=await modAiR.json();
     attackMagicDb=await attackMagicR.json();
     itemMagicDb=await itemMagicR.json();
+    enemyWeaponDb=await enemyWeaponR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
     zooQuest=await zooR.json();
@@ -5724,7 +5822,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V0.70 載入完成：原 itemset6.txt 10,737 筆 ITEM_MAGICUSEMP 已接入 existing-item 建立流程；Enemy carried loot／STYLE 與 V0.69 舊 null slot 會依真實 Item ID 帶入 MP cost。','good');
+    addLog('V0.71 載入完成：Enemy STYLE／RandomChange 道場武器已接入 existing-item 換裝與 CHAR compliance；攻防敏、武器會心、弓會心傷害規則與投射武器反擊限制生效。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
