@@ -7098,3 +7098,177 @@ Player / Active Pet 因目前沒有相同的 Enemy AI PetSkill stat-write 流程
 - V0.73 BOW DuckCheck / Guardian rules 保留
 - save schema：仍為 **21**
 
+
+
+## V0.79 Charge / EarthRound PreCommand lifecycle
+
+V0.79 校正兩個 fixed data 已實際可達的跨回合 PetSkill：
+
+- 30 突擊：`1 攻%+90`，62 個正權重 Enemy。
+- 31 雙重突擊：`2 攻%+110`，23 個正權重 Enemy。
+- 120 地球一周：`攻%+90`，12 個正權重 Enemy。
+
+固定來源仍為：
+
+- `gavinlinasd/StoneAge`
+- ref `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/pet_skill.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+- `gmsv/src/battle/battle_ai.c`
+
+### Charge 不是鎖定第一次出招時的攻擊力
+
+`PETSKILL_ChargeAttack()` 第一回合只把：
+
+- 蓄力回合數寫入 COM3 low。
+- `攻%` 寫入 COM3 high。
+- command 改成 `BATTLE_COM_S_CHARGE`。
+
+真正釋放由 `BATTLE_Charge()` 處理：
+
+```c
+pow = CHAR_getWorkInt(attackindex, CHAR_WORKFIXSTR);
+pow += pow * N * 0.01;
+CHAR_setWorkInt(attackindex, CHAR_WORKATTACKPOWER,
+    pow + CHAR_getWorkInt(attackindex, CHAR_WORKMODATTACK));
+```
+
+所以釋放傷害使用的是**釋放回合重新完成 complianceParameter 後的 FIXSTR**。
+
+V0.79 的 `performEnemyChargeState()` 現在改用該回合已建立的 `unit.roundAttack` FIX snapshot，再依 +90% / +110% 做 C-style truncation。
+
+目前 fixed 正權重 Enemy 可達系統沒有建立 `CHAR_WORKMODATTACK` 的來源；正權重 Combined 只有 21 / 61 / 139 / 159 / 169 / 179 / 189 / 230 / 240，AttackMagic 為 301～325、204、435，不會寫該 work-int。因此目前 runtime 的額外 MODATTACK 等價 0，不自行虛構欄位。
+
+### Charge 持續回合
+
+`BATTLE_IsCharge()` 對 `BATTLE_COM_S_CHARGE` 回傳 TRUE。
+
+因此每輪 `BATTLE_AllCharaCWaitSet()` 不會把 command 清掉，Enemy AI 也會直接跳過重新選招。
+
+N=1：
+
+1. 第一次使用技能：BATTLE_Charge 把 low 1 -> 0，不攻擊。
+2. 下一輪正常 PreCommand。
+3. BATTLE_Charge 看到 low 0，改成 CHARGE_OK。
+4. 同一輪落入 shared physical attack loop 釋放。
+
+N=2 則再多一輪等待。
+
+V0.79 保留此 1 / 2 回合等待語意。
+
+### EarthRound0 是 PreCommand 的明確例外
+
+`PETSKILL_EarthRound()` 第一回合：
+
+- command = `BATTLE_COM_S_EARTHROUND1`
+- COM3 = `攻%+90`
+
+`BATTLE_EarthRoundHide()`：
+
+- `CHAR_ISATTACKED = 0`
+- command -> `BATTLE_COM_S_EARTHROUND0`
+
+下一輪 `BATTLE_PreCommandSeq()` 在清 Guardian 後立刻：
+
+```c
+if (CHAR_getWorkInt(charaindex, CHAR_WORKBATTLECOM1)
+    == BATTLE_COM_S_EARTHROUND0) continue;
+```
+
+因此該隱身角色這一輪不會執行：
+
+- `CHAR_complianceParameter()`
+- `BATTLE_TurnParam()`
+- FIXSTR / FIXTOUGH / FIXDEX 重建
+- WEAKEN / BARRIER 的 compliance 階段扣回合
+- `BATTLE_AttReverse()` 的 FIX 屬性重建
+
+V0.79 新增角色級：
+
+- `sourceEnemySkipsPreCommandCompliance()`
+- `sourcePreCommandKeySkipsCompliance()`
+- `sourcePreCommandResetTransient()`
+
+並讓 EARTHROUND0 保留上一輪：
+
+- roundAttack / roundDefense / roundQuick
+- WEAKEN 已形成的 FIX snapshot
+- BARRIER counter
+- 酒醉解除時來源 bug 留下的暫時 QUICK ×2
+- FIX attribute snapshot
+
+### WEAKEN 1 -> 0 後進入 EarthRound 的特殊結果
+
+若 EarthRound 第一回合的 PreCommand：
+
+- WEAKEN counter 原為 1
+- 先把 FIXSTR / FIXTOUGH / FIXDEX ×0.8
+- 再把 WEAKEN 1 -> 0
+- 之後才選到 EarthRound
+
+則角色進入 EARTHROUND0 時，status 已經沒有 WEAKEN，但**這一輪已建立的 0.8 FIX snapshot 仍存在**。
+
+下一隱身輪因 PreCommand 被跳過，該 0.8 snapshot 繼續保留到現身攻擊。
+
+V0.79 保留這個看似反直覺但由 fixed C 呼叫順序直接產生的行為。
+
+### EarthRound 的 +90% 仍是最終傷害倍率
+
+battle.c 對 EARTHROUND0：
+
+```c
+gBattleDamageModyfy =
+    1.0 + 0.01 * CHAR_getWorkInt(charaindex, CHAR_WORKBATTLECOM3);
+```
+
+所以 Skill 120 的 `攻%+90` 在這裡不是改 WORKATTACKPOWER，而是：
+
+`gBattleDamageModyfy = 1.9`
+
+V0.79 保留現有 `damageMultiplier = 1.9`；本版只修正它進入這個倍率前應沿用哪一輪的 WORK/FIX snapshot。
+
+### 混亂會中斷跨回合技能
+
+`BATTLE_IsCharge()` 只因 command 仍為：
+
+- CHARGE
+- EARTHROUND1
+- EARTHROUND0
+
+才讓跨回合流程延續。
+
+`BATTLE_StatusSeq()` 的 CONFUSION 若發作，會把 command 強制改成普通 ATTACK 並換亂數目標。
+
+之後下一輪 `BATTLE_AllCharaCWaitSet()` 不再視為 charge，因此原技能鏈結束。
+
+現版原本已有：
+
+- 混亂時清 `chargeState`
+- 混亂時清 `earthRoundState`
+- EarthRound 重新現身
+
+V0.79 回歸確認這條仍保留。
+
+### V0.79 回歸
+
+確認：
+
+- `game.js` JavaScript 語法：PASS
+- 正權重 Skill ID：158
+- 已執行 handler：134
+- 原資料缺失：22
+- 原 build 未註冊：2
+- dispatcher gap：0
+- Charge 30：62 個 Enemy
+- Charge 31：23 個 Enemy
+- EarthRound 120：12 個 Enemy
+- Charge release 使用 release-round FIX snapshot
+- EarthRound hidden round 跳過 WEAKEN/BARRIER compliance tick
+- EarthRound hidden round保留 DRUNK release boost
+- EarthRound hidden round保留 FIX attribute work
+- EarthRound release 仍為 final damage ×1.9，不改成 attack ×1.9
+- Confusion 會中斷 Charge / EarthRound
+- V0.73～V0.78 回歸標記保留
+- save schema：仍為 **21**
+
