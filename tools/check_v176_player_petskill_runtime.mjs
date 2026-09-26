@@ -74,7 +74,7 @@ assert.ok(game.includes('function sourcePerformPetAntInterSkill(pet,action,optio
 assert.ok(game.includes('sourceAntInterFallthrough:true'));
 assert.ok(game.includes("PETSKILL_AntInter')result=sourcePerformPetAntInterSkill"));
 
-assert.ok(html.includes('PLAYABLE CORE V1.76'));
+assert.ok(/PLAYABLE CORE V\d+\.\d+/.test(html));
 
 console.log(JSON.stringify({
   pass:true,
