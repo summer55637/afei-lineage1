@@ -22,7 +22,16 @@ on:
       - "tools/check_v187_player_hector_sars_runtime.mjs"
       - "tools/check_v188_player_acupuncture_runtime.mjs"
       - "tools/check_v189_player_sonic_regret_runtime.mjs"
-      - "tools/check_v190_player_firekill_runtime.mjs"\n      - "tools/check_v191_player_tear_runtime.mjs"\n      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"\n      - "tools/check_v193_player_batfly_divideattack_runtime.mjs"\n      - "tools/check_v194_player_timid_runtime.mjs"\n      - "tools/check_v195_player_magicstatuschange_runtime.mjs"\n      - "tools/check_v196_player_abduct_runtime.mjs"\n      - "tools/check_v197_player_steal_runtime.mjs"\n      - "tools/check_v198_player_stealmoney_runtime.mjs"
+      - "tools/check_v190_player_firekill_runtime.mjs"
+      - "tools/check_v191_player_tear_runtime.mjs"
+      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"
+      - "tools/check_v193_player_batfly_divideattack_runtime.mjs"
+      - "tools/check_v194_player_timid_runtime.mjs"
+      - "tools/check_v195_player_magicstatuschange_runtime.mjs"
+      - "tools/check_v196_player_abduct_runtime.mjs"
+      - "tools/check_v197_player_steal_runtime.mjs"
+      - "tools/check_v198_player_stealmoney_runtime.mjs"
+      - "tools/check_v199_player_attackcrazed_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -130,6 +139,9 @@ jobs:
 
       - name: Run V1.98 player StealMoney regressions
         run: node tools/check_v198_player_stealmoney_runtime.mjs
+
+      - name: Run V1.99 player AttackCrazed regressions
+        run: node tools/check_v199_player_attackcrazed_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
