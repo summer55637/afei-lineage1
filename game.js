@@ -7508,8 +7508,14 @@ function sourceProcessBattleDeathsAtAddProfit(){
   // fixed BATTLE_AddExpItem scans side 0 Entry[] in slot order: Player 0 precedes DEFAULTPET 5.
   // This matters when both die before the same AddProfit: player death-extra must still see DEFAULTPET.
   const player=sourceProcessPlayerBattleDeathOnce();
+
+  // Player Ultimate is special: BATTLE_UltimateExtra immediately calls BATTLE_PetDefaultExit()
+  // and then BATTLE_Exit(player). The DEFAULTPET Entry is gone before AddExpItem reaches slot 5,
+  // so a simultaneously HP<=0 Pet must NOT run Pet_Check_Die / Pet death-extra here.
+  if(player?.ultimate)return {player,pets:[],playerUltimatePetExit:true};
+
   const pets=sourceProcessPendingPetBattleDeaths();
-  return {player,pets};
+  return {player,pets,playerUltimatePetExit:false};
 }
 function sourceProcessBattleDeathsBetweenActors(){
   // Every completed actor reaches the unconditional outer BATTLE_AddProfit.
