@@ -40,7 +40,7 @@ const randomEnd=game.indexOf('function sourcePetChargeSpec',randomStart);
 assert.ok(randomStart>=0&&randomEnd>randomStart);
 const randomPlan=game.slice(randomStart,randomEnd);
 assert.ok(randomPlan.includes('const targetDesc=sourcePetRandomEnemyTarget()'));
-assert.ok(randomPlan.includes("return {kind:'skill',skillSlot:iNum,skillId,meta,targetDesc}"));
+assert.ok(randomPlan.includes("return {kind:'skill',slot:iNum,skillId,meta,targetDesc}"));
 
 const specialStart=game.indexOf('function sourcePetSpecialStatusTarget');
 const specialEnd=game.indexOf('function sourcePerformPetGuardianSkill',specialStart);
