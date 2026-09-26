@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.95**
+**PLAYABLE CORE V1.96**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,25 +16,25 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.95 最新進度
+## V1.96 最新進度
 
-V1.94～V1.95 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.95～V1.96 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 606／727 `PETSKILL_BattleTimid`
-- 636／824 `PETSKILL_2BattleTimid`
 - 552／553／565／658 `PETSKILL_MagicStatusChange`
+- 130／607 `PETSKILL_Abduct`（旅程伙伴）
 
-### V1.95 鐵壁系 RANDOMACT
+### V1.96 Abduct
 
-- 原 RANDOMACT 先用 `BATTLE_DefaultAttacker` 選敵方 COM2，MagicStatusChange 不會依 target metadata 重選我方
-- option 的「全」只是不觸發「單」的合法性限制，並不把 COM2 改成全體
-- 因此低忠誠 Pet 亂放鐵壁／銅牆／玄武鐵壁時，實際會替敵方單一 Enemy 加 SuperWall
-- raw COM2 若在執行前失效，沿原 `BATTLE_MultiList` 在同敵側用 `rand()%10` 重抽存活 Entry
-- 目前四列分別為 3回合+30、3回合+30、5回合+40、3回合+50
-- SuperWall 每次參與物理 DamageCalc 時仍會額外 consume 原 C `rand()%20`
-- 技能本身沒有物理 AttackSeq／ItemCrush／Counter
-- 本輪也確認 field=2 的加工、料理、修復、鑲寶石本來就會被 RANDOMACT field filter 排除，Web 已正確實作，不新增錯誤戰鬥效果
-- 新增 `tools/check_v195_player_magicstatuschange_runtime.mjs` 並接入 CI
+- Abduct 先走 `BATTLE_TargetAdjust`，raw COM2 失效時仍消耗原 `BATTLE_DefaultAttacker` fallback RNG
+- 玩家 Pet 的目標是 `CHAR_TYPEENEMY`，所以 607 的 option=60 不會走 FIXAI 特殊分支；130／607 都使用 `max(trunc((敵Lv-寵Lv)*0.6+30), 50)`
+- 成敗判定是嚴格 `RAND(1,100) < per`
+- 成功時 Enemy 直接 `BATTLE_Exit`，不是擊殺，不給 EXP／掉落
+- 無論成功或失敗，施術 Pet 最後都 `BATTLE_PetDefaultExit` 並清掉 DEFAULTPET／現行出戰選擇
+- Abduct 沒有物理 damage、DamageSub、ItemCrush 或 Counter
+- 最後一隻 Enemy 被帶走時，Web teardown 仍會掃全部 owned Pet 做戰後 HP finalization
+- 新增 `tools/check_v196_player_abduct_runtime.mjs` 並接入 CI
+
+V1.94 Timid、V1.95 鐵壁系 regression 全數保留。
 
 save schema 維持 **29**。
 
