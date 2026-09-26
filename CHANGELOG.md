@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.80**
+目前最新可玩核心：**V1.81**
 
 ## 歷史分檔
 
@@ -14,15 +14,15 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.80
+## 最新版本 V1.81
 
-V1.80 接上玩家寵低忠誠 RANDOMACT 的 506～508 MP攻擊：
+V1.81 接上玩家寵低忠誠 RANDOMACT 的屬性強化／屬性轉換攻擊：
 
-- `PETSKILL_MpDamage` 的 `50/100` 是 C int/int 先算，結果 0；固定 build 實際不降攻
-- `BATTLE_S_MpDamage` 對 ENEMY / PET 直接 return 0
-- RANDOMACT 的 DefaultAttacker 在目前 PVE 路徑選 Enemy，因此 50% / 75% / 100% MP 削減都不可達，額外 MP 傷害固定 0
-- 物理部分沿用 `BATTLE_S_AttackDamage` Guardian calc-only / 原目標 DamageSub bug
+- Modifyattack：544～547、825～828；依原目標永久屬性追加傷害，保留 `rand()%(ModNum+5)` 後整數 `/100` bug
+- Mdfyattack：548～551、697～700；本次 AttackSeq 將攻方四屬清零，只留 option 指定屬性
+- Guardian 仍只替換 local AttackSeq defender；真正 DamageSub / death / ItemCrush 留在原目標
+- Modifyattack 的 bonus 被原目標 DamageReact 造成的 `skill_type=-1` 取消；Mdfyattack 元素替換仍成立
 - execution-time TargetAdjust 保留
-- 不接普通 Counter
+- 兩類都不接普通 Counter
 
-完整 V1.80 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.81 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
