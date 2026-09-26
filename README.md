@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.83**
+**PLAYABLE CORE V1.84**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,15 +16,17 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.83 最新進度
+## V1.84 最新進度
 
-V1.83 收斂玩家寵低忠誠 `RANDOMACT` 的 595 `PETSKILL_SetDuck`：
+V1.84 接入 19 筆 fixed `PETSKILL_SetMagicPet`：601～604、660～663、693～696、720～723、726、838、841。
 
-- fixed `BATTLE_PetRandomSkill()` 先用 `BATTLE_DefaultAttacker()` 選 Enemy `toNo`，再把這個值傳給 `PETSKILL_SetDuck()`
-- `PETSKILL_SetDuck()` 本身會成功建立 `BATTLE_COM_S_SETDUCK`，但真正 execution 的 `PETSKILL_SetDuckChange_Battle()` 第一個 target gate 要求 `BATTLE_No2Index(toNo) == charaindex`
-- 這條 RANDOMACT 的 `toNo` 是 Enemy，不可能等於施術寵自己，因此 execution 直接 FALSE：不解析 `3|60`、不寫 Duck turn/power、不產生 MagicEffect，也不吃 RNG
-- `PETSKILL_SetDuck()` 同時寫 `CHAR_MAGICPETMP=0`；fixed repo 全域搜尋確認沒有任何累加該欄位的路徑，`PETSKILL_SetMagicPet()` 只讀後寫回原值，所以目前這個 reset 在 fixed build 行為上也是 0→0
-- 因此 Web 不建立假的三回合 60% 閃避效果
+- 玩家寵低忠誠 `RANDOMACT` 先由 `BATTLE_DefaultAttacker()` 選 opposing Enemy `toNo`，之後 `PETSKILL_SetMagicPet()` 原樣寫入 COM2；execution 直接交給 `BATTLE_MultiList()`，不依 `PETSKILL_TARGET` 改回友方
+- Enemy AI 也是先用一般攻擊 AI 選對面目標，再把 raw target 傳入 `PETSKILL_Use()`；因此 SetMagicPet 同樣不能硬改成「我方全體」
+- STR／TGH／DEX 共用 Duck／STR／TGH／DEX 互斥 gate；任一已存在就不刷新
+- fixed `Other_DefcharWorkInt()` 有來源 bug：STR／TGH／DEX 三種加成都使用保存的 `mtgh` 作基準，即 `mtgh * power / 100`，Web 原樣保留
+- 能力強化在施放當輪先寫狀態，下一輪 PreCommand 才套入 WORK/FIX；角色自己的 `BATTLE_StatusSeq` 再扣回合，因此即使本次扣到 0，本輪已建立的 WORK/FIX 仍有效
+- HP 分支每個目標各自抽 `90%～110%`，再乘 `GetRecoveryRate()`：Player = `1 + VITAL×0.00010`、Pet/Enemy = `1 + VITAL×0.00005`，最後封頂 MaxHP
+- `CHAR_MAGICPETMP` 仍只有讀後寫回、沒有可達累加，所以 fixed build 的「最多三次」限制不生效；Web 不虛構計數
 
 save schema 維持 **29**。
 
