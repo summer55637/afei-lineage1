@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.63</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.64</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.63：</b>
-      對齊原 C 的 Enemy AI → Battling RNG 階段：每回合先完成所有 Enemy AI 的 action／target／PetSkill AI-stage lifecycle，之後才抽 Player／Pet／Enemy Dex、排序與 ComboCheck。WAZA 即使最後變成防禦／NONE／失敗，仍保留來源先發生的 target RNG；已死亡但仍留在 Battle Entry 的 Enemy 也不再被提早跳過 AI RNG。V1.61／V1.62 的低忠誠 RANDOMACT 與 EarthRound 修正維持不變。
+      <b>V1.64：</b>
+      對齊玩家空手 BATTLE_GetAttackCount 與友方 TargetAdjust：Lv10 起即使本輪是防禦／捕獲，也會先依 Luck 消耗原 C 的空手攻擊次數 RNG；真正普通攻擊才使用 attack_max 多段出手。玩家／普通寵物保留回合開始時的 raw COM2，只有原目標失效才走 BATTLE_DefaultAttacker，包含單一候選的 RAND(0,0)；玩家多段攻擊逐段結算傷害／掉落 RNG，全部完成後才進 Counter。
     </article>
   </main>
 
