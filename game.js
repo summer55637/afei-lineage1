@@ -7705,6 +7705,13 @@ function sourcePetLoyalCheck(actor,pet,intent){
     };
   }
   if(mode==='randomact'){
+    // fixed BATTLE_PetLoyalCheck special case:
+    // if the Pet is already in BATTLE_COM_S_EARTHROUND0, RANDOMACT returns 0 immediately.
+    // AIBAD was set just before the switch, but COM1/COM2 stay untouched and no random skill /
+    // BATTLE_DefaultAttacker RNG is consumed. The hidden Pet therefore continues its EarthRound release.
+    if(intent?.commandKind==='earthround'){
+      return {changed:false,aibad:true,mode,ai,roll,fixed,intent,sourceEarthRoundRandomActPreserved:true};
+    }
     if(type===1){
       return {changed:true,aibad:true,mode,ai,roll,fixed,action:{kind:'none',reason:'self-target'},intent};
     }
