@@ -7683,19 +7683,27 @@ function enemyTryRegretDizzy(chosen,successPct,label){
 function performEnemyTear(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
-  const tearPct=Math.max(0,Math.trunc(Number(String(meta?.o||'').match(/-?\d+/)?.[0])||0));
+  const tearPct=Math.max(0,Math.trunc(Number(String(meta?.o||'').match(/-?\\d+/)?.[0])||0));
   const targetDesc=enemySkillTargetDesc(chosen);
   const beforeHp=battleStatusHp(targetDesc);
   const maxHp=chosen.kind==='pet'?n(chosen.pet?.maxHp):n(state.maxHp);
   const missingHp=Math.max(0,maxHp-beforeHp);
 
+  // BATTLE_S_AttackDamage checks DamageReact before AttackSeq. Player-side Acupuncture
+  // therefore downgrades local PETSKILLTEAR to -1 and suppresses the missing-HP bonus.
+  const hadDamageReact=chosen.kind==='pet'&&chosen.pet
+    ?battlePetAcupunctureIds.has(chosen.pet.id)
+    :false;
+  const localTear=!hadDamageReact;
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
 
-  if(!r.dodged){
-    const tearBonus=Math.trunc(missingHp*tearPct/100);
+  let tearBonus=0;
+  if(!r.dodged&&localTear){
+    tearBonus=Math.trunc(missingHp*tearPct/100);
     if(tearBonus<=0){
       r.damage=0;r.miss=true;
+      r.sourceTearZeroedBaseDamage=true;
     }else{
       r.damage=Math.max(0,Math.trunc(n(r.damage)+tearBonus));
       r.miss=r.damage<=0;
@@ -7706,7 +7714,10 @@ function performEnemyTear(actor,unit,options,meta){
   sourceBattleFinalizeItemCrushRng(r);
 
   // 原 BATTLE_COM_S_PETSKILLTEAR 走 BATTLE_S_AttackDamage 後直接 break，不進普通 Counter loop。
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,tearPct,missingHp};
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,tearPct,missingHp,tearBonus,
+    hadDamageReact,localTear
+  };
 }
 function performEnemyRegret(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
@@ -10827,6 +10838,86 @@ function sourcePetTryRegretDizzy(pet,target,successPct,label){
   return {attempted:true,applied,roll,reason:applied?'success':'apply-failed'};
 }
 
+function sourcePerformPetTearSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'撕裂傷口';
+  const tearPct=sourceCAtoi(meta?.o);
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_BattleTearDamage() writes this round's WORK values before battle.c:
+  // ATTACK = trunc(FIXSTR*0.9), DEFENCE = trunc(FIXTOUGH*0.8).
+  // Low-loyalty RANDOMACT is after EntrySort, so DEF cannot reorder this turn,
+  // but remains the Pet's work defence for later attacks in the same round.
+  const baseAttack=Math.trunc(n(base.attack));
+  const baseDefense=Math.trunc(n(base.defense));
+  const attack=Math.trunc(baseAttack*.9);
+  const defense=Math.trunc(baseDefense*.8);
+  battlePetPowerMods.set(pet.id,{
+    attack,defense,skillId:action?.skillId,sourceTear:true
+  });
+
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {
+      handled:true,skillId:action?.skillId,noTarget:true,
+      tearPct,attack,defense,sourceNoCounter:true
+    };
+  }
+
+  const targetMaxHp=Math.max(0,Math.trunc(n(target.maxHp)));
+  const targetHpBefore=Math.max(0,Math.trunc(n(target.hp)));
+  const missingHp=Math.max(0,targetMaxHp-targetHpBefore);
+
+  // BATTLE_S_AttackDamage reads DamageReact before AttackSeq. Any positive react changes
+  // the LOCAL skill_type to -1, so PETSKILLTEAR's missing-HP bonus is skipped entirely.
+  // PETSKILL_Use's 90% attack / 80% defence writes have already happened and remain.
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const localTear=!hadDamageReact;
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    attackerOverride:{attack}
+  });
+  if(!r)return {
+    handled:true,skillId:action?.skillId,noTarget:true,
+    tearPct,attack,defense,missingHp,hadDamageReact,localTear,sourceNoCounter:true
+  };
+
+  let tearBonus=0;
+  if(!r.dodged&&localTear){
+    // Source stores the float result back into int userhp, truncating toward zero.
+    tearBonus=Math.trunc(missingHp*tearPct/100);
+    // Source quirk: if the computed old-wound amount is <=0, base physical damage is zeroed.
+    if(tearBonus<=0){
+      r.damage=0;
+      r.miss=true;
+      r.sourceTearZeroedBaseDamage=true;
+    }else{
+      r.damage=Math.max(0,Math.trunc(n(r.damage)+tearBonus));
+      r.miss=r.damage<=0;
+      r.tearBonus=tearBonus;
+    }
+  }
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  addLog(
+    pet.name+' 隨機使用「'+label+'」：攻 90%／防 80%，目標已損 '+missingHp+
+      ' HP，撕裂係數 '+tearPct+'%'+
+      (hadDamageReact?'；目標 DamageReact 令原 C local skill_type=-1，撕裂追加被跳過。':
+        (tearBonus>0?'，追加 '+tearBonus+' 傷害。':'；原 C 因撕裂追加 <=0，把本次傷害歸零。')),
+    'pet'
+  );
+
+  // BATTLE_COM_S_PETSKILLTEAR is an isolated BATTLE_S_AttackDamage case.
+  // It breaks before the common direct-attack Counter loop; command-end AddProfit stays outer.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,tearPct,missingHp,tearBonus,
+    attack,defense,hadDamageReact,localTear,sourceNoCounter:true
+  };
+}
+
 function sourcePerformPetSonicSkill(pet,action){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -11248,6 +11339,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
+    else if(meta?.f==='PETSKILL_BattleTearDamage')result=sourcePerformPetTearSkill(pet,action);
     else if(meta?.f==='PETSKILL_Sonic')result=sourcePerformPetSonicSkill(pet,action);
     else if(meta?.f==='PETSKILL_Regret')result=sourcePerformPetRegretSkill(pet,action);
     else if(meta?.f==='PETSKILL_Firekill')result=sourcePerformPetFirekillSkill(pet,action);
