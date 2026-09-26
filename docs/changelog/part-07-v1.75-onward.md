@@ -632,3 +632,76 @@ Web 不把這個技能改成去扣 Enemy 的虛構 MP。
 - `d61402360194b84ff6bfa6d5743f67efe11ac847` — V1.80 playable marker
 - `54f3d21e4b14532c75cc2f7b8d466043b0220afd` — V1.80 README
 - `28032f151c1c108a11801e3ecf0bca9be669ad8c` — V1.80 changelog index
+
+
+---
+
+## V1.81 Player RANDOMACT attribute attacks
+
+V1.81 接上玩家出戰 Pet 在低忠誠 `RANDOMACT` 下的 `PETSKILL_Modifyattack` 與 `PETSKILL_Mdfyattack`。
+
+### Fixed rows
+
+Modifyattack：
+- 544 / 545 / 546 / 547：EA / WA / FI / WI `|20`
+- 825 / 826 / 827 / 828：EA / WA / FI / WI `|9999`
+
+Mdfyattack：
+- 548 / 549 / 550 / 551：EA / WA / FI / WI `|100`
+- 697 / 698 / 699 / 700：FI / WI / EA / WA `|100`
+
+### Modifyattack
+
+`PETSKILL_Modifyattack()` 只建立 `BATTLE_COM_S_MODIFYATT`；它原本可能有的攻擊修正碼已整段註解，不自行恢復。
+
+`BATTLE_S_AttackDamage()` 在 `BATTLE_AttackSeq()` 回來後，只有 `damage>0` 才呼叫 `BATTLE_S_Modifyattack()`。
+
+`BATTLE_S_Modifyattack()`：
+- option 第一段決定讀原目標永久 `CHAR_EARTHAT / WATERAT / FIREAT / WINDAT` 的哪一欄
+- 第二段是基本 bonus percent
+- 只有目標該屬性 `ModNum>0` 才進 bonus
+- 額外 random 寫成 `(float)((rand()%(ModNum+5))/100)`，其中 `/100` 是 C 整數除法先算
+- 因此 ModNum<=95 時 random 部分永遠 0；更高屬性時則以整數 1.0 階梯跳增，而不是 0.xx
+
+最重要的是 `BATTLE_S_Modifyattack()` 使用 caller 保存的原 `defindex`。即使 `BATTLE_AttackSeq()` local Guardian 代入了防禦計算，post bonus 仍讀原目標屬性。
+
+原目標若在 AttackSeq 前已有 DamageReact，`BATTLE_S_AttackDamage()` 會先把 local `skill_type=-1`，所以 Modifyattack 的 post switch 不執行，沒有額外屬性 bonus。
+
+### Mdfyattack
+
+`PETSKILL_Mdfyattack()` 會驗證 EA / WA / FI / WI，並把種類與數值寫進 `CHAR_WORKBATTLECOM4`。
+
+真正元素替換發生在 `BATTLE_AttrAdjust()`：只要攻方 `CHAR_WORKBATTLECOM1 == BATTLE_COM_S_MDFYATTACK`，就：
+- 清空 At_pow[0..4]
+- 只在指定屬性欄寫 option 數值
+- 用這個一次性的攻方屬性向量進 `BATTLE_AttrCalc`
+
+這裡檢查的是攻方 WORKBATTLECOM1，不是 `BATTLE_S_AttackDamage()` 的 local `skill_type` 變數。因此原目標有 DamageReact、local skill_type 先降成 -1 時，Mdfyattack 的元素替換仍然會發生。
+
+若 Guardian 成立，這個 element-adjusted AttackSeq 會用 local Guardian 的防禦／屬性做計算；但 caller 原 `defindex` 不變，真正 DamageSub / death / ItemCrush 仍落原目標。
+
+### Shared lifecycle
+
+兩類都使用 V1.79 建立的 execution-time TargetAdjust 與 calc-only Guardian helper，且都是獨立 `BATTLE_S_AttackDamage` case，不進普通 Counter。
+
+### Regression
+
+新增 `tools/check_v181_player_attribute_attacks_runtime.mjs`，檢查：
+- 16 筆 fixed row
+- EA / WA / FI / WI parser
+- Modifyattack 原目標 permanent attr
+- rand%(ModNum+5) + integer /100 bug
+- Modifyattack DamageReact gate
+- Mdfyattack 全屬清零後單屬替換
+- Mdfyattack 不因 local skill_type=-1 關閉元素替換
+- Guardian calc-only shared path
+- no Counter
+- dispatcher 位於 pending fallback 前
+
+### commits
+
+- `9819be8fabd6f02160588d75fbd645d5cc8a065d` — V1.81 player attribute attack core
+- `322aade11f4d2ea7f7f376cb746441ac53d29d20` — V1.81 regression
+- `3371d87d49a978b083d8b3af1b4ffd6156fbfcdb` — V1.81 playable marker
+- `947d7470a3bd38dd3b4c7f01f307901b90ca9938` — V1.81 README
+- `9595bed33db916256cc5e721b0d91eb9b002429c` — V1.81 changelog index
