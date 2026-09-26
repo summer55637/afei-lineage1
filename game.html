@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.83</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.84</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.84：</b>
+      接上 601～604、660～663、693～696、720～723、726、838、841 SetMagicPet。依 fixed C 保留 raw COM2：玩家寵低忠誠 RANDOMACT 會把 BATTLE_DefaultAttacker 選到的 Enemy toNo 原樣交給 BATTLE_MultiList；Enemy AI 也先按一般攻擊 AI 選對面目標，不依 PETSKILL_TARGET 改回友方。STR/TGH/DEX 共用 Duck/三屬互斥 gate，且原 Other_DefcharWorkInt 有 mtgh 基準 bug：三種加成都用 mtgh×power/100。狀態在下一輪 PreCommand 才進 WORK/FIX，StatusSeq 於目標自己的行動開始扣回合；HP 則每個目標各抽 90%～110%，乘 VITAL RecoveryRate 後封頂 MaxHP。CHAR_MAGICPETMP 仍沒有可達累加，因此不虛構三次限制。
+    </article>
 
     <article class="card note">
       <b>V1.83：</b>
