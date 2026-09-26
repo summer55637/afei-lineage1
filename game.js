@@ -4186,7 +4186,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
   sourceBattleFinalizeItemCrushRng(r);
-  sourceProcessPlayerBattleDeathOnce();
+  sourceProcessBattleDeathsAtAddProfit();
   const after=battleStatusHp(targetDesc);
   if(before>0&&after<=0&&targetDesc?.kind==='enemy'&&targetDesc.unit){
     sourceMarkEnemyDeathCredit(targetDesc.unit,[attackerDesc]);
@@ -4314,11 +4314,11 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     state.hp=Math.max(0,sourceUltimateBefore-r.damage);
     sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
     sourceBattleFinalizeItemCrushRng(r);
-    sourceProcessPlayerBattleDeathOnce();
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
     }
 
+    sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(state.hp<=0||unit.hp<=0)break;
     if(r.miss||r.critical)break;
@@ -4373,6 +4373,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
         if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
       }
     }
+    sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(!petIsBattleActive(pet)||unit.hp<=0)break;
     if(r.miss||r.critical)break;
@@ -4673,6 +4674,7 @@ function sourcePerformPlayerCommonAttack(actor,options={}){
 
     const r=playerAttackResult(target);
     const actual=applyFriendlyEnemyHit('player','你',target,r);
+    sourceProcessBattleDeathsAtAddProfit();
     attackCount++;
     lastTarget=target;
     lastActual=actual;
@@ -4845,7 +4847,7 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
     if(!hit)continue;
     if(afterHit)hit.afterHit=afterHit(hit,target);
     sourceBattleFinalizeItemCrushRng(hit.r);
-    sourceProcessPlayerBattleDeathOnce();
+    sourceProcessBattleDeathsAtAddProfit();
     hits.push(Object.assign({battleSlot:slot},hit));
     attackCount++;
     sourcePostTarget=target;
@@ -4900,7 +4902,7 @@ function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,baseOptions);
     if(hit){
       sourceBattleFinalizeItemCrushRng(hit.r);
-      sourceProcessPlayerBattleDeathOnce();
+      sourceProcessBattleDeathsAtAddProfit();
       hits.push(Object.assign({battleSlot:slot},hit));
     }
     if(n(unit.hp)<=0)break;
@@ -4942,7 +4944,7 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     if(useBreakthrowStatus&&Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
     if(afterHit)hit.afterHit=afterHit(hit,target);
     sourceBattleFinalizeItemCrushRng(hit.r);
-    sourceProcessPlayerBattleDeathOnce();
+    sourceProcessBattleDeathsAtAddProfit();
     hits.push(Object.assign({paralysis},hit));
     sourcePostTarget=target;
     if(i+1>=attackMax){
@@ -5020,7 +5022,7 @@ function performEnemyFoxFistRangedAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)break;
     sourceBattleFinalizeItemCrushRng(hit.r);
-    sourceProcessPlayerBattleDeathOnce();
+    sourceProcessBattleDeathsAtAddProfit();
     hits.push(Object.assign({
       battleSlot:sourceEnemyTargetBattleSlot(target),
       sourceCommandSlot:attackCount===0?commandSlot:(actualWeaponType===4?bowPlan?.slots?.[k]:commandSlot)
@@ -5132,7 +5134,7 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
   // fixed common BATTLE_Attack caller reaches BATTLE_AddProfit before Counter.
-  sourceProcessPlayerBattleDeathOnce();
+  sourceProcessBattleDeathsAtAddProfit();
   if(allowPlayerCounter&&state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
   return {target:'player',actualTarget:r.guardian?'pet':'player',guardianPetId:r.guardianPetId||null,r};
 }
@@ -5748,6 +5750,7 @@ function performEnemyRetrace(actor,unit,options,meta){
       lastTarget=target;
 
       const retry=sourceEnemyRetraceMaybeFollow(unit,target,options,label+'第 '+primaryCount+'/'+attackMax+' 段',primary);
+      sourceProcessBattleDeathsAtAddProfit();
       segments.push({
         battleSlot:slot,target:target.kind,petId:target.pet?.id||null,
         primary,retraceRoll:retry.roll,follow:retry.follow,boosted:retry.boosted,
@@ -5782,6 +5785,7 @@ function performEnemyRetrace(actor,unit,options,meta){
       lastTarget=target;
 
       const retry=sourceEnemyRetraceMaybeFollow(unit,target,options,label+'第 '+primaryCount+'/'+attackMax+' 段',primary);
+      sourceProcessBattleDeathsAtAddProfit();
       segments.push({
         battleSlot:sourceEnemyTargetBattleSlot(target),target:target.kind,petId:target.pet?.id||null,
         primary,retraceRoll:retry.roll,follow:retry.follow,boosted:retry.boosted,
@@ -6239,12 +6243,13 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
       hits++;lastTarget=target;lastResult=r;
       enemyApplySkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
       sourceBattleFinalizeItemCrushRng(r);
+      sourceProcessBattleDeathsAtAddProfit();
     }else{
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyDirectAttackToPlayer(unit,{guarding});
       hits++;lastTarget=target;lastResult=r;
       enemyApplyDirectGuardianSkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
-      sourceProcessPlayerBattleDeathOnce();
+      sourceProcessBattleDeathsAtAddProfit();
     }
 
     // fixed loop breaks immediately here when ++attack_count reaches attack_max,
@@ -6296,7 +6301,7 @@ function sourceEnemyAttackShootApplyHit(unit,target,options,count,label){
     if(sleepRoll>4)sleepApplied=sourceAttackShootApplySleep(targetDesc);
   }
   sourceBattleFinalizeItemCrushRng(r);
-  sourceProcessPlayerBattleDeathOnce();
+  sourceProcessBattleDeathsAtAddProfit();
   return {
     target:target.kind,petId:target.pet?.id||null,
     actualTarget:targetDesc?.kind||target.kind,
@@ -6599,6 +6604,7 @@ function performEnemyWildViolent(actor,unit,options,meta){
       enemyApplyDirectGuardianSkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
     }
 
+    sourceProcessBattleDeathsAtAddProfit();
     if(state.hp<=0)break;
     if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet))chosen=null;
   }
@@ -6944,7 +6950,6 @@ function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label,options={}){
   enemyApplySkillHit(unit,actual,r,label);
   if(options.finalizeItemCrush!==false){
     sourceBattleFinalizeItemCrushRng(r);
-    sourceProcessPlayerBattleDeathOnce();
   }
   return actual;
 }
@@ -7409,9 +7414,11 @@ function sourcePetWinVariableAi(pet,enemyLevel,petLevelSnapshot=null){
 function sourceMarefiaDeathPenalty(pet){
   if(!pet||Number(pet.tempNo)!==718)return null;
   const beforeAlloc=unpackPetAllocPoint(pet.allocPointPacked);
-  let afterAlloc=null,rolls=null;
+  // fixed Pet_Check_Die() consumes all four RANDs for PETID 718 unconditionally.
+  // If a legacy/malformed save lacks reconstructible ALLOCPOINT, keep RNG order but do not invent stats.
+  const rolls={vital:cRand(1,8),str:cRand(1,4),tgh:cRand(1,4),dex:cRand(1,4)};
+  let afterAlloc=null;
   if(beforeAlloc){
-    rolls={vital:cRand(1,8),str:cRand(1,4),tgh:cRand(1,4),dex:cRand(1,4)};
     afterAlloc={
       vital:clamp(Math.trunc(n(beforeAlloc.vital))-rolls.vital,0,50),
       str:clamp(Math.trunc(n(beforeAlloc.str))-rolls.str,0,50),
@@ -7497,10 +7504,16 @@ function sourceProcessPlayerBattleDeathOnce(){
   }
   return death;
 }
-function sourceProcessBattleDeathsBetweenActors(){
-  const pets=sourceProcessPendingPetBattleDeaths();
+function sourceProcessBattleDeathsAtAddProfit(){
+  // fixed BATTLE_AddExpItem scans side 0 Entry[] in slot order: Player 0 precedes DEFAULTPET 5.
+  // This matters when both die before the same AddProfit: player death-extra must still see DEFAULTPET.
   const player=sourceProcessPlayerBattleDeathOnce();
-  return {pets,player};
+  const pets=sourceProcessPendingPetBattleDeaths();
+  return {player,pets};
+}
+function sourceProcessBattleDeathsBetweenActors(){
+  // Every completed actor reaches the unconditional outer BATTLE_AddProfit.
+  return sourceProcessBattleDeathsAtAddProfit();
 }
 
 function petFixedAi(pet){
@@ -7719,6 +7732,7 @@ function sourcePerformPetChargeState(pet,options={},targetOverride=undefined){
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
   addLog(pet.name+' 釋放 '+charge.label+'（FIXSTR 攻擊 '+baseAttack+' → '+releaseAttack+'，攻擊修正 '+charge.attackPct+'%）。','pet');
 
   // k=0 still lets the defender counter; k=1 would ask this Pet to counter-counter,
@@ -7776,6 +7790,7 @@ function sourcePerformPetEarthRoundState(pet,options={},targetOverride=undefined
     damageMultiplier:multiplier
   });
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
   addLog(pet.name+' 從背後完成 '+st.label+'（來源最終傷害 ×'+multiplier.toFixed(2)+'）。','pet');
   if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r,{maxDepth:1});
   if(battlePetEarthRoundStates.get(pet.id)===st)battlePetEarthRoundStates.delete(pet.id);
@@ -7877,6 +7892,7 @@ function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
     if(meta.confusion)addLog(pet.name+' 的混亂發作：改為普通攻擊 '+target.name+'。','pet');
     const r=petAttackResult(pet,target);
     const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+    sourceProcessBattleDeathsAtAddProfit();
     if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     return {handled:true,target:'enemy',targetUnitId:target.id,actualTargetUnitId:actual?.id||null,r};
   }
@@ -7970,6 +7986,7 @@ function sourcePerformPetStatusSkill(pet,action,options={}){
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
   const actualDesc=actual?{kind:'enemy',unit:actual,unitId:actual.id}:targetDesc;
   const status=sourcePetApplyStatusAttackHit(pet,actualDesc,r,type,turn,meta?.n||'狀態攻擊');
+  sourceProcessBattleDeathsAtAddProfit();
 
   // fixed BATTLE_Attack：StatusChange 已在 Counter 判定前寫進目標 WORK status。
   // 若因此變成不能動（例如睡/石），就不能反擊。毒/醉仍可照原規則反擊。
@@ -8008,6 +8025,7 @@ function sourcePerformPetGuardianSkill(pet,action,options={}){
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
 
   // GUARDIAN_ATTACK 位於 fixed direct-attack 群組；進 BATTLE_Attack 前會被改回 COM_ATTACK，
   // 所以若對方沒有被 Guardian 代擋等條件阻斷，仍可進普通 Counter chain。
@@ -8054,6 +8072,7 @@ function sourcePerformPetContinuationSkill(pet,action,options={}){
       damageDivisor:count
     });
     const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+    sourceProcessBattleDeathsAtAddProfit();
     hits++;
     lastResult=r;
     lastActual=actual;
@@ -8089,6 +8108,7 @@ function sourcePerformPetMightySkill(pet,action,options={}){
     duckBonusPercent:duckBonus
   });
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
   if(petIsBattleActive(pet)&&actual?.hp>0){
     resolvePetEnemyCounterChain('pet',pet,actual,r);
   }
@@ -8120,6 +8140,7 @@ function sourcePerformPetPowerBalanceSkill(pet,action,options={}){
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
   if(petIsBattleActive(pet)&&actual?.hp>0){
     // Counter chain 會再次 petBattleView()；battlePetPowerMods 因此同時保留本輪攻／防。
     resolvePetEnemyCounterChain('pet',pet,actual,r);
@@ -8627,6 +8648,7 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
       return false;
     }
 
+    sourceProcessBattleDeathsAtAddProfit();
     attackCount++;
     lastTarget=target;
     lastActualTarget=actualTarget;
@@ -9047,7 +9069,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
         target:'pet',pet:target.pet,targetDesc:actualTarget,r
       },target);
       sourceBattleFinalizeItemCrushRng(r);
-      sourceProcessPlayerBattleDeathOnce();
+      sourceProcessBattleDeathsAtAddProfit();
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
@@ -9064,7 +9086,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
         guardianPetId:r?.guardianPetId||null
       },target);
       sourceBattleFinalizeItemCrushRng(r);
-      sourceProcessPlayerBattleDeathOnce();
+      sourceProcessBattleDeathsAtAddProfit();
     }else{
       sourcePostTarget=null;
       sourceLoopExit='attack-failed';
@@ -9249,6 +9271,7 @@ function performEnemyContinuation(actor,unit,options,meta){
       enemyApplyDirectGuardianSkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
     }
 
+    sourceProcessBattleDeathsAtAddProfit();
     if(state.hp<=0)break;
     if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet)){
       chosen=null;
@@ -9604,6 +9627,7 @@ function captureTurn(manual=false){
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+      sourceProcessBattleDeathsAtAddProfit();
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
@@ -9716,8 +9740,7 @@ function winBattle(){
 function defeat(){
   const hadBattle=!!enemy;
   if(hadBattle){
-    sourceProcessPendingPetBattleDeaths();
-    sourceProcessPlayerBattleDeathOnce();
+    sourceProcessBattleDeathsAtAddProfit();
   }
   addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
   releaseBattleEnemyRuntimeItems(enemy);
@@ -10047,7 +10070,7 @@ function sourcePerformCombo(order,index,options={}){
     if(deferredWake?.damage>0)battleStatusWakeOnDamage(deferredWake.desc,deferredWake.damage);
     sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
     // fixed BATTLE_Combo returns to the caller, then BATTLE_AddProfit processes the new death.
-    sourceProcessPlayerBattleDeathOnce();
+    sourceProcessBattleDeathsAtAddProfit();
   }
 
   const actual=immediateDamage+accumulatedActual;
@@ -10344,6 +10367,7 @@ function attackTurn(){
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+      sourceProcessBattleDeathsAtAddProfit();
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
@@ -10437,6 +10461,7 @@ function guardTurn(){
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+      sourceProcessBattleDeathsAtAddProfit();
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
