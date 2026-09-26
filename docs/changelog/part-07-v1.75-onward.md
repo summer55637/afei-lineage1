@@ -1689,3 +1689,111 @@ save schema 維持 **29**。
 - `48d97e4689ab49fa5cfb50a8ea143936c5b6f4fd` — V1.94 CI
 - `3ff05b5da784788e5a07619c7dc1bb05e249192f` — V1.94 playable-core marker
 
+---
+
+## V1.95 Player RANDOMACT MagicStatusChange
+
+V1.95 接入玩家寵低忠誠 RANDOMACT：
+
+- 552 / 553 `PETSKILL_MagicStatusChange`（鐵壁 3 回合 / 30）
+- 565 `PETSKILL_MagicStatusChange`（銅牆 5 回合 / 40）
+- 658 `PETSKILL_MagicStatusChange`（玄武鐵壁 3 回合 / 50）
+
+### RANDOMACT target quirk
+
+原 `BATTLE_PetRandomSkill()` 在掃技能前已經先做：
+
+`BATTLE_DefaultAttacker(battleindex, 1-side)`
+
+也就是先抽一個敵方 COM2。
+
+`PETSKILL_MagicStatusChange()` 不會依技能資料的 target=2 重新選「我方」，而是直接：
+
+`CHAR_WORKBATTLECOM2 = toindex`
+
+因此低忠誠 RANDOMACT 抽到鐵壁系時，會把**敵方 COM2** 帶進執行階段。
+
+### 「全」不是全體重定向
+
+option：
+
+- `铁壁|3|30|全`
+- `铁壁|5|40|全`
+- `铁壁|3|50|全`
+
+第四欄只在包含「單」時做 `toNo < 20` 的合法性檢查。
+
+「全」本身不改寫 toNo。
+
+真正套用目標仍由：
+
+`BATTLE_MultiList(battleindex, toNo, ToList)`
+
+決定。
+
+RANDOMACT COM2 是 10～19 的單一 Enemy slot，因此：
+
+- raw Enemy 還活著：只對該 Enemy 套鐵壁
+- raw Enemy 已死亡／不在場：在同一敵側用來源 `rand()%10` 反覆挑存活 Entry
+- 不會因 option 寫「全」就套整個敵方 side
+- 更不會自動改成玩家／自己的 side
+
+### SuperWall
+
+目前四個可達 row 都解析為 MagicStatus「鐵壁」。
+
+對選中的 Enemy：
+
+- 若已有任何目前 source-backed MagicTbl 鐵壁狀態，不刷新
+- 否則設定 `superWallTurns = turn`
+- `superWallPower = nums`
+
+現有 DamageCalc 已按原 C：
+
+- 基礎防禦先走來源比例
+- 有 SuperWall 時，每次物理傷害計算再 consume `rand()%20`
+- 防禦追加 `(power + rand()%20)%`
+
+技能本身：
+
+- 不做物理 AttackSeq
+- 不做 ItemCrush
+- 不進 Counter
+
+### Field-filter audit
+
+這輪順帶確認原 `BATTLE_PetRandomSkill()` 只接受：
+
+- `PETSKILL_FIELD_ALL`
+- `PETSKILL_FIELD_BATTLE`
+
+Web 已對應為 `field===0 || field===1`。
+
+因此 field=2 的加工／料理／修復／鑲寶石等技能本來就不可能被 RANDOMACT 抽到，不新增錯誤的戰鬥 dispatch。
+
+### Regression
+
+新增：
+
+`tools/check_v195_player_magicstatuschange_runtime.mjs`
+
+鎖定：
+
+- 552 / 553 / 565 / 658 runtime rows
+- RANDOMACT opposing COM2 preservation
+- 「全」文字不重定向目標
+- 0..19 單目標 BATTLE_MultiList semantics
+- raw target dead 時同側 `rand()%10` fallback
+- SuperWall turns / power
+- no Counter / no ItemCrush
+- field=2 非戰鬥技能持續被 RANDOMACT filter 排除
+
+save schema 維持 **29**。
+
+### commits
+
+- `63698af4adfac838120ee6788e4b0c7e722fc350` — V1.95 core
+- `dab8a42f0bccfbe1390bfdf5bc9e886a76ed9c42` — V1.95 regression
+- `9a85b2ea96f75453f27e79a49d000d4f3b5d99cf` — V1.95 CI
+- `bb1ec30325250def3c0359d932922230b03f7b25` — V1.95 playable-core marker
+
