@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.91**
+**PLAYABLE CORE V1.92**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,26 +16,25 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.91 最新進度
+## V1.92 最新進度
 
-V1.89～V1.91 持續接入玩家寵低忠誠 `RANDOMACT` 的 fixed PetSkill：
+V1.91～V1.92 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 618 `PETSKILL_Sonic`（音波衝擊）
-- 640／666／718 `PETSKILL_Regret`（憾甲一擊）
-- 624 `PETSKILL_Firekill`（火線獵殺）
 - 615／616／651／656 `PETSKILL_BattleTearDamage`（撕裂傷口）
+- 626 `PETSKILL_ShowMercy`（手下留情）
+- 635 `PETSKILL_BecomePig`（黑烏力化）
 
-### V1.91 BattleTearDamage
+### V1.92 ShowMercy / BecomePig
 
-- 原 `PETSKILL_BattleTearDamage()` 先寫 `FIXSTR ×0.9` 攻擊與 `FIXTOUGH ×0.8` 防禦；低忠誠 RANDOMACT 發生在 EntrySort 後，因此不回頭改本回合排序
-- `BATTLE_TargetAdjust` 後，以目標「已損 HP × 20／50／70／150%」作撕裂追加，並保留 C int 截斷
-- 原 C 特例：若目標沒有舊傷、算出的撕裂追加 `<= 0`，會把本次物理 `damage` 直接歸零，不是單純不加成
-- 若原目標已有 DamageReact，`BATTLE_S_AttackDamage` 會先把 local skill_type 降為 -1，因此撕裂追加整段跳過，但 90% 攻／80% 防 work 值仍保留
-- 同步修正既有 Enemy Tear × 玩家 Pet Acupuncture crossover
-- Tear 為 isolated `BATTLE_S_AttackDamage`，不進普通 Counter loop；玩家側沿用 command-end outer AddProfit
-- 新增 `tools/check_v191_player_tear_runtime.mjs` 並接入 CI
+- ShowMercy 的致死保護在 `BATTLE_DamageSub`：Guardian 已代擋時，以實際 Guardian HP 做 `HP-1` clamp
+- clamp 發生在 DamageReact 前，因此 Acupuncture 仍可在後面改變實際扣血
+- ShowMercy 的 COM1 不會被 common loop 改成 ATTACK：原目標最多可反擊一次，ShowMercy Pet 不能再反反擊
+- BecomePig 的 COM1 會在 common loop 改成 ATTACK，因此保留完整 Counter chain
+- Guardian 只改 `BATTLE_Attack()` 內部 defindex；外層 Counter 仍從原 TargetAdjust 目標開始
+- 玩家 Pet 對 Enemy 使用 BecomePig 時，原 C 在 `CHAR_TYPEPLAYER` 條件就失敗，因此不 parse option、不抽 `rand()%100`、不套烏力化
+- 新增 `tools/check_v192_player_showmercy_becomepig_runtime.mjs` 並接入 CI
 
-V1.89／V1.90 的 Sonic、Regret、Firekill 行為與 regression 全數保留。
+V1.91 Tear 與之前 Sonic／Regret／Firekill regression 全數保留。
 
 save schema 維持 **29**。
 
