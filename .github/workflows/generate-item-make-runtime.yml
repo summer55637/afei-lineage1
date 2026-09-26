@@ -34,6 +34,7 @@ on:
       - "tools/check_v199_player_attackcrazed_runtime.mjs"
       - "tools/check_v200_player_attackshoot_runtime.mjs"
       - "tools/check_v201_player_battlemodel_runtime.mjs"
+      - "tools/check_v202_player_combined_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -150,6 +151,9 @@ jobs:
 
       - name: Run V2.01 player BattleModel regressions
         run: node tools/check_v201_player_battlemodel_runtime.mjs
+
+      - name: Run V2.02 player Combined regressions
+        run: node tools/check_v202_player_combined_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
