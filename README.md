@@ -15192,3 +15192,101 @@ V1.68 用 `battleOuterAddProfitPending` 保留這個差異：只有實際走到 
 - V1.67 Marefia PetID 718 四顆死亡 RNG retained
 - targeted V1.68 regression: **29 / 29 PASS**
 - save schema 27 unchanged
+
+
+## V1.69 Source-backed relife item templates
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心 commits：
+
+- `f6204996fad82ce96aa4cc9ce3305b232e2a48a7` — 從固定 `itemset6.txt` 建立 `stoneage_item_relife_runtime.json`
+- `2b5cbb09a768ee859b2b5180ebffee47a44e7cde` — `game.js` 開機載入 relife runtime，戰鬥判定改成只信 source template
+
+### Fixed itemset6 result
+
+固定 10,737 筆 Item 中，`ITEM_DIErelife` 共 **5 件**：
+
+- Item 20131 — 替身娃娃 Lv1 — `HP:200`
+- Item 20132 — 替身娃娃 Lv2 — `HP:500`
+- Item 20133 — 替身娃娃 Lv3 — `HP:FULL`
+- Item 21128 — 祈福戒指 — `HP:FULL`
+- Item 19180 — VIP祈福戒指 — `HP:FULL`
+
+五件資料的 `ITEM_TYPE` 都是 **15 = ITEM_AMULET**。固定 `ITEM_getEquipPlace()` 將 `ITEM_AMULET` 映射到 **CHAR_DECORATION1 = equipment slot 3**。
+
+固定 build 同時開啟 `_ITEM_EQUITSPACE` 與 `_EQUIT_NEWGLOVE`，所以完整裝備區是：
+
+0 HEAD、1 BODY、2 ARM、3 DECORATION1、4 DECORATION2、5 BELT、6 SHIELD、7 SHOES、8 GLOVE。
+
+但 `CHECK_ITEM_RELIFE()` 仍硬寫只掃 **slot 0..4**；relife 五件剛好全部落在 slot 3，可被該舊掃描範圍看到。
+
+### Source-backed trust boundary
+
+V1.68 的 lifecycle 測試 descriptor 曾可直接帶 `dieRelifeFunc` / `hpArgument`。V1.69 改為：
+
+1. 先用 existing item index 通過 ITEM_CHECKINDEX 等價檢查
+2. 從 existing item 取得真正 ItemId
+3. ItemId 必須在固定 `stoneage_item_relife_runtime.json` 找得到
+4. template 的 `relifeFunc` 必須真的是 `ITEM_DIErelife`
+5. HP argument、名稱、equip place 全部只讀 source template
+
+所以任意物品就算外部 descriptor 偽造 `dieRelifeFunc=true` 或 `hpArgument=FULL`，也不會被當成死亡復活裝備。
+
+### Exact fixed modifiers
+
+替身娃娃 Lv1/Lv2/Lv3 的裝備 modifier 全為 0。
+
+祈福戒指 21128：
+
+- ATK +75
+- DEF +75
+- QUICK +75
+- MAXHP +200
+
+VIP祈福戒指 19180：
+
+- ATK +90
+- DEF +90
+- QUICK +90
+- MAXHP +250
+- MAXMP +80
+
+以上 min/max pair 均相同，item creation 不需要額外猜 RNG。
+
+### Acquisition boundary
+
+目前固定 repo 已可直接證明：
+
+- Item 20131 出現在 `GMQUE_AddQueStrTrophy()` 的 `itemID1` 隨機獎勵池。
+
+其餘 20132 / 20133 / 21128 / 19180 在目前已索引固定 C 原碼中尚未找到可直接證明的玩家取得入口，因此 V1.69 **不自動送、不塞商店、不猜掉落來源**。
+
+### Current production boundary
+
+Web 現階段仍沒有 source-backed Player equipment-slot lifecycle，因此：
+
+- relife runtime 已正式載入
+- 戰鬥 relife 核心已只接受真實 source template
+- `sourcePlayerEquippedRelifeItems()` 仍保持空 adapter
+- 不會因為已知道 ItemId 就憑空讓玩家裝備或取得它們
+- save schema 27 不變
+
+下一步應先移植固定 `CHAR_moveItemFromItemBoxToEquip` / `ITEM_equipEffect` 與 Player equipment slot lifecycle，再把這 5 件真正接入可裝備狀態。
+
+### Regression
+
+- generated relife runtime：5 templates / exact ItemIds PASS
+- source HP argument 200 / 500 / FULL PASS
+- all type 15 / CHAR_DECORATION1 slot 3 PASS
+- arbitrary ItemId cannot spoof relife PASS
+- runtime ItemId overrides forged descriptor PASS
+- normal death / Ultimate exclusion retained
+- slot 0..4 scan retained
+- inner / outer AddProfit relife ordering retained
+- existing item consumption retained
+- relife core 0 RNG retained
+- capture / attack / guard pending gates retained
+- targeted V1.69 regression: **36 / 36 PASS**
+- committed `game.js` syntax PASS
+- save schema 27 unchanged
