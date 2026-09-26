@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.82</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.83</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.83：</b>
+      確認玩家寵低忠誠 RANDOMACT 的 595 閃避術其實是原 C no-op：RANDOMACT 先選 Enemy toNo，PETSKILL_SetDuck 雖成功建立 command，但 PETSKILL_SetDuckChange_Battle 執行時要求 toNo 必須就是施術寵自己，因此立刻 FALSE，不解析 3|60、不加閃避、也不吃 RNG。CHAR_MAGICPETMP 雖被清 0，但 fixed repo 沒有任何累加路徑，SetMagicPet 只讀後寫回同值，因此目前行為上仍是 0。
+    </article>
 
     <article class="card note">
       <b>V1.82：</b>
