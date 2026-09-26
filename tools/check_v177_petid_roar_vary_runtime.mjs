@@ -89,8 +89,10 @@ const view=game.slice(viewStart,viewEnd);
 assert.ok(view.includes('const vary=battlePetVaryStates.get(pet.id)||null'));
 assert.ok(view.indexOf('const variedAttackBase=')<view.indexOf('const normalAttackBase=weaken?'));
 assert.ok(view.indexOf('const variedQuickBase=')<view.indexOf('const normalQuickBase=weaken?'));
-assert.ok(view.includes('Math.trunc(sourceAttackBase*Math.trunc(n(vary.attackPct))/100)'));
-assert.ok(view.includes('Math.trunc(sourceQuickBase*Math.trunc(n(vary.dexPct))/100)'));
+// V1.84 inserts SetMagicPet before Vary, matching fixed Other_DefcharWorkInt order.
+assert.ok(view.includes('Math.trunc(magicPet.attack*Math.trunc(n(vary.attackPct))/100)'));
+assert.ok(view.includes('Math.trunc(magicPet.quick*Math.trunc(n(vary.dexPct))/100)'));
+assert.ok(view.indexOf('const magicPet=sourceMagicPetAdjusted')<view.indexOf('const variedAttackBase='));
 
 // fixed post-command WORKTURN: cast action 0->1, then five subsequent executed commands;
 // reset occurs only after the fifth subsequent command changes 5->6.
