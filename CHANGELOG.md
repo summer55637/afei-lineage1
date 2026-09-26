@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.76**
+目前最新可玩核心：**V1.77**
 
 ## 歷史分檔
 
@@ -14,14 +14,14 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.76
+## 最新版本 V1.77
 
-V1.76 補齊玩家寵低忠誠 RANDOMACT 的 functbl / BattleProperty 邊界：
+V1.77 接上 fixed CHAR_PETID identity 與 Roar / Vary：
 
-- 582 / 642 / 643 依 fixed PETSKILL_functbl 判定為 PETSKILL_Use FALSE
-- 612 魔之詛咒接入 PET_PetskillPropertyEvent，物理攻守屬性會即時剋制對手
-- callback 在 Pet / battle exit 時清除
-- 639 蟻葬對 RANDOMACT 的存活 Enemy 依原 battle.c fall-through 為普通物理攻擊
-- 仍缺真實 CHAR_PETID 的 Roar / Vary 保留不猜
+- Enemy 的 `E_T_TEMPNO → CHAR_PETID` 與捕獲後 PETID copy 已落進 Web runtime
+- 581 / 734 Roar 依 option 精確 PETID 清單直接 BATTLE_Exit
+- 600 / 674 Vary 僅允許 PETID 981～984，依原 C 套攻／敏與 WORKTURN 生命週期
+- _FIXWOLF 的 skill 600 reroll 維持原 RNG 順序
+- save schema 升至 29；舊存檔僅由已有 source tempNo 安全補 petId
 
-完整 V1.76 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.77 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
