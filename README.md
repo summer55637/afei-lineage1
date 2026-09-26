@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.80**
+**PLAYABLE CORE V1.81**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,16 +16,15 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.80 最新進度
+## V1.81 最新進度
 
-V1.80 接上玩家寵低忠誠 `RANDOMACT` 的 506～508 `PETSKILL_MpDamage`：
+V1.81 接上玩家寵低忠誠 `RANDOMACT` 的屬性攻擊類 PetSkill：
 
-- fixed `PETSKILL_MpDamage()` 使用 `(float)(atoi(buf1) / 100)`；50 / 100 先做 C 整數除法，因此實際為 0，技能說明的「攻擊力下降50%」在這個 build 不生效
-- `BATTLE_S_MpDamage()` 只有目標是 PLAYER 且 MP>0、沒有 DamageReact 時才會扣 MP；ENEMY / PET 會直接 return 0
-- 低忠誠 `BATTLE_PetRandomSkill()` 的 DefaultAttacker 在目前 PVE 路徑只會選 Enemy，因此 506 / 507 / 508 的額外 MP 傷害固定為 0
-- 物理部分仍走 `BATTLE_S_AttackDamage`，沿用 V1.79 的 Guardian calc-only / 原目標 DamageSub bug
-- execution 時仍會重跑 TargetAdjust；目標失效才在該時點重抽 Enemy
-- 這個特殊 command 不接普通 Counter
+- **544～547 / 825～828：`PETSKILL_Modifyattack`**：先完成 `BATTLE_S_AttackDamage` 的物理傷害，再依原目標永久地／水／火／風屬性加傷；保留 `rand()%(ModNum+5)` 後 C 整數 `/100` 的來源 bug
+- **548～551 / 697～700：`PETSKILL_Mdfyattack`**：`BATTLE_AttrAdjust` 在本次 AttackSeq 內把攻方四屬清 0，只留下 option 指定屬性與數值
+- **Guardian 差異**：兩類都走 V1.79 的 calc-only Guardian bug；Mdfyattack 的屬性相剋會拿 local Guardian 算，但真正 DamageSub 仍落原目標；Modifyattack 的後置 bonus 則讀 caller 原目標的永久屬性
+- **DamageReact 差異**：Modifyattack 的 post-AttackSeq bonus 會因 local `skill_type=-1` 被取消；Mdfyattack 的元素替換看的是攻方 `WORKBATTLECOM1`，即使 local skill type 被降成 -1，元素替換仍會進 DamageCalc
+- execution-time TargetAdjust 與 no-Counter lifecycle 都依 fixed `BATTLE_S_AttackDamage` 保留
 
 save schema 維持 **29**。
 
