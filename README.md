@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.78**
+**PLAYABLE CORE V1.79**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,17 +16,16 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.78 最新進度
+## V1.79 最新進度
 
-V1.78 繼續收斂玩家寵低忠誠 `RANDOMACT` 的特殊狀態 PetSkill：
+V1.79 接上玩家寵低忠誠 `RANDOMACT` 的吸血類 PetSkill：
 
-- **Refresh / 淨化**：326、583、584、591、592、593 已接入 fixed `BATTLE_MultiStatusRecovery`；`全` 不是全部清光，而是照 `StatusTbl` 掃描後只解除最後一個有效狀態，指定狀態也必須與該掃描結果一致
-- **Weaken / 虛弱**：575、576 使用 `BATTLE_StatusAttackCheck(..., Success, 30, 1.0)`，成功後保存 `turn+1`
-- **Deeppoison / 劇毒**：577、578、840 成功後依 fixed `BATTLE_S_Deeppoison` 保存 `turn+2`
-- **Barrier / 魔障**：579、594、673、836 成功後保存 `turn+1`
-- **Nocast / 沉默**：580、672、837 成功後直接保存原 `turn`，不額外 +1
-- **RANDOMACT 單體怪行為**：fixed `BATTLE_PetRandomSkill()` 先用 `BATTLE_DefaultAttacker()` 選單一 `toNo`，`PETSKILL_Use()` 不依資料列 target 欄重新擴成全體；所以這條低忠誠路徑即使技能名稱／target metadata 寫「全體」，仍只作用於那個隨機單體
-- 這五類皆是獨立特殊 command，不造成物理傷害，也不進普通 Counter
+- **503 / 504 / 505 / 714 / 833：`PETSKILL_DamageToHp`**：fixed C 的 `def = (atoi(buf1) / 100)` 是 int/int 先算，因此目前 30 / 20 / 10 全部先截成 0；技能說明寫的降攻在這個 build 實際不生效
+- **623 / 659：`PETSKILL_DamageToHp2`**：依 `BATTLE_AttackSeq` 套 FIXSTR +20% 與會心率 ×1.3；低忠誠 RANDOMACT 發生在 EntrySort 後，因此其 WORKQUICK +20% 不會回頭改本回合排序
+- **Guardian calc-only bug**：`BATTLE_S_AttackDamage` 讓 `BATTLE_AttackSeq` 可用 Guardian 的防禦／Guard 做傷害計算，但 caller 的原 `defindex` 沒被改掉，所以真正 `DamageSub`、死亡、ItemCrush 與吸血仍作用在原目標
+- **DamageReact**：原目標若已有 DamageReact，`skill_type` 在 `BATTLE_AttackSeq` 前先降為 `-1`；吸血不成立，`DamageToHp2` 的 +20% 攻與 ×1.3 會心也不成立
+- **623 HP50% 說明**：fixed `PETSKILL_DamageToHp2()` 沒有 HP gate；原碼只留下註解，因此不自行補「50% 以下才能用」
+- 兩類都是獨立 `BATTLE_S_AttackDamage` command，不接普通 Counter
 
 save schema 維持 **29**。
 
