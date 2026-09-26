@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.82**
+**PLAYABLE CORE V1.83**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,16 +16,15 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.82 最新進度
+## V1.83 最新進度
 
-V1.82 接上玩家寵低忠誠 `RANDOMACT` 的 Lighttakeed，並完成 574 嚙齒術的 illegal audit：
+V1.83 收斂玩家寵低忠誠 `RANDOMACT` 的 595 `PETSKILL_SetDuck`：
 
-- **609 / 610 / 611：`PETSKILL_Lighttakeed`**：依 fixed C 將本回合 `WORKATTACKPOWER = FIXSTR × 0.7`、`WORKDEFENCEPOWER = FIXTOUGH × 0.5`；`WORKQUICK × 0.95` 那行原碼已註解，因此不補
-- **WORK 生命週期**：使用既有 `battlePetPowerMods`，它在下一個 `normalBattleOrder()` 的 compliance 邊界會清除，因此 70%/50% 只保留本回合，且同回合 Counter 計算仍可看到這組 WORK 值
-- **DamageReact**：目前 source-backed Enemy 只有 Acupuncture；它對 ABSROB / REFLEC / VANISH 都不匹配，因此 fixed `BATTLE_S_AttackDamage` 只把 local skill type 降成普通反應，不會吸收／複製任何光鏡守狀態
-- **Guardian**：物理部分沿用 V1.79 的 `BATTLE_S_AttackDamage` calc-only Guardian bug；Guardian 可參與傷害計算，但真正 DamageSub 仍落原目標
-- **574 嚙齒術**：fixed `petskill2.txt` 為 `illegal=1`；`PETSKILL_Use()` 對 `CHAR_TYPEPET` 在進函式前直接 FALSE，所以玩家寵 RANDOMACT 抽到 574 就是不動，不執行破壞裝備效果
-- Lighttakeed 是獨立特殊 command，不接普通 Counter
+- fixed `BATTLE_PetRandomSkill()` 先用 `BATTLE_DefaultAttacker()` 選 Enemy `toNo`，再把這個值傳給 `PETSKILL_SetDuck()`
+- `PETSKILL_SetDuck()` 本身會成功建立 `BATTLE_COM_S_SETDUCK`，但真正 execution 的 `PETSKILL_SetDuckChange_Battle()` 第一個 target gate 要求 `BATTLE_No2Index(toNo) == charaindex`
+- 這條 RANDOMACT 的 `toNo` 是 Enemy，不可能等於施術寵自己，因此 execution 直接 FALSE：不解析 `3|60`、不寫 Duck turn/power、不產生 MagicEffect，也不吃 RNG
+- `PETSKILL_SetDuck()` 同時寫 `CHAR_MAGICPETMP=0`；fixed repo 全域搜尋確認沒有任何累加該欄位的路徑，`PETSKILL_SetMagicPet()` 只讀後寫回原值，所以目前這個 reset 在 fixed build 行為上也是 0→0
+- 因此 Web 不建立假的三回合 60% 閃避效果
 
 save schema 維持 **29**。
 
