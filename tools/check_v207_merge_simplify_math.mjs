@@ -104,7 +104,7 @@ function tableNum(value){
   for(let i=0;i<math.itemRandTableForItem.length;i++)if(n<=math.itemRandTableForItem[i].maxnum)return i;
   return math.itemRandTableForItem.length-1;
 }
-function simplify(values){
+function simplifyExample(values){
   const d=[...values].sort((a,b)=>a-b);
   for(let j=1;j<d.length;j++){
     const t=tableNum(d[j-1]);
@@ -113,10 +113,10 @@ function simplify(values){
   }
   return Math.min(1000,Math.trunc(d[d.length-1]));
 }
-assert.equal(simplify([10,20,30]),35);
-assert.equal(simplify([100,200]),206);
-assert.equal(simplify([900,900]),943);
-assert.equal(simplify([1000,1000]),1000);
+assert.equal(simplifyExample([10,20,30]),35);
+assert.equal(simplifyExample([100,200]),206);
+assert.equal(simplifyExample([900,900]),943);
+assert.equal(simplifyExample([1000,1000]),1000);
 assert.equal(tableNum(24),0);
 assert.equal(tableNum(25),1);
 assert.equal(tableNum(4001),19);
@@ -142,5 +142,5 @@ console.log(JSON.stringify({
   atomByteNames:Object.keys(runtime.atomIndexByByteName).length,
   tableRows:math.itemRandTableForItem.length,
   odds:math.oddsTable.length,
-  examples:{a:simplify([10,20,30]),b:simplify([100,200]),c:simplify([900,900]),cap:simplify([1000,1000])}
+  examples:{a:simplifyExample([10,20,30]),b:simplifyExample([100,200]),c:simplifyExample([900,900]),cap:simplifyExample([1000,1000])}
 }));
