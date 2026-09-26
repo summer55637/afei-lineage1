@@ -7,6 +7,7 @@ const PETSKILL_RUNTIME_URL='data/generated/stoneage_petskill_runtime.json';
 const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
 const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.json';
 const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
+const ITEM_RELIFE_RUNTIME_URL='data/generated/stoneage_item_relife_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
@@ -48,7 +49,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -65,6 +66,11 @@ function sourceItemTemplateMagicUseMp(itemId){
   if(!sourceItemTemplateExists(itemId))return null;
   const value=Number(itemMagicDb.byItemId[String(Math.trunc(Number(itemId)))]);
   return Number.isFinite(value)?Math.trunc(value):null;
+}
+function sourceItemRelifeTemplate(itemId){
+  const id=Math.trunc(Number(itemId));
+  if(!Number.isFinite(id)||!itemRelifeDb?.byItemId)return null;
+  return itemRelifeDb.byItemId[String(id)]||null;
 }
 function sourceEnemyWeaponTemplate(itemId){
   const id=Math.trunc(Number(itemId));
@@ -7518,10 +7524,10 @@ function sourceProcessBattleDeathsAtAddProfit(){
   return {player,pets,playerUltimatePetExit:false};
 }
 function sourcePlayerEquippedRelifeItems(){
-  // Current Web runtime still has no source-backed Player equipment-slot importer.
-  // CHECK_ITEM_RELIFE is therefore wired to an empty production adapter instead of
-  // inventing an item ID / equip slot / HP argument. Unit regressions can pass the
-  // exact five-slot descriptors directly to sourceProcessBattleActorOuterBoundary().
+  // V1.69 now has the exact five ITEM_DIErelife templates from fixed itemset6.txt,
+  // but Player equipment slots themselves are not source-backed in the current Web runtime.
+  // Keep the production adapter empty until the real equip lifecycle is ported; do not
+  // manufacture an equipped ItemId merely because its template is now known.
   return [];
 }
 function sourceCAtoi(value){
@@ -7529,10 +7535,11 @@ function sourceCAtoi(value){
   const match=String(value??'').match(/^\s*([+-]?\d+)/);
   return match?Math.trunc(Number(match[1])):0;
 }
-function sourceRelifeHpPower(item){
-  // ITEM_DIErelife: missing HP= argument -> 1; literal FULL -> WORKMAXHP; otherwise atoi().
-  if(!item||item.hpArgument==null)return 1;
-  const raw=String(item.hpArgument);
+function sourceRelifeHpPower(template){
+  // ITEM_DIErelife reads key HP from ITEM_ARGUMENT. The generated runtime stores the exact
+  // value after HP: as relifeHpArgument: missing -> 1; FULL -> WORKMAXHP; otherwise atoi().
+  if(!template||template.relifeHpArgument==null)return 1;
+  const raw=String(template.relifeHpArgument);
   if(raw==='FULL')return Math.trunc(n(state?.maxHp));
   return sourceCAtoi(raw);
 }
@@ -7556,11 +7563,19 @@ function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePl
     if(!item)continue;
     // ITEM_CHECKINDEX + ITEM_getEquipPlace() are both hard gates in fixed CHECK_ITEM_RELIFE.
     const runtimeIndex=Math.trunc(Number(item.itemIndex));
-    const equipPlace=Math.trunc(Number(item.equipPlace));
-    if(!Number.isFinite(runtimeIndex)||!sourceItemRuntimeSlot(runtimeIndex))continue;
-    if(!Number.isFinite(equipPlace)||equipPlace===-1||item.equipped===false||item.dieRelifeFunc!==true)continue;
+    if(!Number.isFinite(runtimeIndex))continue;
+    const existing=sourceItemRuntimeSlot(runtimeIndex);
+    if(!existing||item.equipped===false)continue;
 
-    const requested=sourceRelifeHpPower(item);
+    // V1.69: function pointer / ITEM_ARGUMENT / ITEM_TYPE come only from the fixed itemset6
+    // runtime. A caller cannot turn an arbitrary existing item into a relife item by passing
+    // dieRelifeFunc=true or a fabricated hpArgument.
+    const template=sourceItemRelifeTemplate(existing.itemId);
+    if(!template||template.relifeFunc!=='ITEM_DIErelife')continue;
+    const equipPlace=Math.trunc(Number(template.equipPlace));
+    if(!Number.isFinite(equipPlace)||equipPlace===-1)continue;
+
+    const requested=sourceRelifeHpPower(template);
     const workHp=Math.max(1,Math.trunc(n(requested)));
     const maxHp=Math.trunc(n(state?.maxHp));
     state.hp=Math.min(workHp,maxHp);
@@ -7572,11 +7587,12 @@ function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePl
 
     // ITEM_DIErelife consumes the equipped existing item immediately after MultiReLife.
     sourceConsumeRelifeEquipment(item,slots,i);
-    const label=item.name||(
-      Number.isFinite(Number(item.itemId))?('Item '+Math.trunc(Number(item.itemId))):'死亡復活裝備'
-    );
+    const label=template.name||('Item '+Math.trunc(Number(template.itemId)));
     addLog(label+' 發動死亡復活：HP 回復至 '+state.hp+'，裝備已消耗。','good');
-    return {slot:i,itemId:item.itemId??null,itemIndex:item.itemIndex??null,requested,restoredHp:state.hp};
+    return {
+      slot:i,itemId:Math.trunc(Number(template.itemId)),itemIndex:runtimeIndex,
+      requested,restoredHp:state.hp,equipPlace
+    };
   }
   return null;
 }
@@ -11114,7 +11130,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,enemyWeaponR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,enemyWeaponR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -11124,6 +11140,7 @@ async function boot(){
       fetch(PET_MODAI_URL,{cache:'no-store'}),
       fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'}),
+      fetch(ITEM_RELIFE_RUNTIME_URL,{cache:'no-store'}),
       fetch(ENEMY_WEAPON_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
@@ -11135,6 +11152,7 @@ async function boot(){
     if(!modAiR.ok)throw new Error('Pet MODAI runtime HTTP '+modAiR.status);
     if(!attackMagicR.ok)throw new Error('AttackMagic runtime HTTP '+attackMagicR.status);
     if(!itemMagicR.ok)throw new Error('Item MAGICUSEMP runtime HTTP '+itemMagicR.status);
+    if(!itemRelifeR.ok)throw new Error('Item relife runtime HTTP '+itemRelifeR.status);
     if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
@@ -11143,6 +11161,7 @@ async function boot(){
     petModAiDb=await modAiR.json();
     attackMagicDb=await attackMagicR.json();
     itemMagicDb=await itemMagicR.json();
+    itemRelifeDb=await itemRelifeR.json();
     enemyWeaponDb=await enemyWeaponR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
@@ -11155,7 +11174,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.31 載入完成：Enemy AI 選目標已對齊 fixed battle_ai.c 的單候選 RAND(0,rn) 時序與 TARGET_LEADER 非隊長抽選。','good');
+    addLog('V1.69 載入完成：_Item_ReLifeAct 已改讀 fixed itemset6 的 5 件 source template；玩家裝備取得／穿戴仍待來源化，不自動發放。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
