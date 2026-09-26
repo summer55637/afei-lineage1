@@ -267,3 +267,139 @@ Web 因此同步在：
 - `8e5e71e5e7c923be7764c7978db68f740004a26e` — V1.76 regression
 - `2e393e2ab48daefb36fa768987a59da37cea46b5` — V1.76 playable marker
 - `575ca55b8be8db9b1538bf331e572feb4de6e87e` — CI runs V1.76 regression
+
+
+---
+
+## V1.77 CHAR_PETID / Roar / Vary lifecycle
+
+V1.76 對 581 / 734 Roar 與 600 / 674 Vary 保留不猜，原因是當時 Web runtime 沒有獨立保存 `CHAR_PETID`。V1.77 重新沿 fixed 原 C 往上追來源後，這個欄位已可直接證明，不需要用名稱、圖號或 Web id 猜測。
+
+### CHAR_PETID 真實來源
+
+固定 `char/enemy.c` 的 Enemy 建立流程直接寫：
+
+`CharNew.data[CHAR_PETID] = *(tp + E_T_TEMPNO)`
+
+固定 `char/pet.c::PET_createPetFromCharaIndex()` 捕獲時再直接複製：
+
+`CharNew.data[CHAR_PETID] = CHAR_getInt(enemyindex, CHAR_PETID)`
+
+因此目前 source-backed 的 `tempNo` 就是這條建立鏈上的 `E_T_TEMPNO`，可以安全保存成 Web `petId`：
+
+- runtime Enemy：`petId = tempNo`
+- 捕獲 Pet：複製 target `petId`
+- 原服模板建立的任務 Pet / 起始 Pet：同樣由其 `tempNo` 保存
+- 舊存檔：只有已有有限 `tempNo` 時才補 `petId`；沒有來源欄就保持未知
+
+save schema 因此由 28 升為 **29**。
+
+### 581 大吼 / 734 獅王之吼
+
+`PETSKILL_Roar()` 只建立 `BATTLE_COM_S_ROAR` command；真正效果在 `BATTLE_S_Roar()`：
+
+1. execution 時先 `BATTLE_TargetAdjust()`
+2. 讀目標 `CHAR_PETID`
+3. 把 PetSkill option 以 `|` 拆開逐一 `atoi`
+4. 只要 exact PETID 命中清單，就 `BATTLE_Exit(target)`
+5. 不符合則沒有傷害、沒有其他效果
+
+固定資料：
+
+- 581：`901|902|903|904|1056|1057|1058|1059`
+- 734：`1009|1010|1011|989|990|991|992|1030|1031|1032|997|998|999|1000`
+
+Web 現在使用相同 exact membership，不做範圍猜測。命中的 Enemy 走 direct-exit lifecycle，不產生擊殺 EXP／掉落。
+
+### 600 / 674 暗月變身
+
+固定 `PETSKILL_Vary()` 第一個 gate 是：
+
+`CHAR_PETID ∈ {981,982,983,984}`
+
+不符合會直接 return FALSE，連 command 都不建立。
+
+符合時 fixed C：
+
+- 解析 `攻%` → `CHAR_SKILLSTRPOWER`
+- 解析 `敏%` → `CHAR_SKILLDEXPOWER`
+- 當下 WORKATTACKPOWER / WORKQUICK 依 FIX 值加成
+- BASEIMAGENUMBER = 101428
+- WORKTURN = 0
+
+固定資料列：
+
+- 600：攻 +30%、敏 +30%
+- 674：攻 +60%、敏 +50%
+
+雖然資料文字另有「魔防%-50 / -80」，但 fixed `PETSKILL_Vary()` 沒有解析魔防 token，因此 Web 也不自行補這個效果。
+
+### compliance 與 WORKTURN
+
+固定 `item/item.c` 的 compliance 在圖號 101428 時會用 `CHAR_SKILLSTRPOWER / CHAR_SKILLDEXPOWER` 重新加到 `WORKFIXSTR / WORKFIXDEX`，而且這段在 WEAKEN 前執行。
+
+所以 Web 的順序為：
+
+1. 基礎攻／敏
+2. Vary 百分比
+3. WEAKEN 等後續修正
+4. 生成本輪 attack / quick
+
+fixed `battle.c` 在角色真正執行 command 後才處理 WORKTURN：
+
+- cast 當回合：0 → 1
+- 後續實際執行五次 command：1 → 2 → 3 → 4 → 5 → 6
+- `WORKTURN > 5` 時才回復原圖、FIXSTR / FIXDEX，WORKTURN 歸 0
+
+因此 buff 會涵蓋 cast 後 **五次實際執行的指令**。若 StatusSeq / CanMoveCheck 讓該 Pet 本回合直接 skip，原 C 不會走到這段，Web 也不遞增。
+
+### _FIXWOLF RNG
+
+`BATTLE_PetRandomSkill()` 的 fixed `_FIXWOLF` 邊界維持：
+
+- PETID 981～984
+- 若抽到 skill 600
+- 先重抽 skill slot，直到不是 600
+- 然後才做 `BATTLE_DefaultAttacker()`
+
+因此不能把 reroll 移到 target RNG 之後，也不能因為 600 最終不執行就省略前面的 RNG。
+
+### Battle Exit
+
+新增 `battlePetVaryStates` 是純 battle transient。
+
+在：
+
+- 全場 reset
+- Pet Ultimate / Player Ultimate DEFAULTPET exit
+- 低忠誠逃跑
+- Abduct 成功帶走
+
+都會清掉 Vary state，不把變身跨戰鬥保存。
+
+### Regression
+
+新增：
+
+`tools/check_v177_petid_roar_vary_runtime.mjs`
+
+檢查：
+
+- 581 / 734 / 600 / 674 fixed runtime rows
+- Enemy / Capture / Quest / Starter 的 PETID source chain
+- schema 29 舊存檔 migration
+- _FIXWOLF reroll 在 DefaultAttacker 前
+- Roar exact PETID membership + direct exit
+- Vary 981～984 gate
+- 600 / 674 攻敏百分比
+- 不自行解析魔防 token
+- compliance：Vary before WEAKEN
+- cast 0→1 + 五次 command 後 >5 reset
+- status skip 不誤增 WORKTURN
+- mid-battle / full battle exit cleanup
+- `PLAYABLE CORE V1.77`
+
+### commits
+
+- `cf946cf26e91991bd11fdb4ffb7fac5d7cc38f19` — V1.77 CHAR_PETID / Roar / Vary core
+- `d521615e80428aba5694cfca431a2d8e7a1a0191` — initial V1.77 regression
