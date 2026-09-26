@@ -117,9 +117,9 @@ for i in range(5):
     char()
     integer(f"ITEM_INGVALUE{i}")
 
-def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int]]], dict[str, int]]:
+def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int], dict[str, str]]], dict[str, int]]:
     text = raw.decode("latin1")
-    templates: dict[int, tuple[list[int], list[int]]] = {}
+    templates: dict[int, tuple[list[int], list[int], dict[str, str]]] = {}
     syntax_errors = 0
     duplicate_ids = 0
     parsed_lines = 0
@@ -129,6 +129,14 @@ def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int]]],
             continue
         line = raw_line.replace("\t", " ").lstrip(" ")
         tokens = line.split(",")
+        # Fixed pre-ID string order: name, secret, effect, argument, typecode, inlaycode,
+        # init, preover, postover, watch, use, attach, detach, drop, pickup, relife, ID.
+        # Function names are ASCII even though the surrounding itemset is legacy encoded.
+        callbacks = {
+            "i": tokens[6] if len(tokens) > 6 else "",
+            "a": tokens[11] if len(tokens) > 11 else "",
+            "d": tokens[12] if len(tokens) > 12 else "",
+        }
         readpos = 1
         data = DEFAULT_DATA.copy()
         widths = [0] * len(ORDER)
@@ -173,7 +181,7 @@ def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int]]],
         if item_id in templates:
             duplicate_ids += 1
             continue
-        templates[item_id] = (data, widths)
+        templates[item_id] = (data, widths, callbacks)
         parsed_lines += 1
 
     return templates, {
@@ -186,7 +194,7 @@ def pair(data: list[int], widths: list[int], field: str) -> list[int]:
     i = IDX[field]
     return [data[i], data[i] + widths[i]]
 
-def verify_known_source_rows(templates: dict[int, tuple[list[int], list[int]]]) -> dict[str, int]:
+def verify_known_source_rows(templates: dict[int, tuple[list[int], list[int], dict[str, str]]]) -> dict[str, int]:
     weapon_path = Path("data/generated/stoneage_enemy_weapon_runtime.json")
     relife_path = Path("data/generated/stoneage_item_relife_runtime.json")
     weapon = json.loads(weapon_path.read_text(encoding="utf-8"))
@@ -203,7 +211,7 @@ def verify_known_source_rows(templates: dict[int, tuple[list[int], list[int]]]) 
     for key, row in weapon["byItemId"].items():
         item_id = int(key)
         assert item_id in templates, f"weapon template missing: {item_id}"
-        data, widths = templates[item_id]
+        data, widths, callbacks = templates[item_id]
         assert data[IDX["ITEM_TYPE"]] == int(row["type"]), f"type mismatch {item_id}"
         assert [data[IDX["ITEM_ATTACKNUM_MIN"]], data[IDX["ITEM_ATTACKNUM_MAX"]]] == [int(x) for x in row["attackNum"]], f"attackNum mismatch {item_id}"
         for runtime_key, field in weapon_pairs.items():
@@ -220,14 +228,16 @@ def verify_known_source_rows(templates: dict[int, tuple[list[int], list[int]]]) 
     for key, row in relife["byItemId"].items():
         item_id = int(key)
         assert item_id in templates, f"relife template missing: {item_id}"
-        data, widths = templates[item_id]
+        data, widths, callbacks = templates[item_id]
         for runtime_key, field in relife_pairs.items():
             assert pair(data, widths, field) == [int(x) for x in row[runtime_key]], f"{runtime_key} mismatch {item_id}"
+        assert callbacks["a"] == str(row.get("attachFunc","")), f"attach callback mismatch {item_id}"
+        assert callbacks["d"] == str(row.get("detachFunc","")), f"detach callback mismatch {item_id}"
         checked_relife += 1
 
     return {"weaponTemplatesCrossChecked": checked_weapon, "relifeTemplatesCrossChecked": checked_relife}
 
-def sparse_row(data: list[int], widths: list[int]) -> dict[str, list[int]]:
+def sparse_row(data: list[int], widths: list[int], callbacks: dict[str, str]) -> dict[str, object]:
     base_overrides: list[int] = []
     random_widths: list[int] = []
     for i, value in enumerate(data):
@@ -236,7 +246,11 @@ def sparse_row(data: list[int], widths: list[int]) -> dict[str, list[int]]:
     for i, value in enumerate(widths):
         if value != 0:
             random_widths.extend((i, value))
-    return {"b": base_overrides, "w": random_widths}
+    out: dict[str, object] = {"b": base_overrides, "w": random_widths}
+    callback_overrides = {k:v for k,v in callbacks.items() if v != ""}
+    if callback_overrides:
+        out["f"] = callback_overrides
+    return out
 
 def main() -> None:
     with urllib.request.urlopen(SOURCE_URL, timeout=60) as response:
@@ -254,8 +268,11 @@ def main() -> None:
     assert 20131 in templates, "GMQUE item 20131 missing"
 
     checks = verify_known_source_rows(templates)
-    randomized_templates = sum(1 for _, widths in templates.values() if any(widths))
-    nonzero_width_fields = sum(sum(1 for value in widths if value) for _, widths in templates.values())
+    randomized_templates = sum(1 for _, widths, _ in templates.values() if any(widths))
+    nonzero_width_fields = sum(sum(1 for value in widths if value) for _, widths, _ in templates.values())
+    init_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["i"] != "")
+    attach_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["a"] != "")
+    detach_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["d"] != "")
 
     by_item_id = {
         str(item_id): sparse_row(*templates[item_id])
@@ -297,7 +314,7 @@ def main() -> None:
         "parser": {
             "randomRangeRule": "base=min(a,b); randomwidth=ABS(b-a)",
             "nonRangeRandomWidth": 0,
-            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w",
+            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d",
         },
         "makeItem": {
             "loop": "for i=0..ITEM_DATAINTNUM-1: RAND(0, randomdata[i]); data[i]=template[i]+roll",
@@ -320,6 +337,9 @@ def main() -> None:
             "templates": len(templates),
             "randomizedTemplates": randomized_templates,
             "nonzeroRandomWidthFields": nonzero_width_fields,
+            "initCallbackTemplates": init_callback_templates,
+            "attachCallbackTemplates": attach_callback_templates,
+            "detachCallbackTemplates": detach_callback_templates,
             **parse_stats,
             **checks,
         },
