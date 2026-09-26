@@ -33,7 +33,8 @@ const body=game.slice(start,end);
 assert.ok(body.includes('const attack=Math.trunc(n(base.attack)*.7)'));
 assert.ok(body.includes('const defense=Math.trunc(n(base.defense)*.5)'));
 assert.ok(body.includes("battlePetPowerMods.set(pet.id,{attack,defense,skillId:action?.skillId,sourceLighttakeed:true})"));
-assert.equal(/(?:quick|WORKQUICK)[^\n;]*[*.]\s*0?\.95/i.test(body),false);
+const bodyCode=body.replace(/\/\/.*$/gm,'');
+assert.equal(bodyCode.includes('.95'),false);
 
 // battlePetPowerMods must reset at next round compliance boundary, matching WORK lifetime.
 const orderStart=game.indexOf('function normalBattleOrder');
