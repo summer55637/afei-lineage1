@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.86**
+**PLAYABLE CORE V1.88**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,19 +16,45 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.86 最新進度
+## V1.88 最新進度
 
-V1.86 接入玩家寵低忠誠 `RANDOMACT` 的下一批 fixed PetSkill：619／653／667／831 `PETSKILL_Gyrate`，以及 621／713／735 `PETSKILL_Retrace`。
+V1.87～V1.88 繼續接入玩家寵低忠誠 `RANDOMACT` 的 fixed PetSkill，完成：
 
-- 回旋攻擊不先跑 `BATTLE_TargetAdjust`，而是直接用 raw COM2 判定 0～4／5～9／10～14／15～19 哪一個五格橫排，再把當下 `BATTLE_TargetCheck` 有效的該排單位逐一做 `BATTLE_Attack`
-- Gyrate 的攻擊百分比仍依當輪 FIXSTR 寫入 WORKATTACKPOWER；低忠誠 RANDOMACT 發生在 EntrySort 後，所以不回頭影響排序
-- fixed Gyrate 特殊 case 自己寫 FF 後直接 break；不進 common Counter loop，也沒有該 case 內的 `BATTLE_AddProfit`
-- 追跡攻擊的 option parser 在 fixed 原 C 已整段註解；621 的 +20%、713 的 +100%、735 的 +50% 都不直接改首擊攻擊力
-- Player Pet 沒有 CHAR_ARM，所以 `BATTLE_GetAttackCount()` 在忠誠檢查前會落到非 PLAYER fallback：`attack_max = 1`
-- Retrace 只有首擊回傳 DODGE 時才抽 `RAND(1,100) < 80`；成功後 battle.c 固定把 WORKATTACKPOWER 改成 `FIXSTR + 20%`，再對同一個 post-TargetAdjust 目標追加一次 `BATTLE_Attack`
-- Retrace 的追加攻擊不增加 `attack_count`；`BATTLE_AddProfit` 在追加攻擊之後只跑一次，外層 Counter 仍使用首擊的 `ContFlg / defNo`，不是追加攻擊的結果
-- V1.83 regression 因 V1.86 helper 插入而調整文字切片終點；只修測試邊界，沒有更動 SetDuck 行為
-- V1.72～V1.86 CI 全部 SUCCESS
+- 617 `PETSKILL_Sars`（毒煞蔓延）
+- 620 `PETSKILL_Hector`（威嚇攻擊）
+- 622 `PETSKILL_Acupuncture`（針刺外皮）
+- 同步修正既有 Enemy Sars 路徑原本只進 handler、卻被共用 status helper 當成 unsupported 而沒有真正掛上毒煞的缺口
+
+### Hector
+
+- `PETSKILL_Hector()` 依當輪 FIXSTR／FIXDEX 寫 `WORKATTACKPOWER` 與 `WORKQUICK`
+- 低忠誠 RANDOMACT 發生在 EntrySort 後，所以敏捷 -30% 不會倒帶重排本回合，但仍影響同回合後續以 WORKQUICK 參與的戰鬥計算
+- 特殊麻痺判定使用 raw COM2，發生在 common `BATTLE_TargetAdjust` 與物理攻擊 RNG 之前
+- `PROFESSION_BATTLE_StatusAttackCheck(...,2,60)` 會先抽 `RAND(1,100)`，再檢查死亡／既有異常；成功條件嚴格 `roll < 60`
+- Hector 直接把麻痺寫成 1 回合；LOW(COM3) 仍是技能 array 620，超過 `BATTLE_ST_END`，所以普通 `BATTLE_Attack` 的 general status block 不會再做第二次狀態判定
+
+### Sars
+
+- 617 option 只有「煞」，沒有 `turn` 覆寫，因此 `PETSKILL_Sars()` 保留預設 turn=3
+- 命中後依普通 `BATTLE_StatusAttackCheck` 的 SARS 專用 VITAL 公式判定
+- 直接感染寫入 `WORKSARS = turn+1 = 4`，並等價標記 `WORKMODSARS=1`，因此只有主感染者可以向鄰格傳染
+- 擴散感染只寫 3 回合，不取得 carrier 標記
+- 玩家角色中 SARS 時每回合另扣目前 MP 的 10%，既有 SARS lifecycle 繼續沿用
+- 修正 Enemy Sars 共用 helper，現在同樣會真正寫入 dedicated SARS state + carrier
+
+### Acupuncture
+
+- `PETSKILL_Acupuncture()` 不是單純防禦技能：先在施術 Pet 身上寫 `WORKACUPUNCTURE=1`，接著直接 fall-through 進 ordinary physical common loop，仍會攻擊 raw COM2 對面的敵人
+- 玩家 Pet 的針刺 flag 現在以 battle-local set 保存，不寫入存檔；換戰鬥自動清除
+- `BATTLE_GetDamageReact` 已統一支援 Enemy 或玩家 Pet 作為針刺 defender
+- 被非投擲物理傷害命中時：奇數傷害先補成偶數，defender 承受完整傷害，針刺立即消耗，attacker 再承受一半反彈
+- 弓／回力標／投斧／投石等 throw weapon 會把 Acupuncture reflect 改回 NONE，因此不觸發、也不消耗針刺
+- 反彈可殺死 Enemy attacker，會保留死亡 credit / loot lifecycle
+- 已接入普通 Enemy→Pet、弓／投擲、共用 Enemy PetSkill、Counter、忠犬代擋，以及 Combo 的 DamageReact 路徑，避免只在某一種攻擊類型生效
+
+V1.83 regression 因新 helper 插入再次縮短文字切片終點；只修測試邊界，沒有更動 SetDuck 行為。
+
+V1.72～V1.88 CI 全部 SUCCESS。
 
 save schema 維持 **29**。
 
