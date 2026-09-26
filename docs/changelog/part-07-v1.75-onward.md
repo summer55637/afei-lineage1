@@ -1992,3 +1992,99 @@ save schema 維持 **29**。
 - `8c3504e0b89e5351185743e2203c88d7c88ff4b2` — V1.97 CI
 - `3938034e1affc4fc7c4e331611d24fa83148f807` — V1.97 playable-core marker
 
+---
+
+## V1.98 Player RANDOMACT StealMoney
+
+V1.98 接入玩家寵低忠誠 RANDOMACT：
+
+- 211 `PETSKILL_StealMoney`（捐獻）
+
+### Enemy target
+
+battle.c 先走 `BATTLE_TargetAdjust`，再進 `BATTLE_StealMoney()`。
+
+對 `CHAR_TYPEENEMY`：
+
+`per = 5`
+
+但若施術者是 Pet 且主人已達 `CHAR_getMaxHaveGold(owner)`：
+
+`per = 0`
+
+Web 使用既有 fixed `sourcePlayerMaxGold()`：
+
+`1,000,000 + 轉生次數 × 1,800,000`
+
+### RNG
+
+第一顆永遠 consume：
+
+`RAND(1,100) < per`
+
+因此 per=5 的實際成功 roll 是 1～4。
+
+若主人金錢已滿：
+
+- per 先被改為 0
+- 仍 consume 第一顆 `RAND(1,100)`
+- 固定失敗
+- 不抽第二顆石幣 RNG
+
+成功後，Enemy 目標走：
+
+`GOLD = RAND(10,100)`
+
+這不是從 Enemy 自身 GOLD 扣除，而是來源直接產生 10～100 石幣。
+
+### Owner / Pet lifecycle
+
+成功時：
+
+- 石幣加到 Pet 主人
+- 超過持有上限時 clamp 到 max gold
+- `BATTLE_PetDefaultExit(owner)`
+- `CHAR_DEFAULTPET = -1`
+- Pet 自己退出本場戰鬥
+
+失敗時：
+
+- 不增加石幣
+- Pet 留在戰場
+
+此技能：
+
+- 不造成 damage
+- 不走 DamageSub
+- 不做 ItemCrush
+- 不進 Counter
+
+### Regression
+
+新增：
+
+`tools/check_v198_player_stealmoney_runtime.mjs`
+
+鎖定：
+
+- 211 runtime row
+- Enemy per=5
+- owner max gold → per=0
+- 第一顆 RNG 無條件 consume
+- 嚴格 `roll < per`
+- success-only `RAND(10,100)`
+- Enemy GOLD 不被扣
+- 主人金錢上限 clamp
+- 成功 Pet exit / 失敗 Pet stay
+- no damage / no Counter
+- dispatch 在 runtime-pending fallback 前
+
+save schema 維持 **29**。
+
+### commits
+
+- `0cf9b338d87c331f7ddbd74bcf09e27c01d1c50e` — V1.98 core
+- `0bd8230bb468a6f37683f716b6400f1f9faac390` — V1.98 regression
+- `a1f4789ea5c515e3e1591e5e394f4fb1700a1d25` — V1.98 CI
+- `9b09ece0ddc821e874c5778ebcd7b028b3b3259e` — V1.98 playable-core marker
+
