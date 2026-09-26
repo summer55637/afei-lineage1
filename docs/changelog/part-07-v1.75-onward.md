@@ -781,3 +781,92 @@ Regression：`tools/check_v183_player_setduck_runtime.mjs`。
 - `ff0c978788caf316ff33dfe8c7ba0e46c76ce101` — V1.83 playable marker
 - `3c2f29cbdb9ad618e8d130af9acfb75140db2606` — V1.83 README
 - `ab55da3167deecdee77f75e2d59b2c7e0c49ee36` — V1.83 changelog index
+
+---
+
+## V1.84 SetMagicPet raw COM2 + STR/TGH/DEX/HP lifecycle
+
+V1.84 接入目前 runtime 中 19 筆 fixed `PETSKILL_SetMagicPet`：
+
+- 601～604
+- 660～663
+- 693～696
+- 720～723
+- 726
+- 838
+- 841
+
+### raw COM2 / BATTLE_MultiList
+
+fixed 玩家寵低忠誠 `BATTLE_PetRandomSkill()` 會先用 `BATTLE_DefaultAttacker()` 選 opposing Enemy `toNo`，再把該值原樣傳給 `PETSKILL_Use()`。
+
+`PETSKILL_SetMagicPet()` 不依 `PETSKILL_TARGET` 改寫目標，只把 `toNo` 寫入 COM2；真正 execution 的 `PETSKILL_SetMagicPet_Battle()` 再直接交給 `BATTLE_MultiList()`。因此低忠誠亂放支援技能時，原 C 可以把 STR/TGH/DEX 強化或 HP 回復施加到 Enemy。
+
+Enemy AI 亦有同類來源行為：`battle_ai.c::BATTLE_ai_normal()` 先依一般攻擊 AI 從 opposite side 選 `result->target`，之後 `PETSKILL_Use()` 原樣使用它；`BATTLE_ai_all()` 再把相對 target 轉成 absolute COM2。SetMagicPet 不可硬改成「Enemy 自己一側」。
+
+Web 新增 source-shaped `sourceSetMagicPetMultiList()`：
+- 單體 0～19：原 target 已失效時保留 fixed compact `nLifeArea[10]` + `rand()%10` rejection-loop 行為
+- 20／21／22：兩側全體／全體常數
+- 23～26：前後排與另一排 fallback
+
+### STR / TGH / DEX lifecycle
+
+`PETSKILL_SetMagicPet_Battle()` 的非 HP 分支先檢查 Duck／STR／TGH／DEX 任一是否已存在；有任一即跳過，不能刷新或疊加。
+
+fixed `Other_DefcharWorkInt()` 還保留一個來源 bug：進函式時保存 `mtgh = CHAR_WORKFIXTOUGH`，之後 STR、TGH、DEX 三條都用
+
+`mtgh * power / 100`
+
+當加成量，而不是各自使用 STR／TOUGH／DEX 當基準。V1.84 依「原 C 規則優先、不猜數值」完整保留。
+
+時序同樣照 fixed battle lifecycle：
+1. 施放 SetMagicPet 時先寫 `CHAR_MYSKILLSTR/TGH/DEX` 與 POWER
+2. 當輪能力不 retroactively 重建
+3. 下一輪 `BATTLE_PreCommandSeq -> complianceParameter -> Other_DefcharWorkInt` 才把強化寫入 WORK/FIX
+4. 角色輪到行動時 `BATTLE_StatusSeq` 再把自己的 SetMagicPet 回合數 -1
+5. 即使 StatusSeq 此時把回合扣成 0，本輪早已建立的 WORK/FIX 仍維持到下一次 PreCommand
+
+Web 因此拆成 live state 與 round snapshot，避免把它誤做成「施放瞬間立即加能力」或「倒數歸零瞬間立即拔掉本輪能力」。
+
+### HP lifecycle
+
+HP option 不建立 STR/TGH/DEX 狀態，而是直接走 fixed `BATTLE_MultiRecovery(..., BD_KIND_HP, power, per=0)`。
+
+每一個 MultiList 目標分別：
+- `RAND(power*0.9, power*1.1)`
+- 乘 `GetRecoveryRate()`
+- Player：`1 + VITAL * 0.00010`
+- Pet / Enemy：`1 + VITAL * 0.00005`
+- 最後 clamp 到 MaxHP
+
+因此 602／661／694／721／726／838／841 都保留逐目標 RNG，而不是固定回復描述值。
+
+### CHAR_MAGICPETMP
+
+fixed `PETSKILL_SetMagicPet()` 讀取 `CHAR_MAGICPETMP` 並檢查 `>=3`，但成功後只把原值寫回原值，沒有 ++。全 repo 搜尋亦沒有其他可達累加路徑；SetDuck 只會清 0。
+
+所以此 fixed build 的「一場最多三次」實際不會累積。V1.84 不虛構該限制。
+
+### Regression
+
+新增 `tools/check_v184_setmagicpet_runtime.mjs`，鎖定：
+- 19 筆 runtime row 的 function／option／target／illegal
+- 玩家低忠誠 RANDOMACT 先耗 opposing Enemy target RNG
+- raw COM2 直接進 MultiList
+- 單體失效後 `rand()%10` compact rejection-loop
+- Enemy AI opposite-side raw COM2
+- Duck／STR／TGH／DEX 互斥 gate
+- STR/TGH/DEX 共用 mtgh 基準 bug
+- PreCommand snapshot → target StatusSeq countdown 時序
+- HP 90%～110% RNG、RecoveryRate、MaxHP cap
+- 玩家 RANDOMACT dispatcher 已在 pending fallback 前接入 SetMagicPet
+
+### commits
+
+- `b57117c568529addce5a9dbddf3efbcb16675e21` — V1.84 SetMagicPet core
+- `78f5d05b395ddbf17b51600de09e0e30e8de1840` — target helper call fix
+- `ba7f896c40bb563bfc77fcd96c15d8cb65ddb1ba` — V1.84 regression
+- `928b84604b140abe62a754588d5571042297ec89` — CI regression step
+- `f688af1f4e274d2a3157d03e33ccdb9c4410fe98` — V1.84 playable marker
+- `1cc90049bb87c5fd3944efbb042167e6af03fa56` — V1.84 README
+
