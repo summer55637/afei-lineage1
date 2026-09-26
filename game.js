@@ -9162,6 +9162,127 @@ function sourcePerformPetStatusSkill(pet,action,options={}){
   return {handled:true,skillId:action.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,r,status,type,turn,attackPct};
 }
 
+function sourcePetSpecialStatusTarget(action){
+  const unit=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  if(!unit||n(unit.hp)<=0)return null;
+  return {kind:'enemy',unit,unitId:unit.id};
+}
+function sourcePetSpecialStatusSpec(meta){
+  const option=String(meta?.o||'');
+  const turnMatch=option.match(/turn\s*(-?\d+)/i);
+  const successMatch=option.match(/成\s*([+-]?\d+)/);
+  return {
+    type:battleStatusTypeFromOption(option),
+    turns:turnMatch?Math.max(0,Math.trunc(Number(turnMatch[1])||0)):null,
+    success:successMatch?Math.max(0,Math.trunc(Number(successMatch[1])||0)):null
+  };
+}
+const SOURCE_REFRESH_STATUS_ORDER=Object.freeze([
+  'poison','paralysis','sleep','stone','drunk','confusion',
+  'weaken','deepPoison','barrier','nocast','sars','dizzy'
+]);
+function sourceRefreshLastStatus(targetDesc){
+  // fixed BATTLE_MultiStatusRecovery scans StatusTbl from 1 to BATTLE_ST_END
+  // without breaking, so the last positive StatusTbl entry wins.
+  let current=null;
+  for(const type of SOURCE_REFRESH_STATUS_ORDER){
+    if(battleStatusActive(targetDesc,type))current=type;
+  }
+  return current;
+}
+function sourceRefreshClearStatus(targetDesc,type){
+  if(type==='sars')return battleSarsClear(targetDesc);
+  return battleStatusClear(targetDesc,type);
+}
+function sourcePerformPetRefreshSkill(pet,action){
+  const meta=action?.meta;
+  const targetDesc=sourcePetSpecialStatusTarget(action);
+  if(!targetDesc){
+    addLog(pet.name+' 使用「'+(meta?.n||'淨化')+'」，但原 RANDOMACT 選定的目標已無效；不另抽目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+  const option=String(meta?.o||'');
+  const all=option.includes('全');
+  const requested=all?null:battleStatusTypeFromOption(option);
+  if(!all&&!requested){
+    addLog(pet.name+' 抽到「'+(meta?.n||'淨化')+'」，但來源 status token 無法解析；不猜效果。','pet');
+    return {handled:true,skillId:action?.skillId,sourceRuntimePending:true};
+  }
+
+  const current=sourceRefreshLastStatus(targetDesc);
+  let cleared=false;
+  // fixed BATTLE_MultiStatusRecovery clears only the single "last positive" StatusTbl
+  // entry. status=0 ("全") is not a blanket clear-all; a specific token must equal it.
+  if(current&&(all||requested===current)){
+    cleared=sourceRefreshClearStatus(targetDesc,current);
+  }
+  if(cleared){
+    addLog(pet.name+' 使用「'+(meta?.n||'淨化')+'」，解除 '+targetDesc.unit.name+' 的'+(BATTLE_STATUS_NAMES[current]||current)+'。','pet');
+  }else{
+    addLog(pet.name+' 使用「'+(meta?.n||'淨化')+'」，但 '+targetDesc.unit.name+' 沒有符合來源掃描結果的可解除狀態。','pet');
+  }
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:targetDesc.unit.id,
+    all,requested,current,cleared
+  };
+}
+function sourcePerformPetSpecialStatusSkill(pet,action,type){
+  const meta=action?.meta;
+  const targetDesc=sourcePetSpecialStatusTarget(action);
+  if(!targetDesc){
+    addLog(pet.name+' 使用「'+(meta?.n||BATTLE_STATUS_NAMES[type]||'狀態技')+'」，但原 RANDOMACT 選定的目標已無效；不另抽目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const spec=sourcePetSpecialStatusSpec(meta);
+  if(spec.type!==type||spec.turns==null||spec.success==null){
+    addLog(pet.name+' 抽到「'+(meta?.n||BATTLE_STATUS_NAMES[type]||'狀態技')+'」，但 fixed option 缺少可證明的狀態／turn／成功率；不猜。','pet');
+    return {handled:true,skillId:action?.skillId,sourceRuntimePending:true,spec};
+  }
+
+  const attackerDesc={kind:'pet',pet,petId:pet.id};
+  // fixed CHAR_complianceParameter explicitly initializes MODWEAKEN / MODDEEPPOISON /
+  // MODBARRIER / MODNOCAST to 0. These four source status checks therefore use the
+  // common BATTLE_StatusAttackCheck formula with Success, range 30 and Bai 1.0.
+  const check=battleStatusChance(
+    attackerDesc,targetDesc,type,
+    {perOffset:spec.success,range:30,bai:1,forceGeneral:true}
+  );
+  let applied=false,storedTurns=0;
+  if(check.allowed&&check.success){
+    if(type==='deepPoison'){
+      // fixed BATTLE_S_Deeppoison -> BATTLE_MultiStatusChange(..., turn+2, ...).
+      storedTurns=spec.turns+2;
+      applied=battleStatusApplyRaw(targetDesc,type,storedTurns);
+    }else if(type==='nocast'){
+      // fixed BATTLE_S_Nocast writes CHAR_WORKNOCAST = turn (no +1).
+      // RANDOMACT's target is an Enemy, so the source's CHAR_TYPEPET exclusion is false.
+      storedTurns=spec.turns;
+      applied=battleStatusApplyRaw(targetDesc,type,storedTurns);
+    }else{
+      // WEAKEN and BARRIER both write turn+1; battleStatusApply stores that exact +1.
+      storedTurns=spec.turns+1;
+      applied=battleStatusApply(targetDesc,type,spec.turns);
+    }
+  }
+
+  const label=meta?.n||BATTLE_STATUS_NAMES[type]||'狀態技';
+  if(applied){
+    addLog(pet.name+' 使用「'+label+'」，'+targetDesc.unit.name+' 陷入'+(BATTLE_STATUS_NAMES[type]||type)+'（原檢定 '+check.per.toFixed(1)+'%，stored turn '+storedTurns+'）。','pet');
+  }else if(check.reason==='existing'){
+    addLog(pet.name+' 使用「'+label+'」，但 '+targetDesc.unit.name+' 已有其他異常狀態；原 BATTLE_StatusAttackCheck 不再擲成功率。','pet');
+  }else{
+    addLog(pet.name+' 使用「'+label+'」，對 '+targetDesc.unit.name+' 的狀態檢定未成功（'+n(check.per).toFixed(1)+'%）。','pet');
+  }
+
+  // These are standalone BATTLE_COM_S_* commands: no physical damage and no Counter.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:targetDesc.unit.id,
+    type,turns:spec.turns,success:spec.success,storedTurns,applied,
+    per:check.per,reason:check.reason||(!applied?'roll':null)
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -9720,6 +9841,11 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_AntInter')result=sourcePerformPetAntInterSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Roar')result=sourcePerformPetRoarSkill(pet,action);
     else if(meta?.f==='PETSKILL_Vary')result=sourcePerformPetVarySkill(pet,action);
+    else if(meta?.f==='PETSKILL_Refresh')result=sourcePerformPetRefreshSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Weaken')result=sourcePerformPetSpecialStatusSkill(pet,action,'weaken');
+    else if(meta?.f==='PETSKILL_Deeppoison')result=sourcePerformPetSpecialStatusSkill(pet,action,'deepPoison');
+    else if(meta?.f==='PETSKILL_Barrier')result=sourcePerformPetSpecialStatusSkill(pet,action,'barrier');
+    else if(meta?.f==='PETSKILL_Nocast')result=sourcePerformPetSpecialStatusSkill(pet,action,'nocast');
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
