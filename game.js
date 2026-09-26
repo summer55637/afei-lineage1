@@ -9480,6 +9480,99 @@ function sourcePerformPetMpDamageSkill(pet,action){
   };
 }
 
+function sourcePetAttrSkillSpec(meta){
+  const parts=String(meta?.o||'').split('|');
+  const code=String(parts[0]||'').trim().toUpperCase();
+  const amount=Number(parts[1]);
+  const key=code==='EA'?'earth':(code==='WA'?'water':(code==='FI'?'fire':(code==='WI'?'wind':null)));
+  return {code,key,amount:Number.isFinite(amount)?amount:null};
+}
+function sourcePerformPetModifyAttackSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'屬性強化攻擊')+'」，但沒有可作用的敵方目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const spec=sourcePetAttrSkillSpec(meta);
+  if(!spec.key||spec.amount==null){
+    addLog(pet.name+' 抽到「'+(meta?.n||'屬性強化攻擊')+'」，但 fixed option 無法解析；不猜效果。','pet');
+    return {handled:true,skillId:action?.skillId,sourceUseFailed:true};
+  }
+
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{});
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
+
+  let attr=0,bonusRoll=null,bonusStep=0,bonus=0;
+  // fixed BATTLE_S_AttackDamage downgrades local skill_type to -1 before AttackSeq
+  // when the ORIGINAL target has DamageReact, so the later MODIFYATT switch is skipped.
+  if(!hadDamageReact&&r.damage>0){
+    // fixed BATTLE_S_Modifyattack reads CHAR_*AT from the caller's ORIGINAL defindex.
+    // Guardian may have been used only for AttackSeq calculation, but it does not replace
+    // this target attribute lookup.
+    const targetElements=battleBaseElements({kind:'enemy',unit:target,unitId:target.id})||{};
+    attr=Math.max(0,Math.trunc(n(targetElements[spec.key])));
+    if(attr>0){
+      // Source bug: (float)((rand() % (ModNum+5)) / 100)
+      // rand()% range is 0..ModNum+4, then C integer /100 before float cast.
+      bonusRoll=cRand(0,attr+4);
+      bonusStep=Math.trunc(bonusRoll/100);
+      const factor=n(spec.amount)/100+bonusStep;
+      const before=Math.trunc(n(r.damage));
+      r.damage=Math.trunc(before+before*factor);
+      bonus=r.damage-before;
+    }
+  }
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,spec,targetAttr:attr,
+    bonusRoll,bonusStep,bonus,hadDamageReact,
+    guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+  };
+}
+function sourcePerformPetMdfyAttackSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'屬性轉換攻擊')+'」，但沒有可作用的敵方目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const spec=sourcePetAttrSkillSpec(meta);
+  if(!spec.key||spec.amount==null){
+    addLog(pet.name+' 抽到「'+(meta?.n||'屬性轉換攻擊')+'」，但 fixed option 無法解析；原 PETSKILL_Mdfyattack() 會 FALSE。','pet');
+    return {handled:true,skillId:action?.skillId,sourceUseFailed:true};
+  }
+
+  const elements={earth:0,water:0,fire:0,wind:0};
+  elements[spec.key]=spec.amount;
+
+  // fixed BATTLE_AttrAdjust checks the attacker's WORKBATTLECOM1, not the local
+  // BATTLE_S_AttackDamage skill_type variable. Therefore even if the original target has
+  // DamageReact and local skill_type becomes -1, MDFYATTACK's one-hit element replacement
+  // still participates in AttackSeq / DamageCalc.
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    attackerOverride:{elements}
+  });
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,spec,elements,hadDamageReact,
+    guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10046,6 +10139,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_DamageToHp')result=sourcePerformPetDamageToHpSkill(pet,action);
     else if(meta?.f==='PETSKILL_DamageToHp2')result=sourcePerformPetDamageToHp2Skill(pet,action);
     else if(meta?.f==='PETSKILL_MpDamage')result=sourcePerformPetMpDamageSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Modifyattack')result=sourcePerformPetModifyAttackSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Mdfyattack')result=sourcePerformPetMdfyAttackSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
