@@ -10985,6 +10985,115 @@ function sourcePetTryRegretDizzy(pet,target,successPct,label){
   return {attempted:true,applied,roll,reason:applied?'success':'apply-failed'};
 }
 
+function sourcePetDirectEnemySideTargets(){
+  // BATTLE_MultiList(TARGET_SIDE_x) is evaluated after the TargetAdjust gate and returns
+  // TargetCheck-valid entries on the opposing side. EarthRound-hidden / dead entries are out.
+  return targetableEnemyUnits().slice().sort((a,b)=>
+    sourceBattleStatusSlot({kind:'enemy',unit:a,unitId:a.id})
+      -sourceBattleStatusSlot({kind:'enemy',unit:b,unitId:b.id})
+  );
+}
+function sourcePerformPetBatFlySkill(pet,action){
+  const meta=action?.meta;
+  const label=meta?.n||'群蝠四竄';
+
+  // battle.c runs BATTLE_TargetAdjust first even though BATTLE_BatFly never uses defNo later.
+  // Preserve a fallback target RNG when the raw RANDOMACT COM2 became invalid before execution.
+  const gateTarget=sourcePetEnemyTargetFromAction(action);
+  if(!gateTarget){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const targets=sourcePetDirectEnemySideTargets();
+  syncPetBattleHp(pet,true);
+  const beforeSelf=Math.max(0,Math.trunc(n(pet.hp)));
+  const maxSelf=Math.max(1,Math.trunc(n(pet.maxHp)));
+  let drained=0;
+  const results=[];
+
+  for(const unit of targets){
+    const before=Math.max(0,Math.trunc(n(unit.hp)));
+    if(before<=0)continue;
+    // Current generated Enemy Battle Entries have no BATTLE_getRidePet relationship.
+    // Therefore every Enemy deterministically uses BATTLE_BatFly's no-ride branch:
+    // floor(currentHP/10), but HP 1..9 still loses exactly 1.
+    const damage=Math.trunc(before/10)===0?1:Math.trunc(before/10);
+    unit.hp=Math.max(0,before-damage);
+    drained+=damage;
+    results.push({unitId:unit.id,hpBefore:before,damage,hpAfter:unit.hp});
+    addLog(pet.name+' 的「'+label+'」吸取 '+unit.name+' '+damage+' HP。','pet');
+    if(before>0&&unit.hp<=0){
+      sourceMarkEnemyDeathCredit(unit,[{kind:'pet',petId:pet.id}]);
+      addLog(unit.name+' 被「'+label+'」吸乾而倒下。','bad');
+    }
+  }
+
+  // Source quirk: on overflow it heals to MAXHP and then rewrites local addhp=0 only for
+  // the outgoing protocol field. Actual HP is still MAXHP.
+  let sourceProtocolAddHp=drained;
+  if(beforeSelf+drained>maxSelf){
+    pet.hp=maxSelf;
+    sourceProtocolAddHp=0;
+  }else{
+    pet.hp=Math.min(maxSelf,beforeSelf+drained);
+  }
+  const healed=Math.max(0,Math.trunc(n(pet.hp))-beforeSelf);
+
+  addLog(
+    pet.name+' 由「'+label+'」總共吸取 '+drained+' HP，實際回復 '+healed+
+      (sourceProtocolAddHp===0&&drained>0?'（超出上限時原 C 將顯示用 addhp 清 0）':'')+'。','pet'
+  );
+
+  // Direct CHAR_HP writes only: no AttackSeq / DamageSub / WakeUp / ItemCrush / Counter.
+  // Enemy death rewards are credited now; generic actor outer AddProfit remains the boundary.
+  return {
+    handled:true,skillId:action?.skillId,gateTargetUnitId:gateTarget.id,
+    targets:results,drained,beforeSelf,afterSelf:pet.hp,healed,sourceProtocolAddHp,
+    sourceEnemyRidePetRuntime:false,sourceNoWake:true,sourceNoCounter:true,sourceNoInnerAddProfit:true
+  };
+}
+function sourcePerformPetDivideAttackSkill(pet,action){
+  const meta=action?.meta;
+  const label=meta?.n||'分身地裂';
+
+  // Same source gate as BatFly: TargetAdjust must succeed before the all-side helper runs.
+  const gateTarget=sourcePetEnemyTargetFromAction(action);
+  if(!gateTarget){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const targets=sourcePetDirectEnemySideTargets();
+
+  // BATTLE_DivideAttack's first pass halves MP only for CHAR_TYPEPLAYER entries.
+  // Player Pet attacks side-1 Enemy entries, all CHAR_TYPEENEMY, so this pass is a strict no-op.
+  const mpResults=[];
+
+  const results=[];
+  for(const unit of targets){
+    const before=Math.max(0,Math.trunc(n(unit.hp)));
+    if(before<=0)continue;
+    // No ride-pet relationship exists for generated Enemy entries, so use the fixed
+    // no-ride branch: floor(currentHP/5), with HP 1..4 still losing exactly 1.
+    const damage=Math.trunc(before/5)===0?1:Math.trunc(before/5);
+    unit.hp=Math.max(0,before-damage);
+    results.push({unitId:unit.id,hpBefore:before,damage,hpAfter:unit.hp});
+    addLog(pet.name+' 的「'+label+'」對 '+unit.name+' 造成 '+damage+' 直接 HP 傷害。',unit.hp<=0?'bad':'pet');
+    if(before>0&&unit.hp<=0){
+      sourceMarkEnemyDeathCredit(unit,[{kind:'pet',petId:pet.id}]);
+    }
+  }
+
+  // Direct CHAR_HP / CHAR_MP writes only. Source never invokes AttackSeq, DamageSub,
+  // DamageWakeUp, ItemCrush or the common Counter loop here.
+  return {
+    handled:true,skillId:action?.skillId,gateTargetUnitId:gateTarget.id,
+    mpResults,targets:results,sourceEnemyMpPassNoop:true,
+    sourceEnemyRidePetRuntime:false,sourceNoWake:true,sourceNoCounter:true,sourceNoInnerAddProfit:true
+  };
+}
+
 function sourcePerformPetTearSkill(pet,action){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -11488,6 +11597,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
+    else if(meta?.f==='PETSKILL_BatFly')result=sourcePerformPetBatFlySkill(pet,action);
+    else if(meta?.f==='PETSKILL_DivideAttack')result=sourcePerformPetDivideAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_BattleTearDamage')result=sourcePerformPetTearSkill(pet,action);
     else if(meta?.f==='PETSKILL_Sonic')result=sourcePerformPetSonicSkill(pet,action);
     else if(meta?.f==='PETSKILL_Regret')result=sourcePerformPetRegretSkill(pet,action);
