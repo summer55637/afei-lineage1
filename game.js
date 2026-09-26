@@ -12669,7 +12669,7 @@ function sourcePetCombinedAttackMagicOne(pet,targetDesc,magic,trueMagic,attMagic
   const resist=resistInfo.effective;
   let kmagic=attMagicLv*1.4-resist;
   if(kmagic<0)kmagic=0;
-  const mmagic=1;
+  const mmagic=Math.max(1,attMagicLv);
   const randomAmp=cRand(0,19);
   const amagic=(kmagic*kmagic)/(mmagic*mmagic)+randomAmp/100;
   const aPower=Math.trunc(n(magic.power)*(1+n(magic.magicLv)/10)*amagic);
@@ -12747,14 +12747,53 @@ function sourcePerformPetCombinedRecovery(pet,action,magicId,rawToNo){
   addLog(pet.name+' 的綜合法抽到回復精靈，'+battleStatusDescName(target)+' 回復 '+Math.max(0,battleStatusHp(target)-before)+' HP。','pet');
   return {handled:true,skillId:action.skillId,magicId,mp,power,rollHeal:heal,targetSlot:picked.targetSlot,hpBefore:before,hpAfter:battleStatusHp(target),multi:picked.multi};
 }
+const SOURCE_COMBINED_STATUS_ORDER=Object.freeze({
+  poison:1,paralysis:2,sleep:3,stone:4,drunk:5,confusion:6,
+  weaken:7,deepPoison:8,barrier:9,nocast:10,sars:11,
+  dizzy:12,entwine:13,dragnet:14,icecrack:15,oblivion:16,icearrow:17,
+  bloodworms:18,sign:19,instigate:20
+});
+function sourceCombinedHighestRecoveryStatus(target){
+  // fixed BATTLE_MultiStatusRecovery scans all StatusTbl[] entries and keeps the
+  // LAST active index. That means a later status (SARS / profession / weaken...)
+  // can intentionally block "全" and the six basic recovery magics.
+  const candidates=[];
+  const regular=battleStatusGet(target);
+  if(regular&&n(regular.turns)>0){
+    candidates.push({type:regular.type,index:SOURCE_COMBINED_STATUS_ORDER[regular.type]??100,source:'regular'});
+  }
+  const shoot=battleShootSleepGet(target);
+  if(shoot&&n(shoot.turns)>0)candidates.push({type:'sleep',index:3,source:'shootSleep'});
+  const sars=battleSarsGet(target);
+  if(sars&&n(sars.turns)>0)candidates.push({type:'sars',index:11,source:'sars'});
+  if(!candidates.length)return null;
+  candidates.sort((a,b)=>a.index-b.index);
+  return candidates[candidates.length-1];
+}
+function sourceCombinedClearRecoveryStatus(target,st){
+  if(!st)return false;
+  const key=battleStatusKey(target);
+  if(st.type==='sleep'){
+    let cleared=false;
+    const regular=battleStatusGet(target);
+    if(regular?.type==='sleep')cleared=battleStatusClear(target,'sleep')||cleared;
+    if(key&&battleShootSleepStates.has(key)){
+      battleShootSleepStates.delete(key);cleared=true;
+    }
+    return cleared;
+  }
+  if(st.source==='sars')return battleSarsClear(target);
+  return battleStatusClear(target,st.type);
+}
 function sourcePerformPetCombinedStatusRecovery(pet,action,magicId,rawToNo){
   const mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
   if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
-  const target=picked.target,requested=SOURCE_COMBINED_STATUS_RECOVERY[magicId],st=battleStatusGet(target);
-  const canClear=!!st&&((requested==='all'&&SOURCE_COMBINED_BASIC_RECOVERABLE.has(st.type))||requested===st.type);
-  if(canClear)battleStatusClear(target,st.type);
-  addLog(pet.name+' 的綜合法抽到異常回復：'+battleStatusDescName(target)+(canClear?' 的 '+(BATTLE_STATUS_NAMES[st.type]||st.type)+' 被解除。':' 沒有符合的異常狀態。'),'pet');
-  return {handled:true,skillId:action.skillId,magicId,mp,requested,cleared:canClear?st.type:null,targetSlot:picked.targetSlot,multi:picked.multi};
+  const target=picked.target,requested=SOURCE_COMBINED_STATUS_RECOVERY[magicId];
+  const st=sourceCombinedHighestRecoveryStatus(target);
+  const canClear=!!st&&((requested==='all'&&st.index<=6&&SOURCE_COMBINED_BASIC_RECOVERABLE.has(st.type))||requested===st.type);
+  const cleared=canClear&&sourceCombinedClearRecoveryStatus(target,st);
+  addLog(pet.name+' 的綜合法抽到異常回復：'+battleStatusDescName(target)+(cleared?' 的 '+(BATTLE_STATUS_NAMES[st.type]||st.type)+' 被解除。':' 沒有符合的異常狀態。'),'pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,requested,highestStatus:st,cleared:cleared?st.type:null,targetSlot:picked.targetSlot,multi:picked.multi};
 }
 function sourcePerformPetCombinedStatusChange(pet,action,magicId,rawToNo){
   const mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
