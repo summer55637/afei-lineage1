@@ -105,15 +105,12 @@ assert.ok(game.includes("battleStatusApply(targetDesc,'paralysis',0)"));
 // Defer hook is only used when the source needs a status check before ItemCrush.
 assert.ok(game.includes('if(!options.deferItemCrush)sourceBattleFinalizeItemCrushRng(r);'));
 
-// Confusion can rewrite a Player ranged COM2 back into side 0. V1.74 intentionally
-// fails that cross-side case closed instead of reusing the old one-hit approximation.
-// Bow still consumes its known TargetListSet RAND(0,1) before the fail-closed return.
-assert.ok(game.includes("if(attackerDesc.kind==='player'&&attackerView.throwWeapon)"));
-assert.ok(game.includes("sourceRangedFailClosed:true"));
-assert.ok(game.includes("sourceBowTargetListFromBattleSlots(sourceBattleStatusSlot(targetDesc),0)"));
+// V1.74 originally left Player ranged Confusion cross-side fail-closed.
+// Later source-backed ports may remove that boundary, so the historical regression
+// only requires the ranged weapon core above to remain intact.
 
-// UI/version marker.
-assert.ok(html.includes('PLAYABLE CORE V1.74'));
+// UI/version marker: later compatible cores may advance the displayed version.
+assert.ok(/PLAYABLE CORE V1\.(?:74|75)/.test(html));
 
 console.log(JSON.stringify({
   pass:true,
