@@ -13,6 +13,10 @@ const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
+const PLAYER_EQUIP_SLOT_COUNT=9;
+const PLAYER_BACKPACK_SLOT_COUNT=15;
+const PLAYER_BACKPACK_START=PLAYER_EQUIP_SLOT_COUNT;
+const PLAYER_ITEM_SLOT_COUNT=PLAYER_EQUIP_SLOT_COUNT+PLAYER_BACKPACK_SLOT_COUNT;
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
@@ -71,6 +75,172 @@ function sourceItemRelifeTemplate(itemId){
   const id=Math.trunc(Number(itemId));
   if(!Number.isFinite(id)||!itemRelifeDb?.byItemId)return null;
   return itemRelifeDb.byItemId[String(id)]||null;
+}
+function freshPlayerItemSlots(){return Array(PLAYER_ITEM_SLOT_COUNT).fill(null)}
+function sourceRuntimeSlotFromTarget(target,index){
+  const idx=Math.trunc(Number(index));
+  if(!target?.itemRuntime||!Number.isFinite(idx)||idx<=0||idx>=25000)return null;
+  const slot=target.itemRuntime.slots?.[String(idx)];
+  return slot?.use===true?slot:null;
+}
+function sourcePlayerItemSlots(target=state){
+  if(!target)return freshPlayerItemSlots();
+  if(!Array.isArray(target.playerItemSlots)||target.playerItemSlots.length!==PLAYER_ITEM_SLOT_COUNT){
+    target.playerItemSlots=freshPlayerItemSlots();
+  }
+  return target.playerItemSlots;
+}
+function sourcePlayerEquipTemplateForExisting(itemIndex,target=state){
+  const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+  if(!existing||existing.owner!=='player')return null;
+  return sourceItemRelifeTemplate(existing.itemId);
+}
+function sourcePlayerEquipSlotAllowsTemplate(slotIndex,template){
+  const to=Math.trunc(Number(slotIndex));
+  const ep=Math.trunc(Number(template?.equipPlace));
+  if(!Number.isFinite(to)||!Number.isFinite(ep))return false;
+  // fixed CHAR_moveItemFromItemBoxToEquip special-cases CHAR_DECORATION1:
+  // an item whose canonical place is slot 3 may be equipped in slot 3 or slot 4.
+  if(ep===3)return to===3||to===4;
+  return to===ep;
+}
+function sourcePlayerDecorationTypeConflict(slotIndex,template,slots=sourcePlayerItemSlots(),target=state){
+  const to=Math.trunc(Number(slotIndex));
+  if(Math.trunc(Number(template?.equipPlace))!==3||(to!==3&&to!==4))return false;
+  const other=to===3?4:3;
+  const otherIndex=Number(slots?.[other]);
+  if(!Number.isFinite(otherIndex))return false;
+  const otherTemplate=sourcePlayerEquipTemplateForExisting(otherIndex,target);
+  return !!otherTemplate&&Math.trunc(n(otherTemplate.type))===Math.trunc(n(template.type));
+}
+function normalizePlayerItemSlots(rawSlots,itemRuntime){
+  const out=freshPlayerItemSlots();
+  if(!Array.isArray(rawSlots)||!itemRuntime?.slots)return out;
+  const seen=new Set();
+  for(let i=0;i<PLAYER_ITEM_SLOT_COUNT;i++){
+    const idx=Math.trunc(Number(rawSlots[i]));
+    if(!Number.isFinite(idx)||idx<=0||seen.has(idx))continue;
+    const existing=itemRuntime.slots[String(idx)];
+    if(existing?.use!==true||existing.owner!=='player')continue;
+    if(i<PLAYER_EQUIP_SLOT_COUNT){
+      const template=sourceItemRelifeTemplate(existing.itemId);
+      if(!template||!sourcePlayerEquipSlotAllowsTemplate(i,template))continue;
+      if(sourcePlayerDecorationTypeConflict(i,template,out,{itemRuntime,playerItemSlots:out}))continue;
+    }
+    out[i]=idx;seen.add(idx);
+  }
+  return out;
+}
+function sourcePlayerFixedEquipModifier(template,key){
+  const pair=template?.[key];
+  if(!Array.isArray(pair)||pair.length<2)return 0;
+  const a=Number(pair[0]),b=Number(pair[1]);
+  // Current source-backed player-equipment templates are deterministic. Do not invent
+  // an ITEM_makeItem() roll for a future non-deterministic template until the existing
+  // item stores that rolled field explicitly.
+  if(!Number.isFinite(a)||!Number.isFinite(b)||a!==b)return null;
+  return Math.trunc(a);
+}
+function sourcePlayerEquipmentModifiers(target=state){
+  const result={attack:0,defense:0,quick:0,hp:0,mp:0,luck:0,charm:0,avoid:0,items:[],complete:true};
+  const slots=sourcePlayerItemSlots(target);
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Number(slots[i]);
+    if(!Number.isFinite(itemIndex))continue;
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!template)continue;
+    const values={};
+    for(const [outKey,templateKey] of [
+      ['attack','modifyAttack'],['defense','modifyDefense'],['quick','modifyQuick'],
+      ['hp','modifyHp'],['mp','modifyMp'],['luck','modifyLuck'],['charm','modifyCharm'],['avoid','modifyAvoid']
+    ]){
+      const value=sourcePlayerFixedEquipModifier(template,templateKey);
+      if(value==null){result.complete=false;continue;}
+      values[outKey]=value;result[outKey]+=value;
+    }
+    result.items.push({slot:i,itemIndex,itemId:Math.trunc(n(template.itemId)),name:template.name||null,values});
+  }
+  return result;
+}
+function sourcePlayerEquipRequirements(template,target=state){
+  if(!template||!target)return {ok:false,reason:'template'};
+  const trans=Math.max(0,Math.trunc(n(target.transmigration)));
+  const level=Math.max(1,Math.trunc(n(target.level)||1));
+  if(trans<=0&&Math.trunc(n(template.level))>level)return {ok:false,reason:'level'};
+  const p=target.playerStats||{};
+  if(Math.trunc(n(p.str))<Math.trunc(n(template.needStr)))return {ok:false,reason:'str'};
+  if(Math.trunc(n(p.dex))<Math.trunc(n(template.needDex)))return {ok:false,reason:'dex'};
+  if(trans<Math.trunc(n(template.needTrans)))return {ok:false,reason:'transmigration'};
+  if(Math.trunc(n(template.needProfession))!==0)return {ok:false,reason:'profession-unported'};
+  if(String(template.attachFunc||'')!==''||String(template.detachFunc||'')!=='')return {ok:false,reason:'callback-unported'};
+  return {ok:true};
+}
+function sourcePlayerRegisterExistingInBackpack(itemIndex,target=state){
+  const idx=Math.trunc(Number(itemIndex));
+  const existing=sourceRuntimeSlotFromTarget(target,idx);
+  if(!existing||existing.owner!=='player')return -1;
+  const slots=sourcePlayerItemSlots(target);
+  if(slots.some(v=>Number(v)===idx))return slots.findIndex(v=>Number(v)===idx);
+  for(let i=PLAYER_BACKPACK_START;i<PLAYER_ITEM_SLOT_COUNT;i++){
+    if(slots[i]==null){slots[i]=idx;return i;}
+  }
+  return -1;
+}
+function sourcePlayerMoveBackpackToEquip(fromindex,toindex,target=state){
+  const slots=sourcePlayerItemSlots(target);
+  const fromid=Math.trunc(Number(slots[fromindex]));
+  if(!Number.isFinite(fromid))return {ok:false,reason:'missing-source'};
+  const template=sourcePlayerEquipTemplateForExisting(fromid,target);
+  if(!template)return {ok:false,reason:'unsupported-template'};
+  const req=sourcePlayerEquipRequirements(template,target);
+  if(!req.ok)return req;
+  if(!sourcePlayerEquipSlotAllowsTemplate(toindex,template))return {ok:false,reason:'wrong-equip-place'};
+  if(sourcePlayerDecorationTypeConflict(toindex,template,slots,target)){
+    const toid=Number(slots[toindex]);
+    return {ok:false,reason:Number.isFinite(toid)?'same-type-exchange':'same-type'};
+  }
+  const toid=slots[toindex]==null?null:Math.trunc(Number(slots[toindex]));
+  slots[toindex]=fromid;
+  slots[fromindex]=Number.isFinite(toid)?toid:null;
+  return {ok:true,kind:'item-to-equip',fromindex,toindex,itemIndex:fromid,replacedItemIndex:Number.isFinite(toid)?toid:null};
+}
+function sourcePlayerMoveEquipToBackpack(fromindex,toindex,target=state){
+  const slots=sourcePlayerItemSlots(target);
+  const fromid=Math.trunc(Number(slots[fromindex]));
+  if(!Number.isFinite(fromid))return {ok:false,reason:'missing-source'};
+  const toid=slots[toindex]==null?null:Math.trunc(Number(slots[toindex]));
+  if(!Number.isFinite(toid)){
+    slots[toindex]=fromid;slots[fromindex]=null;
+    return {ok:true,kind:'equip-to-item',fromindex,toindex,itemIndex:fromid,replacedItemIndex:null};
+  }
+  // fixed CHAR_moveItemFromEquipToItemBox(): occupied destination delegates to
+  // CHAR_moveItemFromItemBoxToEquip(index,toindex,fromindex), i.e. a legal reverse equip swap.
+  return sourcePlayerMoveBackpackToEquip(toindex,fromindex,target);
+}
+function sourcePlayerMoveItem(fromindex,toindex,{target=state,isDie=null}={}){
+  if(!target)return {ok:false,reason:'state'};
+  const from=Math.trunc(Number(fromindex)),to=Math.trunc(Number(toindex));
+  if(!Number.isFinite(from)||!Number.isFinite(to)||from<0||to<0||from>=PLAYER_ITEM_SLOT_COUNT||to>=PLAYER_ITEM_SLOT_COUNT)return {ok:false,reason:'range'};
+  const die=isDie==null?(target===state&&!!enemy&&battlePlayerDeathProcessed):!!isDie;
+  if(die)return {ok:false,reason:'dead'};
+  const slots=sourcePlayerItemSlots(target);
+  if(!Number.isFinite(Number(slots[from])))return {ok:false,reason:'missing-source'};
+  if(from===to)return {ok:false,reason:'same-slot'};
+  let moved;
+  const fromEquip=from<PLAYER_EQUIP_SLOT_COUNT,toEquip=to<PLAYER_EQUIP_SLOT_COUNT;
+  if(fromEquip&&toEquip){
+    // fixed CHAR_moveEquipItem refuses direct equip-slot movement/exchange.
+    moved={ok:false,reason:slots[to]==null?'equip-direct-move':'equip-direct-exchange'};
+  }else if(fromEquip){
+    moved=sourcePlayerMoveEquipToBackpack(from,to,target);
+  }else if(toEquip){
+    moved=sourcePlayerMoveBackpackToEquip(from,to,target);
+  }else{
+    const tmp=slots[to];slots[to]=slots[from];slots[from]=tmp;
+    moved={ok:true,kind:'item-to-item',fromindex:from,toindex:to};
+  }
+  if(moved?.ok&&(fromEquip||toEquip))playerComplianceParameter(target);
+  return moved;
 }
 function sourceEnemyWeaponTemplate(itemId){
   const id=Math.trunc(Number(itemId));
@@ -193,6 +363,12 @@ function sourceItemRuntimeFree(index){
   if(!state?.itemRuntime||!Number.isFinite(idx))return false;
   const key=String(idx);
   if(state.itemRuntime.slots?.[key]?.use!==true)return false;
+  // A freed existing item cannot remain referenced by a Player CHAR item slot.
+  if(Array.isArray(state.playerItemSlots)){
+    for(let i=0;i<state.playerItemSlots.length;i++){
+      if(Number(state.playerItemSlots[i])===idx)state.playerItemSlots[i]=null;
+    }
+  }
   delete state.itemRuntime.slots[key];
   return true;
 }
@@ -583,7 +759,7 @@ function confirmPlayerElements(points=playerElementDraft){
 }
 function freshState(){
   return {
-    schemaVersion:27,
+    schemaVersion:28,
     level:1,exp:0,expNext:2,hp:0,maxHp:0,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -599,6 +775,7 @@ function freshState(){
     // fixed setup.cf + _HELP_NEWHAND: ITEM1=24114; exact item name/effect is not guessed.
     inventory:{'24114':1},
     itemRuntime:freshItemRuntime(),
+    playerItemSlots:freshPlayerItemSlots(),
     quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
     log:[],savedAt:Date.now()
   };
@@ -847,7 +1024,12 @@ function normalizeState(raw){
   }
   // V0.69 起 slot 記錄 owner/source；V0.68 的舊 slot 若無 owner，保留 use/index 但不捏造歸屬。
   // V0.70 itemset6 runtime 已能唯一還原 ITEM_MAGICUSEMP；normalizeItemRuntime 會只對已知 itemId 的 null slot 回填來源值。
-  s.schemaVersion=27;
+  // V1.70: pre-schema28 saves did not preserve CHAR's 9 equipment + 15 backpack slots.
+  // Their historical positions cannot be reconstructed from aggregate inventory / owner alone.
+  // Start them empty instead of inventing where an existing item used to sit.
+  if(n(raw?.schemaVersion)<28)s.playerItemSlots=freshPlayerItemSlots();
+  else s.playerItemSlots=normalizePlayerItemSlots(s.playerItemSlots,s.itemRuntime);
+  s.schemaVersion=28;
   delete s.pets;
   return s;
 }
@@ -1170,12 +1352,25 @@ function playerComplianceParameter(target=state){
   const vital=Math.max(0,Math.floor(n(p.vital))),str=Math.max(0,Math.floor(n(p.str)));
   const tgh=Math.max(0,Math.floor(n(p.tgh))),dex=Math.max(0,Math.floor(n(p.dex)));
   target.playerStats={vital,str,tgh,dex};
-  target.attack=Math.trunc(str+tgh*.1+vital*.1+dex*.05);
-  target.defense=Math.trunc(tgh+str*.1+vital*.1+dex*.05);
-  target.dex=Math.trunc(dex);
-  target.maxHp=Math.max(0,Math.trunc(vital*4+str+tgh+dex));
+
+  // fixed CHAR_initcharWorkInt() rebuilds base WORK first; ITEM_equipEffect() then scans
+  // every equip slot and applies the total. Slot state, not incremental +/- operations,
+  // is therefore the single source of truth.
+  const equip=sourcePlayerEquipmentModifiers(target);
+  const baseAttack=Math.trunc(str+tgh*.1+vital*.1+dex*.05);
+  const baseDefense=Math.trunc(tgh+str*.1+vital*.1+dex*.05);
+  const baseQuick=Math.trunc(dex);
+  const baseMaxHp=Math.max(0,Math.trunc(vital*4+str+tgh+dex));
+  target.attack=Math.max(0,baseAttack+Math.trunc(n(equip.attack)));
+  target.defense=Math.max(-100,baseDefense+Math.trunc(n(equip.defense)));
+  target.dex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
+  target.maxHp=clamp(baseMaxHp+Math.trunc(n(equip.hp)),0,10000000);
+  // fixed player creation baseline CHAR_MAXMP=100; _FIX_MAXCHARMP applies equip MP and clamps 0..1000.
+  target.maxMp=clamp(100+Math.trunc(n(equip.mp)),0,1000);
   target.hp=Math.min(Math.max(0,n(target.hp)),target.maxHp);
-  return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp};
+  target.mp=Math.min(Math.max(0,n(target.mp)),target.maxMp);
+  target.playerEquipCompliance=equip;
+  return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp,maxMp:target.maxMp,equip};
 }
 function allocatePlayerStat(key){
   const labels={vital:'體力 VITAL',str:'腕力 STR',tgh:'耐力 TOUGH',dex:'速度 DEX'};
@@ -7524,11 +7719,16 @@ function sourceProcessBattleDeathsAtAddProfit(){
   return {player,pets,playerUltimatePetExit:false};
 }
 function sourcePlayerEquippedRelifeItems(){
-  // V1.69 now has the exact five ITEM_DIErelife templates from fixed itemset6.txt,
-  // but Player equipment slots themselves are not source-backed in the current Web runtime.
-  // Keep the production adapter empty until the real equip lifecycle is ported; do not
-  // manufacture an equipped ItemId merely because its template is now known.
-  return [];
+  const out=Array(5).fill(null);
+  const slots=sourcePlayerItemSlots(state);
+  for(let i=0;i<5;i++){
+    const itemIndex=Math.trunc(Number(slots[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const existing=sourceItemRuntimeSlot(itemIndex);
+    if(!existing||existing.owner!=='player')continue;
+    out[i]={itemIndex,equipped:true,playerSlotIndex:i};
+  }
+  return out;
 }
 function sourceCAtoi(value){
   // C atoi(): leading whitespace/sign are accepted; parsing stops at the first non-digit.
@@ -7544,9 +7744,24 @@ function sourceRelifeHpPower(template){
   return sourceCAtoi(raw);
 }
 function sourceConsumeRelifeEquipment(item,slots,slotIndex){
-  const runtimeIndex=Number(item?.itemIndex);
-  if(Number.isFinite(runtimeIndex))sourceItemRuntimeFree(Math.trunc(runtimeIndex));
+  const runtimeIndex=Math.trunc(Number(item?.itemIndex));
+  const existing=Number.isFinite(runtimeIndex)?sourceItemRuntimeSlot(runtimeIndex):null;
+  const itemId=existing&&Number.isFinite(Number(existing.itemId))?Math.trunc(Number(existing.itemId)):null;
+
+  // fixed ITEM_DIErelife order: clear CHAR equip slot -> end existing item. There is no
+  // detach callback and NO immediate CHAR_complianceParameter here; equipment WORK bonuses
+  // therefore survive until a later source compliance boundary.
+  const playerSlot=Math.trunc(Number(item?.playerSlotIndex));
+  if(Array.isArray(state?.playerItemSlots)&&Number.isFinite(playerSlot)&&playerSlot>=0&&playerSlot<state.playerItemSlots.length
+    &&Number(state.playerItemSlots[playerSlot])===runtimeIndex){
+    state.playerItemSlots[playerSlot]=null;
+  }
   if(Array.isArray(slots)&&slotIndex>=0&&slotIndex<slots.length)slots[slotIndex]=null;
+  if(itemId!=null&&n(state?.inventory?.[String(itemId)])>0){
+    state.inventory[String(itemId)]=Math.max(0,Math.trunc(n(state.inventory[String(itemId)]))-1);
+    if(state.inventory[String(itemId)]<=0)delete state.inventory[String(itemId)];
+  }
+  if(Number.isFinite(runtimeIndex))sourceItemRuntimeFree(runtimeIndex);
 }
 function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePlayerEquippedRelifeItems()){
   // fixed CHECK_ITEM_RELIFE is reached only after a completed Entry command and before
@@ -10198,7 +10413,10 @@ function normalBattleOrder(options={}){
   battlePetNoGuardStates.clear();
   battlePlayerGuardianPetId=null;
   // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；
-  // EARTHROUND0 是明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
+  // Player 沒有 EARTHROUND0 例外，所以這裡也必須重建裝備 WORK。特別重要的是
+  // ITEM_DIErelife 同回合消耗裝備後不立即 compliance，直到下一 round 才失去戒指加成。
+  playerComplianceParameter(state);
+  // EARTHROUND0 是 Pet/Enemy 的明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
   sourcePreCommandResetTransient();
   // Other_DefcharWorkInt 同一階段處理 WEAKEN / BARRIER 的真正倒數與 WEAKEN 0.8 FIX 快照。
   sourcePreCommandStatusTick();
