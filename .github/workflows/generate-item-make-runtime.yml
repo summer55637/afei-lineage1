@@ -7,6 +7,7 @@ on:
       - "tools/check_v172_item_make_runtime.mjs"
       - "tools/check_v173_item_equip_runtime.mjs"
       - "tools/check_v174_player_ranged_runtime.mjs"
+      - "tools/check_v175_player_ranged_confusion_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -42,6 +43,9 @@ jobs:
 
       - name: Run V1.74 player ranged regressions
         run: node tools/check_v174_player_ranged_runtime.mjs
+
+      - name: Run V1.75 player ranged confusion regressions
+        run: node tools/check_v175_player_ranged_confusion_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
