@@ -35,6 +35,7 @@ on:
       - "tools/check_v200_player_attackshoot_runtime.mjs"
       - "tools/check_v201_player_battlemodel_runtime.mjs"
       - "tools/check_v202_player_combined_runtime.mjs"
+      - "tools/check_v203_player_field01_coverage.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -154,6 +155,9 @@ jobs:
 
       - name: Run V2.02 player Combined regressions
         run: node tools/check_v202_player_combined_runtime.mjs
+
+      - name: Run V2.03 player field0/1 coverage closure
+        run: node tools/check_v203_player_field01_coverage.mjs
 
       - name: Commit generated runtime
         shell: bash
