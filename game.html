@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.66</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.67</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -206,6 +206,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.67：</b>
+      對齊 Pet 死亡的原 C AddProfit 時序：瑪蕾菲雅 PetID 718 的死亡懲罰固定先消耗 RAND(1,8)＋三次 RAND(1,4)，common multi-hit／Counter 每段都在真正 BATTLE_AddProfit 邊界立即掃死亡。同步死亡依 side 0 Entry 順序先 Player 再 Pet；若 Player 是 Ultimate，會先把 DEFAULTPET Entry 移出，因此同次不再跑 Pet_Check_Die。FIREKILL／GYRATE 等 dedicated case 仍維持 outer AddProfit，不提前死亡副作用。
+    </article>
 
     <article class="card note">
       <b>V1.66：</b>
