@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.94**
+**PLAYABLE CORE V1.95**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,28 +16,25 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.94 最新進度
+## V1.95 最新進度
 
-V1.93～V1.94 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.94～V1.95 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 633 `PETSKILL_BatFly`（群蝠四竄）
-- 634 `PETSKILL_DivideAttack`（分身地裂）
-- 606／727 `PETSKILL_BattleTimid`（怯戰）
-- 636／824 `PETSKILL_2BattleTimid`（狂獅怒吼／恐嚇）
+- 606／727 `PETSKILL_BattleTimid`
+- 636／824 `PETSKILL_2BattleTimid`
+- 552／553／565／658 `PETSKILL_MagicStatusChange`
 
-### V1.94 Timid
+### V1.95 鐵壁系 RANDOMACT
 
-- 怯戰固定把攻／防／敏 work 值設為 FIX 的 70%／40%／80%
-- 2BattleTimid 的原 parser 有特殊語意：`-攻%50` 是直接變成 FIXSTR 50%，不是「在原值上再扣 50%」
-- 636 實際為攻 50%、敏 130%；824 為攻 50%、敏 150%
-- 兩招都是 isolated `BATTLE_S_AttackDamage`，不進普通 Counter
-- 原目標有 DamageReact 時 local skill_type 先降成 -1，因此 Timid 後置 RNG 完全不抽；Enemy 端的 Acupuncture crossover 也同步修正
-- BattleTimid 在 `damage > 0` 時才抽 `rand()%100`；damage=1 仍抽但不能觸發，roll<15 且 damage>1 才迫使目標離場
-- 玩家 Pet 對 Enemy 成功怯戰時走 `BATTLE_Exit`，不應算擊殺 EXP／掉落；V1.94 因此新增 deferred death-credit 路徑
-- 2BattleTimid 即使命中率 roll 成功，Enemy 是 `CHAR_TYPEENEMY` 而不是 `CHAR_TYPEPET`，不會被收回寵物欄
-- 新增 `tools/check_v194_player_timid_runtime.mjs` 並接入 CI
-
-V1.91～V1.93 regression 全數保留。
+- 原 RANDOMACT 先用 `BATTLE_DefaultAttacker` 選敵方 COM2，MagicStatusChange 不會依 target metadata 重選我方
+- option 的「全」只是不觸發「單」的合法性限制，並不把 COM2 改成全體
+- 因此低忠誠 Pet 亂放鐵壁／銅牆／玄武鐵壁時，實際會替敵方單一 Enemy 加 SuperWall
+- raw COM2 若在執行前失效，沿原 `BATTLE_MultiList` 在同敵側用 `rand()%10` 重抽存活 Entry
+- 目前四列分別為 3回合+30、3回合+30、5回合+40、3回合+50
+- SuperWall 每次參與物理 DamageCalc 時仍會額外 consume 原 C `rand()%20`
+- 技能本身沒有物理 AttackSeq／ItemCrush／Counter
+- 本輪也確認 field=2 的加工、料理、修復、鑲寶石本來就會被 RANDOMACT field filter 排除，Web 已正確實作，不新增錯誤戰鬥效果
+- 新增 `tools/check_v195_player_magicstatuschange_runtime.mjs` 並接入 CI
 
 save schema 維持 **29**。
 
