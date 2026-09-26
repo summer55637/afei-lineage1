@@ -9283,6 +9283,155 @@ function sourcePerformPetSpecialStatusSkill(pet,action,type){
   };
 }
 
+function sourcePetAdjustedAttackDamageTarget(action){
+  let unit=action?.targetDesc?.kind==='enemy'&&action.targetDesc.unit&&n(action.targetDesc.unit.hp)>0
+    ?action.targetDesc.unit:null;
+  if(unit)return unit;
+
+  // fixed battle.c re-runs BATTLE_TargetAdjust() when BATTLE_COM_S_DAMAGETOHP /
+  // DAMAGETOHP2 executes. If the raw COM2 target disappeared before this Pet's turn,
+  // TargetAdjust falls back through DefaultAttacker and consumes that target RNG now.
+  const fallback=sourcePetRandomEnemyTarget();
+  return fallback?.unit&&n(fallback.unit.hp)>0?fallback.unit:null;
+}
+function sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,attackOptions={}){
+  const attacker=Object.assign({},petBattleView(pet),attackOptions.attackerOverride||{});
+  if(!attacker||!target)return null;
+
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const originalGuarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
+  const dodge=sourceInitialDodgeOnly(attacker,enemyBattleView(target),{guarding:originalGuarding});
+  if(dodge.dodged){
+    dodge.actualTarget=target;
+    dodge.originalTarget=target;
+    return dodge;
+  }
+
+  // fixed BATTLE_S_AttackDamage bug:
+  // BATTLE_AttackSeq() may locally switch defindex to Guardian for critical / defence /
+  // GuardAdjust, but caller BATTLE_S_AttackDamage keeps its original defindex for
+  // BATTLE_DamageSub, WakeUp, death, ItemCrush and the later drain helper.
+  const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,null);
+  const calcTarget=guardian||target;
+  const calcDesc={kind:'enemy',unit:calcTarget,unitId:calcTarget.id};
+  const calcGuarding=guardian
+    ?!!calcTarget.guardThisTurn&&!battleStatusActive(calcDesc,'confusion')
+    :originalGuarding;
+  const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),Object.assign({},attackOptions,{
+    guarding:calcGuarding,
+    disableDodge:true
+  }));
+  r.duckRaw=dodge.duckRaw;
+  r.actualTarget=target;
+  r.originalTarget=target;
+  if(guardian){
+    // fixed Guardian branch forces NORMAL / damage=1 when its local damage is <= 0.
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardianCalcOnly=guardian;
+    r.guardianSourceBug='BATTLE_S_AttackDamage-defindex-not-updated';
+  }
+  return r;
+}
+function sourcePetOriginalDamageReact(target){
+  // Current source-backed Enemy DamageReact state is ACUPUNCTURE.
+  // BATTLE_S_AttackDamage calls BATTLE_GetDamageReact(original defindex) BEFORE
+  // BATTLE_AttackSeq / Guardian. Any positive ReactType downgrades non-LIGHTTAKE
+  // skill_type to -1, so DAMAGETOHP / DAMAGETOHP2 still deal/react but do not drain HP.
+  return !!target?.acupunctureActive;
+}
+function sourcePetDrainHeal(pet,damage,pct,label){
+  const percent=Math.max(0,Math.trunc(n(pct)));
+  if(!pet||damage<1||percent<=0)return 0;
+  const before=Math.max(0,Math.trunc(n(pet.hp)));
+  const maxHp=Math.max(1,Math.trunc(n(pet.maxHp)));
+  const amount=Math.trunc(Math.max(0,Math.trunc(n(damage)))*percent/100);
+  pet.hp=Math.min(maxHp,before+amount);
+  const healed=Math.max(0,Math.trunc(n(pet.hp))-before);
+  if(healed>0)addLog(pet.name+' 由「'+label+'」吸收 '+healed+' HP。','pet');
+  return healed;
+}
+function sourcePerformPetDamageToHpSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'嗜血技')+'」，但沒有可作用的敵方目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const parts=String(meta?.o||'').split('|');
+  const attackReduceRaw=sourceCAtoi(parts[0]);
+  const absorbPct=Math.max(0,sourceCAtoi(parts[1]));
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_DamageToHp:
+  //   float def = (atoi(buf1) / 100);
+  // Both operands are int, so all current 30 / 20 / 10 options truncate to 0 first.
+  const cIntegerDivision=Math.trunc(attackReduceRaw/100);
+  const attack=Math.trunc(n(base.attack))-Math.trunc(Math.trunc(n(base.attack))*cIntegerDivision);
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    attackerOverride:{attack}
+  });
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  let healed=0;
+  if(!hadDamageReact&&r.damage>0&&!r.dodged&&!r.miss){
+    healed=sourcePetDrainHeal(pet,r.damage,absorbPct,meta?.n||'嗜血技');
+  }
+  sourceProcessBattleDeathsAtAddProfit();
+
+  // BATTLE_COM_S_DAMAGETOHP is an isolated BATTLE_S_AttackDamage case.
+  // battle.c breaks after it, so there is no normal Counter chain.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,healed,absorbPct,attackReduceRaw,
+    cIntegerDivision,hadDamageReact,guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+  };
+}
+function sourcePerformPetDamageToHp2Skill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'浴血狂襲')+'」，但沒有可作用的敵方目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const absorbPct=Math.max(0,sourceCAtoi(meta?.o));
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed BATTLE_AttackSeq(DAMAGETOHP2):
+  // CriticalCheck is computed first from FIXDEX; then perCri *= 1.3 and
+  // WORKATTACKPOWER becomes FIXSTR +20% before DamageCalc.
+  // Its WORKQUICK +20% write occurs after EntrySort on this low-loyalty RANDOMACT path,
+  // so it cannot retroactively change this turn's order.
+  const attack=Math.trunc(n(base.attack))+Math.trunc(Math.trunc(n(base.attack))*.2);
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    criticalChanceMultiplier:1.3,
+    attackerOverride:{attack}
+  });
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  let healed=0;
+  if(!hadDamageReact&&r.damage>0&&!r.dodged&&!r.miss){
+    healed=sourcePetDrainHeal(pet,r.damage,absorbPct,meta?.n||'浴血狂襲');
+  }
+  sourceProcessBattleDeathsAtAddProfit();
+
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,healed,absorbPct,
+    attackPct:20,criticalChanceMultiplier:1.3,hadDamageReact,
+    guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -9846,6 +9995,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Deeppoison')result=sourcePerformPetSpecialStatusSkill(pet,action,'deepPoison');
     else if(meta?.f==='PETSKILL_Barrier')result=sourcePerformPetSpecialStatusSkill(pet,action,'barrier');
     else if(meta?.f==='PETSKILL_Nocast')result=sourcePerformPetSpecialStatusSkill(pet,action,'nocast');
+    else if(meta?.f==='PETSKILL_DamageToHp')result=sourcePerformPetDamageToHpSkill(pet,action);
+    else if(meta?.f==='PETSKILL_DamageToHp2')result=sourcePerformPetDamageToHp2Skill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
