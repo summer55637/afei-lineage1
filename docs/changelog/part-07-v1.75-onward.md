@@ -1302,3 +1302,78 @@ save schema 維持 **29**。
 - `d47ffd751b3d59ef24f119e758ebf0071c9b02e1` — V1.89 regression boundary repair
 - `c8cbc1e37d6bbedc1a28dba10103c003f53e7cc3` — V1.90 regression
 - `641a2093f3514594355a35438420ce8b6ec94407` — V1.90 CI
+
+---
+
+## V1.91 Player RANDOMACT BattleTearDamage
+
+V1.91 接入玩家寵低忠誠 RANDOMACT：
+
+- 615 `PETSKILL_BattleTearDamage`（撕裂傷口1，20%）
+- 616 `PETSKILL_BattleTearDamage`（撕裂傷口2，50%）
+- 651 `PETSKILL_BattleTearDamage`（撕裂傷口4，150%）
+- 656 `PETSKILL_BattleTearDamage`（撕裂傷口3，70%）
+
+### Work power lifecycle
+
+原 `PETSKILL_BattleTearDamage()` 在 battle.c 執行前先寫：
+
+- `WORKATTACKPOWER = trunc(FIXSTR * 0.9)`
+- `WORKDEFENCEPOWER = trunc(FIXTOUGH * 0.8)`
+
+低忠誠 RANDOMACT 發生在 EntrySort 後，所以本回合排序不會被 80% 防禦影響；但該 work defence 仍保留給同回合後續攻擊使用。
+
+### Old-wound damage
+
+`BATTLE_S_AttackDamage(... PETSKILLTEAR ...)` 先做一般 AttackSeq，再依目標已損 HP 增傷：
+
+`tearBonus = trunc((MAXHP - HP) * atoi(option) / 100)`
+
+保留原 C 特例：
+
+- 目標尚未損 HP，或算出的 `tearBonus <= 0` 時，不是「只是不追加」，而是直接把本次 `damage = 0`。
+- 目標有舊傷時，才把 `tearBonus` 加到原物理傷害。
+- Enemy 目標沒有騎寵 HP 合併分支，因此只讀該 Enemy 自身 MAXHP / HP。
+
+### DamageReact crossover
+
+`BATTLE_S_AttackDamage` 會在 AttackSeq 前先讀原始目標 DamageReact。
+
+若原始目標已有 DamageReact：
+
+- local `skill_type` 先變成 -1。
+- 90% 攻擊／80% 防禦 work 值仍已寫入，不回滾。
+- PETSKILLTEAR 的已損 HP 追加整段跳過。
+- DamageSub / Acupuncture 仍照一般反應流程處理。
+
+同步修正既有 Enemy Tear，讓玩家 Pet 的 Acupuncture 與 Tear 交叉生命週期符合相同原 C 規則。
+
+### Counter / AddProfit
+
+- Tear 是獨立 `BATTLE_S_AttackDamage` case。
+- 不進 common Counter loop。
+- 玩家側不在技能內額外跑 AddProfit；沿用 actor command-end outer boundary。
+
+### Regression
+
+新增 `tools/check_v191_player_tear_runtime.mjs`，鎖定：
+
+- 615 / 616 / 651 / 656 runtime rows
+- FIXSTR ×0.9 / FIXTOUGH ×0.8
+- TargetAdjust lifecycle
+- 已損 HP 整數截斷
+- `tearBonus <= 0 => damage = 0`
+- DamageReact 先於 AttackSeq 並關閉 Tear 特效
+- calc-only Guardian helper
+- no common Counter / no inner AddProfit
+- Enemy Tear × Acupuncture crossover
+
+save schema 維持 **29**。
+
+### commits
+
+- `6f6fbd925d66fb3d680b9956ec3448f4101a74b1` — V1.91 core
+- `cf3e0ac789f89c2e5943edf7488711ddf6c23079` — V1.91 regression
+- `fb1f1b92cee4d297a8b8345ca64080667f1e9b97` — V1.91 CI
+- `74c90e4b0f4d7b6ca928d5de53c6cda9d1f2c416` — V1.91 playable-core marker
+
