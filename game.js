@@ -1071,6 +1071,10 @@ function normalizeState(raw){
   // from being applied on top of the fixed creation baseline.
   if(!raw||typeof raw!=='object')return base;
   const s=Object.assign(base,raw);
+  // playerEquipCompliance mirrors transient CHAR_WORK* values, not persistent CHAR data.
+  // A real login reconstructs these Work fields from scratch before ITEM_equipEffect();
+  // never restore a serialized derived snapshot across reload.
+  s.playerEquipCompliance=null;
   // Prior web versions started GOLD at 0. If an unusual legacy save omitted the field,
   // preserve that historical web baseline instead of backfilling setup.cf's 30000.
   if(!Object.prototype.hasOwnProperty.call(raw,'gold'))s.gold=0;
@@ -1637,7 +1641,12 @@ function playerComplianceParameter(target=state){
   const fixedDex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
   const fixedLuck=clamp(Math.trunc(n(target.luck))+Math.trunc(n(equip.luck)),1,5);
   const fixedCharm=clamp(Math.trunc(n(target.charm))+Math.trunc(n(equip.charm)),0,100);
-  const fixedAvoid=clamp(Math.trunc(n(equip.avoid)),0,10000000);
+  // Fixed source quirk: CHAR_initcharWorkInt() resets the other ITEM_equipEffect Work fields,
+  // but never resets CHAR_WORKFIXAVOID. ITEM_equipEffect therefore re-adds the equipped avoid
+  // total on every compliance call. Preserve that in-process accumulation bug; normalizeState()
+  // clears this transient Work value across reload, like a fresh server login.
+  const previousAvoid=Math.trunc(n(target.playerEquipCompliance?.fixedAvoid));
+  const fixedAvoid=clamp(previousAvoid+Math.trunc(n(equip.avoid)),0,10000000);
   const statusResist={};
   for(const key of ['poison','paralysis','sleep','stone','drunk','confusion']){
     statusResist[key]=clamp(Math.trunc(n(equip.statusResist?.[key])),-100,100);
