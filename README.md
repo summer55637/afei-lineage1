@@ -16249,3 +16249,147 @@ GitHub Actions 驗證包含：
 - generated runtime unchanged PASS
 
 V1.73 CI：**PASS**
+
+
+## V1.74 player ranged weapon normal-attack pattern
+
+V1.74 從 V1.73 的玩家 source-backed 裝備生命週期繼續往固定 battle command 推進。
+
+固定來源仍為：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+
+本版只採用固定原 C 可以直接證明的數值與順序，不自行補猜。
+
+### Ranged equipment gate removed
+
+V1.73 對玩家：
+
+- BOW / type 4
+- BOOMERANG / type 17
+- BOUNDTHROW / type 18
+- BREAKTHROW / type 19
+
+使用 `weapon-pattern-unported` fail-closed。
+
+V1.74 已完成普通 `BATTLE_COM_ATTACK` 可達的遠程 pattern，因此這個裝備 gate 移除；callback / profession / Item 2884 / 2885 的既有安全邊界不變。
+
+### BOW / aBowW
+
+固定順序：
+
+1. `BATTLE_GetAttackCount()` 先消耗 ARM 的 AttackNum RAND。
+2. `BATTLE_TargetListSet()` 再固定只消耗一顆 `RAND(0,1)`。
+3. 依 raw COM2 的 `defNo % 5`、前後列與 `aBowW[50]` 建出最多 10 格候選。
+4. 空格／死亡／不可 TargetCheck 的格只 skip，不增加 `attack_count`。
+5. 每次真的完成一段 `BATTLE_Attack -> BATTLE_AddProfit` 後才 `attack_count++`。
+6. 到達 primed `attack_max` 就停止；候選表先結束時不為了補滿 AttackNum 重抽或重複同一目標。
+
+Player slot 0、Enemy slot `10 + battleSlot` 的 raw target 若為 10，固定兩組候選為：
+
+- RAND 0：`10,15,12,17,11,16,14,19,13,18`
+- RAND 1：`10,15,11,16,12,17,13,18,14,19`
+
+protocol metadata：`BB-w0`。
+
+### BOOMERANG
+
+普通 ATTACK + 回力標會進 fixed dedicated `BATTLE_COM_BOOMERANG`。
+
+重要 RNG lifecycle：
+
+- 前面的武器 AttackNum RAND **照樣先消耗**。
+- dedicated BOOMERANG case **不使用**抽到的 AttackNum 值。
+- `gBattleDamageModyfy = 0.3`。
+- Player 為 side 0，因此 `BoomerangVsTbl[row]` 使用 `k=0 / j=+1` 的正向 5-slot traversal。
+- Enemy 既有 side 1 實作維持反向 traversal。
+- 原 raw COM2 < 0，或該 row 已無合法目標時，才進 DefaultAttacker fallback。
+- dedicated case 完成後直接 break，不進 common Counter loop。
+
+protocol metadata：`BO`。
+
+### BOUNDTHROW / BREAKTHROW
+
+兩者沿用 common physical multi-hit loop：
+
+- AttackNum 仍由 `BATTLE_GetAttackCount()` 取得。
+- 每一段都重新從**原 raw COM2**執行 TargetAdjust。
+- 原目標已失效時，每一段都可能重新消耗 DefaultAttacker RNG；不把前一段 fallback 目標錯誤沿用到下一段。
+- BOUNDTHROW protocol：`BB-w1`
+- BREAKTHROW protocol：`BB-w2`
+
+BREAKTHROW 的固定正傷害順序：
+
+`DamageSub / WakeUp -> paralysis StatusAttackCheck -> ItemCrush -> AddProfit`
+
+麻痺沿用 `BATTLE_StatusAttackCheck()` 的固定特殊分支：
+
+`per = 20 - paralysis resistance`
+
+判定：
+
+`RAND(1,100) < per`
+
+目標已有其他 StatusTbl 異常時，在 RAND 前直接失敗；成功寫入 1 回合麻痺。
+
+### Indirect-weapon gates
+
+固定 `BATTLE_IsThrowWepon()` 把四種遠程都視為 indirect weapon。
+
+V1.74 玩家端同步接入：
+
+- BOW 也正式加入 `throwWeapon`；不再只包含 type 17/18/19。
+- Guardian substitution 被阻擋。
+- Counter 在任一方為四種 indirect weapon 時直接失敗，且不消耗 Counter RNG。
+- `ComboCheck()` 不會把持有四種 indirect weapon 的 Player 拉進普通合擊鏈。
+
+### Confusion cross-side boundary
+
+固定 Confusion 可以在 `BATTLE_StatusSeq` 內把 COM1 改為 ATTACK，並把 COM2 指到任一 side。
+
+這代表玩家持遠程武器時可能出現「射向己方 side」的另一套跨 side pattern。
+
+V1.74 **沒有拿普通 PVE 單向 target helper 冒充這條路徑**：
+
+- Confusion 的既有 target-selection RNG 仍先發生。
+- 若 Player 當下持遠程武器，該跨 side 攻擊明確 fail-closed。
+- 若是 BOW，已知的 `BATTLE_TargetListSet RAND(0,1)` 仍先消耗。
+- 真正跨 side 的 Bow / Boomerang / Throw 命中序列留待後續以原 C 單獨來源化。
+
+這符合本專案「原 C 規則優先、不猜數值」：尚未完整證明的分支不以舊 one-hit approximation 假裝完成。
+
+### V1.74 regression
+
+新增：
+
+`tools/check_v174_player_ranged_runtime.mjs`
+
+GitHub Actions 已接入：
+
+- `game.js` syntax check
+- V1.72 item-create regression
+- V1.73 generic equipment regression
+- V1.74 player ranged regression
+
+V1.74 regression 固定檢查：
+
+- Item 400 = BOW / AttackNum 1～3
+- Item 500 = BOOMERANG
+- Item 600 = BOUNDTHROW
+- Item 700 = BREAKTHROW
+- ranged equipment fail-closed 已移除
+- callback / profession / special-item gates 仍保留
+- BOW `RAND(0,1)` / aBowW Player-side 順序
+- BOOMERANG Player forward / Enemy reverse traversal
+- BOOMERANG 不使用 primed AttackNum 值
+- BOUND/BREAK 每段 raw COM2 TargetAdjust
+- BREAKTHROW paralysis 在 ItemCrush 前
+- four indirect weapons 的 Counter / Combo gate
+- ranged Confusion cross-side fail-closed
+- `PLAYABLE CORE V1.74`
+
+本輪透過 GitHub 內容直接做 V8 syntax / 靜態 lifecycle 驗證：**PASS**。
+
+目前可用的 commit-workflow 查詢只回傳 PR-triggered run，對本 repo 的 push run 回傳空陣列；因此 README 不把該空結果誤標成「GitHub Actions CI PASS」。workflow 已接好 V1.74 check，實際 push Actions 結果以 GitHub Actions 頁面為準。
