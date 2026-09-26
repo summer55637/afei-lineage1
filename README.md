@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.98**
+**PLAYABLE CORE V1.99**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,25 +16,28 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.98 最新進度
+## V1.99 最新進度
 
-V1.97～V1.98 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.97～V1.99 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
 - 140 `PETSKILL_Steal`（偷竊）
 - 211 `PETSKILL_StealMoney`（捐獻）
+- 613 `PETSKILL_AttackCrazed`（狂亂暴走）
 
-### V1.98 StealMoney
+### V1.99 AttackCrazed
 
-- 玩家 Pet 對 Enemy 使用捐獻時，原 C 成功值固定 `per=5`
-- 判定是嚴格 `RAND(1,100) < 5`，所以真正成功 roll 為 1～4
-- 主人已達原服金錢上限時，per 先強制改成 0，但第一顆 RNG 仍照抽
-- 成功後 Enemy 分支直接生成 `RAND(10,100)` 石幣，不會從 Enemy 的 GOLD 扣
-- 石幣加入 Pet 主人並依 `sourcePlayerMaxGold()` clamp
-- 成功時 Pet 依原 C 離開本場戰鬥；失敗則留場
-- 沒有物理 damage、DamageSub、ItemCrush 或 Counter
-- 新增 `tools/check_v198_player_stealmoney_runtime.mjs` 並接入 CI
+- 原 `PETSKILL_AttackCrazed()` 直接把攻擊設成 `FIXSTR × 0.8`、防禦設成 `FIXTOUGH × 0.7`
+- 613 的 option 是 `3`；原 C 把它放進 COM3 high，執行時直接作為 `attack_max=3`
+- 此技能**沒有**設定 `gDamageDiv`，所以三段不是把總傷害除以 3，而是三次完整物理攻擊
+- `BATTLE_TargetListSet` 會在第一擊前先抽完三個目標 RNG
+- 原碼 `for(i=defsub; i<deftop; i++)` 對 Enemy side 10～19 實際只掃 10～18；Web 對應只把 battleSlot 0～8 放進預抽池，保留 slot 19 被排除的原 C 邊界
+- 非弓第一擊雖然已經消耗第一顆預抽 RNG，實際仍從原 COM2 做 `TargetAdjust`；第二、三擊才使用對應的預抽目標
+- 預抽目標若在前一擊後死亡／失效，才於該段重新走 `DefaultAttacker` RNG
+- 全段結束後只進一次共用 Counter chain
+- 新增 `tools/check_v199_player_attackcrazed_runtime.mjs` 並接入 CI
+- 同步修復 workflow 中 V1.90～V1.98 路徑段落殘留的 8 個字面 `\\n`，恢復成真正 YAML 換行
 
-V1.97 Enemy Steal existing-item / attacker-exit 修正全數保留。
+V1.97 Steal、V1.98 StealMoney 行為與 regression 全數保留。
 
 save schema 維持 **29**。
 
