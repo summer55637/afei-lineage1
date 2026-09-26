@@ -11699,7 +11699,125 @@ function renderPets(){
       '<div class="pet-actions">'+actions.join('')+'</div></div>';
   }).join(''):'<div class="empty-note">目前還沒有寵物。把野生 Lv1 削到低 HP 後嘗試捕獲。</div>';
 }
+const SOURCE_PLAYER_EQUIP_SLOT_LABELS=Object.freeze([
+  '頭部','身體','武器','飾品1','飾品2','腰帶','盾牌','鞋子','手套'
+]);
+const SOURCE_ITEM_TYPE_LABELS=Object.freeze({
+  0:'空手類',1:'斧',2:'棍棒',3:'槍',4:'弓',6:'頭盔',7:'鎧甲',
+  8:'手環',9:'樂器',10:'項鍊',11:'戒指',12:'腰帶飾品',13:'耳環',14:'鼻環',15:'護身符',
+  16:'其他',17:'回力標',18:'投擲斧',19:'投擲石',20:'料理',21:'金屬',22:'寶石',23:'商品',
+  24:'腰帶',25:'盾牌',26:'鞋子',27:'手套'
+});
+function sourcePlayerRuntimeItemLabel(existing){
+  if(!existing)return '空';
+  const itemId=Math.trunc(Number(existing.itemId));
+  const relife=sourceItemRelifeTemplate(itemId);
+  return relife?.name||('Item '+itemId);
+}
+function sourcePlayerRuntimeItemSummary(existing){
+  if(!existing)return '';
+  const parts=[];
+  for(const [label,field] of [
+    ['攻','ITEM_MODIFYATTACK'],['防','ITEM_MODIFYDEFENCE'],['敏','ITEM_MODIFYQUICK'],
+    ['HP','ITEM_MODIFYHP'],['MP','ITEM_MODIFYMP'],['運','ITEM_MODIFYLUCK'],['魅','ITEM_MODIFYCHARM'],
+    ['迴避','ITEM_MODIFYAVOID'],['會心','ITEM_CRITICAL'],['額傷','ITEM_OTHERDAMAGE'],
+    ['額防','ITEM_OTHERDEFC'],['命中','ITEM_HITRIGHT'],['忽防','ITEM_NEGLECTGUARD']
+  ]){
+    const value=sourceItemRuntimeResolvedDataInt(existing,field);
+    if(value)parts.push(label+(value>0?'+':'')+value);
+  }
+  const type=sourceItemRuntimeResolvedDataInt(existing,'ITEM_TYPE');
+  if(type!=null)parts.unshift(SOURCE_ITEM_TYPE_LABELS[type]||('Type '+type));
+  return parts.join(' · ');
+}
+function sourcePlayerMoveFailureText(reason){
+  return ({
+    'state':'角色資料不存在',
+    'range':'裝備／背包格超出範圍',
+    'dead':'角色死亡時不能移動裝備',
+    'missing-source':'找不到 source-backed existing item',
+    'same-slot':'已在同一格',
+    'unsupported-template':'item template 尚未完整來源化',
+    'level':'角色等級不足',
+    'str':'腕力 STR 未達原 C 裝備需求',
+    'dex':'速度 DEX 未達原 C 裝備需求',
+    'transmigration':'轉生次數不足',
+    'profession-unported':'此物品有職業限制，職業系統尚未完整移植',
+    'callback-unported':'此物品有 attach/detach callback，特殊效果尚未移植',
+    'special-equip-unported':'此物品有固定原 C 特殊裝備副作用，尚未移植',
+    'weapon-pattern-unported':'此遠程武器的玩家攻擊 pattern 尚未完整移植',
+    'wrong-equip-place':'目前裝備位置不符合固定 ITEM_getEquipPlace',
+    'same-type':'兩個飾品槽不能同時裝備相同 ITEM_TYPE',
+    'same-type-exchange':'同類飾品交換會違反固定同 ITEM_TYPE 限制',
+    'equip-direct-move':'原 C 不允許裝備格直接移到另一個空裝備格',
+    'equip-direct-exchange':'原 C 不允許兩個裝備格直接交換',
+    'backpack-full':'15 格 source-backed 背包已滿'
+  })[reason]||('無法移動：'+String(reason||'unknown'));
+}
+function sourcePlayerAutoEquipDestination(fromSlot,target=state){
+  const slots=sourcePlayerItemSlots(target);
+  const from=Math.trunc(Number(fromSlot));
+  if(from<PLAYER_BACKPACK_START||from>=PLAYER_ITEM_SLOT_COUNT)return {ok:false,reason:'range'};
+  const itemIndex=Math.trunc(Number(slots[from]));
+  if(!Number.isFinite(itemIndex))return {ok:false,reason:'missing-source'};
+  const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+  if(!template)return {ok:false,reason:'unsupported-template'};
+  const req=sourcePlayerEquipRequirements(template,target);
+  if(!req.ok)return req;
+  const canonical=sourcePlayerEquipPlace(template,slots,target);
+  if(canonical<0)return {ok:false,reason:'wrong-equip-place'};
+  if(canonical===PLAYER_DECORATION1_SLOT){
+    const candidates=[PLAYER_DECORATION1_SLOT,PLAYER_DECORATION2_SLOT];
+    const empty=candidates.find(slot=>slots[slot]==null&&!sourcePlayerDecorationTypeConflict(slot,template,slots,target));
+    if(empty!=null)return {ok:true,to:empty,template,itemIndex};
+    const legal=candidates.find(slot=>!sourcePlayerDecorationTypeConflict(slot,template,slots,target));
+    if(legal!=null)return {ok:true,to:legal,template,itemIndex};
+    return {ok:false,reason:'same-type'};
+  }
+  return {ok:true,to:canonical,template,itemIndex};
+}
+function renderSourcePlayerItems(){
+  const equipEl=$('#sourceEquipmentGrid'),bagEl=$('#sourceBackpackGrid'),statusEl=$('#sourceItemRuntimeStatus');
+  if(!equipEl||!bagEl||!statusEl)return;
+  const slots=sourcePlayerItemSlots(state);
+  const tracked=sourceTrackedPlayerItems();
+  const equippedCount=slots.slice(0,PLAYER_EQUIP_SLOT_COUNT).filter(v=>v!=null).length;
+  const bagCount=slots.slice(PLAYER_BACKPACK_START).filter(v=>v!=null).length;
+  statusEl.textContent='裝備 '+equippedCount+' / 9 · 背包 '+bagCount+' / 15 · existing '+tracked.length;
+
+  equipEl.innerHTML=SOURCE_PLAYER_EQUIP_SLOT_LABELS.map((label,slotIndex)=>{
+    const itemIndex=slots[slotIndex];
+    const existing=itemIndex==null?null:sourceRuntimeSlotFromTarget(state,itemIndex);
+    const itemLabel=sourcePlayerRuntimeItemLabel(existing);
+    const summary=sourcePlayerRuntimeItemSummary(existing);
+    return '<div class="source-item-slot '+(existing?'filled':'empty')+'">'+
+      '<div class="source-item-slot-head"><span>'+label+'</span><small>#'+slotIndex+'</small></div>'+
+      '<b>'+escapeHtml(itemLabel)+'</b>'+
+      (existing?'<div class="source-item-effects">'+escapeHtml(summary||'sourceData 已建立')+'</div>':'<div class="source-item-effects">空</div>')+
+      (existing?'<button data-source-item-action="unequip" data-slot="'+slotIndex+'">卸下</button>':'')+
+    '</div>';
+  }).join('');
+
+  bagEl.innerHTML=Array.from({length:PLAYER_BACKPACK_SLOT_COUNT},(_,offset)=>{
+    const slotIndex=PLAYER_BACKPACK_START+offset;
+    const itemIndex=slots[slotIndex];
+    const existing=itemIndex==null?null:sourceRuntimeSlotFromTarget(state,itemIndex);
+    if(!existing){
+      return '<div class="source-item-slot empty"><div class="source-item-slot-head"><span>背包 '+(offset+1)+'</span><small>#'+slotIndex+'</small></div><div class="source-item-effects">空</div></div>';
+    }
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,state);
+    const equipPlace=template?sourcePlayerEquipPlace(template,slots,state):-1;
+    const canAttempt=equipPlace>=0;
+    return '<div class="source-item-slot filled">'+
+      '<div class="source-item-slot-head"><span>背包 '+(offset+1)+'</span><small>#'+slotIndex+'</small></div>'+
+      '<b>'+escapeHtml(sourcePlayerRuntimeItemLabel(existing))+'</b>'+
+      '<div class="source-item-effects">'+escapeHtml(sourcePlayerRuntimeItemSummary(existing)||'sourceData 已建立')+'</div>'+
+      (canAttempt?'<button data-source-item-action="equip" data-slot="'+slotIndex+'">裝備</button>':'<span class="source-item-not-equip">不可裝備類型</span>')+
+    '</div>';
+  }).join('');
+}
 function renderInventory(){
+  renderSourcePlayerItems();
   const held=conditionItems.filter(x=>hasItem(x.id)).length;
   const verified=conditionItems.filter(x=>x.sourceStatus==='verified').length;
   $('#inventoryKinds').textContent=held+' / '+conditionItems.length;
@@ -12128,6 +12246,32 @@ $('#playerHometownConfirmBtn').addEventListener('click',()=>confirmPlayerHometow
 $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;
   handleZooAction(b.dataset.zooAction);
+});
+$('#sourceItemRuntimePanel').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-source-item-action]');if(!b)return;
+  const action=b.dataset.sourceItemAction,slot=Math.trunc(Number(b.dataset.slot));
+  let moved=null;
+  if(action==='equip'){
+    const dest=sourcePlayerAutoEquipDestination(slot,state);
+    if(!dest.ok){
+      addLog('無法裝備：'+sourcePlayerMoveFailureText(dest.reason)+'。','bad');
+      render();return;
+    }
+    moved=sourcePlayerMoveItem(slot,dest.to,{target:state});
+  }else if(action==='unequip'){
+    const to=sourcePlayerFindEmptyBackpackSlot(state);
+    if(to<PLAYER_BACKPACK_START){
+      addLog('無法卸下：'+sourcePlayerMoveFailureText('backpack-full')+'。','bad');
+      render();return;
+    }
+    moved=sourcePlayerMoveItem(slot,to,{target:state});
+  }
+  if(!moved?.ok){
+    addLog('裝備移動失敗：'+sourcePlayerMoveFailureText(moved?.reason)+'。','bad');
+  }else{
+    addLog((action==='equip'?'已裝備 ':'已卸下 ')+(sourcePlayerRuntimeItemLabel(sourceRuntimeSlotFromTarget(state,moved.itemIndex))||'道具')+'。','good');
+  }
+  save();render();
 });
 $('#testSupplyBtn').addEventListener('click',()=>{
   for(const key of sourceCatalog.keys())giveItem(key,1);
