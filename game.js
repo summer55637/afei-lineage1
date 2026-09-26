@@ -66,7 +66,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
@@ -2948,7 +2948,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -3007,6 +3007,76 @@ function battleStatusKey(desc){
   if(desc.kind==='pet')return 'pet:'+String(desc.pet?.id??desc.petId??'');
   if(desc.kind==='enemy')return 'enemy:'+String(desc.unit?.id??desc.unitId??'');
   return null;
+}
+function sourceMagicPetState(desc){
+  const key=battleStatusKey(desc);
+  if(!key)return null;
+  const st=battleMagicPetStates.get(key)||null;
+  return st&&Math.trunc(n(st.turns))>0?st:null;
+}
+function sourceMagicPetRoundState(desc){
+  const key=battleStatusKey(desc);
+  return key?(battleMagicPetRoundStates.get(key)||null):null;
+}
+function sourceMagicPetDuckActive(desc){
+  return !!(desc?.kind==='enemy'&&n(desc.unit?.skillDuckTurns)>0);
+}
+function sourceMagicPetBusy(desc){
+  return sourceMagicPetDuckActive(desc)||!!sourceMagicPetState(desc);
+}
+function sourceMagicPetApply(desc,stat,turns,power){
+  const key=battleStatusKey(desc);
+  if(!key||sourceMagicPetBusy(desc))return false;
+  battleMagicPetStates.set(key,{
+    stat:String(stat||'').toUpperCase(),
+    turns:Math.max(0,Math.trunc(n(turns))),
+    power:Math.trunc(n(power)),
+    appliedBattleTurn:Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)))
+  });
+  return true;
+}
+function sourceMagicPetStatusSeq(desc){
+  const key=battleStatusKey(desc),st=key?battleMagicPetStates.get(key):null;
+  if(!key||!st||Math.trunc(n(st.turns))<=0)return null;
+  st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+  if(st.turns<=0){
+    battleMagicPetStates.delete(key);
+    addLog(battleStatusDescName(desc)+' 的 '+String(st.stat||'能力')+' 強化效果結束。');
+    return {expired:true,stat:st.stat,power:st.power,turns:0};
+  }
+  return {expired:false,stat:st.stat,power:st.power,turns:st.turns};
+}
+function sourcePrepareMagicPetRoundStates(){
+  battleMagicPetRoundStates=new Map();
+  const current=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+  const descs=[];
+  if(state?.hp>0)descs.push({kind:'player'});
+  const pet=activePet();
+  if(pet&&petIsBattleActive(pet))descs.push({kind:'pet',pet,petId:pet.id});
+  const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+  for(const unit of units)if(unit&&n(unit.hp)>0)descs.push({kind:'enemy',unit,unitId:unit.id});
+  for(const desc of descs){
+    const key=battleStatusKey(desc),st=sourceMagicPetState(desc);
+    if(!key||!st)continue;
+    if(current<=Math.trunc(n(st.appliedBattleTurn)))continue;
+    battleMagicPetRoundStates.set(key,Object.assign({},st));
+  }
+}
+function sourceMagicPetAdjusted(desc,attack,defense,quick,mtghBase=defense){
+  const out={
+    attack:Math.trunc(n(attack)),defense:Math.trunc(n(defense)),quick:Math.trunc(n(quick)),
+    stat:null,power:0,add:0
+  };
+  const st=sourceMagicPetRoundState(desc);
+  if(!st)return out;
+  const stat=String(st.stat||'').toUpperCase(),power=Math.trunc(n(st.power));
+  // fixed Other_DefcharWorkInt() bug: STR/TGH/DEX all add (mtgh * power) / 100.
+  const add=Math.trunc(Math.trunc(n(mtghBase))*power/100);
+  if(stat==='STR')out.attack+=add;
+  else if(stat==='TGH')out.defense+=add;
+  else if(stat==='DEX')out.quick+=add;
+  out.stat=stat;out.power=power;out.add=add;
+  return out;
 }
 function sourceUltimateMaxHp(desc){
   if(desc?.kind==='player')return Math.max(1,Math.trunc(n(state?.maxHp)));
@@ -3562,8 +3632,13 @@ function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
 
+  // fixed BATTLE_StatusSeq tail: SetMagicPet counts down on the target's own action.
+  // The round WORK/FIX snapshot was already prepared before StatusSeq, so an expiry here
+  // must not erase this round's already-built stat bonus.
+  sourceMagicPetStatusSeq(desc);
+
   if(desc.kind==='enemy'){
-    // 原 BATTLE_StatusSeq 尾端：SetDuck / SetMagicPet 各自按「輪到該角色行動」扣 1。
+    // 原 BATTLE_StatusSeq 尾端：SetDuck 同樣按「輪到該角色行動」扣 1。
     if(n(desc.unit?.skillDuckTurns)>0){
       desc.unit.skillDuckTurns=Math.max(0,Math.trunc(n(desc.unit.skillDuckTurns))-1);
       if(desc.unit.skillDuckTurns<=0){
@@ -3571,14 +3646,6 @@ function processBattleStatusTurn(actor){
         addLog(desc.unit.name+' 的閃避術效果結束。');
       }
     }
-    if(n(desc.unit?.mySkillTghTurns)>0){
-      desc.unit.mySkillTghTurns=Math.max(0,Math.trunc(n(desc.unit.mySkillTghTurns))-1);
-      if(desc.unit.mySkillTghTurns<=0){
-        desc.unit.mySkillTghPower=0;
-        addLog(desc.unit.name+' 的大地鎧甲效果結束。');
-      }
-    }
-
     // 原主迴圈在 BATTLE_StatusSeq 後緊接 BATTLE_MagicStatusSeq；
     // 鐵壁 MagicTbl 倒數同樣在角色自己的行動開始前遞減。
     if(n(desc.unit?.superWallTurns)>0){
@@ -3685,15 +3752,16 @@ function playerBattleView(){
   const drunk=battleStatusActive(desc,'drunk');
   const weaken=battleWeakenRoundActive(desc);
   const compliance=state?.playerEquipCompliance||playerComplianceParameter(state)?.equip||{};
-  const attack=weaken?Math.trunc(n(state.attack)*.8):n(state.attack);
-  const defenseBase=weaken?Math.trunc(n(state.defense)*.8):n(state.defense);
-  const quickBase=weaken?Math.trunc(n(state.dex)*.8):n(state.dex);
-  const fixedToughBase=n(compliance.fixedTough??state.defense);
+  const fixedToughBase=Math.trunc(n(compliance.fixedTough??state.defense));
+  const magicPet=sourceMagicPetAdjusted(desc,state.attack,state.defense,state.dex,fixedToughBase);
+  const attack=weaken?Math.trunc(n(magicPet.attack)*.8):n(magicPet.attack);
+  const defenseBase=weaken?Math.trunc(n(magicPet.defense)*.8):n(magicPet.defense);
+  const quickBase=weaken?Math.trunc(n(magicPet.quick)*.8):n(magicPet.quick);
   const arm=compliance.arm||null;
   const weaponType=arm?Math.trunc(n(arm.type)):0;
   return {
     type:'player',attack,defense:defenseBase,stone,
-    fixedTough:weaken?Math.trunc(fixedToughBase*.8):fixedToughBase,
+    fixedTough:defenseBase,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(compliance.fixedLuck??state.luck),drunk,
     weaponType,weaponCritical:arm?Math.trunc(n(arm.critical)):0,
@@ -3716,17 +3784,20 @@ function petBattleView(pet){
   const earth=battlePetEarthRoundStates.get(pet.id)||null;
   const frozen=earth?.snapshot||null;
   const vary=battlePetVaryStates.get(pet.id)||null;
-  const sourceAttackBase=n(combat?.attack),sourceQuickBase=n(combat?.quick);
-  // fixed ITEM_equipEffect/compliance: when BASEIMAGENUMBER==101428, Vary first adds
-  // CHAR_SKILLSTRPOWER / CHAR_SKILLDEXPOWER to WORKFIXSTR / WORKFIXDEX; WEAKEN is later.
+  const sourceAttackBase=Math.trunc(n(combat?.attack));
+  const sourceDefenseBase=Math.trunc(n(combat?.defense));
+  const sourceQuickBase=Math.trunc(n(combat?.quick));
+  // fixed Other_DefcharWorkInt(): SetMagicPet is applied before Vary/WEAKEN.
+  // The source bug uses the saved mtgh base for STR/TGH/DEX alike.
+  const magicPet=sourceMagicPetAdjusted(desc,sourceAttackBase,sourceDefenseBase,sourceQuickBase,sourceDefenseBase);
   const variedAttackBase=vary
-    ?sourceAttackBase+Math.trunc(sourceAttackBase*Math.trunc(n(vary.attackPct))/100)
-    :sourceAttackBase;
+    ?magicPet.attack+Math.trunc(magicPet.attack*Math.trunc(n(vary.attackPct))/100)
+    :magicPet.attack;
   const variedQuickBase=vary
-    ?sourceQuickBase+Math.trunc(sourceQuickBase*Math.trunc(n(vary.dexPct))/100)
-    :sourceQuickBase;
+    ?magicPet.quick+Math.trunc(magicPet.quick*Math.trunc(n(vary.dexPct))/100)
+    :magicPet.quick;
   const normalAttackBase=weaken?Math.trunc(variedAttackBase*.8):variedAttackBase;
-  const normalDefenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
+  const normalDefenseBase=weaken?Math.trunc(magicPet.defense*.8):magicPet.defense;
   const normalQuickBase=weaken?Math.trunc(variedQuickBase*.8):variedQuickBase;
   const powerMod=battlePetPowerMods.get(pet.id)||null;
   const noGuard=battlePetNoGuardStates.get(pet.id)||null;
@@ -3734,8 +3805,7 @@ function petBattleView(pet){
     :(powerMod&&Number.isFinite(Number(powerMod.attack))?Math.trunc(Number(powerMod.attack)):normalAttackBase);
   const defense=frozen?Math.trunc(n(frozen.defense))
     :(powerMod&&Number.isFinite(Number(powerMod.defense))?Math.trunc(Number(powerMod.defense)):normalDefenseBase);
-  const fixedToughBase=pet.serverStats?n(pet.serverStats.tgh)*.01:n(pet.stats?.tgh);
-  const fixedTough=frozen?Number(frozen.fixedTough):weaken?Math.trunc(fixedToughBase*.8):fixedToughBase;
+  const fixedTough=frozen?Number(frozen.fixedTough):normalDefenseBase;
   const fixedDex=frozen?Number(frozen.fixedDex):normalQuickBase;
   const workQuickBase=frozen?Number(frozen.workQuickBase??frozen.fixedDex??frozen.quick):normalQuickBase;
   const elements=frozen?.elements?Object.assign({},frozen.elements):battleElementsForDesc(desc);
@@ -4060,11 +4130,14 @@ function enemyPrepareRoundAction(unit,action){
   // 最後才進 AI / PETSKILL_*，因此所有技能都必須從「本輪 FIX 快照」起算。
   let sourceFixAttack=Math.trunc(n(unit.attack));
   let sourceFixQuick=Math.trunc(n(unit.quick));
-
-  // 大地鎧甲在 Other_DefcharWorkInt 裡早於 WEAKEN 套到 FIXTOUGH。
-  const tghBuffPower=n(unit?.mySkillTghTurns)>0?Math.max(0,n(unit?.mySkillTghPower)):0;
   const baseDefense=Math.trunc(n(unit.defense));
-  let sourceFixDefense=baseDefense+Math.trunc(baseDefense*tghBuffPower/100);
+
+  // fixed Other_DefcharWorkInt(): SetMagicPet precedes WEAKEN and, due to a source bug,
+  // STR/TGH/DEX all use the saved mtgh base for their percentage addition.
+  const magicPet=sourceMagicPetAdjusted(desc,sourceFixAttack,baseDefense,sourceFixQuick,baseDefense);
+  sourceFixAttack=magicPet.attack;
+  let sourceFixDefense=magicPet.defense;
+  sourceFixQuick=magicPet.quick;
 
   if(weakened){
     sourceFixAttack=Math.trunc(sourceFixAttack*.8);
@@ -4079,7 +4152,9 @@ function enemyPrepareRoundAction(unit,action){
   unit.roundDefense=sourceFixDefense;
   unit.roundQuick=sourceFixQuick;
   unit.roundWeakenApplied=weakened;
-  unit.roundTghBuffPower=tghBuffPower;
+  unit.roundMagicPetStat=magicPet.stat;
+  unit.roundMagicPetPower=magicPet.power;
+  unit.roundTghBuffPower=magicPet.stat==='TGH'?magicPet.power:0;
 
   unit.noGuardDuckBonus=0;
   unit.noGuardCounterBonus=0;
@@ -6951,32 +7026,111 @@ function performEnemyMagicStatusChange(actor,unit,options,meta){
   addLog(unit.name+' 使用 '+(meta?.n||'鐵壁')+'：我方全體取得 '+turns+' 回合鐵壁（基準 +'+power+'%，每次受物理傷害另加原 C rand()%20）。','bad');
   return {kind:'skill',skillId:actor.skillId,status:'superWall',turns,power,results};
 }
-function performEnemySetMagicPet(actor,unit,options,meta){
-  const p=String(meta?.o||'').split('|');
-  const turns=Math.max(0,Math.trunc(Number(p[0])||0));
-  const power=Math.max(0,Math.trunc(Number(p[1])||0));
-  const stat=String(p[2]||'').trim().toUpperCase();
-  const results=[];
-
-  if(stat!=='TGH'){
-    addLog(unit.name+' 使用 '+(meta?.n||'能力強化')+'，但目前正權重資料不是 TGH；不猜其他屬性效果。');
-    return {kind:'skill',skillId:actor.skillId,unsupportedStat:stat};
-  }
-
-  // 原 PETSKILL_SetMagicPet_Battle：ALLMYSIDE；若 Duck/STR/TGH/DEX 任一 MySkill 已存在則跳過。
-  // 本專案目前已建模 Duck 與 TGH，正權重 601 只使用 TGH。
-  for(const target of livingEnemyUnits()){
-    const busy=n(target.skillDuckTurns)>0||n(target.mySkillTghTurns)>0;
-    if(busy){
-      results.push({unitId:target.id,applied:false,existing:true});
-      continue;
+function sourceSetMagicPetTargetableDescFromSlot(slot){
+  const desc=sourceBattleStatusDescFromSlot(slot);
+  if(!desc)return null;
+  if(desc.kind==='player')return state.hp>0?desc:null;
+  if(desc.kind==='pet')return desc.pet&&petIsBattleActive(desc.pet)&&!sourcePlayerPetHidden(desc.pet)?desc:null;
+  if(desc.kind==='enemy')return desc.unit&&n(desc.unit.hp)>0&&!enemyUnitHidden(desc.unit)?desc:null;
+  return null;
+}
+function sourceSetMagicPetMultiList(toNo){
+  const no=Math.trunc(Number(toNo));
+  const slots=(start,end)=>{
+    const out=[];
+    for(let slot=start;slot<end;slot++)if(sourceSetMagicPetTargetableDescFromSlot(slot))out.push(slot);
+    return out;
+  };
+  if(no>=0&&no<=19){
+    if(sourceSetMagicPetTargetableDescFromSlot(no))return {ok:true,toNo:no,slots:[no],fallback:false,rolls:[]};
+    const compact=slots(no<10?0:10,no<10?10:20);
+    if(!compact.length)return {ok:false,toNo:-1,slots:[],fallback:true,rolls:[],reason:'all-die'};
+    const rolls=[];
+    for(;;){
+      const roll=cRand(0,9); // fixed __ATTACK_MAGIC path: nLifeArea[rand()%10]
+      rolls.push(roll);
+      const picked=compact[roll];
+      if(picked!=null)return {ok:true,toNo:picked,slots:[picked],fallback:true,rolls,compact:compact.slice()};
     }
-    target.mySkillTghTurns=turns;
-    target.mySkillTghPower=power;
-    results.push({unitId:target.id,applied:true,turns,power});
   }
-  addLog(unit.name+' 使用 '+(meta?.n||'大地鎧甲')+'：可套用的我方成員取得 '+turns+' 回合 TGH +'+power+'%。','bad');
-  return {kind:'skill',skillId:actor.skillId,stat:'TGH',turns,power,results};
+  if(no===20)return {ok:true,toNo:no,slots:slots(0,10),fallback:false,rolls:[]};
+  if(no===21)return {ok:true,toNo:no,slots:slots(10,20),fallback:false,rolls:[]};
+  if(no===22)return {ok:true,toNo:no,slots:slots(0,20),fallback:false,rolls:[]};
+  const rows={23:[10,15,15,20,24],24:[15,20,10,15,23],25:[5,10,0,5,26],26:[0,5,5,10,25]};
+  const row=rows[no];
+  if(row){
+    let picked=slots(row[0],row[1]);
+    if(picked.length)return {ok:true,toNo:no,slots:picked,rowFallback:false,rolls:[]};
+    picked=slots(row[2],row[3]);
+    if(picked.length)return {ok:true,toNo:row[4],slots:picked,rowFallback:true,rolls:[]};
+    return {ok:false,toNo:-1,slots:[],rowFallback:true,rolls:[],reason:'all-die'};
+  }
+  return {ok:false,toNo:no,slots:[],fallback:false,rolls:[],reason:'invalid-target'};
+}
+function sourceSetMagicPetRecoveryRate(desc){
+  const raw=battleStatusRawStats(desc);
+  const vital=Math.trunc(n(raw.vital));
+  return 1+(desc?.kind==='player'?0.00010:0.00005)*vital;
+}
+function sourceSetMagicPetHeal(desc,power){
+  const low=Math.trunc(n(power)*0.9),high=Math.trunc(n(power)*1.1);
+  const roll=cRand(Math.min(low,high),Math.max(low,high));
+  const rate=sourceSetMagicPetRecoveryRate(desc);
+  const amount=Math.trunc(roll*rate);
+  const before=Math.max(0,Math.trunc(n(battleStatusHp(desc))));
+  const maxHp=sourceUltimateMaxHp(desc);
+  const after=Math.min(maxHp,before+amount);
+  battleStatusSetHp(desc,after);
+  return {before,after,amount:after-before,rawAmount:amount,roll,rate,maxHp};
+}
+function sourcePerformSetMagicPetBattle(casterLabel,skillId,rawToNo,meta,logClass=''){
+  const p=String(meta?.o||'').split('|');
+  const turns=Math.trunc(Number(p[0])||0);
+  const power=Math.trunc(Number(p[1])||0);
+  const stat=String(p[2]||'').trim().toUpperCase();
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    addLog(casterLabel+' 使用 '+(meta?.n||'能力強化')+'，但原 BATTLE_MultiList 找不到可作用目標。',logClass);
+    return {kind:'skill',skillId,noTarget:true,rawToNo,multi,stat,turns,power,magicPetMpBehaviorallyUnchanged:true};
+  }
+
+  const results=[];
+  if(stat==='HP'){
+    for(const slot of multi.slots){
+      const desc=sourceSetMagicPetTargetableDescFromSlot(slot);
+      if(!desc)continue;
+      const heal=sourceSetMagicPetHeal(desc,power);
+      results.push({slot,target:battleStatusDescName(desc),kind:desc.kind,petId:desc.petId||null,unitId:desc.unitId||null,heal});
+    }
+    addLog(casterLabel+' 使用 '+(meta?.n||'回復')+'：依原 BATTLE_MultiRecovery 對 '+results.length+' 個目標抽 90%～110% 後回復 HP。',logClass);
+    return {kind:'skill',skillId,stat,turns,power,rawToNo,multi,results,magicPetMpBehaviorallyUnchanged:true};
+  }
+
+  if(stat!=='STR'&&stat!=='TGH'&&stat!=='DEX'){
+    addLog(casterLabel+' 使用 '+(meta?.n||'能力強化')+'，但 option 屬性 '+stat+' 無對應原 C 分支；不猜效果。',logClass);
+    return {kind:'skill',skillId,unsupportedStat:stat,turns,power,rawToNo,multi,magicPetMpBehaviorallyUnchanged:true};
+  }
+
+  for(const slot of multi.slots){
+    const desc=sourceSetMagicPetTargetableDescFromBattleSlot(slot);
+    if(!desc)continue;
+    const busy=sourceMagicPetBusy(desc);
+    const applied=!busy&&sourceMagicPetApply(desc,stat,turns,power);
+    results.push({slot,target:battleStatusDescName(desc),kind:desc.kind,petId:desc.petId||null,unitId:desc.unitId||null,applied,busy});
+  }
+  addLog(
+    casterLabel+' 使用 '+(meta?.n||'能力強化')+'：'+stat+' '+power+'／'+turns+' 回合；'
+      +'原 C 與 Duck/STR/TGH/DEX 共用互斥 gate，且真正能力變化從下一輪 PreCommand 生效。',
+    logClass
+  );
+  return {kind:'skill',skillId,stat,turns,power,rawToNo,multi,results,magicPetMpBehaviorallyUnchanged:true};
+}
+function performEnemySetMagicPet(actor,unit,options,meta){
+  // fixed BATTLE_ai_normal() selects the opposite-side attack target first and passes that raw
+  // target through PETSKILL_Use(); BATTLE_ai_all() then stores the absolute COM2 slot.
+  // It does NOT rewrite PETSKILL_TARGET_ALLMYSIDE here.
+  const rawToNo=sourceEnemyCommandTargetBattleSlot(actor,null);
+  return sourcePerformSetMagicPetBattle(unit.name,actor.skillId,rawToNo,meta,'bad');
 }
 function performEnemySetDuck(actor,unit,options,meta){
   const p=String(meta?.o||'').split('|');
@@ -10232,6 +10386,10 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Modifyattack')result=sourcePerformPetModifyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Mdfyattack')result=sourcePerformPetMdfyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Lighttakeed')result=sourcePerformPetLighttakeedSkill(pet,action);
+    else if(meta?.f==='PETSKILL_SetMagicPet'){
+      const rawToNo=action?.targetDesc?.kind==='enemy'?sourceBattleStatusSlot(action.targetDesc):-1;
+      result=sourcePerformSetMagicPetBattle(pet.name,action.skillId,rawToNo,meta,'pet');
+    }
     else if(meta?.f==='PETSKILL_SetDuck')result=sourcePerformPetSetDuckRandomSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
@@ -11900,6 +12058,9 @@ function normalBattleOrder(options={}){
   sourcePreCommandResetTransient();
   // Other_DefcharWorkInt 同一階段處理 WEAKEN / BARRIER 的真正倒數與 WEAKEN 0.8 FIX 快照。
   sourcePreCommandStatusTick();
+  // SetMagicPet is read by Other_DefcharWorkInt() during this PreCommand phase.
+  // Freeze which buffs affect this round before any later StatusSeq countdown can expire them.
+  sourcePrepareMagicPetRoundStates();
   // 再依 REVERSE flag 套 BATTLE_AttReverse；EARTHROUND0 同樣保留舊 FIX 屬性快照。
   battlePrepareElementWork();
 
