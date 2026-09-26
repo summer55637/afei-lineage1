@@ -6250,7 +6250,7 @@ function enemySkillNumber(option,pattern,fallback=0){
   const v=m?Number(m[1]):NaN;
   return Number.isFinite(v)?v:fallback;
 }
-function enemyApplySkillHit(unit,chosen,r,label){
+function enemyApplySkillHit(unit,chosen,r,label,options={}){
   if(chosen.kind==='pet'&&chosen.pet){
     const pet=chosen.pet;
     const targetDesc={kind:'pet',pet,petId:pet.id};
@@ -6259,9 +6259,11 @@ function enemyApplySkillHit(unit,chosen,r,label){
     }else if(r.miss){
       addLog(unit.name+' 的'+label+'沒有造成傷害。');
     }else{
-      const acupuncture=sourcePrepareAcupunctureReaction(
-        {kind:'enemy',unit,unitId:unit.id},targetDesc,r
-      );
+      const acupuncture=options.ignoreDamageReact
+        ?{triggered:false,sourceIgnoredByFirekill:true}
+        :sourcePrepareAcupunctureReaction(
+          {kind:'enemy',unit,unitId:unit.id},targetDesc,r
+        );
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
       sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
@@ -8161,7 +8163,7 @@ function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label,options={}){
   if(r?.guardian&&chosen?.kind==='player'){
     addLog(r.guardian.name+' 發動忠犬，代替你承受 '+unit.name+' 的'+label+'。','pet');
   }
-  enemyApplySkillHit(unit,actual,r,label);
+  enemyApplySkillHit(unit,actual,r,label,options);
   if(options.finalizeItemCrush!==false){
     sourceBattleFinalizeItemCrushRng(r);
   }
@@ -8186,7 +8188,9 @@ function performEnemyFirekill(actor,unit,options,meta){
   }else{
     physical=resolveEnemyDirectAttackToPlayer(unit,{guarding});
   }
-  const physicalActual=physical?enemyApplyDirectGuardianSkillHit(unit,chosen,physical,label+'物理段'):chosen;
+  const physicalActual=physical?enemyApplyDirectGuardianSkillHit(
+    unit,chosen,physical,label+'物理段',{ignoreDamageReact:true}
+  ):chosen;
 
   // 隨後固定呼叫 BATTLE_MultiAttMagic_Fire(...,2,200)。該函式 MagicLv 固定 4。
   // 它仍會消耗一次 rand()%100 的 TrueMagic 檢定，但 _FIX_MAGICDAMAGE 下的 ×0.7 行在此專用函式已被註解，
@@ -10959,6 +10963,211 @@ function sourcePerformPetRegretSkill(pet,action){
   };
 }
 
+function sourcePetFirekillResolveTarget(action){
+  const raw=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  const rawSlot=raw?sourceBattleStatusSlot({kind:'enemy',unit:raw,unitId:raw.id}):-1;
+
+  // fixed FIREKILL does NOT call TargetAdjust. A dead/invalid/EarthRound COM2 instead
+  // falls back deterministically to the first TargetCheck-valid, non-EarthRound slot
+  // on the same side. RANDOMACT supplies an Enemy-side COM2, so valid slots are 10..19.
+  if(raw&&n(raw.hp)>0&&!enemyUnitHidden(raw)){
+    return {target:raw,rawSlot,resolvedSlot:rawSlot,fallback:false};
+  }
+  if(rawSlot<10||rawSlot>19){
+    return {target:null,rawSlot,resolvedSlot:-1,fallback:false,sourceInvalidRawSide:true};
+  }
+
+  const units=(Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]))
+    .filter(u=>u&&n(u.hp)>0&&!enemyUnitHidden(u))
+    .sort((a,b)=>sourceBattleStatusSlot({kind:'enemy',unit:a,unitId:a.id})
+      -sourceBattleStatusSlot({kind:'enemy',unit:b,unitId:b.id}));
+  const target=units.find(u=>{
+    const slot=sourceBattleStatusSlot({kind:'enemy',unit:u,unitId:u.id});
+    return slot>=10&&slot<20;
+  })||null;
+  return {
+    target,rawSlot,resolvedSlot:target?sourceBattleStatusSlot({kind:'enemy',unit:target,unitId:target.id}):-1,
+    fallback:true
+  };
+}
+
+function sourceApplyPetFirekillPhysicalHit(pet,target,r,label){
+  const actual=r?.actualTarget||target;
+  if(!actual)return null;
+  if(r.dodged){
+    addLog(target.name+' 閃避了 '+pet.name+' 的「'+label+'」物理段。','pet');
+    return target;
+  }
+  if(r.miss){
+    addLog(pet.name+' 的「'+label+'」物理段沒有造成傷害。','pet');
+    return actual;
+  }
+
+  // BATTLE_DamageSub_FIREKILL reads BATTLE_GetDamageReact() and then immediately forces
+  // react=BATTLE_MD_NONE. Thus Acupuncture/Reflect/Absorb/Vanish do not trigger or consume.
+  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
+  const before=Math.max(0,Math.trunc(n(actual.hp)));
+  actual.hp=Math.max(0,before-Math.max(0,Math.trunc(n(r.damage))));
+  sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
+  battleStatusWakeOnDamage(targetDesc,r.damage);
+  sourceBattleFinalizeItemCrushRng(r);
+
+  if(r.guardian){
+    addLog(actual.name+' 發動忠犬護住 '+target.name+'，承受 '+pet.name+' 的「'+label+'」物理段 '+r.damage+' 傷害。',actual.hp<=0?'bad':'pet');
+  }else{
+    addLog(pet.name+' 的「'+label+'」物理段命中 '+actual.name+'，造成 '+r.damage+' 傷害。','pet');
+  }
+  if(before>0&&actual.hp<=0){
+    sourceMarkEnemyDeathCredit(actual,[{kind:'pet',petId:pet.id}]);
+    addLog(actual.name+' 倒下了，本場後續回合不再行動。','bad');
+  }
+  return actual;
+}
+
+function sourcePetFirekillMagicAttrDamage(pet,target,aPower){
+  const attackerDesc={kind:'pet',pet,petId:pet.id};
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const source=normalizedElements(battleElementsForDesc(attackerDesc))
+    ||{earth:0,water:0,fire:0,wind:0,none:100};
+  const targetView=battleStatusDescView(targetDesc);
+  const def=normalizedElements(targetView?.elements||{})
+    ||{earth:0,water:0,fire:0,wind:0,none:100};
+
+  // BATTLE_getMagicAdjustInt(... MagicLv=4, flg=2):
+  // MagicLv*=10, keep none, zero Earth/Water/Wind, and pull Fire from the caster.
+  const scaled=40;
+  const magicVector={
+    earth:0,water:0,wind:0,
+    fire:scaled+scaled*Math.trunc(Math.trunc(n(source.fire))/50),
+    none:Math.trunc(n(source.none))
+  };
+  const fieldRatio=battleFieldRatio(magicVector,def);
+  const attack={
+    earth:0,water:0,wind:0,
+    fire:Math.trunc(n(magicVector.fire)*n(aPower)),
+    none:Math.trunc(n(magicVector.none)*n(aPower))
+  };
+  const baseDamage=magicAttrCalcRaw(attack,def);
+  return {
+    damage:Math.max(0,Math.trunc(baseDamage*fieldRatio)),
+    magicVector,attackVector:attack,defVector:def,fieldRatio,
+    fieldState:Object.assign({},battleFieldState)
+  };
+}
+
+function sourcePetFirekillMagicOne(pet,target,trueMagic){
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+
+  // BATTLE_MagicDodge() treats every non-PLAYER as the Pet branch, including CHAR_TYPEENEMY:
+  // fLuck = LV*0.2, capped at 30; rand()%100+1 <= trunc(fLuck) dodges.
+  const threshold=Math.trunc(Math.min(30,Math.max(0,n(target.level)*.2)));
+  const dodgeRoll=cRand(1,100);
+  if(dodgeRoll<=threshold){
+    return {damage:0,dodged:true,dodge:{roll:dodgeRoll,threshold},trueMagic};
+  }
+
+  // BATTLE_MultiAttMagic_Fire hard-codes PET att_magic_lv[all]=5.
+  // Enemy magic resistance is trunc(LV*0.5). The function still rolls TrueMagic once
+  // for the whole row, but its false-magic ×0.7 line is commented out.
+  const attMagicLv=5;
+  const resist=Math.trunc(Math.max(0,n(target.level))*.5);
+  let kmagic=attMagicLv*1.4-resist;
+  if(kmagic<0)kmagic=0;
+  const randomAmp=cRand(0,19);
+  const amagic=(kmagic*kmagic)/(attMagicLv*attMagicLv)+randomAmp/100;
+  const aPower=Math.trunc(200*(1+4/10)*amagic);
+  const adjusted=sourcePetFirekillMagicAttrDamage(pet,target,aPower);
+  const damage=Math.max(0,Math.trunc(n(adjusted.damage)));
+  const before=Math.max(0,Math.trunc(n(target.hp)));
+  target.hp=Math.max(0,before-damage);
+
+  if(before>0&&target.hp<=0){
+    sourceMarkEnemyDeathCredit(target,[{kind:'pet',petId:pet.id}]);
+  }
+  return {
+    damage,dodged:false,dodge:{roll:dodgeRoll,threshold},
+    trueMagic,attMagicLv,resist,kmagic,randomAmp,amagic,aPower,adjusted,
+    hpBefore:before,hpAfter:target.hp
+  };
+}
+
+function sourcePerformPetFirekillSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'火線獵殺';
+  const resolved=sourcePetFirekillResolveTarget(action);
+  const target=resolved.target;
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 raw COM2 同側沒有可用目標；原 FIREKILL 結束不行動。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true,targetResolution:resolved};
+  }
+
+  // fixed battle.c overwrites WORKATTACKPOWER = (float)FIXSTR * 0.8 immediately
+  // before BATTLE_Attack_FIREKILL. Pet has no weapon, so use the current round FIX snapshot.
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+  const baseAttack=Math.trunc(n(base.attack));
+  const physicalAttack=Math.trunc(baseAttack*.8);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const attacker=Object.assign({},base,{attack:physicalAttack});
+  const physical=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const physicalActual=sourceApplyPetFirekillPhysicalHit(pet,target,physical,label);
+
+  // The magic call receives the ORIGINAL resolved defNo, not the Guardian's slot.
+  // BATTLE_MultiAttMagic_Fire snapshots every TargetCheck-valid member of that five-slot row.
+  const resolvedSlot=resolved.resolvedSlot;
+  const rowStart=resolvedSlot>=15?15:10;
+  const magicTargets=(Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]))
+    .filter(u=>{
+      if(!u||n(u.hp)<=0||enemyUnitHidden(u))return false;
+      const slot=sourceBattleStatusSlot({kind:'enemy',unit:u,unitId:u.id});
+      return slot>=rowStart&&slot<rowStart+5;
+    })
+    .sort((a,b)=>sourceBattleStatusSlot({kind:'enemy',unit:a,unitId:a.id})
+      -sourceBattleStatusSlot({kind:'enemy',unit:b,unitId:b.id}));
+
+  // Source consumes exactly one rand()%100 TrueMagic roll before iterating the row.
+  // PET fire magic level is 5, so true iff roll<=5; dedicated Firekill damage ignores false penalty.
+  const trueRoll=cRand(0,99);
+  const trueMagic=trueRoll<=5;
+  const magicResults=[];
+  const wake=[];
+  for(const unit of magicTargets){
+    const r=sourcePetFirekillMagicOne(pet,unit,trueMagic);
+    magicResults.push({
+      unitId:unit.id,battleSlot:sourceBattleStatusSlot({kind:'enemy',unit,unitId:unit.id}),r
+    });
+    if(r.dodged){
+      addLog(unit.name+' 閃過「'+label+'」火焰追加（'+r.dodge.roll+' ≤ '+r.dodge.threshold+'）。');
+    }else{
+      addLog('「'+label+'」火焰追加命中 '+unit.name+'，造成 '+r.damage+' 魔法傷害。',unit.hp<=0?'bad':'pet');
+      wake.push(unit);
+    }
+  }
+
+  // Dedicated Firekill helper clears sleep only after the complete row loop.
+  for(const unit of wake){
+    const desc={kind:'enemy',unit,unitId:unit.id};
+    if(battleStatusActive(desc,'sleep'))battleStatusClear(desc,'sleep');
+  }
+
+  // FIREKILL is an isolated special case: no common Counter and no inner AddProfit.
+  // The actor outer boundary processes all physical/magic deaths after the command.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    targetResolution:resolved,baseAttack,physicalAttack,physical,
+    physicalActualTargetUnitId:physicalActual?.id||target.id,
+    physicalGuardianUnitId:physical?.guardian?.id||null,
+    fire:{
+      fieldAttr:2,power:200,magicLv:4,attMagicLv:5,trueRoll,trueMagic,
+      rowStart,targets:magicResults
+    },
+    sourceDamageReactForcedNone:true,sourceNoCounter:true
+  };
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
   if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
@@ -11041,6 +11250,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
     else if(meta?.f==='PETSKILL_Sonic')result=sourcePerformPetSonicSkill(pet,action);
     else if(meta?.f==='PETSKILL_Regret')result=sourcePerformPetRegretSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Firekill')result=sourcePerformPetFirekillSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
