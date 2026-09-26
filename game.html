@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.67</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.68</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -206,6 +206,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.68：</b>
+      對齊原 C 的 _Item_ReLifeAct 玩家死亡復活 lifecycle：CHECK_ITEM_RELIFE 只在有效 Entry 完成 command 後、outer BATTLE_AddProfit 前掃描，僅接受一般死亡且已標記 ISDIE 的玩家；Ultimate／打飛直接排除。裝備只掃 slot 0～4、第一件有效 ITEM_DIERELIFEFUNC，HP 依缺省 1／FULL／C atoi 規則復活並立即消耗。inner AddProfit 可讓同一 actor 結束時復活；outer-only 致死則必須等後續真正完成行動的 Entry。現階段不猜替身道具 ID，正式 Player 裝備 adapter 仍保持空資料。
+    </article>
 
     <article class="card note">
       <b>V1.67：</b>
