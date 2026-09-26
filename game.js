@@ -7554,9 +7554,11 @@ function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePl
   for(let i=0;i<5;i++){
     const item=slots[i];
     if(!item)continue;
-    // CHECK_ITEM_RELIFE scans CHAR item slots 0..4, requires ITEM_getEquipPlace()!=-1,
-    // then uses the first item whose ITEM_DIERELIFEFUNC pointer is non-null.
-    if(item.equipPlace===-1||item.equipped===false||item.dieRelifeFunc!==true)continue;
+    // ITEM_CHECKINDEX + ITEM_getEquipPlace() are both hard gates in fixed CHECK_ITEM_RELIFE.
+    const runtimeIndex=Math.trunc(Number(item.itemIndex));
+    const equipPlace=Math.trunc(Number(item.equipPlace));
+    if(!Number.isFinite(runtimeIndex)||!sourceItemRuntimeSlot(runtimeIndex))continue;
+    if(!Number.isFinite(equipPlace)||equipPlace===-1||item.equipped===false||item.dieRelifeFunc!==true)continue;
 
     const requested=sourceRelifeHpPower(item);
     const workHp=Math.max(1,Math.trunc(n(requested)));
