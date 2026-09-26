@@ -1180,3 +1180,125 @@ throw weapon 時直接 NONE，flag 不消耗。
 - `c210901e9cf353165958a87112c77b031df0468b` — V1.88 regression
 - `f3dd5c46ebf4217e339d4a7ee81dfc9cd8cbfa2d` — V1.88 CI step
 - `0386035e9dec907b99077f1a1e480d1806bf9704` — V1.87/V1.88 README
+
+
+---
+
+## V1.89 Player RANDOMACT Sonic / Regret
+
+V1.89 接入玩家寵低忠誠 RANDOMACT：
+
+- 618 `PETSKILL_Sonic`
+- 640 / 666 / 718 `PETSKILL_Regret`
+
+### Sonic
+
+- 先對 raw COM2 經 `BATTLE_TargetAdjust` 後的主目標執行第一段。
+- 只有主目標位於後排 15～19 時，才追加同欄前排 `defNo-5`。
+- SONIC2 第二段在 `AttackSeq` 內先做傷害 ×0.5，再進 GuardAdjust。
+- 此技能走獨立 `BATTLE_S_AttackDamage`，不進 common Counter loop。
+
+### Regret
+
+- 同樣只在後排主目標時追加 `defNo-5` 前排貫穿段。
+- `BATTLE_DamageCalc` 以目標 `FIXTOUGH` 覆蓋一般防禦計算。
+- REGRET2 第二段傷害 ×0.8。
+- 暈眩判定依 `PROFESSION_BATTLE_StatusAttackCheck`：先消耗 `RAND(1,100)`，再檢查死亡／既有異常；成功條件嚴格 `roll < 命中值`。
+- 640 的 `防%-50` 會被原 parser 正確讀到；666/718 的 `防-20%`、`防-35%` 因原 C 只搜尋字串 `防%`，實際不改防禦。保留此來源資料/parser mismatch，不自行修成設計意圖。
+
+### DamageReact crossover
+
+`BATTLE_S_AttackDamage` 會在原始目標已有 DamageReact 時，先把 local `skill_type` 改成 -1：
+
+- Sonic 第二段 ×0.5 被跳過。
+- Regret 第二段 ×0.8 被跳過。
+- Regret 後續暈眩 switch 被跳過。
+- 但 Regret 的 FIXTOUGH 防禦覆蓋仍生效，因為該判定讀的是攻擊者真正的 COM1。
+
+同步修正既有 Enemy Regret，讓 V1.88 Acupuncture 與 Regret 的交叉生命週期一致。
+
+### Regression
+
+新增 `tools/check_v189_player_sonic_regret_runtime.mjs`，並加入 CI。完整 V1.72～V1.89 regression 已確認 SUCCESS。
+
+### commits
+
+- `463c5c812efb2c9fd6a937ec39cbf1364d7a15c0` — V1.89 core
+- `69588ca3cde388ae73ab203da346a0f690d03e4c` — ternary syntax fix
+- `18cee248e4b993680233a9ca5b0a815a9c061a56` — V1.89 regression
+- `712490724d936fc3c9d26ef41ebc05c08d7cdad8` — V1.89 CI
+
+---
+
+## V1.90 Player RANDOMACT Firekill
+
+V1.90 接入 624 `PETSKILL_Firekill`（火線獵殺），完整拆成專用物理段 + 火魔法橫排追加。
+
+### Target resolution
+
+- FIREKILL 不呼叫一般 `TargetAdjust`。
+- raw COM2 有效時直接使用。
+- raw COM2 已死亡／EarthRound 不可打時，依原流程在同一 Enemy side 以固定 slot 順序找第一個 `TargetCheck` 有效目標。
+- 此 fallback 不消耗額外隨機選目標 RNG。
+
+### Physical stage
+
+- 物理段先把 Pet 當輪 FIXSTR 等價攻擊力改成 80%。
+- 使用 Firekill 專用 `BATTLE_Attack_FIREKILL` / `BATTLE_DamageSub_FIREKILL` 行為。
+- Guardian 仍可在 AttackSeq 中真正代擋物理傷害。
+- 最重要來源特例：`BATTLE_DamageSub_FIREKILL` 先讀 DamageReact，下一行立即強制 `react = BATTLE_MD_NONE`。
+- 因此 Acupuncture／Reflect／Absorb／Vanish 全都不觸發，也不消耗其狀態。
+- 同步修正既有 Enemy Firekill，避免錯誤觸發玩家 Pet 的 Acupuncture。
+
+### Fire magic stage
+
+物理段後固定進：
+
+`BATTLE_MultiAttMagic_Fire(..., FieldAttr=2, Power=200)`
+
+來源固定值：
+
+- Fire MagicLv = 4
+- Pet attack magic level = 5
+- Power = 200
+- Enemy magic resist = `trunc(enemyLv * 0.5)`
+- Magic dodge 對非 Player（包含 Enemy）走 Pet 分支：`min(30, Lv * 0.2)`
+- 整個橫排只先抽一次 TrueMagic `rand()%100`；Pet level=5 時等價 `roll <= 5`
+- Firekill 專用函式中的 false-magic ×0.7 被原 C 註解掉，因此 TrueMagic roll 只保留 RNG lifecycle，不改此技能傷害
+
+魔法目標仍依「原 resolved defNo 所在五格橫排」建立，**不跟著 Guardian 的實際物理承傷位置改列**。
+
+### Damage / row lifecycle
+
+- 物理段先完成。
+- 接著重新依該列目前仍存活且 TargetCheck 有效的 Enemy 建立魔法目標。
+- 物理段已死亡的主目標不再吃火魔法，但同排其他敵人仍照常被打。
+- 火魔法列全部結束後才處理睡眠解除。
+- FIREKILL 為獨立特殊 case，不進 common Counter。
+- 死亡／EXP／掉落由 actor outer AddProfit boundary 統一收尾。
+
+### Regression
+
+新增 `tools/check_v190_player_firekill_runtime.mjs`，鎖定：
+
+- deterministic same-side fallback
+- FIXSTR ×0.8 physical
+- dedicated DamageReact forced NONE
+- Guardian physical target vs original magic row
+- Enemy magic dodge / resist
+- one TrueMagic roll
+- no false-magic ×0.7
+- row targeting
+- no Counter
+- Enemy Firekill Acupuncture bypass
+
+完整 GitHub Actions **V1.72～V1.90 全部 SUCCESS**。
+
+save schema 維持 **29**。
+
+### commits
+
+- `2e1ba50f0b219e5d2356a3809f18f0a2d261a22c` — V1.90 core
+- `d47ffd751b3d59ef24f119e758ebf0071c9b02e1` — V1.89 regression boundary repair
+- `c8cbc1e37d6bbedc1a28dba10103c003f53e7cc3` — V1.90 regression
+- `641a2093f3514594355a35438420ce8b6ec94407` — V1.90 CI
