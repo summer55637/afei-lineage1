@@ -38,6 +38,7 @@ on:
       - "tools/check_v202_player_combined_runtime.mjs"
       - "tools/check_v203_player_field01_coverage.mjs"
       - "tools/check_v204_item_field2_runtime.mjs"
+      - "tools/check_v205_player_field2_fixitem_inslay.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -166,6 +167,9 @@ jobs:
 
       - name: Run V2.04 item field2 runtime regressions
         run: node tools/check_v204_item_field2_runtime.mjs
+
+      - name: Run V2.05 player Fixitem Inslay regressions
+        run: node tools/check_v205_player_field2_fixitem_inslay.mjs
 
       - name: Commit generated runtime
         shell: bash
