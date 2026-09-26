@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.79**
+**PLAYABLE CORE V1.80**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,16 +16,16 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.79 最新進度
+## V1.80 最新進度
 
-V1.79 接上玩家寵低忠誠 `RANDOMACT` 的吸血類 PetSkill：
+V1.80 接上玩家寵低忠誠 `RANDOMACT` 的 506～508 `PETSKILL_MpDamage`：
 
-- **503 / 504 / 505 / 714 / 833：`PETSKILL_DamageToHp`**：fixed C 的 `def = (atoi(buf1) / 100)` 是 int/int 先算，因此目前 30 / 20 / 10 全部先截成 0；技能說明寫的降攻在這個 build 實際不生效
-- **623 / 659：`PETSKILL_DamageToHp2`**：依 `BATTLE_AttackSeq` 套 FIXSTR +20% 與會心率 ×1.3；低忠誠 RANDOMACT 發生在 EntrySort 後，因此其 WORKQUICK +20% 不會回頭改本回合排序
-- **Guardian calc-only bug**：`BATTLE_S_AttackDamage` 讓 `BATTLE_AttackSeq` 可用 Guardian 的防禦／Guard 做傷害計算，但 caller 的原 `defindex` 沒被改掉，所以真正 `DamageSub`、死亡、ItemCrush 與吸血仍作用在原目標
-- **DamageReact**：原目標若已有 DamageReact，`skill_type` 在 `BATTLE_AttackSeq` 前先降為 `-1`；吸血不成立，`DamageToHp2` 的 +20% 攻與 ×1.3 會心也不成立
-- **623 HP50% 說明**：fixed `PETSKILL_DamageToHp2()` 沒有 HP gate；原碼只留下註解，因此不自行補「50% 以下才能用」
-- 兩類都是獨立 `BATTLE_S_AttackDamage` command，不接普通 Counter
+- fixed `PETSKILL_MpDamage()` 使用 `(float)(atoi(buf1) / 100)`；50 / 100 先做 C 整數除法，因此實際為 0，技能說明的「攻擊力下降50%」在這個 build 不生效
+- `BATTLE_S_MpDamage()` 只有目標是 PLAYER 且 MP>0、沒有 DamageReact 時才會扣 MP；ENEMY / PET 會直接 return 0
+- 低忠誠 `BATTLE_PetRandomSkill()` 的 DefaultAttacker 在目前 PVE 路徑只會選 Enemy，因此 506 / 507 / 508 的額外 MP 傷害固定為 0
+- 物理部分仍走 `BATTLE_S_AttackDamage`，沿用 V1.79 的 Guardian calc-only / 原目標 DamageSub bug
+- execution 時仍會重跑 TargetAdjust；目標失效才在該時點重抽 Enemy
+- 這個特殊 command 不接普通 Counter
 
 save schema 維持 **29**。
 
