@@ -66,7 +66,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
@@ -2948,7 +2948,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -4822,7 +4822,9 @@ function battleConfusionGuarding(targetDesc,options){
 }
 function sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter=false}={}){
   const unit=targetDesc?.kind==='enemy'?targetDesc.unit:null;
-  if(!unit||!unit.acupunctureActive||!r||r.dodged||r.miss||n(r.damage)<=0){
+  const pet=targetDesc?.kind==='pet'?targetDesc.pet:null;
+  const active=!!unit?.acupunctureActive||!!(pet&&battlePetAcupunctureIds.has(pet.id));
+  if(!active||!r||r.dodged||r.miss||n(r.damage)<=0){
     return {triggered:false};
   }
 
@@ -4843,17 +4845,18 @@ function sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter=fal
   r.sourceAcupunctureReflectedDamage=reflectedDamage;
   return {
     triggered:true,counter:!!counter,
-    attackerDesc,targetDesc,targetUnit:unit,r,
+    attackerDesc,targetDesc,targetUnit:unit,targetPet:pet,r,
     originalDamage,fullDamage,reflectedDamage
   };
 }
 function sourceFinishAcupunctureReaction(reaction){
   if(!reaction?.triggered)return reaction||{triggered:false};
-  const {targetUnit,attackerDesc,r,fullDamage,reflectedDamage,counter}=reaction;
+  const {targetUnit,targetPet,attackerDesc,targetDesc,r,fullDamage,reflectedDamage,counter}=reaction;
 
   // Source order inside BATTLE_DamageSub:
   // defender full damage -> clear WORKACUPUNCTURE -> attacker half damage.
-  targetUnit.acupunctureActive=false;
+  if(targetUnit)targetUnit.acupunctureActive=false;
+  if(targetPet)battlePetAcupunctureIds.delete(targetPet.id);
   const beforeAttacker=battleStatusHp(attackerDesc);
   battleStatusSetHp(attackerDesc,beforeAttacker-reflectedDamage);
 
@@ -4867,6 +4870,9 @@ function sourceFinishAcupunctureReaction(reaction){
   reaction.ultimate=sourceTrackDamageSubUltimate(
     attackerDesc,reflectedDamage,beforeAttacker,reflectResult
   );
+  if(beforeAttacker>0&&reaction.attackerAfter<=0&&attackerDesc?.kind==='enemy'&&attackerDesc.unit){
+    sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc]);
+  }
 
   // BATTLE_Counter has a different WakeUp target from primary BATTLE_Attack:
   // after acupuncture redirects defindex, Counter wakes the reflected attacker.
@@ -5102,12 +5108,10 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
       if(r.dodged)addLog(pet.name+' 閃避了 '+unit.name+' 的反擊。','pet');
       else if(r.miss)addLog(unit.name+' 對 '+pet.name+' 的反擊沒有造成傷害。');
       else{
-        const before=n(pet.hp);
-        pet.hp=Math.max(0,before-r.damage);
-      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
-      sourceBattleFinalizeItemCrushRng(r);
-        addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
-        if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
+        battleApplyPhysicalHit(
+          {kind:'enemy',unit,unitId:unit.id},{kind:'pet',pet,petId:pet.id},r,
+          {counter:true,deferAddProfit:true}
+        );
       }
     }
     sourceProcessBattleDeathsAtAddProfit();
@@ -5886,18 +5890,10 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
     const r=enemyAttackPetResult(unit,pet,attackOptions);
     const targetDesc={kind:'pet',pet,petId:pet.id};
     const beforeApplyResult=beforeApply?beforeApply({target:'pet',pet,targetDesc,r},target):null;
-    if(r.dodged){
-      addLog(pet.name+' 閃避了 '+unit.name+' 的攻擊。','pet');
-    }else if(r.miss){
-      addLog(unit.name+' 攻擊 '+pet.name+'，但沒有造成傷害。');
-    }else{
-      const before=n(pet.hp);
-      pet.hp=Math.max(0,before-r.damage);
-      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
-      battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
-      addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
-      if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
-    }
+    battleApplyPhysicalHit(
+      {kind:'enemy',unit,unitId:unit.id},targetDesc,r,
+      {deferItemCrush:true,deferAddProfit:true}
+    );
     return {target:'pet',pet,targetDesc,r,beforeApply:beforeApplyResult};
   }
 
@@ -6205,19 +6201,12 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
     const pet=chosen.pet;
     const r=enemyAttackPetResult(unit,pet,attackOptions);
-    if(r.dodged){
-      addLog(pet.name+' 閃避了 '+unit.name+' 的攻擊。','pet');
-    }else if(r.miss){
-      addLog(unit.name+' 攻擊 '+pet.name+'，但沒有造成傷害。');
-    }else{
-      const before=n(pet.hp);
-      pet.hp=Math.max(0,before-r.damage);
-      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
-      sourceBattleFinalizeItemCrushRng(r);
-      battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
-      addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
-      if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
-    }
+    const targetDesc={kind:'pet',pet,petId:pet.id};
+    battleApplyPhysicalHit(
+      {kind:'enemy',unit,unitId:unit.id},targetDesc,r,
+      {deferAddProfit:true}
+    );
+    sourceProcessBattleDeathsAtAddProfit();
     if(petIsBattleActive(pet)&&unit.hp>0)resolvePetEnemyCounterChain('enemy',pet,unit,r);
     return {target:'pet',pet,r};
   }
@@ -6225,13 +6214,11 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   const r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
   if(r.guardian){
     const pet=r.guardian;
-    const before=n(pet.hp);
-    pet.hp=Math.max(0,before-r.damage);
-      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
-      sourceBattleFinalizeItemCrushRng(r);
-    battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
-    addLog(pet.name+' 發動忠犬，代替你承受 '+unit.name+(r.critical?' 的會心一擊 ':' 的攻擊 ')+r.damage+' 傷害。',pet.hp<=0?'bad':'pet');
-    if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
+    addLog(pet.name+' 發動忠犬，代替你承受 '+unit.name+' 的攻擊。','pet');
+    battleApplyPhysicalHit(
+      {kind:'enemy',unit,unitId:unit.id},{kind:'pet',pet,petId:pet.id},r,
+      {deferAddProfit:true}
+    );
   }else if(playerGuarding){
     if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
     else{
@@ -6266,16 +6253,22 @@ function enemySkillNumber(option,pattern,fallback=0){
 function enemyApplySkillHit(unit,chosen,r,label){
   if(chosen.kind==='pet'&&chosen.pet){
     const pet=chosen.pet;
+    const targetDesc={kind:'pet',pet,petId:pet.id};
     if(r.dodged){
       addLog(pet.name+' 閃避了 '+unit.name+' 的'+label+'。','pet');
     }else if(r.miss){
       addLog(unit.name+' 的'+label+'沒有造成傷害。');
     }else{
+      const acupuncture=sourcePrepareAcupunctureReaction(
+        {kind:'enemy',unit,unitId:unit.id},targetDesc,r
+      );
       const before=n(pet.hp);
       pet.hp=Math.max(0,before-r.damage);
-      sourceTrackDamageSubUltimate({kind:'pet',pet,petId:pet.id},r.damage,before,r);
-      battleStatusWakeOnDamage({kind:'pet',pet,petId:pet.id},r.damage);
+      sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
+      sourceFinishAcupunctureReaction(acupuncture);
+      battleStatusWakeOnDamage(targetDesc,r.damage);
       addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'命中 '+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
+      sourceLogAcupunctureReaction(acupuncture);
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
     }
     return;
@@ -9830,6 +9823,40 @@ function sourcePerformPetSetDuckRandomSkill(pet,action){
   };
 }
 
+function sourcePerformPetAcupunctureSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'針刺外皮';
+
+  // fixed BATTLE_COM_S_ACUPUNCTURE sets WORKACUPUNCTURE=1 on the attacker, then
+  // deliberately falls through into the ordinary physical common loop.
+  battlePetAcupunctureIds.add(pet.id);
+
+  const target=sourcePetEnemyTargetFromAction(action);
+  addLog(pet.name+' 隨機使用「'+label+'」：針刺外皮啟動，直到被非投擲物理傷害觸發一次為止。','pet');
+  if(!target){
+    return {handled:true,skillId:action?.skillId,acupuncture:true,noTarget:true};
+  }
+
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+
+  // ACUPUNCTURE is in the source common direct-attack group. The outer Counter uses
+  // the original post-TargetAdjust defNo and is suppressed by Guardian/critical/death as usual.
+  if(petIsBattleActive(pet)&&n(target.hp)>0){
+    resolvePetEnemyCounterChain('pet',pet,target,r);
+  }
+  return {
+    handled:true,skillId:action?.skillId,acupuncture:true,
+    targetUnitId:target.id,actualTargetUnitId:actual?.id||null,r
+  };
+}
+
 function sourcePerformPetHectorParalysis(pet,action,label){
   const target=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
   if(!target)return {attempted:false,applied:false,reason:'invalid-entry'};
@@ -10831,6 +10858,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
       result=sourcePerformSetMagicPetBattle(pet.name,action.skillId,rawToNo,meta,'pet');
     }
     else if(meta?.f==='PETSKILL_SetDuck')result=sourcePerformPetSetDuckRandomSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Acupuncture')result=sourcePerformPetAcupunctureSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Hector')result=sourcePerformPetHectorSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Sars')result=sourcePerformPetSarsSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
