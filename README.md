@@ -15457,3 +15457,181 @@ V1.70 已改為真正讀：
 - V1.67 Marefia 4 RNG retained
 - V1.68/V1.69 relife lifecycle retained
 - targeted V1.70 regression: **41 / 41 PASS**
+
+
+## V1.71 Source item acquisition / GMQUE trophy runtime
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心 commits：
+
+- `2796f0b99ab4e2290cd7eee7e6e7cb98dd653700` — 建立 `stoneage_gmque_trophy_runtime.json`
+- `8b2b3e2473d45f17dbf181ab7d495adbc0a4d5da` — 接入 `CHAR_addItemSpecificItemIndex` 等價 acquisition lifecycle，修正 tracked battle loot 的 15 格背包行為
+- `c41ab8e5ce61efc941eecf8d8f265e2f3ba99eb5` — 把 20131 的固定 GMQUE 取得路徑與精確機率寫回 relife runtime
+
+### CHAR_addItemSpecificItemIndex exact lifecycle
+
+固定 `CHAR_addItemSpecificItemIndex()`：
+
+1. existing item index 必須有效
+2. `CHAR_findEmptyItemBox()` 從 `CHAR_STARTITEMARRAY = 9` 開始找第一個空格
+3. 玩家總 item slot 為 0..23，所以一般背包固定是 **9..23 共 15 格**
+4. 有空格：
+   - CHAR item slot = existing item index
+   - ITEM_WORKCHARAINDEX = Player
+   - ITEM_WORKOBJINDEX = -1
+   - 回傳該 CHAR slot index
+5. 無空格：回傳 `CHAR_MAXITEMHAVE = 24`
+
+V1.71 新增 `sourcePlayerAddSpecificExistingItem()`，所有有 source existing index 的新取得路徑都共用這個規則。
+
+### Battle get-item full-bag fix
+
+固定 `BATTLE_AddProfit()` 對 `pEntryChara->getitem[]`：
+
+- 玩家活著且背包有空格 -> `CHAR_addItemSpecificItemIndex()`
+- 成功才算真正拾獲
+- 背包滿 / add 失敗 -> `ITEM_endExistItemsOne(itemindex)`
+- 無論成功失敗，該 battle getitem slot 最後都清成 -1
+
+V1.71 修正先前 Web tracked battle drop：
+
+- 成功：existing item 進第一個空的 playerItemSlots 9..23，owner 改 player，aggregate inventory +1
+- 滿包：existing item 直接 free
+- 滿包時 **不再產生只有 inventory 數字、沒有 existing item / CHAR slot 的 phantom loot**
+
+沒有 source existing index 的舊版／手工 fallback 仍保留舊 aggregate path，避免替歷史資料捏造 allocation。
+
+### GMQUE action RNG is NOT the same RAND macro
+
+固定 `GMQUE_CheckQueStr()` 第一次決定獎勵類型：
+
+```c
+GMQUEACTION = rand()%100;
+GMQUEACTION = (GMQUEACTION<1)?1:GMQUEACTION;
+```
+
+因此 raw 0 與 raw 1 最後都變成 1。
+
+100 個 raw outcome：
+
+- Gold：normalized 1..40 = **41 / 100**
+- Item：41..97 = **57 / 100**
+- Pet：98..99 = **2 / 100**
+
+這一步不是 inclusive `RAND(0,99)` helper，V1.71 用獨立的 modulo-roll helper 保留語意。
+
+### GMQUE item branch
+
+進 Item branch 後 `GMQUE_AddQueStrTrophy()` 才使用 fixed inclusive：
+
+`RAND(x,y) = x..y`
+
+先抽 `RAND(0,100)`：
+
+- 0 -> itemID3[ RAND(0,1) ]
+- 97..100 -> itemID2[ RAND(0,5) ]
+- 70..96 -> itemID4[ RAND(0,7) ]
+- 40..69 -> itemID5[ RAND(0,7) ]
+- 1..39 -> itemID1[ RAND(0,8) ]
+
+itemID1：
+
+`[20131,20594,20171,17005,20210,20211,20212,20213,2435]`
+
+所以固定 20131（替身娃娃 Lv1）：
+
+- conditional on Item branch = `39/101 * 1/9 = 13/303`
+- including GMQUE action-type roll = **`57/100 * 13/303 = 247/10100`**
+- 約 **2.4455% / 一次成功進入獎勵類型判定**
+
+這只是固定 C 的程式機率，不代表目前 Web 已開放 GMQUE 活動。
+
+### GMQUE Pet source bug retained
+
+固定宣告：
+
+```c
+int petID[4]={1642,1636,475};
+rands = RAND(0,3);
+```
+
+C 會把未明寫的 `petID[3]` 自動補 0。
+
+因此 Pet branch 有四個等可能 selection index：
+
+- 0 -> 1642
+- 1 -> 1636
+- 2 -> 475
+- 3 -> **0**
+
+index 3 會拿 0 去做 `ENEMY_getEnemyArrayFromId(0)` / pet creation，可能在 `GMQUE_AddQueStrTrophy()` 中直接失敗並於 cleanup 前 return FALSE。
+
+V1.71 resolver 保留這個 implicit-zero 分支，不把它「修好」成三選一。
+
+### GMQUE Gold branch
+
+Item / Pet 之外：
+
+`RAND(0,30)`
+
+- 15..30 -> 20,000
+- 10..14 -> 50,000
+- 0..9 -> 再 `RAND(2,4)`
+  - 2 -> 100,000
+  - 3 -> 150,000
+  - 4 -> 200,000
+
+### Relife acquisition boundary
+
+固定 source 目前已直接證明：
+
+- **20131 替身娃娃 Lv1**：GMQUE itemID1 pool index 0
+
+目前仍沒有在固定 C 已索引程式碼與這輪高價值 data 表中直接確認：
+
+- 20132 替身娃娃 Lv2
+- 20133 替身娃娃 Lv3
+- 21128 祈福戒指
+- 19180 VIP祈福戒指
+
+V1.71 不替這四件新增商店、任務或掉落來源。
+
+另外，不同外部版本的道具編號可能不同；本專案繼續只以固定 `1f90cb...` 的 `itemset6.txt` 為準。
+
+### Current GMQUE boundary
+
+V1.71 已來源化：
+
+- action-type roll
+- item pool primary + secondary selection
+- pet pool，包括 implicit zero bug
+- gold reward resolver
+- existing item -> Player 15-slot backpack lifecycle
+
+但尚未把完整 GMQUE 活動 UI / 抓寵目標生成 / 交寵流程接進 Web。
+
+因此目前**不會因為 runtime 已存在就自動抽獎或發 20131**。
+
+### Regression
+
+- game.js syntax PASS
+- GMQUE runtime format PASS
+- action 0 -> 1 fold PASS
+- Gold / Item / Pet boundary 40 / 41 / 97 / 98 PASS
+- item primary 0 / 40 / 70 / 97 / 100 bucket boundaries PASS
+- itemID1 primary 1..39 PASS
+- 20131 = itemID1 index 0 PASS
+- Pet index 3 -> implicit item 0 failure PASS
+- Gold one-RNG / two-RNG branch counts PASS
+- AddSpecific first empty = slot 9 PASS
+- AddSpecific owner/source transition PASS
+- AddSpecific aggregate inventory +1 exactly once PASS
+- AddSpecific full bag returns 24 PASS
+- full bag leaves prior owner unchanged before caller cleanup PASS
+- tracked BattleGet success enters playerItemSlots PASS
+- tracked BattleGet full bag frees existing item PASS
+- tracked BattleGet full bag creates no aggregate phantom PASS
+- legacy/player existing registration does not double inventory PASS
+- schema 28 unchanged
+- targeted V1.71 regression: **41 / 41 PASS**
