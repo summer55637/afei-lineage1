@@ -15252,7 +15252,7 @@ VIP祈福戒指 19180：
 - MAXHP +250
 - MAXMP +80
 
-以上 min/max pair 均相同，item creation 不需要額外猜 RNG。
+以上 min/max pair 均相同，所以**生成出的 modifier 數值不需要猜**；但 V1.72 後已確認固定 `ITEM_makeItem()` 仍會對全部 66 個 `ITEM_DATAINT` 欄位逐一執行一次 `RAND(0, randomdata[i])`。因此即使 random width = 0，建立這些物品仍固定消耗 **66 顆 RNG**。
 
 ### Acquisition boundary
 
@@ -15635,3 +15635,297 @@ V1.71 已來源化：
 - legacy/player existing registration does not double inventory PASS
 - schema 28 unchanged
 - targeted V1.71 regression: **41 / 41 PASS**
+
+
+## V1.72 ITEM_makeItem / ITEM_makeItemAndRegist RNG lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心 commits：
+
+- `82e29367cd3d7c9f726d35aac2f67b6082860f61` — 建立 `stoneage_item_make_runtime.json`，固定 66 個 ITEM_DATAINT 與 item creation RNG metadata
+- `0a80accb3a828cbea3385767be823805b2d3a76d` — `game.js` 接入 ITEM_makeItem 66-call lifecycle，修正 Enemy 掉落 item creation 交錯順序
+
+### ITEM_makeItem consumes RNG for every integer field
+
+固定 `ITEM_makeItem()`：
+
+```c
+if (ITEM_CHECKITEMTABLE(number) == FALSE) return FALSE;
+
+memcpy(itm, &ITEM_tbl[number].itm, sizeof(ITEM_Item));
+
+for (i = 0; i < ITEM_DATAINTNUM; i++) {
+    int randomvalue;
+    randomvalue = RAND(0, ITEM_tbl[number].randomdata[i]);
+    itm->data[i] = ITEM_tbl[number].itm.data[i] + randomvalue;
+}
+
+itm->data[ITEM_LEAKLEVEL] = 1;
+```
+
+固定 build 展開後：
+
+**ITEM_DATAINTNUM = 66**
+
+所以一件有效 template 每次進入 `ITEM_makeItem()`，固定先消耗：
+
+**66 次 rand()**
+
+這和實際有幾個可變能力欄位無關。
+
+### RAND(0,0) still consumes rand()
+
+固定 `util.h`：
+
+```c
+#define RAND(x,y) ((x-1)+1 + (int)((double)(y-(x-1))*rand()/(RAND_MAX+1.0)))
+```
+
+代入 `RAND(0,0)`：
+
+- 結果永遠是 0
+- 但 expression 內的 `rand()` 仍實際執行一次
+- 因此 RNG state 仍向前一格
+
+這修正了 V1.69 當時「min=max，所以 item creation 不需要 RNG」的舊理解。
+
+正確說法是：
+
+- min=max -> **結果值不需猜**
+- ITEM_makeItem -> **仍固定消耗 66 顆 RNG**
+
+### Fixed ITEM_DATAINT order
+
+V1.72 generated runtime 保存固定 build 的完整 66 欄順序。
+
+主要包含：
+
+- ID / image / cost / type / field / target / level
+- durability / pile / equip requirements
+- damage / suit
+- attack count
+- equipment attack / defence / quick / HP / MP / luck / charm / avoid
+- attribute / magic
+- arrange / sequence / attach pile / hit right / neglect guard
+- poison / paralysis / sleep / stone / drunk / confusion / critical
+- logout / drop / mail / merge flags
+- ingredient values
+- put time / leak level / merge / crush
+- VAR1..VAR4
+
+固定 parser 中真正使用 `ITEM_getRandomValue()` 的 range 欄位共 **15 個**：
+
+- MODIFYATTACK
+- MODIFYDEFENCE
+- MODIFYQUICK
+- MODIFYHP
+- MODIFYMP
+- MODIFYLUCK
+- MODIFYCHARM
+- MODIFYAVOID
+- POISON
+- PARALYSIS
+- SLEEP
+- STONE
+- DRUNK
+- CONFUSION
+- CRITICAL
+
+parser 規則：
+
+`base = min(a,b)`
+
+`randomwidth = ABS(b-a)`
+
+但 `ITEM_makeItem()` 並不只迴圈這 15 欄，而是迴圈**全部 66 欄**。
+
+### ITEM_makeItemAndRegist exact order
+
+固定：
+
+```text
+ITEM_makeItem()
+  -> 66 RAND calls
+  -> ITEM_LEAKLEVEL = 1
+ITEM_initExistItemsOne()
+  -> round-robin existing item slot scan
+  -> initfunc
+  -> ITEM_constructFunctable()
+```
+
+固定 `itemset6.txt` 10,737 筆資料已掃描：
+
+**非空 initfunc = 0 筆**
+
+因此目前固定 itemset6 不會在 allocation 成功後再由 initfunc 額外插入未知 RNG。
+
+### Invalid template versus full existing array
+
+兩個失敗邊界的 RNG 時序不同。
+
+不存在 ITEM_tbl 的 ItemId：
+
+```text
+ITEM_CHECKITEMTABLE fail
+-> return FALSE
+-> 0 item-make RNG
+```
+
+有效 ItemId，但 existing item array 已滿：
+
+```text
+ITEM_makeItem success
+-> 已消耗 66 RNG
+-> ITEM_initExistItemsOne 掃不到空 existing slot
+-> return -1
+```
+
+也就是「配置 existing index 失敗」不能把前面的 66 顆 RNG 回滾。
+
+V1.72 的 `sourceItemRuntimeAlloc()` 已按這個順序處理。
+
+### Existing item metadata
+
+新建立的 Web existing slot 現在記錄：
+
+- `sourceMakeRngCalls = 66`
+- `leakLevel = 1`
+
+舊 schema28 existing item 沒有這兩個歷史欄位時不反推、不補假的 creation history；normalize 只保存已存在的 metadata。
+
+save schema 仍為 **28**。
+
+### Enemy carried drop ordering correction
+
+固定 `enemy.c` 不是：
+
+```text
+先抽完 10 格掉落
+-> 再建立所有中獎 item
+```
+
+而是：
+
+```text
+slot 1 probability RAND
+  -> 若命中，立即 ITEM_makeItemAndRegist = 66 RNG
+slot 2 probability RAND
+  -> 若命中，立即 66 RNG
+...
+slot 10
+```
+
+固定 `_FIX_ITEMPROB` 使用：
+
+`RAND(0,999) < ITEMPROB`
+
+所以如果：
+
+- slot1 命中
+- slot2 有 probability
+
+RNG 時序必須是：
+
+```text
+call 0     slot1 probability
+call 1-66  slot1 ITEM_makeItem
+call 67    slot2 probability
+```
+
+V1.72 已將 `rollEnemyDropSlots()` 改為命中後立即建立 existing item，不再 batch。
+
+兩格都命中時：
+
+`1 + 66 + 1 + 66 = 134` 次 source RNG call。
+
+### STYLE weapon / RandomChange ordering
+
+固定 Enemy 建立：
+
+```text
+carried item slot loop
+-> STYLE weapon ITEM_makeItemAndRegist
+-> ENEMY_RandomChange
+-> 若 human DoujyouRandomWeponSet：
+     free 原 CHAR_ARM
+     抽 dojo weapon
+     有武器則 ITEM_makeItemAndRegist
+-> CHAR_complianceParameter
+```
+
+目前 source-backed Enemy 自動武器 runtime 共 8 個模板：
+
+`0 / 100 / 200 / 400 / 500 / 600 / 700 / 2498`
+
+目前這 8 個模板的相關 equipment modifier pair 均 min=max，因此數值可以直接由來源確定；但 STYLE / dojo weapon 每次真正建立 existing item，仍各自消耗完整 **66 RNG**。
+
+### Web-only identity must not consume source RNG
+
+舊 Web Enemy unit id 曾使用：
+
+`Math.random().toString(36)`
+
+這會在 source RNG 流程中插入一顆完全不存在於原 C 的亂數。
+
+V1.72 改成單純遞增的 `sourceEnemyUnitSerial` 作 Web bookkeeping。
+
+因此 unit identity 不再污染：
+
+- drop probability
+- item creation
+- STYLE weapon
+- ENEMY_RandomChange
+- dojo weapon
+
+之間的 source RNG 時序。
+
+### Current materialization boundary
+
+V1.72 已精確來源化：
+
+- ITEM_makeItem 固定 66 RNG call count
+- invalid template 0 RNG boundary
+- full existing array 先 66 RNG 再失敗
+- ITEM_LEAKLEVEL = 1 metadata
+- Enemy carried drop probability / item creation interleave
+- STYLE / dojo existing item creation RNG
+- Web-only unit identity 不消耗 source RNG
+
+但目前 generic item runtime **尚未保存全部 66 個生成後 data[] 實值**。
+
+因此：
+
+- 對目前 relife 5 件與 source-backed Enemy weapon，modifier min=max，可安全用來源固定值
+- 未來若接入 min!=max 的 generic equipment，必須把當次 66-call 中對應欄位的 rolled data 真正保存到 existing item
+- 在那之前不會用 template 平均值或自行猜 roll
+
+### Regression
+
+V1.72 targeted sequence regression：
+
+- valid template first allocation -> existing index 2 PASS
+- valid item creation exactly 66 RNG calls PASS
+- zero-width calls still consume RNG PASS
+- invalid template -> 0 make RNG PASS
+- full existing array -> 66 RNG then allocation failure PASS
+- new existing slot records sourceMakeRngCalls=66 PASS
+- new existing slot leakLevel=1 PASS
+- Enemy slot1 hit / slot2 miss -> total 68 calls PASS
+- call 0 = slot1 probability PASS
+- calls 1..66 = item creation PASS
+- call 67 = slot2 probability PASS
+- two drop hits -> total 134 calls PASS
+- second probability exactly call 67 PASS
+- second item creation begins call 68 PASS
+- Enemy drop owner lifecycle retained PASS
+- Web Enemy unit id consumes no source RNG PASS
+- no batch drop allocation retained PASS
+- STYLE item creation remains before RandomChange PASS
+- dojo replacement item creation remains after RandomChange PASS
+- game.js syntax PASS
+- save schema 28 unchanged
+
+Targeted V1.72 lifecycle regression：**27 / 27 PASS**
+
+Additional structural verification：**19 / 19 PASS**
