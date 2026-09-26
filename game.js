@@ -71,6 +71,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
 let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
+let sourceMergeCandidateCacheMemo=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -350,6 +351,158 @@ function sourceMergeRatePlan(atomIndex,simplified,searchtable,petFixEntries){
   if(!randPlan.ok)return randPlan;
   return {ok:true,atomIndex,tableNum,rate,fixed,base,minRate,maxRate,randPlan};
 }
+function sourceItemMakeTemplateInt(itemId,fieldName){
+  const index=sourceItemMakeDataIndex(fieldName);
+  const template=sourceItemMakeTemplateData(itemId);
+  if(index<0||!template||!Array.isArray(template.widths)||template.widths[index]!==0)return null;
+  const value=Number(template.base[index]);
+  return Number.isFinite(value)?Math.trunc(value):null;
+}
+function sourceMergeCandidateCache(){
+  if(sourceMergeCandidateCacheMemo)return sourceMergeCandidateCacheMemo;
+  if(!itemMakeDb?.byItemId||!itemField2Db?.byItemId||!petMergeFixDb?.atomIndexByByteName){
+    return {ok:false,reason:'candidate-runtime-source'};
+  }
+  const ids=Object.keys(itemMakeDb.byItemId).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  const candidates=[];
+  const byIngUse={1:0,2:0,3:0,4:0,5:0};
+  let canMergeTo=0,canMergeToNoResolvedIngredients=0,withResolvedIngredients=0;
+  let resolvedIngredientEntries=0,unknownIngredientOccurrences=0,maxIngUse=0;
+  for(const id of ids){
+    const canTo=sourceItemMakeTemplateInt(id,'ITEM_CANMERGETO');
+    if(canTo==null)return {ok:false,reason:'candidate-canmergeto-source',itemId:id};
+    if(canTo===1)canMergeTo++;
+    const row=sourceItemField2Template(id)||{};
+    const ingredients=[];
+    for(let i=0;i<5;i++){
+      const name=typeof row['ingName'+i]==='string'?row['ingName'+i]:'';
+      if(!name)continue;
+      const atomIndex=sourceMergeAtomIndexByByteName(name);
+      if(atomIndex==null){unknownIngredientOccurrences++;continue}
+      const value=sourceItemMakeTemplateInt(id,'ITEM_INGVALUE'+i);
+      if(value==null)return {ok:false,reason:'candidate-ingvalue-source',itemId:id,ingredient:i};
+      ingredients.push({slot:i,atomIndex,name,value});
+      resolvedIngredientEntries++;
+    }
+    if(ingredients.length){
+      withResolvedIngredients++;
+      maxIngUse=Math.max(maxIngUse,ingredients.length);
+    }
+    if(canTo!==1)continue;
+    if(!ingredients.length){canMergeToNoResolvedIngredients++;continue}
+    const inguse=ingredients.length;
+    if(!Object.prototype.hasOwnProperty.call(byIngUse,inguse))return {ok:false,reason:'candidate-inguse-source',itemId:id,inguse};
+    byIngUse[inguse]++;
+    candidates.push({id,inguse,ingredients});
+  }
+  sourceMergeCandidateCacheMemo={
+    ok:true,candidates,
+    stats:{
+      templates:ids.length,withResolvedIngredients,canMergeTo,
+      candidates:candidates.length,canMergeToNoResolvedIngredients,
+      resolvedIngredientEntries,unknownIngredientOccurrences,maxIngUse,byIngUse
+    }
+  };
+  return sourceMergeCandidateCacheMemo;
+}
+function sourceMergeCandidateHitPlan(ingEntries,searchtable,inputItemIds=[]){
+  const cache=sourceMergeCandidateCache();
+  if(!cache.ok)return cache;
+  const rows=petMergeFixDb?.mergeMath?.itemRandTableForItem;
+  const searchRows=petMergeFixDb?.mergeMath?.itemSearchTable;
+  const maxMatch=Math.trunc(Number(petMergeFixDb?.mergeMath?.maxMatch)||2048);
+  const mode=Math.trunc(Number(searchtable));
+  if(!Array.isArray(rows)||rows.length!==20||!Array.isArray(searchRows)||!Array.isArray(searchRows[mode])){
+    return {ok:false,reason:'candidate-range-source'};
+  }
+  if(mode!==0&&mode!==1)return {ok:false,reason:'candidate-searchtable-source'};
+  const work=(Array.isArray(ingEntries)?ingEntries:[]).map(raw=>({
+    atomIndex:Math.trunc(Number(raw?.atomIndex)),
+    value:Math.trunc(Number(raw?.value))
+  }));
+  if(!work.length||work.some(x=>!Number.isFinite(x.atomIndex)||!Number.isFinite(x.value))){
+    return {ok:false,reason:'candidate-ingtable-source'};
+  }
+  const inputSet=new Set((Array.isArray(inputItemIds)?inputItemIds:[]).map(x=>Math.trunc(Number(x))));
+  const byExtract={1:[],2:[],3:[],4:[],5:[]};
+  let fullyMatchedBeforeInputExclusion=0,excludedInputCandidates=0;
+  const searchMin=Number(searchRows[mode][0]),searchMax=Number(searchRows[mode][1]);
+  if(!Number.isFinite(searchMin)||!Number.isFinite(searchMax))return {ok:false,reason:'candidate-search-range-source'};
+  const foodCap=mode===1?Math.trunc(Number(rows[9]?.maxnum)/searchMax):null;
+
+  for(const candidate of cache.candidates){
+    let hitnum=0;
+    for(const ingredient of candidate.ingredients){
+      for(let k=0;k<work.length;k++){
+        if(ingredient.atomIndex!==work[k].atomIndex)continue;
+        if(mode===0){
+          const tableNum=sourceMergeTableNum(work[k].value);
+          if(tableNum==null)return {ok:false,reason:'candidate-table-source'};
+          const rate=Number(rows[tableNum]?.rate);
+          if(!Number.isFinite(rate)||rate===0)return {ok:false,reason:'candidate-rate-source'};
+          let top=work[k].value*rate;
+          if(top>1000)top=1000;
+          if(ingredient.value<=top&&ingredient.value>=work[k].value*(1/rate)){
+            hitnum++;break;
+          }
+        }else{
+          // fixed ordinary-pet cooking path mutates ingtable[k] in place before the range check.
+          if(work[k].value>foodCap)work[k].value=foodCap;
+          if(ingredient.value<=work[k].value*searchMax&&ingredient.value>=work[k].value*searchMin){
+            hitnum++;break;
+          }
+        }
+      }
+    }
+    if(hitnum!==candidate.inguse)continue;
+    fullyMatchedBeforeInputExclusion++;
+    if(inputSet.has(candidate.id)){excludedInputCandidates++;continue}
+    const bucket=byExtract[candidate.inguse];
+    bucket.push(candidate.id);
+    if(bucket.length>maxMatch){
+      return {ok:false,reason:'maxmatch-overflow-no-guess',extractnum:candidate.inguse,count:bucket.length,maxMatch};
+    }
+  }
+  return {
+    ok:true,byExtract,mutatedIngEntries:work,
+    fullyMatchedBeforeInputExclusion,excludedInputCandidates,maxMatch,
+    sourceFirstPassHitnumCached:true
+  };
+}
+function sourceMergeRetryExtractNum(ingnum,roll){
+  const thresholds=petMergeFixDb?.mergeMath?.retryThresholds;
+  const ideal=Math.min(5,Math.max(0,Math.trunc(Number(ingnum))));
+  const r=Math.trunc(Number(roll));
+  if(ideal<1||!Array.isArray(thresholds)||!Array.isArray(thresholds[ideal-1])||!Number.isFinite(r)||r<0||r>999)return null;
+  const row=thresholds[ideal-1];
+  let extractIndex=0;
+  for(;extractIndex<ideal;extractIndex++){
+    if(r>=Math.trunc(Number(row[extractIndex])))break;
+  }
+  return ideal-extractIndex;
+}
+function sourceMergeRetrySpec(ingnum){
+  const ideal=Math.min(5,Math.max(0,Math.trunc(Number(ingnum))));
+  if(ideal<1)return {ok:false,reason:'retry-ideal-source'};
+  const rollCounts={};
+  for(let r=0;r<1000;r++){
+    const required=sourceMergeRetryExtractNum(ideal,r);
+    if(required==null)return {ok:false,reason:'retry-threshold-source'};
+    rollCounts[required]=(rollCounts[required]||0)+1;
+  }
+  return {
+    ok:true,ideal,rollCounts,
+    distinctExtractClasses:ideal,
+    duplicateClassRollsConsumeRng:true,
+    firstPassComputesHitnum:true,
+    laterPassesReuseHitnum:true,
+    finalSelection:'random()%match',
+    maxMatch:Math.trunc(Number(petMergeFixDb?.mergeMath?.maxMatch)||2048),
+    outerMergeAttempts:Math.trunc(Number(petMergeFixDb?.mergeMath?.outerMergeAttempts)||5),
+    sourceNoRngConsumed:true
+  };
+}
+
 function sourceMergePrepareStatic(selected,pet=activePet()){
   const collected=sourceMergeCollectStaticAtoms(selected);
   if(!collected.ok)return collected;
@@ -368,6 +521,7 @@ function sourceMergePrepareStatic(selected,pet=activePet()){
   const makeItemCalls=Math.max(0,Math.trunc(Number(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
   return {
     ok:true,itemCount:collected.items.length,searchtable:collected.searchtable,itemType:collected.itemType,
+    inputItemIds:collected.items.map(x=>Math.trunc(Number(x?.existing?.itemId))).filter(Number.isFinite),
     skipped:collected.skipped,atoms,petFixEntries:petFixEntries.length,
     deferredMakeItemRngCalls:makeItemCalls*collected.items.length,
     plannedAtomRandCalls,
@@ -16121,8 +16275,19 @@ async function sourceUseField2PetSkill(skillId){
       addLog((id===200?'加工':'料理')+' 的固定材料數值前置無法完成：'+String(prepared?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
       return Object.assign({ok:false,mergeStaticPrepared:false,sourceNoRngConsumed:true},prepared||{reason:'merge-prepare'});
     }
-    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 的固定前置計畫（'+prepared.atoms.length+' 種素材，預計 atom RNG '+prepared.plannedAtomRandCalls+' 次）；目前未實際擲 RNG。ITEM_mergeItem_merge 的完整 merge table/runtime、成品候選與後續 lifecycle 尚未來源化，維持不猜結果。','bad');
-    return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,mergeStaticPrepared:true,petFixEntries:petFixEntries.length,prepared};
+    const candidateCache=sourceMergeCandidateCache();
+    const retrySpec=sourceMergeRetrySpec(prepared.atoms.length);
+    if(!candidateCache.ok||!retrySpec.ok){
+      const failed=!candidateCache.ok?candidateCache:retrySpec;
+      addLog((id===200?'加工':'料理')+' 的 fixed candidate/retry 前置無法完成：'+String(failed?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
+      return Object.assign({ok:false,reason:'merge-candidate-runtime',sourceNoRngConsumed:true},failed);
+    }
+    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 與 ITEM_merge_with_retry 候選 cache／extractnum 規則前置（'+prepared.atoms.length+' 種素材、'+candidateCache.stats.candidates+' 個成品候選、ideal '+retrySpec.ideal+'）；目前未實際擲 RNG。ITEM_mergeItem_merge 的完整 merge table/runtime、實際候選 hitnum/成品抽選與後續 lifecycle 尚未來源化，維持不猜結果。','bad');
+    return {
+      ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,
+      mergeStaticPrepared:true,mergeCandidatePrepared:true,petFixEntries:petFixEntries.length,
+      candidateStats:candidateCache.stats,retrySpec,prepared
+    };
   }
 
   try{await sourceEnsureItemField2Db()}

@@ -3193,3 +3193,87 @@ V2.07 實作的是 **plan-only**：
 - V2.07 prep 中禁止 `cRand()`
 
 save schema 維持 **29**。
+
+---
+
+## V2.08 ITEM_merge_with_retry candidate / retry plan
+
+本輪只完成候選掃描與 retry class 的 fixed-C 前置，不實際消耗 RNG。
+
+### fixed icache identity
+
+固定 `version.h` 的 `_IMPOROVE_ITEMTABLE` 關閉；`ITEM_readItemConfFile()` 直接把 ITEM_ID 當 `ITEM_tbl[itemid]` index，因此 `ITEM_merge_with_retry()` 的 `icache[i]` / 回傳 `i` 就是 ITEM_ID，不做額外映射。
+
+現有兩份 lazy runtime 已足以重建 fixed icache：
+
+- `stoneage_item_make_runtime.json`：CANMERGETO + INGVALUE0..4
+- `stoneage_item_field2_runtime.json`：INGNAME0..4
+- `stoneage_pet_merge_fix_runtime.json`：raw-byte INGNAME → zero-based atom index
+
+固定資料統計：
+
+- templates 10737
+- 有 resolved ingredient 9437
+- CANMERGETO 5808
+- 真正 candidate 5804
+- CANMERGETO 但 resolved inguse=0：4
+- resolved ingredient entries 31518
+- unknown ingredient occurrences 0
+- max inguse 5
+- by inguse = 11 / 270 / 1278 / 2892 / 1353
+
+### first-pass hitnum
+
+第一次 retry class 掃描時，所有 `use && canmergeto` candidate 都算一次 hitnum。
+
+加工普通寵：
+
+- candidate atom 必須等於某個 simplified/rand 後 input atom
+- `tablenum = ITEM_getTableNum(ingtable[k])`
+- lower = `ingtable[k] / rate`
+- upper = `ingtable[k] * rate`
+- upper > 1000 時 cap 1000
+
+料理普通寵：
+
+- `ItemSearchTable[1] = {0.7, 1.3}`
+- 若 `ingtable[k] > ItemRandTableForItem[9].maxnum / 1.3`
+- 原 C 把右側 double 指派回 int，因此 1059/1.3 → **814**
+- 這是對 `ingtable[k]` 的原地 mutation，會影響後面 candidate 掃描
+
+candidate 必須每個 ingredient 都找到範圍內同 atom，才有 `hitnum == inguse`。同一 input atom 沒有 consumption 標記，因此 candidate 若重複同 atom，原 C 允許同一 input atom 被多個 candidate ingredient 重複命中；V2.08 保留此行為。
+
+### extractnum retry table
+
+`ideal=min(ingnum,5)`，每輪先 `RAND(0,999)`，固定 threshold：
+
+- 1: [0]
+- 2: [250,0]
+- 3: [400,150,0]
+- 4: [700,260,70,0]
+- 5: [740,500,200,40,0]
+
+轉成 1000 個 roll 的 class count：
+
+- ideal1：1→1000
+- ideal2：1→250、2→750
+- ideal3：1→150、2→250、3→600
+- ideal4：1→70、2→190、3→440、4→300
+- ideal5：1→40、2→160、3→300、4→240、5→260
+
+`endflg[extractIndex]` 只阻止同 class 再掃 candidate；抽到重複 class 的 RAND 已經消耗。第一次 class 後 `first=FALSE`，後續 class 只重用之前的 hitnum。
+
+真正 match 條件：
+
+`hitnum == inguse && hitnum == extractnum && result ITEM_ID 不在輸入 items[]`
+
+若 match > 0，最後是 `matchid[random() % match]`。固定 `MAXMATCH=2048`；Web 若未來真的遇到 >2048，直接 no-guess，不模擬 C stack overflow。
+
+### representative checks
+
+- processing：atom 4/2/5 = 305/305/305 → 唯一完整 3-ing candidate 2106
+- cooking：atom 26 = 900 → fixed clamp 814 → 唯一完整 1-ing candidate 2506
+
+新增 `tools/check_v208_merge_retry_candidates.mjs`。
+
+V2.08 仍禁止在 200/201 pending gate 呼叫 `cRand()`，save schema 維持 29。

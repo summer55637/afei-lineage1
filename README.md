@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.07**
+**PLAYABLE CORE V2.08**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,52 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.08 最新進度
+
+V2.08 延續 200／201 `PETSKILL_Merge`，完成 `ITEM_merge_with_retry()` 的**候選 cache 與 retry 規則前置**，仍不實際擲 RNG。
+
+固定來源結果：
+
+- pinned build `_IMPOROVE_ITEMTABLE` 關閉，因此 `icache[i]` 的 `i` 就是 `ITEM_ID`
+- itemset6 共 5808 個 `CANMERGETO`
+- 其中 5804 個具有至少 1 個可解析 ingredient，成為真正 candidate
+- candidate ingredient 數量分布：
+  - 1 種：11
+  - 2 種：270
+  - 3 種：1278
+  - 4 種：2892
+  - 5 種：1353
+- 31518 個 ingredient entry 全部可對到固定 112 atom，unknown = 0
+- fixed `MAXMATCH=2048`
+
+`ITEM_merge_with_retry()` 第一個新的 RNG 是 `RAND(0,999)`，依 unique atom 數（最多 5）決定這次要求 candidate 必須有幾種 ingredient。V2.08 已鎖定原表：
+
+- ideal 1：1種 100%
+- ideal 2：1種 25%、2種 75%
+- ideal 3：1種 15%、2種 25%、3種 60%
+- ideal 4：1種 7%、2種 19%、3種 44%、4種 30%
+- ideal 5：1種 4%、2種 16%、3種 30%、4種 24%、5種 26%
+
+同一 `ITEM_merge_with_retry()` 呼叫裡，第一次 class 才掃全部 icache 並寫 `hitnum`；後續抽到不同 class 只重用第一次的 hitnum。若抽到已試過的 class，仍會消耗 RNG 後直接 continue。
+
+候選 range matching 也已來源化成 pure plan：
+
+- 加工：依 `ItemRandTableForItem[table].rate` 比上下限，普通寵上限額外 cap 1000
+- 料理：`ItemSearchTable[1] = 0.7～1.3`
+- 普通寵料理會把過高的 `ingtable[k]` **原地改成 814**（`1059 / 1.3` 的 C int 截斷），這個 mutation 已保留
+- candidate 必須 `hitnum == inguse == extractnum`
+- 輸入材料本身的 ITEM_ID 不可成為結果
+- 命中結果最後由原 C `random() % match` 再選一個
+
+代表 regression：
+
+- atom 皮/骨/線，各 305 → extract 3 唯一命中 candidate **2106**
+- 料理 atom 26、值 900 → 先原地 clamp 814，extract 1 唯一命中 **2506**
+
+目前 action 只建立 candidate cache + retry spec，保持 `sourceNoRngConsumed=true`。下一步才會把前面的 `ITEM_makeItem` 66×N RNG、atom `ITEM_randRange` RNG、retry `RAND(0,999)` 與 `random()%match` 串成真正原 C RNG lifecycle。
+
+save schema 維持 **29**。
 
 ## V2.07 最新進度
 

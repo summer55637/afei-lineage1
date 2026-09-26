@@ -30,6 +30,10 @@ OUTPUT=Path("data/generated/stoneage_pet_merge_fix_runtime.json")
 ITEM_GEN_RATE=0.7
 ITEM_RAND_NUMS=[10,30,65,125,205,305,425,565,725,905,1125,1354,1594,1825,2105,2405,2725,3065,3425,3805]
 ITEM_RAND_TABLE=[[700,1300],[900,1100]]
+ITEM_SEARCH_TABLE=[[0.8,1.2],[0.7,1.3]]
+MERGE_RETRY_THRESHOLDS=[[0],[250,0],[400,150,0],[700,260,70,0],[740,500,200,40,0]]
+MERGE_MAXMATCH=2048
+MERGE_OUTER_ATTEMPTS=5
 ODDS_TABLE=[0.1,0.25,0.35,0.4,0.42,0.44,0.46,0.47,0.48,0.49,0.5,0.51,0.52,0.53]
 MERGE_RANGEWIDTH_MIN=0.87
 MERGE_RANGEWIDTH_MAX=1.05
@@ -44,9 +48,13 @@ def build_merge_math():
         "itemGenRate":ITEM_GEN_RATE,
         "itemRandNums":ITEM_RAND_NUMS,
         "itemRandTable":ITEM_RAND_TABLE,
+        "itemSearchTable":ITEM_SEARCH_TABLE,
         "itemRandTableForItem":rows,
         "oddsTable":ODDS_TABLE,
         "mergeRangeWidth":{"min":MERGE_RANGEWIDTH_MIN,"max":MERGE_RANGEWIDTH_MAX},
+        "retryThresholds":MERGE_RETRY_THRESHOLDS,
+        "maxMatch":MERGE_MAXMATCH,
+        "outerMergeAttempts":MERGE_OUTER_ATTEMPTS,
         "randDom":1000,
     }
 

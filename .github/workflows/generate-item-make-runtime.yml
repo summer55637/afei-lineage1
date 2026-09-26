@@ -42,6 +42,7 @@ on:
       - "tools/check_v205_player_field2_fixitem_inslay.mjs"
       - "tools/check_v206_pet_merge_fix_runtime.mjs"
       - "tools/check_v207_merge_simplify_math.mjs"
+      - "tools/check_v208_merge_retry_candidates.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -182,6 +183,9 @@ jobs:
 
       - name: Run V2.07 merge simplify math regressions
         run: node tools/check_v207_merge_simplify_math.mjs
+
+      - name: Run V2.08 merge retry candidate regressions
+        run: node tools/check_v208_merge_retry_candidates.mjs
 
       - name: Commit generated runtime
         shell: bash
