@@ -22,6 +22,7 @@ on:
       - "tools/check_v187_player_hector_sars_runtime.mjs"
       - "tools/check_v188_player_acupuncture_runtime.mjs"
       - "tools/check_v189_player_sonic_regret_runtime.mjs"
+      - "tools/check_v190_player_firekill_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -102,6 +103,9 @@ jobs:
 
       - name: Run V1.89 player Sonic/Regret regressions
         run: node tools/check_v189_player_sonic_regret_runtime.mjs
+
+      - name: Run V1.90 player Firekill regressions
+        run: node tools/check_v190_player_firekill_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
