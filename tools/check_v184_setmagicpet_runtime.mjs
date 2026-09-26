@@ -81,6 +81,10 @@ assert.ok(heal.includes('Math.trunc(n(power)*1.1)'));
 assert.ok(heal.includes('const roll=cRand('));
 assert.ok(heal.includes('Math.trunc(roll*rate)'));
 assert.ok(heal.includes('Math.min(maxHp,before+amount)'));
+assert.ok(heal.includes("if(desc?.kind==='pet'&&desc.pet)"));
+assert.ok(heal.includes('sourcePetAddVariableAi(desc.pet,10)'));
+assert.ok(heal.includes('battlePetRecoveryAiIds.has(key)'));
+assert.ok(game.includes('battlePetRecoveryAiIds=new Set()'));
 
 const performStart=game.indexOf('function sourcePerformSetMagicPetBattle');
 const performEnd=game.indexOf('function performEnemySetMagicPet',performStart);
