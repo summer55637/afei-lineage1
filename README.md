@@ -16001,3 +16001,251 @@ GitHub Actions 本輪結果：
 
 最新 CI regression：**PASS**
 
+
+
+## V1.73 generic player equipment / ITEM_equipEffect lifecycle
+
+V1.73 由 V1.72 已 materialize 的 66 欄 `sourceData` 繼續向固定原 C 的玩家裝備流程推進。
+
+固定來源仍為：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `gmsv/src/item/item.c`
+- `gmsv/src/char/char.c`
+- `gmsv/src/char/char_item.c`
+- `gmsv/src/battle/battle.c`
+- `gmsv/src/battle/battle_event.c`
+
+### 9 equip slots / ITEM_getEquipPlace
+
+固定 9 格：
+
+`頭 / 身 / 武器 / 飾品1 / 飾品2 / 腰帶 / 盾 / 鞋 / 手套`
+
+index：
+
+`0 / 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8`
+
+固定 Item Type 對應已接入：
+
+- 0 / 1 / 2 / 3 / 17 / 18 / 19 -> 武器格
+- 6 -> 頭
+- 7 -> 身
+- 8～15 -> 飾品1；移動時可落在飾品1／2，但同 ITEM_TYPE 不可同時兩件
+- 4 弓 -> 武器格，且盾存在時原 C 不允許
+- 24 -> 腰帶
+- 25 -> 盾；武器格是弓時原 C 不允許
+- 26 -> 鞋
+- 27 -> 手套
+
+職業二刀流是固定原 C 的額外分支，但目前 Web 沒有完整 profession skill runtime，因此不假設玩家擁有二刀流。
+
+### Equip requirements use raw CHAR scale
+
+固定角色建立把：
+
+- `CHAR_STR = str * 100`
+- `CHAR_DEX = dex * 100`
+
+而 `CHAR_moveItemFromItemBoxToEquip()` 直接比較：
+
+- `CHAR_STR >= ITEM_NEEDSTR`
+- `CHAR_DEX >= ITEM_NEEDDEX`
+
+因此 Web 裝備需求已修正為：
+
+- `playerStats.str * 100`
+- `playerStats.dex * 100`
+
+再與 Item 的 raw requirement 比較。
+
+這避免把原 C 裝備需求門檻錯縮小 100 倍。
+
+### Callback safety boundary
+
+V1.73 generator 額外保存 fixed itemset 的：
+
+- init callback
+- attach callback
+- detach callback
+
+完整 10,737 templates 掃描結果：
+
+- init callback：**0**
+- attach callback：**260**
+- detach callback：**260**
+
+因此一般純數值裝備可以安全沿用 `sourceData`。
+
+但有非空 attach / detach callback 的 260 件特殊裝備目前維持：
+
+`callback-unported`
+
+不會把 callback 副作用忽略後強行允許裝備。
+
+另外目前仍 fail-closed：
+
+- `ITEM_NEEDPROFESSION != 0`
+- 使者／勇者信物 Item 2884 / 2885
+- 玩家弓／回力標／投擲斧／投擲石的完整特殊攻擊 pattern
+
+### ITEM_equipEffect values
+
+玩家 compliance 現在從每件 equipped existing item 當次真正生成的 `sourceData` 累加：
+
+- attack / defence / quick
+- HP / MP
+- luck / charm / avoid
+- poison / paralysis / sleep / stone / drunk / confusion resistance
+- critical Work
+- other damage / other defence
+- arrange / sequence
+- attach pile
+- hit right
+- neglect guard
+- four attribute modifiers
+
+主要 clamp 保留固定原 C：
+
+- attack >= 0
+- defence >= -100
+- quick >= -100
+- HP 0..10,000,000
+- MP 0..1000
+- luck 1..5
+- charm 0..100
+- six abnormal resistances -100..100
+- critical / other damage / other defence -100..100
+- arrange 0..1000
+- sequence / attach pile / hit right / neglect guard：raw accumulation
+
+四屬性則保留固定 Work lifecycle：
+
+1. base 正屬性先把相反屬性設成負值。
+2. 裝備屬性加到自身。
+3. 同一裝備屬性量從另外三屬全部扣除。
+4. 只做 upper clamp 100；不自行補 lower clamp。
+
+### Fixed WORKFIXAVOID accumulation quirk
+
+固定 `CHAR_initcharWorkInt()` 會重設大部分裝備相關 Work，但 source 裡找不到它重設：
+
+`CHAR_WORKFIXAVOID`
+
+而 `ITEM_equipEffect()` 仍會：
+
+`WORKFIXAVOID += ITEM_MODIFYAVOID total`
+
+因此同一 server process 內每次 compliance 都可能再次累加 equipped avoid。
+
+V1.73 保留這個原 C quirk：
+
+- 同一 Web session 的 repeated compliance 會累加。
+- `playerEquipCompliance` 視為 transient Work state。
+- reload / login 時不從 LocalStorage 恢復這份 derived Work snapshot，重新由 0 建立，等價新的 server runtime Work array。
+
+目前固定 source 搜描沒有找到 `CHAR_WORKFIXAVOID` 的實際戰鬥 consumer，所以不自行把它接成另一種閃避公式。
+
+### Battle consumers
+
+V1.73 已把可證明的裝備 Work 值接到既有戰鬥端：
+
+- `WORKFIXLUCK` -> player status / critical 相關 luck
+- `WORKFIXCHARM` -> capture + Pet FIXAI host charm
+- 六異常抗性 -> player status resistance
+- ARM `ITEM_CRITICAL` -> player weapon critical
+- ARM `ITEM_ATTACKNUM_MIN/MAX` -> `BATTLE_GetAttackCount` weapon RNG
+- `WORKHITRIGHT` -> `BATTLE_DuckCheck`
+- `WORKNEGLECTGUARD` -> `BATTLE_DamageCalc` defence reduction
+- `WORKOTHERDMAGE / WORKOTHERDEFC` -> additional damage / defence RNG
+- equipped four attributes -> battle element Work values
+
+捕獲公式也改讀裝備後的：
+
+- `WORKFIXDEX`
+- `WORKFIXLUCK`
+- `WORKFIXCHARM`
+
+注意：fixed `BATTLE_MagicDodge` 讀的是 raw `CHAR_LUCK`，不是 `WORKFIXLUCK`，所以該路徑不因裝備 luck 而改寫。
+
+### Fractional RAND macro correction
+
+V1.73 regression 發現：
+
+- 非零 `HITRIGHT` templates：3
+- 非零 `OTHERDAMAGE` templates：151
+- 非零 `OTHERDEFC` templates：101
+- 非零 `NEGLECTGUARD` templates：1
+- 非零 `MODIFYAVOID` templates：203
+
+`HITRIGHT * 0.8 / 1.2` 在 fixed itemset 的非零值上都仍是整數。
+
+但 `OTHERDAMAGE / OTHERDEFC * 0.3` 存在會產生小數的來源值：
+
+`5 / 25 / 45 / 55 / 85 / 95 / 105 / 115 / 125 / 135`
+
+因此不能直接用 Web 舊的 integer `cRand()` 近似。
+
+V1.73 新增 `sourceCRandMacroValue()`，保留固定 macro：
+
+`(x-1)+1+(int)((y-(x-1))*rand/(RAND_MAX+1.0))`
+
+的「inner product 先截斷、macro expression 可暫時帶小數」行為。
+
+`otherpower` 則在：
+
+`RAND(apower*0.3,apower) - RAND(dpower*0.3,dpower)`
+
+完成兩顆 RAND expression 相減後，才按 C 的 int assignment 截斷。
+
+### Reachable equipment UI
+
+V1.70～V1.72 雖已有 9 equip + 15 backpack lifecycle，但 `sourcePlayerMoveItem()` 原本沒有 UI caller。
+
+V1.73 新增：
+
+- 9 格 source-backed 裝備 UI
+- 15 格 existing-item 背包 UI
+- 裝備按鈕
+- 卸下按鈕
+
+UI 本身不直接改裝備數值；所有操作仍經：
+
+`sourcePlayerMoveItem()`
+
+因此會繼續使用原 C 對齊的：
+
+- equip-place gate
+- level / STR / DEX / transmigration requirement
+- same-type decoration rule
+- bow / shield gate
+- callback / profession / special-item fail-closed
+- full compliance rebuild
+
+條件／任務道具的 aggregate inventory UI 與 source existing-item 背包分開顯示，避免把沒有 existing index 的 legacy / quest count 當成可裝備 instance。
+
+### V1.73 regression
+
+新增：
+
+`tools/check_v173_item_equip_runtime.mjs`
+
+GitHub Actions 驗證包含：
+
+- V1.72 item-create regression PASS
+- game.js syntax PASS
+- 10,737 template runtime regenerate PASS
+- callback counts 0 / 260 / 260 PASS
+- fixed 9-slot / Item Type mapping PASS
+- raw STR / DEX ×100 requirements PASS
+- callback / profession / special / ranged fail-closed PASS
+- ITEM_equipEffect sourceData field coverage PASS
+- FIXAVOID repeated-compliance quirk PASS
+- derived Work state cleared across reload PASS
+- hit-right / neglect-guard / other damage battle consumers PASS
+- weapon attack-count RNG PASS
+- capture uses fixed luck / charm / dex PASS
+- equipment UI exists and has live `sourcePlayerMoveItem()` caller PASS
+- generated runtime unchanged PASS
+
+V1.73 CI：**PASS**
