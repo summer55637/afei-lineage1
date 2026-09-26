@@ -760,13 +760,17 @@ function sourceConsumeTrackedExistingItem(itemIndex){
     if(Number(slots[selectedSlot])===Number(itemIndex))sourceField2SelectedSlots.delete(selectedSlot);
   }
 
+  let freed=false;
   if(pile>1){
     if(!sourceItemRuntimeSetDataInt(existing,'ITEM_USEPILENUMS',pile-1))return false;
   }else{
     if(!sourceItemRuntimeFree(itemIndex))return false;
+    freed=true;
   }
 
-  if(Number.isFinite(itemId)){
+  // state.inventory counts source-backed existing entries, not ITEM_USEPILENUMS units.
+  // Keep the aggregate entry while a decremented pile still owns the same existing slot.
+  if(freed&&Number.isFinite(itemId)){
     const key=String(itemId),before=Math.max(0,Math.trunc(n(state.inventory?.[key])));
     if(before>1)state.inventory[key]=before-1;
     else if(before===1)delete state.inventory[key];
