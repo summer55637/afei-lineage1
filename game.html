@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.77</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.78</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.78：</b>
+      補齊玩家寵低忠誠 RANDOMACT 的淨化／虛弱／劇毒／魔障／沉默。依 fixed BATTLE_PetRandomSkill，技能表即使標示全體，這條路徑仍先由 DefaultAttacker 選一個單體 toNo，再原封不動傳入 PETSKILL_Use；因此不自行擴成整側。淨化依 BATTLE_MultiStatusRecovery 的 StatusTbl 掃描順序只解除最後一個符合狀態；劇毒存 turn+2、虛弱與魔障存 turn+1、沉默存原 turn。
+    </article>
 
     <article class="card note">
       <b>V1.77：</b>
