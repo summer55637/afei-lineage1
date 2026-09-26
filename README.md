@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.97**
+**PLAYABLE CORE V1.98**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,24 +16,25 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.97 最新進度
+## V1.98 最新進度
 
-V1.96～V1.97 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.97～V1.98 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 130／607 `PETSKILL_Abduct`
 - 140 `PETSKILL_Steal`（偷竊）
+- 211 `PETSKILL_StealMoney`（捐獻）
 
-### V1.97 Steal
+### V1.98 StealMoney
 
-- 玩家 Pet 對 Enemy 使用偷竊時，原 `BATTLE_Steal` 對 `CHAR_TYPEENEMY` 成功率固定 0
-- 但來源仍一定 consume 一次 `RAND(1,100)`；第一階段固定失敗，所以不再抽石幣／道具模式 RNG
-- 玩家 Pet 不偷到任何東西，也不會因此離場
-- 同步修正 Enemy→Player：第一顆成功 RNG、第二顆模式 RNG、石幣 `RAND(8,12)` 與 existing-item 抽取順序
-- Enemy 偷道具改為真正掃 15 格 existing-item 背包，不再從 aggregate inventory 憑空抽 legacy item
-- 偷到 existing item 後清背包 slot、同步 aggregate mirror，並結束該 existing item
-- Enemy 真正偷成功後依原 C 自己 `BATTLE_Exit`；模式最終失敗則留在戰場
-- Enemy 對 Pet 使用偷竊時 per=0 也仍會 consume 第一顆成功 RNG
-- 新增 `tools/check_v197_player_steal_runtime.mjs` 並接入 CI
+- 玩家 Pet 對 Enemy 使用捐獻時，原 C 成功值固定 `per=5`
+- 判定是嚴格 `RAND(1,100) < 5`，所以真正成功 roll 為 1～4
+- 主人已達原服金錢上限時，per 先強制改成 0，但第一顆 RNG 仍照抽
+- 成功後 Enemy 分支直接生成 `RAND(10,100)` 石幣，不會從 Enemy 的 GOLD 扣
+- 石幣加入 Pet 主人並依 `sourcePlayerMaxGold()` clamp
+- 成功時 Pet 依原 C 離開本場戰鬥；失敗則留場
+- 沒有物理 damage、DamageSub、ItemCrush 或 Counter
+- 新增 `tools/check_v198_player_stealmoney_runtime.mjs` 並接入 CI
+
+V1.97 Enemy Steal existing-item / attacker-exit 修正全數保留。
 
 save schema 維持 **29**。
 
