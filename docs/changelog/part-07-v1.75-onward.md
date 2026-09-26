@@ -2348,3 +2348,265 @@ save schema 維持 **29**。
 - `7c73c9b2930367e30d404d969a4439b8cc641205` — V2.00 changelog index
 - `4432d117542aaed6b66efa4a970bc2d15a98ec41` — V2.00 V1.99 regression boundary compatibility fix / full CI green
 
+
+---
+
+## V2.01 Player RANDOMACT BattleModel
+
+V2.01 接入玩家寵低忠誠 `RANDOMACT` 剩餘大組之一：
+
+- 590、638、641、649、650、654、655、664、668、669
+- 689、690、691、692、717
+- 812～823
+- 829
+- 共 28 筆 `PETSKILL_BattleModel`
+- 全部 `field=1`、`illegal=0`
+- fixed `PETSKILL_functbl` 有正式 `PETSKILL_BattleModel` handler
+
+### PETSKILL_BattleModel command
+
+fixed `PETSKILL_BattleModel()` 不保留 RANDOMACT 先前的 `toNo` 作為實際攻擊目標。
+
+handler 重新寫：
+
+- `COM1 = BATTLE_COM_S_BATTLE_MODEL`
+- `COM2 low = iType`
+- `COM2 high = iObjectNum`
+- `COM3 = PetSkill array`
+
+所以 Web V2.01 明確標記：
+
+`sourceTargetDescIgnored = true`
+
+真正目標由執行階段 `BATTLE_BattleModel()` 重新對整個敵方 side 建立。
+
+### type = 5
+
+這 28 筆 option 第一欄全部為：
+
+`5`
+
+來源以 bit flag 判讀：
+
+- `5 & 0x01`：當 AttackObject 少於目標數時，後續繼續 cover 剩餘目標
+- `5 & 0x04`：physical；Guardian 成功時真正把 defender 改成 Guardian
+
+因此 V2.01 不把 28 筆拆成猜測性的 28 種攻擊類型，而是沿同一個 source-backed type 5 lifecycle。
+
+### Object count
+
+第二欄只有 4 或 5。
+
+來源規則仍完整保留：
+
+- `iObjectNum <= 0` → `RAND(1,10)`
+- `iObjectNum > 10` → clamp 10
+- 目前 28 筆都不會觸發 object-count RNG
+
+### Ability modifier parser bug
+
+第 6 欄如：
+
+- `攻%15`
+- `攻%-30`
+- `攻%+15`
+- `攻%20`
+
+來源 parser 是 positional：
+
+1. 第 1 個 space token 只檢查「攻」
+2. 第 2 個只檢查「防」
+3. 第 3 個只檢查「敏」
+
+而且有 source bug：
+
+無論正在改攻／防／敏，基底都先讀：
+
+`CHAR_WORKATTACKPOWER`
+
+再做百分比或絕對值計算。
+
+V2.01 保留此 bug；目前 28 筆實際都只有第 1 token 的攻擊修正，所以不自行補正成「防應讀 FIXTOUGH／敏應讀 FIXDEX」。
+
+### BATTLE_MultiList / SortLoc
+
+BattleModel 以敵方 side 作 `BATTLE_MultiList`，再在 target count >1 時 `qsort(SortLoc)`。
+
+固定 `CharTableIdx` + Enemy side 的 `SortLoc` 結果為：
+
+`13,11,10,12,14,18,16,15,17,19`
+
+Web `battleSlot = source slot - 10`，因此順序為：
+
+`[3,1,0,2,4,8,6,5,7,9]`
+
+這剛好與已 source-backed 的 `SOURCE_SARS_SLOT_ORDER` 相同，V2.01 直接沿用同一個位置順序，不以 units array 原始排列替代。
+
+### AttackObject lifecycle
+
+若 object count >= 初始存活目標數：
+
+1. 先對初始排序 `iToList` 每個目標各分配一個 AttackObject
+2. 剩餘 AttackObject 才逐顆：
+   `RAND(0, i0-1)`
+3. 這些 RNG 在**各自物件真正執行前**才抽，不預抽
+
+若 extra object 抽中一個已被前面物件打倒的原始目標：
+
+- `BATTLE_BattleModel_ATTACK` 的 `BATTLE_TargetCheck` 直接 return
+- 不 DefaultAttacker
+- 不補抽另一個目標
+
+若 object count < 初始目標數：
+
+- 先對前 object-count 個目標攻擊
+- 因 type bit 1 開啟，再把剩餘初始目標全部各攻擊一次
+- 不需要 random target RNG
+
+### Physical / Guardian
+
+type bit 4 開啟，因此走 physical `BATTLE_AttackSeq`。
+
+此 caller 是先前 V1.12 已確認的**真正 Guardian substitution** caller：
+
+- 原目標先做 Duck
+- Guardian 成功後真正 defender 改成 Guardian
+- Damage / Ultimate / ItemCrush / Status 都以實際 Guardian 為 defender
+
+V2.01 玩家 Pet→Enemy 直接沿用既有 `resolveAttackToEnemyWithGuardian` source path。
+
+### ItemCrush special lifecycle
+
+`BATTLE_BattleModel_ATTACK` 與普通 `BATTLE_Attack` 不同。
+
+death / alive 是互斥分支：
+
+- actual defender 死亡：不做 ItemCrush
+- actual defender 存活：無條件呼叫 `BATTLE_ItemCrushSeq`
+
+因此即使該物件：
+
+- DODGE
+- MISS
+- 0 damage
+
+只要實際 defender 還活著，仍 consume defender ItemCrush check RNG。
+
+V2.01 沿用既有：
+
+`sourceBattleModelAliveItemCrushRng()`
+
+且 ItemCrush 發生在 BattleModel 狀態檢定之前。
+
+### Status
+
+28 筆實際 token：
+
+- `麻` → paralysis
+- `眠` → sleep
+- `石` → stone
+- `障` → barrier
+- `剧` → deepPoison
+- `虚` → weaken
+- `罗` → dragnet / 天羅地網
+
+BattleModel status check 只在：
+
+- physical damage >0
+- actual defender 存活
+
+時執行。
+
+來源固定參數：
+
+- `perOffset = EffectHit`
+- level difference multiplier `Bai = 1`
+- level range `30`
+- existing status 仍是 early reject
+- success 使用 strict `RAND(1,100) < per`
+
+命中後：
+
+`StatusTbl[iEffect] = iTurn`
+
+注意這裡是 **exact iTurn**，不是 common StatusChange 的 `turn+1`。
+
+V2.01 因此使用 `battleStatusApplyRaw(..., turns)`。
+
+### 天羅地網
+
+本輪補齊 `羅/罗 -> dragnet`：
+
+- 顯示名：天羅地網
+- fixed `BATTLE_CanMoveCheck` 對 `CHAR_WORKDRAGNET >0` 直接 FALSE
+- Web 因此把 dragnet 納入 can-move gate
+- generic StatusSeq 依原倒數生命週期處理
+
+沒有加入職業技能 `BATTLE_COM_S_DRAGNET` 特有的：
+
+- DOOMTIME 清除
+- profession stored-command 清除
+- 已存在天羅數量造成 Success 0.64 / 0.4 修正
+
+因為這些都位於職業技能 handler，**不在 `BATTLE_BattleModel_ATTACK`**。維持「原 C 規則優先、不猜副作用」。
+
+### Counter / AddProfit
+
+battle.c：
+
+`case BATTLE_COM_S_BATTLE_MODEL:`
+→ `BATTLE_BattleModel()`
+→ `break`
+
+因此：
+
+- 不進普通 Counter loop
+- 每個 AttackObject 內沒有 `BATTLE_AddProfit`
+- command 結束後才由共用 outer AddProfit boundary 處理死亡生命週期
+
+V2.01 不在每個分身後自行插 AddProfit。
+
+### Regression
+
+新增：
+
+`tools/check_v201_player_battlemodel_runtime.mjs`
+
+鎖定：
+
+- 28 筆 runtime row
+- type=5 / object count 4 or 5
+- 七種 status token
+- COM2 target override / original toNo ignored
+- positional ability parser + WORKATTACKPOWER base bug
+- SortLoc source order
+- cover-all bit
+- extra-object RNG 必須 interleave execution
+- dead random target skip / no fallback
+- no damageDivisor
+- real Guardian substitution
+- surviving target unconditional ItemCrush
+- ItemCrush before status
+- EffectHit / range30 / Bai1
+- exact raw turn storage
+- dragnet can-move lifecycle
+- no Counter
+- no per-object AddProfit
+- player RANDOMACT dispatch 在 pending fallback 前
+
+完整 CI：
+
+- V1.72～V2.01 全部 regression success
+- `game.js` syntax success
+- generated runtime success
+
+save schema 維持 **29**。
+
+### commits
+
+- `db05f6684454baef5538fd9f88075b40c2bebbdd` — V2.01 core
+- `a2bd13d710a780bee9b779c4334d354c43004f1a` — V2.01 regression
+- `3025c0dde1dabfa106dbd23554619b8e6309255b` — V2.01 CI
+- `577678343b259fb67f042fa5561ab8673edf7ea3` — V2.01 playable-core marker
+- `cdbce9f96bdaefb8fdbd05e9c9869ecdab0f5f65` — V2.01 README
+
