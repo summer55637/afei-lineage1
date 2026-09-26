@@ -1899,3 +1899,96 @@ save schema 維持 **29**。
 - `c25b49f292f138f1f5fa426ac5e7916fabf1efb0` — V1.96 CI
 - `9bdcaae6052f9e23331aaac03626d6e4c3dc012e` — V1.96 playable-core marker
 
+---
+
+## V1.97 Player RANDOMACT Steal
+
+V1.97 接入玩家寵低忠誠 RANDOMACT：
+
+- 140 `PETSKILL_Steal`（偷竊）
+
+### Player Pet → Enemy
+
+battle.c 先走 `BATTLE_TargetAdjust`。
+
+進入 `BATTLE_Steal()` 後，來源只讓：
+
+`CHAR_TYPEPLAYER => per = 50`
+
+其他類型全部：
+
+`per = 0`
+
+玩家 Pet 的 RANDOMACT 目標是 `CHAR_TYPEENEMY`，因此：
+
+- `per = 0`
+- 仍然一定 consume 一次 `RAND(1,100)`
+- 判定為嚴格 `roll < 0`，固定失敗
+- 不進第二顆「石幣／道具模式」RNG
+- 不讀 Enemy 石幣
+- 不碰 Enemy existing item
+- 不讓施術 Pet 離場
+- 無 damage / ItemCrush / Counter
+
+### Enemy Steal audit
+
+本輪同步修正既有 Enemy→Player 偷竊生命週期。
+
+來源流程：
+
+1. `RAND(1,100) < 50` 才算第一階段成功。
+2. 成功後才 `RAND(1,100) < 50` 決定石幣／道具。
+3. 石幣模式再 consume `RAND(8,12)`。
+4. 道具模式只掃 `CHAR_STARTITEMARRAY .. CHAR_MAXITEMHAVE-1`。
+5. 有可偷 existing item 時才 consume `RAND(0,j-1)`。
+6. 最終 `flg == 1` 時施術 Enemy 自己 `BATTLE_Exit`。
+
+Web 舊版曾從 `state.inventory` aggregate key 偷道具；V1.97 改成真正 15 格 existing-item backpack：
+
+- 不偷裝備格
+- 不把只有 aggregate、沒有 source existing index 的 legacy item 捏造成可偷物
+- 抽中後清 Player backpack slot
+- 同步扣 aggregate UI mirror
+- `ITEM_endExistItemsOne` 對應為 `sourceItemRuntimeFree(existing index)`
+
+成功偷到石幣或 existing item 後：
+
+- 施術 Enemy 直接離場
+- 該離場沒有擊殺 EXP／掉落
+- 若偷竊模式最後失敗（0 石幣／沒有 existing item），Enemy 不離場
+
+另外修正 Enemy 對 Pet 目標時的 RNG：
+
+- 目標不是 PLAYER → per=0
+- 仍 consume 第一顆 `RAND(1,100)`
+- 不再因 Web early-return 而漏掉來源 RNG
+
+### Regression
+
+新增：
+
+`tools/check_v197_player_steal_runtime.mjs`
+
+鎖定：
+
+- 140 runtime row
+- Player→Enemy per=0
+- 正好一顆 success RNG
+- no mode / gold / item RNG
+- Pet 不退出
+- Enemy Steal success RNG order
+- 15 格 existing ItemBox scan
+- existing item destroy
+- successful Enemy attacker BATTLE_Exit
+- mode failure 不退出
+- dispatch 在 runtime-pending fallback 前
+
+save schema 維持 **29**。
+
+### commits
+
+- `05b02b4a4b96078824a193fbbe949857734b7252` — V1.97 core
+- `f4efac642f82f14bda628fbf101af6d4d56baed4` — V1.97 regression
+- `8c3504e0b89e5351185743e2203c88d7c88ff4b2` — V1.97 CI
+- `3938034e1affc4fc7c4e331611d24fa83148f807` — V1.97 playable-core marker
+
