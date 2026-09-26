@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.75**
+**PLAYABLE CORE V1.76**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,18 +16,16 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.75 最新進度
+## V1.76 最新進度
 
-V1.75 補完 V1.74 留下的玩家遠程武器混亂跨 side 邊界：
+V1.76 繼續收斂玩家寵低忠誠 RANDOMACT 的 fixed PetSkill 行為：
 
-- **混亂 StatusSeq → AttackNum → weapon command** 順序已依固定原 C 接回
-- **BOW**：raw COM2=-1 時不做 DefaultAttacker，也不誤消耗 aBowW `RAND(0,1)`
-- **BOW 打自己出戰 Pet**：依原 aBowW row 5 / row 0 排列與 -1 sentinel 停止
-- **BOOMERANG**：保留 AttackNum RNG 消耗、dedicated row sweep、Player side 0 正向順序與 30% 傷害
-- **BOUNDTHROW / BREAKTHROW**：跨 side TargetAdjust、死亡後 fallback、raw -1 只做第一段 fallback
-- **BREAKTHROW**：維持 WakeUp → 麻痺 → ItemCrush → AddProfit
-- 同 side Pet 的 Guard / hidden / loyalty lifecycle 也納入
-- V1.74 的 ranged-confusion fail-closed 已正式移除
+- **582 自爆攻擊／642 覺醒／643 蠱惑**：資料列存在，但 fixed `PETSKILL_functbl` 沒有同名函式；現在依原 `PETSKILL_Use()` 正確失敗，不再誤列為待實作效果
+- **612 魔之詛咒**：真正接入 `PET_PetskillPropertyEvent`；本場後續物理攻擊與受擊會依當前對手屬性即時轉成剋制向量
+- **BattleProperty exit lifecycle**：Pet 被嚇退／帶走／逃跑／打飛或戰鬥結束時清除 callback
+- **639 蟻葬**：RANDOMACT 選到存活 Enemy 時，依 fixed battle.c fall-through 成普通物理攻擊
+- **581/734 Roar、600/674 Vary** 仍因缺可靠 source `CHAR_PETID` 而不猜
+- V1.73～V1.75 歷史 regression 的 UI 版本檢查已改為版本無關，避免後續升版假紅
 
 ## 目前主要系統
 
