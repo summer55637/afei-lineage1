@@ -3318,18 +3318,19 @@ function enemyChooseAction(unit){
   if(!picked)return {kind:'none',spec};
 
   if(picked.kind==='skill'){
+    picked.sourceAiPickedSkill=true;
     if(ENEMY_SOURCE_MISSING_SKILL_IDS.has(Number(picked.skillId))){
       return {
         kind:'none',spec,
         skillSlot:picked.skillSlot,skillId:picked.skillId,
-        sourceSkillMissing:true
+        sourceSkillMissing:true,sourceAiPickedSkill:true
       };
     }
     if(ENEMY_SOURCE_UNREGISTERED_SKILL_IDS.has(Number(picked.skillId))){
       return {
         kind:'none',spec,
         skillSlot:picked.skillSlot,skillId:picked.skillId,
-        sourceSkillUnregistered:true,
+        sourceSkillUnregistered:true,sourceAiPickedSkill:true,
         sourceCWaitReason:'unregistered-function'
       };
     }
@@ -3339,12 +3340,12 @@ function enemyChooseAction(unit){
       // BATTLE_ai_all() 不設 C_OK，因此本回合在 StatusSeq 前被跳過。
       return {
         kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta,
-        sourceSkillRejected:true,sourceCWaitReason:'sacrifice-low-hp'
+        sourceSkillRejected:true,sourceAiPickedSkill:true,sourceCWaitReason:'sacrifice-low-hp'
       };
     }
-    if(meta?.f==='PETSKILL_None')return {kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
-    if(meta?.f==='PETSKILL_NormalAttack')return {kind:'attack',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
-    if(meta?.f==='PETSKILL_NormalGuard')return {kind:'guard',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta};
+    if(meta?.f==='PETSKILL_None')return {kind:'none',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta,sourceAiPickedSkill:true};
+    if(meta?.f==='PETSKILL_NormalAttack')return {kind:'attack',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta,sourceAiPickedSkill:true};
+    if(meta?.f==='PETSKILL_NormalGuard')return {kind:'guard',spec,skillSlot:picked.skillSlot,skillId:picked.skillId,skillMeta:meta,sourceAiPickedSkill:true};
     return Object.assign({},picked,{spec,skillMeta:meta});
   }
   // 原 BATTLE_ai_normal() 會把 ma 權重納入抽籤，但沒有 B_AI_MAGICMODE handler；
@@ -9950,6 +9951,7 @@ function normalBattleOrder(options={}){
   sourcePreCommandStatusTick();
   // 再依 REVERSE flag 套 BATTLE_AttReverse；EARTHROUND0 同樣保留舊 FIX 屬性快照。
   battlePrepareElementWork();
+
   const order=[];
   let orderIndex=0;
   const enemyEntryUnits=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units.slice():(enemy?[enemy]:[]);
@@ -9957,8 +9959,86 @@ function normalBattleOrder(options={}){
     unit.guardianReadyThisTurn=false;
     unit.guardedByUnitId=null;
   }
+
+  // Player/Pet command targets already exist before BATTLE_ai_all() in fixed C.
+  // Snapshot that non-RNG command state now, but DO NOT call BATTLE_DexCalc yet.
   const friendlyTarget=targetEnemyUnit();
   const player=playerBattleView();
+  const playerEntries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+  const petEntry=playerEntries.find(x=>x?.kind==='pet'&&!battlePetOutIds.has(x.petId));
+  let pet=petEntry?state.petBox.find(p=>p.id===petEntry.petId):null;
+  if(!playerEntries.length){
+    const fallback=activePet();
+    if(fallback&&!battlePetOutIds.has(fallback.id))pet=fallback;
+  }
+
+  // V1.63 source order:
+  // BATTLE_Command() -> BATTLE_ai_all(side 0) -> BATTLE_ai_all(side 1)
+  // -> BATTLE_Battling() -> BATTLE_DexCalc() / EntrySort() / ComboCheck().
+  // In this Web PVE the Enemy side is the only BATTLE_S_TYPE_ENEMY side, so every Enemy AI
+  // action/target/skill-side-effect RNG must finish before the first Player/Pet/Enemy dex RNG.
+  // BATTLE_ai_all() also does not pre-filter CHAR_ISDIE/HP<=0: a dead-but-still-present Entry
+  // can consume AI RNG (and PETSKILL_Use side effects) before BATTLE_Battling later skips it.
+  const enemyPlans=new Map();
+  for(const unit of enemyEntryUnits){
+    const dead=n(unit?.hp)<=0;
+    const desc={kind:'enemy',unit,unitId:unit?.id};
+
+    if(surpriseSide==='enemy'){
+      // fixed BATTLE_ai_all(): SURPRISE writes COM_NONE/C_OK and consumes no AI RNG.
+      unit.guardThisTurn=false;
+      unit.roundDexMode=null;
+      const quick=n(enemyBattleView(unit)?.quick);
+      enemyPlans.set(unit.id,{
+        dead,quick,
+        action:{kind:'none',spec:enemyAiAttackSpec(unit)},
+        chosen:null,attackShootPrime:null,
+        sourceSurpriseSkip:true
+      });
+      continue;
+    }
+
+    let action=enemyChooseAction(unit);
+    const needsTarget=action?.kind==='attack'||action?.sourceAiPickedSkill===true;
+    const chosen=needsTarget?enemyChooseTarget(unit):null;
+
+    if(needsTarget&&!chosen){
+      // fixed BATTLE_ai_normal(): if the requested target class and TARGET_ALL fallback both
+      // produce cnt==0, it returns FALSE BEFORE PETSKILL_Use(). Keep PreCommand baseline state,
+      // but do not apply selected-skill side effects.
+      const failed=Object.assign({},action,{
+        kind:'none',sourceAiTargetMissing:true,
+        sourceCWaitReason:action?.sourceCWaitReason||'no-target'
+      });
+      enemyPrepareRoundAction(unit,{kind:'none'});
+      unit.guardThisTurn=false;
+      unit.counterEligibleThisTurn=false;
+      unit.roundDexMode=null;
+      action=failed;
+      const quick=n(enemyBattleView(unit)?.quick);
+      enemyPlans.set(unit.id,{dead,quick,action,chosen:null,attackShootPrime:null,sourceSurpriseSkip:false});
+      continue;
+    }
+
+    // In fixed BATTLE_ai_normal, PETSKILL_Use() is after target selection.
+    enemyPrepareRoundAction(unit,action);
+    unit.guardThisTurn=action?.kind==='guard';
+    const attackShootPrime=sourceEnemyPrimeAttackShoot(action,unit,chosen);
+
+    // BATTLE_ai_all() checks CanMove only after the AI/PETSKILL callback returned.
+    // Skill side effects already happened, but the final command is overwritten with NONE.
+    if(!battleStatusCanMove(desc)){
+      action=Object.assign({},action,{kind:'none',sourceAiCanMoveBlocked:true});
+      unit.guardThisTurn=false;
+      unit.counterEligibleThisTurn=false;
+      unit.roundDexMode=null;
+    }
+
+    const quick=n(enemyBattleView(unit)?.quick);
+    enemyPlans.set(unit.id,{dead,quick,action,chosen,attackShootPrime,sourceSurpriseSkip:false});
+  }
+
+  // Only now enter the fixed BATTLE_Battling() phase and consume dex RNG in Entry order.
   order.push({
     kind:'player',label:'你',quick:player.quick,dex:battleDexRoll(player.quick),orderIndex:orderIndex++,
     targetUnitId:friendlyTarget?.id||null,sourceSurpriseSkip:surpriseSide==='player'
@@ -9967,13 +10047,6 @@ function normalBattleOrder(options={}){
   // fixed Battle Entry：HP=0 不會自動等於 BATTLE_Exit。
   // 因此倒下但仍留在 side Entry 的出戰寵，仍要先進 EntrySort / ComboCheck，
   // 真正執行行動時才因 ISDIE / HP<=0 被跳過。
-  const playerEntries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
-  const petEntry=playerEntries.find(x=>x?.kind==='pet'&&!battlePetOutIds.has(x.petId));
-  let pet=petEntry?state.petBox.find(p=>p.id===petEntry.petId):null;
-  if(!playerEntries.length){
-    const fallback=activePet();
-    if(fallback&&!battlePetOutIds.has(fallback.id))pet=fallback;
-  }
   if(pet){
     const pv=petBattleView(pet);
     const quick=pv?n(pv.quick):n(pet?.stats?.dex);
@@ -9985,61 +10058,35 @@ function normalBattleOrder(options={}){
   }
 
   for(const unit of enemyEntryUnits){
-    const dead=n(unit?.hp)<=0;
-    if(dead){
-      // fixed BATTLE_AllCharaCWaitSet 會先把一般死亡 Entry 的 COM 清回 NONE；
-      // PreCommandSeq 仍 complianceParameter，所以 DexCalc 使用本輪重建的 QUICK，
-      // 但之後 action loop 才因 ISDIE / HP<=0 continue。
-      const desc={kind:'enemy',unit,unitId:unit?.id};
-      let quick=Math.trunc(n(unit?.quick));
-      if(battleWeakenRoundActive(desc))quick=Math.trunc(quick*.8);
-      quick=battleDrunkQuick(desc,quick);
-      unit.guardThisTurn=false;
-      unit.roundDexMode=null;
-      order.push({
-        kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
-        enemyAction:'none',skillSlot:null,skillId:null,
-        sourceSkillMissing:false,sourceSkillUnregistered:false,sourceSkillRejected:false,sourceMagicCWait:false,
-        sourceCWaitReason:null,targetKind:null,targetPetId:null,sourceSurpriseSkip:false,sourceDeadEntry:true
-      });
-      continue;
-    }
-
-    // fixed BATTLE_ai_all：Enemy 所在 side 有 BSIDE_FLG_SURPRISE 時，
-    // 直接 COM_NONE + C_OK，不呼叫 BATTLE_ai_normal()；因此本輪不能先抽 skill 再丟掉。
-    if(surpriseSide==='enemy'){
-      unit.guardThisTurn=false;
-      unit.roundDexMode=null;
-      const quick=n(enemyBattleView(unit)?.quick);
-      order.push({
-        kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick),orderIndex:orderIndex++,
-        enemyAction:'none',skillSlot:null,skillId:null,
-        sourceSkillMissing:false,sourceSkillUnregistered:false,sourceSkillRejected:false,sourceMagicCWait:false,
-        sourceCWaitReason:null,targetKind:null,targetPetId:null,sourceSurpriseSkip:true
-      });
-      continue;
-    }
-    const action=enemyChooseAction(unit);
-    enemyPrepareRoundAction(unit,action);
-    unit.guardThisTurn=action.kind==='guard';
-    // 排序 QUICK 應使用當前狀態後的 battle view；V0.47 的 weaken 也因此會正確影響出手順序。
-    const quick=n(enemyBattleView(unit)?.quick);
-    const needsTarget=action.kind==='attack'||action.kind==='skill'||action.kind==='magic';
-    const chosen=needsTarget?enemyChooseTarget(unit):null;
-    const attackShootPrime=sourceEnemyPrimeAttackShoot(action,unit,chosen);
+    const plan=enemyPlans.get(unit.id)||{
+      dead:n(unit?.hp)<=0,
+      quick:n(enemyBattleView(unit)?.quick),
+      action:{kind:'none',spec:enemyAiAttackSpec(unit)},
+      chosen:null,attackShootPrime:null,
+      sourceSurpriseSkip:false
+    };
+    const action=plan.action||{kind:'none'};
+    const chosen=plan.chosen;
+    const attackShootPrime=plan.attackShootPrime;
     order.push({
-      kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
+      kind:'enemy',label:unit.name,unitId:unit.id,quick:plan.quick,
+      dex:battleDexRoll(plan.quick,unit.roundDexMode),orderIndex:orderIndex++,
       enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
       sourceSkillMissing:!!action.sourceSkillMissing,
       sourceSkillUnregistered:!!action.sourceSkillUnregistered,
       sourceSkillRejected:!!action.sourceSkillRejected,
       sourceMagicCWait:!!action.sourceMagicCWait,
       sourceCWaitReason:action.sourceCWaitReason||null,
+      sourceAiPickedSkill:!!action.sourceAiPickedSkill,
+      sourceAiTargetMissing:!!action.sourceAiTargetMissing,
+      sourceAiCanMoveBlocked:!!action.sourceAiCanMoveBlocked,
       targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null,
       sourceAttackShootCount:attackShootPrime?.count??null,
       sourceAttackShootMin:attackShootPrime?.min??null,
       sourceAttackShootMax:attackShootPrime?.max??null,
-      sourceAttackShootFixAi:attackShootPrime?.fixAi??null
+      sourceAttackShootFixAi:attackShootPrime?.fixAi??null,
+      sourceSurpriseSkip:!!plan.sourceSurpriseSkip,
+      sourceDeadEntry:!!plan.dead
     });
   }
 
