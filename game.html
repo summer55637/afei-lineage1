@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.73</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.74</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -223,8 +223,13 @@
     </section>
 
     <article class="card note">
+      <b>V1.74：</b>
+      玩家遠程武器已接固定原 C 普通攻擊 pattern：弓依 aBowW + RAND(0,1) 建 10 格候選並只對有效格計 AttackNum；回力標保留先消耗 AttackNum、再忽略其值的來源 lifecycle，Player side 0 正向掃五格且每段 30% 傷害；投擲斧／投擲石每段都由原 raw COM2 重新 TargetAdjust，投石正傷害依 20－麻痺抗性檢定，順序固定在 WakeUp 後、ItemCrush 前。四種遠程武器同步阻擋 Guardian／Counter／Combo。
+    </article>
+
+    <article class="card note">
       <b>V1.73：</b>
-      固定原 C 的 ITEM_getEquipPlace／ITEM_equipEffect 已接入玩家 9 格裝備：一般 source-backed existing item 會使用建立當下真正 roll 出來的 66 欄 sourceData，套用攻防敏、HP／MP、運／魅、六異常抗性、四屬性、會心、額外傷防、命中、忽防等 Work 值；STR／DEX 裝備需求依原 raw 值 ×100 比較。260 件有 attach／detach callback 的特殊裝備、職業限定、使者／勇者信物，以及玩家端尚未完整移植的弓／回力標／投擲武器維持 fail-closed。新增 9 格裝備＋15 格 existing 背包操作 UI。
+      固定原 C 的 ITEM_getEquipPlace／ITEM_equipEffect 已接入玩家 9 格裝備：一般 source-backed existing item 會使用建立當下真正 roll 出來的 66 欄 sourceData，套用攻防敏、HP／MP、運／魅、六異常抗性、四屬性、會心、額外傷防、命中、忽防等 Work 值；STR／DEX 裝備需求依原 raw 值 ×100 比較。260 件有 attach／detach callback 的特殊裝備、職業限定、使者／勇者信物仍維持 fail-closed；新增 9 格裝備＋15 格 existing 背包操作 UI。
     </article>
 
     <article class="card note">
