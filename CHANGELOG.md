@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.83**
+目前最新可玩核心：**V1.99**
 
 ## 歷史分檔
 
@@ -14,14 +14,19 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.83
+## 最新版本 V1.99
 
-V1.83 確認玩家寵低忠誠 RANDOMACT 的 595 閃避術是 source-defined no-op：
+V1.99 已接入玩家寵低忠誠 `RANDOMACT` 的 613 `PETSKILL_AttackCrazed`（狂亂暴走）：
 
-- RANDOMACT 先選 Enemy toNo；PETSKILL_SetDuck 成功建立 command
-- execution 的 PETSKILL_SetDuckChange_Battle 要求 toNo 必須就是施術寵自己，否則立刻 FALSE
-- 因此不解析 `3|60`、不寫閃避 turn/power、不產生效果／RNG
-- `CHAR_MAGICPETMP=0` reset 在 fixed build 行為上也是 0→0：全 repo 無累加路徑，SetMagicPet 只讀後寫回同值
-- Web 不自行把 595 修成可用的自體三回合 60% 閃避
+- 攻擊使用 `FIXSTR × 0.8`
+- 防禦使用 `FIXTOUGH × 0.7`
+- option=3 直接成為 `attack_max=3`
+- ATTCRAZED 不設定 `gDamageDiv`，三段皆為完整物理攻擊
+- `BATTLE_TargetListSet` 在第一擊前先完成三顆目標 RNG
+- 保留原碼 `i < deftop` 導致 Enemy slot 19 不進預抽池的邊界
+- 保留 non-BOW 第一擊消耗預抽 RNG、實際仍使用原 COM2 的行為
+- 全段結束後只走一次共用 Counter chain
+- 新增 V1.99 regression 並接入 CI
+- 修復 workflow V1.90～V1.98 paths 段落的 8 個字面 `\\n`
 
-完整 V1.83 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.75～V1.99 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
