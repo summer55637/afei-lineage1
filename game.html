@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.71</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.72</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -206,6 +206,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.72：</b>
+      對齊 fixed ITEM_makeItem / ITEM_makeItemAndRegist：有效 Item template 每次建立 existing item 都固定消耗 66 顆 RNG，即使 random width = 0 的 RAND(0,0) 也會前進 rand() 狀態；existing array 滿時則是先吃完 66 顆才配置失敗。Enemy 10 格掉落也改為「每格抽中後立即建立 item，再抽下一格」，並移除 Enemy unit ID 原本多吃的 Web-only Math.random。save schema 維持 28。
+    </article>
 
     <article class="card note">
       <b>V1.71：</b>
