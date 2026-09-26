@@ -12598,6 +12598,49 @@ function sourceCombinedAttackMagicTargets(toNo,pattern){
     .map(slot=>({slot,desc:sourceCombinedTargetableFromSlot(slot)}))
     .filter(x=>x.desc);
 }
+function sourcePetCombinedMagicPractice(pet){
+  if(!pet)return {levels:[0,0,0,0],exp:[0,0,0,0]};
+  if(!Array.isArray(pet.sourceAttackMagicLv))pet.sourceAttackMagicLv=[0,0,0,0];
+  if(!Array.isArray(pet.sourceAttackMagicExp))pet.sourceAttackMagicExp=[0,0,0,0];
+  while(pet.sourceAttackMagicLv.length<4)pet.sourceAttackMagicLv.push(0);
+  while(pet.sourceAttackMagicExp.length<4)pet.sourceAttackMagicExp.push(0);
+  pet.sourceAttackMagicLv=pet.sourceAttackMagicLv.slice(0,4).map(v=>clamp(Math.trunc(n(v)),0,100));
+  pet.sourceAttackMagicExp=pet.sourceAttackMagicExp.slice(0,4).map(v=>Math.max(0,Math.trunc(n(v))));
+  return {levels:pet.sourceAttackMagicLv,exp:pet.sourceAttackMagicExp};
+}
+function sourcePetCombinedMagicComputeAttExp(pet,attrIndex,magicLv,hitCount){
+  // fixed Magic_ComputeAttExp() runs only when TrueMagic==FALSE && AttIsPlayer.
+  // Under _FIX_MAGICDAMAGE PET sets AttIsPlayer=1, so Pet CHAR_*_EXP really does advance.
+  const st=sourcePetCombinedMagicPractice(pet);
+  const idx=clamp(Math.trunc(n(attrIndex)),0,3);
+  const addEx=Math.max(0,Math.trunc(n(magicLv))*3*Math.max(0,Math.trunc(n(hitCount))));
+  let level=Math.trunc(n(st.levels[idx])),exp=Math.trunc(n(st.exp[idx]))+addEx;
+  if(exp>100){
+    exp=0;
+    if(level<100)level++;
+  }
+  exp=Math.max(0,Math.trunc(exp));
+  level=clamp(Math.trunc(level),0,100);
+  st.levels[idx]=level;st.exp[idx]=exp;
+
+  const opposed=(idx+1)%4;
+  let opposedLevel=Math.trunc(n(st.levels[opposed]));
+  let opposedExp=Math.trunc(n(st.exp[opposed]));
+  if(opposedLevel>1){
+    opposedExp=Math.trunc(opposedExp-addEx*.5);
+    if(opposedExp<0){
+      opposedExp=0;
+      opposedLevel=Math.max(0,opposedLevel-1);
+    }
+    st.levels[opposed]=opposedLevel;
+    st.exp[opposed]=Math.max(0,opposedExp);
+  }
+  return {
+    attrIndex:idx,addEx,hitCount:Math.max(0,Math.trunc(n(hitCount))),
+    level,exp,opposedAttrIndex:opposed,opposedLevel:st.levels[opposed],opposedExp:st.exp[opposed]
+  };
+}
+
 function sourcePetCombinedMagicAttrDamage(pet,targetDesc,magic,aPower){
   const source=normalizedElements(battleElementsForDesc({kind:'pet',pet,petId:pet?.id}))
     ||{earth:0,water:0,fire:0,wind:0,none:100};
@@ -12615,15 +12658,13 @@ function sourcePetCombinedMagicAttrDamage(pet,targetDesc,magic,aPower){
   return {damage:Math.trunc(baseDamage*fieldRatio),attackVector:attack,magicVector:vector,
     defVector:def,fieldRatio,fieldState:Object.assign({},battleFieldState)};
 }
-function sourcePetCombinedAttackMagicOne(pet,targetDesc,magic,trueMagic){
+function sourcePetCombinedAttackMagicOne(pet,targetDesc,magic,trueMagic,attMagicLv){
   const threshold=Math.trunc(Math.min(30,Math.max(0,n(targetDesc?.unit?.level))*.2));
   const dodgeRoll=cRand(1,100);
   if(dodgeRoll<=threshold)return {damage:0,dodged:true,dodge:{roll:dodgeRoll,threshold},trueMagic};
 
-  // fixed Char array is zero-initialized and this source tree has no Pet setter for CHAR_*_EXP.
-  // Under _FIX_MAGICDAMAGE a PET still enters the AttIsPlayer branch, therefore att_magic_lv=0.
-  const attMagicLv=0;
   const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
+  attMagicLv=clamp(Math.trunc(n(attMagicLv)),0,100);
   const resistInfo=sourceMagicEffectiveResist(targetDesc,attrIndex);
   const resist=resistInfo.effective;
   let kmagic=attMagicLv*1.4-resist;
@@ -12662,7 +12703,9 @@ function sourcePerformPetCombinedAttackMagic(pet,action,magicId,magic,rawToNo){
   }
 
   // JYUJYUTU calls MAGIC_DirectUse directly: do NOT run S_ATTACK_MAGIC TargetIndex rewrite.
-  const attMagicLv=0;
+  const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
+  const practice=sourcePetCombinedMagicPractice(pet);
+  const attMagicLv=clamp(Math.trunc(n(practice.levels[attrIndex])),0,100);
   const trueRoll=cRand(0,99);
   const trueMagic=!(trueRoll>attMagicLv);
   const targets=sourceCombinedAttackMagicTargets(multi.toNo,pattern),results=[];
@@ -12670,14 +12713,18 @@ function sourcePerformPetCombinedAttackMagic(pet,action,magicId,magic,rawToNo){
   for(const entry of targets){
     const target=entry.desc;
     if(!target||!battleStatusDescAlive(target))continue;
-    const r=sourcePetCombinedAttackMagicOne(pet,target,magic,trueMagic);
+    const r=sourcePetCombinedAttackMagicOne(pet,target,magic,trueMagic,attMagicLv);
     results.push({battleSlot:entry.slot,targetKey:battleStatusKey(target),r});
     if(r.dodged)addLog(battleStatusDescName(target)+' 閃過 '+magic.name+'。','good');
     else addLog(magic.name+' 命中 '+battleStatusDescName(target)+'，造成 '+r.damage+' 魔法傷害'+(trueMagic?'':'（施法判定失敗 ×0.7）')+'。',battleStatusHp(target)<=0?'bad':'');
   }
+  const hitCount=results.filter(x=>!x.r?.dodged).length;
+  const practiceUpdate=!trueMagic
+    ?sourcePetCombinedMagicComputeAttExp(pet,attrIndex,magic.magicLv,hitCount)
+    :null;
   return {handled:true,skillId:action.skillId,magicId,magicName:magic.name,attackMagic:true,
     rawToNo,adjustedToNo:multi.toNo,multi,trueRoll,attMagicLv,trueMagic,
-    attIdx:magic.attIdx,ignoredTargetRewrite:magic.targetRewrite,targets:results};
+    attIdx:magic.attIdx,ignoredTargetRewrite:magic.targetRewrite,targets:results,hitCount,practiceUpdate};
 }
 function sourceCombinedSingleTarget(rawToNo){
   const multi=sourceCombinedMultiList(rawToNo);
