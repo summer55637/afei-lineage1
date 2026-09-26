@@ -7467,6 +7467,11 @@ function sourcePetRandomSkillPlan(pet){
     }
   }
 
+  // fixed BATTLE_PetRandomSkill 在抽完 iNum 後，會先呼叫 BATTLE_DefaultAttacker()
+  // 選定敵方 COM2，之後才開始 50 次 PetSkill 掃描。即使後面因 array=-1
+  // 落入原 C 的未定義讀取，這一次目標 RNG 也已經消耗，不能被 Web 提前省略。
+  const targetDesc=sourcePetRandomEnemyTarget();
+
   // fixed BATTLE_PetRandomSkill 有一個很舊的索引怪癖：
   // 掃描 i 來計數 battle/all skill，最後 PETSKILL_Use() 卻傳原始 iNum slot。
   // 對目前常見 [0,0,0,0,0,0,1] 等全 Battle skill 陣列，結果等價直接抽 slot iNum。
@@ -7477,8 +7482,8 @@ function sourcePetRandomSkillPlan(pet){
     const scanMeta=petSkillDb?.byId?.[String(scanId)]||null;
     if(!scanMeta){
       // 原 C 此處會 PETSKILL_getInt(-1, FIELD)，屬未定義記憶體讀取。
-      // 不把 UB 猜成任何固定技能效果。
-      return {kind:'blocked',reason:'source-invalid-petskill-array',scanSlot:i,scanSkillId:scanId,slot:iNum,skillId:skills[iNum]};
+      // 不把 UB 猜成任何固定技能效果；但保留此前已發生的 BATTLE_DefaultAttacker RNG。
+      return {kind:'blocked',reason:'source-invalid-petskill-array',scanSlot:i,scanSkillId:scanId,slot:iNum,skillId:skills[iNum],targetDesc};
     }
     const field=Math.trunc(n(scanMeta.field));
     if(field!==0&&field!==1)continue; // PETSKILL_FIELD_ALL / BATTLE
@@ -7488,15 +7493,15 @@ function sourcePetRandomSkillPlan(pet){
     const meta=petSkillDb?.byId?.[String(skillId)]||null;
     if(!meta){
       // PETSKILL_Use() 會因 array==-1 return FALSE；安全可確定為 NoAction。
-      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,targetDesc:sourcePetRandomEnemyTarget()};
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,targetDesc};
     }
     if(Math.trunc(n(meta.illegal))!==0){
       // fixed PETSKILL_Use：CHAR_TYPEPET 遇 PETSKILL_ILLEGAL 直接 return FALSE。
-      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceIllegal:true,targetDesc:sourcePetRandomEnemyTarget()};
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceIllegal:true,targetDesc};
     }
-    return {kind:'skill',slot:iNum,skillId,meta,targetDesc:sourcePetRandomEnemyTarget()};
+    return {kind:'skill',slot:iNum,skillId,meta,targetDesc};
   }
-  return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc:null};
+  return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc};
 }
 function sourcePetChargeSpec(meta){
   // 與 fixed PETSKILL_ChargeAttack 相同：option 開頭 N，攻% 寫入 COM3 high。
