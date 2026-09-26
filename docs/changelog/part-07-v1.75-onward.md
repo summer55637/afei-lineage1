@@ -2927,3 +2927,112 @@ save schema 維持 **29**。
 - `93c7d3b4f832a45badc63e987b8b7e58db6a2752` — CI wiring
 - `a85894dc42ac7590bd867b51d0f0d983c233ae5c` — corrected fixed unique-function count
 
+---
+
+## V2.04 Fixed item field=2 string runtime
+
+V2.03 完成 field=0/1 玩家 PetSkill coverage closure 後，固定資料下一個 field 只剩 200 加工、201 料理、540 修復、572 鑲寶石。
+
+540 / 572 的 fixed C 直接讀 existing item 的 `ITEM_TYPECODE`、`ITEM_INLAYCODE`、`ITEM_ARGUMENT`、`ITEM_SECRETNAME`、`ITEM_INGNAME0～4` 與 ITEM function strings；舊 Web 只有整數 data[]，不能用物品名稱或 ID 猜材料。
+
+新增 `tools/generate_item_field2_runtime.py`，固定輸入 pinned `gmsv/data/itemset6.txt`（blob `eac985796b59286c547db2abce7b3d604a5e6226`），輸出 `data/generated/stoneage_item_field2_runtime.json`。
+
+實際統計：
+
+- templates 10737 / 10737
+- syntax errors 0
+- duplicate IDs 0
+- TYPECODE templates 296
+- repair ingredient-name templates 9437
+- nonblank item function strings 1759
+
+legacy source 字串用 latin1 作 byte-preserving transport：同來源 exact equality 與 ASCII token `INSLAY` / `NULL` / `FIXITEMALL` 可安全比對，但不把 legacy bytes 猜成新顯示翻譯。
+
+約 1.9 MB runtime 由 `sourceEnsureItemField2Db()` 懶載入，沒有加入 boot Promise.all。
+
+新增 `tools/check_v204_item_field2_runtime.mjs` 並接入 CI。
+
+---
+
+## V2.05 Player field=2 Fixitem / Inslay
+
+V2.05 正式接入 540 `PETSKILL_Fixitem` 與 572 `PETSKILL_Inslay`。200 / 201 因 fixed `ITEM_mergeItem_merge` 的完整 merge table / lifecycle 尚未來源化，維持 no-guess boundary。
+
+### field=2 UI / gate
+
+- 只從 15 格 source-backed backpack 選物，不從 equipped slot 選
+- Set insertion order 保留玩家選取順序
+- 只有出戰 Pet 真正持有的 field=2 skill 才顯示 action
+- battle 中依 fixed `BATTLE_CHARMODE_NONE` 直接拒絕
+
+### 540 修復
+
+fixed target ITEM_TYPE：0～15、17、18、19；ITEM_DISH=20 直接拒絕。每次最多兩個 selected items，且恰好一個 equipment target。
+
+材料必須滿足：
+
+`material.ITEM_INGNAME0 == target.ITEM_INGNAME0..4`
+
+或 fixed `_ITEM_FIXALLBASE`：
+
+`material.ITEM_ARGUMENT == "FIXITEMALL"`
+
+耐久 lifecycle：
+
+- `DAMAGECRUSHE >= MAXDAMAGECRUSHE*0.80` → 不需要修
+- `MAXDAMAGECRUSHE < 500` → 不能再修
+- `DAMAGECRUSHE <= 0` → fail
+- success：`newMax = trunc(oldMax*0.85)`
+- `DAMAGECRUSHE = newMax`
+- `MAXDAMAGECRUSHE = newMax`
+- `CRUSHLEVEL = 0`
+- SECRETNAME 有 `(` 時保留前段
+
+固定資料實際有 1 個 `FIXITEMALL` 模板。
+
+### CHAR_DelItem pile lifecycle
+
+原 `_CHAR_DelItem(..., num=1)` 在 `_ITEM_PILENUMS` 下先扣 `ITEM_USEPILENUMS`；只有 pile <=0 才清 player item slot + `ITEM_endExistItemsOne`。
+
+因此 Web 現在：stack 5→4 時 existing item 保留；stack 1→0 時才 free。`state.inventory` 對 source-backed item 記 existing entry count，不記 pile units，所以 surviving pile 不減 aggregate。
+
+### 572 鑲寶石
+
+- max 4 selected items
+- 每一件都必須 nonempty TYPECODE 且 != `NULL`
+- 恰好一件 TYPECODE 含 `INSLAY` 作 target
+- fixed runtime 實際有 200 個 INSLAY target templates
+- INLAYCODE 固定三格，填第一個 `NULL`；滿三格 fail
+- 精確相加 8 欄：MODIFYATTACK / MODIFYDEFENCE / MODIFYQUICK / MODIFYHP / MODIFYMP / MODIFYLUCK / OTHERDAMAGE / OTHERDEFC
+- material MAGICID >0 時覆蓋 target MAGICID / MAGICUSEMP
+- copy ITEM function strings 與 ARGUMENT，然後 reconstruct functable
+
+再次核對 pinned `item.h` / `version.h`：`_Item_ReLifeAct` 開啟，所以 `ITEM_FIRSTFUNCTION..ITEM_LASTFUNCTION` 包含 INIT、PREOVER、POSTOVER、WATCH、USE、ATTACH、DETACH、DROP、PICKUP、DIERELIFE，共 10 個 function string。
+
+### partial commit semantics
+
+多材料不是 transaction。每顆依序：
+
+`PETSKILL_ITEM_inslay(target, material) -> success -> CHAR_DelItem(material)`
+
+後一顆失敗時，前面已修改 target 並消耗 material，不 rollback。Web 保留此 lifecycle。
+
+### Inslay copied ITEM_DIErelife
+
+封版前重新檢查發現：舊 Web 死亡復活只看原 itemId，但 fixed Inslay 會真的覆蓋 `ITEM_DIERELIFEFUNC` 與 `ITEM_ARGUMENT`。
+
+V2.05 死亡掃描現會優先讀 existing item 上 source-backed 的 `field2Functions.relife` 與 `field2Char.argument`。HP parser 對齊 fixed `ITEM_getArgument`：先 `|` 分項，再 `:` 分 key/value，key case-insensitive；缺 HP →1、FULL → WORKMAXHP、其他 → C atoi。
+
+觸發後仍走既有 fixed lifecycle：復活、清 death state、消耗 equipped existing item，不立即 compliance。
+
+### display-only boundary
+
+fixed Inslay 最後還會重建 SECRETNAME / EFFECTSTRING，包含 legacy localized magic name。目前 stats、magic ID / MP、functions、argument、inlay code 都已 source-backed；Web 暫不拿不完整 magic-name table 猜顯示字串，而以 `field2EffectStringNeedsSourceMagicName=true` 標記這個純顯示邊界。
+
+### Regression
+
+新增 `tools/check_v205_player_field2_fixitem_inslay.mjs`，鎖定 fixed 4 field=2 rows、200 INSLAY templates、1 FIXITEMALL template、9437 repair ingredient templates，以及 Fixitem / Inslay / pile / partial-commit / copied relife lifecycle。
+
+CI run #182：V1.72～V2.05 全部 success，`game.js` syntax success。
+
+save schema 維持 **29**。
