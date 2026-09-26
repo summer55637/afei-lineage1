@@ -7726,12 +7726,12 @@ function performEnemyRegret(actor,unit,options,meta){
     let r;
     if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
       r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOpts,{
-        preGuardDamageMultiplier:secondary&&localRegret?.8:1
+        preGuardDamageMultiplier:secondary&&localRegret ? .8 : 1
       }));
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyAttackSeqBugToPlayer(unit,Object.assign({},attackOpts,{
-        guarding,preGuardDamageMultiplier:secondary&&localRegret?.8:1
+        guarding,preGuardDamageMultiplier:secondary&&localRegret ? .8 : 1
       }));
     }else return null;
     r.ultimateCriticalEnemyOnly=true;
@@ -10841,7 +10841,7 @@ function sourcePerformPetSonicSkill(pet,action){
     // Therefore SONIC2's 0.5 pre-Guard multiplier disappears for that target.
     const localSonic=!hadDamageReact;
     const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
-      preGuardDamageMultiplier:secondary&&localSonic?.5:1
+      preGuardDamageMultiplier:secondary&&localSonic ? .5 : 1
     });
     if(!r)return null;
     r.ultimateCriticalEnemyOnly=true;
@@ -10917,7 +10917,7 @@ function sourcePerformPetRegretSkill(pet,action){
       // BATTLE_DamageCalc checks attacker's COM1 and therefore keeps REGRET's FIXTOUGH
       // defense overwrite even if local BATTLE_S_AttackDamage skill_type became -1.
       useFixedToughDefense:true,
-      preGuardDamageMultiplier:secondary&&localRegret?.8:1,
+      preGuardDamageMultiplier:secondary&&localRegret ? .8 : 1,
       attackerOverride:{attack}
     });
     if(!r)return null;
