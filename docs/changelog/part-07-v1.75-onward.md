@@ -1570,3 +1570,122 @@ save schema 維持 **29**。
 - `817e73e0204eacaab19279f292e7c429443cc88e` — V1.93 CI
 - `ddb51f0f90bd4bdbb5616348ac25bc917fe39903` — V1.93 playable-core marker
 
+---
+
+## V1.94 Player RANDOMACT BattleTimid / 2BattleTimid
+
+V1.94 接入玩家寵低忠誠 RANDOMACT：
+
+- 606 / 727 `PETSKILL_BattleTimid`（怯戰）
+- 636 `PETSKILL_2BattleTimid`（狂獅怒吼）
+- 824 `PETSKILL_2BattleTimid`（恐嚇）
+
+### BattleTimid work power
+
+原 `PETSKILL_BattleTimid()` 在 battle.c 前直接寫：
+
+- `WORKATTACKPOWER = trunc(FIXSTR * 0.7)`
+- `WORKDEFENCEPOWER = trunc(FIXTOUGH * 0.4)`
+- `WORKQUICK = trunc(FIXDEX * 0.8)`
+
+低忠誠 RANDOMACT 發生於 EntrySort 之後，因此 quick 不能回頭改本回合排序，但 work 值仍保留。
+
+### 2BattleTimid parser quirk
+
+固定原 C 對負號 token 的做法不是「扣掉百分比」，而是直接乘該百分比：
+
+- `-攻%50` → `FIXSTR * 0.50`
+- `-防%40` → `FIXTOUGH * 0.40`
+- `-敏%30` → `FIXDEX * 0.30`
+
+正號 token 才是加回 FIX：
+
+- `+敏%30` → `FIXDEX + FIXDEX * 0.30`
+
+因此目前：
+
+- 636：攻 = FIXSTR 50%，敏 = FIXDEX 130%
+- 824：攻 = FIXSTR 50%，敏 = FIXDEX 150%
+- 兩者都沒有防 token，防禦不改
+
+### BATTLE_S_AttackDamage / DamageReact
+
+兩招都走 isolated `BATTLE_S_AttackDamage`。
+
+原函式會在 AttackSeq 前先讀原始 defindex 的 DamageReact：
+
+- 有 DamageReact → local `skill_type = -1`
+- Timid / 2Timid 的後置 switch 整段被跳過
+- 不 consume timid `rand()%100`
+- 物理 DamageSub / Acupuncture 仍照一般反應流程
+- 不進普通 Counter loop
+
+同步修正既有 Enemy Timid / 2Timid × 玩家 Pet Acupuncture crossover。
+
+### BattleTimid forced exit
+
+只有 local TIMID switch 存活且最終 `damage > 0` 才抽：
+
+`rand()%100`
+
+- damage == 1 仍先 consume RNG，但不能觸發退場
+- `roll < 15 && damage > 1` 才成功
+
+玩家 Pet 的目標是 `CHAR_TYPEENEMY`，所以成功時走原 else：
+
+- `BATTLE_Exit(defindex, battleindex)`
+- 不算正常擊殺 reward
+
+為避免 Web 在 DamageSub 後先鎖定擊殺獎勵，V1.94 新增可選 `deferDeathCredit`：
+
+- 普通攻擊預設行為完全不變
+- Timid 先完成 damage / ItemCrush / timid RNG
+- 若 forced BATTLE_Exit 成功，不建立 kill credit
+- 若沒有 forced exit 而 Enemy HP <= 0，才建立 Pet kill credit
+
+### 2BattleTimid Enemy target
+
+local 2TIMID switch 存活且 `damage > 0` 時：
+
+- 先 consume `rand()%100`
+- 成功條件使用 option 的 `命%60`
+- damage == 1 仍 consume RNG，但不能進效果分支
+
+真正的收寵只在：
+
+`CHAR_WHICHTYPE == CHAR_TYPEPET`
+
+玩家 Pet 攻擊 Enemy 時 defindex 是 `CHAR_TYPEENEMY`，所以即使 roll 通過且 damage > 1：
+
+- 不 BATTLE_PetIn
+- 不讓 Enemy 退場
+- Enemy 若被物理傷害擊殺，照正常 Pet kill credit
+
+### Regression
+
+新增：
+
+`tools/check_v194_player_timid_runtime.mjs`
+
+鎖定：
+
+- 606 / 727 / 636 / 824 runtime rows
+- 70% / 40% / 80% fixed work power
+- 2Timid parser quirk
+- DamageReact suppresses Timid RNG
+- damage==1 still consumes RNG
+- BattleTimid Enemy BATTLE_Exit without kill reward
+- 2Timid Enemy type cannot be recalled
+- isolated no-Counter lifecycle
+- Enemy-side Timid × Acupuncture crossover
+- generic hit helper default reward behavior unchanged
+
+save schema 維持 **29**。
+
+### commits
+
+- `1009929ff67a9468b6e1c69286b54d818b410727` — V1.94 core
+- `d12a9e3d13ab4ee76ec8632c32822b9e5c1e3ef0` — V1.94 regression
+- `48d97e4689ab49fa5cfb50a8ea143936c5b6f4fd` — V1.94 CI
+- `3ff05b5da784788e5a07619c7dc1bb05e249192f` — V1.94 playable-core marker
+
