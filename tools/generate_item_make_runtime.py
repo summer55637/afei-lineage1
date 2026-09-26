@@ -5,7 +5,8 @@ Source of truth:
   gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
   gmsv/data/itemset6.txt
 
-The source file is legacy-encoded. Parsing is byte-safe because the C loader is comma-delimited
+The source file is legacy-encoded. The pinned build has _ITEMSET2_ITEM + _ITEM_INSLAY +
+_SIMPLIFY_ITEMSTRING enabled, so ITEM_ID_TOKEN_INDEX is 17. Parsing is byte-safe because the C loader is comma-delimited
 and every field needed here is ASCII numeric / TRUE-FALSE metadata. Human-readable strings are
 not copied into this runtime.
 """
