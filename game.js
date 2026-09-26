@@ -7112,7 +7112,7 @@ function sourcePerformSetMagicPetBattle(casterLabel,skillId,rawToNo,meta,logClas
   }
 
   for(const slot of multi.slots){
-    const desc=sourceSetMagicPetTargetableDescFromBattleSlot(slot);
+    const desc=sourceSetMagicPetTargetableDescFromSlot(slot);
     if(!desc)continue;
     const busy=sourceMagicPetBusy(desc);
     const applied=!busy&&sourceMagicPetApply(desc,stat,turns,power);
