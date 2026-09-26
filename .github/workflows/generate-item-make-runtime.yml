@@ -12,6 +12,7 @@ on:
       - "tools/check_v177_petid_roar_vary_runtime.mjs"
       - "tools/check_v178_player_status_runtime.mjs"
       - "tools/check_v179_player_drain_runtime.mjs"
+      - "tools/check_v180_player_mpdamage_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -62,6 +63,9 @@ jobs:
 
       - name: Run V1.79 player drain PetSkill regressions
         run: node tools/check_v179_player_drain_runtime.mjs
+
+      - name: Run V1.80 player MP damage regressions
+        run: node tools/check_v180_player_mpdamage_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
