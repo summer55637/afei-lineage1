@@ -4900,7 +4900,7 @@ function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,baseOptions);
     if(hit){
       sourceBattleFinalizeItemCrushRng(hit.r);
-    sourceProcessPlayerBattleDeathOnce();
+      sourceProcessPlayerBattleDeathOnce();
       hits.push(Object.assign({battleSlot:slot},hit));
     }
     if(n(unit.hp)<=0)break;
@@ -10044,9 +10044,10 @@ function sourcePerformCombo(order,index,options={}){
       target,accumulatedDamage,lastComboResult,
       hits.map(x=>({kind:x.kind,petId:x.petId||null}))
     );
-    sourceProcessPlayerBattleDeathOnce();
     if(deferredWake?.damage>0)battleStatusWakeOnDamage(deferredWake.desc,deferredWake.damage);
     sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
+    // fixed BATTLE_Combo returns to the caller, then BATTLE_AddProfit processes the new death.
+    sourceProcessPlayerBattleDeathOnce();
   }
 
   const actual=immediateDamage+accumulatedActual;
