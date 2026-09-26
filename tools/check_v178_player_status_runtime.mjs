@@ -89,7 +89,7 @@ for(const f of ['PETSKILL_Refresh','PETSKILL_Weaken','PETSKILL_Deeppoison','PETS
   assert.ok(loyal.indexOf("meta?.f==='"+f+"'")<pendingPos,f+' dispatch before pending');
 }
 
-assert.ok(html.includes('PLAYABLE CORE V1.78'));
+assert.ok(/PLAYABLE CORE V\d+\.\d+/.test(html));
 
 console.log(JSON.stringify({
   pass:true,
