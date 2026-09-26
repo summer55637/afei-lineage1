@@ -2831,3 +2831,99 @@ save schema 維持 **29**。
 - `30617cb11dc2f87993f08df8cb07db0ea2a45a65` — strengthened V2.02 regression
 - `adc71e03f3646454872fefafab7994a9eee9b24c` — V2.02 README
 
+---
+
+## V2.03 Player field=0/1 PetSkill coverage closure
+
+V2.02 完成 Combined 後，重新以固定 `stoneage_petskill_runtime.json` 做完整 coverage audit，而不是只繼續憑 function 名逐個找。
+
+固定條件：
+
+- `FIELD ∈ {0,1}`
+- `ILLEGAL = 0`
+
+共得到：
+
+- **233 筆 row**
+- **61 種 function string**
+
+### Dispatcher closure
+
+把 61 種 function 與 `sourcePerformPetLoyalAction()` 的玩家 RANDOMACT dispatcher 做 exact-name 比對後，沒有發現新的可執行漏接技能。
+
+唯一沒有玩家 handler 的 function：
+
+- `PETSKILL_SelfExplodeAttack` → 582 自爆攻擊
+- `PETSKILL_Awaken` → 642 覺醒
+- `PETSKILL_Temptation` → 643 蠱惑
+
+這三筆不是待實作效果，而是 V1.76 已追到的 fixed source boundary。
+
+固定 `PETSKILL_functbl[]` 沒有這三個 exact function name；`PETSKILL_Use()`：
+
+1. 先依技能 ID 找 petskill array
+2. 再呼叫 `PETSKILL_getPetskillFuncPointer(FUNCNAME)`
+3. 找不到回傳 NULL
+4. `func == NULL` 時直接 `ret = FALSE`
+
+所以玩家低忠誠 RANDOMACT 抽到 582／642／643 時，正確行為就是 NoAction，不可以依技能名稱自行補自爆／覺醒／蠱惑效果。
+
+### RNG boundary
+
+`BATTLE_PetRandomSkill()` 在進 `PETSKILL_Use()` 之前已先呼叫 `BATTLE_DefaultAttacker()`。
+
+因此即使最後 function pointer 缺失：
+
+- 前面的 target RNG 已經消耗
+- 之後才 PETSKILL_Use FALSE
+- Web 必須保留這顆 RNG，不能因為結果 NoAction 就提前省略
+
+既有 `sourcePetRandomSkillPlan()` 已保持這個順序。
+
+### Defensive pending branches
+
+部分已接 handler 仍保留 defensive `sourceRuntimePending`，例如 source option 未來若出現未知 token 時不猜。
+
+V2.03 另外驗證現有 pinned data：
+
+- BattleProperty option = `PET_PetskillPropertyEvent`
+- 4 筆 MagicStatusChange 均是鐵壁格式
+- 5 筆 Refresh token 均可解析
+- Weaken / Deeppoison / Barrier / Nocast 均有 turn + 成功率
+- 12 筆 StatusChange 均有可解析 status + turn
+
+因此這些 pending boundary 對**目前 fixed rows 不可達**。
+
+### Result
+
+截至 V2.03：
+
+**現有固定 field=0/1 合法玩家 PetSkill 已全部 source-backed 或 source-proven NoAction。**
+
+下一個真正尚未處理的 PetSkill field 是 field=2：
+
+- 200 加工 / PETSKILL_Merge
+- 201 料理 / PETSKILL_Merge
+- 540 修復 / PETSKILL_Fixitem
+- 572 鑲寶石 / PETSKILL_Inslay
+
+### Regression
+
+新增：
+
+`tools/check_v203_player_field01_coverage.mjs`
+
+CI run #167：
+
+- V1.72～V2.03 全部 success
+- game.js syntax success
+- generated runtime success
+
+save schema 維持 **29**。
+
+### commits
+
+- `b486579fdf39d375dac1b68d45f998cbde5f744f` — field0/1 closure regression
+- `93c7d3b4f832a45badc63e987b8b7e58db6a2752` — CI wiring
+- `a85894dc42ac7590bd867b51d0f0d983c233ae5c` — corrected fixed unique-function count
+
