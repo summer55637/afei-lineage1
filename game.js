@@ -6363,44 +6363,93 @@ function performEnemySteal(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   const label=meta?.n||'偷竊';
   if(!chosen){
-    addLog(unit.name+' 使用 '+label+'，但沒有可偷竊的目標。');
+    addLog(unit.name+' 使用 '+label+'，但 BATTLE_TargetAdjust 找不到有效目標。');
     return {kind:'skill',skillId:actor.skillId,success:false,noTarget:true};
   }
 
-  // 原 BATTLE_Steal：只有 CHAR_TYPEPLAYER 的目標 per=50；
-  // 寵物／Enemy 目標 per=0，而且判定是嚴格 RAND(1,100) < per。
-  if(chosen.kind!=='player'){
-    addLog(unit.name+' 對 '+(chosen.pet?.name||'寵物')+' 使用 '+label+'，但原版只允許從玩家身上偷竊。');
-    return {kind:'skill',skillId:actor.skillId,success:false,invalidTarget:true};
-  }
-  if(cRand(1,100)>=50){
-    addLog(unit.name+' 使用 '+label+'，但沒有偷到任何東西。');
-    return {kind:'skill',skillId:actor.skillId,success:false};
+  const targetType=chosen.kind==='player'?'CHAR_TYPEPLAYER'
+    :(chosen.kind==='pet'?'CHAR_TYPEPET':'CHAR_TYPEENEMY');
+  const per=chosen.kind==='player'?50:0;
+
+  // Fixed BATTLE_Steal consumes this roll even when per==0.
+  const successRoll=cRand(1,100);
+  if(!(successRoll<per)){
+    addLog(
+      unit.name+' 使用 '+label+'，沒有偷到任何東西（RAND(1,100)='+
+      successRoll+'，成功率 '+per+'）。'
+    );
+    return {
+      kind:'skill',skillId:actor.skillId,success:false,per,successRoll,targetType,
+      sourceNoSecondRoll:true,attackerExited:false
+    };
   }
 
-  // 成功後再用嚴格 RAND(1,100) < 50 決定石幣或背包道具。
-  if(cRand(1,100)<50){
-    const amount=Math.trunc(Math.max(0,n(state.gold))*cRand(8,12)*.01);
+  // Only a successful first roll consumes the mode roll.
+  const modeRoll=cRand(1,100);
+  if(modeRoll<50){
+    const percentRoll=cRand(8,12);
+    const amount=Math.trunc(Math.max(0,n(state.gold))*percentRoll*.01);
     if(amount<=0){
       addLog(unit.name+' 想偷石幣，但你身上沒有可被偷走的石幣。');
-      return {kind:'skill',skillId:actor.skillId,success:false,mode:'gold'};
+      return {
+        kind:'skill',skillId:actor.skillId,success:false,mode:'gold',per,successRoll,
+        modeRoll,percentRoll,amount:0,targetType,attackerExited:false
+      };
     }
+
     state.gold=Math.max(0,Math.trunc(n(state.gold))-amount);
-    addLog(unit.name+' 從你身上偷走 '+amount+' 石幣。','bad');
-    return {kind:'skill',skillId:actor.skillId,success:true,mode:'gold',amount};
+    addLog(unit.name+' 從你身上偷走 '+amount+' 石幣，隨後依原 C 離開戰鬥。','bad');
+    const exit=finishEnemyDirectExit(unit,label+'成功後離場');
+    return Object.assign({
+      kind:'skill',skillId:actor.skillId,success:true,mode:'gold',amount,
+      per,successRoll,modeRoll,percentRoll,targetType,attackerExited:true
+    },exit);
   }
 
-  const keys=battleStealableInventoryKeys();
-  if(!keys.length){
-    addLog(unit.name+' 想偷道具，但你的背包沒有可偷取的道具。');
-    return {kind:'skill',skillId:actor.skillId,success:false,mode:'item'};
+  // Fixed source scans CHAR_STARTITEMARRAY..CHAR_MAXITEMHAVE-1 only: backpack ItemBox,
+  // not equipment and not aggregate-only legacy inventory.
+  const slots=sourcePlayerItemSlots(state);
+  const candidates=[];
+  for(let slotIndex=PLAYER_BACKPACK_START;slotIndex<PLAYER_ITEM_SLOT_COUNT;slotIndex++){
+    const itemIndex=Math.trunc(Number(slots[slotIndex]));
+    if(!Number.isFinite(itemIndex))continue;
+    const existing=sourceItemRuntimeSlot(itemIndex);
+    if(!existing||existing.owner!=='player')continue;
+    candidates.push({slotIndex,itemIndex,itemId:Math.trunc(Number(existing.itemId))});
   }
-  const key=keys[cRand(0,keys.length-1)];
-  const itemName=battleInventoryItemLabel(key);
-  consumeItem(key,1);
-  // 原 Enemy 使用 BATTLE_Steal 時不會把物品放進 Enemy 背包；被偷的物品直接從玩家持有物移除。
-  addLog(unit.name+' 從你的背包偷走 '+itemName+'。','bad');
-  return {kind:'skill',skillId:actor.skillId,success:true,mode:'item',itemId:Number(key)};
+
+  if(!candidates.length){
+    addLog(unit.name+' 想偷道具，但你的 15 格 existing-item 背包沒有可偷取物。');
+    return {
+      kind:'skill',skillId:actor.skillId,success:false,mode:'item',
+      per,successRoll,modeRoll,targetType,itemCandidates:0,attackerExited:false
+    };
+  }
+
+  const itemRoll=cRand(0,candidates.length-1);
+  const picked=candidates[itemRoll];
+  const itemName=Number.isFinite(picked.itemId)
+    ?battleInventoryItemLabel(String(picked.itemId))
+    :('existing item '+picked.itemIndex);
+
+  // CHAR_setItemIndex(slot,-1) + ITEM_endExistItemsOne(existing).
+  slots[picked.slotIndex]=null;
+  if(Number.isFinite(picked.itemId)&&n(state.inventory?.[String(picked.itemId)])>0){
+    state.inventory[String(picked.itemId)]=Math.max(
+      0,Math.trunc(n(state.inventory[String(picked.itemId)]))-1
+    );
+    if(state.inventory[String(picked.itemId)]<=0)delete state.inventory[String(picked.itemId)];
+  }
+  sourceItemRuntimeFree(picked.itemIndex);
+
+  addLog(unit.name+' 從你的背包偷走 '+itemName+'，隨後依原 C 離開戰鬥。','bad');
+  const exit=finishEnemyDirectExit(unit,label+'成功後離場');
+  return Object.assign({
+    kind:'skill',skillId:actor.skillId,success:true,mode:'item',
+    per,successRoll,modeRoll,itemRoll,itemCandidates:candidates.length,
+    itemIndex:picked.itemIndex,itemId:picked.itemId,playerSlotIndex:picked.slotIndex,
+    targetType,attackerExited:true,sourceExistingItemDestroyed:true
+  },exit);
 }
 function enemyBattleModelSpec(meta){
   const p=String(meta?.o||'').split('|');
@@ -10966,6 +11015,41 @@ const SOURCE_VARY_WOLF_PETIDS=new Set([981,982,983,984]);
 function sourcePetRoarPetIds(meta){
   return String(meta?.o||'').split('|').map(sourceCAtoi).filter(v=>Number.isFinite(v));
 }
+function sourcePerformPetStealSkill(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  const meta=action?.meta;
+  const label=meta?.n||'偷竊';
+
+  // battle.c performs BATTLE_TargetAdjust before entering BATTLE_Steal().
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  // Fixed BATTLE_Steal:
+  //   CHAR_TYPEPLAYER => per=50
+  //   every other target type (PET / ENEMY) => per=0
+  // The success RAND is nevertheless called unconditionally.
+  const per=0;
+  const roll=cRand(1,100);
+  const success=roll<per; // structurally impossible, but preserve the strict source comparison.
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」對 '+target.name+
+    '；Enemy 目標的原 C 成功率固定 0，但仍消耗 RAND(1,100)='+roll+
+    '，因此不進石幣／道具第二階段，Pet 也不離場。','pet'
+  );
+
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    sourceTargetType:'CHAR_TYPEENEMY',per,roll,success,
+    sourceFirstRollConsumed:true,sourceNoSecondRoll:true,
+    sourceNoGoldMutation:true,sourceNoItemMutation:true,
+    sourceAttackerStays:true,sourceNoDamage:true,sourceNoCounter:true
+  };
+}
+
 function sourcePerformPetAbductSkill(pet,action){
   if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
   const meta=action?.meta;
@@ -11899,6 +11983,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Steal')result=sourcePerformPetStealSkill(pet,action);
     else if(meta?.f==='PETSKILL_Abduct')result=sourcePerformPetAbductSkill(pet,action);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
     else if(meta?.f==='PETSKILL_BattleTimid')result=sourcePerformPetBattleTimidSkill(pet,action);
