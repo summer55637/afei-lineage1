@@ -14305,3 +14305,58 @@ V1.54 繼續以 outer `sourcePostTarget` + last primary `r.allGuard` 表示這�
 - final sourcePostTarget is used for both post effects
 - existing V1.49 MISS/DODGE/ALLGUARD/ARRANGE gates unchanged
 - schema 27 unchanged
+
+
+## V1.55 GuardianAttack / ATTCRAZED / GYRATE common direct-attack sweep
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### GuardianAttack
+- `PETSKILL_Guardian`（skill 20）先登記 Guardian，再進 common direct-attack。
+- 第一個 `BATTLE_Attack` 前 WORKBATTLECOM1 會改回 `BATTLE_COM_ATTACK`。
+- 近戰／技能 BOOMERANG 改走 primed AttackNum + 每段 raw COM2 TargetAdjust。
+- BOW／BOUNDTHROW／BREAKTHROW 沿用既有 weapon loop。
+- 因工作 command 已變 ATTACK，GuardianAttack 可正常進 Counter／反 Counter。
+
+### ATTCRAZED / 狂亂暴走
+- skill 613：攻 = FIXSTR × 0.8；防 = FIXTOUGH × 0.7；option 3 覆寫 attack_max=3。
+- 更早的 `BATTLE_GetAttackCount` 仍先執行並消耗武器 AttackNum RNG。
+- `BATTLE_TargetListSet` 在第一擊前先抽好全部 3 個亂數 pList 目標。
+- 原碼 `i < deftop`，所以 slot 9 / 19 被排除。
+- 非 BOW 第一擊仍走 raw COM2 + TargetAdjust，預抽 pList[0] 只消耗 RNG、不實際使用。
+- 第二、三擊使用 pList[1] / pList[2]；若當下失效，再跑 TargetAdjust / DefaultAttacker。
+- BOW 使用預抽 pList，且專用分支提前 return，不再消耗一般 Bow RAND(0,1)。
+- BREAKTHROW 仍保留每段麻痺 lifecycle；完整多段後才進 common Counter。
+- 若是真實 ITEM_FIST 且原 AttackNum 有效，ATTCRAZED 不重設 gDamageDiv，因此保留 primed FIST AttackNum 作為傷害除數。
+
+### GYRATE / 回旋攻擊
+- skill 619：WORKATTACKPOWER = FIXSTR × 0.5。
+- raw COM2 只決定四個 5-slot row，不做 TargetAdjust。
+- 先快照該 row 的 TargetCheck-valid 成員，再依 slot 順序逐一 BATTLE_Attack。
+- 專用 case 直接 break，不進 common Counter。
+- primed attack_max 不決定 GYRATE 的攻擊次數，但 BATTLE_GetAttackCount 仍已先消耗。
+- 若武器是 BOW，普通 BATTLE_TargetListSet 仍先消耗 Bow RAND(0,1)，產生的 aBowW 隨後完全不用。
+- 若是真實 ITEM_FIST 且 AttackNum 有效，前置 gDamageDiv=primed AttackNum 仍影響每個 GYRATE BATTLE_Attack。
+
+### WildViolent re-audit
+- primed BATTLE_GetAttackCount 先消耗，之後 RAND(3,10) 覆寫 attack_max 與 gDamageDiv。
+- BOW 仍走 aBowW；BOUND/BREAKTHROW 走完整 common weapon loop。
+- V1.55 修正非 BOW：每一段都重新從原 raw COM2 執行 TargetAdjust。
+- 因此 raw COM2 已失效時，每段都會重新消耗 DefaultAttacker RNG，不再錯誤沿用上一段 fallback 目標。
+- 完整多段後才進 Counter。
+
+### V1.55 regression targets
+- parent fixed at V1.54 / `399f2660ce4cd93b57106fe1431b1dba832d5098`
+- game.js syntax PASS
+- GuardianAttack non-ranged reuses primed AttackNum
+- GuardianAttack Counter eligibility restored after COM1 becomes ATTACK
+- ATTCRAZED consumes all target-list RNG before first hit
+- ATTCRAZED non-BOW first hit ignores random pList[0]
+- ATTCRAZED Bow does not consume ordinary bow-order RNG
+- ATTCRAZED preserves primed FIST gDamageDiv
+- GYRATE attacks raw-COM2 row without TargetAdjust
+- GYRATE consumes discarded Bow target-list RNG when appropriate
+- GYRATE preserves primed FIST gDamageDiv
+- GYRATE never enters common Counter
+- WildViolent reruns raw-COM2 TargetAdjust on every non-BOW segment
+- save schema 27 unchanged
