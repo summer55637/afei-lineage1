@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2326,7 +2326,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -7517,9 +7517,84 @@ function sourceProcessBattleDeathsAtAddProfit(){
   const pets=sourceProcessPendingPetBattleDeaths();
   return {player,pets,playerUltimatePetExit:false};
 }
-function sourceProcessBattleDeathsBetweenActors(){
-  // Every completed actor reaches the unconditional outer BATTLE_AddProfit.
-  return sourceProcessBattleDeathsAtAddProfit();
+function sourcePlayerEquippedRelifeItems(){
+  // Current Web runtime still has no source-backed Player equipment-slot importer.
+  // CHECK_ITEM_RELIFE is therefore wired to an empty production adapter instead of
+  // inventing an item ID / equip slot / HP argument. Unit regressions can pass the
+  // exact five-slot descriptors directly to sourceProcessBattleActorOuterBoundary().
+  return [];
+}
+function sourceCAtoi(value){
+  // C atoi(): leading whitespace/sign are accepted; parsing stops at the first non-digit.
+  const match=String(value??'').match(/^\s*([+-]?\d+)/);
+  return match?Math.trunc(Number(match[1])):0;
+}
+function sourceRelifeHpPower(item){
+  // ITEM_DIErelife: missing HP= argument -> 1; literal FULL -> WORKMAXHP; otherwise atoi().
+  if(!item||item.hpArgument==null)return 1;
+  const raw=String(item.hpArgument);
+  if(raw==='FULL')return Math.trunc(n(state?.maxHp));
+  return sourceCAtoi(raw);
+}
+function sourceConsumeRelifeEquipment(item,slots,slotIndex){
+  const runtimeIndex=Number(item?.itemIndex);
+  if(Number.isFinite(runtimeIndex))sourceItemRuntimeFree(Math.trunc(runtimeIndex));
+  if(Array.isArray(slots)&&slotIndex>=0&&slotIndex<slots.length)slots[slotIndex]=null;
+}
+function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePlayerEquippedRelifeItems()){
+  // fixed CHECK_ITEM_RELIFE is reached only after a completed Entry command and before
+  // that Entry's unconditional outer BATTLE_AddProfit. The fixed build has _DUMMYDIE off.
+  if(!enemy||n(state?.hp)>0||!battlePlayerDeathProcessed)return null;
+
+  // BATTLE_getBattleDieIndex() returns -1 for BENT_FLG_ULTIMATE, so a blown-away Player
+  // is never offered to CHECK_ITEM_RELIFE even before BATTLE_Exit removes the Entry.
+  if(battlePlayerDeathResult?.ultimate)return null;
+
+  const slots=Array.isArray(equipmentSlots)?equipmentSlots:[];
+  for(let i=0;i<5;i++){
+    const item=slots[i];
+    if(!item)continue;
+    // CHECK_ITEM_RELIFE scans CHAR item slots 0..4, requires ITEM_getEquipPlace()!=-1,
+    // then uses the first item whose ITEM_DIERELIFEFUNC pointer is non-null.
+    if(item.equipPlace===-1||item.equipped===false||item.dieRelifeFunc!==true)continue;
+
+    const requested=sourceRelifeHpPower(item);
+    const workHp=Math.max(1,Math.trunc(n(requested)));
+    const maxHp=Math.trunc(n(state?.maxHp));
+    state.hp=Math.min(workHp,maxHp);
+
+    // BATTLE_MultiReLife clears CHAR_ISDIE. Our battlePlayerDeathProcessed flag is the
+    // current Web equivalent, so clear it or a later second death could never be processed.
+    battlePlayerDeathProcessed=false;
+    battlePlayerDeathResult=null;
+
+    // ITEM_DIErelife consumes the equipped existing item immediately after MultiReLife.
+    sourceConsumeRelifeEquipment(item,slots,i);
+    const label=item.name||(
+      Number.isFinite(Number(item.itemId))?('Item '+Math.trunc(Number(item.itemId))):'死亡復活裝備'
+    );
+    addLog(label+' 發動死亡復活：HP 回復至 '+state.hp+'，裝備已消耗。','good');
+    return {slot:i,itemId:item.itemId??null,itemIndex:item.itemIndex??null,requested,restoredHp:state.hp};
+  }
+  return null;
+}
+function sourceMarkBattleActorOuterAddProfit(){
+  // A dead / C_WAIT / combo-consumed Entry is continued before this mark, exactly like
+  // fixed BATTLE_Battling; only an Entry that reaches StatusSeq/command processing
+  // earns the generic CHECK_ITEM_RELIFE -> outer BATTLE_AddProfit boundary.
+  battleOuterAddProfitPending=true;
+}
+function sourceProcessBattleActorOuterBoundary(equipmentSlots=sourcePlayerEquippedRelifeItems()){
+  if(!battleOuterAddProfitPending)return null;
+  battleOuterAddProfitPending=false;
+
+  // Critical ordering from fixed battle.c:
+  // completed command -> CHECK_ITEM_RELIFE -> BATTLESTR_ADD(bad status) -> BATTLE_AddProfit.
+  // Inner per-hit AddProfit calls stay separate; they can set CHAR_ISDIE first, allowing
+  // this same actor's end-of-command scan to revive the Player before the next Entry.
+  const relife=sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots);
+  const deaths=sourceProcessBattleDeathsAtAddProfit();
+  return {relife,deaths};
 }
 
 function petFixedAi(pet){
@@ -9526,13 +9601,14 @@ function captureTurn(manual=false){
   const order=normalBattleOrder({playerCommand:'capture'});
   let captured=false;
   for(const actor of order){
-    sourceProcessBattleDeathsBetweenActors();
+    sourceProcessBattleActorOuterBoundary();
     if(!enemy)return captured;
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
+    sourceMarkBattleActorOuterAddProfit();
     const statusTurn=processBattleStatusTurn(actor);
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
@@ -9560,14 +9636,14 @@ function captureTurn(manual=false){
       const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
       if(petPre.handled){
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
     }else{
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
       if(sourceSurpriseSkipAction(actor))continue;
@@ -9641,11 +9717,11 @@ function captureTurn(manual=false){
       performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
     }
 
-    sourceProcessBattleDeathsBetweenActors();
+    sourceProcessBattleActorOuterBoundary();
     if(enemy)syncEnemyTarget();
   }
 
-  sourceProcessBattleDeathsBetweenActors();
+  sourceProcessBattleActorOuterBoundary();
   if(!enemy){return captured;}
   if(state.hp<=0){defeat();return captured;}
   if(!livingEnemyUnits().length){winBattle();return captured;}
@@ -10301,13 +10377,14 @@ function attackTurn(){
   const order=normalBattleOrder({playerCommand:'attack'});
 
   for(const actor of order){
-    sourceProcessBattleDeathsBetweenActors();
+    sourceProcessBattleActorOuterBoundary();
     if(!enemy)return;
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
+    sourceMarkBattleActorOuterAddProfit();
     const statusTurn=processBattleStatusTurn(actor);
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
@@ -10335,14 +10412,14 @@ function attackTurn(){
       const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
       if(petPre.handled){
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
     }else{
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
       if(sourceSurpriseSkipAction(actor))continue;
@@ -10351,7 +10428,7 @@ function attackTurn(){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
       if(combo){
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
     }
@@ -10381,11 +10458,11 @@ function attackTurn(){
       performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
     }
 
-    sourceProcessBattleDeathsBetweenActors();
+    sourceProcessBattleActorOuterBoundary();
     if(enemy)syncEnemyTarget();
   }
 
-  sourceProcessBattleDeathsBetweenActors();
+  sourceProcessBattleActorOuterBoundary();
   if(!enemy){return;}
   if(state.hp<=0){defeat();return;}
   if(!livingEnemyUnits().length){winBattle();return;}
@@ -10399,13 +10476,14 @@ function guardTurn(){
   // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；
   // 所以即使敵人的排序在玩家之前，防禦減傷也已生效。
   for(const actor of order){
-    sourceProcessBattleDeathsBetweenActors();
+    sourceProcessBattleActorOuterBoundary();
     if(!enemy)return;
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
+    sourceMarkBattleActorOuterAddProfit();
     const statusTurn=processBattleStatusTurn(actor);
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
@@ -10433,14 +10511,14 @@ function guardTurn(){
       const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
       if(petPre.handled){
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
     }else{
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
       if(sourceSurpriseSkipAction(actor))continue;
@@ -10449,7 +10527,7 @@ function guardTurn(){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:true});
       if(combo){
         if(enemy)syncEnemyTarget();
-        sourceProcessBattleDeathsBetweenActors();
+        sourceProcessBattleActorOuterBoundary();
         continue;
       }
     }
@@ -10475,11 +10553,11 @@ function guardTurn(){
       performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
     }
 
-    sourceProcessBattleDeathsBetweenActors();
+    sourceProcessBattleActorOuterBoundary();
     if(enemy)syncEnemyTarget();
   }
 
-  sourceProcessBattleDeathsBetweenActors();
+  sourceProcessBattleActorOuterBoundary();
   if(!enemy){return;}
   if(state.hp<=0){defeat();return;}
   if(!livingEnemyUnits().length){winBattle();return;}
