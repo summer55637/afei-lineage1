@@ -31,7 +31,7 @@ const guardianStart=game.indexOf('function sourcePetAttackDamageCalcOnlyGuardian
 assert.ok(guardianStart>=0&&drain1Start>guardianStart&&drain2Start>drain1Start);
 
 const drain1=game.slice(drain1Start,drain2Start);
-const drain2=game.slice(drain2Start,game.indexOf('function sourcePerformPetGuardianSkill',drain2Start));
+const drain2=game.slice(drain2Start,game.indexOf('function sourcePerformPetMpDamageSkill',drain2Start));
 const guardian=game.slice(guardianStart,game.indexOf('function sourcePetOriginalDamageReact',guardianStart));
 
 assert.ok(drain1.includes('const cIntegerDivision=Math.trunc(attackReduceRaw/100)'));
