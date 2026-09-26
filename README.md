@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.00**
+**PLAYABLE CORE V2.01**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,30 +16,32 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V2.00 最新進度
+## V2.01 最新進度
 
-V1.97～V2.00 持續接入玩家寵低忠誠 `RANDOMACT`：
+V2.01 接入玩家寵低忠誠 `RANDOMACT` 的 **28 筆 `PETSKILL_BattleModel`**：
 
-- 140 `PETSKILL_Steal`（偷竊）
-- 211 `PETSKILL_StealMoney`（捐獻）
-- 613 `PETSKILL_AttackCrazed`（狂亂暴走）
-- 614／647 `PETSKILL_AttackShoot`（栗子連激／栗子連激改）
+- 590、638、641、649、650、654、655、664、668、669
+- 689～692、717
+- 812～823
+- 829
 
-### V2.00 AttackShoot
+### V2.01 BattleModel
 
-- 614 option `3|5`：原 C 先 `RAND(3,5)` 決定 3～5 發
-- 647 option `6|8`：原 C 先 `RAND(6,8)` 決定 6～8 發
-- 玩家低忠誠 `RANDOMACT` 只會在 FIXAI 20～39 出現，因此原函式的 `loyal>=100` 額外爆發 RNG 在此路徑完全不可達
-- 發數 RNG 後，`BATTLE_TargetListSet` 會在第一擊前一次預抽全部目標
-- 延續原碼 `i < deftop` 邊界：Enemy battleSlot 9（source slot 19）不進預抽池
-- non-BOW 第一擊仍使用原 COM2；第一顆預抽目標 RNG 雖已消耗，但其值不使用
-- `BATTLE_COM_S_ATTSHOOT` 設 `gDamageDiv=attack_max`，每擊傷害依總發數分攤
-- 每次正傷害的來源順序固定為：DamageWakeUp → `RAND(1,5)` 睡眠 → ItemCrush → AddProfit
-- 睡眠判定是 `RAND(1,5) > 4`，成功直接寫 3 回合 sleep，不走一般 StatusAttackCheck
-- 原 `BATTLE_CounterCheck/BATTLE_Counter` 只要任一方仍是 ATTSHOOT 就直接 FALSE，因此此技能沒有 Counter RNG
-- 新增 `tools/check_v200_player_attackshoot_runtime.mjs` 並接入 CI
+- 28 筆 fixed runtime 都是 `type=5`；原 C 位元意義為 `0x01` cover-all + `0x04` physical
+- `PETSKILL_BattleModel()` 會覆寫 COM2 low/high 為 type／object count，低忠誠 RANDOMACT 原先抽到的 `toNo` 不再參與真正攻擊目標
+- Enemy side 先經 `BATTLE_MultiList(TARGET_SIDE_1)` + `SortLoc`，固定順序為 source slot `13,11,10,12,14,18,16,15,17,19`
+- Web 對應 `battleSlot [3,1,0,2,4,8,6,5,7,9]`
+- object count 小於存活目標數且 type bit 1 開啟時，會繼續覆蓋剩餘敵人；object count 大於等於目標數時，多出的分身才在**執行當下**逐顆 `RAND(0,i0-1)`
+- 額外分身抽中已被前面分身打倒的原始目標時，原 `BATTLE_TargetCheck` 直接跳過，不另找新目標
+- option 第 6 欄能力修正保留原 parser bug：攻／防／敏三種 token 都以當下 `WORKATTACKPOWER` 作計算基底；目前 28 筆實際都只有攻擊修正
+- physical bit 4 使用真正 Guardian substitution；後續 ItemCrush／狀態都作用在實際代擋者
+- BattleModel 特例：實際目標**存活時**即使 MISS／DODGE／0 傷仍會 consume ItemCrush RNG；致死則不做 ItemCrush
+- 狀態在 ItemCrush 之後檢定，使用 `EffectHit + level差×1`、range 30，並直接存 `iTurn`，不套 common StatusChange 的 +1
+- 已接 `麻／眠／石／障／劇／虛／羅`；其中 `羅` 為天羅地網，下一次行動依原 `BATTLE_CanMoveCheck` 禁止行動
+- BattleModel command 不進普通 Counter，也沒有 per-object `BATTLE_AddProfit`
+- 新增 `tools/check_v201_player_battlemodel_runtime.mjs` 並接入 CI；V1.72～V2.01 完整 regression 已全綠
 
-V1.99 的 613 AttackCrazed 與 workflow 字面 `\\n` 修復全部保留。
+V1.99 AttackCrazed、V2.00 AttackShoot 與 CI 換行修正全部保留。
 
 save schema 維持 **29**。
 
