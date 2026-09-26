@@ -16120,7 +16120,7 @@ async function sourceUseField2PetSkill(skillId){
       addLog((id===200?'加工':'料理')+' 的固定材料數值前置無法完成：'+String(prepared?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
       return Object.assign({ok:false,mergeStaticPrepared:false,sourceNoRngConsumed:true},prepared||{reason:'merge-prepare'});
     }
-    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 的固定前置計畫（'+prepared.atoms.length+' 種素材，預計 atom RNG '+prepared.plannedAtomRandCalls+' 次）；目前未實際擲 RNG。成品候選與完整 lifecycle 尚未來源化，維持不猜結果。','bad');
+    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 的固定前置計畫（'+prepared.atoms.length+' 種素材，預計 atom RNG '+prepared.plannedAtomRandCalls+' 次）；目前未實際擲 RNG。ITEM_mergeItem_merge 的完整 merge table/runtime、成品候選與後續 lifecycle 尚未來源化，維持不猜結果。','bad');
     return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,mergeStaticPrepared:true,petFixEntries:petFixEntries.length,prepared};
   }
 
