@@ -24,7 +24,7 @@ for(const [id,o] of [[609,'ABSROB'],[610,'REFLEC'],[611,'VANISH']]){
 }
 
 const start=game.indexOf('function sourcePerformPetLighttakeedSkill');
-const end=game.indexOf('function sourcePerformPetGuardianSkill',start);
+const end=game.indexOf('function sourcePerformPetSetDuckRandomSkill',start);
 assert.ok(start>=0&&end>start);
 const body=game.slice(start,end);
 
