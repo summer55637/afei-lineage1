@@ -9573,6 +9573,70 @@ function sourcePerformPetMdfyAttackSkill(pet,action){
   };
 }
 
+function sourcePerformPetLighttakeedSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'採光術')+'」，但沒有可作用的敵方目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_Lighttakeed writes WORK values from this round's FIX snapshot:
+  //   WORKATTACKPOWER = FIXSTR * 0.7
+  //   WORKDEFENCEPOWER = FIXTOUGH * 0.5
+  // The WORKQUICK *0.95 line is commented out.
+  // battlePetPowerMods is cleared at the next normalBattleOrder compliance boundary,
+  // so it has the same one-round WORK lifetime and also remains visible to same-round Counter.
+  const attack=Math.trunc(n(base.attack)*.7);
+  const defense=Math.trunc(n(base.defense)*.5);
+  battlePetPowerMods.set(pet.id,{attack,defense,skillId:action?.skillId,sourceLighttakeed:true});
+
+  const option=String(meta?.o||'').trim().toUpperCase();
+  const requestedReact=option==='VANISH'?'vanish':(option==='ABSROB'?'absorb':(option==='REFLEC'?'reflect':null));
+  if(!requestedReact){
+    // Current fixed rows are all valid; retain PETSKILL_Use FALSE semantics for malformed data.
+    battlePetPowerMods.delete(pet.id);
+    addLog(pet.name+' 抽到「'+(meta?.n||'採光術')+'」，但來源 option 不是 VANISH / ABSROB / REFLEC；不猜。','pet');
+    return {handled:true,skillId:action?.skillId,sourceUseFailed:true};
+  }
+
+  // Current source-backed Enemy DamageReact can be ACUPUNCTURE. It is a positive ReactType,
+  // but never one of Lighttakeed's three requested types. fixed BATTLE_S_AttackDamage then
+  // changes only its local skill_type to -1; the 70% / 50% WORK values written above remain.
+  // No source-backed Enemy WORKDAMAGEVANISH / ABSROB / REFLEC exists yet, so copying one of
+  // those counters into the Pet is not reachable and is intentionally not fabricated.
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const matchedReact=false;
+  const absorbed=false;
+
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    attackerOverride:{attack,defense}
+  });
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+
+  addLog(
+    pet.name+' 使用「'+(meta?.n||'採光術')+'」：本輪 WORK攻/防改為 70%/50%'
+    +(hadDamageReact?'；原目標只有不相符的 DamageReact，依原 C 降成普通反應，不吸收狀態。':'；目標沒有可吸收的 '+option+'。'),
+    'pet'
+  );
+
+  // BATTLE_COM_S_LIGHTTAKE is an isolated BATTLE_S_AttackDamage case; no normal Counter.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,
+    attack,defense,attackPct:70,defensePct:50,
+    requestedReact,hadDamageReact,matchedReact,absorbed,
+    guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10141,6 +10205,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_MpDamage')result=sourcePerformPetMpDamageSkill(pet,action);
     else if(meta?.f==='PETSKILL_Modifyattack')result=sourcePerformPetModifyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Mdfyattack')result=sourcePerformPetMdfyAttackSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Lighttakeed')result=sourcePerformPetLighttakeedSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
