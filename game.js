@@ -8,6 +8,7 @@ const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
 const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.json';
 const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
 const ITEM_RELIFE_RUNTIME_URL='data/generated/stoneage_item_relife_runtime.json';
+const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
@@ -53,7 +54,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -177,16 +178,47 @@ function sourcePlayerEquipRequirements(template,target=state){
   if(String(template.attachFunc||'')!==''||String(template.detachFunc||'')!=='')return {ok:false,reason:'callback-unported'};
   return {ok:true};
 }
+function sourcePlayerFindEmptyBackpackSlot(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  for(let i=PLAYER_BACKPACK_START;i<PLAYER_ITEM_SLOT_COUNT;i++){
+    if(slots[i]==null)return i;
+  }
+  return -1;
+}
+function sourcePlayerAddSpecificExistingItem(itemIndex,{target=state,source=null,incrementInventory=true}={}){
+  const idx=Math.trunc(Number(itemIndex));
+  const existing=sourceRuntimeSlotFromTarget(target,idx);
+  if(!existing)return -1;
+
+  // fixed CHAR_addItemSpecificItemIndex(): first empty ItemBox slot only; no pile/merge here.
+  const emptyindex=sourcePlayerFindEmptyBackpackSlot(target);
+  if(emptyindex<0)return PLAYER_ITEM_SLOT_COUNT;
+
+  const slots=sourcePlayerItemSlots(target);
+  slots[emptyindex]=idx;
+  existing.owner='player';
+  existing.enemySlot=null;
+  if(source!==null)existing.source=source;
+
+  if(incrementInventory){
+    const itemId=Number(existing.itemId);
+    if(Number.isFinite(itemId)){
+      const key=String(Math.trunc(itemId));
+      target.inventory=target.inventory&&typeof target.inventory==='object'?target.inventory:{};
+      target.inventory[key]=Math.max(0,Math.trunc(n(target.inventory[key])))+1;
+    }
+  }
+  return emptyindex;
+}
 function sourcePlayerRegisterExistingInBackpack(itemIndex,target=state){
   const idx=Math.trunc(Number(itemIndex));
   const existing=sourceRuntimeSlotFromTarget(target,idx);
   if(!existing||existing.owner!=='player')return -1;
   const slots=sourcePlayerItemSlots(target);
-  if(slots.some(v=>Number(v)===idx))return slots.findIndex(v=>Number(v)===idx);
-  for(let i=PLAYER_BACKPACK_START;i<PLAYER_ITEM_SLOT_COUNT;i++){
-    if(slots[i]==null){slots[i]=idx;return i;}
-  }
-  return -1;
+  const present=slots.findIndex(v=>v!=null&&Number(v)===idx);
+  if(present>=0)return present;
+  // Registration of an already-owned legacy/runtime item must not double aggregate inventory.
+  return sourcePlayerAddSpecificExistingItem(idx,{target,source:existing.source,incrementInventory:false});
 }
 function sourcePlayerMoveBackpackToEquip(fromindex,toindex,target=state){
   const slots=sourcePlayerItemSlots(target);
@@ -389,12 +421,19 @@ function sourceTrackedPlayerItems(itemId=null){
 }
 function giveTrackedItemFromExisting(itemId,itemIndex){
   const slot=sourceItemRuntimeSlot(itemIndex);
-  if(!slot)return false;
-  const key=String(itemId);
-  state.inventory[key]=n(state.inventory[key])+1;
+  if(!slot)return {ok:false,reason:'missing-existing',itemIndex};
   slot.itemId=Math.trunc(Number(itemId));
-  slot.owner='player';slot.source='battle-getitem';slot.enemySlot=null;
-  return true;
+
+  // fixed BATTLE_AddProfit -> CHAR_addItemSpecificItemIndex. If the 15-slot ItemBox is full,
+  // the carried existing item is ended instead of becoming an aggregate-only inventory count.
+  const ret=sourcePlayerAddSpecificExistingItem(itemIndex,{
+    target:state,source:'battle-getitem',incrementInventory:true
+  });
+  if(ret<PLAYER_BACKPACK_START||ret>=PLAYER_ITEM_SLOT_COUNT){
+    sourceItemRuntimeFree(itemIndex);
+    return {ok:false,reason:'backpack-full',itemIndex};
+  }
+  return {ok:true,slotIndex:ret,itemIndex,itemId:Math.trunc(Number(itemId))};
 }
 function releaseEnemyRuntimeItems(unit){
   if(!unit)return 0;
@@ -1085,11 +1124,15 @@ function rollVerifiedDrops(defeatedEnemy){
   for(const carried of carriedLoot){
     const itemId=Number(carried.itemId);
     if(!Number.isFinite(itemId))continue;
+    let acquired=true;
     if(Number.isFinite(Number(carried.itemIndex))&&sourceItemRuntimeSlot(carried.itemIndex)){
-      giveTrackedItemFromExisting(itemId,carried.itemIndex);
+      acquired=giveTrackedItemFromExisting(itemId,carried.itemIndex).ok;
     }else{
+      // Legacy/untracked fallback has no source existing index; preserve the old aggregate path
+      // rather than inventing a historical allocation.
       giveItem(itemId,1);
     }
+    if(!acquired)continue;
     const meta=questItemMeta(itemId);
     drops.push(meta
       ?Object.assign({},meta,{enemyDrop:true,enemyDropSlot:carried.slot,dropProbabilityRaw:carried.probabilityRaw})
@@ -2220,6 +2263,56 @@ function cRand(min,max){
   min=Number(min);max=Number(max);
   if(!Number.isFinite(min)||!Number.isFinite(max))return 0;
   return Math.trunc(min+(max-min+1)*Math.random());
+}
+function sourceRandModulo(mod){
+  const m=Math.max(1,Math.trunc(n(mod)));
+  return Math.trunc(Math.random()*m);
+}
+function sourceGmQueActionValue(randModulo=sourceRandModulo){
+  // fixed GMQUE_CheckQueStr: rand()%100, then 0 is folded into 1.
+  let value=Math.trunc(n(randModulo(100)));
+  value=((value%100)+100)%100;
+  if(value<1)value=1;
+  return value;
+}
+function sourceGmQueRewardType(gmqueNums){
+  const value=Math.trunc(n(gmqueNums));
+  if(value>97)return 'pet';
+  if(value>40)return 'item';
+  return 'gold';
+}
+function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
+  const type=sourceGmQueRewardType(gmqueNums);
+  if(!gmqueDb)return {ok:false,reason:'runtime-missing',type};
+
+  if(type==='pet'){
+    const ids=gmqueDb.petReward?.effectiveIds||[];
+    const i=Math.trunc(n(randInclusive(0,3)));
+    const petId=Number(ids[i]??0);
+    return {ok:petId>0,type:'pet',selectionIndex:i,petId,sourceFailure:petId<=0?'implicit-zero-pet-slot':null};
+  }
+
+  if(type==='item'){
+    const primary=Math.trunc(n(randInclusive(0,100)));
+    const pools=gmqueDb.itemReward?.pools||[];
+    let pool=null;
+    if(primary===0)pool=pools.find(x=>x.name==='itemID3')||null;
+    else if(primary>=97)pool=pools.find(x=>x.name==='itemID2')||null;
+    else if(primary>=70)pool=pools.find(x=>x.name==='itemID4')||null;
+    else if(primary>=40)pool=pools.find(x=>x.name==='itemID5')||null;
+    else pool=pools.find(x=>x.name==='itemID1')||null;
+    if(!pool||!Array.isArray(pool.ids)||!pool.ids.length)return {ok:false,reason:'pool-missing',type:'item',primary};
+    const pick=Math.trunc(n(randInclusive(0,pool.ids.length-1)));
+    const itemId=Math.trunc(n(pool.ids[pick]));
+    return {ok:itemId>0,type:'item',primary,pool:pool.name,selectionIndex:pick,itemId};
+  }
+
+  const primary=Math.trunc(n(randInclusive(0,30)));
+  if(primary>=15)return {ok:true,type:'gold',primary,gold:20000};
+  if(primary>=10)return {ok:true,type:'gold',primary,gold:50000};
+  const secondary=Math.trunc(n(randInclusive(2,4)));
+  const gold=Math.trunc(n(gmqueDb.goldReward?.branches?.[2]?.secondary?.goldByIndex?.[String(secondary)]));
+  return {ok:gold>0,type:'gold',primary,secondary,gold};
 }
 function normalizedElements(elements){
   if(!elements)return null;
@@ -11353,7 +11446,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,enemyWeaponR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,gmqueR,enemyWeaponR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -11364,6 +11457,7 @@ async function boot(){
       fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_RELIFE_RUNTIME_URL,{cache:'no-store'}),
+      fetch(GMQUE_TROPHY_RUNTIME_URL,{cache:'no-store'}),
       fetch(ENEMY_WEAPON_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
@@ -11376,6 +11470,7 @@ async function boot(){
     if(!attackMagicR.ok)throw new Error('AttackMagic runtime HTTP '+attackMagicR.status);
     if(!itemMagicR.ok)throw new Error('Item MAGICUSEMP runtime HTTP '+itemMagicR.status);
     if(!itemRelifeR.ok)throw new Error('Item relife runtime HTTP '+itemRelifeR.status);
+    if(!gmqueR.ok)throw new Error('GMQUE trophy runtime HTTP '+gmqueR.status);
     if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
     encounterRuntime=await runtimeR.json();
@@ -11385,6 +11480,7 @@ async function boot(){
     attackMagicDb=await attackMagicR.json();
     itemMagicDb=await itemMagicR.json();
     itemRelifeDb=await itemRelifeR.json();
+    gmqueDb=await gmqueR.json();
     enemyWeaponDb=await enemyWeaponR.json();
     buildDynamicGroupCatalog();
     buildEncounterCatalog();
@@ -11397,7 +11493,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.69 載入完成：_Item_ReLifeAct 已改讀 fixed itemset6 的 5 件 source template；玩家裝備取得／穿戴仍待來源化，不自動發放。','good');
+    addLog('V1.71 載入完成：tracked existing item 取得已接 CHAR_addItemSpecificItemIndex 的 15 格背包規則；GMQUE 獎勵池與兩種 RNG 分支已來源化，但活動 UI/交寵流程尚未啟用。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
