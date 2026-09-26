@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.03**
+**PLAYABLE CORE V2.05**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,32 +16,64 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V2.03 最新進度
+## V2.05 最新進度
 
-V2.03 完成玩家寵 **field=0/1 PetSkill coverage closure**。目前固定 `petskill2.txt` 中：
+V2.04～V2.05 已正式進入 **field=2 寵物生活技能**。
 
-- 合法 `field=0/1 + illegal=0` 共 **233 筆**
-- 共 **61 種 function string**
-- 其中 **58 種**都有玩家側 RANDOMACT dispatcher／source-backed handler
-- 唯一沒有 handler 的 3 種 function string 是 `PETSKILL_SelfExplodeAttack`、`PETSKILL_Awaken`、`PETSKILL_Temptation`
-- 對應固定 row 只有 **582／642／643**
-- 這三種在 pinned build 的 `PETSKILL_functbl` 都沒有同名註冊，因此原 `PETSKILL_Use()` 會取得 NULL function pointer、直接 FALSE / NoAction
+### V2.04 固定 item field=2 runtime
 
-因此目前固定資料中，**不存在仍會真正落到 generic `sourceRuntimePending` 的合法 field=0/1 玩家 PetSkill**。generic fallback 只保留給未來來源資料變更，不代表現有 fixed runtime 還有漏接技能。
+新增 pinned `itemset6.txt` 字串 runtime：
 
-新增 `tools/check_v203_player_field01_coverage.mjs`，會鎖定：
+- 固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- `itemset6.txt` **10737 / 10737** 筆模板解析成功
+- syntax error 0、duplicate ID 0
+- 296 筆模板有 `TYPECODE`
+- 9437 筆模板有修復材料 `INGNAME0～4`
+- 1759 個 nonblank item function string
+- 保留 `TYPECODE / INLAYCODE / ARGUMENT / SECRETNAME / INGNAME0～4` 與完整 function strings
+- legacy 字串採 latin1 byte-preserving，只做原 C exact equality / ASCII token 判斷，不把亂碼當顯示文字猜譯
+- 約 1.9 MB runtime **只在真的使用 field=2 技能時懶載入**，不增加每次開遊戲的手機負擔
 
-- 233 筆 legal field=0/1 rows
-- 61 種 function
-- 582／642／643 functbl-missing 邊界
-- RANDOMACT target RNG 先消耗，再由 `PETSKILL_Use()` 發現 function pointer 缺失
-- 所有現有合法 function 必須「已有 dispatcher」或「屬固定 functbl-missing」二選一
-- uncovered function 必須永遠是空陣列
-- BattleProperty / MagicStatusChange / Refresh / specialized status / StatusChange 的現有固定 option 都必須能通過各自 parser guard
+### V2.05 540 修復 / 572 鑲寶石
 
-CI 已確認 V1.72～V2.03 全部 regression success。
+玩家目前可從現有 15 格 source-backed 背包選材料，並由出戰寵實際擁有的 field=2 PetSkill 執行：
 
-V2.02 Combined / AttackMagic / def-magic lifecycle 全部保留。
+- **540 修復 / `PETSKILL_Fixitem`**
+  - 最多選 2 個物品
+  - 料理不可修復
+  - 必須恰好一件武器／防具（ITEM_TYPE 0～15、17～19）
+  - 材料 `INGNAME0` 必須精確匹配目標 `INGNAME0～4`，或材料 `ARGUMENT=FIXITEMALL`
+  - 耐久必須低於 Max × 80%
+  - Max 耐久 <500 不可再修
+  - 成功後新 Max = `trunc(oldMax × 0.85)`，目前耐久直接補至新 Max，`CRUSHLEVEL=0`
+  - 材料依固定 `CHAR_DelItem(...,1)`：堆疊 >1 只扣 `ITEM_USEPILENUMS` 一個，剩 0 才 free existing item
+
+- **572 鑲寶石 / `PETSKILL_Inslay`**
+  - 最多選 4 個物品
+  - 每個物品都必須有 nonempty、非 `NULL` TYPECODE
+  - 恰好一件 TYPECODE 含 `INSLAY` 的基底裝備
+  - 固定資料實際有 **200 個 INSLAY 基底模板**
+  - INLAYCODE 固定三格，填第一個 `NULL`
+  - 精確相加 8 欄：攻／防／敏／HP／MP／運／額外傷害／額外防禦
+  - 材料 MAGICID >0 時覆蓋 MAGICID / MAGICUSEMP
+  - 材料的 init / preOver / postOver / watch / use / attach / detach / drop / pickup / **relife** 10 個 function string 與 ARGUMENT 全部覆蓋到目標
+  - 多材料逐個提交；後一顆失敗不回滾前面已成功的原 C 變更
+  - 鑲入 `ITEM_DIErelife` 後，目標裝備死亡時會真正進現有死亡復活 lifecycle，不只是保存字串
+
+固定資料另確認只有 **1 個 FIXITEMALL** 萬用修復材料模板。
+
+200 加工／201 料理雖已顯示為 field=2 技能，但目前 `ITEM_mergeItem_merge` 的完整 merge table/runtime 尚未來源化，因此仍明確 **不猜合成結果**。
+
+新增：
+
+- `tools/generate_item_field2_runtime.py`
+- `data/generated/stoneage_item_field2_runtime.json`
+- `tools/check_v204_item_field2_runtime.mjs`
+- `tools/check_v205_player_field2_fixitem_inslay.mjs`
+
+CI 已確認 V1.72～V2.05 全部 regression success，`game.js` syntax success。
+
+V2.03 field=0/1 coverage closure 與 V2.02 Combined lifecycle 全部保留。
 
 save schema 維持 **29**。
 
