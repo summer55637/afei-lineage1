@@ -5207,7 +5207,9 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   }
   sourceLogAcupunctureReaction(acupuncture);
   if(before>0&&actual.hp<=0){
-    sourceMarkEnemyDeathCredit(actual,[attackerKind==='pet'?{kind:'pet',petId:attackerPetId}:{kind:'player'}]);
+    if(!options.deferDeathCredit){
+      sourceMarkEnemyDeathCredit(actual,[attackerKind==='pet'?{kind:'pet',petId:attackerPetId}:{kind:'player'}]);
+    }
     addLog(actual.name+' 倒下了，本場後續回合不再行動。','bad');
   }
   return actual;
@@ -7899,6 +7901,12 @@ function performEnemyBattleTimid(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const label=meta?.n||'怯戰';
+  // BATTLE_S_AttackDamage reads DamageReact on the ORIGINAL defindex before AttackSeq.
+  // Current reachable player-side reaction here is Pet Acupuncture.
+  const hadDamageReact=chosen.kind==='pet'&&chosen.pet
+    ?battlePetAcupunctureIds.has(chosen.pet.id)
+    :false;
+  const localTimid=!hadDamageReact;
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -7907,10 +7915,10 @@ function performEnemyBattleTimid(actor,unit,options,meta){
   sourceBattleFinalizeItemCrushRng(r);
 
   let timidRoll=null,forced=false,playerExited=false;
-  if(r.damage>0){
+  if(localTimid&&r.damage>0){
     timidRoll=cRand(0,99);
-    // 原 BATTLE_S_AttackDamage：先無條件 rand()%100，再判斷 timid < 15 && damage > 1。
-    // 因此 damage == 1 也必須消耗這顆 RNG，只是怯戰效果不能成立。
+    // Source enters TIMID only when local skill_type survives and final damage>0.
+    // damage==1 still consumes the roll but cannot force an exit.
     if(timidRoll<15&&r.damage>1){
       if(chosen.kind==='pet'&&chosen.pet){
         battlePetOutIds.add(chosen.pet.id);
@@ -7925,13 +7933,19 @@ function performEnemyBattleTimid(actor,unit,options,meta){
     }
   }
 
-  // BATTLE_COM_S_TIMID 是特殊 BATTLE_S_AttackDamage case，battle.c 直接 break，不進普通 Counter loop。
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timidRoll,forced,playerExited};
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timidRoll,forced,playerExited,
+    hadDamageReact,localTimid
+  };
 }
 function performEnemy2BattleTimid(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
   const label=meta?.n||'狂獅怒吼';
+  const hadDamageReact=chosen.kind==='pet'&&chosen.pet
+    ?battlePetAcupunctureIds.has(chosen.pet.id)
+    :false;
+  const localTimid=!hadDamageReact;
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
   const r=enemyAttackSeqBugTargetResult(unit,chosen,{guarding});
   if(!r)return {kind:'skill',skillId:actor.skillId,noTarget:true};
@@ -7941,10 +7955,8 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
 
   const timid=Math.max(0,Math.trunc(enemySkillNumber(meta?.o,/命%([0-9.]+)/,0)));
   let timidRoll=null,recalled=false;
-  if(r.damage>0){
+  if(localTimid&&r.damage>0){
     timidRoll=cRand(0,99);
-    // 原 C 寫成 rand()%100 < timid && damage > 1；依 C 左到右求值，
-    // damage == 1 時仍先消耗 RNG，但不會進實際召回分支。
     if(timidRoll<timid&&r.damage>1&&chosen.kind==='pet'&&chosen.pet){
       battlePetOutIds.add(chosen.pet.id);
       sourceClearPetBattleProperty(chosen.pet);
@@ -7953,7 +7965,10 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
     }
   }
 
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled};
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,timid,timidRoll,recalled,
+    hadDamageReact,localTimid
+  };
 }
 function performEnemyMpDamage(actor,unit,options,meta){
   const chosen=enemyActorTarget(actor,unit);
@@ -10985,6 +11000,168 @@ function sourcePetTryRegretDizzy(pet,target,successPct,label){
   return {attempted:true,applied,roll,reason:applied?'success':'apply-failed'};
 }
 
+function sourcePet2TimidPowerMod(pet,meta){
+  const base=petBattleView(pet);
+  if(!base)return null;
+  const option=String(meta?.o||'');
+  const baseAttack=Math.trunc(n(base.attack));
+  const baseDefense=Math.trunc(n(base.fixedTough));
+  const baseQuick=Math.trunc(n(base.fixedDex));
+  const power={skillId:meta?.id??null,source2Timid:true};
+  let attack=baseAttack,defense=baseDefense,quick=baseQuick;
+  let attackMatched=false,defenseMatched=false,quickMatched=false;
+
+  const read=(token)=>{
+    const m=option.match(new RegExp(token+'([0-9]+(?:\\.[0-9]+)?)'));
+    return m?Math.max(0,Number(m[1])||0):null;
+  };
+  const negAttack=read('-攻%'),posAttack=read('\\+攻%');
+  const negDefense=read('-防%'),posDefense=read('\\+防%');
+  const negQuick=read('-敏%'),posQuick=read('\\+敏%');
+
+  // Fixed PETSKILL_2BattleTimid parser quirk:
+  // "-攻%50" writes FIXSTR * 0.50, not FIXSTR * (1-0.50).
+  if(negAttack!=null){attack=Math.trunc(baseAttack*(negAttack/100));attackMatched=true;}
+  else if(posAttack!=null){attack=Math.trunc(baseAttack+baseAttack*(posAttack/100));attackMatched=true;}
+  if(negDefense!=null){defense=Math.trunc(baseDefense*(negDefense/100));defenseMatched=true;}
+  else if(posDefense!=null){defense=Math.trunc(baseDefense+baseDefense*(posDefense/100));defenseMatched=true;}
+  if(negQuick!=null){quick=Math.trunc(baseQuick*(negQuick/100));quickMatched=true;}
+  else if(posQuick!=null){quick=Math.trunc(baseQuick+baseQuick*(posQuick/100));quickMatched=true;}
+
+  if(attackMatched)power.attack=attack;
+  if(defenseMatched)power.defense=defense;
+  if(quickMatched)power.quick=quick;
+  return {
+    base,option,power,attack,defense,quick,
+    attackMatched,defenseMatched,quickMatched
+  };
+}
+function sourcePerformPetBattleTimidSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'怯戰';
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_BattleTimid writes WORK powers immediately:
+  // STR 70%, TOUGH 40%, DEX 80%. RANDOMACT is after EntrySort, so the quick write
+  // cannot change this actor's already-decided position but remains source work state.
+  const attack=Math.trunc(n(base.attack)*.7);
+  const defense=Math.trunc(n(base.fixedTough)*.4);
+  const quick=Math.trunc(n(base.fixedDex)*.8);
+  battlePetPowerMods.set(pet.id,{
+    attack,defense,quick,skillId:action?.skillId,sourceTimid:true
+  });
+
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true,attack,defense,quick,sourceNoCounter:true};
+  }
+
+  const targetHpBefore=Math.max(0,Math.trunc(n(target.hp)));
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const localTimid=!hadDamageReact;
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{attackerOverride:{attack}});
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true,attack,defense,quick,hadDamageReact,localTimid,sourceNoCounter:true};
+
+  // Timid's possible BATTLE_Exit happens after damage/death/ItemCrush but before outer AddProfit.
+  // Delay kill credit so a successful forced exit does not accidentally become a kill reward.
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id,{deferDeathCredit:true});
+
+  let timidRoll=null,forcedExit=false,exit=null;
+  // BATTLE_S_AttackDamage changes local skill_type to -1 on DamageReact or damage<=0,
+  // so in either case the TIMID switch (and its rand()%100) is unreachable.
+  if(localTimid&&n(r.damage)>0){
+    timidRoll=cRand(0,99);
+    // Source consumes this roll even at damage==1; only damage>1 may force the exit.
+    if(timidRoll<15&&n(r.damage)>1){
+      forcedExit=true;
+      exit=finishEnemyDirectExit(target,label+'成功');
+    }
+  }
+
+  // If the special did not BATTLE_Exit the Enemy, a lethal hit is a normal Pet kill.
+  if(!forcedExit&&targetHpBefore>0&&n(target.hp)<=0){
+    sourceMarkEnemyDeathCredit(target,[{kind:'pet',petId:pet.id}]);
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」（攻70%／防40%／敏80%）'+
+      (hadDamageReact?'；目標 DamageReact 令 local skill_type=-1，不抽怯戰 RNG。':
+        (timidRoll==null?'；本次最終傷害為 0，不抽怯戰 RNG。':
+          ('；rand()%100='+timidRoll+(forcedExit?'，Enemy 被迫 BATTLE_Exit。':'。')))),
+    forcedExit?'good':'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,attack,defense,quick,
+    hadDamageReact,localTimid,timidRoll,forcedExit,exit,
+    sourceNoCounter:true,sourceDeferredDeathCredit:true
+  };
+}
+function sourcePerformPet2BattleTimidSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'狂獅怒吼';
+  const parsed=sourcePet2TimidPowerMod(pet,meta);
+  if(!parsed)return {handled:true,skillId:action?.skillId,missingPet:true};
+  parsed.power.skillId=action?.skillId;
+  battlePetPowerMods.set(pet.id,parsed.power);
+
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  const timid=Math.max(0,Math.trunc(enemySkillNumber(meta?.o,/命%([0-9.]+)/,0)));
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {
+      handled:true,skillId:action?.skillId,noTarget:true,timid,
+      attack:parsed.attack,defense:parsed.defense,quick:parsed.quick,
+      attackMatched:parsed.attackMatched,defenseMatched:parsed.defenseMatched,quickMatched:parsed.quickMatched,
+      sourceNoCounter:true
+    };
+  }
+
+  const targetHpBefore=Math.max(0,Math.trunc(n(target.hp)));
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const localTimid=!hadDamageReact;
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    attackerOverride:{attack:parsed.attack}
+  });
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true,timid,hadDamageReact,localTimid,sourceNoCounter:true};
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id,{deferDeathCredit:true});
+  let timidRoll=null,rollPassed=false,recalled=false;
+
+  if(localTimid&&n(r.damage)>0){
+    timidRoll=cRand(0,99);
+    rollPassed=timidRoll<timid;
+    // fixed S_2TIMID only performs BATTLE_PetIn when defindex is CHAR_TYPEPET.
+    // Player Pet attacks CHAR_TYPEENEMY here, so even a passing roll + damage>1 never recalls/exits it.
+    recalled=false;
+  }
+
+  if(targetHpBefore>0&&n(target.hp)<=0){
+    sourceMarkEnemyDeathCredit(target,[{kind:'pet',petId:pet.id}]);
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」'+
+      (hadDamageReact?'；DamageReact 將 local skill_type=-1，不抽恐嚇 RNG。':
+        (timidRoll==null?'；本次最終傷害為 0，不抽恐嚇 RNG。':
+          ('；rand()%100='+timidRoll+'（命 '+timid+'%）'+
+            (rollPassed&&n(r.damage)>1?'，但 Enemy 不是 CHAR_TYPEPET，因此不會被收回。':'。')))),
+    'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,timid,timidRoll,rollPassed,recalled,
+    attack:parsed.attack,defense:parsed.defense,quick:parsed.quick,
+    attackMatched:parsed.attackMatched,defenseMatched:parsed.defenseMatched,quickMatched:parsed.quickMatched,
+    hadDamageReact,localTimid,sourceTargetType:'CHAR_TYPEENEMY',
+    sourceNoCounter:true,sourceDeferredDeathCredit:true
+  };
+}
+
 function sourcePetDirectEnemySideTargets(){
   // BATTLE_MultiList(TARGET_SIDE_x) is evaluated after the TargetAdjust gate and returns
   // TargetCheck-valid entries on the opposing side. EarthRound-hidden / dead entries are out.
@@ -11597,6 +11774,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
+    else if(meta?.f==='PETSKILL_BattleTimid')result=sourcePerformPetBattleTimidSkill(pet,action);
+    else if(meta?.f==='PETSKILL_2BattleTimid')result=sourcePerformPet2BattleTimidSkill(pet,action);
     else if(meta?.f==='PETSKILL_BatFly')result=sourcePerformPetBatFlySkill(pet,action);
     else if(meta?.f==='PETSKILL_DivideAttack')result=sourcePerformPetDivideAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_BattleTearDamage')result=sourcePerformPetTearSkill(pet,action);
