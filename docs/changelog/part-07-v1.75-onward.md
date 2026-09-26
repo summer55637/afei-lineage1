@@ -2205,3 +2205,141 @@ save schema 維持 **29**。
 - `aa7063f1f103ff9025f1f75a5d8943b48ccdf98c` — V1.99 playable-core marker
 - `dd12e6d1cf1e133a1d19ef0d2fe4a49d98d76756` — V1.99 README
 
+
+---
+
+## V2.00 Player RANDOMACT AttackShoot
+
+V2.00 接入玩家寵低忠誠 `RANDOMACT`：
+
+- 614 `PETSKILL_AttackShoot`（栗子連激），option `3|5`
+- 647 `PETSKILL_AttackShoot`（栗子連激改），option `6|8`
+- 兩筆皆 `field=1`、`target=1`、`illegal=0`
+- fixed `PETSKILL_functbl` 有正式 `PETSKILL_AttackShoot` handler
+
+### Count RNG / loyalty branch
+
+fixed `PETSKILL_AttackShoot()` 先解析：
+
+- `pmin = atoi(option[0])`
+- `pmax = atoi(option[1])`
+- `n = RAND(pmin,pmax)`
+
+因此：
+
+- 614：`RAND(3,5)`
+- 647：`RAND(6,8)`
+
+來源後面另有 `loyal >= 100` 時的 1/300 與低 HP 1/50 強制 8 發分支。
+
+但玩家這裡是 **低忠誠 RANDOMACT**。fixed `BATTLE_PetLoyalCheck()` 明確只有：
+
+- FIXAI 30～39 且 loyalty roll <70
+- FIXAI 20～29 且 loyalty roll <70
+
+才會進 `PETAI_MODE_RANDOMACT`。
+
+所以此玩家路徑 FIXAI 必定 <40：
+
+- `loyal >= 100` 不可能成立
+- 不 consume `RAND(1,300)`
+- 不 consume `RAND(1,50)`
+- 不自行補「幸運 8 發」效果
+
+### TargetList
+
+`BATTLE_TargetListSet()` 對 ATTSHOOT 與 ATTCRAZED 共用同一段。
+
+若 Enemy side 為 10～19：
+
+`for(i=10; i<19; i++)`
+
+只掃 10～18，因此 V2.00 延續 V1.99：
+
+- Web `battleSlot 0..8` 才進預抽池
+- source slot 19 / Web battleSlot 9 排除
+- 預抽池存在時，一次 consume `attackMax` 顆 target RNG
+- 所有 target RNG 都在第一個 `BATTLE_Attack` 前完成
+- 預抽池為空時保留原 COM2-filled list，不 consume target-list RNG
+
+玩家 Pet 沒有遠距裝備路徑，因此第一擊仍是 non-BOW source quirk：
+
+- `plannedTargets[0]` RNG 已消耗
+- 實際第一擊仍以原 COM2 做 `BATTLE_TargetAdjust`
+- 第二擊起才還原 `aDefList[i]`
+- 預抽目標失效時才於該段重新 `DefaultAttacker`
+
+### Damage / sleep RNG order
+
+`BATTLE_COM_S_ATTSHOOT` 在 battle.c 設：
+
+- `attack_max = COM3 high`
+- `gDamageDiv = attack_max`
+
+因此每擊的物理傷害都除以本次總發數。
+
+fixed `BATTLE_Attack()` 的正傷害後順序：
+
+1. Damage / DamageSub
+2. DamageWakeUp
+3. 若 attacker COM1 仍為 ATTSHOOT：`RAND(1,5)`
+4. roll >4：直接寫 `CHAR_WORKSLEEP=3`
+5. ItemCrush RNG
+6. 返回 battle.c
+7. `BATTLE_AddProfit`
+
+V2.00 因此對每次正傷害：
+
+- 先 defer shared ItemCrush
+- consume `RAND(1,5)`
+- 5 才套原生 3-turn sleep
+- 再 consume ItemCrush RNG
+- 最後處理 AddProfit / death lifecycle
+
+這個睡眠不是一般 `BATTLE_StatusAttackCheck`，不自行套狀態命中率。
+
+### Counter
+
+fixed `BATTLE_CounterCheck()`：
+
+只要 attackindex 或 defindex 的 COM1 是 `BATTLE_COM_S_ATTSHOOT`，直接 FALSE。
+
+fixed `BATTLE_Counter()` 本身也再次檢查 counter attacker 若仍是 ATTSHOOT 直接 FALSE。
+
+因此 ATTSHOOT 完整 attack loop 後：
+
+- 不做 Counter hit
+- 不 consume Counter chance RNG
+- Web 不呼叫 `resolvePetEnemyCounterChain`
+
+### Regression
+
+新增：
+
+`tools/check_v200_player_attackshoot_runtime.mjs`
+
+鎖定：
+
+- 614 / 647 runtime rows
+- count RNG 先於 target-list RNG
+- RANDOMACT FIXAI <40，不抽 loyal>=100 burst RNG
+- 不套被註解掉的攻防重寫
+- slot 19 排除邊界
+- all target RNG before first attack
+- empty pre-roll pool no target RNG
+- non-BOW first-hit original COM2 quirk
+- `damageDivisor=attackMax`
+- positive hit：sleep RNG before ItemCrush
+- no Counter
+- player RANDOMACT dispatch 在 runtime-pending fallback 前
+
+save schema 維持 **29**。
+
+### commits
+
+- `0eb4bb2982818f94cf2054b6dfdbd528ac296f57` — V2.00 core
+- `ffee0b6a451c5073bbfb21d5b3ab0886d38f50a7` — V2.00 regression
+- `0645f191b73cf2a3da405225e6b2b346e7cd08e7` — V2.00 CI
+- `6f903317c5ede8527812c92b5adb755c3bedecf9` — V2.00 playable-core marker
+- `f36c6f30c58de125362a90a219164bf171a9b6db` — V2.00 README
+
