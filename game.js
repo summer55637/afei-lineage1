@@ -66,7 +66,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
@@ -2613,6 +2613,24 @@ function sourceBattleElements(elements){
   const none=Math.max(0,100-earth-water-fire-wind);
   return {earth,water,fire,wind,none};
 }
+function sourceBattlePropertyCounterElements(otherElements){
+  const d=sourceBattleElements(otherElements);
+  if(!d)return null;
+  // fixed PET_PetskillPropertyEvent():
+  // EARTH(0)->WIND(3), WATER(1)->EARTH(0), FIRE(2)->WATER(1), WIND(3)->FIRE(2).
+  // The callback writes T_Pow[4]=100-sum directly; unlike BATTLE_GetAttr it does not clamp this none value.
+  return {
+    earth:d.water,
+    water:d.fire,
+    fire:d.wind,
+    wind:d.earth,
+    none:100-d.earth-d.water-d.fire-d.wind
+  };
+}
+function sourceBattlePropertyActive(desc){
+  const key=battleStatusKey(desc);
+  return !!(key&&battlePropertyKeys.has(key));
+}
 function battleFieldPower(elements){
   const e=normalizedElements(elements)||{earth:0,water:0,fire:0,wind:0,none:100};
   const attr=String(battleFieldState?.attr||'none');
@@ -2640,8 +2658,14 @@ function battleFieldTick(){
 }
 function battleAttrDamage(attacker,defender,rawDamage){
   const damage=Math.max(0,Math.trunc(n(rawDamage)));
-  const a=sourceBattleElements(attacker?.elements),d=sourceBattleElements(defender?.elements);
-  if(!a||!d)return damage;
+  const baseA=sourceBattleElements(attacker?.elements),baseD=sourceBattleElements(defender?.elements);
+  if(!baseA||!baseD)return damage;
+
+  // fixed BATTLE_AttrAdjust reads both source vectors first, then invokes attacker and defender
+  // CHAR_BATTLEPROPERTY callbacks independently. PET_PetskillPropertyEvent re-reads the opponent's
+  // current attributes, so two active callbacks do not recursively counter an already-countered vector.
+  const a=attacker?.battleProperty?(sourceBattlePropertyCounterElements(baseD)||baseA):baseA;
+  const d=defender?.battleProperty?(sourceBattlePropertyCounterElements(baseA)||baseD):baseD;
 
   // fixed BATTLE_AttrAdjust：At_pow[] 是 int，先各自 *= damage。
   const attackVector={
@@ -2906,7 +2930,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -3693,6 +3717,7 @@ function petBattleView(pet){
     fixedTough,fixedDex,workQuickBase,quick:battleDrunkQuick(desc,workQuickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     canMove:battleStatusCanMove(desc),
+    battleProperty:sourceBattlePropertyActive(desc),
     level:Math.max(1,Math.trunc(n(pet.level))),elements
   };
 }
@@ -3862,6 +3887,15 @@ const ENEMY_SOURCE_MISSING_SKILL_IDS=new Set([
 // 582 則完全沒有 PETSKILL_SelfExplodeAttack 函式／註冊項，version.h 也標成不可開。
 // 兩者都會在 PETSKILL_getPetskillFuncPointer() 得到 NULL，PETSKILL_Use() return FALSE。
 const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
+
+// V1.76 fixed PETSKILL_functbl exact-name audit.
+// These petskill2 rows exist, but their function strings are not registered in this build.
+// PETSKILL_Use() therefore gets a NULL function pointer and returns FALSE.
+const SOURCE_PLAYER_UNREGISTERED_PETSKILL_FUNCTIONS=new Set([
+  'PETSKILL_SelfExplodeAttack',
+  'PETSKILL_Awaken',
+  'PETSKILL_Temptation'
+]);
 
 // V0.66：這些 PetSkill 在來源中不是 missing / unregistered；PETSKILL_Use 本身會成功，
 // 但實際 battle effect 依賴本前端沒有的原 server 全域 runtime 狀態，不能靜態決定。
@@ -8737,6 +8771,11 @@ function sourcePetRandomSkillPlan(pet){
       // fixed PETSKILL_Use：CHAR_TYPEPET 遇 PETSKILL_ILLEGAL 直接 return FALSE。
       return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceIllegal:true,targetDesc};
     }
+    if(SOURCE_PLAYER_UNREGISTERED_PETSKILL_FUNCTIONS.has(String(meta.f||''))){
+      // BATTLE_PetRandomSkill has already consumed its DefaultAttacker RNG before PETSKILL_Use()
+      // resolves the exact function string. Missing functbl entry => FALSE / no command.
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceFunctionMissing:true,targetDesc};
+    }
     return {kind:'skill',slot:iNum,skillId,meta,targetDesc};
   }
   return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc};
@@ -9495,6 +9534,34 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   };
 }
 
+function sourcePerformPetBattlePropertySkill(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  const meta=action?.meta;
+  // BATTLE_S_PetSkillProperty copies PETSKILL_OPTION into CHAR_BATTLEPROPERTY, reconstructs
+  // the function table, and battle.c then calls BATTLE_NoAction. No TargetAdjust / extra RNG.
+  if(String(meta?.o||'')!=='PET_PetskillPropertyEvent'){
+    addLog(pet.name+' 抽到 '+(meta?.n||'戰鬥屬性技')+'，但 callback 名稱不是固定來源值；不猜效果。','pet');
+    return {handled:true,skillId:action?.skillId,sourceRuntimePending:true};
+  }
+  const desc={kind:'pet',pet,petId:pet.id};
+  const key=battleStatusKey(desc);
+  if(key)battlePropertyKeys.add(key);
+  addLog(pet.name+' 使用「'+(meta?.n||'魔之詛咒')+'」：本場戰鬥啟用原 PET_PetskillPropertyEvent 屬性剋制 callback。','pet');
+  return {handled:true,skillId:action?.skillId,battleProperty:true,noAction:true};
+}
+function sourcePerformPetAntInterSkill(pet,action,options={}){
+  // ANTINTER only enters its special branch when COM2 is a dead CHAR_TYPEPET.
+  // RANDOMACT's COM2 came from BATTLE_DefaultAttacker, which only returns live TargetCheck targets.
+  // In this Player-Pet PVE path, a live Enemy therefore falls through into the common physical block.
+  const target=action?.targetDesc;
+  if(target?.kind==='enemy'&&target.unit&&n(target.unit.hp)>0){
+    addLog(pet.name+' 隨機使用「'+(action?.meta?.n||'蟻葬')+'」；目標仍存活，依原 C 落入普通物理攻擊。','pet');
+    const result=sourcePerformPetAttackTarget(pet,target,options,{loyalty:true,skillId:action?.skillId});
+    return Object.assign({},result,{skillId:action?.skillId,sourceAntInterFallthrough:true});
+  }
+  addLog(pet.name+' 的「'+(action?.meta?.n||'蟻葬')+'」沒有符合原 C 可執行的隨機目標。','pet');
+  return {handled:true,skillId:action?.skillId,noTarget:true,sourceAntInter:true};
+}
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
   if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
@@ -9520,9 +9587,10 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   if(action.kind==='attack')return finish(sourcePerformPetAttackTarget(pet,action.targetDesc,options,{loyalty:true}));
   if(action.kind==='none'){
     if(action.sourceIllegal)addLog(pet.name+' 隨機抽到原表標記為 PETSKILL_ILLEGAL 的技能；原 PETSKILL_Use() 對玩家寵直接失敗，本回合不行動。','pet');
+    else if(action.sourceFunctionMissing)addLog(pet.name+' 隨機抽到的 PetSkill 在 fixed PETSKILL_functbl 沒有同名函式；原 PETSKILL_Use() 直接 FALSE，本回合不行動。','pet');
     else if(action.sourceUseFailed)addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
     else addLog(pet.name+' 本回合沒有行動。','pet');
-    return finish({handled:true,none:true});
+    return finish({handled:true,none:true,sourceUseFailed:!!action.sourceUseFailed,sourceFunctionMissing:!!action.sourceFunctionMissing});
   }
   if(action.kind==='blocked'){
     addLog(pet.name+' 的原 C 隨機技能流程碰到未定義的 PetSkill array 讀取；不猜記憶體結果，本回合不行動。','pet');
@@ -9545,6 +9613,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_BecomeFox')result=sourcePerformPetBecomeFoxSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_FallGround')result=sourcePerformPetFallGroundSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_GuardBreak2')result=sourcePerformPetGuardBreak2Skill(pet,action,options);
+    else if(meta?.f==='PETSKILL_BattleProperty')result=sourcePerformPetBattlePropertySkill(pet,action);
+    else if(meta?.f==='PETSKILL_AntInter')result=sourcePerformPetAntInterSkill(pet,action,options);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
