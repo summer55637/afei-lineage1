@@ -1471,3 +1471,102 @@ save schema 維持 **29**。
 - `11fc1d0f822c9c69349a371b6c9eb1472fa7c37e` — V1.92 CI
 - `4326f3f1c870272bd294e82079f06be7fb94574d` — V1.92 playable-core marker
 
+---
+
+## V1.93 Player RANDOMACT BatFly / DivideAttack
+
+V1.93 接入玩家寵低忠誠 RANDOMACT：
+
+- 633 `PETSKILL_BatFly`（群蝠四竄）
+- 634 `PETSKILL_DivideAttack`（分身地裂）
+
+### 共用 TargetAdjust gate
+
+兩個 battle.c case 都先執行：
+
+`BATTLE_TargetAdjust(battleindex, charaindex, myside)`
+
+即使後面的 all-side helper 不使用 defNo，也必須先通過這個 gate。
+
+因此：
+
+- raw COM2 仍有效時，不新增 target RNG。
+- raw COM2 已死亡／隱藏時，仍要由 `BATTLE_DefaultAttacker` 消耗 fallback target RNG。
+- 若完全沒有可用敵人，技能 NoAction。
+
+### BatFly / 群蝠四竄
+
+`BATTLE_BatFly()` 對敵側 `BATTLE_MultiList` 的 TargetCheck-valid Entry 逐一處理。
+
+目前 generated Enemy Battle Entry 沒有 ride-pet 關係，因此全部走 no-ride 分支：
+
+- HP 1～9：固定扣 1
+- HP >= 10：扣 `floor(currentHP / 10)`
+- 傷害直接寫 `CHAR_HP`
+- 不做 AttackSeq / DamageSub / DamageWakeUp / ItemCrush / Counter
+
+每個目標扣掉的 HP 全部累加成 `addhp`，再回復施術 Pet。
+
+保留來源 overflow quirk：
+
+- 若 `currentHP + addhp > maxHP`，實際 HP 直接設為 maxHP。
+- 之後 local `addhp` 被設為 0，只影響來源送出的 protocol 顯示值。
+- 實際治療量仍是到 maxHP 的差額。
+
+### DivideAttack / 分身地裂
+
+`BATTLE_DivideAttack()` 有兩輪。
+
+第一輪只處理：
+
+`CHAR_WHICHTYPE == CHAR_TYPEPLAYER`
+
+Enemy 側全部是 `CHAR_TYPEENEMY`，因此玩家 Pet 對 Enemy 使用時：
+
+- Enemy MP 完全不變
+- 不消耗任何 MP 相關 RNG
+- 第一輪是 strict no-op
+
+第二輪處理 HP。
+
+目前 Enemy 沒有 ride-pet 關係，因此全部走 no-ride 分支：
+
+- HP 1～4：固定扣 1
+- HP >= 5：扣 `floor(currentHP / 5)`，也就是目前 HP 20%
+- 直接寫 HP
+- 不走命中、屬性、Guard、DamageReact、WakeUp、ItemCrush 或 Counter
+
+### Reward / AddProfit
+
+BatFly / DivideAttack 都不在函式內呼叫普通物理 AddProfit。
+
+Web runtime 在直接 HP 寫入造成 Enemy 死亡時，先鎖定 Pet reward credit；generic actor outer AddProfit boundary 仍負責後續 command-end lifecycle。
+
+### Regression
+
+新增：
+
+`tools/check_v193_player_batfly_divideattack_runtime.mjs`
+
+鎖定：
+
+- 633 / 634 runtime rows
+- TargetAdjust gate
+- BatFly HP /10、minimum 1
+- BatFly overflow `addhp=0` protocol quirk
+- DivideAttack Enemy MP strict no-op
+- DivideAttack HP /5、minimum 1
+- no WakeUp / ItemCrush / Counter
+- no inner AddProfit
+- Enemy death Pet reward credit
+- dispatch 在 runtime-pending fallback 之前
+
+save schema 維持 **29**。
+
+### commits
+
+- `0f6752f79d2209ecaa11c9106094f6722fa97be3` — V1.93 core
+- `0d64a2897f1bdfb7755ef199a247ee882545f6c2` — V1.93 regression
+- `817e73e0204eacaab19279f292e7c429443cc88e` — V1.93 CI
+- `ddb51f0f90bd4bdbb5616348ac25bc917fe39903` — V1.93 playable-core marker
+
