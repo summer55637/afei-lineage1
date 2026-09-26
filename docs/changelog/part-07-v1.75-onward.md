@@ -882,3 +882,104 @@ fixed `PETSKILL_SetMagicPet()` 讀取 `CHAR_MAGICPETMP` 並檢查 `>=3`，但成
 - `f9d6aea4d7e7392e49954b4481ba02da4d43f49c` — V1.84 regression path trigger
 - `af401bcd7bed6d482a2649c3ebbef45289dc17b0` — README recovery lifecycle note
 
+
+
+---
+
+## V1.85 Player RANDOMACT WildViolent / Speedy / Sacrifice
+
+V1.85 依 fixed `PETSKILL_functbl` 在 SetMagicPet 之後繼續做玩家出戰 Pet 的低忠誠 `RANDOMACT` 差集，接入：
+
+- 541／652／665／671 `PETSKILL_WildViolentAttack`
+- 542 `PETSKILL_SpeedyAttack`
+- 573 `PETSKILL_Sacrifice`
+
+### WildViolentAttack
+
+fixed `PETSKILL_WildViolentAttack()` 先依 option 讀：
+- `攻%` → `WORKATTACKPOWER = FIXSTR + int(FIXSTR * percent)`
+- `防%` → `WORKDEFENCEPOWER = FIXTOUGH + int(FIXTOUGH * percent)`
+- `回避N` → COM3 high
+
+真正進 `BATTLE_Battling()` 後，該 command 會覆寫：
+
+`attack_max = RAND(3,10)`
+
+並令：
+
+`gDamageDiv = attack_max`
+
+`gBattleDuckModyfy = COM3 high`
+
+因此不能沿用先前 `BATTLE_GetAttackCount()` 的 AttackNum，也不能把每段都算完整單次傷害。
+
+此 command 仍落入 common direct-attack group。玩家 Pet 沒有 CHAR_ARM，因此走非弓 common loop；`BATTLE_TargetListSet()` 先把原 raw COM2 填滿列表，後續每段再把該 raw slot 寫回 COM2 並重新跑 `BATTLE_TargetAdjust()`。若原目標已死亡，後續段數因此可重新消耗 target RNG 換有效目標。
+
+Counter 不是每段一次，而是在整個 `attack_max` loop 結束後，以最後一個 `BATTLE_Attack` 結果／defNo 進 common Counter chain。
+
+### SpeedyAttack
+
+fixed `PETSKILL_SpeedyAttack()` 本體只解析 `防%`：
+
+`WORKDEFENCEPOWER = FIXTOUGH + int(FIXTOUGH * percent)`
+
+資料 option 雖然寫 `防%-30 敏%+30`，但 `敏%+30` 並不由 PetSkill parser 寫入 WORKQUICK。
+
+真正的 +30% 在 `BATTLE_DexCalc()`：
+
+`work = WORKQUICK + 20`
+
+`dex = work + work * 0.3`
+
+關鍵是 fixed `BATTLE_Battling()` 的時序：
+1. 先替所有 Entry 做 `BATTLE_DexCalc()`
+2. `EntrySort()`
+3. 輪到單一 Pet 執行時才 `BATTLE_PetLoyalCheck()`
+4. RANDOMACT 才可能把原 command 改成 SpeedyAttack
+
+所以玩家 Pet 因低忠誠 RANDOMACT 臨時抽到 542 時，+30% Speedy Dex 已經太晚，**不會倒帶重排本回合**。Web 只保留當下可達的防禦 -30% WORK 與 common physical attack／Counter。
+
+Enemy AI 的 SpeedyAttack 不同：Enemy PetSkill 是在 EntrySort 前由 AI 選好，因此現有 Enemy path 仍可正常使用 Speedy 的專用排序公式。兩條路徑不可合併成同一時序。
+
+### Sacrifice
+
+fixed `PETSKILL_Sacrifice()` 先檢查：
+
+`HP > WORKMAXHP * 0.2`
+
+是嚴格大於。失敗會直接 `return FALSE`；而 `BATTLE_PetRandomSkill()` 一開始已把 COM1 清成 NONE，因此低忠誠 RANDOMACT 抽到救援但耐久不足時，本回合就是 NoAction。
+
+成功時，RANDOMACT 已先用 `BATTLE_DefaultAttacker()` 選 opposing Enemy raw COM2。真正 `BATTLE_S_Sacrifice()`：
+
+1. `caster HP = caster HP * 0.5`，C int 截斷
+2. `Damage = caster` 砍半後的 HP
+3. `target HP = min(target HP + Damage, target MaxHP)`
+
+這代表玩家 Pet 低忠誠亂放「救援」時，會真的砍掉自己一半 HP，**替敵方補血**。
+
+函式雖呼叫 `BATTLE_MultiList()` 做魔法動畫，但實際 `CHAR_setInt(defindex, CHAR_HP, ...)` 只寫單一 defindex；不能把動畫 list 誤做成群補。此 case 沒有物理 `BATTLE_Attack`，也沒有普通 Counter。
+
+### Regression / CI
+
+新增 `tools/check_v185_player_wild_speedy_sacrifice_runtime.mjs`，鎖定：
+- 541／542／573／652／665／671 runtime rows
+- Wild 攻防 option、回避值、`RAND(3,10)`、damage divisor、每段 TargetAdjust 與末段 Counter
+- Speedy 只解析防禦，RANDOMACT 發生於本輪排序之後
+- Sacrifice 嚴格 20% HP gate、砍半截斷、以砍半後 HP 補 opposing Enemy、無 Counter
+- 三個 dispatcher 都位於 pending fallback 前
+
+因 V1.85 helper 插入位置改變，V1.80～V1.83 部分 regression 原本以較遠的 Guardian helper 當文字切片終點，會把新 helper 誤算進舊測試 body。已只修正 regression boundary，沒有更動 V1.80～V1.83 遊戲規則。
+
+完整 GitHub Actions 已確認 V1.72～V1.85 全部 SUCCESS。
+
+### commits
+
+- `cc808a640a4b766bf8301382b85d7f300525b34e` — V1.85 player RANDOMACT Wild / Speedy / Sacrifice core
+- `96fe0b2b48bb022693f73d56ccf89bae8c579d80` — V1.85 regression
+- `573458ac38192c33bfbaccd90e8333cb1cba753f` — CI V1.85 regression step
+- `0048937fda879b3eccf7461020c54830c2cb1fe5` — repair V1.80 regression helper boundary
+- `74a132f84683816b0f9231e4b91c87d6a08343fe` — repair V1.81 regression helper boundary
+- `5ac2ffb1f1d0828a51ba6ddd671cbee4fceec31e` — repair V1.82 regression helper boundary
+- `7f8f3bb6c0d10d2864477a795ddd2398bf66ff2a` — repair V1.83 regression helper boundary
+- `bd8347c312642dbd7782e7222c286cbf58bc1b0c` — tighten V1.85 post-sort timing regression
+- `35a983192b6a27c33014dd553edfb6594100a2ef` — V1.85 README
