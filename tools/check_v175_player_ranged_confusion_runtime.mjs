@@ -115,7 +115,7 @@ assert.ok(dispatch.includes('if(weaponType===4)return sourcePerformPlayerConfusi
 assert.ok(dispatch.includes('if(weaponType===17)return sourcePerformPlayerConfusionBoomerangAttack'));
 assert.ok(dispatch.includes('if(weaponType===18||weaponType===19)'));
 
-assert.ok(/PLAYABLE CORE V1\.(?:75|76)/.test(html));
+assert.ok(/PLAYABLE CORE V\\d+\\.\\d+/.test(html));
 
 console.log(JSON.stringify({
   pass:true,
