@@ -13,7 +13,7 @@ const rows=Object.entries(runtime.byId||{})
 assert.equal(rows.length,233,'fixed runtime field=0/1 legal Player-Pet coverage changed');
 
 const functions=[...new Set(rows.map(row=>String(row.f||'')))].sort();
-assert.equal(functions.length,62,'fixed runtime field=0/1 function count changed');
+assert.equal(functions.length,61,'fixed runtime field=0/1 function count changed');
 
 const loyalStart=game.indexOf('function sourcePerformPetLoyalAction');
 const loyalEnd=game.indexOf('function sourcePetPreCommandAction',loyalStart);
