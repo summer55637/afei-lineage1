@@ -42,7 +42,7 @@ assert.ok(fixStart>=0&&fixEnd>fixStart);
 const fix=game.slice(fixStart,fixEnd);
 assert.ok(fix.includes("selected.length>2"));
 assert.ok(fix.includes("if(type===20)"));
-assert.ok(fix.includes("(type>=0&&type<=15)||type===17||type===18||type===19"));
+assert.ok(game.includes("return (type>=0&&type<=15)||type===17||type===18||type===19;"));
 assert.ok(fix.includes("sourceItemField2Char(material.existing,'ingName0')"));
 for(let i=0;i<5;i++)assert.ok(fix.includes("'ingName'+i"));
 assert.ok(fix.includes("sourceItemField2Char(material.existing,'argument')==='FIXITEMALL'"));
