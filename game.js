@@ -8,6 +8,7 @@ const PET_MODAI_URL='data/generated/stoneage_pet_modai.json';
 const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.json';
 const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
 const ITEM_RELIFE_RUNTIME_URL='data/generated/stoneage_item_relife_runtime.json';
+const ITEM_MAKE_RUNTIME_URL='data/generated/stoneage_item_make_runtime.json';
 const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
@@ -54,7 +55,8 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -137,9 +139,9 @@ function sourcePlayerFixedEquipModifier(template,key){
   const pair=template?.[key];
   if(!Array.isArray(pair)||pair.length<2)return 0;
   const a=Number(pair[0]),b=Number(pair[1]);
-  // Current source-backed player-equipment templates are deterministic. Do not invent
-  // an ITEM_makeItem() roll for a future non-deterministic template until the existing
-  // item stores that rolled field explicitly.
+  // Current source-backed player-equipment modifier pairs are min=max, so the resulting
+  // value is deterministic. V1.72 still consumes ITEM_makeItem's 66 RNG calls at creation;
+  // this helper only avoids inventing a variable rolled field that the runtime does not store.
   if(!Number.isFinite(a)||!Number.isFinite(b)||a!==b)return null;
   return Math.trunc(a);
 }
@@ -342,7 +344,9 @@ function normalizeItemRuntime(rt){
       magicUseMp:v.magicUseMp==null?sourceMu:(Number.isFinite(Number(v.magicUseMp))?Math.trunc(Number(v.magicUseMp)):sourceMu),
       owner:typeof v.owner==='string'?v.owner:null,
       source:typeof v.source==='string'?v.source:null,
-      enemySlot:Number.isFinite(Number(v.enemySlot))?Math.trunc(Number(v.enemySlot)):null
+      enemySlot:Number.isFinite(Number(v.enemySlot))?Math.trunc(Number(v.enemySlot)):null,
+      sourceMakeRngCalls:Number.isFinite(Number(v.sourceMakeRngCalls))?Math.trunc(Number(v.sourceMakeRngCalls)):null,
+      leakLevel:Number.isFinite(Number(v.leakLevel))?Math.trunc(Number(v.leakLevel)):null
     };
   }
   return out;
@@ -368,12 +372,23 @@ function sourceItemRuntimeSetOwner(index,owner,source=null){
   if(source!==null)slot.source=source;
   return true;
 }
+function sourceConsumeItemMakeRng(){
+  const calls=Math.max(0,Math.trunc(n(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
+  // fixed ITEM_makeItem() loops every ITEM_DATAINT field. Even randomwidth==0 executes
+  // RAND(0,0), whose macro still calls rand() once and returns 0.
+  for(let i=0;i<calls;i++)cRand(0,0);
+  return calls;
+}
 function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
   if(!state)return -1;
   const normalizedItemId=Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null;
   const sourceMu=sourceItemTemplateMagicUseMp(normalizedItemId);
-  // 原 ITEM_makeItem() 對不存在 ITEM_tbl 的 itemId 直接失敗；runtime 已載入時也維持這個邊界。
+  // fixed ITEM_makeItem() rejects an invalid ITEM_tbl before entering its RNG loop.
   if(normalizedItemId!=null&&itemMagicDb?.byItemId&&!Object.prototype.hasOwnProperty.call(itemMagicDb.byItemId,String(normalizedItemId)))return -1;
+
+  // ITEM_makeItemAndRegist order is make first, existing-slot allocation second. Therefore
+  // even an exhausted ITEM_item[] array has already consumed all 66 make-item RNG calls.
+  const sourceMakeRngCalls=sourceConsumeItemMakeRng();
   const resolvedMu=magicUseMp==null?sourceMu:(Number.isFinite(Number(magicUseMp))?Math.trunc(Number(magicUseMp)):sourceMu);
   state.itemRuntime=normalizeItemRuntime(state.itemRuntime);
   const rt=state.itemRuntime;
@@ -388,7 +403,9 @@ function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
       magicUseMp:resolvedMu,
       owner:typeof meta?.owner==='string'?meta.owner:null,
       source:typeof meta?.source==='string'?meta.source:null,
-      enemySlot:Number.isFinite(Number(meta?.enemySlot))?Math.trunc(Number(meta.enemySlot)):null
+      enemySlot:Number.isFinite(Number(meta?.enemySlot))?Math.trunc(Number(meta.enemySlot)):null,
+      sourceMakeRngCalls,
+      leakLevel:1
     };
     return rt.sindex;
   }
@@ -1631,21 +1648,30 @@ function applyEnemyRandomChange(raw,elements,petSkills){
   }
   return result;
 }
-function rollEnemyDropSlots(raw){
+function rollEnemyDropSlots(raw,unitId=null){
   const items=Array.isArray(raw?.enemyItems)?raw.enemyItems:[];
   const probs=Array.isArray(raw?.itemProbs)?raw.itemProbs:[];
   const resolved=items.length>=10&&probs.length>=10;
-  const drops=[];
-  if(!resolved)return {resolved:false,drops};
+  const drops=[],attempts=[];
+  if(!resolved)return {resolved:false,drops,attempts};
+
+  // fixed enemy.c interleaves each probability roll with ITEM_makeItemAndRegist immediately:
+  // slot roll -> on hit 66 item-make RNG calls -> next slot roll.
   for(let i=0;i<10;i++){
     const probabilityRaw=Math.trunc(n(probs[i]));
     if(!probabilityRaw)continue;
-    // 原 _FIX_ITEMPROB：RAND(0,999) < ITEMPROB。大於 1000 的原始值不 clamp。
-    if(Math.floor(Math.random()*1000)<probabilityRaw){
-      drops.push({slot:i+1,itemId:Math.trunc(n(items[i])),probabilityRaw});
-    }
+    const probabilityRoll=cRand(0,999);
+    const attempt={slot:i+1,itemId:Math.trunc(n(items[i])),probabilityRaw,probabilityRoll,hit:probabilityRoll<probabilityRaw};
+    attempts.push(attempt);
+    if(!attempt.hit)continue;
+
+    const itemIndex=sourceItemRuntimeAlloc(attempt.itemId,null,{
+      owner:unitId==null?null:'enemy:'+unitId,source:'enemy-drop',enemySlot:attempt.slot
+    });
+    attempt.itemIndex=itemIndex;
+    if(itemIndex>=0)drops.push(Object.assign({},attempt));
   }
-  return {resolved:true,drops};
+  return {resolved:true,drops,attempts};
 }
 function sourceDiscardBattleGetItemPool(){
   let freed=0;
@@ -1826,18 +1852,16 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     quick=Math.max(0,Math.round(n(st.dex)||0));
   }
 
-  // 原 enemy.c：先決定 carried item 掉落，再建立 STYLE 武器，之後才 ENEMY_RandomChange + CHAR_complianceParameter。
-  const enemyDropRoll=rollEnemyDropSlots(raw);
+  // fixed enemy.c: each successful carried-drop roll creates its existing item immediately,
+  // then STYLE weapon creation happens, then ENEMY_RandomChange.
   const serverExpBase=enemyServerBaseExp(raw,level);
   const resolvedEnemyId=Number(raw?.enemyId??base.enemyIds?.[0]??0)||null;
-  const unitId='unit-'+Date.now()+'-'+index+'-'+Math.random().toString(36).slice(2,7);
+  // Web-only identity must not advance source RNG.
+  sourceEnemyUnitSerial++;
+  const unitId='unit-'+sourceEnemyUnitSerial+'-'+index;
   const aiRow=resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]||null):null;
-
-  const runtimeDrops=[];
-  for(const drop of enemyDropRoll.drops){
-    const itemIndex=sourceItemRuntimeAlloc(drop.itemId,null,{owner:'enemy:'+unitId,source:'enemy-drop',enemySlot:drop.slot});
-    if(itemIndex>=0)runtimeDrops.push(Object.assign({},drop,{itemIndex}));
-  }
+  const enemyDropRoll=rollEnemyDropSlots(raw,unitId);
+  const runtimeDrops=enemyDropRoll.drops;
 
   const style=Math.max(0,Math.trunc(n(aiRow?.sty)));
   const styleWeaponId=sourceEnemyStyleWeaponItemId(style);
@@ -1864,7 +1888,8 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
   }
 
   // 原 CHAR_complianceParameter()：CHAR_initcharWorkInt() 後 ITEM_equipEffect()。
-  // 這批 Enemy 自動武器的裝備 modifier min=max，因此可直接套來源值，不新增猜測 RNG。
+  // 這批 Enemy 自動武器 modifier min=max，所以數值可直接套來源值；建立武器本身
+  // 已在 sourceItemRuntimeAlloc() 精確消耗 ITEM_makeItem 的 66 顆 RNG。
   const equipped=sourceEnemyWeaponCompliance({attack,defense,quick,maxHp:hp,maxMp:0},equippedWeaponId);
   attack=equipped.attack;defense=equipped.defense;quick=equipped.quick;hp=Math.max(1,equipped.maxHp);
 
@@ -11446,7 +11471,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,gmqueR,enemyWeaponR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,itemMakeR,gmqueR,enemyWeaponR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -11457,6 +11482,7 @@ async function boot(){
       fetch(ATTACK_MAGIC_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_RELIFE_RUNTIME_URL,{cache:'no-store'}),
+      fetch(ITEM_MAKE_RUNTIME_URL,{cache:'no-store'}),
       fetch(GMQUE_TROPHY_RUNTIME_URL,{cache:'no-store'}),
       fetch(ENEMY_WEAPON_RUNTIME_URL,{cache:'no-store'})
     ]);
@@ -11470,6 +11496,7 @@ async function boot(){
     if(!attackMagicR.ok)throw new Error('AttackMagic runtime HTTP '+attackMagicR.status);
     if(!itemMagicR.ok)throw new Error('Item MAGICUSEMP runtime HTTP '+itemMagicR.status);
     if(!itemRelifeR.ok)throw new Error('Item relife runtime HTTP '+itemRelifeR.status);
+    if(!itemMakeR.ok)throw new Error('Item make runtime HTTP '+itemMakeR.status);
     if(!gmqueR.ok)throw new Error('GMQUE trophy runtime HTTP '+gmqueR.status);
     if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
@@ -11480,6 +11507,7 @@ async function boot(){
     attackMagicDb=await attackMagicR.json();
     itemMagicDb=await itemMagicR.json();
     itemRelifeDb=await itemRelifeR.json();
+    itemMakeDb=await itemMakeR.json();
     gmqueDb=await gmqueR.json();
     enemyWeaponDb=await enemyWeaponR.json();
     buildDynamicGroupCatalog();
@@ -11493,7 +11521,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.71 載入完成：tracked existing item 取得已接 CHAR_addItemSpecificItemIndex 的 15 格背包規則；GMQUE 獎勵池與兩種 RNG 分支已來源化，但活動 UI/交寵流程尚未啟用。','good');
+    addLog('V1.72 載入完成：ITEM_makeItem 固定 66 顆 RNG 已接入 existing item 建立；Enemy 10 格掉落已改成每格命中後立即建 item，再進下一格，對齊 fixed enemy.c。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
