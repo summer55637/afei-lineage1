@@ -9164,10 +9164,28 @@ function sourceCAtoi(value){
   const match=String(value??'').match(/^\s*([+-]?\d+)/);
   return match?Math.trunc(Number(match[1])):0;
 }
+function sourceItemArgumentValue(argument,entryName){
+  // fixed ITEM_getArgument(): split by "|" first, then ":"; entry name is case-insensitive.
+  const wanted=String(entryName??'').toLowerCase();
+  for(const part of String(argument??'').split('|')){
+    const fields=part.split(':');
+    if(fields.length<2)continue;
+    if(String(fields[0]).toLowerCase()===wanted)return String(fields[1]);
+  }
+  return null;
+}
+function sourceRelifeHpPowerFromArgument(argument){
+  const raw=sourceItemArgumentValue(argument,'HP');
+  if(raw==null)return 1;
+  if(raw==='FULL')return Math.trunc(n(state?.maxHp));
+  return sourceCAtoi(raw);
+}
 function sourceRelifeHpPower(template){
-  // ITEM_DIErelife reads key HP from ITEM_ARGUMENT. The generated runtime stores the exact
-  // value after HP: as relifeHpArgument: missing -> 1; FULL -> WORKMAXHP; otherwise atoi().
-  if(!template||template.relifeHpArgument==null)return 1;
+  // Preserve the V1.69 generated source path, but parse the original ITEM_ARGUMENT so
+  // an Inslay-copied argument can share the exact ITEM_DIErelife parser.
+  if(!template)return 1;
+  if(typeof template.argument==='string')return sourceRelifeHpPowerFromArgument(template.argument);
+  if(template.relifeHpArgument==null)return 1;
   const raw=String(template.relifeHpArgument);
   if(raw==='FULL')return Math.trunc(n(state?.maxHp));
   return sourceCAtoi(raw);
@@ -9211,15 +9229,29 @@ function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePl
     const existing=sourceItemRuntimeSlot(runtimeIndex);
     if(!existing||item.equipped===false)continue;
 
-    // V1.69: function pointer / ITEM_ARGUMENT / ITEM_TYPE come only from the fixed itemset6
-    // runtime. A caller cannot turn an arbitrary existing item into a relife item by passing
-    // dieRelifeFunc=true or a fabricated hpArgument.
+    // Base function/argument come from pinned itemset6. After V2.05 Inslay, however,
+    // PETSKILL_ITEM_inslay has legitimately overwritten ITEM_DIERELIFEFUNC and ITEM_ARGUMENT
+    // on this existing item. Only those persisted source-backed overrides may replace the base.
     const template=sourceItemRelifeTemplate(existing.itemId);
-    if(!template||template.relifeFunc!=='ITEM_DIErelife')continue;
-    const equipPlace=Math.trunc(Number(template.equipPlace));
+    const hasRelifeOverride=!!existing.field2Functions
+      &&Object.prototype.hasOwnProperty.call(existing.field2Functions,'relife');
+    const relifeFunc=hasRelifeOverride
+      ?String(existing.field2Functions.relife??'')
+      :String(template?.relifeFunc??'');
+    if(relifeFunc!=='ITEM_DIErelife')continue;
+
+    const equipTemplate=sourcePlayerEquipTemplateForExisting(runtimeIndex,state);
+    const equipPlace=equipTemplate
+      ?Math.trunc(Number(sourcePlayerEquipPlace(equipTemplate,sourcePlayerItemSlots(state),state)))
+      :Math.trunc(Number(template?.equipPlace));
     if(!Number.isFinite(equipPlace)||equipPlace===-1)continue;
 
-    const requested=sourceRelifeHpPower(template);
+    const hasArgumentOverride=!!existing.field2Char
+      &&Object.prototype.hasOwnProperty.call(existing.field2Char,'argument');
+    const argument=hasArgumentOverride
+      ?String(existing.field2Char.argument??'')
+      :String(template?.argument??'');
+    const requested=sourceRelifeHpPowerFromArgument(argument);
     const workHp=Math.max(1,Math.trunc(n(requested)));
     const maxHp=Math.trunc(n(state?.maxHp));
     state.hp=Math.min(workHp,maxHp);
@@ -9231,11 +9263,13 @@ function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePl
 
     // ITEM_DIErelife consumes the equipped existing item immediately after MultiReLife.
     sourceConsumeRelifeEquipment(item,slots,i);
-    const label=template.name||('Item '+Math.trunc(Number(template.itemId)));
+    const itemId=Math.trunc(Number(existing.itemId));
+    const label=sourcePlayerRuntimeItemLabel(existing);
     addLog(label+' 發動死亡復活：HP 回復至 '+state.hp+'，裝備已消耗。','good');
     return {
-      slot:i,itemId:Math.trunc(Number(template.itemId)),itemIndex:runtimeIndex,
-      requested,restoredHp:state.hp,equipPlace
+      slot:i,itemId,itemIndex:runtimeIndex,
+      requested,restoredHp:state.hp,equipPlace,relifeFunc,argument,
+      sourceInslayOverride:hasRelifeOverride||hasArgumentOverride
     };
   }
   return null;
