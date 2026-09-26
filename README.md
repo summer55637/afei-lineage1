@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.74**
+**PLAYABLE CORE V1.75**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,17 +16,18 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.74 最新進度
+## V1.75 最新進度
 
-玩家一般裝備／ITEM_equipEffect 已在 V1.73 接入；V1.74 繼續完成玩家普通遠程武器 pattern：
+V1.75 補完 V1.74 留下的玩家遠程武器混亂跨 side 邊界：
 
-- **弓 BOW**：AttackNum、aBowW、RAND(0,1)、多目標候選與實際攻擊計數
-- **回力標 BOOMERANG**：保留 AttackNum RNG 消耗但 dedicated path 不使用數值；Player side 0 正向五格掃描、每段 30% 傷害
-- **投擲斧 BOUNDTHROW**：每段重新從原 raw COM2 執行 TargetAdjust
-- **投擲石 BREAKTHROW**：原 C 麻痺判定與 WakeUp → 麻痺 → ItemCrush → AddProfit 順序
-- 四種遠程武器同步阻擋 **Guardian／Counter／Combo**
-- 玩家遠程裝備已不再使用 `weapon-pattern-unported` fail-closed
-- **已知未完成邊界**：混亂狀態造成的玩家遠程跨 side pattern，目前明確 fail-closed，沒有用猜測的一擊近似
+- **混亂 StatusSeq → AttackNum → weapon command** 順序已依固定原 C 接回
+- **BOW**：raw COM2=-1 時不做 DefaultAttacker，也不誤消耗 aBowW `RAND(0,1)`
+- **BOW 打自己出戰 Pet**：依原 aBowW row 5 / row 0 排列與 -1 sentinel 停止
+- **BOOMERANG**：保留 AttackNum RNG 消耗、dedicated row sweep、Player side 0 正向順序與 30% 傷害
+- **BOUNDTHROW / BREAKTHROW**：跨 side TargetAdjust、死亡後 fallback、raw -1 只做第一段 fallback
+- **BREAKTHROW**：維持 WakeUp → 麻痺 → ItemCrush → AddProfit
+- 同 side Pet 的 Guard / hidden / loyalty lifecycle 也納入
+- V1.74 的 ranged-confusion fail-closed 已正式移除
 
 ## 目前主要系統
 
@@ -65,5 +66,6 @@
 - [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 - [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 - [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
+- [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
 之後新版本只需要在首頁更新「目前版本／最新進度」，詳細技術紀錄繼續寫入 CHANGELOG 分檔，就不會再發生首頁看起來卡在舊版本的問題。
