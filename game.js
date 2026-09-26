@@ -66,7 +66,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
@@ -2948,7 +2948,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -3008,6 +3008,49 @@ function battleStatusKey(desc){
   if(desc.kind==='enemy')return 'enemy:'+String(desc.unit?.id??desc.unitId??'');
   return null;
 }
+function sourceDefMagicState(desc){
+  const key=battleStatusKey(desc);
+  const st=key?battleDefMagicStates.get(key)||null:null;
+  return st&&Math.trunc(n(st.turns))>0?st:null;
+}
+function sourceApplyDefMagicStatus(desc,turns,nums){
+  const key=battleStatusKey(desc);
+  if(!key)return {applied:false,updated:false,turns:0,nums:0};
+  const old=battleDefMagicStates.get(key)||null;
+  let applied=false;
+  if(!old||Math.trunc(n(old.turns))<=0){
+    battleDefMagicStates.set(key,{
+      type:'defMagic',turns:Math.max(0,Math.trunc(n(turns))),nums:Math.trunc(n(nums))
+    });
+    applied=true;
+  }else{
+    // fixed BATTLE_MultiMagicStatusChange only guards MagicTbl[iEffect] (the turn counter);
+    // CHAR_OTHERSTATUSNUMS is overwritten unconditionally even when the same status is active.
+    old.nums=Math.trunc(n(nums));
+  }
+  const current=battleDefMagicStates.get(key)||old;
+  return {
+    applied,updated:!applied&&!!current,
+    turns:Math.max(0,Math.trunc(n(current?.turns))),
+    nums:Math.trunc(n(current?.nums))
+  };
+}
+function sourceDefMagicStatusSeq(desc){
+  const key=battleStatusKey(desc),st=key?battleDefMagicStates.get(key)||null:null;
+  if(!key||!st||Math.trunc(n(st.turns))<=0)return null;
+  st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+  if(st.turns<=0){
+    battleDefMagicStates.delete(key);
+    addLog(battleStatusDescName(desc)+' 的魔抗狀態結束。');
+    return {expired:true,turns:0,nums:Math.trunc(n(st.nums))};
+  }
+  return {expired:false,turns:st.turns,nums:Math.trunc(n(st.nums))};
+}
+function sourceDefMagicResistBonus(desc){
+  const st=sourceDefMagicState(desc);
+  return st?Math.trunc(n(st.nums)):0;
+}
+
 function sourceMagicPetState(desc){
   const key=battleStatusKey(desc);
   if(!key)return null;
@@ -3661,9 +3704,14 @@ function processBattleStatusTurn(actor){
   const blockedBefore=battleStatusCanMove(desc)===false;
   const attackShootSleep=sourceProcessAttackShootSleepTurn(desc);
   const finish=result=>{
+    // fixed battle.c: BATTLE_StatusSeq -> BATTLE_MagicStatusSeq -> BATTLE_CanMoveCheck.
+    // Def-magic is an independent WORK status, so it ticks even when a normal bad status
+    // is also active and never participates in battleHasAnyStatus().
+    const defMagic=sourceDefMagicStatusSeq(desc);
     const sars=sourceProcessSarsStatusTurn(desc);
     const extra={};
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
+    if(defMagic)extra.defMagic=defMagic;
     if(sars)extra.sars=sars;
     return Object.keys(extra).length?Object.assign({},result,extra):result;
   };
