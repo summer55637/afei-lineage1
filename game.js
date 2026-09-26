@@ -74,6 +74,67 @@ function sourceItemTemplateMagicUseMp(itemId){
   const value=Number(itemMagicDb.byItemId[String(Math.trunc(Number(itemId)))]);
   return Number.isFinite(value)?Math.trunc(value):null;
 }
+const sourceItemMakeTemplateCache=new Map();
+function sourceItemMakeDataIndex(name){
+  const order=itemMakeDb?.itemDataIntOrder;
+  return Array.isArray(order)?order.indexOf(String(name)):-1;
+}
+function sourceItemMakeTemplateData(itemId){
+  const id=Math.trunc(Number(itemId));
+  if(!Number.isFinite(id)||!itemMakeDb?.byItemId)return null;
+  const key=String(id);
+  if(sourceItemMakeTemplateCache.has(key))return sourceItemMakeTemplateCache.get(key);
+  if(!Object.prototype.hasOwnProperty.call(itemMakeDb.byItemId,key))return null;
+  const count=Math.trunc(Number(itemMakeDb.itemDataIntCount));
+  if(count!==66||!Array.isArray(itemMakeDb.defaultData)||itemMakeDb.defaultData.length!==count)return null;
+  const row=itemMakeDb.byItemId[key];
+  const base=itemMakeDb.defaultData.map(v=>Math.trunc(Number(v)));
+  const widths=Array(count).fill(0);
+  const applySparse=(pairs,target,{nonnegative=false}={})=>{
+    if(!Array.isArray(pairs)||(pairs.length%2)!==0)return false;
+    for(let i=0;i<pairs.length;i+=2){
+      const index=Math.trunc(Number(pairs[i])),value=Number(pairs[i+1]);
+      if(!Number.isFinite(index)||index<0||index>=count||!Number.isFinite(value))return false;
+      const resolved=Math.trunc(value);
+      if(nonnegative&&resolved<0)return false;
+      target[index]=resolved;
+    }
+    return true;
+  };
+  if(!applySparse(row?.b||[],base)||!applySparse(row?.w||[],widths,{nonnegative:true}))return null;
+  const idIndex=sourceItemMakeDataIndex('ITEM_ID');
+  if(idIndex<0||base[idIndex]!==id)return null;
+  const result={base,widths};
+  sourceItemMakeTemplateCache.set(key,result);
+  return result;
+}
+function sourceItemRuntimeDataInt(slot,fieldName){
+  const index=sourceItemMakeDataIndex(fieldName);
+  const count=Math.trunc(Number(itemMakeDb?.itemDataIntCount));
+  if(index<0||count!==66||!Array.isArray(slot?.sourceData)||slot.sourceData.length!==count)return null;
+  const value=Number(slot.sourceData[index]);
+  return Number.isFinite(value)?Math.trunc(value):null;
+}
+function sourceMakeItemData(itemId){
+  const calls=Math.max(0,Math.trunc(n(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
+  const template=sourceItemMakeTemplateData(itemId);
+  if(!template||template.base.length!==calls||template.widths.length!==calls){
+    // Legacy/malformed metadata fallback: preserve the known one-rand-per-field lifecycle only.
+    // Do not fabricate data[] when base/randomwidth cannot be source-backed.
+    for(let i=0;i<calls;i++)cRand(0,0);
+    return {calls,data:null,materialized:false};
+  }
+  const data=template.base.slice();
+  for(let i=0;i<calls;i++){
+    const width=template.widths[i];
+    data[i]+=cRand(0,width);
+  }
+  const leakIndex=Math.trunc(Number(itemMakeDb?.makeItem?.leakLevelIndex));
+  if(Number.isFinite(leakIndex)&&leakIndex>=0&&leakIndex<data.length){
+    data[leakIndex]=Math.trunc(n(itemMakeDb?.makeItem?.leakLevelAfterLoop)||1);
+  }
+  return {calls,data,materialized:true};
+}
 function sourceItemRelifeTemplate(itemId){
   const id=Math.trunc(Number(itemId));
   if(!Number.isFinite(id)||!itemRelifeDb?.byItemId)return null;
@@ -139,9 +200,8 @@ function sourcePlayerFixedEquipModifier(template,key){
   const pair=template?.[key];
   if(!Array.isArray(pair)||pair.length<2)return 0;
   const a=Number(pair[0]),b=Number(pair[1]);
-  // Current source-backed player-equipment modifier pairs are min=max, so the resulting
-  // value is deterministic. V1.72 still consumes ITEM_makeItem's 66 RNG calls at creation;
-  // this helper only avoids inventing a variable rolled field that the runtime does not store.
+  // Backward-compatible fallback for pre-materialization saves. New V1.72 existing items keep
+  // the exact rolled ITEM data[] and therefore do not need this min=max shortcut.
   if(!Number.isFinite(a)||!Number.isFinite(b)||a!==b)return null;
   return Math.trunc(a);
 }
@@ -155,11 +215,15 @@ function sourcePlayerEquipmentModifiers(target=state){
     const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
     if(!template)continue;
     const values={};
-    for(const [outKey,templateKey] of [
-      ['attack','modifyAttack'],['defense','modifyDefense'],['quick','modifyQuick'],
-      ['hp','modifyHp'],['mp','modifyMp'],['luck','modifyLuck'],['charm','modifyCharm'],['avoid','modifyAvoid']
+    const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+    for(const [outKey,templateKey,fieldName] of [
+      ['attack','modifyAttack','ITEM_MODIFYATTACK'],['defense','modifyDefense','ITEM_MODIFYDEFENCE'],
+      ['quick','modifyQuick','ITEM_MODIFYQUICK'],['hp','modifyHp','ITEM_MODIFYHP'],
+      ['mp','modifyMp','ITEM_MODIFYMP'],['luck','modifyLuck','ITEM_MODIFYLUCK'],
+      ['charm','modifyCharm','ITEM_MODIFYCHARM'],['avoid','modifyAvoid','ITEM_MODIFYAVOID']
     ]){
-      const value=sourcePlayerFixedEquipModifier(template,templateKey);
+      const rolled=sourceItemRuntimeDataInt(existing,fieldName);
+      const value=rolled==null?sourcePlayerFixedEquipModifier(template,templateKey):rolled;
       if(value==null){result.complete=false;continue;}
       values[outKey]=value;result[outKey]+=value;
     }
@@ -302,7 +366,7 @@ function sourceEnemyWeaponIsThrowType(type){
   const t=Math.trunc(Number(type));
   return Array.isArray(enemyWeaponDb?.throwWeaponTypes)&&enemyWeaponDb.throwWeaponTypes.map(Number).includes(t);
 }
-function sourceEnemyWeaponCompliance(base,weaponId){
+function sourceEnemyWeaponCompliance(base,weaponId,itemIndex=null){
   const template=sourceEnemyWeaponTemplate(weaponId);
   const initial={
     attack:Math.trunc(n(base?.attack)),defense:Math.trunc(n(base?.defense)),quick:Math.trunc(n(base?.quick)),
@@ -310,18 +374,29 @@ function sourceEnemyWeaponCompliance(base,weaponId){
     weaponId:null,weaponName:null,weaponType:0,weaponCritical:0,throwWeapon:false,attackNumMin:0,attackNumMax:0
   };
   if(!template)return initial;
+  const existing=sourceItemRuntimeSlot(itemIndex);
   const fixed=pair=>Array.isArray(pair)&&Number.isFinite(Number(pair[0]))?Math.trunc(Number(pair[0])):0;
-  const attack=Math.max(0,initial.attack+fixed(template.modifyAttack));
-  const defense=Math.max(-100,initial.defense+fixed(template.modifyDefense));
-  const quick=Math.max(-100,initial.quick+fixed(template.modifyQuick));
-  const maxHp=Math.max(0,initial.maxHp+fixed(template.modifyHp));
-  const maxMp=clamp(initial.maxMp+fixed(template.modifyMp),0,1000);
-  const type=Math.trunc(n(template.type));
+  const rolled=(field,pair)=>{
+    const value=sourceItemRuntimeDataInt(existing,field);
+    return value==null?fixed(pair):value;
+  };
+  const attack=Math.max(0,initial.attack+rolled('ITEM_MODIFYATTACK',template.modifyAttack));
+  const defense=Math.max(-100,initial.defense+rolled('ITEM_MODIFYDEFENCE',template.modifyDefense));
+  const quick=Math.max(-100,initial.quick+rolled('ITEM_MODIFYQUICK',template.modifyQuick));
+  const maxHp=Math.max(0,initial.maxHp+rolled('ITEM_MODIFYHP',template.modifyHp));
+  const maxMp=clamp(initial.maxMp+rolled('ITEM_MODIFYMP',template.modifyMp),0,1000);
+  const rolledType=sourceItemRuntimeDataInt(existing,'ITEM_TYPE');
+  const type=rolledType==null?Math.trunc(n(template.type)):rolledType;
+  const rolledCritical=sourceItemRuntimeDataInt(existing,'ITEM_CRITICAL');
+  const attackNumMin=sourceItemRuntimeDataInt(existing,'ITEM_ATTACKNUM_MIN');
+  const attackNumMax=sourceItemRuntimeDataInt(existing,'ITEM_ATTACKNUM_MAX');
   return {
     attack,defense,quick,maxHp,maxMp,
     weaponId:Math.trunc(Number(template.itemId)),weaponName:template.name||null,weaponType:type,
-    weaponCritical:fixed(template.critical),throwWeapon:sourceEnemyWeaponIsThrowType(type),
-    attackNumMin:Math.trunc(n(template.attackNum?.[0])),attackNumMax:Math.trunc(n(template.attackNum?.[1]))
+    weaponCritical:rolledCritical==null?fixed(template.critical):rolledCritical,
+    throwWeapon:sourceEnemyWeaponIsThrowType(type),
+    attackNumMin:attackNumMin==null?Math.trunc(n(template.attackNum?.[0])):attackNumMin,
+    attackNumMax:attackNumMax==null?Math.trunc(n(template.attackNum?.[1])):attackNumMax
   };
 }
 function normalizeItemRuntime(rt){
@@ -330,6 +405,9 @@ function normalizeItemRuntime(rt){
   out.itemnum=25000;
   out.sindex=clamp(Math.trunc(n(rt.sindex)||1),1,out.itemnum-1);
   const slots=rt.slots&&typeof rt.slots==='object'?rt.slots:{};
+  const dataCount=Math.trunc(Number(itemMakeDb?.itemDataIntCount));
+  const muIndex=sourceItemMakeDataIndex('ITEM_MAGICUSEMP');
+  const leakIndex=sourceItemMakeDataIndex('ITEM_LEAKLEVEL');
   for(const [k,v] of Object.entries(slots)){
     const idx=Math.trunc(Number(k));
     if(!Number.isFinite(idx)||idx<=0||idx>=out.itemnum||!v||v.use!==true)continue;
@@ -337,16 +415,23 @@ function normalizeItemRuntime(rt){
     // 原 ITEM_makeItem() 對 ITEM_tbl 不存在的 ID 會失敗；V0.69 曾無法驗證模板，V0.70 起不再保留 phantom existing item。
     if(itemId!=null&&itemMagicDb?.byItemId&&!sourceItemTemplateExists(itemId))continue;
     const sourceMu=sourceItemTemplateMagicUseMp(itemId);
+    const sourceData=(
+      dataCount===66&&Array.isArray(v.sourceData)&&v.sourceData.length===dataCount&&
+      v.sourceData.every(value=>Number.isFinite(Number(value)))
+    )?v.sourceData.map(value=>Math.trunc(Number(value))):null;
+    const dataMu=sourceData&&muIndex>=0?sourceData[muIndex]:null;
+    const dataLeak=sourceData&&leakIndex>=0?sourceData[leakIndex]:null;
     out.slots[String(idx)]={
       use:true,
       itemId,
-      // V0.70：V0.69 已存在的 null slot 可由原 itemset6 第 58 欄安全回填；來源不存在才保留 unknown。
-      magicUseMp:v.magicUseMp==null?sourceMu:(Number.isFinite(Number(v.magicUseMp))?Math.trunc(Number(v.magicUseMp)):sourceMu),
+      magicUseMp:v.magicUseMp==null?(dataMu==null?sourceMu:dataMu):(Number.isFinite(Number(v.magicUseMp))?Math.trunc(Number(v.magicUseMp)):sourceMu),
       owner:typeof v.owner==='string'?v.owner:null,
       source:typeof v.source==='string'?v.source:null,
       enemySlot:Number.isFinite(Number(v.enemySlot))?Math.trunc(Number(v.enemySlot)):null,
       sourceMakeRngCalls:Number.isFinite(Number(v.sourceMakeRngCalls))?Math.trunc(Number(v.sourceMakeRngCalls)):null,
-      leakLevel:Number.isFinite(Number(v.leakLevel))?Math.trunc(Number(v.leakLevel)):null
+      sourceMakeMaterialized:sourceData!==null&&v.sourceMakeMaterialized!==false,
+      sourceData,
+      leakLevel:Number.isFinite(Number(v.leakLevel))?Math.trunc(Number(v.leakLevel)):(dataLeak==null?null:dataLeak)
     };
   }
   return out;
@@ -372,24 +457,25 @@ function sourceItemRuntimeSetOwner(index,owner,source=null){
   if(source!==null)slot.source=source;
   return true;
 }
-function sourceConsumeItemMakeRng(){
-  const calls=Math.max(0,Math.trunc(n(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
-  // fixed ITEM_makeItem() loops every ITEM_DATAINT field. Even randomwidth==0 executes
-  // RAND(0,0), whose macro still calls rand() once and returns 0.
-  for(let i=0;i<calls;i++)cRand(0,0);
-  return calls;
-}
 function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
   if(!state)return -1;
   const normalizedItemId=Number.isFinite(Number(itemId))?Math.trunc(Number(itemId)):null;
-  const sourceMu=sourceItemTemplateMagicUseMp(normalizedItemId);
-  // fixed ITEM_makeItem() rejects an invalid ITEM_tbl before entering its RNG loop.
-  if(normalizedItemId!=null&&itemMagicDb?.byItemId&&!Object.prototype.hasOwnProperty.call(itemMagicDb.byItemId,String(normalizedItemId)))return -1;
+  if(normalizedItemId==null||!sourceItemTemplateExists(normalizedItemId))return -1;
+  // V1.72 v2 runtime is an exact parse of the pinned itemset6 blob. If a v2 row is missing or
+  // malformed, fail before RNG instead of inventing base/randomwidth values.
+  if(itemMakeDb?.byItemId&&!sourceItemMakeTemplateData(normalizedItemId))return -1;
 
+  const sourceMu=sourceItemTemplateMagicUseMp(normalizedItemId);
   // ITEM_makeItemAndRegist order is make first, existing-slot allocation second. Therefore
   // even an exhausted ITEM_item[] array has already consumed all 66 make-item RNG calls.
-  const sourceMakeRngCalls=sourceConsumeItemMakeRng();
-  const resolvedMu=magicUseMp==null?sourceMu:(Number.isFinite(Number(magicUseMp))?Math.trunc(Number(magicUseMp)):sourceMu);
+  const made=sourceMakeItemData(normalizedItemId);
+  const sourceMakeRngCalls=made.calls;
+  const makeMuIndex=sourceItemMakeDataIndex('ITEM_MAGICUSEMP');
+  const madeMu=made.materialized&&makeMuIndex>=0?made.data[makeMuIndex]:null;
+  const resolvedMu=magicUseMp==null?(madeMu==null?sourceMu:madeMu):(Number.isFinite(Number(magicUseMp))?Math.trunc(Number(magicUseMp)):sourceMu);
+  const leakIndex=sourceItemMakeDataIndex('ITEM_LEAKLEVEL');
+  const madeLeak=made.materialized&&leakIndex>=0?made.data[leakIndex]:1;
+
   state.itemRuntime=normalizeItemRuntime(state.itemRuntime);
   const rt=state.itemRuntime;
   for(let guard=0;guard<rt.itemnum;guard++){
@@ -405,7 +491,9 @@ function sourceItemRuntimeAlloc(itemId=null,magicUseMp=null,meta={}){
       source:typeof meta?.source==='string'?meta.source:null,
       enemySlot:Number.isFinite(Number(meta?.enemySlot))?Math.trunc(Number(meta.enemySlot)):null,
       sourceMakeRngCalls,
-      leakLevel:1
+      sourceMakeMaterialized:made.materialized,
+      sourceData:made.materialized?made.data:null,
+      leakLevel:madeLeak
     };
     return rt.sindex;
   }
@@ -1888,9 +1976,9 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
   }
 
   // 原 CHAR_complianceParameter()：CHAR_initcharWorkInt() 後 ITEM_equipEffect()。
-  // 這批 Enemy 自動武器 modifier min=max，所以數值可直接套來源值；建立武器本身
-  // 已在 sourceItemRuntimeAlloc() 精確消耗 ITEM_makeItem 的 66 顆 RNG。
-  const equipped=sourceEnemyWeaponCompliance({attack,defense,quick,maxHp:hp,maxMp:0},equippedWeaponId);
+  // V1.72 直接讀 existing item 保存的生成後 data[]，因此即使 itemset6 是 min!=max，
+  // compliance 也使用同一輪 ITEM_makeItem 66 顆 RNG 得到的實際 modifier。
+  const equipped=sourceEnemyWeaponCompliance({attack,defense,quick,maxHp:hp,maxMp:0},equippedWeaponId,weaponItemIndex);
   attack=equipped.attack;defense=equipped.defense;quick=equipped.quick;hp=Math.max(1,equipped.maxHp);
 
   return {
@@ -11508,6 +11596,12 @@ async function boot(){
     itemMagicDb=await itemMagicR.json();
     itemRelifeDb=await itemRelifeR.json();
     itemMakeDb=await itemMakeR.json();
+    sourceItemMakeTemplateCache.clear();
+    if(itemMakeDb?.format==='stoneage-item-make-runtime-v2'){
+      if(Math.trunc(Number(itemMakeDb.itemDataIntCount))!==66)throw new Error('Item make runtime field-count mismatch');
+      if(Math.trunc(Number(itemMakeDb?.stats?.templates))!==10737)throw new Error('Item make runtime template-count mismatch');
+      if(Math.trunc(Number(itemMakeDb?.fixedBuild?.itemIdTokenIndex))!==17)throw new Error('Item make runtime fixed-build mismatch');
+    }
     gmqueDb=await gmqueR.json();
     enemyWeaponDb=await enemyWeaponR.json();
     buildDynamicGroupCatalog();
@@ -11521,7 +11615,7 @@ async function boot(){
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.72 載入完成：ITEM_makeItem 固定 66 顆 RNG 已接入 existing item 建立；Enemy 10 格掉落已改成每格命中後立即建 item，再進下一格，對齊 fixed enemy.c。','good');
+    addLog('V1.72 載入完成：固定 itemset6 的 10,737 個 template 已展開 base/randomwidth；ITEM_makeItem 每次建立都依 66 欄逐欄抽 RNG 並保存生成後 data[]。','good');
     render();
     timer=setInterval(tick,900);
   }catch(err){
