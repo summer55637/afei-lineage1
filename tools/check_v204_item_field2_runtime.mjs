@@ -29,10 +29,10 @@ assert.deepEqual(field2.semantics?.functionFields,[
 assert.equal(field2.stats?.parsedLines,10737);
 assert.equal(field2.stats?.syntaxErrors,0);
 assert.equal(field2.stats?.duplicateIdsIgnored,0);
-assert.ok(Number(field2.stats?.rowsWithField2StringData)>0);
-assert.ok(Number(field2.stats?.templatesWithTypeCode)>0);
-assert.ok(Number(field2.stats?.templatesWithRepairIngredientName)>0);
-assert.ok(Number(field2.stats?.nonblankFunctionStrings)>0);
+assert.equal(Number(field2.stats?.rowsWithField2StringData),10737);
+assert.equal(Number(field2.stats?.templatesWithTypeCode),296);
+assert.equal(Number(field2.stats?.templatesWithRepairIngredientName),9437);
+assert.equal(Number(field2.stats?.nonblankFunctionStrings),1759);
 
 const rows=Object.entries(pets.byId||{})
   .map(([id,row])=>({id:Number(id),...row}))
@@ -55,6 +55,24 @@ assert.ok(values.some(row=>row.functions&&Object.keys(row.functions).length>0));
 // Generated strings are source bytes transported through latin1. They are not localization/display
 // text and must stay source metadata only.
 assert.equal(field2.semantics?.missingRowOrKey,'empty C string');
+
+const game=fs.readFileSync('game.js','utf8');
+assert.ok(game.includes("const ITEM_FIELD2_RUNTIME_URL='data/generated/stoneage_item_field2_runtime.json'"));
+assert.ok(game.includes('async function sourceEnsureItemField2Db()'));
+assert.ok(game.includes("fetch(ITEM_FIELD2_RUNTIME_URL,{cache:'no-store'})"));
+assert.ok(game.includes("if(itemField2Db)return itemField2Db"));
+assert.ok(game.includes("if(itemField2LoadPromise)return itemField2LoadPromise"));
+assert.ok(game.includes('function sourceItemField2Char(slot,key)'));
+assert.ok(game.includes('function sourceItemField2SetChar(slot,key,value)'));
+assert.ok(game.includes('function sourceItemField2Function(slot,key)'));
+assert.ok(game.includes('function sourceItemField2SetFunction(slot,key,value)'));
+assert.ok(game.includes('function sourceItemRuntimeSetDataInt(slot,fieldName,value)'));
+
+// Field2 source is intentionally lazy: do not add its 1.9 MB JSON to boot Promise.all.
+const bootStart=game.indexOf('async function boot()');
+assert.ok(bootStart>=0);
+const boot=game.slice(bootStart);
+assert.equal(boot.includes('fetch(ITEM_FIELD2_RUNTIME_URL'),false,'field2 runtime must remain lazy-loaded');
 
 console.log(JSON.stringify({
   pass:true,
