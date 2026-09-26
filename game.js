@@ -10376,6 +10376,125 @@ function sourcePerformPetAttackCrazedSkill(pet,action,options={}){
   };
 }
 
+function sourcePerformPetAttackShootSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const parts=String(meta?.o||'').split('|');
+  const min=sourceCAtoi(parts[0]);
+  const max=sourceCAtoi(parts[1]);
+  const attackMax=cRand(min,max);
+  const label=meta?.n||'栗子連激';
+
+  // fixed PETSKILL_AttackShoot() first RANDs the count from option min|max.
+  // Its loyal>=100 burst branch is unreachable from BATTLE_PetLoyalCheck RANDOMACT:
+  // RANDOMACT exists only for FIXAI 20..39. Do not consume RAND(1,300) / RAND(1,50).
+  // The skill leaves WORK attack/defense unchanged; the commented 1.2/n code is inert.
+  addLog(
+    pet.name+' 隨機使用「'+label+'」：'+attackMax+' 顆，每擊傷害依原 gDamageDiv 除以 '+attackMax+'。',
+    'pet'
+  );
+
+  // Same fixed TargetListSet branch as ATTCRAZED. Enemy side 10..19 is scanned with
+  // i < deftop, so only source slots 10..18 (Web battleSlot 0..8) enter the pre-roll pool.
+  // If this pool is non-empty, ALL attackMax target RANDs happen before the first hit.
+  // If empty, the original COM2-filled aDefList remains and no target-list RNG is consumed.
+  const originalTarget=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  const sourcePool=targetableEnemyUnits().filter(unit=>{
+    const slot=Math.trunc(n(unit?.battleSlot));
+    return slot>=0&&slot<9;
+  });
+  const plannedTargets=[];
+  const targetRolls=[];
+  if(sourcePool.length){
+    for(let i=0;i<attackMax;i++){
+      const roll=cRand(0,sourcePool.length-1);
+      targetRolls.push(roll);
+      plannedTargets.push(sourcePool[roll]);
+    }
+  }else{
+    for(let i=0;i<attackMax;i++)plannedTargets.push(originalTarget);
+  }
+
+  const segments=[];
+  let attackCount=0,sourceLoopExit='target-list-end';
+  for(let i=0;i<attackMax;i++){
+    if(!petIsBattleActive(pet)||!enemy){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
+    if(!targetableEnemyUnits().length){
+      sourceLoopExit='battle-side-empty';
+      break;
+    }
+
+    let target=null;
+    if(i===0){
+      // Player Pet has no CHAR_ARM => non-BOW. Source consumes plannedTargets[0] RNG but
+      // still TargetAdjusts the original COM2 for the first hit.
+      target=sourcePetEnemyTargetFromAction(action);
+    }else{
+      const raw=plannedTargets[i];
+      if(raw&&n(raw.hp)>0&&!enemyUnitHidden(raw)){
+        target=raw;
+      }else{
+        const list=targetableEnemyUnits();
+        target=list.length?list[cRand(0,list.length-1)]:null;
+      }
+    }
+    if(!target){
+      sourceLoopExit='target-adjust-failed';
+      break;
+    }
+
+    const attacker=petBattleView(pet);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+      guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
+      damageDivisor:attackMax
+    });
+
+    // fixed BATTLE_Attack order for ATTSHOOT:
+    // DamageWakeUp -> special RAND(1,5) sleep -> ItemCrush -> return -> BATTLE_AddProfit.
+    // Defer the shared ItemCrush RNG so the sleep roll stays in its exact source position.
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id,{deferItemCrush:true});
+    let sleepRoll=null,sleepApplied=false;
+    if(n(r?.damage)>0){
+      sleepRoll=cRand(1,5);
+      if(sleepRoll>4&&actual){
+        sleepApplied=sourceAttackShootApplySleep({kind:'enemy',unit:actual,unitId:actual.id});
+      }
+    }
+    sourceBattleFinalizeItemCrushRng(r);
+    sourceProcessBattleDeathsAtAddProfit();
+
+    attackCount++;
+    segments.push({
+      targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
+      r,sleepRoll,sleepApplied
+    });
+
+    if(attackCount>=attackMax){
+      sourceLoopExit='attack-max';
+      break;
+    }
+    if(!petIsBattleActive(pet)){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
+  }
+
+  // fixed BATTLE_Counter / BATTLE_CounterCheck explicitly return FALSE when either
+  // participant still has COM1 == BATTLE_COM_S_ATTSHOOT. No post-loop Counter RNG.
+  return {
+    handled:true,skillId:action?.skillId,attackMax,attackCount,hits:attackCount,
+    min,max,sourceRandomActFixAiBelow40:true,loyaltyBurstEligible:false,
+    protocol:'BB-w0-forced',targetRolls,
+    plannedTargetUnitIds:plannedTargets.map(unit=>unit?.id||null),
+    sourcePoolUnitIds:sourcePool.map(unit=>unit.id),
+    sourceExcludedSlot19:true,segments,sourceLoopExit,counterBlocked:true
+  };
+}
+
 function sourcePerformPetWildViolentSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -12157,6 +12276,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_AttackCrazed')result=sourcePerformPetAttackCrazedSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_AttackShoot')result=sourcePerformPetAttackShootSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_StealMoney')result=sourcePerformPetStealMoneySkill(pet,action);
