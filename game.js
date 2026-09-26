@@ -178,6 +178,9 @@ async function sourceEnsurePetMergeFixDb(){
     if(Math.trunc(Number(data?.stats?.uniqueTempNo))!==1813)throw new Error('Pet merge-fix runtime TempNo-count mismatch');
     if(Math.trunc(Number(data?.stats?.itemAtomCount))!==112)throw new Error('Pet merge-fix runtime atom-count mismatch');
     if(Math.trunc(Number(data?.stats?.configuredSlots))!==4602)throw new Error('Pet merge-fix runtime slot-count mismatch');
+    if(Object.keys(data?.atomIndexByByteName||{}).length!==112)throw new Error('Pet merge-fix runtime byte-atom-count mismatch');
+    if(!Array.isArray(data?.mergeMath?.itemRandTableForItem)||data.mergeMath.itemRandTableForItem.length!==20)throw new Error('Pet merge-fix runtime math-table mismatch');
+    if(!Array.isArray(data?.mergeMath?.oddsTable)||data.mergeMath.oddsTable.length!==14)throw new Error('Pet merge-fix runtime odds-table mismatch');
     petMergeFixDb=data;
     return data;
   })();
@@ -210,6 +213,166 @@ function sourcePetMergeFixEntries(pet=activePet()){
     }
   }
   return out;
+}
+
+function sourceMergeAtomIndexByByteName(name){
+  const value=petMergeFixDb?.atomIndexByByteName?.[String(name??'')];
+  const index=Number(value);
+  return Number.isFinite(index)?Math.trunc(index):null;
+}
+function sourceMergeTableNum(value){
+  const rows=petMergeFixDb?.mergeMath?.itemRandTableForItem;
+  if(!Array.isArray(rows)||!rows.length)return null;
+  const num=Math.trunc(Number(value));
+  if(!Number.isFinite(num))return null;
+  for(let i=0;i<rows.length;i++){
+    if(num<=Math.trunc(Number(rows[i]?.maxnum)))return i;
+  }
+  return rows.length-1;
+}
+function sourceMergeCRint(value){
+  const v=Number(value);
+  if(!Number.isFinite(v))return null;
+  const sign=v<0?-1:1,a=Math.abs(v),floor=Math.floor(a),fraction=a-floor;
+  if(fraction<0.5)return sign*floor;
+  if(fraction>0.5)return sign*(floor+1);
+  return sign*((floor%2===0)?floor:floor+1);
+}
+function sourceMergeRandRangePlan(base,minRate,maxRate){
+  const dom=Math.trunc(Number(petMergeFixDb?.mergeMath?.randDom)||1000);
+  let b=Math.trunc(Number(base)),lo=Math.trunc(Number(minRate)),hi=Math.trunc(Number(maxRate));
+  if(!Number.isFinite(b)||!Number.isFinite(lo)||!Number.isFinite(hi)||dom<=0)return {ok:false,reason:'rand-range-source'};
+  if(lo>hi){const t=lo;lo=hi;hi=t}
+  const minnum=sourceMergeCRint((b/dom)*lo),maxnum=sourceMergeCRint((b/dom)*hi);
+  if(minnum==null||maxnum==null)return {ok:false,reason:'rand-range-source'};
+  const range=maxnum-minnum;
+  if(lo===0&&hi===0)return {ok:true,base:b,minRate:lo,maxRate:hi,minnum,maxnum,range,mode:'zero',result:0,rngCalls:0};
+  if(range===0)return {ok:true,base:b,minRate:lo,maxRate:hi,minnum,maxnum,range,mode:'base',result:b,rngCalls:0};
+  if(range<0)return {ok:true,base:b,minRate:lo,maxRate:hi,minnum,maxnum,range,mode:'negative-range-zero',result:0,rngCalls:0};
+  return {ok:true,base:b,minRate:lo,maxRate:hi,minnum,maxnum,range,mode:'rng',resultMin:minnum,resultMax:maxnum,rngMin:0,rngMax:range,rngCalls:1};
+}
+function sourceMergeSimplifyValues(values,{petPresent=true,petFamily=false}={}){
+  const rows=petMergeFixDb?.mergeMath?.itemRandTableForItem;
+  const odds=petMergeFixDb?.mergeMath?.oddsTable;
+  if(!Array.isArray(rows)||rows.length!==20||!Array.isArray(odds)||odds.length!==14)return {ok:false,reason:'simplify-source'};
+  if(!Array.isArray(values)||!values.length)return {ok:false,reason:'simplify-empty'};
+  if(values.length>odds.length+1)return {ok:false,reason:'simplify-odds-oob',count:values.length};
+  const data=values.map(Number);
+  if(data.some(v=>!Number.isFinite(v)))return {ok:false,reason:'simplify-value-source'};
+  data.sort((a,b)=>a-b);
+  const steps=[];
+  for(let j=1;j<data.length;j++){
+    const tableNum=sourceMergeTableNum(data[j-1]);
+    if(tableNum==null)return {ok:false,reason:'simplify-table-source'};
+    const rowRate=Number(rows[tableNum]?.rate),baseRate=Number(rows[0]?.rate);
+    if(!Number.isFinite(rowRate)||!Number.isFinite(baseRate)||baseRate===0)return {ok:false,reason:'simplify-rate-source'};
+    const rate=rowRate/baseRate,before=data[j];
+    data[j]+=data[j-1]*Number(odds[j-1])*rate;
+    steps.push({j,tableNum,rate,before,after:data[j]});
+  }
+  let value=Math.trunc(data[data.length-1]);
+  if(petPresent){
+    const cap=petFamily
+      ?Math.trunc(Number(petMergeFixDb?.fixedBuild?.fmRandRangeDom)||4000)
+      :1000;
+    if(value>cap)value=cap;
+  }
+  return {ok:true,value,sorted:data,steps,petPresent:!!petPresent,petFamily:!!petFamily};
+}
+function sourceMergeCollectStaticAtoms(selected){
+  if(!Array.isArray(selected))return {ok:false,reason:'merge-selection-source'};
+  const ordered=[...selected].sort((a,b)=>Math.trunc(Number(a?.slotIndex))-Math.trunc(Number(b?.slotIndex)));
+  const items=[],buckets=[],byAtom=new Map(),skipped=[];
+  let itemType=-1;
+  itemLoop:
+  for(const entry of ordered){
+    const canMerge=sourceItemRuntimeResolvedDataInt(entry?.existing,'ITEM_CANMERGEFROM');
+    if(canMerge==null)return {ok:false,reason:'merge-canmerge-source'};
+    if(canMerge!==1){skipped.push({slotIndex:entry?.slotIndex,reason:'cannot-merge-from'});continue}
+    const type=sourceItemRuntimeResolvedDataInt(entry?.existing,'ITEM_TYPE');
+    if(type==null)return {ok:false,reason:'merge-type-source'};
+    if(itemType===-1)itemType=type;
+    else if(itemType===20&&type!==20)return {ok:false,reason:'mixed-dish'};
+    else if(itemType!==20&&type===20)return {ok:false,reason:'mixed-dish'};
+    items.push(entry);
+    for(let i=0;i<5;i++){
+      const name=sourceItemField2Char(entry.existing,'ingName'+i);
+      if(!name)continue;
+      const atomIndex=sourceMergeAtomIndexByByteName(name);
+      if(atomIndex==null){
+        skipped.push({slotIndex:entry.slotIndex,ingredient:i,reason:'unknown-atom'});
+        continue itemLoop;
+      }
+      const value=sourceItemRuntimeResolvedDataInt(entry.existing,'ITEM_INGVALUE'+i);
+      if(value==null)return {ok:false,reason:'merge-ingvalue-source',slotIndex:entry.slotIndex,ingredient:i};
+      let bucket=byAtom.get(atomIndex);
+      if(!bucket){
+        bucket={atomIndex,name,values:[]};
+        byAtom.set(atomIndex,bucket);buckets.push(bucket);
+      }
+      bucket.values.push(value);
+    }
+  }
+  if(items.length<=1)return {ok:false,reason:'less-than-two-mergeable',items:items.length,skipped};
+  return {ok:true,items,skipped,itemType,searchtable:itemType===20?1:0,buckets};
+}
+function sourceMergeRatePlan(atomIndex,simplified,searchtable,petFixEntries){
+  const rows=petMergeFixDb?.mergeMath?.itemRandTableForItem;
+  const rangeWidth=petMergeFixDb?.mergeMath?.mergeRangeWidth;
+  const dishTable=petMergeFixDb?.mergeMath?.itemRandTable;
+  if(!Array.isArray(rows)||!rangeWidth||!Array.isArray(dishTable))return {ok:false,reason:'merge-rate-source'};
+  const tableNum=searchtable===0?sourceMergeTableNum(simplified):0;
+  if(tableNum==null)return {ok:false,reason:'merge-table-source'};
+  const rate=Number(rows[tableNum]?.rate);
+  if(!Number.isFinite(rate)||rate===0)return {ok:false,reason:'merge-rate-source'};
+  const fixed=(Array.isArray(petFixEntries)?petFixEntries:[]).find(x=>Math.trunc(Number(x?.atomIndex))===Math.trunc(Number(atomIndex)))||null;
+  let base=Math.trunc(Number(simplified)),minRate,maxRate;
+  if(fixed){
+    let fixMin=Math.trunc(Number(fixed.fixMin)),fixMax=Math.trunc(Number(fixed.fixMax));
+    if(fixMin<0)fixMin=1000;
+    if(fixMax<0)fixMax=1000;
+    base+=Math.trunc(Number(fixed.baseAdd)||0);
+    if(searchtable===0){
+      minRate=Math.trunc((1/rate)*Number(rangeWidth.min)*fixMin);
+      maxRate=Math.trunc(rate*Number(rangeWidth.max)*fixMax);
+    }else{
+      minRate=Math.trunc(Number(dishTable[1]?.[0])*fixMin/1000);
+      maxRate=Math.trunc(Number(dishTable[1]?.[1])*fixMin/1000);
+    }
+  }else if(searchtable===0){
+    minRate=Math.trunc((1/rate)*Number(rangeWidth.min)*1000);
+    maxRate=Math.trunc(rate*Number(rangeWidth.max)*1000);
+  }else{
+    minRate=Math.trunc(Number(dishTable[1]?.[0]));
+    maxRate=Math.trunc(Number(dishTable[1]?.[1]));
+  }
+  const randPlan=sourceMergeRandRangePlan(base,minRate,maxRate);
+  if(!randPlan.ok)return randPlan;
+  return {ok:true,atomIndex,tableNum,rate,fixed,base,minRate,maxRate,randPlan};
+}
+function sourceMergePrepareStatic(selected,pet=activePet()){
+  const collected=sourceMergeCollectStaticAtoms(selected);
+  if(!collected.ok)return collected;
+  const petFixEntries=sourcePetMergeFixEntries(pet);
+  const atoms=[];
+  let plannedAtomRandCalls=0;
+  for(const bucket of collected.buckets){
+    // Current Web pet lifecycle only creates ordinary pets, not CHAR_PETFAMILY guardian pets.
+    const simplified=sourceMergeSimplifyValues(bucket.values,{petPresent:true,petFamily:false});
+    if(!simplified.ok)return Object.assign({atomIndex:bucket.atomIndex},simplified);
+    const ratePlan=sourceMergeRatePlan(bucket.atomIndex,simplified.value,collected.searchtable,petFixEntries);
+    if(!ratePlan.ok)return ratePlan;
+    plannedAtomRandCalls+=Math.trunc(Number(ratePlan.randPlan?.rngCalls)||0);
+    atoms.push({atomIndex:bucket.atomIndex,name:bucket.name,rawValues:[...bucket.values],simplified,ratePlan});
+  }
+  const makeItemCalls=Math.max(0,Math.trunc(Number(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
+  return {
+    ok:true,itemCount:collected.items.length,searchtable:collected.searchtable,itemType:collected.itemType,
+    skipped:collected.skipped,atoms,petFixEntries:petFixEntries.length,
+    deferredMakeItemRngCalls:makeItemCalls*collected.items.length,
+    plannedAtomRandCalls,
+    sourceNoRngConsumed:true
+  };
 }
 
 function sourceItemField2Template(itemId){
@@ -15944,16 +16107,21 @@ async function sourceUseField2PetSkill(skillId){
   if(enemy){addLog('原 C field=2 PetSkill 只能在非戰鬥狀態使用。','bad');return {ok:false,reason:'in-battle'}}
 
   if(id===200||id===201){
-    let petFixEntries=[];
+    let petFixEntries=[],prepared=null;
     try{
-      await sourceEnsurePetMergeFixDb();
+      await Promise.all([sourceEnsurePetMergeFixDb(),sourceEnsureItemField2Db()]);
       petFixEntries=sourcePetMergeFixEntries(activePet());
+      prepared=sourceMergePrepareStatic(sourceField2SelectedEntries(),activePet());
     }catch(err){
-      addLog('加工／料理固定寵物修正 runtime 載入失敗：'+String(err?.message||err),'bad');
+      addLog('加工／料理固定 merge runtime 載入失敗：'+String(err?.message||err),'bad');
       return {ok:false,reason:'merge-fix-runtime-load'};
     }
-    addLog((id===200?'加工':'料理')+' 的 enemybase ATOM 寵物修正已由固定來源載入；ITEM_mergeItem_merge 的完整 merge table/runtime 與成品 lifecycle 尚未完全來源化，維持不猜結果。','bad');
-    return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,petFixEntries:petFixEntries.length};
+    if(!prepared?.ok){
+      addLog((id===200?'加工':'料理')+' 的固定材料數值前置無法完成：'+String(prepared?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
+      return Object.assign({ok:false,mergeStaticPrepared:false,sourceNoRngConsumed:true},prepared||{reason:'merge-prepare'});
+    }
+    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 的固定前置計畫（'+prepared.atoms.length+' 種素材，預計 atom RNG '+prepared.plannedAtomRandCalls+' 次）；目前未實際擲 RNG。成品候選與完整 lifecycle 尚未來源化，維持不猜結果。','bad');
+    return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,mergeStaticPrepared:true,petFixEntries:petFixEntries.length,prepared};
   }
 
   try{await sourceEnsureItemField2Db()}

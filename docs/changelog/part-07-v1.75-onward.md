@@ -3112,3 +3112,84 @@ save schema 維持 **29**。
 `ITEM_getAtomIndexByName()` 回傳的是 `item_atoms[]` 的 **zero-based 載入位置**。
 
 因此 V2.06 初版把第三欄 1..112 當 index 屬於來源解析錯誤；當時 200／201 仍維持 pending，尚未拿錯 index 產生成品。本修正把 runtime 改成真正 zero-based load order：石=0、木=1、骨=2、牙=3、皮=4、線=5……；其餘 1813 / 980 / 4602 / 4572 / 30 / 22860 / 75 統計不變。
+
+---
+
+## V2.07 Merge simplify / table / rand-range plan
+
+本輪只往 200／201 的下一層推進，不碰成品建立與材料刪除。
+
+### itematom cross-file byte identity
+
+V2.04 的 `ITEM_INGNAME0～4` 為 latin1 byte-preserving transport；fixed C 的跨檔比對本質是 source bytes 的 `strcmp`。因此 V2.07 在 pet merge runtime 新增 `atomIndexByByteName`：
+
+- key = itematom raw bytes 1:1 映成 U+00xx
+- value = zero-based `item_atoms[]` load index
+
+例如石的 GB18030 bytes `CA AF` 會以 byte-string key `Ê¯` 對到 atom 0。這讓 itemset6 與 itematom 可以不經猜譯做精確跨檔匹配。
+
+### ITEM_initRandTable / ITEM_getTableNum
+
+固定 `ITEM_GEN_RATE=0.7`，20 個 num：
+
+`10,30,65,125,205,305,425,565,725,905,1125,1354,1594,1825,2105,2405,2725,3065,3425,3805`
+
+初始化後 max：
+
+`24,54,107,181,275,389,523,677,851,1059,1285,1522,1755,2021,2315,2629,2963,3317,3691,4000`
+
+`ITEM_getTableNum(int num)` 取第一個 `num <= maxnum` 的 row；超過 4000 固定落最後一列。傳入 double 時依 C function argument 先截成 int。
+
+### ITEM_simplify_atoms
+
+同 atom 的 ingredient values：
+
+1. double 升冪 qsort
+2. j=1 開始
+3. `tableNum = ITEM_getTableNum(data[j-1])`
+4. `rate = table[tableNum].rate / table[0].rate`
+5. `data[j] += data[j-1] * oddstable[j-1] * rate`
+6. 最後 `(int)data[last]`
+7. 普通 Pet skill petindex 存在時上限 1000
+
+代表值 regression：
+
+- [10,20,30] → 35
+- [100,200] → 206
+- [900,900] → 943
+- [1000,1000] → 1048.x → cap 1000
+
+固定 oddstable 只有 14 筆，因此同 atom 超過 15 筆會讀出原 C 陣列界外；Web 維持 no-guess boundary。
+
+### ITEM_randRange plan
+
+V2.07 實作的是 **plan-only**：
+
+- min/max rate 先按 C int parameter 截斷
+- min > max 先交換
+- `rint(base/1000*rate)` 依預設 nearest / ties-to-even
+- rate 都 0 → 0
+- range == 0 → 原 C 怪行為：直接回 base
+- range > 0 → 記錄未來需要一次 `RAND(0,range)`
+
+目前不呼叫 `cRand()`，因此使用 200／201 不會因尚未完成的系統偷吃 RNG。
+
+### Pet fix rate plan
+
+加工（searchtable 0）與料理（searchtable 1）均已把 fixed C 的 rate 參數算成 plan；200／201 都呼叫同一個 `PETSKILL_Merge(... alchemist=0)`，實際 searchtable 仍依第一個可合成 item 的 `ITEM_TYPE==ITEM_DISH(20)` 決定，而不是依 skill ID 猜。
+
+### Regression
+
+新增 `tools/check_v207_merge_simplify_math.mjs`，鎖定：
+
+- 112 個 byte-name atom keys
+- 20-row ItemRandTableForItem
+- 14 個 oddstable
+- table 邊界
+- simplify 代表值
+- CANMERGEFROM / mixed dish / unknown atom control flow
+- rand-range plan 公式
+- 200／201 同時 lazy-load item field2 + pet merge runtime
+- V2.07 prep 中禁止 `cRand()`
+
+save schema 維持 **29**。

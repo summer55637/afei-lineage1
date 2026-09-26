@@ -41,6 +41,7 @@ on:
       - "tools/check_v204_item_field2_runtime.mjs"
       - "tools/check_v205_player_field2_fixitem_inslay.mjs"
       - "tools/check_v206_pet_merge_fix_runtime.mjs"
+      - "tools/check_v207_merge_simplify_math.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -178,6 +179,9 @@ jobs:
 
       - name: Run V2.06 pet merge-fix runtime regressions
         run: node tools/check_v206_pet_merge_fix_runtime.mjs
+
+      - name: Run V2.07 merge simplify math regressions
+        run: node tools/check_v207_merge_simplify_math.mjs
 
       - name: Commit generated runtime
         shell: bash

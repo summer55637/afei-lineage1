@@ -26,6 +26,30 @@ ENEMYBASE_BLOB="a19a508975e3a982fada323861b35b2edab79349"
 ITEMATOM_BLOB="85ecfbf543b85b269e6177921f76a587d969ea26"
 OUTPUT=Path("data/generated/stoneage_pet_merge_fix_runtime.json")
 
+# Fixed item_gen.c tables used by ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange.
+ITEM_GEN_RATE=0.7
+ITEM_RAND_NUMS=[10,30,65,125,205,305,425,565,725,905,1125,1354,1594,1825,2105,2405,2725,3065,3425,3805]
+ITEM_RAND_TABLE=[[700,1300],[900,1100]]
+ODDS_TABLE=[0.1,0.25,0.35,0.4,0.42,0.44,0.46,0.47,0.48,0.49,0.5,0.51,0.52,0.53]
+MERGE_RANGEWIDTH_MIN=0.87
+MERGE_RANGEWIDTH_MAX=1.05
+
+def build_merge_math():
+    rows=[]
+    for i,num in enumerate(ITEM_RAND_NUMS):
+        minnum=0 if i==0 else rows[-1]["maxnum"]+1
+        maxnum=int(num+(ITEM_RAND_NUMS[i+1]-num)*ITEM_GEN_RATE) if i+1<len(ITEM_RAND_NUMS) else 4000
+        rows.append({"num":num,"minnum":minnum,"maxnum":maxnum,"rate":maxnum/float(num)})
+    return {
+        "itemGenRate":ITEM_GEN_RATE,
+        "itemRandNums":ITEM_RAND_NUMS,
+        "itemRandTable":ITEM_RAND_TABLE,
+        "itemRandTableForItem":rows,
+        "oddsTable":ODDS_TABLE,
+        "mergeRangeWidth":{"min":MERGE_RANGEWIDTH_MIN,"max":MERGE_RANGEWIDTH_MAX},
+        "randDom":1000,
+    }
+
 def c_atoi(value:str)->int:
     m=re.match(r"^[ \t]*([+-]?\d+)",value)
     return int(m.group(1)) if m else 0
@@ -40,24 +64,33 @@ def fetch(path:str)->bytes:
 
 def parse_atoms(raw:bytes):
     atoms={}
+    byte_atoms={}
     lines=0
     duplicates=0
-    for line in raw.decode("gb18030").splitlines():
-        if not line or line.startswith("#"):
+    for raw_line in raw.splitlines():
+        if not raw_line or raw_line.startswith(b"#"):
             continue
+        # gb18030 is used only for human-readable enemybase/itematom matching in this
+        # generator. latin1 is a 1:1 byte transport used to match V2.04 ITEM_INGNAME
+        # strings, which are intentionally stored byte-preserving.
+        line=raw_line.decode("gb18030")
+        byte_line=raw_line.decode("latin1")
         p=line.split(",")
-        if len(p)<2:
+        bp=byte_line.split(",")
+        if len(p)<2 or len(bp)<2:
             continue
         # Fixed ITEM_initItemAtom() ignores itematom.txt column 3 completely.
         # ITEM_getAtomIndexByName() returns the zero-based item_atoms[] load position.
         atom_index=lines
         lines+=1
         name=p[0]
+        byte_name=bp[0]
         if name in atoms:
             duplicates+=1
             continue
         atoms[name]=atom_index
-    return atoms,lines,duplicates
+        byte_atoms[byte_name]=atom_index
+    return atoms,byte_atoms,lines,duplicates
 
 def parse_enemybase(raw:bytes,atoms:dict[str,int]):
     by_temp={}
@@ -121,8 +154,9 @@ def main():
     assert git_blob_sha(enemy_raw)==ENEMYBASE_BLOB
     assert git_blob_sha(atom_raw)==ITEMATOM_BLOB
 
-    atoms,atom_lines,atom_duplicates=parse_atoms(atom_raw)
+    atoms,byte_atoms,atom_lines,atom_duplicates=parse_atoms(atom_raw)
     assert atom_lines==112
+    assert len(byte_atoms)==112
     assert atom_duplicates==0
 
     by_temp,stats=parse_enemybase(enemy_raw,atoms)
@@ -151,12 +185,15 @@ def main():
             "outerPasses":5,
             "slotOrder":[1,2,3,4,5],
             "atomIndex":"zero-based ITEM_initItemAtom load order; itematom.txt third column is ignored by fixed C",
+            "byteNameLookup":"latin1 1:1 source-byte keys reproduce cross-file ITEM_INGNAME -> itematom strcmp",
             "minMax":"swap when fixMin > fixMax after atom resolution",
             "unknownAtom":"ITEM_getAtomIndexByName < 0 continues the outer ITEM_merge_getPetFix pass, so later slots in that pass are skipped",
             "negativeFallback":"ordinary 1000 / family 4000; no resolved pinned slot currently has a negative effective min/max",
             "petIdentity":"petId is fixed CHAR_PETID, populated from E_T_TEMPNO",
         },
         "stats":stats,
+        "atomIndexByByteName":byte_atoms,
+        "mergeMath":build_merge_math(),
         "byTempNo":{k:by_temp[k] for k in sorted(by_temp,key=lambda x:int(x))},
     }
     OUTPUT.parent.mkdir(parents=True,exist_ok=True)

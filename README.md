@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.06**
+**PLAYABLE CORE V2.07**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,32 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.07 最新進度
+
+V2.07 延續 200／201 `PETSKILL_Merge`，只完成下一小塊固定數值鏈：
+
+`ITEM_simplify_atoms() → ITEM_getTableNum() → ITEM_randRange() plan`
+
+這一版仍 **不實際消耗 RNG、不產生成品、不刪材料**；只把可以完全由原 C 證明的「材料整理＋隨機範圍計畫」算出來。
+
+已固定：
+
+- `itematom.txt` 跨檔名稱比對改用 latin1 1:1 source-byte key，與 V2.04 `ITEM_INGNAME` runtime 相同
+- `ItemRandTableForItem` 20 級：0～24、25～54……最後 3692～4000
+- `ITEM_GEN_RATE=0.7`
+- `oddstable = 0.1, 0.25, 0.35, ... 0.53`
+- 同素材先升冪排序，再以前一筆「已被修正後的 double 值」逐級疊加
+- 最終依 C cast 截成 int；普通出戰寵上限 1000
+- 超過 15 筆同 atom 會碰到原 C oddstable 邊界，因此 Web 直接 no-guess，不讀陣列外
+- `ITEM_randRange` 的 min/max rate、C `rint`（ties-to-even）、range=0 時回 base 的怪行為已轉成 plan
+- 加工／料理仍由第一個可合成物品的 `ITEM_TYPE==20` 決定 searchtable，不拿技能 ID 200/201 猜
+- 非 `CANMERGEFROM` 物品依原 C 跳過；料理與非料理混用依原 C `-10` 規則拒絕
+- item ingredient 找不到 atom 時，依原 ADD_INGRED 巨集直接跳到下一件物品，該物品後續 ingredient 不處理
+
+V2.07 action 目前會回報 static prepare 結果與「預計 atom RNG 次數」，但保持 `sourceNoRngConsumed=true`。下一缺口仍是 `ITEM_merge_with_retry()` 的成品候選搜尋與後續完整 lifecycle。
+
+save schema 維持 **29**。
 
 ## V2.06 最新進度
 
