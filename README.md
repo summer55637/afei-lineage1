@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.99**
+**PLAYABLE CORE V2.00**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,28 +16,30 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.99 最新進度
+## V2.00 最新進度
 
-V1.97～V1.99 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.97～V2.00 持續接入玩家寵低忠誠 `RANDOMACT`：
 
 - 140 `PETSKILL_Steal`（偷竊）
 - 211 `PETSKILL_StealMoney`（捐獻）
 - 613 `PETSKILL_AttackCrazed`（狂亂暴走）
+- 614／647 `PETSKILL_AttackShoot`（栗子連激／栗子連激改）
 
-### V1.99 AttackCrazed
+### V2.00 AttackShoot
 
-- 原 `PETSKILL_AttackCrazed()` 直接把攻擊設成 `FIXSTR × 0.8`、防禦設成 `FIXTOUGH × 0.7`
-- 613 的 option 是 `3`；原 C 把它放進 COM3 high，執行時直接作為 `attack_max=3`
-- 此技能**沒有**設定 `gDamageDiv`，所以三段不是把總傷害除以 3，而是三次完整物理攻擊
-- `BATTLE_TargetListSet` 會在第一擊前先抽完三個目標 RNG
-- 原碼 `for(i=defsub; i<deftop; i++)` 對 Enemy side 10～19 實際只掃 10～18；Web 對應只把 battleSlot 0～8 放進預抽池，保留 slot 19 被排除的原 C 邊界
-- 非弓第一擊雖然已經消耗第一顆預抽 RNG，實際仍從原 COM2 做 `TargetAdjust`；第二、三擊才使用對應的預抽目標
-- 預抽目標若在前一擊後死亡／失效，才於該段重新走 `DefaultAttacker` RNG
-- 全段結束後只進一次共用 Counter chain
-- 新增 `tools/check_v199_player_attackcrazed_runtime.mjs` 並接入 CI
-- 同步修復 workflow 中 V1.90～V1.98 路徑段落殘留的 8 個字面 `\\n`，恢復成真正 YAML 換行
+- 614 option `3|5`：原 C 先 `RAND(3,5)` 決定 3～5 發
+- 647 option `6|8`：原 C 先 `RAND(6,8)` 決定 6～8 發
+- 玩家低忠誠 `RANDOMACT` 只會在 FIXAI 20～39 出現，因此原函式的 `loyal>=100` 額外爆發 RNG 在此路徑完全不可達
+- 發數 RNG 後，`BATTLE_TargetListSet` 會在第一擊前一次預抽全部目標
+- 延續原碼 `i < deftop` 邊界：Enemy battleSlot 9（source slot 19）不進預抽池
+- non-BOW 第一擊仍使用原 COM2；第一顆預抽目標 RNG 雖已消耗，但其值不使用
+- `BATTLE_COM_S_ATTSHOOT` 設 `gDamageDiv=attack_max`，每擊傷害依總發數分攤
+- 每次正傷害的來源順序固定為：DamageWakeUp → `RAND(1,5)` 睡眠 → ItemCrush → AddProfit
+- 睡眠判定是 `RAND(1,5) > 4`，成功直接寫 3 回合 sleep，不走一般 StatusAttackCheck
+- 原 `BATTLE_CounterCheck/BATTLE_Counter` 只要任一方仍是 ATTSHOOT 就直接 FALSE，因此此技能沒有 Counter RNG
+- 新增 `tools/check_v200_player_attackshoot_runtime.mjs` 並接入 CI
 
-V1.97 Steal、V1.98 StealMoney 行為與 regression 全數保留。
+V1.99 的 613 AttackCrazed 與 workflow 字面 `\\n` 修復全部保留。
 
 save schema 維持 **29**。
 
