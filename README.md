@@ -14600,3 +14600,93 @@ V1.60 依此新增中途死亡停止點，不再把未結算總傷害錯補到�
 - skill 621 `PETSKILL_Retrace` unchanged
 - skill 623 `PETSKILL_DamageToHp2` unchanged
 - save schema 27 unchanged
+
+
+## V1.61 low-loyalty RANDOMACT target RNG order
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`8e95a3702f1c14ae196fe2683fc57b08094ff056`。
+
+### Source order
+固定 `BATTLE_PetRandomSkill()` 的順序是：
+
+1. `iNum = RAND(0, CHAR_MAXPETSKILLHAVE-1)`
+2. `_FIXWOLF` 必要時重抽 skill slot
+3. **先**呼叫 `BATTLE_DefaultAttacker(battleindex, 1-side)` 選定 COM2
+4. 之後才進最多 50 次的 PetSkill 掃描
+5. 最後仍用來源的舊索引怪癖，把原始 `iNum` 當 slot 傳給 `PETSKILL_Use()`
+
+V1.60 前 Web 只有在成功／PETSKILL_Use 失敗的 return 分支才呼叫目標抽籤。
+若掃描途中遇到 `PETSKILL_GetArray -> -1`，Web 會先保守停止，因而少掉來源早已消耗的目標 RNG。
+
+### V1.61 correction
+V1.61 把 `sourcePetRandomEnemyTarget()` 移到固定來源相同位置：
+
+- skill slot RNG 完成後
+- `_FIXWOLF` 重抽完成後
+- 任何 PetSkill scan / UB 邊界之前
+
+同一次預先抽好的 target 供正常 PetSkill、PETSKILL_Use 失敗、ILLEGAL skill、50 次搜尋耗盡與未定義邊界共同使用。
+
+對來源未定義讀取仍維持既有原則：**只保留能證明已發生的 RNG，不猜 UB 最後會讀出什麼 FIELD／技能效果。**
+
+### Why this is reachable
+一般野外 166 species / 169 Lv1 variants 的捕獲寵會保存原 `enemybase1` 七格 PetSkill。
+大量寵物只有前面 1～2 格有效，其餘格為 `-1`，所以低忠誠 RANDOMACT 的 scan 可實際進入這個來源邊界。
+
+### Regression
+- parent fixed at V1.60 / `d5c5a5f8d70b1bbecd0950f7c45d9a6fc73407f2`
+- game.js syntax PASS
+- 有效 slot：RNG 順序 = skill slot → target
+- scan 遇 `-1`：仍先消耗 target RNG，再停在 source-invalid-petskill-array
+- UB 邊界不猜技能效果
+- 19 個一般野外 Lv1 PetSkill dispatcher coverage unchanged
+- save schema 27 unchanged
+
+
+## V1.62 low-loyalty EarthRound RANDOMACT exception
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`3249fdaeb924e35309b0832ad559668916acbcce`。
+
+### Fixed BATTLE_PetLoyalCheck special case
+固定 `BATTLE_PetLoyalCheck()` 在判定為 `PETAI_MODE_RANDOMACT` 後，第一個特殊判斷是：
+
+```c
+if (CHAR_getWorkInt(charaindex, CHAR_WORKBATTLECOM1) == BATTLE_COM_S_EARTHROUND0)
+    return 0;
+```
+
+這個 return 發生在本輪 loyalty RNG 已消耗、AIBAD 已設定之後，但在清 Guardian 與 `BATTLE_PetRandomSkill()` 之前。
+
+因此已隱身、等待釋放的地球一周 Pet 即使忠誠不足抽到 RANDOMACT：
+
+- **不取消 EARTHROUND0**
+- **不亂抽 PetSkill**
+- **不呼叫 BATTLE_DefaultAttacker**
+- **不多消耗 skill slot / target RNG**
+- COM1 / COM2 保持原值
+- action loop 之後仍照 EARTHROUND0 正常現身攻擊
+
+### V1.62 correction
+V1.61 前 Web 將 RANDOMACT、OWNERATTACK、ENEMYATTACK 一起視為覆寫目前特殊行動，所以 RANDOMACT 會錯誤中斷地球一周再亂出招。
+
+V1.62 在 `sourcePetLoyalCheck()` 內保留來源例外：
+
+- `mode === randomact` 且目前 intent command 是 `earthround`
+- loyalty roll 已發生，但回報 `changed=false`
+- 後續照原 EarthRound release path 執行
+
+OWNERATTACK / ENEMYATTACK 仍會覆寫地球一周；TARGETRANDOM 仍只改 COM2 後繼續地球一周，與固定來源一致。
+
+### Regression
+- parent core = V1.61 / `8e95a3702f1c14ae196fe2683fc57b08094ff056`
+- game.js syntax PASS
+- FIXAI 30 + roll 10 + EARTHROUND0：只消耗 loyalty RAND(1,100)
+- 不呼叫 RANDOMACT skill planner
+- EarthRound command 保留
+- 同樣 FIXAI / roll 的普通 attack intent：仍會進 RANDOMACT skill planner
+- V1.61 slot → target RNG 順序保留
+- save schema 27 unchanged
