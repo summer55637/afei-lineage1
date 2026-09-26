@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.96**
+**PLAYABLE CORE V1.97**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,25 +16,24 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.96 最新進度
+## V1.97 最新進度
 
-V1.95～V1.96 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.96～V1.97 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 552／553／565／658 `PETSKILL_MagicStatusChange`
-- 130／607 `PETSKILL_Abduct`（旅程伙伴）
+- 130／607 `PETSKILL_Abduct`
+- 140 `PETSKILL_Steal`（偷竊）
 
-### V1.96 Abduct
+### V1.97 Steal
 
-- Abduct 先走 `BATTLE_TargetAdjust`，raw COM2 失效時仍消耗原 `BATTLE_DefaultAttacker` fallback RNG
-- 玩家 Pet 的目標是 `CHAR_TYPEENEMY`，所以 607 的 option=60 不會走 FIXAI 特殊分支；130／607 都使用 `max(trunc((敵Lv-寵Lv)*0.6+30), 50)`
-- 成敗判定是嚴格 `RAND(1,100) < per`
-- 成功時 Enemy 直接 `BATTLE_Exit`，不是擊殺，不給 EXP／掉落
-- 無論成功或失敗，施術 Pet 最後都 `BATTLE_PetDefaultExit` 並清掉 DEFAULTPET／現行出戰選擇
-- Abduct 沒有物理 damage、DamageSub、ItemCrush 或 Counter
-- 最後一隻 Enemy 被帶走時，Web teardown 仍會掃全部 owned Pet 做戰後 HP finalization
-- 新增 `tools/check_v196_player_abduct_runtime.mjs` 並接入 CI
-
-V1.94 Timid、V1.95 鐵壁系 regression 全數保留。
+- 玩家 Pet 對 Enemy 使用偷竊時，原 `BATTLE_Steal` 對 `CHAR_TYPEENEMY` 成功率固定 0
+- 但來源仍一定 consume 一次 `RAND(1,100)`；第一階段固定失敗，所以不再抽石幣／道具模式 RNG
+- 玩家 Pet 不偷到任何東西，也不會因此離場
+- 同步修正 Enemy→Player：第一顆成功 RNG、第二顆模式 RNG、石幣 `RAND(8,12)` 與 existing-item 抽取順序
+- Enemy 偷道具改為真正掃 15 格 existing-item 背包，不再從 aggregate inventory 憑空抽 legacy item
+- 偷到 existing item 後清背包 slot、同步 aggregate mirror，並結束該 existing item
+- Enemy 真正偷成功後依原 C 自己 `BATTLE_Exit`；模式最終失敗則留在戰場
+- Enemy 對 Pet 使用偷竊時 per=0 也仍會 consume 第一顆成功 RNG
+- 新增 `tools/check_v197_player_steal_runtime.mjs` 並接入 CI
 
 save schema 維持 **29**。
 
