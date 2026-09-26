@@ -79,6 +79,9 @@ jobs:
       - name: Run V1.83 player SetDuck regressions
         run: node tools/check_v183_player_setduck_runtime.mjs
 
+      - name: Run V1.84 SetMagicPet regressions
+        run: node tools/check_v184_setmagicpet_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |
