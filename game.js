@@ -3351,8 +3351,9 @@ function enemyPrepareRoundAction(unit,action){
     }
     if(meta?.f==='PETSKILL_Guardian'&&!String(meta.o||'').includes('COM:防')){
       unit.guardianReadyThisTurn=true;
-      // 原 BATTLE_Counter 只接受 ATTACK / NOGUARD；GUARDIAN_ATTACK 本身不能反反擊。
-      unit.counterEligibleThisTurn=false;
+      // PETSKILL_Guardian 先寫 GUARDIAN_ATTACK；但 common direct-attack 分支在第一個
+      // BATTLE_Attack 前會把 WORKBATTLECOM1 改成 ATTACK。Counter 階段因此可正常反擊／反反擊。
+      unit.counterEligibleThisTurn=true;
       const owner=enemyGuardianOwner(unit);
       if(owner&&owner.id!==unit.id)owner.guardedByUnitId=unit.id;
     }
@@ -6014,15 +6015,14 @@ function performEnemyWildViolent(actor,unit,options,meta){
   // BOOMERANG is only converted to the special BOOMERANG command when COM was plain ATTACK.
   // WILDVIOLENT therefore stays in the common loop even while holding a boomerang.
   // For melee/common segments, preserve the source Guardian check on Player targets.
-  let chosen=enemyActorTarget(actor,unit);
+  let chosen=null;
   let lastResult=null,lastChosen=null,hits=0;
   for(let i=0;i<count;i++){
     if(!enemy||unit.hp<=0||state.hp<=0)break;
-    if(!chosen
-      ||(chosen.kind==='pet'&&(!chosen.pet||!petIsBattleActive(chosen.pet)))
-      ||(chosen.kind==='player'&&state.hp<=0)){
-      chosen=enemyActorTarget(actor,unit);
-    }
+    // Non-BOW TargetListSet prefilled every entry with the original raw COM2.
+    // Source writes that raw slot back and reruns BATTLE_TargetAdjust on EVERY segment;
+    // if raw COM2 is invalid, DefaultAttacker therefore consumes a fresh RNG each hit.
+    chosen=enemyActorTarget(actor,unit);
     if(!chosen)break;
 
     let r;
@@ -7907,12 +7907,289 @@ function performEnemyAbduct(actor,unit,options,meta){
 }
 function performEnemyGuardianAttack(actor,unit,options,meta){
   const owner=enemyGuardianOwner(unit);
+  const label=meta?.n||'忠犬';
   if(owner&&owner.guardedByUnitId===unit.id){
-    addLog(unit.name+' 使用 '+(meta?.n||'忠犬')+'，本回合保護 '+owner.name+' 並以攻擊修正後出手。');
+    addLog(unit.name+' 使用 '+label+'，本回合保護 '+owner.name+' 並以攻擊修正後出手。');
   }else{
-    addLog(unit.name+' 使用 '+(meta?.n||'忠犬')+'，但目前沒有對應的前排主人可保護。');
+    addLog(unit.name+' 使用 '+label+'，但目前沒有對應的前排主人可保護。');
   }
-  return Object.assign({kind:'skill',skillId:actor.skillId},performEnemyPrimaryAttack(actor,unit,options)||{});
+  // GUARDIAN_ATTACK 和普通 ATTACK 共用同一個 direct-attack loop。
+  // 遠距沿用既有 BOW/BOUND/BREAKTHROW helper；近戰與技能中的 BOOMERANG
+  // 必須沿用本回合已抽好的 AttackNum，並在 later segment 從 raw COM2 重跑 TargetAdjust。
+  unit.counterEligibleThisTurn=true;
+  return Object.assign(
+    {kind:'skill',skillId:actor.skillId},
+    sourceEnemyCommonSkillAttack(actor,unit,options,label)||{}
+  );
+}
+function sourceEnemyAttackCrazedTargetList(actor,count){
+  const rawDefNo=sourceEnemyCommandTargetBattleSlot(actor,null);
+  const pList=Array(20).fill(rawDefNo);
+  let defsub=0,deftop=0;
+  if(rawDefNo>=0&&rawDefNo<=9){
+    defsub=0;deftop=9;
+  }else if(rawDefNo>=10&&rawDefNo<=19){
+    defsub=10;deftop=19;
+  }else{
+    pList[1]=-1;
+    return {rawDefNo,defsub:null,deftop:null,pool:[],randomSlots:[],slots:pList,invalid:true};
+  }
+
+  // fixed BATTLE_TargetListSet quirk: i < deftop, so slot 9 / 19 is excluded.
+  const pool=[];
+  for(let slot=defsub;slot<deftop;slot++){
+    if(sourceEnemyTargetableFromBattleSlot(slot))pool.push(slot);
+  }
+  if(!pool.length){
+    // Source returns here before writing a sentinel; the prefilled raw COM2 entries remain.
+    return {rawDefNo,defsub,deftop,pool,randomSlots:[],slots:pList,empty:true};
+  }
+
+  const randomSlots=[];
+  for(let i=0;i<count;i++){
+    const slot=pool[cRand(0,pool.length-1)];
+    pList[i]=slot;
+    randomSlots.push(slot);
+  }
+  pList[count]=-1;
+  return {rawDefNo,defsub,deftop,pool,randomSlots,slots:pList};
+}
+function sourceEnemyTargetAdjustBattleSlot(slot){
+  return sourceEnemyTargetableFromBattleSlot(slot)||sourceEnemyDefaultAttacker();
+}
+function performEnemyAttackCrazed(actor,unit,options,meta){
+  const count=clamp(Math.trunc(enemySkillNumber(meta?.o,/^\s*(\d+)/,1)),1,10);
+  const label=meta?.n||'狂亂暴走';
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const primedMax=Number(actor?.sourceAttackMax);
+  const primedAttackMax=Number.isFinite(primedMax)&&primedMax>0?Math.trunc(primedMax):1;
+
+  // BATTLE_GetAttackCount happened before the command switch. ATTCRAZED later overwrites
+  // attack_max with option n, but does NOT rewrite gDamageDiv. A real ITEM_FIST therefore
+  // keeps the earlier weapon AttackNum as its damage divisor.
+  const attackOptions=Object.assign({},options.attackOptions||{});
+  if(weaponType===0&&actor?.sourceAttackCountWeaponRoll&&primedAttackMax>0
+    &&!Number.isFinite(Number(attackOptions.damageDivisor))){
+    attackOptions.damageDivisor=primedAttackMax;
+  }
+
+  // Source builds all n random pList entries up front, before the first BATTLE_Attack.
+  // For non-BOW, pList[0] is nevertheless ignored because the first hit uses raw COM2
+  // through BATTLE_TargetAdjust; later hits consume pList[1], pList[2], ...
+  const plan=sourceEnemyAttackCrazedTargetList(actor,count);
+  const segments=[];
+  let attackCount=0,lastTarget=null,lastActualTarget=null,lastResult=null;
+  let sourcePostTarget=null,sourceCounterReady=false,sourceLoopExit='no-target';
+
+  const applyOne=(target,slot)=>{
+    let r,actualTarget=target,paralysis=null;
+    if(target?.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
+      r=enemyAttackPetResult(unit,target.pet,attackOptions);
+      actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
+      enemyApplySkillHit(unit,target,r,label+'第 '+(attackCount+1)+'/'+count+' 段');
+      if(weaponType===19)paralysis=sourceBreakthrowParalysis(unit,{
+        target:'pet',pet:target.pet,targetDesc:actualTarget,r
+      });
+      sourceBattleFinalizeItemCrushRng(r);
+    }else if(target?.kind==='player'&&state.hp>0){
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
+      actualTarget=enemyApplyDirectGuardianSkillHit(
+        unit,target,r,label+'第 '+(attackCount+1)+'/'+count+' 段',
+        {finalizeItemCrush:false}
+      )||target;
+      if(weaponType===19)paralysis=sourceBreakthrowParalysis(unit,{
+        target:'player',targetDesc:actualTarget,r
+      });
+      sourceBattleFinalizeItemCrushRng(r);
+    }else{
+      return false;
+    }
+
+    attackCount++;
+    lastTarget=target;
+    lastActualTarget=actualTarget;
+    lastResult=r;
+    sourcePostTarget=target;
+    segments.push({
+      sourceListSlot:slot,target:target.kind,petId:target.pet?.id||null,
+      actualTarget:actualTarget?.kind||target.kind,
+      actualPetId:actualTarget?.petId||actualTarget?.pet?.id||null,
+      guardianPetId:r?.guardianPetId||null,r,paralysis
+    });
+    return true;
+  };
+
+  if(weaponType===4){
+    // ATTCRAZED's special TargetListSet returns before the ordinary BOW aBowW branch:
+    // no bow RAND(0,1) is consumed here.
+    let anyTarget=false;
+    for(let scan=0;scan<10;scan++){
+      const slot=plan.slots[scan];
+      if(sourceEnemyTargetableFromBattleSlot(slot)){anyTarget=true;break;}
+    }
+    if(!anyTarget){
+      sourceLoopExit='bow-no-target';
+    }else{
+      let k=0;
+      for(;;){
+        const slot=plan.slots[k];
+        if(slot==null||slot<0){
+          sourcePostTarget=null;
+          sourceLoopExit='target-list-end';
+          break;
+        }
+        const target=sourceEnemyTargetableFromBattleSlot(slot);
+        if(target)applyOne(target,slot);
+        if(attackCount>=count){
+          sourceCounterReady=true;
+          sourceLoopExit='attack-max';
+          break;
+        }
+        if(n(unit.hp)<=0){
+          sourceLoopExit='attacker-dead';
+          break;
+        }
+        k++;
+        if(k>=plan.slots.length){
+          sourcePostTarget=null;
+          sourceLoopExit='target-list-end';
+          break;
+        }
+      }
+    }
+  }else{
+    let target=enemyActorTarget(actor,unit);
+    let k=0;
+    while(target&&attackCount<count&&enemy&&n(unit.hp)>0){
+      applyOne(target,k===0?plan.rawDefNo:plan.slots[k]);
+      if(attackCount>=count){
+        sourceCounterReady=true;
+        sourceLoopExit='attack-max';
+        break;
+      }
+      if(n(unit.hp)<=0){
+        sourceLoopExit='attacker-dead';
+        break;
+      }
+
+      // fixed loop: defNo = aDefList[++k] happens before the <0 check.
+      k++;
+      const slot=plan.slots[k];
+      if(slot==null||slot<0){
+        sourcePostTarget=null;
+        sourceLoopExit='target-list-end';
+        break;
+      }
+      target=sourceEnemyTargetAdjustBattleSlot(slot);
+      if(!target){
+        sourcePostTarget=null;
+        sourceLoopExit='target-adjust-failed';
+        break;
+      }
+    }
+  }
+
+  let counter=null;
+  if(sourceCounterReady&&lastResult&&lastTarget&&n(unit.hp)>0&&enemy){
+    if(lastTarget.kind==='pet'&&lastTarget.pet&&petIsBattleActive(lastTarget.pet)){
+      resolvePetEnemyCounterChain('enemy',lastTarget.pet,unit,lastResult);
+      counter={target:'pet',petId:lastTarget.pet.id};
+    }else if(lastTarget.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
+      counter={target:'player'};
+    }
+  }
+
+  addLog(unit.name+' 使用 '+label+'：原 TargetListSet 預抽 '+count+' 個亂數目標，實際完成 '+attackCount+'/'+count+' 段。');
+  return {
+    kind:'skill',skillId:actor.skillId,count,weaponType,
+    primedAttackMax,sourceFistDamageDiv:Number.isFinite(Number(attackOptions.damageDivisor))
+      ?Number(attackOptions.damageDivisor):1,
+    targetPlan:plan,segments,attackCount,
+    target:segments[0]?.target||null,
+    pet:segments[0]?.petId?state.petBox.find(p=>p.id===segments[0].petId)||null:null,
+    r:lastResult,sourcePostTarget,sourceCounterReady,sourceLoopExit,
+    lastActualTarget:lastActualTarget?.kind||null,counter
+  };
+}
+function performEnemyGyrate(actor,unit,options,meta){
+  const label=meta?.n||'回旋攻擊';
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const rawDefNo=sourceEnemyCommandTargetBattleSlot(actor,null);
+  const primedMax=Number(actor?.sourceAttackMax);
+  const primedAttackMax=Number.isFinite(primedMax)&&primedMax>0?Math.trunc(primedMax):1;
+
+  // BATTLE_TargetListSet still executes before the special GYRATE case. If the real weapon
+  // is BOW it consumes its RAND(0,1), although the resulting aBowW list is never used.
+  const discardedBowPlan=weaponType===4
+    ?sourceBowTargetList(actor,unit,enemyActorCommandTarget(actor))
+    :null;
+
+  // Like ATTCRAZED, GYRATE does not reset the pre-command FIST gDamageDiv.
+  const attackOptions=Object.assign({},options.attackOptions||{});
+  if(weaponType===0&&actor?.sourceAttackCountWeaponRoll&&primedAttackMax>0
+    &&!Number.isFinite(Number(attackOptions.damageDivisor))){
+    attackOptions.damageDivisor=primedAttackMax;
+  }
+
+  let rowStart;
+  if(rawDefNo<5)rowStart=0;
+  else if(rawDefNo<10)rowStart=5;
+  else if(rawDefNo<15)rowStart=10;
+  else rowStart=15;
+
+  // Source snapshots the targetable members of that five-slot row once, then attacks each.
+  const rowSlots=[];
+  for(let slot=rowStart;slot<rowStart+5;slot++){
+    if(sourceEnemyTargetableFromBattleSlot(slot))rowSlots.push(slot);
+  }
+
+  const segments=[];
+  for(const slot of rowSlots){
+    const target=sourceEnemyTargetFromBattleSlot(slot);
+    if(!target)continue;
+    let r,actualTarget=target,paralysis=null;
+    if(target.kind==='pet'&&target.pet){
+      r=enemyAttackPetResult(unit,target.pet,attackOptions);
+      actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
+      enemyApplySkillHit(unit,target,r,label);
+      if(weaponType===19)paralysis=sourceBreakthrowParalysis(unit,{
+        target:'pet',pet:target.pet,targetDesc:actualTarget,r
+      });
+      sourceBattleFinalizeItemCrushRng(r);
+    }else if(target.kind==='player'&&state.hp>0){
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
+      actualTarget=enemyApplyDirectGuardianSkillHit(
+        unit,target,r,label,{finalizeItemCrush:false}
+      )||target;
+      if(weaponType===19)paralysis=sourceBreakthrowParalysis(unit,{
+        target:'player',targetDesc:actualTarget,r
+      });
+      sourceBattleFinalizeItemCrushRng(r);
+    }else{
+      continue;
+    }
+    segments.push({
+      battleSlot:slot,target:target.kind,petId:target.pet?.id||null,
+      actualTarget:actualTarget?.kind||target.kind,
+      actualPetId:actualTarget?.petId||actualTarget?.pet?.id||null,
+      guardianPetId:r?.guardianPetId||null,r,paralysis
+    });
+  }
+
+  addLog(unit.name+' 使用 '+label+'：依原 COM2 所在排攻擊 '+segments.length+' 個有效目標；此專用分支不進 common Counter。');
+  return {
+    kind:'skill',skillId:actor.skillId,weaponType,rawDefNo,rowStart,rowSlots,
+    primedAttackMax,discardedBowRandom:discardedBowPlan?.random??null,
+    discardedBowTargetSlots:discardedBowPlan?.slots?.slice?.()||null,
+    sourceFistDamageDiv:Number.isFinite(Number(attackOptions.damageDivisor))
+      ?Number(attackOptions.damageDivisor):1,
+    attackCount:segments.length,segments,
+    target:segments[0]?.target||null,r:segments.length?segments[segments.length-1].r:null,
+    counter:null,sourceCounterReady:false
+  };
 }
 function performEnemyFallGround(actor,unit,options,meta){
   unit.counterEligibleThisTurn=false;
@@ -8411,6 +8688,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Gyrate')return performEnemyGyrate(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_WildViolentAttack')return performEnemyWildViolent(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_GuardBreak2')return performEnemyGuardBreak2(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
