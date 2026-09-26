@@ -110,7 +110,7 @@ assert.ok(game.includes('if(!options.deferItemCrush)sourceBattleFinalizeItemCrus
 // only requires the ranged weapon core above to remain intact.
 
 // UI/version marker: later compatible cores may advance the displayed version.
-assert.ok(/PLAYABLE CORE V\\d+\\.\\d+/.test(html));
+assert.ok(/PLAYABLE CORE V\d+\.\d+/.test(html));
 
 console.log(JSON.stringify({
   pass:true,
