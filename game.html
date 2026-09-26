@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.53</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.54</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.53：</b>
-      補齊 StatusChange 非遠距完整 AttackNum loop：近戰／技能中的回力標都依 raw COM2 每段重新 TargetAdjust，每次命中都維持「傷害／喚醒→狀態→ItemCrush」；最後一段若狀態使實際目標不能行動，原 Counter 不啟動。
+      <b>V1.54：</b>
+      補齊 BecomeFox／BecomePig 非遠距完整 common loop：近戰／技能回力標沿用已抽好的 AttackNum、每段 raw COM2 TargetAdjust，Counter 完成後才以最後 primary 的 return-state 與最終 defNo 決定變狐／烏力化後置 RNG。
     </article>
   </main>
 

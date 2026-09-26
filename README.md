@@ -14176,3 +14176,132 @@ generic non-ranged helper現在也明確回傳 `sourcePostTarget`：
 - immobilized final actual target blocks outer Counter
 - ranged StatusChange behavior remains on existing helpers
 - schema 27 unchanged
+
+
+## V1.54 BecomeFox / BecomePig non-ranged common loop
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### Reachable Enemy paths
+
+目前生成的 Enemy AI 中：
+
+- `PETSKILL_BecomeFox` skill 625：2 個正權重引用
+  - Enemy 2462
+  - Enemy 2463
+- `PETSKILL_BecomePig`：
+  - 正權重可達的是 skill 635「黑烏力化」
+  - Enemy 2493，權重 1
+
+雖然比 StatusChange 少，但都是現行可達路徑。
+
+### Source common-loop behavior
+
+`BATTLE_COM_S_BECOMEFOX` 與 `BATTLE_COM_S_BECOMEPIG` 都位於普通 physical common direct-attack 群組。
+
+因此兩者在後置效果之前先完整執行：
+
+1. 本回合已完成的 `BATTLE_GetAttackCount`
+2. `BATTLE_TargetListSet`
+3. 每個 primary `BATTLE_Attack`
+4. `attack_count`
+5. 後續 aDefList / TargetAdjust
+6. common-loop Counter chain
+7. 最後才進 BECOMEFOX / BECOMEPIG 的附加效果條件
+
+V1.53 前，BOW／BOUNDTHROW／BREAKTHROW 已走完整 ranged loop；
+近戰與技能 command 下的 BOOMERANG 仍透過 `performEnemyPrimaryAttack()` 固定只打一段。
+
+V1.54 將兩個 handler 改為 `sourceEnemyCommonSkillAttack()`。
+
+### Non-ranged AttackNum
+
+近戰／技能 BOOMERANG 現在：
+
+- 沿用 `actor.sourceAttackMax`
+- 不重抽 `BATTLE_GetAttackCount`
+- 有效 FIST AttackNum 繼續使用來源 `gDamageDiv = attack_max`
+- 每個 later segment 都從 raw COM2 重新 `BATTLE_TargetAdjust`
+- BOOMERANG 因原 command 不是 plain ATTACK，不轉特殊 BO row attack
+
+### Final defNo
+
+V1.53 generic helper 已補 `sourcePostTarget`：
+
+- 達 `attack_max`：保留最後一次真正 primary BATTLE_Attack 的 outer defNo
+- 攻擊者在 primary 後死亡：同樣保留最後 defNo
+- later TargetAdjust 失敗：source defNo 已變成無效值，因此 `sourcePostTarget=null`
+
+V1.54 的 BecomeFox／BecomePig 直接沿用這個狀態。
+
+這和 V1.49 已完成的 ranged final-defNo lifecycle 對齊。
+
+### Counter does not overwrite Battle_Attack_ReturnData
+
+本輪另外重新核對固定原 C 的 `BATTLE_Counter()`：
+
+它沒有呼叫 `BATTLE_Attack()`，而是直接執行：
+
+- `BATTLE_CounterCheck`
+- `BATTLE_AttackSeq`
+- `BATTLE_DamageSub`
+- `BATTLE_ItemCrushSeq`
+
+因此 common-loop Counter 雖然發生在 BECOMEFOX／BECOMEPIG 後置判斷之前，
+但不會重新寫入 `Battle_Attack_ReturnData_x.Battle_Attack_ReturnData`。
+
+後置條件讀到的仍是最後一個 primary `BATTLE_Attack()` 的 return-state。
+
+### BecomeFox post-order
+
+V1.54 保留已對齊的短路順序：
+
+1. 非 MISS
+2. 非 DODGE
+3. 非 ALLGUARD
+4. 非 ARRANGE
+5. final defNo 仍通過 TargetCheck
+6. 才抽 `rand()%100 < 31`
+7. 然後才檢查 target type != PLAYER
+8. 再檢查 WORK_PETFLG != 0
+
+目前玩家側出戰寵的來源 WORK_PETFLG 為 0，
+所以 Enemy 變狐附加效果仍不成立，但合格路徑必須先消耗那顆 RNG。
+
+### BecomePig post-order
+
+V1.54 保留：
+
+1. 非 MISS / DODGE / ALLGUARD / ARRANGE
+2. final defNo 仍存活
+3. final target 必須是 PLAYER
+4. 不同 side
+5. BECOMEPIG < 2000000000
+6. 才抽 `rand()%100 < petrate`
+
+因此多段技能如果最後 outer defNo 已經因 TargetAdjust 失敗變成無效，
+或最後實際 primary target 是寵物，就不會錯對最初玩家目標抽黑烏力 RNG。
+
+### Guardian quirk
+
+Guardian substitution 發生在 `BATTLE_AttackSeq` 的 local defindex。
+
+BECOMEFOX／BECOMEPIG 後置條件使用的則是 outer common-loop `defNo`。
+但 Guardian 命中會留下 ALLGUARD return-state，因此後置條件會在最前面的 return-state gate 就停止。
+
+V1.54 繼續以 outer `sourcePostTarget` + last primary `r.allGuard` 表示這個來源行為。
+
+### V1.54 regression targets
+
+- game.js syntax PASS
+- main parent fixed at V1.53 / d0369affac080ba350adc0f29baed0343ae5630e
+- BecomeFox non-ranged reuses primed AttackNum
+- BecomePig non-ranged reuses primed AttackNum
+- no duplicate weapon AttackNum RNG
+- later non-ranged segments rerun TargetAdjust from raw COM2
+- skill BOOMERANG remains common non-BOW
+- post-effect runs only after common-loop Counter
+- Counter does not overwrite Battle_Attack_ReturnData
+- final sourcePostTarget is used for both post effects
+- existing V1.49 MISS/DODGE/ALLGUARD/ARRANGE gates unchanged
+- schema 27 unchanged

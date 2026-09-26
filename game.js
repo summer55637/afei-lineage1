@@ -6499,9 +6499,13 @@ function sourceCommonPostAttackTargetAlive(target){
   return false;
 }
 function performEnemyBecomePig(actor,unit,options,meta){
-  // 原 battle.c：BECOMEPIG 先完成普通 BATTLE_Attack + Counter 鏈，
-  // 再用「共用 loop 離開當下的 defNo」與最後一次 BATTLE_Attack return-state 判斷後置效果。
-  const result=performEnemyPrimaryAttack(actor,unit,options)||{};
+  // 原 battle.c：BECOMEPIG 先完成完整 common weapon loop + Counter 鏈，
+  // 再用「共用 loop 離開當下的 defNo」與最後一次 primary BATTLE_Attack return-state 判斷後置效果。
+  // sourceEnemyCommonSkillAttack 對 BOW／投斧／投石沿用既有 ranged helper；
+  // 對近戰／技能中的 BOOMERANG 則走 V1.53 generic non-ranged AttackNum loop。
+  const result=sourceEnemyCommonSkillAttack(
+    actor,unit,options,meta?.n||'黑烏力化'
+  )||{};
   const parts=String(meta?.o||'').trim().split(/\s+/);
   const rate=Math.max(0,Math.trunc(Number(parts[0])||0));
   const seconds=Math.max(0,Math.trunc(Number(parts[1])||0));
@@ -6542,10 +6546,13 @@ function performEnemyBecomePig(actor,unit,options,meta){
   },result);
 }
 function performEnemyBecomeFox(actor,unit,options,meta){
-  // 原 BECOMEFOX 先完成普通 BATTLE_Attack + Counter 鏈，再跑一串 && 後置條件。
+  // 原 BECOMEFOX 先完成完整 common weapon loop + Counter 鏈，再跑一串 && 後置條件。
   // C 的求值順序把 rand()%100 < 31 放在 target type / PETFLG 檢查之前，
   // 所以效果即使注定因玩家側資料失敗，合格的活著命中仍必須先消耗這顆 RNG。
-  const result=performEnemyPrimaryAttack(actor,unit,options)||{};
+  // 非遠距現在也使用原 AttackNum／raw COM2 TargetAdjust lifecycle。
+  const result=sourceEnemyCommonSkillAttack(
+    actor,unit,options,meta?.n||'媚惑術'
+  )||{};
   const sourcePostTarget=sourceCommonPostAttackTarget(result);
   const sourceTargetAlive=sourceCommonPostAttackTargetAlive(sourcePostTarget);
   const sourceReturnEligible=!!result.r
