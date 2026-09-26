@@ -13,7 +13,9 @@ assert.equal(Number(row?.field),1);
 assert.equal(Number(row?.illegal),0);
 
 const fnStart=game.indexOf('function sourcePerformPetAttackCrazedSkill');
-const nextStart=game.indexOf('function sourcePerformPetWildViolentSkill',fnStart);
+const attackShootStart=game.indexOf('function sourcePerformPetAttackShootSkill',fnStart);
+const wildStart=game.indexOf('function sourcePerformPetWildViolentSkill',fnStart);
+const nextStart=attackShootStart>fnStart?attackShootStart:wildStart;
 assert.ok(fnStart>=0&&nextStart>fnStart);
 const fn=game.slice(fnStart,nextStart);
 
