@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.75</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.76</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.76：</b>
+      補齊玩家寵低忠誠 RANDOMACT 的 fixed PETSKILL_functbl 與戰鬥屬性生命週期：582 自爆攻擊、642 覺醒、643 蠱惑雖有資料列，但固定 build 沒有同名註冊函式，原 PETSKILL_Use 會直接失敗；612 魔之詛咒則真正掛上 PET_PetskillPropertyEvent，之後攻擊／受擊的物理屬性會依當前對手即時轉成剋制向量，直到離開戰鬥清除。639 蟻葬在 RANDOMACT 的存活 Enemy 目標路徑依原 battle.c 落入普通物理攻擊。
+    </article>
 
     <article class="card note">
       <b>V1.75：</b>
