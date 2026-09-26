@@ -1377,3 +1377,97 @@ save schema 維持 **29**。
 - `fb1f1b92cee4d297a8b8345ca64080667f1e9b97` — V1.91 CI
 - `74c90e4b0f4d7b6ca928d5de53c6cda9d1f2c416` — V1.91 playable-core marker
 
+---
+
+## V1.92 Player RANDOMACT ShowMercy / BecomePig
+
+V1.92 接入玩家寵低忠誠 RANDOMACT：
+
+- 626 `PETSKILL_ShowMercy`（手下留情）
+- 635 `PETSKILL_BecomePig`（黑烏力化）
+
+### ShowMercy / 手下留情
+
+原 `PETSKILL_ShowMercy()` 只寫 COM1 / COM2；實際效果發生在 common `BATTLE_Attack()` 內的 `BATTLE_DamageSub()`：
+
+`if (HP - damage <= 0 && COM1 == SHOWMERCY) damage = HP - 1`
+
+保留原 C 順序：
+
+1. AttackSeq 先完成 Dodge / Guardian / Critical / Damage。
+2. 若 Guardian 成功，`BATTLE_Attack()` 的 local defindex 先改成 Guardian。
+3. `BATTLE_DamageSub()` 再以這個實際 defindex 做 HP-1 clamp。
+4. clamp 發生在 DamageReact 之前；因此 Acupuncture 仍可把 clamp 後的奇數傷害補成偶數，極端情況仍可能造成死亡。
+
+Counter 特例：
+
+- common loop 刻意不把 SHOWMERCY 的 COM1 改成 ATTACK。
+- 原目標可做第一段 Counter。
+- 但 ShowMercy Pet 自己的 COM1 仍不是 ATTACK / NOGUARD，所以不能再 Counter 回去。
+- 因此玩家側 Counter chain 鎖為最多 1 段。
+
+### BecomePig / 黑烏力化
+
+635 的物理段仍進 common `BATTLE_Attack()`：
+
+- BECOMEPIG 沒有 SHOWMERCY 的 COM1 例外，因此進攻擊前會被 common loop 改成 ATTACK。
+- 所以完整最多 5 段 Counter chain 仍成立。
+- Guardian 只改 `BATTLE_Attack()` local defindex；外層 common loop 的 defNo 保留原 TargetAdjust 目標，因此 Counter 對象仍是原目標。
+
+烏力化後置效果是在整個 common Counter loop **之後** 才判定。
+
+原 C 條件順序：
+
+1. primary `Battle_Attack_ReturnData` 不是 MISS / DODGE / ALLGUARD / ARRANGE
+2. `BATTLE_TargetCheck(defNo)`
+3. defNo 的 `CHAR_WHICHTYPE == CHAR_TYPEPLAYER`
+4. 非同隊
+5. `CHAR_BECOMEPIG < 2000000000`
+6. 之後才 parse option
+7. 最後才 `rand()%100 < rate`
+
+玩家 Pet RANDOMACT 的敵方 defNo 是 `CHAR_TYPEENEMY`，因此固定在第 3 步失敗：
+
+- 不 parse `30 180 100388`
+- 不 consume pig `rand()%100`
+- 不套用黑烏力化
+- 只保留物理攻擊與完整 Counter lifecycle
+
+### Guardian / ContFlg audit
+
+新增共用 source helper，鎖住 common `BATTLE_Attack()` 的重要 caller 行為：
+
+- attacker 或原始 defindex 在 AttackSeq 前已有 DamageReact → `ContFlg = FALSE`
+- Critical → `ContFlg = FALSE`
+- 實際 Guardian / target 正在 GUARD → `ContFlg = FALSE`
+- 實際被扣 HP 的 defindex 死亡 → `ContFlg = FALSE`
+- DODGE / MISS / ARRANGE 本身不會直接把 `ContFlg` 清 FALSE
+- Guardian 不會改外層 defNo，因此 Counter 從原目標開始
+
+### Regression
+
+新增：
+
+`tools/check_v192_player_showmercy_becomepig_runtime.mjs`
+
+鎖定：
+
+- 626 / 635 runtime row
+- ShowMercy Guardian-substituted HP-1 clamp
+- clamp before DamageReact
+- ShowMercy Counter 最大 1 段
+- BecomePig full Counter chain
+- Guardian outer defNo preservation
+- BecomePig Enemy target 在 PLAYER type check 前停止
+- no option parse / no pig RNG
+- dispatch 在 runtime-pending fallback 之前
+
+save schema 維持 **29**。
+
+### commits
+
+- `8d7bfa6d02b80332d91be6ef6f38282d648b5d07` — V1.92 core
+- `554c377c09ae087c0440eb68b8604e6126abd34c` — V1.92 regression
+- `11fc1d0f822c9c69349a371b6c9eb1472fa7c37e` — V1.92 CI
+- `4326f3f1c870272bd294e82079f06be7fb94574d` — V1.92 playable-core marker
+
