@@ -2610,3 +2610,224 @@ save schema 維持 **29**。
 - `577678343b259fb67f042fa5561ab8673edf7ea3` — V2.01 playable-core marker
 - `cdbce9f96bdaefb8fdbd05e9c9869ecdab0f5f65` — V2.01 README
 
+---
+
+## V2.02 Player RANDOMACT PETSKILL_Combined / MAGIC_DirectUse
+
+V2.02 接續 V2.01 的玩家寵低忠誠 RANDOMACT，處理 fixed runtime 中 **36 筆 `PETSKILL_Combined`**。
+
+### PETSKILL_Combined command chain
+
+固定 `pet_skill.c::PETSKILL_Combined()`：
+
+1. option 第一欄必須是 `综合法`
+2. count 上限 10
+3. 以 `kill[rand()%count]` 抽出 magic ID
+4. `CHAR_WORKBATTLECOM2 = toNo`
+5. `COM3 low = magic ID`
+6. `COM3 high = 0`
+7. command 改成 `BATTLE_COM_JYUJYUTU`
+
+真正執行時 battle.c 直接：
+
+`MAGIC_DirectUse(charaindex, COM3 low, COM2, COM3 high)`
+
+因此 RANDOMACT 先前由 `BATTLE_DefaultAttacker()` 抽到的單體 `toNo` 會原封不動帶進 DirectUse。
+
+特別重要的是：這條路徑**不會先進** `BATTLE_COM_S_ATTACK_MAGIC`，所以不能套該 case 的 `MAGIC_TARGET / TargetIndex` rewrite。V2.02 AttackMagic 只允許 raw COM2 先走固定 `BATTLE_MultiList`，再依 AttackMagic player-side pattern 展開。
+
+### 36 rows / 101 unique magic IDs
+
+36 筆 Combined 共引用 101 個不同 magic ID。
+
+其中 **69 筆**為 `MAGIC_AttMagic`：
+
+- 306
+- 470～477、480～484、490～493
+- 500～507、510～514、520～523
+- 530～537、540～544、550～553
+- 560～567、570～574、580～583
+
+全部已有 `stoneage_attack_magic_runtime.json` 對應 magic row 與 player-side attIdx pattern。
+
+其餘 non-AttMagic：
+
+- Recovery：20～25
+- StatusRecovery：61 / 71 / 81 / 91 / 101 / 121
+- StatusChange：139 / 159 / 169 / 179 / 189 / 413 / 414 / 416
+- FieldAttChange：194 / 204 / 214 / 224 / 230
+- AttReverse：240
+- Weaken：436
+- MagicStatusChange：460 / 461
+- fixed magic.txt 無 row：458 / 459 / 462
+
+458／459／462 維持「原 C 規則優先、不猜數值」：DirectUse 找不到固定 magic row，不補效果。
+
+### Pet MP side effect
+
+Combined 固定把 `itemnum=0` 傳入 `MAGIC_DirectUse`。
+
+現有 non-AttMagic wrapper 會取得 `MAGICUSEMP=-1`，之後執行：
+
+`CHAR_MP -= mp`
+
+因此 Pet 會實際 **MP +1**。
+
+`MAGIC_AttMagic` 則只對 `CHAR_TYPEPLAYER` 扣 MP，Pet 不扣也不加。
+
+458／459／462 因為根本沒有 magic row，不會進 wrapper，所以也沒有 MP +1。
+
+### AttackMagic target / damage / RNG
+
+V2.02 使用固定 player-side AttackMagic pattern：
+
+- attackNo < 10 → `attIdx*2+1`
+- raw single toNo 先進 `BATTLE_MultiList`
+- dead raw target 時保留固定 compact-list + `rand()%10` rejection fallback
+- 再依 `siField` 展開受擊格
+- SortLoc 保留 fixed side-0 comparator typo，不自行修正
+
+`BATTLE_MagicDodge` 對非 Player defender 使用：
+
+`min(30, LV*0.2)`
+
+Enemy damage resist 使用：
+
+`trunc(LV*0.5)`
+
+TrueMagic 依攻方目前該屬性 `CHAR_*_EXP` 做一次 cast-level 判定；FalseMagic 傷害 ×0.7。
+
+### Pet AttackMagic practice lifecycle
+
+原先不能把 Pet AttackMagic 熟練度永遠固定為 0。
+
+固定 `BATTLE_MultiAttMagic()` 在 `_FIX_MAGICDAMAGE` 下會把 Pet 同樣設成 `AttIsPlayer=1`，並讀取：
+
+- `CHAR_EARTH_EXP`
+- `CHAR_WATER_EXP`
+- `CHAR_FIRE_EXP`
+- `CHAR_WIND_EXP`
+
+FalseMagic 結束後會呼叫 `Magic_ComputeAttExp()`：
+
+`addEx = MagicLv * 3 * getexp`
+
+其中 `getexp` 是本次實際**未閃避**的受擊目標數。
+
+V2.02 因此在 Pet 保存：
+
+- `sourceAttackMagicLv[4]`
+- `sourceAttackMagicExp[4]`
+
+並保留：
+
+- exp > 100 才升 1 級、exp 歸 0
+- 上限 100
+- 相剋屬性為 `(Mnum+1)%4`
+- 相剋熟練度 >1 時依 `addEx*0.5` 扣經驗，負值時降 1 級
+- `Mmagic = max(1, current magic level)`
+
+這些 Pet 欄位會隨既有 petBox JSON 存檔直接持久化；舊 Pet 第一次使用時從 C zero-init 等價的 0/0 起步。
+
+### 460 / 461 def-magic lifecycle
+
+固定資料：
+
+- 460：`魔抗|3|90|单`
+- 461：`魔抗|3|50|全`
+
+兩者不是普通 StatusTbl，而是同一組 MagicTbl / `CHAR_DEFMAGICSTATUS`。
+
+`BATTLE_MultiMagicStatusChange()` 會先掃整個 MagicTbl；只要已有任何 MagicStatus，就完全跳過本次寫入。因此：
+
+- 不刷新 turn
+- 460 不會覆蓋 461
+- 461 不會覆蓋 460
+- `CHAR_OTHERSTATUSNUMS` 也不會被新值覆寫
+
+AttackMagic 計傷時，只有 local `def_magic_resist > 0` 才套：
+
+`resist += resist * OTHERSTATUSNUMS / 100`
+
+V2.02 已把這個百分比接到 Player/Pet/Enemy 共用 AttackMagic 傷害抗性；它不改 `BATTLE_MagicDodge`。
+
+MagicStatus 依既有 V2.02 lifecycle 每回合 -1，3 回合結束清除。
+
+### 436 Weaken
+
+固定 row 436：
+
+`虚 turn 3 成 20`
+
+`BATTLE_MultiParamChangeTurn()` 成功後寫：
+
+`CHAR_WORKWEAKEN = turn + 1`
+
+因此 Web 直接保存 **4**，不再經 common `battleStatusApply()` 額外 +1。
+
+### StatusRecovery
+
+Combined 的 61 / 71 / 81 / 91 / 101 / 121 直接共用 V1.78 已 source-backed 的 `BATTLE_MultiStatusRecovery` 行為：
+
+- 掃完整個 `StatusTbl`
+- 每遇到正值就覆蓋 `tostatus`
+- 最後一個正值狀態勝出
+- `全` 也只解除這一個，不是 blanket clear-all
+- 指定狀態必須和最後掃出的狀態一致
+
+不另寫第二套「較合理」狀態回復規則。
+
+### save schema 修正
+
+V1.77 已把 `freshState().schemaVersion` 升到 29，但舊 `normalizeState()` 尾端仍殘留：
+
+`s.schemaVersion=28`
+
+會讓載入過的存檔版本號倒退。
+
+V2.02 修正為：
+
+`s.schemaVersion=29`
+
+不新增猜測 migration；只是讓 normalize 與 V1.77 已確立的 schema 29 一致。
+
+### Regression / CI
+
+新增：
+
+`tools/check_v202_player_combined_runtime.mjs`
+
+鎖定：
+
+- 36 筆 Combined row
+- 101 unique magic ID
+- 69 筆 AttackMagic 與 player-side pattern
+- `kill[rand()%count]`
+- raw COM2 / 不套 S_ATTACK_MAGIC target rewrite
+- non-AttMagic Pet MP +1
+- AttackMagic MP 不變
+- 458 / 459 / 462 no-row no-guess
+- 436 WORKWEAKEN=4
+- 460 / 461 3 turns + 90/50 + no overwrite
+- def-magic damage resist
+- StatusRecovery 共用 V1.78 last-positive scan
+- Pet AttackMagic practice / opposed practice
+- schema 29 normalize 不倒退
+- dispatcher 位於 generic pending fallback 前
+
+CI 已加入 V2.02 step；第一輪 V1.72～V2.02、game.js syntax、generated runtime 全部 success。
+
+save schema 維持 **29**。
+
+### commits
+
+- `525dad539644e167143792fe728e1a73f72dcaaf` — Combined core / def-magic damage integration
+- `7bb6a5281d34ee9dfe1638f5f3869719d9180565` — Combined status turn storage fix
+- `9732bb02c9aafe3a9400b777acbe75cf558b2e6c` — Pet AttackMagic practice lifecycle
+- `f57a3adec57aefccfd6cf73b610074f4bfa635f2` — AttackMagic formula / recovery scan refinement
+- `7b231059449ced57d1c3111412090dee8817adaf` — V2.02 regression
+- `1f1b00ea9fc8d827c7b7b44b13fda3c41b917cc1` — V2.02 CI
+- `c2337a49bc33f0fdb0cc8c5a629a3384c9099f39` — reuse V1.78 recovery semantics / schema 29 normalize
+- `30617cb11dc2f87993f08df8cb07db0ea2a45a65` — strengthened V2.02 regression
+- `adc71e03f3646454872fefafab7994a9eee9b24c` — V2.02 README
+
