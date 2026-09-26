@@ -3101,3 +3101,14 @@ save schema 維持 **29**。
 - 200／201 仍不猜完整 merge 結果
 
 save schema 維持 **29**。
+
+### V2.06 source correction — itematom index
+
+後續追 `ITEM_simplify_atoms()` 時重新核對固定 `ITEM_initItemAtom()`，確認 `itematom.txt` 第三欄**沒有被原 C 讀取**。原 C 只讀：
+
+1. column 1 → atom name
+2. column 2 → magicflg
+
+`ITEM_getAtomIndexByName()` 回傳的是 `item_atoms[]` 的 **zero-based 載入位置**。
+
+因此 V2.06 初版把第三欄 1..112 當 index 屬於來源解析錯誤；當時 200／201 仍維持 pending，尚未拿錯 index 產生成品。本修正把 runtime 改成真正 zero-based load order：石=0、木=1、骨=2、牙=3、皮=4、線=5……；其餘 1813 / 980 / 4602 / 4572 / 30 / 22860 / 75 統計不變。

@@ -46,14 +46,17 @@ def parse_atoms(raw:bytes):
         if not line or line.startswith("#"):
             continue
         p=line.split(",")
-        if len(p)<3:
+        if len(p)<2:
             continue
+        # Fixed ITEM_initItemAtom() ignores itematom.txt column 3 completely.
+        # ITEM_getAtomIndexByName() returns the zero-based item_atoms[] load position.
+        atom_index=lines
         lines+=1
         name=p[0]
         if name in atoms:
             duplicates+=1
             continue
-        atoms[name]=c_atoi(p[2])
+        atoms[name]=atom_index
     return atoms,lines,duplicates
 
 def parse_enemybase(raw:bytes,atoms:dict[str,int]):

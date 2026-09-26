@@ -16,6 +16,8 @@ assert.equal(runtime.fixedBuild?.itemRandRangeDom,1000);
 assert.equal(runtime.fixedBuild?.fmRandRangeDom,4000);
 assert.equal(runtime.fixedBuild?.maxItemAtomsSize,256);
 assert.equal(runtime.semantics?.outerPasses,5);
+assert.ok(String(runtime.semantics?.atomIndex||'').includes('zero-based'));
+assert.ok(String(runtime.semantics?.atomIndex||'').includes('third column is ignored'));
 
 assert.deepEqual(runtime.stats,{
   enemybaseRows:1816,
@@ -33,18 +35,18 @@ assert.deepEqual(runtime.stats,{
 });
 
 assert.deepEqual(runtime.byTempNo['1']?.slots,[
-  {slot:1,name:'石',atomIndex:1,baseAdd:0,fixMin:700,fixMax:700},
-  {slot:2,name:'木',atomIndex:2,baseAdd:0,fixMin:700,fixMax:700},
-  {slot:3,name:'皮',atomIndex:5,baseAdd:0,fixMin:700,fixMax:700},
-  {slot:4,name:'骨',atomIndex:3,baseAdd:0,fixMin:700,fixMax:700},
-  {slot:5,name:'线',atomIndex:6,baseAdd:0,fixMin:700,fixMax:700}
+  {slot:1,name:'石',atomIndex:0,baseAdd:0,fixMin:700,fixMax:700},
+  {slot:2,name:'木',atomIndex:1,baseAdd:0,fixMin:700,fixMax:700},
+  {slot:3,name:'皮',atomIndex:4,baseAdd:0,fixMin:700,fixMax:700},
+  {slot:4,name:'骨',atomIndex:2,baseAdd:0,fixMin:700,fixMax:700},
+  {slot:5,name:'线',atomIndex:5,baseAdd:0,fixMin:700,fixMax:700}
 ]);
 
 const row600=runtime.byTempNo['600'];
 assert.deepEqual(row600?.slots.map(x=>[x.slot,x.name,x.atomIndex,x.baseAdd,x.fixMin,x.fixMax]),[
-  [1,'石',1,100,1,2],
-  [2,'木',2,100,1,2],
-  [3,'线',6,100,1,2],
+  [1,'石',0,100,1,2],
+  [2,'木',1,100,1,2],
+  [3,'线',5,100,1,2],
   [4,'加特洛',null,-500,0,0],
   [5,'美鲁娜',null,-500,0,0]
 ]);
