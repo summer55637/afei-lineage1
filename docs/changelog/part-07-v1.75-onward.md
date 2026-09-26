@@ -1078,3 +1078,105 @@ V1.86 helper 插入後，V1.83 SetDuck regression 的文字切片終點同步縮
 - `be00830832a091d1341b3bdc5f5740e0fb8b84c7` — V1.86 regression
 - `3e7ca0fa0d34b6dae80626a8075bfa20322ed02b` — CI V1.86 regression step
 - `43750a2f3dea8f3a15e6127543751315226ac76e` — V1.86 README
+
+
+---
+
+## V1.87 Player RANDOMACT Hector / Sars
+
+V1.87 接入 620 `PETSKILL_Hector` 與 617 `PETSKILL_Sars`，並修正既有 Enemy Sars 共用 status helper 漏掉 `sars` 的缺口。
+
+### Hector
+
+`PETSKILL_Hector()` 會依當輪 `WORKFIXSTR / WORKFIXDEX` 寫入 `WORKATTACKPOWER / WORKQUICK`。玩家 Pet 的低忠誠 RANDOMACT 發生在 EntrySort 後，因此敏捷修正不會倒帶重排，但會保留為本回合 WORKQUICK。
+
+battle.c 的 Hector 特殊段先直接讀 raw COM2，呼叫：
+
+`PROFESSION_BATTLE_StatusAttackCheck(charaindex, def_index, 2, 60)`
+
+該函式第一步就 `RAND(1,100)`，之後才檢查死亡／已有異常；成功條件為嚴格 `roll < 60`。成功直接寫麻痺 1 回合。
+
+之後才 fall-through 進 common physical loop。LOW(COM3) 仍是 skill array 620，已超出 `BATTLE_ST_END`，因此 general `BATTLE_Attack` status block 不會再次做狀態 RNG。
+
+### Sars
+
+617 option 僅為「煞」，`PETSKILL_Sars()` 找不到 `turn` 字串，因此保留預設 turn=3。
+
+命中正傷害後走普通 `BATTLE_StatusAttackCheck` SARS 公式。成功時原 C 寫：
+- `WORKSARS = gBattleStausTurn + 1` → 4
+- `WORKMODSARS = 1`
+
+只有主感染者有 MODSARS，因此只有它會在 StatusSeq 向相鄰格以 60% 機率傳染；被傳染者只取得 3 回合 SARS，不再成為 carrier。
+
+現有 Enemy `performEnemySars()` 原本已呼叫共用 helper，但 helper 的 allowed type 清單漏掉 `sars`。V1.87 補上 dedicated `battleSarsApplyRaw(..., true)` 分支，Enemy 與玩家 Pet 現在使用相同來源 lifecycle。
+
+### Regression
+
+新增 `tools/check_v187_player_hector_sars_runtime.mjs`，鎖定 Hector RNG 順序、WORKQUICK 同回合覆寫、no second status roll、Sars turn+1/carrier、Enemy Sars 修正，以及兩個玩家 dispatcher。
+
+V1.83 SetDuck regression 的切片終點同步縮到新 Hector helper；沒有改 SetDuck 行為。
+
+### commits
+
+- `2de5adacd702f95bdf6104a51eaeb5f548227944` — V1.87 core
+- `fc335c28e4797824af9e3b749e08f57d328fa98d` — V1.87 regression
+- `9b606bf485a3775cb972133e8497b219f9592266` — V1.87 CI step
+- `df004f2f8db09a5f6dd1ddc6f59a73c7f5324ca1` — repair V1.83 regression boundary
+
+
+---
+
+## V1.88 Player RANDOMACT Acupuncture
+
+V1.88 接入 622 `PETSKILL_Acupuncture`，並把針刺反彈從 Enemy-only DamageReact 擴展到玩家出戰 Pet。
+
+### Source command
+
+`PETSKILL_Acupuncture()` 寫 `BATTLE_COM_S_ACUPUNCTURE` 與 raw COM2。battle.c 執行時先：
+
+`CHAR_WORKACUPUNCTURE = 1`
+
+然後刻意 fall-through 到 ordinary physical common loop。因此低忠誠 RANDOMACT 抽到 622 時，Pet 會啟動針刺，同時照 raw COM2 / TargetAdjust 攻擊敵方。
+
+Web 以 battle-local `battlePetAcupunctureIds` 保存玩家 Pet flag，battle reset 清空，不新增 save schema。
+
+### DamageReact
+
+`BATTLE_GetDamageReact` 的 Acupuncture 只對非 throw weapon 生效。V1.88 的 shared reaction 現在同時辨識：
+- Enemy `unit.acupunctureActive`
+- Player Pet `battlePetAcupunctureIds.has(pet.id)`
+
+觸發後完全沿 fixed `BATTLE_DamageSub`：
+1. 原傷害若為奇數，先 +1 變偶數
+2. defender 先承受完整補偶後傷害
+3. 清掉 `WORKACUPUNCTURE`
+4. attacker 承受一半傷害
+
+throw weapon 時直接 NONE，flag 不消耗。
+
+若反彈殺死 Enemy attacker，補上 Enemy death credit，讓後續 AddProfit / loot lifecycle 能正常處理。
+
+### Covered physical entrypoints
+
+為避免只在單一路徑生效，V1.88 已接到：
+- plain Enemy → Pet
+- BOW / BOUNDTHROW / BREAKTHROW 等 weapon helper
+- shared Enemy PetSkill → Pet
+- Enemy Counter → Pet
+- Guardian Pet 代擋
+- Combo 的既有 `sourceComboAcupunctureSegment`
+
+所有路徑都共用同一 `sourcePrepareAcupunctureReaction / sourceFinishAcupunctureReaction`。
+
+### Regression
+
+新增 `tools/check_v188_player_acupuncture_runtime.mjs`，鎖定 battle-local flag、throw block、奇數補偶、50% 反彈、flag consume、Enemy death credit，以及各物理入口與 dispatcher。
+
+完整 GitHub Actions 已確認 V1.72～V1.88 全部 SUCCESS。
+
+### commits
+
+- `7ea52dcccd558a1c8c245be566f23f61d4b92cca` — V1.88 core
+- `c210901e9cf353165958a87112c77b031df0468b` — V1.88 regression
+- `f3dd5c46ebf4217e339d4a7ee81dfc9cd8cbfa2d` — V1.88 CI step
+- `0386035e9dec907b99077f1a1e480d1806bf9704` — V1.87/V1.88 README
