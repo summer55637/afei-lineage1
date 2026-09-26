@@ -170,7 +170,7 @@ jobs:
       - name: Commit generated runtime
         shell: bash
         run: |
-          if git diff --quiet -- data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json; then
+          if [ -z "$(git status --porcelain -- data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json)" ]; then
             echo "Generated runtimes are already current."
             exit 0
           fi
