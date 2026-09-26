@@ -2088,3 +2088,120 @@ save schema 維持 **29**。
 - `a1f4789ea5c515e3e1591e5e394f4fb1700a1d25` — V1.98 CI
 - `9b09ece0ddc821e874c5778ebcd7b028b3b3259e` — V1.98 playable-core marker
 
+
+---
+
+## V1.99 Player RANDOMACT AttackCrazed
+
+V1.99 接入玩家寵低忠誠 `RANDOMACT`：
+
+- 613 `PETSKILL_AttackCrazed`（狂亂暴走）
+- runtime：`field=1`、`target=1`、`option=3`、`illegal=0`
+- fixed `PETSKILL_functbl` 有正式 `PETSKILL_AttackCrazed` handler
+
+### Command 建立
+
+fixed `PETSKILL_AttackCrazed()`：
+
+- `COM1 = BATTLE_COM_S_ATTCRAZED`
+- `COM2 = RANDOMACT 已抽好的 toNo`
+- `WORKATTACKPOWER = trunc(WORKFIXSTR * 0.8)`
+- `WORKDEFENCEPOWER = trunc(WORKFIXTOUGH * 0.7)`
+- `COM3 low = PetSkill array`
+- `COM3 high = atoi(option)`
+
+613 的 option 是 `3`，因此執行階段：
+
+`attack_max = 3`
+
+此 command **沒有**寫 `gDamageDiv`，和 RENZOKU／ATTSHOOT／WILDVIOLENT 不同；三段都是完整物理攻擊，不自行除以 3。
+
+### TargetList 原 C 邊界
+
+`BATTLE_TargetListSet()` 先把整個 `aDefList` 填成原 COM2，再處理 ATTCRAZED：
+
+`for(i=defsub; i<deftop; i++)`
+
+Enemy side 若 COM2 在 10～19：
+
+- `defsub = 10`
+- `deftop = 19`
+- 實際掃描只有 **10～18**
+- slot 19 不會進 ATTCRAZED 預抽池
+
+Web 的 Enemy `battleSlot` 是 0-based，因此 V1.99 精準對應成只預抽 `battleSlot 0..8`。
+
+若 10～18 沒有任何 `BATTLE_TargetCheck` 通過：
+
+- source 在 `j == 0` 直接 return
+- 先前填好的原 COM2 list 保留
+- 不 consume ATTCRAZED target-list RNG
+
+若預抽池存在，則來源在第一擊前一次抽完全部 3 顆：
+
+`RAND(0, j-1)`
+
+不得與 Duck／Critical／Damage／ItemCrush RNG 交錯。
+
+### Non-BOW 第一擊 quirk
+
+玩家 Pet 沒有 `CHAR_ARM`，固定走 `ITEM_FIST` / non-BOW。
+
+來源雖然已經抽了 `aDefList[0]`，第一擊仍使用原 COM2 再做 `BATTLE_TargetAdjust`：
+
+- 第一顆 target-list RNG **已消耗**
+- 但第一顆抽到的目標值**不使用**
+- 第二、三擊才取 `aDefList[i]`
+- 後續預抽目標若已死亡／失效，才在當段重新 `DefaultAttacker` 並 consume fallback RNG
+
+### Counter lifecycle
+
+每段：
+
+1. `BATTLE_Attack`
+2. `BATTLE_AddProfit`
+3. `++attack_count`
+
+只有整個 attack loop 結束後才進共用 Counter loop；Web 因此不在每一擊後各做一次 Counter。
+
+### Regression
+
+新增：
+
+`tools/check_v199_player_attackcrazed_runtime.mjs`
+
+鎖定：
+
+- 613 runtime row
+- FIXSTR × 0.8 / FIXTOUGH × 0.7
+- COM3 high / option=3 attack count
+- ATTCRAZED 無 `gDamageDiv`
+- slot 19 排除的 `i < deftop` 原碼邊界
+- all target RNG before first attack
+- empty pre-roll pool 不 consume target-list RNG
+- non-BOW first-hit original COM2 quirk
+- later dead target fallback RNG
+- single post-loop Counter
+- player RANDOMACT dispatch 在 runtime-pending fallback 前
+
+### CI 修正
+
+巡檢 V1.99 時發現 workflow 的 V1.90～V1.98 paths 段落含 8 個字面 `\\n`，不是 YAML 真換行。
+
+V1.99 已：
+
+- 全部改回真正換行
+- 加入 V1.99 path trigger
+- 加入 V1.99 regression step
+
+save schema 維持 **29**。
+
+### commits
+
+- `97d2b712075f2762b0992197473abb34c4f0b571` — V1.99 core
+- `2d4517804efb6039a438f90201cb113037b97538` — V1.99 dispatch newline syntax fix
+- `3290e8246fc11d7cea9874780947fe9e3bd102b7` — V1.99 regression
+- `c3a09852a15fdf5880bd586605d1420f74e68e0a` — V1.99 CI / YAML newline repair
+- `aa7063f1f103ff9025f1f75a5d8943b48ccdf98c` — V1.99 playable-core marker
+- `dd12e6d1cf1e133a1d19ef0d2fe4a49d98d76756` — V1.99 README
+
