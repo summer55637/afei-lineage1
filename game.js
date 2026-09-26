@@ -503,6 +503,199 @@ function sourceMergeRetrySpec(ingnum){
   };
 }
 
+function sourceMergeCloneDataInt(clone,fieldName){
+  const index=sourceItemMakeDataIndex(fieldName);
+  const value=Number(clone?.data?.[index]);
+  return index>=0&&Number.isFinite(value)?Math.trunc(value):null;
+}
+function sourceMergeMakeInputClones(selected,{randInclusive=cRand}={}){
+  if(!Array.isArray(selected))return {ok:false,reason:'merge-selection-source'};
+  const ordered=[...selected].sort((a,b)=>Math.trunc(Number(a?.slotIndex))-Math.trunc(Number(b?.slotIndex)));
+  const clones=[],seenExisting=new Set();
+  let rngCalls=0,skippedNotMergeable=0;
+  for(const entry of ordered){
+    const existing=entry?.existing;
+    if(!existing||existing.owner!=='player')continue;
+    const itemIndex=Math.trunc(Number(entry?.itemIndex));
+    if(seenExisting.has(itemIndex))return {ok:false,reason:'merge-collision'};
+    seenExisting.add(itemIndex);
+    const itemId=Math.trunc(Number(existing.itemId));
+    const canMerge=sourceItemMakeTemplateInt(itemId,'ITEM_CANMERGEFROM');
+    if(canMerge==null)return {ok:false,reason:'merge-canmerge-source',itemId};
+    if(canMerge!==1){skippedNotMergeable++;continue}
+    const template=sourceItemMakeTemplateData(itemId);
+    const calls=Math.max(0,Math.trunc(Number(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
+    if(!template||!Array.isArray(template.base)||!Array.isArray(template.widths)||template.base.length!==calls||template.widths.length!==calls){
+      return {ok:false,reason:'merge-input-template-source',itemId};
+    }
+    const data=template.base.slice();
+    for(let i=0;i<calls;i++){
+      const width=Math.max(0,Math.trunc(Number(template.widths[i])||0));
+      const roll=Math.trunc(Number(randInclusive(0,width)));
+      data[i]+=Number.isFinite(roll)?roll:0;
+      rngCalls++;
+    }
+    const leakIndex=Math.trunc(Number(itemMakeDb?.makeItem?.leakLevelIndex));
+    if(Number.isFinite(leakIndex)&&leakIndex>=0&&leakIndex<data.length){
+      data[leakIndex]=Math.trunc(Number(itemMakeDb?.makeItem?.leakLevelAfterLoop)||1);
+    }
+    clones.push({slotIndex:Math.trunc(Number(entry.slotIndex)),itemIndex,itemId,data});
+  }
+  return {ok:true,clones,rngCalls,skippedNotMergeable,sourceItemMakeCallsPerClone:66};
+}
+function sourceMergeCollectCloneAtoms(clones){
+  if(!Array.isArray(clones))return {ok:false,reason:'merge-clone-source'};
+  const buckets=[],byAtom=new Map(),items=[],skipped=[];
+  let itemType=-1;
+  itemLoop:
+  for(const clone of clones){
+    const type=sourceMergeCloneDataInt(clone,'ITEM_TYPE');
+    if(type==null)return {ok:false,reason:'merge-type-source',itemId:clone?.itemId};
+    if(itemType===-1)itemType=type;
+    else if(itemType===20&&type!==20)return {ok:false,reason:'mixed-dish',sourceReturn:-10};
+    else if(itemType!==20&&type===20)return {ok:false,reason:'mixed-dish',sourceReturn:-10};
+    items.push(clone);
+    const row=sourceItemField2Template(clone.itemId)||{};
+    for(let i=0;i<5;i++){
+      const name=typeof row['ingName'+i]==='string'?row['ingName'+i]:'';
+      if(!name)continue;
+      const atomIndex=sourceMergeAtomIndexByByteName(name);
+      if(atomIndex==null){
+        skipped.push({itemId:clone.itemId,ingredient:i,reason:'unknown-atom'});
+        continue itemLoop;
+      }
+      const value=sourceMergeCloneDataInt(clone,'ITEM_INGVALUE'+i);
+      if(value==null)return {ok:false,reason:'merge-ingvalue-source',itemId:clone.itemId,ingredient:i};
+      let bucket=byAtom.get(atomIndex);
+      if(!bucket){bucket={atomIndex,name,values:[]};byAtom.set(atomIndex,bucket);buckets.push(bucket)}
+      bucket.values.push(value);
+    }
+  }
+  if(!items.length)return {ok:false,reason:'no-mergeable-items'};
+  return {ok:true,items,skipped,itemType,searchtable:itemType===20?1:0,buckets};
+}
+function sourceMergePrepareClones(clones,pet=activePet()){
+  const collected=sourceMergeCollectCloneAtoms(clones);
+  if(!collected.ok)return collected;
+  const petFixEntries=sourcePetMergeFixEntries(pet);
+  const atoms=[];
+  for(const bucket of collected.buckets){
+    const simplified=sourceMergeSimplifyValues(bucket.values,{petPresent:true,petFamily:false});
+    if(!simplified.ok)return Object.assign({atomIndex:bucket.atomIndex},simplified);
+    const ratePlan=sourceMergeRatePlan(bucket.atomIndex,simplified.value,collected.searchtable,petFixEntries);
+    if(!ratePlan.ok)return ratePlan;
+    atoms.push({atomIndex:bucket.atomIndex,name:bucket.name,rawValues:[...bucket.values],simplified,ratePlan});
+  }
+  if(!atoms.length)return {ok:false,reason:'no-merge-atoms'};
+  return {
+    ok:true,searchtable:collected.searchtable,itemType:collected.itemType,
+    inputItemIds:collected.items.map(x=>x.itemId),atoms,skipped:collected.skipped
+  };
+}
+function sourceMergeExecuteRandRangePlan(plan,{randInclusive=cRand}={}){
+  if(!plan?.ok)return {ok:false,reason:'rand-range-plan'};
+  if(plan.mode==='rng'){
+    const roll=Math.trunc(Number(randInclusive(plan.rngMin,plan.rngMax)));
+    const result=Math.trunc(Number(plan.minnum))+roll;
+    return {ok:true,result,roll,rngCalls:1,mode:'rng'};
+  }
+  if(Object.prototype.hasOwnProperty.call(plan,'result')){
+    return {ok:true,result:Math.trunc(Number(plan.result)),roll:null,rngCalls:0,mode:String(plan.mode||'fixed')};
+  }
+  return {ok:false,reason:'rand-range-plan-mode'};
+}
+function sourceMergeExecuteRetryOnce(hitPlan,ingnum,{randInclusive=cRand,randModulo=sourceRandModulo}={}){
+  if(!hitPlan?.ok)return {ok:false,reason:'retry-hitplan'};
+  const ideal=Math.min(5,Math.max(0,Math.trunc(Number(ingnum))));
+  const thresholds=petMergeFixDb?.mergeMath?.retryThresholds;
+  if(ideal<1||!Array.isArray(thresholds)||!Array.isArray(thresholds[ideal-1]))return {ok:false,reason:'retry-threshold-source'};
+  const row=thresholds[ideal-1],endflg=Array(ideal).fill(false),trace=[];
+  let extractcnt=0,rngCalls=0,moduloCalls=0,first=true;
+  while(true){
+    const roll=Math.trunc(Number(randInclusive(0,999)));rngCalls++;
+    if(extractcnt>=ideal){
+      trace.push({roll,terminalExtraRoll:true});
+      return {ok:true,createdItemId:-1,rngCalls,moduloCalls,trace,exhausted:true};
+    }
+    let extractIndex=0;
+    for(;extractIndex<ideal;extractIndex++){
+      if(roll>=Math.trunc(Number(row[extractIndex])))break;
+    }
+    if(endflg[extractIndex]){
+      trace.push({roll,extractIndex,duplicateClass:true});
+      continue;
+    }
+    endflg[extractIndex]=true;extractcnt++;
+    const extractnum=ideal-extractIndex;
+    const matches=Array.isArray(hitPlan.byExtract?.[extractnum])?hitPlan.byExtract[extractnum]:[];
+    trace.push({roll,extractIndex,extractnum,firstPassHitnum:first,matches:matches.length});
+    first=false;
+    if(matches.length>0){
+      let pick=Math.trunc(Number(randModulo(matches.length)));moduloCalls++;
+      pick=((pick%matches.length)+matches.length)%matches.length;
+      return {ok:true,createdItemId:matches[pick],pickIndex:pick,rngCalls,moduloCalls,trace,exhausted:false};
+    }
+  }
+}
+function sourceMergeExecuteRetryOuter(hitPlan,ingnum,inputItemIds,{randInclusive=cRand,randModulo=sourceRandModulo}={}){
+  const attempts=Math.max(0,Math.trunc(Number(petMergeFixDb?.mergeMath?.outerMergeAttempts)||5));
+  const trace=[];let rngCalls=0,moduloCalls=0;
+  for(let attempt=0;attempt<attempts;attempt++){
+    const one=sourceMergeExecuteRetryOnce(hitPlan,ingnum,{randInclusive,randModulo});
+    if(!one.ok)return one;
+    rngCalls+=one.rngCalls;moduloCalls+=one.moduloCalls;
+    trace.push({attempt,...one});
+    if(one.createdItemId>=0){
+      return {ok:true,createdItemId:one.createdItemId,rngCalls,moduloCalls,attemptsUsed:attempt+1,trace,fallback:false};
+    }
+  }
+  if(!Array.isArray(inputItemIds)||!inputItemIds.length)return {ok:false,reason:'retry-fallback-inputs'};
+  let pick=Math.trunc(Number(randInclusive(0,inputItemIds.length-1)));rngCalls++;
+  pick=((pick%inputItemIds.length)+inputItemIds.length)%inputItemIds.length;
+  return {
+    ok:true,createdItemId:Math.trunc(Number(inputItemIds[pick])),rngCalls,moduloCalls,
+    attemptsUsed:attempts,trace,fallback:true,fallbackPickIndex:pick
+  };
+}
+function sourceMergeExecuteCoreRng(selected,pet=activePet(),{
+  randInclusive=cRand,randModulo=sourceRandModulo,cooldownHit=false
+}={}){
+  const cloned=sourceMergeMakeInputClones(selected,{randInclusive});
+  if(!cloned.ok)return cloned;
+  const inputIds=cloned.clones.map(x=>x.itemId);
+  if(cloned.clones.length<=1){
+    return {ok:false,reason:'less-than-two-mergeable',inputMakeRngCalls:cloned.rngCalls,sourceRngConsumed:true};
+  }
+  if(cooldownHit){
+    let pick=Math.trunc(Number(randInclusive(0,inputIds.length-1)));
+    pick=((pick%inputIds.length)+inputIds.length)%inputIds.length;
+    return {
+      ok:true,createdItemId:inputIds[pick],cooldownHit:true,inputMakeRngCalls:cloned.rngCalls,
+      atomRngCalls:0,retryRngCalls:0,moduloCalls:0,cooldownFallbackRngCalls:1,sourceRngConsumed:true
+    };
+  }
+  const prepared=sourceMergePrepareClones(cloned.clones,pet);
+  if(!prepared.ok)return Object.assign({inputMakeRngCalls:cloned.rngCalls,sourceRngConsumed:true},prepared);
+  const ingEntries=[];let atomRngCalls=0;
+  for(const atom of prepared.atoms){
+    const executed=sourceMergeExecuteRandRangePlan(atom.ratePlan.randPlan,{randInclusive});
+    if(!executed.ok)return executed;
+    atomRngCalls+=executed.rngCalls;
+    ingEntries.push({atomIndex:atom.atomIndex,value:executed.result});
+  }
+  const hitPlan=sourceMergeCandidateHitPlan(ingEntries,prepared.searchtable,prepared.inputItemIds);
+  if(!hitPlan.ok)return hitPlan;
+  const retry=sourceMergeExecuteRetryOuter(hitPlan,prepared.atoms.length,prepared.inputItemIds,{randInclusive,randModulo});
+  if(!retry.ok)return retry;
+  return {
+    ok:true,createdItemId:retry.createdItemId,searchtable:prepared.searchtable,
+    inputMakeRngCalls:cloned.rngCalls,atomRngCalls,retryRngCalls:retry.rngCalls,
+    moduloCalls:retry.moduloCalls,totalSharedRngCalls:cloned.rngCalls+atomRngCalls+retry.rngCalls+retry.moduloCalls,
+    retry,hitPlan,executedIngEntries:hitPlan.mutatedIngEntries,
+    sourceRngConsumed:true,sourceLifecycleMutationPending:true
+  };
+}
+
 function sourceMergePrepareStatic(selected,pet=activePet()){
   const collected=sourceMergeCollectStaticAtoms(selected);
   if(!collected.ok)return collected;
@@ -16282,10 +16475,10 @@ async function sourceUseField2PetSkill(skillId){
       addLog((id===200?'加工':'料理')+' 的 fixed candidate/retry 前置無法完成：'+String(failed?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
       return Object.assign({ok:false,reason:'merge-candidate-runtime',sourceNoRngConsumed:true},failed);
     }
-    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 與 ITEM_merge_with_retry 候選 cache／extractnum 規則前置（'+prepared.atoms.length+' 種素材、'+candidateCache.stats.candidates+' 個成品候選、ideal '+retrySpec.ideal+'）；目前未實際擲 RNG。ITEM_mergeItem_merge 的完整 merge table/runtime、實際候選 hitnum/成品抽選與後續 lifecycle 尚未來源化，維持不猜結果。','bad');
+    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 與 ITEM_merge_with_retry 候選 cache／extractnum 規則前置（'+prepared.atoms.length+' 種素材、'+candidateCache.stats.candidates+' 個成品候選、ideal '+retrySpec.ideal+'）；目前未實際擲 RNG。ITEM_mergeItem_merge 的完整 merge table/runtime、RNG executor 已來源化但為避免半套操作目前不從按鈕消耗 RNG；成品建立／材料刪除與後續 lifecycle 尚未接入，維持不猜結果。','bad');
     return {
       ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,
-      mergeStaticPrepared:true,mergeCandidatePrepared:true,petFixEntries:petFixEntries.length,
+      mergeStaticPrepared:true,mergeCandidatePrepared:true,mergeRngLifecycleReady:true,petFixEntries:petFixEntries.length,
       candidateStats:candidateCache.stats,retrySpec,prepared
     };
   }

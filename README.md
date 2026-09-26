@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.08**
+**PLAYABLE CORE V2.09**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,48 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.09 最新進度
+
+V2.09 把 200／201 的 fixed-C RNG **執行核心**串完整，但為避免「吃 RNG 卻不產生成品」的半套狀態，玩家按鈕仍不呼叫 executor；下一版和材料刪除／成品建立一起原子化啟用。
+
+已固定執行順序：
+
+1. 依背包 slot 升冪掃選取物品。
+2. 只有 `CANMERGEFROM==1` 的物品先各跑一次 `ITEM_makeItem()`。
+3. 每件 `ITEM_makeItem()` 固定消耗 **66 顆 RAND**，包含 width=0 的欄位。
+4. 若有效材料不足 2 件，到此結束；已發生的 66×N RNG 不回滾。
+5. 原 C 5+(num-2) 秒 cooldown 位於這些 66×N RNG **之後**；cooldown 命中時再吃一顆 `RAND(0,num-1)`，直接回傳其中一件 input ITEM_ID。
+6. 正常路徑才做 mixed-dish、atom simplify 與每 atom 的 `ITEM_randRange()`。
+7. `ITEM_randRange()` 只有真正 range>0 時才吃一顆 RAND；rate=0、range=0 等原 C early return 不吃 RNG。
+8. 然後第一次 candidate scan 取得 hitnum。
+9. 每次 `ITEM_merge_with_retry()` 先吃 `RAND(0,999)`，**再**檢查 `extractcnt>=ideal`；完全失敗時所以會多一顆 terminal RAND。
+10. 命中 candidate 後再吃一顆 `random()%match`。
+11. 一個 `ITEM_mergeItem()` 最多呼叫 5 次 retry；五次全敗後再吃一顆 `RAND(0,num-1)`，回傳一個 input ITEM_ID。
+
+GNU libc 的 `rand()` 與 `random()` 共用同一個 `__random()` 狀態，因此 V2.09 也維持 Web 既有的單一 RNG stream lifecycle；Web 並不宣稱複製 glibc 的 bit-for-bit PRNG，只鎖原 C 的呼叫順序與分支消耗。
+
+新增：
+
+- `sourceMergeMakeInputClones()`
+- `sourceMergeCollectCloneAtoms()`
+- `sourceMergePrepareClones()`
+- `sourceMergeExecuteRandRangePlan()`
+- `sourceMergeExecuteRetryOnce()`
+- `sourceMergeExecuteRetryOuter()`
+- `sourceMergeExecuteCoreRng()`
+- `tools/check_v209_merge_rng_lifecycle.mjs`
+
+代表 regression：
+
+- ideal=3 立即命中：1 顆 retry RAND + 1 顆 modulo RNG
+- ideal=3 完整失敗一次：3 個 unique class + 1 顆 terminal extra RAND = 4 顆
+- duplicate class 仍吃 RNG，不增加 extractcnt
+- ideal=3 五次 retry 全敗 + input fallback：**21 顆** retry/fallback RAND
+
+目前 live 200/201 回傳 `mergeRngLifecycleReady=true`，但仍保持按鈕端 **0 RNG consumption**，等下一批 lifecycle 原子化。
+
+save schema 維持 **29**。
 
 ## V2.08 最新進度
 

@@ -3277,3 +3277,90 @@ candidate 必須每個 ingredient 都找到範圍內同 atom，才有 `hitnum ==
 新增 `tools/check_v208_merge_retry_candidates.mjs`。
 
 V2.08 仍禁止在 200/201 pending gate 呼叫 `cRand()`，save schema 維持 29。
+
+---
+
+## V2.09 Merge RNG lifecycle executor
+
+這一輪完成 fixed merge RNG 的可執行核心，但 live 200／201 暫不呼叫，避免未完成 lifecycle 時只消耗 RNG。
+
+### RNG ordering
+
+固定 `ITEM_mergeItem_merge()`：
+
+- 先掃背包 token
+- 每個有效 `CANMERGEFROM` item 立即 `ITEM_makeItem(&items[cnt], ITEM_ID)`
+- fixed ITEM_makeItem loop 對 66 個 int field 每個都 `RAND(0,randomdata[i])`
+- zero-width 仍消耗 RAND
+- 全部 input clone 完後才進 `ITEM_mergeItem()`
+
+所以 cooldown／mixed dish／atom 處理以前，已先消耗 66×N。
+
+### cooldown branch location
+
+`ITEM_mergeItem()` 一進去先檢查：
+
+`nowtime - CHAR_WORKLASTMERGETIME < 5+(num-2)`
+
+命中時直接：
+
+`items[RAND(0,num-1)].data[ITEM_ID]`
+
+因此 cooldown 不是 0-RNG shortcut；它發生在 input ITEM_makeItem RNG 之後，再多吃 1 顆 RAND，且 atom/range/retry 全部不執行。
+
+V2.09 executor 先以 `cooldownHit` 注入此來源分支；真正 last-merge-time state 與 save schema 留給 lifecycle 接線版。
+
+### ITEM_randRange execution
+
+V2.07 已有 plan；V2.09 新增真正 executor：
+
+- mode=rng：`minnum + RAND(0,range)`，1 call
+- rate=0 → result 0，0 call
+- range=0 → 原 C 直接 return base，0 call
+- range<0 → 0，0 call
+
+### ITEM_merge_with_retry exact consumption
+
+原碼 while 順序：
+
+1. `r = RAND(0,999)`
+2. 宣告本輪資料
+3. `if(extractcnt >= ideal) break`
+
+因此 all-class failure 會額外多吃 terminal RAND。
+
+抽到已經 endflg=true 的 class 也已經先消耗 RAND，然後才 continue。
+
+match>0：
+
+`return matchid[random()%match]`
+
+GNU libc 的 rand() 實作直接呼叫 `__random()`，random() 同樣是 `__random()`，所以固定 Linux/glibc 環境中兩者共用 RNG state。Web 目前的 RNG abstraction 仍是一條 Math.random stream；V2.09 保證的是 source call ordering/lifecycle，不宣稱 browser PRNG 與 glibc bit sequence 相同。
+
+### outer retry
+
+`ITEM_mergeItem()` 最多呼叫 `ITEM_merge_with_retry()` 5 次。
+
+五次均 -1：
+
+`items[RAND(0,num-1)].data[ITEM_ID]`
+
+也就是最後還有 1 顆 fallback RAND。
+
+### atomic safety
+
+雖然 `sourceMergeExecuteCoreRng()` 已可真正消耗 RNG 並選出 source result ITEM_ID，live 200/201 gate **沒有呼叫它**。
+
+原因：原 C 在拿到 ret 後會無條件進材料 pile decrement/delete，再於 ret>=0 時 make/register 成品。若本版先讓按鈕吃 RNG、卻不做這些 mutation，會造成比 pending 更嚴重的不一致。
+
+所以下一批要把：
+
+- cooldown timestamp
+- input pile consume/delete
+- ret>=0 ITEM_makeItemAndRegist
+- MERGEFLG
+- backpack add/full handling
+
+與 V2.09 executor 一起原子化啟用。
+
+save schema 維持 29。

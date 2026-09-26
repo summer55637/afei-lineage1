@@ -55,6 +55,14 @@ def build_merge_math():
         "retryThresholds":MERGE_RETRY_THRESHOLDS,
         "maxMatch":MERGE_MAXMATCH,
         "outerMergeAttempts":MERGE_OUTER_ATTEMPTS,
+        "rngLifecycle":{
+            "makeItemCallsPerInput":66,
+            "mergeItemMergeBeforeMergeItem":"ITEM_makeItem for every selected CANMERGEFROM item",
+            "cooldownPosition":"after all input ITEM_makeItem calls, before atom collection/randRange",
+            "retryRollPosition":"RAND(0,999) occurs before extractcnt>=ideal break check",
+            "finalCandidateSelection":"random()%match consumes one shared libc RNG call",
+            "allRetryFailureFallback":"RAND(0,num-1) selects one input ITEM_ID",
+        },
         "randDom":1000,
     }
 

@@ -43,6 +43,7 @@ on:
       - "tools/check_v206_pet_merge_fix_runtime.mjs"
       - "tools/check_v207_merge_simplify_math.mjs"
       - "tools/check_v208_merge_retry_candidates.mjs"
+      - "tools/check_v209_merge_rng_lifecycle.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -186,6 +187,9 @@ jobs:
 
       - name: Run V2.08 merge retry candidate regressions
         run: node tools/check_v208_merge_retry_candidates.mjs
+
+      - name: Run V2.09 merge RNG lifecycle regressions
+        run: node tools/check_v209_merge_rng_lifecycle.mjs
 
       - name: Commit generated runtime
         shell: bash
