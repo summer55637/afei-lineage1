@@ -565,3 +565,70 @@ Web 新增 player-Pet 對 Enemy 的 calc-only Guardian 路徑：Guardian 只參�
 - `e599753318bb0b7776d3ca35cf13079c6a2bdeef` — V1.79 playable marker
 - `fd9de16a9a734b0be5a4befe27e75cd465268be4` — V1.79 README
 - `7177372bcd0c6f0612771e644614216fedac8744` — V1.79 changelog index
+
+
+---
+
+## V1.80 Player RANDOMACT MP damage
+
+V1.80 接上玩家出戰 Pet 在低忠誠 `RANDOMACT` 下的 506～508 `PETSKILL_MpDamage`。
+
+### Fixed rows
+
+- 506 MP攻擊：`50|50`
+- 507 MP攻擊2：`50|75`
+- 508 MP攻擊3：`50|100`
+
+### Attack reduction integer bug
+
+`PETSKILL_MpDamage()` 寫成：
+
+`def = (float)(atoi(buf1) / 100);`
+
+這仍是 int/int 先算。三筆資料第一段都是 50，所以 50 / 100 先截成 0，再轉 float；固定 build 實際不會把 WORKATTACKPOWER 降 50%。
+
+### MP damage target-type gate
+
+`BATTLE_S_MpDamage()` 的順序是：
+
+1. damage < 1 → return 0
+2. 原目標 DamageReact > 0 → return 0
+3. 原目標是 `CHAR_TYPEENEMY` 或 `CHAR_TYPEPET` → return 0
+4. 只有 PLAYER 且 MP>0 才讀 option 第二段並扣目前 MP 的百分比
+
+低忠誠 `BATTLE_PetRandomSkill()` 先用 `BATTLE_DefaultAttacker()` 選 opposing-side target。在目前 Web PVE，玩家 Pet 的 opposing side 是 Enemy side，因此 506 / 507 / 508 這條 RANDOMACT 路徑的原 `defindex` 必然是 Enemy。
+
+即使 Enemy Guardian 成立，V1.79 已確認 `BATTLE_S_AttackDamage()` 只讓 `BATTLE_AttackSeq()` local defindex 改成 Guardian，caller 的原 defindex 仍不變。因此 `BATTLE_S_MpDamage()` 看到的仍然是原 Enemy，MP 額外效果 source-provably 為 0。
+
+Web 不把這個技能改成去扣 Enemy 的虛構 MP。
+
+### Physical command lifecycle
+
+物理傷害仍走 V1.79 共用的 `sourcePetAttackDamageCalcOnlyGuardianResult()`：
+
+- 原目標先 Duck
+- Guardian 可參與 local critical / defence / GuardAdjust 計算
+- 真正傷害 / death / ItemCrush 仍落原 Enemy
+- execution 時原 COM2 失效才重跑 TargetAdjust / DefaultAttacker
+- case 結束直接 break，不接普通 Counter
+
+### Regression
+
+新增 `tools/check_v180_player_mpdamage_runtime.mjs`，檢查：
+
+- 506 / 507 / 508 fixed rows
+- 50/100 C 整數截斷為 0
+- source MP damage 固定 0
+- 不寫 `state.mp`
+- execution-time Enemy target
+- 共用 Guardian calc-only bug
+- 無普通 Counter
+- dispatcher 位於 pending fallback 前
+
+### commits
+
+- `19549cdd5b1fef62810cd6ee86d7f63e0c5ec316` — V1.80 player MP damage core
+- `455b25dd1d56b2b5250365a73b0dbfc2db0c7e8d` — V1.80 regression
+- `d61402360194b84ff6bfa6d5743f67efe11ac847` — V1.80 playable marker
+- `54f3d21e4b14532c75cc2f7b8d466043b0220afd` — V1.80 README
+- `28032f151c1c108a11801e3ecf0bca9be669ad8c` — V1.80 changelog index
