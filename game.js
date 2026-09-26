@@ -9409,10 +9409,15 @@ function sourcePerformPetDamageToHp2Skill(pet,action){
   // WORKATTACKPOWER becomes FIXSTR +20% before DamageCalc.
   // Its WORKQUICK +20% write occurs after EntrySort on this low-loyalty RANDOMACT path,
   // so it cannot retroactively change this turn's order.
-  const attack=Math.trunc(n(base.attack))+Math.trunc(Math.trunc(n(base.attack))*.2);
   const hadDamageReact=sourcePetOriginalDamageReact(target);
+  // BATTLE_S_AttackDamage downgrades skill_type to -1 before BATTLE_AttackSeq when the
+  // ORIGINAL target already has DamageReact. In that branch DAMAGETOHP2's +20% STR /
+  // +30% critical code is unreachable and this becomes an ordinary AttackSeq reaction.
+  const attackPct=hadDamageReact?0:20;
+  const criticalChanceMultiplier=hadDamageReact?1:1.3;
+  const attack=Math.trunc(n(base.attack))+Math.trunc(Math.trunc(n(base.attack))*attackPct/100);
   const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
-    criticalChanceMultiplier:1.3,
+    criticalChanceMultiplier,
     attackerOverride:{attack}
   });
   if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
@@ -9427,7 +9432,7 @@ function sourcePerformPetDamageToHp2Skill(pet,action){
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,
     actualTargetUnitId:actual?.id||target.id,r,healed,absorbPct,
-    attackPct:20,criticalChanceMultiplier:1.3,hadDamageReact,
+    attackPct,criticalChanceMultiplier,hadDamageReact,
     guardianCalcOnlyId:r.guardianCalcOnly?.id||null
   };
 }
