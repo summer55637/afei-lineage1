@@ -9829,6 +9829,172 @@ function sourcePerformPetSetDuckRandomSkill(pet,action){
   };
 }
 
+function sourcePerformPetWildViolentSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const option=String(meta?.o||'');
+  const attackPct=enemySignedSkillPercent(option,'攻%');
+  const defensePct=enemySignedSkillPercent(option,'防%');
+  const duckMatch=option.match(/回?避([+-]?\d+)/);
+  const duckBonus=duckMatch?Math.trunc(Number(duckMatch[1])||0):0;
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_WildViolentAttack() writes WORK attack/defense immediately from this
+  // round's FIXSTR/FIXTOUGH. BATTLE_PetLoyalCheck() runs only after EntrySort, so these
+  // RANDOMACT work values affect this action/counter chain, not the already-fixed turn order.
+  const baseAttack=Math.trunc(n(base.attack));
+  const baseDefense=Math.trunc(n(base.defense));
+  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  const defense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+  battlePetPowerMods.set(pet.id,{
+    attack,defense,skillId:action?.skillId,sourceWildViolent:true
+  });
+
+  // battle.c overwrites the already-primed attack_max with RAND(3,10), then uses that
+  // same value as gDamageDiv. Captured Pets have no CHAR_ARM, so this is the common
+  // non-BOW direct-attack loop with raw COM2 re-adjusted on every later segment.
+  const count=cRand(3,10);
+  addLog(
+    pet.name+' 隨機使用「'+(meta?.n||'狂暴攻擊')+'」：'+count+' 段，攻 '
+      +(attackPct>=0?'+':'')+attackPct+'%／防 '+(defensePct>=0?'+':'')+defensePct
+      +'%／目標回避 +'+duckBonus+'。',
+    'pet'
+  );
+
+  let lastResult=null,lastActual=null,hits=0,lastTarget=null;
+  for(let step=0;step<count;step++){
+    if(!petIsBattleActive(pet)||!enemy)break;
+    // fixed BATTLE_TargetListSet pre-fills every non-BOW slot with the original COM2.
+    // Each later segment writes that raw slot back and calls BATTLE_TargetAdjust again.
+    const target=sourcePetEnemyTargetFromAction(action);
+    if(!target)break;
+    const attacker=petBattleView(pet);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+      guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
+      damageDivisor:count,
+      duckBonusPercent:duckBonus
+    });
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+    sourceProcessBattleDeathsAtAddProfit();
+    hits++;
+    lastResult=r;
+    lastActual=actual;
+    lastTarget=target;
+  }
+
+  // The common direct-attack loop performs Counter only after all attack_max segments,
+  // using the final BATTLE_Attack result/defNo.
+  if(lastResult&&lastActual?.hp>0&&petIsBattleActive(pet)){
+    resolvePetEnemyCounterChain('pet',pet,lastActual,lastResult);
+  }
+  return {
+    handled:true,skillId:action?.skillId,hits,attackCount:count,
+    attackPct,defensePct,duckBonus,attack,defense,
+    targetUnitId:lastTarget?.id||null,actualTargetUnitId:lastActual?.id||null,
+    lastResult
+  };
+}
+
+function sourcePerformPetSpeedyAttackSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const defensePct=enemySignedSkillPercent(meta?.o,'防%');
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  const baseDefense=Math.trunc(n(base.defense));
+  const defense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+  // PETSKILL_SpeedyAttack() itself only writes WORKDEFENCEPOWER. The advertised 敏%+30
+  // is not parsed there; battle.c implements it only in BATTLE_DexCalc for this COM.
+  // Low-loyalty RANDOMACT happens after EntrySort, so that DexCalc branch is too late to
+  // change this round's position. Keep the defense work value for attack/counter only.
+  battlePetPowerMods.set(pet.id,{
+    defense,skillId:action?.skillId,sourceSpeedyAttack:true
+  });
+
+  const target=sourcePetEnemyTargetFromAction(action);
+  addLog(
+    pet.name+' 隨機使用「'+(meta?.n||'疾速攻擊')+'」（防 '
+      +(defensePct>=0?'+':'')+defensePct
+      +'%；低忠誠 RANDOMACT 發生在排序後，本輪不倒帶套用 +30% 排序敏捷）。',
+    'pet'
+  );
+  if(!target){
+    return {
+      handled:true,skillId:action?.skillId,noTarget:true,
+      defensePct,defense,sourceDexOrderAlreadyFixed:true
+    };
+  }
+
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+  if(petIsBattleActive(pet)&&actual?.hp>0){
+    resolvePetEnemyCounterChain('pet',pet,actual,r);
+  }
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||null,defensePct,defense,
+    sourceDexOrderAlreadyFixed:true,r
+  };
+}
+
+function sourcePerformPetSacrificeSkill(pet,action){
+  const meta=action?.meta;
+  syncPetBattleHp(pet,true);
+  const beforeCaster=Math.max(0,Math.trunc(n(pet?.hp)));
+  const maxCaster=Math.max(1,Math.trunc(n(pet?.maxHp)));
+
+  // PETSKILL_Sacrifice() gates before writing COM1: strictly HP > WORKMAXHP*0.2.
+  // BATTLE_PetRandomSkill() already cleared COM1 to NONE, so a failed gate remains NoAction.
+  if(!(beforeCaster>maxCaster*.2)){
+    addLog(
+      pet.name+' 隨機抽到「'+(meta?.n||'救援')+'」，但自身耐久力不足（HP '
+        +beforeCaster+' / '+maxCaster+'）；原 PETSKILL_Use() FALSE，本回合不行動。',
+      'pet'
+    );
+    return {
+      handled:true,skillId:action?.skillId,noAction:true,sourceUseFailed:true,
+      hpGateFailed:true,beforeCaster,maxCaster
+    };
+  }
+
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    // PETSKILL_Use already succeeded, but battle.c BATTLE_TargetAdjust can still fail later.
+    addLog(pet.name+' 使用「'+(meta?.n||'救援')+'」，但執行時已沒有可作用的目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true,beforeCaster,maxCaster};
+  }
+
+  // fixed BATTLE_S_Sacrifice first halves caster HP (C int truncation), then heals the
+  // single defindex by that post-halving HP. Although it calls BATTLE_MultiList for the
+  // animation, the actual CHAR_HP write is only to defindex.
+  pet.hp=Math.max(0,Math.trunc(beforeCaster*.5));
+  const transfer=Math.max(0,Math.trunc(n(pet.hp)));
+  const beforeTarget=Math.max(0,Math.trunc(n(target.hp)));
+  const maxTarget=Math.max(1,Math.trunc(n(target.maxHp)));
+  target.hp=Math.min(maxTarget,beforeTarget+transfer);
+  const healed=Math.max(0,Math.trunc(n(target.hp))-beforeTarget);
+
+  addLog(
+    pet.name+' 低忠誠隨機使用「'+(meta?.n||'救援')+'」：自身 HP '
+      +beforeCaster+' → '+pet.hp+'，反而替敵方 '+target.name+' 回復 '+healed
+      +' HP（來源轉移值 '+transfer+'）。',
+    'bad'
+  );
+  // No physical BATTLE_Attack and no Counter loop.
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    beforeCaster,afterCaster:pet.hp,transfer,beforeTarget,afterTarget:target.hp,healed
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10403,6 +10569,9 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
       result=sourcePerformSetMagicPetBattle(pet.name,action.skillId,rawToNo,meta,'pet');
     }
     else if(meta?.f==='PETSKILL_SetDuck')result=sourcePerformPetSetDuckRandomSkill(pet,action);
+    else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
