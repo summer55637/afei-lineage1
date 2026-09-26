@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.60</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.62</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.60：</b>
-      補齊合擊中的針刺外皮生命週期：BATTLE_Combo 逐段檢查 DamageReact，第一個合格非投擲成員立即觸發針刺並不加入 AllDamage；後續段才正常累積。針刺段若先把目標打倒，後續合擊立即停止；WakeUp／ItemCrush 順序同步原 C。
+      <b>V1.62：</b>
+      校正低忠誠寵的原 C RNG／地球一周生命週期：RANDOMACT 先抽技能 slot、再先抽敵方 target，之後才掃 PetSkill；即使掃描撞到 -1 未定義邊界也保留已發生的 target RNG。若寵物正處於 EARTHROUND0，低忠誠抽到 RANDOMACT 不會中斷地球一周，也不會額外抽技能／目標 RNG。
     </article>
   </main>
 
