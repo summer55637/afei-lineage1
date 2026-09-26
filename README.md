@@ -15089,3 +15089,106 @@ V1.67 同時修正 V1.66 一個被 death-extra 無 RNG 掩蓋的時序風險：`
 - V1.66 full-round finish + WORKFIXAI snapshot retained
 - targeted core regression: **46 / 46 PASS**
 - save schema 27 unchanged
+
+
+## V1.68 _Item_ReLifeAct / Player equipment death-relife lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心 commits：
+
+- `5780970fa3885d1dee561d332eac19f8670c6d32` — 接入 Player death-relife lifecycle 與 actor outer AddProfit pending gate
+- `ef9913e4384a10b208453dc6e81e0b388d733074` — 補齊 ITEM_CHECKINDEX / equip-place 有效性 gate
+
+### Fixed build flags
+
+固定 `version.h`：
+
+- `_Item_ReLifeAct` = ON
+- `_DUMMYDIE` = OFF
+- `_LOSE_FINCH_` = OFF
+
+因此本輪只處理玩家裝備死亡復活；Pet relife 仍不可達。
+
+### CHECK_ITEM_RELIFE exact gates
+
+固定 `BATTLE_Battling()` 在一個有效 Entry 完成 command 後、該 Entry 的統一 outer `BATTLE_AddProfit()` 前呼叫 relife scan。
+
+`CHECK_ITEM_RELIFE()` 對玩家的硬條件：
+
+1. HP <= 0
+2. `CHAR_ISDIE == TRUE`
+3. 只掃 CHAR item slot 0..4
+4. item index 必須有效
+5. `ITEM_getEquipPlace() != -1`
+6. 只觸發第一個 `ITEM_DIERELIFEFUNC` 非空的裝備
+
+`BATTLE_getBattleDieIndex()` 若 Entry 帶 `BENT_FLG_ULTIMATE` 會直接回 -1，所以 Ultimate / 打飛死亡的 Player **不會進入替身裝備復活**。這個排除發生在裝備掃描之前，不需要依賴後面的 `BATTLE_Exit(player)` 才成立。
+
+### ITEM_DIErelife HP and consumption
+
+固定 `ITEM_DIErelife()` 沒有 RNG：
+
+- 沒有 `HP=` argument -> power = 1
+- `HP=FULL` -> power = `CHAR_WORKMAXHP`
+- 其他字串 -> C `atoi()`
+- `BATTLE_MultiReLife()` 再做 `max(1,power)` 並 cap 到 WORKMAXHP
+- 成功後清除 `CHAR_ISDIE`
+- 隨即把裝備 slot 清成 -1 並 `ITEM_endExistItemsOne()` 消耗該 existing item
+
+Web 端因此新增 C `atoi` 等價解析，且 relife 後會把 `battlePlayerDeathProcessed` / result 清回 alive 狀態；否則同一場第二次死亡會被錯誤地當成「已處理過」而漏掉 death-extra。
+
+### Inner AddProfit vs outer-only fatal timing
+
+這是本輪最重要的時序差異。
+
+若致死傷害所在的 command 內部已經有來源明確的 inner `BATTLE_AddProfit()`：
+
+1. inner AddProfit 先把 Player 標成 ISDIE 並跑 NormalDeadExtra
+2. command 結束
+3. generic `CHECK_ITEM_RELIFE` 可在**同一 actor iteration** 復活
+4. 再跑該 actor 的 outer AddProfit
+5. 下一個排序 Entry 看到的是已復活 Player，因此若 Player 的排序尚未輪到，仍可正常進入後續 action / RNG
+
+若是 dedicated outer-only 路徑，致死時只有 HP=0、尚未由 AddProfit 標 ISDIE：
+
+1. command 結束時 relife scan 因 ISDIE 尚未成立而失敗
+2. 接著 outer AddProfit 才處理 Player death
+3. 若下一個排序 Entry 正好是已死 Player，會直接在 StatusSeq / AttackCount 前被 skip
+4. 必須等**後面另一個真正完成 command 的 C_OK Entry**，它的 generic relife scan 才可能把 Player 復活
+
+Dead Entry、C_WAIT Entry、以及被 Combo leader 吃掉的 member 都在固定 C 的 generic relife scan 前就 continue，因此它們本身不能憑空製造一個復活 boundary。
+
+V1.68 用 `battleOuterAddProfitPending` 保留這個差異：只有實際走到 StatusSeq / command processing 的 Entry 才 mark pending；回合開頭或純 dead/C_WAIT/Combo-consumed skip 不會誤觸 relife。
+
+### Player equipment data boundary
+
+目前 Web 尚未有來源可驗證的 Player equipment-slot importer。V1.68 **沒有猜任何替身娃娃 ItemId、equip slot 或 HP argument**。
+
+`sourcePlayerEquippedRelifeItems()` 的正式 adapter 暫時回傳空陣列；lifecycle core 已完成，等後續把原 itemset 的已驗證 Player 裝備資料接入後即可直接使用。這也代表目前公開玩法不會憑空生成或啟用一件未證實的復活裝備。
+
+### Regression
+
+- committed `game.js` syntax PASS
+- C atoi：前導空白 / 正負號 / 遇非數字停止 PASS
+- HP argument：missing / FULL / numeric PASS
+- HP clamp：至少 1、最多 max HP PASS
+- HP>0 不觸發 PASS
+- HP=0 但尚未 AddProfit / ISDIE 不觸發 PASS
+- Ultimate death 排除 PASS
+- 只掃 slot 0..4 PASS
+- ITEM_CHECKINDEX / equip-place / function-pointer gate PASS
+- 第一個有效 relife 裝備優先 PASS
+- existing item 與 equip slot 同步消耗 PASS
+- relife 清除 death-processed state，可再次死亡 PASS
+- completed actor 才建立 outer boundary PASS
+- relife 發生在 outer AddProfit 之前 PASS
+- outer-only fatal 同 boundary 不偷跑 relife PASS
+- 後續有效 Entry 才能替先前 outer-only death 觸發 relife PASS
+- relife helper 0 RNG PASS
+- capture / attack / guard 三個 actor loop 均接入 pending gate PASS
+- V1.67 Player -> Pet AddProfit scan order retained
+- V1.67 Player Ultimate DEFAULTPET exit retained
+- V1.67 Marefia PetID 718 四顆死亡 RNG retained
+- targeted V1.68 regression: **29 / 29 PASS**
+- save schema 27 unchanged
