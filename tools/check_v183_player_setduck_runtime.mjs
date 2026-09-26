@@ -20,7 +20,7 @@ assert.ok(plan.includes("return {kind:'skill',slot:iNum,skillId,meta,targetDesc}
 
 // SetDuck's battle execution must fail its self-target gate in this path.
 const start=game.indexOf('function sourcePerformPetSetDuckRandomSkill');
-const end=game.indexOf('function sourcePerformPetGuardianSkill',start);
+const end=game.indexOf('function sourcePerformPetWildViolentSkill',start);
 assert.ok(start>=0&&end>start);
 const body=game.slice(start,end);
 assert.ok(body.includes('sourceExecutionFailed:true'));
