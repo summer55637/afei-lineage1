@@ -7,6 +7,8 @@ on:
       - "tools/check_v172_item_make_runtime.mjs"
       - "tools/check_v173_item_equip_runtime.mjs"
       - "game.js"
+      - "game.html"
+      - "game.css"
       - ".github/workflows/generate-item-make-runtime.yml"
   workflow_dispatch:
 
