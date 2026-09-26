@@ -7715,22 +7715,30 @@ function performEnemyRegret(actor,unit,options,meta){
 
   function hitOne(target,secondary=false){
     if(!target)return null;
+    // BATTLE_S_AttackDamage checks BATTLE_GetDamageReact(original defindex) before AttackSeq.
+    // Any positive ReactType changes only the local skill_type to -1. For current player-side
+    // state this is reachable when the target Pet has Acupuncture. That suppresses REGRET2's
+    // 0.8 multiplier and the later dizzy switch, even though DamageSub may then consume the skin.
+    const hadDamageReact=target.kind==='pet'&&target.pet
+      ?battlePetAcupunctureIds.has(target.pet.id)
+      :false;
+    const localRegret= !hadDamageReact;
     let r;
     if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
       r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOpts,{
-        preGuardDamageMultiplier:secondary?.8:1
+        preGuardDamageMultiplier:secondary&&localRegret?.8:1
       }));
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyAttackSeqBugToPlayer(unit,Object.assign({},attackOpts,{
-        guarding,preGuardDamageMultiplier:secondary?.8:1
+        guarding,preGuardDamageMultiplier:secondary&&localRegret?.8:1
       }));
     }else return null;
     r.ultimateCriticalEnemyOnly=true;
     enemyApplySkillHit(unit,target,r,label+(secondary?'貫穿段':''));
-  sourceBattleFinalizeItemCrushRng(r);
-    const dizzy=enemyTryRegretDizzy(target,successPct,label);
-    return {target:target.kind,r,dizzy,secondary};
+    sourceBattleFinalizeItemCrushRng(r);
+    const dizzy=localRegret?enemyTryRegretDizzy(target,successPct,label):false;
+    return {target:target.kind,r,dizzy,secondary,hadDamageReact,localRegret};
   }
 
   const primary=hitOne(chosen,false);
@@ -10786,6 +10794,171 @@ function sourceFinalizePetExecutedCommand(pet,result){
   return varyTurn?Object.assign({},result,{varyTurn}):result;
 }
 
+function sourcePetPierceFrontEnemy(primary){
+  if(!primary)return null;
+  const slot=sourceBattleStatusSlot({kind:'enemy',unit:primary,unitId:primary.id});
+  if(slot<15||slot>=20)return null;
+  const frontSlot=slot-5;
+
+  // Source only checks BATTLE_No2Index(frontSlot) >= 0 here; it does NOT run TargetCheck
+  // or EarthRound filtering for the second target. In the Web model, hp>0 represents an
+  // entry still present in battle; hidden EarthRound entries remain valid for this direct index hit.
+  const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+  const unit=units.find(u=>u&&sourceBattleStatusSlot({kind:'enemy',unit,unitId:u.id})===frontSlot)||null;
+  return unit&&n(unit.hp)>0?unit:null;
+}
+
+function sourcePetTryRegretDizzy(pet,target,successPct,label){
+  // PROFESSION_BATTLE_StatusAttackCheck() consumes RAND first, then checks HP/death/existing status.
+  const roll=cRand(1,100);
+  const desc={kind:'enemy',unit:target,unitId:target?.id};
+  if(!target||n(target.hp)<=0)return {attempted:true,applied:false,roll,reason:'dead'};
+  if(battleHasAnyStatus(desc))return {attempted:true,applied:false,roll,reason:'existing-status'};
+  if(roll>=successPct)return {attempted:true,applied:false,roll,reason:'roll'};
+
+  // Source writes StatusTbl[DIZZY]=2 and then CanMove is checked after StatusSeq.
+  // This runtime stores one blocked action as turns=1 (the StatusSeq adapter checks blockedBefore).
+  const applied=battleStatusApply(desc,'dizzy',0);
+  if(applied)addLog(target.name+' 被 '+label+' 擊暈，下一次行動無法動作。','pet');
+  return {attempted:true,applied,roll,reason:applied?'success':'apply-failed'};
+}
+
+function sourcePerformPetSonicSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'音波衝擊';
+  const primary=sourcePetAdjustedAttackDamageTarget(action);
+  if(!primary){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const results=[];
+  const hitOne=(target,secondary=false)=>{
+    if(!target)return null;
+    const hadDamageReact=sourcePetOriginalDamageReact(target);
+    // BATTLE_S_AttackDamage changes local skill_type to -1 before AttackSeq on DamageReact.
+    // Therefore SONIC2's 0.5 pre-Guard multiplier disappears for that target.
+    const localSonic=!hadDamageReact;
+    const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+      preGuardDamageMultiplier:secondary&&localSonic?.5:1
+    });
+    if(!r)return null;
+    r.ultimateCriticalEnemyOnly=true;
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+    return {
+      targetUnitId:target.id,actualTargetUnitId:actual?.id||target.id,
+      secondary,hadDamageReact,localSonic,r
+    };
+  };
+
+  const first=hitOne(primary,false);
+  if(first)results.push(first);
+
+  const secondaryTarget=sourcePetPierceFrontEnemy(primary);
+  if(secondaryTarget){
+    const second=hitOne(secondaryTarget,true);
+    if(second)results.push(second);
+  }
+
+  // SONIC / SONIC2 are isolated BATTLE_S_AttackDamage calls. No common Counter loop;
+  // the generic actor outer boundary owns the command-end AddProfit pass.
+  addLog(
+    pet.name+' 隨機使用「'+label+'」：主目標'+
+      (secondaryTarget?'，並貫穿同欄前排 '+secondaryTarget.name+'（正常 SONIC2 傷害 ×0.5）。':'；沒有可對應的前排貫穿目標。'),
+    'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,primaryUnitId:primary.id,
+    secondaryUnitId:secondaryTarget?.id||null,results,sourceNoCounter:true
+  };
+}
+
+function sourcePerformPetRegretSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'憾甲一擊';
+  const option=String(meta?.o||'');
+  const successPct=Math.max(0,Math.trunc(enemySkillNumber(option,/命%([+-]?\d+)/,0)));
+  const attackPct=enemySignedSkillPercent(option,'攻%');
+  const hasDefenseToken=option.includes('防%');
+  const defensePct=hasDefenseToken?enemySignedSkillPercent(option,'防%'):null;
+
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+  const baseAttack=Math.trunc(n(base.attack));
+  const baseDefense=Math.trunc(n(base.defense));
+  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  const powerMod={attack,skillId:action?.skillId,sourceRegret:true};
+  let defense=baseDefense;
+  if(hasDefenseToken){
+    defense=baseDefense+Math.trunc(baseDefense*defensePct/100);
+    powerMod.defense=defense;
+  }
+  // 666/718 use "防-20%" / "防-35%"; fixed PETSKILL_Regret searches "防%" exactly,
+  // so those rows never enter the defense parser. Preserve that data/parser mismatch.
+  battlePetPowerMods.set(pet.id,powerMod);
+
+  const primary=sourcePetAdjustedAttackDamageTarget(action);
+  if(!primary){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {
+      handled:true,skillId:action?.skillId,noTarget:true,attackPct,defensePct,
+      defenseParserMatched:hasDefenseToken,attack,defense,successPct
+    };
+  }
+
+  const results=[];
+  const hitOne=(target,secondary=false)=>{
+    if(!target)return null;
+    const hadDamageReact=sourcePetOriginalDamageReact(target);
+    const localRegret=!hadDamageReact;
+    const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+      // BATTLE_DamageCalc checks attacker's COM1 and therefore keeps REGRET's FIXTOUGH
+      // defense overwrite even if local BATTLE_S_AttackDamage skill_type became -1.
+      useFixedToughDefense:true,
+      preGuardDamageMultiplier:secondary&&localRegret?.8:1,
+      attackerOverride:{attack}
+    });
+    if(!r)return null;
+    r.ultimateCriticalEnemyOnly=true;
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+
+    // Regret's status switch runs after ItemCrush and is skipped entirely when local
+    // skill_type was downgraded by DamageReact.
+    const dizzy=localRegret
+      ?sourcePetTryRegretDizzy(pet,target,successPct,label)
+      :{attempted:false,applied:false,reason:'damage-react-local-skilltype-minus1'};
+
+    return {
+      targetUnitId:target.id,actualTargetUnitId:actual?.id||target.id,
+      secondary,hadDamageReact,localRegret,dizzy,r
+    };
+  };
+
+  const first=hitOne(primary,false);
+  if(first)results.push(first);
+  const secondaryTarget=sourcePetPierceFrontEnemy(primary);
+  if(secondaryTarget){
+    const second=hitOne(secondaryTarget,true);
+    if(second)results.push(second);
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」（命 '+successPct+'%、攻 '
+      +(attackPct>=0?'+':'')+attackPct+'%'
+      +(hasDefenseToken?'、防 '+(defensePct>=0?'+':'')+defensePct+'%':'；來源防禦字串未匹配「防%」，防禦不變')
+      +'）。',
+    'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,primaryUnitId:primary.id,
+    secondaryUnitId:secondaryTarget?.id||null,results,successPct,
+    attackPct,defensePct,defenseParserMatched:hasDefenseToken,
+    attack,defense,sourceNoCounter:true
+  };
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
   if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
@@ -10866,6 +11039,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Sonic')result=sourcePerformPetSonicSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Regret')result=sourcePerformPetRegretSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
