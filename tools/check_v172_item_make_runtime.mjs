@@ -93,7 +93,7 @@ const dropFn=functionSlice('rollEnemyDropSlots','makeEnemyUnit');
 assertOrdered(dropFn,[
   'for(let i=0;i<10;i++)',
   'probabilityRoll=cRand(0,999)',
-  'sourceItemRuntimeAlloc(itemId'
+  'sourceItemRuntimeAlloc(attempt.itemId'
 ],'Enemy drop per-slot order');
 
 const enemyFn=functionSlice('makeEnemyUnit','makeEnemyGroup');
