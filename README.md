@@ -14458,3 +14458,63 @@ HECTOR special block沒有 break，之後落入 common physical group，COM1 在
 - V1.57 AttackShoot 保留
 - V1.56 SARS / ShowMercy 保留
 - save schema 27 unchanged
+
+
+## V1.59 Acupuncture / 針刺外皮 source lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`cb8cc14210a98e3b87e08e530896b62a25fd1f14`。
+
+### PETSKILL_Acupuncture / skill 622
+- `petskill2` runtime：skill 622／`PETSKILL_Acupuncture`，option 為空，資料 target=0 對應 `PETSKILL_TARGET_MYSELF`。
+- 這個 target 欄位不能直接拿來改寫 Enemy AI 目標：固定 `battle_ai.c` 在技能模式中會把已選好的 `result->target` 直接傳入 `PETSKILL_Use(..., result->target, NULL)`。
+- 因此 Enemy 使用 622 時，`PETSKILL_Acupuncture` 先把 COM1 設為 ACUPUNCTURE、COM2 保留 AI 選中的玩家／寵物。
+- `battle.c` 進 `BATTLE_COM_S_ACUPUNCTURE` 時先把 `CHAR_WORKACUPUNCTURE=1`，沒有 break，隨後落入完整 common physical attack。
+- 真正攻擊前 common block 會把 COM1 改回 ATTACK，所以施術者完成自己的攻擊後可照普通物理流程參與 Counter chain。
+
+### Damage reaction
+固定 `BATTLE_GetDamageReact / BATTLE_DamageSub` 的針刺規則：
+
+1. 只在針刺旗標存在、物理傷害為正且攻擊方不是投擲武器時觸發。
+2. 原傷害為奇數時先加 1，補成下一個偶數。
+3. 針刺持有者承受完整的偶數傷害。
+4. `CHAR_WORKACUPUNCTURE` 立即清成 0。
+5. 攻擊者再承受該偶數傷害的一半。
+6. 一次觸發後效果即消耗；之後的多段攻擊不再反彈，除非重新施放。
+
+投擲武器命中時，來源會把 reaction 強制改回 NONE：
+- 正常造成原物理傷害
+- 不反彈
+- 不清除針刺旗標
+
+### Counter / WakeUp lifecycle
+- 普通 `BATTLE_Attack` 在 Acupuncture 暫時改寫 defindex 後，會把原 defender 恢復再做 WakeUp。
+- `BATTLE_Counter` 沒有這個 restore；針刺反彈後 WakeUp 會落在被反傷的攻擊者。
+- V1.59 把 primary 與 Counter 分開保留這個來源差異，而不是共用錯誤的 WakeUp 目標。
+
+### Ultimate quirk
+針刺反彈的實際 HP 損失是 `damage/2`，但固定來源在後續 Ultimate direct-hit threshold 判定仍使用反彈前的完整偶數 `damage`。
+V1.59 只為這條來源路徑加入 threshold override；overkill／實際扣血仍使用真正的半傷值。
+
+### BattleModel exception
+固定 `BATTLE_BattleModel_ATTACK` 會暫時把真正 defender 標成 `BATTLE_COM_S_BATTLE_MODEL`。
+若該 defender 有針刺：
+- 針刺旗標仍會被清除
+- 但來源明確跳過攻擊者的半傷反彈
+
+目前 Web runtime 的 BattleModel 可達實作是 Enemy 分身攻擊玩家側，沒有玩家／寵物 BattleModel 反向命中 Enemy 622 的可達路徑。
+因此 V1.59 只記錄此來源例外，不為目前不存在的路徑猜造額外 runtime。
+
+### V1.59 regression targets
+- parent fixed at V1.58 / `f7069c6abb9888a1204b55a971ee3e019ec0d8f1`
+- core game.js commit `cb8cc14210a98e3b87e08e530896b62a25fd1f14`
+- game.js syntax PASS
+- 5 damage -> defender 6 / attacker reflect 3 / flag consumed
+- 6 damage -> defender 6 / attacker reflect 3 / flag consumed
+- throw 5 damage -> defender 5 / no reflect / flag preserved
+- Counter 5 damage -> defender 6 / attacker reflect 3 / reflected-attacker WakeUp path
+- ordinary player/pet physical hit, physical skill hit, confusion physical hit and Counter share the sourced reaction helper
+- skill 621 `PETSKILL_Retrace` unchanged
+- skill 623 `PETSKILL_DamageToHp2` unchanged
+- save schema 27 unchanged
