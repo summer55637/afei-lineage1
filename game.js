@@ -8056,11 +8056,15 @@ function performEnemyStatusChange(actor,unit,options,meta){
   const weaponType=Math.trunc(n(unit?.weaponType));
 
   // 原 BATTLE_COM_S_STATUSCHANGE 先把 gBattleStausChange 改成技能狀態，
-  // 再落入和普通攻擊共用的 BOW / BOUNDTHROW / BREAKTHROW weapon loop。
-  // 因此弓會依 aBowW + attack_max 打多個目標；BREAKTHROW 原先設定的 PARALYSIS
-  // 已被這裡的技能狀態覆蓋，不能再額外套投石麻痺。
+  // 再落入普通 physical common weapon loop。每一次真正 BATTLE_Attack 都會：
+  // damage/wakeup -> status check -> ItemCrush，然後才回到 outer attack_count loop。
+  const afterHit=hit=>sourceEnemyApplyStatusAttackHit(
+    unit,hit.targetDesc,hit.r,type,turn,label
+  );
+
   if(weaponType===4||weaponType===18||weaponType===19){
-    const afterHit=hit=>sourceEnemyApplyStatusAttackHit(unit,hit.targetDesc,hit.r,type,turn,label);
+    // BOW / BOUNDTHROW / BREAKTHROW 沿既有 ranged common loop。
+    // BREAKTHROW 的預設 paralysis 已被 STATUSCHANGE 的 gBattleStausChange 覆蓋。
     const seq=weaponType===4
       ?performEnemyBowWeaponAttack(actor,unit,Object.assign({},options,{afterHit}))
       :performEnemyThrowWeaponAttack(actor,unit,Object.assign({},options,{afterHit,breakthrowStatus:false}));
@@ -8071,36 +8075,22 @@ function performEnemyStatusChange(actor,unit,options,meta){
     };
   }
 
-  // BOOMERANG 只有原 command 本來就是 ATTACK 才會被前置 switch 改成 BATTLE_COM_BOOMERANG。
-  // StatusChange 不會轉換，因此持回力標時仍是單一目標的一般物理命中。
-  let r;
-  let targetDesc;
-  if(chosen.kind==='pet'&&chosen.pet){
-    r=enemyAttackPetResult(unit,chosen.pet);
-    enemyApplySkillHit(unit,chosen,r,label);
-    targetDesc={kind:'pet',pet:chosen.pet,petId:chosen.pet?.id};
-  }else{
-    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-    r=resolveEnemyDirectAttackToPlayer(unit,{guarding});
-    targetDesc=enemyApplyDirectGuardianSkillHit(
-      unit,chosen,r,label,{finalizeItemCrush:false}
-    );
-  }
-
-  // fixed BATTLE_Attack order: damage/wakeup -> status -> ItemCrush.
-  // Guardian substitution changes defindex before both the status check and ItemCrush.
-  const statusResult=sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label);
-  sourceBattleFinalizeItemCrushRng(r);
-
-  // StatusChange 的異常套用發生在 BATTLE_Attack() 返回之前；睡眠／石化成功後目標已不能反擊。
-  if(unit.hp>0&&enemy){
-    if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)&&battleStatusCanMove(targetDesc)){
-      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,r);
-    }else if(chosen.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding&&battleStatusCanMove(targetDesc)){
-      resolvePlayerEnemyCounterChain('enemy',unit,r);
-    }
-  }
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,statusType:type,statusResult};
+  // Non-BOW including skill-held BOOMERANG also uses the source AttackNum loop.
+  // Every segment restores raw COM2 and reruns TargetAdjust; BOOMERANG is NOT converted
+  // to the special BO row command because the original COM was STATUSCHANGE, not ATTACK.
+  const seq=sourceEnemyCommonNonRangedSkillSequence(
+    actor,unit,
+    Object.assign({},options,{
+      afterHit,
+      counterRules:{requireCanMove:true}
+    }),
+    label
+  );
+  return {
+    kind:'skill',skillId:actor.skillId,statusType:type,weaponSequence:true,
+    target:chosen.kind,sequence:seq,hits:seq?.segments||[],
+    r:seq?.r||null
+  };
 }
 function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='攻擊'){
   const weaponType=Math.trunc(n(unit?.weaponType));
@@ -8110,6 +8100,10 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
     :sourceEnemyBattleAttackMax(unit);
 
   const attackOptions=Object.assign({},options.attackOptions||{});
+  const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
+  const counterRules=options.counterRules&&typeof options.counterRules==='object'
+    ?options.counterRules:{};
+
   // fixed battle.c：只有「有效武器的 BATTLE_GetAttackCount() > 0」且 gWeponType==ITEM_FIST
   // 才把 gDamageDiv 設成 attack_max。Enemy 空手的 fallback 1 擊不走這個除數。
   if(weaponType===0&&actor?.sourceAttackCountWeaponRoll&&attackMax>0
@@ -8120,7 +8114,9 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
   const segments=[];
   let attackCount=0;
   let lastTarget=null;
+  let lastActualTarget=null;
   let lastResult=null;
+  let sourcePostTarget=null;
   let sourceCounterReady=false;
   let sourceLoopExit='no-target';
 
@@ -8129,52 +8125,72 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
   while(attackCount<attackMax&&enemy&&n(unit.hp)>0){
     const target=enemyActorTarget(actor,unit);
     if(!target){
+      sourcePostTarget=null;
       sourceLoopExit='target-adjust-failed';
       break;
     }
 
-    let r,actualTarget=target;
+    let r,actualTarget=target,afterHitResult=null;
     if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
       r=enemyAttackPetResult(unit,target.pet,attackOptions);
+      actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
       enemyApplySkillHit(unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段');
+      // fixed BATTLE_Attack(): DamageSub / WakeUp -> gBattleStausChange -> ItemCrush.
+      if(afterHit)afterHitResult=afterHit({
+        target:'pet',pet:target.pet,targetDesc:actualTarget,r
+      },target);
       sourceBattleFinalizeItemCrushRng(r);
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
       actualTarget=enemyApplyDirectGuardianSkillHit(
-        unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段'
+        unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段',
+        {finalizeItemCrush:false}
       )||target;
+      if(afterHit)afterHitResult=afterHit({
+        target:'player',targetDesc:actualTarget,r,
+        guardianPetId:r?.guardianPetId||null
+      },target);
+      sourceBattleFinalizeItemCrushRng(r);
     }else{
+      sourcePostTarget=null;
       sourceLoopExit='attack-failed';
       break;
     }
 
     attackCount++;
     lastTarget=target;
+    lastActualTarget=actualTarget;
     lastResult=r;
+    sourcePostTarget=target;
     segments.push({
       target:target.kind,petId:target.pet?.id||null,
       actualTarget:actualTarget?.kind||target.kind,
-      guardianPetId:r?.guardianPetId||null,r
+      actualPetId:actualTarget?.petId||actualTarget?.pet?.id||null,
+      guardianPetId:r?.guardianPetId||null,r,afterHit:afterHitResult
     });
 
     // fixed common loop breaks immediately after ++attack_count reaches attack_max;
-    // defNo therefore remains the last real target for the following Counter loop.
+    // defNo therefore remains the last real target for the following Counter/post checks.
     if(attackCount>=attackMax){
       sourceCounterReady=true;
       sourceLoopExit='attack-max';
       break;
     }
+    // Attacker death is checked before loading aDefList[++k], so source defNo remains lastTarget.
     if(n(unit.hp)<=0){
       sourceLoopExit='attacker-dead';
       break;
     }
   }
 
-  // Counter uses the last primary BATTLE_Attack result/defNo only.
-  // Throw-type boomerang is still allowed to reach this helper, but BATTLE_Counter's
-  // throw-weapon gate makes the chain end without consuming counter RNG.
-  if(sourceCounterReady&&lastResult&&lastTarget&&n(unit.hp)>0&&enemy){
+  // Counter uses the last primary BATTLE_Attack result / outer defNo only.
+  // STATUSCHANGE's status happens inside BATTLE_Attack before this outer loop:
+  // if it immobilized the real hit target, Counter cannot begin.
+  const counterTargetCanMove=!counterRules.requireCanMove
+    ||!lastActualTarget
+    ||battleStatusCanMove(lastActualTarget);
+  if(sourceCounterReady&&counterTargetCanMove&&lastResult&&lastTarget&&n(unit.hp)>0&&enemy){
     if(lastTarget.kind==='pet'&&lastTarget.pet&&petIsBattleActive(lastTarget.pet)){
       resolvePetEnemyCounterChain('enemy',lastTarget.pet,unit,lastResult);
     }else if(lastTarget.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
@@ -8189,7 +8205,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
     weaponCommand:'COMMON',
     weaponItemId:unit.equippedWeaponId,
     weaponType,attackMax,attackCount,segments,
-    sourceCounterReady,sourceLoopExit,
+    sourcePostTarget,sourceCounterReady,sourceLoopExit,counterTargetCanMove,
     sourceFistDamageDiv:Number.isFinite(Number(attackOptions.damageDivisor))
       ?Number(attackOptions.damageDivisor):1
   };

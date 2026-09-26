@@ -14056,3 +14056,123 @@ V1.52 繼續用 `unit.counterEligibleThisTurn=false` 保留這個來源行為。
 - defender may Counter; Charge/EarthRound actor cannot counter-counter after COM1 becomes NONE
 - existing charge/earth state timing unchanged
 - schema 27 unchanged
+
+
+## V1.53 StatusChange non-ranged common loop
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### Reachability check
+
+先重新核對目前生成資料：
+
+- `PETSKILL_Acupuncture` = skill 622
+  - Enemy 2800 / 2801 有掛在第 3 技能槽
+  - 兩者該槽權重都是 0
+  - 目前 Enemy AI 不可達
+- `PETSKILL_ShowMercy` = skill 626
+  - 目前 `stoneage_enemy_ai.json` 沒有任何 Enemy 引用
+  - 目前 Enemy AI 不可達
+
+因此本輪不為 622 / 626 猜 runtime 行為。
+
+相對地，`PETSKILL_StatusChange` 在現行 Enemy AI 有 217 個正權重技能槽引用，
+是這一區真正高頻可達的 common-loop 缺口。
+
+### Source finding
+
+`BATTLE_COM_S_STATUSCHANGE` 位於普通 physical common direct-attack 群組。
+
+來源在進 loop 前已完成：
+
+1. `attack_max = BATTLE_GetAttackCount(charaindex)`
+2. 有效 FIST 武器時設定 `gDamageDiv = attack_max`
+3. `BATTLE_TargetListSet(..., aDefList)`
+4. STATUSCHANGE 設定 `gBattleStausChange / gBattleStausTurn`
+5. command 隨後改成普通 ATTACK，但狀態 global 保留到整個 common loop 結束
+
+所以 STATUSCHANGE 不是「只打一擊、套一次狀態」。
+
+### Per-segment order
+
+每一次 `BATTLE_Attack()` 的來源順序是：
+
+1. AttackSeq / DamageSub
+2. `BATTLE_DamageWakeUp`
+3. 若 `gBattleStausChange != -1`，執行 `BATTLE_StatusAttackCheck`
+4. `BATTLE_ItemCrushSeq`
+5. 返回 outer common loop
+6. `++attack_count`
+7. 若尚未達 `attack_max`，載入下一個 aDefList / TargetAdjust
+
+V1.53 在 `sourceEnemyCommonNonRangedSkillSequence()` 新增 `afterHit` hook，
+固定放在 Damage/WakeUp 完成後、ItemCrush 前。
+
+STATUSCHANGE 使用該 hook，所以每個 primary segment 都獨立做狀態判定。
+
+### Non-BOW / BOOMERANG
+
+V1.52 前：
+
+- BOW / BOUNDTHROW / BREAKTHROW 已經會跑完整 AttackNum
+- 近戰與技能 command 下的 BOOMERANG 仍只打一段
+
+V1.53 改為：
+
+- 沿用本回合已 prime 的 `sourceAttackMax`
+- 不重抽 `BATTLE_GetAttackCount`
+- 每一段都從 raw COM2 重新做 `BATTLE_TargetAdjust`
+- 原目標死亡／EarthRound hidden 才消耗 DefaultAttacker fallback RNG
+- STATUSCHANGE + BOOMERANG 不轉特殊 BO row attack
+
+### Guardian and status target
+
+近戰打 Player 時，`BATTLE_AttackSeq` 先做 Duck，再做 Guardian substitution。
+
+因此若忠犬代擋：
+
+- 傷害落在忠犬
+- STATUSCHANGE 也檢查／套在忠犬
+- ItemCrush 同樣以實際 defindex 為準
+
+V1.53 的 afterHit 使用 `enemyApplyDirectGuardianSkillHit()` 回傳的實際 targetDesc，
+再執行狀態，最後才 ItemCrush。
+
+### Counter mobility gate
+
+STATUSCHANGE 的狀態是在 `BATTLE_Attack()` 返回前就已套上。
+
+因此最後 primary hit 若成功讓實際目標進入不能行動的狀態，
+外層 `BATTLE_Counter()` 不應開始。
+
+V1.53 給 generic common helper 增加 `counterRules.requireCanMove`：
+
+- 一般 Mighty / PowerBalance / Charge / EarthRound 不受影響
+- STATUSCHANGE 使用此 gate
+- Counter 仍只看最後一個 primary BATTLE_Attack 的 return / outer defNo
+
+### Final-defNo groundwork
+
+generic non-ranged helper現在也明確回傳 `sourcePostTarget`：
+
+- 達 attack_max：保留最後實際 primary target
+- 攻擊者死亡：保留最後 target
+- TargetAdjust 失敗：清為 null
+
+這與 V1.49 ranged final-defNo lifecycle 一致，供下一輪 BecomeFox / BecomePig 非遠距修正直接共用。
+
+### V1.53 regression targets
+
+- game.js syntax PASS
+- main parent fixed at V1.52 / 9a0f70c792889f08f69773b3521cf37d310e923d
+- ShowMercy 626 has no current Enemy AI reference
+- Acupuncture 622 only appears at weight 0 for Enemy 2800 / 2801
+- StatusChange has 217 positive-weight Enemy AI references
+- non-ranged StatusChange reuses primed AttackNum without duplicate RNG
+- every primary segment executes damage/wakeup -> status -> ItemCrush
+- later segments rerun TargetAdjust from raw COM2
+- skill BOOMERANG stays common non-BOW
+- Guardian receives status before ItemCrush when it substitutes
+- immobilized final actual target blocks outer Counter
+- ranged StatusChange behavior remains on existing helpers
+- schema 27 unchanged
