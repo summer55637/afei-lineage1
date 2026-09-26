@@ -103,6 +103,7 @@ FUNC_NAMES=["init","preOver","postOver","watch","use","attach","detach","drop","
 def parse(raw:bytes):
     text=raw.decode("latin1")
     out={}
+    seen_ids=set()
     parsed=0
     syntax_errors=0
     duplicate=0
@@ -154,9 +155,10 @@ def parse(raw:bytes):
             syntax_errors+=1
             continue
         item_id=ints[IDX["ITEM_ID"]]
-        if item_id in out:
+        if item_id in seen_ids:
             duplicate+=1
             continue
+        seen_ids.add(item_id)
 
         row={}
         for key in FIELD2_KEYS:
