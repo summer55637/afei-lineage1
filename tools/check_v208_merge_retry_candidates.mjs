@@ -156,7 +156,7 @@ assert.ok(gate.includes('const candidateCache=sourceMergeCandidateCache()'));
 assert.ok(gate.includes('const retrySpec=sourceMergeRetrySpec(prepared.atoms.length)'));
 assert.ok(gate.includes('mergeCandidatePrepared:true'));
 assert.ok(gate.includes('candidateStats:candidateCache.stats'));
-assert.ok(gate.includes('實際候選 hitnum/成品抽選'));
+assert.ok(gate.includes('RNG executor 已來源化'));
 assert.equal(gate.includes('cRand('),false,'V2.08 remains plan-only');
 
 console.log(JSON.stringify({
