@@ -841,6 +841,10 @@ HP option 不建立 STR/TGH/DEX 狀態，而是直接走 fixed `BATTLE_MultiReco
 
 因此 602／661／694／721／726／838／841 都保留逐目標 RNG，而不是固定回復描述值。
 
+`BATTLE_MultiRecovery()` 尾端還有 Pet recovery 的 battle flag lifecycle：`norisk == 0` 且目標是 Pet 時，第一次 recovery 會 `CHAR_PetAddVariableAi(..., AI_FIX_PETRECOVERY)`，其中 `AI_FIX_PETRECOVERY=+10`；之後以 `CHAR_BATTLEFLG_RECOVERY` 阻止同場重複增加。V1.84 以 `battlePetRecoveryAiIds` 對齊這個一次性副作用。
+
+fixed 騎乘分支會把同一次 recovery 拆給 player 與 ridepet；目前 Web 沒有正式 ride system／ridepet entry，因此依「原 C 規則優先、不猜數值」暫不虛構騎乘分流。
+
 ### CHAR_MAGICPETMP
 
 fixed `PETSKILL_SetMagicPet()` 讀取 `CHAR_MAGICPETMP` 並檢查 `>=3`，但成功後只把原值寫回原值，沒有 ++。全 repo 搜尋亦沒有其他可達累加路徑；SetDuck 只會清 0。
@@ -859,6 +863,7 @@ fixed `PETSKILL_SetMagicPet()` 讀取 `CHAR_MAGICPETMP` 並檢查 `>=3`，但成
 - STR/TGH/DEX 共用 mtgh 基準 bug
 - PreCommand snapshot → target StatusSeq countdown 時序
 - HP 90%～110% RNG、RecoveryRate、MaxHP cap
+- Pet recovery `AI_FIX_PETRECOVERY=+10` 與一場一次 flag lifecycle
 - 玩家 RANDOMACT dispatcher 已在 pending fallback 前接入 SetMagicPet
 
 ### commits
@@ -869,4 +874,11 @@ fixed `PETSKILL_SetMagicPet()` 讀取 `CHAR_MAGICPETMP` 並檢查 `>=3`，但成
 - `928b84604b140abe62a754588d5571042297ec89` — CI regression step
 - `f688af1f4e274d2a3157d03e33ccdb9c4410fe98` — V1.84 playable marker
 - `1cc90049bb87c5fd3944efbb042167e6af03fa56` — V1.84 README
+- `7f225ffef263d68e55d0f7f5faa0c98ded66b1ec` / `7e07e83da81e72f07765d037a54e5f524f2ae92e` — repair stale V1.77 regression ordering / regex
+- `f572f59ac547b03faade3187af047660b42b3ab2` / `dcc0770260071b52b5feaadb169a6e7f9733439b` — repair stale V1.78 regression slot / scope
+- `3e8127ac2cea241cd97ee4744a491275fe65904c` — repair stale V1.79 regression scope
+- `53447a0347f643a174ea417e18d8b78e13bf38e0` — Pet recovery AI once-per-battle lifecycle
+- `91cc53b1cfe99daf7ac517f3bd2fd8d74dddd098` — recovery AI regression coverage
+- `f9d6aea4d7e7392e49954b4481ba02da4d43f49c` — V1.84 regression path trigger
+- `af401bcd7bed6d482a2649c3ebbef45289dc17b0` — README recovery lifecycle note
 
