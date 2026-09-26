@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.75**
+目前最新可玩核心：**V1.76**
 
 ## 歷史分檔
 
@@ -14,16 +14,14 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.75
+## 最新版本 V1.76
 
-V1.75 補完玩家混亂狀態下四種遠程武器的跨 side 原 C pattern：
+V1.76 補齊玩家寵低忠誠 RANDOMACT 的 functbl / BattleProperty 邊界：
 
-- StatusSeq 改寫 COM2 後仍先消耗 AttackNum RNG
-- BOW invalid raw COM2 不做 DefaultAttacker，也不消耗 aBowW RAND
-- BOW 可依原排列打到自己出戰 Pet，並保留 self -1 sentinel
-- BOOMERANG 保留 dedicated row sweep / forward order / 30% damage
-- BOUNDTHROW / BREAKTHROW 保留 raw COM2 TargetAdjust 與 raw -1 sentinel
-- BREAKTHROW 保留 WakeUp → 麻痺 → ItemCrush → AddProfit
-- V1.74 的 ranged-confusion fail-closed 已移除
+- 582 / 642 / 643 依 fixed PETSKILL_functbl 判定為 PETSKILL_Use FALSE
+- 612 魔之詛咒接入 PET_PetskillPropertyEvent，物理攻守屬性會即時剋制對手
+- callback 在 Pet / battle exit 時清除
+- 639 蟻葬對 RANDOMACT 的存活 Enemy 依原 battle.c fall-through 為普通物理攻擊
+- 仍缺真實 CHAR_PETID 的 Roar / Vary 保留不猜
 
-完整 V1.75 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.76 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
