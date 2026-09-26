@@ -31,7 +31,9 @@ assert.ok(game.includes('function sourceField2PetSkills(pet=activePet())'));
 assert.ok(game.includes("Number(meta.field)!==2||Number(meta.illegal)!==0"));
 assert.ok(game.includes("if(enemy){addLog('原 C field=2 PetSkill 只能在非戰鬥狀態使用。'"));
 assert.ok(game.includes("if(id===200||id===201)"));
-assert.ok(game.includes("merge runtime 尚未來源化"));
+assert.ok(game.includes("ITEM_mergeItem_merge"));
+assert.ok(game.includes("完整 merge table/runtime"));
+assert.ok(game.includes("維持不猜結果"));
 assert.ok(game.includes("sourceRuntimePending:true"));
 
 const fixStart=game.indexOf('function sourceUsePetFixitem(selected)');
@@ -63,9 +65,14 @@ assert.ok(consume.includes("if(pile==null||pile<1)return false"));
 assert.ok(consume.includes("if(pile>1)"));
 assert.ok(consume.includes("sourceItemRuntimeSetDataInt(existing,'ITEM_USEPILENUMS',pile-1)"));
 assert.ok(consume.includes("sourceItemRuntimeFree(itemIndex)"));
+assert.ok(consume.includes("let freed=false"));
+assert.ok(consume.includes("if(freed&&Number.isFinite(itemId))"));
 assert.ok(consume.indexOf("sourceItemRuntimeSetDataInt(existing,'ITEM_USEPILENUMS',pile-1)") <
           consume.indexOf("sourceItemRuntimeFree(itemIndex)"),
           'stack decrement branch must precede free branch');
+assert.ok(consume.indexOf("if(freed&&Number.isFinite(itemId))") >
+          consume.indexOf("sourceItemRuntimeFree(itemIndex)"),
+          'aggregate inventory must decrement only after the existing item is actually freed');
 
 const inlayStart=game.indexOf('function sourceApplyPetInslayMaterial(target,material)');
 const inlayEnd=game.indexOf('function sourceUsePetInslay(selected)',inlayStart);
