@@ -14690,3 +14690,79 @@ OWNERATTACK / ENEMYATTACK 仍會覆寫地球一周；TARGETRANDOM 仍只改 COM2
 - 同樣 FIXAI / roll 的普通 attack intent：仍會進 RANDOMACT skill planner
 - V1.61 slot → target RNG 順序保留
 - save schema 27 unchanged
+
+## V1.63 Enemy AI pre-Battling RNG lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`1e38f0badf2c79c97ae3a9eff30308498e239285`。
+
+### Fixed phase order
+固定 `BATTLE_Command()` 的回合執行順序是：
+
+1. `pBattle->turn++`
+2. `BATTLE_ai_all(battleindex, 0, 0)`
+3. `BATTLE_ai_all(battleindex, 1, 0)`
+4. `BATTLE_Battling(battleindex)`
+5. `BATTLE_Battling()` 建立 EntryList 時才逐 Entry 呼叫 `BATTLE_DexCalc()`
+6. `EntrySort()`
+7. `ComboCheck()`
+
+因此 Enemy AI 的 action / target / PetSkill AI-stage side effect 必須全部發生在 Player、Pet、Enemy 的第一顆 Dex RNG **之前**。
+
+V1.62 前 Web 在 `normalBattleOrder()` 先抽 Player Dex、Pet Dex，之後才逐 Enemy 做 AI action / target，再抽 Enemy Dex；同一 seed 下會從回合前段開始讓整條 RNG 串錯位。
+
+### WAZA target lifecycle
+固定 `BATTLE_ai_normal()` 抽到 `B_AI_WAZAMODE0..6` 後，會先：
+
+- 建立 target candidate
+- 依 target type / select mode 消耗必要 RNG
+- 寫入 `result->target`
+
+之後才呼叫：
+
+`PETSKILL_Use(charaindex, slot, result->target, NULL)`
+
+所以即使 PetSkill callback 最後變成 NONE／GUARD，或 callback 未註冊、技能拒絕執行，**WAZA 的 target RNG 仍然先發生**。
+
+V1.63 用 `sourceAiPickedSkill` 保留「原始 AI 抽到的是 WAZA」這件事，不再只看最後轉換後的 `action.kind` 決定是否選 target。
+
+### Dead Enemy Entry
+固定 `BATTLE_ai_all()` 在呼叫 tactics function 前沒有 `CHAR_ISDIE` / HP<=0 pre-filter。
+
+而它是在 AI callback 完成後才檢查 `BATTLE_CanMoveCheck()`；固定版 `BATTLE_CanMoveCheck()` 檢查麻痺／石化／睡眠等狀態，**不檢查 HP**。
+
+因此「已死亡但仍留在 Battle Entry」的 Enemy 仍可先跑 AI action / target / `PETSKILL_Use()` lifecycle、消耗 RNG；之後進 `BATTLE_Battling()` 才因 ISDIE / HP<=0 被跳過。
+
+V1.63 不再為 dead Enemy 提早跳過 AI，只在真正 action execution 階段維持死亡 Entry 不行動。
+
+### V1.63 correction
+`normalBattleOrder()` 現在拆成與固定 C 對齊的兩階段：
+
+- **AI phase**：依 Enemy Entry 順序完成 action → target → PetSkill AI-stage side effects
+- **Battling phase**：之後才依 Player → Pet → Enemy Entry 順序消耗 Dex RNG，再 EntrySort → ComboCheck
+
+另外：
+
+- WAZA→NormalGuard / PETSKILL_None 仍先完成 target lifecycle
+- missing / unregistered / Sacrifice-low-HP 等最終失敗分支仍保留來源已發生的 target lifecycle
+- target candidate 完全不存在時，保持來源在 `PETSKILL_Use()` 前 return FALSE，不套技能副作用
+- `BATTLE_CanMoveCheck()` 類阻止行動的狀態在 AI callback 後才把最後 command 覆成 NONE；已發生的 skill side effect 不倒退
+- save schema 維持 27
+
+### Regression
+- parent = V1.62 playable HEAD / `3ae1f72ec5c99256d6179876da0eb1043342679c`
+- core = `1e38f0badf2c79c97ae3a9eff30308498e239285`
+- committed `game.js` syntax PASS
+- V1.61 slot → target RNG regression PASS
+- V1.61 undefined PetSkill boundary target-RNG preservation PASS
+- V1.62 EarthRound RANDOMACT exception PASS
+- WAZA→NormalGuard target lifecycle PASS
+- PETSKILL_None target lifecycle PASS
+- Sacrifice reject target lifecycle PASS
+- missing / unregistered skill target lifecycle PASS
+- Enemy AI → target → skill-side-effect → Dex → Combo order PASS
+- dead Enemy Entry AI / target RNG lifecycle PASS
+- targeted regression: **14 / 14 PASS**
+- save schema 27 unchanged
+
