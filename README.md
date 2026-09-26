@@ -14906,3 +14906,97 @@ Web 仍可能進入 `processBattleStatusTurn()`，並對 Enemy 呼叫 `sourceEne
 - V1.63 Enemy AI pre-Battling lifecycle 保留
 - save schema 27 unchanged
 
+## V1.66 full-round finish / player death lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commits：
+
+- `5104c39cb23df1cf2ca0bc72a9af90a56bb6b075` — full-round finish、player death-extra、Pet WORKFIXAI snapshot
+- `3cd23d68ca21e9a846816cb19b71f7a223879ec2` — Combo 的 ItemCrush → AddProfit/death-extra 最終順序校正
+
+### Fixed BATTLE_Command finish timing
+固定 `BATTLE_Command()` 每回合先：
+
+1. `BATTLE_ai_all(side 0)`
+2. `BATTLE_ai_all(side 1)`
+3. 完整跑完 `BATTLE_Battling()`
+4. 清 SURPRISE
+5. 才呼叫 `BATTLE_OnlyRescue(side 0)`
+6. side 0 尚有非 Pet 生存者時，才再檢查 `BATTLE_OnlyRescue(side 1)`
+
+因此任一角色在排序中的較早 action 打死玩家或最後一隻 Enemy，都**不會當場中止 EntryList**。尚未輪到的 Entry 仍依來源 execution gate 繼續處理自己的 StatusSeq / AttackCount / PetLoyalCheck / command。
+
+### OnlyRescue side priority
+固定 `BATTLE_OnlyRescue()` 明確跳過 `CHAR_TYPEPET`，只計算該 side 的非 Pet 生存角色。
+
+現行單人 Web side 0 只有玩家本人屬非 Pet，因此：
+
+- 玩家普通死亡後，即使出戰寵仍活著，該寵仍可在本輪後續排序中行動
+- 整輪跑完後 side 0 仍視為全滅
+- 若寵物在玩家死亡後又殺死最後 Enemy，`BATTLE_Command()` 仍先命中 side 0 全滅分支，結果是玩家敗
+- 最後 Enemy 較早死亡時，後續仍未執行的 Player / Pet Entry 仍先跑完來源 lifecycle，之後才判勝
+
+### Dead loser profit check
+固定 `BATTLE_Finish()` 會對仍在 Entry 的角色呼叫 `BATTLE_GetProfit()`，但 `BATTLE_GetExpGold()` 第一段即檢查：
+
+`CHAR_ISDIE == TRUE -> return 0`
+
+所以普通死亡玩家即使本輪同時擊殺 Enemy，也不會在敗北結算取得該場 EXP / item；Web 的 defeat teardown 繼續不發勝利獎勵是來源一致，不自行補發。
+
+### Player death-extra is separate from battle finish
+固定死亡副作用在傷害後的 `BATTLE_AddProfit() -> BATTLE_AddExpItem()` 階段處理，不等到 `BATTLE_OnlyRescue()`：
+
+- Normal death：扣玩家 Charm、修改 DEFAULTPET VariableAI，玩家/寵物 Battle Entry 不因此立即整場清除
+- Ultimate player death：`BATTLE_UltimateExtra()` 先呼叫 `BATTLE_PetDefaultExit()`，再套較大的 Charm / VariableAI 修正並 `BATTLE_Exit(player)`
+- `BATTLE_PetDefaultExit()` 只移除 DEFAULTPET 的 Battle Entry，不清除玩家持有／DEFAULTPET 關係
+
+V1.66 因此把 Web 原本綁在 `defeat()` 的 player death-extra 拆成 `sourceProcessPlayerBattleDeathOnce()`：
+
+- death-extra 每場最多一次
+- Normal death 保留出戰寵本輪後續行動
+- Ultimate death 立即把 DEFAULTPET 標成 `battlePetOutIds`，讓後續 TargetAdjust / Entry execution 看不到該 Battle Entry
+- 真正回村、補滿 HP/MP、釋放戰場仍延到整輪勝負判定完成後
+
+已能直接對到固定 common physical `BATTLE_Attack -> ItemCrush -> BATTLE_AddProfit` 的路徑，death-extra 會在該段結算後立即發生；未逐技能證明 AddProfit 時點的特殊 skill 不自行猜測，只保證在 actor 結束與下一 Entry 之前處理。
+
+### Pet WORKFIXAI round snapshot
+固定 `CHAR_WORKFIXAI` 是 `BATTLE_PreCommandSeq -> CHAR_complianceParameter()` 寫入的本輪 WORK 值；`BATTLE_PetLoyalCheck()` 與 `BATTLE_Abduct()` 後面都直接讀這個 snapshot。
+
+玩家在 Pet 行動前死亡時，Charm / VariableAI 雖會立刻改變，但**同一回合的 WORKFIXAI 不會重新計算**。
+
+V1.66 新增 `battlePetFixAiSnapshots`：
+
+- 正常 PreCommand 刷新本輪 FIXAI
+- 本輪 LoyaltyCheck / Abduct 只讀 snapshot
+- EARTHROUND0 因固定 PreCommand 直接 skip compliance，保留上一輪 WORKFIXAI
+- 下一個正常 PreCommand 才把死亡造成的 Charm / VariableAI 變更反映到 FIXAI
+
+### V1.66 correction
+`captureTurn()`、`attackTurn()`、`guardTurn()` 現在都：
+
+- actor 之間只掃死亡副作用，不因 HP=0 / Enemy 全滅立刻 `return`
+- 本輪中途才死亡的 Entry 仍由 V1.65 current-state execution gate 跳過 StatusSeq / AttackCount
+- 對仍活著的後續 Entry 繼續原排序 lifecycle
+- 全 order 完成後才判勝負
+- 固定採 side 0 優先：玩家死亡先判 defeat，再判 Enemy 全滅 win
+- 結束場次不再進下一輪 `battleFieldTick()`
+
+### Regression
+- parent playable HEAD = V1.65 / `513696aac0bd060d442300f4b4cd76e4e1ed764c`
+- final core = `3cd23d68ca21e9a846816cb19b71f7a223879ec2`
+- committed `game.js` syntax PASS
+- FIXAI snapshot：本輪固定 PASS
+- EARTHROUND0 FIXAI 保留 PASS
+- 下一正常 PreCommand FIXAI refresh PASS
+- Normal player death-extra exactly-once PASS
+- Ultimate player death DEFAULTPET Battle exit PASS
+- capture / attack / guard：full EntryList finish timing PASS
+- capture / attack / guard：side 0 defeat priority PASS
+- V1.61 / V1.62 low-loyalty lifecycle retained
+- V1.63 Enemy AI → Dex ordering retained
+- V1.64 Player AttackCount / friendly TargetAdjust retained
+- V1.65 execution-time current death gate retained
+- targeted regression: **17 / 17 PASS**
+- save schema 27 unchanged
+
