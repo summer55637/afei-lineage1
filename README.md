@@ -15000,3 +15000,92 @@ V1.66 新增 `battlePetFixAiSnapshots`：
 - targeted regression: **17 / 17 PASS**
 - save schema 27 unchanged
 
+## V1.67 Pet death AddProfit / Marefia RNG lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心 commits：
+
+- `914633f66083a3b075ad380f78492fe1545dfd67` — Pet death 改到來源真正的 `BATTLE_AddProfit()` 邊界、瑪蕾菲雅死亡 RNG、common physical / Counter lifecycle
+- `a1c601c8b7303685889ed638c96be68045fef58f` — Player Ultimate 先移除 DEFAULTPET Entry，因此同次 AddProfit 不再掃 slot 5 Pet death
+
+### Fixed Pet death timing
+固定 `BATTLE_AddExpItem()` 會掃兩側 Battle Entry。對每個 `HP <= 0 && CHAR_ISDIE == FALSE` 的新死亡者，來源會在該次 `BATTLE_AddProfit()` 內立即：
+
+1. 標記 `CHAR_ISDIE`
+2. `_PET_LIMITLEVEL` 開啟時呼叫 `Pet_Check_Die()`
+3. 增加 DEADCOUNT
+4. 依 Entry Ultimate flag 呼叫 `BATTLE_UltimateExtra()` 或 `BATTLE_NormalDeadExtra()`
+
+因此 Pet death 不能只延到「下一個 actor 開始」才處理。特別是 common multi-hit / Counter 中，Pet_Check_Die 可能消耗 RNG，必須發生在下一個 TargetAdjust / Counter RNG 之前。
+
+### Marefia / PetID 718
+固定 `_PET_LIMITLEVEL` 已啟用。`Pet_Check_Die()` 對 `CHAR_PETID == 718` 無條件依序消耗：
+
+1. `RAND(1,8)` — VITAL
+2. `RAND(1,4)` — STR
+3. `RAND(1,4)` — TOUGH
+4. `RAND(1,4)` — DEX
+
+四項扣除後 clamp 0..50，接著 `CHAR_MODAI -= CHAR_MODAI * 5 / 100`。
+
+V1.67 的 `sourceMarefiaDeathPenalty()` 現在只要 TempNo/PetID 718 就一定先消耗這 4 顆 RNG。若舊／異常存檔真的沒有可還原的 `allocPointPacked`，仍保留四顆 RNG 與已知 MODAI -5%；但不自行猜遺失的四圍數值。
+
+### AddProfit scan order: Player before Pet
+目前單人 side 0 對應 Player = slot 0、DEFAULTPET = slot 5。固定 `BATTLE_AddExpItem()` 由低 slot 往高 slot 掃，所以同一個 AddProfit 前 Player 與 Pet 同時死亡時，一定先處理 Player death-extra，再處理 Pet。
+
+這會影響 Player death 對 DEFAULTPET 的 `AI_FIX_PLAYERDEAD / AI_FIX_PLAYERULTIMATE`：不能先把 Pet Ultimate 清掉，否則會錯漏主人死亡對 Pet 的 VariableAI 修正。
+
+V1.67 新增 `sourceProcessBattleDeathsAtAddProfit()`，固定順序：`Player death-extra -> Pet death scan`。
+
+### Player Ultimate special case
+固定 `BATTLE_UltimateExtra(player)` 在處理 Player slot 0 時會先 `BATTLE_PetDefaultExit(player,battleindex)`，其內 `BATTLE_Exit(DEFAULTPET)` 會把 slot 5 Battle Entry 立刻設成 -1，之後才完成 Player Ultimate 的 Charm / DEFAULTPET VariableAI 修正與 `BATTLE_Exit(player)`。
+
+因此如果 Player Ultimate 與 DEFAULTPET 在同一個 AddProfit 前都已 HP=0，等 `BATTLE_AddExpItem()` 後續掃到 slot 5 時，Pet Entry 已不存在：
+
+- 不執行該 Pet 的 `Pet_Check_Die()`
+- 不執行 Pet NormalDeadExtra / UltimateExtra
+- 瑪蕾菲雅也不額外消耗 4 顆死亡 RNG
+- Player BATTLE_Exit 的持有寵清理最後會把 HP<=0 Pet 回到 HP 1
+
+V1.67 已保留這個來源特例：Player death scan 若回報 Ultimate，該場後續 AddProfit 不再對已被 DefaultExit 的 Pet 做 death scan；Web 最終 defeat teardown 仍負責既有的 Pet HP 1 離場恢復。
+
+### Inner AddProfit boundaries
+固定 common physical loop 每一個 `BATTLE_Attack()` 後都立即：`BATTLE_AddProfit() -> attack_count++ -> attacker-death check -> next TargetAdjust`。
+
+固定每一個 `BATTLE_Counter()` 後也立即 `BATTLE_AddProfit()`。
+
+V1.67 已把 immediate death scan 接到目前可達且來源已證明的 Player common multi-hit、Active Pet normal attack、Pet CHARGE_OK / EARTHROUND0 / STATUSCHANGE / GUARDIAN_ATTACK / RENZOKU / MIGHTY / POWERBALANCE、Enemy normal/common direct attack、BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW、ATTCRAZED、ATTSHOOT、WILDVIOLENT、RENZOKU、RETRACE、common non-ranged PetSkill loop、Combo `_Item_ReLifeAct` AddProfit，以及每一段 Player↔Enemy / Pet↔Enemy Counter。
+
+RETRACE 保留固定特殊順序：`primary BATTLE_Attack -> optional 80% retrace BATTLE_Attack -> ONE AddProfit -> next primary segment`，因此不會錯把 Pet death RNG 插到首擊與追擊中間。
+
+### Dedicated outer-only skills
+V1.67 同時修正 V1.66 一個被 death-extra 無 RNG 掩蓋的時序風險：`enemyApplyDirectGuardianSkillHit()` 不再自行觸發死亡掃描。
+
+像 FIREKILL、GYRATE、REGRET、GUARD_BREAK2 等 dedicated case 在固定 C 內部先跑完整技能，再依 actor 統一 outer `BATTLE_AddProfit()`；不能因為共用 Web helper 就提前 Pet_Check_Die / Player Ultimate exit。現在這些技能維持 actor 結束時再掃死亡。
+
+### Pet relife flag
+固定 `version.h`：`_Item_ReLifeAct` = ON、`_LOSE_FINCH_` = OFF。
+
+所以 fixed build 的 `CHECK_PET_RELIFE()` 不可達，不會攔截 Pet_Check_Die / Pet death-extra。Player 的 `_Item_ReLifeAct` 裝備死亡復活屬另一個獨立 lifecycle，V1.67 不自行猜裝備資料，留作後續來源掃描。
+
+### Regression
+- parent playable HEAD = V1.66 / `e8cbbcddc846876decea51040144e3d0ec1f43e5`
+- V1.67 core = `a1c601c8b7303685889ed638c96be68045fef58f`
+- committed `game.js` syntax PASS
+- normal simultaneous Player + Pet death: Player -> Pet order PASS
+- Player Ultimate removes Pet Entry before slot 5 death scan PASS
+- Marefia missing alloc still consumes exactly 4 RNG PASS
+- Marefia RNG ranges/order PASS
+- Marefia alloc clamp + MODAI -5% PASS
+- Counter per-segment AddProfit PASS
+- RETRACE AddProfit before next primary TargetAdjust PASS
+- ATTCRAZED / ATTSHOOT / WILDVIOLENT / RENZOKU common AddProfit PASS
+- dedicated outer-only skills do not receive false inner AddProfit PASS
+- V1.61 / V1.62 low-loyalty lifecycle retained
+- V1.63 Enemy AI -> Dex ordering retained
+- V1.64 Player AttackCount / TargetAdjust retained
+- V1.65 current-state execution death gate retained
+- V1.66 full-round finish + WORKFIXAI snapshot retained
+- targeted core regression: **46 / 46 PASS**
+- save schema 27 unchanged
