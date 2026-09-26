@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.74</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.75</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.75：</b>
+      補完玩家「混亂」狀態下的遠程武器跨 side 原 C pattern：StatusSeq 改寫 COM2 後仍先抽 AttackNum，再依武器走弓／回力標／投擲斧／投擲石來源流程。弓在 raw COM2=-1 時不再誤做 DefaultAttacker，也不消耗 aBowW 的 RAND(0,1)；回力標保留 dedicated row sweep；投擲武器保留 TargetAdjust 與 raw -1 sentinel 行為；投石麻痺順序維持 WakeUp → 麻痺 → ItemCrush → AddProfit。
+    </article>
 
     <article class="card note">
       <b>V1.74：</b>
