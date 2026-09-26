@@ -2631,6 +2631,10 @@ function sourceBattlePropertyActive(desc){
   const key=battleStatusKey(desc);
   return !!(key&&battlePropertyKeys.has(key));
 }
+function sourceClearPetBattleProperty(pet){
+  if(!pet)return false;
+  return battlePropertyKeys.delete('pet:'+String(pet.id));
+}
 function battleFieldPower(elements){
   const e=normalizedElements(elements)||{earth:0,water:0,fire:0,wind:0,none:100};
   const attr=String(battleFieldState?.attr||'none');
@@ -7705,6 +7709,7 @@ function performEnemyBattleTimid(actor,unit,options,meta){
     if(timidRoll<15&&r.damage>1){
       if(chosen.kind==='pet'&&chosen.pet){
         battlePetOutIds.add(chosen.pet.id);
+        sourceClearPetBattleProperty(chosen.pet);
         forced=true;
         addLog(chosen.pet.name+' 被 '+label+' 嚇退，本場不再出戰。','bad');
       }else if(chosen.kind==='player'&&state.hp>0){
@@ -7737,6 +7742,7 @@ function performEnemy2BattleTimid(actor,unit,options,meta){
     // damage == 1 時仍先消耗 RNG，但不會進實際召回分支。
     if(timidRoll<timid&&r.damage>1&&chosen.kind==='pet'&&chosen.pet){
       battlePetOutIds.add(chosen.pet.id);
+      sourceClearPetBattleProperty(chosen.pet);
       recalled=true;
       addLog(chosen.pet.name+' 被 '+label+' 嚇回寵物欄，本場不再出戰。','bad');
     }
@@ -8475,6 +8481,7 @@ function sourceProcessPetBattleDeath(pet){
   if(ultimate){
     if(state.activePetId===pet.id)state.activePetId=null;
     battlePetOutIds.add(pet.id);
+    sourceClearPetBattleProperty(pet);
     addLog(pet.name+' 被打飛：依 BATTLE_UltimateExtra 忠誠修正 '+(ai.delta/100).toFixed(2)
       +(marefia?'；並先套瑪蕾菲雅 _PET_LIMITLEVEL 死亡懲罰':'')+'。','bad');
   }else{
@@ -8512,7 +8519,7 @@ function sourceProcessPlayerBattleDeathOnce(){
 
   // fixed BATTLE_UltimateExtra(PLAYER) first BATTLE_PetDefaultExit()s the DEFAULTPET Entry.
   // It does not clear CHAR_DEFAULTPET, so ownership/default selection remains intact.
-  if(death?.ultimate&&pet)battlePetOutIds.add(pet.id);
+  if(death?.ultimate&&pet){battlePetOutIds.add(pet.id);sourceClearPetBattleProperty(pet);}
 
   if(death){
     addLog((death.ultimate?'角色被打飛：依 BATTLE_UltimateExtra 魅力 ':'角色戰鬥倒下：依原 C 魅力 ')+death.charmDelta
@@ -9572,6 +9579,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     sourceCancelPetCharge(pet);
     battlePetEarthRoundStates.delete(pet.id);battlePetHiddenIds.delete(pet.id);
     battlePetOutIds.add(pet.id);
+    sourceClearPetBattleProperty(pet);
     if(state.activePetId===pet.id)state.activePetId=null;
     state.charm=Math.max(0,Math.trunc(n(state.charm))-1);
     addLog(pet.name+' 因忠誠過低離開本場戰鬥並取消出戰；魅力 -1。','bad');
@@ -9696,6 +9704,7 @@ function performEnemyAbduct(actor,unit,options,meta){
     success=roll<per;
     if(success){
       battlePetOutIds.add(pet.id);
+      sourceClearPetBattleProperty(pet);
       addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per+(fixAiInfo?'；FIXAI '+fixAiInfo.ai+' < '+aiPer:'')+'）。','bad');
     }else{
       addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per+(fixAiInfo?'；FIXAI '+fixAiInfo.ai+(fixAiInfo.ai<aiPer?' < ':' ≥ ')+aiPer:'')+'）。');
