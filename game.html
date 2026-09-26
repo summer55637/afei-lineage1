@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.44</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.45</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.44：</b>
-      對齊 BECOMEFOX／媚惑術後置 && 求值順序：普通攻擊與 Counter 結束後，只要原目標仍活著且不是 MISS／DODGE／ALLGUARD／ARRANGE，原 C 會先消耗 rand()%100，再檢查玩家／PETFLG；即使效果注定失敗也不能省略。
+      <b>V1.45：</b>
+      補回共用 BOW／BOUNDTHROW／BREAKTHROW weapon loop 結束後的 Counter 鏈：只有 attack_count 真正達到 attack_max、最後 defNo 仍停在最後成功目標時才接反擊；若 aDefList／TargetAdjust 先耗盡則不拿舊目標誤反擊。
     </article>
   </main>
 

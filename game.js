@@ -4461,10 +4461,12 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
     // 空格／死亡格不消耗弓的 AttackNum。
     if(attackCount>=attackMax||n(unit.hp)<=0)break;
   }
+  const sourceCounterReady=attackCount>=attackMax&&hits.length>0&&n(unit.hp)>0;
   return {
     target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
     weaponCommand:'BOW',protocol:'BB-w0',weaponItemId:unit.equippedWeaponId,
-    attackMax,attackCount,bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits
+    attackMax,attackCount,bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits,
+    sourceCounterReady
   };
 }
 function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
@@ -4536,12 +4538,37 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     target=enemyActorTarget(actor,unit);
   }
   const type=Math.trunc(n(unit.weaponType));
+  const attackCount=hits.length;
+  const sourceCounterReady=attackCount>=attackMax&&hits.length>0&&n(unit.hp)>0;
   return {
     target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
     weaponCommand:type===19?'BREAKTHROW':'BOUNDTHROW',
     protocol:type===19?'BB-w2':'BB-w1',weaponItemId:unit.equippedWeaponId,
-    attackMax,attackCount:hits.length,hits
+    attackMax,attackCount,hits,sourceCounterReady
   };
+}
+
+function sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options={},rules={}){
+  if(!unit||!seq?.sourceCounterReady||!Array.isArray(seq.hits)||!seq.hits.length||!enemy||n(unit.hp)<=0)return null;
+  const last=seq.hits[seq.hits.length-1];
+  const r=last?.r;
+  const targetDesc=last?.targetDesc;
+  if(!r||!targetDesc)return null;
+
+  // Some common-loop skills (notably STATUSCHANGE) apply their status inside BATTLE_Attack()
+  // before the outer Counter loop. If that status makes the last target unable to move,
+  // BATTLE_Counter() cannot begin.
+  if(rules.requireCanMove&& !battleStatusCanMove(targetDesc))return null;
+
+  if(last.target==='pet'&&last.pet&&petIsBattleActive(last.pet)){
+    resolvePetEnemyCounterChain('enemy',last.pet,unit,r);
+    return {target:'pet',petId:last.pet.id};
+  }
+  if(last.target==='player'&&state.hp>0&&options.allowPlayerCounter){
+    resolvePlayerEnemyCounterChain('enemy',unit,r);
+    return {target:'player'};
+  }
+  return null;
 }
 
 function performEnemyFoxFistRangedAttack(actor,unit,options={}){
@@ -4609,8 +4636,16 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   // 原 battle.c：只有普通 BATTLE_COM_ATTACK 會把 BOOMERANG 改成 BATTLE_COM_BOOMERANG；
   // BOW／BOUNDTHROW／BREAKTHROW 則仍走共用物理攻擊 loop。
   if(weaponType===17&&actor?.enemyAction==='attack')return performEnemyBoomerangWeaponAttack(actor,unit,options);
-  if(weaponType===4)return performEnemyBowWeaponAttack(actor,unit,options);
-  if(weaponType===18||weaponType===19)return performEnemyThrowWeaponAttack(actor,unit,options);
+  if(weaponType===4){
+    const seq=performEnemyBowWeaponAttack(actor,unit,options);
+    if(seq)seq.counter=sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options);
+    return seq;
+  }
+  if(weaponType===18||weaponType===19){
+    const seq=performEnemyThrowWeaponAttack(actor,unit,options);
+    if(seq)seq.counter=sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options);
+    return seq;
+  }
 
   const chosen=enemyActorTarget(actor,unit);
   if(!chosen)return null;
@@ -7709,9 +7744,10 @@ function performEnemyStatusChange(actor,unit,options,meta){
     const seq=weaponType===4
       ?performEnemyBowWeaponAttack(actor,unit,Object.assign({},options,{afterHit}))
       :performEnemyThrowWeaponAttack(actor,unit,Object.assign({},options,{afterHit,breakthrowStatus:false}));
+    const counter=sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options,{requireCanMove:true});
     return {
       kind:'skill',skillId:actor.skillId,statusType:type,weaponSequence:true,
-      target:chosen.kind,sequence:seq,hits:seq?.hits||[]
+      target:chosen.kind,sequence:seq,hits:seq?.hits||[],counter
     };
   }
 
@@ -7788,9 +7824,10 @@ function performEnemyContinuation(actor,unit,options,meta){
     const seq=weaponType===4
       ?performEnemyBowWeaponAttack(actor,unit,seqOptions)
       :performEnemyThrowWeaponAttack(actor,unit,seqOptions);
+    const counter=sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options);
     return {
       kind:'skill',skillId:actor.skillId,hits:seq?.attackCount??seq?.hits?.length??0,
-      lastResult:seq?.r||null,weaponSequence:true,sequence:seq
+      lastResult:seq?.r||null,weaponSequence:true,sequence:seq,counter
     };
   }
 

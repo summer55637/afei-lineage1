@@ -13181,3 +13181,128 @@ Guardian 代擋不改變 source 的原目標 defNo 存活檢查；若原目標�
 - Player / player-owned Pet transform remains unavailable with current source data
 - V1.43 BattleModel target interleaving unchanged
 - schema 27 unchanged
+
+
+## V1.45 common ranged weapon-loop Counter lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `battle.c` 的 common direct-attack block 對 BOW / BOUNDTHROW / BREAKTHROW 仍共用同一個外層流程：
+
+```c
+for (attack_count = 0, k = 0;;) {
+    ...
+    if (attack_flg) {
+        ContFlg = BATTLE_Attack(...);
+        if (++attack_count >= attack_max) break;
+        if (attacker HP <= 0) {
+            ContFlg = FALSE;
+            break;
+        }
+    }
+
+    defNo = aDefList[++k];
+    if (defNo < 0) break;
+
+    if (gWeponType != ITEM_BOW) {
+        if ((defNo = BATTLE_TargetAdjust(...)) < 0) break;
+    }
+    ...
+}
+
+gBattleDamageModyfy = 1.0;
+gBattleDuckModyfy = 0;
+
+for (k = 0; k < 5 && ContFlg == TRUE; k++) {
+    ...
+    ContFlg = BATTLE_Counter(...);
+}
+```
+
+所以 ranged weapon loop **不是打完就 return**；只要最後一次 `BATTLE_Attack()` 的 `ContFlg` 仍允許，而且外層 `defNo` 還有效，就會進 Counter 鏈。
+
+### Important defNo lifetime
+
+來源有兩種不同結束方式：
+
+1. `++attack_count >= attack_max`  
+   立即 break，還沒有讀下一個 `aDefList`。  
+   此時 `defNo` 仍是最後一次真正攻擊的目標，可進 Counter。
+
+2. 尚未達到 attack_max，但：
+   - BOW 的 target list 先走到 -1，或
+   - 非 BOW 的 `BATTLE_TargetAdjust()` 回傳 < 0
+
+   此時來源已把 `defNo` 換成無效值後才 break。  
+   **不能拿上一個成功命中的舊目標去補 Counter。**
+
+### Previous Web mismatch
+
+V1.44 的：
+
+- `performEnemyBowWeaponAttack()`
+- `performEnemyThrowWeaponAttack()`
+
+只完成 weapon hit loop 就 return，沒有把最後一擊接回 common Counter loop。
+
+受影響的已接來源路徑包括：
+
+- 普通 BOW / BOUNDTHROW / BREAKTHROW 攻擊
+- `BATTLE_COM_S_STATUSCHANGE`
+- `BATTLE_COM_S_RENZOKU`
+
+### V1.45 correction
+
+兩個 weapon helper 現在都回傳：
+
+```js
+sourceCounterReady
+```
+
+只在：
+
+- `attackCount >= attackMax`
+- 至少真的執行過一發 `BATTLE_Attack`
+- attacker 仍存活
+
+時為 true。
+
+新增：
+
+```js
+sourceEnemyFinalizeWeaponSequenceCounter(...)
+```
+
+它只用最後一個成功 hit 的 target / result 接回既有 Counter chain。
+
+#### STATUSCHANGE
+
+StatusChange 的異常是在 `BATTLE_Attack()` 裡、外層 Counter loop 之前套用。
+
+因此 ranged StatusChange 另帶：
+
+```js
+{requireCanMove:true}
+```
+
+若最後目標被睡眠／石化／麻痺／魔障等變成不能行動，就不開始反擊，與 fixed `BATTLE_Counter()` 的 CanMove 條件一致。
+
+#### BOOMERANG
+
+普通 BOOMERANG 是獨立 `BATTLE_COM_BOOMERANG` case，來源打完整排後直接 reset / FF / break，**不進 common Counter loop**。
+
+因此 V1.45 不改 `performEnemyBoomerangWeaponAttack()`。
+
+### V1.45 regression targets
+
+- game.js syntax PASS
+- ordinary BOW / BOUNDTHROW / BREAKTHROW that reaches attack_max can enter one post-loop Counter chain
+- BOW list exhaustion before attack_max does not counter stale last target
+- non-BOW TargetAdjust exhaustion before attack_max does not counter stale last target
+- only the final successful BATTLE_Attack result controls the Counter chain
+- STATUSCHANGE final disabling status suppresses counter
+- RENZOKU ranged path counters only after all segments
+- BOOMERANG remains no-counter special case
+- schema 27 unchanged
