@@ -10175,8 +10175,22 @@ function normalBattleOrder(options={}){
   return order;
 }
 function sourceDeadBattleEntry(actor){
-  // fixed BATTLE_Command：EntrySort / ComboCheck 之後才檢查 ISDIE / HP<=0。
-  return !!actor?.sourceDeadEntry;
+  // fixed BATTLE_Battling builds/sorts the full EntryList first, but re-checks the actor's
+  // CURRENT CHAR_ISDIE / HP<=0 immediately before StatusSeq / GetAttackCount.
+  // Do not rely only on the order-build snapshot: an actor can die after EntrySort/ComboCheck
+  // because an earlier, faster actor already attacked it this same round.
+  if(!actor)return false;
+  if(actor.kind==='player')return n(state?.hp)<=0;
+  if(actor.kind==='pet'){
+    const pet=state?.petBox?.find?.(p=>p.id===actor.petId)||null;
+    return !pet||battlePetOutIds.has(actor.petId)||n(pet.hp)<=0;
+  }
+  if(actor.kind==='enemy'){
+    const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+    const unit=units.find(u=>u&&u.id===actor.unitId)||null;
+    return !unit||n(unit.hp)<=0;
+  }
+  return !!actor.sourceDeadEntry;
 }
 function sourceEnemyCWait(actor){
   if(actor?.kind!=='enemy'||(!actor.sourceSkillMissing&&!actor.sourceSkillUnregistered&&!actor.sourceSkillRejected&&!actor.sourceMagicCWait))return false;
