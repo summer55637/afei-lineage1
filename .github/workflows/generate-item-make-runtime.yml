@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "tools/generate_item_make_runtime.py"
+      - "tools/generate_item_field2_runtime.py"
       - "tools/check_v172_item_make_runtime.mjs"
       - "tools/check_v173_item_equip_runtime.mjs"
       - "tools/check_v174_player_ranged_runtime.mjs"
@@ -36,6 +37,7 @@ on:
       - "tools/check_v201_player_battlemodel_runtime.mjs"
       - "tools/check_v202_player_combined_runtime.mjs"
       - "tools/check_v203_player_field01_coverage.mjs"
+      - "tools/check_v204_item_field2_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -59,6 +61,9 @@ jobs:
 
       - name: Generate fixed runtime
         run: python tools/generate_item_make_runtime.py
+
+      - name: Generate fixed field2 item runtime
+        run: python tools/generate_item_field2_runtime.py
 
       - name: Check game.js syntax
         run: node --check game.js
@@ -159,15 +164,18 @@ jobs:
       - name: Run V2.03 player field0/1 coverage closure
         run: node tools/check_v203_player_field01_coverage.mjs
 
+      - name: Run V2.04 item field2 runtime regressions
+        run: node tools/check_v204_item_field2_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |
-          if git diff --quiet -- data/generated/stoneage_item_make_runtime.json; then
-            echo "Generated runtime is already current."
+          if git diff --quiet -- data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json; then
+            echo "Generated runtimes are already current."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/generated/stoneage_item_make_runtime.json
-          git commit -m "V1.72 generate full ITEM_makeItem template runtime"
+          git add data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json
+          git commit -m "V2.04 generate fixed item runtimes"
           git push
