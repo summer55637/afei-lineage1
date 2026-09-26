@@ -5610,14 +5610,52 @@ function enemyRandomPlayerSideTarget(){
 function performEnemyAttackCrazed(actor,unit,options,meta){
   const count=Math.max(1,Math.trunc(Number(String(meta?.o||'').match(/\d+/)?.[0])||3));
   const label=meta?.n||'狂亂暴走';
+  const weaponType=Math.trunc(n(unit?.weaponType));
   unit.counterEligibleThisTurn=true;
   addLog(unit.name+' 使用 '+label+'：攻 80%／防 70%，隨機攻擊 '+count+' 次。');
 
+  // fixed BATTLE_TargetListSet(ATTCRAZED) snapshots the living target row and consumes
+  // ALL n target RANDs before the first BATTLE_Attack. Do not interleave these rolls
+  // with Duck/Critical/Damage/ItemCrush RNG.
+  const sourcePool=enemyPlayerSideLivingTargets();
+  if(!sourcePool.length)return {kind:'skill',skillId:actor.skillId,hits:0,attackCount:count,noTarget:true};
+  const plannedTargets=[];
+  const targetRolls=[];
+  for(let i=0;i<count;i++){
+    const roll=cRand(0,sourcePool.length-1);
+    targetRolls.push(roll);
+    plannedTargets.push(sourcePool[roll]);
+  }
+
   let lastTarget=null,lastResult=null,hits=0;
+  let sourceCounterReady=false;
   for(let i=0;i<count;i++){
     if(!enemy||unit.hp<=0||state.hp<=0)break;
-    const target=enemyRandomPlayerSideTarget();
-    if(!target)break;
+
+    let target=null;
+    if(weaponType===4){
+      // BOW explicitly replaces defNo with aDefList[0], so pList[0] is used.
+      // Later dead/hidden planned slots are only TargetCheck-skipped; no TargetAdjust fallback.
+      const raw=plannedTargets[i];
+      if(raw?.kind==='player'&&state.hp>0)target={kind:'player'};
+      else if(raw?.kind==='pet'&&raw.pet&&petIsBattleActive(raw.pet)&&!sourcePlayerPetHidden(raw.pet))target=raw;
+      else continue;
+    }else if(i===0){
+      // Source bug/quirk: non-BOW first hit still uses the original COM2 after TargetAdjust.
+      // plannedTargets[0] was already rolled above but its value is never used.
+      target=enemyActorTarget(actor,unit);
+      if(!target)break;
+    }else{
+      // Later non-BOW segments restore aDefList[i] then run TargetAdjust.
+      // If that pre-rolled target died/vanished after an earlier segment, DefaultAttacker
+      // is evaluated now and consumes its own fallback target RNG.
+      const raw=plannedTargets[i];
+      if(raw?.kind==='player'&&state.hp>0)target={kind:'player'};
+      else if(raw?.kind==='pet'&&raw.pet&&petIsBattleActive(raw.pet)&&!sourcePlayerPetHidden(raw.pet))target=raw;
+      else target=sourceEnemyDefaultAttacker();
+      if(!target)break;
+    }
+
     let r;
     if(target.kind==='pet'&&target.pet){
       r=enemyAttackPetResult(unit,target.pet);
@@ -5625,20 +5663,33 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=enemyAttackResult(unit,{guarding});
     }
+
     hits++;lastTarget=target;lastResult=r;
     enemyApplySkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
-  sourceBattleFinalizeItemCrushRng(r);
+    sourceBattleFinalizeItemCrushRng(r);
+
+    // fixed loop breaks immediately here when ++attack_count reaches attack_max,
+    // leaving defNo on the last real attack target for the following Counter loop.
+    if(hits>=count){
+      sourceCounterReady=true;
+      break;
+    }
   }
 
-  // ATTCRAZED 位於原 direct-attack 群組；全部攻擊後只以最後一擊的 defNo / ContFlg 進普通反擊鏈。
-  if(lastTarget&&lastResult&&unit.hp>0&&enemy){
+  // If BOW skipped a dead pre-rolled slot (or TargetAdjust ran out) before attack_max,
+  // source advances to aDefList[count] == -1 and must not counter a stale last target.
+  if(sourceCounterReady&&lastTarget&&lastResult&&unit.hp>0&&enemy){
     if(lastTarget.kind==='pet'&&lastTarget.pet&&petIsBattleActive(lastTarget.pet)){
       resolvePetEnemyCounterChain('enemy',lastTarget.pet,unit,lastResult);
     }else if(lastTarget.kind==='player'&&state.hp>0&&options.allowPlayerCounter&&!options.playerGuarding){
       resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
     }
   }
-  return {kind:'skill',skillId:actor.skillId,hits,attackCount:count,lastTarget:lastTarget?.kind||null,lastResult};
+  return {
+    kind:'skill',skillId:actor.skillId,hits,attackCount:count,
+    targetRolls,plannedTargets:plannedTargets.map(t=>t?.kind||null),
+    sourceCounterReady,lastTarget:lastTarget?.kind||null,lastResult
+  };
 }
 function performEnemySpeedyAttack(actor,unit,options,meta){
   const defensePct=enemySignedSkillPercent(meta?.o,'防%');

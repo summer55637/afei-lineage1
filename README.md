@@ -13452,3 +13452,124 @@ Web 反擊維持既有 `counterScaledResult()`，不額外帶 WILDVIOLENT diviso
 - Counter damage is not divided by WILDVIOLENT count
 - V1.45 ranged Counter lifecycle remains intact
 - schema 27 unchanged
+
+
+## V1.47 ATTCRAZED TargetListSet RNG pre-roll lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof: all target RNG happens before attacks
+
+fixed `BATTLE_TargetListSet()` has a dedicated ATTCRAZED branch:
+
+```c
+n = CHAR_GETWORKINT_HIGH(charaindex, CHAR_WORKBATTLECOM3);
+
+for (i=defsub; i<deftop; i++) {
+    if (BATTLE_TargetCheck(battleindex, i) == FALSE) continue;
+    plive[j++] = i;
+}
+
+for (i=0; i<n; i++) {
+    pList[i] = plive[RAND(0,j-1)];
+}
+pList[i] = -1;
+return;
+```
+
+This function runs before the common attack loop.
+
+Therefore all `n` random target selections are consumed consecutively **before**:
+
+- Duck
+- Critical
+- DamageCalc
+- ItemCrush
+- per-hit status / other attack RNG
+
+V1.46 Web instead called `enemyRandomPlayerSideTarget()` inside every hit, interleaving target RNG with attack RNG.
+
+### Source quirk: non-BOW pList[0] is rolled but unused
+
+The common direct block enters with `defNo` still holding the original `CHAR_WORKBATTLECOM2`.
+
+For non-BOW:
+
+```c
+defNo = BATTLE_TargetAdjust(...);   // original COM2
+...
+BATTLE_Attack(..., defNo);          // first hit
+
+defNo = aDefList[++k];              // first read is pList[1]
+```
+
+So ATTCRAZED non-BOW does something unusual:
+
+- `pList[0]` target RNG is still consumed during TargetListSet
+- its selected target is **not used**
+- first attack uses original COM2 after TargetAdjust
+- second attack starts at `pList[1]`
+
+This source bug is intentionally preserved.
+
+### BOW differs
+
+The common block has a BOW preamble that finally does:
+
+```c
+defNo = aDefList[0];
+```
+
+Therefore BOW ATTCRAZED uses:
+
+- first hit = pre-rolled `pList[0]`
+- second hit = `pList[1]`
+- etc.
+
+Later BOW planned slots are checked with `BATTLE_TargetCheck` only. If an earlier attack killed a target that appears again later in the pre-rolled list, that later slot is skipped without a replacement target RNG.
+
+### Non-BOW dead planned target
+
+For segments after the first, non-BOW restores the pre-rolled raw target and then executes `BATTLE_TargetAdjust()`.
+
+If that target died or became invalid after an earlier segment, the fixed source may call `BATTLE_DefaultAttacker()` at that later time, adding a new fallback target RNG **after** the pre-roll block.
+
+V1.47 mirrors this distinction:
+
+- all ATTCRAZED planned target RNG is consumed up front
+- BOW dead planned slot => skip
+- non-BOW dead planned slot => current DefaultAttacker fallback
+
+### Counter lifetime
+
+ATTCRAZED sets `attack_max = n`.
+
+Only when the number of actual `BATTLE_Attack()` calls reaches `attack_max` does the source break before loading the next aDefList entry, leaving the final valid `defNo` for Counter.
+
+If BOW skips enough dead planned slots that actual `attack_count < attack_max`, source eventually loads the `-1` sentinel and does not counter the stale previous target.
+
+V1.47 records `sourceCounterReady` only when actual hits reach `count`.
+
+### Current battle-slot mapping
+
+The web single-player battle side maps:
+
+- Player => source slot 0
+- Active Pet => source slot 5
+
+Both are inside the fixed ATTCRAZED scan `0..8`, and `enemyPlayerSideLivingTargets()` returns them in the same ascending source-slot order while excluding EarthRound-hidden pets.
+
+No extra slot/value is invented.
+
+### V1.47 regression targets
+
+- game.js syntax PASS
+- exactly count ATTCRAZED target cRand calls happen before the first attack RNG
+- non-BOW planned target index 0 is rolled but not used
+- non-BOW first attack still uses original COM2 / TargetAdjust
+- BOW first attack uses planned target index 0
+- later BOW dead planned target is skipped without fallback target RNG
+- later non-BOW dead planned target uses DefaultAttacker fallback at execution time
+- Counter only when actual hit count reaches attack_max
+- V1.46 WildViolent common weapon loop unchanged
+- schema 27 unchanged
