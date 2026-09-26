@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.74**
+目前最新可玩核心：**V1.75**
 
 ## 歷史分檔
 
@@ -12,17 +12,18 @@
 4. [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
+7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.74
+## 最新版本 V1.75
 
-V1.74 完成玩家普通遠程武器的原 C 攻擊 pattern：
+V1.75 補完玩家混亂狀態下四種遠程武器的跨 side 原 C pattern：
 
-- BOW：AttackNum + aBowW + RAND(0,1) 候選順序
-- BOOMERANG：先消耗 AttackNum RNG，但 dedicated path 不使用該值；Player side 0 正向掃五格
-- BOUNDTHROW：每段由原 raw COM2 重新 TargetAdjust
-- BREAKTHROW：正傷害後依原 C 麻痺公式判定，順序為 WakeUp → 麻痺 → ItemCrush → AddProfit
-- 四種 indirect weapon 已接 Guardian / Counter / Combo gate
-- 玩家遠程裝備的 `weapon-pattern-unported` gate 已移除
-- 混亂造成的跨 side 玩家遠程攻擊目前仍採 fail-closed，不猜未完整來源化的行為
+- StatusSeq 改寫 COM2 後仍先消耗 AttackNum RNG
+- BOW invalid raw COM2 不做 DefaultAttacker，也不消耗 aBowW RAND
+- BOW 可依原排列打到自己出戰 Pet，並保留 self -1 sentinel
+- BOOMERANG 保留 dedicated row sweep / forward order / 30% damage
+- BOUNDTHROW / BREAKTHROW 保留 raw COM2 TargetAdjust 與 raw -1 sentinel
+- BREAKTHROW 保留 WakeUp → 麻痺 → ItemCrush → AddProfit
+- V1.74 的 ranged-confusion fail-closed 已移除
 
-更完整的 V1.74 原 C 對照與 regression 紀錄請看第 6 份歷史檔。
+完整 V1.75 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
