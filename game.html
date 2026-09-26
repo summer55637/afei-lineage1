@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.72</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.73</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -192,6 +192,21 @@
           <div class="empty-note">目前還沒有寵物。</div>
         </div>
 
+        <div id="sourceItemRuntimePanel" class="inventory-section source-item-runtime-section">
+          <div class="section-head inventory-head">
+            <div>
+              <div class="eyebrow">SOURCE ITEM RUNTIME</div>
+              <h2>裝備／existing 背包</h2>
+            </div>
+            <span id="sourceItemRuntimeStatus" class="source-progress">裝備 0 / 9 · 背包 0 / 15</span>
+          </div>
+          <div class="source-item-subhead">9 格裝備</div>
+          <div id="sourceEquipmentGrid" class="source-item-grid source-equipment-grid"></div>
+          <div class="source-item-subhead">15 格背包</div>
+          <div id="sourceBackpackGrid" class="source-item-grid source-backpack-grid"></div>
+          <div class="muted dev-note">只顯示有 source existing-index 的道具。裝備位置、能力需求、同類飾品、弓盾互斥與 callback／職業限制都走固定原 C gate；尚未完整移植的特殊效果不會強行裝備。</div>
+        </div>
+
         <div class="inventory-section">
           <div class="section-head inventory-head">
             <div>
@@ -206,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.73：</b>
+      固定原 C 的 ITEM_getEquipPlace／ITEM_equipEffect 已接入玩家 9 格裝備：一般 source-backed existing item 會使用建立當下真正 roll 出來的 66 欄 sourceData，套用攻防敏、HP／MP、運／魅、六異常抗性、四屬性、會心、額外傷防、命中、忽防等 Work 值；STR／DEX 裝備需求依原 raw 值 ×100 比較。260 件有 attach／detach callback 的特殊裝備、職業限定、使者／勇者信物，以及玩家端尚未完整移植的弓／回力標／投擲武器維持 fail-closed。新增 9 格裝備＋15 格 existing 背包操作 UI。
+    </article>
 
     <article class="card note">
       <b>V1.72：</b>
