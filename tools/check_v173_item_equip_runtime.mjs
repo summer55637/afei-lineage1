@@ -61,12 +61,12 @@ for(const needle of [
 assert.ok(game.includes('n(p.str)*100'),'STR requirement must use raw CHAR_STR scale');
 assert.ok(game.includes('n(p.dex)*100'),'DEX requirement must use raw CHAR_DEX scale');
 
-// Unported side effects / combat patterns must fail closed.
+// V1.73 side-effect boundaries remain fail-closed. Player ranged weapon patterns
+// are intentionally allowed to advance in V1.74 without invalidating this historical regression.
 for(const needle of [
   "reason:'profession-unported'",
   "reason:'callback-unported'",
-  "reason:'special-equip-unported'",
-  "reason:'weapon-pattern-unported'"
+  "reason:'special-equip-unported'"
 ])assert.ok(game.includes(needle),'missing fail-closed boundary '+needle);
 
 // ITEM_equipEffect values must come from the creation-time generated data[].
@@ -102,7 +102,7 @@ assert.ok(game.includes('cRand(Math.trunc(min),Math.trunc(max))'));
 for(const id of ['sourceItemRuntimePanel','sourceEquipmentGrid','sourceBackpackGrid','sourceItemRuntimeStatus']){
   assert.ok(html.includes('id="'+id+'"'),'missing source equipment UI '+id);
 }
-assert.ok(html.includes('PLAYABLE CORE V1.73'));
+assert.ok(/PLAYABLE CORE V1\.(?:73|74)/.test(html));
 assert.ok(game.includes("data-source-item-action=\"equip\""));
 assert.ok(game.includes("data-source-item-action=\"unequip\""));
 assert.ok(game.includes("$('#sourceItemRuntimePanel').addEventListener('click'"));
