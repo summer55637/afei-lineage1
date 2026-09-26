@@ -108,7 +108,8 @@ function sourcePlayerDecorationTypeConflict(slotIndex,template,slots=sourcePlaye
   const to=Math.trunc(Number(slotIndex));
   if(Math.trunc(Number(template?.equipPlace))!==3||(to!==3&&to!==4))return false;
   const other=to===3?4:3;
-  const otherIndex=Number(slots?.[other]);
+  if(slots?.[other]==null)return false;
+  const otherIndex=Number(slots[other]);
   if(!Number.isFinite(otherIndex))return false;
   const otherTemplate=sourcePlayerEquipTemplateForExisting(otherIndex,target);
   return !!otherTemplate&&Math.trunc(n(otherTemplate.type))===Math.trunc(n(template.type));
@@ -145,6 +146,7 @@ function sourcePlayerEquipmentModifiers(target=state){
   const result={attack:0,defense:0,quick:0,hp:0,mp:0,luck:0,charm:0,avoid:0,items:[],complete:true};
   const slots=sourcePlayerItemSlots(target);
   for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    if(slots[i]==null)continue;
     const itemIndex=Number(slots[i]);
     if(!Number.isFinite(itemIndex))continue;
     const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
@@ -188,6 +190,7 @@ function sourcePlayerRegisterExistingInBackpack(itemIndex,target=state){
 }
 function sourcePlayerMoveBackpackToEquip(fromindex,toindex,target=state){
   const slots=sourcePlayerItemSlots(target);
+  if(slots[fromindex]==null)return {ok:false,reason:'missing-source'};
   const fromid=Math.trunc(Number(slots[fromindex]));
   if(!Number.isFinite(fromid))return {ok:false,reason:'missing-source'};
   const template=sourcePlayerEquipTemplateForExisting(fromid,target);
@@ -196,8 +199,8 @@ function sourcePlayerMoveBackpackToEquip(fromindex,toindex,target=state){
   if(!req.ok)return req;
   if(!sourcePlayerEquipSlotAllowsTemplate(toindex,template))return {ok:false,reason:'wrong-equip-place'};
   if(sourcePlayerDecorationTypeConflict(toindex,template,slots,target)){
-    const toid=Number(slots[toindex]);
-    return {ok:false,reason:Number.isFinite(toid)?'same-type-exchange':'same-type'};
+    const occupied=slots[toindex]!=null&&Number.isFinite(Number(slots[toindex]));
+    return {ok:false,reason:occupied?'same-type-exchange':'same-type'};
   }
   const toid=slots[toindex]==null?null:Math.trunc(Number(slots[toindex]));
   slots[toindex]=fromid;
@@ -206,6 +209,7 @@ function sourcePlayerMoveBackpackToEquip(fromindex,toindex,target=state){
 }
 function sourcePlayerMoveEquipToBackpack(fromindex,toindex,target=state){
   const slots=sourcePlayerItemSlots(target);
+  if(slots[fromindex]==null)return {ok:false,reason:'missing-source'};
   const fromid=Math.trunc(Number(slots[fromindex]));
   if(!Number.isFinite(fromid))return {ok:false,reason:'missing-source'};
   const toid=slots[toindex]==null?null:Math.trunc(Number(slots[toindex]));
@@ -224,7 +228,7 @@ function sourcePlayerMoveItem(fromindex,toindex,{target=state,isDie=null}={}){
   const die=isDie==null?(target===state&&!!enemy&&battlePlayerDeathProcessed):!!isDie;
   if(die)return {ok:false,reason:'dead'};
   const slots=sourcePlayerItemSlots(target);
-  if(!Number.isFinite(Number(slots[from])))return {ok:false,reason:'missing-source'};
+  if(slots[from]==null||!Number.isFinite(Number(slots[from])))return {ok:false,reason:'missing-source'};
   if(from===to)return {ok:false,reason:'same-slot'};
   let moved;
   const fromEquip=from<PLAYER_EQUIP_SLOT_COUNT,toEquip=to<PLAYER_EQUIP_SLOT_COUNT;
@@ -7722,6 +7726,7 @@ function sourcePlayerEquippedRelifeItems(){
   const out=Array(5).fill(null);
   const slots=sourcePlayerItemSlots(state);
   for(let i=0;i<5;i++){
+    if(slots[i]==null)continue;
     const itemIndex=Math.trunc(Number(slots[i]));
     if(!Number.isFinite(itemIndex))continue;
     const existing=sourceItemRuntimeSlot(itemIndex);
