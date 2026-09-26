@@ -13,7 +13,7 @@ for(const [id,o] of [[506,'50|50'],[507,'50|75'],[508,'50|100']]){
 }
 
 const start=game.indexOf('function sourcePerformPetMpDamageSkill');
-const end=game.indexOf('function sourcePerformPetGuardianSkill',start);
+const end=game.indexOf('function sourcePetAttrSkillSpec',start);
 assert.ok(start>=0&&end>start);
 const body=game.slice(start,end);
 
