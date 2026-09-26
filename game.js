@@ -69,6 +69,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
 ]);
 let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
+const sourceField2SelectedSlots=new Set();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -257,6 +258,11 @@ function sourcePlayerEquipTemplateForExisting(itemIndex,target=state){
   const type=read('ITEM_TYPE');
   if(type==null)return null;
   const callbacks=sourceItemMakeCallbacks(itemId);
+  if(existing.field2Functions&&typeof existing.field2Functions==='object'){
+    if(Object.prototype.hasOwnProperty.call(existing.field2Functions,'init'))callbacks.initFunc=String(existing.field2Functions.init??'');
+    if(Object.prototype.hasOwnProperty.call(existing.field2Functions,'attach'))callbacks.attachFunc=String(existing.field2Functions.attach??'');
+    if(Object.prototype.hasOwnProperty.call(existing.field2Functions,'detach'))callbacks.detachFunc=String(existing.field2Functions.detach??'');
+  }
   const relife=sourceItemRelifeTemplate(itemId);
   return {
     itemId,
@@ -695,6 +701,189 @@ function sourceTrackedPlayerItems(itemId=null){
   }
   out.sort((a,b)=>a.index-b.index);
   return out;
+}
+
+const SOURCE_FIELD2_SKILL_IDS=Object.freeze([200,201,540,572]);
+const SOURCE_FIELD2_FUNCTION_KEYS=Object.freeze([
+  'init','preOver','postOver','watch','use','attach','detach','drop','pickup','relife'
+]);
+const SOURCE_INSLAY_ADD_FIELDS=Object.freeze([
+  'ITEM_MODIFYATTACK','ITEM_MODIFYDEFENCE','ITEM_MODIFYQUICK','ITEM_MODIFYHP',
+  'ITEM_MODIFYMP','ITEM_MODIFYLUCK','ITEM_OTHERDAMAGE','ITEM_OTHERDEFC'
+]);
+function sourceField2PetSkills(pet=activePet()){
+  if(!pet||!Array.isArray(pet.petSkills))return [];
+  const seen=new Set(),out=[];
+  for(const raw of pet.petSkills){
+    const id=Math.trunc(Number(raw));
+    if(!SOURCE_FIELD2_SKILL_IDS.includes(id)||seen.has(id))continue;
+    const meta=petSkillDb?.byId?.[String(id)]||null;
+    if(!meta||Number(meta.field)!==2||Number(meta.illegal)!==0)continue;
+    seen.add(id);out.push({id,meta});
+  }
+  return out;
+}
+function sourceField2PruneSelection(){
+  const slots=sourcePlayerItemSlots(state);
+  for(const slotIndex of [...sourceField2SelectedSlots]){
+    const s=Math.trunc(Number(slotIndex));
+    if(s<PLAYER_BACKPACK_START||s>=PLAYER_ITEM_SLOT_COUNT){
+      sourceField2SelectedSlots.delete(slotIndex);continue;
+    }
+    const itemIndex=Math.trunc(Number(slots[s]));
+    const existing=sourceRuntimeSlotFromTarget(state,itemIndex);
+    if(!existing||existing.owner!=='player')sourceField2SelectedSlots.delete(slotIndex);
+  }
+}
+function sourceField2SelectedEntries(){
+  sourceField2PruneSelection();
+  const slots=sourcePlayerItemSlots(state),out=[];
+  for(const slotIndex of sourceField2SelectedSlots){
+    const itemIndex=Math.trunc(Number(slots[slotIndex]));
+    const existing=sourceRuntimeSlotFromTarget(state,itemIndex);
+    if(existing?.owner==='player')out.push({slotIndex,itemIndex,existing});
+  }
+  return out;
+}
+function sourceConsumeTrackedExistingItem(itemIndex){
+  const existing=sourceItemRuntimeSlot(itemIndex);
+  if(!existing||existing.owner!=='player')return false;
+  const itemId=Math.trunc(Number(existing.itemId));
+  if(!sourceItemRuntimeFree(itemIndex))return false;
+  if(Number.isFinite(itemId)){
+    const key=String(itemId),before=Math.max(0,Math.trunc(n(state.inventory?.[key])));
+    if(before>1)state.inventory[key]=before-1;
+    else if(before===1)delete state.inventory[key];
+  }
+  sourceField2PruneSelection();
+  return true;
+}
+function sourceField2FixTargetType(existing){
+  const type=sourceItemRuntimeResolvedDataInt(existing,'ITEM_TYPE');
+  if(type==null)return false;
+  return (type>=0&&type<=15)||type===17||type===18||type===19;
+}
+function sourceUsePetFixitem(selected){
+  if(!Array.isArray(selected)||selected.length>2)return {ok:false,reason:'max-two'};
+  let target=null;
+  for(const entry of selected){
+    const type=sourceItemRuntimeResolvedDataInt(entry.existing,'ITEM_TYPE');
+    if(type===20)return {ok:false,reason:'dish'};
+    if(sourceField2FixTargetType(entry.existing)){
+      if(target)return {ok:false,reason:'multiple-equipment'};
+      target=entry;
+    }
+  }
+  if(!target)return {ok:false,reason:'no-equipment'};
+  const material=selected.find(x=>x.itemIndex!==target.itemIndex)||null;
+  if(!material)return {ok:false,reason:'no-material'};
+
+  const materialName=sourceItemField2Char(material.existing,'ingName0');
+  let matched=false;
+  for(let i=0;i<5;i++){
+    const need=sourceItemField2Char(target.existing,'ingName'+i);
+    if(!materialName||!need)continue;
+    if(need===materialName){matched=true;break}
+  }
+  const fixAll=sourceItemField2Char(material.existing,'argument')==='FIXITEMALL';
+  if(!matched&&!fixAll)return {ok:false,reason:'material-mismatch'};
+
+  const crush=sourceItemRuntimeResolvedDataInt(target.existing,'ITEM_DAMAGECRUSHE');
+  const maxCrush=sourceItemRuntimeResolvedDataInt(target.existing,'ITEM_MAXDAMAGECRUSHE');
+  if(crush==null||maxCrush==null)return {ok:false,reason:'missing-durability-source'};
+  if(crush>=maxCrush*0.80)return {ok:false,reason:'not-damaged-enough',crush,maxCrush};
+  if(maxCrush<500)return {ok:false,reason:'cannot-repair',crush,maxCrush};
+  if(crush<=0)return {ok:false,reason:'no-durability',crush,maxCrush};
+
+  const repairedMax=Math.trunc(maxCrush*0.85);
+  if(!sourceItemRuntimeSetDataInt(target.existing,'ITEM_DAMAGECRUSHE',repairedMax)
+    ||!sourceItemRuntimeSetDataInt(target.existing,'ITEM_MAXDAMAGECRUSHE',repairedMax)
+    ||!sourceItemRuntimeSetDataInt(target.existing,'ITEM_CRUSHLEVEL',0)){
+    return {ok:false,reason:'mutable-source-missing'};
+  }
+  const secret=sourceItemField2Char(target.existing,'secretName');
+  if(secret.includes('('))sourceItemField2SetChar(target.existing,'secretName',secret.split('(')[0]);
+  const consumed=sourceConsumeTrackedExistingItem(material.itemIndex);
+  playerComplianceParameter(state);
+  return {
+    ok:true,skillId:540,targetItemIndex:target.itemIndex,materialItemIndex:material.itemIndex,
+    oldCrush:crush,oldMaxCrush:maxCrush,newCrush:repairedMax,newMaxCrush:repairedMax,
+    fixAll,consumed
+  };
+}
+function sourceApplyPetInslayMaterial(target,material){
+  const code=sourceItemField2Char(material.existing,'typeCode');
+  if(!code||code==='NULL')return {ok:false,reason:'material-typecode'};
+
+  const raw=sourceItemField2Char(target.existing,'inlayCode');
+  const parts=['NULL','NULL','NULL'];
+  if(raw){
+    const src=raw.split('|');
+    for(let i=0;i<3&&i<src.length;i++)if(src[i]!=='')parts[i]=src[i];
+  }
+  const open=parts.findIndex(x=>x==='NULL');
+  if(open<0)return {ok:false,reason:'full'};
+  parts[open]=code;
+  sourceItemField2SetChar(target.existing,'inlayCode',parts.join('|'));
+
+  const work={};
+  for(const field of SOURCE_INSLAY_ADD_FIELDS){
+    const a=sourceItemRuntimeResolvedDataInt(target.existing,field);
+    const b=sourceItemRuntimeResolvedDataInt(material.existing,field);
+    if(a==null||b==null)return {ok:false,reason:'missing-int-source',field,mutated:true};
+    const value=a+b;
+    if(!sourceItemRuntimeSetDataInt(target.existing,field,value))return {ok:false,reason:'mutable-source-missing',field,mutated:true};
+    work[field]=value;
+  }
+
+  const materialMagic=sourceItemRuntimeResolvedDataInt(material.existing,'ITEM_MAGICID');
+  if(materialMagic!=null&&materialMagic>0){
+    const materialMp=sourceItemRuntimeResolvedDataInt(material.existing,'ITEM_MAGICUSEMP');
+    if(!sourceItemRuntimeSetDataInt(target.existing,'ITEM_MAGICID',materialMagic)
+      ||materialMp==null
+      ||!sourceItemRuntimeSetDataInt(target.existing,'ITEM_MAGICUSEMP',materialMp)){
+      return {ok:false,reason:'magic-source-missing',mutated:true};
+    }
+  }
+
+  // fixed PETSKILL_ITEM_inslay clears every ITEM function and then copies the material's
+  // corresponding string, so empty source functions intentionally erase target callbacks.
+  for(const key of SOURCE_FIELD2_FUNCTION_KEYS){
+    sourceItemField2SetFunction(target.existing,key,sourceItemField2Function(material.existing,key));
+  }
+  sourceItemField2SetChar(target.existing,'argument',sourceItemField2Char(material.existing,'argument'));
+
+  // Source also rebuilds ITEM_EFFECTSTRING using legacy localized magic-name text. That field
+  // is display-only in this web; gameplay state above is exact, so do not invent a magic label.
+  target.existing.field2EffectStringNeedsSourceMagicName=true;
+  return {ok:true,slot:open,code,work,materialMagic:materialMagic??0,mutated:true};
+}
+function sourceUsePetInslay(selected){
+  if(!Array.isArray(selected)||selected.length>4)return {ok:false,reason:'max-four'};
+  let target=null;
+  for(const entry of selected){
+    const code=sourceItemField2Char(entry.existing,'typeCode');
+    if(!code||code==='NULL')return {ok:false,reason:'unsuitable-item',itemIndex:entry.itemIndex};
+    if(code.includes('INSLAY')){
+      if(target)return {ok:false,reason:'multiple-equipment'};
+      target=entry;
+    }
+  }
+  if(!target)return {ok:false,reason:'no-equipment'};
+
+  const applied=[];
+  for(const material of selected){
+    if(material.itemIndex===target.itemIndex)continue;
+    const r=sourceApplyPetInslayMaterial(target,material);
+    if(!r.ok)return {
+      ok:false,reason:r.reason,partial:applied.length>0,applied,
+      targetItemIndex:target.itemIndex,failedMaterialItemIndex:material.itemIndex,mutated:!!r.mutated||applied.length>0
+    };
+    const consumed=sourceConsumeTrackedExistingItem(material.itemIndex);
+    applied.push({materialItemIndex:material.itemIndex,consumed,...r});
+  }
+  playerComplianceParameter(state);
+  return {ok:true,skillId:572,targetItemIndex:target.itemIndex,applied,mutated:applied.length>0};
 }
 function giveTrackedItemFromExisting(itemId,itemIndex){
   const slot=sourceItemRuntimeSlot(itemIndex);
