@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.92**
+**PLAYABLE CORE V1.93**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,25 +16,27 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.92 最新進度
+## V1.93 最新進度
 
-V1.91～V1.92 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.92～V1.93 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 615／616／651／656 `PETSKILL_BattleTearDamage`（撕裂傷口）
 - 626 `PETSKILL_ShowMercy`（手下留情）
 - 635 `PETSKILL_BecomePig`（黑烏力化）
+- 633 `PETSKILL_BatFly`（群蝠四竄）
+- 634 `PETSKILL_DivideAttack`（分身地裂）
 
-### V1.92 ShowMercy / BecomePig
+### V1.93 BatFly / DivideAttack
 
-- ShowMercy 的致死保護在 `BATTLE_DamageSub`：Guardian 已代擋時，以實際 Guardian HP 做 `HP-1` clamp
-- clamp 發生在 DamageReact 前，因此 Acupuncture 仍可在後面改變實際扣血
-- ShowMercy 的 COM1 不會被 common loop 改成 ATTACK：原目標最多可反擊一次，ShowMercy Pet 不能再反反擊
-- BecomePig 的 COM1 會在 common loop 改成 ATTACK，因此保留完整 Counter chain
-- Guardian 只改 `BATTLE_Attack()` 內部 defindex；外層 Counter 仍從原 TargetAdjust 目標開始
-- 玩家 Pet 對 Enemy 使用 BecomePig 時，原 C 在 `CHAR_TYPEPLAYER` 條件就失敗，因此不 parse option、不抽 `rand()%100`、不套烏力化
-- 新增 `tools/check_v192_player_showmercy_becomepig_runtime.mjs` 並接入 CI
+- 兩技都先跑 `BATTLE_TargetAdjust`；raw COM2 失效時仍會消耗 fallback target RNG
+- BatFly 對敵側每個有效 Enemy 直接扣目前 HP 10%，HP 1～9 固定扣 1，再把總量吸回 Pet
+- BatFly 若回復量超過上限，原 C 會把實際 HP 設 max，但把顯示用 local `addhp` 清成 0；此 quirk 已保留
+- DivideAttack 第一輪只砍 `CHAR_TYPEPLAYER` MP；玩家 Pet 的敵側全是 `CHAR_TYPEENEMY`，因此 Enemy MP 固定不變
+- DivideAttack 第二輪對每個 Enemy 直接扣目前 HP 20%，HP 1～4 固定扣 1
+- 兩技都不走 AttackSeq / DamageSub / WakeUp / ItemCrush / Counter，也沒有 inner AddProfit
+- 直接 HP 傷害造成 Enemy 死亡時會鎖定施術 Pet reward credit
+- 新增 `tools/check_v193_player_batfly_divideattack_runtime.mjs` 並接入 CI
 
-V1.91 Tear 與之前 Sonic／Regret／Firekill regression 全數保留。
+V1.91 Tear、V1.92 ShowMercy / BecomePig 與更早 regression 全數保留。
 
 save schema 維持 **29**。
 
