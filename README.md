@@ -14766,3 +14766,84 @@ V1.63 不再為 dead Enemy 提早跳過 AI，只在真正 action execution 階�
 - targeted regression: **14 / 14 PASS**
 - save schema 27 unchanged
 
+## V1.64 player unarmed AttackCount / friendly TargetAdjust lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`fc8a696ddae0fb8250f198b27d132bea500f6c39`。
+
+### Fixed BATTLE_GetAttackCount timing
+固定 `BATTLE_Battling()` 對每個仍是 C_OK 的 actor：
+
+1. 先跑 StatusSeq / CanMoveCheck
+2. 然後在 command switch **之前**呼叫 `BATTLE_GetAttackCount()`
+3. 沒有有效 CHAR_ARM 時，非 PLAYER 固定退回 1 擊
+4. PLAYER 若 Lv < 10 固定 1 擊
+5. PLAYER 若 Lv >= 10，會先消耗 `RAND(1,1000)`
+
+玩家空手 Lv>=10 的固定表：
+
+- `roll <= 10 + luck*5`：再抽 `RAND(5,10)`，attack_max = 該值
+- `roll <= 30 + luck*5`：attack_max = 3
+- `roll <= 70 + luck*5`：attack_max = 2
+- 其餘：attack_max = 1
+- `luck*5 > 25` 時固定只 clamp 到 25；來源沒有負值下限，Web 不自行新增
+
+目前 Web 尚未有玩家 CHAR_ARM/equipment runtime，且 `playerBattleView.weaponType` 固定 ITEM_FIST，所以「BATTLE_GetAttackCount() 回 0 → PLAYER 空手 fallback」是現行可達來源路徑。
+
+這顆 AttackCount RNG 與最後 command 無關：玩家本輪即使是 CAPTURE / GUARD，只要進到 C_OK actor execution，也先消耗同一顆空手 RNG；只有 ATTACK command 才實際使用 attack_max 多段攻擊。
+
+### Fixed non-BOW common attack loop
+固定普通非 BOW 攻擊會把原始 COM2 預先填入 `aDefList[]`。
+
+每一段：
+
+1. 從同一份 raw COM2 重新做 `BATTLE_TargetAdjust()`
+2. 執行一段 `BATTLE_Attack()`
+3. 立刻 `BATTLE_AddProfit()`
+4. 若還沒到 attack_max，下一段再把 raw COM2 寫回並重新 TargetAdjust
+5. 全部段數完成後才進 Counter chain
+
+空手 PLAYER 的隨機 attack_max **不會**同步寫入 gDamageDiv，所以每段仍是來源正常單段傷害，不自行平均分攤。
+
+### Friendly TargetAdjust
+V1.63 前 Web 在玩家／普通寵物真正行動時直接重新取 `targetEnemyUnit()`，等於把 command phase 已固定的 COM2 丟掉。
+
+V1.64 改為：
+
+- 原 `actor.targetUnitId` 仍然 TargetCheck-valid：直接沿用，不吃 target RNG
+- 原目標已死亡／失效／EarthRound 隱身：才走固定 `BATTLE_DefaultAttacker()`
+- DefaultAttacker 保留來源 `RAND(0,cnt-1)`，**包含只剩一個候選時的 RAND(0,0)**
+- 玩家多段攻擊每一段都從同一份 raw COM2 重新 TargetAdjust
+- 普通寵物只在忠誠 NORMAL、未被特殊技能 lifecycle 接管時走這條；V1.61/V1.62 的 TARGETRANDOM / RANDOMACT / OWNERATTACK / ENEMYATTACK 不被覆蓋
+
+### Per-segment profit / Counter order
+Web 的 `applyFriendlyEnemyHit()` 已在每段內完成 ItemCrush，並在新死亡時立即 `sourceMarkEnemyDeathCredit()`。
+
+`sourceMarkEnemyDeathCredit()` 又會立即 `sourceQueueEnemyCarriedLoot()`，所以來源的：
+
+- `RAND(0, allnum-1)`
+- getitem 滿格時 `RAND(0,1)`
+- 必要時 `RAND(0,2)`
+
+都會在下一段 TargetAdjust 之前消耗。
+
+因此 V1.64 保持「hit → per-hit reward RNG → next TargetAdjust」；Counter 只在整個 common attack loop 最後跑一次。
+
+### Regression
+- parent playable HEAD = V1.63 / `abece348166cf8111f9b4d4ef09320c93882f8ba`
+- core = `fc8a696ddae0fb8250f198b27d132bea500f6c39`
+- committed game.js syntax PASS
+- schema 27 unchanged
+- attack / capture / guard 三條 turn loop：Player AttackCount prime 都在 status skip / command switch 前
+- Lv9 空手：不消耗 AttackCount RNG
+- Lv10 Luck0 roll 10：再消耗 RAND(5,10)
+- Lv10 Luck0 roll 11 / 31 / 71：分別得到 3 / 2 / 1 擊
+- Luck >5：luckWork 固定 clamp 25
+- valid raw COM2：不消耗 DefaultAttacker RNG
+- invalid raw COM2 + 單一剩餘目標：保留 RAND(0,0)
+- 3-hit common loop：每段重新 TargetAdjust，逐段收益 lifecycle，最後只跑一次 Counter
+- V1.63 Enemy AI pre-Battling ordering regression PASS
+- targeted regression: **16 / 16 PASS**
+- save schema 27 unchanged
+
