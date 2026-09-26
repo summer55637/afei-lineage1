@@ -103,11 +103,14 @@ assert.ok(combined.includes('battleStatusApplyRaw(target,cfg.type,storedTurns)')
 assert.ok(combined.includes("{perOffset:20,range:30,bai:1,forceGeneral:true}"));
 assert.ok(combined.includes("battleStatusApplyRaw(target,'weaken',4)"));
 
-// StatusRecovery scans every source StatusTbl entry and only then decides whether the highest one is removable.
-assert.ok(combined.includes('function sourceCombinedHighestRecoveryStatus'));
-assert.ok(combined.includes('SOURCE_COMBINED_STATUS_ORDER'));
-assert.ok(combined.includes("sars:11"));
-assert.ok(combined.includes("requested==='all'&&st.index<=6"));
+// StatusRecovery must reuse the V1.78 source-backed BATTLE_MultiStatusRecovery scan:
+ // keep the last positive StatusTbl entry, then clear only that winner.
+assert.ok(game.includes('function sourceRefreshLastStatus'));
+assert.ok(game.includes('function sourceRefreshClearStatus'));
+assert.ok(combined.includes('const current=sourceRefreshLastStatus(target)'));
+assert.ok(combined.includes("requested==='all'||requested===current"));
+assert.ok(combined.includes('sourceRefreshClearStatus(target,current)'));
+assert.equal(combined.includes('st.index<=6'),false,'must not rationalize the fixed status-index comparison into six basic statuses');
 
 // 460/461 are one independent magic-status group: 3 turns, 90% / 50%.
 assert.ok(combined.includes("460:Object.freeze({turns:3,nums:90})"));
@@ -144,6 +147,16 @@ const loyal=game.slice(loyalStart,loyalEnd);
 const dispatch=loyal.indexOf("meta?.f==='PETSKILL_Combined'");
 const fallback=loyal.indexOf('sourceRuntimePending:true');
 assert.ok(dispatch>=0&&fallback>dispatch);
+
+// V1.77 introduced schema 29; a loaded save must never be normalized back to 28.
+assert.ok(game.includes('schemaVersion:29'));
+assert.ok(game.includes('s.schemaVersion=29'));
+assert.equal(game.includes('s.schemaVersion=28;'),false);
+
+// Pet magic practice fields are ordinary Pet CHAR-equivalent persistent data and survive shallow pet migration.
+assert.ok(game.includes('const copy=Object.assign({},p,{id:p.id||uid()})'));
+assert.ok(combined.includes('pet.sourceAttackMagicLv'));
+assert.ok(combined.includes('pet.sourceAttackMagicExp'));
 
 assert.ok(/PLAYABLE CORE V\d+\.\d+/.test(html));
 
