@@ -5318,7 +5318,7 @@ V0.70 把 V0.68／V0.69 最後保留的 `ITEM_MAGICUSEMP = unknown` 邊界正式
 原 `ITEM_makeItem()`：
 
 1. 從 `ITEM_tbl[itemId]` 複製完整 `ITEM_Item`。
-2. 只對帶有 `randomdata[]` width 的欄位做 `RAND(0,width)`。
+2. **V1.72 更正：**固定迴圈全部 66 個 `ITEM_DATAINT`，逐欄做 `RAND(0, randomdata[i])`；`randomwidth = 0` 仍會實際消耗一顆 `rand()`，只是結果必為 0。
 3. `ITEM_MAGICUSEMP` 在 parser 中是普通 `ITEM_INTENTRY`，不是 `ITEM_INTFUNC / ITEM_getRandomValue`，所以其 random width 為 0。
 4. `ITEM_makeItemAndRegist()` 再把這份 Item 丟進 existing-index allocator。
 
@@ -15697,6 +15697,24 @@ itm->data[ITEM_LEAKLEVEL] = 1;
 
 ### Fixed ITEM_DATAINT order
 
+固定 `version.h` 已再次核對，這個 build 同時開啟：
+
+- `_SIMPLIFY_ITEMSTRING`
+- `_SIMPLIFY_ITEMSTRING2`
+- `_ITEMSET2_ITEM`
+- `_ITEM_INSLAY`
+- `_Item_ReLifeAct`
+- `_ITEM_MAXUSERNUM`
+- `_ITEMSET4_TXT`
+- `_TAKE_ITEMDAMAGE`
+- `_ADD_DEAMGEDEFC`
+- `_SUIT_ITEM`
+- `_ITEMSET5_TXT`
+- `_ITEMSET6_TXT`
+- `_FIX_ITEMPROB`
+
+因此固定 parser 的 **`ITEM_ID_TOKEN_INDEX = 17`**，不是 15。前 16 token 包含 name / secretname / effect / argument、`_ITEM_INSLAY` 的 2 欄、9 個 callback 欄與 `_Item_ReLifeAct` 的 relifefunc；第 17 token 才是 Item ID。
+
 V1.72 generated runtime 保存固定 build 的完整 66 欄順序。
 
 主要包含：
@@ -15787,12 +15805,16 @@ V1.72 的 `sourceItemRuntimeAlloc()` 已按這個順序處理。
 
 ### Existing item metadata
 
-新建立的 Web existing slot 現在記錄：
+V1.72 完整 materialization 後，新建立的 Web existing slot 現在記錄：
 
 - `sourceMakeRngCalls = 66`
+- `sourceMakeMaterialized = true`
+- `sourceData = [66 個生成後 ITEM_DATAINT]`
 - `leakLevel = 1`
 
-舊 schema28 existing item 沒有這兩個歷史欄位時不反推、不補假的 creation history；normalize 只保存已存在的 metadata。
+`sourceData` 是同一次 `ITEM_makeItem()` 逐欄 RNG 後真正得到的 data，不是 template 平均值，也不是事後重抽。
+
+舊 schema28 existing item 沒有 creation-time `sourceData` 時，不反推當時不存在的 roll；normalize 只保留真的存在的 history。對舊裝備只有來源能確定 min=max 時才沿用 deterministic fallback，min!=max 不猜。
 
 save schema 仍為 **28**。
 
@@ -15880,52 +15902,102 @@ V1.72 改成單純遞增的 `sourceEnemyUnitSerial` 作 Web bookkeeping。
 
 之間的 source RNG 時序。
 
-### Current materialization boundary
+### Full item-create materialization
 
-V1.72 已精確來源化：
+V1.72 現在已經不再停在「只知道 66 次 call count」的邊界。
 
-- ITEM_makeItem 固定 66 RNG call count
-- invalid template 0 RNG boundary
-- full existing array 先 66 RNG 再失敗
-- ITEM_LEAKLEVEL = 1 metadata
-- Enemy carried drop probability / item creation interleave
-- STYLE / dojo existing item creation RNG
-- Web-only unit identity 不消耗 source RNG
+新增 deterministic generator：
 
-但目前 generic item runtime **尚未保存全部 66 個生成後 data[] 實值**。
+`tools/generate_item_make_runtime.py`
+
+它直接抓固定：
+
+- repo：`gavinlinasd/StoneAge`
+- ref：`1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- path：`gmsv/data/itemset6.txt`
+- Git blob SHA：`eac985796b59286c547db2abce7b3d604a5e6226`
+
+生成前先自行重算 Git blob SHA；不是這個 blob 就直接失敗，不接受近似鏡像。
+
+generated runtime 已升為：
+
+`stoneage-item-make-runtime-v2`
+
+完整來源結果：
+
+- templates：**10,737**
+- syntax error：**0**
+- duplicate Item ID：**0**
+- 有至少一個非 0 randomwidth 的 template：**5,521**
+- 全表非 0 randomwidth 欄位：**11,092**
+- 已用既有 Enemy 裝備 runtime 交叉驗證：**8 / 8**
+- 已用 relife item runtime 交叉驗證：**5 / 5**
+
+為避免網頁額外膨脹，runtime 用 source default + sparse override 保存，但可無損重建每個 ItemID 的：
+
+- 66 個 base
+- 66 個 randomwidth
+
+`sourceItemRuntimeAlloc()` 現在：
+
+1. 驗證 Item ID。
+2. 從 v2 runtime 重建該 Item 的完整 66 base / width。
+3. 依欄位 0 → 65 每欄各呼叫一次 `cRand(0,width)`。
+4. 寫入 `base + roll`。
+5. 66 欄完成後把 `ITEM_LEAKLEVEL = 1`。
+6. 再開始 existing-index round-robin scan。
+7. allocation 成功才把這次真正生成的 66 欄 `sourceData` 保存進 existing slot。
 
 因此：
 
-- 對目前 relife 5 件與 source-backed Enemy weapon，modifier min=max，可安全用來源固定值
-- 未來若接入 min!=max 的 generic equipment，必須把當次 66-call 中對應欄位的 rolled data 真正保存到 existing item
-- 在那之前不會用 template 平均值或自行猜 roll
+- width = 0：仍消耗 RNG，data 不變。
+- width > 0：消耗同一顆 RNG，而且實際 roll 會保存。
+- existing array 已滿：66 顆已經消耗，但 temporary item 不會變成 existing slot。
+- v2 runtime 若缺 template / 結構錯誤：直接 fail closed，不自行猜 base / width。
+
+Player / Enemy compliance 若 existing slot 有 `sourceData`，會優先讀當次真正 roll 出來的 modifier；legacy slot 才使用可證明 deterministic 的舊 fallback。
+
+### GMQUE 20131 lifecycle check
+
+V1.71 已確認：
+
+`itemID1[0] = 20131`
+
+V1.72 專項回歸現在把 GMQUE 的 item pool 與 item-create runtime 串在同一個驗證裡：
+
+- GMQUE `itemID1` index 0 = **20131**
+- 20131 template 存在
+- 選到 20131 後的 item-create loop = **66 calls**
+- 20131 本身本輪非 0 randomwidth 欄位 = **0**
+- 66 個 width=0 欄仍全部消耗 RNG
+- `ITEM_LEAKLEVEL` 最終 = **1**
+
+所以「GMQUE 先抽到 20131」與「之後 `ITEM_makeItemAndRegist(20131)` 再吃 66 顆 RNG」是兩段獨立 source RNG lifecycle，已確認。
 
 ### Regression
 
-V1.72 targeted sequence regression：
+原 V1.72 call-count / ordering regression 已保留；本輪另外把可重跑的檢查正式提交：
 
-- valid template first allocation -> existing index 2 PASS
-- valid item creation exactly 66 RNG calls PASS
-- zero-width calls still consume RNG PASS
-- invalid template -> 0 make RNG PASS
-- full existing array -> 66 RNG then allocation failure PASS
-- new existing slot records sourceMakeRngCalls=66 PASS
-- new existing slot leakLevel=1 PASS
-- Enemy slot1 hit / slot2 miss -> total 68 calls PASS
-- call 0 = slot1 probability PASS
-- calls 1..66 = item creation PASS
-- call 67 = slot2 probability PASS
-- two drop hits -> total 134 calls PASS
-- second probability exactly call 67 PASS
-- second item creation begins call 68 PASS
-- Enemy drop owner lifecycle retained PASS
-- Web Enemy unit id consumes no source RNG PASS
-- no batch drop allocation retained PASS
-- STYLE item creation remains before RandomChange PASS
-- dojo replacement item creation remains after RandomChange PASS
-- game.js syntax PASS
-- save schema 28 unchanged
+- `tools/check_v172_item_make_runtime.mjs`
+- `.github/workflows/generate-item-make-runtime.yml`
 
-Targeted V1.72 lifecycle regression：**27 / 27 PASS**
+GitHub Actions 本輪結果：
 
-Additional structural verification：**19 / 19 PASS**
+- fixed itemset6 blob SHA 驗證 PASS
+- deterministic runtime regenerate PASS
+- 10,737 templates PASS
+- 5,521 randomized templates PASS
+- 11,092 nonzero randomwidth fields PASS
+- 8 個既有 Enemy 裝備 template cross-check PASS
+- 5 個 relife template cross-check PASS
+- `game.js` `node --check` PASS
+- GMQUE 20131 item-create = 66 calls PASS
+- variable-width template 仍固定 66 calls PASS
+- width=0 欄仍存在於 66-call loop PASS
+- Enemy carried drop：probability → 命中後 item-create → 下一格 probability 的 interleave PASS
+- carried drop → STYLE existing item → `ENEMY_RandomChange` → dojo replacement → compliance 的結構順序 PASS
+- `ITEM_makeItem` 在 existing-slot scan 前執行 PASS
+- generated runtime 第二次重建無 diff PASS
+
+最新 CI regression：**PASS**
+
