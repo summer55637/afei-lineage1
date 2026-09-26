@@ -110,7 +110,7 @@ assert.ok(game.includes('sourceFinalizePetExecutedCommand(pet'));
 
 // Status-skip returns before sourcePetPreCommandAction, so immobilized turns do not advance Vary.
 // Normal Pet attacks have an explicit post-command tick in capture / attack / guard loops.
-assert.ok((game.match(/sourceAdvancePetVaryTurn\\(pet\\);/g)||[]).length>=4);
+assert.ok((game.match(/sourceAdvancePetVaryTurn\(pet\);/g)||[]).length>=4);
 
 // Battle exit lifecycle clears transformation state, while full reset reconstructs the map.
 assert.ok(game.includes('battlePetVaryStates=new Map()'));
