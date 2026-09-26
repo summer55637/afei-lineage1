@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.79</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.80</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.80：</b>
+      接上玩家寵低忠誠 RANDOMACT 的 506～508 MP攻擊。fixed PETSKILL_MpDamage 的 50/100 先做 C 整數除法，實際為 0，因此技能說明寫的攻擊力 -50% 不生效；BATTLE_S_MpDamage 又明確排除 ENEMY 與 PET，而這條 RANDOMACT 的 DefaultAttacker 只會選 Enemy，所以額外 MP 傷害固定為 0，只保留 BATTLE_S_AttackDamage 的特殊物理攻擊與 Guardian calc-only 舊 bug，且不接普通 Counter。
+    </article>
 
     <article class="card note">
       <b>V1.79：</b>
