@@ -25,8 +25,9 @@ V1.84 接入 19 筆 fixed `PETSKILL_SetMagicPet`：601～604、660～663、693�
 - STR／TGH／DEX 共用 Duck／STR／TGH／DEX 互斥 gate；任一已存在就不刷新
 - fixed `Other_DefcharWorkInt()` 有來源 bug：STR／TGH／DEX 三種加成都使用保存的 `mtgh` 作基準，即 `mtgh * power / 100`，Web 原樣保留
 - 能力強化在施放當輪先寫狀態，下一輪 PreCommand 才套入 WORK/FIX；角色自己的 `BATTLE_StatusSeq` 再扣回合，因此即使本次扣到 0，本輪已建立的 WORK/FIX 仍有效
-- HP 分支每個目標各自抽 `90%～110%`，再乘 `GetRecoveryRate()`：Player = `1 + VITAL×0.00010`、Pet/Enemy = `1 + VITAL×0.00005`，最後封頂 MaxHP
+- HP 分支每個目標各自抽 `90%～110%`，再乘 `GetRecoveryRate()`：Player = `1 + VITAL×0.00010`、Pet/Enemy = `1 + VITAL×0.00005`，最後封頂 MaxHP；risk battle 第一次回復 Pet 另依 `CHAR_BATTLEFLG_RECOVERY` 加 `AI_FIX_PETRECOVERY=+10` VARIABLEAI，一場僅一次
 - `CHAR_MAGICPETMP` 仍只有讀後寫回、沒有可達累加，所以 fixed build 的「最多三次」限制不生效；Web 不虛構計數
+- fixed 騎乘回復另有主人／ridepet 分流；目前 Web 尚無實際騎乘系統，因此 V1.84 不猜 ridepet、不提前虛構分流
 
 save schema 維持 **29**。
 
