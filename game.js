@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2326,7 +2326,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -2530,9 +2530,13 @@ function battleSarsGet(desc){
   const key=battleStatusKey(desc);
   return key?battleSarsStates.get(key)||null:null;
 }
+function battleShootSleepGet(desc){
+  const key=battleStatusKey(desc);
+  return key?battleShootSleepStates.get(key)||null:null;
+}
 function battleHasAnyStatus(desc){
-  const st=battleStatusGet(desc),sars=battleSarsGet(desc);
-  return !!((st&&st.turns>0)||(sars&&sars.turns>0));
+  const st=battleStatusGet(desc),sars=battleSarsGet(desc),shootSleep=battleShootSleepGet(desc);
+  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0));
 }
 function battleStatusActive(desc,type=null){
   if(type==='sars'){
@@ -2540,9 +2544,13 @@ function battleStatusActive(desc,type=null){
     return !!(sars&&sars.turns>0);
   }
   const st=battleStatusGet(desc);
+  const shootSleep=battleShootSleepGet(desc);
+  if(type==='sleep'){
+    return !!((st&&st.turns>0&&st.type==='sleep')||(shootSleep&&shootSleep.turns>0));
+  }
   if(type==null){
     const sars=battleSarsGet(desc);
-    return !!((st&&st.turns>0)||(sars&&sars.turns>0));
+    return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0));
   }
   return !!(st&&st.turns>0&&st.type===type);
 }
@@ -2550,12 +2558,19 @@ function battleStatusClear(desc,type=null){
   const key=battleStatusKey(desc);
   if(!key)return false;
   const st=battleStatuses.get(key);
+  if(type==='sleep'){
+    let cleared=false;
+    if(st&&st.type==='sleep'){battleStatuses.delete(key);cleared=true;}
+    if(battleShootSleepStates.delete(key))cleared=true;
+    return cleared;
+  }
   if(!st||type&&st.type!==type)return false;
   battleStatuses.delete(key);
   return true;
 }
 function battleStatusCanMove(desc){
-  const st=battleStatusGet(desc);
+  const st=battleStatusGet(desc),shootSleep=battleShootSleepGet(desc);
+  if(shootSleep&&shootSleep.turns>0)return false;
   return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'||st.type==='dizzy'||st.type==='barrier'));
 }
 function battleStatusRawStats(desc){
@@ -2683,6 +2698,34 @@ function battleSarsApplyRaw(targetDesc,storedTurns,markCarrier=false){
 function battleSarsClear(targetDesc){
   const key=battleStatusKey(targetDesc);
   return key?battleSarsStates.delete(key):false;
+}
+function sourceAttackShootApplySleep(targetDesc){
+  const key=battleStatusKey(targetDesc);
+  if(!key)return false;
+  const st=battleStatusGet(targetDesc);
+  if(!st){
+    battleStatuses.set(key,{type:'sleep',turns:3,sourceAttackShoot:true});
+  }else if(st.type==='sleep'){
+    st.turns=3;
+    st.sourceAttackShoot=true;
+  }else{
+    battleShootSleepStates.set(key,{type:'sleep',turns:3,sourceAttackShoot:true});
+  }
+  sourceClearPetBattleCommand(targetDesc,'sleep');
+  addLog(battleStatusDescName(targetDesc)+' 被栗子連激打中後陷入睡眠。','bad');
+  return true;
+}
+function sourceProcessAttackShootSleepTurn(desc){
+  const st=battleShootSleepGet(desc);
+  if(!st||n(st.turns)<=0)return null;
+  st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+  if(st.turns<=0){
+    const key=battleStatusKey(desc);
+    if(key)battleShootSleepStates.delete(key);
+    addLog(battleStatusDescName(desc)+' 的睡眠狀態解除。');
+    return {expired:true,turns:0};
+  }
+  return {expired:false,turns:st.turns};
 }
 const SOURCE_SARS_SLOT_ORDER=Object.freeze([3,1,0,2,4,8,6,5,7,9]);
 function sourceBattleStatusDescFromSlot(slot){
@@ -2917,14 +2960,17 @@ function processBattleStatusTurn(actor){
     sourceEnemyFoxStatusSeq(desc.unit);
   }
 
+  const blockedBefore=battleStatusCanMove(desc)===false;
+  const attackShootSleep=sourceProcessAttackShootSleepTurn(desc);
   const finish=result=>{
     const sars=sourceProcessSarsStatusTurn(desc);
-    return sars?Object.assign({},result,{sars}):result;
+    const extra={};
+    if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
+    if(sars)extra.sars=sars;
+    return Object.keys(extra).length?Object.assign({},result,extra):result;
   };
   const st=battleStatusGet(desc);
-  if(!st||st.turns<=0)return finish({skip:false,desc,status:null});
-
-  const blockedBefore=battleStatusCanMove(desc)===false;
+  if(!st||st.turns<=0)return finish({skip:blockedBefore,desc,status:null});
 
   if(st.type==='weaken'||st.type==='barrier'){
     // Source BATTLE_StatusSeq does --cnt, then if the same WORK value is still >0
@@ -3112,6 +3158,7 @@ const ENEMY_SOURCE_SKILL_META={
   542:{n:'疾速攻擊',d:'防禦下降；此來源函式未實作資料描述的敏捷增加',f:'PETSKILL_SpeedyAttack',o:'防%-30 敏%+30',field:1,target:6},
   543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
+  614:{n:'栗子連激',d:'亂數連續投擲栗子 3~5 顆',f:'PETSKILL_AttackShoot',o:'3|5',field:1,target:1},
   617:{n:'毒煞蔓延',d:'物理命中後感染毒煞，主傳染者可向鄰格擴散',f:'PETSKILL_Sars',o:'煞',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
@@ -3303,6 +3350,17 @@ function enemySignedSkillPercent(option,key){
   const v=m?Number(m[1]):0;
   return Number.isFinite(v)?v:0;
 }
+function sourceEnemyPrimeAttackShoot(action,unit,chosen){
+  const meta=action?.skillMeta||enemyPetSkillMeta(action?.skillId);
+  if(action?.kind!=='skill'||meta?.f!=='PETSKILL_AttackShoot'||!chosen)return null;
+  const parts=String(meta?.o||'').split('|');
+  let min=Math.trunc(Number(parts[0])),max=Math.trunc(Number(parts[1]));
+  if(!Number.isFinite(min))min=3;
+  if(!Number.isFinite(max))max=min;
+  if(max<min){const swap=min;min=max;max=swap;}
+  const count=cRand(min,max);
+  return {count,min,max,fixAi:0,loyaltyBurstEligible:false};
+}
 function enemyGuardianOwner(unit){
   if(!enemy||!Array.isArray(enemy.units))return null;
   const slot=Math.trunc(n(unit?.battleSlot));
@@ -3405,6 +3463,8 @@ function enemyPrepareRoundAction(unit,action){
     unit.roundAttack=Math.trunc(sourceFixAttack*.8);
     unit.roundDefense=Math.trunc(sourceFixDefense*.7);
     unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_AttackShoot'){
+    unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_SpeedyAttack'){
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseDefense=sourceFixDefense;
@@ -6027,6 +6087,92 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
     kind:'skill',skillId:actor.skillId,hits,attackCount:count,
     targetRolls,plannedTargets:plannedTargets.map(t=>t?.kind||null),
     sourceCounterReady,lastTarget:lastTarget?.kind||null,lastResult
+  };
+}
+function sourceEnemyAttackShootApplyHit(unit,target,options,count,label){
+  if(!target)return null;
+  const damageOptions={damageDivisor:count};
+  let r=null,actualTarget=target,targetDesc=null;
+  if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
+    r=enemyAttackPetResult(unit,target.pet,damageOptions);
+    targetDesc={kind:'pet',pet:target.pet,petId:target.pet.id};
+    actualTarget=targetDesc;
+    enemyApplySkillHit(unit,target,r,label);
+  }else if(target.kind==='player'&&state.hp>0){
+    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    r=resolveEnemyDirectAttackToPlayer(unit,{guarding,damageDivisor:count});
+    actualTarget=enemyDirectActualTarget(target,r)||target;
+    targetDesc=enemyApplyDirectGuardianSkillHit(unit,target,r,label,{finalizeItemCrush:false})||actualTarget;
+  }else return null;
+
+  let paralysis=null;
+  if(n(r?.damage)>0&&Math.trunc(n(unit?.weaponType))===19){
+    paralysis=sourceBreakthrowParalysis(unit,{targetDesc,r});
+  }
+  let sleepRoll=null,sleepApplied=false;
+  if(n(r?.damage)>0){
+    sleepRoll=cRand(1,5);
+    if(sleepRoll>4)sleepApplied=sourceAttackShootApplySleep(targetDesc);
+  }
+  sourceBattleFinalizeItemCrushRng(r);
+  return {
+    target:target.kind,petId:target.pet?.id||null,
+    actualTarget:targetDesc?.kind||target.kind,
+    actualPetId:targetDesc?.petId||targetDesc?.pet?.id||null,
+    guardianPetId:r?.guardianPetId||null,r,paralysis,sleepRoll,sleepApplied
+  };
+}
+function performEnemyAttackShoot(actor,unit,options,meta){
+  const primed=Number(actor?.sourceAttackShootCount);
+  const parts=String(meta?.o||'').split('|');
+  let min=Math.trunc(Number(parts[0])),max=Math.trunc(Number(parts[1]));
+  if(!Number.isFinite(min))min=3;
+  if(!Number.isFinite(max))max=min;
+  if(max<min){const swap=min;min=max;max=swap;}
+  const latePrime=!(Number.isFinite(primed)&&primed>0);
+  const attackMax=latePrime?cRand(min,max):Math.trunc(primed);
+  const label=meta?.n||'栗子連激';
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  unit.counterEligibleThisTurn=false;
+  addLog(unit.name+' 使用 '+label+'（'+attackMax+' 顆；每擊傷害除以 '+attackMax+'）。');
+
+  const sourcePool=enemyPlayerSideLivingTargets();
+  if(!sourcePool.length)return {kind:'skill',skillId:actor.skillId,attackMax,hits:0,noTarget:true,latePrime};
+  const plannedTargets=[],targetRolls=[];
+  for(let i=0;i<attackMax;i++){
+    const roll=cRand(0,sourcePool.length-1);
+    targetRolls.push(roll);plannedTargets.push(sourcePool[roll]);
+  }
+
+  const segments=[];
+  let attackCount=0,sourceLoopExit='target-list-end';
+  for(let i=0;i<attackMax;i++){
+    if(!enemy||n(unit.hp)<=0){sourceLoopExit='attacker-dead';break;}
+    if(!enemyPlayerSideLivingTargets().length){sourceLoopExit='battle-side-empty';break;}
+    let target=null;
+    if(weaponType===4){
+      const raw=plannedTargets[i];
+      if(sourceEnemyTargetCheck(raw))target=raw;
+      else continue;
+    }else if(i===0){
+      target=enemyActorTarget(actor,unit);
+      if(!target){sourceLoopExit='target-adjust-failed';break;}
+    }else{
+      const raw=plannedTargets[i];
+      target=sourceEnemyTargetCheck(raw)?raw:sourceEnemyDefaultAttacker();
+      if(!target){sourceLoopExit='target-adjust-failed';break;}
+    }
+    const hit=sourceEnemyAttackShootApplyHit(unit,target,options,attackMax,label+'第 '+(attackCount+1)+'/'+attackMax+' 擊');
+    if(!hit){sourceLoopExit='attack-failed';break;}
+    segments.push(hit);attackCount++;
+    if(attackCount>=attackMax){sourceLoopExit='attack-max';break;}
+    if(n(unit.hp)<=0){sourceLoopExit='attacker-dead';break;}
+  }
+  return {
+    kind:'skill',skillId:actor.skillId,attackMax,attackCount,hits:attackCount,
+    min,max,fixAi:actor?.sourceAttackShootFixAi??0,loyaltyBurstEligible:false,latePrime,
+    protocol:'BB-w0-forced',weaponType,targetRolls,
+    plannedTargets:plannedTargets.map(t=>t?.kind||null),segments,sourceLoopExit,counterBlocked:true
   };
 }
 function performEnemySpeedyAttack(actor,unit,options,meta){
@@ -8869,6 +9015,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Combined')return performEnemyCombined(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_DivideAttack')return performEnemyDivideAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_AttackShoot')return performEnemyAttackShoot(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
@@ -9586,6 +9733,7 @@ function normalBattleOrder(options={}){
     const quick=n(enemyBattleView(unit)?.quick);
     const needsTarget=action.kind==='attack'||action.kind==='skill'||action.kind==='magic';
     const chosen=needsTarget?enemyChooseTarget(unit):null;
+    const attackShootPrime=sourceEnemyPrimeAttackShoot(action,unit,chosen);
     order.push({
       kind:'enemy',label:unit.name,unitId:unit.id,quick,dex:battleDexRoll(quick,unit.roundDexMode),orderIndex:orderIndex++,
       enemyAction:action.kind,skillSlot:action.skillSlot??null,skillId:action.skillId??null,
@@ -9594,7 +9742,11 @@ function normalBattleOrder(options={}){
       sourceSkillRejected:!!action.sourceSkillRejected,
       sourceMagicCWait:!!action.sourceMagicCWait,
       sourceCWaitReason:action.sourceCWaitReason||null,
-      targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null
+      targetKind:chosen?.kind||null,targetPetId:chosen?.petId||null,
+      sourceAttackShootCount:attackShootPrime?.count??null,
+      sourceAttackShootMin:attackShootPrime?.min??null,
+      sourceAttackShootMax:attackShootPrime?.max??null,
+      sourceAttackShootFixAi:attackShootPrime?.fixAi??null
     });
   }
 
