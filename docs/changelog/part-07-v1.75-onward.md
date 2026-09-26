@@ -983,3 +983,98 @@ fixed `PETSKILL_Sacrifice()` 先檢查：
 - `7f8f3bb6c0d10d2864477a795ddd2398bf66ff2a` — repair V1.83 regression helper boundary
 - `bd8347c312642dbd7782e7222c286cbf58bc1b0c` — tighten V1.85 post-sort timing regression
 - `35a983192b6a27c33014dd553edfb6594100a2ef` — V1.85 README
+
+
+---
+
+## V1.86 Player RANDOMACT Gyrate / Retrace
+
+V1.86 繼續 fixed `PETSKILL_functbl` 的玩家出戰 Pet 低忠誠 `RANDOMACT` 差集，接入：
+
+- 619／653／667／831 `PETSKILL_Gyrate`
+- 621／713／735 `PETSKILL_Retrace`
+
+### Gyrate
+
+`PETSKILL_Gyrate()` 先從 option 解析 `攻%`，依當輪 `WORKFIXSTR` 算出新的 `WORKATTACKPOWER`，再把 raw `toNo` 原樣寫入 COM2。
+
+真正 battle.c 的 GYRATE 特殊 case **不先做 `BATTLE_TargetAdjust()`**，而是直接依 COM2 分成：
+
+- 0～4 → row 0
+- 5～9 → row 5
+- 10～14 → row 10
+- 15～19 → row 15
+
+接著只在該五格橫排內掃 `BATTLE_TargetCheck()`，先把當下有效目標存成 temp，再逐一呼叫 `BATTLE_Attack()`。
+
+玩家寵低忠誠 RANDOMACT 的 raw COM2 來自 opposing Enemy，因此實際會落在 Enemy 的 10～14 或 15～19 排。Web 依 enemy battleSlot 還原 row，而不是把它改成「全敵方」。
+
+該特殊 case 自己送出 FF 後直接 `break`：
+- 不進 common physical loop
+- 不進 common Counter
+- 該 case 裡也沒有 `BATTLE_AddProfit`
+
+因此 Web 逐目標執行物理 Attack／Guardian／ItemCrush 與傷害，但不額外虛構 Gyrate 專屬 Counter 或 immediate AddProfit。
+
+### Retrace
+
+`PETSKILL_Retrace()` 裡原本解析 `攻%` 的整段程式已被 fixed 原 C 註解。因此：
+
+- 621 顯示 `攻%+20`
+- 713 顯示 `攻%+100`
+- 735 顯示 `攻%+50`
+
+這些 option **都不直接改首擊攻擊力**。
+
+battle.c common loop 的真正追跡條件是：
+
+1. 先執行普通 `BATTLE_Attack()`
+2. 只有 `Battle_Attack_ReturnData == BATTLE_RET_DODGE`
+3. 再抽 `RAND(1,100) < 80`
+4. 成功時硬編碼：
+   `WORKATTACKPOWER = WORKFIXSTR + WORKFIXSTR * 0.2`
+5. 對同一個已經過 `BATTLE_TargetAdjust` 的 defNo 再執行一次 `BATTLE_Attack()`
+
+因此不論技能資料寫 +20 / +50 / +100，追擊實際一律是 fixed **FIXSTR +20%**。
+
+玩家 Pet 沒有 CHAR_ARM。battle.c 在 `BATTLE_PetLoyalCheck()` 之前已跑 `BATTLE_GetAttackCount()`；回傳 0 後，因角色不是 PLAYER，直接 fallback 成：
+
+`attack_max = 1`
+
+所以玩家 Pet RANDOMACT Retrace 在目前固定來源路徑只有一個 primary segment。
+
+追擊的第二次 `BATTLE_Attack()` 不會增加 `attack_count`。原碼在 optional follow-up 之後才跑一次 `BATTLE_AddProfit`。之後 common Counter 使用的 `ContFlg / defNo` 仍是 **primary BATTLE_Attack** 的值；follow-up 的 return value 沒有覆寫 ContFlg。
+
+Web 因此保留：
+- primary DODGE 才 consume 追跡 RNG
+- 嚴格 `roll < 80`
+- 固定 +20% 而非 option 值
+- primary 與 follow-up 各自完成 ItemCrush lifecycle
+- optional follow-up 後一次 AddProfit
+- Counter 用 primary result / original post-TargetAdjust target
+
+### Regression / CI
+
+新增 `tools/check_v186_player_gyrate_retrace_runtime.mjs`，鎖定：
+- 4 筆 Gyrate / 3 筆 Retrace runtime rows
+- Gyrate raw COM2 五格 row 判定
+- Gyrate 不使用 execution-time TargetAdjust
+- Gyrate no common Counter / no immediate AddProfit
+- Retrace attack_max=1
+- DODGE → `RAND(1,100)<80`
+- 固定 FIXSTR +20% 與 option ignored
+- follow-up 不增加 attack_count
+- ItemCrush / AddProfit / Counter 時序
+- dispatcher 位於 pending fallback 前
+
+V1.86 helper 插入後，V1.83 SetDuck regression 的文字切片終點同步縮到第一個新 helper，避免把 Gyrate / Retrace 的 RNG 誤算進 SetDuck body；沒有更動 V1.83 遊戲規則。
+
+完整 GitHub Actions 已確認 V1.72～V1.86 全部 SUCCESS。
+
+### commits
+
+- `5d4e6b36f34752987781cfddbe49b9d2ce0eb0b9` — V1.86 player RANDOMACT Gyrate / Retrace core
+- `2b7ec8e0330076e4035154dc884bdbbee40c8cb9` — repair V1.83 regression boundary
+- `be00830832a091d1341b3bdc5f5740e0fb8b84c7` — V1.86 regression
+- `3e7ca0fa0d34b6dae80626a8075bfa20322ed02b` — CI V1.86 regression step
+- `43750a2f3dea8f3a15e6127543751315226ac76e` — V1.86 README
