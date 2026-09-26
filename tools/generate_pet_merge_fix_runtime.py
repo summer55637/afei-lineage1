@@ -6,7 +6,7 @@ Source of truth:
   gmsv/data/enemybase1.txt
   gmsv/data/itematom.txt
 
-This intentionally preserves fixed-C ITEM_merge_getPetFix quirks.  In particular the
+The pinned data files are decoded as gb18030. This intentionally preserves fixed-C ITEM_merge_getPetFix quirks.  In particular the
 pinned build has _MERGE_NEW_8 disabled, and the function's outer for(i=0;i<5;i++)
 replays all five ATOMFIX slots five times.
 """
@@ -42,7 +42,7 @@ def parse_atoms(raw:bytes):
     atoms={}
     lines=0
     duplicates=0
-    for line in raw.decode("utf-8").splitlines():
+    for line in raw.decode("gb18030").splitlines():
         if not line or line.startswith("#"):
             continue
         p=line.split(",")
@@ -65,7 +65,7 @@ def parse_enemybase(raw:bytes,atoms:dict[str,int]):
         "unresolvedSlots":0,"swappedRanges":0,"itemAtomCount":len(atoms),
         "itemAtomDuplicateNames":0,"expandedResolvedEntries":0,"abortedOuterPasses":0,
     }
-    for line in raw.decode("utf-8").splitlines():
+    for line in raw.decode("gb18030").splitlines():
         if not line or line.startswith("#"):
             continue
         stats["enemybaseRows"]+=1
