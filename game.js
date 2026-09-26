@@ -12156,7 +12156,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Sars')result=sourcePerformPetSarsSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
-    else if(meta?.f==='PETSKILL_AttackCrazed')result=sourcePerformPetAttackCrazedSkill(pet,action,options);\n    else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_AttackCrazed')result=sourcePerformPetAttackCrazedSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_StealMoney')result=sourcePerformPetStealMoneySkill(pet,action);
     else if(meta?.f==='PETSKILL_Steal')result=sourcePerformPetStealSkill(pet,action);
