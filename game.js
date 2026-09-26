@@ -4619,6 +4619,77 @@ function sourceEnemyPrimeExecutionAttackCount(actor){
   actor.sourceAttackCountWeaponRoll=validArm;
   return {attackMax,validArm,itemIndex:validArm?itemIndex:-1};
 }
+function sourcePlayerBattleAttackMax(){
+  // Current Web player runtime has no CHAR_ARM/equipment path yet: playerBattleView.weaponType
+  // is fixed ITEM_FIST and no player weaponItemIndex exists. Therefore fixed BATTLE_GetAttackCount()
+  // returns 0 and the source unarmed PLAYER fallback below is the reachable path.
+  const level=Math.max(1,Math.trunc(n(state?.level)));
+  if(level<10)return {attackMax:1,roll:null,burstRoll:null,luckWork:null};
+
+  let luckWork=Math.trunc(n(state?.luck))*5;
+  // fixed battle.c only clamps the strange high side; preserve negative values rather than inventing a floor.
+  if(luckWork>25)luckWork=25;
+  const roll=cRand(1,1000);
+  let attackMax=1,burstRoll=null;
+  if(roll<=10+luckWork){
+    burstRoll=cRand(5,10);
+    attackMax=burstRoll;
+  }else if(roll<=30+luckWork){
+    attackMax=3;
+  }else if(roll<=70+luckWork){
+    attackMax=2;
+  }
+  return {attackMax,roll,burstRoll,luckWork};
+}
+function sourcePlayerPrimeExecutionAttackCount(actor){
+  if(actor?.kind!=='player')return null;
+  const plan=sourcePlayerBattleAttackMax();
+  actor.sourceAttackMax=plan.attackMax;
+  actor.sourcePlayerUnarmedAttackCountRoll=plan.roll;
+  actor.sourcePlayerUnarmedBurstRoll=plan.burstRoll;
+  actor.sourcePlayerUnarmedLuckWork=plan.luckWork;
+  return plan;
+}
+function sourceFriendlyEnemyTargetAdjust(actor){
+  // fixed BATTLE_TargetAdjust first accepts the raw COM2 when it is still TargetCheck-valid.
+  // Only an invalid/dead/hidden original target falls through to BATTLE_DefaultAttacker(),
+  // which always consumes RAND(0,cnt-1), including RAND(0,0).
+  const rawId=actor?.targetUnitId;
+  const fixed=targetableEnemyUnits().find(u=>u?.id===rawId)||null;
+  if(fixed)return fixed;
+  return sourcePetRandomEnemyTarget()?.unit||null;
+}
+function sourcePerformPlayerCommonAttack(actor,options={}){
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
+  let attackCount=0,lastTarget=null,lastActual=null,lastResult=null;
+
+  // Non-BOW TargetListSet pre-fills every aDefList slot with the original raw COM2.
+  // Re-run TargetAdjust from that same raw COM2 for every segment, exactly like the C loop.
+  while(enemy&&state.hp>0&&attackCount<attackMax){
+    const target=sourceFriendlyEnemyTargetAdjust(actor);
+    if(!target)break;
+
+    const r=playerAttackResult(target);
+    const actual=applyFriendlyEnemyHit('player','你',target,r);
+    attackCount++;
+    lastTarget=target;
+    lastActual=actual;
+    lastResult=r;
+
+    // applyFriendlyEnemyHit performs per-segment ItemCrush/death-credit/carried-loot lifecycle
+    // before we re-enter TargetAdjust for the next segment, matching BATTLE_Attack -> AddProfit.
+    if(state.hp<=0||!enemy)break;
+    if(!livingEnemyUnits().length)break;
+  }
+
+  // fixed common loop performs Counter only after the full multi-hit loop and uses the
+  // last segment's ContFlg/defNo. Critical/Guardian/death suppression stays in the chain helper.
+  const counterUnit=lastActual||lastTarget;
+  if(lastResult&&state.hp>0&&counterUnit?.hp>0&&options.allowCounter!==false){
+    resolvePlayerEnemyCounterChain('player',counterUnit,lastResult);
+  }
+  return {attackCount,attackMax,lastTarget,lastActual,lastResult};
+}
 function sourceEnemyTargetBattleSlot(target){
   if(target?.kind==='player')return 0;
   if(target?.kind==='pet')return 5;
@@ -9379,7 +9450,8 @@ function captureTurn(manual=false){
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
     // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
-    if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
+    if(actor.kind==='player')sourcePlayerPrimeExecutionAttackCount(actor);
+    else if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);
@@ -9417,7 +9489,7 @@ function captureTurn(manual=false){
     }
 
     if(actor.kind==='player'){
-      const target=targetEnemyUnit();
+      const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return captured
@@ -9468,7 +9540,7 @@ function captureTurn(manual=false){
     }else if(actor.kind==='pet'){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
-      const target=targetEnemyUnit();
+      const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return captured
@@ -10139,7 +10211,8 @@ function attackTurn(){
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
     // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
-    if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
+    if(actor.kind==='player')sourcePlayerPrimeExecutionAttackCount(actor);
+    else if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);
@@ -10186,18 +10259,15 @@ function attackTurn(){
     }
 
     if(actor.kind==='player'){
-      const target=targetEnemyUnit();
-      if(!target){
+      const result=sourcePerformPlayerCommonAttack(actor,{allowCounter:true});
+      if(!result.attackCount){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
       }
-      const r=playerAttackResult(target);
-      const actual=applyFriendlyEnemyHit('player','你',target,r);
-      if(state.hp>0&&actual?.hp>0)resolvePlayerEnemyCounterChain('player',actual,r);
     }else if(actor.kind==='pet'){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
-      const target=targetEnemyUnit();
+      const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
@@ -10240,7 +10310,8 @@ function guardTurn(){
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
     // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
-    if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
+    if(actor.kind==='player')sourcePlayerPrimeExecutionAttackCount(actor);
+    else if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);
@@ -10291,7 +10362,7 @@ function guardTurn(){
     }else if(actor.kind==='pet'){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
-      const target=targetEnemyUnit();
+      const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
         if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
         winBattle();return
