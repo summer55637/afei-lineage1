@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.81**
+**PLAYABLE CORE V1.82**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,15 +16,16 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.81 最新進度
+## V1.82 最新進度
 
-V1.81 接上玩家寵低忠誠 `RANDOMACT` 的屬性攻擊類 PetSkill：
+V1.82 接上玩家寵低忠誠 `RANDOMACT` 的 Lighttakeed，並完成 574 嚙齒術的 illegal audit：
 
-- **544～547 / 825～828：`PETSKILL_Modifyattack`**：先完成 `BATTLE_S_AttackDamage` 的物理傷害，再依原目標永久地／水／火／風屬性加傷；保留 `rand()%(ModNum+5)` 後 C 整數 `/100` 的來源 bug
-- **548～551 / 697～700：`PETSKILL_Mdfyattack`**：`BATTLE_AttrAdjust` 在本次 AttackSeq 內把攻方四屬清 0，只留下 option 指定屬性與數值
-- **Guardian 差異**：兩類都走 V1.79 的 calc-only Guardian bug；Mdfyattack 的屬性相剋會拿 local Guardian 算，但真正 DamageSub 仍落原目標；Modifyattack 的後置 bonus 則讀 caller 原目標的永久屬性
-- **DamageReact 差異**：Modifyattack 的 post-AttackSeq bonus 會因 local `skill_type=-1` 被取消；Mdfyattack 的元素替換看的是攻方 `WORKBATTLECOM1`，即使 local skill type 被降成 -1，元素替換仍會進 DamageCalc
-- execution-time TargetAdjust 與 no-Counter lifecycle 都依 fixed `BATTLE_S_AttackDamage` 保留
+- **609 / 610 / 611：`PETSKILL_Lighttakeed`**：依 fixed C 將本回合 `WORKATTACKPOWER = FIXSTR × 0.7`、`WORKDEFENCEPOWER = FIXTOUGH × 0.5`；`WORKQUICK × 0.95` 那行原碼已註解，因此不補
+- **WORK 生命週期**：使用既有 `battlePetPowerMods`，它在下一個 `normalBattleOrder()` 的 compliance 邊界會清除，因此 70%/50% 只保留本回合，且同回合 Counter 計算仍可看到這組 WORK 值
+- **DamageReact**：目前 source-backed Enemy 只有 Acupuncture；它對 ABSROB / REFLEC / VANISH 都不匹配，因此 fixed `BATTLE_S_AttackDamage` 只把 local skill type 降成普通反應，不會吸收／複製任何光鏡守狀態
+- **Guardian**：物理部分沿用 V1.79 的 `BATTLE_S_AttackDamage` calc-only Guardian bug；Guardian 可參與傷害計算，但真正 DamageSub 仍落原目標
+- **574 嚙齒術**：fixed `petskill2.txt` 為 `illegal=1`；`PETSKILL_Use()` 對 `CHAR_TYPEPET` 在進函式前直接 FALSE，所以玩家寵 RANDOMACT 抽到 574 就是不動，不執行破壞裝備效果
+- Lighttakeed 是獨立特殊 command，不接普通 Counter
 
 save schema 維持 **29**。
 
