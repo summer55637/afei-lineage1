@@ -10267,6 +10267,115 @@ function sourcePerformPetRetraceSkill(pet,action,options={}){
   };
 }
 
+function sourcePerformPetAttackCrazedSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const count=Math.max(0,sourceCAtoi(meta?.o));
+  const label=meta?.n||'狂亂暴走';
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_AttackCrazed() uses the current round FIX values directly:
+  // WORKATTACKPOWER = trunc(FIXSTR * 0.8), WORKDEFENCEPOWER = trunc(FIXTOUGH * 0.7).
+  // It stores atoi(option) in COM3 high; BATTLE_AttackSeq later uses that exact value
+  // as attack_max, without gDamageDiv. 613 therefore performs three full-damage attacks.
+  const baseAttack=Math.trunc(n(base.attack));
+  const baseDefense=Math.trunc(n(base.defense));
+  const attack=Math.trunc(baseAttack*.8);
+  const defense=Math.trunc(baseDefense*.7);
+  battlePetPowerMods.set(pet.id,{
+    attack,defense,skillId:action?.skillId,sourceAttackCrazed:true
+  });
+
+  // Player Pets have no CHAR_ARM in this runtime, so fixed BATTLE_GetWepon() is ITEM_FIST.
+  // BATTLE_TargetListSet(ATTCRAZED) first fills every aDefList entry with the original COM2,
+  // then snapshots live entries from defsub through i < deftop. For Enemy side 10..19 this
+  // source loop is 10..18: slot 19 is intentionally excluded by the original '< deftop'.
+  // When at least one such entry exists, ALL count target RANDs are consumed before the
+  // first BATTLE_Attack. If none exists, the initial COM2-filled list is left untouched and
+  // no target-list RNG is consumed.
+  const originalTarget=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  const sourcePool=targetableEnemyUnits().filter(unit=>{
+    const slot=Math.trunc(n(unit?.battleSlot));
+    return slot>=0&&slot<9;
+  });
+  const plannedTargets=[];
+  const targetRolls=[];
+  if(sourcePool.length){
+    for(let i=0;i<count;i++){
+      const roll=cRand(0,sourcePool.length-1);
+      targetRolls.push(roll);
+      plannedTargets.push(sourcePool[roll]);
+    }
+  }else{
+    for(let i=0;i<count;i++)plannedTargets.push(originalTarget);
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」：攻 80%／防 70%，依原 COM3 high 連續攻擊 '+count+' 次。',
+    'pet'
+  );
+
+  let hits=0,lastTarget=null,lastActual=null,lastResult=null;
+  let sourceCounterReady=false;
+  for(let i=0;i<count;i++){
+    if(!petIsBattleActive(pet)||!enemy)break;
+
+    let target=null;
+    if(i===0){
+      // Non-BOW source quirk: pList[0] was already randomly generated above, but the
+      // first hit still TargetAdjusts the ORIGINAL COM2. The first pre-roll is consumed
+      // yet its selected value is not used.
+      target=sourcePetEnemyTargetFromAction(action);
+    }else{
+      // Later segments restore aDefList[i], then run BATTLE_TargetAdjust. A pre-rolled
+      // target that died/vanished falls back to BATTLE_DefaultAttacker and consumes the
+      // fallback target RNG at this point.
+      const raw=plannedTargets[i];
+      if(raw&&n(raw.hp)>0&&!enemyUnitHidden(raw)){
+        target=raw;
+      }else{
+        const list=targetableEnemyUnits();
+        target=list.length?list[cRand(0,list.length-1)]:null;
+      }
+    }
+    if(!target)break;
+
+    const attacker=petBattleView(pet);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+      guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+    });
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+    sourceProcessBattleDeathsAtAddProfit();
+
+    hits++;
+    lastTarget=target;
+    lastActual=actual;
+    lastResult=r;
+
+    // fixed loop breaks immediately after ++attack_count reaches attack_max and keeps
+    // the final defNo / ContFlg for the single outer Counter chain.
+    if(hits>=count){
+      sourceCounterReady=true;
+      break;
+    }
+    if(!petIsBattleActive(pet))break;
+  }
+
+  if(sourceCounterReady&&lastResult&&lastActual?.hp>0&&petIsBattleActive(pet)){
+    resolvePetEnemyCounterChain('pet',pet,lastActual,lastResult);
+  }
+  return {
+    handled:true,skillId:action?.skillId,hits,attackCount:count,
+    baseAttack,baseDefense,attack,defense,
+    targetRolls,plannedTargetUnitIds:plannedTargets.map(unit=>unit?.id||null),
+    sourcePoolUnitIds:sourcePool.map(unit=>unit.id),
+    sourceExcludedSlot19:true,sourceCounterReady,
+    targetUnitId:lastTarget?.id||null,actualTargetUnitId:lastActual?.id||null,lastResult
+  };
+}
+
 function sourcePerformPetWildViolentSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -12047,7 +12156,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Sars')result=sourcePerformPetSarsSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
-    else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_AttackCrazed')result=sourcePerformPetAttackCrazedSkill(pet,action,options);\n    else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_StealMoney')result=sourcePerformPetStealMoneySkill(pet,action);
     else if(meta?.f==='PETSKILL_Steal')result=sourcePerformPetStealSkill(pet,action);
