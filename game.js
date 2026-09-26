@@ -351,7 +351,6 @@ function sourcePlayerEquipRequirements(template,target=state){
   if(Math.trunc(n(template.needProfession))!==0)return {ok:false,reason:'profession-unported'};
   if(String(template.attachFunc||'')!==''||String(template.detachFunc||'')!=='')return {ok:false,reason:'callback-unported'};
   if(SOURCE_PLAYER_SPECIAL_EQUIP_IDS.has(Math.trunc(Number(template.itemId))))return {ok:false,reason:'special-equip-unported'};
-  if(SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(Math.trunc(Number(template.type))))return {ok:false,reason:'weapon-pattern-unported'};
   return {ok:true};
 }
 function sourcePlayerFindEmptyBackpackSlot(target=state){
@@ -3656,7 +3655,8 @@ function playerBattleView(){
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(compliance.fixedLuck??state.luck),drunk,
     weaponType,weaponCritical:arm?Math.trunc(n(arm.critical)):0,
-    throwWeapon:weaponType===17||weaponType===18||weaponType===19,
+    // fixed BATTLE_IsThrowWepon(): bow / boomerang / boundthrow / breakthrow are all indirect weapons.
+    throwWeapon:SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(weaponType),
     hitRight:Math.trunc(n(compliance.hitRight)),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
     otherDamage:Math.trunc(n(compliance.otherDamage)),otherDefc:Math.trunc(n(compliance.otherDefc)),
     canMove:battleStatusCanMove(desc),
@@ -5021,7 +5021,7 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
   }
   return r;
 }
-function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=null){
+function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=null,options={}){
   const actual=r?.actualTarget||target;
   if(!actual)return null;
   const style=attackerKind==='pet'?'pet':(r.critical?'good':'');
@@ -5044,7 +5044,7 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
   battleStatusWakeOnDamage(targetDesc,r.damage);
-  sourceBattleFinalizeItemCrushRng(r);
+  if(!options.deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(r.guardian){
     addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
   }else if(attackerKind==='pet'){
@@ -5059,9 +5059,12 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   }
   return actual;
 }
-function playerAttackResult(target=targetEnemyUnit()){
+function playerAttackResult(target=targetEnemyUnit(),options={}){
   const targetDesc={kind:'enemy',unit:target,unitId:target?.id};
-  return resolveAttackToEnemyWithGuardian(playerBattleView(),target,{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')});
+  return resolveAttackToEnemyWithGuardian(
+    playerBattleView(),target,
+    Object.assign({},options,{guarding:!!target?.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')})
+  );
 }
 function petAttackResult(pet,target=targetEnemyUnit()){
   const attacker=petBattleView(pet);
@@ -5261,6 +5264,11 @@ function sourceFriendlyEnemyTargetAdjust(actor){
   return sourcePetRandomEnemyTarget()?.unit||null;
 }
 function sourcePerformPlayerCommonAttack(actor,options={}){
+  const weaponType=Math.trunc(n(playerBattleView()?.weaponType));
+  if(weaponType===4)return sourcePerformPlayerBowWeaponAttack(actor,options);
+  if(weaponType===17)return sourcePerformPlayerBoomerangWeaponAttack(actor,options);
+  if(weaponType===18||weaponType===19)return sourcePerformPlayerThrowWeaponAttack(actor,options);
+
   const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
   let attackCount=0,lastTarget=null,lastActual=null,lastResult=null;
 
@@ -5336,23 +5344,211 @@ function sourceFoxDefaultPlayerSideTarget(){
 function sourceFoxTargetAdjust(slot){
   return sourceFoxPlayerSideTargetFromBattleSlot(slot)||sourceFoxDefaultPlayerSideTarget();
 }
-function sourceBowTargetList(actor,unit,target){
-  const defNo=sourceEnemyCommandTargetBattleSlot(actor,target);
-  if(defNo<0||defNo>19)return {defNo,random:null,slots:[-1]};
-  const defsub=defNo%5;
-  const deftop=defNo-defsub;
+function sourceBowTargetListFromBattleSlots(defNo,attackNo){
+  const sourceDefNo=Math.trunc(Number(defNo));
+  const sourceAttackNo=Math.trunc(Number(attackNo));
+  if(!Number.isFinite(sourceDefNo)||sourceDefNo<0||sourceDefNo>19){
+    return {defNo:sourceDefNo,random:null,attackNo:sourceAttackNo,slots:[-1]};
+  }
+  const defsub=sourceDefNo%5;
+  const deftop=sourceDefNo-defsub;
+  // fixed BATTLE_TargetListSet(): exactly one RAND(0,1) after AttackNum was already primed.
   const random=cRand(0,1);
-  const attackNo=10+Math.max(0,Math.trunc(n(unit?.battleSlot)));
   const slots=[];
   for(let j=0;j<5;j++){
     let first=SOURCE_BOW_W[defsub*10+random*5+j]+deftop;
     let second=(deftop===0||deftop===10)?first+5:first-5;
-    if(first===attackNo)first=-1;
-    if(second===attackNo)second=-1;
+    if(first===sourceAttackNo)first=-1;
+    if(second===sourceAttackNo)second=-1;
     slots.push(first,second);
   }
   slots.push(-1);
-  return {defNo,defsub,deftop,random,attackNo,slots};
+  return {defNo:sourceDefNo,defsub,deftop,random,attackNo:sourceAttackNo,slots};
+}
+function sourceBowTargetList(actor,unit,target){
+  return sourceBowTargetListFromBattleSlots(
+    sourceEnemyCommandTargetBattleSlot(actor,target),
+    10+Math.max(0,Math.trunc(n(unit?.battleSlot)))
+  );
+}
+function sourcePlayerCommandTargetBattleSlot(actor){
+  const rawId=actor?.targetUnitId;
+  const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+  const unit=units.find(u=>u&&u.id===rawId)||null;
+  return unit?10+Math.max(0,Math.trunc(n(unit.battleSlot))):-1;
+}
+function sourcePlayerEnemyTargetableFromBattleSlot(slot){
+  const no=Math.trunc(Number(slot));
+  if(!Number.isFinite(no)||no<10||no>19)return null;
+  const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+  const unit=units.find(u=>u&&10+Math.max(0,Math.trunc(n(u.battleSlot)))===no)||null;
+  return unit&&n(unit.hp)>0&&!enemyUnitHidden(unit)?unit:null;
+}
+function sourcePlayerBowTargetList(actor){
+  return sourceBowTargetListFromBattleSlots(sourcePlayerCommandTargetBattleSlot(actor),0);
+}
+function sourcePlayerDefaultAttacker(){
+  return sourcePetRandomEnemyTarget()?.unit||null;
+}
+function sourcePlayerBreakthrowParalysis(target,r){
+  const targetDesc=target?{kind:'enemy',unit:target,unitId:target.id}:null;
+  if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
+  // fixed BATTLE_StatusAttackCheck() has a dedicated paralysis branch: 20 - resistance.
+  // It rejects an already-statused target before consuming RAND(1,100).
+  const check=battleStatusChance({kind:'player'},targetDesc,'paralysis');
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(targetDesc,'paralysis',0));
+  if(applied)addLog(target.name+' 被投擲石打中後陷入麻痺 1 回合。','good');
+  return {attempted:true,check,applied};
+}
+function sourcePerformPlayerBowWeaponAttack(actor,options={}){
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
+  // raw COM2 is preserved even if that unit dies before this actor executes.
+  const plan=sourcePlayerBowTargetList(actor);
+  const hits=[];
+  let attackCount=0,lastTarget=null,lastActual=null,lastResult=null;
+  let sourceLoopExit='target-list-end';
+
+  for(const slot of plan.slots){
+    if(slot<0){
+      sourceLoopExit='target-list-end';
+      break;
+    }
+    const target=sourcePlayerEnemyTargetableFromBattleSlot(slot);
+    if(!target)continue;
+    const r=playerAttackResult(target);
+    const actual=applyFriendlyEnemyHit('player','你',target,r);
+    sourceProcessBattleDeathsAtAddProfit();
+    hits.push({battleSlot:slot,targetId:target.id,r,actual});
+    attackCount++;
+    lastTarget=target;
+    lastActual=actual;
+    lastResult=r;
+
+    // Source checks attack_max immediately after the real BATTLE_Attack/AddProfit segment,
+    // before loading the next aDefList slot.
+    if(attackCount>=attackMax){
+      sourceLoopExit='attack-max';
+      break;
+    }
+    if(state.hp<=0||!enemy){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
+  }
+
+  const counterUnit=lastActual||lastTarget;
+  if(sourceLoopExit==='attack-max'&&lastResult&&state.hp>0&&counterUnit?.hp>0&&options.allowCounter!==false){
+    // The common loop reaches Counter, but BATTLE_IsThrowWepon blocks it before Counter RNG.
+    resolvePlayerEnemyCounterChain('player',counterUnit,lastResult);
+  }
+  return {
+    weaponCommand:'BOW',protocol:'BB-w0',attackMax,attackCount,
+    bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits,
+    sourceLoopExit,lastTarget,lastActual,lastResult
+  };
+}
+function sourcePerformPlayerBoomerangWeaponAttack(actor,options={}){
+  // The earlier BATTLE_GetAttackCount weapon RAND has already been consumed.
+  // BATTLE_COM_BOOMERANG ignores attack_max and sweeps its five-slot row once.
+  let defNo=sourcePlayerCommandTargetBattleSlot(actor);
+  let chosen=defNo>=0?sourcePlayerEnemyTargetableFromBattleSlot(defNo):null;
+  if(defNo<0){
+    chosen=sourcePlayerDefaultAttacker();
+    if(!chosen)return {weaponCommand:'BOOMERANG',protocol:'BO',attackCount:0,hits:[],sourceLoopExit:'no-target'};
+    defNo=10+Math.max(0,Math.trunc(n(chosen.battleSlot)));
+  }
+
+  let row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
+  const attackerRow=0; // Player battle slot 0.
+  if(row===attackerRow){
+    return {weaponCommand:'BOOMERANG',protocol:'BO',attackCount:0,hits:[],row,sourceLoopExit:'same-side-row'};
+  }
+
+  const rowHasTarget=r=>r>=0&&r<SOURCE_BOOMERANG_VS_TBL.length
+    && SOURCE_BOOMERANG_VS_TBL[r].some(slot=>!!sourcePlayerEnemyTargetableFromBattleSlot(slot));
+  if(!rowHasTarget(row)){
+    chosen=sourcePlayerDefaultAttacker();
+    if(!chosen)return {weaponCommand:'BOOMERANG',protocol:'BO',attackCount:0,hits:[],sourceLoopExit:'no-target'};
+    defNo=10+Math.max(0,Math.trunc(n(chosen.battleSlot)));
+    row=Math.trunc(defNo/5);
+  }
+  if(row<0||row>=SOURCE_BOOMERANG_VS_TBL.length){
+    return {weaponCommand:'BOOMERANG',protocol:'BO',attackCount:0,hits:[],sourceLoopExit:'invalid-row'};
+  }
+
+  // Player is side 0: source uses k=0,j=+1. Enemy side 1 is the existing reversed path.
+  const order=SOURCE_BOOMERANG_VS_TBL[row].slice();
+  const hits=[];
+  for(const slot of order){
+    const target=sourcePlayerEnemyTargetableFromBattleSlot(slot);
+    if(!target)continue;
+    const r=playerAttackResult(target,{damageMultiplier:.3});
+    const actual=applyFriendlyEnemyHit('player','你',target,r);
+    sourceProcessBattleDeathsAtAddProfit();
+    hits.push({battleSlot:slot,targetId:target.id,r,actual});
+    if(state.hp<=0||!enemy)break;
+  }
+  // Dedicated BOOMERANG case breaks before the common Counter loop.
+  return {
+    weaponCommand:'BOOMERANG',protocol:'BO',damageMultiplier:.3,row,
+    targetSlots:order,hits,attackCount:hits.length,sourceLoopExit:'row-complete'
+  };
+}
+function sourcePerformPlayerThrowWeaponAttack(actor,options={}){
+  const type=Math.trunc(n(playerBattleView()?.weaponType));
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
+  const hits=[];
+  let attackCount=0,lastTarget=null,lastActual=null,lastResult=null;
+  let sourceLoopExit='target-adjust-failed';
+
+  while(enemy&&state.hp>0&&attackCount<attackMax){
+    // Non-BOW TargetListSet repeats the original raw COM2. Each segment reruns TargetAdjust,
+    // so a dead/hidden original target consumes a fresh DefaultAttacker RNG every segment.
+    const target=sourceFriendlyEnemyTargetAdjust(actor);
+    if(!target){
+      sourceLoopExit='target-adjust-failed';
+      break;
+    }
+    const r=playerAttackResult(target);
+    const deferItemCrush=type===19;
+    const actual=applyFriendlyEnemyHit('player','你',target,r,null,{deferItemCrush});
+    let paralysis=null;
+    if(type===19){
+      // fixed BATTLE_Attack order: DamageSub/WakeUp -> BREAKTHROW paralysis -> ItemCrush.
+      paralysis=sourcePlayerBreakthrowParalysis(actual||target,r);
+      sourceBattleFinalizeItemCrushRng(r);
+    }
+    sourceProcessBattleDeathsAtAddProfit();
+    hits.push({targetId:target.id,r,actual,paralysis});
+    attackCount++;
+    lastTarget=target;
+    lastActual=actual;
+    lastResult=r;
+
+    if(attackCount>=attackMax){
+      sourceLoopExit='attack-max';
+      break;
+    }
+    if(state.hp<=0||!enemy){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
+    if(!livingEnemyUnits().length){
+      sourceLoopExit='no-living-target';
+      break;
+    }
+  }
+
+  const counterUnit=lastActual||lastTarget;
+  if(sourceLoopExit==='attack-max'&&lastResult&&state.hp>0&&counterUnit?.hp>0&&options.allowCounter!==false){
+    // Common path reaches Counter; throw-weapon gate makes it fail without Counter RNG.
+    resolvePlayerEnemyCounterChain('player',counterUnit,lastResult);
+  }
+  return {
+    weaponCommand:type===19?'BREAKTHROW':'BOUNDTHROW',
+    protocol:type===19?'BB-w2':'BB-w1',
+    attackMax,attackCount,hits,sourceLoopExit,lastTarget,lastActual,lastResult
+  };
 }
 function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   if(!target)return null;
@@ -10493,7 +10689,9 @@ function sourceComboActorInfo(actor,playerCommand='attack'){
     return {
       normalAttack:playerCommand==='attack',
       move:state.hp>0&&battleStatusCanMove(desc),
-      throwWeapon:false,side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
+      // fixed ComboCheck excludes BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW.
+      throwWeapon:SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(Math.trunc(n(playerBattleView()?.weaponType))),
+      side:0,targetKey:targetId?('enemy:'+targetId):null,per:50
     };
   }
 
@@ -11736,7 +11934,6 @@ function sourcePlayerMoveFailureText(reason){
     'profession-unported':'此物品有職業限制，職業系統尚未完整移植',
     'callback-unported':'此物品有 attach/detach callback，特殊效果尚未移植',
     'special-equip-unported':'此物品有固定原 C 特殊裝備副作用，尚未移植',
-    'weapon-pattern-unported':'此遠程武器的玩家攻擊 pattern 尚未完整移植',
     'wrong-equip-place':'目前裝備位置不符合固定 ITEM_getEquipPlace',
     'same-type':'兩個飾品槽不能同時裝備相同 ITEM_TYPE',
     'same-type-exchange':'同類飾品交換會違反固定同 ITEM_TYPE 限制',
