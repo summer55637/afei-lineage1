@@ -10600,6 +10600,153 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
   };
 }
 
+function sourcePetCommonAttackContFlg(pet,originalTarget,actualTarget,r){
+  // fixed BATTLE_Attack() seeds iRet=TRUE, then disables the common Counter loop when:
+  // - attacker or ORIGINAL defindex already has DamageReact before AttackSeq;
+  // - AttackSeq returns CRITICAL;
+  // - the actual (Guardian-substituted) defindex is guarding;
+  // - the actual defindex dies.
+  // DODGE / MISS / ARRANGE do not by themselves clear iRet.
+  const attackerHadDamageReact=!!pet&&battlePetAcupunctureIds.has(pet.id);
+  const originalTargetHadDamageReact=!!originalTarget?.acupunctureActive;
+  const actualAlive=!!actualTarget&&n(actualTarget.hp)>0;
+  const contFlg=!attackerHadDamageReact&&!originalTargetHadDamageReact
+    &&!r?.critical&&!r?.guarded&&actualAlive;
+  return {
+    contFlg,attackerHadDamageReact,originalTargetHadDamageReact,actualAlive
+  };
+}
+function sourcePetCommonCounterResult(r){
+  // Guardian only rewrites BATTLE_Attack()'s LOCAL defindex. battle.c's outer common
+  // loop keeps the raw/TargetAdjusted defNo, so Counter starts from the original target.
+  // resolvePetEnemyCounterChain normally treats r.guardian as "do not counter"; remove
+  // only that JS helper marker while keeping Critical/Guard/etc source return state.
+  if(!r)return r;
+  if(!r.guardian)return r;
+  const seed=Object.assign({},r);
+  delete seed.guardian;
+  delete seed.protectedTarget;
+  seed.sourceOuterDefNoPreservedThroughGuardian=true;
+  return seed;
+}
+function sourcePerformPetShowMercySkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'手下留情';
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const attacker=petBattleView(pet);
+  if(!attacker)return {handled:true,skillId:action?.skillId,missingPet:true};
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=r?.actualTarget||target;
+  const hpBefore=Math.max(0,Math.trunc(n(actual?.hp)));
+  const originalDamage=Math.max(0,Math.trunc(n(r?.damage)));
+
+  // fixed BATTLE_DamageSub ordering: SHOWMERCY clamps lethal damage BEFORE DamageReact.
+  // This uses the Guardian-substituted defindex, because BATTLE_Attack() rewrites its
+  // local defindex to Guardian immediately after AttackSeq.
+  let clamped=false;
+  if(r&&!r.dodged&&!r.miss&&originalDamage>0&&hpBefore-originalDamage<=0){
+    r.damage=Math.max(0,hpBefore-1);
+    r.showMercyClamped=true;
+    r.showMercyOriginalDamage=originalDamage;
+    clamped=true;
+  }
+
+  const actualApplied=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+
+  const cont=sourcePetCommonAttackContFlg(pet,target,actualApplied||actual,r);
+  let counterAttempted=false;
+  // SHOWMERCY is the one common skill battle.c deliberately does NOT rewrite to ATTACK.
+  // Therefore the original target may counter once, but the Pet cannot counter back:
+  // BATTLE_Counter() only accepts ATTACK / NOGUARD as the counterer's COM1.
+  if(cont.contFlg&&petIsBattleActive(pet)&&n(target.hp)>0){
+    counterAttempted=true;
+    resolvePetEnemyCounterChain(
+      'pet',pet,target,sourcePetCommonCounterResult(r),{maxDepth:1}
+    );
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」'+
+      (clamped?'：原傷害 '+originalDamage+' 會致死，依原 C 先壓到 '+r.damage+'。':
+        '：本次不需要啟動 HP-1 致死保護。'),
+    'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,showMercy:true,
+    targetUnitId:target.id,actualTargetUnitId:actualApplied?.id||actual?.id||null,
+    hpBefore,originalDamage,clamped,r,counterAttempted,
+    sourceCounterMaxDepth:1,
+    sourceOuterCounterTargetUnitId:target.id,
+    sourcePrimaryContFlg:cont
+  };
+}
+function sourcePerformPetBecomePigSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'黑烏力化';
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true,pigRoll:null};
+  }
+
+  const attacker=petBattleView(pet);
+  if(!attacker)return {handled:true,skillId:action?.skillId,missingPet:true,pigRoll:null};
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=r?.actualTarget||target;
+  const actualApplied=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+
+  const cont=sourcePetCommonAttackContFlg(pet,target,actualApplied||actual,r);
+  let counterAttempted=false;
+  // BECOMEPIG is NOT exempted by the common-loop COM1 rewrite, so before BATTLE_Attack
+  // the Pet's COM1 becomes ATTACK. It can therefore participate in the full 5-step
+  // Counter chain, while outer defNo still points at the original target through Guardian.
+  if(cont.contFlg&&petIsBattleActive(pet)&&n(target.hp)>0){
+    counterAttempted=true;
+    resolvePetEnemyCounterChain(
+      'pet',pet,target,sourcePetCommonCounterResult(r)
+    );
+  }
+
+  // The pig post-effect is evaluated only AFTER the whole common Counter loop.
+  // Condition order is return-state -> TargetCheck(defNo) -> target CHAR_TYPEPLAYER
+  // -> opposite side -> BECOMEPIG cap -> option parse -> rand()%100.
+  // Player Pet RANDOMACT targets Enemy entries (CHAR_TYPEENEMY), so the PLAYER-type
+  // condition always fails before option parsing and before rand(). Preserve zero RNG.
+  const sourceReturnEligible=!!r&&!r.miss&&!r.dodged&&!r.allGuard&&!r.arranged;
+  const sourcePostTargetAlive=n(target.hp)>0&&!enemyUnitHidden(target);
+  const sourceTargetType='CHAR_TYPEENEMY';
+  const sourceTargetTypeEligible=false;
+  const pigRoll=null;
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」完成物理攻擊；原 C 後置烏力化要求 defNo 為 CHAR_TYPEPLAYER，'+
+    target.name+' 是 Enemy，因此在 rand()%100 之前就停止判定。','pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,becomePig:true,
+    targetUnitId:target.id,actualTargetUnitId:actualApplied?.id||actual?.id||null,
+    r,counterAttempted,sourceOuterCounterTargetUnitId:target.id,
+    sourcePrimaryContFlg:cont,sourceReturnEligible,sourcePostTargetAlive,
+    sourceTargetType,sourceTargetTypeEligible,pigRoll,
+    sourceOptionNotParsed:true,sourceNoPigRng:true
+  };
+}
+
 function sourcePerformPetBecomeFoxSkill(pet,action,options={}){
   const meta=action?.meta;
   const target=sourcePetEnemyTargetFromAction(action);
@@ -11308,6 +11455,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_PowerBalance')result=sourcePerformPetPowerBalanceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_GuardBreak')result=sourcePerformPetGuardBreakSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_NoGuard')result=sourcePerformPetNoGuardSkill(pet,action);
+    else if(meta?.f==='PETSKILL_ShowMercy')result=sourcePerformPetShowMercySkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_BecomePig')result=sourcePerformPetBecomePigSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_BecomeFox')result=sourcePerformPetBecomeFoxSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_FallGround')result=sourcePerformPetFallGroundSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_GuardBreak2')result=sourcePerformPetGuardBreak2Skill(pet,action,options);
