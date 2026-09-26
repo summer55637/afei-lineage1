@@ -22,7 +22,7 @@ on:
       - "tools/check_v187_player_hector_sars_runtime.mjs"
       - "tools/check_v188_player_acupuncture_runtime.mjs"
       - "tools/check_v189_player_sonic_regret_runtime.mjs"
-      - "tools/check_v190_player_firekill_runtime.mjs"\n      - "tools/check_v191_player_tear_runtime.mjs"\n      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"
+      - "tools/check_v190_player_firekill_runtime.mjs"\n      - "tools/check_v191_player_tear_runtime.mjs"\n      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"\n      - "tools/check_v193_player_batfly_divideattack_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -112,6 +112,9 @@ jobs:
 
       - name: Run V1.92 player ShowMercy/BecomePig regressions
         run: node tools/check_v192_player_showmercy_becomepig_runtime.mjs
+
+      - name: Run V1.93 player BatFly/DivideAttack regressions
+        run: node tools/check_v193_player_batfly_divideattack_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
