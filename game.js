@@ -9637,6 +9637,32 @@ function sourcePerformPetLighttakeedSkill(pet,action){
   };
 }
 
+function sourcePerformPetSetDuckRandomSkill(pet,action){
+  const meta=action?.meta;
+
+  // fixed PETSKILL_SetDuck() itself succeeds and stores the RANDOMACT DefaultAttacker
+  // Enemy toNo in COM2. It also writes CHAR_MAGICPETMP=0.
+  //
+  // Execution then enters PETSKILL_SetDuckChange_Battle(), whose first target gate is:
+  //   BATTLE_No2Index(battleindex,toNo) == charaindex
+  // RANDOMACT's toNo is the opposing Enemy, never this casting Pet, so the function
+  // returns FALSE before parsing "3|60", before MagicEffect and before writing Duck state.
+  //
+  // Fixed-repo audit also finds no increment of CHAR_MAGICPETMP anywhere:
+  // SetMagicPet reads it and writes the same value back. Thus this reset-to-zero has
+  // no separately observable runtime effect in the fixed build.
+  addLog(
+    pet.name+' 隨機抽到「'+(meta?.n||'閃避術')+'」，但 RANDOMACT 的 COM2 是敵方目標；'
+    +'原 PETSKILL_SetDuckChange_Battle() 要求目標必須等於施術寵自己，因此直接 FALSE、不加閃避。',
+    'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,noAction:true,
+    sourceExecutionFailed:true,sourceSetDuckSelfTargetGate:true,
+    magicPetMpResetBehaviorallyZero:true
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10206,6 +10232,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Modifyattack')result=sourcePerformPetModifyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Mdfyattack')result=sourcePerformPetMdfyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Lighttakeed')result=sourcePerformPetLighttakeedSkill(pet,action);
+    else if(meta?.f==='PETSKILL_SetDuck')result=sourcePerformPetSetDuckRandomSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
