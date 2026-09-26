@@ -9829,6 +9829,142 @@ function sourcePerformPetSetDuckRandomSkill(pet,action){
   };
 }
 
+function sourcePerformPetGyrateSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // PETSKILL_Gyrate() writes WORKATTACKPOWER from this round's FIXSTR before execution.
+  // Low-loyalty RANDOMACT happens after EntrySort, so only the same-round attack/calc state changes.
+  const baseAttack=Math.trunc(n(base.attack));
+  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  battlePetPowerMods.set(pet.id,{
+    attack,skillId:action?.skillId,sourceGyrate:true
+  });
+
+  // fixed GYRATE does NOT TargetAdjust before choosing the row: it derives f_num directly
+  // from raw COM2, then snapshots every TargetCheck-valid member of those five battle slots.
+  const rawDefNo=sourceBattleStatusSlot(action?.targetDesc);
+  let rowStart;
+  if(rawDefNo<5)rowStart=0;
+  else if(rawDefNo<10)rowStart=5;
+  else if(rawDefNo<15)rowStart=10;
+  else rowStart=15;
+
+  const rowTargets=[];
+  for(let slot=rowStart;slot<rowStart+5;slot++){
+    const unit=targetableEnemyUnits().find(u=>sourceBattleStatusSlot({kind:'enemy',unit})===slot)||null;
+    if(unit)rowTargets.push({slot,unit});
+  }
+
+  const label=meta?.n||'回旋攻擊';
+  addLog(
+    pet.name+' 隨機使用「'+label+'」（攻 '+(attackPct>=0?'+':'')+attackPct
+      +'%），依 raw COM2 攻擊同一橫排 '+rowTargets.length+' 個有效目標。',
+    'pet'
+  );
+
+  const results=[];
+  for(const entry of rowTargets){
+    const target=entry.unit;
+    if(!target||n(target.hp)<=0||enemyUnitHidden(target))continue;
+    const attacker=petBattleView(pet);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+      guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+    });
+    const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+    results.push({
+      battleSlot:entry.slot,targetUnitId:target.id,
+      actualTargetUnitId:actual?.id||target.id,r
+    });
+  }
+
+  // Source GYRATE special case writes FF and breaks immediately:
+  // no BATTLE_AddProfit call here and no common Counter loop.
+  return {
+    handled:true,skillId:action?.skillId,attackPct,attack,
+    rawDefNo,rowStart,results,sourceNoCounter:true,sourceNoImmediateAddProfit:true
+  };
+}
+
+function sourcePerformPetRetraceSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'追跡攻擊';
+
+  // Player Pet has no CHAR_ARM. BATTLE_GetAttackCount() therefore returned 0 before
+  // BATTLE_PetLoyalCheck(), and the non-PLAYER fallback fixed attack_max to exactly 1.
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 隨機使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true,attackMax:1};
+  }
+
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  const guarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
+  const primary=resolveAttackToEnemyWithGuardian(base,target,{guarding});
+  const primaryActual=applyFriendlyEnemyHit(
+    'pet',pet.name,target,primary,pet.id,{deferItemCrush:true}
+  );
+  sourceBattleFinalizeItemCrushRng(primary);
+
+  let retraceRoll=null,follow=null,followActual=null,boosted=false,boostedAttack=null;
+  if(primary?.dodged){
+    // fixed condition is strict RAND(1,100) < 80, so 1..79 succeeds.
+    retraceRoll=cRand(1,100);
+    if(retraceRoll<80){
+      // PETSKILL_Retrace's option parser is commented out. All 621/713/735 therefore use
+      // the hard-coded FIXSTR +20% in battle.c regardless of their displayed +20/+100/+50.
+      const fixAttack=Math.trunc(n(base.attack));
+      boostedAttack=fixAttack+Math.trunc(fixAttack*.2);
+      battlePetPowerMods.set(pet.id,{
+        attack:boostedAttack,skillId:action?.skillId,sourceRetrace:true
+      });
+      const retryTargetDesc={kind:'enemy',unit:target,unitId:target.id};
+      follow=resolveAttackToEnemyWithGuardian(
+        Object.assign({},petBattleView(pet),{attack:boostedAttack}),
+        target,
+        {guarding:!!target.guardThisTurn&&!battleStatusActive(retryTargetDesc,'confusion')}
+      );
+      followActual=applyFriendlyEnemyHit(
+        'pet',pet.name,target,follow,pet.id,{deferItemCrush:true}
+      );
+      sourceBattleFinalizeItemCrushRng(follow);
+      boosted=true;
+    }
+  }
+
+  // BATTLE_AddProfit is after the optional RETRACE follow-up, once per primary segment.
+  sourceProcessBattleDeathsAtAddProfit();
+
+  // Outer common Counter uses ContFlg/defNo from the PRIMARY BATTLE_Attack, not the
+  // optional follow-up return value. The source target remains the post-TargetAdjust defNo.
+  if(primary&&petIsBattleActive(pet)&&n(target.hp)>0){
+    resolvePetEnemyCounterChain('pet',pet,target,primary);
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」：首擊'
+      +(primary?.dodged?'被閃避'+(retraceRoll!=null?'，追跡 roll '+retraceRoll:''):'完成')
+      +(boosted?'；觸發固定 FIXSTR +20% 追擊。':'。'),
+    'pet'
+  );
+
+  return {
+    handled:true,skillId:action?.skillId,attackMax:1,targetUnitId:target.id,
+    primary,primaryActualTargetUnitId:primaryActual?.id||target.id,
+    retraceRoll,boosted,boostedAttack,follow,
+    followActualTargetUnitId:followActual?.id||null,
+    sourceOptionIgnored:true,sourceCounterUsesPrimary:true
+  };
+}
+
 function sourcePerformPetWildViolentSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10569,6 +10705,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
       result=sourcePerformSetMagicPetBattle(pet.name,action.skillId,rawToNo,meta,'pet');
     }
     else if(meta?.f==='PETSKILL_SetDuck')result=sourcePerformPetSetDuckRandomSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
