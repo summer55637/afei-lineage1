@@ -9770,6 +9770,44 @@ function sourceComboApplyDamage(target,total,lastResult=null,rewardActors=[]){
   }
   return 0;
 }
+function sourceComboAcupunctureSegment(actor,target,r,rewardActors=[]){
+  const attackerDesc=battleStatusActorDesc(actor);
+  if(!attackerDesc||!target||!r)return {triggered:false};
+
+  // BATTLE_Combo uses the same DamageReact, but on a reacting segment it calls
+  // BATTLE_DamageSub immediately instead of adding that segment into AllDamage.
+  // Its later critical-death check only treats CHAR_TYPEENEMY as eligible.
+  r.ultimateCriticalEnemyOnly=true;
+  const reaction=sourcePrepareAcupunctureReaction(attackerDesc,target,r);
+  if(!reaction.triggered)return {triggered:false,reaction,attackerDesc};
+
+  const before=battleStatusHp(target);
+  battleStatusSetHp(target,before-r.damage);
+  sourceTrackDamageSubUltimate(target,r.damage,before,r);
+  sourceFinishAcupunctureReaction(reaction);
+  const after=battleStatusHp(target);
+  if(before>0&&after<=0&&target.kind==='enemy'&&target.unit){
+    // fixed BATTLE_AddProfit receives the complete combo aAttackList even if BATTLE_Combo
+    // returns early after this immediate reaction kills the target.
+    sourceMarkEnemyDeathCredit(target.unit,rewardActors);
+  }
+
+  reaction.targetBefore=before;
+  reaction.targetAfter=after;
+  reaction.targetDamage=Math.max(0,before-after);
+
+  // BATTLE_DamageSub writes *pDamage back as playerdamage. For Acupuncture without riding,
+  // that is the reflected half-damage, and BATTLE_Combo uses this value for WakeUp/ItemCrush.
+  r.sourceComboAcupunctureFullDamage=reaction.fullDamage;
+  r.sourceComboAcupunctureReflectedDamage=reaction.reflectedDamage;
+  r.damage=reaction.reflectedDamage;
+  sourceLogAcupunctureReaction(reaction);
+  return {
+    triggered:true,reaction,attackerDesc,
+    targetDamage:reaction.targetDamage,
+    postDamage:r.damage
+  };
+}
 function sourcePerformCombo(order,index,options={}){
   const first=order[index];
   const comboId=Math.trunc(n(first?.sourceComboId));
@@ -9794,9 +9832,19 @@ function sourcePerformCombo(order,index,options={}){
   const targetView=sourceComboTargetView(target);
   if(!targetView)return null;
   const guarding=sourceComboTargetGuarding(target,!!options.playerGuarding);
+  const rewardActors=members.map(x=>({kind:x.kind,petId:x.petId||null}));
   const hits=[];
-  let total=0;
+  let accumulatedDamage=0,rawTotal=0,immediateDamage=0;
+  let deferredWake=null,abortedByTargetDeath=false;
+
   for(let memberIndex=0;memberIndex<members.length;memberIndex++){
+    // fixed BATTLE_Combo checks the original target HP at the beginning of every segment.
+    // An Acupuncture segment can therefore kill it immediately and abort all later members.
+    if(!battleStatusDescAlive(target)){
+      abortedByTargetDeath=true;
+      break;
+    }
+
     const actor=members[memberIndex];
     const attacker=sourceComboAttackerView(actor);
     if(!attacker)continue;
@@ -9804,26 +9852,73 @@ function sourcePerformCombo(order,index,options={}){
     // 完全跳過 DuckCheck，Guardian 初值 -2 也使 GuardianCheck 不執行。
     const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true});
     if(n(r.damage)<=0){r.damage=1;r.miss=false}
-    // 原 BATTLE_Combo 每一段在 DamageSubCale / DamageSub 後，只要本段 damage > 0
-    // 就立刻 BATTLE_DamageWakeUp；一般合擊總傷害仍到最後一段才由 DamageSub2 一次扣 HP。
-    battleStatusWakeOnDamage(target,r.damage);
-    if(memberIndex+1<members.length)sourceBattleFinalizeItemCrushRng(r);
-    total+=Math.max(1,Math.trunc(n(r.damage)));
-    hits.push({kind:actor.kind,unitId:actor.unitId||null,petId:actor.petId||null,label:actor.label||actor.kind,r});
+    const calculatedDamage=Math.max(1,Math.trunc(n(r.damage)));
+    rawTotal+=calculatedDamage;
+
+    const acupuncture=sourceComboAcupunctureSegment(actor,target,r,rewardActors);
+    let wakeDesc=target,wakeDamage=Math.max(0,Math.trunc(n(r.damage)));
+    if(acupuncture.triggered){
+      // Reaction segments are applied immediately by BATTLE_DamageSub and are NOT added to AllDamage.
+      immediateDamage+=Math.max(0,Math.trunc(n(acupuncture.targetDamage)));
+      wakeDesc=acupuncture.attackerDesc;
+      wakeDamage=Math.max(0,Math.trunc(n(acupuncture.postDamage)));
+    }else{
+      // BATTLE_DamageSubCale only adjusts the segment damage here; HP is deferred to DamageSub2.
+      accumulatedDamage+=calculatedDamage;
+    }
+
+    const isLast=memberIndex+1>=members.length;
+    hits.push({
+      kind:actor.kind,unitId:actor.unitId||null,petId:actor.petId||null,label:actor.label||actor.kind,r,
+      acupuncture:acupuncture.triggered?acupuncture.reaction:null,
+      calculatedDamage
+    });
+
+    if(!isLast){
+      // For non-last members the source wakes immediately after this segment.
+      // Acupuncture has already redirected defindex to the reflected attacker.
+      if(wakeDamage>0)battleStatusWakeOnDamage(wakeDesc,wakeDamage);
+      sourceBattleFinalizeItemCrushRng(r);
+
+      if(acupuncture.triggered&&!battleStatusDescAlive(target)){
+        // The next source loop iteration returns before DamageSub2, so any earlier AllDamage
+        // would be discarded rather than applied after the target has already died.
+        abortedByTargetDeath=true;
+        break;
+      }
+    }else{
+      // Last-member WakeUp / ItemCrush happen only after DamageSub2 applies accumulated AllDamage.
+      deferredWake={desc:wakeDesc,damage:wakeDamage};
+    }
   }
 
   if(!hits.length)return null;
-  const lastComboResult=hits[hits.length-1]?.r
-    ?Object.assign({},hits[hits.length-1].r,{ultimateCriticalEnemyOnly:true})
-    :{ultimateCriticalEnemyOnly:true};
-  const actual=sourceComboApplyDamage(
-    target,total,lastComboResult,
-    hits.map(x=>({kind:x.kind,petId:x.petId||null}))
-  );
-  sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
+
+  let accumulatedActual=0;
+  if(!abortedByTargetDeath){
+    const lastComboResult=hits[hits.length-1]?.r
+      ?Object.assign({},hits[hits.length-1].r,{ultimateCriticalEnemyOnly:true})
+      :{ultimateCriticalEnemyOnly:true};
+    accumulatedActual=sourceComboApplyDamage(
+      target,accumulatedDamage,lastComboResult,
+      hits.map(x=>({kind:x.kind,petId:x.petId||null}))
+    );
+    if(deferredWake?.damage>0)battleStatusWakeOnDamage(deferredWake.desc,deferredWake.damage);
+    sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
+  }
+
+  const actual=immediateDamage+accumulatedActual;
   const names=hits.map(x=>x.label).join('、');
-  addLog(names+' 發動合擊，對 '+battleStatusDescName(target)+' 合計造成 '+actual+' 傷害。',target.kind==='enemy'?'good':'bad');
-  return {comboId,target,totalDamage:actual,rawTotal:total,hits};
+  addLog(
+    names+' 發動合擊，對 '+battleStatusDescName(target)+' 合計造成 '+actual+' 傷害。'
+      +(abortedByTargetDeath?'（目標在合擊途中倒下）':''),
+    target.kind==='enemy'?'good':'bad'
+  );
+  return {
+    comboId,target,totalDamage:actual,rawTotal,
+    accumulatedDamage,accumulatedActual,immediateDamage,
+    abortedByTargetDeath,hits
+  };
 }
 
 function normalBattleOrder(options={}){
