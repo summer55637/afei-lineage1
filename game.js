@@ -11015,6 +11015,72 @@ const SOURCE_VARY_WOLF_PETIDS=new Set([981,982,983,984]);
 function sourcePetRoarPetIds(meta){
   return String(meta?.o||'').split('|').map(sourceCAtoi).filter(v=>Number.isFinite(v));
 }
+function sourcePerformPetStealMoneySkill(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  const meta=action?.meta;
+  const label=meta?.n||'捐獻';
+
+  // battle.c performs BATTLE_TargetAdjust before BATTLE_StealMoney().
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const goldBefore=Math.max(0,Math.trunc(n(state.gold)));
+  const maxGold=sourcePlayerMaxGold(state);
+
+  // Fixed BATTLE_StealMoney: CHAR_TYPEENEMY => per=5.
+  // A PET attacker whose owner is already at max gold then forces per back to 0.
+  let per=5;
+  const ownerGoldFull=goldBefore>=maxGold;
+  if(ownerGoldFull)per=0;
+
+  // This RAND is unconditional even when per was forced to 0.
+  const roll=cRand(1,100);
+  const success=roll<per;
+  let goldRoll=null,gained=0;
+
+  if(success){
+    // Enemy target branch does NOT read/subtract Enemy GOLD. It simply creates RAND(10,100).
+    goldRoll=cRand(10,100);
+    gained=Math.min(goldRoll,Math.max(0,maxGold-goldBefore));
+    state.gold=goldBefore+gained;
+
+    // flg remains TRUE because RAND(10,100) can never be <=0. A successful PET attacker
+    // is always BATTLE_PetDefaultExit()ed, DEFAULTPET=-1, then BATTLE_Exit(attacker).
+    battlePetOutIds.add(pet.id);
+    sourceClearPetBattleProperty(pet);
+    sourceClearPetVary(pet);
+    battlePetGuardIds.delete(pet.id);
+    battlePetAcupunctureIds.delete(pet.id);
+    battlePetNoGuardStates.delete(pet.id);
+    battleMagicPetStates.delete(pet.id);
+    battleMagicPetRoundStates.delete(pet.id);
+    if(state.activePetId===pet.id)state.activePetId=null;
+
+    addLog(
+      pet.name+' 的「'+label+'」成功（RAND(1,100)='+roll+' < '+per+
+      '）：由 Enemy 分支取得 RAND(10,100)='+goldRoll+' 石幣，主人實收 '+gained+
+      '，Pet 隨後離開本場戰鬥。','good'
+    );
+  }else{
+    addLog(
+      pet.name+' 的「'+label+'」失敗（RAND(1,100)='+roll+'，成功值 '+per+
+      (ownerGoldFull?'；主人已達金錢上限，原 C 先把 per 強制為 0':'')+'）。','pet'
+    );
+  }
+
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    sourceTargetType:'CHAR_TYPEENEMY',per,roll,success,
+    goldRoll,goldBefore,gained,goldAfter:Math.max(0,Math.trunc(n(state.gold))),maxGold,
+    ownerGoldFull,sourceEnemyGoldUntouched:true,
+    attackerExited:success,sourceDefaultPetCleared:success,
+    sourceNoDamage:true,sourceNoCounter:true
+  };
+}
+
 function sourcePerformPetStealSkill(pet,action){
   if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
   const meta=action?.meta;
@@ -11983,6 +12049,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_StealMoney')result=sourcePerformPetStealMoneySkill(pet,action);
     else if(meta?.f==='PETSKILL_Steal')result=sourcePerformPetStealSkill(pet,action);
     else if(meta?.f==='PETSKILL_Abduct')result=sourcePerformPetAbductSkill(pet,action);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
