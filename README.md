@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.84**
+**PLAYABLE CORE V1.85**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,18 +16,18 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.84 最新進度
+## V1.85 最新進度
 
-V1.84 接入 19 筆 fixed `PETSKILL_SetMagicPet`：601～604、660～663、693～696、720～723、726、838、841。
+V1.85 接入玩家寵低忠誠 `RANDOMACT` 的下一批 fixed PetSkill：541／652／665／671 `WildViolentAttack`、542 `SpeedyAttack`、573 `Sacrifice`。
 
-- 玩家寵低忠誠 `RANDOMACT` 先由 `BATTLE_DefaultAttacker()` 選 opposing Enemy `toNo`，之後 `PETSKILL_SetMagicPet()` 原樣寫入 COM2；execution 直接交給 `BATTLE_MultiList()`，不依 `PETSKILL_TARGET` 改回友方
-- Enemy AI 也是先用一般攻擊 AI 選對面目標，再把 raw target 傳入 `PETSKILL_Use()`；因此 SetMagicPet 同樣不能硬改成「我方全體」
-- STR／TGH／DEX 共用 Duck／STR／TGH／DEX 互斥 gate；任一已存在就不刷新
-- fixed `Other_DefcharWorkInt()` 有來源 bug：STR／TGH／DEX 三種加成都使用保存的 `mtgh` 作基準，即 `mtgh * power / 100`，Web 原樣保留
-- 能力強化在施放當輪先寫狀態，下一輪 PreCommand 才套入 WORK/FIX；角色自己的 `BATTLE_StatusSeq` 再扣回合，因此即使本次扣到 0，本輪已建立的 WORK/FIX 仍有效
-- HP 分支每個目標各自抽 `90%～110%`，再乘 `GetRecoveryRate()`：Player = `1 + VITAL×0.00010`、Pet/Enemy = `1 + VITAL×0.00005`，最後封頂 MaxHP；risk battle 第一次回復 Pet 另依 `CHAR_BATTLEFLG_RECOVERY` 加 `AI_FIX_PETRECOVERY=+10` VARIABLEAI，一場僅一次
-- `CHAR_MAGICPETMP` 仍只有讀後寫回、沒有可達累加，所以 fixed build 的「最多三次」限制不生效；Web 不虛構計數
-- fixed 騎乘回復另有主人／ridepet 分流；目前 Web 尚無實際騎乘系統，因此 V1.84 不猜 ridepet、不提前虛構分流
+- 狂暴攻擊先依 option 以 FIXSTR／FIXTOUGH 算本輪 WORK 攻防，再由 `RAND(3,10)` 決定攻擊段數；同一段數同時作 `gDamageDiv`，回避數值寫入 `gBattleDuckModyfy`
+- 狂暴攻擊的非弓 common loop 每段都從原 raw COM2 再跑 `BATTLE_TargetAdjust`；最後一段才進 Counter chain
+- 疾速攻擊的 `防%-30` 由 `PETSKILL_SpeedyAttack()` 當下寫入 WORKDEFENCEPOWER；`敏%+30` 並不是 option parser，而是 `BATTLE_DexCalc` 對該 command 的專用排序公式
+- fixed 時序是先 `BATTLE_DexCalc + EntrySort`，輪到 Pet 行動時才 `BATTLE_PetLoyalCheck`；所以低忠誠 RANDOMACT 臨時抽到疾速攻擊時，本輪不會倒帶重排，只保留防禦下降與普通物理攻擊
+- 救援先嚴格檢查 `HP > MaxHP*0.2`；失敗時 `PETSKILL_Use() FALSE`，由已清成 NONE 的 RANDOMACT command 直接 NoAction
+- 救援成功後 `BATTLE_S_Sacrifice` 先把施術 Pet HP 截斷成一半，再以「砍半後 HP」回復 raw opposing Enemy；雖然動畫呼叫 `BATTLE_MultiList`，真正 HP 寫入只有單一 defindex，也沒有物理攻擊／Counter
+- V1.80～V1.83 舊 regression 因新 helper 插入而造成的切片終點假設已同步修正，沒有改舊版遊戲行為
+- V1.72～V1.85 CI 全部 SUCCESS
 
 save schema 維持 **29**。
 
