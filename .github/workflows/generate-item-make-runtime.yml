@@ -1,0 +1,39 @@
+name: Generate fixed item make runtime
+
+on:
+  push:
+    paths:
+      - "tools/generate_item_make_runtime.py"
+      - ".github/workflows/generate-item-make-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate fixed runtime
+        run: python tools/generate_item_make_runtime.py
+
+      - name: Commit generated runtime
+        shell: bash
+        run: |
+          if git diff --quiet -- data/generated/stoneage_item_make_runtime.json; then
+            echo "Generated runtime is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_item_make_runtime.json
+          git commit -m "V1.72 generate full ITEM_makeItem template runtime"
+          git push
