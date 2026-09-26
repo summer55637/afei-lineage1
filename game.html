@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.65</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.66</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -206,6 +206,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.66：</b>
+      對齊原 C 的整回合勝負生命週期：BATTLE_Battling 的排序 Entry 會先完整跑完，之後才以 OnlyRescue 先判玩家側、再判敵方側。玩家普通死亡後出戰寵仍可完成本輪後續行動；Ultimate 死亡才會立即把 DEFAULTPET 退出 Battle。Pet 忠誠／旅程伙伴改讀本輪 PreCommand 固定的 WORKFIXAI snapshot，避免玩家死亡後的魅力／忠誠修正反向污染同一回合 RNG。
+    </article>
 
     <article class="card note">
       <b>V1.65：</b>
