@@ -1797,3 +1797,105 @@ save schema 維持 **29**。
 - `9a85b2ea96f75453f27e79a49d000d4f3b5d99cf` — V1.95 CI
 - `bb1ec30325250def3c0359d932922230b03f7b25` — V1.95 playable-core marker
 
+---
+
+## V1.96 Player RANDOMACT Abduct
+
+V1.96 接入玩家寵低忠誠 RANDOMACT：
+
+- 130 `PETSKILL_Abduct`（旅程伙伴）
+- 607 `PETSKILL_Abduct`（旅程伙伴2，option=60）
+
+### TargetAdjust
+
+battle.c 的 `BATTLE_COM_S_ABDUCT` 先執行：
+
+`BATTLE_TargetAdjust(battleindex, charaindex, myside)`
+
+因此 raw RANDOMACT COM2 若已失效，仍由 `BATTLE_DefaultAttacker` 重新消耗敵方 target RNG。
+
+### Enemy target formula
+
+`BATTLE_Abduct()` 在 `_BATTLE_ABDUCTII` 下只有：
+
+`AiPer > 0 && Deftype == CHAR_TYPEPET`
+
+才改走 FIXAI 判定。
+
+玩家 Pet RANDOMACT 對到的是 `CHAR_TYPEENEMY`，所以：
+
+- 130 空 option：走等級公式
+- 607 option=60：**仍走同一個等級公式**
+- 607 的 60 不會拿來和 Enemy FIXAI 比
+
+來源公式：
+
+`per = trunc((defLevel - attackLevel) * 0.6 + 30)`
+
+再：
+
+`per = max(per, 50)`
+
+判定：
+
+`RAND(1,100) < per`
+
+不額外 clamp 100。
+
+### Exit lifecycle
+
+目標是 `CHAR_TYPEENEMY`。
+
+成功時：
+
+- `BATTLE_Exit(defindex)`
+- Enemy 直接離場
+- 不屬於擊殺
+- 不產生 kill EXP／掉落 credit
+
+無論成功或失敗，只要施術者是 Pet：
+
+- `BATTLE_PetDefaultExit(owner)`
+- `CHAR_DEFAULTPET = -1`
+- 施術 Pet 自己一定離開本場戰鬥
+
+Web 因最後一隻 Enemy 直接離場時會立即 teardown battle，V1.96 先標記 caster Pet out / default cleared，再執行 Enemy direct exit；此順序不改任何來源 RNG，並確保 teardown 後的最終狀態等價於原 C 依序執行兩個 Exit。
+
+### No attack lifecycle
+
+Abduct：
+
+- 不造成物理 damage
+- 不跑 DamageSub
+- 不跑 ItemCrush
+- 不進 Counter
+- 不建立 Enemy kill credit
+
+### Regression
+
+新增：
+
+`tools/check_v196_player_abduct_runtime.mjs`
+
+鎖定：
+
+- 130 / 607 runtime rows
+- TargetAdjust path
+- Enemy 永遠使用 level formula
+- option=60 對 Enemy 被忽略
+- `RAND(1,100) < per`
+- 成功 Enemy direct BATTLE_Exit 無 kill reward
+- caster Pet 無論成功失敗都退出
+- DEFAULTPET / active Pet 清除
+- 最後 Enemy teardown 仍掃全部 owned Pet 做 HP finalization
+- no damage / no Counter / no inner AddProfit
+
+save schema 維持 **29**。
+
+### commits
+
+- `8c131a6fcfa85857314a5f0bf35812e0b7925d8e` — V1.96 core
+- `4cf0d1bc3847e3b2546236f28bf0d8ce18b79c8b` — V1.96 regression
+- `c25b49f292f138f1f5fa426ac5e7916fabf1efb0` — V1.96 CI
+- `9bdcaae6052f9e23331aaac03626d6e4c3dc012e` — V1.96 playable-core marker
+
