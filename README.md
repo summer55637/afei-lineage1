@@ -13745,3 +13745,114 @@ target type / WORK_PETFLG 仍位於 RNG 之後，維持 V1.44 已對齊的短路
 - V1.45 ranged Counter unchanged
 - V1.48 Guardian logic unchanged
 - schema 27 unchanged
+
+
+## V1.50 RETRACE common weapon loop
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### Source finding
+
+`BATTLE_COM_S_RETRACE` 並不是獨立單擊分支。它先設定 `CHAR_WORKRETRACE=1`，接著直接落入普通 physical common loop。
+
+因此在進 RETRACE 前，來源已經完成：
+
+1. `attack_max = BATTLE_GetAttackCount(charaindex)`
+2. BREAKTHROW 時先設定全域 paralysis status
+3. `BATTLE_TargetListSet(..., aDefList)`
+4. BOW 建立 aBowW 目標表；非 BOW 的 aDefList 則重複 raw COM2
+
+V1.49 以前的 Web `performEnemyRetrace()` 只做一個首擊與最多一個追擊，漏掉整個 weapon common-loop lifecycle。
+
+### Per-primary RETRACE timing
+
+固定來源在每一次 primary `BATTLE_Attack()` 返回後立即執行：
+
+```c
+if (Battle_Attack_ReturnData == BATTLE_RET_DODGE && COM == BATTLE_COM_S_RETRACE) {
+    if (RAND(1,100) < 80) {
+        WORKATTACKPOWER = FIXSTR + FIXSTR * 0.2;
+        BATTLE_Attack(battleindex, attackNo, defNo);
+    }
+    Battle_Attack_ReturnData = 0;
+}
+```
+
+因此：
+
+- 每一個 primary segment 都可以各自觸發一次 RETRACE
+- 只有 primary DODGE 才抽 `RAND(1,100)`
+- 判定是嚴格 `<80`，成功值 1..79
+- follow-up 不增加 `attack_count`
+- follow-up 不會再遞迴觸發 RETRACE
+
+### +20% attack persistence
+
+來源不是只把 +20% 傳給第二擊，而是直接覆寫：
+
+`CHAR_WORKATTACKPOWER = CHAR_WORKFIXSTR + CHAR_WORKFIXSTR * 0.2`
+
+而 common loop 內沒有立即還原。
+
+所以任一段 RETRACE 成功後：
+
+- 該段 follow-up 使用 FIXSTR +20%
+- 同一 command 後面的 primary segments 也繼續使用 FIXSTR +20%
+- 不使用 petskill2 option 裡被註解掉的「攻%+100」猜值
+
+V1.50 以 `unit.roundAttack` 保存這個來源生命週期。
+
+### BOW
+
+RETRACE + BOW 現在：
+
+- 仍先消耗 aBowW 的 `RAND(0,1)`
+- 依來源 10-slot 目標表順序掃描
+- 無效／死亡／EarthRound hidden slot 只跳過，不 TargetAdjust
+- `attack_count` 只計 primary BATTLE_Attack
+- 每個真正 primary DODGE 都可獨立抽 RETRACE follow-up
+
+### BOUNDTHROW / BREAKTHROW
+
+非 BOW 仍把 raw COM2 放回後逐段執行 TargetAdjust。
+
+BREAKTHROW 的全域 paralysis 狀態不會因 RETRACE 被清掉，因此：
+
+- primary 正傷害：paralysis check → ItemCrush
+- 若 primary 是 DODGE：沒有 status / ItemCrush，接著才抽 RETRACE RNG
+- follow-up 正傷害：再次 paralysis check → ItemCrush
+
+V1.50 沒有額外猜任何麻痺率；沿用既有 `sourceBreakthrowParalysis` 原 C 判定。
+
+### BOOMERANG held during RETRACE
+
+固定來源只有 `COM == BATTLE_COM_ATTACK` 時才把 command 轉成特殊 `BATTLE_COM_BOOMERANG`。
+
+RETRACE 不會轉換，所以手持回力標時仍走普通 non-BOW common loop，而不是 BO 全排攻擊。
+V1.50 依此保留 raw COM2 + TargetAdjust 的多段生命週期。
+
+### Counter quirk
+
+第二次 follow-up `BATTLE_Attack()` 的回傳值沒有寫回 `ContFlg`。
+
+因此 common loop 結尾 Counter 仍只依「最後一個 primary BATTLE_Attack」決定。
+V1.50 保留：
+
+- follow-up critical 不覆寫 primary ContFlg
+- follow-up Guardian 不覆寫 primary ContFlg
+- 但 follow-up 若實際把目標打死，後續 liveness check 仍會自然阻止 Counter
+
+### V1.50 regression targets
+
+- game.js syntax PASS
+- main parent fixed at V1.49 / a4a6548e0a48c8266698523d747a3079bacb841c
+- RETRACE uses primed source AttackNum without duplicate weapon RNG
+- BOW builds exactly one aBowW plan before first primary hit
+- every primary DODGE consumes exactly one RAND(1,100)
+- follow-up does not increment attack_count
+- successful RETRACE persists FIXSTR +20% into later same-command segments
+- BREAKTHROW applies status before ItemCrush on primary and follow-up
+- non-BOW later segments rerun TargetAdjust from raw COM2
+- BOOMERANG held by RETRACE stays common non-BOW, not special BO command
+- Counter still uses last primary result, not follow-up result
+- schema 27 unchanged

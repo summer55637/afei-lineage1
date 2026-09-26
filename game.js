@@ -5258,58 +5258,179 @@ function performEnemyGyrate(actor,unit,options,meta){
   }
   return {kind:'skill',skillId:actor.skillId,attackPct,results};
 }
-function performEnemyRetrace(actor,unit,options,meta){
-  const chosen=enemyActorTarget(actor,unit);
-  if(!chosen)return {kind:'skill',skillId:actor.skillId,noTarget:true};
-  const label=meta?.n||'追跡攻擊';
-  const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+function sourceEnemyRetraceApplyHit(unit,target,options,label){
+  if(!target)return null;
+  const guarding=target.kind==='player'
+    &&!!options.playerGuarding
+    &&!battleStatusActive({kind:'player'},'confusion');
 
-  unit.counterEligibleThisTurn=true;
-  const first=enemySkillTargetResult(unit,chosen,{guarding,sourceDirectGuardian:true});
-  if(!first)return {kind:'skill',skillId:actor.skillId,noTarget:true};
-  if(chosen.kind==='player'){
-    enemyApplyDirectGuardianSkillHit(unit,chosen,first,label+'首擊');
+  const r=enemySkillTargetResult(
+    unit,target,
+    {guarding,sourceDirectGuardian:true}
+  );
+  if(!r)return null;
+
+  let targetDesc;
+  if(target.kind==='player'){
+    targetDesc=enemyApplyDirectGuardianSkillHit(
+      unit,target,r,label,{finalizeItemCrush:false}
+    );
   }else{
-    enemyApplySkillHit(unit,chosen,first,label+'首擊');
-    sourceBattleFinalizeItemCrushRng(first);
+    enemyApplySkillHit(unit,target,r,label);
+    targetDesc={kind:'pet',pet:target.pet,petId:target.pet?.id};
   }
 
-  let second=null,retraceRoll=null;
-  const targetStillAlive=chosen.kind==='pet'
-    ?!!chosen.pet&&petIsBattleActive(chosen.pet)
-    :state.hp>0;
-  if(first.dodged&&targetStillAlive){
-    retraceRoll=cRand(1,100);
-    // 原碼是 RAND(1,100) < 80，所以實際成功值 1..79。
-    if(retraceRoll<80){
-      // fixed battle.c 的追擊硬寫 FIXSTR +20%；PETSKILL_Retrace option 的 攻%+100 parser 被整段註解。
-      const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
-      const attack=baseAttack+Math.trunc(baseAttack*.2);
-      second=enemySkillTargetResult(unit,chosen,{guarding,sourceDirectGuardian:true},{attack});
-      if(second){
-        if(chosen.kind==='player'){
-          enemyApplyDirectGuardianSkillHit(unit,chosen,second,label+'追擊');
-        }else{
-          enemyApplySkillHit(unit,chosen,second,label+'追擊');
-          sourceBattleFinalizeItemCrushRng(second);
-        }
+  // BREAKTHROW's global paralysis status is already active before the common command switch.
+  // Every BATTLE_Attack call -- including RETRACE's optional second call -- gets its own
+  // damage>0 status check before ItemCrush.
+  let paralysis=null;
+  if(Math.trunc(n(unit?.weaponType))===19){
+    paralysis=sourceBreakthrowParalysis(unit,{targetDesc,r});
+  }
+
+  // fixed BATTLE_Attack order finishes status first, then ItemCrush, then returns to battle.c.
+  sourceBattleFinalizeItemCrushRng(r);
+  return {target:target.kind,pet:target.pet||null,targetDesc,r,paralysis};
+}
+function sourceEnemyRetraceMaybeFollow(unit,target,options,label,primary){
+  if(!primary?.r?.dodged)return {roll:null,follow:null,boosted:false};
+
+  // fixed code checks Battle_Attack_ReturnData immediately after the first BATTLE_Attack.
+  // DODGE therefore consumes RAND(1,100) even though the first hit dealt no damage.
+  const roll=cRand(1,100);
+  if(roll>=80)return {roll,follow:null,boosted:false};
+
+  // Source hard-codes FIXSTR +20%; PETSKILL_Retrace's option parser is commented out.
+  // This writes WORKATTACKPOWER and is NOT restored inside the common loop, so later
+  // weapon segments in the same command keep the +20% attack after the first successful retrace.
+  const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
+  unit.roundAttack=baseAttack+Math.trunc(baseAttack*.2);
+
+  const follow=sourceEnemyRetraceApplyHit(unit,target,options,label+'追擊');
+  return {roll,follow,boosted:true,boostedAttack:unit.roundAttack};
+}
+function performEnemyRetrace(actor,unit,options,meta){
+  const label=meta?.n||'追跡攻擊';
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const primedMax=Number(actor?.sourceAttackMax);
+  const attackMax=Number.isFinite(primedMax)&&primedMax>0
+    ?Math.trunc(primedMax)
+    :sourceEnemyBattleAttackMax(unit);
+
+  unit.counterEligibleThisTurn=true;
+
+  // fixed BATTLE_TargetListSet happens before RETRACE enters the common direct-attack loop.
+  // Only BOW builds a 10-slot aBowW list; every non-BOW weapon repeats raw COM2 and reruns
+  // BATTLE_TargetAdjust after each completed primary segment.
+  const bowPlan=weaponType===4?sourceBowTargetList(actor,unit,enemyActorCommandTarget(actor)):null;
+  const segments=[];
+  let primaryCount=0;
+  let lastPrimary=null;
+  let lastTarget=null;
+  let sourceCounterReady=false;
+  let sourceLoopExit='no-target';
+
+  if(weaponType===4){
+    // Source first scans the list only to decide whether NoAction is needed, then resets
+    // defNo to aDefList[0]. Iterating from slot 0 while TargetCheck-skipping invalid slots
+    // is equivalent and consumes no extra RNG.
+    for(const slot of bowPlan?.slots||[]){
+      if(slot<0){
+        sourceLoopExit='target-list-end';
+        break;
+      }
+      const target=sourceEnemyTargetableFromBattleSlot(slot);
+      if(!target)continue;
+
+      const primary=sourceEnemyRetraceApplyHit(
+        unit,target,options,label+'第 '+(primaryCount+1)+'/'+attackMax+' 段首擊'
+      );
+      if(!primary)continue;
+      primaryCount++;
+      lastPrimary=primary;
+      lastTarget=target;
+
+      const retry=sourceEnemyRetraceMaybeFollow(unit,target,options,label+'第 '+primaryCount+'/'+attackMax+' 段',primary);
+      segments.push({
+        battleSlot:slot,target:target.kind,petId:target.pet?.id||null,
+        primary,retraceRoll:retry.roll,follow:retry.follow,boosted:retry.boosted,
+        boostedAttack:retry.boostedAttack??null
+      });
+
+      // Source increments attack_count once per primary BATTLE_Attack only; the optional RETRACE
+      // second BATTLE_Attack does not consume attack_max.
+      if(primaryCount>=attackMax){
+        sourceCounterReady=true;
+        sourceLoopExit='attack-max';
+        break;
+      }
+      if(n(unit.hp)<=0){
+        sourceLoopExit='attacker-dead';
+        break;
+      }
+    }
+  }else{
+    // First non-BOW segment starts from BATTLE_TargetAdjust(COM2).
+    let target=enemyActorTarget(actor,unit);
+    while(target&&primaryCount<attackMax&&n(unit.hp)>0){
+      const primary=sourceEnemyRetraceApplyHit(
+        unit,target,options,label+'第 '+(primaryCount+1)+'/'+attackMax+' 段首擊'
+      );
+      if(!primary){
+        sourceLoopExit='attack-failed';
+        break;
+      }
+      primaryCount++;
+      lastPrimary=primary;
+      lastTarget=target;
+
+      const retry=sourceEnemyRetraceMaybeFollow(unit,target,options,label+'第 '+primaryCount+'/'+attackMax+' 段',primary);
+      segments.push({
+        battleSlot:sourceEnemyTargetBattleSlot(target),target:target.kind,petId:target.pet?.id||null,
+        primary,retraceRoll:retry.roll,follow:retry.follow,boosted:retry.boosted,
+        boostedAttack:retry.boostedAttack??null
+      });
+
+      if(primaryCount>=attackMax){
+        sourceCounterReady=true;
+        sourceLoopExit='attack-max';
+        break;
+      }
+      if(n(unit.hp)<=0){
+        sourceLoopExit='attacker-dead';
+        break;
+      }
+
+      // aDefList for non-BOW is raw COM2 repeated. TargetAdjust can therefore consume a fresh
+      // DefaultAttacker RNG on every later segment if that raw target died or became hidden.
+      target=enemyActorTarget(actor,unit);
+      if(!target){
+        sourceLoopExit='target-adjust-failed';
+        break;
       }
     }
   }
 
-  // 原 battle.c 第二發 BATTLE_Attack() 的回傳值沒有覆寫 ContFlg；
-  // 後面的 Counter loop 仍使用第一發結果。技能進 common direct-attack 路徑後 command 已轉 ATTACK。
-  const aliveAfter=chosen.kind==='pet'
-    ?!!chosen.pet&&petIsBattleActive(chosen.pet)
-    :state.hp>0;
-  if(aliveAfter&&unit.hp>0&&enemy){
-    if(chosen.kind==='pet'&&chosen.pet){
-      resolvePetEnemyCounterChain('enemy',chosen.pet,unit,first);
-    }else if(chosen.kind==='player'&&options.allowPlayerCounter){
-      resolvePlayerEnemyCounterChain('enemy',unit,first);
+  // Outer Counter uses ContFlg/defNo from the LAST PRIMARY BATTLE_Attack only.
+  // A RETRACE follow-up can crit, Guardian-substitute, or kill, but its return value does not
+  // overwrite ContFlg. Runtime liveness checks below naturally stop Counter if that follow-up killed.
+  if(sourceCounterReady&&lastPrimary&&lastTarget&&unit.hp>0&&enemy){
+    const firstResult=lastPrimary.r;
+    if(lastTarget.kind==='pet'&&lastTarget.pet&&petIsBattleActive(lastTarget.pet)){
+      resolvePetEnemyCounterChain('enemy',lastTarget.pet,unit,firstResult);
+    }else if(lastTarget.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,firstResult);
     }
   }
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,first,second,retraceRoll};
+
+  return {
+    kind:'skill',skillId:actor.skillId,
+    weaponType,attackMax,primaryCount,
+    bowRandom:bowPlan?.random??null,bowTargetSlots:bowPlan?.slots?.slice?.()||null,
+    segments,sourceCounterReady,sourceLoopExit,
+    lastPrimary:lastPrimary?.r||null,lastTarget:lastTarget?.kind||null,
+    finalRoundAttack:Math.trunc(n(unit.roundAttack??unit.attack))
+  };
 }
 function enemyWideStatusSpec(meta){
   const option=String(meta?.o||'');

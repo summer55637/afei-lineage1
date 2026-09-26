@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.49</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.50</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.49：</b>
-      對齊 BECOMEFOX／BECOMEPIG 的共用攻擊 loop 後置 defNo：弓／投擲結束後改看原 C 真正離開 loop 時的目標；目標表跑盡或 TargetAdjust 失敗時不誤抽後置 RNG，並補齊 MISS／DODGE／ALLGUARD／ARRANGE／存活門檻。
+      <b>V1.50：</b>
+      還原 RETRACE 完整 common weapon loop：依武器 AttackNum／BOW aBowW／非弓 TargetAdjust 執行每段首擊；每段首擊 DODGE 後才各自抽一次 &lt;80 追擊，成功後 FIXSTR +20% 會保留到本 command 後續段數，BREAKTHROW 追擊也維持麻痺→ItemCrush 原順序。
     </article>
   </main>
 
