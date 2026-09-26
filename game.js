@@ -10966,6 +10966,69 @@ const SOURCE_VARY_WOLF_PETIDS=new Set([981,982,983,984]);
 function sourcePetRoarPetIds(meta){
   return String(meta?.o||'').split('|').map(sourceCAtoi).filter(v=>Number.isFinite(v));
 }
+function sourcePerformPetAbductSkill(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  const meta=action?.meta;
+  const label=meta?.n||'旅程伙伴';
+
+  // battle.c first performs BATTLE_TargetAdjust on the RANDOMACT opposing COM2.
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  // _BATTLE_ABDUCTII only uses option AiPer when Deftype == CHAR_TYPEPET.
+  // RANDOMACT's opposing target here is CHAR_TYPEENEMY, so both skill 130 (empty option)
+  // and 607 (option 60) MUST use the old level formula.
+  const attackLevel=Math.max(1,Math.trunc(n(pet.level)));
+  const defLevel=Math.max(1,Math.trunc(n(target.level)));
+  const aiPer=Math.max(0,sourceCAtoi(meta?.o));
+  const per=Math.max(Math.trunc((defLevel-attackLevel)*.6+30),50);
+
+  // BATTLE_Abduct always consumes RAND(1,100) after the source WinFunc gate.
+  // Web encounter battles do not expose a source WinFunc callback, matching the normal null path.
+  const roll=cRand(1,100);
+  const success=roll<per;
+
+  // Source always BATTLE_PetDefaultExit()s a PET attacker after the attempt, regardless
+  // of success. Mark this before possibly tearing down the last-enemy battle so the web
+  // cleanup observes the same final DEFAULTPET=-1 state.
+  battlePetOutIds.add(pet.id);
+  sourceClearPetBattleProperty(pet);
+  sourceClearPetVary(pet);
+  battlePetGuardIds.delete(pet.id);
+  battlePetAcupunctureIds.delete(pet.id);
+  battlePetNoGuardStates.delete(pet.id);
+  battleMagicPetStates.delete(pet.id);
+  battleMagicPetRoundStates.delete(pet.id);
+  if(state.activePetId===pet.id)state.activePetId=null;
+
+  let targetExit=null;
+  if(success){
+    // CHAR_TYPEENEMY success branch is BATTLE_Exit(defindex): no kill EXP / drop credit.
+    addLog(
+      pet.name+' 使用「'+label+'」成功把 '+target.name+
+      ' 帶離戰鬥（RAND(1,100)='+roll+' < '+per+'）；此離場不是擊殺。','good'
+    );
+    targetExit=finishEnemyDirectExit(target,label+'帶離');
+  }else{
+    addLog(
+      pet.name+' 使用「'+label+'」未能帶走 '+target.name+
+      '（RAND(1,100)='+roll+' ≥ '+per+'）；但施術 Pet 仍依原 C 自己離場。','pet'
+    );
+  }
+
+  return Object.assign({
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    attackLevel,defLevel,aiPer,per,roll,success,
+    sourceTargetType:'CHAR_TYPEENEMY',
+    sourceAiPerIgnoredForEnemy:true,
+    attackerExited:true,sourceDefaultPetCleared:true,
+    sourceNoDamage:true,sourceNoCounter:true,sourceNoKillReward:success
+  },targetExit||{});
+}
+
 function sourcePerformPetRoarSkill(pet,action){
   if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
   let target=action?.targetDesc?.kind==='enemy'&&action.targetDesc.unit&&n(action.targetDesc.unit.hp)>0
@@ -11836,6 +11899,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_SpeedyAttack')result=sourcePerformPetSpeedyAttackSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Abduct')result=sourcePerformPetAbductSkill(pet,action);
     else if(meta?.f==='PETSKILL_Sacrifice')result=sourcePerformPetSacrificeSkill(pet,action);
     else if(meta?.f==='PETSKILL_BattleTimid')result=sourcePerformPetBattleTimidSkill(pet,action);
     else if(meta?.f==='PETSKILL_2BattleTimid')result=sourcePerformPet2BattleTimidSkill(pet,action);
