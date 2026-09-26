@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.93**
+**PLAYABLE CORE V1.94**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,27 +16,28 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.93 最新進度
+## V1.94 最新進度
 
-V1.92～V1.93 繼續接入玩家寵低忠誠 `RANDOMACT`：
+V1.93～V1.94 繼續接入玩家寵低忠誠 `RANDOMACT`：
 
-- 626 `PETSKILL_ShowMercy`（手下留情）
-- 635 `PETSKILL_BecomePig`（黑烏力化）
 - 633 `PETSKILL_BatFly`（群蝠四竄）
 - 634 `PETSKILL_DivideAttack`（分身地裂）
+- 606／727 `PETSKILL_BattleTimid`（怯戰）
+- 636／824 `PETSKILL_2BattleTimid`（狂獅怒吼／恐嚇）
 
-### V1.93 BatFly / DivideAttack
+### V1.94 Timid
 
-- 兩技都先跑 `BATTLE_TargetAdjust`；raw COM2 失效時仍會消耗 fallback target RNG
-- BatFly 對敵側每個有效 Enemy 直接扣目前 HP 10%，HP 1～9 固定扣 1，再把總量吸回 Pet
-- BatFly 若回復量超過上限，原 C 會把實際 HP 設 max，但把顯示用 local `addhp` 清成 0；此 quirk 已保留
-- DivideAttack 第一輪只砍 `CHAR_TYPEPLAYER` MP；玩家 Pet 的敵側全是 `CHAR_TYPEENEMY`，因此 Enemy MP 固定不變
-- DivideAttack 第二輪對每個 Enemy 直接扣目前 HP 20%，HP 1～4 固定扣 1
-- 兩技都不走 AttackSeq / DamageSub / WakeUp / ItemCrush / Counter，也沒有 inner AddProfit
-- 直接 HP 傷害造成 Enemy 死亡時會鎖定施術 Pet reward credit
-- 新增 `tools/check_v193_player_batfly_divideattack_runtime.mjs` 並接入 CI
+- 怯戰固定把攻／防／敏 work 值設為 FIX 的 70%／40%／80%
+- 2BattleTimid 的原 parser 有特殊語意：`-攻%50` 是直接變成 FIXSTR 50%，不是「在原值上再扣 50%」
+- 636 實際為攻 50%、敏 130%；824 為攻 50%、敏 150%
+- 兩招都是 isolated `BATTLE_S_AttackDamage`，不進普通 Counter
+- 原目標有 DamageReact 時 local skill_type 先降成 -1，因此 Timid 後置 RNG 完全不抽；Enemy 端的 Acupuncture crossover 也同步修正
+- BattleTimid 在 `damage > 0` 時才抽 `rand()%100`；damage=1 仍抽但不能觸發，roll<15 且 damage>1 才迫使目標離場
+- 玩家 Pet 對 Enemy 成功怯戰時走 `BATTLE_Exit`，不應算擊殺 EXP／掉落；V1.94 因此新增 deferred death-credit 路徑
+- 2BattleTimid 即使命中率 roll 成功，Enemy 是 `CHAR_TYPEENEMY` 而不是 `CHAR_TYPEPET`，不會被收回寵物欄
+- 新增 `tools/check_v194_player_timid_runtime.mjs` 並接入 CI
 
-V1.91 Tear、V1.92 ShowMercy / BecomePig 與更早 regression 全數保留。
+V1.91～V1.93 regression 全數保留。
 
 save schema 維持 **29**。
 
