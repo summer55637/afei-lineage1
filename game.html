@@ -204,7 +204,12 @@
           <div id="sourceEquipmentGrid" class="source-item-grid source-equipment-grid"></div>
           <div class="source-item-subhead">15 格背包</div>
           <div id="sourceBackpackGrid" class="source-item-grid source-backpack-grid"></div>
-          <div class="muted dev-note">只顯示有 source existing-index 的道具。裝備位置、能力需求、同類飾品、弓盾互斥與 callback／職業限制都走固定原 C gate；尚未完整移植的特殊效果不會強行裝備。</div>
+          <div id="sourceField2SkillPanel" class="source-field2-panel">
+            <div class="source-item-subhead">寵物生活技能 · field=2</div>
+            <div id="sourceField2SelectionStatus" class="muted">未選取材料</div>
+            <div id="sourceField2SkillActions" class="pet-actions"></div>
+          </div>
+          <div class="muted dev-note">只顯示有 source existing-index 的道具。裝備位置、能力需求、同類飾品、弓盾互斥與 callback／職業限制都走固定原 C gate；540 修復／572 鑲寶石使用原 itemset6 字串與 existing item data，field=2 大表只在實際使用時懶載入。</div>
         </div>
 
         <div class="inventory-section">
