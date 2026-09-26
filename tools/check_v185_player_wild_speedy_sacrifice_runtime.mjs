@@ -61,12 +61,12 @@ assert.equal(sacrificeBody.includes('sourceSetMagicPetMultiList'),false);
 
 // Low-loyalty RANDOMACT order is already fixed before sourcePerformPetLoyalAction.
 // The player Speedy implementation therefore must not invent a late +30% reorder.
-const orderStart=game.indexOf('function normalBattleOrder');
-const orderEnd=game.indexOf('function sourceDeadBattleEntry',orderStart);
-const order=game.slice(orderStart,orderEnd);
-assert.ok(orderStart>=0&&orderEnd>orderStart);
-assert.ok(order.includes('const order=[]'));
-assert.ok(order.includes('sourcePetPreCommandAction'));
+const captureStart=game.indexOf('function captureTurn');
+const captureEnd=game.indexOf('function attackTurn',captureStart);
+const capture=game.slice(captureStart,captureEnd);
+assert.ok(captureStart>=0&&captureEnd>captureStart);
+assert.ok(capture.indexOf('const order=normalBattleOrder')>=0);
+assert.ok(capture.indexOf('const order=normalBattleOrder')<capture.indexOf('sourcePetPreCommandAction'));
 
 // Dispatcher resolves all three functions before the pending fallback.
 const loyalStart=game.indexOf('function sourcePerformPetLoyalAction');
