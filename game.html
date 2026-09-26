@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.62</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.63</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -208,8 +208,8 @@
     </section>
 
     <article class="card note">
-      <b>V1.62：</b>
-      校正低忠誠寵的原 C RNG／地球一周生命週期：RANDOMACT 先抽技能 slot、再先抽敵方 target，之後才掃 PetSkill；即使掃描撞到 -1 未定義邊界也保留已發生的 target RNG。若寵物正處於 EARTHROUND0，低忠誠抽到 RANDOMACT 不會中斷地球一周，也不會額外抽技能／目標 RNG。
+      <b>V1.63：</b>
+      對齊原 C 的 Enemy AI → Battling RNG 階段：每回合先完成所有 Enemy AI 的 action／target／PetSkill AI-stage lifecycle，之後才抽 Player／Pet／Enemy Dex、排序與 ComboCheck。WAZA 即使最後變成防禦／NONE／失敗，仍保留來源先發生的 target RNG；已死亡但仍留在 Battle Entry 的 Enemy 也不再被提早跳過 AI RNG。V1.61／V1.62 的低忠誠 RANDOMACT 與 EarthRound 修正維持不變。
     </article>
   </main>
 
