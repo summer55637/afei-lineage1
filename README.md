@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.90**
+**PLAYABLE CORE V1.91**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,40 +16,26 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.90 最新進度
+## V1.91 最新進度
 
-V1.89～V1.90 繼續接入玩家寵低忠誠 `RANDOMACT` 的 fixed PetSkill：
+V1.89～V1.91 持續接入玩家寵低忠誠 `RANDOMACT` 的 fixed PetSkill：
 
 - 618 `PETSKILL_Sonic`（音波衝擊）
 - 640／666／718 `PETSKILL_Regret`（憾甲一擊）
 - 624 `PETSKILL_Firekill`（火線獵殺）
+- 615／616／651／656 `PETSKILL_BattleTearDamage`（撕裂傷口）
 
-### Sonic / Regret
+### V1.91 BattleTearDamage
 
-- Sonic／Regret 都先由 `BATTLE_TargetAdjust` 決定主目標；只有主目標在後排 15～19 時，才追加同欄前排 `defNo-5`
-- Sonic 第二段使用 `SONIC2`，傷害 ×0.5，且倍率發生在 GuardAdjust 前
-- Regret 的 DamageCalc 強制用目標 `WORKFIXTOUGH` 作防禦；第二段 `REGRET2` 再 ×0.8
-- Regret 暈眩使用 `PROFESSION_BATTLE_StatusAttackCheck`：先 consume `RAND(1,100)`，再檢查死亡／已有異常，成功條件嚴格 `roll < 命%`
-- 640 的 `防%-50` 會被原 parser 命中；666／718 的 `防-20%`／`防-35%` 因原 C 只搜尋字串 `防%`，實際不修改防禦
-- 原目標已有 DamageReact 時，`BATTLE_S_AttackDamage` 先把 local skill_type 降為 -1：Sonic2 ×0.5、Regret2 ×0.8 與 Regret 暈眩都被跳過；Regret 的 FIXTOUGH 防禦規則仍保留
-- 同步修正 Enemy Regret 與 V1.88 Acupuncture 的交叉行為
-- Sonic／Regret 都是 isolated `BATTLE_S_AttackDamage` 分支，不進普通 Counter loop
+- 原 `PETSKILL_BattleTearDamage()` 先寫 `FIXSTR ×0.9` 攻擊與 `FIXTOUGH ×0.8` 防禦；低忠誠 RANDOMACT 發生在 EntrySort 後，因此不回頭改本回合排序
+- `BATTLE_TargetAdjust` 後，以目標「已損 HP × 20／50／70／150%」作撕裂追加，並保留 C int 截斷
+- 原 C 特例：若目標沒有舊傷、算出的撕裂追加 `<= 0`，會把本次物理 `damage` 直接歸零，不是單純不加成
+- 若原目標已有 DamageReact，`BATTLE_S_AttackDamage` 會先把 local skill_type 降為 -1，因此撕裂追加整段跳過，但 90% 攻／80% 防 work 值仍保留
+- 同步修正既有 Enemy Tear × 玩家 Pet Acupuncture crossover
+- Tear 為 isolated `BATTLE_S_AttackDamage`，不進普通 Counter loop；玩家側沿用 command-end outer AddProfit
+- 新增 `tools/check_v191_player_tear_runtime.mjs` 並接入 CI
 
-### Firekill
-
-- Firekill 不使用 `BATTLE_TargetAdjust`；raw COM2 失效／死亡／地球一周時，在原同側 10 格中由低 battle slot 起找第一個有效且非 EarthRound 目標，沒有新 RNG
-- 物理段先把 `WORKATTACKPOWER = trunc(FIXSTR × 0.8)`，再執行 `BATTLE_Attack_FIREKILL`
-- 物理段的 Guardian 是真正代擋；但後續火魔法仍使用原本 resolved defNo 所在橫排，不跟著 Guardian 改位置
-- `BATTLE_DamageSub_FIREKILL` 讀完 DamageReact 後立刻硬設 `react = BATTLE_MD_NONE`，因此物理段完全不觸發／不消耗 Acupuncture、Reflect、Absorb、Vanish
-- 同步修正既有 Enemy Firekill，避免 V1.88 後錯誤觸發玩家 Pet 的針刺
-- 火魔法固定 FieldAttr=2／Power=200／MagicLv=4；PET 四系 att_magic_lv 固定 5
-- 敵人魔法閃避沿原 `BATTLE_MagicDodge` 的 non-PLAYER 分支：`trunc(min(30, LV×0.2))`
-- Enemy 火抗使用 `trunc(LV×0.5)`；每個未閃避目標再 consume `rand()%20` 傷害浮動
-- 整個橫排共用一次 `rand()%100` TrueMagic 判定；Pet 等級固定 5，所以 roll 0～5 為 TrueMagic，但此專用函式的 false-magic ×0.7 行已被原 C 註解，不影響實際傷害
-- 魔法會掃原目標所在五格橫排的所有 `BATTLE_TargetCheck` 有效目標；完整 row 結束後才解除被命中者的睡眠
-- Firekill 不進普通 Counter，也沒有 inner `BATTLE_AddProfit`；命令結束後由外層 AddProfit lifecycle 統一處理
-
-V1.72～V1.90 CI 全部 SUCCESS。
+V1.89／V1.90 的 Sonic、Regret、Firekill 行為與 regression 全數保留。
 
 save schema 維持 **29**。
 
