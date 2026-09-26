@@ -4678,6 +4678,7 @@ function battleConfusionChooseTarget(attackerDesc){
 function battleConfusionGuarding(targetDesc,options){
   if(battleStatusActive(targetDesc,'confusion'))return false;
   if(targetDesc?.kind==='player')return !!options?.playerGuarding;
+  if(targetDesc?.kind==='pet')return sourcePlayerPetGuardAdjust(targetDesc.pet);
   if(targetDesc?.kind==='enemy')return !!targetDesc.unit?.guardThisTurn;
   return false;
 }
@@ -4745,7 +4746,7 @@ function sourceLogAcupunctureReaction(reaction){
     reaction.attackerAfter<=0?'bad':''
   );
 }
-function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false}={}){
+function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false}={}){
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
@@ -4773,8 +4774,8 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   sourceFinishAcupunctureReaction(acupuncture);
   // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
-  sourceBattleFinalizeItemCrushRng(r);
-  sourceProcessBattleDeathsAtAddProfit();
+  if(!deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
+  if(!deferAddProfit)sourceProcessBattleDeathsAtAddProfit();
   const after=battleStatusHp(targetDesc);
   if(before>0&&after<=0&&targetDesc?.kind==='enemy'&&targetDesc.unit){
     sourceMarkEnemyDeathCredit(targetDesc.unit,[attackerDesc]);
@@ -4831,28 +4832,24 @@ function performConfusionAttack(actor,statusTurn,options={}){
   }
 
   const pick=battleConfusionChooseTarget(attackerDesc);
+  const attackerView=battleStatusDescView(attackerDesc);
+  if(!attackerView)return true;
+
+  // V1.75: StatusSeq has already rewritten COM1/COM2 before BATTLE_GetAttackCount.
+  // A Player holding an indirect weapon therefore follows the same BOW/BOOMERANG/
+  // BOUNDTHROW/BREAKTHROW command path even when confusion pointed COM2 back to side 0.
+  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
+    return sourcePerformPlayerRangedConfusionAttack(actor,pick,options)||true;
+  }
+
   const targetDesc=pick.target;
   if(!targetDesc||!battleStatusDescAlive(targetDesc)){
     addLog(battleStatusDescName(attackerDesc)+' 受到混亂影響改為普通攻擊，但沒有可攻擊的目標。');
     return true;
   }
 
-  const attackerView=battleStatusDescView(attackerDesc);
   const defenderView=battleStatusDescView(targetDesc);
-  if(!attackerView||!defenderView)return true;
-
-  // V1.74 ports the fixed normal ATTACK weapon-command patterns. Confusion rewrites COM1/COM2
-  // inside StatusSeq and can legally point a Player ranged weapon back into side 0; that needs
-  // a separate cross-side weapon-pattern port. Fail closed rather than silently doing the old
-  // one-hit approximation. Preserve the known Bow TargetListSet RAND(0,1) lifecycle.
-  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
-    const weaponType=Math.trunc(n(attackerView.weaponType));
-    const sourceRangedBowPlan=weaponType===4
-      ?sourceBowTargetListFromBattleSlots(sourceBattleStatusSlot(targetDesc),0)
-      :null;
-    addLog('你在混亂中觸發遠程武器攻擊；跨 side 原 C pattern 尚未來源化，本次不猜攻擊結果。','bad');
-    return {handled:true,sourceRangedFailClosed:true,weaponType,sourceRangedBowPlan};
-  }
+  if(!defenderView)return true;
 
   const guarding=battleConfusionGuarding(targetDesc,options);
   const r=targetDesc.kind==='enemy'
@@ -5404,15 +5401,192 @@ function sourcePlayerBowTargetList(actor){
 function sourcePlayerDefaultAttacker(){
   return sourcePetRandomEnemyTarget()?.unit||null;
 }
-function sourcePlayerBreakthrowParalysis(target,r){
-  const targetDesc=target?{kind:'enemy',unit:target,unitId:target.id}:null;
+function sourcePlayerBreakthrowParalysisDesc(targetDesc,r){
   if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
   // fixed BATTLE_StatusAttackCheck() has a dedicated paralysis branch: 20 - resistance.
   // It rejects an already-statused target before consuming RAND(1,100).
   const check=battleStatusChance({kind:'player'},targetDesc,'paralysis');
   const applied=!!(check.allowed&&check.success&&battleStatusApply(targetDesc,'paralysis',0));
-  if(applied)addLog(target.name+' 被投擲石打中後陷入麻痺 1 回合。','good');
+  if(applied)addLog(battleStatusDescName(targetDesc)+' 被投擲石打中後陷入麻痺 1 回合。','good');
   return {attempted:true,check,applied};
+}
+function sourcePlayerBreakthrowParalysis(target,r){
+  const targetDesc=target?{kind:'enemy',unit:target,unitId:target.id}:null;
+  return sourcePlayerBreakthrowParalysisDesc(targetDesc,r);
+}
+function sourcePlayerConfusionTargetableFromBattleSlot(slot){
+  const desc=sourceBattleStatusDescFromSlot(slot);
+  if(!desc||!battleStatusDescAlive(desc))return null;
+  if(desc.kind==='pet'&&sourcePlayerPetHidden(desc.pet))return null;
+  if(desc.kind==='enemy'&&enemyUnitHidden(desc.unit))return null;
+  return desc;
+}
+function sourcePlayerConfusionDefaultAttackerDesc(){
+  const unit=sourcePetRandomEnemyTarget()?.unit||null;
+  return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+}
+function sourcePlayerConfusionRangedResult(targetDesc,options={},attackOptions={}){
+  const attackerView=playerBattleView();
+  const defenderView=battleStatusDescView(targetDesc);
+  if(!attackerView||!defenderView)return null;
+  const guarding=battleConfusionGuarding(targetDesc,options);
+  if(targetDesc.kind==='enemy'){
+    return resolveAttackToEnemyWithGuardian(
+      attackerView,targetDesc.unit,Object.assign({},attackOptions,{guarding})
+    );
+  }
+  return resolveNormalAttack(attackerView,defenderView,Object.assign({},attackOptions,{guarding}));
+}
+function sourcePlayerConfusionResolvedTargetDesc(targetDesc,r){
+  if(targetDesc?.kind==='enemy'&&r?.actualTarget&&r.actualTarget!==targetDesc.unit){
+    return {kind:'enemy',unit:r.actualTarget,unitId:r.actualTarget.id};
+  }
+  return targetDesc;
+}
+function sourceApplyPlayerConfusionRangedHit(targetDesc,r,{breakthrow=false}={}){
+  if(!targetDesc||!r)return {resolvedTarget:targetDesc,paralysis:null};
+  const resolvedTarget=sourcePlayerConfusionResolvedTargetDesc(targetDesc,r);
+  let paralysis=null;
+  if(breakthrow){
+    // fixed BATTLE_Attack order for BREAKTHROW:
+    // DamageSub/WakeUp -> StatusAttackCheck(paralysis) -> ItemCrush -> AddProfit.
+    battleApplyPhysicalHit({kind:'player'},resolvedTarget,r,{
+      confusion:true,deferItemCrush:true,deferAddProfit:true
+    });
+    paralysis=sourcePlayerBreakthrowParalysisDesc(resolvedTarget,r);
+    sourceBattleFinalizeItemCrushRng(r);
+    sourceProcessBattleDeathsAtAddProfit();
+  }else{
+    battleApplyPhysicalHit({kind:'player'},resolvedTarget,r,{confusion:true});
+  }
+  return {resolvedTarget,paralysis};
+}
+function sourcePerformPlayerConfusionBowAttack(actor,pick,options={}){
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
+  // StatusSeq can leave COM2=-1 when the randomly chosen side has no valid target.
+  // BOW TargetListSet does NOT DefaultAttacker that case and does NOT consume RAND(0,1).
+  const rawSlot=pick?.fallback?-1:sourceBattleStatusSlot(pick?.target);
+  const plan=sourceBowTargetListFromBattleSlots(rawSlot,0);
+  const hits=[];
+  let attackCount=0,sourceLoopExit='target-list-end';
+
+  if(rawSlot<0){
+    addLog('你的混亂發作，但弓的原始 COM2 無有效目標，因此本次沒有射擊。');
+    return {handled:true,weaponCommand:'BOW',protocol:'BB-w0',attackMax,attackCount,
+      rawSlot,bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits,sourceLoopExit:'raw-com2-invalid'};
+  }
+
+  addLog('你的混亂發作：弓依原 C 的 aBowW 順序改打戰場目標。');
+  for(const slot of plan.slots){
+    if(slot<0){sourceLoopExit='target-list-end';break;}
+    const targetDesc=sourcePlayerConfusionTargetableFromBattleSlot(slot);
+    if(!targetDesc)continue;
+    const r=sourcePlayerConfusionRangedResult(targetDesc,options);
+    if(!r)continue;
+    const applied=sourceApplyPlayerConfusionRangedHit(targetDesc,r);
+    hits.push({battleSlot:slot,targetKey:battleStatusKey(targetDesc),r,
+      resolvedTargetKey:battleStatusKey(applied.resolvedTarget)});
+    attackCount++;
+    if(attackCount>=attackMax){sourceLoopExit='attack-max';break;}
+    if(!battleStatusDescAlive({kind:'player'})){sourceLoopExit='attacker-dead';break;}
+  }
+  // Common BOW path reaches Counter, but BATTLE_IsThrowWepon blocks it before Counter RNG.
+  return {handled:true,weaponCommand:'BOW',protocol:'BB-w0',attackMax,attackCount,
+    rawSlot,bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits,sourceLoopExit};
+}
+function sourcePerformPlayerConfusionBoomerangAttack(actor,pick,options={}){
+  // BATTLE_GetAttackCount already consumed the weapon RAND before ATTACK becomes BOOMERANG.
+  // The dedicated BOOMERANG case ignores that attack_max value.
+  let rawSlot=pick?.fallback?-1:sourceBattleStatusSlot(pick?.target);
+  let defNo=rawSlot;
+  let fallbackTarget=null;
+  if(defNo<0){
+    fallbackTarget=sourcePlayerConfusionDefaultAttackerDesc();
+    if(!fallbackTarget){
+      return {handled:true,weaponCommand:'BOOMERANG',protocol:'BO',rawSlot,attackCount:0,hits:[],sourceLoopExit:'no-target'};
+    }
+    defNo=sourceBattleStatusSlot(fallbackTarget);
+  }
+
+  let row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
+  const attackerRow=0;
+  if(row===attackerRow){
+    addLog('你的混亂發作，但回力標目標與攻擊者位於同一列，依原 C 本次無動作。');
+    return {handled:true,weaponCommand:'BOOMERANG',protocol:'BO',rawSlot,row,attackCount:0,hits:[],sourceLoopExit:'same-row'};
+  }
+
+  const rowHasTarget=r=>r>=0&&r<SOURCE_BOOMERANG_VS_TBL.length
+    &&SOURCE_BOOMERANG_VS_TBL[r].some(slot=>!!sourcePlayerConfusionTargetableFromBattleSlot(slot));
+  if(!rowHasTarget(row)){
+    fallbackTarget=sourcePlayerConfusionDefaultAttackerDesc();
+    if(!fallbackTarget){
+      return {handled:true,weaponCommand:'BOOMERANG',protocol:'BO',rawSlot,row,attackCount:0,hits:[],sourceLoopExit:'no-target'};
+    }
+    defNo=sourceBattleStatusSlot(fallbackTarget);
+    row=Math.trunc(defNo/5);
+  }
+  if(row<0||row>=SOURCE_BOOMERANG_VS_TBL.length){
+    return {handled:true,weaponCommand:'BOOMERANG',protocol:'BO',rawSlot,row,attackCount:0,hits:[],sourceLoopExit:'invalid-row'};
+  }
+
+  const order=SOURCE_BOOMERANG_VS_TBL[row].slice(); // Player side 0: k=0,j=+1.
+  const hits=[];
+  addLog('你的混亂發作：回力標依原 C 順序掃過目標列。');
+  for(const slot of order){
+    const targetDesc=sourcePlayerConfusionTargetableFromBattleSlot(slot);
+    if(!targetDesc)continue;
+    const r=sourcePlayerConfusionRangedResult(targetDesc,options,{damageMultiplier:.3});
+    if(!r)continue;
+    const applied=sourceApplyPlayerConfusionRangedHit(targetDesc,r);
+    hits.push({battleSlot:slot,targetKey:battleStatusKey(targetDesc),r,
+      resolvedTargetKey:battleStatusKey(applied.resolvedTarget)});
+    if(!battleStatusDescAlive({kind:'player'}))break;
+  }
+  // Dedicated BOOMERANG case breaks before the common Counter loop.
+  return {handled:true,weaponCommand:'BOOMERANG',protocol:'BO',damageMultiplier:.3,
+    rawSlot,row,targetSlots:order,hits,attackCount:hits.length,sourceLoopExit:'row-complete'};
+}
+function sourcePerformPlayerConfusionThrowAttack(actor,pick,options={},weaponType){
+  const type=Math.trunc(n(weaponType));
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
+  // TargetListSet pre-fills with the StatusSeq raw COM2. If raw COM2 is -1,
+  // the first TargetAdjust may DefaultAttacker, but the next aDefList entry is already -1.
+  const rawSlot=pick?.fallback?-1:sourceBattleStatusSlot(pick?.target);
+  const hits=[];
+  let attackCount=0,sourceLoopExit='target-adjust-failed';
+
+  addLog('你的混亂發作：'+(type===19?'投擲石':'投擲斧')+'依原 C TargetAdjust 執行。');
+  while(attackCount<attackMax&&battleStatusDescAlive({kind:'player'})){
+    let targetDesc=rawSlot>=0?sourcePlayerConfusionTargetableFromBattleSlot(rawSlot):null;
+    if(!targetDesc)targetDesc=sourcePlayerConfusionDefaultAttackerDesc();
+    if(!targetDesc){sourceLoopExit='target-adjust-failed';break;}
+
+    const r=sourcePlayerConfusionRangedResult(targetDesc,options);
+    if(!r){sourceLoopExit='target-adjust-failed';break;}
+    const applied=sourceApplyPlayerConfusionRangedHit(targetDesc,r,{breakthrow:type===19});
+    hits.push({battleSlot:sourceBattleStatusSlot(targetDesc),targetKey:battleStatusKey(targetDesc),r,
+      resolvedTargetKey:battleStatusKey(applied.resolvedTarget),paralysis:applied.paralysis});
+    attackCount++;
+
+    if(attackCount>=attackMax){sourceLoopExit='attack-max';break;}
+    if(rawSlot<0){
+      // aDefList[++k] is the original -1 sentinel, so source stops after this first fallback hit.
+      sourceLoopExit='target-list-end';
+      break;
+    }
+  }
+  // BOUNDTHROW/BREAKTHROW common path would enter Counter, but throw-weapon gate returns before RNG.
+  return {handled:true,weaponCommand:type===19?'BREAKTHROW':'BOUNDTHROW',
+    protocol:type===19?'BB-w2':'BB-w1',rawSlot,attackMax,attackCount,hits,sourceLoopExit};
+}
+function sourcePerformPlayerRangedConfusionAttack(actor,pick,options={}){
+  const weaponType=Math.trunc(n(playerBattleView()?.weaponType));
+  if(weaponType===4)return sourcePerformPlayerConfusionBowAttack(actor,pick,options);
+  if(weaponType===17)return sourcePerformPlayerConfusionBoomerangAttack(actor,pick,options);
+  if(weaponType===18||weaponType===19){
+    return sourcePerformPlayerConfusionThrowAttack(actor,pick,options,weaponType);
+  }
+  return null;
 }
 function sourcePerformPlayerBowWeaponAttack(actor,options={}){
   const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax))||1);
