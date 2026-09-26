@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.81</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.82</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.82：</b>
+      接上玩家寵低忠誠 RANDOMACT 的 609～611 採光／破鏡重圓／穿透術。依 fixed PETSKILL_Lighttakeed，本回合 WORK攻擊改為 FIXSTR×0.7、WORK防禦改為 FIXTOUGH×0.5，敏捷×0.95 那行原碼已註解所以不補。下一輪 compliance 會恢復 FIX。現有 Enemy source-backed DamageReact 只有針刺外皮，不可能匹配 ABSROB／REFLEC／VANISH，因此不虛構吸收狀態；物理傷害仍保留 BATTLE_S_AttackDamage 的 Guardian calc-only bug且不接普通 Counter。574 嚙齒術因 petskill2 illegal=1，玩家寵在 PETSKILL_Use 前直接 FALSE，不做效果。
+    </article>
 
     <article class="card note">
       <b>V1.81：</b>
