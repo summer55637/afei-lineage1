@@ -10,6 +10,7 @@ on:
       - "tools/check_v175_player_ranged_confusion_runtime.mjs"
       - "tools/check_v176_player_petskill_runtime.mjs"
       - "tools/check_v177_petid_roar_vary_runtime.mjs"
+      - "tools/check_v178_player_status_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -54,6 +55,9 @@ jobs:
 
       - name: Run V1.77 PETID Roar Vary regressions
         run: node tools/check_v177_petid_roar_vary_runtime.mjs
+
+      - name: Run V1.78 player status PetSkill regressions
+        run: node tools/check_v178_player_status_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
