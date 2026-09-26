@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2326,7 +2326,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -4186,6 +4186,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
   sourceBattleFinalizeItemCrushRng(r);
+  sourceProcessPlayerBattleDeathOnce();
   const after=battleStatusHp(targetDesc);
   if(before>0&&after<=0&&targetDesc?.kind==='enemy'&&targetDesc.unit){
     sourceMarkEnemyDeathCredit(targetDesc.unit,[attackerDesc]);
@@ -4313,6 +4314,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     state.hp=Math.max(0,sourceUltimateBefore-r.damage);
     sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
     sourceBattleFinalizeItemCrushRng(r);
+    sourceProcessPlayerBattleDeathOnce();
         addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
       }
     }
@@ -4843,6 +4845,7 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
     if(!hit)continue;
     if(afterHit)hit.afterHit=afterHit(hit,target);
     sourceBattleFinalizeItemCrushRng(hit.r);
+    sourceProcessPlayerBattleDeathOnce();
     hits.push(Object.assign({battleSlot:slot},hit));
     attackCount++;
     sourcePostTarget=target;
@@ -4897,6 +4900,7 @@ function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,baseOptions);
     if(hit){
       sourceBattleFinalizeItemCrushRng(hit.r);
+    sourceProcessPlayerBattleDeathOnce();
       hits.push(Object.assign({battleSlot:slot},hit));
     }
     if(n(unit.hp)<=0)break;
@@ -4938,6 +4942,7 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     if(useBreakthrowStatus&&Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
     if(afterHit)hit.afterHit=afterHit(hit,target);
     sourceBattleFinalizeItemCrushRng(hit.r);
+    sourceProcessPlayerBattleDeathOnce();
     hits.push(Object.assign({paralysis},hit));
     sourcePostTarget=target;
     if(i+1>=attackMax){
@@ -5015,6 +5020,7 @@ function performEnemyFoxFistRangedAttack(actor,unit,options={}){
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
     if(!hit)break;
     sourceBattleFinalizeItemCrushRng(hit.r);
+    sourceProcessPlayerBattleDeathOnce();
     hits.push(Object.assign({
       battleSlot:sourceEnemyTargetBattleSlot(target),
       sourceCommandSlot:attackCount===0?commandSlot:(actualWeaponType===4?bowPlan?.slots?.[k]:commandSlot)
@@ -5125,6 +5131,8 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
     battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
+  // fixed common BATTLE_Attack caller reaches BATTLE_AddProfit before Counter.
+  sourceProcessPlayerBattleDeathOnce();
   if(allowPlayerCounter&&state.hp>0&&unit.hp>0)resolvePlayerEnemyCounterChain('enemy',unit,r);
   return {target:'player',actualTarget:r.guardian?'pet':'player',guardianPetId:r.guardianPetId||null,r};
 }
@@ -6236,6 +6244,7 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
       r=resolveEnemyDirectAttackToPlayer(unit,{guarding});
       hits++;lastTarget=target;lastResult=r;
       enemyApplyDirectGuardianSkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
+      sourceProcessPlayerBattleDeathOnce();
     }
 
     // fixed loop breaks immediately here when ++attack_count reaches attack_max,
@@ -6287,6 +6296,7 @@ function sourceEnemyAttackShootApplyHit(unit,target,options,count,label){
     if(sleepRoll>4)sleepApplied=sourceAttackShootApplySleep(targetDesc);
   }
   sourceBattleFinalizeItemCrushRng(r);
+  sourceProcessPlayerBattleDeathOnce();
   return {
     target:target.kind,petId:target.pet?.id||null,
     actualTarget:targetDesc?.kind||target.kind,
@@ -6932,7 +6942,10 @@ function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label,options={}){
     addLog(r.guardian.name+' 發動忠犬，代替你承受 '+unit.name+' 的'+label+'。','pet');
   }
   enemyApplySkillHit(unit,actual,r,label);
-  if(options.finalizeItemCrush!==false)sourceBattleFinalizeItemCrushRng(r);
+  if(options.finalizeItemCrush!==false){
+    sourceBattleFinalizeItemCrushRng(r);
+    sourceProcessPlayerBattleDeathOnce();
+  }
   return actual;
 }
 
@@ -7466,6 +7479,29 @@ function sourceProcessPlayerBattleDeath(){
   const petAi=pet?sourcePetAddVariableAi(pet,Math.trunc((ultimate?-1000:-100)/levelDiv)):null;
   return {levelDiv,ultimate,charmBefore,charmDelta,charmAfter:state.charm,petId:pet?.id||null,petAi};
 }
+function sourceProcessPlayerBattleDeathOnce(){
+  if(!enemy||n(state?.hp)>0)return null;
+  if(battlePlayerDeathProcessed)return battlePlayerDeathResult;
+  const pet=activePet();
+  const death=sourceProcessPlayerBattleDeath();
+  battlePlayerDeathProcessed=true;
+  battlePlayerDeathResult=death||null;
+
+  // fixed BATTLE_UltimateExtra(PLAYER) first BATTLE_PetDefaultExit()s the DEFAULTPET Entry.
+  // It does not clear CHAR_DEFAULTPET, so ownership/default selection remains intact.
+  if(death?.ultimate&&pet)battlePetOutIds.add(pet.id);
+
+  if(death){
+    addLog((death.ultimate?'角色被打飛：依 BATTLE_UltimateExtra 魅力 ':'角色戰鬥倒下：依原 C 魅力 ')+death.charmDelta
+      +(death.petAi?'，出戰寵忠誠修正 '+(death.petAi.delta/100).toFixed(2):'')+'。','bad');
+  }
+  return death;
+}
+function sourceProcessBattleDeathsBetweenActors(){
+  const pets=sourceProcessPendingPetBattleDeaths();
+  const player=sourceProcessPlayerBattleDeathOnce();
+  return {pets,player};
+}
 
 function petFixedAi(pet){
   if(!pet||!state)return null;
@@ -7488,6 +7524,27 @@ function petFixedAi(pet){
   if(ai<0)ai=0;
   if(ai>100)ai=100;
   return {ai,modAi,sourceModAi,hostLv,petLv,fixCharm,variableAi:n(pet.variableAi)};
+}
+function sourceRefreshPetRoundFixAi(pet){
+  if(!pet)return null;
+  const key=String(pet.id);
+  // EARTHROUND0 skips fixed C complianceParameter, so the prior WORKFIXAI survives unchanged.
+  if(sourcePetEarthRoundCommandActive(pet)&&battlePetFixAiSnapshots.has(key)){
+    return battlePetFixAiSnapshots.get(key);
+  }
+  const fixed=petFixedAi(pet);
+  if(!fixed){
+    battlePetFixAiSnapshots.delete(key);
+    return null;
+  }
+  const snapshot=Object.assign({},fixed);
+  battlePetFixAiSnapshots.set(key,snapshot);
+  return snapshot;
+}
+function sourcePetRoundFixedAi(pet){
+  if(!pet)return null;
+  const key=String(pet.id);
+  return battlePetFixAiSnapshots.get(key)||sourceRefreshPetRoundFixAi(pet);
 }
 
 function sourcePetEnemyTargetDesc(unit=targetEnemyUnit()){
@@ -7726,7 +7783,7 @@ function sourcePerformPetEarthRoundState(pet,options={},targetOverride=undefined
 }
 
 function sourcePetLoyalCheck(actor,pet,intent){
-  const fixed=petFixedAi(pet);
+  const fixed=sourcePetRoundFixedAi(pet);
   if(!fixed){
     return {changed:false,mode:'normal',sourceUnknownAi:true,ai:null,roll:null,intent};
   }
@@ -8435,7 +8492,7 @@ function performEnemyAbduct(actor,unit,options,meta){
   if(aiPer>0){
     // _BATTLE_ABDUCTII：option >0 且目標為 CHAR_TYPEPET 時，不走等級公式。
     // WORKFIXAI < option => per=200，否則 per=0。
-    fixAiInfo=petFixedAi(pet);
+    fixAiInfo=sourcePetRoundFixedAi(pet);
     if(!fixAiInfo){
       sourceDataMissing=true;
       per=null;
@@ -8990,6 +9047,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
         target:'pet',pet:target.pet,targetDesc:actualTarget,r
       },target);
       sourceBattleFinalizeItemCrushRng(r);
+      sourceProcessPlayerBattleDeathOnce();
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
@@ -9006,6 +9064,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
         guardianPetId:r?.guardianPetId||null
       },target);
       sourceBattleFinalizeItemCrushRng(r);
+      sourceProcessPlayerBattleDeathOnce();
     }else{
       sourcePostTarget=null;
       sourceLoopExit='attack-failed';
@@ -9438,9 +9497,8 @@ function captureTurn(manual=false){
   const order=normalBattleOrder({playerCommand:'capture'});
   let captured=false;
   for(const actor of order){
-    sourceProcessPendingPetBattleDeaths();
+    sourceProcessBattleDeathsBetweenActors();
     if(!enemy)return captured;
-    if(state.hp<=0){defeat();return captured}
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
@@ -9473,16 +9531,14 @@ function captureTurn(manual=false){
       const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
       if(petPre.handled){
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return captured}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
     }else{
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return captured}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
       if(sourceSurpriseSkipAction(actor))continue;
@@ -9491,8 +9547,8 @@ function captureTurn(manual=false){
     if(actor.kind==='player'){
       const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
-        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
-        winBattle();return captured
+        if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
+        continue;
       }
       const c=captureChance();
       if(!c.allowed||c.display<=0){
@@ -9542,8 +9598,8 @@ function captureTurn(manual=false){
       if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
       const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
-        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
-        winBattle();return captured
+        if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
+        continue;
       }
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
@@ -9555,13 +9611,15 @@ function captureTurn(manual=false){
       performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
     }
 
+    sourceProcessBattleDeathsBetweenActors();
     if(enemy)syncEnemyTarget();
-    if(state.hp<=0){defeat();return captured}
-    if(enemy&&!livingEnemyUnits().length){winBattle();return captured}
   }
 
-  sourceProcessPendingPetBattleDeaths();
-  if(enemy){syncEnemyTarget();battleFieldTick();}
+  sourceProcessBattleDeathsBetweenActors();
+  if(!enemy){return captured;}
+  if(state.hp<=0){defeat();return captured;}
+  if(!livingEnemyUnits().length){winBattle();return captured;}
+  syncEnemyTarget();battleFieldTick();
   save();render();
   return captured;
 }
@@ -9657,11 +9715,9 @@ function winBattle(){
 }
 function defeat(){
   const hadBattle=!!enemy;
-  if(hadBattle)sourceProcessPendingPetBattleDeaths();
-  const death=hadBattle?sourceProcessPlayerBattleDeath():null;
-  if(death){
-    addLog((death.ultimate?'角色被打飛：依 BATTLE_UltimateExtra 魅力 ':'角色戰鬥倒下：依原 C 魅力 ')+death.charmDelta
-      +(death.petAi?'，出戰寵忠誠修正 '+(death.petAi.delta/100).toFixed(2):'')+'。','bad');
+  if(hadBattle){
+    sourceProcessPendingPetBattleDeaths();
+    sourceProcessPlayerBattleDeathOnce();
   }
   addLog('角色體力不足，已自動回村休息並補滿 HP／MP。','bad');
   releaseBattleEnemyRuntimeItems(enemy);
@@ -9988,6 +10044,7 @@ function sourcePerformCombo(order,index,options={}){
       target,accumulatedDamage,lastComboResult,
       hits.map(x=>({kind:x.kind,petId:x.petId||null}))
     );
+    sourceProcessPlayerBattleDeathOnce();
     if(deferredWake?.damage>0)battleStatusWakeOnDamage(deferredWake.desc,deferredWake.damage);
     sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
   }
@@ -10043,6 +10100,7 @@ function normalBattleOrder(options={}){
     const fallback=activePet();
     if(fallback&&!battlePetOutIds.has(fallback.id))pet=fallback;
   }
+  if(pet)sourceRefreshPetRoundFixAi(pet);
 
   // V1.63 source order:
   // BATTLE_Command() -> BATTLE_ai_all(side 0) -> BATTLE_ai_all(side 1)
@@ -10213,9 +10271,8 @@ function attackTurn(){
   const order=normalBattleOrder({playerCommand:'attack'});
 
   for(const actor of order){
-    sourceProcessPendingPetBattleDeaths();
+    sourceProcessBattleDeathsBetweenActors();
     if(!enemy)return;
-    if(state.hp<=0){defeat();return}
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
@@ -10248,16 +10305,14 @@ function attackTurn(){
       const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
       if(petPre.handled){
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
     }else{
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
       if(sourceSurpriseSkipAction(actor))continue;
@@ -10266,8 +10321,7 @@ function attackTurn(){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
       if(combo){
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
     }
@@ -10275,16 +10329,16 @@ function attackTurn(){
     if(actor.kind==='player'){
       const result=sourcePerformPlayerCommonAttack(actor,{allowCounter:true});
       if(!result.attackCount){
-        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
-        winBattle();return
+        if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
+        continue;
       }
     }else if(actor.kind==='pet'){
       const pet=activePet();
       if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
       const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
-        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
-        winBattle();return
+        if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
+        continue;
       }
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
@@ -10296,13 +10350,15 @@ function attackTurn(){
       performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
     }
 
+    sourceProcessBattleDeathsBetweenActors();
     if(enemy)syncEnemyTarget();
-    if(state.hp<=0){defeat();return}
-    if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
-  sourceProcessPendingPetBattleDeaths();
-  if(enemy){syncEnemyTarget();battleFieldTick();}
+  sourceProcessBattleDeathsBetweenActors();
+  if(!enemy){return;}
+  if(state.hp<=0){defeat();return;}
+  if(!livingEnemyUnits().length){winBattle();return;}
+  syncEnemyTarget();battleFieldTick();
   render();
 }
 function guardTurn(){
@@ -10312,9 +10368,8 @@ function guardTurn(){
   // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；
   // 所以即使敵人的排序在玩家之前，防禦減傷也已生效。
   for(const actor of order){
-    sourceProcessPendingPetBattleDeaths();
+    sourceProcessBattleDeathsBetweenActors();
     if(!enemy)return;
-    if(state.hp<=0){defeat();return}
     if(sourceDeadBattleEntry(actor))continue;
     if(sourceEnemyCWait(actor))continue;
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
@@ -10347,16 +10402,14 @@ function guardTurn(){
       const petPre=sourcePetPreCommandAction(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
       if(petPre.handled){
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
     }else{
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
       if(sourceSurpriseSkipAction(actor))continue;
@@ -10365,8 +10418,7 @@ function guardTurn(){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:true});
       if(combo){
         if(enemy)syncEnemyTarget();
-        if(state.hp<=0){defeat();return}
-        if(enemy&&!livingEnemyUnits().length){winBattle();return}
+        sourceProcessBattleDeathsBetweenActors();
         continue;
       }
     }
@@ -10378,8 +10430,8 @@ function guardTurn(){
       if(!pet||pet.id!==actor.petId||!petIsBattleActive(pet))continue;
       const target=sourceFriendlyEnemyTargetAdjust(actor);
       if(!target){
-        if(livingEnemyUnits().length){addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');continue}
-        winBattle();return
+        if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
+        continue;
       }
       sourceRevealPetForDirectAttack(pet);
       const r=petAttackResult(pet,target);
@@ -10391,13 +10443,15 @@ function guardTurn(){
       performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
     }
 
+    sourceProcessBattleDeathsBetweenActors();
     if(enemy)syncEnemyTarget();
-    if(state.hp<=0){defeat();return}
-    if(enemy&&!livingEnemyUnits().length){winBattle();return}
   }
 
-  sourceProcessPendingPetBattleDeaths();
-  if(enemy){syncEnemyTarget();battleFieldTick();}
+  sourceProcessBattleDeathsBetweenActors();
+  if(!enemy){return;}
+  if(state.hp<=0){defeat();return;}
+  if(!livingEnemyUnits().length){winBattle();return;}
+  syncEnemyTarget();battleFieldTick();
   save();render();
 }
 function walkEncounterStep(){
