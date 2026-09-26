@@ -749,7 +749,23 @@ function sourceConsumeTrackedExistingItem(itemIndex){
   const existing=sourceItemRuntimeSlot(itemIndex);
   if(!existing||existing.owner!=='player')return false;
   const itemId=Math.trunc(Number(existing.itemId));
-  if(!sourceItemRuntimeFree(itemIndex))return false;
+  const pile=sourceItemRuntimeResolvedDataInt(existing,'ITEM_USEPILENUMS');
+  // fixed _CHAR_DelItem(..., num=1): insufficient pile fails without mutation.
+  if(pile==null||pile<1)return false;
+
+  // Client selection is for this one submitted use. Remove the selected backpack slot
+  // even when the underlying existing item remains because the pile still has units.
+  const slots=sourcePlayerItemSlots(state);
+  for(const selectedSlot of [...sourceField2SelectedSlots]){
+    if(Number(slots[selectedSlot])===Number(itemIndex))sourceField2SelectedSlots.delete(selectedSlot);
+  }
+
+  if(pile>1){
+    if(!sourceItemRuntimeSetDataInt(existing,'ITEM_USEPILENUMS',pile-1))return false;
+  }else{
+    if(!sourceItemRuntimeFree(itemIndex))return false;
+  }
+
   if(Number.isFinite(itemId)){
     const key=String(itemId),before=Math.max(0,Math.trunc(n(state.inventory?.[key])));
     if(before>1)state.inventory[key]=before-1;
