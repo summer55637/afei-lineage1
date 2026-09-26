@@ -150,6 +150,7 @@ def main():
         "semantics":{
             "outerPasses":5,
             "slotOrder":[1,2,3,4,5],
+            "atomIndex":"zero-based ITEM_initItemAtom load order; itematom.txt third column is ignored by fixed C",
             "minMax":"swap when fixMin > fixMax after atom resolution",
             "unknownAtom":"ITEM_getAtomIndexByName < 0 continues the outer ITEM_merge_getPetFix pass, so later slots in that pass are skipped",
             "negativeFallback":"ordinary 1000 / family 4000; no resolved pinned slot currently has a negative effective min/max",
