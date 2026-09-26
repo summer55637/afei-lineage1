@@ -2333,6 +2333,8 @@ fixed `BATTLE_Counter()` 本身也再次檢查 counter attacker 若仍是 ATTSHO
 - no Counter
 - player RANDOMACT dispatch 在 runtime-pending fallback 前
 
+V2.00 接入新函式後，舊 V1.99 regression 原本用 `WildViolent` 當函式結束邊界，會把新插入的 `AttackShoot` 一併切進 `AttackCrazed` 測試範圍，造成假性的 `damageDivisor` failure。已將 V1.99 regression 改成優先以 `sourcePerformPetAttackShootSkill` 作下一函式邊界；這只修測試切片範圍，不改任何戰鬥規則。
+
 save schema 維持 **29**。
 
 ### commits
@@ -2342,4 +2344,7 @@ save schema 維持 **29**。
 - `0645f191b73cf2a3da405225e6b2b346e7cd08e7` — V2.00 CI
 - `6f903317c5ede8527812c92b5adb755c3bedecf9` — V2.00 playable-core marker
 - `f36c6f30c58de125362a90a219164bf171a9b6db` — V2.00 README
+- `8be757b9f83f86fe52129cde56254534a9fd7e77` — V2.00 detailed changelog
+- `7c73c9b2930367e30d404d969a4439b8cc641205` — V2.00 changelog index
+- `4432d117542aaed6b66efa4a970bc2d15a98ec41` — V2.00 V1.99 regression boundary compatibility fix / full CI green
 
