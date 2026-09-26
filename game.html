@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.78</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.79</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.79：</b>
+      接上玩家寵低忠誠 RANDOMACT 的嗜血技／浴血狂襲。503/504/505/714/833 保留 PETSKILL_DamageToHp 的 C 整數除法 bug，因此 30/20/10 ÷100 先截成 0，實際不降攻；623/659 浴血狂襲依 fixed BATTLE_AttackSeq 套攻 +20% 與會心率 ×1.3。兩類都保留 BATTLE_S_AttackDamage 的 Guardian 僅代入傷害計算、實際仍扣原目標的舊 bug，且原目標有 DamageReact 時不吸血；623 資料文字的 HP50% 限制在 fixed 函式中沒有實作，因此不自行補 gate。
+    </article>
 
     <article class="card note">
       <b>V1.78：</b>
