@@ -5,6 +5,7 @@ on:
     paths:
       - "tools/generate_item_make_runtime.py"
       - "tools/check_v172_item_make_runtime.mjs"
+      - "tools/check_v173_item_equip_runtime.mjs"
       - "game.js"
       - ".github/workflows/generate-item-make-runtime.yml"
   workflow_dispatch:
@@ -32,6 +33,9 @@ jobs:
 
       - name: Run V1.72 item make regressions
         run: node tools/check_v172_item_make_runtime.mjs
+
+      - name: Run V1.73 item equip regressions
+        run: node tools/check_v173_item_equip_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
