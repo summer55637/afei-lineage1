@@ -22,7 +22,7 @@ on:
       - "tools/check_v187_player_hector_sars_runtime.mjs"
       - "tools/check_v188_player_acupuncture_runtime.mjs"
       - "tools/check_v189_player_sonic_regret_runtime.mjs"
-      - "tools/check_v190_player_firekill_runtime.mjs"\n      - "tools/check_v191_player_tear_runtime.mjs"\n      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"\n      - "tools/check_v193_player_batfly_divideattack_runtime.mjs"\n      - "tools/check_v194_player_timid_runtime.mjs"
+      - "tools/check_v190_player_firekill_runtime.mjs"\n      - "tools/check_v191_player_tear_runtime.mjs"\n      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"\n      - "tools/check_v193_player_batfly_divideattack_runtime.mjs"\n      - "tools/check_v194_player_timid_runtime.mjs"\n      - "tools/check_v195_player_magicstatuschange_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -118,6 +118,9 @@ jobs:
 
       - name: Run V1.94 player Timid regressions
         run: node tools/check_v194_player_timid_runtime.mjs
+
+      - name: Run V1.95 player MagicStatusChange regressions
+        run: node tools/check_v195_player_magicstatuschange_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
