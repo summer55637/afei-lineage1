@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.64</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.65</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -206,6 +206,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.65：</b>
+      修正同一回合中途死亡 Entry 的 execution-time lifecycle：Entry 仍照原 C 先參與 AI／Dex／排序／Combo，但真正輪到行動時會重新讀目前 HP／是否仍在 Battle，已死亡者在 StatusSeq、AttackCount、PetLoyalCheck 前直接跳過，避免已被前一位打死的持武器 Enemy 額外消耗 AttackCount RNG。
+    </article>
 
     <article class="card note">
       <b>V1.64：</b>
