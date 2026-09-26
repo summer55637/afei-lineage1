@@ -48,7 +48,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2323,10 +2323,10 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
   return {damage,dodged:false,dodge,attMagicLv,resist,randomAmp,amagic,aPower,adjusted,trueMagic,exp,hpBefore,hpAfter:battleStatusHp(targetDesc)};
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默'
+  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -2526,9 +2526,25 @@ function battleStatusGet(desc){
   const key=battleStatusKey(desc);
   return key?battleStatuses.get(key)||null:null;
 }
+function battleSarsGet(desc){
+  const key=battleStatusKey(desc);
+  return key?battleSarsStates.get(key)||null:null;
+}
+function battleHasAnyStatus(desc){
+  const st=battleStatusGet(desc),sars=battleSarsGet(desc);
+  return !!((st&&st.turns>0)||(sars&&sars.turns>0));
+}
 function battleStatusActive(desc,type=null){
+  if(type==='sars'){
+    const sars=battleSarsGet(desc);
+    return !!(sars&&sars.turns>0);
+  }
   const st=battleStatusGet(desc);
-  return !!(st&&st.turns>0&&(!type||st.type===type));
+  if(type==null){
+    const sars=battleSarsGet(desc);
+    return !!((st&&st.turns>0)||(sars&&sars.turns>0));
+  }
+  return !!(st&&st.turns>0&&st.type===type);
 }
 function battleStatusClear(desc,type=null){
   const key=battleStatusKey(desc);
@@ -2585,15 +2601,21 @@ function battleStatusLuck(desc){
   return desc?.kind==='player'?n(state.luck):0;
 }
 function battleStatusChance(attackerDesc,targetDesc,type,rules={}){
-  if(battleStatusGet(targetDesc))return {allowed:false,per:0,reason:'existing'};
-  const resist=battleStatusResist(targetDesc,type);
+  if(battleHasAnyStatus(targetDesc))return {allowed:false,per:0,reason:'existing'};
+  const targetKey=battleStatusKey(targetDesc);
+  const resist=type==='sars'
+    ?(targetKey&&battleSarsCarrierKeys.has(targetKey)?1:0)
+    :battleStatusResist(targetDesc,type);
   if(type==='paralysis'&&!rules.forceGeneral){
     const per=20-resist;
     return {allowed:true,per,success:cRand(1,100)<per,resist};
   }
   const raw=battleStatusRawStats(targetDesc);
   const total=n(raw.vital)+n(raw.str)+n(raw.tgh)+n(raw.dex);
-  const vitalPenalty=total>0?(n(raw.vital)/total)/.25*10:0;
+  const vitalShare=total>0?n(raw.vital)/total:0;
+  const vitalPenalty=type==='sars'
+    ?(1-vitalShare)*.9/.25*10
+    :vitalShare/.25*10;
   const bai=Number.isFinite(Number(rules.bai))?Number(rules.bai):2;
   const range=Number.isFinite(Number(rules.range))?Math.max(0,Math.trunc(Number(rules.range))):40;
   const perOffset=Number.isFinite(Number(rules.perOffset))?Math.trunc(Number(rules.perOffset)):30;
@@ -2608,7 +2630,7 @@ function battleStatusChance(attackerDesc,targetDesc,type,rules={}){
   return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset};
 }
 function battleStatusApply(targetDesc,type,turns){
-  if(battleStatusGet(targetDesc))return false;
+  if(battleHasAnyStatus(targetDesc))return false;
   const key=battleStatusKey(targetDesc);
   if(!key)return false;
   battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns))+1)});
@@ -2642,12 +2664,121 @@ function sourcePerformPetNormalGuard(pet,action){
 }
 
 function battleStatusApplyRaw(targetDesc,type,turns){
-  if(battleStatusGet(targetDesc))return false;
+  if(battleHasAnyStatus(targetDesc))return false;
   const key=battleStatusKey(targetDesc);
   if(!key)return false;
   battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns)))});
   sourceClearPetBattleCommand(targetDesc,type);
   return true;
+}
+function battleSarsApplyRaw(targetDesc,storedTurns,markCarrier=false){
+  const key=battleStatusKey(targetDesc);
+  if(!key)return false;
+  const existing=battleSarsStates.get(key);
+  if(existing&&n(existing.turns)>0)return false;
+  battleSarsStates.set(key,{type:'sars',turns:Math.max(1,Math.trunc(n(storedTurns)))});
+  if(markCarrier)battleSarsCarrierKeys.add(key);
+  return true;
+}
+function battleSarsClear(targetDesc){
+  const key=battleStatusKey(targetDesc);
+  return key?battleSarsStates.delete(key):false;
+}
+const SOURCE_SARS_SLOT_ORDER=Object.freeze([3,1,0,2,4,8,6,5,7,9]);
+function sourceBattleStatusDescFromSlot(slot){
+  const no=Math.trunc(Number(slot));
+  if(no===0&&state)return {kind:'player'};
+  if(no===5){
+    const pet=activePet();
+    if(pet&&!battlePetOutIds.has(pet.id))return {kind:'pet',pet,petId:pet.id};
+    return null;
+  }
+  if(no>=10&&no<20){
+    const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+    const unit=units.find(u=>u&&10+Math.max(0,Math.trunc(n(u.battleSlot)))===no)||null;
+    return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+  }
+  return null;
+}
+function sourceBattleStatusSlot(desc){
+  if(desc?.kind==='player')return 0;
+  if(desc?.kind==='pet')return 5;
+  if(desc?.kind==='enemy'&&desc.unit)return 10+Math.max(0,Math.trunc(n(desc.unit.battleSlot)));
+  return -1;
+}
+function sourceSarsNeighborSlots(slot){
+  const no=Math.trunc(Number(slot)),side=no>9?10:0,rel=no-(no>9?10:0);
+  const j=SOURCE_SARS_SLOT_ORDER.indexOf(rel);
+  if(j<0)return [];
+  const out=[],push=i=>{if(i>=0&&i<10)out.push(SOURCE_SARS_SLOT_ORDER[i]+side)};
+  if(j>4){
+    if((j+1)<10)push(j+1);
+    if((j-1)>4)push(j-1);
+    if((j-5+1)<5)push(j-5+1);
+    if((j-5-1)>=0)push(j-5-1);
+    if((j-5)>=0)push(j-5);
+  }else{
+    if((j+1)<5)push(j+1);
+    if((j-1)>=0)push(j-1);
+    if((j+5+1)<10)push(j+5+1);
+    if((j+5-1)>4)push(j+5-1);
+    if((j+5)<10)push(j+5);
+  }
+  return out;
+}
+function sourceSarsSpread(desc){
+  const sourceKey=battleStatusKey(desc);
+  if(!sourceKey||!battleSarsCarrierKeys.has(sourceKey))return [];
+  const sourceSlot=sourceBattleStatusSlot(desc);
+  if(sourceSlot<0)return [];
+  const rolls=[];
+  for(const slot of sourceSarsNeighborSlots(sourceSlot)){
+    const target=sourceBattleStatusDescFromSlot(slot);
+    if(target&&battleStatusActive(target,'sars')){
+      rolls.push({slot,skipped:'already-sars'});
+      continue;
+    }
+    const roll=cRand(1,100);
+    let applied=false;
+    if(roll<=60&&target){
+      const targetKey=battleStatusKey(target);
+      if(targetKey!==sourceKey&&battleStatusHp(target)>0){
+        applied=battleSarsApplyRaw(target,3,false);
+        if(applied)addLog(battleStatusDescName(target)+' 被毒煞傳染。','bad');
+      }
+    }
+    rolls.push({slot,roll,applied,target:target?.kind||null});
+  }
+  return rolls;
+}
+function sourceProcessSarsStatusTurn(desc){
+  const st=battleSarsGet(desc);
+  if(!st||n(st.turns)<=0)return null;
+  st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+  if(st.turns<=0){
+    battleSarsClear(desc);
+    addLog(battleStatusDescName(desc)+' 的毒煞狀態解除。');
+    return {expired:true,turns:0,damage:0,mpDamage:0,spread:[]};
+  }
+  const hpBefore=Math.max(0,Math.trunc(n(battleStatusHp(desc))));
+  let damage=Math.trunc(hpBefore*10/100);
+  if(hpBefore<=damage)damage=hpBefore-1;
+  if(damage<0)damage=0;
+  if(hpBefore>0)battleStatusSetHp(desc,Math.max(1,hpBefore-damage));
+  let mpDamage=0,mpBefore=null,mpAfter=null;
+  if(desc.kind==='player'){
+    mpBefore=Math.max(0,Math.trunc(n(state.mp)));
+    mpDamage=Math.trunc(mpBefore/10);
+    state.mp=Math.max(0,mpBefore-mpDamage);
+    mpAfter=state.mp;
+  }
+  if(damage>0||mpDamage>0){
+    addLog(battleStatusDescName(desc)+' 因毒煞受到 '+damage+' HP 傷害'
+      +(desc.kind==='player'?'，並失去 '+mpDamage+' MP':'')+'。','bad');
+  }
+  const spread=sourceSarsSpread(desc);
+  return {expired:false,turns:st.turns,hpBefore,hpAfter:battleStatusHp(desc),damage,
+    mpBefore,mpDamage,mpAfter,spread,carrier:battleSarsCarrierKeys.has(battleStatusKey(desc))};
 }
 function battleStatusWakeOnDamage(targetDesc,damage){
   if(n(damage)>0&&battleStatusActive(targetDesc,'sleep')){
@@ -2786,8 +2917,12 @@ function processBattleStatusTurn(actor){
     sourceEnemyFoxStatusSeq(desc.unit);
   }
 
+  const finish=result=>{
+    const sars=sourceProcessSarsStatusTurn(desc);
+    return sars?Object.assign({},result,{sars}):result;
+  };
   const st=battleStatusGet(desc);
-  if(!st||st.turns<=0)return {skip:false,desc,status:null};
+  if(!st||st.turns<=0)return finish({skip:false,desc,status:null});
 
   const blockedBefore=battleStatusCanMove(desc)===false;
 
@@ -2797,9 +2932,9 @@ function processBattleStatusTurn(actor){
     if(Math.trunc(n(st.turns))<=1){
       battleStatusClear(desc,st.type);
       addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
-      return {skip:blockedBefore,desc,status:st,expired:true,preCommandStatus:true};
+      return finish({skip:blockedBefore,desc,status:st,expired:true,preCommandStatus:true});
     }
-    return {skip:blockedBefore,desc,status:st,preCommandStatus:true};
+    return finish({skip:blockedBefore,desc,status:st,preCommandStatus:true});
   }
 
   st.turns--;
@@ -2812,11 +2947,11 @@ function processBattleStatusTurn(actor){
       battleStatusSetHp(desc,0);
       battleStatusClear(desc,'deepPoison');
       addLog(name+' 身中劇毒未解而倒下了！','bad');
-      return {skip:true,desc,status:st,deepPoisonDeath:true};
+      return finish({skip:true,desc,status:st,deepPoisonDeath:true});
     }
     const down=battleStatusPoisonDamage(desc);
     if(down>0)addLog(name+' 因劇毒受到 '+down+' 傷害。','bad');
-    return {skip:false,desc,status:st};
+    return finish({skip:false,desc,status:st});
   }
 
   if(st.turns<=0){
@@ -2828,7 +2963,7 @@ function processBattleStatusTurn(actor){
     }
     battleStatusClear(desc);
     addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
-    return {skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'};
+    return finish({skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'});
   }
 
   if(st.type==='poison'){
@@ -2836,12 +2971,13 @@ function processBattleStatusTurn(actor){
     if(down>0)addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 因中毒受到 '+down+' 傷害。','bad');
   }
   if(st.type==='confusion'&&cRand(1,100)<=80){
-    return {skip:false,desc,status:st,confusionAttack:true};
+    return finish({skip:false,desc,status:st,confusionAttack:true});
   }
-  return {skip:blockedBefore,desc,status:st};
+  return finish({skip:blockedBefore,desc,status:st});
 }
 function battleStatusTypeFromOption(option){
   const t=String(option||'');
+  if(t.includes('煞'))return 'sars';
   if(t.includes('剧')||t.includes('劇'))return 'deepPoison';
   if(t.includes('毒'))return 'poison';
   if(t.includes('虚')||t.includes('虛'))return 'weaken';
@@ -2976,6 +3112,7 @@ const ENEMY_SOURCE_SKILL_META={
   542:{n:'疾速攻擊',d:'防禦下降；此來源函式未實作資料描述的敏捷增加',f:'PETSKILL_SpeedyAttack',o:'防%-30 敏%+30',field:1,target:6},
   543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
+  617:{n:'毒煞蔓延',d:'物理命中後感染毒煞，主傳染者可向鄰格擴散',f:'PETSKILL_Sars',o:'煞',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
   // V0.64：分身地裂；直接操作敵方整側 MP／HP，不走命中、屬性、Guard 或 Counter。
@@ -3048,6 +3185,7 @@ const ENEMY_SOURCE_SKILL_META={
   // V0.62：火線獵殺；原 battle.c 固定物理攻 80%，再對目標所在一排施放火屬性 Power 200 / MagicLv 4。
   624:{n:'火線獵殺',d:'攻擊 80% 特殊物理攻擊後，對目標所在一排追加火屬性 Power 200／MagicLv 4',f:'PETSKILL_Firekill',o:'',field:1,target:1},
   625:{n:'媚惑術',d:'來源玩家寵物 PETFLG=0；Enemy 使用時等價普通物理攻擊',f:'PETSKILL_BecomeFox',o:'',field:1,target:1},
+  626:{n:'手下留情',d:'致死物理傷害改為留下 1 HP；保留 SHOWMERCY command lifecycle',f:'PETSKILL_ShowMercy',o:'',field:1,target:1},
   // V0.55：_BATTLE_ABDUCTII 旅程伙伴3；以玩家寵物 FIXAI 與 option 80 判定。
   608:{n:'E旅程伙伴3',d:'目標寵物 FIXAI 低於 80 時必定帶走',f:'PETSKILL_Abduct',o:'80',field:1,target:7},
   // V0.56：光鏡吸收技；目前玩家側沒有 DamageReact work-int，精準走 ReactType=0 分支。
@@ -3301,6 +3439,10 @@ function enemyPrepareRoundAction(unit,action){
     const quickPlus=Math.max(0,enemySkillNumber(meta.o,/\+敏%([0-9.]+)/,0));
     unit.roundAttack=Math.trunc(sourceFixAttack*attackRemain/100);
     unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*quickPlus/100);
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_Sars'){
+    unit.counterEligibleThisTurn=true;
+  }else if(meta?.f==='PETSKILL_ShowMercy'){
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_BecomeFox'||meta?.f==='PETSKILL_BecomePig'){
     // BecomeFox / BecomePig 都在 battle.c 的一般物理攻擊群組；
@@ -4381,10 +4523,13 @@ function sourceBowTargetList(actor,unit,target){
 function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   if(!target)return null;
   const playerGuarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+  const beforeApply=typeof options.beforeApply==='function'?options.beforeApply:null;
 
   if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
     const pet=target.pet;
     const r=enemyAttackPetResult(unit,pet,attackOptions);
+    const targetDesc={kind:'pet',pet,petId:pet.id};
+    const beforeApplyResult=beforeApply?beforeApply({target:'pet',pet,targetDesc,r},target):null;
     if(r.dodged){
       addLog(pet.name+' 閃避了 '+unit.name+' 的攻擊。','pet');
     }else if(r.miss){
@@ -4397,11 +4542,13 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
       addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
     }
-    return {target:'pet',pet,targetDesc:{kind:'pet',pet,petId:pet.id},r};
+    return {target:'pet',pet,targetDesc,r,beforeApply:beforeApplyResult};
   }
 
   if(target.kind!=='player'||state.hp<=0)return null;
   const r=enemyAttackResult(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
+  const targetDesc={kind:'player'};
+  const beforeApplyResult=beforeApply?beforeApply({target:'player',targetDesc,r},target):null;
   if(playerGuarding){
     if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
     else{
@@ -4422,7 +4569,7 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
     battleStatusWakeOnDamage({kind:'player'},r.damage);
     addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
   }
-  return {target:'player',targetDesc:{kind:'player'},r};
+  return {target:'player',targetDesc,r,beforeApply:beforeApplyResult};
 }
 function sourceBreakthrowParalysis(unit,hit){
   if(!hit?.targetDesc||!hit?.r||n(hit.r.damage)<=0)return {attempted:false,applied:false};
@@ -5904,7 +6051,7 @@ function enemyTryRegretDizzy(chosen,successPct,label){
   // 所以 miss / dodge / kill / existing-status 都必須先消耗同一顆。
   const roll=cRand(1,100);
   const desc=enemySkillTargetDesc(chosen);
-  if(!desc||!battleStatusDescAlive(desc)||battleStatusGet(desc))return false;
+  if(!desc||!battleStatusDescAlive(desc)||battleHasAnyStatus(desc))return false;
   if(roll>=successPct)return false;
   if(!battleStatusApply(desc,'dizzy',0))return false;
   addLog(battleStatusDescName(desc)+' 被 '+label+' 擊暈，下一次行動無法動作。','bad');
@@ -7297,14 +7444,17 @@ function sourcePetStatusSkillAttackPct(meta){
 }
 function sourcePetApplyStatusAttackHit(pet,targetDesc,r,type,turn,label){
   if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
-  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk')){
+  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'||type==='sars')){
     return {attempted:false,applied:false,unsupportedType:type||null};
   }
   const attackerDesc={kind:'pet',pet,petId:pet.id};
   const check=battleStatusChance(attackerDesc,targetDesc,type);
   let applied=false,storedTurns=0;
   if(check.allowed&&check.success){
-    if(type==='drunk'){
+    if(type==='sars'){
+      storedTurns=Math.max(1,Math.trunc(n(turn))+1);
+      applied=battleSarsApplyRaw(targetDesc,storedTurns,true);
+    }else if(type==='drunk'){
       // fixed BATTLE_Attack：先寫 gBattleStausTurn+1，再把 WORKDRUNK 自己 /2。
       storedTurns=Math.trunc((Math.max(0,Math.trunc(n(turn)))+1)/2);
       if(storedTurns>0)applied=battleStatusApplyRaw(targetDesc,type,storedTurns);
@@ -8384,6 +8534,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
     :sourceEnemyBattleAttackMax(unit);
 
   const attackOptions=Object.assign({},options.attackOptions||{});
+  const beforeApply=typeof options.beforeApply==='function'?options.beforeApply:null;
   const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
   const counterRules=options.counterRules&&typeof options.counterRules==='object'
     ?options.counterRules:{};
@@ -8414,10 +8565,11 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
       break;
     }
 
-    let r,actualTarget=target,afterHitResult=null;
+    let r,actualTarget=target,beforeApplyResult=null,afterHitResult=null;
     if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
       r=enemyAttackPetResult(unit,target.pet,attackOptions);
       actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
+      if(beforeApply)beforeApplyResult=beforeApply({target:'pet',pet:target.pet,targetDesc:actualTarget,r},target);
       enemyApplySkillHit(unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段');
       // fixed BATTLE_Attack(): DamageSub / WakeUp -> gBattleStausChange -> ItemCrush.
       if(afterHit)afterHitResult=afterHit({
@@ -8427,10 +8579,14 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
     }else if(target.kind==='player'&&state.hp>0){
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
       r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
+      actualTarget=enemyDirectActualTarget(target,r)||target;
+      if(beforeApply)beforeApplyResult=beforeApply({
+        target:'player',targetDesc:actualTarget,r,guardianPetId:r?.guardianPetId||null
+      },target);
       actualTarget=enemyApplyDirectGuardianSkillHit(
         unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段',
         {finalizeItemCrush:false}
-      )||target;
+      )||actualTarget;
       if(afterHit)afterHitResult=afterHit({
         target:'player',targetDesc:actualTarget,r,
         guardianPetId:r?.guardianPetId||null
@@ -8451,7 +8607,7 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
       target:target.kind,petId:target.pet?.id||null,
       actualTarget:actualTarget?.kind||target.kind,
       actualPetId:actualTarget?.petId||actualTarget?.pet?.id||null,
-      guardianPetId:r?.guardianPetId||null,r,afterHit:afterHitResult
+      guardianPetId:r?.guardianPetId||null,r,beforeApply:beforeApplyResult,afterHit:afterHitResult
     });
 
     // fixed common loop breaks immediately after ++attack_count reaches attack_max;
@@ -8503,6 +8659,32 @@ function sourceEnemyCommonSkillAttack(actor,unit,options={},label='攻擊'){
   // BOOMERANG is intentionally included here: only plain ATTACK is converted to the
   // special BO command. Skill commands stay in the ordinary non-BOW common loop.
   return sourceEnemyCommonNonRangedSkillSequence(actor,unit,options,label);
+}
+function sourceEnemyShowMercyBeforeApply(hit){
+  const r=hit?.r,targetDesc=hit?.targetDesc;
+  if(!r||!targetDesc||r.dodged||r.miss||n(r.damage)<=0)return {clamped:false,originalDamage:Math.max(0,Math.trunc(n(r?.damage)))};
+  const hp=Math.max(0,Math.trunc(n(battleStatusHp(targetDesc))));
+  const originalDamage=Math.max(0,Math.trunc(n(r.damage)));
+  if(hp-originalDamage<=0){
+    r.damage=Math.max(0,hp-1);
+    r.showMercyClamped=true;
+    r.showMercyOriginalDamage=originalDamage;
+    return {clamped:true,hp,originalDamage,damage:r.damage};
+  }
+  return {clamped:false,hp,originalDamage,damage:originalDamage};
+}
+function performEnemyShowMercy(actor,unit,options,meta){
+  const label=meta?.n||'手下留情';
+  unit.counterEligibleThisTurn=false;
+  const result=sourceEnemyCommonSkillAttack(actor,unit,Object.assign({},options,{beforeApply:sourceEnemyShowMercyBeforeApply}),label)||{};
+  return Object.assign({kind:'skill',skillId:actor.skillId,showMercy:true},result);
+}
+function performEnemySars(actor,unit,options,meta){
+  const label=meta?.n||'毒煞蔓延',turn=3;
+  unit.counterEligibleThisTurn=true;
+  const afterHit=hit=>sourceEnemyApplyStatusAttackHit(unit,hit.targetDesc,hit.r,'sars',turn,label);
+  const result=sourceEnemyCommonSkillAttack(actor,unit,Object.assign({},options,{afterHit,breakthrowStatus:false}),label)||{};
+  return Object.assign({kind:'skill',skillId:actor.skillId,statusType:'sars',turn},result);
 }
 function performEnemyPowerBalance(actor,unit,options,meta){
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
@@ -8650,6 +8832,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_PowerBalance')return performEnemyPowerBalance(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_NoGuard')return performEnemyNoGuard(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_StatusChange')return performEnemyStatusChange(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Sars')return performEnemySars(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_ChargeAttack')return performEnemyChargeAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_EarthRound')return performEnemyEarthRoundStart(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_FallGround')return performEnemyFallGround(actor,unit,options,meta);
@@ -8664,6 +8847,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Lighttakeed')return performEnemyLighttakeed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomePig')return performEnemyBecomePig(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BecomeFox')return performEnemyBecomeFox(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_ShowMercy')return performEnemyShowMercy(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sacrifice')return performEnemySacrifice(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTimid')return performEnemyBattleTimid(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_2BattleTimid')return performEnemy2BattleTimid(actor,unit,options,meta);
@@ -8688,8 +8872,6 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
-    if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
-    if(meta?.f==='PETSKILL_Gyrate')return performEnemyGyrate(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_WildViolentAttack')return performEnemyWildViolent(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_GuardBreak2')return performEnemyGuardBreak2(actor,unit,options,meta);
     if(meta?.f==='ENEMYSKILL_ReLife')return performEnemyReLife(actor,unit,options,meta);
