@@ -14360,3 +14360,34 @@ V1.54 繼續以 outer `sourcePostTarget` + last primary `r.allGuard` 表示這�
 - GYRATE never enters common Counter
 - WildViolent reruns raw-COM2 TargetAdjust on every non-BOW segment
 - save schema 27 unchanged
+
+
+## V1.56 SARS / ShowMercy common direct-attack completion
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### SARS / 毒煞蔓延
+- skill 617 / `PETSKILL_Sars`；option「煞」沿用 local `turn=3`。
+- 進入完整 common physical loop；每個正傷害 primary hit 在 WakeUp 後、ItemCrush 前做 SARS StatusAttackCheck。
+- BREAKTHROW 的 default paralysis 被 SARS 覆蓋。
+- 直接感染寫 WORKSARS=4、WORKMODSARS=1；MODSARS 本場不隨 SARS 到期清除。
+- 特有命中 penalty 為 `(1-vitalShare)*0.9/0.25*10`。
+- active tick 扣目前 HP 10%（最低 1 HP）；PLAYER 同時扣目前 MP 10%。
+- 主傳染者依固定 `{3,1,0,2,4,8,6,5,7,9}` 鄰格表逐格做 `RAND(1,100)<=60`。
+- 已 SARS 格在 RNG 前 skip；空格／死亡格在有效性檢查前仍消耗 RNG。
+- spread 直接寫 WORKSARS=3，不做 StatusAttackCheck，因此可與另一異常共存；V1.56 使用獨立 transient SARS map。
+
+### ShowMercy / 手下留情
+- skill 626 / `PETSKILL_ShowMercy`。
+- 保留完整 common AttackNum / BOW / throw / later TargetAdjust。
+- DamageSub 對真正承傷者（含 Guardian substitution）把致死傷害改為 `HP-1`。
+- HP=1 時正傷害可變 0，但 AttackSeq return-state仍是 NORMAL/CRITICAL，不改 MISS。
+- clamp 在 HP 套用、WakeUp、Ultimate、ItemCrush 前完成；最終 damage=0 不消耗 ItemCrush RNG。
+- COM1 保持 SHOWMERCY，所以被打者可 Counter，但攻擊者不能 counter-counter。
+
+### V1.56 cleanup / regression
+- SpeedyAttack 重新核對：既有實作符合來源，未改。
+- 移除 V1.55 dispatch 中重複的 ATTCRAZED / GYRATE 分支。
+- parent fixed at V1.55 / `76f450422787633a1eccda54acbee4ed1d7b9cb1`
+- game.js syntax PASS
+- save schema 27 unchanged
