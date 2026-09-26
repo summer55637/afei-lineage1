@@ -43,7 +43,7 @@ assert.ok(randomPlan.includes('const targetDesc=sourcePetRandomEnemyTarget()'));
 assert.ok(randomPlan.includes("return {kind:'skill',slot:iNum,skillId,meta,targetDesc}"));
 
 const specialStart=game.indexOf('function sourcePetSpecialStatusTarget');
-const specialEnd=game.indexOf('function sourcePerformPetGuardianSkill',specialStart);
+const specialEnd=game.indexOf('function sourcePetAdjustedAttackDamageTarget',specialStart);
 assert.ok(specialStart>=0&&specialEnd>specialStart);
 const special=game.slice(specialStart,specialEnd);
 assert.ok(special.includes("action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null"));
