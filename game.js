@@ -9835,6 +9835,68 @@ function sourcePerformPetLighttakeedSkill(pet,action){
   };
 }
 
+function sourcePerformPetMagicStatusChangeSkill(pet,action){
+  const meta=action?.meta;
+  const label=meta?.n||'鐵壁';
+  const parts=String(meta?.o||'').split('|');
+  const status=String(parts[0]||'').trim();
+  const turns=Math.max(0,sourceCAtoi(parts[1]));
+  const power=Math.max(0,sourceCAtoi(parts[2]));
+  const scope=String(parts[3]||'').trim();
+
+  // PETSKILL_MagicStatusChange() blindly copies the RANDOMACT toNo into COM2.
+  // BATTLE_PetRandomSkill chose that toNo through BATTLE_DefaultAttacker(opposing side),
+  // so even rows described as "全" do NOT become own-side/all-side here.
+  const rawToNo=action?.targetDesc?.kind==='enemy'
+    ?sourceBattleStatusSlot(action.targetDesc)
+    :-1;
+
+  if(!(status==='铁壁'||status==='鐵壁')){
+    addLog(pet.name+' 隨機抽到「'+label+'」，但 fixed MagicStatus 名稱不是鐵壁；不猜效果。','pet');
+    return {handled:true,skillId:action?.skillId,sourceRuntimePending:true,status,turns,power,scope,rawToNo};
+  }
+
+  // BATTLE_MultiMagicStatusChange calls BATTLE_MultiList(raw COM2).
+  // For a valid 0..19 slot this is one target only. If that target died before execution,
+  // __ATTACK_MAGIC repeatedly rand()%10-picks a living member of the same side.
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    addLog(pet.name+' 使用「'+label+'」，但來源 BATTLE_MultiList 找不到有效目標。','pet');
+    return {
+      handled:true,skillId:action?.skillId,noTarget:true,status:'superWall',
+      turns,power,scope,rawToNo,multi,sourceNoCounter:true
+    };
+  }
+
+  const results=[];
+  for(const slot of multi.slots){
+    const desc=sourceBattleStatusDescFromSlot(slot);
+    if(desc?.kind!=='enemy'||!desc.unit||n(desc.unit.hp)<=0)continue;
+    const unit=desc.unit;
+
+    // BATTLE_MultiMagicStatusChange scans every MagicTbl[j] and only writes the new
+    // status if none are active. Current source-backed MagicTbl runtime exposes SuperWall.
+    if(n(unit.superWallTurns)>0){
+      results.push({unitId:unit.id,slot,applied:false,existing:true});
+      continue;
+    }
+    unit.superWallTurns=turns;
+    unit.superWallPower=power;
+    results.push({unitId:unit.id,slot,applied:true,turns,power});
+    addLog(
+      pet.name+' 低忠誠亂放「'+label+'」，反而讓敵方 '+unit.name+
+      ' 取得 '+turns+' 回合鐵壁（基準 +'+power+'%）。','bad'
+    );
+  }
+
+  // This is an isolated SUPERWALL case: no physical hit, no ItemCrush, no Counter.
+  return {
+    handled:true,skillId:action?.skillId,status:'superWall',turns,power,scope,
+    rawToNo,multi,results,sourceRandomActOpposingTarget:true,
+    sourceScopeTextDoesNotRetarget:true,sourceNoCounter:true
+  };
+}
+
 function sourcePerformPetSetDuckRandomSkill(pet,action){
   const meta=action?.meta;
 
@@ -11761,6 +11823,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Modifyattack')result=sourcePerformPetModifyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Mdfyattack')result=sourcePerformPetMdfyAttackSkill(pet,action);
     else if(meta?.f==='PETSKILL_Lighttakeed')result=sourcePerformPetLighttakeedSkill(pet,action);
+    else if(meta?.f==='PETSKILL_MagicStatusChange')result=sourcePerformPetMagicStatusChangeSkill(pet,action);
     else if(meta?.f==='PETSKILL_SetMagicPet'){
       const rawToNo=action?.targetDesc?.kind==='enemy'?sourceBattleStatusSlot(action.targetDesc):-1;
       result=sourcePerformSetMagicPetBattle(pet.name,action.skillId,rawToNo,meta,'pet');
