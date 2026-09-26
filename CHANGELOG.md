@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.77**
+目前最新可玩核心：**V1.78**
 
 ## 歷史分檔
 
@@ -14,14 +14,16 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.77
+## 最新版本 V1.78
 
-V1.77 接上 fixed CHAR_PETID identity 與 Roar / Vary：
+V1.78 接上玩家寵低忠誠 RANDOMACT 的 Refresh / Weaken / Deeppoison / Barrier / Nocast：
 
-- Enemy 的 `E_T_TEMPNO → CHAR_PETID` 與捕獲後 PETID copy 已落進 Web runtime
-- 581 / 734 Roar 依 option 精確 PETID 清單直接 BATTLE_Exit
-- 600 / 674 Vary 僅允許 PETID 981～984，依原 C 套攻／敏與 WORKTURN 生命週期
-- _FIXWOLF 的 skill 600 reroll 維持原 RNG 順序
-- save schema 升至 29；舊存檔僅由已有 source tempNo 安全補 petId
+- fixed RANDOMACT 的單一 DefaultAttacker `toNo` 原樣傳進 PetSkill，不依 target metadata 擴成全體
+- Refresh 依 `BATTLE_MultiStatusRecovery` 的最後有效 StatusTbl 項目判定，只清一個狀態
+- Weaken / Barrier：成功後 `turn+1`
+- Deeppoison：成功後 `turn+2`
+- Nocast：成功後原始 `turn`
+- 四種狀態檢定沿用 `Success / range 30 / Bai 1.0`，且固定 build 的特殊 MOD resist 初始為 0
+- 全部都是獨立特殊 command，無物理傷害／普通 Counter
 
-完整 V1.77 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.78 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
