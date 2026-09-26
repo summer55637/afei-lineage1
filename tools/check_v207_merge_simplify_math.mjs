@@ -131,7 +131,8 @@ assert.ok(gate.includes('sourceMergePrepareStatic(sourceField2SelectedEntries(),
 assert.ok(gate.includes('mergeStaticPrepared:true'));
 assert.ok(gate.includes('sourceRuntimePending:true'));
 assert.ok(gate.includes('目前未實際擲 RNG'));
-assert.ok(gate.includes('成品候選與完整 lifecycle 尚未來源化'));
+assert.ok(gate.includes('ITEM_mergeItem_merge 的完整 merge table/runtime'));
+assert.ok(gate.includes('成品候選與後續 lifecycle 尚未來源化'));
 
 console.log(JSON.stringify({
   pass:true,
