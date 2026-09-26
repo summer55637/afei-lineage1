@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.81**
+目前最新可玩核心：**V1.82**
 
 ## 歷史分檔
 
@@ -14,15 +14,15 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.81
+## 最新版本 V1.82
 
-V1.81 接上玩家寵低忠誠 RANDOMACT 的屬性強化／屬性轉換攻擊：
+V1.82 接上玩家寵低忠誠 RANDOMACT 的 Lighttakeed，並確認 574 嚙齒術玩家側不可用：
 
-- Modifyattack：544～547、825～828；依原目標永久屬性追加傷害，保留 `rand()%(ModNum+5)` 後整數 `/100` bug
-- Mdfyattack：548～551、697～700；本次 AttackSeq 將攻方四屬清零，只留 option 指定屬性
-- Guardian 仍只替換 local AttackSeq defender；真正 DamageSub / death / ItemCrush 留在原目標
-- Modifyattack 的 bonus 被原目標 DamageReact 造成的 `skill_type=-1` 取消；Mdfyattack 元素替換仍成立
-- execution-time TargetAdjust 保留
-- 兩類都不接普通 Counter
+- 609～611：本回合 WORK攻擊=FIXSTR×0.7、WORK防禦=FIXTOUGH×0.5；原碼註解掉的敏捷×0.95不補
+- `battlePetPowerMods` 在下一 round compliance 前清除，符合 WORK 值生命週期
+- 現有 Enemy source-backed DamageReact 只有 Acupuncture，與 ABSROB / REFLEC / VANISH 均不匹配，因此不複製任何未建模光鏡守狀態
+- 物理部分保留 BATTLE_S_AttackDamage Guardian calc-only bug與 execution-time TargetAdjust
+- 574 `PETSKILL_ToothCrushe` 為 illegal=1，CHAR_TYPEPET 在 PETSKILL_Use 前直接 FALSE
+- Lighttakeed 不接普通 Counter
 
-完整 V1.81 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.82 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
