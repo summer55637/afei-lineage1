@@ -403,3 +403,63 @@ fixed `battle.c` 在角色真正執行 command 後才處理 WORKTURN：
 
 - `cf946cf26e91991bd11fdb4ffb7fac5d7cc38f19` — V1.77 CHAR_PETID / Roar / Vary core
 - `d521615e80428aba5694cfca431a2d8e7a1a0191` — initial V1.77 regression
+
+
+---
+
+## V1.78 Player RANDOMACT specialized status commands
+
+V1.78 繼續掃玩家出戰 Pet 在低忠誠 `RANDOMACT` 下仍落入 `sourceRuntimePending`、但 fixed 原 C 可以完整證明的特殊狀態 command。
+
+本輪接入：
+
+- 326 / 583 / 584 / 591 / 592 / 593 — `PETSKILL_Refresh`
+- 575 / 576 — `PETSKILL_Weaken`
+- 577 / 578 / 840 — `PETSKILL_Deeppoison`
+- 579 / 594 / 673 / 836 — `PETSKILL_Barrier`
+- 580 / 672 / 837 — `PETSKILL_Nocast`
+
+### RANDOMACT target 邊界
+
+fixed `BATTLE_PetRandomSkill()` 是先抽 skill slot，再用 `BATTLE_DefaultAttacker()` 取得單一敵方 `toNo`，最後才呼叫 `PETSKILL_Use(petindex, iNum, toNo, NULL)`。
+
+`PETSKILL_Use()` 只找 skill array / function pointer，會把這個 `toindex` 原封不動交給技能函式；它不會依 `PETSKILL_TARGET` metadata 再改成 ALLMYSIDE / ALLOTHERSIDE。
+
+因此在低忠誠 RANDOMACT 下，即使 576 全體虛弱、578 全體劇毒、672 全體沉默、673 全體魔障等資料列 target=3，仍只對 DefaultAttacker 當下選出的單一 Enemy 生效。Web 不按技能名稱修成較合理的全體效果。
+
+### Refresh
+
+fixed `BATTLE_S_Refresh()` 最後進 `BATTLE_MultiStatusRecovery()`。該函式從 status index 1 一直掃到 `BATTLE_ST_END`，每次遇到正值都覆寫 `tostatus`，所以最後一個正值勝出。
+
+固定前段 StatusTbl 順序為：
+
+`毒 → 麻 → 眠 → 石 → 醉 → 亂 → 虛 → 劇 → 障 → 默 → 煞 → ...`
+
+option=`全` 也不是一次清光：只清掃描出的那一個 `tostatus`。指定狀態則必須與該 `tostatus` 完全一致才解除。
+
+Web 依目前已建模狀態維持同一順序，並把 SARS 納入；SARS 雖使用獨立 battle map，但仍能被 `全` 的 fixed 掃描結果選中並解除。
+
+### Weaken / Deeppoison / Barrier / Nocast
+
+四類都沿用 fixed `BATTLE_StatusAttackCheck(attacker,target,status,Success,30,1.0)`。固定 `CHAR_complianceParameter` 明確把 MODWEAKEN / MODDEEPPOISON / MODBARRIER / MODNOCAST 初始化為 0，所以不拿既有六項 enemybase1 z[] 抗性猜到這些新欄位。
+
+- Weaken：成功後 `CHAR_WORKWEAKEN = turn + 1`
+- Deeppoison：`BATTLE_S_Deeppoison` 傳 `turn + 2` 給 MultiStatusChange
+- Barrier：成功後 `CHAR_WORKBARRIER = turn + 1`
+- Nocast：成功後直接 `CHAR_WORKNOCAST = turn`，不 +1
+
+Nocast 的 fixed `&&` 順序是先做 StatusAttackCheck，再排除 CHAR_TYPEPET。本輪 RANDOMACT target 是 Enemy，因此會正常寫入沉默；沉默本身不被 Web 猜成封鎖 Enemy 全技能。
+
+這五類都是獨立 `BATTLE_COM_S_*` command，不造成物理傷害，也不進普通 Counter。
+
+### Regression
+
+新增 `tools/check_v178_player_status_runtime.mjs`，檢查 18 筆 fixed row、單一 target 傳遞、Refresh last-positive 掃描、SARS、Success/range/Bai、各技能 stored turn、無物理 Counter，以及五個 dispatcher 都位於 pending fallback 前。
+
+### commits
+
+- `0c2dcb6c7b514bca5757d760e10ababe5ccc3579` — V1.78 player specialized status command core
+- `9e3dc4052030dd0c7e70e3fbce354b26a36b1a1d` — V1.78 regression
+- `23cd2ec7405138736c6e240abcfabb30148a9059` — V1.78 playable marker
+- `3e4e9f43b85f652858a51067a4af9a17ed487e4d` — V1.78 README
+- `e6af645a7ec672bf54e44e506b5878bdb85fd0ef` — V1.78 changelog index
