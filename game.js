@@ -12716,8 +12716,10 @@ function sourcePerformPetCombinedStatusChange(pet,action,magicId,rawToNo){
   const target=picked.target;
   const check=battleStatusChance({kind:'pet',pet,petId:pet.id},target,cfg.type,
     {perOffset:cfg.success,range:30,bai:1,forceGeneral:true});
-  const storedTurns=cfg.turn+2;
-  const applied=!!(check.allowed&&check.success&&battleStatusApply(target,cfg.type,storedTurns));
+  // fixed MAGIC_StatusChange_Battle passes the parsed turn unchanged.
+  // Use the raw writer because battleStatusApply() is the physical StatusChange adapter (+1).
+  const storedTurns=cfg.turn;
+  const applied=!!(check.allowed&&check.success&&battleStatusApplyRaw(target,cfg.type,storedTurns));
   if(applied)addLog(pet.name+' 的綜合法使 '+battleStatusDescName(target)+' 陷入 '+(BATTLE_STATUS_NAMES[cfg.type]||cfg.type)+'。','pet');
   return {handled:true,skillId:action.skillId,magicId,mp,targetSlot:picked.targetSlot,status:cfg.type,turn:cfg.turn,storedTurns,check,applied,multi:picked.multi};
 }
@@ -12727,7 +12729,7 @@ function sourcePerformPetCombinedWeaken(pet,action,rawToNo){
   const target=picked.target;
   const check=battleStatusChance({kind:'pet',pet,petId:pet.id},target,'weaken',
     {perOffset:20,range:30,bai:1,forceGeneral:true});
-  const applied=!!(check.allowed&&check.success&&battleStatusApply(target,'weaken',4));
+  const applied=!!(check.allowed&&check.success&&battleStatusApplyRaw(target,'weaken',4));
   if(applied)addLog(pet.name+' 的綜合法使 '+battleStatusDescName(target)+' 陷入虛弱（WORKWEAKEN=4）。','pet');
   return {handled:true,skillId:action.skillId,magicId,mp,targetSlot:picked.targetSlot,check,applied,storedTurns:4,multi:picked.multi};
 }
