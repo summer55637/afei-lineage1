@@ -3159,6 +3159,7 @@ const ENEMY_SOURCE_SKILL_META={
   543:{n:'破除防禦之2',d:'防禦目標增傷、非防禦目標減傷',f:'PETSKILL_GuardBreak2',o:'',field:1,target:6},
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
   614:{n:'栗子連激',d:'亂數連續投擲栗子 3~5 顆',f:'PETSKILL_AttackShoot',o:'3|5',field:1,target:1},
+  620:{n:'威嚇攻擊',d:'攻擊 -30%、敏捷 -30%；攻擊前以原 PROFESSION 判定嘗試麻痺 1 回合',f:'PETSKILL_Hector',o:'麻 turn 1 攻%-30 敏%-30',field:1,target:1},
   617:{n:'毒煞蔓延',d:'物理命中後感染毒煞，主傳染者可向鄰格擴散',f:'PETSKILL_Sars',o:'煞',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
@@ -3465,6 +3466,14 @@ function enemyPrepareRoundAction(unit,action){
     unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_AttackShoot'){
     unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_Hector'){
+    // PETSKILL_Hector is executed by Enemy AI before EntrySort, so both modifiers affect this round.
+    const attackPct=enemySignedSkillPercent(meta.o,'攻%');
+    const quickPct=enemySignedSkillPercent(meta.o,'敏%');
+    unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*attackPct/100);
+    unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*quickPct/100);
+    unit.hectorSkillDexPower=quickPct;
+    unit.counterEligibleThisTurn=true;
   }else if(meta?.f==='PETSKILL_SpeedyAttack'){
     const defensePct=enemySignedSkillPercent(meta.o,'防%');
     const baseDefense=sourceFixDefense;
@@ -4650,7 +4659,7 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
   const attackMax=Number.isFinite(overrideMax)&&overrideMax>0
     ?Math.trunc(overrideMax)
     :(Number.isFinite(primedMax)&&primedMax>0?Math.trunc(primedMax):sourceEnemyBattleAttackMax(unit));
-  const plan=sourceBowTargetList(actor,unit,chosen);
+  const plan=options.sourceBowPlan||sourceBowTargetList(actor,unit,chosen);
   const attackOptions=Object.assign({},options.attackOptions||{});
   const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
   const hits=[];
@@ -6174,6 +6183,74 @@ function performEnemyAttackShoot(actor,unit,options,meta){
     protocol:'BB-w0-forced',weaponType,targetRolls,
     plannedTargets:plannedTargets.map(t=>t?.kind||null),segments,sourceLoopExit,counterBlocked:true
   };
+}
+function sourceEnemyHectorRawEntryTarget(actor){
+  const raw=enemyActorCommandTarget(actor);
+  if(!raw)return null;
+  if(raw.kind==='pet'&&raw.pet){
+    if(battlePetOutIds.has(raw.pet.id))return null;
+    // Dead/hidden pets still have a Battle Entry; LostEscape/Abduct/PetOut do not.
+    const entries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:null;
+    if(entries&&entries.length&&!entries.some(x=>x?.kind==='pet'&&x.petId===raw.pet.id))return null;
+  }
+  return raw;
+}
+function sourceEnemyHectorParalysis(actor,unit,label){
+  const raw=sourceEnemyHectorRawEntryTarget(actor);
+  if(!raw)return {attempted:false,applied:false,reason:'invalid-entry'};
+
+  // PROFESSION_BATTLE_StatusAttackCheck() rolls before checking HP/ISDIE/existing status.
+  // It uses strict <60, so the effective success set is 1..59.
+  const roll=cRand(1,100);
+  const desc=enemySkillTargetDesc(raw);
+  if(!desc||!battleStatusDescAlive(desc)){
+    return {attempted:true,applied:false,roll,successPct:60,reason:'dead'};
+  }
+  if(battleHasAnyStatus(desc)){
+    return {attempted:true,applied:false,roll,successPct:60,reason:'existing-status'};
+  }
+  if(roll>=60){
+    return {attempted:true,applied:false,roll,successPct:60,reason:'roll'};
+  }
+
+  // Source writes WORKPARALYSIS=1 directly. Do not clear the target command now:
+  // an EarthRound-hidden raw COM2 must remain hidden for the immediately following TargetAdjust.
+  const key=battleStatusKey(desc);
+  if(!key)return {attempted:true,applied:false,roll,successPct:60,reason:'no-status-key'};
+  battleStatuses.set(key,{type:'paralysis',turns:1,sourceHector:true});
+  addLog(battleStatusDescName(desc)+' 被 '+label+' 威嚇成功，陷入麻痺 1 回合（roll '+roll+' < 60）。','bad');
+  return {attempted:true,applied:true,roll,successPct:60,target:desc.kind,petId:desc.pet?.id||null};
+}
+function performEnemyHector(actor,unit,options,meta){
+  const label=meta?.n||'威嚇攻擊';
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  const quickPct=enemySignedSkillPercent(meta?.o,'敏%');
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const rawTarget=enemyActorCommandTarget(actor);
+
+  // BATTLE_TargetListSet runs before the special HECTOR status block. Only BOW consumes RNG here.
+  const sourceBowPlan=(weaponType===4&&rawTarget)
+    ?sourceBowTargetList(actor,unit,rawTarget)
+    :null;
+  const paralysis=sourceEnemyHectorParalysis(actor,unit,label);
+
+  addLog(unit.name+' 使用 '+label+'（攻 '+attackPct+'%、敏 '+quickPct+'%；麻痺判定為 RAND(1,100) < 60）。');
+  unit.counterEligibleThisTurn=true;
+
+  // BREAKTHROW's earlier PARALYSIS global is overwritten by HECTOR LOW(COM3)=620.
+  // BATTLE_ST_END is 44, so general per-hit status processing exits before any RNG.
+  const commonOptions=Object.assign({},options,{breakthrowStatus:false});
+  if(sourceBowPlan)commonOptions.sourceBowPlan=sourceBowPlan;
+  const result=sourceEnemyCommonSkillAttack(actor,unit,commonOptions,label)||{};
+
+  return Object.assign({
+    kind:'skill',skillId:actor.skillId,attackPct,quickPct,
+    paralysis,sourceCom3Low:620,sourceBattleStatusEnd:44,
+    sourceGeneralHitStatusInvalid:true,breakthrowStatusOverridden:true,
+    sourceBowPlan:sourceBowPlan?{
+      random:sourceBowPlan.random,slots:sourceBowPlan.slots.slice()
+    }:null
+  },result);
 }
 function performEnemySpeedyAttack(actor,unit,options,meta){
   const defensePct=enemySignedSkillPercent(meta?.o,'防%');
@@ -9016,6 +9093,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_DivideAttack')return performEnemyDivideAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackShoot')return performEnemyAttackShoot(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Hector')return performEnemyHector(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
