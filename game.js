@@ -4840,6 +4840,20 @@ function performConfusionAttack(actor,statusTurn,options={}){
   const attackerView=battleStatusDescView(attackerDesc);
   const defenderView=battleStatusDescView(targetDesc);
   if(!attackerView||!defenderView)return true;
+
+  // V1.74 ports the fixed normal ATTACK weapon-command patterns. Confusion rewrites COM1/COM2
+  // inside StatusSeq and can legally point a Player ranged weapon back into side 0; that needs
+  // a separate cross-side weapon-pattern port. Fail closed rather than silently doing the old
+  // one-hit approximation. Preserve the known Bow TargetListSet RAND(0,1) lifecycle.
+  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
+    const weaponType=Math.trunc(n(attackerView.weaponType));
+    const sourceRangedBowPlan=weaponType===4
+      ?sourceBowTargetListFromBattleSlots(sourceBattleStatusSlot(targetDesc),0)
+      :null;
+    addLog('你在混亂中觸發遠程武器攻擊；跨 side 原 C pattern 尚未來源化，本次不猜攻擊結果。','bad');
+    return {handled:true,sourceRangedFailClosed:true,weaponType,sourceRangedBowPlan};
+  }
+
   const guarding=battleConfusionGuarding(targetDesc,options);
   const r=targetDesc.kind==='enemy'
     ?resolveAttackToEnemyWithGuardian(attackerView,targetDesc.unit,{guarding,attackerUnit:attackerDesc.kind==='enemy'?attackerDesc.unit:null})
