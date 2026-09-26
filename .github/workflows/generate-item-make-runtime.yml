@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "tools/generate_item_make_runtime.py"
+      - "tools/check_v172_item_make_runtime.mjs"
+      - "game.js"
       - ".github/workflows/generate-item-make-runtime.yml"
   workflow_dispatch:
 
@@ -24,6 +26,12 @@ jobs:
 
       - name: Generate fixed runtime
         run: python tools/generate_item_make_runtime.py
+
+      - name: Check game.js syntax
+        run: node --check game.js
+
+      - name: Run V1.72 item make regressions
+        run: node tools/check_v172_item_make_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
