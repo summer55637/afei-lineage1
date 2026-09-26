@@ -2414,12 +2414,17 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
   const after=battleStatusHp(desc);
   const maxHp=sourceUltimateMaxHp(desc);
   const threshold=maxHp*1.2+20;
+  // Acupuncture is a source oddity: reflected HP loss is damage/2, but the later
+  // BATTLE_DamageSub Ultimate direct-hit threshold still compares the pre-halved damage.
+  const thresholdDamage=Object.prototype.hasOwnProperty.call(result||{},'sourceUltimateThresholdDamage')
+    ?Math.max(0,Math.trunc(n(result.sourceUltimateThresholdDamage)))
+    :damage;
   const rawAfter=before-damage;
   const overkill=rawAfter<0?-rawAfter:0;
   let work=Math.max(0,Math.trunc(n(battleUltimateWork.get(key))));
   let type=0;
 
-  if(damage>=threshold){
+  if(thresholdDamage>=threshold){
     type=2;
   }else if(overkill>0){
     work+=overkill;
@@ -2442,7 +2447,7 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
     battleUltimateWork.delete(key);
     addLog(battleStatusDescName(desc)+' 達成原版 Ultimate／打飛條件（type '+type+'）。','bad');
   }
-  return {type,damage,before,after,maxHp,threshold,overkill,work,criticalRoll};
+  return {type,damage,thresholdDamage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
 function sourceBattleFinalizeItemCrushRng(r){
   if(!r||r.dodged||r.miss||n(r.damage)<=0)return null;
@@ -3160,6 +3165,7 @@ const ENEMY_SOURCE_SKILL_META={
   613:{n:'狂亂暴走',d:'亂數攻擊對手 3 次，攻防下降',f:'PETSKILL_AttackCrazed',o:'3',field:1,target:1},
   614:{n:'栗子連激',d:'亂數連續投擲栗子 3~5 顆',f:'PETSKILL_AttackShoot',o:'3|5',field:1,target:1},
   620:{n:'威嚇攻擊',d:'攻擊 -30%、敏捷 -30%；攻擊前以原 PROFESSION 判定嘗試麻痺 1 回合',f:'PETSKILL_Hector',o:'麻 turn 1 攻%-30 敏%-30',field:1,target:1},
+  622:{n:'針刺外皮',d:'可令攻擊者受到 1/2 的傷害',f:'PETSKILL_Acupuncture',o:'',field:1,target:0},
   617:{n:'毒煞蔓延',d:'物理命中後感染毒煞，主傳染者可向鄰格擴散',f:'PETSKILL_Sars',o:'煞',field:1,target:1},
   615:{n:'撕裂傷口1',d:'撕裂舊傷口，增加已損失 HP 20% 的傷害',f:'PETSKILL_BattleTearDamage',o:'20',field:1,target:1},
   633:{n:'群蝠四竄',d:'吸取敵方整側目前 HP 的一部分回復自身',f:'PETSKILL_BatFly',o:'',field:1,target:3},
@@ -4086,6 +4092,70 @@ function battleConfusionGuarding(targetDesc,options){
   if(targetDesc?.kind==='enemy')return !!targetDesc.unit?.guardThisTurn;
   return false;
 }
+function sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter=false}={}){
+  const unit=targetDesc?.kind==='enemy'?targetDesc.unit:null;
+  if(!unit||!unit.acupunctureActive||!r||r.dodged||r.miss||n(r.damage)<=0){
+    return {triggered:false};
+  }
+
+  // fixed BATTLE_DamageSub: BATTLE_GetDamageReact may return ACUPUNCTURE, but a throw weapon
+  // forcibly rewrites pRefrect back to NONE. The flag is therefore NOT consumed by throws.
+  const attackerView=battleStatusDescView(attackerDesc);
+  if(attackerView?.throwWeapon){
+    return {triggered:false,throwWeaponBlocked:true};
+  }
+
+  const originalDamage=Math.max(0,Math.trunc(n(r.damage)));
+  let fullDamage=originalDamage;
+  if(fullDamage%2!==0)fullDamage+=1; // source rounds odd damage upward before both deductions
+  const reflectedDamage=Math.trunc(fullDamage/2);
+  r.damage=fullDamage;
+  r.sourceAcupunctureOriginalDamage=originalDamage;
+  r.sourceAcupunctureFullDamage=fullDamage;
+  r.sourceAcupunctureReflectedDamage=reflectedDamage;
+  return {
+    triggered:true,counter:!!counter,
+    attackerDesc,targetDesc,targetUnit:unit,r,
+    originalDamage,fullDamage,reflectedDamage
+  };
+}
+function sourceFinishAcupunctureReaction(reaction){
+  if(!reaction?.triggered)return reaction||{triggered:false};
+  const {targetUnit,attackerDesc,r,fullDamage,reflectedDamage,counter}=reaction;
+
+  // Source order inside BATTLE_DamageSub:
+  // defender full damage -> clear WORKACUPUNCTURE -> attacker half damage.
+  targetUnit.acupunctureActive=false;
+  const beforeAttacker=battleStatusHp(attackerDesc);
+  battleStatusSetHp(attackerDesc,beforeAttacker-reflectedDamage);
+
+  const reflectResult=Object.assign({},r,{
+    damage:reflectedDamage,
+    sourceAcupunctureReflect:true,
+    sourceUltimateThresholdDamage:fullDamage
+  });
+  reaction.attackerBefore=beforeAttacker;
+  reaction.attackerAfter=battleStatusHp(attackerDesc);
+  reaction.ultimate=sourceTrackDamageSubUltimate(
+    attackerDesc,reflectedDamage,beforeAttacker,reflectResult
+  );
+
+  // BATTLE_Counter has a different WakeUp target from primary BATTLE_Attack:
+  // after acupuncture redirects defindex, Counter wakes the reflected attacker.
+  if(counter&&reflectedDamage>0)battleStatusWakeOnDamage(attackerDesc,reflectedDamage);
+  return reaction;
+}
+function sourceLogAcupunctureReaction(reaction){
+  if(!reaction?.triggered)return;
+  const targetName=battleStatusDescName(reaction.targetDesc);
+  const attackerName=battleStatusDescName(reaction.attackerDesc);
+  addLog(
+    targetName+' 的針刺外皮發動：原傷害 '+reaction.originalDamage+
+    (reaction.fullDamage!==reaction.originalDamage?' 先補成偶數 '+reaction.fullDamage:'')+
+    '，並反彈 '+reaction.reflectedDamage+' 傷害給 '+attackerName+'；效果已消耗。',
+    reaction.attackerAfter<=0?'bad':''
+  );
+}
 function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false}={}){
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
@@ -4107,16 +4177,20 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
     return;
   }
 
+  const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter});
   const before=battleStatusHp(targetDesc);
   battleStatusSetHp(targetDesc,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
-  battleStatusWakeOnDamage(targetDesc,r.damage);
+  sourceFinishAcupunctureReaction(acupuncture);
+  // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
+  if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
   sourceBattleFinalizeItemCrushRng(r);
   const after=battleStatusHp(targetDesc);
   if(before>0&&after<=0&&targetDesc?.kind==='enemy'&&targetDesc.unit){
     sourceMarkEnemyDeathCredit(targetDesc.unit,[attackerDesc]);
   }
   addLog(attackerName+' '+action+' '+targetName+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',after<=0?'bad':(attackerDesc?.kind==='pet'?'pet':''));
+  sourceLogAcupunctureReaction(acupuncture);
   if(before>0&&after<=0&&targetDesc?.kind==='pet')addLog(targetName+' 倒下了，本場後續回合不再行動。','bad');
 }
 function battleConfusionCounterEligible(desc,options,forcedAttackerKey){
@@ -4216,12 +4290,17 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
       }else if(r.miss){
         addLog('你的反擊沒有造成傷害。');
       }else{
+        const attackerDesc={kind:'player'};
+        const targetDesc={kind:'enemy',unit,unitId:unit.id};
+        const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter:true});
         const sourceUltimateBefore=n(unit.hp);
         unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
-        sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
+        sourceTrackDamageSubUltimate(targetDesc,r.damage,sourceUltimateBefore,r);
+        sourceFinishAcupunctureReaction(acupuncture);
         sourceBattleFinalizeItemCrushRng(r);
-        if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[{kind:'player'}]);
+        if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[attackerDesc]);
         addLog('你反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。',r.critical?'good':'');
+        sourceLogAcupunctureReaction(acupuncture);
       }
     }else{
       if(r.dodged){
@@ -4267,12 +4346,17 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
       if(r.dodged)addLog(unit.name+' 閃避了 '+pet.name+' 的反擊。','pet');
       else if(r.miss)addLog(pet.name+' 的反擊沒有造成傷害。','pet');
       else{
+        const attackerDesc={kind:'pet',pet,petId:pet.id};
+        const targetDesc={kind:'enemy',unit,unitId:unit.id};
+        const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter:true});
         const sourceUltimateBefore=n(unit.hp);
         unit.hp=Math.max(0,sourceUltimateBefore-r.damage);
-        sourceTrackDamageSubUltimate({kind:'enemy',unit,unitId:unit.id},r.damage,sourceUltimateBefore,r);
+        sourceTrackDamageSubUltimate(targetDesc,r.damage,sourceUltimateBefore,r);
+        sourceFinishAcupunctureReaction(acupuncture);
         sourceBattleFinalizeItemCrushRng(r);
-        if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[{kind:'pet',petId:pet.id}]);
+        if(sourceUltimateBefore>0&&unit.hp<=0)sourceMarkEnemyDeathCredit(unit,[attackerDesc]);
         addLog(pet.name+' 反擊 '+unit.name+(r.critical?'，會心一擊 ':'，造成 ')+r.damage+' 傷害。','pet');
+        sourceLogAcupunctureReaction(acupuncture);
       }
     }else{
       if(r.dodged)addLog(pet.name+' 閃避了 '+unit.name+' 的反擊。','pet');
@@ -4358,10 +4442,16 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
     return actual;
   }
 
+  const attackerDesc=attackerKind==='pet'
+    ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
+    :{kind:'player'};
+  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
+  const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r);
   const before=n(actual.hp);
   actual.hp=Math.max(0,before-r.damage);
-  sourceTrackDamageSubUltimate({kind:'enemy',unit:actual,unitId:actual.id},r.damage,before,r);
-  battleStatusWakeOnDamage({kind:'enemy',unit:actual,unitId:actual.id},r.damage);
+  sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
+  sourceFinishAcupunctureReaction(acupuncture);
+  battleStatusWakeOnDamage(targetDesc,r.damage);
   sourceBattleFinalizeItemCrushRng(r);
   if(r.guardian){
     addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
@@ -4370,6 +4460,7 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   }else{
     addLog('你對 '+actual.name+(r.critical?' 發動會心一擊，造成 ':' 造成 ')+r.damage+' 傷害。',r.critical?'good':'');
   }
+  sourceLogAcupunctureReaction(acupuncture);
   if(before>0&&actual.hp<=0){
     sourceMarkEnemyDeathCredit(actual,[attackerKind==='pet'?{kind:'pet',petId:attackerPetId}:{kind:'player'}]);
     addLog(actual.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -6250,6 +6341,22 @@ function performEnemyHector(actor,unit,options,meta){
     sourceBowPlan:sourceBowPlan?{
       random:sourceBowPlan.random,slots:sourceBowPlan.slots.slice()
     }:null
+  },result);
+}
+function performEnemyAcupuncture(actor,unit,options,meta){
+  const label=meta?.n||'針刺外皮';
+
+  // fixed battle.c BATTLE_COM_S_ACUPUNCTURE sets WORKACUPUNCTURE=1 first, then falls through
+  // the common physical block. Enemy AI has already supplied result->target to PETSKILL_Use,
+  // so meta.target=MYSELF does not replace the AI-selected COM2 here.
+  unit.acupunctureActive=true;
+  unit.counterEligibleThisTurn=true;
+  addLog(unit.name+' 使用 '+label+'：針刺外皮啟動；非投擲物理傷害命中時反彈一半並消耗。');
+
+  const result=sourceEnemyCommonSkillAttack(actor,unit,options,label)||{};
+  return Object.assign({
+    kind:'skill',skillId:actor.skillId,acupuncture:true,
+    sourceWorkAcupuncture:unit.acupunctureActive?1:0
   },result);
 }
 function performEnemySpeedyAttack(actor,unit,options,meta){
@@ -9094,6 +9201,7 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_AttackCrazed')return performEnemyAttackCrazed(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_AttackShoot')return performEnemyAttackShoot(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Hector')return performEnemyHector(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Acupuncture')return performEnemyAcupuncture(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_SpeedyAttack')return performEnemySpeedyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_BattleTearDamage')return performEnemyTear(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Regret')return performEnemyRegret(actor,unit,options,meta);
