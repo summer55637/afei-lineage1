@@ -4447,8 +4447,16 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
   const afterHit=typeof options.afterHit==='function'?options.afterHit:null;
   const hits=[];
   let attackCount=0;
+  let sourcePostTarget=null;
+  let sourceLoopExit='target-list-end';
   for(const slot of plan.slots){
-    if(slot<0)break;
+    // fixed common loop assigns defNo=aDefList[++k] before testing <0.
+    // Therefore hitting the sentinel leaves the later BECOMEFOX/BECOMEPIG post-check with invalid defNo.
+    if(slot<0){
+      sourcePostTarget=null;
+      sourceLoopExit='target-list-end';
+      break;
+    }
     const target=sourceEnemyTargetableFromBattleSlot(slot);
     if(!target)continue;
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
@@ -4457,16 +4465,25 @@ function performEnemyBowWeaponAttack(actor,unit,options={}){
     sourceBattleFinalizeItemCrushRng(hit.r);
     hits.push(Object.assign({battleSlot:slot},hit));
     attackCount++;
-    // 原 battle.c 的 attack_count 只在真正呼叫 BATTLE_Attack() 後遞增；
-    // 空格／死亡格不消耗弓的 AttackNum。
-    if(attackCount>=attackMax||n(unit.hp)<=0)break;
+    sourcePostTarget=target;
+    // When attack_max is reached (or the attacker dies), source breaks before loading the next aDefList slot,
+    // so defNo remains the target of the last real BATTLE_Attack.
+    if(attackCount>=attackMax){
+      sourceLoopExit='attack-max';
+      break;
+    }
+    if(n(unit.hp)<=0){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
   }
+  if(attackCount<attackMax&&n(unit.hp)>0&&sourceLoopExit!=='attacker-dead')sourcePostTarget=null;
   const sourceCounterReady=attackCount>=attackMax&&hits.length>0&&n(unit.hp)>0;
   return {
     target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
     weaponCommand:'BOW',protocol:'BB-w0',weaponItemId:unit.equippedWeaponId,
     attackMax,attackCount,bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits,
-    sourceCounterReady
+    sourcePostTarget,sourceLoopExit,sourceCounterReady
   };
 }
 function performEnemyBoomerangWeaponAttack(actor,unit,options={}){
@@ -4523,19 +4540,43 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
   const useBreakthrowStatus=options.breakthrowStatus!==false;
   const hits=[];
   let target=chosen;
+  let sourcePostTarget=null;
+  let sourceLoopExit='target-adjust-failed';
   for(let i=0;i<attackMax;i++){
-    if(!target)break;
+    if(!target){
+      sourcePostTarget=null;
+      sourceLoopExit='target-adjust-failed';
+      break;
+    }
     const hit=enemyWeaponApplyHit(unit,target,options,attackOptions);
-    if(!hit)break;
+    if(!hit){
+      sourcePostTarget=null;
+      sourceLoopExit='attack-failed';
+      break;
+    }
     let paralysis=null;
     if(useBreakthrowStatus&&Math.trunc(n(unit.weaponType))===19)paralysis=sourceBreakthrowParalysis(unit,hit);
     if(afterHit)hit.afterHit=afterHit(hit,target);
     sourceBattleFinalizeItemCrushRng(hit.r);
     hits.push(Object.assign({paralysis},hit));
-    if(i+1>=attackMax||n(unit.hp)<=0)break;
+    sourcePostTarget=target;
+    if(i+1>=attackMax){
+      sourceLoopExit='attack-max';
+      break;
+    }
+    if(n(unit.hp)<=0){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
     // Non-BOW TargetListSet prefilled every later aDefList entry with the original COM2.
     // Each later segment writes that raw slot back to COM2 and runs BATTLE_TargetAdjust again.
     target=enemyActorTarget(actor,unit);
+    // fixed code has already assigned the failed TargetAdjust result into defNo before it breaks.
+    if(!target){
+      sourcePostTarget=null;
+      sourceLoopExit='target-adjust-failed';
+      break;
+    }
   }
   const type=Math.trunc(n(unit.weaponType));
   const attackCount=hits.length;
@@ -4544,7 +4585,7 @@ function performEnemyThrowWeaponAttack(actor,unit,options={}){
     target:chosen.kind,pet:chosen.pet||null,r:hits.length?hits[hits.length-1].r:null,
     weaponCommand:type===19?'BREAKTHROW':'BOUNDTHROW',
     protocol:type===19?'BB-w2':'BB-w1',weaponItemId:unit.equippedWeaponId,
-    attackMax,attackCount,hits,sourceCounterReady
+    attackMax,attackCount,hits,sourcePostTarget,sourceLoopExit,sourceCounterReady
   };
 }
 
@@ -6309,17 +6350,45 @@ function applyPlayerPigDuration(seconds,imageNo){
   state.playerPigImage=Math.trunc(n(imageNo)||100388);
   return playerPigRemainingSeconds(now);
 }
+function sourceCommonPostAttackTarget(result){
+  if(!result)return null;
+  // Ranged common-loop callers explicitly preserve the final source defNo. null means the loop
+  // already loaded an invalid/sentinel defNo before breaking, so post-attack effects must not retarget.
+  if(Object.prototype.hasOwnProperty.call(result,'sourcePostTarget'))return result.sourcePostTarget||null;
+  if(result.target==='pet'&&result.pet)return {kind:'pet',pet:result.pet,petId:result.pet.id};
+  if(result.target==='player')return {kind:'player'};
+  return null;
+}
+function sourceCommonPostAttackTargetAlive(target){
+  if(target?.kind==='pet')return !!target.pet&&petIsBattleActive(target.pet);
+  if(target?.kind==='player')return state.hp>0;
+  return false;
+}
 function performEnemyBecomePig(actor,unit,options,meta){
   // 原 battle.c：BECOMEPIG 先完成普通 BATTLE_Attack + Counter 鏈，
-  // 再以該次攻擊結果判斷是否套黑烏力化。
+  // 再用「共用 loop 離開當下的 defNo」與最後一次 BATTLE_Attack return-state 判斷後置效果。
   const result=performEnemyPrimaryAttack(actor,unit,options)||{};
   const parts=String(meta?.o||'').trim().split(/\s+/);
   const rate=Math.max(0,Math.trunc(Number(parts[0])||0));
   const seconds=Math.max(0,Math.trunc(Number(parts[1])||0));
   const imageNo=Math.trunc(Number(parts[2])||100388);
 
+  const sourcePostTarget=sourceCommonPostAttackTarget(result);
+  const sourceTargetAlive=sourceCommonPostAttackTargetAlive(sourcePostTarget);
+  const sourceReturnEligible=!!result.r
+    &&!result.r.dodged
+    &&!result.r.miss
+    &&!result.r.allGuard
+    &&!result.r.arranged;
+
   let roll=null,applied=false,remaining=playerPigRemainingSeconds();
-  if(result.target==='player'&&state.hp>0&&result.r&&!result.r.dodged&&!result.r.miss){
+  // Source condition order before rand()%100:
+  // MISS/DODGE/ALLGUARD/ARRANGE -> BATTLE_TargetCheck(defNo) -> PLAYER type
+  // -> opposite side -> CHAR_BECOMEPIG < 2000000000 -> rand.
+  // Enemy-to-player targeting structurally satisfies the opposite-side test here.
+  const sourcePigCapEligible=remaining<2000000000;
+  const sourceTargetEligible=sourcePostTarget?.kind==='player'&&sourceTargetAlive;
+  if(sourceReturnEligible&&sourceTargetEligible&&sourcePigCapEligible){
     roll=cRand(0,99);
     if(roll<rate){
       remaining=applyPlayerPigDuration(seconds,imageNo);
@@ -6332,7 +6401,10 @@ function performEnemyBecomePig(actor,unit,options,meta){
 
   return Object.assign({
     kind:'skill',skillId:actor.skillId,rate,seconds,imageNo,roll,applied,
-    pigRemainingSeconds:remaining
+    pigRemainingSeconds:remaining,
+    sourcePostTargetKind:sourcePostTarget?.kind||null,
+    sourcePostTargetPetId:sourcePostTarget?.petId||sourcePostTarget?.pet?.id||null,
+    sourceTargetAlive,sourceReturnEligible,sourcePigCapEligible
   },result);
 }
 function performEnemyBecomeFox(actor,unit,options,meta){
@@ -6340,12 +6412,12 @@ function performEnemyBecomeFox(actor,unit,options,meta){
   // C 的求值順序把 rand()%100 < 31 放在 target type / PETFLG 檢查之前，
   // 所以效果即使注定因玩家側資料失敗，合格的活著命中仍必須先消耗這顆 RNG。
   const result=performEnemyPrimaryAttack(actor,unit,options)||{};
-  const sourceTargetAlive=result.target==='pet'
-    ?!!result.pet&&petIsBattleActive(result.pet)
-    :(result.target==='player'?state.hp>0:false);
+  const sourcePostTarget=sourceCommonPostAttackTarget(result);
+  const sourceTargetAlive=sourceCommonPostAttackTargetAlive(sourcePostTarget);
   const sourceReturnEligible=!!result.r
     &&!result.r.dodged
     &&!result.r.miss
+    &&!result.r.allGuard
     &&!result.r.arranged;
   let foxRoll=null;
   if(sourceReturnEligible&&sourceTargetAlive){
@@ -6353,7 +6425,7 @@ function performEnemyBecomeFox(actor,unit,options,meta){
   }
 
   // fixed condition order after the roll:
-  // 1) target != PLAYER
+  // 1) final defNo target != PLAYER
   // 2) target WORK_PETFLG != 0
   // 玩家擁有寵物的 WORK_PETFLG 來源初始化為 0；玩家本身又先被 type 條件排除。
   // 因此目前仍沒有可成立的變狐效果，但不能因此省略前面的 rand()%100。
@@ -6368,6 +6440,8 @@ function performEnemyBecomeFox(actor,unit,options,meta){
   return Object.assign({
     kind:'skill',skillId:actor.skillId,transformEligible,sourcePetFlg,
     foxRoll,foxRollPassed:foxRoll!=null&&foxRoll<31,
+    sourcePostTargetKind:sourcePostTarget?.kind||null,
+    sourcePostTargetPetId:sourcePostTarget?.petId||sourcePostTarget?.pet?.id||null,
     sourceTargetAlive,sourceReturnEligible
   },result);
 }

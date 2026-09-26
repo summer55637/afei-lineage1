@@ -13678,3 +13678,70 @@ V1.48 restores that per-hit substitution without adding any GYRATE Counter.
 - GYRATE Player row hit can Guardian-substitute but GYRATE still has no outer Counter
 - ranged throw weapons remain Guardian-ineligible
 - schema 27 unchanged
+
+
+## V1.49 common-loop post-attack defNo lifecycle
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source finding
+
+`BATTLE_COM_S_BECOMEFOX` 與 `BATTLE_COM_S_BECOMEPIG` 都先落入普通物理 common loop。
+後置條件不是重新看最初 COM2，而是直接使用 loop 離開當下仍留在區域變數中的 `defNo`。
+
+固定 common loop 的重要順序：
+
+1. 真正呼叫 `BATTLE_Attack(attackNo, defNo)`
+2. `++attack_count`
+3. 若已達 `attack_max`，立即 break，`defNo` 保留最後實際攻擊目標
+4. 若攻擊者死亡，同樣在載入下一格前 break
+5. 否則先做 `defNo = aDefList[++k]`
+6. 若新 `defNo < 0`，break 時後置 `defNo` 已是無效值
+7. 非 BOW 再執行 `BATTLE_TargetAdjust`；若失敗，後置 `defNo` 同樣無效
+
+### BOW / BOUNDTHROW / BREAKTHROW
+
+V1.49 的 ranged common-loop 回傳額外保存 `sourcePostTarget` 與 `sourceLoopExit`：
+
+- 達到 `attack_max` 或攻擊者死亡：後置目標保留最後一次真正攻擊的目標
+- BOW 讀到 `-1` sentinel／目標表耗盡：後置目標清為 null
+- 非 BOW 的 `TargetAdjust` 失敗：後置目標清為 null
+
+這不改 V1.45 Counter；Counter 仍以最後實際 hit 為準。新增狀態只供 Counter 之後的 BECOMEFOX／BECOMEPIG 後置條件使用，也沒有新增任何 TargetAdjust RNG。
+
+### BECOMEFOX
+
+後置 RNG 現在依固定條件順序判定：
+
+- 最後一次 BATTLE_Attack return 不是 MISS / DODGE / ALLGUARD / ARRANGE
+- common loop 最終 `defNo` 仍通過 BATTLE_TargetCheck
+- 然後才消耗 `rand()%100 < 31`
+
+target type / WORK_PETFLG 仍位於 RNG 之後，維持 V1.44 已對齊的短路順序。
+
+### BECOMEPIG
+
+黑烏力化後置判定改用同一個 source final `defNo`，並補齊固定 C 明列門檻：
+
+- 非 MISS / DODGE / ALLGUARD / ARRANGE
+- 最終 `defNo` 仍存活可攻擊
+- 最終目標必須是 PLAYER
+- Enemy 對 Player 的現行路徑結構上已滿足不同 side
+- 既有黑烏力時間 < 2000000000
+- 以上都成立才抽 `rand()%100 < petrate`
+
+因此 ranged common-loop 若最後 source defNo 是寵物，或目標表／TargetAdjust 已留下無效 defNo，不會再錯把最初玩家目標拿來抽黑烏力 RNG。
+
+### V1.49 regression targets
+
+- game.js syntax PASS
+- parent fixed at V1.48 / 732d50ec28b349bfa98007ac19cb5bd311b52254
+- BOW attack_max exit preserves final attacked target
+- BOW sentinel clears post target
+- BOUND/BREAK attack_max exit preserves final attacked target
+- failed TargetAdjust clears post target without extra RNG
+- BECOMEFOX uses source final defNo and full return-state gate
+- BECOMEPIG uses source final defNo and full return-state/alive/type/cap gate
+- V1.45 ranged Counter unchanged
+- V1.48 Guardian logic unchanged
+- schema 27 unchanged
