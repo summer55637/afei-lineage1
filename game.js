@@ -272,15 +272,6 @@ function normalizePlayerItemSlots(rawSlots,itemRuntime){
   }
   return out;
 }
-function sourcePlayerFixedEquipModifier(template,key){
-  const pair=template?.[key];
-  if(!Array.isArray(pair)||pair.length<2)return 0;
-  const a=Number(pair[0]),b=Number(pair[1]);
-  // Backward-compatible fallback for pre-materialization saves. New V1.72 existing items keep
-  // the exact rolled ITEM data[] and therefore do not need this min=max shortcut.
-  if(!Number.isFinite(a)||!Number.isFinite(b)||a!==b)return null;
-  return Math.trunc(a);
-}
 function sourcePlayerEquipmentModifiers(target=state){
   const result={
     attack:0,defense:0,quick:0,hp:0,mp:0,luck:0,charm:0,avoid:0,
