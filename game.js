@@ -4825,13 +4825,22 @@ function performEnemyChargeState(actor,unit,options={}){
   // 因此此 runtime 的額外 MODATTACK 等價 0，不自行建立猜測值。
   const releaseFixAttack=Math.trunc(n(unit.roundFixAttack??unit.roundAttack??unit.attack));
   unit.roundAttack=releaseFixAttack+Math.trunc(releaseFixAttack*n(charge.attackPct)/100);
+
+  // BATTLE_Charge() 把 command 轉成 CHARGE_OK；進 common direct-attack case 後，
+  // battle.c 在第一個 BATTLE_Attack 前又把 COM1 清成 NONE。
+  // 所以目標可以反擊這次攻擊，但施術者不能在 Counter 鏈中再反反擊。
   unit.counterEligibleThisTurn=false;
   const releaseActor=Object.assign({},actor,{
     targetKind:charge.targetKind,
     targetPetId:charge.targetPetId
   });
   addLog(unit.name+' 釋放 '+charge.label+'（攻擊 +'+charge.attackPct+'%）。');
-  const result=performEnemyPrimaryAttack(releaseActor,unit,options)||{};
+
+  // CHARGE_OK 仍使用本釋放回合已經 prime 的 AttackNum / TargetListSet lifecycle。
+  // 非 BOW 需逐段用 raw COM2 重新 TargetAdjust；技能中的 BOOMERANG 不轉特殊 BO command。
+  const result=sourceEnemyCommonSkillAttack(
+    releaseActor,unit,options,charge.label||'蓄力攻擊'
+  )||{};
   unit.chargeState=null;
   return Object.assign({kind:'charge',released:true},result);
 }
@@ -7967,9 +7976,15 @@ function performEnemyEarthRoundRelease(actor,unit,options={}){
   });
   const multiplier=1+n(round.attackPct)/100;
   addLog(unit.name+' 從背後現身完成 '+round.label+'（最終傷害 ×'+multiplier.toFixed(2)+'）。');
-  const result=performEnemyPrimaryAttack(releaseActor,unit,Object.assign({},options,{
-    attackOptions:Object.assign({},options.attackOptions||{}, {damageMultiplier:multiplier})
-  }))||{};
+
+  // EARTHROUND0 在 common loop 前設定 gBattleDamageModyfy，
+  // 所以每一個 primary segment 都套同一倍率；之後仍依本回合 AttackNum / aDefList 執行。
+  const attackOptions=Object.assign({},options.attackOptions||{},{
+    damageMultiplier:multiplier
+  });
+  const result=sourceEnemyCommonSkillAttack(
+    releaseActor,unit,Object.assign({},options,{attackOptions}),round.label||'地球一周'
+  )||{};
   return Object.assign({kind:'earthround',released:true,multiplier},result);
 }
 function performEnemyGuardBreak(actor,unit,options,meta){

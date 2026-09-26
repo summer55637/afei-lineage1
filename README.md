@@ -13962,3 +13962,97 @@ V1.51：
 - Counter uses final primary result after full sequence
 - BOW / BOUNDTHROW / BREAKTHROW continue through existing V1.49/V1.50 helpers
 - schema 27 unchanged
+
+
+## V1.52 Charge release / EarthRound0 common weapon loop
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### Source finding
+
+`BATTLE_COM_S_CHARGE_OK` 與 `BATTLE_COM_S_EARTHROUND0` 都和 PowerBalance／Mighty／SpeedyAttack 一樣，
+落入 battle.c 的普通 physical common direct-attack 群組。
+
+兩者都不是獨立的「固定單擊」。
+
+釋放回合在真正進 command switch 前已經完成：
+
+1. `BATTLE_GetAttackCount(charaindex)`
+2. FIST 有效武器的 `gDamageDiv = attack_max` 判定
+3. `BATTLE_TargetListSet(..., aDefList)`
+4. BOW 建 aBowW；非 BOW 以 raw COM2 填滿 aDefList
+
+因此 V1.51 新建立的 common skill loop 同樣適用於這兩個 release command。
+
+### Charge release
+
+`BATTLE_Charge()` 到時間後把 command 改成 `BATTLE_COM_S_CHARGE_OK`，
+並用「釋放回合」的 `WORKFIXSTR` 計算攻擊修正。
+
+V1.52 保留既有：
+
+`WORKATTACKPOWER = release FIXSTR + int(release FIXSTR * 攻% / 100)`
+
+只修正後面的攻擊生命週期：
+
+- 使用該釋放回合已 prime 的 `sourceAttackMax`
+- 不重抽武器 AttackNum
+- BOW / BOUNDTHROW / BREAKTHROW 沿既有完整 weapon helpers
+- 非 BOW 每段重新從 raw COM2 做 `BATTLE_TargetAdjust`
+- 手持 BOOMERANG 不轉特殊 BO row command
+
+### EarthRound0 release
+
+battle.c 在 `BATTLE_COM_S_EARTHROUND0` 進 common loop 前設定：
+
+`gBattleDamageModyfy = 1.0 + 0.01 * COM3`
+
+因此這個倍率不是只給第一擊，而是直到 common loop 結束前都維持。
+
+V1.52：
+
+- 每個 primary segment 都套相同 EarthRound damage multiplier
+- multiplier 仍發生在 AttackSeq / GuardAdjust 後、`gDamageDiv` 前
+- 有效 FIST AttackNum 的每段傷害仍在最後再除以 AttackNum
+- BOW / throw 也沿同一 release-round AttackNum
+
+### Command cleared to NONE
+
+固定 C 在真正攻擊前：
+
+```c
+if (COM == BATTLE_COM_S_CHARGE_OK || COM == BATTLE_COM_S_EARTHROUND0)
+    CHAR_setWorkInt(charaindex, CHAR_WORKBATTLECOM1, BATTLE_COM_NONE);
+```
+
+這造成一個重要 Counter 行為：
+
+- 被攻擊方仍可以因這次 `BATTLE_Attack` 進 Counter
+- 施術者此時 COM1 已是 NONE，因此不能在 Counter 鏈裡再反反擊
+
+V1.52 繼續用 `unit.counterEligibleThisTurn=false` 保留這個來源行為。
+
+### BOOMERANG
+
+只有 plain `BATTLE_COM_ATTACK` 才在前置 switch 被轉成 `BATTLE_COM_BOOMERANG`。
+
+`CHARGE_OK` / `EARTHROUND0` 都不會轉換，因此：
+
+- 手持回力標時仍是 common non-BOW multi-segment
+- 不做特殊 BO 全排攻擊
+- throw weapon gate 仍會阻止 Guardian / Counter
+
+### V1.52 regression targets
+
+- game.js syntax PASS
+- main parent fixed at V1.51 / 79ed01e35b0dc303c9f50ddb273fd31d6e201b74
+- Charge release reuses current-turn primed sourceAttackMax
+- EarthRound0 release reuses current-turn primed sourceAttackMax
+- no duplicate BATTLE_GetAttackCount RNG
+- non-BOW later segments rerun TargetAdjust from raw COM2
+- EarthRound multiplier applies to every primary segment
+- FIST gDamageDiv ordering remains multiplier-then-divisor
+- skill BOOMERANG stays common non-BOW
+- defender may Counter; Charge/EarthRound actor cannot counter-counter after COM1 becomes NONE
+- existing charge/earth state timing unchanged
+- schema 27 unchanged
