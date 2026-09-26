@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.79**
+目前最新可玩核心：**V1.80**
 
 ## 歷史分檔
 
@@ -14,15 +14,15 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.79
+## 最新版本 V1.80
 
-V1.79 接上玩家寵低忠誠 RANDOMACT 的嗜血技／浴血狂襲：
+V1.80 接上玩家寵低忠誠 RANDOMACT 的 506～508 MP攻擊：
 
-- 503 / 504 / 505 / 714 / 833 保留 `atoi(first)/100` 的 C 整數除法 bug，現有 30 / 20 / 10 全部等於 0，不實際降攻
-- 623 / 659 依 fixed `BATTLE_AttackSeq` 使用攻 +20% 與會心率 ×1.3
-- `BATTLE_S_AttackDamage` 的 Guardian 只替換 local AttackSeq defender，真正 DamageSub / death / ItemCrush / drain 仍落在原目標
-- 原目標已有 DamageReact 時，skill type 先降成普通反應：不吸血，DamageToHp2 的 +20% / ×1.3 也不套
-- 623 的 HP50% 使用限制只有資料說明／註解，fixed `PETSKILL_DamageToHp2()` 沒有實際判斷，Web 不自行補 gate
-- 兩類皆不進普通 Counter
+- `PETSKILL_MpDamage` 的 `50/100` 是 C int/int 先算，結果 0；固定 build 實際不降攻
+- `BATTLE_S_MpDamage` 對 ENEMY / PET 直接 return 0
+- RANDOMACT 的 DefaultAttacker 在目前 PVE 路徑選 Enemy，因此 50% / 75% / 100% MP 削減都不可達，額外 MP 傷害固定 0
+- 物理部分沿用 `BATTLE_S_AttackDamage` Guardian calc-only / 原目標 DamageSub bug
+- execution-time TargetAdjust 保留
+- 不接普通 Counter
 
-完整 V1.79 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.80 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
