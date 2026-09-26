@@ -5874,9 +5874,13 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
 }
 function performEnemySpeedyAttack(actor,unit,options,meta){
   const defensePct=enemySignedSkillPercent(meta?.o,'防%');
-  addLog(unit.name+' 使用 '+(meta?.n||'疾速攻擊')+'（防 '+defensePct+'%；原來源未套用 option 內的敏捷增加）。');
+  const label=meta?.n||'疾速攻擊';
+  addLog(unit.name+' 使用 '+label+'（防 '+defensePct+'%；排序敏捷由 BATTLE_DexCalc 專用 +30% 規則處理）。');
   unit.counterEligibleThisTurn=true;
-  return Object.assign({kind:'skill',skillId:actor.skillId},performEnemyPrimaryAttack(actor,unit,options)||{});
+  return Object.assign(
+    {kind:'skill',skillId:actor.skillId,defensePct,dexMode:'speedy'},
+    sourceEnemyCommonSkillAttack(actor,unit,options,label)||{}
+  );
 }
 function enemySkillTargetDesc(chosen){
   if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
@@ -8083,15 +8087,119 @@ function performEnemyStatusChange(actor,unit,options,meta){
   }
   return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,statusType:type,statusResult};
 }
+function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='攻擊'){
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const primedMax=Number(actor?.sourceAttackMax);
+  const attackMax=Number.isFinite(primedMax)&&primedMax>0
+    ?Math.trunc(primedMax)
+    :sourceEnemyBattleAttackMax(unit);
+
+  const attackOptions=Object.assign({},options.attackOptions||{});
+  // fixed battle.c：只有「有效武器的 BATTLE_GetAttackCount() > 0」且 gWeponType==ITEM_FIST
+  // 才把 gDamageDiv 設成 attack_max。Enemy 空手的 fallback 1 擊不走這個除數。
+  if(weaponType===0&&actor?.sourceAttackCountWeaponRoll&&attackMax>0
+    &&!Number.isFinite(Number(attackOptions.damageDivisor))){
+    attackOptions.damageDivisor=attackMax;
+  }
+
+  const segments=[];
+  let attackCount=0;
+  let lastTarget=null;
+  let lastResult=null;
+  let sourceCounterReady=false;
+  let sourceLoopExit='no-target';
+
+  // Non-BOW TargetListSet fills aDefList with the original COM2 repeatedly.
+  // Every segment writes that raw slot back, then reruns BATTLE_TargetAdjust.
+  while(attackCount<attackMax&&enemy&&n(unit.hp)>0){
+    const target=enemyActorTarget(actor,unit);
+    if(!target){
+      sourceLoopExit='target-adjust-failed';
+      break;
+    }
+
+    let r,actualTarget=target;
+    if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
+      r=enemyAttackPetResult(unit,target.pet,attackOptions);
+      enemyApplySkillHit(unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段');
+      sourceBattleFinalizeItemCrushRng(r);
+    }else if(target.kind==='player'&&state.hp>0){
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
+      actualTarget=enemyApplyDirectGuardianSkillHit(
+        unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段'
+      )||target;
+    }else{
+      sourceLoopExit='attack-failed';
+      break;
+    }
+
+    attackCount++;
+    lastTarget=target;
+    lastResult=r;
+    segments.push({
+      target:target.kind,petId:target.pet?.id||null,
+      actualTarget:actualTarget?.kind||target.kind,
+      guardianPetId:r?.guardianPetId||null,r
+    });
+
+    // fixed common loop breaks immediately after ++attack_count reaches attack_max;
+    // defNo therefore remains the last real target for the following Counter loop.
+    if(attackCount>=attackMax){
+      sourceCounterReady=true;
+      sourceLoopExit='attack-max';
+      break;
+    }
+    if(n(unit.hp)<=0){
+      sourceLoopExit='attacker-dead';
+      break;
+    }
+  }
+
+  // Counter uses the last primary BATTLE_Attack result/defNo only.
+  // Throw-type boomerang is still allowed to reach this helper, but BATTLE_Counter's
+  // throw-weapon gate makes the chain end without consuming counter RNG.
+  if(sourceCounterReady&&lastResult&&lastTarget&&n(unit.hp)>0&&enemy){
+    if(lastTarget.kind==='pet'&&lastTarget.pet&&petIsBattleActive(lastTarget.pet)){
+      resolvePetEnemyCounterChain('enemy',lastTarget.pet,unit,lastResult);
+    }else if(lastTarget.kind==='player'&&state.hp>0&&options.allowPlayerCounter){
+      resolvePlayerEnemyCounterChain('enemy',unit,lastResult);
+    }
+  }
+
+  return {
+    target:segments[0]?.target||null,
+    pet:segments[0]?.petId?state.petBox.find(p=>p.id===segments[0].petId)||null:null,
+    r:lastResult,
+    weaponCommand:'COMMON',
+    weaponItemId:unit.equippedWeaponId,
+    weaponType,attackMax,attackCount,segments,
+    sourceCounterReady,sourceLoopExit,
+    sourceFistDamageDiv:Number.isFinite(Number(attackOptions.damageDivisor))
+      ?Number(attackOptions.damageDivisor):1
+  };
+}
+function sourceEnemyCommonSkillAttack(actor,unit,options={},label='攻擊'){
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  // BOW / BOUNDTHROW / BREAKTHROW already have source-accurate common-loop helpers.
+  if(weaponType===4||weaponType===18||weaponType===19){
+    return performEnemyPrimaryAttack(actor,unit,options);
+  }
+  // BOOMERANG is intentionally included here: only plain ATTACK is converted to the
+  // special BO command. Skill commands stay in the ordinary non-BOW common loop.
+  return sourceEnemyCommonNonRangedSkillSequence(actor,unit,options,label);
+}
 function performEnemyPowerBalance(actor,unit,options,meta){
   const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
   const defensePct=enemySignedSkillPercent(meta?.o,'防%');
-  addLog(unit.name+' 使用 '+(meta?.n||'背水之戰')+'（攻 '+(attackPct>=0?'+':'')+attackPct+'%／防 '+(defensePct>=0?'+':'')+defensePct+'%）。');
-  // 原直接攻擊群組在執行前會把 COM 改回 ATTACK，之後具備反擊資格。
+  const label=meta?.n||'背水之戰';
+  addLog(unit.name+' 使用 '+label+'（攻 '+(attackPct>=0?'+':'')+attackPct+'%／防 '+(defensePct>=0?'+':'')+defensePct+'%）。');
+  // PETSKILL_PowerBalance 已在 AI 決定技能時修改當輪 WORKATTACK/DEFENCE；
+  // battle.c 之後仍落入完整 common direct-attack loop，不是固定單擊。
   unit.counterEligibleThisTurn=true;
   return Object.assign(
-    {kind:'skill',skillId:actor.skillId},
-    performEnemyPrimaryAttack(actor,unit,options)||{}
+    {kind:'skill',skillId:actor.skillId,attackPct,defensePct},
+    sourceEnemyCommonSkillAttack(actor,unit,options,label)||{}
   );
 }
 function performEnemyNoGuard(actor,unit,options,meta){
@@ -8103,12 +8211,16 @@ function performEnemyMighty(actor,unit,options,meta){
   unit.counterEligibleThisTurn=true;
   const multiplier=Math.max(0,enemySkillNumber(meta?.o,/倍\s*([0-9.]+)/,2));
   const duckBonus=Math.max(0,enemySkillNumber(meta?.o,/回避\s*([0-9.]+)/,0));
-  addLog(unit.name+' 使用 '+(meta?.n||'一擊必殺')+'（傷害 ×'+multiplier+'／目標回避 +'+duckBonus+'）。');
+  const label=meta?.n||'一擊必殺';
+  addLog(unit.name+' 使用 '+label+'（傷害 ×'+multiplier+'／目標回避 +'+duckBonus+'）。');
+  const attackOptions=Object.assign({},options.attackOptions||{},{
+    damageMultiplier:multiplier,duckBonusPercent:duckBonus
+  });
   return Object.assign(
-    {kind:'skill',skillId:actor.skillId},
-    performEnemyPrimaryAttack(actor,unit,Object.assign({},options,{
-      attackOptions:{damageMultiplier:multiplier,duckBonusPercent:duckBonus}
-    }))||{}
+    {kind:'skill',skillId:actor.skillId,multiplier,duckBonus},
+    sourceEnemyCommonSkillAttack(
+      actor,unit,Object.assign({},options,{attackOptions}),label
+    )||{}
   );
 }
 function performEnemyContinuation(actor,unit,options,meta){

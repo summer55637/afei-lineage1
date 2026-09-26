@@ -13856,3 +13856,109 @@ V1.50 保留：
 - BOOMERANG held by RETRACE stays common non-BOW, not special BO command
 - Counter still uses last primary result, not follow-up result
 - schema 27 unchanged
+
+
+## V1.51 PowerBalance / Mighty / SpeedyAttack common non-ranged loop
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### Source finding
+
+`BATTLE_COM_S_POWERBALANCE`、`BATTLE_COM_S_MIGHTY`、`BATTLE_COM_S_SPEEDYATTACK`
+都位於普通 physical common direct-attack 群組。
+
+三者在進入該群組前都已經完成：
+
+1. `attack_max = BATTLE_GetAttackCount(charaindex)`
+2. 若有效武器為 ITEM_FIST 且 AttackNum > 0，`gDamageDiv = attack_max`
+3. `BATTLE_TargetListSet(..., aDefList)`
+4. BOW 使用 aBowW；其他武器把 raw COM2 重複填入 aDefList
+
+V1.50 前 BOW／BOUNDTHROW／BREAKTHROW 已透過既有 weapon helpers 跑完整 loop，
+但近戰與「技能 command 下的 BOOMERANG」仍落回 `performEnemyPrimaryAttack()` 的單擊分支。
+
+### Pre-command stat behavior remains unchanged
+
+本輪沒有重寫已完成的能力快照：
+
+- PowerBalance：
+  `WORKATTACKPOWER = FIXSTR + int(FIXSTR * 攻% / 100)`
+  `WORKDEFENCEPOWER = FIXTOUGH + int(FIXTOUGH * 防% / 100)`
+- SpeedyAttack：
+  PETSKILL 本體只改 `WORKDEFENCEPOWER`
+- SpeedyAttack 的出手順序：
+  `BATTLE_DexCalc` 使用 `(WORKQUICK + 20) * 1.3`
+- Mighty：
+  `gBattleDamageModyfy = option 倍率`
+  `gBattleDuckModyfy = option 回避`
+
+以上既有 V1.50 邏輯保留，只補執行段數與 TargetAdjust lifecycle。
+
+### Non-BOW common sequence
+
+新增 `sourceEnemyCommonNonRangedSkillSequence()`：
+
+- 使用 actor 在 BATTLE_Battling 前置階段已抽好的 `sourceAttackMax`
+- 不再次呼叫 `BATTLE_GetAttackCount`，避免多消耗武器 RNG
+- 每段使用同一 raw COM2 再跑一次 `BATTLE_TargetAdjust`
+- 原目標倒下／EarthRound hidden 時，後續段數才由 `BATTLE_DefaultAttacker` 消耗 fallback RNG
+- `attack_count` 每次真正 `BATTLE_Attack` 後 +1
+- 達 `attack_max` 時，最後 defNo 保留給 Counter
+- TargetAdjust 失敗時不對 stale target 反擊
+
+### FIST AttackNum damage divisor
+
+固定 C 只有在「有效 CHAR_ARM 的 `BATTLE_GetAttackCount() > 0`」且武器型態是 ITEM_FIST 時，
+才把 `gDamageDiv = attack_max`。
+
+V1.51 使用既有 `actor.sourceAttackCountWeaponRoll` 判斷此來源條件：
+
+- 有效 FIST 武器：每段在 BATTLE_Attack 後除以 AttackNum，正傷害最低 1
+- Enemy 真空手：BATTLE_GetAttackCount 回 0，來源 fallback 為 1 擊，不額外套除數
+
+### BOOMERANG skill quirk
+
+battle.c 只有：
+
+`COM == BATTLE_COM_ATTACK && gWeponType == ITEM_BOOMERANG`
+
+才會把 command 改成 `BATTLE_COM_BOOMERANG`。
+
+PowerBalance／Mighty／SpeedyAttack 都不是 plain ATTACK，因此手持回力標時：
+
+- 不走 BO 全排攻擊
+- 仍留在 common non-BOW loop
+- AttackNum 可造成多個 primary segments
+- 因回力標屬 throw weapon，Guardian / Counter 仍由既有 throw gate 阻擋
+
+### Mighty per-segment modifiers
+
+Mighty 的 `gBattleDamageModyfy` 與 `gBattleDuckModyfy` 是 common-loop globals，
+因此每一個 primary segment 都使用相同倍率／回避加成。
+
+Counter 前原 C 會把兩者重設，所以 V1.51 只把這些 attackOptions 套在 primary segments，
+不污染 Counter。
+
+### Counter
+
+common loop 結束後只以最後一次 primary `BATTLE_Attack` 的 ContFlg / defNo 進 Counter。
+
+V1.51：
+
+- 只有完整達到 `attack_max` 才保留有效 final defNo 進 Counter
+- 最後目標死亡、Guardian、GUARD、critical 等仍由既有 counter helpers 阻擋
+- BOOMERANG／其他 throw weapon 進 counter helper 後會由 throw gate 直接結束，不額外抽 Counter RNG
+
+### V1.51 regression targets
+
+- game.js syntax PASS
+- main parent fixed at V1.50 / 3043cd53da92c7a0acc051c39c531178c0abcfbd
+- PowerBalance / Mighty / SpeedyAttack keep existing pre-command stat math
+- non-BOW skill loop reuses primed sourceAttackMax without duplicate weapon RNG
+- later non-BOW segments rerun TargetAdjust from raw COM2
+- skill BOOMERANG stays common non-BOW and never becomes special BO row attack
+- valid FIST weapon AttackNum uses source gDamageDiv lifecycle
+- Mighty multiplier / duck modifier applies to every primary segment only
+- Counter uses final primary result after full sequence
+- BOW / BOUNDTHROW / BREAKTHROW continue through existing V1.49/V1.50 helpers
+- schema 27 unchanged
