@@ -2924,7 +2924,8 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
   if(dodge.dodged)return {damage:0,dodged:true,dodge};
 
   const attMagicLv=Math.trunc(n(unit.level)*.9);
-  const resist=magicTargetResist(targetDesc,attrIndex);
+  const resistInfo=sourceMagicEffectiveResist(targetDesc,attrIndex);
+  const resist=resistInfo.effective;
   let kmagic=attMagicLv*1.4-resist;
   if(kmagic<0)kmagic=0;
   const mmagic=Math.max(1,attMagicLv);
@@ -2942,7 +2943,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
     battleStatusClear(targetDesc,'sleep');
     addLog(battleStatusDescName(targetDesc)+' 被魔法命中，睡眠解除。');
   }
-  return {damage,dodged:false,dodge,attMagicLv,resist,randomAmp,amagic,aPower,adjusted,trueMagic,exp,hpBefore,hpAfter:battleStatusHp(targetDesc)};
+  return {damage,dodged:false,dodge,attMagicLv,resist,resistBase:resistInfo.base,resistBonus:resistInfo.bonus,randomAmp,amagic,aPower,adjusted,trueMagic,exp,hpBefore,hpAfter:battleStatusHp(targetDesc)};
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
@@ -3015,7 +3016,7 @@ function sourceDefMagicState(desc){
 }
 function sourceApplyDefMagicStatus(desc,turns,nums){
   const key=battleStatusKey(desc);
-  if(!key)return {applied:false,updated:false,turns:0,nums:0};
+  if(!key)return {applied:false,updated:false,blocked:false,turns:0,nums:0};
   const old=battleDefMagicStates.get(key)||null;
   let applied=false;
   if(!old||Math.trunc(n(old.turns))<=0){
@@ -3023,14 +3024,13 @@ function sourceApplyDefMagicStatus(desc,turns,nums){
       type:'defMagic',turns:Math.max(0,Math.trunc(n(turns))),nums:Math.trunc(n(nums))
     });
     applied=true;
-  }else{
-    // fixed BATTLE_MultiMagicStatusChange only guards MagicTbl[iEffect] (the turn counter);
-    // CHAR_OTHERSTATUSNUMS is overwritten unconditionally even when the same status is active.
-    old.nums=Math.trunc(n(nums));
   }
+  // fixed BATTLE_MultiMagicStatusChange scans every MagicTbl[] slot first.
+  // If ANY magic-status counter is already active it skips both writes, including
+  // CHAR_OTHERSTATUSNUMS. Therefore 460/461 do not refresh or replace each other.
   const current=battleDefMagicStates.get(key)||old;
   return {
-    applied,updated:!applied&&!!current,
+    applied,updated:false,blocked:!applied&&!!current,
     turns:Math.max(0,Math.trunc(n(current?.turns))),
     nums:Math.trunc(n(current?.nums))
   };
@@ -3049,6 +3049,19 @@ function sourceDefMagicStatusSeq(desc){
 function sourceDefMagicResistBonus(desc){
   const st=sourceDefMagicState(desc);
   return st?Math.trunc(n(st.nums)):0;
+}
+function sourceMagicEffectiveResist(desc,attrIndex){
+  // fixed BATTLE_MultiAttMagic:
+  // Player/Pet use CHAR_*_RESIST; Enemy uses trunc(LV*0.5).
+  // _MAGIC_DEFMAGICATT then scales only positive local def_magic_resist[].
+  const base=desc?.kind==='enemy'
+    ?Math.trunc(Math.max(0,n(desc.unit?.level))*.5)
+    :Math.max(0,Math.trunc(n(magicTargetResist(desc,attrIndex))));
+  const bonus=sourceDefMagicResistBonus(desc);
+  const effective=(base>0&&bonus!==0)
+    ?base+Math.trunc(base*bonus/100)
+    :base;
+  return {base,bonus,effective};
 }
 
 function sourceMagicPetState(desc){
@@ -12447,6 +12460,333 @@ function sourcePerformPetFirekillSkill(pet,action){
   };
 }
 
+
+const SOURCE_COMBINED_MISSING_MAGIC_IDS=Object.freeze([458,459,462]);
+const SOURCE_COMBINED_RECOVERY_POWER=Object.freeze({20:50,21:100,22:200,23:300,24:420,25:600});
+const SOURCE_COMBINED_STATUS_RECOVERY=Object.freeze({
+  61:'all',71:'poison',81:'paralysis',91:'stone',101:'confusion',121:'sleep'
+});
+const SOURCE_COMBINED_STATUS_CHANGE=Object.freeze({
+  139:Object.freeze({type:'poison',turn:5,success:25}),
+  159:Object.freeze({type:'stone',turn:5,success:25}),
+  169:Object.freeze({type:'confusion',turn:5,success:25}),
+  179:Object.freeze({type:'drunk',turn:5,success:25}),
+  189:Object.freeze({type:'sleep',turn:5,success:25}),
+  413:Object.freeze({type:'stone',turn:6,success:25}),
+  414:Object.freeze({type:'confusion',turn:6,success:25}),
+  416:Object.freeze({type:'sleep',turn:6,success:25})
+});
+const SOURCE_COMBINED_FIELD_MAGIC=Object.freeze({
+  194:Object.freeze({attr:'earth',power:100,turns:5}),
+  204:Object.freeze({attr:'water',power:100,turns:5}),
+  214:Object.freeze({attr:'fire',power:100,turns:5}),
+  224:Object.freeze({attr:'wind',power:100,turns:5}),
+  230:Object.freeze({attr:'none',power:30,turns:3})
+});
+const SOURCE_COMBINED_MAGIC_STATUS=Object.freeze({
+  460:Object.freeze({turns:3,nums:90}),
+  461:Object.freeze({turns:3,nums:50})
+});
+const SOURCE_COMBINED_BASIC_RECOVERABLE=new Set(['poison','paralysis','sleep','stone','drunk','confusion']);
+
+function sourcePetCombinedOption(meta){
+  const parts=String(meta?.o||'').split('|');
+  if(parts[0]!=='综合法'&&parts[0]!=='綜合法')return null;
+  let count=Math.max(0,Math.trunc(Number(parts[1])||0));
+  if(count>10)count=10;
+  const magicIds=[];
+  for(let i=0;i<count;i++){
+    const id=Number(parts[2+i]);
+    if(Number.isFinite(id))magicIds.push(Math.trunc(id));
+  }
+  if(!count||magicIds.length!==count)return null;
+  return {count,magicIds};
+}
+function sourcePetCombinedGainMp(pet){
+  // PETSKILL_Combined stores HIGH(COM3)=0, so MAGIC_DirectUse sees itemnum=0.
+  // Existing non-AttMagic wrappers get MAGICUSEMP=-1 and execute MP -= -1.
+  const before=Math.trunc(n(pet?.mp));
+  if(pet)pet.mp=before+1;
+  return {before,after:pet?Math.trunc(n(pet.mp)):before+1,delta:1};
+}
+function sourceCombinedTargetableFromSlot(slot){
+  const desc=sourceBattleStatusDescFromSlot(slot);
+  if(!desc||!battleStatusDescAlive(desc))return null;
+  if(desc.kind==='pet'&&sourcePlayerPetHidden(desc.pet))return null;
+  if(desc.kind==='enemy'&&enemyUnitHidden(desc.unit))return null;
+  return desc;
+}
+function sourceCombinedMultiList(toNo){
+  let no=Math.trunc(Number(toNo));
+  const slots=(start,end)=>{
+    const out=[];
+    for(let i=start;i<end;i++)if(sourceCombinedTargetableFromSlot(i))out.push(i);
+    return out;
+  };
+  if(no>=0&&no<=19){
+    const start=no<10?0:10,compact=slots(start,start+10);
+    if(!compact.length)return {ok:false,toNo:-1,rolls:[],reason:'all-die'};
+    const rolls=[];
+    if(!sourceCombinedTargetableFromSlot(no)){
+      for(;;){
+        const roll=cRand(0,9); // fixed nLifeArea[rand()%10] rejection loop
+        rolls.push(roll);
+        if(compact[roll]!=null){no=compact[roll];break;}
+      }
+    }
+    return {ok:true,toNo:no,rolls,fallback:rolls.length>0};
+  }
+  const row=(a,b,fallbackNo,fa,fb)=>{
+    let picked=slots(a,b);
+    if(picked.length)return {ok:true,toNo:no,slots:picked,rowFallback:false};
+    picked=slots(fa,fb);
+    if(!picked.length)return {ok:false,toNo:-1,slots:[],rowFallback:true,reason:'all-die'};
+    return {ok:true,toNo:fallbackNo,slots:picked,rowFallback:true};
+  };
+  if(no===26)return row(0,5,25,5,10);
+  if(no===25)return row(5,10,26,0,5);
+  if(no===23)return row(10,15,24,15,20);
+  if(no===24)return row(15,20,23,10,15);
+  if(no===20)return {ok:true,toNo:no,slots:slots(0,10),fallback:false};
+  if(no===21)return {ok:true,toNo:no,slots:slots(10,20),fallback:false};
+  if(no===22)return {ok:true,toNo:no,slots:slots(0,20),fallback:false};
+  return {ok:true,toNo:no,slots:sourceCombinedTargetableFromSlot(no)?[no]:[],fallback:false};
+}
+function sourceCombinedSortLoc(a,b){
+  const ai=MAGIC_CHAR_TABLE_IDX[a],bi=MAGIC_CHAR_TABLE_IDX[b];
+  if(!ai||!bi)return a-b;
+  const ay=ai[0],ax=ai[1],by=bi[0],bx=bi[1];
+  if(a>=10){
+    if(ay!==by)return ay-by;
+    return ax-bx;
+  }
+  if(ay!==by)return by-ay;
+  return bx-ay; // fixed side-0 SortLoc typo: ele2basex - ele1basey
+}
+function sourceCombinedAttackMagicTargets(toNo,pattern){
+  const found=new Set();
+  const add=slot=>{if(sourceCombinedTargetableFromSlot(slot))found.add(slot);};
+  const field=pattern?.field||[[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0]];
+  if(toNo>=0&&toNo<20){
+    const idx=MAGIC_CHAR_TABLE_IDX[toNo];
+    if(idx){
+      const basey=idx[0],basex=idx[1];
+      for(let i=0,j=basey-1;j<=basey+1;i++,j++){
+        if(toNo<10&&(j<2||j>3))continue;
+        if(toNo>=10&&(j<0||j>1))continue;
+        for(let k=0;k<5;k++){
+          const x=basex-2+k;
+          if(x<0||x>4)continue;
+          if(n(field?.[i]?.[k])&&MAGIC_CHAR_TABLE[j])add(MAGIC_CHAR_TABLE[j][x]);
+        }
+      }
+    }
+  }else if(toNo===20||toNo===21){
+    const rowBase=toNo===20?2:0;
+    for(let i=0;i<2;i++)for(let j=0;j<5;j++){
+      if(n(field?.[i]?.[j]))add(MAGIC_CHAR_TABLE[rowBase+i][j]);
+    }
+  }else if(toNo>=23&&toNo<=26){
+    const basey=toNo-23;
+    for(let i=0,j=basey-1;j<=basey+1;i++,j++){
+      if((toNo===25||toNo===26)&&(j<2||j>3))continue;
+      if((toNo===23||toNo===24)&&(j<0||j>1))continue;
+      for(let k=0;k<5;k++)if(n(field?.[i]?.[k])&&MAGIC_CHAR_TABLE[j])add(MAGIC_CHAR_TABLE[j][k]);
+    }
+  }
+  return [...found].sort(sourceCombinedSortLoc)
+    .map(slot=>({slot,desc:sourceCombinedTargetableFromSlot(slot)}))
+    .filter(x=>x.desc);
+}
+function sourcePetCombinedMagicAttrDamage(pet,targetDesc,magic,aPower){
+  const source=normalizedElements(battleElementsForDesc({kind:'pet',pet,petId:pet?.id}))
+    ||{earth:0,water:0,fire:0,wind:0,none:100};
+  const targetView=battleStatusDescView(targetDesc);
+  const def=normalizedElements(targetView?.elements||{})
+    ||{earth:0,water:0,fire:0,wind:0,none:100};
+  const scaled=Math.trunc(n(magic.magicLv))*10;
+  const vector={earth:0,water:0,fire:0,wind:0,none:Math.trunc(n(source.none))};
+  const sourceAttr=Math.trunc(n(source[magic.attr]));
+  vector[magic.attr]=scaled+scaled*Math.trunc(sourceAttr/50);
+  const fieldRatio=battleFieldRatio(vector,def);
+  const attack={earth:0,water:0,fire:0,wind:0,none:Math.trunc(n(vector.none)*n(aPower))};
+  attack[magic.attr]=Math.trunc(n(vector[magic.attr])*n(aPower));
+  const baseDamage=magicAttrCalcRaw(attack,def);
+  return {damage:Math.trunc(baseDamage*fieldRatio),attackVector:attack,magicVector:vector,
+    defVector:def,fieldRatio,fieldState:Object.assign({},battleFieldState)};
+}
+function sourcePetCombinedAttackMagicOne(pet,targetDesc,magic,trueMagic){
+  const threshold=Math.trunc(Math.min(30,Math.max(0,n(targetDesc?.unit?.level))*.2));
+  const dodgeRoll=cRand(1,100);
+  if(dodgeRoll<=threshold)return {damage:0,dodged:true,dodge:{roll:dodgeRoll,threshold},trueMagic};
+
+  // fixed Char array is zero-initialized and this source tree has no Pet setter for CHAR_*_EXP.
+  // Under _FIX_MAGICDAMAGE a PET still enters the AttIsPlayer branch, therefore att_magic_lv=0.
+  const attMagicLv=0;
+  const attrIndex=MAGIC_ATTR_KEYS.indexOf(magic.attr);
+  const resistInfo=sourceMagicEffectiveResist(targetDesc,attrIndex);
+  const resist=resistInfo.effective;
+  let kmagic=attMagicLv*1.4-resist;
+  if(kmagic<0)kmagic=0;
+  const mmagic=1;
+  const randomAmp=cRand(0,19);
+  const amagic=(kmagic*kmagic)/(mmagic*mmagic)+randomAmp/100;
+  const aPower=Math.trunc(n(magic.power)*(1+n(magic.magicLv)/10)*amagic);
+  const adjusted=sourcePetCombinedMagicAttrDamage(pet,targetDesc,magic,aPower);
+  let damage=Math.max(0,Math.trunc(n(adjusted.damage)));
+  if(!trueMagic)damage=Math.trunc(damage*.7);
+
+  const hpBefore=battleStatusHp(targetDesc);
+  battleStatusSetHp(targetDesc,Math.max(0,hpBefore-damage));
+  if(battleStatusActive(targetDesc,'sleep')){
+    battleStatusClear(targetDesc,'sleep');
+    addLog(battleStatusDescName(targetDesc)+' 被魔法命中，睡眠解除。');
+  }
+  if(hpBefore>0&&battleStatusHp(targetDesc)<=0&&targetDesc.kind==='enemy'){
+    sourceMarkEnemyDeathCredit(targetDesc.unit,[{kind:'pet',petId:pet.id}]);
+  }
+  return {damage,dodged:false,dodge:{roll:dodgeRoll,threshold},trueMagic,attMagicLv,
+    resist,resistBase:resistInfo.base,resistBonus:resistInfo.bonus,kmagic,randomAmp,
+    amagic,aPower,adjusted,hpBefore,hpAfter:battleStatusHp(targetDesc)};
+}
+function sourcePerformPetCombinedAttackMagic(pet,action,magicId,magic,rawToNo){
+  const multi=sourceCombinedMultiList(rawToNo);
+  if(!multi.ok){
+    addLog(pet.name+' 的綜合法抽到 '+magic.name+'，但原 BATTLE_MultiList 已沒有可作用目標。','pet');
+    return {handled:true,skillId:action.skillId,magicId,attackMagic:true,noTarget:true,rawToNo,multi};
+  }
+  const pattern=attackMagicDb?.byAttIdx?.[String(magic.attIdx)]?.playerSide||null;
+  if(!pattern){
+    addLog(pet.name+' 的綜合法抽到 AttackMagic '+magicId+'，但固定 AttackMagic pattern 缺資料；不猜效果。','pet');
+    return {handled:true,skillId:action.skillId,magicId,attackMagic:true,sourceDataMissing:true,rawToNo,multi};
+  }
+
+  // JYUJYUTU calls MAGIC_DirectUse directly: do NOT run S_ATTACK_MAGIC TargetIndex rewrite.
+  const attMagicLv=0;
+  const trueRoll=cRand(0,99);
+  const trueMagic=!(trueRoll>attMagicLv);
+  const targets=sourceCombinedAttackMagicTargets(multi.toNo,pattern),results=[];
+  addLog(pet.name+' 的綜合法抽到「'+magic.name+'」（raw COM2 '+rawToNo+'）。','pet');
+  for(const entry of targets){
+    const target=entry.desc;
+    if(!target||!battleStatusDescAlive(target))continue;
+    const r=sourcePetCombinedAttackMagicOne(pet,target,magic,trueMagic);
+    results.push({battleSlot:entry.slot,targetKey:battleStatusKey(target),r});
+    if(r.dodged)addLog(battleStatusDescName(target)+' 閃過 '+magic.name+'。','good');
+    else addLog(magic.name+' 命中 '+battleStatusDescName(target)+'，造成 '+r.damage+' 魔法傷害'+(trueMagic?'':'（施法判定失敗 ×0.7）')+'。',battleStatusHp(target)<=0?'bad':'');
+  }
+  return {handled:true,skillId:action.skillId,magicId,magicName:magic.name,attackMagic:true,
+    rawToNo,adjustedToNo:multi.toNo,multi,trueRoll,attMagicLv,trueMagic,
+    attIdx:magic.attIdx,ignoredTargetRewrite:magic.targetRewrite,targets:results};
+}
+function sourceCombinedSingleTarget(rawToNo){
+  const multi=sourceCombinedMultiList(rawToNo);
+  if(!multi.ok)return {multi,target:null,targetSlot:-1};
+  const target=sourceCombinedTargetableFromSlot(multi.toNo);
+  return {multi,target,targetSlot:multi.toNo};
+}
+function sourcePerformPetCombinedRecovery(pet,action,magicId,rawToNo){
+  const mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
+  const power=SOURCE_COMBINED_RECOVERY_POWER[magicId];
+  if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
+  const target=picked.target,heal=cRand(Math.trunc(power*.9),Math.trunc(power*1.1));
+  const before=Math.max(0,Math.trunc(n(battleStatusHp(target))));
+  const maxHp=target.kind==='enemy'
+    ?Math.max(1,Math.trunc(n(target.unit?.maxHp)))
+    :target.kind==='pet'
+      ?Math.max(1,Math.trunc(n(target.pet?.maxHp)||petMaxHp(target.pet)))
+      :Math.max(1,Math.trunc(n(state?.maxHp)));
+  battleStatusSetHp(target,Math.min(maxHp,before+heal));
+  addLog(pet.name+' 的綜合法抽到回復精靈，'+battleStatusDescName(target)+' 回復 '+Math.max(0,battleStatusHp(target)-before)+' HP。','pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,power,rollHeal:heal,targetSlot:picked.targetSlot,hpBefore:before,hpAfter:battleStatusHp(target),multi:picked.multi};
+}
+function sourcePerformPetCombinedStatusRecovery(pet,action,magicId,rawToNo){
+  const mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
+  if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
+  const target=picked.target,requested=SOURCE_COMBINED_STATUS_RECOVERY[magicId],st=battleStatusGet(target);
+  const canClear=!!st&&((requested==='all'&&SOURCE_COMBINED_BASIC_RECOVERABLE.has(st.type))||requested===st.type);
+  if(canClear)battleStatusClear(target,st.type);
+  addLog(pet.name+' 的綜合法抽到異常回復：'+battleStatusDescName(target)+(canClear?' 的 '+(BATTLE_STATUS_NAMES[st.type]||st.type)+' 被解除。':' 沒有符合的異常狀態。'),'pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,requested,cleared:canClear?st.type:null,targetSlot:picked.targetSlot,multi:picked.multi};
+}
+function sourcePerformPetCombinedStatusChange(pet,action,magicId,rawToNo){
+  const mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
+  const cfg=SOURCE_COMBINED_STATUS_CHANGE[magicId];
+  if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
+  const target=picked.target;
+  const check=battleStatusChance({kind:'pet',pet,petId:pet.id},target,cfg.type,
+    {perOffset:cfg.success,range:30,bai:1,forceGeneral:true});
+  const storedTurns=cfg.turn+2;
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(target,cfg.type,storedTurns));
+  if(applied)addLog(pet.name+' 的綜合法使 '+battleStatusDescName(target)+' 陷入 '+(BATTLE_STATUS_NAMES[cfg.type]||cfg.type)+'。','pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,targetSlot:picked.targetSlot,status:cfg.type,turn:cfg.turn,storedTurns,check,applied,multi:picked.multi};
+}
+function sourcePerformPetCombinedWeaken(pet,action,rawToNo){
+  const magicId=436,mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
+  if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
+  const target=picked.target;
+  const check=battleStatusChance({kind:'pet',pet,petId:pet.id},target,'weaken',
+    {perOffset:20,range:30,bai:1,forceGeneral:true});
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(target,'weaken',4));
+  if(applied)addLog(pet.name+' 的綜合法使 '+battleStatusDescName(target)+' 陷入虛弱（WORKWEAKEN=4）。','pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,targetSlot:picked.targetSlot,check,applied,storedTurns:4,multi:picked.multi};
+}
+function sourcePerformPetCombinedField(pet,action,magicId){
+  const mp=sourcePetCombinedGainMp(pet),cfg=SOURCE_COMBINED_FIELD_MAGIC[magicId];
+  battleSetField(cfg.attr,cfg.power,cfg.turns);
+  addLog(pet.name+' 的綜合法改變戰場屬性為 '+cfg.attr+'（'+cfg.power+'，'+cfg.turns+' 回合）。','pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,field:Object.assign({},battleFieldState)};
+}
+function sourcePerformPetCombinedReverse(pet,action,rawToNo){
+  const magicId=240,mp=sourcePetCombinedGainMp(pet),picked=sourceCombinedSingleTarget(rawToNo);
+  if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
+  const reverse=battleToggleAttributeReverse(picked.target);
+  addLog(pet.name+' 的綜合法對 '+battleStatusDescName(picked.target)+' 發動屬性逆轉。','pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,targetSlot:picked.targetSlot,reverse,multi:picked.multi};
+}
+function sourcePerformPetCombinedDefMagic(pet,action,magicId,rawToNo){
+  const mp=sourcePetCombinedGainMp(pet),cfg=SOURCE_COMBINED_MAGIC_STATUS[magicId];
+  const picked=sourceCombinedSingleTarget(rawToNo);
+  if(!picked.target)return {handled:true,skillId:action.skillId,magicId,mp,noTarget:true,multi:picked.multi};
+  const status=sourceApplyDefMagicStatus(picked.target,cfg.turns,cfg.nums);
+  addLog(pet.name+' 的綜合法抽到魔抗狀態（'+cfg.nums+'%／'+cfg.turns+' 回合）'
+    +(status.applied?'，套用到 '+battleStatusDescName(picked.target)+'。':'，但目標已有 MagicStatus，原 C 不覆蓋。'),'pet');
+  return {handled:true,skillId:action.skillId,magicId,mp,targetSlot:picked.targetSlot,status,multi:picked.multi};
+}
+function sourcePerformPetCombinedSkill(pet,action){
+  const parsed=sourcePetCombinedOption(action?.meta);
+  if(!parsed){
+    addLog(pet.name+' 的 PETSKILL_Combined option 無法依固定格式解析；不猜效果。','pet');
+    return {handled:true,skillId:action?.skillId,sourceDataMissing:true};
+  }
+  const pickIndex=cRand(0,parsed.count-1),magicId=parsed.magicIds[pickIndex];
+  const rawToNo=sourceBattleStatusSlot(action?.targetDesc);
+  const magic=attackMagicDb?.byMagicId?.[String(magicId)]||null;
+
+  if(SOURCE_COMBINED_MISSING_MAGIC_IDS.includes(magicId)){
+    addLog(pet.name+' 的綜合法抽到 magic '+magicId+'；固定 magic.txt 無 row，依原 C 不猜效果。','pet');
+    return {handled:true,skillId:action.skillId,pickIndex,magicId,rawToNo,missingMagicRow:true,mpDelta:0};
+  }
+  if(magic?.func==='MAGIC_AttMagic'){
+    return Object.assign({pickIndex,mpDelta:0},sourcePerformPetCombinedAttackMagic(pet,action,magicId,magic,rawToNo));
+  }
+  if(Object.prototype.hasOwnProperty.call(SOURCE_COMBINED_RECOVERY_POWER,magicId))
+    return Object.assign({pickIndex},sourcePerformPetCombinedRecovery(pet,action,magicId,rawToNo));
+  if(Object.prototype.hasOwnProperty.call(SOURCE_COMBINED_STATUS_RECOVERY,magicId))
+    return Object.assign({pickIndex},sourcePerformPetCombinedStatusRecovery(pet,action,magicId,rawToNo));
+  if(Object.prototype.hasOwnProperty.call(SOURCE_COMBINED_STATUS_CHANGE,magicId))
+    return Object.assign({pickIndex},sourcePerformPetCombinedStatusChange(pet,action,magicId,rawToNo));
+  if(Object.prototype.hasOwnProperty.call(SOURCE_COMBINED_FIELD_MAGIC,magicId))
+    return Object.assign({pickIndex},sourcePerformPetCombinedField(pet,action,magicId));
+  if(magicId===240)return Object.assign({pickIndex},sourcePerformPetCombinedReverse(pet,action,rawToNo));
+  if(magicId===436)return Object.assign({pickIndex},sourcePerformPetCombinedWeaken(pet,action,rawToNo));
+  if(Object.prototype.hasOwnProperty.call(SOURCE_COMBINED_MAGIC_STATUS,magicId))
+    return Object.assign({pickIndex},sourcePerformPetCombinedDefMagic(pet,action,magicId,rawToNo));
+
+  addLog(pet.name+' 的綜合法抽到已存在的 magic '+magicId+'，但玩家側 DirectUse 尚無固定對應；不猜效果。','pet');
+  return {handled:true,skillId:action.skillId,pickIndex,magicId,rawToNo,sourceRuntimePending:true};
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
   if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
@@ -12527,6 +12867,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Sars')result=sourcePerformPetSarsSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Combined')result=sourcePerformPetCombinedSkill(pet,action);
     else if(meta?.f==='PETSKILL_BattleModel')result=sourcePerformPetBattleModelSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_AttackCrazed')result=sourcePerformPetAttackCrazedSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_AttackShoot')result=sourcePerformPetAttackShootSkill(pet,action,options);
