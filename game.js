@@ -9,6 +9,7 @@ const ATTACK_MAGIC_RUNTIME_URL='data/generated/stoneage_attack_magic_runtime.jso
 const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
 const ITEM_RELIFE_RUNTIME_URL='data/generated/stoneage_item_relife_runtime.json';
 const ITEM_MAKE_RUNTIME_URL='data/generated/stoneage_item_make_runtime.json';
+const ITEM_FIELD2_RUNTIME_URL='data/generated/stoneage_item_field2_runtime.json';
 const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
@@ -66,7 +67,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
@@ -145,6 +146,68 @@ function sourceItemRuntimeResolvedDataInt(slot,fieldName){
   if(index<0||!template||!Array.isArray(template.widths)||template.widths[index]!==0)return null;
   const value=Number(template.base[index]);
   return Number.isFinite(value)?Math.trunc(value):null;
+}
+
+async function sourceEnsureItemField2Db(){
+  if(itemField2Db)return itemField2Db;
+  if(itemField2LoadPromise)return itemField2LoadPromise;
+  itemField2LoadPromise=(async()=>{
+    const r=await fetch(ITEM_FIELD2_RUNTIME_URL,{cache:'no-store'});
+    if(!r.ok)throw new Error('Item field2 runtime HTTP '+r.status);
+    const data=await r.json();
+    if(data?.format!=='stoneage-item-field2-runtime-v1')throw new Error('Item field2 runtime format mismatch');
+    if(data?.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56')throw new Error('Item field2 runtime source-ref mismatch');
+    if(Math.trunc(Number(data?.stats?.parsedLines))!==10737)throw new Error('Item field2 runtime template-count mismatch');
+    itemField2Db=data;
+    return data;
+  })();
+  try{return await itemField2LoadPromise}
+  catch(err){itemField2LoadPromise=null;throw err}
+}
+function sourceItemField2Template(itemId){
+  const id=Math.trunc(Number(itemId));
+  if(!Number.isFinite(id)||!itemField2Db?.byItemId)return null;
+  return itemField2Db.byItemId[String(id)]||null;
+}
+function sourceItemField2Char(slot,key){
+  if(!slot)return '';
+  if(slot.field2Char&&Object.prototype.hasOwnProperty.call(slot.field2Char,key)){
+    return String(slot.field2Char[key]??'');
+  }
+  const row=sourceItemField2Template(slot.itemId);
+  const value=row?.[key];
+  return typeof value==='string'?value:'';
+}
+function sourceItemField2SetChar(slot,key,value){
+  if(!slot)return false;
+  if(!slot.field2Char||typeof slot.field2Char!=='object')slot.field2Char={};
+  slot.field2Char[key]=String(value??'');
+  return true;
+}
+function sourceItemField2Function(slot,key){
+  if(!slot)return '';
+  if(slot.field2Functions&&Object.prototype.hasOwnProperty.call(slot.field2Functions,key)){
+    return String(slot.field2Functions[key]??'');
+  }
+  const row=sourceItemField2Template(slot.itemId);
+  const value=row?.functions?.[key];
+  return typeof value==='string'?value:'';
+}
+function sourceItemField2SetFunction(slot,key,value){
+  if(!slot)return false;
+  if(!slot.field2Functions||typeof slot.field2Functions!=='object')slot.field2Functions={};
+  slot.field2Functions[key]=String(value??'');
+  return true;
+}
+function sourceItemRuntimeSetDataInt(slot,fieldName,value){
+  const index=sourceItemMakeDataIndex(fieldName);
+  const count=Math.trunc(Number(itemMakeDb?.itemDataIntCount));
+  if(index<0||count!==66||!Array.isArray(slot?.sourceData)||slot.sourceData.length!==count)return false;
+  const resolved=Number(value);
+  if(!Number.isFinite(resolved))return false;
+  slot.sourceData[index]=Math.trunc(resolved);
+  if(fieldName==='ITEM_MAGICUSEMP')slot.magicUseMp=Math.trunc(resolved);
+  return true;
 }
 function sourceMakeItemData(itemId){
   const calls=Math.max(0,Math.trunc(n(itemMakeDb?.makeItem?.rngCallsBeforeLeakLevel)||66));
