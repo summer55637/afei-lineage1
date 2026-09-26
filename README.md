@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V1.85**
+**PLAYABLE CORE V1.86**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,18 +16,19 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V1.85 最新進度
+## V1.86 最新進度
 
-V1.85 接入玩家寵低忠誠 `RANDOMACT` 的下一批 fixed PetSkill：541／652／665／671 `WildViolentAttack`、542 `SpeedyAttack`、573 `Sacrifice`。
+V1.86 接入玩家寵低忠誠 `RANDOMACT` 的下一批 fixed PetSkill：619／653／667／831 `PETSKILL_Gyrate`，以及 621／713／735 `PETSKILL_Retrace`。
 
-- 狂暴攻擊先依 option 以 FIXSTR／FIXTOUGH 算本輪 WORK 攻防，再由 `RAND(3,10)` 決定攻擊段數；同一段數同時作 `gDamageDiv`，回避數值寫入 `gBattleDuckModyfy`
-- 狂暴攻擊的非弓 common loop 每段都從原 raw COM2 再跑 `BATTLE_TargetAdjust`；最後一段才進 Counter chain
-- 疾速攻擊的 `防%-30` 由 `PETSKILL_SpeedyAttack()` 當下寫入 WORKDEFENCEPOWER；`敏%+30` 並不是 option parser，而是 `BATTLE_DexCalc` 對該 command 的專用排序公式
-- fixed 時序是先 `BATTLE_DexCalc + EntrySort`，輪到 Pet 行動時才 `BATTLE_PetLoyalCheck`；所以低忠誠 RANDOMACT 臨時抽到疾速攻擊時，本輪不會倒帶重排，只保留防禦下降與普通物理攻擊
-- 救援先嚴格檢查 `HP > MaxHP*0.2`；失敗時 `PETSKILL_Use() FALSE`，由已清成 NONE 的 RANDOMACT command 直接 NoAction
-- 救援成功後 `BATTLE_S_Sacrifice` 先把施術 Pet HP 截斷成一半，再以「砍半後 HP」回復 raw opposing Enemy；雖然動畫呼叫 `BATTLE_MultiList`，真正 HP 寫入只有單一 defindex，也沒有物理攻擊／Counter
-- V1.80～V1.83 舊 regression 因新 helper 插入而造成的切片終點假設已同步修正，沒有改舊版遊戲行為
-- V1.72～V1.85 CI 全部 SUCCESS
+- 回旋攻擊不先跑 `BATTLE_TargetAdjust`，而是直接用 raw COM2 判定 0～4／5～9／10～14／15～19 哪一個五格橫排，再把當下 `BATTLE_TargetCheck` 有效的該排單位逐一做 `BATTLE_Attack`
+- Gyrate 的攻擊百分比仍依當輪 FIXSTR 寫入 WORKATTACKPOWER；低忠誠 RANDOMACT 發生在 EntrySort 後，所以不回頭影響排序
+- fixed Gyrate 特殊 case 自己寫 FF 後直接 break；不進 common Counter loop，也沒有該 case 內的 `BATTLE_AddProfit`
+- 追跡攻擊的 option parser 在 fixed 原 C 已整段註解；621 的 +20%、713 的 +100%、735 的 +50% 都不直接改首擊攻擊力
+- Player Pet 沒有 CHAR_ARM，所以 `BATTLE_GetAttackCount()` 在忠誠檢查前會落到非 PLAYER fallback：`attack_max = 1`
+- Retrace 只有首擊回傳 DODGE 時才抽 `RAND(1,100) < 80`；成功後 battle.c 固定把 WORKATTACKPOWER 改成 `FIXSTR + 20%`，再對同一個 post-TargetAdjust 目標追加一次 `BATTLE_Attack`
+- Retrace 的追加攻擊不增加 `attack_count`；`BATTLE_AddProfit` 在追加攻擊之後只跑一次，外層 Counter 仍使用首擊的 `ContFlg / defNo`，不是追加攻擊的結果
+- V1.83 regression 因 V1.86 helper 插入而調整文字切片終點；只修測試邊界，沒有更動 SetDuck 行為
+- V1.72～V1.86 CI 全部 SUCCESS
 
 save schema 維持 **29**。
 
