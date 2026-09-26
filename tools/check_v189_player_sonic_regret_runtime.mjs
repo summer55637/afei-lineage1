@@ -23,8 +23,9 @@ const pierceStart=game.indexOf('function sourcePetPierceFrontEnemy');
 const dizzyStart=game.indexOf('function sourcePetTryRegretDizzy',pierceStart);
 const sonicStart=game.indexOf('function sourcePerformPetSonicSkill',dizzyStart);
 const regretStart=game.indexOf('function sourcePerformPetRegretSkill',sonicStart);
-const loyalStart=game.indexOf('function sourcePerformPetLoyalAction',regretStart);
-assert.ok(pierceStart>=0&&dizzyStart>pierceStart&&sonicStart>dizzyStart&&regretStart>sonicStart&&loyalStart>regretStart);
+const firekillStart=game.indexOf('function sourcePetFirekillResolveTarget',regretStart);
+const loyalStart=game.indexOf('function sourcePerformPetLoyalAction',firekillStart);
+assert.ok(pierceStart>=0&&dizzyStart>pierceStart&&sonicStart>dizzyStart&&regretStart>sonicStart&&firekillStart>regretStart&&loyalStart>firekillStart);
 
 const pierce=game.slice(pierceStart,dizzyStart);
 assert.ok(pierce.includes('if(slot<15||slot>=20)return null'));
@@ -47,7 +48,7 @@ assert.ok(sonic.includes('sourcePetPierceFrontEnemy(primary)'));
 assert.ok(sonic.includes('sourceNoCounter:true'));
 assert.equal(sonic.includes('resolvePetEnemyCounterChain'),false);
 
-const regret=game.slice(regretStart,loyalStart);
+const regret=game.slice(regretStart,firekillStart);
 assert.ok(regret.includes("enemySkillNumber(option,/命%([+-]?\\d+)/,0)"));
 assert.ok(regret.includes("enemySignedSkillPercent(option,'攻%')"));
 assert.ok(regret.includes("const hasDefenseToken=option.includes('防%')"));
