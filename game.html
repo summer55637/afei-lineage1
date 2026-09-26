@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.80</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.81</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.81：</b>
+      接上玩家寵低忠誠 RANDOMACT 的屬性強化攻擊／屬性轉換攻擊。544～547、825～828 的 Modifyattack 先走 BATTLE_S_AttackDamage，再依原目標永久屬性加傷，保留 rand()%(ModNum+5) 後整數 /100 的來源 bug；548～551、697～700 的 Mdfyattack 則在 AttackSeq 的 AttrAdjust 階段把攻方四屬清零、只留下指定屬性。兩者都保留 Guardian calc-only 舊 bug、execution-time TargetAdjust，且不接普通 Counter。
+    </article>
 
     <article class="card note">
       <b>V1.80：</b>
