@@ -15290,3 +15290,170 @@ Web 現階段仍沒有 source-backed Player equipment-slot lifecycle，因此：
 - targeted V1.69 regression: **36 / 36 PASS**
 - committed `game.js` syntax PASS
 - save schema 27 unchanged
+
+
+## V1.70 Player equipment slot lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心 commits：
+
+- `56cc289cbd142975aeae0e9a1e627876589d3328` — relife runtime 補齊裝備需求、attach/detach 與 fixed 9+15 slot metadata
+- `77072c0a995add7d35f5a52431b0629dfce8e5bd` — 建立 Player 9 裝備格 + 15 背包格 lifecycle、來源 compliance 與正式 relife equipment adapter
+- `3ebc268845930af98325322104532ab54c674cc6` — 修正 JS `Number(null)===0` 對空 item slot 的誤判
+
+### Fixed Player item layout
+
+固定 build 同時開啟 `_ITEM_EQUITSPACE` 與 `_EQUIT_NEWGLOVE`：
+
+- 0 = CHAR_HEAD
+- 1 = CHAR_BODY
+- 2 = CHAR_ARM
+- 3 = CHAR_DECORATION1
+- 4 = CHAR_DECORATION2
+- 5 = CHAR_EQBELT
+- 6 = CHAR_EQSHIELD
+- 7 = CHAR_EQSHOES
+- 8 = CHAR_EQGLOVE
+- 9..23 = 15 格一般背包
+
+V1.70 新增 `playerItemSlots[24]` 作為 CHAR item slot 的 Web 對應。
+
+舊版 Web 只有 aggregate `inventory` 與部分 existing `itemRuntime` owner，沒有保存歷史 CHAR slot。pre-schema28 存檔因此**不做反推**，一律以空 `playerItemSlots` 起始；不把「玩家擁有」猜成「曾放在哪一格／曾裝備」。
+
+save schema：**27 -> 28**。
+
+### Backpack -> equip exact move
+
+固定 `CHAR_moveItemFromItemBoxToEquip()`：
+
+1. source existing item 必須有效
+2. 檢查 Level / STR / DEX / Transmigration / Profession
+3. 由 `ITEM_getEquipPlace()` 決定合法裝備格
+4. 一般裝備只能進 canonical slot
+5. canonical `CHAR_DECORATION1` 是特例，可放 slot 3 或 slot 4
+6. slot 3/4 另一格若已有**相同 ITEM_TYPE**，禁止再裝第二件同類型
+7. 目的裝備格已有物品時，合法情況會交換回原背包格
+8. 先換 CHAR item slot，再 detach 舊裝、attach 新裝
+9. 回到 `CHAR_moveEquipItem()` 後統一跑 `CHAR_complianceParameter()`
+
+目前 source-backed 五件 relife template：
+
+- Level 0
+- NeedSTR / NeedDEX / NeedTRANS / NeedPROFESSION 全 0
+- attachFunc / detachFunc 全空
+- ITEM_TYPE 全為 15 = ITEM_AMULET
+- canonical equip place 全為 CHAR_DECORATION1
+
+因此五件之間最多只能同時裝一件；可在 slot 3 或 slot 4，但不能兩格各裝一個 ITEM_AMULET。
+
+### Equip -> backpack exact move
+
+固定 `CHAR_moveItemFromEquipToItemBox()`：
+
+- 背包目的格為空：直接卸裝到該格
+- 背包目的格已佔用：**不是普通交換**
+- 來源會反向呼叫 `CHAR_moveItemFromItemBoxToEquip(index,toindex,fromindex)`
+- 也就是背包內那件物品必須能合法裝進原裝備格，交換才成立
+- 若背包物不是合法裝備，整次 move 失敗，兩格保持不變
+
+固定 `CHAR_moveEquipItem()` 同時禁止直接「裝備格 -> 裝備格」移動或交換；即使另一裝備格是空的也拒絕。
+
+### Full compliance rebuild, not incremental +/- stats
+
+固定：
+
+`CHAR_complianceParameter()`
+-> `CHAR_initcharWorkInt()`
+-> `ITEM_equipEffect()`
+
+`ITEM_equipEffect()` 每次重新掃整個 `CHAR_EQUIPPLACENUM`，再一次性累加所有裝備 modifier。
+
+V1.70 因此不使用「裝上 +75、卸下 -75」的增量模型，而是 `playerItemSlots` 作唯一裝備真相，每次裝備 move 後完整重算：
+
+- Attack
+- Defence
+- Quick
+- MaxHP
+- MaxMP
+
+固定 `_FIX_MAXCHARMP` 已開：
+
+- MaxHP clamp 0..10,000,000
+- MaxMP clamp 0..1000
+- compliance 完成後目前 HP / MP 只做 `min(current,max)`
+- 裝上增加 MaxHP/MP **不會補血補魔**
+- 卸下若新上限下降，當前 HP/MP 會被截到新上限
+
+### Relife consumption source oddity
+
+固定 `ITEM_DIErelife()` 成功後：
+
+1. `BATTLE_MultiReLife()`
+2. `CHAR_setItemIndex(charaindex, eqw, -1)`
+3. `ITEM_endExistItemsOne(itemindex)`
+4. send item data
+5. return
+
+這裡**沒有**：
+
+- detach callback
+- `CHAR_complianceParameter()`
+
+因此祈福戒指／VIP祈福戒指死亡消失時，該次 battle round 已建立的 WORK 攻防敏/MaxHP/MaxMP 不會在消耗瞬間立刻重算。
+
+固定下一輪 `BATTLE_PreCommandSeq()` 才再次：
+
+`CHAR_complianceParameter() -> ITEM_equipEffect()`
+
+所以 V1.70 也保留：
+
+- relife 當下先清 equip slot + existing item
+- **不立即扣掉本輪已建立的裝備 WORK**
+- 下一個 round PreCommand 才依目前空裝備格重新計算並失去戒指 bonus
+- 若 MaxHP/MP 因此下降，再依 compliance 規則 clamp 當前 HP/MP
+
+Web `normalBattleOrder()` 現在也在每輪 PreCommand 對 Player 執行 `playerComplianceParameter(state)`，對齊這個時序。
+
+### Production relife adapter
+
+V1.69 的 `sourcePlayerEquippedRelifeItems()` 是空 adapter。
+
+V1.70 已改為真正讀：
+
+`playerItemSlots[0..4] -> existing item index -> itemRuntime -> fixed relife template`
+
+因此只要後續有來源正確的 acquisition / backpack registration，把這五件 existing item 放進 slot 3 或 4，V1.68/V1.69 的死亡復活 lifecycle 就能直接正式運作。
+
+目前仍**沒有自動送替身娃娃、沒有捏造 GMQUE 結果、沒有新增裝備 UI 按鈕**。
+
+### Regression
+
+- game.js syntax PASS
+- source relife runtime：5/5 attach/detach blank PASS
+- 5/5 equip requirements = 0 PASS
+- fixed 9 equip + 15 backpack layout PASS
+- existing item register -> backpack slot 9 PASS
+- Lv1/Lv2/Lv3 / rings decoration slot 3/4 rules PASS
+- same ITEM_TYPE decoration pair exclusion PASS
+- direct equip->equip move/exchange rejection PASS
+- backpack->occupied equip legal swap PASS
+- equip->occupied backpack reverse-equip rule PASS
+- unsupported reverse equip leaves slots unchanged PASS
+- 祈福戒指 +75/+75/+75/+200 PASS
+- VIP祈福戒指 +90/+90/+90/+250/+80MP PASS
+- equip does not heal HP PASS
+- unequip full rebuild + HP/MP clamp PASS
+- relife clears real equip slot + existing item + aggregate count PASS
+- relife does not immediately compliance PASS
+- later compliance removes consumed ring bonus PASS
+- Ultimate exclusion retained PASS
+- HP0 before AddProfit/ISDIE exclusion retained PASS
+- actor outer relife ordering retained PASS
+- dead CHAR item move rejection PASS
+- wrong equip slot rejection PASS
+- JS null item slot is not existing item index 0 PASS
+- pre-schema28 no slot-history guessing PASS
+- V1.67 Marefia 4 RNG retained
+- V1.68/V1.69 relife lifecycle retained
+- targeted V1.70 regression: **41 / 41 PASS**
