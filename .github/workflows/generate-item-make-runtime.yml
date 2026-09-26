@@ -32,6 +32,7 @@ on:
       - "tools/check_v197_player_steal_runtime.mjs"
       - "tools/check_v198_player_stealmoney_runtime.mjs"
       - "tools/check_v199_player_attackcrazed_runtime.mjs"
+      - "tools/check_v200_player_attackshoot_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -142,6 +143,9 @@ jobs:
 
       - name: Run V1.99 player AttackCrazed regressions
         run: node tools/check_v199_player_attackcrazed_runtime.mjs
+
+      - name: Run V2.00 player AttackShoot regressions
+        run: node tools/check_v200_player_attackshoot_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
