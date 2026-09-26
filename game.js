@@ -2945,7 +2945,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
   return {damage,dodged:false,dodge,attMagicLv,resist,randomAmp,amagic,aPower,adjusted,trueMagic,exp,hpBefore,hpAfter:battleStatusHp(targetDesc)};
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
+  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
@@ -3272,7 +3272,7 @@ function battleStatusClear(desc,type=null){
 function battleStatusCanMove(desc){
   const st=battleStatusGet(desc),shootSleep=battleShootSleepGet(desc);
   if(shootSleep&&shootSleep.turns>0)return false;
-  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'||st.type==='dizzy'||st.type==='barrier'));
+  return !(st&&st.turns>0&&(st.type==='paralysis'||st.type==='stone'||st.type==='sleep'||st.type==='dizzy'||st.type==='dragnet'||st.type==='barrier'));
 }
 function battleStatusRawStats(desc){
   if(desc?.kind==='player'){
@@ -3724,7 +3724,9 @@ function battleStatusTypeFromOption(option){
   if(t.includes('煞'))return 'sars';
   if(t.includes('剧')||t.includes('劇'))return 'deepPoison';
   if(t.includes('毒'))return 'poison';
+  if(t.includes('麻'))return 'paralysis';
   if(t.includes('虚')||t.includes('虛'))return 'weaken';
+  if(t.includes('罗')||t.includes('羅'))return 'dragnet';
   if(t.includes('石'))return 'stone';
   if(t.includes('眠'))return 'sleep';
   if(t.includes('乱')||t.includes('亂'))return 'confusion';
@@ -9426,7 +9428,7 @@ function sourcePetSpecialStatusSpec(meta){
 }
 const SOURCE_REFRESH_STATUS_ORDER=Object.freeze([
   'poison','paralysis','sleep','stone','drunk','confusion',
-  'weaken','deepPoison','barrier','nocast','sars','dizzy'
+  'weaken','deepPoison','barrier','nocast','sars','dizzy','dragnet'
 ]);
 function sourceRefreshLastStatus(targetDesc){
   // fixed BATTLE_MultiStatusRecovery scans StatusTbl from 1 to BATTLE_ST_END
@@ -10264,6 +10266,208 @@ function sourcePerformPetRetraceSkill(pet,action,options={}){
     retraceRoll,boosted,boostedAttack,follow,
     followActualTargetUnitId:followActual?.id||null,
     sourceOptionIgnored:true,sourceCounterUsesPrimary:true
+  };
+}
+
+function sourcePetBattleModelSpec(meta){
+  const p=String(meta?.o||'').split('|');
+  const type=Math.max(0,sourceCAtoi(p[0]));
+  let objectNum=sourceCAtoi(p[1]),objectNumRoll=null;
+  // fixed PETSKILL_BattleModel: <=0 rolls RAND(1,10); >10 clamps to 10.
+  if(objectNum<=0){
+    objectNumRoll=cRand(1,10);
+    objectNum=objectNumRoll;
+  }else if(objectNum>10){
+    objectNum=10;
+  }
+
+  const statusToken=String(p[2]||'');
+  const statusType=battleStatusTypeFromOption(statusToken);
+  const turns=Math.max(0,sourceCAtoi(p[3]));
+  const effectHit=Math.max(0,sourceCAtoi(p[4]));
+
+  // PETSKILL_BattleModel parses up to three SPACE-delimited stat tokens positionally:
+  // token 1 may affect 攻, token 2 防, token 3 敏. It does not search a token in every slot.
+  // Source bug: every matched stat starts from WORKATTACKPOWER, even 防/敏.
+  const statTokens=String(p[5]||'').trim()?String(p[5]).trim().split(/\s+/).slice(0,3):[];
+  const actionNumbers=String(p[6]||'').trim()
+    ?String(p[6]).trim().split(/\s+/).slice(0,4).map(sourceCAtoi)
+    :[];
+
+  return {
+    type,objectNum,objectNumRoll,statusToken,statusType,turns,effectHit,
+    statTokens,actionNumbers,
+    physical:(type&4)!==0,coverAll:(type&1)!==0
+  };
+}
+function sourceApplyPetBattleModelPower(pet,spec,skillId){
+  const base=petBattleView(pet);
+  if(!base)return {baseAttack:0,mods:null};
+  const attackBase=Math.trunc(n(base.attack));
+  const mods={};
+  const words=['攻','防','敏'];
+  const keys=['attack','defense','quick'];
+
+  for(let i=0;i<3;i++){
+    const token=String(spec?.statTokens?.[i]||'');
+    if(!token||!token.includes(words[i]))continue;
+    let value=attackBase;
+    if(token.includes('%')){
+      const m=token.match(/%([+-]?\d+(?:\.\d+)?)/);
+      const pct=m?(Number(m[1])||0):0;
+      value=value+Math.trunc(value*pct/100);
+    }else{
+      const m=token.match(/[攻防敏]([+-]?\d+(?:\.\d+)?)/);
+      value=m?Math.trunc(Number(m[1])||0):0;
+    }
+    mods[keys[i]]=Math.trunc(value);
+  }
+
+  if(Object.keys(mods).length){
+    battlePetPowerMods.set(pet.id,Object.assign(
+      {skillId,sourceBattleModel:true},
+      mods
+    ));
+  }
+  return {baseAttack:attackBase,mods:Object.keys(mods).length?mods:null};
+}
+function sourceBattleModelEnemyTargets(){
+  // fixed BATTLE_MultiList(TARGET_SIDE_1) scans 10..19, then qsort(SortLoc).
+  // CharTableIdx + SortLoc produces source order 13,11,10,12,14,18,16,15,17,19.
+  // Web battleSlot is source slot-10, exactly the already sourced SARS location order.
+  const bySlot=new Map(
+    targetableEnemyUnits().map(unit=>[Math.trunc(n(unit?.battleSlot)),unit])
+  );
+  const out=[];
+  for(const slot of SOURCE_SARS_SLOT_ORDER){
+    const unit=bySlot.get(slot);
+    if(unit)out.push(unit);
+  }
+  return out;
+}
+function sourcePerformPetBattleModelSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const spec=sourcePetBattleModelSpec(meta);
+  const label=meta?.n||'BattleModel';
+
+  if(!spec.physical){
+    addLog(pet.name+' 隨機使用「'+label+'」，但來源 type '+spec.type+' 不是物理 BattleModel；不猜非物理傷害。','pet');
+    return {handled:true,skillId:action?.skillId,spec,unsupportedType:spec.type};
+  }
+
+  // PETSKILL_BattleModel ignores RANDOMACT toNo after PETSKILL_Use enters the handler:
+  // COM2 is overwritten with low=type / high=objectNum. Actual targets are rebuilt here
+  // from the entire opposing side.
+  const power=sourceApplyPetBattleModelPower(pet,spec,action?.skillId);
+  const initial=sourceBattleModelEnemyTargets();
+  if(!initial.length){
+    addLog(pet.name+' 使用「'+label+'」，但敵方已沒有可攻擊目標。','pet');
+    return {handled:true,skillId:action?.skillId,spec,power,noTarget:true,sourceTargetDescIgnored:true};
+  }
+
+  // fixed BATTLE_BattleModel does NOT pre-roll extra random targets.
+  // It first consumes attacks against the sorted initial iToList; only an extra object
+  // beyond live-count rolls RAND(0,i0-1), immediately before that object's attack.
+  const sequence=[];
+  if(spec.objectNum>=initial.length){
+    for(const unit of initial)sequence.push({unit,random:false});
+    while(sequence.length<spec.objectNum)sequence.push({unit:null,random:true});
+  }else{
+    for(let i=0;i<spec.objectNum&&i<initial.length;i++)sequence.push({unit:initial[i],random:false});
+    if(spec.coverAll){
+      for(let i=spec.objectNum;i<initial.length;i++)sequence.push({unit:initial[i],random:false});
+    }
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」：BattleModel type '+spec.type+'，'
+      +spec.objectNum+' 個攻擊物件'+(spec.statusType?'，可附加'+(BATTLE_STATUS_NAMES[spec.statusType]||spec.statusType):'')+'。',
+    'pet'
+  );
+
+  const results=[];
+  for(let i=0;i<sequence.length;i++){
+    const step=sequence[i];
+    let randomTargetRoll=null;
+    let target=step.unit;
+    if(step.random){
+      randomTargetRoll=cRand(0,initial.length-1);
+      target=initial[randomTargetRoll];
+    }
+
+    const actionNumber=spec.actionNumbers.length
+      ?spec.actionNumbers[i%spec.actionNumbers.length]
+      :null;
+
+    // Extra random objects select from the ORIGINAL iToList. If that selected entry died
+    // after an earlier object, BATTLE_BattleModel_ATTACK TargetCheck simply returns.
+    if(!target||n(target.hp)<=0||enemyUnitHidden(target)){
+      results.push({
+        objectIndex:i,actionNumber,
+        targetUnitId:target?.id||null,randomTargetRoll,skippedDead:true
+      });
+      continue;
+    }
+
+    const attacker=petBattleView(pet);
+    const originalDesc={kind:'enemy',unit:target,unitId:target.id};
+    const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+      guarding:!!target.guardThisTurn&&!battleStatusActive(originalDesc,'confusion')
+    });
+    const actual=applyFriendlyEnemyHit(
+      'pet',pet.name,target,r,pet.id,{deferItemCrush:true}
+    );
+    const actualDesc=actual
+      ?{kind:'enemy',unit:actual,unitId:actual.id}
+      :originalDesc;
+
+    // fixed BattleModel alive branch: ItemCrush happens even on DODGE/MISS/0 damage,
+    // but is skipped completely when the actual defender died.
+    const itemCrushRoll=sourceBattleModelAliveItemCrushRng(r,actualDesc);
+
+    let status=null;
+    if(spec.statusType&&n(r?.damage)>0&&battleStatusDescAlive(actualDesc)){
+      const check=battleStatusChance(
+        {kind:'pet',pet,petId:pet.id},actualDesc,spec.statusType,
+        {perOffset:spec.effectHit,range:30,bai:1,forceGeneral:true}
+      );
+      let applied=false;
+      if(check.allowed&&check.success){
+        // BATTLE_BattleModel_ATTACK stores iTurn exactly, unlike common StatusChange (+1).
+        applied=battleStatusApplyRaw(actualDesc,spec.statusType,spec.turns);
+      }
+      status={
+        applied,type:spec.statusType,turns:spec.turns,
+        per:check.per,reason:check.reason||(!check.success?'roll':null)
+      };
+      if(applied){
+        addLog(
+          battleStatusDescName(actualDesc)+' 被「'+label+'」附加'
+            +(BATTLE_STATUS_NAMES[spec.statusType]||spec.statusType)
+            +' '+spec.turns+' 回合（BattleModel 原檢定 '+check.per.toFixed(1)+'%）。',
+          'pet'
+        );
+      }
+    }
+
+    results.push({
+      objectIndex:i,actionNumber,
+      targetUnitId:target.id,actualTargetUnitId:actual?.id||target.id,
+      guardianUnitId:r?.guardian?.id||null,
+      randomTargetRoll,itemCrushRoll,r,status
+    });
+  }
+
+  // BATTLE_COM_S_BATTLE_MODEL calls BATTLE_BattleModel() and immediately breaks.
+  // There is no ordinary Counter loop and no per-object BATTLE_AddProfit.
+  return {
+    handled:true,skillId:action?.skillId,spec,power,
+    sourceTargetDescIgnored:true,
+    initialTargetUnitIds:initial.map(unit=>unit.id),
+    sourceSortSlots:SOURCE_SARS_SLOT_ORDER.slice(),
+    sequenceLength:sequence.length,results,
+    sourceNoCounter:true,sourceNoPerObjectAddProfit:true
   };
 }
 
@@ -12275,6 +12479,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Sars')result=sourcePerformPetSarsSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_BattleModel')result=sourcePerformPetBattleModelSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_AttackCrazed')result=sourcePerformPetAttackCrazedSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_AttackShoot')result=sourcePerformPetAttackShootSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
