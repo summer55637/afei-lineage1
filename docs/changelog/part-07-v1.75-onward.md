@@ -463,3 +463,105 @@ Nocast 的 fixed `&&` 順序是先做 StatusAttackCheck，再排除 CHAR_TYPEPET
 - `23cd2ec7405138736c6e240abcfabb30148a9059` — V1.78 playable marker
 - `3e4e9f43b85f652858a51067a4af9a17ed487e4d` — V1.78 README
 - `e6af645a7ec672bf54e44e506b5878bdb85fd0ef` — V1.78 changelog index
+
+
+---
+
+## V1.79 Player RANDOMACT drain PetSkills
+
+V1.79 接上玩家出戰 Pet 在低忠誠 `RANDOMACT` 下的 `PETSKILL_DamageToHp` 與 `PETSKILL_DamageToHp2`。
+
+### Fixed rows
+
+- 503 嗜血技：`30|50`
+- 504 嗜血技2：`20|70`
+- 505 嗜血技3：`10|100`
+- 714 嗜血之擊：`30|100`
+- 833 大海血擊：`30|100`
+- 623 浴血狂襲：`30`
+- 659 T浴血狂襲：`100`
+
+### DamageToHp 的 C 整數除法 bug
+
+`PETSKILL_DamageToHp()` 寫成：
+
+`def = (atoi(buf1) / 100);`
+
+`atoi(buf1)` 與 `100` 都是 int，所以先做整數除法，再轉 float。現有 first token 30 / 20 / 10 因此全部先得到 0，最後 WORKATTACKPOWER 不會真的下降。
+
+Web 保留這個 bug，不按技能說明自行改成 -30% / -20% / -10%。第二段 option 才是 `BATTLE_S_DamageToHp()` 的實際吸血比例。
+
+### DamageToHp2
+
+`PETSKILL_DamageToHp2()` 本身只建立 `BATTLE_COM_S_DAMAGETOHP2`。真正特殊能力在 `BATTLE_AttackSeq()`：
+
+- 先完成普通 `BATTLE_CriticalCheck()`
+- `perCri = perCri + perCri*0.3`
+- `WORKATTACKPOWER = WORKFIXSTR + WORKFIXSTR*0.2`
+- `WORKQUICK = WORKFIXDEX + WORKFIXDEX*0.2`
+
+低忠誠 RANDOMACT 是 EntrySort 後才改 command，因此 WORKQUICK +20% 不可能回頭改本回合的速度排序；但 AttackSeq 當下的攻 +20% 與會心率 ×1.3 仍會作用。
+
+623 資料文字寫「HP50%以下時才可使用」，但 fixed `PETSKILL_DamageToHp2()` 沒有 HP 判斷。`BATTLE_AttackSeq()` 中也只有一段註解殘留類似文字，並未形成條件，所以 Web 不自行加入 HP50% gate。
+
+### BATTLE_S_AttackDamage Guardian bug
+
+`BATTLE_S_AttackDamage()` 先保存 caller 的原 `defindex`，再呼叫：
+
+`BATTLE_AttackSeq(attackindex, defindex, &damage, &Guardian, skill_type)`
+
+`BATTLE_AttackSeq()` 內若 Guardian 成立，只有它自己的 local `defindex` 改成 Guardian，所以 Duck 後的會心、防禦、GuardAdjust 會用 Guardian。
+
+回到 caller 後，原 `defindex` 沒有被更新，因此後面的：
+
+- `BATTLE_DamageSub`
+- WakeUp
+- death / Ultimate
+- ItemCrush
+- `BATTLE_S_DamageToHp*`
+
+仍然都落在原目標。
+
+Web 新增 player-Pet 對 Enemy 的 calc-only Guardian 路徑：Guardian 只參與傷害計算，`actualTarget` 保持原 Enemy。
+
+### DamageReact 先於 AttackSeq
+
+`BATTLE_S_AttackDamage()` 在呼叫 AttackSeq 之前，先對原目標執行 `BATTLE_GetDamageReact(defindex)`。對非 LIGHTTAKE 技能，只要 ReactType > 0 就先把 `skill_type=-1`。
+
+因此：
+
+- 本次仍進普通 AttackSeq / DamageSub 反應
+- `DamageToHp` / `DamageToHp2` 的吸血 switch 不會執行
+- `DamageToHp2` 因為傳進 AttackSeq 的 opt 已經是 -1，所以攻 +20% 與會心率 ×1.3 也不會執行
+
+目前 Web 可由 fixed source-backed runtime 實際達到的 Enemy DamageReact 是 `ACUPUNCTURE`，所以以它作為這個 gate 的現行映射。
+
+### TargetAdjust / Counter
+
+兩個 command 在 battle.c execution 時都先重新跑 `BATTLE_TargetAdjust()`。若 RANDOMACT 先選的 COM2 在 Pet 真正出手前失效，Web 會在該時點才重新走 DefaultAttacker target RNG。
+
+兩者都是獨立 `BATTLE_S_AttackDamage` case，case 結束直接 `break`，不接普通 Counter chain。
+
+### Regression
+
+新增 `tools/check_v179_player_drain_runtime.mjs`，檢查：
+
+- 7 筆 fixed PetSkill row
+- DamageToHp int/int 截斷
+- execution-time TargetAdjust fallback
+- Guardian calc-only / original-target damage bug
+- DamageToHp2 +20% / ×1.3
+- DamageReact 先降 skill type，取消吸血與 DamageToHp2 bonus
+- 623 不自行加入 HP50% gate
+- heal percentage truncation + max HP cap
+- 無普通 Counter
+- dispatcher 位於 pending fallback 前
+
+### commits
+
+- `eb272e6abfc6afe90db8721fa9f85f33425e6dc7` — V1.79 player drain core
+- `3ee0b72f97719faa602f72732e7628e3d9adf194` — DamageReact downgrade correction
+- `50109ebb47c3232b25250a94a3cddbba635b2fdd` — V1.79 regression
+- `e599753318bb0b7776d3ca35cf13079c6a2bdeef` — V1.79 playable marker
+- `fd9de16a9a734b0be5a4befe27e75cd465268be4` — V1.79 README
+- `7177372bcd0c6f0612771e644614216fedac8744` — V1.79 changelog index
