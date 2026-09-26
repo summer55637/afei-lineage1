@@ -748,3 +748,36 @@ fixed `PETSKILL_Use()` 在找 function pointer 前先做：CHAR_TYPEPET 且 ille
 - `d9aa19704743e57058c86aba19010d5b75a49009` — V1.82 playable marker
 - `1468c6ea2a8c3b120c92c1287db1506ea22caec8` — V1.82 README
 - `4a96248807fb242034a45908ce6e7acb2c2619eb` — V1.82 changelog index
+
+
+---
+
+## V1.83 Player RANDOMACT SetDuck self-target failure
+
+595 `PETSKILL_SetDuck` 在一般正規自體使用時可建立閃避效果，但玩家寵低忠誠 `RANDOMACT` 的 call path 不是正規 target metadata path。
+
+fixed `BATTLE_PetRandomSkill()` 先 `BATTLE_DefaultAttacker()` 選 opposing Enemy `toNo`，再呼叫 `PETSKILL_Use(pet,iNum,toNo,NULL)`；`PETSKILL_Use()` 不依 PETSKILL_TARGET=0 改回自己。
+
+`PETSKILL_SetDuck()` 因此把 Enemy `toNo` 原樣寫進 COM2，並回 TRUE。真正執行 `PETSKILL_SetDuckChange_Battle()` 時，在讀 option 前先檢查：
+
+`BATTLE_No2Index(battleindex,toNo) == charaindex`
+
+RANDOMACT 的 Enemy toNo 不可能等於施術 Pet charaindex，因此直接 FALSE。結果是：
+- 不讀 `3|60`
+- 不寫 CHAR_MYSKILLDUCK / POWER
+- 不產生 MagicEffect
+- 不消耗 RNG
+
+`PETSKILL_SetDuck()` 另寫 `CHAR_MAGICPETMP=0`。對 fixed repo 全域搜尋只找到 battle init 清 0、SetDuck 清 0、SetMagicPet 讀取後又寫回同一 nums；沒有任何 ++ / 累加。因此所謂「SetMagicPet 單場三次」計數在此 build 沒有可達累加，SetDuck 的清零目前是行為上的 0→0。
+
+V1.83 新增 `sourcePerformPetSetDuckRandomSkill()`，明確結束這個 pending function，但不虛構可用閃避 buff。
+
+Regression：`tools/check_v183_player_setduck_runtime.mjs`。
+
+### commits
+
+- `515fc22ad3766a3c0cd5dc2e93dc897adbf81c17` — V1.83 SetDuck RANDOMACT no-op core
+- `5463c87501ed82f41513458631ecddf8ca1c15eb` — V1.83 regression
+- `ff0c978788caf316ff33dfe8c7ba0e46c76ce101` — V1.83 playable marker
+- `3c2f29cbdb9ad618e8d130af9acfb75140db2606` — V1.83 README
+- `ab55da3167deecdee77f75e2d59b2c7e0c49ee36` — V1.83 changelog index
