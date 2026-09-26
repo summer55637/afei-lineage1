@@ -3036,3 +3036,68 @@ fixed Inslay 最後還會重建 SECRETNAME / EFFECTSTRING，包含 legacy locali
 CI run #182：V1.72～V2.05 全部 success，`game.js` syntax success。
 
 save schema 維持 **29**。
+
+---
+
+## V2.06 Pet merge-fix source runtime
+
+本輪刻意只處理 200／201 `PETSKILL_Merge` 所需的第一小塊：`enemybase1.txt` 的 `ATOMFIXNAME1～5 / ATOMBASEADD1～5 / ATOMFIXMIN1～5 / ATOMFIXMAX1～5`，以及名稱到 `itematom.txt` atom index 的固定映射。成品抽選尚未接入，因此沒有猜任何合成結果。
+
+### fixed C 行為確認
+
+固定 `version.h` 沒有開 `_MERGE_NEW_8`，所以：
+
+- `ITEM_RANDRANGEDOM_BASE = 0`
+- ATOMFIXMIN / MAX 不額外 +600
+- 成功解析 atom 後若 min > max，原 C 交換兩者
+- 負值 fallback 仍存在：普通 1000、家族 4000；但 pinned 可解析 slot 目前沒有負的 effective min/max
+- `MAX_ITEM_ATOMS_SIZE = 256`
+
+另外固定 `ITEM_merge_getPetFix()` 有原版怪行為：外面 `for(i=0;i<5;i++)`，裡面每次又依序呼叫完整 5 個 PET_ADD_INGRED slot，所以有效 slot 會重複加入 5 輪。這不是 Web 自行修正的 bug，而是需要保留的來源行為。
+
+若 `ITEM_getAtomIndexByName()` 回傳 <0，巨集中的 `continue` 會跳到下一次外層 `for`，該 pass 後面的 slot 不再處理。像 TempNo 600 的 slot4「加特洛」在 itematom 不存在，因此每一輪只留下石／木／線，slot5「美鲁娜」也不會被走到。
+
+### pinned data 統計
+
+- enemybase rows：1816
+- unique TempNo：1813
+- duplicate TempNo ignored：3
+- TempNo with configured fix：980
+- configured slots：4602
+- resolved slots：4572
+- unresolved slots：30
+- min/max swaps：2
+- itematom unique names：112
+- 5-pass expanded resolved entries：22860
+- unknown-atom outer-pass aborts：75
+
+固定 blob：
+
+- `enemybase1.txt` = `a19a508975e3a982fada323861b35b2edab79349`
+- `itematom.txt` = `85ecfbf543b85b269e6177921f76a587d969ea26`
+
+### Web source layer
+
+新增 `stoneage_pet_merge_fix_runtime.json`，並由 `sourceEnsurePetMergeFixDb()` 懶載入。
+
+`sourcePetMergeFixTemplate()` 直接用 V1.77 已來源化的 Pet `petId`；`sourcePetMergeFixEntries()` 明確重播 5 個 outer pass，且 unresolved atom 依原 C 直接 abort 當前 pass。
+
+200／201 action 現在會先完成這層 source lookup，再維持：
+
+`sourceRuntimePending:true`
+
+因為 `ITEM_mergeItem_merge` 的完整 merge candidate table、rand range、結果 item 建立／材料消耗 lifecycle 還沒有在同一批完成。這一輪只鎖定已確認的來源層，不跨越 no-guess boundary。
+
+### Regression
+
+新增 `tools/check_v206_pet_merge_fix_runtime.mjs`，固定檢查：
+
+- pinned blob / build flags
+- 1813 / 980 / 4602 / 4572 / 30 / 2 / 112 等統計
+- TempNo 1 五個 700 修正
+- TempNo 600 unknown slot4 導致 slot5 不執行
+- 5-pass 重播為 25／15 筆的代表案例
+- runtime lazy-load
+- 200／201 仍不猜完整 merge 結果
+
+save schema 維持 **29**。

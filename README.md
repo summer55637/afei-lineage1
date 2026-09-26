@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.05**
+**PLAYABLE CORE V2.06**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,36 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.06 最新進度
+
+V2.06 先以小批次完成 200／201 `PETSKILL_Merge` 的 **enemybase 寵物加工修正來源層**；成品抽選與完整 lifecycle 尚未接完，所以仍維持「不猜合成結果」。
+
+### V2.06 enemybase / itematom Pet merge-fix runtime
+
+新增 pinned runtime：
+
+- `enemybase1.txt`：1816 列、1813 個唯一 TempNo
+- 980 個 TempNo 有 ATOM 加工修正
+- 4602 個非空 ATOMFIX slot
+- 4572 個可在 `itematom.txt` 精確解析；30 個固定來源本身無對應 atom
+- `itematom.txt`：112 個唯一素材名稱
+- 固定 `_MERGE_NEW_8` 關閉，因此 `ITEM_RANDRANGEDOM_BASE=0`
+- 2 組 min/max 依原 C 在成功解析 atom 後交換
+- 原 `ITEM_merge_getPetFix()` 外層 5 次迴圈會把 5 個 slot 重跑 5 次；有效資料實際展開 22860 筆
+- 找不到 atom 時原巨集的 `continue` 會直接進下一個外層 pass，因此後續 slot 被跳過；固定資料共發生 75 次 pass abort
+- runtime 維持 lazy-load，不加入開機 Promise.all
+- 玩家 Pet 已有的 source `petId`（fixed `CHAR_PETID = E_T_TEMPNO`）直接作 TempNo lookup，不拿 Web id 猜
+
+新增：
+
+- `tools/generate_pet_merge_fix_runtime.py`
+- `data/generated/stoneage_pet_merge_fix_runtime.json`
+- `tools/check_v206_pet_merge_fix_runtime.mjs`
+
+200 加工／201 料理現在會先載入並解析出戰寵的固定 ATOM 修正；但 `ITEM_mergeItem_merge` 的完整 merge table/runtime 與成品 lifecycle 尚未完全來源化，因此仍回傳 pending，不先造合成結果。
+
+save schema 維持 **29**。
 
 ## V2.05 最新進度
 
@@ -71,7 +101,7 @@ V2.04～V2.05 已正式進入 **field=2 寵物生活技能**。
 - `tools/check_v204_item_field2_runtime.mjs`
 - `tools/check_v205_player_field2_fixitem_inslay.mjs`
 
-CI 已確認 V1.72～V2.05 全部 regression success，`game.js` syntax success。
+V1.72～V2.06 regression 已接入同一條 CI；`game.js` syntax check 維持。
 
 V2.03 field=0/1 coverage closure 與 V2.02 Combined lifecycle 全部保留。
 

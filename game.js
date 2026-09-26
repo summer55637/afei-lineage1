@@ -10,6 +10,7 @@ const ITEM_MAGIC_RUNTIME_URL='data/generated/stoneage_item_magic_runtime.json';
 const ITEM_RELIFE_RUNTIME_URL='data/generated/stoneage_item_relife_runtime.json';
 const ITEM_MAKE_RUNTIME_URL='data/generated/stoneage_item_make_runtime.json';
 const ITEM_FIELD2_RUNTIME_URL='data/generated/stoneage_item_field2_runtime.json';
+const PET_MERGE_FIX_RUNTIME_URL='data/generated/stoneage_pet_merge_fix_runtime.json';
 const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
@@ -67,7 +68,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 
@@ -165,6 +166,52 @@ async function sourceEnsureItemField2Db(){
   try{return await itemField2LoadPromise}
   catch(err){itemField2LoadPromise=null;throw err}
 }
+async function sourceEnsurePetMergeFixDb(){
+  if(petMergeFixDb)return petMergeFixDb;
+  if(petMergeFixLoadPromise)return petMergeFixLoadPromise;
+  petMergeFixLoadPromise=(async()=>{
+    const r=await fetch(PET_MERGE_FIX_RUNTIME_URL,{cache:'no-store'});
+    if(!r.ok)throw new Error('Pet merge-fix runtime HTTP '+r.status);
+    const data=await r.json();
+    if(data?.format!=='stoneage-pet-merge-fix-runtime-v1')throw new Error('Pet merge-fix runtime format mismatch');
+    if(data?.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56')throw new Error('Pet merge-fix runtime source-ref mismatch');
+    if(Math.trunc(Number(data?.stats?.uniqueTempNo))!==1813)throw new Error('Pet merge-fix runtime TempNo-count mismatch');
+    if(Math.trunc(Number(data?.stats?.itemAtomCount))!==112)throw new Error('Pet merge-fix runtime atom-count mismatch');
+    if(Math.trunc(Number(data?.stats?.configuredSlots))!==4602)throw new Error('Pet merge-fix runtime slot-count mismatch');
+    petMergeFixDb=data;
+    return data;
+  })();
+  try{return await petMergeFixLoadPromise}
+  catch(err){petMergeFixLoadPromise=null;throw err}
+}
+function sourcePetMergeFixTemplate(pet=activePet()){
+  const petId=Math.trunc(Number(pet?.petId));
+  if(!Number.isFinite(petId)||!petMergeFixDb?.byTempNo)return null;
+  return petMergeFixDb.byTempNo[String(petId)]||null;
+}
+function sourcePetMergeFixEntries(pet=activePet()){
+  const row=sourcePetMergeFixTemplate(pet);
+  if(!row||!Array.isArray(row.slots))return [];
+  const out=[];
+  outerPass:
+  for(let pass=0;pass<5;pass++){
+    for(const raw of row.slots){
+      if(!raw||!raw.name)continue;
+      if(raw?.atomIndex==null)continue outerPass;
+      const atomIndex=Math.trunc(Number(raw.atomIndex));
+      if(!Number.isFinite(atomIndex))continue outerPass;
+      out.push({
+        pass,slot:Math.trunc(Number(raw.slot)),
+        name:String(raw.name),atomIndex,
+        baseAdd:Math.trunc(Number(raw.baseAdd)||0),
+        fixMin:Math.trunc(Number(raw.fixMin)||0),
+        fixMax:Math.trunc(Number(raw.fixMax)||0)
+      });
+    }
+  }
+  return out;
+}
+
 function sourceItemField2Template(itemId){
   const id=Math.trunc(Number(itemId));
   if(!Number.isFinite(id)||!itemField2Db?.byItemId)return null;
@@ -15897,8 +15944,16 @@ async function sourceUseField2PetSkill(skillId){
   if(enemy){addLog('原 C field=2 PetSkill 只能在非戰鬥狀態使用。','bad');return {ok:false,reason:'in-battle'}}
 
   if(id===200||id===201){
-    addLog((id===200?'加工':'料理')+' 目前仍缺 ITEM_mergeItem_merge 的完整 merge table/runtime；維持不猜結果。','bad');
-    return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true};
+    let petFixEntries=[];
+    try{
+      await sourceEnsurePetMergeFixDb();
+      petFixEntries=sourcePetMergeFixEntries(activePet());
+    }catch(err){
+      addLog('加工／料理固定寵物修正 runtime 載入失敗：'+String(err?.message||err),'bad');
+      return {ok:false,reason:'merge-fix-runtime-load'};
+    }
+    addLog((id===200?'加工':'料理')+' 的 enemybase ATOM 寵物修正已由固定來源載入；ITEM_mergeItem_merge 的完整 merge table/runtime 與成品 lifecycle 尚未完全來源化，維持不猜結果。','bad');
+    return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,petFixEntries:petFixEntries.length};
   }
 
   try{await sourceEnsureItemField2Db()}

@@ -5,6 +5,7 @@ on:
     paths:
       - "tools/generate_item_make_runtime.py"
       - "tools/generate_item_field2_runtime.py"
+      - "tools/generate_pet_merge_fix_runtime.py"
       - "tools/check_v172_item_make_runtime.mjs"
       - "tools/check_v173_item_equip_runtime.mjs"
       - "tools/check_v174_player_ranged_runtime.mjs"
@@ -39,6 +40,7 @@ on:
       - "tools/check_v203_player_field01_coverage.mjs"
       - "tools/check_v204_item_field2_runtime.mjs"
       - "tools/check_v205_player_field2_fixitem_inslay.mjs"
+      - "tools/check_v206_pet_merge_fix_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -65,6 +67,9 @@ jobs:
 
       - name: Generate fixed field2 item runtime
         run: python tools/generate_item_field2_runtime.py
+
+      - name: Generate fixed pet merge-fix runtime
+        run: python tools/generate_pet_merge_fix_runtime.py
 
       - name: Check game.js syntax
         run: node --check game.js
@@ -171,15 +176,18 @@ jobs:
       - name: Run V2.05 player Fixitem Inslay regressions
         run: node tools/check_v205_player_field2_fixitem_inslay.mjs
 
+      - name: Run V2.06 pet merge-fix runtime regressions
+        run: node tools/check_v206_pet_merge_fix_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |
-          if [ -z "$(git status --porcelain -- data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json)" ]; then
+          if [ -z "$(git status --porcelain -- data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json data/generated/stoneage_pet_merge_fix_runtime.json)" ]; then
             echo "Generated runtimes are already current."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json
+          git add data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json data/generated/stoneage_pet_merge_fix_runtime.json
           git commit -m "V2.04 generate fixed item runtimes"
           git push
