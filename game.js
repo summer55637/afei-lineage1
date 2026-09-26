@@ -2546,6 +2546,16 @@ function cRand(min,max){
   if(!Number.isFinite(min)||!Number.isFinite(max))return 0;
   return Math.trunc(min+(max-min+1)*Math.random());
 }
+function sourceCRandMacroValue(min,max){
+  min=Number(min);max=Number(max);
+  if(!Number.isFinite(min)||!Number.isFinite(max))return 0;
+  // Exact fixed util.h macro value before assignment to an int lvalue:
+  // (x-1)+1+(int)((double)(y-(x-1))*rand()/(RAND_MAX+1.0))
+  // The inner product truncates toward zero first. If x is fractional, the macro
+  // expression itself remains fractional until its caller assigns/compound-assigns it.
+  const inner=Math.trunc((max-(min-1))*Math.random());
+  return (min-1)+1+inner;
+}
 function sourceRandModulo(mod){
   const m=Math.max(1,Math.trunc(n(mod)));
   return Math.trunc(Math.random()*m);
@@ -4460,8 +4470,13 @@ function battleDamageCore(attacker,defender,options={}){
   // fixed _ADD_DEAMGEDEFC unconditionally consumes both RAND calls, including 0..0.
   const sourceOtherDamage=Math.trunc(n(attacker?.otherDamage));
   const sourceOtherDefense=Math.trunc(n(defender?.otherDefc));
-  const sourceOtherPower=cRand(sourceOtherDamage*.3,sourceOtherDamage)
-    -cRand(sourceOtherDefense*.3,sourceOtherDefense);
+  // C: int otherpower = RAND(apower*.3,apower) - RAND(dpower*.3,dpower).
+  // Both RAND macro expressions may be fractional because x is a double; the subtraction
+  // happens first and only the final assignment to int truncates toward zero.
+  const sourceOtherPower=Math.trunc(
+    sourceCRandMacroValue(sourceOtherDamage*.3,sourceOtherDamage)
+    -sourceCRandMacroValue(sourceOtherDefense*.3,sourceOtherDefense)
+  );
   if(sourceOtherPower!==0)damage+=sourceOtherPower;
   if(damage<0)damage=0;
   return damage;
