@@ -14391,3 +14391,37 @@ V1.54 繼續以 outer `sourcePostTarget` + last primary `r.allGuard` 表示這�
 - parent fixed at V1.55 / `76f450422787633a1eccda54acbee4ed1d7b9cb1`
 - game.js syntax PASS
 - save schema 27 unchanged
+
+
+## V1.57 AttackShoot / 栗子連激 source lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### PETSKILL_AttackShoot / skill 614
+- option `3|5`；Enemy AI 選好 target 後、EntrySort 前先執行 `RAND(3,5)`。
+- 原函式的 1/300、低 HP 1/50 升到 8 段分支要求 `WORKFIXAI>=100`。
+- `CHAR_initcharWorkInt()` 只替 `CHAR_TYPEPET` 計算 FIXAI；Enemy 維持 0，因此 Enemy 614 不多抽那兩顆 RNG，也不進 8 段。
+
+### TargetListSet
+- 第一擊前一次預抽完整 n 顆 target RNG。
+- BOW 直接使用預抽格，失效格只 skip。
+- 非 BOW 第一擊仍使用原 COM2 + TargetAdjust，因此 pList[0] RNG 已消耗但值不用。
+- 第二擊起才用預抽格；中途失效時才由 DefaultAttacker 補 fallback RNG。
+
+### Damage / status order
+- 執行前仍先消耗共用 BATTLE_GetAttackCount 武器 RNG，之後 ATTSHOOT 再覆寫 attack_max。
+- `gDamageDiv=attack_max`，每個 BATTLE_Attack 的完整物理傷害再除以栗子總數。
+- 顯示 protocol 固定 BB/w0，但真實 weaponType 不變。
+- 正傷害 hit：DamageSub/WakeUp → BREAKTHROW 麻痺 → `RAND(1,5)>4` 直接 WORKSLEEP=3 → ItemCrush。
+- 栗子睡眠不跑 StatusAttackCheck，可與另一異常共存；下一個正傷害會先 WakeUp 清掉前一擊睡眠。
+- Web runtime 對「另一異常 + 栗子睡眠」使用獨立 transient sleep slot。
+
+### Counter
+ATTSHOOT 保留 COM_S_ATTSHOOT；來源 BATTLE_CounterCheck 在任一方為 ATTSHOOT 時直接 FALSE。
+因此 V1.57 不進 Counter chain，也不消耗 Counter RNG。
+
+### Regression
+- game.js syntax PASS
+- V1.56 SARS / ShowMercy 保留
+- V1.55 ATTCRAZED / GYRATE 保留
+- save schema 27 unchanged
