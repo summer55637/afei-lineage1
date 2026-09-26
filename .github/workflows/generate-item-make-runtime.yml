@@ -15,6 +15,7 @@ on:
       - "tools/check_v180_player_mpdamage_runtime.mjs"
       - "tools/check_v181_player_attribute_attacks_runtime.mjs"
       - "tools/check_v182_player_lighttakeed_runtime.mjs"
+      - "tools/check_v183_player_setduck_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -74,6 +75,9 @@ jobs:
 
       - name: Run V1.82 player Lighttakeed regressions
         run: node tools/check_v182_player_lighttakeed_runtime.mjs
+
+      - name: Run V1.83 player SetDuck regressions
+        run: node tools/check_v183_player_setduck_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
