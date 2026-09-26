@@ -120,6 +120,13 @@ assert.ok(game.includes('existing.field2Functions'));
 assert.ok(game.includes("callbacks.initFunc=String(existing.field2Functions.init"));
 assert.ok(game.includes("callbacks.attachFunc=String(existing.field2Functions.attach"));
 assert.ok(game.includes("callbacks.detachFunc=String(existing.field2Functions.detach"));
+assert.ok(game.includes("SOURCE_FIELD2_FUNCTION_KEYS"));
+assert.ok(game.includes("'relife'"));
+assert.ok(game.includes("Object.prototype.hasOwnProperty.call(existing.field2Functions,'relife')"));
+assert.ok(game.includes("relifeFunc!=='ITEM_DIErelife'"));
+assert.ok(game.includes("Object.prototype.hasOwnProperty.call(existing.field2Char,'argument')"));
+assert.ok(game.includes("sourceRelifeHpPowerFromArgument(argument)"));
+assert.ok(game.includes("sourceInslayOverride:hasRelifeOverride||hasArgumentOverride"));
 
 assert.ok(html.includes('id="sourceField2SkillPanel"'));
 assert.ok(html.includes('id="sourceField2SelectionStatus"'));
