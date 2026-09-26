@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.76</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.77</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -221,6 +221,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.77：</b>
+      補上 fixed CHAR_PETID 真實來源鏈：Enemy 建立時由 E_T_TEMPNO 寫入 CHAR_PETID，捕獲時原值複製到 Pet。581 大吼／734 獅王之吼現在會依技能 option 的精確 PETID 清單判斷並直接讓符合目標離場；600／674 暗月變身則只允許 PETID 981～984，依原 C 套用攻擊／敏捷百分比與 WORKTURN 五回合生命週期，技能文字中的魔防百分比不自行補實作。save schema 升至 29，舊存檔只在已有 source tempNo 時補 petId。
+    </article>
 
     <article class="card note">
       <b>V1.76：</b>
