@@ -5732,11 +5732,43 @@ function performEnemyWildViolent(actor,unit,options,meta){
   const option=String(meta?.o||'');
   const duckMatch=option.match(/回?避([+-]?\d+)/);
   const duckBonus=duckMatch?Math.max(0,Number(duckMatch[1])||0):0;
+
+  // fixed battle.c：先完成本 actor 的 BATTLE_GetAttackCount lifecycle，
+  // 再由 WILDVIOLENT 自己覆寫 attack_max = RAND(3,10)。
   const count=cRand(3,10);
   const label=meta?.n||'狂暴攻擊';
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const attackOptions=Object.assign({},options.attackOptions||{},{
+    damageDivisor:count,
+    duckBonusPercent:duckBonus
+  });
+
   unit.counterEligibleThisTurn=true;
   addLog(unit.name+' 使用 '+label+'：隨機 '+count+' 段，單段傷害 ÷'+count+'，目標回避 +'+duckBonus+'。');
 
+  // WILDVIOLENT is still in battle.c's common direct-attack group.
+  // BOW therefore keeps aBowW; BOUND/BREAKTHROW keep the common throw loop.
+  // attack_max is the skill's RAND(3,10), not the weapon's primed AttackNum.
+  if(weaponType===4||weaponType===18||weaponType===19){
+    const seqOptions=Object.assign({},options,{
+      attackMaxOverride:count,
+      attackOptions
+    });
+    const seq=weaponType===4
+      ?performEnemyBowWeaponAttack(actor,unit,seqOptions)
+      :performEnemyThrowWeaponAttack(actor,unit,seqOptions);
+    const counter=sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options);
+    return {
+      kind:'skill',skillId:actor.skillId,
+      hits:seq?.attackCount??seq?.hits?.length??0,
+      attackCount:count,duckBonus,lastResult:seq?.r||null,
+      weaponSequence:true,sequence:seq,counter
+    };
+  }
+
+  // BOOMERANG is only converted to the special BOOMERANG command when COM was plain ATTACK.
+  // WILDVIOLENT therefore stays in the common loop even while holding a boomerang.
+  // For melee/common segments, preserve the source Guardian check on Player targets.
   let chosen=enemyActorTarget(actor,unit);
   let lastResult=null,lastChosen=null,hits=0;
   for(let i=0;i<count;i++){
@@ -5750,21 +5782,25 @@ function performEnemyWildViolent(actor,unit,options,meta){
 
     let r;
     if(chosen.kind==='pet'&&chosen.pet){
-      r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count,duckBonusPercent:duckBonus});
+      r=enemyAttackPetResult(unit,chosen.pet,attackOptions);
+      hits++;
+      lastResult=r;lastChosen=chosen;
+      enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+      sourceBattleFinalizeItemCrushRng(r);
     }else{
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-      r=enemyAttackResult(unit,{guarding,damageDivisor:count,duckBonusPercent:duckBonus});
+      r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding}));
+      hits++;
+      lastResult=r;lastChosen=chosen;
+      enemyApplyDirectGuardianSkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
     }
-    hits++;
-    lastResult=r;lastChosen=chosen;
-    enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
-  sourceBattleFinalizeItemCrushRng(r);
 
     if(state.hp<=0)break;
     if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet))chosen=null;
   }
 
-  // 原 battle.c 完成所有多段攻擊後，才以最後一次 BATTLE_Attack 的 ContFlg 進反擊鏈。
+  // fixed common loop runs Counter only after the full multi-hit sequence, using the last
+  // BATTLE_Attack ContFlg / defNo. Guardian / GUARD / critical already suppress via chain helper.
   if(lastResult&&unit.hp>0&&enemy){
     if(lastChosen?.kind==='pet'&&lastChosen.pet&&petIsBattleActive(lastChosen.pet)){
       resolvePetEnemyCounterChain('enemy',lastChosen.pet,unit,lastResult);

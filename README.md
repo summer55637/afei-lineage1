@@ -13306,3 +13306,149 @@ StatusChange 的異常是在 `BATTLE_Attack()` 裡、外層 Counter loop 之前�
 - RENZOKU ranged path counters only after all segments
 - BOOMERANG remains no-counter special case
 - schema 27 unchanged
+
+
+## V1.46 WILDVIOLENT common weapon-loop restoration
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source proof
+
+fixed `battle.c` 對 `BATTLE_COM_S_WILDVIOLENTATTACK` 的前置只做：
+
+```c
+attack_max = RAND(3,10);
+gDamageDiv = attack_max;
+gBattleDuckModyfy = CHAR_GETWORKINT_HIGH(charaindex, CHAR_WORKBATTLECOM3);
+```
+
+之後 command 仍落入同一個 common direct-attack group，並呼叫：
+
+```c
+BATTLE_TargetListSet(charaindex, attackNo, aDefList);
+```
+
+因此 WILDVIOLENT 不是獨立的「固定目標 N 次簡化攻擊」。
+
+### Weapon behavior inherited from the common loop
+
+#### BOW
+
+`BATTLE_TargetListSet()` 對實際 BOW 仍建立 `aBowW` 順序。
+
+WILDVIOLENT 的 `RAND(3,10)` 會覆寫原先的 weapon AttackNum，所以：
+
+- target ordering = BOW / aBowW
+- maximum successful attacks = WILDVIOLENT count
+- each positive hit = damage / WILDVIOLENT count
+- dodge modifier = WILDVIOLENT option
+
+#### BOUNDTHROW / BREAKTHROW
+
+仍走 common throw loop。
+
+BREAKTHROW 在 actor 開始時已先設定：
+
+```c
+gBattleStausChange = BATTLE_ST_PARALYSIS;
+```
+
+WILDVIOLENT 沒有覆寫這個 status，因此每個符合條件的投石命中仍可走原麻痺 StatusAttackCheck。
+
+#### BOOMERANG
+
+只有：
+
+```c
+case BATTLE_COM_ATTACK:
+    if (gWeponType == ITEM_BOOMERANG)
+        COM = BATTLE_COM_BOOMERANG;
+```
+
+會轉成特殊整排回力標 command。
+
+WILDVIOLENT 本身不是 plain ATTACK，所以持回力標時**不會**進 `BATTLE_COM_BOOMERANG`；它仍在 common loop 依 WILDVIOLENT count 連打原目標。
+
+### Previous Web mismatch
+
+V1.45 前 `performEnemyWildViolent()` 自己建立一條簡化 loop，直接：
+
+- Player => `enemyAttackResult()`
+- Pet => `enemyAttackPetResult()`
+
+因此漏掉：
+
+- BOW 的 aBowW target list
+- BOUND/BREAKTHROW 的既有 weapon lifecycle
+- BREAKTHROW 每段可觸發的來源麻痺
+- 非投擲武器對 Player 的 Guardian substitution
+
+### V1.46 correction
+
+WILDVIOLENT 現在先固定消耗：
+
+```js
+count = cRand(3,10)
+```
+
+然後建立共同 attack options：
+
+```js
+damageDivisor: count
+duckBonusPercent: duckBonus
+```
+
+#### BOW / BOUNDTHROW / BREAKTHROW
+
+直接複用 V1.45 已對齊的 weapon helpers，並以：
+
+```js
+attackMaxOverride: count
+```
+
+確保不重新抽 weapon AttackNum。
+
+完成後只接**一次** V1.45 post-loop Counter lifecycle。
+
+#### Melee / skill-held BOOMERANG
+
+維持逐段 common TargetAdjust 行為，但 Player target 改走：
+
+```js
+resolveEnemyDirectAttackToPlayer(...)
+```
+
+因此重新取得 fixed `BATTLE_AttackSeq()` 的 Guardian 時點：
+
+1. 原目標先 DuckCheck
+2. 命中後才 GuardianCheck
+3. Guardian 成立後用 Guardian 自身防禦重算傷害
+4. 該段 `ContFlg` 因 Guardian 關閉
+5. 全部段數結束後才依最後一段結果判斷 Counter
+
+### gDamageDiv clarification
+
+本輪也重新確認 fixed `BATTLE_Counter()` 自己在反擊 AttackSeq 前做：
+
+```c
+gDamageDiv = 1.0;
+```
+
+所以 WILDVIOLENT 的 `gDamageDiv = attack_max` 不會把後面的 Counter 傷害再除以段數。
+
+Web 反擊維持既有 `counterScaledResult()`，不額外帶 WILDVIOLENT divisor。
+
+### V1.46 regression targets
+
+- game.js syntax PASS
+- WILDVIOLENT still consumes exactly one cRand(3,10) after primed weapon AttackNum lifecycle
+- BOW uses aBowW with attackMaxOverride = WILDVIOLENT count
+- BOUNDTHROW uses common repeated-target / TargetAdjust loop
+- BREAKTHROW keeps per-hit paralysis lifecycle
+- skill-held BOOMERANG does not enter special BOOMERANG row command
+- melee/common Player hit can trigger Guardian substitution
+- no Counter occurs between WILDVIOLENT segments
+- only final hit / final valid defNo controls post-loop Counter
+- Counter damage is not divided by WILDVIOLENT count
+- V1.45 ranged Counter lifecycle remains intact
+- schema 27 unchanged
