@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.69</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V1.70</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
     <a class="link-btn" href="index.html">資料圖鑑</a>
@@ -206,6 +206,11 @@
         </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.70：</b>
+      建立固定原 C 的玩家 9 裝備格＋15 背包格 lifecycle。裝備／卸裝不採增量加減，而是依 playerItemSlots 交換後重新 compliance 掃全部裝備；CHAR_DECORATION1 類可放飾品1／2，但同 ITEM_TYPE 不能同時兩件。祈福戒指與 VIP祈福戒指的攻防敏／HP／MP 已按原表套用。ITEM_DIErelife 消耗裝備後不立即 compliance，故本回合 WORK 加成保留到下一輪 PreCommand 才消失。舊 schema27 存檔不猜歷史裝備位置，升 schema28 從空 playerItemSlots 開始。
+    </article>
 
     <article class="card note">
       <b>V1.69：</b>
