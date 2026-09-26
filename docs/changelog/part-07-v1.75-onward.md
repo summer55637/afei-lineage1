@@ -705,3 +705,46 @@ Mdfyattack：
 - `3371d87d49a978b083d8b3af1b4ffd6156fbfcdb` — V1.81 playable marker
 - `947d7470a3bd38dd3b4c7f01f307901b90ca9938` — V1.81 README
 - `9595bed33db916256cc5e721b0d91eb9b002429c` — V1.81 changelog index
+
+
+---
+
+## V1.82 Player RANDOMACT Lighttakeed
+
+V1.82 接入 609～611 `PETSKILL_Lighttakeed`，並完成 574 ToothCrushe 的 player-Pet illegal audit。
+
+### 609～611 Lighttakeed
+
+fixed `PETSKILL_Lighttakeed()` 對非 PLAYER 施術者：
+- `WORKATTACKPOWER = WORKFIXSTR * 0.7`
+- `WORKDEFENCEPOWER = WORKFIXTOUGH * 0.5`
+- 原本可能的 `WORKQUICK * 0.95` 行已註解
+- command = `BATTLE_COM_S_LIGHTTAKE`
+
+Web 用 `battlePetPowerMods` 保存這兩個 WORK 值；該 map 在下一個 `normalBattleOrder()` compliance 邊界清空，因此不跨 round，且同 round 的防禦／Counter 計算仍可看到 50% WORKDEFENCEPOWER。
+
+`BATTLE_S_AttackDamage()` 在 AttackSeq 前先讀原目標 DamageReact。Lighttake option 對應：ABSROB / REFLEC / VANISH。只有 ReactType 完全匹配才會在後段把相同 WORKDAMAGE counter 複製到施術者。
+
+目前 source-backed Enemy DamageReact 只有 Acupuncture；它是正 ReactType，但不匹配上述三者。因此目前可證明路徑是：保留 70%/50% WORK 修正，local skill_type 降成普通反應，照 DamageReact 結算，不複製任何未建模光鏡守 counter。
+
+物理部分沿用 V1.79 `BATTLE_S_AttackDamage` calc-only Guardian bug與 execution-time TargetAdjust；case 完成後不進普通 Counter。
+
+### 574 ToothCrushe
+
+574 row 雖有 `PETSKILL_ToothCrushe` 函式，但 `petskill2.txt` 的 `PETSKILL_ILLEGAL=1`。
+
+fixed `PETSKILL_Use()` 在找 function pointer 前先做：CHAR_TYPEPET 且 illegal 非 0 → `return FALSE`。因此玩家寵低忠誠 RANDOMACT 抽到 574 時，正確結果是 NoAction，不可執行 ToothCrushe 的 PLAYER 裝備破壞分支。
+
+現有 `sourcePetRandomSkillPlan()` 已在 dispatch 前保留這個 gate，所以 V1.82 不新增 ToothCrushe handler。
+
+### Regression
+
+新增 `tools/check_v182_player_lighttakeed_runtime.mjs`，檢查 574 illegal NoAction、609～611 rows、70%/50% WORK、無 0.95 敏捷、下一 round 清除、不可達的 ABSROB/REFLEC/VANISH copy、Guardian calc-only 與 no Counter。
+
+### commits
+
+- `14ff0dfe12797542166b7644c0d08a0dfe387a65` — V1.82 Lighttakeed core
+- `89b3ffe98bdd495a16d6650b3c65581b221fe463` — V1.82 regression
+- `d9aa19704743e57058c86aba19010d5b75a49009` — V1.82 playable marker
+- `1468c6ea2a8c3b120c92c1287db1506ea22caec8` — V1.82 README
+- `4a96248807fb242034a45908ce6e7acb2c2619eb` — V1.82 changelog index
