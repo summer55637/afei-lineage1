@@ -14847,3 +14847,62 @@ Web 的 `applyFriendlyEnemyHit()` 已在每段內完成 ItemCrush，並在新死
 - targeted regression: **16 / 16 PASS**
 - save schema 27 unchanged
 
+## V1.65 current Entry death recheck before execution
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`7b7082316ff48a56bc72cd1e31ac53d93ce11d49`。
+
+### Fixed execution-time death gate
+固定 `BATTLE_Battling()` 會先把仍在 Battle Entry 的角色全部放進 EntryList、計算 Dex、排序並跑 `ComboCheck()`。但真正逐 actor 執行時，每一個 Entry 都會重新檢查：
+
+- `CHAR_CHECKINDEX(charaindex)`
+- `CHAR_ISDIE`
+- `CHAR_WORKBATTLEMODE == BATTLE_CHARMODE_C_OK`
+- `CHAR_HP > 0`
+
+只要此時已死亡／HP<=0，就會在 `BATTLE_StatusSeq()`、`BATTLE_GetAttackCount()`、`BATTLE_PetLoyalCheck()` 之前直接 `continue`。
+
+這和 V1.63 的「死亡 Entry 仍參與 AI → Dex → EntrySort → ComboCheck」並不衝突：兩個判斷發生在不同 phase。
+
+### Reachable Web mismatch
+V1.64 的 `sourceDeadBattleEntry()` 只讀 `normalBattleOrder()` 建表時寫入的 `sourceDeadEntry` 快照。
+
+因此若 Enemy：
+
+1. 建表／Dex／ComboCheck 時仍活著；
+2. 被排序更前面的 actor 在同一回合打死；
+3. 自己稍後才輪到執行；
+
+Web 仍可能進入 `processBattleStatusTurn()`，並對 Enemy 呼叫 `sourceEnemyPrimeExecutionAttackCount()`。
+
+若該 Enemy 持有有效原版武器，`sourceBattleGetAttackCount()` 會多消耗 `RAND(min,max)`；固定 C 此時早已因當下 HP/ISDIE 直接跳過，不會有這顆 RNG。
+
+### V1.65 correction
+`sourceDeadBattleEntry(actor)` 現在在真正執行前讀取當下 runtime：
+
+- Player：目前 HP
+- Pet：目前 Pet 是否仍存在、是否已退出 Battle、目前 HP
+- Enemy：目前 Battle unit 是否仍存在、目前 HP
+
+不再把建表時的 `sourceDeadEntry` 當成永久死亡判定。
+
+因此：
+
+- 回合開始前已死的 Entry 仍照 V1.63 參與 AI/Dex/Combo，再於 execution gate 跳過
+- 同回合中途才死亡的 Entry 不再跑 StatusSeq / AttackCount / Loyalty
+- 若未來有可靠復活 lifecycle，建表時的舊死亡快照也不會錯誤壓過執行當下的活體狀態
+- save schema 維持 27
+
+### Regression
+- parent playable HEAD = V1.64 / `afa8686c1ed34d026fa781d4ee4e6e0867379ee5`
+- core = `7b7082316ff48a56bc72cd1e31ac53d93ce11d49`
+- committed `game.js` syntax PASS
+- capture / attack / guard：current-state death gate 都在 StatusSeq 與 Enemy AttackCount prime 之前
+- alive Enemy + stale `sourceDeadEntry=true`：以執行當下 HP 為準，不永久判死
+- mid-round Enemy HP→0：execution gate PASS
+- missing/removed Enemy Entry：execution gate PASS
+- mid-round Pet HP→0：execution gate PASS
+- V1.63 Enemy AI pre-Battling lifecycle 保留
+- save schema 27 unchanged
+
