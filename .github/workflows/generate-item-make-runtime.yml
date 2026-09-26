@@ -17,6 +17,7 @@ on:
       - "tools/check_v182_player_lighttakeed_runtime.mjs"
       - "tools/check_v183_player_setduck_runtime.mjs"
       - "tools/check_v184_setmagicpet_runtime.mjs"
+      - "tools/check_v185_player_wild_speedy_sacrifice_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -82,6 +83,9 @@ jobs:
 
       - name: Run V1.84 SetMagicPet regressions
         run: node tools/check_v184_setmagicpet_runtime.mjs
+
+      - name: Run V1.85 player Wild/Speedy/Sacrifice regressions
+        run: node tools/check_v185_player_wild_speedy_sacrifice_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
