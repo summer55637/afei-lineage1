@@ -3,6 +3,8 @@ import fs from 'node:fs';
 
 const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
 const game=fs.readFileSync('game.js','utf8');
+const html=fs.readFileSync('game.html','utf8');
+const css=fs.readFileSync('game.css','utf8');
 
 assert.equal(runtime.format,'stoneage-item-make-runtime-v2');
 assert.equal(runtime.itemDataIntCount,66);
@@ -86,10 +88,27 @@ assert.ok(game.includes("duck-=cRand(sourceHitRight*.8,sourceHitRight*1.2)"));
 assert.ok(game.includes('if(neglectGuard>1)defense*=1-neglectGuard/100'));
 assert.ok(game.includes('const sourceOtherDamage=Math.trunc(n(attacker?.otherDamage))'));
 assert.ok(game.includes('const sourceOtherDefense=Math.trunc(n(defender?.otherDefc))'));
+assert.ok(game.includes('function sourceCRandMacroValue(min,max)'));
+assert.ok(game.includes('Math.trunc((max-(min-1))*Math.random())'));
+assert.ok(game.includes('const sourceOtherPower=Math.trunc('));
+assert.ok(game.includes('sourceCRandMacroValue(sourceOtherDamage*.3,sourceOtherDamage)'));
+assert.ok(game.includes('sourceCRandMacroValue(sourceOtherDefense*.3,sourceOtherDefense)'));
 assert.ok(game.includes("state?.playerEquipCompliance?.statusResist?.[type]"));
 assert.ok(game.includes("state?.playerEquipCompliance?.fixedLuck??state?.luck"));
 assert.ok(game.includes("state?.playerEquipCompliance?.fixedCharm??state.charm"));
 assert.ok(game.includes('cRand(Math.trunc(min),Math.trunc(max))'));
+
+// The lifecycle must be reachable from the actual UI, not only from test/helper code.
+for(const id of ['sourceItemRuntimePanel','sourceEquipmentGrid','sourceBackpackGrid','sourceItemRuntimeStatus']){
+  assert.ok(html.includes('id="'+id+'"'),'missing source equipment UI '+id);
+}
+assert.ok(html.includes('PLAYABLE CORE V1.73'));
+assert.ok(game.includes("data-source-item-action=\"equip\""));
+assert.ok(game.includes("data-source-item-action=\"unequip\""));
+assert.ok(game.includes("$('#sourceItemRuntimePanel').addEventListener('click'"));
+assert.ok(game.split('sourcePlayerMoveItem(').length-1>=2,'sourcePlayerMoveItem must have a live UI caller');
+assert.ok(css.includes('.source-equipment-grid'));
+assert.ok(css.includes('.source-backpack-grid'));
 
 // Audit the float-bound RAND sites newly activated by equipment values.
 // These fields are non-random itemset integers; report any values whose 0.8/1.2 or 0.3 bounds are fractional.
