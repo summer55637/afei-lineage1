@@ -16109,7 +16109,8 @@ async function sourceUseField2PetSkill(skillId){
   if(id===200||id===201){
     let petFixEntries=[],prepared=null;
     try{
-      await Promise.all([sourceEnsurePetMergeFixDb(),sourceEnsureItemField2Db()]);
+      await sourceEnsurePetMergeFixDb();
+      await sourceEnsureItemField2Db();
       petFixEntries=sourcePetMergeFixEntries(activePet());
       prepared=sourceMergePrepareStatic(sourceField2SelectedEntries(),activePet());
     }catch(err){
