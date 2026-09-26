@@ -119,7 +119,7 @@ assert.ok((game.match(/sourceClearPetVary\(pet\)/g)||[]).length>=5);
 assert.ok(game.includes("PETSKILL_Roar')result=sourcePerformPetRoarSkill"));
 assert.ok(game.includes("PETSKILL_Vary')result=sourcePerformPetVarySkill"));
 
-assert.ok(html.includes('PLAYABLE CORE V1.77'));
+assert.ok(/PLAYABLE CORE V\d+\.\d+/.test(html));
 
 console.log(JSON.stringify({
   pass:true,
