@@ -15813,9 +15813,82 @@ function sourcePlayerAutoEquipDestination(fromSlot,target=state){
   }
   return {ok:true,to:canonical,template,itemIndex};
 }
+function sourceField2FailureText(reason){
+  return ({
+    'max-two':'修復每次只能選擇兩個物品',
+    'max-four':'精工每次只能選擇四個物品',
+    'dish':'料理不能做修復',
+    'multiple-equipment':'每次只能選擇一個武器或防具',
+    'no-equipment':'必須選擇一個武器或防具',
+    'no-material':'修復還需要一個材料',
+    'material-mismatch':'材料不符',
+    'not-damaged-enough':'物品並沒有損壞到需要修復',
+    'cannot-repair':'此物品已不能修復',
+    'no-durability':'目前耐久資料不能執行修復',
+    'missing-durability-source':'缺少固定耐久來源資料',
+    'mutable-source-missing':'existing item 缺少可寫入的 sourceData',
+    'unsuitable-item':'選到不適合精工的物品',
+    'material-typecode':'精工材料缺少 TYPECODE',
+    'full':'武器或防具已經鑲滿三格',
+    'missing-int-source':'精工所需整數欄位來源不完整',
+    'magic-source-missing':'精工魔法欄位來源不完整',
+    'consume-failed':'材料 existing item 無法依原生命週期刪除'
+  })[reason]||String(reason||'未知 field=2 錯誤');
+}
+async function sourceUseField2PetSkill(skillId){
+  const id=Math.trunc(Number(skillId)),pet=activePet();
+  if(!pet){addLog('目前沒有出戰寵物，不能使用寵物生活技能。','bad');return {ok:false,reason:'no-active-pet'}}
+  const skills=sourceField2PetSkills(pet);
+  if(!skills.some(x=>x.id===id)){addLog(pet.name+' 並沒有這個 field=2 技能。','bad');return {ok:false,reason:'skill-not-owned'}}
+  if(enemy){addLog('原 C field=2 PetSkill 只能在非戰鬥狀態使用。','bad');return {ok:false,reason:'in-battle'}}
+
+  if(id===200||id===201){
+    addLog((id===200?'加工':'料理')+' 目前仍缺 ITEM_mergeItem_merge 的完整 merge table/runtime；維持不猜結果。','bad');
+    return {ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true};
+  }
+
+  try{await sourceEnsureItemField2Db()}
+  catch(err){addLog('field=2 固定 item runtime 載入失敗：'+String(err?.message||err),'bad');return {ok:false,reason:'runtime-load'}}
+
+  const selected=sourceField2SelectedEntries();
+  let result=id===540?sourceUsePetFixitem(selected):sourceUsePetInslay(selected);
+  if(!result.ok){
+    const prefix=result.partial?'精工已保留前面成功材料的原 C 部分提交；後續失敗：':'';
+    addLog(prefix+sourceField2FailureText(result.reason)+'。','bad');
+    if(result.mutated){save();render()}
+    else renderSourcePlayerItems();
+    return result;
+  }
+
+  if(id===540){
+    addLog('修復完成：耐久上限 '+result.oldMaxCrush+' → '+result.newMaxCrush+'，目前耐久恢復為 '+result.newCrush+'；材料已消耗。','good');
+  }else{
+    addLog('鑲寶石完成：'+result.applied.length+' 個材料依選取順序套用並消耗。','good');
+  }
+  sourceField2SelectedSlots.clear();
+  save();render();
+  return result;
+}
+function renderSourceField2Skills(){
+  const statusEl=$('#sourceField2SelectionStatus'),actionsEl=$('#sourceField2SkillActions');
+  if(!statusEl||!actionsEl)return;
+  const selected=sourceField2SelectedEntries(),pet=activePet(),skills=sourceField2PetSkills(pet);
+  statusEl.textContent=selected.length
+    ?'已選 '+selected.length+'：'+selected.map((x,i)=>(i+1)+'. '+sourcePlayerRuntimeItemLabel(x.existing)).join('／')
+    :'未選取材料（只從 15 格背包選取；順序會影響多材料精工）';
+  const buttons=[];
+  for(const {id,meta} of skills){
+    buttons.push('<button data-source-item-action="field2-use" data-skill="'+id+'">'+escapeHtml(meta?.n||('Skill '+id))+' #'+id+'</button>');
+  }
+  if(selected.length)buttons.push('<button data-source-item-action="field2-clear">清除選取</button>');
+  actionsEl.innerHTML=buttons.length
+    ?buttons.join('')
+    :'<span class="muted">'+(pet?'出戰寵目前沒有 field=2 技能。':'請先指定一隻出戰寵物。')+'</span>';
+}
 function renderSourcePlayerItems(){
   const equipEl=$('#sourceEquipmentGrid'),bagEl=$('#sourceBackpackGrid'),statusEl=$('#sourceItemRuntimeStatus');
   if(!equipEl||!bagEl||!statusEl)return;
+  sourceField2PruneSelection();
   const slots=sourcePlayerItemSlots(state);
   const tracked=sourceTrackedPlayerItems();
   const equippedCount=slots.slice(0,PLAYER_EQUIP_SLOT_COUNT).filter(v=>v!=null).length;
@@ -15845,13 +15918,16 @@ function renderSourcePlayerItems(){
     const template=sourcePlayerEquipTemplateForExisting(itemIndex,state);
     const equipPlace=template?sourcePlayerEquipPlace(template,slots,state):-1;
     const canAttempt=equipPlace>=0;
-    return '<div class="source-item-slot filled">'+
+    const field2Selected=sourceField2SelectedSlots.has(slotIndex);
+    return '<div class="source-item-slot filled'+(field2Selected?' field2-selected':'')+'">'+
       '<div class="source-item-slot-head"><span>背包 '+(offset+1)+'</span><small>#'+slotIndex+'</small></div>'+
       '<b>'+escapeHtml(sourcePlayerRuntimeItemLabel(existing))+'</b>'+
       '<div class="source-item-effects">'+escapeHtml(sourcePlayerRuntimeItemSummary(existing)||'sourceData 已建立')+'</div>'+
+      '<button data-source-item-action="field2-select" data-slot="'+slotIndex+'">'+(field2Selected?'取消材料':'選為材料')+'</button>'+
       (canAttempt?'<button data-source-item-action="equip" data-slot="'+slotIndex+'">裝備</button>':'<span class="source-item-not-equip">不可裝備類型</span>')+
     '</div>';
   }).join('');
+  renderSourceField2Skills();
 }
 function renderInventory(){
   renderSourcePlayerItems();
@@ -16284,9 +16360,21 @@ $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;
   handleZooAction(b.dataset.zooAction);
 });
-$('#sourceItemRuntimePanel').addEventListener('click',e=>{
+$('#sourceItemRuntimePanel').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-source-item-action]');if(!b)return;
   const action=b.dataset.sourceItemAction,slot=Math.trunc(Number(b.dataset.slot));
+  if(action==='field2-select'){
+    if(slot<PLAYER_BACKPACK_START||slot>=PLAYER_ITEM_SLOT_COUNT)return;
+    if(sourceField2SelectedSlots.has(slot))sourceField2SelectedSlots.delete(slot);
+    else sourceField2SelectedSlots.add(slot);
+    renderSourcePlayerItems();return;
+  }
+  if(action==='field2-clear'){
+    sourceField2SelectedSlots.clear();renderSourcePlayerItems();return;
+  }
+  if(action==='field2-use'){
+    await sourceUseField2PetSkill(b.dataset.skill);return;
+  }
   let moved=null;
   if(action==='equip'){
     const dest=sourcePlayerAutoEquipDestination(slot,state);
