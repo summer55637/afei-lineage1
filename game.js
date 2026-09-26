@@ -3807,7 +3807,8 @@ function petBattleView(pet){
     :(powerMod&&Number.isFinite(Number(powerMod.defense))?Math.trunc(Number(powerMod.defense)):normalDefenseBase);
   const fixedTough=frozen?Number(frozen.fixedTough):normalDefenseBase;
   const fixedDex=frozen?Number(frozen.fixedDex):normalQuickBase;
-  const workQuickBase=frozen?Number(frozen.workQuickBase??frozen.fixedDex??frozen.quick):normalQuickBase;
+  const workQuickBase=frozen?Number(frozen.workQuickBase??frozen.fixedDex??frozen.quick)
+    :(powerMod&&Number.isFinite(Number(powerMod.quick))?Math.trunc(Number(powerMod.quick)):normalQuickBase);
   const elements=frozen?.elements?Object.assign({},frozen.elements):battleElementsForDesc(desc);
   return {
     type:'pet',attack,defense,stone,
@@ -9829,6 +9830,131 @@ function sourcePerformPetSetDuckRandomSkill(pet,action){
   };
 }
 
+function sourcePerformPetHectorParalysis(pet,action,label){
+  const target=action?.targetDesc?.kind==='enemy'?action.targetDesc.unit:null;
+  if(!target)return {attempted:false,applied:false,reason:'invalid-entry'};
+
+  // fixed PROFESSION_BATTLE_StatusAttackCheck() consumes RAND first, then checks
+  // HP/death/existing status. Hector passes status=2 and Success=60: strict roll < 60.
+  const roll=cRand(1,100);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  if(n(target.hp)<=0){
+    return {attempted:true,applied:false,roll,successPct:60,reason:'dead'};
+  }
+  if(battleHasAnyStatus(targetDesc)){
+    return {attempted:true,applied:false,roll,successPct:60,reason:'existing-status'};
+  }
+  if(roll>=60){
+    return {attempted:true,applied:false,roll,successPct:60,reason:'roll'};
+  }
+
+  // Hector writes StatusTbl[PARALYSIS]=1 directly. It does not use the normal
+  // BATTLE_Attack status block and therefore does not clear COM1 here.
+  const key=battleStatusKey(targetDesc);
+  if(!key)return {attempted:true,applied:false,roll,successPct:60,reason:'no-status-key'};
+  battleStatuses.set(key,{type:'paralysis',turns:1,sourceHector:true});
+  addLog(target.name+' 被 '+label+' 威嚇成功，陷入麻痺 1 回合（roll '+roll+' < 60）。','pet');
+  return {attempted:true,applied:true,roll,successPct:60,targetUnitId:target.id};
+}
+
+function sourcePerformPetHectorSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'威嚇攻擊';
+  const attackPct=enemySignedSkillPercent(meta?.o,'攻%');
+  const quickPct=enemySignedSkillPercent(meta?.o,'敏%');
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // PETSKILL_Hector writes WORKATTACKPOWER from FIXSTR and WORKQUICK from FIXDEX.
+  // RANDOMACT happens after EntrySort, so quick cannot reorder this round, but it still
+  // affects same-round attack/counter/dodge calculations that read WORKQUICK.
+  const baseAttack=Math.trunc(n(base.attack));
+  const baseQuick=Math.trunc(n(base.fixedDex));
+  const attack=baseAttack+Math.trunc(baseAttack*attackPct/100);
+  const quick=baseQuick+Math.trunc(baseQuick*quickPct/100);
+  battlePetPowerMods.set(pet.id,{
+    attack,quick,skillId:action?.skillId,sourceHector:true
+  });
+
+  // Source special Hector status check runs on RAW COM2 before the later common-loop
+  // BATTLE_TargetAdjust and before any physical attack RNG.
+  const paralysis=sourcePerformPetHectorParalysis(pet,action,label);
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+label+'」，威嚇判定後已沒有可攻擊目標。','pet');
+    return {
+      handled:true,skillId:action?.skillId,noTarget:true,
+      attackPct,quickPct,attack,quick,paralysis,sourceOrderAlreadyFixed:true
+    };
+  }
+
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+  sourceProcessBattleDeathsAtAddProfit();
+
+  // The generic status machinery sees LOW(COM3)=skill array 620, which is >= BATTLE_ST_END,
+  // so no second status roll occurs. Outer Counter still uses the common-loop original defNo.
+  if(petIsBattleActive(pet)&&n(target.hp)>0){
+    resolvePetEnemyCounterChain('pet',pet,target,r);
+  }
+
+  addLog(
+    pet.name+' 隨機使用「'+label+'」（攻 '+attackPct+'%、敏 '+quickPct
+      +'%；敏捷變更發生在排序後，不倒帶重排）。',
+    'pet'
+  );
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||null,attackPct,quickPct,attack,quick,
+    paralysis,sourceOrderAlreadyFixed:true,sourceNoGeneralStatusRoll:true,r
+  };
+}
+
+function sourcePerformPetSarsSkill(pet,action,options={}){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const label=meta?.n||'毒煞蔓延';
+  const turn=3;
+
+  // PETSKILL_Sars defaults turn=3. Current option is only "煞", so no "turn" override exists.
+  // LOW(COM3)=BATTLE_ST_SARS, HIGH(COM3)=3 before TargetListSet/common physical execution.
+  const target=sourcePetEnemyTargetFromAction(action);
+  if(!target){
+    addLog(pet.name+' 隨機使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true,statusType:'sars',turn};
+  }
+
+  const attacker=petBattleView(pet);
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const r=resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+
+  // fixed BATTLE_Attack order is damage/wakeup -> status roll/write -> ItemCrush.
+  const actual=applyFriendlyEnemyHit(
+    'pet',pet.name,target,r,pet.id,{deferItemCrush:true}
+  );
+  const actualDesc=actual?{kind:'enemy',unit:actual,unitId:actual.id}:targetDesc;
+  const status=sourcePetApplyStatusAttackHit(pet,actualDesc,r,'sars',turn,label);
+  sourceBattleFinalizeItemCrushRng(r);
+  sourceProcessBattleDeathsAtAddProfit();
+
+  // SARS does not block CanMove. Common Counter uses the original post-TargetAdjust defNo;
+  // Guardian itself already makes ContFlg false via r.guardian.
+  if(petIsBattleActive(pet)&&n(target.hp)>0){
+    resolvePetEnemyCounterChain('pet',pet,target,r);
+  }
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||null,statusType:'sars',turn,status,r
+  };
+}
+
 function sourcePerformPetGyrateSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10705,6 +10831,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
       result=sourcePerformSetMagicPetBattle(pet.name,action.skillId,rawToNo,meta,'pet');
     }
     else if(meta?.f==='PETSKILL_SetDuck')result=sourcePerformPetSetDuckRandomSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Hector')result=sourcePerformPetHectorSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Sars')result=sourcePerformPetSarsSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Gyrate')result=sourcePerformPetGyrateSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_Retrace')result=sourcePerformPetRetraceSkill(pet,action,options);
     else if(meta?.f==='PETSKILL_WildViolentAttack')result=sourcePerformPetWildViolentSkill(pet,action,options);
@@ -11214,14 +11342,19 @@ function performEnemyGuardBreak(actor,unit,options,meta){
 }
 function sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label){
   if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
-  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk')){
+  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'||type==='sars')){
     return {attempted:false,applied:false,unsupportedType:type||null};
   }
   // BATTLE_Attack() 已先 DamageWakeUp，再進 gBattleStausChange 的 StatusAttackCheck。
   const check=battleStatusChance({kind:'enemy',unit,unitId:unit.id},targetDesc,type);
   let applied=false,storedTurns=0;
   if(check.allowed&&check.success){
-    if(type==='drunk'){
+    if(type==='sars'){
+      // BATTLE_Attack writes WORKSARS = gBattleStausTurn + 1 and WORKMODSARS = 1.
+      // Only the directly infected carrier receives MODSARS; spread infections do not.
+      storedTurns=Math.max(1,Math.trunc(n(turn))+1);
+      applied=battleSarsApplyRaw(targetDesc,storedTurns,true);
+    }else if(type==='drunk'){
       // BATTLE_Attack：先 StatusTbl[DRUNK] = gBattleStausTurn + 1，
       // 接著誤把 CHAR_WORKDRUNK 本身 /2；C int division 對正整數直接截斷。
       storedTurns=Math.trunc((Math.max(0,Math.trunc(n(turn)))+1)/2);
