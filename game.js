@@ -66,7 +66,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetPowerMods=new Map(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 
 const $=s=>document.querySelector(s);
@@ -791,7 +791,7 @@ function sourceCreateQuestGetPet(tempNo,extra={}){
   const template=sourceQuestPetTemplate(tempNo);
   if(!template)return null;
   const pet=Object.assign({
-    id:uid(),name:template.name,animationGroupId:template.animationGroupId,tempNo:Number(tempNo),
+    id:uid(),name:template.name,animationGroupId:template.animationGroupId,tempNo:Number(tempNo),petId:Number(tempNo),
     level:1,exp:0,wildGrowth:template.wildGrowth,
     stats:Object.assign({},template.baseStats),
     elements:Object.assign({},template.elements),
@@ -936,7 +936,7 @@ function sourceCreateStarterPet(hometown){
 
   const pet={
     id:uid(),name:template.name||('Enemy '+meta.enemyId),
-    animationGroupId:template.animationGroupId??null,tempNo:template.tempNo??null,
+    animationGroupId:template.animationGroupId??null,tempNo:template.tempNo??null,petId:template.tempNo??null,
     level,exp:0,wildGrowth:n(template.wildGrowth),
     stats:Object.assign({},rolled.stats),
     elements:Object.assign({},template.elements||{}),
@@ -1016,7 +1016,7 @@ function confirmPlayerElements(points=playerElementDraft){
 }
 function freshState(){
   return {
-    schemaVersion:28,
+    schemaVersion:29,
     level:1,exp:0,expNext:2,hp:0,maxHp:0,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -1039,7 +1039,15 @@ function freshState(){
 }
 function migrateLegacyPets(raw,s){
   if(Array.isArray(raw?.petBox)){
-    s.petBox=raw.petBox.filter(Boolean).map(p=>Object.assign({},p,{id:p.id||uid()}));
+    s.petBox=raw.petBox.filter(Boolean).map(p=>{
+      const copy=Object.assign({},p,{id:p.id||uid()});
+      // V1.77 migration: every source-created Pet tempNo came from the same E_T_TEMPNO
+      // that fixed C stores in CHAR_PETID. Only backfill when tempNo itself is present.
+      if(copy.petId==null&&copy.tempNo!=null&&Number.isFinite(Number(copy.tempNo))){
+        copy.petId=Math.trunc(Number(copy.tempNo));
+      }
+      return copy;
+    });
     return;
   }
   if(!raw?.pets||typeof raw.pets!=='object')return;
@@ -2147,6 +2155,8 @@ function makeEnemyUnit(raw,fallbackEntry,index=0){
     ai:aiRow,
     statusResist:resolvedEnemyId!=null?(enemyAiDb?.byEnemyId?.[String(resolvedEnemyId)]?.z?.slice?.(0,6)||[0,0,0,0,0,0]):[0,0,0,0,0,0],
     tempNo:Number(raw?.tempNo??base.tempNo??0)||null,
+    // fixed ENEMY_createEnemyIndex: CHAR_PETID is copied directly from E_T_TEMPNO.
+    petId:Number(raw?.tempNo??base.tempNo??0)||null,
     // Enemy 原始 MP/MAXMP=0；目前這批自動武器 modifyMp 皆 0。
     level,hp,maxHp:hp,mp:0,maxMp:equipped.maxMp,attack,defense,quick,
     stats:st,
@@ -2635,6 +2645,10 @@ function sourceClearPetBattleProperty(pet){
   if(!pet)return false;
   return battlePropertyKeys.delete('pet:'+String(pet.id));
 }
+function sourceClearPetVary(pet){
+  if(!pet)return false;
+  return battlePetVaryStates.delete(pet.id);
+}
 function battleFieldPower(elements){
   const e=normalizedElements(elements)||{earth:0,water:0,fire:0,wind:0,none:100};
   const attr=String(battleFieldState?.attr||'none');
@@ -2934,7 +2948,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetPowerMods=new Map();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -3701,9 +3715,19 @@ function petBattleView(pet){
   const weaken=battleWeakenRoundActive(desc);
   const earth=battlePetEarthRoundStates.get(pet.id)||null;
   const frozen=earth?.snapshot||null;
-  const normalAttackBase=weaken?Math.trunc(n(combat?.attack)*.8):n(combat?.attack);
+  const vary=battlePetVaryStates.get(pet.id)||null;
+  const sourceAttackBase=n(combat?.attack),sourceQuickBase=n(combat?.quick);
+  // fixed ITEM_equipEffect/compliance: when BASEIMAGENUMBER==101428, Vary first adds
+  // CHAR_SKILLSTRPOWER / CHAR_SKILLDEXPOWER to WORKFIXSTR / WORKFIXDEX; WEAKEN is later.
+  const variedAttackBase=vary
+    ?sourceAttackBase+Math.trunc(sourceAttackBase*Math.trunc(n(vary.attackPct))/100)
+    :sourceAttackBase;
+  const variedQuickBase=vary
+    ?sourceQuickBase+Math.trunc(sourceQuickBase*Math.trunc(n(vary.dexPct))/100)
+    :sourceQuickBase;
+  const normalAttackBase=weaken?Math.trunc(variedAttackBase*.8):variedAttackBase;
   const normalDefenseBase=weaken?Math.trunc(n(combat?.defense)*.8):n(combat?.defense);
-  const normalQuickBase=weaken?Math.trunc(n(combat?.quick)*.8):n(combat?.quick);
+  const normalQuickBase=weaken?Math.trunc(variedQuickBase*.8):variedQuickBase;
   const powerMod=battlePetPowerMods.get(pet.id)||null;
   const noGuard=battlePetNoGuardStates.get(pet.id)||null;
   const attack=frozen?Math.trunc(n(frozen.attack))
@@ -8481,7 +8505,7 @@ function sourceProcessPetBattleDeath(pet){
   if(ultimate){
     if(state.activePetId===pet.id)state.activePetId=null;
     battlePetOutIds.add(pet.id);
-    sourceClearPetBattleProperty(pet);
+    sourceClearPetBattleProperty(pet);sourceClearPetVary(pet);
     addLog(pet.name+' 被打飛：依 BATTLE_UltimateExtra 忠誠修正 '+(ai.delta/100).toFixed(2)
       +(marefia?'；並先套瑪蕾菲雅 _PET_LIMITLEVEL 死亡懲罰':'')+'。','bad');
   }else{
@@ -8519,7 +8543,7 @@ function sourceProcessPlayerBattleDeathOnce(){
 
   // fixed BATTLE_UltimateExtra(PLAYER) first BATTLE_PetDefaultExit()s the DEFAULTPET Entry.
   // It does not clear CHAR_DEFAULTPET, so ownership/default selection remains intact.
-  if(death?.ultimate&&pet){battlePetOutIds.add(pet.id);sourceClearPetBattleProperty(pet);}
+  if(death?.ultimate&&pet){battlePetOutIds.add(pet.id);sourceClearPetBattleProperty(pet);sourceClearPetVary(pet);}
 
   if(death){
     addLog((death.ultimate?'角色被打飛：依 BATTLE_UltimateExtra 魅力 ':'角色戰鬥倒下：依原 C 魅力 ')+death.charmDelta
@@ -8733,7 +8757,7 @@ function sourcePetRandomSkillPlan(pet){
 
   let iNum=cRand(0,6);
   // fixed _FIXWOLF：PetID 981..984 抽到 skill 600 時重抽。
-  // 現有捕獲資料沒有可證明的 CHAR_PETID 欄；只有真的帶 petId 時才套，不由 tempNo 猜。
+  // V1.77 起 petId follows fixed CHAR_PETID <- E_T_TEMPNO and capture copies it unchanged.
   const petId=Number(pet?.petId);
   if(Number.isFinite(petId)&&petId>=981&&petId<=984&&skills[iNum]===600){
     let guard=0;
@@ -9569,6 +9593,77 @@ function sourcePerformPetAntInterSkill(pet,action,options={}){
   addLog(pet.name+' 的「'+(action?.meta?.n||'蟻葬')+'」沒有符合原 C 可執行的隨機目標。','pet');
   return {handled:true,skillId:action?.skillId,noTarget:true,sourceAntInter:true};
 }
+const SOURCE_VARY_WOLF_PETIDS=new Set([981,982,983,984]);
+function sourcePetRoarPetIds(meta){
+  return String(meta?.o||'').split('|').map(sourceCAtoi).filter(v=>Number.isFinite(v));
+}
+function sourcePerformPetRoarSkill(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  let target=action?.targetDesc?.kind==='enemy'&&action.targetDesc.unit&&n(action.targetDesc.unit.hp)>0
+    ?action.targetDesc.unit:null;
+  if(!target){
+    // fixed BATTLE_COM_S_ROAR runs TargetAdjust at execution; an invalid COM2 falls back
+    // to BATTLE_DefaultAttacker on the opposing side.
+    const fallback=sourcePetRandomEnemyTarget();
+    target=fallback?.unit||null;
+  }
+  if(!target){
+    addLog(pet.name+' 使用「'+(action?.meta?.n||'大吼')+'」，但沒有可作用的目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const petId=target.petId==null?null:Number(target.petId);
+  if(!Number.isFinite(petId)){
+    addLog(pet.name+' 使用「'+(action?.meta?.n||'大吼')+'」，但目標缺少可由原 C 證明的 CHAR_PETID；不猜效果。','pet');
+    return {handled:true,skillId:action?.skillId,targetUnitId:target.id,sourcePetIdMissing:true};
+  }
+  const ids=sourcePetRoarPetIds(action?.meta);
+  if(!ids.includes(Math.trunc(petId))){
+    addLog(pet.name+' 使用「'+(action?.meta?.n||'大吼')+'」，'+target.name+' 的 PETID '+Math.trunc(petId)+' 不在此技能清單內。','pet');
+    return {handled:true,skillId:action?.skillId,targetUnitId:target.id,petId:Math.trunc(petId),roared:false};
+  }
+
+  addLog(pet.name+' 使用「'+(action?.meta?.n||'大吼')+'」：'+target.name+'（PETID '+Math.trunc(petId)+'）被吼聲嚇離戰鬥。','good');
+  const exit=finishEnemyDirectExit(target,action?.meta?.n||'大吼');
+  return Object.assign({
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,petId:Math.trunc(petId),roared:true
+  },exit);
+}
+function sourcePerformPetVarySkill(pet,action){
+  if(!pet||!petIsBattleActive(pet))return {handled:true,missingPet:true};
+  const petId=pet.petId==null?null:Number(pet.petId);
+  if(!Number.isFinite(petId)||!SOURCE_VARY_WOLF_PETIDS.has(Math.trunc(petId))){
+    // fixed PETSKILL_Vary returns FALSE before setting COM1/COM2 or any transform state.
+    addLog(pet.name+' 抽到「'+(action?.meta?.n||'暗月變身')+'」，但 PETID 不是 981～984；原 PETSKILL_Vary() 直接 FALSE。','pet');
+    return {handled:true,skillId:action?.skillId,sourceUseFailed:true,sourceVaryPetIdRejected:true};
+  }
+  const attackPct=Math.trunc(enemySignedSkillPercent(action?.meta?.o,'攻%'));
+  const dexPct=Math.trunc(enemySignedSkillPercent(action?.meta?.o,'敏%'));
+  battlePetVaryStates.set(pet.id,{
+    skillId:action?.skillId??null,
+    attackPct,dexPct,workTurn:0,sourceImage:101428
+  });
+  // fixed PETSKILL_Vary parses only 攻% / 敏%. The descriptive 魔防% token is not read here.
+  addLog(pet.name+' 使用「'+(action?.meta?.n||'暗月變身')+'」：依原 C 攻 '+attackPct+'%／敏 '+dexPct+'%，WORKTURN 重設為 0。','pet');
+  return {handled:true,skillId:action?.skillId,vary:true,attackPct,dexPct,workTurn:0};
+}
+function sourceAdvancePetVaryTurn(pet){
+  if(!pet)return null;
+  const vary=battlePetVaryStates.get(pet.id);
+  if(!vary)return null;
+  vary.workTurn=Math.trunc(n(vary.workTurn))+1;
+  if(vary.workTurn>5){
+    battlePetVaryStates.delete(pet.id);
+    addLog(pet.name+' 的暗月變身依原 C WORKTURN > 5 結束，攻擊／敏捷回復 FIX 值。','pet');
+    return {expired:true,workTurn:0};
+  }
+  return {expired:false,workTurn:vary.workTurn,attackPct:vary.attackPct,dexPct:vary.dexPct};
+}
+function sourceFinalizePetExecutedCommand(pet,result){
+  const varyTurn=sourceAdvancePetVaryTurn(pet);
+  return varyTurn?Object.assign({},result,{varyTurn}):result;
+}
+
 function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   const action=loyalty?.action||{kind:'none'},ai=loyalty?.ai,roll=loyalty?.roll;
   if(loyalty?.mode==='targetrandom')addLog(pet.name+' 忠誠不足（FIXAI '+ai+'，roll '+roll+'），改為隨機選目標。','pet');
@@ -9579,7 +9674,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     sourceCancelPetCharge(pet);
     battlePetEarthRoundStates.delete(pet.id);battlePetHiddenIds.delete(pet.id);
     battlePetOutIds.add(pet.id);
-    sourceClearPetBattleProperty(pet);
+    sourceClearPetBattleProperty(pet);sourceClearPetVary(pet);
     if(state.activePetId===pet.id)state.activePetId=null;
     state.charm=Math.max(0,Math.trunc(n(state.charm))-1);
     addLog(pet.name+' 因忠誠過低離開本場戰鬥並取消出戰；魅力 -1。','bad');
@@ -9623,6 +9718,8 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_GuardBreak2')result=sourcePerformPetGuardBreak2Skill(pet,action,options);
     else if(meta?.f==='PETSKILL_BattleProperty')result=sourcePerformPetBattlePropertySkill(pet,action);
     else if(meta?.f==='PETSKILL_AntInter')result=sourcePerformPetAntInterSkill(pet,action,options);
+    else if(meta?.f==='PETSKILL_Roar')result=sourcePerformPetRoarSkill(pet,action);
+    else if(meta?.f==='PETSKILL_Vary')result=sourcePerformPetVarySkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
@@ -9652,13 +9749,16 @@ function sourcePetPreCommandAction(actor,statusTurn,options={}){
     :(liveEarth?{confusion:false,commandKind:'earthround',targetDesc:sourcePetEarthRoundTargetDesc(pet)}
     :{confusion:false,commandKind:'attack',targetDesc:sourcePetEnemyTargetDesc()}));
   const loyalty=sourcePetLoyalCheck(actor,pet,intent);
-  if(loyalty.changed)return Object.assign({loyalty},sourcePerformPetLoyalAction(pet,loyalty,options));
+  if(loyalty.changed){
+    const result=sourcePerformPetLoyalAction(pet,loyalty,options);
+    return Object.assign({loyalty},sourceFinalizePetExecutedCommand(pet,result));
+  }
   if(confusionIntent){
     const result=sourcePerformPetAttackTarget(pet,confusionIntent.targetDesc,options,{confusion:true});
-    return Object.assign({loyalty},sourceFinishPetEarthRoundOverride(pet,result));
+    return Object.assign({loyalty},sourceFinalizePetExecutedCommand(pet,sourceFinishPetEarthRoundOverride(pet,result)));
   }
-  if(liveCharge)return Object.assign({loyalty},sourcePerformPetChargeState(pet,options));
-  if(liveEarth)return Object.assign({loyalty},sourcePerformPetEarthRoundState(pet,options));
+  if(liveCharge)return Object.assign({loyalty},sourceFinalizePetExecutedCommand(pet,sourcePerformPetChargeState(pet,options)));
+  if(liveEarth)return Object.assign({loyalty},sourceFinalizePetExecutedCommand(pet,sourcePerformPetEarthRoundState(pet,options)));
   return {handled:false,loyalty};
 }
 function performEnemyAbduct(actor,unit,options,meta){
@@ -9704,7 +9804,7 @@ function performEnemyAbduct(actor,unit,options,meta){
     success=roll<per;
     if(success){
       battlePetOutIds.add(pet.id);
-      sourceClearPetBattleProperty(pet);
+      sourceClearPetBattleProperty(pet);sourceClearPetVary(pet);
       addLog(unit.name+' 使用 '+label+'，成功把 '+pet.name+' 帶離本場戰鬥（判定 '+roll+' < '+per+(fixAiInfo?'；FIXAI '+fixAiInfo.ai+' < '+aiPer:'')+'）。','bad');
     }else{
       addLog(unit.name+' 使用 '+label+'，沒有帶走 '+pet.name+'（判定 '+roll+' ≥ '+per+(fixAiInfo?'；FIXAI '+fixAiInfo.ai+(fixAiInfo.ai<aiPer?' < ':' ≥ ')+aiPer:'')+'）。');
@@ -10590,6 +10690,8 @@ function createCapturedPet(target=targetEnemyUnit()){
     name:target?.name||enemy?.name||v.serverName||'寵物',
     animationGroupId:target?.animationGroupId??enemy?.entry?.species?.animationGroupId??null,
     tempNo:target?.tempNo??v.tempNo??null,
+    // fixed PET_createPetFromCharaIndex copies enemy CHAR_PETID unchanged.
+    petId:target?.petId??target?.tempNo??v.tempNo??null,
     level:target?.level||enemy?.level||1,exp:0,
     wildGrowth:n(target?.wildGrowth??v.wildGrowth),
     stats:Object.assign({},target?.stats||v.stats||{}),
@@ -10806,6 +10908,7 @@ function captureTurn(manual=false){
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
       sourceProcessBattleDeathsAtAddProfit();
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
+      sourceAdvancePetVaryTurn(pet);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -11552,6 +11655,7 @@ function attackTurn(){
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
       sourceProcessBattleDeathsAtAddProfit();
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
+      sourceAdvancePetVaryTurn(pet);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
@@ -11647,6 +11751,7 @@ function guardTurn(){
       const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
       sourceProcessBattleDeathsAtAddProfit();
       if(petIsBattleActive(pet)&&actual?.hp>0)resolvePetEnemyCounterChain('pet',pet,actual,r);
+      sourceAdvancePetVaryTurn(pet);
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
