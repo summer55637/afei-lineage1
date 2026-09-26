@@ -102,7 +102,7 @@ assert.ok(game.includes('cRand(Math.trunc(min),Math.trunc(max))'));
 for(const id of ['sourceItemRuntimePanel','sourceEquipmentGrid','sourceBackpackGrid','sourceItemRuntimeStatus']){
   assert.ok(html.includes('id="'+id+'"'),'missing source equipment UI '+id);
 }
-assert.ok(/PLAYABLE CORE V\\d+\\.\\d+/.test(html));
+assert.ok(/PLAYABLE CORE V\d+\.\d+/.test(html));
 assert.ok(game.includes("data-source-item-action=\"equip\""));
 assert.ok(game.includes("data-source-item-action=\"unequip\""));
 assert.ok(game.includes("$('#sourceItemRuntimePanel').addEventListener('click'"));
