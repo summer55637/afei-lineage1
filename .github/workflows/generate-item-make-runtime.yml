@@ -19,6 +19,7 @@ on:
       - "tools/check_v184_setmagicpet_runtime.mjs"
       - "tools/check_v185_player_wild_speedy_sacrifice_runtime.mjs"
       - "tools/check_v186_player_gyrate_retrace_runtime.mjs"
+      - "tools/check_v187_player_hector_sars_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -90,6 +91,9 @@ jobs:
 
       - name: Run V1.86 player Gyrate/Retrace regressions
         run: node tools/check_v186_player_gyrate_retrace_runtime.mjs
+
+      - name: Run V1.87 player Hector/Sars regressions
+        run: node tools/check_v187_player_hector_sars_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
