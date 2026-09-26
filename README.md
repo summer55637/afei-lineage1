@@ -14518,3 +14518,85 @@ V1.59 只為這條來源路徑加入 threshold override；overkill／實際扣�
 - skill 621 `PETSKILL_Retrace` unchanged
 - skill 623 `PETSKILL_DamageToHp2` unchanged
 - save schema 27 unchanged
+
+
+## V1.60 Combo / Acupuncture source lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+核心程式 commit：`a7a4036b7102302ddfbd69ccb8e03db9e57d12f8`。
+
+### Post-622 positive-weight sweep
+V1.59 後重新以固定原 C 的：
+
+- `enemy1.txt`：`wa:` 七個技能槽權重
+- `enemybase1.txt`：`E_T_PETSKILL1..7`
+- `enemy.h`：欄位 enum
+
+交叉解析，而不是把 encounter / Enemy ID 誤當 PetSkill ID。
+
+624～750 的正權重來源技能中，現有已知 function 都已有 dispatcher；
+仍未解析的只有原資料本身缺 PetSkill 定義的 645／729／745。
+639 `PETSKILL_AntInter`、642 `PETSKILL_Awaken`、643 `PETSKILL_Temptation`、674 `PETSKILL_Vary`、734 `PETSKILL_Roar`
+在這份固定 Enemy AI 中沒有正權重技能槽，因此本輪不為死資料硬猜 runtime。
+
+### BATTLE_Combo reaction order
+V1.59 雖已把一般物理、技能物理、混亂與 Counter 接入 Acupuncture，
+但 `BATTLE_Combo()` 是獨立傷害路徑，不能把整個合擊總傷害直接視為一次普通 `BATTLE_DamageSub`。
+
+固定原 C 每個 combo member 都依序：
+
+1. `BATTLE_AttackSeq(..., BATTLE_COM_COMBO)`
+2. 最低 damage=1
+3. `BATTLE_GetDamageReact(defindex)`
+4. 若是 REFLEC／TRAP／ACUPUNCTURE 且攻擊者不是投擲武器，立即呼叫 `BATTLE_DamageSub`
+5. 否則只做 `BATTLE_DamageSubCale`，把該段加入 `AllDamage`
+6. 只有最後一名 combo member 才用 `BATTLE_DamageSub2(..., refrect=-1)` 一次扣除累積 `AllDamage`
+
+因此最後的 `DamageSub2` 明確不會再做第二次 Acupuncture 判定。
+
+### Acupuncture inside Combo
+當 combo 目標持有針刺外皮：
+
+- 第一個符合條件的非投擲 member 立即觸發針刺。
+- 該 member 的傷害若為奇數，仍先補成偶數。
+- defender 立即承受完整偶數傷害。
+- attacker 立即承受一半反傷。
+- `WORKACUPUNCTURE` 當場清 0。
+- **這一段不加入 `AllDamage`**。
+- 後續 member 因針刺已消耗，才恢復正常 `DamageSubCale -> AllDamage` 累積。
+
+投擲 member 不觸發也不消耗針刺；若未來有來源路徑把投擲成員帶進 `BATTLE_Combo`，
+針刺可保留給後面的非投擲 member。
+
+### Early target death
+`BATTLE_Combo` 每一段開始都先檢查原 target HP。
+
+所以若針刺的 immediate defender damage 在非最後一段就把目標打倒：
+
+- 當前段的反傷／WakeUp／ItemCrush 照常完成。
+- 下一段一開始直接 return。
+- 尚未到最後一段的 `AllDamage` **不會補扣**。
+- 後續 combo member 也不再攻擊。
+
+V1.60 依此新增中途死亡停止點，不再把未結算總傷害錯補到已死亡目標。
+
+### WakeUp / ItemCrush
+- 一般非最後 combo 段：WakeUp 仍在該段後立即執行。
+- Acupuncture 段：source 已把 `defindex` 改成 attacker，所以 WakeUp 落在被反傷的攻擊者。
+- 最後一段：先執行 `DamageSub2(AllDamage)`，之後才 WakeUp / ItemCrush。
+- ItemCrush 仍每個有效 combo member 各保留一次來源 RNG 消耗。
+
+### V1.60 regression targets
+- parent fixed at V1.59 / `4777c0ac1ecdeef5ae148930ec976f642812fc26`
+- core game.js commit `a7a4036b7102302ddfbd69ccb8e03db9e57d12f8`
+- game.js syntax PASS
+- ordinary 2-member combo: 5 + 7 -> 12 total damage
+- Acupuncture combo: first 5 -> defender 6 / attacker reflect 3; second 7 -> AllDamage 7; defender total loss 13
+- Acupuncture lethal first segment: target dies immediately, second member does not execute
+- Acupuncture segment WakeUp target = reflected attacker
+- ordinary final combo member WakeUp occurs after accumulated DamageSub2 application
+- ItemCrush RNG remains one per processed combo member
+- skill 621 `PETSKILL_Retrace` unchanged
+- skill 623 `PETSKILL_DamageToHp2` unchanged
+- save schema 27 unchanged
