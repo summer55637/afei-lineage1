@@ -14425,3 +14425,36 @@ ATTSHOOT 保留 COM_S_ATTSHOOT；來源 BATTLE_CounterCheck 在任一方為 ATTS
 - V1.56 SARS / ShowMercy 保留
 - V1.55 ATTCRAZED / GYRATE 保留
 - save schema 27 unchanged
+
+
+## V1.58 Hector / 威嚇攻擊 source lifecycle
+
+固定來源：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+### PETSKILL_Hector / skill 620
+- option `麻 turn 1 攻%-30 敏%-30`。
+- Enemy AI 在 PETSKILL_Use / EntrySort 前直接把 WORKATTACKPOWER、WORKQUICK 改成 FIX 值的 70%，因此敏捷下降會直接影響本輪排序。
+- HECTOR special block 對原 COM2 呼叫 `PROFESSION_BATTLE_StatusAttackCheck(...,2,60)`。
+- 該函式第一行先 `RAND(1,100)`，之後才檢查死亡／既有異常；判定為嚴格 `roll < 60`，即 59/100。
+- 成功時直接寫 PARALYSIS=1，不在命中當下提前清除原 command。
+
+### COM3 / BREAKTHROW override
+本 build 開啟 `_PETSKILL_OPTIMUM`，skill 620 的 array index 即 620。
+HECTOR 把 LOW(COM3)=620，再在 battle.c 設成 `gBattleStausChange=620`。
+本 build `BATTLE_ST_END=44`，所以每個 BATTLE_Attack 的一般狀態檢查在範圍檢查就直接 return，不吃 RNG。
+
+因此 BREAKTHROW 更早設定的 PARALYSIS 會被 HECTOR 620 覆寫；V1.58 關閉 HECTOR hit 的普通投石麻痺，避免雙重判定。
+
+### BOW RNG order
+執行順序為：AttackNum RNG → BATTLE_TargetListSet 的 `RAND(0,1)` → HECTOR 的 `RAND(1,100)` → 真正攻擊。
+V1.58 讓 Bow helper 可接收已建立的 sourceBowPlan，確保不重抽第二次 TargetList RNG。
+
+### Common attack / Counter
+HECTOR special block沒有 break，之後落入 common physical group，COM1 在真正攻擊前改回 ATTACK。
+因此仍保留武器 AttackNum、多段 common loop 與正常 Counter chain；若 Counter 方當下不能移動，既有 Counter CanMoveCheck 會阻止反擊。
+
+### Regression
+- game.js syntax PASS
+- V1.57 AttackShoot 保留
+- V1.56 SARS / ShowMercy 保留
+- save schema 27 unchanged
