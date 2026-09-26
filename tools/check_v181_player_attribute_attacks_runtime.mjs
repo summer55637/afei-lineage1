@@ -26,7 +26,7 @@ for(const [id,o] of mdfyRows){
 const specStart=game.indexOf('function sourcePetAttrSkillSpec');
 const modStart=game.indexOf('function sourcePerformPetModifyAttackSkill',specStart);
 const mdfyStart=game.indexOf('function sourcePerformPetMdfyAttackSkill',modStart);
-const end=game.indexOf('function sourcePerformPetGuardianSkill',mdfyStart);
+const end=game.indexOf('function sourcePerformPetLighttakeedSkill',mdfyStart);
 assert.ok(specStart>=0&&modStart>specStart&&mdfyStart>modStart&&end>mdfyStart);
 const spec=game.slice(specStart,modStart);
 const mod=game.slice(modStart,mdfyStart);
