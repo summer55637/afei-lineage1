@@ -9437,6 +9437,49 @@ function sourcePerformPetDamageToHp2Skill(pet,action){
   };
 }
 
+function sourcePerformPetMpDamageSkill(pet,action){
+  sourceRevealPetForDirectAttack(pet);
+  const meta=action?.meta;
+  const target=sourcePetAdjustedAttackDamageTarget(action);
+  if(!target){
+    addLog(pet.name+' 使用「'+(meta?.n||'MP攻擊')+'」，但沒有可作用的敵方目標。','pet');
+    return {handled:true,skillId:action?.skillId,noTarget:true};
+  }
+
+  const parts=String(meta?.o||'').split('|');
+  const attackReduceRaw=sourceCAtoi(parts[0]);
+  const mpPct=Math.max(0,sourceCAtoi(parts[1]));
+  const base=petBattleView(pet);
+  if(!base)return {handled:true,skillId:action?.skillId,missingPet:true};
+
+  // fixed PETSKILL_MpDamage uses:
+  //   def = (float)(atoi(buf1) / 100);
+  // so current 50/100 is C int division first -> 0; physical attack is not reduced.
+  const cIntegerDivision=Math.trunc(attackReduceRaw/100);
+  const attack=Math.trunc(n(base.attack))-Math.trunc(Math.trunc(n(base.attack))*cIntegerDivision);
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
+  const r=sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,{
+    attackerOverride:{attack}
+  });
+  if(!r)return {handled:true,skillId:action?.skillId,noTarget:true};
+
+  const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
+
+  // fixed BATTLE_S_MpDamage returns immediately for CHAR_TYPEENEMY / CHAR_TYPEPET.
+  // Low-loyalty BATTLE_PetRandomSkill picked an opposing Enemy through DefaultAttacker,
+  // and BATTLE_S_AttackDamage keeps the original defindex even if Guardian is used only
+  // for local AttackSeq calculation. Therefore MP damage is source-provably 0 here.
+  const mpDamage=0;
+  sourceProcessBattleDeathsAtAddProfit();
+
+  return {
+    handled:true,skillId:action?.skillId,targetUnitId:target.id,
+    actualTargetUnitId:actual?.id||target.id,r,
+    attackReduceRaw,cIntegerDivision,mpPct,mpDamage,hadDamageReact,
+    sourceTargetType:'enemy',guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+  };
+}
+
 function sourcePerformPetGuardianSkill(pet,action,options={}){
   sourceRevealPetForDirectAttack(pet);
   const meta=action?.meta;
@@ -10002,6 +10045,7 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
     else if(meta?.f==='PETSKILL_Nocast')result=sourcePerformPetSpecialStatusSkill(pet,action,'nocast');
     else if(meta?.f==='PETSKILL_DamageToHp')result=sourcePerformPetDamageToHpSkill(pet,action);
     else if(meta?.f==='PETSKILL_DamageToHp2')result=sourcePerformPetDamageToHp2Skill(pet,action);
+    else if(meta?.f==='PETSKILL_MpDamage')result=sourcePerformPetMpDamageSkill(pet,action);
     else{addLog(pet.name+' 隨機抽到「'+(meta?.n||('PetSkill '+action.skillId))+'」；此玩家側 PetSkill 尚未接入，保留原抽籤但本回合不猜效果。','pet');result={handled:true,skillId:action.skillId,sourceRuntimePending:true};}
     return finish(result);
   }
