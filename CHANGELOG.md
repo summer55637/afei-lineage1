@@ -2,7 +2,7 @@
 
 根目錄 README 已改為精簡首頁；原本超大型 README 的歷史內容**沒有刪除**，完整依版本區段保存於下列檔案。
 
-目前最新可玩核心：**V1.82**
+目前最新可玩核心：**V1.83**
 
 ## 歷史分檔
 
@@ -14,15 +14,14 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～](docs/changelog/part-07-v1.75-onward.md)
 
-## 最新版本 V1.82
+## 最新版本 V1.83
 
-V1.82 接上玩家寵低忠誠 RANDOMACT 的 Lighttakeed，並確認 574 嚙齒術玩家側不可用：
+V1.83 確認玩家寵低忠誠 RANDOMACT 的 595 閃避術是 source-defined no-op：
 
-- 609～611：本回合 WORK攻擊=FIXSTR×0.7、WORK防禦=FIXTOUGH×0.5；原碼註解掉的敏捷×0.95不補
-- `battlePetPowerMods` 在下一 round compliance 前清除，符合 WORK 值生命週期
-- 現有 Enemy source-backed DamageReact 只有 Acupuncture，與 ABSROB / REFLEC / VANISH 均不匹配，因此不複製任何未建模光鏡守狀態
-- 物理部分保留 BATTLE_S_AttackDamage Guardian calc-only bug與 execution-time TargetAdjust
-- 574 `PETSKILL_ToothCrushe` 為 illegal=1，CHAR_TYPEPET 在 PETSKILL_Use 前直接 FALSE
-- Lighttakeed 不接普通 Counter
+- RANDOMACT 先選 Enemy toNo；PETSKILL_SetDuck 成功建立 command
+- execution 的 PETSKILL_SetDuckChange_Battle 要求 toNo 必須就是施術寵自己，否則立刻 FALSE
+- 因此不解析 `3|60`、不寫閃避 turn/power、不產生效果／RNG
+- `CHAR_MAGICPETMP=0` reset 在 fixed build 行為上也是 0→0：全 repo 無累加路徑，SetMagicPet 只讀後寫回同值
+- Web 不自行把 595 修成可用的自體三回合 60% 閃避
 
-完整 V1.82 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
+完整 V1.83 原 C 對照與 regression 紀錄請看第 7 份歷史檔。
