@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.01**
+**PLAYABLE CORE V2.02**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,32 +16,27 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V2.01 最新進度
+## V2.02 最新進度
 
-V2.01 接入玩家寵低忠誠 `RANDOMACT` 的 **28 筆 `PETSKILL_BattleModel`**：
+V2.02 接入玩家寵低忠誠 `RANDOMACT` 的 **36 筆 `PETSKILL_Combined`**，沿 fixed `PETSKILL_Combined → BATTLE_COM_JYUJYUTU → MAGIC_DirectUse` 鏈完整對齊目前可證明行為。
 
-- 590、638、641、649、650、654、655、664、668、669
-- 689～692、717
-- 812～823
-- 829
+### V2.02 Combined / DirectUse
 
-### V2.01 BattleModel
+- 36 筆 fixed `PETSKILL_Combined` 共會抽到 **101 個不同 magic ID**；選法固定為 `kill[rand()%count]`
+- RANDOMACT 原先由 `BATTLE_DefaultAttacker()` 抽到的單體 `toNo` 直接存入 COM2；JYUJYUTU 不會經 `BATTLE_COM_S_ATTACK_MAGIC` 的 target rewrite
+- 非 `MAGIC_AttMagic` 使用 `itemnum=0`，固定 C 取得 `MAGICUSEMP=-1` 後會令 Pet **MP +1**
+- `MAGIC_AttMagic` 不扣 Pet MP；458／459／462 在固定 `magic.txt` 無 row，因此不猜效果、也不產生 MP +1
+- 306 與 470～583 實際被 Combined 使用的 **69 筆 AttackMagic** 均走 fixed player-side AttackMagic pattern；raw `toNo` 只經 `BATTLE_MultiList` 與 pattern 展開
+- Pet AttackMagic 依 `CHAR_EARTH_EXP～CHAR_WIND_EXP` 等價欄位保存熟練度；FalseMagic 後依 `MagicLv × 3 × 實際未閃避目標數` 累積，>100 時升級，並保留相剋屬性熟練度下降生命週期
+- AttackMagic 的 `Mmagic` 會隨目前熟練度變動；Enemy 魔法抗性固定為 `trunc(LV×0.5)`
+- 460／461 為同一組獨立 MagicStatus：3 回合、90%／50%；既有 MagicStatus 時不刷新、不覆蓋 `OTHERSTATUSNUMS`
+- def-magic 已接入 AttackMagic 傷害抗性：只在原始 resist >0 時依百分比放大；不改 `BATTLE_MagicDodge`
+- 436 虛弱固定 `虚 turn 3 成 20`，成功直接保存 `WORKWEAKEN=4`
+- Combined 異常回復直接共用 V1.78 已 source-backed 的 `BATTLE_MultiStatusRecovery` 規則：掃完整個 StatusTbl、只處理最後一個正值狀態
+- 修正 V1.77 遺留的 schema marker：`freshState()` 與 `normalizeState()` 現在都維持 **29**，不再把已載入存檔寫回 28
+- 新增 `tools/check_v202_player_combined_runtime.mjs` 並接入 CI；V1.72～V2.02 完整 regression 已通過第一輪全綠
 
-- 28 筆 fixed runtime 都是 `type=5`；原 C 位元意義為 `0x01` cover-all + `0x04` physical
-- `PETSKILL_BattleModel()` 會覆寫 COM2 low/high 為 type／object count，低忠誠 RANDOMACT 原先抽到的 `toNo` 不再參與真正攻擊目標
-- Enemy side 先經 `BATTLE_MultiList(TARGET_SIDE_1)` + `SortLoc`，固定順序為 source slot `13,11,10,12,14,18,16,15,17,19`
-- Web 對應 `battleSlot [3,1,0,2,4,8,6,5,7,9]`
-- object count 小於存活目標數且 type bit 1 開啟時，會繼續覆蓋剩餘敵人；object count 大於等於目標數時，多出的分身才在**執行當下**逐顆 `RAND(0,i0-1)`
-- 額外分身抽中已被前面分身打倒的原始目標時，原 `BATTLE_TargetCheck` 直接跳過，不另找新目標
-- option 第 6 欄能力修正保留原 parser bug：攻／防／敏三種 token 都以當下 `WORKATTACKPOWER` 作計算基底；目前 28 筆實際都只有攻擊修正
-- physical bit 4 使用真正 Guardian substitution；後續 ItemCrush／狀態都作用在實際代擋者
-- BattleModel 特例：實際目標**存活時**即使 MISS／DODGE／0 傷仍會 consume ItemCrush RNG；致死則不做 ItemCrush
-- 狀態在 ItemCrush 之後檢定，使用 `EffectHit + level差×1`、range 30，並直接存 `iTurn`，不套 common StatusChange 的 +1
-- 已接 `麻／眠／石／障／劇／虛／羅`；其中 `羅` 為天羅地網，下一次行動依原 `BATTLE_CanMoveCheck` 禁止行動
-- BattleModel command 不進普通 Counter，也沒有 per-object `BATTLE_AddProfit`
-- 新增 `tools/check_v201_player_battlemodel_runtime.mjs` 並接入 CI；V1.72～V2.01 完整 regression 已全綠
-
-V1.99 AttackCrazed、V2.00 AttackShoot 與 CI 換行修正全部保留。
+V2.01 BattleModel、V2.00 AttackShoot、V1.99 AttackCrazed 與既有回歸全部保留。
 
 save schema 維持 **29**。
 
