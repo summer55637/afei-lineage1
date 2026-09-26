@@ -4220,8 +4220,8 @@ function sourcePlayerGuardianPetForAttack(unit){
   if(!battleStatusCanMove(desc)||battleStatusActive(desc,'confusion')||battleStatusActive(desc,'barrier'))return null;
   return pet;
 }
-function resolveEnemyDirectAttackToPlayer(unit,options={}){
-  const attacker=enemyBattleView(unit);
+function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   const original=playerBattleView();
   const dodge=sourceInitialDodgeOnly(attacker,original,options);
   if(dodge.dodged){
@@ -5007,6 +5007,11 @@ function enemySkillTargetResult(unit,chosen,options={},attackerOverride=null){
     const guarding=Object.prototype.hasOwnProperty.call(options,'guarding')
       ?!!options.guarding
       :false;
+    if(options.sourceDirectGuardian){
+      const directOptions=Object.assign({},options,{guarding});
+      delete directOptions.sourceDirectGuardian;
+      return resolveEnemyDirectAttackToPlayer(unit,directOptions,attackerOverride);
+    }
     return resolveNormalAttack(attacker,playerBattleView(),Object.assign({},options,{guarding}));
   }
   return null;
@@ -5199,11 +5204,16 @@ function performEnemyGyrate(actor,unit,options,meta){
   addLog(unit.name+' 使用 '+label+'（攻 '+(attackPct>=0?'+':'')+attackPct+'%，攻擊目標所在一排）。');
   for(const target of targets){
     const guarding=target.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-    const r=enemySkillTargetResult(unit,target,{guarding},{attack});
+    const r=enemySkillTargetResult(unit,target,{guarding,sourceDirectGuardian:true},{attack});
     if(!r)continue;
-    enemyApplySkillHit(unit,target,r,label);
-  sourceBattleFinalizeItemCrushRng(r);
-    results.push({target:target.kind,r});
+    let actualTarget=target;
+    if(target.kind==='player'){
+      actualTarget=enemyApplyDirectGuardianSkillHit(unit,target,r,label);
+    }else{
+      enemyApplySkillHit(unit,target,r,label);
+      sourceBattleFinalizeItemCrushRng(r);
+    }
+    results.push({target:target.kind,actualTarget:actualTarget?.kind||target.kind,guardianPetId:r?.guardianPetId||null,r});
   }
   return {kind:'skill',skillId:actor.skillId,attackPct,results};
 }
@@ -5214,10 +5224,14 @@ function performEnemyRetrace(actor,unit,options,meta){
   const guarding=chosen.kind==='player'&&!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
 
   unit.counterEligibleThisTurn=true;
-  const first=enemySkillTargetResult(unit,chosen,{guarding});
+  const first=enemySkillTargetResult(unit,chosen,{guarding,sourceDirectGuardian:true});
   if(!first)return {kind:'skill',skillId:actor.skillId,noTarget:true};
-  enemyApplySkillHit(unit,chosen,first,label+'首擊');
-  sourceBattleFinalizeItemCrushRng(first);
+  if(chosen.kind==='player'){
+    enemyApplyDirectGuardianSkillHit(unit,chosen,first,label+'首擊');
+  }else{
+    enemyApplySkillHit(unit,chosen,first,label+'首擊');
+    sourceBattleFinalizeItemCrushRng(first);
+  }
 
   let second=null,retraceRoll=null;
   const targetStillAlive=chosen.kind==='pet'
@@ -5230,10 +5244,14 @@ function performEnemyRetrace(actor,unit,options,meta){
       // fixed battle.c 的追擊硬寫 FIXSTR +20%；PETSKILL_Retrace option 的 攻%+100 parser 被整段註解。
       const baseAttack=Math.trunc(n(unit.roundFixAttack??unit.attack));
       const attack=baseAttack+Math.trunc(baseAttack*.2);
-      second=enemySkillTargetResult(unit,chosen,{guarding},{attack});
+      second=enemySkillTargetResult(unit,chosen,{guarding,sourceDirectGuardian:true},{attack});
       if(second){
-        enemyApplySkillHit(unit,chosen,second,label+'追擊');
-        sourceBattleFinalizeItemCrushRng(second);
+        if(chosen.kind==='player'){
+          enemyApplyDirectGuardianSkillHit(unit,chosen,second,label+'追擊');
+        }else{
+          enemyApplySkillHit(unit,chosen,second,label+'追擊');
+          sourceBattleFinalizeItemCrushRng(second);
+        }
       }
     }
   }
@@ -5659,14 +5677,15 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
     let r;
     if(target.kind==='pet'&&target.pet){
       r=enemyAttackPetResult(unit,target.pet);
+      hits++;lastTarget=target;lastResult=r;
+      enemyApplySkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
+      sourceBattleFinalizeItemCrushRng(r);
     }else{
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
-      r=enemyAttackResult(unit,{guarding});
+      r=resolveEnemyDirectAttackToPlayer(unit,{guarding});
+      hits++;lastTarget=target;lastResult=r;
+      enemyApplyDirectGuardianSkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
     }
-
-    hits++;lastTarget=target;lastResult=r;
-    enemyApplySkillHit(unit,target,r,label+'第 '+hits+'/'+count+' 擊');
-    sourceBattleFinalizeItemCrushRng(r);
 
     // fixed loop breaks immediately here when ++attack_count reaches attack_max,
     // leaving defNo on the last real attack target for the following Counter loop.
@@ -7841,16 +7860,21 @@ function performEnemyStatusChange(actor,unit,options,meta){
   // BOOMERANG 只有原 command 本來就是 ATTACK 才會被前置 switch 改成 BATTLE_COM_BOOMERANG。
   // StatusChange 不會轉換，因此持回力標時仍是單一目標的一般物理命中。
   let r;
+  let targetDesc;
   if(chosen.kind==='pet'&&chosen.pet){
     r=enemyAttackPetResult(unit,chosen.pet);
+    enemyApplySkillHit(unit,chosen,r,label);
+    targetDesc={kind:'pet',pet:chosen.pet,petId:chosen.pet?.id};
   }else{
-    r=enemyAttackResult(unit,{guarding:!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion')});
+    const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+    r=resolveEnemyDirectAttackToPlayer(unit,{guarding});
+    targetDesc=enemyApplyDirectGuardianSkillHit(
+      unit,chosen,r,label,{finalizeItemCrush:false}
+    );
   }
-  enemyApplySkillHit(unit,chosen,r,label);
 
-  const targetDesc=chosen.kind==='pet'
-    ?{kind:'pet',pet:chosen.pet,petId:chosen.pet?.id}
-    :{kind:'player'};
+  // fixed BATTLE_Attack order: damage/wakeup -> status -> ItemCrush.
+  // Guardian substitution changes defindex before both the status check and ItemCrush.
   const statusResult=sourceEnemyApplyStatusAttackHit(unit,targetDesc,r,type,turn,label);
   sourceBattleFinalizeItemCrushRng(r);
 
@@ -7934,15 +7958,19 @@ function performEnemyContinuation(actor,unit,options,meta){
     let r;
     if(chosen.kind==='pet'&&chosen.pet){
       r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count});
+      hits++;
+      lastResult=r;
+      lastChosen=chosen;
+      enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+      sourceBattleFinalizeItemCrushRng(r);
     }else{
-      r=enemyAttackResult(unit,{guarding:!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion'),damageDivisor:count});
+      const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
+      r=resolveEnemyDirectAttackToPlayer(unit,{guarding,damageDivisor:count});
+      hits++;
+      lastResult=r;
+      lastChosen=chosen;
+      enemyApplyDirectGuardianSkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
     }
-
-    hits++;
-    lastResult=r;
-    lastChosen=chosen;
-    enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
-  sourceBattleFinalizeItemCrushRng(r);
 
     if(state.hp<=0)break;
     if(chosen.kind==='pet'&&chosen.pet&&!petIsBattleActive(chosen.pet)){

@@ -13573,3 +13573,108 @@ No extra slot/value is invented.
 - Counter only when actual hit count reaches attack_max
 - V1.46 WildViolent common weapon loop unchanged
 - schema 27 unchanged
+
+
+## V1.48 manual common-direct Guardian substitution
+
+固定來源仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，維持「原 C 規則優先、不猜數值」。
+
+### Source scope
+
+The following connected skills ultimately call fixed `BATTLE_Attack()` / `BATTLE_AttackSeq()` rather than a calc-only special-damage caller:
+
+- `BATTLE_COM_S_STATUSCHANGE`
+- `BATTLE_COM_S_RENZOKU`
+- `BATTLE_COM_S_ATTCRAZED`
+- `BATTLE_COM_S_RETRACE`
+- `BATTLE_COM_S_GYRATE`
+
+Their Player-target hits therefore inherit normal direct-attack Guardian timing.
+
+### Fixed BATTLE_AttackSeq Guardian timing
+
+The source order is:
+
+1. DuckCheck on the original target
+2. if not dodged, GuardianCheck
+3. if Guardian succeeds, switch damage calculation to Guardian
+4. do not perform a second dodge on Guardian
+5. Guardian does not inherit the original Player GUARD command
+6. if Guardian-substituted damage becomes zero, source forces NORMAL / damage 1
+
+The existing `resolveEnemyDirectAttackToPlayer()` already models these rules.
+
+V1.48 extends it with an optional attacker override so RETRACE's second hit can still use its fixed `FIXSTR + 20%` attack while preserving Guardian timing.
+
+### STATUSCHANGE ordering
+
+fixed `BATTLE_Attack()` changes local `defindex` to Guardian before later hit effects.
+
+Its relevant order is:
+
+```
+AttackSeq / Guardian
+DamageSub
+DamageWakeUp
+StatusAttackCheck + status write
+ItemCrushSeq
+return to outer common loop
+Counter loop
+```
+
+Therefore when a Player is protected by Guardian:
+
+- physical damage lands on Guardian
+- StatusAttackCheck uses Guardian stats
+- successful poison/sleep/stone/etc. is written to Guardian
+- ItemCrush also uses Guardian as defender
+- outer Counter still sees Guardian's false ContFlg and does not start
+
+V1.48 calls `enemyApplyDirectGuardianSkillHit(...,{finalizeItemCrush:false})`, applies the status to the returned actual target, then performs ItemCrush. This preserves source ordering.
+
+### RENZOKU / ATTCRAZED
+
+Non-ranged Player segments previously used `enemyAttackResult()`, which bypasses Guardian.
+
+They now use `resolveEnemyDirectAttackToPlayer()`.
+
+Ranged throw/BOW paths remain unchanged:
+
+- BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW are rejected by fixed GuardianCheck
+- the existing `throwWeapon` gate keeps them non-Guardian
+
+V1.47 ATTCRAZED target pre-roll order is unchanged.
+
+### RETRACE
+
+Both the first BATTLE_Attack and the optional +20% second BATTLE_Attack now use Guardian-aware Player resolution.
+
+The original RETRACE quirk is preserved:
+
+- follow-up chance is based only on first attack DODGE
+- second BATTLE_Attack return value does **not** replace outer `ContFlg`
+- final Counter loop still uses the first BATTLE_Attack result
+
+So a Guardian on the second follow-up does not retroactively replace the first DODGE ContFlg.
+
+### GYRATE
+
+GYRATE is a special row loop that calls `BATTLE_Attack()` for each living slot and then immediately ends; it does not enter the common outer Counter loop.
+
+Each Player row hit can nevertheless Guardian-substitute inside its own BATTLE_Attack.
+
+V1.48 restores that per-hit substitution without adding any GYRATE Counter.
+
+### V1.48 regression targets
+
+- game.js syntax PASS
+- direct resolver supports attackerOverride without changing existing callers
+- STATUSCHANGE Player hit can redirect damage/status/ItemCrush to Guardian
+- STATUSCHANGE status occurs before ItemCrush
+- RENZOKU non-ranged Player segment can Guardian-substitute
+- ATTCRAZED V1.47 target RNG pre-roll unchanged; Player hit can Guardian-substitute
+- RETRACE first and optional second hit can Guardian-substitute
+- RETRACE Counter still uses first result
+- GYRATE Player row hit can Guardian-substitute but GYRATE still has no outer Counter
+- ranged throw weapons remain Guardian-ineligible
+- schema 27 unchanged
