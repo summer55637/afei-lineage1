@@ -110,6 +110,7 @@ let battlePlayerProfessionTrap=null;
 let battlePlayerMySkillStrPower=0;
 let battlePlayerFixedAttackWork=null;
 let battlePlayerAttackWork=null;
+let battlePlayerCaptureMod=0;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2499,6 +2500,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_TRAP'
     ||functionName==='PROFESSION_TOXIN_WEAPON'
     ||functionName==='PROFESSION_PLUNDER'
+    ||functionName==='PROFESSION_DOCILE'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -2511,6 +2513,15 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_DEFLECT'
     ||functionName==='PROFESSION_REBACK'
     ||functionName==='PROFESSION_AVOID';
+}
+function sourceProfessionLiveSelectedToNo(slot,target=state){
+  const entry=sourcePlayerProfessionSkillAt(slot,target);
+  const row=entry?sourceProfessionSkillTemplate(entry.skillId):null;
+  // Fixed target enum TARGET_OTHER allows self. BATTLE_MultiCaptureUp only mutates
+  // CHAR_TYPEPLAYER entries; the current Web battle model has exactly one Player at bid 0.
+  if(String(row?.func||'')==='PROFESSION_DOCILE')return 0;
+  const selected=targetEnemyUnit();
+  return selected?10+Math.trunc(n(selected.battleSlot)):null;
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -3168,6 +3179,41 @@ function sourceProfessionToxinWeaponTargetPlan(prepared,spec){
   return {rawToNo,weaponType,mode:'single',random:null,targetSlots:[rawToNo]};
 }
 
+function sourceProfessionDocileRate(prepared){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  return tier*2+10;
+}
+function sourceProfessionDocileUpPoint(rate,randMacro=sourceCRandMacroValue){
+  const power=Math.trunc(n(rate));
+  // fixed BATTLE_MultiCaptureUp passes fractional power*0.9 / power*1.1 into RAND.
+  // RAND's inner cast happens first; UpPoint is int, so truncate the final macro value.
+  return Math.trunc(randMacro(power*.9,power*1.1));
+}
+function sourceProfessionDocileExecute(prepared,name,randMacro=sourceCRandMacroValue){
+  const toNo=Math.trunc(n(prepared?.toNo));
+  const rate=sourceProfessionDocileRate(prepared);
+  const before=Math.trunc(n(battlePlayerCaptureMod));
+
+  // fixed BATTLE_MultiCaptureUp() iterates MultiList but only changes CHAR_TYPEPLAYER
+  // and skips CHAR_ISDIE. In the current Web battle model the only Player entry is bid 0.
+  if(toNo!==0||n(state?.hp)<=0){
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      applied:false,rate,upPoint:0,captureModBefore:before,captureModAfter:before,
+      reason:toNo!==0?'source-target-not-player':'source-player-dead',
+      noDamage:true,noCounter:true
+    };
+  }
+
+  const upPoint=sourceProfessionDocileUpPoint(rate,randMacro);
+  battlePlayerCaptureMod=before+upPoint;
+  addLog('你施放「'+name+'」：本場捕獲修正 +'+upPoint+'（累積 '+battlePlayerCaptureMod+'）。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+    applied:true,rate,upPoint,captureModBefore:before,captureModAfter:battlePlayerCaptureMod,
+    noDurationCounter:true,noDamage:true,noCounter:true
+  };
+}
 function sourceProfessionPlayerMaxPile(target=state){
   const trans=Math.trunc(n(target?.transmigration));
   const cachedAttach=Number(target?.playerEquipCompliance?.attachPile);
@@ -4211,6 +4257,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const assistRow=sourceProfessionSkillTemplate(prepared.skillId);
     const assistName=String(assistRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionWarriorAssistExecute(prepared,assistName);
+  }
+  if(prepared.functionName==='PROFESSION_DOCILE'){
+    const docileRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const docileName=String(docileRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionDocileExecute(prepared,docileName);
   }
   if(toNo<10){
     // fixed battle.c direct-attack profession gate rejects same-side direct targets here;
@@ -7428,7 +7479,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -19082,8 +19133,8 @@ function captureChance(){
   const dexTerm=playerDex/15-enemyDex/15;
   const workSum=hpTerm+levelTerm+dexTerm+(captureBase+luck);
 
-  // 現行 web 尚未有 CHAR_WORKMODCAPTURE 的可靠來源，等價 fixed runtime 預設 0。
-  const captureMod=0;
+  // fixed BATTLE_CaptureCheck adds the attacker's battle-local CHAR_WORKMODCAPTURE.
+  const captureMod=Math.trunc(n(battlePlayerCaptureMod));
   const targetDesc={kind:'enemy',unit:target,unitId:target.id};
   const sleepBonus=battleStatusActive(targetDesc,'sleep')?15:0;
   let raw=workSum*charm/50+captureMod+sleepBonus;
@@ -19171,8 +19222,12 @@ function captureTurn(manual=false){
         continue;
       }
       const c=captureChance();
+      // fixed BATTLE_Capture() clears CHAR_WORKMODCAPTURE on every real capture execution,
+      // whether CaptureCheck succeeds or fails. Status/C_WAIT paths above never reach here.
+      const captureModConsumed=Math.trunc(n(battlePlayerCaptureMod));
+      battlePlayerCaptureMod=0;
       if(!c.allowed||c.display<=0){
-        addLog('捕獲失敗：目前捕獲率為 '+Math.max(0,n(c.display)).toFixed(1)+'%。','bad');
+        addLog('捕獲失敗：目前捕獲率為 '+Math.max(0,n(c.display)).toFixed(1)+'%'+(captureModConsumed?'（馴服修正 '+captureModConsumed+' 已消耗）':'')+'。','bad');
       }else if(cRand(1,100)<c.raw){
         // fixed BATTLE_CaptureCheck：RAND(1,100) < WorkGet，為嚴格小於；
         // 例如 WorkGet=20 實際成功 roll 是 1..19。
@@ -19926,8 +19981,7 @@ function attackTurn(options={}){
     ?Math.trunc(Number(options.professionSlot)):null;
   let professionPrepared=null;
   if(professionSlot!==null){
-    const selected=targetEnemyUnit();
-    const selectedToNo=selected?10+Math.trunc(n(selected.battleSlot)):null;
+    const selectedToNo=sourceProfessionLiveSelectedToNo(professionSlot,state);
     professionPrepared=sourceProfessionBattleSkillPrepare({
       slot:professionSlot,selectedToNo,battleMyNo:0,target:state
     });

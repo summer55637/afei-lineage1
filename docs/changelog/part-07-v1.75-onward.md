@@ -4542,3 +4542,84 @@ PLUNDER caller **完全忽略回傳值**，之後仍 talk「得到」、`CHAR_se
 - save schema 30
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.46 Skill 56 Docile / capture Work
+
+V2.46 接入獵人 Skill 56「馴服寵物」／`PROFESSION_DOCILE` 的 fixed `BATTLE_MultiCaptureUp -> CHAR_WORKMODCAPTURE -> BATTLE_CaptureCheck` lifecycle。
+
+### Runtime row
+
+- Skill ID 56
+- MP 10
+- TARGET 1 / OTHER
+- KIND 2
+- option `倍%2|次%2|攻%2|效%1`
+- command `BATTLE_COM_S_DOCILE`
+
+### Assist calculation
+
+`battle_profession_assist_fun()` 不解析 row 的倍／次／攻欄位；DOCILE 明確：
+
+`tier = PROFESSION_CHANGE_SKILL_LEVEL_A(displayLevel)`
+
+`power = tier*2 + 10`
+
+即 tier 0..10 對應 10..30。
+
+### MultiCaptureUp target gate
+
+`BATTLE_MultiCaptureUp()` 先建 ToList，再逐項只接受：
+
+- `CHAR_WHICHTYPE == CHAR_TYPEPLAYER`
+- `CHAR_ISDIE == FALSE`
+
+TARGET_OTHER 的 protocol enum包含 self；目前 Web 只有 Player bid 0，因此 live DOCILE 自動把 selectedToNo 指向 0。對非 Player direct slot 的 source executor會保留 NoEffect，而不是錯誤給 Enemy 加捕獲率。
+
+### RAND macro / Work accumulation
+
+每個有效 Player：
+
+`UpPoint = RAND(power*0.9, power*1.1)`
+
+fixed util.h RAND macro 的 x/y 可為 fractional；內層 `(int)` 與最後 `int UpPoint` 是兩個截斷邊界。Web 使用 `sourceCRandMacroValue(power*.9,power*1.1)` 後再 `Math.trunc`。
+
+之後：
+
+`CHAR_WORKMODCAPTURE += UpPoint`
+
+沒有 turn counter；同場多次施放直接累加。
+
+### CaptureCheck / reset
+
+既有 V0.91 fixed float pipeline現在把 `captureMod` 由 0 改讀 `battlePlayerCaptureMod`：
+
+`raw = workSum*charm/50 + captureMod + sleepBonus`
+
+並保留 `raw > 99 -> 99`、strict `RAND(1,100) < raw`。
+
+`BATTLE_Capture()` 在 item/capture check 後無條件清 `CHAR_WORKMODCAPTURE=0`。V2.46 對齊成：Player 真正到 capture command 時，先以當下 modifier算 chance，接著清 0，再判成功／失敗。Status/C_WAIT 等未執行 capture case 的路徑不提前清。
+
+Battle Entry 初始化的原 C 也把 Work 清 0；Web `resetBattleStatuses()` 同步歸零。這是 battle-local transient，不改 save schema。
+
+### Regression
+
+新增 `tools/check_v246_profession_docile_runtime.mjs`：
+
+- Skill 56 metadata / command support
+- tier 0/5/10 => power 10/20/30
+- fractional 0.9/1.1 RAND macro input + final int truncation
+- self Player bid 0 applied / Enemy direct slot NoEffect / dead Player NoEffect
+- repeated cast accumulation
+- dispatcher before generic same-side reject
+- live selectedToNo 0 only for DOCILE
+- CaptureCheck reads battlePlayerCaptureMod
+- real capture execution clears modifier before success RNG
+- resetBattleStatuses clears modifier
+- V2.44/V2.45 historical markers remain
+- V2.46 marker
+- save schema 30
+
+save schema 維持 **30**。

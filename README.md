@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.45**
+**PLAYABLE CORE V2.46**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,54 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.46 最新進度
+
+V2.46 接入獵人 **Skill 56「馴服寵物」／`PROFESSION_DOCILE`**，把之前捕獲公式中尚無來源而固定為 0 的 `CHAR_WORKMODCAPTURE` 正式接回 fixed lifecycle。
+
+fixed row：MP 10、TARGET 1（OTHER）、KIND 2、option `倍%2|次%2|攻%2|效%1`、command `BATTLE_COM_S_DOCILE`。
+
+### 技能本體不讀 row 的倍／次／攻
+
+`battle_profession_assist_fun()` 的 DOCILE case 直接把 display level 經 `PROFESSION_CHANGE_SKILL_LEVEL_A()` 轉成 A-tier 0～10，然後固定：
+
+`rate = tier*2 + 10`
+
+所以 power 為 **10～30**。row option 裡的 `倍%2|次%2|攻%2` 在這個 case 沒被讀取；Web 不拿它們自行製造傷害或額外次數。
+
+### TARGET_OTHER 與實際受益者
+
+固定 target enum 的 `OTHER` 定義包含自己。`BATTLE_MultiCaptureUp()` 收到 ToList 後又明確只處理 `CHAR_TYPEPLAYER`，並跳過死亡 Player。
+
+目前 Web 一場戰鬥只建一個 Player Battle Entry（bid 0），因此 live 按鈕對 DOCILE 固定選自己 bid 0；其他既有職業技能仍沿用目前 Enemy selected target，不把 DOCILE 的特殊選法外溢。
+
+### exact RAND 與累積
+
+每個有效 Player 都做：
+
+`UpPoint = RAND(power*0.9, power*1.1)`
+
+fixed `RAND` macro 允許 0.9／1.1 產生小數邊界：內層 random width 先做 C `(int)`，macro 表達式最後再指定到 `int UpPoint`。V2.46 直接沿用既有 `sourceCRandMacroValue()`，最後再 `Math.trunc`，不改成一般整數 `cRand()`。
+
+成功後：
+
+`CHAR_WORKMODCAPTURE += UpPoint`
+
+沒有 duration counter，也不會每回合衰減；同場重複施放會繼續累加。
+
+### 捕獲公式與消耗時點
+
+V0.91 已對齊的 `BATTLE_CaptureCheck()` 本來就有：
+
+`WorkGet += CHAR_WORKMODCAPTURE`
+
+V2.46 把原本 placeholder 0 改為 battle-local `battlePlayerCaptureMod`，因此畫面捕獲率與真正 `RAND(1,100) < WorkGet` 都會使用馴服加成，最後仍套既有 99 上限。
+
+fixed `BATTLE_Capture()` 在真正執行捕獲時，不論 CaptureItemCheck／CaptureCheck 最後成功或失敗，都會把 `CHAR_WORKMODCAPTURE` 清 0。Web 因此只在 Player 真正走到 capture command 分支時清掉；若玩家在出手前死亡、C_WAIT 或被異常狀態阻止而根本沒進捕獲 case，加成仍保留。
+
+Battle Entry 初始化本來也會清 `CHAR_WORKMODCAPTURE`，所以 V2.46 同步在 `resetBattleStatuses()` 歸零，不跨戰鬥保存。
+
+新增 `tools/check_v246_profession_docile_runtime.mjs`，鎖住 Skill 56 metadata、A-tier 10～30、fractional RAND macro、Player-only target、累加、capture formula bridge、真正捕獲才清零、battle reset、V2.46 marker；**save schema 維持 30**。
 
 ## V2.45 最新進度
 
