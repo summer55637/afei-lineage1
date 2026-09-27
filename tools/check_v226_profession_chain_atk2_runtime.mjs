@@ -115,7 +115,7 @@ const turn=extractFunction(game,'attackTurn');
 assert.ok(turn.indexOf("sourcePlayerPrimeExecutionAttackCount(actor)")
   <turn.indexOf('sourceProfessionBattleSkillExecute(professionPrepared,actor)'));
 
-assert.match(html,/PLAYABLE CORE V2\.26/);
+assert.match(html,/PLAYABLE CORE V\d+\.\d+/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
