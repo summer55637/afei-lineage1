@@ -2495,6 +2495,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_CAVALRY'
     ||functionName==='PROFESSION_ENTWINE'
     ||functionName==='PROFESSION_DRAGNET'
+    ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
     ||functionName==='PROFESSION_CONVOLUTE'
     ||functionName==='PROFESSION_CHAOS'
@@ -3089,6 +3090,62 @@ function sourceProfessionHunterControlExecute(target,prepared,name){
     fixedDexOnly:type==='entwine',workQuickUnchanged:type==='entwine',
     nextPreCommandResetsEntwineDex:type==='entwine',
     noDamage:true,noOrdinaryCounter:true
+  };
+}
+
+function sourceProfessionAttackWeakExecute(target,prepared,name){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const base=playerBattleView();
+  if(!base||!target){
+    return {
+      handled:true,noAction:true,reason:'attack-result-missing',
+      skillId:prepared?.skillId,functionName:prepared?.functionName,
+      toNo:prepared?.toNo,targetUnitId:target?.id??null
+    };
+  }
+
+  // fixed BATTLE_COM_S_ATTACK_WEAK mutates current WORKATTACKPOWER for Pet/Enemy targets.
+  // The live Web profession target here is CHAR_TYPEENEMY, so that source branch applies.
+  const attackBefore=Math.trunc(n(base.attack));
+  const attackScale=tier*2+110;
+  const attackPower=Math.trunc(attackBefore*attackScale/100);
+  sourceProfessionSetPlayerAttackWork(attackPower);
+
+  // Source reduces the ATTACKER's WORKQUICK, not the defender's DEX.
+  // EntrySort already ran, so this cannot reorder the current round; however the
+  // immediately following BATTLE_AttackSeq/BATTLE_DamageCalc reads this lower WORKQUICK.
+  const fixedDex=Math.trunc(n(base.fixedDex));
+  const quickScale=90-tier;
+  const workQuick=Math.trunc(fixedDex*quickScale/100);
+
+  const r=sourceProfessionPhysicalCalcOnlyResult(target,{
+    attackerOverride:{attack:attackPower,quick:workQuick}
+  });
+  if(!r){
+    return {
+      handled:true,noAction:true,reason:'attack-result-missing',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:prepared.toNo,targetUnitId:target.id,
+      attackSkillTier:tier,attackBefore,attackScale,attackPower,
+      fixedDex,quickScale,workQuick
+    };
+  }
+
+  // Generic direct-profession boundary: non-CHAIN DamageReact is cleared and
+  // ordinary BATTLE_Attack SUITPOISON is absent; wake / ItemCrush still occur.
+  const actual=applyFriendlyEnemyHit(
+    'player','你',target,r,null,
+    {suppressSuitPoison:true,suppressDamageReact:true}
+  );
+  addLog('你施放「'+name+'」：WORKATTACKPOWER '+attackBefore+' → '+attackPower
+    +'；自身 WORKQUICK = FIXDEX '+fixedDex+' × '+quickScale+'%。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:prepared.toNo,targetUnitId:target.id,attackSkillTier:tier,
+    attackBefore,attackScale,attackPower,fixedDex,quickScale,workQuick,
+    targetTypeBoost:true,entrySortAlreadyFixed:true,
+    r,actual,damageReactSuppressed:true,suitPoisonSuppressed:true,
+    noOrdinaryCounter:true
   };
 }
 
@@ -3728,6 +3785,10 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   if(prepared.functionName==='PROFESSION_ENTWINE'||prepared.functionName==='PROFESSION_DRAGNET'){
     return sourceProfessionHunterControlExecute(target,prepared,name);
+  }
+
+  if(prepared.functionName==='PROFESSION_ATTACK_WEAK'){
+    return sourceProfessionAttackWeakExecute(target,prepared,name);
   }
 
   if(prepared.functionName==='PROFESSION_CAVALRY'){
