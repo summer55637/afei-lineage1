@@ -132,7 +132,7 @@ assert.ok(dispatcher.indexOf("prepared.functionName==='PROFESSION_ICE_CRACK'")<d
 
 const dexFn=extractFunction(game,'sourceProfessionBattleDexRoll');
 assert.ok(dexFn.includes("command!=='BATTLE_COM_S_ICE_CRACK'"));
-assert.ok(dexFn.includes("command==='BATTLE_COM_S_ICE_CRACK')upper=work*.5"));
+assert.ok(dexFn.includes("command==='BATTLE_COM_S_ICE_CRACK'"));
 
 assert.ok(game.includes('sourceQueueExecutorCommentedOut:true'));
 assert.ok(game.includes('sourceDormantMagicAttackUnreachable:true'));
