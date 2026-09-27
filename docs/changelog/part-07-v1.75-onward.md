@@ -3674,6 +3674,40 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.29 profession Skill 39 through attack
+
+V2.29 adds Warrior Skill 39 `PROFESSION_THROUGH_ATTACK` through its actual fixed profession-magic pipeline rather than approximating it as ordinary attacks.
+
+- Runtime row: TARGET=1, KIND=1, USE_FLAG=1, MP 21, option magic token `无` → magic type -1.
+- Direct dead target follows fixed `__ATTACK_MAGIC BATTLE_MultiList()`: repeatedly sample packed alive slots with `rand()%10` until a non--1 entry is reached.
+- Through pairing uses ±5 in the same column. With both entries alive, `PROFESSION_MAGIC_TOLIST_SORT()` always emits front 15..19 first, back 10..14 second.
+- If only one target survives, it remains list index 0 even if physically in the back row. Since source damage scaling keys off loop index rather than row, that back target receives the first/front multiplier.
+- `PROFESSION_MAGIC_GET_PRACTICE()` has no Through power branch, but still consumes its unconditional `RAND(1,100)` and `rand()%100`; hp_power stays 0 and no variance roll follows.
+- Per target, `PROFESSION_MAGIC_DODGE()` consumes `RAND(1,100)` before EarthRound rejection. Enemy targets use `int(LV*0.15)`, capped at 20, and miss on `roll <= luck`.
+- tier != 10, once per magic-dodge-passing target:
+  - MYSKILLHIT=1
+  - MYSKILLHIT_NUM=-70
+  - WORKHITRIGHT -=50
+  This reuses V2.28's exact transient Work lifecycle, including the later fixed compliance bug.
+- Dedicated physical path consumes critical `RAND(1,10000)` before ordinary duck.
+  - critical skips ordinary BATTLE_DuckCheck entirely;
+  - direct `BATTLE_CriDamageCalc()` has no bow exception;
+  - it does not trigger AttackSeq's Weapon Focus / Dual Weapon critical proficiency hooks.
+- Noncritical path uses BATTLE_DuckCheck semantics only; no second SUIT WDUCKPOWER dodge.
+- GUARD / cannot-move / current DamageReact disable ordinary duck, but Through subsequently does no GuardAdjust or DamageSub.
+- Physical raw power is then passed through profession `UN_POW_M`; magic type -1 otherwise leaves it unchanged.
+- `PROFESSION_MAGIC_CHANGE_STATUS()` has no Through case but still consumes its leading unused `RAND(1,100)`.
+- Final multiplier:
+  - target index 0 = `70 + tier*2` percent
+  - target index 1 = `50 + tier*2` percent.
+- Final HP subtraction is direct. No Guardian, GuardAdjust, DamageSub, DamageReact consumption/reflection, ItemCrush, SUITPOISON, physical Ultimate or ordinary Counter.
+- Fixed tail wakes every target that passed profession magic dodge, even if the inner physical duck made final damage 0.
+- Also corrected `sourceProfessionEnemyByBattleSlot()` so the single-enemy battle object is reachable, not only group `enemy.units`.
+
+Added `tools/check_v229_profession_through_attack_runtime.mjs` and wired it into Actions. Save schema remains **30**.
+
+---
+
 ## V2.28 profession Skill 40 near-death attack
 
 V2.28 adds Warrior Skill 40 `PROFESSION_DEAD_ATTACK` and audits the generic profession direct-attack DamageReact branch.
