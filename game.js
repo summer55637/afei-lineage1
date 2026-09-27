@@ -2496,6 +2496,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_ENTWINE'
     ||functionName==='PROFESSION_DRAGNET'
     ||functionName==='PROFESSION_ATTACK_WEAK'
+    ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
     ||functionName==='PROFESSION_CONVOLUTE'
     ||functionName==='PROFESSION_CHAOS'
@@ -3090,6 +3091,47 @@ function sourceProfessionHunterControlExecute(target,prepared,name){
     fixedDexOnly:type==='entwine',workQuickUnchanged:type==='entwine',
     nextPreCommandResetsEntwineDex:type==='entwine',
     noDamage:true,noOrdinaryCounter:true
+  };
+}
+
+function sourceProfessionInstigateExecute(target,prepared,name){
+  const row=sourceProfessionSkillTemplate(prepared.skillId);
+  const option=String(row?.option||'');
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const baseSuccess=sourceProfessionStatusOptionInt(option,'成',0);
+  const success=baseSuccess+tier*4;
+  // fixed row says 回%2, but tier 10 is explicitly overridden to turn=4
+  // before StatusTbl[INSTIGATE] receives turn+1.
+  const optionTurn=Math.max(1,sourceProfessionStatusOptionInt(option,'回',1));
+  const turn=tier===10?4:optionTurn;
+  const rate=tier+10;
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+
+  const check=sourceProfessionStatusAttackCheck(targetDesc,success);
+  let applied=false;
+  if(check.success){
+    applied=battleStatusApply(targetDesc,'instigate',turn);
+    if(applied){
+      const st=battleStatusGet(targetDesc);
+      if(st)st.instigateRate=rate;
+    }
+  }
+
+  if(applied){
+    addLog(target.name+' 被「'+name+'」挑撥：stored turn='+(turn+1)
+      +'，StatusSeq 發作率 80%，發作時 FIX 攻防敏 -'+rate+'%。','bad');
+  }else{
+    addLog('「'+name+'」對 '+target.name+' 未成功；原檢定 roll '+check.roll
+      +' / threshold '+check.threshold+'。');
+  }
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:prepared.toNo,targetUnitId:target.id,attackSkillTier:tier,
+    option,baseSuccess,success,optionTurn,turn,storedTurns:applied?turn+1:0,
+    rate,check,applied,
+    // Unlike ENTWINE / DRAGNET, INSTIGATE is absent from the fixed list that
+    // clears BATTLECOM1 immediately on application.
+    commandCancelledOnApply:false,noDamage:true,noOrdinaryCounter:true
   };
 }
 
@@ -3785,6 +3827,10 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   if(prepared.functionName==='PROFESSION_ENTWINE'||prepared.functionName==='PROFESSION_DRAGNET'){
     return sourceProfessionHunterControlExecute(target,prepared,name);
+  }
+
+  if(prepared.functionName==='PROFESSION_INSTIGATE'){
+    return sourceProfessionInstigateExecute(target,prepared,name);
   }
 
   if(prepared.functionName==='PROFESSION_ATTACK_WEAK'){
@@ -6954,7 +7000,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
-  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
+  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
@@ -7849,6 +7895,25 @@ function processBattleStatusTurn(actor){
   if(st.type==='poison'){
     const down=battleStatusPoisonDamage(desc);
     if(down>0)addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 因中毒受到 '+down+' 傷害。','bad');
+  }
+  if(st.type==='instigate'){
+    // fixed CHAR_WORKINSTIGATE: decrement already happened above; expiry skips
+    // the switch entirely. Every remaining active tick consumes RAND(1,100).
+    const roll=cRand(1,100);
+    if(roll<=80){
+      const rate=Math.trunc(n(st.instigateRate));
+      const fixMutation=sourceProfessionInstigateFixMutation(desc,rate);
+      // The same-side RAND(0,9) belongs to StatusSeq and must happen before
+      // BATTLE_GetAttackCount(). The scan starts from ++pos and excludes self.
+      const pick=sourceProfessionInstigateSameSideTarget(desc);
+      return finish({
+        skip:false,desc,status:st,instigateAttack:true,
+        instigateRoll:roll,instigateRate:rate,instigateFixMutation:fixMutation,
+        instigateTarget:pick.target,instigateTargetRoll:pick.roll,
+        instigateRawToNo:pick.rawToNo
+      });
+    }
+    return finish({skip:false,desc,status:st,instigateRoll:roll,instigateAttack:false});
   }
   if(st.type==='confusion'&&cRand(1,100)<=80){
     return finish({skip:false,desc,status:st,confusionAttack:true});
@@ -9200,6 +9265,110 @@ function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,opti
     target=next;
   }
 }
+function sourceProfessionInstigateSameSideTarget(attackerDesc){
+  const attackerSlot=sourceBattleStatusSlot(attackerDesc);
+  if(attackerSlot<0)return {roll:null,target:null,targetSlot:-1,rawToNo:-1};
+  const sideStart=attackerSlot>=10?10:0;
+  let pos=cRand(0,9);
+  const roll=pos;
+  for(let lop=0;lop<10;lop++){
+    if(++pos>=10)pos=0;
+    const slot=sideStart+pos;
+    if(slot===attackerSlot)continue;
+    const target=sourcePlayerConfusionTargetableFromBattleSlot(slot);
+    if(target)return {roll,target,targetSlot:slot,rawToNo:slot};
+  }
+  // fixed StatusSeq writes COM2=-1 here. BATTLE_TargetAdjust's opponent-side
+  // BATTLE_DefaultAttacker RNG happens later, after BATTLE_GetAttackCount().
+  return {roll,target:null,targetSlot:-1,rawToNo:-1};
+}
+
+function sourceProfessionInstigateDefaultTarget(attackerDesc){
+  const list=attackerDesc?.kind==='enemy'
+    ?enemyPlayerSideLivingTargets()
+    :targetableEnemyUnits().map(unit=>({kind:'enemy',unit,unitId:unit.id}));
+  if(!list.length)return null;
+  // fixed BATTLE_DefaultAttacker always calls RAND(0,cnt-1), including cnt==1.
+  return list[cRand(0,list.length-1)]||null;
+}
+
+function sourceProfessionInstigateFixMutation(desc,rate){
+  if(desc?.kind!=='enemy'||!desc.unit)return null;
+  const unit=desc.unit;
+  const pct=100-Math.trunc(n(rate));
+  const before={
+    attack:Math.trunc(n(unit.roundFixAttack??unit.attack)),
+    defense:Math.trunc(n(unit.roundFixDefense??unit.defense)),
+    quick:Math.trunc(n(unit.roundFixQuick??unit.quick))
+  };
+  const after={
+    attack:Math.trunc(before.attack*pct/100),
+    defense:Math.trunc(before.defense*pct/100),
+    quick:Math.trunc(before.quick*pct/100)
+  };
+  unit.roundFixAttack=after.attack;
+  unit.roundFixDefense=after.defense;
+  unit.roundFixQuick=after.quick;
+  // fixed StatusSeq changes FIX only. WORKATTACKPOWER / WORKDEFENCEPOWER /
+  // WORKQUICK and the already-built EntrySort order are intentionally untouched.
+  return {
+    rate:Math.trunc(n(rate)),before,after,
+    workAttack:Math.trunc(n(unit.roundAttack??unit.attack)),
+    workDefense:Math.trunc(n(unit.roundDefense??unit.defense)),
+    workQuick:Math.trunc(n(unit.roundQuick??unit.quick))
+  };
+}
+
+function performProfessionInstigateAttack(actor,statusTurn,options={}){
+  const attackerDesc=statusTurn?.desc||battleStatusActorDesc(actor);
+  if(!attackerDesc||!battleStatusDescAlive(attackerDesc))return true;
+
+  if(attackerDesc.kind==='enemy'&&attackerDesc.unit){
+    // StatusSeq overwrites COM1 with ordinary ATTACK.
+    if(attackerDesc.unit.chargeState)attackerDesc.unit.chargeState=null;
+    if(attackerDesc.unit.earthRoundState)attackerDesc.unit.earthRoundState=null;
+    attackerDesc.unit.guardThisTurn=false;
+    attackerDesc.unit.counterEligibleThisTurn=true;
+  }
+
+  let targetDesc=statusTurn?.instigateTarget||null;
+  let fallback=false;
+  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
+    targetDesc=sourceProfessionInstigateDefaultTarget(attackerDesc);
+    fallback=true;
+  }
+  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
+    addLog(battleStatusDescName(attackerDesc)+' 的挑撥發作，但沒有可攻擊的目標。');
+    return true;
+  }
+
+  const attackerView=battleStatusDescView(attackerDesc);
+  const defenderView=battleStatusDescView(targetDesc);
+  if(!attackerView||!defenderView)return true;
+  const guarding=battleConfusionGuarding(targetDesc,options);
+  const r=targetDesc.kind==='enemy'
+    ?resolveAttackToEnemyWithGuardian(attackerView,targetDesc.unit,{
+        guarding,attackerUnit:attackerDesc.kind==='enemy'?attackerDesc.unit:null
+      })
+    :resolveNormalAttack(attackerView,defenderView,{guarding});
+  const resolvedTarget=r.guardian
+    ?{kind:'enemy',unit:r.actualTarget,unitId:r.actualTarget.id}
+    :targetDesc;
+
+  addLog(battleStatusDescName(attackerDesc)+' 的挑撥發作：'
+    +(fallback?'同隊無有效目標，TargetAdjust 改攻擊 ':'強制攻擊同隊 ')
+    +battleStatusDescName(targetDesc)+'。','bad');
+  if(r.guardian)addLog(r.guardian.name+' 發動忠犬，代替 '+targetDesc.unit.name+' 承受這次攻擊。');
+
+  battleApplyPhysicalHit(attackerDesc,resolvedTarget,r);
+  if(battleStatusDescAlive(attackerDesc)&&battleStatusDescAlive(resolvedTarget)){
+    // This is the ordinary BATTLE_Attack counter loop; the existing helper already
+    // carries the same physical Counter gates for cross-side and same-side targets.
+    resolveConfusionCounterChain(attackerDesc,resolvedTarget,r,options);
+  }
+  return true;
+}
+
 function performConfusionAttack(actor,statusTurn,options={}){
   const attackerDesc=statusTurn?.desc||battleStatusActorDesc(actor);
   if(!attackerDesc||!battleStatusDescAlive(attackerDesc))return true;
