@@ -215,7 +215,7 @@ assert.deepEqual(JSON.parse(JSON.stringify(applied)),{
 assert.equal(ctx.battleCounterChance(
   {type:'player',fixedDex:50,luck:2,weaponType:0,suitCounter:20},
   {type:'enemy',fixedDex:50,weaponType:0}
-),22);
+),23.5); // Player->Enemy first applies defender FIXDEX *0.6, yielding CriPer 15 -> 1.5 + Luck 2 + suit 20.
 
 // WDUCKPOWER is an independent rand()%100 check, strict <, and COMBO skips it.
 rollCalls=0;roll=19;
