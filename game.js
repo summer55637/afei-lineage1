@@ -1059,10 +1059,48 @@ function sourcePlayerEquipTemplateForExisting(itemIndex,target=state){
     detachFunc:callbacks.detachFunc
   };
 }
+function sourceProfessionDualWeaponEntries(target=state){
+  const out=[];
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(!entry)continue;
+    const row=sourceProfessionSkillTemplate(entry.skillId);
+    if(!row||String(row.func||'')!=='PROFESSION_DUAL_WEAPON')continue;
+    const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
+    const tier=sourceProfessionAttackSkillTier(displayLevel);
+    out.push({slot:i,skillId:entry.skillId,displayLevel,tier,rate:tier*3+20});
+  }
+  return out;
+}
+function sourceProfessionDualWeaponLearned(target=state){
+  return sourceProfessionDualWeaponEntries(target).length>0;
+}
+function sourceProfessionDualWeaponScaledItemValue(value,entries){
+  const raw=Math.trunc(n(value));
+  if(!Array.isArray(entries)||!entries.length)return 0;
+  let total=0;
+  for(const entry of entries){
+    total+=Math.trunc(raw*Math.trunc(n(entry?.rate))/100);
+  }
+  return total;
+}
 function sourcePlayerEquipPlace(template,slots=sourcePlayerItemSlots(),target=state){
   const type=Math.trunc(Number(template?.type));
   if(!Number.isFinite(type))return -1;
-  if(type===0||type===1||type===2||type===3||type===17||type===18||type===19)return PLAYER_ARM_SLOT;
+  if(type===0||type===1||type===2||type===3||type===17||type===18||type===19){
+    // fixed ITEM_getEquipPlace(): Dual Weapon only changes non-bow weapon placement.
+    // It checks the learned function name, not profession-class validity.
+    if(sourceProfessionDualWeaponLearned(target)){
+      const armIndex=slots?.[PLAYER_ARM_SLOT];
+      if(armIndex!=null){
+        const armTemplate=sourcePlayerEquipTemplateForExisting(Number(armIndex),target);
+        if(Math.trunc(Number(armTemplate?.type))!==4){
+          return slots?.[PLAYER_SHIELD_SLOT]==null?PLAYER_SHIELD_SLOT:PLAYER_ARM_SLOT;
+        }
+      }
+    }
+    return PLAYER_ARM_SLOT;
+  }
   if(type===6)return PLAYER_HEAD_SLOT;
   if(type===7)return PLAYER_BODY_SLOT;
   if(type>=8&&type<=15)return PLAYER_DECORATION1_SLOT;
@@ -1148,17 +1186,25 @@ function sourcePlayerEquipmentModifiers(target=state){
     const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
     const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
     if(!existing||!template){result.complete=false;continue;}
+    // fixed ITEM_equipEffect(): a non-shield item occupying CHAR_EQSHIELD contributes
+    // only through every learned PROFESSION_DUAL_WEAPON row. Each field is integer-
+    // truncated separately at (tier*3+20)%, while ITEM_MODIFYATTRIBVALUE remains full.
+    const leftDualEntries=i===PLAYER_SHIELD_SLOT&&Math.trunc(Number(template.type))!==25
+      ?sourceProfessionDualWeaponEntries(target):null;
+    const applyEquipValue=value=>leftDualEntries===null
+      ?Math.trunc(n(value))
+      :sourceProfessionDualWeaponScaledItemValue(value,leftDualEntries);
     const values={};
     for(const [outKey,fieldName] of numericFields){
       const value=sourceItemRuntimeResolvedDataInt(existing,fieldName);
       if(value==null){result.complete=false;continue;}
-      result[outKey]+=value;values[outKey]=value;
+      const applied=applyEquipValue(value);result[outKey]+=applied;values[outKey]=applied;
     }
     const statusValues={};
     for(const [statusKey,fieldName] of statusFields){
       const value=sourceItemRuntimeResolvedDataInt(existing,fieldName);
       if(value==null){result.complete=false;continue;}
-      result.statusResist[statusKey]+=value;statusValues[statusKey]=value;
+      const applied=applyEquipValue(value);result.statusResist[statusKey]+=applied;statusValues[statusKey]=applied;
     }
     const attrib=sourceItemRuntimeResolvedDataInt(existing,'ITEM_MODIFYATTRIB');
     const attribValue=sourceItemRuntimeResolvedDataInt(existing,'ITEM_MODIFYATTRIBVALUE');
@@ -3920,6 +3966,9 @@ function sourcePlayerMoveItem(fromindex,toindex,{target=state,isDie=null}={}){
   if(die)return {ok:false,reason:'dead'};
   const slots=sourcePlayerItemSlots(target);
   if(slots[from]==null||!Number.isFinite(Number(slots[from])))return {ok:false,reason:'missing-source'};
+  // battle.c caches the source itemindex before CHAR_ItemUse(), then calls
+  // ITEM_getEquipPlace(charaindex,itemindex) only after the move has completed.
+  const sourceItemIndex=Math.trunc(Number(slots[from]));
   if(from===to)return {ok:false,reason:'same-slot'};
   let moved;
   const fromEquip=from<PLAYER_EQUIP_SLOT_COUNT,toEquip=to<PLAYER_EQUIP_SLOT_COUNT;
@@ -3944,7 +3993,10 @@ function sourcePlayerMoveItem(fromindex,toindex,{target=state,isDie=null}={}){
       sourceProfessionPlayerStatPreCommandCompliance(target);
       sourceProfessionPlayerFixedAttackCompliance(target);
       battlePlayerAttackWork=null;
-      if(from===PLAYER_ARM_SLOT||to===PLAYER_ARM_SLOT){
+      const sourceTemplate=sourcePlayerEquipTemplateForExisting(sourceItemIndex,target);
+      moved.postMoveEquipPlace=sourceTemplate
+        ?sourcePlayerEquipPlace(sourceTemplate,sourcePlayerItemSlots(target),target):-1;
+      if(moved.postMoveEquipPlace===PLAYER_ARM_SLOT){
         moved.avoidRefresh=sourceProfessionPlayerAvoidRefresh(target,'weapon-change');
         moved.weaponFocusRefresh=sourceProfessionPlayerWeaponFocusRefresh(target,'weapon-change');
       }

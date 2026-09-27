@@ -221,7 +221,8 @@ const moveFixed=move.indexOf('sourceProfessionPlayerFixedAttackCompliance(target
 const moveResetAttack=move.indexOf('battlePlayerAttackWork=null');
 const moveRefresh=move.indexOf("sourceProfessionPlayerWeaponFocusRefresh(target,'weapon-change')");
 assert.ok(moveCompliance>=0&&moveStat>moveCompliance&&moveFixed>moveStat&&moveResetAttack>moveFixed&&moveRefresh>moveResetAttack);
-assert.ok(move.includes('from===PLAYER_ARM_SLOT||to===PLAYER_ARM_SLOT'));
+assert.ok(move.includes('const sourceItemIndex=Math.trunc(Number(slots[from]))'));
+assert.ok(move.includes('moved.postMoveEquipPlace===PLAYER_ARM_SLOT'));
 
 // Proficiency helper still uses weapon marker; growing skill raw level alone does not mutate Work.
 const prof=extractFunction(game,'sourceProfessionWeaponFocusProficiency');

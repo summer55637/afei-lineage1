@@ -4052,3 +4052,15 @@ V2.37 closes Skill 25 `PROFESSION_AVOID`.
 - Active `PROFESSION_avoid()` prepares BATTLE_COM_S_AVOID, but `battle_profession_assist_fun()` has no matching case. Web preserves command-receipt proficiency then executes source NoAction rather than inventing an active dodge buff.
 
 Added `tools/check_v237_profession_avoid_runtime.mjs`; save schema remains **30**.
+
+## V2.38 Skill 43 Dual Weapon equipment/effect lifecycle
+
+V2.38 closes the fixed passive lifecycle for Skill 43 `PROFESSION_DUAL_WEAPON`.
+
+- Dynamic `ITEM_getEquipPlace()` now reproduces the second non-bow left-slot rule and bow exclusion.
+- Non-`ITEM_WSHIELD` left-slot `itemEffect[]` fields use per-field integer-truncated `(tier*3+20)%` contributions; duplicate matching skill rows stack exactly as the source loop does.
+- `ITEM_MODIFYATTRIBVALUE` intentionally remains full strength because the source attribute accumulator is outside the scaling loop.
+- Mid-battle equipment refresh caches the command source item before the move, evaluates equip-place after the move, and refreshes Avoid / Weapon Focus only when the post-move result is `CHAR_ARM`.
+- Skill 43 remains passive in the web battle UI; the fixed zero-MP use path is rejected before its trivial callback.
+
+Added `tools/check_v238_profession_dual_weapon_runtime.mjs`; save schema remains **30**.

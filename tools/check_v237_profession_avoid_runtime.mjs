@@ -163,7 +163,7 @@ const view=extractFunction(game,'playerBattleView');
 assert.ok(view.includes('professionAvoidActive:!!battlePlayerAvoidWork?.active'));
 assert.ok(view.includes('professionAvoidMod:Math.trunc(n(battlePlayerAvoidWork?.mod))'));
 
-// Battle entry and weapon-change Status_init refresh both Avoid and Weapon Focus.
+// Battle entry and source-accurate post-move Status_init refresh both Avoid and Weapon Focus.
 const entry=extractFunction(game,'sourceInitPlayerSideEntrySnapshot');
 assert.ok(entry.indexOf("sourceProfessionPlayerAvoidRefresh(state,'battle-entry')")
   <entry.indexOf("sourceProfessionPlayerWeaponFocusRefresh(state,'battle-entry')"));
@@ -171,6 +171,7 @@ const move=extractFunction(game,'sourcePlayerMoveItem');
 const avoidMove=move.indexOf("sourceProfessionPlayerAvoidRefresh(target,'weapon-change')");
 const focusMove=move.indexOf("sourceProfessionPlayerWeaponFocusRefresh(target,'weapon-change')");
 assert.ok(avoidMove>=0&&focusMove>avoidMove);
+assert.ok(move.includes('moved.postMoveEquipPlace===PLAYER_ARM_SLOT'));
 
 // Reset is battle-local; schema remains unchanged.
 const reset=extractFunction(game,'resetBattleStatuses');

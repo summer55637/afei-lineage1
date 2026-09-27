@@ -47,7 +47,7 @@ assert.equal(val(700,'ITEM_TYPE'),19);   // break throw
 
 // The fixed equip-place mapping used by ITEM_getEquipPlace().
 for(const needle of [
-  'if(type===0||type===1||type===2||type===3||type===17||type===18||type===19)return PLAYER_ARM_SLOT',
+  'if(type===0||type===1||type===2||type===3||type===17||type===18||type===19){',
   'if(type===6)return PLAYER_HEAD_SLOT',
   'if(type===7)return PLAYER_BODY_SLOT',
   'if(type>=8&&type<=15)return PLAYER_DECORATION1_SLOT',
@@ -56,6 +56,7 @@ for(const needle of [
   'if(type===26)return PLAYER_SHOES_SLOT',
   'if(type===27)return PLAYER_GLOVE_SLOT'
 ])assert.ok(game.includes(needle),'missing equip mapping: '+needle);
+assert.ok(game.includes('sourceProfessionDualWeaponLearned(target)'),'non-bow equip mapping must keep fixed Dual Weapon dynamic branch');
 
 // Fixed CHAR_STR/DEX are displayed points * 100 when requirements are checked.
 assert.ok(game.includes('n(p.str)*100'),'STR requirement must use raw CHAR_STR scale');

@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.37**
+**PLAYABLE CORE V2.38**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,21 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.38 最新進度
+
+V2.38 接入勇士 **Skill 43「二刀流」／`PROFESSION_DUAL_WEAPON`** 的固定原 C 裝備與 `ITEM_equipEffect()` lifecycle。
+
+- `ITEM_getEquipPlace()`：只要技能欄存在 `PROFESSION_DUAL_WEAPON`，右手已有非弓武器且左手空時，第二把非弓武器可進 `CHAR_EQSHIELD`；右手是弓時不開左手。這個來源 branch 不另外檢查 profession class。
+- 左手不是 `ITEM_WSHIELD` 時，`itemEffect[]` 內的攻防敏、HP/MP、運魅、迴避、異常抗性、會心、額外傷防、格檔、順序、AttachPile、命中、忽防，逐欄套 `rate = tier*3+20`%，每欄先做 C 整數截斷再累加。
+- 若資料異常存在多個二刀流技能槽，fixed C 會逐槽重複累加；Web 也保留，不自行去重。
+- `ITEM_MODIFYATTRIB / ITEM_MODIFYATTRIBVALUE` 在 fixed `ITEM_equipEffect()` 的倍率迴圈外，因此左手四屬性仍按 100% 原值計入。
+- 戰鬥換裝改成保存 move 前的 source item，再於 move 完成後重新跑 `ITEM_getEquipPlace()`；只有 post-move 結果是 `CHAR_ARM` 才刷新 Avoid / Weapon Focus，完全跟 fixed `battle.c -> BATTLE_ProfessionStatus_init()` gate 對齊。
+- Skill 43 不新增戰鬥按鈕：fixed callback 只 `return TRUE`，且 MP=0 row 會先被 `PROFESSION_SKILL_DEC_COST_MP()` 的 `dec_mp <= 0` gate 擋下。
+
+典型 post-move source 時序也保留：第一把非弓武器裝入空右手後不 refresh；第二把裝入左手後 refresh；卸右手時 refresh；卸左手時不 refresh。
+
+新增 `tools/check_v238_profession_dual_weapon_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.37 最新進度
 
