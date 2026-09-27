@@ -3094,6 +3094,9 @@ function sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r,{ignoreDa
   r.sourceProfessionTrap=true;
   r.sourceProfessionTrapOriginalDamage=originalDamage;
   r.sourceProfessionTrapDamage=trapDamage;
+  // BATTLE_Attack() sets iRet/ContFlg FALSE as soon as either side has DamageReact.
+  // A real TRAP trigger therefore cannot flow into the outer Counter loop.
+  r.sourceCounterBlockedByTrap=true;
   return {
     triggered:true,attackerDesc,targetDesc,r,
     originalDamage,trapDamage,trapTurns
