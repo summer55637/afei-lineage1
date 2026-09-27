@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.34**
+**PLAYABLE CORE V2.35**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,66 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.35 最新進度
+
+V2.35 接入勇士 **Skill 33「狀態回復」／`PROFESSION_REBACK`** 的 fixed 自動回復 lifecycle。這招名稱容易誤解：原 C **不會解除異常狀態**，而是在玩家仍處於指定異常時，每次輪到自己的 StatusSeq 自動回復 HP。
+
+fixed row：TARGET=1、KIND=2、USE_FLAG=1、MP=0、option `HP%2`，command 為 `BATTLE_COM_S_REBACK`。
+
+### 主動施放其實 NoAction
+
+`PROFESSION_reback()` 只用 `profession_common_fun()` 寫入 `BATTLE_COM_S_REBACK`；但 pinned `battle.c` 的 profession command switch 沒有對應 case。因此主動點 Skill 33 仍保留 command-receipt proficiency，但真正輪到行動時 NoAction。
+
+真正效果在每個 Player actor 的：
+
+`BATTLE_StatusSeq → BATTLE_MagicStatusSeq → BATTLE_ProfessionStatusSeq → BATTLE_CanMoveCheck`
+
+所以即使角色因麻痺／睡眠／石化等不能動，狀態回復仍先執行。
+
+### 只認 9 個 fixed status
+
+來源 `status_table[9]` 固定為：
+
+- 麻痺
+- 睡眠
+- 石化
+- 暈眩
+- 樹根纏繞
+- 天羅地網
+- 冰爆
+- 冰箭
+- 雷附體
+
+中毒、酒醉、混亂、虛弱、劇毒、魔障、沉默等都**不會**觸發 Skill 33。
+
+而且判定發生在一般 StatusSeq 已經扣完回合之後；若某狀態在這次 StatusSeq 剛好歸零，就不會再拿它觸發回復。
+
+### HP 回復公式
+
+fixed 先把技能 display level 走 `PROFESSION_CHANGE_SKILL_LEVEL_M()`：
+
+- 1～10 → tier 1
+- 11～20 → tier 2
+- …
+- 81～90 → tier 9
+- 91～100 → tier 10
+
+回復比例為：
+
+`min(20, tier × 2)% × WORKMAXHP`
+
+使用 C int 截斷並封頂到最大 HP。即使 HP 已滿導致實際回復量為 0，只要指定異常仍存在，來源仍會呼叫 `PROFESSION_SKILL_LVEVEL_UP("PROFESSION_REBACK")`；V2.35 同樣保留。
+
+### 技能欄 early-return bug
+
+fixed `BATTLE_ProfessionStatusSeq()` 掃技能欄時是：
+
+`if(Pskillid <= 0) return;`
+
+不是 `continue`。因此掃描遇到第一個空／無效技能欄就整個停止，後面的 Skill 33 不會被找到。V2.35 新增專用 sequential scanner 保留這個來源邊界，不沿用一般「跳過空欄繼續找」的 helper。
+
+新增 `tools/check_v235_profession_reback_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.34 最新進度
 

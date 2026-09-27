@@ -3993,3 +3993,22 @@ V2.34 closes Skill 53 `PROFESSION_DEFLECT` together with fixed `BATTLE_ArrangeCh
 - `BATTLE_Attack()` leaves `iRet=TRUE` for ARRANGE, so ordinary Counter is intentionally not blocked, while existing post-effect ARRANGE gates now receive a real `r.arranged`.
 
 Added `tools/check_v234_profession_deflect_arrange_runtime.mjs`; save schema remains **30**.
+
+
+---
+
+## V2.35 Warrior Skill 33 Reback automatic StatusSeq recovery
+
+V2.35 closes Skill 33 `PROFESSION_REBACK`.
+
+- Runtime row: Skill 33, TARGET=1, KIND=2, USE_FLAG=1, MP=0, option `HP%2`, command `BATTLE_COM_S_REBACK`.
+- `PROFESSION_reback()` only prepares that command; pinned `battle.c` has no matching profession command-switch case, so active use keeps command-receipt proficiency and becomes NoAction.
+- The real effect runs automatically for every Player actor in `BATTLE_ProfessionStatusSeq()`, after ordinary `BATTLE_StatusSeq` / `BATTLE_MagicStatusSeq` and before `BATTLE_CanMoveCheck`.
+- Fixed qualifying `status_table[9]`: paralysis, sleep, stone, dizzy, entwine, dragnet, ice-crack, ice-arrow, thunder-enclose. Poison, drunk, confusion, weaken, deep-poison, barrier and nocast do not trigger it.
+- Because the check is post-countdown, a qualifying status that reaches zero during this StatusSeq no longer qualifies.
+- Skill level uses `PROFESSION_CHANGE_SKILL_LEVEL_M()`: >90 => 10, >80 => 9 ... >10 => 2, otherwise 1.
+- Heal is `min(20, tier*2)% * WORKMAXHP`, C-int truncated and capped at max HP.
+- `PROFESSION_SKILL_LVEVEL_UP("PROFESSION_REBACK")` is still attempted when the heal cap reduces the actual restored HP to zero.
+- Fixed skill-slot scan uses `if(Pskillid <= 0) return`; V2.35 preserves the first empty/invalid slot as a hard terminator rather than skipping gaps.
+
+Added `tools/check_v235_profession_reback_runtime.mjs`; save schema remains **30**.

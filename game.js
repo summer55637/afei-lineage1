@@ -2056,6 +2056,69 @@ function sourceProfessionLogProficiencyResult(result){
   }
   return result;
 }
+const SOURCE_PROFESSION_REBACK_STATUS_TYPES=Object.freeze([
+  'paralysis','sleep','stone','dizzy','entwine','dragnet','iceCrack','iceArrow','thunderEnclose'
+]);
+function sourceProfessionStatusSeqFindSkillByFunction(funcName,target=state){
+  const wanted=String(funcName||'');
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    // fixed BATTLE_ProfessionStatusSeq uses "if(Pskillid <= 0) return", not continue.
+    if(!entry)return {ok:false,reason:'source-slot-terminator',slot:i,functionName:wanted};
+    const row=sourceProfessionSkillTemplate(entry.skillId);
+    if(!row)return {ok:false,reason:'source-invalid-skill-terminator',slot:i,skillId:entry.skillId,functionName:wanted};
+    if(String(row.func||'')===wanted)return {ok:true,slot:i,entry,row,functionName:wanted};
+  }
+  return {ok:false,reason:'not-found',functionName:wanted};
+}
+function sourceProfessionPlayerRebackQualifyingStatus(desc){
+  const st=battleStatusGet(desc);
+  if(!st||Math.trunc(n(st.turns))<=0)return null;
+  return SOURCE_PROFESSION_REBACK_STATUS_TYPES.includes(String(st.type||''))?st:null;
+}
+function sourceProfessionPlayerRebackStatusSeq(desc={kind:'player'},target=state,{randInclusive=cRand}={}){
+  if(desc?.kind!=='player')return {triggered:false,reason:'not-player'};
+  const found=sourceProfessionStatusSeqFindSkillByFunction('PROFESSION_REBACK',target);
+  if(!found.ok)return Object.assign({triggered:false},found);
+  const professionClass=Math.trunc(n(target?.professionClass));
+  const requiredClass=Math.trunc(n(found.row?.professionClass));
+  if(professionClass!==requiredClass){
+    return {
+      triggered:false,reason:'profession-mismatch',
+      slot:found.slot,skillId:found.entry.skillId,professionClass,requiredClass
+    };
+  }
+  const status=sourceProfessionPlayerRebackQualifyingStatus(desc);
+  if(!status){
+    return {triggered:false,reason:'no-qualifying-status',slot:found.slot,skillId:found.entry.skillId};
+  }
+
+  // fixed BATTLE_ProfessionStatusSeq reads SKILL_LEVEL, then CHANGE_SKILL_LEVEL_M:
+  // >90 => 10 ... >10 => 2, otherwise 1. Heal percent is tier*2, capped at 20.
+  const displayLevel=sourcePlayerProfessionSkillDisplayLevel(found.entry);
+  const tier=sourceProfessionMagicLevelM(displayLevel);
+  const percent=Math.min(20,tier*2);
+  const maxHp=sourceUltimateMaxHp(desc);
+  const hpBefore=Math.max(0,Math.trunc(n(battleStatusHp(desc))));
+  let amount=Math.trunc(maxHp*percent/100);
+  if(amount+hpBefore>maxHp)amount=maxHp-hpBefore;
+  if(amount<0)amount=0;
+  battleStatusSetHp(desc,hpBefore+amount);
+
+  // Source calls PROFESSION_SKILL_LVEVEL_UP even when capped heal amount is zero.
+  const proficiency=sourceProfessionSkillProficiencyApply(
+    target,found.slot,{randInclusive}
+  );
+  sourceProfessionLogProficiencyResult(proficiency);
+  if(amount>0)addLog('狀態回復自動恢復 '+amount+' HP。','good');
+  else addLog('狀態回復自動觸發；目前 HP 已滿。','good');
+  return {
+    triggered:true,slot:found.slot,skillId:found.entry.skillId,
+    status:String(status.type||''),statusTurns:Math.trunc(n(status.turns)),
+    displayLevel,tier,percent,maxHp,hpBefore,hpAfter:battleStatusHp(desc),
+    amount,proficiency
+  };
+}
 function sourceProfessionPlayerDeflectArrangePower(compliance=state?.playerEquipCompliance){
   // fixed BATTLE_ProfessionStatus_init() first adds (tier+10) to WORKFIXARRANGE,
   // then immediately calls CHAR_complianceParameter(). CHAR_initcharWorkInt() resets
@@ -2287,7 +2350,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_ENERGY_COLLECT'
     ||functionName==='PROFESSION_FOCUS'
     ||functionName==='PROFESSION_SCAPEGOAT'
-    ||functionName==='PROFESSION_DEFLECT';
+    ||functionName==='PROFESSION_DEFLECT'
+    ||functionName==='PROFESSION_REBACK';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -3266,6 +3330,16 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:false,reason:'profession-command-not-prepared'};
   }
   const toNo=Math.trunc(n(prepared.toNo));
+  if(prepared.functionName==='PROFESSION_REBACK'){
+    // fixed PROFESSION_reback() prepares BATTLE_COM_S_REBACK, but the pinned
+    // battle.c profession command switch has no matching case. Its real effect
+    // lives in BATTLE_ProfessionStatusSeq(), not in active command execution.
+    return {
+      handled:true,noAction:true,reason:'source-reback-no-battle-case',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      sourceNoBattleCase:true
+    };
+  }
   if(prepared.functionName==='PROFESSION_DEFLECT'){
     // fixed profession_skill.c only prepares BATTLE_COM_S_DEFLECT. The pinned battle.c
     // has no matching command-switch case, so active use reaches the turn and does nothing.
@@ -3423,6 +3497,7 @@ function sourceProfessionBattleFailureText(reason){
     'client-nonbattle-skill':'這招不是 client 戰鬥技能',
     'battle-function-unported':'這招的戰鬥函式尚未移植',
     'source-deflect-no-battle-case':'fixed battle.c 沒有 BATTLE_COM_S_DEFLECT 執行 case',
+    'source-reback-no-battle-case':'fixed battle.c 沒有 BATTLE_COM_S_REBACK 執行 case；效果在 StatusSeq 自動觸發',
     'shield-required':'需要裝備盾牌',
     'dead-attack-hp-too-low':'目前 HP 必須大於 10',
     'target-side-empty':'敵方已沒有可用目標',
@@ -6446,7 +6521,9 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
   return {damage,dodged:false,dodge,attMagicLv,resist,resistBase:resistInfo.base,resistBonus:resistInfo.bonus,randomAmp,amagic,aPower,adjusted,trueMagic,exp,hpBefore,hpAfter:battleStatusHp(targetDesc)};
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
-  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
+  poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
+  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
+  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAttackWork=null}
@@ -7275,6 +7352,10 @@ function processBattleStatusTurn(actor){
     // fixed battle.c then continues with other independent WORK-status lifecycles.
     const defMagic=sourceDefMagicStatusSeq(desc);
     const sars=sourceProcessSarsStatusTurn(desc);
+    // fixed main loop: ordinary StatusSeq -> MagicStatusSeq -> ProfessionStatusSeq -> CanMoveCheck.
+    // Reback therefore observes the post-countdown status and still runs before the caller skips movement.
+    const professionReback=desc.kind==='player'
+      ?sourceProfessionPlayerRebackStatusSeq(desc,state):null;
     const extra={};
     if(professionStats)extra.professionStats=professionStats;
     if(professionHit)extra.professionHit=professionHit;
@@ -7282,6 +7363,7 @@ function processBattleStatusTurn(actor){
     if(suitRound&&(suitRound.addHp!==0||suitRound.addMp!==0))extra.suitRound=suitRound;
     if(defMagic)extra.defMagic=defMagic;
     if(sars)extra.sars=sars;
+    if(professionReback?.triggered)extra.professionReback=professionReback;
     return Object.keys(extra).length?Object.assign({},result,extra):result;
   };
   const st=battleStatusGet(desc);
