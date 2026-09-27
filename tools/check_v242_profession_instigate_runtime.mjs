@@ -179,6 +179,20 @@ const executeAt=turnFn.indexOf('if(statusTurn.instigateAttack)');
 assert.ok(statusAt>=0&&countAt>statusAt&&executeAt>countAt);
 assert.ok(turnFn.includes('performProfessionInstigateAttack(actor,statusTurn'));
 
+for(const [name,guard,counter] of [
+  ['captureTurn',false,false],
+  ['guardTurn',true,false]
+]){
+  const fn=extractFunction(game,name);
+  const stAt=fn.indexOf('processBattleStatusTurn(actor)');
+  const acAt=fn.indexOf('sourceEnemyPrimeExecutionAttackCount(actor)');
+  const inAt=fn.indexOf('if(statusTurn.instigateAttack)');
+  assert.ok(stAt>=0&&acAt>stAt&&inAt>acAt,name+' Instigate must execute after AttackCount');
+  assert.ok(fn.includes(
+    'performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:'+guard+',allowPlayerCounter:'+counter+'})'
+  ));
+}
+
 // COM2=-1 fallback is intentionally deferred until execution, after attack-count RNG.
 const defaultFn=extractFunction(game,'sourceProfessionInstigateDefaultTarget');
 assert.ok(defaultFn.includes('cRand(0,list.length-1)'));
