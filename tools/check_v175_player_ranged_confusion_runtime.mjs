@@ -5,7 +5,7 @@ const game=fs.readFileSync('game.js','utf8');
 const html=fs.readFileSync('game.html','utf8');
 
 // StatusSeq -> AttackCount -> command execution order must stay intact for Player confusion.
-const turnStart=game.indexOf('function attackTurn()');
+const turnStart=game.indexOf('function attackTurn(');
 const turnEnd=game.indexOf('function guardTurn()',turnStart);
 assert.ok(turnStart>=0&&turnEnd>turnStart);
 const turn=game.slice(turnStart,turnEnd);
