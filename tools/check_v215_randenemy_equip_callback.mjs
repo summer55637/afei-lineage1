@@ -87,6 +87,9 @@ const ctx={
   randomPointInEncounter:()=>({x:1,y:1}),
   resolveEncounterAt:()=>({encounterId:7,encounterMin:5,encounterMax:10}),
   sourcePlayerNoEnemyActive:()=>false,
+  // V2.24 profession encounter Work is inactive in these legacy RandEnemy fixtures.
+  sourceProfessionEncounterRollPlan:cep=>({rollCep:cep,pCep:0,expired:false}),
+  addLog:()=>{},
   cRand:()=>{secondary++;return ctx.secondaryRoll},
   spawnEnemy:()=>{spawnCalls++;ctx.enemy={}}
 };
