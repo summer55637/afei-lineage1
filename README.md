@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.59**
+**PLAYABLE CORE V2.60**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,39 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.60 最新進度
+
+V2.60 接入巫師 **Skill 4「冰爆術」／`PROFESSION_ICE_CRACK`**，但這版最重要的不是把冰爆「做出來」，而是確認 fixed source 的 **live path 本身已失效**，因此保留原 C 的 NoAction，而不把來源中的 dormant code 擅自復活。
+
+fixed row：TARGET **ALL_OTHERSIDE**、KIND 1、option `冰|1|1|320|240|2700|3800|0|320|240`、img1 **101697**、img2 **101651**。dynamic MP：M-tier 1～2 / 3～4 / 5～6 / 7～8 / 9 / 10 = **30 / 40 / 50 / 60 / 70 / 80 MP**。
+
+### 真正 live 行為
+
+`BATTLE_DexCalc()` 仍會在 EntrySort 階段照冰爆專用公式消耗 RNG：
+
+`work = WORKQUICK + 20`
+`dex = work - RAND(0, work*0.5)`
+
+但輪到 command switch 時，`BATTLE_COM_S_ICE_CRACK` 在 `_PROFESSION_ADDSKILL` 下會：
+
+1. 把資料寫入 `pBattle->ice_use / ice_level / ice_bout / ice_toNo / ice_array / ice_charaindex / ice_attackNo`
+2. 固定 `ice_bout=2`
+3. 把施法者 `COM1` 改成 `BATTLE_COM_NONE`
+4. 執行 `BATTLE_NoAction()`
+5. 直接 break，**不呼叫 `battle_profession_attack_magic_fun()`**
+
+而整個負責 `--ice_bout`、倒數到 0 後真正呼叫 `battle_profession_attack_magic_fun()` 的 20-slot ice queue 執行器，在 pinned `battle.c` 中完整包在 `/* ... */`，不會編譯。
+
+所以 fixed build 的實際結果是：**MP 與技能本身的 command-receipt 熟練流程已消耗，排序 RNG 也已消耗，但戰鬥中只 NoAction，之後沒有冰爆傷害。**
+
+### Dormant code 不復活
+
+來源仍留有一條不可達的舊冰爆魔法鏈：Ice Practice、GET_PRACTICE、magic dodge、`RAND(0,100)<100` 掛層、10 個 `CHAR_WORKICECRACK*` 槽與 StatusSeq 延遲整側爆炸。進一步確認還有多個 bug，包括第 2～10 槽 helper 讀錯 Work、因此正常倒數歸零時不會爆；第 1 槽爆炸又會清掉整側角色的第 1 槽。
+
+這些程式在 fixed Skill 4 正常 live path **全部到不了**，所以 V2.60 只記錄來源事實，不把它們變成可玩效果。也因此施放冰爆不會進 `analysis_profession_parameter()`，不會額外提升 Ice Practice，也不會消耗 GET_PRACTICE／magic dodge／掛層 RNG。
+
+新增 `tools/check_v260_profession_ice_crack_runtime.mjs`，鎖住 metadata、dynamic MP、專用 Dex、dead queue NoAction，以及「不得誤接 dormant magic chain」。save schema 維持 **30**。
 
 ## V2.59 最新進度
 

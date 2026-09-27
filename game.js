@@ -1666,10 +1666,12 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
   const command=String(prepared?.commonCommand||'');
   if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'
     &&command!=='BATTLE_COM_S_SIGN'
-    &&command!=='BATTLE_COM_S_DOOM')return battleDexRoll(quick);
+    &&command!=='BATTLE_COM_S_DOOM'
+    &&command!=='BATTLE_COM_S_ICE_CRACK')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS')upper=work*.2;
+  else if(command==='BATTLE_COM_S_ICE_CRACK')upper=work*.5;
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2627,6 +2629,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
   return functionName==='PROFESSION_VOLCANO_SPRINGS'
     ||functionName==='PROFESSION_SIGN'
     ||functionName==='PROFESSION_DOOM'
+    ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -4367,6 +4370,43 @@ function sourceProfessionDoomExecute(prepared,name){
     noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
   };
 }
+
+function sourceProfessionIceCrackExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==4)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  // fixed battle.c checks same-side before entering the shared profession-magic block.
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {
+      handled:true,noAction:true,reason:'same-side-target',
+      skillId,functionName:prepared?.functionName||null,rawToNo
+    };
+  }
+
+  // _PROFESSION_ADDSKILL live path:
+  //   - writes pBattle->ice_use/count/level/bout/toNo/array/charaindex/attackNo
+  //   - forces COM1=NONE
+  //   - BATTLE_NoAction()
+  // The ONLY loop that decrements ice_bout and later calls
+  // battle_profession_attack_magic_fun() is fully inside /* ... */ in the pinned source.
+  // Therefore the queue write is gameplay-unobservable and MUST NOT be "repaired"
+  // into the dormant PROFESSION_MAGIC_ATTAIC / 10-slot ICECRACK code.
+  addLog('你施放「'+name+'」；fixed 原 C 只寫入已失效的冰爆暫存佇列，本回合不行動，後續執行器已被註解。');
+  return {
+    handled:true,noAction:true,reason:'source-ice-queue-executor-commented',
+    skillId,functionName:prepared.functionName,rawToNo,
+    sourceQueueWrite:{
+      use:true,bout:2,toNo:rawToNo,
+      rawSkillLevel:Math.trunc(n(prepared.displayLevel)),
+      sourceCapacity:20,sourceWrapAt20:true
+    },
+    sourceQueueExecutorCommentedOut:true,
+    sourceDormantMagicAttackUnreachable:true,
+    sourceDormantIceCrackSlotsUnreachable:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -5693,6 +5733,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionDoomExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_ICE_CRACK'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionIceCrackExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===68){
     const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);

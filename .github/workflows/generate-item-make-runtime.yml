@@ -95,6 +95,7 @@ on:
       - "tools/check_v257_profession_volcano_springs_runtime.mjs"
       - "tools/check_v258_profession_sign_runtime.mjs"
       - "tools/check_v259_profession_doom_runtime.mjs"
+      - "tools/check_v260_profession_ice_crack_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -394,6 +395,9 @@ jobs:
 
       - name: Run V2.59 DOOM regression
         run: node tools/check_v259_profession_doom_runtime.mjs
+
+      - name: Run V2.60 Ice Crack regression
+        run: node tools/check_v260_profession_ice_crack_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

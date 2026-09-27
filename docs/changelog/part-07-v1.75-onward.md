@@ -4944,4 +4944,19 @@ save schema 維持 **30**。
 - CI trigger 同步加入 `tools/check_v259_profession_doom_runtime.mjs`，避免 regression-only fix 不觸發 Actions。
 
 新增 `tools/check_v259_profession_doom_runtime.mjs`。save schema 維持 **30**。
+---
 
+## V2.60 Skill 4 ICE_CRACK
+
+- 接入巫師 Skill 4 `冰爆术 / PROFESSION_ICE_CRACK`，但依 pinned fixed source 保留為 dead-queue NoAction，而不是復活 dormant 冰爆傷害。
+- row：TARGET ALLOTHERSIDE、KIND 1、option `冰|1|1|320|240|2700|3800|0|320|240`、img1 101697、img2 101651。
+- dynamic MP：M-tier 1～2=30、3～4=40、5～6=50、7～8=60、9=70、10=80。
+- EntrySort 的專用 Dex 仍實際執行：`WORKQUICK+20 - RAND(0, work*0.5)`。
+- battle command switch 的 live `_PROFESSION_ADDSKILL` branch 只寫 `pBattle->ice_*`：use=TRUE、bout=2、toNo、raw level、skill array、charaindex、attackNo；接著 COM1=NONE、BATTLE_NoAction、break。
+- 唯一會遞減 `ice_bout` 並在 0 時呼叫 `battle_profession_attack_magic_fun()` 的 queue executor 整段被 `/* ... */` 註解，fixed build 不會執行。
+- 因此 live Skill 4 不會進 analysis / Ice Practice passive level-up / GET_PRACTICE / magic dodge / CHANG_STATUS / delayed damage。
+- Dormant CHANG_STATUS 仍可看到 `RAND(0,100)<100`、10 個 ICECRACK Work 槽與延遲整側爆炸，但正常 Skill 4 path 不可達。
+- Dormant 第 2～10 槽的 `WorkIceCrackPlay()` 又把已歸零的 countdown Work 當 damage value，故即使單獨看死碼也只有 primary slot 有真正爆炸路徑；V2.60 不「修正」這段不可達 source bug。
+- CI path/step 加入 `tools/check_v260_profession_ice_crack_runtime.mjs`，鎖住 no dormant resurrection。
+
+新增 `tools/check_v260_profession_ice_crack_runtime.mjs`。save schema 維持 **30**。
