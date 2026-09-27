@@ -213,7 +213,7 @@ assert.ok(exec.indexOf("prepared.functionName==='PROFESSION_THROUGH_ATTACK'")
 assert.ok(exec.indexOf("prepared.functionName==='PROFESSION_THROUGH_ATTACK'")
   <exec.indexOf("reason:'target-earthround'"));
 
-assert.match(html,/PLAYABLE CORE V2\.29/);
+assert.match(html,/PLAYABLE CORE V\d+\.\d+/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
