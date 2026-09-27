@@ -78,6 +78,7 @@ on:
       - "tools/check_v240_profession_hunter_control_runtime.mjs"
       - "tools/check_v241_profession_attack_weak_runtime.mjs"
       - "tools/check_v242_profession_instigate_runtime.mjs"
+      - "tools/check_v243_profession_trap_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -326,6 +327,9 @@ jobs:
 
       - name: Run V2.42 Instigate regression
         run: node tools/check_v242_profession_instigate_runtime.mjs
+
+      - name: Run V2.43 Trap regression
+        run: node tools/check_v243_profession_trap_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
