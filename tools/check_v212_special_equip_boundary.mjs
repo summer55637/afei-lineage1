@@ -70,6 +70,7 @@ const ctx={
   sourcePlayerEquipTemplateForExisting:()=>null
 };
 vm.createContext(ctx);
+vm.runInContext(extractFunction(game,'sourcePlayerEquipCallbackSupported'),ctx);
 vm.runInContext(extractFunction(game,'sourcePlayerEquipRequirements'),ctx);
 vm.runInContext(extractFunction(game,'sourcePlayerEquipPlace'),ctx);
 
