@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.17**
+**PLAYABLE CORE V2.18**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,35 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.18 最新進度
+
+V2.18 完成第六組、也是目前 fixed item table 剩餘的玩家裝備 callback：`ITEM_suitEquip / ITEM_ResuitEquip` 套裝系統。
+
+fixed `itemset6.txt` 共驗到 **236 件**這組 callback、**51 個 SUITCODE**。原 `ITEM_CheckSuitEquip()` 的核心規則已來源化：
+
+- 每次穿／脫裝都重新掃 9 個裝備格。
+- 同一 `ITEM_SUITCODE` 至少 **3 件**才啟用；依裝備格 0→8 掃描，**第一個達到 3 件的套裝碼勝出**，不是同時啟用多套。
+- 啟用後再依 0→8 掃一次同套裝碼成員，解析各件 `ITEM_ARGUMENT`。原函式是 `CHAR_setWorkInt`，所以同一 Work **後面的裝備格覆寫前面的值，不累加**。
+- `NPC_Util_GetStrFromStrWithDelim()` 是先以 `strstr()` 找到含 key 的 pipe token，再取第二個 `:` 欄位 `atoi`；Web 保留這個來源語意。
+- item-make runtime 的 byte-preserving `g` 現在除了 callback item，也會替所有 `SUITCODE > 0` 的 item 保存 argument，因為原第二次套裝掃描不要求每件成員本身有 callback。
+
+這份 fixed 資料真正出現的套裝 Work 只有 16 種：`FSTR / MSTR / MTGH / MDEX / HP / MP / RESIST / COUNTER / M_POW / WAST / WDUCKPOWER / RENOCASE / SUITDEXP / SUITPOISON / M2_POW / UN_POW_M`。目前已接入所有在現行 Web 核心中有完整原 C 消費鏈的部分：
+
+- 能力值：`FSTR / MSTR / MTGH / MDEX / SUITDEXP`，以及原函式已支援的 `VIT / SUITSTRP / SUITTGH_P`，按 `Other_DefcharWorkInt()` 的 int／float 截斷順序套用。
+- `HP / MP`：不是整輪結束才補，而是在玩家每次輪到 `BATTLE_StatusSeq()` 時依套裝 Work 回復，並照原 max/min 規則 clamp。fixed `_TYPE_TOXICATION` 會另外查 connection-level toxication；Web 尚無該 connection 系統，因此不把普通戰鬥中毒錯當成這個 gate。
+- `RESIST`：扣在一般 `BATTLE_StatusAttackCheck()`；原 paralysis 快速分支不吃這個套裝 RESIST。
+- `RENOCASE`：保留來源 bug。雖然註解是抗沉默，但 fixed code 實際只在 **WEAKEN／虛弱** 時再扣一次。
+- `COUNTER`：玩家反擊率在武器倍率＋Luck 後直接再加此 Work。
+- `WDUCKPOWER`：普通 `BATTLE_DuckCheck` 完成後再獨立抽一顆 `rand()%100`，嚴格 `roll < power` 才閃避；COMBO 明確跳過這第二段閃避。
+- `SUITPOISON`：普通玩家物理攻擊在沒有其他預選 `gBattleStausChange` 時才接管為 poison，固定 turn=3，Work 值作 StatusAttackCheck 的 PerOffset。BREAKTHROW 會先預選 paralysis，因此投石麻痺優先，**不額外抽套裝毒 RNG**；反擊走 `BATTLE_Counter()->BATTLE_AttackSeq()`，也不進套裝毒段。
+
+暫不錯接的 fixed Work：
+
+- `WAST`：原消費點是 water-world／connection 呼吸狀態，現行 Web 尚無這條連線環境系統。
+- `M_POW / M2_POW / UN_POW_M`：原消費點在 `PROFESSION_MAGIC_GET_DAMAGE()` 職業魔法鏈，現行 Web 尚未移植，因此只保留正確套裝 Work，不嫁接到別的魔法公式。
+
+新增／強化 `tools/check_v218_suit_equip_callback.mjs`，完整鎖住 236 件、51 個套裝碼、啟用／覆寫規則、能力 compliance、異常抗性、反擊、第二段閃避、StatusSeq HP/MP、套裝毒與 BREAKTHROW 優先序。save schema 維持 **29**。
 
 ## V2.17 最新進度
 
