@@ -3387,3 +3387,24 @@ V2.10 將 V2.09 RNG executor 與原 C `ITEM_mergeItem_merge()` 後半段正式�
 `CHAR_WORKLASTMERGETIME` 採頁面 session transient，不進 save；`CHAR_MERGEITEMCOUNT` 以 `mergeItemCount` 保存。save schema 維持 29。
 
 新增 `tools/check_v210_merge_live_lifecycle.mjs`，並把 V2.09 regression 的 live-pending assertion 改為只鎖 V2.09 executor 本身；live gate 由 V2.10 regression 接手。
+
+
+---
+
+## V2.11 Merge live executable fixtures
+
+V2.11 把 V2.10 的 live merge lifecycle 改成可實際執行的 regression fixture。
+
+測試不複製另一份 lifecycle 實作；它會從目前 `game.js` 以 brace-aware parser 抽出 production function，再用 Node `vm` 注入固定 existing-item／背包／RNG dependency。
+
+覆蓋：
+
+- full backpack preflight：0 後續 mutation
+- `ITEM_USEPILENUMS > 1` decrement without free
+- `ITEM_USEPILENUMS == 1` free + inventory decrement
+- normal success ordering and `ITEM_MERGEFLG=1`
+- cooldown hit updates transient timestamp and still consumes inputs
+- source `-10` mixed dish consumes inputs but creates no output
+- output backpack-add failure frees newly created output existing without rollback
+
+這批只增加防回歸保護，不改 fixed-C 數值與 RNG 規則。save schema 29。

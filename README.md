@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.10**
+**PLAYABLE CORE V2.11**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,22 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.11 最新進度
+
+V2.11 不再擴張合成規則，而是先把 V2.10 的 live lifecycle 鎖成**可執行 fixture regression**。測試會直接從 `game.js` 抽出目前 production 的 `sourceMergeLifecyclePreflight()`、`sourceConsumeTrackedExistingItem()`、`sourceMergeCooldownState()`、`sourceMergeExecuteLifecycle()`，放進 Node `vm` 執行，不只做字串搜尋。
+
+固定 fixture：
+
+- **滿背包 preflight**：15 個背包格全滿時，直接 `merge-backpack-full`，不進材料模板／RNG。
+- **pile > 1**：消耗 1 pile，只把 `ITEM_USEPILENUMS` 減 1，existing 與 aggregate inventory 都保留。
+- **pile == 1**：消耗後 free existing、清 CHAR 背包 slot，aggregate inventory 才減少。
+- **正常成功**：merge count +1 → 材料消耗 → 成品 existing → `ITEM_MERGEFLG=1` → 加入第一個空背包格。
+- **cooldown fallback**：確認 `5+(num-2)` 命中後 timestamp 先更新，core 收到 `cooldownHit=true`，仍走材料消耗與成品生命週期。
+- **mixed dish -10**：不產生成品，但 merge count 仍 +1、有效材料仍各扣 1 pile。
+- **成品加入失敗**：已建立的成品 existing 會依原 C free；材料與 merge count 不回滾。
+
+新增 `tools/check_v211_merge_live_fixtures.mjs`，並加入 GitHub Actions。save schema 維持 **29**。
 
 ## V2.10 最新進度
 
