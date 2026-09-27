@@ -104,6 +104,9 @@ let battlePlayerProfessionStatRound=null;
 let battleProfessionScapegoat=null;
 let battlePlayerRawGuardCommand=false;
 let battlePlayerFixedToughWork=null;
+let battlePlayerWeaponFocusWork=null;
+let battlePlayerMySkillStrPower=0;
+let battlePlayerFixedAttackWork=null;
 let battlePlayerAttackWork=null;
 
 const $=s=>document.querySelector(s);
@@ -2030,6 +2033,59 @@ function sourceProfessionWeaponFocusProficiency(target,weaponType,{randInclusive
     target,'PROFESSION_WEAPON_FOCUS',{optionNeedle:marker,randInclusive}
   );
 }
+function sourceProfessionPlayerWeaponType(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  const itemIndex=Math.trunc(Number(slots?.[PLAYER_ARM_SLOT]));
+  if(!Number.isFinite(itemIndex))return 0;
+  const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+  return template?Math.trunc(n(template.type)):0;
+}
+function sourceProfessionPlayerWeaponFocusRefresh(target=state,reason='battle-entry'){
+  // fixed BATTLE_ProfessionStatus_init resets WORK_WEAPON / WORKMOD_WEAPON first,
+  // then scans every profession slot with CONTINUE on empty/invalid rows.
+  battlePlayerWeaponFocusWork=null;
+  if(!target)return {active:false,reason:'state-missing'};
+  const professionClass=Math.trunc(n(target.professionClass));
+  const weaponType=sourceProfessionPlayerWeaponType(target);
+  if(professionClass<=PROFESSION_CLASS_NONE){
+    return {active:false,reason:'no-profession',weaponType};
+  }
+  if(![1,2,3,4,17,18,19].includes(weaponType)){
+    return {active:false,reason:'weapon-type',weaponType};
+  }
+  const marker=sourceProfessionWeaponFocusMarker(weaponType);
+  let matched=null;
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(!entry)continue;
+    const row=sourceProfessionSkillTemplate(entry.skillId);
+    if(!row||String(row.func||'')!=='PROFESSION_WEAPON_FOCUS')continue;
+    if(professionClass!==Math.trunc(n(row.professionClass)))continue;
+    if(!String(row.option||'').includes(marker))continue;
+    const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
+    const tier=sourceProfessionAttackSkillTier(displayLevel);
+    const oldStrPower=Math.trunc(n(battlePlayerMySkillStrPower));
+    let mod=tier<=5?tier*2+oldStrPower:(tier-5)*3+10+oldStrPower;
+    if(mod>25)mod=25;
+    // A later matching slot overwrites the Work values; do not sum matching skills.
+    matched={
+      active:true,reason:String(reason||'refresh'),
+      slot:i,skillId:entry.skillId,displayLevel,tier,
+      professionClass,weaponType,marker,option:String(row.option||''),
+      oldStrPower,mod
+    };
+  }
+  battlePlayerWeaponFocusWork=matched;
+  return matched||{active:false,reason:'no-matching-skill',professionClass,weaponType,marker};
+}
+function sourceProfessionPlayerWeaponFocusApply(attack,work=battlePlayerWeaponFocusWork){
+  const before=Math.trunc(n(attack));
+  if(!work?.active)return {active:false,before,after:before,mod:0,work:work||null};
+  const mod=Math.trunc(n(work.mod));
+  // fixed ITEM_equipEffect: FIXSTR = FIXSTR * (100 + WORKMOD_WEAPON) / 100.
+  const after=Math.trunc(before*(100+mod)/100);
+  return {active:true,before,after,mod,work};
+}
 function sourceProfessionDualWeaponProficiency(
   target,{armEquipped=false,shieldEquipped=false,randInclusive=cRand}={}
 ){
@@ -2427,10 +2483,9 @@ function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
   return r;
 }
 function sourceProfessionChainAtk2FixedStr(target=state){
-  // fixed battle_profession_attack_fun() reads CHAR_WORKFIXSTR, not the current
-  // WORKATTACKPOWER. playerEquipCompliance.fixedAttack is the Web mirror of FIXSTR.
-  const compliance=target?.playerEquipCompliance||null;
-  return Math.trunc(n(compliance?.fixedAttack??target?.attack));
+  // fixed battle_profession_attack_fun() reads CHAR_WORKFIXSTR, not current
+  // WORKATTACKPOWER. V2.36 includes MYSKILLSTR -> Weapon Focus -> WEAKEN order.
+  return sourceProfessionPlayerEffectiveFixedAttack(target);
 }
 function sourceProfessionChainAtk2AttackPower(fixedStr,attackSkillTier){
   const base=Math.trunc(n(fixedStr));
@@ -2615,6 +2670,9 @@ function sourceProfessionPlayerStatSet(stat,turns,power){
   }
 
   battlePlayerProfessionStatStates[key]=value;
+  // fixed CHAR_MYSKILLSTRPOWER survives when CHAR_MYSKILLSTR turns later reach zero.
+  // It is cleared only by BATTLE_BadStatusAllClr at battle entry.
+  if(key==='str')battlePlayerMySkillStrPower=value.power;
   return {ok:true,stat:key,turns:value.turns,power:value.power,overwroteMagicPet};
 }
 function sourceProfessionPlayerStatPreCommandCompliance(target=state){
@@ -2651,6 +2709,41 @@ function sourceProfessionPlayerStatRoundAdjusted(attack,defense,quick){
     mtgh:Math.trunc(n(round.mtgh)),
     effects:round.effects||{}
   };
+}
+function sourceProfessionPlayerFixedAttackCompliance(target=state){
+  if(!target){
+    battlePlayerFixedAttackWork=null;
+    return null;
+  }
+  const desc={kind:'player'};
+  const compliance=target.playerEquipCompliance||null;
+  const fixedToughBase=Math.trunc(n(compliance?.fixedTough??target.defense));
+  const magicPet=sourceMagicPetAdjusted(
+    desc,target.attack,target.defense,target.dex,fixedToughBase
+  );
+  const professionStats=sourceProfessionPlayerStatRoundAdjusted(
+    magicPet.attack,magicPet.defense,magicPet.quick
+  );
+  // fixed ITEM_equipEffect order: MYSKILLSTR first, then WORK_WEAPON multiplier.
+  const focus=sourceProfessionPlayerWeaponFocusApply(professionStats.attack);
+  battlePlayerFixedAttackWork=Math.trunc(n(focus.after));
+  return {
+    fixedAttack:battlePlayerFixedAttackWork,
+    preFocusAttack:Math.trunc(n(professionStats.attack)),
+    magicPet,professionStats,focus
+  };
+}
+function sourceProfessionPlayerEffectiveFixedAttack(target=state){
+  const desc={kind:'player'};
+  let value=battlePlayerFixedAttackWork;
+  if(value==null){
+    const fallback=sourceProfessionPlayerWeaponFocusApply(Math.trunc(n(target?.attack)));
+    value=fallback.after;
+  }
+  value=Math.trunc(n(value));
+  // fixed _MAGIC_WEAKEN runs after Weapon Focus inside Other_DefcharWorkInt.
+  if(target===state&&battleWeakenRoundActive(desc))value=Math.trunc(value*.8);
+  return value;
 }
 function sourceProfessionPlayerStatStatusSeq(target=state){
   const results=[];
@@ -3782,7 +3875,21 @@ function sourcePlayerMoveItem(fromindex,toindex,{target=state,isDie=null}={}){
     const tmp=slots[to];slots[to]=slots[from];slots[from]=tmp;
     moved={ok:true,kind:'item-to-item',fromindex:from,toindex:to};
   }
-  if(moved?.ok&&(fromEquip||toEquip))playerComplianceParameter(target);
+  if(moved?.ok&&(fromEquip||toEquip)){
+    // fixed CHAR_moveEquipItem performs compliance BEFORE battle.c calls
+    // BATTLE_ProfessionStatus_init for an equipped weapon. Preserve that order:
+    // current FIX/WORK attack sees the OLD Weapon Focus Work once, then the new
+    // weapon refresh only affects the next compliance.
+    playerComplianceParameter(target);
+    if(target===state&&enemy){
+      sourceProfessionPlayerStatPreCommandCompliance(target);
+      sourceProfessionPlayerFixedAttackCompliance(target);
+      battlePlayerAttackWork=null;
+      if(from===PLAYER_ARM_SLOT||to===PLAYER_ARM_SLOT){
+        moved.weaponFocusRefresh=sourceProfessionPlayerWeaponFocusRefresh(target,'weapon-change');
+      }
+    }
+  }
   return moved;
 }
 function sourceEnemyWeaponTemplate(itemId){
@@ -5865,6 +5972,9 @@ function syncEnemyTarget(){
 }
 function sourceInitPlayerSideEntrySnapshot(){
   if(!enemy)return [];
+  // fixed BATTLE_NewEntry: BATTLE_BadStatusAllClr has already cleared MYSKILLSTRPOWER,
+  // then BATTLE_ProfessionStatus_init snapshots Weapon Focus for the current arm.
+  sourceProfessionPlayerWeaponFocusRefresh(state,'battle-entry');
   const entries=[{kind:'player',level:Math.max(1,Math.trunc(n(state?.level)))}];
   const pet=activePet();
   // 原 Battle Entry 建立時只有實際出戰的寵會進 side entry；之後 HP=0 不會自動等於 BATTLE_Exit。
@@ -6526,7 +6636,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerWeaponFocusWork=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -6668,12 +6778,17 @@ function sourceMagicPetBusy(desc){
 function sourceMagicPetApply(desc,stat,turns,power){
   const key=battleStatusKey(desc);
   if(!key||sourceMagicPetBusy(desc))return false;
+  const normalizedStat=String(stat||'').toUpperCase();
+  const normalizedPower=Math.trunc(n(power));
   battleMagicPetStates.set(key,{
-    stat:String(stat||'').toUpperCase(),
+    stat:normalizedStat,
     turns:Math.max(0,Math.trunc(n(turns))),
-    power:Math.trunc(n(power)),
+    power:normalizedPower,
     appliedBattleTurn:Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)))
   });
+  // SetMagicPet writes the same CHAR_MYSKILLSTRPOWER field used by Weapon Focus init.
+  // Expiry clears only the turn counter; the power Work value remains stale in fixed C.
+  if(desc?.kind==='player'&&normalizedStat==='STR')battlePlayerMySkillStrPower=normalizedPower;
   return true;
 }
 function sourceMagicPetStatusSeq(desc){
@@ -7458,8 +7573,12 @@ function playerBattleView(){
   const professionStats=sourceProfessionPlayerStatRoundAdjusted(
     magicPet.attack,magicPet.defense,magicPet.quick
   );
-  // fixed Other_DefcharWorkInt applies MYSKILL STR/TGH/DEX before WEAKEN.
-  const compliantAttack=weaken?Math.trunc(n(professionStats.attack)*.8):n(professionStats.attack);
+  // fixed Other_DefcharWorkInt applies MYSKILL STR/TGH/DEX, then Weapon Focus,
+  // then WEAKEN. battlePlayerFixedAttackWork is the FIXSTR snapshot from compliance.
+  const fixedAttackBase=battlePlayerFixedAttackWork==null
+    ?sourceProfessionPlayerWeaponFocusApply(professionStats.attack).after
+    :Math.trunc(n(battlePlayerFixedAttackWork));
+  const compliantAttack=weaken?Math.trunc(fixedAttackBase*.8):fixedAttackBase;
   const attack=battlePlayerAttackWork==null?compliantAttack:Math.trunc(n(battlePlayerAttackWork));
   const defenseBase=weaken?Math.trunc(n(professionStats.defense)*.8):n(professionStats.defense);
   const quickBase=weaken?Math.trunc(n(professionStats.quick)*.8):n(professionStats.quick);
@@ -18482,6 +18601,9 @@ function normalBattleOrder(options={}){
   // SetMagicPet is read by Other_DefcharWorkInt() during this PreCommand phase.
   // Freeze which buffs affect this round before any later StatusSeq countdown can expire them.
   sourcePrepareMagicPetRoundStates();
+  // fixed Other_DefcharWorkInt: MYSKILLSTR is applied first, then Weapon Focus
+  // multiplies FIXSTR. Freeze that FIXSTR before StatusSeq can expire the source Work.
+  sourceProfessionPlayerFixedAttackCompliance(state);
   // 再依 REVERSE flag 套 BATTLE_AttReverse；EARTHROUND0 同樣保留舊 FIX 屬性快照。
   battlePrepareElementWork();
 

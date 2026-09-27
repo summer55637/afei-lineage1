@@ -71,6 +71,7 @@ on:
       - "tools/check_v233_profession_scapegoat_runtime.mjs"
       - "tools/check_v234_profession_deflect_arrange_runtime.mjs"
       - "tools/check_v235_profession_reback_runtime.mjs"
+      - "tools/check_v236_profession_weapon_focus_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -298,6 +299,9 @@ jobs:
 
       - name: Run V2.35 Reback StatusSeq regressions
         run: node tools/check_v235_profession_reback_runtime.mjs
+
+      - name: Run V2.36 Weapon Focus regressions
+        run: node tools/check_v236_profession_weapon_focus_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

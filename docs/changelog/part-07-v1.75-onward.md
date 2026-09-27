@@ -4012,3 +4012,23 @@ V2.35 closes Skill 33 `PROFESSION_REBACK`.
 - Fixed skill-slot scan uses `if(Pskillid <= 0) return`; V2.35 preserves the first empty/invalid slot as a hard terminator rather than skipping gaps.
 
 Added `tools/check_v235_profession_reback_runtime.mjs`; save schema remains **30**.
+
+
+---
+
+## V2.36 Weapon Focus fixed damage lifecycle
+
+V2.36 closes Skills 26..32 `PROFESSION_WEAPON_FOCUS` as a real passive FIXSTR modifier.
+
+- Fixed weapon marker map: AXE 1→斧, CLUB 2→棍, SPEAR 3→枪, BOW 4→弓, BOOMERANG 17→镖, BOUNDTHROW 18→投, BREAKTHROW 19→石.
+- `BATTLE_ProfessionStatus_init()` resets WORK_WEAPON / WORKMOD_WEAPON, scans profession slots with `continue` on empty/invalid rows, and snapshots only the skill matching the currently equipped weapon and profession class.
+- Tier uses `PROFESSION_CHANGE_SKILL_LEVEL_A()`.
+- Modifier is tier<=5 ? tier*2 + stale MYSKILLSTRPOWER : (tier-5)*3 + 10 + stale MYSKILLSTRPOWER, capped only above at 25.
+- `ITEM_equipEffect()` applies `FIXSTR = int(FIXSTR * (100 + WORKMOD_WEAPON) / 100)` after MYSKILLSTR and before WEAKEN.
+- Weapon Focus proficiency gains on critical do not mutate the current Work modifier; entering battle or changing weapon is required to rebuild it.
+- MYSKILLSTRPOWER is mirrored separately because fixed StatusSeq clears the STR turn counter but leaves the power Work value stale until the next BATTLE_BadStatusAllClr.
+- Battle entry clears that raw STR power first, so initial Weapon Focus snapshot always sees oldStrPower=0.
+- Mid-battle weapon change preserves source order: CHAR_moveEquipItem compliance runs with the OLD focus snapshot, then BATTLE_ProfessionStatus_init rebuilds the NEW snapshot for the next compliance.
+- Skill 24 CHAIN_ATK_2 FIXSTR now reads the same MYSKILLSTR → Weapon Focus → WEAKEN effective FIXSTR bridge instead of raw equipment-only fixedAttack.
+
+Added `tools/check_v236_profession_weapon_focus_runtime.mjs`; save schema remains **30**.

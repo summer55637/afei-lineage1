@@ -198,8 +198,8 @@ assert.ok(decrementAt>=0);
 assert.ok(process.indexOf("battleStatusClear(desc);",decrementAt)>decrementAt);
 assert.ok(process.indexOf("return finish({skip:blockedBefore,desc,status:st,expired:true",decrementAt)>decrementAt);
 
-assert.match(html,/PLAYABLE CORE V2\.35/);
-assert.match(html,/V2\.35 live：[^<]*狀態回復/);
+assert.match(html,/PLAYABLE CORE V2\.36/);
+assert.match(html,/V2\.36 live：[^<]*狀態回復/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

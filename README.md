@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.35**
+**PLAYABLE CORE V2.36**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,70 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.36 最新進度
+
+V2.36 接入 **Skill 26～32「武器專精」／`PROFESSION_WEAPON_FOCUS`** 的真正 fixed 傷害被動。V2.22～V2.23 已經有「物理暴擊時依武器種類增加對應專精熟練度」的 hook；這一版補上原 C 真正影響攻擊力的 `WORK_WEAPON / WORKMOD_WEAPON → FIXSTR` lifecycle。
+
+對應固定武器／option：
+
+- Skill 26 槍熟練度：ITEM_SPEAR=3 → `枪`
+- Skill 27 斧熟練度：ITEM_AXE=1 → `斧`
+- Skill 28 棍熟練度：ITEM_CLUB=2 → `棍`
+- Skill 29 弓熟練度：ITEM_BOW=4 → `弓`
+- Skill 30 精通回力鏢：ITEM_BOOMERANG=17 → `镖`
+- Skill 31 精通投擲石：ITEM_BREAKTHROW=19 → `石`
+- Skill 32 精通投擲斧：ITEM_BOUNDTHROW=18 → `投`
+
+### Weapon Focus Work 不是每回合重算
+
+fixed `BATTLE_ProfessionStatus_init()` 只在 Player 建立 Battle Entry 時，以及戰鬥中裝備武器後重新呼叫。
+
+它先把：
+
+`CHAR_WORK_WEAPON = 0`
+
+`CHAR_WORKMOD_WEAPON = 0`
+
+再掃完整職業技能欄；空欄／無效欄是 `continue`，與 V2.35 Reback 的 early-return bug 不同。
+
+只有目前武器類型與 Skill OPTION marker 相符、且 profession class 相符時才建立 Work snapshot。技能後續因暴擊升熟練度**不會立刻改變當前傷害倍率**；必須重新進戰或戰鬥中換武器觸發 Status_init 才重建。
+
+### 專精倍率
+
+技能 display level 先走 `PROFESSION_CHANGE_SKILL_LEVEL_A()` 得到 tier 0～10：
+
+- tier 0～5：`mod = tier×2 + old MYSKILLSTRPOWER`
+- tier 6～10：`mod = (tier-5)×3 + 10 + old MYSKILLSTRPOWER`
+- 只做上限 `mod <= 25`，來源沒有下限 clamp。
+
+真正 compliance 時：
+
+`FIXSTR = int(FIXSTR × (100 + WORKMOD_WEAPON) / 100)`
+
+所以專精不是加暴擊率，而是直接乘 FIXSTR。
+
+### 與激化／SetMagicPet 的來源交互
+
+fixed `Other_DefcharWorkInt()` 的順序是：
+
+`裝備/Suit → MYSKILLSTR → Weapon Focus → WEAKEN → WORKATTACKPOWER`
+
+因此 V2.36 新增 Player FIXSTR bridge，讓一般攻擊與明確讀 `CHAR_WORKFIXSTR` 的 Skill 24 雙重攻擊都使用同一條順序。
+
+另外，`CHAR_MYSKILLSTRPOWER` 在 STR 效果回合數歸零時**不會被清成 0**；只在 `BATTLE_BadStatusAllClr()` 進戰初始化時清掉。因此同一場戰鬥裡，即使激化／SetMagicPet STR 已過期，之後換武器重新建 Weapon Focus 仍可能讀到殘留 power。V2.36 用 battle-local raw Work mirror 保留這個來源怪行為。
+
+### 戰鬥中換武器的先後順序
+
+fixed `CHAR_moveEquipItem()` 是：
+
+1. 先換裝；
+2. 呼叫 `CHAR_complianceParameter()`；
+3. 回到 battle.c 後，若這次物品是武器才呼叫 `BATTLE_ProfessionStatus_init()`。
+
+所以換武器當下那次 compliance 仍使用**舊的 Weapon Focus Work**；Status_init 重建出的新專精倍率要到下一次 compliance 才真正進 FIXSTR。V2.36 保留此順序，不把新倍率ย้อนหลัง套到已完成的 compliance。
+
+新增 `tools/check_v236_profession_weapon_focus_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.35 最新進度
 
