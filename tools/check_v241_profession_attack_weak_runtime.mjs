@@ -103,6 +103,8 @@ const exec=extractFunction(game,'sourceProfessionBattleSkillExecute');
 assert.ok(exec.includes("prepared.functionName==='PROFESSION_ATTACK_WEAK'"));
 assert.ok(exec.includes('sourceProfessionAttackWeakExecute(target,prepared,name)'));
 
+assert.match(html,/PLAYABLE CORE V2\.41/);
+assert.match(html,/V2\.41 live：[^<]*弱點攻擊/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
