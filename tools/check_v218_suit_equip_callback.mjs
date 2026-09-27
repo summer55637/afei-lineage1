@@ -272,6 +272,13 @@ const physicalFn=extractFunction(game,'battleApplyPhysicalHit');
 assert.ok(physicalFn.includes('sourcePlayerSuitPoisonAfterPhysicalHit'));
 const friendlyFn=extractFunction(game,'applyFriendlyEnemyHit');
 assert.ok(friendlyFn.includes('sourcePlayerSuitPoisonAfterPhysicalHit'));
+assert.ok(friendlyFn.includes('options.suppressSuitPoison'));
+const throwFn=extractFunction(game,'sourcePerformPlayerThrowWeaponAttack');
+assert.ok(throwFn.includes('suppressSuitPoison:type===19'),
+  'BREAKTHROW preselects paralysis in gBattleStausChange and must suppress suit poison');
+const confusionRangedFn=extractFunction(game,'sourceApplyPlayerConfusionRangedHit');
+assert.ok(confusionRangedFn.includes('suppressSuitPoison:true'),
+  'confusion BREAKTHROW must preserve the same status precedence');
 
 // Fixed but currently deferred consumers stay represented instead of being guessed elsewhere.
 for(const [code,key,value,ids] of [
