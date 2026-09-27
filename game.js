@@ -9351,7 +9351,8 @@ function battleConfusionCounterEligible(desc,options,forcedAttackerKey){
   return false;
 }
 function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,options={}){
-  if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian)return;
+  if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded
+    ||primaryResult?.guardian||primaryResult?.sourceCounterBlockedByTrap)return;
   const forcedAttackerKey=battleStatusKey(attackerDesc);
   let counterer=targetDesc,target=attackerDesc;
   for(let depth=0;depth<5;depth++){
@@ -9657,7 +9658,8 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
-    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand)return;
+    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand
+    ||primaryResult?.sourceCounterBlockedByTrap)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -10827,7 +10829,7 @@ function sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options={},rules={}){
   const last=seq.hits[seq.hits.length-1];
   const r=last?.r;
   const targetDesc=last?.targetDesc;
-  if(!r||!targetDesc||r.playerGuardian)return null;
+  if(!r||!targetDesc||r.playerGuardian||r.sourceCounterBlockedByTrap)return null;
 
   // Some common-loop skills (notably STATUSCHANGE) apply their status inside BATTLE_Attack()
   // before the outer Counter loop. If that status makes the last target unable to move,
@@ -13004,10 +13006,11 @@ function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label,options={}){
   }else if(r?.playerGuardian&&chosen?.kind==='pet'){
     addLog('你發動舍己為友，代替 '+(chosen.pet?.name||'出戰寵物')+' 承受 '+unit.name+' 的'+label+'。','good');
   }
-  enemyApplySkillHit(unit,actual,r,label,options);
+  const applied=enemyApplySkillHit(unit,actual,r,label,options);
   if(options.finalizeItemCrush!==false){
     sourceBattleFinalizeItemCrushRng(r);
   }
+  if(applied?.triggered&&applied?.attackerDesc)return applied.attackerDesc;
   return actual;
 }
 
