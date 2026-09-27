@@ -7,8 +7,10 @@ Source of truth:
 
 The source file is legacy-encoded. The pinned build has _ITEMSET2_ITEM + _ITEM_INSLAY +
 _SIMPLIFY_ITEMSTRING enabled, so ITEM_ID_TOKEN_INDEX is 17. Parsing is byte-safe because the C loader is comma-delimited
-and every field needed here is ASCII numeric / TRUE-FALSE metadata. Human-readable strings are
-not copied into this runtime.
+and every numeric field needed here is ASCII numeric / TRUE-FALSE metadata. For equipment
+attach/detach callbacks only, ITEM_ARGUMENT is preserved with latin1 as a byte-preserving
+transport so callback code can reproduce fixed strstr()/atoi() semantics without loading the
+large field2 runtime. It is not localized display text.
 """
 from __future__ import annotations
 
@@ -136,6 +138,9 @@ def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int], d
             "i": tokens[6] if len(tokens) > 6 else "",
             "a": tokens[11] if len(tokens) > 11 else "",
             "d": tokens[12] if len(tokens) > 12 else "",
+            # token 4 is ITEM_ARGUMENT. Keep it byte-for-byte through latin1 only when
+            # an equipment callback exists; consumers must treat it as source bytes.
+            "g": tokens[3] if len(tokens) > 3 else "",
         }
         readpos = 1
         data = DEFAULT_DATA.copy()
@@ -247,9 +252,11 @@ def sparse_row(data: list[int], widths: list[int], callbacks: dict[str, str]) ->
         if value != 0:
             random_widths.extend((i, value))
     out: dict[str, object] = {"b": base_overrides, "w": random_widths}
-    callback_overrides = {k:v for k,v in callbacks.items() if v != ""}
+    callback_overrides = {k:v for k,v in callbacks.items() if k in {"i","a","d"} and v != ""}
     if callback_overrides:
         out["f"] = callback_overrides
+    if (callbacks.get("a") or callbacks.get("d")) and callbacks.get("g","") != "":
+        out["g"] = callbacks["g"]
     return out
 
 def main() -> None:
@@ -273,6 +280,10 @@ def main() -> None:
     init_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["i"] != "")
     attach_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["a"] != "")
     detach_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["d"] != "")
+    callback_argument_templates = sum(
+        1 for _, _, funcs in templates.values()
+        if (funcs["a"] != "" or funcs["d"] != "") and funcs.get("g","") != ""
+    )
 
     by_item_id = {
         str(item_id): sparse_row(*templates[item_id])
@@ -286,7 +297,7 @@ def main() -> None:
             "ref": SOURCE_REF,
             "path": SOURCE_PATH,
             "gitBlobSha": actual_blob_sha,
-            "legacyEncodingReadMode": "latin1-byte-preserving-ascii-fields",
+            "legacyEncodingReadMode": "latin1-byte-preserving; callback g is source bytes, not display text",
             "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c"],
         },
         "fixedBuild": {
@@ -314,7 +325,7 @@ def main() -> None:
         "parser": {
             "randomRangeRule": "base=min(a,b); randomwidth=ABS(b-a)",
             "nonRangeRandomWidth": 0,
-            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d",
+            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d; equipment callback ITEM_ARGUMENT uses optional byte-preserving g",
         },
         "makeItem": {
             "loop": "for i=0..ITEM_DATAINTNUM-1: RAND(0, randomdata[i]); data[i]=template[i]+roll",
@@ -340,6 +351,7 @@ def main() -> None:
             "initCallbackTemplates": init_callback_templates,
             "attachCallbackTemplates": attach_callback_templates,
             "detachCallbackTemplates": detach_callback_templates,
+            "callbackArgumentTemplates": callback_argument_templates,
             **parse_stats,
             **checks,
         },
