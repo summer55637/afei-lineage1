@@ -3587,4 +3587,6 @@ V2.19 開始接 fixed 職業魔法傷害數值核心；本版不先創造職業�
 
 新增 `sourceProfessionMagicLevelM()`、`sourceProfessionMagicTypeFromOption()`、`sourceProfessionMagicPracticePower()`、`sourceProfessionMagicPreDamagePower()`、`sourceProfessionMagicGetDamage()`、`sourcePlayerProfessionMagicDamageCore()` 與 `tools/check_v219_profession_magic_damage_core.mjs`。
 
-這批仍不把 profession core 混入既有 `BATTLE_MultiAttMagic`，也不聲稱玩家已可從 UI 施放職業技能。save schema 維持 29。
+這批仍不把 profession core 混入既有 `BATTLE_MultiAttMagic`，也不聲稱玩家已可從 UI 施放職業技能。
+
+同輪修正 `generate_item_field2_runtime.py` 的可重現性：`FIELD2_KEYS` 從無序 set 改成固定 tuple。舊寫法會讓相同 pinned source 只因 JSON row key 順序漂移就被 Actions 判成 generated runtime 有變；新寫法不改欄位內容，只固定輸出順序。save schema 維持 29。

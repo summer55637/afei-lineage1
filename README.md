@@ -32,7 +32,9 @@ V2.19 開始移植 fixed **職業魔法傷害數值核心**，先把 V2.17／V2.
 - 保留 fixed 的欄位錯位：magic type 2 實際讀 **雷熟練／雷抗 + 冰 base suit + 雷裝備抗**；type 3 實際讀 **冰熟練／冰抗 + 雷 base suit + 冰裝備抗**。這和上面的「冰→2、电→3」組合看起來不直觀，但不自行修正來源 bug。
 - V2.17 的 `CHAR_WORKEQUITFIRE / THUNDER / ICE` 與 V2.18 的 `M_POW / M2_POW / UN_POW_M` 現在都有正式 profession-magic consumer helper；仍**不混入 V2.16 的 `BATTLE_MultiAttMagic`**，避免把兩套不同魔法公式合併。
 
-新增 `tools/check_v219_profession_magic_damage_core.mjs`，鎖住 skill-level 分段、literal magic type、RNG 次序、CURRENT 的來源邊界、float→int 截斷、UN_POW_M、type 2／3 錯位與 DOOM 分段 int truncation。沒有新增永久狀態，save schema 維持 **29**。
+新增 `tools/check_v219_profession_magic_damage_core.mjs`，鎖住 skill-level 分段、literal magic type、RNG 次序、CURRENT 的來源邊界、float→int 截斷、UN_POW_M、type 2／3 錯位與 DOOM 分段 int truncation。
+
+另外修正既有 field2 generator 的非語意漂移：`FIELD2_KEYS` 原本是 Python set，導致相同 pinned source 在不同 Actions process 可能只因 JSON key 順序不同就產生 bot commit；現在改為固定 tuple 順序。這**不改任何 field2 規則或數值**，只讓 generated runtime 可重現。沒有新增永久狀態，save schema 維持 **29**。
 ## V2.18 最新進度
 
 V2.18 完成第六組、也是目前 fixed item table 剩餘的玩家裝備 callback：`ITEM_suitEquip / ITEM_ResuitEquip` 套裝系統。

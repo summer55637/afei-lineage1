@@ -96,8 +96,8 @@ for i in range(5):
     char(f"ingName{i}")
     integer(f"ITEM_INGVALUE{i}")
 
-FIELD2_KEYS={"secretName","effectString","argument","typeCode","inlayCode",
-             "ingName0","ingName1","ingName2","ingName3","ingName4"}
+FIELD2_KEYS=("secretName","effectString","argument","typeCode","inlayCode",
+             "ingName0","ingName1","ingName2","ingName3","ingName4")
 FUNC_NAMES=["init","preOver","postOver","watch","use","attach","detach","drop","pickup","relife"]
 
 def parse(raw:bytes):
