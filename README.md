@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.43**
+**PLAYABLE CORE V2.44**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,102 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.44 最新進度
+
+V2.44 接入獵人 **Skill 50「毒素武器」／`PROFESSION_TOXIN_WEAPON`**。fixed 實作並不是「先給武器上毒 Buff，之後普通攻擊才帶毒」，而是施放當下立即依目前武器完成一輪自訂物理攻擊，然後每一個正傷害 hit 各自做一次中毒檢定。
+
+fixed row：MP 5、TARGET 1、KIND 1、option `毒|前|成%20|敏%30|效%1|回%5`、command `BATTLE_COM_S_TOXIN_WEAPON`。
+
+### 等級與中毒檢定
+
+`battle_profession_status_chang_fun()` 一開始把 display level 經：
+
+`PROFESSION_CHANGE_SKILL_LEVEL_A()`
+
+轉為 A-tier 0～10。
+
+毒成功率：
+
+`Success = 20 + tier×2`
+
+因此為 20～40%。
+
+每一個真正算出正 damage 的 hit 都在：
+
+`AttackSeq -> DamageSub -> WakeUp -> death -> ItemCrush`
+
+之後，再呼叫一次 `PROFESSION_BATTLE_StatusAttackCheck()`。
+
+這個 status helper 仍保留 fixed 規則：
+
+- 先消耗 `RAND(1,100)`
+- 之後才檢查死亡／已有其他 StatusTbl
+- 成功條件是嚴格 `roll < Success`
+- 目標已有任一 status 時會失敗
+
+option `回%5` 最後寫入：
+
+`StatusTbl[POISON] = 5 + 1`
+
+所以 fixed stored turn = **6**。
+
+### 它不使用普通 AttackCount
+
+TOXIN_WEAPON 有自己的 custom attack loop，**完全不走普通 `BATTLE_GetAttackCount()`**。
+
+因此各武器規則是：
+
+- 一般近戰：只打 raw COM2 一次
+- BOUNDTHROW：只打一個 raw target
+- BREAKTHROW：只打一個 raw target；這條 custom branch 不走普通 BREAKTHROW 麻痺 tail
+- BOW：直接用 `BATTLE_TargetListSet()` 建完整 `aBowW` target list，逐格打到 sentinel，沒有 AttackNum 上限
+- BOOMERANG：直接取 raw COM2 所在 5 格 row，整排掃一次，傷害 ×0.3
+
+也就是毒素武器拿弓時，可能一次對多個目標各自造成物理傷害並各自獨立判毒；這不是普通弓的 1～N AttackCount 行為。
+
+### raw target 死亡的來源差異
+
+`battle_profession_status_chang_fun()` 在進 TOXIN case 前：
+
+- 會要求 raw COM2 對應到有效角色 index
+- 會拒絕 raw target 的 EarthRound
+- **不會因 raw target HP=0 就整招 return**
+
+所以若 raw target 在玩家真正出手前已死亡：
+
+- 近戰／投擲單目標：loop 看到死 target 後略過，實際 0 hit
+- BOW：仍可依那個 raw slot 建 `aBowW`，打到 target list 裡其他活著的單位
+- BOOMERANG：仍可依 raw slot 的 row 打到同排其他活著的單位
+
+V2.44 因此把 TOXIN dispatcher 放在 generic 「target dead -> NoAction」之前，避免錯誤截斷這個 fixed 行為。
+
+### EarthRound secondary target bug
+
+fixed TOXIN loop 對 target list 裡每個後續目標只做：
+
+- index valid
+- HP > 0
+
+**沒有再做 `BATTLE_TargetCheck()`**。
+
+所以 raw COM2 本身若是 EarthRound，整招會先 return；但弓／回力鏢 target list 的「次要目標」即使正處於 EarthRound，只要角色仍存在且 HP>0，原 C 仍會把它送進 AttackSeq。
+
+Web V2.44 為了保留這個來源 bug，secondary target lookup 使用 raw battle-slot lookup，而不是會排除 hidden/EarthRound 的一般 targetable helper。
+
+### Guardian／DamageReact／SUITPOISON
+
+這條 custom branch：
+
+- 會正常做 GuardianCheck，而且 Guardian 會真正成為本次 DamageSub 的 defender
+- 會正常保留 DamageReact
+- 每個正 damage hit 都保留 WakeUp / ItemCrush
+- **不會進普通 BATTLE_Attack 的 SUITPOISON**
+- 完成後也**不進普通 Counter loop**
+
+因此 Web 用 real Guardian + normal DamageReact，但明確 `suppressSuitPoison:true`。
+
+新增 `tools/check_v244_profession_toxin_weapon_runtime.mjs`，鎖住 Skill 50 runtime、20～40% poison、stored turn 6、custom weapon target list、no AttackCount、dead raw target、secondary EarthRound、×0.3 boomerang、DamageSub/ItemCrush 後才判毒與 V2.44 marker；**save schema 維持 30**。
 
 ## V2.43 最新進度
 
