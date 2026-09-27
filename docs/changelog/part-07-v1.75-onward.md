@@ -3639,3 +3639,19 @@ V2.21 將 fixed profession 資料接到玩家永久狀態，但不先虛構轉�
 - fixed `_NPC_ProfessionTrans` 已開啟；`_75_TEST` 關閉。
 
 新增 `tools/check_v221_profession_player_state.mjs`。永久欄位加入後 save schema 29 → **30**；舊 Web save 只補無職業的來源初值。
+
+---
+
+## V2.22 profession proficiency / level-check lifecycle
+
+V2.22 來源化 fixed `PROFESSION_NORMAL_SKILL_LEVLE_UP()` 與 `PROFESSION_LEVEL_CHECK_UP()`。
+
+- 第一顆 `RAND(0,10000)` 在 max raw 10000 檢查之前就消耗。
+- raw<10000 才再抽 `RAND(0,FIX_VALUE*100)`；fixed `_75_TEST` 關閉，成功條件是 strict `rand1 > raw + rand2`，成功只 raw +1。
+- 只有成功後新 raw 恰為 100 的倍數才做 Profession Level Check。
+- Level Check 對 skill 63/64/65 固定加 5000，其餘直接加 raw；門檻 = old profession level * 7000。
+- 每次 check 最多 profession level +1、skill point +1；fixed code 沒有真正的 Lv26 cap，也沒有 while catch-up。
+- `PROFESSION_SKILL_Use()` post-dispatch 的 `ret==-1 -> rand()%10` 與 Skill 57 non-Pet no-exp gate 已保留。
+- 特殊熟練度入口可依 function 名掃 26 格第一個 match；武器專精額外比對來源 option marker，二刀流保留雙裝備 gate。
+
+新增 `tools/check_v222_profession_proficiency_runtime.mjs`。本版沒有新增 save 欄位，schema 維持 **30**。

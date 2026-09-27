@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.21**
+**PLAYABLE CORE V2.22**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,25 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.22 最新進度
+
+V2.22 接上 fixed **職技熟練度成長 + Profession Level Check**。這一版先把所有 RNG 次序與永久狀態變更做成可執行 lifecycle helper；尚未虛構職技 UI，也不先假裝所有 53 個 battle command 都已經能在 Web 完整施放。
+
+- `PROFESSION_NORMAL_SKILL_LEVLE_UP()` 的 RNG 次序正式鎖定：**先抽 `RAND(0,10000)`，再檢查 raw 是否已達 10000**；已滿級時第一顆 RNG 仍然被消耗，但不抽第二顆。
+- 未滿級才抽第二顆 `RAND(0, FIX_VALUE*100)`。fixed `_75_TEST` 關閉，所以只有 `rand1 > rawLevel + rand2`（嚴格大於）才讓 raw 熟練度 **+1**。
+- fixed `FIX_VALUE` 目前只有 0／10／20／30，因此第二顆 RNG 範圍分別是 0、0～1000、0～2000、0～3000。
+- raw +1 後只有在 **新 raw % 100 == 0** 時才呼叫 `PROFESSION_LEVEL_CHECK_UP()`；普通 +1 不會每次都檢查職業等級。
+- 職業升級門檻固定為 `oldProfessionLevel * 70 * 100`，把 26 格已學技能 raw 熟練度相加。Skill 63／64／65 即使 raw 不同，來源固定各算 **5000**。
+- fixed `PROFESSION_LEVEL_CHECK_UP()` 每次最多只升 **1 級**並增加 **1 點技能點**，即使總熟練度遠高於多個門檻也不會 while 連升。
+- 雖然 header 註解寫 `PROFESSION_MAX_LEVEL 26`，但 fixed level-check 執行碼**沒有 26 級 cap 判斷**；Web 不自行修正，因此來源條件足夠時 26 → 27 仍合法。
+- `PROFESSION_SKILL_Use()` 的 post-dispatch 經驗順序也已鏡像：若 function 回 `-1`，先吃 `rand()%10`，只有 >5 才直接不給熟練度；其餘情況仍繼續。
+- Skill 57「激怒寵物」保留來源特殊 gate：選到的目標不是 Pet 時，不給這次熟練度；這個檢查位於上面的 `ret==-1` RNG 之後。
+- 被動／事件型職技已提供來源化 lookup：依 **26 格 slot 順序找第一個 function name 相符技能**；武器專精再依目前武器映射「斧／棍／枪／弓／镖／投／石」，二刀流只有 arm + shield 兩格都存在才進熟練度 roll。
+
+新增 `tools/check_v222_profession_proficiency_runtime.mjs`，鎖住滿級仍吃第一 RNG、第二 RNG 邊界、strict `>`、raw +1、百點邊界、職業熟練度總和、63～65 固定 5000、單次升級、26→27 無硬 cap、post-dispatch `rand()%10`、Skill 57 Pet gate、武器專精與二刀流條件。
+
+這版只修改 V2.21 已存在的永久欄位，**save schema 維持 30**。
 
 ## V2.21 最新進度
 

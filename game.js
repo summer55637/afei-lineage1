@@ -1875,6 +1875,163 @@ function sourceProfessionSkillLearn(options={}){
   target.professionSkillPoint=plan.skillPointAfter;
   return Object.assign({},plan,{slot:added.slot,rawLevel:added.rawLevel});
 }
+
+function sourceProfessionLevelCheckPlan(target=state){
+  const oldLevel=Math.trunc(n(target?.professionLevel));
+  const oldSkillPoint=Math.trunc(n(target?.professionSkillPoint));
+  let skillLevelSum=0;
+  const contributions=[];
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(!entry||entry.skillId<=0)continue;
+    const common=[63,64,65].includes(entry.skillId);
+    const add=common?50*100:Math.trunc(n(entry.rawLevel));
+    skillLevelSum+=add;
+    contributions.push({slot:i,skillId:entry.skillId,rawLevel:entry.rawLevel,add,commonFixed50:common});
+  }
+  // fixed PROFESSION_LEVEL_CHECK_UP has no PROFESSION_MAX_LEVEL guard and advances only once.
+  const nextLevelNeedPoint=oldLevel*70*100;
+  const levelUp=skillLevelSum>=nextLevelNeedPoint;
+  return {
+    oldLevel,skillLevelSum,nextLevelNeedPoint,levelUp,contributions,
+    levelAfter:levelUp?oldLevel+1:oldLevel,
+    skillPointBefore:oldSkillPoint,
+    skillPointAfter:levelUp?oldSkillPoint+1:oldSkillPoint
+  };
+}
+function sourceProfessionLevelCheckApply(target=state){
+  const plan=sourceProfessionLevelCheckPlan(target);
+  if(plan.levelUp){
+    target.professionLevel=plan.levelAfter;
+    target.professionSkillPoint=plan.skillPointAfter;
+  }
+  return plan;
+}
+function sourceProfessionSkillProficiencyRollPlan({
+  skillId,rawSkillLevel,randInclusive=cRand
+}={}){
+  const row=sourceProfessionSkillTemplate(skillId);
+  if(!row)return {ok:false,reason:'skill-not-found',skillId:Math.trunc(n(skillId))};
+  const rawBefore=Math.trunc(n(rawSkillLevel));
+  // fixed PROFESSION_NORMAL_SKILL_LEVLE_UP draws RAND(0,10000) before the max-level check.
+  const randNum=Math.trunc(n(randInclusive(0,10000)));
+  if(rawBefore>=PROFESSION_SKILL_LEVEL_MAX*100){
+    return {
+      ok:true,skillId:Math.trunc(n(row.skillId)),rawBefore,rawAfter:rawBefore,
+      randNum,randNum2:null,upFixValue:Math.trunc(n(row.fixValue))*100,
+      success:false,maxed:true,centuryBoundary:false,addPoint:0
+    };
+  }
+  const upFixValue=Math.trunc(n(row.fixValue))*100;
+  const randNum2=Math.trunc(n(randInclusive(0,upFixValue)));
+  const success=randNum>rawBefore+randNum2;
+  const rawAfter=success?rawBefore+1:rawBefore;
+  return {
+    ok:true,skillId:Math.trunc(n(row.skillId)),rawBefore,rawAfter,
+    randNum,randNum2,upFixValue,success,maxed:false,
+    centuryBoundary:success&&(rawAfter%100===0),
+    addPoint:success?1:0
+  };
+}
+function sourceProfessionSkillProficiencyApply(target,slot,{randInclusive=cRand}={}){
+  const entry=sourcePlayerProfessionSkillAt(slot,target);
+  if(!entry)return {ok:false,reason:'skill-slot-empty',slot:Math.trunc(n(slot))};
+  const roll=sourceProfessionSkillProficiencyRollPlan({
+    skillId:entry.skillId,rawSkillLevel:entry.rawLevel,randInclusive
+  });
+  if(!roll.ok)return Object.assign({slot:entry.slot},roll);
+  let levelCheck=null;
+  if(roll.success){
+    target.professionSkills[entry.slot].rawLevel=roll.rawAfter;
+    if(roll.centuryBoundary)levelCheck=sourceProfessionLevelCheckApply(target);
+  }
+  return Object.assign({slot:entry.slot,displayLevelAfter:Math.trunc(roll.rawAfter/100),levelCheck},roll);
+}
+function sourceProfessionSkillPostDispatchProficiency({
+  target=state,slot,dispatchRet=1,targetIsPet=false,
+  randModulo=sourceRandModulo,randInclusive=cRand
+}={}){
+  const entry=sourcePlayerProfessionSkillAt(slot,target);
+  if(!entry)return {ok:false,reason:'skill-slot-empty',slot:Math.trunc(n(slot))};
+  let dispatchFailureRoll=null;
+  if(Math.trunc(n(dispatchRet))===-1){
+    const rawRoll=Math.trunc(n(randModulo(10)));
+    dispatchFailureRoll=((rawRoll%10)+10)%10;
+    // fixed source: ret==-1 only exits early when rand()%10 > 5.
+    if(dispatchFailureRoll>5){
+      return {
+        ok:true,skillId:entry.skillId,slot:entry.slot,dispatchRet:-1,
+        dispatchFailureRoll,proficiencySkipped:true,reason:'dispatch-ret-random'
+      };
+    }
+  }
+  // fixed _PROSKILL_OPTIMUM keeps Pskillid equal to Skill ID here; Skill 57 only gains
+  // proficiency when its selected target resolves to CHAR_TYPEPET.
+  if(entry.skillId===57&&targetIsPet!==true){
+    return {
+      ok:true,skillId:entry.skillId,slot:entry.slot,dispatchRet:Math.trunc(n(dispatchRet)),
+      dispatchFailureRoll,proficiencySkipped:true,reason:'enrage-target-not-pet'
+    };
+  }
+  const proficiency=sourceProfessionSkillProficiencyApply(target,entry.slot,{randInclusive});
+  return Object.assign({
+    ok:proficiency.ok,skillId:entry.skillId,slot:entry.slot,
+    dispatchRet:Math.trunc(n(dispatchRet)),dispatchFailureRoll,
+    proficiencySkipped:false
+  },{proficiency});
+}
+function sourceProfessionFindSkillByFunction(funcName,target=state,optionNeedle=null){
+  const wanted=String(funcName||'');
+  const needle=optionNeedle==null?null:String(optionNeedle);
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(!entry)continue;
+    const row=sourceProfessionSkillTemplate(entry.skillId);
+    if(!row||String(row.func||'')!==wanted)continue;
+    if(needle!=null&&!String(row.option||'').includes(needle))continue;
+    return {slot:i,entry,row};
+  }
+  return null;
+}
+function sourceProfessionSpecialSkillProficiencyByFunction(
+  target,funcName,{optionNeedle=null,randInclusive=cRand}={}
+){
+  const found=sourceProfessionFindSkillByFunction(funcName,target,optionNeedle);
+  if(!found)return {ok:false,reason:'skill-not-learned',functionName:String(funcName||''),optionNeedle};
+  const proficiency=sourceProfessionSkillProficiencyApply(target,found.slot,{randInclusive});
+  return Object.assign({
+    functionName:String(funcName||''),optionNeedle,skillId:found.entry.skillId,slot:found.slot
+  },proficiency);
+}
+function sourceProfessionWeaponFocusMarker(weaponType){
+  switch(Math.trunc(n(weaponType))){
+    case 1:return '斧';
+    case 2:return '棍';
+    case 3:return '枪';
+    case 4:return '弓';
+    case 17:return '镖';
+    case 18:return '投';
+    case 19:return '石';
+    default:return '无';
+  }
+}
+function sourceProfessionWeaponFocusProficiency(target,weaponType,{randInclusive=cRand}={}){
+  const marker=sourceProfessionWeaponFocusMarker(weaponType);
+  return sourceProfessionSpecialSkillProficiencyByFunction(
+    target,'PROFESSION_WEAPON_FOCUS',{optionNeedle:marker,randInclusive}
+  );
+}
+function sourceProfessionDualWeaponProficiency(
+  target,{armEquipped=false,shieldEquipped=false,randInclusive=cRand}={}
+){
+  if(armEquipped!==true||shieldEquipped!==true){
+    return {ok:true,proficiencySkipped:true,reason:'dual-weapon-equipment'};
+  }
+  return sourceProfessionSpecialSkillProficiencyByFunction(
+    target,'PROFESSION_DUAL_WEAPON',{randInclusive}
+  );
+}
+
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
   for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
