@@ -4230,3 +4230,134 @@ BOW 是固定例外：`BATTLE_TargetListSet()` 收到 invalid COM2 時只留下 
 - save schema 30
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.43 Skill 47 Trap
+
+V2.43 接入獵人 Skill 47「陷阱」／`PROFESSION_TRAP` 的 fixed assist → ProfessionStatusSeq → DamageReact → DamageSub 完整鏈。
+
+### Runtime row
+
+- Skill ID 47
+- MP 11
+- TARGET 5
+- KIND 2
+- option `效%1|回%5`
+- command `BATTLE_COM_S_TRAP`
+
+### M-tier / assist
+
+`battle_profession_assist_fun()` 對 TRAP 先執行：
+
+`PROFESSION_CHANGE_SKILL_LEVEL_M(skill_level)`
+
+分段為：
+
+- >90 → 10
+- >80 → 9
+- >70 → 8
+- >60 → 7
+- >50 → 6
+- >40 → 5
+- >30 → 4
+- >20 → 3
+- >10 → 2
+- 其他 → 1
+
+之後：
+
+`WORKMODTRAP = tier * 30 + 100`
+
+`WORKTRAP = tier>=10 ? 3 : tier>=5 ? 2 : 1`
+
+因此 fixed Trap damage 為 130～400。
+
+### ProfessionStatusSeq
+
+TRAP 不在一般 StatusTbl。
+
+`BATTLE_ProfessionStatusSeq()` 每次 Player 自己進該階段時：
+
+- count > 0：count--
+- count == 0：才清 WORKTRAP / WORKMODTRAP
+
+這代表 1→0 的 pass 之後 DamageReact 已經看不到 active Trap，但 MODTRAP 仍多留一個 ProfessionStatusSeq pass。V2.43 保留此來源生命週期。
+
+### DamageReact priority
+
+fixed `BATTLE_GetDamageReact()`：
+
+`VANISH -> ABSROB -> REFLEC -> TRAP -> ACUPUNCTURE`
+
+Player Trap 進入 `BATTLE_DamageSub()` 後，只有正 damage 才可能觸發。
+
+投射武器由 `BATTLE_IsThrowWepon()` 阻擋：
+
+- BOW
+- BOOMERANG
+- BOUNDTHROW
+- BREAKTHROW
+
+這些攻擊將 pRefrect 改回 NONE，Trap 不消耗。
+
+### Trigger behavior
+
+非投射正傷害踩到 Trap：
+
+1. 原 calculated damage 被覆寫成 WORKMODTRAP。
+2. Player 不扣該次 damage。
+3. attackindex 扣固定 Trap damage。
+4. WORKTRAP / WORKMODTRAP 立刻清 0。
+5. local defindex 改成 attackindex。
+6. 後續 WakeUp / status target / ItemCrush / death / Ultimate 依 redirected attacker 處理。
+7. BATTLE_Attack 在 DamageReact precheck 已把 iRet 設 FALSE，因此 outer Counter 不再開始。
+
+V2.43 以 `sourceCounterBlockedByTrap` 明確保存這個 ContFlg 邊界。
+
+### Guardian
+
+原 BATTLE_Attack 在 AttackSeq 前雖先看到原 Player 的 DamageReact，但若後續 Guardian 真正代擋，DamageSub 收到的是 Guardian defindex；Player Trap 不會被 Guardian 代擋那一下消耗。
+
+Web 同樣只在 actual target 仍是 Player 時啟動 Trap。
+
+### Current Web physical coverage
+
+接入：
+
+- ordinary Enemy physical
+- common multi-hit / weapon sequence
+- physical PetSkill helper
+- Counter
+- Confusion
+- Combo per-segment immediate DamageReact
+- Guardian actual-target routing
+- status-after-hit redirect
+
+STATUSCHANGE 特別需要 redirect：Trap 觸發後 status helper 必須收到 attacker desc，對齊 fixed BATTLE_Attack 的 defindex=attackindex。
+
+### Regression
+
+新增：
+
+`tools/check_v243_profession_trap_runtime.mjs`
+
+覆蓋：
+
+- runtime metadata
+- M-tier thresholds
+- value 130 / 250 / 400 fixtures
+- WORKTRAP 1 / 2 / 3
+- 1→0 MOD retention
+- later MOD clear
+- throw block / no consume
+- MISS / DODGE / zero preserve Trap
+- fixed damage redirect
+- attacker wake / Player no damage
+- Counter block
+- common skill / weapon / confusion / combo hooks
+- V2.43 UI marker
+- save schema 30
+
+save schema 維持 **30**。
