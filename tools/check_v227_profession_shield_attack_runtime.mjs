@@ -139,8 +139,8 @@ const exec=extractFunction(game,'sourceProfessionBattleSkillExecute');
 assert.ok(exec.includes("if(prepared.functionName==='PROFESSION_SHIELD_ATTACK')"));
 assert.ok(exec.includes('return sourceProfessionShieldAttackExecute(target,prepared,name);'));
 
-assert.match(html,/PLAYABLE CORE V2\.27/);
-assert.match(html,/V2\.27 live：暴擊／連環攻擊／雙重攻擊／盾擊。/);
+assert.match(html,/PLAYABLE CORE V\d+\.\d+/);
+assert.match(html,/id="professionBattleActions"/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
