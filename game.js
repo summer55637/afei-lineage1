@@ -5026,6 +5026,35 @@ function sourceEnemyFoxCommandGate(unit,actor){
   addLog(unit.name+' 仍是小狐狸，只能攻擊、防禦或待機；本回合特殊指令取消。');
   return {active:true,blocked:true};
 }
+function sourcePlayerSuitStatusSeq(target=state){
+  if(!target)return null;
+  const suit=sourcePlayerSuitWork(target);
+  if(Math.trunc(n(suit.activeCode))<=0)return null;
+  const addHp=Math.trunc(n(suit.HP)),addMp=Math.trunc(n(suit.MP));
+  if(addHp===0&&addMp===0)return {activeCode:suit.activeCode,addHp,addMp,hpActual:0,mpActual:0};
+
+  const hpBefore=Math.trunc(n(target.hp)),mpBefore=Math.trunc(n(target.mp));
+  let hpAfter=hpBefore,mpAfter=mpBefore;
+
+  // fixed _TYPE_TOXICATION gates HP recovery through connection toxication state.
+  // That connection-side system is not present in the web core; every currently representable
+  // state corresponds to the non-toxicated branch, so do not substitute battle poison for it.
+  if(addHp!==0){
+    hpAfter=Math.min(Math.trunc(n(target.maxHp)),hpBefore+addHp);
+    if(hpAfter<=1)hpAfter=1;
+    target.hp=hpAfter;
+  }
+  if(addMp!==0){
+    mpAfter=Math.min(Math.trunc(n(target.maxMp)),mpBefore+addMp);
+    if(mpAfter<0)mpAfter=0;
+    target.mp=mpAfter;
+  }
+  return {
+    activeCode:suit.activeCode,addHp,addMp,
+    hpBefore,hpAfter:Math.trunc(n(target.hp)),hpActual:Math.trunc(n(target.hp))-hpBefore,
+    mpBefore,mpAfter:Math.trunc(n(target.mp)),mpActual:Math.trunc(n(target.mp))-mpBefore
+  };
+}
 function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
@@ -5059,13 +5088,14 @@ function processBattleStatusTurn(actor){
   const blockedBefore=battleStatusCanMove(desc)===false;
   const attackShootSleep=sourceProcessAttackShootSleepTurn(desc);
   const finish=result=>{
-    // fixed battle.c: BATTLE_StatusSeq -> BATTLE_MagicStatusSeq -> BATTLE_CanMoveCheck.
-    // Def-magic is an independent WORK status, so it ticks even when a normal bad status
-    // is also active and never participates in battleHasAnyStatus().
+    // fixed BATTLE_StatusSeq handles suit round HP/MP after the ordinary status loop.
+    const suitRound=desc.kind==='player'?sourcePlayerSuitStatusSeq(state):null;
+    // fixed battle.c then continues with other independent WORK-status lifecycles.
     const defMagic=sourceDefMagicStatusSeq(desc);
     const sars=sourceProcessSarsStatusTurn(desc);
     const extra={};
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
+    if(suitRound&&(suitRound.addHp!==0||suitRound.addMp!==0))extra.suitRound=suitRound;
     if(defMagic)extra.defMagic=defMagic;
     if(sars)extra.sars=sars;
     return Object.keys(extra).length?Object.assign({},result,extra):result;
@@ -6315,6 +6345,22 @@ function sourceLogAcupunctureReaction(reaction){
     reaction.attackerAfter<=0?'bad':''
   );
 }
+function sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r){
+  if(attackerDesc?.kind!=='player'||!targetDesc||!r||n(r.damage)<=0)return null;
+  const suit=sourcePlayerSuitWork(state);
+  const power=Math.trunc(n(suit.SUITPOISON));
+  if(power<=0)return null;
+
+  // fixed _SUIT_ADDPART4: only when no other gBattleStausChange was already selected,
+  // SUITPOISON chooses poison, turn=3, and passes its Work value as PerOffset.
+  const check=battleStatusChance(
+    attackerDesc,targetDesc,'poison',
+    {perOffset:power,range:40,bai:2,forceGeneral:true}
+  );
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(targetDesc,'poison',3));
+  if(applied)addLog(battleStatusDescName(targetDesc)+' 受到套裝帶毒效果，陷入中毒。','bad');
+  return {power,check,applied,storedTurns:applied?4:0};
+}
 function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false}={}){
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
@@ -6343,6 +6389,8 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   sourceFinishAcupunctureReaction(acupuncture);
   // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
+  const suitPoison=!counter?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
+  if(suitPoison)r.suitPoison=suitPoison;
   if(!deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(!deferAddProfit)sourceProcessBattleDeathsAtAddProfit();
   const after=battleStatusHp(targetDesc);
@@ -6622,6 +6670,8 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
   battleStatusWakeOnDamage(targetDesc,r.damage);
+  const suitPoison=sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
+  if(suitPoison)r.suitPoison=suitPoison;
   if(!options.deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(r.guardian){
     addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
