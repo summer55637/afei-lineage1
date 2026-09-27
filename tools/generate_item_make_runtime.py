@@ -25,6 +25,9 @@ SOURCE_REF = "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
 SOURCE_PATH = "gmsv/data/itemset6.txt"
 SOURCE_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{SOURCE_PATH}"
 EXPECTED_SOURCE_BLOB_SHA = "eac985796b59286c547db2abce7b3d604a5e6226"
+ITEM_EVENT_PATH = "gmsv/src/item/item_event.c"
+ITEM_EVENT_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{ITEM_EVENT_PATH}"
+EXPECTED_ITEM_EVENT_BLOB_SHA = "00e05ebe58ef3988f7e0121f2a3aa5ede78344b5"
 EXPECTED_TEMPLATE_COUNT = 10737
 OUTPUT = Path("data/generated/stoneage_item_make_runtime.json")
 
@@ -195,6 +198,61 @@ def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int], d
         "duplicateIdsIgnored": duplicate_ids,
     }
 
+EQUIP_RESIST_KEY_BY_WORK = {
+    "CHAR_WORKEQUITFIRE": "fire",
+    "CHAR_WORKEQUITTHUNDER": "thunder",
+    "CHAR_WORKEQUITICE": "ice",
+    "CHAR_WORKEQUITWEAKEN": "weaken",
+    "CHAR_WORKEQUITBARRIER": "barrier",
+    "CHAR_WORKEQUITNOCAST": "nocast",
+    "CHAR_WORKEQUITFALLRIDE": "fallride",
+}
+
+def extract_equip_resist_source(raw: bytes) -> dict[str, object]:
+    attach_start = raw.find(b"void ITEM_MagicResist")
+    detach_start = raw.find(b"void ITEM_MagicReResist", attach_start + 1)
+    assert attach_start >= 0 and detach_start > attach_start
+    attach = raw[attach_start:detach_start]
+    next_void = raw.find(b"\nvoid ", detach_start + 1)
+    detach = raw[detach_start:next_void if next_void > detach_start else len(raw)]
+
+    pairs = re.findall(
+        rb'strstr\s*\(\s*itemarg\s*,\s*"([^"]+)"\s*\).*?'
+        rb'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*'
+        rb'atoi\s*\(\s*p\s*\+\s*(\d+)\s*\)',
+        attach,
+        flags=re.S,
+    )
+    assert len(pairs) == 7, pairs
+    markers = []
+    seen = set()
+    for marker, work_raw, offset_raw in pairs:
+        work = work_raw.decode("ascii")
+        assert work in EQUIP_RESIST_KEY_BY_WORK, work
+        key = EQUIP_RESIST_KEY_BY_WORK[work]
+        assert key not in seen
+        seen.add(key)
+        offset = int(offset_raw)
+        # fixed C explicitly uses p+4 for every branch; preserve the bytes rather than
+        # decoding/re-encoding the legacy marker.
+        assert offset == 4, (key, offset)
+        markers.append({"key": key, "marker": marker.decode("latin1"), "atoiOffset": offset})
+
+    detach_targets = re.findall(
+        rb'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*0\s*\)',
+        detach,
+    )
+    assert len(detach_targets) == 7, detach_targets
+    decoded_targets = [x.decode("ascii") for x in detach_targets]
+    assert set(decoded_targets) == {"CHAR_WORKEQUITFIRE"}, decoded_targets
+
+    return {
+        "markers": markers,
+        "attachSemantics": "first matching strstr branch sets exactly one CHAR_WORKEQUIT* to atoi(p+4)",
+        "detachSemantics": "all seven ITEM_MagicReResist branches clear CHAR_WORKEQUITFIRE only (fixed source bug)",
+        "detachClearsKey": "fire",
+    }
+
 def pair(data: list[int], widths: list[int], field: str) -> list[int]:
     i = IDX[field]
     return [data[i], data[i] + widths[i]]
@@ -262,11 +320,18 @@ def sparse_row(data: list[int], widths: list[int], callbacks: dict[str, str]) ->
 def main() -> None:
     with urllib.request.urlopen(SOURCE_URL, timeout=60) as response:
         raw = response.read()
+    with urllib.request.urlopen(ITEM_EVENT_URL, timeout=60) as response:
+        item_event_raw = response.read()
 
     actual_blob_sha = git_blob_sha(raw)
     assert actual_blob_sha == EXPECTED_SOURCE_BLOB_SHA, (
         f"fixed itemset6 blob changed: {actual_blob_sha} != {EXPECTED_SOURCE_BLOB_SHA}"
     )
+    item_event_blob_sha = git_blob_sha(item_event_raw)
+    assert item_event_blob_sha == EXPECTED_ITEM_EVENT_BLOB_SHA, (
+        f"fixed item_event.c blob changed: {item_event_blob_sha} != {EXPECTED_ITEM_EVENT_BLOB_SHA}"
+    )
+    equip_resist_source = extract_equip_resist_source(item_event_raw)
 
     templates, parse_stats = parse_templates(raw)
     assert len(templates) == EXPECTED_TEMPLATE_COUNT, (
@@ -298,8 +363,10 @@ def main() -> None:
             "path": SOURCE_PATH,
             "gitBlobSha": actual_blob_sha,
             "legacyEncodingReadMode": "latin1-byte-preserving; callback g is source bytes, not display text",
-            "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c"],
+            "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c",ITEM_EVENT_PATH],
+            "itemEventGitBlobSha": item_event_blob_sha,
         },
+        "equipResistSource": equip_resist_source,
         "fixedBuild": {
             "improveItemTable": False,
             "simplifyItemString": True,
