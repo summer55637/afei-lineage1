@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.24**
+**PLAYABLE CORE V2.25**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,38 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.25 最新進度
+
+V2.25 把 V2.24 刻意保留 unresolved 的 fixed **profession TARGET / KIND / battle toNo** 正式閉環，並接入第一批真正能從玩家戰鬥指令施放的職業技能。server 行為仍以固定 `gavinlinasd/StoneAge@1f90cb6...` 為唯一規則基準；client 對照使用 `anson1788/stoneage@1997fc20456dbda36d181b9680ae10bed2e9cdf9` 只用來確認 server 傳給 client 的 TARGET / KIND UI 語意與實際封包轉換。
+
+- fixed client 的 **KIND** 已確認：`1 = BattleSkill`、`2 = AssitSkill`、`3 = AdvanceSkill`。Web 只保存這個來源分類，不另造新 enum。
+- fixed profession **TARGET 直接沿用 PetSkill target enum 0～10**：
+  - 0 自己、1 單一其他目標、2 我方全體、3 敵方全體、4 全體、5 無目標；
+  - 6 其他且不含自己、7 不含自己與自己的 Pet、8 單排、9 單線、10 死亡目標。
+- fixed client → server 的 `toNo` 已完整鎖定：
+  - 場上實體單位直接用 **0～19**；
+  - side/all pseudo target：20=Side0、21=Side1、22=All；
+  - row pseudo target：23=Side1 後排、24=Side1 前排、25=Side0 前排、26=Side0 後排。
+  - Player `BattleMyNo=0` 時，TARGET=3 敵方全體會送 21；TARGET=2 我方全體送 20。
+  - TARGET=8 單排依實際點到的格子轉換：0～4→26、5～9→25、10～14→23、15～19→24。
+- `sourceProfessionBattleCommandPlan()` 現在可依 TARGET + 玩家實際選取格自動得到真正 `P|slotHex|toNoHex`；仍保留 explicit `toNo` 路徑供 protocol fixture 使用。
+- live command lifecycle 依 fixed `PROFESSION_SKILL_Use()` 保留：**收到技能指令時先扣 MP、立刻跑 callback 後熟練度；真正 battle command 到角色回合才執行**。因此玩家之後若在輪到自己前死亡、睡眠／麻痺而失去行動，已扣 MP 不會退款，熟練度事件也不倒退。
+- V2.25 第一批 live battle profession skills：
+  - **Skill 22 暴擊 / `PROFESSION_BRUST`**
+  - **Skill 23 連環攻擊 / `PROFESSION_CHAIN_ATK`**
+- Skill 22 保留 fixed source 的反直覺 bug：helper 把 `CHAR_WORKFIXSTR` 改成 `FIXSTR × (100 + tier×3)%`，但緊接著的 `BATTLE_DamageCalc()` 讀的是 `CHAR_WORKATTACKPOWER`；所以這次攻擊**不會因該行 FIXSTR 寫入而增傷**。Web 不把它「修好」成不存在的傷害倍率。
+- Skill 23 保留 exact tier / RNG：
+  - display Lv 10→tier0、11～20→1、…、91～99→9、100→10；
+  - 若 tier 不是 10 的倍數，連擊判定前先 +1；
+  - 第二擊機率 = `tier × 5 + 15`，範圍 15%～65%；
+  - **`RAND(1,100)` 在第一擊 AttackSeq 之前消耗**；
+  - 成功時只對同一個 raw `defNo` 再呼叫一次普通 `BATTLE_Attack()`，且要求攻方／原目標第一擊後仍存活。
+- profession 第一擊保留 `battle_profession_attack_fun()` 的 **Guardian calc-only bug**：Guardian 可替傷害計算提供防禦／會心資料，但 caller 沒把 `defindex` 換成 Guardian，因此 DamageSub／WakeUp／死亡／ItemCrush 仍落在原目標；第一擊也沒有普通 `BATTLE_Attack()` 的 SUITPOISON 分支。Skill 23 第二擊才是完整普通 `BATTLE_Attack()` Guardian substitution。
+- profession direct-attack case 執行完就 `break`，不會進 ordinary common Counter loop；Web 同樣不替 Skill 22／23 補普通 Counter。
+- 戰鬥畫面新增「職業戰鬥技能」區，只顯示**玩家已學會且 V2.25 已完成 live executor** 的技能；其餘已學職技繼續 fail-closed，不用一個泛化 handler 假裝都能施放。
+
+新增 `tools/check_v225_profession_battle_runtime.mjs`，鎖定 KIND/TARGET、0～19／20～26、row mapping、tier boundary、command-receipt lifecycle、BRUST fixed bug、CHAIN RNG 次序與 no-Counter。**save schema 維持 30**。
 
 ## V2.24 最新進度
 
