@@ -106,6 +106,7 @@ let battlePlayerRawGuardCommand=false;
 let battlePlayerFixedToughWork=null;
 let battlePlayerAvoidWork=null;
 let battlePlayerWeaponFocusWork=null;
+let battlePlayerProfessionTrap=null;
 let battlePlayerMySkillStrPower=0;
 let battlePlayerFixedAttackWork=null;
 let battlePlayerAttackWork=null;
@@ -2495,6 +2496,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_CAVALRY'
     ||functionName==='PROFESSION_ENTWINE'
     ||functionName==='PROFESSION_DRAGNET'
+    ||functionName==='PROFESSION_TRAP'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -3034,6 +3036,97 @@ function sourceProfessionEnemyCommandCancelled(unit){
   if(Math.trunc(n(unit.sourceProfessionCommandCancelledTurn))!==turn)return null;
   return {turn,statusType:String(unit.sourceProfessionCommandCancelStatus||'')};
 }
+function sourceProfessionTrapTier(prepared){
+  return sourceProfessionMagicLevelM(prepared?.displayLevel);
+}
+
+function sourceProfessionTrapExecute(prepared,name){
+  const tier=sourceProfessionTrapTier(prepared);
+  const value=tier*30+100;
+  const turns=tier>=10?3:(tier>=5?2:1);
+  battlePlayerProfessionTrap={turns,value,tier};
+  addLog('你設下「'+name+'」：陷阱傷害 '+value+'，WORKTRAP='+turns+'。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:Math.trunc(n(prepared.toNo)),tier,value,turns,
+    sourceLevelM:true,noDamage:true,noOrdinaryCounter:true
+  };
+}
+
+function sourceProfessionPlayerTrapStatusSeq(){
+  if(!battlePlayerProfessionTrap)return null;
+  const before=Math.max(0,Math.trunc(n(battlePlayerProfessionTrap.turns)));
+  const value=Math.max(0,Math.trunc(n(battlePlayerProfessionTrap.value)));
+  if(before>0){
+    const after=before-1;
+    battlePlayerProfessionTrap.turns=after;
+    return {before,after,value,active:after>0,modRetainedAtZero:after===0};
+  }
+  // fixed BATTLE_ProfessionStatusSeq clears MODTRAP only on a later pass that starts at count==0.
+  battlePlayerProfessionTrap=null;
+  return {before:0,after:0,value,active:false,modCleared:true};
+}
+
+function sourceProfessionPlayerTrapActive(){
+  return !!battlePlayerProfessionTrap
+    &&Math.trunc(n(battlePlayerProfessionTrap.turns))>0
+    &&Math.trunc(n(battlePlayerProfessionTrap.value))>0;
+}
+
+function sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r,{ignoreDamageReact=false}={}){
+  if(ignoreDamageReact||targetDesc?.kind!=='player'||!sourceProfessionPlayerTrapActive()
+    ||!r||r.dodged||r.miss||n(r.damage)<=0){
+    return {triggered:false};
+  }
+  const attackerView=battleStatusDescView(attackerDesc);
+  // fixed BATTLE_DamageSub: TRAP is returned by BATTLE_GetDamageReact, but any throw weapon
+  // rewrites pRefrect back to NONE. The trap remains armed.
+  if(attackerView?.throwWeapon){
+    return {triggered:false,throwWeaponBlocked:true};
+  }
+
+  const originalDamage=Math.max(0,Math.trunc(n(r.damage)));
+  const trapDamage=Math.max(0,Math.trunc(n(battlePlayerProfessionTrap.value)));
+  const trapTurns=Math.max(0,Math.trunc(n(battlePlayerProfessionTrap.turns)));
+  // Trigger consumes both WORKTRAP and WORKMODTRAP immediately.
+  battlePlayerProfessionTrap=null;
+  r.damage=trapDamage;
+  r.sourceProfessionTrap=true;
+  r.sourceProfessionTrapOriginalDamage=originalDamage;
+  r.sourceProfessionTrapDamage=trapDamage;
+  return {
+    triggered:true,attackerDesc,targetDesc,r,
+    originalDamage,trapDamage,trapTurns
+  };
+}
+
+function sourceFinishProfessionTrapReaction(reaction){
+  if(!reaction?.triggered)return reaction||{triggered:false};
+  const {attackerDesc,targetDesc,r,trapDamage}=reaction;
+  const before=battleStatusHp(attackerDesc);
+  battleStatusSetHp(attackerDesc,before-trapDamage);
+  reaction.attackerBefore=before;
+  reaction.attackerAfter=battleStatusHp(attackerDesc);
+  reaction.ultimate=sourceTrackDamageSubUltimate(attackerDesc,trapDamage,before,r);
+  // fixed BATTLE_Attack rewrites defindex to attackindex after TRAP, so wake / later crush
+  // observe the attacker rather than the protected Player.
+  battleStatusWakeOnDamage(attackerDesc,trapDamage);
+  if(before>0&&reaction.attackerAfter<=0&&attackerDesc?.kind==='enemy'&&attackerDesc.unit){
+    sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc]);
+  }
+  return reaction;
+}
+
+function sourceLogProfessionTrapReaction(reaction){
+  if(!reaction?.triggered)return;
+  addLog(
+    '你的陷阱發動：原本 '+reaction.originalDamage+' 傷害被改成陷阱固定 '
+      +reaction.trapDamage+'，反傷 '+battleStatusDescName(reaction.attackerDesc)
+      +'；陷阱已消耗。',
+    reaction.attackerAfter<=0?'good':''
+  );
+}
+
 function sourceProfessionHunterControlExecute(target,prepared,name){
   const functionName=String(prepared?.functionName||'');
   const type=functionName==='PROFESSION_ENTWINE'?'entwine'
@@ -3790,6 +3883,12 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const convoluteRow=sourceProfessionSkillTemplate(prepared.skillId);
     const convoluteName=String(convoluteRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionConvoluteExecute(prepared,convoluteName);
+  }
+
+  if(prepared.functionName==='PROFESSION_TRAP'){
+    const trapRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const trapName=String(trapRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionTrapExecute(prepared,trapName);
   }
   if(prepared.functionName==='PROFESSION_SCAPEGOAT'
     ||prepared.functionName==='PROFESSION_ENRAGE'
@@ -7004,7 +7103,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -9215,6 +9314,15 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
     return;
   }
 
+  const trap=sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r);
+  if(trap.triggered){
+    sourceFinishProfessionTrapReaction(trap);
+    if(!deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
+    if(!deferAddProfit)sourceProcessBattleDeathsAtAddProfit();
+    sourceLogProfessionTrapReaction(trap);
+    return trap;
+  }
+
   const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter});
   const before=battleStatusHp(targetDesc);
   battleStatusSetHp(targetDesc,before-r.damage);
@@ -9589,17 +9697,28 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
       }else if(r.miss){
         addLog(unit.name+' 的反擊沒有造成傷害。');
       }else{
-        const sourceUltimateBefore=n(state.hp);
-    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
-    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
-    sourceBattleFinalizeItemCrushRng(r);
-        addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+        const trap=sourcePrepareProfessionTrapReaction(
+          {kind:'enemy',unit,unitId:unit.id},{kind:'player'},r
+        );
+        if(trap.triggered){
+          sourceFinishProfessionTrapReaction(trap);
+          sourceBattleFinalizeItemCrushRng(r);
+          sourceLogProfessionTrapReaction(trap);
+          r.sourceCounterBlockedByTrap=true;
+        }else{
+          const sourceUltimateBefore=n(state.hp);
+          state.hp=Math.max(0,sourceUltimateBefore-r.damage);
+          sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
+          sourceBattleFinalizeItemCrushRng(r);
+          addLog(unit.name+(r.critical?' 反擊會心 ':' 反擊 ')+r.damage+'。',state.hp<=0?'bad':'');
+        }
       }
     }
 
     sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(state.hp<=0||unit.hp<=0)break;
+    if(r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
 
     const next=counterer;
@@ -10504,6 +10623,14 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   const r=enemyAttackResult(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
   const targetDesc={kind:'player'};
   const beforeApplyResult=beforeApply?beforeApply({target:'player',targetDesc,r},target):null;
+  const trap=sourcePrepareProfessionTrapReaction(
+    {kind:'enemy',unit,unitId:unit.id},targetDesc,r
+  );
+  if(trap.triggered){
+    sourceFinishProfessionTrapReaction(trap);
+    sourceLogProfessionTrapReaction(trap);
+    return {target:'player',targetDesc:{kind:'enemy',unit,unitId:unit.id},r,beforeApply:beforeApplyResult,trap};
+  }
   if(playerGuarding){
     if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
     else{
@@ -10819,6 +10946,16 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
   }
 
   const r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
+  const playerTrap=(!r.guardian)?sourcePrepareProfessionTrapReaction(
+    {kind:'enemy',unit,unitId:unit.id},{kind:'player'},r
+  ): {triggered:false};
+  if(playerTrap.triggered){
+    sourceFinishProfessionTrapReaction(playerTrap);
+    sourceBattleFinalizeItemCrushRng(r);
+    sourceProcessBattleDeathsAtAddProfit();
+    sourceLogProfessionTrapReaction(playerTrap);
+    return {target:'player',actualTarget:'enemy',r,trap:playerTrap,sourceCounterBlockedByDamageReact:true};
+  }
   if(r.guardian){
     const pet=r.guardian;
     addLog(pet.name+' 發動忠犬，代替你承受 '+unit.name+' 的攻擊。','pet');
@@ -10892,6 +11029,15 @@ function enemyApplySkillHit(unit,chosen,r,label,options={}){
   }else if(r.miss){
     addLog(unit.name+' 的'+label+'沒有造成傷害。');
   }else{
+    const trap=sourcePrepareProfessionTrapReaction(
+      {kind:'enemy',unit,unitId:unit.id},{kind:'player'},r,
+      {ignoreDamageReact:!!options.ignoreDamageReact}
+    );
+    if(trap.triggered){
+      sourceFinishProfessionTrapReaction(trap);
+      sourceLogProfessionTrapReaction(trap);
+      return trap;
+    }
     const sourceUltimateBefore=n(state.hp);
     state.hp=Math.max(0,sourceUltimateBefore-r.damage);
     sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
@@ -19063,6 +19209,17 @@ function sourceComboAcupunctureSegment(actor,target,r,rewardActors=[]){
   // BATTLE_DamageSub immediately instead of adding that segment into AllDamage.
   // Its later critical-death check only treats CHAR_TYPEENEMY as eligible.
   r.ultimateCriticalEnemyOnly=true;
+  const trap=sourcePrepareProfessionTrapReaction(attackerDesc,target,r);
+  if(trap.triggered){
+    sourceFinishProfessionTrapReaction(trap);
+    // Combo's immediate DamageSub reaction is not added to AllDamage; TRAP protects
+    // the original target entirely and returns fixed trap damage as *pDamage.
+    sourceLogProfessionTrapReaction(trap);
+    return {
+      triggered:true,reaction:trap,reactionType:'trap',attackerDesc,
+      targetDamage:0,postDamage:trap.trapDamage
+    };
+  }
   const reaction=sourcePrepareAcupunctureReaction(attackerDesc,target,r);
   if(!reaction.triggered)return {triggered:false,reaction,attackerDesc};
 
@@ -19155,7 +19312,9 @@ function sourcePerformCombo(order,index,options={}){
     const isLast=memberIndex+1>=members.length;
     hits.push({
       kind:actor.kind,unitId:actor.unitId||null,petId:actor.petId||null,label:actor.label||actor.kind,r,
-      acupuncture:acupuncture.triggered?acupuncture.reaction:null,
+      acupuncture:acupuncture.triggered&&acupuncture.reactionType!=='trap'?acupuncture.reaction:null,
+      trap:acupuncture.reactionType==='trap'?acupuncture.reaction:null,
+      damageReactType:acupuncture.reactionType|| (acupuncture.triggered?'acupuncture':null),
       calculatedDamage
     });
 
