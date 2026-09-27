@@ -9,7 +9,27 @@ const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_profession_ski
 function extractFunction(src,name){
   const sig='function '+name+'(';
   const i=src.indexOf(sig);assert.ok(i>=0,'missing '+name);
-  const b=src.indexOf('{',i);let d=0,q=null,esc=false,line=false,block=false;
+
+  // Find the function BODY brace, not an object literal in a default argument
+  // such as battleDamageCore(..., options={}).
+  const openParen=src.indexOf('(',i);
+  let paren=0,q=null,esc=false,line=false,block=false,closeParen=-1;
+  for(let p=openParen;p<src.length;p++){
+    const c=src[p],nx=src[p+1];
+    if(line){if(c==='\n')line=false;continue}
+    if(block){if(c==='*'&&nx==='/'){block=false;p++}continue}
+    if(q){if(esc){esc=false;continue}if(c==='\\'){esc=true;continue}if(c===q)q=null;continue}
+    if(c==='/'&&nx==='/'){line=true;p++;continue}
+    if(c==='/'&&nx==='*'){block=true;p++;continue}
+    if(c==="'"||c==='"'||c.charCodeAt(0)===96){q=c;continue}
+    if(c==='(')paren++;
+    else if(c===')'&&--paren===0){closeParen=p;break}
+  }
+  assert.ok(closeParen>=0,'missing signature close '+name);
+
+  const b=src.indexOf('{',closeParen);
+  assert.ok(b>=0,'missing body '+name);
+  let d=0;q=null;esc=false;line=false;block=false;
   for(let p=b;p<src.length;p++){const c=src[p],nx=src[p+1];
     if(line){if(c==='\n')line=false;continue}
     if(block){if(c==='*'&&nx==='/'){block=false;p++}continue}
@@ -18,7 +38,8 @@ function extractFunction(src,name){
     if(c==='/'&&nx==='*'){block=true;p++;continue}
     if(c==="'"||c==='"'||c.charCodeAt(0)===96){q=c;continue}
     if(c==='{')d++;else if(c==='}'&&--d===0)return src.slice(i,p+1);
-  }throw new Error('unterminated '+name);
+  }
+  throw new Error('unterminated '+name);
 }
 
 const row=runtime.bySkillId['68'];
