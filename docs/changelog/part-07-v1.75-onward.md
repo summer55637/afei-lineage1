@@ -5015,3 +5015,20 @@ save schema 維持 **30**。
 - Water 納入 `battleHasAnyStatus()`／附身 busy check，並直接供 V2.62 召雷術的 `professionWaterTurns` 讀取。
 - 新增 `tools/check_v263_profession_storm_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.64 Skill 8 CURRENT
+
+- 接入巫師 Skill 8 `电流术 / PROFESSION_CURRENT`。
+- MP：M-tier 1～2=30、3～4=40、5～6=50、7=60、8=70、9=80、10=100；來源 `>9 =>90` 分支不可達。
+- GET_PRACTICE：tier1=50、2～4=10、5～7=150、8～9=200、10=300；來源 `>9 =>250` 不可達。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.5)`。
+- ENEMY_ALL 先 SortLoc，再以與 STORM 相同的 rejection sampling 隨機取 M-tier 個目標。
+- type=3 DODGE 用 Thunder proficiency，且 CURRENT 額外要求第二顆 `RAND(1,100) < 75`；GET_DAMAGE type=3 仍誤讀 Ice proficiency/resist。
+- Water 導電沿用 V2.62/V2.63 live Work：Water>0 才抽 RNG，`roll<75` 時在 UNMPOWER/GET_DAMAGE 前 power ×3。
+- 命中後保留 `PROFESSION_MAGIC_CHANGE_STATUS` leading RNG。
+- 修正 ENCLOSE/SUMMON_THUNDER/STORM 回傳 animation metadata 的 source `attIdx`：單體0／全體2。
+- 新增 `tools/check_v264_profession_current_runtime.mjs`。
+- save schema 維持 **30**。

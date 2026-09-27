@@ -99,6 +99,7 @@ on:
       - "tools/check_v261_profession_enclose_runtime.mjs"
       - "tools/check_v262_profession_summon_thunder_runtime.mjs"
       - "tools/check_v263_profession_storm_runtime.mjs"
+      - "tools/check_v264_profession_current_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -410,6 +411,9 @@ jobs:
 
       - name: Run V2.63 Storm regression
         run: node tools/check_v263_profession_storm_runtime.mjs
+
+      - name: Run V2.64 Current regression
+        run: node tools/check_v264_profession_current_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

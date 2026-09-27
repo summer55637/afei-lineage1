@@ -1669,13 +1669,14 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_SIGN'
     &&command!=='BATTLE_COM_S_DOOM'
     &&command!=='BATTLE_COM_S_ICE_CRACK'
+    &&command!=='BATTLE_COM_S_CURRENT'
     &&command!=='BATTLE_COM_S_SUMMON_THUNDER'
     &&command!=='BATTLE_COM_S_STORM'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER')upper=work*.2;
-  else if(command==='BATTLE_COM_S_ICE_CRACK')upper=work*.5;
+  else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
   else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
@@ -2636,6 +2637,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_DOOM'
     ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_SUMMON_THUNDER'
+    ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
     ||functionName==='PROFESSION_ENCLOSE'
     ||functionName==='PROFESSION_BRUST'
@@ -4505,7 +4507,7 @@ function sourceProfessionAnnexStatusSeq(desc,{
 function sourceProfessionEncloseAnimation(row,toNo){
   const opt=String(row?.option||'').split('|');
   const out={
-    magicType:-1,attIdx:5,
+    magicType:-1,attIdx:0,
     img1:Math.trunc(n(row?.img1)),img2:Math.trunc(n(row?.img2)),
     showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
     x:Math.trunc(n(opt[3])),y:Math.trunc(n(opt[4])),
@@ -4606,7 +4608,7 @@ function sourceProfessionEncloseExecute(prepared,name){
 function sourceProfessionSummonThunderAnimation(row){
   const opt=String(row?.option||'').split('|');
   return {
-    magicType:3,attIdx:6,
+    magicType:3,attIdx:0,
     img1:Math.trunc(n(row?.img1)),img2:Math.trunc(n(row?.img2)),
     showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
     x:Math.trunc(n(opt[3])),y:Math.trunc(n(opt[4])),
@@ -4770,7 +4772,7 @@ function sourceProfessionStormAnimation(row,toNo){
   const no=Math.trunc(n(toNo));
   const rightSide=no===20||no===25||no===26;
   return {
-    magicType:2,attIdx:7,
+    magicType:2,attIdx:2,
     img1:Math.trunc(n(row?.img1)),
     img2:rightSide?101677:Math.trunc(n(row?.img2)),
     showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
@@ -4914,6 +4916,126 @@ function sourceProfessionStormExecute(prepared,name){
     sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
     sourceDodgeUsesIcePractice:true,sourceDamageType2UsesThunderPracticeBug:true,
     sourceStormTargetCountEqualsMTier:true,sourceWaterStatusThresholdStrict30:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
+
+function sourceProfessionCurrentAnimation(row){
+  const opt=String(row?.option||'').split('|');
+  return {
+    // fixed battle_profession_attack_magic_fun(): ENEMY_ALL toNo=21 => attIdx=2.
+    magicType:3,attIdx:2,
+    img1:Math.trunc(n(row?.img1)),img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7]))
+  };
+}
+
+function sourceProfessionCurrentExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==8)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis_profession_parameter() raises Thunder Practice first; current cast still
+  // uses the battle-entry Work snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const thunderPractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_THUNDER_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(thunderPractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionCurrentAnimation(row);
+  const sortedSlots=sourceProfessionMagicEnemySortedSlots(multi.slots);
+
+  // fixed order: qsort -> GET_PRACTICE -> TOLIST_SORT.
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_CURRENT',prepared.displayLevel,state.hp
+  );
+  // _PROFESSION_ADDSKILL CURRENT's get_num resolves exactly to M-tier 1..10.
+  const selection=sourceProfessionStormSelectSlots(
+    sortedSlots,practice.skillLevel,{randInclusive:cRand}
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of selection.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    // type=3 base dodge uses Thunder proficiency; CURRENT then has a strict <75 second gate.
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:3,command:'BATTLE_COM_S_CURRENT',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    // The shared special-damage helper applies Water conductivity before UNMPOWER/GET_DAMAGE.
+    const waterPower=sourceProfessionThunderWaterPower(
+      target,'BATTLE_COM_S_CURRENT',practice.power,{randInclusive:cRand}
+    );
+    const preDamagePower=sourceProfessionMagicPreDamagePower(waterPower.power,0);
+
+    // Fixed type=3 GET_DAMAGE mismatch: damage reads Ice proficiency/resist path.
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:3,power:preDamagePower,command:'BATTLE_COM_S_CURRENT',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,waterPower,preDamagePower,
+      damage,hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      sourceDodgeUsesThunderPractice:true,sourceDamageType3UsesIcePracticeBug:true,
+      sourceWaterPowerBeforeUnPower:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害'
+      +(waterPower.tripled?'（水附體導電 ×3）':''),after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,sortedSlots,selection,animation,
+    thunderPractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:3,sourceThunderPracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceCurrentTargetCountEqualsMTier:true,
+    sourceDodgeUsesThunderPractice:true,sourceDamageType3UsesIcePracticeBug:true,
     noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
   };
 }
@@ -6254,6 +6376,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionSummonThunderExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_CURRENT'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionCurrentExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_STORM'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);

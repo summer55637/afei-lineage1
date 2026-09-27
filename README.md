@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.63**
+**PLAYABLE CORE V2.64**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,25 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.64 最新進度
+
+V2.64 接入巫師 **Skill 8「電流術」／`PROFESSION_CURRENT`**，並直接使用 V2.63 的 Water StatusTbl lifecycle。
+
+- TARGET ENEMY_ALL；option `电|0|1|0|0|0|0|0`，所以 `magic_type=3`。
+- dynamic MP：M-tier 1～2=30、3～4=40、5～6=50、7=60、8=70、9=80、10=100；來源中的 `tier>9 => 90` 在 `>=10 =>100` 後方不可達，照原 C 保留語意。
+- GET_PRACTICE 的 fixed 分段非常反直覺：tier1=50、tier2～4=10、tier5～7=150、tier8～9=200、tier10=300；`>9 =>250` 同樣不可達。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.5)`。
+- analysis 先嘗試提升 **雷熟練度**，當前 cast 仍使用 battle-entry proficiency Work snapshot。
+- 目標先經 SortLoc，再由 `TOLIST_SORT` 依 M-tier 隨機取 1～10 隻；抽到已清成 `-1` 的重複 index 仍消耗 RNG 後重抽。
+- magic dodge type=3 正確讀 Thunder proficiency，但 CURRENT 還有第二顆 `RAND(1,100) < 75` 命中 gate。
+- fixed type-3 GET_DAMAGE 欄位 bug 繼續保留：真正傷害讀 **Ice proficiency/resist** 路徑。
+- 若目標 Water 尚有效，先抽 `RAND(1,100)`，只有 **<75** 才把 power ×3；這顆導電 RNG 位於 UNMPOWER／GET_DAMAGE 之前，沒有 Water 時完全不抽。
+- 命中傷害計算後仍固定消耗 `PROFESSION_MAGIC_CHANGE_STATUS()` leading `RAND(1,100)`，CURRENT 沒有自己的 self-status case。
+- 同步修正 V2.61～V2.63 純回傳 animation metadata：fixed `battle_profession_attack_magic_fun()` 的 `attIdx` 是依目標形狀決定（單體=0、單排=1、全體=2），不是技能序號；此修正不改既有戰鬥結果。
+- save schema 維持 **30**。
+
+---
 
 ## V2.63 最新進度
 
