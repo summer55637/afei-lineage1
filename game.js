@@ -1111,6 +1111,30 @@ function sourcePlayerEquipmentModifiers(target=state){
   }
   return result;
 }
+function sourcePlayerEquipCallbackSupported(template){
+  const attach=String(template?.attachFunc||'');
+  const detach=String(template?.detachFunc||'');
+  if(attach===''&&detach==='')return true;
+  // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
+  return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
+}
+function sourcePlayerPickAllPetEnabled(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!template)continue;
+    if(String(template.attachFunc||'')==='ITEM_WearEquip'&&
+       String(template.detachFunc||'')==='ITEM_ReWearEquip')return true;
+  }
+  return false;
+}
+function sourcePlayerCaptureLevelAllowed(enemyUnit,player=state){
+  if(!enemyUnit||!player)return false;
+  if(sourcePlayerPickAllPetEnabled(player))return true;
+  return Math.trunc(n(player.level))+5>=Math.trunc(n(enemyUnit.level));
+}
 function sourcePlayerEquipRequirements(template,target=state){
   if(!template||!target)return {ok:false,reason:'template'};
   const trans=Math.max(0,Math.trunc(n(target.transmigration)));
@@ -1123,7 +1147,7 @@ function sourcePlayerEquipRequirements(template,target=state){
   if(Math.trunc(n(p.dex)*100)<Math.trunc(n(template.needDex)))return {ok:false,reason:'dex'};
   if(trans<Math.trunc(n(template.needTrans)))return {ok:false,reason:'transmigration'};
   if(Math.trunc(n(template.needProfession))!==0)return {ok:false,reason:'profession-unported'};
-  if(String(template.attachFunc||'')!==''||String(template.detachFunc||'')!=='')return {ok:false,reason:'callback-unported'};
+  if(!sourcePlayerEquipCallbackSupported(template))return {ok:false,reason:'callback-unported'};
   if(SOURCE_PLAYER_SPECIAL_EQUIP_IDS.has(Math.trunc(Number(template.itemId))))return {ok:false,reason:'special-equip-unported'};
   return {ok:true};
 }
@@ -14979,7 +15003,7 @@ function captureChance(){
   if(!capturable)return {raw:0,display:0,allowed:false,missing:[],uncapturable:true,groupBattle:enemy.groupBattle,targetName:target.name};
   const req=captureRequirements(target);
   if(!req.allowed)return {raw:0,display:0,allowed:false,missing:req.missing,requirements:req.items,targetName:target.name};
-  if(state.level+5<target.level)return {raw:0,display:0,allowed:false,missing:[],requirements:req.items,targetName:target.name};
+  // fixed BATTLE_CaptureCheck: CHAR_PickAllPet bypasses only the player-level +5 gate.\n  if(!sourcePlayerCaptureLevelAllowed(target,state))return {raw:0,display:0,allowed:false,missing:[],requirements:req.items,targetName:target.name};
 
   // fixed BATTLE_CaptureCheck 使用雙方 CHAR_WORKFIXDEX。
   // 實際捕獲判定在 normalBattleOrder() 的 PreCommand snapshot 後再次計算，因此 Enemy 可直接讀 roundFixQuick；

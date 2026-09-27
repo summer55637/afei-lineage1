@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.12**
+**PLAYABLE CORE V2.13**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,23 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.13 最新進度
+
+V2.13 完成第一組裝備 callback：`ITEM_WearEquip / ITEM_ReWearEquip`。固定 item table 中只有 **Item 1975、20130** 使用這組 callback，兩件都是 `ITEM_TYPE=11` 戒指、無 profession 限制。
+
+原 C 行為：
+
+- `ITEM_WearEquip()`：`CHAR_PickAllPet = TRUE`
+- `ITEM_ReWearEquip()`：`CHAR_PickAllPet = FALSE`
+- `BATTLE_CaptureCheck()`：只有在 `CHAR_PickAllPet != TRUE` 時才套用「敵寵等級不得高於玩家等級 +5」；旗標 TRUE 直接跳過這條等級限制。
+- 捕獲率後面的 HP／等級／DEX／Luck／Charm 計算完全不變。
+
+Web 現在允許這一組 callback 通過裝備 gate；`sourcePlayerPickAllPetEnabled()` 從目前 9 格已裝備 existing item 推導 Work flag，所以裝上／卸下、重新讀檔都與目前裝備狀態一致，**不新增永久存檔欄位**。捕獲判定改由 `sourcePlayerCaptureLevelAllowed()` 套用 fixed `CHAR_PickAllPet` 規則。
+
+其餘 5 組 callback 仍維持 `callback-unported` fail-closed，不擴大猜測。
+
+新增 `tools/check_v213_pickallpet_equip_callback.mjs`。save schema 維持 **29**。
 
 ## V2.12 最新進度
 

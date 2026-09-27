@@ -3425,3 +3425,22 @@ fixed C：
 - `ITEM_getEquipPlace()` 沒有 ITEM_OTHER(type 16) case，因此 2885 正常回 -1
 
 Web 現在只保留 2884 為 `special-equip-unported`；2885 改走正常 equip-place 拒絕。save schema 29。
+
+
+---
+
+## V2.13 ITEM_WearEquip / ITEM_ReWearEquip
+
+V2.13 來源化第一組玩家裝備 callback。fixed item runtime 只有 Item 1975、20130 使用 `ITEM_WearEquip -> ITEM_ReWearEquip`，兩件 type=11、profession=0。
+
+fixed `item_event.c`：
+- attach: `CHAR_setWorkInt(charaindex, CHAR_PickAllPet, TRUE)`
+- detach: `CHAR_setWorkInt(charaindex, CHAR_PickAllPet, FALSE)`
+
+fixed `BATTLE_CaptureCheck()`：
+- `CHAR_PickAllPet != TRUE` 且 `player LV + 5 < enemy LV` 時直接不可捕獲
+- `CHAR_PickAllPet == TRUE` 時跳過這一條，後續 capture percentage 算式不變
+
+Web 以目前 equip slots 推導 PickAllPet，不增加 save 欄位。只有這組 callback 從 `callback-unported` 白名單化；其他 callback 繼續 fail-closed。
+
+新增 `tools/check_v213_pickallpet_equip_callback.mjs`。save schema 29。
