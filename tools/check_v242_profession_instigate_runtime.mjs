@@ -220,6 +220,8 @@ const execFn=extractFunction(game,'sourceProfessionBattleSkillExecute');
 assert.ok(execFn.includes("prepared.functionName==='PROFESSION_INSTIGATE'"));
 assert.ok(execFn.includes('sourceProfessionInstigateExecute(target,prepared,name)'));
 
+assert.match(html,/PLAYABLE CORE V2\.42/);
+assert.match(html,/V2\.42 live：[^<]*弱點攻擊[^<]*挑撥/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
