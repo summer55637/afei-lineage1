@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const game=fs.readFileSync('game.js','utf8');
+const html=fs.readFileSync('game.html','utf8');
 const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_profession_skill_runtime.json','utf8'));
 
 function extractFunction(source,name){
