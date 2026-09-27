@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.40**
+**PLAYABLE CORE V2.41**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,21 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.41 最新進度
+
+V2.41 接入獵人 **Skill 51「弱點攻擊」／`PROFESSION_ATTACK_WEAK`**，依固定原 C 的 `battle_profession_attack_fun()` 直接攻擊鏈實作，不把技能文字誤解成「降低敵人敏捷」。
+
+fixed row：MP 9、TARGET 1、KIND 1、command `BATTLE_COM_S_ATTACK_WEAK`。真正輪到角色行動後：
+
+- 若目標是 `CHAR_TYPEPET` 或 `CHAR_TYPEENEMY`，先把施術者目前的 `WORKATTACKPOWER` 乘上 `(110 + tier×2)%`；Web PVE 的職技目標是 Enemy，因此會進這個升攻分支。
+- 接著改的是**施術者自己的** `WORKQUICK`：`WORKQUICK = FIXDEX × (90-tier)%`。原 C 沒有修改守方敏捷。
+- `EntrySort` 在本輪更早已經完成，所以這次 WORKQUICK 改動**不會重排本輪出手順序**；但緊接著的 `BATTLE_AttackSeq() -> BATTLE_DamageCalc()` 會讀到這個較低的攻方 WORKQUICK，因此仍會影響本次物理傷害計算。
+- 直接職技共用邊界不變：同隊目標先 NoAction；EarthRound 目標在 profession attack helper 內 NoAction；非 `CHAIN_ATK` 的 DamageReact 會被清掉；普通 `BATTLE_Attack()` 的 SUITPOISON 不會進，但 WakeUp / ItemCrush 等 generic hit 副作用保留。
+- 不新增普通 Counter loop。
+- `sourceProfessionSetPlayerAttackWork()` 保留 WORKATTACKPOWER 的本輪 mutation；WORKQUICK 則以 attacker override 精確送入緊接著的傷害計算，避免誤改 Enemy 狀態。
+
+新增 `tools/check_v241_profession_attack_weak_runtime.mjs`，鎖住公式、目標類型、攻方 WORKQUICK、direct-profession hit boundary 與 V2.41 頁面標記；**save schema 維持 30**。
 
 ## V2.40 最新進度
 
