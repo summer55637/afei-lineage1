@@ -1704,6 +1704,41 @@ function sourceProfessionSkillUsePreflight({
   skillId,rawSkillLevel,professionClass,mp,isPlayer=true,toNo=0
 }
 
+={}){
+  const row=sourceProfessionSkillTemplate(skillId);
+  if(!row)return {ok:false,reason:'skill-not-found'};
+  const charClass=Math.trunc(n(professionClass));
+  const requiredClass=Math.trunc(n(row.professionClass));
+  if(charClass<=0||charClass!==requiredClass){
+    return {ok:false,reason:'profession-mismatch',skillId:Math.trunc(n(row.skillId)),professionClass:charClass,requiredClass};
+  }
+  if(row.dispatchKnown!==true)return {ok:false,reason:'function-missing',skillId:Math.trunc(n(row.skillId))};
+  if(!isPlayer)return {ok:false,reason:'not-player',skillId:Math.trunc(n(row.skillId))};
+
+  const rawLevel=Math.trunc(n(rawSkillLevel));
+  if(rawLevel<=0)return {ok:false,reason:'skill-level',skillId:Math.trunc(n(row.skillId))};
+
+  const cost=sourceProfessionSkillMpCost(row.skillId,rawLevel);
+  if(!cost.ok)return cost;
+  const oldMp=Math.trunc(n(mp));
+  if(oldMp<cost.decMp){
+    return {ok:false,reason:'mp-short',skillId:Math.trunc(n(row.skillId)),mpBefore:oldMp,decMp:cost.decMp};
+  }
+  if(Math.trunc(n(row.skillId))!==11&&cost.decMp<=0){
+    return {ok:false,reason:'mp-cost-invalid',skillId:Math.trunc(n(row.skillId)),mpBefore:oldMp,decMp:cost.decMp};
+  }
+
+  const mpAfter=Math.max(0,oldMp-cost.decMp);
+  return {
+    ok:true,skillId:Math.trunc(n(row.skillId)),functionName:String(row.func||''),
+    professionClass:charClass,requiredClass,rawSkillLevel:rawLevel,
+    skillLevel:cost.skillLevel,mpBefore:oldMp,decMp:cost.decMp,mpAfter,
+    dynamicMp:cost.dynamic,deductBeforeDispatch:true,
+    useFlag:Math.trunc(n(row.useFlag)),targetType:Math.trunc(n(row.target)),
+    commonCommand:sourceProfessionCommonCommandPlan(row.skillId,toNo,rawLevel)
+  };
+}
+
 function sourcePlayerProfessionSkillAt(slot,target=state){
   const i=Math.trunc(Number(slot));
   if(!target||i<0||i>=PROFESSION_SKILL_SLOT_COUNT)return null;
@@ -1839,40 +1874,6 @@ function sourceProfessionSkillLearn(options={}){
   target.gold=plan.goldAfter;
   target.professionSkillPoint=plan.skillPointAfter;
   return Object.assign({},plan,{slot:added.slot,rawLevel:added.rawLevel});
-}
-={}){
-  const row=sourceProfessionSkillTemplate(skillId);
-  if(!row)return {ok:false,reason:'skill-not-found'};
-  const charClass=Math.trunc(n(professionClass));
-  const requiredClass=Math.trunc(n(row.professionClass));
-  if(charClass<=0||charClass!==requiredClass){
-    return {ok:false,reason:'profession-mismatch',skillId:Math.trunc(n(row.skillId)),professionClass:charClass,requiredClass};
-  }
-  if(row.dispatchKnown!==true)return {ok:false,reason:'function-missing',skillId:Math.trunc(n(row.skillId))};
-  if(!isPlayer)return {ok:false,reason:'not-player',skillId:Math.trunc(n(row.skillId))};
-
-  const rawLevel=Math.trunc(n(rawSkillLevel));
-  if(rawLevel<=0)return {ok:false,reason:'skill-level',skillId:Math.trunc(n(row.skillId))};
-
-  const cost=sourceProfessionSkillMpCost(row.skillId,rawLevel);
-  if(!cost.ok)return cost;
-  const oldMp=Math.trunc(n(mp));
-  if(oldMp<cost.decMp){
-    return {ok:false,reason:'mp-short',skillId:Math.trunc(n(row.skillId)),mpBefore:oldMp,decMp:cost.decMp};
-  }
-  if(Math.trunc(n(row.skillId))!==11&&cost.decMp<=0){
-    return {ok:false,reason:'mp-cost-invalid',skillId:Math.trunc(n(row.skillId)),mpBefore:oldMp,decMp:cost.decMp};
-  }
-
-  const mpAfter=Math.max(0,oldMp-cost.decMp);
-  return {
-    ok:true,skillId:Math.trunc(n(row.skillId)),functionName:String(row.func||''),
-    professionClass:charClass,requiredClass,rawSkillLevel:rawLevel,
-    skillLevel:cost.skillLevel,mpBefore:oldMp,decMp:cost.decMp,mpAfter,
-    dynamicMp:cost.dynamic,deductBeforeDispatch:true,
-    useFlag:Math.trunc(n(row.useFlag)),targetType:Math.trunc(n(row.target)),
-    commonCommand:sourceProfessionCommonCommandPlan(row.skillId,toNo,rawLevel)
-  };
 }
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
