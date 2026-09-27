@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.25**
+**PLAYABLE CORE V2.26**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,27 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.26 最新進度
+
+V2.26 繼續接勇士 direct-attack profession skill，新增 **Skill 24「雙重攻擊」／`PROFESSION_CHAIN_ATK_2`** 的完整 fixed battle lifecycle。
+
+- fixed row：TARGET=1、KIND=1、USE_FLAG=1、MP=13、common command = `BATTLE_COM_S_CHAIN_ATK_2`。
+- command receipt 沿用 V2.25：收到 `P|slot|toNo` 時先扣 MP、跑 post-dispatch 熟練度；真正效果等 Player actor 輪到時才執行。
+- 這招和 Skill 23「連環攻擊」不是同一條邏輯。fixed `battle_profession_attack_fun()` 的實際順序是：
+  1. 讀原目標 `WORKDAMAGEABSROB / WORKDAMAGEVANISH / WORKTRAP`；
+  2. ABSROB > 0 則 -1、VANISH > 0 則 -1、TRAP > 0 直接清 0；REFLEC 那行在 fixed source 被註解，因此**不消耗 REFLEC**；
+  3. 先把攻方 `WORKATTACKPOWER=0`，送出一段 **0 傷害技能動作**；
+  4. 再算 `WORKATTACKPOWER = FIXSTR × (100 + tier×2)%`；
+  5. 若攻方與原目標仍存活，對同一 raw `defNo` 呼叫**一次真正普通 `BATTLE_Attack()`**；
+  6. helper 立即 return，不再走 profession calc-only 第一擊，也不進普通 Counter loop。
+- Web 的 `FIXSTR` 映射使用現有 `playerEquipCompliance.fixedAttack`，不是當下可能已被 WEAKEN／MagicPet 改過的 `WORKATTACKPOWER`。
+- tier 仍沿用 `PROFESSION_CHANGE_SKILL_LEVEL_A()`：例如 FIXSTR 100 時 tier0=100、tier1=102、tier5=110、tier10=120；保留 C 整數截斷。
+- 現行 source-backed Enemy DamageReact 實際可達的只有 **ACUPUNCTURE**。CHAIN_ATK_2 原碼只預消耗 ABSROB／VANISH／TRAP，不包含 ACUPUNCTURE；因此 V2.26 不虛構尚不存在的三個 runtime counter，ACUPUNCTURE 保持不動，交給後面的普通 `BATTLE_Attack()` 正常處理。
+- 真正那一下是普通 `BATTLE_Attack()` 路徑，所以保留 real Guardian substitution、SUITPOISON、ItemCrush 等普通物理命中規則；但 profession case 本身 break，因此**不補 ordinary Counter**。
+- 戰鬥技能面板現在可顯示已學會的 22 暴擊、23 連環攻擊、24 雙重攻擊。
+
+新增 `tools/check_v226_profession_chain_atk2_runtime.mjs`，鎖定 Skill 24 runtime row、FIXSTR 公式與 C 截斷、0 傷害前段、DamageReact 預消耗邊界、真正普通攻擊、AttackCount 仍先消耗、以及 no-Counter。**save schema 維持 30**。
 
 ## V2.25 最新進度
 
