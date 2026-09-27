@@ -8,9 +8,33 @@ function extractFunction(source,name){
   const marker='function '+name+'(';
   const start=source.indexOf(marker);
   assert.ok(start>=0,'missing '+name);
-  const bodyStart=source.indexOf('{',start);
+
+  // First match the full parameter list. Some production functions use object-destructuring
+  // defaults such as (...,{...}={}), so the first "{" after the function name is NOT the body.
+  const paramStart=source.indexOf('(',start);
+  let parenDepth=0,paramEnd=-1,quote=null,escape=false,lineComment=false,blockComment=false;
+  for(let i=paramStart;i<source.length;i++){
+    const c=source[i],n=source[i+1];
+    if(lineComment){if(c==='\n')lineComment=false;continue}
+    if(blockComment){if(c==='*'&&n==='/'){blockComment=false;i++}continue}
+    if(quote){
+      if(escape){escape=false;continue}
+      if(c==='\\'){escape=true;continue}
+      if(c===quote)quote=null;
+      continue;
+    }
+    if(c==="'"||c==='"'||c==='\x60'){quote=c;continue}
+    if(c==='/'&&n==='/'){lineComment=true;i++;continue}
+    if(c==='/'&&n==='*'){blockComment=true;i++;continue}
+    if(c==='(')parenDepth++;
+    else if(c===')'&&--parenDepth===0){paramEnd=i;break}
+  }
+  assert.ok(paramEnd>paramStart,'unterminated params '+name);
+
+  const bodyStart=source.indexOf('{',paramEnd);
   assert.ok(bodyStart>=0,'missing body '+name);
-  let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
+  let depth=0;
+  quote=null;escape=false;lineComment=false;blockComment=false;
   for(let i=bodyStart;i<source.length;i++){
     const c=source[i],n=source[i+1];
     if(lineComment){if(c==='\n')lineComment=false;continue}
