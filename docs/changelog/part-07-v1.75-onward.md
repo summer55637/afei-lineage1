@@ -3364,3 +3364,26 @@ GNU libc 的 rand() 實作直接呼叫 `__random()`，random() 同樣是 `__rand
 與 V2.09 executor 一起原子化啟用。
 
 save schema 維持 29。
+
+
+---
+
+## V2.10 Merge live lifecycle
+
+V2.10 將 V2.09 RNG executor 與原 C `ITEM_mergeItem_merge()` 後半段正式原子化接線，200／201 玩家按鈕開始執行真正合成。
+
+### fixed order
+
+- `CHAR_findEmptyItemBox` 在解析材料與任何 `ITEM_makeItem` RNG 前；全滿直接 return -1。
+- 每件有效材料先 `ITEM_makeItem` 66 RNG。
+- `cnt>1` 才進 `ITEM_mergeItem`。
+- `time(NULL)-CHAR_WORKLASTMERGETIME < 5+(num-2)` 命中時，先覆寫 timestamp，再 `RAND(0,num-1)` 回傳 input ITEM_ID；正常路徑同樣先覆寫 timestamp。
+- `ITEM_mergeItem` 回來後 `CHAR_MERGEITEMCOUNT++`。
+- 不論 ret 正負，每個有效材料先把 `ITEM_USEPILENUMS` 減 1；<=0 才清 CHAR slot 並 end existing。
+- ret>=0 才 `ITEM_makeItemAndRegist` 成品；成品 make RNG 發生在材料刪除之後。
+- 成品先 `ITEM_MERGEFLG=TRUE`，再加入背包；加入失敗就 end 成品 existing。
+- mixed dish `-10`／no atom `-1` 都仍消耗材料，與原 C 一致。
+
+`CHAR_WORKLASTMERGETIME` 採頁面 session transient，不進 save；`CHAR_MERGEITEMCOUNT` 以 `mergeItemCount` 保存。save schema 維持 29。
+
+新增 `tools/check_v210_merge_live_lifecycle.mjs`，並把 V2.09 regression 的 live-pending assertion 改為只鎖 V2.09 executor 本身；live gate 由 V2.10 regression 接手。

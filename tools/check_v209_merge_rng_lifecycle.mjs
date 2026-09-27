@@ -114,15 +114,9 @@ function retryOnce(ideal,byExtract,randInclusive,randModulo){
 // Five failed outer calls for ideal=3: 5*4 retry RAND + final input fallback RAND = 21 shared RAND calls.
 assert.equal(5*4+1,21);
 
-// Live 200/201 gate remains atomic-safe: executor is ready but is not invoked before lifecycle exists.
-const gateStart=game.indexOf('if(id===200||id===201)');
-const gateEnd=game.indexOf('try{await sourceEnsureItemField2Db()}',gateStart);
-const gate=game.slice(gateStart,gateEnd);
-assert.ok(gate.includes('mergeRngLifecycleReady:true'));
-assert.ok(gate.includes('RNG executor 已來源化'));
-assert.ok(gate.includes('目前不從按鈕消耗 RNG'));
-assert.equal(gate.includes('sourceMergeExecuteCoreRng('),false);
-assert.equal(gate.includes('cRand('),false);
+// V2.10 intentionally activates the live 200/201 lifecycle. V2.09 regression now owns
+// only the executor ordering it introduced; live mutation ordering is checked by V2.10.
+assert.ok(game.includes('function sourceMergeExecuteLifecycle(selected,pet=activePet(),{'));
 
 console.log(JSON.stringify({
   pass:true,version:'V2.09',focus:'merge-rng-lifecycle-executor',
@@ -130,5 +124,5 @@ console.log(JSON.stringify({
   retryImmediate:{rand:1,modulo:1},
   retryIdeal3FullFailureRand:4,
   retryIdeal3FiveFailuresPlusFallbackRand:21,
-  liveGateConsumesRng:false
+  liveGateWiringCheckedBy:'V2.10'
 }));

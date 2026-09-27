@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.09**
+**PLAYABLE CORE V2.10**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,25 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.10 最新進度
+
+V2.10 正式把 200／201 `PETSKILL_Merge` 從 pending gate 接成可玩的原 C lifecycle；RNG 與物品 mutation 現在一次完整執行，不再存在「只吃 RNG、不刪材料／不產生成品」的半套狀態。
+
+固定順序：
+
+1. `CHAR_findEmptyItemBox` 等價檢查先執行；背包 15 格全滿時直接拒絕，**0 RNG、0 材料 mutation**。
+2. 每個有效 `CANMERGEFROM==1` input 先各跑 `ITEM_makeItem`，仍是 66 顆 RAND／件。
+3. 有效材料 >1 後，以 `time(NULL)` 秒級 timestamp 鏡像 `CHAR_WORKLASTMERGETIME`：門檻是 `5+(num-2)` 秒；命中 cooldown 會更新 timestamp，再吃 `RAND(0,num-1)` 回傳某個 input ITEM_ID。
+4. 正常路徑接 V2.09 atom／retry executor；`-10` mixed dish 與 `-1` no-atom 都視為原 C 真實負結果。
+5. 只要已進 `ITEM_mergeItem()`，原 C 都先把本次有效材料各扣 1 `ITEM_USEPILENUMS`；扣到 0 才解除背包 slot 並 `ITEM_endExistItemsOne`。
+6. `ret>=0` 才 `ITEM_makeItemAndRegist(ret)`；這一步會再跑成品自己的 66-field `ITEM_makeItem` RNG。
+7. 成品 existing 先設 `ITEM_MERGEFLG=TRUE`，再 `CHAR_addItemSpecificItemIndex` 加入背包。
+8. 若加入背包失敗，依原 C 立刻銷毀新成品 existing；已消耗的材料與 RNG 不回滾。
+9. `CHAR_MERGEITEMCOUNT` 也在每次有效材料 >1 的嘗試後累加；Web 以 `mergeItemCount` 保存。
+10. `CHAR_WORKLASTMERGETIME` 是 Work 值，因此 Web 只保留在目前頁面執行期，不寫入存檔；save schema 維持 **29**。
+
+新增 `sourceMergeCooldownState()`、`sourceMergeLifecyclePreflight()`、`sourceMergeExecuteLifecycle()` 與 `tools/check_v210_merge_live_lifecycle.mjs`。
 
 ## V2.09 最新進度
 

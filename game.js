@@ -72,6 +72,7 @@ let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
+let sourceLastMergeTimeSec=0;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -586,7 +587,7 @@ function sourceMergePrepareClones(clones,pet=activePet()){
     if(!ratePlan.ok)return ratePlan;
     atoms.push({atomIndex:bucket.atomIndex,name:bucket.name,rawValues:[...bucket.values],simplified,ratePlan});
   }
-  if(!atoms.length)return {ok:false,reason:'no-merge-atoms'};
+  if(!atoms.length)return {ok:false,reason:'no-merge-atoms',sourceReturn:-1};
   return {
     ok:true,searchtable:collected.searchtable,itemType:collected.itemType,
     inputItemIds:collected.items.map(x=>x.itemId),atoms,skipped:collected.skipped
@@ -658,9 +659,9 @@ function sourceMergeExecuteRetryOuter(hitPlan,ingnum,inputItemIds,{randInclusive
   };
 }
 function sourceMergeExecuteCoreRng(selected,pet=activePet(),{
-  randInclusive=cRand,randModulo=sourceRandModulo,cooldownHit=false
+  randInclusive=cRand,randModulo=sourceRandModulo,cooldownHit=false,precloned=null
 }={}){
-  const cloned=sourceMergeMakeInputClones(selected,{randInclusive});
+  const cloned=precloned?.ok===true?precloned:sourceMergeMakeInputClones(selected,{randInclusive});
   if(!cloned.ok)return cloned;
   const inputIds=cloned.clones.map(x=>x.itemId);
   if(cloned.clones.length<=1){
@@ -693,6 +694,153 @@ function sourceMergeExecuteCoreRng(selected,pet=activePet(),{
     moduloCalls:retry.moduloCalls,totalSharedRngCalls:cloned.rngCalls+atomRngCalls+retry.rngCalls+retry.moduloCalls,
     retry,hitPlan,executedIngEntries:hitPlan.mutatedIngEntries,
     sourceRngConsumed:true,sourceLifecycleMutationPending:true
+  };
+}
+
+
+function sourceMergeCooldownState(inputCount,nowSec,lastMergeTimeSec=sourceLastMergeTimeSec){
+  const num=Math.max(0,Math.trunc(Number(inputCount)));
+  const now=Math.trunc(Number(nowSec));
+  const previous=Math.trunc(Number(lastMergeTimeSec)||0);
+  if(num<=1||!Number.isFinite(now))return {ok:false,reason:'merge-cooldown-source'};
+  const threshold=5+(num-2);
+  const elapsed=now-previous;
+  return {ok:true,hit:elapsed<threshold,threshold,elapsed,nowSec:now,previousSec:previous};
+}
+function sourceMergeLifecyclePreflight(selected){
+  // fixed ITEM_mergeItem_merge checks CHAR_findEmptyItemBox before it parses or makes any input item.
+  if(sourcePlayerFindEmptyBackpackSlot(state)<0){
+    return {ok:false,reason:'merge-backpack-full',sourceNoRngConsumed:true};
+  }
+  if(!Array.isArray(selected))return {ok:false,reason:'merge-selection-source',sourceNoRngConsumed:true};
+  const ordered=[...selected].sort((a,b)=>Math.trunc(Number(a?.slotIndex))-Math.trunc(Number(b?.slotIndex)));
+  const valid=[],seen=new Set();
+  for(const entry of ordered){
+    const existing=entry?.existing;
+    if(!existing||existing.owner!=='player')continue;
+    const itemIndex=Math.trunc(Number(entry?.itemIndex));
+    if(seen.has(itemIndex))return {ok:false,reason:'merge-collision',sourceNoRngConsumed:true};
+    seen.add(itemIndex);
+    const itemId=Math.trunc(Number(existing.itemId));
+    const canMerge=sourceItemMakeTemplateInt(itemId,'ITEM_CANMERGEFROM');
+    if(canMerge==null)return {ok:false,reason:'merge-canmerge-source',itemId,sourceNoRngConsumed:true};
+    if(canMerge!==1)continue;
+    if(!sourceItemMakeTemplateData(itemId)){
+      return {ok:false,reason:'merge-input-template-source',itemId,sourceNoRngConsumed:true};
+    }
+    const pile=sourceItemRuntimeResolvedDataInt(existing,'ITEM_USEPILENUMS');
+    if(pile==null||pile<1){
+      return {ok:false,reason:'merge-pile-source',itemId,itemIndex,sourceNoRngConsumed:true};
+    }
+    valid.push({slotIndex:Math.trunc(Number(entry.slotIndex)),itemIndex,itemId,pile});
+  }
+  return {ok:true,valid,sourceNoRngConsumed:true};
+}
+function sourceMergeExecuteLifecycle(selected,pet=activePet(),{
+  randInclusive=cRand,randModulo=sourceRandModulo,nowSec=Math.trunc(Date.now()/1000)
+}={}){
+  const preflight=sourceMergeLifecyclePreflight(selected);
+  if(!preflight.ok)return preflight;
+
+  // ITEM_mergeItem_merge calls ITEM_makeItem for every valid CANMERGEFROM input before cnt>1.
+  const cloned=sourceMergeMakeInputClones(selected,{randInclusive});
+  if(!cloned.ok)return cloned;
+  if(cloned.clones.length<=1){
+    return {
+      ok:false,reason:'less-than-two-mergeable',inputCount:cloned.clones.length,
+      inputMakeRngCalls:cloned.rngCalls,sourceRngConsumed:cloned.rngCalls>0,
+      materialsConsumed:false
+    };
+  }
+
+  // fixed ITEM_mergeItem: time(NULL), test < 5+(num-2), then ALWAYS overwrite LASTMERGETIME.
+  const cooldown=sourceMergeCooldownState(cloned.clones.length,nowSec,sourceLastMergeTimeSec);
+  if(!cooldown.ok)return cooldown;
+  sourceLastMergeTimeSec=cooldown.nowSec;
+
+  const core=sourceMergeExecuteCoreRng(selected,pet,{
+    randInclusive,randModulo,cooldownHit:cooldown.hit,precloned:cloned
+  });
+  let sourceReturn=null;
+  if(core?.ok)sourceReturn=Math.trunc(Number(core.createdItemId));
+  else if(Number.isFinite(Number(core?.sourceReturn)))sourceReturn=Math.trunc(Number(core.sourceReturn));
+  else{
+    return Object.assign({
+      ok:false,reason:core?.reason||'merge-core-source',
+      cooldown,sourceRngConsumed:!!core?.sourceRngConsumed,
+      materialsConsumed:false,sourceLifecycleStoppedNoGuess:true
+    },core||{});
+  }
+
+  // fixed CHAR_MERGEITEMCOUNT increments for every cnt>1 attempt, including negative source return.
+  state.mergeItemCount=Math.max(0,Math.trunc(n(state.mergeItemCount)))+1;
+
+  // fixed _ITEM_PILENUMS path: decrement one unit; free existing only when resulting pile <=0.
+  const consumed=[];
+  for(const clone of cloned.clones){
+    const beforeSlot=sourceItemRuntimeSlot(clone.itemIndex);
+    const pileBefore=sourceItemRuntimeResolvedDataInt(beforeSlot,'ITEM_USEPILENUMS');
+    const consumedOk=sourceConsumeTrackedExistingItem(clone.itemIndex);
+    const afterSlot=sourceItemRuntimeSlot(clone.itemIndex);
+    const pileAfter=afterSlot?sourceItemRuntimeResolvedDataInt(afterSlot,'ITEM_USEPILENUMS'):0;
+    consumed.push({
+      itemIndex:clone.itemIndex,itemId:clone.itemId,pileBefore,
+      pileAfter,freed:!afterSlot,ok:consumedOk
+    });
+    if(!consumedOk){
+      sourceField2SelectedSlots.clear();
+      return {
+        ok:false,reason:'merge-consume-failed',sourceReturn,cooldown,core,consumed,
+        sourceRngConsumed:true,materialsConsumed:consumed.some(x=>x.ok),mutated:true
+      };
+    }
+  }
+  sourceField2SelectedSlots.clear();
+
+  if(sourceReturn<0){
+    return {
+      ok:false,reason:core?.reason||'merge-source-failed',sourceReturn,cooldown,core,consumed,
+      sourceRngConsumed:true,materialsConsumed:true,mutated:true
+    };
+  }
+
+  // fixed ITEM_makeItemAndRegist(ret): consumes the output ITEM_makeItem RNG before existing allocation.
+  const outputItemIndex=sourceItemRuntimeAlloc(sourceReturn,null,{source:'merge'});
+  if(outputItemIndex<0){
+    return {
+      ok:false,reason:'merge-output-alloc-failed',sourceReturn,cooldown,core,consumed,
+      sourceRngConsumed:true,materialsConsumed:true,outputMakeAttempted:true,mutated:true
+    };
+  }
+  const outputExisting=sourceItemRuntimeSlot(outputItemIndex);
+  const outputMakeRngCalls=Math.trunc(Number(outputExisting?.sourceMakeRngCalls)||0);
+
+  // fixed ITEM_setInt(createitemindex, ITEM_MERGEFLG, TRUE) occurs before CHAR_addItemSpecificItemIndex.
+  if(!sourceItemRuntimeSetDataInt(outputExisting,'ITEM_MERGEFLG',1)){
+    sourceItemRuntimeFree(outputItemIndex);
+    return {
+      ok:false,reason:'merge-mergeflag-source',sourceReturn,cooldown,core,consumed,
+      sourceRngConsumed:true,materialsConsumed:true,outputMakeAttempted:true,
+      outputMakeRngCalls,outputFreed:true,mutated:true
+    };
+  }
+
+  const addRc=sourcePlayerAddSpecificExistingItem(outputItemIndex,{source:'merge',incrementInventory:true});
+  if(addRc<PLAYER_BACKPACK_START||addRc>=PLAYER_ITEM_SLOT_COUNT){
+    // fixed failure branch destroys the newly registered output existing item.
+    sourceItemRuntimeFree(outputItemIndex);
+    return {
+      ok:false,reason:'merge-output-add-failed',sourceReturn,cooldown,core,consumed,
+      sourceRngConsumed:true,materialsConsumed:true,outputMakeAttempted:true,
+      outputMakeRngCalls,outputFreed:true,addRc,mutated:true
+    };
+  }
+
+  return {
+    ok:true,sourceReturn,createdItemId:sourceReturn,outputItemIndex,backpackSlot:addRc,
+    outputMakeRngCalls,mergeFlag:1,cooldown,core,consumed,
+    sourceRngConsumed:true,materialsConsumed:true,mutated:true,
+    searchtable:core?.searchtable??null
   };
 }
 
@@ -1856,7 +2004,7 @@ function freshState(){
     creationPlayerStats:null,playerCreationStatsConfigured:false,playerCreationStatsLegacyUnknown:false,
     playerStats:{vital:0,str:0,tgh:0,dex:0},
     elements:null,playerElementsConfigured:false,
-    gold:30000,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
+    gold:30000,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     // fixed setup.cf + _HELP_NEWHAND: ITEM1=24114; exact item name/effect is not guessed.
     inventory:{'24114':1},
@@ -16443,7 +16591,17 @@ function sourceField2FailureText(reason){
     'full':'武器或防具已經鑲滿三格',
     'missing-int-source':'精工所需整數欄位來源不完整',
     'magic-source-missing':'精工魔法欄位來源不完整',
-    'consume-failed':'材料 existing item 無法依原生命週期刪除'
+    'consume-failed':'材料 existing item 無法依原生命週期刪除',
+    'merge-backpack-full':'合成時最少需要一個空的背包欄位',
+    'merge-collision':'同一個 existing item 被重複送入合成',
+    'merge-pile-source':'材料 pile 資料不完整，已停止且不猜值',
+    'less-than-two-mergeable':'至少需要兩個可加工／料理材料',
+    'mixed-dish':'料理與非料理材料不能混合',
+    'no-merge-atoms':'材料沒有可供原 C 合成的 atom',
+    'merge-consume-failed':'合成材料無法依原 C pile 生命週期扣除',
+    'merge-output-alloc-failed':'成品 ITEM_makeItemAndRegist 無法取得 existing slot',
+    'merge-mergeflag-source':'成品缺少可寫入的 ITEM_MERGEFLG 來源欄位',
+    'merge-output-add-failed':'成品無法加入背包，已依原 C 銷毀成品 existing'
   })[reason]||String(reason||'未知 field=2 錯誤');
 }
 async function sourceUseField2PetSkill(skillId){
@@ -16454,33 +16612,41 @@ async function sourceUseField2PetSkill(skillId){
   if(enemy){addLog('原 C field=2 PetSkill 只能在非戰鬥狀態使用。','bad');return {ok:false,reason:'in-battle'}}
 
   if(id===200||id===201){
-    let petFixEntries=[],prepared=null;
     try{
       await sourceEnsurePetMergeFixDb();
       await sourceEnsureItemField2Db();
-      petFixEntries=sourcePetMergeFixEntries(activePet());
-      prepared=sourceMergePrepareStatic(sourceField2SelectedEntries(),activePet());
     }catch(err){
       addLog('加工／料理固定 merge runtime 載入失敗：'+String(err?.message||err),'bad');
-      return {ok:false,reason:'merge-fix-runtime-load'};
-    }
-    if(!prepared?.ok){
-      addLog((id===200?'加工':'料理')+' 的固定材料數值前置無法完成：'+String(prepared?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
-      return Object.assign({ok:false,mergeStaticPrepared:false,sourceNoRngConsumed:true},prepared||{reason:'merge-prepare'});
+      return {ok:false,reason:'merge-fix-runtime-load',sourceNoRngConsumed:true};
     }
     const candidateCache=sourceMergeCandidateCache();
-    const retrySpec=sourceMergeRetrySpec(prepared.atoms.length);
-    if(!candidateCache.ok||!retrySpec.ok){
-      const failed=!candidateCache.ok?candidateCache:retrySpec;
-      addLog((id===200?'加工':'料理')+' 的 fixed candidate/retry 前置無法完成：'+String(failed?.reason||'unknown')+'；未消耗 RNG／材料。','bad');
-      return Object.assign({ok:false,reason:'merge-candidate-runtime',sourceNoRngConsumed:true},failed);
+    if(!candidateCache.ok){
+      addLog((id===200?'加工':'料理')+' 的 fixed candidate runtime 無法完成：'+String(candidateCache.reason||'unknown')+'；未消耗 RNG／材料。','bad');
+      return Object.assign({ok:false,reason:'merge-candidate-runtime',sourceNoRngConsumed:true},candidateCache);
     }
-    addLog((id===200?'加工':'料理')+' 已完成 ITEM_simplify_atoms / ITEM_getTableNum / ITEM_randRange 與 ITEM_merge_with_retry 候選 cache／extractnum 規則前置（'+prepared.atoms.length+' 種素材、'+candidateCache.stats.candidates+' 個成品候選、ideal '+retrySpec.ideal+'）；目前未實際擲 RNG。ITEM_mergeItem_merge 的完整 merge table/runtime、RNG executor 已來源化但為避免半套操作目前不從按鈕消耗 RNG；成品建立／材料刪除與後續 lifecycle 尚未接入，維持不猜結果。','bad');
-    return {
-      ok:false,reason:'merge-runtime-pending',sourceRuntimePending:true,petMergeFixReady:true,
-      mergeStaticPrepared:true,mergeCandidatePrepared:true,mergeRngLifecycleReady:true,petFixEntries:petFixEntries.length,
-      candidateStats:candidateCache.stats,retrySpec,prepared
-    };
+
+    const selected=sourceField2SelectedEntries();
+    const result=sourceMergeExecuteLifecycle(selected,activePet());
+    if(!result.ok){
+      if(result.reason==='mixed-dish'&&result.materialsConsumed){
+        addLog('非法的合成方法：料理與非料理材料混用；依原 C，這次有效材料仍已各消耗 1 pile。','bad');
+      }else if(result.materialsConsumed){
+        addLog((id===200?'加工':'料理')+' 未產生成品（'+sourceField2FailureText(result.reason)+'）；依原 C，這次有效材料已各消耗 1 pile。','bad');
+      }else{
+        addLog((id===200?'加工':'料理')+' 無法執行：'+sourceField2FailureText(result.reason)+'。','bad');
+      }
+      if(result.mutated||result.sourceRngConsumed)render();
+      else renderSourcePlayerItems();
+      return result;
+    }
+
+    const output=sourceItemRuntimeSlot(result.outputItemIndex);
+    const label=output?sourcePlayerRuntimeItemLabel(output):('Item '+result.createdItemId);
+    const mode=result.searchtable===1?'料理':'加工';
+    const cooldownText=result.cooldown?.hit?'（命中原 C 頻繁合成 fallback）':'';
+    addLog(mode+'完成'+cooldownText+'：'+label+'；材料各扣 1 pile，成品已設 ITEM_MERGEFLG 並加入背包。','good');
+    save();render();
+    return result;
   }
 
   try{await sourceEnsureItemField2Db()}
