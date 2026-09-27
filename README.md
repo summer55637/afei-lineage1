@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.22**
+**PLAYABLE CORE V2.23**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,26 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.23 最新進度
+
+V2.23 把 V2.22 已驗證的熟練度 lifecycle **正式掛回目前 Web 已存在的物理戰鬥事件**。只接 fixed source 與現行 Web 都有一對一事件的位置，不為了「看起來完整」而捏造尚未移植的 battle result。
+
+- **普通回避 live hook**：fixed `BATTLE_DuckCheck()` 的最終 `RAND(1,10000) <= per` 成功後，若 defender 是 Player，立即找第一個 `PROFESSION_AVOID`（Skill 25）並跑熟練度 RNG。
+- 這個 hook 同時接進一般 `resolveNormalAttack()` 與 Guardian 前置的 `sourceInitialDodgeOnly()`，避免普通 Enemy attack 與 Guardian 路徑結果不一致。
+- **不誤算其他 dodge**：PetSkill/SetDuck 的 `skillDuck` 與裝備 `WDUCKPOWER` 的第二段 suit dodge 都不是 fixed `PROFESSION_AVOID` 升級點，因此不會升回避。
+- **Player 會心 live hook**：fixed 會心成功後先完成 `BATTLE_CriDamageCalc/BATTLE_DamageCalc`，接著依來源順序先升 `PROFESSION_WEAPON_FOCUS`、再升 `PROFESSION_DUAL_WEAPON`；Web 現在也在 GuardBreak／GuardAdjust／damage<1 RNG **之前**做同一順序。
+- 武器專精仍依 V2.22 的 source marker：斧／棍／槍／弓／回力鏢／投擲斧／投石。沒有學到相符專精時不消耗熟練度 RNG。
+- 二刀流仍依 fixed 裝備 gate：`CHAR_ARM` 與 `CHAR_EQSHIELD` 兩格都存在才會繼續查技能與抽熟練度 RNG。
+- 同一次 critical 若武器專精與二刀流都已學，兩者按 fixed 順序各自獨立跑熟練度；任一跨 raw 100 邊界都可各自觸發 Profession Level Check。
+- live 熟練度跨整百與職業升級現在會寫入戰鬥日誌，狀態本身沿用 V2.21 的永久 `professionSkills/professionLevel/professionSkillPoint`。
+
+本版刻意**沒有**先接：
+- `PROFESSION_DEFLECT`：fixed 只在 `BATTLE_ArrangeCheck()` 成功時升，但 Web 尚未實作真正 ARRANGE battle result。
+- 火／冰／雷 practice：fixed 在 `analysis_profession_parameter()` 解析職業魔法時升；目前 Web 的職業魔法 damage core 尚未有 live cast 入口。
+- 一般 `PROFESSION_SKILL_Use()` post-dispatch：V2.22 規則已完成，但玩家職技 live command UI／dispatcher 尚未接入。
+
+新增 `tools/check_v223_profession_live_physical_hooks.mjs`，鎖定普通 dodge 才升回避、critical 的 Focus→Dual 順序、兩格裝備 gate，以及 hook 在 Guard／damage<1 RNG 前的來源位置。**save schema 維持 30**。
 
 ## V2.22 最新進度
 

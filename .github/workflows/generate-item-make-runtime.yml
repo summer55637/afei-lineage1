@@ -58,6 +58,7 @@ on:
       - "tools/check_v220_profession_skill_runtime.mjs"
       - "tools/check_v221_profession_player_state.mjs"
       - "tools/check_v222_profession_proficiency_runtime.mjs"
+      - "tools/check_v223_profession_live_physical_hooks.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -246,6 +247,9 @@ jobs:
 
       - name: Run V2.22 profession proficiency regressions
         run: node tools/check_v222_profession_proficiency_runtime.mjs
+
+      - name: Run V2.23 profession live physical hook regressions
+        run: node tools/check_v223_profession_live_physical_hooks.mjs
 
       - name: Commit generated runtime
         shell: bash

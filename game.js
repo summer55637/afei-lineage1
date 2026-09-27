@@ -2032,6 +2032,47 @@ function sourceProfessionDualWeaponProficiency(
   );
 }
 
+
+function sourceProfessionLogProficiencyResult(result){
+  if(!result||result.ok!==true)return result;
+  const roll=result.proficiency&&typeof result.proficiency==='object'?result.proficiency:result;
+  if(roll.success&&roll.centuryBoundary){
+    const row=sourceProfessionSkillTemplate(roll.skillId);
+    const name=String(row?.name||('Skill '+roll.skillId));
+    addLog(name+'技能熟練度上升為'+Math.trunc(n(roll.rawAfter)/100)+'。','good');
+  }
+  const levelCheck=roll.levelCheck||null;
+  if(levelCheck?.levelUp){
+    addLog('職業等級上升為'+levelCheck.levelAfter+'級，職業技能點 +1。','good');
+  }
+  return result;
+}
+function sourceProfessionPlayerNormalDodgeEvent(target=state,{randInclusive=cRand}={}){
+  const result=sourceProfessionSpecialSkillProficiencyByFunction(
+    target,'PROFESSION_AVOID',{randInclusive}
+  );
+  sourceProfessionLogProficiencyResult(result);
+  return result;
+}
+function sourceProfessionPlayerCriticalEvent(
+  target=state,weaponType=0,{randInclusive=cRand}={}
+){
+  // fixed BATTLE_AttackSeq critical block order:
+  // weapon-focus helper first, then dual-weapon helper.
+  const slots=sourcePlayerItemSlots(target);
+  const armEquipped=slots?.[PLAYER_ARM_SLOT]!=null;
+  const shieldEquipped=slots?.[PLAYER_SHIELD_SLOT]!=null;
+  const weaponFocus=sourceProfessionWeaponFocusProficiency(
+    target,weaponType,{randInclusive}
+  );
+  sourceProfessionLogProficiencyResult(weaponFocus);
+  const dualWeapon=sourceProfessionDualWeaponProficiency(
+    target,{armEquipped,shieldEquipped,randInclusive}
+  );
+  sourceProfessionLogProficiencyResult(dualWeapon);
+  return {weaponType:Math.trunc(n(weaponType)),armEquipped,shieldEquipped,weaponFocus,dualWeapon};
+}
+
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
   for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
@@ -6785,7 +6826,10 @@ function resolveNormalAttack(attacker,defender,options={}){
   }
   const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進普通閃避判定。
-  if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
+  if(!disableDodge&&cRand(1,10000)<=duck){
+    const professionDodge=defender?.type==='player'?sourceProfessionPlayerNormalDodgeEvent(state):null;
+    return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck,professionDodge};
+  }
   const suitDuck=sourceSuitDuckCheck(defender,options);
   if(suitDuck.dodged){
     return {
@@ -6806,6 +6850,11 @@ function resolveNormalAttack(attacker,defender,options={}){
   if(critical&&Math.trunc(n(attacker?.weaponType))!==4){
     damage=Math.trunc(damage+n(defender?.defense)*Math.max(1,n(attacker?.level))/Math.max(1,n(defender?.level))*.5);
   }
+  // fixed BATTLE_AttackSeq invokes Weapon Focus then Dual Weapon immediately after
+  // critical damage is calculated, before GuardBreak/GuardAdjust and the damage<1 RAND.
+  const professionCritical=(critical&&attacker?.type==='player')
+    ?sourceProfessionPlayerCriticalEvent(state,Math.trunc(n(attacker?.weaponType)))
+    :null;
 
   // GuardBreak2 類技能會在 GuardAdjust 前先修正原始傷害。
   const preGuardMultiplier=Number.isFinite(Number(options.preGuardDamageMultiplier))
@@ -6829,7 +6878,7 @@ function resolveNormalAttack(attacker,defender,options={}){
   return {
     damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,
     guarded:guarding,duckRaw:duck,criticalRaw,baseCriticalRaw,criticalChanceMultiplier,
-    preGuardDamageMultiplier:preGuardMultiplier,
+    preGuardDamageMultiplier:preGuardMultiplier,professionCritical,
     damageMultiplier:multiplier,damageDivisor:Number.isFinite(divisor)&&divisor>0?divisor:1
   };
 }
@@ -7403,7 +7452,8 @@ function sourceInitialDodgeOnly(attacker,defender,options={}){
 
   const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
   if(!disableDodge&&cRand(1,10000)<=duck){
-    return {dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck};
+    const professionDodge=defender?.type==='player'?sourceProfessionPlayerNormalDodgeEvent(state):null;
+    return {dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,professionDodge};
   }
   const suitDuck=sourceSuitDuckCheck(defender,options);
   if(suitDuck.dodged){

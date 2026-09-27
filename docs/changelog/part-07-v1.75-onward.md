@@ -3655,3 +3655,19 @@ V2.22 來源化 fixed `PROFESSION_NORMAL_SKILL_LEVLE_UP()` 與 `PROFESSION_LEVEL
 - 特殊熟練度入口可依 function 名掃 26 格第一個 match；武器專精額外比對來源 option marker，二刀流保留雙裝備 gate。
 
 新增 `tools/check_v222_profession_proficiency_runtime.mjs`。本版沒有新增 save 欄位，schema 維持 **30**。
+
+---
+
+## V2.23 profession live physical hooks
+
+V2.23 將已來源化的 profession proficiency 掛回現有 physical battle events。
+
+- `resolveNormalAttack()`：只有 fixed ordinary DuckCheck 成功才觸發 `PROFESSION_AVOID`。
+- `sourceInitialDodgeOnly()`：Guardian 前置 DuckCheck 同樣觸發，避免 direct-to-player 路徑漏掉。
+- `skillDuck` / suit `WDUCKPOWER` dodge 不會誤升回避。
+- Player critical：critical damage 計算後、GuardBreak / GuardAdjust / damage<1 RNG 之前，依 fixed 順序跑 Weapon Focus → Dual Weapon。
+- Weapon Focus 依武器 marker 找第一個匹配 slot；Dual Weapon 先檢查 ARM + EQSHIELD。
+- 每個 proficiency boundary 可各自觸發 V2.22 Profession Level Check；live 日誌同步顯示熟練度整百與 profession level + skill point。
+- ARRANGE/DEFLECT、profession magic practice、active PROFESSION_SKILL_Use post-dispatch 尚未有等價 live event，因此本版不假接。
+
+新增 `tools/check_v223_profession_live_physical_hooks.mjs`。schema 維持 30。
