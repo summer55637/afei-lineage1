@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.42**
+**PLAYABLE CORE V2.43**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,103 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.43 最新進度
+
+V2.43 接入獵人 **Skill 47「陷阱」／`PROFESSION_TRAP`**，完整接上 fixed `battle_profession_assist_fun() -> BATTLE_ProfessionStatusSeq() -> BATTLE_GetDamageReact() -> BATTLE_DamageSub()` 的自體陷阱／反傷鏈。
+
+fixed row：MP 11、TARGET 5、KIND 2、option `效%1|回%5`、command `BATTLE_COM_S_TRAP`。
+
+### 施放時不是普通 status
+
+原 C 先把技能 display level 經：
+
+`PROFESSION_CHANGE_SKILL_LEVEL_M()`
+
+轉成 M-tier 1～10：
+
+- raw >90 → 10
+- >80 → 9
+- …
+- >10 → 2
+- 其他 → 1
+
+陷阱真正保存兩個 Work：
+
+- `WORKMODTRAP = tier×30 + 100`
+- `WORKTRAP`：tier 1～4 = 1、tier 5～9 = 2、tier 10 = 3
+
+所以固定傷害為 **130～400**。row 文字中的 `回%5` 並沒有直接當作陷阱剩餘回合；fixed assist case 明確用上述 tier 分段覆寫。
+
+### ProfessionStatusSeq 的特殊倒數
+
+陷阱不走一般 `StatusTbl[]`。
+
+每次輪到 Player 進 `BATTLE_ProfessionStatusSeq()` 時：
+
+- 若 `WORKTRAP > 0`：只做 `WORKTRAP--`。
+- 若該次一開始就是 `WORKTRAP == 0`：才把 `WORKTRAP` 與 `WORKMODTRAP` 一起清零。
+
+因此來源有一個很怪但明確的 lifecycle：
+
+- `1 -> 0` 的那次 ProfessionStatusSeq 之後，陷阱**立即已失效**，因為 DamageReact 只看 `WORKTRAP > 0`。
+- 但 `WORKMODTRAP` 的舊固定傷害值會多留到下一次 ProfessionStatusSeq 才被清掉。
+- Web 保留這個「count 先失效、MOD 晚一回合清」的來源行為，不自行整理成一般 Buff timer。
+
+### DamageReact：不是反彈原傷害
+
+`BATTLE_GetDamageReact()` 的 fixed 順序為：
+
+`VANISH -> ABSROB -> REFLEC -> TRAP -> ACUPUNCTURE`
+
+目前 Web Player 可達的新反應是 TRAP。
+
+當 Player 有 `WORKTRAP > 0` 且收到**正傷害的非投射物理攻擊**：
+
+1. 原本算出的物理 damage 不再扣 Player。
+2. `damage` 直接被改寫成 `WORKMODTRAP` 固定值。
+3. 固定陷阱傷害改扣**攻擊者**。
+4. `WORKTRAP` 與 `WORKMODTRAP` 立即清零。
+5. `defindex` 在後續流程改成 attackindex，因此 WakeUp、後續 physical status target、ItemCrush 與死亡／Ultimate 判定都視攻擊者為受擊者。
+6. `BATTLE_Attack()` 在一開始看到 DamageReact 就會把 `iRet/ContFlg` 關掉，所以陷阱觸發後不再進外層普通 Counter。
+
+也就是：**陷阱不是「Player 先吃 77 再反 250」；而是「Player 這次不吃 77，攻擊者改吃固定 250」。**
+
+### 投射武器不會踩陷阱
+
+fixed `BATTLE_DamageSub()` 對 TRAP 額外檢查 `BATTLE_IsThrowWepon()`。
+
+攻擊者使用：
+
+- BOW
+- BOOMERANG
+- BOUNDTHROW
+- BREAKTHROW
+
+時，`pRefrect` 會被改回 NONE：
+
+- Player 正常承受該次攻擊。
+- Trap **不觸發**。
+- Trap **不消耗**。
+
+MISS／DODGE／0 damage 也不會進 DamageSub 的 Trap 分支，因此同樣保留陷阱。
+
+### Web 接入範圍
+
+V2.43 把 Trap redirect 接到目前已有的實際物理入口：
+
+- 普通 Enemy → Player 攻擊
+- common weapon / AttackNum 多段
+- common PetSkill physical
+- Player／Enemy Counter
+- Confusion 同／跨 side ordinary physical
+- Combo 的 per-segment DamageReact
+- Guardian 後的 actual target
+- STATUSCHANGE 等「傷害後再附狀態」流程
+
+特別是 status physical：Trap 觸發後，後續 status 會沿 fixed 的 `defindex=attackindex` 指向攻擊者，而不是錯上到被陷阱保護的 Player。
+
+新增 `tools/check_v243_profession_trap_runtime.mjs`，鎖住 Skill 47 runtime、M-tier、130～400 固定傷害、1/2/3 count、MOD 延後清除、投射武器免疫、fixed damage redirect、Counter block、status/Combo/weapon 路徑與 V2.43 marker；**save schema 維持 30**。
 
 ## V2.42 最新進度
 
