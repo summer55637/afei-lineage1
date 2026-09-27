@@ -98,6 +98,7 @@ let sourceMergeCandidateCacheMemo=null;
 let sourceLastMergeTimeSec=0;
 let professionEncounterFix=0;
 let professionEncounterUntilSec=0;
+let battlePlayerProfessionHitState=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2249,7 +2250,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
   return functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
-    ||functionName==='PROFESSION_SHIELD_ATTACK';
+    ||functionName==='PROFESSION_SHIELD_ATTACK'
+    ||functionName==='PROFESSION_DEAD_ATTACK';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2426,6 +2428,103 @@ function sourceProfessionShieldAttackExecute(target,prepared,name){
     noOrdinaryCounter:true
   };
 }
+function sourceProfessionPlayerHitRight(compliance=state?.playerEquipCompliance){
+  const base=Math.trunc(n(compliance?.hitRight));
+  if(!battlePlayerProfessionHitState)return base;
+  const work=Number(battlePlayerProfessionHitState.workHitRight);
+  return Number.isFinite(work)?Math.trunc(work):base;
+}
+function sourceProfessionPlayerHitPreCommandCompliance(target=state){
+  if(!target)return null;
+  const compliance=target.playerEquipCompliance||null;
+  const baseHitRight=Math.trunc(n(compliance?.hitRight));
+  if(!battlePlayerProfessionHitState)return {active:false,workHitRight:baseHitRight};
+
+  // fixed _CHAR_complianceParameter -> CHAR_initcharWorkInt -> ITEM_equipEffect:
+  // WORKHITRIGHT is rebuilt from equipment, while MYSKILLHIT / MYSKILLHIT_NUM survive.
+  battlePlayerProfessionHitState.workHitRight=baseHitRight;
+
+  const beforeTurns=Math.trunc(n(battlePlayerProfessionHitState.turns));
+  let afterTurns=beforeTurns;
+  let sourceEquipBugAdd=0;
+  if(beforeTurns>0){
+    // fixed Other_DefcharWorkInt source bug:
+    // mpower=MYSKILLHIT; mdef=WORKHITRIGHT;
+    // mpower += (mtgh*mdef)/100; then writes the result BACK to MYSKILLHIT.
+    // mtgh is the pre-suit FIXTOUGH snapshot.
+    const mtgh=Math.trunc(n(compliance?.preSuitFixedTough));
+    sourceEquipBugAdd=Math.trunc(mtgh*baseHitRight/100);
+    afterTurns=beforeTurns+sourceEquipBugAdd;
+    battlePlayerProfessionHitState.turns=afterTurns;
+  }
+  return {
+    active:afterTurns>0,beforeTurns,afterTurns,baseHitRight,
+    sourceEquipBugAdd,
+    preSuitFixedTough:Math.trunc(n(compliance?.preSuitFixedTough)),
+    power:Math.trunc(n(battlePlayerProfessionHitState.power)),
+    workHitRight:Math.trunc(n(battlePlayerProfessionHitState.workHitRight))
+  };
+}
+function sourceProfessionPlayerHitStatusSeq(target=state){
+  const st=battlePlayerProfessionHitState;
+  if(!st||Math.trunc(n(st.turns))<=0)return null;
+  const beforeTurns=Math.trunc(n(st.turns));
+  const turns=beforeTurns-1;
+  st.turns=turns;
+  let restored=false;
+  if(turns===0){
+    // fixed BATTLE_StatusSeq tail subtracts MYSKILLHIT_NUM from the CURRENT
+    // compliance-rebuilt WORKHITRIGHT. This can create a negative one-round Work value.
+    st.workHitRight=Math.trunc(n(st.workHitRight))-Math.trunc(n(st.power));
+    restored=true;
+  }
+  return {
+    beforeTurns,turns,power:Math.trunc(n(st.power)),
+    restored,workHitRight:Math.trunc(n(st.workHitRight))
+  };
+}
+function sourceProfessionDeadAttackExecute(target,prepared,name){
+  const oldHp=Math.max(0,Math.trunc(n(state.hp)));
+  if(oldHp<=10){
+    addLog('「'+name+'」執行失敗：fixed 原 C 要求目前 HP > 10；MP／熟練度已在指令接收時處理。','bad');
+    return {
+      handled:true,noAction:true,reason:'dead-attack-hp-too-low',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:prepared.toNo,targetUnitId:target?.id??null,oldHp
+    };
+  }
+
+  const tier=Math.trunc(n(prepared.attackSkillTier));
+  const hpRate=tier*2+10;
+  const hpAfter=Math.trunc(oldHp*hpRate/100);
+  const hit=tier*2+80;
+  const hitRightBefore=sourceProfessionPlayerHitRight();
+  battlePlayerProfessionHitState={
+    turns:1,power:hit,workHitRight:hitRightBefore+hit
+  };
+  state.hp=hpAfter;
+
+  // fixed generic profession direct branch preserves skill_type but zeros any non-CHAIN
+  // DamageReact before BATTLE_DamageSub. ACUPUNCTURE therefore stays unconsumed here.
+  const r=sourceProfessionPhysicalCalcOnlyResult(target);
+  if(!r)return {
+    handled:true,noAction:true,reason:'attack-result-missing',
+    toNo:prepared.toNo,targetUnitId:target.id,oldHp,hpAfter,hit
+  };
+  const actual=applyFriendlyEnemyHit(
+    'player','你',target,r,null,
+    {suppressSuitPoison:true,suppressDamageReact:true}
+  );
+  addLog('你施放「'+name+'」：HP '+oldHp+' → '+hpAfter+
+    '，本次 WORKHITRIGHT +'+hit+'。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:prepared.toNo,targetUnitId:target.id,
+    attackSkillTier:tier,oldHp,hpRate,hpAfter,hit,
+    hitRightBefore,hitRightAfter:sourceProfessionPlayerHitRight(),
+    r,actual,damageReactSuppressed:true,noOrdinaryCounter:true
+  };
+}
 function sourceProfessionBattleSkillExecute(prepared,actor=null){
   if(!prepared?.ok||prepared.prepared!==true){
     return {handled:false,reason:'profession-command-not-prepared'};
@@ -2456,6 +2555,10 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   if(prepared.functionName==='PROFESSION_SHIELD_ATTACK'){
     return sourceProfessionShieldAttackExecute(target,prepared,name);
+  }
+
+  if(prepared.functionName==='PROFESSION_DEAD_ATTACK'){
+    return sourceProfessionDeadAttackExecute(target,prepared,name);
   }
 
   if(prepared.functionName==='PROFESSION_CHAIN_ATK_2'){
@@ -2496,7 +2599,14 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
   if(!first)return {handled:true,noAction:true,reason:'attack-result-missing',toNo,targetUnitId:target.id};
 
   // Unlike ordinary BATTLE_Attack, the profession helper has no SUITPOISON branch.
-  const firstActual=applyFriendlyEnemyHit('player','你',target,first,null,{suppressSuitPoison:true});
+  const firstActual=applyFriendlyEnemyHit(
+    'player','你',target,first,null,
+    {
+      suppressSuitPoison:true,
+      // fixed generic profession helper zeroes react for every direct skill except CHAIN_ATK.
+      suppressDamageReact:prepared.functionName!=='PROFESSION_CHAIN_ATK'
+    }
+  );
 
   if(prepared.functionName==='PROFESSION_BRUST'){
     // fixed source quirk: BRUST multiplies CHAR_WORKFIXSTR, but the immediately following
@@ -2542,7 +2652,8 @@ function sourceProfessionBattleFailureText(reason){
     'mp-cost-invalid':'fixed MP cost 無效',
     'client-nonbattle-skill':'這招不是 client 戰鬥技能',
     'battle-function-unported':'這招的戰鬥函式尚未移植',
-    'shield-required':'需要裝備盾牌'
+    'shield-required':'需要裝備盾牌',
+    'dead-attack-hp-too-low':'目前 HP 必須大於 10'
   })[reason]||String(reason||'未知原因');
 }
 
@@ -4239,6 +4350,7 @@ function playerComplianceParameter(target=state){
   let fixedAttack=Math.max(0,baseAttack+Math.trunc(n(equip.attack)));
   let fixedTough=Math.max(-100,baseDefense+Math.trunc(n(equip.defense)));
   let fixedDex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
+  const preSuitFixedTough=fixedTough;
   const normalMaxHp=clamp(baseMaxHp+Math.trunc(n(equip.hp)),0,10000000);
   const suit=sourcePlayerSuitWork(target);
   const suitApplied=sourcePlayerApplySuitCompliance(
@@ -4298,7 +4410,7 @@ function playerComplianceParameter(target=state){
   Object.assign(equip,{
     fixedAttack,fixedTough,fixedDex,fixedLuck,fixedCharm,fixedAvoid,statusResist,criticalWork,
     otherDamage,otherDefc,arrange,sequence,attachPile,hitRight,neglectGuard,elementsRaw,
-    suit,suitApplied
+    preSuitFixedTough,suit,suitApplied
   });
   target.playerEquipCompliance=equip;
   return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp,maxMp:target.maxMp,equip};
@@ -5564,7 +5676,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -6378,12 +6490,15 @@ function processBattleStatusTurn(actor){
   const blockedBefore=battleStatusCanMove(desc)===false;
   const attackShootSleep=sourceProcessAttackShootSleepTurn(desc);
   const finish=result=>{
+    // fixed BATTLE_StatusSeq tail handles CHAR_MYSKILLHIT before the later magic/profession status phases.
+    const professionHit=desc.kind==='player'?sourceProfessionPlayerHitStatusSeq(state):null;
     // fixed BATTLE_StatusSeq handles suit round HP/MP after the ordinary status loop.
     const suitRound=desc.kind==='player'?sourcePlayerSuitStatusSeq(state):null;
     // fixed battle.c then continues with other independent WORK-status lifecycles.
     const defMagic=sourceDefMagicStatusSeq(desc);
     const sars=sourceProcessSarsStatusTurn(desc);
     const extra={};
+    if(professionHit)extra.professionHit=professionHit;
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
     if(suitRound&&(suitRound.addHp!==0||suitRound.addMp!==0))extra.suitRound=suitRound;
     if(defMagic)extra.defMagic=defMagic;
@@ -6492,7 +6607,7 @@ function playerBattleView(){
     weaponType,weaponCritical:arm?Math.trunc(n(arm.critical)):0,
     // fixed BATTLE_IsThrowWepon(): bow / boomerang / boundthrow / breakthrow are all indirect weapons.
     throwWeapon:SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(weaponType),
-    hitRight:Math.trunc(n(compliance.hitRight)),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
+    hitRight:sourceProfessionPlayerHitRight(compliance),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
     otherDamage:Math.trunc(n(compliance.otherDamage)),otherDefc:Math.trunc(n(compliance.otherDefc)),
     suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
     suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
@@ -7963,7 +8078,9 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
     ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
     :{kind:'player'};
   const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
-  const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r);
+  const acupuncture=options.suppressDamageReact
+    ?{triggered:false,suppressed:true}
+    :sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r);
   const before=n(actual.hp);
   actual.hp=Math.max(0,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
@@ -17365,6 +17482,7 @@ function normalBattleOrder(options={}){
   // Player 沒有 EARTHROUND0 例外，所以這裡也必須重建裝備 WORK。特別重要的是
   // ITEM_DIErelife 同回合消耗裝備後不立即 compliance，直到下一 round 才失去戒指加成。
   playerComplianceParameter(state);
+  sourceProfessionPlayerHitPreCommandCompliance(state);
   // EARTHROUND0 是 Pet/Enemy 的明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
   sourcePreCommandResetTransient();
   // Other_DefcharWorkInt 同一階段處理 WEAKEN / BARRIER 的真正倒數與 WEAKEN 0.8 FIX 快照。
@@ -18142,7 +18260,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.27 live：暴擊／連環攻擊／雙重攻擊／盾擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.28 live：暴擊／連環攻擊／雙重攻擊／盾擊／瀕死攻擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;
