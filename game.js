@@ -2516,7 +2516,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_RESIST_THUNDER'
     ||functionName==='PROFESSION_RESIST_F_I_T'
     ||functionName==='PROFESSION_CALL_NATURE'
-    ||(functionName==='PROFESSION_BOUNDARY'&&[68,69,70,71].includes(Math.trunc(n(skillId))))
+    ||(functionName==='PROFESSION_BOUNDARY'&&[68,69,70,71,72].includes(Math.trunc(n(skillId))))
     ||functionName==='PROFESSION_OBLIVION'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
@@ -3556,6 +3556,26 @@ function sourceProfessionBoundaryTurns(attackSkillTier){
   if(tier>4)return 2;
   return 1;
 }
+
+function sourceProfessionBoundaryBreakChance(displayLevel){
+  const level=Math.trunc(n(displayLevel));
+  if(level>=100)return 100;
+  if(level>80)return 80;
+  if(level>40)return 70;
+  if(level>20)return 60;
+  return 50;
+}
+
+function sourceProfessionBoundaryClear(desc){
+  const key=battleStatusKey(desc);
+  if(!key)return {key:null,cleared:false,hadActive:false,activeAttrs:[]};
+  const current=battleProfessionBoundaryStates.get(key)||null;
+  const activeAttrs=current
+    ?SOURCE_PROFESSION_BOUNDARY_ATTRS.filter(attr=>current[attr]&&Math.trunc(n(current[attr].power))>0)
+    :[];
+  battleProfessionBoundaryStates.delete(key);
+  return {key,cleared:true,hadActive:activeAttrs.length>0,activeAttrs};
+}
 function sourceProfessionBoundaryPower(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 100;
@@ -3644,6 +3664,8 @@ function sourceProfessionBoundaryPhysicalAdjust(attacker,defender,damage){
 function sourceProfessionEarthBoundaryExecute(prepared,name){
   const skillId=Math.trunc(n(prepared?.skillId));
   if(skillId!==68)return {handled:false,reason:'battle-function-unported',skillId};
+  // fixed BATTLE_COM_S_BOUNDARY consumes RAND(1,100) before target expansion even when this roll is unused.
+  const boundaryRoll=cRand(1,100);
   const rawToNo=Math.trunc(n(prepared?.toNo));
   const multi=sourceSetMagicPetMultiList(rawToNo);
   if(!multi.ok||!multi.slots.length){
@@ -3673,6 +3695,8 @@ function sourceProfessionEarthBoundaryExecute(prepared,name){
 function sourceProfessionWaterBoundaryExecute(prepared,name){
   const skillId=Math.trunc(n(prepared?.skillId));
   if(skillId!==69)return {handled:false,reason:'battle-function-unported',skillId};
+  // fixed BATTLE_COM_S_BOUNDARY consumes RAND(1,100) before target expansion even when this roll is unused.
+  const boundaryRoll=cRand(1,100);
   const rawToNo=Math.trunc(n(prepared?.toNo));
   const multi=sourceSetMagicPetMultiList(rawToNo);
   if(!multi.ok||!multi.slots.length){
@@ -3702,6 +3726,8 @@ function sourceProfessionWaterBoundaryExecute(prepared,name){
 function sourceProfessionFireBoundaryExecute(prepared,name){
   const skillId=Math.trunc(n(prepared?.skillId));
   if(skillId!==70)return {handled:false,reason:'battle-function-unported',skillId};
+  // fixed BATTLE_COM_S_BOUNDARY consumes RAND(1,100) before target expansion even when this roll is unused.
+  const boundaryRoll=cRand(1,100);
   const rawToNo=Math.trunc(n(prepared?.toNo));
   const multi=sourceSetMagicPetMultiList(rawToNo);
   if(!multi.ok||!multi.slots.length){
@@ -3731,6 +3757,8 @@ function sourceProfessionFireBoundaryExecute(prepared,name){
 function sourceProfessionWindBoundaryExecute(prepared,name){
   const skillId=Math.trunc(n(prepared?.skillId));
   if(skillId!==71)return {handled:false,reason:'battle-function-unported',skillId};
+  // fixed BATTLE_COM_S_BOUNDARY consumes RAND(1,100) before target expansion even when this roll is unused.
+  const boundaryRoll=cRand(1,100);
   const rawToNo=Math.trunc(n(prepared?.toNo));
   const multi=sourceSetMagicPetMultiList(rawToNo);
   if(!multi.ok||!multi.slots.length){
@@ -3755,6 +3783,61 @@ function sourceProfessionWindBoundaryExecute(prepared,name){
     displayLevel:Math.trunc(n(prepared?.displayLevel)),attackSkillTier:Math.trunc(n(prepared?.attackSkillTier)),
     power,turns,img1,img2,rightSide,results,
     sourcePowerStoredButPhysicalRateUsesAttackerWind:true,noDamage:true,noCounter:true
+  };
+}
+
+function sourceProfessionBreakBoundaryExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==72)return {handled:false,reason:'battle-function-unported',skillId};
+
+  const roll=cRand(1,100);
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const forcedSideToNo=rawToNo<10?20:21;
+  const displayLevel=Math.trunc(n(prepared?.displayLevel));
+  const chance=sourceProfessionBoundaryBreakChance(displayLevel);
+  const success=roll<=chance;
+
+  const sourcePower=sourceProfessionBoundaryPower(displayLevel);
+  const sourceTurns=sourceProfessionBoundaryTurns(prepared?.attackSkillTier);
+  const power=success?0:sourcePower;
+  const turns=success?0:sourceTurns;
+
+  const multi=sourceSetMagicPetMultiList(forcedSideToNo);
+  const row=sourceProfessionSkillTemplate(skillId);
+  const rightSide=(forcedSideToNo===20||forcedSideToNo===25||forcedSideToNo===26);
+  const img1=Math.trunc(n(row?.img1));
+  const img2=rightSide?101770:Math.trunc(n(row?.img2));
+
+  if(!multi.ok||!multi.slots.length){
+    return {
+      handled:true,noAction:true,reason:'target-side-empty',
+      skillId,functionName:prepared?.functionName||null,rawToNo,forcedSideToNo,multi,
+      displayLevel,chance,roll,success,sourcePower,sourceTurns,power,turns,img1,img2,rightSide,
+      sourceRollBeforeMultiList:true,noDamage:true,noCounter:true
+    };
+  }
+
+  const results=[];
+  for(const slot of multi.slots){
+    const desc=sourceSetMagicPetTargetableDescFromSlot(slot);
+    if(!desc)continue;
+    const cleared=success?sourceProfessionBoundaryClear(desc):null;
+    results.push({
+      slot,target:battleStatusDescName(desc),kind:desc.kind,
+      petId:desc.petId||null,unitId:desc.unitId||null,cleared
+    });
+  }
+
+  addLog(
+    '你施放「'+name+'」：破除率 '+chance+'%，判定 '+roll+(success?'，同側四屬結界清除。':'，破除失敗。'),
+    success?'good':''
+  );
+  return {
+    handled:true,skillId,functionName:prepared.functionName,rawToNo,forcedSideToNo,multi,
+    displayLevel,attackSkillTier:Math.trunc(n(prepared?.attackSkillTier)),
+    chance,roll,success,sourcePower,sourceTurns,power,turns,img1,img2,rightSide,results,
+    sourceRollBeforeMultiList:true,sourceSuccessUsesLessEqual:true,
+    sourceForcesWholeTargetSide:true,noDamage:true,noCounter:true
   };
 }
 function sourceProfessionCallNaturePool(displayLevel){
@@ -5088,6 +5171,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
     const boundaryName=String(boundaryRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionWindBoundaryExecute(prepared,boundaryName);
+  }
+  if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===72){
+    const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const boundaryName=String(boundaryRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionBreakBoundaryExecute(prepared,boundaryName);
   }
   if(prepared.functionName==='PROFESSION_OBLIVION'){
     const oblivionRow=sourceProfessionSkillTemplate(prepared.skillId);

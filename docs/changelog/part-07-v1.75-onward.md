@@ -4867,3 +4867,20 @@ Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtim
 - V2.52～V2.54 current-runtime support assertions 同步更新為 68～71 true、72 false。
 
 新增 `tools/check_v255_profession_wind_boundary_runtime.mjs`。save schema 維持 **30**。
+
+---
+
+## V2.56 Skill 72 Break Boundary
+
+- 接入 Skill 72 `破除结界 / PROFESSION_BOUNDARY`；68～72 現在都走 fixed `BATTLE_COM_S_BOUNDARY`。
+- 破結界 dynamic MP 依 M-tier：1～2=5、3～4=10、5～8=15、9～10=20；不直接採 row 10。
+- fixed boundary case 在任何 option 分支前都先 `RAND(1,100)`。V2.56 同步修正 Skill 68～71：一般結界也會消耗這顆 unused RNG，且順序在 `BATTLE_MultiList()` 前。
+- Skill 72 破除率讀 raw display level：≤20=50%、21～40=60%、41～80=70%、81～99=80%、≥100=100%；成功條件為 `roll <= chance`。
+- 破結界先把 raw defNo 強制成整側：`defNo<10 ? 20 : 21`，再做 MultiList。正常 Player 對 Enemy 直接目標會處理整個 Enemy side。
+- 成功：`loop=4 / power=0 / turn=0`，清 EARTH/WATER/FIRE/WIND 四個 boundary Work；失敗：`loop=0`，原結界完全不動。
+- source 仍先計算一般 boundary power/turn，再於成功時覆寫為 0；失敗時保留計算但不寫入 boundary。
+- 動畫參數使用強制後的 defNo2；Enemy side=21 保留 row img2 101771，side20 的 break fallback img2=101770。
+- 新增 `tools/check_v256_profession_break_boundary_runtime.mjs`，並更新 V2.52～V2.55 historical regression 的 current support / unused RNG stub。
+
+save schema 維持 **30**。
+

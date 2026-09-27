@@ -379,6 +379,9 @@ jobs:
       - name: Run V2.55 Wind Boundary regression
         run: node tools/check_v255_profession_wind_boundary_runtime.mjs
 
+      - name: Run V2.56 Break Boundary regression
+        run: node tools/check_v256_profession_break_boundary_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |

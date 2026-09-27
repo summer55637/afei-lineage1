@@ -55,7 +55,7 @@ assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUN
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',69),true);
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',70),true);
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',71),true);
-assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',72),false);
+assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',72),true);
 
 const costCtx={Math,Number,String,n:v=>Number.isFinite(Number(v))?Number(v):0,
   sourceProfessionMagicLevelM:level=>{level=Math.trunc(Number(level)||0);if(level>90)return 10;if(level>80)return 9;if(level>70)return 8;if(level>60)return 7;if(level>50)return 6;if(level>40)return 5;if(level>30)return 4;if(level>20)return 3;if(level>10)return 2;return 1;}};
@@ -104,6 +104,7 @@ assert.equal(tick.ticks[0].after,-1);assert.equal(tick.active,false);
 
 const execCtx={Math,Number,String,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
+  cRand:()=>42,
   sourceSetMagicPetMultiList:raw=>({ok:true,toNo:raw,slots:[0,5],fallback:false,rolls:[]}),
   sourceSetMagicPetTargetableDescFromSlot:slot=>slot===0?{kind:'player'}:{kind:'pet',pet,petId:pet.id},
   sourceProfessionSkillTemplate:id=>runtime.bySkillId[String(id)]||null,
@@ -129,4 +130,4 @@ assert.ok(fs.existsSync('tools/check_v252_profession_earth_boundary_runtime.mjs'
 for(const v of ['2.52','2.53'])assert.ok(html.includes('PLAYABLE CORE V'+v));
 assert.match(html,/V2\.53 live：[^<]*水結界/);assert.match(game,/schemaVersion:30/);assert.match(game,/s\.schemaVersion=30/);
 
-console.log(JSON.stringify({pass:true,version:'V2.53-core',focus:'Skill 69 water boundary',support:'68/69 only',mp:'dynamic 10/15/20',waterPhysical:'damage -= damage*(attackerWater/200)',storedPower:'active flag only',tick:'post-command; low 0 remains active',rightSideImg2:101774,saveSchema:30}));
+console.log(JSON.stringify({pass:true,version:'V2.53-core',focus:'Skill 69 water boundary',support:'68-72 current runtime',mp:'dynamic 10/15/20',waterPhysical:'damage -= damage*(attackerWater/200)',storedPower:'active flag only',tick:'post-command; low 0 remains active',rightSideImg2:101774,saveSchema:30}));

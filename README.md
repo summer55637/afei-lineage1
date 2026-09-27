@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.55**
+**PLAYABLE CORE V2.56**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,20 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.56 最新進度
+
+V2.56 接入獵人 **Skill 72「破除結界」／`PROFESSION_BOUNDARY`**，完成 68～72 的 fixed `BATTLE_COM_S_BOUNDARY` 技能鏈；同時補回原 C 在四種一般結界施放時也會消耗、但不使用結果的 `RAND(1,100)`，讓後續 RNG 順序繼續與固定來源一致。
+
+fixed row：TARGET 1（OTHER）、KIND 1、option `破结界|1|2|320|240|3200|4200|1|320|240`、row `costMp=10`、img1 101697、img2 101771。實際 MP 走破結界特例：M-tier 1～2 / 3～4 / 5～8 / 9～10 = **5 / 10 / 15 / 20 MP**。
+
+破除率直接讀 raw display level：≤20=50%、21～40=60%、41～80=70%、81～99=80%、≥100=100%，判定是 **`roll <= chance`**。來源會先抽這顆 RNG，再把 raw `defNo` 強制成整側：`<10 → 20`，其餘 → `21`，之後才跑 `BATTLE_MultiList()`。正常玩家對任何 Enemy 格施放，都會處理整個 Enemy side。
+
+成功時原 C 以 `loop=4 / power=0 / turn=0` 連續把地／水／火／風四個 boundary Work 寫 0；失敗時 `loop=0`，現有結界完全不變。Skill 68～71 也同步補回 source 在 option 判斷前固定消耗的 unused `RAND(1,100)`。
+
+動畫參數使用強制後的 `defNo2`：正常 Enemy side=21 保留 row img2 **101771**；若來源走到 side 20，break fallback img2 為 **101770**。img1 維持 101697。
+
+新增 `tools/check_v256_profession_break_boundary_runtime.mjs`，同步更新 V2.52～V2.55 historical regression。save schema 維持 **30**。
 
 ## V2.55 最新進度
 

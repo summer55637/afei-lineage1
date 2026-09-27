@@ -50,7 +50,7 @@ assert.equal(wind.img1,101697);assert.equal(wind.img2,101795);assert.equal(wind.
 const supportCtx={Math,Number,n:v=>Number.isFinite(Number(v))?Number(v):0};
 vm.createContext(supportCtx);vm.runInContext(extractFunction(game,'sourceProfessionBattleFunctionSupported'),supportCtx);
 for(const id of [68,69,70,71])assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',id),true);
-assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',72),false);
+assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',72),true);
 
 const costCtx={Math,Number,String,n:v=>Number.isFinite(Number(v))?Number(v):0,
   sourceProfessionMagicLevelM:level=>{level=Math.trunc(Number(level)||0);if(level>90)return 10;if(level>80)return 9;if(level>70)return 8;if(level>60)return 7;if(level>50)return 6;if(level>40)return 5;if(level>30)return 4;if(level>20)return 3;if(level>10)return 2;return 1;}};
@@ -81,6 +81,7 @@ ctx.sourceProfessionBoundaryApply(player,'wind',20,1);let tick=ctx.sourceProfess
 tick=ctx.sourceProfessionBoundaryPostAction({kind:'player'});assert.equal(tick.ticks[0].after,-1);assert.equal(tick.active,false);
 
 const execCtx={Math,Number,String,n:v=>Number.isFinite(Number(v))?Number(v):0,
+  cRand:()=>42,
   sourceSetMagicPetMultiList:raw=>({ok:true,toNo:raw,slots:[0,5],fallback:false,rolls:[]}),
   sourceSetMagicPetTargetableDescFromSlot:slot=>slot===0?{kind:'player'}:{kind:'pet',pet,petId:pet.id},
   sourceProfessionSkillTemplate:id=>runtime.bySkillId[String(id)]||null,sourceProfessionBoundaryPower:pure.sourceProfessionBoundaryPower,sourceProfessionBoundaryTurns:pure.sourceProfessionBoundaryTurns,
@@ -97,4 +98,4 @@ assert.ok(fs.existsSync('tools/check_v254_profession_fire_boundary_runtime.mjs')
 for(const v of ['2.52','2.53','2.54','2.55'])assert.ok(html.includes('PLAYABLE CORE V'+v));
 assert.match(html,/V2\.55 live：[^<]*風結界/);assert.match(game,/schemaVersion:30/);assert.match(game,/s\.schemaVersion=30/);
 
-console.log(JSON.stringify({pass:true,version:'V2.55-core',focus:'Skill 71 wind boundary',support:'68-71 only; 72 closed',mp:'dynamic 10/15/20',windPhysical:'damage -= damage*(attackerWind/200)',storedPower:'active flag only',tick:'post-command; low 0 remains active',rightSideImg2:101792,saveSchema:30}));
+console.log(JSON.stringify({pass:true,version:'V2.55-core',focus:'Skill 71 wind boundary',support:'68-72 current runtime',mp:'dynamic 10/15/20',windPhysical:'damage -= damage*(attackerWind/200)',storedPower:'active flag only',tick:'post-command; low 0 remains active',rightSideImg2:101792,saveSchema:30}));

@@ -51,11 +51,11 @@ assert.equal(row.commonCommand,'BATTLE_COM_S_BOUNDARY');
 const supportCtx={Math,Number,n:v=>Number.isFinite(Number(v))?Number(v):0};
 vm.createContext(supportCtx);vm.runInContext(extractFunction(game,'sourceProfessionBattleFunctionSupported'),supportCtx);
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',68),true);
-// Historical regression runs against current game.js: V2.53/54/55 open 69/70/71.
+// Historical regression runs against current game.js: V2.53-56 open 69-72.
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',69),true);
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',70),true);
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',71),true);
-assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',72),false);
+assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',72),true);
 
 const costCtx={Math,Number,String,n:v=>Number.isFinite(Number(v))?Number(v):0,
   sourceProfessionMagicLevelM:level=>{level=Math.trunc(Number(level)||0);if(level>90)return 10;if(level>80)return 9;if(level>70)return 8;if(level>60)return 7;if(level>50)return 6;if(level>40)return 5;if(level>30)return 4;if(level>20)return 3;if(level>10)return 2;return 1;}};
@@ -115,6 +115,7 @@ assert.ok(!magic.includes('battleProfessionBoundaryStates'));
 
 const execCtx={Math,Number,String,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
+  cRand:()=>42,
   sourceSetMagicPetMultiList:raw=>({ok:true,toNo:raw,slots:[0,5],fallback:false,rolls:[]}),
   sourceSetMagicPetTargetableDescFromSlot:slot=>slot===0?{kind:'player'}:{kind:'pet',pet,petId:pet.id},
   sourceProfessionSkillTemplate:id=>runtime.bySkillId[String(id)]||null,
