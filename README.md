@@ -25,7 +25,7 @@ V2.17 完成第五組玩家裝備 callback：`ITEM_MagicResist / ITEM_MagicReRes
 原 C lifecycle 已接入：
 
 - 登入：`CHAR_loginCheckUserItem()` 依裝備格 0→8 重播 attach callback；Web 的 transient Work 也依同一順序重建。
-- 穿裝：`ITEM_MagicResist()` 是 `CHAR_setWorkInt`，只把第一個命中的類別**直接設值**，不是累加。
+- 穿裝：`ITEM_MagicResist()` 是 `CHAR_setWorkInt`，只把第一個命中的類別**直接設值**，不是累加；若 fixed row 的 argument 沒有七個 marker，原 callback 就是合法 no-op，Web 也照樣允許裝備而不猜效果（Item 2898 是已驗到的例子）。
 - 換裝：原 `CHAR_moveItemFromItemBoxToEquip()` 先交換格子，再舊裝 detach、最後新裝 attach；Web 保留相同事件順序。
 - 卸裝：保留 fixed source 的明確 bug——`ITEM_MagicReResist()` 七個分支最後全部都只做 `CHAR_WORKEQUITFIRE = 0`。因此卸掉雷／冰／虛弱／魔障／沉默／落馬裝備時，對應 Work 可能暫時殘留到重新登入或被另一個 attach 覆寫。
 - 虛弱／魔障／沉默：已接到 `BATTLE_StatusAttackCheck()` 的命中率扣減。
