@@ -3674,6 +3674,32 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.27 profession Skill 38 shield attack
+
+V2.27 adds Warrior Skill 38 `PROFESSION_SHIELD_ATTACK` as a live profession battle command.
+
+- Runtime row: TARGET=1, KIND=1, USE_FLAG=1, MP 5, option `晕|成%30|效%2|回%2`.
+- Shield requirement is checked at **execution time**, matching fixed `battle_profession_status_chang_fun()`; packet-receipt MP/proficiency has already happened.
+- Web shield gate mirrors `CHAR_EQSHIELD`: player slot 6 must contain an existing item whose `ITEM_TYPE` is 25 / `ITEM_WSHIELD`.
+- Attack power:
+  - tier 10 keeps current WORKATTACKPOWER;
+  - all other tiers use `int(WORKATTACKPOWER * 0.5)`.
+- Shield Attack uses the profession status-change physical path and therefore preserves the calc-only Guardian caller bug.
+- Fixed `PROFESSION_BATTLE_StatusAttackCheck()` is mirrored directly:
+  - consume `RAND(1,100)` first;
+  - then reject dead targets or any target that already has an abnormal status;
+  - success is strict `roll < Success`;
+  - no ordinary status-level/resistance formula is used.
+- `Success = 30 + tier*4`.
+- Option `回%2` is stored by source as `turn+1 = 3`.
+- Status check occurs after damage/death/ItemCrush and only for NORMAL/CRITICAL-equivalent hits; MISS/DODGE does not consume the Shield Attack dizzy roll.
+- On dizzy success fixed source clears the defender command to NONE; Web clears the Enemy guard flag and uses the existing dizzy blocker.
+- No ordinary SUITPOISON branch and no ordinary Counter loop are added.
+
+Added `tools/check_v227_profession_shield_attack_runtime.mjs`; V2.26 historical regression is now version-agnostic so later UI version bumps do not create false failures. Save schema remains **30**.
+
+---
+
 ## V2.26 profession Skill 24 dual attack
 
 V2.26 adds fixed Skill 24 `PROFESSION_CHAIN_ATK_2` as the third live Warrior battle skill.
