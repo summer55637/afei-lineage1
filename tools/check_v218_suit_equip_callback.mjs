@@ -37,6 +37,38 @@ for(const r of rows){
 const byCode={};
 for(const r of rows)(byCode[String(r.suitCode)]??=[]).push(r.id);
 
+const suitKeys=[
+  'VIT','FSTR','MSTR','MTGH','MDEX','WAST','HP','MP',
+  'FRES','IRES','TRES','RESIST','COUNTER','M_POW',
+  'EARTH','WRITER','FIRE','WIND',
+  'WDUCKPOWER','RENOCASE','SUITSTRP','SUITTGH_P','SUITDEXP',
+  'SUITPOISON','M2_POW','UN_POW_M'
+];
+function cAtoi(v){
+  const m=String(v??'').match(/^[ \t]*([+-]?\d+)/);
+  return m?Number(m[1]):0;
+}
+function sourceDelimValue(argument,key){
+  for(const token of String(argument||'').split('|')){
+    if(!token.includes(key))continue;
+    const parts=token.split(':');
+    if(parts.length>=2)return cAtoi(parts[1]);
+  }
+  return null;
+}
+const usedKeys={};
+const byCodeValues={};
+for(const r of rows){
+  const values={};
+  for(const key of suitKeys){
+    const value=sourceDelimValue(r.argument,key);
+    if(value===null)continue;
+    values[key]=value;
+    (usedKeys[key]??=[]).push({id:r.id,suitCode:r.suitCode,value});
+  }
+  if(Object.keys(values).length)(byCodeValues[String(r.suitCode)]??=[]).push({id:r.id,values});
+}
+
 console.log(JSON.stringify({
   pass:true,
   version:'V2.18-discovery',
@@ -44,5 +76,7 @@ console.log(JSON.stringify({
   count:rows.length,
   suitCodes:Object.keys(byCode).map(Number).sort((a,b)=>a-b),
   byCode,
+  usedKeys,
+  byCodeValues,
   rows
 }));
