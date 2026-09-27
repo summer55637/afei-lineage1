@@ -184,7 +184,7 @@ const out=execCtx.sourceProfessionSignExecute(
   '針針相對'
 );
 assert.deepEqual(Array.from(out.targetSlots),[13,11,10]);
-assert.deepEqual(out.hits.map(x=>x.targetUnitId),['u13','u11','u10']);
+assert.deepEqual(Array.from(out.hits,x=>x.targetUnitId),['u13','u11','u10']);
 assert.deepEqual(units.map(x=>x.hp),[300,300,300]);
 assert.equal(out.addHp,600);
 assert.equal(out.addMp,90);
@@ -192,7 +192,7 @@ assert.equal(out.selfRestore.hpBefore,20);
 assert.equal(out.selfRestore.hpAfter,100);
 assert.equal(out.selfRestore.mpBefore,5);
 assert.equal(out.selfRestore.mpAfter,95);
-assert.deepEqual(out.mpDrains.map(x=>x.drain),[0,0,0]);
+assert.deepEqual(Array.from(out.mpDrains,x=>x.drain),[0,0,0]);
 assert.deepEqual(wakes,['u13','u11','u10']);
 
 const active=extractFunction(game,'sourceProfessionSignExecute');
