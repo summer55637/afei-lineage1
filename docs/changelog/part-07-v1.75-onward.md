@@ -3408,3 +3408,20 @@ V2.11 把 V2.10 的 live merge lifecycle 改成可實際執行的 regression fix
 - output backpack-add failure frees newly created output existing without rollback
 
 這批只增加防回歸保護，不改 fixed-C 數值與 RNG 規則。save schema 29。
+
+
+---
+
+## V2.12 Angel/Hero token equip boundary
+
+V2.12 修正 V1.73 對 Item 2884／2885 過度合併的特殊裝備 fail-closed 邊界。
+
+fixed C：
+- `version.h` 開啟 `_ANGEL_SUMMON`
+- `char_base.h`: `ANGELITEM 2884`、`HEROITEM 2885`
+- `CHAR_moveItemFromItemBoxToEquip()` 只有 `ITEM_ID == ANGELITEM` 時才驗 MissionTable／angelinfo／heroinfo／角色 nameinfo
+- HEROITEM 2885 不走這個 ownership check
+- fixed item runtime：2884 type=10、2885 type=16；兩者 profession=0、attach/detach callback 都空
+- `ITEM_getEquipPlace()` 沒有 ITEM_OTHER(type 16) case，因此 2885 正常回 -1
+
+Web 現在只保留 2884 為 `special-equip-unported`；2885 改走正常 equip-place 拒絕。save schema 29。

@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.11**
+**PLAYABLE CORE V2.12**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,20 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.12 最新進度
+
+V2.12 收斂玩家裝備 adapter 的 **使者／勇者信物特殊邊界**，只修 fixed C 能完整證明的部分。
+
+- fixed build 開啟 `_ANGEL_SUMMON`。
+- `ANGELITEM=2884`、`HEROITEM=2885`。
+- `CHAR_moveItemFromItemBoxToEquip()` 的 MissionTable／所有權檢查 **只套用 Item 2884**。
+- 2884 固定 item table 是 `ITEM_TYPE=10`，無 profession／attach／detach callback；Web 尚無多人 MissionTable，因此仍維持 `special-equip-unported`。
+- 2885 固定 item table 是 `ITEM_TYPE=16 (ITEM_OTHER)`，同樣無 profession／attach／detach callback；原 C `ITEM_getEquipPlace()` 對 type 16 本來就回 `-1`，所以不是可裝備品，也不該被歸進 2884 的特殊任務 gate。
+
+因此 `SOURCE_PLAYER_SPECIAL_EQUIP_IDS` 從 `[2884,2885]` 修正為只含 `[2884]`。新增 `tools/check_v212_special_equip_boundary.mjs`，直接執行 production `sourcePlayerEquipRequirements()` 與 `sourcePlayerEquipPlace()` 驗證分流。
+
+save schema 維持 **29**。
 
 ## V2.11 最新進度
 

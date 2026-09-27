@@ -31,7 +31,7 @@ const PLAYER_SHIELD_SLOT=6;
 const PLAYER_SHOES_SLOT=7;
 const PLAYER_GLOVE_SLOT=8;
 const SOURCE_PLAYER_RANGED_WEAPON_TYPES=new Set([4,17,18,19]);
-const SOURCE_PLAYER_SPECIAL_EQUIP_IDS=new Set([2884,2885]);
+// fixed _ANGEL_SUMMON: CHAR_moveItemFromItemBoxToEquip only special-checks ANGELITEM 2884.\n// HEROITEM 2885 is ITEM_OTHER (type 16), so ITEM_getEquipPlace() rejects it normally.\nconst SOURCE_PLAYER_SPECIAL_EQUIP_IDS=new Set([2884]);
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],

@@ -46,6 +46,7 @@ on:
       - "tools/check_v209_merge_rng_lifecycle.mjs"
       - "tools/check_v210_merge_live_lifecycle.mjs"
       - "tools/check_v211_merge_live_fixtures.mjs"
+      - "tools/check_v212_special_equip_boundary.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -198,6 +199,9 @@ jobs:
 
       - name: Run V2.11 merge live executable fixtures
         run: node tools/check_v211_merge_live_fixtures.mjs
+
+      - name: Run V2.12 special equip boundary regressions
+        run: node tools/check_v212_special_equip_boundary.mjs
 
       - name: Commit generated runtime
         shell: bash
