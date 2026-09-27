@@ -3674,6 +3674,26 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.31 profession Skill 42 chaos attack
+
+V2.31 adds Warrior Skill 42 `PROFESSION_CHAOS` through the fixed direct-profession physical path.
+
+- Runtime row: TARGET=1, KIND=1, USE_FLAG=1, MP 28, option `效%1|`.
+- Initial same-side targets are rejected by the profession battle gate; an initial EarthRound target returns before the Chaos WORK mutation.
+- The callback mutates the **current** WORKATTACKPOWER once: `int(WORKATTACKPOWER * 70 / 100)`. The reduced Work value persists for the rest of the same round.
+- Total attack count is 3 for tier <5, 4 for tier 5..9, and 5 for tier >=10.
+- fixed `BATTLE_DuckCheck()` applies the Chaos penalty after the normal 75% cap and after player HITRIGHT subtraction: `per += per*0.4`. There is no second cap.
+- The first hit remains inside `battle_profession_attack_fun()`: calc-only Guardian bug, non-CHAIN DamageReact suppression, no SUITPOISON, but normal DamageSub / wake / positive-damage ItemCrush.
+- After the first hit, fixed scans all currently alive entries on the target side in ascending battle-slot order. EarthRound entries remain in this candidate pool.
+- All remaining N-1 target slots are pre-drawn as one batch with replacement **before** any extra `BATTLE_Attack()` damage RNG is consumed.
+- Extra hits are ordinary `BATTLE_Attack()`: real Guardian substitution plus normal DamageReact, SUITPOISON and ItemCrush, while the profession outer branch still performs no ordinary Counter.
+- If a pre-drawn slot becomes dead or is EarthRound when executed, fixed discards the rest of that batch, rebuilds the live pool, and pre-draws the whole remaining count again.
+- If only EarthRound candidates remain, the original loop can redraw forever. Web reports `sourceInfiniteLoop: earthround-only-candidate-pool` and stops safely instead of freezing the browser.
+
+Added `tools/check_v231_profession_chaos_runtime.mjs`; save schema remains **30**.
+
+---
+
 ## V2.30 profession Skill 41 convolute attack
 
 V2.30 adds Warrior Skill 41 `PROFESSION_CONVOLUTE` and introduces a battle-local Player WORKATTACKPOWER mirror so source callback mutations survive for the rest of the same round.

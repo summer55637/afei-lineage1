@@ -2262,7 +2262,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_SHIELD_ATTACK'
     ||functionName==='PROFESSION_DEAD_ATTACK'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
-    ||functionName==='PROFESSION_CONVOLUTE';
+    ||functionName==='PROFESSION_CONVOLUTE'
+    ||functionName==='PROFESSION_CHAOS';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2306,7 +2307,9 @@ function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
   const attacker=Object.assign({},base,attackOptions.attackerOverride||{});
   const targetDesc={kind:'enemy',unit:target,unitId:target.id};
   const originalGuarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
-  const dodge=sourceInitialDodgeOnly(attacker,enemyBattleView(target),{guarding:originalGuarding});
+  const dodgeOptions=Object.assign({},attackOptions,{guarding:originalGuarding});
+  delete dodgeOptions.attackerOverride;
+  const dodge=sourceInitialDodgeOnly(attacker,enemyBattleView(target),dodgeOptions);
   if(dodge.dodged){
     dodge.actualTarget=target;
     dodge.originalTarget=target;
@@ -2359,14 +2362,15 @@ function sourceProfessionChainAtk2ReactionConsume(target){
     sourceCountersUnreachable:true
   };
 }
-function sourceProfessionOrdinaryPlayerAttackResult(target,{attackPower=null}={}){
+function sourceProfessionOrdinaryPlayerAttackResult(target,{attackPower=null,sourceProfessionChaos=false}={}){
   if(!target)return {damage:0,dodged:false,critical:false,miss:true,guarded:false,actualTarget:null};
   const attacker=playerBattleView();
   if(!attacker)return {damage:0,dodged:false,critical:false,miss:true,guarded:false,actualTarget:null};
   if(Number.isFinite(Number(attackPower)))attacker.attack=Math.trunc(Number(attackPower));
   const targetDesc={kind:'enemy',unit:target,unitId:target.id};
   return resolveAttackToEnemyWithGuardian(attacker,target,{
-    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'),
+    sourceProfessionChaos:!!sourceProfessionChaos
   });
 }
 function sourceProfessionPlayerShieldEquipped(target=state){
@@ -2601,6 +2605,149 @@ function sourceProfessionThroughHitPenalty(attackSkillTier){
   // It overwrites MYSKILLHIT=1 / NUM=-70 each time and subtracts 50 from current WORKHITRIGHT.
   battlePlayerProfessionHitState={turns:1,power:-70,workHitRight:before-50};
   return {applied:true,tier,before,after:before-50,turns:1,power:-70};
+}
+
+function sourceProfessionChaosDuckRaw(raw){
+  const duck=Math.max(0,Math.trunc(n(raw)));
+  return Math.trunc(duck+duck*.4);
+}
+function sourceProfessionChaosAttackPowerStep(){
+  const before=sourceProfessionPlayerAttackWork();
+  const after=Math.trunc(before*70/100);
+  sourceProfessionSetPlayerAttackWork(after);
+  return {before,after,pct:70};
+}
+function sourceProfessionChaosAttackCount(attackSkillTier){
+  const tier=Math.trunc(n(attackSkillTier));
+  return tier>=10?5:(tier>=5?4:3);
+}
+function sourceProfessionChaosAliveSideSlots(toNo){
+  const slot=Math.trunc(n(toNo));
+  if(slot<10||slot>19)return [];
+  // Current live player profession targets enemy-side slots 10..19.
+  // fixed only checks BATTLE_TargetCheck while building this pool: EarthRound
+  // remains a candidate and is rejected later when that pre-drawn slot executes.
+  return sourceProfessionThroughAliveEnemySlots();
+}
+function sourceProfessionChaosDrawBatch(slots,count,randInclusive=cRand){
+  const pool=Array.isArray(slots)?slots.slice():[];
+  const total=Math.max(0,Math.trunc(n(count)));
+  if(!pool.length||total<=0)return [];
+  const out=[];
+  for(let i=0;i<total;i++){
+    out.push(pool[randInclusive(0,pool.length-1)]);
+  }
+  return out;
+}
+function sourceProfessionChaosExecute(target,prepared,name){
+  const tier=Math.trunc(n(prepared.attackSkillTier));
+  const attackCount=sourceProfessionChaosAttackCount(tier);
+
+  // fixed mutates CURRENT WORKATTACKPOWER once before the first AttackSeq.
+  // V2.30's battle-local Work mirror makes this 70% value survive the round.
+  const attackWork=sourceProfessionChaosAttackPowerStep();
+
+  // First hit is still inside battle_profession_attack_fun:
+  // calc-only Guardian bug, non-CHAIN DamageReact suppression, no SUITPOISON,
+  // but normal DamageSub / wake / ItemCrush are retained.
+  const first=sourceProfessionPhysicalCalcOnlyResult(target,{
+    attackerOverride:{attack:attackWork.after},
+    sourceProfessionChaos:true
+  });
+  if(!first){
+    return {
+      handled:true,noAction:true,reason:'attack-result-missing',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:prepared.toNo,targetUnitId:target?.id??null,
+      attackSkillTier:tier,attackCount,attackWork
+    };
+  }
+  const firstActual=applyFriendlyEnemyHit(
+    'player','你',target,first,null,
+    {suppressSuitPoison:true,suppressDamageReact:true}
+  );
+
+  let remaining=attackCount-1;
+  let pool=sourceProfessionChaosAliveSideSlots(prepared.toNo);
+  let batch=sourceProfessionChaosDrawBatch(pool,remaining);
+  const selectionBatches=[{
+    reason:'initial-after-first-hit',remaining,pool:pool.slice(),draws:batch.slice()
+  }];
+  const extras=[];
+  let k=0;
+  let sourceInfiniteLoop=false;
+  let sourceInfiniteLoopReason=null;
+
+  // fixed pre-draws the WHOLE remaining target batch before any extra
+  // BATTLE_Attack damage RNG. Duplicates are allowed.
+  while(remaining>0){
+    if(!pool.length||!batch.length)break;
+    const slot=Math.trunc(n(batch[k]));
+    const extraTarget=sourceProfessionEnemyByBattleSlot(slot);
+    const valid=!!extraTarget&&n(extraTarget.hp)>0&&!enemyUnitHidden(extraTarget);
+
+    if(valid){
+      const attack=sourceProfessionOrdinaryPlayerAttackResult(
+        extraTarget,{sourceProfessionChaos:true}
+      );
+      const actual=applyFriendlyEnemyHit('player','你',extraTarget,attack);
+      extras.push({
+        slot,targetUnitId:extraTarget.id,attack,actualUnitId:actual?.id??null,
+        hpAfter:Math.max(0,Math.trunc(n(extraTarget.hp))),
+        ordinaryBattleAttack:true,realGuardian:true,
+        normalDamageReact:true,normalSuitPoison:true,normalItemCrush:true,
+        noOuterCounter:true
+      });
+      remaining--;
+      k++;
+      continue;
+    }
+
+    // Invalid pre-drawn target: fixed discards the rest of the old batch,
+    // rebuilds the current live side, then pre-draws ALL remaining targets again.
+    pool=sourceProfessionChaosAliveSideSlots(prepared.toNo);
+    if(!pool.length)break;
+
+    // fixed can spin forever if the live pool consists only of EarthRound entries.
+    // Preserve that source fact but do not freeze the browser.
+    const visible=pool.filter(s=>{
+      const unit=sourceProfessionEnemyByBattleSlot(s);
+      return !!unit&&n(unit.hp)>0&&!enemyUnitHidden(unit);
+    });
+    if(!visible.length){
+      sourceInfiniteLoop=true;
+      sourceInfiniteLoopReason='earthround-only-candidate-pool';
+      break;
+    }
+
+    batch=sourceProfessionChaosDrawBatch(pool,remaining);
+    k=0;
+    selectionBatches.push({
+      reason:'invalid-predrawn-target-reroll',remaining,
+      pool:pool.slice(),draws:batch.slice()
+    });
+  }
+
+  syncEnemyTarget();
+  addLog(
+    '你施放「'+name+'」：WORK attack '+attackWork.before+' → '+attackWork.after+
+    '，fixed 總攻擊 '+attackCount+' 次；實際追加 '+extras.length+' 次。',
+    'good'
+  );
+
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:Math.trunc(n(prepared.toNo)),targetUnitId:target.id,
+    attackSkillTier:tier,attackCount,attackWork,
+    first,firstActual,extras,selectionBatches,
+    remainingExtraAttacks:remaining,
+    sourceInfiniteLoop,sourceInfiniteLoopReason,
+    finalWorkAttack:sourceProfessionPlayerAttackWork(),
+    chaosDuckMultiplier:1.4,
+    firstDamageReactSuppressed:true,firstSuitPoisonSuppressed:true,
+    extraHitsOrdinaryBattleAttack:true,
+    noOrdinaryCounter:true,workAttackPersists:true
+  };
 }
 function sourceProfessionThroughPhysicalResult(target){
   if(!target)return null;
@@ -2906,6 +3053,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   const row=sourceProfessionSkillTemplate(prepared.skillId);
   const name=String(row?.name||('Skill '+prepared.skillId));
+
+  if(prepared.functionName==='PROFESSION_CHAOS'){
+    return sourceProfessionChaosExecute(target,prepared,name);
+  }
+
   let second=null,secondActual=null,chainRoll=null,chainHit=null,chainEffectiveTier=null;
   let chainExtra=false;
 
@@ -7843,6 +7995,11 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
     const sourceHitRight=Math.trunc(n(attacker?.hitRight));
     duck-=cRand(sourceHitRight*.8,sourceHitRight*1.2);
     if(duck<0)duck=0;
+  }
+  // fixed _PROFESSION_ADDSKILL: CHAOS adds 40% to the already-capped /
+  // HITRIGHT-adjusted ordinary duck threshold and does NOT cap it again.
+  if(options.sourceProfessionChaos===true){
+    duck=sourceProfessionChaosDuckRaw(duck);
   }
   return duck;
 }

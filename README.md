@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.30**
+**PLAYABLE CORE V2.31**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,69 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.31 最新進度
+
+V2.31 新增勇士 **Skill 42「混亂攻擊」／`PROFESSION_CHAOS`** 的 live battle executor，完整保留 fixed source 的 WORK、閃避與追加目標 RNG 順序。
+
+fixed row：TARGET=1、KIND=1、USE_FLAG=1、MP=28，option 為 `效%1|`。這招走一般職業直接攻擊：
+
+`battle_profession_attack_fun() → BATTLE_AttackSeq()`
+
+### WORKATTACKPOWER 與攻擊次數
+
+進入技能後，fixed 只做一次：
+
+`WORKATTACKPOWER = int(WORKATTACKPOWER × 70 / 100)`
+
+它讀的是**當下 Work attack**，不是 FIXSTR；V2.30 建立的 battle-local Work mirror 因此繼續保留這個 70% 值到同輪結束。
+
+總攻擊次數依 attack tier：
+
+- tier 0～4：3 次
+- tier 5～9：4 次
+- tier 10：5 次
+
+第 1 擊打原本指定目標，後面才進隨機追加段。
+
+### 混亂攻擊專屬閃避倍率
+
+fixed `BATTLE_DuckCheck()` 先完成一般 dodge、75% cap 與 HITRIGHT 修正，最後才對 Chaos 做：
+
+`duck = int(duck + duck × 0.4)`
+
+而且**不再 cap**。因此原本 7500 的 dodge threshold 會變成 10500，等同普通 dodge 判定必定成功。V2.31 把這個 1.4× 套在首擊與所有追加普通攻擊。
+
+### 首擊與追加擊不是同一條傷害鏈
+
+首擊仍在 `battle_profession_attack_fun()` 內：
+
+- 保留 profession direct helper 的 calc-only Guardian bug；
+- 非 CHAIN 的 DamageReact 被壓成 0；
+- 沒有 SUITPOISON；
+- 仍走 DamageSub、wake 與正傷害 ItemCrush；
+- 不進 ordinary Counter。
+
+追加擊則是真正的 `BATTLE_Attack()`：
+
+- 使用已降到 70% 的 WORKATTACKPOWER；
+- 使用 Chaos 1.4× ordinary duck；
+- Guardian 是真正代擋；
+- DamageReact、SUITPOISON、ItemCrush 都照普通物理攻擊；
+- profession 外層仍不執行 ordinary Counter。
+
+### 追加目標 RNG：先整批抽完
+
+fixed 並不是「打一拳才抽下一隻」。首擊完成後會先建立同側所有存活 slot，再把剩餘 N-1 個目標**一次全部抽完**：
+
+- replacement 抽取，所以同一隻可以被抽中多次；
+- 先消耗完這批 target RNG，才開始追加攻擊的傷害 RNG；
+- 若某個預抽目標在輪到它前已死亡，或它處於 EarthRound，會丟棄尚未執行的預抽結果；
+- 接著重建目前存活清單，並把「剩餘全部攻擊」重新整批抽一次。
+
+來源候選清單刻意沒有先排除 EarthRound。若最後只剩 EarthRound 存活單位，原 C 會在重抽迴圈中無限循環；Web 保留此 source bug 的判定結果，但以 `sourceInfiniteLoop: earthround-only-candidate-pool` 安全中止，避免瀏覽器真的卡死。
+
+新增 `tools/check_v231_profession_chaos_runtime.mjs`，鎖定 Skill 42 row、70% Work、3/4/5 hit count、Chaos dodge 1.4× 的時序、整批 target RNG、invalid-target 全批重抽、首擊／追加擊差異與 infinite-loop guard。**save schema 維持 30**。
 
 ## V2.30 最新進度
 
