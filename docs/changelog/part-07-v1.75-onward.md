@@ -4960,3 +4960,21 @@ save schema 維持 **30**。
 - CI path/step 加入 `tools/check_v260_profession_ice_crack_runtime.mjs`，鎖住 no dormant resurrection。
 
 新增 `tools/check_v260_profession_ice_crack_runtime.mjs`。save schema 維持 **30**。
+
+
+---
+
+## V2.61 Skill 5 ENCLOSE / ANNEX
+
+- 接入巫師 Skill 5 `附身术 / PROFESSION_ENCLOSE`。
+- 無屬性 profession magic：`magic_type=-1`，不提升 F/I/T Practice；傷害保持 `power`。
+- dynamic MP：M-tier 1～4=50、5～7=60、8～9=70、10=80。
+- GET_PRACTICE：1～4=150、5～7=200、8～9=250、10=400；保留來源不可達的 `>9 => 300` 分支語意。
+- Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- hit 後先消耗 `PROFESSION_MAGIC_CHANGE_STATUS` 的 leading `RAND(1,100)`；再掃 StatusTbl。目標已有狀態時不抽 ANNEX success RNG。
+- ANNEX success 讀 raw display level，判定 `RAND(0,100) <= success`；stored round 為 1/2/3。
+- fixed `BATTLE_StatusSeq` 會先 `--cnt`，再進 `CHAR_WORKANNEX` switch，所以 stored 1/2/3 實際強制普通攻擊 0/1/2 次。
+- 每個有效 ANNEX tick 固定消耗 side `RAND(0,1)` + pos `RAND(0,9)`，沒有 CONFUSION 的 80% gate；COM2 找不到時保留 -1 交給後續普通 ATTACK / TargetAdjust。
+- ANNEX visual 仍沿用 `BATTLE_ST_CONFUSION`，但 runtime 狀態獨立保存。
+- 新增 `tools/check_v261_profession_enclose_runtime.mjs`。
+- save schema 維持 **30**。

@@ -121,6 +121,7 @@ let battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};
 let battlePetProfessionOblivionStates=new Map();
 let battleProfessionBoundaryStates=new Map();
 let battleProfessionDoomFearStates=new Map();
+let battleProfessionAnnexStates=new Map();
 let battleOuterBoundaryActor=null;
 
 const $=s=>document.querySelector(s);
@@ -1667,11 +1668,13 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
   if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'
     &&command!=='BATTLE_COM_S_SIGN'
     &&command!=='BATTLE_COM_S_DOOM'
-    &&command!=='BATTLE_COM_S_ICE_CRACK')return battleDexRoll(quick);
+    &&command!=='BATTLE_COM_S_ICE_CRACK'
+    &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK')upper=work*.5;
+  else if(command==='BATTLE_COM_S_ENCLOSE'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2630,6 +2633,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_SIGN'
     ||functionName==='PROFESSION_DOOM'
     ||functionName==='PROFESSION_ICE_CRACK'
+    ||functionName==='PROFESSION_ENCLOSE'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -4407,6 +4411,192 @@ function sourceProfessionIceCrackExecute(prepared,name){
     noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
   };
 }
+
+function sourceProfessionEncloseSpec(rawSkillLevel){
+  // PROFESSION_MAGIC_CHANG_STATUS rereads the RAW high word here, not M-tier.
+  const level=Math.trunc(n(rawSkillLevel));
+  const success=level>=100?50:level>90?40:level>80?30:level>60?25:level>30?20:10;
+  const storedTurns=level>80?3:level>50?2:1;
+  return {level,success,storedTurns,effectiveForcedTurns:Math.max(0,storedTurns-1)};
+}
+
+function sourceProfessionAnnexState(desc){
+  const key=battleStatusKey(desc);
+  const st=key?battleProfessionAnnexStates.get(key)||null:null;
+  return st&&Math.trunc(n(st.turns))>0?st:null;
+}
+
+function sourceProfessionEncloseTargetHasAnyStatus(desc){
+  // fixed CHANG_STATUS scans StatusTbl before it even rolls Annex success.
+  const key=battleStatusKey(desc);
+  const ordinary=key?battleStatuses.get(key)||null:null;
+  const sars=typeof battleSarsGet==='function'?battleSarsGet(desc):null;
+  const shootSleep=typeof battleShootSleepGet==='function'?battleShootSleepGet(desc):null;
+  const resist=typeof sourceProfessionPlayerResistStatusActive==='function'
+    ?sourceProfessionPlayerResistStatusActive(desc):false;
+  const fear=typeof sourceProfessionDoomFearState==='function'?sourceProfessionDoomFearState(desc):null;
+  const annex=sourceProfessionAnnexState(desc);
+  return !!((ordinary&&Math.trunc(n(ordinary.turns))>0)
+    ||(sars&&Math.trunc(n(sars.turns))>0)
+    ||(shootSleep&&Math.trunc(n(shootSleep.turns))>0)
+    ||resist||fear||annex);
+}
+
+function sourceProfessionAnnexApply(desc,rawSkillLevel,{
+  randInclusive=cRand,hasAnyStatus=sourceProfessionEncloseTargetHasAnyStatus
+}={}){
+  const key=battleStatusKey(desc);
+  if(!key)return {applied:false,blocked:false,roll:null,key:null,reason:'invalid-target'};
+  const spec=sourceProfessionEncloseSpec(rawSkillLevel);
+  if(hasAnyStatus(desc)){
+    return {applied:false,blocked:true,roll:null,key,spec,reason:'source-status-tbl-busy'};
+  }
+  const roll=Math.trunc(n(randInclusive(0,100)));
+  if(roll>spec.success){
+    return {applied:false,blocked:false,roll,key,spec,reason:'success-roll'};
+  }
+  battleProfessionAnnexStates.set(key,{turns:spec.storedTurns});
+  return {
+    applied:true,blocked:false,roll,key,spec,
+    turns:spec.storedTurns,effectiveForcedTurns:spec.effectiveForcedTurns,
+    sourceVisualStatus:'CONFUSION'
+  };
+}
+
+function sourceProfessionAnnexStatusSeq(desc,{
+  randInclusive=cRand,targetFromSlot=sourcePlayerConfusionTargetableFromBattleSlot
+}={}){
+  const key=battleStatusKey(desc);
+  const st=key?battleProfessionAnnexStates.get(key)||null:null;
+  if(!key||!st||Math.trunc(n(st.turns))<=0)return null;
+
+  // fixed BATTLE_StatusSeq always does --cnt before its switch.
+  const beforeTurns=Math.trunc(n(st.turns));
+  st.turns=beforeTurns-1;
+  if(st.turns<=0){
+    battleProfessionAnnexStates.delete(key);
+    return {beforeTurns,turns:0,expired:true,forced:false,sideRoll:null,posRoll:null,target:null,targetSlot:-1,rawToNo:-1};
+  }
+
+  // CHAR_WORKANNEX has no confusion-style 80% gate: every surviving tick rewrites COM1=ATTACK.
+  const attackerSlot=sourceBattleStatusSlot(desc);
+  const sideRoll=Math.trunc(n(randInclusive(0,1)));
+  let pos=Math.trunc(n(randInclusive(0,9)));
+  const posRoll=pos;
+  let target=null,targetSlot=-1;
+  for(let lop=0;lop<10;lop++){
+    if(++pos>=10)pos=0;
+    const slot=sideRoll*10+pos;
+    if(slot===attackerSlot)continue;
+    const candidate=targetFromSlot(slot);
+    if(candidate){target=candidate;targetSlot=slot;break}
+  }
+  return {
+    beforeTurns,turns:st.turns,expired:false,forced:true,
+    sideRoll,posRoll,target,targetSlot,rawToNo:targetSlot
+  };
+}
+
+function sourceProfessionEncloseAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const out={
+    magicType:-1,attIdx:5,
+    img1:Math.trunc(n(row?.img1)),img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7]))
+  };
+  // GET_IMG2 flips this spell only for right-side pseudo/slots. Player -> Enemy keeps row x/y.
+  const no=Math.trunc(n(toNo));
+  if(no===20||no===25||no===26||(no>=0&&no<10)){
+    out.img2=101643;
+    out.x=Math.trunc(n(opt[8]));
+    out.y=Math.trunc(n(opt[9]));
+  }
+  return out;
+}
+
+function sourceProfessionEncloseExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==5)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  // fixed PROFESSION_MAGIC_ATTAIC order starts with BATTLE_MultiList.
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionEncloseAnimation(row,toNo);
+
+  // option "无" => magic_type=-1, so analysis does not advance F/I/T Practice.
+  const practice=sourceProfessionMagicPracticePower('BATTLE_COM_S_ENCLOSE',prepared.displayLevel,state.hp);
+  const hits=[],hitTargets=[];
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:-1,command:'BATTLE_COM_S_ENCLOSE',
+      proficiencyVector:sourceProfessionPlayerMagicProficiencyVector()
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:-1,power:preDamagePower,command:'BATTLE_COM_S_ENCLOSE',
+      proficiency:{fire:0,thunder:0,ice:0},resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},equipSuit:{fire:0,thunder:0,ice:0},spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // PROFESSION_MAGIC_CHANGE_STATUS consumes this leading RAND even though ENClose has no self case.
+    const unusedChangeStatusRoll=cRand(1,100);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    // CHANG_STATUS checks StatusTbl first; a busy target consumes no RAND(0,100).
+    const annex=sourceProfessionAnnexApply(targetDesc,prepared.displayLevel);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,annex,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    hitTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害'
+      +(annex.applied?'，並附身成功。':annex.blocked?'；目標已有異常狀態，附身判定不擲骰。':'；附身未成功。'),
+      after<=0?'bad':'good');
+  }
+
+  const wakes=hitTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,animation,practice,hits,wakes,
+    sourceMagicType:-1,sourceNoElementPractice:true,
+    sourceAnnexVisualStatus:'CONFUSION',
+    sourceAnnexCountdownBeforeForce:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -5738,6 +5928,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionIceCrackExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_ENCLOSE'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionEncloseExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===68){
     const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -8987,7 +9182,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battleOuterBoundaryActor=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -9411,7 +9606,8 @@ function battleShootSleepGet(desc){
 function battleHasAnyStatus(desc){
   const st=battleStatusGet(desc),sars=battleSarsGet(desc),shootSleep=battleShootSleepGet(desc);
   const professionResist=sourceProfessionPlayerResistStatusActive(desc);
-  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist);
+  const professionAnnex=sourceProfessionAnnexState(desc);
+  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist||professionAnnex);
 }
 function battleStatusActive(desc,type=null){
   if(type==='sars'){
@@ -9850,6 +10046,7 @@ function processBattleStatusTurn(actor){
   // RESIST_F/I/T are ordinary StatusTbl entries, so their --cnt/recovery happens
   // before the later MYSKILL tail on the Player's own StatusSeq.
   const professionResist=desc.kind==='player'?sourceProfessionPlayerResistStatusSeq():null;
+  const professionAnnex=sourceProfessionAnnexStatusSeq(desc);
   const professionDoomFear=sourceProfessionDoomFearStatusSeq(desc);
 
   // fixed BATTLE_StatusSeq tail begins with MYSKILLSTR. ENRAGE_PET shares that raw field.
@@ -9901,6 +10098,14 @@ function processBattleStatusTurn(actor){
       ?sourceProfessionPlayerTrapStatusSeq():null;
     const extra={};
     if(professionResist)extra.professionResist=professionResist;
+    if(professionAnnex){
+      extra.professionAnnex=professionAnnex;
+      if(professionAnnex.forced){
+        result.annexAttack=true;
+        result.annexTarget=professionAnnex.target;
+        result.annexRawToNo=professionAnnex.rawToNo;
+      }
+    }
     if(professionDoomFear)extra.professionDoomFear=professionDoomFear;
     if(professionStats)extra.professionStats=professionStats;
     if(professionHit)extra.professionHit=professionHit;
@@ -11567,6 +11772,38 @@ function sourceProfessionInstigateCommonAttack(actor,attackerDesc,statusTurn,opt
     handled:true,weaponCommand:weaponType===19?'BREAKTHROW':(weaponType===18?'BOUNDTHROW':'ATTACK'),
     attackMax,attackCount:hits.length,rawToNo,fallback,hits
   };
+}
+
+
+function performProfessionAnnexAttack(actor,statusTurn,options={}){
+  const attackerDesc=statusTurn?.desc||battleStatusActorDesc(actor);
+  if(!attackerDesc||!battleStatusDescAlive(attackerDesc))return true;
+  // Current Skill 5 PVE can only place ANNEX on an Enemy battle entry.
+  if(attackerDesc.kind!=='enemy'||!attackerDesc.unit)return true;
+  const unit=attackerDesc.unit;
+
+  if(unit.chargeState)unit.chargeState=null;
+  if(unit.earthRoundState)unit.earthRoundState=null;
+  unit.guardThisTurn=false;
+  unit.counterEligibleThisTurn=true;
+
+  // After StatusSeq overwrites COM1=ATTACK, normal weapon-command execution still applies.
+  const proxy={
+    ...statusTurn,
+    instigateRawToNo:Math.trunc(n(statusTurn?.annexRawToNo)),
+    instigateTarget:statusTurn?.annexTarget||null
+  };
+  const weaponType=Math.trunc(n(unit.weaponType));
+  let result;
+  if(weaponType===17)result=sourceProfessionInstigateBoomerang(actor,attackerDesc,proxy,options);
+  else if(weaponType===4)result=sourceProfessionInstigateBow(actor,attackerDesc,proxy,options);
+  else result=sourceProfessionInstigateCommonAttack(actor,attackerDesc,proxy,options);
+
+  const forced=statusTurn?.annexTarget;
+  addLog(battleStatusDescName(attackerDesc)+' 的附身發作：'
+    +(forced?'強制普通攻擊 '+battleStatusDescName(forced)
+      :'亂數側沒有有效目標，COM2=-1 後依普通 ATTACK / TargetAdjust 繼續處理。'),'bad');
+  return result||true;
 }
 
 function performProfessionInstigateAttack(actor,statusTurn,options={}){
@@ -20818,6 +21055,12 @@ function captureTurn(manual=false){
         continue;
       }
     }else{
+      if(statusTurn.annexAttack){
+        performProfessionAnnexAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
+        if(enemy)syncEnemyTarget();
+        sourceProcessBattleActorOuterBoundary();
+        continue;
+      }
       if(statusTurn.instigateAttack){
         performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
@@ -21654,6 +21897,12 @@ function attackTurn(options={}){
         continue;
       }
     }else{
+      if(statusTurn.annexAttack){
+        performProfessionAnnexAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
+        if(enemy)syncEnemyTarget();
+        sourceProcessBattleActorOuterBoundary();
+        continue;
+      }
       if(statusTurn.instigateAttack){
         performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
         if(enemy)syncEnemyTarget();
@@ -21769,6 +22018,12 @@ function guardTurn(){
         continue;
       }
     }else{
+      if(statusTurn.annexAttack){
+        performProfessionAnnexAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
+        if(enemy)syncEnemyTarget();
+        sourceProcessBattleActorOuterBoundary();
+        continue;
+      }
       if(statusTurn.instigateAttack){
         performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();

@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.60**
+**PLAYABLE CORE V2.61**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,24 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.61 最新進度
+
+V2.61 接入巫師 **Skill 5「附身術」／`PROFESSION_ENCLOSE`**，沿用 V2.19 profession magic core，但完整保留 fixed source 的 raw-level ANNEX 與 StatusSeq 怪異回合語意。
+
+- TARGET OTHER；option `无|0|1|0|-60|0|0|0|0|60`，因此 `magic_type=-1`，不提升火／冰／雷 Practice。
+- dynamic MP：M-tier 1～4=50、5～7=60、8～9=70、10=80。
+- GET_PRACTICE：tier1～4=150、5～7=200、8～9=250、10=400；來源中 `>9 => 300` 位於 `>=10 => 400` 後方，照原 C 視為不可達。
+- Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- 命中流程保持：MultiList → GET_PRACTICE → magic dodge → damage → self CHANGE_STATUS 的 leading `RAND(1,100)` → target StatusTbl busy check → Annex `RAND(0,100)`。
+- target 已有任一 StatusTbl 時，直接保留傷害但 **不消耗 Annex success RNG**。
+- Annex success 讀 raw skill level：>=100=50%、>90=40%、>80=30%、>60=25%、>30=20%、其餘10%，且判定為 `roll <= success`。
+- raw round：>80=3、>50=2、其餘=1；StatusSeq 先 `--cnt` 再執行 ANNEX，因此實際強制攻擊次數為 2／1／0，這是 fixed source 行為，不補成直覺版。
+- ANNEX 每個仍存活 tick 都固定改成普通 ATTACK，先 `RAND(0,1)` 選側、再 `RAND(0,9)` 選掃描起點，沒有混亂狀態的 80% gate。
+- source 顯示封包使用 CONFUSION bad-status visual，但實際 Work 是 ANNEX。
+- save schema 維持 **30**。
+
+---
 
 ## V2.60 最新進度
 
