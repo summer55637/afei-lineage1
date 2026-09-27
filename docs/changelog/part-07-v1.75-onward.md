@@ -3674,6 +3674,50 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.28 profession Skill 40 near-death attack
+
+V2.28 adds Warrior Skill 40 `PROFESSION_DEAD_ATTACK` and audits the generic profession direct-attack DamageReact branch.
+
+### DEAD_ATTACK execution
+
+- Runtime row: TARGET=1, KIND=1, USE_FLAG=1, MP 17, option `命%82|HP%10|倍%2|效%1|回%3`.
+- The fixed HP>10 gate is checked at battle execution time; packet-receipt MP/proficiency has already happened.
+- `rate = tier*2 + 10`.
+- New HP is `int(currentHP * rate / 100)`, so tier0 keeps 10% and tier10 keeps 30% of current HP.
+- `hit = tier*2 + 80`.
+- The skill writes `WORKHITRIGHT += hit`, `MYSKILLHIT=1`, `MYSKILLHIT_NUM=hit` before the profession AttackSeq.
+- The physical hit keeps the generic profession calc-only Guardian caller bug, omits ordinary SUITPOISON and does not enter the ordinary Counter loop.
+
+### MYSKILLHIT source lifecycle / bug
+
+A later fixed PreCommand does not simply preserve the skill's HITRIGHT bonus:
+
+1. compliance rebuilds WORKHITRIGHT from equipment;
+2. MYSKILLHIT and MYSKILLHIT_NUM survive;
+3. fixed `Other_DefcharWorkInt()` mistakenly performs
+   `MYSKILLHIT += preSuitFIXTOUGH * equipmentWORKHITRIGHT / 100`;
+4. the ordinary StatusSeq tail then decrements MYSKILLHIT;
+5. only when it becomes zero does source subtract MYSKILLHIT_NUM from the CURRENT rebuilt WORKHITRIGHT.
+
+Consequences preserved by Web:
+- with equipment HITRIGHT 0, the next action can see `WORKHITRIGHT = -skillHit` for one command;
+- with nonzero equipment HITRIGHT, the wrong-field formula can extend the MYSKILLHIT counter, potentially repeatedly.
+
+A new battle-local `battlePlayerProfessionHitState` mirrors turns / power / WORKHITRIGHT and is reset with all other battle-local Work. `playerBattleView()` now consumes this transient HITRIGHT when present. Save schema does not change.
+
+### Generic direct DamageReact correction
+
+Pinned `battle_profession_attack_fun()` sets local react back to zero for every generic direct profession skill except `BATTLE_COM_S_CHAIN_ATK`.
+
+V2.28 therefore corrects the first-hit runtime:
+- CHAIN_ATK preserves DamageReact / ACUPUNCTURE;
+- BRUST and DEAD_ATTACK do not trigger or consume ACUPUNCTURE;
+- CHAIN_ATK_2 and SHIELD_ATTACK keep their separate fixed helper semantics.
+
+Added `tools/check_v228_profession_dead_attack_runtime.mjs`; historical V2.25/V2.27 regressions were adjusted only to avoid version-string brittleness and to assert the corrected DamageReact split. Save schema remains **30**.
+
+---
+
 ## V2.27 profession Skill 38 shield attack
 
 V2.27 adds Warrior Skill 38 `PROFESSION_SHIELD_ATTACK` as a live profession battle command.
