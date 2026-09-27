@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.23**
+**PLAYABLE CORE V2.24**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,24 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.24 最新進度
+
+V2.24 先把 fixed 職技真正使用時最容易被猜錯的**技能槽／狀態字串／battle command protocol**鎖住，並完整接通兩個 fixed 非戰鬥職技「追尋敵蹤／回避戰鬥」。
+
+- fixed battle command 收的是 **26 格技能槽 index，不是 Skill ID**：server 解析 `P|<slotHex>|<toNoHex>`，再以 `CHAR_getCharSkill(charaindex, slot)` 取得該格 Skill ID。V2.21 保留 slot hole 的決策因此正式和 command protocol 閉環。
+- 新增 `sourceProfessionSkillStatusRow/String/Menu()`，逐格鏡像 `SKILL_makeSkillStatusString()` 的 9 欄順序：`USE_FLAG | Skill ID | TARGET | KIND | ICON | COST_MP | LEVEL | NAME | TEXT`。LEVEL 使用 raw/100，MP 使用 V2.20 的 dynamic cost。
+- 新增 `sourceProfessionBattleCommandPlan()`：以 slot + raw `toNo` 建立 server parser 相容的 `P|slot|toNo` command，並先跑 V2.20 的職業／MP preflight。
+- **不猜 TARGET=1/2/3/5/8/10 的 client UI 語意**：fixed server 只把 TARGET/KIND 傳給 client，battle command 本身接受的是實際 `toNo`。在找到對應 client source 前，V2.24 只保存 metadata，不把數字硬翻成「敵單體／我方全體」。
+- fixed `USE_FLAG=0` 的資料只有 Skill 44「追尋敵蹤」與 45「回避戰鬥」；兩者的 callback 都是實際 field skill，因此 V2.24 先做成完整 out-of-battle executor。
+- Track/Escape 固定先走 `PROFESSION_SKILL_DEC_COST_MP()`，所以每次先扣 13 MP，再把顯示熟練度整數除以 10，乘 OPTION `倍%5`：例如 Lv10 = ±5%、Lv70 = ±35%。
+- 效果固定 **180 秒**，直接作用在原遇敵 CEP：`temp = cep * (100 + p_cep) / 100`，C int 向零截斷。
+- 保留 char_walk.c 的來源順序 bug：`temp` 用的是 **min/max clamp 前 CEP**。
+- 保留過期那一步的 stale-local bug：timer 過期時 Work 已清 0，但該次 encounter check 仍用剛讀到的舊 `p_cep` 算一次；下一步才真正回 0。
+- 保留重複施放怪行為：效果尚未到期時 Track/Escape callback 先設 `ret=-1`，但仍會重新套效果並把 180 秒延長；MP 也已先扣。固定 BATTLESKILL protocol 最後會把這次視為失敗，runtime 以 `protocolWouldReject` 明確標示，不偷偷改成成功。
+- Encounter Work 是 fixed transient `CHAR_WORK*`，V2.24 因此放在 runtime global，不寫進 save；reload/login 會自然清除，符合原 server 初始化。
+
+新增 `tools/check_v224_profession_command_outbattle.mjs`。本版沒有新增永久欄位，**save schema 維持 30**。
 
 ## V2.23 最新進度
 

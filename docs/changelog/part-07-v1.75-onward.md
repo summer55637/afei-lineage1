@@ -3671,3 +3671,24 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 - ARRANGE/DEFLECT、profession magic practice、active PROFESSION_SKILL_Use post-dispatch 尚未有等價 live event，因此本版不假接。
 
 新增 `tools/check_v223_profession_live_physical_hooks.mjs`。schema 維持 30。
+
+---
+
+## V2.24 profession command/status bridge + out-of-battle Track/Escape
+
+- Battle command fixed parser：`P|<slotHex>|<toNoHex>`；第一個值是 CHAR_HaveSkill slot，不是 Skill ID。
+- `sourceProfessionSkillStatusRow/String/Menu()` 鏡像 fixed S status：USE_FLAG / ID / TARGET / KIND / ICON / MP / LEVEL / NAME / TEXT。
+- `sourceProfessionBattleCommandPlan()` 使用 slot 取 Skill ID，保留 raw `toNo`，不猜 client TARGET enum。
+- USE_FLAG=0 的 fixed rows 只有 44 TRACK、45 ESCAPE；兩個 callback 均已 live：
+  - display level `/10`；
+  - OPTION `倍%5`；
+  - encounter fix 正／負；
+  - 180 秒；
+  - MP 先扣；
+  - callback ret 與 proficiency post-dispatch 順序保留。
+- char_walk profession `temp` 用 clamp 前 CEP。
+- expiry 清 Work 後該步仍使用 stale local p_cep，下一步才歸零。
+- 重複施放 active effect 時 callback ret=-1，但效果／timer 已更新；protocol failure 狀態不被 Web 偷改。
+- encounter profession Work 不持久化，schema 維持 30。
+
+新增 `tools/check_v224_profession_command_outbattle.mjs`。

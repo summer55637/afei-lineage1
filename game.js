@@ -96,6 +96,8 @@ let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
 let sourceLastMergeTimeSec=0;
+let professionEncounterFix=0;
+let professionEncounterUntilSec=0;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2071,6 +2073,172 @@ function sourceProfessionPlayerCriticalEvent(
   );
   sourceProfessionLogProficiencyResult(dualWeapon);
   return {weaponType:Math.trunc(n(weaponType)),armEquipped,shieldEquipped,weaponFocus,dualWeapon};
+}
+
+
+function sourceProfessionSkillStatusRow(slot,target=state){
+  const entry=sourcePlayerProfessionSkillAt(slot,target);
+  if(!entry)return null;
+  const row=sourceProfessionSkillTemplate(entry.skillId);
+  if(!row)return null;
+  const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
+  const mp=sourceProfessionSkillMpCost(entry.skillId,displayLevel);
+  if(!mp.ok)return null;
+  return {
+    slot:entry.slot,
+    useFlag:Math.trunc(n(row.useFlag)),
+    skillId:entry.skillId,
+    targetType:Math.trunc(n(row.target)),
+    kind:Math.trunc(n(row.kind)),
+    icon:Math.trunc(n(row.icon)),
+    costMp:Math.trunc(n(mp.decMp)),
+    displayLevel,
+    rawLevel:entry.rawLevel,
+    name:String(row.name||''),
+    text:String(row.text||''),
+    functionName:String(row.func||'')
+  };
+}
+function sourceProfessionSkillStatusString(slot,target=state){
+  const row=sourceProfessionSkillStatusRow(slot,target);
+  if(!row)return '|';
+  // fixed SKILL_makeSkillStatusString() field order.
+  return [
+    row.useFlag,row.skillId,row.targetType,row.kind,row.icon,
+    row.costMp,row.displayLevel,row.name,row.text
+  ].join('|');
+}
+function sourceProfessionSkillMenu(target=state){
+  const out=[];
+  for(let slot=0;slot<PROFESSION_SKILL_SLOT_COUNT;slot++){
+    out.push(sourceProfessionSkillStatusRow(slot,target));
+  }
+  return out;
+}
+function sourceProfessionBattleCommandPlan({
+  slot,toNo,target=state
+}={}){
+  const entry=sourcePlayerProfessionSkillAt(slot,target);
+  if(!entry)return {ok:false,reason:'skill-slot-empty',slot:Math.trunc(n(slot))};
+  const row=sourceProfessionSkillTemplate(entry.skillId);
+  if(!row)return {ok:false,reason:'skill-not-found',slot:entry.slot,skillId:entry.skillId};
+  const resolvedToNo=Math.trunc(Number(toNo));
+  if(!Number.isFinite(Number(toNo))||resolvedToNo<0){
+    return {
+      ok:false,reason:'target-unresolved',slot:entry.slot,skillId:entry.skillId,
+      clientBattleUse:Math.trunc(n(row.useFlag))===1
+    };
+  }
+  const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
+  const use=sourceProfessionSkillUsePreflight({
+    skillId:entry.skillId,rawSkillLevel:displayLevel,
+    professionClass:Math.trunc(n(target?.professionClass)),
+    mp:Math.trunc(n(target?.mp)),isPlayer:true,toNo:resolvedToNo
+  });
+  if(!use.ok)return Object.assign({slot:entry.slot,skillId:entry.skillId,toNo:resolvedToNo},use);
+  const slotHex=entry.slot.toString(16).toUpperCase();
+  const toNoHex=resolvedToNo.toString(16).toUpperCase();
+  return {
+    ok:true,slot:entry.slot,skillId:entry.skillId,toNo:resolvedToNo,
+    slotHex,toNoHex,command:'P|'+slotHex+'|'+toNoHex,
+    clientBattleUse:Math.trunc(n(row.useFlag))===1,
+    useFlag:Math.trunc(n(row.useFlag)),targetType:Math.trunc(n(row.target)),
+    kind:Math.trunc(n(row.kind)),displayLevel,use
+  };
+}
+function sourceProfessionEncounterRate(option){
+  const m=String(option||'').match(/倍%([+-]?\d+)/);
+  return m?Math.trunc(Number(m[1])):0;
+}
+function sourceProfessionEncounterRollPlan(baseCep,{nowMs=Date.now()}={}){
+  const cep=Math.trunc(n(baseCep));
+  const pCep=Math.trunc(n(professionEncounterFix));
+  const nowSec=Math.trunc(n(nowMs)/1000);
+  let expired=false;
+  // fixed char_walk.c reads p_cep first. If expired, it clears Work values but
+  // still computes this step's temp from that stale local p_cep.
+  if(pCep!==0&&professionEncounterUntilSec<nowSec){
+    professionEncounterFix=0;
+    professionEncounterUntilSec=0;
+    expired=true;
+  }
+  const rollCep=pCep!==0?Math.trunc(cep*(100+pCep)/100):cep;
+  return {
+    baseCep:cep,pCep,rollCep,nowSec,expired,
+    workFixAfter:Math.trunc(n(professionEncounterFix)),
+    workUntilAfter:Math.trunc(n(professionEncounterUntilSec))
+  };
+}
+function sourceProfessionOutOfBattleSkillPlan({
+  slot,target=state,nowMs=Date.now()
+}={}){
+  const entry=sourcePlayerProfessionSkillAt(slot,target);
+  if(!entry)return {ok:false,reason:'skill-slot-empty',slot:Math.trunc(n(slot))};
+  const row=sourceProfessionSkillTemplate(entry.skillId);
+  if(!row)return {ok:false,reason:'skill-not-found',slot:entry.slot,skillId:entry.skillId};
+  const func=String(row.func||'');
+  if(func!=='PROFESSION_TRACK'&&func!=='PROFESSION_ESCAPE'){
+    return {
+      ok:false,reason:'out-of-battle-function-unported',
+      slot:entry.slot,skillId:entry.skillId,useFlag:Math.trunc(n(row.useFlag)),functionName:func
+    };
+  }
+  const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
+  const use=sourceProfessionSkillUsePreflight({
+    skillId:entry.skillId,rawSkillLevel:displayLevel,
+    professionClass:Math.trunc(n(target?.professionClass)),
+    mp:Math.trunc(n(target?.mp)),isPlayer:true,toNo:0
+  });
+  if(!use.ok)return Object.assign({slot:entry.slot,skillId:entry.skillId},use);
+
+  const nowSec=Math.trunc(n(nowMs)/1000);
+  const dispatchRet=(professionEncounterUntilSec>=nowSec&&professionEncounterUntilSec>0)?-1:1;
+  const rate=sourceProfessionEncounterRate(row.option);
+  const level10=Math.trunc(displayLevel/10);
+  const magnitude=level10*rate;
+  const encounterFix=func==='PROFESSION_ESCAPE'?-magnitude:magnitude;
+  return {
+    ok:true,slot:entry.slot,skillId:entry.skillId,functionName:func,
+    useFlag:Math.trunc(n(row.useFlag)),displayLevel,level10,rate,encounterFix,
+    nowSec,untilSec:nowSec+180,dispatchRet,
+    protocolReturn:dispatchRet,
+    protocolWouldReject:dispatchRet!==1,
+    use
+  };
+}
+function sourceProfessionOutOfBattleSkillUse({
+  slot,target=state,nowMs=Date.now(),
+  randModulo=sourceRandModulo,randInclusive=cRand
+}={}){
+  const plan=sourceProfessionOutOfBattleSkillPlan({slot,target,nowMs});
+  if(!plan.ok)return plan;
+
+  // PROFESSION_SKILL_DEC_COST_MP runs before the function callback.
+  target.mp=plan.use.mpAfter;
+
+  // TRACK / ESCAPE apply their Work values even when they set ret=-1 because
+  // CHAR_ENCOUNT_NUM is still active.
+  professionEncounterFix=plan.encounterFix;
+  professionEncounterUntilSec=plan.untilSec;
+
+  const proficiency=sourceProfessionSkillPostDispatchProficiency({
+    target,slot:plan.slot,dispatchRet:plan.dispatchRet,targetIsPet:false,
+    randModulo,randInclusive
+  });
+  sourceProfessionLogProficiencyResult(proficiency);
+
+  const up=plan.encounterFix>=0;
+  addLog(
+    (plan.functionName==='PROFESSION_TRACK'?'追尋敵蹤':'回避戰鬥')
+      +'：遇敵 CEP 修正 '+(up?'+':'')+plan.encounterFix+'%，效力 180 秒。'
+      +(plan.protocolWouldReject?'（來源重複施放 ret=-1；server protocol 會視為失敗）':''),
+    up?'bad':'good'
+  );
+  return Object.assign({},plan,{
+    effectApplied:true,mpAfter:target.mp,
+    workFix:professionEncounterFix,workUntilSec:professionEncounterUntilSec,
+    proficiency
+  });
 }
 
 function sourcePlayerRandEnemyThreshold(target=state){
@@ -17209,13 +17377,22 @@ function walkEncounterStep(){
   let max=clamp(n(encounter.encounterMax),0,100);
   if(min>max){const t=min;min=max;max=t}
   let cep=n(state.encounterCep);
+  // fixed char_walk.c computes profession temp from the PRE-clamp CEP, then clamps CEP only
+  // for the normal min/max progression state.
+  const professionEncounter=sourceProfessionEncounterRollPlan(cep);
+  const rollCep=professionEncounter.rollCep;
   if(cep<min)cep=min;
   if(cep>max)cep=max;
 
-  // 原 char_walk.c：每走一步 if(rand()%120 < cep)，失敗則 cep++，成功重設 minep。
+  // 原 char_walk.c：每走一步 if(rand()%120 < temp)，失敗則 cep++，成功重設 minep。
   const roll=Math.floor(Math.random()*120);
-  state.lastEncounterRoll={roll,cep,min,max,encounterId:encounter.encounterId,x:point.x,y:point.y};
-  if(roll<cep){
+  state.lastEncounterRoll={
+    roll,cep,rollCep,min,max,encounterId:encounter.encounterId,x:point.x,y:point.y,
+    professionEncounterFix:professionEncounter.pCep,
+    professionEncounterExpired:professionEncounter.expired
+  };
+  if(professionEncounter.expired)addLog('職業技能的遇敵率效果結束。');
+  if(roll<rollCep){
     // fixed _Item_MoonAct order: only after the primary rand()%120 encounter hit,
     // roll RAND(0,100); encounter continues only when Rnum > equipped rand threshold.
     const randEnemy=sourcePlayerRandEnemyThreshold(state);
