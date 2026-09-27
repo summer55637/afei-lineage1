@@ -38,6 +38,15 @@ const SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM=Object.freeze({18546:40,18547:80,18548
 const SOURCE_PLAYER_RANDENEMY_BY_ITEM=Object.freeze({20126:60,20127:70,20128:100});
 // fixed itemset6 callback rows with ITEM_MagicEquitWear / ITEM_MagicEquitReWear.
 const SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS=new Set([20184,20420,20421]);
+// fixed ITEM_CheckSuitEquip ListSuit[] order. The parser uses strstr() on each pipe token,
+// so preserve this exact key order instead of treating ITEM_ARGUMENT as a generic object.
+const SOURCE_PLAYER_SUIT_KEYS=Object.freeze([
+  'VIT','FSTR','MSTR','MTGH','MDEX','WAST','HP','MP',
+  'FRES','IRES','TRES','RESIST','COUNTER','M_POW',
+  'EARTH','WRITER','FIRE','WIND',
+  'WDUCKPOWER','RENOCASE','SUITSTRP','SUITTGH_P','SUITDEXP',
+  'SUITPOISON','M2_POW','UN_POW_M'
+]);
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
@@ -1178,6 +1187,9 @@ function sourcePlayerEquipCallbackSupported(template){
   if(attach==='ITEM_MagicResist'&&detach==='ITEM_MagicReResist'){
     return sourcePlayerFixedEquipResistTemplate(template?.itemId);
   }
+  if(attach==='ITEM_suitEquip'&&detach==='ITEM_ResuitEquip'){
+    return sourcePlayerFixedSuitTemplate(template?.itemId);
+  }
   // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
   return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
 }
@@ -1217,6 +1229,96 @@ function sourcePlayerEquipMagicDefense(target=state){
     out.items.push({slot:i,itemIndex,itemId:Math.trunc(Number(template.itemId)),argument,values});
   }
   return out;
+}
+function sourcePlayerFixedSuitTemplate(itemId){
+  const id=Math.trunc(Number(itemId));
+  const row=Number.isFinite(id)&&itemMakeDb?.byItemId?itemMakeDb.byItemId[String(id)]:null;
+  const f=row?.f&&typeof row.f==='object'?row.f:{};
+  return f.a==='ITEM_suitEquip'&&f.d==='ITEM_ResuitEquip';
+}
+function sourcePlayerSuitArgumentValue(argument,key){
+  const wanted=String(key||'');
+  for(const token of String(argument||'').split('|')){
+    // fixed NPC_Util_GetStrFromStrWithDelim first uses strstr(token,key), not exact key equality.
+    if(!token.includes(wanted))continue;
+    const fields=token.split(':');
+    if(fields.length<2)continue;
+    const m=String(fields[1]??'').match(/^[ \t]*([+-]?\d+)/);
+    return m?Math.trunc(Number(m[1])):0;
+  }
+  return null;
+}
+function sourcePlayerSuitFreshWork(){
+  const work={activeCode:0,members:[]};
+  for(const key of SOURCE_PLAYER_SUIT_KEYS)work[key]=0;
+  return work;
+}
+function sourcePlayerSuitWork(target=state){
+  const out=sourcePlayerSuitFreshWork();
+  if(!target)return out;
+  const slots=sourcePlayerItemSlots(target);
+  const equipped=[];
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!existing||!template)continue;
+    equipped.push({
+      slot:i,itemIndex,existing,template,
+      suitCode:Math.trunc(n(template.suitCode))
+    });
+  }
+
+  // fixed ITEM_CheckSuitEquip: first suit code encountered in equip-slot order with >=3 members wins.
+  let activeCode=0;
+  for(const entry of equipped){
+    if(entry.suitCode<=0)continue;
+    let same=0;
+    for(const other of equipped)if(other.suitCode===entry.suitCode)same++;
+    if(same>=3){activeCode=entry.suitCode;break}
+  }
+  out.activeCode=activeCode;
+  if(activeCode<=0)return out;
+
+  // Second source scan is again slot 0..8. Every matching member may set any ListSuit Work;
+  // CHAR_setWorkInt means later slots overwrite earlier values instead of accumulating them.
+  for(const entry of equipped){
+    if(entry.suitCode!==activeCode)continue;
+    const argument=sourcePlayerLiveCallbackArgument(entry.existing,entry.template.itemId);
+    const values={};
+    for(const key of SOURCE_PLAYER_SUIT_KEYS){
+      const value=sourcePlayerSuitArgumentValue(argument,key);
+      if(value==null)continue;
+      out[key]=Math.trunc(n(value));
+      values[key]=Math.trunc(n(value));
+    }
+    out.members.push({
+      slot:entry.slot,itemIndex:entry.itemIndex,itemId:Math.trunc(n(entry.template.itemId)),
+      suitCode:activeCode,argument,values
+    });
+  }
+  return out;
+}
+function sourcePlayerApplySuitCompliance(normal,suit){
+  const src=suit||sourcePlayerSuitFreshWork();
+  let mfix=Math.trunc(n(normal?.fixedAttack));
+  const mtgh=Math.trunc(n(normal?.fixedTough));
+  const mdex=Math.trunc(n(normal?.fixedDex));
+  let maxHp=Math.trunc(n(normal?.maxHp));
+
+  mfix=mfix+Math.trunc(mfix*Math.trunc(n(src.FSTR))/100);
+  let fixedAttack=mfix+Math.trunc(n(src.MSTR));
+  let fixedTough=mtgh+Math.trunc(n(src.MTGH));
+  let fixedDex=mdex+Math.trunc(n(src.MDEX));
+  maxHp=maxHp+Math.trunc(n(src.VIT));
+
+  // Other_DefcharWorkInt uses float /100.0 then assigns back to int Work values.
+  if(mfix>0)fixedAttack=Math.trunc(fixedAttack+mfix*Math.trunc(n(src.SUITSTRP))/100);
+  if(mtgh>0)fixedTough=Math.trunc(fixedTough+mtgh*Math.trunc(n(src.SUITTGH_P))/100);
+  if(mdex>0)fixedDex=Math.trunc(fixedDex+mdex*Math.trunc(n(src.SUITDEXP))/100);
+
+  return {fixedAttack,fixedTough,fixedDex,maxHp,mfix,mtgh,mdex};
 }
 function sourcePlayerEquipResistFreshWork(){
   return {fire:0,thunder:0,ice:0,weaken:0,barrier:0,nocast:0,fallride:0};
@@ -2844,9 +2946,18 @@ function playerComplianceParameter(target=state){
   const baseQuick=Math.trunc(dex);
   const baseMaxHp=Math.max(0,Math.trunc(vital*4+str+tgh+dex));
 
-  const fixedAttack=Math.max(0,baseAttack+Math.trunc(n(equip.attack)));
-  const fixedTough=Math.max(-100,baseDefense+Math.trunc(n(equip.defense)));
-  const fixedDex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
+  let fixedAttack=Math.max(0,baseAttack+Math.trunc(n(equip.attack)));
+  let fixedTough=Math.max(-100,baseDefense+Math.trunc(n(equip.defense)));
+  let fixedDex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
+  const normalMaxHp=clamp(baseMaxHp+Math.trunc(n(equip.hp)),0,10000000);
+  const suit=sourcePlayerSuitWork(target);
+  const suitApplied=sourcePlayerApplySuitCompliance(
+    {fixedAttack,fixedTough,fixedDex,maxHp:normalMaxHp},suit
+  );
+  fixedAttack=suitApplied.fixedAttack;
+  fixedTough=suitApplied.fixedTough;
+  fixedDex=suitApplied.fixedDex;
+  const suitMaxHp=suitApplied.maxHp;
   const fixedLuck=clamp(Math.trunc(n(target.luck))+Math.trunc(n(equip.luck)),1,5);
   const fixedCharm=clamp(Math.trunc(n(target.charm))+Math.trunc(n(equip.charm)),0,100);
   // Fixed source quirk: CHAR_initcharWorkInt() resets the other ITEM_equipEffect Work fields,
@@ -2889,14 +3000,15 @@ function playerComplianceParameter(target=state){
   target.attack=fixedAttack;
   target.defense=fixedTough;
   target.dex=fixedDex;
-  target.maxHp=clamp(baseMaxHp+Math.trunc(n(equip.hp)),0,10000000);
+  target.maxHp=clamp(suitMaxHp,0,10000000);
   // fixed player creation baseline CHAR_MAXMP=100; _FIX_MAXCHARMP applies equip MP and clamps 0..1000.
   target.maxMp=clamp(100+Math.trunc(n(equip.mp)),0,1000);
   target.hp=Math.min(Math.max(0,n(target.hp)),target.maxHp);
   target.mp=Math.min(Math.max(0,n(target.mp)),target.maxMp);
   Object.assign(equip,{
     fixedAttack,fixedTough,fixedDex,fixedLuck,fixedCharm,fixedAvoid,statusResist,criticalWork,
-    otherDamage,otherDefc,arrange,sequence,attachPile,hitRight,neglectGuard,elementsRaw
+    otherDamage,otherDefc,arrange,sequence,attachPile,hitRight,neglectGuard,elementsRaw,
+    suit,suitApplied
   });
   target.playerEquipCompliance=equip;
   return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp,maxMp:target.maxMp,equip};
