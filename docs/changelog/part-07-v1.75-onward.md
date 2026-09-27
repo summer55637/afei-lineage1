@@ -5049,3 +5049,20 @@ save schema 維持 **30**。
 - type1 DODGE/GET_DAMAGE 都走 Fire 路徑，無第二層命中 gate。
 - 新增 `tools/check_v265_profession_fire_ball_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.66 Skill 10 BLOOD_WORMS
+
+- 接入巫師 Skill 10 `嗜血蛊 / PROFESSION_BLOOD_WORMS`。
+- MP：M-tier 1～4=5、5～9=10、10=15；GET_PRACTICE=`tier*10+20`。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.3)`；無屬性 magic_type=-1。
+- 命中後保留 CHANGE_STATUS leading RNG，再依 direct damage 立即回施術者 HP：5%／10%／15%／20%。
+- CHANG_STATUS 先掃 StatusTbl；busy 時不掛蠱，free 時直接掛，沒有 success RNG。
+- duration：tier1～4=2、5～7=3、8～9=4、10=5 active ticks，Work stored count=active+1。
+- 保留 double-M bug：MODBLOODWORMS 儲存已轉換 tier，StatusSeq 再 M-convert => 每個持續 tick 固定 tier1，40 damage + 2 HP caster heal。
+- BloodWorms 直接進 `battleStatuses`，StatusSeq pre-decrement 後 tick；死亡 tick 仍完成 caster heal。
+- generic `battleHasAnyStatus()` 補入 Doom Fear，對齊 fixed StatusTbl collision。
+- 新增 `tools/check_v266_profession_blood_worms_runtime.mjs`。
+- save schema 維持 **30**。

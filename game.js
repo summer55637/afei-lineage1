@@ -1667,6 +1667,7 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
   const command=String(prepared?.commonCommand||'');
   if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'
     &&command!=='BATTLE_COM_S_SIGN'
+    &&command!=='BATTLE_COM_S_BLOOD_WORMS'
     &&command!=='BATTLE_COM_S_DOOM'
     &&command!=='BATTLE_COM_S_ICE_CRACK'
     &&command!=='BATTLE_COM_S_FIRE_BALL'
@@ -2639,6 +2640,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_FIRE_BALL'
+    ||functionName==='PROFESSION_BLOOD_WORMS'
     ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
     ||functionName==='PROFESSION_ENCLOSE'
@@ -5168,6 +5170,146 @@ function sourceProfessionFireBallExecute(prepared,name){
   };
 }
 
+
+function sourceProfessionBloodWormSpec(skillLevel){
+  const tier=Math.trunc(n(skillLevel));
+  const activeTurns=tier>=10?5:tier>=8?4:tier>=5?3:2;
+  const storedTurns=activeTurns+1;
+  const immediateRate=tier>=10?20:(Math.trunc(tier/4)*5+5);
+  return {tier,activeTurns,storedTurns,immediateRate};
+}
+function sourceProfessionBloodWormImmediateHeal(damage,skillLevel){
+  const spec=sourceProfessionBloodWormSpec(skillLevel);
+  const heal=spec.tier>=10
+    ?Math.trunc(n(damage)*.2)
+    :Math.trunc(Math.trunc(n(damage))*spec.immediateRate/100);
+  return {damage:Math.trunc(n(damage)),heal,...spec};
+}
+function sourceProfessionBloodWormApply(desc,skillLevel){
+  const spec=sourceProfessionBloodWormSpec(skillLevel);
+  if(battleHasAnyStatus(desc))return {applied:false,reason:'source-status-tbl-busy',...spec};
+  const applied=battleStatusApply(desc,'bloodWorms',spec.activeTurns);
+  if(!applied)return {applied:false,reason:'status-apply-failed',...spec};
+  const st=battleStatusGet(desc);
+  if(st){
+    // Source stores the already-M-converted tier and caster charaindex.
+    st.bloodWormStoredTier=spec.tier;
+    st.bloodWormCaster='player';
+  }
+  return {applied:true,...spec};
+}
+function sourceProfessionBloodWormStatusTick(desc,st){
+  const targetHpBefore=Math.max(0,Math.trunc(n(battleStatusHp(desc))));
+  const storedTier=Math.trunc(n(st?.bloodWormStoredTier));
+  // Source bug: stored M-tier 1..10 gets converted by M AGAIN in StatusSeq => always 1.
+  const tickTier=sourceProfessionMagicLevelM(storedTier);
+  const damage=tickTier*10+30;
+  const rate=tickTier>=10?20:tickTier>=7?15:tickTier>=5?10:5;
+  const requestedHeal=Math.trunc(damage*rate/100);
+  let targetHpAfter=targetHpBefore;
+  if(targetHpBefore>0){
+    targetHpAfter=Math.max(0,targetHpBefore-damage);
+    battleStatusSetHp(desc,targetHpAfter);
+    if(desc?.kind==='enemy'&&targetHpAfter<=0){
+      sourceMarkEnemyDeathCredit(desc.unit,[{kind:'player'}]);
+    }
+  }
+  let casterRestore={
+    hpBefore:Math.max(0,Math.trunc(n(state?.hp))),
+    hpAfter:Math.max(0,Math.trunc(n(state?.hp))),
+    hpApplied:0,requestedAddHp:requestedHeal
+  };
+  if(st?.bloodWormCaster==='player'&&n(state?.hp)>0&&requestedHeal>0){
+    casterRestore=sourceProfessionSignApplySelfRestore(requestedHeal,0);
+  }
+  return {
+    storedTier,tickTier,damage,rate,requestedHeal,targetHpBefore,targetHpAfter,
+    targetDied:targetHpBefore>0&&targetHpAfter<=0,casterRestore,
+    sourceDoubleMConversionBug:true
+  };
+}
+function sourceProfessionBloodWormAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  let x=Math.trunc(n(opt[3])),y=Math.trunc(n(opt[4]));
+  if(no===20||no===25||no===26||(no>=0&&no<10)){
+    x=Math.trunc(n(opt[8]));y=Math.trunc(n(opt[9]));
+  }
+  return {
+    magicType:-1,attIdx:0,img1:Math.trunc(n(row?.img1)),img2:101623,
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x,y,shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7]))
+  };
+}
+function sourceProfessionBloodWormExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==10)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionBloodWormAnimation(row,toNo);
+  const practice=sourceProfessionMagicPracticePower('BATTLE_COM_S_BLOOD_WORMS',prepared.displayLevel,state.hp);
+  const hits=[],wakeTargets=[];
+  let addHp=0;
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:-1,command:'BATTLE_COM_S_BLOOD_WORMS',
+      proficiencyVector:sourceProfessionPlayerMagicProficiencyVector()
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:-1,power:preDamagePower,command:'BATTLE_COM_S_BLOOD_WORMS',
+      proficiency:{fire:0,thunder:0,ice:0},resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},equipSuit:{fire:0,thunder:0,ice:0},spirit:{fire:0,thunder:0,ice:0}
+    })));
+    const unusedChangeStatusRoll=cRand(1,100);
+    const immediate=sourceProfessionBloodWormImmediateHeal(damage,practice.skillLevel);
+    addHp=Math.fround(addHp+immediate.heal);
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    // CHANG_STATUS scans StatusTbl and, if free, applies BloodWorms with NO success RNG.
+    // This happens before this cast's direct HP subtraction.
+    const bloodWorm=sourceProfessionBloodWormApply(targetDesc,practice.skillLevel);
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,damage,hpBefore:before,hpAfter:after,
+      unusedChangeStatusRoll,immediate,bloodWorm,
+      sourceNoElementDamage:true,sourceStatusAppliedBeforeDirectDamage:true,sourceBloodWormNoSuccessRng:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害'
+      +(bloodWorm.applied?'，並附加嗜血蠱。':bloodWorm.reason==='source-status-tbl-busy'?'；目標已有異常狀態，未掛蠱。':''),
+      after<=0?'bad':'good');
+  }
+  // Source applies accumulated self HP after target loop, before sleep wake.
+  const selfRestore=sourceProfessionSignApplySelfRestore(addHp,0);
+  const wakes=wakeTargets.map(target=>({targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)}));
+  syncEnemyTarget();
+  return {
+    handled:true,skillId,functionName:prepared.functionName,rawToNo,toNo,multi,animation,practice,hits,
+    addHp,selfRestore,wakes,sourceMagicType:-1,sourceNoElementPractice:true,
+    sourceBloodWormNoSuccessRng:true,noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -6509,6 +6651,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionFireBallExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_BLOOD_WORMS'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionBloodWormExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_CURRENT'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -9770,7 +9917,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
   dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
-  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘'
+  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',bloodWorms:'嗜血蠱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
@@ -10199,7 +10346,8 @@ function battleHasAnyStatus(desc){
   const professionResist=sourceProfessionPlayerResistStatusActive(desc);
   const professionWater=sourceProfessionWaterState(desc);
   const professionAnnex=sourceProfessionAnnexState(desc);
-  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist||professionWater||professionAnnex);
+  const professionFear=sourceProfessionDoomFearState(desc);
+  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist||professionWater||professionAnnex||professionFear);
 }
 function battleStatusActive(desc,type=null){
   if(type==='sars'){
@@ -10768,6 +10916,16 @@ function processBattleStatusTurn(actor){
     battleStatusClear(desc);
     addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
     return finish({skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'});
+  }
+
+  if(st.type==='bloodWorms'){
+    const bloodWormTick=sourceProfessionBloodWormStatusTick(desc,st);
+    const name=desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標';
+    if(bloodWormTick.targetHpBefore>0){
+      addLog(name+' 因嗜血蠱受到 '+bloodWormTick.damage+' 傷害'
+        +(bloodWormTick.casterRestore?.hpApplied>0?'，施術者回復 '+bloodWormTick.casterRestore.hpApplied+' HP。':''),'bad');
+    }
+    return finish({skip:bloodWormTick.targetDied,desc,status:st,bloodWormTick});
   }
 
   if(st.type==='poison'){

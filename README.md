@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.65**
+**PLAYABLE CORE V2.66**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,26 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.66 最新進度
+
+V2.66 接入巫師 **Skill 10「嗜血蠱」／`PROFESSION_BLOOD_WORMS`**，包含直擊回血與真正 StatusTbl 持續吸血。
+
+- TARGET OTHER；option `无|0|1|0|-120|0|0|0|0|120|`，`magic_type=-1`，不提升火／冰／雷 Practice。
+- dynamic MP：M-tier 1～4=5、5～9=10、10=15。
+- GET_PRACTICE：`hp_power = M-tier*10 + 20`。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.3)`。
+- magic dodge 為無屬性基礎 dodge，沒有第二層命中 gate；GET_DAMAGE 無屬性時保留 `power`。
+- dodge 通過後先跑 `PROFESSION_MAGIC_CHANGE_STATUS` 的 leading `RAND(1,100)`，再依本次 damage 算施術者立即回血：tier1～3=5%、4～7=10%、8～9=15%、10=20%，皆按 fixed C 的截斷語意。
+- 接著 `PROFESSION_MAGIC_CHANG_STATUS` 先掃 StatusTbl；目標已有任一狀態時只保留直擊與立即回血，**不掛蠱、也沒有額外成功率 RNG**。
+- 無既有狀態時必定掛蠱：原始 M-tier 1～4 有效 2 tick、5～7=3、8～9=4、10=5；Work 實際存成 `activeTurns+1`，讓 StatusSeq 先 `--cnt` 後仍完整跳足次數。
+- fixed source 的重大 bug 原樣保留：掛狀態時 `MODBLOODWORMS` 存「已轉過一次的 M-tier 1～10」，每次 StatusSeq 又跑第二次 M 轉換，因此 **所有 tier 的持續 tick 都再次變成 tier1**，固定每 tick 40 傷害、回施術者 2 HP。
+- tick 可把目標打死；死亡當次仍會照來源完成施術者回補。施術者已死亡時不回補。
+- BloodWorms 納入現有 `battleStatuses`／StatusTbl 互斥，不會另造平行異常系統。
+- 同步修正 generic StatusTbl collision：Fear 本來也在 fixed StatusTbl，現在其他狀態檢查會正確把 Fear 視為已有異常。
+- save schema 維持 **30**。
+
+---
 
 ## V2.65 最新進度
 
