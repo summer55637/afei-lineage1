@@ -5032,3 +5032,20 @@ save schema 維持 **30**。
 - 修正 ENCLOSE/SUMMON_THUNDER/STORM 回傳 animation metadata 的 source `attIdx`：單體0／全體2。
 - 新增 `tools/check_v264_profession_current_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.65 Skill 9 FIRE_BALL
+
+- 接入巫師 Skill 9 `火星球 / PROFESSION_FIRE_BALL`。
+- ONE_ROW client mapping：敵方 10～14→23、15～19→24；MultiList 可在空排時 23↔24 fallback。
+- MP：M-tier 1～2=30、3～4=35、5～6=40、7～8=45、9～10=50。
+- GET_PRACTICE：1～2=160、3～4=180、5～6=220、7=260、8=280、9=320、10=360。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.5)`。
+- analysis 先跑 Fire Practice；當前 cast 仍使用 battle-entry proficiency snapshot。
+- source 先 SortLoc，但 FIRE_BALL TOLIST_SORT 會丟掉原 list，再依 final row toNo 重建活目標；逐目標順序固定 battle slot 升冪。
+- animation `attIdx=1`；23/24 使用 img2=101693 且座標分別 (250,180)/(350,260)。
+- type1 DODGE/GET_DAMAGE 都走 Fire 路徑，無第二層命中 gate。
+- 新增 `tools/check_v265_profession_fire_ball_runtime.mjs`。
+- save schema 維持 **30**。

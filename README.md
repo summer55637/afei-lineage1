@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.64**
+**PLAYABLE CORE V2.65**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,24 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.65 最新進度
+
+V2.65 接入巫師 **Skill 9「火星球」／`PROFESSION_FIRE_BALL`**，重點是保留 fixed source 的單排目標重建流程。
+
+- TARGET ONE_ROW；玩家對敵方選中 slot 10～14 → `toNo=23`，slot 15～19 → `toNo=24`。
+- `BATTLE_MultiList()` 若指定排沒有活目標，會先把 23↔24 切到另一排；後續 FireBall 全部使用修正後的 `toNo`。
+- dynamic MP：M-tier 1～2=30、3～4=35、5～6=40、7～8=45、9～10=50。
+- GET_PRACTICE：tier1～2=160、3～4=180、5～6=220、7=260、8=280、9=320、10=360。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.5)`。
+- analysis 先嘗試提升 Fire Practice；當前 cast 保留 battle-entry Fire proficiency Work snapshot。
+- 原 C 先對 MultiList 做 SortLoc，接著 `TOLIST_SORT(FIRE_BALL)` **整份重建該排**，因此真正逐目標處理順序是 slot 10→14 或 15→19，不使用前面的 SortLoc 順序，也不抽選目標 RNG。
+- row pseudo target 的 `attIdx=1`；23 使用 img2 101693 / (250,180)，24 使用 101693 / (350,260)；25/26 則是 101694 的另一側座標。
+- magic_type=1，DODGE 與 GET_DAMAGE 都走 Fire proficiency/resist，這招沒有 type2/type3 的欄位錯配，也沒有 CURRENT/STORM 的第二層命中 gate。
+- 每個 dodge 通過的目標在傷害後仍固定消耗 `PROFESSION_MAGIC_CHANGE_STATUS()` leading `RAND(1,100)`；FireBall 無額外狀態 case。
+- save schema 維持 **30**。
+
+---
 
 ## V2.64 最新進度
 

@@ -1669,6 +1669,7 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_SIGN'
     &&command!=='BATTLE_COM_S_DOOM'
     &&command!=='BATTLE_COM_S_ICE_CRACK'
+    &&command!=='BATTLE_COM_S_FIRE_BALL'
     &&command!=='BATTLE_COM_S_CURRENT'
     &&command!=='BATTLE_COM_S_SUMMON_THUNDER'
     &&command!=='BATTLE_COM_S_STORM'
@@ -1676,7 +1677,7 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER')upper=work*.2;
-  else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
+  else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_FIRE_BALL'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
   else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
@@ -2637,6 +2638,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_DOOM'
     ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_SUMMON_THUNDER'
+    ||functionName==='PROFESSION_FIRE_BALL'
     ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
     ||functionName==='PROFESSION_ENCLOSE'
@@ -5040,6 +5042,132 @@ function sourceProfessionCurrentExecute(prepared,name){
   };
 }
 
+
+function sourceProfessionFireBallAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  let img2=Math.trunc(n(row?.img2));
+  let x=Math.trunc(n(opt[3])),y=Math.trunc(n(opt[4]));
+  // fixed GET_IMG2 FIRE_BALL maps each row pseudo target to its own coordinates.
+  if(no===25){img2=101694;x=Math.trunc(n(opt[8]));y=Math.trunc(n(opt[9]));}
+  else if(no===26){img2=101694;x=Math.trunc(n(opt[10]));y=Math.trunc(n(opt[11]));}
+  else if(no===23){img2=101693;x=Math.trunc(n(opt[12]));y=Math.trunc(n(opt[13]));}
+  else if(no===24){img2=101693;x=Math.trunc(n(opt[14]));y=Math.trunc(n(opt[15]));}
+  return {
+    magicType:1,attIdx:1,
+    img1:Math.trunc(n(row?.img1)),img2,
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x,y,shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7]))
+  };
+}
+
+function sourceProfessionFireBallRowSlots(toNo){
+  const no=Math.trunc(n(toNo));
+  const start=no===23?10:no===24?15:no===25?5:no===26?0:-1;
+  if(start<0)return [];
+  const out=[];
+  for(let slot=start;slot<start+5;slot++){
+    if(sourceSetMagicPetTargetableDescFromSlot(slot))out.push(slot);
+  }
+  return out;
+}
+
+function sourceProfessionFireBallExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==9)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  // BATTLE_MultiList may flip 23<->24 when the chosen row is empty.
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-row-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis raises Fire Practice, while this cast keeps the entry snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const firePractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_FIRE_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(firePractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionFireBallAnimation(row,toNo);
+
+  // Source qsorts the MultiList first, then FIRE_BALL TOLIST_SORT discards that list and
+  // rebuilds the selected row in raw battle-slot ascending order.
+  const preSortSlots=sourceProfessionMagicEnemySortedSlots(multi.slots);
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_FIRE_BALL',prepared.displayLevel,state.hp
+  );
+  const targetSlots=sourceProfessionFireBallRowSlots(toNo);
+
+  const hits=[],wakeTargets=[];
+  for(const slot of targetSlots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:1,command:'BATTLE_COM_S_FIRE_BALL',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:1,power:preDamagePower,command:'BATTLE_COM_S_FIRE_BALL',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,
+      damage,hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      sourceFireDamageFieldsAligned:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,preSortSlots,targetSlots,animation,
+    firePractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:1,sourceFirePracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceFireBallRebuildsRowAfterSort:true,
+    sourceRowSlotOrderAscending:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -6376,6 +6504,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionSummonThunderExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_FIRE_BALL'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionFireBallExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_CURRENT'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
