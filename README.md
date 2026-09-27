@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.58**
+**PLAYABLE CORE V2.59**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,34 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.59 最新進度
+
+V2.59 接入巫師 **Skill 3「世界末日」／`PROFESSION_DOOM`**。這版沿用 V2.57～V2.58 profession magic core，但完整補上 DOOM 自己的隨機選敵、90% 二次命中、特殊敏捷排序，以及滿級 `CHAR_WORKFEAR` lifecycle。
+
+fixed row：TARGET **ALL_OTHERSIDE**、KIND 3、option `无|1|1|320|240|1000|4700|0|320|240`、img1 **101697**、img2 **101640**。實際 MP：M-tier 1～4 = **50**、5～8 = **100**、9～10 = **150**。來源裡 DOOM／火龍槍的集氣阻擋程式整段位於註解，因此此 fixed build **不做蓄力回合**。
+
+### 目標數與 RNG 順序
+
+先依 fixed `SortLoc` 排成 `13,11,10,12,14,18,16,15,17,19`，再依 M-tier 決定最多命中 **2 / 4 / 6 / 8 / 10** 個。若需要抽子集，原 C 每次 `RAND(0,listidx-1)`，抽中的格子就寫成 -1；重複抽到 -1 仍消耗 RNG、但不增加目標數，因此 Web 也保留 rejection loop。
+
+DOOM 的完整 RNG 順序固定為：
+
+`GET_PRACTICE critical → M2 → 98～102 variance → target draws → 每目標 base magic dodge → DOOM RAND(1,100)<90 → hit-only unused CHANGE_STATUS RAND(1,100)`
+
+option 第一欄是「无」，所以 magic type = -1，不提升火／冰／雷熟練度。GET_PRACTICE base power 依 M-tier為 **200 / 200 / 250 / 250 / 300 / 300 / 350 / 400 / 450 / 550**。
+
+### 世界末日 FEAR
+
+只有 M-tier 10，而且必須是「通過 magic dodge 且傷害後仍存活」的目標，才會直接寫 `CHAR_WORKFEAR=4`。這不是一般 StatusChange，因此不走普通異常互斥；V2.59 使用獨立 battle-local FEAR Work 保存，可與既有普通狀態並存。
+
+每到該角色自己的 `BATTLE_StatusSeq`，FEAR 由 4→3→2→1→0。真正能力修正在下一輪 `CHAR_complianceParameter → Other_DefcharWorkInt` 才生效：在 SetMagicPet 等前置 Work 修正後，減掉**原始保存 base**的攻 10%、防 10%、敏 20%，然後才再處理 WEAKEN。
+
+原 C 施放當下送出的 -10 / -10 / -20 是顯示封包，並沒有立即直接改當輪已建立的 WORK；而 `BATTLE_DexCalc` 裡 FEAR 的 0.8 預算又會被後續 command switch 覆寫。因此 V2.59 不把 FEAR 錯做成「命中瞬間永久直接扣屬性」。
+
+DOOM 專用 Dex 保留 fixed 怪式：`WORKQUICK+20 - RAND(0.3, work*0.6)`，包含 fractional lower bound 0.3。動畫 Enemy side=21 使用 img2 101640、座標 320/240；right-side pseudo 20 才切 101639。
+
+新增 `tools/check_v259_profession_doom_runtime.mjs`。save schema 維持 **30**。
 
 ## V2.58 最新進度
 

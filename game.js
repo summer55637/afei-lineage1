@@ -120,6 +120,7 @@ let battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};
 let battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};
 let battlePetProfessionOblivionStates=new Map();
 let battleProfessionBoundaryStates=new Map();
+let battleProfessionDoomFearStates=new Map();
 let battleOuterBoundaryActor=null;
 
 const $=s=>document.querySelector(s);
@@ -1663,10 +1664,14 @@ function sourceProfessionPlayerMagicProficiencyVector(){
 
 function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacroValue}={}){
   const command=String(prepared?.commonCommand||'');
-  if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'&&command!=='BATTLE_COM_S_SIGN')return battleDexRoll(quick);
+  if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'
+    &&command!=='BATTLE_COM_S_SIGN'
+    &&command!=='BATTLE_COM_S_DOOM')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
-  const upper=command==='BATTLE_COM_S_VOLCANO_SPRINGS'?work*.2:work*.3;
-  const roll=randMacro(0,upper);
+  let lower=0,upper=work*.3;
+  if(command==='BATTLE_COM_S_VOLCANO_SPRINGS')upper=work*.2;
+  else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
+  const roll=randMacro(lower,upper);
   let dex=work-roll;
   if(dex<=0)dex=1;
   return Math.trunc(dex);
@@ -2621,6 +2626,7 @@ function sourceProfessionSetPlayerAttackWork(value){
 function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
   return functionName==='PROFESSION_VOLCANO_SPRINGS'
     ||functionName==='PROFESSION_SIGN'
+    ||functionName==='PROFESSION_DOOM'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -4177,6 +4183,190 @@ function sourceProfessionSignExecute(prepared,name){
     noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
   };
 }
+
+function sourceProfessionDoomTargetCount(skillLevel){
+  const tier=Math.trunc(n(skillLevel));
+  if(tier>=8)return 10;
+  if(tier>=7)return 8;
+  if(tier>=5)return 6;
+  if(tier>=3)return 4;
+  return 2;
+}
+
+function sourceProfessionDoomSelectSlots(sortedSlots,skillLevel,{randInclusive=cRand}={}){
+  const source=(Array.isArray(sortedSlots)?sortedSlots:[]).map(v=>Math.trunc(n(v)));
+  const getNum=sourceProfessionDoomTargetCount(skillLevel);
+  if(getNum>=source.length)return {slots:source.slice(),rolls:[],getNum,sourceCount:source.length};
+  const work=source.slice(),out=[],rolls=[];
+  while(out.length<getNum){
+    const index=Math.trunc(n(randInclusive(0,work.length-1)));
+    rolls.push(index);
+    const slot=work[index];
+    work[index]=-1;
+    // fixed C uses if(out_num > 0); a repeat draw sees -1 and is rejected.
+    if(slot>0)out.push(slot);
+  }
+  return {slots:out,rolls,getNum,sourceCount:source.length};
+}
+
+function sourceProfessionDoomFearState(desc){
+  const key=battleStatusKey(desc);
+  const st=key?battleProfessionDoomFearStates.get(key)||null:null;
+  return st&&Math.trunc(n(st.turns))>0?st:null;
+}
+
+function sourceProfessionDoomFearApply(desc){
+  const key=battleStatusKey(desc);
+  if(!key)return {applied:false,key:null,turns:0};
+  // fixed DOOM writes CHAR_WORKFEAR=4 directly; this overwrites/refreshes Fear
+  // and does not use ordinary status mutual-exclusion checks.
+  const st={turns:4};
+  battleProfessionDoomFearStates.set(key,st);
+  return {applied:true,key,turns:4};
+}
+
+function sourceProfessionDoomFearStatusSeq(desc){
+  const key=battleStatusKey(desc);
+  const st=key?battleProfessionDoomFearStates.get(key)||null:null;
+  if(!key||!st||Math.trunc(n(st.turns))<=0)return null;
+  const beforeTurns=Math.trunc(n(st.turns));
+  st.turns=Math.max(0,beforeTurns-1);
+  const expired=st.turns<=0;
+  if(expired)battleProfessionDoomFearStates.delete(key);
+  return {beforeTurns,turns:st.turns,expired};
+}
+
+function sourceProfessionDoomFearAdjusted(desc,currentAttack,currentDefense,currentQuick,baseAttack,currentBaseDefense,baseQuick){
+  const active=!!sourceProfessionDoomFearState(desc);
+  const attack=Math.trunc(n(currentAttack));
+  const defense=Math.trunc(n(currentDefense));
+  const quick=Math.trunc(n(currentQuick));
+  if(!active)return {active:false,attack,defense,quick,attackSub:0,defenseSub:0,quickSub:0};
+  const attackSub=n(baseAttack)*.1;
+  const defenseSub=n(currentBaseDefense)*.1;
+  const quickSub=n(baseQuick)*.2;
+  // Other_DefcharWorkInt subtracts percentages of the saved pre-buff mfix/mtgh/mdex,
+  // then CHAR_setWorkInt truncates the resulting floating expression.
+  return {
+    active:true,
+    attack:Math.trunc(attack-attackSub),
+    defense:Math.trunc(defense-defenseSub),
+    quick:Math.trunc(quick-quickSub),
+    attackSub,defenseSub,quickSub
+  };
+}
+
+function sourceProfessionDoomAnimation(row,toNo){
+  const parts=String(row?.option||'').split('|');
+  const rightSide=toNo===20||toNo===25||toNo===26;
+  return {
+    magicType:-1,attIdx:3,
+    img1:Math.trunc(n(row?.img1)),
+    img2:rightSide?101639:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(parts[1])),
+    showBehind:Math.trunc(n(parts[2])),
+    x:rightSide?Math.trunc(n(parts[8])):Math.trunc(n(parts[3])),
+    y:rightSide?Math.trunc(n(parts[9])):Math.trunc(n(parts[4])),
+    shakeStart:Math.trunc(n(parts[5])),
+    shakeEnd:Math.trunc(n(parts[6])),
+    disappear:Math.trunc(n(parts[7]))
+  };
+}
+
+function sourceProfessionDoomExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==3)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+  const sortedSlots=sourceProfessionMagicEnemySortedSlots(multi.slots);
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionDoomAnimation(row,toNo);
+
+  // fixed order: analysis -> GET_PRACTICE RNG -> TOLIST_SORT target RNG.
+  // option "无" means no Fire/Ice/Thunder passive proficiency roll.
+  const practice=sourceProfessionMagicPracticePower('BATTLE_COM_S_DOOM',prepared.displayLevel,state.hp);
+  const selection=sourceProfessionDoomSelectSlots(sortedSlots,practice.skillLevel);
+
+  const hits=[],hitTargets=[];
+  for(const slot of selection.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:-1,command:'BATTLE_COM_S_DOOM',
+      proficiencyVector:sourceProfessionPlayerMagicProficiencyVector()
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:-1,power:preDamagePower,command:'BATTLE_COM_S_DOOM',
+      proficiency:{fire:0,thunder:0,ice:0},
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // PROFESSION_MAGIC_CHANGE_STATUS always consumes its leading critical RAND.
+    // DOOM has no self-status switch case, and its target-status case is commented out.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      sourceTargetDoomStatusCaseCommentedOut:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    hitTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+  }
+
+  const fears=[];
+  if(practice.skillLevel>=10){
+    for(const target of hitTargets){
+      if(n(target.hp)<=0)continue;
+      const desc={kind:'enemy',unit:target,unitId:target.id};
+      const fear=sourceProfessionDoomFearApply(desc);
+      fears.push({targetUnitId:target.id,fear,visualAttack:-10,visualDefense:-10,visualQuick:-20});
+      addLog(target.name+' 陷入「恐懼」4 回合。','bad');
+    }
+  }
+
+  const wakes=hitTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,sortedSlots,selection,animation,practice,hits,fears,wakes,
+    sourceMagicType:-1,sourceNoElementPractice:true,
+    sourceDoomChargeBlockCommentedOut:true,
+    sourceFearRawTurns:4,sourceFearVisual:{attack:-10,defense:-10,quick:-20},
+    sourceFearActualStatsApplyOnCompliance:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -5498,6 +5688,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionSignExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_DOOM'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionDoomExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===68){
     const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -8747,7 +8942,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleOuterBoundaryActor=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battleOuterBoundaryActor=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -9610,6 +9805,7 @@ function processBattleStatusTurn(actor){
   // RESIST_F/I/T are ordinary StatusTbl entries, so their --cnt/recovery happens
   // before the later MYSKILL tail on the Player's own StatusSeq.
   const professionResist=desc.kind==='player'?sourceProfessionPlayerResistStatusSeq():null;
+  const professionDoomFear=sourceProfessionDoomFearStatusSeq(desc);
 
   // fixed BATTLE_StatusSeq tail begins with MYSKILLSTR. ENRAGE_PET shares that raw field.
   // The round WORK/FIX snapshot was already prepared before StatusSeq, so expiry here
@@ -9660,6 +9856,7 @@ function processBattleStatusTurn(actor){
       ?sourceProfessionPlayerTrapStatusSeq():null;
     const extra={};
     if(professionResist)extra.professionResist=professionResist;
+    if(professionDoomFear)extra.professionDoomFear=professionDoomFear;
     if(professionStats)extra.professionStats=professionStats;
     if(professionHit)extra.professionHit=professionHit;
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
@@ -10187,8 +10384,10 @@ function enemyPrepareRoundAction(unit,action){
   // fixed C 的 PreCommandSeq -> complianceParameter -> Other_DefcharWorkInt：
   // 先套持續中的能力 buff，再套 WEAKEN 0.8 到 FIXSTR/FIXTOUGH/FIXDEX，
   // 最後才進 AI / PETSKILL_*，因此所有技能都必須從「本輪 FIX 快照」起算。
-  let sourceFixAttack=Math.trunc(n(unit.attack));
-  let sourceFixQuick=Math.trunc(n(unit.quick));
+  const baseAttack=Math.trunc(n(unit.attack));
+  const baseQuick=Math.trunc(n(unit.quick));
+  let sourceFixAttack=baseAttack;
+  let sourceFixQuick=baseQuick;
   const baseDefense=Math.trunc(n(unit.defense));
 
   // fixed Other_DefcharWorkInt(): SetMagicPet precedes WEAKEN and, due to a source bug,
@@ -10197,6 +10396,15 @@ function enemyPrepareRoundAction(unit,action){
   sourceFixAttack=magicPet.attack;
   let sourceFixDefense=magicPet.defense;
   sourceFixQuick=magicPet.quick;
+
+  // fixed Other_DefcharWorkInt applies CHAR_WORKFEAR after SetMagicPet and before WEAKEN.
+  const doomFear=sourceProfessionDoomFearAdjusted(
+    desc,sourceFixAttack,sourceFixDefense,sourceFixQuick,
+    baseAttack,baseDefense,baseQuick
+  );
+  sourceFixAttack=doomFear.attack;
+  sourceFixDefense=doomFear.defense;
+  sourceFixQuick=doomFear.quick;
 
   if(weakened){
     sourceFixAttack=Math.trunc(sourceFixAttack*.8);
@@ -10214,6 +10422,7 @@ function enemyPrepareRoundAction(unit,action){
   unit.roundMagicPetStat=magicPet.stat;
   unit.roundMagicPetPower=magicPet.power;
   unit.roundTghBuffPower=magicPet.stat==='TGH'?magicPet.power:0;
+  unit.roundDoomFearApplied=doomFear.active;
 
   unit.noGuardDuckBonus=0;
   unit.noGuardCounterBonus=0;

@@ -4923,3 +4923,25 @@ save schema 維持 **30**。
 
 新增 `tools/check_v258_profession_sign_runtime.mjs`。save schema 維持 **30**。
 
+---
+
+## V2.59 Skill 3 DOOM
+
+- 接入巫師 Skill 3 `世界末日 / PROFESSION_DOOM`；TARGET ALLOTHERSIDE，Player side 使用 pseudo target 21。
+- dynamic MP：M-tier 1～4=50、5～8=100、9～10=150。
+- fixed DOOM／FIRE_SPEAR 集氣 no-action 判斷整段被註解，不實作蓄力回合。
+- qsort 後 Enemy side 順序沿用 fixed SortLoc：13,11,10,12,14,18,16,15,17,19。
+- TOLIST_SORT 目標數：tier1～2=2、3～4=4、5～6=6、7=8、8～10=10。抽子集時保留 RAND(0,listidx-1) rejection loop，重複抽到已寫成 -1 的位置仍耗 RNG。
+- option `无` => magic_type=-1，不提升 F/I/T Practice。
+- GET_PRACTICE base power：tier1～2=200、3～4=250、5～6=300、7=350、8=400、9=450、10=550；之後沿用 M_POW / 30% M2 / 98～102。
+- DOOM magic dodge：先 base Enemy dodge，再 `RAND(1,100)<90`；90 本身是 miss。
+- 每個 hit 在 damage core 後仍由 self CHANGE_STATUS 固定消耗 leading `RAND(1,100)`；DOOM 無 self-status case。target-side DOOM CHANG_STATUS 舊實作整段註解，不自行新增。
+- tier10 post-loop：只對 hit 且傷害後仍存活目標直接寫 `CHAR_WORKFEAR=4`。Fear 獨立於一般 StatusChange，可與普通異常並存。
+- FEAR 每個 actor 自己的 StatusSeq 4→3→2→1→0；PreCommand compliance 在 active 時，於 SetMagicPet 後、WEAKEN 前減 saved base 的攻10%／防10%／敏20%。
+- 施放當下 -10/-10/-20 僅為原封包顯示；不把已建立的當輪 WORK 即時永久扣值。
+- DOOM Dex：`WORKQUICK+20 - RAND(0.3, work*0.6)`，保留 fractional lower bound。
+- 動畫：Enemy side=21 row img2 101640 / x320 y240；right pseudo 20 使用 img2 101639。
+- CI trigger 同步加入 `tools/check_v259_profession_doom_runtime.mjs`，避免 regression-only fix 不觸發 Actions。
+
+新增 `tools/check_v259_profession_doom_runtime.mjs`。save schema 維持 **30**。
+

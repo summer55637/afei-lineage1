@@ -94,6 +94,7 @@ on:
       - "tools/check_v256_profession_break_boundary_runtime.mjs"
       - "tools/check_v257_profession_volcano_springs_runtime.mjs"
       - "tools/check_v258_profession_sign_runtime.mjs"
+      - "tools/check_v259_profession_doom_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -390,6 +391,9 @@ jobs:
 
       - name: Run V2.58 SIGN regression
         run: node tools/check_v258_profession_sign_runtime.mjs
+
+      - name: Run V2.59 DOOM regression
+        run: node tools/check_v259_profession_doom_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
