@@ -2248,7 +2248,8 @@ function sourceProfessionAttackSkillTier(displayLevel){
 function sourceProfessionBattleFunctionSupported(functionName){
   return functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
-    ||functionName==='PROFESSION_CHAIN_ATK_2';
+    ||functionName==='PROFESSION_CHAIN_ATK_2'
+    ||functionName==='PROFESSION_SHIELD_ATTACK';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2354,6 +2355,77 @@ function sourceProfessionOrdinaryPlayerAttackResult(target,{attackPower=null}={}
     guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
   });
 }
+function sourceProfessionPlayerShieldEquipped(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  const itemIndex=Math.trunc(Number(slots?.[PLAYER_SHIELD_SLOT]));
+  if(!Number.isFinite(itemIndex))return {equipped:false,itemIndex:null,template:null};
+  const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+  return {
+    equipped:!!template&&Math.trunc(Number(template.type))===25,
+    itemIndex,template:template||null
+  };
+}
+function sourceProfessionShieldAttackPower(currentAttack,attackSkillTier){
+  const attack=Math.trunc(n(currentAttack));
+  return Math.trunc(n(attackSkillTier))===10?attack:Math.trunc(attack*.5);
+}
+function sourceProfessionStatusAttackCheck(targetDesc,success){
+  // fixed PROFESSION_BATTLE_StatusAttackCheck() consumes RAND before EVERY early return.
+  const roll=cRand(1,100);
+  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
+    return {success:false,roll,threshold:Math.trunc(n(success)),reason:'dead-or-missing'};
+  }
+  if(battleHasAnyStatus(targetDesc)){
+    return {success:false,roll,threshold:Math.trunc(n(success)),reason:'existing-status'};
+  }
+  const threshold=Math.trunc(n(success));
+  return {success:roll<threshold,roll,threshold,reason:roll<threshold?'hit':'roll'};
+}
+function sourceProfessionShieldAttackExecute(target,prepared,name){
+  const shield=sourceProfessionPlayerShieldEquipped(state);
+  if(!shield.equipped){
+    addLog('「'+name+'」執行失敗：fixed 原 C 在角色回合才檢查盾牌，目前未裝備 ITEM_WSHIELD。','bad');
+    return {
+      handled:true,noAction:true,reason:'shield-required',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:prepared.toNo,targetUnitId:target?.id??null,shield
+    };
+  }
+
+  const base=playerBattleView();
+  const attackPower=sourceProfessionShieldAttackPower(base?.attack,prepared.attackSkillTier);
+  // fixed status-change branch uses BATTLE_AttackSeq with Guardian output but never rewrites
+  // defindex to Guardian, so this is the same calc-only Guardian bug as the first profession hit.
+  const r=sourceProfessionPhysicalCalcOnlyResult(target,{attackerOverride:{attack:attackPower}});
+  if(!r)return {handled:true,noAction:true,reason:'attack-result-missing',toNo:prepared.toNo,targetUnitId:target.id};
+
+  // No ordinary BATTLE_Attack SUITPOISON branch. ItemCrush still happens for positive damage,
+  // and must happen BEFORE PROFESSION_BATTLE_StatusAttackCheck consumes its RAND(1,100).
+  const actual=applyFriendlyEnemyHit('player','你',target,r,null,{suppressSuitPoison:true});
+  let dizzy=null,applied=false;
+  const sourceHit=!r.dodged&&!r.miss;
+  if(sourceHit){
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const success=30+prepared.attackSkillTier*4;
+    dizzy=sourceProfessionStatusAttackCheck(targetDesc,success);
+    if(dizzy.success){
+      // fixed option 回%2 -> source stores turn+1 = 3.
+      applied=battleStatusApply(targetDesc,'dizzy',2);
+      if(applied){
+        // Source explicitly rewrites CHAR_WORKBATTLECOM1=BATTLE_COM_NONE for DIZZY.
+        target.guardThisTurn=false;
+        addLog(target.name+' 被「'+name+'」擊暈；fixed stored turn=3。','bad');
+      }
+    }
+  }
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:prepared.toNo,targetUnitId:target.id,shield,
+    attackSkillTier:prepared.attackSkillTier,attackPower,sourceHit,
+    r,actual,dizzy,dizzyApplied:applied,dizzyStoredTurns:applied?3:0,
+    noOrdinaryCounter:true
+  };
+}
 function sourceProfessionBattleSkillExecute(prepared,actor=null){
   if(!prepared?.ok||prepared.prepared!==true){
     return {handled:false,reason:'profession-command-not-prepared'};
@@ -2381,6 +2453,10 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
   const name=String(row?.name||('Skill '+prepared.skillId));
   let second=null,secondActual=null,chainRoll=null,chainHit=null,chainEffectiveTier=null;
   let chainExtra=false;
+
+  if(prepared.functionName==='PROFESSION_SHIELD_ATTACK'){
+    return sourceProfessionShieldAttackExecute(target,prepared,name);
+  }
 
   if(prepared.functionName==='PROFESSION_CHAIN_ATK_2'){
     // fixed source order:
@@ -2465,7 +2541,8 @@ function sourceProfessionBattleFailureText(reason){
     'mp-short':'MP 不足',
     'mp-cost-invalid':'fixed MP cost 無效',
     'client-nonbattle-skill':'這招不是 client 戰鬥技能',
-    'battle-function-unported':'這招的戰鬥函式尚未移植'
+    'battle-function-unported':'這招的戰鬥函式尚未移植',
+    'shield-required':'需要裝備盾牌'
   })[reason]||String(reason||'未知原因');
 }
 
@@ -18065,7 +18142,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.26 live：暴擊／連環攻擊／雙重攻擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.27 live：暴擊／連環攻擊／雙重攻擊／盾擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;
