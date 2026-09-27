@@ -3527,3 +3527,35 @@ V2.17 來源化第五組玩家裝備 callback，並修正 V2.16 對大型 field2
 
 新增 `tools/check_v217_equip_resist_callback.mjs`，save schema 維持 29。
 
+---
+
+## V2.18 ITEM_suitEquip / ITEM_ResuitEquip
+
+V2.18 來源化 fixed 玩家套裝 callback。
+
+fixed item runtime 驗到：
+- 236 件 `ITEM_suitEquip / ITEM_ResuitEquip`
+- 51 個 SUITCODE
+- fixed 資料真正有值的 ListSuit keys：`COUNTER / FSTR / HP / M2_POW / MDEX / MP / MSTR / MTGH / M_POW / RENOCASE / RESIST / SUITDEXP / SUITPOISON / UN_POW_M / WAST / WDUCKPOWER`
+
+原 `ITEM_CheckSuitEquip()` lifecycle：
+- 每次穿／脫都把套裝 Work 清零並重掃 equip 0..8。
+- 第一個 `SUITCODE > 0` 且裝備數 >=3 的 code 啟用；只啟用一套。
+- 第二次 0..8 掃描該 code，依 `NPC_Util_GetStrFromStrWithDelim()` 的 strstr + 第二個 colon 欄位 + atoi 規則讀 argument。
+- Work 是 set，不是 add；同 key 後格覆寫前格。
+- item-make runtime 的 `g` 因此擴到所有 `SUITCODE > 0` item，而不只 callback item。
+
+已接消費鏈：
+- `Other_DefcharWorkInt()`：FSTR/MSTR/MTGH/MDEX/VIT/SUITSTRP/SUITTGH_P/SUITDEXP。
+- `BATTLE_StatusSeq()`：HP/MP 在 Player 每次輪到行動時回復，不是整輪尾端。connection-level toxication gate 尚無對應 Web 系統，因此不拿 battle poison 代替。
+- `BATTLE_StatusAttackCheck()`：RESIST；paralysis 快速分支不吃它。RENOCASE 保留 fixed bug，只在 WEAKEN 時扣。
+- `BATTLE_CounterCheckPlayer()`：COUNTER 直接加在武器倍率 + Luck 後。
+- `BATTLE_AttackSeq()`：WDUCKPOWER 是普通 DuckCheck 後的第二顆獨立 `rand()%100`，strict `< power`；COMBO 跳過。
+- `BATTLE_Attack()`：SUITPOISON 只在沒有既有 `gBattleStausChange` 時接成 poison turn=3。BREAKTHROW 先設 paralysis，所以投石不再抽套裝毒 RNG；Counter 只走 AttackSeq，也不套套裝毒。
+
+暫存 Work、但不猜未移植系統：
+- WAST → water-world／connection 呼吸狀態。
+- M_POW / M2_POW / UN_POW_M → `PROFESSION_MAGIC_GET_DAMAGE()`。
+
+新增完整 `tools/check_v218_suit_equip_callback.mjs` executable regression，並更新 V2.13 fixture 的 shared callback-gate dependency。save schema 維持 29。
+
