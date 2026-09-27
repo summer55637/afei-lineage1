@@ -61,6 +61,7 @@ on:
       - "tools/check_v223_profession_live_physical_hooks.mjs"
       - "tools/check_v224_profession_command_outbattle.mjs"
       - "tools/check_v225_profession_battle_runtime.mjs"
+      - "tools/check_v226_profession_chain_atk2_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -258,6 +259,9 @@ jobs:
 
       - name: Run V2.25 profession battle runtime regressions
         run: node tools/check_v225_profession_battle_runtime.mjs
+
+      - name: Run V2.26 dual attack profession regressions
+        run: node tools/check_v226_profession_chain_atk2_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
