@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.16**
+**PLAYABLE CORE V2.17**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,26 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.17 最新進度
+
+V2.17 完成第五組玩家裝備 callback：`ITEM_MagicResist / ITEM_MagicReResist`，並補掉 V2.16 的 lazy field2 argument 漏洞。
+
+這次不硬寫舊編碼中文字。fixed runtime generator 會直接從 pinned `item_event.c` blob `00e05ebe58ef3988f7e0121f2a3aa5ede78344b5` 抽出 `ITEM_MagicResist()` 七個 `strstr()` 原始 bytes、各自對應的 `CHAR_WORKEQUIT*` 與固定 `p+4`，再把有 attach/detach callback 的 `ITEM_ARGUMENT` 以 latin1 byte-preserving 形式寫進較小的 item-make runtime。這樣不需要預先載入 10,737 筆大型 field2 runtime，也不猜 GBK／Big5。
+
+原 C lifecycle 已接入：
+
+- 登入：`CHAR_loginCheckUserItem()` 依裝備格 0→8 重播 attach callback；Web 的 transient Work 也依同一順序重建。
+- 穿裝：`ITEM_MagicResist()` 是 `CHAR_setWorkInt`，只把第一個命中的類別**直接設值**，不是累加。
+- 換裝：原 `CHAR_moveItemFromItemBoxToEquip()` 先交換格子，再舊裝 detach、最後新裝 attach；Web 保留相同事件順序。
+- 卸裝：保留 fixed source 的明確 bug——`ITEM_MagicReResist()` 七個分支最後全部都只做 `CHAR_WORKEQUITFIRE = 0`。因此卸掉雷／冰／虛弱／魔障／沉默／落馬裝備時，對應 Work 可能暫時殘留到重新登入或被另一個 attach 覆寫。
+- 虛弱／魔障／沉默：已接到 `BATTLE_StatusAttackCheck()` 的命中率扣減。
+- 落馬：已接到 `RAND(0,100) > 50 + CHAR_WORKEQUITFALLRIDE`。
+- 火／雷／冰：Work 值與 lifecycle 已完整保留；fixed C 的消費點是 `PROFESSION_MAGIC_GET_DAMAGE()` 的 suit 抗性。現行 Web 尚未有這條職業魔法傷害路徑，因此本版**不把它誤接到 V2.16 的 BATTLE_MultiAttMagic 魔防公式**。
+
+V2.16 同步修正：20184／20420／20421 的 EA/WA/FI/WI/QU 原始 argument 現在直接取自小型 item-make runtime；即使玩家本次頁面從未使用 field=2 技能、`itemField2Db` 尚未 lazy-load，魔防裝效果仍會正常生效。existing item 若被 V2.05 改寫 `field2Char.argument`，仍以 live override 優先。
+
+新增 `tools/check_v217_equip_resist_callback.mjs`，並強化 V2.16 regression。這些 Work 都是登入重建的 transient 狀態，不新增永久存檔欄位；save schema 維持 **29**。
 
 ## V2.16 最新進度
 
