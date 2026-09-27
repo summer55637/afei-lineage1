@@ -148,10 +148,11 @@ assert.ok(turn.includes("playerCommand:professionPrepared?'profession':'attack'"
 // CHAIN second hit is one normal BATTLE_Attack and does not enter ordinary Counter.
 const exec=extractFunction(game,'sourceProfessionBattleSkillExecute');
 assert.ok(exec.indexOf('chainRoll=cRand(1,100)')<exec.indexOf('sourceProfessionPhysicalCalcOnlyResult(target)'));
-assert.ok(exec.includes("{suppressSuitPoison:true}"));
+assert.ok(exec.includes('suppressSuitPoison:true'));
 assert.ok(exec.includes('sourceBrustAttackPowerUnchanged:true'));
 assert.ok(exec.includes('sourceFixedStrMultiplier=prepared.attackSkillTier*3+100'));
 assert.ok(exec.includes('second=playerAttackResult(target)'));
+assert.ok(exec.includes("suppressDamageReact:prepared.functionName!=='PROFESSION_CHAIN_ATK'"));
 assert.equal(exec.includes('resolvePlayerEnemyCounterChain'),false);
 assert.equal(exec.includes('sourceProcessBattleDeathsAtAddProfit'),false);
 
