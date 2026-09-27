@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.48**
+**PLAYABLE CORE V2.49**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,58 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.49 最新進度
+
+V2.49 完成獵人 **Skill 62「遺忘」／`PROFESSION_OBLIVION`** 的 fixed StatusTbl、Pet client skill-list 與恢復生命週期。
+
+fixed row：MP 21、TARGET 1（OTHER）、KIND 2、option `忘|成%100|回%3`、command `BATTLE_COM_S_OBLIVION`。
+
+### 成功率、回合與遺忘數量
+
+display level 先經 A-tier 0～10。成功率與其他 profession status 相同：
+
+`Success = 100 + tier×4`
+
+而且 `PROFESSION_BATTLE_StatusAttackCheck()` 一定先消耗 `RAND(1,100)`，之後才檢查死亡／既有 StatusTbl；成功條件仍是嚴格 `roll < Success`。
+
+OBLIVION 自己覆寫 duration：tier 0～4=2、5～9=3、10=4；實際寫進 StatusTbl 為 `turn+1`，所以 stored counter 是 **3／4／5**。
+
+`CHAR_WORKMODOBLIVION = max(1, trunc(tier/2))`，即 1～5。但 client 的 Y-list 會再做：
+
+`f_num = MODOBLIVION + 1`
+
+所以一次最多可把 **2～6 個**有效寵技槽暫時改成不可選。
+
+### Y/W client skill-list RNG
+
+fixed `CHAR_makeStatusString('y')` 並不是永久刪除技能。成功套用時先送正常 W-list，再送一份遮蔽版 W-list：
+
+- 逐一掃 7 個 PetSkill 槽。
+- 只有有效 PetSkill 才消耗 `RAND(0,100)`。
+- 即使是 Skill ID 1、或忘卻配額已經用完，該有效槽仍會先吃 RNG。
+- 條件 `roll <= 60 && skillId != 1 && f_num > 0` 才暫時改成 `PETSKILL_FIELD_MAP=2 / PETSKILL_TARGET_NONE=5`。
+- Skill ID 1 永遠不會被遮蔽。
+- 這只是 client 可選清單；server 的低忠誠 RANDOMACT 並沒有讀 `CHAR_WORKOBLIVION`，因此 Web 不把它錯做成「全面封印 Pet AI」。
+
+### 非 Pet 目標的來源怪行為
+
+status-change callback **沒有 CHAR_TYPEPET gate**，所以若 protocol 把 OTHER 指到 CHAR_TYPEENEMY，原 C 仍會先寫 OBLIVION StatusTbl。真正「忘技能」的 W/Y owner-Pet refresh 才是 Pet 專屬。
+
+因此目前 PVE 的 Enemy 可以得到 OBLIVION StatusTbl，會參與「已有狀態」互斥與倒數，但 **不會憑空禁止 Enemy AI 技能**；只有實際 Pet target 才建立 client skill mask。
+
+### 恢復與 battle end
+
+`BATTLE_StatusSeq()` 先 `--cnt`。OBLIVION 在 decrement 後 `cnt <= 1` 時就明確：
+
+- 把 OBLIVION status 寫 0。
+- 重新送正常 W-list，恢復全部寵技可選狀態。
+
+所以它比一般 status 的 generic 0-clear 早一格恢復。
+
+另外 `BATTLE_Exit()` 會掃玩家持有寵；只要仍有 OBLIVION，就強制清 0 並送 W-list。Web battle reset 同步清除 client mask，不讓遺忘跨戰鬥殘留。
+
+新增 `tools/check_v249_profession_oblivion_runtime.mjs`，鎖住 Skill 62 metadata、100+tier×4、3/4/5 stored counter、MODOBLIVION、+1 mask budget、有效槽 RNG、Skill 1 免遮蔽、FIELD_MAP/TARGET_NONE、counter=1 恢復、battle reset、PVE non-Pet 不發明封技；**save schema 維持 30**。
 
 ## V2.48 最新進度
 

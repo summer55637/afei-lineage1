@@ -4750,3 +4750,20 @@ Player own StatusSeq：
 新增 `tools/check_v248_profession_resist_runtime.mjs`，覆盖 Skill58 source bind、59～61 rows、support/dispatcher、strict StatusAttackCheck顺序、self override、status exclusivity、tier/up/turn math、ghost counter/stale MOD、magic-type mapping、battle reset、历史 markers与 schema 30。
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.49 Skill 62 Oblivion
+
+Skill 62 fixed row：`PROFESSION_OBLIVION` / MP 21 / TARGET OTHER / `忘|成%100|回%3`。
+
+- A-tier success = `100+tier*4`，仍是先 RAND(1,100) 再 early-return、strict `roll < threshold`。
+- duration tier 0～4/5～9/10 = 2/3/4，StatusTbl stored counter = 3/4/5。
+- `MODOBLIVION=max(1,trunc(tier/2))`；client Y-list 的實際遮蔽 budget = `MODOBLIVION+1`。
+- CHAR_makeStatusString('y') 對每個有效 PetSkill 都先 RAND(0,100)；`<=60` 且 skill ID !=1 才遮蔽。即使 budget 已耗盡，有效槽仍會消耗 RNG。
+- 遮蔽只把 client 欄位改成 FIELD_MAP=2 / TARGET_NONE=5，不刪除 PetSkill；server RANDOMACT 不讀 OBLIVION，所以不額外封鎖低忠誠 Pet AI。
+- StatusSeq decrement 後 cnt<=1 就清 OBLIVION 並恢復 W-list；battle exit/reset 也強制恢復。
+- callback 無 Pet type gate；CHAR_TYPEENEMY 可得到 StatusTbl，但不自行發明 Enemy skill silence。
+
+新增 `tools/check_v249_profession_oblivion_runtime.mjs`。save schema 維持 **30**。

@@ -117,6 +117,7 @@ let battleProfessionPetStrPowerRaw=new Map();
 let battlePlayerProfessionResistState=null;
 let battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};
 let battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};
+let battlePetProfessionOblivionStates=new Map();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2511,6 +2512,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_RESIST_FIRE'
     ||functionName==='PROFESSION_RESIST_ICE'
     ||functionName==='PROFESSION_RESIST_THUNDER'
+    ||functionName==='PROFESSION_OBLIVION'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -3428,6 +3430,134 @@ function sourceProfessionResistExecute(prepared,name,statusCheck=sourceProfessio
     requestedToNo:Math.trunc(n(prepared.toNo)),toNo:0,spec,check,applied:true,
     oldValue,newValue:sourceProfessionPlayerResistValue(spec.attr),
     forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
+  };
+}
+
+function sourceProfessionOblivionTurns(tier){
+  const t=Math.trunc(n(tier));
+  if(t>=10)return 4;
+  if(t>=5)return 3;
+  return 2;
+}
+function sourceProfessionOblivionMode(tier){
+  return Math.max(1,Math.trunc(Math.trunc(n(tier))/2));
+}
+function sourceProfessionOblivionSpec(prepared){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const baseSuccess=sourceProfessionStatusOptionInt(row?.option,'成',0);
+  const turns=sourceProfessionOblivionTurns(tier);
+  const mode=sourceProfessionOblivionMode(tier);
+  return {
+    tier,baseSuccess,success:baseSuccess+tier*4,
+    turns,storedTurns:turns+1,
+    mode,clientForgetBudget:mode+1
+  };
+}
+function sourceProfessionOblivionTargetDesc(toNo){
+  return sourceBattleStatusDescFromSlot(Math.trunc(n(toNo)));
+}
+function sourceProfessionPetOblivionBuildClientMask(pet,mode,randInclusive=cRand){
+  // fixed CHAR_makeStatusString('y'): f_num=MODOBLIVION+1.
+  // Every VALID PetSkill consumes RAND(0,100), even Skill 1 and even after f_num reaches 0.
+  const skills=Array(7).fill(-1);
+  for(let i=0;i<7;i++){
+    if(Array.isArray(pet?.petSkills)&&i<pet.petSkills.length)skills[i]=Math.trunc(n(pet.petSkills[i]));
+  }
+  let remaining=Math.max(0,Math.trunc(n(mode)))+1;
+  const budget=remaining,rows=[];
+  for(let slot=0;slot<7;slot++){
+    const skillId=skills[slot];
+    const meta=petSkillDb?.byId?.[String(skillId)]||null;
+    if(!meta){
+      rows.push({slot,skillId,valid:false,forgotten:false,roll:null,field:null,target:null});
+      continue;
+    }
+    const roll=Math.trunc(n(randInclusive(0,100)));
+    const forgotten=remaining>0&&roll<=60&&skillId!==1;
+    if(forgotten)remaining--;
+    rows.push({
+      slot,skillId,valid:true,roll,forgotten,
+      // pet_skill.h: FIELD_MAP=2, TARGET_NONE=5.
+      field:forgotten?2:Math.trunc(n(meta.field)),
+      target:forgotten?5:Math.trunc(n(meta.target))
+    });
+  }
+  return {
+    mode:Math.max(1,Math.trunc(n(mode))),budget,remaining,
+    forgottenSlots:rows.filter(x=>x.forgotten).map(x=>x.slot),
+    forgottenSkillIds:rows.filter(x=>x.forgotten).map(x=>x.skillId),
+    rollsConsumed:rows.filter(x=>x.valid).length,
+    rows
+  };
+}
+function sourceProfessionPetOblivionClientState(pet){
+  if(!pet)return null;
+  return battlePetProfessionOblivionStates.get(pet.id)||null;
+}
+function sourceProfessionOblivionExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck,randInclusive=cRand){
+  const spec=sourceProfessionOblivionSpec(prepared);
+  const toNo=Math.trunc(n(prepared?.toNo));
+  const targetDesc=sourceProfessionOblivionTargetDesc(toNo);
+  if(!targetDesc){
+    return {
+      handled:true,noAction:true,reason:'raw-target-missing',
+      skillId:prepared?.skillId??null,functionName:prepared?.functionName||null,toNo,
+      spec,noDamage:true,noCounter:true
+    };
+  }
+  // battle_profession_status_chang_fun() rejects EarthRound before StatusAttackCheck.
+  if(targetDesc.kind==='enemy'&&enemyUnitHidden(targetDesc.unit)){
+    return {
+      handled:true,noAction:true,reason:'target-earthround',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      spec,noDamage:true,noCounter:true
+    };
+  }
+  if(targetDesc.kind==='pet'&&sourcePlayerPetHidden(targetDesc.pet)){
+    return {
+      handled:true,noAction:true,reason:'target-earthround',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      spec,noDamage:true,noCounter:true
+    };
+  }
+
+  const check=statusCheck(targetDesc,spec.success);
+  if(!check.success){
+    addLog('你施放「'+name+'」，但遺忘狀態未成立（'+check.reason+'，roll '+check.roll+' / '+check.threshold+'）。');
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      targetKind:targetDesc.kind,spec,check,applied:false,noDamage:true,noCounter:true
+    };
+  }
+
+  const applied=battleStatusApplyRaw(targetDesc,'oblivion',spec.storedTurns);
+  let clientMask=null;
+  if(applied){
+    const st=battleStatusGet(targetDesc);
+    if(st){
+      st.oblivionMode=spec.mode;
+      st.sourceProfessionSkillId=Math.trunc(n(prepared.skillId));
+    }
+    if(targetDesc.kind==='pet'&&targetDesc.pet){
+      clientMask=sourceProfessionPetOblivionBuildClientMask(targetDesc.pet,spec.mode,randInclusive);
+      battlePetProfessionOblivionStates.set(targetDesc.pet.id,{
+        mode:spec.mode,skillId:Math.trunc(n(prepared.skillId)),
+        toNo,clientMask
+      });
+      addLog(targetDesc.pet.name+' 中了「'+name+'」：client 暫時遮蔽 '
+        +clientMask.forgottenSlots.length+' 個寵技槽。','bad');
+    }else{
+      // fixed source does not type-gate before writing StatusTbl. The actual skill hiding is
+      // only the owner/Pet W/Y client-list refresh; CHAR_TYPEENEMY server AI never reads OBLIVION.
+      addLog(battleStatusDescName(targetDesc)+' 中了「'+name+'」；StatusTbl 生效，但非 Pet 不發明封技效果。','bad');
+    }
+  }
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+    targetKind:targetDesc.kind,spec,check,applied,clientMask,
+    petClientMaskOnly:targetDesc.kind==='pet',
+    serverPetRandomActUnaffected:true,noDamage:true,noCounter:true
   };
 }
 function sourceProfessionPlayerMaxPile(target=state){
@@ -4490,6 +4620,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const resistRow=sourceProfessionSkillTemplate(prepared.skillId);
     const resistName=String(resistRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionResistExecute(prepared,resistName);
+  }
+  if(prepared.functionName==='PROFESSION_OBLIVION'){
+    const oblivionRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const oblivionName=String(oblivionRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionOblivionExecute(prepared,oblivionName);
   }
   if(toNo<10){
     // fixed battle.c direct-attack profession gate rejects same-side direct targets here;
@@ -7704,10 +7839,10 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
   dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
-  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
+  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0}}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map()}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -8645,6 +8780,22 @@ function processBattleStatusTurn(actor){
   }
 
   st.turns--;
+
+  if(st.type==='oblivion'&&st.turns<=1){
+    let clientMaskCleared=false,forgottenCount=0;
+    if(desc.kind==='pet'&&desc.pet){
+      const clientState=battlePetProfessionOblivionStates.get(desc.pet.id)||null;
+      forgottenCount=clientState?.clientMask?.forgottenSlots?.length||0;
+      clientMaskCleared=battlePetProfessionOblivionStates.delete(desc.pet.id);
+    }
+    // fixed BATTLE_StatusSeq OBLIVION case restores W-list at cnt<=1 and explicitly writes status=0.
+    battleStatusClear(desc,'oblivion');
+    addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的遺忘狀態解除。');
+    return finish({
+      skip:blockedBefore,desc,status:st,expired:true,
+      oblivionRestored:true,clientMaskCleared,forgottenCount,sourceRestoreAtCounterOne:true
+    });
+  }
 
   if(st.type==='deepPoison'){
     const hp=battleStatusHp(desc);
