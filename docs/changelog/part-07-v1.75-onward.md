@@ -3674,6 +3674,61 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.25 profession TARGET/KIND + first live battle skills
+
+V2.25 closes the profession battle-command target semantics that V2.24 intentionally left unresolved.
+
+### Fixed client/server target bridge
+
+Pinned server authority remains `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`.
+Client-side corroboration uses `anson1788/stoneage@1997fc20456dbda36d181b9680ae10bed2e9cdf9` only to identify the UI enum and packet conversion.
+
+- KIND: 1 BattleSkill / 2 AssitSkill / 3 AdvanceSkill.
+- TARGET is the existing PETSKILL target enum 0..10.
+- Direct battle entries remain 0..19.
+- Pseudo `toNo`: 20 Side0, 21 Side1, 22 All, 23 Side1 back row, 24 Side1 front row, 25 Side0 front row, 26 Side0 back row.
+- ONE_ROW click conversion: 0..4→26, 5..9→25, 10..14→23, 15..19→24.
+- Player BattleMyNo=0 therefore resolves ALLOTHERSIDE to 21 and ALLMYSIDE to 20.
+
+`sourceProfessionBattleCommandPlan()` now resolves the client target shape to the exact `P|slotHex|toNoHex` server command while preserving the explicit-toNo fixture path.
+
+### Command-receipt lifecycle
+
+`sourceProfessionBattleSkillPrepare()` runs before battle sorting / StatusSeq:
+
+1. resolve learned slot + target;
+2. run the fixed profession/MP preflight;
+3. deduct MP immediately;
+4. run post-dispatch proficiency immediately;
+5. retain the prepared COM plan for execution when the Player actor later reaches its turn.
+
+This preserves the fixed split between packet receipt and battle execution. A later sleep/paralysis/death can cancel the actual action without refunding MP or rolling back proficiency.
+
+### First live physical profession skills
+
+Skill 22 `PROFESSION_BRUST` and Skill 23 `PROFESSION_CHAIN_ATK` are now executable from the battle UI.
+
+BRUST preserves the fixed source bug:
+- tier uses `PROFESSION_CHANGE_SKILL_LEVEL_A()`;
+- helper writes `CHAR_WORKFIXSTR = oldFixStr * (100 + tier*3) / 100`;
+- the immediately following `BATTLE_DamageCalc()` reads `CHAR_WORKATTACKPOWER`, not FIXSTR;
+- therefore Web does not invent a current-hit damage bonus.
+
+CHAIN_ATK preserves fixed ordering:
+- `RAND(1,100)` is consumed before the first AttackSeq;
+- non-10-multiple tier is incremented once before computing hit chance;
+- chance is `tier*5 + 15`;
+- first hit uses the profession helper path;
+- on proc, if attacker and original target remain alive, one ordinary `BATTLE_Attack()` is issued against the same raw defNo.
+
+The first profession hit preserves the calc-only Guardian caller bug and omits ordinary BATTLE_Attack SUITPOISON. The CHAIN second hit is a true ordinary BATTLE_Attack with real Guardian substitution. The direct profession case breaks before the common Counter loop, so neither skill gains an ordinary Counter chain.
+
+The battle panel lists only learned skills with a V2.25 live executor; other battle functions remain fail-closed.
+
+Added `tools/check_v225_profession_battle_runtime.mjs`; Actions now runs it after the V2.24 profession regression. Save schema remains **30**.
+
+---
+
 ## V2.24 profession command/status bridge + out-of-battle Track/Escape
 
 - Battle command fixed parser：`P|<slotHex>|<toNoHex>`；第一個值是 CHAR_HaveSkill slot，不是 Skill ID。
