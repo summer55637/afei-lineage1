@@ -177,8 +177,8 @@ assert.ok(move.includes('moved.postMoveEquipPlace===PLAYER_ARM_SLOT'));
 const reset=extractFunction(game,'resetBattleStatuses');
 assert.ok(reset.includes('battlePlayerAvoidWork=null'));
 
-assert.match(html,/PLAYABLE CORE V2\.39/);
-assert.match(html,/V2\.39 live：[^<]*回避/);
+assert.match(html,/PLAYABLE CORE V2\.40/);
+assert.match(html,/V2\.40 live：[^<]*回避/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

@@ -2493,6 +2493,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_SHIELD_ATTACK'
     ||functionName==='PROFESSION_DEAD_ATTACK'
     ||functionName==='PROFESSION_CAVALRY'
+    ||functionName==='PROFESSION_ENTWINE'
+    ||functionName==='PROFESSION_DRAGNET'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
     ||functionName==='PROFESSION_CONVOLUTE'
     ||functionName==='PROFESSION_CHAOS'
@@ -2995,6 +2997,101 @@ function sourceProfessionWarriorAssistExecute(prepared,name){
 
   return {handled:false,reason:'battle-function-unported',skillId:prepared?.skillId??null};
 }
+function sourceProfessionStatusOptionInt(option,label,fallback=0){
+  const token=String(label||'')+'%';
+  const text=String(option||'');
+  const at=text.indexOf(token);
+  if(at<0)return Math.trunc(n(fallback));
+  const m=text.slice(at+token.length).match(/^[+-]?\d+/);
+  return m?Math.trunc(Number(m[0])):Math.trunc(n(fallback));
+}
+function sourceProfessionDragnetEnemyCount(){
+  const units=Array.isArray(enemy?.units)&&enemy.units.length?enemy.units:(enemy?[enemy]:[]);
+  let count=0;
+  for(const unit of units){
+    if(!unit)continue;
+    if(battleStatusActive({kind:'enemy',unit,unitId:unit.id},'dragnet'))count++;
+  }
+  return count;
+}
+function sourceProfessionCancelEnemyCurrentCommand(unit,statusType){
+  if(!unit)return null;
+  const turn=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+  // fixed status-change success writes CHAR_WORKBATTLECOM1=BATTLE_COM_NONE for
+  // ENTWINE/DRAGNET immediately. This cancels a not-yet-executed command but
+  // does not retroactively undo an action that already happened earlier in EntrySort.
+  unit.sourceProfessionCommandCancelledTurn=turn;
+  unit.sourceProfessionCommandCancelStatus=String(statusType||'');
+  unit.guardThisTurn=false;
+  unit.counterEligibleThisTurn=false;
+  return {turn,statusType:String(statusType||'')};
+}
+function sourceProfessionEnemyCommandCancelled(unit){
+  if(!unit)return null;
+  const turn=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+  if(Math.trunc(n(unit.sourceProfessionCommandCancelledTurn))!==turn)return null;
+  return {turn,statusType:String(unit.sourceProfessionCommandCancelStatus||'')};
+}
+function sourceProfessionHunterControlExecute(target,prepared,name){
+  const functionName=String(prepared?.functionName||'');
+  const type=functionName==='PROFESSION_ENTWINE'?'entwine'
+    :(functionName==='PROFESSION_DRAGNET'?'dragnet':null);
+  if(!type)return {handled:false,reason:'hunter-control-function',functionName};
+  const row=sourceProfessionSkillTemplate(prepared.skillId);
+  const option=String(row?.option||'');
+  const tier=Math.trunc(n(prepared.attackSkillTier));
+  const baseSuccess=sourceProfessionStatusOptionInt(option,'成',0);
+  let success=baseSuccess+tier*4;
+  const dragnetBefore=type==='dragnet'?sourceProfessionDragnetEnemyCount():0;
+  if(type==='dragnet'){
+    if(dragnetBefore===1)success=Math.trunc(success*.64);
+    else if(dragnetBefore>1)success=Math.trunc(success*.4);
+  }
+  const turn=Math.max(1,sourceProfessionStatusOptionInt(option,'回',1));
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+
+  // fixed PROFESSION_BATTLE_StatusAttackCheck consumes RAND(1,100) before
+  // checking death or any existing StatusTbl entry. The shared helper preserves that.
+  const check=sourceProfessionStatusAttackCheck(targetDesc,success);
+  let applied=false,cancel=null,dexPercent=0,fixedDexBefore=null,fixedDexAfter=null;
+  if(check.success){
+    applied=battleStatusApply(targetDesc,type,turn);
+    if(applied){
+      cancel=sourceProfessionCancelEnemyCurrentCommand(target,type);
+      if(type==='entwine'){
+        // fixed branch writes FIXDEX only. WORKQUICK / already-built EntrySort order is
+        // untouched, and next BATTLE_PreCommandSeq compliance rebuilds FIXDEX from base.
+        dexPercent=sourceProfessionStatusOptionInt(option,'敏',0)+tier*4;
+        fixedDexBefore=Math.trunc(n(target.roundFixQuick??target.quick));
+        fixedDexAfter=Math.trunc(fixedDexBefore*(100-dexPercent)/100);
+        target.roundFixQuick=fixedDexAfter;
+      }
+    }
+  }
+  if(applied){
+    if(type==='entwine'){
+      addLog(target.name+' 被「'+name+'」纏住：stored turn='+(turn+1)
+        +'；FIXDEX '+fixedDexBefore+' → '+fixedDexAfter
+        +'（WORKQUICK/本輪排序不重算，下一輪 compliance 會洗掉降敏）。','bad');
+    }else{
+      addLog(target.name+' 被「'+name+'」困住：stored turn='+(turn+1)
+        +'，期間 BATTLE_CanMoveCheck=false。','bad');
+    }
+  }else{
+    addLog('「'+name+'」對 '+target.name+' 未成功；原檢定 roll '+check.roll
+      +' / threshold '+check.threshold+'。');
+  }
+  return {
+    handled:true,skillId:prepared.skillId,functionName,toNo:prepared.toNo,
+    targetUnitId:target.id,attackSkillTier:tier,type,option,
+    baseSuccess,success,dragnetBefore,turn,storedTurns:applied?turn+1:0,
+    check,applied,cancel,dexPercent,fixedDexBefore,fixedDexAfter,
+    fixedDexOnly:type==='entwine',workQuickUnchanged:type==='entwine',
+    nextPreCommandResetsEntwineDex:type==='entwine',
+    noDamage:true,noOrdinaryCounter:true
+  };
+}
+
 function sourceProfessionCavalryExecute(target,prepared,name){
   // fixed version.h defines CAVALRY_DEBUG. In battle_profession_attack_fun(),
   // Cavalry therefore uses ordinary BATTLE_DamageSub(), NOT
@@ -3628,6 +3725,10 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   const row=sourceProfessionSkillTemplate(prepared.skillId);
   const name=String(row?.name||('Skill '+prepared.skillId));
+
+  if(prepared.functionName==='PROFESSION_ENTWINE'||prepared.functionName==='PROFESSION_DRAGNET'){
+    return sourceProfessionHunterControlExecute(target,prepared,name);
+  }
 
   if(prepared.functionName==='PROFESSION_CAVALRY'){
     return sourceProfessionCavalryExecute(target,prepared,name);
@@ -17936,6 +18037,11 @@ function performEnemyContinuation(actor,unit,options,meta){
   return {kind:'skill',skillId:actor.skillId,hits,lastResult};
 }
 function performEnemyAction(actor,unit,options={}){
+  const professionCancel=sourceProfessionEnemyCommandCancelled(unit);
+  if(professionCancel){
+    addLog(unit.name+' 的本輪指令被'+(BATTLE_STATUS_NAMES[professionCancel.statusType]||'職業異常狀態')+'清除。');
+    return {kind:'none',sourceProfessionCommandCancelled:true,...professionCancel};
+  }
   const kind=actor?.enemyAction||'attack';
   const foxGate=sourceEnemyFoxCommandGate(unit,actor);
   if(foxGate.blocked)return {kind:'none',foxBlocked:true,sourceFoxTurn:unit.sourceFoxTurn};

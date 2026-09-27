@@ -186,8 +186,8 @@ const reset=extractFunction(game,'resetBattleStatuses');
 assert.ok(reset.includes('battlePlayerProfessionStatStates={str:null,tgh:null,dex:null}'));
 assert.ok(reset.includes('battlePlayerProfessionStatRound=null'));
 
-assert.match(html,/PLAYABLE CORE V2\.39/);
-assert.match(html,/V2\.39 live：[^<]*舍己為友[^<]*激化攻擊[^<]*能量聚集[^<]*專注戰鬥/);
+assert.match(html,/PLAYABLE CORE V2\.40/);
+assert.match(html,/V2\.40 live：[^<]*舍己為友[^<]*激化攻擊[^<]*能量聚集[^<]*專注戰鬥/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

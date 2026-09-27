@@ -106,8 +106,8 @@ const chaosAt=exec.indexOf("prepared.functionName==='PROFESSION_CHAOS'");
 assert.ok(cavalryAt>=0&&chaosAt>cavalryAt);
 assert.ok(exec.slice(cavalryAt,chaosAt).includes('sourceProfessionCavalryExecute(target,prepared,name)'));
 
-assert.match(html,/PLAYABLE CORE V2\.39/);
-assert.match(html,/V2\.39 live：[^<]*座騎攻擊/);
+assert.match(html,/PLAYABLE CORE V2\.40/);
+assert.match(html,/V2\.40 live：[^<]*座騎攻擊/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

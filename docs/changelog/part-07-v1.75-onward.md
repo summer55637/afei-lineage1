@@ -4076,3 +4076,15 @@ V2.39 closes the currently reachable Skill 54 `PROFESSION_CAVALRY` path.
 - The web still has no formal `CHAR_RIDEPET` relationship. Active Pet is not treated as a mount, so no `BATTLE_adjustRidePet3A()` values are fabricated.
 
 Added `tools/check_v239_profession_cavalry_runtime.mjs`; save schema remains **30**.
+
+## V2.40 Skills 46/48 Hunter control statuses
+
+V2.40 closes `PROFESSION_ENTWINE` and `PROFESSION_DRAGNET` against the pinned status-change path.
+
+- Both use strict `RAND(1,100) < (base Success + A-tier*4)`; RNG is consumed before dead/existing-status early returns.
+- Successful status writes store `turn+1` and clear the target's current command immediately.
+- Entwine: base Success 40, base DEX reduction 30, option turn 5. It mutates FIXDEX only; WORKQUICK/EntrySort are unchanged and next PreCommand compliance rebuilds FIXDEX. ENTWINE is not in fixed `BATTLE_CanMoveCheck()`.
+- Dragnet: base Success 30, option turn 2. Existing target-side Dragnet count applies integer-truncated x0.64 for exactly one or x0.4 for two or more. DRAGNET is in fixed `BATTLE_CanMoveCheck()`.
+- The web uses a same-battle-turn command-cancel marker so only not-yet-executed Enemy commands are suppressed.
+
+Added `tools/check_v240_profession_hunter_control_runtime.mjs`; save schema remains **30**.

@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.39**
+**PLAYABLE CORE V2.40**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,37 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.40 最新進度
+
+V2.40 接入獵人 **Skill 46「樹根纏繞」／`PROFESSION_ENTWINE`** 與 **Skill 48「天羅地網」／`PROFESSION_DRAGNET`**，共用 pinned C 的 `battle_profession_status_chang_fun()`／`PROFESSION_BATTLE_StatusAttackCheck()` 骨架。
+
+兩招共同規則：
+- fixed status check 一進函式就先消耗 `RAND(1,100)`，之後才檢查目標死亡／既有 StatusTbl；已有任何異常時仍會吃掉這次 RNG。
+- 成功條件是嚴格 `roll < Success`，不是 `<=`。
+- Success 基礎值來自 option 的 `成%`，再加 `A-tier × 4`。
+- 目標正在 EarthRound 時直接 Miss／NoAction，不 TargetAdjust。
+- 成功後 source 寫 `StatusTbl[status] = turn + 1`，並立即把目標本輪 `BATTLECOM1` 清成 NONE。
+
+### Skill 46 樹根纏繞
+row option 為 `缠|成%40|敏%30|效%1|回%5`，因此：
+- Success = `40 + tier×4`。
+- status stored turn = 6。
+- 命中後降敏百分比 = `30 + tier×4`。
+- 來源只做一次 `FIXDEX = FIXDEX × (100-dex%)/100`，**不改 WORKQUICK**，也不重跑已完成的 EntrySort。
+- 下一輪 `BATTLE_PreCommandSeq -> CHAR_complianceParameter()` 會重建 FIXDEX；原碼沒有依 ENTWINE status 重套降敏。
+- `BATTLE_CanMoveCheck()` 沒有 ENTWINE，所以 stored status 本身不會讓後續回合持續不能行動。
+
+### Skill 48 天羅地網
+row option 為 `罗|成%30|效%1|回%2`：
+- 初始 Success = `30 + tier×4`。
+- 敵方目前已有恰好 1 個 Dragnet 時乘 `0.64` 並截整數；已有 2 個以上時乘 `0.4` 並截整數。
+- status stored turn = 3。
+- Dragnet 明確在 `BATTLE_CanMoveCheck()` 中回 FALSE，因此會真正阻止行動；倒數按角色自己的 StatusSeq 時點走。
+
+Web 用 battle-turn marker 對齊「命中當下清除目標已輸入指令」：只取消同一輪尚未執行的 Enemy action，不回頭撤銷已經先行動完的目標。
+
+新增 `tools/check_v240_profession_hunter_control_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.39 最新進度
 
