@@ -28,6 +28,10 @@ EXPECTED_SOURCE_BLOB_SHA = "eac985796b59286c547db2abce7b3d604a5e6226"
 ITEM_EVENT_PATH = "gmsv/src/item/item_event.c"
 ITEM_EVENT_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{ITEM_EVENT_PATH}"
 EXPECTED_ITEM_EVENT_BLOB_SHA = "00e05ebe58ef3988f7e0121f2a3aa5ede78344b5"
+RECODE_PATH = "recode.sh"
+RECODE_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{RECODE_PATH}"
+EXPECTED_RECODE_BLOB_SHA = "10ef38a0e84b70e8573d94199d038416afadf923"
+SOURCE_EXEC_ENCODING = "gb18030"
 EXPECTED_TEMPLATE_COUNT = 10737
 OUTPUT = Path("data/generated/stoneage_item_make_runtime.json")
 
@@ -209,45 +213,57 @@ EQUIP_RESIST_KEY_BY_WORK = {
 }
 
 def extract_equip_resist_source(raw: bytes) -> dict[str, object]:
-    attach_start = raw.find(b"void ITEM_MagicResist")
-    detach_start = raw.find(b"void ITEM_MagicReResist", attach_start + 1)
+    # The pinned repository's recode.sh documents that gmsv was converted
+    # gb18030 -> utf8. item_event.c is therefore readable UTF-8 in Git, while
+    # p+4 records the original two-DBCS-character execution-string width.
+    # Re-encode only the literal marker to GB18030 to reproduce the source runtime bytes.
+    text = raw.decode("utf-8")
+    attach_start = text.find("void ITEM_MagicResist")
+    detach_start = text.find("void ITEM_MagicReResist", attach_start + 1)
     assert attach_start >= 0 and detach_start > attach_start
-    attach = raw[attach_start:detach_start]
-    next_void = raw.find(b"\nvoid ", detach_start + 1)
-    detach = raw[detach_start:next_void if next_void > detach_start else len(raw)]
+    attach = text[attach_start:detach_start]
+    next_void = text.find("\nvoid ", detach_start + 1)
+    detach = text[detach_start:next_void if next_void > detach_start else len(text)]
 
     pairs = re.findall(
-        rb'strstr\s*\(\s*itemarg\s*,\s*"([^"]+)"\s*\).*?'
-        rb'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*'
-        rb'atoi\s*\(\s*p\s*\+\s*(\d+)\s*\)',
+        r'strstr\s*\(\s*itemarg\s*,\s*"([^"]+)"\s*\).*?'
+        r'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*'
+        r'atoi\s*\(\s*p\s*\+\s*(\d+)\s*\)',
         attach,
         flags=re.S,
     )
     assert len(pairs) == 7, pairs
     markers = []
     seen = set()
-    for marker, work_raw, offset_raw in pairs:
-        work = work_raw.decode("ascii")
+    for literal, work, offset_raw in pairs:
         assert work in EQUIP_RESIST_KEY_BY_WORK, work
         key = EQUIP_RESIST_KEY_BY_WORK[work]
         assert key not in seen
         seen.add(key)
         offset = int(offset_raw)
-        # fixed C explicitly uses p+4 for every branch; preserve the bytes rather than
-        # decoding/re-encoding the legacy marker.
+        marker_bytes = literal.encode(SOURCE_EXEC_ENCODING)
+        # fixed C uses p+4 for all seven branches. The pinned recode provenance
+        # must reconstruct exactly four execution bytes for each two-character marker.
         assert offset == 4, (key, offset)
-        markers.append({"key": key, "marker": marker.decode("latin1"), "atoiOffset": offset})
+        assert len(marker_bytes) == offset, (key, literal, marker_bytes.hex(), offset)
+        markers.append({
+            "key": key,
+            "marker": marker_bytes.decode("latin1"),
+            "sourceLiteral": literal,
+            "atoiOffset": offset,
+        })
 
     detach_targets = re.findall(
-        rb'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*0\s*\)',
+        r'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*0\s*\)',
         detach,
     )
     assert len(detach_targets) == 7, detach_targets
-    decoded_targets = [x.decode("ascii") for x in detach_targets]
-    assert set(decoded_targets) == {"CHAR_WORKEQUITFIRE"}, decoded_targets
+    assert set(detach_targets) == {"CHAR_WORKEQUITFIRE"}, detach_targets
 
     return {
         "markers": markers,
+        "sourceExecutionEncoding": SOURCE_EXEC_ENCODING,
+        "encodingProvenance": "pinned recode.sh: recode gb18030..utf8 gmsv",
         "attachSemantics": "first matching strstr branch sets exactly one CHAR_WORKEQUIT* to atoi(p+4)",
         "detachSemantics": "all seven ITEM_MagicReResist branches clear CHAR_WORKEQUITFIRE only (fixed source bug)",
         "detachClearsKey": "fire",
@@ -322,6 +338,8 @@ def main() -> None:
         raw = response.read()
     with urllib.request.urlopen(ITEM_EVENT_URL, timeout=60) as response:
         item_event_raw = response.read()
+    with urllib.request.urlopen(RECODE_URL, timeout=60) as response:
+        recode_raw = response.read()
 
     actual_blob_sha = git_blob_sha(raw)
     assert actual_blob_sha == EXPECTED_SOURCE_BLOB_SHA, (
@@ -331,6 +349,13 @@ def main() -> None:
     assert item_event_blob_sha == EXPECTED_ITEM_EVENT_BLOB_SHA, (
         f"fixed item_event.c blob changed: {item_event_blob_sha} != {EXPECTED_ITEM_EVENT_BLOB_SHA}"
     )
+    recode_blob_sha = git_blob_sha(recode_raw)
+    assert recode_blob_sha == EXPECTED_RECODE_BLOB_SHA, (
+        f"fixed recode.sh blob changed: {recode_blob_sha} != {EXPECTED_RECODE_BLOB_SHA}"
+    )
+    recode_text = recode_raw.decode("utf-8")
+    assert "find gmsv -type f" in recode_text
+    assert "recode gb18030..utf8 $file" in recode_text
     equip_resist_source = extract_equip_resist_source(item_event_raw)
 
     templates, parse_stats = parse_templates(raw)
@@ -363,8 +388,9 @@ def main() -> None:
             "path": SOURCE_PATH,
             "gitBlobSha": actual_blob_sha,
             "legacyEncodingReadMode": "latin1-byte-preserving; callback g is source bytes, not display text",
-            "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c",ITEM_EVENT_PATH],
+            "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c",ITEM_EVENT_PATH,RECODE_PATH],
             "itemEventGitBlobSha": item_event_blob_sha,
+            "recodeGitBlobSha": recode_blob_sha,
         },
         "equipResistSource": equip_resist_source,
         "fixedBuild": {
