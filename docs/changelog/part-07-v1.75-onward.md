@@ -3488,3 +3488,23 @@ fixed char_walk.c under _Item_MoonAct:
 - primary miss increments CEP as before
 
 Web now derives the exact threshold from equipped existing item and preserves this RNG/order lifecycle. Quest/script battles remain outside this path. save schema 29.
+
+
+---
+
+## V2.16 ITEM_MagicEquitWear / ITEM_MagicEquitReWear
+
+V2.16 來源化第四組玩家裝備 callback。
+
+fixed itemset6:
+- 20184: EA/WA/FI/WI/QU = 40
+- 20420: EA/WA/FI/WI/QU = 10
+- 20421: EA/WA/FI/WI/QU = 10
+
+fixed ITEM_MagicEquitWear/ReWear accumulates/subtracts five Work values. In battle_magic.c:
+- Earth/Water/Fire/Wind equipment values are added to Player def_magic_resist[j].
+- _MAGIC_DEFMAGICATT percentage scaling happens after that combined value.
+- QU is separate: BATTLE_MagicDodge adds CHAR_EQUITQUIMAGIC * 0.9 to Player dodge luck.
+- Pet does not receive these equipment values.
+
+Web reads current existing-item callback + field2 argument so an in-place callback/argument mutation also changes the live effect. No new save field. save schema 29.

@@ -36,6 +36,8 @@ const SOURCE_PLAYER_RANGED_WEAPON_TYPES=new Set([4,17,18,19]);
 const SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM=Object.freeze({18546:40,18547:80,18548:120});
 // fixed itemset6.txt ITEM_ARGUMENT: moon ornaments use rand:60 / rand:70 / rand:100.
 const SOURCE_PLAYER_RANDENEMY_BY_ITEM=Object.freeze({20126:60,20127:70,20128:100});
+// fixed itemset6 callback rows with ITEM_MagicEquitWear / ITEM_MagicEquitReWear.
+const SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS=new Set([20184,20420,20421]);
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
@@ -1131,8 +1133,47 @@ function sourcePlayerEquipCallbackSupported(template){
     const key=String(Math.trunc(Number(template?.itemId)));
     return Object.prototype.hasOwnProperty.call(SOURCE_PLAYER_RANDENEMY_BY_ITEM,key);
   }
+  if(attach==='ITEM_MagicEquitWear'&&detach==='ITEM_MagicEquitReWear'){
+    return SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS.has(Math.trunc(Number(template?.itemId)));
+  }
   // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
   return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
+}
+function sourcePlayerMagicDefenseArgumentValue(argument,key){
+  const wanted=String(key||'');
+  for(const token of String(argument||'').split('|')){
+    const colon=token.indexOf(':');
+    if(colon<0||token.slice(0,colon)!==wanted)continue;
+    const value=parseInt(token.slice(colon+1),10);
+    if(!Number.isFinite(value)||value<-100||value>100)return 0;
+    return Math.trunc(value);
+  }
+  return 0;
+}
+function sourcePlayerEquipMagicDefense(target=state){
+  const out={earth:0,water:0,fire:0,wind:0,quick:0,items:[]};
+  const slots=sourcePlayerItemSlots(target);
+  const fields=[['EA','earth'],['WA','water'],['FI','fire'],['WI','wind'],['QU','quick']];
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!existing||!template)continue;
+    if(String(template.attachFunc||'')!=='ITEM_MagicEquitWear'||
+       String(template.detachFunc||'')!=='ITEM_MagicEquitReWear')continue;
+    if(!SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS.has(Math.trunc(Number(template.itemId))))continue;
+    // V2.05 PETSKILL_ITEM_inslay may overwrite the live ITEM_ARGUMENT / callbacks.
+    // Read the current existing-item argument instead of reusing the original template literal.
+    const argument=sourceItemField2Char(existing,'argument');
+    const values={};
+    for(const [sourceKey,outKey] of fields){
+      const value=sourcePlayerMagicDefenseArgumentValue(argument,sourceKey);
+      out[outKey]+=value;values[outKey]=value;
+    }
+    out.items.push({slot:i,itemIndex,itemId:Math.trunc(Number(template.itemId)),argument,values});
+  }
+  return out;
 }
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
@@ -3971,7 +4012,10 @@ function enemyAttackMagicTargets(toNo,pattern){
 function enemyMagicDodge(targetDesc,attrIndex){
   let fLuck=0;
   if(targetDesc?.kind==='player'){
-    fLuck=n(state.luck)*3+magicTargetResist(targetDesc,attrIndex)*.15;
+    const equipMagic=sourcePlayerEquipMagicDefense(state);
+    // fixed BATTLE_MagicDodge: elemental equipment resist is NOT part of fResist here;
+    // only CHAR_EQUITQUIMAGIC contributes, at 0.9 per point.
+    fLuck=n(state.luck)*3+magicTargetResist(targetDesc,attrIndex)*.15+n(equipMagic.quick)*.9;
   }else if(targetDesc?.kind==='pet'){
     fLuck=Math.min(30,n(targetDesc.pet?.level)*.2);
   }
@@ -4114,16 +4158,21 @@ function sourceDefMagicResistBonus(desc){
 }
 function sourceMagicEffectiveResist(desc,attrIndex){
   // fixed BATTLE_MultiAttMagic:
-  // Player/Pet use CHAR_*_RESIST; Enemy uses trunc(LV*0.5).
-  // _MAGIC_DEFMAGICATT then scales only positive local def_magic_resist[].
-  const base=desc?.kind==='enemy'
+  // Player starts from CHAR_*_RESIST, then adds CHAR_EQUITDEFMAGIC_E+j.
+  // Pet does not receive equipment magic defense; Enemy uses trunc(LV*0.5).
+  // _MAGIC_DEFMAGICATT then scales only a positive combined def_magic_resist[].
+  const natural=desc?.kind==='enemy'
     ?Math.trunc(Math.max(0,n(desc.unit?.level))*.5)
     :Math.max(0,Math.trunc(n(magicTargetResist(desc,attrIndex))));
+  const equipMagic=desc?.kind==='player'?sourcePlayerEquipMagicDefense(state):null;
+  const equipKeys=['earth','water','fire','wind'];
+  const equip=desc?.kind==='player'?Math.trunc(n(equipMagic?.[equipKeys[attrIndex]])):0;
+  const base=natural+equip;
   const bonus=sourceDefMagicResistBonus(desc);
   const effective=(base>0&&bonus!==0)
     ?base+Math.trunc(base*bonus/100)
     :base;
-  return {base,bonus,effective};
+  return {base,natural,equip,bonus,effective};
 }
 
 function sourceMagicPetState(desc){

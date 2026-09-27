@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.15**
+**PLAYABLE CORE V2.16**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,26 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.16 最新進度
+
+V2.16 完成第四組裝備 callback：`ITEM_MagicEquitWear / ITEM_MagicEquitReWear`。fixed itemset6 只有三件：
+
+- Item 20184 亞伊歐之鎧：`EA:40|WA:40|FI:40|WI:40|QU:40`
+- Item 20420 雷爾鎧1：`EA:10|WA:10|FI:10|WI:10|QU:10`
+- Item 20421 雷爾服1：`EA:10|WA:10|FI:10|WI:10|QU:10`
+
+原 `item_event.c + battle_magic.c` 行為已接入：
+
+- `EA/WA/FI/WI` 分別加到玩家地／水／火／風 `def_magic_resist[]`
+- 這個加值發生在 `_MAGIC_DEFMAGICATT` 百分比魔抗狀態之前，因此魔抗狀態會放大「基礎魔抗 + 裝備魔抗」的正值總和
+- 裝備魔抗允許 -100～100；若合計變成負值，原公式會保留負值，不強制 clamp
+- `QU` 不加入四屬傷害魔抗，而是在 `BATTLE_MagicDodge()` 以 `QU × 0.9` 加到玩家魔法閃避門檻
+- Pet／Enemy 不吃玩家裝備魔抗
+
+Web 從目前 equipped existing item 的 **當前 callback + argument** 即時重建效果，因此若 V2.05 鑲嵌把 callback／argument 改掉，效果會跟著消失，不新增 save/Work 欄位。三件本身都沒有 field2 `typeCode`，不能合法充當 572 鑲嵌材料，所以這組 callback 不會被來源流程複製到其他 Item ID。
+
+新增 `tools/check_v216_magic_defense_equip_callback.mjs`。save schema 維持 **29**。
 
 ## V2.15 最新進度
 
