@@ -7941,6 +7941,10 @@ function processBattleStatusTurn(actor){
     // Reback therefore observes the post-countdown status and still runs before the caller skips movement.
     const professionReback=desc.kind==='player'
       ?sourceProfessionPlayerRebackStatusSeq(desc,state):null;
+    // fixed BATTLE_ProfessionStatusSeq runs after ordinary/Magic StatusSeq on the
+    // actor's own turn. TRAP count belongs here, not to generic StatusTbl.
+    const professionTrap=desc.kind==='player'
+      ?sourceProfessionPlayerTrapStatusSeq():null;
     const extra={};
     if(professionStats)extra.professionStats=professionStats;
     if(professionHit)extra.professionHit=professionHit;
@@ -7949,6 +7953,7 @@ function processBattleStatusTurn(actor){
     if(defMagic)extra.defMagic=defMagic;
     if(sars)extra.sars=sars;
     if(professionReback?.triggered)extra.professionReback=professionReback;
+    if(professionTrap)extra.professionTrap=professionTrap;
     return Object.keys(extra).length?Object.assign({},result,extra):result;
   };
   const st=battleStatusGet(desc);
