@@ -4132,3 +4132,101 @@ V2.41 接入獵人 Skill 51「弱點攻擊」／`PROFESSION_ATTACK_WEAK` 的 fix
 新增 `tools/check_v241_profession_attack_weak_runtime.mjs`，覆蓋 Skill 51 row metadata、公式、攻方 quick override、dispatcher、direct-profession boundary、V2.41 marker 與 save schema。
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.42 Skill 52 Instigate
+
+V2.42 接入獵人 Skill 52「挑撥」／`PROFESSION_INSTIGATE`，並完整保留它分成「status 命中」與「目標自己的 StatusSeq 發作」兩階段的 fixed 行為。
+
+### Runtime row
+
+- Skill ID 52
+- MP 17
+- TARGET 1
+- KIND 2
+- option `挑|成%20|敏%30|效%1|回%2`
+- command `BATTLE_COM_S_INSTIGATE`
+
+### Application
+
+`battle_profession_status_chang_fun()` 使用：
+
+`Success = 20 + A-tier*4`
+
+並走共用 `PROFESSION_BATTLE_StatusAttackCheck()`：
+
+- 先 `RAND(1,100)`
+- 再 dead / existing StatusTbl early return
+- strict `roll < Success`
+
+一般 option turn=2，StatusTbl 寫 turn+1=3；但 fixed 對 `skill_level==10` 有明確特判，把 turn 改 4，因此 tier10 寫 **5**。
+
+成功後：
+
+`WORKMODINSTIGATE = tier + 10`
+
+Instigate 不在 status-change helper 成功後「立即 `BATTLECOM1=NONE`」的 command-clear 名單，因此**命中本身不取消目標當前已輸入指令**。
+
+### StatusSeq
+
+fixed `BATTLE_StatusSeq()` 先把 stored turn `--cnt`；若 cnt<=0 先解除並 continue，所以 expiry tick 不做挑撥效果。
+
+仍 active 時：
+
+1. `RAND(1,100)`
+2. >80：break
+3. <=80：COM1 = ordinary ATTACK
+4. side = 自己 side
+5. rate = WORKMODINSTIGATE
+6. FIXSTR / FIXTOUGH / FIXDEX 各乘 `(100-rate)/100`
+7. `RAND(0,9)`
+8. 從 `++pos` 開始掃自己 side，排除自己的 battle slot，取第一個 TargetCheck-valid target
+9. 找不到則 COM2=-1
+
+FIX-only 是重要來源邊界：這段沒有重算 WORKATTACKPOWER / WORKDEFENCEPOWER / WORKQUICK，也不會重跑 EntrySort。Web 因此只改 `roundFixAttack / roundFixDefense / roundFixQuick`，保留本輪既有 `roundAttack / roundDefense / roundQuick`。
+
+### RNG ordering and COM2=-1
+
+同 side target 的 `RAND(0,9)` 發生在 StatusSeq，位於 `BATTLE_GetAttackCount()` **之前**。
+
+如果同 side 找不到人，StatusSeq 只留下 COM2=-1。非 BOW 普通 ATTACK 要等 AttackCount 已消耗後，才由 `BATTLE_TargetAdjust() -> BATTLE_DefaultAttacker(1-myside)` 消耗 fallback RNG。
+
+BOW 是固定例外：`BATTLE_TargetListSet()` 收到 invalid COM2 時只留下 sentinel，不 DefaultAttacker、也不消耗 bow `RAND(0,1)`，因此這次 NoAction。
+
+### Ordinary weapon command
+
+挑撥是把 command 改成真正 `BATTLE_COM_ATTACK`，所以 V2.42 接回目前 fixed Enemy 武器 runtime：
+
+- BOW：source `aBowW`、AttackNum、多 target、raw invalid NoAction。
+- BOOMERANG：ATTACK → BOOMERANG、0.3 damage、Enemy reverse row sweep；attackNo/5 == target row 時 NoAction。
+- BOUNDTHROW：common physical loop。
+- BREAKTHROW：common physical loop，paralysis before ItemCrush / AddProfit。
+- melee fixed Enemy weapons：ordinary attack / Guardian / Counter。
+
+目前 fixed Enemy auto weapon templates 中，真正 multi-hit 的是 BOW（STYLE Item 400 為 1～3、dojo Item 2498 為 3～5）；其餘目前可達模板都是 1 hit，但 adapter 保留 common AttackCount 結構。
+
+### Regression
+
+新增：
+
+`tools/check_v242_profession_instigate_runtime.mjs`
+
+覆蓋：
+
+- Skill 52 runtime metadata
+- command support
+- tier5 / tier10 success, rate, stored turn
+- no immediate command cancel
+- same-side ++pos scan
+- FIX-only mutation
+- StatusSeq decrement / expiry / 80% proc ordering
+- StatusSeq target RNG before Enemy AttackCount
+- COM2=-1 deferred fallback
+- BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW bridges
+- BREAKTHROW status-before-ItemCrush ordering
+- V2.42 UI marker
+- save schema 30
+
+save schema 維持 **30**。
