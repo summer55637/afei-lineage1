@@ -53,7 +53,7 @@ assert.ok(gate.includes('材料各扣 1 pile'));
 assert.ok(gate.includes('ITEM_MERGEFLG'));
 
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 
 // Pure mirror of fixed ITEM_mergeItem cooldown math.
 function cooldown(num,now,last){

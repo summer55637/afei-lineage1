@@ -84,7 +84,7 @@ assert.equal(ctx.sourcePlayerEquipPlace(t(2884),Array(24).fill(null),ctx.state),
 assert.equal(ctx.sourcePlayerEquipPlace(t(2885),Array(24).fill(null),ctx.state),-1);
 
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 console.log(JSON.stringify({
   pass:true,version:'V2.12',focus:'angel-hero-token-equip-boundary',
   angel:{itemId:2884,type:10,specialGate:true},

@@ -306,7 +306,7 @@ function installLifecycleOps(ctx,{core,addResult=9,outputId=999}={}){
 }
 
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 
 console.log(JSON.stringify({
   pass:true,version:'V2.11',focus:'merge-live-executable-fixtures',
