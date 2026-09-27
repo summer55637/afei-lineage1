@@ -1587,6 +1587,21 @@ function sourcePlayerProfessionMagicDamageCore({
   proficiency={},resist={},baseSuit={},spirit={},target=state
 }
 
+={}){
+  const suitPower=sourcePlayerProfessionMagicSuitPower(target);
+  const reducedPower=sourceProfessionMagicPreDamagePower(power,suitPower.unPower);
+  const equipSuit={
+    fire:sourcePlayerProfessionMagicEquipSuitForType(1,target),
+    thunder:sourcePlayerProfessionMagicEquipSuitForType(2,target),
+    ice:sourcePlayerProfessionMagicEquipSuitForType(3,target)
+  };
+  const damage=sourceProfessionMagicGetDamage({
+    magicType,power:reducedPower,command,proficiency,resist,baseSuit,equipSuit,spirit
+  });
+  return {damage,power:reducedPower,equipSuit,unPower:suitPower.unPower};
+}
+
+
 function sourceProfessionSkillTemplate(skillId){
   const id=Math.trunc(Number(skillId));
   if(!Number.isFinite(id)||!professionSkillDb?.bySkillId)return null;
@@ -1714,20 +1729,6 @@ function sourceProfessionSkillUsePreflight({
     commonCommand:sourceProfessionCommonCommandPlan(row.skillId,toNo,rawLevel)
   };
 }
-={}){
-  const suitPower=sourcePlayerProfessionMagicSuitPower(target);
-  const reducedPower=sourceProfessionMagicPreDamagePower(power,suitPower.unPower);
-  const equipSuit={
-    fire:sourcePlayerProfessionMagicEquipSuitForType(1,target),
-    thunder:sourcePlayerProfessionMagicEquipSuitForType(2,target),
-    ice:sourcePlayerProfessionMagicEquipSuitForType(3,target)
-  };
-  const damage=sourceProfessionMagicGetDamage({
-    magicType,power:reducedPower,command,proficiency,resist,baseSuit,equipSuit,spirit
-  });
-  return {damage,power:reducedPower,equipSuit,unPower:suitPower.unPower};
-}
-
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
   for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
