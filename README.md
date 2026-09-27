@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.20**
+**PLAYABLE CORE V2.21**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,22 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.21 最新進度
+
+V2.21 把 V2.20 的 fixed 職業技能資料真正接到**玩家永久職業狀態與 26 格 CHAR_HaveSkill 儲存模型**。本版仍不虛構「轉職按鈕／轉職 NPC」；新角色照原 C 維持無職業，但存檔已能正確保存未來真正取得的職業與職技。
+
+- fixed `CHAR_SKILLMAXHAVE=26`；新增 26 格 `professionSkills`，每格保存原 `skillN` 對應的 `skillId + rawLevel`，空格不壓縮，slot index 會持久化。
+- fixed `SKILL_makeStringFromSkillData()` 只保存 `lv` 與 `id`；`SKILL_getInt(SKILL_LEVEL)` 是 raw / 100 的整數除法。Web 同樣把 raw 熟練度原值保存，顯示等級才向零除以 100。
+- 新角色來源初值：`PROFESSION_CLASS=0 / PROFESSION_LEVEL=0 / PROFESSION_SKILL_POINT=0`；class enum 為 0 無職／1 勇士／2 巫師／3 獵人。
+- `PROFESSION_SKILL_ADDSK()` 已鏡像：level 夾在 1～100、拒絕重複技能、找第一個 unused slot、存入 `displayLevel*100`；26 格滿時失敗。這一層不自行檢查職業、金錢或 prerequisite。
+- `NPC_WelfareWindowTalked()` 的學習 preflight 已來源化：非戰鬥 → 已就職 → 職業符合 → 有技能點 → 四組 prerequisite → 金錢 → fixed `_NPC_ProfessionTrans` 轉生條件 → ADDSK。
+- prerequisite 的 `percent=0` 保留原特殊語意：同一列多個技能形成 **OR**，至少學會其中一個即可；例如 Skill 50 毒素武器的 30／31／32。
+- 一般商店學到的技能初始顯示 Lv10（raw 1000）；原碼對 63／64／65 有 Lv50 特例，但 fixed `_PROSKILL_OPTIMUM` runtime 這三個 ID 是空洞，所以不捏造可購買資料。
+- `skill_rate` 仍是 double，乘表內 COST 後存回 int，保留向零截斷；成功 ADDSK 後才扣 Gold，再扣 1 profession skill point。
+- 本版沒有把熟練度升級 RNG 接到 live battle；那段 `RAND(0,10000)`＋`RAND(0,fix*100)` 與 profession level-up 會獨立驗收。
+
+因為新增真正永久職業欄位，save schema **29 → 30**。舊 Web 存檔沒有這些欄位，migration 只補來源初值（無職／0 級／0 點／26 空格），不替玩家猜職業。
 
 ## V2.20 最新進度
 

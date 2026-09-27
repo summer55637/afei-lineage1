@@ -3620,3 +3620,22 @@ V2.19 開始接 fixed 職業魔法傷害數值核心；本版不先創造職業�
 `sourceProfessionCommonCommandPlan()` 保留 COM1/COM2/COM3 與 C_OK；DOOM／FIRE_SPEAR 依 `_PROFESSION_ADDSKILL` 改為 final COM1 NONE，另存 deferred command 與 DOOMTIME 3／2。
 
 本版沒有猜玩家 profession class 或 learned-skill slots，也沒有新增 UI / save 欄位。save schema 維持 29。
+
+---
+
+## V2.21 persistent profession state / learning lifecycle
+
+V2.21 將 fixed profession 資料接到玩家永久狀態，但不先虛構轉職 UI。
+
+- `CHAR_SKILLMAXHAVE=26`、`PROFESSION_MAX_LEVEL=26`。
+- profession class enum：0 NONE / 1 FIGHTER / 2 WIZARD / 3 HUNTER。
+- 新角色 class 0、profession level 0、profession skill point 0。
+- fixed save 是固定位置 `skill0..skill25`；每格 Skill 只序列化 raw `lv` 與 `id`。Web 的 `professionSkills[26]` 同樣保留 slot hole，不 compact。
+- `SKILL_getInt(SKILL_LEVEL)` = raw /100 整數除法；`SKILL_getRealInt` 才讀 raw。
+- `sourceProfessionSkillAdd()` 鏡像 ADDSK：display level clamp 1..100、duplicate reject、第一空 slot、raw=display*100、26 格滿失敗。
+- `sourceProfessionSkillLearnPreflight()/Learn()` 鏡像 Welfare NPC：battle → class → point → prerequisites → gold → trans → ADDSK，再扣 Gold／skill point。
+- percent=0 prerequisite 保留 OR-group；Skill 50 fixture 是 30/31/32 任一。
+- 一般學習起始 Lv10/raw1000；63/64/65 Lv50 分支只保留來源規則，不建立不存在的 runtime row。
+- fixed `_NPC_ProfessionTrans` 已開啟；`_75_TEST` 關閉。
+
+新增 `tools/check_v221_profession_player_state.mjs`。永久欄位加入後 save schema 29 → **30**；舊 Web save 只補無職業的來源初值。

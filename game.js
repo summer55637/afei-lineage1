@@ -22,6 +22,13 @@ const PLAYER_EQUIP_SLOT_COUNT=9;
 const PLAYER_BACKPACK_SLOT_COUNT=15;
 const PLAYER_BACKPACK_START=PLAYER_EQUIP_SLOT_COUNT;
 const PLAYER_ITEM_SLOT_COUNT=PLAYER_EQUIP_SLOT_COUNT+PLAYER_BACKPACK_SLOT_COUNT;
+const PROFESSION_SKILL_SLOT_COUNT=26;
+const PROFESSION_LEVEL_MAX=26;
+const PROFESSION_SKILL_LEVEL_MAX=100;
+const PROFESSION_CLASS_NONE=0;
+const PROFESSION_CLASS_FIGHTER=1;
+const PROFESSION_CLASS_WIZARD=2;
+const PROFESSION_CLASS_HUNTER=3;
 const PLAYER_HEAD_SLOT=0;
 const PLAYER_BODY_SLOT=1;
 const PLAYER_ARM_SLOT=2;
@@ -1695,7 +1702,145 @@ function sourceProfessionCommonCommandPlan(skillId,toNo,rawSkillLevel){
 }
 function sourceProfessionSkillUsePreflight({
   skillId,rawSkillLevel,professionClass,mp,isPlayer=true,toNo=0
+}
+
+function sourcePlayerProfessionSkillAt(slot,target=state){
+  const i=Math.trunc(Number(slot));
+  if(!target||i<0||i>=PROFESSION_SKILL_SLOT_COUNT)return null;
+  const entry=Array.isArray(target.professionSkills)?target.professionSkills[i]:null;
+  if(!entry||typeof entry!=='object')return null;
+  const skillId=Number(entry.skillId),rawLevel=Number(entry.rawLevel);
+  if(!Number.isFinite(skillId)||!Number.isFinite(rawLevel))return null;
+  return {slot:i,skillId:Math.trunc(skillId),rawLevel:Math.trunc(rawLevel)};
+}
+function sourcePlayerProfessionFindSkill(skillId,target=state){
+  const wanted=Math.trunc(Number(skillId));
+  if(!Number.isFinite(wanted))return null;
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(entry&&entry.skillId===wanted)return entry;
+  }
+  return null;
+}
+function sourcePlayerProfessionSkillDisplayLevel(entry){
+  if(!entry||!Number.isFinite(Number(entry.rawLevel)))return 0;
+  return Math.trunc(Math.trunc(Number(entry.rawLevel))/100);
+}
+function sourceProfessionSkillAddPlan(target,skillId,displayLevel){
+  if(!target)return {ok:false,reason:'state-missing'};
+  const id=Math.trunc(Number(skillId));
+  let level=Math.trunc(Number(displayLevel));
+  if(!Number.isFinite(id)||!Number.isFinite(level))return {ok:false,reason:'skill-data'};
+  if(level>PROFESSION_SKILL_LEVEL_MAX)level=PROFESSION_SKILL_LEVEL_MAX;
+  else if(level<1)level=1;
+  let firstEmpty=-1;
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(entry){
+      if(entry.skillId===id)return {ok:false,reason:'already-learned',skillId:id,slot:i};
+    }else if(firstEmpty<0){
+      firstEmpty=i;
+    }
+  }
+  if(firstEmpty<0)return {ok:false,reason:'skill-slots-full',skillId:id};
+  return {ok:true,skillId:id,slot:firstEmpty,displayLevel:level,rawLevel:level*100};
+}
+function sourceProfessionSkillAdd(target,skillId,displayLevel){
+  const plan=sourceProfessionSkillAddPlan(target,skillId,displayLevel);
+  if(!plan.ok)return plan;
+  if(!Array.isArray(target.professionSkills)||target.professionSkills.length!==PROFESSION_SKILL_SLOT_COUNT){
+    target.professionSkills=normalizeProfessionSkills(target.professionSkills);
+  }
+  target.professionSkills[plan.slot]={skillId:plan.skillId,rawLevel:plan.rawLevel};
+  return plan;
+}
+function sourceProfessionSkillPrerequisitePlan(row,target=state){
+  if(!row)return {ok:false,reason:'skill-not-found'};
+  let zeroPercentNeed=0,zeroPercentMissing=0;
+  const missingAlternatives=[];
+  for(let i=1;i<=4;i++){
+    const limit=Math.trunc(n(row['limit'+i]));
+    const needPercent=Math.trunc(n(row['percent'+i]));
+    if(limit!==0&&needPercent===0)zeroPercentNeed++;
+    if(limit===0)continue;
+    if(limit===-1){
+      let any=false;
+      for(let slot=0;slot<PROFESSION_SKILL_SLOT_COUNT;slot++){
+        const learned=sourcePlayerProfessionSkillAt(slot,target);
+        if(learned&&learned.skillId>0){any=true;break}
+      }
+      if(!any)return {ok:false,reason:'needs-any-battle-skill',limit,needPercent};
+      continue;
+    }
+    const learned=sourcePlayerProfessionFindSkill(limit,target);
+    if(!learned){
+      if(needPercent===0){
+        zeroPercentMissing++;
+        missingAlternatives.push(limit);
+        continue;
+      }
+      return {ok:false,reason:'missing-prerequisite',limit,needPercent};
+    }
+    const level=sourcePlayerProfessionSkillDisplayLevel(learned);
+    if(level<needPercent)return {ok:false,reason:'prerequisite-level',limit,needPercent,level};
+  }
+  if(zeroPercentNeed!==0&&zeroPercentMissing===zeroPercentNeed){
+    return {ok:false,reason:'missing-prerequisite-alternative',alternatives:missingAlternatives};
+  }
+  return {ok:true,zeroPercentNeed,zeroPercentMissing};
+}
+function sourceProfessionSkillLearnPreflight({
+  skillId,target=state,skillRate=1,transRequirement=null,inBattle=false
 }={}){
+  const row=sourceProfessionSkillTemplate(skillId);
+  if(!row)return {ok:false,reason:'skill-not-found'};
+  if(inBattle)return {ok:false,reason:'in-battle',skillId:Math.trunc(n(row.skillId))};
+  const professionClass=Math.trunc(n(target?.professionClass));
+  const requiredClass=Math.trunc(n(row.professionClass));
+  if(professionClass===PROFESSION_CLASS_NONE){
+    return {ok:false,reason:'no-profession',skillId:Math.trunc(n(row.skillId)),requiredClass};
+  }
+  if(professionClass!==requiredClass&&requiredClass!==4){
+    return {ok:false,reason:'profession-mismatch',skillId:Math.trunc(n(row.skillId)),professionClass,requiredClass};
+  }
+  const skillPoint=Math.trunc(n(target?.professionSkillPoint));
+  if(skillPoint<=0)return {ok:false,reason:'no-skill-point',skillId:Math.trunc(n(row.skillId)),skillPoint};
+  const prerequisite=sourceProfessionSkillPrerequisitePlan(row,target);
+  if(!prerequisite.ok)return Object.assign({skillId:Math.trunc(n(row.skillId))},prerequisite);
+  const rate=Number.isFinite(Number(skillRate))?Number(skillRate):0;
+  const cost=Math.trunc(Math.trunc(n(row.cost))*rate);
+  const gold=Math.trunc(n(target?.gold));
+  if(gold<cost)return {ok:false,reason:'gold-short',skillId:Math.trunc(n(row.skillId)),gold,cost,rate};
+  if(transRequirement!=null){
+    const requiredTrans=Math.trunc(n(transRequirement));
+    const trans=Math.trunc(n(target?.transmigration));
+    if(trans<requiredTrans){
+      return {ok:false,reason:'transmigration-short',skillId:Math.trunc(n(row.skillId)),transmigration:trans,requiredTrans,cost};
+    }
+  }
+  const initialDisplayLevel=([63,64,65].includes(Math.trunc(n(row.skillId))))?50:10;
+  const addPlan=sourceProfessionSkillAddPlan(target,row.skillId,initialDisplayLevel);
+  if(!addPlan.ok)return Object.assign({skillId:Math.trunc(n(row.skillId)),cost},addPlan);
+  return {
+    ok:true,skillId:Math.trunc(n(row.skillId)),professionClass,requiredClass,
+    skillPointBefore:skillPoint,skillPointAfter:skillPoint-1,
+    goldBefore:gold,goldAfter:gold-cost,cost,rate,
+    initialDisplayLevel,initialRawLevel:initialDisplayLevel*100,
+    slot:addPlan.slot,prerequisite,
+    transRequirement:transRequirement==null?null:Math.trunc(n(transRequirement))
+  };
+}
+function sourceProfessionSkillLearn(options={}){
+  const target=options?.target??state;
+  const plan=sourceProfessionSkillLearnPreflight(Object.assign({},options,{target}));
+  if(!plan.ok)return plan;
+  const added=sourceProfessionSkillAdd(target,plan.skillId,plan.initialDisplayLevel);
+  if(!added.ok)return Object.assign({},plan,{ok:false,reason:added.reason});
+  target.gold=plan.goldAfter;
+  target.professionSkillPoint=plan.skillPointAfter;
+  return Object.assign({},plan,{slot:added.slot,rawLevel:added.rawLevel});
+}
+={}){
   const row=sourceProfessionSkillTemplate(skillId);
   if(!row)return {ok:false,reason:'skill-not-found'};
   const charClass=Math.trunc(n(professionClass));
@@ -2678,14 +2823,32 @@ function confirmPlayerElements(points=playerElementDraft){
   save();render();
   return {ok:true,points:checked.points,elements:checked.elements};
 }
+function freshProfessionSkills(){
+  return Array(PROFESSION_SKILL_SLOT_COUNT).fill(null);
+}
+function normalizeProfessionSkills(raw){
+  const out=freshProfessionSkills();
+  if(!Array.isArray(raw))return out;
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT&&i<raw.length;i++){
+    const entry=raw[i];
+    if(!entry||typeof entry!=='object')continue;
+    const skillId=Number(entry.skillId),rawLevel=Number(entry.rawLevel);
+    if(!Number.isFinite(skillId)||!Number.isFinite(rawLevel))continue;
+    out[i]={skillId:Math.trunc(skillId),rawLevel:Math.trunc(rawLevel)};
+  }
+  return out;
+}
 function freshState(){
   return {
-    schemaVersion:29,
+    schemaVersion:30,
     level:1,exp:0,expNext:2,hp:0,maxHp:0,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
     attack:0,defense:0,dex:0,charm:60,luck:0,skillPoints:0,duelPoint:100,
     transmigration:1,
+    // fixed _CHAR_PROFESSION: persistent profession fields + CHAR_HaveSkill[26].
+    professionClass:PROFESSION_CLASS_NONE,professionLevel:0,professionSkillPoint:0,
+    professionSkills:freshProfessionSkills(),
     hometown:null,lastTalkElder:null,homeFloor:null,homeX:null,homeY:null,hometownSavePointMask:0,
     playerHometownConfigured:false,hometownLegacyUnknown:false,starterPetGranted:false,
     creationPlayerStats:null,playerCreationStatsConfigured:false,playerCreationStatsLegacyUnknown:false,
@@ -2733,6 +2896,11 @@ function normalizeState(raw){
   // from being applied on top of the fixed creation baseline.
   if(!raw||typeof raw!=='object')return base;
   const s=Object.assign(base,raw);
+  // V2.21 mirrors persistent CHAR profession fields; original skillN slot indices are retained.
+  s.professionClass=Number.isFinite(Number(raw.professionClass))?Math.trunc(Number(raw.professionClass)):PROFESSION_CLASS_NONE;
+  s.professionLevel=Number.isFinite(Number(raw.professionLevel))?Math.trunc(Number(raw.professionLevel)):0;
+  s.professionSkillPoint=Number.isFinite(Number(raw.professionSkillPoint))?Math.trunc(Number(raw.professionSkillPoint)):0;
+  s.professionSkills=normalizeProfessionSkills(raw.professionSkills);
   // playerEquipCompliance mirrors transient CHAR_WORK* values, not persistent CHAR data.
   // A real login reconstructs these Work fields from scratch before ITEM_equipEffect();
   // never restore a serialized derived snapshot across reload.
@@ -2965,7 +3133,7 @@ function normalizeState(raw){
   // Start them empty instead of inventing where an existing item used to sit.
   if(n(raw?.schemaVersion)<28)s.playerItemSlots=freshPlayerItemSlots();
   else s.playerItemSlots=normalizePlayerItemSlots(s.playerItemSlots,s.itemRuntime);
-  s.schemaVersion=29;
+  s.schemaVersion=30;
   delete s.pets;
   return s;
 }

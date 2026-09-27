@@ -56,6 +56,7 @@ on:
       - "tools/check_v218_suit_equip_callback.mjs"
       - "tools/check_v219_profession_magic_damage_core.mjs"
       - "tools/check_v220_profession_skill_runtime.mjs"
+      - "tools/check_v221_profession_player_state.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -238,6 +239,9 @@ jobs:
 
       - name: Run V2.20 profession skill runtime regressions
         run: node tools/check_v220_profession_skill_runtime.mjs
+
+      - name: Run V2.21 profession player-state regressions
+        run: node tools/check_v221_profession_player_state.mjs
 
       - name: Commit generated runtime
         shell: bash
