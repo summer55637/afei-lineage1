@@ -4903,3 +4903,23 @@ save schema 維持 **30**。
 
 新增 `tools/check_v257_profession_volcano_springs_runtime.mjs`。save schema 維持 **30**。
 
+---
+
+## V2.58 Skill 2 SIGN
+
+- 接入巫師 Skill 2 `针针相对 / PROFESSION_SIGN`；TARGET ALLOTHERSIDE，Player side 固定 pseudo target 21。
+- dynamic MP：M-tier 1～7=5、8～10=10；row cost 10 只作 fallback。
+- fixed `qsort(SortLoc)` 的 Enemy side 順序固定為 13,11,10,12,14,18,16,15,17,19；不使用 numeric 10→19。
+- `_PROFESSION_ADDSKILL` 的 SIGN `TOLIST_SORT` 固定 get_num=10，因此一側最多 10 人時不再抽 target-selection RNG。
+- option `无` => magic_type=-1，不提升 F/I/T Practice；GET_DAMAGE 保持無屬性 power。
+- GET_PRACTICE：tier1～3=50 HP power / 10 MP power、4～6=100/15、7～9=150/20、10=200/30；HP power 繼續走 M_POW / 30% M2 / 98～102。
+- magic dodge：先 Enemy LV*0.15 cap20 的 base roll；base hit 後 SIGN 再 `RAND(1,100)<50`，所以 50 為 miss。
+- 每個 hit 的 CHANGE_STATUS 固定先吃 unused `RAND(1,100)`，再 `RAND(0,100)<10`：tier9+ 累加完整 attvalue + mp_power，tier8 累加 int(attvalue/2)，tier<=7 無回復。
+- 所有 target 完成後先跑 hit/alive/non-Pet 的 enemy MP drain，再一次套用 caster HP/MP。Current fixed Enemy MP/MAXMP=0，因此 PVE drain 通常為 no-op。
+- `_PROFESSION_ADDSKILL` 把 target-side SIGN status 舊分支編譯排除；不新增吸血狀態。
+- spell tail 只喚醒 hit target；miss target 不寫 def_be_hit，因此不 wake。
+- Skill 2 Dex 明確固定為 `WORKQUICK+20 - RAND(0, work*0.3)`。
+- img1 101697 / img2 101633；attIdx=2 whole enemy side。
+
+新增 `tools/check_v258_profession_sign_runtime.mjs`。save schema 維持 **30**。
+

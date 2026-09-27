@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.57**
+**PLAYABLE CORE V2.58**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,41 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.58 最新進度
+
+V2.58 接入巫師 **Skill 2「針針相對」／`PROFESSION_SIGN`**，延續 V2.57 的 profession magic live lifecycle。這版完整保留敵方全體目標、`SortLoc` 多目標順序、二段魔法命中、每個命中目標的 HP／MP 轉換 RNG，以及施法結束後才一次套用的自回復。
+
+fixed row：TARGET **ALL_OTHERSIDE**、KIND 3、option `无|0|1|0|0|0|0|0`、img1 **101697**、img2 **101633**。Player side 的目標固定解析成 pseudo target **21**。實際 MP 走 dynamic branch：M-tier 1～7 = **5 MP**，8～10 = **10 MP**。
+
+### 固定多目標順序
+
+`PROFESSION_MAGIC_ATTAIC()` 在算 power 前先 `qsort(list, SortLoc)`。Enemy side 的固定位置順序為：
+
+`13, 11, 10, 12, 14, 18, 16, 15, 17, 19`
+
+所以多目標 battle RNG 不能用單純 10→19。Skill 2 的 `PROFESSION_MAGIC_TOLIST_SORT()` 在 `_PROFESSION_ADDSKILL` 下固定 `get_num=10`；一側本來最多 10 人，因此不再抽選目標 RNG。
+
+### 無屬性傷害與二段命中
+
+option 第一欄是「无」，所以 `analysis_profession_parameter()` 回傳 magic type **-1**，不提升火／冰／雷熟練度。GET_PRACTICE power：M-tier 1～3 = **50 / MP power 10**、4～6 = **100 / 15**、7～9 = **150 / 20**、10 = **200 / 30**；HP power 仍走 M_POW、30% M2_POW 與 98～102 variance。
+
+Enemy magic dodge 先抽 base `RAND(1,100)`；無屬性不扣元素熟練。base 通過後，SIGN 再抽第二顆 `RAND(1,100)`，只有 **<50** 才命中，因此 50 本身是 miss。
+
+### 針針相對轉換 RNG
+
+每個真正命中的目標都先由 `PROFESSION_MAGIC_CHANGE_STATUS()` 消耗一顆未使用的 `RAND(1,100)`，再抽 `RAND(0,100)`；固定成功條件是 **<10**，不是 ≤10。
+
+成功時：
+- M-tier 9～10：累加本目標完整傷害到施法者 HP 回復池，並累加 GET_PRACTICE 的 mp_power 到 MP 回復池。
+- M-tier 8：只累加 `damage / 2`，且因 C 參數是 int，先做整數除法；不回 MP。
+- M-tier ≤7：即使 success roll 成功，也不增加 HP／MP。
+
+所有目標處理完後，原 C 先嘗試扣每個「命中且仍存活、非 Pet」目標的 mp_power，再一次套用施法者累積 HP／MP 回復。固定 Enemy 建立時 MP/MAXMP=0，所以目前 PVE Enemy 的扣 MP 路徑是來源化 no-op；施法者回復仍照常。
+
+`_PROFESSION_ADDSKILL` 下 target-side SIGN 異常狀態舊程式碼被編譯排除，因此不自行添加吸血 Debuff。最後 sleep wake tail 只喚醒真正通過 magic dodge 的目標。
+
+新增 `tools/check_v258_profession_sign_runtime.mjs`。save schema 維持 **30**。
 
 ## V2.57 最新進度
 

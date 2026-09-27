@@ -385,6 +385,9 @@ jobs:
       - name: Run V2.57 Volcano Springs regression
         run: node tools/check_v257_profession_volcano_springs_runtime.mjs
 
+      - name: Run V2.58 SIGN regression
+        run: node tools/check_v258_profession_sign_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |

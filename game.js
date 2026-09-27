@@ -1663,11 +1663,10 @@ function sourceProfessionPlayerMagicProficiencyVector(){
 
 function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacroValue}={}){
   const command=String(prepared?.commonCommand||'');
-  if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS')return battleDexRoll(quick);
+  if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'&&command!=='BATTLE_COM_S_SIGN')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
-  // fixed BATTLE_DexCalc: work - RAND(0, work*0.2). The RAND macro receives
-  // the fractional upper expression directly; sourceCRandMacroValue preserves it.
-  const roll=randMacro(0,work*.2);
+  const upper=command==='BATTLE_COM_S_VOLCANO_SPRINGS'?work*.2:work*.3;
+  const roll=randMacro(0,upper);
   let dex=work-roll;
   if(dex<=0)dex=1;
   return Math.trunc(dex);
@@ -2621,6 +2620,7 @@ function sourceProfessionSetPlayerAttackWork(value){
 }
 function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
   return functionName==='PROFESSION_VOLCANO_SPRINGS'
+    ||functionName==='PROFESSION_SIGN'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -4056,6 +4056,127 @@ function sourceProfessionVolcanoSpringsExecute(prepared,name){
     noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
   };
 }
+
+const SOURCE_PROFESSION_MAGIC_ENEMY_SORT_ORDER=Object.freeze([13,11,10,12,14,18,16,15,17,19]);
+
+function sourceProfessionMagicEnemySortedSlots(slots){
+  const rank=new Map(SOURCE_PROFESSION_MAGIC_ENEMY_SORT_ORDER.map((slot,index)=>[slot,index]));
+  return (Array.isArray(slots)?slots:[])
+    .map(v=>Math.trunc(n(v)))
+    .filter(v=>v>=10&&v<=19)
+    .sort((a,b)=>(rank.get(a)??99)-(rank.get(b)??99));
+}
+
+function sourceProfessionSignSelfChange(skillLevel,attvalue,mpPower,{randInclusive=cRand}={}){
+  const leadingCriticalRoll=Math.trunc(n(randInclusive(1,100)));
+  const successRoll=Math.trunc(n(randInclusive(0,100)));
+  const tier=Math.trunc(n(skillLevel));
+  const damage=Math.trunc(n(attvalue));
+  const mp=Math.fround(n(mpPower));
+  const success=successRoll<10;
+  let addHp=0,addMp=0;
+  if(success){
+    if(tier>8){
+      addHp=damage;
+      addMp=mp;
+    }else if(tier>7){
+      addHp=Math.trunc(damage/2);
+    }
+  }
+  return {tier,leadingCriticalRoll,successRoll,success,successThreshold:10,addHp:Math.fround(addHp),addMp:Math.fround(addMp)};
+}
+
+function sourceProfessionSignApplySelfRestore(addHp,addMp){
+  const hpBefore=Math.max(0,Math.trunc(n(state?.hp)));
+  const mpBefore=Math.max(0,Math.trunc(n(state?.mp)));
+  const maxHp=Math.max(0,Math.trunc(n(state?.maxHp)));
+  const maxMp=Math.max(0,Math.trunc(n(state?.maxMp)));
+  let hpAfter=hpBefore,mpAfter=mpBefore;
+  if(Math.trunc(n(addHp))!==0){
+    hpAfter=Math.trunc(hpBefore+n(addHp));
+    if(hpAfter>=maxHp)hpAfter=maxHp;
+    else if(hpAfter<=1)hpAfter=1;
+    state.hp=hpAfter;
+  }
+  if(Math.trunc(n(addMp))!==0){
+    mpAfter=Math.trunc(mpBefore+n(addMp));
+    if(mpAfter>=maxMp)mpAfter=maxMp;
+    else if(mpAfter<=1)mpAfter=1;
+    state.mp=mpAfter;
+  }
+  return {hpBefore,hpAfter,hpApplied:hpAfter-hpBefore,mpBefore,mpAfter,mpApplied:mpAfter-mpBefore,requestedAddHp:Math.fround(n(addHp)),requestedAddMp:Math.fround(n(addMp))};
+}
+
+function sourceProfessionSignExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==2)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+  const targetSlots=sourceProfessionMagicEnemySortedSlots(multi.slots);
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation={magicType:-1,attIdx:2,img1:Math.trunc(n(row?.img1)),img2:Math.trunc(n(row?.img2)),showType:0,showBehind:1,x:0,y:0,shakeStart:0,shakeEnd:0,disappear:0};
+  const practice=sourceProfessionMagicPracticePower('BATTLE_COM_S_SIGN',prepared.displayLevel,state.hp);
+  let addHp=Math.fround(0),addMp=Math.fround(0);
+  const hits=[],hitTargets=[];
+  for(const slot of targetSlots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{magicType:-1,command:'BATTLE_COM_S_SIGN',proficiencyVector:sourceProfessionPlayerMagicProficiencyVector()});
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:-1,power:preDamagePower,command:'BATTLE_COM_S_SIGN',
+      proficiency:{fire:0,thunder:0,ice:0},resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},equipSuit:{fire:0,thunder:0,ice:0},spirit:{fire:0,thunder:0,ice:0}
+    })));
+    const selfChange=sourceProfessionSignSelfChange(practice.skillLevel,damage,practice.mpPower);
+    addHp=Math.fround(addHp+selfChange.addHp);
+    addMp=Math.fround(addMp+selfChange.addMp);
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,selfChange,damage,hpBefore:before,hpAfter:after,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,sourceTargetSignStatusCompiledOut:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    hitTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+  }
+  const mpDrains=[];
+  if(Math.trunc(n(practice.mpPower))!==0){
+    for(const target of hitTargets){
+      const before=Math.max(0,Math.trunc(n(target.mp)));
+      let drain=0;
+      if(n(target.hp)>0&&before>0){
+        drain=Math.trunc(Math.min(before,n(practice.mpPower)));
+        target.mp=before-drain;
+      }
+      mpDrains.push({targetUnitId:target.id,before,after:Math.max(0,Math.trunc(n(target.mp))),drain,sourceEnemyInitialMpZero:Math.trunc(n(target.maxMp))===0});
+    }
+  }
+  const selfRestore=sourceProfessionSignApplySelfRestore(addHp,addMp);
+  const wakes=hitTargets.map(target=>({targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)}));
+  syncEnemyTarget();
+  return {
+    handled:true,skillId,functionName:prepared.functionName,rawToNo,toNo,multi,targetSlots,animation,practice,hits,mpDrains,
+    addHp,addMp,selfRestore,wakes,sourceMagicType:-1,sourceTargetCountCap:10,sourceTargetSort:'SortLoc',
+    sourceNoElementPractice:true,sourceTargetSignStatusCompiledOut:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -5372,6 +5493,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionVolcanoSpringsExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_SIGN'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionSignExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===68){
     const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
