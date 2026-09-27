@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.28**
+**PLAYABLE CORE V2.29**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,108 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.29 最新進度
+
+V2.29 新增勇士 **Skill 39「貫穿攻擊」／`PROFESSION_THROUGH_ATTACK`** 的 live battle executor。
+
+這招雖然是勇士攻擊技能，但 pinned fixed source 並不是走一般 `BATTLE_AttackSeq()`；它走：
+
+`battle_profession_attack_magic_fun() → PROFESSION_MAGIC_ATTAIC()`
+
+再於其中呼叫專用的 `BATTLE_PROFESSION_THROUGH_ATTACK_GET_DAMAGE()`。V2.29 依這條實際路徑移植，不把它簡化成兩次普通攻擊。
+
+### Target / 前後排
+
+fixed row：TARGET=1、KIND=1、USE_FLAG=1、MP=21，option 第一欄是 `无`，因此 magic type = -1。
+
+- 直指 0～19 時先經 `__ATTACK_MAGIC BATTLE_MultiList()`。
+- 如果原 COM2 目標已死亡／不在可攻擊 Battle Entry，但同側還有活人，來源會用 **`rand()%10` 反覆抽 packed alive list**，直到抽到不是 -1 的位置；Web 保留這個 RNG 生命週期。
+- Through 再把實際 COM2 配成同欄前後排：
+  - 10↔15、11↔16、12↔17、13↔18、14↔19。
+- 兩者都活著時，fixed `PROFESSION_MAGIC_TOLIST_SORT()` 永遠輸出 **前排 15～19 → 後排 10～14**，不看玩家原本點前排還是後排。
+- 若配對格不存在，只打一人。
+- 一個特殊來源 bug：傷害倍率看的是迴圈 index `no`，不是實際前／後排。因此只剩一個後排目標時，它仍然是 index 0，會吃「第一段／前排倍率」。
+
+### 固定 RNG 順序
+
+在真正逐目標處理之前，`PROFESSION_MAGIC_GET_PRACTICE()` 對 Through 雖然算出的 `hp_power=0`，仍固定消耗：
+
+1. `RAND(1,100)`（unused critical）
+2. `rand()%100`（M2_POW 判定）
+3. 因為 hp_power=0，所以不吃後面的 `RAND(98,102)`
+
+每個目標則先跑 `PROFESSION_MAGIC_DODGE()`：
+
+- 一進函式先吃 `RAND(1,100)`；
+- EarthRound 隱身是在這顆 RNG **之後**才 early return；
+- Enemy 走非 Player 分支，magic dodge luck = `int(LV×0.15)`，最多 20；
+- `roll <= luck` 為 magic miss。
+
+只有通過 magic dodge 的目標才進後面的 Through physical chain。
+
+### tier < 10 的 HITRIGHT 來源行為
+
+`BATTLE_PROFESSION_THROUGH_ATTACK_GET_DAMAGE()` 之前，fixed source 對 tier≠10 每個通過 magic dodge 的目標都執行一次：
+
+- `MYSKILLHIT = 1`
+- `MYSKILLHIT_NUM = -70`
+- `WORKHITRIGHT -= 50`
+
+所以兩個貫穿目標都通過 magic dodge 時，第二人做物理閃避判定前，玩家 WORKHITRIGHT 已比原值少 **100**。
+
+這會覆寫／共用 V2.28 已移植的 `MYSKILLHIT` lifecycle；下一輪 StatusSeq 歸零時，fixed 會做：
+
+`WORKHITRIGHT -= (-70)`
+
+也就是反向 **+70**。裝備 HITRIGHT 導致 MYSKILLHIT 倒數異常延長的原 C bug 同樣繼續成立。
+
+tier=10 則完全不寫這三個 Work 值。
+
+### 專用物理傷害鏈
+
+fixed `BATTLE_PROFESSION_THROUGH_ATTACK_GET_DAMAGE()` 的順序和普通 AttackSeq 不同：
+
+1. **先** `RAND(1,10000)` 做 critical。
+2. 若 critical 成功：
+   - 直接 `BATTLE_CriDamageCalc()`
+   - **不做普通 BATTLE_DuckCheck**
+   - 即使拿弓也沒有一般 AttackSeq 的 bow critical 例外
+   - 不觸發 Weapon Focus／Dual Weapon critical 熟練度 hook，因為那些 hook 在 `BATTLE_AttackSeq()` 裡。
+3. 若 critical 失敗：
+   - 才做 `BATTLE_DuckCheck()`
+   - 這裡沒有 AttackSeq 的第二層 SUIT WDUCKPOWER dodge。
+4. 若目標正在 GUARD、不能行動或已有 DamageReact，fixed `BATTLE_DuckCheck()` 會直接視為「不能閃」；但 Through 之後又**完全不做 GuardAdjust / DamageSub**，因此 GUARD 不會對這招做一般防禦減傷，DamageReact 也不會被消耗。
+
+內層物理 raw damage 後，fixed 還會走 `UN_POW_M` 的 profession magic power reduction；magic type=-1 沒有額外元素熟練／抗性倍率。
+
+接著 `PROFESSION_MAGIC_CHANGE_STATUS()` 對 Through 沒有 case，卻仍會先固定再吃一顆 **`RAND(1,100)` unused RNG**。
+
+最後倍率：
+
+- index 0：`(70 + tier×2)%`
+- index 1：`(50 + tier×2)%`
+
+所以 tier0 為 70% / 50%，tier10 為 90% / 70%。
+
+### 這招明確不走的普通物理系統
+
+Through Attack 最後直接扣 HP，因此 pinned source 不經：
+
+- Guardian
+- GuardAdjust
+- `BATTLE_DamageSub()`
+- DamageReact 消耗／反射
+- ItemCrush
+- SUITPOISON
+- ordinary Counter
+- ordinary physical Ultimate 判定
+
+另外 fixed tail 會對所有「通過 profession magic dodge」的目標呼叫 `BATTLE_DamageWakeUp()`。所以即使內層物理 `BATTLE_DuckCheck()` 成功、最終傷害是 0，**睡眠仍會被解除**。Web V2.29 同步保留。
+
+這輪也修正 `sourceProfessionEnemyByBattleSlot()` 的單隻 Enemy 路徑，讓非 group battle 的 battleSlot 10 同樣能使用既有職業戰鬥技能。
+
+新增 `tools/check_v229_profession_through_attack_runtime.mjs`，鎖定 dead-target 重選、front→back 配對、practice 無效 RNG、magic dodge、每人 -50 HITRIGHT、critical-before-duck、UN_POW_M、unused status RNG、單後排 index0 倍率，以及整條 no Guardian／DamageSub／ItemCrush／Counter 路徑。**save schema 維持 30**。
 
 ## V2.28 最新進度
 
