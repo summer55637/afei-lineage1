@@ -3518,6 +3518,7 @@ V2.17 來源化第五組玩家裝備 callback，並修正 V2.16 對大型 field2
 - item-make runtime 現在只對有 attach/detach callback 的 fixed item 額外保存 byte-preserving `ITEM_ARGUMENT`（`g`）。
 - generator 直接從 pinned `item_event.c` raw bytes 抽出七個 `strstr()` marker／`CHAR_WORKEQUIT*`／`p+4`，不自行假設舊編碼。
 - 登入依 equip slot 0→8 replay attach；attach 是 set Work，不是加總。
+- fixed callback pair 若 argument 沒有七個 marker，原 C 是合法 no-op；Web 不再把這種物品誤判成 callback-unported（已驗到 Item 2898）。
 - 真實換裝順序維持「舊裝 detach → 新裝 attach」。
 - 保留原 `ITEM_MagicReResist()` bug：七種 detach 全部只清 `CHAR_WORKEQUITFIRE`。
 - weaken／barrier／nocast 已接 `BATTLE_StatusAttackCheck()`；fallride 已接落馬門檻。
