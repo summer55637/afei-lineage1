@@ -153,11 +153,9 @@ const gateStart=game.indexOf('if(id===200||id===201)');
 const gateEnd=game.indexOf('try{await sourceEnsureItemField2Db()}',gateStart);
 const gate=game.slice(gateStart,gateEnd);
 assert.ok(gate.includes('const candidateCache=sourceMergeCandidateCache()'));
-assert.ok(gate.includes('const retrySpec=sourceMergeRetrySpec(prepared.atoms.length)'));
-assert.ok(gate.includes('mergeCandidatePrepared:true'));
-assert.ok(gate.includes('candidateStats:candidateCache.stats'));
-assert.ok(gate.includes('RNG executor 已來源化'));
-assert.equal(gate.includes('cRand('),false,'V2.08 remains plan-only');
+assert.ok(gate.includes('sourceMergeExecuteLifecycle(selected,activePet())'));
+assert.equal(gate.includes('cRand('),false,'live gate delegates RNG to the sourced lifecycle helper');
+assert.ok(game.includes('sourceMergeExecuteRetryOuter(hitPlan,prepared.atoms.length,prepared.inputItemIds'));
 
 console.log(JSON.stringify({
   pass:true,version:'V2.08',focus:'merge-with-retry-candidate-plan',

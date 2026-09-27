@@ -121,19 +121,15 @@ assert.equal(tableNum(24),0);
 assert.equal(tableNum(25),1);
 assert.equal(tableNum(4001),19);
 
-// Merge action must load both byte-name/item metadata and pet-fix metadata, prepare,
-// then remain pending without creating a result or consuming RNG.
+// V2.07 still owns the pure simplify/range plan. V2.10 now consumes that plan through
+// the live lifecycle, so only verify that the live gate loads both fixed runtimes and delegates.
 const gateStart=game.indexOf('if(id===200||id===201)');
 const gateEnd=game.indexOf('try{await sourceEnsureItemField2Db()}',gateStart);
 const gate=game.slice(gateStart,gateEnd);
 assert.ok(gate.includes('await sourceEnsurePetMergeFixDb()'));
 assert.ok(gate.includes('await sourceEnsureItemField2Db()'));
-assert.ok(gate.includes('sourceMergePrepareStatic(sourceField2SelectedEntries(),activePet())'));
-assert.ok(gate.includes('mergeStaticPrepared:true'));
-assert.ok(gate.includes('sourceRuntimePending:true'));
-assert.ok(gate.includes('目前未實際擲 RNG'));
-assert.ok(gate.includes('ITEM_mergeItem_merge 的完整 merge table/runtime'));
-assert.ok(gate.includes('成品建立／材料刪除與後續 lifecycle 尚未接入'));
+assert.ok(gate.includes('sourceMergeExecuteLifecycle(selected,activePet())'));
+assert.ok(game.includes('sourceMergePrepareClones(cloned.clones,pet)'));
 
 console.log(JSON.stringify({
   pass:true,

@@ -82,11 +82,9 @@ const mergeGateEnd=game.indexOf('try{await sourceEnsureItemField2Db()}',mergeGat
 assert.ok(mergeGateStart>=0&&mergeGateEnd>mergeGateStart);
 const mergeGate=game.slice(mergeGateStart,mergeGateEnd);
 assert.ok(mergeGate.includes('await sourceEnsurePetMergeFixDb()'));
-assert.ok(mergeGate.includes('sourcePetMergeFixEntries(activePet())'));
-assert.ok(mergeGate.includes('petMergeFixReady:true'));
-assert.ok(mergeGate.includes("完整 merge table/runtime"));
-assert.ok(mergeGate.includes("維持不猜結果"));
-assert.ok(mergeGate.includes('sourceRuntimePending:true'));
+assert.ok(mergeGate.includes('await sourceEnsureItemField2Db()'));
+assert.ok(mergeGate.includes('sourceMergeExecuteLifecycle(selected,activePet())'));
+assert.ok(game.includes('const petFixEntries=sourcePetMergeFixEntries(pet)'));
 
 // This source layer stays lazy like the V2.04 item field2 runtime.
 const bootStart=game.indexOf('async function boot()');

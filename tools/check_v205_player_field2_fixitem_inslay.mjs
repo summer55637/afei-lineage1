@@ -32,9 +32,8 @@ assert.ok(game.includes("Number(meta.field)!==2||Number(meta.illegal)!==0"));
 assert.ok(game.includes("if(enemy){addLog('原 C field=2 PetSkill 只能在非戰鬥狀態使用。'"));
 assert.ok(game.includes("if(id===200||id===201)"));
 assert.ok(game.includes("ITEM_mergeItem_merge"));
-assert.ok(game.includes("完整 merge table/runtime"));
-assert.ok(game.includes("維持不猜結果"));
-assert.ok(game.includes("sourceRuntimePending:true"));
+assert.ok(game.includes("function sourceMergeExecuteLifecycle(selected,pet=activePet(),{"));
+assert.ok(game.includes("sourceMergeExecuteLifecycle(selected,activePet())"));
 
 const fixStart=game.indexOf('function sourceUsePetFixitem(selected)');
 const fixEnd=game.indexOf('function sourceApplyPetInslayMaterial',fixStart);
