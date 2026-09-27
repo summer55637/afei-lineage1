@@ -9319,54 +9319,178 @@ function sourceProfessionInstigateFixMutation(desc,rate){
   };
 }
 
+function sourceProfessionInstigateApplyHit(attackerDesc,targetDesc,options={},attackOptions={},deferFinalize=false){
+  if(attackerDesc?.kind!=='enemy'||!attackerDesc.unit||!targetDesc)return null;
+  const unit=attackerDesc.unit;
+  let r=null,actualTargetDesc=targetDesc;
+
+  if(targetDesc.kind==='enemy'&&targetDesc.unit){
+    const guarding=battleConfusionGuarding(targetDesc,options);
+    r=resolveAttackToEnemyWithGuardian(enemyBattleView(unit),targetDesc.unit,{
+      ...attackOptions,guarding,attackerUnit:unit
+    });
+    if(r?.guardian)actualTargetDesc={kind:'enemy',unit:r.actualTarget,unitId:r.actualTarget.id};
+  }else if(targetDesc.kind==='pet'&&targetDesc.pet&&petIsBattleActive(targetDesc.pet)){
+    r=enemyAttackPetResult(unit,targetDesc.pet,{...attackOptions,sourceGuardianReal:true});
+    actualTargetDesc=enemyDirectActualTarget(targetDesc,r)||targetDesc;
+  }else if(targetDesc.kind==='player'&&state.hp>0){
+    const guarding=battleConfusionGuarding(targetDesc,options);
+    r=resolveEnemyDirectAttackToPlayer(unit,{...attackOptions,guarding});
+    actualTargetDesc=r?.actualTargetDesc||targetDesc;
+  }
+  if(!r)return null;
+
+  battleApplyPhysicalHit(attackerDesc,actualTargetDesc,r,{
+    deferItemCrush:deferFinalize,deferAddProfit:deferFinalize
+  });
+  return {targetDesc:actualTargetDesc,originalTargetDesc:targetDesc,r};
+}
+
+function sourceProfessionInstigateTargetFromSlot(slot){
+  return sourcePlayerConfusionTargetableFromBattleSlot(slot);
+}
+
+function sourceProfessionInstigateBoomerang(actor,attackerDesc,statusTurn,options={}){
+  const unit=attackerDesc.unit;
+  const attackSlot=sourceBattleStatusSlot(attackerDesc);
+  let defNo=Math.trunc(n(statusTurn?.instigateRawToNo));
+  let chosen=defNo>=0?sourceProfessionInstigateTargetFromSlot(defNo):null;
+  if(defNo<0||!chosen){
+    chosen=sourceProfessionInstigateDefaultTarget(attackerDesc);
+    if(!chosen)return {handled:true,noAction:true,reason:'target-adjust-failed',hits:[]};
+    defNo=sourceBattleStatusSlot(chosen);
+  }
+  let row=(defNo>=0&&defNo<=19)?Math.trunc(defNo/5):-1;
+  if(row<0)return {handled:true,noAction:true,reason:'boomerang-row-invalid',hits:[]};
+  // fixed BATTLE_COM_BOOMERANG explicitly refuses to attack the attacker's own 5-slot row.
+  if(Math.trunc(attackSlot/5)===row){
+    return {handled:true,noAction:true,reason:'boomerang-same-row',row,hits:[]};
+  }
+
+  const rowHasTarget=r=>r>=0&&r<SOURCE_BOOMERANG_VS_TBL.length
+    &&SOURCE_BOOMERANG_VS_TBL[r].some(slot=>!!sourceProfessionInstigateTargetFromSlot(slot));
+  if(!rowHasTarget(row)){
+    chosen=sourceProfessionInstigateDefaultTarget(attackerDesc);
+    if(!chosen)return {handled:true,noAction:true,reason:'boomerang-row-empty',hits:[]};
+    defNo=sourceBattleStatusSlot(chosen);
+    row=Math.trunc(defNo/5);
+  }
+
+  const order=SOURCE_BOOMERANG_VS_TBL[row].slice().reverse(); // Enemy side => k=4,j=-1
+  const hits=[];
+  for(const slot of order){
+    const target=sourceProfessionInstigateTargetFromSlot(slot);
+    if(!target)continue;
+    const hit=sourceProfessionInstigateApplyHit(attackerDesc,target,options,{damageMultiplier:.3});
+    if(hit)hits.push({battleSlot:slot,...hit});
+    if(n(unit.hp)<=0)break;
+  }
+  return {handled:true,weaponCommand:'BOOMERANG',row,targetSlots:order,hits,noOrdinaryCounter:true};
+}
+
+function sourceProfessionInstigateBow(actor,attackerDesc,statusTurn,options={}){
+  const unit=attackerDesc.unit;
+  const rawToNo=Math.trunc(n(statusTurn?.instigateRawToNo));
+  const attackSlot=sourceBattleStatusSlot(attackerDesc);
+  // fixed BATTLE_TargetListSet: invalid raw COM2 gives [-1] and consumes NO bow RAND.
+  if(rawToNo<0||rawToNo>19){
+    return {handled:true,noAction:true,reason:'bow-raw-target-invalid',attackMax:Math.max(1,Math.trunc(n(actor?.sourceAttackMax)||1)),hits:[]};
+  }
+  const plan=sourceBowTargetListFromBattleSlots(rawToNo,attackSlot);
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax)||1));
+  const hits=[];
+  for(const slot of plan.slots){
+    if(slot<0)break;
+    const target=sourceProfessionInstigateTargetFromSlot(slot);
+    if(!target)continue;
+    const hit=sourceProfessionInstigateApplyHit(attackerDesc,target,options);
+    if(!hit)continue;
+    hits.push({battleSlot:slot,...hit});
+    if(hits.length>=attackMax||n(unit.hp)<=0)break;
+  }
+  return {
+    handled:true,weaponCommand:'BOW',attackMax,attackCount:hits.length,
+    bowRandom:plan.random,bowTargetSlots:plan.slots.slice(),hits,
+    noOrdinaryCounter:true
+  };
+}
+
+function sourceProfessionInstigateCommonAttack(actor,attackerDesc,statusTurn,options={}){
+  const unit=attackerDesc.unit;
+  const weaponType=Math.trunc(n(unit?.weaponType));
+  const attackMax=Math.max(1,Math.trunc(n(actor?.sourceAttackMax)||1));
+  const rawToNo=Math.trunc(n(statusTurn?.instigateRawToNo));
+  let target=rawToNo>=0?sourceProfessionInstigateTargetFromSlot(rawToNo):null;
+  let fallback=false;
+  if(!target){
+    target=sourceProfessionInstigateDefaultTarget(attackerDesc);
+    fallback=true;
+  }
+  if(!target)return {handled:true,noAction:true,reason:'target-adjust-failed',attackMax,hits:[]};
+
+  const hits=[];
+  for(let i=0;i<attackMax;i++){
+    if(!target)break;
+    const defer=weaponType===19;
+    const hit=sourceProfessionInstigateApplyHit(attackerDesc,target,options,{},defer);
+    if(!hit)break;
+    let paralysis=null;
+    if(weaponType===19){
+      paralysis=sourceBreakthrowParalysis(unit,hit);
+      sourceBattleFinalizeItemCrushRng(hit.r);
+      sourceProcessBattleDeathsAtAddProfit();
+    }
+    hits.push({paralysis,...hit});
+    if(i+1>=attackMax||n(unit.hp)<=0)break;
+
+    // BATTLE_TargetListSet prefilled later entries with the ORIGINAL COM2.
+    // When original COM2 was -1, the next list entry is the sentinel and the loop ends.
+    if(rawToNo<0)break;
+    target=sourceProfessionInstigateTargetFromSlot(rawToNo);
+    if(!target){
+      target=sourceProfessionInstigateDefaultTarget(attackerDesc);
+      fallback=true;
+    }
+  }
+
+  const last=hits[hits.length-1]||null;
+  if(last&&hits.length>=attackMax&&n(unit.hp)>0&&!last.r?.playerGuardian){
+    resolveConfusionCounterChain(attackerDesc,last.targetDesc,last.r,options);
+  }
+  return {
+    handled:true,weaponCommand:weaponType===19?'BREAKTHROW':(weaponType===18?'BOUNDTHROW':'ATTACK'),
+    attackMax,attackCount:hits.length,rawToNo,fallback,hits
+  };
+}
+
 function performProfessionInstigateAttack(actor,statusTurn,options={}){
   const attackerDesc=statusTurn?.desc||battleStatusActorDesc(actor);
   if(!attackerDesc||!battleStatusDescAlive(attackerDesc))return true;
+  if(attackerDesc.kind!=='enemy'||!attackerDesc.unit)return true;
+  const unit=attackerDesc.unit;
 
-  if(attackerDesc.kind==='enemy'&&attackerDesc.unit){
-    // StatusSeq overwrites COM1 with ordinary ATTACK.
-    if(attackerDesc.unit.chargeState)attackerDesc.unit.chargeState=null;
-    if(attackerDesc.unit.earthRoundState)attackerDesc.unit.earthRoundState=null;
-    attackerDesc.unit.guardThisTurn=false;
-    attackerDesc.unit.counterEligibleThisTurn=true;
+  // StatusSeq overwrites COM1 with ordinary ATTACK after BATTLE_ai_all() already planned
+  // the original command. Preserve that replacement before executing the weapon command.
+  if(unit.chargeState)unit.chargeState=null;
+  if(unit.earthRoundState)unit.earthRoundState=null;
+  unit.guardThisTurn=false;
+  unit.counterEligibleThisTurn=true;
+
+  const weaponType=Math.trunc(n(unit.weaponType));
+  let result;
+  if(weaponType===17){
+    result=sourceProfessionInstigateBoomerang(actor,attackerDesc,statusTurn,options);
+  }else if(weaponType===4){
+    result=sourceProfessionInstigateBow(actor,attackerDesc,statusTurn,options);
+  }else{
+    result=sourceProfessionInstigateCommonAttack(actor,attackerDesc,statusTurn,options);
   }
 
-  let targetDesc=statusTurn?.instigateTarget||null;
-  let fallback=false;
-  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
-    targetDesc=sourceProfessionInstigateDefaultTarget(attackerDesc);
-    fallback=true;
-  }
-  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
-    addLog(battleStatusDescName(attackerDesc)+' 的挑撥發作，但沒有可攻擊的目標。');
-    return true;
-  }
-
-  const attackerView=battleStatusDescView(attackerDesc);
-  const defenderView=battleStatusDescView(targetDesc);
-  if(!attackerView||!defenderView)return true;
-  const guarding=battleConfusionGuarding(targetDesc,options);
-  const r=targetDesc.kind==='enemy'
-    ?resolveAttackToEnemyWithGuardian(attackerView,targetDesc.unit,{
-        guarding,attackerUnit:attackerDesc.kind==='enemy'?attackerDesc.unit:null
-      })
-    :resolveNormalAttack(attackerView,defenderView,{guarding});
-  const resolvedTarget=r.guardian
-    ?{kind:'enemy',unit:r.actualTarget,unitId:r.actualTarget.id}
-    :targetDesc;
-
+  const forced=statusTurn?.instigateTarget;
   addLog(battleStatusDescName(attackerDesc)+' 的挑撥發作：'
-    +(fallback?'同隊無有效目標，TargetAdjust 改攻擊 ':'強制攻擊同隊 ')
-    +battleStatusDescName(targetDesc)+'。','bad');
-  if(r.guardian)addLog(r.guardian.name+' 發動忠犬，代替 '+targetDesc.unit.name+' 承受這次攻擊。');
-
-  battleApplyPhysicalHit(attackerDesc,resolvedTarget,r);
-  if(battleStatusDescAlive(attackerDesc)&&battleStatusDescAlive(resolvedTarget)){
-    // This is the ordinary BATTLE_Attack counter loop; the existing helper already
-    // carries the same physical Counter gates for cross-side and same-side targets.
-    resolveConfusionCounterChain(attackerDesc,resolvedTarget,r,options);
-  }
-  return true;
+    +(forced?'強制普通攻擊同隊 '+battleStatusDescName(forced)
+      :'同隊無有效目標，依普通 ATTACK / TargetAdjust 繼續處理。'),'bad');
+  return result||true;
 }
 
 function performConfusionAttack(actor,statusTurn,options={}){
