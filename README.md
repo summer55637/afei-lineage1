@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.54**
+**PLAYABLE CORE V2.55**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,40 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.55 最新進度
+
+V2.55 接入獵人 **Skill 71「風結界」／`PROFESSION_BOUNDARY`**。這一版只把既有 boundary core 開到 Skill 71；Skill 72「破除結界」仍保持未接入。
+
+fixed row：TARGET 2（ALL_MYSIDE）、KIND 1、option `风结界|...`、row `costMp=14`、img1 101697、img2 101795。實際 MP 與地／水／火結界相同，走 boundary dynamic branch：M-tier ≤6 / 7～9 / 10 = **10 / 15 / 20 MP**。
+
+### 共用 boundary lifecycle
+
+風結界沿用 V2.52 已驗證的 A-tier low turn：0～4→1、5～8→2、9→3、10→5；raw display level 再決定 stored power 20～100。Player 的 ALL_MYSIDE 仍解析成 pseudo target 20。
+
+對每個有效同側 Battle Entry，source 先把地／水／火／風四個 boundary Work 全清 0，再只寫：
+
+`CHAR_WORKFIXWINDAT_BOUNDARY = MAKE2VALUE(power, turn)`
+
+所以風結界會覆蓋地／水／火結界，四屬結界不能疊加。
+
+### fixed 風屬減傷 bug
+
+`BATTLE_DamageCalc()` 的 boundary `else if` 鏈順序固定是 `earth -> water -> fire -> wind`。當風結界 high word >0 時，真正物理公式是：
+
+`damage = trunc(damage - damage * attackerWind / 200)`
+
+stored power 20～100 仍只作 active flag，不參與減傷率。攻擊者風屬性 100 才減 50%，風屬性 20 只減 10%；若 attackerWind=0，風分支本身不減傷。
+
+profession magic 仍不讀 boundary Work；critical 額外 bonus 仍在 core damage 之後追加，因此不吃風結界減傷。既有 AttrAdjust → boundary → OtherDamage 順序維持不變。
+
+### post-action 倒數與動畫
+
+風結界與前三屬共用 post-command tick：low 先減 1，low=0 時 high power 仍有效，下一次 0→-1 才清除。
+
+Skill 71 row img2 是 101795；fixed `PROFESSION_MAGIC_GET_IMG2()` 對右側 target 20／25／26 覆寫成 **101792**。正常 Player ALL_MYSIDE=20，因此 live 使用 101792；img1 維持 101697。
+
+新增 `tools/check_v255_profession_wind_boundary_runtime.mjs`；同步更新 V2.52～V2.54 歷史 regression，讓 current game.js 的 **68～71 都可 support，只有 72 仍必須 false**。save schema 維持 **30**。
 
 ## V2.54 最新進度
 
