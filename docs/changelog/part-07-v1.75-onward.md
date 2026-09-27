@@ -3674,6 +3674,34 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.30 profession Skill 41 convolute attack
+
+V2.30 adds Warrior Skill 41 `PROFESSION_CONVOLUTE` and introduces a battle-local Player WORKATTACKPOWER mirror so source callback mutations survive for the rest of the same round.
+
+- Runtime row: TARGET=8, KIND=1, USE_FLAG=1, MP 28, magic token `无`.
+- Enemy row pseudos:
+  - 23 = back 10..14
+  - 24 = front 15..19.
+- fixed `BATTLE_MultiList()` falls to the opposite row when the requested row is empty and rewrites COM2 to the fallback pseudo.
+- `PROFESSION_MAGIC_TOLIST_SORT()` then rebuilds the entire live row in ascending battle-slot order.
+- Convolute has no practice-power case, but `PROFESSION_MAGIC_GET_PRACTICE()` still consumes its unconditional `RAND(1,100)` and `rand()%100`.
+- Every target first runs profession magic dodge. Only a magic-dodge-passing target reaches the Convolute attack mutation.
+- fixed `BATTLE_PROFESSION_CONVOLUTE_GET_DAMAGE()` mutates the current WORKATTACKPOWER:
+  `int(WORKATTACKPOWER * (50 + tier*2) / 100)`.
+  This is cumulative across row targets; it is not recalculated from FIXSTR.
+- The mutated final WORKATTACKPOWER remains active for the rest of the same source round and is rebuilt only by the next PreCommand compliance boundary.
+- Web adds battle-local `battlePlayerAttackWork`, read by `playerBattleView().attack`, cleared on battle reset and each new PreCommand.
+- The same Work persistence is now applied to existing Skill 24 CHAIN_ATK_2 and Skill 38 SHIELD_ATTACK, whose fixed callbacks also write WORKATTACKPOWER before their attack.
+- Per-target physical path reuses the V2.29 dedicated semantics: critical RNG before ordinary duck, direct critical damage even with bow, no AttackSeq critical proficiency hook, no second suit dodge.
+- Physical raw power then passes through UN_POW_M.
+- `PROFESSION_MAGIC_CHANGE_STATUS()` has no Convolute case but still consumes its unused leading `RAND(1,100)`.
+- Final HP subtraction is direct: no Guardian, GuardAdjust, DamageSub, DamageReact consumption, ItemCrush, SUITPOISON, physical Ultimate, or ordinary Counter.
+- Tail wake-up applies to every magic-dodge-passing target even if inner physical dodge produced zero damage.
+
+Added `tools/check_v230_profession_convolute_runtime.mjs`; save schema remains **30**.
+
+---
+
 ## V2.29 profession Skill 39 through attack
 
 V2.29 adds Warrior Skill 39 `PROFESSION_THROUGH_ATTACK` through its actual fixed profession-magic pipeline rather than approximating it as ordinary attacks.
