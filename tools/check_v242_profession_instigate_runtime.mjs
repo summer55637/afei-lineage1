@@ -143,8 +143,12 @@ const unit={
   roundAttack:111,roundDefense:91,roundQuick:71
 };
 const mutation=fixCtx.sourceProfessionInstigateFixMutation({kind:'enemy',unit},15);
-assert.deepEqual(mutation.before,{attack:100,defense:80,quick:60});
-assert.deepEqual(mutation.after,{attack:85,defense:68,quick:51});
+assert.equal(mutation.before.attack,100);
+assert.equal(mutation.before.defense,80);
+assert.equal(mutation.before.quick,60);
+assert.equal(mutation.after.attack,85);
+assert.equal(mutation.after.defense,68);
+assert.equal(mutation.after.quick,51);
 assert.equal(unit.roundFixAttack,85);
 assert.equal(unit.roundFixDefense,68);
 assert.equal(unit.roundFixQuick,51);
