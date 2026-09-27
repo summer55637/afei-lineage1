@@ -69,6 +69,8 @@ on:
       - "tools/check_v231_profession_chaos_runtime.mjs"
       - "tools/check_v232_profession_warrior_assist_runtime.mjs"
       - "tools/check_v233_profession_scapegoat_runtime.mjs"
+      - "tools/check_v234_profession_deflect_arrange_runtime.mjs"
+      - "tools/check_v235_profession_reback_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
