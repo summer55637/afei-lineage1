@@ -329,7 +329,10 @@ def sparse_row(data: list[int], widths: list[int], callbacks: dict[str, str]) ->
     callback_overrides = {k:v for k,v in callbacks.items() if k in {"i","a","d"} and v != ""}
     if callback_overrides:
         out["f"] = callback_overrides
-    if (callbacks.get("a") or callbacks.get("d")) and callbacks.get("g","") != "":
+    # ITEM_ARGUMENT is needed not only by attach/detach callbacks but also by
+    # ITEM_CheckSuitEquip(), which rescans every equipped ITEM_SUITCODE member and parses
+    # its argument regardless of that member's own callback pointer.
+    if ((callbacks.get("a") or callbacks.get("d")) or data[IDX["ITEM_SUITCODE"]] > 0) and callbacks.get("g","") != "":
         out["g"] = callbacks["g"]
     return out
 
@@ -418,7 +421,7 @@ def main() -> None:
         "parser": {
             "randomRangeRule": "base=min(a,b); randomwidth=ABS(b-a)",
             "nonRangeRandomWidth": 0,
-            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d; equipment callback ITEM_ARGUMENT uses optional byte-preserving g",
+            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d; callback or positive-SUITCODE ITEM_ARGUMENT uses optional byte-preserving g",
         },
         "makeItem": {
             "loop": "for i=0..ITEM_DATAINTNUM-1: RAND(0, randomdata[i]); data[i]=template[i]+roll",
