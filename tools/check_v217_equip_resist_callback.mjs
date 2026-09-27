@@ -7,8 +7,16 @@ const make=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime
 
 assert.equal(make.source.ref,'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56');
 assert.equal(make.source.itemEventGitBlobSha,'00e05ebe58ef3988f7e0121f2a3aa5ede78344b5');
+assert.equal(make.source.recodeGitBlobSha,'10ef38a0e84b70e8573d94199d038416afadf923');
+assert.equal(make.equipResistSource?.sourceExecutionEncoding,'gb18030');
+assert.equal(make.equipResistSource?.encodingProvenance,'pinned recode.sh: recode gb18030..utf8 gmsv');
 assert.ok(Array.isArray(make.equipResistSource?.markers));
 assert.equal(make.equipResistSource.markers.length,7);
+for(const marker of make.equipResistSource.markers){
+  assert.equal(typeof marker.sourceLiteral,'string');
+  assert.equal(marker.atoiOffset,4);
+  assert.equal(String(marker.marker).length,4,'latin1 marker must preserve four GB18030 bytes');
+}
 assert.equal(make.equipResistSource.detachClearsKey,'fire');
 assert.match(make.equipResistSource.detachSemantics,/clear CHAR_WORKEQUITFIRE only/);
 
