@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.47**
+**PLAYABLE CORE V2.48**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,76 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.48 最新進度
+
+V2.48 完成獵人 **Skill 58 fixed 錯綁 closure**，並正式接入 **Skill 59～61 雷／火／冰抗性**。
+
+### Skill 58「自給自足」其實不是製作技能
+
+fixed `gmsv/data/profession.txt` 第 58 筆原文就是：
+
+`自给自足,...,PROFESSION_ENRAGE,...,58,...`
+
+也就是資料表把它綁到勇士 Skill 35 同一個 `PROFESSION_ENRAGE -> BATTLE_COM_S_ENRAGE`。雖然 source code 另有 `PROFESSION_AUTARKY()`，該函式只 `return TRUE`，而 fixed profession row 根本沒有指到它。
+
+因此 V2.48 **不修正資料表、不發明材料製作**；Skill 58 照 fixed 錯綁直接走既有激化攻擊 lifecycle。新增 regression 鎖住這個來源 bug。
+
+### Skill 59～61 fixed rows
+
+- 59 雷抗性：`PROFESSION_RESIST_THUNDER`，MP 14，option `雷|成%100|回%3`
+- 60 火抗性：`PROFESSION_RESIST_FIRE`，MP 14，option `火|成%100|回%3`
+- 61 冰抗性：`PROFESSION_RESIST_ICE`，MP 14，option `冰|成%100|回%3`
+
+固定 build 有 `_PROFESSION_ADDSKILL`，所以 source 在 status-change callback 內會把這三招的 `defNo2` **強制改為施術者自己的 battle slot**。舊版依等級擴成單排／全體的分支被 `#else` 排除；V2.48 永遠只加 Player 自己。
+
+### 成功率與 StatusTbl 互斥
+
+三招都先走 `PROFESSION_BATTLE_StatusAttackCheck()`：
+
+1. 一進函式先消耗 `RAND(1,100)`。
+2. 才檢查目標死亡／已有任何 StatusTbl 狀態。
+3. 最後用嚴格 `roll < Success`。
+
+`Success = option 成%100 + A-tier×4`。
+
+因此 tier 0 是 **99%**（roll 100 失敗），tier 1 以上因 threshold >=104，在沒有既有狀態時必定成功。即使因已有狀態而失敗，前面的 RNG 仍照樣消耗。
+
+RESIST_F/I/T 本身就是 StatusTbl，所以它會參與 Web 的共用 `battleHasAnyStatus()`：三抗彼此不能疊，也會阻止／被一般 StatusTbl 狀態阻止。
+
+### 抗性值與 stored counter
+
+成功後：
+
+`upValue = A-tier + 10` → **10～20**
+
+`WORK_*_RESIST += upValue`
+
+`WORKMODRESIST_* = upValue`
+
+回合：tier 0～4=3、5～9=4、10=5；真正寫進 StatusTbl 的是 `turn+1`，所以 stored counter 為 **4／5／6**。
+
+### 幽靈 1 回合來源行為
+
+`BATTLE_StatusSeq()` 每次 Player 自己行動時先 `--cnt`。當 RESIST counter 減到 **1** 時，source 已經：
+
+`WORK_*_RESIST -= WORKMODRESIST_*`
+
+也就是實際抗性效果先消失；但 StatusTbl counter 還是 1，仍會阻擋新狀態。下一次自己行動才 1→0，generic loop 直接清掉狀態。
+
+`WORKMODRESIST_*` 在這裡不會清 0，會以 stale raw Work 留到 battle reset 或下次同屬性重寫。V2.48 同樣保存。
+
+### Profession magic 對應
+
+新增 `sourceProfessionPlayerResistVector()`／`sourceProfessionPlayerResistForMagicType()`，固定映射：
+
+- magic type 1 → Fire resist
+- magic type 2 → Thunder resist
+- magic type 3 → Ice resist
+
+這對齊 `PROFESSION_MAGIC_GET_DAMAGE()` 與 profession magic dodge 的 source 欄位；不把它錯接到一般地／水／火／風 `magicResist[4]`。
+
+新增 `tools/check_v248_profession_resist_runtime.mjs`，鎖住 Skill 58 fixed 錯綁、59～61 metadata、自體強制目標、strict success、StatusTbl 互斥、10～20 抗性、4/5/6 stored counter、幽靈回合、stale MOD、magic type mapping、V2.48 marker；**save schema 維持 30**。
 
 ## V2.47 最新進度
 

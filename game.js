@@ -114,6 +114,9 @@ let battlePlayerCaptureMod=0;
 let battleProfessionPetStrStates=new Map();
 let battleProfessionPetStrRoundStates=new Map();
 let battleProfessionPetStrPowerRaw=new Map();
+let battlePlayerProfessionResistState=null;
+let battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};
+let battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2505,6 +2508,9 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_PLUNDER'
     ||functionName==='PROFESSION_DOCILE'
     ||functionName==='PROFESSION_ENRAGE_PET'
+    ||functionName==='PROFESSION_RESIST_FIRE'
+    ||functionName==='PROFESSION_RESIST_ICE'
+    ||functionName==='PROFESSION_RESIST_THUNDER'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -3302,6 +3308,126 @@ function sourceProfessionEnragePetExecute(prepared,name){
     calculatedDamage,damageApplied:Math.max(0,Math.trunc(n(attack.damage))),
     lethalSuppressed,attack,buff,
     sourceAttackPowerZero:true,noOrdinaryCounter:true,noDamageReact:true,noSuitPoison:true
+  };
+}
+function sourceProfessionResistAttr(functionName){
+  const f=String(functionName||'');
+  if(f==='PROFESSION_RESIST_FIRE')return 'fire';
+  if(f==='PROFESSION_RESIST_ICE')return 'ice';
+  if(f==='PROFESSION_RESIST_THUNDER')return 'thunder';
+  return null;
+}
+function sourceProfessionResistTurns(tier){
+  const t=Math.trunc(n(tier));
+  if(t>=10)return 5;
+  if(t>=5)return 4;
+  return 3;
+}
+function sourceProfessionResistSpec(prepared){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const baseSuccess=sourceProfessionStatusOptionInt(row?.option,'成',0);
+  const turns=sourceProfessionResistTurns(tier);
+  return {
+    attr:sourceProfessionResistAttr(prepared?.functionName),tier,
+    baseSuccess,success:baseSuccess+tier*4,
+    upValue:tier+10,turns,storedTurns:turns+1
+  };
+}
+function sourceProfessionPlayerResistStatusActive(desc={kind:'player'}){
+  return !!(desc?.kind==='player'&&battlePlayerProfessionResistState
+    &&Math.trunc(n(battlePlayerProfessionResistState.turns))>0);
+}
+function sourceProfessionPlayerResistValue(attr){
+  const key=String(attr||'').toLowerCase();
+  return ['fire','ice','thunder'].includes(key)
+    ?Math.trunc(n(battlePlayerProfessionResistWork?.[key])):0;
+}
+function sourceProfessionPlayerResistVector(){
+  return {
+    fire:sourceProfessionPlayerResistValue('fire'),
+    ice:sourceProfessionPlayerResistValue('ice'),
+    thunder:sourceProfessionPlayerResistValue('thunder')
+  };
+}
+function sourceProfessionPlayerResistForMagicType(magicType){
+  // fixed PROFESSION_MAGIC_GET_DAMAGE: 1=fire, 2=thunder, 3=ice.
+  const type=Math.trunc(n(magicType));
+  if(type===1)return sourceProfessionPlayerResistValue('fire');
+  if(type===2)return sourceProfessionPlayerResistValue('thunder');
+  if(type===3)return sourceProfessionPlayerResistValue('ice');
+  return 0;
+}
+function sourceProfessionPlayerResistStatusSeq(){
+  const st=battlePlayerProfessionResistState;
+  if(!st||Math.trunc(n(st.turns))<=0)return null;
+  const attr=String(st.attr||'');
+  const beforeTurns=Math.trunc(n(st.turns));
+  const turns=beforeTurns-1;
+  st.turns=Math.max(0,turns);
+
+  if(turns<=0){
+    // fixed loop hits cnt<=0 and continues before the status-specific switch.
+    // WORKMODRESIST_* remains stale until reset/rewrite.
+    battlePlayerProfessionResistState=null;
+    return {
+      attr,beforeTurns,turns:0,statusCleared:true,
+      effectActive:false,work:sourceProfessionPlayerResistValue(attr),
+      staleMod:Math.trunc(n(battlePlayerProfessionResistMod?.[attr]))
+    };
+  }
+
+  let effectRemoved=false;
+  if(st.effectActive!==false&&turns<=1){
+    const oldValue=sourceProfessionPlayerResistValue(attr);
+    const addValue=Math.trunc(n(battlePlayerProfessionResistMod?.[attr]));
+    battlePlayerProfessionResistWork[attr]=oldValue-addValue;
+    st.effectActive=false;
+    effectRemoved=true;
+    addLog('你的'+(attr==='fire'?'火':attr==='ice'?'冰':'雷')+'抗性提升效果已回收；StatusTbl 尚餘 1。');
+  }
+
+  return {
+    attr,beforeTurns,turns:Math.max(0,turns),
+    effectRemoved,effectActive:st.effectActive!==false,
+    work:sourceProfessionPlayerResistValue(attr),
+    staleMod:Math.trunc(n(battlePlayerProfessionResistMod?.[attr])),
+    ghostStatus:turns===1&&st.effectActive===false
+  };
+}
+function sourceProfessionResistExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck){
+  const spec=sourceProfessionResistSpec(prepared);
+  if(!spec.attr){
+    return {handled:false,reason:'unsupported-resist-function',skillId:prepared?.skillId??null};
+  }
+
+  // fixed _PROFESSION_ADDSKILL forcibly retargets these three skills to attackNo/self.
+  const targetDesc={kind:'player'};
+  const check=statusCheck(targetDesc,spec.success);
+  if(!check.success){
+    addLog('你施放「'+name+'」，但抗性狀態未成立（'+check.reason+'，roll '+check.roll+' / '+check.threshold+'）。');
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+      requestedToNo:Math.trunc(n(prepared.toNo)),toNo:0,spec,check,applied:false,
+      forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
+    };
+  }
+
+  const oldValue=sourceProfessionPlayerResistValue(spec.attr);
+  battlePlayerProfessionResistMod[spec.attr]=spec.upValue;
+  battlePlayerProfessionResistWork[spec.attr]=oldValue+spec.upValue;
+  battlePlayerProfessionResistState={
+    attr:spec.attr,tier:spec.tier,turns:spec.storedTurns,
+    upValue:spec.upValue,effectActive:true,
+    skillId:Math.trunc(n(prepared.skillId)),functionName:String(prepared.functionName||'')
+  };
+  addLog('你施放「'+name+'」：'+(spec.attr==='fire'?'火':spec.attr==='ice'?'冰':'雷')
+    +'抗 +'+spec.upValue+'，stored StatusTbl='+spec.storedTurns+'。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    requestedToNo:Math.trunc(n(prepared.toNo)),toNo:0,spec,check,applied:true,
+    oldValue,newValue:sourceProfessionPlayerResistValue(spec.attr),
+    forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
   };
 }
 function sourceProfessionPlayerMaxPile(target=state){
@@ -4357,6 +4483,13 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const enragePetRow=sourceProfessionSkillTemplate(prepared.skillId);
     const enragePetName=String(enragePetRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionEnragePetExecute(prepared,enragePetName);
+  }
+  if(prepared.functionName==='PROFESSION_RESIST_FIRE'
+    ||prepared.functionName==='PROFESSION_RESIST_ICE'
+    ||prepared.functionName==='PROFESSION_RESIST_THUNDER'){
+    const resistRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const resistName=String(resistRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionResistExecute(prepared,resistName);
   }
   if(toNo<10){
     // fixed battle.c direct-attack profession gate rejects same-side direct targets here;
@@ -7574,7 +7707,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map()}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0}}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -7997,7 +8130,8 @@ function battleShootSleepGet(desc){
 }
 function battleHasAnyStatus(desc){
   const st=battleStatusGet(desc),sars=battleSarsGet(desc),shootSleep=battleShootSleepGet(desc);
-  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0));
+  const professionResist=sourceProfessionPlayerResistStatusActive(desc);
+  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist);
 }
 function battleStatusActive(desc,type=null){
   if(type==='sars'){
@@ -8433,6 +8567,10 @@ function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
 
+  // RESIST_F/I/T are ordinary StatusTbl entries, so their --cnt/recovery happens
+  // before the later MYSKILL tail on the Player's own StatusSeq.
+  const professionResist=desc.kind==='player'?sourceProfessionPlayerResistStatusSeq():null;
+
   // fixed BATTLE_StatusSeq tail begins with MYSKILLSTR. ENRAGE_PET shares that raw field.
   // The round WORK/FIX snapshot was already prepared before StatusSeq, so expiry here
   // affects only the next round.
@@ -8481,6 +8619,7 @@ function processBattleStatusTurn(actor){
     const professionTrap=desc.kind==='player'
       ?sourceProfessionPlayerTrapStatusSeq():null;
     const extra={};
+    if(professionResist)extra.professionResist=professionResist;
     if(professionStats)extra.professionStats=professionStats;
     if(professionHit)extra.professionHit=professionHit;
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;

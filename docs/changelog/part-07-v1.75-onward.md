@@ -4685,3 +4685,68 @@ Pet 自己進 StatusSeq時先倒數 profession Pet STR，再倒數其餘 SetMagi
 新增 `tools/check_v247_profession_enrage_pet_runtime.mjs`，覆蓋 metadata、support、live bid 5、same-side dispatcher、power/turn formulas、shared raw Work overwrite/coexist/busy、PreCommand/StatusSeq ordering、zero AttackPower、lethal suppression、DamageReact/SUITPOISON suppression、owner→Pet physical apply hook、歷史 V2.41/V2.44/V2.45/V2.46 markers、V2.47 marker與 schema 30。
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.48 Skill 58 fixed bind + Skills 59～61 Resist
+
+### Skill 58 fixed data bug
+
+`profession.txt` row 58「自给自足」固定写 `func=PROFESSION_ENRAGE`，不是 `PROFESSION_AUTARKY`。
+
+`PROFESSION_AUTARKY` dispatch entry虽然存在，但 callback只 `return TRUE`，且 fixed row未引用。Web不按技能名称脑补制作材料系统；row 58继续复用已完成的 ENRAGE lifecycle。
+
+### Resist rows
+
+- 59 `PROFESSION_RESIST_THUNDER` / `雷|成%100|回%3`
+- 60 `PROFESSION_RESIST_FIRE` / `火|成%100|回%3`
+- 61 `PROFESSION_RESIST_ICE` / `冰|成%100|回%3`
+
+三笔均 MP 14 / TARGET MYSELF / KIND 2。
+
+### `_PROFESSION_ADDSKILL` self override
+
+fixed callback在三种 RESIST command下直接：
+
+`defNo2 = BATTLE_Index2No(battleindex, charaindex)`
+
+所以 pinned build不会进入旧版 tier5 row / tier10 side-wide target expansion。Web executor忽略 request target作为效果目标，并明确回报 `forcedSelfByProfessionAddskill`。
+
+### StatusAttackCheck
+
+每次先 `RAND(1,100)`，再 early-return gate。Success=`100+tier*4`，判定 strict `<`。
+
+tier0因此只有 roll 1..99成功；tier1+ threshold >100，在无 StatusTbl 冲突时必成。
+
+Web将 profession resist StatusTbl mirror接进 `battleHasAnyStatus()`，因此 active/ghost RESIST会阻止普通 status apply/chance，普通 status也会阻止 RESIST。
+
+### Work and countdown
+
+成功：
+
+`upValue=tier+10`
+
+`WORKMODRESIST_attr=upValue`
+
+`WORK_attr_RESIST=old+upValue`
+
+`storedTurns=(tier>=10?5:tier>=5?4:3)+1`
+
+Player own StatusSeq：
+
+- stored 4/5/6逐次 --cnt。
+- cnt降到1时先从 WORK resistance减回 stale MOD，effectActive=false。
+- counter=1仍视为已有 StatusTbl，形成一回 ghost lock。
+- 下次 1→0 才清 status mirror。
+- MOD raw Work不在 expiry清零，只在 battle reset或下次同 attr write覆盖。
+
+### Profession magic field bridge
+
+`sourceProfessionPlayerResistForMagicType()`固定：1 fire / 2 thunder / 3 ice，对齐 source `PROFESSION_MAGIC_GET_DAMAGE`/`PROFESSION_MAGIC_DODGE`，不污染普通四属性 magicResist runtime。
+
+### Regression
+
+新增 `tools/check_v248_profession_resist_runtime.mjs`，覆盖 Skill58 source bind、59～61 rows、support/dispatcher、strict StatusAttackCheck顺序、self override、status exclusivity、tier/up/turn math、ghost counter/stale MOD、magic-type mapping、battle reset、历史 markers与 schema 30。
+
+save schema 維持 **30**。

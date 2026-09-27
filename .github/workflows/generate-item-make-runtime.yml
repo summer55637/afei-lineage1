@@ -83,6 +83,7 @@ on:
       - "tools/check_v245_profession_plunder_runtime.mjs"
       - "tools/check_v246_profession_docile_runtime.mjs"
       - "tools/check_v247_profession_enrage_pet_runtime.mjs"
+      - "tools/check_v248_profession_resist_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -346,6 +347,9 @@ jobs:
 
       - name: Run V2.47 Enrage Pet regression
         run: node tools/check_v247_profession_enrage_pet_runtime.mjs
+
+      - name: Run V2.48 Hunter resist regression
+        run: node tools/check_v248_profession_resist_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
