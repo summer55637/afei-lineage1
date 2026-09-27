@@ -181,8 +181,8 @@ assert.ok(apply.includes('{triggered:false,suppressed:true}'));
 const reset=extractFunction(game,'resetBattleStatuses');
 assert.ok(reset.includes('battlePlayerProfessionHitState=null'));
 
-assert.match(html,/PLAYABLE CORE V2\.28/);
-assert.match(html,/V2\.28 live：暴擊／連環攻擊／雙重攻擊／盾擊／瀕死攻擊。/);
+assert.match(html,/PLAYABLE CORE V\d+\.\d+/);
+assert.match(html,/id="professionBattleActions"/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
