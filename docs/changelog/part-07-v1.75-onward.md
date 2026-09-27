@@ -4786,3 +4786,20 @@ Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtim
 - raw COM2 EarthRound gate 發生在 forced-self 之前，explicit protocol fixture 保留此來源順序。
 
 新增 `tools/check_v250_profession_nature_resist_runtime.mjs`。save schema 維持 **30**。
+
+
+---
+
+## V2.51 Skill 67 Call Nature
+
+- 接入 `PROFESSION_CALL_NATURE` / `BATTLE_COM_S_CALL_NATURE`。
+- 實際 MP 走既有 dynamic cost：固定 50，不採 row 14。
+- raw display level 治療總池：500 / 1000 / 2000 / 2500 / 3000 / 3500 / 4000 / 4500 / 5000。
+- TARGET ALL_MYSIDE 正常解析為 defNo 20；重用 source-backed MultiList，只計算活著且可鎖定的同側 Battle Entries。
+- 現版無正式 CHAR_RIDEPET，因此每個 Player/active Pet Entry 各算 1 份，不把 active Pet 當 mount。
+- `addhp=trunc(totalPool/count)`；實際 HP clamp 到 maxHP，但 protocol raw heal 仍保持 addhp。
+- defNo 20/25/26 時 img1 覆寫 101772；img2 依 addhp 選 100601/100602/100603。
+- 治療 Pet 時沿用 battle recovery flag：AI_FIX_PETRECOVERY +10 每場每 Pet 最多一次。
+- 保留 `ridepet=-1` 在 C ternary 仍為 true 的 packet `p=addhp` bug；只記錄 protocol，不新增虛構騎寵。
+
+新增 `tools/check_v251_profession_call_nature_runtime.mjs`。save schema 維持 **30**。

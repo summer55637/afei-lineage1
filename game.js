@@ -2513,6 +2513,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_RESIST_ICE'
     ||functionName==='PROFESSION_RESIST_THUNDER'
     ||functionName==='PROFESSION_RESIST_F_I_T'
+    ||functionName==='PROFESSION_CALL_NATURE'
     ||functionName==='PROFESSION_OBLIVION'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
@@ -3541,6 +3542,84 @@ function sourceProfessionNatureResistExecute(prepared,name,statusCheck=sourcePro
     oldValue,newValue:sourceProfessionPlayerResistVector(),
     threeStatusTbl:true,ordinaryStatusIgnoredBySource:true,
     forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
+  };
+}
+function sourceProfessionCallNaturePool(displayLevel){
+  const level=Math.trunc(n(displayLevel));
+  if(level>=100)return 5000;
+  if(level>95)return 4500;
+  if(level>90)return 4000;
+  if(level>85)return 3500;
+  if(level>80)return 3000;
+  if(level>60)return 2500;
+  if(level>40)return 2000;
+  if(level>20)return 1000;
+  return 500;
+}
+function sourceProfessionCallNatureEffect(addHp){
+  const amount=Math.trunc(n(addHp));
+  if(amount<=100)return 100601;
+  if(amount<=300)return 100602;
+  return 100603;
+}
+function sourceProfessionCallNaturePetRecoveryAi(desc){
+  if(desc?.kind!=='pet'||!desc.pet)return null;
+  const key=String(desc.pet.id);
+  if(battlePetRecoveryAiIds.has(key))return null;
+  const recoveryAi=sourcePetAddVariableAi(desc.pet,10);
+  battlePetRecoveryAiIds.add(key);
+  return recoveryAi;
+}
+function sourceProfessionCallNatureExecute(prepared,name){
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {
+      handled:true,noAction:true,reason:'target-side-empty',
+      skillId:prepared?.skillId??null,functionName:prepared?.functionName||null,
+      rawToNo,multi,noDamage:true,noCounter:true
+    };
+  }
+
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const totalPool=sourceProfessionCallNaturePool(prepared?.displayLevel);
+  // Current Web has no formal CHAR_RIDEPET model. Every actual Battle Entry therefore
+  // follows BATTLE_getRidePet()==-1 and contributes exactly one divisor unit.
+  const count=multi.slots.length;
+  const addHp=count>0?Math.trunc(totalPool/count):0;
+  const img1=(rawToNo===20||rawToNo===25||rawToNo===26)?101772:Math.trunc(n(row?.img1));
+  const img2=sourceProfessionCallNatureEffect(addHp);
+  const results=[];
+
+  for(const slot of multi.slots){
+    const desc=sourceSetMagicPetTargetableDescFromSlot(slot);
+    if(!desc)continue;
+    const before=Math.max(0,Math.trunc(n(battleStatusHp(desc))));
+    const maxHp=Math.max(0,Math.trunc(n(sourceUltimateMaxHp(desc))));
+    const after=Math.min(maxHp,before+addHp);
+    battleStatusSetHp(desc,after);
+    const recoveryAi=sourceProfessionCallNaturePetRecoveryAi(desc);
+    // Source packet bug: ridepet==-1 means no mount, but C ternary 'ridepet ? addhp : 0'
+    // treats -1 as true, so p still carries addHp even though no ride-pet HP was mutated.
+    const sourceRidePetNo=-1;
+    const packetPetHp=sourceRidePetNo?addHp:0;
+    results.push({
+      slot,target:battleStatusDescName(desc),kind:desc.kind,
+      petId:desc.petId||null,unitId:desc.unitId||null,
+      before,after,maxHp,actualHeal:Math.max(0,after-before),rawAddHp:addHp,
+      sourceRidePetNo,packetHp:addHp,packetPetHp,
+      sourcePacketRidepetTruthinessBug:true,recoveryAi
+    });
+  }
+
+  addLog('你施放「'+name+'」：自然治療池 '+totalPool+' ÷ '+count
+    +' = 每個 Battle Entry '+addHp+' HP。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    rawToNo,multi,displayLevel:Math.trunc(n(prepared?.displayLevel)),
+    totalPool,count,addHp,img1,img2,results,
+    noFormalRideSystem:true,sourcePacketRidepetTruthinessBug:true,
+    noDamage:true,noCounter:true
   };
 }
 function sourceProfessionResistExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck){
@@ -4771,6 +4850,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const natureRow=sourceProfessionSkillTemplate(prepared.skillId);
     const natureName=String(natureRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionNatureResistExecute(prepared,natureName);
+  }
+  if(prepared.functionName==='PROFESSION_CALL_NATURE'){
+    const callNatureRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const callNatureName=String(callNatureRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionCallNatureExecute(prepared,callNatureName);
   }
   if(prepared.functionName==='PROFESSION_OBLIVION'){
     const oblivionRow=sourceProfessionSkillTemplate(prepared.skillId);

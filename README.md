@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.50**
+**PLAYABLE CORE V2.51**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,57 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.51 最新進度
+
+V2.51 接入獵人 **Skill 67「號召自然」／`PROFESSION_CALL_NATURE`**，對齊 fixed `battle_profession_assist_fun()` 的總治療池分攤、動畫、HP cap 與 Pet recovery AI 副作用。
+
+fixed row：TARGET 2（ALL_MYSIDE）、KIND 1、row `costMp=14`。但實際扣魔早已有 source dynamic branch：`PROFESSION_MAGIC_COST_MP()` 對 CALL_NATURE **固定回傳 50 MP**，所以 V2.51 不採 row 14。
+
+### raw display level 治療總池
+
+這招完全不做 A-tier/M-tier 轉換；直接讀 raw display level：
+
+- ≤20 → 500
+- 21～40 → 1000
+- 41～60 → 2000
+- 61～80 → 2500
+- 81～85 → 3000
+- 86～90 → 3500
+- 91～95 → 4000
+- 96～99 → 4500
+- ≥100 → 5000
+
+這些數字是**整招總治療池**，不是每個目標各拿一份。
+
+### BATTLE_MultiList 與分母
+
+TARGET ALL_MYSIDE 在目前 Player side 會解析成 pseudo target **20**。fixed 先 `BATTLE_MultiList()` 取得當下仍可被鎖定的同側 Battle Entries，再計算分母：
+
+- 沒有騎寵：該 Entry `count += 1`。
+- 有騎寵：該 Entry `count += 2`，之後主人與騎寵各補同一個 addhp。
+
+目前放置版尚未建立正式 `CHAR_RIDEPET` 系統，因此 active pet 仍是獨立 Battle Entry，**不能假裝成玩家騎寵**。正常玩家＋出戰寵都活著時 count=2；只有玩家時 count=1。
+
+`addhp = totalPool / count` 使用 C 整數除法。每個實際 Entry 都加同一個 addhp，最後 clamp 到 `CHAR_WORKMAXHP`；封包顯示值仍是 raw addhp，不改成實際因 HP 上限而縮短的 healed amount。
+
+### 動畫覆寫
+
+fixed row 的 img1 是 101773，但當 defNo 為 20／25／26（右方）時 source 會覆寫成 **101772**。Skill 67 正常 ALL_MYSIDE=20，因此 live 固定走 101772。
+
+img2 不採 row 的 101654，而依**分攤後 addhp**決定：
+
+- addhp ≤100 → 100601 (`SPR_heal`)
+- addhp ≤300 → 100602 (`SPR_heal2`)
+- 其他 → 100603 (`SPR_heal3`)
+
+### Pet recovery AI 與封包 truthiness bug
+
+若被治療的 Battle Entry 本身是 `CHAR_TYPEPET`，risk battle 下第一次 recovery 會做 `AI_FIX_PETRECOVERY`，也就是現有 runtime 的 VARIABLEAI **+10**，並用 `CHAR_BATTLEFLG_RECOVERY` 保證同場不重複加。V2.51 直接重用既有 `battlePetRecoveryAiIds` closure。
+
+另外保留 fixed 的封包 bug：source 先令無騎寵 `ridepet=-1`，之後卻輸出 `ridepet ? addhp : 0`。C 裡 -1 為 true，因此**沒有騎寵時 `p` 欄仍送 addhp**，但實際不會多補任何騎寵 HP。Web regression 只記錄這個 protocol 行為，不憑空建立騎寵。
+
+新增 `tools/check_v251_profession_call_nature_runtime.mjs`，鎖住 Skill 67 metadata、dynamic 50 MP、raw level pool、ALL_MYSIDE=20、count 分攤、HP cap、動畫覆寫、Pet +10 once-per-battle、無騎寵 packet `p` bug、V2.48～V2.50 regression；**save schema 維持 30**。
 
 ## V2.50 最新進度
 
