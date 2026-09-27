@@ -2246,7 +2246,9 @@ function sourceProfessionAttackSkillTier(displayLevel){
   return 0;
 }
 function sourceProfessionBattleFunctionSupported(functionName){
-  return functionName==='PROFESSION_BRUST'||functionName==='PROFESSION_CHAIN_ATK';
+  return functionName==='PROFESSION_BRUST'
+    ||functionName==='PROFESSION_CHAIN_ATK'
+    ||functionName==='PROFESSION_CHAIN_ATK_2';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2318,6 +2320,40 @@ function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
   }
   return r;
 }
+function sourceProfessionChainAtk2FixedStr(target=state){
+  // fixed battle_profession_attack_fun() reads CHAR_WORKFIXSTR, not the current
+  // WORKATTACKPOWER. playerEquipCompliance.fixedAttack is the Web mirror of FIXSTR.
+  const compliance=target?.playerEquipCompliance||null;
+  return Math.trunc(n(compliance?.fixedAttack??target?.attack));
+}
+function sourceProfessionChainAtk2AttackPower(fixedStr,attackSkillTier){
+  const base=Math.trunc(n(fixedStr));
+  const tier=Math.trunc(n(attackSkillTier));
+  return Math.trunc(base*(tier*2+100)/100);
+}
+function sourceProfessionChainAtk2ReactionConsume(target){
+  // fixed CHAIN_ATK_2 consumes one ABSROB, one VANISH and clears TRAP BEFORE
+  // the real BATTLE_Attack. It intentionally does NOT consume REFLEC.
+  //
+  // Current source-backed Web Enemy DamageReact can only reach ACUPUNCTURE.
+  // ABSROB / VANISH / TRAP have no reachable runtime state yet, so do not
+  // invent storage fields just to make this skill look more complete.
+  return {
+    absorbModeled:false,vanishModeled:false,trapModeled:false,
+    acupunctureUntouched:!!target?.acupunctureActive,
+    sourceCountersUnreachable:true
+  };
+}
+function sourceProfessionOrdinaryPlayerAttackResult(target,{attackPower=null}={}){
+  if(!target)return {damage:0,dodged:false,critical:false,miss:true,guarded:false,actualTarget:null};
+  const attacker=playerBattleView();
+  if(!attacker)return {damage:0,dodged:false,critical:false,miss:true,guarded:false,actualTarget:null};
+  if(Number.isFinite(Number(attackPower)))attacker.attack=Math.trunc(Number(attackPower));
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  return resolveAttackToEnemyWithGuardian(attacker,target,{
+    guarding:!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion')
+  });
+}
 function sourceProfessionBattleSkillExecute(prepared,actor=null){
   if(!prepared?.ok||prepared.prepared!==true){
     return {handled:false,reason:'profession-command-not-prepared'};
@@ -2345,6 +2381,31 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
   const name=String(row?.name||('Skill '+prepared.skillId));
   let second=null,secondActual=null,chainRoll=null,chainHit=null,chainEffectiveTier=null;
   let chainExtra=false;
+
+  if(prepared.functionName==='PROFESSION_CHAIN_ATK_2'){
+    // fixed source order:
+    // 1) consume ABSROB/VANISH/TRAP counters (REFLEC is deliberately untouched),
+    // 2) emit a zero-damage skill animation with WORKATTACKPOWER=0,
+    // 3) set WORKATTACKPOWER = FIXSTR * (100 + tier*2)%,
+    // 4) issue exactly one ordinary BATTLE_Attack on the same raw defNo.
+    const reactionConsume=sourceProfessionChainAtk2ReactionConsume(target);
+    const fixedStr=sourceProfessionChainAtk2FixedStr(state);
+    const attackPower=sourceProfessionChainAtk2AttackPower(fixedStr,prepared.attackSkillTier);
+    addLog('你施放「'+name+'」；第一段為 0 傷害動作，真正攻擊力改為 FIXSTR×'
+      +(prepared.attackSkillTier*2+100)+'%。','good');
+
+    let attack=null,actual=null;
+    if(state.hp>0&&n(target.hp)>0){
+      attack=sourceProfessionOrdinaryPlayerAttackResult(target,{attackPower});
+      actual=applyFriendlyEnemyHit('player','你',target,attack);
+    }
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo,targetUnitId:target.id,zeroDamageLead:true,reactionConsume,
+      attackSkillTier:prepared.attackSkillTier,fixedStr,attackPower,
+      attack,actual,noOrdinaryCounter:true
+    };
+  }
 
   if(prepared.functionName==='PROFESSION_CHAIN_ATK'){
     // fixed battle_profession_attack_fun order: proc RNG happens BEFORE BATTLE_AttackSeq.
@@ -18004,7 +18065,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.25 live：暴擊／連環攻擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.26 live：暴擊／連環攻擊／雙重攻擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;
