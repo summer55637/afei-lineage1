@@ -4978,3 +4978,20 @@ save schema 維持 **30**。
 - ANNEX visual 仍沿用 `BATTLE_ST_CONFUSION`，但 runtime 狀態獨立保存。
 - 新增 `tools/check_v261_profession_enclose_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.62 Skill 6 SUMMON_THUNDER
+
+- 接入巫師 Skill 6 `召雷术 / PROFESSION_SUMMON_THUNDER`。
+- option `电|0|1|0|0|0|0|0` → `magic_type=3`。
+- MP：M-tier 1～2=10、3～4=20、5～7=25、8～10=30。
+- GET_PRACTICE：`M-tier*10+200`；保留 unused critical RNG。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.2)`。
+- analysis 先跑 Thunder Practice proficiency；本次 cast 仍沿用 battle-entry proficiency snapshot。
+- 保留 fixed source type-3 欄位 bug：DODGE 用 Thunder proficiency，但 GET_DAMAGE 用 Ice proficiency/resist path。
+- 保留 `CHAR_WORKWATER > 0` 特例：`RAND(1,100) < 75` 時，在 UNMPOWER／GET_DAMAGE 前把 power ×3；無 Water 時不抽這顆 RNG。
+- 命中後保留 `PROFESSION_MAGIC_CHANGE_STATUS` 的 leading `RAND(1,100)`。
+- 新增 `tools/check_v262_profession_summon_thunder_runtime.mjs`。
+- save schema 維持 **30**。

@@ -1669,10 +1669,11 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_SIGN'
     &&command!=='BATTLE_COM_S_DOOM'
     &&command!=='BATTLE_COM_S_ICE_CRACK'
+    &&command!=='BATTLE_COM_S_SUMMON_THUNDER'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
-  if(command==='BATTLE_COM_S_VOLCANO_SPRINGS')upper=work*.2;
+  if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK')upper=work*.5;
   else if(command==='BATTLE_COM_S_ENCLOSE'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
@@ -2633,6 +2634,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_SIGN'
     ||functionName==='PROFESSION_DOOM'
     ||functionName==='PROFESSION_ICE_CRACK'
+    ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_ENCLOSE'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
@@ -4597,6 +4599,138 @@ function sourceProfessionEncloseExecute(prepared,name){
   };
 }
 
+
+function sourceProfessionSummonThunderAnimation(row){
+  const opt=String(row?.option||'').split('|');
+  return {
+    magicType:3,attIdx:6,
+    img1:Math.trunc(n(row?.img1)),img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7]))
+  };
+}
+
+function sourceProfessionTargetWaterTurns(target){
+  // Skill 7 will populate this CHAR_WORKWATER mirror. Keep the read here source-shaped
+  // so Skill 6 already preserves the CURRENT/SUMMON_THUNDER interaction.
+  return Math.max(0,Math.trunc(n(target?.professionWaterTurns)));
+}
+
+function sourceProfessionThunderWaterPower(target,command,power,{randInclusive=cRand}={}){
+  const inputPower=Math.trunc(n(power));
+  const cmd=String(command||'');
+  const waterTurns=sourceProfessionTargetWaterTurns(target);
+  if((cmd!=='BATTLE_COM_S_CURRENT'&&cmd!=='BATTLE_COM_S_SUMMON_THUNDER')||waterTurns<=0){
+    return {inputPower,power:inputPower,waterTurns,roll:null,tripled:false};
+  }
+  // fixed PROFESSION_MAGIC_GET_ICE_MIRROR_DAMAGE: strict RAND(1,100) < 75.
+  const roll=Math.trunc(n(randInclusive(1,100)));
+  const tripled=roll<75;
+  return {inputPower,power:tripled?inputPower*3:inputPower,waterTurns,roll,tripled};
+}
+
+function sourceProfessionSummonThunderExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==6)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  // PROFESSION_MAGIC_ATTAIC first expands/repairs the target. No analysis RNG before success.
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis_profession_parameter() raises Thunder Practice first, but damage/dodge Work for
+  // the current cast still comes from BATTLE_ProfessionStatus_init's entry snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const thunderPractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_THUNDER_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(thunderPractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionSummonThunderAnimation(row);
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_SUMMON_THUNDER',prepared.displayLevel,state.hp
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    // DODGE's type=3 reads Thunder proficiency.
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:3,command:'BATTLE_COM_S_SUMMON_THUNDER',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    // Special CURRENT/SUMMON_THUNDER Water interaction happens before UNMPOWER and GET_DAMAGE.
+    const waterPower=sourceProfessionThunderWaterPower(
+      target,'BATTLE_COM_S_SUMMON_THUNDER',practice.power,{randInclusive:cRand}
+    );
+    const preDamagePower=sourceProfessionMagicPreDamagePower(waterPower.power,0);
+
+    // Fixed GET_DAMAGE bug: analysis returns type=3 for "电", but type=3's damage branch
+    // reads ICE proficiency/resist fields while DODGE above correctly read Thunder.
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:3,power:preDamagePower,command:'BATTLE_COM_S_SUMMON_THUNDER',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // PROFESSION_MAGIC_CHANGE_STATUS always consumes this RNG even though Summon Thunder has no case.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,waterPower,preDamagePower,
+      damage,hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      sourceDodgeUsesThunderPractice:true,sourceDamageType3UsesIcePracticeBug:true,
+      sourceWaterPowerBeforeUnPower:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害'
+      +(waterPower.tripled?'（水附體導電 ×3）':''),after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,animation,thunderPractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:3,sourceThunderPracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceDodgeUsesThunderPractice:true,sourceDamageType3UsesIcePracticeBug:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -5928,6 +6062,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionIceCrackExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_SUMMON_THUNDER'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionSummonThunderExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_ENCLOSE'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);

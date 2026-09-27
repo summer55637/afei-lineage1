@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.61**
+**PLAYABLE CORE V2.62**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,24 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.62 最新進度
+
+V2.62 接入巫師 **Skill 6「召雷術」／`PROFESSION_SUMMON_THUNDER`**，完整沿用 fixed source 的通用 profession magic 鏈。
+
+- TARGET OTHER，option `电|0|1|0|0|0|0|0`，所以 `analysis_profession_parameter()` 回傳 `magic_type=3`。
+- dynamic MP：M-tier 1～2=10、3～4=20、5～7=25、8～10=30。
+- GET_PRACTICE：`hp_power = M-tier*10 + 200`；與其他 profession magic 一樣仍固定先消耗一顆 `RAND(1,100)` critical，即使召雷術本身不使用 critical。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.2)`。
+- `analysis_profession_parameter()` 會先嘗試提升 **雷熟練度**；但當前這次施法仍使用 battle-entry 時的熟練度 Work snapshot。
+- fixed source 欄位錯配保留：magic dodge 的 type=3 正確讀雷熟練度，但 `PROFESSION_MAGIC_GET_DAMAGE()` 的 type=3 傷害分支讀的是 **冰熟練度／冰抗欄位**。
+- 若目標 `CHAR_WORKWATER > 0`，會在 UNMPOWER 與元素傷害計算前額外抽 `RAND(1,100)`；只有 **roll < 75** 才先把 power ×3，roll=75 不加成。
+- 水附體不存在時不消耗這顆特殊 RNG。
+- 命中後仍會進 `PROFESSION_MAGIC_CHANGE_STATUS()`，因此即使沒有對應 case，也會固定消耗 leading `RAND(1,100)`。
+- 現行網頁 Enemy 沒有騎寵，傷害仍直接扣 Enemy HP；Guardian／DamageSub／Counter 不參與 profession magic。
+- save schema 維持 **30**。
+
+---
 
 ## V2.61 最新進度
 
