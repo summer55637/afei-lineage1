@@ -38,6 +38,15 @@ const SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM=Object.freeze({18546:40,18547:80,18548
 const SOURCE_PLAYER_RANDENEMY_BY_ITEM=Object.freeze({20126:60,20127:70,20128:100});
 // fixed itemset6 callback rows with ITEM_MagicEquitWear / ITEM_MagicEquitReWear.
 const SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS=new Set([20184,20420,20421]);
+// fixed ITEM_CheckSuitEquip ListSuit[] order. The parser uses strstr() on each pipe token,
+// so preserve this exact key order instead of treating ITEM_ARGUMENT as a generic object.
+const SOURCE_PLAYER_SUIT_KEYS=Object.freeze([
+  'VIT','FSTR','MSTR','MTGH','MDEX','WAST','HP','MP',
+  'FRES','IRES','TRES','RESIST','COUNTER','M_POW',
+  'EARTH','WRITER','FIRE','WIND',
+  'WDUCKPOWER','RENOCASE','SUITSTRP','SUITTGH_P','SUITDEXP',
+  'SUITPOISON','M2_POW','UN_POW_M'
+]);
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
@@ -1178,6 +1187,9 @@ function sourcePlayerEquipCallbackSupported(template){
   if(attach==='ITEM_MagicResist'&&detach==='ITEM_MagicReResist'){
     return sourcePlayerFixedEquipResistTemplate(template?.itemId);
   }
+  if(attach==='ITEM_suitEquip'&&detach==='ITEM_ResuitEquip'){
+    return sourcePlayerFixedSuitTemplate(template?.itemId);
+  }
   // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
   return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
 }
@@ -1217,6 +1229,96 @@ function sourcePlayerEquipMagicDefense(target=state){
     out.items.push({slot:i,itemIndex,itemId:Math.trunc(Number(template.itemId)),argument,values});
   }
   return out;
+}
+function sourcePlayerFixedSuitTemplate(itemId){
+  const id=Math.trunc(Number(itemId));
+  const row=Number.isFinite(id)&&itemMakeDb?.byItemId?itemMakeDb.byItemId[String(id)]:null;
+  const f=row?.f&&typeof row.f==='object'?row.f:{};
+  return f.a==='ITEM_suitEquip'&&f.d==='ITEM_ResuitEquip';
+}
+function sourcePlayerSuitArgumentValue(argument,key){
+  const wanted=String(key||'');
+  for(const token of String(argument||'').split('|')){
+    // fixed NPC_Util_GetStrFromStrWithDelim first uses strstr(token,key), not exact key equality.
+    if(!token.includes(wanted))continue;
+    const fields=token.split(':');
+    if(fields.length<2)continue;
+    const m=String(fields[1]??'').match(/^[ \t]*([+-]?\d+)/);
+    return m?Math.trunc(Number(m[1])):0;
+  }
+  return null;
+}
+function sourcePlayerSuitFreshWork(){
+  const work={activeCode:0,members:[]};
+  for(const key of SOURCE_PLAYER_SUIT_KEYS)work[key]=0;
+  return work;
+}
+function sourcePlayerSuitWork(target=state){
+  const out=sourcePlayerSuitFreshWork();
+  if(!target)return out;
+  const slots=sourcePlayerItemSlots(target);
+  const equipped=[];
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!existing||!template)continue;
+    equipped.push({
+      slot:i,itemIndex,existing,template,
+      suitCode:Math.trunc(n(template.suitCode))
+    });
+  }
+
+  // fixed ITEM_CheckSuitEquip: first suit code encountered in equip-slot order with >=3 members wins.
+  let activeCode=0;
+  for(const entry of equipped){
+    if(entry.suitCode<=0)continue;
+    let same=0;
+    for(const other of equipped)if(other.suitCode===entry.suitCode)same++;
+    if(same>=3){activeCode=entry.suitCode;break}
+  }
+  out.activeCode=activeCode;
+  if(activeCode<=0)return out;
+
+  // Second source scan is again slot 0..8. Every matching member may set any ListSuit Work;
+  // CHAR_setWorkInt means later slots overwrite earlier values instead of accumulating them.
+  for(const entry of equipped){
+    if(entry.suitCode!==activeCode)continue;
+    const argument=sourcePlayerLiveCallbackArgument(entry.existing,entry.template.itemId);
+    const values={};
+    for(const key of SOURCE_PLAYER_SUIT_KEYS){
+      const value=sourcePlayerSuitArgumentValue(argument,key);
+      if(value==null)continue;
+      out[key]=Math.trunc(n(value));
+      values[key]=Math.trunc(n(value));
+    }
+    out.members.push({
+      slot:entry.slot,itemIndex:entry.itemIndex,itemId:Math.trunc(n(entry.template.itemId)),
+      suitCode:activeCode,argument,values
+    });
+  }
+  return out;
+}
+function sourcePlayerApplySuitCompliance(normal,suit){
+  const src=suit||sourcePlayerSuitFreshWork();
+  let mfix=Math.trunc(n(normal?.fixedAttack));
+  const mtgh=Math.trunc(n(normal?.fixedTough));
+  const mdex=Math.trunc(n(normal?.fixedDex));
+  let maxHp=Math.trunc(n(normal?.maxHp));
+
+  mfix=mfix+Math.trunc(mfix*Math.trunc(n(src.FSTR))/100);
+  let fixedAttack=mfix+Math.trunc(n(src.MSTR));
+  let fixedTough=mtgh+Math.trunc(n(src.MTGH));
+  let fixedDex=mdex+Math.trunc(n(src.MDEX));
+  maxHp=maxHp+Math.trunc(n(src.VIT));
+
+  // Other_DefcharWorkInt uses float /100.0 then assigns back to int Work values.
+  if(mfix>0)fixedAttack=Math.trunc(fixedAttack+mfix*Math.trunc(n(src.SUITSTRP))/100);
+  if(mtgh>0)fixedTough=Math.trunc(fixedTough+mtgh*Math.trunc(n(src.SUITTGH_P))/100);
+  if(mdex>0)fixedDex=Math.trunc(fixedDex+mdex*Math.trunc(n(src.SUITDEXP))/100);
+
+  return {fixedAttack,fixedTough,fixedDex,maxHp,mfix,mtgh,mdex};
 }
 function sourcePlayerEquipResistFreshWork(){
   return {fire:0,thunder:0,ice:0,weaken:0,barrier:0,nocast:0,fallride:0};
@@ -2844,9 +2946,18 @@ function playerComplianceParameter(target=state){
   const baseQuick=Math.trunc(dex);
   const baseMaxHp=Math.max(0,Math.trunc(vital*4+str+tgh+dex));
 
-  const fixedAttack=Math.max(0,baseAttack+Math.trunc(n(equip.attack)));
-  const fixedTough=Math.max(-100,baseDefense+Math.trunc(n(equip.defense)));
-  const fixedDex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
+  let fixedAttack=Math.max(0,baseAttack+Math.trunc(n(equip.attack)));
+  let fixedTough=Math.max(-100,baseDefense+Math.trunc(n(equip.defense)));
+  let fixedDex=Math.max(-100,baseQuick+Math.trunc(n(equip.quick)));
+  const normalMaxHp=clamp(baseMaxHp+Math.trunc(n(equip.hp)),0,10000000);
+  const suit=sourcePlayerSuitWork(target);
+  const suitApplied=sourcePlayerApplySuitCompliance(
+    {fixedAttack,fixedTough,fixedDex,maxHp:normalMaxHp},suit
+  );
+  fixedAttack=suitApplied.fixedAttack;
+  fixedTough=suitApplied.fixedTough;
+  fixedDex=suitApplied.fixedDex;
+  const suitMaxHp=suitApplied.maxHp;
   const fixedLuck=clamp(Math.trunc(n(target.luck))+Math.trunc(n(equip.luck)),1,5);
   const fixedCharm=clamp(Math.trunc(n(target.charm))+Math.trunc(n(equip.charm)),0,100);
   // Fixed source quirk: CHAR_initcharWorkInt() resets the other ITEM_equipEffect Work fields,
@@ -2889,14 +3000,15 @@ function playerComplianceParameter(target=state){
   target.attack=fixedAttack;
   target.defense=fixedTough;
   target.dex=fixedDex;
-  target.maxHp=clamp(baseMaxHp+Math.trunc(n(equip.hp)),0,10000000);
+  target.maxHp=clamp(suitMaxHp,0,10000000);
   // fixed player creation baseline CHAR_MAXMP=100; _FIX_MAXCHARMP applies equip MP and clamps 0..1000.
   target.maxMp=clamp(100+Math.trunc(n(equip.mp)),0,1000);
   target.hp=Math.min(Math.max(0,n(target.hp)),target.maxHp);
   target.mp=Math.min(Math.max(0,n(target.mp)),target.maxMp);
   Object.assign(equip,{
     fixedAttack,fixedTough,fixedDex,fixedLuck,fixedCharm,fixedAvoid,statusResist,criticalWork,
-    otherDamage,otherDefc,arrange,sequence,attachPile,hitRight,neglectGuard,elementsRaw
+    otherDamage,otherDefc,arrange,sequence,attachPile,hitRight,neglectGuard,elementsRaw,
+    suit,suitApplied
   });
   target.playerEquipCompliance=equip;
   return {attack:target.attack,defense:target.defense,quick:target.dex,maxHp:target.maxHp,maxMp:target.maxMp,equip};
@@ -4619,9 +4731,17 @@ function battleStatusChance(attackerDesc,targetDesc,type,rules={}){
   let level=Math.trunc((battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*bai);
   level=clamp(level,-range,range);
   const luck=Math.trunc(n(battleStatusLuck(attackerDesc)));
-  let per=Math.trunc(perOffset+level+luck-resist-vitalPenalty);
+  const suit=targetDesc?.kind==='player'?sourcePlayerSuitWork(state):null;
+  const suitResist=targetDesc?.kind==='player'?Math.trunc(n(suit?.RESIST)):0;
+  // fixed _SUIT_ADDPART3 source bug: RENOCASE is subtracted only when status is WEAKEN.
+  const suitRenocase=targetDesc?.kind==='player'&&type==='weaken'
+    ?Math.trunc(n(suit?.RENOCASE)):0;
+  let per=Math.trunc(perOffset+level+luck-resist-vitalPenalty-suitResist-suitRenocase);
   if(per>80)per=80;
-  return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset};
+  return {
+    allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset,
+    suitResist,suitRenocase
+  };
 }
 function battleStatusApply(targetDesc,type,turns){
   if(battleHasAnyStatus(targetDesc))return false;
@@ -4906,6 +5026,35 @@ function sourceEnemyFoxCommandGate(unit,actor){
   addLog(unit.name+' 仍是小狐狸，只能攻擊、防禦或待機；本回合特殊指令取消。');
   return {active:true,blocked:true};
 }
+function sourcePlayerSuitStatusSeq(target=state){
+  if(!target)return null;
+  const suit=sourcePlayerSuitWork(target);
+  if(Math.trunc(n(suit.activeCode))<=0)return null;
+  const addHp=Math.trunc(n(suit.HP)),addMp=Math.trunc(n(suit.MP));
+  if(addHp===0&&addMp===0)return {activeCode:suit.activeCode,addHp,addMp,hpActual:0,mpActual:0};
+
+  const hpBefore=Math.trunc(n(target.hp)),mpBefore=Math.trunc(n(target.mp));
+  let hpAfter=hpBefore,mpAfter=mpBefore;
+
+  // fixed _TYPE_TOXICATION gates HP recovery through connection toxication state.
+  // That connection-side system is not present in the web core; every currently representable
+  // state corresponds to the non-toxicated branch, so do not substitute battle poison for it.
+  if(addHp!==0){
+    hpAfter=Math.min(Math.trunc(n(target.maxHp)),hpBefore+addHp);
+    if(hpAfter<=1)hpAfter=1;
+    target.hp=hpAfter;
+  }
+  if(addMp!==0){
+    mpAfter=Math.min(Math.trunc(n(target.maxMp)),mpBefore+addMp);
+    if(mpAfter<0)mpAfter=0;
+    target.mp=mpAfter;
+  }
+  return {
+    activeCode:suit.activeCode,addHp,addMp,
+    hpBefore,hpAfter:Math.trunc(n(target.hp)),hpActual:Math.trunc(n(target.hp))-hpBefore,
+    mpBefore,mpAfter:Math.trunc(n(target.mp)),mpActual:Math.trunc(n(target.mp))-mpBefore
+  };
+}
 function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
@@ -4939,13 +5088,14 @@ function processBattleStatusTurn(actor){
   const blockedBefore=battleStatusCanMove(desc)===false;
   const attackShootSleep=sourceProcessAttackShootSleepTurn(desc);
   const finish=result=>{
-    // fixed battle.c: BATTLE_StatusSeq -> BATTLE_MagicStatusSeq -> BATTLE_CanMoveCheck.
-    // Def-magic is an independent WORK status, so it ticks even when a normal bad status
-    // is also active and never participates in battleHasAnyStatus().
+    // fixed BATTLE_StatusSeq handles suit round HP/MP after the ordinary status loop.
+    const suitRound=desc.kind==='player'?sourcePlayerSuitStatusSeq(state):null;
+    // fixed battle.c then continues with other independent WORK-status lifecycles.
     const defMagic=sourceDefMagicStatusSeq(desc);
     const sars=sourceProcessSarsStatusTurn(desc);
     const extra={};
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
+    if(suitRound&&(suitRound.addHp!==0||suitRound.addMp!==0))extra.suitRound=suitRound;
     if(defMagic)extra.defMagic=defMagic;
     if(sars)extra.sars=sars;
     return Object.keys(extra).length?Object.assign({},result,extra):result;
@@ -5054,6 +5204,8 @@ function playerBattleView(){
     throwWeapon:SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(weaponType),
     hitRight:Math.trunc(n(compliance.hitRight)),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
     otherDamage:Math.trunc(n(compliance.otherDamage)),otherDefc:Math.trunc(n(compliance.otherDefc)),
+    suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
+    suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
     canMove:battleStatusCanMove(desc),
     level:Math.max(1,Math.trunc(n(state.level))),elements:battleElementsForDesc(desc)
   };
@@ -5929,9 +6081,19 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
   }
   return duck;
 }
+function sourceSuitDuckCheck(defender,options={}){
+  // fixed BATTLE_AttackSeq: this is a second independent dodge after BATTLE_DuckCheck.
+  // It still runs when GUARD / immobility made BATTLE_DuckCheck return FALSE; only COMBO skips it.
+  if(options.sourceCombo||options.skipSuitDodge)return {dodged:false,power:0,roll:null};
+  const power=Math.trunc(n(defender?.suitDuckPower));
+  if(power<=0)return {dodged:false,power,roll:null};
+  const roll=cRand(0,99); // rand()%100
+  return {dodged:roll<power,power,roll};
+}
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
-  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD or BATTLE_CanMoveCheck()==FALSE.
+  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / immobility, while the
+  // separate suit-dodge branch below still executes unless this is COMBO/already checked.
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
   if(!disableDodge&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
@@ -5941,8 +6103,15 @@ function resolveNormalAttack(attacker,defender,options={}){
     }
   }
   const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
-  // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
+  // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進普通閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
+  const suitDuck=sourceSuitDuckCheck(defender,options);
+  if(suitDuck.dodged){
+    return {
+      damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck,
+      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll
+    };
+  }
 
   const baseCriticalRaw=battleCriticalChance(attacker,defender);
   const criticalChanceMultiplier=Number.isFinite(Number(options.criticalChanceMultiplier))
@@ -6033,8 +6202,9 @@ function battleCounterChance(attacker,defender){
   per=Math.trunc(per);
 
   if(attacker?.type==='player'){
-    // BATTLE_CounterCheckPlayer：CriPer * CounterTbl * 0.1 + Luck。
-    per=per*sourceCounterWeaponFactor(attacker?.weaponType,defender?.weaponType)*.1+n(attacker?.luck);
+    // fixed _SUIT_ADDENDUM: Player counter adds CHAR_WORKCOUNTER after weapon factor + Luck.
+    per=per*sourceCounterWeaponFactor(attacker?.weaponType,defender?.weaponType)*.1
+      +n(attacker?.luck)+n(attacker?.suitCounter);
   }else{
     // Pet/Enemy 使用 BATTLE_CounterCheckPet，不套 CounterTbl；NoGuard 額外反擊率已由 counterBonus 帶入。
     per+=n(attacker?.counterBonus);
@@ -6175,7 +6345,23 @@ function sourceLogAcupunctureReaction(reaction){
     reaction.attackerAfter<=0?'bad':''
   );
 }
-function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false}={}){
+function sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r){
+  if(attackerDesc?.kind!=='player'||!targetDesc||!r||n(r.damage)<=0)return null;
+  const suit=sourcePlayerSuitWork(state);
+  const power=Math.trunc(n(suit.SUITPOISON));
+  if(power<=0)return null;
+
+  // fixed _SUIT_ADDPART4: only when no other gBattleStausChange was already selected,
+  // SUITPOISON chooses poison, turn=3, and passes its Work value as PerOffset.
+  const check=battleStatusChance(
+    attackerDesc,targetDesc,'poison',
+    {perOffset:power,range:40,bai:2,forceGeneral:true}
+  );
+  const applied=!!(check.allowed&&check.success&&battleStatusApply(targetDesc,'poison',3));
+  if(applied)addLog(battleStatusDescName(targetDesc)+' 受到套裝帶毒效果，陷入中毒。','bad');
+  return {power,check,applied,storedTurns:applied?4:0};
+}
+function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false,suppressSuitPoison=false}={}){
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
@@ -6203,6 +6389,9 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   sourceFinishAcupunctureReaction(acupuncture);
   // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
+  const suitPoison=(!counter&&!suppressSuitPoison)
+    ?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
+  if(suitPoison)r.suitPoison=suitPoison;
   if(!deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(!deferAddProfit)sourceProcessBattleDeathsAtAddProfit();
   const after=battleStatusHp(targetDesc);
@@ -6482,6 +6671,9 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
   battleStatusWakeOnDamage(targetDesc,r.damage);
+  const suitPoison=options.suppressSuitPoison
+    ?null:sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
+  if(suitPoison)r.suitPoison=suitPoison;
   if(!options.deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(r.guardian){
     addLog(actual.name+' 發動忠犬護住 '+target.name+'，代受 '+r.damage+' 傷害'+(r.critical?'（會心）':'')+'。',actual.hp<=0?'bad':style);
@@ -6516,9 +6708,8 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 function sourceInitialDodgeOnly(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
-  if(disableDodge)return {dodged:false,duckRaw:0};
 
-  if(n(defender?.skillDuckPower)>0){
+  if(!disableDodge&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
@@ -6529,11 +6720,18 @@ function sourceInitialDodgeOnly(attacker,defender,options={}){
     }
   }
 
-  const duck=sourceBattleDuckTotal(attacker,defender,options);
-  if(cRand(1,10000)<=duck){
+  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
+  if(!disableDodge&&cRand(1,10000)<=duck){
     return {dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck};
   }
-  return {dodged:false,duckRaw:duck};
+  const suitDuck=sourceSuitDuckCheck(defender,options);
+  if(suitDuck.dodged){
+    return {
+      dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,
+      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll
+    };
+  }
+  return {dodged:false,duckRaw:duck,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll};
 }
 // fixed BATTLE_AttackSeq() Guardian caller audit (V1.12):
 // - real substitution: BATTLE_Attack, BATTLE_Attack_FIREKILL, BATTLE_BattleModel_ATTACK,
@@ -6576,7 +6774,7 @@ function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null)
   // Guardian 接手後不做第二次 dodge，也不沿用主人 GUARD；傷害/critical 以 Guardian 自身能力重算。
   const r=resolveNormalAttack(attacker,defender,Object.assign({},options,{
     guarding:guardian?false:!!options.guarding,
-    disableDodge:true
+    disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
   r.originalTargetDesc={kind:'player'};
@@ -6880,7 +7078,7 @@ function sourceApplyPlayerConfusionRangedHit(targetDesc,r,{breakthrow=false}={})
     // fixed BATTLE_Attack order for BREAKTHROW:
     // DamageSub/WakeUp -> StatusAttackCheck(paralysis) -> ItemCrush -> AddProfit.
     battleApplyPhysicalHit({kind:'player'},resolvedTarget,r,{
-      confusion:true,deferItemCrush:true,deferAddProfit:true
+      confusion:true,deferItemCrush:true,deferAddProfit:true,suppressSuitPoison:true
     });
     paralysis=sourcePlayerBreakthrowParalysisDesc(resolvedTarget,r);
     sourceBattleFinalizeItemCrushRng(r);
@@ -7128,7 +7326,9 @@ function sourcePerformPlayerThrowWeaponAttack(actor,options={}){
     }
     const r=playerAttackResult(target);
     const deferItemCrush=type===19;
-    const actual=applyFriendlyEnemyHit('player','你',target,r,null,{deferItemCrush});
+    const actual=applyFriendlyEnemyHit('player','你',target,r,null,{
+      deferItemCrush,suppressSuitPoison:type===19
+    });
     let paralysis=null;
     if(type===19){
       // fixed BATTLE_Attack order: DamageSub/WakeUp -> BREAKTHROW paralysis -> ItemCrush.
@@ -7926,7 +8126,7 @@ function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null)
   // but caller defindex is never updated, so DamageSub still hits the original Player.
   const r=resolveNormalAttack(attacker,calcDefender,Object.assign({},options,{
     guarding:guardian?false:guarding,
-    disableDodge:true
+    disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
   r.originalTargetDesc={kind:'player'};
@@ -7955,7 +8155,7 @@ function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
   const localGuarding=guardian?false:!!originalGuarding;
   const multiplier=localGuarding?1.3:.7;
   const r=resolveNormalAttack(attacker,calcDefender,{
-    guarding:false,disableDodge:true,preGuardDamageMultiplier:multiplier
+    guarding:false,disableDodge:true,skipSuitDodge:true,preGuardDamageMultiplier:multiplier
   });
   r.duckRaw=dodge.duckRaw;
   r.originalTargetDesc={kind:'player'};
@@ -15779,7 +15979,7 @@ function sourcePerformCombo(order,index,options={}){
     if(!attacker)continue;
     // 原 BATTLE_Combo -> BATTLE_AttackSeq(..., BATTLE_COM_COMBO)：
     // 完全跳過 DuckCheck，Guardian 初值 -2 也使 GuardianCheck 不執行。
-    const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true});
+    const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true,sourceCombo:true,skipSuitDodge:true});
     if(n(r.damage)<=0){r.damage=1;r.miss=false}
     const calculatedDamage=Math.max(1,Math.trunc(n(r.damage)));
     rawTotal+=calculatedDamage;

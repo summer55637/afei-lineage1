@@ -76,6 +76,9 @@ const ctx={
   n:v=>Number.isFinite(Number(v))?Number(v):0,
   sourcePlayerItemSlots:t=>t.playerItemSlots,
   sourcePlayerEquipTemplateForExisting:i=>templates.get(Number(i))||null,
+  // V2.18 adds a source-backed suit branch to the shared callback gate. This legacy
+  // V2.13 fixture intentionally uses item 9999, which is not a fixed suit template.
+  sourcePlayerFixedSuitTemplate:()=>false,
   SOURCE_PLAYER_SPECIAL_EQUIP_IDS:new Set([2884])
 };
 vm.createContext(ctx);
