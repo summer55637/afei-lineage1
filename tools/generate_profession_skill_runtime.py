@@ -45,7 +45,7 @@ def active_define(text:str,name:str)->bool:
 
 def parse_rows(raw:bytes):
     rows=[]
-    for raw_line in raw.decode("utf-8").splitlines():
+    for raw_line in raw.decode("gb18030").splitlines():
         if not raw_line or raw_line.startswith("#") or raw_line.strip()=="":
             continue
         line=raw_line.replace("\t"," ").lstrip(" ")
@@ -95,7 +95,7 @@ def main():
     c_raw=fetch(PROFESSION_C_URL,EXPECTED_PROFESSION_C_BLOB)
     v_raw=fetch(VERSION_URL,EXPECTED_VERSION_BLOB)
     rows=parse_rows(p_raw)
-    pairs,common=parse_dispatch(c_raw.decode("utf-8"))
+    pairs,common=parse_dispatch(c_raw.decode("latin1"))
     dispatch={x["name"] for x in pairs}
     unique_funcs=list(dict.fromkeys(x["func"] for x in rows))
     assert len(unique_funcs)==57,len(unique_funcs)
@@ -115,7 +115,7 @@ def main():
     assert holes==[63,64,65],holes
     by_prof={str(cls):sum(1 for x in rows if x["professionClass"]==cls) for cls in (1,2,3)}
 
-    version=v_raw.decode("utf-8")
+    version=v_raw.decode("latin1")
     fixed={
         "professionSkill":active_define(version,"_PROFESSION_SKILL"),
         "charProfession":active_define(version,"_CHAR_PROFESSION"),
