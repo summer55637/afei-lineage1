@@ -2115,27 +2115,110 @@ function sourceProfessionSkillMenu(target=state){
   }
   return out;
 }
+const SOURCE_PROFESSION_TARGET=Object.freeze({
+  MYSELF:0,OTHER:1,ALL_MYSIDE:2,ALL_OTHERSIDE:3,ALL:4,NONE:5,
+  OTHER_WITHOUT_MYSELF:6,WITHOUT_MYSELF_AND_PET:7,ONE_ROW:8,ONE_LINE:9,DEATH:10
+});
+const SOURCE_PROFESSION_KIND=Object.freeze({BATTLE:1,ASSIST:2,ADVANCE:3});
+const SOURCE_PROFESSION_BATTLE_TO_NO=Object.freeze({
+  SIDE_0:20,SIDE_1:21,ALL:22,SIDE_1_B_ROW:23,SIDE_1_F_ROW:24,SIDE_0_F_ROW:25,SIDE_0_B_ROW:26
+});
+function sourceProfessionKindSemantic(kind){
+  switch(Math.trunc(n(kind))){
+    case SOURCE_PROFESSION_KIND.BATTLE:return 'battle';
+    case SOURCE_PROFESSION_KIND.ASSIST:return 'assist';
+    case SOURCE_PROFESSION_KIND.ADVANCE:return 'advance';
+    default:return 'unknown';
+  }
+}
+function sourceProfessionTargetSemantic(targetType){
+  switch(Math.trunc(n(targetType))){
+    case SOURCE_PROFESSION_TARGET.MYSELF:return 'myself';
+    case SOURCE_PROFESSION_TARGET.OTHER:return 'other';
+    case SOURCE_PROFESSION_TARGET.ALL_MYSIDE:return 'all-my-side';
+    case SOURCE_PROFESSION_TARGET.ALLOTHERSIDE:return 'all-other-side';
+    case SOURCE_PROFESSION_TARGET.ALL:return 'all';
+    case SOURCE_PROFESSION_TARGET.NONE:return 'none';
+    case SOURCE_PROFESSION_TARGET.OTHER_WITHOUT_MYSELF:return 'other-without-myself';
+    case SOURCE_PROFESSION_TARGET.WITHOUT_MYSELF_AND_PET:return 'without-myself-and-pet';
+    case SOURCE_PROFESSION_TARGET.ONE_ROW:return 'one-row';
+    case SOURCE_PROFESSION_TARGET.ONE_LINE:return 'one-line';
+    case SOURCE_PROFESSION_TARGET.DEATH:return 'death';
+    default:return 'unknown';
+  }
+}
+function sourceProfessionTargetToNo({targetType,selectedToNo,battleMyNo=0}={}){
+  const type=Math.trunc(Number(targetType));
+  const myNo=Math.trunc(Number(battleMyNo));
+  if(!Number.isFinite(Number(targetType))||!Number.isFinite(Number(battleMyNo))||myNo<0||myNo>19){
+    return {ok:false,reason:'target-source-invalid',targetType:type,battleMyNo:myNo};
+  }
+  const selected=Math.trunc(Number(selectedToNo));
+  const selectedValid=selectedToNo!=null&&!(typeof selectedToNo==='string'&&!selectedToNo.trim())
+    &&Number.isFinite(Number(selectedToNo))&&selected>=0&&selected<=19;
+  const side0=myNo<10;
+
+  // fixed client battlemenu.cpp / ai_setting.cpp:
+  // TARGET is the PETSKILL target enum. P|slot|toNo carries a battle number:
+  // direct entries 0..19, side/all pseudo targets 20..22, and row pseudo targets 23..26.
+  switch(type){
+    case SOURCE_PROFESSION_TARGET.MYSELF:
+    case SOURCE_PROFESSION_TARGET.NONE:
+      return {ok:true,toNo:myNo,source:'battle-my-no'};
+    case SOURCE_PROFESSION_TARGET.OTHER:
+    case SOURCE_PROFESSION_TARGET.OTHER_WITHOUT_MYSELF:
+    case SOURCE_PROFESSION_TARGET.WITHOUT_MYSELF_AND_PET:
+    case SOURCE_PROFESSION_TARGET.ONE_LINE:
+    case SOURCE_PROFESSION_TARGET.DEATH:
+      return selectedValid
+        ?{ok:true,toNo:selected,source:'selected-direct'}
+        :{ok:false,reason:'target-unresolved',targetType:type,battleMyNo:myNo};
+    case SOURCE_PROFESSION_TARGET.ALL_MYSIDE:
+      return {ok:true,toNo:side0?SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_0:SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_1,source:'my-side'};
+    case SOURCE_PROFESSION_TARGET.ALLOTHERSIDE:
+      return {ok:true,toNo:side0?SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_1:SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_0,source:'other-side'};
+    case SOURCE_PROFESSION_TARGET.ALL:
+      return {ok:true,toNo:SOURCE_PROFESSION_BATTLE_TO_NO.ALL,source:'all'};
+    case SOURCE_PROFESSION_TARGET.ONE_ROW:
+      if(!selectedValid)return {ok:false,reason:'target-unresolved',targetType:type,battleMyNo:myNo};
+      if(selected<=4)return {ok:true,toNo:SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_0_B_ROW,source:'selected-row',selectedToNo:selected};
+      if(selected<=9)return {ok:true,toNo:SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_0_F_ROW,source:'selected-row',selectedToNo:selected};
+      if(selected<=14)return {ok:true,toNo:SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_1_B_ROW,source:'selected-row',selectedToNo:selected};
+      return {ok:true,toNo:SOURCE_PROFESSION_BATTLE_TO_NO.SIDE_1_F_ROW,source:'selected-row',selectedToNo:selected};
+    default:
+      return {ok:false,reason:'target-type-unported',targetType:type,battleMyNo:myNo};
+  }
+}
 function sourceProfessionBattleCommandPlan({
-  slot,toNo,target=state
+  slot,toNo,selectedToNo,battleMyNo=0,target=state
 }={}){
   const entry=sourcePlayerProfessionSkillAt(slot,target);
   if(!entry)return {ok:false,reason:'skill-slot-empty',slot:Math.trunc(n(slot))};
   const row=sourceProfessionSkillTemplate(entry.skillId);
   if(!row)return {ok:false,reason:'skill-not-found',slot:entry.slot,skillId:entry.skillId};
-  const resolvedToNo=Math.trunc(Number(toNo));
-  if(toNo==null||(typeof toNo==='string'&&!toNo.trim())||!Number.isFinite(Number(toNo))||resolvedToNo<0){
-    return {
-      ok:false,reason:'target-unresolved',slot:entry.slot,skillId:entry.skillId,
-      clientBattleUse:Math.trunc(n(row.useFlag))===1
-    };
+
+  const explicitToNo=toNo!=null&&!(typeof toNo==='string'&&!toNo.trim())&&Number.isFinite(Number(toNo))&&Math.trunc(Number(toNo))>=0;
+  const targetPlan=explicitToNo
+    ?{ok:true,toNo:Math.trunc(Number(toNo)),source:'explicit-toNo'}
+    :sourceProfessionTargetToNo({
+      targetType:Math.trunc(n(row.target)),selectedToNo,battleMyNo
+    });
+  if(!targetPlan.ok){
+    return Object.assign({
+      ok:false,reason:targetPlan.reason||'target-unresolved',slot:entry.slot,skillId:entry.skillId,
+      clientBattleUse:Math.trunc(n(row.useFlag))===1,targetType:Math.trunc(n(row.target)),
+      kind:Math.trunc(n(row.kind)),kindSemantic:sourceProfessionKindSemantic(row.kind),
+      targetSemantic:sourceProfessionTargetSemantic(row.target)
+    },{targetPlan});
   }
+  const resolvedToNo=Math.trunc(n(targetPlan.toNo));
   const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
   const use=sourceProfessionSkillUsePreflight({
     skillId:entry.skillId,rawSkillLevel:displayLevel,
     professionClass:Math.trunc(n(target?.professionClass)),
     mp:Math.trunc(n(target?.mp)),isPlayer:true,toNo:resolvedToNo
   });
-  if(!use.ok)return Object.assign({slot:entry.slot,skillId:entry.skillId,toNo:resolvedToNo},use);
+  if(!use.ok)return Object.assign({slot:entry.slot,skillId:entry.skillId,toNo:resolvedToNo,targetPlan},use);
   const slotHex=entry.slot.toString(16).toUpperCase();
   const toNoHex=resolvedToNo.toString(16).toUpperCase();
   return {
@@ -2143,9 +2226,183 @@ function sourceProfessionBattleCommandPlan({
     slotHex,toNoHex,command:'P|'+slotHex+'|'+toNoHex,
     clientBattleUse:Math.trunc(n(row.useFlag))===1,
     useFlag:Math.trunc(n(row.useFlag)),targetType:Math.trunc(n(row.target)),
-    kind:Math.trunc(n(row.kind)),displayLevel,use
+    targetSemantic:sourceProfessionTargetSemantic(row.target),
+    kind:Math.trunc(n(row.kind)),kindSemantic:sourceProfessionKindSemantic(row.kind),
+    displayLevel,use,targetPlan
   };
 }
+function sourceProfessionAttackSkillTier(displayLevel){
+  const level=Math.trunc(n(displayLevel));
+  if(level>=100)return 10;
+  if(level>90)return 9;
+  if(level>80)return 8;
+  if(level>70)return 7;
+  if(level>60)return 6;
+  if(level>50)return 5;
+  if(level>40)return 4;
+  if(level>30)return 3;
+  if(level>20)return 2;
+  if(level>10)return 1;
+  return 0;
+}
+function sourceProfessionBattleFunctionSupported(functionName){
+  return functionName==='PROFESSION_BRUST'||functionName==='PROFESSION_CHAIN_ATK';
+}
+function sourceProfessionBattleSkillPrepare({
+  slot,toNo,selectedToNo,battleMyNo=0,target=state,
+  randModulo=sourceRandModulo,randInclusive=cRand
+}={}){
+  if(!enemy)return {ok:false,reason:'not-in-battle',slot:Math.trunc(n(slot))};
+  const plan=sourceProfessionBattleCommandPlan({slot,toNo,selectedToNo,battleMyNo,target});
+  if(!plan.ok)return plan;
+  if(plan.clientBattleUse!==true){
+    return Object.assign({},plan,{ok:false,reason:'client-nonbattle-skill'});
+  }
+  if(!sourceProfessionBattleFunctionSupported(plan.use.functionName)){
+    return Object.assign({},plan,{ok:false,reason:'battle-function-unported'});
+  }
+
+  // fixed PROFESSION_SKILL_Use(): MP is deducted at command receipt, BEFORE the
+  // profession callback stores COM1/COM2/COM3 and before the later battle turn executes.
+  target.mp=plan.use.mpAfter;
+  const proficiency=sourceProfessionSkillPostDispatchProficiency({
+    target,slot:plan.slot,dispatchRet:1,targetIsPet:false,
+    randModulo,randInclusive
+  });
+  sourceProfessionLogProficiencyResult(proficiency);
+  return Object.assign({},plan,{
+    prepared:true,mpAfter:Math.trunc(n(target.mp)),
+    functionName:plan.use.functionName,
+    commonCommand:plan.use.commonCommand,
+    attackSkillTier:sourceProfessionAttackSkillTier(plan.displayLevel),
+    proficiency
+  });
+}
+function sourceProfessionEnemyByBattleSlot(toNo){
+  const slot=Math.trunc(Number(toNo));
+  if(!enemy||slot<10||slot>19)return null;
+  return (enemy.units||[]).find(unit=>10+Math.trunc(n(unit?.battleSlot))===slot)||null;
+}
+function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
+  const base=playerBattleView();
+  if(!base||!target)return null;
+  const attacker=Object.assign({},base,attackOptions.attackerOverride||{});
+  const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+  const originalGuarding=!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion');
+  const dodge=sourceInitialDodgeOnly(attacker,enemyBattleView(target),{guarding:originalGuarding});
+  if(dodge.dodged){
+    dodge.actualTarget=target;
+    dodge.originalTarget=target;
+    return dodge;
+  }
+
+  // fixed battle_profession_attack_fun() seeds Guardian=-1 and BATTLE_AttackSeq()
+  // may calculate against the Guardian, but the caller never rewrites defindex afterward.
+  // DamageSub / WakeUp / ItemCrush therefore still hit the ORIGINAL target.
+  const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,null);
+  const calcTarget=guardian||target;
+  const calcDesc={kind:'enemy',unit:calcTarget,unitId:calcTarget.id};
+  const calcGuarding=guardian
+    ?!!calcTarget.guardThisTurn&&!battleStatusActive(calcDesc,'confusion')
+    :originalGuarding;
+  const opts=Object.assign({},attackOptions,{guarding:calcGuarding,disableDodge:true});
+  delete opts.attackerOverride;
+  const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),opts);
+  r.duckRaw=dodge.duckRaw;
+  r.actualTarget=target;
+  r.originalTarget=target;
+  if(guardian){
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardianCalcOnly=guardian;
+    r.guardianSourceBug='battle_profession_attack_fun-defindex-not-updated';
+  }
+  return r;
+}
+function sourceProfessionBattleSkillExecute(prepared,actor=null){
+  if(!prepared?.ok||prepared.prepared!==true){
+    return {handled:false,reason:'profession-command-not-prepared'};
+  }
+  const toNo=Math.trunc(n(prepared.toNo));
+  if(toNo<10){
+    // fixed battle.c direct-attack profession gate rejects same-side targets here;
+    // MP/proficiency were already consumed earlier by PROFESSION_SKILL_Use().
+    return {handled:true,noAction:true,reason:'same-side-target',toNo};
+  }
+  if(toNo>19){
+    return {handled:true,noAction:true,reason:'unsupported-pseudo-target-for-direct-physical',toNo};
+  }
+  const target=sourceProfessionEnemyByBattleSlot(toNo);
+  if(!target||n(target.hp)<=0){
+    return {handled:true,noAction:true,reason:'target-dead-or-missing',toNo};
+  }
+  if(enemyUnitHidden(target)){
+    // battle_profession_attack_fun() explicitly returns on BATTLE_COM_S_EARTHROUND0;
+    // it does not TargetAdjust to a replacement enemy.
+    return {handled:true,noAction:true,reason:'target-earthround',toNo,targetUnitId:target.id};
+  }
+
+  const row=sourceProfessionSkillTemplate(prepared.skillId);
+  const name=String(row?.name||('Skill '+prepared.skillId));
+  const first=sourceProfessionPhysicalCalcOnlyResult(target);
+  if(!first)return {handled:true,noAction:true,reason:'attack-result-missing',toNo,targetUnitId:target.id};
+
+  // Unlike ordinary BATTLE_Attack, the profession helper has no SUITPOISON branch.
+  const firstActual=applyFriendlyEnemyHit('player','你',target,first,null,{suppressSuitPoison:true});
+  let second=null,secondActual=null,chainRoll=null,chainHit=null,chainEffectiveTier=null;
+
+  if(prepared.functionName==='PROFESSION_BRUST'){
+    // fixed source quirk: BRUST multiplies CHAR_WORKFIXSTR, but the immediately following
+    // BATTLE_DamageCalc() reads CHAR_WORKATTACKPOWER. Do NOT "fix" it into current-hit damage.
+    const sourceFixedStrMultiplier=prepared.attackSkillTier*3+100;
+    addLog('你施放「'+name+'」；fixed 原 C 本次只改 FIXSTR，當下傷害仍讀 WORKATTACKPOWER。','good');
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo,targetUnitId:target.id,first,firstActual,
+      attackSkillTier:prepared.attackSkillTier,sourceFixedStrMultiplier,
+      sourceBrustAttackPowerUnchanged:true,noOrdinaryCounter:true
+    };
+  }
+
+  if(prepared.functionName==='PROFESSION_CHAIN_ATK'){
+    // fixed order: RAND(1,100) first, then tier adjustment, then AttackSeq.
+    chainRoll=cRand(1,100);
+    chainEffectiveTier=prepared.attackSkillTier;
+    if(chainEffectiveTier%10!==0)chainEffectiveTier+=1;
+    chainHit=chainEffectiveTier*5+15;
+    const extra=chainRoll<=chainHit;
+    addLog('你施放「'+name+'」；連擊判定 '+chainRoll+' / '+chainHit+(extra?'，第二擊發動。':'，未發動第二擊。'),extra?'good':'');
+    if(extra&&state.hp>0&&n(target.hp)>0){
+      // The second hit is a direct fixed BATTLE_Attack() on the SAME raw defNo:
+      // real Guardian substitution and normal on-hit/item-crush rules apply, but the
+      // profession command breaks afterward and never enters the ordinary Counter loop.
+      second=playerAttackResult(target);
+      secondActual=applyFriendlyEnemyHit('player','你',target,second);
+    }
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo,targetUnitId:target.id,first,firstActual,second,secondActual,
+      attackSkillTier:prepared.attackSkillTier,chainEffectiveTier,chainRoll,chainHit,
+      extraAttack:!!second,noOrdinaryCounter:true
+    };
+  }
+  return {handled:false,reason:'battle-function-unported',skillId:prepared.skillId};
+}
+function sourceProfessionBattleFailureText(reason){
+  return ({
+    'not-in-battle':'目前不在戰鬥中',
+    'skill-slot-empty':'職業技能槽是空的',
+    'skill-not-found':'找不到 fixed profession skill',
+    'target-unresolved':'目前沒有可用的職業技能目標',
+    'target-type-unported':'此 TARGET 類型尚未接入',
+    'profession-mismatch':'目前職業不符合技能',
+    'skill-level':'技能熟練度不足',
+    'mp-short':'MP 不足',
+    'mp-cost-invalid':'fixed MP cost 無效',
+    'client-nonbattle-skill':'這招不是 client 戰鬥技能',
+    'battle-function-unported':'這招的戰鬥函式尚未移植'
+  })[reason]||String(reason||'未知原因');
+}
+
 function sourceProfessionEncounterRate(option){
   const m=String(option||'').match(/倍%([+-]?\d+)/);
   return m?Math.trunc(Number(m[1])):0;
@@ -17160,9 +17417,24 @@ function sourceEnemyCWait(actor){
   }
   return true;
 }
-function attackTurn(){
+function attackTurn(options={}){
   if(!enemy)return;
-  const order=normalBattleOrder({playerCommand:'attack'});
+  const professionSlot=Number.isInteger(Number(options?.professionSlot))
+    ?Math.trunc(Number(options.professionSlot)):null;
+  let professionPrepared=null;
+  if(professionSlot!==null){
+    const selected=targetEnemyUnit();
+    const selectedToNo=selected?10+Math.trunc(n(selected.battleSlot)):null;
+    professionPrepared=sourceProfessionBattleSkillPrepare({
+      slot:professionSlot,selectedToNo,battleMyNo:0,target:state
+    });
+    if(!professionPrepared.ok){
+      addLog('職業技能無法施放：'+sourceProfessionBattleFailureText(professionPrepared.reason)+'。','bad');
+      render();
+      return professionPrepared;
+    }
+  }
+  const order=normalBattleOrder({playerCommand:professionPrepared?'profession':'attack'});
 
   for(const actor of order){
     sourceProcessBattleActorOuterBoundary();
@@ -17222,10 +17494,18 @@ function attackTurn(){
     }
 
     if(actor.kind==='player'){
-      const result=sourcePerformPlayerCommonAttack(actor,{allowCounter:true});
-      if(!result.attackCount){
-        if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
-        continue;
+      if(professionPrepared){
+        const result=sourceProfessionBattleSkillExecute(professionPrepared,actor);
+        professionPrepared.execution=result;
+        if(result?.noAction){
+          addLog('「'+String(sourceProfessionSkillTemplate(professionPrepared.skillId)?.name||'職業技能')+'」沒有產生效果：'+sourceProfessionBattleFailureText(result.reason)+'。');
+        }
+      }else{
+        const result=sourcePerformPlayerCommonAttack(actor,{allowCounter:true});
+        if(!result.attackCount){
+          if(livingEnemyUnits().length)addLog('敵方目前都在地球一周的繞背狀態，暫時沒有可指定的目標。');
+          continue;
+        }
       }
     }else if(actor.kind==='pet'){
       const pet=activePet();
@@ -17257,6 +17537,7 @@ function attackTurn(){
   if(!livingEnemyUnits().length){winBattle();return;}
   syncEnemyTarget();battleFieldTick();
   render();
+  return professionPrepared;
 }
 function guardTurn(){
   if(!enemy)return;
@@ -17709,6 +17990,28 @@ function renderPlayerElements(){
     button.disabled=!checked.valid;
   }
 }
+function renderProfessionBattleActions(){
+  const info=$('#professionBattleInfo'),actions=$('#professionBattleActions');
+  if(!info||!actions)return;
+  const rows=sourceProfessionSkillMenu(state).filter(Boolean);
+  const learnedBattle=rows.filter(row=>row.useFlag===1);
+  const supported=learnedBattle.filter(row=>sourceProfessionBattleFunctionSupported(row.functionName));
+  const unsupportedCount=learnedBattle.length-supported.length;
+
+  if(!supported.length){
+    info.textContent='V2.25 live：暴擊／連環攻擊。角色目前尚未學會已接入的戰鬥職技。'
+      +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
+    actions.innerHTML='';
+    return;
+  }
+  info.textContent='固定 client TARGET → battle toNo 已接入；目前鎖定 '+(targetEnemyUnit()?.name||'—')
+    +(unsupportedCount>0?'；另有 '+unsupportedCount+' 招已學戰鬥技能尚未接函式。':'。');
+  actions.innerHTML=supported.map(row=>{
+    const disabled=!enemy||state.hp<=0||Math.trunc(n(state.mp))<row.costMp;
+    return '<button data-profession-battle-slot="'+row.slot+'" '+(disabled?'disabled':'')+'>'
+      +escapeHtml(row.name)+' Lv'+row.displayLevel+' · MP '+row.costMp+'</button>';
+  }).join('');
+}
 function render(){
   if(!state)return;
   $('#level').textContent=state.level;
@@ -17760,6 +18063,7 @@ function render(){
   renderMapOptions();
   renderEncounterOptions();
   renderEnemy();
+  renderProfessionBattleActions();
   if(playerPigActive()){
     const pigRemain=playerPigRemainingSeconds();
     $('#battleState').textContent+=' · 黑烏力化'+(pigRemain>0?' '+pigRemain+'秒':' · 戰鬥結束後解除');
@@ -18507,6 +18811,13 @@ $('#autoCaptureBtn').addEventListener('click',()=>{
 });
 $('#captureBtn').addEventListener('click',()=>captureTurn(true));
 $('#guardBtn').addEventListener('click',()=>guardTurn());
+$('#professionBattleActions').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-profession-battle-slot]');if(!b||b.disabled)return;
+  const slot=Math.trunc(Number(b.dataset.professionBattleSlot));
+  if(!Number.isFinite(slot))return;
+  attackTurn({professionSlot:slot});
+  save();render();
+});
 $('#healBtn').addEventListener('click',()=>{
   state.hp=state.maxHp;
   state.mp=state.maxMp;
