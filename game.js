@@ -101,6 +101,8 @@ let professionEncounterUntilSec=0;
 let battlePlayerProfessionHitState=null;
 let battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};
 let battlePlayerProfessionStatRound=null;
+let battleProfessionScapegoat=null;
+let battlePlayerFixedToughWork=null;
 let battlePlayerAttackWork=null;
 
 const $=s=>document.querySelector(s);
@@ -2268,7 +2270,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_CHAOS'
     ||functionName==='PROFESSION_ENRAGE'
     ||functionName==='PROFESSION_ENERGY_COLLECT'
-    ||functionName==='PROFESSION_FOCUS';
+    ||functionName==='PROFESSION_FOCUS'
+    ||functionName==='PROFESSION_SCAPEGOAT';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2591,9 +2594,90 @@ function sourceProfessionWarriorAssistTurns(attackSkillTier){
   const tier=Math.trunc(n(attackSkillTier));
   return tier>=10?5:(tier>=5?4:3);
 }
+
+function sourceProfessionScapegoatSourceSlots(tier,battleMyNo=0){
+  const skillTier=Math.trunc(n(tier));
+  const myNo=clamp(Math.trunc(n(battleMyNo)),0,19);
+  const sideBase=myNo>=10?10:0;
+  const local=myNo-sideBase;
+  if(skillTier>=10){
+    const slots=[];
+    for(let i=0;i<10;i++){
+      const slot=sideBase+i;
+      if(slot!==myNo)slots.push(slot);
+    }
+    return slots;
+  }
+  if(skillTier>=5){
+    return [5,6,7,8,9].map(i=>sideBase+i);
+  }
+  return [sideBase+((local+5)%10)];
+}
+function sourceProfessionScapegoatProtectedPets(tier,battleMyNo=0){
+  const slots=sourceProfessionScapegoatSourceSlots(tier,battleMyNo);
+  const pets=sourceBattlePlayerPets().filter(p=>petIsBattleActive(p)&&!battlePetOutIds.has(p.id));
+  // Current web battle runtime materializes Player slot 0 + at most one active Pet slot 5.
+  // Keep the fixed covered-slot plan separately; do not invent absent party members/pets.
+  if(!slots.some(slot=>slot%10===5))return [];
+  return Math.trunc(n(tier))<5?pets.slice(0,1):pets;
+}
+function sourceProfessionScapegoatGuardianForPet(unit,pet){
+  const st=battleProfessionScapegoat;
+  if(!st||!pet||!st.protectedPetIds?.has?.(pet.id))return null;
+  if(!state||n(state.hp)<=0)return null;
+  if(!petIsBattleActive(pet)||!petIsAlive(pet)||sourcePlayerPetHidden(pet))return null;
+
+  // fixed BATTLE_GuardianCheck: all indirect / throw weapons bypass Guardian.
+  const wt=Math.trunc(n(unit?.weaponType));
+  if(wt===4||wt===17||wt===18||wt===19)return null;
+
+  const desc={kind:'player'};
+  // Source rejects sleep/confusion/paralysis/stone/barrier/dizzy/dragnet/instigate/doom.
+  // Every currently modeled blocking state is covered by CanMove, with confusion explicit.
+  if(!battleStatusCanMove(desc)||battleStatusActive(desc,'confusion')||battleStatusActive(desc,'barrier'))return null;
+  return state;
+}
+function sourceProfessionScapegoatExecute(prepared,name){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const battleMyNo=Math.trunc(n(prepared?.toNo));
+  const sourceSlots=sourceProfessionScapegoatSourceSlots(tier,battleMyNo);
+  const pets=sourceProfessionScapegoatProtectedPets(tier,battleMyNo);
+  const protectedPetIds=new Set(pets.map(p=>p.id));
+
+  // fixed callback mutates FIXTOUGH only, after this round's WORKDEFENCEPOWER was already built.
+  // Normal physical damage therefore keeps the old Work defense, while later same-round callers
+  // that explicitly read FIXTOUGH see this reduced value.
+  const beforeView=playerBattleView();
+  const fixedToughBefore=Math.trunc(n(beforeView?.fixedTough));
+  const tghPenalty=30-tier*2;
+  const fixedToughScale=100-tghPenalty; // 70 + tier*2
+  const fixedToughAfter=Math.trunc(fixedToughBefore*fixedToughScale/100);
+  battlePlayerFixedToughWork=fixedToughAfter;
+
+  battleProfessionScapegoat={
+    tier,battleMyNo,sourceSlots:sourceSlots.slice(),protectedPetIds,
+    fixedToughBefore,fixedToughAfter,fixedToughScale,tghPenalty,
+    appliedBattleTurn:Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)))
+  };
+
+  addLog('你施放「'+name+'」：本輪後續近戰物理攻擊可替出戰寵物代擋；'
+    +'FIXTOUGH '+fixedToughBefore+' → '+fixedToughAfter
+    +'（WORKDEFENCEPOWER 本輪不重建）。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:String(prepared.functionName||''),
+    toNo:battleMyNo,attackSkillTier:tier,sourceSlots:sourceSlots.slice(),
+    protectedPetIds:[...protectedPetIds],
+    fixedToughBefore,fixedToughAfter,fixedToughScale,tghPenalty,
+    guardianUntilNextPreCommand:true,noDamage:true,noOrdinaryCounter:true
+  };
+}
 function sourceProfessionWarriorAssistExecute(prepared,name){
   const tier=Math.trunc(n(prepared?.attackSkillTier));
   const functionName=String(prepared?.functionName||'');
+
+  if(functionName==='PROFESSION_SCAPEGOAT'){
+    return sourceProfessionScapegoatExecute(prepared,name);
+  }
 
   if(functionName==='PROFESSION_ENRAGE'){
     const turns=sourceProfessionWarriorAssistTurns(tier);
@@ -3171,7 +3255,8 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const convoluteName=String(convoluteRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionConvoluteExecute(prepared,convoluteName);
   }
-  if(prepared.functionName==='PROFESSION_ENRAGE'
+  if(prepared.functionName==='PROFESSION_SCAPEGOAT'
+    ||prepared.functionName==='PROFESSION_ENRAGE'
     ||prepared.functionName==='PROFESSION_ENERGY_COLLECT'
     ||prepared.functionName==='PROFESSION_FOCUS'){
     const assistRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -6337,7 +6422,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerFixedToughWork=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -7271,9 +7356,11 @@ function playerBattleView(){
   const quickBase=weaken?Math.trunc(n(professionStats.quick)*.8):n(professionStats.quick);
   const arm=compliance.arm||null;
   const weaponType=arm?Math.trunc(n(arm.type)):0;
+  const fixedTough=battlePlayerFixedToughWork==null
+    ?defenseBase:Math.trunc(n(battlePlayerFixedToughWork));
   return {
     type:'player',attack,defense:defenseBase,stone,
-    fixedTough:defenseBase,
+    fixedTough,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(compliance.fixedLuck??state.luck),drunk,
     weaponType,weaponCritical:arm?Math.trunc(n(arm.critical)):0,
@@ -8577,7 +8664,8 @@ function performConfusionAttack(actor,statusTurn,options={}){
 function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   if(!unit||!enemy||state.hp<=0||unit.hp<=0)return;
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
-  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian||primaryResult?.sourcePetGuardCommand)return;
+  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
+    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -8637,7 +8725,8 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
 }
 function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,options={}){
   if(!pet||!unit||!enemy||!petIsBattleActive(pet)||unit.hp<=0)return;
-  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian||primaryResult?.sourcePetGuardCommand)return;
+  if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
+    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand)return;
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
   const maxDepth=Number.isFinite(Number(options.maxDepth))?clamp(Math.trunc(Number(options.maxDepth)),0,5):5;
@@ -8882,10 +8971,56 @@ function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null)
   }
   return r;
 }
+
+function resolveEnemyDirectAttackToPet(unit,pet,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
+  const original=petBattleView(pet);
+  const guardCommand=sourcePlayerPetGuardCommand(pet);
+  const guarding=sourcePlayerPetGuardAdjust(pet);
+  const dodge=sourceInitialDodgeOnly(attacker,original,Object.assign({},options,{
+    guarding,disableDodge:!!options.disableDodge||guardCommand
+  }));
+  dodge.sourcePetGuardCommand=guardCommand;
+  dodge.sourcePetGuardAdjust=guarding;
+  if(dodge.dodged){
+    dodge.originalTargetDesc={kind:'pet',pet,petId:pet.id};
+    dodge.actualTargetDesc={kind:'pet',pet,petId:pet.id};
+    return dodge;
+  }
+
+  // fixed BATTLE_AttackSeq: original Pet completes DuckCheck first; GuardianCheck happens after.
+  const guardian=attacker?.throwWeapon?null:sourceProfessionScapegoatGuardianForPet(unit,pet);
+  const actualDesc=guardian?{kind:'player'}:{kind:'pet',pet,petId:pet.id};
+  const defender=guardian?playerBattleView():original;
+  const r=resolveNormalAttack(attacker,defender,Object.assign({},options,{
+    guarding:guardian?false:guarding,
+    disableDodge:true,skipSuitDodge:true
+  }));
+  r.duckRaw=dodge.duckRaw;
+  r.sourcePetGuardCommand=guardCommand;
+  r.sourcePetGuardAdjust=guarding;
+  r.originalTargetDesc={kind:'pet',pet,petId:pet.id};
+  r.actualTargetDesc=actualDesc;
+
+  if(guardian){
+    // Guardian substitution forces NORMAL damage=1 when the redirected calculation reaches 0.
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.playerGuardian=true;
+    r.professionScapegoat=true;
+    r.protectedPetId=pet.id;
+    r.protectedTarget='pet';
+  }
+  return r;
+}
 function enemyAttackResult(unit=targetEnemyUnit(),options={}){
   return resolveNormalAttack(enemyBattleView(unit),playerBattleView(),options);
 }
 function enemyAttackPetResult(unit,pet,options={}){
+  if(options.sourceGuardianReal===true){
+    const directOptions=Object.assign({},options);
+    delete directOptions.sourceGuardianReal;
+    return resolveEnemyDirectAttackToPet(unit,pet,directOptions);
+  }
   const guardCommand=sourcePlayerPetGuardCommand(pet);
   const guarding=sourcePlayerPetGuardAdjust(pet);
   const r=resolveNormalAttack(enemyBattleView(unit),petBattleView(pet),Object.assign({},options,{
@@ -9467,8 +9602,12 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
 
   if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
     const pet=target.pet;
-    const r=enemyAttackPetResult(unit,pet,attackOptions);
-    const targetDesc={kind:'pet',pet,petId:pet.id};
+    const r=enemyAttackPetResult(unit,pet,Object.assign({},attackOptions,{sourceGuardianReal:true}));
+    const originalDesc={kind:'pet',pet,petId:pet.id};
+    const targetDesc=enemyDirectActualTarget(originalDesc,r)||originalDesc;
+    if(r.playerGuardian){
+      addLog('你發動舍己為友，代替 '+pet.name+' 承受 '+unit.name+' 的攻擊。','good');
+    }
     const beforeApplyResult=beforeApply?beforeApply({target:'pet',pet,targetDesc,r},target):null;
     battleApplyPhysicalHit(
       {kind:'enemy',unit,unitId:unit.id},targetDesc,r,
@@ -9677,7 +9816,7 @@ function sourceEnemyFinalizeWeaponSequenceCounter(unit,seq,options={},rules={}){
   const last=seq.hits[seq.hits.length-1];
   const r=last?.r;
   const targetDesc=last?.targetDesc;
-  if(!r||!targetDesc)return null;
+  if(!r||!targetDesc||r.playerGuardian)return null;
 
   // Some common-loop skills (notably STATUSCHANGE) apply their status inside BATTLE_Attack()
   // before the outer Counter loop. If that status makes the last target unable to move,
@@ -9780,15 +9919,19 @@ function performEnemyPrimaryAttack(actor,unit,options={}){
 
   if(chosen.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
     const pet=chosen.pet;
-    const r=enemyAttackPetResult(unit,pet,attackOptions);
-    const targetDesc={kind:'pet',pet,petId:pet.id};
+    const r=enemyAttackPetResult(unit,pet,Object.assign({},attackOptions,{sourceGuardianReal:true}));
+    const originalDesc={kind:'pet',pet,petId:pet.id};
+    const targetDesc=enemyDirectActualTarget(originalDesc,r)||originalDesc;
+    if(r.playerGuardian){
+      addLog('你發動舍己為友，代替 '+pet.name+' 承受 '+unit.name+' 的攻擊。','good');
+    }
     battleApplyPhysicalHit(
       {kind:'enemy',unit,unitId:unit.id},targetDesc,r,
       {deferAddProfit:true}
     );
     sourceProcessBattleDeathsAtAddProfit();
-    if(petIsBattleActive(pet)&&unit.hp>0)resolvePetEnemyCounterChain('enemy',pet,unit,r);
-    return {target:'pet',pet,r};
+    if(!r.playerGuardian&&petIsBattleActive(pet)&&unit.hp>0)resolvePetEnemyCounterChain('enemy',pet,unit,r);
+    return {target:'pet',actualTarget:targetDesc.kind,pet,r,playerGuardian:!!r.playerGuardian};
   }
 
   const r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
@@ -9831,6 +9974,7 @@ function enemySkillNumber(option,pattern,fallback=0){
   return Number.isFinite(v)?v:fallback;
 }
 function enemyApplySkillHit(unit,chosen,r,label,options={}){
+  if(r?.playerGuardian&&chosen?.kind==='pet')chosen={kind:'player'};
   if(chosen.kind==='pet'&&chosen.pet){
     const pet=chosen.pet;
     const targetDesc={kind:'pet',pet,petId:pet.id};
@@ -10085,7 +10229,7 @@ function performEnemyBattleModel(actor,unit,options,meta){
     }
     let r;
     if(target.kind==='pet'&&target.pet){
-      r=enemyAttackPetResult(unit,target.pet);
+      r=enemyAttackPetResult(unit,target.pet,{sourceGuardianReal:true});
     }else{
       r=resolveEnemyDirectAttackToPlayer(unit,{guarding:playerGuardingActive});
     }
@@ -10177,6 +10321,11 @@ function enemyPlayerSideLivingTargets(){
 function enemySkillTargetResult(unit,chosen,options={},attackerOverride=null){
   const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   if(chosen?.kind==='pet'&&chosen.pet&&petIsBattleActive(chosen.pet)){
+    if(options.sourceDirectGuardian){
+      const directOptions=Object.assign({},options);
+      delete directOptions.sourceDirectGuardian;
+      return resolveEnemyDirectAttackToPet(unit,chosen.pet,directOptions,attackerOverride);
+    }
     const guardCommand=sourcePlayerPetGuardCommand(chosen.pet);
     const guarding=sourcePlayerPetGuardAdjust(chosen.pet);
     const r=resolveNormalAttack(attacker,petBattleView(chosen.pet),Object.assign({},options,{
@@ -11115,10 +11264,11 @@ function sourceEnemyAttackShootApplyHit(unit,target,options,count,label){
   const damageOptions={damageDivisor:count};
   let r=null,actualTarget=target,targetDesc=null;
   if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
-    r=enemyAttackPetResult(unit,target.pet,damageOptions);
-    targetDesc={kind:'pet',pet:target.pet,petId:target.pet.id};
+    r=enemyAttackPetResult(unit,target.pet,Object.assign({},damageOptions,{sourceGuardianReal:true}));
+    const originalDesc={kind:'pet',pet:target.pet,petId:target.pet.id};
+    targetDesc=enemyDirectActualTarget(originalDesc,r)||originalDesc;
     actualTarget=targetDesc;
-    enemyApplySkillHit(unit,target,r,label);
+    enemyApplyDirectGuardianSkillHit(unit,target,r,label,{finalizeItemCrush:false});
   }else if(target.kind==='player'&&state.hp>0){
     const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
     r=resolveEnemyDirectAttackToPlayer(unit,{guarding,damageDivisor:count});
@@ -11445,10 +11595,13 @@ function performEnemyWildViolent(actor,unit,options,meta){
 
     let r;
     if(chosen.kind==='pet'&&chosen.pet){
-      r=enemyAttackPetResult(unit,chosen.pet,attackOptions);
+      r=enemyAttackPetResult(unit,chosen.pet,Object.assign({},attackOptions,{sourceGuardianReal:true}));
       hits++;
       lastResult=r;lastChosen=chosen;
-      enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+      enemyApplyDirectGuardianSkillHit(
+        unit,chosen,r,label+'第 '+hits+'/'+count+' 段',
+        {finalizeItemCrush:false}
+      );
       sourceBattleFinalizeItemCrushRng(r);
     }else{
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
@@ -11809,12 +11962,17 @@ function enemyDirectActualTarget(chosen,r){
   if(r?.guardian&&chosen?.kind==='player'){
     return {kind:'pet',pet:r.guardian,petId:r.guardian.id};
   }
+  if(r?.playerGuardian&&chosen?.kind==='pet'){
+    return {kind:'player'};
+  }
   return chosen;
 }
 function enemyApplyDirectGuardianSkillHit(unit,chosen,r,label,options={}){
   const actual=enemyDirectActualTarget(chosen,r);
   if(r?.guardian&&chosen?.kind==='player'){
     addLog(r.guardian.name+' 發動忠犬，代替你承受 '+unit.name+' 的'+label+'。','pet');
+  }else if(r?.playerGuardian&&chosen?.kind==='pet'){
+    addLog('你發動舍己為友，代替 '+(chosen.pet?.name||'出戰寵物')+' 承受 '+unit.name+' 的'+label+'。','good');
   }
   enemyApplySkillHit(unit,actual,r,label,options);
   if(options.finalizeItemCrush!==false){
@@ -11837,7 +11995,7 @@ function performEnemyFirekill(actor,unit,options,meta){
   // 但 battle.c 緊接著的 BATTLE_MultiAttMagic_Fire 仍使用原始 defNo。
   let physical;
   if(chosen.kind==='pet'&&chosen.pet){
-    physical=enemySkillTargetResult(unit,chosen,{});
+    physical=enemySkillTargetResult(unit,chosen,{sourceDirectGuardian:true});
   }else{
     physical=resolveEnemyDirectAttackToPlayer(unit,{guarding});
   }
@@ -16667,9 +16825,11 @@ function performEnemyAttackCrazed(actor,unit,options,meta){
   const applyOne=(target,slot)=>{
     let r,actualTarget=target,paralysis=null;
     if(target?.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
-      r=enemyAttackPetResult(unit,target.pet,attackOptions);
-      actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
-      enemyApplySkillHit(unit,target,r,label+'第 '+(attackCount+1)+'/'+count+' 段');
+      r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOptions,{sourceGuardianReal:true}));
+      actualTarget=enemyApplyDirectGuardianSkillHit(
+        unit,target,r,label+'第 '+(attackCount+1)+'/'+count+' 段',
+        {finalizeItemCrush:false}
+      )||target;
       if(weaponType===19)paralysis=sourceBreakthrowParalysis(unit,{
         target:'pet',pet:target.pet,targetDesc:actualTarget,r
       });
@@ -16835,9 +16995,10 @@ function performEnemyGyrate(actor,unit,options,meta){
     if(!target)continue;
     let r,actualTarget=target,paralysis=null;
     if(target.kind==='pet'&&target.pet){
-      r=enemyAttackPetResult(unit,target.pet,attackOptions);
-      actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
-      enemyApplySkillHit(unit,target,r,label);
+      r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOptions,{sourceGuardianReal:true}));
+      actualTarget=enemyApplyDirectGuardianSkillHit(
+        unit,target,r,label,{finalizeItemCrush:false}
+      )||target;
       if(weaponType===19)paralysis=sourceBreakthrowParalysis(unit,{
         target:'pet',pet:target.pet,targetDesc:actualTarget,r
       });
@@ -17111,10 +17272,14 @@ function sourceEnemyCommonNonRangedSkillSequence(actor,unit,options={},label='�
 
     let r,actualTarget=target,beforeApplyResult=null,afterHitResult=null;
     if(target.kind==='pet'&&target.pet&&petIsBattleActive(target.pet)){
-      r=enemyAttackPetResult(unit,target.pet,attackOptions);
-      actualTarget={kind:'pet',pet:target.pet,petId:target.pet.id};
+      r=enemyAttackPetResult(unit,target.pet,Object.assign({},attackOptions,{sourceGuardianReal:true}));
+      const originalDesc={kind:'pet',pet:target.pet,petId:target.pet.id};
+      actualTarget=enemyDirectActualTarget(originalDesc,r)||originalDesc;
       if(beforeApply)beforeApplyResult=beforeApply({target:'pet',pet:target.pet,targetDesc:actualTarget,r},target);
-      enemyApplySkillHit(unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段');
+      enemyApplyDirectGuardianSkillHit(
+        unit,target,r,label+'第 '+(attackCount+1)+'/'+attackMax+' 段',
+        {finalizeItemCrush:false}
+      );
       // fixed BATTLE_Attack(): DamageSub / WakeUp -> gBattleStausChange -> ItemCrush.
       if(afterHit)afterHitResult=afterHit({
         target:'pet',pet:target.pet,targetDesc:actualTarget,r
@@ -17307,11 +17472,14 @@ function performEnemyContinuation(actor,unit,options,meta){
 
     let r;
     if(chosen.kind==='pet'&&chosen.pet){
-      r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count});
+      r=enemyAttackPetResult(unit,chosen.pet,{damageDivisor:count,sourceGuardianReal:true});
       hits++;
       lastResult=r;
       lastChosen=chosen;
-      enemyApplySkillHit(unit,chosen,r,label+'第 '+hits+'/'+count+' 段');
+      enemyApplyDirectGuardianSkillHit(
+        unit,chosen,r,label+'第 '+hits+'/'+count+' 段',
+        {finalizeItemCrush:false}
+      );
       sourceBattleFinalizeItemCrushRng(r);
     }else{
       const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
@@ -18155,7 +18323,9 @@ function normalBattleOrder(options={}){
   battlePetPowerMods.clear();
   battlePetNoGuardStates.clear();
   battlePlayerGuardianPetId=null;
-  // 原 BATTLE_PreCommandSeq 每輪先 complianceParameter 重建 FIX 屬性；
+  battleProfessionScapegoat=null;
+  battlePlayerFixedToughWork=null;
+  // 原 BATTLE_PreCommandSeq 每輪先清 Guardian mapping/flag，再 complianceParameter 重建 FIX 屬性；
   // Player 沒有 EARTHROUND0 例外，所以這裡也必須重建裝備 WORK。特別重要的是
   // ITEM_DIErelife 同回合消耗裝備後不立即 compliance，直到下一 round 才失去戒指加成。
   playerComplianceParameter(state);
@@ -18941,7 +19111,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.32 live：暴擊／連環攻擊／雙重攻擊／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／瀕死攻擊／回旋攻擊／混亂攻擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.33 live：暴擊／連環攻擊／雙重攻擊／舍己為友／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／瀕死攻擊／回旋攻擊／混亂攻擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;

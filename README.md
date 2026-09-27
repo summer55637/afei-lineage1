@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.32**
+**PLAYABLE CORE V2.33**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,75 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.33 最新進度
+
+V2.33 接入勇士 **Skill 34「舍已為友」／`PROFESSION_SCAPEGOAT`** 的完整 fixed Guardian lifecycle。
+
+fixed row：TARGET=5、KIND=2、USE_FLAG=1、MP=5，option 為 `回%1`。技能走 `battle_profession_assist_fun()`，但來源實際並不是一般多回合 Buff：它直接改當輪 `BattleArray.Side[].Entry[].guardian` 與施術者的 `CHAR_BATTLEFLG_GUARDIAN`。
+
+### Guardian mapping 只活到下一輪 PreCommand
+
+fixed `BATTLE_PreCommandSeq()` 每輪先：
+
+1. 將所有 Entry.guardian 清成 -1；
+2. 清掉所有角色的 `CHAR_BATTLEFLG_GUARDIAN`；
+3. 才跑 `CHAR_complianceParameter()` 重建 FIX／WORK。
+
+因此舍己為友只保護**施放後的本輪剩餘攻擊**。玩家出手前已經發生的攻擊不ย้อนหลัง重導，下一輪開始前 mapping 也一定消失。
+
+### tier 對應保護範圍
+
+`PROFESSION_CHANGE_SKILL_LEVEL_A()` 後：
+
+- tier 0～4：只把「自己人物對應的寵物 slot」guardian 指向玩家；
+- tier 5～9：我方所有 Pet slots 5～9；
+- tier 10：我方 10 個 Entry 除施術者本人之外全部指向玩家。
+
+目前網頁 battle runtime 只有 Player slot 0 + 一隻 Active Pet slot 5，因此 V2.33 保存完整來源 slot plan，但只對場上真正存在的寵物 materialize Guardian，不虛構其他人物或寵物。
+
+### 原目標先閃避，成功命中後才代擋
+
+fixed `BATTLE_AttackSeq()` 順序是：
+
+`DuckCheck(original target) → GuardianCheck() → critical/damage(new defender)`
+
+所以敵人原本打寵物時：
+
+- 寵物先跑自己的普通／技能回避；
+- 寵物若已閃掉，玩家不會跳出來代擋；
+- 只有未閃避時才檢查舍己為友；
+- 代擋成功後不再讓玩家做第二次 dodge；
+- critical／damage 改用玩家的當輪 WORK 防禦計算；
+- 若 Guardian 重導後傷害結果 <=0，fixed 強制 NORMAL damage=1。
+
+遠距／投擲武器（Bow／Boomerang／BoundThrow／BreakThrow）在 `BATTLE_GuardianCheck()` 直接失敗，因此不會被舍己為友攔截。
+
+### 代擋後 Counter 關閉
+
+普通 `BATTLE_Attack()` 在 Guardian>=0 時會把 `iRet/ContFlg` 設成 FALSE，所以這次攻擊後不進 common Counter loop。V2.33 將 Player Scapegoat Guardian 納入同一條 counter-block gate。
+
+### FIXTOUGH 降低但當輪 WORKDEFENCEPOWER 不變
+
+Skill 34 callback 還會做：
+
+`tghPenalty = 30 - tier*2`
+
+`FIXTOUGH = int(old FIXTOUGH * (70 + tier*2) / 100)`
+
+也就是 tier0 為 70%、tier5 為 80%、tier10 為 90%。
+
+但這個寫入發生在本輪 PreCommand 已經把 `FIXTOUGH` 複製到 `WORKDEFENCEPOWER` **之後**。來源沒有再次呼叫 `BATTLE_TurnParam`，所以：
+
+- 普通物理 Guardian 傷害仍使用施放前的當輪 WORKDEFENCEPOWER；
+- 同輪若有特殊函式明確讀 FIXTOUGH，會看到降低後的值；
+- 下一輪 PreCommand 重新 compliance 後，這個 FIXTOUGH 暫時改值一起消失。
+
+V2.33 用 battle-local `battlePlayerFixedToughWork` 分開保存 FIX 與 WORK，不把這個來源怪行為錯做成「當場降普通防禦」。
+
+另外補齊 FIREKILL／BattleModel／common direct-attack 類 Pet 目標的真實 Guardian 重導；FallGround、Regret／AttackDamage 等 fixed caller-defindex bug 路徑仍刻意保持 calc-only，不被全域化。
+
+新增 `tools/check_v233_profession_scapegoat_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.32 最新進度
 

@@ -3674,6 +3674,32 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.33 Warrior Skill 34 Scapegoat Guardian lifecycle
+
+V2.33 ports `PROFESSION_SCAPEGOAT` (Skill 34) as a real current-round Guardian mapping rather than a generic duration buff.
+
+- fixed row: TARGET=5, KIND=2, USE_FLAG=1, MP=5, `BATTLE_COM_S_SCAPEGOAT`.
+- tier <5 maps the owner's Pet entry to the Player.
+- tier 5..9 maps all Pet entries 5..9.
+- tier 10 maps every same-side entry except the caster.
+- current web battle only materializes Player 0 + Active Pet 5; absent party entries are not invented.
+
+`BATTLE_PreCommandSeq()` clears every Entry.guardian and every `CHAR_BATTLEFLG_GUARDIAN` before compliance each round, so the mapping applies only after Skill 34 executes and expires at the next PreCommand.
+
+The physical order is preserved:
+`DuckCheck(original Pet) -> GuardianCheck -> critical/damage(Player)`.
+Throw/ranged weapons cannot trigger Guardian. A successful Guardian redirect forces minimum damage 1 when the redirected calculation reaches zero and sets the ordinary `BATTLE_Attack()` return false, blocking Counter.
+
+The source callback also writes:
+`FIXTOUGH = int(old FIXTOUGH * (70 + tier*2) / 100)`.
+Because WORKDEFENCEPOWER was already built earlier in PreCommand, ordinary same-round damage still reads the old Work defense. The browser therefore stores this as a separate battle-local FIXTOUGH override and clears it at the next PreCommand.
+
+Real-defindex callers (ordinary/common direct attacks, FIREKILL physical, BattleModel) can redirect Pet -> Player. Calc-only caller-defindex bug paths such as FallGround / AttackDamage remain intentionally non-substituting.
+
+Added `tools/check_v233_profession_scapegoat_runtime.mjs`; save schema remains **30**.
+
+---
+
 ## V2.32 Warrior assist Skills 35-37
 
 V2.32 adds the fixed live battle lifecycle for Warrior self-assists `PROFESSION_ENRAGE`, `PROFESSION_ENERGY_COLLECT`, and `PROFESSION_FOCUS`.
