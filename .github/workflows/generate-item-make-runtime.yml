@@ -60,6 +60,7 @@ on:
       - "tools/check_v222_profession_proficiency_runtime.mjs"
       - "tools/check_v223_profession_live_physical_hooks.mjs"
       - "tools/check_v224_profession_command_outbattle.mjs"
+      - "tools/check_v225_profession_battle_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -254,6 +255,9 @@ jobs:
 
       - name: Run V2.24 profession command/out-of-battle regressions
         run: node tools/check_v224_profession_command_outbattle.mjs
+
+      - name: Run V2.25 profession battle runtime regressions
+        run: node tools/check_v225_profession_battle_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
