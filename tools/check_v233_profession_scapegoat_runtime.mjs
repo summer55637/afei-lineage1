@@ -152,8 +152,8 @@ const reset=extractFunction(game,'resetBattleStatuses');
 assert.ok(reset.includes('battleProfessionScapegoat=null'));
 assert.ok(reset.includes('battlePlayerFixedToughWork=null'));
 
-assert.match(html,/PLAYABLE CORE V2\.37/);
-assert.match(html,/V2\.37 live：[^<]*舍己為友/);
+assert.match(html,/PLAYABLE CORE V2\.38/);
+assert.match(html,/V2\.38 live：[^<]*舍己為友/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

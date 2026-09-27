@@ -123,8 +123,8 @@ const chaosAt=exec.indexOf("if(prepared.functionName==='PROFESSION_CHAOS')");
 const genericAt=exec.indexOf('const first=sourceProfessionPhysicalCalcOnlyResult(target)');
 assert.ok(hiddenAt>=0&&chaosAt>hiddenAt&&genericAt>chaosAt);
 
-assert.match(html,/PLAYABLE CORE V2\.37/);
-assert.match(html,/V2\.37 live：[^<]*混亂攻擊/);
+assert.match(html,/PLAYABLE CORE V2\.38/);
+assert.match(html,/V2\.38 live：[^<]*混亂攻擊/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
