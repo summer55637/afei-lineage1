@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.29**
+**PLAYABLE CORE V2.30**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,96 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.30 最新進度
+
+V2.30 新增勇士 **Skill 41「回旋攻擊」／`PROFESSION_CONVOLUTE`**，同時補齊 profession callback 對玩家 **WORKATTACKPOWER** 的同輪生命週期。
+
+fixed row：TARGET=8、KIND=1、USE_FLAG=1、MP=28，option 第一欄同樣是 `无`，因此這招和 V2.29 貫穿攻擊共用：
+
+`battle_profession_attack_magic_fun() → PROFESSION_MAGIC_ATTAIC()`
+
+而不是一般 `BATTLE_Attack()`。
+
+### 列目標與 fallback
+
+client TARGET=8 會送 row pseudo toNo：
+
+- 23：敵方後排 10～14
+- 24：敵方前排 15～19
+
+fixed `BATTLE_MultiList()` 會先掃該排：
+
+- 該排有活人 → 保留原 row pseudo
+- 該排全空，但另一排有活人 → 自動 fallback 到另一排，並把 COM2 改成新的 row pseudo
+- 兩排都沒有活人 → 失敗
+
+之後 `PROFESSION_MAGIC_TOLIST_SORT()` 會重新按 battle slot 由小到大列出該排所有存活目標，最多 5 人；沒有額外隨機抽人。
+
+### 每個目標的 WORKATTACKPOWER 連乘
+
+`BATTLE_PROFESSION_CONVOLUTE_GET_DAMAGE()` 不是每個目標都從 FIXSTR 重新算。
+
+它對每個「通過 profession magic dodge」的目標執行：
+
+`WORKATTACKPOWER = int(WORKATTACKPOWER × (50 + tier×2) / 100)`
+
+所以：
+
+- tier0：每人再乘 50%
+- tier5：每人再乘 60%
+- tier10：每人再乘 70%
+
+而且是**逐目標連乘**。例如當下 WORK attack=100、tier5、同排三人都通過 magic dodge：
+
+`100 → 60 → 36 → 21`
+
+來源沒有在每一人之間恢復原攻擊力。
+
+如果某目標在 profession magic dodge 階段就 miss，該人不會觸發這次 WORK attack 降低。
+
+### 同輪 WORK attack 現在正式保留
+
+fixed callback 改過 `CHAR_WORKATTACKPOWER` 後，這個 Work 值會一直留到下一輪 `BATTLE_PreCommandSeq() → CHAR_complianceParameter/BATTLE_TurnParam` 才重建。
+
+Web 因此新增 battle-local `battlePlayerAttackWork`：
+
+- 下一輪 PreCommand 自動清回 compliant attack；
+- 戰鬥結束清除；
+- 不寫 save。
+- `playerBattleView().attack` 在本輪有 Work override 時會讀這個值。
+
+這除了讓回旋攻擊逐人連乘正確，也補正之前兩招的同輪後續語意：
+
+- Skill 24 雙重攻擊：真正普通攻擊前寫入的 boosted WORKATTACKPOWER 現在會保留到本輪結束；
+- Skill 38 盾擊：tier≠10 的 50% WORKATTACKPOWER 現在同樣會保留到本輪結束。
+
+因此若玩家在自己職技行動後、同輪稍晚又因 Enemy 攻擊觸發反擊，反擊會使用 fixed 當下的 WORK attack，而不是錯誤回到 round baseline。
+
+### 回旋攻擊的 profession-magic pipeline
+
+和貫穿攻擊相同：
+
+1. `PROFESSION_MAGIC_GET_PRACTICE()` 對 Convolute 沒有 power case，但仍固定吃：
+   - `RAND(1,100)`
+   - `rand()%100`
+   - hp_power=0，所以不吃 variance RNG。
+2. 每個目標先跑 `PROFESSION_MAGIC_DODGE()`。
+3. 通過後先降低 WORKATTACKPOWER。
+4. 專用物理傷害仍是 **critical-before-duck**：
+   - critical 成功直接 `BATTLE_CriDamageCalc()`
+   - 非 critical 才跑 `BATTLE_DuckCheck()`
+   - 沒有第二層 SUIT dodge
+   - 沒有 Weapon Focus / Dual Weapon critical proficiency hook。
+5. raw physical power 再走 `UN_POW_M`。
+6. `PROFESSION_MAGIC_CHANGE_STATUS()` 雖沒有 Convolute case，仍固定吃 leading `RAND(1,100)`。
+7. `PROFESSION_MAGIC_CHANG_STATUS()` 對 Convolute 沒有額外倍率，所以直接扣該 damage。
+
+同樣**不經** Guardian、GuardAdjust、DamageSub、DamageReact 消耗、ItemCrush、SUITPOISON、ordinary Counter、ordinary physical Ultimate。
+
+fixed tail 也同樣會喚醒每個通過 profession magic dodge 的目標，即使內層物理 dodge 最終傷害為 0。
+
+新增 `tools/check_v230_profession_convolute_runtime.mjs`，鎖定 row fallback、slot 順序、逐人 WORK attack 連乘、同輪 Work 保留、shared critical-before-duck pipeline，以及 Skill 24／38 的 Work persistence 修正。**save schema 維持 30**。
 
 ## V2.29 最新進度
 
