@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.27**
+**PLAYABLE CORE V2.28**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,74 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.28 最新進度
+
+V2.28 新增勇士 **Skill 40「瀕死攻擊」／`PROFESSION_DEAD_ATTACK`**，並在重新審核 fixed generic profession direct helper 時修正 DamageReact 的來源差異。
+
+### Skill 40 瀕死攻擊
+
+fixed row：TARGET=1、KIND=1、USE_FLAG=1、MP=17，option = `命%82|HP%10|倍%2|效%1|回%3`。
+
+- HP 條件在**角色真正執行技能時**檢查，不在 command receipt：
+  - 若當下 `HP <= 10`，callback 直接 return，沒有攻擊效果；
+  - MP 與 post-dispatch 熟練度早已依 fixed protocol 在收到 `P|slot|toNo` 時處理，不退款。
+- tier 沿用 `PROFESSION_CHANGE_SKILL_LEVEL_A()`。
+- 執行時先計算：
+  - `rate = tier*2 + 10`
+  - `HP = int(currentHP * rate / 100)`
+  - tier0 留 10% 當下 HP，tier10 留 30%。
+- 命中 Work：
+  - `hit = tier*2 + 80`
+  - 當下 `WORKHITRIGHT += hit`
+  - `MYSKILLHIT = 1`
+  - `MYSKILLHIT_NUM = hit`
+  - 因此這次攻擊使用 +80～100 的 HITRIGHT。
+- HP 犧牲與 HITRIGHT 寫入都發生在本次 `BATTLE_AttackSeq()` 前。
+
+### MYSKILLHIT 的 fixed source bug
+
+這不是單純「命中 Buff 一回合」。
+
+下一輪 fixed `BATTLE_PreCommandSeq()` 會先跑 `CHAR_complianceParameter()`：
+
+1. `CHAR_initcharWorkInt()` 把 `WORKHITRIGHT` 重建；
+2. `ITEM_equipEffect()` 只重新加回裝備 HITRIGHT；
+3. `MYSKILLHIT / MYSKILLHIT_NUM` 本身沒有被 compliance 清掉；
+4. `Other_DefcharWorkInt()` 有一段來源欄位 bug：
+   - `mpower = MYSKILLHIT`
+   - `mdef = WORKHITRIGHT`
+   - `mpower += (pre-suit FIXTOUGH * mdef) / 100`
+   - 最後把結果**寫回 MYSKILLHIT 倒數**。
+
+所以：
+
+- 沒有 HITRIGHT 裝備時，下一輪 compliance 把 WORKHITRIGHT 重建為 0，MYSKILLHIT 仍為 1；
+  接著 `BATTLE_StatusSeq()` 把倒數 1→0，並執行 `WORKHITRIGHT -= MYSKILLHIT_NUM`；
+  因而該次行動會短暫得到 **-80～-100 HITRIGHT**。再下一輪 compliance 才恢復正常裝備值。
+- 若裝備 HITRIGHT 不為 0，`pre-suit FIXTOUGH * equipment HITRIGHT / 100` 可能錯誤加進 MYSKILLHIT，將原本的 1 回合倒數延長，甚至反覆延長。Web 保留這個 fixed 行為，不改成合理化 Buff。
+- Web 新增 battle-local `battlePlayerProfessionHitState`，只鏡像這組 WORK lifecycle；戰鬥結束即清除，不寫入存檔。
+- `playerBattleView().hitRight` 現在在該 Work 存在時讀實際 transient WORKHITRIGHT，因此本次攻擊、同輪後續物理事件、以及下一輪來源 bug 都會走既有 `BATTLE_DuckCheck` 的 HITRIGHT RNG。
+
+### generic profession DamageReact audit
+
+重新核對 fixed `battle_profession_attack_fun()`：
+
+- `BATTLE_GetDamageReact(defindex)` 雖先讀出 ReactType；
+- 但 **只有 `BATTLE_COM_S_CHAIN_ATK` 會保留 react**；
+- 其他 generic direct profession skill 都把 local `react` 清回 0，再進 `BATTLE_DamageSub()`。
+
+因此 V2.28 同步修正：
+
+- Skill 23 連環攻擊第一擊：仍可觸發／消耗 ACUPUNCTURE。
+- Skill 22 暴擊第一擊：不再錯誤觸發 ACUPUNCTURE。
+- Skill 40 瀕死攻擊：同樣忽略並保留 ACUPUNCTURE。
+- Skill 24 雙重攻擊走的是後續真正普通 `BATTLE_Attack()`，不受此 generic helper 規則影響。
+- Skill 38 盾擊位於 status-change helper，來源遇 DamageReact 會走另一條邏輯，也不套這個規則。
+
+瀕死攻擊本身仍保留 profession calc-only Guardian bug、無普通 SUITPOISON、無 ordinary Counter。
+
+新增 `tools/check_v228_profession_dead_attack_runtime.mjs`，鎖定 HP gate／HP 10～30% 公式、HITRIGHT +80～100、MYSKILLHIT compliance/status lifecycle、負 HITRIGHT bug、裝備 HITRIGHT 延長倒數 bug，以及 generic direct DamageReact 只有 CHAIN_ATK 保留。**save schema 維持 30**。
 
 ## V2.27 最新進度
 
