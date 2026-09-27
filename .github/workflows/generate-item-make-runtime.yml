@@ -72,6 +72,7 @@ on:
       - "tools/check_v234_profession_deflect_arrange_runtime.mjs"
       - "tools/check_v235_profession_reback_runtime.mjs"
       - "tools/check_v236_profession_weapon_focus_runtime.mjs"
+      - "tools/check_v237_profession_avoid_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -302,6 +303,9 @@ jobs:
 
       - name: Run V2.36 Weapon Focus regressions
         run: node tools/check_v236_profession_weapon_focus_runtime.mjs
+
+      - name: Run V2.37 Avoid regressions
+        run: node tools/check_v237_profession_avoid_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

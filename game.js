@@ -104,6 +104,7 @@ let battlePlayerProfessionStatRound=null;
 let battleProfessionScapegoat=null;
 let battlePlayerRawGuardCommand=false;
 let battlePlayerFixedToughWork=null;
+let battlePlayerAvoidWork=null;
 let battlePlayerWeaponFocusWork=null;
 let battlePlayerMySkillStrPower=0;
 let battlePlayerFixedAttackWork=null;
@@ -2033,6 +2034,52 @@ function sourceProfessionWeaponFocusProficiency(target,weaponType,{randInclusive
     target,'PROFESSION_WEAPON_FOCUS',{optionNeedle:marker,randInclusive}
   );
 }
+function sourceProfessionPlayerAvoidRefresh(target=state,reason='battle-entry'){
+  // fixed BATTLE_ProfessionStatus_init resets WORK_P_DUCK / WORKMOD_P_DUCK,
+  // then scans all profession slots. Empty / invalid slots use CONTINUE.
+  battlePlayerAvoidWork=null;
+  if(!target)return {active:false,reason:'state-missing'};
+  const professionClass=Math.trunc(n(target.professionClass));
+  if(professionClass<=PROFESSION_CLASS_NONE)return {active:false,reason:'no-profession'};
+  let matched=null;
+  for(let i=0;i<PROFESSION_SKILL_SLOT_COUNT;i++){
+    const entry=sourcePlayerProfessionSkillAt(i,target);
+    if(!entry)continue;
+    const row=sourceProfessionSkillTemplate(entry.skillId);
+    if(!row||String(row.func||'')!=='PROFESSION_AVOID')continue;
+    const requiredClass=Math.trunc(n(row.professionClass));
+    // fixed Avoid branch uses RETURN, not continue, on profession mismatch.
+    if(professionClass!==requiredClass){
+      battlePlayerAvoidWork=null;
+      return {
+        active:false,reason:'profession-mismatch-terminator',
+        slot:i,skillId:entry.skillId,professionClass,requiredClass
+      };
+    }
+    const displayLevel=sourcePlayerProfessionSkillDisplayLevel(entry);
+    const tier=sourceProfessionAttackSkillTier(displayLevel);
+    // Preserve source discontinuity: tier 5 = 10%, tier 6 falls to 3%.
+    let mod=tier<=5?tier*2:(tier-5)*3;
+    if(mod>25)mod=25;
+    matched={
+      active:true,reason:String(reason||'refresh'),
+      slot:i,skillId:entry.skillId,displayLevel,tier,
+      professionClass,mod
+    };
+  }
+  battlePlayerAvoidWork=matched;
+  return matched||{active:false,reason:'skill-not-learned',professionClass};
+}
+function sourceProfessionPlayerAvoidApply(raw,work=battlePlayerAvoidWork){
+  const before=Math.max(0,n(raw));
+  if(!work?.active)return {active:false,before,after:before,mod:0,work:work||null};
+  // BATTLE_DuckCheck owns float per, but BATTLE_check_profession_duck takes int per.
+  // The call therefore truncates BEFORE multiplying by (100 + WORKMOD_P_DUCK)%.
+  const input=Math.trunc(before);
+  const mod=Math.trunc(n(work.mod));
+  const after=Math.trunc(input*(100+mod)/100);
+  return {active:true,before,input,after,mod,work};
+}
 function sourceProfessionPlayerWeaponType(target=state){
   const slots=sourcePlayerItemSlots(target);
   const itemIndex=Math.trunc(Number(slots?.[PLAYER_ARM_SLOT]));
@@ -2407,7 +2454,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_FOCUS'
     ||functionName==='PROFESSION_SCAPEGOAT'
     ||functionName==='PROFESSION_DEFLECT'
-    ||functionName==='PROFESSION_REBACK';
+    ||functionName==='PROFESSION_REBACK'
+    ||functionName==='PROFESSION_AVOID';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -3423,6 +3471,16 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:false,reason:'profession-command-not-prepared'};
   }
   const toNo=Math.trunc(n(prepared.toNo));
+  if(prepared.functionName==='PROFESSION_AVOID'){
+    // fixed PROFESSION_avoid() prepares BATTLE_COM_S_AVOID and battle.c routes it
+    // into battle_profession_assist_fun(), whose switch has NO S_AVOID case.
+    // Command-receipt proficiency still happened; turn execution has no effect.
+    return {
+      handled:true,noAction:true,reason:'source-avoid-assist-no-case',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      sourceAssistNoCase:true
+    };
+  }
   if(prepared.functionName==='PROFESSION_REBACK'){
     // fixed PROFESSION_reback() prepares BATTLE_COM_S_REBACK, but the pinned
     // battle.c profession command switch has no matching case. Its real effect
@@ -3591,6 +3649,7 @@ function sourceProfessionBattleFailureText(reason){
     'battle-function-unported':'這招的戰鬥函式尚未移植',
     'source-deflect-no-battle-case':'fixed battle.c 沒有 BATTLE_COM_S_DEFLECT 執行 case',
     'source-reback-no-battle-case':'fixed battle.c 沒有 BATTLE_COM_S_REBACK 執行 case；效果在 StatusSeq 自動觸發',
+    'source-avoid-assist-no-case':'fixed battle_profession_assist_fun 沒有 BATTLE_COM_S_AVOID case；主動使用無效果',
     'shield-required':'需要裝備盾牌',
     'dead-attack-hp-too-low':'目前 HP 必須大於 10',
     'target-side-empty':'敵方已沒有可用目標',
@@ -3886,6 +3945,7 @@ function sourcePlayerMoveItem(fromindex,toindex,{target=state,isDie=null}={}){
       sourceProfessionPlayerFixedAttackCompliance(target);
       battlePlayerAttackWork=null;
       if(from===PLAYER_ARM_SLOT||to===PLAYER_ARM_SLOT){
+        moved.avoidRefresh=sourceProfessionPlayerAvoidRefresh(target,'weapon-change');
         moved.weaponFocusRefresh=sourceProfessionPlayerWeaponFocusRefresh(target,'weapon-change');
       }
     }
@@ -5974,6 +6034,7 @@ function sourceInitPlayerSideEntrySnapshot(){
   if(!enemy)return [];
   // fixed BATTLE_NewEntry: BATTLE_BadStatusAllClr has already cleared MYSKILLSTRPOWER,
   // then BATTLE_ProfessionStatus_init snapshots Weapon Focus for the current arm.
+  sourceProfessionPlayerAvoidRefresh(state,'battle-entry');
   sourceProfessionPlayerWeaponFocusRefresh(state,'battle-entry');
   const entries=[{kind:'player',level:Math.max(1,Math.trunc(n(state?.level)))}];
   const pet=activePet();
@@ -6636,7 +6697,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerWeaponFocusWork=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -7597,6 +7658,8 @@ function playerBattleView(){
     hitRight:sourceProfessionPlayerHitRight(compliance),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
     otherDamage:Math.trunc(n(compliance.otherDamage)),otherDefc:Math.trunc(n(compliance.otherDefc)),
     arrangePower:sourceProfessionPlayerDeflectArrangePower(compliance),
+    professionAvoidActive:!!battlePlayerAvoidWork?.active,
+    professionAvoidMod:Math.trunc(n(battlePlayerAvoidWork?.mod)),
     rawGuardCommand:!!battlePlayerRawGuardCommand,
     suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
     suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
@@ -8473,8 +8536,16 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
     duck-=cRand(sourceHitRight*.8,sourceHitRight*1.2);
     if(duck<0)duck=0;
   }
-  // fixed _PROFESSION_ADDSKILL: CHAOS adds 40% to the already-capped /
-  // HITRIGHT-adjusted ordinary duck threshold and does NOT cap it again.
+  // fixed _PROFESSION_SKILL: Player Avoid runs AFTER the 75% cap and HITRIGHT.
+  // BATTLE_check_profession_duck(int per) truncates the float threshold first,
+  // multiplies by (100+WORKMOD_P_DUCK)%, and does NOT re-cap.
+  if(defender?.type==='player'&&defender?.professionAvoidActive){
+    duck=sourceProfessionPlayerAvoidApply(duck,{
+      active:true,mod:Math.trunc(n(defender.professionAvoidMod))
+    }).after;
+  }
+  // fixed _PROFESSION_ADDSKILL: CHAOS adds 40% after Profession Avoid and
+  // does NOT cap the threshold again.
   if(options.sourceProfessionChaos===true){
     duck=sourceProfessionChaosDuckRaw(duck);
   }

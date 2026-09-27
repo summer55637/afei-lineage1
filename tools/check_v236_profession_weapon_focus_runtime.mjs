@@ -228,8 +228,8 @@ const prof=extractFunction(game,'sourceProfessionWeaponFocusProficiency');
 assert.ok(prof.includes('sourceProfessionWeaponFocusMarker(weaponType)'));
 assert.equal(prof.includes('battlePlayerWeaponFocusWork'),false);
 
-assert.match(html,/PLAYABLE CORE V2\.36/);
-assert.match(html,/V2\.36 live：[^<]*武器專精 26～32/);
+assert.match(html,/PLAYABLE CORE V2\.37/);
+assert.match(html,/V2\.37 live：[^<]*武器專精 26～32/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

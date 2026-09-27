@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.36**
+**PLAYABLE CORE V2.37**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,56 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.37 最新進度
+
+V2.37 接入勇士 **Skill 25「回避」／`PROFESSION_AVOID`** 的真正 fixed 被動閃避倍率，並補齊它非常反直覺的主動使用行為。V2.23 已經有「Player 普通物理成功 dodge 後嘗試增加 Skill 25 熟練度」；這一版補上 `CHAR_WORK_P_DUCK / CHAR_WORKMOD_P_DUCK` 對 `BATTLE_DuckCheck()` 的實際作用。
+
+fixed row：TARGET=1、KIND=2、USE_FLAG=1、MP=0、option `回`，command 為 `BATTLE_COM_S_AVOID`。
+
+### 被動 Work 在 Status_init 建立
+
+`BATTLE_ProfessionStatus_init()` 進戰時先清：
+
+`WORK_P_DUCK = 0`
+
+`WORKMOD_P_DUCK = 0`
+
+再掃職業技能欄。一般空／無效 slot 是 `continue`；找到 Skill 25 後要求 profession class 相符，否則該分支直接 `return`。
+
+技能 display level 經 `PROFESSION_CHANGE_SKILL_LEVEL_A()` 轉 tier 0～10，來源公式是：
+
+- tier 0～5：`mod = tier × 2`
+- tier 6～10：`mod = (tier - 5) × 3`
+- 上限 25
+
+這代表來源有明顯不連續：**tier 5 = 10%，tier 6 反而掉成 3%**，之後為 6／9／12／15%。V2.37 不自行補 `+10`。
+
+Status_init 在戰鬥中換武器時也會重新跑，所以換武器同時會重新抓當下 Skill 25 熟練度；單純靠成功閃避或主動按技能增加熟練度，不會立即改變目前 `WORKMOD_P_DUCK`。
+
+### 它發生在 75% cap 之後
+
+fixed `BATTLE_DuckCheck()` 的順序：
+
+`base dodge → 全域修正／酒醉／Bow／NoGuard → ×100 → 75% cap → HITRIGHT → Profession Avoid → Chaos +40% → RAND(1,10000)`
+
+其中 `BATTLE_check_profession_duck(int per)` 的參數是 **int**，但 caller 的 `per` 是 float，因此進函式前會先截斷，再做：
+
+`per = int(per × (100 + WORKMOD_P_DUCK) / 100)`
+
+而且之後**沒有再套 75% cap**。因此高閃避角色的 Skill 25 可以把已經封頂 7500 的 threshold 放大，例如 tier 5 的 10% 會得到 8250；若攻擊又是混亂攻擊，後面還會再乘 1.4，甚至可能超過 10000 而形成必閃。
+
+即使 tier 0 的 mod=0，只要 Skill 25 active，來源仍會因 `int per` 參數發生一次截斷；V2.37 也保留。
+
+### 主動按「回避」其實沒有 Buff
+
+`PROFESSION_avoid()` 會正常寫 `BATTLE_COM_S_AVOID` 並回傳 TRUE，所以 packet receipt 的 MP／熟練度 lifecycle 仍成立。
+
+但 pinned `battle.c` 把它送進 `battle_profession_assist_fun()` 後，該函式的 switch **完全沒有 `BATTLE_COM_S_AVOID` case**。因此真正輪到角色行動時沒有任何 active Buff／動畫效果。
+
+V2.37 將 Skill 25 放進 battle command bridge，但 execution 明確 source NoAction；不把被動回避率錯做成「按下後才生效」。
+
+新增 `tools/check_v237_profession_avoid_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.36 最新進度
 

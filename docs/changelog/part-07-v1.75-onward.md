@@ -4032,3 +4032,23 @@ V2.36 closes Skills 26..32 `PROFESSION_WEAPON_FOCUS` as a real passive FIXSTR mo
 - Skill 24 CHAIN_ATK_2 FIXSTR now reads the same MYSKILLSTR → Weapon Focus → WEAKEN effective FIXSTR bridge instead of raw equipment-only fixedAttack.
 
 Added `tools/check_v236_profession_weapon_focus_runtime.mjs`; save schema remains **30**.
+
+
+---
+
+## V2.37 Skill 25 Avoid passive duck Work
+
+V2.37 closes Skill 25 `PROFESSION_AVOID`.
+
+- Runtime row: TARGET=1, KIND=2, USE_FLAG=1, MP=0, option `回`, command `BATTLE_COM_S_AVOID`.
+- `BATTLE_ProfessionStatus_init()` resets WORK_P_DUCK / WORKMOD_P_DUCK and scans profession slots with continue on empty/invalid rows.
+- Avoid profession mismatch uses source `return`, not continue.
+- A-tier modifier is tier<=5 ? tier*2 : (tier-5)*3, capped above at 25. Preserve the source discontinuity: tier5=10, tier6=3.
+- `BATTLE_check_profession_duck(int per)` runs after ordinary 75% cap and Player HITRIGHT. Float per is truncated on the int parameter boundary, then multiplied by (100+mod)% with integer truncation.
+- No recapping occurs after Profession Avoid; CHAOS then adds another 40%. Threshold can exceed 7500 and even 10000.
+- Tier0 / mod0 still forces the int-parameter truncation when WORK_P_DUCK is active.
+- Successful ordinary Player dodge continues to attempt Skill 25 proficiency via the V2.23 hook; proficiency changes do not mutate current Work until Status_init refresh.
+- Weapon change reruns Status_init, so it refreshes Avoid Work together with Weapon Focus.
+- Active `PROFESSION_avoid()` prepares BATTLE_COM_S_AVOID, but `battle_profession_assist_fun()` has no matching case. Web preserves command-receipt proficiency then executes source NoAction rather than inventing an active dodge buff.
+
+Added `tools/check_v237_profession_avoid_runtime.mjs`; save schema remains **30**.
