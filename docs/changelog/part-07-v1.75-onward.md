@@ -3974,3 +3974,22 @@ Added `tools/check_v225_profession_battle_runtime.mjs`; Actions now runs it afte
 - encounter profession Work 不持久化，schema 維持 30。
 
 新增 `tools/check_v224_profession_command_outbattle.mjs`。
+
+
+---
+
+## V2.34 Warrior Skill 53 Deflect / Arrange lifecycle
+
+V2.34 closes Skill 53 `PROFESSION_DEFLECT` together with fixed `BATTLE_ArrangeCheck()`.
+
+- Runtime row: Skill 53, TARGET=1, KIND=2, USE_FLAG=1, MP=0, FIX_VALUE=10, command `BATTLE_COM_S_DEFLECT`.
+- `PROFESSION_deflect()` only prepares that command; pinned `battle.c` has no matching profession command-switch case, so active use keeps command-receipt MP/proficiency and becomes NoAction at execution.
+- `BATTLE_ProfessionStatus_init()` writes `WORKFIXARRANGE += tier+10` and immediately calls `CHAR_complianceParameter()`; that resets FIXARRANGE, rebuilds it from equipment `ITEM_MODIFYARRANGE`, then copies it to WORKARRANGEPOWER. Effective Arrange power is equipment-only.
+- `BATTLE_ArrangeCheck()` rejects raw GUARD, positive DamageReact, cannot-move, NODUCK and ABIO before RNG. Raw GUARD is kept separately from confusion-aware GuardAdjust.
+- Chance is `RAND(1,1000) <= min(WORKARRANGEPOWER,700)`, so maximum success rate is 70%.
+- Success happens after GuardAdjust and damage<1 RAND, then C-int truncates `damage *= 0.1`.
+- Player success attempts `PROFESSION_SKILL_LVEVEL_UP(...,"PROFESSION_DEFLECT")` even if the 10% truncation later becomes zero.
+- Zero damage rewrites ARRANGE to MISS; Guardian zero becomes NORMAL damage=1; positive damage keeps ARRANGE.
+- `BATTLE_Attack()` leaves `iRet=TRUE` for ARRANGE, so ordinary Counter is intentionally not blocked, while existing post-effect ARRANGE gates now receive a real `r.arranged`.
+
+Added `tools/check_v234_profession_deflect_arrange_runtime.mjs`; save schema remains **30**.

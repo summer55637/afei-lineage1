@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.33**
+**PLAYABLE CORE V2.34**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,34 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.34 最新進度
+
+V2.34 接入勇士 **Skill 53「格檔」／`PROFESSION_DEFLECT`** 與 fixed `BATTLE_ArrangeCheck()` 的受擊端 lifecycle，並保留來源中一個可完整證明的 bug。
+
+fixed row：TARGET=1、KIND=2、USE_FLAG=1、MP=0、`FIX_VALUE=10`，command 是 `BATTLE_COM_S_DEFLECT`。
+
+### 主動按技能：來源其實 NoAction
+
+`PROFESSION_deflect()` 只呼叫 `profession_common_fun(..., BATTLE_COM_S_DEFLECT)` 寫入 command；但 pinned `battle.c` 的人物職技 switch **完全沒有 `BATTLE_COM_S_DEFLECT` case**。因此 Web 保留 command-receipt MP／post-dispatch proficiency，真正輪到行動時則 source NoAction，不自行發明主動格檔 Buff。
+
+### tier+10 會被來源自己清掉
+
+fixed `BATTLE_ProfessionStatus_init()` 先做 `WORKFIXARRANGE += tier + 10`，下一行卻立刻呼叫 `CHAR_complianceParameter()`；其中 `CHAR_initcharWorkInt()` 把 `WORKFIXARRANGE=0`，再由 `ITEM_equipEffect()` 只把裝備 `ITEM_MODIFYARRANGE` 加回，最後 `WORKARRANGEPOWER = WORKFIXARRANGE`。
+
+所以 Skill 53 的 tier+10 **實際不會留下來**。有效 Arrange power 只來自裝備 `arr`／`ITEM_MODIFYARRANGE`；V2.34 不偷修這個來源 bug。
+
+### BATTLE_ArrangeCheck
+
+gate 順序照 fixed：原始 GUARD → DamageReact > 0 → 不能行動 → NODUCK → ABIO → power<=0，以上都不抽 Arrange RNG；其後 `per=min(ARRANGEPOWER,700)`，用 `RAND(1,1000) <= per`。因此成功率上限為 **70%**。
+
+GUARD gate 讀的是原始 command，即使混亂令真正 GuardAdjust 無效仍阻止 Arrange；V2.34 新增 battle-local raw GUARD snapshot 保留此差異。
+
+成功後 int damage 截成 10%，Player 守方同時觸發 `PROFESSION_SKILL_LVEVEL_UP(...,"PROFESSION_DEFLECT")`。若截斷成 0，最終 RET 由 ARRANGE 改成 MISS；若是 Guardian 重導則 NORMAL damage=1；正傷害保留 ARRANGE。
+
+fixed `BATTLE_Attack()` 的 ARRANGE case 不會把 `iRet/ContFlg` 改成 FALSE，因此普通 Counter 仍可能繼續；但原本會排除 ARRANGE 的後置效果現在可真正讀到 `r.arranged`。
+
+新增 `tools/check_v234_profession_deflect_arrange_runtime.mjs`；**save schema 維持 30**。
 
 ## V2.33 最新進度
 

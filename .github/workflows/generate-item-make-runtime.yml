@@ -291,6 +291,9 @@ jobs:
       - name: Run V2.33 Scapegoat Guardian regressions
         run: node tools/check_v233_profession_scapegoat_runtime.mjs
 
+      - name: Run V2.34 Deflect / Arrange regressions
+        run: node tools/check_v234_profession_deflect_arrange_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |

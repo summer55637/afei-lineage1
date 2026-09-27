@@ -102,6 +102,7 @@ let battlePlayerProfessionHitState=null;
 let battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};
 let battlePlayerProfessionStatRound=null;
 let battleProfessionScapegoat=null;
+let battlePlayerRawGuardCommand=false;
 let battlePlayerFixedToughWork=null;
 let battlePlayerAttackWork=null;
 
@@ -2055,6 +2056,20 @@ function sourceProfessionLogProficiencyResult(result){
   }
   return result;
 }
+function sourceProfessionPlayerDeflectArrangePower(compliance=state?.playerEquipCompliance){
+  // fixed BATTLE_ProfessionStatus_init() first adds (tier+10) to WORKFIXARRANGE,
+  // then immediately calls CHAR_complianceParameter(). CHAR_initcharWorkInt() resets
+  // WORKFIXARRANGE to 0 and ITEM_equipEffect() rebuilds it from ITEM_MODIFYARRANGE.
+  // Therefore effective WORKARRANGEPOWER is equipment-only; do not add Skill 53 tier here.
+  return clamp(Math.trunc(n(compliance?.arrange)),0,1000);
+}
+function sourceProfessionPlayerDeflectEvent(target=state,{randInclusive=cRand}={}){
+  const result=sourceProfessionSpecialSkillProficiencyByFunction(
+    target,'PROFESSION_DEFLECT',{randInclusive}
+  );
+  sourceProfessionLogProficiencyResult(result);
+  return result;
+}
 function sourceProfessionPlayerNormalDodgeEvent(target=state,{randInclusive=cRand}={}){
   const result=sourceProfessionSpecialSkillProficiencyByFunction(
     target,'PROFESSION_AVOID',{randInclusive}
@@ -2271,7 +2286,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_ENRAGE'
     ||functionName==='PROFESSION_ENERGY_COLLECT'
     ||functionName==='PROFESSION_FOCUS'
-    ||functionName==='PROFESSION_SCAPEGOAT';
+    ||functionName==='PROFESSION_SCAPEGOAT'
+    ||functionName==='PROFESSION_DEFLECT';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -3250,6 +3266,16 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:false,reason:'profession-command-not-prepared'};
   }
   const toNo=Math.trunc(n(prepared.toNo));
+  if(prepared.functionName==='PROFESSION_DEFLECT'){
+    // fixed profession_skill.c only prepares BATTLE_COM_S_DEFLECT. The pinned battle.c
+    // has no matching command-switch case, so active use reaches the turn and does nothing.
+    // MP/proficiency were already handled at command receipt; do not invent an active block buff.
+    return {
+      handled:true,noAction:true,reason:'source-deflect-no-battle-case',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+      sourceNoBattleCase:true
+    };
+  }
   if(prepared.functionName==='PROFESSION_CONVOLUTE'){
     const convoluteRow=sourceProfessionSkillTemplate(prepared.skillId);
     const convoluteName=String(convoluteRow?.name||('Skill '+prepared.skillId));
@@ -3396,6 +3422,7 @@ function sourceProfessionBattleFailureText(reason){
     'mp-cost-invalid':'fixed MP cost 無效',
     'client-nonbattle-skill':'這招不是 client 戰鬥技能',
     'battle-function-unported':'這招的戰鬥函式尚未移植',
+    'source-deflect-no-battle-case':'fixed battle.c 沒有 BATTLE_COM_S_DEFLECT 執行 case',
     'shield-required':'需要裝備盾牌',
     'dead-attack-hp-too-low':'目前 HP 必須大於 10',
     'target-side-empty':'敵方已沒有可用目標',
@@ -6422,7 +6449,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerFixedToughWork=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -7368,6 +7395,8 @@ function playerBattleView(){
     throwWeapon:SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(weaponType),
     hitRight:sourceProfessionPlayerHitRight(compliance),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
     otherDamage:Math.trunc(n(compliance.otherDamage)),otherDefc:Math.trunc(n(compliance.otherDefc)),
+    arrangePower:sourceProfessionPlayerDeflectArrangePower(compliance),
+    rawGuardCommand:!!battlePlayerRawGuardCommand,
     suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
     suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
     canMove:battleStatusCanMove(desc),
@@ -8259,6 +8288,22 @@ function sourceSuitDuckCheck(defender,options={}){
   const roll=cRand(0,99); // rand()%100
   return {dodged:roll<power,power,roll};
 }
+function sourceBattleArrangeCheck(defender,options={}){
+  const power=clamp(Math.trunc(n(defender?.arrangePower)),0,1000);
+  const per=Math.min(700,power);
+  // fixed BATTLE_ArrangeCheck reads raw COM_GUARD before the confusion-aware GuardAdjust check.
+  const guardCommand=Object.prototype.hasOwnProperty.call(options,'arrangeGuardCommand')
+    ?!!options.arrangeGuardCommand:(!!defender?.rawGuardCommand||!!options.guarding);
+  if(guardCommand)return {arranged:false,power,per,roll:null,reason:'guard'};
+  const damageReact=Math.trunc(n(options.damageReact??defender?.damageReact));
+  if(damageReact>0)return {arranged:false,power,per,roll:null,reason:'damage-react'};
+  if(defender?.canMove===false)return {arranged:false,power,per,roll:null,reason:'cannot-move'};
+  if(options.noDuck===true||defender?.noDuck===true)return {arranged:false,power,per,roll:null,reason:'no-duck'};
+  if(options.abio===true||defender?.abio===true)return {arranged:false,power,per,roll:null,reason:'abio'};
+  if(power<=0)return {arranged:false,power,per,roll:null,reason:'no-power'};
+  const roll=cRand(1,1000);
+  return {arranged:roll<=per,power,per,roll,reason:roll<=per?'success':'roll'};
+}
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
   // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / immobility, while the
@@ -8312,6 +8357,16 @@ function resolveNormalAttack(attacker,defender,options={}){
   if(guarding)damage=battleGuardAdjust(damage);
   if(damage<1)damage=cRand(0,1);
 
+  // fixed BATTLE_AttackSeq: Arrange runs after GuardAdjust / damage<1 RAND and before
+  // gBattleDamageModyfy. Player success raises Deflect proficiency before zero can become MISS.
+  const arrange=sourceBattleArrangeCheck(defender,Object.assign({},options,{guarding}));
+  let professionDeflect=null;
+  if(arrange.arranged){
+    damage=Math.trunc(damage*.1);
+    if(defender?.type==='player')professionDeflect=sourceProfessionPlayerDeflectEvent(state);
+  }
+  const arranged=arrange.arranged&&damage>0;
+
   const multiplier=Number.isFinite(Number(options.damageMultiplier))?Number(options.damageMultiplier):1;
   damage=Math.trunc(damage*multiplier);
 
@@ -8326,6 +8381,9 @@ function resolveNormalAttack(attacker,defender,options={}){
     damage:Math.max(0,Math.trunc(damage)),dodged:false,critical,miss:damage===0,
     guarded:guarding,duckRaw:duck,criticalRaw,baseCriticalRaw,criticalChanceMultiplier,
     preGuardDamageMultiplier:preGuardMultiplier,professionCritical,
+    arrangeTriggered:arrange.arranged,arranged,
+    arrangePower:arrange.power,arrangePer:arrange.per,arrangeRoll:arrange.roll,
+    arrangeReason:arrange.reason,professionDeflect,
     damageMultiplier:multiplier,damageDivisor:Number.isFinite(divisor)&&divisor>0?divisor:1
   };
 }
@@ -18314,6 +18372,7 @@ function sourcePerformCombo(order,index,options={}){
 }
 
 function normalBattleOrder(options={}){
+  battlePlayerRawGuardCommand=String(options.playerCommand||'')==='guard';
   if(enemy)enemy.sourceBattleTurn=Math.max(0,Math.trunc(n(enemy.sourceBattleTurn)))+1;
   const surpriseSide=enemy?.sourceSurprisePending?enemy.sourceSurpriseSide:null;
   // fixed BATTLE_AllCharaCWaitSet 只保留 Charge 類 command；普通 GUARD 新一輪前清回 NONE。
