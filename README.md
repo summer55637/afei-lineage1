@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.26**
+**PLAYABLE CORE V2.27**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,32 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.27 最新進度
+
+V2.27 新增勇士 **Skill 38「盾擊」／`PROFESSION_SHIELD_ATTACK`** 的 fixed live battle executor。
+
+- fixed row：TARGET=1、KIND=1、USE_FLAG=1、MP=5、option = `晕|成%30|效%2|回%2`。
+- command receipt 仍沿用 V2.25：先扣 MP、跑 post-dispatch 熟練度；**盾牌條件不是在按下技能時檢查，而是等角色真正輪到執行時才檢查**。因此若當下沒有 `ITEM_WSHIELD`，技能不產生戰鬥效果，但 MP／熟練度已依 fixed protocol 處理。
+- 盾牌 gate 對應 fixed `CHAR_EQSHIELD`，Web 使用玩家裝備 slot 6，且 existing item 的 `ITEM_TYPE` 必須為 **25 / ITEM_WSHIELD**。
+- fixed 攻擊力規則：
+  - tier = 10：保留當下 `WORKATTACKPOWER`；
+  - tier ≠ 10：`WORKATTACKPOWER = int(WORKATTACKPOWER × 0.5)`。
+  - 這裡用的是**當下 WORK attack**，不是 Skill 24 的 FIXSTR 重建公式。
+- 盾擊仍走 `BATTLE_AttackSeq`，但 caller 沒把 Guardian output 寫回 `defindex`，因此沿用 profession 的 **Guardian calc-only bug**。
+- 盾擊專用暈眩不是一般 `battleStatusChance()`。它用 fixed `PROFESSION_BATTLE_StatusAttackCheck()`：
+  1. 一進函式先抽 `RAND(1,100)`；
+  2. 之後才檢查目標死亡／已有異常；
+  3. 判定是嚴格 `roll < Success`；
+  4. 不使用一般 level／VITAL／status resist 公式。
+- Success = `30 + tier×4`，所以 tier0=30、tier10=70。
+- fixed option `回%2` 最後寫入的是 `turn + 1 = 3`。由於原 `BATTLE_StatusSeq()` 先依舊值判斷不能行動、再遞減，因此這是來源實際儲存值，不自行改成 2。
+- 狀態 RNG 位於 **DamageSub / death 判定 / ItemCrush 之後**；只有本次 AttackSeq 結果是 NORMAL／CRITICAL 才會進狀態判定。MISS／DODGE 不抽盾擊暈眩 RNG。
+- 成功暈眩時 fixed 會把目標 `CHAR_WORKBATTLECOM1 = BATTLE_COM_NONE`；Web 同步清除 Enemy 本輪 guard flag，並由現有 dizzy 狀態阻止後續行動。
+- 此專用 profession branch 不走普通 `BATTLE_Attack()` 的 SUITPOISON，也不接 ordinary Counter loop。
+- 戰鬥面板現在可顯示已學會的 22 暴擊、23 連環攻擊、24 雙重攻擊、38 盾擊。
+
+新增 `tools/check_v227_profession_shield_attack_runtime.mjs`，鎖定盾牌 gate、tier 10 例外、50% WORK attack、strict `RAND < Success`、dead/existing-status 仍先吃 RNG、stored dizzy turn=3、ItemCrush-before-status 與 no Counter。**save schema 維持 30**。
 
 ## V2.26 最新進度
 
