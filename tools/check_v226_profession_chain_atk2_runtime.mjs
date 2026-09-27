@@ -42,11 +42,16 @@ function extractFunction(source,name){
 const ctx={
   Math,Number,Object,
   state:null,
+  battlePlayerFixedAttackWork:null,
+  battlePlayerWeaponFocusWork:null,
+  battleWeakenRoundActive:()=>false,
   n:v=>Number.isFinite(Number(v))?Number(v):0
 };
 vm.createContext(ctx);
 for(const name of [
   'sourceProfessionBattleFunctionSupported',
+  'sourceProfessionPlayerWeaponFocusApply',
+  'sourceProfessionPlayerEffectiveFixedAttack',
   'sourceProfessionChainAtk2FixedStr',
   'sourceProfessionChainAtk2AttackPower',
   'sourceProfessionChainAtk2ReactionConsume'
@@ -71,8 +76,11 @@ assert.equal(ctx.sourceProfessionChainAtk2AttackPower(100,5),110);
 assert.equal(ctx.sourceProfessionChainAtk2AttackPower(100,10),120);
 assert.equal(ctx.sourceProfessionChainAtk2AttackPower(101,1),103); // C truncation.
 
-const stateLike={attack:999,playerEquipCompliance:{fixedAttack:123}};
-assert.equal(ctx.sourceProfessionChainAtk2FixedStr(stateLike),123);
+// V2.36 closes real FIXSTR: ChainAtk2 consumes the frozen compliance FIXSTR
+// after MYSKILLSTR -> Weapon Focus, rather than raw equipment-only fixedAttack.
+ctx.battlePlayerFixedAttackWork=123;
+assert.equal(ctx.sourceProfessionChainAtk2FixedStr({attack:999}),123);
+ctx.battlePlayerFixedAttackWork=null;
 assert.equal(ctx.sourceProfessionChainAtk2FixedStr({attack:77}),77);
 
 // Current source-backed Enemy DamageReact is ACUPUNCTURE only.
