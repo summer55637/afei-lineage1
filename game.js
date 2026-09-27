@@ -4731,9 +4731,17 @@ function battleStatusChance(attackerDesc,targetDesc,type,rules={}){
   let level=Math.trunc((battleStatusLevel(attackerDesc)-battleStatusLevel(targetDesc))*bai);
   level=clamp(level,-range,range);
   const luck=Math.trunc(n(battleStatusLuck(attackerDesc)));
-  let per=Math.trunc(perOffset+level+luck-resist-vitalPenalty);
+  const suit=targetDesc?.kind==='player'?sourcePlayerSuitWork(state):null;
+  const suitResist=targetDesc?.kind==='player'?Math.trunc(n(suit?.RESIST)):0;
+  // fixed _SUIT_ADDPART3 source bug: RENOCASE is subtracted only when status is WEAKEN.
+  const suitRenocase=targetDesc?.kind==='player'&&type==='weaken'
+    ?Math.trunc(n(suit?.RENOCASE)):0;
+  let per=Math.trunc(perOffset+level+luck-resist-vitalPenalty-suitResist-suitRenocase);
   if(per>80)per=80;
-  return {allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset};
+  return {
+    allowed:true,per,success:cRand(1,100)<per,resist,vitalPenalty,level,bai,range,perOffset,
+    suitResist,suitRenocase
+  };
 }
 function battleStatusApply(targetDesc,type,turns){
   if(battleHasAnyStatus(targetDesc))return false;
@@ -5166,6 +5174,8 @@ function playerBattleView(){
     throwWeapon:SOURCE_PLAYER_RANGED_WEAPON_TYPES.has(weaponType),
     hitRight:Math.trunc(n(compliance.hitRight)),neglectGuard:Math.trunc(n(compliance.neglectGuard)),
     otherDamage:Math.trunc(n(compliance.otherDamage)),otherDefc:Math.trunc(n(compliance.otherDefc)),
+    suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
+    suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
     canMove:battleStatusCanMove(desc),
     level:Math.max(1,Math.trunc(n(state.level))),elements:battleElementsForDesc(desc)
   };
@@ -6041,9 +6051,19 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
   }
   return duck;
 }
+function sourceSuitDuckCheck(defender,options={}){
+  // fixed BATTLE_AttackSeq: this is a second independent dodge after BATTLE_DuckCheck.
+  // It still runs when GUARD / immobility made BATTLE_DuckCheck return FALSE; only COMBO skips it.
+  if(options.sourceCombo||options.skipSuitDodge)return {dodged:false,power:0,roll:null};
+  const power=Math.trunc(n(defender?.suitDuckPower));
+  if(power<=0)return {dodged:false,power,roll:null};
+  const roll=cRand(0,99); // rand()%100
+  return {dodged:roll<power,power,roll};
+}
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
-  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD or BATTLE_CanMoveCheck()==FALSE.
+  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / immobility, while the
+  // separate suit-dodge branch below still executes unless this is COMBO/already checked.
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
   if(!disableDodge&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
@@ -6053,8 +6073,15 @@ function resolveNormalAttack(attacker,defender,options={}){
     }
   }
   const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
-  // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進閃避判定。
+  // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進普通閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck)return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck};
+  const suitDuck=sourceSuitDuckCheck(defender,options);
+  if(suitDuck.dodged){
+    return {
+      damage:0,dodged:true,critical:false,miss:false,guarded:guarding,duckRaw:duck,
+      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll
+    };
+  }
 
   const baseCriticalRaw=battleCriticalChance(attacker,defender);
   const criticalChanceMultiplier=Number.isFinite(Number(options.criticalChanceMultiplier))
@@ -6145,8 +6172,9 @@ function battleCounterChance(attacker,defender){
   per=Math.trunc(per);
 
   if(attacker?.type==='player'){
-    // BATTLE_CounterCheckPlayer：CriPer * CounterTbl * 0.1 + Luck。
-    per=per*sourceCounterWeaponFactor(attacker?.weaponType,defender?.weaponType)*.1+n(attacker?.luck);
+    // fixed _SUIT_ADDENDUM: Player counter adds CHAR_WORKCOUNTER after weapon factor + Luck.
+    per=per*sourceCounterWeaponFactor(attacker?.weaponType,defender?.weaponType)*.1
+      +n(attacker?.luck)+n(attacker?.suitCounter);
   }else{
     // Pet/Enemy 使用 BATTLE_CounterCheckPet，不套 CounterTbl；NoGuard 額外反擊率已由 counterBonus 帶入。
     per+=n(attacker?.counterBonus);
@@ -6628,9 +6656,8 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 function sourceInitialDodgeOnly(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
-  if(disableDodge)return {dodged:false,duckRaw:0};
 
-  if(n(defender?.skillDuckPower)>0){
+  if(!disableDodge&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
@@ -6641,11 +6668,18 @@ function sourceInitialDodgeOnly(attacker,defender,options={}){
     }
   }
 
-  const duck=sourceBattleDuckTotal(attacker,defender,options);
-  if(cRand(1,10000)<=duck){
+  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
+  if(!disableDodge&&cRand(1,10000)<=duck){
     return {dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck};
   }
-  return {dodged:false,duckRaw:duck};
+  const suitDuck=sourceSuitDuckCheck(defender,options);
+  if(suitDuck.dodged){
+    return {
+      dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,
+      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll
+    };
+  }
+  return {dodged:false,duckRaw:duck,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll};
 }
 // fixed BATTLE_AttackSeq() Guardian caller audit (V1.12):
 // - real substitution: BATTLE_Attack, BATTLE_Attack_FIREKILL, BATTLE_BattleModel_ATTACK,
@@ -6688,7 +6722,7 @@ function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null)
   // Guardian 接手後不做第二次 dodge，也不沿用主人 GUARD；傷害/critical 以 Guardian 自身能力重算。
   const r=resolveNormalAttack(attacker,defender,Object.assign({},options,{
     guarding:guardian?false:!!options.guarding,
-    disableDodge:true
+    disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
   r.originalTargetDesc={kind:'player'};
@@ -8038,7 +8072,7 @@ function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null)
   // but caller defindex is never updated, so DamageSub still hits the original Player.
   const r=resolveNormalAttack(attacker,calcDefender,Object.assign({},options,{
     guarding:guardian?false:guarding,
-    disableDodge:true
+    disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
   r.originalTargetDesc={kind:'player'};
@@ -8067,7 +8101,7 @@ function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
   const localGuarding=guardian?false:!!originalGuarding;
   const multiplier=localGuarding?1.3:.7;
   const r=resolveNormalAttack(attacker,calcDefender,{
-    guarding:false,disableDodge:true,preGuardDamageMultiplier:multiplier
+    guarding:false,disableDodge:true,skipSuitDodge:true,preGuardDamageMultiplier:multiplier
   });
   r.duckRaw=dodge.duckRaw;
   r.originalTargetDesc={kind:'player'};
@@ -15891,7 +15925,7 @@ function sourcePerformCombo(order,index,options={}){
     if(!attacker)continue;
     // 原 BATTLE_Combo -> BATTLE_AttackSeq(..., BATTLE_COM_COMBO)：
     // 完全跳過 DuckCheck，Guardian 初值 -2 也使 GuardianCheck 不執行。
-    const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true});
+    const r=resolveNormalAttack(attacker,targetView,{guarding,disableDodge:true,sourceCombo:true,skipSuitDodge:true});
     if(n(r.damage)<=0){r.damage=1;r.miss=false}
     const calculatedDamage=Math.max(1,Math.trunc(n(r.damage)));
     rawTotal+=calculatedDamage;
