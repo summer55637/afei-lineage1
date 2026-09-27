@@ -2251,7 +2251,8 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
     ||functionName==='PROFESSION_SHIELD_ATTACK'
-    ||functionName==='PROFESSION_DEAD_ATTACK';
+    ||functionName==='PROFESSION_DEAD_ATTACK'
+    ||functionName==='PROFESSION_THROUGH_ATTACK';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2286,7 +2287,8 @@ function sourceProfessionBattleSkillPrepare({
 function sourceProfessionEnemyByBattleSlot(toNo){
   const slot=Math.trunc(Number(toNo));
   if(!enemy||slot<10||slot>19)return null;
-  return (enemy.units||[]).find(unit=>10+Math.trunc(n(unit?.battleSlot))===slot)||null;
+  const units=Array.isArray(enemy.units)&&enemy.units.length?enemy.units:[enemy];
+  return units.find(unit=>10+Math.trunc(n(unit?.battleSlot))===slot)||null;
 }
 function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
   const base=playerBattleView();
@@ -2525,6 +2527,231 @@ function sourceProfessionDeadAttackExecute(target,prepared,name){
     r,actual,damageReactSuppressed:true,noOrdinaryCounter:true
   };
 }
+function sourceProfessionThroughAliveEnemySlots(){
+  if(!enemy)return [];
+  const units=Array.isArray(enemy.units)&&enemy.units.length?enemy.units:[enemy];
+  return units
+    .filter(unit=>unit&&n(unit.hp)>0)
+    .map(unit=>10+Math.trunc(n(unit.battleSlot)))
+    .filter(slot=>slot>=10&&slot<=19)
+    .sort((a,b)=>a-b);
+}
+function sourceProfessionThroughResolveInitialSlot(toNo,{randModulo=sourceRandModulo}={}){
+  const requested=Math.trunc(Number(toNo));
+  const alive=sourceProfessionThroughAliveEnemySlots();
+  if(!alive.length)return {ok:false,reason:'target-side-empty',requestedToNo:requested,aliveSlots:alive};
+  if(alive.includes(requested)){
+    return {ok:true,toNo:requested,requestedToNo:requested,retargeted:false,aliveSlots:alive,retargetRolls:[]};
+  }
+
+  // fixed __ATTACK_MAGIC BATTLE_MultiList packs alive slots into nLifeArea[0..nLife-1],
+  // then repeatedly uses rand()%10 until the sampled packed index is not -1.
+  const rolls=[];
+  while(true){
+    const roll=((Math.trunc(n(randModulo(10)))%10)+10)%10;
+    rolls.push(roll);
+    if(roll<alive.length){
+      return {
+        ok:true,toNo:alive[roll],requestedToNo:requested,retargeted:true,
+        aliveSlots:alive,retargetRolls:rolls
+      };
+    }
+  }
+}
+function sourceProfessionThroughTargetSlots(toNo){
+  const base=Math.trunc(Number(toNo));
+  const alive=new Set(sourceProfessionThroughAliveEnemySlots());
+  if(!alive.has(base))return [];
+  const pair=base<15?base+5:base-5;
+  if(!alive.has(pair))return [base];
+
+  // fixed PROFESSION_MAGIC_TOLIST_SORT always puts the front-row slot (15..19)
+  // before the paired back-row slot (10..14), regardless of which one was clicked.
+  return pair>base?[pair,base]:[base,pair];
+}
+function sourceProfessionThroughMagicDodge(target){
+  // fixed PROFESSION_MAGIC_DODGE consumes RAND(1,100) before the EARTHROUND early return.
+  const roll=cRand(1,100);
+  if(!target||n(target.hp)<=0){
+    return {miss:true,roll,luck:0,reason:'dead-or-missing'};
+  }
+  if(enemyUnitHidden(target)){
+    return {miss:true,roll,luck:0,reason:'earthround'};
+  }
+  // CHAR_TYPEENEMY follows the non-Player ("pet") branch: LV*0.15, capped at 20.
+  const luck=Math.trunc(Math.min(Math.max(1,Math.trunc(n(target.level)))*.15,20));
+  return {miss:roll<=luck,roll,luck,reason:roll<=luck?'roll':'hit'};
+}
+function sourceProfessionThroughHitPenalty(attackSkillTier){
+  const tier=Math.trunc(n(attackSkillTier));
+  if(tier===10)return {applied:false,tier,workHitRight:sourceProfessionPlayerHitRight()};
+  const before=sourceProfessionPlayerHitRight();
+  // fixed Through special-power helper runs once PER target that passed magic dodge.
+  // It overwrites MYSKILLHIT=1 / NUM=-70 each time and subtracts 50 from current WORKHITRIGHT.
+  battlePlayerProfessionHitState={turns:1,power:-70,workHitRight:before-50};
+  return {applied:true,tier,before,after:before-50,turns:1,power:-70};
+}
+function sourceProfessionThroughPhysicalResult(target){
+  if(!target)return null;
+  const attacker=playerBattleView();
+  const defender=enemyBattleView(target);
+  if(!attacker||!defender)return null;
+
+  // fixed BATTLE_PROFESSION_THROUGH_ATTACK_GET_DAMAGE:
+  // critical RNG is consumed BEFORE BATTLE_DuckCheck.
+  const criticalRaw=battleCriticalChance(attacker,defender);
+  const criticalRoll=cRand(1,10000);
+  const critical=criticalRoll<criticalRaw;
+
+  if(critical){
+    let damage=battleDamageCore(attacker,defender);
+    // Direct BATTLE_CriDamageCalc: unlike BATTLE_AttackSeq, BOW has no critical-damage exception.
+    damage=Math.trunc(
+      damage+n(defender.defense)*Math.max(1,n(attacker.level))/Math.max(1,n(defender.level))*.5
+    );
+    return {
+      damage:Math.max(0,Math.trunc(damage)),critical:true,dodged:false,miss:damage<=0,
+      criticalRaw,criticalRoll,duckSkippedByCritical:true,
+      noCriticalProficiencyHook:true
+    };
+  }
+
+  const desc={kind:'enemy',unit:target,unitId:target.id};
+  const guarding=!!target.guardThisTurn&&!battleStatusActive(desc,'confusion');
+  const damageReact=!!target.acupunctureActive;
+
+  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD, any DamageReact,
+  // or an actor that cannot move. Through never follows with GuardAdjust/DamageSub.
+  if(!guarding&&!damageReact&&defender.canMove!==false){
+    const skillDuckPower=Math.trunc(n(defender.skillDuckPower));
+    if(skillDuckPower>0){
+      const skillDuckRoll=cRand(0,99);
+      if(skillDuckRoll<=skillDuckPower){
+        return {
+          damage:0,critical:false,dodged:true,miss:false,criticalRaw,criticalRoll,
+          skillDuck:true,skillDuckPower,skillDuckRoll,damageReact,
+          noSuitDuck:true
+        };
+      }
+    }
+    const duckRaw=sourceBattleDuckTotal(attacker,defender);
+    const duckRoll=cRand(1,10000);
+    if(duckRoll<=duckRaw){
+      return {
+        damage:0,critical:false,dodged:true,miss:false,criticalRaw,criticalRoll,
+        duckRaw,duckRoll,damageReact,noSuitDuck:true
+      };
+    }
+    const damage=battleDamageCore(attacker,defender);
+    return {
+      damage:Math.max(0,Math.trunc(damage)),critical:false,dodged:false,miss:damage<=0,
+      criticalRaw,criticalRoll,duckRaw,duckRoll,damageReact,noSuitDuck:true
+    };
+  }
+
+  const damage=battleDamageCore(attacker,defender);
+  return {
+    damage:Math.max(0,Math.trunc(damage)),critical:false,dodged:false,miss:damage<=0,
+    criticalRaw,criticalRoll,duckRaw:0,duckRoll:null,
+    duckDisabled:true,guarding,damageReact,noSuitDuck:true
+  };
+}
+function sourceProfessionThroughWakeTarget(target){
+  if(!target)return false;
+  const desc={kind:'enemy',unit:target,unitId:target.id};
+  if(!battleStatusActive(desc,'sleep'))return false;
+  // fixed PROFESSION_MAGIC_ATTAIC calls BATTLE_DamageWakeUp at the tail for every
+  // def_be_hit target, even when the inner physical dodge yielded attvalue==0.
+  battleStatusClear(desc,'sleep');
+  addLog(target.name+' 被貫穿攻擊的來源 tail 喚醒了。');
+  return true;
+}
+function sourceProfessionThroughAttackExecute(prepared,name){
+  const resolved=sourceProfessionThroughResolveInitialSlot(prepared.toNo);
+  if(!resolved.ok){
+    return {
+      handled:true,noAction:true,reason:resolved.reason,
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:Math.trunc(n(prepared.toNo)),resolved
+    };
+  }
+
+  // fixed PROFESSION_MAGIC_GET_PRACTICE runs once before Through re-builds its paired list.
+  // Through has no practice-power case, but still consumes its unconditional RAND(1,100)
+  // and _SUIT_ADDPART4 rand()%100. power remains zero.
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_THROUGH_ATTACK',prepared.displayLevel,state.hp
+  );
+  const slots=sourceProfessionThroughTargetSlots(resolved.toNo);
+  const hits=[],wakeTargets=[];
+
+  for(let i=0;i<slots.length;i++){
+    const slot=slots[i];
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    const magicDodge=sourceProfessionThroughMagicDodge(target);
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const hitPenalty=sourceProfessionThroughHitPenalty(prepared.attackSkillTier);
+    const physical=sourceProfessionThroughPhysicalResult(target);
+    const rawPhysical=Math.max(0,Math.trunc(n(physical?.damage)));
+
+    // fixed order: special physical power -> UN_POW_M -> PROFESSION_MAGIC_GET_DAMAGE.
+    // magic_type is -1 ("无"), so the damage core otherwise returns this reduced power unchanged.
+    const magicDamage=sourcePlayerProfessionMagicDamageCore({
+      magicType:-1,power:rawPhysical,command:'BATTLE_COM_S_THROUGH_ATTACK',target:state
+    });
+
+    // fixed PROFESSION_MAGIC_CHANGE_STATUS consumes this RAND even though Through has no switch case.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    // fixed PROFESSION_MAGIC_CHANG_STATUS uses loop index, not actual row.
+    // Therefore a single surviving back-row target is still "no==0" and gets the front multiplier.
+    const multiplier=i===0?(prepared.attackSkillTier*2+70):(prepared.attackSkillTier*2+50);
+    const damage=Math.max(0,Math.trunc(n(magicDamage.damage)*multiplier/100));
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+
+    if(before>0&&after<=0){
+      sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+    }
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,hitPenalty,physical,
+      rawPhysical,magicDamage,unusedChangeStatusRoll,multiplier,
+      damage,hpBefore:before,hpAfter:after,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true,noGuardAdjust:true
+    });
+    wakeTargets.push(target);
+
+    if(physical?.dodged){
+      addLog(target.name+' 閃過「'+name+'」內層物理判定；傷害 0，但 fixed tail 仍會解除睡眠。');
+    }else{
+      addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+    }
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionThroughWakeTarget(target)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    requestedToNo:Math.trunc(n(prepared.toNo)),toNo:resolved.toNo,
+    resolved,practice,targetSlots:slots,hits,wakes,
+    attackSkillTier:prepared.attackSkillTier,
+    sourceMagicType:-1,sourcePracticePower:practice.power,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
 function sourceProfessionBattleSkillExecute(prepared,actor=null){
   if(!prepared?.ok||prepared.prepared!==true){
     return {handled:false,reason:'profession-command-not-prepared'};
@@ -2537,6 +2764,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
   }
   if(toNo>19){
     return {handled:true,noAction:true,reason:'unsupported-pseudo-target-for-direct-physical',toNo};
+  }
+  if(prepared.functionName==='PROFESSION_THROUGH_ATTACK'){
+    const throughRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const throughName=String(throughRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionThroughAttackExecute(prepared,throughName);
   }
   const target=sourceProfessionEnemyByBattleSlot(toNo);
   if(!target||n(target.hp)<=0){
@@ -2653,7 +2885,8 @@ function sourceProfessionBattleFailureText(reason){
     'client-nonbattle-skill':'這招不是 client 戰鬥技能',
     'battle-function-unported':'這招的戰鬥函式尚未移植',
     'shield-required':'需要裝備盾牌',
-    'dead-attack-hp-too-low':'目前 HP 必須大於 10'
+    'dead-attack-hp-too-low':'目前 HP 必須大於 10',
+    'target-side-empty':'敵方已沒有可用目標'
   })[reason]||String(reason||'未知原因');
 }
 
@@ -18260,7 +18493,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.28 live：暴擊／連環攻擊／雙重攻擊／盾擊／瀕死攻擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.29 live：暴擊／連環攻擊／雙重攻擊／盾擊／貫穿攻擊／瀕死攻擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;
