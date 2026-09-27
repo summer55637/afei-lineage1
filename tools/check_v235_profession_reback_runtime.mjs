@@ -10,8 +10,23 @@ function extractFunction(source,name){
   const marker='function '+name+'(';
   const start=source.indexOf(marker);
   assert.ok(start>=0,'missing '+name);
-  const bs=source.indexOf('{',start);
-  let d=0,q=null,esc=false,lc=false,bc=false;
+  const ps=source.indexOf('(',start);
+  let pd=0,pe=-1,q=null,esc=false,lc=false,bc=false;
+  for(let i=ps;i<source.length;i++){
+    const c=source[i],n=source[i+1];
+    if(lc){if(c==='\n')lc=false;continue}
+    if(bc){if(c==='*'&&n==='/'){bc=false;i++}continue}
+    if(q){if(esc){esc=false;continue}if(c==='\\'){esc=true;continue}if(c===q)q=null;continue}
+    if(c==="'"||c==='"'||c==='\x60'){q=c;continue}
+    if(c==='/'&&n==='/'){lc=true;i++;continue}
+    if(c==='/'&&n==='*'){bc=true;i++;continue}
+    if(c==='(')pd++;
+    else if(c===')'&&--pd===0){pe=i;break}
+  }
+  assert.ok(pe>=0,'unterminated params '+name);
+  const bs=source.indexOf('{',pe);
+  assert.ok(bs>=0,'missing body '+name);
+  let d=0;q=null;esc=false;lc=false;bc=false;
   for(let i=bs;i<source.length;i++){
     const c=source[i],n=source[i+1];
     if(lc){if(c==='\n')lc=false;continue}
