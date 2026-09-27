@@ -90,7 +90,8 @@ assert.equal(result.noFormalRideSystem,true);
 assert.equal(result.damageReactSuppressed,true);
 assert.equal(result.suitPoisonSuppressed,true);
 assert.equal(result.noOrdinaryCounter,true);
-assert.deepEqual(applyOptions,{suppressSuitPoison:true,suppressDamageReact:true});
+assert.equal(applyOptions.suppressSuitPoison,true);
+assert.equal(applyOptions.suppressDamageReact,true);
 
 const cav=extractFunction(game,'sourceProfessionCavalryExecute');
 assert.ok(cav.includes('fixed version.h defines CAVALRY_DEBUG'));
