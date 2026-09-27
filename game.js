@@ -99,6 +99,7 @@ let sourceLastMergeTimeSec=0;
 let professionEncounterFix=0;
 let professionEncounterUntilSec=0;
 let battlePlayerProfessionHitState=null;
+let battlePlayerAttackWork=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2246,13 +2247,22 @@ function sourceProfessionAttackSkillTier(displayLevel){
   if(level>10)return 1;
   return 0;
 }
+function sourceProfessionPlayerAttackWork(){
+  const view=playerBattleView();
+  return Math.trunc(n(view?.attack));
+}
+function sourceProfessionSetPlayerAttackWork(value){
+  battlePlayerAttackWork=Math.trunc(n(value));
+  return battlePlayerAttackWork;
+}
 function sourceProfessionBattleFunctionSupported(functionName){
   return functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
     ||functionName==='PROFESSION_SHIELD_ATTACK'
     ||functionName==='PROFESSION_DEAD_ATTACK'
-    ||functionName==='PROFESSION_THROUGH_ATTACK';
+    ||functionName==='PROFESSION_THROUGH_ATTACK'
+    ||functionName==='PROFESSION_CONVOLUTE';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2398,6 +2408,7 @@ function sourceProfessionShieldAttackExecute(target,prepared,name){
 
   const base=playerBattleView();
   const attackPower=sourceProfessionShieldAttackPower(base?.attack,prepared.attackSkillTier);
+  sourceProfessionSetPlayerAttackWork(attackPower);
   // fixed status-change branch uses BATTLE_AttackSeq with Guardian output but never rewrites
   // defindex to Guardian, so this is the same calc-only Guardian bug as the first profession hit.
   const r=sourceProfessionPhysicalCalcOnlyResult(target,{attackerOverride:{attack:attackPower}});
@@ -2666,6 +2677,114 @@ function sourceProfessionThroughWakeTarget(target){
   addLog(target.name+' 被貫穿攻擊的來源 tail 喚醒了。');
   return true;
 }
+function sourceProfessionConvoluteResolveRow(toNo){
+  const requested=Math.trunc(Number(toNo));
+  if(requested!==23&&requested!==24){
+    return {ok:false,reason:'unsupported-convolute-row',requestedToNo:requested};
+  }
+  const back=sourceProfessionThroughAliveEnemySlots().filter(slot=>slot>=10&&slot<=14);
+  const front=sourceProfessionThroughAliveEnemySlots().filter(slot=>slot>=15&&slot<=19);
+  const primary=requested===23?back:front;
+  if(primary.length){
+    return {
+      ok:true,toNo:requested,requestedToNo:requested,fallback:false,
+      targetSlots:primary.slice()
+    };
+  }
+  const alternate=requested===23?front:back;
+  if(!alternate.length){
+    return {ok:false,reason:'target-side-empty',requestedToNo:requested,targetSlots:[]};
+  }
+  // fixed __ATTACK_MAGIC BATTLE_MultiList row fallback mutates COM2 to the opposite row pseudo.
+  return {
+    ok:true,toNo:requested===23?24:23,requestedToNo:requested,fallback:true,
+    targetSlots:alternate.slice()
+  };
+}
+function sourceProfessionConvoluteAttackStep(attackSkillTier){
+  const before=sourceProfessionPlayerAttackWork();
+  const pct=50+Math.trunc(n(attackSkillTier))*2;
+  const after=Math.trunc(before*pct/100);
+  sourceProfessionSetPlayerAttackWork(after);
+  return {before,after,pct};
+}
+function sourceProfessionConvoluteExecute(prepared,name){
+  const row=sourceProfessionConvoluteResolveRow(prepared.toNo);
+  if(!row.ok){
+    return {
+      handled:true,noAction:true,reason:row.reason,
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:Math.trunc(n(prepared.toNo)),row
+    };
+  }
+
+  // Same PROFESSION_MAGIC_GET_PRACTICE source quirk as Through:
+  // no Convolute branch, but unconditional critical + M2 RNG are still consumed.
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_CONVOLUTE',prepared.displayLevel,state.hp
+  );
+  const slots=row.targetSlots.slice();
+  const hits=[],wakeTargets=[];
+
+  for(const slot of slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    const magicDodge=sourceProfessionThroughMagicDodge(target);
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    // fixed BATTLE_PROFESSION_CONVOLUTE_GET_DAMAGE mutates global WORKATTACKPOWER
+    // before critical/duck. It reads the already-mutated value again for every next target.
+    const attackWork=sourceProfessionConvoluteAttackStep(prepared.attackSkillTier);
+    const physical=sourceProfessionThroughPhysicalResult(target);
+    const rawPhysical=Math.max(0,Math.trunc(n(physical?.damage)));
+    const magicDamage=sourcePlayerProfessionMagicDamageCore({
+      magicType:-1,power:rawPhysical,command:'BATTLE_COM_S_CONVOLUTE',target:state
+    });
+
+    // No Convolute case, but fixed PROFESSION_MAGIC_CHANGE_STATUS still consumes its leading RAND.
+    const unusedChangeStatusRoll=cRand(1,100);
+    const damage=Math.max(0,Math.trunc(n(magicDamage.damage)));
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,attackWork,physical,
+      rawPhysical,magicDamage,unusedChangeStatusRoll,
+      damage,hpBefore:before,hpAfter:after,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true,noGuardAdjust:true
+    });
+    wakeTargets.push(target);
+
+    if(physical?.dodged){
+      addLog(target.name+' 閃過「'+name+'」內層物理判定；傷害 0，但 fixed tail 仍會解除睡眠。');
+    }else{
+      addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+    }
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionThroughWakeTarget(target)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    requestedToNo:Math.trunc(n(prepared.toNo)),toNo:row.toNo,row,
+    practice,targetSlots:slots,hits,wakes,
+    attackSkillTier:prepared.attackSkillTier,
+    finalWorkAttack:sourceProfessionPlayerAttackWork(),
+    sourceMagicType:-1,sourcePracticePower:practice.power,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
 function sourceProfessionThroughAttackExecute(prepared,name){
   const resolved=sourceProfessionThroughResolveInitialSlot(prepared.toNo);
   if(!resolved.ok){
@@ -2757,8 +2876,13 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:false,reason:'profession-command-not-prepared'};
   }
   const toNo=Math.trunc(n(prepared.toNo));
+  if(prepared.functionName==='PROFESSION_CONVOLUTE'){
+    const convoluteRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const convoluteName=String(convoluteRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionConvoluteExecute(prepared,convoluteName);
+  }
   if(toNo<10){
-    // fixed battle.c direct-attack profession gate rejects same-side targets here;
+    // fixed battle.c direct-attack profession gate rejects same-side direct targets here;
     // MP/proficiency were already consumed earlier by PROFESSION_SKILL_Use().
     return {handled:true,noAction:true,reason:'same-side-target',toNo};
   }
@@ -2802,6 +2926,7 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const reactionConsume=sourceProfessionChainAtk2ReactionConsume(target);
     const fixedStr=sourceProfessionChainAtk2FixedStr(state);
     const attackPower=sourceProfessionChainAtk2AttackPower(fixedStr,prepared.attackSkillTier);
+    sourceProfessionSetPlayerAttackWork(attackPower);
     addLog('你施放「'+name+'」；第一段為 0 傷害動作，真正攻擊力改為 FIXSTR×'
       +(prepared.attackSkillTier*2+100)+'%。','good');
 
@@ -2886,7 +3011,8 @@ function sourceProfessionBattleFailureText(reason){
     'battle-function-unported':'這招的戰鬥函式尚未移植',
     'shield-required':'需要裝備盾牌',
     'dead-attack-hp-too-low':'目前 HP 必須大於 10',
-    'target-side-empty':'敵方已沒有可用目標'
+    'target-side-empty':'敵方已沒有可用目標',
+    'unsupported-convolute-row':'回旋攻擊目前沒有有效的敵方列目標'
   })[reason]||String(reason||'未知原因');
 }
 
@@ -5909,7 +6035,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -6827,7 +6953,8 @@ function playerBattleView(){
   const compliance=state?.playerEquipCompliance||playerComplianceParameter(state)?.equip||{};
   const fixedToughBase=Math.trunc(n(compliance.fixedTough??state.defense));
   const magicPet=sourceMagicPetAdjusted(desc,state.attack,state.defense,state.dex,fixedToughBase);
-  const attack=weaken?Math.trunc(n(magicPet.attack)*.8):n(magicPet.attack);
+  const compliantAttack=weaken?Math.trunc(n(magicPet.attack)*.8):n(magicPet.attack);
+  const attack=battlePlayerAttackWork==null?compliantAttack:Math.trunc(n(battlePlayerAttackWork));
   const defenseBase=weaken?Math.trunc(n(magicPet.defense)*.8):n(magicPet.defense);
   const quickBase=weaken?Math.trunc(n(magicPet.quick)*.8):n(magicPet.quick);
   const arm=compliance.arm||null;
@@ -17715,6 +17842,8 @@ function normalBattleOrder(options={}){
   // Player 沒有 EARTHROUND0 例外，所以這裡也必須重建裝備 WORK。特別重要的是
   // ITEM_DIErelife 同回合消耗裝備後不立即 compliance，直到下一 round 才失去戒指加成。
   playerComplianceParameter(state);
+  // fixed CHAR_complianceParameter + BATTLE_TurnParam rebuilds Player WORKATTACKPOWER each round.
+  battlePlayerAttackWork=null;
   sourceProfessionPlayerHitPreCommandCompliance(state);
   // EARTHROUND0 是 Pet/Enemy 的明確例外，隱身者跳過整段並保留上一輪 WORK/FIX。
   sourcePreCommandResetTransient();
@@ -18493,7 +18622,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.29 live：暴擊／連環攻擊／雙重攻擊／盾擊／貫穿攻擊／瀕死攻擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.30 live：暴擊／連環攻擊／雙重攻擊／盾擊／貫穿攻擊／回旋攻擊／瀕死攻擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;
