@@ -18670,6 +18670,12 @@ function captureTurn(manual=false){
         continue;
       }
     }else{
+      if(statusTurn.instigateAttack){
+        performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
+        if(enemy)syncEnemyTarget();
+        sourceProcessBattleActorOuterBoundary();
+        continue;
+      }
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
@@ -19481,6 +19487,12 @@ function attackTurn(options={}){
         continue;
       }
     }else{
+      if(statusTurn.instigateAttack){
+        performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
+        if(enemy)syncEnemyTarget();
+        sourceProcessBattleActorOuterBoundary();
+        continue;
+      }
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:false,allowPlayerCounter:true});
         if(enemy)syncEnemyTarget();
@@ -19590,6 +19602,12 @@ function guardTurn(){
         continue;
       }
     }else{
+      if(statusTurn.instigateAttack){
+        performProfessionInstigateAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
+        if(enemy)syncEnemyTarget();
+        sourceProcessBattleActorOuterBoundary();
+        continue;
+      }
       if(statusTurn.confusionAttack){
         performConfusionAttack(actor,statusTurn,{playerGuarding:true,allowPlayerCounter:false});
         if(enemy)syncEnemyTarget();
