@@ -1374,6 +1374,230 @@ function sourcePlayerProfessionMagicEquipSuitResist(attr,target=state){
   if(!(key==='fire'||key==='thunder'||key==='ice'))return 0;
   return Math.trunc(n(sourcePlayerEquipResistWork(target)[key]));
 }
+
+// V2.19 fixed profession-magic numeric core.
+// This does not invent a profession-skill menu. It preserves the pinned C
+// PROFESSION_MAGIC_GET_PRACTICE -> UN_POW_M -> PROFESSION_MAGIC_GET_DAMAGE chain.
+function sourceProfessionMagicLevelM(rawLevel){
+  const skillLevel=Math.trunc(n(rawLevel));
+  if(skillLevel>90)return 10;
+  if(skillLevel>80)return 9;
+  if(skillLevel>70)return 8;
+  if(skillLevel>60)return 7;
+  if(skillLevel>50)return 6;
+  if(skillLevel>40)return 5;
+  if(skillLevel>30)return 4;
+  if(skillLevel>20)return 3;
+  if(skillLevel>10)return 2;
+  return 1;
+}
+function sourceProfessionMagicTypeFromOption(option){
+  // pinned analysis_profession_parameter(): char magic[3][5]={"火","冰","电"}.
+  // Keep the fixed source literals and their 1/2/3 ordering exactly.
+  const value=String(option??'');
+  if(value==='火')return 1;
+  if(value==='冰')return 2;
+  if(value==='电')return 3;
+  return -1;
+}
+function sourcePlayerProfessionMagicSuitPower(target=state){
+  const suit=sourcePlayerSuitWork(target);
+  return {
+    mPower:Math.trunc(n(suit?.M_POW)),
+    m2Power:Math.trunc(n(suit?.M2_POW)),
+    unPower:Math.trunc(n(suit?.UN_POW_M))
+  };
+}
+function sourcePlayerProfessionMagicEquipSuitForType(magicType,target=state){
+  // PROFESSION_MAGIC_GET_DAMAGE fixed mapping is intentionally not corrected:
+  // type 2 consumes thunder equip Work, type 3 consumes ice equip Work.
+  const type=Math.trunc(n(magicType));
+  if(type===1)return sourcePlayerProfessionMagicEquipSuitResist('fire',target);
+  if(type===2)return sourcePlayerProfessionMagicEquipSuitResist('thunder',target);
+  if(type===3)return sourcePlayerProfessionMagicEquipSuitResist('ice',target);
+  return 0;
+}
+function sourceProfessionMagicPracticePower(command,rawSkillLevel,playerHp=0,suitWork=null){
+  const skillLevel=sourceProfessionMagicLevelM(rawSkillLevel);
+  // fixed C consumes this RAND even for commands whose switch branch never reads critical.
+  const criticalRoll=cRand(1,100);
+  let hpPower=0,mpPower=0;
+
+  switch(String(command||'')){
+    case 'BATTLE_COM_S_VOLCANO_SPRINGS':
+      hpPower=skillLevel*10+100;
+      if(skillLevel>=10){
+        if(criticalRoll<=25)hpPower=Math.fround(hpPower*1.5);
+      }else if(criticalRoll<=skillLevel+12){
+        hpPower=Math.fround(hpPower*1.5);
+      }
+      break;
+    case 'BATTLE_COM_S_FIRE_BALL':
+      if(skillLevel>=10)hpPower=360;
+      else if(skillLevel>=9)hpPower=320;
+      else if(skillLevel>=8)hpPower=280;
+      else if(skillLevel>=7)hpPower=260;
+      else if(skillLevel>=5)hpPower=220;
+      else if(skillLevel>=3)hpPower=180;
+      else hpPower=160;
+      break;
+    case 'BATTLE_COM_S_SUMMON_THUNDER':
+      hpPower=skillLevel*10+200;
+      break;
+    case 'BATTLE_COM_S_CURRENT':
+      // Preserve the fixed _PROFESSION_ADDSKILL branch, including the unreachable >9 case.
+      if(skillLevel>=10)hpPower=300;
+      else if(skillLevel>9)hpPower=250;
+      else if(skillLevel>7)hpPower=200;
+      else if(skillLevel>4)hpPower=150;
+      else if(skillLevel>1)hpPower=10;
+      else hpPower=50;
+      break;
+    case 'BATTLE_COM_S_STORM':
+      if(skillLevel>9)hpPower=200;
+      else if(skillLevel>7)hpPower=180;
+      else if(skillLevel>5)hpPower=160;
+      else if(skillLevel>3)hpPower=140;
+      else hpPower=120;
+      break;
+    case 'BATTLE_COM_S_ICE_ARROW':
+      hpPower=skillLevel>=10?250:skillLevel*10+130;
+      break;
+    case 'BATTLE_COM_S_ICE_CRACK':
+      if(skillLevel>=10)hpPower=400;
+      else if(skillLevel===9)hpPower=300;
+      else hpPower=skillLevel*10+210;
+      break;
+    case 'BATTLE_COM_S_DOOM':
+      if(skillLevel>=10)hpPower=550;
+      else if(skillLevel>9)hpPower=500;
+      else if(skillLevel>8)hpPower=450;
+      else if(skillLevel>7)hpPower=400;
+      else if(skillLevel>6)hpPower=350;
+      else if(skillLevel>4)hpPower=300;
+      else if(skillLevel>2)hpPower=250;
+      else hpPower=200;
+      break;
+    case 'BATTLE_COM_S_FIRE_SPEAR':
+      if(skillLevel>9)hpPower=800;
+      else if(skillLevel>8)hpPower=450;
+      else if(skillLevel>7)hpPower=400;
+      else if(skillLevel>6)hpPower=350;
+      else if(skillLevel>5)hpPower=300;
+      else if(skillLevel>3)hpPower=200;
+      else hpPower=100;
+      break;
+    case 'BATTLE_COM_S_BLOOD': {
+      const hp=Math.trunc(n(playerHp));
+      hpPower=hp>1?Math.trunc(hp*(skillLevel*5+10)/100):0;
+      break;
+    }
+    case 'BATTLE_COM_S_BLOOD_WORMS':
+      hpPower=skillLevel*10+20;
+      break;
+    case 'BATTLE_COM_S_SIGN':
+      if(skillLevel>=10){hpPower=200;mpPower=30}
+      else if(skillLevel>6){hpPower=150;mpPower=20}
+      else if(skillLevel>3){hpPower=100;mpPower=15}
+      else{hpPower=50;mpPower=10}
+      break;
+    case 'BATTLE_COM_S_ENCLOSE':
+      if(skillLevel>=10)hpPower=400;
+      else if(skillLevel>9)hpPower=300;
+      else if(skillLevel>7)hpPower=250;
+      else if(skillLevel>4)hpPower=200;
+      else hpPower=150;
+      break;
+  }
+
+  const work=suitWork||sourcePlayerProfessionMagicSuitPower(state);
+  const mPower=Math.trunc(n(work?.mPower??work?.M_POW));
+  const m2Power=Math.trunc(n(work?.m2Power??work?.M2_POW));
+  hpPower=Math.fround(hpPower+hpPower*(mPower/100));
+
+  // fixed _SUIT_ADDPART4 consumes rand()%100 even when hpPower is zero.
+  const m2Roll=cRand(0,99);
+  if(m2Roll<30)hpPower=Math.fround(hpPower+hpPower*(m2Power/100));
+
+  let varianceRoll=null;
+  if(hpPower>0){
+    varianceRoll=cRand(98,102);
+    hpPower=Math.fround(hpPower*Math.fround(varianceRoll/100));
+  }else{
+    hpPower=0;
+  }
+
+  // PROFESSION_MAGIC_ATTAIC assigns the float hp_power into int power here.
+  return {
+    hpPower,mpPower,power:Math.trunc(hpPower),
+    skillLevel,criticalRoll,m2Roll,varianceRoll
+  };
+}
+function sourceProfessionMagicPreDamagePower(power,unPower){
+  // fixed PROFESSION_MAGIC_ATTAIC applies UN_POW_M after ICE_MIRROR/special power
+  // and before PROFESSION_MAGIC_GET_DAMAGE; compound assignment stores back into int power.
+  let out=Math.trunc(n(power));
+  const pct=Math.trunc(n(unPower));
+  if(pct>0)out=Math.trunc(out-out*(pct/100));
+  return out;
+}
+function sourceProfessionMagicGetDamage({
+  magicType=0,power=0,command='',
+  proficiency={},resist={},baseSuit={},equipSuit={},spirit={}
+}={}){
+  const inputPower=Math.trunc(n(power));
+  const term=type=>{
+    let prof=0,res=0,suit=0,sp=0;
+    if(type===1){
+      prof=n(proficiency?.fire);
+      res=n(resist?.fire);
+      suit=n(baseSuit?.fire)+n(equipSuit?.fire);
+      sp=n(spirit?.fire);
+    }else if(type===2){
+      // fixed source mismatch: type 2 reads T proficiency/resist, I base suit, THUNDER equipment.
+      prof=n(proficiency?.thunder);
+      res=n(resist?.thunder);
+      suit=n(baseSuit?.ice)+n(equipSuit?.thunder);
+      sp=n(spirit?.thunder);
+    }else if(type===3){
+      // fixed source mismatch: type 3 reads I proficiency/resist, T base suit, ICE equipment.
+      prof=n(proficiency?.ice);
+      res=n(resist?.ice);
+      suit=n(baseSuit?.thunder)+n(equipSuit?.ice);
+      sp=n(spirit?.ice);
+    }
+    return inputPower*(1+prof/100)*(1-res/100)*(1-suit/100)*(1-sp/100);
+  };
+
+  let damage=0;
+  if(String(command||'')==='BATTLE_COM_S_DOOM'){
+    // fixed int damage receives each double expression through assignment / += / /= in sequence.
+    damage=Math.trunc(term(1));
+    damage=Math.trunc(damage+term(2));
+    damage=Math.trunc(damage+term(3));
+    damage=Math.trunc(damage/3);
+  }else{
+    damage=Math.trunc(term(Math.trunc(n(magicType))));
+  }
+  return damage<0?0:damage;
+}
+function sourcePlayerProfessionMagicDamageCore({
+  magicType=0,power=0,command='',
+  proficiency={},resist={},baseSuit={},spirit={},target=state
+}={}){
+  const suitPower=sourcePlayerProfessionMagicSuitPower(target);
+  const reducedPower=sourceProfessionMagicPreDamagePower(power,suitPower.unPower);
+  const equipSuit={
+    fire:sourcePlayerProfessionMagicEquipSuitForType(1,target),
+    thunder:sourcePlayerProfessionMagicEquipSuitForType(2,target),
+    ice:sourcePlayerProfessionMagicEquipSuitForType(3,target)
+  };
+  const damage=sourceProfessionMagicGetDamage({
+    magicType,power:reducedPower,command,proficiency,resist,baseSuit,equipSuit,spirit
+  });
+  return {damage,power:reducedPower,equipSuit,unPower:suitPower.unPower};
+}
+
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
   for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){

@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.18**
+**PLAYABLE CORE V2.19**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,6 +16,23 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.19 最新進度
+
+V2.19 開始移植 fixed **職業魔法傷害數值核心**，先把 V2.17／V2.18 已保存、但先前刻意沒有錯接的裝備／套裝 Work 接到它們真正的來源 consumer。這一版**不先造假的職業技能選單或技能資料**；先完成 `PROFESSION_MAGIC_GET_PRACTICE() → UN_POW_M → PROFESSION_MAGIC_GET_DAMAGE()` 可執行核心，之後接真正職業技能入口時可直接沿用。
+
+固定 build 已確認 `_PROFESSION_SKILL / _PROFESSION_ADDSKILL / _FIX_MAGIC_RESIST / _EQUIT_RESIST / _MAGICSTAUTS_RESIST / _SUIT_ADDENDUM / _SUIT_ADDPART4` 都開啟，因此本版只走 fixed 真正會編進去的分支：
+
+- `PROFESSION_CHANGE_SKILL_LEVEL_M()` 的原 1～10 分段已來源化；例如 raw 90→9、91→10。
+- `analysis_profession_parameter()` 的固定字串順序是 **火／冰／电 → magic type 1／2／3**。Web 保留這個 literal 與順序，不自行把簡體 `电` 改成另一個資料值。
+- `PROFESSION_MAGIC_GET_PRACTICE()` 每次**先固定吃 1 顆 `RAND(1,100)`**，即使該技能分支根本不用 critical；開啟 `_SUIT_ADDPART4` 後又固定吃 1 顆 `rand()%100` 判斷 `M2_POW`，只有最終 `hp_power>0` 才再吃 `RAND(98,102)`。
+- `M_POW` 先無條件調整 `hp_power`；`M2_POW` 僅在第二顆 RNG `<30` 時調整。`hp_power` 是 C `float`，Web 以 `Math.fround()` 保留每次存回 float 的精度，再在 `PROFESSION_MAGIC_ATTAIC()` 等價位置轉成 int `power`。
+- `UN_POW_M` 位於特殊魔法 power 修正之後、`PROFESSION_MAGIC_GET_DAMAGE()` 之前；原 `power -= power * pct / 100.00` 存回 int 的向零截斷已保留。
+- `_FIX_MAGIC_RESIST` 傷害式已來源化：熟練度、角色抗性、套裝／裝備抗性、精靈抗性依原順序相乘，負傷害最後 clamp 0。
+- 世界末日 `BATTLE_COM_S_DOOM` 不是最後一次才截斷；原 `int damage` 會在火段賦值、雷段 `+=`、冰段 `+=`、最後 `/=3.0` **每一步都再向零截斷**，Web 同樣逐段保存。
+- 保留 fixed 的欄位錯位：magic type 2 實際讀 **雷熟練／雷抗 + 冰 base suit + 雷裝備抗**；type 3 實際讀 **冰熟練／冰抗 + 雷 base suit + 冰裝備抗**。這和上面的「冰→2、电→3」組合看起來不直觀，但不自行修正來源 bug。
+- V2.17 的 `CHAR_WORKEQUITFIRE / THUNDER / ICE` 與 V2.18 的 `M_POW / M2_POW / UN_POW_M` 現在都有正式 profession-magic consumer helper；仍**不混入 V2.16 的 `BATTLE_MultiAttMagic`**，避免把兩套不同魔法公式合併。
+
+新增 `tools/check_v219_profession_magic_damage_core.mjs`，鎖住 skill-level 分段、literal magic type、RNG 次序、CURRENT 的來源邊界、float→int 截斷、UN_POW_M、type 2／3 錯位與 DOOM 分段 int truncation。沒有新增永久狀態，save schema 維持 **29**。
 ## V2.18 最新進度
 
 V2.18 完成第六組、也是目前 fixed item table 剩餘的玩家裝備 callback：`ITEM_suitEquip / ITEM_ResuitEquip` 套裝系統。

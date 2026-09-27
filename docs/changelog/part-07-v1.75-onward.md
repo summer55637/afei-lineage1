@@ -3558,4 +3558,33 @@ fixed item runtime 驗到：
 - M_POW / M2_POW / UN_POW_M → `PROFESSION_MAGIC_GET_DAMAGE()`。
 
 新增完整 `tools/check_v218_suit_equip_callback.mjs` executable regression，並更新 V2.13 fixture 的 shared callback-gate dependency。save schema 維持 29。
+---
 
+## V2.19 profession magic damage core
+
+V2.19 開始接 fixed 職業魔法傷害數值核心；本版不先創造職業技能 UI／技能表，而是先把 V2.17／V2.18 已保存的 profession-magic Work 接到正確 consumer。
+
+固定 build 啟用 `_PROFESSION_SKILL / _PROFESSION_ADDSKILL / _FIX_MAGIC_RESIST / _EQUIT_RESIST / _MAGICSTAUTS_RESIST / _SUIT_ADDENDUM / _SUIT_ADDPART4`。
+
+### `PROFESSION_MAGIC_GET_PRACTICE()`
+
+- `PROFESSION_CHANGE_SKILL_LEVEL_M()` 依原 >90、>80…>10 門檻轉成 10…2，其他為 1。
+- 每次先消耗 `RAND(1,100)` critical，即使該 command 不用它。
+- `_SUIT_ADDENDUM`：`M_POW` 無條件修改 float `hp_power`。
+- `_SUIT_ADDPART4`：再固定消耗 `rand()%100`，嚴格 `<30` 才套 `M2_POW`。
+- 只有 `hp_power>0` 才再消耗 `RAND(98,102)`。
+- Web 使用 `Math.fround()` 模擬每次存回 C `float`，最後在 caller `power = hp_power` 等價位置向零截成 int。
+- fixed `_PROFESSION_ADDSKILL` 的 CURRENT／STORM／SIGN／ENCLOSE 分支照原條件保留，包括 CURRENT 的 `>=10` 後緊接 `>9` 之不可達分支。
+
+### `UN_POW_M` 與 `PROFESSION_MAGIC_GET_DAMAGE()`
+
+- `UN_POW_M` 在 special-power helper 之後、GET_DAMAGE 之前執行，compound assignment 存回 int `power`。
+- `_FIX_MAGIC_RESIST` 依 proficiency / resist / suit / spirit 百分比逐項乘算。
+- V2.17 equip Work 正式作為 fire/thunder/ice suit resistance consumer。
+- fixed `analysis_profession_parameter()` 是 `{"火","冰","电"} -> 1/2/3`。
+- 同時保留 fixed GET_DAMAGE 欄位錯位：type 2 用 T proficiency/resist + I base suit + THUNDER equip；type 3 用 I proficiency/resist + T base suit + ICE equip。
+- DOOM 依原 `int damage` 的 `=`、兩次 `+=`、`/=3.0` 每一步向零截斷，不改成「最後才截一次」。
+
+新增 `sourceProfessionMagicLevelM()`、`sourceProfessionMagicTypeFromOption()`、`sourceProfessionMagicPracticePower()`、`sourceProfessionMagicPreDamagePower()`、`sourceProfessionMagicGetDamage()`、`sourcePlayerProfessionMagicDamageCore()` 與 `tools/check_v219_profession_magic_damage_core.mjs`。
+
+這批仍不把 profession core 混入既有 `BATTLE_MultiAttMagic`，也不聲稱玩家已可從 UI 施放職業技能。save schema 維持 29。

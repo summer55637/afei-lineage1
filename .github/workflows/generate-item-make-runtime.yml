@@ -53,6 +53,7 @@ on:
       - "tools/check_v216_magic_defense_equip_callback.mjs"
       - "tools/check_v217_equip_resist_callback.mjs"
       - "tools/check_v218_suit_equip_callback.mjs"
+      - "tools/check_v219_profession_magic_damage_core.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -226,6 +227,9 @@ jobs:
 
       - name: Run V2.18 suit equip callback regressions
         run: node tools/check_v218_suit_equip_callback.mjs
+
+      - name: Run V2.19 profession magic damage core regressions
+        run: node tools/check_v219_profession_magic_damage_core.mjs
 
       - name: Commit generated runtime
         shell: bash
