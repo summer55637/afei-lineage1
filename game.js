@@ -2343,12 +2343,23 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   const row=sourceProfessionSkillTemplate(prepared.skillId);
   const name=String(row?.name||('Skill '+prepared.skillId));
+  let second=null,secondActual=null,chainRoll=null,chainHit=null,chainEffectiveTier=null;
+  let chainExtra=false;
+
+  if(prepared.functionName==='PROFESSION_CHAIN_ATK'){
+    // fixed battle_profession_attack_fun order: proc RNG happens BEFORE BATTLE_AttackSeq.
+    chainRoll=cRand(1,100);
+    chainEffectiveTier=prepared.attackSkillTier;
+    if(chainEffectiveTier%10!==0)chainEffectiveTier+=1;
+    chainHit=chainEffectiveTier*5+15;
+    chainExtra=chainRoll<=chainHit;
+  }
+
   const first=sourceProfessionPhysicalCalcOnlyResult(target);
   if(!first)return {handled:true,noAction:true,reason:'attack-result-missing',toNo,targetUnitId:target.id};
 
   // Unlike ordinary BATTLE_Attack, the profession helper has no SUITPOISON branch.
   const firstActual=applyFriendlyEnemyHit('player','你',target,first,null,{suppressSuitPoison:true});
-  let second=null,secondActual=null,chainRoll=null,chainHit=null,chainEffectiveTier=null;
 
   if(prepared.functionName==='PROFESSION_BRUST'){
     // fixed source quirk: BRUST multiplies CHAR_WORKFIXSTR, but the immediately following
@@ -2364,14 +2375,8 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
   }
 
   if(prepared.functionName==='PROFESSION_CHAIN_ATK'){
-    // fixed order: RAND(1,100) first, then tier adjustment, then AttackSeq.
-    chainRoll=cRand(1,100);
-    chainEffectiveTier=prepared.attackSkillTier;
-    if(chainEffectiveTier%10!==0)chainEffectiveTier+=1;
-    chainHit=chainEffectiveTier*5+15;
-    const extra=chainRoll<=chainHit;
-    addLog('你施放「'+name+'」；連擊判定 '+chainRoll+' / '+chainHit+(extra?'，第二擊發動。':'，未發動第二擊。'),extra?'good':'');
-    if(extra&&state.hp>0&&n(target.hp)>0){
+    addLog('你施放「'+name+'」；連擊判定 '+chainRoll+' / '+chainHit+(chainExtra?'，第二擊發動。':'，未發動第二擊。'),chainExtra?'good':'');
+    if(chainExtra&&state.hp>0&&n(target.hp)>0){
       // The second hit is a direct fixed BATTLE_Attack() on the SAME raw defNo:
       // real Guardian substitution and normal on-hit/item-crush rules apply, but the
       // profession command breaks afterward and never enters the ordinary Counter loop.
