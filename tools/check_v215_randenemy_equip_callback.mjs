@@ -167,11 +167,11 @@ assert.equal(secondary,0);
 assert.equal(spawnCalls,1);
 assert.equal(ctx.state.encounterCep,5);
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 console.log(JSON.stringify({
   pass:true,version:'V2.15',focus:'randenemy-equip-callback',
   callbackItems:{20126:60,20127:70,20128:100},
   rngOrder:'rand()%120 first; RAND(0,100) only on primary hit; require > threshold',
-  saveSchema:29
+  saveSchema:30
 }));

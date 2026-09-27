@@ -168,7 +168,7 @@ assert.ok(game.includes("fetch(PROFESSION_SKILL_RUNTIME_URL,{cache:'no-store'})"
 assert.ok(game.includes("Math.trunc(Number(professionSkillDb?.stats?.rows))!==69"));
 assert.ok(game.includes("JSON.stringify(professionSkillDb?.stats?.holes)!=='[63,64,65]'"));
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 
 console.log(JSON.stringify({
@@ -177,5 +177,5 @@ console.log(JSON.stringify({
   rows:runtime.stats.rows,maxSkillId:runtime.stats.maxSkillId,holes:runtime.stats.holes,
   uniqueDataFunctions:runtime.stats.uniqueDataFunctions,functionTable:runtime.stats.functionTable,
   commonCommandFunctions:runtime.stats.commonCommandFunctions,
-  saveSchema:29
+  saveSchema:30
 }));

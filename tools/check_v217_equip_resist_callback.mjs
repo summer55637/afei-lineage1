@@ -167,7 +167,7 @@ const effective=extractFunction(game,'sourceMagicEffectiveResist');
 assert.equal(effective.includes('sourcePlayerProfessionMagicEquipSuitResist'),false,
   'do not mix _EQUIT_RESIST profession suit resistance into V2.16 BATTLE_MultiAttMagic defense');
 assert.ok(game.includes('s.playerEquipResistWork=null'));
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 
 console.log(JSON.stringify({
@@ -178,5 +178,5 @@ console.log(JSON.stringify({
   detachBug:'every branch clears fire only',
   currentConsumers:['weaken','barrier','nocast','fallride'],
   deferredConsumer:'fire/thunder/ice -> PROFESSION_MAGIC_GET_DAMAGE not yet present in web core',
-  saveSchema:29
+  saveSchema:30
 }));

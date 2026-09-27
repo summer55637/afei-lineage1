@@ -294,7 +294,7 @@ for(const [code,key,value,ids] of [
   assert.equal(suit[key],value);
 }
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 console.log(JSON.stringify({
   pass:true,version:'V2.18',focus:'ITEM_suitEquip / ITEM_ResuitEquip',
@@ -306,5 +306,5 @@ console.log(JSON.stringify({
     'COUNTER','WDUCKPOWER','HP/MP StatusSeq','SUITPOISON'
   ],
   deferredConsumers:['WAST water-world connection state','M_POW/M2_POW/UN_POW_M profession magic'],
-  saveSchema:29
+  saveSchema:30
 }));

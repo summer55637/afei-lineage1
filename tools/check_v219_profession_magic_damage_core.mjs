@@ -148,7 +148,7 @@ for(const name of ['sourceProfessionMagicGetDamage','sourcePlayerProfessionMagic
   assert.equal(extractFunction(game,name).includes('BATTLE_MultiAttMagic'),false);
 }
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 
 console.log(JSON.stringify({
@@ -156,5 +156,5 @@ console.log(JSON.stringify({
   version:'V2.19',
   focus:'PROFESSION_MAGIC_GET_PRACTICE -> UN_POW_M -> PROFESSION_MAGIC_GET_DAMAGE',
   rngOrder:['RAND(1,100)','rand()%100','RAND(98,102) if hp_power>0'],
-  saveSchema:29
+  saveSchema:30
 }));

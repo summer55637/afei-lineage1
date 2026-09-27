@@ -157,7 +157,7 @@ assert.deepEqual(
   }
 );
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 console.log(JSON.stringify({
   pass:true,version:'V2.16',focus:'magic-defense-equip-callback',
@@ -165,5 +165,5 @@ console.log(JSON.stringify({
   damageResist:'natural + EA/WA/FI/WI, then positive def-magic status scaling',
   dodge:'luck*3 + naturalResist*.15 + QU*.9',
   baseArgumentSource:'item-make runtime g; field2 preload not required',
-  saveSchema:29
+  saveSchema:30
 }));
