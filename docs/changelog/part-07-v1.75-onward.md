@@ -4088,3 +4088,47 @@ V2.40 closes `PROFESSION_ENTWINE` and `PROFESSION_DRAGNET` against the pinned st
 - The web uses a same-battle-turn command-cancel marker so only not-yet-executed Enemy commands are suppressed.
 
 Added `tools/check_v240_profession_hunter_control_runtime.mjs`; save schema remains **30**.
+
+
+---
+
+## V2.41 Skill 51 Weakness Attack
+
+V2.41 接入獵人 Skill 51「弱點攻擊」／`PROFESSION_ATTACK_WEAK` 的 fixed direct-physical lifecycle。
+
+### Fixed source result
+
+`PROFESSION_attack_weak()` 只透過 `profession_common_fun()` 寫入 `BATTLE_COM_S_ATTACK_WEAK`。真正執行在 `battle_profession_attack_fun()`：
+
+- skill display level 先經 `PROFESSION_CHANGE_SKILL_LEVEL_A()` 轉成 tier。
+- 若守方 `CHAR_WHICHTYPE` 是 `CHAR_TYPEPET` 或 `CHAR_TYPEENEMY`：
+  - `WORKATTACKPOWER = int(WORKATTACKPOWER * (110 + tier*2) / 100)`
+- 接著無條件修改**攻方自己**：
+  - `WORKQUICK = int(FIXDEX * (90 - tier) / 100)`
+- 原 C 同時送出攻方敏捷下降的 battle display；並沒有修改守方 DEX / QUICK。
+
+`BATTLE_EntrySort()` 在這個 command execution 以前已經完成，所以 WORKQUICK 的下降不會重排本輪出手順序；但接著的 `BATTLE_AttackSeq() -> BATTLE_DamageCalc()` 會直接讀攻方 WORKQUICK，因此會影響本次傷害計算。
+
+### Direct profession boundary
+
+沿用 fixed generic direct-profession attack：
+
+- 同隊目標在 `battle.c` 先 NoAction。
+- EarthRound 目標在 `battle_profession_attack_fun()` 直接 return。
+- 非 `BATTLE_COM_S_CHAIN_ATK` 的 DamageReact 會在傷害前清為 0。
+- 不走普通 `BATTLE_Attack()` 的 SUITPOISON。
+- WakeUp / ItemCrush 等 `BATTLE_DamageSub()` 後續副作用保留。
+- 不新增普通 Counter loop。
+
+### Web implementation
+
+新增 `sourceProfessionAttackWeakExecute()`：
+
+- 先以目前 Player battle Work 取 `WORKATTACKPOWER`。
+- 依 fixed 公式建立新的 attack Work，並透過既有 `sourceProfessionSetPlayerAttackWork()` 保存本輪 mutation。
+- 以 `FIXDEX × (90-tier)%` 建立攻方 `workQuick`，只作為緊接著 physical calc 的 attacker override；不修改 Enemy 狀態、不重跑 EntrySort。
+- 交給既有 direct-profession physical hit boundary 套用 DamageReact / SUITPOISON 抑制與 generic hit side effects。
+
+新增 `tools/check_v241_profession_attack_weak_runtime.mjs`，覆蓋 Skill 51 row metadata、公式、攻方 quick override、dispatcher、direct-profession boundary、V2.41 marker 與 save schema。
+
+save schema 維持 **30**。
