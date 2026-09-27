@@ -43,6 +43,14 @@ const ctx={
   Math,Number,String,Object,Array,Date,
   PROFESSION_SKILL_SLOT_COUNT:26,PROFESSION_SKILL_LEVEL_MAX:100,
   professionSkillDb:runtime,state:null,
+  SOURCE_PROFESSION_TARGET:{
+    MYSELF:0,OTHER:1,ALL_MYSIDE:2,ALLOTHERSIDE:3,ALL:4,NONE:5,
+    OTHER_WITHOUT_MYSELF:6,WITHOUT_MYSELF_AND_PET:7,ONE_ROW:8,ONE_LINE:9,DEATH:10
+  },
+  SOURCE_PROFESSION_KIND:{BATTLE:1,ASSIST:2,ADVANCE:3},
+  SOURCE_PROFESSION_BATTLE_TO_NO:{
+    SIDE_0:20,SIDE_1:21,ALL:22,SIDE_1_B_ROW:23,SIDE_1_F_ROW:24,SIDE_0_F_ROW:25,SIDE_0_B_ROW:26
+  },
   professionEncounterFix:0,professionEncounterUntilSec:0,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
   addLog:(text,type)=>logs.push({text,type}),
@@ -58,6 +66,7 @@ for(const name of [
   'sourceProfessionSkillProficiencyRollPlan','sourceProfessionSkillProficiencyApply',
   'sourceProfessionSkillPostDispatchProficiency','sourceProfessionLogProficiencyResult',
   'sourceProfessionSkillStatusRow','sourceProfessionSkillStatusString','sourceProfessionSkillMenu',
+  'sourceProfessionKindSemantic','sourceProfessionTargetSemantic','sourceProfessionTargetToNo',
   'sourceProfessionBattleCommandPlan','sourceProfessionEncounterRate',
   'sourceProfessionEncounterRollPlan','sourceProfessionOutOfBattleSkillPlan',
   'sourceProfessionOutOfBattleSkillUse'
@@ -95,7 +104,10 @@ assert.equal(cmd.slot,2);
 assert.equal(cmd.skillId,44);
 assert.equal(cmd.command,'P|2|14');
 assert.equal(cmd.clientBattleUse,false); // metadata only; server top-level Use itself does not gate USE_FLAG.
-assert.equal(ctx.sourceProfessionBattleCommandPlan({slot:2,toNo:null,target:p}).reason,'target-unresolved');
+const autoTargetCmd=ctx.sourceProfessionBattleCommandPlan({slot:2,toNo:null,target:p});
+assert.equal(autoTargetCmd.ok,true);
+assert.equal(autoTargetCmd.toNo,21); // TARGET=ALLOTHERSIDE, player BattleMyNo=0.
+assert.equal(autoTargetCmd.command,'P|2|15');
 
 // Track: display 70 -> (70/10)*5 = +35, MP first, 180s Work timer.
 let rngCalls=[];
