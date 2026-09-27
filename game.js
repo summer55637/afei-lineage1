@@ -147,6 +147,43 @@ function sourceItemMakeCallbacks(itemId){
     detachFunc:typeof f.d==='string'?f.d:''
   };
 }
+function sourceItemMakeCallbackArgument(itemId){
+  const id=Math.trunc(Number(itemId));
+  const row=Number.isFinite(id)&&itemMakeDb?.byItemId?itemMakeDb.byItemId[String(id)]:null;
+  return typeof row?.g==='string'?row.g:'';
+}
+function sourcePlayerLiveCallbackArgument(existing,itemId){
+  if(existing?.field2Char&&Object.prototype.hasOwnProperty.call(existing.field2Char,'argument')){
+    return String(existing.field2Char.argument??'');
+  }
+  return sourceItemMakeCallbackArgument(itemId);
+}
+function sourcePlayerEquipResistSpecFromArgument(argument){
+  const markers=Array.isArray(itemMakeDb?.equipResistSource?.markers)
+    ?itemMakeDb.equipResistSource.markers:[];
+  const raw=String(argument||'');
+  for(const entry of markers){
+    const marker=typeof entry?.marker==='string'?entry.marker:'';
+    const offset=Math.trunc(Number(entry?.atoiOffset));
+    if(!marker||!Number.isFinite(offset)||offset<0)continue;
+    const p=raw.indexOf(marker);
+    if(p<0)continue;
+    const parsed=parseInt(raw.slice(p+offset),10);
+    return {
+      key:String(entry?.key||''),
+      value:Number.isFinite(parsed)?Math.trunc(parsed):0,
+      marker,offset
+    };
+  }
+  return null;
+}
+function sourcePlayerFixedEquipResistTemplate(itemId){
+  const id=Math.trunc(Number(itemId));
+  const row=Number.isFinite(id)&&itemMakeDb?.byItemId?itemMakeDb.byItemId[String(id)]:null;
+  const f=row?.f&&typeof row.f==='object'?row.f:{};
+  if(f.a!=='ITEM_MagicResist'||f.d!=='ITEM_MagicReResist')return false;
+  return !!sourcePlayerEquipResistSpecFromArgument(typeof row?.g==='string'?row.g:'');
+}
 function sourceItemRuntimeResolvedDataInt(slot,fieldName){
   const exact=sourceItemRuntimeDataInt(slot,fieldName);
   if(exact!=null)return exact;
@@ -1136,6 +1173,9 @@ function sourcePlayerEquipCallbackSupported(template){
   if(attach==='ITEM_MagicEquitWear'&&detach==='ITEM_MagicEquitReWear'){
     return SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS.has(Math.trunc(Number(template?.itemId)));
   }
+  if(attach==='ITEM_MagicResist'&&detach==='ITEM_MagicReResist'){
+    return sourcePlayerFixedEquipResistTemplate(template?.itemId);
+  }
   // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
   return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
 }
@@ -1164,8 +1204,9 @@ function sourcePlayerEquipMagicDefense(target=state){
        String(template.detachFunc||'')!=='ITEM_MagicEquitReWear')continue;
     if(!SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS.has(Math.trunc(Number(template.itemId))))continue;
     // V2.05 PETSKILL_ITEM_inslay may overwrite the live ITEM_ARGUMENT / callbacks.
-    // Read the current existing-item argument instead of reusing the original template literal.
-    const argument=sourceItemField2Char(existing,'argument');
+    // Base callback arguments come from the small item-make runtime so this effect does not
+    // depend on the large field2 runtime having been lazily loaded first.
+    const argument=sourcePlayerLiveCallbackArgument(existing,template.itemId);
     const values={};
     for(const [sourceKey,outKey] of fields){
       const value=sourcePlayerMagicDefenseArgumentValue(argument,sourceKey);
@@ -1174,6 +1215,60 @@ function sourcePlayerEquipMagicDefense(target=state){
     out.items.push({slot:i,itemIndex,itemId:Math.trunc(Number(template.itemId)),argument,values});
   }
   return out;
+}
+function sourcePlayerEquipResistFreshWork(){
+  return {fire:0,thunder:0,ice:0,weaken:0,barrier:0,nocast:0,fallride:0};
+}
+function sourcePlayerEquipResistAttachEvent(itemIndex,target=state){
+  if(!target)return false;
+  const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+  const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+  if(!existing||!template||String(template.attachFunc||'')!=='ITEM_MagicResist')return false;
+  const spec=sourcePlayerEquipResistSpecFromArgument(sourcePlayerLiveCallbackArgument(existing,template.itemId));
+  if(!spec)return false;
+  const work=sourcePlayerEquipResistWork(target);
+  if(!Object.prototype.hasOwnProperty.call(work,spec.key))return false;
+  // fixed ITEM_MagicResist uses CHAR_setWorkInt, not accumulation.
+  work[spec.key]=Math.trunc(n(spec.value));
+  return true;
+}
+function sourcePlayerEquipResistDetachEvent(itemIndex,target=state){
+  if(!target)return false;
+  const existing=sourceRuntimeSlotFromTarget(target,itemIndex);
+  const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+  if(!existing||!template||String(template.detachFunc||'')!=='ITEM_MagicReResist')return false;
+  const spec=sourcePlayerEquipResistSpecFromArgument(sourcePlayerLiveCallbackArgument(existing,template.itemId));
+  if(!spec)return false;
+  const clearKey=String(itemMakeDb?.equipResistSource?.detachClearsKey||'');
+  const work=sourcePlayerEquipResistWork(target);
+  if(!Object.prototype.hasOwnProperty.call(work,clearKey))return false;
+  // fixed source bug: every detach branch writes CHAR_WORKEQUITFIRE=0,
+  // even for thunder/ice/weaken/barrier/nocast/fallride.
+  work[clearKey]=0;
+  return true;
+}
+function sourcePlayerEquipResistWork(target=state){
+  if(!target)return sourcePlayerEquipResistFreshWork();
+  const current=target.playerEquipResistWork;
+  const keys=['fire','thunder','ice','weaken','barrier','nocast','fallride'];
+  if(current&&typeof current==='object'&&keys.every(k=>Number.isFinite(Number(current[k])))){
+    return current;
+  }
+  // CHAR_loginCheckUserItem replays ATTACHFUNC for equipped slots in 0..8 order.
+  // Build the transient Work snapshot the same way after every page reload.
+  const work=sourcePlayerEquipResistFreshWork();
+  target.playerEquipResistWork=work;
+  const slots=sourcePlayerItemSlots(target);
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(Number.isFinite(itemIndex))sourcePlayerEquipResistAttachEvent(itemIndex,target);
+  }
+  return work;
+}
+function sourcePlayerProfessionMagicEquipSuitResist(attr,target=state){
+  const key=String(attr||'');
+  if(!(key==='fire'||key==='thunder'||key==='ice'))return 0;
+  return Math.trunc(n(sourcePlayerEquipResistWork(target)[key]));
 }
 function sourcePlayerRandEnemyThreshold(target=state){
   const slots=sourcePlayerItemSlots(target);
@@ -1310,8 +1405,13 @@ function sourcePlayerMoveBackpackToEquip(fromindex,toindex,target=state){
     return {ok:false,reason:occupied?'same-type-exchange':'same-type'};
   }
   const toid=slots[toindex]==null?null:Math.trunc(Number(slots[toindex]));
+  // Work values are transient and stateful; reconstruct the pre-move login state before
+  // mutating slots so subsequent detach/attach events see the same history as fixed C.
+  sourcePlayerEquipResistWork(target);
   slots[toindex]=fromid;
   slots[fromindex]=Number.isFinite(toid)?toid:null;
+  if(Number.isFinite(toid))sourcePlayerEquipResistDetachEvent(toid,target);
+  sourcePlayerEquipResistAttachEvent(fromid,target);
   return {ok:true,kind:'item-to-equip',fromindex,toindex,itemIndex:fromid,replacedItemIndex:Number.isFinite(toid)?toid:null};
 }
 function sourcePlayerMoveEquipToBackpack(fromindex,toindex,target=state){
@@ -1321,7 +1421,9 @@ function sourcePlayerMoveEquipToBackpack(fromindex,toindex,target=state){
   if(!Number.isFinite(fromid))return {ok:false,reason:'missing-source'};
   const toid=slots[toindex]==null?null:Math.trunc(Number(slots[toindex]));
   if(!Number.isFinite(toid)){
+    sourcePlayerEquipResistWork(target);
     slots[toindex]=fromid;slots[fromindex]=null;
+    sourcePlayerEquipResistDetachEvent(fromid,target);
     return {ok:true,kind:'equip-to-item',fromindex,toindex,itemIndex:fromid,replacedItemIndex:null};
   }
   // fixed CHAR_moveItemFromEquipToItemBox(): occupied destination delegates to
@@ -2176,6 +2278,9 @@ function normalizeState(raw){
   // A real login reconstructs these Work fields from scratch before ITEM_equipEffect();
   // never restore a serialized derived snapshot across reload.
   s.playerEquipCompliance=null;
+  // ITEM_MagicResist writes transient CHAR_WORK values. Login reconstructs them by replaying
+  // equipped ATTACHFUNC in slot order, so stale in-process detach bugs must not persist in save.
+  s.playerEquipResistWork=null;
   // Prior web versions started GOLD at 0. If an unusual legacy save omitted the field,
   // preserve that historical web baseline instead of backfilling setup.cf's 30000.
   if(!Object.prototype.hasOwnProperty.call(raw,'gold'))s.gold=0;
@@ -4461,6 +4566,10 @@ function battleStatusRawStats(desc){
   return {vital:0,str:0,tgh:0,dex:0};
 }
 function battleStatusResist(desc,type){
+  if(desc?.kind==='player'){
+    const equipKey=({weaken:'weaken',barrier:'barrier',nocast:'nocast'})[type];
+    if(equipKey)return Math.trunc(n(sourcePlayerEquipResistWork(state)[equipKey]));
+  }
   const idx=BATTLE_STATUS_INDEX[type];
   if(idx==null)return 0;
   if(desc?.kind==='player')return Math.trunc(n(state?.playerEquipCompliance?.statusResist?.[type]));
@@ -14493,8 +14602,10 @@ function performEnemyFallGround(actor,unit,options,meta){
   let fallRoll=null,fallSuccess=false;
   if(r.damage>0&&!r.dodged&&!r.miss){
     fallRoll=cRand(0,100);
-    // 原版無落馬抗性時：RAND(0,100) > 50，共 50/101。
-    if(fallRoll>50&&chosen.kind==='player'){
+    const fallResist=chosen.kind==='player'
+      ?Math.trunc(n(sourcePlayerEquipResistWork(state).fallride)):0;
+    // fixed _EQUIT_RESIST: RAND(0,100) > 50 + CHAR_WORKEQUITFALLRIDE.
+    if(fallRoll>50+fallResist&&chosen.kind==='player'){
       // 目前放置版尚未建立騎乘系統；若未來以 state.ridePetId 接入，
       // 這裡已保留與 CHAR_RIDEPET >= 0 對應的清除點。
       if(state.ridePetId!=null){
@@ -14505,7 +14616,10 @@ function performEnemyFallGround(actor,unit,options,meta){
     }
   }
   sourceBattleFinalizeItemCrushRng(r);
-  return {kind:'skill',skillId:actor.skillId,target:chosen.kind,r,fallRoll,fallSuccess};
+  return {
+    kind:'skill',skillId:actor.skillId,target:chosen.kind,r,fallRoll,fallSuccess,
+    fallResist:chosen.kind==='player'?Math.trunc(n(sourcePlayerEquipResistWork(state).fallride)):0
+  };
 }
 function performEnemyEarthRoundStart(actor,unit,options,meta){
   // BATTLE_EarthRoundHide does not validate COM2; it only clears CHAR_ISATTACKED and keeps COM2.
