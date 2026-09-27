@@ -67,7 +67,7 @@ for(const [raw,cost] of [[10,30],[20,30],[30,40],[40,40],[50,50],[60,50],[70,60]
 }
 
 const practiceCtx={
-  Math,Number,String,
+  Math,Number,String,state:{},
   n:v=>Number.isFinite(Number(v))?Number(v):0,
   sourceProfessionMagicLevelM:levelM,
   sourcePlayerProfessionMagicSuitPower:()=>({mPower:0,m2Power:0}),
