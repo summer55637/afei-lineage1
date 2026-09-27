@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.51**
+**PLAYABLE CORE V2.52**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,55 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.52 最新進度
+
+V2.52 接入獵人 **Skill 68「地結界」／`PROFESSION_BOUNDARY`**。這一版只開 Skill 68；Skill 69～72 雖共用同一個函式名，仍保持未接入，避免提前扣 MP 卻跑到半套效果。
+
+fixed row：TARGET 2（ALL_MYSIDE）、KIND 1、option `地结界|...`。實際 MP 沿用既有 source dynamic branch：M-tier ≤6 為 **10 MP**、7～9 為 **15 MP**、10 為 **20 MP**；row 的 `costMp=14` 只保留 fallback 資料，不作 live 扣魔。
+
+### power 與 turn 是兩套等級來源
+
+Boundary case 進入前，battle callback 已把 display level 轉為 A-tier，因此回合使用 A-tier：
+
+- tier 10 → turn 5
+- tier 9 → turn 3
+- tier 5～8 → turn 2
+- tier 0～4 → turn 1
+
+source 還有一個 `tier > 9 → turn 4` 分支，但 A-tier 是整數，實際上被前面的 `>=10` 吃掉，因此 **turn 4 在 fixed 可達路徑不存在**。
+
+接著 source 又重新讀 `CHAR_WORKBATTLECOM3 high` 的 raw display level 算 power：≤20=20、21～40=30、41～60=40、61～80=50、81～85=60、86～90=70、91～95=80、96～99=90、≥100=100。
+
+每個同側有效 Battle Entry 都存成等價 `MAKE2VALUE(power, turn)`。施放新結界前，source 會先把該目標的地／水／火／風四個結界全部清 0，再只寫地結界。
+
+### 最重要的 fixed 減傷 bug
+
+`BATTLE_DamageCalc()` 在四屬性 `BATTLE_AttrAdjust()` 之後檢查結界，但**stored power 完全沒有拿來算減傷比例**。地結界只用 high word `power > 0` 判斷「地結界存在」，真正公式是：
+
+`damage = trunc(damage - damage * attackerEarth / 200)`
+
+所以攻擊者地屬性 100 才是 50% 減傷；地屬性 20 只有 10%。Skill 68 stored power 20 與 100 在物理減傷率上完全相同，只影響「是否大於 0」。V2.52 保留這個來源 bug，不把技能 power 擅自改造成正規減傷百分比。
+
+另外 source 是 `earth -> water -> fire -> wind` 的 `else if` 鏈；地結界存在但攻擊者 earth=0 時，不會改拿其他屬性計算。
+
+這條結界只出現在 **physical `BATTLE_DamageCalc()`**；profession magic 的 `PROFESSION_MAGIC_GET_DAMAGE()` 沒有讀 boundary Work，因此 V2.52 不把地結界擴張成魔法減傷。
+
+Critical 也有來源順序差異：`BATTLE_CriDamageCalc()` 先拿已套結界的 `BATTLE_DamageCalc()`，再額外加防禦×等級比×0.5；所以**額外 critical bonus 不吃結界減傷**。現有 Web pipeline 本來就是先 `battleDamageCore()` 再加 critical bonus，V2.52 只把結界插在 core 的 AttrAdjust 後、OtherDamage 前。
+
+### post-action 倒數與 low=0 ghost
+
+結界不是 StatusSeq 開頭扣回合，而是在該 Battle Entry 的 command 完成後才：`low = low - 1`。
+
+只有 `low <= -1` 才清除，所以 low=0 時 high power 仍 >0，結界依然有效。玩家施放 ALL_MYSIDE 的同一個 action 結束後，玩家自己的結界會立刻先扣一次；Pet 的結界要等 Pet 自己 command 結束後才扣。
+
+V2.52 把這個 tick 接到現有 `command -> CHECK_ITEM_RELIFE -> outer AddProfit` 邊界，順序改成 **command → boundary tick → relife → AddProfit**，因此防禦、混亂、Pet skill、NoAction 等可達 command lifecycle 不必各自重寫。
+
+### 動畫
+
+Skill 68 正常 Player side pseudo target=20，fixed `PROFESSION_MAGIC_GET_IMG2()` 會把 row img2 101789 改為右側地結界 **101786**；img1 保持 row 101697。
+
+新增 `tools/check_v252_profession_earth_boundary_runtime.mjs`，鎖住 Skill 68-only gate、dynamic MP、A-tier turn unreachable-4 bug、raw-level power、ALL_MYSIDE、clear-four/write-earth、post-action low=0 ghost、stored-power-ignored physical formula、critical/OtherDamage ordering、右側動畫與 V2.48～V2.51 regression；**save schema 維持 30**。
 
 ## V2.51 最新進度
 

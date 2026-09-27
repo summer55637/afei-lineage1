@@ -4803,3 +4803,20 @@ Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtim
 - 保留 `ridepet=-1` 在 C ternary 仍為 true 的 packet `p=addhp` bug；只記錄 protocol，不新增虛構騎寵。
 
 新增 `tools/check_v251_profession_call_nature_runtime.mjs`。save schema 維持 **30**。
+
+
+---
+
+## V2.52 Skill 68 Earth Boundary
+
+- 只開 Skill 68 `地结界 / PROFESSION_BOUNDARY`；69～72 共函式仍維持 unsupported。
+- dynamic MP：M-tier <=6 / 7..9 / 10 => 10 / 15 / 20；row 14 不作 live cost。
+- turn 走 A-tier：0..4=1、5..8=2、9=3、10=5；來源中的 >9=>4 分支不可達。
+- power 再讀 raw display：20 / 30 / 40 / 50 / 60 / 70 / 80 / 90 / 100。
+- 每個 target 先清四結界，再寫 earth MAKE2VALUE(power,turn)。
+- 物理 DamageCalc：AttrAdjust 後、OtherDamage 前；stored power 只作 active flag，真正減傷 = attacker earth / 200。
+- profession magic 不讀 boundary；critical bonus 在 DamageCalc 後追加，因此不吃 boundary reduction。
+- boundary low 在該 actor command 後遞減；low=0 仍 active，0->-1 才清。
+- target=20 右側地結界 img2 101786；img1 101697。
+
+新增 `tools/check_v252_profession_earth_boundary_runtime.mjs`。save schema 維持 **30**。

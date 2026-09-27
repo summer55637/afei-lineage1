@@ -118,6 +118,8 @@ let battlePlayerProfessionResistState=null;
 let battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};
 let battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};
 let battlePetProfessionOblivionStates=new Map();
+let battleProfessionBoundaryStates=new Map();
+let battleOuterBoundaryActor=null;
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2495,7 +2497,7 @@ function sourceProfessionSetPlayerAttackWork(value){
   battlePlayerAttackWork=Math.trunc(n(value));
   return battlePlayerAttackWork;
 }
-function sourceProfessionBattleFunctionSupported(functionName){
+function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
   return functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -2514,6 +2516,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_RESIST_THUNDER'
     ||functionName==='PROFESSION_RESIST_F_I_T'
     ||functionName==='PROFESSION_CALL_NATURE'
+    ||(functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(skillId))===68)
     ||functionName==='PROFESSION_OBLIVION'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
@@ -2552,7 +2555,7 @@ function sourceProfessionBattleSkillPrepare({
   if(plan.clientBattleUse!==true){
     return Object.assign({},plan,{ok:false,reason:'client-nonbattle-skill'});
   }
-  if(!sourceProfessionBattleFunctionSupported(plan.use.functionName)){
+  if(!sourceProfessionBattleFunctionSupported(plan.use.functionName,plan.skillId)){
     return Object.assign({},plan,{ok:false,reason:'battle-function-unported'});
   }
 
@@ -3542,6 +3545,129 @@ function sourceProfessionNatureResistExecute(prepared,name,statusCheck=sourcePro
     oldValue,newValue:sourceProfessionPlayerResistVector(),
     threeStatusTbl:true,ordinaryStatusIgnoredBySource:true,
     forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
+  };
+}
+const SOURCE_PROFESSION_BOUNDARY_ATTRS=Object.freeze(['earth','water','fire','wind']);
+function sourceProfessionBoundaryTurns(attackSkillTier){
+  const tier=Math.trunc(n(attackSkillTier));
+  if(tier>=10)return 5;
+  if(tier>9)return 4;
+  if(tier>8)return 3;
+  if(tier>4)return 2;
+  return 1;
+}
+function sourceProfessionBoundaryPower(displayLevel){
+  const level=Math.trunc(n(displayLevel));
+  if(level>=100)return 100;
+  if(level>95)return 90;
+  if(level>90)return 80;
+  if(level>85)return 70;
+  if(level>80)return 60;
+  if(level>60)return 50;
+  if(level>40)return 40;
+  if(level>20)return 30;
+  return 20;
+}
+function sourceProfessionBoundaryActorDesc(actor){
+  if(actor?.kind==='player')return {kind:'player'};
+  if(actor?.kind==='pet'){
+    const pet=state?.petBox?.find(p=>p.id===actor.petId)||null;
+    return pet?{kind:'pet',pet,petId:pet.id}:null;
+  }
+  if(actor?.kind==='enemy'){
+    const units=Array.isArray(enemy?.units)?enemy.units:(enemy?[enemy]:[]);
+    const unit=units.find(u=>u?.id===actor.unitId)||null;
+    return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+  }
+  return null;
+}
+function sourceProfessionBoundaryState(desc){
+  const key=battleStatusKey(desc);
+  return key?battleProfessionBoundaryStates.get(key)||null:null;
+}
+function sourceProfessionBoundaryApply(desc,attr,power,turns){
+  const key=battleStatusKey(desc);
+  const type=String(attr||'');
+  if(!key||!SOURCE_PROFESSION_BOUNDARY_ATTRS.includes(type))return null;
+  // fixed BOUNDARY first clears all four Work fields on every target.
+  const next={earth:null,water:null,fire:null,wind:null};
+  next[type]={power:Math.max(0,Math.trunc(n(power))),turns:Math.trunc(n(turns))};
+  battleProfessionBoundaryStates.set(key,next);
+  return {key,attr:type,power:next[type].power,turns:next[type].turns,clearedOtherAttrs:true};
+}
+function sourceProfessionBoundaryPostAction(actor){
+  const desc=sourceProfessionBoundaryActorDesc(actor);
+  const key=battleStatusKey(desc);
+  if(!key)return null;
+  const st=battleProfessionBoundaryStates.get(key);
+  if(!st)return null;
+  const ticks=[],cleared=[];
+  for(const attr of SOURCE_PROFESSION_BOUNDARY_ATTRS){
+    const part=st[attr];
+    if(!part||Math.trunc(n(part.power))<=0)continue;
+    const before=Math.trunc(n(part.turns));
+    const after=before-1;
+    if(after<=-1){
+      st[attr]=null;
+      cleared.push(attr);
+    }else{
+      part.turns=after;
+    }
+    ticks.push({attr,power:Math.trunc(n(part.power)),before,after,cleared:after<=-1});
+  }
+  const active=SOURCE_PROFESSION_BOUNDARY_ATTRS.some(attr=>st[attr]&&Math.trunc(n(st[attr].power))>0);
+  if(!active)battleProfessionBoundaryStates.delete(key);
+  if(cleared.length){
+    addLog(battleStatusDescName(desc)+' 的'+cleared.map(x=>({earth:'地',water:'水',fire:'火',wind:'風'}[x]||x)).join('／')+'結界解除。');
+  }
+  return {key,ticks,cleared,active,state:active?st:null,sourcePostCommandTick:true};
+}
+function sourceProfessionBoundaryPhysicalAdjust(attacker,defender,damage){
+  const raw=Math.trunc(n(damage));
+  const key=String(defender?.boundaryKey||'');
+  const st=key?battleProfessionBoundaryStates.get(key)||null:null;
+  if(!st)return {damage:raw,applied:false};
+  // fixed BATTLE_DamageCalc uses an earth->water->fire->wind else-if chain.
+  for(const attr of SOURCE_PROFESSION_BOUNDARY_ATTRS){
+    const part=st[attr];
+    if(!part||Math.trunc(n(part.power))<=0)continue;
+    const attackerAttr=Math.trunc(n(attacker?.elements?.[attr]));
+    const after=attackerAttr>0?Math.trunc(raw-raw*(attackerAttr/200)):raw;
+    return {
+      damage:after,applied:attackerAttr>0,attr,attackerAttr,
+      storedPower:Math.trunc(n(part.power)),turns:Math.trunc(n(part.turns)),
+      sourceStoredPowerIgnored:true,sourceRate:attackerAttr/200
+    };
+  }
+  return {damage:raw,applied:false};
+}
+function sourceProfessionEarthBoundaryExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==68)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const row=sourceProfessionSkillTemplate(skillId);
+  const power=sourceProfessionBoundaryPower(prepared?.displayLevel);
+  const turns=sourceProfessionBoundaryTurns(prepared?.attackSkillTier);
+  const results=[];
+  for(const slot of multi.slots){
+    const desc=sourceSetMagicPetTargetableDescFromSlot(slot);
+    if(!desc)continue;
+    const applied=sourceProfessionBoundaryApply(desc,'earth',power,turns);
+    results.push({slot,target:battleStatusDescName(desc),kind:desc.kind,petId:desc.petId||null,unitId:desc.unitId||null,applied});
+  }
+  const rightSide=(rawToNo===20||rawToNo===25||rawToNo===26);
+  const img1=Math.trunc(n(row?.img1));
+  const img2=rightSide?101786:Math.trunc(n(row?.img2));
+  addLog('你施放「'+name+'」：同側 '+results.length+' 個 Battle Entry 套用地結界，stored power='+power+'／low='+turns+'。','good');
+  return {
+    handled:true,skillId,functionName:prepared.functionName,rawToNo,multi,
+    displayLevel:Math.trunc(n(prepared?.displayLevel)),attackSkillTier:Math.trunc(n(prepared?.attackSkillTier)),
+    power,turns,img1,img2,rightSide,results,
+    sourcePowerStoredButPhysicalRateUsesAttackerEarth:true,noDamage:true,noCounter:true
   };
 }
 function sourceProfessionCallNaturePool(displayLevel){
@@ -4855,6 +4981,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const callNatureRow=sourceProfessionSkillTemplate(prepared.skillId);
     const callNatureName=String(callNatureRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionCallNatureExecute(prepared,callNatureName);
+  }
+  if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===68){
+    const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const boundaryName=String(boundaryRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionEarthBoundaryExecute(prepared,boundaryName);
   }
   if(prepared.functionName==='PROFESSION_OBLIVION'){
     const oblivionRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -8077,7 +8208,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map()}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleOuterBoundaryActor=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -9141,7 +9272,7 @@ function playerBattleView(){
   const fixedTough=battlePlayerFixedToughWork==null
     ?defenseBase:Math.trunc(n(battlePlayerFixedToughWork));
   return {
-    type:'player',attack,defense:defenseBase,stone,
+    type:'player',attack,defense:defenseBase,stone,boundaryKey:battleStatusKey(desc),
     fixedTough,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(compliance.fixedLuck??state.luck),drunk,
@@ -9199,7 +9330,7 @@ function petBattleView(pet){
     :(powerMod&&Number.isFinite(Number(powerMod.quick))?Math.trunc(Number(powerMod.quick)):normalQuickBase);
   const elements=frozen?.elements?Object.assign({},frozen.elements):battleElementsForDesc(desc);
   return {
-    type:'pet',attack,defense,stone,
+    type:'pet',attack,defense,stone,boundaryKey:battleStatusKey(desc),
     duckBonus:n(noGuard?.duckBonus),counterBonus:n(noGuard?.counterBonus),
     fixedTough,fixedDex,workQuickBase,quick:battleDrunkQuick(desc,workQuickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
@@ -9216,7 +9347,7 @@ function enemyBattleView(unit){
   const defenseRaw=n(unit?.roundDefense??unit?.defense);
   const quickRaw=n(unit?.roundQuick??unit?.quick);
   return {
-    type:'enemy',
+    type:'enemy',boundaryKey:battleStatusKey(desc),
     attack:attackBase,
     defense:defenseRaw,stone,
     fixedDex:n(unit?.roundFixQuick??unit?.quick),
@@ -9983,6 +10114,10 @@ function battleDamageCore(attacker,defender,options={}){
     damage=Math.trunc((attack-defense)*2+k0);
   }
   damage=battleAttrDamage(attacker,defender,damage);
+
+  // fixed _PROFESSION_ADDSKILL boundary check is after AttrAdjust and before _ADD_DEAMGEDEFC.
+  const professionBoundary=sourceProfessionBoundaryPhysicalAdjust(attacker,defender,damage);
+  damage=professionBoundary.damage;
 
   // fixed _ADD_DEAMGEDEFC unconditionally consumes both RAND calls, including 0..0.
   const sourceOtherDamage=Math.trunc(n(attacker?.otherDamage));
@@ -14777,23 +14912,25 @@ function sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots=sourcePl
   }
   return null;
 }
-function sourceMarkBattleActorOuterAddProfit(){
+function sourceMarkBattleActorOuterAddProfit(actor=null){
   // A dead / C_WAIT / combo-consumed Entry is continued before this mark, exactly like
   // fixed BATTLE_Battling; only an Entry that reaches StatusSeq/command processing
-  // earns the generic CHECK_ITEM_RELIFE -> outer BATTLE_AddProfit boundary.
+  // earns the generic post-command boundary -> CHECK_ITEM_RELIFE -> outer AddProfit tail.
   battleOuterAddProfitPending=true;
+  battleOuterBoundaryActor=actor||null;
 }
 function sourceProcessBattleActorOuterBoundary(equipmentSlots=sourcePlayerEquippedRelifeItems()){
   if(!battleOuterAddProfitPending)return null;
   battleOuterAddProfitPending=false;
+  const actor=battleOuterBoundaryActor;
+  battleOuterBoundaryActor=null;
 
-  // Critical ordering from fixed battle.c:
-  // completed command -> CHECK_ITEM_RELIFE -> BATTLESTR_ADD(bad status) -> BATTLE_AddProfit.
-  // Inner per-hit AddProfit calls stay separate; they can set CHAR_ISDIE first, allowing
-  // this same actor's end-of-command scan to revive the Player before the next Entry.
+  // fixed battle.c tail order: completed command -> profession boundary countdown
+  // -> CHECK_ITEM_RELIFE -> bad-status packet -> outer BATTLE_AddProfit.
+  const professionBoundary=sourceProfessionBoundaryPostAction(actor);
   const relife=sourceCheckPlayerItemRelifeBeforeOuterAddProfit(equipmentSlots);
   const deaths=sourceProcessBattleDeathsAtAddProfit();
-  return {relife,deaths};
+  return {professionBoundary,relife,deaths};
 }
 
 function petFixedAi(pet){
@@ -19856,7 +19993,7 @@ function captureTurn(manual=false){
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
-    sourceMarkBattleActorOuterAddProfit();
+    sourceMarkBattleActorOuterAddProfit(actor);
     const statusTurn=processBattleStatusTurn(actor);
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
@@ -20691,7 +20828,7 @@ function attackTurn(options={}){
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
-    sourceMarkBattleActorOuterAddProfit();
+    sourceMarkBattleActorOuterAddProfit(actor);
     const statusTurn=processBattleStatusTurn(actor);
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
@@ -20806,7 +20943,7 @@ function guardTurn(){
     // fixed BATTLE_COM_COMBO 會在 leader case 直接推進 EntryList index，
     // 已被 leader 吃掉的 combo member 不會回到外層再跑第二次 StatusSeq。
     if(actor.sourceComboConsumed)continue;
-    sourceMarkBattleActorOuterAddProfit();
+    sourceMarkBattleActorOuterAddProfit(actor);
     const statusTurn=processBattleStatusTurn(actor);
     // fixed BATTLE_Battling(): after StatusSeq / CanMoveCheck, every C_OK actor reaches
     // BATTLE_GetAttackCount() before the command switch. A valid CHAR_ARM therefore consumes
@@ -21254,7 +21391,7 @@ function renderProfessionBattleActions(){
   if(!info||!actions)return;
   const rows=sourceProfessionSkillMenu(state).filter(Boolean);
   const learnedBattle=rows.filter(row=>row.useFlag===1);
-  const supported=learnedBattle.filter(row=>sourceProfessionBattleFunctionSupported(row.functionName));
+  const supported=learnedBattle.filter(row=>sourceProfessionBattleFunctionSupported(row.functionName,row.skillId));
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
