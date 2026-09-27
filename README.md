@@ -20,12 +20,12 @@
 
 V2.17 完成第五組玩家裝備 callback：`ITEM_MagicResist / ITEM_MagicReResist`，並補掉 V2.16 的 lazy field2 argument 漏洞。
 
-這次不硬寫舊編碼中文字。fixed runtime generator 會直接從 pinned `item_event.c` blob `00e05ebe58ef3988f7e0121f2a3aa5ede78344b5` 抽出 `ITEM_MagicResist()` 七個 `strstr()` 原始 bytes、各自對應的 `CHAR_WORKEQUIT*` 與固定 `p+4`，再把有 attach/detach callback 的 `ITEM_ARGUMENT` 以 latin1 byte-preserving 形式寫進較小的 item-make runtime。這樣不需要預先載入 10,737 筆大型 field2 runtime，也不猜 GBK／Big5。
+這次不硬寫舊編碼中文字。pinned `recode.sh` blob `10ef38a0e84b70e8573d94199d038416afadf923` 明確記錄 `gmsv` 曾以 `recode gb18030..utf8` 轉碼；generator 因此從 pinned `item_event.c` blob `00e05ebe58ef3988f7e0121f2a3aa5ede78344b5` 讀取目前 UTF-8 的七個 `strstr()` literal，再依來源證據還原成 GB18030 執行字串 bytes，並強制驗證每個 marker 都正好是原 C `p+4` 對應的 4 bytes。fixed `ITEM_ARGUMENT` 則以 latin1 byte-preserving 形式放進較小的 item-make runtime。這樣不需要預先載入 10,737 筆大型 field2 runtime，也不猜字元集。
 
 原 C lifecycle 已接入：
 
 - 登入：`CHAR_loginCheckUserItem()` 依裝備格 0→8 重播 attach callback；Web 的 transient Work 也依同一順序重建。
-- 穿裝：`ITEM_MagicResist()` 是 `CHAR_setWorkInt`，只把第一個命中的類別**直接設值**，不是累加；若 fixed row 的 argument 沒有七個 marker，原 callback 就是合法 no-op，Web 也照樣允許裝備而不猜效果（Item 2898 是已驗到的例子）。
+- 穿裝：`ITEM_MagicResist()` 是 `CHAR_setWorkInt`，只把第一個命中的類別**直接設值**，不是累加。fixed 有效列已驗到：2898=虛弱30、2899=魔障30、2900=沉默30、2901=落馬30、20643=沉默15。若 fixed row 的 argument 沒有七個 marker，原 callback 就是合法 no-op，Web 也照樣允許裝備而不猜效果；目前驗到的 no-op Item 為 2907、2912、2917、2922、21032、21037、21174、21400。
 - 換裝：原 `CHAR_moveItemFromItemBoxToEquip()` 先交換格子，再舊裝 detach、最後新裝 attach；Web 保留相同事件順序。
 - 卸裝：保留 fixed source 的明確 bug——`ITEM_MagicReResist()` 七個分支最後全部都只做 `CHAR_WORKEQUITFIRE = 0`。因此卸掉雷／冰／虛弱／魔障／沉默／落馬裝備時，對應 Work 可能暫時殘留到重新登入或被另一個 attach 覆寫。
 - 虛弱／魔障／沉默：已接到 `BATTLE_StatusAttackCheck()` 的命中率扣減。
