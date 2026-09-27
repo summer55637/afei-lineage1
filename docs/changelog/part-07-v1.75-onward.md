@@ -4623,3 +4623,65 @@ Battle Entry 初始化的原 C 也把 Work 清 0；Web `resetBattleStatuses()` �
 - save schema 30
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.47 Skill 57 Enrage Pet
+
+V2.47 接入 Skill 57「激怒寵物」／`PROFESSION_ENRAGE_PET`。
+
+### Source command shape
+
+- MP 13
+- TARGET 1 / OTHER
+- KIND 2
+- option `攻%20|防%10|倍%2|效%1|回%3`
+- command `BATTLE_COM_S_ENRAGE_PET`
+
+`battle.c` 對此 command 不跑一般 same-side reject；`battle_profession_attack_fun()` 反而要求 `BATTLE_CheckSameSide(...) == 1`。
+
+### Zero-attack AttackSeq
+
+fixed case先 `WORKATTACKPOWER=0`，但仍對原 raw target跑 `BATTLE_AttackSeq()`。之後：
+
+`if(target.HP <= calculatedDamage) damage = 0`
+
+所以它不是固定 0 傷害；0 AttackPower 仍可能經 fixed damage/critical/minimum-damage流程得到正值，只在致死時才整段壓回 0。
+
+主人攻擊自己的 Pet 仍在 AttackSeq早期吃 `AI_FIX_SEKKAN=-200` variable-AI/忠誠修正；Dodge/MISS也不能跳掉。
+
+profession helper對 ENRAGE_PET 把 DamageReact 清成 0，且沒有 ordinary SUITPOISON / Counter。Web對 shared physical apply新增 opt-in `suppressDamageReact`，只在這條來源路徑啟用。
+
+### Buff write
+
+AttackSeq / DamageSub後重新讀 raw COM2。只有 target type PET才：
+
+`MYSKILLSTRPOWER = tier*2+10`
+
+`MYSKILLSTR = tier>=10 ? 5 : tier>=5 ? 4 : 3`
+
+OTHER 可以包含 Player；對 Player raw target會執行前段攻擊但不寫 Buff。
+
+### Shared MYSKILLSTR lifecycle
+
+Web新增 battle-local Pet STR Work mirror：
+
+- ENRAGE_PET覆蓋同 Pet 的 SetMagicPet STR raw Work。
+- SetMagicPet TGH/DEX可並存。
+- active ENRAGE_PET STR會進 SetMagicPet busy gate。
+- raw STR power在 turn expiry後保留 stale value，battle reset才清。
+
+PreCommand先 snapshot ENRAGE_PET STR，再處理 SetMagicPet TGH/DEX。Pet battle view依 fixed bug用 saved FIXTOUGH作 STR add 基底：
+
+`attack += trunc(fixedTough * strPower / 100)`
+
+之後才 Vary / WEAKEN。
+
+Pet 自己進 StatusSeq時先倒數 profession Pet STR，再倒數其餘 SetMagicPet狀態。新 Buff若在同輪 Pet行動前才被寫入，會先消耗一回合但不 retroactively改本輪能力。
+
+### Regression
+
+新增 `tools/check_v247_profession_enrage_pet_runtime.mjs`，覆蓋 metadata、support、live bid 5、same-side dispatcher、power/turn formulas、shared raw Work overwrite/coexist/busy、PreCommand/StatusSeq ordering、zero AttackPower、lethal suppression、DamageReact/SUITPOISON suppression、owner→Pet physical apply hook、歷史 V2.41/V2.44/V2.45/V2.46 markers、V2.47 marker與 schema 30。
+
+save schema 維持 **30**。

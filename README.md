@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.46**
+**PLAYABLE CORE V2.47**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,67 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.47 最新進度
+
+V2.47 接入獵人 **Skill 57「激怒寵物」／`PROFESSION_ENRAGE_PET`**，完整保留 fixed「先攻擊自己陣營，再寫 Pet MYSKILLSTR」的特殊生命週期。
+
+fixed row：MP 13、TARGET 1（OTHER）、KIND 2、option `攻%20|防%10|倍%2|效%1|回%3`、command `BATTLE_COM_S_ENRAGE_PET`。
+
+### 這招不是單純 Buff
+
+`battle.c` 沒有把 ENRAGE_PET 放進一般「禁止同隊互打」gate；`battle_profession_attack_fun()` 反而明確要求 raw target **必須同隊**，然後：
+
+1. 把施術者 `WORKATTACKPOWER = 0`。
+2. 仍對原 raw target 跑完整 `BATTLE_AttackSeq()`。
+3. 若算出的 damage 足以讓目標死亡，才把最終 damage 強制改成 0。
+4. 走 `BATTLE_DamageSub()`；此技能的 DamageReact 被 profession helper 清掉，也沒有普通 SUITPOISON／Counter。
+5. 最後重新讀原 raw target；只有 `CHAR_TYPEPET` 才寫攻擊 Buff。
+
+因此選到同隊 Player 時可能跑 0 攻擊 AttackSeq，但最後**不會得到 Buff**。Web live UI 目前只有一名 Player + 一隻出戰 Pet，所以 Skill 57 直接選 fixed Pet bid 5；explicit protocol fixture 仍保留 bid 0 的來源怪路徑。
+
+### 主人打自己 Pet 的忠誠副作用
+
+`BATTLE_AttackSeq()` 很早就會對 owner→own Pet 執行 `CHAR_PetAddVariableAi(..., AI_FIX_SEKKAN)`，也就是 -2.00 忠誠修正；這發生在 Dodge／MISS 之前。
+
+V2.47 直接沿用既有 `battleApplyPhysicalHit()` owner→Pet 修正，因此即使這次 0 攻擊閃避／MISS，忠誠副作用仍保留。為了對齊 profession helper，這條呼叫新增 `suppressDamageReact:true`，同時保留 `suppressSuitPoison:true`。
+
+### STR power 與回合
+
+display level 經 A-tier 0～10 後：
+
+`MYSKILLSTRPOWER = tier×2 + 10`
+
+即 **10～30%**。
+
+回合 Work：
+
+- tier 0～4 → 3
+- tier 5～9 → 4
+- tier 10 → 5
+
+加攻不是用 Pet STR 自己當百分比基底；fixed `Other_DefcharWorkInt()` 的來源 bug 是：
+
+`FIXSTR += (saved FIXTOUGH * MYSKILLSTRPOWER) / 100`
+
+所以 V2.47 用 Pet 的 defense/FIXTOUGH base 算 STR add，保留 C int 截斷。
+
+### 與 SetMagicPet 共用 raw Work
+
+ENRAGE_PET 直接覆寫 `CHAR_MYSKILLSTR / CHAR_MYSKILLSTRPOWER`：
+
+- 既有 SetMagicPet STR 會被覆蓋。
+- SetMagicPet TGH／DEX 使用不同 raw Work，可和激怒寵物 STR 共存。
+- 激怒寵物 STR 尚在時，後續 SetMagicPet 的 busy gate 必須看到 `MYSKILLSTR>0` 而拒絕施放。
+- STR turn 歸零後 POWER 不清 0；原 C 只在 battle entry 的 BadStatusAllClr 清 raw power。V2.47 以 battle-local raw mirror 保存這個 stale power。
+
+### PreCommand / StatusSeq 時序
+
+施放當下不 retroactively 重建本輪 Pet FIXSTR。下一輪 `PreCommand -> Other_DefcharWorkInt` 才把 STR bonus 寫進能力快照。
+
+但 `MYSKILLSTR` 倒數是在**目標 Pet 自己輪到行動時**的 `BATTLE_StatusSeq()`：若 Player 先施放、Pet 在同一輪稍後才動，新寫入的 3/4/5 會先扣 1，而本輪能力快照仍沒吃到新 Buff。V2.47 刻意保留這個依行動順序不同而損失一回合的來源行為。
+
+新增 `tools/check_v247_profession_enrage_pet_runtime.mjs`，鎖住 Skill 57 metadata、同隊 Pet bid 5、0 AttackPower AttackSeq、致死傷害歸 0、忠誠副作用入口、DamageReact/SUITPOISON suppression、10～30% STR power、3/4/5 回合、SetMagicPet STR overwrite/TGH-DEX coexist/busy、PreCommand snapshot、Pet StatusSeq 倒數與 V2.47 marker；**save schema 維持 30**。
 
 ## V2.46 最新進度
 

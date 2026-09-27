@@ -111,6 +111,9 @@ let battlePlayerMySkillStrPower=0;
 let battlePlayerFixedAttackWork=null;
 let battlePlayerAttackWork=null;
 let battlePlayerCaptureMod=0;
+let battleProfessionPetStrStates=new Map();
+let battleProfessionPetStrRoundStates=new Map();
+let battleProfessionPetStrPowerRaw=new Map();
 
 const $=s=>document.querySelector(s);
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
@@ -2501,6 +2504,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_TOXIN_WEAPON'
     ||functionName==='PROFESSION_PLUNDER'
     ||functionName==='PROFESSION_DOCILE'
+    ||functionName==='PROFESSION_ENRAGE_PET'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -2520,6 +2524,11 @@ function sourceProfessionLiveSelectedToNo(slot,target=state){
   // Fixed target enum TARGET_OTHER allows self. BATTLE_MultiCaptureUp only mutates
   // CHAR_TYPEPLAYER entries; the current Web battle model has exactly one Player at bid 0.
   if(String(row?.func||'')==='PROFESSION_DOCILE')return 0;
+  if(String(row?.func||'')==='PROFESSION_ENRAGE_PET'){
+    const entries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+    const petEntry=entries.find(x=>x?.kind==='pet'&&!battlePetOutIds.has(x.petId));
+    return petEntry?5:null;
+  }
   const selected=targetEnemyUnit();
   return selected?10+Math.trunc(n(selected.battleSlot)):null;
 }
@@ -3212,6 +3221,87 @@ function sourceProfessionDocileExecute(prepared,name,randMacro=sourceCRandMacroV
     handled:true,skillId:prepared.skillId,functionName:prepared.functionName,toNo,
     applied:true,rate,upPoint,captureModBefore:before,captureModAfter:battlePlayerCaptureMod,
     noDurationCounter:true,noDamage:true,noCounter:true
+  };
+}
+function sourceProfessionFriendlyDescByBattleSlot(toNo){
+  const slot=Math.trunc(Number(toNo));
+  if(slot===0)return {kind:'player'};
+  if(slot!==5)return null;
+  const entries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+  const entry=entries.find(x=>x?.kind==='pet'&&!battlePetOutIds.has(x.petId));
+  if(!entry)return null;
+  const pet=state?.petBox?.find?.(p=>p.id===entry.petId)||null;
+  return pet?{kind:'pet',pet,petId:pet.id}:null;
+}
+function sourceProfessionEnragePetPower(prepared){
+  return Math.trunc(n(prepared?.attackSkillTier))*2+10;
+}
+function sourceProfessionEnragePetTurns(prepared){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  if(tier>=10)return 5;
+  if(tier>=5)return 4;
+  return 3;
+}
+function sourceProfessionEnragePetAttackResult(targetDesc){
+  const base=playerBattleView();
+  if(!base||!targetDesc)return null;
+  const attacker=Object.assign({},base,{attack:0});
+  let defender=null,guarding=false,disableDodge=false;
+  if(targetDesc.kind==='pet'&&targetDesc.pet){
+    defender=petBattleView(targetDesc.pet);
+    guarding=sourcePlayerPetGuardAdjust(targetDesc.pet);
+    disableDodge=sourcePlayerPetGuardCommand(targetDesc.pet);
+  }else if(targetDesc.kind==='player'){
+    defender=playerBattleView();
+  }
+  if(!defender)return null;
+  const r=resolveNormalAttack(attacker,defender,{guarding,disableDodge});
+  r.sourceEnragePetAttackPower=0;
+  return r;
+}
+function sourceProfessionEnragePetExecute(prepared,name){
+  const toNo=Math.trunc(n(prepared?.toNo));
+  const targetDesc=sourceProfessionFriendlyDescByBattleSlot(toNo);
+  if(!targetDesc){
+    return {handled:true,noAction:true,reason:'source-target-not-same-side',toNo};
+  }
+  const hpBefore=Math.max(0,Math.trunc(n(battleStatusHp(targetDesc))));
+  if(hpBefore<=0){
+    return {handled:true,noAction:true,reason:'target-dead-or-missing',toNo};
+  }
+  if(targetDesc.kind==='pet'&&sourcePlayerPetHidden(targetDesc.pet)){
+    return {handled:true,noAction:true,reason:'target-earthround',toNo,targetPetId:targetDesc.pet.id};
+  }
+
+  const attack=sourceProfessionEnragePetAttackResult(targetDesc);
+  if(!attack)return {handled:true,noAction:true,reason:'attack-result-missing',toNo};
+  const calculatedDamage=Math.max(0,Math.trunc(n(attack.damage)));
+  const lethalSuppressed=!attack.dodged&&!attack.miss&&calculatedDamage>0&&hpBefore<=calculatedDamage;
+  if(lethalSuppressed){
+    attack.damage=0;
+    attack.sourceEnragePetLethalSuppressed=true;
+    attack.sourceEnragePetCalculatedDamage=calculatedDamage;
+  }
+
+  // fixed generic profession helper zeroes DamageReact for ENRAGE_PET and has no SUITPOISON.
+  battleApplyPhysicalHit({kind:'player'},targetDesc,attack,{
+    suppressSuitPoison:true,suppressDamageReact:true
+  });
+
+  let buff=null;
+  if(targetDesc.kind==='pet'){
+    const power=sourceProfessionEnragePetPower(prepared);
+    const turns=sourceProfessionEnragePetTurns(prepared);
+    buff=sourceProfessionPetStrSet(targetDesc.pet,turns,power);
+    addLog('你以「'+name+'」激怒 '+targetDesc.pet.name+'：攻擊強化 '+power+'%，原版回合 Work '+turns+'。','good');
+  }
+
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,toNo,
+    targetKind:targetDesc.kind,targetPetId:targetDesc.pet?.id||null,hpBefore,
+    calculatedDamage,damageApplied:Math.max(0,Math.trunc(n(attack.damage))),
+    lethalSuppressed,attack,buff,
+    sourceAttackPowerZero:true,noOrdinaryCounter:true,noDamageReact:true,noSuitPoison:true
   };
 }
 function sourceProfessionPlayerMaxPile(target=state){
@@ -4262,6 +4352,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const docileRow=sourceProfessionSkillTemplate(prepared.skillId);
     const docileName=String(docileRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionDocileExecute(prepared,docileName);
+  }
+  if(prepared.functionName==='PROFESSION_ENRAGE_PET'){
+    const enragePetRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const enragePetName=String(enragePetRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionEnragePetExecute(prepared,enragePetName);
   }
   if(toNo<10){
     // fixed battle.c direct-attack profession gate rejects same-side direct targets here;
@@ -7479,7 +7574,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map()}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -7616,7 +7711,8 @@ function sourceMagicPetBusy(desc){
   const professionBusy=desc?.kind==='player'
     &&typeof sourceProfessionPlayerStatActiveAny==='function'
     &&sourceProfessionPlayerStatActiveAny();
-  return sourceMagicPetDuckActive(desc)||!!sourceMagicPetState(desc)||professionBusy;
+  const professionPetStrBusy=desc?.kind==='pet'&&!!sourceProfessionPetStrState(desc.pet);
+  return sourceMagicPetDuckActive(desc)||!!sourceMagicPetState(desc)||professionBusy||professionPetStrBusy;
 }
 function sourceMagicPetApply(desc,stat,turns,power){
   const key=battleStatusKey(desc);
@@ -7644,6 +7740,71 @@ function sourceMagicPetStatusSeq(desc){
     return {expired:true,stat:st.stat,power:st.power,turns:0};
   }
   return {expired:false,stat:st.stat,power:st.power,turns:st.turns};
+}
+function sourceProfessionPetStrState(pet){
+  if(!pet)return null;
+  const st=battleProfessionPetStrStates.get(pet.id)||null;
+  return st&&Math.trunc(n(st.turns))>0?st:null;
+}
+function sourceProfessionPetStrRoundState(pet){
+  return pet?(battleProfessionPetStrRoundStates.get(pet.id)||null):null;
+}
+function sourceProfessionPetStrSet(pet,turns,power){
+  if(!pet)return {ok:false,reason:'pet-missing'};
+  const desc={kind:'pet',pet,petId:pet.id};
+  const magic=sourceMagicPetState(desc);
+  let overwroteMagicStr=false;
+  // fixed ENRAGE_PET writes CHAR_MYSKILLSTR / POWER unconditionally.
+  // A pre-existing SetMagicPet STR uses the same raw Work and is overwritten;
+  // TGH/DEX use different Work fields and therefore remain active.
+  if(magic&&String(magic.stat||'').toUpperCase()==='STR'){
+    battleMagicPetStates.delete('pet:'+String(pet.id));
+    overwroteMagicStr=true;
+  }
+  const value={
+    turns:Math.max(0,Math.trunc(n(turns))),power:Math.trunc(n(power)),
+    appliedBattleTurn:Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)))
+  };
+  battleProfessionPetStrStates.set(pet.id,value);
+  // fixed StatusSeq clears only the turn counter; POWER remains stale until battle reset
+  // or another write to the same raw field.
+  battleProfessionPetStrPowerRaw.set(pet.id,value.power);
+  return {ok:true,petId:pet.id,...value,overwroteMagicStr};
+}
+function sourceProfessionPetStrStatusSeq(desc){
+  if(desc?.kind!=='pet'||!desc.pet)return null;
+  const st=sourceProfessionPetStrState(desc.pet);
+  if(!st)return null;
+  const beforeTurns=Math.trunc(n(st.turns));
+  st.turns=Math.max(0,beforeTurns-1);
+  const power=Math.trunc(n(st.power));
+  if(st.turns<=0){
+    battleProfessionPetStrStates.delete(desc.pet.id);
+    addLog(desc.pet.name+' 的激怒寵物攻擊強化效果結束。');
+    return {expired:true,beforeTurns,turns:0,power,rawPowerStale:Math.trunc(n(battleProfessionPetStrPowerRaw.get(desc.pet.id)))};
+  }
+  return {expired:false,beforeTurns,turns:st.turns,power};
+}
+function sourcePrepareProfessionPetStrRoundStates(){
+  battleProfessionPetStrRoundStates=new Map();
+  const current=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+  const entries=Array.isArray(enemy?.sourcePlayerSideEntries)?enemy.sourcePlayerSideEntries:[];
+  for(const entry of entries){
+    if(entry?.kind!=='pet'||battlePetOutIds.has(entry.petId))continue;
+    const pet=state?.petBox?.find?.(p=>p.id===entry.petId)||null;
+    const st=sourceProfessionPetStrState(pet);
+    if(!pet||!st||current<=Math.trunc(n(st.appliedBattleTurn)))continue;
+    battleProfessionPetStrRoundStates.set(pet.id,Object.assign({},st));
+  }
+}
+function sourceProfessionPetStrAdjusted(pet,attack,defense){
+  const st=sourceProfessionPetStrRoundState(pet);
+  const baseAttack=Math.trunc(n(attack)),baseDefense=Math.trunc(n(defense));
+  if(!st)return {attack:baseAttack,power:0,add:0,active:false};
+  const power=Math.trunc(n(st.power));
+  // fixed Other_DefcharWorkInt bug: STR adds (saved mtgh * STRPOWER)/100.
+  const add=Math.trunc(baseDefense*power/100);
+  return {attack:baseAttack+add,power,add,active:true,turns:Math.trunc(n(st.turns))};
 }
 function sourcePrepareMagicPetRoundStates(){
   battleMagicPetRoundStates=new Map();
@@ -8272,9 +8433,10 @@ function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
 
-  // fixed BATTLE_StatusSeq tail: SetMagicPet counts down on the target's own action.
-  // The round WORK/FIX snapshot was already prepared before StatusSeq, so an expiry here
-  // must not erase this round's already-built stat bonus.
+  // fixed BATTLE_StatusSeq tail begins with MYSKILLSTR. ENRAGE_PET shares that raw field.
+  // The round WORK/FIX snapshot was already prepared before StatusSeq, so expiry here
+  // affects only the next round.
+  sourceProfessionPetStrStatusSeq(desc);
   sourceMagicPetStatusSeq(desc);
 
   if(desc.kind==='enemy'){
@@ -8487,9 +8649,10 @@ function petBattleView(pet){
   const sourceAttackBase=Math.trunc(n(combat?.attack));
   const sourceDefenseBase=Math.trunc(n(combat?.defense));
   const sourceQuickBase=Math.trunc(n(combat?.quick));
-  // fixed Other_DefcharWorkInt(): SetMagicPet is applied before Vary/WEAKEN.
-  // The source bug uses the saved mtgh base for STR/TGH/DEX alike.
-  const magicPet=sourceMagicPetAdjusted(desc,sourceAttackBase,sourceDefenseBase,sourceQuickBase,sourceDefenseBase);
+  // fixed Other_DefcharWorkInt(): MYSKILLSTR runs before MYSKILLTGH/DEX, then Vary/WEAKEN.
+  // ENRAGE_PET owns the Pet STR Work mirror; SetMagicPet TGH/DEX may coexist.
+  const professionPetStr=sourceProfessionPetStrAdjusted(pet,sourceAttackBase,sourceDefenseBase);
+  const magicPet=sourceMagicPetAdjusted(desc,professionPetStr.attack,sourceDefenseBase,sourceQuickBase,sourceDefenseBase);
   const variedAttackBase=vary
     ?magicPet.attack+Math.trunc(magicPet.attack*Math.trunc(n(vary.attackPct))/100)
     :magicPet.attack;
@@ -9674,7 +9837,7 @@ function sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r){
   if(applied)addLog(battleStatusDescName(targetDesc)+' 受到套裝帶毒效果，陷入中毒。','bad');
   return {power,check,applied,storedTurns:applied?4:0};
 }
-function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false,suppressSuitPoison=false}={}){
+function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false,suppressSuitPoison=false,suppressDamageReact=false}={}){
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
@@ -9695,7 +9858,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
     return;
   }
 
-  const trap=sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r);
+  const trap=suppressDamageReact?{triggered:false}:sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r);
   if(trap.triggered){
     sourceFinishProfessionTrapReaction(trap);
     if(!deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
@@ -9704,7 +9867,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
     return trap;
   }
 
-  const acupuncture=sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter});
+  const acupuncture=suppressDamageReact?{triggered:false}:sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter});
   const before=battleStatusHp(targetDesc);
   battleStatusSetHp(targetDesc,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
@@ -19781,6 +19944,8 @@ function normalBattleOrder(options={}){
   sourcePreCommandResetTransient();
   // Other_DefcharWorkInt 同一階段處理 WEAKEN / BARRIER 的真正倒數與 WEAKEN 0.8 FIX 快照。
   sourcePreCommandStatusTick();
+  // fixed Other_DefcharWorkInt reads Pet MYSKILLSTR before MYSKILLTGH/DEX.
+  sourcePrepareProfessionPetStrRoundStates();
   // SetMagicPet is read by Other_DefcharWorkInt() during this PreCommand phase.
   // Freeze which buffs affect this round before any later StatusSeq countdown can expire them.
   sourcePrepareMagicPetRoundStates();
