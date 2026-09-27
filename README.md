@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.56**
+**PLAYABLE CORE V2.57**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,37 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.57 最新進度
+
+V2.57 正式接入巫師 **Skill 1「火山泉」／`PROFESSION_VOLCANO_SPRINGS`**，開始把 V2.19 已來源化的 profession magic core 接進實際戰鬥。這版不是只補傷害按鈕，而是連同 fixed `BATTLE_ProfessionStatus_init → BATTLE_DexCalc → analysis_profession_parameter → PROFESSION_MAGIC_ATTAIC` 的 RNG／Work 順序一起閉環。
+
+fixed row：TARGET OTHER、KIND 1、option `火|0|1|0|0|0|0|0|0|50|0|-50`、row MP 10、img1 101697、img2 101686。實際 MP 走既有 dynamic cost：M-tier 1～2 / 3～4 / 5～6 / 7～9 / 10 = **10 / 15 / 20 / 30 / 35 MP**。
+
+### 火熟練度 Work 與施法熟練 RNG
+
+進戰時 `BATTLE_ProfessionStatus_init()` 會掃 Skill 18 `PROFESSION_FIRE_PRACTICE`，把 M-tier 轉成 Fire Work：tier 1～5 = tier×2；tier 6～10 = (tier-5)×3+10；上限 25。V2.57 新增 battle-local Fire/Ice/Thunder proficiency Work 快照，戰鬥結束清除；來源在戰中因武器變更重跑 `BATTLE_ProfessionStatus_init()` 時也同步刷新。
+
+火山泉進 `analysis_profession_parameter()` 後會先對 Skill 18 再跑一次 `PROFESSION_SKILL_LVEVEL_UP()`，所以被動 raw 熟練度會吃自己的 normal proficiency RNG；但**本次傷害仍讀進戰時的 `CHAR_WORK_F_PROFICIENCY` 快照**，不把剛升的 raw 熟練立刻灌回 Work。只有下一次 Status init 才反映。
+
+### 出手排序與傷害 RNG
+
+火山泉的 `BATTLE_DexCalc()` 不是普通 30% 浮動，而是：
+
+`work = WORKQUICK + 20`
+`dex = work - RAND(0, work*0.2)`
+
+並保留 fixed RAND macro 的 fractional upper expression。
+
+執行順序鎖為：`BATTLE_MultiList` → 火熟練度 proficiency RNG → `PROFESSION_MAGIC_GET_PRACTICE` 的 critical / M2 / 98～102 variance → 每目標 profession magic dodge → Fire damage core → 命中後 `PROFESSION_MAGIC_CHANGE_STATUS` 固定先吃的一顆 `RAND(1,100)`。火山泉本身沒有 status case，所以最後這顆 RNG 只消耗、不改狀態。
+
+Volcano base power = M-tier×10+100；tier10 critical 門檻 25%，其餘為 tier+12%，成功 ×1.5。M_POW／M2_POW 與 98～102 variance 延用 V2.19 fixed core。Enemy 走非 Player magic dodge：LV×0.15（cap20）再扣攻方法術熟練×0.2。命中後直接扣 HP，不進物理 Guardian／DamageReact／ItemCrush／Counter；若命中目標正在睡眠，fixed tail 會解除睡眠。
+
+### 動畫
+
+火山泉 img2 依 M-tier：1～4 = **101688**、5～9 = **101687**、10 = **101686**。正常 Player 對 Enemy direct target 使用 option token 11/12，座標為 **0 / -50**；img1 維持 101697。
+
+新增 `tools/check_v257_profession_volcano_springs_runtime.mjs`。save schema 維持 **30**。
 
 ## V2.56 最新進度
 

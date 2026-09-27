@@ -382,6 +382,9 @@ jobs:
       - name: Run V2.56 Break Boundary regression
         run: node tools/check_v256_profession_break_boundary_runtime.mjs
 
+      - name: Run V2.57 Volcano Springs regression
+        run: node tools/check_v257_profession_volcano_springs_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |

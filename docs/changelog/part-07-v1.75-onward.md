@@ -4884,3 +4884,22 @@ Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtim
 
 save schema 維持 **30**。
 
+---
+
+## V2.57 Skill 1 Volcano Springs
+
+- 接入巫師 Skill 1 `火山泉 / PROFESSION_VOLCANO_SPRINGS`，首次把 V2.19 profession magic damage core 接進 live command。
+- row：TARGET OTHER、KIND 1、option `火|0|1|0|0|0|0|0|0|50|0|-50`、img1 101697、row img2 101686。
+- dynamic MP：M-tier 1～2=10、3～4=15、5～6=20、7～9=30、10=35。
+- 新增 battle-local F/I/T profession magic proficiency Work。Skill18 Fire Practice 的 Work 公式為 tier<=5 ? tier*2 : (tier-5)*3+10，cap25；進戰與 source weapon-change Status_init 刷新，battle reset 清 0。
+- `analysis_profession_parameter()` 先對 Fire Practice 跑 normal proficiency RNG；本次火山泉仍使用施法前已存在的 battle-entry Fire Work snapshot，不把剛增加的 raw passive proficiency 即時回填。
+- Player 火山泉 Dex：`WORKQUICK+20 - RAND(0,(WORKQUICK+20)*0.2)`；使用 fixed fractional RAND macro。
+- 執行 RNG 順序：MultiList → passive proficiency → GET_PRACTICE critical / M2 / variance → per-target magic dodge → damage → hit-only CHANGE_STATUS leading RAND。
+- Enemy magic dodge 使用 non-Player branch：LV*0.15 cap20，再減 Fire Work*0.2；EarthRound early miss 仍在第一顆 dodge RNG 之後。
+- Volcano power：tier*10+100；tier10 critical<=25，其餘 critical<=tier+12 時 ×1.5；之後沿用 M_POW、30% M2_POW、RAND(98,102) 與 Fire GET_DAMAGE。
+- Current Web Enemy 不具 Player-only profession resist / suit / UNMPOWER Work，因此固定以 0 處理；不混入一般四屬 `magicResist[4]`。
+- Magic hit 直接扣 HP，無 Guardian / DamageReact / ItemCrush / Counter；命中者在 spell tail 解除 Sleep。
+- img2：tier1～4=101688、5～9=101687、10=101686；Player→Enemy direct target 使用 option token11/12 = 0/-50。
+
+新增 `tools/check_v257_profession_volcano_springs_runtime.mjs`。save schema 維持 **30**。
+
