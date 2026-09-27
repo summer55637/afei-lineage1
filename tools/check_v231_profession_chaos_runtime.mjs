@@ -124,6 +124,7 @@ const genericAt=exec.indexOf('const first=sourceProfessionPhysicalCalcOnlyResult
 assert.ok(hiddenAt>=0&&chaosAt>hiddenAt&&genericAt>chaosAt);
 
 assert.match(html,/PLAYABLE CORE V2\.31/);
+assert.match(html,/V2\.31 live：[^<]*混亂攻擊/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
