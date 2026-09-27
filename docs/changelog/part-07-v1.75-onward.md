@@ -4361,3 +4361,106 @@ STATUSCHANGE 特別需要 redirect：Trap 觸發後 status helper 必須收到 a
 - save schema 30
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.44 Skill 50 Toxin Weapon
+
+V2.44 接入獵人 Skill 50「毒素武器」／`PROFESSION_TOXIN_WEAPON` 的 fixed custom physical-status branch。
+
+### Runtime row
+
+- Skill ID 50
+- MP 5
+- TARGET 1
+- KIND 1
+- option `毒|前|成%20|敏%30|效%1|回%5`
+- command `BATTLE_COM_S_TOXIN_WEAPON`
+
+### Source shape
+
+這招不是持續武器 Buff。
+
+`battle.c` 把 command 送入 `battle_profession_status_chang_fun()`，TOXIN case 自己完成：
+
+`weapon target list -> BATTLE_AttackSeq -> BATTLE_DamageSub -> WakeUp -> death -> ItemCrush -> PROFESSION_BATTLE_StatusAttackCheck`
+
+之後 command 結束；沒有 ordinary Counter tail。
+
+### Poison parameters
+
+display level 先經 `PROFESSION_CHANGE_SKILL_LEVEL_A()`：
+
+- <=10 => tier0
+- >10 => tier1
+- …
+- >=100 => tier10
+
+TOXIN 成功率：
+
+`20 + tier*2`
+
+因此 20～40。
+
+option turn=5，成功後寫 `StatusTbl[POISON]=turn+1`，即 stored turn **6**。
+
+每個正 damage segment 各自獨立呼叫 StatusAttackCheck。該 helper 固定先消耗 `RAND(1,100)`，再檢查 dead/existing status，成功為 strict `roll < Success`。
+
+### Weapon target list
+
+TOXIN custom loop不使用 `BATTLE_GetAttackCount()`。
+
+- melee：raw COM2 single
+- BOUNDTHROW：raw COM2 single
+- BREAKTHROW：raw COM2 single；不走普通 BREAKTHROW paralysis tail
+- BOW：`BATTLE_TargetListSet()` 的完整 `aBowW` list；沒有 AttackNum cap
+- BOOMERANG：`BoomerangVsTbl[defNo/5]` 五格 row；每 hit ×0.3
+
+Player 變身中時 fixed `bChange` 會跳過遠距 list 改寫，所以即使裝遠距武器也保留最初的 raw single-target MultiList。Web 目前可達的 Player 變身狀態是 BECOMEPIG，因此 V2.44 用 `playerPigActive()` 保存此邊界。
+
+### Raw target / EarthRound
+
+函式入口對 raw COM2：
+
+- index invalid => return
+- raw target command 是 EarthRound => return
+- raw target HP==0 => **不 return**
+
+因此 raw target 死亡仍可作為 BOW/BOOMERANG target-list seed。
+
+TOXIN loop 對每個 secondary list member只檢查 index/HP，沒有 `BATTLE_TargetCheck()`。因此次要 bow/boomerang 目標即使 EarthRound hidden，只要還活著，source 仍會 AttackSeq。V2.44 刻意用 raw battle-slot lookup保留這個 bug。
+
+### Damage lifecycle
+
+每 hit 使用 real Guardian substitution。
+
+TOXIN custom branch沒有 ordinary SUITPOISON；Web 因此傳 `suppressSuitPoison:true`，但保留 DamageReact、WakeUp、ItemCrush 與 death/Ultimate。
+
+Poison status check發生在 DamageSub + ItemCrush之後。即使 DamageSub 已把 defender 打死，source仍先呼叫 StatusAttackCheck，所以 RNG照樣消耗，然後以 dead reason失敗。
+
+### Regression
+
+新增：
+
+`tools/check_v244_profession_toxin_weapon_runtime.mjs`
+
+覆蓋：
+
+- row metadata
+- supported function bridge
+- 20～40% poison success
+- stored turn 6
+- BOW full target list
+- BOOMERANG row / ×0.3
+- BOUND/BREAK single target
+- transformed remote single-target fallback
+- no AttackCount helpers
+- raw-dead dispatch before generic dead-target gate
+- secondary EarthRound raw lookup
+- DamageSub/ItemCrush before poison check
+- no ordinary SUITPOISON / Counter
+- V2.44 marker
+- save schema 30
+
+save schema 維持 **30**。
