@@ -6361,7 +6361,7 @@ function sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r){
   if(applied)addLog(battleStatusDescName(targetDesc)+' 受到套裝帶毒效果，陷入中毒。','bad');
   return {power,check,applied,storedTurns:applied?4:0};
 }
-function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false}={}){
+function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusion=false,deferItemCrush=false,deferAddProfit=false,suppressSuitPoison=false}={}){
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
@@ -6389,7 +6389,8 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   sourceFinishAcupunctureReaction(acupuncture);
   // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
-  const suitPoison=!counter?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
+  const suitPoison=(!counter&&!suppressSuitPoison)
+    ?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
   if(suitPoison)r.suitPoison=suitPoison;
   if(!deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(!deferAddProfit)sourceProcessBattleDeathsAtAddProfit();
@@ -6670,7 +6671,8 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
   battleStatusWakeOnDamage(targetDesc,r.damage);
-  const suitPoison=sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
+  const suitPoison=options.suppressSuitPoison
+    ?null:sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
   if(suitPoison)r.suitPoison=suitPoison;
   if(!options.deferItemCrush)sourceBattleFinalizeItemCrushRng(r);
   if(r.guardian){
@@ -7076,7 +7078,7 @@ function sourceApplyPlayerConfusionRangedHit(targetDesc,r,{breakthrow=false}={})
     // fixed BATTLE_Attack order for BREAKTHROW:
     // DamageSub/WakeUp -> StatusAttackCheck(paralysis) -> ItemCrush -> AddProfit.
     battleApplyPhysicalHit({kind:'player'},resolvedTarget,r,{
-      confusion:true,deferItemCrush:true,deferAddProfit:true
+      confusion:true,deferItemCrush:true,deferAddProfit:true,suppressSuitPoison:true
     });
     paralysis=sourcePlayerBreakthrowParalysisDesc(resolvedTarget,r);
     sourceBattleFinalizeItemCrushRng(r);
@@ -7324,7 +7326,9 @@ function sourcePerformPlayerThrowWeaponAttack(actor,options={}){
     }
     const r=playerAttackResult(target);
     const deferItemCrush=type===19;
-    const actual=applyFriendlyEnemyHit('player','你',target,r,null,{deferItemCrush});
+    const actual=applyFriendlyEnemyHit('player','你',target,r,null,{
+      deferItemCrush,suppressSuitPoison:type===19
+    });
     let paralysis=null;
     if(type===19){
       // fixed BATTLE_Attack order: DamageSub/WakeUp -> BREAKTHROW paralysis -> ItemCrush.
