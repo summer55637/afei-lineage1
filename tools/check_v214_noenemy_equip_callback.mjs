@@ -136,11 +136,11 @@ player.playerItemSlots[3]=null;
 assert.equal(ctx.sourcePlayerNoEnemyLevel(player),0);
 assert.equal(ctx.sourcePlayerNoEnemyActive(player,{floorId:100}),false);
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 console.log(JSON.stringify({
   pass:true,version:'V2.14',focus:'noenemy-equip-callback',
   callbackItems:{18546:40,18547:80,18548:120},
   walkSuppression:'count-step; no encounter RNG; no CEP mutation',
-  saveSchema:29
+  saveSchema:30
 }));

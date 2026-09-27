@@ -83,11 +83,11 @@ assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourcePlayerEquipRequirements(t(2
 assert.equal(ctx.sourcePlayerEquipPlace(t(2884),Array(24).fill(null),ctx.state),3);
 assert.equal(ctx.sourcePlayerEquipPlace(t(2885),Array(24).fill(null),ctx.state),-1);
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 console.log(JSON.stringify({
   pass:true,version:'V2.12',focus:'angel-hero-token-equip-boundary',
   angel:{itemId:2884,type:10,specialGate:true},
   hero:{itemId:2885,type:16,specialGate:false,equipPlace:-1},
-  saveSchema:29
+  saveSchema:30
 }));

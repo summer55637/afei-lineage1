@@ -24,7 +24,7 @@ assert.ok(game.includes('petId:target?.petId??target?.tempNo??v.tempNo??null'));
 assert.ok(game.includes('petId:Number(tempNo)'));
 assert.ok(game.includes('petId:template.tempNo??null'));
 assert.ok(game.includes('copy.petId=Math.trunc(Number(copy.tempNo))'));
-assert.ok(game.includes('schemaVersion:29'));
+assert.ok(game.includes('schemaVersion:30'));
 
 // _FIXWOLF uses CHAR_PETID 981..984 and rerolls skill 600 before DefaultAttacker.
 const randomStart=game.indexOf('function sourcePetRandomSkillPlan');
@@ -130,5 +130,5 @@ console.log(JSON.stringify({
   roarSkills:[581,734],
   varySkills:[600,674],
   varyPetIds:[981,982,983,984],
-  schemaVersion:29
+  schemaVersion:30
 }));

@@ -148,9 +148,9 @@ const dispatch=loyal.indexOf("meta?.f==='PETSKILL_Combined'");
 const fallback=loyal.indexOf('sourceRuntimePending:true');
 assert.ok(dispatch>=0&&fallback>dispatch);
 
-// V1.77 introduced schema 29; a loaded save must never be normalized back to 28.
-assert.ok(game.includes('schemaVersion:29'));
-assert.ok(game.includes('s.schemaVersion=29'));
+// V1.77 introduced schema 29; V2.21 advances current saves to schema 30 and must never normalize back to 28.
+assert.ok(game.includes('schemaVersion:30'));
+assert.ok(game.includes('s.schemaVersion=30'));
 assert.equal(game.includes('s.schemaVersion=28;'),false);
 
 // Pet magic practice fields are ordinary Pet CHAR-equivalent persistent data and survive shallow pet migration.

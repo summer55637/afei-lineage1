@@ -52,7 +52,7 @@ assert.equal(gate.includes('merge-runtime-pending'),false);
 assert.ok(gate.includes('材料各扣 1 pile'));
 assert.ok(gate.includes('ITEM_MERGEFLG'));
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 
 // Pure mirror of fixed ITEM_mergeItem cooldown math.
@@ -71,5 +71,5 @@ console.log(JSON.stringify({
     'empty-slot-precheck','input-make-rng','cooldown-timestamp','merge-core',
     'merge-count','material-pile-consume','output-make-and-regist','mergeflag','backpack-add-or-free'
   ],
-  saveSchema:29
+  saveSchema:30
 }));

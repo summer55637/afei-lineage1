@@ -117,11 +117,11 @@ assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourcePlayerEquipRequirements(equ
 const unsupported={...equipTemplate,itemId:9999,attachFunc:'ITEM_suitEquip',detachFunc:'ITEM_ResuitEquip'};
 assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourcePlayerEquipRequirements(unsupported,basePlayer))),{ok:false,reason:'callback-unported'});
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 console.log(JSON.stringify({
   pass:true,version:'V2.13',focus:'pickallpet-equip-callback',
   callbackItems:[1975,20130],
   captureLevelRule:'PickAllPet || playerLevel+5>=enemyLevel',
-  saveSchema:29
+  saveSchema:30
 }));

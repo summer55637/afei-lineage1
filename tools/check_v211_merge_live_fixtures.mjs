@@ -305,7 +305,7 @@ function installLifecycleOps(ctx,{core,addResult=9,outputId=999}={}){
   assert.ok(freed.includes(50));
 }
 
-assert.match(game,/schemaVersion:29/);
+assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=29/);
 
 console.log(JSON.stringify({
@@ -314,5 +314,5 @@ console.log(JSON.stringify({
     'full-backpack-preflight','pile-decrement','pile-free',
     'normal-success','cooldown-fallback','mixed-dish-minus10','output-add-failure-free'
   ],
-  saveSchema:29
+  saveSchema:30
 }));
