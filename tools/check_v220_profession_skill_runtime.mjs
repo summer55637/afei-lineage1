@@ -169,7 +169,7 @@ assert.ok(game.includes("Math.trunc(Number(professionSkillDb?.stats?.rows))!==69
 assert.ok(game.includes("JSON.stringify(professionSkillDb?.stats?.holes)!=='[63,64,65]'"));
 
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 
 console.log(JSON.stringify({
   pass:true,version:'V2.20',

@@ -149,7 +149,7 @@ for(const name of ['sourceProfessionMagicGetDamage','sourcePlayerProfessionMagic
 }
 
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 
 console.log(JSON.stringify({
   pass:true,

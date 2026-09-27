@@ -168,7 +168,7 @@ assert.equal(effective.includes('sourcePlayerProfessionMagicEquipSuitResist'),fa
   'do not mix _EQUIT_RESIST profession suit resistance into V2.16 BATTLE_MultiAttMagic defense');
 assert.ok(game.includes('s.playerEquipResistWork=null'));
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 
 console.log(JSON.stringify({
   pass:true,version:'V2.17',focus:'ITEM_MagicResist / ITEM_MagicReResist',

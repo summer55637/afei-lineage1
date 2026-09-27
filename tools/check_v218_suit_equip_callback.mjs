@@ -295,7 +295,7 @@ for(const [code,key,value,ids] of [
 }
 
 assert.match(game,/schemaVersion:30/);
-assert.match(game,/s\.schemaVersion=29/);
+assert.match(game,/s\.schemaVersion=30/);
 console.log(JSON.stringify({
   pass:true,version:'V2.18',focus:'ITEM_suitEquip / ITEM_ResuitEquip',
   fixedItems:callbackRows.length,suitCodes:suitCodes.length,
