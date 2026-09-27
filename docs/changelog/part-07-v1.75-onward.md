@@ -3508,3 +3508,22 @@ fixed ITEM_MagicEquitWear/ReWear accumulates/subtracts five Work values. In batt
 - Pet does not receive these equipment values.
 
 Web reads current existing-item callback + field2 argument so an in-place callback/argument mutation also changes the live effect. No new save field. save schema 29.
+
+---
+
+## V2.17 ITEM_MagicResist / ITEM_MagicReResist
+
+V2.17 來源化第五組玩家裝備 callback，並修正 V2.16 對大型 field2 runtime 的隱性依賴。
+
+- item-make runtime 現在只對有 attach/detach callback 的 fixed item 額外保存 byte-preserving `ITEM_ARGUMENT`（`g`）。
+- pinned `recode.sh` 明確證明 `gmsv` 使用 `gb18030 -> utf8`；generator 從目前 UTF-8 的 pinned `item_event.c` 抽七個 literal，再還原 GB18030 bytes，並驗證每個 marker 長度都與原 `p+4` 一致。
+- 登入依 equip slot 0→8 replay attach；attach 是 set Work，不是加總。
+- fixed 有效列：2898 weaken30、2899 barrier30、2900 nocast30、2901 fallride30、20643 nocast15；另有 2907／2912／2917／2922／21032／21037／21174／21400 同 callback pair 但 marker 全 miss，原 C 是合法 no-op，Web 不再把它們誤判成 callback-unported。
+- 真實換裝順序維持「舊裝 detach → 新裝 attach」。
+- 保留原 `ITEM_MagicReResist()` bug：七種 detach 全部只清 `CHAR_WORKEQUITFIRE`。
+- weaken／barrier／nocast 已接 `BATTLE_StatusAttackCheck()`；fallride 已接落馬門檻。
+- fire／thunder／ice Work 已保留，但 fixed consumer 是尚未移植的 `PROFESSION_MAGIC_GET_DAMAGE()`，所以不錯接到 V2.16 `BATTLE_MultiAttMagic`。
+- V2.16 EA/WA/FI/WI/QU 也改由小型 runtime 取得 base argument；field2 runtime 未 lazy-load 時仍有效。
+
+新增 `tools/check_v217_equip_resist_callback.mjs`，save schema 維持 29。
+

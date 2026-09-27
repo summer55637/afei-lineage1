@@ -7,8 +7,10 @@ Source of truth:
 
 The source file is legacy-encoded. The pinned build has _ITEMSET2_ITEM + _ITEM_INSLAY +
 _SIMPLIFY_ITEMSTRING enabled, so ITEM_ID_TOKEN_INDEX is 17. Parsing is byte-safe because the C loader is comma-delimited
-and every field needed here is ASCII numeric / TRUE-FALSE metadata. Human-readable strings are
-not copied into this runtime.
+and every numeric field needed here is ASCII numeric / TRUE-FALSE metadata. For equipment
+attach/detach callbacks only, ITEM_ARGUMENT is preserved with latin1 as a byte-preserving
+transport so callback code can reproduce fixed strstr()/atoi() semantics without loading the
+large field2 runtime. It is not localized display text.
 """
 from __future__ import annotations
 
@@ -23,6 +25,13 @@ SOURCE_REF = "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
 SOURCE_PATH = "gmsv/data/itemset6.txt"
 SOURCE_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{SOURCE_PATH}"
 EXPECTED_SOURCE_BLOB_SHA = "eac985796b59286c547db2abce7b3d604a5e6226"
+ITEM_EVENT_PATH = "gmsv/src/item/item_event.c"
+ITEM_EVENT_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{ITEM_EVENT_PATH}"
+EXPECTED_ITEM_EVENT_BLOB_SHA = "00e05ebe58ef3988f7e0121f2a3aa5ede78344b5"
+RECODE_PATH = "recode.sh"
+RECODE_URL = f"https://raw.githubusercontent.com/{SOURCE_REPOSITORY}/{SOURCE_REF}/{RECODE_PATH}"
+EXPECTED_RECODE_BLOB_SHA = "10ef38a0e84b70e8573d94199d038416afadf923"
+SOURCE_EXEC_ENCODING = "gb18030"
 EXPECTED_TEMPLATE_COUNT = 10737
 OUTPUT = Path("data/generated/stoneage_item_make_runtime.json")
 
@@ -136,6 +145,9 @@ def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int], d
             "i": tokens[6] if len(tokens) > 6 else "",
             "a": tokens[11] if len(tokens) > 11 else "",
             "d": tokens[12] if len(tokens) > 12 else "",
+            # token 4 is ITEM_ARGUMENT. Keep it byte-for-byte through latin1 only when
+            # an equipment callback exists; consumers must treat it as source bytes.
+            "g": tokens[3] if len(tokens) > 3 else "",
         }
         readpos = 1
         data = DEFAULT_DATA.copy()
@@ -188,6 +200,73 @@ def parse_templates(raw: bytes) -> tuple[dict[int, tuple[list[int], list[int], d
         "parsedLines": parsed_lines,
         "syntaxErrors": syntax_errors,
         "duplicateIdsIgnored": duplicate_ids,
+    }
+
+EQUIP_RESIST_KEY_BY_WORK = {
+    "CHAR_WORKEQUITFIRE": "fire",
+    "CHAR_WORKEQUITTHUNDER": "thunder",
+    "CHAR_WORKEQUITICE": "ice",
+    "CHAR_WORKEQUITWEAKEN": "weaken",
+    "CHAR_WORKEQUITBARRIER": "barrier",
+    "CHAR_WORKEQUITNOCAST": "nocast",
+    "CHAR_WORKEQUITFALLRIDE": "fallride",
+}
+
+def extract_equip_resist_source(raw: bytes) -> dict[str, object]:
+    # The pinned repository's recode.sh documents that gmsv was converted
+    # gb18030 -> utf8. item_event.c is therefore readable UTF-8 in Git, while
+    # p+4 records the original two-DBCS-character execution-string width.
+    # Re-encode only the literal marker to GB18030 to reproduce the source runtime bytes.
+    text = raw.decode("utf-8")
+    attach_start = text.find("void ITEM_MagicResist")
+    detach_start = text.find("void ITEM_MagicReResist", attach_start + 1)
+    assert attach_start >= 0 and detach_start > attach_start
+    attach = text[attach_start:detach_start]
+    next_void = text.find("\nvoid ", detach_start + 1)
+    detach = text[detach_start:next_void if next_void > detach_start else len(text)]
+
+    pairs = re.findall(
+        r'strstr\s*\(\s*itemarg\s*,\s*"([^"]+)"\s*\).*?'
+        r'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*'
+        r'atoi\s*\(\s*p\s*\+\s*(\d+)\s*\)',
+        attach,
+        flags=re.S,
+    )
+    assert len(pairs) == 7, pairs
+    markers = []
+    seen = set()
+    for literal, work, offset_raw in pairs:
+        assert work in EQUIP_RESIST_KEY_BY_WORK, work
+        key = EQUIP_RESIST_KEY_BY_WORK[work]
+        assert key not in seen
+        seen.add(key)
+        offset = int(offset_raw)
+        marker_bytes = literal.encode(SOURCE_EXEC_ENCODING)
+        # fixed C uses p+4 for all seven branches. The pinned recode provenance
+        # must reconstruct exactly four execution bytes for each two-character marker.
+        assert offset == 4, (key, offset)
+        assert len(marker_bytes) == offset, (key, literal, marker_bytes.hex(), offset)
+        markers.append({
+            "key": key,
+            "marker": marker_bytes.decode("latin1"),
+            "sourceLiteral": literal,
+            "atoiOffset": offset,
+        })
+
+    detach_targets = re.findall(
+        r'CHAR_setWorkInt\s*\(\s*charaindex\s*,\s*(CHAR_WORKEQUIT[A-Z]+)\s*,\s*0\s*\)',
+        detach,
+    )
+    assert len(detach_targets) == 7, detach_targets
+    assert set(detach_targets) == {"CHAR_WORKEQUITFIRE"}, detach_targets
+
+    return {
+        "markers": markers,
+        "sourceExecutionEncoding": SOURCE_EXEC_ENCODING,
+        "encodingProvenance": "pinned recode.sh: recode gb18030..utf8 gmsv",
+        "attachSemantics": "first matching strstr branch sets exactly one CHAR_WORKEQUIT* to atoi(p+4)",
+        "detachSemantics": "all seven ITEM_MagicReResist branches clear CHAR_WORKEQUITFIRE only (fixed source bug)",
+        "detachClearsKey": "fire",
     }
 
 def pair(data: list[int], widths: list[int], field: str) -> list[int]:
@@ -247,19 +326,37 @@ def sparse_row(data: list[int], widths: list[int], callbacks: dict[str, str]) ->
         if value != 0:
             random_widths.extend((i, value))
     out: dict[str, object] = {"b": base_overrides, "w": random_widths}
-    callback_overrides = {k:v for k,v in callbacks.items() if v != ""}
+    callback_overrides = {k:v for k,v in callbacks.items() if k in {"i","a","d"} and v != ""}
     if callback_overrides:
         out["f"] = callback_overrides
+    if (callbacks.get("a") or callbacks.get("d")) and callbacks.get("g","") != "":
+        out["g"] = callbacks["g"]
     return out
 
 def main() -> None:
     with urllib.request.urlopen(SOURCE_URL, timeout=60) as response:
         raw = response.read()
+    with urllib.request.urlopen(ITEM_EVENT_URL, timeout=60) as response:
+        item_event_raw = response.read()
+    with urllib.request.urlopen(RECODE_URL, timeout=60) as response:
+        recode_raw = response.read()
 
     actual_blob_sha = git_blob_sha(raw)
     assert actual_blob_sha == EXPECTED_SOURCE_BLOB_SHA, (
         f"fixed itemset6 blob changed: {actual_blob_sha} != {EXPECTED_SOURCE_BLOB_SHA}"
     )
+    item_event_blob_sha = git_blob_sha(item_event_raw)
+    assert item_event_blob_sha == EXPECTED_ITEM_EVENT_BLOB_SHA, (
+        f"fixed item_event.c blob changed: {item_event_blob_sha} != {EXPECTED_ITEM_EVENT_BLOB_SHA}"
+    )
+    recode_blob_sha = git_blob_sha(recode_raw)
+    assert recode_blob_sha == EXPECTED_RECODE_BLOB_SHA, (
+        f"fixed recode.sh blob changed: {recode_blob_sha} != {EXPECTED_RECODE_BLOB_SHA}"
+    )
+    recode_text = recode_raw.decode("utf-8")
+    assert "find gmsv -type f" in recode_text
+    assert "recode gb18030..utf8 $file" in recode_text
+    equip_resist_source = extract_equip_resist_source(item_event_raw)
 
     templates, parse_stats = parse_templates(raw)
     assert len(templates) == EXPECTED_TEMPLATE_COUNT, (
@@ -273,6 +370,10 @@ def main() -> None:
     init_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["i"] != "")
     attach_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["a"] != "")
     detach_callback_templates = sum(1 for _, _, funcs in templates.values() if funcs["d"] != "")
+    callback_argument_templates = sum(
+        1 for _, _, funcs in templates.values()
+        if (funcs["a"] != "" or funcs["d"] != "") and funcs.get("g","") != ""
+    )
 
     by_item_id = {
         str(item_id): sparse_row(*templates[item_id])
@@ -286,9 +387,12 @@ def main() -> None:
             "ref": SOURCE_REF,
             "path": SOURCE_PATH,
             "gitBlobSha": actual_blob_sha,
-            "legacyEncodingReadMode": "latin1-byte-preserving-ascii-fields",
-            "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c"],
+            "legacyEncodingReadMode": "latin1-byte-preserving; callback g is source bytes, not display text",
+            "sourceCode": ["gmsv/src/include/version.h","gmsv/src/include/item.h","gmsv/src/include/util.h","gmsv/src/item/item.c",ITEM_EVENT_PATH,RECODE_PATH],
+            "itemEventGitBlobSha": item_event_blob_sha,
+            "recodeGitBlobSha": recode_blob_sha,
         },
+        "equipResistSource": equip_resist_source,
         "fixedBuild": {
             "improveItemTable": False,
             "simplifyItemString": True,
@@ -314,7 +418,7 @@ def main() -> None:
         "parser": {
             "randomRangeRule": "base=min(a,b); randomwidth=ABS(b-a)",
             "nonRangeRandomWidth": 0,
-            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d",
+            "representation": "base=defaultData plus flat index/value overrides b; random widths default 0 plus flat index/value overrides w; nonblank init/attach/detach callback names use sparse f.i/f.a/f.d; equipment callback ITEM_ARGUMENT uses optional byte-preserving g",
         },
         "makeItem": {
             "loop": "for i=0..ITEM_DATAINTNUM-1: RAND(0, randomdata[i]); data[i]=template[i]+roll",
@@ -340,6 +444,7 @@ def main() -> None:
             "initCallbackTemplates": init_callback_templates,
             "attachCallbackTemplates": attach_callback_templates,
             "detachCallbackTemplates": detach_callback_templates,
+            "callbackArgumentTemplates": callback_argument_templates,
             **parse_stats,
             **checks,
         },
