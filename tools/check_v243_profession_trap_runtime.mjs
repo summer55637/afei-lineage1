@@ -179,11 +179,17 @@ for(const rr of [
   assert.equal(reactCtx.getTrap().value,130);
 }
 
-// StatusSeq integration happens before command execution, so newly cast TRAP is not decremented same turn.
+// fixed main-loop ordering: ordinary StatusSeq / MagicStatusSeq -> ProfessionStatusSeq
+// -> command execution. A newly cast TRAP is therefore not decremented on its cast turn.
 const statusFn=extractFunction(game,'processBattleStatusTurn');
-assert.ok(statusFn.includes('sourceProfessionPlayerTrapStatusSeq()'));
+const rebackAt=statusFn.indexOf('sourceProfessionPlayerRebackStatusSeq(desc,state)');
+const trapSeqAt=statusFn.indexOf('sourceProfessionPlayerTrapStatusSeq()');
+assert.ok(rebackAt>=0&&trapSeqAt>rebackAt);
+assert.ok(statusFn.includes('if(professionTrap)extra.professionTrap=professionTrap;'));
 const turnFn=extractFunction(game,'attackTurn');
-assert.ok(turnFn.indexOf('processBattleStatusTurn(actor)')<turnFn.indexOf('sourceProfessionBattleSkillExecute(professionPrepared,actor)'));
+const statusAt=turnFn.indexOf('processBattleStatusTurn(actor)');
+const castAt=turnFn.indexOf('sourceProfessionBattleSkillExecute(professionPrepared,actor)');
+assert.ok(statusAt>=0&&castAt>statusAt);
 
 // Dispatcher must happen before generic same-side direct-target rejection.
 const execFn=extractFunction(game,'sourceProfessionBattleSkillExecute');
