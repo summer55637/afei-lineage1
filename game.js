@@ -181,8 +181,10 @@ function sourcePlayerFixedEquipResistTemplate(itemId){
   const id=Math.trunc(Number(itemId));
   const row=Number.isFinite(id)&&itemMakeDb?.byItemId?itemMakeDb.byItemId[String(id)]:null;
   const f=row?.f&&typeof row.f==='object'?row.f:{};
-  if(f.a!=='ITEM_MagicResist'||f.d!=='ITEM_MagicReResist')return false;
-  return !!sourcePlayerEquipResistSpecFromArgument(typeof row?.g==='string'?row.g:'');
+  // A fixed row with this exact callback pair is source-backed even when its argument
+  // contains none of the seven strstr markers. In that case the original callback is a no-op;
+  // do not turn that harmless source row into a callback-unported equip rejection.
+  return f.a==='ITEM_MagicResist'&&f.d==='ITEM_MagicReResist';
 }
 function sourceItemRuntimeResolvedDataInt(slot,fieldName){
   const exact=sourceItemRuntimeDataInt(slot,fieldName);
