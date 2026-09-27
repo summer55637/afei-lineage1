@@ -2512,6 +2512,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_RESIST_FIRE'
     ||functionName==='PROFESSION_RESIST_ICE'
     ||functionName==='PROFESSION_RESIST_THUNDER'
+    ||functionName==='PROFESSION_RESIST_F_I_T'
     ||functionName==='PROFESSION_OBLIVION'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
@@ -3363,6 +3364,51 @@ function sourceProfessionPlayerResistForMagicType(magicType){
 function sourceProfessionPlayerResistStatusSeq(){
   const st=battlePlayerProfessionResistState;
   if(!st||Math.trunc(n(st.turns))<=0)return null;
+
+  if(st.nature===true){
+    const attrs=['fire','ice','thunder'];
+    const beforeTurns=Math.trunc(n(st.turns));
+    const turns=beforeTurns-1;
+    st.turns=Math.max(0,turns);
+
+    if(turns<=0){
+      battlePlayerProfessionResistState=null;
+      return {
+        nature:true,attrs,beforeTurns,turns:0,statusCleared:true,
+        effectActive:false,
+        work:sourceProfessionPlayerResistVector(),
+        staleMod:{
+          fire:Math.trunc(n(battlePlayerProfessionResistMod?.fire)),
+          ice:Math.trunc(n(battlePlayerProfessionResistMod?.ice)),
+          thunder:Math.trunc(n(battlePlayerProfessionResistMod?.thunder))
+        }
+      };
+    }
+
+    let effectRemoved=false;
+    if(st.effectActive!==false&&turns<=1){
+      for(const attr of attrs){
+        const oldValue=sourceProfessionPlayerResistValue(attr);
+        const addValue=Math.trunc(n(battlePlayerProfessionResistMod?.[attr]));
+        battlePlayerProfessionResistWork[attr]=oldValue-addValue;
+      }
+      st.effectActive=false;
+      effectRemoved=true;
+      addLog('你的火／冰／雷抗性提升效果已回收；三個 StatusTbl 尚各餘 1。');
+    }
+    return {
+      nature:true,attrs,beforeTurns,turns:Math.max(0,turns),
+      effectRemoved,effectActive:st.effectActive!==false,
+      work:sourceProfessionPlayerResistVector(),
+      staleMod:{
+        fire:Math.trunc(n(battlePlayerProfessionResistMod?.fire)),
+        ice:Math.trunc(n(battlePlayerProfessionResistMod?.ice)),
+        thunder:Math.trunc(n(battlePlayerProfessionResistMod?.thunder))
+      },
+      ghostStatus:turns===1&&st.effectActive===false
+    };
+  }
+
   const attr=String(st.attr||'');
   const beforeTurns=Math.trunc(n(st.turns));
   const turns=beforeTurns-1;
@@ -3395,6 +3441,106 @@ function sourceProfessionPlayerResistStatusSeq(){
     work:sourceProfessionPlayerResistValue(attr),
     staleMod:Math.trunc(n(battlePlayerProfessionResistMod?.[attr])),
     ghostStatus:turns===1&&st.effectActive===false
+  };
+}
+function sourceProfessionNatureResistTurns(displayLevel){
+  const level=Math.trunc(n(displayLevel));
+  if(level>=100)return 5;
+  if(level>80)return 4;
+  return 3;
+}
+function sourceProfessionNatureResistUpValue(displayLevel){
+  const level=Math.trunc(n(displayLevel));
+  if(level>=10)return 20;
+  if(level>8)return 18;
+  if(level>7)return 16;
+  if(level>6)return 14;
+  if(level>5)return 12;
+  if(level>4)return 10;
+  if(level>3)return 8;
+  if(level>2)return 6;
+  if(level>1)return 4;
+  return 2;
+}
+function sourceProfessionNatureResistSpec(prepared){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const displayLevel=Math.trunc(n(prepared?.displayLevel));
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const baseSuccess=sourceProfessionStatusOptionInt(row?.option,'成',0);
+  const turns=sourceProfessionNatureResistTurns(displayLevel);
+  return {
+    tier,displayLevel,baseSuccess,success:baseSuccess+tier*4,
+    turns,storedTurns:turns+1,
+    upValue:sourceProfessionNatureResistUpValue(displayLevel)
+  };
+}
+function sourceProfessionNatureResistStatusCheck(targetDesc,success,randInclusive=cRand){
+  // fixed PROFESSION_BATTLE_StatusAttackCheck() consumes RAND first.
+  const roll=Math.trunc(n(randInclusive(1,100)));
+  const threshold=Math.trunc(n(success));
+  if(!targetDesc||!battleStatusDescAlive(targetDesc)){
+    return {success:false,roll,threshold,reason:'dead-or-missing',rollIgnored:true};
+  }
+  // BATTLE_ST_RESIST_F_I_T checks only the three resist counters, then returns 1.
+  if(sourceProfessionPlayerResistStatusActive(targetDesc)){
+    return {success:false,roll,threshold,reason:'existing-profession-resist',rollIgnored:true};
+  }
+  return {success:true,roll,threshold,reason:'source-fit-special',rollIgnored:true};
+}
+function sourceProfessionNatureResistExecute(prepared,name,statusCheck=sourceProfessionNatureResistStatusCheck){
+  const spec=sourceProfessionNatureResistSpec(prepared);
+  const requestedToNo=Math.trunc(n(prepared?.toNo));
+
+  // The raw COM2 EarthRound gate runs before the later forced-self rewrite.
+  const rawDesc=(requestedToNo>=0&&requestedToNo<=19)
+    ?sourceBattleStatusDescFromSlot(requestedToNo):null;
+  if(rawDesc?.kind==='enemy'&&enemyUnitHidden(rawDesc.unit)){
+    return {
+      handled:true,noAction:true,reason:'target-earthround',
+      skillId:prepared?.skillId??null,functionName:prepared?.functionName||null,
+      requestedToNo,toNo:0,spec,forcedSelfByProfessionAddskill:true,
+      sourceRawTargetGate:true,noDamage:true,noCounter:true
+    };
+  }
+  if(rawDesc?.kind==='pet'&&sourcePlayerPetHidden(rawDesc.pet)){
+    return {
+      handled:true,noAction:true,reason:'target-earthround',
+      skillId:prepared?.skillId??null,functionName:prepared?.functionName||null,
+      requestedToNo,toNo:0,spec,forcedSelfByProfessionAddskill:true,
+      sourceRawTargetGate:true,noDamage:true,noCounter:true
+    };
+  }
+
+  const targetDesc={kind:'player'};
+  const check=statusCheck(targetDesc,spec.success);
+  if(!check.success){
+    addLog('你施放「'+name+'」，但自然威能未成立（'+check.reason+'，roll '+check.roll+' 已消耗）。');
+    return {
+      handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+      requestedToNo,toNo:0,spec,check,applied:false,
+      forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
+    };
+  }
+
+  const oldValue=sourceProfessionPlayerResistVector();
+  for(const attr of ['fire','ice','thunder']){
+    battlePlayerProfessionResistMod[attr]=spec.upValue;
+    battlePlayerProfessionResistWork[attr]=sourceProfessionPlayerResistValue(attr)+spec.upValue;
+  }
+  battlePlayerProfessionResistState={
+    nature:true,attrs:['fire','ice','thunder'],
+    tier:spec.tier,displayLevel:spec.displayLevel,
+    turns:spec.storedTurns,upValue:spec.upValue,effectActive:true,
+    skillId:Math.trunc(n(prepared.skillId)),functionName:String(prepared.functionName||'')
+  };
+  addLog('你施放「'+name+'」：火／冰／雷抗各 +'+spec.upValue
+    +'，三個 stored StatusTbl='+spec.storedTurns+'。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    requestedToNo,toNo:0,spec,check,applied:true,
+    oldValue,newValue:sourceProfessionPlayerResistVector(),
+    threeStatusTbl:true,ordinaryStatusIgnoredBySource:true,
+    forcedSelfByProfessionAddskill:true,noDamage:true,noCounter:true
   };
 }
 function sourceProfessionResistExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck){
@@ -4620,6 +4766,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const resistRow=sourceProfessionSkillTemplate(prepared.skillId);
     const resistName=String(resistRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionResistExecute(prepared,resistName);
+  }
+  if(prepared.functionName==='PROFESSION_RESIST_F_I_T'){
+    const natureRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const natureName=String(natureRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionNatureResistExecute(prepared,natureName);
   }
   if(prepared.functionName==='PROFESSION_OBLIVION'){
     const oblivionRow=sourceProfessionSkillTemplate(prepared.skillId);

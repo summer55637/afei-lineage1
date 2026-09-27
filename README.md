@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.49**
+**PLAYABLE CORE V2.50**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,63 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.50 最新進度
+
+V2.50 接入獵人 **Skill 66「自然威能」／`PROFESSION_RESIST_F_I_T`**，完整保留 fixed `_PROFESSION_ADDSKILL` 下的三抗特殊判定與 source level bug。
+
+fixed row：TARGET 5（NONE）、KIND 3、option `抗|成%100|回%3`。表面 `costMp=14` **不是實際扣魔**；既有 `PROFESSION_MAGIC_COST_MP()` 分支會先把 display level 轉成 M-tier，再扣 **5／10／15／20 MP**，V2.50 沿用現有 dynamic MP bridge。
+
+### 強制自體與特殊命中
+
+和 Skill 59～61 一樣，fixed `_PROFESSION_ADDSKILL` 會把實際目標強制改成施術者自己。
+
+但 `PROFESSION_BATTLE_StatusAttackCheck()` 對 `BATTLE_ST_RESIST_F_I_T` 有專用 early branch：
+
+1. 一進函式仍先消耗 `RAND(1,100)`。
+2. 檢查死亡。
+3. **只檢查火／冰／雷三個 resist StatusTbl 是否已存在。**
+4. 三抗都沒有就直接 `return 1`。
+
+因此 option 的 `成%100 + A-tier×4` threshold 仍可計算，但 **roll 完全不參與成敗**；而中毒、睡眠、遺忘等其他 StatusTbl 也不會阻止自然威能。這不是一般 status 的互斥規則。
+
+### 三個 StatusTbl 同時建立
+
+成功後不是建立一個 combined status，而是同時寫：
+
+- `StatusTbl[RESIST_F] = turn+1`
+- `StatusTbl[RESIST_I] = turn+1`
+- `StatusTbl[RESIST_T] = turn+1`
+
+所以之後普通 status 會把它視為「已有狀態」，單體火／冰／雷抗也會被擋；自然威能自己再次施放則因任一三抗 counter >0 而失敗。
+
+### raw display level 的來源 bug
+
+status callback 一開始已把技能轉成 A-tier，但自然威能在計算 duration 前又重新讀 `CHAR_WORKBATTLECOM3 high` 的**原始 display level**。
+
+回合因此是：
+
+- display level ≥100 → turn 5 → stored **6**
+- display level >80 → turn 4 → stored **5**
+- 其餘 → turn 3 → stored **4**
+
+抗性值也沿用這個 raw display level，且 source 寫成 1～10 級表：
+
+- Lv1 → +2
+- Lv2 → +4
+- …
+- Lv9 → +18
+- **Lv10 以上全部 +20**
+
+所以技能正常學會時初始 display Lv10 就已直接得到 +20 火／冰／雷抗；不把這個明顯怪異的 source 行為「修正」成 A-tier。
+
+### 倒數與 ghost counter
+
+三個 RESIST StatusTbl 每次 Player 自己行動都一起 `--cnt`。降到 **1** 時，三屬抗性都先減回各自的 stale `WORKMODRESIST_*`，實際加成已消失，但三個 counter 仍各為 1，繼續阻擋新的 status／resist。
+
+下一次自己行動 1→0 才真正清除 counters；三個 MOD raw Work 仍保持舊值，直到 battle reset 或下一次 resist 重寫。Web 以同一個 combined runtime state 模擬三個同步 counters，不另造不存在的第四個 combined counter。
+
+新增 `tools/check_v250_profession_nature_resist_runtime.mjs`，鎖住 Skill 66 metadata、dynamic MP、forced self、raw EarthRound gate、roll-consumed-but-ignored、只檢查三抗、raw display power/turn bug、三 StatusTbl、ghost counter、stale MOD 與 V2.48/V2.49 regression；**save schema 維持 30**。
 
 ## V2.49 最新進度
 

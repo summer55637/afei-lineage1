@@ -85,6 +85,7 @@ on:
       - "tools/check_v247_profession_enrage_pet_runtime.mjs"
       - "tools/check_v248_profession_resist_runtime.mjs"
       - "tools/check_v249_profession_oblivion_runtime.mjs"
+      - "tools/check_v250_profession_nature_resist_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -354,6 +355,9 @@ jobs:
 
       - name: Run V2.49 Oblivion regression
         run: node tools/check_v249_profession_oblivion_runtime.mjs
+
+      - name: Run V2.50 Nature resist regression
+        run: node tools/check_v250_profession_nature_resist_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

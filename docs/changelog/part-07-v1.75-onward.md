@@ -4767,3 +4767,22 @@ Skill 62 fixed row：`PROFESSION_OBLIVION` / MP 21 / TARGET OTHER / `忘|成%100
 - callback 無 Pet type gate；CHAR_TYPEENEMY 可得到 StatusTbl，但不自行發明 Enemy skill silence。
 
 新增 `tools/check_v249_profession_oblivion_runtime.mjs`。save schema 維持 **30**。
+
+
+---
+
+## V2.50 Skill 66 Nature Resist
+
+Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtime。
+
+- row：`抗|成%100|回%3`、TARGET NONE、KIND 3。
+- 實際 MP 走既有 `PROFESSION_MAGIC_COST_MP` dynamic branch：M-tier 對應 5／10／15／20，不採 row 14。
+- callback 強制 self。
+- StatusAttackCheck 仍先 RAND(1,100)，但 FIT special branch 完全忽略 roll／普通 StatusTbl，只檢查 RESIST_F/I/T 是否已存在。
+- 成功時同時建立 F/I/T 三個 counter，不建立額外 combined counter。
+- duration 重新讀 raw display level：<=80 / >80 / >=100 => stored 4 / 5 / 6。
+- upValue 同樣錯讀 raw display level：Lv1..9 => 2..18，Lv10+ 固定 20。
+- 三個 counter 同步倒數；降到 1 時先回收三抗，counter 1 ghost lock 再留一個 own action；MOD 保持 stale 到 battle reset/rewrite。
+- raw COM2 EarthRound gate 發生在 forced-self 之前，explicit protocol fixture 保留此來源順序。
+
+新增 `tools/check_v250_profession_nature_resist_runtime.mjs`。save schema 維持 **30**。
