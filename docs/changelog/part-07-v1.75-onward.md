@@ -3674,6 +3674,29 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.26 profession Skill 24 dual attack
+
+V2.26 adds fixed Skill 24 `PROFESSION_CHAIN_ATK_2` as the third live Warrior battle skill.
+
+- Runtime row: TARGET=1, KIND=1, USE_FLAG=1, MP 13, command `BATTLE_COM_S_CHAIN_ATK_2`.
+- Packet-receipt MP/proficiency lifecycle remains the V2.25 model.
+- Execution mirrors fixed `battle_profession_attack_fun()`:
+  - pre-consume ABSROB by 1, VANISH by 1 and clear TRAP;
+  - fixed REFLEC decrement line is commented out, so REFLEC is not consumed;
+  - first stage sets WORKATTACKPOWER=0 and is animation/no-damage only;
+  - real attack power becomes `FIXSTR * (tier*2 + 100) / 100`;
+  - if attacker and original defender remain alive, issue exactly one ordinary `BATTLE_Attack()` to the same raw defNo;
+  - return immediately instead of entering the shared profession AttackSeq path.
+- Web maps FIXSTR to the existing player equipment-compliance fixed attack snapshot. Current WORKATTACKPOWER modifiers are intentionally not used as the base.
+- Current source-backed Enemy DamageReact exposes ACUPUNCTURE only. The fixed pre-consume list does not include ACUPUNCTURE, so it remains untouched; no fake ABSROB/VANISH/TRAP state fields are created.
+- The real attack keeps ordinary Guardian substitution, SUITPOISON and ItemCrush behavior.
+- No ordinary Counter is appended after the profession command.
+- The battle panel now exposes learned Skill 24 together with Skills 22/23.
+
+Added `tools/check_v226_profession_chain_atk2_runtime.mjs` and wired it into Actions after V2.25. Save schema remains **30**.
+
+---
+
 ## V2.25 profession TARGET/KIND + first live battle skills
 
 V2.25 closes the profession battle-command target semantics that V2.24 intentionally left unresolved.
