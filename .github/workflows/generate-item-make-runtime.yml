@@ -76,6 +76,7 @@ on:
       - "tools/check_v238_profession_dual_weapon_runtime.mjs"
       - "tools/check_v239_profession_cavalry_runtime.mjs"
       - "tools/check_v240_profession_hunter_control_runtime.mjs"
+      - "tools/check_v241_profession_attack_weak_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -318,6 +319,9 @@ jobs:
 
       - name: Run V2.40 Hunter control regressions
         run: node tools/check_v240_profession_hunter_control_runtime.mjs
+
+      - name: Run V2.41 Weakness Attack regression
+        run: node tools/check_v241_profession_attack_weak_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
