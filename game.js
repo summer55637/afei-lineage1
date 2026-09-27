@@ -2123,7 +2123,7 @@ function sourceProfessionBattleCommandPlan({
   const row=sourceProfessionSkillTemplate(entry.skillId);
   if(!row)return {ok:false,reason:'skill-not-found',slot:entry.slot,skillId:entry.skillId};
   const resolvedToNo=Math.trunc(Number(toNo));
-  if(!Number.isFinite(Number(toNo))||resolvedToNo<0){
+  if(toNo==null||(typeof toNo==='string'&&!toNo.trim())||!Number.isFinite(Number(toNo))||resolvedToNo<0){
     return {
       ok:false,reason:'target-unresolved',slot:entry.slot,skillId:entry.skillId,
       clientBattleUse:Math.trunc(n(row.useFlag))===1
