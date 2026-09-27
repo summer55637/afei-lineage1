@@ -99,6 +99,8 @@ let sourceLastMergeTimeSec=0;
 let professionEncounterFix=0;
 let professionEncounterUntilSec=0;
 let battlePlayerProfessionHitState=null;
+let battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};
+let battlePlayerProfessionStatRound=null;
 let battlePlayerAttackWork=null;
 
 const $=s=>document.querySelector(s);
@@ -2263,7 +2265,10 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_DEAD_ATTACK'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
     ||functionName==='PROFESSION_CONVOLUTE'
-    ||functionName==='PROFESSION_CHAOS';
+    ||functionName==='PROFESSION_CHAOS'
+    ||functionName==='PROFESSION_ENRAGE'
+    ||functionName==='PROFESSION_ENERGY_COLLECT'
+    ||functionName==='PROFESSION_FOCUS';
 }
 function sourceProfessionBattleSkillPrepare({
   slot,toNo,selectedToNo,battleMyNo=0,target=state,
@@ -2499,6 +2504,144 @@ function sourceProfessionPlayerHitStatusSeq(target=state){
     beforeTurns,turns,power:Math.trunc(n(st.power)),
     restored,workHitRight:Math.trunc(n(st.workHitRight))
   };
+}
+
+function sourceProfessionPlayerStatActiveAny(){
+  return ['str','tgh','dex'].some(key=>{
+    const st=battlePlayerProfessionStatStates?.[key];
+    return !!st&&Math.trunc(n(st.turns))>0;
+  });
+}
+function sourceProfessionPlayerStatSet(stat,turns,power){
+  const key=String(stat||'').toLowerCase();
+  if(!['str','tgh','dex'].includes(key))return {ok:false,reason:'unsupported-stat',stat:key};
+  const value={
+    turns:Math.max(0,Math.trunc(n(turns))),
+    power:Math.trunc(n(power))
+  };
+
+  // SetMagicPet and profession assists share CHAR_MYSKILLSTR/TGH/DEX in fixed C.
+  // A profession callback writes its field unconditionally, so it overwrites a same-stat
+  // SetMagicPet state for future PreCommand rounds. The already-built current-round
+  // snapshot intentionally remains untouched.
+  let overwroteMagicPet=false;
+  const magic=typeof sourceMagicPetState==='function'?sourceMagicPetState({kind:'player'}):null;
+  if(magic&&String(magic.stat||'').toLowerCase()===key){
+    battleMagicPetStates.delete('player');
+    overwroteMagicPet=true;
+  }
+
+  battlePlayerProfessionStatStates[key]=value;
+  return {ok:true,stat:key,turns:value.turns,power:value.power,overwroteMagicPet};
+}
+function sourceProfessionPlayerStatPreCommandCompliance(target=state){
+  if(!target)return null;
+  const compliance=target.playerEquipCompliance||null;
+  const mtgh=Math.trunc(n(compliance?.preSuitFixedTough??compliance?.fixedTough??target.defense));
+  const effects={};
+  let attackAdd=0,defenseAdd=0,quickAdd=0;
+
+  // fixed Other_DefcharWorkInt source bug: STR/TGH/DEX ALL use the saved mtgh
+  // snapshot as the percentage base, not their own FIX stat.
+  for(const key of ['str','tgh','dex']){
+    const st=battlePlayerProfessionStatStates?.[key]||null;
+    if(!st||Math.trunc(n(st.turns))<=0)continue;
+    const power=Math.trunc(n(st.power));
+    const add=Math.trunc(mtgh*power/100);
+    effects[key]={turns:Math.trunc(n(st.turns)),power,add};
+    if(key==='str')attackAdd+=add;
+    else if(key==='tgh')defenseAdd+=add;
+    else quickAdd+=add;
+  }
+  battlePlayerProfessionStatRound={mtgh,attackAdd,defenseAdd,quickAdd,effects};
+  return Object.assign({active:Object.keys(effects).length>0},battlePlayerProfessionStatRound);
+}
+function sourceProfessionPlayerStatRoundAdjusted(attack,defense,quick){
+  const round=battlePlayerProfessionStatRound||{};
+  return {
+    attack:Math.trunc(n(attack))+Math.trunc(n(round.attackAdd)),
+    defense:Math.trunc(n(defense))+Math.trunc(n(round.defenseAdd)),
+    quick:Math.trunc(n(quick))+Math.trunc(n(round.quickAdd)),
+    attackAdd:Math.trunc(n(round.attackAdd)),
+    defenseAdd:Math.trunc(n(round.defenseAdd)),
+    quickAdd:Math.trunc(n(round.quickAdd)),
+    mtgh:Math.trunc(n(round.mtgh)),
+    effects:round.effects||{}
+  };
+}
+function sourceProfessionPlayerStatStatusSeq(target=state){
+  const results=[];
+  for(const key of ['str','tgh','dex']){
+    const st=battlePlayerProfessionStatStates?.[key]||null;
+    if(!st||Math.trunc(n(st.turns))<=0)continue;
+    const beforeTurns=Math.trunc(n(st.turns));
+    const turns=beforeTurns-1;
+    const power=Math.trunc(n(st.power));
+    if(turns<=0){
+      battlePlayerProfessionStatStates[key]=null;
+      addLog('你的職業 '+key.toUpperCase()+' Work 效果結束。');
+    }else{
+      st.turns=turns;
+    }
+    results.push({stat:key,beforeTurns,turns:Math.max(0,turns),power,expired:turns<=0});
+  }
+  return results.length?results:null;
+}
+function sourceProfessionWarriorAssistTurns(attackSkillTier){
+  const tier=Math.trunc(n(attackSkillTier));
+  return tier>=10?5:(tier>=5?4:3);
+}
+function sourceProfessionWarriorAssistExecute(prepared,name){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  const functionName=String(prepared?.functionName||'');
+
+  if(functionName==='PROFESSION_ENRAGE'){
+    const turns=sourceProfessionWarriorAssistTurns(tier);
+    const strPower=tier*2+20;
+    const tghPower=-(tier*2+10);
+    const str=sourceProfessionPlayerStatSet('str',turns,strPower);
+    const tgh=sourceProfessionPlayerStatSet('tgh',turns,tghPower);
+    addLog('你施放「'+name+'」：STR Work +'+strPower+'%、TGH Work '+tghPower+
+      '%，stored turns='+turns+'；真正能力從下一輪 compliance 生效。','good');
+    return {
+      handled:true,skillId:prepared.skillId,functionName,toNo:Math.trunc(n(prepared.toNo)),
+      attackSkillTier:tier,turns,strPower,tghPower,str,tgh,
+      effectStartsNextPreCommand:true,noDamage:true,noOrdinaryCounter:true
+    };
+  }
+
+  if(functionName==='PROFESSION_ENERGY_COLLECT'){
+    const turns=sourceProfessionWarriorAssistTurns(tier);
+    const dexPower=tier*2+10;
+    const tghPower=tier*2+20;
+    const dex=sourceProfessionPlayerStatSet('dex',turns,dexPower);
+    const tgh=sourceProfessionPlayerStatSet('tgh',turns,tghPower);
+    // fixed source comment/client packet says "reduce dex", but MYSKILLDEXPOWER is stored POSITIVE.
+    addLog('你施放「'+name+'」：TGH Work +'+tghPower+'%、DEX Work +'+dexPower+
+      '%（保留 fixed 正號 bug），stored turns='+turns+'。','good');
+    return {
+      handled:true,skillId:prepared.skillId,functionName,toNo:Math.trunc(n(prepared.toNo)),
+      attackSkillTier:tier,turns,dexPower,tghPower,dex,tgh,
+      sourceDexSignBug:true,effectStartsNextPreCommand:true,
+      noDamage:true,noOrdinaryCounter:true
+    };
+  }
+
+  if(functionName==='PROFESSION_FOCUS'){
+    const workHitRight=sourceProfessionPlayerHitRight();
+    // fixed ignores option 命%200 for Work mutation here and hardcodes:
+    // MYSKILLHIT=2, MYSKILLHIT_NUM=100. It does NOT add 100 to WORKHITRIGHT now.
+    battlePlayerProfessionHitState={turns:2,power:100,workHitRight};
+    addLog('你施放「'+name+'」：fixed 只寫 MYSKILLHIT=2／NUM=100，當下 WORKHITRIGHT 不增加。','good');
+    return {
+      handled:true,skillId:prepared.skillId,functionName,toNo:Math.trunc(n(prepared.toNo)),
+      attackSkillTier:tier,turns:2,power:100,workHitRight,
+      noImmediateHitRightIncrease:true,usesExistingHitLifecycle:true,
+      noDamage:true,noOrdinaryCounter:true
+    };
+  }
+
+  return {handled:false,reason:'battle-function-unported',skillId:prepared?.skillId??null};
 }
 function sourceProfessionDeadAttackExecute(target,prepared,name){
   const oldHp=Math.max(0,Math.trunc(n(state.hp)));
@@ -3027,6 +3170,13 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const convoluteRow=sourceProfessionSkillTemplate(prepared.skillId);
     const convoluteName=String(convoluteRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionConvoluteExecute(prepared,convoluteName);
+  }
+  if(prepared.functionName==='PROFESSION_ENRAGE'
+    ||prepared.functionName==='PROFESSION_ENERGY_COLLECT'
+    ||prepared.functionName==='PROFESSION_FOCUS'){
+    const assistRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const assistName=String(assistRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionWarriorAssistExecute(prepared,assistName);
   }
   if(toNo<10){
     // fixed battle.c direct-attack profession gate rejects same-side direct targets here;
@@ -6187,7 +6337,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',dizzy:'暈眩',dragnet:'天羅地網',barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerAttackWork=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battlePlayerAttackWork=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -6321,7 +6471,10 @@ function sourceMagicPetDuckActive(desc){
   return !!(desc?.kind==='enemy'&&n(desc.unit?.skillDuckTurns)>0);
 }
 function sourceMagicPetBusy(desc){
-  return sourceMagicPetDuckActive(desc)||!!sourceMagicPetState(desc);
+  const professionBusy=desc?.kind==='player'
+    &&typeof sourceProfessionPlayerStatActiveAny==='function'
+    &&sourceProfessionPlayerStatActiveAny();
+  return sourceMagicPetDuckActive(desc)||!!sourceMagicPetState(desc)||professionBusy;
 }
 function sourceMagicPetApply(desc,stat,turns,power){
   const key=battleStatusKey(desc);
@@ -7001,7 +7154,9 @@ function processBattleStatusTurn(actor){
   const blockedBefore=battleStatusCanMove(desc)===false;
   const attackShootSleep=sourceProcessAttackShootSleepTurn(desc);
   const finish=result=>{
-    // fixed BATTLE_StatusSeq tail handles CHAR_MYSKILLHIT before the later magic/profession status phases.
+    // fixed BATTLE_StatusSeq tail order: MYSKILLSTR -> TGH -> DEX -> MYSKILLHIT.
+    // The PreCommand FIX snapshot is already built, so expiry here affects the NEXT round.
+    const professionStats=desc.kind==='player'?sourceProfessionPlayerStatStatusSeq(state):null;
     const professionHit=desc.kind==='player'?sourceProfessionPlayerHitStatusSeq(state):null;
     // fixed BATTLE_StatusSeq handles suit round HP/MP after the ordinary status loop.
     const suitRound=desc.kind==='player'?sourcePlayerSuitStatusSeq(state):null;
@@ -7009,6 +7164,7 @@ function processBattleStatusTurn(actor){
     const defMagic=sourceDefMagicStatusSeq(desc);
     const sars=sourceProcessSarsStatusTurn(desc);
     const extra={};
+    if(professionStats)extra.professionStats=professionStats;
     if(professionHit)extra.professionHit=professionHit;
     if(attackShootSleep)extra.attackShootSleep=attackShootSleep;
     if(suitRound&&(suitRound.addHp!==0||suitRound.addMp!==0))extra.suitRound=suitRound;
@@ -7105,10 +7261,14 @@ function playerBattleView(){
   const compliance=state?.playerEquipCompliance||playerComplianceParameter(state)?.equip||{};
   const fixedToughBase=Math.trunc(n(compliance.fixedTough??state.defense));
   const magicPet=sourceMagicPetAdjusted(desc,state.attack,state.defense,state.dex,fixedToughBase);
-  const compliantAttack=weaken?Math.trunc(n(magicPet.attack)*.8):n(magicPet.attack);
+  const professionStats=sourceProfessionPlayerStatRoundAdjusted(
+    magicPet.attack,magicPet.defense,magicPet.quick
+  );
+  // fixed Other_DefcharWorkInt applies MYSKILL STR/TGH/DEX before WEAKEN.
+  const compliantAttack=weaken?Math.trunc(n(professionStats.attack)*.8):n(professionStats.attack);
   const attack=battlePlayerAttackWork==null?compliantAttack:Math.trunc(n(battlePlayerAttackWork));
-  const defenseBase=weaken?Math.trunc(n(magicPet.defense)*.8):n(magicPet.defense);
-  const quickBase=weaken?Math.trunc(n(magicPet.quick)*.8):n(magicPet.quick);
+  const defenseBase=weaken?Math.trunc(n(professionStats.defense)*.8):n(professionStats.defense);
+  const quickBase=weaken?Math.trunc(n(professionStats.quick)*.8):n(professionStats.quick);
   const arm=compliance.arm||null;
   const weaponType=arm?Math.trunc(n(arm.type)):0;
   return {
@@ -17999,6 +18159,8 @@ function normalBattleOrder(options={}){
   // Player 沒有 EARTHROUND0 例外，所以這裡也必須重建裝備 WORK。特別重要的是
   // ITEM_DIErelife 同回合消耗裝備後不立即 compliance，直到下一 round 才失去戒指加成。
   playerComplianceParameter(state);
+  // fixed Other_DefcharWorkInt applies MYSKILL STR/TGH/DEX during this same compliance pass.
+  sourceProfessionPlayerStatPreCommandCompliance(state);
   // fixed CHAR_complianceParameter + BATTLE_TurnParam rebuilds Player WORKATTACKPOWER each round.
   battlePlayerAttackWork=null;
   sourceProfessionPlayerHitPreCommandCompliance(state);
@@ -18779,7 +18941,7 @@ function renderProfessionBattleActions(){
   const unsupportedCount=learnedBattle.length-supported.length;
 
   if(!supported.length){
-    info.textContent='V2.30 live：暴擊／連環攻擊／雙重攻擊／盾擊／貫穿攻擊／回旋攻擊／瀕死攻擊。角色目前尚未學會已接入的戰鬥職技。'
+    info.textContent='V2.32 live：暴擊／連環攻擊／雙重攻擊／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／瀕死攻擊／回旋攻擊／混亂攻擊。角色目前尚未學會已接入的戰鬥職技。'
       +(unsupportedCount>0?' 另有 '+unsupportedCount+' 招已學戰鬥技能待後續移植。':'');
     actions.innerHTML='';
     return;

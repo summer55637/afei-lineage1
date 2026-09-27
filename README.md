@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.31**
+**PLAYABLE CORE V2.32**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,69 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.32 最新進度
+
+V2.32 接入勇士三個自我輔助戰鬥技能：
+
+- Skill 35 **激化攻擊**／`PROFESSION_ENRAGE`
+- Skill 36 **能量聚集**／`PROFESSION_ENERGY_COLLECT`
+- Skill 37 **專注戰鬥**／`PROFESSION_FOCUS`
+
+三招 fixed runtime 都是 TARGET=5（NONE → client 送自己的 battle No）、KIND=2、USE_FLAG=1；MP 分別為 20／10／9。它們走：
+
+`battle_profession_assist_fun()`
+
+不造成直接傷害，也沒有 ordinary Counter。
+
+### Skill 35 激化攻擊
+
+先用 `PROFESSION_CHANGE_SKILL_LEVEL_A()` 得到 tier 0～10，再寫：
+
+- `MYSKILLSTRPOWER = tier×2+20`
+- `MYSKILLTGHPOWER = -(tier×2+10)`
+- tier 0～4：stored turns 3
+- tier 5～9：stored turns 4
+- tier 10：stored turns 5
+
+效果不是施放瞬間直接重算能力；fixed 要等下一輪 `CHAR_complianceParameter → Other_DefcharWorkInt` 才進 WORK/FIX。
+
+### Skill 36 能量聚集
+
+fixed 寫：
+
+- `MYSKILLTGHPOWER = tier×2+20`
+- `MYSKILLDEXPOWER = tier×2+10`
+- stored turns 同樣為 3／4／5。
+
+來源註解與 client BD 封包都把 DEX 描述成「下降」，但真正存入 `MYSKILLDEXPOWER` 的值是**正數**。因此下一輪原 C 實際會把 QUICK 往上加；V2.32 保留這個來源 bug，不擅自改成負號。
+
+### 三圍共同的 mtgh 基底 bug
+
+fixed `Other_DefcharWorkInt()` 對 STR／TGH／DEX 三個欄位都不是用各自的能力當百分比基底，而是同一個 compliance 前保存的 `mtgh`：
+
+`add = int(mtgh × MYSKILLxxxPOWER / 100)`
+
+所以 STR 加成也用耐力基底、DEX 加成也用耐力基底。Web 新增 battle-local profession stat round snapshot，在 PreCommand 建立、角色自己的 StatusSeq 扣回合；狀態於 StatusSeq 歸零時，本輪已建立的 FIX snapshot 仍保留，到下一輪才真正消失。
+
+### Skill 37 專注戰鬥的來源 bug
+
+fixed callback沒有照 option 的 `命%200` 直接加命中，而只寫：
+
+- `MYSKILLHIT = 2`
+- `MYSKILLHIT_NUM = 100`
+
+當下 `WORKHITRIGHT` **完全不增加**。之後它沿用 V2.28 已建立的 MYSKILLHIT compliance bug／StatusSeq lifecycle；到歸零時還會從當下 WORKHITRIGHT 減掉 100。V2.32 不把它修成一般理解的「命中 +100」。
+
+### 與 SetMagicPet 的同欄互斥
+
+原 C 的 SetMagicPet 與這組職業技共用 `CHAR_MYSKILLSTR/TGH/DEX`：
+
+- 職業技能會無條件覆蓋自己寫到的同一欄；
+- 若 profession STR/TGH/DEX 任一欄仍 active，後來的 SetMagicPet 會被原互斥 gate 擋掉；
+- 已在本輪 PreCommand 建好的舊 snapshot 不會被施放當下ย้อนหลัง改寫。
+
+新增 `tools/check_v232_profession_warrior_assist_runtime.mjs` 鎖定 35～37 runtime row、3/4/5 stored turns、mtgh 共同基底、Collect DEX 正號 bug、Focus 無即時命中加成、PreCommand／StatusSeq 順序與 SetMagicPet 互斥。**save schema 維持 30**。
 
 ## V2.31 最新進度
 

@@ -3674,6 +3674,32 @@ V2.23 將已來源化的 profession proficiency 掛回現有 physical battle eve
 
 ---
 
+## V2.32 Warrior assist Skills 35-37
+
+V2.32 adds the fixed live battle lifecycle for Warrior self-assists `PROFESSION_ENRAGE`, `PROFESSION_ENERGY_COLLECT`, and `PROFESSION_FOCUS`.
+
+- Skill 35: TARGET=5, KIND=2, MP 20, command `BATTLE_COM_S_ENRAGE`.
+  - STR power = `tier*2+20`.
+  - TGH power = `-(tier*2+10)`.
+  - stored turns = 3 / 4 / 5 at tier <5 / 5..9 / 10.
+- Skill 36: TARGET=5, KIND=2, MP 10, command `BATTLE_COM_S_COLLECT`.
+  - TGH power = `tier*2+20`.
+  - DEX power = **positive** `tier*2+10`, preserving the fixed mismatch where comments/client UI say reduced DEX but the server raises QUICK on compliance.
+  - same 3 / 4 / 5 stored turns.
+- Skill 37: TARGET=5, KIND=2, MP 9, command `BATTLE_COM_S_FOCUS`.
+  - fixed writes `MYSKILLHIT=2`, `MYSKILLHIT_NUM=100`;
+  - it does not immediately add 100 to WORKHITRIGHT and therefore reuses the existing source-buggy MYSKILLHIT lifecycle.
+
+For STR/TGH/DEX, `Other_DefcharWorkInt()` uses the same saved `mtgh` base for every percentage:
+`add = int(mtgh * power / 100)`.
+The browser now snapshots these Work effects at Player PreCommand, then decrements STR -> TGH -> DEX before HIT in Player StatusSeq. Expiry during StatusSeq does not erase the already-built current-round FIX snapshot.
+
+SetMagicPet shares the same source MYSKILL fields. A profession assist overwrites a same-stat SetMagicPet state for future rounds, while an already-active profession stat blocks a later SetMagicPet through the shared mutual-exclusion gate.
+
+Added `tools/check_v232_profession_warrior_assist_runtime.mjs`; save schema remains **30**.
+
+---
+
 ## V2.31 profession Skill 42 chaos attack
 
 V2.31 adds Warrior Skill 42 `PROFESSION_CHAOS` through the fixed direct-profession physical path.

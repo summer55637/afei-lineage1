@@ -67,6 +67,7 @@ on:
       - "tools/check_v229_profession_through_attack_runtime.mjs"
       - "tools/check_v230_profession_convolute_runtime.mjs"
       - "tools/check_v231_profession_chaos_runtime.mjs"
+      - "tools/check_v232_profession_warrior_assist_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -282,6 +283,9 @@ jobs:
 
       - name: Run V2.31 chaos profession regressions
         run: node tools/check_v231_profession_chaos_runtime.mjs
+
+      - name: Run V2.32 Warrior assist profession regressions
+        run: node tools/check_v232_profession_warrior_assist_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
