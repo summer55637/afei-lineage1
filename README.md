@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.62**
+**PLAYABLE CORE V2.63**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,25 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.63 最新進度
+
+V2.63 接入巫師 **Skill 7「暴風雨」／`PROFESSION_STORM`**，並把 V2.62 預留的 `CHAR_WORKWATER` 真正接成 StatusTbl lifecycle。
+
+- TARGET ENEMY_ALL；option `冰|1|0|320|240|1500|4500|0|320|240|`，所以 `magic_type=2`。
+- dynamic MP：M-tier 1～2=30、3～4=35、5～6=40、7～8=45、9～10=50。
+- GET_PRACTICE：tier1～3=120、4～5=140、6～7=160、8～9=180、10=200。
+- Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- analysis 先嘗試提升 **冰熟練度**，當前 cast 仍使用 battle-entry proficiency Work snapshot。
+- fixed type-2 欄位 bug 保留：magic dodge 讀 Ice proficiency，但 `GET_DAMAGE(type=2)` 讀 **Thunder proficiency/resist** 路徑。
+- magic dodge 通過 base roll 後，STORM 還會再抽一顆 `RAND(1,100)`，只有 **<75** 才真正命中。
+- `PROFESSION_MAGIC_TOLIST_SORT()` 令實際目標數 = M-tier；若活目標比 tier 多，會由 SortLoc 後的 list 隨機抽不重複目標。若重複抽到已被設成 `-1` 的 index，仍照原 C 消耗 RNG 後重抽。
+- 每個實際命中目標在扣本次傷害 HP **之前** 都會跑 Water StatusAttackCheck；該檢定先抽 `RAND(1,100)`，再看死亡／既有 StatusTbl，成功條件嚴格 `roll < 30`。
+- Water stored count：tier1～3=1、tier4=2、tier5～6=3、tier7～8=4、tier9～10=5；角色自己每次進 `BATTLE_StatusSeq` 時先減 1，歸零即消失。
+- Water 本身不造成回合傷害／不能動等效果，只作為 StatusTbl 與召雷／電流的導電條件；存在期間會阻擋其他一般 StatusTbl 套用。
+- save schema 維持 **30**。
+
+---
 
 ## V2.62 最新進度
 

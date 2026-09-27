@@ -1670,12 +1670,13 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_DOOM'
     &&command!=='BATTLE_COM_S_ICE_CRACK'
     &&command!=='BATTLE_COM_S_SUMMON_THUNDER'
+    &&command!=='BATTLE_COM_S_STORM'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK')upper=work*.5;
-  else if(command==='BATTLE_COM_S_ENCLOSE'){lower=work*.2;upper=work*.5}
+  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2635,6 +2636,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_DOOM'
     ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_SUMMON_THUNDER'
+    ||functionName==='PROFESSION_STORM'
     ||functionName==='PROFESSION_ENCLOSE'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
@@ -4436,12 +4438,13 @@ function sourceProfessionEncloseTargetHasAnyStatus(desc){
   const shootSleep=typeof battleShootSleepGet==='function'?battleShootSleepGet(desc):null;
   const resist=typeof sourceProfessionPlayerResistStatusActive==='function'
     ?sourceProfessionPlayerResistStatusActive(desc):false;
+  const water=typeof sourceProfessionWaterState==='function'?sourceProfessionWaterState(desc):null;
   const fear=typeof sourceProfessionDoomFearState==='function'?sourceProfessionDoomFearState(desc):null;
   const annex=sourceProfessionAnnexState(desc);
   return !!((ordinary&&Math.trunc(n(ordinary.turns))>0)
     ||(sars&&Math.trunc(n(sars.turns))>0)
     ||(shootSleep&&Math.trunc(n(shootSleep.turns))>0)
-    ||resist||fear||annex);
+    ||resist||water||fear||annex);
 }
 
 function sourceProfessionAnnexApply(desc,rawSkillLevel,{
@@ -4613,9 +4616,39 @@ function sourceProfessionSummonThunderAnimation(row){
 }
 
 function sourceProfessionTargetWaterTurns(target){
-  // Skill 7 will populate this CHAR_WORKWATER mirror. Keep the read here source-shaped
-  // so Skill 6 already preserves the CURRENT/SUMMON_THUNDER interaction.
   return Math.max(0,Math.trunc(n(target?.professionWaterTurns)));
+}
+
+function sourceProfessionWaterTarget(desc){
+  if(desc?.kind==='player')return state||null;
+  if(desc?.kind==='pet')return desc.pet||null;
+  if(desc?.kind==='enemy')return desc.unit||null;
+  return null;
+}
+
+function sourceProfessionWaterState(desc){
+  const target=sourceProfessionWaterTarget(desc);
+  const turns=sourceProfessionTargetWaterTurns(target);
+  return target&&turns>0?{target,turns}:null;
+}
+
+function sourceProfessionWaterApply(desc,storedTurns){
+  const target=sourceProfessionWaterTarget(desc);
+  if(!target)return {applied:false,storedTurns:0};
+  const turns=Math.max(0,Math.trunc(n(storedTurns)));
+  if(turns<=0)return {applied:false,storedTurns:0};
+  target.professionWaterTurns=turns;
+  return {applied:true,storedTurns:turns};
+}
+
+function sourceProfessionWaterStatusSeq(desc){
+  const stateNow=sourceProfessionWaterState(desc);
+  if(!stateNow)return null;
+  const beforeTurns=stateNow.turns;
+  const turns=Math.max(0,beforeTurns-1);
+  stateNow.target.professionWaterTurns=turns;
+  if(turns<=0)delete stateNow.target.professionWaterTurns;
+  return {beforeTurns,turns,expired:turns<=0};
 }
 
 function sourceProfessionThunderWaterPower(target,command,power,{randInclusive=cRand}={}){
@@ -4727,6 +4760,160 @@ function sourceProfessionSummonThunderExecute(prepared,name){
     sourceMagicType:3,sourceThunderPracticeBeforePracticePower:true,
     sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
     sourceDodgeUsesThunderPractice:true,sourceDamageType3UsesIcePracticeBug:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
+
+function sourceProfessionStormAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  const rightSide=no===20||no===25||no===26;
+  return {
+    magicType:2,attIdx:7,
+    img1:Math.trunc(n(row?.img1)),
+    img2:rightSide?101677:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[rightSide?8:3])),y:Math.trunc(n(opt[rightSide?9:4])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),rightSide
+  };
+}
+
+function sourceProfessionStormWaterTurns(skillLevel){
+  const t=Math.trunc(n(skillLevel));
+  if(t>8)return 5;
+  if(t>6)return 4;
+  if(t>4)return 3;
+  if(t>3)return 2;
+  return 1;
+}
+
+function sourceProfessionStormSelectSlots(sortedSlots,skillLevel,{randInclusive=cRand}={}){
+  const source=(Array.isArray(sortedSlots)?sortedSlots:[]).map(v=>Math.trunc(n(v)));
+  let getNum=Math.trunc(n(skillLevel));
+  if(getNum>=10)getNum=10;
+  if(getNum<=0||getNum>=source.length){
+    return {slots:getNum<=0?[]:source.slice(),rolls:[],getNum,sourceCount:source.length};
+  }
+  const work=source.slice(),out=[],rolls=[];
+  while(out.length<getNum){
+    const index=Math.trunc(n(randInclusive(0,work.length-1)));
+    rolls.push(index);
+    const slot=work[index];
+    work[index]=-1;
+    // fixed TOLIST_SORT retries duplicate indices because the consumed slot becomes -1.
+    if(slot>0)out.push(slot);
+  }
+  return {slots:out,rolls,getNum,sourceCount:source.length};
+}
+
+function sourceProfessionStormExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==7)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis_profession_parameter() raises Ice Practice, but current cast keeps the entry snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const icePractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_ICE_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(icePractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionStormAnimation(row,toNo);
+  const sortedSlots=sourceProfessionMagicEnemySortedSlots(multi.slots);
+
+  // fixed order is qsort -> GET_PRACTICE -> TOLIST_SORT.
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_STORM',prepared.displayLevel,state.hp
+  );
+  const selection=sourceProfessionStormSelectSlots(
+    sortedSlots,practice.skillLevel,{randInclusive:cRand}
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of selection.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    // type=2 DODGE correctly uses Ice proficiency, then STORM adds a strict <75 second gate.
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:2,command:'BATTLE_COM_S_STORM',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    // fixed type=2 GET_DAMAGE bug reads Thunder proficiency/resist fields.
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:2,power:preDamagePower,command:'BATTLE_COM_S_STORM',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // Self CHANGE_STATUS consumes its leading RAND before the separate Water status check.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    // Source checks Water BEFORE subtracting this spell's damage. StatusAttackCheck itself
+    // always consumes RAND first, even when an existing StatusTbl entry makes it fail.
+    const waterCheck=sourceProfessionStatusAttackCheck(targetDesc,30);
+    const waterStoredTurns=sourceProfessionStormWaterTurns(practice.skillLevel);
+    const water=waterCheck.success
+      ?sourceProfessionWaterApply(targetDesc,waterStoredTurns)
+      :{applied:false,storedTurns:0};
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      waterCheck,water,waterStoredTurns,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      sourceDodgeUsesIcePractice:true,sourceDamageType2UsesThunderPracticeBug:true,
+      sourceWaterCheckBeforeDamageSubtract:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害'
+      +(water.applied?'，並附加水附體 '+waterStoredTurns+'。':''),after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,sortedSlots,selection,animation,
+    icePractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:2,sourceIcePracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceDodgeUsesIcePractice:true,sourceDamageType2UsesThunderPracticeBug:true,
+    sourceStormTargetCountEqualsMTier:true,sourceWaterStatusThresholdStrict30:true,
     noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
   };
 }
@@ -6067,6 +6254,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionSummonThunderExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_STORM'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionStormExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_ENCLOSE'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -9745,8 +9937,9 @@ function battleShootSleepGet(desc){
 function battleHasAnyStatus(desc){
   const st=battleStatusGet(desc),sars=battleSarsGet(desc),shootSleep=battleShootSleepGet(desc);
   const professionResist=sourceProfessionPlayerResistStatusActive(desc);
+  const professionWater=sourceProfessionWaterState(desc);
   const professionAnnex=sourceProfessionAnnexState(desc);
-  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist||professionAnnex);
+  return !!((st&&st.turns>0)||(sars&&sars.turns>0)||(shootSleep&&shootSleep.turns>0)||professionResist||professionWater||professionAnnex);
 }
 function battleStatusActive(desc,type=null){
   if(type==='sars'){
@@ -10185,6 +10378,7 @@ function processBattleStatusTurn(actor){
   // RESIST_F/I/T are ordinary StatusTbl entries, so their --cnt/recovery happens
   // before the later MYSKILL tail on the Player's own StatusSeq.
   const professionResist=desc.kind==='player'?sourceProfessionPlayerResistStatusSeq():null;
+  const professionWater=sourceProfessionWaterStatusSeq(desc);
   const professionAnnex=sourceProfessionAnnexStatusSeq(desc);
   const professionDoomFear=sourceProfessionDoomFearStatusSeq(desc);
 
@@ -10237,6 +10431,7 @@ function processBattleStatusTurn(actor){
       ?sourceProfessionPlayerTrapStatusSeq():null;
     const extra={};
     if(professionResist)extra.professionResist=professionResist;
+    if(professionWater)extra.professionWater=professionWater;
     if(professionAnnex){
       extra.professionAnnex=professionAnnex;
       if(professionAnnex.forced){

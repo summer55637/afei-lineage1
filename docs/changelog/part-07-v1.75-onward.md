@@ -4995,3 +4995,23 @@ save schema 維持 **30**。
 - 命中後保留 `PROFESSION_MAGIC_CHANGE_STATUS` 的 leading `RAND(1,100)`。
 - 新增 `tools/check_v262_profession_summon_thunder_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.63 Skill 7 STORM / WATER
+
+- 接入巫師 Skill 7 `暴风雨 / PROFESSION_STORM`。
+- option `冰|1|0|320|240|1500|4500|0|320|240|` → `magic_type=2`。
+- MP：M-tier 1～2=30、3～4=35、5～6=40、7～8=45、9～10=50。
+- GET_PRACTICE：1～3=120、4～5=140、6～7=160、8～9=180、10=200。
+- Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- analysis 先跑 Ice Practice；當前 cast 保留 battle-entry proficiency snapshot。
+- fixed type-2 mismatch：DODGE 用 Ice proficiency；GET_DAMAGE 用 Thunder proficiency/resist path。
+- STORM magic dodge 另有第二顆 `RAND(1,100) < 75` 命中 gate。
+- TOLIST_SORT 實際取 M-tier 個目標；SortLoc 後以 index rejection sampling 隨機取不重複 slot，重複 index 會白吃 RNG。
+- Water StatusAttackCheck 固定先抽 RNG，再檢查死亡／既有 StatusTbl；`roll < 30` 才成功。
+- Water count：1～3=1、4=2、5～6=3、7～8=4、9～10=5；在目標自己的 StatusSeq 先減 1。
+- Water 納入 `battleHasAnyStatus()`／附身 busy check，並直接供 V2.62 召雷術的 `professionWaterTurns` 讀取。
+- 新增 `tools/check_v263_profession_storm_runtime.mjs`。
+- save schema 維持 **30**。
