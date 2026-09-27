@@ -178,13 +178,42 @@ assert.ok(turnFn.includes('performProfessionInstigateAttack(actor,statusTurn'));
 // COM2=-1 fallback is intentionally deferred until execution, after attack-count RNG.
 const defaultFn=extractFunction(game,'sourceProfessionInstigateDefaultTarget');
 assert.ok(defaultFn.includes('cRand(0,list.length-1)'));
+
 const performFn=extractFunction(game,'performProfessionInstigateAttack');
-assert.ok(performFn.includes('sourceProfessionInstigateDefaultTarget(attackerDesc)'));
-assert.ok(performFn.includes('attackerDesc.unit.counterEligibleThisTurn=true'));
-assert.ok(performFn.includes('attackerDesc.unit.chargeState=null'));
-assert.ok(performFn.includes('attackerDesc.unit.earthRoundState=null'));
-assert.ok(performFn.includes('battleApplyPhysicalHit(attackerDesc,resolvedTarget,r)'));
-assert.ok(performFn.includes('resolveConfusionCounterChain(attackerDesc,resolvedTarget,r,options)'));
+assert.ok(performFn.includes('unit.counterEligibleThisTurn=true'));
+assert.ok(performFn.includes('unit.chargeState=null'));
+assert.ok(performFn.includes('unit.earthRoundState=null'));
+assert.ok(performFn.includes('sourceProfessionInstigateBoomerang(actor,attackerDesc,statusTurn,options)'));
+assert.ok(performFn.includes('sourceProfessionInstigateBow(actor,attackerDesc,statusTurn,options)'));
+assert.ok(performFn.includes('sourceProfessionInstigateCommonAttack(actor,attackerDesc,statusTurn,options)'));
+
+// INSTIGATE rewrites to a real ordinary ATTACK, so the currently reachable fixed
+// Enemy weapon set must keep its BOW / BOOMERANG / BOUNDTHROW / BREAKTHROW behavior.
+const hitFn=extractFunction(game,'sourceProfessionInstigateApplyHit');
+assert.ok(hitFn.includes('resolveAttackToEnemyWithGuardian'));
+assert.ok(hitFn.includes('enemyAttackPetResult'));
+assert.ok(hitFn.includes('resolveEnemyDirectAttackToPlayer'));
+assert.ok(hitFn.includes('battleApplyPhysicalHit(attackerDesc,actualTargetDesc,r'));
+
+const bowFn=extractFunction(game,'sourceProfessionInstigateBow');
+assert.ok(bowFn.includes('sourceBowTargetListFromBattleSlots(rawToNo,attackSlot)'));
+assert.ok(bowFn.includes("reason:'bow-raw-target-invalid'"));
+assert.ok(bowFn.includes('actor?.sourceAttackMax'));
+assert.equal(bowFn.includes('sourceEnemyBattleAttackMax'),false);
+
+const boomFn=extractFunction(game,'sourceProfessionInstigateBoomerang');
+assert.ok(boomFn.includes("reason:'boomerang-same-row'"));
+assert.ok(boomFn.includes('SOURCE_BOOMERANG_VS_TBL[row].slice().reverse()'));
+assert.ok(boomFn.includes('damageMultiplier:.3'));
+
+const commonFn=extractFunction(game,'sourceProfessionInstigateCommonAttack');
+assert.ok(commonFn.includes('sourceProfessionInstigateDefaultTarget(attackerDesc)'));
+assert.ok(commonFn.includes('actor?.sourceAttackMax'));
+assert.ok(commonFn.includes('if(rawToNo<0)break'));
+const breakAt=commonFn.indexOf('sourceBreakthrowParalysis(unit,hit)');
+const crushAt=commonFn.indexOf('sourceBattleFinalizeItemCrushRng(hit.r)');
+assert.ok(breakAt>=0&&crushAt>breakAt);
+assert.ok(commonFn.includes('resolveConfusionCounterChain(attackerDesc,last.targetDesc,last.r,options)'));
 
 // Dispatcher and published marker.
 const execFn=extractFunction(game,'sourceProfessionBattleSkillExecute');
