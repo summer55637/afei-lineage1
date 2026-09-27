@@ -2497,6 +2497,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_ENTWINE'
     ||functionName==='PROFESSION_DRAGNET'
     ||functionName==='PROFESSION_TRAP'
+    ||functionName==='PROFESSION_TOXIN_WEAPON'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -3128,6 +3129,124 @@ function sourceLogProfessionTrapReaction(reaction){
       +'；陷阱已消耗。',
     reaction.attackerAfter<=0?'good':''
   );
+}
+
+function sourceProfessionToxinWeaponSpec(prepared){
+  const tier=Math.trunc(n(prepared?.attackSkillTier));
+  return {
+    tier,
+    success:20+tier*2,
+    turn:5,
+    storedTurns:6,
+    weaponType:sourceProfessionPlayerWeaponType(state),
+    transformed:playerPigActive()
+  };
+}
+
+function sourceProfessionToxinWeaponTargetPlan(prepared,spec){
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const weaponType=Math.trunc(n(spec?.weaponType));
+  if(spec?.transformed){
+    return {rawToNo,weaponType,mode:'transformed-single',random:null,targetSlots:[rawToNo]};
+  }
+  if(weaponType===4){
+    const bow=sourceBowTargetListFromBattleSlots(rawToNo,0);
+    return {
+      rawToNo,weaponType,mode:'bow',random:bow.random,
+      targetSlots:bow.slots.filter(slot=>slot>=0)
+    };
+  }
+  if(weaponType===17){
+    const row=Math.trunc(rawToNo/5);
+    const slots=row>=0&&row<SOURCE_BOOMERANG_VS_TBL.length
+      ?SOURCE_BOOMERANG_VS_TBL[row].slice():[];
+    return {rawToNo,weaponType,mode:'boomerang',row,random:null,targetSlots:slots};
+  }
+  // fixed BATTLE_MultiList for TARGET=1 leaves the raw COM2 as the single target.
+  // BOUNDTHROW / BREAKTHROW do NOT enter the ordinary AttackNum loop in this custom branch.
+  return {rawToNo,weaponType,mode:'single',random:null,targetSlots:[rawToNo]};
+}
+
+function sourceProfessionToxinWeaponExecute(prepared,name){
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const rawTarget=sourceProfessionEnemyByBattleSlot(rawToNo);
+  if(!rawTarget){
+    return {
+      handled:true,noAction:true,reason:'raw-target-missing',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo:rawToNo
+    };
+  }
+  // battle_profession_status_chang_fun checks the original COM2 for EarthRound
+  // before entering the TOXIN case. A dead raw target is NOT rejected here.
+  if(enemyUnitHidden(rawTarget)){
+    return {
+      handled:true,noAction:true,reason:'target-earthround',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:rawToNo,targetUnitId:rawTarget.id
+    };
+  }
+
+  const spec=sourceProfessionToxinWeaponSpec(prepared);
+  const plan=sourceProfessionToxinWeaponTargetPlan(prepared,spec);
+  const hits=[];
+
+  for(const slot of plan.targetSlots){
+    // The fixed TOXIN loop checks only CHAR_CHECKINDEX + HP for each ToList member.
+    // It does NOT call BATTLE_TargetCheck here, so secondary bow/boomerang entries that
+    // are EarthRound-hidden remain attackable if alive.
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target||n(target.hp)<=0)continue;
+
+    const r=playerAttackResult(
+      target,
+      plan.mode==='boomerang'?{damageMultiplier:.3}:{}
+    );
+    const positiveCalculated=!r.dodged&&!r.miss&&n(r.damage)>0;
+
+    // Custom TOXIN branch uses normal DamageReact / real Guardian and ItemCrush,
+    // but it never enters ordinary BATTLE_Attack's SUITPOISON or Counter tail.
+    const actual=applyFriendlyEnemyHit(
+      'player','你',target,r,null,{suppressSuitPoison:true}
+    );
+
+    let poison=null,poisonApplied=false;
+    if(positiveCalculated){
+      // Source calls PROFESSION_BATTLE_StatusAttackCheck AFTER DamageSub/ItemCrush,
+      // even when DamageSub killed the defender. The helper therefore still consumes
+      // its RAND before returning dead/existing-status failure.
+      const poisonTarget=actual||target;
+      const targetDesc={kind:'enemy',unit:poisonTarget,unitId:poisonTarget.id};
+      poison=sourceProfessionStatusAttackCheck(targetDesc,spec.success);
+      if(poison.success){
+        poisonApplied=battleStatusApply(targetDesc,'poison',spec.turn);
+        if(poisonApplied){
+          addLog(poisonTarget.name+' 被「'+name+'」附加中毒；fixed stored turn='+spec.storedTurns+'。','bad');
+        }
+      }
+    }
+
+    hits.push({
+      battleSlot:slot,targetUnitId:target.id,
+      actualTargetUnitId:actual?.id??target.id,
+      positiveCalculated,r,actual,
+      poison,poisonApplied,poisonStoredTurns:poisonApplied?spec.storedTurns:0
+    });
+  }
+
+  syncEnemyTarget();
+  addLog(
+    '你施放「'+name+'」：'+
+    (plan.mode==='bow'?'弓 target list':plan.mode==='boomerang'?'回力鏢橫排 ×0.3':'單目標')+
+    '，毒成功率 '+spec.success+'%，實際命中段數 '+hits.length+'。','good'
+  );
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:rawToNo,targetUnitId:rawTarget.id,
+    attackSkillTier:spec.tier,spec,plan,hits,
+    poisonSuccess:spec.success,poisonTurn:spec.turn,poisonStoredTurns:spec.storedTurns,
+    noAttackCount:true,noOrdinarySuitPoison:true,noOrdinaryCounter:true,
+    realGuardian:true,damageReactEnabled:true
+  };
 }
 
 function sourceProfessionHunterControlExecute(target,prepared,name){
@@ -3908,6 +4027,12 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
   }
   if(toNo>19){
     return {handled:true,noAction:true,reason:'unsupported-pseudo-target-for-direct-physical',toNo};
+  }
+
+  if(prepared.functionName==='PROFESSION_TOXIN_WEAPON'){
+    const toxinRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const toxinName=String(toxinRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionToxinWeaponExecute(prepared,toxinName);
   }
   if(prepared.functionName==='PROFESSION_THROUGH_ATTACK'){
     const throughRow=sourceProfessionSkillTemplate(prepared.skillId);
