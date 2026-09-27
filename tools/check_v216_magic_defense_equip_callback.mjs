@@ -16,6 +16,7 @@ for(const [idText,arg] of Object.entries(expectedArgs)){
   const id=Number(idText),row=field2.byItemId[String(id)],m=make.byItemId[String(id)];
   assert.ok(row&&m,'runtime '+id);
   assert.equal(row.argument,arg);
+  assert.equal(m.g,arg,'small item-make runtime must carry callback argument without field2 preload');
   assert.equal(row.functions.attach,'ITEM_MagicEquitWear');
   assert.equal(row.functions.detach,'ITEM_MagicEquitReWear');
   assert.equal(row.typeCode,undefined);
@@ -60,9 +61,9 @@ function extractFunction(source,name){
 }
 
 const slots={
-  1:{use:true,owner:'player',itemId:20184,argument:expectedArgs[20184]},
-  2:{use:true,owner:'player',itemId:20420,argument:expectedArgs[20420]},
-  3:{use:true,owner:'player',itemId:20421,argument:expectedArgs[20421]}
+  1:{use:true,owner:'player',itemId:20184},
+  2:{use:true,owner:'player',itemId:20420},
+  3:{use:true,owner:'player',itemId:20421}
 };
 const templates={
   1:{itemId:20184,attachFunc:'ITEM_MagicEquitWear',detachFunc:'ITEM_MagicEquitReWear'},
@@ -73,6 +74,7 @@ let dodgeRoll=1;
 const ctx={
   Math,Number,Object,parseInt,
   state:{luck:5,playerItemSlots:Array(24).fill(null),itemRuntime:{slots:{}}},
+  itemMakeDb:make,
   PLAYER_EQUIP_SLOT_COUNT:9,
   SOURCE_PLAYER_MAGIC_DEFENSE_ITEM_IDS:new Set([20184,20420,20421]),
   SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM:Object.freeze({18546:40,18547:80,18548:120}),
@@ -81,18 +83,15 @@ const ctx={
   sourcePlayerItemSlots:t=>t.playerItemSlots,
   sourceRuntimeSlotFromTarget:(t,i)=>t.itemRuntime.slots[String(i)]||null,
   sourcePlayerEquipTemplateForExisting:i=>templates[i]||null,
-  sourceItemField2Char:(existing,key)=>{
-    if(key!=='argument')return '';
-    return existing.field2Char&&Object.prototype.hasOwnProperty.call(existing.field2Char,'argument')
-      ?String(existing.field2Char.argument??'')
-      :String(existing.argument??'');
-  },
+  sourcePlayerFixedEquipResistTemplate:()=>false,
   magicTargetResist:()=>20,
   sourceDefMagicResistBonus:()=>50,
   cRand:()=>dodgeRoll
 };
 vm.createContext(ctx);
 for(const name of [
+  'sourceItemMakeCallbackArgument',
+  'sourcePlayerLiveCallbackArgument',
   'sourcePlayerEquipCallbackSupported',
   'sourcePlayerMagicDefenseArgumentValue',
   'sourcePlayerEquipMagicDefense',
@@ -165,5 +164,6 @@ console.log(JSON.stringify({
   items:expectedArgs,
   damageResist:'natural + EA/WA/FI/WI, then positive def-magic status scaling',
   dodge:'luck*3 + naturalResist*.15 + QU*.9',
+  baseArgumentSource:'item-make runtime g; field2 preload not required',
   saveSchema:29
 }));
