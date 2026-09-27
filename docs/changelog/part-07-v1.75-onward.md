@@ -3466,3 +3466,25 @@ fixed `ITEM_equipNoenemy()` 會把 connection `eqnoenemy` 設成 40／80／120�
 有效時只跳過 random encounter / CEP branch，並不取消 warp、NPC 或腳本戰。
 
 Web 以目前 equip slots 推導 noen level；`walkEncounterStep()` 先增加 virtual walk count，再於有效 Floor 直接返回，不抽 encounter roll、不改 CEP。其他 callback 仍 fail-closed。save schema 29。
+
+
+---
+
+## V2.15 ITEM_randEnemyEquip / ITEM_RerandEnemyEquip
+
+V2.15 來源化第三組玩家裝備 callback。
+
+fixed itemset6：
+- 20126：rand:60
+- 20127：rand:70
+- 20128：rand:100
+
+fixed char_walk.c under _Item_MoonAct:
+- first: rand()%120 < CEP
+- only on primary hit and EqRandenemy > 0: Rnum = RAND(0,100)
+- actual encounter only if Rnum > RandEnemy
+- secondary suppression does not reset CEP and does not increment CEP
+- actual encounter resets CEP to minep
+- primary miss increments CEP as before
+
+Web now derives the exact threshold from equipped existing item and preserves this RNG/order lifecycle. Quest/script battles remain outside this path. save schema 29.

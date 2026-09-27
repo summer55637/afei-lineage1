@@ -34,6 +34,8 @@ const SOURCE_PLAYER_RANGED_WEAPON_TYPES=new Set([4,17,18,19]);
 // fixed _ANGEL_SUMMON: CHAR_moveItemFromItemBoxToEquip only special-checks ANGELITEM 2884.\n// HEROITEM 2885 is ITEM_OTHER (type 16), so ITEM_getEquipPlace() rejects it normally.\nconst SOURCE_PLAYER_SPECIAL_EQUIP_IDS=new Set([2884]);
 // fixed itemset6.txt ITEM_ARGUMENT: 18546 noen:40 / 18547 noen:80 / 18548 noen:120.
 const SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM=Object.freeze({18546:40,18547:80,18548:120});
+// fixed itemset6.txt ITEM_ARGUMENT: moon ornaments use rand:60 / rand:70 / rand:100.
+const SOURCE_PLAYER_RANDENEMY_BY_ITEM=Object.freeze({20126:60,20127:70,20128:100});
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
@@ -1123,8 +1125,30 @@ function sourcePlayerEquipCallbackSupported(template){
     const key=String(Math.trunc(Number(template?.itemId)));
     return Object.prototype.hasOwnProperty.call(SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM,key);
   }
+  // fixed _Item_MoonAct: ITEM_randEnemyEquip reads ITEM_ARGUMENT rand; only these
+  // fixed itemset6 rows have an exact sourced threshold.
+  if(attach==='ITEM_randEnemyEquip'&&detach==='ITEM_RerandEnemyEquip'){
+    const key=String(Math.trunc(Number(template?.itemId)));
+    return Object.prototype.hasOwnProperty.call(SOURCE_PLAYER_RANDENEMY_BY_ITEM,key);
+  }
   // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
   return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
+}
+function sourcePlayerRandEnemyThreshold(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!template)continue;
+    if(String(template.attachFunc||'')!=='ITEM_randEnemyEquip'||
+       String(template.detachFunc||'')!=='ITEM_RerandEnemyEquip')continue;
+    const key=String(Math.trunc(Number(template.itemId)));
+    if(Object.prototype.hasOwnProperty.call(SOURCE_PLAYER_RANDENEMY_BY_ITEM,key)){
+      return Math.trunc(Number(SOURCE_PLAYER_RANDENEMY_BY_ITEM[key]));
+    }
+  }
+  return 0;
 }
 function sourcePlayerNoEnemyLevel(target=state){
   const slots=sourcePlayerItemSlots(target);
@@ -16096,6 +16120,19 @@ function walkEncounterStep(){
   const roll=Math.floor(Math.random()*120);
   state.lastEncounterRoll={roll,cep,min,max,encounterId:encounter.encounterId,x:point.x,y:point.y};
   if(roll<cep){
+    // fixed _Item_MoonAct order: only after the primary rand()%120 encounter hit,
+    // roll RAND(0,100); encounter continues only when Rnum > equipped rand threshold.
+    const randEnemy=sourcePlayerRandEnemyThreshold(state);
+    if(randEnemy>0){
+      const randEnemyRoll=cRand(0,100);
+      state.lastEncounterRoll.randEnemyThreshold=randEnemy;
+      state.lastEncounterRoll.randEnemyRoll=randEnemyRoll;
+      state.lastEncounterRoll.randEnemySuppressed=randEnemyRoll<=randEnemy;
+      if(randEnemyRoll<=randEnemy){
+        state.encounterCep=cep;
+        return false;
+      }
+    }
     state.encounterCep=min;
     spawnEnemy({map,selected,encounter,point,cepUsed:cep,roll});
     return !!enemy;

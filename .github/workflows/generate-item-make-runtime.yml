@@ -49,6 +49,7 @@ on:
       - "tools/check_v212_special_equip_boundary.mjs"
       - "tools/check_v213_pickallpet_equip_callback.mjs"
       - "tools/check_v214_noenemy_equip_callback.mjs"
+      - "tools/check_v215_randenemy_equip_callback.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -210,6 +211,9 @@ jobs:
 
       - name: Run V2.14 NoEnemy equip callback regressions
         run: node tools/check_v214_noenemy_equip_callback.mjs
+
+      - name: Run V2.15 RandEnemy equip callback regressions
+        run: node tools/check_v215_randenemy_equip_callback.mjs
 
       - name: Commit generated runtime
         shell: bash

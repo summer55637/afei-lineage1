@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.14**
+**PLAYABLE CORE V2.15**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,30 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.15 最新進度
+
+V2.15 完成第三組裝備 callback：`ITEM_randEnemyEquip / ITEM_RerandEnemyEquip`。fixed `itemset6.txt` 中只有三件月亮首飾：
+
+- Item 20126：`rand:60`
+- Item 20127：`rand:70`
+- Item 20128：`rand:100`
+
+原 `_Item_MoonAct + char_walk.c` RNG 順序已接入：
+
+1. 先照原本規則抽 `rand()%120 < CEP`。
+2. 第一抽沒命中：照舊 `CEP + 1`，**不抽月亮首飾 RNG**。
+3. 第一抽命中且有月亮首飾：再抽一次 `RAND(0,100)`。
+4. 只有 `Rnum > rand` 才真的進 encounter；若 `Rnum <= rand`，此次遇敵被擋掉。
+5. 被擋掉時 CEP 維持當步原值，不歸 min、也不 +1。
+6. 真正進戰鬥才把 CEP 重設為 min。
+7. `rand:100` 因 `RAND(0,100)` 不可能大於 100，所以會擋掉所有一般隨機 encounter。
+
+月亮首飾只作用於一般 walking random encounter；V2.14 太陽神 NoEnemy 仍更早跳過整段 encounter RNG，任務 `questZone`／NPC 腳本戰仍不受影響。
+
+Web 從目前 equip slots 即時推導 rand threshold，不新增存檔欄位。未知同名 callback 物品仍 fail-closed。新增 `tools/check_v215_randenemy_equip_callback.mjs`。
+
+save schema 維持 **29**。
 
 ## V2.14 最新進度
 
