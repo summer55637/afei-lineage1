@@ -81,20 +81,33 @@ const rows=Object.entries(make.byItemId)
   .filter(([,row])=>row?.f?.a==='ITEM_MagicResist'&&row?.f?.d==='ITEM_MagicReResist')
   .map(([id,row])=>({id:Number(id),row,spec:ctx.sourcePlayerEquipResistSpecFromArgument(row.g)}));
 assert.ok(rows.length>0,'fixed itemset6 must contain ITEM_MagicResist/ReResist rows');
+const effectiveRows=rows.filter(x=>x.spec);
+const noOpRows=rows.filter(x=>!x.spec);
+assert.ok(effectiveRows.length>0,'at least one fixed callback row must match a pinned strstr marker');
 for(const x of rows){
-  assert.equal(typeof x.row.g,'string','callback row '+x.id+' must carry byte-preserving g');
-  assert.ok(x.spec,'callback row '+x.id+' argument must match one of the seven pinned C strstr markers');
-  assert.ok(['fire','thunder','ice','weaken','barrier','nocast','fallride'].includes(x.spec.key));
   assert.equal(ctx.sourcePlayerEquipCallbackSupported({
     itemId:x.id,attachFunc:'ITEM_MagicResist',detachFunc:'ITEM_MagicReResist'
-  }),true);
+  }),true,'all fixed callback-pair rows are legal; unmatched arguments are original no-op');
+  if(x.spec)assert.ok(['fire','thunder','ice','weaken','barrier','nocast','fallride'].includes(x.spec.key));
 }
 assert.equal(ctx.sourcePlayerEquipCallbackSupported({
   itemId:999999,attachFunc:'ITEM_MagicResist',detachFunc:'ITEM_MagicReResist'
 }),false);
 
+// Unmatched fixed arguments are not an error: strstr misses every branch, so attach/detach do nothing.
+for(const x of noOpRows){
+  const itemIndex=900000+x.id;
+  ctx.state.itemRuntime.slots[String(itemIndex)]={use:true,owner:'player',itemId:x.id};
+  ctx.templates[String(itemIndex)]={itemId:x.id,attachFunc:'ITEM_MagicResist',detachFunc:'ITEM_MagicReResist'};
+  ctx.state.playerEquipResistWork={fire:11,thunder:12,ice:13,weaken:14,barrier:15,nocast:16,fallride:17};
+  const before=JSON.stringify(ctx.state.playerEquipResistWork);
+  assert.equal(ctx.sourcePlayerEquipResistAttachEvent(itemIndex,ctx.state),false);
+  assert.equal(ctx.sourcePlayerEquipResistDetachEvent(itemIndex,ctx.state),false);
+  assert.equal(JSON.stringify(ctx.state.playerEquipResistWork),before);
+}
+
 // Login rebuild: fixed CHAR_loginCheckUserItem replays equipped attach callbacks in slot order.
-const base=rows[0];
+const base=effectiveRows[0];
 ctx.state.itemRuntime.slots['101']={use:true,owner:'player',itemId:base.id};
 ctx.state.itemRuntime.slots['102']={use:true,owner:'player',itemId:base.id,field2Char:{
   argument:base.spec.marker+'37'
@@ -151,7 +164,8 @@ assert.match(game,/s\.schemaVersion=29/);
 
 console.log(JSON.stringify({
   pass:true,version:'V2.17',focus:'ITEM_MagicResist / ITEM_MagicReResist',
-  fixedRows:rows.map(x=>({id:x.id,key:x.spec.key,value:x.spec.value})),
+  effectiveRows:effectiveRows.map(x=>({id:x.id,key:x.spec.key,value:x.spec.value})),
+  noOpRows:noOpRows.map(x=>x.id),
   sourceMarkers:make.equipResistSource.markers.map(x=>x.key),
   detachBug:'every branch clears fire only',
   currentConsumers:['weaken','barrier','nocast','fallride'],
