@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.41**
+**PLAYABLE CORE V2.42**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,43 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.42 最新進度
+
+V2.42 接入獵人 **Skill 52「挑撥」／`PROFESSION_INSTIGATE`** 的完整 fixed StatusSeq → 普通 ATTACK lifecycle。這招不是命中後立即讓目標亂打；真正效果會等到被挑撥目標自己的 `BATTLE_StatusSeq()`。
+
+fixed row：MP 17、TARGET 1、KIND 2、option `挑|成%20|敏%30|效%1|回%2`、command `BATTLE_COM_S_INSTIGATE`。
+
+### 命中階段
+
+- 命中率基礎 `20 + tier×4`，沿用 fixed `PROFESSION_BATTLE_StatusAttackCheck()`：先消耗 `RAND(1,100)`，再檢查死亡／既有異常，成功條件仍是嚴格 `roll < Success`。
+- 一般 tier 0～9 使用 option `回%2`，因此 StatusTbl 寫入 `2+1=3`。
+- fixed 原 C 對 **tier 10** 有額外特判：先把 turn 改成 4，因此實際 stored turn = **5**。
+- 成功後保存 `WORKMODINSTIGATE = tier+10`，即 10～20%。
+- 和樹根纏繞／天羅地網不同，Instigate **不在命中後立即清除 BATTLECOM1 的名單內**。因此若目標本輪尚未行動，原本已輸入的指令仍保留到它自己的 StatusSeq。
+
+### StatusSeq 發作階段
+
+目標輪到自己時先照 fixed 共用流程把 status turn 減 1；若因此歸零，直接解除，不再做挑撥判定。只要還有剩餘 turn：
+
+1. 消耗 `RAND(1,100)`；`roll > 80` 不發作，亦不再抽目標。
+2. `roll <= 80` 時把 COM1 強制改成普通 `ATTACK`。
+3. 對**施術目標自己**的 `FIXSTR / FIXTOUGH / FIXDEX` 各乘 `(100-(tier+10))%`。
+4. 這裡只改 FIX，不重建 `WORKATTACKPOWER / WORKDEFENCEPOWER / WORKQUICK`，也不重跑早已完成的 EntrySort。當次普通攻擊仍使用既有 WORK；但會心／反擊等後續若讀 FIXDEX，會看到這次降低後的值。
+5. 接著固定消耗一顆 `RAND(0,9)`，從 **++pos** 開始循環掃自己 side 的 10 個 battle slot，排除自己，找第一個 `BATTLE_TargetCheck()==TRUE` 的同隊單位。
+6. 找不到同隊目標時原 C 寫 `COM2=-1`。這時不提前找敵人；要等 `BATTLE_GetAttackCount()` 完成後，真正普通 ATTACK 執行到 `BATTLE_TargetAdjust()` 才由對面 side 的 `BATTLE_DefaultAttacker()` 再抽目標。
+
+### 真正普通 ATTACK／武器鏈
+
+因為挑撥發作後寫的是正式 `BATTLE_COM_ATTACK`，V2.42 沒有用「單發近戰」冒充。現在沿用目前 fixed Enemy 可達的完整自動武器規則：
+
+- **BOW**：AttackCount 已先抽完；以挑撥寫入的 raw COM2 建原 `aBowW` target list，再消耗 BOW 的 `RAND(0,1)`。raw COM2=-1 時原 TargetListSet 不做 DefaultAttacker、也不抽 BOW RNG，該次直接 NoAction。
+- **BOOMERANG**：普通 ATTACK 先轉 `BATTLE_COM_BOOMERANG`；傷害 ×0.3，Enemy 依固定 `k=4,j=-1` 反向掃 5-slot row。同 row 指到自己所在橫排時固定 NoAction；無有效 row target 才走對面 DefaultAttacker。
+- **BOUNDTHROW / BREAKTHROW**：沿普通 common loop；BREAKTHROW 仍維持「命中 → 麻痺檢定 → ItemCrush → AddProfit」的來源順序。
+- 其他目前 fixed Enemy 自動武器皆為單擊；仍走普通 Attack / Guardian / Counter 邊界。
+- 投射武器本身會在 CounterCheck 最前面阻擋反擊，與既有來源規則相同。
+
+新增 `tools/check_v242_profession_instigate_runtime.mjs`，鎖住命中、tier10 turn 特判、80% StatusSeq、FIX-only 降低、同 side ++pos RNG、COM2=-1 延後 TargetAdjust、以及四種遠距武器 command；**save schema 維持 30**。
 
 ## V2.41 最新進度
 
