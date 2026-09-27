@@ -4820,3 +4820,18 @@ Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtim
 - target=20 右側地結界 img2 101786；img1 101697。
 
 新增 `tools/check_v252_profession_earth_boundary_runtime.mjs`。save schema 維持 **30**。
+
+
+---
+
+## V2.53 Skill 69 Water Boundary
+
+- 接入 Skill 69 `水结界 / PROFESSION_BOUNDARY`；68/69 live，70～72 仍 unsupported。
+- TARGET ALL_MYSIDE -> Player pseudo target 20；dynamic MP 與 Skill 68 相同為 10 / 15 / 20。
+- 共用 V2.52 A-tier turn 與 raw display power；每個 target 先清四結界，再寫 water `MAKE2VALUE(power,turn)`。
+- physical `BATTLE_DamageCalc()` 仍是 AttrAdjust -> boundary -> OtherDamage；water active 時真正減傷 = attacker water / 200，stored power 只作 active flag。
+- profession magic 不讀 boundary；critical bonus 不吃 boundary reduction。
+- 共用 post-command low--；low=0 仍 active，0->-1 才清。
+- row img2 101777；Player-side target 20 由 fixed GET_IMG2 覆寫成右側水結界 101774；img1 101697。
+
+新增 `tools/check_v253_profession_water_boundary_runtime.mjs`。save schema 維持 **30**。

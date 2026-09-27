@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.52**
+**PLAYABLE CORE V2.53**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,42 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.53 最新進度
+
+V2.53 接入獵人 **Skill 69「水結界」／`PROFESSION_BOUNDARY`**。這一版只把既有 V2.52 boundary core 開到 Skill 69；Skill 70～72 仍保持未接入。
+
+fixed row：TARGET 2（ALL_MYSIDE）、KIND 1、option `水结界|...`、row `costMp=14`、img1 101697、img2 101777。實際 MP 與 Skill 68 相同，走 `PROFESSION_MAGIC_COST_MP()` 的 boundary dynamic branch：M-tier ≤6 / 7～9 / 10 = **10 / 15 / 20 MP**，不採 row 14。
+
+### 共用 V2.52 的 boundary lifecycle
+
+Skill 69 完全沿用已驗證的 fixed power／turn：A-tier 決定 low turn（0～4→1、5～8→2、9→3、10→5；source 的 turn 4 分支不可達），raw display level 再決定 stored power 20～100。
+
+`BATTLE_MultiList()` 對 Player 的 ALL_MYSIDE 解析成 pseudo target 20。每個有效同側 Battle Entry 都先把地／水／火／風四個 boundary Work 清 0，再只寫：
+
+`CHAR_WORKFIXWATERAT_BOUNDARY = MAKE2VALUE(power, turn)`
+
+因此水結界會覆蓋既有地結界；反過來之後施放地結界也會清掉水結界。這不是四種結界可同時疊加。
+
+### fixed 水屬減傷 bug
+
+`BATTLE_DamageCalc()` 的 boundary 鏈固定是 `earth -> water -> fire -> wind`。當水結界 high word >0 時，真正物理公式是：
+
+`damage = trunc(damage - damage * attackerWater / 200)`
+
+stored power 仍然只作「結界存在」旗標，完全不參與減傷率。攻擊者水屬性 100 才減 50%，水屬性 20 只減 10%。V2.53 不把 power 20～100 擅自解讀成減傷百分比。
+
+profession magic 仍不讀 boundary Work；critical 額外 bonus 仍在 `BATTLE_DamageCalc()` 之後追加，因此不吃水結界減傷。既有 `battleDamageCore()` 的 AttrAdjust → boundary → OtherDamage 順序不需改寫。
+
+### post-action 倒數
+
+水結界與地結界共用同一個 post-command lifecycle：該 Battle Entry 完成 command 後 `low--`，low=0 仍有效，下一次 0→-1 才清除。玩家施放當下自己的 low 會先扣一次；同側 Pet 要等自己的 command 結束才扣。
+
+### 動畫
+
+Skill 69 row img2 是 101777；但 fixed `PROFESSION_MAGIC_GET_IMG2()` 對右側 target 20／25／26 會覆寫成 **101774**。正常 Player ALL_MYSIDE=20，因此 live 使用 101774；img1 維持 101697。
+
+新增 `tools/check_v253_profession_water_boundary_runtime.mjs`，鎖住 Skill 68/69 support gate、70～72 仍關閉、dynamic MP、water clear-four/write-water、stored-power-ignored water formula、post-action low=0 ghost、右側動畫 101774、V2.52 regression 與 save schema **30**。
 
 ## V2.52 最新進度
 

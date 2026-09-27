@@ -88,6 +88,7 @@ on:
       - "tools/check_v250_profession_nature_resist_runtime.mjs"
       - "tools/check_v251_profession_call_nature_runtime.mjs"
       - "tools/check_v252_profession_earth_boundary_runtime.mjs"
+      - "tools/check_v253_profession_water_boundary_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -366,6 +367,9 @@ jobs:
 
       - name: Run V2.52 Earth Boundary regression
         run: node tools/check_v252_profession_earth_boundary_runtime.mjs
+
+      - name: Run V2.53 Water Boundary regression
+        run: node tools/check_v253_profession_water_boundary_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
