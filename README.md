@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.44**
+**PLAYABLE CORE V2.45**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,46 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.45 最新進度
+
+V2.45 接入獵人 **Skill 49「屍體掠奪」／`PROFESSION_PLUNDER`**，固定來源為 `battle_profession_attack_fun()` 的 `BATTLE_COM_S_PLUNDER`。
+
+fixed row：MP 10、TARGET 10（DEATH）、KIND 2、option `效%1`、command `BATTLE_COM_S_PLUNDER`。
+
+### 死亡目標與 EarthRound
+
+`PLUNDER` 是 direct profession attack 裡唯一明確略過 generic `HP<=0` return 的技能，因此死亡目標仍可進 case。raw COM2 若是 EarthRound，則和其他 profession direct attack 一樣在 switch 前直接 return。
+
+來源 callback 本身並沒有再次強制 `HP==0`；正常 client 由 TARGET_DEATH 限制選屍體。Web 保留 server-side 行為，不額外發明 HP gate。
+
+### 掃描的不是只有指定屍體
+
+原 C 先用 raw COM2 決定 side，再依：
+
+`battle slot 0..9 / 10..19 -> 每名角色 ItemBox 10 格`
+
+由小到大掃描。找到**同側第一件有效 existing item**就停止。因此拿到的物品可以來自同側另一名 Enemy；最後 `BATTLE_Exit()` 的仍是原本指定的 raw target，不是物品擁有者。
+
+Web V2.45 依 `battleSlot -> enemyDrops.slot 1..10` 重建相同順序，且只接受 owner 仍為該 Enemy 的 existing item，避免已進一般 `battleGetItemPool` 的物品被重複取得。
+
+### `CHAR_AddPileItem()` 原樣保留
+
+這條路徑不是一般勝利掉落的 3 格 getitem reservoir，而是直接呼叫 `CHAR_AddPileItem()`：
+
+- 玩家最大 pile = `轉生 + trunc(轉生/5)*2 + 3 + ITEM_ATTACHPILE`。
+- 空背包容量不足以容納整個 `ITEM_USEPILENUMS`，或 pile<=0：直接 return -1。
+- pile <= 玩家最大 pile：把原 existing item 放入第一個空背包格。
+- pile > 玩家最大 pile：以相同 Item ID 逐份 `ITEM_makeItemAndRegist()`，每份重新消耗完整 make-item RNG，再只覆寫 `ITEM_USEPILENUMS`；最多 10 份。
+- 全部分割品成功加入後才 end 原 existing item。
+
+最重要的來源 bug：**PLUNDER 完全不檢查 `CHAR_AddPileItem()` 回傳值。** 就算滿包導致 -1，仍會顯示取得訊息、清掉 Enemy item slot，然後讓指定目標離場。V2.45 保留這個失敗後 orphan/end 的生命週期，不自行把物品還給屍體。
+
+### Exit / reward 邊界
+
+取得或找不到物品後都會直接 `BATTLE_Exit(defindex)`；`defindex` 是原指定 target。這條 case 沒有傷害、Counter、普通掉落抽選，也不把退出本身當成擊殺獎勵。
+
+新增 `tools/check_v245_profession_plunder_runtime.mjs`，鎖住 Skill 49 runtime、死亡 raw target、EarthRound gate、同側 10×10 掃描順序、跨 Enemy 取物、AddPile pile/容量/分割規則、失敗仍 detach、只退出原 target、V2.45 marker；**save schema 維持 30**。
 
 ## V2.44 最新進度
 

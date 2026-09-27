@@ -4464,3 +4464,81 @@ Poison status check發生在 DamageSub + ItemCrush之後。即使 DamageSub 已�
 - save schema 30
 
 save schema 維持 **30**。
+
+
+---
+
+## V2.45 Skill 49 Plunder
+
+V2.45 接入獵人 Skill 49「屍體掠奪」／`PROFESSION_PLUNDER` 的 fixed corpse-item / direct-exit lifecycle。
+
+### Runtime row
+
+- Skill ID 49
+- MP 10
+- TARGET 10 / DEATH
+- KIND 2
+- option `效%1`
+- command `BATTLE_COM_S_PLUNDER`
+
+### Dead-target exception
+
+`battle_profession_attack_fun()` 對 direct profession 一般在 target HP<=0 時 return，但明確排除 `BATTLE_COM_S_PLUNDER`。所以屍體仍可進 case；raw target 若是 EarthRound 則在 switch 前照常 return。
+
+client TARGET_DEATH 負責正常選屍體；server callback 本身沒有再要求 target HP==0。V2.45 不自行補額外 HP gate。
+
+### Same-side carried-item scan
+
+PLUNDER 先由 raw defNo 決定 side start，再做兩層固定掃描：
+
+1. battle slot 由 sideStart 到 sideStart+9。
+2. 每個有效角色掃 `CHAR_STARTITEMARRAY .. +9`。
+3. 第一個 `ITEM_CHECKINDEX` 成功的 carried existing item立即停止掃描。
+
+因此 item owner 不必等於 raw target；可以從同側另一名 Enemy 身上拿到第一件 carried item。無論 item 來自誰，最後 `BATTLE_Exit()` 的永遠是原 raw defindex。
+
+### CHAR_AddPileItem
+
+固定 `_ITEM_PILENUMS` / `_EQUIT_ADDPILE` 已開：
+
+`maxPile = transmigration + trunc(transmigration/5)*2 + 3 + CHAR_WORKATTACHPILE`
+
+`CHAR_findSurplusItemBox()` 只計 15 個 ItemBox 空格。
+
+AddPile lifecycle：
+
+- `itemPile > surplus*maxPile` 或 `itemPile<=0`：return -1，不 end 原 existing。
+- `maxPile>=itemPile`：原 existing 直接進第一空格；unexpected add failure 時 end 原 existing。
+- 否則每份先 `ITEM_makeItemAndRegist(itemId)`，再把 `ITEM_USEPILENUMS` 覆寫為 maxPile / remainder，最多 10 份。
+- 所有新 existing 都成功加入後才 end 原 existing。
+- 中途 make/add 失敗時，來源不回滾已建立／已加入的前段。
+
+PLUNDER caller **完全忽略回傳值**，之後仍 talk「得到」、`CHAR_setItemIndex(enemy,item,-1)`，再 `BATTLE_Exit(raw target)`。V2.45 因此在容量失敗時也 detach Enemy slot；不把物品留回屍體。
+
+### Web mapping
+
+- `enemyDrops.slot 1..10` 對應 Enemy ItemBox 十格。
+- 掃描只接受 runtime owner 仍為 `enemy:<unitId>` 的 existing item，避免已被 AddProfit/getitem 搬走的 item重複取得。
+- 成功直接移入 Player backpack；split branch使用既有 `sourceItemRuntimeAlloc()`，因此完整保留每份 66-field item-make RNG。
+- no item也仍直接退出 raw target。
+- Exit 本身不做 damage / Counter / kill reward。
+
+### Regression
+
+新增 `tools/check_v245_profession_plunder_runtime.mjs`，覆蓋：
+
+- Skill 49 metadata / command support
+- max-pile公式與 backpack surplus
+- AddPile capacity failure不先 free
+- direct existing transfer
+- split 4/4/1 fixture與 original end ordering
+- battle slot -> item slot scan order
+- dead raw target可執行
+- EarthRound raw target拒絕
+- loot owner可不同於 raw target
+- detach before raw-target exit
+- dispatcher位於 generic dead-target gate之前
+- V2.45 marker
+- save schema 30
+
+save schema 維持 **30**。

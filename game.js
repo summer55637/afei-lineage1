@@ -2498,6 +2498,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_DRAGNET'
     ||functionName==='PROFESSION_TRAP'
     ||functionName==='PROFESSION_TOXIN_WEAPON'
+    ||functionName==='PROFESSION_PLUNDER'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
@@ -3167,6 +3168,197 @@ function sourceProfessionToxinWeaponTargetPlan(prepared,spec){
   return {rawToNo,weaponType,mode:'single',random:null,targetSlots:[rawToNo]};
 }
 
+function sourceProfessionPlayerMaxPile(target=state){
+  const trans=Math.trunc(n(target?.transmigration));
+  const cachedAttach=Number(target?.playerEquipCompliance?.attachPile);
+  const attachPile=Number.isFinite(cachedAttach)
+    ?Math.trunc(cachedAttach)
+    :Math.trunc(n(sourcePlayerEquipmentModifiers(target)?.attachPile));
+  // fixed CHAR_getMyMaxPilenum(): transmigration + (transmigration/5)*2 + 3
+  // plus CHAR_WORKATTACHPILE because the pinned build enables _EQUIT_ADDPILE.
+  return Math.max(0,trans+Math.trunc(trans/5)*2+3+attachPile);
+}
+function sourceProfessionPlayerBackpackSurplus(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  let surplus=0;
+  for(let i=PLAYER_BACKPACK_START;i<PLAYER_ITEM_SLOT_COUNT;i++){
+    if(slots[i]==null)surplus++;
+  }
+  return surplus;
+}
+function sourceProfessionPlunderAddPileItem(itemIndex,target=state){
+  const idx=Math.trunc(Number(itemIndex));
+  const existing=sourceItemRuntimeSlot(idx);
+  if(!existing)return {ok:false,ret:-1,reason:'missing-existing',itemIndex:idx};
+
+  const itemId=Math.trunc(Number(existing.itemId));
+  const rawPile=sourceItemRuntimeResolvedDataInt(existing,'ITEM_USEPILENUMS');
+  const itemPile=rawPile==null?null:Math.trunc(Number(rawPile));
+  const myPile=sourceProfessionPlayerMaxPile(target);
+  const surplus=sourceProfessionPlayerBackpackSurplus(target);
+
+  // fixed CHAR_AddPileItem() rejects before touching the existing item. PLUNDER ignores
+  // this return value and clears the Enemy CHAR slot anyway, so do NOT free here.
+  if(itemPile==null||!Number.isFinite(itemPile)||itemPile>surplus*myPile||itemPile<=0){
+    return {
+      ok:false,ret:-1,reason:'capacity-or-nonpositive-pile',
+      itemIndex:idx,itemId,itemPile,myPile,surplus,originalEnded:false
+    };
+  }
+
+  if(myPile>=itemPile){
+    const ret=sourcePlayerAddSpecificExistingItem(idx,{
+      target,source:'profession-plunder',incrementInventory:true
+    });
+    if(ret<PLAYER_BACKPACK_START||ret>=PLAYER_ITEM_SLOT_COUNT){
+      // fixed CHAR_AddPileItem() ends the original existing item if
+      // CHAR_addItemSpecificItemIndex() unexpectedly fails.
+      sourceItemRuntimeFree(idx);
+      return {
+        ok:false,ret:-1,reason:'add-specific-failed-ended',
+        itemIndex:idx,itemId,itemPile,myPile,surplus,originalEnded:true
+      };
+    }
+    return {
+      ok:true,ret,itemIndex:idx,itemId,itemPile,myPile,surplus,
+      split:false,playerItemIndexes:[idx],originalEnded:false
+    };
+  }
+
+  // fixed split branch makes fresh existing items, at most ten, using the same item ID.
+  // Each ITEM_makeItemAndRegist consumes its own make-item RNG; only USEPILENUMS is
+  // overwritten after creation. The original existing item is ended only after every
+  // split item was added successfully.
+  const created=[];
+  let maxPile=itemPile;
+  while(maxPile>0){
+    if(created.length>=10){
+      return {
+        ok:false,ret:-1,reason:'split-over-ten',itemIndex:idx,itemId,itemPile,myPile,surplus,
+        created:created.slice(),originalEnded:false
+      };
+    }
+    const newIndex=sourceItemRuntimeAlloc(itemId,null,{
+      owner:null,source:'profession-plunder-split'
+    });
+    if(newIndex<0){
+      return {
+        ok:false,ret:-1,reason:'split-make-failed',itemIndex:idx,itemId,itemPile,myPile,surplus,
+        created:created.slice(),originalEnded:false
+      };
+    }
+    const take=myPile>maxPile?maxPile:myPile;
+    const made=sourceItemRuntimeSlot(newIndex);
+    if(!made||!sourceItemRuntimeSetDataInt(made,'ITEM_USEPILENUMS',take)){
+      return {
+        ok:false,ret:-1,reason:'split-pile-write-failed',itemIndex:idx,itemId,itemPile,myPile,surplus,
+        created:created.concat([newIndex]),originalEnded:false
+      };
+    }
+    created.push(newIndex);
+    maxPile-=take;
+    if(maxPile<0){
+      return {
+        ok:false,ret:-1,reason:'split-negative-remainder',itemIndex:idx,itemId,itemPile,myPile,surplus,
+        created:created.slice(),originalEnded:false
+      };
+    }
+  }
+
+  let ret=-1;
+  const added=[];
+  for(const newIndex of created){
+    ret=sourcePlayerAddSpecificExistingItem(newIndex,{
+      target,source:'profession-plunder-split',incrementInventory:true
+    });
+    if(ret<PLAYER_BACKPACK_START||ret>=PLAYER_ITEM_SLOT_COUNT){
+      sourceItemRuntimeFree(newIndex);
+      return {
+        ok:false,ret:-1,reason:'split-add-failed',itemIndex:idx,itemId,itemPile,myPile,surplus,
+        created:created.slice(),added:added.slice(),failedIndex:newIndex,originalEnded:false
+      };
+    }
+    added.push(newIndex);
+  }
+  sourceItemRuntimeFree(idx);
+  return {
+    ok:true,ret,itemIndex:idx,itemId,itemPile,myPile,surplus,split:true,
+    playerItemIndexes:added,created:created.slice(),originalEnded:true
+  };
+}
+function sourceProfessionPlunderFirstCarried(sideStart){
+  const start=Math.trunc(Number(sideStart));
+  for(let battleSlot=start;battleSlot<start+10;battleSlot++){
+    const unit=sourceProfessionEnemyByBattleSlot(battleSlot);
+    if(!unit)continue;
+    const drops=Array.isArray(unit.enemyDrops)?unit.enemyDrops:[];
+    for(let itemSlot=1;itemSlot<=10;itemSlot++){
+      const drop=drops.find(v=>Math.trunc(Number(v?.slot))===itemSlot);
+      if(!drop)continue;
+      const itemIndex=Math.trunc(Number(drop.itemIndex));
+      const existing=sourceItemRuntimeSlot(itemIndex);
+      if(!existing||existing.owner!=='enemy:'+unit.id)continue;
+      return {battleSlot,itemSlot,unit,drop,itemIndex,existing};
+    }
+  }
+  return null;
+}
+function sourceProfessionPlunderDetachCarried(found){
+  if(!found)return false;
+  const itemIndex=Math.trunc(Number(found.itemIndex));
+  if(found.drop)found.drop.itemIndex=-1;
+  const existing=sourceItemRuntimeSlot(itemIndex);
+  if(existing&&existing.owner==='enemy:'+found.unit.id){
+    sourceItemRuntimeSetOwner(itemIndex,null,'profession-plunder-detached');
+    existing.enemySlot=null;
+  }
+  return true;
+}
+function sourceProfessionPlunderExecute(prepared,name){
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const rawTarget=sourceProfessionEnemyByBattleSlot(rawToNo);
+  if(!rawTarget){
+    return {
+      handled:true,noAction:true,reason:'raw-target-missing',
+      skillId:prepared.skillId,functionName:prepared.functionName,toNo:rawToNo
+    };
+  }
+  // PLUNDER is the fixed exception to the generic HP<=0 profession gate. TARGET_DEATH
+  // normally supplies a corpse, but the server callback itself does not require HP==0.
+  if(enemyUnitHidden(rawTarget)){
+    return {
+      handled:true,noAction:true,reason:'target-earthround',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:rawToNo,targetUnitId:rawTarget.id
+    };
+  }
+
+  const targetHpBefore=Math.max(0,Math.trunc(n(rawTarget.hp)));
+  const sideStart=rawToNo<10?0:10;
+  const found=sourceProfessionPlunderFirstCarried(sideStart);
+  let loot=null;
+  if(found){
+    const itemId=Math.trunc(Number(found.existing.itemId));
+    const addPile=sourceProfessionPlunderAddPileItem(found.itemIndex,state);
+    // fixed PLUNDER ignores CHAR_AddPileItem() return, talks as if the item was obtained,
+    // unconditionally clears the owner Enemy item slot, then exits the ORIGINAL raw target.
+    sourceProfessionPlunderDetachCarried(found);
+    const meta=questItemMeta(itemId);
+    const itemName=String(meta?.name||('Item '+itemId));
+    addLog('你以「'+name+'」取得 '+itemName+'。',addPile.ok?'good':'');
+    loot={
+      battleSlot:found.battleSlot,itemSlot:found.itemSlot,sourceUnitId:found.unit.id,
+      itemIndex:found.itemIndex,itemId,itemName,addPile
+    };
+  }
+
+  const exit=finishEnemyDirectExit(rawTarget,name+'目標離場');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:rawToNo,targetUnitId:rawTarget.id,targetHpBefore,targetWasDead:targetHpBefore<=0,
+    sideStart,loot,exit,noDamage:true,noCounter:true,noKillRewardFromExit:true
+  };
+}
 function sourceProfessionToxinWeaponExecute(prepared,name){
   const rawToNo=Math.trunc(n(prepared?.toNo));
   const rawTarget=sourceProfessionEnemyByBattleSlot(rawToNo);
@@ -4029,6 +4221,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:true,noAction:true,reason:'unsupported-pseudo-target-for-direct-physical',toNo};
   }
 
+  if(prepared.functionName==='PROFESSION_PLUNDER'){
+    const plunderRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const plunderName=String(plunderRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionPlunderExecute(prepared,plunderName);
+  }
   if(prepared.functionName==='PROFESSION_TOXIN_WEAPON'){
     const toxinRow=sourceProfessionSkillTemplate(prepared.skillId);
     const toxinName=String(toxinRow?.name||('Skill '+prepared.skillId));
