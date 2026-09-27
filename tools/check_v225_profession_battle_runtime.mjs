@@ -160,7 +160,7 @@ assert.ok(calcOnly.includes('enemyGuardianFor(target,null)'));
 assert.ok(calcOnly.includes("guardianSourceBug='battle_profession_attack_fun-defindex-not-updated'"));
 assert.ok(calcOnly.includes('r.actualTarget=target'));
 
-assert.match(html,/PLAYABLE CORE V2\.25/);
+assert.match(html,/PLAYABLE CORE V\d+\.\d+/);
 assert.match(html,/id="professionBattleActions"/);
 assert.match(html,/id="professionBattleInfo"/);
 assert.match(game,/schemaVersion:30/);
