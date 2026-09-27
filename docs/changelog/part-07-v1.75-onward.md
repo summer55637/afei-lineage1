@@ -3590,3 +3590,33 @@ V2.19 開始接 fixed 職業魔法傷害數值核心；本版不先創造職業�
 這批仍不把 profession core 混入既有 `BATTLE_MultiAttMagic`，也不聲稱玩家已可從 UI 施放職業技能。
 
 同輪修正 `generate_item_field2_runtime.py` 的可重現性：`FIELD2_KEYS` 從無序 set 改成固定 tuple。舊寫法會讓相同 pinned source 只因 JSON row key 順序漂移就被 Actions 判成 generated runtime 有變；新寫法不改欄位內容，只固定輸出順序。save schema 維持 29。
+---
+
+## V2.20 profession skill runtime / Use preflight
+
+新增 pinned `profession.txt` runtime，來源固定 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+- `profession.txt` 69 rows / max ID 72 / holes 63,64,65。
+- class 1/2/3 = 20 / 21 / 28 rows。
+- 資料表 57 種 unique function string 全部存在 fixed function table 的 64 個 active dispatch entry。
+- generator 直接掃 `profession_skill.c` 的 simple `profession_common_fun()` wrapper，建立 function → `BATTLE_COM_*` source map。
+- `_PROSKILL_OPTIMUM` 下 skill ID 即 table index；空洞維持不存在，不壓縮。
+
+`sourceProfessionMagicCostPlan()` 來源化 `PROFESSION_MAGIC_COST_MP()`；未知 func 才使用 row `COST_MP` fallback。`PROFESSION_BOUNDARY` 的 `破结界` option 另走 fixed cost table。
+
+`sourceProfessionSkillUsePreflight()` 保留 `PROFESSION_SKILL_Use()` / `PROFESSION_SKILL_DEC_COST_MP()` 的前置順序：
+
+1. profession class 必須 >0 且與 row class 相同；
+2. fixed dispatch function 必須存在；
+3. actor 必須是 Player；
+4. raw skill level 必須 >0；
+5. 動態或 fallback MP cost 計算；
+6. MP 不足直接失敗；
+7. 除 Pskillid 11 外，dec_mp<=0 直接失敗；
+8. 成功結果先得到 mpAfter，並標記 `deductBeforeDispatch=true`。
+
+固定 `PROFESSION_SKILL_Use()` 並不在這一層檢查 `USE_FLAG` / `TARGET`，V2.20 因此只保存欄位，不加入不存在的 gate。
+
+`sourceProfessionCommonCommandPlan()` 保留 COM1/COM2/COM3 與 C_OK；DOOM／FIRE_SPEAR 依 `_PROFESSION_ADDSKILL` 改為 final COM1 NONE，另存 deferred command 與 DOOMTIME 3／2。
+
+本版沒有猜玩家 profession class 或 learned-skill slots，也沒有新增 UI / save 欄位。save schema 維持 29。

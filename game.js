@@ -11,6 +11,7 @@ const ITEM_RELIFE_RUNTIME_URL='data/generated/stoneage_item_relife_runtime.json'
 const ITEM_MAKE_RUNTIME_URL='data/generated/stoneage_item_make_runtime.json';
 const ITEM_FIELD2_RUNTIME_URL='data/generated/stoneage_item_field2_runtime.json';
 const PET_MERGE_FIX_RUNTIME_URL='data/generated/stoneage_pet_merge_fix_runtime.json';
+const PROFESSION_SKILL_RUNTIME_URL='data/generated/stoneage_profession_skill_runtime.json';
 const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
@@ -83,7 +84,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
@@ -1584,7 +1585,136 @@ function sourceProfessionMagicGetDamage({
 function sourcePlayerProfessionMagicDamageCore({
   magicType=0,power=0,command='',
   proficiency={},resist={},baseSuit={},spirit={},target=state
+}
+
+function sourceProfessionSkillTemplate(skillId){
+  const id=Math.trunc(Number(skillId));
+  if(!Number.isFinite(id)||!professionSkillDb?.bySkillId)return null;
+  return professionSkillDb.bySkillId[String(id)]||null;
+}
+function sourceProfessionMagicCostPlan(funcName,rawSkillLevel,option=''){
+  const skillLevel=sourceProfessionMagicLevelM(rawSkillLevel);
+  const func=String(funcName||'');
+  let cost=-1;
+  switch(func){
+    case 'PROFESSION_VOLCANO_SPRINGS':
+      cost=skillLevel>=10?35:skillLevel>=7?30:skillLevel>=5?20:skillLevel>=3?15:10;break;
+    case 'PROFESSION_FIRE_BALL':
+      cost=skillLevel>=9?50:skillLevel>=7?45:skillLevel>=5?40:skillLevel>=3?35:30;break;
+    case 'PROFESSION_SUMMON_THUNDER':
+      cost=skillLevel>=8?30:skillLevel>=5?25:skillLevel>=3?20:10;break;
+    case 'PROFESSION_CURRENT':
+      if(skillLevel>=10)cost=100;
+      else if(skillLevel>9)cost=90;
+      else if(skillLevel>8)cost=80;
+      else if(skillLevel>7)cost=70;
+      else if(skillLevel>6)cost=60;
+      else if(skillLevel>4)cost=50;
+      else if(skillLevel>2)cost=40;
+      else cost=30;
+      break;
+    case 'PROFESSION_STORM':
+      cost=skillLevel>8?50:skillLevel>6?45:skillLevel>4?40:skillLevel>2?35:30;break;
+    case 'PROFESSION_ICE_ARROW':
+      cost=skillLevel>=8?20:skillLevel>=4?15:10;break;
+    case 'PROFESSION_ICE_CRACK':
+      cost=skillLevel>=10?80:skillLevel>8?70:skillLevel>6?60:skillLevel>4?50:skillLevel>2?40:30;break;
+    case 'PROFESSION_DOOM':
+      cost=skillLevel>8?150:skillLevel>4?100:50;break;
+    case 'PROFESSION_FIRE_SPEAR':
+      cost=skillLevel>8?80:skillLevel>6?70:skillLevel>4?60:skillLevel>2?40:30;break;
+    case 'PROFESSION_BLOOD_WORMS':
+      cost=skillLevel>=10?15:skillLevel>=5?10:5;break;
+    case 'PROFESSION_SIGN':
+      cost=skillLevel>=8?10:5;break;
+    case 'PROFESSION_ENCLOSE':
+      cost=skillLevel>=10?80:skillLevel>=8?70:skillLevel>=5?60:50;break;
+    case 'PROFESSION_ICE_MIRROR':
+      cost=skillLevel>=9?40:skillLevel>=7?35:skillLevel>=5?30:skillLevel>=3?25:20;break;
+    case 'PROFESSION_FIRE_ENCLOSE':
+    case 'PROFESSION_ICE_ENCLOSE':
+    case 'PROFESSION_THUNDER_ENCLOSE':
+      cost=skillLevel>=10?50:skillLevel>=7?40:skillLevel>=4?30:20;break;
+    case 'PROFESSION_TRANSPOSE':
+      cost=skillLevel>=10?50:skillLevel>=9?40:skillLevel>=7?30:skillLevel>=4?20:10;break;
+    case 'PROFESSION_RESIST_F_I_T':
+      cost=skillLevel>=10?20:skillLevel>=9?15:skillLevel>=6?10:5;break;
+    case 'PROFESSION_CALL_NATURE':
+      cost=50;break;
+    case 'PROFESSION_BOUNDARY':
+      if(String(option||'').includes('破结界')){
+        cost=skillLevel>=9?20:skillLevel>4?15:skillLevel>2?10:5;
+      }else{
+        cost=skillLevel>9?20:skillLevel>6?15:10;
+      }
+      break;
+  }
+  return {skillLevel,dynamic:cost>=0,cost};
+}
+function sourceProfessionSkillMpCost(skillId,rawSkillLevel){
+  const row=sourceProfessionSkillTemplate(skillId);
+  if(!row)return {ok:false,reason:'skill-not-found'};
+  const magic=sourceProfessionMagicCostPlan(row.func,rawSkillLevel,row.option);
+  const decMp=magic.dynamic?Math.trunc(n(magic.cost)):Math.trunc(n(row.costMp));
+  return {
+    ok:true,skillId:Math.trunc(n(row.skillId)),rawSkillLevel:Math.trunc(n(rawSkillLevel)),
+    skillLevel:magic.skillLevel,decMp,dynamic:magic.dynamic,fallbackCost:Math.trunc(n(row.costMp))
+  };
+}
+function sourceProfessionCommonCommandPlan(skillId,toNo,rawSkillLevel){
+  const row=sourceProfessionSkillTemplate(skillId);
+  if(!row)return null;
+  const command=String(professionSkillDb?.commonCommandByFunc?.[String(row.func||'')]||'');
+  if(!command)return null;
+  const target=Math.trunc(n(toNo)),level=Math.trunc(n(rawSkillLevel)),array=Math.trunc(n(row.skillId));
+  const delayed=command==='BATTLE_COM_S_DOOM'||command==='BATTLE_COM_S_FIRE_SPEAR';
+  return {
+    skillId:array,functionName:String(row.func||''),command,
+    initialCom1:command,finalCom1:delayed?'BATTLE_COM_NONE':command,
+    com2:target,com3High:level,com3Low:array,battleMode:'BATTLE_CHARMODE_C_OK',
+    deferred:delayed?{
+      com1:command,toNo:target,mode:'BATTLE_CHARMODE_C_OK',
+      skillLevel:level,array,doomTime:command==='BATTLE_COM_S_DOOM'?3:2
+    }:null
+  };
+}
+function sourceProfessionSkillUsePreflight({
+  skillId,rawSkillLevel,professionClass,mp,isPlayer=true,toNo=0
 }={}){
+  const row=sourceProfessionSkillTemplate(skillId);
+  if(!row)return {ok:false,reason:'skill-not-found'};
+  const charClass=Math.trunc(n(professionClass));
+  const requiredClass=Math.trunc(n(row.professionClass));
+  if(charClass<=0||charClass!==requiredClass){
+    return {ok:false,reason:'profession-mismatch',skillId:Math.trunc(n(row.skillId)),professionClass:charClass,requiredClass};
+  }
+  if(row.dispatchKnown!==true)return {ok:false,reason:'function-missing',skillId:Math.trunc(n(row.skillId))};
+  if(!isPlayer)return {ok:false,reason:'not-player',skillId:Math.trunc(n(row.skillId))};
+
+  const rawLevel=Math.trunc(n(rawSkillLevel));
+  if(rawLevel<=0)return {ok:false,reason:'skill-level',skillId:Math.trunc(n(row.skillId))};
+
+  const cost=sourceProfessionSkillMpCost(row.skillId,rawLevel);
+  if(!cost.ok)return cost;
+  const oldMp=Math.trunc(n(mp));
+  if(oldMp<cost.decMp){
+    return {ok:false,reason:'mp-short',skillId:Math.trunc(n(row.skillId)),mpBefore:oldMp,decMp:cost.decMp};
+  }
+  if(Math.trunc(n(row.skillId))!==11&&cost.decMp<=0){
+    return {ok:false,reason:'mp-cost-invalid',skillId:Math.trunc(n(row.skillId)),mpBefore:oldMp,decMp:cost.decMp};
+  }
+
+  const mpAfter=Math.max(0,oldMp-cost.decMp);
+  return {
+    ok:true,skillId:Math.trunc(n(row.skillId)),functionName:String(row.func||''),
+    professionClass:charClass,requiredClass,rawSkillLevel:rawLevel,
+    skillLevel:cost.skillLevel,mpBefore:oldMp,decMp:cost.decMp,mpAfter,
+    dynamicMp:cost.dynamic,deductBeforeDispatch:true,
+    useFlag:Math.trunc(n(row.useFlag)),targetType:Math.trunc(n(row.target)),
+    commonCommand:sourceProfessionCommonCommandPlan(row.skillId,toNo,rawLevel)
+  };
+}
+={}){
   const suitPower=sourcePlayerProfessionMagicSuitPower(target);
   const reducedPower=sourceProfessionMagicPreDamagePower(power,suitPower.unPower);
   const equipSuit={
@@ -17481,7 +17611,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,itemMakeR,gmqueR,enemyWeaponR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,itemMakeR,professionSkillR,gmqueR,enemyWeaponR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -17493,6 +17623,7 @@ async function boot(){
       fetch(ITEM_MAGIC_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_RELIFE_RUNTIME_URL,{cache:'no-store'}),
       fetch(ITEM_MAKE_RUNTIME_URL,{cache:'no-store'}),
+      fetch(PROFESSION_SKILL_RUNTIME_URL,{cache:'no-store'}),
       fetch(GMQUE_TROPHY_RUNTIME_URL,{cache:'no-store'}),
       fetch(ENEMY_WEAPON_RUNTIME_URL,{cache:'no-store'})
     ]);
@@ -17507,6 +17638,7 @@ async function boot(){
     if(!itemMagicR.ok)throw new Error('Item MAGICUSEMP runtime HTTP '+itemMagicR.status);
     if(!itemRelifeR.ok)throw new Error('Item relife runtime HTTP '+itemRelifeR.status);
     if(!itemMakeR.ok)throw new Error('Item make runtime HTTP '+itemMakeR.status);
+    if(!professionSkillR.ok)throw new Error('Profession skill runtime HTTP '+professionSkillR.status);
     if(!gmqueR.ok)throw new Error('GMQUE trophy runtime HTTP '+gmqueR.status);
     if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
@@ -17524,6 +17656,11 @@ async function boot(){
       if(Math.trunc(Number(itemMakeDb?.stats?.templates))!==10737)throw new Error('Item make runtime template-count mismatch');
       if(Math.trunc(Number(itemMakeDb?.fixedBuild?.itemIdTokenIndex))!==17)throw new Error('Item make runtime fixed-build mismatch');
     }
+    professionSkillDb=await professionSkillR.json();
+    if(professionSkillDb?.format!=='stoneage-profession-skill-runtime-v1')throw new Error('Profession skill runtime format mismatch');
+    if(professionSkillDb?.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56')throw new Error('Profession skill runtime source-ref mismatch');
+    if(Math.trunc(Number(professionSkillDb?.stats?.rows))!==69||Math.trunc(Number(professionSkillDb?.stats?.maxSkillId))!==72)throw new Error('Profession skill runtime row-count mismatch');
+    if(JSON.stringify(professionSkillDb?.stats?.holes)!=='[63,64,65]')throw new Error('Profession skill runtime hole mismatch');
     gmqueDb=await gmqueR.json();
     enemyWeaponDb=await enemyWeaponR.json();
     buildDynamicGroupCatalog();

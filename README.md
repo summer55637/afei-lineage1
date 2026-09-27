@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.19**
+**PLAYABLE CORE V2.20**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -16,6 +16,21 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.20 最新進度
+
+V2.20 把 fixed 職業技能的**資料層與 `PROFESSION_SKILL_Use()` 前半段**正式來源化；仍不猜玩家現在是哪個職業、也不虛構已學技能槽，所以本版先不新增職業技能 UI。
+
+- fixed `gmsv/data/profession.txt` 直接生成 `stoneage_profession_skill_runtime.json`：共 **69 筆**，最大 Skill ID **72**，ID **63／64／65** 保留 `_PROSKILL_OPTIMUM` 下的空洞。
+- 三職固定筆數：勇士 20、巫師 21、獵人 28；資料表 **57 種 unique function string** 全部能在 pinned `PROFESSION_SKILL_functbl` 的 **64 個 active dispatch entry** 找到。
+- runtime 同時從 pinned `profession_skill.c` 自動掃出真正呼叫 `profession_common_fun()` 的 function → `BATTLE_COM_*` 對應，不用手抄技能名稱猜 command。
+- `PROFESSION_MAGIC_COST_MP()` 的固定動態 MP 表已接入，包含 `_PROFESSION_ADDSKILL` 分支與原本不可達的 CURRENT `>9` 分支順序；不在該表的技能才退回 `profession.txt COST_MP`。
+- `PROFESSION_BOUNDARY` 保留 `OPTION` 含 `破结界` 時的另一組 MP 門檻。
+- `PROFESSION_SKILL_DEC_COST_MP()` 已鏡像成 preflight：先檢查 raw skill level，再算 MP；MP 不足失敗；除 Skill ID 11 嗜血成性外，`dec_mp<=0` 也失敗。嗜血成性可合法 0 MP。
+- `PROFESSION_SKILL_Use()` 的來源順序已鎖：`_PROSKILL_OPTIMUM` 職業一致性 → function 存在 → Player → MP 扣除 → function dispatch。結果明確回報 `deductBeforeDispatch=true`；後續 function 若失敗，原 C 不會退 MP。
+- **不新增假的 gate**：`PROFESSION_SKILL_Use()` 本身不檢查 `USE_FLAG` 或 `TARGET`，所以 runtime 只保存這兩欄供上層 UI／協定使用，不拿它們阻擋 preflight。
+- `profession_common_fun()` plan 保存 raw 1～100 skill level 到 COM3 high、Skill ID 到 COM3 low。世界末日／火龍槍還保留 `_PROFESSION_ADDSKILL` 的蓄力行為：先把 COM1 改回 `BATTLE_COM_NONE`，另存 deferred command，`DOOMTIME` 分別為 3／2。
+
+新增 `tools/generate_profession_skill_runtime.py`、`data/generated/stoneage_profession_skill_runtime.json` 與 `tools/check_v220_profession_skill_runtime.mjs`；runtime 已加入開機驗證與 CI generated-runtime closure。玩家職業／已學職技尚未進 save，因此 save schema 維持 **29**。
 ## V2.19 最新進度
 
 V2.19 開始移植 fixed **職業魔法傷害數值核心**，先把 V2.17／V2.18 已保存、但先前刻意沒有錯接的裝備／套裝 Work 接到它們真正的來源 consumer。這一版**不先造假的職業技能選單或技能資料**；先完成 `PROFESSION_MAGIC_GET_PRACTICE() → UN_POW_M → PROFESSION_MAGIC_GET_DAMAGE()` 可執行核心，之後接真正職業技能入口時可直接沿用。
