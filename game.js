@@ -32,6 +32,8 @@ const PLAYER_SHOES_SLOT=7;
 const PLAYER_GLOVE_SLOT=8;
 const SOURCE_PLAYER_RANGED_WEAPON_TYPES=new Set([4,17,18,19]);
 // fixed _ANGEL_SUMMON: CHAR_moveItemFromItemBoxToEquip only special-checks ANGELITEM 2884.\n// HEROITEM 2885 is ITEM_OTHER (type 16), so ITEM_getEquipPlace() rejects it normally.\nconst SOURCE_PLAYER_SPECIAL_EQUIP_IDS=new Set([2884]);
+// fixed itemset6.txt ITEM_ARGUMENT: 18546 noen:40 / 18547 noen:80 / 18548 noen:120.
+const SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM=Object.freeze({18546:40,18547:80,18548:120});
 const IDLE_WALK_STEPS_PER_TICK=3; // 放置版轉譯參數：900ms tick 內模擬 3 次原版走路遇敵檢查；不是服務端原始時間常數
 const EVENT81_AIR_ROUTES=Object.freeze([
   [[5579,18,11],[5579,18,15],[5579,15,18],[5579,15,23],[5540,528,634],[5540,559,646],[5561,23,113],[5561,57,113],[5581,1,1],[5581,100,100],[5561,57,113],[5561,180,86],[7000,88,25],[7000,90,58],[7000,113,57],[7000,112,46],[7000,103,46]],
@@ -1115,8 +1117,43 @@ function sourcePlayerEquipCallbackSupported(template){
   const attach=String(template?.attachFunc||'');
   const detach=String(template?.detachFunc||'');
   if(attach===''&&detach==='')return true;
+  // fixed item_event.c: ITEM_equipNoenemy reads ITEM_ARGUMENT noen; only the three
+  // fixed itemset6 rows below have that callback pair and an exact sourced value.
+  if(attach==='ITEM_equipNoenemy'&&detach==='ITEM_remNoenemy'){
+    const key=String(Math.trunc(Number(template?.itemId)));
+    return Object.prototype.hasOwnProperty.call(SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM,key);
+  }
   // fixed item_event.c: this pair only toggles CHAR_PickAllPet.
   return attach==='ITEM_WearEquip'&&detach==='ITEM_ReWearEquip';
+}
+function sourcePlayerNoEnemyLevel(target=state){
+  const slots=sourcePlayerItemSlots(target);
+  for(let i=0;i<PLAYER_EQUIP_SLOT_COUNT;i++){
+    const itemIndex=Math.trunc(Number(slots?.[i]));
+    if(!Number.isFinite(itemIndex))continue;
+    const template=sourcePlayerEquipTemplateForExisting(itemIndex,target);
+    if(!template)continue;
+    if(String(template.attachFunc||'')!=='ITEM_equipNoenemy'||
+       String(template.detachFunc||'')!=='ITEM_remNoenemy')continue;
+    const key=String(Math.trunc(Number(template.itemId)));
+    if(Object.prototype.hasOwnProperty.call(SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM,key)){
+      return Math.trunc(Number(SOURCE_PLAYER_NOENEMY_LEVEL_BY_ITEM[key]));
+    }
+  }
+  return 0;
+}
+function sourcePlayerNoEnemyFloorActive(level,floorId){
+  const noen=Math.trunc(n(level)),floor=Math.trunc(n(floorId));
+  if(noen>=200)return true;
+  if(noen>=120)return floor===100||floor===200||floor===300||floor===400||floor===500;
+  if(noen>=80)return floor===100||floor===200||floor===300||floor===400;
+  if(noen>=40)return floor===100||floor===200;
+  return false;
+}
+function sourcePlayerNoEnemyActive(target=state,map=currentMap()){
+  const noen=sourcePlayerNoEnemyLevel(target);
+  const floor=Math.trunc(n(map?.floorId??map?.id));
+  return sourcePlayerNoEnemyFloorActive(noen,floor);
 }
 function sourcePlayerPickAllPetEnabled(target=state){
   const slots=sourcePlayerItemSlots(target);
@@ -16038,6 +16075,12 @@ function walkEncounterStep(){
   }
   const selected=currentEncounter(map);
   if(!selected)return false;
+
+  // fixed char_walk.c still counts the successful walk, then skips the whole
+  // rand()%120 / CEP branch when equipped eqnoenemy is effective on this Floor.
+  state.virtualWalkSteps=Math.max(0,Math.floor(n(state.virtualWalkSteps)))+1;
+  if(sourcePlayerNoEnemyActive(state,map))return false;
+
   const point=randomPointInEncounter(selected);
   const encounter=resolveEncounterAt(map,point.x,point.y);
   if(!encounter)return false;
@@ -16051,7 +16094,6 @@ function walkEncounterStep(){
 
   // 原 char_walk.c：每走一步 if(rand()%120 < cep)，失敗則 cep++，成功重設 minep。
   const roll=Math.floor(Math.random()*120);
-  state.virtualWalkSteps=Math.max(0,Math.floor(n(state.virtualWalkSteps)))+1;
   state.lastEncounterRoll={roll,cep,min,max,encounterId:encounter.encounterId,x:point.x,y:point.y};
   if(roll<cep){
     state.encounterCep=min;

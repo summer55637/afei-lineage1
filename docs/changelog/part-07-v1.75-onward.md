@@ -3444,3 +3444,25 @@ fixed `BATTLE_CaptureCheck()`：
 Web 以目前 equip slots 推導 PickAllPet，不增加 save 欄位。只有這組 callback 從 `callback-unported` 白名單化；其他 callback 繼續 fail-closed。
 
 新增 `tools/check_v213_pickallpet_equip_callback.mjs`。save schema 29。
+
+
+---
+
+## V2.14 ITEM_equipNoenemy / ITEM_remNoenemy
+
+V2.14 來源化第二組玩家裝備 callback。
+
+fixed `itemset6.txt`：
+- 18546：`noen:40`
+- 18547：`noen:80`
+- 18548：`noen:120`
+
+fixed `ITEM_equipNoenemy()` 會把 connection `eqnoenemy` 設成 40／80／120；`ITEM_remNoenemy()` 清零。fixed `char_walk.c` 每步依 Floor 判定：
+- 120 → 100/200/300/400/500
+- 80 → 100/200/300/400
+- 40 → 100/200
+- 200 → all floors
+
+有效時只跳過 random encounter / CEP branch，並不取消 warp、NPC 或腳本戰。
+
+Web 以目前 equip slots 推導 noen level；`walkEncounterStep()` 先增加 virtual walk count，再於有效 Floor 直接返回，不抽 encounter roll、不改 CEP。其他 callback 仍 fail-closed。save schema 29。

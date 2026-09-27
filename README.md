@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.13**
+**PLAYABLE CORE V2.14**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,27 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.14 最新進度
+
+V2.14 完成第二組裝備 callback：`ITEM_equipNoenemy / ITEM_remNoenemy`，固定 item table 中只有三件太陽神首飾：
+
+- Item 18546：`ITEM_ARGUMENT noen:40`
+- Item 18547：`ITEM_ARGUMENT noen:80`
+- Item 18548：`ITEM_ARGUMENT noen:120`
+
+原 `item_event.c + char_walk.c` 規則已接入：
+
+- `noen >= 120`：只在 Floor 100／200／300／400／500 不遇隨機敵
+- `noen >= 80`：只在 Floor 100／200／300／400
+- `noen >= 40`：只在 Floor 100／200
+- 原函式也保留 `>=200` 全 Floor 分支，但目前 fixed itemset6 這組 callback 沒有 200 級物品
+- 生效時仍算一次成功走路，但**不執行 `rand()%120`、不修改 CEP、不進入一般 encounter**
+- 任務 `questZone`／NPC 腳本戰不受影響，因原效果只包在 `char_walk.c` 的隨機遇敵段
+
+Web 不保存新的 eqnoenemy 欄位，而是從目前已裝備 existing item 即時推導，等價登入後依裝備恢復 Work/connection 效果。未知 `ITEM_equipNoenemy` 物品沒有 sourced `noen` 時仍 fail-closed，不猜參數。
+
+新增 `tools/check_v214_noenemy_equip_callback.mjs`。save schema 維持 **29**。
 
 ## V2.13 最新進度
 
