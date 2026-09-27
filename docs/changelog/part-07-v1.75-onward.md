@@ -4835,3 +4835,19 @@ Skill 66 `PROFESSION_RESIST_F_I_T` 已接入 fixed `_PROFESSION_ADDSKILL` runtim
 - row img2 101777；Player-side target 20 由 fixed GET_IMG2 覆寫成右側水結界 101774；img1 101697。
 
 新增 `tools/check_v253_profession_water_boundary_runtime.mjs`。save schema 維持 **30**。
+
+
+---
+
+## V2.54 Skill 70 Fire Boundary
+
+- 接入 Skill 70 `火结界 / PROFESSION_BOUNDARY`；68～70 live，71～72 仍 unsupported。
+- TARGET ALL_MYSIDE -> Player pseudo target 20；dynamic MP 10 / 15 / 20。
+- 共用 A-tier turn 與 raw display power；每個 target 先清四結界，再寫 fire `MAKE2VALUE(power,turn)`。
+- physical boundary chain 維持 earth -> water -> fire -> wind；fire active 時真正減傷 = attacker fire / 200，stored power 只作 active flag。
+- profession magic 不讀 boundary；critical bonus 不吃 boundary reduction。
+- 共用 post-command low--；low=0 仍 active，0->-1 才清。
+- row img2 101783；Player-side target 20 由 fixed GET_IMG2 覆寫成右側火結界 101780；img1 101697。
+- V2.52 / V2.53 current-runtime support assertions同步更新為 68/69/70 true、71/72 false。
+
+新增 `tools/check_v254_profession_fire_boundary_runtime.mjs`。save schema 維持 **30**。

@@ -2516,7 +2516,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_RESIST_THUNDER'
     ||functionName==='PROFESSION_RESIST_F_I_T'
     ||functionName==='PROFESSION_CALL_NATURE'
-    ||(functionName==='PROFESSION_BOUNDARY'&&[68,69].includes(Math.trunc(n(skillId))))
+    ||(functionName==='PROFESSION_BOUNDARY'&&[68,69,70].includes(Math.trunc(n(skillId))))
     ||functionName==='PROFESSION_OBLIVION'
     ||functionName==='PROFESSION_ATTACK_WEAK'
     ||functionName==='PROFESSION_INSTIGATE'
@@ -3697,6 +3697,35 @@ function sourceProfessionWaterBoundaryExecute(prepared,name){
     displayLevel:Math.trunc(n(prepared?.displayLevel)),attackSkillTier:Math.trunc(n(prepared?.attackSkillTier)),
     power,turns,img1,img2,rightSide,results,
     sourcePowerStoredButPhysicalRateUsesAttackerWater:true,noDamage:true,noCounter:true
+  };
+}
+function sourceProfessionFireBoundaryExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==70)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const row=sourceProfessionSkillTemplate(skillId);
+  const power=sourceProfessionBoundaryPower(prepared?.displayLevel);
+  const turns=sourceProfessionBoundaryTurns(prepared?.attackSkillTier);
+  const results=[];
+  for(const slot of multi.slots){
+    const desc=sourceSetMagicPetTargetableDescFromSlot(slot);
+    if(!desc)continue;
+    const applied=sourceProfessionBoundaryApply(desc,'fire',power,turns);
+    results.push({slot,target:battleStatusDescName(desc),kind:desc.kind,petId:desc.petId||null,unitId:desc.unitId||null,applied});
+  }
+  const rightSide=(rawToNo===20||rawToNo===25||rawToNo===26);
+  const img1=Math.trunc(n(row?.img1));
+  const img2=rightSide?101780:Math.trunc(n(row?.img2));
+  addLog('你施放「'+name+'」：同側 '+results.length+' 個 Battle Entry 套用火結界，stored power='+power+'／low='+turns+'。','good');
+  return {
+    handled:true,skillId,functionName:prepared.functionName,rawToNo,multi,
+    displayLevel:Math.trunc(n(prepared?.displayLevel)),attackSkillTier:Math.trunc(n(prepared?.attackSkillTier)),
+    power,turns,img1,img2,rightSide,results,
+    sourcePowerStoredButPhysicalRateUsesAttackerFire:true,noDamage:true,noCounter:true
   };
 }
 function sourceProfessionCallNaturePool(displayLevel){
@@ -5020,6 +5049,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
     const boundaryName=String(boundaryRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionWaterBoundaryExecute(prepared,boundaryName);
+  }
+  if(prepared.functionName==='PROFESSION_BOUNDARY'&&Math.trunc(n(prepared.skillId))===70){
+    const boundaryRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const boundaryName=String(boundaryRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionFireBoundaryExecute(prepared,boundaryName);
   }
   if(prepared.functionName==='PROFESSION_OBLIVION'){
     const oblivionRow=sourceProfessionSkillTemplate(prepared.skillId);

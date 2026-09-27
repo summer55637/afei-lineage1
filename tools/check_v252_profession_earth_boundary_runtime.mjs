@@ -51,10 +51,10 @@ assert.equal(row.commonCommand,'BATTLE_COM_S_BOUNDARY');
 const supportCtx={Math,Number,n:v=>Number.isFinite(Number(v))?Number(v):0};
 vm.createContext(supportCtx);vm.runInContext(extractFunction(game,'sourceProfessionBattleFunctionSupported'),supportCtx);
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',68),true);
-// Historical V2.52 only shipped Earth Boundary, but the regression runs against current game.js.
-// V2.53 legitimately opens Skill 69; only still-unported 70..72 must remain false here.
+// Historical regression runs against current game.js: V2.53 opens 69 and V2.54 opens 70.
 assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',69),true);
-for(const id of [70,71,72])assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',id),false);
+assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',70),true);
+for(const id of [71,72])assert.equal(supportCtx.sourceProfessionBattleFunctionSupported('PROFESSION_BOUNDARY',id),false);
 
 const costCtx={Math,Number,String,n:v=>Number.isFinite(Number(v))?Number(v):0,
   sourceProfessionMagicLevelM:level=>{level=Math.trunc(Number(level)||0);if(level>90)return 10;if(level>80)return 9;if(level>70)return 8;if(level>60)return 7;if(level>50)return 6;if(level>40)return 5;if(level>30)return 4;if(level>20)return 3;if(level>10)return 2;return 1;}};

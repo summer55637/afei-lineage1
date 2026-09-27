@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.53**
+**PLAYABLE CORE V2.54**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,42 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.54 最新進度
+
+V2.54 接入獵人 **Skill 70「火結界」／`PROFESSION_BOUNDARY`**。這一版只把既有 boundary core 開到 Skill 70；Skill 71「風結界」與 72「破除結界」仍保持未接入。
+
+fixed row：TARGET 2（ALL_MYSIDE）、KIND 1、option `火结界|...`、row `costMp=14`、img1 101697、img2 101783。實際 MP 與地／水結界相同，走 boundary dynamic branch：M-tier ≤6 / 7～9 / 10 = **10 / 15 / 20 MP**。
+
+### 共用 boundary power／turn／互斥
+
+火結界沿用 V2.52 已驗證的 A-tier low turn：0～4→1、5～8→2、9→3、10→5；raw display level 再決定 stored power 20～100。
+
+Player 的 ALL_MYSIDE 仍解析成 pseudo target 20。對每個有效同側 Battle Entry，source 先把地／水／火／風四個 boundary Work 全清 0，再只寫：
+
+`CHAR_WORKFIXFIREAT_BOUNDARY = MAKE2VALUE(power, turn)`
+
+所以火結界會覆蓋地／水結界，四屬結界不能疊加。
+
+### fixed 火屬減傷 bug
+
+`BATTLE_DamageCalc()` 的 `earth -> water -> fire -> wind` else-if 鏈在火結界 high word >0 時，真正公式是：
+
+`damage = trunc(damage - damage * attackerFire / 200)`
+
+stored power 20～100 仍只作 active flag，完全不參與減傷率。攻擊者火屬性 100 才減 50%，火屬性 20 只減 10%。若火結界存在但 attackerFire=0，因為已進入 fire 分支，也不會再往 wind fallback。
+
+profession magic 仍不讀 boundary Work；critical 額外 bonus 仍在 core damage 之後追加，所以不吃火結界減傷。既有 AttrAdjust → boundary → OtherDamage 順序不改。
+
+### post-action 倒數
+
+火結界與地／水完全共用 post-command tick：low 先減 1，low=0 時 high power 仍有效；下一次 0→-1 才清除。玩家施放當下自己的 low 先扣一次，同側 Pet 等自己的 command 結束才扣。
+
+### 動畫
+
+Skill 70 row img2 是 101783；fixed `PROFESSION_MAGIC_GET_IMG2()` 對右側 target 20／25／26 覆寫成 **101780**。正常 Player ALL_MYSIDE=20，因此 live 使用 101780；img1 維持 101697。
+
+新增 `tools/check_v254_profession_fire_boundary_runtime.mjs`；同時更新 V2.52／V2.53 歷史 regression，讓 current game.js 的 68／69／70 都可 support，但 **71～72 仍必須 false**。save schema 維持 **30**。
 
 ## V2.53 最新進度
 
