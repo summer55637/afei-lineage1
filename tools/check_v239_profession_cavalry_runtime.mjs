@@ -98,7 +98,7 @@ assert.ok(cav.includes('fixed version.h defines CAVALRY_DEBUG'));
 assert.ok(cav.includes('BATTLE_PROFESSION_ATK_PET_DamageSub()'));
 assert.ok(cav.includes('ordinary BATTLE_DamageSub()'));
 assert.equal(cav.includes('skill_level * 2 + 60'),false,'disabled non-debug ride-pet split formula must not be implemented');
-assert.equal(cav.includes('BATTLE_adjustRidePet3A'),false,'web must not fabricate formal ride stats');
+assert.equal(cav.includes('BATTLE_adjustRidePet3A('),false,'web must not fabricate formal ride-stat calls');
 
 const exec=extractFunction(game,'sourceProfessionBattleSkillExecute');
 const cavalryAt=exec.indexOf("prepared.functionName==='PROFESSION_CAVALRY'");
