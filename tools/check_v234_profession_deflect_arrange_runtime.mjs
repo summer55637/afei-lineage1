@@ -191,8 +191,8 @@ assert.ok(pig.includes('!result.r.arranged'));
 const reset=extractFunction(game,'resetBattleStatuses');
 assert.ok(reset.includes('battlePlayerRawGuardCommand=false'));
 
-assert.match(html,/PLAYABLE CORE V2\.38/);
-assert.match(html,/V2\.38 live：[^<]*格檔/);
+assert.match(html,/PLAYABLE CORE V2\.39/);
+assert.match(html,/V2\.39 live：[^<]*格檔/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 

@@ -37,5 +37,5 @@ e=equipTarget([{skillId:43,rawLevel:6000},{skillId:43,rawLevel:10000}],2);mods=c
 assert.equal(ctx.sourceProfessionBattleFunctionSupported('PROFESSION_DUAL_WEAPON'),false);
 
 const move=extractFunction(game,'sourcePlayerMoveItem');assert.ok(move.includes('const sourceItemIndex=Math.trunc(Number(slots[from]))'));assert.ok(move.includes('sourcePlayerEquipPlace(sourceTemplate,sourcePlayerItemSlots(target),target)'));assert.ok(move.includes('if(moved.postMoveEquipPlace===PLAYER_ARM_SLOT)'));assert.ok(!move.includes('from===PLAYER_ARM_SLOT||to===PLAYER_ARM_SLOT'));assert.ok(move.indexOf("sourceProfessionPlayerAvoidRefresh(target,'weapon-change')")<move.indexOf("sourceProfessionPlayerWeaponFocusRefresh(target,'weapon-change')"));
-assert.match(html,/PLAYABLE CORE V2\.38/);assert.match(html,/V2\.38 live：[^<]*二刀流/);assert.match(game,/schemaVersion:30/);assert.match(game,/s\.schemaVersion=30/);
+assert.match(html,/PLAYABLE CORE V2\.39/);assert.match(html,/V2\.39 live：[^<]*二刀流/);assert.match(game,/schemaVersion:30/);assert.match(game,/s\.schemaVersion=30/);
 console.log(JSON.stringify({pass:true,version:'V2.38',focus:'Skill 43 PROFESSION_DUAL_WEAPON equip-place + scaled left-hand itemEffect + post-move Status_init gate',skillId:43,rateFormula:'tier*3+20',saveSchema:30}));

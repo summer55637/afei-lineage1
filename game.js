@@ -2492,6 +2492,7 @@ function sourceProfessionBattleFunctionSupported(functionName){
     ||functionName==='PROFESSION_CHAIN_ATK_2'
     ||functionName==='PROFESSION_SHIELD_ATTACK'
     ||functionName==='PROFESSION_DEAD_ATTACK'
+    ||functionName==='PROFESSION_CAVALRY'
     ||functionName==='PROFESSION_THROUGH_ATTACK'
     ||functionName==='PROFESSION_CONVOLUTE'
     ||functionName==='PROFESSION_CHAOS'
@@ -2994,6 +2995,48 @@ function sourceProfessionWarriorAssistExecute(prepared,name){
 
   return {handled:false,reason:'battle-function-unported',skillId:prepared?.skillId??null};
 }
+function sourceProfessionCavalryExecute(target,prepared,name){
+  // fixed version.h defines CAVALRY_DEBUG. In battle_profession_attack_fun(),
+  // Cavalry therefore uses ordinary BATTLE_DamageSub(), NOT
+  // BATTLE_PROFESSION_ATK_PET_DamageSub(). The special ride-pet damage split
+  // is compiled out in this pinned build.
+  //
+  // Web still has no formal CHAR_RIDEPET ride system. Do not treat the active
+  // battle pet as a mount and do not invent BATTLE_adjustRidePet3A inputs.
+  const r=sourceProfessionPhysicalCalcOnlyResult(target);
+  if(!r){
+    return {
+      handled:true,noAction:true,reason:'attack-result-missing',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      toNo:prepared.toNo,targetUnitId:target?.id??null,
+      sourceCavalryDebug:true,ridePetDamageSplitDisabled:true
+    };
+  }
+
+  // Same generic profession-direct boundary as the fixed helper:
+  // no ordinary SUITPOISON branch, and every non-CHAIN direct skill clears
+  // DamageReact before BATTLE_DamageSub. ItemCrush / wake / Guard / Arrange
+  // remain part of the normal physical chain.
+  const actual=applyFriendlyEnemyHit(
+    'player','你',target,r,null,
+    {suppressSuitPoison:true,suppressDamageReact:true}
+  );
+  addLog('你施放「'+name+'」；fixed CAVALRY_DEBUG 走一般 BATTLE_DamageSub，不啟用騎寵分傷。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    toNo:prepared.toNo,targetUnitId:target.id,
+    attackSkillTier:Math.trunc(n(prepared.attackSkillTier)),
+    r,actual,
+    sourceCavalryDebug:true,
+    ordinaryDamageSub:true,
+    ridePetDamageSplitDisabled:true,
+    noFormalRideSystem:true,
+    damageReactSuppressed:true,
+    suitPoisonSuppressed:true,
+    noOrdinaryCounter:true
+  };
+}
+
 function sourceProfessionDeadAttackExecute(target,prepared,name){
   const oldHp=Math.max(0,Math.trunc(n(state.hp)));
   if(oldHp<=10){
@@ -3585,6 +3628,10 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
 
   const row=sourceProfessionSkillTemplate(prepared.skillId);
   const name=String(row?.name||('Skill '+prepared.skillId));
+
+  if(prepared.functionName==='PROFESSION_CAVALRY'){
+    return sourceProfessionCavalryExecute(target,prepared,name);
+  }
 
   if(prepared.functionName==='PROFESSION_CHAOS'){
     return sourceProfessionChaosExecute(target,prepared,name);

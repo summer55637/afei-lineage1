@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.38**
+**PLAYABLE CORE V2.39**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,32 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.39 最新進度
+
+V2.39 接入勇士 **Skill 54「座騎攻擊」／`PROFESSION_CAVALRY`**，並嚴格依固定原 C build 的編譯結果實作，而不是照技能文字猜效果。
+
+固定基準 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` 的 `version.h` 明確開著：
+
+`#define CAVALRY_DEBUG`
+
+因此 `battle_profession_attack_fun()` 在 `BATTLE_AttackSeq()` 算完傷害後，實際走的是普通 `BATTLE_DamageSub()`；原碼中專門給座騎攻擊的 `BATTLE_PROFESSION_ATK_PET_DamageSub()` 被 `#else` 編譯掉，**這個 fixed build 不會使用「依 tier 把大部分傷害分到騎寵」的特殊分傷公式**。
+
+V2.39 因此只接 fixed 真正可達的 direct-physical lifecycle：
+
+- row 54：MP 11、TARGET 1、KIND 1、USE_FLAG 1、command `BATTLE_COM_S_CAVALRY`。
+- command receipt 仍先扣 MP、再走一般職技熟練度。
+- 回合執行走 `battle_profession_attack_fun()` 的直接攻擊類分支。
+- 同隊目標照 fixed battle.c 先 NoAction；EarthRound 目標也直接 NoAction，不另找替代目標。
+- 傷害本體沿用 `BATTLE_AttackSeq()`：閃避、Guardian 計算、暴擊、Guard、格檔、最低傷害等既有順序不變。
+- 保留 profession helper 的 Guardian **calc-only** 舊 bug：Guardian 可被拿去算傷害，但實際 `DamageSub` 仍打原目標。
+- 和其他非 `CHAIN_ATK` 的 direct profession 技相同，進 `BATTLE_DamageSub()` 前 DamageReact 被清掉；普通 `BATTLE_Attack()` 的 SUITPOISON 分支也不會進。
+- ItemCrush／WakeUp 等 generic profession hit 既有副作用保留。
+- 不接普通 Counter loop。
+
+另外，Web 目前仍沒有正式 `CHAR_RIDEPET` 騎乘系統。原 C 的普通 `BATTLE_DamageCalc()` 若真的騎乘，會透過 `BATTLE_getRidePet()`／`BATTLE_adjustRidePet3A()` 把騎寵能力納入攻防；但 **Active Pet 並不等於 RidePet**，所以 V2.39 不會擅自把目前出戰寵當坐騎，也不新增假的騎乘數值。
+
+新增 `tools/check_v239_profession_cavalry_runtime.mjs`，專門鎖住 `CAVALRY_DEBUG -> ordinary DamageSub` 這個固定 build 邊界；**save schema 維持 30**。
 
 ## V2.38 最新進度
 

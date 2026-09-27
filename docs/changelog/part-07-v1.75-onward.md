@@ -4064,3 +4064,15 @@ V2.38 closes the fixed passive lifecycle for Skill 43 `PROFESSION_DUAL_WEAPON`.
 - Skill 43 remains passive in the web battle UI; the fixed zero-MP use path is rejected before its trivial callback.
 
 Added `tools/check_v238_profession_dual_weapon_runtime.mjs`; save schema remains **30**.
+
+## V2.39 Skill 54 Cavalry fixed CAVALRY_DEBUG path
+
+V2.39 closes the currently reachable Skill 54 `PROFESSION_CAVALRY` path.
+
+- The pinned `version.h` defines `CAVALRY_DEBUG`.
+- As compiled, `battle_profession_attack_fun()` calls ordinary `BATTLE_DamageSub()` for Cavalry. The special `BATTLE_PROFESSION_ATK_PET_DamageSub()` ride-pet split lives only in the disabled `#else` branch.
+- The skill is now a supported direct profession physical command with its fixed MP/proficiency receipt lifecycle.
+- It preserves the profession direct-attack boundaries: same-side/EarthRound NoAction, calc-only Guardian bug, non-CHAIN DamageReact suppression, no ordinary SUITPOISON branch, normal wake/ItemCrush, and no outer ordinary Counter loop.
+- The web still has no formal `CHAR_RIDEPET` relationship. Active Pet is not treated as a mount, so no `BATTLE_adjustRidePet3A()` values are fabricated.
+
+Added `tools/check_v239_profession_cavalry_runtime.mjs`; save schema remains **30**.

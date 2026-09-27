@@ -165,7 +165,7 @@ const shield=extractFunction(game,'sourceProfessionShieldAttackExecute');
 assert.ok(shield.includes('sourceProfessionSetPlayerAttackWork(attackPower)'));
 assert.ok(exec.includes('sourceProfessionSetPlayerAttackWork(attackPower)'));
 
-assert.match(html,/PLAYABLE CORE V2\.38/);
+assert.match(html,/PLAYABLE CORE V2\.39/);
 assert.match(game,/schemaVersion:30/);
 assert.match(game,/s\.schemaVersion=30/);
 
