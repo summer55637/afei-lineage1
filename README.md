@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.99**
+**PLAYABLE CORE V3.00**
 
-歷史 regression markers：**PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.00 — confusion target RNG + `_PREVENT_TEAMATTACK` source order
+
+V3.00 對齊 fixed `CHAR_WORKCONFUSION` StatusSeq 與 `BATTLE_COM_S_CHAOS`：
+
+- 混亂流程固定先消耗 `RAND(0,1)` 選 side，再 `RAND(0,9)` 決定循序掃描起點；Web 不再把候選目標清單重新均勻抽樣。
+- 選中 side 沒有合法 TargetCheck 目標時，fixed C 寫入 `COM2=-1`，後續由 `BATTLE_TargetAdjust` 呼叫對側 `BATTLE_DefaultAttacker`；Web 改用同一個 source-backed default-target owner。
+- `BATTLE_COM_S_CHAOS` 在 AttackSeq 前經 `_PREVENT_TEAMATTACK`；若混亂選到同隊目標，Web 現在保留前面的 StatusSeq RNG，但不再消耗 Duck / Critical / Damage / Guardian RNG。
+- 間接武器的混亂攻擊也先經同隊 gate，再進 BOW／BOOMERANG 等 ranged path。
+
+regression：`tools/check_v300_confusion_teamattack_rng.mjs`
+GitHub Actions：`.github/workflows/v300-confusion-teamattack-rng.yml`
 
 ## V2.99 — manual first-dodge callers must not re-run suit dodge
 
@@ -155,7 +167,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.99；本版把 GuardianCheck 的 instigate source block 收斂。
+目前主線已完成 V3.00；本版把 GuardianCheck 的 instigate source block 收斂。
 
 > **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
