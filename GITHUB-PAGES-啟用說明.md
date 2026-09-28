@@ -29,3 +29,8 @@ GitHub Pages 使用 HTTPS，Service Worker／PWA 可以在網頁環境下正常�
 ## 注意
 
 不要用本機 `file://` 直接雙擊 `game.html` 來判斷 GitHub Pages 是否正常；GitHub Pages 提供的是真正的 HTTP/HTTPS 網頁環境。
+
+
+## V2.70 直接遊玩版
+
+GitHub Pages 的網站根網址會直接進入遊戲，不需要再按「進入遊戲」。`codex.html` 保留資料圖鑑。

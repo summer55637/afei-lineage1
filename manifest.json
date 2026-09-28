@@ -2,7 +2,7 @@
   "name": "阿肥石器時代放置版",
   "short_name": "阿肥石器時代",
   "lang": "zh-Hant-TW",
-  "start_url": "game.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

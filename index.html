@@ -3,78 +3,360 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#1c2119">
-  <meta name="description" content="阿肥石器時代資料圖鑑與遊戲入口">
+  <meta name="theme-color" content="#15190f">
+  <meta name="description" content="阿肥石器時代：PC／手機共用的純前端單機放置版">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <title>阿肥石器時代放置版</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>阿肥石器時代放置版 V2.70</title>
+  <link rel="stylesheet" href="game.css">
 </head>
 <body>
+  <!-- historical regression markers: PLAYABLE CORE V2.40 | V2.40 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網。 | PLAYABLE CORE V2.41 | V2.41 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊。 | PLAYABLE CORE V2.44 | V2.44 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器。  | PLAYABLE CORE V2.42 | V2.42 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥。  | PLAYABLE CORE V2.43 | V2.43 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱。 | PLAYABLE CORE V2.45 | V2.45 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪。 | PLAYABLE CORE V2.46 | V2.46 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物。 | PLAYABLE CORE V2.47 | V2.47 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物／激怒寵物。 | PLAYABLE CORE V2.48 | V2.48 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物／激怒寵物／自給自足（fixed→激化攻擊）／雷抗性／火抗性／冰抗性。  | PLAYABLE CORE V2.49 | V2.49 live：Skill 62 遺忘／StatusTbl／Pet client mask。  | PLAYABLE CORE V2.50 | V2.50 live：Skill 66 自然威能／火冰雷三抗。  | PLAYABLE CORE V2.51 | V2.51 live：Skill 67 號召自然／總池分攤治療。  | PLAYABLE CORE V2.52 | V2.52 live：Skill 68 地結界／post-action boundary lifecycle。  | PLAYABLE CORE V2.53 | V2.53 live：Skill 69 水結界／water boundary lifecycle。  | PLAYABLE CORE V2.54 | V2.54 live：Skill 70 火結界／fire boundary lifecycle。  | PLAYABLE CORE V2.55 | V2.55 live：Skill 71 風結界／wind boundary lifecycle。 | PLAYABLE CORE V2.56 | V2.56 live：Skill 72 破除結界／break boundary RNG lifecycle。 | PLAYABLE CORE V2.57 | V2.57 live：Skill 1 火山泉／profession magic lifecycle。 | PLAYABLE CORE V2.58 | V2.58 live：Skill 2 針針相對／multi-target SIGN conversion lifecycle。 | PLAYABLE CORE V2.59 | V2.59 live：Skill 3 世界末日／DOOM random-target + FEAR lifecycle。 | PLAYABLE CORE V2.60 | V2.60 live：Skill 4 冰爆術／fixed dead ice queue NoAction。 | PLAYABLE CORE V2.61 | V2.61 live：Skill 5 附身術／profession magic + ANNEX StatusSeq lifecycle。 | PLAYABLE CORE V2.62 | V2.62 live：Skill 6 召雷術／Thunder Practice + Water ×3 + fixed type-3 damage bug。 | PLAYABLE CORE V2.63 | V2.63 live：Skill 7 暴風雨／random target count + WATER StatusTbl lifecycle。 | PLAYABLE CORE V2.64 | V2.64 live：Skill 8 電流術／M-tier random targets + Water conductivity。 | PLAYABLE CORE V2.65 | V2.65 live：Skill 9 火星球／row fallback + source row rebuild。 | PLAYABLE CORE V2.66 | V2.66 live：Skill 10 嗜血蠱／StatusTbl DOT + source double-M bug。 | PLAYABLE CORE V2.67 | V2.67 live：Skill 11 嗜血成性／self magic dodge + HP→MP。 | PLAYABLE CORE V2.68 | V2.68 live：Skill 12 冰箭術／ICEARROW StatusTbl + FIXDEX source bug。 | PLAYABLE CORE V2.69 | V2.69 live：Skill 13 火龍槍／shared DOOMTIME charge lifecycle。 -->
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE PROJECT</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V2.70</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
-    <div class="top-actions"><a class="play-link" href="game.html">進入遊戲</a><span class="status">GitHub Pages V2.70</span><div id="dbStatus" class="status">讀取資料中…</div></div>
+    <div class="top-actions">
+      <button id="pwaInstallBtn" class="link-btn" hidden>安裝 App</button>
+      <button id="saveExportBtn" class="link-btn">匯出存檔</button>
+      <button id="saveImportBtn" class="link-btn">匯入存檔</button>
+      <input id="saveFileInput" type="file" accept="application/json,.json" hidden>
+      <a class="link-btn" href="codex.html">資料圖鑑</a>
+    </div>
   </header>
 
-  <main class="layout">
-    <nav class="tabs" aria-label="主功能">
-      <button class="tab active" data-tab="codex">寵物圖鑑</button>
-      <button class="tab" data-tab="maps">抓寵地圖</button>
-      <button class="tab" data-tab="about">資料狀態</button>
-    </nav>
-
-    <section id="codex" class="panel active">
-      <div class="toolbar">
-        <label class="search">
-          <span>搜尋</span>
-          <input id="searchInput" autocomplete="off" placeholder="寵物名、TempNo、EnemyID、地圖…">
-        </label>
-        <select id="mapFilter" aria-label="地圖篩選">
-          <option value="">全部地圖</option>
-        </select>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <span class="pill">純前端單機</span>
+        <span class="pill">PC＋手機</span>
+        <span class="pill">LocalStorage 存檔</span>
+        <span class="pill">PWA 離線</span>
+        <span class="pill">V2.70</span>
       </div>
-      <div id="summary" class="summary-grid"></div>
-      <div id="petGrid" class="pet-grid"></div>
+      <p id="offlineStatus" class="v270-offline-status">離線估算：讀取中…</p>
+      <p>選地圖 → 自動遭遇 → 戰鬥削血 → 捕獲 Lv1 寵物 → 編入 5 格隊伍 → 指定一隻出戰。</p>
     </section>
 
-    <section id="maps" class="panel">
-      <div class="panel-head">
-        <div>
-          <div class="eyebrow">LV1 CAPTURE ROUTES</div>
-          <h2>抓寵地圖</h2>
-        </div>
-        <div class="muted">依服務端 encounter / group 規則整理</div>
-      </div>
-      <div id="mapList" class="map-list"></div>
+    <section class="status-grid">
+      <article class="card stat-card"><small>等級</small><strong id="level">1</strong></article>
+      <article class="card stat-card"><small>經驗</small><strong id="exp">0 / 2</strong></article>
+      <article class="card stat-card"><small>HP</small><strong id="hp">0 / 0</strong></article>
+      <article class="card stat-card"><small>MP</small><strong id="mp">100 / 100</strong></article>
+      <article class="card stat-card"><small>石幣</small><strong id="gold">30000</strong></article>
     </section>
 
-    <section id="about" class="panel">
-      <div class="panel-head">
-        <div>
-          <div class="eyebrow">DATA VALIDATION</div>
-          <h2>資料狀態</h2>
-        </div>
+    <section class="main-grid">
+      <div class="left-col">
+        <article class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">HUNTING AREA</div>
+              <h2>狩獵地圖</h2>
+            </div>
+            <span id="mapPetCount" class="muted"></span>
+          </div>
+          <select id="mapSelect"></select>
+          <select id="encounterSelect" class="encounter-select" aria-label="Encounter 狩獵區"></select>
+          <div id="mapInfo" class="map-info"></div>
+        </article>
+
+        <article class="card quest-card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">QUEST</div>
+              <h2>伊甸動物園任務</h2>
+            </div>
+            <span id="zooQuestBadge" class="pill">未解鎖</span>
+          </div>
+          <div id="zooQuestStatus" class="quest-status"></div>
+          <div id="zooQuestActions" class="quest-actions"></div>
+          <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；Encounter 兩角座標也已依 ENCOUNT_initEncount() 做 min/max 正規化；Enemy 10 格掉落已依 _FIX_ITEMPROB 在建立時逐格生成；一般野怪 EXP 也改走 enemy1／enemybase1／enemyexptbl 與原戰鬥等級差衰減。</div>
+        </article>
+
+        <article class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">PLAYER</div>
+              <h2>角色</h2>
+            </div>
+          </div>
+          <div class="stats">
+            <div><span>攻擊</span><b id="attack">0</b></div>
+            <div><span>防禦</span><b id="defense">0</b></div>
+            <div><span>敏捷</span><b id="dex">0</b></div>
+            <div><span>魅力</span><b id="charm">60</b></div>
+            <div><span>運</span><b id="luck">0</b></div>
+            <div><span>能力點</span><b id="skillPoints">0</b></div>
+            <div><span>勝場</span><b id="wins">0</b></div>
+          </div>
+          <div id="playerCreationStatsPanel" class="player-element-panel">
+            <div class="player-param-head"><b>原服創角四圍</b><span>各 0～20 · 合計 ≤20 · 確認後永久鎖定</span></div>
+            <div id="playerCreationStatsGrid" class="player-element-grid">
+              <label><span>體力 VITAL</span><input id="creationVital" data-player-create-stat="vital" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+              <label><span>腕力 STR</span><input id="creationStr" data-player-create-stat="str" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+              <label><span>耐力 TOUGH</span><input id="creationTgh" data-player-create-stat="tgh" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+              <label><span>速度 DEX</span><input id="creationDex" data-player-create-stat="dex" type="number" min="0" max="20" step="1" inputmode="numeric" value="0"></label>
+            </div>
+            <div id="playerCreationStatsStatus" class="player-element-status good">固定 _NEW_PLAYER_CF build 允許四圍合計 0～20；不要求一定用滿。</div>
+            <button id="playerCreationStatsConfirmBtn">確認創角四圍並永久鎖定</button>
+            <div class="muted player-param-note">原 C CHAR_makeCharFromOptionAtCreate：每項 0～20，_NEW_PLAYER_CF 下只拒絕合計 &gt;20；寫入 CHAR_VITAL／STR／TOUGH／DEX 時每點 ×100。全 0 也是服務端合法輸入，因此本版不擅自改成固定 5/5/5/5。</div>
+          </div>
+          <div class="player-param-panel">
+            <div class="player-param-head"><b>升級能力配點</b><span>1 點 = CHAR 參數 +100</span></div>
+            <div id="playerParamGrid" class="player-param-grid">
+              <button data-player-stat="vital"><span>體力 VITAL</span><b id="paramVital">0</b><small>+1</small></button>
+              <button data-player-stat="str"><span>腕力 STR</span><b id="paramStr">0</b><small>+1</small></button>
+              <button data-player-stat="tgh"><span>耐力 TOUGH</span><b id="paramTgh">0</b><small>+1</small></button>
+              <button data-player-stat="dex"><span>速度 DEX</span><b id="paramDex">0</b><small>+1</small></button>
+            </div>
+            <div class="muted player-param-note">配點後立即重算 HP／攻／防／敏；提高 MaxHP 不會免費補血。</div>
+          </div>
+          <div id="playerHometownPanel" class="player-element-panel">
+            <div class="player-param-head"><b>原服出生村／起始寵</b><span>確認後永久鎖定</span></div>
+            <label>
+              <span class="muted">hometown</span>
+              <select id="playerHometownSelect">
+                <option value="0">0 號出生村 · Floor 1006 · 烏力烏力</option>
+                <option value="1">瑪麗娜絲 · Floor 2006 · 凱比</option>
+                <option value="2">加加 · Floor 3006 · 克克爾</option>
+                <option value="3">卡魯它那 · Floor 4006 · 威伯</option>
+              </select>
+            </label>
+            <div id="playerHometownStatus" class="player-element-status good">請選擇原服 hometown 0～3。</div>
+            <button id="playerHometownConfirmBtn">確認出生村並建立起始寵</button>
+            <div class="muted player-param-note">固定 build 未開 _MUSEUM／_DELBORNPLACE；hometown 決定 LASTTALKELDER、出生座標與 EnemyID 1～4 起始寵。原 C 給寵後不會自動設定 CHAR_DEFAULTPET。</div>
+          </div>
+          <div id="playerElementPanel" class="player-element-panel">
+            <div class="player-param-head"><b>原服創角元素</b><span>10 點 · 確認後永久鎖定</span></div>
+            <div id="playerElementGrid" class="player-element-grid">
+              <label><span>地 EARTH</span><input id="elementEarth" data-player-element="earth" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+              <label><span>水 WATER</span><input id="elementWater" data-player-element="water" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+              <label><span>火 FIRE</span><input id="elementFire" data-player-element="fire" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+              <label><span>風 WIND</span><input id="elementWind" data-player-element="wind" type="number" min="0" max="10" step="1" inputmode="numeric" value="0"></label>
+            </div>
+            <div id="playerElementStatus" class="player-element-status bad">四屬性合計必須剛好 10 點。</div>
+            <button id="playerElementConfirmBtn" disabled>確認並永久鎖定</button>
+            <div class="muted player-param-note">原 C：各 0～10、合計 10、最多兩屬；地＋火禁止、水＋風禁止。儲存值為點數 ×10。V1.25 以前的存檔沒有歷史元素資料，因此本版不倒推、不預設。</div>
+          </div>
+          <div class="progress"><i id="hpBar"></i></div>
+          <div class="button-row">
+            <button id="autoBtn" class="primary">自動戰鬥：開</button>
+            <button id="healBtn">休息補滿</button>
+          </div>
+          <div class="muted mini-note">VITAL／STR／TOUGH／DEX、攻防敏、初始魅力與運已接原服；固定 defaultPlayer 的 CHAR_LUCK 初始值為 0。</div>
+        </article>
+
+        <article class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">PET TEAM</div>
+              <h2>寵物隊伍</h2>
+            </div>
+            <span class="muted">5 格</span>
+          </div>
+          <div id="teamGrid" class="team-grid"></div>
+          <div id="activePetInfo" class="active-pet-info muted">尚未指定出戰寵物。</div>
+        </article>
       </div>
-      <div id="validation" class="validation"></div>
-      <article class="note">
-        <h3>目前資料層</h3>
-        <p>AnimationGroupId 是外觀／動畫身分；TempNo 是寵物數值模板；EnemyID 是實際野外遇敵身分。三者不混用。</p>
-        <p>出現道具門檻與真正捕獲時的道具門檻分開保存；E_T_GET 負值也保留原值。</p>
+
+      <article class="card battle-card">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">AUTO BATTLE</div>
+            <h2>戰鬥</h2>
+          </div>
+          <span id="battleState" class="pill">等待中</span>
+        </div>
+        <div id="enemyBox" class="enemy empty">
+          <div class="enemy-name">尚未遭遇敵人</div>
+          <div class="muted">開啟自動戰鬥後會依目前地圖的 Lv1 資料出現。</div>
+        </div>
+
+        <div class="capture-panel">
+          <div>
+            <b id="captureChance">捕獲率：—</b>
+            <div id="captureInfo" class="muted">遭遇 Lv1 寵物後顯示條件。</div>
+          </div>
+          <div class="capture-actions">
+            <button id="captureBtn" class="capture-btn" disabled>捕獲</button>
+            <button id="guardBtn">防禦</button>
+            <button id="autoCaptureBtn">自動捕獲：開</button>
+          </div>
+        </div>
+
+        <div class="capture-panel">
+          <div>
+            <b>職業戰鬥技能</b>
+            <div id="professionBattleInfo" class="muted">V2.69 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物／激怒寵物／自給自足（fixed→激化攻擊）／雷抗性／火抗性／冰抗性／遺忘／自然威能／號召自然／地結界／水結界／火結界／風結界／破除結界／火山泉／針針相對／世界末日（DOOMTIME=3）／冰爆術（fixed dead queue）／附身術／召雷術／暴風雨／電流術／火星球／嗜血蠱／嗜血成性／冰箭術／火龍槍（DOOMTIME=2）。</div>
+          </div>
+          <div id="professionBattleActions" class="capture-actions"></div>
+        </div>
+
+        <div class="log-wrap">
+          <h3>戰鬥紀錄</h3>
+          <div id="battleLog" class="battle-log"></div>
+        </div>
+      </article>
+
+      <article class="card pets-card">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">PET BOX</div>
+            <h2>已收服寵物</h2>
+          </div>
+          <strong id="petTotal">0</strong>
+        </div>
+        <div id="petBox" class="pet-box">
+          <div class="empty-note">目前還沒有寵物。</div>
+        </div>
+
+        <div id="sourceItemRuntimePanel" class="inventory-section source-item-runtime-section">
+          <div class="section-head inventory-head">
+            <div>
+              <div class="eyebrow">SOURCE ITEM RUNTIME</div>
+              <h2>裝備／existing 背包</h2>
+            </div>
+            <span id="sourceItemRuntimeStatus" class="source-progress">裝備 0 / 9 · 背包 0 / 15</span>
+          </div>
+          <div class="source-item-subhead">9 格裝備</div>
+          <div id="sourceEquipmentGrid" class="source-item-grid source-equipment-grid"></div>
+          <div class="source-item-subhead">15 格背包</div>
+          <div id="sourceBackpackGrid" class="source-item-grid source-backpack-grid"></div>
+          <div id="sourceField2SkillPanel" class="source-field2-panel">
+            <div class="source-item-subhead">寵物生活技能 · field=2</div>
+            <div id="sourceField2SelectionStatus" class="muted">未選取材料</div>
+            <div id="sourceField2SkillActions" class="pet-actions"></div>
+          </div>
+          <div class="muted dev-note">只顯示有 source existing-index 的道具。裝備位置、能力需求、同類飾品、弓盾互斥與 callback／職業限制都走固定原 C gate；540 修復／572 鑲寶石使用原 itemset6 字串與 existing item data，field=2 大表只在實際使用時懶載入。</div>
+        </div>
+
+        <div class="inventory-section">
+          <div class="section-head inventory-head">
+            <div>
+              <div class="eyebrow">CONDITION ITEMS</div>
+              <h2>條件／任務道具背包</h2>
+            </div>
+            <div class="inventory-head-stats"><strong id="inventoryKinds">0 / 9</strong><span id="sourceProgress" class="source-progress">來源 3 / 9</span></div>
+          </div>
+          <div id="inventoryList" class="inventory-list"></div>
+          <button id="testSupplyBtn" class="dev-btn">開發測試補給：每種 +1</button>
+          <div class="muted dev-note">僅供目前開發驗證。正式來源與任務來源會依目前資料表即時顯示；尚未解出的來源仍保留待查。此按鈕仍只供開發驗證，不視為正式取得方式。</div>
+        </div>
       </article>
     </section>
+
+    <article class="card note">
+      <b>V1.84：</b>
+      接上 601～604、660～663、693～696、720～723、726、838、841 SetMagicPet。依 fixed C 保留 raw COM2：玩家寵低忠誠 RANDOMACT 會把 BATTLE_DefaultAttacker 選到的 Enemy toNo 原樣交給 BATTLE_MultiList；Enemy AI 也先按一般攻擊 AI 選對面目標，不依 PETSKILL_TARGET 改回友方。STR/TGH/DEX 共用 Duck/三屬互斥 gate，且原 Other_DefcharWorkInt 有 mtgh 基準 bug：三種加成都用 mtgh×power/100。狀態在下一輪 PreCommand 才進 WORK/FIX，StatusSeq 於目標自己的行動開始扣回合；HP 則每個目標各抽 90%～110%，乘 VITAL RecoveryRate 後封頂 MaxHP。CHAR_MAGICPETMP 仍沒有可達累加，因此不虛構三次限制。
+    </article>
+
+    <article class="card note">
+      <b>V1.83：</b>
+      確認玩家寵低忠誠 RANDOMACT 的 595 閃避術其實是原 C no-op：RANDOMACT 先選 Enemy toNo，PETSKILL_SetDuck 雖成功建立 command，但 PETSKILL_SetDuckChange_Battle 執行時要求 toNo 必須就是施術寵自己，因此立刻 FALSE，不解析 3|60、不加閃避、也不吃 RNG。CHAR_MAGICPETMP 雖被清 0，但 fixed repo 沒有任何累加路徑，SetMagicPet 只讀後寫回同值，因此目前行為上仍是 0。
+    </article>
+
+    <article class="card note">
+      <b>V1.82：</b>
+      接上玩家寵低忠誠 RANDOMACT 的 609～611 採光／破鏡重圓／穿透術。依 fixed PETSKILL_Lighttakeed，本回合 WORK攻擊改為 FIXSTR×0.7、WORK防禦改為 FIXTOUGH×0.5，敏捷×0.95 那行原碼已註解所以不補。下一輪 compliance 會恢復 FIX。現有 Enemy source-backed DamageReact 只有針刺外皮，不可能匹配 ABSROB／REFLEC／VANISH，因此不虛構吸收狀態；物理傷害仍保留 BATTLE_S_AttackDamage 的 Guardian calc-only bug且不接普通 Counter。574 嚙齒術因 petskill2 illegal=1，玩家寵在 PETSKILL_Use 前直接 FALSE，不做效果。
+    </article>
+
+    <article class="card note">
+      <b>V1.81：</b>
+      接上玩家寵低忠誠 RANDOMACT 的屬性強化攻擊／屬性轉換攻擊。544～547、825～828 的 Modifyattack 先走 BATTLE_S_AttackDamage，再依原目標永久屬性加傷，保留 rand()%(ModNum+5) 後整數 /100 的來源 bug；548～551、697～700 的 Mdfyattack 則在 AttackSeq 的 AttrAdjust 階段把攻方四屬清零、只留下指定屬性。兩者都保留 Guardian calc-only 舊 bug、execution-time TargetAdjust，且不接普通 Counter。
+    </article>
+
+    <article class="card note">
+      <b>V1.80：</b>
+      接上玩家寵低忠誠 RANDOMACT 的 506～508 MP攻擊。fixed PETSKILL_MpDamage 的 50/100 先做 C 整數除法，實際為 0，因此技能說明寫的攻擊力 -50% 不生效；BATTLE_S_MpDamage 又明確排除 ENEMY 與 PET，而這條 RANDOMACT 的 DefaultAttacker 只會選 Enemy，所以額外 MP 傷害固定為 0，只保留 BATTLE_S_AttackDamage 的特殊物理攻擊與 Guardian calc-only 舊 bug，且不接普通 Counter。
+    </article>
+
+    <article class="card note">
+      <b>V1.79：</b>
+      接上玩家寵低忠誠 RANDOMACT 的嗜血技／浴血狂襲。503/504/505/714/833 保留 PETSKILL_DamageToHp 的 C 整數除法 bug，因此 30/20/10 ÷100 先截成 0，實際不降攻；623/659 浴血狂襲依 fixed BATTLE_AttackSeq 套攻 +20% 與會心率 ×1.3。兩類都保留 BATTLE_S_AttackDamage 的 Guardian 僅代入傷害計算、實際仍扣原目標的舊 bug，且原目標有 DamageReact 時不吸血；623 資料文字的 HP50% 限制在 fixed 函式中沒有實作，因此不自行補 gate。
+    </article>
+
+    <article class="card note">
+      <b>V1.78：</b>
+      補齊玩家寵低忠誠 RANDOMACT 的淨化／虛弱／劇毒／魔障／沉默。依 fixed BATTLE_PetRandomSkill，技能表即使標示全體，這條路徑仍先由 DefaultAttacker 選一個單體 toNo，再原封不動傳入 PETSKILL_Use；因此不自行擴成整側。淨化依 BATTLE_MultiStatusRecovery 的 StatusTbl 掃描順序只解除最後一個符合狀態；劇毒存 turn+2、虛弱與魔障存 turn+1、沉默存原 turn。
+    </article>
+
+    <article class="card note">
+      <b>V1.77：</b>
+      補上 fixed CHAR_PETID 真實來源鏈：Enemy 建立時由 E_T_TEMPNO 寫入 CHAR_PETID，捕獲時原值複製到 Pet。581 大吼／734 獅王之吼現在會依技能 option 的精確 PETID 清單判斷並直接讓符合目標離場；600／674 暗月變身則只允許 PETID 981～984，依原 C 套用攻擊／敏捷百分比與 WORKTURN 五回合生命週期，技能文字中的魔防百分比不自行補實作。save schema 升至 29，舊存檔只在已有 source tempNo 時補 petId。
+    </article>
+
+    <article class="card note">
+      <b>V1.76：</b>
+      補齊玩家寵低忠誠 RANDOMACT 的 fixed PETSKILL_functbl 與戰鬥屬性生命週期：582 自爆攻擊、642 覺醒、643 蠱惑雖有資料列，但固定 build 沒有同名註冊函式，原 PETSKILL_Use 會直接失敗；612 魔之詛咒則真正掛上 PET_PetskillPropertyEvent，之後攻擊／受擊的物理屬性會依當前對手即時轉成剋制向量，直到離開戰鬥清除。639 蟻葬在 RANDOMACT 的存活 Enemy 目標路徑依原 battle.c 落入普通物理攻擊。
+    </article>
+
+    <article class="card note">
+      <b>V1.75：</b>
+      補完玩家「混亂」狀態下的遠程武器跨 side 原 C pattern：StatusSeq 改寫 COM2 後仍先抽 AttackNum，再依武器走弓／回力標／投擲斧／投擲石來源流程。弓在 raw COM2=-1 時不再誤做 DefaultAttacker，也不消耗 aBowW 的 RAND(0,1)；回力標保留 dedicated row sweep；投擲武器保留 TargetAdjust 與 raw -1 sentinel 行為；投石麻痺順序維持 WakeUp → 麻痺 → ItemCrush → AddProfit。
+    </article>
+
+    <article class="card note">
+      <b>V1.74：</b>
+      玩家遠程武器已接固定原 C 普通攻擊 pattern：弓依 aBowW + RAND(0,1) 建 10 格候選並只對有效格計 AttackNum；回力標保留先消耗 AttackNum、再忽略其值的來源 lifecycle，Player side 0 正向掃五格且每段 30% 傷害；投擲斧／投擲石每段都由原 raw COM2 重新 TargetAdjust，投石正傷害依 20－麻痺抗性檢定，順序固定在 WakeUp 後、ItemCrush 前。四種遠程武器同步阻擋 Guardian／Counter／Combo。
+    </article>
+
+    <article class="card note">
+      <b>V1.73：</b>
+      固定原 C 的 ITEM_getEquipPlace／ITEM_equipEffect 已接入玩家 9 格裝備：一般 source-backed existing item 會使用建立當下真正 roll 出來的 66 欄 sourceData，套用攻防敏、HP／MP、運／魅、六異常抗性、四屬性、會心、額外傷防、命中、忽防等 Work 值；STR／DEX 裝備需求依原 raw 值 ×100 比較。260 件有 attach／detach callback 的特殊裝備、職業限定、使者／勇者信物仍維持 fail-closed；新增 9 格裝備＋15 格 existing 背包操作 UI。
+    </article>
+
+    <article class="card note">
+      <b>V1.72：</b>
+      對齊 fixed ITEM_makeItem / ITEM_makeItemAndRegist：有效 Item template 每次建立 existing item 都固定消耗 66 顆 RNG，即使 random width = 0 的 RAND(0,0) 也會前進 rand() 狀態；existing array 滿時則是先吃完 66 顆才配置失敗。Enemy 10 格掉落也改為「每格抽中後立即建立 item，再抽下一格」，並移除 Enemy unit ID 原本多吃的 Web-only Math.random。save schema 維持 28。
+    </article>
+
+    <article class="card note">
+      <b>V1.71：</b>
+      接入原 C 的 existing item 取得流程：tracked 戰利品現在必須進玩家第一個空背包格 9～23，滿包就 free existing item，不再留下只有 inventory 數字的幽靈道具。另建立 GMQUE trophy runtime，保留 rand()%100 的 41% 金幣／57% 道具／2% 寵物分類、Item 五個獎池，以及 petID[3] 隱含為 0 的原 C 失敗分支。20131 替身娃娃 Lv1 已確認是 GMQUE itemID1 index 0；完整 GMQUE 活動 UI／交寵流程尚未啟用。
+    </article>
+
+    <article class="card note">
+      <b>V1.70：</b>
+      建立固定原 C 的玩家 9 裝備格＋15 背包格 lifecycle。裝備／卸裝不採增量加減，而是依 playerItemSlots 交換後重新 compliance 掃全部裝備；CHAR_DECORATION1 類可放飾品1／2，但同 ITEM_TYPE 不能同時兩件。祈福戒指與 VIP祈福戒指的攻防敏／HP／MP 已按原表套用。ITEM_DIErelife 消耗裝備後不立即 compliance，故本回合 WORK 加成保留到下一輪 PreCommand 才消失。舊 schema27 存檔不猜歷史裝備位置，升 schema28 從空 playerItemSlots 開始。
+    </article>
+
+    <article class="card note">
+      <b>V1.69：</b>
+      已直接從固定原 C 的 itemset6.txt 找出全部 5 件 ITEM_DIErelife：替身娃娃 Lv1／Lv2／Lv3（HP 200／500／FULL）、祈福戒指與 VIP祈福戒指（FULL）。五件 ITEM_TYPE 都是 15 = ITEM_AMULET，固定映射 CHAR_DECORATION1。戰鬥復活現在只信 source template 的 ItemId／function／HP argument，任意 existing item 無法靠偽造 descriptor 冒充復活裝備。玩家正式裝備／取得 lifecycle 尚未來源化，因此目前不自動發放或穿戴。
+    </article>
+
+    <article class="card note">
+      <b>V2.70：</b>
+      對齊原 C 的 _Item_ReLifeAct 玩家死亡復活 lifecycle：CHECK_ITEM_RELIFE 只在有效 Entry 完成 command 後、outer BATTLE_AddProfit 前掃描，僅接受一般死亡且已標記 ISDIE 的玩家；Ultimate／打飛直接排除。裝備只掃 slot 0～4、第一件有效 ITEM_DIERELIFEFUNC，HP 依缺省 1／FULL／C atoi 規則復活並立即消耗。inner AddProfit 可讓同一 actor 結束時復活；outer-only 致死則必須等後續真正完成行動的 Entry。現階段不猜替身道具 ID，正式 Player 裝備 adapter 仍保持空資料。
+    </article>
+
+    <article class="card note">
+      <b>V1.67：</b>
+      對齊 Pet 死亡的原 C AddProfit 時序：瑪蕾菲雅 PetID 718 的死亡懲罰固定先消耗 RAND(1,8)＋三次 RAND(1,4)，common multi-hit／Counter 每段都在真正 BATTLE_AddProfit 邊界立即掃死亡。同步死亡依 side 0 Entry 順序先 Player 再 Pet；若 Player 是 Ultimate，會先把 DEFAULTPET Entry 移出，因此同次不再跑 Pet_Check_Die。FIREKILL／GYRATE 等 dedicated case 仍維持 outer AddProfit，不提前死亡副作用。
+    </article>
+
+    <article class="card note">
+      <b>V1.66：</b>
+      對齊原 C 的整回合勝負生命週期：BATTLE_Battling 的排序 Entry 會先完整跑完，之後才以 OnlyRescue 先判玩家側、再判敵方側。玩家普通死亡後出戰寵仍可完成本輪後續行動；Ultimate 死亡才會立即把 DEFAULTPET 退出 Battle。Pet 忠誠／旅程伙伴改讀本輪 PreCommand 固定的 WORKFIXAI snapshot，避免玩家死亡後的魅力／忠誠修正反向污染同一回合 RNG。
+    </article>
+
+    <article class="card note">
+      <b>V1.65：</b>
+      修正同一回合中途死亡 Entry 的 execution-time lifecycle：Entry 仍照原 C 先參與 AI／Dex／排序／Combo，但真正輪到行動時會重新讀目前 HP／是否仍在 Battle，已死亡者在 StatusSeq、AttackCount、PetLoyalCheck 前直接跳過，避免已被前一位打死的持武器 Enemy 額外消耗 AttackCount RNG。
+    </article>
+
+    <article class="card note">
+      <b>V1.64：</b>
+      對齊玩家空手 BATTLE_GetAttackCount 與友方 TargetAdjust：Lv10 起即使本輪是防禦／捕獲，也會先依 Luck 消耗原 C 的空手攻擊次數 RNG；真正普通攻擊才使用 attack_max 多段出手。玩家／普通寵物保留回合開始時的 raw COM2，只有原目標失效才走 BATTLE_DefaultAttacker，包含單一候選的 RAND(0,0)；玩家多段攻擊逐段結算傷害／掉落 RNG，全部完成後才進 Counter。
+    </article>
   </main>
 
-  <dialog id="petDialog">
-    <button id="closeDialog" class="dialog-close" aria-label="關閉">×</button>
-    <div id="petDetail"></div>
-  </dialog>
-
   <script src="pwa.js"></script>
-  <script src="app.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>
