@@ -5172,3 +5172,51 @@ V2.70 從 V2.69 乾淨基準重新開始，接入巫師 Skill 14「冰鏡術」�
 鎖定 runtime row、dynamic MP、Dex、Practice RNG 消耗、Dodge 第二段 gate 缺失、Ice Mirror special damage、type=2 damage bug、animation 101652 與 source cap quirk。
 
 save schema 維持 **30**。
+
+---
+
+## V2.71 Skill 15 FIRE_ENCLOSE / 火附體 StatusSeq lifecycle
+
+V2.71 沿 V2.70 繼續固定 C profession skill 主線，接入巫師 Skill 15「火附體」／`PROFESSION_FIRE_ENCLOSE`。公開資料把它描述為把火焰附在武器／防具上；固定 C 的實際 battle command 則走 `battle_profession_status_chang_fun()` 的不移動型狀態分支，真正可觀察的效果是目標的 Fire Enclose StatusSeq 逐回合扣 HP。
+
+### fixed skill row / MP / Dex
+
+- Skill 15 runtime：`PROFESSION_FIRE_ENCLOSE`。
+- option：`炎|效%1|回%3|成%100`；img1=101697、img2=101699、icon=29258、cost=1000。
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
+- fixed Dex：與 Storm / Fire Spear / Ice Mirror / Enclose 同組，`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+
+### Cast path / RNG
+
+- 不走一般 `PROFESSION_MAGIC_ATTAIC`，所以不做 magic dodge、practice power、GET_DAMAGE 與普通魔法傷害。
+- target 先走 `BATTLE_MultiList`，再對每個目標使用 `PROFESSION_BATTLE_StatusAttackCheck`。
+- fixed skill level 使用 A-tier，不是 M-tier；成功率是 option `成%100` 加上 `A-tier × 4`。
+- 成功後 StatusTbl 直接寫 `turn+1`，因此 option `回%3` 會保存 **4**；真正 StatusSeq 共有 3 次有效傷害 tick。
+- Fire Practice 熟練度提升發生在狀態成功、寫入固定 C work field 之後；失敗不走這個 success path。
+
+### StatusSeq damage
+
+固定 `BATTLE_StatusSeq()` 先把 StatusTbl 倒數，再進 `CHAR_WORK_F_ENCLOSE` case。傷害基礎值固定為 `50 × 當前 cnt`，之後呼叫以「被火附體的目標自己」同時作 attackindex／defindex 的 Fire GET_DAMAGE。
+
+因此新狀態保存 4 回合時，三次有效傷害依序是：
+
+- 第一次：cnt=3 → **150 HP**
+- 第二次：cnt=2 → **100 HP**
+- 第三次：cnt=1 → **50 HP**
+- 接著 cnt=0，走通用狀態結束，不再造成 0 傷害。
+
+### important fixed-source dead path
+
+fixed C 在成功施放 Fire Enclose 後會寫入 `CHAR_WORKMOD_F_ENCLOSE_2`，也就是附加攻擊用的技能等級欄位；但 pinned build 中搜尋不到任何將 `CHAR_WORK_F_ENCLOSE_2` 寫成正值的路徑。後面的普通物理攻擊確實存在「火／冰／雷附體附加狀態」檢查，但它讀的是這個始終沒有被寫入的 counter field。
+
+V2.71 **不自行把這條死路修活**：Web 會保留 `sourceFireEncloseModTier` 的來源資料，但 `sourceFireEncloseAuraActive=false`，不額外替 Fire Enclose 加一個「攻擊時自動附加燒傷」效果。這符合本專案的「原 C 規則優先、不猜數值」原則。
+
+### Regression
+
+新增：
+
+`tools/check_v271_profession_fire_enclose_runtime.mjs`
+
+鎖定 runtime row、dynamic MP、A-tier 成功率、Dex RNG、StatusTbl stored +1、成功後 Fire Practice、150/100/50 damage ticks，以及 fixed `_2` counter dead path。
+
+save schema 維持 **30**。
