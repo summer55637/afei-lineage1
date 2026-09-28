@@ -13082,36 +13082,51 @@ function counterScaledResult(attacker,defender){
   }
   return r;
 }
-function battleConfusionSideTargets(side,attackerDesc){
-  const list=[];
-  if(side===0){
-    if(state.hp>0)list.push({kind:'player'});
-    const pet=activePet();
-    if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
-  }else{
-    for(const unit of targetableEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
-  }
+function battleConfusionSideTargets(side,attackerDesc,startPos=0){
+  const out=[];
   const selfKey=battleStatusKey(attackerDesc);
-  return list.filter(x=>battleStatusKey(x)!==selfKey);
+  let pos=Math.trunc(n(startPos));
+  for(let lop=0;lop<10;lop++){
+    if(++pos>=10)pos=0;
+    const slot=(side?10:0)+pos;
+    const target=sourceBattleStatusDescFromSlot(slot);
+    if(!target||battleStatusKey(target)===selfKey)continue;
+    if(!battleStatusDescAlive(target))continue;
+    out.push({slot,target});
+  }
+  return out;
 }
 function battleConfusionFallbackTarget(attackerDesc){
-  if(attackerDesc?.kind==='enemy'){
-    const chosen=enemyChooseTarget(attackerDesc.unit);
-    if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
-    if(chosen?.kind==='player')return {kind:'player'};
-    return null;
-  }
-  const unit=targetEnemyUnit();
-  return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+  // Fixed BATTLE_StatusSeq writes COM2=-1 when the chosen side has no valid target.
+  // BATTLE_TargetAdjust then calls BATTLE_DefaultAttacker(1-myside), consuming a fresh
+  // RAND(0,cnt-1). Reuse the same source-backed default-target owner instead of inventing
+  // a second fallback selection rule.
+  return sourceProfessionInstigateDefaultTarget(attackerDesc);
 }
 function battleConfusionChooseTarget(attackerDesc){
-  // 原 BATTLE_StatusSeq 先 RAND(0,1) 選戰場其中一側，再從該側隨機起點循環找存活目標並排除自己。
-  // 放置版沒有 0..9 的實體站位，因此保留「先選側」語意，再在該側存活單位中均勻抽一名。
+  // fixed CHAR_WORKCONFUSION StatusSeq:
+  // RAND(0,1) side -> RAND(0,9) starting position -> ++pos circular scan for the
+  // first TargetCheck-valid entry other than self. There is NO candidate-list RNG.
   const side=cRand(0,1);
-  const candidates=battleConfusionSideTargets(side,attackerDesc);
-  if(candidates.length)return {target:candidates[cRand(0,candidates.length-1)],side,fallback:false};
-  // 原碼找不到該側目標會把 COM2 設 -1，之後 BATTLE_TargetAdjust 退回正常敵對側目標。
-  return {target:battleConfusionFallbackTarget(attackerDesc),side,fallback:true};
+  const startPos=cRand(0,9);
+  const scanned=battleConfusionSideTargets(side,attackerDesc,startPos);
+  if(scanned.length){
+    return {
+      target:scanned[0].target,side,startPos,
+      targetSlot:scanned[0].slot,
+      fallback:false
+    };
+  }
+  // Empty selected side: COM2=-1, then BATTLE_TargetAdjust performs the opposite-side
+  // BATTLE_DefaultAttacker RNG.
+  const fallback=battleConfusionFallbackTarget(attackerDesc);
+  return {target:fallback,side,startPos,targetSlot:-1,fallback:true};
+}
+function sourceBattleSameSideDesc(attackerDesc,targetDesc){
+  const attackerSlot=sourceBattleStatusSlot(attackerDesc);
+  const targetSlot=sourceBattleStatusSlot(targetDesc);
+  if(attackerSlot<0||targetSlot<0)return false;
+  return (attackerSlot<10)===(targetSlot<10);
 }
 function battleConfusionGuarding(targetDesc,options){
   if(battleStatusActive(targetDesc,'confusion'))return false;
@@ -13589,6 +13604,14 @@ function performConfusionAttack(actor,statusTurn,options={}){
   const targetDesc=pick.target;
   if(!targetDesc||!battleStatusDescAlive(targetDesc)){
     addLog(battleStatusDescName(attackerDesc)+' 受到混亂影響改為普通攻擊，但沒有可攻擊的目標。');
+    return true;
+  }
+
+  // fixed battle.c BATTLE_COM_S_CHAOS:
+  // _PREVENT_TEAMATTACK rejects the selected same-side target BEFORE AttackSeq.
+  // Keep the already-consumed StatusSeq target RNG, but do not consume Duck/Critical/Damage RNG.
+  if(sourceBattleSameSideDesc(attackerDesc,targetDesc)){
+    addLog(battleStatusDescName(attackerDesc)+' 混亂選到同隊目標；依原版同隊攻擊限制，本次不執行攻擊。');
     return true;
   }
 
