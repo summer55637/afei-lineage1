@@ -5351,6 +5351,44 @@ V2.76 將 Skill 21「移形換位」從 V2.75 的 source-parity core 接進主�
 
 ---
 
+## V2.79 — Enemy PETFLG source parity / PetSkill source-missing boundary
+
+這一版不新增沒有固定來源證據的戰鬥效果；重點是把 Enemy → PetSkill 的資料契約鎖死，避免後續 refactor 把 V1.24 的 fail-closed 邊界重新打開。
+
+### ENEMY_PETFLG
+
+固定 enemy.h 的 ENEMY_DATAINT 順序把 ENEMY_PETFLG 放在 ENEMY_STYLE 後；enemy.c::ENEMY_createEnemy() 會把該欄位寫入 CHAR_WORK_PETFLG。
+
+generated encounter runtime 的 enemyPetFlg 已與 pinned enemy1.txt 逐筆比對：
+
+- 2,958 / 2,958 EnemyID 完整對應。
+- PETFLG=0：1,557 筆。
+- PETFLG=1：1,401 筆。
+- 無 missing、extra 或 value mismatch。
+
+### BecomeFox
+
+makeEnemyUnit() 透過 sourceEnemyPetFlg(resolvedEnemyId) 把 source-backed PETFLG 放進 battle Enemy；625 媚惑術只在這個資料存在時依 fixed RAND(0,99) < 31 進入變狐。
+
+資料缺失仍保持 fail-closed，不用圖號／名稱／範圍猜測。
+
+### 582 / 642 / 643
+
+玩家出戰 PetSkill runtime 中：
+
+- 582 PETSKILL_SelfExplodeAttack
+- 642 PETSKILL_Awaken
+- 643 PETSKILL_Temptation
+
+這三個 exact function name 仍不在 fixed PETSKILL_functbl；其中 Temptation 雖可在 battle_event.c 找到 BATTLE_S_Temptation()，但 pinned battle dispatcher 搜不到對應的 BATTLE_COM_S_TEMPTATION case，因此仍不能把它推定成一個可從 PETSKILL_Use() 進入的 handler。
+
+V2.79 只鎖定這個 source-missing 邊界。
+
+### Regression
+
+新增 tools/check_v279_enemy_petflg_source_parity.mjs。
+
+save schema 維持 30。
 ## V2.78 — Player Pet RANDOMACT / PETSKILL_StatusChange 通用狀態 token 完整化
 
 V2.77 完成 Hunter 非戰鬥職業技能後，繼續回到玩家出戰 Pet 的低忠誠 `RANDOMACT` source fallback。這次沒有新增一個不存在的 PetSkill，而是把 fixed `PETSKILL_StatusChange()` 已經存在、但 Web parser 尚未完整解析的 `aszStatus` token 補齊。

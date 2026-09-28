@@ -4,9 +4,9 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.78**
+**PLAYABLE CORE V2.79**
 
-目前主線已完成 V2.78，下一個核心開發版本待定。
+目前主線已完成 V2.79，下一個核心開發版本待定。
 
 > **原 C 規則優先、不猜數值**
 
@@ -14,6 +14,18 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.79 — Enemy PETFLG source parity / PetSkill boundary regression
+
+V2.79 不猜新的戰鬥效果，而是把 fixed C 的 Enemy ENEMY_PETFLG → Web sourcePetFlg → PETSKILL_BecomeFox 這條來源鏈鎖進 regression：
+
+- generated encounter runtime 的 enemyPetFlg 必須完整覆蓋固定 enemy1.txt 的 2,958 個 EnemyID。
+- 目前 source-backed 分布為 PETFLG=0：1,557、PETFLG=1：1,401。
+- makeEnemyUnit() 建立 Enemy 時直接把 sourceEnemyPetFlg(resolvedEnemyId) 帶進 unit。
+- PETSKILL_BecomeFox 的原始 RAND(0,99) 與 roll<31 判定維持不變；sourcePetFlg 缺失時仍 fail-closed，不用圖號、名稱或範圍猜效果。
+- 同時鎖定 582／642／643 仍是 fixed functbl 未註冊的 source-missing 邊界，不把不存在的 handler 猜出來。
+- save schema 維持 30。
+
+regression：tools/check_v279_enemy_petflg_source_parity.mjs
 ## V2.78 — 玩家出戰 Pet RANDOMACT「PETSKILL_StatusChange」完整狀態映射
 
 V2.78 沿固定 C 的 `PETSKILL_StatusChange()` 繼續補玩家出戰 Pet 低忠誠 `RANDOMACT` 剩餘的通用狀態攻擊解析：

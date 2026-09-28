@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V2.78**
+目前最新可玩核心：**V2.79**
 
-目前主線已完成 V2.78；下一個核心開發節點待定。
+目前主線已完成 V2.79；下一個核心開發節點待定。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -29,7 +29,8 @@
 - V2.71：Skill 15「火附體」／固定 C StatusTbl mapping correction
 - V2.72：Skill 16「雷附體」／on-hit aura lifecycle
 - V2.77：Skill 44／45 非戰鬥職業技能／180 秒遇敵率生命週期
-- **V2.78：玩家出戰 Pet RANDOMACT 的 PETSKILL_StatusChange 完整狀態 token 映射**
+- V2.78：玩家出戰 Pet RANDOMACT 的 PETSKILL_StatusChange 完整狀態 token 映射
+- **V2.79：Enemy PETFLG source parity／PetSkill source-missing boundary regression**
 
 詳細版本行為、原 C 對照、RNG 順序與 regression 均以各歷史檔為準。
 
