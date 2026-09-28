@@ -4,9 +4,9 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.70**
+**PLAYABLE CORE V2.71**
 
-目前主線已完成 V2.70，下一個核心開發版本為 **V2.71**。
+目前主線已完成 V2.71，下一個核心開發版本為 **V2.72**。
 
 > **原 C 規則優先、不猜數值**
 
@@ -14,6 +14,23 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.71 — Skill 15「火附體」
+
+V2.71 在 V2.70 上接入巫師 Skill 15 `PROFESSION_FIRE_ENCLOSE`：
+
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`
+- fixed status command uses A-tier success：`100 + A-tier×4`
+- `回%3` 會保存 StatusTbl=4，之後 StatusSeq 實際造成 `150 → 100 → 50` HP
+- Fire Practice 只在狀態成功後提升
+- 不走一般 magic dodge / practice / GET_DAMAGE cast path
+- fixed `_2` on-hit aura path：`CHAR_WORKMOD_F_ENCLOSE_2` 有寫入，但 `CHAR_WORK_F_ENCLOSE_2` 在 pinned build 沒有寫入路徑，因此 Web 不自行啟用攻擊時附燒
+- regression：`tools/check_v271_profession_fire_enclose_runtime.mjs`
+- save schema 維持 **30**
+
+完整技術細節請看 [V2.71 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
+---
 ## V2.70 — Skill 14「冰鏡術」
 
 V2.70 在 V2.69 乾淨核心上接入巫師 Skill 14 `PROFESSION_ICE_MIRROR`：
@@ -80,9 +97,10 @@ V2.69 是目前保留的最後核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**下一個核心版本：V2.71**
+**下一個核心版本：V2.72**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
+- V2.71 已完成 Skill 15 火附體 StatusSeq 核心
 - 下一版依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
@@ -116,6 +134,6 @@ V2.69 是目前保留的最後核心版本，完成：
 - [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 - [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 - [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-- [V1.75～V2.70](docs/changelog/part-07-v1.75-onward.md)
+- [V1.75～V2.71](docs/changelog/part-07-v1.75-onward.md)
 
 README 只保留目前版本、自述與開發方向；詳細技術內容統一放在 CHANGELOG，避免首頁再次堆積過時說明。
