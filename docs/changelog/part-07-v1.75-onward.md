@@ -1,3 +1,22 @@
+## V3.05 caller-sensitive Acupuncture WakeUp order
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+V3.05 fixed-C caller matrix：
+
+| Caller | ACUPUNCTURE WakeUp target |
+| --- | --- |
+| `BATTLE_Attack()` | original defender |
+| `BATTLE_Counter()` | attacker |
+| `BATTLE_S_AttackDamage()` family | attacker |
+| profession `CHAIN_ATK` first hit | attacker |
+| profession `CHAIN_ATK` second hit | ordinary `BATTLE_Attack()` rules |
+
+原因不是效果不同，而是各 caller 在 `BATTLE_DamageSub()` 後對 `defindex` 的 restore／rewrite source-order 不同。Web 現在以 caller marker 保留這個差異。
+
+regression：`tools/check_v305_caller_sensitive_acupuncture_wakeup.mjs`
+CI：`.github/workflows/v305-caller-sensitive-acupuncture-wakeup.yml`
+
 ## V3.04 Enemy→Player Guardian Acupuncture still wakes original Player
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
