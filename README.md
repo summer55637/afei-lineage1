@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.85**
+**PLAYABLE CORE V2.86**
 
 目前主線已完成 V2.85；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
