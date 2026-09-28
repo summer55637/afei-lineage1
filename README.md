@@ -195,7 +195,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 - [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 - [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-- [V1.75～V2.72](docs/changelog/part-07-v1.75-onward.md)
+- [V1.75～V2.74](docs/changelog/part-07-v1.75-onward.md)
 
 README 只保留目前版本、自述與開發方向；詳細技術內容統一放在 CHANGELOG，避免首頁再次堆積過時說明。
 
@@ -237,3 +237,6 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## V2.71 最新進度
 已完成 Skill 15 火附體 fixed C mapping correction；V2.72 已把其 on-hit aura lifecycle 校正回固定 C。
+
+## V2.74 最新進度
+已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity；詳見歷史紀錄與對應 regression。
