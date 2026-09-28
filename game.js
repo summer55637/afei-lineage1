@@ -11861,6 +11861,7 @@ function playerBattleView(){
     ?defenseBase:Math.trunc(n(battlePlayerFixedToughWork));
   return {
     type:'player',attack,defense:defenseBase,stone,boundaryKey:battleStatusKey(desc),
+    counterGuarding:!!battlePlayerRawGuardCommand&&!battleStatusActive(desc,'confusion'),
     fixedTough,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(compliance.fixedLuck??state.luck),drunk,
@@ -11921,6 +11922,7 @@ function petBattleView(pet){
   const elements=frozen?.elements?Object.assign({},frozen.elements):battleElementsForDesc(desc);
   return {
     type:'pet',attack,defense,stone,boundaryKey:battleStatusKey(desc),
+    counterGuarding:sourcePlayerPetGuardAdjust(pet),
     duckBonus:n(noGuard?.duckBonus),counterBonus:n(noGuard?.counterBonus),
     fixedTough,fixedDex,workQuickBase,quick:battleDrunkQuick(desc,workQuickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
@@ -11938,6 +11940,7 @@ function enemyBattleView(unit){
   const quickRaw=n(unit?.roundQuick??unit?.quick);
   return {
     type:'enemy',boundaryKey:battleStatusKey(desc),
+    counterGuarding:!!unit?.guardThisTurn&&!battleStatusActive(desc,'confusion'),
     attack:attackBase,
     defense:defenseRaw,stone,
     fixedDex:n(unit?.roundFixQuick??unit?.quick),
@@ -13018,7 +13021,13 @@ function battleCounterCheck(attacker,defender){
   return {success:cRand(1,10000)<=rollPer,raw};
 }
 function counterScaledResult(attacker,defender){
-  const r=resolveNormalAttack(attacker,defender);
+  // fixed BATTLE_Counter() calls BATTLE_AttackSeq() with opt=-1, so the counter hit
+  // still honors the current defender's GUARD GuardAdjust before the 75% counter
+  // multiplier. The defender view carries the source-accurate guard command; confusion
+  // clears GuardAdjust exactly like fixed C.
+  const r=resolveNormalAttack(attacker,defender,{
+    guarding:!!defender?.counterGuarding
+  });
   if(!r.dodged&&!r.miss&&r.damage>0){
     r.damage=Math.trunc(r.damage*.75);
     if(r.damage<1)r.damage=1;

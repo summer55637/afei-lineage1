@@ -4,7 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.88**
+**PLAYABLE CORE V2.89
+
+## V2.89 — Counter GuardAdjust boundary
+
+V2.89 對齊 fixed C 的 BATTLE_Counter -> BATTLE_AttackSeq(..., -1) 順序：
+
+- Counter 命中後仍重新進 BATTLE_AttackSeq()，因此目標當回合若是 GUARD，會照樣進 BATTLE_GuardAdjust()。
+- GuardAdjust 只在目標確實處於 GUARD 且沒有被混亂取消時生效；Player、出戰 Pet、Enemy 三種 Web battle view 都現在帶有 source-accurate counterGuarding。
+- counterScaledResult() 不改 Counter 機率，也不改原本 75% 傷害縮放；它只把這個 guard state 傳進既有 resolveNormalAttack()。
+- GuardAdjust 的既有 C RNG 區間與倍率完全沿用，不新增任何猜測數值。
+
+regression：tools/check_v289_counter_guard_boundary.mjs
+GitHub Actions：.github/workflows/v289-counter-guard.yml
+
+**
 
 ## V2.88 — pre-DamageReact Counter boundary
 
