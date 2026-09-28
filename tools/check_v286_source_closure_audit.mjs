@@ -230,7 +230,7 @@ assert.match(readme,/V2\.86 — PetSkill source closure audit/);
 
 console.log(JSON.stringify({
   pass:true,
-  version:'V2.86',
+  version:'V2.89',
   legalFunctionFamilies:familyFields.size,
   battleAllDeclaredFamilies:battleEligibleFamilies.length,
   playerDispatcherFamilies:loyalDispatch.length,
