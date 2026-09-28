@@ -5066,3 +5066,20 @@ save schema 維持 **30**。
 - generic `battleHasAnyStatus()` 補入 Doom Fear，對齊 fixed StatusTbl collision。
 - 新增 `tools/check_v266_profession_blood_worms_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.67 Skill 11 BLOOD
+
+- 接入巫師 Skill 11 `嗜血成性 / PROFESSION_BLOOD`。
+- TARGET NONE → 正常 client 強制 self battle slot；非 self BLOOD 封包在 fixed C 屬異常斷線路徑，Web 保留 no-action。
+- MP cost=0；沒有 dynamic cost override。
+- GET_PRACTICE：HP>1 時 `currentHP*(tier*5+10)/100`，再套 M_POW／30% M2_POW／98～102% variance；HP<=1 時基底 0。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.3)`。
+- 保留 self magic-dodge：`magic_type=-1` 導致 player resist index 錯讀 `CHAR_WORK_I_PROFICIENCY`，threshold=`Luck*3 + IceProf*0.5 + EQUITQUIMAGIC*0.4`。
+- 自己的 UN_POW_M 先降低 sacrifice power，再進無屬性 GET_DAMAGE。
+- CHANGE_STATUS leading RNG 後，MP restore rate 為 40/45/50/55/60%；順序是先算 add_mp、再扣 self HP、最後 apply MP，因此 self-death 後仍可回 MP。
+- BLOOD 動畫 tier 圖：101692 / 101691 / 101690 / 101689；固定走 CHANG_IMG2 option 9/10 座標。
+- 新增 `tools/check_v267_profession_blood_runtime.mjs`。
+- save schema 維持 **30**。

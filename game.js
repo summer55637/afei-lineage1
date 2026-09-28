@@ -1667,6 +1667,7 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
   const command=String(prepared?.commonCommand||'');
   if(command!=='BATTLE_COM_S_VOLCANO_SPRINGS'
     &&command!=='BATTLE_COM_S_SIGN'
+    &&command!=='BATTLE_COM_S_BLOOD'
     &&command!=='BATTLE_COM_S_BLOOD_WORMS'
     &&command!=='BATTLE_COM_S_DOOM'
     &&command!=='BATTLE_COM_S_ICE_CRACK'
@@ -2640,6 +2641,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_FIRE_BALL'
+    ||functionName==='PROFESSION_BLOOD'
     ||functionName==='PROFESSION_BLOOD_WORMS'
     ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
@@ -5310,6 +5312,134 @@ function sourceProfessionBloodWormExecute(prepared,name){
   };
 }
 
+
+function sourceProfessionBloodSelfDodge({
+  randInclusive=cRand,
+  proficiencyVector=sourceProfessionPlayerMagicProficiencyVector(),
+  equipMagic=sourcePlayerEquipMagicDefense(state)
+}={}){
+  // fixed PROFESSION_MAGIC_DODGE player branch with magic_type=-1:
+  // fResist indexes CHAR_WORK_F_RESIST + (-1) - 1 == CHAR_WORK_I_PROFICIENCY.
+  const roll=Math.trunc(n(randInclusive(1,100)));
+  const luckPart=n(state?.luck)*3;
+  const sourceMinusOneResistRead=n(proficiencyVector?.ice)*.5;
+  const equipQuickPart=n(equipMagic?.quick)*.4;
+  const threshold=Math.trunc(luckPart+sourceMinusOneResistRead+equipQuickPart);
+  return {
+    miss:roll<=threshold,roll,threshold,
+    luckPart,sourceMinusOneResistRead,equipQuickPart,
+    sourceMagicType:-1,sourceResistFieldBug:'CHAR_WORK_I_PROFICIENCY'
+  };
+}
+
+function sourceProfessionBloodMpRestore(damage,skillLevel){
+  const tier=Math.trunc(n(skillLevel));
+  const rate=tier>=10?20:tier>=7?15:tier>=5?10:tier>=3?5:0;
+  // hp_power and rate are both int in fixed CHANGE_STATUS, so division truncates before float store.
+  const addMp=Math.trunc(Math.trunc(n(damage))*(rate+40)/100);
+  return {tier,rate,totalRate:rate+40,damage:Math.trunc(n(damage)),addMp};
+}
+
+function sourceProfessionBloodAnimation(row,skillLevel){
+  const opt=String(row?.option||'').split('|');
+  const tier=Math.trunc(n(skillLevel));
+  const img2=tier>=10?101689:tier>=7?101690:tier>=3?101691:101692;
+  // BLOOD always calls CHANG_IMG2, which uses 1-based option fields 9/10.
+  return {
+    magicType:-1,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),img2,
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[8])),y:Math.trunc(n(opt[9])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7]))
+  };
+}
+
+function sourceProfessionBloodExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==11)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  // fixed target NONE resolves to attackNo. A crafted BLOOD packet pointing elsewhere
+  // is treated as abnormal and disconnected; Web preserves the no-effect branch.
+  if(rawToNo!==0){
+    addLog('「'+name+'」目標異常；fixed 原 C 會視為嗜血吸別人的血封包並斷線。','bad');
+    return {
+      handled:true,noAction:true,reason:'source-blood-invalid-self-target',
+      skillId,functionName:prepared.functionName,rawToNo,
+      sourceWouldDisconnect:true
+    };
+  }
+
+  // BATTLE_MultiList(self) succeeds before GET_PRACTICE.
+  const multi=sourceSetMagicPetMultiList(0);
+  if(!multi.ok||!multi.slots.includes(0)){
+    return {handled:true,noAction:true,reason:'self-target-missing',skillId,functionName:prepared.functionName,rawToNo,multi};
+  }
+
+  const row=sourceProfessionSkillTemplate(skillId);
+
+  // GET_PRACTICE reads current HP BEFORE self-damage and consumes:
+  // critical RAND -> M2 rand%100 -> optional 98..102 variance.
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_BLOOD',prepared.displayLevel,state.hp
+  );
+  const animation=sourceProfessionBloodAnimation(row,practice.skillLevel);
+
+  // Despite targeting self, fixed common magic loop still runs PROFESSION_MAGIC_DODGE.
+  const magicDodge=sourceProfessionBloodSelfDodge();
+  if(magicDodge.miss){
+    addLog('你施放「'+name+'」，但 fixed 原 C 的自我 magic dodge 判定使技能落空。');
+    return {
+      handled:true,skillId,functionName:prepared.functionName,rawToNo,toNo:0,multi,
+      animation,practice,magicDodge,magicMiss:true,
+      hpBefore:Math.max(0,Math.trunc(n(state.hp))),hpAfter:Math.max(0,Math.trunc(n(state.hp))),
+      mpBefore:Math.max(0,Math.trunc(n(state.mp))),mpAfter:Math.max(0,Math.trunc(n(state.mp))),
+      sourceMagicType:-1,sourceSelfMagicDodge:true,noOrdinaryCounter:true
+    };
+  }
+
+  // Defender is also Player, so its own UN_POW_M equipment reduces the sacrifice first.
+  const suitWork=sourcePlayerProfessionMagicSuitPower(state);
+  const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,suitWork.unPower);
+  const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+    magicType:-1,power:preDamagePower,command:'BATTLE_COM_S_BLOOD',
+    proficiency:{fire:0,thunder:0,ice:0},
+    resist:{fire:0,thunder:0,ice:0},
+    baseSuit:{fire:0,thunder:0,ice:0},
+    equipSuit:{fire:0,thunder:0,ice:0},
+    spirit:{fire:0,thunder:0,ice:0}
+  })));
+
+  // CHANGE_STATUS consumes the leading critical RAND, then computes add_mp from attvalue.
+  const unusedChangeStatusRoll=cRand(1,100);
+  const mpRestore=sourceProfessionBloodMpRestore(damage,practice.skillLevel);
+
+  const hpBefore=Math.max(0,Math.trunc(n(state.hp)));
+  const mpBefore=Math.max(0,Math.trunc(n(state.mp)));
+  state.hp=Math.max(0,hpBefore-damage);
+  const hpAfter=Math.max(0,Math.trunc(n(state.hp)));
+
+  // fixed PROFESSION_MAGIC_ATTAIC applies accumulated add_mp AFTER direct HP subtraction,
+  // even if the self-damage just killed the caster.
+  const selfRestore=sourceProfessionSignApplySelfRestore(0,mpRestore.addMp);
+  const mpAfter=Math.max(0,Math.trunc(n(state.mp)));
+
+  addLog('你施放「'+name+'」，消耗 '+(hpBefore-hpAfter)+' HP，回復 '+selfRestore.mpApplied+' MP。',
+    hpAfter<=0?'bad':'good');
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,rawToNo,toNo:0,multi,
+    animation,practice,magicDodge,suitWork,preDamagePower,damage,
+    unusedChangeStatusRoll,mpRestore,selfRestore,
+    hpBefore,hpAfter,mpBefore,mpAfter,
+    sourceMagicType:-1,sourceSelfMagicDodge:true,
+    sourceSelfUnPowerBeforeDamage:true,sourceMpRestoreAfterSelfDamage:true,
+    sourceMpRestoreEvenAfterSelfDeath:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -6651,6 +6781,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionFireBallExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_BLOOD'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionBloodExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BLOOD_WORMS'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);

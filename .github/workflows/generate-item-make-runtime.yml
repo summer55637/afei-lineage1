@@ -102,6 +102,7 @@ on:
       - "tools/check_v264_profession_current_runtime.mjs"
       - "tools/check_v265_profession_fire_ball_runtime.mjs"
       - "tools/check_v266_profession_blood_worms_runtime.mjs"
+      - "tools/check_v267_profession_blood_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -422,6 +423,9 @@ jobs:
 
       - name: Run V2.66 Blood Worms regression
         run: node tools/check_v266_profession_blood_worms_runtime.mjs
+
+      - name: Run V2.67 Blood regression
+        run: node tools/check_v267_profession_blood_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

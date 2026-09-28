@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.66**
+**PLAYABLE CORE V2.67**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,23 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.67 最新進度
+
+V2.67 接入巫師 **Skill 11「嗜血成性」／`PROFESSION_BLOOD`**，完整保留 fixed source 的自我目標與 HP→MP 怪異流程。
+
+- TARGET NONE；正常 client 會把 `toNo` 強制設成自己的 battle slot。Web 玩家固定 slot 0；若收到 BLOOD 卻指定別人，fixed C 會視為異常封包並斷線，因此 Web 保留為 no-action 異常路徑。
+- 技能 **MP 消耗 0**；`sourceProfessionMagicCostPlan()` 沒有 BLOOD dynamic override，直接使用 skill row 的 `costMp=0`。
+- GET_PRACTICE：若施法前 HP>1，基底為 `currentHP * (M-tier*5+10) / 100`；HP<=1 時基底為 0。之後仍套 M_POW、30% M2_POW 與 98～102% variance。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.3)`。
+- 即使是自己對自己施法，也會真的跑 `PROFESSION_MAGIC_DODGE()`。因 `magic_type=-1`，來源的 `F_RESIST + magic_type - 1` 會錯位讀到 **I_PROFICIENCY（冰熟練度）**；自我閃避 threshold 因此是 `Luck*3 + IceProficiency*0.5 + EQUITQUIMAGIC*0.4`。自己閃掉時不扣 HP、不回 MP。
+- dodge 通過後，自己的 `UN_POW_M` 會先降低本次 sacrifice power，再由無屬性 GET_DAMAGE 取得實際扣血量。
+- `PROFESSION_MAGIC_CHANGE_STATUS()` 固定先消耗 leading `RAND(1,100)`，再依實際 damage 計算回 MP：tier1～2=40%、3～4=45%、5～6=50%、7～9=55%、10=60%。
+- source 順序為：算回 MP → 扣自己 HP → 最後才把 MP 套回角色。故本次自損即使把 HP 扣到 0，後續 MP 回復仍會執行。
+- 動畫依 M-tier 換圖：1～2=101692、3～6=101691、7～9=101690、10=101689；BLOOD 固定用 option 的第 9/10 欄座標。
+- save schema 維持 **30**。
+
+---
 
 ## V2.66 最新進度
 
