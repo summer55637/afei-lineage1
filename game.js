@@ -11600,6 +11600,27 @@ function sourcePlayerSuitStatusSeq(target=state){
     mpBefore,mpAfter:Math.trunc(n(target.mp)),mpActual:Math.trunc(n(target.mp))-mpBefore
   };
 }
+function sourceProfessionFireEncloseStatusTick(desc,st){
+  const cnt=Math.max(0,Math.trunc(n(st?.turns)));
+  const sourcePower=50*cnt;
+  const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+    magicType:1,power:sourcePower,command:'BATTLE_COM_S_FIRE_ENCLOSE',
+    proficiency:{fire:0,thunder:0,ice:0},
+    resist:{fire:0,thunder:0,ice:0},
+    baseSuit:{fire:0,thunder:0,ice:0},
+    equipSuit:{fire:0,thunder:0,ice:0},
+    spirit:{fire:0,thunder:0,ice:0}
+  })));
+  const hpBefore=battleStatusHp(desc);
+  const hpAfter=Math.max(0,hpBefore-damage);
+  return {
+    cnt,sourcePower,damage,hpBefore,hpAfter,
+    sourceType1SelfDamage:true,
+    sourceTargetOwnPracticeAndResistFields:true,
+    sourcePhysicalAuraCounterDeadPath:true
+  };
+}
+
 function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
@@ -11742,34 +11763,15 @@ function processBattleStatusTurn(actor){
   if(st.type==='fireEnclose'){
     // fixed BATTLE_StatusSeq decrements StatusTbl first. The current cnt is therefore
     // 3 -> 2 -> 1 across the three active ticks after the initial stored value 4.
-    const cnt=Math.max(0,Math.trunc(n(st.turns)));
-    const sourcePower=50*cnt;
-    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
-      magicType:1,power:sourcePower,command:'BATTLE_COM_S_FIRE_ENCLOSE',
-      // In fixed C the attackindex and defindex are BOTH the burned target.
-      // PvE Enemy entries have no profession magic Work, so all source fields are zero here.
-      proficiency:{fire:0,thunder:0,ice:0},
-      resist:{fire:0,thunder:0,ice:0},
-      baseSuit:{fire:0,thunder:0,ice:0},
-      equipSuit:{fire:0,thunder:0,ice:0},
-      spirit:{fire:0,thunder:0,ice:0}
-    })));
-    const hpBefore=battleStatusHp(desc);
-    battleStatusSetHp(desc,Math.max(0,hpBefore-damage));
-    const hpAfter=battleStatusHp(desc);
+    const tick=sourceProfessionFireEncloseStatusTick(desc,st);
+    battleStatusSetHp(desc,tick.hpAfter);
     const name=battleStatusDescName(desc);
-    const tick={
-      cnt,sourcePower,damage,hpBefore,hpAfter,
-      sourceType1SelfDamage:true,
-      sourceTargetOwnPracticeAndResistFields:true,
-      sourcePhysicalAuraCounterDeadPath:true
-    };
-    if(hpBefore>0&&hpAfter<=0){
+    if(tick.hpBefore>0&&tick.hpAfter<=0){
       if(desc.kind==='enemy'&&desc.unit)sourceMarkEnemyDeathCredit(desc.unit,[{kind:'player'}]);
-      addLog(name+' 因「火附體」受到 '+damage+' 傷害並倒下。','bad');
+      addLog(name+' 因「火附體」受到 '+tick.damage+' 傷害並倒下。','bad');
       return finish({skip:true,desc,status:st,fireEncloseTick:tick});
     }
-    if(damage>0)addLog(name+' 因「火附體」受到 '+damage+' 傷害。','bad');
+    if(tick.damage>0)addLog(name+' 因「火附體」受到 '+tick.damage+' 傷害。','bad');
     return finish({skip:false,desc,status:st,fireEncloseTick:tick});
   }
 
