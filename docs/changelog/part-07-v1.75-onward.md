@@ -5347,3 +5347,57 @@ V2.76 將 Skill 21「移形換位」從 V2.75 的 source-parity core 接進主�
 - tools/check_v276_profession_transpose_live.mjs 鎖定 row、M-tier、dispatcher、raw turn+1 counter、StatusSeq decrement、independent skill-duck dodge 與 reset wiring。
 - 新增 .github/workflows/v276-profession-transpose-live.yml。
 
+
+
+---
+
+## V2.77 Hunter non-battle profession skills / 追尋敵蹤・回避戰鬥
+
+V2.77 接回固定 C 中尚未有操作入口的兩個 Hunter 非戰鬥職業技能：Skill 44「追尋敵蹤」與 Skill 45「回避戰鬥」。這一版不是另外發明遇敵公式，而是把既有的 `CHAR_ENCOUNT_FIX`／`CHAR_ENCOUNT_NUM` source-backed encounter pipeline 正式接到玩家 UI。
+
+### Fixed C 行為
+
+固定 `profession_skill.c`：
+
+- Skill 44：`PROFESSION_TRACK`，option=`倍%5|升`，MP 13，非戰鬥技能；display skill level 先做整數 `level/10`，再乘 option 的 rate 5，因此 Work 修正為 `+floor(displayLevel/10)×5%`。
+- Skill 45：`PROFESSION_ESCAPE`，option=`倍%5|降`，MP 13，非戰鬥技能；同一套 level/rate 計算，但 Work 修正為負值。
+- 兩者都把 `CHAR_ENCOUNT_NUM` 設為 `time(NULL)+60*3`，也就是 180 秒。
+- 若目前 `CHAR_ENCOUNT_NUM >= time(NULL)`，fixed function 先把 return value 設為 `-1`；但後面仍照常重新計算 `per`、覆寫 `CHAR_ENCOUNT_FIX`、重新設定 180 秒與送出技能動畫，因此 Web 保留這個「protocol return 失敗、Work 仍被覆寫」的來源 quirk。
+- Skill 44 的 client skill animation `img1=101627`；Skill 45 為 `img1=101629`。runtime 同時保留原表 `img2=101629 / 101638` 資料。
+
+### Encounter lifecycle
+
+固定 `char_walk.c` 在真正 `rand()%120 < temp` 前先讀取 `CHAR_ENCOUNT_FIX` 為 `p_cep`；若效果已過期，先清掉 Work 與時間並提示「技能效用结束。」但本次 walk 仍以清除前讀到的 `p_cep` 計算 `temp = cep * (100 + p_cep) / 100`。Web 的 `sourceProfessionEncounterRollPlan()` 保留相同順序，不把過期當下的這一次 walk 改成普通 CEP。
+
+Encounter 本身仍使用原有 CEP min/max clamp、`rand()%120`、No Enemy 裝備 gate 與 Moon／Randenemy 二次 RNG；V2.77 只把 Track/Escape 的 transient Work 正式接進這條既有 pipeline。
+
+### Web live UI
+
+新增「非戰鬥職業技能」操作區：
+
+- 玩家已學 Skill 44／45 時顯示對應按鈕、display level 與 MP cost。
+- 戰鬥中不提供非戰鬥技能按鈕；戰鬥外可直接使用。
+- 施放後即時顯示目前 `+/-Encounter Fix%` 與剩餘秒數。
+- 技能 Work 不進 save schema；沿用既有 battle-free transient globals，讀檔後不虛構歷史中的 Work 狀態。
+- Skill 44/45 的施放仍走既有 profession MP preflight 與 profession skill proficiency post-dispatch lifecycle。
+
+### Regression / CI
+
+新增：
+
+- `tools/check_v277_profession_outofbattle_runtime.mjs`
+- `.github/workflows/v277-profession-outofbattle.yml`
+
+Regression 鎖定：
+
+- Skill 44／45 runtime row、option、MP、img1/img2。
+- level/10 × rate 5 的 +35／-50 等固定來源計算。
+- 180 秒 `CHAR_ENCOUNT_NUM` window。
+- 過期當下 walk 仍使用清除前 `p_cep` 的 source quirk。
+- active effect 期間再次施放的 `ret=-1`，以及 Work 仍被重新寫入的行為。
+- UI listener、render、encounter integration 與 transient globals。
+- `game.js` syntax gate。
+
+V2.77 GitHub Actions regression run **36415712288** 成功。
+
+save schema 維持 **30**。
