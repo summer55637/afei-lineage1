@@ -1,4 +1,4 @@
-const fs=require('node:fs');
+import fs from 'node:fs';
 const src=fs.readFileSync('game.js','utf8');
 function extract(name){
   const sig='function '+name+'(';
