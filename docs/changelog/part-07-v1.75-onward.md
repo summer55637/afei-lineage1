@@ -5191,7 +5191,7 @@ V2.71 接入 Skill 15，但本版原先把 option `炎` 直接當成火傷 Statu
 - 成功後固定 C 執行 `CHAR_setWorkInt(toindex, StatusTbl[status], turn+1)`。
 - `炎 → CHAR_WORK_F_ENCLOSE_2`：建立火附體的 on-hit counter。
 - `燒 → CHAR_WORK_F_ENCLOSE`：這才是後續普攻觸發的灼傷 StatusSeq。
-- on-hit chance=`20 + A-tier×2`；火附體有效附加狀態回合為 tier<5→1、tier 5～9→2、tier 10→3。
+- on-hit chance=`20 + A-tier ×2`；火附體有效附加狀態回合為 tier<5→1、tier 5～9→2、tier 10→3。
 
 ### Fire on-hit StatusSeq
 - fixed `BATTLE_Attack()` 只在玩家造成正傷害後檢查 F/I/T `_2` counter，Fire 先於 Ice / Thunder。
@@ -5225,7 +5225,7 @@ V2.72 接入巫師 Skill 16「雷附體」／`PROFESSION_THUNDER_ENCLOSE`，使�
 
 ### Player physical-hit proc
 - fixed `BATTLE_Attack()` 只在攻擊者是 Player 且 `damage > 0` 時檢查附體。
-- 觸發率=`20 + A-tier×2`。
+- 觸發率=`20 + A-tier ×2`。
 - Thunder 命中狀態 token 是 `电`，映射到 `CHAR_WORK_T_ENCLOSE`。
 - Thunder 強制有效回合為 1，因此 StatusTbl stored=2。
 - `CHAR_WORK_T_ENCLOSE` 被 fixed `BATTLE_CanMoveCheck()` 視為不可行動狀態；因此雷附體命中後封鎖 1 回合，再在下一次該角色的 StatusSeq 後解除。
