@@ -1,3 +1,22 @@
+## V3.08 reaction death credit waits for ItemCrush boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_Counter()` source-order：
+
+1. `BATTLE_DamageSub()` 完成 Trap／ACUPUNCTURE 反傷；
+2. reaction 改寫 `defindex`；
+3. `BATTLE_DamageWakeUp()`；
+4. death flag；
+5. `BATTLE_ItemCrushSeq()`；
+6. `BATTLE_Counter()` return；
+7. 外層 `BATTLE_AddProfit()` 才掃死亡／獎勵。
+
+Web 現在把 reaction death credit 暫存於 `sourcePendingDeathCredit`，由 ItemCrush finalize helper 在 RNG 邊界完成後才寫入 reward credit。
+
+regression：`tools/check_v308_reaction_death_credit_itemcrush.mjs`
+CI：`.github/workflows/v308-reaction-death-credit-itemcrush.yml`
+
 ## V3.07 Toxin Weapon uses actual defindex for Acupuncture WakeUp
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
