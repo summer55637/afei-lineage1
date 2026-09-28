@@ -64,6 +64,10 @@ assert.deepEqual(JSON.parse(JSON.stringify(profileCtx.sourceProfessionTransposeP
 const logs=[];
 const ctx={
   Math,Number,String,Object,Array,Map,
+  SOURCE_PROFESSION_TARGET:{
+    MYSELF:0,OTHER:1,ALL_MYSIDE:2,ALLOTHERSIDE:3,ALL:4,NONE:5,
+    OTHER_WITHOUT_MYSELF:6,WITHOUT_MYSELF_AND_PET:7,ONE_ROW:8,ONE_LINE:9,DEATH:10
+  },
   state:{},
   battlePlayerSkillDuckTurns:0,
   battlePlayerSkillDuckPower:0,
