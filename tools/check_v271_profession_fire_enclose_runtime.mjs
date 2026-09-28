@@ -43,7 +43,7 @@ assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 const row=runtime.bySkillId['15'];
 assert.ok(row);
 assert.equal(row.name,'火附体');
-assert.equal(row.text,'召喚火焰附在武器或防具上增強其效能');
+assert.equal(row.text,'召唤火焰附在武器或防具上增强其效能');
 assert.equal(row.func,'PROFESSION_FIRE_ENCLOSE');
 assert.equal(row.option,'炎|效%1|回%3|成%100');
 assert.equal(row.skillId,15);
