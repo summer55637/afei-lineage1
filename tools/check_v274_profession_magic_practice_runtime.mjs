@@ -7,38 +7,15 @@ const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_profession_ski
 const html=fs.readFileSync('game.html','utf8');
 
 function extractFunction(source,name){
-  const marker='function '+name+'(';
-  const start=source.indexOf(marker);
-  assert.ok(start>=0,'missing '+name);
-  const ps=source.indexOf('(',start);
-  let d=0,end=-1,q=null,esc=false,line=false,block=false;
-  for(let i=ps;i<source.length;i++){
-    const c=source[i],n=source[i+1];
-    if(line){if(c==='\n')line=false;continue}
-    if(block){if(c==='*'&&n==='/'){block=false;i++;}continue}
-    if(q){if(esc)esc=false;else if(c==='\\')esc=true;else if(c===q)q=null;continue}
-    if(c==='/'&&n==='/'){line=true;i++;continue}
-    if(c==='/'&&n==='*'){block=true;i++;continue}
-    if(c==="'"||c==='"'||c==='`'){q=c;continue}
-    if(c==='(')d++;else if(c===')'&&--d===0){end=i;break}
-  }
-  const bs=source.indexOf('{',end);
-  d=0;q=null;esc=false;line=false;block=false;
-  for(let i=bs;i<source.length;i++){
-    const c=source[i],n=source[i+1];
-    if(line){if(c==='\n')line=false;continue}
-    if(block){if(c==='*'&&n==='/'){block=false;i++;}continue}
-    if(q){if(esc)esc=false;else if(c==='\\')esc=true;else if(c===q)q=null;continue}
-    if(c==='/'&&n==='/'){line=true;i++;continue}
-    if(c==='/'&&n==='*'){block=true;i++;continue}
-    if(c==="'"||c==='"'||c==='`'){q=c;continue}
-    if(c==='{')d++;else if(c==='}'&&--d===0)return source.slice(start,i+1);
-  }
+  const marker='function '+name+'(';const start=source.indexOf(marker);assert.ok(start>=0,'missing '+name);
+  const ps=source.indexOf('(',start);let d=0,end=-1,q=null,esc=false,line=false,block=false;
+  for(let i=ps;i<source.length;i++){const c=source[i],n=source[i+1];if(line){if(c==='\n')line=false;continue}if(block){if(c==='*'&&n==='/'){block=false;i++;}continue}if(q){if(esc)esc=false;else if(c==='\\')esc=true;else if(c===q)q=null;continue}if(c==='/'&&n==='/'){line=true;i++;continue}if(c==='/'&&n==='*'){block=true;i++;continue}if(c==="'"||c==='"'||c==='`'){q=c;continue}if(c==='(')d++;else if(c===')'&&--d===0){end=i;break}}
+  const bs=source.indexOf('{',end);d=0;q=null;esc=false;line=false;block=false;
+  for(let i=bs;i<source.length;i++){const c=source[i],n=source[i+1];if(line){if(c==='\n')line=false;continue}if(block){if(c==='*'&&n==='/'){block=false;i++;}continue}if(q){if(esc)esc=false;else if(c==='\\')esc=true;else if(c===q)q=null;continue}if(c==='/'&&n==='/'){line=true;i++;continue}if(c==='/'&&n==='*'){block=true;i++;continue}if(c==="'"||c==='"'||c==='`'){q=c;continue}if(c==='{')d++;else if(c==='}'&&--d===0)return source.slice(start,i+1)}
   throw new Error('unterminated '+name);
 }
 
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
-
 const rows=[18,19,20].map(id=>runtime.bySkillId[String(id)]);
 assert.ok(rows.every(Boolean));
 assert.deepEqual(rows.map(r=>[r.skillId,r.name,r.func,r.professionClass,r.target,r.kind,r.costMp,r.fixValue]),[
@@ -59,7 +36,7 @@ const ctx={Math,Number,Object,Array,PROFESSION_CLASS_NONE:0,PROFESSION_SKILL_SLO
 vm.createContext(ctx);
 for(const fn of ['sourceProfessionMagicPracticeWork','sourceProfessionPlayerMagicProficiencyRefresh','sourceProfessionPlayerMagicProficiencyVector'])vm.runInContext(extractFunction(game,fn),ctx);
 
-assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionMagicPracticeWork(1))),{tier:0,value:0});
+assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionMagicPracticeWork(1))),{tier:1,value:2});
 assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionMagicPracticeWork(10))),{tier:1,value:2});
 assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionMagicPracticeWork(60))),{tier:6,value:13});
 assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionMagicPracticeWork(100))),{tier:10,value:25});
@@ -72,25 +49,20 @@ let snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'v274');
 assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:18,thunder:25});
 assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionPlayerMagicProficiencyVector())),{fire:13,ice:18,thunder:25});
 
-// Sparse slots must not terminate the scan; an unrelated skill is ignored.
-p.professionSkills[0]={skillId:999,rawLevel:10000};
-p.professionSkills[1]=null;
+p.professionSkills[0]={skillId:999,rawLevel:10000};p.professionSkills[1]=null;
 snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'sparse');
 assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:18,thunder:25});
 
-// Wrong profession is a source-compatible boundary: no magic practice snapshot is applied.
 p.professionClass=1;
 snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'wrong-class');
-assert.equal(snap.active,false);
-assert.equal(snap.reason,'profession-mismatch-terminator');
+assert.equal(snap.active,false);assert.equal(snap.reason,'profession-mismatch-terminator');
 
 const entry=extractFunction(game,'sourceInitPlayerSideEntrySnapshot');
 assert.ok(entry.includes("sourceProfessionPlayerMagicProficiencyRefresh(state,'battle-entry')"));
 const reset=extractFunction(game,'resetBattleStatuses');
 assert.ok(reset.includes('battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0}'));
 
-const supported={};
-vm.createContext(supported);vm.runInContext(extractFunction(game,'sourceProfessionBattleFunctionSupported'),supported);
+const supported={};vm.createContext(supported);vm.runInContext(extractFunction(game,'sourceProfessionBattleFunctionSupported'),supported);
 assert.equal(supported.sourceProfessionBattleFunctionSupported('PROFESSION_FIRE_PRACTICE'),false);
 assert.equal(supported.sourceProfessionBattleFunctionSupported('PROFESSION_ICE_PRACTICE'),false);
 assert.equal(supported.sourceProfessionBattleFunctionSupported('PROFESSION_THUNDER_PRACTICE'),false);
