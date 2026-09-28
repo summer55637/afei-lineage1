@@ -66,6 +66,6 @@ assert.equal(game.includes('sourceFireEncloseSourceCounterNeverWritten'),false);
 assert.equal(game.includes('sourceFireEncloseAuraActive=false;'),false);
 assert.ok(game.includes("prepared?.functionName==='PROFESSION_FIRE_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===15"));
 assert.ok(changelog.includes('炎'));
-assert.ok(readmePlaceholder=>true);
+assert.ok(fs.readFileSync('README.md','utf8').includes('PLAYABLE CORE V2.72'));
 
 console.log(JSON.stringify({pass:true,focus:'V2.71 Fire Enclose corrected aura mapping',mapping:'炎->_F_ENCLOSE_2, 燒->_F_ENCLOSE',storedTurns:4,onHitChanceTier10:40}));
