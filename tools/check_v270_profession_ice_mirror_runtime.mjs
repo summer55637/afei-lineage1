@@ -127,7 +127,7 @@ const specialCtx={Math,Number,n:v=>Number.isFinite(Number(v))?Number(v):0,source
 vm.createContext(specialCtx);
 vm.runInContext(extractFunction(game,'sourceProfessionIceMirrorDamage'),specialCtx);
 let special=specialCtx.sourceProfessionIceMirrorDamage(
-  {roundDefense:100,serverDerived:{charStats:{tgh:500}}},10
+  {roundDefense:100,serverDerived:{charStats:{tgh:500}}},100
 );
 assert.equal(special.ok,true);
 assert.equal(special.rate,60);
@@ -137,7 +137,7 @@ assert.equal(special.sourceRidePetNo,-1);
 assert.equal(special.sourceNpcCapBugUnemulated,true);
 
 special=specialCtx.sourceProfessionIceMirrorDamage(
-  {roundDefense:2000,serverDerived:{charStats:{tgh:500}}},10
+  {roundDefense:2000,serverDerived:{charStats:{tgh:500}}},100
 );
 assert.equal(special.damage,1918);
 assert.equal(special.sourceNpcCapBugUnemulated,true);
