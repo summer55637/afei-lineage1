@@ -10,27 +10,8 @@ function extractFunction(source,name){
   const marker='function '+name+'(';
   const start=source.indexOf(marker);
   assert.ok(start>=0,'missing '+name);
-  const brace=source.indexOf('{',start);
-  assert.ok(brace>=0,'missing body '+name);
-  let depth=0,quote=null,escape=false,line=false,block=false;
-  const tick=String.fromCharCode(96);
-  for(let i=brace;i<source.length;i++){
-    const c=source[i],n=source[i+1];
-    if(line){if(c==='\n')line=false;continue;}
-    if(block){if(c==='*'&&n==='/'){block=false;i++;}continue;}
-    if(quote){
-      if(escape){escape=false;continue;}
-      if(c==='\\'){escape=true;continue;}
-      if(c===quote)quote=null;
-      continue;
-    }
-    if(c==="'"||c==='"'||c===tick){quote=c;continue;}
-    if(c==='/'&&n==='/'){line=true;i++;continue;}
-    if(c==='/'&&n==='*'){block=true;i++;continue;}
-    if(c==='{')depth++;
-    else if(c==='}'&&--depth===0)return source.slice(start,i+1);
-  }
-  assert.fail('unterminated '+name);
+  const end=source.indexOf('\nfunction ',start+10);
+  return source.slice(start,end>start?end:start+18000);
 }
 
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
