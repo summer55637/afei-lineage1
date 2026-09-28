@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.83**
+**PLAYABLE CORE V2.84**
 
 目前主線已完成 V2.82；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
@@ -14,6 +14,24 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.84 — Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
+
+V2.84 把目前 Enemy AI 真的會抽到、但原本還會落入 unsupported fallback 的三個 source rows 接上：
+
+- `600 暗月變身`：`攻%+30 敏%+30 魔防%-50`
+- `674 暗月變身改`：`攻%+60 敏%+50 魔防%-80`
+- `734 狮王之吼`：只對指定 PETID 的玩家寵物生效
+
+fixed C 證明：
+
+- `PETSKILL_Vary()` 只有 `PETID 981/982/983/984` 才會成功；它只解析 `攻%`／`敏%`，`魔防%` 雖存在於 option，但原函式不讀。
+- Vary 設定 `WORKTURN=0`；之後每個 battle command 讓它遞增，`>5` 才恢復 FIXSTR/FIXDEX。
+- Enemy Web runtime 每回合會先重建 FIX，再套仍在 Vary window 內的攻／敏修正，符合 fixed C 的 Work 值生命週期。
+- `PETSKILL_Roar()` 只設 battle command；`BATTLE_S_Roar()` 對 Player 本人 `petid=-1` 不生效，對玩家 Pet 則讀 `CHAR_PETID`，命中 option 清單後直接 `BATTLE_Exit`，不造成傷害、不算擊殺。
+
+本版沒有把 `魔防%` 自行加進 Web，也沒有把 Roar 擴成普通玩家或未列入 option 的 Pet。
+
+regression：`tools/check_v284_enemy_vary_roar.mjs`
 ## V2.83 — CHAR_WORKPETFALL → rideflg source adapter
 
 V2.83 把 fixed `battle_command.c` 的落馬結果語意獨立鎖成 source adapter，但不假造目前 Web 沒有的正式 RidePet runtime。

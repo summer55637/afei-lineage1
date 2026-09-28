@@ -12273,6 +12273,15 @@ function enemyPrepareRoundAction(unit,action){
   unit.roundTghBuffPower=magicPet.stat==='TGH'?magicPet.power:0;
   unit.roundDoomFearApplied=doomFear.active;
 
+  // fixed PETSKILL_Vary writes WORKATTACKPOWER/WORKQUICK from the current FIX snapshot;
+  // the Web keeps that source state across rounds because PreCommandSeq rebuilds FIX first.
+  const persistentVary=battlePetVaryStates.get(unit.id)||null;
+  unit.roundVaryActive=!!persistentVary;
+  if(persistentVary){
+    unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*Math.trunc(n(persistentVary.attackPct))/100);
+    unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*Math.trunc(n(persistentVary.dexPct))/100);
+  }
+
   unit.noGuardDuckBonus=0;
   unit.noGuardCounterBonus=0;
   unit.noGuardThisTurn=false;
@@ -12362,6 +12371,26 @@ function enemyPrepareRoundAction(unit,action){
     const quickPlus=Math.max(0,enemySkillNumber(meta.o,/\+敏%([0-9.]+)/,0));
     unit.roundAttack=Math.trunc(sourceFixAttack*attackRemain/100);
     unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*quickPlus/100);
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_Vary'){
+    const petId=Number(unit?.petId);
+    if(Number.isFinite(petId)&&SOURCE_VARY_WOLF_PETIDS.has(Math.trunc(petId))){
+      const attackPct=Math.trunc(enemySignedSkillPercent(meta.o,'攻%'));
+      const dexPct=Math.trunc(enemySignedSkillPercent(meta.o,'敏%'));
+      battlePetVaryStates.set(unit.id,{
+        skillId:action?.skillId??null,
+        attackPct,dexPct,workTurn:0,sourceImage:101428
+      });
+      unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*attackPct/100);
+      unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*dexPct/100);
+      unit.roundVaryActive=true;
+      unit.sourceVaryRejected=false;
+    }else{
+      // fixed PETSKILL_Vary returns FALSE before changing any WORK/COM state.
+      // Keep any previous source-backed Vary state intact instead of inventing one.
+      unit.sourceVaryRejected=true;
+      unit.roundVaryActive=!!persistentVary;
+    }
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_Sars'){
     unit.counterEligibleThisTurn=true;
@@ -20316,6 +20345,17 @@ function sourceAdvancePetVaryTurn(pet){
     return {expired:true,workTurn:0};
   }
   return {expired:false,workTurn:vary.workTurn,attackPct:vary.attackPct,dexPct:vary.dexPct};
+}function sourceAdvanceEnemyVaryTurn(unit){
+  if(!unit)return null;
+  const vary=battlePetVaryStates.get(unit.id);
+  if(!vary)return null;
+  vary.workTurn=Math.trunc(n(vary.workTurn))+1;
+  if(vary.workTurn>5){
+    battlePetVaryStates.delete(unit.id);
+    addLog(unit.name+' 的暗月變身依原 C WORKTURN > 5 結束，攻擊／敏捷回復 FIX 值。','enemy');
+    return {expired:true,workTurn:0};
+  }
+  return {expired:false,workTurn:vary.workTurn,attackPct:vary.attackPct,dexPct:vary.dexPct};
 }
 function sourceFinalizePetExecutedCommand(pet,result){
   const varyTurn=sourceAdvancePetVaryTurn(pet);
@@ -22382,6 +22422,47 @@ function performEnemyContinuation(actor,unit,options,meta){
   }
   return {kind:'skill',skillId:actor.skillId,hits,lastResult};
 }
+function performEnemyRoar(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  const label=meta?.n||'狮王之吼';
+  if(!chosen){
+    addLog(unit.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。');
+    return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  }
+  if(chosen.kind!=='pet'||!chosen.pet||!petIsBattleActive(chosen.pet)){
+    // fixed BATTLE_S_Roar assigns petid=-1 to a player target, so it cannot match
+    // the fusion-pet option list and produces no exit/damage effect.
+    return {kind:'skill',skillId:actor.skillId,target:chosen.kind,roared:false,sourceNoEffect:true};
+  }
+
+  const pet=chosen.pet;
+  const petId=pet.petId==null?null:Number(pet.petId);
+  if(!Number.isFinite(petId)){
+    return {kind:'skill',skillId:actor.skillId,target:'pet',petId:null,roared:false,sourcePetIdMissing:true};
+  }
+  const ids=sourcePetRoarPetIds(meta);
+  if(!ids.includes(Math.trunc(petId))){
+    addLog(unit.name+' 使用「'+label+'」，'+pet.name+' 的 PETID '+Math.trunc(petId)+' 不在原 C 可吼跑清單內。');
+    return {kind:'skill',skillId:actor.skillId,target:'pet',petId:Math.trunc(petId),roared:false};
+  }
+
+  // fixed BATTLE_S_Roar -> BATTLE_Exit(pet): no damage, no kill reward.
+  battlePetOutIds.add(pet.id);
+  sourceClearPetBattleProperty(pet);
+  sourceClearPetVary(pet);
+  battlePetGuardIds.delete(pet.id);
+  battlePetAcupunctureIds.delete(pet.id);
+  battlePetNoGuardStates.delete(pet.id);
+  battleMagicPetStates.delete(pet.id);
+  battleMagicPetRoundStates.delete(pet.id);
+  if(state.activePetId===pet.id)state.activePetId=null;
+
+  addLog(unit.name+' 使用「'+label+'」：'+pet.name+'（PETID '+Math.trunc(petId)+'）被吼聲嚇跑了！','good');
+  return {
+    kind:'skill',skillId:actor.skillId,target:'pet',petId:Math.trunc(petId),roared:true,
+    sourcePlayerPetExit:true,noDamage:true,noKillReward:true,noCounter:true
+  };
+}
 function performEnemyAction(actor,unit,options={}){
   const professionCancel=sourceProfessionEnemyCommandCancelled(unit);
   if(professionCancel){
@@ -22453,6 +22534,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Mdfyattack')return performEnemyMdfyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sonic')return performEnemySonic(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Gyrate')return performEnemyGyrate(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Roar')return performEnemyRoar(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Vary')return {kind:'skill',skillId:actor.skillId,vary:true,sourceVaryActive:!!unit.roundVaryActive,sourceVaryRejected:!!unit.sourceVaryRejected,noDamage:true,noCounter:true};
     if(meta?.f==='PETSKILL_Retrace')return performEnemyRetrace(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Weaken')return performEnemyWeaken(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Deeppoison')return performEnemyDeepPoison(actor,unit,options,meta);
@@ -22754,7 +22837,7 @@ function captureTurn(manual=false){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
+      const enemyActionResult=performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false}); sourceAdvanceEnemyVaryTurn(unit);
     }
 
     sourceProcessBattleActorOuterBoundary();
@@ -23607,7 +23690,7 @@ function attackTurn(options={}){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
+      const enemyActionResult=performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true}); sourceAdvanceEnemyVaryTurn(unit);
     }
 
     sourceProcessBattleActorOuterBoundary();
@@ -23717,7 +23800,7 @@ function guardTurn(){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
+      const enemyActionResult=performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false}); sourceAdvanceEnemyVaryTurn(unit);
     }
 
     sourceProcessBattleActorOuterBoundary();

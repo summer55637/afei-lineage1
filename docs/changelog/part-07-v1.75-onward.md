@@ -1,3 +1,40 @@
+## V2.84 Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
+
+V2.84 關閉一條實際存在於 Enemy AI 的 unsupported gap：`600/674/734`。
+
+### Vary 600 / 674
+
+pinned C 的 `PETSKILL_Vary()` 明確限制 `CHAR_PETID` 在 `981/982/983/984`；只解析 `攻%` 與 `敏%`，並把 `CHAR_BASEIMAGENUMBER` 設成 `101428`、`CHAR_WORKTURN=0`。battle loop 每個 command 後遞增 WorkTurn，`>5` 才恢復 BASEBASE image、FIXSTR、FIXDEX。
+
+Web V2.84：
+
+- Enemy 每回合 PreCommand 先重建 FIX；
+- 有 source-backed Vary state 時，再從當輪 FIX 套攻／敏百分比；
+- 只有 981～984 才能建立新的 Vary state；
+- `魔防%` 不自行補效果；
+- Enemy command 結束後依 fixed C `WORKTURN` lifecycle 遞增。
+
+### Roar 734
+
+fixed `PETSKILL_Roar()` 只建立 `BATTLE_COM_S_ROAR`；`BATTLE_S_Roar()` 對 Player 自身設定 `petid=-1`，不會命中清單。對 Pet 則讀 `CHAR_PETID`，命中 option 清單後直接 `BATTLE_Exit()`。
+
+Web V2.84 對應為：
+
+- 目標必須是真正玩家 Pet；
+- `PETID` 必須在 `1009|1010|1011|989|990|991|992|1030|1031|1032|997|998|999|1000`；
+- 成功後加入 `battlePetOutIds`、清除相關戰鬥 state、`activePetId` 清為 null；
+- 不造成傷害、不發擊殺 EXP。
+
+### Regression
+
+新增：
+
+- `tools/check_v284_enemy_vary_roar.mjs`
+- `.github/workflows/v284-enemy-vary-roar.yml`
+
+save schema 維持 30。
+
+---
 ## V2.83 CHAR_WORKPETFALL → rideflg source adapter
 
 V2.83 不建立尚未證明的 RidePet runtime，只把 pinned `battle_command.c` 已知的 battle-result protocol 做成純 source adapter，讓之後真正接 client result 時不必重新猜。
