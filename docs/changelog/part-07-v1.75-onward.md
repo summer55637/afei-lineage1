@@ -5235,7 +5235,7 @@ V2.74 將固定 C 的三個巫師 magic-practice 輔助技能正式納入主線 
 
 ### Regression / CI
 - `tools/check_v274_profession_magic_practice_runtime.mjs`：Skill 18～20 row、M-tier formula、sparse-slot scan、battle-entry snapshot、battle reset 與 command boundary。
-- V2.74 regression 會同時在獨立 final gate 與主線 CI 驗證。
+- V2.74 regression 已併入唯一主線 CI；不再保留獨立重複 gate。
 - save schema 維持 **30**。
 
 ---
