@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.01**
+目前最新可玩核心：**V3.02**
 
-目前主線已完成 V3.01；本版完成 original Defender DamageReact／Guardian substitution 後 Counter FALSE boundary audit。
+目前主線已完成 V3.02；本版修正 primary ACUPUNCTURE WakeUp 的 fixed defindex restore source-order。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,14 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.02：primary ACUPUNCTURE WakeUp 改回 fixed defindex restore order
+
+- fixed `BATTLE_Attack()` 在 ACUPUNCTURE 的 `BATTLE_DamageSub()` 後，先把 `defindex/toindex` 恢復成 original defender，再呼叫 `BATTLE_DamageWakeUp()`。
+- WakeUp 後才再次把 `defindex` 改成 attacker；這個後續值才供 primary Attack 的 death/status/ItemCrush source-order 使用。
+- Counter caller 不走這個 restore，因此 Counter ACUPUNCTURE 仍由 `sourceFinishAcupunctureReaction()` WakeUp reflected attacker。
+- regression：`tools/check_v302_primary_acupuncture_wakeup_order.mjs`
+- CI：`.github/workflows/v302-primary-acupuncture-wakeup.yml`
 
 ## V3.01：original defender DamageReact／Guardian substitution 後仍保留 Counter FALSE boundary
 
