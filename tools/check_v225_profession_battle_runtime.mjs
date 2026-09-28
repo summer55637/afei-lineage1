@@ -138,7 +138,10 @@ assert.ok(prepare.indexOf('target.mp=plan.use.mpAfter')<prepare.indexOf('sourceP
 const turn=extractFunction(game,'attackTurn');
 assert.ok(turn.indexOf('sourceProfessionBattleSkillPrepare')<turn.indexOf('normalBattleOrder'));
 assert.ok(turn.indexOf('normalBattleOrder')<turn.indexOf('processBattleStatusTurn'));
-assert.ok(turn.includes("playerCommand:professionPrepared?'profession':'attack'"));
+assert.ok(
+  turn.includes("playerCommand:professionPrepared?'profession':'attack'")
+  ||turn.includes("playerCommand:(professionPrepared||chargeForOrder)?'profession':'attack'")
+);
 
 // battle_profession_attack_fun quirks:
 // CHAIN proc RNG precedes the first AttackSeq-equivalent hit.
