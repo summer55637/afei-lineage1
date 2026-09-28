@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.06**
+目前最新可玩核心：**V3.07**
 
-目前主線已完成 V3.06；本版補齊 GBreak／GBreak2／FallGround 三個 special caller 的 ACUPUNCTURE WakeUp source-order。
+目前主線已完成 V3.07；本版補齊職業 Toxin Weapon 的 actual-defindex ACUPUNCTURE WakeUp source-order。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,14 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.07：Toxin Weapon ACUPUNCTURE WakeUp = actual defindex
+
+- `BATTLE_COM_S_TOXIN_WEAPON` 若 Guardian substitution 成功，caller 會把 `defindex` 更新成 Guardian。
+- `BATTLE_DamageSub()` 後不 restore original，也不改成 attacker，因此 ACUPUNCTURE WakeUp = actual current `defindex`。
+- Web shared WakeUp selector 新增 `actual`，Toxin caller 顯式使用。
+- regression：`tools/check_v307_toxin_weapon_acupuncture_order.mjs`
+- CI：`.github/workflows/v307-toxin-weapon-acupuncture.yml`
 
 ## V3.06：GBreak／GBreak2／FallGround ACUPUNCTURE caller-sensitive WakeUp
 
