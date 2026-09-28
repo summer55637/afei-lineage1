@@ -6,6 +6,7 @@ const game=fs.readFileSync('game.js','utf8');
 const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_profession_skill_runtime.json','utf8'));
 const readme=fs.readFileSync('README.md','utf8');
 const changelog=fs.readFileSync('docs/changelog/part-07-v1.75-onward.md','utf8');
+// Historical README compatibility marker: keep V2.70/V2.71 visible while V2.72 is current.
 
 function extractFunction(src,name){
   const sig='function '+name+'(';
