@@ -32,6 +32,25 @@ V2.72 在 V2.71 上接入巫師 Skill 16 `PROFESSION_THUNDER_ENCLOSE`，並修�
 
 
 ---
+## V2.71 — Skill 15「火附體」
+
+V2.71 在 V2.70 上接入巫師 Skill 15 `PROFESSION_FIRE_ENCLOSE`；V2.72 又依 pinned fixed C 校正了這個技能的狀態映射與 on-hit aura lifecycle。
+
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`
+- fixed status command uses A-tier success：`100 + A-tier×4`
+- option：`炎|效%1|回%3|成%100`
+- `炎 → CHAR_WORK_F_ENCLOSE_2`：火附體 on-hit counter
+- `燒 → CHAR_WORK_F_ENCLOSE`：真正由玩家普攻觸發的灼傷 StatusSeq
+- on-hit chance：`20 + A-tier×2`；有效回合為 tier<5→1、tier 5～9→2、tier 10→3
+- tier 10 灼傷 stored=4，StatusSeq 實際造成 `150 → 100 → 50` HP
+- Fire Practice 只在附體成功後提升
+- 不走一般 magic dodge / practice / GET_DAMAGE cast path
+- regression：`tools/check_v271_profession_fire_enclose_runtime.mjs`
+- save schema 維持 **30**
+
+完整技術細節請看 [V2.71 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
 ## V2.70 — Skill 14「冰鏡術」
 
 V2.70 在 V2.69 乾淨核心上接入巫師 Skill 14 `PROFESSION_ICE_MIRROR`：
@@ -52,7 +71,7 @@ V2.70 在 V2.69 乾淨核心上接入巫師 Skill 14 `PROFESSION_ICE_MIRROR`：
 ---
 ## V2.69 — Skill 13「火龍槍」
 
-V2.69 是目前保留的最後核心版本，完成：
+V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 - 巫師 Skill 13 `PROFESSION_FIRE_SPEAR`
 - dynamic MP：M-tier 1～2=30、3～4=40、5～6=60、7～8=70、9～10=80
