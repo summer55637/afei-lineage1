@@ -5315,3 +5315,35 @@ V2.72 接入巫師 Skill 16「雷附體」／`PROFESSION_THUNDER_ENCLOSE`，使�
 save schema 維持 **30**。
 
 V2.73 已接續完成 Skill 17「冰附體」，沿 fixed `冻 → CHAR_WORK_I_ENCLOSE_2` / `霜 → CHAR_WORK_I_ENCLOSE` mapping 實作，並補上 FIXDEX 90% StatusSeq lifecycle。
+
+
+---
+
+## V2.76 Skill 21 PROFESSION_TRANSPOSE / 移形換位 live
+
+V2.76 將 Skill 21「移形換位」從 V2.75 的 source-parity core 接進主戰鬥 command pipeline。
+
+### Fixed C 行為
+- PROFESSION_TRANSPOSE 對應 BATTLE_COM_S_TRANSPOSE。
+- fixed C 使用 PROFESSION_CHANGE_SKILL_LEVEL_M()：
+  - Lv1～5：回避 10 / 25 / 30，持續 3 回合。
+  - Lv6～9：回避 45 / 50 / 60，持續 4 回合。
+  - Lv10：回避 70，持續 5 回合。
+- C 實際保存 CHAR_MYSKILLDUCK=turn+1，由自己的 StatusSeq 每回合遞減。
+- CHAR_MYSKILLDUCKPOWER 進入獨立 skill-duck 判定，先於普通 BATTLE_DuckCheck()。
+- BATTLE_MultiList(defNo2) 與 charaindex == toindex 的 fixed target filter 均保留；因此這個 command 最終只讓施術者自身取得臨時閃避 Work。
+- cast animation 保留 img1=101697、img2=101695。
+
+### Web live pipeline
+- sourceProfessionBattleFunctionSupported() 現在接受 PROFESSION_TRANSPOSE。
+- sourceProfessionBattleSkillExecute() 在 generic same-side direct-target gate 之前處理 Skill 21。
+- 玩家 battle view 暴露 skillDuckPower / skillDuckTurns。
+- resetBattleStatuses() 清除 Skill 21 battle-local Work。
+- game.html 更新為 PLAYABLE CORE V2.76。
+- save schema 維持 30。
+
+### Regression / CI
+- tools/check_v275_profession_transpose_runtime.mjs 修正為 fixed C 的 3 / 4 / 5 回合。
+- tools/check_v276_profession_transpose_live.mjs 鎖定 row、M-tier、dispatcher、raw turn+1 counter、StatusSeq decrement、independent skill-duck dodge 與 reset wiring。
+- 新增 .github/workflows/v276-profession-transpose-live.yml。
+
