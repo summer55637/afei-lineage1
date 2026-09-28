@@ -24824,7 +24824,13 @@ function sourceProfessionThunderEncloseDexRoll(quick,{randMacro=sourceCRandMacro
 }
 
 function sourceProfessionIceEncloseDexRoll(quick,{randMacro=sourceCRandMacroValue}={}){
-  return sourceProfessionThunderEncloseDexRoll(quick,{randMacro});
+  const work=Math.trunc(n(quick))+20;
+  const lower=work*0.2;
+  const upper=work*0.5;
+  const roll=randMacro(lower,upper);
+  let dex=work-roll;
+  if(dex<=0)dex=1;
+  return Math.trunc(dex);
 }
 
 function sourceProfessionEncloseAuraSpec(prepared,element='fire'){
