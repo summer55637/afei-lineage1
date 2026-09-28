@@ -1,0 +1,27 @@
+name: TEMP apply V2.73 Ice Enclose
+on:
+  push:
+    paths:
+      - "tools/apply_v273_ice_enclose.mjs"
+      - ".github/workflows/apply-v273.yml"
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Apply V2.73 game.js patch
+        run: node tools/apply_v273_ice_enclose.mjs
+      - name: Commit V2.73 game.js patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "9527"
+          git config user.email "tttt0977661664@gmail.com"
+          git add game.js
+          git commit -m "V2.73 implement Ice Enclose runtime"
+          git push origin HEAD:main
