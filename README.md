@@ -4,9 +4,23 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.06**
+**PLAYABLE CORE V3.07**
 
-歷史 regression markers：**PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.07 — Toxin Weapon uses actual defindex for Acupuncture WakeUp
+
+V3.07 補上固定 C 職業毒素武器的 caller-specific boundary：
+
+- fixed `BATTLE_COM_S_TOXIN_WEAPON` 在 `BATTLE_AttackSeq()` 後若有 Guardian，先把 caller `defindex` 更新為 Guardian。
+- `BATTLE_DamageSub()` 觸發 ACUPUNCTURE 後，這個 caller **沒有** primary `BATTLE_Attack()` 的 original-target restore，也沒有像 Counter/GBreak 那樣把 `defindex` 改成 attacker。
+- 因此 Toxin Weapon 的 WakeUp target = **actual current defindex**：有 Guardian 就是 Guardian，沒有 Guardian 就是原 target。
+- Web shared caller selector 新增 `actual`，只有 Toxin Weapon 顯式使用；primary／Counter／special AttackDamage／GBreak/FallGround matrix 不變。
+
+本版沒有新增 RNG、傷害、Guardian 條件或新的數值。
+
+regression：`tools/check_v307_toxin_weapon_acupuncture_order.mjs`
+GitHub Actions：`.github/workflows/v307-toxin-weapon-acupuncture.yml`
 
 ## V3.06 — GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
 
