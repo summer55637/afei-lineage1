@@ -40,8 +40,8 @@ for(const fn of ['playerBattleView','petBattleView','enemyBattleView']){
   assert.ok(body.includes('damageReact:sourceBattleDamageReactActive(desc)?1:0'),fn+' source DamageReact view');
 }
 
-assert.match(html,/PLAYABLE CORE V2\.90/);
-assert.match(readme,/PLAYABLE CORE V2\.90/);
+assert.match(html,/PLAYABLE CORE V2\.91/);
+assert.match(readme,/PLAYABLE CORE V2\.91/);
 assert.match(readme,/V2\.90 — attacker-side DamageReact Counter boundary/);
 
 console.log(JSON.stringify({pass:true,version:'V2.90',attackerReactBoundary:true,counterParticipantViews:3}));
