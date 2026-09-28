@@ -69,6 +69,8 @@ const ctx={
   sourceProfessionSkillTemplate:(id)=>runtime.bySkillId[String(id)]||null,
   sourcePlayerProfessionSkillDisplayLevel:()=>70,
   sourceProfessionSkillUsePreflight:({skillId,mp})=>({ok:true,mpAfter:mp-13,skillId}),
+  sourceRandModulo:(m)=>0,
+  cRand:(a,b)=>0,
   sourceProfessionSkillPostDispatchProficiency:({dispatchRet})=>({dispatchRet,ok:true}),
   sourceProfessionLogProficiencyResult:()=>{},
   addLog:(m)=>logs.push(m)
@@ -137,7 +139,7 @@ ctx.state.mp=50;
 ctx.professionEncounterFix=0;
 ctx.professionEncounterUntilSec=0;
 ctx.sourcePlayerProfessionSkillDisplayLevel=()=>60;
-const used=ctx.sourceProfessionOutOfBattleSkillUse({slot:0,target:ctx.state,nowMs:200000});
+const used=ctx.sourceProfessionOutOfBattleSkillUse({slot:0,target:ctx.state,nowMs:200000,randModulo:ctx.sourceRandModulo,randInclusive:ctx.cRand});
 assert.equal(used.ok,true);
 assert.equal(used.effectApplied,true);
 assert.equal(used.encounterFix,30);
@@ -147,7 +149,7 @@ assert.equal(used.animation.img1,101627);
 assert.equal(used.animation.img2,101629);
 assert.equal(ctx.state.mp,37);
 
-const usedAgain=ctx.sourceProfessionOutOfBattleSkillUse({slot:0,target:ctx.state,nowMs:200000});
+const usedAgain=ctx.sourceProfessionOutOfBattleSkillUse({slot:0,target:ctx.state,nowMs:200000,randModulo:ctx.sourceRandModulo,randInclusive:ctx.cRand});
 assert.equal(usedAgain.protocolWouldReject,true);
 assert.equal(usedAgain.dispatchRet,-1);
 assert.equal(usedAgain.encounterFix,30);
