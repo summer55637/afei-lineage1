@@ -18330,7 +18330,8 @@ function sourcePerformPetDamageToHpSkill(pet,action){
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,
     actualTargetUnitId:actual?.id||target.id,r,healed,absorbPct,attackReduceRaw,
-    cIntegerDivision,hadDamageReact,guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+    cIntegerDivision,hadDamageReact,guardianCalcOnlyId:r.guardianCalcOnly?.id||null,
+    sourceNoCounter:true
   };
 }
 function sourcePerformPetDamageToHp2Skill(pet,action){
@@ -18418,7 +18419,8 @@ function sourcePerformPetMpDamageSkill(pet,action){
     handled:true,skillId:action?.skillId,targetUnitId:target.id,
     actualTargetUnitId:actual?.id||target.id,r,
     attackReduceRaw,cIntegerDivision,mpPct,mpDamage,hadDamageReact,
-    sourceTargetType:'enemy',guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+    sourceTargetType:'enemy',guardianCalcOnlyId:r.guardianCalcOnly?.id||null,
+    sourceNoCounter:true
   };
 }
 
@@ -18575,7 +18577,8 @@ function sourcePerformPetLighttakeedSkill(pet,action){
     actualTargetUnitId:actual?.id||target.id,r,
     attack,defense,attackPct:70,defensePct:50,
     requestedReact,hadDamageReact,matchedReact,absorbed,
-    guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+    guardianCalcOnlyId:r.guardianCalcOnly?.id||null,
+    sourceNoCounter:true
   };
 }
 
@@ -20110,7 +20113,8 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
     attackPct,baseAttack,attack,hadDamageReact,guardianCalcOnly:guardian?.id||null,
-    fallRoll,fallSuccess,enemyRideRuntime,r
+    fallRoll,fallSuccess,enemyRideRuntime,r,
+    sourceNoCounter:true
   };
 }
 
@@ -20127,7 +20131,8 @@ function sourcePerformPetBattlePropertySkill(pet,action){
   const key=battleStatusKey(desc);
   if(key)battlePropertyKeys.add(key);
   addLog(pet.name+' 使用「'+(meta?.n||'魔之詛咒')+'」：本場戰鬥啟用原 PET_PetskillPropertyEvent 屬性剋制 callback。','pet');
-  return {handled:true,skillId:action?.skillId,battleProperty:true,noAction:true};
+  return {handled:true,skillId:action?.skillId,battleProperty:true,noAction:true,
+    sourceNoCounter:true};
 }
 function sourcePerformPetAntInterSkill(pet,action,options={}){
   // ANTINTER only enters its special branch when COM2 is a dead CHAR_TYPEPET.
