@@ -2821,7 +2821,7 @@ function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
     ?!!calcTarget.guardThisTurn&&!battleStatusActive(calcDesc,'confusion')
     :originalGuarding;
   const opts=Object.assign({},attackOptions,{
-    guarding:calcGuarding,disableDodge:true,skipSuitDodge:!!guardian
+    guarding:calcGuarding,disableDodge:true,skipSuitDodge:true
   });
   delete opts.attackerOverride;
   const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),opts);
@@ -13778,7 +13778,7 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
     ?(!!actual.guardThisTurn&&!battleStatusActive(actualDesc,'confusion'))
     :originalGuarding;
   const r=resolveNormalAttack(attacker,enemyBattleView(actual),Object.assign({},options,{
-    guarding:actualGuarding,disableDodge:true,skipSuitDodge:!!guardian
+    guarding:actualGuarding,disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=duck;
   r.actualTarget=actual;
@@ -16636,7 +16636,7 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
     }
     if(!r){
       r=resolveNormalAttack(attacker,defender,{
-        guarding:false,disableDodge:true,preGuardDamageMultiplier:multiplier
+        guarding:false,disableDodge:true,skipSuitDodge:!guardCommand,preGuardDamageMultiplier:multiplier
       });
     }
     r.sourcePetGuardCommand=guardCommand;
