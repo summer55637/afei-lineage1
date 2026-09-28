@@ -61,5 +61,5 @@ assert.ok(combinedFn.includes('SOURCE_COMBINED_MISSING_MAGIC_IDS.includes(magicI
 assert.ok(combinedFn.includes('missingMagicRow:true'),'Combined no-row result must remain explicit');
 assert.ok(combinedFn.includes('mpDelta:0'),'missing magic must not invent MP/effect behavior');
 
-assert.ok(html.includes('PLAYABLE CORE V2.80'));
+assert.ok(html.includes('PLAYABLE CORE V2.90'));
 console.log(JSON.stringify({pass:true,version:'V2.80',focus:'enemy-fallground-char-ridepet-boundary-and-combined-missing-magic-boundary',fallGroundSkill:210,combinedRows:combinedRows.length,missingCombinedMagicIds:missingIds,saveSchema:30}));
