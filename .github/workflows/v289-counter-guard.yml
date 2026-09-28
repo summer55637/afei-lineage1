@@ -26,3 +26,5 @@ jobs:
         run: node tools/check_v288_damagereact_counter_boundary.mjs
       - name: Run V2.89 Counter GuardAdjust boundary audit
         run: node tools/check_v289_counter_guard_boundary.mjs
+
+# V2.89 validation trigger: keep workflow on current main marker chain.
