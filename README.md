@@ -4,9 +4,24 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.05**
+**PLAYABLE CORE V3.06**
 
-歷史 regression markers：**PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.06 — GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
+
+V3.06 再把三個 special physical caller 收斂回 fixed C：
+
+- `BATTLE_S_GBreak()`：若真正進入 DamageSub，ACUPUNCTURE 後 `defindex` 改成 attacker，WakeUp = attacker。
+- `BATTLE_S_GBreak2()`：同樣 WakeUp = attacker。
+- `BATTLE_S_FallGround()`：Guardian 只參與 AttackSeq 的 local calc，caller defindex 不更新；ACUPUNCTURE 後仍改成 attacker，WakeUp = attacker。
+- Enemy→Pet `FallGround` 現在使用 calc-only Guardian helper：Guardian 可影響傷害計算，但真正承傷者仍是 original Pet；ACUPUNCTURE WakeUp 仍是 attacker。
+- ordinary `BATTLE_Attack()`、Counter、Combo 與 V3.05 的 `BATTLE_S_AttackDamage` caller matrix 不變。
+
+本版沒有新增 RNG、傷害、Guardian 條件或新的數值。
+
+regression：`tools/check_v306_gbreak_fallground_acupuncture_order.mjs`
+GitHub Actions：`.github/workflows/v306-gbreak-fallground-acupuncture.yml`
 
 ## V3.05 — caller-sensitive Acupuncture WakeUp order
 
