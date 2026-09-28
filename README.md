@@ -4,15 +4,27 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.79**
+**PLAYABLE CORE V2.80**
 
-目前主線已完成 V2.79，下一個核心開發版本待定。
+目前主線已完成 V2.80；本版先把兩個容易被「看起來像能做」而誤猜的 source boundary 鎖死。
 
 > **原 C 規則優先、不猜數值**
 
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.80 — Enemy FallGround / Combined source boundary audit
+
+V2.80 沿 fixed C 繼續往 Enemy／Pet 的特殊技能邊界追，這輪沒有猜新效果，而是把兩個資料斷點正式鎖進 regression：
+
+- PETSKILL_FallGround（Skill 210）固定 option 為 攻%-30，原 C 的 BATTLE_S_FallGround() 確實有 _ENEMY_FALLGROUND 分支，但 Enemy 建立時只做 ridePetTable 外觀圖轉換，沒有把 CHAR_RIDEPET 設成正值；目前 generated Enemy runtime 也沒有 source-backed ridePetId，因此不自行製造騎寵。
+- 落馬判定的 RAND(0,100) 與 >50 仍保留；只有 runtime 本身已帶有正值 ridePetId 時才會進 0.7 倍 STR／TOUGH／VITAL 分支。
+- PETSKILL_Combined 固定 36 筆；Skill 715「火牛狂襲」的 458／459／460／461／462 中，fixed magic.txt 目前只有 460／461 可由已證明的 MagicStatusChange 路徑接出，458／459／462 沒有 source magic row，維持 missingMagicRow fail-closed。
+- 不從技能名稱「火牛狂襲」自行推導多體傷害、火屬性或其他 magic 效果。
+- save schema 維持 30。
+
+regression：tools/check_v280_source_boundaries.mjs
 
 ## V2.79 — Enemy PETFLG source parity / PetSkill boundary regression
 

@@ -1,3 +1,65 @@
+## V2.80 Enemy FallGround / Combined source boundary audit
+
+V2.79 後繼續掃固定 C 的 Enemy／Pet 特殊技能來源。這輪的結論是：有兩條路徑可以完整證明「哪裡能做、哪裡不能猜」，因此直接做成 regression boundary，而不是塞入假效果。
+
+### 1. PETSKILL_FallGround（Skill 210）
+
+固定 petskill2.txt row 210：
+
+- 名稱：落馬術
+- function：PETSKILL_FallGround
+- option：攻%-30
+- fixed C 在 pet_skill.c 先把 WORKATTACKPOWER 做成 FIXSTR + FIXSTR * (-30%)，因此攻擊工作值 = 70% FIXSTR。
+- battle_event.c::BATTLE_S_FallGround() 之後才執行落馬 RNG：RAND(0,100)，成功條件 >50。
+- _ENEMY_FALLGROUND 分支要求 CHAR_TYPEENEMY 且 CHAR_RIDEPET > 0，成功後才清空 RidePet 並把 STR／TOUGH／VITAL 各乘 0.7。
+
+### 2. 為什麼目前不能替 Enemy 生出 ridePetId
+
+固定 enemy.c 的 _ENEMY_FALLGROUND 相關建立碼會掃 ridePetTable[296]，如果 Enemy 的 CHAR_BASEBASEIMAGENUMBER 是 ride image，便把外觀欄位改成 charNo / rideNo 組合。
+
+但該建立流程沒有把 CHAR_RIDEPET 設成正值；CHAR_RIDEPET 的預設值仍是 -1。因此「看起來像騎寵」與「原 C 認定真的有 RidePet」是兩件事。
+
+目前 generated stoneage_general_encounter_runtime.json 也沒有 ridePetId 來源欄位。Web 因而維持：
+
+- fallRoll 仍照原 C 消耗；
+- 沒有 source-backed ridePetId 時，落馬成功旗標保持 false；
+- 不自行套 0.7 倍屬性；
+- 若未來真的補到 ridePetId source，既有分支可以直接承接。
+
+### 3. PETSKILL_Combined Skill 715「火牛狂襲」
+
+fixed runtime row：
+
+綜合法|5|458|459|460|461|462
+
+原 PETSKILL_Combined() 只負責從這個 list 隨機抽出一個數字，再交給 BATTLE_COM_JYUJYUTU -> MAGIC_DirectUse()。
+
+目前 fixed magic.txt 對 458／459／462 沒有 row，所以：
+
+- 458、459、462 維持 missingMagicRow=true；
+- 460、461 仍走已證明的 MagicStatusChange 路徑；
+- 不從「火牛分身攻擊對方敵人全體」描述自行推導傷害型 magic。
+
+### Regression
+
+新增：
+
+- tools/check_v280_source_boundaries.mjs
+- .github/workflows/v280-source-boundaries.yml
+
+鎖定：
+
+- Skill 210 固定 option 與 FallGround RNG RAND(0,100)>50
+- Enemy ridePetId 不由 makeEnemyUnit() 虛構
+- generated Enemy runtime 不宣稱 ridePetId source field
+- Combined 固定 36 rows
+- Skill 715 精確 option
+- 458／459／462 仍不存在於 fixed magic runtime
+- game.js 維持 missingMagicRow fail-closed
+
+save schema 維持 30。
+
+---
 # 阿肥石器時代放置版－開發紀錄 Part 07
 
 > 範圍：V1.75 onward  

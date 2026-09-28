@@ -20020,8 +20020,10 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
     // fixed source consumes RAND(0,100) regardless of whether the Enemy actually has a ride pet.
     fallRoll=cRand(0,100);
     if(fallRoll>50){
-      // _ENEMY_FALLGROUND is compiled on, but current generated Enemy runtime exposes no
-      // CHAR_RIDEPET-equivalent field. Do not invent a mount and do not apply the STR/TOUGH/VITAL *0.7 branch.
+      // _ENEMY_FALLGROUND is compiled on, but fixed enemy.c only converts matching
+      // ridePetTable ride images; it does not assign a positive CHAR_RIDEPET to the Enemy.
+      // Therefore the current generated Enemy runtime has no source-backed ridePetId.
+      // Do not invent a mount and do not apply the STR/TOUGH/VITAL *0.7 branch.
       enemyRideRuntime=Number.isFinite(Number(target?.ridePetId))&&Number(target.ridePetId)>0;
       if(enemyRideRuntime){
         target.ridePetId=-1;
