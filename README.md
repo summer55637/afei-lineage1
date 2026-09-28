@@ -4,9 +4,22 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.98**
+**PLAYABLE CORE V2.99**
 
-歷史 regression markers：**PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V2.99 — manual first-dodge callers must not re-run suit dodge
+
+V2.99 收斂 V2.98 shared `sourceInitialDodgeOnly()` 後的 caller 邊界：
+
+- `sourceInitialDodgeOnly()` 現在本身就包含 fixed `_SUIT_ADDPART3` 第二層 dodge；任何 caller 若先執行它，再把同一 hit 交給 `resolveNormalAttack()` 做 critical/damage 計算，就必須 `skipSuitDodge:true`。
+- fixed `BATTLE_AttackSeq()` 的唯一 suit-dodge branch 在 GuardianCheck **之前**；Guardian substitution、calc-only caller、GBREAK2 都不能再消耗第二顆 suit RNG。
+- 本版修正：`battle_profession_attack_fun` calc-only、Enemy Guardian real-substitution、Enemy/Pet GBreak2、Pet `BATTLE_S_AttackDamage` calc-only。
+- GBreak2 的 Pet guard-command 特例沒有手動 first-dodge，因此僅該分支保留 suit-dodge；手動 first-dodge 的分支則明確 `skipSuitDodge:true`。
+- `_PREVENT_TEAMATTACK`、Critical 數值與 DamageSub 數值本版沒有變更，仍維持 source-backed fail-closed。
+
+regression：`tools/check_v299_shared_first_dodge_suit_gate.mjs`
+GitHub Actions：`.github/workflows/v299-shared-first-dodge-suit-gate.yml`
 
 ## V2.98 — first DuckCheck DamageReact boundary + Guardian pre-substitution suit dodge
 
@@ -142,7 +155,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.98；本版把 GuardianCheck 的 instigate source block 收斂。
+目前主線已完成 V2.99；本版把 GuardianCheck 的 instigate source block 收斂。
 
 > **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
