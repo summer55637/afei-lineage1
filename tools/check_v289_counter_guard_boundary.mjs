@@ -28,7 +28,7 @@ const enemy=sliceFunction('enemyBattleView');
 assert.ok(enemy.includes("counterGuarding:!!unit?.guardThisTurn&&!battleStatusActive(desc,'confusion')"));
 
 const guard=sliceFunction('battleGuardAdjust');
-assert.match(guard,/roll=cRand\\(1,100\\)/);
+assert.match(guard,/roll=cRand\(1,100\)/);
 assert.match(guard,/roll<=25/);
 assert.match(guard,/roll<=50/);
 assert.match(guard,/roll<=70/);
