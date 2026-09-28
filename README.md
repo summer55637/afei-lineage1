@@ -4,9 +4,9 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.69**
+**PLAYABLE CORE V2.70**
 
-目前主線已整理回 V2.69，下一個核心開發版本從 **V2.70** 重新開始。
+目前主線已完成 V2.70，下一個核心開發版本為 **V2.71**。
 
 > **原 C 規則優先、不猜數值**
 
@@ -14,6 +14,24 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.70 — Skill 14「冰鏡術」
+
+V2.70 在 V2.69 乾淨核心上接入巫師 Skill 14 `PROFESSION_ICE_MIRROR`：
+
+- dynamic MP：M-tier 1～2=20、3～4=25、5～6=30、7～8=35、9～10=40
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`
+- Ice Practice 在 analysis 階段提升；當次施法保留 battle-entry proficiency snapshot
+- fixed GET_PRACTICE 沒有 ICE_MIRROR case：power=0，但 critical + M2 RNG 仍消耗，98～102 variance 不消耗
+- special damage 依目標 Defense / Toughness 計算，並保留 type=2 GET_DAMAGE 的 Thunder proficiency/resist source bug
+- Ice Mirror 無額外第二段 Dodge gate
+- img2=101652；direct player-side 座標 (0,50)，其他目標 (0,-50)
+- fixed source 的 NPC 800 cap 索引 quirk 不猜、不強制補 cap
+- regression：`tools/check_v270_profession_ice_mirror_runtime.mjs`
+- save schema 維持 **30**
+
+完整技術細節請看 [V2.70 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
+---
 ## V2.69 — Skill 13「火龍槍」
 
 V2.69 是目前保留的最後核心版本，完成：
@@ -64,8 +82,8 @@ V2.69 是目前保留的最後核心版本，完成：
 
 **下一個核心版本：V2.71**
 
-- V2.70 重新從 V2.69 基準開始
-- 每個版本依序完成 source 對照、production runtime、regression 與 CI
+- V2.70 已完成 Skill 14 冰鏡術核心
+- 下一版依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
 ## 目前主要系統
@@ -98,6 +116,6 @@ V2.69 是目前保留的最後核心版本，完成：
 - [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 - [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 - [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-- [V1.75～V2.69](docs/changelog/part-07-v1.75-onward.md)
+- [V1.75～V2.70](docs/changelog/part-07-v1.75-onward.md)
 
 README 只保留目前版本、自述與開發方向；詳細技術內容統一放在 CHANGELOG，避免首頁再次堆積過時說明。
