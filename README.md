@@ -6,7 +6,7 @@
 
 **PLAYABLE CORE V2.69**
 
-目前主線已整理回 V2.69，下一個核心開發版本從 **V2.71 / Skill 14「冰鏡術」** 繼續。
+目前主線已整理回 V2.69，下一個核心開發版本從 **V2.70** 重新開始。
 
 > **原 C 規則優先、不猜數值**
 
@@ -40,9 +40,8 @@ V2.69 是目前保留的最後核心版本，完成：
 
 **下一個核心版本：V2.71**
 
-- Skill 14「冰鏡術」／`PROFESSION_ICE_MIRROR`
-- 先比對 fixed source 的 MP、Practice、Dodge、Damage、Animation 與 RNG 順序
-- 再接入 production runtime、regression 與 CI
+- V2.70 重新從 V2.69 基準開始
+- 每個版本依序完成 source 對照、production runtime、regression 與 CI
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
 ## 目前主要系統
