@@ -5175,48 +5175,70 @@ save schema 維持 **30**。
 
 ---
 
-## V2.71 Skill 15 FIRE_ENCLOSE / 火附體 StatusSeq lifecycle
+## V2.71 Skill 15 FIRE_ENCLOSE / 火附體 fixed C mapping
 
-V2.71 沿 V2.70 繼續固定 C profession skill 主線，接入巫師 Skill 15「火附體」／`PROFESSION_FIRE_ENCLOSE`。公開資料把它描述為把火焰附在武器／防具上；固定 C 的實際 battle command 則走 `battle_profession_status_chang_fun()` 的不移動型狀態分支，真正可觀察的效果是目標的 Fire Enclose StatusSeq 逐回合扣 HP。
+V2.71 接入 Skill 15，但本版原先把 option `炎` 直接當成火傷 StatusSeq；V2.72 依 pinned fixed C 重新校正這個映射。固定 `StatusTbl` 的 `炎` 對應 `CHAR_WORK_F_ENCLOSE_2`，因此火附體本身是 on-hit aura counter，不是立即灼傷。
 
-### fixed skill row / MP / Dex
-
-- Skill 15 runtime：`PROFESSION_FIRE_ENCLOSE`。
-- option：`炎|效%1|回%3|成%100`；img1=101697、img2=101699、icon=29258、cost=1000。
+### Skill row / MP / Dex
+- Skill 15：`PROFESSION_FIRE_ENCLOSE`。
+- option：`炎|效%1|回%3|成%100`；img1=101697、img2=101699、icon=29258。
 - dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
-- fixed Dex：與 Storm / Fire Spear / Ice Mirror / Enclose 同組，`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
 
-### Cast path / RNG
+### Cast / source mapping
+- target 走 `BATTLE_MultiList()`，再使用 `PROFESSION_BATTLE_StatusAttackCheck()`。
+- skill level 使用 A-tier；成功率=`100 + A-tier×4`。
+- 成功後固定 C 執行 `CHAR_setWorkInt(toindex, StatusTbl[status], turn+1)`。
+- `炎 → CHAR_WORK_F_ENCLOSE_2`：建立火附體的 on-hit counter。
+- `燒 → CHAR_WORK_F_ENCLOSE`：這才是後續普攻觸發的灼傷 StatusSeq。
+- on-hit chance=`20 + A-tier×2`；火附體有效附加狀態回合為 tier<5→1、tier 5～9→2、tier 10→3。
 
-- 不走一般 `PROFESSION_MAGIC_ATTAIC`，所以不做 magic dodge、practice power、GET_DAMAGE 與普通魔法傷害。
-- target 先走 `BATTLE_MultiList`，再對每個目標使用 `PROFESSION_BATTLE_StatusAttackCheck`。
-- fixed skill level 使用 A-tier，不是 M-tier；成功率是 option `成%100` 加上 `A-tier × 4`。
-- 成功後 StatusTbl 直接寫 `turn+1`，因此 option `回%3` 會保存 **4**；真正 StatusSeq 共有 3 次有效傷害 tick。
-- Fire Practice 熟練度提升發生在狀態成功、寫入固定 C work field 之後；失敗不走這個 success path。
-
-### StatusSeq damage
-
-固定 `BATTLE_StatusSeq()` 先把 StatusTbl 倒數，再進 `CHAR_WORK_F_ENCLOSE` case。傷害基礎值固定為 `50 × 當前 cnt`，之後呼叫以「被火附體的目標自己」同時作 attackindex／defindex 的 Fire GET_DAMAGE。
-
-因此新狀態保存 4 回合時，三次有效傷害依序是：
-
-- 第一次：cnt=3 → **150 HP**
-- 第二次：cnt=2 → **100 HP**
-- 第三次：cnt=1 → **50 HP**
-- 接著 cnt=0，走通用狀態結束，不再造成 0 傷害。
-
-### important fixed-source dead path
-
-fixed C 在成功施放 Fire Enclose 後會寫入 `CHAR_WORKMOD_F_ENCLOSE_2`，也就是附加攻擊用的技能等級欄位；但 pinned build 中搜尋不到任何將 `CHAR_WORK_F_ENCLOSE_2` 寫成正值的路徑。後面的普通物理攻擊確實存在「火／冰／雷附體附加狀態」檢查，但它讀的是這個始終沒有被寫入的 counter field。
-
-V2.71 **不自行把這條死路修活**：Web 會保留 `sourceFireEncloseModTier` 的來源資料，但 `sourceFireEncloseAuraActive=false`，不額外替 Fire Enclose 加一個「攻擊時自動附加燒傷」效果。這符合本專案的「原 C 規則優先、不猜數值」原則。
+### Fire on-hit StatusSeq
+- fixed `BATTLE_Attack()` 只在玩家造成正傷害後檢查 F/I/T `_2` counter，Fire 先於 Ice / Thunder。
+- 成功觸發後以 `img1=101697`、`img2=101698` 寫入 `燒`。
+- stored counter 使用 `turn+1`，因此 tier 10 的火燒會保存 4；StatusSeq 先減 1，再造成 `150 → 100 → 50` HP。
+- V2.71 原先的 direct-DOT Web 模型已在 V2.72 修正為固定 C 的 aura→on-hit lifecycle。
 
 ### Regression
-
-新增：
-
-`tools/check_v271_profession_fire_enclose_runtime.mjs`
-
-鎖定 runtime row、dynamic MP、A-tier 成功率、Dex RNG、StatusTbl stored +1、成功後 Fire Practice、150/100/50 damage ticks，以及 fixed `_2` counter dead path。
+`tools/check_v271_profession_fire_enclose_runtime.mjs` 現在鎖定 `炎/_F_ENCLOSE_2`、`燒/_F_ENCLOSE`、stored counter 與 on-hit chance。
 
 save schema 維持 **30**。
+
+---
+
+## V2.72 Skill 16 THUNDER_ENCLOSE / 雷附體
+
+V2.72 接入巫師 Skill 16「雷附體」／`PROFESSION_THUNDER_ENCLOSE`，使用 fixed C 與 Fire/Ice Enclose 共用的 `_2` on-hit aura lifecycle。
+
+### Skill row / MP / Dex
+- Skill 16：`雷附體 / PROFESSION_THUNDER_ENCLOSE`。
+- option：`击|效%1|回%1|成%100`；TARGET OTHER、KIND 1。
+- img1=101697、row img2=101701、icon=29259。
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+
+### Cast / aura counter
+- fixed status command 使用 A-tier；成功率=`100 + A-tier×4`。
+- `击 → CHAR_WORK_T_ENCLOSE_2`，option `回%1` 保存 StatusTbl=2。
+- 成功後寫入雷附體 counter 與對應 A-tier MOD；熟練度只在成功 path 提升。
+- 雷附體本身不直接造成 damage，也不走 magic dodge / GET_DAMAGE cast path。
+
+### Player physical-hit proc
+- fixed `BATTLE_Attack()` 只在攻擊者是 Player 且 `damage > 0` 時檢查附體。
+- 觸發率=`20 + A-tier×2`。
+- Thunder 命中狀態 token 是 `电`，映射到 `CHAR_WORK_T_ENCLOSE`。
+- Thunder 強制有效回合為 1，因此 StatusTbl stored=2。
+- `CHAR_WORK_T_ENCLOSE` 被 fixed `BATTLE_CanMoveCheck()` 視為不可行動狀態；因此雷附體命中後封鎖 1 回合，再在下一次該角色的 StatusSeq 後解除。
+- on-hit animation：img1=101697、img2=101700。
+
+### Fire mapping correction included in V2.72
+本版同時把 V2.71 的錯誤 Fire Enclose model 校正回 fixed C：`炎` 建立 `_F_ENCLOSE_2`，`燒` 才建立 `_F_ENCLOSE`。因此後續 Ice Enclose（Skill 17）可以直接沿同一套 F/I/T `_2` aura 模型接續。
+
+### Regression / CI
+- `tools/check_v271_profession_fire_enclose_runtime.mjs`：Fire mapping correction。
+- `tools/check_v272_profession_thunder_enclose_runtime.mjs`：Skill 16 row、Dex、A-tier、counter、on-hit chance、Thunder one-turn status、img2=101700。
+- CI workflow 已把 V2.72 regression 加入 push path 與執行步驟。
+
+save schema 維持 **30**。
+
+下一步：V2.73 預計接續 Skill 17「冰附體」，沿 fixed `冻 → CHAR_WORK_I_ENCLOSE_2` / `霜 → CHAR_WORK_I_ENCLOSE` mapping 實作。
