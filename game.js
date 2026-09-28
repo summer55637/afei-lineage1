@@ -13594,13 +13594,6 @@ function performConfusionAttack(actor,statusTurn,options={}){
   const attackerView=battleStatusDescView(attackerDesc);
   if(!attackerView)return true;
 
-  // V1.75: StatusSeq has already rewritten COM1/COM2 before BATTLE_GetAttackCount.
-  // A Player holding an indirect weapon therefore follows the same BOW/BOOMERANG/
-  // BOUNDTHROW/BREAKTHROW command path even when confusion pointed COM2 back to side 0.
-  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
-    return sourcePerformPlayerRangedConfusionAttack(actor,pick,options)||true;
-  }
-
   const targetDesc=pick.target;
   if(!targetDesc||!battleStatusDescAlive(targetDesc)){
     addLog(battleStatusDescName(attackerDesc)+' 受到混亂影響改為普通攻擊，但沒有可攻擊的目標。');
@@ -13608,11 +13601,18 @@ function performConfusionAttack(actor,statusTurn,options={}){
   }
 
   // fixed battle.c BATTLE_COM_S_CHAOS:
-  // _PREVENT_TEAMATTACK rejects the selected same-side target BEFORE AttackSeq.
+  // _PREVENT_TEAMATTACK runs before the normal/ranged AttackSeq branch.
   // Keep the already-consumed StatusSeq target RNG, but do not consume Duck/Critical/Damage RNG.
   if(sourceBattleSameSideDesc(attackerDesc,targetDesc)){
     addLog(battleStatusDescName(attackerDesc)+' 混亂選到同隊目標；依原版同隊攻擊限制，本次不執行攻擊。');
     return true;
+  }
+
+  // V1.75: StatusSeq has already rewritten COM1/COM2 before BATTLE_GetAttackCount.
+  // A Player holding an indirect weapon therefore follows the same BOW/BOOMERANG/
+  // BOUNDTHROW/BREAKTHROW command path only after the same-side gate has passed.
+  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
+    return sourcePerformPlayerRangedConfusionAttack(actor,pick,options)||true;
   }
 
   const defenderView=battleStatusDescView(targetDesc);
