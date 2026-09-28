@@ -29,8 +29,6 @@ V2.74 把固定 C 的三個熟練度輔助技能正式整理進主線：
 - regression：`tools/check_v274_profession_magic_practice_runtime.mjs`
 - save schema 維持 **30**
 
-V2.74 的公開資料也與這個定位一致：舊版資料把火／冰／雷熟練度列為增加對應屬性魔法攻擊力的輔助技能，並記載以對應屬性法術／附體來提升熟練度。citeturn706381search0turn706381search1
-
 完整技術細節請看 [V2.74 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
 
 
