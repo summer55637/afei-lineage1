@@ -16,7 +16,7 @@ function sliceFunction(name){
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const real=sliceFunction('resolveAttackToEnemyWithGuardian');
-assert.ok(real.includes('disableDodge:true,skipSuitDodge:!!guardian'));
+assert.ok(real.includes('disableDodge:true,skipSuitDodge:true'));
 assert.ok(real.includes('const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,options.attackerUnit||null);'));
 assert.ok(real.includes('sourceInitialDodgeOnly(attacker,originalView,Object.assign({},options,{'));
 assert.ok(real.includes('skipSuitDodge:!!guardian'));
