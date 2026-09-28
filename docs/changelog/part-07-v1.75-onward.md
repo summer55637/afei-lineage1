@@ -1,3 +1,19 @@
+## V3.03 Guardian-provided Acupuncture still wakes original defender
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+V3.03 補上 V3.02 尚未涵蓋的 ordinary player/Pet primary caller：
+
+1. original defender 完成 first-dodge / Guardian substitution；
+2. Guardian 若持有 ACUPUNCTURE，`BATTLE_DamageSub()` 對 actual `defindex` 產生反應；
+3. `BATTLE_Attack()` 在 `BATTLE_DamageWakeUp()` 前仍把 `defindex/toindex` 恢復為 original `defNo`；
+4. 因此 WakeUp 對象仍是 original defender，而不是 Guardian。
+
+Web `applyFriendlyEnemyHit()` 現在只在 ACUPUNCTURE trigger 時改用 `originalTargetDesc`；普通 hit 不變。
+
+regression：`tools/check_v303_guardian_acupuncture_wakeup_order.mjs`
+CI：`.github/workflows/v303-guardian-acupuncture-wakeup.yml`
+
 ## V3.02 primary Acupuncture WakeUp follows fixed defindex restore order
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
