@@ -36,8 +36,8 @@ assert.equal(game.includes('sourcePetFall=true;'),true,'BecomeFox keeps its exis
 
 assert.ok(workflow.includes('node --check game.js'));
 assert.ok(workflow.includes('node tools/check_v282_fallground_react.mjs'));
-assert.match(html,/PLAYABLE CORE V2\\.82/);
-assert.match(readme,/PLAYABLE CORE V2\\.82/);
-assert.match(readme,/V2\\.82.*FallGround.*DamageReact/i);
+assert.match(html,/PLAYABLE CORE V2\.82/);
+assert.match(readme,/PLAYABLE CORE V2\.82/);
+assert.match(readme,/V2\.82.*FallGround.*DamageReact/i);
 
 console.log(JSON.stringify({pass:true,version:'V2.82',focus:'FallGround react==0 gate + CHAR_WORKPETFALL ride-system fail-closed boundary',fallRng:'RAND(0,100) > 50',currentDamageReact:'ACUPUNCTURE',rideSystem:'fail-closed'}));
