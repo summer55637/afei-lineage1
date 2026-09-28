@@ -39,6 +39,8 @@ jobs:
         run: node tools/check_v295_guardian_no_second_suit_dodge.mjs
       - name: Run V2.96 Guardian instigate source-block audit
         run: node tools/check_v296_guardian_instigate_block.mjs
+      - name: Run V2.97 Acupuncture WakeUp target audit
+        run: node tools/check_v297_acupuncture_wakeup_target.mjs
       - name: Run V3.02 fixed primary Acupuncture WakeUp order audit
         run: node tools/check_v302_primary_acupuncture_wakeup_order.mjs
       - name: Run V2.98 first-dodge Guardian boundary audit
@@ -49,5 +51,3 @@ jobs:
         run: node tools/check_v300_confusion_teamattack_rng.mjs
       - name: Run V3.01 original DamageReact + Guardian Counter audit
         run: node tools/check_v301_original_damagereact_guardian_counter.mjs
-      - name: Run V3.02 primary Acupuncture WakeUp order audit
-        run: node tools/check_v302_primary_acupuncture_wakeup_order.mjs
