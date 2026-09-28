@@ -130,10 +130,10 @@ for(const f of specialNoCounterFns){
   assert.ok(body.includes('sourceNoCounter:true'),f+' must preserve fixed special-command no-counter boundary');
 }
 
-const setDuckStart=game.indexOf('function sourcePerformPetSetDuckRandomSkill');
-const setDuckEnd=game.indexOf('\nfunction ',setDuckStart+10);
-const setDuckBody=game.slice(setDuckStart,setDuckEnd>setDuckStart?setDuckEnd:setDuckStart+4000);
-assert.ok(setDuckBody.includes('sourceSetDuckSelfTargetGate'),'SetDuck must preserve fixed self-target FALSE boundary');
+const setDuckCounterAuditStart=game.indexOf('function sourcePerformPetSetDuckRandomSkill');
+const setDuckCounterAuditEnd=game.indexOf('\nfunction ',setDuckCounterAuditStart+10);
+const setDuckCounterAuditBody=game.slice(setDuckCounterAuditStart,setDuckCounterAuditEnd>setDuckCounterAuditStart?setDuckCounterAuditEnd:setDuckCounterAuditStart+4000);
+assert.ok(setDuckCounterAuditBody.includes('sourceSetDuckSelfTargetGate'),'SetDuck must preserve fixed self-target FALSE boundary');
 
 const commonCounterFns=[
   'sourcePerformPetAcupunctureSkill',
