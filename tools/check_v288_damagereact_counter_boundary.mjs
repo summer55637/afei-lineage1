@@ -49,7 +49,7 @@ assert.match(readme,/V2\.88 — pre-DamageReact Counter boundary/);
 
 console.log(JSON.stringify({
   pass:true,
-  version:'V2.88',
+  version:'V2.89',
   boundary:'BATTLE_GetDamageReact pre-DamageSub Counter block',
   primaryCounterGates:3,
   innerCounterGates:3,
