@@ -68,8 +68,8 @@ const ctx={
 vm.createContext(ctx);
 vm.runInContext(friendly,ctx);
 
-const original={kind:'enemy',unit:{id:'original'}};
-const guardian={kind:'enemy',unit:{id:'guardian'}};
+const original={id:'original',name:'Original'};
+const guardian={id:'guardian',name:'Guardian'};
 const baseR={actualTarget:guardian,guardian,damage:7,dodged:false,miss:false,critical:false};
 ctx.applyFriendlyEnemyHit('player','你',original,Object.assign({},baseR));
 assert.equal(wakeTargets.at(-1).desc.unit.id,'original');
