@@ -109,6 +109,7 @@ on:
       - "tools/check_v271_profession_fire_enclose_runtime.mjs"
       - "tools/check_v272_profession_thunder_enclose_runtime.mjs"
       - "tools/check_v273_profession_ice_enclose_runtime.mjs"
+      - "tools/check_v274_profession_magic_practice_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -116,7 +117,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  # V2.72 regression CI
+  # V2.74 regression CI
   contents: write
 
 jobs:
@@ -451,6 +452,9 @@ jobs:
 
       - name: Run V2.73 Ice Enclose regression
         run: node tools/check_v273_profession_ice_enclose_runtime.mjs
+
+      - name: Run V2.74 magic proficiency regression
+        run: node tools/check_v274_profession_magic_practice_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
