@@ -109,7 +109,7 @@ assert.equal(procCtx.battleStatuses.get('enemy:e1').type,'fireEnclose');
 
 assert.ok(game.includes("function sourceProfessionBattleFunctionSupportedV272"));
 assert.ok(game.includes("functionName==='PROFESSION_THUNDER_ENCLOSE'"));
-assert.ok(game.includes("command==='BATTLE_COM_S_THUNDER_ENCLOSE'"));
+assert.ok(game.includes("String(prepared?.commonCommand||'')==='BATTLE_COM_S_THUNDER_ENCLOSE'"));
 assert.ok(game.includes("st?.type==='encloseAura'"));
 assert.ok(game.includes("st?.type==='thunderShock'"));
 assert.ok(game.includes('img2:101700'));
