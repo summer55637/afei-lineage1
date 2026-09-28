@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.02**
+**PLAYABLE CORE V3.03**
 
-歷史 regression markers：**PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.03 — Guardian-provided Acupuncture still wakes original defender
+
+V3.03 收斂 V3.02 尚未覆蓋的另一個 primary caller：普通玩家／Pet 的 `applyFriendlyEnemyHit()`。
+
+- fixed `BATTLE_Attack()` 的 ACUPUNCTURE 不論反應來自原 target 還是 Guardian substitute，都會在 `BATTLE_DamageWakeUp()` 前把 `defindex/toindex` 恢復成 original `defNo`。
+- 因此「Guardian 本身持有 ACUPUNCTURE」時，真正承傷者是 Guardian，但 primary WakeUp 仍應作用在 original defender。
+- Web `applyFriendlyEnemyHit()` 現在只在 ACUPUNCTURE 觸發時把 WakeUp target 改回 `originalTargetDesc`；普通 hit 仍使用 actual target。
+- Counter、傷害、反傷、ItemCrush、RNG 與 Guardian 條件均沒有新增或改值。
+
+regression：`tools/check_v303_guardian_acupuncture_wakeup_order.mjs`
+GitHub Actions：`.github/workflows/v303-guardian-acupuncture-wakeup.yml`
 
 ## V3.02 — primary Acupuncture WakeUp follows fixed defindex restore order
 
