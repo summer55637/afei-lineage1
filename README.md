@@ -4,7 +4,19 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.90**
+**PLAYABLE CORE V2.91**
+
+## V2.91 — target-side DamageReact pre-Duck boundary
+
+V2.91 修正 V2.90 留下的 shared `battleApplyPhysicalHit()` 邊界：
+
+- fixed C 的 `BATTLE_Attack()`／`BATTLE_AttackSeq()` 在真正進入 DuckCheck 前，就會依 attacker 與 original `defindex` 的 `BATTLE_GetDamageReact() > 0` 保留 `iRet/ContFlg = FALSE`。
+- Web 的 `battleApplyPhysicalHit()` 原本已持有 `targetDesc`，卻在 pre-AttackSeq boundary 傳入 `null`；若 target-side DamageReact 存在，後續 dodge／miss early return 會來不及留下 `sourceCounterBlockedByDamageReact`。
+- 本版改為傳入實際 `targetDesc`，只保存 fixed C 已證明的 pre-Duck control-flow boundary；不新增 DamageReact 類型、傷害、機率或 RNG。
+- 現有 Player TRAP、Pet ACUPUNCTURE、Enemy ACUPUNCTURE source-backed 範圍維持不變；VANISH／ABSROB／REFLEC 仍 fail-closed。
+
+regression：`tools/check_v291_target_damagereact_preduck_boundary.mjs`
+GitHub Actions：`.github/workflows/v291-target-damagereact.yml`
 
 ## V2.90 — attacker-side DamageReact Counter boundary
 
@@ -46,7 +58,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.86；本版把 fixed BATTLE_Attack() 的 DamageReact → Counter 邊界鎖進 Web runtime，避免來源上已被 iRet=FALSE 阻斷的反擊被誤觸發。
+目前主線已完成 V2.91；本版把 fixed BATTLE_Attack() 的 target-side DamageReact → pre-Duck / Counter FALSE 邊界鎖進 Web runtime，避免來源上已被 iRet=FALSE 阻斷的反擊因 early return 漏掉。
 
 > **原 C 規則優先、不猜數值**
 
@@ -362,7 +374,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前核心版本：V2.82**
+**目前核心版本：V2.91**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction

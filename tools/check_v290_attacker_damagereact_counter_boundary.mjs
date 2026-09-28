@@ -23,7 +23,7 @@ assert.ok(friendly.includes('sourcePreAttackDamageReactCounterBlock(r,attackerDe
 assert.ok(friendly.indexOf('sourcePreAttackDamageReactCounterBlock')<friendly.indexOf('if(r.dodged)'));
 
 const physical=sliceFunction('battleApplyPhysicalHit');
-assert.ok(physical.includes('sourcePreAttackDamageReactCounterBlock(r,attackerDesc,null);'));
+assert.ok(physical.includes('sourcePreAttackDamageReactCounterBlock(r,attackerDesc,targetDesc);'));
 assert.ok(physical.indexOf('sourcePreAttackDamageReactCounterBlock')<physical.indexOf('if(r.dodged)'));
 
 const enemyPlayer=sliceFunction('resolveEnemyDirectAttackToPlayer');

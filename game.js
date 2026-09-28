@@ -13192,7 +13192,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
-  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,null);
+  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,targetDesc);
 
   // fixed BATTLE_AttackSeq() 在 DuckCheck / Critical / Damage 前就處理主人打自己的 Pet：
   // CHAR_PetAddVariableAi(defindex, AI_FIX_SEKKAN), AI_FIX_SEKKAN = -2*100。
