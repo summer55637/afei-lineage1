@@ -11,10 +11,10 @@ assert.deepEqual(
 );
 
 // PROFESSION_CHANGE_SKILL_LEVEL_M-compatible levels used by battle_event.c.
-assert.deepEqual(sourceProfessionTransposeProfile(1),{skillLevel:1,avoid:10,turn:1});
-assert.deepEqual(sourceProfessionTransposeProfile(2),{skillLevel:2,avoid:10,turn:1});
-assert.deepEqual(sourceProfessionTransposeProfile(3),{skillLevel:3,avoid:25,turn:1});
-assert.deepEqual(sourceProfessionTransposeProfile(5),{skillLevel:5,avoid:30,turn:1});
+assert.deepEqual(sourceProfessionTransposeProfile(1),{skillLevel:1,avoid:10,turn:3});
+assert.deepEqual(sourceProfessionTransposeProfile(2),{skillLevel:2,avoid:10,turn:3});
+assert.deepEqual(sourceProfessionTransposeProfile(3),{skillLevel:3,avoid:25,turn:3});
+assert.deepEqual(sourceProfessionTransposeProfile(5),{skillLevel:5,avoid:30,turn:3});
 assert.deepEqual(sourceProfessionTransposeProfile(6),{skillLevel:6,avoid:45,turn:4});
 assert.deepEqual(sourceProfessionTransposeProfile(8),{skillLevel:8,avoid:50,turn:4});
 assert.deepEqual(sourceProfessionTransposeProfile(9),{skillLevel:9,avoid:60,turn:4});
@@ -46,4 +46,4 @@ assert.equal(executed.sourceTargetExpansion,'BATTLE_MultiList(defNo2)');
 assert.equal(executed.sourceAnimation,'BATTLE_MagicEffect(attackNo,ToList,img1,img2)');
 
 assert.match(fs.readFileSync('tools/profession_transpose_runtime.mjs','utf8'),/PROFESSION_TRANSPOSE/);
-console.log(JSON.stringify({pass:true,version:'V2.75-core',focus:'Skill 21 移形換位',avoid:[10,10,25,30,45,50,60,70],turn:[1,1,1,1,4,4,4,5],targetExpansion:'BATTLE_MultiList(defNo2)'}));
+console.log(JSON.stringify({pass:true,version:'V2.75-core',focus:'Skill 21 移形換位',avoid:[10,10,25,30,45,50,60,70],turn:[3,3,3,3,4,4,4,5],targetExpansion:'BATTLE_MultiList(defNo2)'}));
