@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.00**
+目前最新可玩核心：**V3.01**
 
-目前主線已完成 V3.00；本版完成 first DuckCheck／Guardian pre-substitution source-order audit。
+目前主線已完成 V3.01；本版完成 original Defender DamageReact／Guardian substitution 後 Counter FALSE boundary audit。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,14 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.01：original defender DamageReact／Guardian substitution 後仍保留 Counter FALSE boundary
+
+- fixed `BATTLE_Attack()` 先於 `BATTLE_AttackSeq()` 讀取 original `defindex` 的 `BATTLE_GetDamageReact()`；一旦大於 0，就先把 `iRet/ContFlg` 關閉。
+- 若 `BATTLE_AttackSeq()` 後才由 `BATTLE_GuardianCheck()` 改成 Guardian，這個 pre-AttackSeq gate 不會被 Guardian replacement 洗掉。
+- Web `resolveAttackToEnemyWithGuardian()` 現在保留 original target 的 `sourceCounterBlockedByDamageReact`；沒有新增第二次 DamageReact RNG 或其他數值。
+- regression：`tools/check_v301_original_damagereact_guardian_counter.mjs`
+- CI：`.github/workflows/v301-original-damagereact-guardian-counter.yml`
 
 ## 主線狀態
 
