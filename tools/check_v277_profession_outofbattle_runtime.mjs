@@ -158,8 +158,10 @@ assert.match(game,/function renderProfessionOutOfBattleActions/);
 assert.match(game,/sourceProfessionOutOfBattleSkillUse\(\{slot,target:state\}\)/);
 assert.match(game,/renderProfessionOutOfBattleActions\(\);/);
 assert.match(game,/professionOutOfBattleActions/);
-assert.match(game,/CHAR_ENCOUNT_FIX/);
-assert.match(game,/CHAR_ENCOUNT_NUM/);
+assert.match(game,/professionEncounterFix/);
+assert.match(game,/professionEncounterUntilSec/);
+assert.match(game,/function sourceProfessionEncounterRollPlan/);
+assert.match(game,/function sourceProfessionOutOfBattleSkillUse/);
 
 const html=fs.readFileSync('game.html','utf8');
 assert.match(html,/PLAYABLE CORE V2\.77/);
