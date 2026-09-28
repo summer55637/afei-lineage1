@@ -31,7 +31,7 @@ const row=runtime.bySkillId['21'];
 assert.ok(row);
 assert.deepEqual(
   {skillId:row.skillId,name:row.name,func:row.func,professionClass:row.professionClass,target:row.target,kind:row.kind,costMp:row.costMp,option:row.option,commonCommand:row.commonCommand,img1:row.img1,img2:row.img2},
-  {skillId:21,name:'移形換位',func:'PROFESSION_TRANSPOSE',professionClass:2,target:5,kind:2,costMp:10,option:'回%80|回%3',commonCommand:'BATTLE_COM_S_TRANSPOSE',img1:101697,img2:101695}
+  {skillId:21,name:'移形换位',func:'PROFESSION_TRANSPOSE',professionClass:2,target:5,kind:2,costMp:10,option:'回%80|回%3',commonCommand:'BATTLE_COM_S_TRANSPOSE',img1:101697,img2:101695}
 );
 
 // Fixed C PROFESSION_CHANGE_SKILL_LEVEL_M + battle_event.c thresholds.
