@@ -12717,7 +12717,7 @@ function enemyActorTarget(actor,unit){
   const commandTarget=enemyActorCommandTarget(actor);
   return sourceEnemyTargetCheck(commandTarget)?commandTarget:sourceEnemyDefaultAttacker();
 }
-function battleDuckChance(attacker,defender){
+function battleDuckChance(attacker,defender,kawashiPara=.02){
   // fixed BATTLE_DuckCheck：At_Dex / Df_Dex / Df_Luck 都是 int。
   // 因此 *=0.8 / *=0.6 的 compound assignment 會立即截斷，不能讓 JS 浮點一路帶到 sqrt。
   let atDex=Math.trunc(n(attacker?.fixedDex??attacker?.quick));
@@ -12730,7 +12730,8 @@ function battleDuckChance(attacker,defender){
   let big,small,wari;
   if(dfDex>=atDex){big=dfDex;small=atDex;wari=1}
   else{big=atDex;small=dfDex;wari=big<=0?0:small/big}
-  let work=(big-small)/.02;if(work<=0)work=0;
+  const divisor=Number.isFinite(Number(kawashiPara))&&Number(kawashiPara)>0?Number(kawashiPara):.02;
+  let work=(big-small)/divisor;if(work<=0)work=0;
   let per=Math.sqrt(work)*wari+dfLuck;
   per*=100;
   if(per>7500)per=7500;
@@ -12822,6 +12823,16 @@ function battleGuardAdjust(damage){
   return Math.trunc(damage);
 }
 function sourceBattleDuckTotal(attacker,defender,options={}){
+  // fixed BATTLE_DuckCheck：
+  // gKawashiPara 預設 0.02；若 defender 的 CHAR_WORKBATTLECOM1 == BATTLE_COM_JYUJYUTU，
+  // 則先改成 0.027，再用它計算 (Big-Small)/gKawashiPara。
+  // Web 不從技能名稱猜 command；只有 caller 明確帶 sourceDefenderBattleCommand，
+  // 或 defender 本身已有 source-backed battleCommand 時，才進入 JYUJYUTU 分支。
+  const sourceDefenderBattleCommand=String(
+    options.sourceDefenderBattleCommand??defender?.battleCommand??''
+  );
+  const kawashiPara=sourceDefenderBattleCommand==='BATTLE_COM_JYUJYUTU'?0.027:.02;
+
   // 原 BATTLE_DuckCheck 的實際順序：
   // base -> gBattleDuckModyfy -> 酒醉 -> BOW +20 -> NoGuard -> BOW +20 -> ×100 / cap 75%。
   // fixed ref 裡 BOW +20 明確重複兩次；V0.73 保留這個來源 bug，不自行去重。
