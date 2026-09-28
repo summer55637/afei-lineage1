@@ -1,0 +1,53 @@
+name: V3.02 primary Acupuncture WakeUp order
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'docs/changelog/part-07-v1.75-onward.md'
+      - 'tools/check_v293_damagereact_duckcheck_boundary.mjs'
+      - 'tools/check_v294_duck_jyujyutu_kawashipara.mjs'
+      - 'tools/check_v295_guardian_no_second_suit_dodge.mjs'
+      - 'tools/check_v296_guardian_instigate_block.mjs'
+      - 'tools/check_v297_acupuncture_wakeup_target.mjs'
+      - 'tools/check_v298_first_dodge_guardian_boundary.mjs'
+      - 'tools/check_v299_shared_first_dodge_suit_gate.mjs'
+      - 'tools/check_v300_confusion_teamattack_rng.mjs'
+      - 'tools/check_v301_original_damagereact_guardian_counter.mjs'
+      - 'tools/check_v302_primary_acupuncture_wakeup_order.mjs'
+      - '.github/workflows/v302-primary-acupuncture-wakeup.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.93 DamageReact DuckCheck boundary audit
+        run: node tools/check_v293_damagereact_duckcheck_boundary.mjs
+      - name: Run V2.94 JYUJYUTU KawashiPara source branch audit
+        run: node tools/check_v294_duck_jyujyutu_kawashipara.mjs
+      - name: Run V2.95 Guardian no-second-suit-dodge audit
+        run: node tools/check_v295_guardian_no_second_suit_dodge.mjs
+      - name: Run V2.96 Guardian instigate source-block audit
+        run: node tools/check_v296_guardian_instigate_block.mjs
+      - name: Run V3.02 fixed primary Acupuncture WakeUp order audit
+        run: node tools/check_v302_primary_acupuncture_wakeup_order.mjs
+      - name: Run V2.98 first-dodge Guardian boundary audit
+        run: node tools/check_v298_first_dodge_guardian_boundary.mjs
+      - name: Run V2.99 shared first-dodge suit-gate audit
+        run: node tools/check_v299_shared_first_dodge_suit_gate.mjs
+      - name: Run V3.00 confusion RNG + team-attack audit
+        run: node tools/check_v300_confusion_teamattack_rng.mjs
+      - name: Run V3.01 original DamageReact + Guardian Counter audit
+        run: node tools/check_v301_original_damagereact_guardian_counter.mjs
+      - name: Run V3.02 primary Acupuncture WakeUp order audit
+        run: node tools/check_v302_primary_acupuncture_wakeup_order.mjs
