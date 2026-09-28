@@ -6,7 +6,7 @@
 
 **PLAYABLE CORE V2.82**
 
-目前主線已完成 V2.81；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
+目前主線已完成 V2.82；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
 > **原 C 規則優先、不猜數值**
 
