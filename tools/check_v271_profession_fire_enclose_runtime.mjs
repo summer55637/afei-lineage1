@@ -60,8 +60,8 @@ for(const [raw,expectedTier,effective,onHitStored,chance] of [[10,0,1,2,20],[50,
   assert.equal(x.onHitChance,chance);
 }
 
-assert.ok(game.includes("statusAuraToken=element==='thunder'?'击':'炎'"));
-assert.ok(game.includes("statusHitToken=element==='thunder'?'电':'烧'"));
+assert.ok(game.includes("statusAuraToken=element==='thunder'?'擊':element==='ice'?'凍':'炎'"));
+assert.ok(game.includes("statusHitToken=element==='thunder'?'電':element==='ice'?'霜':'燒'"));
 assert.ok(game.includes('sourceCounterFieldWritten:true'));
 assert.equal(game.includes('sourceFireEncloseSourceCounterNeverWritten'),false);
 assert.equal(game.includes('sourceFireEncloseAuraActive=false;'),false);
