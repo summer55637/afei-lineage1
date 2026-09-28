@@ -142,6 +142,8 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## 歷史版本 regression 入口
 
+歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`。
+
 以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.61 最新進度
