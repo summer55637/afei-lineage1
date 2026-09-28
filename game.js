@@ -13860,10 +13860,10 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   actual.hp=Math.max(0,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
-  // fixed primary BATTLE_Attack() restores defindex to the ORIGINAL defNo before
-  // BATTLE_DamageWakeUp(), even when DamageSub's ACUPUNCTURE was supplied by a
-  // Guardian-substituted defender. The ordinary player/Pet caller must therefore
-  // wake originalTarget, not actualTarget, whenever ACUPUNCTURE actually triggered.
+  // Caller-sensitive fixed-C rule:
+  // primary BATTLE_Attack() restores defindex to the ORIGINAL defNo before WakeUp;
+  // special BATTLE_S_AttackDamage-family callers and CHAIN_ATK instead keep defindex on
+  // the attacker after DamageSub. Never globalize one WakeUp target across callers.
   const wakeTarget=acupuncture.triggered
     ?(options.sourceAcupunctureWakeTarget==='attacker'||r?.sourceAcupunctureWakeTarget==='attacker'
       ?'attacker':'original')
