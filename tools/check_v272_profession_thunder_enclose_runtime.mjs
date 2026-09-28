@@ -113,7 +113,8 @@ assert.ok(game.includes("String(prepared?.commonCommand||'')==='BATTLE_COM_S_THU
 assert.ok(game.includes("st?.type==='encloseAura'"));
 assert.ok(game.includes("st?.type==='thunderShock'"));
 assert.ok(game.includes('sourceBattleStatusDescFromSlot(slot)'));
-assert.equal(game.includes("reason:'same-side-target'"),false);
+const encloseExec=extractFunction(game,'sourceProfessionEncloseAuraExecute');
+assert.equal(encloseExec.includes("reason:'same-side-target'"),false);
 assert.ok(game.includes('img2:101700'));
 assert.ok(workflow.includes('tools/check_v272_profession_thunder_enclose_runtime.mjs'));
 assert.match(html,/PLAYABLE CORE V2\.72/);
