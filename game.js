@@ -7711,6 +7711,7 @@ function sourceProfessionOutOfBattleSkillPlan({
   return {
     ok:true,slot:entry.slot,skillId:entry.skillId,functionName:func,
     useFlag:Math.trunc(n(row.useFlag)),displayLevel,level10,rate,encounterFix,
+    img1:Math.trunc(n(row.img1)),img2:Math.trunc(n(row.img2)),
     nowSec,untilSec:nowSec+180,dispatchRet,
     protocolReturn:dispatchRet,
     protocolWouldReject:dispatchRet!==1,
@@ -7748,6 +7749,7 @@ function sourceProfessionOutOfBattleSkillUse({
   return Object.assign({},plan,{
     effectApplied:true,mpAfter:target.mp,
     workFix:professionEncounterFix,workUntilSec:professionEncounterUntilSec,
+    animation:{img1:plan.img1,img2:plan.img2},
     proficiency
   });
 }
@@ -24090,6 +24092,37 @@ function renderProfessionBattleActions(){
       +escapeHtml(row.name)+' Lv'+row.displayLevel+' · MP '+row.costMp+'</button>';
   }).join('');
 }
+function renderProfessionOutOfBattleActions(){
+  const info=$('#professionOutOfBattleInfo'),actions=$('#professionOutOfBattleActions');
+  if(!info||!actions)return;
+  const rows=sourceProfessionSkillMenu(state).filter(row=>
+    row&&(
+      row.functionName==='PROFESSION_TRACK'||
+      row.functionName==='PROFESSION_ESCAPE'
+    )
+  );
+  const nowSec=Math.trunc(Date.now()/1000);
+  const activeUntil=Math.trunc(n(professionEncounterUntilSec));
+  const active=activeUntil>nowSec;
+  const remain=Math.max(0,activeUntil-nowSec);
+  const currentFix=Math.trunc(n(professionEncounterFix));
+  if(!rows.length){
+    info.textContent='目前尚未學會「追尋敵蹤」或「回避戰鬥」；兩者都是 Hunter 的非戰鬥職業技能。';
+    actions.innerHTML='';
+    return;
+  }
+  info.textContent=active
+    ?'目前遇敵率修正 '+(currentFix>=0?'+':'')+currentFix+'% · 剩餘 '+remain+' 秒。'
+    :'目前沒有啟用中的職業遇敵率修正。';
+  actions.innerHTML=rows.map(row=>{
+    const canUse=state.hp>0&&Math.trunc(n(state.mp))>=row.costMp&&!enemy;
+    const reason=enemy?'戰鬥中不可施放':'';
+    return '<button data-profession-out-slot="'+row.slot+'" '+(!canUse?'disabled':'')+' title="'+escapeHtml(reason)+'">'
+      +escapeHtml(row.name)+' Lv'+row.displayLevel+' · MP '+row.costMp+'</button>';
+  }).join('');
+}
+
+
 function render(){
   if(!state)return;
   $('#level').textContent=state.level;
@@ -24142,6 +24175,7 @@ function render(){
   renderEncounterOptions();
   renderEnemy();
   renderProfessionBattleActions();
+  renderProfessionOutOfBattleActions();
   if(playerPigActive()){
     const pigRemain=playerPigRemainingSeconds();
     $('#battleState').textContent+=' · 黑烏力化'+(pigRemain>0?' '+pigRemain+'秒':' · 戰鬥結束後解除');
@@ -25277,6 +25311,19 @@ $('#professionBattleActions').addEventListener('click',e=>{
   const slot=Math.trunc(Number(b.dataset.professionBattleSlot));
   if(!Number.isFinite(slot))return;
   attackTurn({professionSlot:slot});
+  save();render();
+});
+
+$('#professionOutOfBattleActions').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-profession-out-slot]');if(!b||b.disabled)return;
+  const slot=Math.trunc(Number(b.dataset.professionOutSlot));
+  if(!Number.isFinite(slot))return;
+  const result=sourceProfessionOutOfBattleSkillUse({slot,target:state});
+  if(!result.ok){
+    addLog('非戰鬥職技無法施放：'+sourceProfessionBattleFailureText(result.reason)+'。','bad');
+  }else if(result.protocolWouldReject){
+    addLog('「'+(result.functionName==='PROFESSION_TRACK'?'追尋敵蹤':'回避戰鬥')+'」已依 fixed C 覆寫現有效果；本次 function return=-1，server protocol 仍視為失敗。','bad');
+  }
   save();render();
 });
 $('#healBtn').addEventListener('click',()=>{
