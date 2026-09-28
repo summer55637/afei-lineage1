@@ -17,9 +17,7 @@ export function sourceProfessionTransposeProfile(skillLevel){
   else if(level>=5) avoid=30;
   else if(level>=3) avoid=25;
 
-  let turn=1;
-  if(level>=10) turn=5;
-  else if(level>=6) turn=4;
+  const turn=level>=10?5:(level>=6?4:3);
 
   return {skillLevel:level,avoid,turn};
 }
