@@ -5120,3 +5120,55 @@ save schema 維持 **30**。
 - animation：enemy-side base img2=101641 (350,250)，toNo<10 才改 101642 (320,240)，attIdx=0。
 - 新增 `tools/check_v269_profession_fire_spear_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.70 Skill 14 ICE_MIRROR / Ice Mirror defense-derived magic
+
+V2.70 從 V2.69 乾淨基準重新開始，接入巫師 Skill 14「冰鏡術」／`PROFESSION_ICE_MIRROR`。這版不復原舊 V2.70 UI／World 實驗，核心版本只沿既有 profession skill 主線向前。
+
+### fixed skill row / MP
+
+- Skill 14 名稱：冰鏡術；固定 option：`冰|0|1|0|0|0|0|0|0|50|0|-50`
+- TARGET OTHER、KIND 1、professionClass=2。
+- img1=101697、img2=101652、icon=29254。
+- dynamic MP：M-tier 1～2=20、3～4=25、5～6=30、7～8=35、9～10=40。
+- command receipt 與既有 profession skill core 共用 MP／proficiency lifecycle；不是 charge skill。
+
+### Dex / proficiency / practice RNG
+
+- fixed `BATTLE_DexCalc()` 把 ICE_MIRROR 與 Storm / Fire Spear / Enclose 放在同一組：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- `analysis_profession_parameter()` 對冰屬性先提升 Ice Practice；當前施法仍保存 battle-entry 的熟練度 Work snapshot。
+- fixed `PROFESSION_MAGIC_GET_PRACTICE()` 沒有 ICE_MIRROR case，因此 `hp_power` 留在 0；共同 critical `RAND(1,100)` 與 M2 `rand()%100` 仍照吃，但因 power=0 不再消耗 98～102 variance。
+- 冰鏡真正傷害不是 practice power，而是後續特殊 defense-derived power。
+
+### Dodge / Damage
+
+- magic type=2。
+- `PROFESSION_MAGIC_DODGE()` 的敵方 base luck 仍為 Lv×0.15、上限 20，再扣 Ice proficiency ×0.2；ICE_MIRROR 沒有 CURRENT／STORM／FIRE_SPEAR／DOOM／SIGN 那些額外第二段命中 gate。
+- 特殊傷害依 fixed source：M-tier 10 的 rate=60，其餘 `rate=tier*5+5`；實際 power 為 `120 + trunc(defense*rate/100 + (defense-baseDefense)*rate/200)`。
+- `baseDefense` 取固定 `CHAR_TOUGH / 100` 的 C int 截斷語意；Web 優先使用現有 Enemy `serverDerived.charStats.tgh`。
+- 特殊 power 之後仍走 generic `GET_DAMAGE(type=2)`，因此固定 source 的 type=2 欄位錯位保留：DODGE 使用 Ice proficiency，而 damage path 讀 Thunder proficiency/resist。
+- current Web Enemy 沒有 ride-pet model，所以固定 source 的 ride-pet adjustment 不虛構。
+- pinned source 最後的 NPC 800 上限判斷把已算出的 `defense` 數值當成 `CHAR` 索引使用；這是 source quirk。現 Web 沒有對應 CharTable index 語意，因此不自行補一個 800 cap，而是在 runtime／regression 明確標示 `sourceNpcCapBugUnemulated`。
+
+### Animation / hit lifecycle
+
+- `attIdx=0`。
+- img2 固定 101652。
+- 對 player-side direct slot（toNo 0～9）：option 的 direct 座標為 (0, 50)。
+- 其他目標：option 後段座標為 (0, -50)。
+- 每個 dodge 通過目標仍固定消耗 `PROFESSION_MAGIC_CHANGE_STATUS()` leading `RAND(1,100)`；ICE_MIRROR 沒有額外 status case。
+- Web 目前沿用 profession magic 的 direct HP subtract path，不接普通 Counter、Guardian、DamageSub、ItemCrush。
+- 命中後仍處理原 C 的睡眠解除生命週期。
+
+### Regression
+
+新增：
+
+`tools/check_v270_profession_ice_mirror_runtime.mjs`
+
+鎖定 runtime row、dynamic MP、Dex、Practice RNG 消耗、Dodge 第二段 gate 缺失、Ice Mirror special damage、type=2 damage bug、animation 101652 與 source cap quirk。
+
+save schema 維持 **30**。
