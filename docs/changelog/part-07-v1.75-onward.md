@@ -1,3 +1,20 @@
+## V3.07 Toxin Weapon uses actual defindex for Acupuncture WakeUp
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_COM_S_TOXIN_WEAPON`：
+
+1. `BATTLE_AttackSeq()` 可先把 local `defindex` 改為 Guardian；
+2. caller 明確把 `defindex = Guardian`；
+3. `BATTLE_DamageSub()` 處理 reaction；
+4. caller 直接呼叫 `BATTLE_DamageWakeUp(defindex)`；
+5. 因此 ACUPUNCTURE WakeUp 目標是 actual current `defindex)，不是 primary Attack 的 original target，也不是 attacker。
+
+Web 以 caller marker `sourceAcupunctureWakeTarget='actual'` 保留這個差異。
+
+regression：`tools/check_v307_toxin_weapon_acupuncture_order.mjs`
+CI：`.github/workflows/v307-toxin-weapon-acupuncture.yml`
+
 ## V3.06 GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
