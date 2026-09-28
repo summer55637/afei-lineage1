@@ -1,3 +1,50 @@
+## V2.82 FallGround DamageReact gate / CHAR_WORKPETFALL ride-system boundary
+
+V2.82 把 V2.80 已鎖住的 FallGround source boundary 再往 BATTLE_S_FallGround() 的 react == 0 條件推進，並把 CHAR_WORKPETFALL 的 battle-result 用途記錄為尚未建正式 RidePet runtime 的 fail-closed 邊界。
+
+### FallGround 的 React 門檻
+
+fixed battle_event.c 不是「只要有傷害就抽落馬 RNG」：
+
+- skill_type == BATTLE_COM_S_FALLRIDE
+- damage > 0
+- react == 0
+- _PREVENT_TEAMATTACK 等既有 gate 通過
+
+上述條件後才 RAND(0,100)，成功比較仍是 > 50（再加 _EQUIT_RESIST 時的抗落馬值）。
+
+Web 目前能由 source-backed Enemy runtime 證明的 DamageReact 是 ACUPUNCTURE。V2.82 因此把 sourcePetOriginalDamageReact(target) 提前保存為 hadDamageReact，只有 !hadDamageReact && damage>0 && !dodged && !miss 才消耗 FallGround RNG；DamageReact 不再多吃一顆 RNG。
+
+### CHAR_WORKPETFALL 不亂補 RidePet
+
+fixed battle_command.c 會把 CHAR_WORKPETFALL 轉成 battle result 的 rideflg：
+
+- 一般落馬：-1
+- 變狐造成的落馬：-2
+- 烏力化造成的落馬：-3
+
+送完 result 後 Work flag 清 0；battle.c 結束戰鬥時另有 CHAR_RIDEPET=-2 → -1 的短暫狀態。
+
+目前 Web 沒有已證明的正式 CHAR_RIDEPET／rideflg runtime，因此這段不假裝「active pet = ride pet」。沒有 source-backed ride state 就不會生 ridePetId、不會捏出 client onRide 效果。
+
+### Regression
+
+新增：
+
+- tools/check_v282_fallground_react.mjs
+- .github/workflows/v282-fallground-react.yml
+
+鎖定：
+
+- FallGround 必須以 react == 0 為 RNG 前置條件
+- ACUPUNCTURE 不得多消耗 FallGround RNG
+- RAND(0,100) 與 >50 不變
+- Enemy CHAR_RIDEPET／ridePetId 不虛構
+- CHAR_WORKPETFALL／rideflg 維持明確 fail-closed ride-system 邊界
+
+save schema 維持 30。
+
+---
 ## V2.81 PetSkill runtime reachability / pending boundary audit
 
 V2.80 將兩個 source boundary 鎖住後，這版直接把目前 fixed PetSkill runtime 的「能不能真的走到 sourceRuntimePending」做靜態 reachability audit。目的不是刪掉防守程式，而是證明目前合法資料不會因 parser／dispatcher 缺口誤落 pending。

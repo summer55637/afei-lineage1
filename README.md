@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.81**
+**PLAYABLE CORE V2.82**
 
 目前主線已完成 V2.81；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
@@ -14,6 +14,17 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.82 — FallGround DamageReact gate / CHAR_WORKPETFALL ride-system boundary
+
+V2.82 接著 V2.80／V2.81 的 source-gap audit，這次追到 battle_event.c::BATTLE_S_FallGround() 的 react == 0 門檻，以及 CHAR_WORKPETFALL 在 battle command 結算時的真實用途。
+
+- fixed C 明確要求 skill_type == BATTLE_COM_S_FALLRIDE、damage > 0、react == 0 才會消耗 RAND(0,100) 並進入落馬判定；Web 原先只看 clean hit，會在可識別的 Enemy DamageReact（目前 source-backed 為 ACUPUNCTURE）下多消耗一顆 FallGround RNG。
+- sourcePerformPetFallGroundSkill() 現在先保存 sourcePetOriginalDamageReact(target)，只有 !hadDamageReact && damage>0 && !dodge && !miss 才會抽 RAND(0,100)。
+- CHAR_WORKPETFALL 的 fixed C 主要是 battle result / rideflg lifecycle：落馬後先保留旗標，battle_command.c 送出 -1／變狐時 -2／烏力化時 -3，然後清除 Work；battle 結束另會短暫使用 CHAR_RIDEPET=-2 後恢復 -1。
+- 目前 Web 沒有已證明的正式 CHAR_RIDEPET／battle rideflg runtime；因此這部分仍 fail-closed，不把 active pet 冒充騎寵，也不虛構 ridePetId。既有 BecomeFox dismount marker 只在 source-backed ride state 真正存在時才會觸發。
+- 不改 FallGround RAND(0,100)、>50、ridePetId source boundary，也不猜 Enemy 騎寵資料。
+
+regression：tools/check_v282_fallground_react.mjs
 ## V2.81 — PetSkill runtime reachability / pending boundary audit
 
 V2.81 不新增猜測效果；把目前 61 個合法 PetSkill function family、36 筆 `PETSKILL_Combined` 與 7 個 `sourceRuntimePending` 防守點做靜態可達性鎖定：
@@ -250,7 +261,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前核心版本：V2.77**
+**目前核心版本：V2.82**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction

@@ -20015,8 +20015,12 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   }
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
 
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
   let fallRoll=null,fallSuccess=false,enemyRideRuntime=false;
-  if(r.damage>0&&!r.dodged&&!r.miss){
+  // fixed BATTLE_S_FallGround requires react == 0 before consuming the fall RNG.
+  // Current source-backed Enemy DamageReact is ACUPUNCTURE; do not let a reaction
+  // accidentally advance RAND(0,100) or perform the fall branch.
+  if(!hadDamageReact&&r.damage>0&&!r.dodged&&!r.miss){
     // fixed source consumes RAND(0,100) regardless of whether the Enemy actually has a ride pet.
     fallRoll=cRand(0,100);
     if(fallRoll>50){
@@ -20042,7 +20046,7 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   // and does not enter the ordinary direct-attack Counter loop.
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
-    attackPct,baseAttack,attack,guardianCalcOnly:guardian?.id||null,
+    attackPct,baseAttack,attack,hadDamageReact,guardianCalcOnly:guardian?.id||null,
     fallRoll,fallSuccess,enemyRideRuntime,r
   };
 }
