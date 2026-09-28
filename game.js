@@ -13811,6 +13811,16 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
     r.guardian=guardian;
     r.protectedTarget=target;
   }
+
+  // fixed BATTLE_Attack() checks DamageReact on the ORIGINAL defender before
+  // BATTLE_AttackSeq() / GuardianCheck. If Guardian later substitutes that defender,
+  // the pre-AttackSeq iRet/ContFlg=FALSE boundary must survive the substitution.
+  // Do not re-run or synthesize a second DamageReact check here; only preserve the
+  // already-proven original-target Counter gate.
+  if(sourceBattleDamageReactActive(targetDesc)){
+    r.sourceCounterBlockedByDamageReact=true;
+  }
+
   return r;
 }
 function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=null,options={}){
