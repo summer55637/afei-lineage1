@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.04**
+目前最新可玩核心：**V3.05**
 
-目前主線已完成 V3.04；本版補齊 Enemy→Player Guardian Pet 持有 ACUPUNCTURE 時的 original Player WakeUp boundary。
+目前主線已完成 V3.05；本版把 ACUPUNCTURE WakeUp 恢復成 caller-sensitive fixed-C source-order。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,16 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.05：ACUPUNCTURE WakeUp 改為 caller-sensitive source-order
+
+- primary `BATTLE_Attack()`：WakeUp target = original defender。
+- Counter：WakeUp target = attacker。
+- `BATTLE_S_AttackDamage()` family：WakeUp target = attacker。
+- profession `CHAIN_ATK`：第一段 WakeUp target = attacker；第二段重新走 ordinary `BATTLE_Attack()`。
+- Guardian substitution 不會再把不同 caller 的 WakeUp 規則混成單一路徑。
+- regression：`tools/check_v305_caller_sensitive_acupuncture_wakeup.mjs`
+- CI：`.github/workflows/v305-caller-sensitive-acupuncture-wakeup.yml`
 
 ## V3.04：Enemy→Player Guardian Pet 的 ACUPUNCTURE 仍 WakeUp original Player
 
