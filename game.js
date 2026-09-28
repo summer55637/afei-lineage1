@@ -121,6 +121,7 @@ let battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};
 let battlePetProfessionOblivionStates=new Map();
 let battleProfessionBoundaryStates=new Map();
 let battleProfessionDoomFearStates=new Map();
+let battlePlayerProfessionCharge=null;
 let battleProfessionAnnexStates=new Map();
 let battleOuterBoundaryActor=null;
 
@@ -1675,13 +1676,14 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_CURRENT'
     &&command!=='BATTLE_COM_S_SUMMON_THUNDER'
     &&command!=='BATTLE_COM_S_ICE_ARROW'
+    &&command!=='BATTLE_COM_S_FIRE_SPEAR'
     &&command!=='BATTLE_COM_S_STORM'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER'||command==='BATTLE_COM_S_ICE_ARROW')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_FIRE_BALL'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
-  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'){lower=work*.2;upper=work*.5}
+  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2642,6 +2644,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_ICE_CRACK'
     ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_FIRE_BALL'
+    ||functionName==='PROFESSION_FIRE_SPEAR'
     ||functionName==='PROFESSION_BLOOD'
     ||functionName==='PROFESSION_ICE_ARROW'
     ||functionName==='PROFESSION_BLOOD_WORMS'
@@ -5623,6 +5626,164 @@ function sourceProfessionIceArrowExecute(prepared,name){
   };
 }
 
+
+function sourceProfessionPlayerChargeTurns(functionName){
+  const fn=String(functionName||'');
+  if(fn==='PROFESSION_FIRE_SPEAR')return 2;
+  if(fn==='PROFESSION_DOOM')return 3;
+  return 0;
+}
+
+function sourceProfessionPlayerChargeState(){
+  return battlePlayerProfessionCharge&&Math.trunc(n(battlePlayerProfessionCharge.remaining))>0
+    ?battlePlayerProfessionCharge:null;
+}
+
+function sourceProfessionPlayerChargeStart(prepared){
+  const turns=sourceProfessionPlayerChargeTurns(prepared?.functionName);
+  if(turns<=0)return null;
+  battlePlayerProfessionCharge={
+    remaining:turns,
+    prepared,
+    functionName:String(prepared.functionName||''),
+    skillId:Math.trunc(n(prepared.skillId)),
+    rawToNo:Math.trunc(n(prepared.toNo))
+  };
+  return {
+    started:true,remaining:turns,functionName:battlePlayerProfessionCharge.functionName,
+    skillId:battlePlayerProfessionCharge.skillId,rawToNo:battlePlayerProfessionCharge.rawToNo
+  };
+}
+
+function sourceProfessionPlayerChargeCancel(reason=null){
+  const charge=battlePlayerProfessionCharge;
+  if(!charge)return null;
+  battlePlayerProfessionCharge=null;
+  if(reason)addLog('「'+String(sourceProfessionSkillTemplate(charge.skillId)?.name||'職業技能')
+    +'」的集氣被'+reason+'中斷。','bad');
+  return {cancelled:true,reason,charge};
+}
+
+function sourceProfessionPlayerChargeStep(){
+  const charge=battlePlayerProfessionCharge;
+  if(!charge)return null;
+  const before=Math.max(0,Math.trunc(n(charge.remaining)));
+  if(before>0)charge.remaining=before-1;
+  const remaining=Math.max(0,Math.trunc(n(charge.remaining)));
+  if(remaining>0){
+    return {
+      charging:true,released:false,before,remaining,
+      functionName:charge.functionName,skillId:charge.skillId,prepared:charge.prepared
+    };
+  }
+  battlePlayerProfessionCharge=null;
+  return {
+    charging:false,released:true,before,remaining:0,
+    functionName:charge.functionName,skillId:charge.skillId,prepared:charge.prepared
+  };
+}
+
+function sourceProfessionFireSpearAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  const rightSide=no<10;
+  return {
+    magicType:1,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:rightSide?101642:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[rightSide?8:3])),
+    y:Math.trunc(n(opt[rightSide?9:4])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),rightSide
+  };
+}
+
+function sourceProfessionFireSpearExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==13)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // FIRE_SPEAR's TOLIST_SORT body is entirely commented in the pinned build.
+  const targetSlots=sourceProfessionMagicEnemySortedSlots(multi.slots);
+
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const firePractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_FIRE_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(firePractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionFireSpearAnimation(row,toNo);
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_FIRE_SPEAR',prepared.displayLevel,state.hp
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of targetSlots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:1,command:'BATTLE_COM_S_FIRE_SPEAR',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:1,power:preDamagePower,command:'BATTLE_COM_S_FIRE_SPEAR',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourceFireDamageFieldsAligned:true,sourceSecondDodgeGateStrict90:true,
+      sourceEnemyUnPower:0,sourceEnemyProfessionResistZero:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你釋放「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,targetSlots,animation,firePractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:1,sourceFirePracticeAtRelease:true,
+    sourceFireSpearTolistCaseCommentedOut:true,
+    sourceSecondDodgeGateStrict90:true,sourceChargeHandledOutsideMagicCase:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -6964,6 +7125,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionFireBallExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_FIRE_SPEAR'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionFireSpearExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BLOOD'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -10243,7 +10409,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',iceArrow:'冰箭',bloodWorms:'嗜血蠱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battlePlayerProfessionCharge=null;battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -10795,6 +10961,7 @@ function battleStatusApply(targetDesc,type,turns){
   const key=battleStatusKey(targetDesc);
   if(!key)return false;
   battleStatuses.set(key,{type,turns:Math.max(1,Math.trunc(n(turns))+1)});
+  if(type==='dragnet'&&targetDesc?.kind==='player')sourceProfessionPlayerChargeCancel('天羅地網');
   sourceClearPetBattleCommand(targetDesc,type);
   return true;
 }
@@ -22087,6 +22254,7 @@ function captureChance(){
 }
 function captureTurn(manual=false){
   if(!enemy)return false;
+  if(sourceProfessionPlayerChargeState())return attackTurn({professionChargeContinue:true});
   const initial=captureChance();
   if(!initial.allowed){
     if(initial.missing?.length){
@@ -22928,8 +23096,9 @@ function attackTurn(options={}){
   if(!enemy)return;
   const professionSlot=Number.isInteger(Number(options?.professionSlot))
     ?Math.trunc(Number(options.professionSlot)):null;
-  let professionPrepared=null;
-  if(professionSlot!==null){
+  const existingCharge=sourceProfessionPlayerChargeState();
+  let professionPrepared=null,chargeStarted=null;
+  if(!existingCharge&&professionSlot!==null){
     const selectedToNo=sourceProfessionLiveSelectedToNo(professionSlot,state);
     professionPrepared=sourceProfessionBattleSkillPrepare({
       slot:professionSlot,selectedToNo,battleMyNo:0,target:state
@@ -22939,8 +23108,20 @@ function attackTurn(options={}){
       render();
       return professionPrepared;
     }
+    chargeStarted=sourceProfessionPlayerChargeStart(professionPrepared);
+    if(chargeStarted){
+      addLog('你開始集氣「'+String(sourceProfessionSkillTemplate(professionPrepared.skillId)?.name||'職業技能')
+        +'」（CHAR_DOOMTIME='+chargeStarted.remaining+'）。','good');
+    }
+  }else if(existingCharge&&professionSlot!==null){
+    addLog('目前仍在職業技能集氣中；fixed 原 C 不會接收另一個玩家 command。');
   }
-  const order=normalBattleOrder({playerCommand:professionPrepared?'profession':'attack',professionPrepared});
+  const chargeForOrder=sourceProfessionPlayerChargeState();
+  const dexPrepared=chargeForOrder?null:professionPrepared;
+  const order=normalBattleOrder({
+    playerCommand:(professionPrepared||chargeForOrder)?'profession':'attack',
+    professionPrepared:dexPrepared
+  });
 
   for(const actor of order){
     sourceProcessBattleActorOuterBoundary();
@@ -22957,6 +23138,27 @@ function attackTurn(options={}){
     // its RAND(min,max) even for GUARD / ESCAPE / NONE / magic / immobilized turns.
     if(actor.kind==='player')sourcePlayerPrimeExecutionAttackCount(actor);
     else if(actor.kind==='enemy')sourceEnemyPrimeExecutionAttackCount(actor);
+
+    let playerChargeStep=null;
+    if(actor.kind==='player'&&sourceProfessionPlayerChargeState()){
+      playerChargeStep=sourceProfessionPlayerChargeStep();
+      if(playerChargeStep?.released){
+        const releasePrepared=playerChargeStep.prepared;
+        const result=sourceProfessionBattleSkillExecute(releasePrepared,actor);
+        releasePrepared.execution=result;
+        professionPrepared=releasePrepared;
+        addLog('集氣完成：'+String(sourceProfessionSkillTemplate(releasePrepared.skillId)?.name||'職業技能')
+          +' 還原 COM1 並立即執行。','good');
+        if(result?.noAction){
+          addLog('「'+String(sourceProfessionSkillTemplate(releasePrepared.skillId)?.name||'職業技能')
+            +'」沒有產生效果：'+sourceProfessionBattleFailureText(result.reason)+'。');
+        }
+        sourceProcessBattleActorOuterBoundary();
+        if(enemy)syncEnemyTarget();
+        continue;
+      }
+    }
+
     if(statusTurn.skip){
       sourceCancelPetChargeFromStatus(statusTurn);
       sourceCancelPetEarthRoundFromStatus(statusTurn);
@@ -23002,6 +23204,14 @@ function attackTurn(options={}){
       }
       if(sourceSurpriseSkipAction(actor))continue;
     }
+    if(actor.kind==='player'&&playerChargeStep?.charging
+      &&!statusTurn.annexAttack&&!statusTurn.instigateAttack&&!statusTurn.confusionAttack){
+      addLog('你持續集氣中（CHAR_DOOMTIME '+playerChargeStep.before+' → '+playerChargeStep.remaining+'），本回合 COM1=NONE。');
+      sourceProcessBattleActorOuterBoundary();
+      if(enemy)syncEnemyTarget();
+      continue;
+    }
+
     if(actor.sourceComboId&&sourceComboHasLater(order,order.indexOf(actor))){
       const combo=sourcePerformCombo(order,order.indexOf(actor),{playerGuarding:false});
       if(combo){
@@ -23012,7 +23222,7 @@ function attackTurn(options={}){
     }
 
     if(actor.kind==='player'){
-      if(professionPrepared){
+      if(professionPrepared&&!chargeStarted&&!playerChargeStep){
         const result=sourceProfessionBattleSkillExecute(professionPrepared,actor);
         professionPrepared.execution=result;
         if(result?.noAction){
@@ -23059,6 +23269,7 @@ function attackTurn(options={}){
 }
 function guardTurn(){
   if(!enemy)return;
+  if(sourceProfessionPlayerChargeState())return attackTurn({professionChargeContinue:true});
   const order=normalBattleOrder({playerCommand:'guard'});
 
   // 原服在回合指令確定後，CHAR_WORKBATTLECOM1 已經是 GUARD；

@@ -5101,3 +5101,22 @@ save schema 維持 **30**。
 - animation：left img2=101648 (10,-20)，right img2=101649 (10,20)，attIdx=0。
 - 新增 `tools/check_v268_profession_ice_arrow_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.69 Skill 13 FIRE_SPEAR / shared DOOMTIME charge
+
+- 接入巫師 Skill 13 `火龙枪 / PROFESSION_FIRE_SPEAR`。
+- dynamic MP：M-tier 1～2=30、3～4=40、5～6=60、7～8=70、9～10=80；command receipt 即扣 MP。
+- 新增 Player battle-local shared charge Work：FIRE_SPEAR `DOOMTIME=2`、DOOM `DOOMTIME=3`。
+- actor pass 先 `--DOOMTIME`；歸零時同 pass 還原保存的 prepared command 並立即執行。Fire Spear 2→1→0，Doom 3→2→1→0。
+- 修正 V2.59：DOOM release magic 原已完成，但先前 Web 漏掉 active outer DOOMTIME lifecycle；V2.69 補回，不改 V2.59 的 damage/fear executor。
+- Guard/Capture 無法覆寫正集氣 command；DRAGNET 會依 fixed source 清除 Player charge。
+- fixed FIRE_SPEAR Dex case（20%～50% jitter）仍保留，但正常 release round EntrySort 時 COM1 尚為 NONE，因此 live charged order 使用 default Dex。
+- release 才跑 Fire Practice / GET_PRACTICE；power tier1～3=100、4～5=200、6=300、7=350、8=400、9=450、10=800。
+- type1 Fire dodge 後另有 strict `RAND(1,100)<90`；roll 90 miss。GET_DAMAGE Fire 欄位一致。
+- FIRE_SPEAR TOLIST_SORT 內容整段 commented，無額外 target-count / miss RNG。
+- animation：enemy-side base img2=101641 (350,250)，toNo<10 才改 101642 (320,240)，attIdx=0。
+- 新增 `tools/check_v269_profession_fire_spear_runtime.mjs`。
+- save schema 維持 **30**。

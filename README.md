@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.68**
+**PLAYABLE CORE V2.69**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,28 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.69 最新進度
+
+V2.69 接入巫師 **Skill 13「火龍槍」／`PROFESSION_FIRE_SPEAR`**，並補齊 fixed `CHAR_DOOMTIME` 的共享集氣 lifecycle；同時修正 V2.59 世界末日先前只移植 release magic、漏掉外層 active charge 的缺口。
+
+- TARGET OTHER；option `火|1|1|350|250|3200|4200|1|320|240`，`magic_type=1`。
+- dynamic MP：M-tier 1～2=30、3～4=40、5～6=60、7～8=70、9～10=80。MP 與該職業技能自身 proficiency 都在**第一次選招／command receipt** 就處理，集氣期間不再次扣 MP。
+- fixed `profession_common_fun()` 會把真正 command/target/skill level/array 暫存，立刻把 `CHAR_WORKBATTLECOM1=BATTLE_COM_NONE`，火龍槍設 `CHAR_DOOMTIME=2`；世界末日設 `CHAR_DOOMTIME=3`。
+- 每次輪到玩家進 `BATTLE_Battling()` 時，在 command switch 前先做 `DOOMTIME--`。若剛好歸零，立即把暫存 COM1/COM2/COM3 還原並**在同一個 actor pass 直接釋放**。
+- 因此火龍槍實際序列是 **2→1（選招當輪 COM1=NONE）→0（下一輪玩家 actor pass 直接出手）**；世界末日則是 **3→2→1→0**，再多空過一個完整玩家 actor pass。
+- `BATTLE_IsCharge()` 在 DOOMTIME>0 時保留 command；Web 的 Guard／Capture 在集氣期間不會覆蓋這筆暫存技能，而是繼續推進原 charge。
+- fixed `BATTLE_DexCalc` 雖然存在 FIRE_SPEAR 專屬 `WORKQUICK+20 - RAND(work*0.2,work*0.5)` case，但正常 charged path 的 **EntrySort 發生在 DOOMTIME 仍為 1、COM1 仍為 NONE 時**，之後輪到玩家才還原 FIRE_SPEAR；所以 live 排序實際走 default Dex。V2.69 同時保存「case 存在」與「正常 charge path 不會用到它」兩件事。
+- DRAGNET 是原 C 會明確把 `DOOMTIME` 與全部暫存 command fields 清成 0 的狀態；Web 現在也會取消 Player 的 profession charge。其他一般不能動狀態不會自行清除這組暫存欄位。
+- release 時才跑 Fire Practice／GET_PRACTICE。GET_PRACTICE：tier1～3=100、4～5=200、6=300、7=350、8=400、9=450、10=800，保留 tier9→10 的 450→800 跳升。
+- magic dodge type1 使用 Fire proficiency；base dodge 通過後 FIRE_SPEAR 還要再過一顆 **`RAND(1,100) < 90`**，roll=90 即 miss。
+- GET_DAMAGE type1 的 Fire proficiency/resist 欄位一致，沒有 type2/type3 錯位 bug。
+- `PROFESSION_MAGIC_TOLIST_SORT(FIRE_SPEAR)` 內兩段命中率／多目標程式全部被註解，因此 live path不另抽 target RNG、不依 tier 擴散；維持 MultiList + SortLoc 後的目標。
+- 動畫單體 `attIdx=0`；敵方（玩家左側攻右側）使用 row img2=101641 / (350,250)，對右側 direct slot（toNo<10）才切 101642 / (320,240)。
+- 命中後仍固定消耗 `PROFESSION_MAGIC_CHANGE_STATUS()` leading `RAND(1,100)`；Fire Spear 沒有額外 status case。
+- save schema 維持 **30**。
+
+---
 
 ## V2.68 最新進度
 
