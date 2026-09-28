@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.07**
+目前最新可玩核心：**V3.08**
 
-目前主線已完成 V3.07；本版補齊職業 Toxin Weapon 的 actual-defindex ACUPUNCTURE WakeUp source-order。
+目前主線已完成 V3.08；本版修正 Trap／Acupuncture 反傷 attacker death credit 的 ItemCrush 後 source-order。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,15 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.08：Trap／Acupuncture 反傷 attacker death credit 改到 ItemCrush 後
+
+- Reaction finish 不再直接寫入 Enemy death/reward credit，只保留 `sourcePendingDeathCredit`。
+- `sourceBattleFinalizeItemCrushRng()` 完成 fixed defender ItemCrush RNG 後，再 finalize pending death credit。
+- Counter 外層接著才進 `BATTLE_AddProfit()` 對應的 Web reward pipeline。
+- pending 有 idempotent guard，避免同一死亡重複結算。
+- regression：`tools/check_v308_reaction_death_credit_itemcrush.mjs`
+- CI：`.github/workflows/v308-reaction-death-credit-itemcrush.yml`
 
 ## V3.07：Toxin Weapon ACUPUNCTURE WakeUp = actual defindex
 
