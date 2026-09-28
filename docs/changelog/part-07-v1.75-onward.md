@@ -1,3 +1,26 @@
+## V2.95 Guardian substitution / second suit-dodge boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_AttackSeq()` 明確是：
+
+1. 原 defender `BATTLE_DuckCheck()`
+2. 原 defender `_SUIT_ADDPART3`（若啟用）
+3. `BATTLE_GuardianCheck()`
+4. Guardian 有效後，把 local `defindex` 改成 Guardian
+5. 以 Guardian 繼續 Critical / Damage / GuardAdjust
+
+因此 Guardian 分支不會再回頭重新跑第二次 Duck／suit-dodge。
+
+V2.95 Web：
+
+- `resolveAttackToEnemyWithGuardian()`：只有真的選到 Guardian 時才傳 `skipSuitDodge:true`。
+- `sourceProfessionPhysicalCalcOnlyResult()`：calc-only Guardian 也在 Guardian 代入後禁止第二次 suit-dodge。
+- 沒有 Guardian 的普通攻擊保持既有 suit-dodge。
+- Enemy→Player／Enemy→Pet 的 direct Guardian resolver 已有同一 boundary，不重複改動。
+
+regression：`tools/check_v295_guardian_no_second_suit_dodge.mjs`
+CI：`.github/workflows/v295-guardian-no-second-suit-dodge.yml`
 ## V2.94 Fixed BATTLE_DuckCheck JYUJYUTU / gKawashiPara source branch
 
 V2.94 追 fixed `battle_event.c` 的 `BATTLE_DuckCheck()` 公式尾端前一個 source gap：`gKawashiPara` 不是永遠固定 `0.02`。
