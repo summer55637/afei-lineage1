@@ -4,10 +4,20 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.92**
+**PLAYABLE CORE V2.93**
 
-歷史 regression markers：**PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
 
+## V2.93 — DamageReact blocks DuckCheck but not independent suit dodge
+
+V2.93 對齊 fixed `BATTLE_DuckCheck()` 的先後順序：target-side `BATTLE_GetDamageReact() > 0` 時，會先直接讓 DuckCheck FALSE，因此不能再消耗 `CHAR_MYSKILLDUCK` 或普通敏捷閃避的 RNG；但 `BATTLE_AttackSeq()` 後續 `_SUIT_ADDPART3` 是獨立第二道閃避，仍然可以執行。
+
+- fixed C 的 `BATTLE_DuckCheck()` 在 `CHAR_MYSKILLDUCK` 前先檢查 DamageReact；Web 原先 `resolveNormalAttack()` 卻先測 `skillDuckPower`，再呼叫 `sourceBattleDuckTotal()`，所以 target 有 DamageReact 時仍可能先走 Duck。
+- 本版只在 `resolveNormalAttack()` 對已存在的 source-backed `damageReact` 加上 DuckCheck boundary：跳過 `skillDuckPower` 與普通 DuckCheck，並保留下面獨立 `sourceSuitDuckCheck()`。
+- 不改 DamageReact 種類、傷害、回合或機率；不把 suit dodge 錯誤地綁到 DamageReact。
+
+regression：`tools/check_v293_damagereact_duckcheck_boundary.mjs`
+GitHub Actions：`.github/workflows/v293-damagereact-duckcheck.yml`
 
 ## V2.92 — Enemy→Player weapon Guardian boundary
 
@@ -73,7 +83,9 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.92；本版把 Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
+目前主線已完成 V2.93；本版把 DamageReact 與 DuckCheck 的 source-order 收斂。
+
+> **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
 > **原 C 規則優先、不猜數值**
 

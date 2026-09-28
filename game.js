@@ -12885,17 +12885,21 @@ function sourceBattleArrangeCheck(defender,options={}){
 }
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
-  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / immobility, while the
-  // separate suit-dodge branch below still executes unless this is COMBO/already checked.
+  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / DamageReact / immobility,
+  // while the separate suit-dodge branch below still executes unless this is COMBO/already checked.
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
-  if(!disableDodge&&n(defender?.skillDuckPower)>0){
+  const sourceDamageReactBlocksDuck=Math.trunc(n(defender?.damageReact))>0;
+  // BATTLE_DuckCheck checks DamageReact before both CHAR_MYSKILLDUCK and ordinary DuckCheck.
+  // Do not consume either Duck RNG while a source-backed DamageReact is active; _SUIT_ADDPART3
+  // remains independent below, matching the fixed AttackSeq second-dodge branch.
+  if(!disableDodge&&!sourceDamageReactBlocksDuck&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
       return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,skillDuck:true,skillDuckPower:power,skillDuckRoll:roll};
     }
   }
-  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
+  const duck=(disableDodge||sourceDamageReactBlocksDuck)?0:sourceBattleDuckTotal(attacker,defender,options);
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進普通閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck){
     const professionDodge=defender?.type==='player'?sourceProfessionPlayerNormalDodgeEvent(state):null;
