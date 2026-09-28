@@ -18,16 +18,6 @@ function extract(name){
   }
   return 'UNTERMINATED '+name;
 }
-console.log('GAME_JS_BYTES='+Buffer.byteLength(src));
-for(const n of ['sourceProfessionEncloseAuraSpec','sourceProfessionEncloseAuraExecute','sourceProfessionBattleFunctionSupportedV272','sourceProfessionBattleFunctionSupported']){
+for(const n of ['sourceProfessionEncloseAuraSpec','sourceProfessionEncloseAnimation','sourceProfessionEncloseAuraExecute','sourceProfessionApplyEncloseAuraProc','sourceProfessionBattleDexRollV272','sourceProfessionBattleFunctionSupportedV271','sourceProfessionBattleSkillExecuteV271','sourceProfessionBattleSkillExecuteV272']){
   console.log('\n===== '+n+' =====\n'+extract(n));
-}
-for(const needle of ['PROFESSION_FIRE_ENCLOSE','PROFESSION_THUNDER_ENCLOSE','BATTLE_COM_S_FIRE_ENCLOSE','BATTLE_COM_S_THUNDER_ENCLOSE']){
-  let p=0,count=0;
-  console.log('\n===== OCCURRENCES '+needle+' =====');
-  while((p=src.indexOf(needle,p))>=0){
-    console.log(src.slice(Math.max(0,p-500),Math.min(src.length,p+900)));
-    p+=needle.length;
-    if(++count>=12)break;
-  }
 }
