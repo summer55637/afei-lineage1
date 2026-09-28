@@ -1,3 +1,23 @@
+## V3.01 original defender DamageReact survives Guardian substitution
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_Attack()` 的順序：
+
+1. original `defindex` 先檢查 `BATTLE_GetDamageReact(attackindex)`；
+2. 再檢查 original `defindex` 的 `BATTLE_GetDamageReact(defindex)`；
+3. 以 `iRet/ContFlg = FALSE` 進入 `BATTLE_AttackSeq()`；
+4. `BATTLE_AttackSeq()` 完成 GuardianCheck 後才可能改寫 `defindex`。
+
+V3.01 Web：
+
+- `resolveAttackToEnemyWithGuardian()` 在 Guardian substitution 後保留 original target 的 `sourceCounterBlockedByDamageReact`。
+- 因此 original defender 的 DamageReact 不會因 Guardian replacement 而重新開啟 Counter。
+- 本版沒有新增 DamageReact 類型、Damage 數值、Guardian 條件或 RNG。
+
+regression：`tools/check_v301_original_damagereact_guardian_counter.mjs`
+CI：`.github/workflows/v301-original-damagereact-guardian-counter.yml`
+
 ## V3.00 confusion target RNG + team-attack boundary
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
