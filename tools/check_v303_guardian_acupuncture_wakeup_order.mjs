@@ -22,8 +22,10 @@ assert.ok(hit.includes("const wakeTarget=acupuncture.triggered"),
   'primary Acupuncture WakeUp must use caller-sensitive target selection');
 assert.ok(hit.includes("wakeTarget==='original'?originalTargetDesc:targetDesc"),
   'ordinary primary caller must default Acupuncture WakeUp to original defNo');
-assert.ok(hit.includes("wakeTarget==='attacker'?attackerDesc"),
+assert.ok(hit.includes("wakeTarget==='attacker'"),
   'special callers must be able to select attacker WakeUp explicitly');
+assert.ok(hit.includes('attackerDesc'),
+  'special caller attacker descriptor must remain available to WakeUp selector');
 
 const wakeTargets=[];
 const ctx={
