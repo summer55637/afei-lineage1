@@ -152,6 +152,11 @@ for(const f of commonCounterFns){
 
 assert.ok(game.includes('SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||\'\'))'));
 assert.ok(game.includes('sourceBattlePreconditionFalse:true'));
+const counterHelperStart=game.indexOf('function resolvePetEnemyCounterChain');
+const counterHelperEnd=game.indexOf('\nfunction ',counterHelperStart+10);
+const counterHelper=game.slice(counterHelperStart,counterHelperEnd>counterHelperStart?counterHelperEnd:counterHelperStart+9000);
+assert.ok(counterHelper.includes('attackerHasDamageReact'),'Counter helper must preserve fixed BATTLE_Attack attacker DamageReact FALSE boundary');
+assert.ok(counterHelper.includes('targetHasDamageReact'),'Counter helper must preserve fixed BATTLE_Attack original-target DamageReact FALSE boundary');
 
 const randomStart=game.indexOf('function sourcePetRandomSkillPlan');
 const randomEnd=game.indexOf('function sourcePetChargeSpec',randomStart);
