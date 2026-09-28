@@ -3372,7 +3372,8 @@ function sourceFinishProfessionTrapReaction(reaction){
   // observe the attacker rather than the protected Player.
   battleStatusWakeOnDamage(attackerDesc,trapDamage);
   if(before>0&&reaction.attackerAfter<=0&&attackerDesc?.kind==='enemy'&&attackerDesc.unit){
-    sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc]);
+    // fixed caller order defers BATTLE_AddProfit until after ItemCrush.
+    r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false};
   }
   return reaction;
 }
@@ -11057,9 +11058,18 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
   }
   return {type,damage,thresholdDamage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
+function sourceFinalizePendingReactionDeathCredit(r){
+  const pending=r?.sourcePendingDeathCredit;
+  if(!pending||pending.processed)return null;
+  pending.processed=true;
+  const unit=pending.unit;
+  if(!unit||n(unit.hp)>0)return null;
+  return sourceMarkEnemyDeathCredit(unit,pending.actors||[]);
+}
 function sourceBattleFinalizeItemCrushRng(r){
   if(!r||r.dodged||r.miss||n(r.damage)<=0)return null;
   if(Object.prototype.hasOwnProperty.call(r,'sourceItemCrushDefenderRoll')){
+    sourceFinalizePendingReactionDeathCredit(r);
     return r.sourceItemCrushDefenderRoll;
   }
   // fixed _TAKE_ITEMDAMAGE:
@@ -13199,7 +13209,10 @@ function sourceFinishAcupunctureReaction(reaction){
     attackerDesc,reflectedDamage,beforeAttacker,reflectResult
   );
   if(beforeAttacker>0&&reaction.attackerAfter<=0&&attackerDesc?.kind==='enemy'&&attackerDesc.unit){
-    sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc]);
+    // fixed BATTLE_Counter/BATTLE_Combo caller order: death is flagged before returning,
+    // but BATTLE_AddProfit is outside the attack routine and ItemCrush runs first.
+    // Keep reward ownership pending until the caller's ItemCrush boundary completes.
+    r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false};
   }
 
   // BATTLE_Counter has a different WakeUp target from primary BATTLE_Attack:
