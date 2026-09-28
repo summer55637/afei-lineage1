@@ -216,6 +216,7 @@ function sourceProfessionBattleSkillExecuteV273(prepared,actor=null){
 })();
 `;
 
+fs.writeFileSync(path,s,'utf8');
 execSync('node --check game.js',{stdio:'inherit'});
 execSync('git diff --check',{stdio:'inherit'});
 console.log('V2.73 game.js patch applied; syntax and diff checks pass');
