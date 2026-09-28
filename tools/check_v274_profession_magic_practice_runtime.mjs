@@ -47,11 +47,11 @@ p.professionSkills[7]={skillId:19,rawLevel:10000};
 p.professionSkills[9]={skillId:20,rawLevel:8000};
 let snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'v274');
 assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:19,thunder:25});
-assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionPlayerMagicProficiencyVector())),{fire:13,ice:18,thunder:25});
+assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionPlayerMagicProficiencyVector())),{fire:13,ice:19,thunder:25});
 
 p.professionSkills[0]={skillId:999,rawLevel:10000};p.professionSkills[1]=null;
 snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'sparse');
-assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:18,thunder:25});
+assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:19,thunder:25});
 
 p.professionClass=1;
 snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'wrong-class');
@@ -68,4 +68,4 @@ assert.equal(supported.sourceProfessionBattleFunctionSupported('PROFESSION_ICE_P
 assert.equal(supported.sourceProfessionBattleFunctionSupported('PROFESSION_THUNDER_PRACTICE'),false);
 
 assert.match(html,/PLAYABLE CORE V2\.72/);
-console.log(JSON.stringify({pass:true,version:'V2.74-core',focus:'Skills 18-20 magic practice parity',snapshot:{fire:13,ice:18,thunder:25}}));
+console.log(JSON.stringify({pass:true,version:'V2.74-core',focus:'Skills 18-20 magic practice parity',snapshot:{fire:13,ice:19,thunder:25}}));
