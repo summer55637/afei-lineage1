@@ -77,6 +77,35 @@ assert.ok(
   /const SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS=new Set\(\[\s*'PETSKILL_Merge'/.test(game),
   'player battle-false set must start with PETSKILL_Merge'
 );
+
+const varyStart=game.indexOf('function sourcePerformPetVarySkill');
+const varyEnd=game.indexOf('\nfunction ',varyStart+10);
+const varyFn=game.slice(varyStart,varyEnd>varyStart?varyEnd:varyStart+2500);
+assert.ok(varyFn.includes('SOURCE_VARY_WOLF_PETIDS.has'),'Vary must keep fixed CHAR_PETID 981..984 gate before transform state');
+
+const setDuckStart=game.indexOf('function sourcePerformPetSetDuckRandomSkill');
+const setDuckEnd=game.indexOf('\nfunction ',setDuckStart+10);
+const setDuckFn=game.slice(setDuckStart,setDuckEnd>setDuckStart?setDuckEnd:setDuckStart+2500);
+assert.ok(setDuckFn.includes('sourceSetDuckSelfTargetGate'),'SetDuck RANDOMACT self-target FALSE boundary must remain explicit');
+
+const sacrificeStart=game.indexOf('function sourcePerformPetSacrificeSkill');
+const sacrificeEnd=game.indexOf('\nfunction ',sacrificeStart+10);
+const sacrificeFn=game.slice(sacrificeStart,sacrificeEnd>sacrificeStart?sacrificeEnd:sacrificeStart+3000);
+assert.ok(sacrificeFn.includes('beforeCaster>maxCaster*.2'),'Sacrifice source gate must remain strict HP > 20%');
+assert.ok(sacrificeFn.includes('sourceUseFailed:true'),'Sacrifice source-false result must remain explicit');
+
+const roleBoundFns=[
+  'PETSKILL_BattleTimid',
+  'PETSKILL_BattleProperty',
+  'PETSKILL_BattleTearDamage',
+  'PETSKILL_Lighttakeed',
+  'PETSKILL_AttackCrazed',
+  'PETSKILL_AttackShoot'
+];
+for(const f of roleBoundFns){
+  assert.ok(loyal.includes("meta?.f==='"+f+"'"),f+' player Pet dispatcher');
+}
+
 assert.ok(game.includes('SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||\'\'))'));
 assert.ok(game.includes('sourceBattlePreconditionFalse:true'));
 
