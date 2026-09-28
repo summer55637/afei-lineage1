@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.08**
+目前最新可玩核心：**V3.09**
 
-目前主線已完成 V3.08；本版修正 Trap／Acupuncture 反傷 attacker death credit 的 ItemCrush 後 source-order。
+目前主線已完成 V3.09；本版修正 Combo death credit 的 ItemCrush 後 source-order。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,16 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.09：Combo 死亡獎勵 credit 延後到 ItemCrush 後
+
+- fixed `BATTLE_Combo()` 的 enemy death 先形成死亡狀態／flag，該次 command 的 `BATTLE_ItemCrushSeq()` 仍在後面，整個 Combo 返回後才由外層 `BATTLE_AddProfit()` 掃描死亡與獎勵。
+- Web 原本在 `sourceComboAcupunctureSegment()` 與 `sourceComboApplyDamage()` 直接 `sourceMarkEnemyDeathCredit()`，會早於同一 segment／last-hit 的 `sourceBattleFinalizeItemCrushRng()`。
+- 本版改成 per-hit pending death credit；同一 Combo segment 若同時造成反傷 attacker 與 original target 都死亡，兩筆 pending credit 都保留，並依 fixed Entry slot 順序 finalize，ItemCrush 完成後才寫入 reward credit。
+- 另外修正 Combo last-hit result clone：pending 與 ItemCrush 現在共用同一個 `r`，避免 pending 掛在未送進 ItemCrush 的 clone 上。
+- Pending list 保留 V3.08 的 idempotent guard；不改 Combo 傷害、Acupuncture／Trap 反傷、WakeUp、Guardian 或 RNG 數值。
+- regression：`tools/check_v309_combo_death_credit_itemcrush.mjs`
+- CI：`.github/workflows/v309-combo-death-credit-itemcrush.yml`
 
 ## V3.08：Trap／Acupuncture 反傷 attacker death credit 改到 ItemCrush 後
 

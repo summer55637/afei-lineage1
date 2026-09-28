@@ -1,3 +1,22 @@
+## V3.09 Combo death credit waits for ItemCrush boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_Combo()`：
+
+1. 每個 member 先做 `DamageSub` 或 `DamageSubCale`；
+2. last member 才用 `BATTLE_DamageSub2()` 套用累積傷害；
+3. reaction rewrite／WakeUp／death flag 在 ItemCrush 前完成；
+4. 每個 segment 的 `BATTLE_ItemCrushSeq()` 再消耗 ItemCrush RNG；
+5. 整個 Combo return 後，外層 `BATTLE_AddProfit()` 才掃 death／reward。
+
+Web 原本的 `sourceComboApplyDamage()` 與 `sourceComboAcupunctureSegment()` 直接寫 enemy reward credit，沒有經過 ItemCrush boundary；last-hit accumulated death 另外有 result clone 與 finalize result 不同物件的問題。
+
+V3.09 改用 per-result pending death credit queue；同一 Combo segment 若 Acupuncture 同時殺掉 attacker 與 original target，兩筆 credit 可一起延後，並依 fixed Entry slot 順序一次 finalize。
+
+regression：`tools/check_v309_combo_death_credit_itemcrush.mjs`
+CI：`.github/workflows/v309-combo-death-credit-itemcrush.yml`
+
 ## V3.08 reaction death credit waits for ItemCrush boundary
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`

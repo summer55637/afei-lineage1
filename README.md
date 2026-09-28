@@ -4,9 +4,22 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.08**
+**PLAYABLE CORE V3.09**
 
-歷史 regression markers：**PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.09** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.09 — Combo death credit waits for ItemCrush boundary
+
+V3.09 延續 V3.08，鎖定 fixed `BATTLE_Combo()` 的死亡／獎勵 source-order：
+
+- fixed Combo 每個 segment 先完成 DamageSub／DamageSub2、WakeUp、death flag，再執行該 segment 的 `BATTLE_ItemCrushSeq()`。
+- 整個 Combo 回 caller 後，外層 `BATTLE_AddProfit()` 才掃死亡、戰利品與 EXP／Pet AI credit。
+- Web 原本讓 `sourceComboAcupunctureSegment()` 與 `sourceComboApplyDamage()` 直接 `sourceMarkEnemyDeathCredit()`；這會在同一 segment 的 ItemCrush RNG 前就鎖定 reward credit。
+- 本版新增 `sourceQueuePendingDeathCredit()`；單一 hit 可同時保留 reaction attacker 與 original target 兩筆 pending credit，`sourceBattleFinalizeItemCrushRng()` 完成 ItemCrush RNG 後一次 finalize，且依 fixed Entry slot 順序處理多筆死亡。
+- 不改 Combo 的傷害累積、反傷、WakeUp、Guardian、ItemCrush RNG 數值或 target selection。
+
+regression：`tools/check_v309_combo_death_credit_itemcrush.mjs`
+GitHub Actions：`.github/workflows/v309-combo-death-credit-itemcrush.yml`
 
 ## V3.08 — reaction death credit waits for ItemCrush boundary
 

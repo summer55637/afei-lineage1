@@ -11058,13 +11058,40 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
   }
   return {type,damage,thresholdDamage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
+function sourceQueuePendingDeathCredit(r,unit,actors=[]){
+  if(!r||!unit||n(unit.hp)>0)return null;
+  const pending={unit,actors:Array.isArray(actors)?actors.slice():[],processed:false};
+  if(!r.sourcePendingDeathCredit){
+    r.sourcePendingDeathCredit=pending;
+  }else{
+    if(!Array.isArray(r.sourcePendingDeathCredits))r.sourcePendingDeathCredits=[];
+    r.sourcePendingDeathCredits.push(pending);
+  }
+  return pending;
+}
 function sourceFinalizePendingReactionDeathCredit(r){
-  const pending=r?.sourcePendingDeathCredit;
-  if(!pending||pending.processed)return null;
-  pending.processed=true;
-  const unit=pending.unit;
-  if(!unit||n(unit.hp)>0)return null;
-  return sourceMarkEnemyDeathCredit(unit,pending.actors||[]);
+  if(!r)return null;
+  const pendings=[];
+  if(r.sourcePendingDeathCredit)pendings.push(r.sourcePendingDeathCredit);
+  if(Array.isArray(r.sourcePendingDeathCredits))pendings.push(...r.sourcePendingDeathCredits);
+  pendings.sort((a,b)=>{
+    const sa=sourceBattleStatusSlot({kind:'enemy',unit:a?.unit});
+    const sb=sourceBattleStatusSlot({kind:'enemy',unit:b?.unit});
+    if(sa<0&&sb<0)return 0;
+    if(sa<0)return 1;
+    if(sb<0)return -1;
+    return sa-sb;
+  });
+  let result=null;
+  for(const pending of pendings){
+    if(!pending||pending.processed)continue;
+    pending.processed=true;
+    const unit=pending.unit;
+    if(!unit||n(unit.hp)>0)continue;
+    const credit=sourceMarkEnemyDeathCredit(unit,pending.actors||[]);
+    if(credit)result=credit;
+  }
+  return result;
 }
 function sourceBattleFinalizeItemCrushRng(r){
   if(!r||r.dodged||r.miss||n(r.damage)<=0)return null;
@@ -23383,7 +23410,7 @@ function sourceComboApplyDamage(target,total,lastResult=null,rewardActors=[]){
     const before=n(target.unit.hp);
     target.unit.hp=Math.max(0,before-damage);
     sourceTrackDamageSubUltimate({kind:'enemy',unit:target.unit,unitId:target.unit.id},damage,before,lastResult||{});
-    if(before>0&&target.unit.hp<=0)sourceMarkEnemyDeathCredit(target.unit,rewardActors);
+    if(before>0&&target.unit.hp<=0)sourceQueuePendingDeathCredit(lastResult||{},target.unit,rewardActors);
     return Math.max(0,before-target.unit.hp);
   }
   return 0;
@@ -23416,9 +23443,9 @@ function sourceComboAcupunctureSegment(actor,target,r,rewardActors=[]){
   sourceFinishAcupunctureReaction(reaction);
   const after=battleStatusHp(target);
   if(before>0&&after<=0&&target.kind==='enemy'&&target.unit){
-    // fixed BATTLE_AddProfit receives the complete combo aAttackList even if BATTLE_Combo
-    // returns early after this immediate reaction kills the target.
-    sourceMarkEnemyDeathCredit(target.unit,rewardActors);
+    // fixed BATTLE_Combo does not grant enemy reward credit here: the caller returns only
+    // after this segment's ItemCrush boundary, then outer BATTLE_AddProfit scans the death.
+    sourceQueuePendingDeathCredit(r,target.unit,rewardActors);
   }
 
   reaction.targetBefore=before;
@@ -23527,15 +23554,14 @@ function sourcePerformCombo(order,index,options={}){
 
   let accumulatedActual=0;
   if(!abortedByTargetDeath){
-    const lastComboResult=hits[hits.length-1]?.r
-      ?Object.assign({},hits[hits.length-1].r,{ultimateCriticalEnemyOnly:true})
-      :{ultimateCriticalEnemyOnly:true};
+    const lastComboResult=hits[hits.length-1]?.r||{ultimateCriticalEnemyOnly:true};
+    lastComboResult.ultimateCriticalEnemyOnly=true;
     accumulatedActual=sourceComboApplyDamage(
       target,accumulatedDamage,lastComboResult,
       hits.map(x=>({kind:x.kind,petId:x.petId||null}))
     );
     if(deferredWake?.damage>0)battleStatusWakeOnDamage(deferredWake.desc,deferredWake.damage);
-    sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
+    sourceBattleFinalizeItemCrushRng(lastComboResult);
     // fixed BATTLE_Combo returns to the caller, then BATTLE_AddProfit processes the new death.
     sourceProcessBattleDeathsAtAddProfit();
   }
