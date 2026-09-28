@@ -1,3 +1,28 @@
+## V3.00 confusion target RNG + team-attack boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `CHAR_WORKCONFUSION`：
+
+1. `RAND(1,100)) <= 80`；
+2. `RAND(0,1)` 選 side；
+3. `RAND(0,9)` 選循序掃描起點；
+4. `++pos` 循環掃描 10 個 battle slot，跳過自己，只接受 `BATTLE_TargetCheck()==TRUE`；
+5. 若沒有合法目標，`COM2=-1`；
+6. 後續 `BATTLE_TargetAdjust` 再由對側 `BATTLE_DefaultAttacker` 補目標。
+
+fixed `BATTLE_COM_S_CHAOS` 隨後還有 `_PREVENT_TEAMATTACK` gate；同隊目標直接 `BATTLE_NoAction`，因此不進 `BATTLE_AttackSeq`，也不消耗 Dodge/Critical/Damage RNG。
+
+V3.00 Web：
+
+- 修正 `battleConfusionChooseTarget()`，不再對候選清單二次均勻抽 RNG。
+- 修正空 side fallback，改用 fixed `BATTLE_DefaultAttacker` owner。
+- 新增 `sourceBattleSameSideDesc()`，在混亂 ranged / normal attack 前都先擋同隊。
+- 保留 StatusSeq 已消耗的 side/start-pos RNG；同隊 gate 不額外吃 AttackSeq RNG。
+
+regression：`tools/check_v300_confusion_teamattack_rng.mjs`
+CI：`.github/workflows/v300-confusion-teamattack-rng.yml`
+
 ## V2.99 manual first-dodge callers must not re-run suit dodge
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
