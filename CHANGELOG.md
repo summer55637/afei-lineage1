@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.03**
+目前最新可玩核心：**V3.04**
 
-目前主線已完成 V3.03；本版補齊 Guardian-provided ACUPUNCTURE 在 ordinary player/Pet caller 的 original defender WakeUp boundary。
+目前主線已完成 V3.04；本版補齊 Enemy→Player Guardian Pet 持有 ACUPUNCTURE 時的 original Player WakeUp boundary。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,14 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.04：Enemy→Player Guardian Pet 的 ACUPUNCTURE 仍 WakeUp original Player
+
+- fixed `BATTLE_Attack()` 在 ACUPUNCTURE 的 `BATTLE_DamageWakeUp()` 前仍恢復 original `defNo`。
+- Enemy→Player Guardian path 已由 `resolveEnemyDirectAttackToPlayer()` 保留 original target descriptor。
+- `battleApplyPhysicalHit()` 在 ACUPUNCTURE trigger 時優先使用 `r.originalTargetDesc`，因此 Guardian Pet 不會錯誤被 WakeUp。
+- regression：`tools/check_v304_enemy_player_guardian_acupuncture_wakeup.mjs`
+- CI：`.github/workflows/v304-enemy-player-guardian-acupuncture-wakeup.yml`
 
 ## V3.03：Guardian-provided ACUPUNCTURE 仍 WakeUp original defender
 
