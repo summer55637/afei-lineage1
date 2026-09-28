@@ -17,8 +17,10 @@ function sliceFunction(name){
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const hit=sliceFunction('battleApplyPhysicalHit');
-assert.ok(hit.includes('const wakeDesc=acupuncture.triggered?(r?.originalTargetDesc||targetDesc):targetDesc;'),
-  'Enemy->Player Guardian Acupuncture must prefer the fixed original defNo WakeUp descriptor');
+assert.ok(hit.includes("const wakeTarget=acupuncture.triggered"),
+  'Enemy->Player Guardian Acupuncture must use caller-sensitive target selection');
+assert.ok(hit.includes("wakeTarget==='original'?originalTargetDesc:targetDesc"),
+  'Enemy->Player primary caller must default Acupuncture WakeUp to original Player');
 assert.ok(hit.includes('if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);'));
 
 const resolver=sliceFunction('resolveEnemyDirectAttackToPlayer');
