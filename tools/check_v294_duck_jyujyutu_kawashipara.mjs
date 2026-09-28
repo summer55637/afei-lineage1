@@ -16,7 +16,7 @@ function sliceFunction(name){
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const duck=sliceFunction('battleDuckChance');
-const result=new Function('n',duck+"\nreturn {normal:battleDuckChance({type:'player',fixedDex:100},{type:'player',fixedDex:130,luck:0},0.02),jujutsu:battleDuckChance({type:'player',fixedDex:100},{type:'player',fixedDex:130,luck:0},0.027),fallback:battleDuckChance({type:'player',fixedDex:100},{type:'player',fixedDex:130,luck:0),undefined)};")(v=>Number(v)||0);
+const result=new Function('n',duck+"\nreturn {normal:battleDuckChance({type:'player',fixedDex:100},{type:'player',fixedDex:130,luck:0},0.02),jujutsu:battleDuckChance({type:'player',fixedDex:100},{type:'player',fixedDex:130,luck:0},0.027),fallback:battleDuckChance({type:'player',fixedDex:100},{type:'player',fixedDex:130,luck:0},undefined)};")(v=>Number(v)||0);
 
 assert.ok(Math.abs(result.normal-3872.9833462074166)<1e-9,'default K=0.02 math drift');
 assert.ok(Math.abs(result.jujutsu-3333.3333333333335)<1e-9,'JYUJYUTU K=0.027 math drift');
