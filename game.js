@@ -24898,6 +24898,362 @@ function handleZooAction(action){
   }
   save();render();
 }
+
+/* V272_ENCLOSE_RUNTIME_PATCH
+ * Fixed-source correction + Skill 16 雷附體.
+ *
+ * Pinned C mapping:
+ *   炎 -> CHAR_WORK_F_ENCLOSE_2   (aura counter)
+ *   烧 -> CHAR_WORK_F_ENCLOSE     (burn status)
+ *   击 -> CHAR_WORK_T_ENCLOSE_2   (thunder aura counter)
+ *   电 -> CHAR_WORK_T_ENCLOSE     (one-turn action lock)
+ *
+ * BATTLE_Attack then checks F/I/T _2 counters, chance = 20 + tier*2,
+ * and writes the mapped on-hit status with StatusTbl=effectiveTurn+1.
+ */
+function sourceProfessionThunderEncloseDexRoll(quick,{randMacro=sourceCRandMacroValue}={}){
+  const work=Math.trunc(n(quick))+20;
+  const lower=work*0.2;
+  const upper=work*0.5;
+  const roll=randMacro(lower,upper);
+  let dex=work-roll;
+  if(dex<=0)dex=1;
+  return Math.trunc(dex);
+}
+
+function sourceProfessionEncloseAuraSpec(prepared,element='fire'){
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const attackTier=sourceProfessionAttackSkillTier(prepared?.displayLevel);
+  const option=String(row?.option||'');
+  const baseSuccess=sourceProfessionStatusOptionInt(option,'成',0);
+  const rawTurn=Math.max(1,sourceProfessionStatusOptionInt(option,'回',1));
+  const effect=sourceProfessionStatusOptionInt(option,'效',0);
+  const effectiveOnHitTurn=element==='thunder'
+    ?1
+    :(attackTier>=10?3:(attackTier>=5?2:1));
+  const statusAuraToken=element==='thunder'?'击':'炎';
+  const statusHitToken=element==='thunder'?'电':'烧';
+  return {
+    skillId:Math.trunc(n(prepared?.skillId)),
+    displayLevel:Math.trunc(n(prepared?.displayLevel)),
+    attackTier,
+    baseSuccess,
+    success:baseSuccess+attackTier*4,
+    rawTurn,
+    storedTurns:rawTurn+1,
+    effect,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    option,
+    element,
+    statusAuraToken,
+    statusHitToken,
+    onHitTurn:effectiveOnHitTurn,
+    onHitStoredTurns:effectiveOnHitTurn+1,
+    onHitChance:20+attackTier*2
+  };
+}
+
+function sourceProfessionEncloseAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  return {
+    magicType:-1,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),
+    showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),
+    y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),
+    shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),
+    effect:Math.trunc(n(opt[1])),
+    toNo:Math.trunc(n(toNo)),
+    sourceBattleMagicEffectPath:true
+  };
+}
+
+function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusCheck=sourceProfessionStatusAttackCheck){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  const expectedSkillId=element==='thunder'?16:15;
+  const functionName=element==='thunder'?'PROFESSION_THUNDER_ENCLOSE':'PROFESSION_FIRE_ENCLOSE';
+  if(skillId!==expectedSkillId)return {handled:false,reason:'battle-function-unported',skillId};
+
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName,rawToNo,multi};
+  }
+
+  const toNo=Math.trunc(n(multi.toNo));
+  const row=sourceProfessionSkillTemplate(skillId);
+  const spec=sourceProfessionEncloseAuraSpec(prepared,element);
+  const animation=sourceProfessionEncloseAnimation(row,toNo);
+  const results=[];
+
+  if(toNo>=0&&toNo<=19){
+    const rawTarget=sourceProfessionEnemyByBattleSlot(toNo);
+    if(rawTarget&&enemyUnitHidden(rawTarget)){
+      return {
+        handled:true,noAction:true,reason:'target-earthround',skillId,functionName,
+        rawToNo,toNo,multi,spec,animation,sourceRawTargetGate:true,noDamage:true
+      };
+    }
+  }
+
+  const tokenName=element==='thunder'?'雷附體':'火附體';
+  const onHitField=element==='thunder'?'sourceThunderEncloseOnHitTurns':'sourceFireEncloseOnHitTurns';
+  const modField=element==='thunder'?'sourceThunderEncloseModTier':'sourceFireEncloseModTier';
+  const activeField=element==='thunder'?'sourceThunderEncloseAuraActive':'sourceFireEncloseAuraActive';
+
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const check=statusCheck(targetDesc,spec.success);
+
+    if(!check.success){
+      results.push({slot,targetUnitId:target.id,check,applied:false,reason:check.reason,sourceUsesStatusAttackCheck:true});
+      addLog('「'+name+'」未能附著在 '+target.name+' 身上（roll '+check.roll+' / '+check.threshold+'）。');
+      continue;
+    }
+    if(battleHasAnyStatus(targetDesc)){
+      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'existing-status'});
+      continue;
+    }
+
+    const statusState={
+      type:'encloseAura',
+      element,
+      turns:spec.storedTurns,
+      encloseTier:spec.attackTier,
+      onHitChance:spec.onHitChance,
+      onHitTurn:spec.onHitTurn,
+      sourceProfessionSkillId:skillId
+    };
+    const key=battleStatusKey(targetDesc);
+    if(!key){
+      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'status-key'});
+      continue;
+    }
+    battleStatuses.set(key,statusState);
+    target[onHitField]=spec.storedTurns;
+    target[modField]=spec.attackTier;
+    target[activeField]=true;
+
+    const practiceFunction=element==='thunder'
+      ?'PROFESSION_THUNDER_PRACTICE'
+      :'PROFESSION_FIRE_PRACTICE';
+    const proficiency=sourceProfessionSpecialSkillProficiencyByFunction(
+      state,practiceFunction,{randInclusive:cRand}
+    );
+    sourceProfessionLogProficiencyResult(proficiency);
+
+    results.push({
+      slot,targetUnitId:target.id,check,applied:true,
+      status:'encloseAura',element,
+      storedTurns:spec.storedTurns,
+      sourceCounterFieldWritten:true,
+      sourceModFieldWritten:true,
+      onHitChance:spec.onHitChance,
+      onHitTurn:spec.onHitTurn,
+      onHitStoredTurns:spec.onHitStoredTurns,
+      proficiency,animation,
+      sourceSkillLevelUsesA:true
+    });
+    addLog(
+      '你施放「'+name+'」：'+target.name+' 取得'+tokenName
+      +'，StatusTbl='+spec.storedTurns+'；後續普通物理攻擊依固定 C 的附體機率觸發。','good'
+    );
+  }
+
+  syncEnemyTarget();
+  return {
+    handled:true,skillId,functionName,
+    rawToNo,toNo,multi,spec,animation,results,
+    sourceStatusCommand:true,
+    sourceMagicDodgeNotUsed:true,
+    sourceAttackSkillTier:'A',
+    sourceBaseSuccessPlusTier4:true,
+    sourceStoredTurnPlusOne:true,
+    sourcePracticeNotUsed:false,
+    sourcePhysicalAuraPath:true,
+    sourceCounterFieldWritten:true,
+    sourceModFieldWritten:true
+  };
+}
+
+function sourceProfessionBattleFunctionSupportedV272(functionName,skillId=null){
+  return functionName==='PROFESSION_THUNDER_ENCLOSE'
+    ?Math.trunc(n(skillId))===16
+    :sourceProfessionBattleFunctionSupportedV271(functionName,skillId);
+}
+
+function sourceProfessionBattleDexRollV272(prepared,quick,opts={}){
+  if(String(prepared?.commonCommand||'')==='BATTLE_COM_S_THUNDER_ENCLOSE'){
+    return sourceProfessionThunderEncloseDexRoll(quick,opts);
+  }
+  return sourceProfessionBattleDexRollV271(prepared,quick,opts);
+}
+
+function sourceProfessionBattleSkillExecuteV272(prepared,actor=null){
+  if(prepared?.functionName==='PROFESSION_FIRE_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===15){
+    const row=sourceProfessionSkillTemplate(prepared.skillId);
+    return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'火附體'),'fire');
+  }
+  if(prepared?.functionName==='PROFESSION_THUNDER_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===16){
+    const row=sourceProfessionSkillTemplate(prepared.skillId);
+    return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'雷附體'),'thunder');
+  }
+  return sourceProfessionBattleSkillExecuteV271(prepared,actor);
+}
+
+function sourceProfessionApplyEncloseAuraProc(attackerKind,actual,r){
+  if(attackerKind!=='player'||!actual||!r||n(r.damage)<=0)return null;
+
+  const auraCandidates=[
+    {element:'fire',turnField:'sourceFireEncloseOnHitTurns',modField:'sourceFireEncloseModTier',activeField:'sourceFireEncloseAuraActive',status:'fireEnclose',statusToken:'燒',label:'火附體',img2:101698},
+    {element:'thunder',turnField:'sourceThunderEncloseOnHitTurns',modField:'sourceThunderEncloseModTier',activeField:'sourceThunderEncloseAuraActive',status:'thunderShock',statusToken:'電',label:'雷附體',img2:101700}
+  ];
+
+  // Fixed BATTLE_Attack() scans F/I/T in order and BREAKs on the first active aura.
+  for(const aura of auraCandidates){
+    const turns=Math.trunc(n(state?.[aura.turnField]));
+    if(turns<=0){
+      if(state&&aura.activeField)state[aura.activeField]=false;
+      continue;
+    }
+
+    const tier=Math.trunc(n(state?.[aura.modField]));
+    const chance=20+tier*2;
+    const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
+    const check=sourceProfessionStatusAttackCheck(targetDesc,chance);
+
+    if(!check.success){
+      addLog('「'+aura.label+'」命中附體效果未觸發（roll '+check.roll+' / '+check.threshold+'）。');
+      return {element:aura.element,triggered:false,check,turnsRemaining:turns,tier};
+    }
+
+    const effectiveTurn=aura.element==='thunder'
+      ?1
+      :(tier>=10?3:(tier>=5?2:1));
+    const storedTurns=effectiveTurn+1;
+    const key=battleStatusKey(targetDesc);
+    if(!key){
+      return {element:aura.element,triggered:false,reason:'status-key',check,turnsRemaining:turns,tier};
+    }
+    if(battleHasAnyStatus(targetDesc)){
+      return {element:aura.element,triggered:false,reason:'existing-status',check,turnsRemaining:turns,tier};
+    }
+
+    battleStatuses.set(key,{
+      type:aura.status,
+      turns:storedTurns,
+      encloseElement:aura.element,
+      sourceStatusToken:aura.statusToken,
+      sourceAuraTier:tier
+    });
+
+    addLog(
+      '「'+aura.label+'」觸發：'+actual.name
+      +(aura.element==='fire'
+        ?' 受到燒傷，StatusTbl='+storedTurns+'。'
+        :' 被雷附體命中，限制行動 1 回合。')
+    );
+    return {
+      element:aura.element,triggered:true,check,
+      turnsRemaining:turns,tier,effectiveTurn,storedTurns,
+      status:aura.status,img1:101697,img2:aura.img2
+    };
+  }
+  return null;
+}
+
+(function installV272EncloseRuntimePatch(){
+  const sourceProfessionBattleFunctionSupportedV271=sourceProfessionBattleFunctionSupported;
+  const sourceProfessionBattleDexRollV271=sourceProfessionBattleDexRoll;
+  const sourceProfessionBattleSkillExecuteV271=sourceProfessionBattleSkillExecute;
+  const applyFriendlyEnemyHitV271=applyFriendlyEnemyHit;
+  const processBattleStatusTurnV271=processBattleStatusTurn;
+
+  globalThis.sourceProfessionBattleFunctionSupportedV271=sourceProfessionBattleFunctionSupportedV271;
+  globalThis.sourceProfessionBattleDexRollV271=sourceProfessionBattleDexRollV271;
+  globalThis.sourceProfessionBattleSkillExecuteV271=sourceProfessionBattleSkillExecuteV271;
+
+  sourceProfessionBattleFunctionSupported=function(functionName,skillId=null){
+    if(functionName==='PROFESSION_THUNDER_ENCLOSE')return sourceProfessionBattleFunctionSupportedV272(functionName,skillId);
+    return sourceProfessionBattleFunctionSupportedV271(functionName,skillId);
+  };
+
+  sourceProfessionBattleDexRoll=function(prepared,quick,opts={}){
+    if(String(prepared?.commonCommand||'')==='BATTLE_COM_S_THUNDER_ENCLOSE'){
+      return sourceProfessionThunderEncloseDexRoll(quick,opts);
+    }
+    return sourceProfessionBattleDexRollV271(prepared,quick,opts);
+  };
+
+  sourceProfessionBattleSkillExecute=function(prepared,actor=null){
+    if(prepared?.functionName==='PROFESSION_FIRE_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===15){
+      const row=sourceProfessionSkillTemplate(prepared.skillId);
+      return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'火附體'),'fire');
+    }
+    if(prepared?.functionName==='PROFESSION_THUNDER_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===16){
+      const row=sourceProfessionSkillTemplate(prepared.skillId);
+      return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'雷附體'),'thunder');
+    }
+    return sourceProfessionBattleSkillExecuteV271(prepared,actor);
+  };
+
+  applyFriendlyEnemyHit=function(attackerKind,attackerName,target,r,attackerPetId=null,options={}){
+    const actual=applyFriendlyEnemyHitV271(attackerKind,attackerName,target,r,attackerPetId,options);
+    const proc=sourceProfessionApplyEncloseAuraProc(attackerKind,actual,r);
+    if(proc)r.professionEnclose=proc;
+    return actual;
+  };
+
+  processBattleStatusTurn=function(actor){
+    const desc=battleStatusActorDesc(actor);
+    const st=desc?battleStatusGet(desc):null;
+
+    if(st?.type==='encloseAura'){
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      const holder=desc.kind==='player'
+        ?state
+        :(desc.kind==='pet'?desc.pet:desc.unit);
+      const prefix=st.element==='thunder'?'sourceThunderEnclose':'sourceFireEnclose';
+      if(holder){
+        holder[prefix+'OnHitTurns']=st.turns;
+        holder[prefix+'AuraActive']=st.turns>0;
+      }
+      if(st.turns<=0){
+        battleStatusClear(desc,'encloseAura');
+        if(holder){
+          holder[prefix+'OnHitTurns']=0;
+          holder[prefix+'AuraActive']=false;
+        }
+        addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')
+          +' 的'+(st.element==='thunder'?'雷附體':'火附體')+'效果結束。');
+      }
+      return {skip:false,desc,status:st,encloseAura:true,element:st.element};
+    }
+
+    if(st?.type==='thunderShock'){
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      if(st.turns<=0){
+        battleStatusClear(desc,'thunderShock');
+        return {skip:false,desc,status:st,thunderShock:true,expired:true};
+      }
+      return {skip:true,desc,status:st,thunderShock:true,expired:false};
+    }
+
+    return processBattleStatusTurnV271(actor);
+  };
+})();
+
 $('#mapSelect').addEventListener('change',e=>{
   state.mapId=e.target.value;state.encounterId=null;clearEnemyBattleNoReward();
   const map=currentMap(),enc=currentEncounter(map);
