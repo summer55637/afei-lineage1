@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.69**
+**PLAYABLE CORE V2.70 · PWA / OFFLINE / SAVE TRANSFER**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,10 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.70 完整版
+
+V2.70 在 V2.69 原戰鬥／任務／runtime 核心外，加上 PWA 離線快取、離線放置 EXP 估算、JSON 存檔匯出／匯入與 PC／手機安裝入口。
 
 ## V2.69 最新進度
 

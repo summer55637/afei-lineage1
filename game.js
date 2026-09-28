@@ -17,6 +17,11 @@ const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.jso
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
+const V270_VERSION='2.70.0';
+const V270_OFFLINE_CAP_MS=12*60*60*1000;
+const V270_OFFLINE_EFFICIENCY=.70;
+const V270_OFFLINE_FALLBACK_BATTLES_PER_HOUR=18;
+const V270_OFFLINE_FALLBACK_EXP_PER_BATTLE=10;
 const TEAM_SIZE=5;
 const PLAYER_EQUIP_SLOT_COUNT=9;
 const PLAYER_BACKPACK_SLOT_COUNT=15;
@@ -8444,7 +8449,7 @@ function normalizeProfessionSkills(raw){
 }
 function freshState(){
   return {
-    schemaVersion:30,
+    schemaVersion:31,
     level:1,exp:0,expNext:2,hp:0,maxHp:0,mp:100,maxMp:100,
     playerPigUntilMs:0,playerPigImage:100388,
     magicResist:[0,0,0,0],magicResistExp:[0,0,0,0],
@@ -8465,7 +8470,8 @@ function freshState(){
     itemRuntime:freshItemRuntime(),
     playerItemSlots:freshPlayerItemSlots(),
     quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
-    log:[],savedAt:Date.now()
+    log:[],savedAt:Date.now(),
+    v270:{lastActiveAt:Date.now(),lastActivityAt:Date.now(),totalActiveMs:0,lastWinAt:0,battleRatePerHour:0,expPerBattle:0,offlineTotalMs:0,offlineTotalExp:0,offlineLastGrantAt:0}
   };
 }
 function migrateLegacyPets(raw,s){
@@ -8737,7 +8743,18 @@ function normalizeState(raw){
   // Start them empty instead of inventing where an existing item used to sit.
   if(n(raw?.schemaVersion)<28)s.playerItemSlots=freshPlayerItemSlots();
   else s.playerItemSlots=normalizePlayerItemSlots(s.playerItemSlots,s.itemRuntime);
-  s.schemaVersion=30;
+  const v270Default=freshState().v270;
+  s.v270=Object.assign({},v270Default,(raw&&raw.v270&&typeof raw.v270==='object')?raw.v270:{});
+  s.v270.lastActiveAt=Number.isFinite(Number(s.v270.lastActiveAt))?Number(s.v270.lastActiveAt):Number(s.savedAt)||Date.now();
+  s.v270.lastActivityAt=Number.isFinite(Number(s.v270.lastActivityAt))?Number(s.v270.lastActivityAt):Date.now();
+  s.v270.totalActiveMs=Math.max(0,Number(s.v270.totalActiveMs)||0);
+  s.v270.lastWinAt=Math.max(0,Number(s.v270.lastWinAt)||0);
+  s.v270.battleRatePerHour=Math.max(0,Number(s.v270.battleRatePerHour)||0);
+  s.v270.expPerBattle=Math.max(0,Number(s.v270.expPerBattle)||0);
+  s.v270.offlineTotalMs=Math.max(0,Number(s.v270.offlineTotalMs)||0);
+  s.v270.offlineTotalExp=Math.max(0,Number(s.v270.offlineTotalExp)||0);
+  s.v270.offlineLastGrantAt=Math.max(0,Number(s.v270.offlineLastGrantAt)||0);
+  s.schemaVersion=31;
   delete s.pets;
   return s;
 }
@@ -8748,8 +8765,126 @@ function loadState(){
   }catch(e){return freshState()}
 }
 function save(){
-  state.savedAt=Date.now();
+  if(!state)return;
+  const now=Date.now();
+  if(!state.v270||typeof state.v270!=='object')state.v270=freshState().v270;
+  state.v270.lastActiveAt=now;
+  state.v270.lastActivityAt=now;
+  state.savedAt=now;
   localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+}
+function noteOnlineActivity(){
+  if(!state)return;
+  const now=Date.now();
+  if(!state.v270||typeof state.v270!=='object')state.v270=freshState().v270;
+  const prev=Math.max(0,Number(state.v270.lastActivityAt)||now);
+  const delta=Math.max(0,Math.min(5000,now-prev));
+  state.v270.totalActiveMs=Math.max(0,Number(state.v270.totalActiveMs)||0)+delta;
+  state.v270.lastActivityAt=now;
+  state.v270.lastActiveAt=now;
+}
+function recordOnlineWin(exp){
+  if(!state||!state.v270)return;
+  const now=Date.now();
+  const last=Math.max(0,Number(state.v270.lastWinAt)||0);
+  if(last>0){
+    const delta=Math.max(2000,now-last);
+    if(delta<=10*60*1000){
+      const instantRate=3600000/delta;
+      state.v270.battleRatePerHour=state.v270.battleRatePerHour>0
+        ?state.v270.battleRatePerHour*.75+Math.min(180,instantRate)*.25
+        :Math.min(180,instantRate);
+      if(Number(exp)>0){
+        const e=Math.max(1,Number(exp));
+        state.v270.expPerBattle=state.v270.expPerBattle>0
+          ?state.v270.expPerBattle*.75+e*.25
+          :e;
+      }
+    }
+  }else if(Number(exp)>0){
+    state.v270.expPerBattle=Math.max(1,Number(exp));
+  }
+  state.v270.lastWinAt=now;
+}
+function offlineLog(text,type){
+  const stamp=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  state.log.unshift({text:'['+stamp+'] '+text,type:type||''});
+  state.log=state.log.slice(0,100);
+}
+function applyOfflineProgress(){
+  if(!state||!state.v270)return {elapsedMs:0,cappedMs:0,battles:0,exp:0};
+  const now=Date.now();
+  const last=Math.max(0,Number(state.v270.lastActiveAt)||Number(state.savedAt)||now);
+  const elapsed=Math.max(0,now-last);
+  const capped=Math.min(elapsed,V270_OFFLINE_CAP_MS);
+  if(capped<2*60*1000){
+    state.v270.lastActiveAt=now;
+    state.v270.lastActivityAt=now;
+    return {elapsedMs:elapsed,cappedMs:0,battles:0,exp:0};
+  }
+  const knownRate=Math.max(0,Number(state.v270.battleRatePerHour)||0);
+  const fallbackFromHistory=(Number(state.v270.totalActiveMs)>15*60*1000&&Number(state.battles)>0)
+    ?Math.min(60,Number(state.battles)/(Number(state.v270.totalActiveMs)/3600000))
+    :0;
+  const battleRate=knownRate||fallbackFromHistory||V270_OFFLINE_FALLBACK_BATTLES_PER_HOUR;
+  const expPerBattle=Math.max(1,Number(state.v270.expPerBattle)||V270_OFFLINE_FALLBACK_EXP_PER_BATTLE);
+  const battles=Math.max(0,Math.floor((battleRate*capped/3600000)*V270_OFFLINE_EFFICIENCY));
+  const exp=Math.max(0,Math.floor(battles*expPerBattle));
+  if(exp>0){
+    state.exp+=exp;
+    state.battles+=battles;
+    state.wins+=battles;
+    state.expNext=expToNext(state.level);
+    levelCheck();
+    const p=activePet();
+    if(p&&battles>0)awardPetExp(p,Math.max(1,Math.floor(exp*.80)));
+    offlineLog('離線放置 '+formatDuration(capped)+'：估算戰鬥 '+battles+' 場，獲得 '+exp+' EXP。效率係數 '+Math.round(V270_OFFLINE_EFFICIENCY*100)+'%。','good');
+  }else{
+    offlineLog('離線放置 '+formatDuration(capped)+'，本次沒有可結算的 EXP。');
+  }
+  state.v270.offlineTotalMs+=capped;
+  state.v270.offlineTotalExp+=exp;
+  state.v270.offlineLastGrantAt=now;
+  state.v270.lastActiveAt=now;
+  state.v270.lastActivityAt=now;
+  return {elapsedMs:elapsed,cappedMs:capped,battles,exp};
+}
+function formatDuration(ms){
+  const sec=Math.max(0,Math.floor(Number(ms)/1000));
+  const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+  return h>0?(h+'小時 '+String(m).padStart(2,'0')+'分'):(m>0?(m+'分 '+String(s).padStart(2,'0')+'秒'):(s+'秒'));
+}
+function exportSaveFile(){
+  if(!state)return;
+  save();
+  const payload={format:'afei-stoneage-save',version:V270_VERSION,exportedAt:new Date().toISOString(),save:state};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+  a.href=url;a.download='afei-stoneage-save-v270-'+stamp+'.json';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  addLog('已匯出 V2.70 存檔。','good');
+}
+async function importSaveFile(file){
+  if(!file)return;
+  try{
+    if(file.size>4*1024*1024)throw new Error('存檔檔案過大（上限 4 MB）。');
+    const text=await file.text();
+    const parsed=JSON.parse(text);
+    const candidate=parsed?.save&&typeof parsed.save==='object'?parsed.save:parsed;
+    if(!candidate||typeof candidate!=='object'||Array.isArray(candidate))throw new Error('不是有效的 JSON 存檔。');
+    const next=normalizeState(candidate);
+    next.v270.lastActiveAt=Date.now();next.v270.lastActivityAt=Date.now();
+    state=next;
+    enemy=null;
+    playerComplianceParameter(state);
+    state.expNext=expToNext(state.level);
+    offlineLog('已匯入存檔；目前以 V2.70 相容格式載入。','good');
+    save();render();
+  }catch(err){
+    alert('匯入失敗：'+err.message);
+  }
 }
 function addLog(text,type){
   const stamp=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -22447,6 +22582,7 @@ function winBattle(){
 
   state.wins++;
   state.exp+=exp;
+  recordOnlineWin(exp);
 
   if(serverResolved){
     for(const [petId,amount] of petExpById){
@@ -23437,7 +23573,9 @@ function walkEncounterStep(){
   return false;
 }
 function tick(){
-  if(!state||!state.auto)return;
+  if(!state)return;
+  noteOnlineActivity();
+  if(!state.auto)return;
   if(!sourcePlayerCreationStatsReady(state))return;
   if(!sourcePlayerHometownReady(state))return;
   if(!sourcePlayerElementsConfigured(state))return;
@@ -23779,6 +23917,13 @@ function render(){
   $('#hpBar').style.width=(n(state.maxHp)>0?clamp(state.hp/state.maxHp*100,0,100):0)+'%';
   $('#autoBtn').textContent='自動戰鬥：'+(state.auto?'開':'關');
   $('#autoCaptureBtn').textContent='自動捕獲：'+(state.autoCapture?'開':'關');
+  if($('#offlineStatus')){
+    const o=state.v270||{};
+    const rate=Math.max(0,Number(o.battleRatePerHour)||0);
+    $('#offlineStatus').textContent=rate>0
+      ?('離線估算：'+rate.toFixed(1)+' 場/時 · 最近離線累計 '+formatDuration(n(o.offlineTotalMs)))
+      :'離線估算：先實際戰鬥幾場後會自動建立個人化效率。';
+  }
 
   const map=currentMap();
   if(map){
@@ -24269,15 +24414,23 @@ async function boot(){
     buildConditionItems();
     buildMaps();
     state=loadState();
+    const offlineResult=applyOfflineProgress();
     playerComplianceParameter(state);
     if(!maps.some(m=>String(m.id)===String(state.mapId)))state.mapId=maps[0]?.id||null;
     state.expNext=expToNext(state.level);
     renderMapOptions();
-    addLog('V1.73 載入完成：一般裝備位置與 ITEM_equipEffect 已讀取 existing item 的 66 欄 sourceData；callback／職業／遠程武器未完整移植者維持 fail-closed。','good');
+    addLog('V2.70 載入完成：PWA／離線存檔／離線收益模組已啟用；原 V2.69 戰鬥與資料 runtime 保留。','good');
+    if(offlineResult?.exp>0)addLog('本次離線結算：'+offlineResult.battles+' 場估算戰鬥／'+offlineResult.exp+' EXP。','good');
     render();
+    save();
     timer=setInterval(tick,900);
   }catch(err){
-    document.body.innerHTML='<main class="shell"><article class="card">資料讀取失敗：'+escapeHtml(err.message)+'</article></main>';
+    const isFile=location.protocol==='file:';
+    const detail=escapeHtml(err?.message||err);
+    document.body.innerHTML='<main class="shell"><article class="card"><div class="eyebrow">V2.70 STARTUP</div><h2>遊戲沒有成功啟動</h2>'
+      +'<p><b>原因：</b>'+detail+'</p>'
+      +(isFile?'<p>你目前是直接開啟 <code>game.html</code>。請改用資料夾內的 <b>開始遊戲.bat</b>，它會自動啟動本機伺服器與 Chrome／Edge。</p>':'<p>請確認遊戲資料夾中的 runtime 資料檔完整存在，再重新整理頁面。</p>')
+      +'<p><a class="link-btn" href="index.html">回資料圖鑑</a></p></article></main>';
   }
 }
 function handleZooAction(action){
@@ -24651,4 +24804,15 @@ $('#teamGrid').addEventListener('click',e=>{
   const slot=e.target.closest('[data-pet-id]');if(slot)setActivePet(slot.dataset.petId);
 });
 window.addEventListener('beforeunload',save);
+window.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){save();return;}
+  if(document.visibilityState==='visible'&&state){
+    const r=applyOfflineProgress();
+    if(r.exp>0){render();save();}
+    else{state.v270.lastActiveAt=Date.now();state.v270.lastActivityAt=Date.now();}
+  }
+});
+$('#saveExportBtn')?.addEventListener('click',exportSaveFile);
+$('#saveImportBtn')?.addEventListener('click',()=>$('#saveFileInput')?.click());
+$('#saveFileInput')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)importSaveFile(f);e.target.value='';});
 boot();

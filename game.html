@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#15190f">
+  <meta name="description" content="阿肥石器時代：PC／手機共用的純前端單機放置版">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <title>阿肥石器時代放置版｜遊戲</title>
   <link rel="stylesheet" href="game.css">
 </head>
@@ -11,10 +17,16 @@
   <!-- historical regression markers: PLAYABLE CORE V2.40 | V2.40 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網。 | PLAYABLE CORE V2.41 | V2.41 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊。 | PLAYABLE CORE V2.44 | V2.44 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器。  | PLAYABLE CORE V2.42 | V2.42 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥。  | PLAYABLE CORE V2.43 | V2.43 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱。 | PLAYABLE CORE V2.45 | V2.45 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪。 | PLAYABLE CORE V2.46 | V2.46 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物。 | PLAYABLE CORE V2.47 | V2.47 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物／激怒寵物。 | PLAYABLE CORE V2.48 | V2.48 live：暴擊／連環攻擊／雙重攻擊／回避／舍己為友／格檔／狀態回復／武器專精 26～32／二刀流／激化攻擊／能量聚集／專注戰鬥／盾擊／貫穿攻擊／座騎攻擊／瀕死攻擊／回旋攻擊／混亂攻擊／樹根纏繞／天羅地網／弱點攻擊／挑撥／陷阱／毒素武器／屍體掠奪／馴服寵物／激怒寵物／自給自足（fixed→激化攻擊）／雷抗性／火抗性／冰抗性。  | PLAYABLE CORE V2.49 | V2.49 live：Skill 62 遺忘／StatusTbl／Pet client mask。  | PLAYABLE CORE V2.50 | V2.50 live：Skill 66 自然威能／火冰雷三抗。  | PLAYABLE CORE V2.51 | V2.51 live：Skill 67 號召自然／總池分攤治療。  | PLAYABLE CORE V2.52 | V2.52 live：Skill 68 地結界／post-action boundary lifecycle。  | PLAYABLE CORE V2.53 | V2.53 live：Skill 69 水結界／water boundary lifecycle。  | PLAYABLE CORE V2.54 | V2.54 live：Skill 70 火結界／fire boundary lifecycle。  | PLAYABLE CORE V2.55 | V2.55 live：Skill 71 風結界／wind boundary lifecycle。 | PLAYABLE CORE V2.56 | V2.56 live：Skill 72 破除結界／break boundary RNG lifecycle。 | PLAYABLE CORE V2.57 | V2.57 live：Skill 1 火山泉／profession magic lifecycle。 | PLAYABLE CORE V2.58 | V2.58 live：Skill 2 針針相對／multi-target SIGN conversion lifecycle。 | PLAYABLE CORE V2.59 | V2.59 live：Skill 3 世界末日／DOOM random-target + FEAR lifecycle。 | PLAYABLE CORE V2.60 | V2.60 live：Skill 4 冰爆術／fixed dead ice queue NoAction。 | PLAYABLE CORE V2.61 | V2.61 live：Skill 5 附身術／profession magic + ANNEX StatusSeq lifecycle。 | PLAYABLE CORE V2.62 | V2.62 live：Skill 6 召雷術／Thunder Practice + Water ×3 + fixed type-3 damage bug。 | PLAYABLE CORE V2.63 | V2.63 live：Skill 7 暴風雨／random target count + WATER StatusTbl lifecycle。 | PLAYABLE CORE V2.64 | V2.64 live：Skill 8 電流術／M-tier random targets + Water conductivity。 | PLAYABLE CORE V2.65 | V2.65 live：Skill 9 火星球／row fallback + source row rebuild。 | PLAYABLE CORE V2.66 | V2.66 live：Skill 10 嗜血蠱／StatusTbl DOT + source double-M bug。 | PLAYABLE CORE V2.67 | V2.67 live：Skill 11 嗜血成性／self magic dodge + HP→MP。 | PLAYABLE CORE V2.68 | V2.68 live：Skill 12 冰箭術／ICEARROW StatusTbl + FIXDEX source bug。 | PLAYABLE CORE V2.69 | V2.69 live：Skill 13 火龍槍／shared DOOMTIME charge lifecycle。 -->
   <header class="topbar">
     <div>
-      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V2.69</div>
+      <div class="eyebrow">STONE AGE IDLE · PLAYABLE CORE V2.70</div>
       <h1>阿肥石器時代放置版</h1>
     </div>
-    <a class="link-btn" href="index.html">資料圖鑑</a>
+    <div class="top-actions">
+      <button id="pwaInstallBtn" class="link-btn" hidden>安裝 App</button>
+      <button id="saveExportBtn" class="link-btn">匯出存檔</button>
+      <button id="saveImportBtn" class="link-btn">匯入存檔</button>
+      <input id="saveFileInput" type="file" accept="application/json,.json" hidden>
+      <a class="link-btn" href="index.html">資料圖鑑</a>
+    </div>
   </header>
 
   <main class="shell">
@@ -23,8 +35,10 @@
         <span class="pill">純前端單機</span>
         <span class="pill">PC＋手機</span>
         <span class="pill">LocalStorage 存檔</span>
-        <span class="pill">服務端捕獲公式骨架</span>
+        <span class="pill">PWA 離線</span>
+        <span class="pill">V2.70</span>
       </div>
+      <p id="offlineStatus" class="v270-offline-status">離線估算：讀取中…</p>
       <p>選地圖 → 自動遭遇 → 戰鬥削血 → 捕獲 Lv1 寵物 → 編入 5 格隊伍 → 指定一隻出戰。</p>
     </section>
 
@@ -317,7 +331,7 @@
     </article>
 
     <article class="card note">
-      <b>V1.68：</b>
+      <b>V2.70：</b>
       對齊原 C 的 _Item_ReLifeAct 玩家死亡復活 lifecycle：CHECK_ITEM_RELIFE 只在有效 Entry 完成 command 後、outer BATTLE_AddProfit 前掃描，僅接受一般死亡且已標記 ISDIE 的玩家；Ultimate／打飛直接排除。裝備只掃 slot 0～4、第一件有效 ITEM_DIERELIFEFUNC，HP 依缺省 1／FULL／C atoi 規則復活並立即消耗。inner AddProfit 可讓同一 actor 結束時復活；outer-only 致死則必須等後續真正完成行動的 Entry。現階段不猜替身道具 ID，正式 Player 裝備 adapter 仍保持空資料。
     </article>
 
@@ -342,6 +356,7 @@
     </article>
   </main>
 
+  <script src="pwa.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
