@@ -4,15 +4,30 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.77**
+**PLAYABLE CORE V2.78**
 
-目前主線已完成 V2.77，下一個核心開發版本為 **V2.78**。
+目前主線已完成 V2.78，下一個核心開發版本待定。
 
 > **原 C 規則優先、不猜數值**
 
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.78 — 玩家出戰 Pet RANDOMACT「PETSKILL_StatusChange」完整狀態映射
+
+V2.78 沿固定 C 的 `PETSKILL_StatusChange()` 繼續補玩家出戰 Pet 低忠誠 `RANDOMACT` 剩餘的通用狀態攻擊解析：
+
+- 固定 `aszStatus[]` 的 `麻／虛／劇／障／默／煞` token 現在都能正確映射到 Web runtime 的 `paralysis／weaken／deepPoison／barrier／nocast／sars`。
+- parser 改成依 option 內最早出現的固定 source token 決定狀態，因此 `劇毒` 不會再被誤判成普通 `毒`。
+- `PETSKILL_StatusChange()` 的通用 `StatusTbl[i]` 路徑現在接受上述新增狀態；仍沿用 fixed `BATTLE_StatusAttackCheck(..., 40, 2.0)` 與 generic `turn + 1` lifecycle。
+- 現有的專用 `PETSKILL_Weaken / Deeppoison / Barrier / Nocast` command 不改動，避免把不同 fixed function 的 stored-turn 規則混在一起。
+- fixed runtime 現有 12 筆 `PETSKILL_StatusChange` rows（60／61／80／90／100／110／707～712）全部通過 parser regression。
+- regression：`tools/check_v278_petskill_statuschange_runtime.mjs`
+- GitHub Actions：新增 V2.78 status-change regression。
+- save schema 維持 **30**。
+
+完整技術細節請看 [V2.78 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
 
 ## V2.77 — Hunter 非戰鬥職業技能「追尋敵蹤／回避戰鬥」
 

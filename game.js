@@ -17957,12 +17957,14 @@ function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
 }
 function sourcePetStatusSkillType(meta){
   const option=String(meta?.o||'');
-  if(option.includes('毒'))return 'poison';
-  if(option.includes('醉'))return 'drunk';
-  if(option.includes('眠'))return 'sleep';
-  if(option.includes('石'))return 'stone';
-  if(option.includes('乱')||option.includes('亂'))return 'confusion';
-  return null;
+  // fixed PETSKILL_StatusChange scans aszStatus from the beginning; keep the earliest token.
+  const tokens=[['剧','deepPoison'],['劇','deepPoison'],['虚','weaken'],['虛','weaken'],['麻','paralysis'],['障','barrier'],['默','nocast'],['煞','sars'],['毒','poison'],['醉','drunk'],['眠','sleep'],['石','stone'],['乱','confusion'],['亂','confusion']];
+  let found=null;
+  for(const [token,type] of tokens){
+    const pos=option.indexOf(token);
+    if(pos>=0&&(!found||pos<found.pos))found={pos,type};
+  }
+  return found?.type||null;
 }
 function sourcePetStatusSkillTurn(meta){
   const m=String(meta?.o||'').match(/turn\s*(-?\d+)/i);
@@ -17974,7 +17976,7 @@ function sourcePetStatusSkillAttackPct(meta){
 }
 function sourcePetApplyStatusAttackHit(pet,targetDesc,r,type,turn,label){
   if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
-  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'||type==='sars')){
+  if(!(type==='poison'||type==='deepPoison'||type==='paralysis'||type==='weaken'||type==='barrier'||type==='nocast'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'||type==='sars')){
     return {attempted:false,applied:false,unsupportedType:type||null};
   }
   const attackerDesc={kind:'pet',pet,petId:pet.id};

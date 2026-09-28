@@ -1,0 +1,24 @@
+name: V2.78 PetSkill StatusChange regression
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'data/generated/stoneage_petskill_runtime.json'
+      - 'tools/check_v278_petskill_statuschange_runtime.mjs'
+      - '.github/workflows/v278-petskill-statuschange.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.78 PetSkill StatusChange regression
+        run: node tools/check_v278_petskill_statuschange_runtime.mjs

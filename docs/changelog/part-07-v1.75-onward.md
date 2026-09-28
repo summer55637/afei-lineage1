@@ -5351,6 +5351,86 @@ V2.76 將 Skill 21「移形換位」從 V2.75 的 source-parity core 接進主�
 
 ---
 
+## V2.78 — Player Pet RANDOMACT / PETSKILL_StatusChange 通用狀態 token 完整化
+
+V2.77 完成 Hunter 非戰鬥職業技能後，繼續回到玩家出戰 Pet 的低忠誠 `RANDOMACT` source fallback。這次沒有新增一個不存在的 PetSkill，而是把 fixed `PETSKILL_StatusChange()` 已經存在、但 Web parser 尚未完整解析的 `aszStatus` token 補齊。
+
+### Fixed source 規則
+
+固定：
+
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`PETSKILL_StatusChange()` 會從 option 字串逐字掃描 `aszStatus[1..BATTLE_ST_END-1]`，找到第一個狀態 token 後寫入：
+
+- `CHAR_WORKBATTLECOM1 = BATTLE_COM_S_STATUSCHANGE`
+- `CHAR_WORKBATTLECOM2 = toindex`
+- `CHAR_WORKBATTLECOM3 low = status index`
+- `CHAR_WORKBATTLECOM3 high = turn`
+- `WORKATTACKPOWER = FIXSTR + trunc(FIXSTR × 攻% / 100)`
+- `WORKDEFENCEPOWER = FIXTOUGH + trunc(FIXTOUGH × 防% / 100)`
+
+`battle_event.c` 的通用 StatusChange 執行再以 `BATTLE_StatusAttackCheck(attackindex, defindex, status, Success=40, range=40, Bai=2.0)` 做成功判定，成功後寫 `StatusTbl[status] = turn + 1`；酒醉、毒煞與不能行動的特殊 side-effect 仍由固定 C 各自處理。
+
+### V2.78 接入內容
+
+現有 `stoneage_petskill_runtime.json` 中 12 筆 generic `PETSKILL_StatusChange`：
+
+- 60／61：毒攻擊
+- 80／708：石化攻擊
+- 90／709：混亂攻擊
+- 100：泥醉攻擊
+- 110／710：催眠攻擊
+- 707：`剧 turn 6 攻%+20`
+- 711：`虚 turn 9 攻%+60`
+- 712：`麻 turn 1 攻%+70`
+
+其中 707 的 `剧` 必須解析成 `deepPoison`，不能因 option 內同時包含「毒」而誤判為普通 `poison`。
+
+V2.78 現在同時支援 fixed `aszStatus` 裡的：
+
+`麻 → paralysis`  
+`虚 → weaken`  
+`剧 → deepPoison`  
+`障 → barrier`  
+`默 → nocast`  
+`煞 → sars`
+
+parser 採「option 內最早出現 token」策略，貼近 fixed C 從字串起點逐字掃描的行為。
+
+### 不混用專用 PetSkill
+
+V1.78 已經獨立接好：
+
+- `PETSKILL_Weaken`
+- `PETSKILL_Deeppoison`
+- `PETSKILL_Barrier`
+- `PETSKILL_Nocast`
+
+這些 function 的 command／stored-turn 規則與 generic `PETSKILL_StatusChange` 不完全相同。
+
+因此 V2.78 只擴充 generic `sourcePetStatusSkillType()` 與其通用 supported-type allowlist；不把 specialized handlers 的 `turn+2`、`turn` 等規則灌進 generic path。
+
+### Regression
+
+新增：
+
+`tools/check_v278_petskill_statuschange_runtime.mjs`
+
+檢查：
+
+- 12 筆 fixed generic StatusChange row
+- `剧／虚／麻／障／默／煞` token mapping
+- `剧毒` 不誤判成 `毒`
+- turn / 攻% parser
+- generic `paralysis / weaken / deepPoison / barrier / nocast / sars` dispatcher path
+- 舊有 `poison / drunk / sleep / stone / confusion` mapping 不回歸
+- `game.js` syntax 與 V2.78 marker
+
+### commits
+
+- V2.78 已落在本次單一主線 commit，並由 GitHub Actions 驗證 regression。
+
 ## V2.77 Hunter non-battle profession skills / 追尋敵蹤・回避戰鬥
 
 V2.77 接回固定 C 中尚未有操作入口的兩個 Hunter 非戰鬥職業技能：Skill 44「追尋敵蹤」與 Skill 45「回避戰鬥」。這一版不是另外發明遇敵公式，而是把既有的 `CHAR_ENCOUNT_FIX`／`CHAR_ENCOUNT_NUM` source-backed encounter pipeline 正式接到玩家 UI。
