@@ -19,7 +19,7 @@ const choose=sliceFunction('battleConfusionChooseTarget');
 assert.ok(choose.includes('const side=cRand(0,1);'));
 assert.ok(choose.includes('const startPos=cRand(0,9);'));
 assert.ok(choose.includes('battleConfusionSideTargets(side,attackerDesc,startPos)'));
-assert.equal((choose.match(/cRand\(/g)||[]).length,3,'choose helper must consume side + start-pos only, plus fallback owner if selected side is empty');
+assert.equal((choose.match(/cRand\(/g)||[]).length,2,'choose helper itself must consume only side + start-pos RNG; empty-side fallback delegates to the source-backed default-target owner');
 
 const side=sliceFunction('battleConfusionSideTargets');
 assert.ok(side.includes('if(++pos>=10)pos=0;'));
