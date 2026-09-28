@@ -13613,6 +13613,16 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
 }
 function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,options={}){
   if(!pet||!unit||!enemy||!petIsBattleActive(pet)||unit.hp<=0)return;
+  // fixed BATTLE_Attack seeds iRet=FALSE when either attacker or ORIGINAL defindex
+  // already has a positive DamageReact before AttackSeq. Current source-backed Web
+  // DamageReact is Acupuncture, so mirror only that proven boundary here.
+  const attackerHasDamageReact=primaryAttackerKind==='pet'
+    ?battlePetAcupunctureIds.has(pet.id)
+    :!!unit.acupunctureActive;
+  const targetHasDamageReact=primaryAttackerKind==='pet'
+    ?!!unit.acupunctureActive
+    :battlePetAcupunctureIds.has(pet.id);
+  if(attackerHasDamageReact||targetHasDamageReact)return;
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
     ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand)return;
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
