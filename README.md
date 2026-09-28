@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.01**
+**PLAYABLE CORE V3.02**
 
-歷史 regression markers：**PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.02 — primary Acupuncture WakeUp follows fixed defindex restore order
+
+V3.02 修正 fixed `BATTLE_Attack()` 的 ACUPUNCTURE source-order：
+
+- `BATTLE_DamageSub()` 觸發 ACUPUNCTURE 後，source 先把 `defindex` 暫時改成 attacker；但在 primary `BATTLE_Attack()` 的 `BATTLE_DamageWakeUp()` **之前**，又明確把 `defindex/toindex` 恢復成原本的 defender，因為針刺反傷不能錯解除被打方狀態。
+- 因此 primary Attack 的 WakeUp 目標是 **original defender**；WakeUp 完成後 source 才再次把 `defindex` 切回 attacker，供後續 death/status/ItemCrush source order 使用。
+- Counter 是不同 caller：fixed `BATTLE_Counter()` 沒有這個中間 restore，ACUPUNCTURE 的 WakeUp 仍在 attacker，因此 Web `sourceFinishAcupunctureReaction()` 的 Counter attacker-WakeUp 保持不變。
+- 本版沒有新增 RNG、傷害、回合、反傷數值或新的狀態規則。
+
+regression：`tools/check_v302_primary_acupuncture_wakeup_order.mjs`
+GitHub Actions：`.github/workflows/v302-primary-acupuncture-wakeup.yml`
 
 ## V3.01 — original Defender DamageReact survives Guardian substitution
 
