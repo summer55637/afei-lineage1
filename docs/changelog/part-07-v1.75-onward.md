@@ -1,3 +1,19 @@
+## V3.04 Enemy→Player Guardian Acupuncture still wakes original Player
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+Enemy→Player 的 Guardian-aware Web caller `resolveEnemyDirectAttackToPlayer()` 已保存 original target descriptor。fixed primary `BATTLE_Attack()` 在 ACUPUNCTURE 下仍遵循：
+
+1. Guardian substitute 可能成為真正承傷者；
+2. `BATTLE_DamageSub()` 產生 ACUPUNCTURE reaction；
+3. `defindex/toindex` 在 WakeUp 前恢復 original `defNo`；
+4. `BATTLE_DamageWakeUp()` 因此作用在 original Player。
+
+Web 現在在 `battleApplyPhysicalHit()` 的 ACUPUNCTURE WakeUp path 優先使用 `r.originalTargetDesc`。
+
+regression：`tools/check_v304_enemy_player_guardian_acupuncture_wakeup.mjs`
+CI：`.github/workflows/v304-enemy-player-guardian-acupuncture-wakeup.yml`
+
 ## V3.03 Guardian-provided Acupuncture still wakes original defender
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
