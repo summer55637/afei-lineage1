@@ -1,3 +1,19 @@
+## V3.02 primary Acupuncture WakeUp follows fixed defindex restore order
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed primary `BATTLE_Attack()` 的 ACUPUNCTURE caller order：
+
+1. `BATTLE_DamageSub()` 先暫時把 `defindex` 改為 attacker；
+2. ACUPUNCTURE 分支在 `BATTLE_DamageWakeUp()` **之前**把 `defindex/toindex` 恢復成 original defender；
+3. `BATTLE_DamageWakeUp()` 因此解除被打方的睡眠；
+4. WakeUp 之後才再次把 `defindex` 改回 attacker，供後續 death/status/ItemCrush path。
+
+Counter caller 不同：`BATTLE_Counter()` 沒有這個中間 restore，ACUPUNCTURE 的 WakeUp 使用 attacker，因此 Web `sourceFinishAcupunctureReaction()` 保持 Counter attacker-WakeUp。
+
+regression：`tools/check_v302_primary_acupuncture_wakeup_order.mjs`
+CI：`.github/workflows/v302-primary-acupuncture-wakeup.yml`
+
 ## V3.01 original defender DamageReact survives Guardian substitution
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
