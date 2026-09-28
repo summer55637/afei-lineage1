@@ -13268,7 +13268,10 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   // switch defindex back to the attacker for later death/status/item-crush handling.
   // Counter is different: BATTLE_Counter() keeps the DamageSub ACUPUNCTURE redirect through
   // its WakeUp step, and sourceFinishAcupunctureReaction() already models that attacker wake.
-  const wakeDesc=targetDesc;
+  // For Enemy->Player Guardian paths, the resolver preserves originalTargetDesc explicitly.
+  // fixed primary BATTLE_Attack() still restores defindex to the original defNo before WakeUp,
+  // so prefer that source-backed descriptor whenever ACUPUNCTURE actually triggered.
+  const wakeDesc=acupuncture.triggered?(r?.originalTargetDesc||targetDesc):targetDesc;
   if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=(!counter&&!suppressSuitPoison)
     ?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
