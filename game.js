@@ -12103,11 +12103,12 @@ const SOURCE_PLAYER_UNREGISTERED_PETSKILL_FUNCTIONS=new Set([
   'PETSKILL_Awaken',
   'PETSKILL_Temptation'
 ]);
-// fixed PETSKILL_Fixitem / PETSKILL_Inslay are registered functions, but both
-// return FALSE when invoked during battle because their source precondition requires
-// BATTLE_CHARMODE_NONE. Keep them as exact no-action boundaries rather than pretending
-// they are missing or inventing an in-battle item UI.
+// fixed PETSKILL_Merge / PETSKILL_Fixitem / PETSKILL_Inslay are registered functions,
+// but all three return FALSE during battle because their source precondition requires
+// the owner battle mode to be BATTLE_CHARMODE_NONE. Keep them as exact no-action
+// boundaries rather than pretending they are missing or inventing an in-battle UI.
 const SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS=new Set([
+  'PETSKILL_Merge',
   'PETSKILL_Fixitem',
   'PETSKILL_Inslay'
 ]);
@@ -17742,7 +17743,7 @@ function sourcePetRandomSkillPlan(pet){
       return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceFunctionMissing:true,targetDesc};
     }
     if(SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||''))){
-      // fixed PETSKILL_Fixitem / PETSKILL_Inslay both reject non-NONE battle mode.
+      // fixed PETSKILL_Merge / PETSKILL_Fixitem / PETSKILL_Inslay all reject non-NONE battle mode.
       // No extra RNG is consumed after this point in PETSKILL_Use().
       return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceBattlePreconditionFalse:true,targetDesc};
     }
@@ -21514,9 +21515,15 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   if(action.kind==='none'){
     if(action.sourceIllegal)addLog(pet.name+' 隨機抽到原表標記為 PETSKILL_ILLEGAL 的技能；原 PETSKILL_Use() 對玩家寵直接失敗，本回合不行動。','pet');
     else if(action.sourceFunctionMissing)addLog(pet.name+' 隨機抽到的 PetSkill 在 fixed PETSKILL_functbl 沒有同名函式；原 PETSKILL_Use() 直接 FALSE，本回合不行動。','pet');
+    else if(action.sourceBattlePreconditionFalse)addLog(pet.name+' 隨機抽到的 PetSkill 在 fixed C 戰鬥前置條件下直接 FALSE；本回合不行動，不猜額外效果。','pet');
     else if(action.sourceUseFailed)addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
     else addLog(pet.name+' 本回合沒有行動。','pet');
-    return finish({handled:true,none:true,sourceUseFailed:!!action.sourceUseFailed,sourceFunctionMissing:!!action.sourceFunctionMissing});
+    return finish({
+      handled:true,none:true,
+      sourceUseFailed:!!action.sourceUseFailed,
+      sourceFunctionMissing:!!action.sourceFunctionMissing,
+      sourceBattlePreconditionFalse:!!action.sourceBattlePreconditionFalse
+    });
   }
   if(action.kind==='blocked'){
     addLog(pet.name+' 的原 C 隨機技能流程碰到未定義的 PetSkill array 讀取；不猜記憶體結果，本回合不行動。','pet');
