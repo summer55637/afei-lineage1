@@ -14574,37 +14574,13 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   }
 
   if(target.kind!=='player'||state.hp<=0)return null;
-  const r=enemyAttackResult(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
-  const targetDesc={kind:'player'};
-  const beforeApplyResult=beforeApply?beforeApply({target:'player',targetDesc,r},target):null;
-  const trap=sourcePrepareProfessionTrapReaction(
-    {kind:'enemy',unit,unitId:unit.id},targetDesc,r
+  const r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
+  const targetDesc=enemyDirectActualTarget({kind:'player'},r)||{kind:'player'};
+  const beforeApplyResult=beforeApply?beforeApply({target:'player',actualTargetDesc:targetDesc,r},target):null;
+  battleApplyPhysicalHit(
+    {kind:'enemy',unit,unitId:unit.id},targetDesc,r,
+    {deferItemCrush:true,deferAddProfit:true}
   );
-  if(trap.triggered){
-    sourceFinishProfessionTrapReaction(trap);
-    sourceLogProfessionTrapReaction(trap);
-    return {target:'player',targetDesc:{kind:'enemy',unit,unitId:unit.id},r,beforeApply:beforeApplyResult,trap};
-  }
-  if(playerGuarding){
-    if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
-    else{
-      const sourceUltimateBefore=n(state.hp);
-    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
-    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
-      battleStatusWakeOnDamage({kind:'player'},r.damage);
-      addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-    }
-  }else if(r.dodged){
-    addLog('你閃避了 '+unit.name+' 的攻擊。','good');
-  }else if(r.miss){
-    addLog(unit.name+' 的攻擊沒有造成傷害。');
-  }else{
-    const sourceUltimateBefore=n(state.hp);
-    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
-    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
-    battleStatusWakeOnDamage({kind:'player'},r.damage);
-    addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-  }
   return {target:'player',targetDesc,r,beforeApply:beforeApplyResult};
 }
 function sourceBreakthrowParalysis(unit,hit){

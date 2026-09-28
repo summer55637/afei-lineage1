@@ -4,7 +4,19 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.91**
+**PLAYABLE CORE V2.92**
+
+## V2.92 — Enemy→Player weapon Guardian boundary
+
+V2.92 修正一條尚未收斂到 fixed `BATTLE_AttackSeq()` 的 Enemy→Player 普通／遠程武器共同路徑：
+
+- fixed C 的一般 `BATTLE_Attack()` 進 `BATTLE_AttackSeq()` 時，原目標完成 DuckCheck 後會跑 `BATTLE_GuardianCheck()`；Guardian 接手後才以實際 Guardian 的能力結算。
+- Web 的 `enemyWeaponApplyHit()` 玩家分支原本直接呼叫 `enemyAttackResult()`，這條 helper 沒有 Guardian substitution。
+- 本版改為共用已經 source-backed 的 `resolveEnemyDirectAttackToPlayer()`，再把 `enemyDirectActualTarget()` 的實際目標交給 `battleApplyPhysicalHit()`；因此 Player、Player Guardian、DamageReact／Trap、ItemCrush 與後續死亡流程重新走同一條 fixed-C boundary。
+- 不新增 Guardian 條件、傷害、機率或 RNG；只是把已存在的 fixed source 路徑接回這條漏接 caller。
+
+regression：`tools/check_v292_enemy_weapon_guardian_boundary.mjs`
+GitHub Actions：`.github/workflows/v292-enemy-weapon-guardian.yml`
 
 ## V2.91 — target-side DamageReact pre-Duck boundary
 
@@ -58,7 +70,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.91；本版把 fixed BATTLE_Attack() 的 target-side DamageReact → pre-Duck / Counter FALSE 邊界鎖進 Web runtime，避免來源上已被 iRet=FALSE 阻斷的反擊因 early return 漏掉。
+目前主線已完成 V2.92；本版把 Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
 > **原 C 規則優先、不猜數值**
 
