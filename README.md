@@ -4,15 +4,35 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.76**
+**PLAYABLE CORE V2.77**
 
-目前主線已完成 V2.76，下一個核心開發版本為 **V2.77**。
+目前主線已完成 V2.77，下一個核心開發版本為 **V2.78**。
 
 > **原 C 規則優先、不猜數值**
 
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.77 — Hunter 非戰鬥職業技能「追尋敵蹤／回避戰鬥」
+
+V2.77 把固定 C 的兩個 Hunter 非戰鬥職技正式接入可操作 UI：
+
+- Skill 44：`PROFESSION_TRACK / 追尋敵蹤`
+- Skill 45：`PROFESSION_ESCAPE / 回避戰鬥`
+- 兩者 MP 都是 13；display level 先整除 10，再乘 option rate 5。
+- 追尋敵蹤：`CHAR_ENCOUNT_FIX=+floor(level/10)×5%`
+- 回避戰鬥：`CHAR_ENCOUNT_FIX=-floor(level/10)×5%`
+- 固定 C 的 `CHAR_ENCOUNT_NUM=time+180` 生命週期已接入。
+- 重複施放時保留 source 的 `ret=-1) quirk：函式回傳失敗，但 Work 與 180 秒時間仍會被重新寫入。
+- `char_walk.c` 的遇敵判定順序與過期當下仍使用 stale `p_cep` 的行為也已保留。
+- 新增「非戰鬥職業技能」UI、剩餘秒數與 +/- 遇敵率修正顯示。
+- regression：`tools/check_v277_profession_outofbattle_runtime.mjs`
+- GitHub Actions：V2.77 regression Run `36415712288) 成功。
+- save schema 維持 **30**。
+
+完整技術細節請看 [V2.77 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
 
 ## V2.76 — Skill 21「移形換位」
 
@@ -177,7 +197,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前核心版本：V2.76**
+**目前核心版本：V2.77**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction
@@ -186,6 +206,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - V2.74 已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity
 - V2.75 已完成 Skill 21 移形換位 source-parity core
 - V2.76 已完成 Skill 21 移形換位 live battle execution、StatusSeq 與獨立 skill dodge lifecycle
+- V2.77 已完成 Skill 44／45 追尋敵蹤、回避戰鬥的非戰鬥職技 live UI、180 秒遇敵 Work 與 encounter pipeline lifecycle
 - 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
@@ -219,13 +240,13 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 - [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 - [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-- [V1.75～V2.76](docs/changelog/part-07-v1.75-onward.md)
+- [V1.75～V2.77](docs/changelog/part-07-v1.75-onward.md)
 
 README 只保留目前版本、自述與開發方向；詳細技術內容統一放在 CHANGELOG，避免首頁再次堆積過時說明。
 
 ## 歷史版本 regression 入口
 
-歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`、`PLAYABLE CORE V2.74`、`PLAYABLE CORE V2.75`、`PLAYABLE CORE V2.76`。
+歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`、`PLAYABLE CORE V2.74`、`PLAYABLE CORE V2.75`、`PLAYABLE CORE V2.76`、`PLAYABLE CORE V2.77`。
 
 以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
@@ -270,3 +291,6 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## V2.76 最新進度
 已完成 Skill 21 移形換位 live battle execution、獨立 skill dodge、StatusSeq lifecycle 與 CI regression；詳見歷史紀錄與對應 regression。
+
+## V2.77 最新進度
+已完成 Skill 44 追尋敵蹤、Skill 45 回避戰鬥的非戰鬥職技 live UI、180 秒 CHAR_ENCOUNT_FIX / CHAR_ENCOUNT_NUM lifecycle 與 encounter regression；詳見歷史紀錄與對應 regression。
