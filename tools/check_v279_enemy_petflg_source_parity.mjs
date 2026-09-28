@@ -45,8 +45,14 @@ const loyalStart=game.indexOf('function sourcePerformPetLoyalAction');
 const loyalEnd=game.indexOf('function sourcePetPreCommandAction',loyalStart);
 const loyal=game.slice(loyalStart,loyalEnd);
 for(const f of missingFns)assert.equal(loyal.includes("meta?.f==='"+f+"'"),false,f+' must remain unregistered');
-const missPos=loyal.indexOf('sourceFunctionMissing:true');
-assert.ok(missPos>=0,'fixed missing functbl boundary must remain explicit');
+const missingSetStart=game.indexOf('SOURCE_PLAYER_UNREGISTERED_PETSKILL_FUNCTIONS');
+assert.ok(missingSetStart>=0,'source missing functbl set must remain explicit');
+const missingSet=game.slice(missingSetStart,missingSetStart+500);
+for(const f of missingFns)assert.ok(missingSet.includes("'"+f+"'"),f+' must remain in source-missing set');
+const randomPlanStart=game.indexOf('function sourcePetRandomSkillPlan');
+const randomPlanEnd=game.indexOf('function sourcePetChargeSpec',randomPlanStart);
+assert.ok(randomPlanStart>=0&&randomPlanEnd>randomPlanStart,'random skill plan must exist');
+assert.ok(game.slice(randomPlanStart,randomPlanEnd).includes('sourceFunctionMissing:true'),'fixed missing functbl result must remain explicit');
 
 assert.ok(html.includes('PLAYABLE CORE V2.79'));
 console.log(JSON.stringify({pass:true,version:'V2.79',focus:'enemy-petflg-source-parity-and-petskill-source-missing-boundary',enemyPetFlgRows:Object.keys(petFlg).length,petFlg0:dist['0'],petFlg1:dist['1'],sourceMissingSkills:[582,642,643],saveSchema:30}));
