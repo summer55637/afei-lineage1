@@ -24,11 +24,11 @@ V2.77 把固定 C 的兩個 Hunter 非戰鬥職技正式接入可操作 UI：
 - 追尋敵蹤：`CHAR_ENCOUNT_FIX=+floor(level/10)×5%`
 - 回避戰鬥：`CHAR_ENCOUNT_FIX=-floor(level/10)×5%`
 - 固定 C 的 `CHAR_ENCOUNT_NUM=time+180` 生命週期已接入。
-- 重複施放時保留 source 的 `ret=-1) quirk：函式回傳失敗，但 Work 與 180 秒時間仍會被重新寫入。
+- 重複施放時保留 source 的 `ret=-1` quirk：函式回傳失敗，但 Work 與 180 秒時間仍會被重新寫入。
 - `char_walk.c` 的遇敵判定順序與過期當下仍使用 stale `p_cep` 的行為也已保留。
 - 新增「非戰鬥職業技能」UI、剩餘秒數與 +/- 遇敵率修正顯示。
 - regression：`tools/check_v277_profession_outofbattle_runtime.mjs`
-- GitHub Actions：V2.77 regression Run `36415712288) 成功。
+- GitHub Actions：V2.77 regression Run `36415712288` 成功。
 - save schema 維持 **30**。
 
 完整技術細節請看 [V2.77 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
