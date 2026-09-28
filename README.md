@@ -6,6 +6,9 @@
 
 **PLAYABLE CORE V2.92**
 
+歷史 regression markers：**PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+
 ## V2.92 — Enemy→Player weapon Guardian boundary
 
 V2.92 修正一條尚未收斂到 fixed `BATTLE_AttackSeq()` 的 Enemy→Player 普通／遠程武器共同路徑：
