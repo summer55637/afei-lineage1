@@ -4,7 +4,19 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.89
+**PLAYABLE CORE V2.90**
+
+## V2.90 — attacker-side DamageReact Counter boundary
+
+V2.90 接著 fixed C 的 `BATTLE_Attack()` pre-AttackSeq gate：
+
+- fixed C 不只檢查原始防守方；攻擊者本身已有 DamageReact 時，同樣先把 `iRet/ContFlg` 設成 `FALSE`。
+- Web 目前可由來源證明的 React 狀態只有 Player 的 TRAP、Pet 的 ACUPUNCTURE、Enemy 的 ACUPUNCTURE；其餘 VANISH / ABSROB / REFLEC 仍 fail-closed。
+- Player/Pet → Enemy、Enemy → Pet/Enemy、Enemy → Player，以及 Counter 本身，都在對應的 fixed-C boundary 保存 `sourceCounterBlockedByDamageReact`；不把這個 gate 與 DamageSub 是否真正消耗 React 混為一談。
+- Counter 命中仍會照常完成 fixed `BATTLE_Counter()` 的 AttackSeq / DamageSub；這個 flag 只讓 outer/inner Counter chain 在正確時機停止，不提前取消本次 Counter 傷害。
+
+regression：`tools/check_v290_attacker_damagereact_counter_boundary.mjs`
+GitHub Actions：`.github/workflows/v290-attacker-damagereact.yml`
 
 ## V2.89 — Counter GuardAdjust boundary
 

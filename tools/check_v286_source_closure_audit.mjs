@@ -224,13 +224,13 @@ for(const row of Object.values(enemyAi.byEnemyId||{})){
 }
 assert.deepEqual([...unresolvedEnemyFamilies].sort(),[],'all other positive Enemy AI PetSkill families must reach an explicit dispatcher');
 
-assert.match(html,/PLAYABLE CORE V2\.89/);
-assert.match(readme,/PLAYABLE CORE V2\.89/);
+assert.match(html,/PLAYABLE CORE V2\.90/);
+assert.match(readme,/PLAYABLE CORE V2\.90/);
 assert.match(readme,/V2\.86 — PetSkill source closure audit/);
 
 console.log(JSON.stringify({
   pass:true,
-  version:'V2.89',
+  version:'V2.90',
   legalFunctionFamilies:familyFields.size,
   battleAllDeclaredFamilies:battleEligibleFamilies.length,
   playerDispatcherFamilies:loyalDispatch.length,

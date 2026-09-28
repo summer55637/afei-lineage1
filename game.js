@@ -11483,6 +11483,26 @@ function battleStatusDescView(desc){
   if(desc?.kind==='enemy')return enemyBattleView(desc.unit);
   return null;
 }
+function sourceBattleDamageReactActive(desc){
+  // Currently source-backed Web DamageReact states:
+  // Player TRAP, Pet ACUPUNCTURE, Enemy ACUPUNCTURE.
+  // Do not fabricate VANISH / ABSROB / REFLEC runtime state.
+  if(desc?.kind==='player')return sourceProfessionPlayerTrapActive();
+  if(desc?.kind==='pet')return !!desc.pet&&battlePetAcupunctureIds.has(desc.pet.id);
+  if(desc?.kind==='enemy')return !!desc.unit?.acupunctureActive;
+  return false;
+}
+
+function sourcePreAttackDamageReactCounterBlock(r,attackerDesc,targetDesc){
+  // fixed BATTLE_Attack() sets iRet/ContFlg FALSE before BATTLE_AttackSeq
+  // when either attacker or the ORIGINAL defender already has DamageReact.
+  if(r&&(sourceBattleDamageReactActive(attackerDesc)
+    ||(targetDesc&&sourceBattleDamageReactActive(targetDesc)))){
+    r.sourceCounterBlockedByDamageReact=true;
+  }
+  return r;
+}
+
 function battleStatusActorDesc(actor){
   if(actor?.kind==='player')return {kind:'player'};
   if(actor?.kind==='pet'){
@@ -11876,6 +11896,7 @@ function playerBattleView(){
     skillDuckPower:battlePlayerSkillDuckTurns>0?Math.trunc(n(battlePlayerSkillDuckPower)):0,
     skillDuckTurns:Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))),
     rawGuardCommand:!!battlePlayerRawGuardCommand,
+    damageReact:sourceBattleDamageReactActive(desc)?1:0,
     suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
     suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
     canMove:battleStatusCanMove(desc),
@@ -11928,6 +11949,7 @@ function petBattleView(pet){
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     canMove:battleStatusCanMove(desc),
     battleProperty:sourceBattlePropertyActive(desc),
+    damageReact:sourceBattleDamageReactActive(desc)?1:0,
     level:Math.max(1,Math.trunc(n(pet.level))),elements
   };
 }
@@ -11953,6 +11975,7 @@ function enemyBattleView(unit){
     superWallPower:n(unit?.superWallTurns)>0?n(unit?.superWallPower):0,
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
+    damageReact:sourceBattleDamageReactActive(desc)?1:0,
     level:Math.max(1,Math.trunc(n(unit?.level))),elements:battleElementsForDesc(desc)
   };
 }
@@ -13022,12 +13045,14 @@ function battleCounterCheck(attacker,defender){
 }
 function counterScaledResult(attacker,defender){
   // fixed BATTLE_Counter() calls BATTLE_AttackSeq() with opt=-1, so the counter hit
-  // still honors the current defender's GUARD GuardAdjust before the 75% counter
-  // multiplier. The defender view carries the source-accurate guard command; confusion
-  // clears GuardAdjust exactly like fixed C.
+  // honors current GUARD GuardAdjust and also starts with iRet=FALSE whenever either
+  // current counter participant has source-backed DamageReact.
   const r=resolveNormalAttack(attacker,defender,{
     guarding:!!defender?.counterGuarding
   });
+  if(Number(attacker?.damageReact)>0||Number(defender?.damageReact)>0){
+    r.sourceCounterBlockedByDamageReact=true;
+  }
   if(!r.dodged&&!r.miss&&r.damage>0){
     r.damage=Math.trunc(r.damage*.75);
     if(r.damage<1)r.damage=1;
@@ -13167,6 +13192,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
+  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,null);
 
   // fixed BATTLE_AttackSeq() 在 DuckCheck / Critical / Damage 前就處理主人打自己的 Pet：
   // CHAR_PetAddVariableAi(defindex, AI_FIX_SEKKAN), AI_FIX_SEKKAN = -2*100。
@@ -13765,6 +13791,8 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   const attackerDesc=attackerKind==='pet'
     ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
     :{kind:'player'};
+  const originalTargetDesc={kind:'enemy',unit:target,unitId:target.id};
+  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,originalTargetDesc);
   const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
   const acupuncture=options.suppressDamageReact
     ?{triggered:false,suppressed:true}
@@ -13863,7 +13891,12 @@ function sourcePlayerGuardianPetForAttack(unit){
 function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null){
   const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   const original=playerBattleView();
+  const attackerDesc={kind:'enemy',unit,unitId:unit.id};
+  const originalTargetDesc={kind:'player'};
+  const preReact={sourceCounterBlockedByDamageReact:false};
+  sourcePreAttackDamageReactCounterBlock(preReact,attackerDesc,originalTargetDesc);
   const dodge=sourceInitialDodgeOnly(attacker,original,options);
+  if(preReact.sourceCounterBlockedByDamageReact)dodge.sourceCounterBlockedByDamageReact=true;
   if(dodge.dodged){
     dodge.originalTargetDesc={kind:'player'};
     dodge.actualTargetDesc={kind:'player'};
@@ -13881,6 +13914,7 @@ function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null)
     disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
+  if(preReact.sourceCounterBlockedByDamageReact)r.sourceCounterBlockedByDamageReact=true;
   r.originalTargetDesc={kind:'player'};
   r.actualTargetDesc=actualDesc;
 

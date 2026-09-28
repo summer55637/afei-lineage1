@@ -35,13 +35,13 @@ assert.match(guard,/roll<=70/);
 assert.match(guard,/roll<=85/);
 assert.match(guard,/roll<=95/);
 
-assert.match(html,/PLAYABLE CORE V2\.89/);
-assert.match(readme,/PLAYABLE CORE V2\.89/);
+assert.match(html,/PLAYABLE CORE V2\.90/);
+assert.match(readme,/PLAYABLE CORE V2\.90/);
 assert.match(readme,/V2\.89 — Counter GuardAdjust boundary/);
 
 console.log(JSON.stringify({
   pass:true,
-  version:'V2.89',
+  version:'V2.90',
   boundary:'BATTLE_Counter -> BATTLE_AttackSeq GuardAdjust',
   defenderViews:3,
   counterDamageScale:0.75

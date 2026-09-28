@@ -43,13 +43,13 @@ assert.ok(physical.includes('sourceFinishAcupunctureReaction(acupuncture)'));
 assert.ok(physical.includes('sourceLogAcupunctureReaction(acupuncture)'));
 
 assert.match(game,/BATTLE_Attack sets ContFlg\/iRet FALSE/);
-assert.match(html,/PLAYABLE CORE V2\.89/);
-assert.match(readme,/PLAYABLE CORE V2\.89/);
+assert.match(html,/PLAYABLE CORE V2\.90/);
+assert.match(readme,/PLAYABLE CORE V2\.90/);
 assert.match(readme,/V2\.88 — pre-DamageReact Counter boundary/);
 
 console.log(JSON.stringify({
   pass:true,
-  version:'V2.89',
+  version:'V2.90',
   boundary:'BATTLE_GetDamageReact pre-DamageSub Counter block',
   primaryCounterGates:3,
   innerCounterGates:3,
