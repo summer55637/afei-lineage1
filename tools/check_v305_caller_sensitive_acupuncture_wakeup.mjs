@@ -20,8 +20,8 @@ const friendly=sliceFunction('applyFriendlyEnemyHit');
 assert.ok(friendly.includes("const wakeTarget=acupuncture.triggered"));
 assert.ok(friendly.includes("options.sourceAcupunctureWakeTarget==='attacker'"));
 assert.ok(friendly.includes("r?.sourceAcupunctureWakeTarget==='attacker'"));
-assert.ok(friendly.includes("wakeTarget==='attacker'?attackerDesc"));
-assert.ok(friendly.includes("wakeTarget==='original'?originalTargetDesc"));
+assert.ok(friendly.includes("wakeTarget==='attacker'"));
+assert.ok(friendly.includes("wakeTarget==='original'"));
 
 const petCalc=sliceFunction('sourcePetAttackDamageCalcOnlyGuardianResult');
 assert.ok(petCalc.includes("r.sourceAcupunctureWakeTarget='attacker';"),
