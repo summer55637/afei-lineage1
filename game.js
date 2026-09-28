@@ -2653,6 +2653,21 @@ function sourceProfessionTransposeProfile(displayLevel){
   const turn=skillLevel>=10?5:(skillLevel>=6?4:3);
   return {skillLevel,avoid,turn};
 }
+function sourceProfessionTransposeStatusSeq(){
+  const before=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns)));
+  if(before<=0)return {active:false,expired:false,turns:0,power:Math.max(0,Math.trunc(n(battlePlayerSkillDuckPower)))};
+  battlePlayerSkillDuckTurns=Math.max(0,before-1);
+  const expired=battlePlayerSkillDuckTurns<=0;
+  if(expired){
+    battlePlayerSkillDuckPower=0;
+    addLog('你的「移形換位」效果結束。');
+  }
+  return {
+    active:!expired,expired,
+    turns:Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))),
+    power:Math.max(0,Math.trunc(n(battlePlayerSkillDuckPower)))
+  };
+}
 function sourceProfessionTransposeExecute(prepared,name='移形換位'){
   const profile=sourceProfessionTransposeProfile(prepared?.displayLevel);
   const beforeTurns=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns)));
@@ -11583,14 +11598,8 @@ function processBattleStatusTurn(actor){
   const professionDoomFear=sourceProfessionDoomFearStatusSeq(desc);
 
   // fixed BATTLE_StatusSeq tail begins with MYSKILLDUCK before MYSKILLSTR.
-  // Transpose stores turn+1 in CHAR_MYSKILLDUCK, then StatusSeq decrements it on the actor's turn.
-  if(desc.kind==='player'&&n(battlePlayerSkillDuckTurns)>0){
-    battlePlayerSkillDuckTurns=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))-1);
-    if(battlePlayerSkillDuckTurns<=0){
-      battlePlayerSkillDuckPower=0;
-      addLog('你的「移形換位」效果結束。');
-    }
-  }
+  // Transpose stores turn+1 in CHAR_MYSKILLDUCK; the helper decrements it on the actor's turn.
+  const professionTranspose=desc.kind==='player'?sourceProfessionTransposeStatusSeq():null;
   // fixed BATTLE_StatusSeq tail continues with MYSKILLSTR. ENRAGE_PET shares that raw field.
   // The round WORK/FIX snapshot was already prepared before StatusSeq, so expiry here
   // affects only the next round.
