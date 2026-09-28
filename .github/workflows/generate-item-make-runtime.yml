@@ -112,6 +112,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  # V2.72 regression CI
   contents: write
 
 jobs:
