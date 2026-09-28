@@ -1,4 +1,4 @@
-## V2.84 Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
+## V2.85 Battle-incompatible PETSKILL_Fixitem / PETSKILL_Inslaypinned C 的 `PETSKILL_Fixitem()` 與 `PETSKILL_Inslay()` 都要求 `CHAR_TYPEPET`，而且要求主人不在 BattleMode；在 Enemy AI／玩家 Pet 的戰鬥隨機技路徑都屬 fixed FALSE boundary。Web V2.85：- Enemy skill IDs `540/572` 在 AI 選技後直接標成 `sourceSkillRejected` / no-action。- Player Pet random skill path 對 `PETSKILL_Fixitem` / `PETSKILL_Inslay` 直接回 `sourceUseFailed + sourceBattlePreconditionFalse`。- 不建立戰鬥修復／精工效果，不額外消耗 RNG，不把它們誤報成 source function missing。- `582 自爆攻擊` 維持既有 unregistered boundary，因 pinned C `_PETSKILL_EXPLODE` 在 `version.h` 關閉。新增 regression：- `tools/check_v285_battle_false_petskills.mjs`- `.github/workflows/v285-battle-false-petskills.yml`---## V2.84 Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
 
 V2.84 關閉一條實際存在於 Enemy AI 的 unsupported gap：`600/674/734`。
 

@@ -4,9 +4,9 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.84**
+**PLAYABLE CORE V2.85**
 
-目前主線已完成 V2.84；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
+目前主線已完成 V2.85；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
 > **原 C 規則優先、不猜數值**
 
@@ -14,7 +14,7 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
-## V2.84 — Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
+## V2.85 — Battle-incompatible PETSKILL_Fixitem / PETSKILL_InslayV2.85 不新增任何修復／鑲寶石效果；這版只把 pinned C 已明確證明的「戰鬥中必定 FALSE」邊界鎖進 runtime。fixed C 的 `PETSKILL_Fixitem()` 與 `PETSKILL_Inslay()` 都先要求 `CHAR_TYPEPET`，再要求主人的 `CHAR_WORKBATTLEMODE == BATTLE_CHARMODE_NONE`。因此：- Enemy AI 抽到 `540 修復` 或 `572 鑲寶石` 時，不能進普通技能效果 handler；fixed C 直接 FALSE。- 玩家 Pet 在戰鬥中隨機抽到這兩個 function 時，同樣是 PETSKILL_Use 失敗，不應落入 `sourceRuntimePending`。- 本版只回報 source-precise no-action，不建立假的戰鬥修復／精工介面，也不消耗額外 RNG。`582 自爆攻擊` 已維持原先 unregistered boundary；pinned C `version.h` 對 `_PETSKILL_EXPLODE` 是關閉狀態，因此不把它當成可執行戰鬥技。regression：`tools/check_v285_battle_false_petskills.mjs`## V2.84 — Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
 
 V2.84 把目前 Enemy AI 真的會抽到、但原本還會落入 unsupported fallback 的三個 source rows 接上：
 

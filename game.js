@@ -12090,6 +12090,10 @@ const ENEMY_SOURCE_MISSING_SKILL_IDS=new Set([
 // 582 則完全沒有 PETSKILL_SelfExplodeAttack 函式／註冊項，version.h 也標成不可開。
 // 兩者都會在 PETSKILL_getPetskillFuncPointer() 得到 NULL，PETSKILL_Use() return FALSE。
 const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
+// fixed PETSKILL_Fixitem(540) / PETSKILL_Inslay(572) are registered, but both
+// immediately return FALSE for an Enemy actor (not CHAR_TYPEPET), and they also
+// reject a Player/Pet caller while BATTLE_CHARMODE is not NONE.
+const ENEMY_SOURCE_BATTLE_FALSE_SKILL_IDS=new Set([540,572]);
 
 // V1.76 fixed PETSKILL_functbl exact-name audit.
 // These petskill2 rows exist, but their function strings are not registered in this build.
@@ -12098,6 +12102,14 @@ const SOURCE_PLAYER_UNREGISTERED_PETSKILL_FUNCTIONS=new Set([
   'PETSKILL_SelfExplodeAttack',
   'PETSKILL_Awaken',
   'PETSKILL_Temptation'
+]);
+// fixed PETSKILL_Fixitem / PETSKILL_Inslay are registered functions, but both
+// return FALSE when invoked during battle because their source precondition requires
+// BATTLE_CHARMODE_NONE. Keep them as exact no-action boundaries rather than pretending
+// they are missing or inventing an in-battle item UI.
+const SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS=new Set([
+  'PETSKILL_Fixitem',
+  'PETSKILL_Inslay'
 ]);
 
 // V0.66：這些 PetSkill 在來源中不是 missing / unregistered；PETSKILL_Use 本身會成功，
@@ -12162,6 +12174,14 @@ function enemyChooseAction(unit){
         skillSlot:picked.skillSlot,skillId:picked.skillId,
         sourceSkillUnregistered:true,sourceAiPickedSkill:true,
         sourceCWaitReason:'unregistered-function'
+      };
+    }
+    if(ENEMY_SOURCE_BATTLE_FALSE_SKILL_IDS.has(Number(picked.skillId))){
+      return {
+        kind:'none',spec,
+        skillSlot:picked.skillSlot,skillId:picked.skillId,
+        sourceSkillRejected:true,sourceAiPickedSkill:true,
+        sourceCWaitReason:'battle-function-precondition-false'
       };
     }
     const meta=enemyPetSkillMeta(picked.skillId);
@@ -17721,6 +17741,11 @@ function sourcePetRandomSkillPlan(pet){
       // resolves the exact function string. Missing functbl entry => FALSE / no command.
       return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceFunctionMissing:true,targetDesc};
     }
+    if(SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||''))){
+      // fixed PETSKILL_Fixitem / PETSKILL_Inslay both reject non-NONE battle mode.
+      // No extra RNG is consumed after this point in PETSKILL_Use().
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceBattlePreconditionFalse:true,targetDesc};
+    }
     return {kind:'skill',slot:iNum,skillId,meta,targetDesc};
   }
   return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc};
@@ -22490,6 +22515,12 @@ function performEnemyAction(actor,unit,options={}){
   }
   if(kind==='skill'){
     const meta=enemyPetSkillMeta(actor.skillId);
+    if(ENEMY_SOURCE_BATTLE_FALSE_SKILL_IDS.has(Number(actor.skillId))){
+      const id=Number(actor.skillId);
+      const reason='fixed PETSKILL_Fixitem / PETSKILL_Inslay return FALSE here: Enemy actor is not CHAR_TYPEPET and battle mode is not NONE.';
+      addLog(unit.name+' 使用 '+(meta?.n||('PetSkill '+id))+'；'+reason+' 本回合不行動。');
+      return {kind:'skill',skillId:id,sourceUseFailed:true,sourceBattlePreconditionFalse:true,reason};
+    }
     if(ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS.has(Number(actor.skillId))){
       const id=Number(actor.skillId);
       let reason='需要原 server 全域 runtime，現版不能靜態唯一決定效果。';
