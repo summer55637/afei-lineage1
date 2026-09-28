@@ -36,7 +36,7 @@ assert.equal(makeFn.includes('ridePetId:'),false,'makeEnemyUnit must not synthes
 
 const encounterJson=JSON.stringify(encounter);
 assert.equal(encounterJson.includes('"ridePetId"'),false,'generated Enemy runtime must not claim a ridePetId field without source proof');
-assert.match(String(encounter?._meta?.source||''),/enemy\\.c/,'encounter runtime source must retain enemy.c provenance');
+assert.match(String(encounter?._meta?.source||''),/enemy\.c/,'encounter runtime source must retain enemy.c provenance');
 
 const combinedRows=Object.entries(petskill.byId||{}).filter(([,row])=>row?.f==='PETSKILL_Combined');
 assert.equal(combinedRows.length,36,'fixed runtime must contain exactly 36 PETSKILL_Combined rows');
