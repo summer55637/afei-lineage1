@@ -105,6 +105,8 @@ let battleProfessionScapegoat=null;
 let battlePlayerRawGuardCommand=false;
 let battlePlayerFixedToughWork=null;
 let battlePlayerAvoidWork=null;
+let battlePlayerSkillDuckTurns=0;
+let battlePlayerSkillDuckPower=0;
 let battlePlayerWeaponFocusWork=null;
 let battlePlayerProfessionTrap=null;
 let battlePlayerMySkillStrPower=0;
@@ -2639,6 +2641,46 @@ function sourceProfessionSetPlayerAttackWork(value){
   battlePlayerAttackWork=Math.trunc(n(value));
   return battlePlayerAttackWork;
 }
+function sourceProfessionTransposeProfile(displayLevel){
+  const skillLevel=sourceProfessionMagicLevelM(displayLevel);
+  let avoid=10;
+  if(skillLevel>=10)avoid=70;
+  else if(skillLevel>=9)avoid=60;
+  else if(skillLevel>=8)avoid=50;
+  else if(skillLevel>=6)avoid=45;
+  else if(skillLevel>=5)avoid=30;
+  else if(skillLevel>=3)avoid=25;
+  const turn=skillLevel>=10?5:(skillLevel>=6?4:3);
+  return {skillLevel,avoid,turn};
+}
+function sourceProfessionTransposeExecute(prepared,name='移形換位'){
+  const profile=sourceProfessionTransposeProfile(prepared?.displayLevel);
+  const beforeTurns=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns)));
+  if(beforeTurns>0){
+    addLog('你再次使用「'+name+'」，但原 CHAR_MYSKILLDUCK 尚在，效果不刷新。');
+    return {
+      handled:true,noAction:true,reason:'existing-skill-duck',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      targetNo:Math.trunc(n(prepared.toNo)),profile,
+      skillDuckTurns:beforeTurns,skillDuckPower:Math.trunc(n(battlePlayerSkillDuckPower)),
+      sourceTargetExpansion:'BATTLE_MultiList(defNo2)',
+      sourceTargetFilter:'charaindex===toindex'
+    };
+  }
+  battlePlayerSkillDuckTurns=profile.turn+1;
+  battlePlayerSkillDuckPower=profile.avoid;
+  addLog('你使用「'+name+'」：'+profile.avoid+'% 閃避，持續 '+profile.turn+' 回合。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    targetNo:Math.trunc(n(prepared.toNo)),profile,
+    skillDuckTurns:battlePlayerSkillDuckTurns,skillDuckPower:battlePlayerSkillDuckPower,
+    sourceTargetExpansion:'BATTLE_MultiList(defNo2)',
+    sourceTargetFilter:'charaindex===toindex',
+    sourceAnimation:'BATTLE_MagicEffect(attackNo,ToList,img1,img2)',
+    img1:101697,img2:101695,
+    noDamage:true,noOrdinaryCounter:true
+  };
+}
 function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
   return functionName==='PROFESSION_VOLCANO_SPRINGS'
     ||functionName==='PROFESSION_SIGN'
@@ -2655,6 +2697,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
     ||functionName==='PROFESSION_ENCLOSE'
+    ||functionName==='PROFESSION_TRANSPOSE'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -7243,6 +7286,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:false,reason:'profession-command-not-prepared'};
   }
   const toNo=Math.trunc(n(prepared.toNo));
+  if(prepared.functionName==='PROFESSION_TRANSPOSE'){
+    const transposeRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const transposeName=String(transposeRow?.name||'移形換位');
+    return sourceProfessionTransposeExecute(prepared,transposeName);
+  }
   if(prepared.functionName==='PROFESSION_AVOID'){
     // fixed PROFESSION_avoid() prepares BATTLE_COM_S_AVOID and battle.c routes it
     // into battle_profession_assist_fun(), whose switch has NO S_AVOID case.
@@ -10642,7 +10690,7 @@ const BATTLE_STATUS_NAMES=Object.freeze({
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',iceArrow:'冰箭',bloodWorms:'嗜血蠱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battlePlayerProfessionCharge=null;battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerSkillDuckTurns=0;battlePlayerSkillDuckPower=0;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battlePlayerProfessionCharge=null;battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -11534,7 +11582,16 @@ function processBattleStatusTurn(actor){
   const professionAnnex=sourceProfessionAnnexStatusSeq(desc);
   const professionDoomFear=sourceProfessionDoomFearStatusSeq(desc);
 
-  // fixed BATTLE_StatusSeq tail begins with MYSKILLSTR. ENRAGE_PET shares that raw field.
+  // fixed BATTLE_StatusSeq tail begins with MYSKILLDUCK before MYSKILLSTR.
+  // Transpose stores turn+1 in CHAR_MYSKILLDUCK, then StatusSeq decrements it on the actor's turn.
+  if(desc.kind==='player'&&n(battlePlayerSkillDuckTurns)>0){
+    battlePlayerSkillDuckTurns=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))-1);
+    if(battlePlayerSkillDuckTurns<=0){
+      battlePlayerSkillDuckPower=0;
+      addLog('你的「移形換位」效果結束。');
+    }
+  }
+  // fixed BATTLE_StatusSeq tail continues with MYSKILLSTR. ENRAGE_PET shares that raw field.
   // The round WORK/FIX snapshot was already prepared before StatusSeq, so expiry here
   // affects only the next round.
   sourceProfessionPetStrStatusSeq(desc);
@@ -11791,6 +11848,8 @@ function playerBattleView(){
     arrangePower:sourceProfessionPlayerDeflectArrangePower(compliance),
     professionAvoidActive:!!battlePlayerAvoidWork?.active,
     professionAvoidMod:Math.trunc(n(battlePlayerAvoidWork?.mod)),
+    skillDuckPower:battlePlayerSkillDuckTurns>0?Math.trunc(n(battlePlayerSkillDuckPower)):0,
+    skillDuckTurns:Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))),
     rawGuardCommand:!!battlePlayerRawGuardCommand,
     suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
     suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
