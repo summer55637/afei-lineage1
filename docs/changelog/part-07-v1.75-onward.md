@@ -1,3 +1,46 @@
+## V2.81 PetSkill runtime reachability / pending boundary audit
+
+V2.80 將兩個 source boundary 鎖住後，這版直接把目前 fixed PetSkill runtime 的「能不能真的走到 sourceRuntimePending」做靜態 reachability audit。目的不是刪掉防守程式，而是證明目前合法資料不會因 parser／dispatcher 缺口誤落 pending。
+
+### 固定 runtime 整體覆蓋
+
+- 目前合法 PetSkill function family：61。
+- sourcePerformPetLoyalAction() 目前有 58 個對應 dispatcher。
+- 剩餘 3 個正好是 fixed PETSKILL_functbl 沒有同名註冊的 582／642／643：PETSKILL_SelfExplodeAttack、PETSKILL_Awaken、PETSKILL_Temptation。
+- 這三個仍維持 V2.79 的 source-missing 邊界，不改成假的 handler。
+
+### 目前 7 個 sourceRuntimePending 防守點
+
+1. PETSKILL_StatusChange：12 個合法 rows 的 毒／剧／石／乱／醉／眠／虚／麻 都能由現有 token parser 解析，turn 與 攻% 亦都有固定格式。
+2. PETSKILL_Refresh：5 個合法 rows 默／剧／障／全／虚 全部有 source token parser。
+3. PETSKILL_Weaken / Deeppoison / Barrier / Nocast：12 個合法 rows 都是 status turn 成 的固定 option，generic status mapping 能解析。
+4. PETSKILL_MagicStatusChange：4 個合法 rows 全部為 铁壁|turn|power|全，走 fixed superWall 路徑。
+5. PETSKILL_BattleProperty：唯一合法 row 612 為精確 PET_PetskillPropertyEvent callback。
+6. PETSKILL_Combined：36 個合法 rows 共引用 101 個唯一 magic ID，所有 ID 都已有固定分流或 MAGIC_AttMagic runtime row；458／459／462 保持 source-missing。
+7. PETSKILL_LoyalAction：目前 dispatcher 已完整覆蓋其餘 58 個合法 function family；3 個 fixed-unregistered family 仍走 sourceFunctionMissing，不是 pending。
+
+### Regression
+
+新增：
+
+- tools/check_v281_petskill_reachability.mjs
+- .github/workflows/v281-petskill-reachability.yml
+
+回歸鎖定：
+
+- 61／58／3 的 fixed dispatcher／unregistered 數量
+- StatusChange 12 rows
+- Refresh 5 rows
+- Special Status 12 rows
+- MagicStatusChange 4 rows
+- BattleProperty row 612
+- Combined 36 rows／101 unique magic IDs
+- 458／459／462 source-missing
+- 7 個 defensive sourceRuntimePending 保留
+
+本版不改戰鬥公式、不刪 fail-closed 分支，save schema 維持 30。
+
+---
 ## V2.80 Enemy FallGround / Combined source boundary audit
 
 V2.79 後繼續掃固定 C 的 Enemy／Pet 特殊技能來源。這輪的結論是：有兩條路徑可以完整證明「哪裡能做、哪裡不能猜」，因此直接做成 regression boundary，而不是塞入假效果。

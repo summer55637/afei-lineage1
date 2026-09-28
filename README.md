@@ -4,15 +4,29 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.80**
+**PLAYABLE CORE V2.81**
 
-目前主線已完成 V2.80；本版先把兩個容易被「看起來像能做」而誤猜的 source boundary 鎖死。
+目前主線已完成 V2.81；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
 > **原 C 規則優先、不猜數值**
 
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.81 — PetSkill runtime reachability / pending boundary audit
+
+V2.81 不新增猜測效果；把目前 61 個合法 PetSkill function family、36 筆 `PETSKILL_Combined` 與 7 個 `sourceRuntimePending` 防守點做靜態可達性鎖定：
+
+- 61 個合法 function family 中，58 個有 fixed Web loyal dispatcher；剩下 3 個正是 fixed `PETSKILL_functbl` 沒有同名註冊的 582／642／643。
+- `PETSKILL_StatusChange` 現有 12 rows 的狀態／turn／攻擊倍率 token 全部能被目前 parser 唯一解析。
+- `PETSKILL_Refresh` 目前 583／584／591／592／593 的 `默／剧／障／全／虚` 都有來源 parser 路徑；特殊 `Weaken／Deeppoison／Barrier／Nocast` 12 rows 也都具備 `status + turn + 成功率`。
+- `PETSKILL_MagicStatusChange` 4 rows 全部是 fixed `铁壁`，走已證明的 `superWall` adapter。
+- `PETSKILL_BattleProperty` 的唯一合法 row 612 保持精確 `PET_PetskillPropertyEvent` callback。
+- 36 筆 Combined 一共引用 101 個唯一 magic ID；每一個都已有固定分流或 `MAGIC_AttMagic` runtime row，458／459／462 則維持明確 source-missing，不會走成猜測效果。
+- 7 個 `sourceRuntimePending` 不刪除，仍是 future/unmapped data 的 fail-closed 防線；本版 regression 只證明目前 fixed runtime 不會繞進這些分支。
+
+regression：`tools/check_v281_petskill_reachability.mjs`
 
 ## V2.80 — Enemy FallGround / Combined source boundary audit
 
