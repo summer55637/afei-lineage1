@@ -36,6 +36,7 @@ let rolls=0;
 const ctx={
   Math,Number,Object,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
+  n:v=>Number.isFinite(Number(v))?Number(v):0,
   battleStatusHp:d=>Math.max(0,Math.trunc(n(d?.unit?.hp??d?.pet?.hp??0))),
   battleStatusSetHp:(d,hp)=>{if(d?.unit)d.unit.hp=hp;if(d?.pet)d.pet.hp=hp;},
   sourceTrackDamageSubUltimate:()=>({}),
