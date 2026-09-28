@@ -73,7 +73,10 @@ for(const id of ['200','201']){
   assert.equal(pet.byId[id]?.f,'PETSKILL_Merge','PETSKILL_Merge runtime row '+id);
   assert.equal(Number(pet.byId[id]?.field),2,'PETSKILL_Merge field '+id);
 }
-assert.ok(game.includes("const SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS=new Set(['PETSKILL_Merge'"));
+assert.ok(
+  /const SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS=new Set\(\[\s*'PETSKILL_Merge'/.test(game),
+  'player battle-false set must start with PETSKILL_Merge'
+);
 assert.ok(game.includes('SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||\'\'))'));
 assert.ok(game.includes('sourceBattlePreconditionFalse:true'));
 
