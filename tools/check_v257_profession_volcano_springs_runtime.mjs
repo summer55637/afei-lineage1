@@ -139,7 +139,11 @@ assert.ok(reset.includes('battlePlayerProfessionMagicProficiencyWork={fire:0,ice
 const order=extractFunction(game,'normalBattleOrder');
 assert.ok(order.includes("sourceProfessionBattleDexRoll(playerProfessionDexPrepared,player.quick)"));
 const turn=extractFunction(game,'attackTurn');
-assert.ok(turn.includes("professionPrepared?'profession':'attack',professionPrepared"));
+assert.ok(
+  turn.includes("professionPrepared?'profession':'attack',professionPrepared")
+  ||(turn.includes("playerCommand:(professionPrepared||chargeForOrder)?'profession':'attack'")
+    &&turn.includes("professionPrepared:dexPrepared"))
+);
 
 const dispatcher=extractFunction(game,'sourceProfessionBattleSkillExecute');
 assert.ok(dispatcher.includes("prepared.functionName==='PROFESSION_VOLCANO_SPRINGS'"));
