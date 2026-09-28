@@ -42,7 +42,7 @@ const combinedRows=Object.entries(petskill.byId||{}).filter(([,row])=>row?.f==='
 assert.equal(combinedRows.length,36,'fixed runtime must contain exactly 36 PETSKILL_Combined rows');
 const fireBull=petskill.byId?.['715'];
 assert.ok(fireBull,'fixed PETSKILL_Combined skill 715 must exist');
-assert.equal(fireBull.o,'綜合法|5|458|459|460|461|462');
+assert.equal(fireBull.o,'综合法|5|458|459|460|461|462');
 
 const missingIds=[458,459,462];
 for(const id of missingIds){
