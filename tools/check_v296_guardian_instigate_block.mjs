@@ -27,7 +27,7 @@ assert.ok(guardian.includes('Do NOT map generic chargeState to CHAR_DOOMTIME'),
   'must keep DoomTime / generic Enemy charge state fail-closed');
 
 const real=sliceFunction('resolveAttackToEnemyWithGuardian');
-assert.ok(real.includes('disableDodge:true,skipSuitDodge:!!guardian'),'V2.95 Guardian second suit-dodge boundary regressed');
+assert.ok(real.includes('disableDodge:true,skipSuitDodge:true'),'V2.95 Guardian second suit-dodge boundary regressed');
 
 assert.match(html,/PLAYABLE CORE V2\.96/);
 assert.match(html,/PLAYABLE CORE V2\.95/);
