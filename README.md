@@ -4,9 +4,24 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.04**
+**PLAYABLE CORE V3.05**
 
-歷史 regression markers：**PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.05 — caller-sensitive Acupuncture WakeUp order
+
+V3.05 將 ACUPUNCTURE 的 WakeUp target 從「全域規則」拆回 fixed C caller boundary：
+
+- primary `BATTLE_Attack()`：`DamageSub` 後先恢復 original `defindex/toindex`，所以 WakeUp = original defender。
+- `BATTLE_Counter()`：沒有 primary 的 restore，WakeUp = attacker。
+- `BATTLE_S_AttackDamage()` 家族：DamageSub 後沒有 restore original target，WakeUp = attacker。
+- profession `CHAIN_ATK`：generic profession caller 保留 DamageReact，reaction 後把 `defindex` 改成 attacker，WakeUp = attacker；第二擊則重新進 ordinary `BATTLE_Attack()`。
+- Guardian substitution 不再改變上述 caller 自己的 WakeUp source-order。
+
+本版只修 caller-sensitive target selection；不新增 RNG、傷害、反傷或 Guardian 數值。
+
+regression：`tools/check_v305_caller_sensitive_acupuncture_wakeup.mjs`
+GitHub Actions：`.github/workflows/v305-caller-sensitive-acupuncture-wakeup.yml`
 
 ## V3.04 — Enemy→Player Guardian Acupuncture still wakes original Player
 
