@@ -30,7 +30,7 @@ V2.79 後繼續掃固定 C 的 Enemy／Pet 特殊技能來源。這輪的結論�
 
 fixed runtime row：
 
-綜合法|5|458|459|460|461|462
+综合法|5|458|459|460|461|462
 
 原 PETSKILL_Combined() 只負責從這個 list 隨機抽出一個數字，再交給 BATTLE_COM_JYUJYUTU -> MAGIC_DirectUse()。
 
