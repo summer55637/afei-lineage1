@@ -6542,8 +6542,12 @@ function sourceProfessionToxinWeaponExecute(prepared,name){
 
     // Custom TOXIN branch uses normal DamageReact / real Guardian and ItemCrush,
     // but it never enters ordinary BATTLE_Attack's SUITPOISON or Counter tail.
+    // fixed BATTLE_COM_S_TOXIN_WEAPON updates caller defindex to Guardian after AttackSeq
+    // and does NOT restore original defNo before BATTLE_DamageWakeUp(); ACUPUNCTURE
+    // therefore wakes the actual Guardian target (or the original target when no Guardian exists).
+    r.sourceAcupunctureWakeTarget='actual';
     const actual=applyFriendlyEnemyHit(
-      'player','你',target,r,null,{suppressSuitPoison:true}
+      'player','你',target,r,null,{suppressSuitPoison:true,sourceAcupunctureWakeTarget:'actual'}
     );
 
     let poison=null,poisonApplied=false;
@@ -13866,9 +13870,13 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   // the attacker after DamageSub. Never globalize one WakeUp target across callers.
   const wakeTarget=acupuncture.triggered
     ?(options.sourceAcupunctureWakeTarget==='attacker'||r?.sourceAcupunctureWakeTarget==='attacker'
-      ?'attacker':'original')
+      ?'attacker'
+      :(options.sourceAcupunctureWakeTarget==='actual'||r?.sourceAcupunctureWakeTarget==='actual'
+        ?'actual':'original'))
     :null;
-  const wakeDesc=wakeTarget==='attacker'?attackerDesc:(wakeTarget==='original'?originalTargetDesc:targetDesc);
+  const wakeDesc=wakeTarget==='attacker'
+    ?attackerDesc
+    :(wakeTarget==='actual'?targetDesc:(wakeTarget==='original'?originalTargetDesc:targetDesc));
   battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=options.suppressSuitPoison
     ?null:sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
