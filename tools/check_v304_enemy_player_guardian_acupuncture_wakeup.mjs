@@ -22,7 +22,7 @@ assert.ok(hit.includes('const wakeDesc=acupuncture.triggered?(r?.originalTargetD
 assert.ok(hit.includes('if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);'));
 
 const resolver=sliceFunction('resolveEnemyDirectAttackToPlayer');
-assert.ok(resolver.includes("r.originalTargetDesc={kind:'player'};'),
+assert.ok(resolver.includes("r.originalTargetDesc={kind:'player'};"),
   'Enemy->Player resolver must retain original target descriptor for post-DamageSub WakeUp');
 
 const wakeTargets=[];
