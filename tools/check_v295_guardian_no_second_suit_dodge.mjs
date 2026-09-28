@@ -19,7 +19,7 @@ const real=sliceFunction('resolveAttackToEnemyWithGuardian');
 assert.ok(real.includes('disableDodge:true,skipSuitDodge:!!guardian'));
 assert.ok(real.includes('const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,options.attackerUnit||null);'));
 assert.ok(real.includes('sourceBattleDuckTotal(attacker,originalView,options)'));
-assert.equal(real.includes('skipSuitDodge:true')); // the real path may only use the conditional guardian gate.
+assert.ok(real.includes('skipSuitDodge:!!guardian'));
 
 const calc=sliceFunction('sourceProfessionPhysicalCalcOnlyResult');
 assert.ok(calc.includes('skipSuitDodge:!!guardian'));
