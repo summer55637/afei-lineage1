@@ -22,6 +22,7 @@ const finalizer=sliceFunction('sourceFinalizePendingReactionDeathCredit');
 const crush=sliceFunction('sourceBattleFinalizeItemCrushRng');
 const comboApply=sliceFunction('sourceComboApplyDamage');
 const comboAcu=sliceFunction('sourceComboAcupunctureSegment');
+const acu=sliceFunction('sourceFinishAcupunctureReaction');
 const combo=sliceFunction('sourcePerformCombo');
 
 assert.ok(comboApply.includes('sourceQueuePendingDeathCredit(lastResult||{},target.unit,rewardActors);'));
