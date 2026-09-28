@@ -50,7 +50,7 @@ const ctx={
   Math,Number,Object,Array,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
   battleStatusHp:d=>Math.max(0,Math.trunc(Number(d?.unit?.hp??d?.pet?.hp??0))),
-  battleStatusSetHp:(d,hp)=>{if(d?.unit)d.unit.hp=hp;else if(d?.pet)d.pet.hp=hp;},
+  battleStatusSetHp:(d,hp)=>{hp=Math.max(0,Math.trunc(Number(hp)));if(d?.unit)d.unit.hp=hp;else if(d?.pet)d.pet.hp=hp;},
   sourceTrackDamageSubUltimate:()=>({}),
   sourceMarkEnemyDeathCredit:(unit,actors)=>{creditCalls.push({unit,actors});unit.sourceRewardProcessed=true;},
   sourceBattleStatusSlot:d=>d?.unit?10+Number(d.unit.battleSlot??0):(d?.kind==='player'?0:5),
