@@ -12266,7 +12266,13 @@ function enemyGuardianFor(target,attackerUnit=null){
   const guardian=livingEnemyUnits().find(u=>u.id===guardianId);
   if(!guardian||guardian===target||guardian===attackerUnit||!guardian.guardianReadyThisTurn)return null;
   const desc={kind:'enemy',unit:guardian,unitId:guardian.id};
-  if(!battleStatusCanMove(desc)||battleStatusActive(desc,'confusion'))return null;
+  // fixed BATTLE_GuardianCheck also rejects CHAR_WORKINSTIGATE > 0.
+  // This Web state is source-backed as the battle status type "instigate".
+  // Do NOT map generic chargeState to CHAR_DOOMTIME: current Enemy charge data is PETSKILL_ChargeAttack,
+  // not a source-backed profession DOOM work field.
+  if(!battleStatusCanMove(desc)
+    ||battleStatusActive(desc,'confusion')
+    ||battleStatusActive(desc,'instigate'))return null;
   return guardian;
 }
 function enemyPrepareRoundAction(unit,action){
