@@ -4534,7 +4534,7 @@ function sourceProfessionFireEncloseSpec(prepared){
     success:baseSuccess+attackTier*4,
     rawTurn,
     storedTurns:rawTurn+1,
-    activeDamageTicks:rawTurn,
+    activeDamageTicks:0,
     effect,
     img1:Math.trunc(n(row?.img1)),
     img2:Math.trunc(n(row?.img2)),
@@ -4542,7 +4542,9 @@ function sourceProfessionFireEncloseSpec(prepared){
     sourceSkillLevelUsesA:true,
     sourceOnHitTurnFormula:attackTier>=10?3:(attackTier>=5?2:1),
     sourceOnHitChance:20+attackTier*2,
-    sourceOnHitCounterFieldWritten:false
+    sourceOnHitCounterFieldWritten:true,
+    sourceAuraToken:'炎',
+    sourceOnHitStatusToken:'燒'
   };
 }
 
@@ -4568,112 +4570,12 @@ function sourceProfessionFireEncloseAnimation(row,toNo){
 function sourceProfessionFireEncloseExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck){
   const skillId=Math.trunc(n(prepared?.skillId));
   if(skillId!==15)return {handled:false,reason:'battle-function-unported',skillId};
-  const rawToNo=Math.trunc(n(prepared?.toNo));
-
-  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
-    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
-  }
-
-  const multi=sourceSetMagicPetMultiList(rawToNo);
-  if(!multi.ok||!multi.slots.length){
-    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
-  }
-  const toNo=Math.trunc(n(multi.toNo));
-  const row=sourceProfessionSkillTemplate(skillId);
-  const spec=sourceProfessionFireEncloseSpec(prepared);
-  const animation=sourceProfessionFireEncloseAnimation(row,toNo);
-  const results=[];
-
-  // fixed battle_profession_status_chang_fun() explicitly checks the raw target for EARTHROUND
-  // before BATTLE_MultiList's final per-target StatusAttackCheck.
-  if(toNo>=0&&toNo<=19){
-    const rawTarget=sourceProfessionEnemyByBattleSlot(toNo);
-    if(rawTarget&&enemyUnitHidden(rawTarget)){
-      return {
-        handled:true,noAction:true,reason:'target-earthround',skillId,functionName:prepared.functionName,
-        rawToNo,toNo,multi,spec,animation,sourceRawTargetGate:true,
-        noDamage:true,noCounter:true
-      };
-    }
-  }
-
-  for(const slot of multi.slots){
-    const target=sourceProfessionEnemyByBattleSlot(slot);
-    if(!target)continue;
-    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
-
-    // This is NOT PROFESSION_MAGIC_DODGE. The fixed status command only consumes
-    // PROFESSION_BATTLE_StatusAttackCheck's RAND(1,100) and uses success = 100 + A-tier*4.
-    const check=statusCheck(targetDesc,spec.success);
-    if(!check.success){
-      results.push({
-        slot,targetUnitId:target.id,check,applied:false,
-        reason:check.reason,sourceUsesStatusAttackCheck:true
-      });
-      addLog('「'+name+'」未能附著在 '+target.name+' 身上（roll '+check.roll+' / '+check.threshold+'）。');
-      continue;
-    }
-
-    if(battleHasAnyStatus(targetDesc)){
-      // source StatusAttackCheck already handles this gate; keep this branch fail-closed if
-      // a custom status checker is injected into a regression.
-      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'existing-status'});
-      continue;
-    }
-
-    const statusState={
-      type:'fireEnclose',
-      turns:spec.storedTurns,
-      fireEncloseTier:spec.attackTier,
-      fireEncloseBaseSuccess:spec.baseSuccess,
-      fireEncloseRawTurn:spec.rawTurn,
-      fireEncloseModTier:spec.attackTier,
-      fireEncloseOnHitTurns:0,
-      fireEncloseSourceCounterNeverWritten:true,
-      sourceProfessionSkillId:skillId
-    };
-    const key=battleStatusKey(targetDesc);
-    if(!key){
-      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'status-key'});
-      continue;
-    }
-    battleStatuses.set(key,statusState);
-
-    // fixed source writes only CHAR_WORKMOD_F_ENCLOSE_2 here. It does NOT write
-    // CHAR_WORK_F_ENCLOSE_2 anywhere in the pinned build, so the later physical-hit aura
-    // check is preserved as an inactive source dead path rather than invented behavior.
-    target.sourceFireEncloseModTier=spec.attackTier;
-    target.sourceFireEncloseAuraActive=false;
-
-    const proficiency=sourceProfessionSpecialSkillProficiencyByFunction(
-      state,'PROFESSION_FIRE_PRACTICE',{randInclusive:cRand}
-    );
-    sourceProfessionLogProficiencyResult(proficiency);
-
-    results.push({
-      slot,targetUnitId:target.id,check,applied:true,status:'fireEnclose',
-      storedTurns:spec.storedTurns,activeDamageTicks:spec.activeDamageTicks,
-      proficiency,animation,
-      sourceSkillLevelUsesA:true,
-      sourceCounterFieldWritten:false,
-      sourceModFieldWritten:true
-    });
-    addLog('你施放「'+name+'」：'+target.name+' 著火，StatusTbl stored='+spec.storedTurns+'；固定 C 接下來每次自身 StatusSeq 依倒數扣 HP。','good');
-  }
-
-  syncEnemyTarget();
-  return {
-    handled:true,skillId,functionName:prepared.functionName,
-    rawToNo,toNo,multi,spec,animation,results,
-    sourceStatusCommand:true,
-    sourceMagicDodgeNotUsed:true,
-    sourceAttackSkillTier:'A',
-    sourceBaseSuccessPlusTier4:true,
-    sourceStoredTurnPlusOne:true,
-    sourcePracticeNotUsed:true,
-    sourcePhysicalAuraCounterDeadPath:true,
-    noOrdinaryCounter:true,noDamageSub:true,noGuardian:true,noItemCrush:true
-  };
+  return sourceProfessionEncloseAuraExecute(
+    prepared,
+    name||'火附體',
+    'fire',
+    statusCheck
+  );
 }
 
 function sourceProfessionEncloseAnimation(row,toNo){
@@ -11617,7 +11519,7 @@ function sourceProfessionFireEncloseStatusTick(desc,st){
     cnt,sourcePower,damage,hpBefore,hpAfter,
     sourceType1SelfDamage:true,
     sourceTargetOwnPracticeAndResistFields:true,
-    sourcePhysicalAuraCounterDeadPath:true
+    sourcePhysicalAuraCounterDeadPath:false
   };
 }
 
