@@ -14,6 +14,26 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.74 — Skills 18～20「火／雷／冰熟練度」
+
+V2.74 把固定 C 的三個熟練度輔助技能正式整理進主線：
+
+- Skill 18：`火熟練度 / PROFESSION_FIRE_PRACTICE`
+- Skill 19：`雷熟練度 / PROFESSION_THUNDER_PRACTICE`
+- Skill 20：`冰熟練度 / PROFESSION_ICE_PRACTICE`
+- 三者都屬巫師 Class 2、TARGET 5、KIND 2、MP 0，不建立 battle command。
+- fixed C 的 M-tier 熟練度 Work：tier 1～5=`tier×2`；tier 6～10=`(tier-5)×3+10`；上限 25。
+- battle-entry 依已學技能的 display level 建立 F／I／T magic proficiency snapshot，戰鬥中的魔法 Dodge／Damage 使用這個 snapshot。
+- fixed C 找不到三項 `PROFESSION_*_P` 的一般 gameplay 寫入路徑，因此 Web 目前只保留 source 可達的 skill-derived Work，不自行虛構 persistent addend。
+- 三個 practice function 本身不屬 battle command，`sourceProfessionBattleFunctionSupported()` 仍回傳 false。
+- regression：`tools/check_v274_profession_magic_practice_runtime.mjs`
+- save schema 維持 **30**
+
+V2.74 的公開資料也與這個定位一致：舊版資料把火／冰／雷熟練度列為增加對應屬性魔法攻擊力的輔助技能，並記載以對應屬性法術／附體來提升熟練度。citeturn706381search0turn706381search1
+
+完整技術細節請看 [V2.74 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
+
 ## V2.73 — Skill 17「冰附體」
 
 V2.73 在 V2.72 Enclose 共用層上接入巫師 Skill 17 `PROFESSION_ICE_ENCLOSE`，並沿 pinned fixed C 完成冰附體的三段 lifecycle：
@@ -137,12 +157,13 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前核心版本：V2.73**
+**目前核心版本：V2.74**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction
 - V2.72 已完成 Skill 16 雷附體 on-hit aura lifecycle
 - V2.73 已完成 Skill 17 冰附體 fixed C mapping、on-hit aura 與 FIXDEX lifecycle
+- V2.74 已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity
 - 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
@@ -182,7 +203,7 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## 歷史版本 regression 入口
 
-歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`。
+歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`、`PLAYABLE CORE V2.74`。
 
 以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
