@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.02**
+目前最新可玩核心：**V3.03**
 
-目前主線已完成 V3.02；本版修正 primary ACUPUNCTURE WakeUp 的 fixed defindex restore source-order。
+目前主線已完成 V3.03；本版補齊 Guardian-provided ACUPUNCTURE 在 ordinary player/Pet caller 的 original defender WakeUp boundary。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,14 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.03：Guardian-provided ACUPUNCTURE 仍 WakeUp original defender
+
+- fixed `BATTLE_Attack()` 在 Guardian substitution 後，若 `BATTLE_DamageSub()` 觸發 ACUPUNCTURE，仍在 `BATTLE_DamageWakeUp()` 前把 `defindex/toindex` 恢復為原 `defNo`。
+- `applyFriendlyEnemyHit()` 現在在 ACUPUNCTURE 觸發時使用 `originalTargetDesc` WakeUp；非 ACUPUNCTURE 維持 actual target。
+- 不新增傷害、反傷、Counter、Guardian 條件或 RNG。
+- regression：`tools/check_v303_guardian_acupuncture_wakeup_order.mjs`
+- CI：`.github/workflows/v303-guardian-acupuncture-wakeup.yml`
 
 ## V3.02：primary ACUPUNCTURE WakeUp 改回 fixed defindex restore order
 
