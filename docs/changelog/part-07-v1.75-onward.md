@@ -1,3 +1,44 @@
+## V2.94 Fixed BATTLE_DuckCheck JYUJYUTU / gKawashiPara source branch
+
+V2.94 追 fixed `battle_event.c` 的 `BATTLE_DuckCheck()` 公式尾端前一個 source gap：`gKawashiPara` 不是永遠固定 `0.02`。
+
+### Fixed C 證據
+
+Pinned fixed C：
+
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_DuckCheck(attackindex, defindex)` 在完成 DEX 的 Big／Small／Wari 後：
+
+- 讀 defender 的 `CHAR_WORKBATTLECOM1`
+- 若命令是 `BATTLE_COM_JYUJYUTU)，設定 `gKawashiPara = 0.027`
+- 否則設定 `gKawashiPara = 0.02`
+- 再計算 `Work = (Big - Small) / gKawashiPara`
+
+同一 pinned source 的 `battle_command.c` 顯示 `J|` 咒術命令會把 `CHAR_WORKBATTLECOM1` 寫成 `BATTLE_COM_JYUJYUTU`；因此這個分支是 defender 的「實際戰鬥 command state」，不能用職業技能名稱或 skill ID 反推。
+
+### Web V2.94
+
+- `battleDuckChance()` 新增明確的 Kawashi divisor 參數，預設仍為 `0.02`。
+- `sourceBattleDuckTotal()` 讀取 `sourceDefenderBattleCommand`；只有明確是 `BATTLE_COM_JYUJYUTU` 或 defender 已帶 source-backed `battleCommand` 時才選 `0.027`。
+- 未提供 command 時維持 `0.02`，因此不會把現有普通攻擊、職業技能或 Pet command 誤標成 JYUJYUTU。
+- 公式後續的 DamageReact、HITRIGHT、Suit Duck／其他 post-Duck order 不變。
+
+### Regression
+
+新增：
+
+- `tools/check_v294_duck_jyujyutu_kawashipara.mjs`
+- `.github/workflows/v294-duck-jyujyutu-kawashipara.yml`
+
+Regression 同時檢查：
+
+- `game.js` syntax
+- `battleDuckChance()` 的 `0.02) / `0.027) deterministic math
+- `sourceBattleDuckTotal()` 的 defender command branch
+- 未提供 command 時仍使用 `0.02)
+- V2.94 版本 markers
+
 ## V2.85 Battle-incompatible PETSKILL_Fixitem / PETSKILL_Inslaypinned C 的 `PETSKILL_Fixitem()` 與 `PETSKILL_Inslay()` 都要求 `CHAR_TYPEPET`，而且要求主人不在 BattleMode；在 Enemy AI／玩家 Pet 的戰鬥隨機技路徑都屬 fixed FALSE boundary。Web V2.85：- Enemy skill IDs `540/572` 在 AI 選技後直接標成 `sourceSkillRejected` / no-action。- Player Pet random skill path 對 `PETSKILL_Fixitem` / `PETSKILL_Inslay` 直接回 `sourceUseFailed + sourceBattlePreconditionFalse`。- 不建立戰鬥修復／精工效果，不額外消耗 RNG，不把它們誤報成 source function missing。- `582 自爆攻擊` 維持既有 unregistered boundary，因 pinned C `_PETSKILL_EXPLODE` 在 `version.h` 關閉。新增 regression：- `tools/check_v285_battle_false_petskills.mjs`- `.github/workflows/v285-battle-false-petskills.yml`---## V2.84 Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
 
 V2.84 關閉一條實際存在於 Enemy AI 的 unsupported gap：`600/674/734`。

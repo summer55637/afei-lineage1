@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.93**
+**PLAYABLE CORE V2.94**
 
-歷史 regression markers：**PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.93** ／ **V2.92** ／ **V2.91** ／ **V2.90**
+
+## V2.94 — fixed BATTLE_DuckCheck JYUJYUTU KawashiPara branch
+
+V2.94 對齊 fixed `BATTLE_DuckCheck()` 的 defender-command 分支：
+
+- fixed C 先讀 defender 的 `CHAR_WORKBATTLECOM1`；只有 `BATTLE_COM_JYUJYUTU` 時，`gKawashiPara` 才從 `0.02` 改成 `0.027`。
+- Web `sourceBattleDuckTotal()` 現在接受 source-backed 的 defender command adapter，再把選出的 `K` 傳給 `battleDuckChance()`；未提供證明 command 時維持 fixed 預設 `0.02`。
+- 不從職業技能函式名、技能 ID 或 UI 猜成 `BATTLE_COM_JYUJYUTU`；只有明確的 `sourceDefenderBattleCommand` 或 defender 已帶 `battleCommand` 才觸發 `0.027`。
+- `BATTLE_DuckCheck()` 後面的酒醉、BOW、NoGuard、HITRIGHT、職業回避與 CHAOS 順序不變。
+
+regression：`tools/check_v294_duck_jyujyutu_kawashipara.mjs`
+GitHub Actions：`.github/workflows/v294-duck-jyujyutu-kawashipara.yml`
 
 ## V2.93 — DamageReact blocks DuckCheck but not independent suit dodge
 
@@ -83,7 +95,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.93；本版把 DamageReact 與 DuckCheck 的 source-order 收斂。
+目前主線已完成 V2.94；本版把 fixed BATTLE_DuckCheck 的 JYUJYUTU KawashiPara source branch 收斂。
 
 > **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
