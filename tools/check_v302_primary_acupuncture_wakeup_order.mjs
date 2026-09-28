@@ -17,8 +17,8 @@ assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const hit=sliceFunction('battleApplyPhysicalHit');
 assert.ok(hit.includes('const acupuncture=suppressDamageReact?{triggered:false}:sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter});'));
-assert.ok(hit.includes('const wakeDesc=targetDesc;'),
-  'primary BATTLE_Attack ACUPUNCTURE WakeUp must use the restored original defender');
+assert.ok(hit.includes('const wakeDesc=acupuncture.triggered?(r?.originalTargetDesc||targetDesc):targetDesc;'),
+  'primary BATTLE_Attack ACUPUNCTURE WakeUp must prefer original defNo, including Guardian substitution');
 assert.ok(!hit.includes('const wakeDesc=acupuncture.triggered?attackerDesc:targetDesc;'),
   'primary WakeUp must not use the temporary post-DamageSub attacker defindex');
 assert.ok(hit.includes('if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);'),
