@@ -2,7 +2,7 @@
 
 目前最新可玩核心：**V2.69**
 
-目前主線已整理回 V2.69；下一個核心開發節點為 **V2.71 / Skill 14「冰鏡術」**。
+目前主線已整理回 V2.69；下一個核心開發節點為 **V2.70**。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -25,7 +25,7 @@
 
 - V2.68：Skill 12「冰箭術」
 - V2.69：Skill 13「火龍槍」＋ shared `DOOMTIME` charge lifecycle
-- **下一步：V2.71 Skill 14「冰鏡術」**
+- **下一步：V2.70**
 
 詳細版本行為、原 C 對照、RNG 順序與 regression 均以各歷史檔為準。
 
