@@ -5206,6 +5206,40 @@ save schema 維持 **30**。
 
 ---
 
+## V2.74 Skills 18-20 MAGIC_PRACTICE / 火／雷／冰熟練度
+
+V2.74 將固定 C 的三個巫師 magic-practice 輔助技能正式納入主線 parity：Skill 18 火熟練度、Skill 19 雷熟練度、Skill 20 冰熟練度。
+
+### Skill rows / command boundary
+- Skill 18：火熟練度 / PROFESSION_FIRE_PRACTICE。
+- Skill 19：雷熟練度 / PROFESSION_THUNDER_PRACTICE。
+- Skill 20：冰熟練度 / PROFESSION_ICE_PRACTICE。
+- 三者共同屬於 professionClass=2、target=5、kind=2、costMp=0、useFlag=1。
+- fixed C 的這三個 function 本身只 `return TRUE`，沒有獨立的 battle command case；因此 Web `sourceProfessionBattleFunctionSupported()` 不把它們視為可在戰鬥 command 階段直接執行的技能。
+
+### Magic proficiency Work
+固定 C 的 `BATTLE_ProfessionStatus_Analysis()` 對三個 function 使用相同 M-tier 公式：
+- tier 1～5：`tier × 2`
+- tier 6～10：`(tier-5) × 3 + 10`
+- 上限 25
+- 公式結果加上 fixed `PROFESSION_*_P` old value 後寫入對應 F/I/T proficiency Work。
+
+本 pinned build 內目前沒有找到一般 gameplay 路徑寫入 `PROFESSION_FIRE_P`、`PROFESSION_ICE_P`、`PROFESSION_THUNDER_P` 的持久值，因此 Web 對新角色只保留 source 可達的 skill-derived Work，不虛構一個不存在的 persistent 累加來源。
+
+### Battle-entry snapshot
+- 玩家進入戰鬥時掃描 26 個 profession slots；對已學的三項 practice skill，依 display level 重新建立 `fire / ice / thunder` magic proficiency snapshot。
+- 稀疏 slot 不會提前終止掃描；非 practice skill 略過。
+- 這個 snapshot 供 profession magic dodge／damage 路徑讀取。
+- 戰鬥結束／reset 會清空 battle-local F/I/T proficiency Work，再由下一場 battle-entry 重新建立。
+- 因 practice function 沒有自己的 battle command，不會重複扣 MP，也不新增 save schema。
+
+### Regression / CI
+- `tools/check_v274_profession_magic_practice_runtime.mjs`：Skill 18～20 row、M-tier formula、sparse-slot scan、battle-entry snapshot、battle reset 與 command boundary。
+- V2.74 regression 會同時在獨立 final gate 與主線 CI 驗證。
+- save schema 維持 **30**。
+
+---
+
 ## V2.73 Skill 17 ICE_ENCLOSE / 冰附體
 
 V2.73 接入巫師 Skill 17「冰附體」／PROFESSION_ICE_ENCLOSE，沿 pinned fixed C 的 F/I/T Enclose 共用結構完成「凍 → 冰 aura」與「霜 → on-hit／StatusSeq」lifecycle。
