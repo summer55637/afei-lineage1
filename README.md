@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.96**
+**PLAYABLE CORE V2.97**
 
-歷史 regression markers：**PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V2.97 — ACUPUNCTURE WakeUp follows fixed DamageSub defindex
+
+V2.97 對齊 fixed `BATTLE_DamageSub()` 的 ACUPUNCTURE caller 邊界：
+
+- fixed C 的 ACUPUNCTURE 分支先扣原 defender，再把 local `defindex` 改成 attacker；回到 `BATTLE_Attack()` 後，正傷害的 `BATTLE_DamageWakeUp()` 因此喚醒的是被反傷的 attacker。
+- Web `sourceFinishAcupunctureReaction()` 已完成反傷／消耗；但 primary physical-hit path 先前仍無條件 WakeUp 原 target，漏掉了這個 local `defindex` rewrite。
+- V2.97 現在只在 ACUPUNCTURE 觸發時把 WakeUp 目標切到 attacker；Counter 的既有反傷 WakeUp 不重複執行。
+- Trap 已有同樣的 attacker WakeUp source path，本版不重複修改。
+
+regression：`tools/check_v297_acupuncture_wakeup_target.mjs`
+GitHub Actions：`.github/workflows/v297-acupuncture-wakeup.yml`
 
 ## V2.96 — GuardianCheck source block: instigate
 
