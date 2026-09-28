@@ -438,6 +438,9 @@ jobs:
       - name: Run V2.70 Ice Mirror regression
         run: node tools/check_v270_profession_ice_mirror_runtime.mjs
 
+      - name: Run V2.71 Fire Enclose regression
+        run: node tools/check_v271_profession_fire_enclose_runtime.mjs
+
       - name: Commit generated runtime
         shell: bash
         run: |
