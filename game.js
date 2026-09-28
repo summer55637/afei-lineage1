@@ -24980,10 +24980,6 @@ function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusC
   if(skillId!==expectedSkillId)return {handled:false,reason:'battle-function-unported',skillId};
 
   const rawToNo=Math.trunc(n(prepared?.toNo));
-  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
-    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName,rawToNo};
-  }
-
   const multi=sourceSetMagicPetMultiList(rawToNo);
   if(!multi.ok||!multi.slots.length){
     return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName,rawToNo,multi};
@@ -24995,34 +24991,37 @@ function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusC
   const animation=sourceProfessionEncloseAnimation(row,toNo);
   const results=[];
 
-  if(toNo>=0&&toNo<=19){
-    const rawTarget=sourceProfessionEnemyByBattleSlot(toNo);
-    if(rawTarget&&enemyUnitHidden(rawTarget)){
-      return {
-        handled:true,noAction:true,reason:'target-earthround',skillId,functionName,
-        rawToNo,toNo,multi,spec,animation,sourceRawTargetGate:true,noDamage:true
-      };
-    }
-  }
-
   const tokenName=element==='thunder'?'雷附體':'火附體';
   const onHitField=element==='thunder'?'sourceThunderEncloseOnHitTurns':'sourceFireEncloseOnHitTurns';
   const modField=element==='thunder'?'sourceThunderEncloseModTier':'sourceFireEncloseModTier';
   const activeField=element==='thunder'?'sourceThunderEncloseAuraActive':'sourceFireEncloseAuraActive';
 
   for(const slot of multi.slots){
-    const target=sourceProfessionEnemyByBattleSlot(slot);
-    if(!target)continue;
-    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const targetDesc=sourceBattleStatusDescFromSlot(slot);
+    if(!targetDesc)continue;
+
+    const targetName=battleStatusDescName(targetDesc);
+    if(targetDesc.kind==='enemy'&&targetDesc.unit&&enemyUnitHidden(targetDesc.unit)){
+      results.push({slot,targetUnitId:targetDesc.unit.id,check:null,applied:false,reason:'target-earthround',sourceRawTargetGate:true});
+      continue;
+    }
+
     const check=statusCheck(targetDesc,spec.success);
 
     if(!check.success){
-      results.push({slot,targetUnitId:target.id,check,applied:false,reason:check.reason,sourceUsesStatusAttackCheck:true});
-      addLog('「'+name+'」未能附著在 '+target.name+' 身上（roll '+check.roll+' / '+check.threshold+'）。');
+      results.push({
+        slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+        targetKind:targetDesc.kind,check,applied:false,reason:check.reason,
+        sourceUsesStatusAttackCheck:true
+      });
+      addLog('「'+name+'」未能附著在 '+targetName+' 身上（roll '+check.roll+' / '+check.threshold+'）。');
       continue;
     }
     if(battleHasAnyStatus(targetDesc)){
-      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'existing-status'});
+      results.push({
+        slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+        targetKind:targetDesc.kind,check,applied:false,reason:'existing-status'
+      });
       continue;
     }
 
@@ -25037,13 +25036,22 @@ function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusC
     };
     const key=battleStatusKey(targetDesc);
     if(!key){
-      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'status-key'});
+      results.push({
+        slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+        targetKind:targetDesc.kind,check,applied:false,reason:'status-key'
+      });
       continue;
     }
     battleStatuses.set(key,statusState);
-    target[onHitField]=spec.storedTurns;
-    target[modField]=spec.attackTier;
-    target[activeField]=true;
+
+    const holder=targetDesc.kind==='player'
+      ?state
+      :(targetDesc.kind==='pet'?targetDesc.pet:targetDesc.unit);
+    if(holder){
+      holder[onHitField]=spec.storedTurns;
+      holder[modField]=spec.attackTier;
+      holder[activeField]=true;
+    }
 
     const practiceFunction=element==='thunder'
       ?'PROFESSION_THUNDER_PRACTICE'
@@ -25054,7 +25062,8 @@ function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusC
     sourceProfessionLogProficiencyResult(proficiency);
 
     results.push({
-      slot,targetUnitId:target.id,check,applied:true,
+      slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+      targetKind:targetDesc.kind,check,applied:true,
       status:'encloseAura',element,
       storedTurns:spec.storedTurns,
       sourceCounterFieldWritten:true,
@@ -25066,7 +25075,7 @@ function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusC
       sourceSkillLevelUsesA:true
     });
     addLog(
-      '你施放「'+name+'」：'+target.name+' 取得'+tokenName
+      '你施放「'+name+'」：'+targetName+' 取得'+tokenName
       +'，StatusTbl='+spec.storedTurns+'；後續普通物理攻擊依固定 C 的附體機率觸發。','good'
     );
   }
