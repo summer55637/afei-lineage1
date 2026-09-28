@@ -39,3 +39,18 @@ body.v270{image-rendering:auto}
 @keyframes damagePop{0%{opacity:0;transform:translateY(8px) scale(.7)}30%{opacity:1;transform:translateY(-5px) scale(1.1)}100%{opacity:0;transform:translateY(-28px) scale(1)}}
 @keyframes toastIn{0%{opacity:0;transform:translate(-50%,8px)}18%{opacity:1;transform:translate(-50%,0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
 @media(max-width:720px){.scene-badge{left:8px;top:8px}.mini-map{right:8px;top:8px;width:118px}.mini-map-grid{height:72px}.pixel-world{min-height:520px}.player-actor{left:30%;width:74px;height:74px}.pet-actor{left:16%;bottom:17%;width:82px;height:76px}.enemy-actor{right:16%;width:100px;height:86px}.compact-target{right:8%;bottom:6%;width:170px!important}.world-quest{left:8px;bottom:10px;width:200px}.pixel-hut{transform:scale(.72)}.pixel-storybar{font-size:9px}.pixel-storybar span:first-child{display:none}}
+
+/* V2.71 player-facing world layer */
+.battle-stage.exploring>.pixel-sky,.battle-stage.exploring>.pixel-mountain,.battle-stage.exploring>.pixel-water,.battle-stage.exploring>.pixel-land,.battle-stage.exploring>.pixel-path,.battle-stage.exploring>.pixel-bridge,.battle-stage.exploring>.pixel-hut,.battle-stage.exploring>.pixel-tree,.battle-stage.exploring>.pixel-rock{display:none!important}
+.battle-stage.exploring .stage-hud-left,.battle-stage.exploring .stage-hud-right{z-index:16}
+.explore-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges;z-index:4;cursor:crosshair;background:#4b7a43}
+.battle-stage.exploring .actor,.battle-stage.exploring .combat-line,.battle-stage.exploring .target-shadow,.battle-stage.exploring .combat-fx,.battle-stage.exploring .damage-fx,.battle-stage.exploring .combat-toast,.battle-stage.exploring #enemyBox{display:none!important}
+.world-interaction{position:absolute;left:50%;top:66px;transform:translateX(-50%);z-index:15;min-width:220px;padding:7px 11px;text-align:center;border:2px solid #514831;background:rgba(13,19,12,.9);box-shadow:4px 4px 0 rgba(0,0,0,.18);font-size:11px;color:#f4dda2;pointer-events:none}
+.world-interaction span{display:block;margin-top:2px;color:#a9b39f;font-size:9px}
+.world-dpad{position:absolute;right:18px;bottom:18px;z-index:20;display:flex;flex-direction:column;align-items:center;gap:5px;filter:drop-shadow(3px 3px 0 rgba(0,0,0,.2))}
+.world-dpad>button,.world-dpad>div>button{width:44px;height:38px;border:2px solid #5a553e;background:linear-gradient(#394936,#202d20);color:#f0ddb0;font-weight:900;cursor:pointer;border-radius:5px;touch-action:manipulation;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.world-dpad>div{display:flex;gap:5px}.world-dpad>div button:nth-child(2){background:linear-gradient(#8e6c3c,#5d4328);color:#fff0b0}
+.battle-stage.exploring .world-dpad{display:flex}
+.battle-stage.in-battle .world-dpad{opacity:.45;pointer-events:none}
+.world-quest{z-index:15!important}
+@media(max-width:720px){.world-dpad{right:8px;bottom:8px}.world-dpad>button,.world-dpad>div>button{width:38px;height:34px}.world-interaction{top:55px;min-width:190px}.explore-canvas{min-height:0}}

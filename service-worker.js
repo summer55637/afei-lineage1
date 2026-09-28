@@ -1,5 +1,5 @@
-const CACHE='afei-v270-pixel1';
-const CORE=['./','./index.html','./game.html','./game.css','./game.js','./manifest.json','./museum.html','./assets/player.svg','./assets/pet.svg','./assets/enemy-dino.svg','./assets/attack.svg','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='afei-v271-world1';
+const CORE=['./','./index.html','./game.html','./game.css','./game.js','./world-explorer.js','./manifest.json','./museum.html','./assets/player.svg','./assets/pet.svg','./assets/enemy-dino.svg','./assets/attack.svg','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

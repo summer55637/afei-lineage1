@@ -24749,6 +24749,54 @@ $('#teamGrid').addEventListener('click',e=>{
   const slot=e.target.closest('[data-pet-id]');if(slot)setActivePet(slot.dataset.petId);
 });
 window.addEventListener('beforeunload',save);
+
+/* V2.71 player-facing world API: keep the large source-simulation core intact,
+   while exposing only a small bridge for the visual exploration layer. */
+window.AfeiGameAPI={
+  getState:()=>state,
+  getCurrentMap:()=>currentMap(),
+  getCurrentEncounter:()=>currentEncounter(),
+  hasEnemy:()=>!!enemy,
+  render:()=>render(),
+  save:()=>save(),
+  addLog:(text,type)=>addLog(text,type),
+  moveEncounterStep:()=>walkEncounterStep(),
+  setAuto:(on)=>{ if(!state)return; state.auto=!!on; save(); render(); },
+  setActivePet:(id)=>setActivePet(id),
+  ensureNewPlayerDefaults:()=>{
+    if(!state)return false;
+    const freshCandidate=state.level===1&&state.wins===0&&state.battles===0&&state.gold===30000&&state.petBox.length===0&&!state.playerCreationStatsConfigured&&!state.playerHometownConfigured;
+    if(!freshCandidate)return false;
+    state.creationPlayerStats={vital:5,str:5,tgh:5,dex:5};
+    state.playerStats={vital:5,str:5,tgh:5,dex:5};
+    state.playerCreationStatsConfigured=true;
+    state.playerCreationStatsLegacyUnknown=false;
+    state.elements={earth:100,water:0,fire:0,wind:0};
+    state.playerElementsConfigured=true;
+    state.hometown=0;
+    state.lastTalkElder=0;
+    state.homeFloor=1006;
+    state.homeX=15; state.homeY=22;
+    state.hometownSavePointMask=1;
+    state.playerHometownConfigured=true;
+    state.hometownLegacyUnknown=false;
+    if(!state.petBox.length){
+      const starter=sourceCreateStarterPet(0);
+      if(starter){
+        state.petBox.push(starter);
+        state.team[0]=starter.id;
+      }
+    }
+    state.activePetId=state.team.find(Boolean)||null;
+    state.mapId=maps.find(m=>Number(m.floorId)===1006)?.id||maps.find(m=>!m.questZone)?.id||maps[0]?.id||null;
+    playerComplianceParameter(state);
+    state.hp=state.maxHp; state.mp=state.maxMp;
+    state.auto=false; state.autoCapture=true;
+    addLog('新冒險已建立：阿肥 5/5/5/5，地屬 10，出生於 0 號村；可以直接開始探索。','good');
+    save(); render();
+    return true;
+  }
+};
 boot();
 
 /* V2.70 UI */

@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b130d">
-  <meta name="description" content="阿肥石器時代 V2.70：PC／手機共用、純前端、單機放置冒險。">
+  <meta name="description" content="阿肥石器時代 V2.71：PC／手機共用、純前端、單機放置冒險與自由探索。">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
-  <title>阿肥石器時代 V2.70｜放置冒險</title>
+  <title>阿肥石器時代 V2.71｜像素世界</title>
   <link rel="stylesheet" href="game.css">
 </head>
 <body class="v270">
@@ -46,7 +46,17 @@
         </div>
         <div class="scene-info"><span id="mapPetCount"></span><span id="mapInfo">探索新的區域，讓阿肥自動尋找敵人。</span></div>
 
-        <div class="battle-stage pixel-world" id="battleStage" aria-label="像素風冒險地圖">
+        <div class="battle-stage pixel-world exploring" id="battleStage" aria-label="像素風冒險地圖">
+          <canvas id="worldCanvas" class="explore-canvas" width="960" height="540" aria-label="可操作的像素冒險地圖"></canvas>
+          <div class="world-interaction" id="worldInteraction">
+            <b id="worldInteractionTitle">自由探索</b>
+            <span id="worldInteractionHint">WASD／方向鍵移動 · 點擊地圖也能走</span>
+          </div>
+          <div class="world-dpad" aria-label="行動控制">
+            <button type="button" data-world-dir="up">▲</button>
+            <div><button type="button" data-world-dir="left">◀</button><button type="button" data-world-action="interact">◆</button><button type="button" data-world-dir="right">▶</button></div>
+            <button type="button" data-world-dir="down">▼</button>
+          </div>
           <div class="pixel-sky"></div>
           <div class="pixel-mountain m1"></div><div class="pixel-mountain m2"></div>
           <div class="pixel-water"></div><div class="pixel-land"></div>
@@ -199,7 +209,7 @@
     </section>
 
     <!-- 技術與原始資料面板：保留給開發者，不干擾一般遊玩。 -->
-    <section class="pixel-storybar"><span>16-bit 探險模式</span><b>地圖 × 角色 × 寵物 × 戰鬥動畫</b><span>V2.70</span></section>
+    <section class="pixel-storybar"><span>16-bit 探險模式</span><b>自由移動 × NPC × 遇敵 × 寵物 × 戰鬥動畫</b><span>V2.71</span></section>
 
     <section class="developer-dock">
       <details>
@@ -219,5 +229,6 @@
   </div>
 
   <script src="game.js"></script>
+  <script src="world-explorer.js"></script>
 </body>
 </html>
