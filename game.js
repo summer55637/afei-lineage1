@@ -13853,7 +13853,12 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   actual.hp=Math.max(0,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
-  battleStatusWakeOnDamage(targetDesc,r.damage);
+  // fixed primary BATTLE_Attack() restores defindex to the ORIGINAL defNo before
+  // BATTLE_DamageWakeUp(), even when DamageSub's ACUPUNCTURE was supplied by a
+  // Guardian-substituted defender. The ordinary player/Pet caller must therefore
+  // wake originalTarget, not actualTarget, whenever ACUPUNCTURE actually triggered.
+  const wakeDesc=acupuncture.triggered?originalTargetDesc:targetDesc;
+  battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=options.suppressSuitPoison
     ?null:sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
   if(suitPoison)r.suitPoison=suitPoison;
