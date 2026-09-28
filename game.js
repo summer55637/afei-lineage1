@@ -15428,6 +15428,45 @@ function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null)
   r.sourceAcupunctureWakeTarget='attacker';
   return r;
 }
+function resolveEnemyAttackSeqBugToPet(unit,pet,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
+  const original=petBattleView(pet);
+  if(!original)return null;
+  const guarding=Object.prototype.hasOwnProperty.call(options,'guarding')?!!options.guarding:false;
+  const dodge=sourceInitialDodgeOnly(attacker,original,Object.assign({},options,{guarding}));
+  if(dodge.dodged){
+    dodge.originalTargetDesc={kind:'pet',pet,petId:pet.id};
+    dodge.actualTargetDesc={kind:'pet',pet,petId:pet.id};
+    return dodge;
+  }
+
+  const guardian=attacker?.throwWeapon?null:sourceProfessionScapegoatGuardianForPet(unit,pet);
+  const calcDefender=guardian?playerBattleView():original;
+  const r=resolveNormalAttack(attacker,calcDefender,Object.assign({},options,{
+    guarding:guardian?false:guarding,
+    disableDodge:true,
+    skipSuitDodge:true
+  }));
+  r.duckRaw=dodge.duckRaw;
+  r.originalTargetDesc={kind:'pet',pet,petId:pet.id};
+  r.actualTargetDesc={kind:'pet',pet,petId:pet.id};
+
+  // fixed BATTLE_S_AttackDamage / S_FallGround-family caller contract:
+  // Guardian affects local AttackSeq calculation, but caller defindex is NOT rewritten.
+  // DamageSub therefore still applies to the original Pet; ACUPUNCTURE then rewrites
+  // defindex to attacker before WakeUp.
+  if(guardian){
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardianCalcOnly=guardian;
+    r.guardianPetId=guardian.id;
+    r.playerGuardian=true;
+    r.guardianSourceBug=String(options.guardianSourceBug||'BATTLE_S_FallGround-defindex-not-updated');
+  }
+  r.sourceAcupunctureWakeTarget='attacker';
+  return r;
+}
+
+
 function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
   const attacker=enemyBattleView(unit);
   const original=playerBattleView();
@@ -16696,6 +16735,7 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
       r=resolveNormalAttack(attacker,defender,{
         guarding:false,disableDodge:true,skipSuitDodge:!guardCommand,preGuardDamageMultiplier:multiplier
       });
+      r.sourceAcupunctureWakeTarget='attacker';
     }
     r.sourcePetGuardCommand=guardCommand;
     r.guardBreak2Multiplier=multiplier;
@@ -19892,6 +19932,7 @@ function sourcePerformPetGuardBreakSkill(pet,action,options={}){
   if(guardian&&r.damage<=0){r.damage=1;r.miss=false}
   r.actualTarget=target;
   r.originalTarget=target;
+  r.sourceAcupunctureWakeTarget='attacker';
   r.guardBreakTargetGuard=true;
   if(guardian){
     r.guardianCalcOnly=guardian;
@@ -19971,6 +20012,7 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
     r.originalTarget=target;
     r.guardBreak2Multiplier=multiplier;
     r.guardBreak2LocalGuarding=localGuarding;
+    r.sourceAcupunctureWakeTarget='attacker';
 
     if(guardian){
       if(r.damage<=0){r.damage=1;r.miss=false}
@@ -20207,7 +20249,8 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
     actualTarget:target,
     originalTarget:target,
     guardianCalcOnly:guardian||null,
-    guardianPetId:guardian?.id||null
+    guardianPetId:guardian?.id||null,
+    sourceAcupunctureWakeTarget:'attacker'
   });
   if(guardian)delete r.guardian;
 
@@ -22132,7 +22175,10 @@ function performEnemyFallGround(actor,unit,options,meta){
 
   let r;
   if(chosen.kind==='pet'&&chosen.pet){
-    r=enemyAttackPetResult(unit,chosen.pet);
+    r=resolveEnemyAttackSeqBugToPet(unit,chosen.pet,{
+      guarding:false,
+      guardianSourceBug:'BATTLE_S_FallGround-defindex-not-updated'
+    });
   }else{
     const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
     r=resolveEnemyAttackSeqBugToPlayer(unit,{
@@ -22229,6 +22275,7 @@ function performEnemyGuardBreak(actor,unit,options,meta){
     r=resolveNormalAttack(enemyBattleView(unit),petBattleView(chosen.pet),{
       guarding:false,disableDodge:true
     });
+    r.sourceAcupunctureWakeTarget='attacker';
     r.sourcePetGuardCommand=true;
   }else{
     r=resolveEnemyAttackSeqBugToPlayer(unit,{
