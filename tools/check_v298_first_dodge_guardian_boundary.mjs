@@ -52,7 +52,8 @@ assert.deepEqual(ctx.rng,[[1,10000]],'ordinary Duck must consume exactly one RNG
 
 const guardian=extractFunction(game,'resolveAttackToEnemyWithGuardian');
 assert.ok(guardian.includes('sourceInitialDodgeOnly(attacker,originalView,Object.assign({},options,{'));
-assert.ok(guardian.includes('skipSuitDodge:!!guardian'));
+assert.ok(guardian.includes('skipSuitDodge:true'));
+assert.equal(guardian.includes('skipSuitDodge:!!guardian'),false);
 assert.equal(guardian.includes('sourceSuitDuckCheck('),false);
 assert.equal(guardian.includes('sourceBattleDuckTotal(attacker,originalView,options)'),false);
 
