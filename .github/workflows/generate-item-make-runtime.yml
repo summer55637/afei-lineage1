@@ -103,6 +103,7 @@ on:
       - "tools/check_v265_profession_fire_ball_runtime.mjs"
       - "tools/check_v266_profession_blood_worms_runtime.mjs"
       - "tools/check_v267_profession_blood_runtime.mjs"
+      - "tools/check_v268_profession_ice_arrow_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -426,6 +427,9 @@ jobs:
 
       - name: Run V2.67 Blood regression
         run: node tools/check_v267_profession_blood_runtime.mjs
+
+      - name: Run V2.68 Ice Arrow regression
+        run: node tools/check_v268_profession_ice_arrow_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

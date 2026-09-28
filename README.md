@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.67**
+**PLAYABLE CORE V2.68**
 
 目前專案已經從資料整理階段進入可玩核心與原 C 行為逐步對齊階段。
 
@@ -15,6 +15,26 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.68 最新進度
+
+V2.68 接入巫師 **Skill 12「冰箭術」／`PROFESSION_ICE_ARROW`**，重點是完整保留 fixed source 的 ICEARROW StatusTbl 與「看似冰凍、實際不封鎖行動」行為。
+
+- TARGET OTHER；option `冰|0|1|10|-20|0|0|0|10|20`，`magic_type=2`。
+- dynamic MP：M-tier 1～3=10、4～7=15、8～10=20。
+- GET_PRACTICE：tier1～9=`tier*10+130`，tier10=250。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.2)`。
+- analysis 先嘗試提升 **冰熟練度**，當前 cast 仍使用 battle-entry proficiency Work snapshot。
+- type=2 magic dodge 正確讀 Ice proficiency，而且 ICE_ARROW 沒有 CURRENT/STORM 的第二層 `<75` gate；但 fixed `GET_DAMAGE(type=2)` 仍誤讀 **Thunder proficiency/resist**。
+- 每個 dodge 通過的目標先消耗 `PROFESSION_MAGIC_CHANGE_STATUS()` leading `RAND(1,100)`，再由 target CHANG_STATUS 掃 StatusTbl。若已有任一狀態，保留直擊傷害但 **不抽冰箭狀態成功 RNG**。
+- 狀態成功率：tier1=10、2～4=15、5～7=20、8～10=25，判定為 `RAND(0,100) <= success`。
+- 成功後降敏幅度：tier1～4=10%、5～7=20%、8～10=25%；有效 tick 數：tier1～5=1、6～9=2、10=3，Work stored count 仍是 `activeTurns+1`。
+- fixed `BATTLE_CanMoveCheck()` 中 ICEARROW 的禁止行動判定被整段註解，因此 **狀態持續期間仍可行動**；CHANG_STATUS 本身也不會取消已排好的當輪 command。
+- 每個有效 StatusSeq tick 只做 `FIXDEX = FIXDEX*(100-decDex)/100`。但這發生在本輪 EntrySort 之後、WORKQUICK 不重算；下一輪 PreCommand/compliance 又會重建 FIXDEX，因此原 C 的冰箭降敏幾乎只留下顯示／暫態 FIX 變動，沒有直覺上的持續減速效果。
+- 動畫：左側目標沿用 img2=101648 / (10,-20)；右側則改 101649 / (10,20)；單體 `attIdx=0`。
+- save schema 維持 **30**。
+
+---
 
 ## V2.67 最新進度
 

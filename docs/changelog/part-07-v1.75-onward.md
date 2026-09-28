@@ -5083,3 +5083,21 @@ save schema 維持 **30**。
 - BLOOD 動畫 tier 圖：101692 / 101691 / 101690 / 101689；固定走 CHANG_IMG2 option 9/10 座標。
 - 新增 `tools/check_v267_profession_blood_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.68 Skill 12 ICE_ARROW
+
+- 接入巫師 Skill 12 `冰箭术 / PROFESSION_ICE_ARROW`。
+- MP：M-tier 1～3=10、4～7=15、8～10=20；GET_PRACTICE=tier1～9 `tier*10+130`、tier10=250。
+- Dex：`WORKQUICK+20 - RAND(0, work*0.2)`。
+- analysis 先跑 Ice Practice；當前 cast 沿用 battle-entry proficiency snapshot。
+- type2 DODGE 用 Ice proficiency、無第二 gate；GET_DAMAGE type2 保留誤讀 Thunder proficiency/resist bug。
+- target StatusTbl busy 時不消耗 ICEARROW success RNG；free 時 `RAND(0,100) <= 10/15/20/25` 才成功。
+- ICEARROW decDex：10%／20%／25%；active ticks：1／2／3，stored count=active+1。
+- fixed BATTLE_CanMoveCheck 的 ICEARROW 分支被註解，狀態不持續封鎖行動；PROFESSION_MAGIC_CHANG_STATUS 也不取消 current command。
+- 每個 surviving StatusSeq tick 只乘 FIXDEX，WORKQUICK/已完成 EntrySort 不重算；下一輪 compliance 再重建 FIXDEX，保留來源的近乎無效 slow 行為。
+- animation：left img2=101648 (10,-20)，right img2=101649 (10,20)，attIdx=0。
+- 新增 `tools/check_v268_profession_ice_arrow_runtime.mjs`。
+- save schema 維持 **30**。

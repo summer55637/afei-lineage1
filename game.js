@@ -1674,11 +1674,12 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_FIRE_BALL'
     &&command!=='BATTLE_COM_S_CURRENT'
     &&command!=='BATTLE_COM_S_SUMMON_THUNDER'
+    &&command!=='BATTLE_COM_S_ICE_ARROW'
     &&command!=='BATTLE_COM_S_STORM'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
-  if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER')upper=work*.2;
+  if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER'||command==='BATTLE_COM_S_ICE_ARROW')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_FIRE_BALL'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
   else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
@@ -2642,6 +2643,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_FIRE_BALL'
     ||functionName==='PROFESSION_BLOOD'
+    ||functionName==='PROFESSION_ICE_ARROW'
     ||functionName==='PROFESSION_BLOOD_WORMS'
     ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
@@ -5440,6 +5442,187 @@ function sourceProfessionBloodExecute(prepared,name){
   };
 }
 
+
+function sourceProfessionIceArrowSpec(skillLevel){
+  const tier=Math.trunc(n(skillLevel));
+  const success=tier>=8?25:tier>=5?20:tier>=2?15:10;
+  const decDex=tier>=8?25:tier>=5?20:10;
+  const activeTurns=tier>=10?3:tier>=6?2:1;
+  return {tier,success,decDex,activeTurns,storedTurns:activeTurns+1};
+}
+
+function sourceProfessionIceArrowApply(desc,skillLevel,{randInclusive=cRand}={}){
+  const spec=sourceProfessionIceArrowSpec(skillLevel);
+  const key=battleStatusKey(desc);
+  if(!key)return {applied:false,blocked:false,roll:null,reason:'invalid-target',...spec};
+
+  // fixed CHANG_STATUS scans every StatusTbl entry before consuming the status success RNG.
+  if(battleHasAnyStatus(desc)){
+    return {applied:false,blocked:true,roll:null,reason:'source-status-tbl-busy',...spec};
+  }
+
+  const roll=Math.trunc(n(randInclusive(0,100)));
+  if(roll>spec.success){
+    return {applied:false,blocked:false,roll,reason:'success-roll',...spec};
+  }
+
+  // Do NOT use generic battleStatusApply here: fixed PROFESSION_MAGIC_CHANG_STATUS
+  // writes ICEARROW Work directly and does not cancel the target's current command.
+  battleStatuses.set(key,{
+    type:'iceArrow',
+    turns:spec.storedTurns,
+    iceArrowDecDex:spec.decDex
+  });
+  return {
+    applied:true,blocked:false,roll,reason:'applied',
+    sourceDoesNotCancelCurrentCommand:true,
+    sourceCanMoveCheckIceArrowCommentedOut:true,
+    ...spec
+  };
+}
+
+function sourceProfessionIceArrowStatusTick(desc,st){
+  const decDex=Math.trunc(n(st?.iceArrowDecDex));
+  if(desc?.kind!=='enemy'||!desc.unit){
+    return {
+      applied:false,decDex,fixedDexBefore:null,fixedDexAfter:null,
+      sourceFixOnly:true,sourceWorkQuickUnchanged:true
+    };
+  }
+  const unit=desc.unit;
+  const fixedDexBefore=Math.trunc(n(unit.roundFixQuick??unit.quick));
+  const fixedDexAfter=Math.trunc(fixedDexBefore*(100-decDex)/100);
+  unit.roundFixQuick=fixedDexAfter;
+
+  // fixed StatusSeq mutates FIXDEX only, after EntrySort has already consumed WORKQUICK.
+  // Next PreCommand/compliance rebuilds FIXDEX from base, so this slow does not carry
+  // into the next round's ordering even though the status itself remains.
+  return {
+    applied:true,decDex,fixedDexBefore,fixedDexAfter,
+    workQuick:Math.trunc(n(unit.roundQuick??unit.quick)),
+    sourceFixOnly:true,sourceWorkQuickUnchanged:true,
+    sourceEntrySortAlreadyDone:true,sourceNextPreCommandRebuildsFixDex:true
+  };
+}
+
+function sourceProfessionIceArrowAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  const rightSide=no===20||no===25||no===26||(no>=0&&no<10);
+  return {
+    magicType:2,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:rightSide?101649:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[rightSide?8:3])),
+    y:Math.trunc(n(opt[rightSide?9:4])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),rightSide
+  };
+}
+
+function sourceProfessionIceArrowExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==12)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis_profession_parameter() attempts Ice Practice first, but current cast keeps
+  // the battle-entry proficiency Work snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const icePractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_ICE_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(icePractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionIceArrowAnimation(row,toNo);
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_ICE_ARROW',prepared.displayLevel,state.hp
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    // type=2 DODGE correctly reads Ice proficiency. ICE_ARROW has no second <75 gate.
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:2,command:'BATTLE_COM_S_ICE_ARROW',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    const preDamagePower=sourceProfessionMagicPreDamagePower(practice.power,0);
+    // fixed type=2 GET_DAMAGE bug: damage path reads Thunder proficiency/resist fields.
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:2,power:preDamagePower,command:'BATTLE_COM_S_ICE_ARROW',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // CHANGE_STATUS always consumes this leading RNG first.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    // Target CHANG_STATUS runs before direct HP subtraction.
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+    const iceArrow=sourceProfessionIceArrowApply(
+      targetDesc,practice.skillLevel,{randInclusive:cRand}
+    );
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,iceArrow,
+      sourceDodgeUsesIcePractice:true,
+      sourceDamageType2UsesThunderPracticeBug:true,
+      sourceStatusAppliedBeforeDirectDamage:true,
+      sourceIceArrowDoesNotBlockMove:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你以「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害'
+      +(iceArrow.applied?'，並附加冰箭狀態。':iceArrow.blocked?'；目標已有異常狀態，冰箭狀態不擲骰。':'；冰箭狀態未成功。'),
+      after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,animation,icePractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:2,sourceIcePracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceDodgeUsesIcePractice:true,sourceDamageType2UsesThunderPracticeBug:true,
+    sourceIceArrowCanMoveCheckCommentedOut:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionCallNaturePool(displayLevel){
   const level=Math.trunc(n(displayLevel));
   if(level>=100)return 5000;
@@ -6786,6 +6969,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionBloodExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_ICE_ARROW'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionIceArrowExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_BLOOD_WORMS'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -10052,7 +10240,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
   dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
-  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',bloodWorms:'嗜血蠱'
+  barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',iceArrow:'冰箭',bloodWorms:'嗜血蠱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
 function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
@@ -11051,6 +11239,16 @@ function processBattleStatusTurn(actor){
     battleStatusClear(desc);
     addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
     return finish({skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'});
+  }
+
+  if(st.type==='iceArrow'){
+    const iceArrowTick=sourceProfessionIceArrowStatusTick(desc,st);
+    const name=desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標';
+    if(iceArrowTick.applied){
+      addLog(name+' 的冰箭狀態：FIXDEX '+iceArrowTick.fixedDexBefore+' → '+iceArrowTick.fixedDexAfter
+        +'（WORKQUICK／本輪排序不重算）。','bad');
+    }
+    return finish({skip:false,desc,status:st,iceArrowTick});
   }
 
   if(st.type==='bloodWorms'){
