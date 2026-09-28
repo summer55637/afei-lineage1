@@ -4,15 +4,25 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.86**
+**PLAYABLE CORE V2.87**
 
-目前主線已完成 V2.85；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
+目前主線已完成 V2.86；本版把 fixed BATTLE_Attack() 的 DamageReact → Counter 邊界鎖進 Web runtime，避免來源上已被 iRet=FALSE 阻斷的反擊被誤觸發。
 
 > **原 C 規則優先、不猜數值**
 
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.87 — Fixed BATTLE_Attack DamageReact / Counter boundary
+
+V2.87 針對 fixed battle_event.c 的 BATTLE_Attack() 來源順序補上一個 Web runtime 邊界：
+
+- fixed C 在真正 BATTLE_AttackSeq() 之前，若攻方或原始防守方已有正向 BATTLE_GetDamageReact()，先把 iRet 設為 FALSE。
+- 因此這一擊之後不應再進 common BATTLE_Counter() chain；Web resolvePetEnemyCounterChain() 現在同步檢查目前可由來源證明的 Acupuncture DamageReact。
+- 本版只接入已被 fixed C 證明且現有 Web 可達的 DamageReact，不擴寫不存在的 VANISH / ABSROB / REFLEC runtime 狀態。
+
+regression：tools/check_v286_source_closure_audit.mjs
 
 ## V2.86 — PetSkill source closure audit
 
