@@ -6,6 +6,20 @@
 
 **PLAYABLE CORE V2.87**
 
+## V2.88 — pre-DamageReact Counter boundary
+
+V2.88 修正 V2.87 尚未完全覆蓋的「先判 Counter、後消耗 DamageReact」順序：
+
+- fixed BATTLE_Attack() 在 BATTLE_DamageSub() 之前，只要攻方或原始防守方的 BATTLE_GetDamageReact() > 0，就先把 iRet/ContFlg 設為 FALSE。
+- Web runtime 先前是在 DamageReact 被消耗後才由 Counter helper 看目前狀態；針刺／陷阱一旦被吃掉，就可能失去這個已經成立的 pre-DamageSub FALSE 邊界。
+- 另外，投擲武器會讓 BATTLE_DamageSub() 不觸發針刺／陷阱，但不會回溯改變先前已經寫入的 iRet=FALSE。
+- 本版在 source reaction prepare 階段把這個「已由 fixed C 證明、但尚未發生 DamageSub」的狀態固定寫入 attack result，三條 Counter chain 都在 primary 與 inner-counter 階段 fail-closed。
+- 不增加任何新傷害、機率、回合或 RNG；只保存 fixed C 已成立的 control-flow boundary。
+
+regression：tools/check_v288_damagereact_counter_boundary.mjs
+GitHub Actions：.github/workflows/v288-damagereact-counter.yml
+
+
 目前主線已完成 V2.86；本版把 fixed BATTLE_Attack() 的 DamageReact → Counter 邊界鎖進 Web runtime，避免來源上已被 iRet=FALSE 阻斷的反擊被誤觸發。
 
 > **原 C 規則優先、不猜數值**

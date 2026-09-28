@@ -3328,9 +3328,14 @@ function sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r,{ignoreDa
     ||!r||r.dodged||r.miss||n(r.damage)<=0){
     return {triggered:false};
   }
+  // fixed BATTLE_Attack sets ContFlg/iRet FALSE from BATTLE_GetDamageReact
+  // before BATTLE_DamageSub. Keep the Counter block even when the throw-weapon branch
+  // later rewrites pRefrect to NONE and leaves TRAP armed.
+  r.sourceCounterBlockedByDamageReact=true;
+
   const attackerView=battleStatusDescView(attackerDesc);
   // fixed BATTLE_DamageSub: TRAP is returned by BATTLE_GetDamageReact, but any throw weapon
-  // rewrites pRefrect back to NONE. The trap remains armed.
+  // rewrites pRefrect back to NONE. The trap remains armed; the pre-existing Counter block stays.
   if(attackerView?.throwWeapon){
     return {triggered:false,throwWeaponBlocked:true};
   }
@@ -13066,8 +13071,13 @@ function sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter=fal
     return {triggered:false};
   }
 
+  // fixed BATTLE_Attack sets ContFlg/iRet FALSE from BATTLE_GetDamageReact
+  // BEFORE BATTLE_DamageSub runs. Preserve that pre-DamageSub boundary even when
+  // DamageSub later consumes the reaction or a throw weapon suppresses the effect.
+  r.sourceCounterBlockedByDamageReact=true;
+
   // fixed BATTLE_DamageSub: BATTLE_GetDamageReact may return ACUPUNCTURE, but a throw weapon
-  // forcibly rewrites pRefrect back to NONE. The flag is therefore NOT consumed by throws.
+  // forcibly rewrites pRefrect back to NONE. The pre-existing Counter block remains.
   const attackerView=battleStatusDescView(attackerDesc);
   if(attackerView?.throwWeapon){
     return {triggered:false,throwWeaponBlocked:true};
@@ -13203,7 +13213,8 @@ function battleConfusionCounterEligible(desc,options,forcedAttackerKey){
 }
 function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,options={}){
   if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded
-    ||primaryResult?.guardian||primaryResult?.sourceCounterBlockedByTrap)return;
+    ||primaryResult?.guardian||primaryResult?.sourceCounterBlockedByTrap
+    ||primaryResult?.sourceCounterBlockedByDamageReact)return;
   const forcedAttackerKey=battleStatusKey(attackerDesc);
   let counterer=targetDesc,target=attackerDesc;
   for(let depth=0;depth<5;depth++){
@@ -13218,6 +13229,7 @@ function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,opti
     const r=counterScaledResult(countererView,targetView);
     battleApplyPhysicalHit(counterer,target,r,{counter:true});
     if(!battleStatusDescAlive(counterer)||!battleStatusDescAlive(target))break;
+    if(r.sourceCounterBlockedByDamageReact||r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
 
     const next=counterer;
@@ -13542,7 +13554,8 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
     ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand
-    ||primaryResult?.sourceCounterBlockedByTrap)return;
+    ||primaryResult?.sourceCounterBlockedByTrap
+    ||primaryResult?.sourceCounterBlockedByDamageReact)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -13603,7 +13616,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(state.hp<=0||unit.hp<=0)break;
-    if(r.sourceCounterBlockedByTrap)break;
+    if(r.sourceCounterBlockedByDamageReact||r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
 
     const next=counterer;
@@ -13624,7 +13637,8 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
     :battlePetAcupunctureIds.has(pet.id);
   if(attackerHasDamageReact||targetHasDamageReact)return;
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
-    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand)return;
+    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand
+    ||primaryResult?.sourceCounterBlockedByDamageReact)return;
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
   const maxDepth=Number.isFinite(Number(options.maxDepth))?clamp(Math.trunc(Number(options.maxDepth)),0,5):5;
@@ -13668,6 +13682,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
     sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(!petIsBattleActive(pet)||unit.hp<=0)break;
+    if(r.sourceCounterBlockedByDamageReact||r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
     const next=counterer;counterer=target;target=next;
   }
