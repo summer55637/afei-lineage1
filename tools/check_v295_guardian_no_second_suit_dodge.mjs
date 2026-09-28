@@ -18,8 +18,9 @@ assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 const real=sliceFunction('resolveAttackToEnemyWithGuardian');
 assert.ok(real.includes('disableDodge:true,skipSuitDodge:!!guardian'));
 assert.ok(real.includes('const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,options.attackerUnit||null);'));
-assert.ok(real.includes('sourceBattleDuckTotal(attacker,originalView,options)'));
+assert.ok(real.includes('sourceInitialDodgeOnly(attacker,originalView,Object.assign({},options,{'));
 assert.ok(real.includes('skipSuitDodge:!!guardian'));
+assert.equal(real.includes('sourceSuitDuckCheck('),false,'Guardian resolver must not perform a second suit dodge itself');
 
 const calc=sliceFunction('sourceProfessionPhysicalCalcOnlyResult');
 assert.ok(calc.includes('skipSuitDodge:!!guardian'));
