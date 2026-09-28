@@ -1,3 +1,29 @@
+## V2.99 manual first-dodge callers must not re-run suit dodge
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_AttackSeq()` 的順序是：
+
+1. original target `BATTLE_DuckCheck()`；
+2. `_SUIT_ADDPART3` 獨立 suit-dodge；
+3. GuardianCheck；
+4. Critical / DamageCalc。
+
+因此只要 Web caller 已先跑 shared `sourceInitialDodgeOnly()`，後續的 `resolveNormalAttack()` 就不能再消耗 suit RNG。
+
+V2.99 修正：
+
+- `sourceProfessionPhysicalCalcOnlyResult()`：calc-only Guardian caller 改成 `skipSuitDodge:true`。
+- `resolveAttackToEnemyWithGuardian()`：Guardian 存在與否都不再第二次 suit dodge；shared first-dodge 已經包含唯一 suit roll。
+- `performEnemyGuardBreak2()`：Pet 有 guard-command 時沒有手動 first-dodge，因此保留一次 suit roll；無 guard-command 時改成 `skipSuitDodge:!guardCommand`。
+- `sourcePetAttackDamageCalcOnlyGuardianResult()`：Pet `BATTLE_S_AttackDamage` calc-only 路徑補 `skipSuitDodge:true`。
+- `sourcePerformPetGuardBreak2Skill()`：手動 first-dodge 後補 `skipSuitDodge:true`。
+
+本版沒有修改 Critical、DamageSub 數值，也沒有新增未證實的 team-attack 數值。
+
+regression：`tools/check_v299_shared_first_dodge_suit_gate.mjs`
+CI：`.github/workflows/v299-shared-first-dodge-suit-gate.yml`
+
 ## V2.98 first DuckCheck DamageReact + Guardian pre-substitution boundary
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
