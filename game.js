@@ -13754,33 +13754,23 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
   const originalGuarding=Object.prototype.hasOwnProperty.call(options,'guarding')
     ?!!options.guarding
     :(!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'));
-  const disableDodge=originalGuarding||!!options.disableDodge;
   const originalView=enemyBattleView(target);
-  if(!disableDodge&&originalView?.canMove!==false&&n(originalView?.skillDuckPower)>0){
-    const power=Math.trunc(n(originalView.skillDuckPower));
-    const roll=cRand(0,99);
-    if(roll<=power){
-      return {
-        damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
-        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,
-        actualTarget:target,originalTarget:target
-      };
-    }
-  }
-  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,originalView,options);
-  if(!disableDodge){
-    if(cRand(1,10000)<=duck){
-      return {
-        damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
-        duckRaw:duck,actualTarget:target,originalTarget:target
-      };
-    }
-  }
 
-  // 原 BATTLE_AttackSeq：先讓原目標做 DuckCheck，成功命中後才 GuardianCheck。
-  // Guardian 接手後用 Guardian 自身防禦／會心／屬性結算，且不再做第二次閃避。
-  // 原 BATTLE_GuardianCheck：攻擊者使用 BOW／BOOMERANG／BOUNDTHROW／BREAKTHROW 時，
-  // 忠犬／Guardian 直接無法代擋。這對混亂後 Enemy 打同側 Enemy 也同樣成立。
+  // fixed BATTLE_AttackSeq: original target completes first-dodge phase before GuardianCheck.
+  // V2.98 routes the phase through the shared DamageReact-aware adapter.
+  const dodge=sourceInitialDodgeOnly(attacker,originalView,Object.assign({},options,{
+    guarding:originalGuarding,
+    disableDodge:originalGuarding||!!options.disableDodge
+  }));
+  if(dodge.dodged){
+    dodge.actualTarget=target;
+    dodge.originalTarget=target;
+    return dodge;
+  }
+  const duck=dodge.duckRaw;
+
+  // Guardian takes over only after the original target has completed the first-dodge phase.
+  // Guardian resolution still uses disableDodge + skipSuitDodge to avoid a second suit roll.
   const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,options.attackerUnit||null);
   const actual=guardian||target;
   const actualDesc={kind:'enemy',unit:actual,unitId:actual.id};
@@ -13794,7 +13784,6 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
   r.actualTarget=actual;
   r.originalTarget=target;
   if(guardian){
-    // BATTLE_AttackSeq 的 Guardian 分支即使原計算傷害為 0，也會強制 NORMAL / damage=1。
     if(r.damage<=0){r.damage=1;r.miss=false}
     r.guardian=guardian;
     r.protectedTarget=target;
@@ -13866,31 +13855,44 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 function sourceInitialDodgeOnly(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
+  // fixed BATTLE_DuckCheck: target DamageReact returns FALSE before MYSKILLDUCK / ordinary
+  // DuckCheck, but the independent _SUIT_ADDPART3 dodge still executes afterward.
+  const sourceDamageReactBlocksDuck=Math.trunc(n(defender?.damageReact))>0;
 
-  if(!disableDodge&&n(defender?.skillDuckPower)>0){
+  if(!disableDodge&&!sourceDamageReactBlocksDuck&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
       return {
         dodged:true,damage:0,critical:false,miss:false,guarded:guarding,
-        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,duckRaw:0
+        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,duckRaw:0,
+        sourceDamageReactBlocksDuck:false
       };
     }
   }
 
-  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
-  if(!disableDodge&&cRand(1,10000)<=duck){
+  const duck=(disableDodge||sourceDamageReactBlocksDuck)?0:sourceBattleDuckTotal(attacker,defender,options);
+  if(!disableDodge&&!sourceDamageReactBlocksDuck&&cRand(1,10000)<=duck){
     const professionDodge=defender?.type==='player'?sourceProfessionPlayerNormalDodgeEvent(state):null;
-    return {dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,professionDodge};
+    return {
+      dodged:true,damage:0,critical:false,miss:false,guarded:guarding,
+      duckRaw:duck,professionDodge,sourceDamageReactBlocksDuck:false
+    };
   }
+
+  // Keep the independent suit dodge outside the DamageReact gate.
   const suitDuck=sourceSuitDuckCheck(defender,options);
   if(suitDuck.dodged){
     return {
       dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,
-      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll
+      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll,
+      sourceDamageReactBlocksDuck
     };
   }
-  return {dodged:false,duckRaw:duck,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll};
+  return {
+    dodged:false,duckRaw:duck,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll,
+    sourceDamageReactBlocksDuck
+  };
 }
 // fixed BATTLE_AttackSeq() Guardian caller audit (V1.12):
 // - real substitution: BATTLE_Attack, BATTLE_Attack_FIREKILL, BATTLE_BattleModel_ATTACK,
