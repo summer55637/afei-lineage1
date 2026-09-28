@@ -108,7 +108,6 @@ for(const f of roleBoundFns){
 
 const specialNoCounterFns=[
   'sourcePerformPetMagicStatusChangeSkill',
-  'sourcePerformPetSetDuckRandomSkill',
   'sourcePerformPetBattlePropertySkill',
   'sourcePerformPetFallGroundSkill',
   'sourcePerformPetBattleTimidSkill',
@@ -127,9 +126,14 @@ for(const f of specialNoCounterFns){
   const fnStart=game.indexOf('function '+f);
   assert.ok(fnStart>=0,f+' source handler');
   const fnEnd=game.indexOf('\nfunction ',fnStart+10);
-  const body=game.slice(fnStart,fnEnd>fnStart?fnEnd:fnStart+10000);
+  const body=game.slice(fnStart,fnEnd>fnStart?fnEnd:fnStart+12000);
   assert.ok(body.includes('sourceNoCounter:true'),f+' must preserve fixed special-command no-counter boundary');
 }
+
+const setDuckStart=game.indexOf('function sourcePerformPetSetDuckRandomSkill');
+const setDuckEnd=game.indexOf('\nfunction ',setDuckStart+10);
+const setDuckBody=game.slice(setDuckStart,setDuckEnd>setDuckStart?setDuckEnd:setDuckStart+4000);
+assert.ok(setDuckBody.includes('sourceSetDuckSelfTargetGate'),'SetDuck must preserve fixed self-target FALSE boundary');
 
 const commonCounterFns=[
   'sourcePerformPetAcupunctureSkill',
