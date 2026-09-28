@@ -91,7 +91,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:5,str:5,tgh:5,dex:5}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
@@ -8458,7 +8458,7 @@ function freshState(){
     creationPlayerStats:null,playerCreationStatsConfigured:false,playerCreationStatsLegacyUnknown:false,
     playerStats:{vital:0,str:0,tgh:0,dex:0},
     elements:null,playerElementsConfigured:false,
-    gold:30000,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
+    gold:30000,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:false,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     // fixed setup.cf + _HELP_NEWHAND: ITEM1=24114; exact item name/effect is not guessed.
     inventory:{'24114':1},
@@ -8675,6 +8675,22 @@ function normalizeState(raw){
       s.playerCreationStatsLegacyUnknown=false;
       s.playerStats={vital:0,str:0,tgh:0,dex:0};
       s.attack=0;s.defense=0;s.dex=0;s.maxHp=0;s.hp=0;
+    }
+  }
+
+  // Safety guard for the playable client: a confirmed all-zero creation build produces MaxHP=0,
+  // which is valid as a source-data edge case but not a playable character. Do not let auto-battle
+  // loop forever through defeat()/rest. Re-open creation setup instead.
+  if(s.playerCreationStatsConfigured===true && s.playerCreationStatsLegacyUnknown!==true){
+    const c=s.creationPlayerStats||{};
+    const total=['vital','str','tgh','dex'].reduce((sum,k)=>sum+Math.max(0,Math.floor(n(c[k]))),0);
+    if(total===0){
+      s.playerCreationStatsConfigured=false;
+      s.creationPlayerStats=null;
+      s.playerStats={vital:0,str:0,tgh:0,dex:0};
+      s.attack=0;s.defense=0;s.dex=0;s.maxHp=0;s.hp=0;
+      s.auto=false;
+      s._v270ZeroCreationRecovered=true;
     }
   }
 
@@ -22505,6 +22521,15 @@ function winBattle(){
   save();render();
 }
 function defeat(){
+  if(n(state?.maxHp)<=0){
+    state.auto=false;
+    if(!state._v270ZeroCreationWarningShown){
+      state._v270ZeroCreationWarningShown=true;
+      addLog('角色尚未完成可遊玩創角四圍，暫停自動戰鬥。請先完成角色設定。','bad');
+    }
+    save();render();
+    return;
+  }
   const hadBattle=!!enemy;
   if(hadBattle){
     sourceProcessBattleDeathsAtAddProfit();
@@ -23441,6 +23466,15 @@ function tick(){
   if(!sourcePlayerCreationStatsReady(state))return;
   if(!sourcePlayerHometownReady(state))return;
   if(!sourcePlayerElementsConfigured(state))return;
+  if(n(state.maxHp)<=0){
+    state.auto=false;
+    if(!state._v270ZeroCreationWarningShown){
+      state._v270ZeroCreationWarningShown=true;
+      addLog('角色尚未完成可遊玩創角四圍：MaxHP 為 0。請到「角色設定」配置 VITAL／STR／TOUGH／DEX 後再開啟自動戰鬥。','bad');
+    }
+    save();render();
+    return;
+  }
   if(state.hp<=0){defeat();return}
   if(!enemy){
     const map=currentMap();
@@ -23753,6 +23787,74 @@ function renderProfessionBattleActions(){
       +escapeHtml(row.name)+' Lv'+row.displayLevel+' · MP '+row.costMp+'</button>';
   }).join('');
 }
+let uiPixelLastEnemyHp=null;
+let uiPixelLastEnemyId=null;
+function pixelFlash(type, text, value){
+  const stage=document.getElementById('battleStage');
+  if(!stage)return;
+  stage.classList.remove('fx-hit','fx-damage','fx-toast');
+  void stage.offsetWidth;
+  if(type==='hit')stage.classList.add('fx-hit');
+  if(type==='damage'){
+    const d=document.getElementById('damageFx');
+    if(d)d.textContent=String(value!=null?('−'+Math.max(1,Math.trunc(value))):'−');
+    stage.classList.add('fx-damage');
+  }
+  if(text){
+    const t=document.getElementById('combatToast');
+    if(t)t.textContent=text;
+    stage.classList.add('fx-toast');
+  }
+  window.setTimeout(()=>stage.classList.remove('fx-hit','fx-damage','fx-toast'),900);
+}
+function renderPixelActors(){
+  const stage=document.getElementById('battleStage');
+  if(!stage||!state)return;
+  const player=document.getElementById('pixelPlayer');
+  const pet=document.getElementById('pixelPet');
+  const enemyActor=document.getElementById('pixelEnemy');
+  const worldMode=document.getElementById('worldMode');
+  const worldCoords=document.getElementById('worldCoords');
+  const miniMapName=document.getElementById('miniMapName');
+  const q=document.getElementById('worldQuestText');
+  const progress=document.getElementById('worldQuestProgress');
+  const map=currentMap();
+  if(map){
+    if(miniMapName)miniMapName.textContent=String(map.name||('Floor '+map.id)).slice(0,15);
+    if(worldMode)worldMode.textContent=state.auto?'自動探索中':'野外探索';
+  }
+  if(enemy){
+    stage.classList.add('in-battle');
+    enemyActor.style.opacity='1';
+    const name=String(enemy.name||'野外敵人');
+    enemyActor.dataset.enemy=name;
+    const v=enemy.entry?.variant;
+    const els=v?.elements||{};
+    const maxKey=['earth','water','fire','wind'].sort((a,b)=>Number(els[b]||0)-Number(els[a]||0))[0];
+    enemyActor.style.filter=maxKey==='water'?'hue-rotate(105deg) drop-shadow(0 10px 0 rgba(0,0,0,.18))':maxKey==='wind'?'hue-rotate(45deg) drop-shadow(0 10px 0 rgba(0,0,0,.18))':maxKey==='earth'?'hue-rotate(-20deg) saturate(.8) drop-shadow(0 10px 0 rgba(0,0,0,.18))':'drop-shadow(0 10px 0 rgba(0,0,0,.18))';
+    const hpNow=n(enemy.hp), previous=uiPixelLastEnemyId===enemy.id?uiPixelLastEnemyHp:null;
+    if(previous!=null&&hpNow<previous){
+      enemyActor.classList.remove('hit');void enemyActor.offsetWidth;enemyActor.classList.add('hit');
+      pixelFlash('hit',null,previous-hpNow);
+      pixelFlash('damage',null,previous-hpNow);
+    }
+    uiPixelLastEnemyHp=hpNow;uiPixelLastEnemyId=enemy.id;
+    if(worldCoords)worldCoords.textContent=enemy.roamX!=null&&enemy.roamY!=null?`${enemy.roamX},${enemy.roamY}`:'野外';
+    if(progress)progress.textContent=`Lv.${enemy.level} 遭遇中`;
+    if(q)q.textContent=`${name} 已出現；${state.auto?'自動戰鬥持續進行。':'可以手動操作。'}`;
+  }else{
+    stage.classList.remove('in-battle');
+    enemyActor.style.opacity='.35';
+    uiPixelLastEnemyHp=null;uiPixelLastEnemyId=null;
+    if(progress)progress.textContent=state.auto?'搜尋敵人':'已暫停';
+    if(q)q.textContent=state.auto?'阿肥正在沿著狩獵區巡邏，等待下一次遭遇。':'開啟自動戰鬥即可開始探索。';
+    if(worldCoords)worldCoords.textContent='巡邏中';
+  }
+  const p=activePet();
+  if(p){pet.style.opacity='1';}else{pet.style.opacity='.28'}
+  if(player)player.classList.toggle('defeated',n(state.hp)<=0&&n(state.maxHp)>0);
+}
+
 function render(){
   if(!state)return;
   try{
@@ -23790,28 +23892,18 @@ function render(){
   if(map){
     const mapTitle=$('#mapTitle');
     if(mapTitle) mapTitle.textContent=map.name||('Floor '+map.id);
-    if(map.questZone){
-      const eligible=eligibleEntries(map);
-      const allNames=[...new Set(map.entries.map(x=>x.species.clientLabel))];
-      const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
-      $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種可遇 · '+(map.name||('Floor '+map.id));
-      $('#mapInfo').textContent=(map.description?map.description+'；':'')+'目前可遇：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'');
-    }else{
-      const encounter=currentEncounter(map);
-      const all=(map.entries||[]).filter(x=>Number(x.route?.encounterId)===Number(encounter?.encounterId));
-      const eligible=all.filter(x=>routeUnlocked(x.route));
-      const allNames=[...new Set(all.map(x=>x.species.clientLabel))];
-      const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
-      const a=encounter?.area||{},groups=encounter?.groups||[],resolved=groups.filter(g=>g.resolved).length;
-      $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種 Lv1';
-      $('#mapInfo').textContent=encounter
-        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+' · 遇敵CEP '+n(state.encounterCep)+'（min '+encounter.encounterMin+' / max '+encounter.encounterMax+'） · 虛擬步數 '+Math.floor(n(state.virtualWalkSteps))+'；每 900ms 放置 tick 模擬 '+IDLE_WALK_STEPS_PER_TICK+' 步，逐步使用原 rand()%120<CEP 規則；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
-        :'此 Floor 沒有可用的 Encounter。';
-    }
+    const eligible=eligibleEntries(map);
+    const allNames=[...new Set((map.entries||[]).map(x=>x.species.clientLabel))];
+    const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
+    $('#mapPetCount').textContent=okNames.length+' / '+Math.max(allNames.length,okNames.length)+' 種可遇';
+    const desc=map.description||'在這片區域探索並尋找野生寵物。';
+    const names=okNames.slice(0,8).join('、')||'暫無可遇寵物';
+    $('#mapInfo').textContent=desc+' 可遇：'+names+(okNames.length>8?'…':'');
   }
   renderMapOptions();
   renderEncounterOptions();
   renderEnemy();
+  renderPixelActors();
   renderProfessionBattleActions();
   if(playerPigActive()){
     const pigRemain=playerPigRemainingSeconds();
@@ -23832,16 +23924,16 @@ function renderEnemy(){
     const hometownReady=sourcePlayerHometownReady(state);
     const elementReady=sourcePlayerElementsConfigured(state);
     if(!creationStatsReady){
-      box.innerHTML='<div class="enemy-name">等待原服創角四圍</div><div class="muted">固定 _NEW_PLAYER_CF build：VITAL／STR／TOUGH／DEX 各 0～20、合計 ≤20；不再替新角色猜固定 5/5/5/5。</div>';
-      $('#battleState').textContent='等待創角四圍';
+      box.innerHTML='<div class="enemy-name">先完成角色建立</div><div class="muted">打開「設定」完成角色屬性，就可以開始冒險。</div>';
+      $('#battleState').textContent='準備角色';
     }else if(!hometownReady){
-      box.innerHTML='<div class="enemy-name">等待原服出生村選擇</div><div class="muted">請先確認 hometown 0～3；確認後才依原 C 建立對應 Lv1 起始寵。</div>';
-      $('#battleState').textContent='等待出生村';
+      box.innerHTML='<div class="enemy-name">選擇出生村</div><div class="muted">完成出生地設定後，就能帶著第一隻寵物踏上旅程。</div>';
+      $('#battleState').textContent='選擇出生村';
     }else if(!elementReady){
-      box.innerHTML='<div class="enemy-name">等待原服創角元素配點</div><div class="muted">舊存檔沒有保存原始地／水／火／風，因此不猜無屬性；請先在角色面板確認合法的 10 點元素。</div>';
-      $('#battleState').textContent='等待元素配點';
+      box.innerHTML='<div class="enemy-name">配置元素</div><div class="muted">完成地、水、火、風的元素配點後，就可以出發。</div>';
+      $('#battleState').textContent='配置元素';
     }else{
-      box.innerHTML='<div class="enemy-name">等待下一次遭遇</div><div class="muted">'+(state.auto?'自動戰鬥運作中。':'目前已暫停。')+'</div>';
+      box.innerHTML='<div class="enemy-name">'+(state.auto?'正在尋找敵人…':'準備開始冒險')+'</div><div class="muted">'+(state.auto?'沿著狩獵區巡邏，下一次遭遇即將發生。':'按下自動戰鬥即可開始探索。')+'</div>';
       $('#battleState').textContent=state.auto?'自動中':'已暫停';
     }
     $('#captureChance').textContent='捕獲率：—';
@@ -23856,8 +23948,7 @@ function renderEnemy(){
     const rows=units.map((u,i)=>{
       const hpPct=clamp(u.hp/u.maxHp*100,0,100),dead=u.hp<=0;
       return '<div class="enemy-unit '+(dead?'defeated':'')+'">'+
-        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+(u.isBig?' · 大型':'')+(u.randomEnemy?' · RandomEnemy':'')+'</b><span>EnemyID '+(u.enemyId??'—')+(u.randomEnemy&&u.sourceEnemyId!=null?' ← '+u.sourceEnemyId:'')+'</span></div>'+
-        '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+' · 攻 '+u.attack+' · 防 '+u.defense+' · 敏 '+n(u.quick)+(u.serverDerived?' · Server公式':'')+(u.randomChange?' · RandomChange '+u.randomChange.type:'')+'</div>'+
+        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv.'+u.level+' '+escapeHtml(u.name)+'</b><span>'+u.hp+'/'+u.maxHp+'</span></div>'+
         '<div class="progress"><i style="width:'+hpPct+'%"></i></div></div>';
     }).join('');
     box.innerHTML='<div class="enemy-name">'+(enemy.dynamicGroup?'動態群組':'任務編成')+' · '+alive+' / '+total+' 存活</div>'+
@@ -23869,8 +23960,7 @@ function renderEnemy(){
       '<div class="enemy-units">'+rows+'</div>';
   }else{
     const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
-    box.innerHTML='<div class="enemy-name">Lv'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
-      '<div class="enemy-meta"><span class="pill">TempNo '+v.tempNo+'</span><span class="pill">EnemyID '+(v.enemyIds||[]).join(', ')+'</span><span class="pill">E_T_GET '+n(v.captureBase)+'</span></div>'+
+    box.innerHTML='<div class="enemy-name">Lv.'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
       '<div class="enemy-hp">HP '+enemy.hp+' / '+enemy.maxHp+'</div>'+
       '<div class="progress"><i style="width:'+hpPct+'%"></i></div>';
   }
