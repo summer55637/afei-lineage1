@@ -20,6 +20,6 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Run V2.74 regression
         run: node tools/check_v274_profession_magic_practice_runtime.mjs
