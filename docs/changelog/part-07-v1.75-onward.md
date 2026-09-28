@@ -1,3 +1,28 @@
+## V2.96 GuardianCheck instigate source block
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_GuardianCheck()` 在 Guardian 存活、具 Guardian flag、不是攻擊者、且沒有 sleep / confusion / paralysis / stone / barrier 等狀態後，固定 C 仍會拒絕：
+
+- `CHAR_WORKDIZZY > 0`
+- `CHAR_WORKDRAGNET > 0`
+- `CHAR_WORKINSTIGATE > 0)
+- `CHAR_DOOMTIME > 0)
+
+另外，攻擊者使用投射武器時 GuardianCheck 也直接 FALSE。
+
+V2.96 Web 只接入目前已有 source-backed runtime 的部分：
+
+- `enemyGuardianFor()` 新增 `battleStatusActive(desc,'instigate')` gate。
+- `instigate` 已由職業技能 Skill 21/挑撥路徑使用現有 `battleStatuses` 保存，因此可以精確映射 fixed `CHAR_WORKINSTIGATE` 的「>0」語意。
+- `CHAR_DOOMTIME` 目前沒有對 Enemy 的等價 source-backed Work state；現有 Enemy `chargeState` 是 `PETSKILL_ChargeAttack` 的資料，不是 profession DOOM。V2.96 不把這兩個欄位硬湊成同一個狀態。
+- `DIZZY / DRAGNET` 已由現有 `battleStatusCanMove()` 間接涵蓋；sleep / paralysis / stone / barrier / confusion 也維持既有 Guardian gate。
+
+因此本版只補一條可以從 fixed C 與現有 Web state 一一對應的漏接，不新增猜測中的 Guardian／Doom lifecycle。
+
+regression：`tools/check_v296_guardian_instigate_block.mjs`
+CI：`.github/workflows/v296-guardian-instigate.yml`
+
 ## V2.95 Guardian substitution / second suit-dodge boundary
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
