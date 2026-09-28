@@ -5206,6 +5206,45 @@ save schema 維持 **30**。
 
 ---
 
+## V2.73 Skill 17 ICE_ENCLOSE / 冰附體
+
+V2.73 接入巫師 Skill 17「冰附體」／PROFESSION_ICE_ENCLOSE，沿 pinned fixed C 的 F/I/T Enclose 共用結構完成「凍 → 冰 aura」與「霜 → on-hit／StatusSeq」lifecycle。
+
+### Skill row / MP / Dex
+- Skill 17：冰附體 / PROFESSION_ICE_ENCLOSE。
+- text：召唤冰雾附在武器或防具上增强其效能。
+- option：凍|效%1|回%3|成%100；TARGET OTHER、KIND 1。
+- icon=29260、img1=101697、row img2=101700。
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
+- fixed Dex：WORKQUICK+20 - RAND(work*0.2, work*0.5)。
+
+### Cast / aura counter
+- fixed status command 使用 A-tier；成功率=100 + A-tier×4。
+- 凍 → CHAR_WORK_I_ENCLOSE_2；option 回%3 保存 StatusTbl=4。
+- 成功後寫入 Ice aura counter 與對應 A-tier MOD；Ice Practice 只在成功 path 提升。
+- 冰附體本身不直接造成 damage，也不走一般 magic dodge / GET_DAMAGE cast path。
+
+### Player physical-hit proc
+- fixed BATTLE_Attack() 的 F/I/T _2 scan 以 Fire → Ice → Thunder 順序檢查；目前 Web 保留相同 first-active 邏輯。
+- Ice 觸發率=20 + A-tier ×2。
+- 冰命中狀態 token 是 霜，映射到 CHAR_WORK_I_ENCLOSE。
+- 有效回合：tier<5→1、tier 5～9→2、tier 10→3；StatusTbl stored=turn+1。
+- on-hit animation：img1=101697、img2=101699。
+- same-side player／pet direct target 維持 fixed TARGET_OTHER 語意，不錯誤拒絕。
+
+### Ice StatusSeq
+- fixed CHAR_WORK_I_ENCLOSE 每次 StatusSeq 取原 DEX 的 90% 寫入 CHAR_WORKFIXDEX。
+- 這是 FIXDEX-only 修正，不把 Ice Enclose 改成 Thunder 式「禁止行動」；原 C 的 CanMove 仍可通過。
+- 下一輪 PreCommand/compliance 會重新建立 FIXDEX，因此不跨回合倒帶 EntrySort。
+
+### Regression / CI
+- tools/check_v273_profession_ice_enclose_runtime.mjs：Skill 17 row、MP、Dex、A-tier、凍/_I_ENCLOSE_2、霜/_I_ENCLOSE、on-hit turns、FIXDEX 90%、same-side target 與 movement semantics。
+- CI workflow 已把 V2.73 regression 加入 push path 與執行步驟。
+
+save schema 維持 30。
+
+---
+
 ## V2.72 Skill 16 THUNDER_ENCLOSE / 雷附體
 
 V2.72 接入巫師 Skill 16「雷附體」／`PROFESSION_THUNDER_ENCLOSE`，使用 fixed C 與 Fire/Ice Enclose 共用的 `_2` on-hit aura lifecycle。
@@ -5241,4 +5280,4 @@ V2.72 接入巫師 Skill 16「雷附體」／`PROFESSION_THUNDER_ENCLOSE`，使�
 
 save schema 維持 **30**。
 
-下一步：V2.73 預計接續 Skill 17「冰附體」，沿 fixed `冻 → CHAR_WORK_I_ENCLOSE_2` / `霜 → CHAR_WORK_I_ENCLOSE` mapping 實作。
+V2.73 已接續完成 Skill 17「冰附體」，沿 fixed `冻 → CHAR_WORK_I_ENCLOSE_2` / `霜 → CHAR_WORK_I_ENCLOSE` mapping 實作，並補上 FIXDEX 90% StatusSeq lifecycle。
