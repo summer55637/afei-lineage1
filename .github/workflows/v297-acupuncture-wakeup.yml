@@ -1,0 +1,30 @@
+name: V2.97 Acupuncture WakeUp target
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'docs/changelog/part-07-v1.75-onward.md'
+      - 'tools/check_v296_guardian_instigate_block.mjs'
+      - 'tools/check_v297_acupuncture_wakeup_target.mjs'
+      - '.github/workflows/v296-guardian-instigate.yml'
+      - '.github/workflows/v297-acupuncture-wakeup.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.96 Guardian instigate source-block audit
+        run: node tools/check_v296_guardian_instigate_block.mjs
+      - name: Run V2.97 Acupuncture WakeUp target audit
+        run: node tools/check_v297_acupuncture_wakeup_target.mjs
