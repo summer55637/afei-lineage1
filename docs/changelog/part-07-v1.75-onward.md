@@ -1,3 +1,26 @@
+## V2.97 ACUPUNCTURE WakeUp target
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+Fixed `BATTLE_DamageSub()` 的 ACUPUNCTURE 分支：
+
+1. 先扣原本 defender HP；
+2. 清除 ACUPUNCTURE；
+3. 把 local `defindex` 改成 attacker；
+4. `BATTLE_Attack()` 回 caller 後，正傷害再執行 `BATTLE_DamageWakeUp(battleindex, defindex)`。
+
+所以 primary attack 被針刺反傷時，WakeUp 應落在 attacker，而不是原本的 defender。
+
+V2.97 Web：
+
+- `sourceFinishAcupunctureReaction()` 繼續負責固定的偶數化、反傷與消耗。
+- `battleApplyPhysicalHit()` 在 ACUPUNCTURE primary hit 時改用 `attackerDesc` 作 WakeUp target。
+- Counter 的反傷 WakeUp 仍由 `sourceFinishAcupunctureReaction(...,{counter:true})` 負責，避免重複喚醒。
+- Trap 本來就已經遵守相同的 attacker WakeUp source path，本版不重複改動。
+
+regression：`tools/check_v297_acupuncture_wakeup_target.mjs`
+CI：`.github/workflows/v297-acupuncture-wakeup.yml`
+
 ## V2.96 GuardianCheck instigate source block
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
