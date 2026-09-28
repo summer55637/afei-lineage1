@@ -1,3 +1,25 @@
+## V2.98 first DuckCheck DamageReact + Guardian pre-substitution boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_DuckCheck()` source order：
+
+1. `BATTLE_GetDamageReact(defindex) > 0` 直接 FALSE；
+2. `_PETSKILL_SETDUCK` / ordinary DuckCheck 因此不消耗第一層 dodge RNG；
+3. `_SUIT_ADDPART3` 在 `BATTLE_AttackSeq()` 的下一段獨立執行，仍可消耗 `rand()%100`；
+4. Guardian substitution 只在原目標完成這組 first-dodge 後才發生；
+5. Guardian 接手後 Web adapter 以 `disableDodge + skipSuitDodge` 計算，不能再跑第二次 suit dodge。
+
+V2.98 Web：
+
+- `sourceInitialDodgeOnly()` 補上 target-side DamageReact gate，並保留獨立 `sourceSuitDuckCheck()`。
+- `resolveAttackToEnemyWithGuardian()` 改用同一個 first-dodge adapter，修正原目標在 Guardian substitution 前漏掉 suit dodge / DamageReact gate 的 caller divergence。
+- Enemy→Player、Enemy→Pet、profession calc-only 與其他 first-dodge caller 因共用 adapter 一併收斂。
+- `_PREVENT_TEAMATTACK` 僅完成 caller/source-order audit；目前 Web 可達同隊路徑沒有新數值證據，因此保持 fail-closed。
+
+regression：`tools/check_v298_first_dodge_guardian_boundary.mjs`
+CI：`.github/workflows/v298-first-dodge-guardian-boundary.yml`
+
 ## V2.97 ACUPUNCTURE WakeUp target
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
