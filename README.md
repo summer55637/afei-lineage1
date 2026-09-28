@@ -14,6 +14,19 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.86 — PetSkill source closure audit
+
+V2.86 不新增新的技能效果；本輪把目前 fixed C / Web 的 PetSkill function closure 再做一次完整 source audit，確認沒有因 V2.85 新增的戰鬥 FALSE 邊界而留下新的未接路徑。
+
+- fixed runtime 目前有 64 個合法 PetSkill function family；其中真正屬於 battle / all-field 的有 63 個。
+- 玩家低忠誠 RANDOMACT 的 sourcePerformPetLoyalAction() 有 58 個實際 dispatcher；另外 3 個仍是 fixed PETSKILL_functbl 明確未註冊的 582／642／643，2 個則是已證明的 battle-mode FALSE 邊界 540／572。
+- 唯一 field=2-only 的 function family 是 PETSKILL_Merge、PETSKILL_Fixitem、PETSKILL_Inslay；battle random skill scan 本來就會排除 field=2，不把加工／料理誤當戰鬥技。
+- Enemy AI 的 source-unregistered 邊界維持 502／582；battle-false 邊界維持 540／572。其餘目前正權重 Enemy PetSkill 都有明確 dispatcher。
+- sourceRuntimePending 仍保留 7 個 defensive guards；本版沒有證據證明任何一個應被改成猜測效果，因此全部維持 fail-closed。
+
+regression：tools/check_v286_source_closure_audit.mjs
+GitHub Actions：.github/workflows/v286-source-closure.yml
+
 ## V2.85 — Battle-incompatible PETSKILL_Fixitem / PETSKILL_InslayV2.85 不新增任何修復／鑲寶石效果；這版只把 pinned C 已明確證明的「戰鬥中必定 FALSE」邊界鎖進 runtime。fixed C 的 `PETSKILL_Fixitem()` 與 `PETSKILL_Inslay()` 都先要求 `CHAR_TYPEPET`，再要求主人的 `CHAR_WORKBATTLEMODE == BATTLE_CHARMODE_NONE`。因此：- Enemy AI 抽到 `540 修復` 或 `572 鑲寶石` 時，不能進普通技能效果 handler；fixed C 直接 FALSE。- 玩家 Pet 在戰鬥中隨機抽到這兩個 function 時，同樣是 PETSKILL_Use 失敗，不應落入 `sourceRuntimePending`。- 本版只回報 source-precise no-action，不建立假的戰鬥修復／精工介面，也不消耗額外 RNG。`582 自爆攻擊` 已維持原先 unregistered boundary；pinned C `version.h` 對 `_PETSKILL_EXPLODE` 是關閉狀態，因此不把它當成可執行戰鬥技。regression：`tools/check_v285_battle_false_petskills.mjs`## V2.84 — Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
 
 V2.84 把目前 Enemy AI 真的會抽到、但原本還會落入 unsupported fallback 的三個 source rows 接上：
