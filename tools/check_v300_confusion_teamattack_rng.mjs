@@ -33,11 +33,11 @@ assert.ok(same.includes('const targetSlot=sourceBattleStatusSlot(targetDesc);'))
 assert.ok(same.includes('(attackerSlot<10)===(targetSlot<10)'));
 
 const perform=sliceFunction('performConfusionAttack');
-assert.ok(perform.indexOf('if(sourceBattleSameSideDesc(attackerDesc,targetDesc))')>perform.indexOf('const targetDesc=pick.target'));
-assert.ok(perform.indexOf('sourceBattleSameSideDesc(attackerDesc,targetDesc)')
-  <perform.indexOf('resolveAttackToEnemyWithGuardian('));
-assert.ok(perform.indexOf('sourceBattleSameSideDesc(attackerDesc,targetDesc)')
-  <perform.indexOf('resolveNormalAttack('));
+const gateAt=perform.indexOf('if(sourceBattleSameSideDesc(attackerDesc,targetDesc))');
+assert.ok(gateAt>perform.indexOf('const targetDesc=pick.target'));
+assert.ok(gateAt<perform.indexOf('sourcePerformPlayerRangedConfusionAttack('));
+assert.ok(gateAt<perform.indexOf('resolveAttackToEnemyWithGuardian('));
+assert.ok(gateAt<perform.indexOf('resolveNormalAttack('));
 
 const ctx={
   Math,Number,
