@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.03**
+**PLAYABLE CORE V3.04**
 
-歷史 regression markers：**PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.04 — Enemy→Player Guardian Acupuncture still wakes original Player
+
+V3.04 補齊另一條 primary `BATTLE_Attack()` caller boundary：
+
+- fixed C 的 ACUPUNCTURE 在 `BATTLE_DamageSub()` 後，`BATTLE_DamageWakeUp()` 前一律恢復 original `defNo`。
+- Enemy→Player 若由 Player Guardian Pet 代擋，而 Guardian Pet 自己持有 ACUPUNCTURE，真正承傷者是 Guardian，但 WakeUp 仍必須回到 original Player。
+- `resolveEnemyDirectAttackToPlayer()` 原本已保留 `r.originalTargetDesc={kind:'player'}`；本版讓 `battleApplyPhysicalHit()` 在 ACUPUNCTURE trigger 時優先使用這個 source-backed descriptor。
+- 不新增傷害、反傷、Counter、Guardian 條件或 RNG。
+
+regression：`tools/check_v304_enemy_player_guardian_acupuncture_wakeup.mjs`
+GitHub Actions：`.github/workflows/v304-enemy-player-guardian-acupuncture-wakeup.yml`
 
 ## V3.03 — Guardian-provided Acupuncture still wakes original defender
 
