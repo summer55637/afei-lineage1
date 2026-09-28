@@ -12840,7 +12840,7 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
   const duckWeaponType=Number.isFinite(sourceOuterWeaponType)
     ?Math.trunc(sourceOuterWeaponType)
     :Math.trunc(n(attacker?.weaponType));
-  let duck=battleDuckChance(attacker,defender);
+  let duck=battleDuckChance(attacker,defender,kawashiPara);
   duck+=n(options.duckBonusPercent)*100;
   if(attacker?.drunk)duck+=cRand(20,30)*100;
   if(duckWeaponType===4)duck+=20*100;
