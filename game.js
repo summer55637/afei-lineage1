@@ -2820,7 +2820,9 @@ function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
   const calcGuarding=guardian
     ?!!calcTarget.guardThisTurn&&!battleStatusActive(calcDesc,'confusion')
     :originalGuarding;
-  const opts=Object.assign({},attackOptions,{guarding:calcGuarding,disableDodge:true});
+  const opts=Object.assign({},attackOptions,{
+    guarding:calcGuarding,disableDodge:true,skipSuitDodge:!!guardian
+  });
   delete opts.attackerOverride;
   const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),opts);
   r.duckRaw=dodge.duckRaw;
@@ -13777,7 +13779,7 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
     ?(!!actual.guardThisTurn&&!battleStatusActive(actualDesc,'confusion'))
     :originalGuarding;
   const r=resolveNormalAttack(attacker,enemyBattleView(actual),Object.assign({},options,{
-    guarding:actualGuarding,disableDodge:true
+    guarding:actualGuarding,disableDodge:true,skipSuitDodge:!!guardian
   }));
   r.duckRaw=duck;
   r.actualTarget=actual;
