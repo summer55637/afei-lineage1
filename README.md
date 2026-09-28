@@ -4,10 +4,20 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.94**
+**PLAYABLE CORE V2.95**
 
-歷史 regression markers：**PLAYABLE CORE V2.93** ／ **V2.92** ／ **V2.91** ／ **V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.95** ／ **V2.94** ／ **V2.93** ／ **V2.92** ／ **V2.91** ／ **V2.90**
 
+## V2.95 — Guardian substitution must not re-run suit dodge
+
+V2.95 對齊 fixed `BATTLE_AttackSeq()` 的 Guardian 邊界：
+
+- 原始 defender 先完成 `BATTLE_DuckCheck()` 與 `_SUIT_ADDPART3`，成功命中後才呼叫 `BATTLE_GuardianCheck()`。
+- Guardian 接手後，fixed C 直接以 Guardian 的 DEX／防禦／會心狀態繼續後半段 AttackSeq，不會重新執行 DuckCheck 或第二顆 suit-dodge RNG。
+- Web 的 real Guardian substitution 與 profession calc-only Guardian path 現在只在 `guardian===true` 時把 `skipSuitDodge` 傳給後半段 `resolveNormalAttack()`；沒有 Guardian 的普通目標仍保留原本 suit dodge。
+
+regression：`tools/check_v295_guardian_no_second_suit_dodge.mjs`
+GitHub Actions：`.github/workflows/v295-guardian-no-second-suit-dodge.yml`
 ## V2.94 — fixed BATTLE_DuckCheck JYUJYUTU KawashiPara branch
 
 V2.94 對齊 fixed `BATTLE_DuckCheck()` 的 defender-command 分支：
@@ -95,7 +105,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.94；本版把 fixed BATTLE_DuckCheck 的 JYUJYUTU KawashiPara source branch 收斂。
+目前主線已完成 V2.95；本版把 Guardian substitution 後的二次 suit-dodge 漏接收斂。
 
 > **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
