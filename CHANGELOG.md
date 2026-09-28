@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V3.05**
+目前最新可玩核心：**V3.06**
 
-目前主線已完成 V3.05；本版把 ACUPUNCTURE WakeUp 恢復成 caller-sensitive fixed-C source-order。
+目前主線已完成 V3.06；本版補齊 GBreak／GBreak2／FallGround 三個 special caller 的 ACUPUNCTURE WakeUp source-order。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -20,6 +20,15 @@
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
+
+## V3.06：GBreak／GBreak2／FallGround ACUPUNCTURE caller-sensitive WakeUp
+
+- `BATTLE_S_GBreak`：ACUPUNCTURE WakeUp = attacker。
+- `BATTLE_S_GBreak2`：ACUPUNCTURE WakeUp = attacker。
+- `BATTLE_S_FallGround`：ACUPUNCTURE WakeUp = attacker；Guardian 只作 local calc，caller defindex 仍是原 target。
+- Enemy→Pet FallGround 改用 calc-only Guardian helper，避免把 Guardian 誤當成真正承傷者。
+- regression：`tools/check_v306_gbreak_fallground_acupuncture_order.mjs`
+- CI：`.github/workflows/v306-gbreak-fallground-acupuncture.yml`
 
 ## V3.05：ACUPUNCTURE WakeUp 改為 caller-sensitive source-order
 
