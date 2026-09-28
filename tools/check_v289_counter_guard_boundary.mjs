@@ -35,8 +35,8 @@ assert.match(guard,/roll<=70/);
 assert.match(guard,/roll<=85/);
 assert.match(guard,/roll<=95/);
 
-assert.match(html,/PLAYABLE CORE V2\\.89/);
-assert.match(readme,/PLAYABLE CORE V2\\.89/);
+assert.match(html,/PLAYABLE CORE V2\.89/);
+assert.match(readme,/PLAYABLE CORE V2\.89/);
 assert.match(readme,/V2\\.89 — Counter GuardAdjust boundary/);
 
 console.log(JSON.stringify({
