@@ -1678,12 +1678,13 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_ICE_ARROW'
     &&command!=='BATTLE_COM_S_FIRE_SPEAR'
     &&command!=='BATTLE_COM_S_STORM'
+    &&command!=='BATTLE_COM_S_ICE_MIRROR'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER'||command==='BATTLE_COM_S_ICE_ARROW')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_FIRE_BALL'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
-  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'){lower=work*.2;upper=work*.5}
+  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'||command==='BATTLE_COM_S_ICE_MIRROR'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2645,6 +2646,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_FIRE_BALL'
     ||functionName==='PROFESSION_FIRE_SPEAR'
+    ||functionName==='PROFESSION_ICE_MIRROR'
     ||functionName==='PROFESSION_BLOOD'
     ||functionName==='PROFESSION_ICE_ARROW'
     ||functionName==='PROFESSION_BLOOD_WORMS'
@@ -5508,6 +5510,166 @@ function sourceProfessionIceArrowStatusTick(desc,st){
   };
 }
 
+function sourceProfessionIceMirrorAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  const directPlayerSide=no>=0&&no<10;
+  return {
+    magicType:2,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:101652,
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[directPlayerSide?8:10])),
+    y:Math.trunc(n(opt[directPlayerSide?9:11])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),
+    directPlayerSide,
+    sourceImage2Fixed:true
+  };
+}
+
+function sourceProfessionIceMirrorDamage(target,skillLevel){
+  const tier=sourceProfessionMagicLevelM(skillLevel);
+  const defenseRaw=target?.roundDefense??target?.defense;
+  const toughRaw=target?.serverDerived?.charStats?.tgh??target?.sourceToughness??target?.stats?.tgh;
+  const defense=Number(defenseRaw);
+  const toughness=Number(toughRaw);
+  if(!Number.isFinite(defense)||!Number.isFinite(toughness)){
+    return {
+      ok:false,reason:'source-defense-unresolved',tier,
+      defense:defenseRaw,toughness:toughRaw,
+      sourceNpcCapBugUnemulated:true
+    };
+  }
+  const baseDefense=Math.trunc(toughness/100);
+  const rate=tier>=10?60:tier*5+5;
+  const damage=120+Math.trunc(
+    (defense*rate/100)+((defense-baseDefense)*rate/200)
+  );
+  return {
+    ok:true,tier,rate,defense,baseDefense,
+    damage:Math.max(0,Math.trunc(damage)),
+    sourceRidePetNo:-1,
+    sourceRidePetAdjustmentApplied:false,
+    sourceNpcCapBugUnemulated:true,
+    sourceNpcCapWouldUseBrokenDefenseIndex:true
+  };
+}
+
+function sourceProfessionIceMirrorExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==14)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis_profession_parameter() raises Ice Practice before the common magic core,
+  // while this cast continues using the battle-entry Work snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const icePractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_ICE_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(icePractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionIceMirrorAnimation(row,toNo);
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_ICE_MIRROR',prepared.displayLevel,state.hp
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    // Ice Mirror uses type=2 magic dodge: Ice proficiency lowers the enemy-side luck.
+    // The pinned source has no command-specific second gate for ICE_MIRROR.
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:2,command:'BATTLE_COM_S_ICE_MIRROR',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    // Fixed C has no ICE_MIRROR branch in GET_PRACTICE, so practice power remains 0
+    // after consuming the common critical + M2 RNG. The actual attack power is replaced
+    // by the special defense-derived Ice Mirror formula below.
+    const special=sourceProfessionIceMirrorDamage(target,practice.skillLevel);
+    if(!special.ok){
+      hits.push({slot,targetUnitId:target.id,magicDodge,special,damage:0,noAction:true});
+      addLog('「'+name+'」無法取得 '+target.name+' 的 fixed Tough/Defense 資料，本次不猜傷害。','bad');
+      continue;
+    }
+
+    // Target enemy entries currently have no modeled Player-only UN_POW_M equipment.
+    const preDamagePower=sourceProfessionMagicPreDamagePower(special.damage,0);
+
+    // Fixed type=2 GET_DAMAGE path reads Thunder proficiency/resist fields.
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:2,power:preDamagePower,command:'BATTLE_COM_S_ICE_MIRROR',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // PROFESSION_MAGIC_CHANGE_STATUS always consumes its leading RAND even though
+    // ICE_MIRROR has no extra status case.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,special,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourcePracticePowerDefaultZero:true,
+      sourcePracticeVarianceRollNotConsumed:true,
+      sourceDodgeUsesIcePractice:true,
+      sourceDamageType2UsesThunderPracticeBug:true,
+      sourceNpcCapBugUnemulated:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你施放「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,animation,icePractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:2,
+    sourceIcePracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceNoSecondDodgeGate:true,
+    sourceDamageUsesIceMirrorDefenseFormula:true,
+    sourceDamageType2UsesThunderPracticeBug:true,
+    sourcePracticePowerDefaultZero:true,
+    sourcePracticeVarianceRollNotConsumed:true,
+    sourceNpcCapBugUnemulated:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionIceArrowAnimation(row,toNo){
   const opt=String(row?.option||'').split('|');
   const no=Math.trunc(n(toNo));
@@ -7135,6 +7297,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionBloodExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_ICE_MIRROR'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionIceMirrorExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_ICE_ARROW'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
