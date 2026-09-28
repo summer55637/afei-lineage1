@@ -14,6 +14,26 @@
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 
+## V2.73 — Skill 17「冰附體」
+
+V2.73 在 V2.72 Enclose 共用層上接入巫師 Skill 17 `PROFESSION_ICE_ENCLOSE`，並沿 pinned fixed C 完成冰附體的三段 lifecycle：
+
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`
+- fixed status command uses A-tier success：`100 + A-tier×4`
+- option：`凍|效%1|回%3|成%100`；施放成功的 aura StatusTbl stored=4
+- `凍 → CHAR_WORK_I_ENCLOSE_2`：冰附體 on-hit counter
+- 普通物理攻擊以 `20 + A-tier×2` 機率觸發 `霜`，tier<5→1 回合、tier 5～9→2 回合、tier 10→3 回合，StatusTbl stored=turn+1
+- `霜 → CHAR_WORK_I_ENCLOSE`：固定 C StatusSeq 每回合把 FIXDEX 設為原敏捷的 90%
+- 冰附體不走一般 magic dodge／GET_DAMAGE cast path；直接使用 profession status attack check
+- same-side player／pet 直接 target 維持 fixed `TARGET_OTHER` 語意，不錯誤拒絕
+- Ice Practice 只在附體成功後提升
+- regression：`tools/check_v273_profession_ice_enclose_runtime.mjs`
+- save schema 維持 **30**
+
+完整技術細節請看 [V2.73 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
+
 ## V2.72 — Skill 16「雷附體」
 
 V2.72 在 V2.71 上接入巫師 Skill 16 `PROFESSION_THUNDER_ENCLOSE`，並修正 V2.71 Fire Enclose 的固定 C 狀態映射：
@@ -117,12 +137,13 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**下一個核心版本：V2.73**
+**目前核心版本：V2.73**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction
 - V2.72 已完成 Skill 16 雷附體 on-hit aura lifecycle
-- 下一版依序繼續 fixed C source → runtime → regression → CI → 視覺還原
+- V2.73 已完成 Skill 17 冰附體 fixed C mapping、on-hit aura 與 FIXDEX lifecycle
+- 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
 ## 目前主要系統
@@ -161,7 +182,7 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## 歷史版本 regression 入口
 
-歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`。
+歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`。
 
 以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
