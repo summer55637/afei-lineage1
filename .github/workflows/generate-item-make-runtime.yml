@@ -108,6 +108,7 @@ on:
       - "tools/check_v270_profession_ice_mirror_runtime.mjs"
       - "tools/check_v271_profession_fire_enclose_runtime.mjs"
       - "tools/check_v272_profession_thunder_enclose_runtime.mjs"
+      - "tools/check_v273_profession_ice_enclose_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -447,6 +448,9 @@ jobs:
 
       - name: Run V2.72 Thunder Enclose regression
         run: node tools/check_v272_profession_thunder_enclose_runtime.mjs
+
+      - name: Run V2.73 Ice Enclose regression
+        run: node tools/check_v273_profession_ice_enclose_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash
