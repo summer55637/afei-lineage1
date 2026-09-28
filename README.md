@@ -6,7 +6,7 @@
 
 **PLAYABLE CORE V2.95**
 
-歷史 regression markers：**PLAYABLE CORE V2.95** ／ **V2.94** ／ **V2.93** ／ **V2.92** ／ **V2.91** ／ **V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
 
 ## V2.95 — Guardian substitution must not re-run suit dodge
 
