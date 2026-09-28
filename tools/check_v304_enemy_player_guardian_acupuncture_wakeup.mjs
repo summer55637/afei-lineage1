@@ -35,6 +35,7 @@ const ctx={
   sourcePrepareProfessionTrapReaction:()=>({triggered:false}),
   sourcePrepareAcupunctureReaction:()=>({triggered:true}),
   battleStatusHp:()=>10,
+  battleStatusSetHp:()=>{},
   sourceTrackDamageSubUltimate:()=>({}),
   sourceFinishAcupunctureReaction:()=>{},
   battleStatusWakeOnDamage:(desc,damage)=>wakeTargets.push({desc,damage}),
