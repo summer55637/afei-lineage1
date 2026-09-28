@@ -4,15 +4,37 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.72**
+**PLAYABLE CORE V2.76**
 
-目前主線已完成 V2.72，下一個核心開發版本為 **V2.73**。
+目前主線已完成 V2.76，下一個核心開發版本為 **V2.77**。
 
 > **原 C 規則優先、不猜數值**
 
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.76 — Skill 21「移形換位」
+
+V2.76 把職業 Skill 21 `PROFESSION_TRANSPOSE` 從 V2.75 的 source-parity core 接進可執行戰鬥流程：
+
+- fixed C 的 `PROFESSION_CHANGE_SKILL_LEVEL_M` 轉換與 Skill 21 的回避率／有效回合完整對齊：回避 10／25／30／45／50／60／70，tier 1～5 為 3 回合、6～9 為 4 回合、10 為 5 回合。
+- 依原 C 的 `CHAR_MYSKILLDUCK = turn + 1` 保存 raw counter；每個施術者行動開始的 StatusSeq 再遞減，歸零時解除效果。
+- Skill 21 的職業回避判定在一般 `BATTLE_DuckCheck` 前獨立執行，命中後傷害為 0；已有效果時不刷新，符合 fixed source 的 no-refresh 行為。
+- 固定 Target=5 的 raw target enum 會先形成 `BATTLE_MultiList`，再依原碼的 caster-only filter 只讓施術者真正得到 `CHAR_MYSKILLDUCKPOWER`。
+- 保留 fixed C 動畫參數 `img1=101697`、`img2=101695`。
+- regression：`tools/check_v276_profession_transpose_live.mjs`
+- GitHub Actions：V2.76 live regression 與 `game.js` syntax gate 均已成功。
+- save schema 維持 **30**。
+
+完整技術細節請看 [V2.76 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
+
+
+## V2.75 — Skill 21「移形換位」source-parity core
+
+V2.75 先把 Skill 21 `PROFESSION_TRANSPOSE` 的固定原 C 規則整理成獨立 runtime profile 與 battle-function adapter，確認 M-tier、回避率、回合數、target enum 與 source function signature，再交給 V2.76 接上 live battle lifecycle。
+
+完整技術細節請看 [V2.75 詳細紀錄](docs/changelog/part-07-v1.75-onward.md)。
 
 ## V2.74 — Skills 18～20「火／雷／冰熟練度」
 
@@ -155,13 +177,15 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前核心版本：V2.74**
+**目前核心版本：V2.76**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction
 - V2.72 已完成 Skill 16 雷附體 on-hit aura lifecycle
 - V2.73 已完成 Skill 17 冰附體 fixed C mapping、on-hit aura 與 FIXDEX lifecycle
 - V2.74 已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity
+- V2.75 已完成 Skill 21 移形換位 source-parity core
+- V2.76 已完成 Skill 21 移形換位 live battle execution、StatusSeq 與獨立 skill dodge lifecycle
 - 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
@@ -195,13 +219,13 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 - [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 - [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-- [V1.75～V2.74](docs/changelog/part-07-v1.75-onward.md)
+- [V1.75～V2.76](docs/changelog/part-07-v1.75-onward.md)
 
 README 只保留目前版本、自述與開發方向；詳細技術內容統一放在 CHANGELOG，避免首頁再次堆積過時說明。
 
 ## 歷史版本 regression 入口
 
-歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`、`PLAYABLE CORE V2.74`。
+歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`、`PLAYABLE CORE V2.74`、`PLAYABLE CORE V2.75`、`PLAYABLE CORE V2.76`。
 
 以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
@@ -240,3 +264,9 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## V2.74 最新進度
 已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity；詳見歷史紀錄與對應 regression。
+
+## V2.75 最新進度
+已完成 Skill 21 移形換位 source-parity core；詳見歷史紀錄與對應 regression。
+
+## V2.76 最新進度
+已完成 Skill 21 移形換位 live battle execution、獨立 skill dodge、StatusSeq lifecycle 與 CI regression；詳見歷史紀錄與對應 regression。
