@@ -10736,7 +10736,7 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
-  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
+  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',fireEnclose:'火附體',thunderEnclose:'雷附體',
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',iceArrow:'冰箭',bloodWorms:'嗜血蠱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
