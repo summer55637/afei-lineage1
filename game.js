@@ -13247,8 +13247,11 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   battleStatusSetHp(targetDesc,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
-  // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
-  if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
+  // fixed BATTLE_DamageSub() rewrites defindex to the attacker for ACUPUNCTURE.
+  // Therefore primary Attack wakes the reflected attacker, while Counter's
+  // sourceFinishAcupunctureReaction() already wakes its reflected attacker.
+  const wakeDesc=acupuncture.triggered?attackerDesc:targetDesc;
+  if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=(!counter&&!suppressSuitPoison)
     ?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
   if(suitPoison)r.suitPoison=suitPoison;
