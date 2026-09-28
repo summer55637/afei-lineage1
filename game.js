@@ -1679,12 +1679,13 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_FIRE_SPEAR'
     &&command!=='BATTLE_COM_S_STORM'
     &&command!=='BATTLE_COM_S_ICE_MIRROR'
+    &&command!=='BATTLE_COM_S_FIRE_ENCLOSE'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER'||command==='BATTLE_COM_S_ICE_ARROW')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_FIRE_BALL'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
-  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'||command==='BATTLE_COM_S_ICE_MIRROR'){lower=work*.2;upper=work*.5}
+  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'||command==='BATTLE_COM_S_ICE_MIRROR'||command==='BATTLE_COM_S_FIRE_ENCLOSE'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2647,6 +2648,7 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_FIRE_BALL'
     ||functionName==='PROFESSION_FIRE_SPEAR'
     ||functionName==='PROFESSION_ICE_MIRROR'
+    ||functionName==='PROFESSION_FIRE_ENCLOSE'
     ||functionName==='PROFESSION_BLOOD'
     ||functionName==='PROFESSION_ICE_ARROW'
     ||functionName==='PROFESSION_BLOOD_WORMS'
@@ -4514,6 +4516,163 @@ function sourceProfessionAnnexStatusSeq(desc,{
   return {
     beforeTurns,turns:st.turns,expired:false,forced:true,
     sideRoll,posRoll,target,targetSlot,rawToNo:targetSlot
+  };
+}
+
+function sourceProfessionFireEncloseSpec(prepared){
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const attackTier=sourceProfessionAttackSkillTier(prepared?.displayLevel);
+  const option=String(row?.option||'');
+  const baseSuccess=sourceProfessionStatusOptionInt(option,'成',0);
+  const rawTurn=Math.max(1,sourceProfessionStatusOptionInt(option,'回',1));
+  const effect=sourceProfessionStatusOptionInt(option,'效',0);
+  return {
+    skillId:Math.trunc(n(prepared?.skillId)),
+    displayLevel:Math.trunc(n(prepared?.displayLevel)),
+    attackTier,
+    baseSuccess,
+    success:baseSuccess+attackTier*4,
+    rawTurn,
+    storedTurns:rawTurn+1,
+    activeDamageTicks:rawTurn,
+    effect,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    option,
+    sourceSkillLevelUsesA:true,
+    sourceOnHitTurnFormula:attackTier>=10?3:(attackTier>=5?2:1),
+    sourceOnHitChance:20+attackTier*2,
+    sourceOnHitCounterFieldWritten:false
+  };
+}
+
+function sourceProfessionFireEncloseAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  return {
+    magicType:-1,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),
+    showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),
+    y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),
+    shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),
+    effect:Math.trunc(n(opt[1])),
+    toNo:Math.trunc(n(toNo)),
+    sourceBattleMagicEffectPath:true
+  };
+}
+
+function sourceProfessionFireEncloseExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==15)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+  const row=sourceProfessionSkillTemplate(skillId);
+  const spec=sourceProfessionFireEncloseSpec(prepared);
+  const animation=sourceProfessionFireEncloseAnimation(row,toNo);
+  const results=[];
+
+  // fixed battle_profession_status_chang_fun() explicitly checks the raw target for EARTHROUND
+  // before BATTLE_MultiList's final per-target StatusAttackCheck.
+  if(toNo>=0&&toNo<=19){
+    const rawTarget=sourceProfessionEnemyByBattleSlot(toNo);
+    if(rawTarget&&enemyUnitHidden(rawTarget)){
+      return {
+        handled:true,noAction:true,reason:'target-earthround',skillId,functionName:prepared.functionName,
+        rawToNo,toNo,multi,spec,animation,sourceRawTargetGate:true,
+        noDamage:true,noCounter:true
+      };
+    }
+  }
+
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+    const targetDesc={kind:'enemy',unit:target,unitId:target.id};
+
+    // This is NOT PROFESSION_MAGIC_DODGE. The fixed status command only consumes
+    // PROFESSION_BATTLE_StatusAttackCheck's RAND(1,100) and uses success = 100 + A-tier*4.
+    const check=statusCheck(targetDesc,spec.success);
+    if(!check.success){
+      results.push({
+        slot,targetUnitId:target.id,check,applied:false,
+        reason:check.reason,sourceUsesStatusAttackCheck:true
+      });
+      addLog('「'+name+'」未能附著在 '+target.name+' 身上（roll '+check.roll+' / '+check.threshold+'）。');
+      continue;
+    }
+
+    if(battleHasAnyStatus(targetDesc)){
+      // source StatusAttackCheck already handles this gate; keep this branch fail-closed if
+      // a custom status checker is injected into a regression.
+      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'existing-status'});
+      continue;
+    }
+
+    const statusState={
+      type:'fireEnclose',
+      turns:spec.storedTurns,
+      fireEncloseTier:spec.attackTier,
+      fireEncloseBaseSuccess:spec.baseSuccess,
+      fireEncloseRawTurn:spec.rawTurn,
+      fireEncloseModTier:spec.attackTier,
+      fireEncloseOnHitTurns:0,
+      fireEncloseSourceCounterNeverWritten:true,
+      sourceProfessionSkillId:skillId
+    };
+    const key=battleStatusKey(targetDesc);
+    if(!key){
+      results.push({slot,targetUnitId:target.id,check,applied:false,reason:'status-key'});
+      continue;
+    }
+    battleStatuses.set(key,statusState);
+
+    // fixed source writes only CHAR_WORKMOD_F_ENCLOSE_2 here. It does NOT write
+    // CHAR_WORK_F_ENCLOSE_2 anywhere in the pinned build, so the later physical-hit aura
+    // check is preserved as an inactive source dead path rather than invented behavior.
+    target.sourceFireEncloseModTier=spec.attackTier;
+    target.sourceFireEncloseAuraActive=false;
+
+    const proficiency=sourceProfessionSpecialSkillProficiencyByFunction(
+      state,'PROFESSION_FIRE_PRACTICE',{randInclusive:cRand}
+    );
+    sourceProfessionLogProficiencyResult(proficiency);
+
+    results.push({
+      slot,targetUnitId:target.id,check,applied:true,status,
+      storedTurns:spec.storedTurns,activeDamageTicks:spec.activeDamageTicks,
+      proficiency,animation,
+      sourceSkillLevelUsesA:true,
+      sourceCounterFieldWritten:false,
+      sourceModFieldWritten:true
+    });
+    addLog('你施放「'+name+'」：'+target.name+' 著火，StatusTbl stored='+spec.storedTurns+'；固定 C 接下來每次自身 StatusSeq 依倒數扣 HP。','good');
+  }
+
+  syncEnemyTarget();
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,spec,animation,results,
+    sourceStatusCommand:true,
+    sourceMagicDodgeNotUsed:true,
+    sourceAttackSkillTier:'A',
+    sourceBaseSuccessPlusTier4:true,
+    sourceStoredTurnPlusOne:true,
+    sourcePracticeNotUsed:true,
+    sourcePhysicalAuraCounterDeadPath:true,
+    noOrdinaryCounter:true,noDamageSub:true,noGuardian:true,noItemCrush:true
   };
 }
 
@@ -7302,6 +7461,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionIceMirrorExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_FIRE_ENCLOSE'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionFireEncloseExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_ICE_ARROW'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -11573,6 +11737,40 @@ function processBattleStatusTurn(actor){
     battleStatusClear(desc);
     addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')+' 的'+(BATTLE_STATUS_NAMES[st.type]||st.type)+'狀態解除。');
     return finish({skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'});
+  }
+
+  if(st.type==='fireEnclose'){
+    // fixed BATTLE_StatusSeq decrements StatusTbl first. The current cnt is therefore
+    // 3 -> 2 -> 1 across the three active ticks after the initial stored value 4.
+    const cnt=Math.max(0,Math.trunc(n(st.turns)));
+    const sourcePower=50*cnt;
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:1,power:sourcePower,command:'BATTLE_COM_S_FIRE_ENCLOSE',
+      // In fixed C the attackindex and defindex are BOTH the burned target.
+      // PvE Enemy entries have no profession magic Work, so all source fields are zero here.
+      proficiency:{fire:0,thunder:0,ice:0},
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+    const hpBefore=battleStatusHp(desc);
+    battleStatusSetHp(desc,Math.max(0,hpBefore-damage));
+    const hpAfter=battleStatusHp(desc);
+    const name=battleStatusDescName(desc);
+    const tick={
+      cnt,sourcePower,damage,hpBefore,hpAfter,
+      sourceType1SelfDamage:true,
+      sourceTargetOwnPracticeAndResistFields:true,
+      sourcePhysicalAuraCounterDeadPath:true
+    };
+    if(hpBefore>0&&hpAfter<=0){
+      if(desc.kind==='enemy'&&desc.unit)sourceMarkEnemyDeathCredit(desc.unit,[{kind:'player'}]);
+      addLog(name+' 因「火附體」受到 '+damage+' 傷害並倒下。','bad');
+      return finish({skip:true,desc,status:st,fireEncloseTick:tick});
+    }
+    if(damage>0)addLog(name+' 因「火附體」受到 '+damage+' 傷害。','bad');
+    return finish({skip:false,desc,status:st,fireEncloseTick:tick});
   }
 
   if(st.type==='iceArrow'){
