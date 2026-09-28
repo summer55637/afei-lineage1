@@ -1,3 +1,21 @@
+## V3.06 GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+special caller matrix now includes：
+
+| Caller | Guardian handling | ACUPUNCTURE WakeUp |
+| --- | --- | --- |
+| `BATTLE_S_GBreak` | calc-only | attacker |
+| `BATTLE_S_GBreak2` | calc-only | attacker |
+| `BATTLE_S_FallGround` | calc-only；caller defindex remains original target | attacker |
+| Enemy→Pet `FallGround` Web helper | calc-only Guardian, original Pet takes HP | attacker |
+
+這些 caller 與 ordinary `BATTLE_Attack()` 的最大差異在於：fixed C 沒有在 WakeUp 前 restore original defindex。
+
+regression：`tools/check_v306_gbreak_fallground_acupuncture_order.mjs`
+CI：`.github/workflows/v306-gbreak-fallground-acupuncture.yml`
+
 ## V3.05 caller-sensitive Acupuncture WakeUp order
 
 Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
