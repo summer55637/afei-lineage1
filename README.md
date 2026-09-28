@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.87**
+**PLAYABLE CORE V2.88**
 
 ## V2.88 — pre-DamageReact Counter boundary
 
