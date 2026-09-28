@@ -1,8 +1,8 @@
 # 阿肥石器時代放置版－完整開發紀錄
 
-目前最新可玩核心：**V2.97**
+目前最新可玩核心：**V2.98**
 
-目前主線已完成 V2.97；本版完成 ACUPUNCTURE WakeUp target source-order audit。
+目前主線已完成 V2.98；本版完成 first DuckCheck／Guardian pre-substitution source-order audit。
 
 固定原 C：
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
@@ -32,6 +32,7 @@
 - V2.78：玩家出戰 Pet RANDOMACT 的 PETSKILL_StatusChange 完整狀態 token 映射
 - **V2.81：PetSkill runtime reachability／pending boundary audit**
 - V2.80：Enemy FallGround／Combined source boundary audit
+- V2.98：first DuckCheck DamageReact boundary＋Guardian pre-substitution suit-dodge source order
 - V2.97：ACUPUNCTURE 反傷後 WakeUp 目標對齊 fixed defindex
 - V2.96：GuardianCheck 不允許 instigate 中的 Guardian 代擋
 - V2.95：Guardian substitution 不重跑第二次 suit dodge
