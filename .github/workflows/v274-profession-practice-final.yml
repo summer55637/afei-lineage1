@@ -1,0 +1,22 @@
+name: V2.74 profession practice final gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'data/generated/stoneage_profession_skill_runtime.json'
+      - 'tools/check_v274_profession_magic_practice_runtime.mjs'
+      - '.github/workflows/v274-profession-practice-final.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/check_v274_profession_magic_practice_runtime.mjs
