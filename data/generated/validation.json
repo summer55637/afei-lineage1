@@ -1,0 +1,24 @@
+{
+  "expected": {
+    "species": 166,
+    "variants": 169,
+    "enemyIds": 171,
+    "floors": 85
+  },
+  "actual": {
+    "species": 166,
+    "variants": 169,
+    "enemyIds": 171,
+    "floors": 85,
+    "routes": 190
+  },
+  "missingSkillNames": [],
+  "elementSumErrors": [],
+  "missingFloorNames": [],
+  "captureRuleTemps": [
+    796,
+    812,
+    1105
+  ],
+  "pass": true
+}

@@ -1,0 +1,3942 @@
+{
+  "source": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "magicPath": "gmsv/data/magic.txt",
+    "attMagicPath": "gmsv/data/attmagic.bin",
+    "buildFlags": [
+      "__ATTACK_MAGIC",
+      "_FIX_MAGICDAMAGE",
+      "_MAGIC_OPTIMUM"
+    ],
+    "attMagicRecordBytes": 132,
+    "attMagicRawRecords": 54,
+    "attMagicPairCount": 27,
+    "combinedPetSkillAttackMagicIds": [
+      470,
+      471,
+      472,
+      473,
+      474,
+      475,
+      476,
+      477,
+      480,
+      481,
+      482,
+      483,
+      484,
+      490,
+      491,
+      492,
+      493,
+      500,
+      501,
+      502,
+      503,
+      504,
+      505,
+      506,
+      507,
+      510,
+      511,
+      512,
+      513,
+      514,
+      520,
+      521,
+      522,
+      523,
+      530,
+      531,
+      532,
+      533,
+      534,
+      535,
+      536,
+      537,
+      540,
+      541,
+      542,
+      543,
+      544,
+      550,
+      551,
+      552,
+      553,
+      560,
+      561,
+      562,
+      563,
+      564,
+      565,
+      566,
+      567,
+      570,
+      571,
+      572,
+      573,
+      574,
+      580,
+      581,
+      582,
+      583
+    ]
+  },
+  "byMagicId": {
+    "301": {
+      "id": 301,
+      "name": "岩石撞击",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|100|1",
+      "field": 1,
+      "target": 1,
+      "deadFlag": 0,
+      "attIdx": 8,
+      "attr": "earth",
+      "power": 100,
+      "magicLv": 1,
+      "targetRewrite": -1
+    },
+    "302": {
+      "id": 302,
+      "name": "落石撞击",
+      "comment": "地魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|150|2",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 150,
+      "magicLv": 2,
+      "targetRewrite": -1
+    },
+    "303": {
+      "id": 303,
+      "name": "土石流",
+      "comment": "地魔法LV3-1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|165|3",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 10,
+      "attr": "earth",
+      "power": 165,
+      "magicLv": 3,
+      "targetRewrite": 26
+    },
+    "304": {
+      "id": 304,
+      "name": "巨岩撞击",
+      "comment": "地魔法LV3-2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|185|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 11,
+      "attr": "earth",
+      "power": 185,
+      "magicLv": 3,
+      "targetRewrite": -1
+    },
+    "305": {
+      "id": 305,
+      "name": "地震",
+      "comment": "地魔法LV3-3",
+      "func": "MAGIC_AttMagic",
+      "option": "地|200|3",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 12,
+      "attr": "earth",
+      "power": 200,
+      "magicLv": 3,
+      "targetRewrite": 20
+    },
+    "306": {
+      "id": 306,
+      "name": "陨石冲击",
+      "comment": "地魔法LV4",
+      "func": "MAGIC_AttMagic",
+      "option": "地|250|4",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 13,
+      "attr": "earth",
+      "power": 250,
+      "magicLv": 4,
+      "targetRewrite": 20
+    },
+    "307": {
+      "id": 307,
+      "name": "水柱",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|100|1",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 14,
+      "attr": "water",
+      "power": 100,
+      "magicLv": 1,
+      "targetRewrite": -1
+    },
+    "308": {
+      "id": 308,
+      "name": "水刃",
+      "comment": "水魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|150|2",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 15,
+      "attr": "water",
+      "power": 150,
+      "magicLv": 2,
+      "targetRewrite": -1
+    },
+    "309": {
+      "id": 309,
+      "name": "大冰山",
+      "comment": "水魔法LV3-1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|165|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 165,
+      "magicLv": 3,
+      "targetRewrite": -1
+    },
+    "310": {
+      "id": 310,
+      "name": "沸点攻击",
+      "comment": "水魔法LV3-2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|185|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 17,
+      "attr": "water",
+      "power": 185,
+      "magicLv": 3,
+      "targetRewrite": -1
+    },
+    "311": {
+      "id": 311,
+      "name": "暴风雪",
+      "comment": "水魔法LV3-3",
+      "func": "MAGIC_AttMagic",
+      "option": "水|200|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 18,
+      "attr": "water",
+      "power": 200,
+      "magicLv": 3,
+      "targetRewrite": 26
+    },
+    "312": {
+      "id": 312,
+      "name": "冰天雪地",
+      "comment": "水魔法LV4",
+      "func": "MAGIC_AttMagic",
+      "option": "水|250|4",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 19,
+      "attr": "water",
+      "power": 250,
+      "magicLv": 4,
+      "targetRewrite": 20
+    },
+    "313": {
+      "id": 313,
+      "name": "火球",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|100|1",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 2,
+      "attr": "fire",
+      "power": 100,
+      "magicLv": 1,
+      "targetRewrite": -1
+    },
+    "314": {
+      "id": 314,
+      "name": "火焰连弹",
+      "comment": "火魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|150|2",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 150,
+      "magicLv": 2,
+      "targetRewrite": -1
+    },
+    "315": {
+      "id": 315,
+      "name": "蒸汽喷射",
+      "comment": "火魔法LV3-1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|165|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 4,
+      "attr": "fire",
+      "power": 165,
+      "magicLv": 3,
+      "targetRewrite": -1
+    },
+    "316": {
+      "id": 316,
+      "name": "火焰风爆",
+      "comment": "火魔法LV3-2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|185|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 5,
+      "attr": "fire",
+      "power": 185,
+      "magicLv": 3,
+      "targetRewrite": -1
+    },
+    "317": {
+      "id": 317,
+      "name": "熔岩爆发",
+      "comment": "火魔法LV3-3",
+      "func": "MAGIC_AttMagic",
+      "option": "火|200|3",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 6,
+      "attr": "fire",
+      "power": 200,
+      "magicLv": 3,
+      "targetRewrite": 26
+    },
+    "318": {
+      "id": 318,
+      "name": "火山爆发",
+      "comment": "火魔法LV4",
+      "func": "MAGIC_AttMagic",
+      "option": "火|200|4",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 7,
+      "attr": "fire",
+      "power": 200,
+      "magicLv": 4,
+      "targetRewrite": 20
+    },
+    "319": {
+      "id": 319,
+      "name": "风刃",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|100|1",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 20,
+      "attr": "wind",
+      "power": 100,
+      "magicLv": 1,
+      "targetRewrite": -1
+    },
+    "320": {
+      "id": 320,
+      "name": "真空刃",
+      "comment": "风魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|150|2",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 21,
+      "attr": "wind",
+      "power": 150,
+      "magicLv": 2,
+      "targetRewrite": -1
+    },
+    "321": {
+      "id": 321,
+      "name": "龙卷风",
+      "comment": "风魔法LV3-1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|165|3",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 22,
+      "attr": "wind",
+      "power": 165,
+      "magicLv": 3,
+      "targetRewrite": 26
+    },
+    "322": {
+      "id": 322,
+      "name": "暴风烈刃",
+      "comment": "风魔法LV3-2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|165|3",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 165,
+      "magicLv": 3,
+      "targetRewrite": -1
+    },
+    "323": {
+      "id": 323,
+      "name": "暴风冰刃",
+      "comment": "风魔法LV3-3",
+      "func": "MAGIC_AttMagic",
+      "option": "风|200|3",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 24,
+      "attr": "wind",
+      "power": 200,
+      "magicLv": 3,
+      "targetRewrite": 26
+    },
+    "324": {
+      "id": 324,
+      "name": "南极飓风",
+      "comment": "风魔法LV4",
+      "func": "MAGIC_AttMagic",
+      "option": "风|250|4",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 25,
+      "attr": "wind",
+      "power": 250,
+      "magicLv": 4,
+      "targetRewrite": 20
+    },
+    "325": {
+      "id": 325,
+      "name": "毁天灭地",
+      "comment": "魔法LV5",
+      "func": "MAGIC_AttMagic",
+      "option": "火|350|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 26,
+      "attr": "fire",
+      "power": 350,
+      "magicLv": 5,
+      "targetRewrite": 20
+    },
+    "470": {
+      "id": 470,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|50|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 50,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "471": {
+      "id": 471,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|100|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "472": {
+      "id": 472,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|260|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 260,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "473": {
+      "id": 473,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|500|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 500,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "474": {
+      "id": 474,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|700|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 700,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "475": {
+      "id": 475,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|980|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 980,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "476": {
+      "id": 476,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|1160|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 1160,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "477": {
+      "id": 477,
+      "name": "地魔法LV1",
+      "comment": "地魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "地|1440|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 9,
+      "attr": "earth",
+      "power": 1440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "480": {
+      "id": 480,
+      "name": "地魔法LV2",
+      "comment": "地魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|120|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 10,
+      "attr": "earth",
+      "power": 120,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "481": {
+      "id": 481,
+      "name": "地魔法LV2",
+      "comment": "地魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|240|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 10,
+      "attr": "earth",
+      "power": 240,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "482": {
+      "id": 482,
+      "name": "地魔法LV2",
+      "comment": "地魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|360|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 10,
+      "attr": "earth",
+      "power": 360,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "483": {
+      "id": 483,
+      "name": "地魔法LV2",
+      "comment": "地魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|480|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 10,
+      "attr": "earth",
+      "power": 480,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "484": {
+      "id": 484,
+      "name": "地魔法LV2",
+      "comment": "地魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "地|640|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 10,
+      "attr": "earth",
+      "power": 640,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "490": {
+      "id": 490,
+      "name": "地魔法LV3",
+      "comment": "地魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "地|100|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 12,
+      "attr": "earth",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "491": {
+      "id": 491,
+      "name": "地魔法LV3",
+      "comment": "地魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "地|200|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 12,
+      "attr": "earth",
+      "power": 200,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "492": {
+      "id": 492,
+      "name": "地魔法LV3",
+      "comment": "地魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "地|300|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 12,
+      "attr": "earth",
+      "power": 300,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "493": {
+      "id": 493,
+      "name": "地魔法LV3",
+      "comment": "地魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "地|440|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 12,
+      "attr": "earth",
+      "power": 440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "500": {
+      "id": 500,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|50|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 50,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "501": {
+      "id": 501,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|100|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "502": {
+      "id": 502,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|260|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 260,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "503": {
+      "id": 503,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|500|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 500,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "504": {
+      "id": 504,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|700|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 700,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "505": {
+      "id": 505,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|980|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 980,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "506": {
+      "id": 506,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|1160|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 1160,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "507": {
+      "id": 507,
+      "name": "水魔法LV1",
+      "comment": "水魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "水|1440|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 16,
+      "attr": "water",
+      "power": 1440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "510": {
+      "id": 510,
+      "name": "水魔法LV2",
+      "comment": "水魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|120|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 18,
+      "attr": "water",
+      "power": 120,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "511": {
+      "id": 511,
+      "name": "水魔法LV2",
+      "comment": "水魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|240|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 18,
+      "attr": "water",
+      "power": 240,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "512": {
+      "id": 512,
+      "name": "水魔法LV2",
+      "comment": "水魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|360|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 18,
+      "attr": "water",
+      "power": 360,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "513": {
+      "id": 513,
+      "name": "水魔法LV2",
+      "comment": "水魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|480|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 18,
+      "attr": "water",
+      "power": 480,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "514": {
+      "id": 514,
+      "name": "水魔法LV2",
+      "comment": "水魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "水|640|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 18,
+      "attr": "water",
+      "power": 640,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "520": {
+      "id": 520,
+      "name": "水魔法LV3",
+      "comment": "水魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "水|100|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 19,
+      "attr": "water",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "521": {
+      "id": 521,
+      "name": "水魔法LV3",
+      "comment": "水魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "水|200|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 19,
+      "attr": "water",
+      "power": 200,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "522": {
+      "id": 522,
+      "name": "水魔法LV3",
+      "comment": "水魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "水|300|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 19,
+      "attr": "water",
+      "power": 300,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "523": {
+      "id": 523,
+      "name": "水魔法LV3",
+      "comment": "水魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "水|440|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 19,
+      "attr": "water",
+      "power": 440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "530": {
+      "id": 530,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|50|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 50,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "531": {
+      "id": 531,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|100|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "532": {
+      "id": 532,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|260|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 260,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "533": {
+      "id": 533,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|500|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 500,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "534": {
+      "id": 534,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|700|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 700,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "535": {
+      "id": 535,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|980|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 980,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "536": {
+      "id": 536,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|1160|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 1160,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "537": {
+      "id": 537,
+      "name": "火魔法LV1",
+      "comment": "火魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "火|1440|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 3,
+      "attr": "fire",
+      "power": 1440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "540": {
+      "id": 540,
+      "name": "火魔法LV2",
+      "comment": "火魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|120|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 6,
+      "attr": "fire",
+      "power": 120,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "541": {
+      "id": 541,
+      "name": "火魔法LV2",
+      "comment": "火魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|240|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 6,
+      "attr": "fire",
+      "power": 240,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "542": {
+      "id": 542,
+      "name": "火魔法LV2",
+      "comment": "火魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|360|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 6,
+      "attr": "fire",
+      "power": 360,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "543": {
+      "id": 543,
+      "name": "火魔法LV2",
+      "comment": "火魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|480|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 6,
+      "attr": "fire",
+      "power": 480,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "544": {
+      "id": 544,
+      "name": "火魔法LV2",
+      "comment": "火魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "火|640|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 6,
+      "attr": "fire",
+      "power": 640,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "550": {
+      "id": 550,
+      "name": "火魔法LV3",
+      "comment": "火魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "火|100|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 26,
+      "attr": "fire",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "551": {
+      "id": 551,
+      "name": "火魔法LV3",
+      "comment": "火魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "火|200|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 26,
+      "attr": "fire",
+      "power": 200,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "552": {
+      "id": 552,
+      "name": "火魔法LV3",
+      "comment": "火魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "火|300|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 26,
+      "attr": "fire",
+      "power": 300,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "553": {
+      "id": 553,
+      "name": "火魔法LV3",
+      "comment": "火魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "火|440|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 26,
+      "attr": "fire",
+      "power": 440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "560": {
+      "id": 560,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|50|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 50,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "561": {
+      "id": 561,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|100|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "562": {
+      "id": 562,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|260|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 260,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "563": {
+      "id": 563,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|500|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 500,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "564": {
+      "id": 564,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|700|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 700,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "565": {
+      "id": 565,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|980|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 980,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "566": {
+      "id": 566,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|1160|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 1160,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "567": {
+      "id": 567,
+      "name": "风魔法LV1",
+      "comment": "风魔法LV1",
+      "func": "MAGIC_AttMagic",
+      "option": "风|1440|5",
+      "field": 1,
+      "target": 9,
+      "deadFlag": 0,
+      "attIdx": 23,
+      "attr": "wind",
+      "power": 1440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "570": {
+      "id": 570,
+      "name": "风魔法LV2",
+      "comment": "风魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|120|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 24,
+      "attr": "wind",
+      "power": 120,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "571": {
+      "id": 571,
+      "name": "风魔法LV2",
+      "comment": "风魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|240|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 24,
+      "attr": "wind",
+      "power": 240,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "572": {
+      "id": 572,
+      "name": "风魔法LV2",
+      "comment": "风魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|360|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 24,
+      "attr": "wind",
+      "power": 360,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "573": {
+      "id": 573,
+      "name": "风魔法LV2",
+      "comment": "风魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|480|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 24,
+      "attr": "wind",
+      "power": 480,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "574": {
+      "id": 574,
+      "name": "风魔法LV2",
+      "comment": "风魔法LV2",
+      "func": "MAGIC_AttMagic",
+      "option": "风|640|5",
+      "field": 1,
+      "target": 10,
+      "deadFlag": 0,
+      "attIdx": 24,
+      "attr": "wind",
+      "power": 640,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "580": {
+      "id": 580,
+      "name": "风魔法LV3",
+      "comment": "风魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "风|100|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 25,
+      "attr": "wind",
+      "power": 100,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "581": {
+      "id": 581,
+      "name": "风魔法LV3",
+      "comment": "风魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "风|200|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 25,
+      "attr": "wind",
+      "power": 200,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "582": {
+      "id": 582,
+      "name": "风魔法LV3",
+      "comment": "风魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "风|300|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 25,
+      "attr": "wind",
+      "power": 300,
+      "magicLv": 5,
+      "targetRewrite": -1
+    },
+    "583": {
+      "id": 583,
+      "name": "风魔法LV3",
+      "comment": "风魔法LV3",
+      "func": "MAGIC_AttMagic",
+      "option": "风|440|5",
+      "field": 1,
+      "target": 11,
+      "deadFlag": 0,
+      "attIdx": 25,
+      "attr": "wind",
+      "power": 440,
+      "magicLv": 5,
+      "targetRewrite": -1
+    }
+  },
+  "byAttIdx": {
+    "0": {
+      "idx": 0,
+      "enemySide": {
+        "record": 0,
+        "sprite": 101120,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -8,
+        "sy": -25,
+        "showBehindChar": 1,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 4294967295,
+        "prevMagicSx": 0,
+        "prevMagicSy": 0,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 1,
+        "sprite": 101120,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -8,
+        "sy": -26,
+        "showBehindChar": 1,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 4294967295,
+        "prevMagicSx": 0,
+        "prevMagicSy": 0,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "1": {
+      "idx": 1,
+      "enemySide": {
+        "record": 2,
+        "sprite": 101121,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 87,
+        "sy": 7,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 4294967295,
+        "prevMagicSx": 0,
+        "prevMagicSy": 0,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 3,
+        "sprite": 101121,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 95,
+        "sy": 11,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 4294967295,
+        "prevMagicSx": 0,
+        "prevMagicSy": 0,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "2": {
+      "idx": 2,
+      "enemySide": {
+        "record": 4,
+        "sprite": 101122,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 83,
+        "sy": -62,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 5,
+        "sprite": 101122,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 82,
+        "sy": -50,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "3": {
+      "idx": 3,
+      "enemySide": {
+        "record": 6,
+        "sprite": 101123,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 83,
+        "sy": -55,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 7,
+        "sprite": 101123,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 85,
+        "sy": -47,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "4": {
+      "idx": 4,
+      "enemySide": {
+        "record": 8,
+        "sprite": 101124,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 1,
+        "sy": -74,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 9,
+        "sprite": 101124,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 9,
+        "sy": -68,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "5": {
+      "idx": 5,
+      "enemySide": {
+        "record": 10,
+        "sprite": 101125,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -44,
+        "sy": -26,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 11,
+        "sprite": 101125,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -31,
+        "sy": -32,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "6": {
+      "idx": 6,
+      "enemySide": {
+        "record": 12,
+        "sprite": 101126,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 1,
+        "sy": -116,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 13,
+        "sprite": 101126,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 10,
+        "sy": -101,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "7": {
+      "idx": 7,
+      "enemySide": {
+        "record": 14,
+        "sprite": 101127,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 533,
+        "sy": 365,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 2200,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 15,
+        "sprite": 101128,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 97,
+        "sy": 153,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 2200,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    "8": {
+      "idx": 8,
+      "enemySide": {
+        "record": 16,
+        "sprite": 101129,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 6,
+        "sy": -9,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 17,
+        "sprite": 101129,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 3,
+        "sy": -6,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "9": {
+      "idx": 9,
+      "enemySide": {
+        "record": 18,
+        "sprite": 101130,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 192,
+        "sy": -20,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 19,
+        "sprite": 101130,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 197,
+        "sy": -16,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "10": {
+      "idx": 10,
+      "enemySide": {
+        "record": 20,
+        "sprite": 101131,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -28,
+        "sy": -10,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 21,
+        "sprite": 101132,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 28,
+        "sy": -4,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "11": {
+      "idx": 11,
+      "enemySide": {
+        "record": 22,
+        "sprite": 101133,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 4,
+        "sy": -82,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 23,
+        "sprite": 101133,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 4,
+        "sy": -71,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "12": {
+      "idx": 12,
+      "enemySide": {
+        "record": 24,
+        "sprite": 101134,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 320,
+        "sy": 240,
+        "showBehindChar": 1,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 3000,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 25,
+        "sprite": 101135,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 316,
+        "sy": 239,
+        "showBehindChar": 1,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 3000,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    "13": {
+      "idx": 13,
+      "enemySide": {
+        "record": 26,
+        "sprite": 101136,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 456,
+        "sy": 356,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 2200,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 27,
+        "sprite": 101136,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 182,
+        "sy": 190,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 2200,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    "14": {
+      "idx": 14,
+      "enemySide": {
+        "record": 28,
+        "sprite": 101137,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 3,
+        "sy": -42,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 29,
+        "sprite": 101137,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 5,
+        "sy": -31,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "15": {
+      "idx": 15,
+      "enemySide": {
+        "record": 30,
+        "sprite": 101138,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 22,
+        "sy": -79,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 31,
+        "sprite": 101138,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 22,
+        "sy": -78,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "16": {
+      "idx": 16,
+      "enemySide": {
+        "record": 32,
+        "sprite": 101139,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -1,
+        "sy": -103,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 33,
+        "sprite": 101139,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": -3,
+        "sy": -98,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "17": {
+      "idx": 17,
+      "enemySide": {
+        "record": 34,
+        "sprite": 101140,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 29,
+        "sy": 16,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 35,
+        "sprite": 101140,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 30,
+        "sy": 20,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "18": {
+      "idx": 18,
+      "enemySide": {
+        "record": 36,
+        "sprite": 101141,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 6,
+        "sy": -142,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 37,
+        "sprite": 101141,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 13,
+        "sy": -127,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "19": {
+      "idx": 19,
+      "enemySide": {
+        "record": 38,
+        "sprite": 101142,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 417,
+        "sy": 275,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1300,
+        "shakeTo": 2100,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 39,
+        "sprite": 101143,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 320,
+        "sy": 199,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1300,
+        "shakeTo": 2100,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    "20": {
+      "idx": 20,
+      "enemySide": {
+        "record": 40,
+        "sprite": 101144,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 5,
+        "sy": 3,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 41,
+        "sprite": 101144,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 13,
+        "sy": 7,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "21": {
+      "idx": 21,
+      "enemySide": {
+        "record": 42,
+        "sprite": 101145,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 11,
+        "sy": -20,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 43,
+        "sprite": 101145,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 16,
+        "sy": -11,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "22": {
+      "idx": 22,
+      "enemySide": {
+        "record": 44,
+        "sprite": 101146,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 3,
+        "sy": -3,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 45,
+        "sprite": 101146,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 2,
+        "sy": -3,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "23": {
+      "idx": 23,
+      "enemySide": {
+        "record": 46,
+        "sprite": 101147,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 4,
+        "sy": -4,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 47,
+        "sprite": 101147,
+        "attackType": 0,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 7,
+        "sy": -2,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "24": {
+      "idx": 24,
+      "enemySide": {
+        "record": 48,
+        "sprite": 101148,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 7,
+        "sy": 6,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 49,
+        "sprite": 101148,
+        "attackType": 1,
+        "sliceTime": 0,
+        "showType": 0,
+        "sx": 11,
+        "sy": 7,
+        "showBehindChar": 0,
+        "shakeScreen": 0,
+        "shakeFrom": 0,
+        "shakeTo": 0,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "25": {
+      "idx": 25,
+      "enemySide": {
+        "record": 50,
+        "sprite": 101149,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 336,
+        "sy": 268,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 2600,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 51,
+        "sprite": 101150,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 305,
+        "sy": 207,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1100,
+        "shakeTo": 2600,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    "26": {
+      "idx": 26,
+      "enemySide": {
+        "record": 52,
+        "sprite": 101151,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 540,
+        "sy": 214,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1300,
+        "shakeTo": 2300,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -25,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "playerSide": {
+        "record": 53,
+        "sprite": 101151,
+        "attackType": 4,
+        "sliceTime": 0,
+        "showType": 1,
+        "sx": 295,
+        "sy": 93,
+        "showBehindChar": 0,
+        "shakeScreen": 1,
+        "shakeFrom": 1300,
+        "shakeTo": 2300,
+        "prevMagicNum": 101120,
+        "prevMagicSx": -8,
+        "prevMagicSy": -26,
+        "prevMagicOnChar": 0,
+        "postMagicNum": 4294967295,
+        "postMagicSx": 0,
+        "postMagicSy": 0,
+        "postMagicOnChar": 0,
+        "field": [
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        ]
+      }
+    }
+  }
+}

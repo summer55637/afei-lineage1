@@ -1,0 +1,470 @@
+name: Generate fixed item make runtime
+
+on:
+  push:
+    paths:
+      - "tools/generate_item_make_runtime.py"
+      - "tools/generate_item_field2_runtime.py"
+      - "tools/generate_pet_merge_fix_runtime.py"
+      - "tools/generate_profession_skill_runtime.py"
+      - "tools/check_v172_item_make_runtime.mjs"
+      - "tools/check_v173_item_equip_runtime.mjs"
+      - "tools/check_v174_player_ranged_runtime.mjs"
+      - "tools/check_v175_player_ranged_confusion_runtime.mjs"
+      - "tools/check_v176_player_petskill_runtime.mjs"
+      - "tools/check_v177_petid_roar_vary_runtime.mjs"
+      - "tools/check_v178_player_status_runtime.mjs"
+      - "tools/check_v179_player_drain_runtime.mjs"
+      - "tools/check_v180_player_mpdamage_runtime.mjs"
+      - "tools/check_v181_player_attribute_attacks_runtime.mjs"
+      - "tools/check_v182_player_lighttakeed_runtime.mjs"
+      - "tools/check_v183_player_setduck_runtime.mjs"
+      - "tools/check_v184_setmagicpet_runtime.mjs"
+      - "tools/check_v185_player_wild_speedy_sacrifice_runtime.mjs"
+      - "tools/check_v186_player_gyrate_retrace_runtime.mjs"
+      - "tools/check_v187_player_hector_sars_runtime.mjs"
+      - "tools/check_v188_player_acupuncture_runtime.mjs"
+      - "tools/check_v189_player_sonic_regret_runtime.mjs"
+      - "tools/check_v190_player_firekill_runtime.mjs"
+      - "tools/check_v191_player_tear_runtime.mjs"
+      - "tools/check_v192_player_showmercy_becomepig_runtime.mjs"
+      - "tools/check_v193_player_batfly_divideattack_runtime.mjs"
+      - "tools/check_v194_player_timid_runtime.mjs"
+      - "tools/check_v195_player_magicstatuschange_runtime.mjs"
+      - "tools/check_v196_player_abduct_runtime.mjs"
+      - "tools/check_v197_player_steal_runtime.mjs"
+      - "tools/check_v198_player_stealmoney_runtime.mjs"
+      - "tools/check_v199_player_attackcrazed_runtime.mjs"
+      - "tools/check_v200_player_attackshoot_runtime.mjs"
+      - "tools/check_v201_player_battlemodel_runtime.mjs"
+      - "tools/check_v202_player_combined_runtime.mjs"
+      - "tools/check_v203_player_field01_coverage.mjs"
+      - "tools/check_v204_item_field2_runtime.mjs"
+      - "tools/check_v205_player_field2_fixitem_inslay.mjs"
+      - "tools/check_v206_pet_merge_fix_runtime.mjs"
+      - "tools/check_v207_merge_simplify_math.mjs"
+      - "tools/check_v208_merge_retry_candidates.mjs"
+      - "tools/check_v209_merge_rng_lifecycle.mjs"
+      - "tools/check_v210_merge_live_lifecycle.mjs"
+      - "tools/check_v211_merge_live_fixtures.mjs"
+      - "tools/check_v212_special_equip_boundary.mjs"
+      - "tools/check_v213_pickallpet_equip_callback.mjs"
+      - "tools/check_v214_noenemy_equip_callback.mjs"
+      - "tools/check_v215_randenemy_equip_callback.mjs"
+      - "tools/check_v216_magic_defense_equip_callback.mjs"
+      - "tools/check_v217_equip_resist_callback.mjs"
+      - "tools/check_v218_suit_equip_callback.mjs"
+      - "tools/check_v219_profession_magic_damage_core.mjs"
+      - "tools/check_v220_profession_skill_runtime.mjs"
+      - "tools/check_v221_profession_player_state.mjs"
+      - "tools/check_v222_profession_proficiency_runtime.mjs"
+      - "tools/check_v223_profession_live_physical_hooks.mjs"
+      - "tools/check_v224_profession_command_outbattle.mjs"
+      - "tools/check_v225_profession_battle_runtime.mjs"
+      - "tools/check_v226_profession_chain_atk2_runtime.mjs"
+      - "tools/check_v227_profession_shield_attack_runtime.mjs"
+      - "tools/check_v228_profession_dead_attack_runtime.mjs"
+      - "tools/check_v229_profession_through_attack_runtime.mjs"
+      - "tools/check_v230_profession_convolute_runtime.mjs"
+      - "tools/check_v231_profession_chaos_runtime.mjs"
+      - "tools/check_v232_profession_warrior_assist_runtime.mjs"
+      - "tools/check_v233_profession_scapegoat_runtime.mjs"
+      - "tools/check_v234_profession_deflect_arrange_runtime.mjs"
+      - "tools/check_v235_profession_reback_runtime.mjs"
+      - "tools/check_v236_profession_weapon_focus_runtime.mjs"
+      - "tools/check_v237_profession_avoid_runtime.mjs"
+      - "tools/check_v238_profession_dual_weapon_runtime.mjs"
+      - "tools/check_v239_profession_cavalry_runtime.mjs"
+      - "tools/check_v240_profession_hunter_control_runtime.mjs"
+      - "tools/check_v241_profession_attack_weak_runtime.mjs"
+      - "tools/check_v242_profession_instigate_runtime.mjs"
+      - "tools/check_v243_profession_trap_runtime.mjs"
+      - "tools/check_v244_profession_toxin_weapon_runtime.mjs"
+      - "tools/check_v245_profession_plunder_runtime.mjs"
+      - "tools/check_v246_profession_docile_runtime.mjs"
+      - "tools/check_v247_profession_enrage_pet_runtime.mjs"
+      - "tools/check_v248_profession_resist_runtime.mjs"
+      - "tools/check_v249_profession_oblivion_runtime.mjs"
+      - "tools/check_v250_profession_nature_resist_runtime.mjs"
+      - "tools/check_v251_profession_call_nature_runtime.mjs"
+      - "tools/check_v252_profession_earth_boundary_runtime.mjs"
+      - "tools/check_v253_profession_water_boundary_runtime.mjs"
+      - "tools/check_v254_profession_fire_boundary_runtime.mjs"
+      - "tools/check_v255_profession_wind_boundary_runtime.mjs"
+      - "tools/check_v256_profession_break_boundary_runtime.mjs"
+      - "tools/check_v257_profession_volcano_springs_runtime.mjs"
+      - "tools/check_v258_profession_sign_runtime.mjs"
+      - "tools/check_v259_profession_doom_runtime.mjs"
+      - "tools/check_v260_profession_ice_crack_runtime.mjs"
+      - "tools/check_v261_profession_enclose_runtime.mjs"
+      - "tools/check_v262_profession_summon_thunder_runtime.mjs"
+      - "tools/check_v263_profession_storm_runtime.mjs"
+      - "tools/check_v264_profession_current_runtime.mjs"
+      - "tools/check_v265_profession_fire_ball_runtime.mjs"
+      - "tools/check_v266_profession_blood_worms_runtime.mjs"
+      - "tools/check_v267_profession_blood_runtime.mjs"
+      - "tools/check_v268_profession_ice_arrow_runtime.mjs"
+      - "tools/check_v269_profession_fire_spear_runtime.mjs"
+      - "tools/check_v270_profession_ice_mirror_runtime.mjs"
+      - "tools/check_v271_profession_fire_enclose_runtime.mjs"
+      - "tools/check_v272_profession_thunder_enclose_runtime.mjs"
+      - "tools/check_v273_profession_ice_enclose_runtime.mjs"
+      - "tools/check_v274_profession_magic_practice_runtime.mjs"
+      - "game.js"
+      - "game.html"
+      - "game.css"
+      - ".github/workflows/generate-item-make-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  # V2.74 regression CI
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate fixed runtime
+        run: python tools/generate_item_make_runtime.py
+
+      - name: Generate fixed field2 item runtime
+        run: python tools/generate_item_field2_runtime.py
+
+      - name: Generate fixed pet merge-fix runtime
+        run: python tools/generate_pet_merge_fix_runtime.py
+
+      - name: Generate fixed profession skill runtime
+        run: python tools/generate_profession_skill_runtime.py
+
+      - name: Check game.js syntax
+        run: node --check game.js
+
+      - name: Run V1.72 item make regressions
+        run: node tools/check_v172_item_make_runtime.mjs
+
+      - name: Run V1.73 item equip regressions
+        run: node tools/check_v173_item_equip_runtime.mjs
+
+      - name: Run V1.74 player ranged regressions
+        run: node tools/check_v174_player_ranged_runtime.mjs
+
+      - name: Run V1.75 player ranged confusion regressions
+        run: node tools/check_v175_player_ranged_confusion_runtime.mjs
+
+      - name: Run V1.76 player PetSkill regressions
+        run: node tools/check_v176_player_petskill_runtime.mjs
+
+      - name: Run V1.77 PETID Roar Vary regressions
+        run: node tools/check_v177_petid_roar_vary_runtime.mjs
+
+      - name: Run V1.78 player status PetSkill regressions
+        run: node tools/check_v178_player_status_runtime.mjs
+
+      - name: Run V1.79 player drain PetSkill regressions
+        run: node tools/check_v179_player_drain_runtime.mjs
+
+      - name: Run V1.80 player MP damage regressions
+        run: node tools/check_v180_player_mpdamage_runtime.mjs
+
+      - name: Run V1.81 player attribute attack regressions
+        run: node tools/check_v181_player_attribute_attacks_runtime.mjs
+
+      - name: Run V1.82 player Lighttakeed regressions
+        run: node tools/check_v182_player_lighttakeed_runtime.mjs
+
+      - name: Run V1.83 player SetDuck regressions
+        run: node tools/check_v183_player_setduck_runtime.mjs
+
+      - name: Run V1.84 SetMagicPet regressions
+        run: node tools/check_v184_setmagicpet_runtime.mjs
+
+      - name: Run V1.85 player Wild/Speedy/Sacrifice regressions
+        run: node tools/check_v185_player_wild_speedy_sacrifice_runtime.mjs
+
+      - name: Run V1.86 player Gyrate/Retrace regressions
+        run: node tools/check_v186_player_gyrate_retrace_runtime.mjs
+
+      - name: Run V1.87 player Hector/Sars regressions
+        run: node tools/check_v187_player_hector_sars_runtime.mjs
+
+      - name: Run V1.88 player Acupuncture regressions
+        run: node tools/check_v188_player_acupuncture_runtime.mjs
+
+      - name: Run V1.89 player Sonic/Regret regressions
+        run: node tools/check_v189_player_sonic_regret_runtime.mjs
+
+      - name: Run V1.90 player Firekill regressions
+        run: node tools/check_v190_player_firekill_runtime.mjs
+
+      - name: Run V1.91 player Tear regressions
+        run: node tools/check_v191_player_tear_runtime.mjs
+
+      - name: Run V1.92 player ShowMercy/BecomePig regressions
+        run: node tools/check_v192_player_showmercy_becomepig_runtime.mjs
+
+      - name: Run V1.93 player BatFly/DivideAttack regressions
+        run: node tools/check_v193_player_batfly_divideattack_runtime.mjs
+
+      - name: Run V1.94 player Timid regressions
+        run: node tools/check_v194_player_timid_runtime.mjs
+
+      - name: Run V1.95 player MagicStatusChange regressions
+        run: node tools/check_v195_player_magicstatuschange_runtime.mjs
+
+      - name: Run V1.96 player Abduct regressions
+        run: node tools/check_v196_player_abduct_runtime.mjs
+
+      - name: Run V1.97 player Steal regressions
+        run: node tools/check_v197_player_steal_runtime.mjs
+
+      - name: Run V1.98 player StealMoney regressions
+        run: node tools/check_v198_player_stealmoney_runtime.mjs
+
+      - name: Run V1.99 player AttackCrazed regressions
+        run: node tools/check_v199_player_attackcrazed_runtime.mjs
+
+      - name: Run V2.00 player AttackShoot regressions
+        run: node tools/check_v200_player_attackshoot_runtime.mjs
+
+      - name: Run V2.01 player BattleModel regressions
+        run: node tools/check_v201_player_battlemodel_runtime.mjs
+
+      - name: Run V2.02 player Combined regressions
+        run: node tools/check_v202_player_combined_runtime.mjs
+
+      - name: Run V2.03 player field0/1 coverage closure
+        run: node tools/check_v203_player_field01_coverage.mjs
+
+      - name: Run V2.04 item field2 runtime regressions
+        run: node tools/check_v204_item_field2_runtime.mjs
+
+      - name: Run V2.05 player Fixitem Inslay regressions
+        run: node tools/check_v205_player_field2_fixitem_inslay.mjs
+
+      - name: Run V2.06 pet merge-fix runtime regressions
+        run: node tools/check_v206_pet_merge_fix_runtime.mjs
+
+      - name: Run V2.07 merge simplify math regressions
+        run: node tools/check_v207_merge_simplify_math.mjs
+
+      - name: Run V2.08 merge retry candidate regressions
+        run: node tools/check_v208_merge_retry_candidates.mjs
+
+      - name: Run V2.09 merge RNG lifecycle regressions
+        run: node tools/check_v209_merge_rng_lifecycle.mjs
+
+      - name: Run V2.10 merge live lifecycle regressions
+        run: node tools/check_v210_merge_live_lifecycle.mjs
+
+      - name: Run V2.11 merge live executable fixtures
+        run: node tools/check_v211_merge_live_fixtures.mjs
+
+      - name: Run V2.12 special equip boundary regressions
+        run: node tools/check_v212_special_equip_boundary.mjs
+
+      - name: Run V2.13 PickAllPet equip callback regressions
+        run: node tools/check_v213_pickallpet_equip_callback.mjs
+
+      - name: Run V2.14 NoEnemy equip callback regressions
+        run: node tools/check_v214_noenemy_equip_callback.mjs
+
+      - name: Run V2.15 RandEnemy equip callback regressions
+        run: node tools/check_v215_randenemy_equip_callback.mjs
+
+      - name: Run V2.16 magic defense equip callback regressions
+        run: node tools/check_v216_magic_defense_equip_callback.mjs
+
+      - name: Run V2.17 equip resist callback regressions
+        run: node tools/check_v217_equip_resist_callback.mjs
+
+      - name: Run V2.18 suit equip callback regressions
+        run: node tools/check_v218_suit_equip_callback.mjs
+
+      - name: Run V2.19 profession magic damage core regressions
+        run: node tools/check_v219_profession_magic_damage_core.mjs
+
+      - name: Run V2.20 profession skill runtime regressions
+        run: node tools/check_v220_profession_skill_runtime.mjs
+
+      - name: Run V2.21 profession player-state regressions
+        run: node tools/check_v221_profession_player_state.mjs
+
+      - name: Run V2.22 profession proficiency regressions
+        run: node tools/check_v222_profession_proficiency_runtime.mjs
+
+      - name: Run V2.23 profession live physical hook regressions
+        run: node tools/check_v223_profession_live_physical_hooks.mjs
+
+      - name: Run V2.24 profession command/out-of-battle regressions
+        run: node tools/check_v224_profession_command_outbattle.mjs
+
+      - name: Run V2.25 profession battle runtime regressions
+        run: node tools/check_v225_profession_battle_runtime.mjs
+
+      - name: Run V2.26 dual attack profession regressions
+        run: node tools/check_v226_profession_chain_atk2_runtime.mjs
+
+      - name: Run V2.27 shield attack profession regressions
+        run: node tools/check_v227_profession_shield_attack_runtime.mjs
+
+      - name: Run V2.28 near-death profession attack regressions
+        run: node tools/check_v228_profession_dead_attack_runtime.mjs
+
+      - name: Run V2.29 through attack profession regressions
+        run: node tools/check_v229_profession_through_attack_runtime.mjs
+
+      - name: Run V2.30 convolute profession regressions
+        run: node tools/check_v230_profession_convolute_runtime.mjs
+
+      - name: Run V2.31 chaos profession regressions
+        run: node tools/check_v231_profession_chaos_runtime.mjs
+
+      - name: Run V2.32 Warrior assist profession regressions
+        run: node tools/check_v232_profession_warrior_assist_runtime.mjs
+
+      - name: Run V2.33 Scapegoat Guardian regressions
+        run: node tools/check_v233_profession_scapegoat_runtime.mjs
+
+      - name: Run V2.34 Deflect / Arrange regressions
+        run: node tools/check_v234_profession_deflect_arrange_runtime.mjs
+
+      - name: Run V2.35 Reback StatusSeq regressions
+        run: node tools/check_v235_profession_reback_runtime.mjs
+
+      - name: Run V2.36 Weapon Focus regressions
+        run: node tools/check_v236_profession_weapon_focus_runtime.mjs
+
+      - name: Run V2.37 Avoid regressions
+        run: node tools/check_v237_profession_avoid_runtime.mjs
+
+      - name: Run V2.38 Dual Weapon regressions
+        run: node tools/check_v238_profession_dual_weapon_runtime.mjs
+
+      - name: Run V2.39 Cavalry regressions
+        run: node tools/check_v239_profession_cavalry_runtime.mjs
+
+      - name: Run V2.40 Hunter control regressions
+        run: node tools/check_v240_profession_hunter_control_runtime.mjs
+
+      - name: Run V2.41 Weakness Attack regression
+        run: node tools/check_v241_profession_attack_weak_runtime.mjs
+
+      - name: Run V2.42 Instigate regression
+        run: node tools/check_v242_profession_instigate_runtime.mjs
+
+      - name: Run V2.43 Trap regression
+        run: node tools/check_v243_profession_trap_runtime.mjs
+
+      - name: Run V2.44 Toxin Weapon regression
+        run: node tools/check_v244_profession_toxin_weapon_runtime.mjs
+
+      - name: Run V2.45 Plunder regression
+        run: node tools/check_v245_profession_plunder_runtime.mjs
+
+      - name: Run V2.46 Docile regression
+        run: node tools/check_v246_profession_docile_runtime.mjs
+
+      - name: Run V2.47 Enrage Pet regression
+        run: node tools/check_v247_profession_enrage_pet_runtime.mjs
+
+      - name: Run V2.48 Hunter resist regression
+        run: node tools/check_v248_profession_resist_runtime.mjs
+
+      - name: Run V2.49 Oblivion regression
+        run: node tools/check_v249_profession_oblivion_runtime.mjs
+
+      - name: Run V2.50 Nature resist regression
+        run: node tools/check_v250_profession_nature_resist_runtime.mjs
+
+      - name: Run V2.51 Call Nature regression
+        run: node tools/check_v251_profession_call_nature_runtime.mjs
+
+      - name: Run V2.52 Earth Boundary regression
+        run: node tools/check_v252_profession_earth_boundary_runtime.mjs
+
+      - name: Run V2.53 Water Boundary regression
+        run: node tools/check_v253_profession_water_boundary_runtime.mjs
+
+      - name: Run V2.54 Fire Boundary regression
+        run: node tools/check_v254_profession_fire_boundary_runtime.mjs
+
+      - name: Run V2.55 Wind Boundary regression
+        run: node tools/check_v255_profession_wind_boundary_runtime.mjs
+
+      - name: Run V2.56 Break Boundary regression
+        run: node tools/check_v256_profession_break_boundary_runtime.mjs
+
+      - name: Run V2.57 Volcano Springs regression
+        run: node tools/check_v257_profession_volcano_springs_runtime.mjs
+
+      - name: Run V2.58 SIGN regression
+        run: node tools/check_v258_profession_sign_runtime.mjs
+
+      - name: Run V2.59 DOOM regression
+        run: node tools/check_v259_profession_doom_runtime.mjs
+
+      - name: Run V2.60 Ice Crack regression
+        run: node tools/check_v260_profession_ice_crack_runtime.mjs
+
+      - name: Run V2.61 Enclose regression
+        run: node tools/check_v261_profession_enclose_runtime.mjs
+
+      - name: Run V2.62 Summon Thunder regression
+        run: node tools/check_v262_profession_summon_thunder_runtime.mjs
+
+      - name: Run V2.63 Storm regression
+        run: node tools/check_v263_profession_storm_runtime.mjs
+
+      - name: Run V2.64 Current regression
+        run: node tools/check_v264_profession_current_runtime.mjs
+
+      - name: Run V2.65 Fire Ball regression
+        run: node tools/check_v265_profession_fire_ball_runtime.mjs
+
+      - name: Run V2.66 Blood Worms regression
+        run: node tools/check_v266_profession_blood_worms_runtime.mjs
+
+      - name: Run V2.67 Blood regression
+        run: node tools/check_v267_profession_blood_runtime.mjs
+
+      - name: Run V2.68 Ice Arrow regression
+        run: node tools/check_v268_profession_ice_arrow_runtime.mjs
+
+      - name: Run V2.69 Fire Spear charge regression
+        run: node tools/check_v269_profession_fire_spear_runtime.mjs
+
+      - name: Run V2.70 Ice Mirror regression
+        run: node tools/check_v270_profession_ice_mirror_runtime.mjs
+
+      - name: Run V2.71 Fire Enclose mapping regression
+        run: node tools/check_v271_profession_fire_enclose_runtime.mjs
+
+      - name: Run V2.72 Thunder Enclose regression
+        run: node tools/check_v272_profession_thunder_enclose_runtime.mjs
+
+      - name: Run V2.73 Ice Enclose regression
+        run: node tools/check_v273_profession_ice_enclose_runtime.mjs
+
+      - name: Run V2.74 magic proficiency regression
+        run: node tools/check_v274_profession_magic_practice_runtime.mjs
+
+      - name: Commit generated runtime
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json data/generated/stoneage_pet_merge_fix_runtime.json data/generated/stoneage_profession_skill_runtime.json)" ]; then
+            echo "Generated runtimes are already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_item_make_runtime.json data/generated/stoneage_item_field2_runtime.json data/generated/stoneage_pet_merge_fix_runtime.json data/generated/stoneage_profession_skill_runtime.json
+          git commit -m "V2.04 generate fixed item runtimes"
+          git push
