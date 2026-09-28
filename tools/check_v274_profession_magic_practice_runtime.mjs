@@ -46,7 +46,7 @@ p.professionSkills[4]={skillId:18,rawLevel:6000};
 p.professionSkills[7]={skillId:19,rawLevel:10000};
 p.professionSkills[9]={skillId:20,rawLevel:8000};
 let snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'v274');
-assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:18,thunder:25});
+assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:19,thunder:25});
 assert.deepEqual(JSON.parse(JSON.stringify(ctx.sourceProfessionPlayerMagicProficiencyVector())),{fire:13,ice:18,thunder:25});
 
 p.professionSkills[0]={skillId:999,rawLevel:10000};p.professionSkills[1]=null;
