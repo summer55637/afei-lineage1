@@ -11080,6 +11080,7 @@ function sourceBattleFinalizeItemCrushRng(r){
   // RAND requires sourced ITEM_DAMAGECRUSHE / ITEM_MAXDAMAGECRUSHE equipment data.
   const roll=cRand(0,99);
   r.sourceItemCrushDefenderRoll=roll;
+  sourceFinalizePendingReactionDeathCredit(r);
   return roll;
 }
 function sourceBattleModelAliveItemCrushRng(r,targetDesc){
