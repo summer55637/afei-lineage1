@@ -4651,7 +4651,7 @@ function sourceProfessionFireEncloseExecute(prepared,name,statusCheck=sourceProf
     sourceProfessionLogProficiencyResult(proficiency);
 
     results.push({
-      slot,targetUnitId:target.id,check,applied:true,status,
+      slot,targetUnitId:target.id,check,applied:true,status:'fireEnclose',
       storedTurns:spec.storedTurns,activeDamageTicks:spec.activeDamageTicks,
       proficiency,animation,
       sourceSkillLevelUsesA:true,
