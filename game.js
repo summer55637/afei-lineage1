@@ -18334,7 +18334,7 @@ function sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,attackOptions={}
     :originalGuarding;
   const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),Object.assign({},attackOptions,{
     guarding:calcGuarding,
-    disableDodge:true
+    disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
   r.actualTarget=target;
@@ -19902,6 +19902,7 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
     r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),{
       guarding:false,
       disableDodge:true,
+      skipSuitDodge:true,
       preGuardDamageMultiplier:multiplier
     });
     r.duckRaw=dodge.duckRaw;
