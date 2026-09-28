@@ -16,11 +16,11 @@
 
 ## V2.86 — PetSkill source closure audit
 
-V2.86 不新增新的技能效果；本輪把目前 fixed C / Web 的 PetSkill function closure 再做一次完整 source audit，確認沒有因 V2.85 新增的戰鬥 FALSE 邊界而留下新的未接路徑。
+V2.86 依 fixed C 證據補齊 `PETSKILL_Merge` 的戰鬥 FALSE 邊界；同時把目前 fixed C / Web 的 PetSkill function closure 再做一次完整 source audit。
 
-- fixed runtime 目前有 64 個合法 PetSkill function family；其中真正屬於 battle / all-field 的有 63 個。
-- 玩家低忠誠 RANDOMACT 的 sourcePerformPetLoyalAction() 有 58 個實際 dispatcher；另外 3 個仍是 fixed PETSKILL_functbl 明確未註冊的 582／642／643，2 個則是已證明的 battle-mode FALSE 邊界 540／572。
-- 唯一 field=2-only 的 function family 是 PETSKILL_Merge、PETSKILL_Fixitem、PETSKILL_Inslay；battle random skill scan 本來就會排除 field=2，不把加工／料理誤當戰鬥技。
+- fixed runtime 目前有 64 個合法 PetSkill function family；其中宣告為 battle / all-field 的有 61 個。
+- 玩家低忠誠 RANDOMACT 的 sourcePerformPetLoyalAction() 有 58 個實際 dispatcher；另外 3 個仍是 fixed PETSKILL_functbl 明確未註冊的 582／642／643；field=2 的 `PETSKILL_Merge`、`PETSKILL_Fixitem`、`PETSKILL_Inslay` 則全部是 fixed C 戰鬥前置 FALSE 邊界。由於原 `BATTLE_PetRandomSkill()` 抽的是原始 `iNum` slot，這三個 field=2 技能仍可能被選中的 slot 經歷 source gate，不能直接當成「永遠不會被隨機抽到」。
+- 唯一 field=2-only 的 function family 是 PETSKILL_Merge、PETSKILL_Fixitem、PETSKILL_Inslay；固定 C 的掃描本身會排除 field=2，但原程式最後仍把原始 iNum slot 傳給 PETSKILL_Use，因此 field=2 selected-slot 的 FALSE 邊界仍必須保留。
 - Enemy AI 的 source-unregistered 邊界維持 502／582；battle-false 邊界維持 540／572。其餘目前正權重 Enemy PetSkill 都有明確 dispatcher。
 - sourceRuntimePending 仍保留 7 個 defensive guards；本版沒有證據證明任何一個應被改成猜測效果，因此全部維持 fail-closed。
 
