@@ -16,8 +16,8 @@ function sliceFunction(name){
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const hit=sliceFunction('battleApplyPhysicalHit');
-assert.ok(hit.includes('const wakeDesc=targetDesc;'),
-  'primary ACUPUNCTURE WakeUp must use the original defender restored before BATTLE_DamageWakeUp');
+assert.ok(hit.includes('const wakeDesc=acupuncture.triggered?(r?.originalTargetDesc||targetDesc):targetDesc;'),
+  'primary ACUPUNCTURE WakeUp must use original defNo; prefer originalTargetDesc when Guardian substitution exists');
 assert.equal(hit.includes('const wakeDesc=acupuncture.triggered?attackerDesc:targetDesc;'),false,
   'primary ACUPUNCTURE WakeUp must not use the temporary attacker defindex');
 assert.ok(hit.includes('if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);'),
