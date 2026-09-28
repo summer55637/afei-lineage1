@@ -1,0 +1,24 @@
+name: V2.83 rideflg source boundary regression
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'tools/check_v283_rideflg_boundary.mjs'
+      - '.github/workflows/v283-rideflg-boundary.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.83 rideflg source boundary regression
+        run: node tools/check_v283_rideflg_boundary.mjs

@@ -1,3 +1,20 @@
+## V2.83 CHAR_WORKPETFALL → rideflg source adapter
+
+V2.83 不建立尚未證明的 RidePet runtime，只把 pinned `battle_command.c` 已知的 battle-result protocol 做成純 source adapter，讓之後真正接 client result 時不必重新猜。
+
+- `CHAR_WORKPETFALL != 1` → `rideflg = 0`
+- 一般落馬 → `rideflg = -1`
+- `CHAR_WORKFOXROUND != -1` → `rideflg = -2`
+- `CHAR_BECOMEPIG > 120` → `rideflg = -3`
+
+目前 Web 沒有 pinned source 證明的正式 `CHAR_RIDEPET`／client `onRide` state，因此 adapter 不啟用 `ridePetId`，仍維持 fail-closed。
+
+regression：`tools/check_v283_rideflg_boundary.mjs`
+
+save schema 維持 30。
+
+---
+
 ## V2.82 FallGround DamageReact gate / CHAR_WORKPETFALL ride-system boundary
 
 V2.82 把 V2.80 已鎖住的 FallGround source boundary 再往 BATTLE_S_FallGround() 的 react == 0 條件推進，並把 CHAR_WORKPETFALL 的 battle-result 用途記錄為尚未建正式 RidePet runtime 的 fail-closed 邊界。

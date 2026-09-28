@@ -4,7 +4,7 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.82**
+**PLAYABLE CORE V2.83**
 
 目前主線已完成 V2.82；本版把目前 fixed PetSkill runtime 能不能真正走到 `sourceRuntimePending` 的 7 條邊界做成 reachability regression。
 
@@ -13,6 +13,19 @@
 固定原 C 基準：
 
 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+## V2.83 — CHAR_WORKPETFALL → rideflg source adapter
+
+V2.83 把 fixed `battle_command.c` 的落馬結果語意獨立鎖成 source adapter，但不假造目前 Web 沒有的正式 RidePet runtime。
+
+- `CHAR_WORKPETFALL != 1` → `rideflg = 0`
+- 一般戰鬥落馬 → `rideflg = -1`
+- `CHAR_WORKFOXROUND != -1` → `rideflg = -2`
+- `CHAR_BECOMEPIG > 120` → `rideflg = -3`
+
+不同公開 StoneAge fork 仍保留同一組 `CHAR_WORKPETFALL`／`rideflg` protocol lifecycle；但 pinned C 與目前 Web model 都沒有足以證明「active Pet = RidePet」的資料來源，因此 V2.83 只新增純 source adapter 與 regression，不把 `ridePetId` 硬接到玩家或出戰寵物。
+
+regression：`tools/check_v283_rideflg_boundary.mjs`
 
 ## V2.82 — FallGround DamageReact gate / CHAR_WORKPETFALL ride-system boundary
 
