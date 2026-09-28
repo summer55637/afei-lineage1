@@ -24,6 +24,13 @@ V2.86 依 fixed C 證據補齊 `PETSKILL_Merge` 的戰鬥 FALSE 邊界；同時�
 - Enemy AI 的 source-unregistered 邊界維持 502／582；battle-false 邊界維持 540／572。其餘目前正權重 Enemy PetSkill 都有明確 dispatcher。
 - sourceRuntimePending 仍保留 7 個 defensive guards；本版沒有證據證明任何一個應被改成猜測效果，因此全部維持 fail-closed。
 
+本輪另完成 fixed battle.c / battle_event.c 的 special-command 執行順序 audit：
+
+- PETSKILL_BattleProperty、FallGround、BattleTimid/2Timid、Lighttakeed、DamageToHp、MpDamage、Tear、Sonic、Regret、Firekill、Gyrate、BattleModel 等 isolated command 不進原一般 Counter chain；runtime 明確保留 sourceNoCounter。
+- SetDuck 則不是 generic no-counter，而是固定 PETSKILL_SetDuckChange_Battle() 的 self-target FALSE boundary；RANDOMACT 的 opposing COM2 不得猜成自身 Duck。
+- Acupuncture、Hector、SARS、BecomePig、Retrace 屬 common attack fall-through，仍保留原 Counter chain。
+- 不因 parser failure 自行補數值：fixed BATTLE_PetRandomSkill() 失敗後會把 COM1 留在／清回 NONE 的時序也維持 fail-closed。
+
 regression：tools/check_v286_source_closure_audit.mjs
 GitHub Actions：.github/workflows/v286-source-closure.yml
 
