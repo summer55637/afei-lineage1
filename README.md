@@ -139,3 +139,40 @@ V2.69 是目前保留的最後核心版本，完成：
 - [V1.75～V2.72](docs/changelog/part-07-v1.75-onward.md)
 
 README 只保留目前版本、自述與開發方向；詳細技術內容統一放在 CHANGELOG，避免首頁再次堆積過時說明。
+
+## 歷史版本 regression 入口
+
+以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
+
+## V2.61 最新進度
+已完成 Skill 5 附身術；詳見歷史紀錄與對應 regression。
+
+## V2.62 最新進度
+已完成 Skill 6 召雷術；詳見歷史紀錄與對應 regression。
+
+## V2.63 最新進度
+已完成 Skill 7 暴風雨；詳見歷史紀錄與對應 regression。
+
+## V2.64 最新進度
+已完成 Skill 8 電流術；詳見歷史紀錄與對應 regression。
+
+## V2.65 最新進度
+已完成 Skill 9 火星球；詳見歷史紀錄與對應 regression。
+
+## V2.66 最新進度
+已完成 Skill 10 嗜血蠱；詳見歷史紀錄與對應 regression。
+
+## V2.67 最新進度
+已完成 Skill 11 嗜血成性；詳見歷史紀錄與對應 regression。
+
+## V2.68 最新進度
+已完成 Skill 12 冰箭術；詳見歷史紀錄與對應 regression。
+
+## V2.69 最新進度
+已完成 Skill 13 火龍槍；詳見歷史紀錄與對應 regression。
+
+## V2.70 最新進度
+已完成 Skill 14 冰鏡術；詳見歷史紀錄與對應 regression。
+
+## V2.71 最新進度
+已完成 Skill 15 火附體 fixed C mapping correction；V2.72 已把其 on-hit aura lifecycle 校正回固定 C。
