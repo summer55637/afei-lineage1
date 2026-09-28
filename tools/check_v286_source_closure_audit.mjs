@@ -106,6 +106,46 @@ for(const f of roleBoundFns){
   assert.ok(loyal.includes("meta?.f==='"+f+"'"),f+' player Pet dispatcher');
 }
 
+const specialNoCounterFns=[
+  'sourcePerformPetMagicStatusChangeSkill',
+  'sourcePerformPetSetDuckRandomSkill',
+  'sourcePerformPetBattlePropertySkill',
+  'sourcePerformPetFallGroundSkill',
+  'sourcePerformPetBattleTimidSkill',
+  'sourcePerformPet2BattleTimidSkill',
+  'sourcePerformPetLighttakeedSkill',
+  'sourcePerformPetDamageToHpSkill',
+  'sourcePerformPetMpDamageSkill',
+  'sourcePerformPetTearSkill',
+  'sourcePerformPetSonicSkill',
+  'sourcePerformPetRegretSkill',
+  'sourcePerformPetFirekillSkill',
+  'sourcePerformPetGyrateSkill',
+  'sourcePerformPetBattleModelSkill'
+];
+for(const f of specialNoCounterFns){
+  const fnStart=game.indexOf('function '+f);
+  assert.ok(fnStart>=0,f+' source handler');
+  const fnEnd=game.indexOf('\nfunction ',fnStart+10);
+  const body=game.slice(fnStart,fnEnd>fnStart?fnEnd:fnStart+10000);
+  assert.ok(body.includes('sourceNoCounter:true'),f+' must preserve fixed special-command no-counter boundary');
+}
+
+const commonCounterFns=[
+  'sourcePerformPetAcupunctureSkill',
+  'sourcePerformPetHectorSkill',
+  'sourcePerformPetSarsSkill',
+  'sourcePerformPetBecomePigSkill',
+  'sourcePerformPetRetraceSkill'
+];
+for(const f of commonCounterFns){
+  const fnStart=game.indexOf('function '+f);
+  assert.ok(fnStart>=0,f+' source handler');
+  const fnEnd=game.indexOf('\nfunction ',fnStart+10);
+  const body=game.slice(fnStart,fnEnd>fnStart?fnEnd:fnStart+12000);
+  assert.ok(body.includes('resolvePetEnemyCounterChain'),f+' must retain source common-loop counter path');
+}
+
 assert.ok(game.includes('SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||\'\'))'));
 assert.ok(game.includes('sourceBattlePreconditionFalse:true'));
 
