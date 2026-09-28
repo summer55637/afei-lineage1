@@ -5605,7 +5605,7 @@ function sourceProfessionIceMirrorExecute(prepared,name){
     // Fixed C has no ICE_MIRROR branch in GET_PRACTICE, so practice power remains 0
     // after consuming the common critical + M2 RNG. The actual attack power is replaced
     // by the special defense-derived Ice Mirror formula below.
-    const special=sourceProfessionIceMirrorDamage(target,practice.skillLevel);
+    const special=sourceProfessionIceMirrorDamage(target,prepared.displayLevel);
     if(!special.ok){
       hits.push({slot,targetUnitId:target.id,magicDodge,special,damage:0,noAction:true});
       addLog('「'+name+'」無法取得 '+target.name+' 的 fixed Tough/Defense 資料，本次不猜傷害。','bad');
