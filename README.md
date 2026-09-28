@@ -4,9 +4,22 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.07**
+**PLAYABLE CORE V3.08**
 
-歷史 regression markers：**PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.08 — reaction death credit waits for ItemCrush boundary
+
+V3.08 修正反傷 Reaction 的 death/reward source-order：
+
+- fixed `BATTLE_Counter()` 在 Trap／ACUPUNCTURE 反傷後，先完成 `BATTLE_DamageWakeUp()`、death flag 與 `BATTLE_ItemCrushSeq()`，整個 Counter 返回外層後才由 `BATTLE_AddProfit()` 處理死亡獎勵。
+- Web 先前在 `sourceFinishProfessionTrapReaction()`／`sourceFinishAcupunctureReaction()` 內直接 `sourceMarkEnemyDeathCredit()`，會早於 ItemCrush。
+- 本版改成 reaction 寫入 `sourcePendingDeathCredit`；`sourceBattleFinalizeItemCrushRng()` 完成 defender ItemCrush RNG 後才 finalize death credit。
+- Pending credit 有 idempotent guard，避免同一 reaction 被重複 AddProfit。
+- 不改反傷數值、WakeUp target、Counter gate、Guardian、RNG 數值。
+
+regression：`tools/check_v308_reaction_death_credit_itemcrush.mjs`
+GitHub Actions：`.github/workflows/v308-reaction-death-credit-itemcrush.yml`
 
 ## V3.07 — Toxin Weapon uses actual defindex for Acupuncture WakeUp
 
