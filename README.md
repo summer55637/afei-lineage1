@@ -4,9 +4,22 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.97**
+**PLAYABLE CORE V2.98**
 
-歷史 regression markers：**PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V2.98 — first DuckCheck DamageReact boundary + Guardian pre-substitution suit dodge
+
+V2.98 對齊 fixed `BATTLE_DuckCheck()` 在多個 Web caller adapter 的 source-order：
+
+- target-side `DamageReact` 時，fixed DuckCheck 直接 FALSE；因此 `MYSKILLDUCK` 與普通 DuckCheck 不得先消耗第一層 dodge RNG。
+- `_SUIT_ADDPART3` 是 AttackSeq 後續獨立的第二層 dodge，仍要在 DamageReact 下照常執行。
+- `sourceInitialDodgeOnly()` 現在與 `resolveNormalAttack()` 共用相同 gate；Enemy→Player、Enemy→Pet、profession calc-only 與 Guardian-aware caller 不再繞過 V2.93 boundary。
+- `resolveAttackToEnemyWithGuardian()` 改走共用 first-dodge adapter，原目標在 Guardian substitution 前保留 suit dodge；Guardian 接手後仍 `disableDodge + skipSuitDodge`，不重跑第二次 suit dodge。
+- `_PREVENT_TEAMATTACK` 本版只完成 caller/source-order audit；沒有新的數值證據就不猜 0.40／1 damage 等規則。
+
+regression：`tools/check_v298_first_dodge_guardian_boundary.mjs`
+GitHub Actions：`.github/workflows/v298-first-dodge-guardian-boundary.yml`
 
 ## V2.97 — ACUPUNCTURE WakeUp follows fixed DamageSub defindex
 
@@ -129,7 +142,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.96；本版把 GuardianCheck 的 instigate source block 收斂。
+目前主線已完成 V2.98；本版把 GuardianCheck 的 instigate source block 收斂。
 
 > **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
