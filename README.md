@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V3.00**
+**PLAYABLE CORE V3.01**
 
-歷史 regression markers：**PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.01 — original Defender DamageReact survives Guardian substitution
+
+V3.01 對齊 fixed `BATTLE_Attack()` 的 pre-`BATTLE_AttackSeq()` control-flow boundary：
+
+- fixed C 在進入 `BATTLE_AttackSeq()` 之前就以 **original `defindex`** 的 `BATTLE_GetDamageReact() > 0` 把 `iRet/ContFlg` 設成 FALSE。
+- 因此 original defender 已有 DamageReact 時，即使後續 `BATTLE_GuardianCheck()` 把真正承傷者換成 Guardian，Counter 仍不能重新開啟。
+- Web `resolveAttackToEnemyWithGuardian()` 現在在 Guardian substitution 完成後，保留 original target 的 `sourceCounterBlockedByDamageReact`；不重新執行第二次 DamageReact，也不新增 RNG。
+- 本版不改 DamageReact 類型、傷害、Guardian 條件、Counter 機率或其他數值。
+
+regression：`tools/check_v301_original_damagereact_guardian_counter.mjs`
+GitHub Actions：`.github/workflows/v301-original-damagereact-guardian-counter.yml`
 
 ## V3.00 — confusion target RNG + `_PREVENT_TEAMATTACK` source order
 
