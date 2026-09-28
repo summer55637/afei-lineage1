@@ -18,13 +18,12 @@ assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const hit=sliceFunction('applyFriendlyEnemyHit');
 assert.ok(hit.includes('const originalTargetDesc={kind:\'enemy\',unit:target,unitId:target.id};'));
-assert.ok(hit.includes('const wakeDesc=acupuncture.triggered?originalTargetDesc:targetDesc;'),
-  'primary Acupuncture must WakeUp original defNo even when Guardian is actual defender');
-assert.equal(
-  hit.includes('battleStatusWakeOnDamage(targetDesc,r.damage);'),
-  false,
-  'ordinary primary caller must not WakeUp Guardian after Acupuncture'
-);
+assert.ok(hit.includes("const wakeTarget=acupuncture.triggered"),
+  'primary Acupuncture WakeUp must use caller-sensitive target selection');
+assert.ok(hit.includes("wakeTarget==='original'?originalTargetDesc:targetDesc"),
+  'ordinary primary caller must default Acupuncture WakeUp to original defNo');
+assert.ok(hit.includes("wakeTarget==='attacker'?attackerDesc"),
+  'special callers must be able to select attacker WakeUp explicitly');
 
 const wakeTargets=[];
 const ctx={
