@@ -4,9 +4,21 @@
 
 ## 目前版本
 
-**PLAYABLE CORE V2.95**
+**PLAYABLE CORE V2.96**
 
-歷史 regression markers：**PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V2.96 — GuardianCheck source block: instigate
+
+V2.96 對齊 fixed `BATTLE_GuardianCheck()` 的 Guardian 禁用條件：
+
+- fixed C 在 Guardian 已存活、具 `CHAR_BATTLEFLG_GUARDIAN` 且不是攻擊者後，還會拒絕 `CHAR_WORKINSTIGATE > 0` 的 Guardian。
+- Web `enemyGuardianFor()` 現在在 Guardian substitution 前檢查 source-backed `instigate` 狀態，因此挑撥中的 Enemy 不會突然代擋。
+- fixed C 另外檢查 `CHAR_DOOMTIME > 0`；目前 Web 沒有可證明的 Enemy profession DOOM Work state。現有 Enemy `chargeState` 是 `PETSKILL_ChargeAttack`，不把兩者硬映射。
+- 既有 sleep／paralysis／stone／barrier／dizzy／dragnet／confusion／投射武器等 Guardian 邊界保持不變。
+
+regression：`tools/check_v296_guardian_instigate_block.mjs`
+GitHub Actions：`.github/workflows/v296-guardian-instigate.yml`
 
 ## V2.95 — Guardian substitution must not re-run suit dodge
 
@@ -105,7 +117,7 @@ regression：tools/check_v288_damagereact_counter_boundary.mjs
 GitHub Actions：.github/workflows/v288-damagereact-counter.yml
 
 
-目前主線已完成 V2.95；本版把 Guardian substitution 後的二次 suit-dodge 漏接收斂。
+目前主線已完成 V2.96；本版把 GuardianCheck 的 instigate source block 收斂。
 
 > **V2.92：** Enemy→Player weapon-hit path 收斂回 fixed BATTLE_AttackSeq 的 Guardian-aware boundary。
 
