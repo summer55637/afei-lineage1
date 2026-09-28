@@ -55,7 +55,8 @@ assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:19,thunder:2
 
 p.professionClass=1;
 snap=ctx.sourceProfessionPlayerMagicProficiencyRefresh(p,'wrong-class');
-assert.equal(snap.active,false);assert.equal(snap.reason,'profession-mismatch-terminator');
+assert.equal(snap.active,true);
+assert.deepEqual(JSON.parse(JSON.stringify(snap.work)),{fire:13,ice:19,thunder:25});
 
 const entry=extractFunction(game,'sourceInitPlayerSideEntrySnapshot');
 assert.ok(entry.includes("sourceProfessionPlayerMagicProficiencyRefresh(state,'battle-entry')"));
