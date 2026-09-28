@@ -59,6 +59,9 @@ const ctx={
   battleUltimateWork:new Map(),
   battleUltimateFlags:new Map(),
   sourceUltimateImmune:()=>false,
+  battleStatusActorDesc:actor=>actor?.kind==='enemy'
+    ?{kind:'enemy',unit:actor.unit,unitId:actor.unitId}
+    :(actor?.kind==='player'?{kind:'player'}:actor?.kind==='pet'?{kind:'pet',pet:actor.pet,petId:actor.petId}:null),
   sourcePrepareProfessionTrapReaction:()=>({triggered:false}),
   sourcePrepareAcupunctureReaction:(attackerDesc,targetDesc,r)=>({
     triggered:true,targetUnit:null,targetPet:null,attackerDesc,targetDesc,r,
@@ -68,7 +71,7 @@ const ctx={
   addLog:()=>{}
 };
 vm.createContext(ctx);
-for(const fn of [queue,finalizer,crush,comboApply,comboAcu])vm.runInContext(fn,ctx);
+for(const fn of [queue,finalizer,crush,acu,comboApply,comboAcu])vm.runInContext(fn,ctx);
 
 const normalEnemy={id:'combo-normal',name:'ComboNormal',hp:4,battleSlot:3};
 const normalR={damage:8};
