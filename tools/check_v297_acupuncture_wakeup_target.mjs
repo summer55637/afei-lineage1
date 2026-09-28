@@ -16,8 +16,10 @@ function sliceFunction(name){
 assert.doesNotThrow(()=>new Function(game),'game.js syntax');
 
 const hit=sliceFunction('battleApplyPhysicalHit');
-assert.ok(hit.includes('const wakeDesc=acupuncture.triggered?attackerDesc:targetDesc;'),
-  'primary ACUPUNCTURE WakeUp target must follow fixed DamageSub defindex rewrite');
+assert.ok(hit.includes('const wakeDesc=targetDesc;'),
+  'primary ACUPUNCTURE WakeUp must use the original defender restored before BATTLE_DamageWakeUp');
+assert.equal(hit.includes('const wakeDesc=acupuncture.triggered?attackerDesc:targetDesc;'),false,
+  'primary ACUPUNCTURE WakeUp must not use the temporary attacker defindex');
 assert.ok(hit.includes('if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);'),
   'ACUPUNCTURE WakeUp must not duplicate the Counter reflected-attacker WakeUp');
 assert.ok(hit.includes('sourceFinishAcupunctureReaction(acupuncture);'),
@@ -43,8 +45,8 @@ assert.match(changelog,/V2\.97：ACUPUNCTURE 反傷後 WakeUp 目標對齊 fixed
 
 console.log(JSON.stringify({
   pass:true,
-  version:'V2.97',
-  primaryAcupunctureWakeUp:'attacker',
+  version:'V2.97 regression refreshed by V3.02 source-order correction',
+  primaryAcupunctureWakeUp:'original-defender',
   counterAcupunctureWakeUp:'sourceFinishAcupunctureReaction',
   trapWakeUp:'attacker'
 }));
