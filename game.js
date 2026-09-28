@@ -7606,7 +7606,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     {
       suppressSuitPoison:true,
       // fixed generic profession helper zeroes react for every direct skill except CHAIN_ATK.
-      suppressDamageReact:prepared.functionName!=='PROFESSION_CHAIN_ATK'
+      suppressDamageReact:prepared.functionName!=='PROFESSION_CHAIN_ATK',
+      // CHAIN_ATK preserves DamageReact through BATTLE_DamageSub, then rewrites defindex
+      // to attackindex before BATTLE_DamageWakeUp().
+      sourceAcupunctureWakeTarget:
+        prepared.functionName==='PROFESSION_CHAIN_ATK'?'attacker':null
     }
   );
 
@@ -13860,7 +13864,11 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   // BATTLE_DamageWakeUp(), even when DamageSub's ACUPUNCTURE was supplied by a
   // Guardian-substituted defender. The ordinary player/Pet caller must therefore
   // wake originalTarget, not actualTarget, whenever ACUPUNCTURE actually triggered.
-  const wakeDesc=acupuncture.triggered?originalTargetDesc:targetDesc;
+  const wakeTarget=acupuncture.triggered
+    ?(options.sourceAcupunctureWakeTarget==='attacker'||r?.sourceAcupunctureWakeTarget==='attacker'
+      ?'attacker':'original')
+    :null;
+  const wakeDesc=wakeTarget==='attacker'?attackerDesc:(wakeTarget==='original'?originalTargetDesc:targetDesc);
   battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=options.suppressSuitPoison
     ?null:sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
@@ -15015,7 +15023,10 @@ function enemyApplySkillHit(unit,chosen,r,label,options={}){
       pet.hp=Math.max(0,before-r.damage);
       sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
       sourceFinishAcupunctureReaction(acupuncture);
-      battleStatusWakeOnDamage(targetDesc,r.damage);
+      const wakeDesc=acupuncture.triggered&&r?.sourceAcupunctureWakeTarget==='attacker'
+        ?{kind:'enemy',unit,unitId:unit.id}
+        :targetDesc;
+      battleStatusWakeOnDamage(wakeDesc,r.damage);
       addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'命中 '+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       sourceLogAcupunctureReaction(acupuncture);
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -15412,6 +15423,9 @@ function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null)
     r.guardianPetId=guardian.id;
     r.guardianSourceBug=String(options.guardianSourceBug||'BATTLE_S_AttackDamage-defindex-not-updated');
   }
+  // Special BATTLE_S_AttackDamage-family callers keep post-DamageSub defindex on attacker
+  // for ACUPUNCTURE WakeUp instead of restoring the original Player/Pet target.
+  r.sourceAcupunctureWakeTarget='attacker';
   return r;
 }
 function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
@@ -18389,6 +18403,9 @@ function sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,attackOptions={}
     r.guardianCalcOnly=guardian;
     r.guardianSourceBug='BATTLE_S_AttackDamage-defindex-not-updated';
   }
+  // BATTLE_S_AttackDamage does NOT restore original defindex for ACUPUNCTURE before
+  // BATTLE_DamageWakeUp(); its post-DamageSub defindex is the attacker.
+  r.sourceAcupunctureWakeTarget='attacker';
   return r;
 }
 function sourcePetOriginalDamageReact(target){
