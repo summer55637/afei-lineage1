@@ -13779,6 +13779,14 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   const actual=r?.actualTarget||target;
   if(!actual)return null;
   const style=attackerKind==='pet'?'pet':(r.critical?'good':'');
+  const attackerDesc=attackerKind==='pet'
+    ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
+    :{kind:'player'};
+  const originalTargetDesc={kind:'enemy',unit:target,unitId:target.id};
+  // fixed BATTLE_Attack checks DamageReact before Dodge/Miss, so this must precede
+  // both early returns. The original target is used here; Guardian substitution happens later.
+  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,originalTargetDesc);
+  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
   if(r.dodged){
     addLog(target.name+' 閃避了 '+attackerName+' 的攻擊。',attackerKind==='pet'?'pet':'');
     return target;
@@ -13787,13 +13795,6 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
     addLog(attackerName+' 攻擊 '+target.name+'，但沒有造成傷害。',attackerKind==='pet'?'pet':'');
     return actual;
   }
-
-  const attackerDesc=attackerKind==='pet'
-    ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
-    :{kind:'player'};
-  const originalTargetDesc={kind:'enemy',unit:target,unitId:target.id};
-  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,originalTargetDesc);
-  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
   const acupuncture=options.suppressDamageReact
     ?{triggered:false,suppressed:true}
     :sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r);
