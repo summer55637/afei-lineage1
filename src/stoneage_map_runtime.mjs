@@ -56,6 +56,15 @@ export function sourceMapBattleCandidatesAt(map,x,y){
   return Object.assign({},tile,{battleCandidates:sourceMapBattleCandidates(map,tile.tile)});
 }
 
+export function sourceMapBattleFieldNoAt(map,x,y,{randIndex}={}){
+  const resolved=sourceMapBattleCandidatesAt(map,x,y);
+  if(!resolved||!Array.isArray(resolved.battleCandidates)||resolved.battleCandidates.length!==3)return null;
+  if(typeof randIndex!=='function')return Object.assign({},resolved,{battleFieldNo:null,selection:null,reason:'rng-not-provided'});
+  const selected=Math.trunc(Number(randIndex(0,2)));
+  if(!Number.isFinite(selected)||selected<0||selected>2)return Object.assign({},resolved,{battleFieldNo:null,selection:null,reason:'rng-index-invalid'});
+  return Object.assign({},resolved,{battleFieldNo:resolved.battleCandidates[selected],selection:selected});
+}
+
 export function sourceMapRuntimeSummary(map){
   if(!map)return {status:'unresolved'};
   return {status:'ready',floorId:Number(map.floorId),width:Number(map.width),height:Number(map.height),tileCount:Array.isArray(map.tiles)?map.tiles.length:0,objectCount:Array.isArray(map.objects)?map.objects.length:0};
