@@ -19,6 +19,8 @@ PLAYABLE CORE V3.09 — current playable baseline; V3.13 remains source/runtime 
 
 - 新增 verified `mapset.txt` runtime：20,166 個 image ID、固定 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` parser 效果，並接到 map runtime API。
 
+- 新增 `sourceMapWalkableAt()`：對齊 fixed C `MAP_walkAbleFromPoint()` 的 ground/object WALKABLE 與 flying HEIGHT 分支，unknown/out-of-range 維持 fail-closed。
+
 ## V3.12 — battlefield source contract
 
 2026-09-30
