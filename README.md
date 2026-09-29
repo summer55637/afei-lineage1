@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.10 groundwork** |
+| 下一階段 | **V3.11 battle presentation** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -85,9 +85,9 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**。
 - 不建立 GMQUE live NPC、handover、領獎 UI。
 - GMQUE 既有 fixed-C 研究資料保留作歷史參考，但不再是版本 blocker，也不會自動重新啟用。
 
-V3.10 仍保留已完成的 **encounter source closure** 資料邊界；主線改為**戰鬥畫面 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
+V3.10 已完成 encounter source closure 與基礎 battle presentation；V3.11 主線改為**戰鬥畫面互動提示 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
 
-本輪在既有戰鬥場景上新增 **battle HUD**：右上固定指令窗、回合／目標資訊，以及玩家／出戰寵的 HP／MP；未有 source-backed runtime 的指令只作視覺佔位，不偽造玩法。 本輪再加入 **battle-stage feedback**：將既有戰鬥 log 的傷害／會心／MISS／捕獲／狀態結果短暫疊到戰場上；只轉譯已發生的結果，不重新計算。 同時開始 **world HUD shell**：以現有 map／encounter／Player／Pet／system log 資料建立世界主畫面的場景與四周常駐 HUD；樹、岩石、水路等目前只屬 presentation-only，不冒充原始地圖資料。
+V3.10 已在既有戰鬥場景上新增 **battle HUD**：右上固定指令窗、回合／目標資訊，以及玩家／出戰寵的 HP／MP；未有 source-backed runtime 的指令只作視覺佔位，不偽造玩法。 本輪再加入 **battle-stage feedback**：將既有戰鬥 log 的傷害／會心／MISS／捕獲／狀態結果短暫疊到戰場上；只轉譯已發生的結果，不重新計算。 並完成 **world HUD shell**：以現有 map／encounter／Player／Pet／system log 資料建立世界主畫面的場景與四周常駐 HUD；樹、岩石、水路等目前只屬 presentation-only，不冒充原始地圖資料。
 
 介面來源筆記：[V3.10 battle UI source notes](docs/reference/v310-battle-ui-source-notes.md)。
 固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
@@ -177,4 +177,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.10 battle presentation → runtime regression → playable integration**
+**目前開發方向：V3.11 battle target marker → 後續戰鬥／世界 presentation → runtime regression → playable integration**
