@@ -90,6 +90,60 @@ V2.61 完成固定 C `PROFESSION_ENCLOSE`／Skill 5 與 `PROFESSION_ANNEX` 狀�
 
 這是歷史 regression 節點，正式可玩 baseline 仍維持 V3.09。
 
+## V2.62～V2.74 歷史進度節點
+
+## V2.62 最新進度
+
+Skill 6 `SUMMON_THUNDER`／召雷術；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.63 最新進度
+
+Skill 7 `STORM / WATER`／暴風雨；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.64 最新進度
+
+Skill 8 `CURRENT`／電流術；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.65 最新進度
+
+Skill 9 `FIRE_BALL`／火星球；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.66 最新進度
+
+Skill 10 `BLOOD_WORMS`／嗜血蠱；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.67 最新進度
+
+Skill 11 `BLOOD`／嗜血成性；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.68 最新進度
+
+Skill 12 `ICE_ARROW`／冰箭術；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.69 最新進度
+
+Skill 13 `FIRE_SPEAR`／火龍槍與 DOOMTIME 蓄力；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.70 最新進度
+
+Skill 14 `ICE_MIRROR`／冰鏡術；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.71 最新進度
+
+職業魔法 `FIRE_ENCLOSE` mapping regression；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.72 最新進度
+
+職業魔法 `THUNDER_ENCLOSE` mapping regression；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.73 最新進度
+
+職業魔法 `ICE_ENCLOSE`／冰附體 regression；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
+## V2.74 最新進度
+
+職業魔法 proficiency regression；此為歷史 regression/source 契約節點，正式可玩 baseline 仍為 V3.09。
+
 ## 🔬 V3.10～V3.12 presentation／source groundwork
 
 GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追尋 RANDGMQUE / QUEPART0..3，也不建立替代任務資料或 live handover／領獎 UI。既有 fixed-C 研究僅保留歷史參考。
