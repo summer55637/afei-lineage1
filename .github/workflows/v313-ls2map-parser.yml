@@ -3,6 +3,11 @@ name: V3.13 LS2MAP parser contract
 on:
   push:
     paths:
+      - 'tools/check_v313_source_map_runtime_api.mjs'
+      - 'tools/check_v313_source_map_world_hud.mjs'
+      - 'game.css'
+      - 'start.html'
+      - 'game.js'
       - 'tools/stoneage_ls2map_parser.mjs'
       - 'tools/check_v313_ls2map_parser.mjs'
       - 'data/generated/stoneage_map_20000.json'
@@ -27,6 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Run game.js syntax check
+        run: node --check game.js
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -34,3 +41,7 @@ jobs:
         run: node tools/check_v313_ls2map_parser.mjs
       - name: Run V3.13 verified floor 20000 runtime regression
         run: node tools/check_v313_map_20000_runtime.mjs
+      - name: Run V3.13 source map runtime API regression
+        run: node tools/check_v313_source_map_runtime_api.mjs
+      - name: Run V3.13 source map world HUD regression
+        run: node tools/check_v313_source_map_world_hud.mjs
