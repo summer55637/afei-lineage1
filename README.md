@@ -125,7 +125,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - Encounter / Enemy source closure
 - GMQUE reward Enemy template closure
 
-Regression 與 CI workflow 都放在 `tools/` 與 `.github/workflows/`。
+Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
 ---
 
