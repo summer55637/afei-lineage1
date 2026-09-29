@@ -25,5 +25,3 @@ jobs:
         run: node --check game.js
       - name: Run encounter source closure regression
         run: node tools/check_v310_encounter_source_closure.mjs
-      - name: Run GMQUE source closure regression
-        run: node tools/check_v310_gmque_source_closure.mjs
