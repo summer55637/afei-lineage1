@@ -111,7 +111,7 @@ on:
       - "tools/check_v273_profession_ice_enclose_runtime.mjs"
       - "tools/check_v274_profession_magic_practice_runtime.mjs"
       - "game.js"
-      - "game.html"
+      - "start.html"
       - "game.css"
       - ".github/workflows/generate-item-make-runtime.yml"
   workflow_dispatch:
