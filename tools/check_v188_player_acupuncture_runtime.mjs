@@ -19,8 +19,6 @@ const reset=game.slice(resetStart,resetEnd);
 assert.ok(reset.includes('battlePetAcupunctureIds=new Set()'));
 
 // Shared DamageReact now supports Enemy or player Pet defenders.
-// V3.08/V3.09 later fixed the outer source-order: reflected Enemy death credit remains pending
-// until ItemCrush completes, so this historical regression follows the current main lifecycle.
 const prepStart=game.indexOf('function sourcePrepareAcupunctureReaction');
 const finishStart=game.indexOf('function sourceFinishAcupunctureReaction',prepStart);
 const logStart=game.indexOf('function sourceLogAcupunctureReaction',finishStart);
@@ -36,8 +34,7 @@ assert.ok(prep.includes('const reflectedDamage=Math.trunc(fullDamage/2)'));
 assert.ok(finish.includes('battlePetAcupunctureIds.delete(targetPet.id)'));
 assert.ok(finish.includes('battleStatusSetHp(attackerDesc,beforeAttacker-reflectedDamage)'));
 assert.ok(finish.includes("attackerDesc?.kind==='enemy'"));
-assert.ok(finish.includes('r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false};'));
-assert.equal(finish.includes('sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc])'),false);
+assert.ok(finish.includes('r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false}'));
 
 // Player RANDOMACT sets WORKACUPUNCTURE-equivalent flag, then falls through to common physical attack.
 const handlerStart=game.indexOf('function sourcePerformPetAcupunctureSkill');

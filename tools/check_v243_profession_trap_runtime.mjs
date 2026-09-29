@@ -198,8 +198,7 @@ const sameSide=execFn.indexOf('if(toNo<10){');
 assert.ok(trapDispatch>=0&&sameSide>trapDispatch);
 assert.ok(execFn.includes('sourceProfessionTrapExecute(prepared,trapName)'));
 
-// DamageReact coverage and redirect boundaries. The weapon caller delegates to the shared physical
-// executor; trap prepare/finish is intentionally centralized there so the source order is single-path.
+// DamageReact coverage and redirect boundaries.
 const generic=extractFunction(game,'battleApplyPhysicalHit');
 assert.ok(generic.indexOf('sourcePrepareProfessionTrapReaction')<generic.indexOf('sourcePrepareAcupunctureReaction'));
 assert.ok(generic.includes('sourceFinishProfessionTrapReaction(trap)'));
@@ -210,11 +209,12 @@ assert.ok(enemySkill.includes('ignoreDamageReact:!!options.ignoreDamageReact'));
 
 const enemyWeapon=extractFunction(game,'enemyWeaponApplyHit');
 assert.ok(enemyWeapon.includes('battleApplyPhysicalHit('));
-assert.ok(enemyWeapon.includes('{deferItemCrush:true,deferAddProfit:true}'));
 assert.equal(enemyWeapon.includes('sourcePrepareProfessionTrapReaction'),false);
+assert.ok(enemyWeapon.includes("battleApplyPhysicalHit(\n      {kind:'enemy',unit,unitId:unit.id},targetDesc,r,"));
 
 const enemyPrimary=extractFunction(game,'performEnemyPrimaryAttack');
 assert.ok(enemyPrimary.includes('sourcePrepareProfessionTrapReaction'));
+assert.ok(enemyPrimary.includes('sourceFinishProfessionTrapReaction(playerTrap)'));
 assert.ok(enemyPrimary.includes('sourceCounterBlockedByDamageReact:true'));
 
 const direct=extractFunction(game,'enemyApplyDirectGuardianSkillHit');

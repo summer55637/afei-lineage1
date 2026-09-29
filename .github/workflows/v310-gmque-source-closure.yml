@@ -1,0 +1,37 @@
+name: V3.10 GMQUE source closure
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'data/generated/stoneage_gmque_trophy_runtime.json'
+      - 'data/generated/stoneage_enemy_ai.json'
+      - 'data/generated/stoneage_general_encounter_runtime.json'
+      - 'data/generated/stoneage_gmque_source_closure.json'
+      - 'docs/reference/gmque-source-closure.md'
+      - 'tools/check_v310_gmque_source_closure.mjs'
+      - 'tools/check_v188_player_acupuncture_runtime.mjs'
+      - 'tools/check_v233_profession_scapegoat_runtime.mjs'
+      - 'tools/check_v243_profession_trap_runtime.mjs'
+      - 'tools/check_v244_profession_toxin_weapon_runtime.mjs'
+      - '.github/workflows/v310-gmque-source-closure.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run GMQUE source closure regression
+        run: node tools/check_v310_gmque_source_closure.mjs
+      - name: Run latest Combo and reaction regressions
+        run: |
+          node tools/check_v308_reaction_death_credit_itemcrush.mjs
+          node tools/check_v309_combo_death_credit_itemcrush.mjs

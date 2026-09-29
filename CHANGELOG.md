@@ -11,15 +11,22 @@
 
 > **原 C 規則優先、不猜數值**
 
-## Unreleased — GMQUE source-closure groundwork
+## V3.10 groundwork：GMQUE pet reward template guard
 
-這一輪不升 playable core 版本，僅把下一個有證據的工作點與 regression 基礎補齊：
+- GMQUE reward pet `1642 / 1636 / 475` 現在不再只回傳一個可疑似可用的 Enemy ID。runtime 會先以目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 建立 `enemyIds → player-pet variant` reverse index。
+- 本輪核對結果：`1642 / 1636 / 475` 全部沒有 player-pet variant 命中，因此正式回傳 `pet-template-pending`；固定 C 的 implicit-zero index 3 仍維持 `implicit-zero-pet-slot`。
+- 這個 guard 只解除「未來找到真正 template 後如何安全接入」的結構缺口，不捏造名稱、能力、TempNo 或初始數值。
 
-- 建立 `docs/reference/gmque-source-audit.md`，集中記錄 `GMQUE_InSertQue` → `GMQUE_CheckQueStr` → `GMQUE_DelQueStrPet` → `GMQUE_AddQueStrTrophy` → `GMQUE_cleanQueStr` 的 fixed C lifecycle。
-- 建立 `tools/check_gmque_source_contract.mjs` 與 `.github/workflows/gmque-source-contract.yml`，固定檢查 GMQUE 41/57/2 分支、五個 item pool、`1642/1636/475/0` pet array 與 gold table。
-- README 改回以 V3.09 為現行主線，移除 V2.91 的過時「目前核心版本」說法，並明確列出目前 7 個 `sourceRuntimePending` 防線與下一個 GMQUE source closure 缺口。
-- 重新整理歷史 regression 文件相容 marker；同步把已因後續 source-order / helper refactor 而落後的 V1.88 / V2.33 / V2.43 / V2.44 regression 改成驗證目前已證實的語意，而不是要求舊 helper 呼叫文字。
-- 這輪完整本地 `tools/check_*.mjs` 共 138 個，全部 PASS；不等同 GitHub Actions 已執行，因為本輪沒有 push。
+## V3.10 groundwork：GMQUE source closure / handover parser
+
+- pinned fixed C 仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- `GMQUE_InSertQue()` 從 NPC argument 的 `RANDGMQUE` 與 `QUEPART0..` 建立四段 `petID-LV` queue；`GMQUE_CheckQueStr()` 先建立 `GMQUENUMS`，再依金幣／背包 gate 檢查四隻寵。
+- `GMQUE_DelQueStrPet()` 負責交出匹配寵物；`GMQUE_AddQueStrTrophy()` 才進入 pet / item / gold reward；成功獎勵後才 `GMQUE_cleanQueStr()`。
+- Web runtime 新增 `sourceGmQueTaskEntries()`、`sourceGmQuePetIdentity()`、`sourceGmQueMatchPetToTask()`、`sourceGmQueHandoverCheck()`，目前只實作 source-backed parser / eligibility，不猜缺失的 Enemy template，也不直接改玩家持久狀態。
+- `stoneage_enemy_ai.json` 目前存在 Enemy ID 1642／1636／475 的 AI 索引；但 AI metadata 不能代替 `ENEMY_getEnemyArrayFromId()` 所需的完整 Enemy template。
+- `enemybase1.txt` 的 pinned 檔案直接核對不到 TempNo 1642／1636；因此 GMQUE pet reward 仍 fail-closed。
+- `enemyItems=[1642,...]` 出現在現有 encounter group 124／125／128 的掉落欄，是 Enemy 掉落 item ID 的證據，不把這些 occurrence 誤認為 GMQUE reward pet template。
+- 新增 source closure ledger 與 regression，明確守住上述資料層級邊界。
 
 ## 歷史分檔
 
@@ -29,7 +36,7 @@
 4. [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-7. [V1.75～V3.09](docs/changelog/part-07-v1.75-onward.md)
+7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
 
 ## V3.09：Combo 死亡獎勵 credit 延後到 ItemCrush 後
 

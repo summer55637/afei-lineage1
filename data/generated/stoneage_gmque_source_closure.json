@@ -1,0 +1,109 @@
+{
+  "format": "stoneage-gmque-source-closure-v1",
+  "status": "partial",
+  "playableCore": "V3.09",
+  "workstream": "V3.10-groundwork",
+  "fixedC": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/src/npc/npc_eventaction.c",
+    "functions": [
+      "GMQUE_InSertQue",
+      "GMQUE_getQueStr",
+      "GMQUE_showQueStr",
+      "GMQUE_CheckQueStr",
+      "GMQUE_DelQueStrPet",
+      "GMQUE_AddQueStrTrophy",
+      "GMQUE_cleanQueStr"
+    ]
+  },
+  "queue": {
+    "slotCount": 4,
+    "token": "petID-LV",
+    "delimiter": "&",
+    "npcArgKeys": [
+      "RANDGMQUE",
+      "QUEPART0",
+      "QUEPART1",
+      "QUEPART2",
+      "QUEPART3"
+    ]
+  },
+  "reward": {
+    "actionRoll": "rand()%100 then 0->1",
+    "goldPercent": "41/100",
+    "itemPercent": "57/100",
+    "petPercent": "2/100",
+    "petArray": [
+      1642,
+      1636,
+      475,
+      0
+    ]
+  },
+  "evidence": {
+    "enemyAi": "data/generated/stoneage_enemy_ai.json",
+    "enemyAiSource": "enemy1.txt + enemybase1.txt",
+    "enemyAiKeysPresent": [
+      1642,
+      1636,
+      475
+    ],
+    "enemybaseDirectCheck": {
+      "path": "gmsv/data/enemybase1.txt",
+      "1642": "not-found",
+      "1636": "not-found",
+      "475": "template-not-established"
+    },
+    "encounterRuntime1642": {
+      "groups": [
+        124,
+        125,
+        128
+      ],
+      "field": "enemyItems",
+      "interpretation": "drop-item-id, not reward pet template"
+    },
+    "mainPetDbEnemyIdIndex": {
+      "source": "data/generated/stoneage_general_lv1_pets.json",
+      "path": "species[].wildLv1Variants[].enemyIds",
+      "rewardIdsChecked": [
+        1642,
+        1636,
+        475
+      ],
+      "matches": [],
+      "interpretation": "no current player-pet variant maps these three GMQUE reward Enemy IDs; do not promote AI metadata into a pet template"
+    }
+  },
+  "unresolved": [
+    {
+      "key": "gmqueNpcArguments",
+      "status": "pending-source",
+      "impact": "cannot safely materialize actual live GMQUE task offerings"
+    },
+    {
+      "key": "rewardPet1642",
+      "status": "pending-template",
+      "impact": "cannot create reward pet safely"
+    },
+    {
+      "key": "rewardPet1636",
+      "status": "pending-template",
+      "impact": "cannot create reward pet safely"
+    },
+    {
+      "key": "rewardPet475",
+      "status": "pending-template",
+      "impact": "cannot prove complete reward-pet template from current web runtime data"
+    }
+  ],
+  "runtime": {
+    "parser": "sourceGmQueTaskEntries",
+    "matcher": "sourceGmQueMatchPetToTask",
+    "eligibility": "sourceGmQueHandoverCheck",
+    "mutatesPersistentState": false,
+    "petRewardTemplateResolver": "sourceGmQueRewardPetTemplate",
+    "petRewardTemplateIndexBuilder": "sourceGmQueBuildPetTemplateIndex"
+  }
+}
