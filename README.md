@@ -157,7 +157,7 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追�
 
 V3.13 已經開始有真正的 floor/x/y → tile runtime：`20000` 已從 fixed C 的 binary map 產生 50×50 verified tile/object JSON，並以 `sourceMapTileAt(floor,x,y)` 與 `sourceMapBattleCandidates(tile)` 提供 fail-closed 查詢。未知 Floor 不會被替換成假地圖。
 
-另外，舊版 V1.72～V2.86 regression 仍可能引用歷史 `game.html`；網站正式入口仍只有 `start.html`，CI 會在測試工作目錄暫時建立 compatibility fixture，不會把舊網址重新發布。舊 regression 若因 runtime 重構而引用過時 helper 名稱，會優先修正測試契約，不回退正式 runtime。
+另外，舊版 V1.72～V2.86 regression 仍可能引用歷史 `game.html`；網站正式入口仍只有 `start.html`，CI 會在測試工作目錄暫時建立 compatibility fixture，不會把舊網址重新發布。舊 regression 若因 runtime 重構而引用過時 helper 名稱，會優先修正測試契約，不回退正式 runtime。自訂 Pages workflow 已停用自動 push deploy，避免與 GitHub Pages managed deployment 重複競爭 artifact；正式 Pages deployment 以 managed workflow 為準。
 
 來源筆記：[V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)。
 ---
@@ -200,6 +200,16 @@ probe 只讀取已經發生的 Encounter 座標，不重新抽座標，也不消
 
 來源筆記：[V3.15 source-map Encounter coordinate probe](docs/reference/v315-source-map-encounter-probe.md)。
 
+## 🔬 V3.16 client image resolver
+
+V3.16 從公開 client source 閉合 tile 圖像來源鏈：`tile image ID → realGetNo() → ADRNBIN graphicNo → Real binary offset/size → decoder()`。
+
+新增 `src/stoneage_client_image_runtime.mjs`，依 client `ADRNBIN` struct 解析固定 **72-byte little-endian record**，提供 image ID → graphic metadata 查詢。
+
+目前沒有可確認可發布的 `adrn_136.bin`／`real_136.bin` asset pack，因此只做 resolver metadata contract，不把第三方客戶端圖片打包進 Pages；缺少 binary 時維持 fail-closed。
+
+來源筆記：[V3.16 client image resolver contract](docs/reference/v316-client-image-resolver-contract.md)。
+
 ## 📁 專案結構
 
 ```
@@ -231,6 +241,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.13 fixed-C map source catalog（1284 個原始 map blobs，7 張已 verified）與 mapset normalization regression
 - V3.14 fixed-C map header catalog（可重跑 1284 map headers scanner）
 - V3.15 verified Encounter coordinate source probe（不耗 RNG、fail-closed）
+- V3.16 client image resolver（ADRNBIN 72-byte metadata contract、Real binary asset fail-closed）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -274,4 +285,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.15 verified Encounter coordinate probe → 真實地圖 presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
+**目前開發方向：V3.16 client image resolver → 真實 tile presentation（需合法 asset pack）→ verified map 擴充 → battle map selection → runtime regression → playable integration**
