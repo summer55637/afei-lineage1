@@ -13,6 +13,8 @@
 
 - 新增 `data/generated/stoneage_map_source_catalog.json`：固定 C `gmsv/data/map` 的 1284 個 map blobs source inventory；不等於每張地圖都已完成 Web runtime。
 
+- `sourceMapBattleFieldNoAt()` 將 fixed C `map[RAND(0,2)]` 保留為外部 RNG injection，不讓地圖模組自行消耗 RNG。
+
 ## V3.12 — battlefield source contract
 
 2026-09-30
