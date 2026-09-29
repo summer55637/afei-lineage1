@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const index=JSON.parse(fs.readFileSync('data/generated/stoneage_map_runtime_index.json','utf8'));
+const mapset=JSON.parse(fs.readFileSync('data/generated/stoneage_mapset_runtime.json','utf8'));
 const expected={
   '20000':{width:50,height:50,tileCount:2500,objectCount:2500,sha:'b730f5aca60347f0b5b1bda497f6e65740706dc1'},
   '200':{width:30,height:30,tileCount:900,objectCount:900,sha:'d08e8fea4dffd127c26f764d51231ec75ec73f98'},
@@ -19,6 +20,9 @@ for(const [id,want] of Object.entries(expected)){
   assert.equal(map.floorId,Number(id));
   assert.equal(map.tiles.length,want.tileCount);
   assert.equal(map.objects.length,want.objectCount);
+  const ids=new Set([...map.tiles,...map.objects].map(Number));
+  const invalid=[...ids].filter(id=>!Object.prototype.hasOwnProperty.call(mapset.walkableByImageId,String(id)));
+  assert.deepEqual(invalid,[],`floor ${id} contains image IDs rejected by fixed-C mapset`);
   assert.equal(Object.keys(map.battlemapResolver.candidatesByImageId||{}).length>0,true);
 }
-console.log(JSON.stringify({pass:true,version:'V3.13',focus:'verified map runtime set',floors:Object.keys(expected).map(Number),sourceBacked:true,unknownFloorPolicy:'fail-closed'}));
+console.log(JSON.stringify({pass:true,version:'V3.13',focus:'verified map runtime set + IsValidImagenumber closure',floors:Object.keys(expected).map(Number),sourceBacked:true,imageIdValidation:'mapset complete',unknownFloorPolicy:'fail-closed'}));
