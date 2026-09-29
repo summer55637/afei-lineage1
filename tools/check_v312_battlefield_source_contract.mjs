@@ -1,7 +1,14 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
+const html=fs.readFileSync('start.html','utf8');
+const css=fs.readFileSync('game.css','utf8');
 const m=JSON.parse(fs.readFileSync('data/generated/stoneage_battlefield_source_manifest.json','utf8'));
+assert.match(html,/id=["']battleSourceMeta["']/,'battle source status node missing');
+assert.ok(html.includes('stoneage_battlefield_source_manifest.json'),'battle source manifest loader missing');
+assert.ok(css.includes('.battle-source-meta{'),'battle source status CSS missing');
+assert.ok(html.includes('不猜測目前戰場地形'),'fail-closed source message missing');
+
 assert.equal(m.version,'V3.12');
 assert.equal(m.kind,'battlefield-source-manifest');
 assert.equal(m.source.repository,'gavinlinasd/StoneAge');
