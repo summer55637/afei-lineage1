@@ -6,6 +6,7 @@
 - manifest 固定 220 個 battle map 定義、122 個有效 tile 範圍宣告，以及 1 筆原始反向範圍 `3137 to 1349`。
 - 候選 battle map 來源固定為 `MAP_BATTLEMAP` / `MAP_BATTLEMAP2` / `MAP_BATTLEMAP3`，選擇規則固定為 `RAND(0,2)`。
 - 目前不因缺少完整 floor/x/y → tile runtime 而猜測當前戰場地形。
+- 戰鬥 HUD 新增原 C 戰場來源狀態列，讀取 generated manifest 的統計；若 manifest 無法載入則明確顯示 fail-closed，不冒充目前戰場地形。
 
 regression：`tools/check_v312_battlefield_source_contract.mjs`。
 ## V3.10 — encounter source closure
