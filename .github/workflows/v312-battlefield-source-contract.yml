@@ -1,0 +1,27 @@
+name: V3.12 battlefield source contract
+
+on:
+  push:
+    paths:
+      - 'data/generated/stoneage_battlefield_source_manifest.json'
+      - 'tools/check_v312_battlefield_source_contract.mjs'
+      - 'docs/reference/v312-battlefield-source-contract.md'
+      - '.github/workflows/v312-battlefield-source-contract.yml'
+  pull_request:
+    paths:
+      - 'data/generated/stoneage_battlefield_source_manifest.json'
+      - 'tools/check_v312_battlefield_source_contract.mjs'
+      - 'docs/reference/v312-battlefield-source-contract.md'
+      - '.github/workflows/v312-battlefield-source-contract.yml'
+  workflow_dispatch:
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run V3.12 battlefield source contract
+        run: node tools/check_v312_battlefield_source_contract.mjs
