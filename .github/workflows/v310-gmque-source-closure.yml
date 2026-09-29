@@ -10,8 +10,10 @@ on:
       - 'data/generated/stoneage_enemy_ai.json'
       - 'data/generated/stoneage_general_encounter_runtime.json'
       - 'data/generated/stoneage_gmque_source_closure.json'
+      - 'data/generated/stoneage_gmque_reward_enemy_templates.json'
       - 'docs/reference/gmque-source-closure.md'
       - 'tools/check_v310_gmque_source_closure.mjs'
+      - 'tools/check_v310_gmque_reward_enemy_template_runtime.mjs'
       - 'tools/check_v188_player_acupuncture_runtime.mjs'
       - 'tools/check_v233_profession_scapegoat_runtime.mjs'
       - 'tools/check_v243_profession_trap_runtime.mjs'
@@ -33,6 +35,8 @@ jobs:
         run: node tools/check_v310_gmque_npc_source_contract.mjs
       - name: Run GMQUE source closure regression
         run: node tools/check_v310_gmque_source_closure.mjs
+      - name: Run GMQUE reward Enemy template runtime regression
+        run: node tools/check_v310_gmque_reward_enemy_template_runtime.mjs
       - name: Run latest Combo and reaction regressions
         run: |
           node tools/check_v308_reaction_death_credit_itemcrush.mjs
