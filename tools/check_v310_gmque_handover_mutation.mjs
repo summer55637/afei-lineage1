@@ -16,9 +16,24 @@ function extractFunction(name){
 }
 
 const itemIds=new Map();
+let randCalls=0;
 const ctx={
   Math,Number,String,Object,Array,Date,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
+  sourceGmQueActionValue:randModulo=>{
+    randCalls++;
+    let value=Math.trunc(ctx._randModulo(100));
+    value=((value%100)+100)%100;
+    if(value<1)value=1;
+    return value;
+  },
+  sourceGmQueRewardType:nums=>{
+    const value=Math.trunc(Number(nums));
+    if(value>97)return 'pet';
+    if(value>40)return 'item';
+    return 'gold';
+  },
+  _randModulo:()=>0,
   sourceCreateGmQueRewardPet:petId=>({
     ok:true,type:'pet',petId,
     pet:{id:'reward-'+petId,tempNo:petId,petId,name:'reward-pet-'+petId,level:1}
@@ -39,6 +54,12 @@ const ctx={
 };
 vm.createContext(ctx);
 for(const name of [
+  'sourceGmQueActionValue',
+  'sourceGmQueRewardType',
+  'sourceGmQueTaskEntries',
+  'sourceGmQuePetIdentity',
+  'sourceGmQueMatchPetToTask',
+  'sourceGmQueHandoverCheck',
   'sourceGmQuePrepareTaskState',
   'sourceGmQueClearTaskState',
   'sourceGmQueHandoverPets',
@@ -69,6 +90,33 @@ assert.equal(state.quest.gmque.active,true);
 assert.equal(state.quest.gmque.taskString,parsed.taskString);
 assert.equal(state.quest.gmque.nums,0);
 assert.equal(state.quest.gmque.handedOver,false);
+
+const checkTask=parsed.taskString;
+randCalls=0;
+ctx._randModulo=()=>0;
+const missingPetCheck=ctx.sourceGmQueHandoverCheck(
+  checkTask,
+  [state.petBox[0],state.petBox[1],state.petBox[2]],
+  {gmqueNums:0,randModulo:ctx._randModulo,bagHasSpace:true,gold:800000}
+);
+assert.equal(missingPetCheck.ok,false);
+assert.equal(missingPetCheck.reason,'missing-pet');
+assert.equal(missingPetCheck.generatedNums,false);
+assert.equal(missingPetCheck.nums,0);
+assert.equal(randCalls,0,'GMQUENUMS RNG must not run before all four pets match');
+
+randCalls=0;
+ctx._randModulo=()=>98;
+const matchedCheck=ctx.sourceGmQueHandoverCheck(
+  checkTask,
+  state.petBox,
+  {gmqueNums:0,randModulo:ctx._randModulo,bagHasSpace:true,gold:0}
+);
+assert.equal(matchedCheck.ok,true);
+assert.equal(matchedCheck.generatedNums,true);
+assert.equal(matchedCheck.nums,99);
+assert.equal(matchedCheck.type,'pet');
+assert.equal(randCalls,1,'GMQUENUMS RNG runs exactly once after pet validation');
 
 const check={
   ok:true,nums:15,matches:[
