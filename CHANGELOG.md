@@ -1,3 +1,10 @@
+## V3.10 groundwork：GMQUE Check RNG order correction
+
+- fixed C `GMQUE_CheckQueStr()` 的 source order 已重新核對：四個 `petID-LV` task 全部通過後，才在 `CHAR_GMQUENUMS <= 0` 時執行 `rand()%100`（0→1）並進入 item / gold gate。
+- Web `sourceGmQueHandoverCheck()` 已修正為相同順序；寵物不足時不提前消耗 GMQUE reward RNG，也不提前觸發 item / gold gate。
+- regression 新增「missing pet 時 RNG 必須為 0 次」與「全部匹配後 RNG 只執行 1 次」的檢查。
+- source-order 仍以 pinned `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` 為準。
+
 ## V3.10 groundwork：GMQUE persistent handover / reward mutation core
 
 - pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
