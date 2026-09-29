@@ -11,6 +11,21 @@
 
 > **原 C 規則優先、不猜數值**
 
+## V3.10 groundwork：GMQUE NPC argument source adapter
+
+這一輪把 fixed `GMQUE_InSertQue()` 的 NPC argument grammar 落成 pure source adapter，但不填入任何未找到證據的實際活動參數。
+
+- `sourceGmQueParseNpcArg()` 接受 `RANDGMQUE=4` 與 `QUEPART0..3`。
+- 每槽 option 以 comma 分隔，格式為 `petID=minLv-maxLv`。
+- option selection 使用 fixed inclusive `RAND(1, optionCount)`；level 使用 fixed inclusive `RAND(minLv, maxLv)`。
+- 輸出固定四段 `petID-LV`，再以 `&` 組成 task string。
+- 缺 key、duplicate key、格式錯、range 錯或 RNG 越界都 fail-closed。
+- parser 不修改 persistent state；目前沒有真實 NPC argument 時不會建立 live GMQUE 任務。
+
+Regression：`tools/check_v310_gmque_npc_source_contract.mjs`
+Reference：`docs/reference/gmque-npc-source-contract.md`
+Data contract：`data/generated/stoneage_gmque_source_closure.json`
+
 ## V3.10 groundwork：GMQUE pet reward template guard
 
 - GMQUE reward pet `1642 / 1636 / 475` 現在不再只回傳一個可疑似可用的 Enemy ID。runtime 會先以目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 建立 `enemyIds → player-pet variant` reverse index。

@@ -613,6 +613,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - 目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 也無法由 `wildLv1Variants[].enemyIds` 對回 1642／1636／475；因此這三個 reward pet 仍維持 unresolved / fail-closed。
 - `sourceGmQueRewardPetTemplate()` 已要求真正的 player-pet template mapping；只有 Enemy ID 被 AI metadata 或 encounter drop table 提到時，不會自動把它提升成可領取寵物。
 - GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；尚不直接刪除寵物或假造缺失 template。
+- V3.10 另外加入 `sourceGmQueParseNpcArg()` source adapter：只接受有證據的 `RANDGMQUE=4 + QUEPART0..3` argument，按 fixed inclusive RNG 生成四段 task string；沒有真實 NPC argument 時不注入預設任務。
 - 對任何尚未取得 pinned-source 證據的規則、名稱、能力、數值或事件旗標，維持 **fail-closed**，不自行補數值。
 - 開發流程固定為 **證據 → runtime → regression → CI → 視覺還原**。
 

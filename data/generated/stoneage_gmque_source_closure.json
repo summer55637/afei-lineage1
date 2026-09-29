@@ -27,7 +27,26 @@
       "QUEPART1",
       "QUEPART2",
       "QUEPART3"
-    ]
+    ],
+    "npcArgContract": {
+      "parser": "sourceGmQueParseNpcArg",
+      "requiredCount": 4,
+      "keys": [
+        "RANDGMQUE",
+        "QUEPART0",
+        "QUEPART1",
+        "QUEPART2",
+        "QUEPART3"
+      ],
+      "optionGrammar": "petID=minLv-maxLv",
+      "optionSeparator": ",",
+      "fieldSeparator": "|",
+      "selection": "RAND(1,optionCount) inclusive",
+      "levelSelection": "RAND(minLv,maxLv) inclusive",
+      "output": "petID-LV joined by &",
+      "persistentMutation": false,
+      "liveNpcDataPresent": false
+    }
   },
   "reward": {
     "actionRoll": "rand()%100 then 0->1",
@@ -104,6 +123,7 @@
     "eligibility": "sourceGmQueHandoverCheck",
     "mutatesPersistentState": false,
     "petRewardTemplateResolver": "sourceGmQueRewardPetTemplate",
-    "petRewardTemplateIndexBuilder": "sourceGmQueBuildPetTemplateIndex"
+    "petRewardTemplateIndexBuilder": "sourceGmQueBuildPetTemplateIndex",
+    "npcArgParser": "sourceGmQueParseNpcArg"
   }
 }

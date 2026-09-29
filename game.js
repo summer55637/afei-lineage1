@@ -10410,6 +10410,64 @@ function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
   const gold=Math.trunc(n(gmqueDb.goldReward?.branches?.[2]?.secondary?.goldByIndex?.[String(secondary)]));
   return {ok:gold>0,type:'gold',primary,secondary,gold};
 }
+function sourceGmQueParseNpcArg(npcArg,{randInclusive=cRand,expectedCount=4}={}){
+  if(npcArg==null)return {ok:false,reason:'npc-arg-missing',tasks:[]};
+  const raw=String(npcArg).trim();
+  if(!raw)return {ok:false,reason:'npc-arg-empty',tasks:[]};
+  const fields={};
+  for(const segment of raw.split('|')){
+    const token=String(segment??'').trim();
+    if(!token)continue;
+    const eq=token.indexOf('=');
+    if(eq<=0)return {ok:false,reason:'npc-arg-token',token,tasks:[]};
+    const key=token.slice(0,eq).trim();
+    const value=token.slice(eq+1).trim();
+    if(!key||Object.prototype.hasOwnProperty.call(fields,key)){
+      return {ok:false,reason:'npc-arg-duplicate',key,token,tasks:[]};
+    }
+    fields[key]=value;
+  }
+
+  const count=Math.trunc(Number(fields.RANDGMQUE));
+  const expected=Math.max(1,Math.trunc(n(expectedCount)||4));
+  if(!Number.isFinite(count)||count<1)return {ok:false,reason:'randgmque-invalid',tasks:[]};
+  if(count!==expected)return {ok:false,reason:'randgmque-count',count,expectedCount:expected,tasks:[]};
+
+  const tasks=[];
+  for(let i=0;i<count;i++){
+    const key='QUEPART'+i;
+    const page=fields[key];
+    if(page==null||page==='')return {ok:false,reason:'quepart-missing',index:i,key,tasks:[]};
+    const options=page.split(',').map(x=>String(x).trim()).filter(Boolean);
+    if(options.length===0)return {ok:false,reason:'quepart-empty',index:i,key,tasks:[]};
+
+    let rawPick=Number(randInclusive(1,options.length));
+    if(!Number.isFinite(rawPick))return {ok:false,reason:'quepart-rng-invalid',index:i,key,tasks:[]};
+    rawPick=Math.trunc(rawPick);
+    if(rawPick<1||rawPick>options.length)return {ok:false,reason:'quepart-rng-range',index:i,key,pick:rawPick,optionCount:options.length,tasks:[]};
+
+    const optionIndex=rawPick-1;
+    const picked=options[optionIndex];
+    const eq=picked.indexOf('=');
+    if(eq<=0)return {ok:false,reason:'quepart-format',index:i,key,token:picked,tasks:[]};
+    const petId=Math.trunc(Number(picked.slice(0,eq).trim()));
+    const range=picked.slice(eq+1).trim().split('-').map(x=>x.trim());
+    if(range.length!==2)return {ok:false,reason:'quepart-level-range',index:i,key,token:picked,tasks:[]};
+    const minLv=Math.trunc(Number(range[0])),maxLv=Math.trunc(Number(range[1]));
+    if(!Number.isFinite(petId)||petId<=0||!Number.isFinite(minLv)||!Number.isFinite(maxLv)){
+      return {ok:false,reason:'quepart-number',index:i,key,token:picked,tasks:[]};
+    }
+    if(minLv<0||maxLv<minLv)return {ok:false,reason:'quepart-level-order',index:i,key,token:picked,tasks:[]};
+
+    let level=Number(randInclusive(minLv,maxLv));
+    if(!Number.isFinite(level))return {ok:false,reason:'quepart-level-rng-invalid',index:i,key,tasks:[]};
+    level=Math.trunc(level);
+    if(level<minLv||level>maxLv)return {ok:false,reason:'quepart-level-rng-range',index:i,key,level,minLv,maxLv,tasks:[]};
+
+    tasks.push({slot:i,petId,level,raw:petId+'-'+level,optionIndex,optionCount:options.length});
+  }
+  return {ok:true,count,tasks,taskString:tasks.map(x=>x.raw).join('&')};
+}
 function sourceGmQueTaskEntries(taskString,{expectedCount=4}={}){
   const raw=String(taskString??'');
   const parts=raw.split('&');

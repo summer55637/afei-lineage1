@@ -29,6 +29,8 @@ jobs:
           node-version: 20
       - name: Check game.js syntax
         run: node --check game.js
+      - name: Run GMQUE NPC source contract regression
+        run: node tools/check_v310_gmque_npc_source_contract.mjs
       - name: Run GMQUE source closure regression
         run: node tools/check_v310_gmque_source_closure.mjs
       - name: Run latest Combo and reaction regressions
