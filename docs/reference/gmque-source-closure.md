@@ -31,7 +31,7 @@
 
 ### Main player-pet database cross-check
 
-`data/generated/stoneage_general_lv1_pets.json` 是目前 `DATA_URL` 實際載入的玩家寵物資料。把 `species[].wildLv1Variants[].enemyIds` 反向索引後，三個 reward ID 仍然沒有對應。這表示 Web player-pet DB 尚未收錄它們；不表示 fixed C 沒有 reward template。現在 source template 已閉合，runtime 仍需改成消費 source-backed Enemy chain。
+`data/generated/stoneage_general_lv1_pets.json` 是目前 `DATA_URL` 實際載入的玩家寵物資料。把 `species[].wildLv1Variants[].enemyIds` 反向索引後，三個 reward ID 仍然沒有對應。這表示 Web player-pet DB 尚未收錄它們；不表示 fixed C 沒有 reward template。現在 source template 已閉合，runtime 已改成消費 source-backed Enemy chain；main player-pet DB 仍只作 cross-check。
 
 ## Runtime boundary
 
@@ -40,17 +40,18 @@
 - `sourceGmQueTaskEntries(taskString)`：固定四槽 `petID-LV` parser。
 - `sourceGmQueMatchPetToTask(pet, task)`：exact ID + level；若 ID 不同，只有 caller 明確提供 source name 時才允許 name fallback。
 - `sourceGmQueHandoverCheck(taskString,pets,...)`：依 fixed C 的 `GMQUENUMS` 初始化與 item/gold gate 順序做 eligibility check。它**不刪寵、不領獎、不變更 persistent state**。
-- `sourceGmQueBuildPetTemplateIndex(petDb)` + `sourceGmQueRewardPetTemplate(petId)`：只接受 main player-pet DB 已有 `enemyIds` 對應的完整 variant；目前三個 GMQUE reward ID 都沒有命中，因此 pet reward 仍 fail-closed。
+- `sourceGmQueBuildPetTemplateIndex(petDb)` 仍保留作一般 Player-Pet DB cross-check；GMQUE `sourceGmQueRewardPetTemplate(petId)` 的 production default 則改讀 `stoneage_gmque_reward_enemy_templates.json` 的 fixed-C Enemy template。
+- `sourceCreateGmQueRewardPet(petId)` 再依 fixed `ENEMY_createPetFromEnemyIndex()` 的 RNG／建立順序產生純 Web Pet object，不修改 persistent state。
 
-這樣可以先把 source contract 鎖住，等 NPC argument 與 Enemy template closure 完成後再接真正 handover mutation。
+這樣 source contract 與 reward template runtime 已接通，下一個 boundary 是實際 handover mutation；NPC arguments 仍維持 source-pending。
 
 ## Explicitly unresolved
 
 - 實際 GMQUE NPC `RANDGMQUE / QUEPART0..` 值。
-- Web runtime 的 Enemy-ID→TempNo→EnemyBase reward adapter。
 - `ENEMY_createPetFromEnemyIndex()` 對應的 Web persistent pet mutation semantics。
+- 實際 GMQUE `RANDGMQUE / QUEPART0..3` NPC arguments。
 
-三個 reward Enemy template 的 source evidence 已閉合；在 runtime adapter 完成前仍不直接啟用 reward mutation。
+三個 reward Enemy template 與純 Web creation adapter 已閉合；persistent handover mutation 與實際 NPC 活動資料仍未啟用。
 
 ## Regression
 
