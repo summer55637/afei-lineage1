@@ -114,6 +114,17 @@
         }
       },
       "implicitZeroSlot": true
+    },
+    "rewardEnemyTemplateActivation": {
+      "status": "source-resolved-runtime-adapter-ready",
+      "artifact": "data/generated/stoneage_gmque_reward_enemy_templates.json",
+      "fixedCResolution": "ENEMY ID -> enemy1 TempNo -> enemybase1 normalized template",
+      "resolvedIds": [
+        1642,
+        1636,
+        475
+      ],
+      "implicitZeroSlot": true
     }
   },
   "unresolved": [
@@ -121,11 +132,6 @@
       "key": "gmqueNpcArguments",
       "status": "pending-source",
       "impact": "cannot safely materialize actual live GMQUE task offerings"
-    },
-    {
-      "key": "gmqueRewardPetRuntimeAdapter",
-      "status": "pending-adapter",
-      "impact": "source Enemy templates are resolved, but Web reward creation still needs a source-backed Enemy-ID-to-template adapter before enabling persistent reward mutation"
     }
   ],
   "runtime": {
@@ -135,7 +141,8 @@
     "mutatesPersistentState": false,
     "petRewardTemplateResolver": "sourceGmQueRewardPetTemplate",
     "petRewardTemplateIndexBuilder": "sourceGmQueBuildPetTemplateIndex",
-    "npcArgParser": "sourceGmQueParseNpcArg"
+    "npcArgParser": "sourceGmQueParseNpcArg",
+    "petRewardTemplateSource": "data/generated/stoneage_gmque_reward_enemy_templates.json"
   },
   "discovery": {
     "npcCandidateRoots": [
