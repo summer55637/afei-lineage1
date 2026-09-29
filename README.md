@@ -19,7 +19,24 @@
 
 **V3.09** 是目前正式可玩的主線版本。
 
-<!-- 歷史 regression compatibility markers：PLAYABLE CORE V2.91 · PLAYABLE CORE V2.92 · PLAYABLE CORE V2.93 · PLAYABLE CORE V2.94 · PLAYABLE CORE V2.95 · PLAYABLE CORE V2.96 · PLAYABLE CORE V2.97 · PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.01 · PLAYABLE CORE V3.02 · PLAYABLE CORE V3.03 · PLAYABLE CORE V3.04 · PLAYABLE CORE V3.05 · PLAYABLE CORE V3.06 · PLAYABLE CORE V3.07 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09 · PLAYABLE CORE V3.10 · PLAYABLE CORE V3.11 · PLAYABLE CORE V3.12。 -->
+<!-- 歷史 regression compatibility markers：
+PLAYABLE CORE V2.88 · PLAYABLE CORE V2.89 · PLAYABLE CORE V2.90 · PLAYABLE CORE V2.91 · PLAYABLE CORE V2.92 · PLAYABLE CORE V2.93 · PLAYABLE CORE V2.94 · PLAYABLE CORE V2.95 · PLAYABLE CORE V2.96 · PLAYABLE CORE V2.97 · PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.01 · PLAYABLE CORE V3.02 · PLAYABLE CORE V3.03 · PLAYABLE CORE V3.04 · PLAYABLE CORE V3.05 · PLAYABLE CORE V3.06 · PLAYABLE CORE V3.07 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09 · PLAYABLE CORE V3.10 · PLAYABLE CORE V3.11 · PLAYABLE CORE V3.12。
+V2.88 — pre-DamageReact Counter boundary
+V2.89 — Counter GuardAdjust boundary
+V2.90 — attacker-side DamageReact Counter boundary
+V2.91 — target-side DamageReact pre-Duck boundary
+V2.92 — Enemy→Player weapon Guardian boundary
+V2.93 — DamageReact blocks DuckCheck but not independent suit dodge
+V2.94 — fixed BATTLE_DuckCheck JYUJYUTU KawashiPara branch
+V2.95 — Guardian substitution must not re-run suit dodge
+V2.96 — GuardianCheck source block: instigate
+V2.97 — ACUPUNCTURE WakeUp follows fixed DamageSub defindex
+V3.01 — original Defender DamageReact survives Guardian substitution
+V3.02 — primary Acupuncture WakeUp follows fixed defindex restore order
+V3.06 — GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
+V3.08 — reaction death credit waits for ItemCrush boundary
+V3.09 — Combo death credit waits for ItemCrush boundary
+-->
 
 
 
