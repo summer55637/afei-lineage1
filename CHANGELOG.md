@@ -6,7 +6,7 @@ PLAYABLE CORE V3.09 — current playable baseline; V3.13 remains source/runtime 
 
 - 依 fixed C `MAP_readMapOne()` 固定 LS2MAP binary layout。
 - 新增 `tools/stoneage_ls2map_parser.mjs`、parser regression 與 CI。
-- 新增 verified Floor `20000`：真實 binary map 解析為 50×50、2500 tile、2500 object，並保存 source blob SHA。
+- verified maps 擴充為 7 張：Floor `200、400、2000、5507、10406、10702、20000`，每張完整保存 tile/object 與 fixed-C source blob SHA。
 - 再加入 verified Floor `400`（150×149）與 Floor `2000`（150×150）；三張地圖均完成 tile/object 與 battlemap candidate 交叉驗證。
 - 再加入 verified Floor `200`（30×30）、`5507`（100×100）、`10406`（50×50）、`10702`（50×50），並擴充 verified map coverage regression。
 - 新增 `data/generated/stoneage_map_20000.json` 與 `stoneage_map_runtime_index.json`。
