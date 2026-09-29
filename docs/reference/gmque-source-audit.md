@@ -14,7 +14,7 @@
 
 ### 1. 建立任務
 
-`GMQUE_InSertQue()` 從 NPC arg 讀取 `RANDGMQUE`，再依 `QUEPART%d` 讀取每一組候選資料。每組先以 `RAND(1, nums)` 選 option，再依 `LV=` 的 min/max 取 inclusive level，最後組成 `petID-LV` token；成功後寫入 `CHAR_GMQUESTR1` 並把 `CHAR_GMQUEFLG` 設為 10。
+`GMQUE_InSertQue()` 從 NPC arg 讀取 `RANDGMQUE`，再依 `QUEPART%d` 讀取每一組候選資料。每組先以 `RAND(1, nums)` 選 option，再依 `LV=` 的 min/max 取 inclusive level，最後組成 `TempNo-LV` token；成功後寫入 `CHAR_GMQUESTR1` 並把 `CHAR_GMQUEFLG` 設為 10。
 
 ### 2. 顯示任務
 
@@ -63,3 +63,9 @@ C 明確使用 `petID[] = {1642, 1636, 475}`，陣列第 4 格因 C zero-initial
 ## Evidence rule
 
 Google / 其他 StoneAge fork 可以協助定位檔名、欄位與歷史脈絡，但不同 fork 的 data 不直接提升成 pinned source。只有能回到上述 fixed C ref 的資料或能以多個獨立來源一致證實、且不與 fixed C 衝突的資訊，才可以進 runtime。
+
+## 2026-09-29 source-order correction
+
+fixed C 的 `GMQUE_CheckQueStr()` 是先驗證四個 `TempNo-LV` task，四槽全部成功後才初始化 `CHAR_GMQUENUMS`，再做 item / gold gate。每個 `QUEPART` 在 `GMQUE_InSertQue()` 中只透過 `j=1..11` 計數，因此每槽最多 11 個 option；Web parser 已對齊這兩個邊界。
+
+reward pet `{1642,1636,475,0}` 仍是另一個資料層：它們是 `GMQUE_AddQueStrTrophy()` 使用的 Enemy ID，不是 task token 的通用 TempNo。`1642→809`、`1636→803`、`475→5` 僅屬 reward creation chain。
