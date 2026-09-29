@@ -1,3 +1,13 @@
+## V3.10 — battle-stage feedback presentation
+
+2026-09-29
+
+- 將既有 `addLog(text,type)` 的戰鬥結果轉成短暫 battle-stage feedback：傷害、會心、MISS、捕獲成功／失敗與狀態命中。
+- Feedback 僅讀取已發生的 log 結果，不重新計算傷害、不重新抽 RNG。
+- presentation state 不寫入 save，不改 battle order、DamageReact、Counter、Guardian、Acupuncture 或 CaptureCheck。
+
+regression：`tools/check_v310_battle_effects.mjs`。
+
 ## V3.10 — battle HUD extension
 
 2026-09-29
