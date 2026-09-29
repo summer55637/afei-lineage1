@@ -15,6 +15,7 @@ function extractFunction(name){
   return game.slice(start,next<0?game.length:next);
 }
 
+const itemIds=new Map();
 const ctx={
   Math,Number,String,Object,Array,Date,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
@@ -23,12 +24,12 @@ const ctx={
     pet:{id:'reward-'+petId,tempNo:petId,petId,name:'reward-pet-'+petId,level:1}
   }),
   sourcePlayerFindEmptyBackpackSlot:()=>9,
-  sourceItemRuntimeAlloc:(itemId)=>7000+Number(itemId),
+  sourceItemRuntimeAlloc:(itemId)=>{ const idx=30000+Number(itemId); itemIds.set(idx,Number(itemId)); return idx; },
   sourcePlayerAddSpecificExistingItem:(itemIndex,{target})=>{
     target.playerItemSlots=Array.isArray(target.playerItemSlots)?target.playerItemSlots:Array(24).fill(null);
     target.playerItemSlots[9]=itemIndex;
     target.inventory=target.inventory||{};
-    const itemId=Number(String(itemIndex).slice(4));
+    const itemId=itemIds.get(Number(itemIndex));
     target.inventory[String(itemId)]=(target.inventory[String(itemId)]||0)+1;
     return 9;
   },
@@ -132,7 +133,7 @@ const item=ctx.sourceGmQueApplyTrophy({ok:true,type:'item',itemId:20131},{target
 assert.equal(item.ok,true);
 assert.equal(item.type,'item');
 assert.equal(itemState.inventory['20131'],1);
-assert.equal(itemState.playerItemSlots[9],undefined?itemState.playerItemSlots[9]:item.itemIndex);
+assert.equal(itemState.playerItemSlots[9],item.itemIndex);
 assert.equal(itemState.quest.gmque.active,false);
 
 console.log(JSON.stringify({
