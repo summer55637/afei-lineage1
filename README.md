@@ -11,13 +11,13 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.13 LS2MAP loader → true floor/x/y → tile runtime** |
+| 下一階段 | **V3.15 verified Encounter coordinate probe → 真實地圖 presentation** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
 | 固定 Source Ref | `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` |
 
-**V3.09** 是目前正式可玩的主線版本。 V3.13 目前仍屬 source/runtime groundwork，不取代這個 playable baseline。
+**V3.09** 是目前正式可玩的主線版本。V3.10～V3.15 目前屬 source/runtime groundwork，不取代這個 playable baseline。
 
 固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 
@@ -101,6 +101,16 @@ V3.13 已經開始有真正的 floor/x/y → tile runtime：`20000` 已從 fixed
 來源筆記：[V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)。
 ---
 
+## 🔬 V3.14 fixed-C map header catalog
+
+V3.14 不再手動挑下一張地圖，而是由 `tools/check_v314_stoneage_map_headers.mjs` 遞迴掃描 fixed C `gmsv/data/map`，只把前 6 bytes 為 `LS2MAP` 的檔案視為地圖。
+
+它會從 `MAP_readMapOne()` 的固定 offset 讀 floor ID、32-byte show string、width、height、expected bytes、trailing bytes 與 Git blob SHA，輸出完整 source catalog artifact。
+
+目前 source inventory 共 **1284 個 map blobs**；這是來源索引，不代表 1284 張都已轉成 Web runtime。
+
+來源筆記：[V3.14 fixed-C map header catalog](docs/reference/v314-map-header-catalog.md)。
+
 ## 🔬 V3.13 map loader
 
 V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `tools/stoneage_ls2map_parser.mjs` 與獨立 regression。
@@ -117,7 +127,17 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 `data/generated/stoneage_mapset_runtime.json` 則保存 fixed-C `mapset.txt` 的 20,166 個 image ID 屬性索引，包含 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` 的 C parser 效果。 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` 的非 0 值依原 C `MAP_flgSet()` 正規化為 1，而不是保留原始整數。
 
-**V3.13 已驗證真實 Floor map**：Floor 20000＝50×50、Floor 400＝150×149、Floor 2000＝150×150；三張地圖的 tile/object 陣列都由 fixed C `LS2MAP` bytes 產生，並固定保存各自 source blob SHA。
+**V3.13 已驗證 7 張真實 Floor map**：`200、400、2000、5507、10406、10702、20000`；每張的 tile/object 陣列都由 fixed C `LS2MAP` bytes 產生，並固定保存 source blob SHA。
+
+## 🔬 V3.15 source-map Encounter coordinate probe
+
+V3.15 把已驗證的 map runtime 接到一般 Encounter 已產生的 `roamX / roamY`，在世界 HUD 顯示 source probe：`Floor/X/Y → tile/object → mapset attributes → walkability → battlemap candidates`。
+
+probe 只讀取已經發生的 Encounter 座標，不重新抽座標，也不消耗 `Math.random`；未知 Floor、越界或 source 驗證失敗則維持 fail-closed。
+
+目前 verified map runtime：`200、400、2000、5507、10406、10702、20000`。
+
+來源筆記：[V3.15 source-map Encounter coordinate probe](docs/reference/v315-source-map-encounter-probe.md)。
 
 ## 📁 專案結構
 
@@ -148,6 +168,8 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.12 battlefield source contract／source-status HUD
 - V3.13 LS2MAP parser、verified map runtime、floor/x/y → tile/object → battlemap candidates、verified map coverage
 - V3.13 fixed-C map source catalog（1284 個原始 map blobs，7 張已 verified）與 mapset normalization regression
+- V3.14 fixed-C map header catalog（可重跑 1284 map headers scanner）
+- V3.15 verified Encounter coordinate source probe（不耗 RNG、fail-closed）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -191,4 +213,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.13 verified maps 擴充 → true floor/x/y → tile runtime → battle map selection → 真實地圖 presentation → runtime regression → playable integration**
+**目前開發方向：V3.15 verified Encounter coordinate probe → 真實地圖 presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
