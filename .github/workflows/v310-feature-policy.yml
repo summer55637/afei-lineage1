@@ -4,14 +4,14 @@ on:
   push:
     paths:
       - 'data/generated/stoneage_disabled_features.json'
-      - 'game.html'
+      - 'start.html'
       - 'game.js'
       - 'tools/check_v310_feature_policy.mjs'
       - '.github/workflows/v310-feature-policy.yml'
   pull_request:
     paths:
       - 'data/generated/stoneage_disabled_features.json'
-      - 'game.html'
+      - 'start.html'
       - 'game.js'
       - 'tools/check_v310_feature_policy.mjs'
       - '.github/workflows/v310-feature-policy.yml'
@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Provide regression HTML fixture
+        run: cp start.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
