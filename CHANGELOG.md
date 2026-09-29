@@ -6,8 +6,9 @@
 - 新增 `tools/stoneage_ls2map_parser.mjs`、parser regression 與 CI。
 - 新增 verified Floor `20000`：真實 binary map 解析為 50×50、2500 tile、2500 object，並保存 source blob SHA。
 - 再加入 verified Floor `400`（150×149）與 Floor `2000`（150×150）；三張地圖均完成 tile/object 與 battlemap candidate 交叉驗證。
+- 再加入 verified Floor `200`（30×30）、`5507`（100×100）、`10406`（50×50）、`10702`（50×50），並擴充 verified map coverage regression。
 - 新增 `data/generated/stoneage_map_20000.json` 與 `stoneage_map_runtime_index.json`。
-- 新增 `src/stoneage_map_runtime.mjs`：`floor/x/y → tile/object` 與 `tile → battlemap candidates` fail-closed API。
+- 新增 `src/stoneage_map_runtime.mjs`：`floor/x/y → tile/object`、`tile → battlemap candidates` 與 `sourceMapBattleCandidatesAt()` fail-closed API。
 - 世界 HUD 開始依目前 `floorId` 查詢 verified map；沒有 source bytes 的 Floor 維持明確未收錄狀態，不猜測。
 
 ## V3.12 — battlefield source contract
