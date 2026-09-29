@@ -218,6 +218,9 @@
               <span>目標</span>
               <b id="battleHudTarget">—</b>
             </div>
+            <div id="battleSourceMeta" class="battle-source-meta">
+              原 C 戰場來源：<b>載入中…</b>
+            </div>
             <div class="battle-command-grid">
               <div class="battle-command-static active"><b>攻擊</b><small>自動戰鬥</small></div>
               <div class="battle-command-static"><b>技能</b><small>職業技能</small></div>
@@ -415,5 +418,21 @@
   </main>
 
   <script src="game.js?v=v310-hpbar-null-guard"></script>
+
+  <script>
+    (async()=>{
+      const el=document.getElementById('battleSourceMeta');
+      if(!el) return;
+      try{
+        const r=await fetch('./data/generated/stoneage_battlefield_source_manifest.json',{cache:'no-store'});
+        if(!r.ok) throw new Error(String(r.status));
+        const m=await r.json();
+        const s=m.statistics||{};
+        el.innerHTML='原 C 戰場來源：<b class="source-ready">'+Number(s.declaredBattleMapCount||0)+' 種定義</b> · '+Number(s.assignedBattleMapCount||0)+' 種有 tile 範圍 · '+Number(s.assignmentRowCount||0)+' 筆規則';
+      }catch(e){
+        el.innerHTML='原 C 戰場來源：<b>manifest 尚未載入</b> · 不猜測目前戰場地形';
+      }
+    })();
+  </script>
 </body>
 </html>
