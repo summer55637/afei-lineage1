@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {pathToFileURL} from 'node:url';
 
 export function parseLS2MapHeader(buffer){
   if(buffer.length<44)return null;
@@ -35,6 +36,7 @@ function walk(dir){
   return out;
 }
 
+if(import.meta.url===pathToFileURL(process.argv[1]).href){
 const root=process.argv[2];
 if(!root){console.error('usage: node tools/check_v314_stoneage_map_headers.mjs <fixed-c-data-map-dir>');process.exit(2);}
 const files=walk(root).sort();
@@ -54,3 +56,4 @@ const result={schemaVersion:1,version:'V3.14',source:{repository:'gavinlinasd/St
 const output=process.env.OUTPUT||'/tmp/stoneage-map-header-catalog.json';
 fs.writeFileSync(output,JSON.stringify(result,null,2));
 console.log(JSON.stringify({pass:true,version:'V3.14',mapFileCount:maps.length,nonMapFileCount:nonMaps.length,duplicateFloorIds,output,bytes:Buffer.byteLength(JSON.stringify(result))}));
+}
