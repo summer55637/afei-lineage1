@@ -30,7 +30,7 @@
 
 對整個 pinned `gmsv/data/npc` 的檔名候選也已檢查；名稱含 `gm/que/quest/prize/reward/task/mission` 的候選共 17 個，實際內容沒有出現這組 GMQUE keys。故目前仍維持 `currentCandidateCount=0`。
 
-SourceForge 的 `SA80 / 石器时代8.0数据规整`（2016-12-09 註冊、2016-12-11 更新）之 `gmsv/data/npc/my` 只列出 `beike`、`ruieryasi`、`weilingbei` 三個目錄；其中 `my/ruieryasi` 有 49 個自訂檔案，例如 `24hboss.arg`、`gmother.arg`、`guardleader.arg`、`rui_shop.create`。這證明不同 8.x distribution 確實可能攜帶不同的 custom-NPC data package，但目前沒有直接證據顯示這批資料含 `RANDGMQUE/QUEPART0..3`。
+另外找到一份完整的公開 GitHub 重建庫 `AthenaCN/StoneAge_Original`，其 `gmsv/data/npc` recursive tree 有 4125 個 NPC paths。與 fixed Gavin pin 的 `gmsv/data/npc` tree 逐 path / blob SHA 比較後，4125 個 paths 全部存在，實際不同的 file 只有 `gmsv/data/npc/doujyou/mkarg.c`；因此它在本題上屬於 Gavin NPC data 的近乎逐檔鏡像，而不是另一份可直接採用的 GMQUE data source。對該庫的 NPC content search 亦未取得 `GMACTION` / `RANDGMQUE` / `QUEPART0..3` 的有效 NPC argument。SourceForge 的 `SA80 / 石器时代8.0数据规整`（2016-12-09 註冊、2016-12-11 更新）之 `gmsv/data/npc/my` 只列出 `beike`、`ruieryasi`、`weilingbei` 三個目錄；其中 `my/ruieryasi` 有 49 個自訂檔案，例如 `24hboss.arg`、`gmother.arg`、`guardleader.arg`、`rui_shop.create`。這證明不同 8.x distribution 確實可能攜帶不同的 custom-NPC data package，但目前沒有直接證據顯示這批資料含 `RANDGMQUE/QUEPART0..3`。
 
 交叉鏡像 `pimpcapital/longzoro-sa` 的 `gmsv/data/npc` 與 pinned Gavin tree 逐檔比較後，4125 個 NPC paths 全部一致、沒有 Gavin-only 或 longzoro-only NPC path，也沒有同一路徑不同 Blob SHA；因此它不是可用的另一份 GMQUE NPC data 來源。
 
