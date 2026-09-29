@@ -12,9 +12,9 @@
 
 ### Lifecycle
 
-1. `GMQUE_InSertQue()` 從 NPC argument 讀 `RANDGMQUE`，再讀 `QUEPART0..`。每個 option 先用 `RAND(1, nums)` 選一條，再依 `min-max` 產生 level，組成 `petID-LV` 並以 `&` 串起來。
+1. `GMQUE_InSertQue()` 從 NPC argument 讀 `RANDGMQUE`，再讀 `QUEPART0..`。每個 option 先用 `RAND(1, nums)` 選一條，再依 `min-max` 產生 level，組成 `TempNo-LV` 並以 `&` 串起來。fixed C 變數名雖叫 `petID`，但下游實際按 EnemyTemp `TempNo` 使用。每個 `QUEPART` 最多只有前 11 個 option 進入 C 的計數與抽選。
 2. `GMQUE_getQueStr()` 在尚未參加時建立 queue 並呼叫 `GMQUE_showQueStr()`。
-3. `GMQUE_CheckQueStr()` 解析四段 task。玩家寵物先以 `CHAR_PETID + level` exact match；ID 不同時再比較 source Enemy name。若 `GMQUENUMS <= 0`，先做 `rand()%100` 並把 0 折成 1，再執行 item / gold gate。
+3. `GMQUE_CheckQueStr()` 解析四段 `TempNo-LV` task。玩家寵物先以 `CHAR_PETID + level` exact match；TempNo 不同時再比較 source Enemy name。**四段全部通過後**，若 `GMQUENUMS <= 0` 才做 `rand()%100` 並把 0 折成 1，再執行 item / gold gate。
 4. `GMQUE_DelQueStrPet()` 依同一 queue 找到要交出的寵物，並處理 default pet / pet slot 清除。
 5. `GMQUE_AddQueStrTrophy()` 依已鎖定的 `GMQUENUMS` 進入 pet / item / gold reward。
 6. 成功的 trophy 後才 `GMQUE_cleanQueStr()`；pet reward 的第四陣列槽是 C implicit-zero，不應自行替成第四隻寵物。
@@ -37,15 +37,15 @@
 
 目前只接三個純 source adapter：
 
-- `sourceGmQueTaskEntries(taskString)`：固定四槽 `petID-LV` parser。
-- `sourceGmQueMatchPetToTask(pet, task)`：exact ID + level；若 ID 不同，只有 caller 明確提供 source name 時才允許 name fallback。
+- `sourceGmQueTaskEntries(taskString)`：固定四槽 `TempNo-LV` parser；`petId` 保留為 TempNo alias，避免既有 Web state/API 破壞。
+- `sourceGmQueMatchPetToTask(pet, task)`：exact TempNo + level；若 TempNo 不同，只有 caller 明確提供 source name 時才允許 name fallback。
 - `sourceGmQueHandoverCheck(taskString,pets,...)`：依 fixed C 的 `GMQUENUMS` 初始化與 item/gold gate 順序做 eligibility check；它本身不刪寵、不領獎。
 - `sourceGmQuePrepareTaskState()` / `sourceGmQueHandoverPets()` / `sourceGmQueApplyTrophy()` 已把 persistent lifecycle 接上：保存 task、交寵、領 pet/item/gold reward、成功後 cleanup。
 - 交寵不是原子 transaction：fixed `GMQUE_DelQueStrPet()` 先把匹配到的 slot 記下，再逐隻刪除；重複目標可能造成前面的寵物已刪、最後 `count` 不足而回傳 FALSE，因此 Web mutation 不做額外 rollback。
 - `sourceGmQueBuildPetTemplateIndex(petDb)` 仍保留作一般 Player-Pet DB cross-check；GMQUE `sourceGmQueRewardPetTemplate(petId)` 的 production default 則改讀 `stoneage_gmque_reward_enemy_templates.json` 的 fixed-C Enemy template。
 - `sourceCreateGmQueRewardPet(petId)` 再依 fixed `ENEMY_createPetFromEnemyIndex()` 的 RNG／建立順序產生純 Web Pet object，不修改 persistent state。
 
-這樣 source contract 與 reward template runtime 已接通，下一個 boundary 是實際 handover mutation；NPC arguments 仍維持 source-pending。
+這樣 source contract、reward template runtime 與 persistent mutation core 已接通；剩餘 boundary 是實際 live NPC argument 與 NPC/UI wiring，仍維持 source-pending。
 
 ## Explicitly unresolved
 
