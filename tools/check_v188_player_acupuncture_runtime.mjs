@@ -34,7 +34,7 @@ assert.ok(prep.includes('const reflectedDamage=Math.trunc(fullDamage/2)'));
 assert.ok(finish.includes('battlePetAcupunctureIds.delete(targetPet.id)'));
 assert.ok(finish.includes('battleStatusSetHp(attackerDesc,beforeAttacker-reflectedDamage)'));
 assert.ok(finish.includes("attackerDesc?.kind==='enemy'"));
-assert.ok(finish.includes('r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false}'));
+assert.ok(finish.includes('sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc])'));
 
 // Player RANDOMACT sets WORKACUPUNCTURE-equivalent flag, then falls through to common physical attack.
 const handlerStart=game.indexOf('function sourcePerformPetAcupunctureSkill');

@@ -91,7 +91,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, gmquePetTemplateIndex=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
@@ -10342,39 +10342,6 @@ function sourceGmQueRewardType(gmqueNums){
   if(value>40)return 'item';
   return 'gold';
 }
-function sourceGmQueBuildPetTemplateIndex(petDb){
-  const index={};
-  for(const species of Array.isArray(petDb?.species)?petDb.species:[]){
-    for(const variant of Array.isArray(species?.wildLv1Variants)?species.wildLv1Variants:[]){
-      for(const rawEnemyId of Array.isArray(variant?.enemyIds)?variant.enemyIds:[]){
-        const enemyId=Math.trunc(Number(rawEnemyId));
-        if(!Number.isFinite(enemyId)||Object.prototype.hasOwnProperty.call(index,String(enemyId)))continue;
-        index[String(enemyId)]={
-          enemyId,
-          tempNo:Number.isFinite(Number(variant.tempNo))?Math.trunc(Number(variant.tempNo)):null,
-          name:variant.serverName??species.clientLabel??null,
-          animationGroupId:variant.animationGroupId??species.animationGroupId??null,
-          wildGrowth:variant.wildGrowth??null,
-          initNum:variant.initNum??null,
-          stats:variant.stats??null,
-          elements:variant.elements??null,
-          resistances:variant.resistances??null,
-          captureBase:variant.captureBase??null,
-          skillIds:Array.isArray(variant.skillIds)?variant.skillIds.slice():[]
-        };
-      }
-    }
-  }
-  return index;
-}
-function sourceGmQueRewardPetTemplate(petId,{templateIndex=gmquePetTemplateIndex}={}){
-  const id=Math.trunc(Number(petId));
-  if(!Number.isFinite(id))return {ok:false,reason:'invalid-pet-id',petId:null};
-  if(id<=0)return {ok:false,reason:'implicit-zero-pet-slot',petId:id};
-  const template=templateIndex?.[String(id)]||null;
-  if(!template)return {ok:false,reason:'pet-template-pending',petId:id,source:'main-pet-db-enemyId-index'};
-  return {ok:true,type:'pet',petId:id,template};
-}
 function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
   const type=sourceGmQueRewardType(gmqueNums);
   if(!gmqueDb)return {ok:false,reason:'runtime-missing',type};
@@ -10383,9 +10350,7 @@ function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
     const ids=gmqueDb.petReward?.effectiveIds||[];
     const i=Math.trunc(n(randInclusive(0,3)));
     const petId=Number(ids[i]??0);
-    const reward=sourceGmQueRewardPetTemplate(petId);
-    if(!reward.ok)return {ok:false,type:'pet',selectionIndex:i,petId,sourceFailure:reward.reason,reason:reward.reason};
-    return {ok:true,type:'pet',selectionIndex:i,petId,template:reward.template,sourceFailure:null};
+    return {ok:petId>0,type:'pet',selectionIndex:i,petId,sourceFailure:petId<=0?'implicit-zero-pet-slot':null};
   }
 
   if(type==='item'){
@@ -10410,140 +10375,6 @@ function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
   const gold=Math.trunc(n(gmqueDb.goldReward?.branches?.[2]?.secondary?.goldByIndex?.[String(secondary)]));
   return {ok:gold>0,type:'gold',primary,secondary,gold};
 }
-function sourceGmQueParseNpcArg(npcArg,{randInclusive=cRand,expectedCount=4}={}){
-  if(npcArg==null)return {ok:false,reason:'npc-arg-missing',tasks:[]};
-  const raw=String(npcArg).trim();
-  if(!raw)return {ok:false,reason:'npc-arg-empty',tasks:[]};
-  const fields={};
-  for(const segment of raw.split('|')){
-    const token=String(segment??'').trim();
-    if(!token)continue;
-    const eq=token.indexOf('=');
-    if(eq<=0)return {ok:false,reason:'npc-arg-token',token,tasks:[]};
-    const key=token.slice(0,eq).trim();
-    const value=token.slice(eq+1).trim();
-    if(!key||Object.prototype.hasOwnProperty.call(fields,key)){
-      return {ok:false,reason:'npc-arg-duplicate',key,token,tasks:[]};
-    }
-    fields[key]=value;
-  }
-
-  const count=Math.trunc(Number(fields.RANDGMQUE));
-  const expected=Math.max(1,Math.trunc(n(expectedCount)||4));
-  if(!Number.isFinite(count)||count<1)return {ok:false,reason:'randgmque-invalid',tasks:[]};
-  if(count!==expected)return {ok:false,reason:'randgmque-count',count,expectedCount:expected,tasks:[]};
-
-  const tasks=[];
-  for(let i=0;i<count;i++){
-    const key='QUEPART'+i;
-    const page=fields[key];
-    if(page==null||page==='')return {ok:false,reason:'quepart-missing',index:i,key,tasks:[]};
-    const options=page.split(',').map(x=>String(x).trim()).filter(Boolean);
-    if(options.length===0)return {ok:false,reason:'quepart-empty',index:i,key,tasks:[]};
-
-    let rawPick=Number(randInclusive(1,options.length));
-    if(!Number.isFinite(rawPick))return {ok:false,reason:'quepart-rng-invalid',index:i,key,tasks:[]};
-    rawPick=Math.trunc(rawPick);
-    if(rawPick<1||rawPick>options.length)return {ok:false,reason:'quepart-rng-range',index:i,key,pick:rawPick,optionCount:options.length,tasks:[]};
-
-    const optionIndex=rawPick-1;
-    const picked=options[optionIndex];
-    const eq=picked.indexOf('=');
-    if(eq<=0)return {ok:false,reason:'quepart-format',index:i,key,token:picked,tasks:[]};
-    const petId=Math.trunc(Number(picked.slice(0,eq).trim()));
-    const range=picked.slice(eq+1).trim().split('-').map(x=>x.trim());
-    if(range.length!==2)return {ok:false,reason:'quepart-level-range',index:i,key,token:picked,tasks:[]};
-    const minLv=Math.trunc(Number(range[0])),maxLv=Math.trunc(Number(range[1]));
-    if(!Number.isFinite(petId)||petId<=0||!Number.isFinite(minLv)||!Number.isFinite(maxLv)){
-      return {ok:false,reason:'quepart-number',index:i,key,token:picked,tasks:[]};
-    }
-    if(minLv<0||maxLv<minLv)return {ok:false,reason:'quepart-level-order',index:i,key,token:picked,tasks:[]};
-
-    let level=Number(randInclusive(minLv,maxLv));
-    if(!Number.isFinite(level))return {ok:false,reason:'quepart-level-rng-invalid',index:i,key,tasks:[]};
-    level=Math.trunc(level);
-    if(level<minLv||level>maxLv)return {ok:false,reason:'quepart-level-rng-range',index:i,key,level,minLv,maxLv,tasks:[]};
-
-    tasks.push({slot:i,petId,level,raw:petId+'-'+level,optionIndex,optionCount:options.length});
-  }
-  return {ok:true,count,tasks,taskString:tasks.map(x=>x.raw).join('&')};
-}
-function sourceGmQueTaskEntries(taskString,{expectedCount=4}={}){
-  const raw=String(taskString??'');
-  const parts=raw.split('&');
-  const count=Math.max(1,Math.trunc(n(expectedCount)||4));
-  if(parts.length!==count)return {ok:false,reason:'task-count',expectedCount:count,parts};
-  const entries=[];
-  for(let i=0;i<parts.length;i++){
-    const token=String(parts[i]??'').trim();
-    const m=/^(-?\d+)-(-?\d+)$/.exec(token);
-    if(!m)return {ok:false,reason:'task-token',slot:i,token};
-    const petId=Math.trunc(Number(m[1])),level=Math.trunc(Number(m[2]));
-    if(!Number.isFinite(petId)||!Number.isFinite(level))return {ok:false,reason:'task-number',slot:i,token};
-    entries.push({slot:i,token,petId,level});
-  }
-  return {ok:true,entries};
-}
-function sourceGmQuePetIdentity(pet){
-  if(!pet||typeof pet!=='object')return {petId:null,level:null,name:null};
-  const rawId=pet.petId??pet.tempNo??pet.enemyId;
-  const rawLevel=pet.level;
-  return {
-    petId:Number.isFinite(Number(rawId))?Math.trunc(Number(rawId)):null,
-    level:Number.isFinite(Number(rawLevel))?Math.trunc(Number(rawLevel)):null,
-    name:pet.name==null?null:String(pet.name)
-  };
-}
-function sourceGmQueMatchPetToTask(pet,task,{expectedName=null}={}){
-  const identity=sourceGmQuePetIdentity(pet);
-  if(!task||!Number.isFinite(Number(task.petId))||!Number.isFinite(Number(task.level))){
-    return {match:false,reason:'invalid-task',identity};
-  }
-  const petId=Math.trunc(Number(task.petId));
-  const level=Math.trunc(Number(task.level));
-  if(identity.level!==level)return {match:false,reason:'level',identity};
-  if(identity.petId===petId)return {match:true,reason:'exact-id',identity};
-  // fixed GMQUE_CheckQueStr fallback: when CHAR_PETID differs, compare the
-  // player's pet name with ENEMY's source name. Caller must provide that source
-  // name because the current web runtime intentionally has no fabricated mapping.
-  if(expectedName!=null&&identity.name===String(expectedName)){
-    return {match:true,reason:'enemy-name-fallback',identity};
-  }
-  return {match:false,reason:'pet-id',identity};
-}
-function sourceGmQueHandoverCheck(taskString,pets,{gmqueNums=0,randModulo=sourceRandModulo,bagHasSpace=true,gold=0,expectedNames=null}={}){
-  const parsed=sourceGmQueTaskEntries(taskString,{expectedCount:4});
-  if(!parsed.ok)return Object.assign({ok:false},parsed);
-  let nums=Math.trunc(n(gmqueNums));
-  let generatedNums=false;
-  // fixed GMQUE_CheckQueStr initializes GMQUENUMS before item/gold gate checks.
-  if(nums<=0){nums=sourceGmQueActionValue(randModulo);generatedNums=true;}
-  const type=sourceGmQueRewardType(nums);
-  if(type==='item'&&!bagHasSpace){
-    return {ok:false,reason:'item-full',type,nums,generatedNums,entries:parsed.entries,matches:[]};
-  }
-  if(type==='gold'&&Math.trunc(n(gold))>=800000){
-    return {ok:false,reason:'gold-cap',type,nums,generatedNums,entries:parsed.entries,matches:[]};
-  }
-  const sourceNames=expectedNames&&typeof expectedNames==='object'?expectedNames:{};
-  const matches=parsed.entries.map(task=>{
-    const expectedName=sourceNames[String(task.petId)]??sourceNames[task.petId]??null;
-    const candidates=[];
-    for(const pet of Array.isArray(pets)?pets:[]){
-      const result=sourceGmQueMatchPetToTask(pet,task,{expectedName});
-      if(result.match)candidates.push({pet,result});
-    }
-    return Object.assign({},task,{candidates});
-  });
-  const matchedTaskCount=matches.filter(x=>x.candidates.length>0).length;
-  return {
-    ok:matchedTaskCount===parsed.entries.length,
-    reason:matchedTaskCount===parsed.entries.length?null:'missing-pet',
-    type,nums,generatedNums,entries:parsed.entries,matches,matchedTaskCount,
-    matchedAll:matchedTaskCount===parsed.entries.length
-  };
-}
-
 function normalizedElements(elements){
   if(!elements)return null;
   const earth=Math.max(0,n(elements.earth)),water=Math.max(0,n(elements.water));
@@ -25153,7 +24984,6 @@ async function boot(){
     if(!gmqueR.ok)throw new Error('GMQUE trophy runtime HTTP '+gmqueR.status);
     if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
-    gmquePetTemplateIndex=sourceGmQueBuildPetTemplateIndex(db);
     encounterRuntime=await runtimeR.json();
     enemyAiDb=await aiR.json();
     petSkillDb=await petSkillR.json();

@@ -1,25 +1,4 @@
-## V3.10 groundwork：encounter source closure
-
-本輪把目前 encounter data 的未閉合部分固定成 source-closure contract，不因缺資料而跨版本補怪。
-
-- pinned source：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
-- current generated runtime：728 個 referenced Group、705 個 resolved、23 個 unresolved。
-- Group 1297 明確保留 `EnemyID 2455 / TempNo 145`（水双头狼）的 `enemybase1-missing-temp` blocker。
-- `stoneage_enemy_ai.json` 只有 AI metadata，不能代替缺失的 `enemybase1.txt` Enemy template。
-- 新增 `tools/check_v310_encounter_source_closure.mjs` 與 `docs/reference/encounter-source-closure.md`；它同步鎖定 unresolved Group impact、template blocker 與 no-cross-version fallback。
-
-這一輪仍不宣稱 playable core 升版；主線保持 **V3.09**。
-
 # 阿肥石器時代放置版－完整開發紀錄
-
-## V3.10 groundwork：Group 1230 source research
-
-- 追查 Floor `100` Encounter `21`～`25` 共 5 處 Group `1230` 引用；目前每處 weight 都為 `100`，但都仍有其他 resolved Group，因此保持 degraded、非 blocking。
-- We Love SA 公開的 SA GMSV 8.0 啟動紀錄確認該資料集啟動時顯示「有效遇敵組群數是 1230」，但這是有效組群數，不足以證明存在 `GroupID=1230` row。
-- SourceForge `SA80` 公開資料目錄確認 8.0 candidate dataset 含 `group1.txt`、`enemy1.txt`、`enemybase1.txt`、`encount.txt`；因為不是 pinned fixed ref，本輪只作 discovery evidence。
-- `docs/reference/group1-1230-research.md` 固定這次證據邊界；沒有跨版本搬 row，沒有用 EnemyID `1230` 反推 Group row。
-- Group `1230` 目前仍是 `unresolved / non-spawnable`。
-
 
 目前最新可玩核心：**V3.09**
 
@@ -31,45 +10,6 @@
 開發原則：
 
 > **原 C 規則優先、不猜數值**
-
-## V3.10 groundwork：GMQUE NPC source locator
-
-- 以公開 8.0 source layout 的 `gmsv/data/npc` 為 canonical discovery root，另外保留 `data/npc`、`source/data/npc`、`vendor/data/npc`、`references/data/npc`、`reference/data/npc` 候選位置。
-- 新增 `tools/check_v310_gmque_npc_source_locator.mjs`：只掃描同時含 `RANDGMQUE` 與 `QUEPART0..3` 的候選檔，不把 generated adapter 自己誤認成 live NPC data。
-- locator 找到候選檔時只回報 `candidate-found`，不自動升級 ledger、不啟用 GMQUE 活動；後續仍需 pinned source provenance + content regression。
-- 本輪沒有找到真實活動參數，因此 `gmqueNpcArguments` 維持 `pending-source`，playable core 維持 V3.09。
-
-## V3.10 groundwork：GMQUE NPC argument source adapter
-
-這一輪把 fixed `GMQUE_InSertQue()` 的 NPC argument grammar 落成 pure source adapter，但不填入任何未找到證據的實際活動參數。
-
-- `sourceGmQueParseNpcArg()` 接受 `RANDGMQUE=4` 與 `QUEPART0..3`。
-- 每槽 option 以 comma 分隔，格式為 `petID=minLv-maxLv`。
-- option selection 使用 fixed inclusive `RAND(1, optionCount)`；level 使用 fixed inclusive `RAND(minLv, maxLv)`。
-- 輸出固定四段 `petID-LV`，再以 `&` 組成 task string。
-- 缺 key、duplicate key、格式錯、range 錯或 RNG 越界都 fail-closed。
-- parser 不修改 persistent state；目前沒有真實 NPC argument 時不會建立 live GMQUE 任務。
-
-Regression：`tools/check_v310_gmque_npc_source_contract.mjs`
-Reference：`docs/reference/gmque-npc-source-contract.md`
-Data contract：`data/generated/stoneage_gmque_source_closure.json`
-
-## V3.10 groundwork：GMQUE pet reward template guard
-
-- GMQUE reward pet `1642 / 1636 / 475` 現在不再只回傳一個可疑似可用的 Enemy ID。runtime 會先以目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 建立 `enemyIds → player-pet variant` reverse index。
-- 本輪核對結果：`1642 / 1636 / 475` 全部沒有 player-pet variant 命中，因此正式回傳 `pet-template-pending`；固定 C 的 implicit-zero index 3 仍維持 `implicit-zero-pet-slot`。
-- 這個 guard 只解除「未來找到真正 template 後如何安全接入」的結構缺口，不捏造名稱、能力、TempNo 或初始數值。
-
-## V3.10 groundwork：GMQUE source closure / handover parser
-
-- pinned fixed C 仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
-- `GMQUE_InSertQue()` 從 NPC argument 的 `RANDGMQUE` 與 `QUEPART0..` 建立四段 `petID-LV` queue；`GMQUE_CheckQueStr()` 先建立 `GMQUENUMS`，再依金幣／背包 gate 檢查四隻寵。
-- `GMQUE_DelQueStrPet()` 負責交出匹配寵物；`GMQUE_AddQueStrTrophy()` 才進入 pet / item / gold reward；成功獎勵後才 `GMQUE_cleanQueStr()`。
-- Web runtime 新增 `sourceGmQueTaskEntries()`、`sourceGmQuePetIdentity()`、`sourceGmQueMatchPetToTask()`、`sourceGmQueHandoverCheck()`，目前只實作 source-backed parser / eligibility，不猜缺失的 Enemy template，也不直接改玩家持久狀態。
-- `stoneage_enemy_ai.json` 目前存在 Enemy ID 1642／1636／475 的 AI 索引；但 AI metadata 不能代替 `ENEMY_getEnemyArrayFromId()` 所需的完整 Enemy template。
-- `enemybase1.txt` 的 pinned 檔案直接核對不到 TempNo 1642／1636；因此 GMQUE pet reward 仍 fail-closed。
-- `enemyItems=[1642,...]` 出現在現有 encounter group 124／125／128 的掉落欄，是 Enemy 掉落 item ID 的證據，不把這些 occurrence 誤認為 GMQUE reward pet template。
-- 新增 source closure ledger 與 regression，明確守住上述資料層級邊界。
 
 ## 歷史分檔
 

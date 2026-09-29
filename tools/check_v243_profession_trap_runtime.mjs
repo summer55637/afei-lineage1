@@ -208,13 +208,11 @@ assert.ok(enemySkill.includes('sourcePrepareProfessionTrapReaction'));
 assert.ok(enemySkill.includes('ignoreDamageReact:!!options.ignoreDamageReact'));
 
 const enemyWeapon=extractFunction(game,'enemyWeaponApplyHit');
-assert.ok(enemyWeapon.includes('battleApplyPhysicalHit('));
-assert.equal(enemyWeapon.includes('sourcePrepareProfessionTrapReaction'),false);
-assert.ok(enemyWeapon.includes("battleApplyPhysicalHit(\n      {kind:'enemy',unit,unitId:unit.id},targetDesc,r,"));
+assert.ok(enemyWeapon.includes('sourcePrepareProfessionTrapReaction'));
+assert.ok(enemyWeapon.includes("targetDesc:{kind:'enemy',unit,unitId:unit.id}"));
 
 const enemyPrimary=extractFunction(game,'performEnemyPrimaryAttack');
 assert.ok(enemyPrimary.includes('sourcePrepareProfessionTrapReaction'));
-assert.ok(enemyPrimary.includes('sourceFinishProfessionTrapReaction(playerTrap)'));
 assert.ok(enemyPrimary.includes('sourceCounterBlockedByDamageReact:true'));
 
 const direct=extractFunction(game,'enemyApplyDirectGuardianSkillHit');

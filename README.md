@@ -601,24 +601,20 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 ## 開發方向
 
-後續版本直接沿著 Git history、pinned 原 C 與目前已驗證的 data layer 往下做；**不為了產生版本號而硬補功能**。
+後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前可玩核心：V3.09**
+**目前核心版本：V2.91**
 
-- V3.09：Combo death credit 延後到同一 command 的 ItemCrush boundary 後 finalize。
-- V3.09 之後目前進入 **V3.10 groundwork**，先做 source closure 與 regression contract，不宣稱已經有新的 playable core。
-- GMQUE 已有 fixed-C-derived trophy runtime；目前 handover 尚以 source adapter / contract 為主，實際 NPC `RANDGMQUE / QUEPART0..` 與 reward pet template 尚未完全閉合。
-- fixed C 的 GMQUE pet reward array 為 `{1642,1636,475,0}`；`0` 是 C 陣列 implicit-zero 分支，不能改成第四隻虛構寵物。
-- `stoneage_enemy_ai.json` 雖有 1642／1636／475 的 Enemy ID 索引，但那是 `enemy1.txt + enemybase1.txt` 的 AI metadata，不等於可直接建立 Pet 的完整 Enemy template。
-- 目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 也無法由 `wildLv1Variants[].enemyIds` 對回 1642／1636／475；因此這三個 reward pet 仍維持 unresolved / fail-closed。
-- `sourceGmQueRewardPetTemplate()` 已要求真正的 player-pet template mapping；只有 Enemy ID 被 AI metadata 或 encounter drop table 提到時，不會自動把它提升成可領取寵物。
-- GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；尚不直接刪除寵物或假造缺失 template。
-- V3.10 另外加入 `sourceGmQueParseNpcArg()` source adapter：只接受有證據的 `RANDGMQUE=4 + QUEPART0..3` argument，按 fixed inclusive RNG 生成四段 task string；沒有真實 NPC argument 時不注入預設任務。
-- V3.10 另外加入 `check_v310_gmque_npc_source_locator.mjs`，固定從 `gmsv/data/npc` 等候選 source root 尋找真實 NPC argument；找到候選檔也只標記 candidate，不自動啟用活動。
-- V3.10 另外加入 `check_v310_encounter_source_closure.mjs`，建立 **encounter source closure**，鎖定目前 728 個被引用 Group 中 705 個已解析、23 個 unresolved，以及 Group 1297 / EnemyID 2455 / TempNo 145 的缺 template 邊界；未取得 pinned source 前不跨版本補怪物。
-- `docs/reference/group1-1230-research.md` 記錄 Group `1230` 的外部追查：8.0 啟動紀錄的「有效遇敵組群數 1230」不能直接等同 `GroupID=1230`；SourceForge 8.0 `group1.txt` 只作 candidate evidence，尚未取得可釘定到 fixed ref 的原始 row，因此 `1230` 維持 unresolved。
-- 對任何尚未取得 pinned-source 證據的規則、名稱、能力、數值或事件旗標，維持 **fail-closed**，不自行補數值。
-- 開發流程固定為 **證據 → runtime → regression → CI → 視覺還原**。
+- V2.70 已完成 Skill 14 冰鏡術核心
+- V2.71 完成 Skill 15 火附體 fixed C mapping correction
+- V2.72 已完成 Skill 16 雷附體 on-hit aura lifecycle
+- V2.73 已完成 Skill 17 冰附體 fixed C mapping、on-hit aura 與 FIXDEX lifecycle
+- V2.74 已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity
+- V2.75 已完成 Skill 21 移形換位 source-parity core
+- V2.76 已完成 Skill 21 移形換位 live battle execution、StatusSeq 與獨立 skill dodge lifecycle
+- V2.77 已完成 Skill 44／45 追尋敵蹤、回避戰鬥的非戰鬥職技 live UI、180 秒遇敵 Work 與 encounter pipeline lifecycle
+- 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
+- 不確定的 source 行為維持 fail-closed，不自行補數值
 
 ## 目前主要系統
 
