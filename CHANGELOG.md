@@ -6,6 +6,10 @@
 
 - Maintenance：README 補回 V2.62～V2.74 歷史進度節點，讓舊職業技能 regression 的文件契約與目前自述同步。
 
+## Maintenance notes
+
+- Maintenance：README 補回 V2.61～V2.74 `PLAYABLE CORE` compatibility markers，配合歷史職業技能 regression。
+
 ## V3.15 — source-map Encounter coordinate probe
 
 - Maintenance：V2.33 FallGround regression 改驗證目前 `resolveEnemyAttackSeqBugToPet()` 的 calc-only Guardian source boundary，不回退舊 `enemyAttackPetResult()` helper；README 同步記錄 legacy regression 相容策略。
