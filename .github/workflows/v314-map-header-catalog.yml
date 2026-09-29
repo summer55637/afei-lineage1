@@ -1,0 +1,46 @@
+name: V3.14 fixed-C map header catalog
+
+on:
+  push:
+    paths:
+      - 'tools/check_v314_stoneage_map_headers.mjs'
+      - 'tools/check_v314_map_header_unit.mjs'
+      - 'docs/reference/v314-map-header-catalog.md'
+      - '.github/workflows/v314-map-header-catalog.yml'
+  pull_request:
+    paths:
+      - 'tools/check_v314_stoneage_map_headers.mjs'
+      - 'tools/check_v314_map_header_unit.mjs'
+      - 'docs/reference/v314-map-header-catalog.md'
+      - '.github/workflows/v314-map-header-catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-map-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout web project
+        uses: actions/checkout@v4
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run V3.14 parser unit regression
+        run: node tools/check_v314_map_header_unit.mjs
+      - name: Checkout fixed C source
+        run: |
+          git init stoneage-source
+          cd stoneage-source
+          git remote add origin https://github.com/gavinlinasd/StoneAge.git
+          git fetch --depth 1 origin 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          git checkout --detach FETCH_HEAD
+      - name: Scan fixed-C map headers
+        run: node tools/check_v314_stoneage_map_headers.mjs stoneage-source/gmsv/data/map
+      - name: Upload map header catalog
+        uses: actions/upload-artifact@v4
+        with:
+          name: v314-stoneage-map-header-catalog
+          path: /tmp/stoneage-map-header-catalog.json
