@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const html=fs.readFileSync('game.html','utf8');
+const css=fs.readFileSync('game.css','utf8');
+const game=fs.readFileSync('game.js','utf8');
+for(const id of ['worldScene','worldSceneMapName','worldSceneAreaName','worldSceneMode','worldScenePlayer','worldScenePet','worldSceneTask','worldSceneMessage'])assert.match(html,new RegExp('id=["\\\']'+id+'["\\\']'));
+for(const cls of ['.world-scene-shell{','.world-scene-landscape','.world-scene-chat{','.scene-tree','.scene-rock','.scene-water','.scene-road'])assert.ok(css.includes(cls),cls+' missing');
+const start=game.indexOf('function renderWorldScene(){');
+const end=game.indexOf('function render(){',start);
+assert.ok(start>=0&&end>start);
+const fn=game.slice(start,end);
+for(const token of ['currentMap()','currentEncounter(map)','activePet()','state.auto','state.hp','state.maxHp'])assert.ok(fn.includes(token),token+' must be represented by HUD');
+assert.equal(fn.includes('Math.random'),false);
+assert.equal(fn.includes('cRand('),false);
+assert.equal(fn.includes('normalBattleOrder('),false);
+assert.ok(game.indexOf('renderWorldScene();',end)>end,'main render must refresh world HUD');
+console.log(JSON.stringify({pass:true,version:'V3.10',focus:'world HUD shell',sources:['currentMap','currentEncounter','player/pet runtime'],rngConsumed:false,combatMutation:false}));
