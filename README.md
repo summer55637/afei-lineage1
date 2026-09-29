@@ -17,7 +17,7 @@
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
 | 固定 Source Ref | `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` |
 
-**V3.09** 是目前正式可玩的主線版本。
+**V3.09** 是目前正式可玩的主線版本。 V3.13 目前仍屬 source/runtime groundwork，不取代這個 playable baseline。
 
 固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 
