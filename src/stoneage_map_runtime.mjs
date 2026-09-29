@@ -1,0 +1,56 @@
+export const SOURCE_MAP_RUNTIME_INDEX_URL='data/generated/stoneage_map_runtime_index.json';
+
+const cache=new Map();
+const promises=new Map();
+let indexPromise=null;
+
+async function loadIndex(fetchImpl=globalThis.fetch){
+  if(!indexPromise){
+    indexPromise=fetchImpl(SOURCE_MAP_RUNTIME_INDEX_URL,{cache:'no-store'}).then(r=>{
+      if(!r.ok)throw new Error('source map runtime index HTTP '+r.status);
+      return r.json();
+    }).catch(err=>{indexPromise=null;throw err});
+  }
+  return indexPromise;
+}
+
+export async function loadSourceMapRuntime(floorId,{fetchImpl=globalThis.fetch}={}){
+  const id=String(Math.trunc(Number(floorId)));
+  if(!/^[-]?\d+$/.test(id))return null;
+  if(cache.has(id))return cache.get(id);
+  if(promises.has(id))return promises.get(id);
+  const promise=(async()=>{
+    const index=await loadIndex(fetchImpl);
+    const entry=index?.maps?.[id];
+    if(!entry)return null;
+    const r=await fetchImpl('./'+entry.path.replace(/^\.\//,''),{cache:'no-store'});
+    if(!r.ok)throw new Error('source map runtime HTTP '+r.status);
+    const map=await r.json();
+    if(Number(map.floorId)!==Number(entry.floorId))throw new Error('source map floor mismatch');
+    if(Number(map.width)!==Number(entry.width)||Number(map.height)!==Number(entry.height))throw new Error('source map dimension mismatch');
+    cache.set(id,map);
+    return map;
+  })();
+  promises.set(id,promise);
+  try{return await promise}finally{promises.delete(id)}
+}
+
+export function sourceMapTileAt(map,x,y){
+  if(!map)return null;
+  const xi=Math.trunc(Number(x)),yi=Math.trunc(Number(y));
+  if(!Number.isFinite(xi)||!Number.isFinite(yi))return null;
+  if(xi<0||yi<0||xi>=Number(map.width)||yi>=Number(map.height))return null;
+  const index=yi*Number(map.width)+xi;
+  return {x:xi,y:yi,tile:Number(map.tiles?.[index]),object:Number(map.objects?.[index]),index};
+}
+
+export function sourceMapBattleCandidates(map,tileId){
+  const key=String(Math.trunc(Number(tileId)));
+  const row=map?.battlemapResolver?.candidatesByImageId?.[key];
+  return Array.isArray(row)?row.map(v=>Math.trunc(Number(v))):null;
+}
+
+export function sourceMapRuntimeSummary(map){
+  if(!map)return {status:'unresolved'};
+  return {status:'ready',floorId:Number(map.floorId),width:Number(map.width),height:Number(map.height),tileCount:Array.isArray(map.tiles)?map.tiles.length:0,objectCount:Array.isArray(map.objects)?map.objects.length:0};
+}
