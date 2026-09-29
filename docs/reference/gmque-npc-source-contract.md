@@ -44,7 +44,7 @@
 
 `RANDGMQUE=4|QUEPART0=<option>,<option>|QUEPART1=<option>,...|QUEPART2=<option>,...|QUEPART3=<option>,...`
 
-每個 `<option>` 的目前 adapter grammar 是 `petID=minLv-maxLv`。每個 `QUEPARTi` 先以 fixed inclusive `RAND(1, optionCount)` 選一個 option，再以 fixed inclusive `RAND(minLv, maxLv)` 決定 level，最後生成 `petID-LV`；四槽以 `&` 組成 task string。
+每個 `<option>` 的目前 adapter grammar 是 `TempNo=minLv-maxLv`。fixed C 內部雖使用變數名 `petID`，但 `GMQUE_showQueStr()`、`GMQUE_CheckQueStr()`、`GMQUE_DelQueStrPet()` 都把 token 第一欄直接拿去 `ENEMYTEMP_getEnemyTempArrayFromTempNo()` / 比較 `CHAR_PETID`；因此這裡定義為 **TempNo**，不是 reward path 的 Enemy ID。每個 `QUEPARTi` 只統計固定 C `j=1..11` 可見的最多 11 個 option，先以 fixed inclusive `RAND(1, optionCount)` 選一個，再以 fixed inclusive `RAND(minLv, maxLv)` 決定 level，最後生成 `TempNo-LV`；四槽以 `&` 組成 task string。
 
 目前 Web adapter 只接受 `RANDGMQUE=4`，原因是現有 GMQUE handover contract 固定要求四段 task；這不是宣稱 fixed C 其他數值不存在。
 
@@ -55,6 +55,15 @@
 - RNG 回傳不在 fixed inclusive range：拒絕。
 - `petID<=0`、level range 反向：拒絕。
 - 沒有實際 NPC source argument 時，不注入任何預設活動任務。
+
+## Identity boundary
+
+GMQUE 有兩個不同的 ID 語義，不能互換：
+
+- **Task token**：`TempNo-LV`。這是玩家交寵驗證與任務顯示使用的 identity；現有 Web `petId` 欄位仍保留作相容 alias，但其來源語義是 TempNo。
+- **Reward pet**：fixed C `GMQUE_AddQueStrTrophy()` 的 `{1642,1636,475,0}` 是 **Enemy ID**，再走 `ENEMY_getEnemyArrayFromId()` → `ENEMY_createPetFromEnemyIndex()`。
+
+`1642 → TempNo 809`、`1636 → TempNo 803`、`475 → TempNo 5` 是 reward creation path 的 Enemy-ID-to-TempNo mapping；不能反過來拿 `1642/1636/475` 當成 GMQUE task token 的通用 TempNo。
 
 ## Runtime boundary
 
