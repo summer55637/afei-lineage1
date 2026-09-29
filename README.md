@@ -67,6 +67,8 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**。
 V3.10 主線改為**戰鬥畫面 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
 
 介面來源筆記：[V3.10 battle UI source notes](docs/reference/v310-battle-ui-source-notes.md)。
+固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
 ## 🧭 開發原則
 
 > **原 C 規則優先，不猜數值。**
