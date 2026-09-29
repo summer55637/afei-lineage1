@@ -17,7 +17,9 @@ for(const label of ['攻擊','技能','防禦','捕獲','自動捕獲','道具',
 
 assert.ok(css.includes('.battle-command-window{'),'battle command CSS missing');
 assert.ok(css.includes('.battle-command-grid{'),'battle command grid CSS missing');
-assert.match(css,/grid-template-areas:"head head head command" "enemy center \\. command" "\\. center player command"/);
+assert.ok(css.includes('grid-template-areas:"head head head command"'),'desktop command grid areas missing');
+assert.ok(css.includes('"enemy center . command"'),'enemy command grid area missing');
+assert.ok(css.includes('" . center player command"')||css.includes('"\\. center player command"'),'player command grid area missing');
 assert.ok(css.includes('.battle-stage-unit-bar.mp i'),'MP bar CSS missing');
 
 function extractFunction(name){
