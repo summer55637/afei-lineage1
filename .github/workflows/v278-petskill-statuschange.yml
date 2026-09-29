@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'game.js'
-      - 'game.html'
+      - 'start.html'
       - 'data/generated/stoneage_petskill_runtime.json'
       - 'tools/check_v278_petskill_statuschange_runtime.mjs'
       - '.github/workflows/v278-petskill-statuschange.yml'
@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Provide regression HTML fixture
+        run: cp start.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
