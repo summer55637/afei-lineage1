@@ -15,6 +15,8 @@
 
 - `sourceMapBattleFieldNoAt()` 將 fixed C `map[RAND(0,2)]` 保留為外部 RNG injection，不讓地圖模組自行消耗 RNG。
 
+- 新增 verified `mapset.txt` runtime：20,166 個 image ID、固定 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` parser 效果，並接到 map runtime API。
+
 ## V3.12 — battlefield source contract
 
 2026-09-30
