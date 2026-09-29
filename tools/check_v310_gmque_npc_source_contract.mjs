@@ -37,8 +37,8 @@ const good=ctx.sourceGmQueParseNpcArg(
 assert.equal(good.ok,true);
 assert.equal(good.count,4);
 assert.equal(good.taskString,'475-2&1636-3&1642-4&999-5');
-assert.deepEqual(good.tasks.map(x=>x.tempNo),[475,1636,1642,999]);
-assert.deepEqual(good.tasks.map(x=>x.petId),[475,1636,1642,999]);
+assert.equal(JSON.stringify(good.tasks.map(x=>x.tempNo)),JSON.stringify([475,1636,1642,999]));
+assert.equal(JSON.stringify(good.tasks.map(x=>x.petId)),JSON.stringify([475,1636,1642,999]));
 assert.deepEqual(calls,[[1,2],[2,2],[1,1],[3,3],[1,1],[4,4],[1,1],[5,5]]);
 
 assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=3|QUEPART0=1=1-1|QUEPART1=2=1-1|QUEPART2=3=1-1').reason,'randgmque-count');
