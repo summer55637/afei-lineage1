@@ -104,5 +104,5 @@ export function sourceMapTileWithAttributes(map,tileX,tileY,mapset){
   if(!Number.isFinite(tile.x)||!Number.isFinite(tile.y)||tile.x<0||tile.y<0||tile.x>=Number(map.width)||tile.y>=Number(map.height))return null;
   const index=tile.y*Number(map.width)+tile.x;
   const imageId=Number(map.tiles?.[index]);
-  return Object.assign({x:tile.x,y:tile.y,index,tile:imageId,object:Number(map.objects?.[index])},sourceMapImageAttributes(mapset,imageId)||{attributes:null});
+  return {x:tile.x,y:tile.y,index,tile:imageId,object:Number(map.objects?.[index]),attributes:sourceMapImageAttributes(mapset,imageId)};
 }
