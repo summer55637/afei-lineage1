@@ -47,9 +47,9 @@
   },
   "activationGuard": {
     "currentRuntimeResolver": "sourceGmQueRewardPetTemplate",
-    "currentRuntimeSource": "main player-pet database enemyIds reverse index",
-    "activationState": "pending-adapter-update",
-    "reason": "fixed C rewards resolve from Enemy ID via ENEMY_getEnemyArrayFromId; the evidence above is not the same data contract as main player-pet wildLv1Variants"
+    "currentRuntimeSource": "data/generated/stoneage_gmque_reward_enemy_templates.json",
+    "activationState": "source-resolved-runtime-adapter-ready",
+    "reason": "fixed-C reward Enemy IDs are now resolved in the normalized source template artifact and consumed directly by the Web reward resolver"
   },
   "templates": {
     "475": {
