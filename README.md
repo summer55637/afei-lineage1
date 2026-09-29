@@ -94,7 +94,7 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追�
 
 **V3.12**：依 fixed C 的 `setup.cf`、`readmap.c/readmap.h`、`battle.c` 與 pinned `battlemap.txt` 建立 battlefield source manifest，固定 220 個 battle map 定義、122 個有效範圍宣告、199 個實際被指定的 battle map，以及原始反向範圍 1 筆。戰鬥 HUD 會顯示 manifest 的 source 狀態；若 manifest 載入失敗則 fail-closed，不猜測目前戰場地形。
 
-目前仍**沒有**完整 floor/x/y → tile runtime，因此 V3.12 不把未證實的 tile／battlemap 強行套入畫面。下一步 V3.13 會繼續解析真正的地圖檔格式與 runtime 接點。
+V3.13 已經開始有真正的 floor/x/y → tile runtime：`20000` 已從 fixed C 的 binary map 產生 50×50 verified tile/object JSON，並以 `sourceMapTileAt(floor,x,y)` 與 `sourceMapBattleCandidates(tile)` 提供 fail-closed 查詢。未知 Floor 不會被替換成假地圖。
 
 另外，舊版 V2.74～V2.86 regression 仍可能引用歷史 `game.html`；網站正式入口仍只有 `start.html`，CI 會在測試工作目錄暫時建立 compatibility fixture，不會把舊網址重新發布。
 
@@ -112,6 +112,8 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 下一步是由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，再接 `floor/x/y → tile → battlemap`。如果沒有可靠 bytes，就維持 **fail-closed**，不虛構地圖。
 
 來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
+
+**V3.13 已驗證 Floor 20000**：50×50、2500 tile、2500 object；原始檔 10044 bytes 與 fixed C layout 完全吻合，source SHA `b730f5aca60347f0b5b1bda497f6e65740706dc1` 固定保存於 generated data。
 
 ## 📁 專案結構
 
@@ -184,4 +186,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.13 LS2MAP loader → true floor/x/y → tile runtime → battle map selection → 戰鬥／世界 presentation → runtime regression → playable integration**
+**目前開發方向：V3.13 verified maps 擴充 → true floor/x/y → tile runtime → battle map selection → 真實地圖 presentation → runtime regression → playable integration**
