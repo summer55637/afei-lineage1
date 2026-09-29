@@ -95,6 +95,74 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
 let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 let sourceMapRuntimeModulePromise=null,sourceMapRuntimeCache=new Map(),sourceMapRuntimePending=new Set(),sourceMapRuntimeErrors=new Map();
+let sourceMapsetRuntimeCache=null,sourceMapsetRuntimePending=false,sourceMapProbeCache=new Map(),sourceMapProbePending=new Set();
+
+function sourceMapProbeKey(map,x,y){return String(Math.trunc(n(map?.floorId??map?.id)))+':'+String(Math.trunc(n(x)))+':'+String(Math.trunc(n(y)));}
+
+async function loadSourceMapsetRuntimeForWorld(){
+  const mod=await loadSourceMapRuntimeModule();
+  if(sourceMapsetRuntimeCache)return {mod,mapset:sourceMapsetRuntimeCache};
+  if(!sourceMapsetRuntimePending){
+    sourceMapsetRuntimePending=true;
+    try{
+      sourceMapsetRuntimeCache=await mod.loadSourceMapsetRuntime();
+    }finally{
+      sourceMapsetRuntimePending=false;
+    }
+  }else{
+    while(sourceMapsetRuntimePending)await new Promise(r=>setTimeout(r,20));
+  }
+  if(!sourceMapsetRuntimeCache)throw new Error('mapset-unavailable');
+  return {mod,mapset:sourceMapsetRuntimeCache};
+}
+
+function sourceMapEncounterProbeStatus(map){
+  const el=$('#worldSceneSourceTile');
+  if(!el)return;
+  const x=Number(enemy?.roamX),y=Number(enemy?.roamY);
+  const floor=Math.trunc(n(map?.floorId??map?.id));
+  if(!Number.isFinite(floor)||!Number.isFinite(x)||!Number.isFinite(y)){
+    el.textContent='Encounter 座標來源：尚無已發生的 Floor/X/Y';
+    el.classList.remove('source-ready','source-missing');
+    return;
+  }
+  const key=sourceMapProbeKey(map,x,y);
+  const ready=sourceMapProbeCache.get(key);
+  if(ready){
+    if(ready.tile==null){
+      el.textContent='Encounter 座標來源：tile 尚未通過 source 驗證';
+      el.classList.add('source-missing');el.classList.remove('source-ready');
+      return;
+    }
+    const candidates=Array.isArray(ready.battleCandidates)?ready.battleCandidates.join('/'):'未定義';
+    const walk=ready.walkable?'可通行':'不可通行';
+    el.textContent='Tile @ ('+ready.x+','+ready.y+') = '+ready.tile+' · Obj '+ready.object+' · '+walk+' · Battle '+candidates;
+    el.classList.add('source-ready');el.classList.remove('source-missing');
+    return;
+  }
+  if(sourceMapProbePending.has(key)){
+    el.textContent='Encounter 座標來源：解析中…';
+    return;
+  }
+  sourceMapProbePending.add(key);
+  (async()=>{
+    const mod=await loadSourceMapRuntimeModule();
+    const mapRuntime=await mod.loadSourceMapRuntime(floor);
+    if(!mapRuntime)throw new Error('floor-not-indexed');
+    const {mapset}=await loadSourceMapsetRuntimeForWorld();
+    const tile=mod.sourceMapTileWithAttributes(mapRuntime,x,y,mapset);
+    const battle=mod.sourceMapBattleCandidatesAt(mapRuntime,x,y);
+    if(!tile||!tile.attributes||!battle)throw new Error('tile-not-verifiable');
+    const walkable=mod.sourceMapWalkableAt(mapRuntime,x,y,mapset,{flying:false});
+    sourceMapProbeCache.set(key,{
+      x:tile.x,y:tile.y,tile:tile.tile,object:tile.object,
+      walkable,battleCandidates:battle.battleCandidates
+    });
+  })().catch(()=>sourceMapProbeCache.set(key,{x:Math.trunc(x),y:Math.trunc(y),tile:null,object:null,walkable:false,battleCandidates:null}))
+    .finally(()=>{sourceMapProbePending.delete(key);renderWorldScene();});
+  el.textContent='Encounter 座標來源：解析中…';
+}
+
 
 function loadSourceMapRuntimeModule(){
   if(!sourceMapRuntimeModulePromise){
@@ -24601,6 +24669,7 @@ function renderWorldScene(){
   if(!root||!mapName||!areaName||!mode||!player||!pet||!task||!message||!state)return;
   const map=currentMap();
   sourceMapRuntimeStatusText(map);
+  sourceMapEncounterProbeStatus(map);
   const encounter=currentEncounter(map);
   const active=activePet();
   mapName.textContent=map?.name||'未知地圖';
