@@ -65,6 +65,27 @@ export function sourceMapBattleFieldNoAt(map,x,y,{randIndex}={}){
   return Object.assign({},resolved,{battleFieldNo:resolved.battleCandidates[selected],selection:selected});
 }
 
+export function sourceMapWalkableAt(map,x,y,mapset,{flying=false}={}){
+  const resolved=sourceMapTileWithAttributes(map,x,y,mapset);
+  if(!resolved)return false;
+  const ground=resolved.attributes;
+  const object=sourceMapImageAttributes(mapset,resolved.object);
+  if(!ground||!object)return false;
+  if(Boolean(flying)){
+    return !ground.haveHeight&&!object.haveHeight;
+  }
+  switch(object.walkable ? 1 : 0){
+    case 0:
+      return false;
+    case 1:
+      return ground.walkable;
+    case 2:
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function sourceMapRuntimeSummary(map){
   if(!map)return {status:'unresolved'};
   return {status:'ready',floorId:Number(map.floorId),width:Number(map.width),height:Number(map.height),tileCount:Array.isArray(map.tiles)?map.tiles.length:0,objectCount:Array.isArray(map.objects)?map.objects.length:0};
