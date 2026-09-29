@@ -2,6 +2,12 @@
 
 本輪把目前 encounter data 的未閉合部分固定成 source-closure contract，不因缺資料而跨版本補怪。
 
+### Encounter group availability diagnostics
+
+- 目前 28 個 encounter 會引用 unresolved Group；28 個都有至少一個 resolved Group，因此沒有整個 encounter 因 source closure 而變成空遇敵區。
+- 這 28 個 encounter 的正權重合計中，resolved Group 為 1410、unresolved Group 為 1563；unresolved weight share 約 52.57%。這只是 source completeness 診斷，不是新的掉率規則。
+- runtime 的 encounter info 現在額外顯示 `source weight resolved/total`，讓缺失 Group 對選組權重的影響可以直接被看見。
+
 - pinned source：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 - current generated runtime：728 個 referenced Group、705 個 resolved、23 個 unresolved。
 - Group 1297 明確保留 `EnemyID 2455 / TempNo 145`（水双头狼）的 `enemybase1-missing-temp` blocker。

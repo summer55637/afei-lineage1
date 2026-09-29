@@ -22,6 +22,9 @@ if (JSON.stringify(unresolved) !== JSON.stringify(ledgerIds)) fail('ledger unres
 if (meta.resolvedGroupIds !== 705) fail(`expected fixed checkpoint resolvedGroupIds=705, got ${meta.resolvedGroupIds}`);
 if (meta.referencedGroupIds !== 728) fail(`expected fixed checkpoint referencedGroupIds=728, got ${meta.referencedGroupIds}`);
 
+const sourceCoverageMarker = 'function sourceEncounterGroupCoverage(encounter){';
+if (!read('game.js').includes(sourceCoverageMarker)) fail('game.js missing encounter group coverage helper');
+
 const impact = Object.values(ledger.impactedReferences ?? {}).flat();
 const actualImpact = {};
 for (const floor of Object.values(runtime.floors ?? {})) {
@@ -38,6 +41,33 @@ for (const id of unresolved) {
   const b = JSON.stringify((ledger.impactedReferences?.[id] ?? []).sort((x,y)=>String(x.floorId).localeCompare(String(y.floorId))||Number(x.encounterId)-Number(y.encounterId)));
   if (a !== b) fail(`impacted references drifted for group ${id}`);
 }
+
+const coverageRows = [];
+for (const floor of Object.values(runtime.floors ?? {})) {
+  for (const encounter of floor.encounters ?? []) {
+    const groups = encounter.groups ?? [];
+    const positive = groups.filter(g => Number(g.weight) > 0);
+    const bad = positive.filter(g => g.resolved !== true || unresolved.includes(Number(g.groupId)));
+    const good = positive.filter(g => g.resolved === true && !unresolved.includes(Number(g.groupId)));
+    if (!bad.length) continue;
+    const resolvedWeight = good.reduce((sum,g)=>sum+Math.max(0,Number(g.weight)||0),0);
+    const unresolvedWeight = bad.reduce((sum,g)=>sum+Math.max(0,Number(g.weight)||0),0);
+    coverageRows.push({floorId:floor.floorId,encounterId:encounter.encounterId,resolvedWeight,unresolvedWeight});
+  }
+}
+const expectedSummary = {
+  affectedEncounterCount: coverageRows.length,
+  degradedEncounterCount: coverageRows.filter(x=>x.resolvedWeight>0&&x.unresolvedWeight>0).length,
+  blockingEncounterCount: coverageRows.filter(x=>x.resolvedWeight<=0&&x.unresolvedWeight>0).length,
+  positiveWeightResolved: coverageRows.reduce((s,x)=>s+x.resolvedWeight,0),
+  positiveWeightUnresolved: coverageRows.reduce((s,x)=>s+x.unresolvedWeight,0)
+};
+expectedSummary.unresolvedWeightShare = expectedSummary.positiveWeightUnresolved / Math.max(1, expectedSummary.positiveWeightResolved + expectedSummary.positiveWeightUnresolved);
+const summary = ledger.impactSummary ?? {};
+for (const key of ['affectedEncounterCount','degradedEncounterCount','blockingEncounterCount','positiveWeightResolved','positiveWeightUnresolved']) {
+  if (Number(summary[key]) !== Number(expectedSummary[key])) fail(`impactSummary ${key} drifted: expected ${expectedSummary[key]}, got ${summary[key]}`);
+}
+if (Math.abs(Number(summary.unresolvedWeightShare)-expectedSummary.unresolvedWeightShare) > 1e-12) fail('impactSummary unresolvedWeightShare drifted');
 
 const invalid = meta.invalidTemplateMembers ?? [];
 const expectedInvalid = ledger.invalidTemplateMembers ?? [];
@@ -72,6 +102,7 @@ console.log(JSON.stringify({
   resolvedGroupCount:meta.resolvedGroupIds,
   unresolvedGroupCount:unresolved.length,
   unresolvedGroupIds:unresolved,
+  impactSummary:expectedSummary,
   invalidTemplateMembers:invalid,
   candidateRootsPresent:found,
   playableCore:'V3.09'
