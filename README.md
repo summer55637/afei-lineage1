@@ -8,6 +8,19 @@
 
 歷史 regression markers：**PLAYABLE CORE V3.09** ／ **PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
 
+## V3.10 groundwork — GMQUE reward Enemy template runtime
+
+這一輪把 fixed C 的 GMQUE reward pet source chain 接到 Web runtime，但尚未啟用完整活動 handover mutation。
+
+- pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- `GMQUE_AddQueStrTrophy()` 的 pet reward array 固定為 `{1642,1636,475,0}`；reward path 依 `ENEMY_getEnemyArrayFromId()` → `ENEMY_createPetFromEnemyIndex()` 建立寵物。
+- pinned `enemy1.txt`／`enemybase1.txt` 已閉合：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`。
+- 新增 `data/generated/stoneage_gmque_reward_enemy_templates.json` 保存 source-normalized template；runtime `sourceGmQueRewardPetTemplate()` 現在直接消費這條 source-backed template chain。
+- 新增 `sourceCreateGmQueRewardPet()`，只建立純 Web Pet object 與固定 C RNG 順序（level → 四次 ±2 → 十次配點 → PETMAIL_EFFECT），不修改 persistent state。
+- GMQUE 的實際 `RANDGMQUE / QUEPART0..3` NPC arguments 仍維持 pending-source；完整交寵／領獎 mutation 尚未啟用。
+- regression：`tools/check_v310_gmque_reward_enemy_template_runtime.mjs`
+- CI：`.github/workflows/v310-gmque-reward-enemy-template-runtime.yml`
+
 ## V3.09 — Combo death credit waits for ItemCrush boundary
 
 V3.09 延續 V3.08，鎖定 fixed `BATTLE_Combo()` 的死亡／獎勵 source-order：
