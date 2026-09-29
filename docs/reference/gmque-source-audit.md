@@ -46,7 +46,7 @@ Item branch 再做 `RAND(0,100)`，落入五個固定 pool；Gold branch 做 `RA
 
 `data/generated/stoneage_gmque_trophy_runtime.json` 已固定保存上述 trophy branch、item pool、pet array、gold table、item lifecycle 與 cleanup contract；`game.js` 目前已有 `sourceGmQueActionValue()`、`sourceGmQueRewardType()`、`sourceGmQueResolveTrophy()`。
 
-目前 `game.html` 仍明確標示「完整 GMQUE 活動 UI／交寵流程尚未啟用」。這是刻意維持的狀態，不是遺漏：queue 的實際 NPC data 與 pet reward Enemy template 尚未從 pinned source 完整取回。
+目前 `game.html` 仍明確標示「完整 GMQUE 活動 UI／交寵流程尚未啟用」。這是刻意維持的狀態：queue 的實際 NPC data 尚未閉合，而 reward pet template 雖已完成 source closure，persistent handover mutation 仍在下一個 runtime boundary。
 
 ## 尚未閉合的兩個 source boundary
 
