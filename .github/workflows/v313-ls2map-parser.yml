@@ -3,6 +3,9 @@ name: V3.13 LS2MAP parser contract
 on:
   push:
     paths:
+      - 'tools/check_v313_verified_maps_runtime.mjs'
+      - 'data/generated/stoneage_map_2000.json'
+      - 'data/generated/stoneage_map_400.json'
       - 'tools/check_v313_source_map_runtime_api.mjs'
       - 'tools/check_v313_source_map_world_hud.mjs'
       - 'game.css'
@@ -43,5 +46,7 @@ jobs:
         run: node tools/check_v313_map_20000_runtime.mjs
       - name: Run V3.13 source map runtime API regression
         run: node tools/check_v313_source_map_runtime_api.mjs
+      - name: Run V3.13 verified map set regression
+        run: node tools/check_v313_verified_maps_runtime.mjs
       - name: Run V3.13 source map world HUD regression
         run: node tools/check_v313_source_map_world_hud.mjs
