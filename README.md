@@ -8,6 +8,22 @@
 
 歷史 regression markers：**PLAYABLE CORE V3.09** ／ **PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
 
+## V3.10 development checkpoint — GMQUE handoff runtime
+
+目前仍維持 **PLAYABLE CORE V3.09**；這不是新的 playable-core release。這一輪把 fixed `GMQUE` 的 queue／Check／交寵／領獎生命週期接成 Web source adapter，但不填入尚未找到 fixed NPC arg 的活動任務。
+
+固定 C 已確認：
+
+- `GMACTION=TRUE` 呼叫 `GMQUE_getQueStr()`，活動中不可再次取得任務；`ShowGmque` 顯示目前四個 queue 項目。
+- `RANDGMQUE` 決定 queue 長度，`QUEPART0..` 每欄再以 `RAND(1,nums)` 抽一個 `petID=LVmin-LVmax`，最後保存成 `CHAR_GMQUESTR1` 的 `petID-LV&...` 字串並設 `CHAR_GMQUEFLG=10`。
+- `GMQUE_CheckQueStr()` 對持有寵逐槽比對 exact `CHAR_PETID`／不同 TempNo 時的同名 fallback＋exact Lv；通過後才初始化一次 `CHAR_GMQUENUMS=rand()%100`（0→1），再檢查道具欄／石幣 gate。
+- `GMQUE_DelQueStrPet()` 與 `GMQUE_AddQueStrTrophy()` 是分開的 action；成功領獎後才 `GMQUE_cleanQueStr()`，把 queue／flag／reward roll 清回初始。
+
+Web 現在保留這個 source order，並把沒有完整 Enemy template 的 GMQUE reward pet 維持 **fail-closed**；不從只有 AI row 的資料拼造寵物。
+
+regression：`tools/check_v310_gmque_handoff.mjs`
+GitHub Actions：`.github/workflows/v310-gmque-handoff.yml`
+
 ## V3.09 — Combo death credit waits for ItemCrush boundary
 
 V3.09 延續 V3.08，鎖定 fixed `BATTLE_Combo()` 的死亡／獎勵 source-order：

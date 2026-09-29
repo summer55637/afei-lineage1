@@ -8778,7 +8778,7 @@ function freshState(){
     inventory:{'24114':1},
     itemRuntime:freshItemRuntime(),
     playerItemSlots:freshPlayerItemSlots(),
-    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false},gmque:{active:false,flag:0,taskString:'NULL',nums:0,handoverComplete:false}},
     log:[],savedAt:Date.now()
   };
 }
@@ -8838,6 +8838,8 @@ function normalizeState(raw){
   s.quest.event71Prep=Object.assign({},base.quest.event71Prep,raw?.quest?.event71Prep||{});
   s.quest.event82=Object.assign({},base.quest.event82,raw?.quest?.event82||{});
   s.quest.event83=Object.assign({},base.quest.event83,raw?.quest?.event83||{});
+  s.quest.gmque=Object.assign({},base.quest.gmque,raw?.quest?.gmque||{});
+  sourceGmQueState(s);
   const legacyDev71=n(raw?.schemaVersion)<5&&raw?.quest?.event71Current===true&&!raw?.quest?.event83?.active&&!raw?.quest?.event83?.complete;
   if(legacyDev71){
     s.quest.event71Current=false;
@@ -10375,6 +10377,186 @@ function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
   const gold=Math.trunc(n(gmqueDb.goldReward?.branches?.[2]?.secondary?.goldByIndex?.[String(secondary)]));
   return {ok:gold>0,type:'gold',primary,secondary,gold};
 }
+function sourceGmQueParseTaskString(taskString,{requireFour=true}={}){
+  const raw=String(taskString??'').trim();
+  if(!raw||raw==='NULL')return {ok:false,reason:'task-missing',tasks:[]};
+  const parts=raw.split('&');
+  if(requireFour&&parts.length!==4)return {ok:false,reason:'task-count',tasks:[]};
+  const tasks=[];
+  for(const token of parts){
+    const match=token.match(/^(\-?\d+)\-(\-?\d+)$/);
+    if(!match)return {ok:false,reason:'task-token',token,tasks:[]};
+    const tempNo=Math.trunc(Number(match[1])),level=Math.trunc(Number(match[2]));
+    if(!Number.isFinite(tempNo)||!Number.isFinite(level))return {ok:false,reason:'task-number',token,tasks:[]};
+    tasks.push({tempNo,level,raw:token});
+  }
+  return {ok:requireFour?tasks.length===4:tasks.length>0,reason:null,tasks};
+}
+function sourceGmQueParseNpcArg(npcArg,{randInclusive=cRand}={}){
+  const raw=String(npcArg??'');
+  const value=(key)=>{
+    const m=raw.match(new RegExp('(?:^|\\|)'+key+'=([^|]*)'));
+    return m?m[1]:null;
+  };
+  const maxque=Math.trunc(Number(value('RANDGMQUE')));
+  if(!Number.isFinite(maxque)||maxque<1)return {ok:false,reason:'randgmque-missing',tasks:[]};
+  const tasks=[];
+  for(let i=0;i<maxque;i++){
+    const page=value('QUEPART'+i);
+    if(page==null||page==='')return {ok:false,reason:'quepart-missing',index:i,tasks:[]};
+    const options=page.split(',').filter(x=>x!=='');
+    if(!options.length)return {ok:false,reason:'quepart-empty',index:i,tasks:[]};
+    const pickIndex=Math.trunc(n(randInclusive(1,options.length)))-1;
+    const picked=options[pickIndex];
+    if(picked==null)return {ok:false,reason:'quepart-pick',index:i,tasks:[]};
+    const leftRight=picked.split('=');
+    if(leftRight.length!==2)return {ok:false,reason:'quepart-format',index:i,token:picked,tasks:[]};
+    const tempNo=Math.trunc(Number(leftRight[0]));
+    const levelRange=leftRight[1].split('-');
+    if(levelRange.length!==2)return {ok:false,reason:'quepart-level-range',index:i,token:picked,tasks:[]};
+    const minLv=Math.trunc(Number(levelRange[0])),maxLv=Math.trunc(Number(levelRange[1]));
+    if(!Number.isFinite(tempNo)||!Number.isFinite(minLv)||!Number.isFinite(maxLv))return {ok:false,reason:'quepart-number',index:i,token:picked,tasks:[]};
+    const level=Math.trunc(Number(randInclusive(minLv,maxLv)));
+    tasks.push({tempNo,level,raw:tempNo+'-'+level,optionIndex:pickIndex,optionCount:options.length});
+  }
+  const taskString=tasks.map(x=>x.raw).join('&');
+  return {ok:true,maxque,tasks,taskString};
+}
+function sourceGmQuePetReferenceName(tempNo,target=state){
+  const exact=Number(tempNo);
+  const main=findMainVariant?.(exact);
+  if(main?.variant?.serverName)return String(main.variant.serverName);
+  return null;
+}
+function sourceGmQuePetMatchesTask(pet,task,{referenceName=null}={}){
+  if(!pet||!task)return false;
+  const petNo=Number(pet.petId??pet.tempNo);
+  if(Number.isFinite(petNo)&&petNo===Number(task.tempNo))return Math.trunc(n(pet.level))===Math.trunc(n(task.level));
+  if(referenceName==null)return false;
+  if(String(pet.name)!==String(referenceName))return false;
+  return Math.trunc(n(pet.level))===Math.trunc(n(task.level));
+}
+function sourceGmQueFindPetMatches(tasks,target=state){
+  const list=Array.isArray(target?.petBox)?target.petBox:[];
+  const matches=[];
+  for(const task of tasks||[]){
+    const referenceName=sourceGmQuePetReferenceName(task.tempNo,target);
+    let foundIndex=-1;
+    for(let i=0;i<Math.min(5,list.length);i++){
+      if(sourceGmQuePetMatchesTask(list[i],task,{referenceName})){foundIndex=i;break;}
+    }
+    matches.push({task,index:foundIndex,referenceName});
+    if(foundIndex<0)return {ok:false,reason:'missing-pet',matches};
+  }
+  return {ok:true,reason:null,matches};
+}
+function sourceGmQueState(target=state){
+  if(!target)return null;
+  if(!target.quest||typeof target.quest!=='object')target.quest={};
+  if(!target.quest.gmque||typeof target.quest.gmque!=='object')target.quest.gmque={active:false,flag:0,taskString:'NULL',nums:0,handoverComplete:false};
+  const q=target.quest.gmque;
+  q.active=Number(q.flag)===10;
+  q.flag=Math.trunc(n(q.flag));
+  q.nums=Math.trunc(n(q.nums));
+  q.taskString=String(q.taskString??'NULL');
+  return q;
+}
+function sourceGmQueBeginFromNpcArg(npcArg,{target=state,randInclusive=cRand}={}){
+  const q=sourceGmQueState(target);
+  if(!q)return {ok:false,reason:'state-missing'};
+  if(q.flag===10)return {ok:false,reason:'already-active'};
+  const generated=sourceGmQueParseNpcArg(npcArg,{randInclusive});
+  if(!generated.ok)return generated;
+  if(generated.tasks.length!==4)return {ok:false,reason:'source-count',count:generated.tasks.length};
+  q.active=true;q.flag=10;q.taskString=generated.taskString;q.nums=0;q.handoverComplete=false;
+  return {ok:true,tasks:generated.tasks,taskString:q.taskString};
+}
+function sourceGmQueCheck({target=state,count=4,randModulo=sourceRandModulo}={}){
+  const q=sourceGmQueState(target);
+  if(!q||q.flag!==10)return {ok:false,reason:'not-active'};
+  const parsed=sourceGmQueParseTaskString(q.taskString);
+  if(!parsed.ok)return Object.assign({ok:false},parsed);
+  const matched=sourceGmQueFindPetMatches(parsed.tasks,target);
+  if(!matched.ok)return Object.assign({ok:false},matched);
+  if(q.nums<=0)q.nums=sourceGmQueActionValue(randModulo);
+  const rewardType=sourceGmQueRewardType(q.nums);
+  if(rewardType==='item'&&sourcePlayerFindEmptyBackpackSlot(target)<0)return {ok:false,reason:'item-full',rewardType,gmqueNums:q.nums,matches:matched.matches};
+  if(rewardType==='gold'&&Math.trunc(n(target.gold))>=800000)return {ok:false,reason:'gold-cap',rewardType,gmqueNums:q.nums,matches:matched.matches};
+  if(Math.trunc(n(count))!==matched.matches.length)return {ok:false,reason:'count-mismatch',rewardType,gmqueNums:q.nums,found:matched.matches.length,required:Math.trunc(n(count)),matches:matched.matches};
+  return {ok:true,rewardType,gmqueNums:q.nums,matches:matched.matches,tasks:parsed.tasks};
+}
+function sourceGmQueDeleteMatchedPets(checkResult,{target=state}={}){
+  const q=sourceGmQueState(target);
+  if(!q||q.flag!==10)return {ok:false,reason:'not-active'};
+  if(!checkResult?.ok)return {ok:false,reason:'check-required'};
+  const slots=Array.isArray(target.petBox)?target.petBox:[];
+  const deleted=[];
+  for(const match of checkResult.matches||[]){
+    const i=Math.trunc(n(match.index));
+    const pet=slots[i];
+    if(!pet)continue;
+    const id=pet.id;
+    if(target.activePetId===id)target.activePetId=null;
+    target.team=Array.isArray(target.team)?target.team.map(x=>x===id?null:x):target.team;
+    deleted.push({slot:i,id,name:pet.name,tempNo:pet.tempNo,level:pet.level});
+    slots[i]=null;
+  }
+  target.petBox=slots.filter(Boolean);
+  if(!Array.isArray(target.team))target.team=Array(TEAM_SIZE).fill(null);
+  if(!target.activePetId)target.activePetId=target.team.find(Boolean)||null;
+  if(deleted.length!==Math.trunc(n(checkResult.matches?.length)))return {ok:false,reason:'delete-count',deleted};
+  q.handoverComplete=true;
+  return {ok:true,deleted};
+}
+function sourceGmQueGrantItem(itemId,{target=state}={}){
+  const idx=sourceItemRuntimeAlloc(itemId,null,{owner:null,source:'gmque'});
+  if(idx<0)return {ok:false,reason:'item-make-failed',itemId};
+  const slot=sourcePlayerAddSpecificExistingItem(idx,{target,source:'gmque',incrementInventory:true});
+  if(slot<0||slot>=PLAYER_ITEM_SLOT_COUNT){sourceItemRuntimeFree(idx);return {ok:false,reason:'item-backpack-full',itemId};}
+  return {ok:true,itemId:Math.trunc(n(itemId)),itemIndex:idx,slot};
+}
+function sourceGmQueGrantPet(tempNo,{target=state}={}){
+  const ref=sourceGmQuePetReferenceName(tempNo,target);
+  // fixed ENEMY_createPetFromEnemyIndex needs the full Enemy template. The current Web runtime does
+  // not yet carry the GMQUE reward pet IDs, so do not synthesize a pet from partial AI data.
+  if(!ref)return {ok:false,reason:'reward-pet-template-pending',tempNo:Math.trunc(n(tempNo))};
+  const template=sourceQuestPetTemplate(tempNo);
+  if(!template)return {ok:false,reason:'reward-pet-template-pending',tempNo:Math.trunc(n(tempNo))};
+  const pet=sourceCreateQuestGetPet(tempNo,{petId:Math.trunc(n(tempNo))});
+  if(!pet)return {ok:false,reason:'reward-pet-create-failed',tempNo:Math.trunc(n(tempNo))};
+  target.petBox.push(pet);
+  const open=Array.isArray(target.team)?target.team.findIndex(x=>!x):-1;
+  if(open>=0)target.team[open]=pet.id;
+  return {ok:true,pet};
+}
+function sourceGmQueClaimPrize({target=state,randInclusive=cRand}={}){
+  const q=sourceGmQueState(target);
+  if(!q||q.flag!==10)return {ok:false,reason:'not-active'};
+  const reward=sourceGmQueResolveTrophy(q.nums,{randInclusive});
+  if(!reward.ok)return reward;
+  let result;
+  if(reward.type==='gold'){
+    target.gold=Math.max(0,Math.trunc(n(target.gold)))+Math.trunc(n(reward.gold));
+    result=Object.assign({ok:true},reward);
+  }else if(reward.type==='item'){
+    result=sourceGmQueGrantItem(reward.itemId,{target});
+    if(result.ok)Object.assign(result,reward);
+  }else{
+    result=sourceGmQueGrantPet(reward.petId,{target});
+    if(result.ok)Object.assign(result,reward);
+  }
+  if(!result.ok)return result;
+  q.active=false;q.flag=0;q.taskString='NULL';q.nums=0;q.handoverComplete=false;
+  return result;
+}
+function sourceGmQueShowTask(target=state){
+  const q=sourceGmQueState(target);
+  if(!q||q.flag!==10)return {ok:false,reason:'not-active',tasks:[]};
+  const parsed=sourceGmQueParseTaskString(q.taskString);
+  if(!parsed.ok)return Object.assign({ok:false},parsed);
+  return {ok:true,taskString:q.taskString,gmqueNums:q.nums,tasks:parsed.tasks.map(task=>Object.assign({},task,{name:sourceGmQuePetReferenceName(task.tempNo,target)}))};
+}
+
 function normalizedElements(elements){
   if(!elements)return null;
   const earth=Math.max(0,n(elements.earth)),water=Math.max(0,n(elements.water));
@@ -24340,6 +24522,32 @@ function renderZooQuest(){
   if(e82.complete&&e83.complete&&hasItem(19715)&&!hasItem(19719))actions.push('<button data-zoo-action="reward19719" class="wide">向里拉拉領 Event83 後續謝禮 19719</button>');
   $('#zooQuestActions').innerHTML=actions.join('');
 }
+function renderGmQue(){
+  const card=$('#gmqueCard'),badge=$('#gmqueBadge'),status=$('#gmqueStatus'),actionsEl=$('#gmqueActions');
+  if(!card||!badge||!status||!actionsEl||!state)return;
+  const q=sourceGmQueState(state),view=sourceGmQueShowTask(state);
+  card.hidden=!view.ok;
+  if(!view.ok){badge.textContent='未參加';status.innerHTML='';actionsEl.innerHTML='';return;}
+  badge.textContent='活動中';
+  const lines=(view.tasks||[]).map(task=>{
+    const label=task.name?escapeHtml(task.name):('TempNo '+task.tempNo);
+    return '<div class="quest-line">'+label+' · Lv.'+task.level+'</div>';
+  });
+  lines.push('<div class="quest-line '+(q.nums>0?'done':'blocked')+'">獎勵分類：'+(q.nums>0?sourceGmQueRewardType(q.nums)+'（GMQUENUMS '+q.nums+'）'+(q.handoverComplete?' · 已交寵，等待領獎':' · 待交寵'):'尚未執行 Check，尚不消耗獎勵 RNG')+'</div>');
+  status.innerHTML=lines.join('');
+  const actions=[];
+  if(q.nums<=0){
+    actions.push('<button data-gmque-action="check" class="wide">檢查四隻指定寵物</button>');
+  }else if(!q.handoverComplete){
+    const check=sourceGmQueCheck({target:state,count:4,randModulo:()=>q.nums||1});
+    if(check.ok)actions.push('<button data-gmque-action="handover" class="wide">交出符合條件的四隻寵物</button>');
+    else actions.push('<button class="wide" disabled>尚未符合交寵條件</button>');
+  }else{
+    actions.push('<button data-gmque-action="claim" class="wide">領取 GMQUE 獎勵</button>');
+  }
+  actionsEl.innerHTML=actions.join('');
+}
+
 function renderPlayerCreationStats(){
   const panel=$('#playerCreationStatsPanel');
   const status=$('#playerCreationStatsStatus');
@@ -24514,6 +24722,7 @@ function render(){
   $('#paramTgh').textContent=Math.floor(n(ps.tgh));
   $('#paramDex').textContent=Math.floor(n(ps.dex));
   document.querySelectorAll('#playerParamGrid button[data-player-stat]').forEach(b=>b.disabled=!sourcePlayerCreationStatsReady(state)||Math.floor(n(state.skillPoints))<=0);
+  renderGmQue();
   renderPlayerCreationStats();
   renderPlayerHometown();
   renderPlayerElements();
@@ -25735,6 +25944,28 @@ $('#playerHometownConfirmBtn').addEventListener('click',()=>confirmPlayerHometow
 $('#zooQuestActions').addEventListener('click',e=>{
   const b=e.target.closest('button[data-zoo-action]');if(!b)return;
   handleZooAction(b.dataset.zooAction);
+});
+$('#gmqueActions').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-gmque-action]');if(!b)return;
+  const action=b.dataset.gmqueAction;
+  if(action==='check'){
+    const result=sourceGmQueCheck({target:state,count:4});
+    if(!result.ok){addLog('抓寵活動檢查失敗：'+({"not-active":'尚未參加活動。',"missing-pet":'缺少指定寵物或等級。',"item-full":'物品欄已滿，無法領取道具獎勵。',"gold-cap":'石幣已達 800,000，無法領取金幣獎勵。'}[result.reason]||result.reason)+'。','bad');}
+    else addLog('抓寵活動檢查通過：四隻指定寵物符合；GMQUENUMS 已鎖定為 '+result.gmqueNums+'。','good');
+  }else if(action==='handover'){
+    const check=sourceGmQueCheck({target:state,count:4});
+    if(!check.ok){addLog('無法交寵：'+check.reason+'。','bad');}
+    else{
+      const result=sourceGmQueDeleteMatchedPets(check,{target:state});
+      if(!result.ok)addLog('交寵失敗：'+result.reason+'。','bad');
+      else addLog('已依固定 C 的寵物 slot 順序交出 '+result.deleted.length+' 隻活動指定寵物。','good');
+    }
+  }else if(action==='claim'){
+    const result=sourceGmQueClaimPrize({target:state});
+    if(!result.ok)addLog('領取活動獎勵失敗：'+result.reason+'。','bad');
+    else addLog(result.type==='gold'?'獲得 '+result.gold+' 石幣。':(result.type==='item'?'獲得 Item '+result.itemId+'。':'獲得寵物 '+(result.pet?.name||'')+'。'),'good');
+  }
+  save();render();
 });
 $('#sourceItemRuntimePanel').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-source-item-action]');if(!b)return;

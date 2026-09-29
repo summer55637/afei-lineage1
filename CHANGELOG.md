@@ -21,6 +21,21 @@
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
 7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
 
+## V3.10 development checkpoint：GMQUE handoff runtime
+
+這一輪不宣稱 playable-core 升版，主線仍為 V3.09。依 fixed `npc_eventaction.c` 把 GMQUE 的四段生命週期接成 Web runtime：
+
+- queue parser：`RANDGMQUE`／`QUEPART0..` → 四個 `petID-LV` token。
+- Check：exact TempNo／exact Lv；不同 TempNo 時只有 source reference name 可用才允許同名 fallback；`GMQUENUMS` 只在通過寵物條件後第一次初始化。
+- handover：保留 Check 與 `DelGmquePet` 的分離邊界，移除符合條件的寵物並清理 active/team reference。
+- reward：保留現有 fixed trophy runtime；gold/item 可直接走現有 source lifecycle，GMQUE reward pet 若沒有完整 Enemy template 則維持 fail-closed。
+- cleanup：只有 reward 成功後才清回 `flag=0 / taskString=NULL / nums=0`。
+
+不填入任何未從 fixed source tree 證實的 NPC 活動任務表。
+
+Regression：`tools/check_v310_gmque_handoff.mjs`
+CI：`.github/workflows/v310-gmque-handoff.yml`
+
 ## V3.09：Combo 死亡獎勵 credit 延後到 ItemCrush 後
 
 - fixed `BATTLE_Combo()` 的 enemy death 先形成死亡狀態／flag，該次 command 的 `BATTLE_ItemCrushSeq()` 仍在後面，整個 Combo 返回後才由外層 `BATTLE_AddProfit()` 掃描死亡與獎勵。
