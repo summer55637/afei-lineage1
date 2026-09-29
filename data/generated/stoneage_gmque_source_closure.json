@@ -19,7 +19,7 @@
   },
   "queue": {
     "slotCount": 4,
-    "token": "petID-LV",
+    "token": "tempNo-LV",
     "delimiter": "&",
     "npcArgKeys": [
       "RANDGMQUE",
@@ -38,15 +38,18 @@
         "QUEPART2",
         "QUEPART3"
       ],
-      "optionGrammar": "petID=minLv-maxLv",
+      "optionGrammar": "TempNo=minLv-maxLv",
       "optionSeparator": ",",
       "fieldSeparator": "|",
       "selection": "RAND(1,optionCount) inclusive",
       "levelSelection": "RAND(minLv,maxLv) inclusive",
-      "output": "petID-LV joined by &",
+      "output": "tempNo-LV joined by &",
       "persistentMutation": false,
-      "liveNpcDataPresent": false
-    }
+      "liveNpcDataPresent": false,
+      "optionMax": 11
+    },
+    "taskIdentity": "TempNo",
+    "rewardEnemyIdentity": "EnemyID"
   },
   "reward": {
     "actionRoll": "rand()%100 then 0->1",
@@ -138,11 +141,17 @@
     "parser": "sourceGmQueTaskEntries",
     "matcher": "sourceGmQueMatchPetToTask",
     "eligibility": "sourceGmQueHandoverCheck",
-    "mutatesPersistentState": false,
+    "mutatesPersistentState": true,
     "petRewardTemplateResolver": "sourceGmQueRewardPetTemplate",
     "petRewardTemplateIndexBuilder": "sourceGmQueBuildPetTemplateIndex",
     "npcArgParser": "sourceGmQueParseNpcArg",
-    "petRewardTemplateSource": "data/generated/stoneage_gmque_reward_enemy_templates.json"
+    "petRewardTemplateSource": "data/generated/stoneage_gmque_reward_enemy_templates.json",
+    "mutationCore": [
+      "sourceGmQuePrepareTaskState",
+      "sourceGmQueHandoverPets",
+      "sourceGmQueApplyTrophy",
+      "sourceGmQueClearTaskState"
+    ]
   },
   "discovery": {
     "npcCandidateRoots": [
