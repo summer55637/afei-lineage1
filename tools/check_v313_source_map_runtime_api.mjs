@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {loadSourceMapRuntime,sourceMapTileAt,sourceMapBattleCandidates,sourceMapBattleCandidatesAt,sourceMapBattleFieldNoAt,sourceMapRuntimeSummary} from '../src/stoneage_map_runtime.mjs';
+import {loadSourceMapRuntime,sourceMapTileAt,sourceMapBattleCandidates,sourceMapBattleCandidatesAt,sourceMapBattleFieldNoAt,sourceMapImageAttributes,sourceMapTileWithAttributes,sourceMapWalkableAt,sourceMapRuntimeSummary} from '../src/stoneage_map_runtime.mjs';
 
 const index=fs.readFileSync('data/generated/stoneage_map_runtime_index.json','utf8');
 const map=fs.readFileSync('data/generated/stoneage_map_20000.json','utf8');
+const mapset=fs.readFileSync('data/generated/stoneage_mapset_runtime.json','utf8');
 const routes={
   'data/generated/stoneage_map_runtime_index.json':index,
   './data/generated/stoneage_map_runtime_index.json':index,
@@ -17,6 +18,7 @@ const fetchImpl=async url=>{
 };
 
 const loaded=await loadSourceMapRuntime(20000,{fetchImpl});
+const mapsetData=JSON.parse(mapset);
 assert.equal(loaded.floorId,20000);
 assert.deepEqual(sourceMapTileAt(loaded,5,0),{x:5,y:0,tile:4500,object:0,index:5});
 assert.deepEqual(sourceMapBattleCandidates(loaded,4500),[138,139,140]);
@@ -25,6 +27,10 @@ assert.equal(sourceMapBattleFieldNoAt(loaded,5,0,{randIndex:()=>0}).battleFieldN
 assert.equal(sourceMapBattleFieldNoAt(loaded,5,0,{randIndex:()=>1}).battleFieldNo,139);
 assert.equal(sourceMapBattleFieldNoAt(loaded,5,0,{randIndex:()=>2}).battleFieldNo,140);
 assert.equal(sourceMapBattleFieldNoAt(loaded,5,0).reason,'rng-not-provided');
+assert.equal(sourceMapWalkableAt(loaded,5,0,mapsetData),true);
+assert.equal(sourceMapWalkableAt(loaded,4,1,mapsetData),false);
+assert.equal(sourceMapWalkableAt(loaded,4,1,mapsetData,{flying:true}),true);
+assert.equal(sourceMapWalkableAt(loaded,-1,0,mapsetData),false);
 assert.equal(sourceMapTileAt(loaded,-1,0),null);
 assert.equal(sourceMapTileAt(loaded,50,0),null);
 assert.equal(await loadSourceMapRuntime(99999,{fetchImpl}),null);
