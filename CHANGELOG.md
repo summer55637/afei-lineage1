@@ -1,3 +1,17 @@
+## V3.10 — GMQUE permanently disabled / battle presentation groundwork
+
+2026-09-29
+
+GMQUE／抓寵活動正式標記為永久停用。
+
+- 不再追尋 RANDGMQUE / QUEPART0..3 真實 NPC data。
+- 不建立替代任務資料，不建立 live handover／領獎 UI。
+- draft PR #3 已關閉；既有 GMQUE fixed-C 研究留作歷史參考。
+- GMQUE 不再阻塞 V3.10、V3.11 及後續版本。
+- V3.10 主線改為戰鬥畫面 presentation layer：只使用現有 runtime 的 Player／Pet／Enemy 資料，不修改 battle order、傷害公式、CaptureCheck 或 RNG。
+- 經典介面參考固定為敵方左上、我方右下、右上指令區；本階段先完成資料化戰鬥場景，不虛構原版 sprite。
+
+regression：tools/check_v310_feature_policy.mjs。
 # 阿肥石器時代放置版－完整開發紀錄
 
 目前最新可玩核心：**V3.09**
