@@ -147,7 +147,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - GMQUE 永久停用政策與 battle presentation regression
 - V3.12 battlefield source contract／source-status HUD
 - V3.13 LS2MAP parser、verified map runtime、floor/x/y → tile/object → battlemap candidates、verified map coverage
-- V3.13 fixed-C map source catalog（1284 個原始 map blobs，7 張已 verified）
+- V3.13 fixed-C map source catalog（1284 個原始 map blobs，7 張已 verified）與 mapset normalization regression
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
