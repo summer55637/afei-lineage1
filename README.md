@@ -115,7 +115,7 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 另有 `data/generated/stoneage_map_source_catalog.json` 保存 fixed-C `data/map` 的 1284 個 map blob 路徑、大小與 SHA；它是來源索引，不代表每個檔案都已轉成 Web runtime。
 
-`data/generated/stoneage_mapset_runtime.json` 則保存 fixed-C `mapset.txt` 的 20,166 個 image ID 屬性索引，包含 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` 的 C parser 效果。
+`data/generated/stoneage_mapset_runtime.json` 則保存 fixed-C `mapset.txt` 的 20,166 個 image ID 屬性索引，包含 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` 的 C parser 效果。 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` 的非 0 值依原 C `MAP_flgSet()` 正規化為 1，而不是保留原始整數。
 
 **V3.13 已驗證真實 Floor map**：Floor 20000＝50×50、Floor 400＝150×149、Floor 2000＝150×150；三張地圖的 tile/object 陣列都由 fixed C `LS2MAP` bytes 產生，並固定保存各自 source blob SHA。
 
