@@ -113,6 +113,8 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
 
+另有 `data/generated/stoneage_map_source_catalog.json` 保存 fixed-C `data/map` 的 1284 個 map blob 路徑、大小與 SHA；它是來源索引，不代表每個檔案都已轉成 Web runtime。
+
 **V3.13 已驗證真實 Floor map**：Floor 20000＝50×50、Floor 400＝150×149、Floor 2000＝150×150；三張地圖的 tile/object 陣列都由 fixed C `LS2MAP` bytes 產生，並固定保存各自 source blob SHA。
 
 ## 📁 專案結構
@@ -121,7 +123,7 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 start.html              # 遊戲入口
 game.js                # 主要 runtime
 game.css               # PC／手機共用介面
-data/generated/        # source-backed generated data
+data/generated/        # source-backed generated data（含 fixed-C map source catalog）
 tools/                 # data generator／regression／map parser
 docs/reference/        # source closure／研究紀錄
 docs/changelog/        # 詳細版本開發紀錄
@@ -143,6 +145,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - GMQUE 永久停用政策與 battle presentation regression
 - V3.12 battlefield source contract／source-status HUD
 - V3.13 LS2MAP parser、verified map runtime、floor/x/y → tile/object → battlemap candidates、verified map coverage
+- V3.13 fixed-C map source catalog（1284 個原始 map blobs，7 張已 verified）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
