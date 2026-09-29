@@ -1,3 +1,13 @@
+## V3.12 — battlefield source contract
+
+2026-09-30
+
+- 依 fixed C 的 `BATTLE_getBattleFieldNo()`、`MAP_getTileAndObjData()`、`MAP_getImageInt()` 與 `battlemap.txt` 建立 battlefield source manifest。
+- manifest 固定 220 個 battle map 定義、122 個有效 tile 範圍宣告，以及 1 筆原始反向範圍 `3137 to 1349`。
+- 候選 battle map 來源固定為 `MAP_BATTLEMAP` / `MAP_BATTLEMAP2` / `MAP_BATTLEMAP3`，選擇規則固定為 `RAND(0,2)`。
+- 目前不因缺少完整 floor/x/y → tile runtime 而猜測當前戰場地形。
+
+regression：`tools/check_v312_battlefield_source_contract.mjs`。
 ## V3.10 — encounter source closure
 
 2026-09-29
