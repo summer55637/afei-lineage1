@@ -1,3 +1,12 @@
+## V3.16 — client image resolver contract
+
+2026-09-30
+
+- 依公開 client source 固定 `tile image ID → realGetNo() → ADRNBIN graphicNo → Real binary offset/size → decoder()`。
+- 新增 `src/stoneage_client_image_runtime.mjs`，將 ADRNBIN 固定為 72-byte little-endian metadata record。
+- 新增 `tools/check_v316_adrnbin_parser.mjs` 與 `.github/workflows/v316-client-image-resolver.yml`。
+- 目前沒有確認可發布的 client image binary；resolver 僅提供 metadata contract，缺少 asset 時 fail-closed，不建立假圖。
+- 自訂 Pages workflow 改為手動 fallback，避免與 managed Pages deployment 重複競爭 artifact。
 ## Maintenance notes
 
 - Maintenance：README 補回 V2.61 歷史節點，與既有 ENCLOSE／ANNEX regression 契約同步。
