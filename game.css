@@ -13,6 +13,30 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .link-btn,.pill{display:inline-flex;align-items:center;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--text);background:#1a2016;font-size:12px}
 .shell{width:min(1220px,100%);margin:auto;padding:14px}
 .hero{margin-bottom:12px}.hero p{color:var(--muted);margin:9px 0 0;line-height:1.55}
+.world-scene-shell{position:relative;min-height:330px;margin-bottom:12px;border:1px solid #5b6949;border-radius:16px;overflow:hidden;background:#8fae6c;box-shadow:0 12px 28px #0004}
+.world-scene-top{position:absolute;z-index:5;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:11px}
+.world-scene-map,.world-scene-mode,.world-scene-hud,.world-scene-chat{border:1px solid #4e5c40;border-radius:10px;background:#151b11dd;backdrop-filter:blur(6px);box-shadow:0 5px 15px #0005}
+.world-scene-map{display:grid;gap:1px;padding:8px 10px;min-width:190px}
+.world-scene-map strong{font-size:18px}.world-scene-map small{font-size:10px;color:var(--muted)}
+.world-scene-kicker{font-size:8px;letter-spacing:.16em;color:var(--accent);font-weight:800}
+.world-scene-mode{display:grid;gap:2px;padding:7px 10px;text-align:right}.world-scene-mode span{font-size:8px;color:var(--muted)}.world-scene-mode b{font-size:12px}
+.world-scene-landscape{position:absolute;inset:0;background:
+  radial-gradient(circle at 15% 25%,#b5cc84 0,transparent 20%),
+  radial-gradient(circle at 74% 72%,#78985b 0,transparent 24%),
+  linear-gradient(165deg,#a9c57a 0 38%,#91ae69 38% 70%,#7d9d5f 70%);
+}
+.scene-water{position:absolute;left:-5%;top:46%;width:52%;height:26%;background:#6fa1a8aa;transform:rotate(-11deg);border-top:3px solid #b8d5c8aa;border-bottom:3px solid #557f85aa}
+.scene-road{position:absolute;left:0;right:0;top:62%;height:9%;background:#c3a978aa;transform:rotate(8deg);border-top:2px solid #a58c61aa;border-bottom:2px solid #d5bf8d88}
+.scene-tree{position:absolute;width:38px;height:38px;border-radius:50%;background:#4f733e;box-shadow:0 0 0 8px #42663366}.scene-tree:after{content:"";position:absolute;left:16px;top:32px;width:7px;height:18px;background:#745637;border-radius:3px}
+.scene-tree.t1{left:10%;top:35%}.scene-tree.t2{left:43%;top:12%;transform:scale(.8)}.scene-tree.t3{right:14%;top:26%;transform:scale(.7)}
+.scene-rock{position:absolute;width:28px;height:18px;border-radius:55% 45% 40% 60%;background:#727b68;box-shadow:inset -5px -3px 0 #5c6556}.scene-rock.r1{left:33%;top:70%}.scene-rock.r2{right:28%;top:58%;transform:scale(.8)}.scene-rock.r3{right:8%;bottom:15%}
+.scene-avatar{position:absolute;width:26px;height:38px;border-radius:10px 10px 7px 7px;box-shadow:0 4px 8px #0005;border:2px solid #eee2bdaa}.scene-avatar:before{content:"";position:absolute;left:5px;top:-9px;width:14px;height:14px;border-radius:50%;background:#e8cda8;border:2px solid #5e4c36}
+.scene-avatar.player{right:28%;bottom:18%;background:#536f86;transform:scale(.9)}
+.scene-avatar.pet{right:21%;bottom:20%;width:24px;height:26px;border-radius:50%;background:#7a5f3f;border-color:#d7bb7a;transform:scale(.8)}
+.world-scene-hud{position:absolute;z-index:5;bottom:44px;padding:7px 9px;display:grid;gap:2px}.world-scene-hud b{font-size:11px}.world-scene-hud span{font-size:9px;color:var(--muted)}.world-scene-left{left:11px}.world-scene-right{right:11px;max-width:42%}.world-scene-right b{line-height:1.35}
+.world-scene-chat{position:absolute;z-index:6;left:11px;right:11px;bottom:10px;display:flex;align-items:center;gap:8px;padding:7px 9px;font-size:10px}.world-scene-chat span:last-child{color:#d9dec9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:700px){.world-scene-shell{min-height:390px}.world-scene-map{min-width:0;max-width:72%}.world-scene-hud{bottom:48px}.world-scene-right{max-width:55%}.world-scene-chat{font-size:9px}}
+
 .status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:9px}
 .card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:15px;padding:13px}
 .stat-card small{display:block;color:var(--muted)}.stat-card strong{font-size:22px;color:var(--accent)}

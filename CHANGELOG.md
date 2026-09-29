@@ -1,3 +1,14 @@
+## V3.10 — world HUD shell
+
+2026-09-29
+
+**目前正式可玩核心仍為 V3.09；V3.10 為開發中的 presentation 主線。**
+
+- 新增資料驅動 world-scene shell：地圖、Encounter、Player／Pet、模式與最新系統訊息固定顯示在場景四周。
+- 場景中的樹木、岩石、水路與角色標記目前為 presentation-only CSS，不偽造原版 map tile／NPC／world coordinate source。
+
+regression：`tools/check_v310_world_hud.mjs`。
+
 ## V3.10 — battle-stage feedback presentation
 
 2026-09-29

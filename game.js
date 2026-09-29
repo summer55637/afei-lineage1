@@ -24546,8 +24546,35 @@ function renderProfessionOutOfBattleActions(){
 }
 
 
+function renderWorldScene(){
+  const root=$('#worldScene');
+  const mapName=$('#worldSceneMapName');
+  const areaName=$('#worldSceneAreaName');
+  const mode=$('#worldSceneMode');
+  const player=$('#worldScenePlayer');
+  const pet=$('#worldScenePet');
+  const task=$('#worldSceneTask');
+  const message=$('#worldSceneMessage');
+  if(!root||!mapName||!areaName||!mode||!player||!pet||!task||!message||!state)return;
+  const map=currentMap();
+  const encounter=currentEncounter(map);
+  const active=activePet();
+  mapName.textContent=map?.name||'未知地圖';
+  areaName.textContent=encounter
+    ?('Encounter '+String(encounter.encounterId)+' · Floor '+String(encounter.floorId??map?.floorId??'—'))
+    :(map?.questZone?'任務遭遇區':'自由狩獵區');
+  mode.textContent=enemy?(state.auto?'AI 戰鬥':'戰鬥中'):(state.auto?'自動狩獵':'待機');
+  player.textContent='玩家 Lv'+Math.max(1,Math.trunc(n(state.level)))+' · HP '+Math.max(0,Math.trunc(n(state.hp)))+'/'+Math.max(1,Math.trunc(n(state.maxHp)));
+  pet.textContent=active&&petIsBattleActive(active)
+    ?(String(active.name||'出戰寵')+' · Lv'+Math.max(1,Math.trunc(n(active.level))))
+    :'未出戰寵物';
+  task.textContent=map?.questZone?'任務地區：沿用目前任務資料':'狩獵地區：依目前 Encounter 資料遭遇';
+  const latest=state.log?.[0]?.text;
+  message.textContent=latest?String(latest).replace(/^\\[[0-9:]+\\]\\s*/,''):'等待新的系統訊息……';
+}
 function render(){
   if(!state)return;
+  renderWorldScene();
   $('#level').textContent=state.level;
   $('#exp').textContent=state.level>=playerLevelCap()?(state.exp+' / MAX'):(state.exp+' / '+state.expNext);
   $('#hp').textContent=state.hp+' / '+state.maxHp;
