@@ -1,3 +1,13 @@
+## V3.10 groundwork：GMQUE persistent handover / reward mutation core
+
+- pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- fixed NPC action order：`Check → DelGmquePet → GetGmPrize → CleanGmque`；`GMQUE_DelQueStrPet()` 成功後，reward action 失敗時不會 rollback 已移除的寵物。
+- Web 新增 `quest.gmque` persistent state，以及 `sourceGmQuePrepareTaskState()`、`sourceGmQueHandoverPets()`、`sourceGmQueApplyTrophy()`。
+- handover 依 current pet identity 移除對應寵物，並同步解除 team / active pet；GMQUENUMS 在 source check 後保留供後續 reward action 使用。
+- pet reward 使用已完成 source closure 的 Enemy template；item reward 使用 existing-item runtime path；gold reward 對齊 pinned `_FIX_MAX_GOLD` 的身上上限與 `CHAR_PERSONAGOLD` overflow。
+- 真實 `RANDGMQUE / QUEPART0..3` NPC arguments 仍是 pending-source，因此尚未接 live NPC／活動 UI，也不宣稱 playable。
+- regression：`tools/check_v310_gmque_handover_mutation.mjs`
+- CI：`.github/workflows/v310-gmque-runtime.yml`
 # V3.10 groundwork：GMQUE reward Enemy template source closure
 
 - 固定 C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
