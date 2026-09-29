@@ -24596,7 +24596,8 @@ function render(){
   renderPlayerHometown();
   renderPlayerElements();
   $('#wins').textContent=state.wins;
-  $('#hpBar').style.width=(n(state.maxHp)>0?clamp(state.hp/state.maxHp*100,0,100):0)+'%';
+  const hpBar=$('#hpBar');
+  if(hpBar)hpBar.style.width=(n(state.maxHp)>0?clamp(state.hp/state.maxHp*100,0,100):0)+'%';
   $('#autoBtn').textContent='自動戰鬥：'+(state.auto?'開':'關');
   $('#autoCaptureBtn').textContent='自動捕獲：'+(state.autoCapture?'開':'關');
 
