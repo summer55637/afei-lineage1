@@ -1,3 +1,10 @@
+## V3.10 — encounter source closure
+
+2026-09-29
+
+- encounter runtime 仍固定使用 pinned source `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- resolved／unresolved group、invalid template member 與 impacted reference 持續由 generated source-closure ledger 驗證。
+- 未閉合 group 與 invalid template member 維持 non-spawnable；不跨版本猜測補資料。
 ## V3.11 — battle target marker presentation
 
 2026-09-30
