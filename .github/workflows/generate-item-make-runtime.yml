@@ -116,6 +116,8 @@ on:
       - "start.html"
       - "game.css"
       - ".github/workflows/generate-item-make-runtime.yml"
+      # README/CHANGELOG are regression inputs; keep this workflow triggered by doc contract updates.
+
   workflow_dispatch:
 
 permissions:
