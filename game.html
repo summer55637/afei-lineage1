@@ -28,6 +28,38 @@
       <p>選地圖 → 自動遭遇 → 戰鬥削血 → 捕獲 Lv1 寵物 → 編入 5 格隊伍 → 指定一隻出戰。</p>
     </section>
 
+    <section class="world-scene-shell" id="worldScene" aria-label="世界主畫面">
+      <div class="world-scene-top">
+        <div class="world-scene-map">
+          <span class="world-scene-kicker">WORLD</span>
+          <strong id="worldSceneMapName">未知地圖</strong>
+          <small id="worldSceneAreaName">狩獵區</small>
+        </div>
+        <div class="world-scene-mode">
+          <span>模式</span><b id="worldSceneMode">待機</b>
+        </div>
+      </div>
+      <div class="world-scene-landscape">
+        <i class="scene-tree t1"></i><i class="scene-tree t2"></i><i class="scene-tree t3"></i>
+        <i class="scene-rock r1"></i><i class="scene-rock r2"></i><i class="scene-rock r3"></i>
+        <i class="scene-water"></i><i class="scene-road"></i>
+        <div class="scene-avatar player" aria-label="玩家"></div>
+        <div class="scene-avatar pet" aria-label="出戰寵物"></div>
+      </div>
+      <div class="world-scene-hud world-scene-left">
+        <b id="worldScenePlayer">玩家</b>
+        <span id="worldScenePet">未出戰寵物</span>
+      </div>
+      <div class="world-scene-hud world-scene-right">
+        <span class="world-scene-kicker">TASK</span>
+        <b id="worldSceneTask">目前狩獵資料</b>
+      </div>
+      <div class="world-scene-chat">
+        <span class="world-scene-kicker">SYSTEM</span>
+        <span id="worldSceneMessage">等待新的系統訊息……</span>
+      </div>
+    </section>
+
     <section class="status-grid">
       <article class="card stat-card"><small>等級</small><strong id="level">1</strong></article>
       <article class="card stat-card"><small>經驗</small><strong id="exp">0 / 2</strong></article>
