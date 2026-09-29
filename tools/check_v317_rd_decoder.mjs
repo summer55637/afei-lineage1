@@ -8,7 +8,7 @@ let b=header(0,3,2,6);b.set([1,2,3,4,5,6],16);
 assert.deepEqual(parseRdHeader(b),{id:'RD',compressFlag:0,width:3,height:2,size:22});
 assert.deepEqual([...decodeStoneAgeRd(b).pixels],[1,2,3,4,5,6]);
 
-const rle=header(1,10,1,0);
+const rle=header(1,10,1,5);
 const payload=[0x80|0x40|5,0x00|5,10,11,12,13,14];
 rle.set(payload,16);u32(rle,12,16+payload.length);
 assert.deepEqual([...decodeStoneAgeRd(rle).pixels],[0,0,0,0,0,10,11,12,13,14]);
