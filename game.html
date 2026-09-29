@@ -158,6 +158,22 @@
           </div>
           <span id="battleState" class="pill">等待中</span>
         </div>
+        <div class="battle-stage" id="battleStage" aria-label="戰鬥場景">
+          <div class="battle-stage-header">
+            <div>
+              <div class="eyebrow">BATTLE SCENE</div>
+              <b>戰鬥場景</b>
+            </div>
+            <span id="battleStageState" class="battle-stage-state">等待中</span>
+          </div>
+          <div id="battleStageEnemySide" class="battle-stage-side battle-stage-enemy-side"></div>
+          <div class="battle-stage-center" aria-hidden="true">
+            <span>VS</span>
+            <small>原服戰鬥配置</small>
+          </div>
+          <div id="battleStagePlayerSide" class="battle-stage-side battle-stage-player-side"></div>
+        </div>
+
         <div id="enemyBox" class="enemy empty">
           <div class="enemy-name">尚未遭遇敵人</div>
           <div class="muted">開啟自動戰鬥後會依目前地圖的 Lv1 資料出現。</div>
@@ -310,8 +326,8 @@
     </article>
 
     <article class="card note">
-      <b>V1.71：</b>
-      接入原 C 的 existing item 取得流程：tracked 戰利品現在必須進玩家第一個空背包格 9～23，滿包就 free existing item，不再留下只有 inventory 數字的幽靈道具。另建立 GMQUE trophy runtime，保留 rand()%100 的 41% 金幣／57% 道具／2% 寵物分類、Item 五個獎池，以及 petID[3] 隱含為 0 的原 C 失敗分支。20131 替身娃娃 Lv1 已確認是 GMQUE itemID1 index 0；完整 GMQUE 活動 UI／交寵流程尚未啟用。
+      <b>V3.10：</b>
+      GMQUE／抓寵活動永久停用，不建立 live NPC 與活動 UI；相關 fixed-C 研究只保留作歷史參考。
     </article>
 
     <article class="card note">

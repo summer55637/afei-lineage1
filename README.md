@@ -19,6 +19,27 @@
 
 **V3.09** 是目前正式可玩的主線版本。
 
+<!-- 歷史 regression compatibility markers：
+PLAYABLE CORE V2.88 · PLAYABLE CORE V2.89 · PLAYABLE CORE V2.90 · PLAYABLE CORE V2.91 · PLAYABLE CORE V2.92 · PLAYABLE CORE V2.93 · PLAYABLE CORE V2.94 · PLAYABLE CORE V2.95 · PLAYABLE CORE V2.96 · PLAYABLE CORE V2.97 · PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.01 · PLAYABLE CORE V3.02 · PLAYABLE CORE V3.03 · PLAYABLE CORE V3.04 · PLAYABLE CORE V3.05 · PLAYABLE CORE V3.06 · PLAYABLE CORE V3.07 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09 · PLAYABLE CORE V3.10 · PLAYABLE CORE V3.11 · PLAYABLE CORE V3.12。
+V2.88 — pre-DamageReact Counter boundary
+V2.89 — Counter GuardAdjust boundary
+V2.90 — attacker-side DamageReact Counter boundary
+V2.91 — target-side DamageReact pre-Duck boundary
+V2.92 — Enemy→Player weapon Guardian boundary
+V2.93 — DamageReact blocks DuckCheck but not independent suit dodge
+V2.94 — fixed BATTLE_DuckCheck JYUJYUTU KawashiPara branch
+V2.95 — Guardian substitution must not re-run suit dodge
+V2.96 — GuardianCheck source block: instigate
+V2.97 — ACUPUNCTURE WakeUp follows fixed DamageSub defindex
+V3.01 — original Defender DamageReact survives Guardian substitution
+V3.02 — primary Acupuncture WakeUp follows fixed defindex restore order
+V3.06 — GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
+V3.08 — reaction death credit waits for ItemCrush boundary
+V3.09 — Combo death credit waits for ItemCrush boundary
+-->
+
+
+
 **V3.10** 正在獨立草稿分支持續做 source closure、runtime contract 與 regression，不提前取代 V3.09。
 
 ---
@@ -57,29 +78,17 @@
 
 ## 🔬 V3.10 groundwork
 
-目前最完整的新工作是 **GMQUE reward pet source closure**。
+GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**。
 
-固定 C 的 GMQUE reward array：
+- 不再追尋真實 `RANDGMQUE / QUEPART0..3` NPC data。
+- 不建立替代或猜測的 GMQUE 任務資料。
+- 不建立 GMQUE live NPC、handover、領獎 UI。
+- GMQUE 既有 fixed-C 研究資料保留作歷史參考，但不再是版本 blocker，也不會自動重新啟用。
 
-```c
-{ 1642, 1636, 475, 0 }
-```
+V3.10 仍保留已完成的 **encounter source closure** 資料邊界；主線改為**戰鬥畫面 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
 
-已從固定來源閉合三條 Enemy template chain：
-
-- `1642 → TempNo 809 → 瑞里西尔`
-- `1636 → TempNo 803 → 可可恩`
-- `475 → TempNo 5 → 黑乌力`
-- 第四槽 `0` 保留 fixed C 的 implicit-zero 行為，不虛構第四隻寵物
-
-目前 Web 已有 source-backed reward template 與純建立 adapter；但 **真正的 GMQUE NPC arguments（`RANDGMQUE / QUEPART0..3`）與 persistent handover／領獎 mutation 尚未啟用**。
-
-V3.10 草稿：
-[branch：v310-gmque-reward-enemy-template-closure](https://github.com/summer55637/afei-lineage1/tree/v310-gmque-reward-enemy-template-closure)
-
-[PR #3](https://github.com/summer55637/afei-lineage1/pull/3)
-
----
+介面來源筆記：[V3.10 battle UI source notes](docs/reference/v310-battle-ui-source-notes.md)。
+固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 
 ## 🧭 開發原則
 
@@ -123,7 +132,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - Guardian／DamageReact／Acupuncture caller order
 - PetSkill source reachability
 - Encounter / Enemy source closure
-- GMQUE reward Enemy template closure
+- GMQUE 永久停用政策與 battle presentation regression
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -147,7 +156,7 @@ game.html
 - [歷史開發紀錄](docs/changelog/)
 - [Source Reference](docs/reference/)
 - [固定原 C：StoneAge](https://github.com/gavinlinasd/StoneAge/tree/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56)
-- [目前 V3.10 草稿分支](https://github.com/summer55637/afei-lineage1/tree/v310-gmque-reward-enemy-template-closure)
+- [目前 V3.10 開發分支](https://github.com/summer55637/afei-lineage1/tree/v310-battle-presentation)
 
 ---
 
@@ -166,4 +175,4 @@ game.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.10 source closure → runtime integration**
+**目前開發方向：V3.10 battle presentation → runtime regression → playable integration**
