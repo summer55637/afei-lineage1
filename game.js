@@ -24564,12 +24564,17 @@ function renderBattleStageUnit(role,name,level,hp,maxHp,opts={}){
   const pct=clamp(n(hp)/Math.max(1,n(maxHp))*100,0,100);
   const target=!!opts.target;
   const roleClass=String(role||'').toLowerCase();
+  const hasMp=opts.showMp===true;
+  const mp=Math.max(0,Math.trunc(n(opts.mp)));
+  const maxMp=Math.max(1,Math.trunc(n(opts.maxMp)));
+  const mpPct=clamp(mp/maxMp*100,0,100);
   return '<div class="battle-stage-unit '+roleClass+(dead?' defeated':'')+(target?' target':'')+'">'+
     '<div class="battle-stage-unit-role">'+escapeHtml(opts.label||role)+'</div>'+
     '<div class="battle-stage-unit-head"><b>'+escapeHtml(name||'未知')+'</b><span>Lv'+Math.max(1,Math.trunc(n(level)))+'</span></div>'+
     '<div class="battle-stage-unit-hp">HP '+Math.max(0,Math.trunc(n(hp)))+' / '+Math.max(1,Math.trunc(n(maxHp)))+'</div>'+
-    '<div class="battle-stage-unit-bar"><i style="width:'+pct+'%"></i></div>'+
-    (target?'<div class="battle-stage-note">目前鎖定</div>':'')+
+    '<div class="battle-stage-unit-bar hp"><i style="width:'+pct+'%"></i></div>'+
+    (hasMp?'<div class="battle-stage-unit-resource">MP '+mp+' / '+maxMp+'</div><div class="battle-stage-unit-bar mp"><i style="width:'+mpPct+'%"></i></div>':'')+
+    (target?'<div class="battle-stage-note">◆ 目前鎖定</div>':'')+
   '</div>';
 }
 function renderBattleStage(){
@@ -24577,10 +24582,18 @@ function renderBattleStage(){
   const enemySide=$('#battleStageEnemySide');
   const playerSide=$('#battleStagePlayerSide');
   const stateEl=$('#battleStageState');
-  if(!root||!enemySide||!playerSide||!stateEl||!state)return;
+  const roundEl=$('#battleHudRound');
+  const targetEl=$('#battleHudTarget');
+  if(!root||!enemySide||!playerSide||!stateEl||!roundEl||!targetEl||!state)return;
 
   stateEl.textContent=$('#battleState')?.textContent||'等待中';
   const currentTarget=targetEnemyUnit();
+  const round=Math.max(0,Math.trunc(n(enemy?.sourceBattleTurn)));
+  roundEl.textContent=enemy?'第 '+round+' 回合':'—';
+  targetEl.textContent=currentTarget
+    ?('Lv'+Math.max(1,Math.trunc(n(currentTarget.level)))+' '+String(currentTarget.name||'未知'))
+    :'—';
+
   const enemyUnits=enemy
     ?(enemy.groupBattle&&Array.isArray(enemy.units)&&enemy.units.length
       ?enemy.units
@@ -24608,7 +24621,13 @@ function renderBattleStage(){
     state.level,
     state.hp,
     state.maxHp,
-    {label:'我方角色',dead:n(state.hp)<=0}
+    {
+      label:'我方角色',
+      dead:n(state.hp)<=0,
+      showMp:true,
+      mp:state.mp,
+      maxMp:state.maxMp
+    }
   );
   const pet=activePet();
   const petCard=(pet&&petIsBattleActive(pet))
@@ -24618,7 +24637,13 @@ function renderBattleStage(){
         pet.level,
         pet.hp,
         pet.maxHp,
-        {label:'出戰寵物',dead:!petIsAlive(pet)}
+        {
+          label:'出戰寵物',
+          dead:!petIsAlive(pet),
+          showMp:true,
+          mp:pet.mp,
+          maxMp:pet.maxMp
+        }
       )
     :'';
   playerSide.innerHTML=player+petCard;
