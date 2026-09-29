@@ -1,3 +1,22 @@
+## V3.15 — source-map Encounter coordinate probe
+
+2026-09-30
+
+- 將 verified map runtime 接到一般 Encounter 已產生的 `roamX / roamY`。
+- 世界 HUD 顯示 `Floor/X/Y → tile/object → mapset attributes → walkability → battlemap candidates` source probe。
+- probe 不重新抽座標、不消耗 `Math.random`、不執行 battle field 的 `RAND(0,2)`；實際 battle field selection 仍由外部 RNG injection 保留。
+- 未收錄 Floor、越界或 source 驗證失敗維持 fail-closed。
+- 新增 `tools/check_v315_source_map_encounter_probe.mjs`、`docs/reference/v315-source-map-encounter-probe.md` 與 `.github/workflows/v315-source-map-encounter-probe.yml`。
+
+## V3.14 — fixed-C map header catalog
+
+2026-09-30
+
+- 新增可重跑的 fixed-C `gmsv/data/map` header scanner，只以 `LS2MAP` magic 判定 map file。
+- 讀取 floor ID、show string、width、height、expected file bytes、trailing bytes 與 Git blob SHA。
+- source inventory 固定為 1284 個 map blobs；不代表全部都已轉成 Web runtime。
+- parser unit regression 與 CI 已完成。
+
 ## V3.13 — LS2MAP parser contract
 
 2026-09-30
