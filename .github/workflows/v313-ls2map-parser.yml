@@ -5,6 +5,10 @@ on:
     paths:
       - 'tools/stoneage_ls2map_parser.mjs'
       - 'tools/check_v313_ls2map_parser.mjs'
+      - 'data/generated/stoneage_map_20000.json'
+      - 'data/generated/stoneage_map_runtime_index.json'
+      - 'src/stoneage_map_runtime.mjs'
+      - 'tools/check_v313_map_20000_runtime.mjs'
       - 'docs/reference/v313-ls2map-parser-contract.md'
       - '.github/workflows/v313-ls2map-parser.yml'
   pull_request:
@@ -28,3 +32,5 @@ jobs:
           node-version: 20
       - name: Run V3.13 LS2MAP parser regression
         run: node tools/check_v313_ls2map_parser.mjs
+      - name: Run V3.13 verified floor 20000 runtime regression
+        run: node tools/check_v313_map_20000_runtime.mjs
