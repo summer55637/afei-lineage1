@@ -57,30 +57,16 @@
 
 ## 🔬 V3.10 groundwork
 
-目前最完整的新工作是 **GMQUE reward pet source closure**。
+GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**。
 
-固定 C 的 GMQUE reward array：
+- 不再追尋真實 `RANDGMQUE / QUEPART0..3` NPC data。
+- 不建立替代或猜測的 GMQUE 任務資料。
+- 不建立 GMQUE live NPC、handover、領獎 UI。
+- GMQUE 既有 fixed-C 研究資料保留作歷史參考，但不再是版本 blocker，也不會自動重新啟用。
 
-```c
-{ 1642, 1636, 475, 0 }
-```
+V3.10 主線改為**戰鬥畫面 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
 
-已從固定來源閉合三條 Enemy template chain：
-
-- `1642 → TempNo 809 → 瑞里西尔`
-- `1636 → TempNo 803 → 可可恩`
-- `475 → TempNo 5 → 黑乌力`
-- 第四槽 `0` 保留 fixed C 的 implicit-zero 行為，不虛構第四隻寵物
-
-目前 Web 已有 source-backed reward template 與純建立 adapter；但 **真正的 GMQUE NPC arguments（`RANDGMQUE / QUEPART0..3`）與 persistent handover／領獎 mutation 尚未啟用**。
-
-V3.10 草稿：
-[branch：v310-gmque-reward-enemy-template-closure](https://github.com/summer55637/afei-lineage1/tree/v310-gmque-reward-enemy-template-closure)
-
-[PR #3](https://github.com/summer55637/afei-lineage1/pull/3)
-
----
-
+介面來源筆記：[V3.10 battle UI source notes](docs/reference/v310-battle-ui-source-notes.md)。
 ## 🧭 開發原則
 
 > **原 C 規則優先，不猜數值。**
@@ -123,7 +109,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - Guardian／DamageReact／Acupuncture caller order
 - PetSkill source reachability
 - Encounter / Enemy source closure
-- GMQUE reward Enemy template closure
+- GMQUE 永久停用政策與 battle presentation regression
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -147,7 +133,7 @@ game.html
 - [歷史開發紀錄](docs/changelog/)
 - [Source Reference](docs/reference/)
 - [固定原 C：StoneAge](https://github.com/gavinlinasd/StoneAge/tree/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56)
-- [目前 V3.10 草稿分支](https://github.com/summer55637/afei-lineage1/tree/v310-gmque-reward-enemy-template-closure)
+- [目前 V3.10 開發分支](https://github.com/summer55637/afei-lineage1/tree/v310-battle-presentation)
 
 ---
 
@@ -166,4 +152,4 @@ game.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.10 source closure → runtime integration**
+**目前開發方向：V3.10 battle presentation → runtime regression → playable integration**
