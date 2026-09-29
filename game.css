@@ -47,8 +47,8 @@ select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10p
 .battle-stage-unit.target{border-color:var(--accent);box-shadow:0 0 0 1px #d4b45f66 inset,0 8px 20px #0006}
 .battle-stage-unit.defeated{opacity:.38;filter:saturate(.55)}
 .battle-stage-unit.player{border-color:#4b6370}
-.battle-stage-unit.pet{border-color:#526a44}
-.battle-stage-unit.enemy{border-color:#6a4c43}
+.battle-stage-unit.pet{border-color:#526a44}.battle-stage-unit.battle-enemy{border-color:#6a4c43}
+
 .battle-stage-unit-head{display:flex;align-items:center;justify-content:space-between;gap:7px}
 .battle-stage-unit-head b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .battle-stage-unit-head span{font-size:9px;color:var(--muted);white-space:nowrap}
