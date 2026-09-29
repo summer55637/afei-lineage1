@@ -19,7 +19,9 @@
 
 **V3.09** 是目前正式可玩的主線版本。
 
-<!-- 歷史 regression compatibility markers：PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09。 -->
+<!-- 歷史 regression compatibility markers：PLAYABLE CORE V2.91 · PLAYABLE CORE V2.92 · PLAYABLE CORE V2.93 · PLAYABLE CORE V2.94 · PLAYABLE CORE V2.95 · PLAYABLE CORE V2.96 · PLAYABLE CORE V2.97 · PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.01 · PLAYABLE CORE V3.02 · PLAYABLE CORE V3.03 · PLAYABLE CORE V3.04 · PLAYABLE CORE V3.05 · PLAYABLE CORE V3.06 · PLAYABLE CORE V3.07 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09 · PLAYABLE CORE V3.10 · PLAYABLE CORE V3.11 · PLAYABLE CORE V3.12。 -->
+
+
 
 **V3.10** 正在獨立草稿分支持續做 source closure、runtime contract 與 regression，不提前取代 V3.09。
 
@@ -66,7 +68,7 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**。
 - 不建立 GMQUE live NPC、handover、領獎 UI。
 - GMQUE 既有 fixed-C 研究資料保留作歷史參考，但不再是版本 blocker，也不會自動重新啟用。
 
-V3.10 主線改為**戰鬥畫面 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
+V3.10 仍保留已完成的 **encounter source closure** 資料邊界；主線改為**戰鬥畫面 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
 
 介面來源筆記：[V3.10 battle UI source notes](docs/reference/v310-battle-ui-source-notes.md)。
 固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
