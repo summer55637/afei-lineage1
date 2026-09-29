@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.12 battlefield source contract** |
+| 下一階段 | **V3.13 true tile runtime** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -177,4 +177,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.12 battlefield source contract → 真正 tile runtime → 戰鬥／世界 presentation → runtime regression → playable integration**
+**目前開發方向：V3.13 true floor/x/y → tile runtime → battle map selection → 戰鬥／世界 presentation → runtime regression → playable integration**
