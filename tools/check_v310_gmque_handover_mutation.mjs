@@ -114,6 +114,30 @@ assert.equal(matchedCheck.nums,98);
 assert.equal(matchedCheck.type,'pet');
 assert.equal(randModuloCalls,1,'GMQUENUMS RNG runs exactly once after pet validation');
 
+const duplicateState={
+  quest:{gmque:{active:true,taskString:'1-10&1-10&2-10&3-10',nums:50,handedOver:false}},
+  petBox:[
+    {id:'dup',tempNo:1,petId:1,level:10,name:'dup'},
+    {id:'p2',tempNo:2,petId:2,level:10,name:'p2'},
+    {id:'p3',tempNo:3,petId:3,level:10,name:'p3'}
+  ],
+  team:[],
+  activePetId:null
+};
+const duplicateCheck={
+  ok:true,nums:50,matches:[
+    {slot:0,candidates:[{pet:duplicateState.petBox[0]}]},
+    {slot:1,candidates:[{pet:duplicateState.petBox[0]}]},
+    {slot:2,candidates:[{pet:duplicateState.petBox[1]}]},
+    {slot:3,candidates:[{pet:duplicateState.petBox[2]}]}
+  ]
+};
+const duplicateHandover=ctx.sourceGmQueHandoverPets(duplicateCheck,{target:duplicateState});
+assert.equal(duplicateHandover.ok,false);
+assert.equal(duplicateHandover.reason,'handover-pet-missing');
+assert.equal(duplicateHandover.removedCount,1,'the original duplicated slot is deleted once before the second deletion attempt fails');
+assert.equal(duplicateState.petBox.some(p=>p.id==='dup'),false);
+
 const check={
   ok:true,nums:15,matches:[
     {slot:0,candidates:[{pet:state.petBox[0]}]},
