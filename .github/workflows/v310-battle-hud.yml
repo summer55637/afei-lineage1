@@ -1,0 +1,33 @@
+name: V3.10 battle HUD
+
+on:
+  push:
+    paths:
+      - 'game.html'
+      - 'game.css'
+      - 'game.js'
+      - 'tools/check_v310_battle_hud.mjs'
+      - 'docs/reference/v310-battle-hud-source-notes.md'
+      - '.github/workflows/v310-battle-hud.yml'
+  pull_request:
+    paths:
+      - 'game.html'
+      - 'game.css'
+      - 'game.js'
+      - 'tools/check_v310_battle_hud.mjs'
+      - 'docs/reference/v310-battle-hud-source-notes.md'
+      - '.github/workflows/v310-battle-hud.yml'
+  workflow_dispatch:
+
+jobs:
+  battle-hud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V3.10 battle HUD regression
+        run: node tools/check_v310_battle_hud.mjs

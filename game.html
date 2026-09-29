@@ -172,31 +172,45 @@
             <small>原服戰鬥配置</small>
           </div>
           <div id="battleStagePlayerSide" class="battle-stage-side battle-stage-player-side"></div>
+          <aside class="battle-command-window" aria-label="戰鬥指令">
+            <div class="battle-command-head">
+              <div>
+                <div class="eyebrow">COMMAND</div>
+                <b>戰鬥指令</b>
+              </div>
+              <span id="battleHudRound" class="battle-command-round">—</span>
+            </div>
+            <div class="battle-command-meta">
+              <span>目標</span>
+              <b id="battleHudTarget">—</b>
+            </div>
+            <div class="battle-command-grid">
+              <div class="battle-command-static active"><b>攻擊</b><small>自動戰鬥</small></div>
+              <div class="battle-command-static"><b>技能</b><small>職業技能</small></div>
+              <button id="guardBtn" type="button"><b>防禦</b><small>GUARD</small></button>
+              <button id="captureBtn" class="capture-btn" type="button" disabled><b>捕獲</b><small>Lv1 條件</small></button>
+              <button id="autoCaptureBtn" type="button"><b>自動捕獲</b><small>自動判定</small></button>
+              <div class="battle-command-static"><b>道具</b><small>尚未接入</small></div>
+              <div class="battle-command-static"><b>更換寵物</b><small>隊伍面板</small></div>
+              <div class="battle-command-static"><b>逃跑</b><small>尚未接入</small></div>
+            </div>
+            <div class="battle-command-capture-info">
+              <b id="captureChance">捕獲率：—</b>
+              <div id="captureInfo" class="muted">遭遇 Lv1 寵物後顯示條件。</div>
+            </div>
+            <div class="battle-command-profession">
+              <div>
+                <b>職業戰鬥技能</b>
+                <div id="professionBattleInfo" class="muted">V2.77 live：已接入 fixed C 可執行的主要職業戰鬥技能。</div>
+              </div>
+              <div id="professionBattleActions" class="capture-actions"></div>
+            </div>
+          </aside>
         </div>
 
         <div id="enemyBox" class="enemy empty">
           <div class="enemy-name">尚未遭遇敵人</div>
           <div class="muted">開啟自動戰鬥後會依目前地圖的 Lv1 資料出現。</div>
-        </div>
-
-        <div class="capture-panel">
-          <div>
-            <b id="captureChance">捕獲率：—</b>
-            <div id="captureInfo" class="muted">遭遇 Lv1 寵物後顯示條件。</div>
-          </div>
-          <div class="capture-actions">
-            <button id="captureBtn" class="capture-btn" disabled>捕獲</button>
-            <button id="guardBtn">防禦</button>
-            <button id="autoCaptureBtn">自動捕獲：開</button>
-          </div>
-        </div>
-
-        <div class="capture-panel">
-          <div>
-            <b>職業戰鬥技能</b>
-            <div id="professionBattleInfo" class="muted">V2.77 live：已接入 fixed C 可執行的主要職業戰鬥技能；Skill 21 移形換位並保留 CHAR_MYSKILLDUCK 與 StatusSeq lifecycle。</div>
-          </div>
-          <div id="professionBattleActions" class="capture-actions"></div>
         </div>
 
         <div class="capture-panel">
