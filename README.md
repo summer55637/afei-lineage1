@@ -84,6 +84,12 @@ V3.09 — Combo death credit waits for ItemCrush boundary
 
 ---
 
+## V2.61 最新進度
+
+V2.61 完成固定 C `PROFESSION_ENCLOSE`／Skill 5 與 `PROFESSION_ANNEX` 狀態生命週期對照：包含 ENclose 的 magic pipeline、ANNEX 的 StatusSeq 強制攻擊、既有異常狀態阻擋與固定 RNG 邊界。
+
+這是歷史 regression 節點，正式可玩 baseline 仍維持 V3.09。
+
 ## 🔬 V3.10～V3.12 presentation／source groundwork
 
 GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追尋 RANDGMQUE / QUEPART0..3，也不建立替代任務資料或 live handover／領獎 UI。既有 fixed-C 研究僅保留歷史參考。
