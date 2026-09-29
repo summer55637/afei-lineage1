@@ -69,3 +69,40 @@ export function sourceMapRuntimeSummary(map){
   if(!map)return {status:'unresolved'};
   return {status:'ready',floorId:Number(map.floorId),width:Number(map.width),height:Number(map.height),tileCount:Array.isArray(map.tiles)?map.tiles.length:0,objectCount:Array.isArray(map.objects)?map.objects.length:0};
 }
+export const SOURCE_MAPSET_RUNTIME_URL='data/generated/stoneage_mapset_runtime.json';
+let sourceMapsetPromise=null;
+
+export async function loadSourceMapsetRuntime({fetchImpl=globalThis.fetch}={}){
+  if(!sourceMapsetPromise){
+    sourceMapsetPromise=fetchImpl(SOURCE_MAPSET_RUNTIME_URL,{cache:'no-store'}).then(r=>{
+      if(!r.ok)throw new Error('source mapset runtime HTTP '+r.status);
+      return r.json();
+    }).catch(err=>{sourceMapsetPromise=null;throw err});
+  }
+  return sourceMapsetPromise;
+}
+
+export function sourceMapImageAttributes(mapset,imageId){
+  if(!mapset||imageId==null)return null;
+  const id=Math.trunc(Number(imageId));
+  if(!Number.isFinite(id))return null;
+  const key=String(id);
+  if(!Object.prototype.hasOwnProperty.call(mapset.walkableByImageId||{},key))return null;
+  return {
+    imageId:id,
+    walkable:mapset.walkableByImageId[key]===1,
+    haveHeight:Array.isArray(mapset.haveHeightImageIds)&&mapset.haveHeightImageIds.includes(id),
+    defence:Number(mapset.defaultData?.defence??-1),
+    introDamage:Number(mapset.defaultData?.intodamage??0),
+    outofDamage:Number(mapset.defaultData?.outofdamage??0),
+  };
+}
+
+export function sourceMapTileWithAttributes(map,tileX,tileY,mapset){
+  if(!map)return null;
+  const tile={x:Math.trunc(Number(tileX)),y:Math.trunc(Number(tileY))};
+  if(!Number.isFinite(tile.x)||!Number.isFinite(tile.y)||tile.x<0||tile.y<0||tile.x>=Number(map.width)||tile.y>=Number(map.height))return null;
+  const index=tile.y*Number(map.width)+tile.x;
+  const imageId=Number(map.tiles?.[index]);
+  return Object.assign({x:tile.x,y:tile.y,index,tile:imageId,object:Number(map.objects?.[index])},sourceMapImageAttributes(mapset,imageId)||{attributes:null});
+}
