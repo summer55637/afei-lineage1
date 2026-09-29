@@ -2,6 +2,8 @@
 
 2026-09-30
 
+PLAYABLE CORE V3.09 — current playable baseline; V3.13 remains source/runtime groundwork.
+
 - 依 fixed C `MAP_readMapOne()` 固定 LS2MAP binary layout。
 - 新增 `tools/stoneage_ls2map_parser.mjs`、parser regression 與 CI。
 - 新增 verified Floor `20000`：真實 binary map 解析為 50×50、2500 tile、2500 object，並保存 source blob SHA。
