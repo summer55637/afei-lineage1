@@ -1,3 +1,14 @@
+## V3.10 — battle HUD extension
+
+2026-09-29
+
+- 在已合併的 battle presentation 基礎上新增 source-shaped battle HUD：右上指令視窗、回合、目前目標、Player／Pet HP／MP。
+- 回合直接讀既有 `enemy.sourceBattleTurn`；目標直接讀既有 `targetEnemyUnit()`，不建立第二份戰鬥狀態。
+- 指令視窗保留經典攻擊／技能／防禦／捕獲／道具／換寵／逃跑的視覺層級；只有既有可執行按鈕保持互動，其餘明確標示尚未接入。
+- 不修改 battle order、傷害、CaptureCheck、Guardian、Counter、Acupuncture 或任何 RNG。
+
+regression：`tools/check_v310_battle_hud.mjs`。
+
 ## V3.10 — GMQUE permanently disabled / battle presentation groundwork
 
 2026-09-29
