@@ -620,7 +620,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 - V3.09：Combo death credit 延後到同一 command 的 ItemCrush boundary 後 finalize。
 - V3.09 之後目前進入 **V3.10 groundwork**，先做 source closure 與 regression contract，不宣稱已經有新的 playable core。
-- GMQUE 已有 fixed-C-derived trophy runtime；目前 handover 尚以 source adapter / contract 為主，實際 NPC `RANDGMQUE / QUEPART0..` 與 reward pet template 尚未完全閉合。
+- GMQUE 已有 fixed-C-derived trophy runtime；reward pet template source closure 已完成，目前 handover 尚以 source adapter / contract 為主，真正的 NPC `RANDGMQUE / QUEPART0..` arguments 與 persistent handover mutation 仍待閉合。
 - fixed C 的 GMQUE pet reward array 為 `{1642,1636,475,0}`；`0` 是 C 陣列 implicit-zero 分支，不能改成第四隻虛構寵物。三個非零 Enemy ID 都已有 pinned source template closure。
 - `stoneage_enemy_ai.json` 雖有 1642／1636／475 的 Enemy ID 索引，但那是 `enemy1.txt + enemybase1.txt` 的 AI metadata，不等於可直接建立 Pet 的完整 Enemy template。
 - 目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 仍不是 GMQUE reward pet 的 source-of-truth；1642／1636／475 已改由 pinned `enemy1.txt` → `enemybase1.txt` 的 source-backed reward template artifact 提供。
