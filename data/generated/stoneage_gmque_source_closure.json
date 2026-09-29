@@ -1,6 +1,6 @@
 {
   "format": "stoneage-gmque-source-closure-v1",
-  "status": "partial",
+  "status": "source-closure-partial",
   "playableCore": "V3.09",
   "workstream": "V3.10-groundwork",
   "fixedC": {
@@ -69,10 +69,10 @@
       475
     ],
     "enemybaseDirectCheck": {
-      "path": "gmsv/data/enemybase1.txt",
-      "1642": "not-found",
+      "475": "template-not-established",
       "1636": "not-found",
-      "475": "template-not-established"
+      "1642": "not-found",
+      "path": "gmsv/data/enemybase1.txt"
     },
     "encounterRuntime1642": {
       "groups": [
@@ -93,6 +93,27 @@
       ],
       "matches": [],
       "interpretation": "no current player-pet variant maps these three GMQUE reward Enemy IDs; do not promote AI metadata into a pet template"
+    },
+    "rewardEnemyTemplateSource": "data/generated/stoneage_gmque_reward_enemy_templates.json",
+    "rewardEnemyTemplateResolution": {
+      "sourcePath": "gmsv/src/npc/npc_eventaction.c::GMQUE_AddQueStrTrophy",
+      "lookup": "ENEMY_getEnemyArrayFromId",
+      "creation": "ENEMY_createPetFromEnemyIndex",
+      "ids": {
+        "475": {
+          "tempNo": 5,
+          "name": "黑乌力"
+        },
+        "1636": {
+          "tempNo": 803,
+          "name": "可可恩"
+        },
+        "1642": {
+          "tempNo": 809,
+          "name": "瑞里西尔"
+        }
+      },
+      "implicitZeroSlot": true
     }
   },
   "unresolved": [
@@ -102,19 +123,9 @@
       "impact": "cannot safely materialize actual live GMQUE task offerings"
     },
     {
-      "key": "rewardPet1642",
-      "status": "pending-template",
-      "impact": "cannot create reward pet safely"
-    },
-    {
-      "key": "rewardPet1636",
-      "status": "pending-template",
-      "impact": "cannot create reward pet safely"
-    },
-    {
-      "key": "rewardPet475",
-      "status": "pending-template",
-      "impact": "cannot prove complete reward-pet template from current web runtime data"
+      "key": "gmqueRewardPetRuntimeAdapter",
+      "status": "pending-adapter",
+      "impact": "source Enemy templates are resolved, but Web reward creation still needs a source-backed Enemy-ID-to-template adapter before enabling persistent reward mutation"
     }
   ],
   "runtime": {
@@ -137,6 +148,7 @@
     ],
     "locator": "tools/check_v310_gmque_npc_source_locator.mjs",
     "candidatePromotion": "requires-pinned-provenance-and-regression",
-    "currentCandidateCount": 0
+    "currentCandidateCount": 0,
+    "sourceTemplateLocator": "fixed-C Enemy ID -> enemy1 TempNo -> enemybase1"
   }
 }
