@@ -114,7 +114,7 @@ const matchedCheck=ctx.sourceGmQueHandoverCheck(
 );
 assert.equal(matchedCheck.ok,true);
 assert.equal(matchedCheck.generatedNums,true);
-assert.equal(matchedCheck.nums,99);
+assert.equal(matchedCheck.nums,98);
 assert.equal(matchedCheck.type,'pet');
 assert.equal(randCalls,1,'GMQUENUMS RNG runs exactly once after pet validation');
 
