@@ -29,3 +29,5 @@
 ## Runtime API extension
 
 V3.13 的 `sourceMapBattleCandidatesAt(map,x,y)` 將 `sourceMapTileAt()` 與 fixed-C `BATTLE_getBattleFieldNo()` 的 image→battlemap candidate 對照串成一次查詢；它只回傳已存在的 map data，座標越界或未知資料直接 `null`，不生成替代 tile。
+
+`sourceMapBattleFieldNoAt(map,x,y,{randIndex})` 將 fixed C `map[RAND(0,2)]` 的選擇保留為外部 RNG injection：沒有提供 RNG 時不自行抽樣，也不消耗隨機數。
