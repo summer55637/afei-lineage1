@@ -1,3 +1,15 @@
+## V3.11 — battle target marker presentation
+
+2026-09-30
+
+**目前正式可玩核心仍為 V3.09；V3.10／V3.11 為 presentation 開發主線。**
+
+- 延續既有 battle-stage 的 `.target` class，把目前已由 runtime 選中的敵方目標做成更醒目的戰場標記。
+- 新增金色目標外框、脈衝提示與「目標」標籤；`prefers-reduced-motion` 時保留靜態標記並停用動畫。
+- 目標來源仍是既有 `targetEnemyUnit()`，不建立第二份 selected-target state。
+- 不修改 battle order、傷害、CaptureCheck、Guardian、Counter、Acupuncture、任何 RNG 或 save schema。
+
+regression：`tools/check_v311_battle_target_marker.mjs`。
 ## V3.10 — world HUD shell
 
 2026-09-29
