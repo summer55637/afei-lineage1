@@ -10623,9 +10623,16 @@ function sourceGmQueHandoverPets(check,{target=state}={}){
   // fixed GMQUE_CheckQueStr writes GMQUENUMS before the item/gold gates and before
   // GMQUE_DelQueStrPet is called as a later NPC action.
   target.quest.gmque.nums=Math.max(0,Math.trunc(n(check.nums)));
+  const matches=Array.isArray(check.matches)?check.matches:[];
+  // fixed GMQUE_CheckQueStr records the selected pet slot before GMQUE_DelQueStrPet
+  // starts mutating the array. Repeated task matches therefore point at the same
+  // original pet slot; the later deletion can fail instead of silently selecting
+  // another duplicate pet.
+  const selectedRefs=matches.map(match=>match?.candidates?.[0]?.pet||null);
   const removed=[];
-  for(const match of Array.isArray(check.matches)?check.matches:[]){
-    const candidate=match?.candidates?.[0]?.pet||null;
+  for(let matchIndex=0;matchIndex<matches.length;matchIndex++){
+    const match=matches[matchIndex];
+    const candidate=selectedRefs[matchIndex];
     const petId=candidate?.id;
     const index=target.petBox?.findIndex(p=>p&&p.id===petId)??-1;
     if(index<0)return {ok:false,reason:'handover-pet-missing',petId,removedCount:removed.length,removed};
