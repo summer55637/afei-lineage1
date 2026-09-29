@@ -1,3 +1,5 @@
+目前正式可玩的 playable baseline：V3.09。V3.10 之後版本為 source/runtime/presentation groundwork，不取代 V3.09。
+
 ## V3.17 — client RD decoder contract
 
 2026-09-30
