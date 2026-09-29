@@ -19,8 +19,16 @@
 
 **V3.09** 是目前正式可玩的主線版本。
 
+固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
 <!-- 歷史 regression compatibility markers：
 PLAYABLE CORE V2.88 · PLAYABLE CORE V2.89 · PLAYABLE CORE V2.90 · PLAYABLE CORE V2.91 · PLAYABLE CORE V2.92 · PLAYABLE CORE V2.93 · PLAYABLE CORE V2.94 · PLAYABLE CORE V2.95 · PLAYABLE CORE V2.96 · PLAYABLE CORE V2.97 · PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.01 · PLAYABLE CORE V3.02 · PLAYABLE CORE V3.03 · PLAYABLE CORE V3.04 · PLAYABLE CORE V3.05 · PLAYABLE CORE V3.06 · PLAYABLE CORE V3.07 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09 · PLAYABLE CORE V3.10 · PLAYABLE CORE V3.11 · PLAYABLE CORE V3.12。
+V2.82 — FallGround DamageReact gate / CHAR_WORKPETFALL ride-system boundary
+V2.83 — rideflg source boundary
+V2.84 — Enemy PETSKILL_Vary / PETSKILL_Roar source parity
+V2.85 — Battle-incompatible PETSKILL_Fixitem / PETSKILL_Inslay
+V2.86 — PetSkill source closure audit
+V2.87 — fixed BATTLE_Attack DamageReact → Counter FALSE boundary
 V2.88 — pre-DamageReact Counter boundary
 V2.89 — Counter GuardAdjust boundary
 V2.90 — attacker-side DamageReact Counter boundary
