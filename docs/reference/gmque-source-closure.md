@@ -39,7 +39,9 @@
 
 - `sourceGmQueTaskEntries(taskString)`：固定四槽 `petID-LV` parser。
 - `sourceGmQueMatchPetToTask(pet, task)`：exact ID + level；若 ID 不同，只有 caller 明確提供 source name 時才允許 name fallback。
-- `sourceGmQueHandoverCheck(taskString,pets,...)`：依 fixed C 的 `GMQUENUMS` 初始化與 item/gold gate 順序做 eligibility check。它**不刪寵、不領獎、不變更 persistent state**。
+- `sourceGmQueHandoverCheck(taskString,pets,...)`：依 fixed C 的 `GMQUENUMS` 初始化與 item/gold gate 順序做 eligibility check；它本身不刪寵、不領獎。
+- `sourceGmQuePrepareTaskState()` / `sourceGmQueHandoverPets()` / `sourceGmQueApplyTrophy()` 已把 persistent lifecycle 接上：保存 task、交寵、領 pet/item/gold reward、成功後 cleanup。
+- 交寵不是原子 transaction：fixed `GMQUE_DelQueStrPet()` 先把匹配到的 slot 記下，再逐隻刪除；重複目標可能造成前面的寵物已刪、最後 `count` 不足而回傳 FALSE，因此 Web mutation 不做額外 rollback。
 - `sourceGmQueBuildPetTemplateIndex(petDb)` 仍保留作一般 Player-Pet DB cross-check；GMQUE `sourceGmQueRewardPetTemplate(petId)` 的 production default 則改讀 `stoneage_gmque_reward_enemy_templates.json` 的 fixed-C Enemy template。
 - `sourceCreateGmQueRewardPet(petId)` 再依 fixed `ENEMY_createPetFromEnemyIndex()` 的 RNG／建立順序產生純 Web Pet object，不修改 persistent state。
 
@@ -47,11 +49,10 @@
 
 ## Explicitly unresolved
 
-- 實際 GMQUE NPC `RANDGMQUE / QUEPART0..` 值。
-- `ENEMY_createPetFromEnemyIndex()` 對應的 Web persistent pet mutation semantics。
-- 實際 GMQUE `RANDGMQUE / QUEPART0..3` NPC arguments。
+- 實際 GMQUE NPC `RANDGMQUE / QUEPART0..3` 值；目前 pinned source tree 與公開 GitHub / Web 搜尋都沒有找到可直接證實的 live NPC arguments。
+- live NPC 如何把 `GMACTION / DelGmquePet / GetGmPrize / CleanGmque` 串成實際對話頁面與 NPC 對應；在沒有 source evidence 前不建立假 NPC。
 
-三個 reward Enemy template 與純 Web creation adapter 已閉合；persistent handover mutation 與實際 NPC 活動資料仍未啟用。
+reward Enemy template、純 Web creation adapter、persistent handover/reward mutation core 已閉合；live NPC／活動 UI 仍維持 source-pending，因此尚不宣稱完整活動 playable。
 
 ## Regression
 
