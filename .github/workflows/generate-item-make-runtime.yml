@@ -3,6 +3,8 @@ name: Generate fixed item make runtime
 on:
   push:
     paths:
+      - 'CHANGELOG.md'
+      - 'README.md'
       - "tools/generate_item_make_runtime.py"
       - "tools/generate_item_field2_runtime.py"
       - "tools/generate_pet_merge_fix_runtime.py"
