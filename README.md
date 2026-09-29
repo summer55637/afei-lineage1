@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.13 true floor/x/y → tile runtime + map loader contract** |
+| 下一階段 | **V3.13 LS2MAP loader → true floor/x/y → tile runtime** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -101,6 +101,18 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追�
 來源筆記：[V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)。
 ---
 
+## 🔬 V3.13 map loader
+
+V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `tools/stoneage_ls2map_parser.mjs` 與獨立 regression。
+
+`MAP_readMapOne()` 的 parser contract 已固定為：6-byte `LS2MAP` magic → big-endian floor ID → 32-byte show string → big-endian width／height → `width × height` tile layer → `width × height` object layer。
+
+原 C 的逐格 `IsValidImagenumber()` 驗證與 trailing-byte warning 邊界也已記錄；Web parser 目前只解析 container，不猜 image attribute，也不直接修改遊戲 world runtime。
+
+下一步是由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，再接 `floor/x/y → tile → battlemap`。如果沒有可靠 bytes，就維持 **fail-closed**，不虛構地圖。
+
+來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
+
 ## 📁 專案結構
 
 ```
@@ -108,7 +120,7 @@ start.html              # 遊戲入口
 game.js                # 主要 runtime
 game.css               # PC／手機共用介面
 data/generated/        # source-backed generated data
-tools/                 # data generator／regression
+tools/                 # data generator／regression／map parser
 docs/reference/        # source closure／研究紀錄
 docs/changelog/        # 詳細版本開發紀錄
 CHANGELOG.md           # 最新與歷史開發總表
@@ -128,6 +140,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - Encounter / Enemy source closure
 - GMQUE 永久停用政策與 battle presentation regression
 - V3.12 battlefield source contract／source-status HUD
+- V3.13 LS2MAP parser contract
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -152,6 +165,7 @@ start.html
 - [Source Reference](docs/reference/)
 - [固定原 C：StoneAge](https://github.com/gavinlinasd/StoneAge/tree/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56)
 - [V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)
+- [V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)
 
 ---
 
@@ -170,4 +184,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.13 true floor/x/y → tile runtime → battle map selection → 戰鬥／世界 presentation → runtime regression → playable integration**
+**目前開發方向：V3.13 LS2MAP loader → true floor/x/y → tile runtime → battle map selection → 戰鬥／世界 presentation → runtime regression → playable integration**
