@@ -9,6 +9,7 @@ const ledger=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_source_cl
 const gmque=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_trophy_runtime.json','utf8'));
 const ai=JSON.parse(fs.readFileSync('data/generated/stoneage_enemy_ai.json','utf8'));
 const encounter=JSON.parse(fs.readFileSync('data/generated/stoneage_general_encounter_runtime.json','utf8'));
+const rewardTemplates=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_reward_enemy_templates.json','utf8'));
 
 function extractFunction(source,name){
   const marker='function '+name+'('; const start=source.indexOf(marker); assert.ok(start>=0,'missing '+name);
@@ -52,7 +53,8 @@ const ctx={
   sourceGmQueRewardType:v=>{v=Math.trunc(Number(v));return v>97?'pet':(v>40?'item':'gold')},
   cRand:()=>0,
   gmqueDb:null,
-  gmquePetTemplateIndex:null
+  gmquePetTemplateIndex:null,
+  gmqueRewardEnemyTemplatesDb:rewardTemplates
 };
 // The production helpers depend on sourceGmQueActionValue / RewardType globals; inject exact test doubles.
 vm.createContext(ctx);
@@ -75,16 +77,17 @@ assert.equal(ctx.sourceGmQueMatchPetToTask(pets[1],{petId:1636,level:11},{expect
 assert.equal(ctx.sourceGmQueMatchPetToTask(pets[1],{petId:1636,level:11}).match,false);
 
 const index=ctx.sourceGmQueBuildPetTemplateIndex(JSON.parse(fs.readFileSync('data/generated/stoneage_general_lv1_pets.json','utf8')));
-for(const id of [1642,1636,475])assert.equal(index[String(id)]??null,null,'reward id must not be promoted from AI-only data');
+for(const id of [1642,1636,475])assert.equal(index[String(id)]??null,null,'reward id must not be promoted from main player-pet DB');
 assert.equal(ctx.sourceGmQueRewardPetTemplate(0,{templateIndex:index}).reason,'implicit-zero-pet-slot');
-assert.equal(ctx.sourceGmQueRewardPetTemplate(1642,{templateIndex:index}).reason,'pet-template-pending');
+const sourceBacked=ctx.sourceGmQueRewardPetTemplate(1642);
+assert.equal(sourceBacked.ok,true); assert.equal(sourceBacked.template.tempNo,809); assert.equal(sourceBacked.template.name,'瑞里西尔');
 const synthetic={1642:{enemyId:1642,tempNo:9000,name:'synthetic',stats:{vital:1,str:1,tgh:1,dex:1},elements:{earth:0,water:0,fire:0,wind:0},resistances:{poison:0,paralysis:0,sleep:0,stone:0,drunk:0,confusion:0},skillIds:[1]}};
 const reward=ctx.sourceGmQueRewardPetTemplate(1642,{templateIndex:synthetic});
 assert.equal(reward.ok,true); assert.equal(reward.template.tempNo,9000);
 
 ctx.gmqueDb=gmque;
 const petRoll=ctx.sourceGmQueResolveTrophy(98,{randInclusive:()=>0});
-assert.equal(petRoll.ok,false); assert.equal(petRoll.reason,'pet-template-pending');
+assert.equal(petRoll.ok,true); assert.equal(petRoll.type,'pet'); assert.equal(petRoll.petId,1642); assert.equal(petRoll.template.tempNo,809);
 const zeroRoll=ctx.sourceGmQueResolveTrophy(99,{randInclusive:()=>3});
 assert.equal(zeroRoll.ok,false); assert.equal(zeroRoll.reason,'implicit-zero-pet-slot');
 
