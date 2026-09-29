@@ -1,8 +1,7 @@
-name: Deploy GitHub Pages
+name: Deploy GitHub Pages (manual fallback)
 
 on:
-  push:
-    branches: ["main"]
+  # GitHub Pages is deployed by the repository's managed Pages workflow.
   workflow_dispatch:
 
 permissions:
