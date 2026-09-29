@@ -210,6 +210,16 @@ V3.16 從公開 client source 閉合 tile 圖像來源鏈：`tile image ID → r
 
 來源筆記：[V3.16 client image resolver contract](docs/reference/v316-client-image-resolver-contract.md)。
 
+## 🔬 V3.17 client RD decoder
+
+V3.17 再往下閉合 client `Real binary` 的最後一層 parser：`RD_HEADER → raw/RLE decoder → pixels`。
+
+新增 `src/stoneage_rd_decoder.mjs`，依 client `unpack.cpp` 實作 raw 與 legacy RLE；`compressFlag >= 16` 的 `_NEW_COLOR_` zlib 分支暫時 fail-closed，因為目前沒有需要發布的合法真彩 asset。
+
+目前完整來源鏈已達到：`tile image ID → ADRNBIN graphicNo → Real binary payload → RD pixels`。但 repo 沒有授權可發布的 client BIN，因此 Pages 仍不打包原版圖片，也不製作假 PNG。
+
+來源筆記：[V3.17 client RD decoder contract](docs/reference/v317-rd-decoder-contract.md)。
+
 ## 📁 專案結構
 
 ```
@@ -242,6 +252,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.14 fixed-C map header catalog（可重跑 1284 map headers scanner）
 - V3.15 verified Encounter coordinate source probe（不耗 RNG、fail-closed）
 - V3.16 client image resolver（ADRNBIN 72-byte metadata contract、Real binary asset fail-closed）
+- V3.17 client RD decoder（RD raw/RLE pixels、truecolor branch fail-closed）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -285,4 +296,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.16 client image resolver → 真實 tile presentation（需合法 asset pack）→ verified map 擴充 → battle map selection → runtime regression → playable integration**
+**目前開發方向：V3.17 RD decoder → 合法 client asset pack adapter → 真實 tile presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
