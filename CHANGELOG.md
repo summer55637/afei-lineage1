@@ -1,3 +1,10 @@
+## V3.10 groundwork：GMQUE task TempNo / option-boundary correction
+
+- fixed C `GMQUE_InSertQue()` 的 `QUEPART` 每槽只透過 `j=1..11` 計數，Web parser 現在超過 11 個 option 直接 fail-closed。
+- fixed C 的 queue token 第一欄雖命名為 `petID`，但 `GMQUE_showQueStr()` / `GMQUE_CheckQueStr()` / `GMQUE_DelQueStrPet()` 都按 `ENEMYTEMP` 的 `TempNo` 使用；Web task parser 現在同時保存 `tempNo` 與相容用 `petId` alias。
+- 明確保留兩種資料層：GMQUE task 是 `TempNo-LV`；reward pet `{1642,1636,475,0}` 是 `GMQUE_AddQueStrTrophy()` 的 Enemy ID array。
+- regression 已增加 11-option 上限與 TempNo alias 檢查。
+
 ## V3.10 groundwork：GMQUE Check RNG order correction
 
 - fixed C `GMQUE_CheckQueStr()` 的 source order 已重新核對：四個 `petID-LV` task 全部通過後，才在 `CHAR_GMQUENUMS <= 0` 時執行 `rand()%100`（0→1）並進入 item / gold gate。
