@@ -25,3 +25,7 @@
 目前因原始地圖檔是 binary，connector 無法直接取得其 bytes，因此本版用 synthetic fixture 驗證 parser；真正 map bytes 後續可由 CI 在 fixed ref 下抓取，再產生受控的 generated JSON。
 
 此外，其他 reverse-engineered client 分支存在不同 `.dat` map container 實作，本專案不把那些格式直接當成 gmsv `LS2MAP` 的格式。
+
+## Runtime API extension
+
+V3.13 的 `sourceMapBattleCandidatesAt(map,x,y)` 將 `sourceMapTileAt()` 與 fixed-C `BATTLE_getBattleFieldNo()` 的 image→battlemap candidate 對照串成一次查詢；它只回傳已存在的 map data，座標越界或未知資料直接 `null`，不生成替代 tile。
