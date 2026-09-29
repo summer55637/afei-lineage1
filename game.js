@@ -8773,13 +8773,13 @@ function freshState(){
     creationPlayerStats:null,playerCreationStatsConfigured:false,playerCreationStatsLegacyUnknown:false,
     playerStats:{vital:0,str:0,tgh:0,dex:0},
     elements:null,playerElementsConfigured:false,
-    gold:30000,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
+    gold:30000,bankGold:0,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     // fixed setup.cf + _HELP_NEWHAND: ITEM1=24114; exact item name/effect is not guessed.
     inventory:{'24114':1},
     itemRuntime:freshItemRuntime(),
     playerItemSlots:freshPlayerItemSlots(),
-    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false}},
+    quest:{event81Complete:false,event81:{active:false,complete:false,stage:0,deliveredTempNo:null,arrivedEden:false,postReward:false,mazeFloor:null,mazeX:null,mazeY:null,mazeBattles:0,flightRouteNo:null,flightWaypoints:[]},event71Current:false,event2:{active:false,complete:false},event4:{active:false,complete:false,stage:0},event71Prep:{stage:0,memoryIndex:0,memoryReady:false},event82:{active:false,complete:false,raelpangReported:false,popodonReported:false},event83:{active:false,complete:false},gmque:{active:false,taskString:'NULL',nums:0,handedOver:false,sourceNpc:null}},
     log:[],savedAt:Date.now()
   };
 }
@@ -8839,6 +8839,13 @@ function normalizeState(raw){
   s.quest.event71Prep=Object.assign({},base.quest.event71Prep,raw?.quest?.event71Prep||{});
   s.quest.event82=Object.assign({},base.quest.event82,raw?.quest?.event82||{});
   s.quest.event83=Object.assign({},base.quest.event83,raw?.quest?.event83||{});
+  s.quest.gmque=Object.assign({},base.quest.gmque,raw?.quest?.gmque||{});
+  s.quest.gmque.nums=Math.max(0,Math.trunc(n(s.quest.gmque.nums)));
+  s.quest.gmque.taskString=String(s.quest.gmque.taskString||'NULL');
+  s.quest.gmque.handedOver=!!s.quest.gmque.handedOver;
+  s.quest.gmque.active=!!s.quest.gmque.active;
+  s.quest.gmque.sourceNpc=s.quest.gmque.sourceNpc==null?null:String(s.quest.gmque.sourceNpc);
+  s.bankGold=Math.max(0,Math.trunc(n(raw?.bankGold)));
   const legacyDev71=n(raw?.schemaVersion)<5&&raw?.quest?.event71Current===true&&!raw?.quest?.event83?.active&&!raw?.quest?.event83?.complete;
   if(legacyDev71){
     s.quest.event71Current=false;
@@ -10574,6 +10581,100 @@ function sourceGmQueHandoverCheck(taskString,pets,{gmqueNums=0,randModulo=source
   };
 }
 
+function sourceGmQuePrepareTaskState(parsed,{target=state,sourceNpc=null}={}){
+  if(!target)return {ok:false,reason:'state-missing'};
+  if(!parsed?.ok)return {ok:false,reason:'task-parse-failed',parsed};
+  target.quest=target.quest&&typeof target.quest==='object'?target.quest:{};
+  target.quest.gmque=Object.assign({active:false,taskString:'NULL',nums:0,handedOver:false,sourceNpc:null},target.quest.gmque||{});
+  target.quest.gmque.active=true;
+  target.quest.gmque.taskString=String(parsed.taskString||'NULL');
+  target.quest.gmque.nums=0;
+  target.quest.gmque.handedOver=false;
+  target.quest.gmque.sourceNpc=sourceNpc==null?null:String(sourceNpc);
+  return {ok:true,taskString:target.quest.gmque.taskString,count:parsed.count,sourceNpc:target.quest.gmque.sourceNpc};
+}
+function sourceGmQueClearTaskState({target=state}={}){
+  if(!target)return {ok:false,reason:'state-missing'};
+  target.quest=target.quest&&typeof target.quest==='object'?target.quest:{};
+  target.quest.gmque={active:false,taskString:'NULL',nums:0,handedOver:false,sourceNpc:null};
+  return {ok:true};
+}
+function sourceGmQueStartTaskFromNpcArg(npcArg,{target=state,randInclusive=cRand,expectedCount=4,sourceNpc=null}={}){
+  const parsed=sourceGmQueParseNpcArg(npcArg,{randInclusive,expectedCount});
+  if(!parsed.ok)return Object.assign({ok:false},parsed);
+  return sourceGmQuePrepareTaskState(parsed,{target,sourceNpc});
+}
+function sourceGmQueHandoverPets(check,{target=state}={}){
+  if(!target)return {ok:false,reason:'state-missing'};
+  if(!check?.ok)return {ok:false,reason:'handover-preflight-failed',check};
+  target.quest=target.quest&&typeof target.quest==='object'?target.quest:{};
+  target.quest.gmque=Object.assign({active:true,taskString:'NULL',nums:0,handedOver:false,sourceNpc:null},target.quest.gmque||{});
+  // fixed GMQUE_CheckQueStr writes GMQUENUMS before the item/gold gates and before
+  // GMQUE_DelQueStrPet is called as a later NPC action.
+  target.quest.gmque.nums=Math.max(0,Math.trunc(n(check.nums)));
+  const removed=[];
+  for(const match of Array.isArray(check.matches)?check.matches:[]){
+    const candidate=match?.candidates?.[0]?.pet||null;
+    const petId=candidate?.id;
+    const index=target.petBox?.findIndex(p=>p&&p.id===petId)??-1;
+    if(index<0)return {ok:false,reason:'handover-pet-missing',petId,removedCount:removed.length,removed};
+    const pet=target.petBox[index];
+    if(Array.isArray(target.team))target.team=target.team.map(id=>id===pet.id?null:id);
+    if(target.activePetId===pet.id)target.activePetId=null;
+    target.petBox.splice(index,1);
+    removed.push({id:pet.id,tempNo:pet.tempNo??pet.petId??pet.enemyId??null,name:pet.name??null,taskSlot:match.slot});
+  }
+  target.quest.gmque.handedOver=true;
+  return {ok:true,removedCount:removed.length,removed,nums:target.quest.gmque.nums};
+}
+function sourceGmQueApplyTrophy(reward,{target=state}={}){
+  if(!target)return {ok:false,reason:'state-missing'};
+  if(!reward?.ok)return {ok:false,reason:'reward-resolution-failed',reward};
+  if(reward.type==='pet'){
+    const owned=Array.isArray(target.petBox)?target.petBox.length:0;
+    if(owned>=5)return {ok:false,reason:'pet-full',type:'pet',owned,maxOwned:5};
+    const created=sourceCreateGmQueRewardPet(reward.petId);
+    if(!created.ok)return created;
+    target.petBox.push(created.pet);
+    const clean=sourceGmQueClearTaskState({target});
+    if(!clean.ok)return {ok:false,reason:'cleanup-failed',type:'pet',createdPet:created.pet,cleanup:clean};
+    return {ok:true,type:'pet',petId:reward.petId,pet:created.pet,cleaned:true};
+  }
+  if(reward.type==='item'){
+    const backpackSlot=sourcePlayerFindEmptyBackpackSlot(target);
+    if(backpackSlot<0)return {ok:false,reason:'backpack-full',type:'item',itemId:reward.itemId};
+    const itemIndex=sourceItemRuntimeAlloc(reward.itemId,null,{owner:null,source:'gmque-reward'});
+    if(itemIndex<0)return {ok:false,reason:'item-make-failed',type:'item',itemId:reward.itemId};
+    const ret=sourcePlayerAddSpecificExistingItem(itemIndex,{target,source:'gmque-reward',incrementInventory:true});
+    if(ret<PLAYER_BACKPACK_START||ret>=PLAYER_ITEM_SLOT_COUNT){
+      sourceItemRuntimeFree(itemIndex);
+      return {ok:false,reason:'backpack-add-failed',type:'item',itemId:reward.itemId,itemIndex};
+    }
+    const clean=sourceGmQueClearTaskState({target});
+    if(!clean.ok)return {ok:false,reason:'cleanup-failed',type:'item',itemId:reward.itemId,itemIndex,backpackSlot:ret,cleanup:clean};
+    return {ok:true,type:'item',itemId:reward.itemId,itemIndex,backpackSlot:ret,cleaned:true};
+  }
+  if(reward.type==='gold'){
+    const trans=Math.max(0,Math.trunc(n(target.transmigration)));
+    // pinned version.h defines _FIX_MAX_GOLD; char_base.c resolves the cap to
+    // 1,000,000 + transmigration * 1,800,000.
+    const maxGold=1000000+trans*1800000;
+    const maxBankGold=50000000;
+    const before=Math.max(0,Math.trunc(n(target.gold)));
+    const normalized=Math.min(before,maxGold);
+    const amount=Math.max(0,Math.trunc(n(reward.gold)));
+    const next=Math.min(maxGold,normalized+amount);
+    const overflow=Math.max(0,normalized+amount-maxGold);
+    const bankBefore=Math.max(0,Math.trunc(n(target.bankGold)));
+    const bankAfter=Math.min(maxBankGold,bankBefore+overflow);
+    target.gold=next;
+    target.bankGold=bankAfter;
+    const clean=sourceGmQueClearTaskState({target});
+    if(!clean.ok)return {ok:false,reason:'cleanup-failed',type:'gold',gold:next-normalized,bankGold:bankAfter-bankBefore,cleanup:clean};
+    return {ok:true,type:'gold',gold:next-normalized,bankGold:bankAfter-bankBefore,maxGold,cleaned:true};
+  }
+  return {ok:false,reason:'unsupported-reward-type',type:reward.type};
+}
 function normalizedElements(elements){
   if(!elements)return null;
   const earth=Math.max(0,n(elements.earth)),water=Math.max(0,n(elements.water));
