@@ -9,7 +9,7 @@ assert.deepEqual(mapset.haveHeightImageIds,[1,3,5,7,9,11]);
 assert.equal(mapset.walkableByImageId['0'],1);
 assert.equal(mapset.walkableByImageId['1'],0);
 assert.deepEqual(sourceMapImageAttributes(mapset,0),{imageId:0,walkable:true,haveHeight:false,defence:-1,introDamage:0,outofDamage:0});
-assert.deepEqual(sourceMapImageAttributes(mapset,4),{imageId:4,walkable:true,haveHeight:false,defence:-1,introDamage:0,outofDamage:0});
+assert.deepEqual(sourceMapImageAttributes(mapset,4),{imageId:4,walkable:true,haveHeight:false,defence:-1,introDamage:0,outofDamage:0}); // raw non-zero WALKABLE values normalize to 1
 assert.deepEqual(sourceMapImageAttributes(mapset,1),{imageId:1,walkable:false,haveHeight:true,defence:-1,introDamage:0,outofDamage:0});
 assert.equal(sourceMapImageAttributes(mapset,999999),null);
 const map=JSON.parse(fs.readFileSync('data/generated/stoneage_map_20000.json','utf8'));
