@@ -109,7 +109,7 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 原 C 的逐格 `IsValidImagenumber()` 驗證與 trailing-byte warning 邊界也已記錄；Web parser 目前只解析 container，不猜 image attribute，也不直接修改遊戲 world runtime。
 
-下一步是由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，再接 `floor/x/y → tile → battlemap`。如果沒有可靠 bytes，就維持 **fail-closed**，不虛構地圖。
+目前已由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，並提供 `floor/x/y → tile/object → battlemap candidates` 的 runtime API；沒有可靠 bytes 的 Floor 仍維持 **fail-closed**，不虛構地圖。
 
 來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
 
@@ -142,7 +142,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - Encounter / Enemy source closure
 - GMQUE 永久停用政策與 battle presentation regression
 - V3.12 battlefield source contract／source-status HUD
-- V3.13 LS2MAP parser、verified map runtime、floor/x/y → tile → battle candidates
+- V3.13 LS2MAP parser、verified map runtime、floor/x/y → tile/object → battlemap candidates、verified map coverage
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
