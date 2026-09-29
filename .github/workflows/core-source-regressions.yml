@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'game.js'
-      - 'game.html'
+      - 'start.html'
       - 'README.md'
       - 'CHANGELOG.md'
       - 'docs/changelog/**'
@@ -35,7 +35,7 @@ on:
   pull_request:
     paths:
       - 'game.js'
-      - 'game.html'
+      - 'start.html'
       - 'README.md'
       - 'CHANGELOG.md'
       - 'docs/changelog/**'
@@ -73,6 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Provide regression HTML fixture
+        run: cp start.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -110,6 +112,8 @@ jobs:
           - tools/check_v309_combo_death_credit_itemcrush.mjs
     steps:
       - uses: actions/checkout@v4
+      - name: Provide regression HTML fixture
+        run: cp start.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
