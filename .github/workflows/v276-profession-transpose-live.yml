@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "game.js"
-      - "game.html"
+      - "start.html"
       - "tools/check_v276_profession_transpose_live.mjs"
       - "tools/profession_transpose_runtime.mjs"
       - "data/generated/stoneage_profession_skill_runtime.json"
