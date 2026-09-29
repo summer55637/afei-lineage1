@@ -625,7 +625,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - `stoneage_enemy_ai.json` 雖有 1642／1636／475 的 Enemy ID 索引，但那是 `enemy1.txt + enemybase1.txt` 的 AI metadata，不等於可直接建立 Pet 的完整 Enemy template。
 - 目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 仍不是 GMQUE reward pet 的 source-of-truth；1642／1636／475 已改由 pinned `enemy1.txt` → `enemybase1.txt` 的 source-backed reward template artifact 提供。
 - `sourceGmQueRewardPetTemplate()` 現在使用 source-backed Enemy template；只有 Enemy ID 被 AI metadata 或 encounter drop table 提到時，不會因此額外推導其他未證明的 Pet template。
-- GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；尚不直接刪除寵物或假造缺失 template。
+- GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；目前不直接刪除寵物或寫入 persistent reward state，避免在缺少完整 activity source 時提前啟用。
 - V3.10 另外加入 `sourceGmQueParseNpcArg()` source adapter：只接受有證據的 `RANDGMQUE=4 + QUEPART0..3` argument，按 fixed inclusive RNG 生成四段 task string；沒有真實 NPC argument 時不注入預設任務。
 - V3.10 另外加入 `check_v310_gmque_npc_source_locator.mjs`，固定從 `gmsv/data/npc` 等候選 source root 尋找真實 NPC argument；找到候選檔也只標記 candidate，不自動啟用活動。
 - V3.10 另外加入 `check_v310_encounter_source_closure.mjs`，建立 **encounter source closure**，鎖定目前 728 個被引用 Group 中 705 個已解析、23 個 unresolved，以及 Group 1297 / EnemyID 2455 / TempNo 145 的缺 template 邊界；未取得 pinned source 前不跨版本補怪物。
