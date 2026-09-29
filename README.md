@@ -17,7 +17,7 @@
 - pinned `enemy1.txt`／`enemybase1.txt` 已閉合：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`。
 - 新增 `data/generated/stoneage_gmque_reward_enemy_templates.json` 保存 source-normalized template；runtime `sourceGmQueRewardPetTemplate()` 現在直接消費這條 source-backed template chain。
 - 新增 `sourceCreateGmQueRewardPet()`，只建立純 Web Pet object 與固定 C RNG 順序（level → 四次 ±2 → 十次配點 → PETMAIL_EFFECT），不修改 persistent state。
-- GMQUE 的實際 `RANDGMQUE / QUEPART0..3` NPC arguments 仍維持 pending-source；完整交寵／領獎 mutation 尚未啟用。
+- GMQUE 的實際 `RANDGMQUE / QUEPART0..3` NPC arguments 仍維持 pending-source；完整交寵／領獎 persistent mutation 尚未啟用。
 - regression：`tools/check_v310_gmque_reward_enemy_template_runtime.mjs`
 - CI：`.github/workflows/v310-gmque-reward-enemy-template-runtime.yml`
 
@@ -621,10 +621,10 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - V3.09：Combo death credit 延後到同一 command 的 ItemCrush boundary 後 finalize。
 - V3.09 之後目前進入 **V3.10 groundwork**，先做 source closure 與 regression contract，不宣稱已經有新的 playable core。
 - GMQUE 已有 fixed-C-derived trophy runtime；目前 handover 尚以 source adapter / contract 為主，實際 NPC `RANDGMQUE / QUEPART0..` 與 reward pet template 尚未完全閉合。
-- fixed C 的 GMQUE pet reward array 為 `{1642,1636,475,0}`；`0` 是 C 陣列 implicit-zero 分支，不能改成第四隻虛構寵物。
+- fixed C 的 GMQUE pet reward array 為 `{1642,1636,475,0}`；`0` 是 C 陣列 implicit-zero 分支，不能改成第四隻虛構寵物。三個非零 Enemy ID 都已有 pinned source template closure。
 - `stoneage_enemy_ai.json` 雖有 1642／1636／475 的 Enemy ID 索引，但那是 `enemy1.txt + enemybase1.txt` 的 AI metadata，不等於可直接建立 Pet 的完整 Enemy template。
-- 目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 也無法由 `wildLv1Variants[].enemyIds` 對回 1642／1636／475；因此這三個 reward pet 仍維持 unresolved / fail-closed。
-- `sourceGmQueRewardPetTemplate()` 已要求真正的 player-pet template mapping；只有 Enemy ID 被 AI metadata 或 encounter drop table 提到時，不會自動把它提升成可領取寵物。
+- 目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 仍不是 GMQUE reward pet 的 source-of-truth；1642／1636／475 已改由 pinned `enemy1.txt` → `enemybase1.txt` 的 source-backed reward template artifact 提供。
+- `sourceGmQueRewardPetTemplate()` 現在使用 source-backed Enemy template；只有 Enemy ID 被 AI metadata 或 encounter drop table 提到時，不會因此額外推導其他未證明的 Pet template。
 - GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；尚不直接刪除寵物或假造缺失 template。
 - V3.10 另外加入 `sourceGmQueParseNpcArg()` source adapter：只接受有證據的 `RANDGMQUE=4 + QUEPART0..3` argument，按 fixed inclusive RNG 生成四段 task string；沒有真實 NPC argument 時不注入預設任務。
 - V3.10 另外加入 `check_v310_gmque_npc_source_locator.mjs`，固定從 `gmsv/data/npc` 等候選 source root 尋找真實 NPC argument；找到候選檔也只標記 candidate，不自動啟用活動。
