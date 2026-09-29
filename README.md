@@ -113,7 +113,7 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
 
-**V3.13 已驗證 Floor 20000**：50×50、2500 tile、2500 object；原始檔 10044 bytes 與 fixed C layout 完全吻合，source SHA `b730f5aca60347f0b5b1bda497f6e65740706dc1` 固定保存於 generated data。
+**V3.13 已驗證真實 Floor map**：Floor 20000＝50×50、Floor 400＝150×149、Floor 2000＝150×150；三張地圖的 tile/object 陣列都由 fixed C `LS2MAP` bytes 產生，並固定保存各自 source blob SHA。
 
 ## 📁 專案結構
 
@@ -142,7 +142,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - Encounter / Enemy source closure
 - GMQUE 永久停用政策與 battle presentation regression
 - V3.12 battlefield source contract／source-status HUD
-- V3.13 LS2MAP parser contract
+- V3.13 LS2MAP parser、verified map runtime、floor/x/y → tile → battle candidates
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
