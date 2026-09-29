@@ -27,10 +27,13 @@ const ctx={
     return 'gold';
   },
   _randModulo:()=>0,
-  sourceCreateGmQueRewardPet:petId=>({
-    ok:true,type:'pet',petId,
-    pet:{id:'reward-'+petId,tempNo:petId,petId,name:'reward-pet-'+petId,level:1}
-  }),
+  sourceCreateGmQueRewardPet:petId=>{
+    const tempNo={1642:809,1636:803,475:5}[Number(petId)]??Number(petId);
+    return {
+      ok:true,type:'pet',petId,
+      pet:{id:'reward-'+petId,tempNo,petId,name:'reward-pet-'+petId,level:1}
+    };
+  },
   sourcePlayerFindEmptyBackpackSlot:()=>9,
   sourceItemRuntimeAlloc:(itemId)=>{ const idx=30000+Number(itemId); itemIds.set(idx,Number(itemId)); return idx; },
   sourcePlayerAddSpecificExistingItem:(itemIndex,{target})=>{
