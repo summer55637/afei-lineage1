@@ -10,16 +10,18 @@
 
 ## V3.10 groundwork — GMQUE reward Enemy template runtime
 
-這一輪把 fixed C 的 GMQUE reward pet source chain 接到 Web runtime，但尚未啟用完整活動 handover mutation。
+這一輪已把 fixed C 的 GMQUE reward pet source chain 接到 Web runtime，並補上 source-backed task state、交寵與獎勵 mutation core；完整活動仍未啟用，因為真實 NPC arguments 仍待 source closure。
 
 - pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 - `GMQUE_AddQueStrTrophy()` 的 pet reward array 固定為 `{1642,1636,475,0}`；reward path 依 `ENEMY_getEnemyArrayFromId()` → `ENEMY_createPetFromEnemyIndex()` 建立寵物。
 - pinned `enemy1.txt`／`enemybase1.txt` 已閉合：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`。
 - 新增 `data/generated/stoneage_gmque_reward_enemy_templates.json` 保存 source-normalized template；runtime `sourceGmQueRewardPetTemplate()` 現在直接消費這條 source-backed template chain。
-- 新增 `sourceCreateGmQueRewardPet()`，只建立純 Web Pet object 與固定 C RNG 順序（level → 四次 ±2 → 十次配點 → PETMAIL_EFFECT），不修改 persistent state。
-- GMQUE 的實際 `RANDGMQUE / QUEPART0..3` NPC arguments 仍維持 pending-source；完整交寵／領獎 persistent mutation 尚未啟用。
-- regression：`tools/check_v310_gmque_reward_enemy_template_runtime.mjs`
-- CI：`.github/workflows/v310-gmque-reward-enemy-template-runtime.yml`
+- 新增 `sourceCreateGmQueRewardPet()`，仍只建立純 Web Pet object 與固定 C RNG 順序（level → 四次 ±2 → 十次配點 → PETMAIL_EFFECT），不直接修改 persistent state。
+- `sourceGmQuePrepareTaskState()` / `sourceGmQueHandoverPets()` / `sourceGmQueApplyTrophy()` 已把 C 的 `Check → DelGmquePet → GetGmPrize → CleanGmque` 順序落成可測試的 Web mutation core；只有獎勵成功才清除任務狀態。
+- 寵物獎勵維持 5 格上限；道具獎勵走現有 source item existing-item / 15 格背包路徑；金幣使用 pinned `_FIX_MAX_GOLD` 的上限與 overflow bank。
+- 真實 `RANDGMQUE / QUEPART0..3` NPC arguments 仍維持 pending-source，因此這段 mutation core 尚未接成 live 活動 UI，也不宣稱 V3.10 playable。
+- regression：`tools/check_v310_gmque_reward_enemy_template_runtime.mjs`、`tools/check_v310_gmque_handover_mutation.mjs`
+- CI：`.github/workflows/v310-gmque-runtime.yml`
 
 ## V3.09 — Combo death credit waits for ItemCrush boundary
 
