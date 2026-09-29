@@ -7,6 +7,7 @@ import vm from 'node:vm';
 
 const game=fs.readFileSync('game.js','utf8');
 const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_trophy_runtime.json','utf8'));
+const rewardTemplates=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_reward_enemy_templates.json','utf8'));
 const fixedRef='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 
 function extractFunction(name){
@@ -30,6 +31,7 @@ const ctx={
   n:value=>Number.isFinite(Number(value))?Number(value):0,
   gmqueDb:runtime,
   gmquePetTemplateIndex:{},
+  gmqueRewardEnemyTemplatesDb:rewardTemplates,
   cRand:(a)=>a,
   sourceRandModulo:()=>41
 };
@@ -71,11 +73,17 @@ assert.equal(item.type,'item');
 assert.equal(item.pool,'itemID3');
 assert.equal(item.itemId,20282);
 
-// Pet branch retains the fixed 0..3 table and remains fail-closed without player-pet templates.
+// Pet branch now resolves through the fixed-C Enemy template artifact; index 3 remains the implicit zero slot.
+const petResolved=ctx.sourceGmQueResolveTrophy(98,{randInclusive:()=>0});
+assert.equal(petResolved.ok,true);
+assert.equal(petResolved.type,'pet');
+assert.equal(petResolved.petId,1642);
+assert.equal(petResolved.template.tempNo,809);
+assert.equal(petResolved.template.name,'瑞里西尔');
 const petZero=ctx.sourceGmQueResolveTrophy(98,{randInclusive:(_,b)=>b});
 assert.equal(petZero.ok,false);
 assert.equal(petZero.reason,'implicit-zero-pet-slot');
-const petPending=ctx.sourceGmQueResolveTrophy(98,{randInclusive:()=>0});
+const petPending=ctx.sourceGmQueRewardPetTemplate(1642,{templateIndex:{}});
 assert.equal(petPending.ok,false);
 assert.equal(petPending.reason,'pet-template-pending');
 
@@ -103,5 +111,6 @@ console.log(JSON.stringify({
   fixedC:fixedRef,
   rewardBoundaries:{gold:'1-40',item:'41-97',pet:'98-99'},
   petRewardIds:[1642,1636,475,0],
-  failClosed:['runtime-missing','pool-missing','pet-template-pending','implicit-zero-pet-slot']
+  failClosed:['runtime-missing','pool-missing','pet-template-pending','implicit-zero-pet-slot'],
+  sourceBackedRewardTemplates:[1642,1636,475]
 }));
