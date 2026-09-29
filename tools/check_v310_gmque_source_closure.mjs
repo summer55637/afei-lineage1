@@ -102,4 +102,4 @@ assert.equal(check.ok,false); assert.equal(check.reason,'gold-cap');
 check=ctx.sourceGmQueHandoverCheck('1642-10&1636-11&475-12&1642-13',[pets[0],pets[2],pets[3]],{gmqueNums:98,bagHasSpace:true,gold:0});
 assert.equal(check.ok,false); assert.equal(check.reason,'missing-pet');
 
-console.log(JSON.stringify({pass:true,version:'V3.10-groundwork',focus:'GMQUE source closure and handover eligibility parser',rewardPetIds:[1642,1636,475,0],playableCore:'V3.09'}));
+console.log(JSON.stringify({pass:true,version:'V3.10-groundwork',focus:'GMQUE source closure and handover eligibility parser',rewardPetIds:[1642,1636,475,0],rewardTemplatesSourceBacked:true,playableCore:'V3.09'}));
