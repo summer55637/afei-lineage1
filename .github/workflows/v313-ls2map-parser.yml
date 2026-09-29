@@ -1,0 +1,30 @@
+name: V3.13 LS2MAP parser contract
+
+on:
+  push:
+    paths:
+      - 'tools/stoneage_ls2map_parser.mjs'
+      - 'tools/check_v313_ls2map_parser.mjs'
+      - 'docs/reference/v313-ls2map-parser-contract.md'
+      - '.github/workflows/v313-ls2map-parser.yml'
+  pull_request:
+    paths:
+      - 'tools/stoneage_ls2map_parser.mjs'
+      - 'tools/check_v313_ls2map_parser.mjs'
+      - 'docs/reference/v313-ls2map-parser-contract.md'
+      - '.github/workflows/v313-ls2map-parser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run V3.13 LS2MAP parser regression
+        run: node tools/check_v313_ls2map_parser.mjs
