@@ -1,5 +1,7 @@
 ## V3.15 — source-map Encounter coordinate probe
 
+- Maintenance：V2.33 FallGround regression 改驗證目前 `resolveEnemyAttackSeqBugToPet()` 的 calc-only Guardian source boundary，不回退舊 `enemyAttackPetResult()` helper；README 同步記錄 legacy regression 相容策略。
+
 2026-09-30
 
 - 將 verified map runtime 接到一般 Encounter 已產生的 `roamX / roamY`。
