@@ -50,6 +50,12 @@ export function sourceMapBattleCandidates(map,tileId){
   return Array.isArray(row)?row.map(v=>Math.trunc(Number(v))):null;
 }
 
+export function sourceMapBattleCandidatesAt(map,x,y){
+  const tile=sourceMapTileAt(map,x,y);
+  if(!tile)return null;
+  return Object.assign({},tile,{battleCandidates:sourceMapBattleCandidates(map,tile.tile)});
+}
+
 export function sourceMapRuntimeSummary(map){
   if(!map)return {status:'unresolved'};
   return {status:'ready',floorId:Number(map.floorId),width:Number(map.width),height:Number(map.height),tileCount:Array.isArray(map.tiles)?map.tiles.length:0,objectCount:Array.isArray(map.objects)?map.objects.length:0};
