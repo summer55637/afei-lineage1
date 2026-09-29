@@ -13,6 +13,7 @@ const ITEM_FIELD2_RUNTIME_URL='data/generated/stoneage_item_field2_runtime.json'
 const PET_MERGE_FIX_RUNTIME_URL='data/generated/stoneage_pet_merge_fix_runtime.json';
 const PROFESSION_SKILL_RUNTIME_URL='data/generated/stoneage_profession_skill_runtime.json';
 const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
+const GMQUE_REWARD_ENEMY_TEMPLATE_URL='data/generated/stoneage_gmque_reward_enemy_templates.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
@@ -91,7 +92,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, gmquePetTemplateIndex=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, gmquePetTemplateIndex=null, gmqueRewardEnemyTemplatesDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
@@ -10367,13 +10368,42 @@ function sourceGmQueBuildPetTemplateIndex(petDb){
   }
   return index;
 }
-function sourceGmQueRewardPetTemplate(petId,{templateIndex=gmquePetTemplateIndex}={}){
+function sourceGmQueRewardPetTemplate(petId,{templateIndex=gmqueRewardEnemyTemplatesDb?.templates||null}={}){
   const id=Math.trunc(Number(petId));
   if(!Number.isFinite(id))return {ok:false,reason:'invalid-pet-id',petId:null};
   if(id<=0)return {ok:false,reason:'implicit-zero-pet-slot',petId:id};
   const template=templateIndex?.[String(id)]||null;
-  if(!template)return {ok:false,reason:'pet-template-pending',petId:id,source:'main-pet-db-enemyId-index'};
+  if(!template)return {ok:false,reason:'pet-template-pending',petId:id,source:'fixed-c-enemy-template'};
   return {ok:true,type:'pet',petId:id,template};
+}
+function sourceCreateGmQueRewardPet(petId){
+  const reward=sourceGmQueRewardPetTemplate(petId);
+  if(!reward.ok)return reward;
+  const template=reward.template;
+  // fixed ENEMY_createPetFromEnemyIndex: level first, then four +/-2 rolls,
+  // ten allocation rolls, then PETMAIL_EFFECT. Persistent player state is not mutated here.
+  const level=rnd(Math.max(1,Math.trunc(n(template.levelMin))||1),Math.max(1,Math.trunc(n(template.levelMax))||1));
+  const rolled=rollEnemyCreateStats(template.stats||{});
+  const derived=serverEnemyDerived(template,level,rolled.stats);
+  const petMailEffect=rnd(0,1);
+  const pet={
+    id:uid(),name:template.name||('Enemy '+reward.petId),
+    animationGroupId:template.animationGroupId??null,tempNo:template.tempNo??null,petId:template.tempNo??null,
+    level,exp:0,wildGrowth:n(template.wildGrowth),
+    stats:Object.assign({},rolled.stats),elements:Object.assign({},template.elements||{}),
+    petSkills:Array.isArray(template.petSkills)?template.petSkills.slice(0,7):[],
+    statusResist:Array.isArray(template.statusResist)?template.statusResist.slice(0,6):[0,0,0,0,0,0],
+    serverStats:Object.assign({},derived.charStats),
+    serverCombat:{attack:derived.attack,defense:derived.defense,quick:derived.quick,maxHp:derived.maxHp},
+    allocPointPacked:packPetAllocPoint(rolled.allocatedFrom),
+    petRank:Number.isFinite(Number(template.rank))?Math.trunc(Number(template.rank)):null,
+    serverProgression:true,serverInitNum:template.serverInitNum??null,serverLvUpPoint:template.serverLvUpPoint??null,
+    sourceEnemyId:reward.petId,sourcePetFlg:template.petFlg??null,sourceImageNumber:template.imageNumber??null,
+    variableAi:0,petMailEffect,
+    maxHp:Math.max(1,Math.trunc(n(derived.maxHp))),hp:Math.max(1,Math.trunc(n(derived.maxHp))),
+    sourceRewardPet:true,sourceRewardTemplate:template,createdAt:Date.now()
+  };
+  return {ok:true,type:'pet',petId:reward.petId,template,pet};
 }
 function sourceGmQueResolveTrophy(gmqueNums,{randInclusive=cRand}={}){
   const type=sourceGmQueRewardType(gmqueNums);
@@ -25122,7 +25152,7 @@ function escapeHtml(s){
 }
 async function boot(){
   try{
-    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,itemMakeR,professionSkillR,gmqueR,enemyWeaponR]=await Promise.all([
+    const [r,runtimeR,itemR,zooR,aiR,petSkillR,modAiR,attackMagicR,itemMagicR,itemRelifeR,itemMakeR,professionSkillR,gmqueR,gmquePetTemplateR,enemyWeaponR]=await Promise.all([
       fetch(DATA_URL,{cache:'no-store'}),
       fetch(ENCOUNTER_RUNTIME_URL,{cache:'no-store'}),
       fetch(CONDITION_ITEM_URL,{cache:'no-store'}),
@@ -25136,6 +25166,7 @@ async function boot(){
       fetch(ITEM_MAKE_RUNTIME_URL,{cache:'no-store'}),
       fetch(PROFESSION_SKILL_RUNTIME_URL,{cache:'no-store'}),
       fetch(GMQUE_TROPHY_RUNTIME_URL,{cache:'no-store'}),
+      fetch(GMQUE_REWARD_ENEMY_TEMPLATE_URL,{cache:'no-store'}),
       fetch(ENEMY_WEAPON_RUNTIME_URL,{cache:'no-store'})
     ]);
     if(!r.ok)throw new Error('寵物資料 HTTP '+r.status);
@@ -25151,6 +25182,7 @@ async function boot(){
     if(!itemMakeR.ok)throw new Error('Item make runtime HTTP '+itemMakeR.status);
     if(!professionSkillR.ok)throw new Error('Profession skill runtime HTTP '+professionSkillR.status);
     if(!gmqueR.ok)throw new Error('GMQUE trophy runtime HTTP '+gmqueR.status);
+    if(!gmquePetTemplateR.ok)throw new Error('GMQUE reward Enemy template runtime HTTP '+gmquePetTemplateR.status);
     if(!enemyWeaponR.ok)throw new Error('Enemy weapon runtime HTTP '+enemyWeaponR.status);
     db=await r.json();
     gmquePetTemplateIndex=sourceGmQueBuildPetTemplateIndex(db);
@@ -25169,6 +25201,14 @@ async function boot(){
       if(Math.trunc(Number(itemMakeDb?.fixedBuild?.itemIdTokenIndex))!==17)throw new Error('Item make runtime fixed-build mismatch');
     }
     professionSkillDb=await professionSkillR.json();
+    gmqueRewardEnemyTemplatesDb=await gmquePetTemplateR.json();
+    if(gmqueRewardEnemyTemplatesDb?.format!=='stoneage-gmque-reward-enemy-template-source-v2')throw new Error('GMQUE reward Enemy template runtime format mismatch');
+    if(gmqueRewardEnemyTemplatesDb?.fixedC?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56')throw new Error('GMQUE reward Enemy template source-ref mismatch');
+    for(const id of [1642,1636,475]){
+      const row=gmqueRewardEnemyTemplatesDb?.templates?.[String(id)];
+      if(!row||Number(row.enemyId)!==id)throw new Error('GMQUE reward Enemy template missing '+id);
+    }
+    if(gmqueRewardEnemyTemplatesDb?.templates?.['0'])throw new Error('GMQUE implicit-zero slot must not be a reward template');
     if(professionSkillDb?.format!=='stoneage-profession-skill-runtime-v1')throw new Error('Profession skill runtime format mismatch');
     if(professionSkillDb?.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56')throw new Error('Profession skill runtime source-ref mismatch');
     if(Math.trunc(Number(professionSkillDb?.stats?.rows))!==69||Math.trunc(Number(professionSkillDb?.stats?.maxSkillId))!==72)throw new Error('Profession skill runtime row-count mismatch');
