@@ -24546,6 +24546,7 @@ function render(){
   renderMapOptions();
   renderEncounterOptions();
   renderEnemy();
+  renderBattleStage();
   renderProfessionBattleActions();
   renderProfessionOutOfBattleActions();
   if(playerPigActive()){
@@ -24557,6 +24558,70 @@ function render(){
   renderInventory();
   renderZooQuest();
   renderLog();
+}
+function renderBattleStageUnit(role,name,level,hp,maxHp,opts={}){
+  const dead=!!opts.dead;
+  const pct=clamp(n(hp)/Math.max(1,n(maxHp))*100,0,100);
+  const target=!!opts.target;
+  const roleClass=String(role||'').toLowerCase();
+  return '<div class="battle-stage-unit '+roleClass+(dead?' defeated':'')+(target?' target':'')+'">'+
+    '<div class="battle-stage-unit-role">'+escapeHtml(opts.label||role)+'</div>'+
+    '<div class="battle-stage-unit-head"><b>'+escapeHtml(name||'未知')+'</b><span>Lv'+Math.max(1,Math.trunc(n(level)))+'</span></div>'+
+    '<div class="battle-stage-unit-hp">HP '+Math.max(0,Math.trunc(n(hp)))+' / '+Math.max(1,Math.trunc(n(maxHp)))+'</div>'+
+    '<div class="battle-stage-unit-bar"><i style="width:'+pct+'%"></i></div>'+
+    (target?'<div class="battle-stage-note">目前鎖定</div>':'')+
+  '</div>';
+}
+function renderBattleStage(){
+  const root=$('#battleStage');
+  const enemySide=$('#battleStageEnemySide');
+  const playerSide=$('#battleStagePlayerSide');
+  const stateEl=$('#battleStageState');
+  if(!root||!enemySide||!playerSide||!stateEl||!state)return;
+
+  stateEl.textContent=$('#battleState')?.textContent||'等待中';
+  const currentTarget=targetEnemyUnit();
+  const enemyUnits=enemy
+    ?(enemy.groupBattle&&Array.isArray(enemy.units)&&enemy.units.length
+      ?enemy.units
+      :[enemy])
+    :[];
+
+  enemySide.innerHTML=enemyUnits.length
+    ?enemyUnits.map((u,i)=>renderBattleStageUnit(
+        'battle-enemy',
+        u?.name,
+        u?.level,
+        u?.hp,
+        u?.maxHp,
+        {
+          label:'敵方 '+(i+1),
+          dead:n(u?.hp)<=0,
+          target:!!currentTarget&&(currentTarget===u||currentTarget?.id===u?.id)
+        }
+      )).join('')
+    :'<div class="battle-stage-note">尚未遭遇敵人</div>';
+
+  const player=renderBattleStageUnit(
+    'player',
+    '玩家',
+    state.level,
+    state.hp,
+    state.maxHp,
+    {label:'我方角色',dead:n(state.hp)<=0}
+  );
+  const pet=activePet();
+  const petCard=(pet&&petIsBattleActive(pet))
+    ?renderBattleStageUnit(
+        'pet',
+        pet.name,
+        pet.level,
+        pet.hp,
+        pet.maxHp,
+        {label:'出戰寵物',dead:!petIsAlive(pet)}
+      )
+    :'';
+  playerSide.innerHTML=player+petCard;
 }
 function renderEnemy(){
   const box=$('#enemyBox');
