@@ -127,6 +127,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Provide regression HTML fixture
+        run: cp start.html game.html
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
