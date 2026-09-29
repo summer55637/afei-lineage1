@@ -11,6 +11,8 @@
 - 新增 `src/stoneage_map_runtime.mjs`：`floor/x/y → tile/object`、`tile → battlemap candidates` 與 `sourceMapBattleCandidatesAt()` fail-closed API。
 - 世界 HUD 開始依目前 `floorId` 查詢 verified map；沒有 source bytes 的 Floor 維持明確未收錄狀態，不猜測。
 
+- 新增 `data/generated/stoneage_map_source_catalog.json`：固定 C `gmsv/data/map` 的 1284 個 map blobs source inventory；不等於每張地圖都已完成 Web runtime。
+
 ## V3.12 — battlefield source contract
 
 2026-09-30
