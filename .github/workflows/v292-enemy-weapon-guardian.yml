@@ -1,0 +1,29 @@
+name: V2.92 Enemy->Player weapon Guardian boundary
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'tools/check_v291_target_damagereact_preduck_boundary.mjs'
+      - 'tools/check_v292_enemy_weapon_guardian_boundary.mjs'
+      - '.github/workflows/v291-target-damagereact.yml'
+      - '.github/workflows/v292-enemy-weapon-guardian.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.91 target-side DamageReact pre-Duck boundary audit
+        run: node tools/check_v291_target_damagereact_preduck_boundary.mjs
+      - name: Run V2.92 Enemy->Player weapon Guardian boundary audit
+        run: node tools/check_v292_enemy_weapon_guardian_boundary.mjs

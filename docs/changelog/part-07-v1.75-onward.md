@@ -1,3 +1,554 @@
+## V3.09 Combo death credit waits for ItemCrush boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_Combo()`：
+
+1. 每個 member 先做 `DamageSub` 或 `DamageSubCale`；
+2. last member 才用 `BATTLE_DamageSub2()` 套用累積傷害；
+3. reaction rewrite／WakeUp／death flag 在 ItemCrush 前完成；
+4. 每個 segment 的 `BATTLE_ItemCrushSeq()` 再消耗 ItemCrush RNG；
+5. 整個 Combo return 後，外層 `BATTLE_AddProfit()` 才掃 death／reward。
+
+Web 原本的 `sourceComboApplyDamage()` 與 `sourceComboAcupunctureSegment()` 直接寫 enemy reward credit，沒有經過 ItemCrush boundary；last-hit accumulated death 另外有 result clone 與 finalize result 不同物件的問題。
+
+V3.09 改用 per-result pending death credit queue；同一 Combo segment 若 Acupuncture 同時殺掉 attacker 與 original target，兩筆 credit 可一起延後，並依 fixed Entry slot 順序一次 finalize。
+
+regression：`tools/check_v309_combo_death_credit_itemcrush.mjs`
+CI：`.github/workflows/v309-combo-death-credit-itemcrush.yml`
+
+## V3.08 reaction death credit waits for ItemCrush boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_Counter()` source-order：
+
+1. `BATTLE_DamageSub()` 完成 Trap／ACUPUNCTURE 反傷；
+2. reaction 改寫 `defindex`；
+3. `BATTLE_DamageWakeUp()`；
+4. death flag；
+5. `BATTLE_ItemCrushSeq()`；
+6. `BATTLE_Counter()` return；
+7. 外層 `BATTLE_AddProfit()` 才掃死亡／獎勵。
+
+Web 現在把 reaction death credit 暫存於 `sourcePendingDeathCredit`，由 ItemCrush finalize helper 在 RNG 邊界完成後才寫入 reward credit。
+
+regression：`tools/check_v308_reaction_death_credit_itemcrush.mjs`
+CI：`.github/workflows/v308-reaction-death-credit-itemcrush.yml`
+
+## V3.07 Toxin Weapon uses actual defindex for Acupuncture WakeUp
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_COM_S_TOXIN_WEAPON`：
+
+1. `BATTLE_AttackSeq()` 可先把 local `defindex` 改為 Guardian；
+2. caller 明確把 `defindex = Guardian`；
+3. `BATTLE_DamageSub()` 處理 reaction；
+4. caller 直接呼叫 `BATTLE_DamageWakeUp(defindex)`；
+5. 因此 ACUPUNCTURE WakeUp 目標是 actual current `defindex)，不是 primary Attack 的 original target，也不是 attacker。
+
+Web 以 caller marker `sourceAcupunctureWakeTarget='actual'` 保留這個差異。
+
+regression：`tools/check_v307_toxin_weapon_acupuncture_order.mjs`
+CI：`.github/workflows/v307-toxin-weapon-acupuncture.yml`
+
+## V3.06 GBreak／GBreak2／FallGround caller-sensitive Acupuncture WakeUp
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+special caller matrix now includes：
+
+| Caller | Guardian handling | ACUPUNCTURE WakeUp |
+| --- | --- | --- |
+| `BATTLE_S_GBreak` | calc-only | attacker |
+| `BATTLE_S_GBreak2` | calc-only | attacker |
+| `BATTLE_S_FallGround` | calc-only；caller defindex remains original target | attacker |
+| Enemy→Pet `FallGround` Web helper | calc-only Guardian, original Pet takes HP | attacker |
+
+這些 caller 與 ordinary `BATTLE_Attack()` 的最大差異在於：fixed C 沒有在 WakeUp 前 restore original defindex。
+
+regression：`tools/check_v306_gbreak_fallground_acupuncture_order.mjs`
+CI：`.github/workflows/v306-gbreak-fallground-acupuncture.yml`
+
+## V3.05 caller-sensitive Acupuncture WakeUp order
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+V3.05 fixed-C caller matrix：
+
+| Caller | ACUPUNCTURE WakeUp target |
+| --- | --- |
+| `BATTLE_Attack()` | original defender |
+| `BATTLE_Counter()` | attacker |
+| `BATTLE_S_AttackDamage()` family | attacker |
+| profession `CHAIN_ATK` first hit | attacker |
+| profession `CHAIN_ATK` second hit | ordinary `BATTLE_Attack()` rules |
+
+原因不是效果不同，而是各 caller 在 `BATTLE_DamageSub()` 後對 `defindex` 的 restore／rewrite source-order 不同。Web 現在以 caller marker 保留這個差異。
+
+regression：`tools/check_v305_caller_sensitive_acupuncture_wakeup.mjs`
+CI：`.github/workflows/v305-caller-sensitive-acupuncture-wakeup.yml`
+
+## V3.04 Enemy→Player Guardian Acupuncture still wakes original Player
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+Enemy→Player 的 Guardian-aware Web caller `resolveEnemyDirectAttackToPlayer()` 已保存 original target descriptor。fixed primary `BATTLE_Attack()` 在 ACUPUNCTURE 下仍遵循：
+
+1. Guardian substitute 可能成為真正承傷者；
+2. `BATTLE_DamageSub()` 產生 ACUPUNCTURE reaction；
+3. `defindex/toindex` 在 WakeUp 前恢復 original `defNo`；
+4. `BATTLE_DamageWakeUp()` 因此作用在 original Player。
+
+Web 現在在 `battleApplyPhysicalHit()` 的 ACUPUNCTURE WakeUp path 優先使用 `r.originalTargetDesc`。
+
+regression：`tools/check_v304_enemy_player_guardian_acupuncture_wakeup.mjs`
+CI：`.github/workflows/v304-enemy-player-guardian-acupuncture-wakeup.yml`
+
+## V3.03 Guardian-provided Acupuncture still wakes original defender
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+V3.03 補上 V3.02 尚未涵蓋的 ordinary player/Pet primary caller：
+
+1. original defender 完成 first-dodge / Guardian substitution；
+2. Guardian 若持有 ACUPUNCTURE，`BATTLE_DamageSub()` 對 actual `defindex` 產生反應；
+3. `BATTLE_Attack()` 在 `BATTLE_DamageWakeUp()` 前仍把 `defindex/toindex` 恢復為 original `defNo`；
+4. 因此 WakeUp 對象仍是 original defender，而不是 Guardian。
+
+Web `applyFriendlyEnemyHit()` 現在只在 ACUPUNCTURE trigger 時改用 `originalTargetDesc`；普通 hit 不變。
+
+regression：`tools/check_v303_guardian_acupuncture_wakeup_order.mjs`
+CI：`.github/workflows/v303-guardian-acupuncture-wakeup.yml`
+
+## V3.02 primary Acupuncture WakeUp follows fixed defindex restore order
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed primary `BATTLE_Attack()` 的 ACUPUNCTURE caller order：
+
+1. `BATTLE_DamageSub()` 先暫時把 `defindex` 改為 attacker；
+2. ACUPUNCTURE 分支在 `BATTLE_DamageWakeUp()` **之前**把 `defindex/toindex` 恢復成 original defender；
+3. `BATTLE_DamageWakeUp()` 因此解除被打方的睡眠；
+4. WakeUp 之後才再次把 `defindex` 改回 attacker，供後續 death/status/ItemCrush path。
+
+Counter caller 不同：`BATTLE_Counter()` 沒有這個中間 restore，ACUPUNCTURE 的 WakeUp 使用 attacker，因此 Web `sourceFinishAcupunctureReaction()` 保持 Counter attacker-WakeUp。
+
+regression：`tools/check_v302_primary_acupuncture_wakeup_order.mjs`
+CI：`.github/workflows/v302-primary-acupuncture-wakeup.yml`
+
+## V3.01 original defender DamageReact survives Guardian substitution
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_Attack()` 的順序：
+
+1. original `defindex` 先檢查 `BATTLE_GetDamageReact(attackindex)`；
+2. 再檢查 original `defindex` 的 `BATTLE_GetDamageReact(defindex)`；
+3. 以 `iRet/ContFlg = FALSE` 進入 `BATTLE_AttackSeq()`；
+4. `BATTLE_AttackSeq()` 完成 GuardianCheck 後才可能改寫 `defindex`。
+
+V3.01 Web：
+
+- `resolveAttackToEnemyWithGuardian()` 在 Guardian substitution 後保留 original target 的 `sourceCounterBlockedByDamageReact`。
+- 因此 original defender 的 DamageReact 不會因 Guardian replacement 而重新開啟 Counter。
+- 本版沒有新增 DamageReact 類型、Damage 數值、Guardian 條件或 RNG。
+
+regression：`tools/check_v301_original_damagereact_guardian_counter.mjs`
+CI：`.github/workflows/v301-original-damagereact-guardian-counter.yml`
+
+## V3.00 confusion target RNG + team-attack boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `CHAR_WORKCONFUSION`：
+
+1. `RAND(1,100)) <= 80`；
+2. `RAND(0,1)` 選 side；
+3. `RAND(0,9)` 選循序掃描起點；
+4. `++pos` 循環掃描 10 個 battle slot，跳過自己，只接受 `BATTLE_TargetCheck()==TRUE`；
+5. 若沒有合法目標，`COM2=-1`；
+6. 後續 `BATTLE_TargetAdjust` 再由對側 `BATTLE_DefaultAttacker` 補目標。
+
+fixed `BATTLE_COM_S_CHAOS` 隨後還有 `_PREVENT_TEAMATTACK` gate；同隊目標直接 `BATTLE_NoAction`，因此不進 `BATTLE_AttackSeq`，也不消耗 Dodge/Critical/Damage RNG。
+
+V3.00 Web：
+
+- 修正 `battleConfusionChooseTarget()`，不再對候選清單二次均勻抽 RNG。
+- 修正空 side fallback，改用 fixed `BATTLE_DefaultAttacker` owner。
+- 新增 `sourceBattleSameSideDesc()`，在混亂 ranged / normal attack 前都先擋同隊。
+- 保留 StatusSeq 已消耗的 side/start-pos RNG；同隊 gate 不額外吃 AttackSeq RNG。
+
+regression：`tools/check_v300_confusion_teamattack_rng.mjs`
+CI：`.github/workflows/v300-confusion-teamattack-rng.yml`
+
+## V2.99 manual first-dodge callers must not re-run suit dodge
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+fixed `BATTLE_AttackSeq()` 的順序是：
+
+1. original target `BATTLE_DuckCheck()`；
+2. `_SUIT_ADDPART3` 獨立 suit-dodge；
+3. GuardianCheck；
+4. Critical / DamageCalc。
+
+因此只要 Web caller 已先跑 shared `sourceInitialDodgeOnly()`，後續的 `resolveNormalAttack()` 就不能再消耗 suit RNG。
+
+V2.99 修正：
+
+- `sourceProfessionPhysicalCalcOnlyResult()`：calc-only Guardian caller 改成 `skipSuitDodge:true`。
+- `resolveAttackToEnemyWithGuardian()`：Guardian 存在與否都不再第二次 suit dodge；shared first-dodge 已經包含唯一 suit roll。
+- `performEnemyGuardBreak2()`：Pet 有 guard-command 時沒有手動 first-dodge，因此保留一次 suit roll；無 guard-command 時改成 `skipSuitDodge:!guardCommand`。
+- `sourcePetAttackDamageCalcOnlyGuardianResult()`：Pet `BATTLE_S_AttackDamage` calc-only 路徑補 `skipSuitDodge:true`。
+- `sourcePerformPetGuardBreak2Skill()`：手動 first-dodge 後補 `skipSuitDodge:true`。
+
+本版沒有修改 Critical、DamageSub 數值，也沒有新增未證實的 team-attack 數值。
+
+regression：`tools/check_v299_shared_first_dodge_suit_gate.mjs`
+CI：`.github/workflows/v299-shared-first-dodge-suit-gate.yml`
+
+## V2.98 first DuckCheck DamageReact + Guardian pre-substitution boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_DuckCheck()` source order：
+
+1. `BATTLE_GetDamageReact(defindex) > 0` 直接 FALSE；
+2. `_PETSKILL_SETDUCK` / ordinary DuckCheck 因此不消耗第一層 dodge RNG；
+3. `_SUIT_ADDPART3` 在 `BATTLE_AttackSeq()` 的下一段獨立執行，仍可消耗 `rand()%100`；
+4. Guardian substitution 只在原目標完成這組 first-dodge 後才發生；
+5. Guardian 接手後 Web adapter 以 `disableDodge + skipSuitDodge` 計算，不能再跑第二次 suit dodge。
+
+V2.98 Web：
+
+- `sourceInitialDodgeOnly()` 補上 target-side DamageReact gate，並保留獨立 `sourceSuitDuckCheck()`。
+- `resolveAttackToEnemyWithGuardian()` 改用同一個 first-dodge adapter，修正原目標在 Guardian substitution 前漏掉 suit dodge / DamageReact gate 的 caller divergence。
+- Enemy→Player、Enemy→Pet、profession calc-only 與其他 first-dodge caller 因共用 adapter 一併收斂。
+- `_PREVENT_TEAMATTACK` 僅完成 caller/source-order audit；目前 Web 可達同隊路徑沒有新數值證據，因此保持 fail-closed。
+
+regression：`tools/check_v298_first_dodge_guardian_boundary.mjs`
+CI：`.github/workflows/v298-first-dodge-guardian-boundary.yml`
+
+## V2.97 ACUPUNCTURE WakeUp target
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+Fixed `BATTLE_DamageSub()` 的 ACUPUNCTURE 分支：
+
+1. 先扣原本 defender HP；
+2. 清除 ACUPUNCTURE；
+3. 把 local `defindex` 改成 attacker；
+4. `BATTLE_Attack()` 回 caller 後，正傷害再執行 `BATTLE_DamageWakeUp(battleindex, defindex)`。
+
+所以 primary attack 被針刺反傷時，WakeUp 應落在 attacker，而不是原本的 defender。
+
+V2.97 Web：
+
+- `sourceFinishAcupunctureReaction()` 繼續負責固定的偶數化、反傷與消耗。
+- `battleApplyPhysicalHit()` 在 ACUPUNCTURE primary hit 時改用 `attackerDesc` 作 WakeUp target。
+- Counter 的反傷 WakeUp 仍由 `sourceFinishAcupunctureReaction(...,{counter:true})` 負責，避免重複喚醒。
+- Trap 本來就已經遵守相同的 attacker WakeUp source path，本版不重複改動。
+
+regression：`tools/check_v297_acupuncture_wakeup_target.mjs`
+CI：`.github/workflows/v297-acupuncture-wakeup.yml`
+
+## V2.96 GuardianCheck instigate source block
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_GuardianCheck()` 在 Guardian 存活、具 Guardian flag、不是攻擊者、且沒有 sleep / confusion / paralysis / stone / barrier 等狀態後，固定 C 仍會拒絕：
+
+- `CHAR_WORKDIZZY > 0`
+- `CHAR_WORKDRAGNET > 0`
+- `CHAR_WORKINSTIGATE > 0)
+- `CHAR_DOOMTIME > 0)
+
+另外，攻擊者使用投射武器時 GuardianCheck 也直接 FALSE。
+
+V2.96 Web 只接入目前已有 source-backed runtime 的部分：
+
+- `enemyGuardianFor()` 新增 `battleStatusActive(desc,'instigate')` gate。
+- `instigate` 已由職業技能 Skill 21/挑撥路徑使用現有 `battleStatuses` 保存，因此可以精確映射 fixed `CHAR_WORKINSTIGATE` 的「>0」語意。
+- `CHAR_DOOMTIME` 目前沒有對 Enemy 的等價 source-backed Work state；現有 Enemy `chargeState` 是 `PETSKILL_ChargeAttack` 的資料，不是 profession DOOM。V2.96 不把這兩個欄位硬湊成同一個狀態。
+- `DIZZY / DRAGNET` 已由現有 `battleStatusCanMove()` 間接涵蓋；sleep / paralysis / stone / barrier / confusion 也維持既有 Guardian gate。
+
+因此本版只補一條可以從 fixed C 與現有 Web state 一一對應的漏接，不新增猜測中的 Guardian／Doom lifecycle。
+
+regression：`tools/check_v296_guardian_instigate_block.mjs`
+CI：`.github/workflows/v296-guardian-instigate.yml`
+
+## V2.95 Guardian substitution / second suit-dodge boundary
+
+Pinned fixed C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_AttackSeq()` 明確是：
+
+1. 原 defender `BATTLE_DuckCheck()`
+2. 原 defender `_SUIT_ADDPART3`（若啟用）
+3. `BATTLE_GuardianCheck()`
+4. Guardian 有效後，把 local `defindex` 改成 Guardian
+5. 以 Guardian 繼續 Critical / Damage / GuardAdjust
+
+因此 Guardian 分支不會再回頭重新跑第二次 Duck／suit-dodge。
+
+V2.95 Web：
+
+- `resolveAttackToEnemyWithGuardian()`：只有真的選到 Guardian 時才傳 `skipSuitDodge:true`。
+- `sourceProfessionPhysicalCalcOnlyResult()`：calc-only Guardian 也在 Guardian 代入後禁止第二次 suit-dodge。
+- 沒有 Guardian 的普通攻擊保持既有 suit-dodge。
+- Enemy→Player／Enemy→Pet 的 direct Guardian resolver 已有同一 boundary，不重複改動。
+
+regression：`tools/check_v295_guardian_no_second_suit_dodge.mjs`
+CI：`.github/workflows/v295-guardian-no-second-suit-dodge.yml`
+## V2.94 Fixed BATTLE_DuckCheck JYUJYUTU / gKawashiPara source branch
+
+V2.94 追 fixed `battle_event.c` 的 `BATTLE_DuckCheck()` 公式尾端前一個 source gap：`gKawashiPara` 不是永遠固定 `0.02`。
+
+### Fixed C 證據
+
+Pinned fixed C：
+
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`BATTLE_DuckCheck(attackindex, defindex)` 在完成 DEX 的 Big／Small／Wari 後：
+
+- 讀 defender 的 `CHAR_WORKBATTLECOM1`
+- 若命令是 `BATTLE_COM_JYUJYUTU)，設定 `gKawashiPara = 0.027`
+- 否則設定 `gKawashiPara = 0.02`
+- 再計算 `Work = (Big - Small) / gKawashiPara`
+
+同一 pinned source 的 `battle_command.c` 顯示 `J|` 咒術命令會把 `CHAR_WORKBATTLECOM1` 寫成 `BATTLE_COM_JYUJYUTU`；因此這個分支是 defender 的「實際戰鬥 command state」，不能用職業技能名稱或 skill ID 反推。
+
+### Web V2.94
+
+- `battleDuckChance()` 新增明確的 Kawashi divisor 參數，預設仍為 `0.02`。
+- `sourceBattleDuckTotal()` 讀取 `sourceDefenderBattleCommand`；只有明確是 `BATTLE_COM_JYUJYUTU` 或 defender 已帶 source-backed `battleCommand` 時才選 `0.027`。
+- 未提供 command 時維持 `0.02`，因此不會把現有普通攻擊、職業技能或 Pet command 誤標成 JYUJYUTU。
+- 公式後續的 DamageReact、HITRIGHT、Suit Duck／其他 post-Duck order 不變。
+
+### Regression
+
+新增：
+
+- `tools/check_v294_duck_jyujyutu_kawashipara.mjs`
+- `.github/workflows/v294-duck-jyujyutu-kawashipara.yml`
+
+Regression 同時檢查：
+
+- `game.js` syntax
+- `battleDuckChance()` 的 `0.02) / `0.027) deterministic math
+- `sourceBattleDuckTotal()` 的 defender command branch
+- 未提供 command 時仍使用 `0.02)
+- V2.94 版本 markers
+
+## V2.85 Battle-incompatible PETSKILL_Fixitem / PETSKILL_Inslaypinned C 的 `PETSKILL_Fixitem()` 與 `PETSKILL_Inslay()` 都要求 `CHAR_TYPEPET`，而且要求主人不在 BattleMode；在 Enemy AI／玩家 Pet 的戰鬥隨機技路徑都屬 fixed FALSE boundary。Web V2.85：- Enemy skill IDs `540/572` 在 AI 選技後直接標成 `sourceSkillRejected` / no-action。- Player Pet random skill path 對 `PETSKILL_Fixitem` / `PETSKILL_Inslay` 直接回 `sourceUseFailed + sourceBattlePreconditionFalse`。- 不建立戰鬥修復／精工效果，不額外消耗 RNG，不把它們誤報成 source function missing。- `582 自爆攻擊` 維持既有 unregistered boundary，因 pinned C `_PETSKILL_EXPLODE` 在 `version.h` 關閉。新增 regression：- `tools/check_v285_battle_false_petskills.mjs`- `.github/workflows/v285-battle-false-petskills.yml`---## V2.84 Enemy PETSKILL_Vary 600/674 + PETSKILL_Roar 734 source parity
+
+V2.84 關閉一條實際存在於 Enemy AI 的 unsupported gap：`600/674/734`。
+
+### Vary 600 / 674
+
+pinned C 的 `PETSKILL_Vary()` 明確限制 `CHAR_PETID` 在 `981/982/983/984`；只解析 `攻%` 與 `敏%`，並把 `CHAR_BASEIMAGENUMBER` 設成 `101428`、`CHAR_WORKTURN=0`。battle loop 每個 command 後遞增 WorkTurn，`>5` 才恢復 BASEBASE image、FIXSTR、FIXDEX。
+
+Web V2.84：
+
+- Enemy 每回合 PreCommand 先重建 FIX；
+- 有 source-backed Vary state 時，再從當輪 FIX 套攻／敏百分比；
+- 只有 981～984 才能建立新的 Vary state；
+- `魔防%` 不自行補效果；
+- Enemy command 結束後依 fixed C `WORKTURN` lifecycle 遞增。
+
+### Roar 734
+
+fixed `PETSKILL_Roar()` 只建立 `BATTLE_COM_S_ROAR`；`BATTLE_S_Roar()` 對 Player 自身設定 `petid=-1`，不會命中清單。對 Pet 則讀 `CHAR_PETID`，命中 option 清單後直接 `BATTLE_Exit()`。
+
+Web V2.84 對應為：
+
+- 目標必須是真正玩家 Pet；
+- `PETID` 必須在 `1009|1010|1011|989|990|991|992|1030|1031|1032|997|998|999|1000`；
+- 成功後加入 `battlePetOutIds`、清除相關戰鬥 state、`activePetId` 清為 null；
+- 不造成傷害、不發擊殺 EXP。
+
+### Regression
+
+新增：
+
+- `tools/check_v284_enemy_vary_roar.mjs`
+- `.github/workflows/v284-enemy-vary-roar.yml`
+
+save schema 維持 30。
+
+---
+## V2.83 CHAR_WORKPETFALL → rideflg source adapter
+
+V2.83 不建立尚未證明的 RidePet runtime，只把 pinned `battle_command.c` 已知的 battle-result protocol 做成純 source adapter，讓之後真正接 client result 時不必重新猜。
+
+- `CHAR_WORKPETFALL != 1` → `rideflg = 0`
+- 一般落馬 → `rideflg = -1`
+- `CHAR_WORKFOXROUND != -1` → `rideflg = -2`
+- `CHAR_BECOMEPIG > 120` → `rideflg = -3`
+
+目前 Web 沒有 pinned source 證明的正式 `CHAR_RIDEPET`／client `onRide` state，因此 adapter 不啟用 `ridePetId`，仍維持 fail-closed。
+
+regression：`tools/check_v283_rideflg_boundary.mjs`
+
+save schema 維持 30。
+
+---
+
+## V2.82 FallGround DamageReact gate / CHAR_WORKPETFALL ride-system boundary
+
+V2.82 把 V2.80 已鎖住的 FallGround source boundary 再往 BATTLE_S_FallGround() 的 react == 0 條件推進，並把 CHAR_WORKPETFALL 的 battle-result 用途記錄為尚未建正式 RidePet runtime 的 fail-closed 邊界。
+
+### FallGround 的 React 門檻
+
+fixed battle_event.c 不是「只要有傷害就抽落馬 RNG」：
+
+- skill_type == BATTLE_COM_S_FALLRIDE
+- damage > 0
+- react == 0
+- _PREVENT_TEAMATTACK 等既有 gate 通過
+
+上述條件後才 RAND(0,100)，成功比較仍是 > 50（再加 _EQUIT_RESIST 時的抗落馬值）。
+
+Web 目前能由 source-backed Enemy runtime 證明的 DamageReact 是 ACUPUNCTURE。V2.82 因此把 sourcePetOriginalDamageReact(target) 提前保存為 hadDamageReact，只有 !hadDamageReact && damage>0 && !dodged && !miss 才消耗 FallGround RNG；DamageReact 不再多吃一顆 RNG。
+
+### CHAR_WORKPETFALL 不亂補 RidePet
+
+fixed battle_command.c 會把 CHAR_WORKPETFALL 轉成 battle result 的 rideflg：
+
+- 一般落馬：-1
+- 變狐造成的落馬：-2
+- 烏力化造成的落馬：-3
+
+送完 result 後 Work flag 清 0；battle.c 結束戰鬥時另有 CHAR_RIDEPET=-2 → -1 的短暫狀態。
+
+目前 Web 沒有已證明的正式 CHAR_RIDEPET／rideflg runtime，因此這段不假裝「active pet = ride pet」。沒有 source-backed ride state 就不會生 ridePetId、不會捏出 client onRide 效果。
+
+### Regression
+
+新增：
+
+- tools/check_v282_fallground_react.mjs
+- .github/workflows/v282-fallground-react.yml
+
+鎖定：
+
+- FallGround 必須以 react == 0 為 RNG 前置條件
+- ACUPUNCTURE 不得多消耗 FallGround RNG
+- RAND(0,100) 與 >50 不變
+- Enemy CHAR_RIDEPET／ridePetId 不虛構
+- CHAR_WORKPETFALL／rideflg 維持明確 fail-closed ride-system 邊界
+
+save schema 維持 30。
+
+---
+## V2.81 PetSkill runtime reachability / pending boundary audit
+
+V2.80 將兩個 source boundary 鎖住後，這版直接把目前 fixed PetSkill runtime 的「能不能真的走到 sourceRuntimePending」做靜態 reachability audit。目的不是刪掉防守程式，而是證明目前合法資料不會因 parser／dispatcher 缺口誤落 pending。
+
+### 固定 runtime 整體覆蓋
+
+- 目前合法 PetSkill function family：61。
+- sourcePerformPetLoyalAction() 目前有 58 個對應 dispatcher。
+- 剩餘 3 個正好是 fixed PETSKILL_functbl 沒有同名註冊的 582／642／643：PETSKILL_SelfExplodeAttack、PETSKILL_Awaken、PETSKILL_Temptation。
+- 這三個仍維持 V2.79 的 source-missing 邊界，不改成假的 handler。
+
+### 目前 7 個 sourceRuntimePending 防守點
+
+1. PETSKILL_StatusChange：12 個合法 rows 的 毒／剧／石／乱／醉／眠／虚／麻 都能由現有 token parser 解析，turn 與 攻% 亦都有固定格式。
+2. PETSKILL_Refresh：5 個合法 rows 默／剧／障／全／虚 全部有 source token parser。
+3. PETSKILL_Weaken / Deeppoison / Barrier / Nocast：12 個合法 rows 都是 status turn 成 的固定 option，generic status mapping 能解析。
+4. PETSKILL_MagicStatusChange：4 個合法 rows 全部為 铁壁|turn|power|全，走 fixed superWall 路徑。
+5. PETSKILL_BattleProperty：唯一合法 row 612 為精確 PET_PetskillPropertyEvent callback。
+6. PETSKILL_Combined：36 個合法 rows 共引用 101 個唯一 magic ID，所有 ID 都已有固定分流或 MAGIC_AttMagic runtime row；458／459／462 保持 source-missing。
+7. PETSKILL_LoyalAction：目前 dispatcher 已完整覆蓋其餘 58 個合法 function family；3 個 fixed-unregistered family 仍走 sourceFunctionMissing，不是 pending。
+
+### Regression
+
+新增：
+
+- tools/check_v281_petskill_reachability.mjs
+- .github/workflows/v281-petskill-reachability.yml
+
+回歸鎖定：
+
+- 61／58／3 的 fixed dispatcher／unregistered 數量
+- StatusChange 12 rows
+- Refresh 5 rows
+- Special Status 12 rows
+- MagicStatusChange 4 rows
+- BattleProperty row 612
+- Combined 36 rows／101 unique magic IDs
+- 458／459／462 source-missing
+- 7 個 defensive sourceRuntimePending 保留
+
+本版不改戰鬥公式、不刪 fail-closed 分支，save schema 維持 30。
+
+---
+## V2.80 Enemy FallGround / Combined source boundary audit
+
+V2.79 後繼續掃固定 C 的 Enemy／Pet 特殊技能來源。這輪的結論是：有兩條路徑可以完整證明「哪裡能做、哪裡不能猜」，因此直接做成 regression boundary，而不是塞入假效果。
+
+### 1. PETSKILL_FallGround（Skill 210）
+
+固定 petskill2.txt row 210：
+
+- 名稱：落馬術
+- function：PETSKILL_FallGround
+- option：攻%-30
+- fixed C 在 pet_skill.c 先把 WORKATTACKPOWER 做成 FIXSTR + FIXSTR * (-30%)，因此攻擊工作值 = 70% FIXSTR。
+- battle_event.c::BATTLE_S_FallGround() 之後才執行落馬 RNG：RAND(0,100)，成功條件 >50。
+- _ENEMY_FALLGROUND 分支要求 CHAR_TYPEENEMY 且 CHAR_RIDEPET > 0，成功後才清空 RidePet 並把 STR／TOUGH／VITAL 各乘 0.7。
+
+### 2. 為什麼目前不能替 Enemy 生出 ridePetId
+
+固定 enemy.c 的 _ENEMY_FALLGROUND 相關建立碼會掃 ridePetTable[296]，如果 Enemy 的 CHAR_BASEBASEIMAGENUMBER 是 ride image，便把外觀欄位改成 charNo / rideNo 組合。
+
+但該建立流程沒有把 CHAR_RIDEPET 設成正值；CHAR_RIDEPET 的預設值仍是 -1。因此「看起來像騎寵」與「原 C 認定真的有 RidePet」是兩件事。
+
+目前 generated stoneage_general_encounter_runtime.json 也沒有 ridePetId 來源欄位。Web 因而維持：
+
+- fallRoll 仍照原 C 消耗；
+- 沒有 source-backed ridePetId 時，落馬成功旗標保持 false；
+- 不自行套 0.7 倍屬性；
+- 若未來真的補到 ridePetId source，既有分支可以直接承接。
+
+### 3. PETSKILL_Combined Skill 715「火牛狂襲」
+
+fixed runtime row：
+
+综合法|5|458|459|460|461|462
+
+原 PETSKILL_Combined() 只負責從這個 list 隨機抽出一個數字，再交給 BATTLE_COM_JYUJYUTU -> MAGIC_DirectUse()。
+
+目前 fixed magic.txt 對 458／459／462 沒有 row，所以：
+
+- 458、459、462 維持 missingMagicRow=true；
+- 460、461 仍走已證明的 MagicStatusChange 路徑；
+- 不從「火牛分身攻擊對方敵人全體」描述自行推導傷害型 magic。
+
+### Regression
+
+新增：
+
+- tools/check_v280_source_boundaries.mjs
+- .github/workflows/v280-source-boundaries.yml
+
+鎖定：
+
+- Skill 210 固定 option 與 FallGround RNG RAND(0,100)>50
+- Enemy ridePetId 不由 makeEnemyUnit() 虛構
+- generated Enemy runtime 不宣稱 ridePetId source field
+- Combined 固定 36 rows
+- Skill 715 精確 option
+- 458／459／462 仍不存在於 fixed magic runtime
+- game.js 維持 missingMagicRow fail-closed
+
+save schema 維持 30。
+
+---
 # 阿肥石器時代放置版－開發紀錄 Part 07
 
 > 範圍：V1.75 onward  
@@ -5120,3 +5671,402 @@ save schema 維持 **30**。
 - animation：enemy-side base img2=101641 (350,250)，toNo<10 才改 101642 (320,240)，attIdx=0。
 - 新增 `tools/check_v269_profession_fire_spear_runtime.mjs`。
 - save schema 維持 **30**。
+
+
+---
+
+## V2.70 Skill 14 ICE_MIRROR / Ice Mirror defense-derived magic
+
+V2.70 從 V2.69 乾淨基準重新開始，接入巫師 Skill 14「冰鏡術」／`PROFESSION_ICE_MIRROR`。這版不復原舊 V2.70 UI／World 實驗，核心版本只沿既有 profession skill 主線向前。
+
+### fixed skill row / MP
+
+- Skill 14 名稱：冰鏡術；固定 option：`冰|0|1|0|0|0|0|0|0|50|0|-50`
+- TARGET OTHER、KIND 1、professionClass=2。
+- img1=101697、img2=101652、icon=29254。
+- dynamic MP：M-tier 1～2=20、3～4=25、5～6=30、7～8=35、9～10=40。
+- command receipt 與既有 profession skill core 共用 MP／proficiency lifecycle；不是 charge skill。
+
+### Dex / proficiency / practice RNG
+
+- fixed `BATTLE_DexCalc()` 把 ICE_MIRROR 與 Storm / Fire Spear / Enclose 放在同一組：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+- `analysis_profession_parameter()` 對冰屬性先提升 Ice Practice；當前施法仍保存 battle-entry 的熟練度 Work snapshot。
+- fixed `PROFESSION_MAGIC_GET_PRACTICE()` 沒有 ICE_MIRROR case，因此 `hp_power` 留在 0；共同 critical `RAND(1,100)` 與 M2 `rand()%100` 仍照吃，但因 power=0 不再消耗 98～102 variance。
+- 冰鏡真正傷害不是 practice power，而是後續特殊 defense-derived power。
+
+### Dodge / Damage
+
+- magic type=2。
+- `PROFESSION_MAGIC_DODGE()` 的敵方 base luck 仍為 Lv×0.15、上限 20，再扣 Ice proficiency ×0.2；ICE_MIRROR 沒有 CURRENT／STORM／FIRE_SPEAR／DOOM／SIGN 那些額外第二段命中 gate。
+- 特殊傷害依 fixed source：M-tier 10 的 rate=60，其餘 `rate=tier*5+5`；實際 power 為 `120 + trunc(defense*rate/100 + (defense-baseDefense)*rate/200)`。
+- `baseDefense` 取固定 `CHAR_TOUGH / 100` 的 C int 截斷語意；Web 優先使用現有 Enemy `serverDerived.charStats.tgh`。
+- 特殊 power 之後仍走 generic `GET_DAMAGE(type=2)`，因此固定 source 的 type=2 欄位錯位保留：DODGE 使用 Ice proficiency，而 damage path 讀 Thunder proficiency/resist。
+- current Web Enemy 沒有 ride-pet model，所以固定 source 的 ride-pet adjustment 不虛構。
+- pinned source 最後的 NPC 800 上限判斷把已算出的 `defense` 數值當成 `CHAR` 索引使用；這是 source quirk。現 Web 沒有對應 CharTable index 語意，因此不自行補一個 800 cap，而是在 runtime／regression 明確標示 `sourceNpcCapBugUnemulated`。
+
+### Animation / hit lifecycle
+
+- `attIdx=0`。
+- img2 固定 101652。
+- 對 player-side direct slot（toNo 0～9）：option 的 direct 座標為 (0, 50)。
+- 其他目標：option 後段座標為 (0, -50)。
+- 每個 dodge 通過目標仍固定消耗 `PROFESSION_MAGIC_CHANGE_STATUS()` leading `RAND(1,100)`；ICE_MIRROR 沒有額外 status case。
+- Web 目前沿用 profession magic 的 direct HP subtract path，不接普通 Counter、Guardian、DamageSub、ItemCrush。
+- 命中後仍處理原 C 的睡眠解除生命週期。
+
+### Regression
+
+新增：
+
+`tools/check_v270_profession_ice_mirror_runtime.mjs`
+
+鎖定 runtime row、dynamic MP、Dex、Practice RNG 消耗、Dodge 第二段 gate 缺失、Ice Mirror special damage、type=2 damage bug、animation 101652 與 source cap quirk。
+
+save schema 維持 **30**。
+
+---
+
+## V2.71 Skill 15 FIRE_ENCLOSE / 火附體 fixed C mapping
+
+V2.71 接入 Skill 15，但本版原先把 option `炎` 直接當成火傷 StatusSeq；V2.72 依 pinned fixed C 重新校正這個映射。固定 `StatusTbl` 的 `炎` 對應 `CHAR_WORK_F_ENCLOSE_2`，因此火附體本身是 on-hit aura counter，不是立即灼傷。
+
+### Skill row / MP / Dex
+- Skill 15：`PROFESSION_FIRE_ENCLOSE`。
+- option：`炎|效%1|回%3|成%100`；img1=101697、img2=101699、icon=29258。
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+
+### Cast / source mapping
+- target 走 `BATTLE_MultiList()`，再使用 `PROFESSION_BATTLE_StatusAttackCheck()`。
+- skill level 使用 A-tier；成功率=`100 + A-tier×4`。
+- 成功後固定 C 執行 `CHAR_setWorkInt(toindex, StatusTbl[status], turn+1)`。
+- `炎 → CHAR_WORK_F_ENCLOSE_2`：建立火附體的 on-hit counter。
+- `燒 → CHAR_WORK_F_ENCLOSE`：這才是後續普攻觸發的灼傷 StatusSeq。
+- on-hit chance=`20 + A-tier ×2`；火附體有效附加狀態回合為 tier<5→1、tier 5～9→2、tier 10→3。
+
+### Fire on-hit StatusSeq
+- fixed `BATTLE_Attack()` 只在玩家造成正傷害後檢查 F/I/T `_2` counter，Fire 先於 Ice / Thunder。
+- 成功觸發後以 `img1=101697`、`img2=101698` 寫入 `燒`。
+- stored counter 使用 `turn+1`，因此 tier 10 的火燒會保存 4；StatusSeq 先減 1，再造成 `150 → 100 → 50` HP。
+- V2.71 原先的 direct-DOT Web 模型已在 V2.72 修正為固定 C 的 aura→on-hit lifecycle。
+
+### Regression
+`tools/check_v271_profession_fire_enclose_runtime.mjs` 現在鎖定 `炎/_F_ENCLOSE_2`、`燒/_F_ENCLOSE`、stored counter 與 on-hit chance。
+
+save schema 維持 **30**。
+
+---
+
+## V2.74 Skills 18-20 MAGIC_PRACTICE / 火／雷／冰熟練度
+
+V2.74 將固定 C 的三個巫師 magic-practice 輔助技能正式納入主線 parity：Skill 18 火熟練度、Skill 19 雷熟練度、Skill 20 冰熟練度。
+
+### Skill rows / command boundary
+- Skill 18：火熟練度 / PROFESSION_FIRE_PRACTICE。
+- Skill 19：雷熟練度 / PROFESSION_THUNDER_PRACTICE。
+- Skill 20：冰熟練度 / PROFESSION_ICE_PRACTICE。
+- 三者共同屬於 professionClass=2、target=5、kind=2、costMp=0、useFlag=1。
+- fixed C 的這三個 function 本身只 `return TRUE`，沒有獨立的 battle command case；因此 Web `sourceProfessionBattleFunctionSupported()` 不把它們視為可在戰鬥 command 階段直接執行的技能。
+
+### Magic proficiency Work
+固定 C 的 `BATTLE_ProfessionStatus_Analysis()` 對三個 function 使用相同 M-tier 公式：
+- tier 1～5：`tier × 2`
+- tier 6～10：`(tier-5) × 3 + 10`
+- 上限 25
+- 公式結果加上 fixed `PROFESSION_*_P` old value 後寫入對應 F/I/T proficiency Work。
+
+本 pinned build 內目前沒有找到一般 gameplay 路徑寫入 `PROFESSION_FIRE_P`、`PROFESSION_ICE_P`、`PROFESSION_THUNDER_P` 的持久值，因此 Web 對新角色只保留 source 可達的 skill-derived Work，不虛構一個不存在的 persistent 累加來源。
+
+### Battle-entry snapshot
+- 玩家進入戰鬥時掃描 26 個 profession slots；對已學的三項 practice skill，依 display level 重新建立 `fire / ice / thunder` magic proficiency snapshot。
+- 稀疏 slot 不會提前終止掃描；非 practice skill 略過。
+- 這個 snapshot 供 profession magic dodge／damage 路徑讀取。
+- 戰鬥結束／reset 會清空 battle-local F/I/T proficiency Work，再由下一場 battle-entry 重新建立。
+- 因 practice function 沒有自己的 battle command，不會重複扣 MP，也不新增 save schema。
+
+### Regression / CI
+- `tools/check_v274_profession_magic_practice_runtime.mjs`：Skill 18～20 row、M-tier formula、sparse-slot scan、battle-entry snapshot、battle reset 與 command boundary。
+- V2.74 regression 已併入唯一主線 CI；不再保留獨立重複 gate。
+- save schema 維持 **30**。
+
+---
+
+## V2.73 Skill 17 ICE_ENCLOSE / 冰附體
+
+V2.73 接入巫師 Skill 17「冰附體」／PROFESSION_ICE_ENCLOSE，沿 pinned fixed C 的 F/I/T Enclose 共用結構完成「凍 → 冰 aura」與「霜 → on-hit／StatusSeq」lifecycle。
+
+### Skill row / MP / Dex
+- Skill 17：冰附體 / PROFESSION_ICE_ENCLOSE。
+- text：召唤冰雾附在武器或防具上增强其效能。
+- option：凍|效%1|回%3|成%100；TARGET OTHER、KIND 1。
+- icon=29260、img1=101697、row img2=101700。
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
+- fixed Dex：WORKQUICK+20 - RAND(work*0.2, work*0.5)。
+
+### Cast / aura counter
+- fixed status command 使用 A-tier；成功率=100 + A-tier×4。
+- 凍 → CHAR_WORK_I_ENCLOSE_2；option 回%3 保存 StatusTbl=4。
+- 成功後寫入 Ice aura counter 與對應 A-tier MOD；Ice Practice 只在成功 path 提升。
+- 冰附體本身不直接造成 damage，也不走一般 magic dodge / GET_DAMAGE cast path。
+
+### Player physical-hit proc
+- fixed BATTLE_Attack() 的 F/I/T _2 scan 以 Fire → Ice → Thunder 順序檢查；目前 Web 保留相同 first-active 邏輯。
+- Ice 觸發率=20 + A-tier ×2。
+- 冰命中狀態 token 是 霜，映射到 CHAR_WORK_I_ENCLOSE。
+- 有效回合：tier<5→1、tier 5～9→2、tier 10→3；StatusTbl stored=turn+1。
+- on-hit animation：img1=101697、img2=101699。
+- same-side player／pet direct target 維持 fixed TARGET_OTHER 語意，不錯誤拒絕。
+
+### Ice StatusSeq
+- fixed CHAR_WORK_I_ENCLOSE 每次 StatusSeq 取原 DEX 的 90% 寫入 CHAR_WORKFIXDEX。
+- 這是 FIXDEX-only 修正，不把 Ice Enclose 改成 Thunder 式「禁止行動」；原 C 的 CanMove 仍可通過。
+- 下一輪 PreCommand/compliance 會重新建立 FIXDEX，因此不跨回合倒帶 EntrySort。
+
+### Regression / CI
+- tools/check_v273_profession_ice_enclose_runtime.mjs：Skill 17 row、MP、Dex、A-tier、凍/_I_ENCLOSE_2、霜/_I_ENCLOSE、on-hit turns、FIXDEX 90%、same-side target 與 movement semantics。
+- CI workflow 已把 V2.73 regression 加入 push path 與執行步驟。
+
+save schema 維持 30。
+
+---
+
+## V2.72 Skill 16 THUNDER_ENCLOSE / 雷附體
+
+V2.72 接入巫師 Skill 16「雷附體」／`PROFESSION_THUNDER_ENCLOSE`，使用 fixed C 與 Fire/Ice Enclose 共用的 `_2` on-hit aura lifecycle。
+
+### Skill row / MP / Dex
+- Skill 16：`雷附體 / PROFESSION_THUNDER_ENCLOSE`。
+- option：`击|效%1|回%1|成%100`；TARGET OTHER、KIND 1。
+- img1=101697、row img2=101701、icon=29259。
+- dynamic MP：M-tier 1～3=20、4～6=30、7～9=40、10=50。
+- fixed Dex：`WORKQUICK+20 - RAND(work*0.2, work*0.5)`。
+
+### Cast / aura counter
+- fixed status command 使用 A-tier；成功率=`100 + A-tier×4`。
+- `击 → CHAR_WORK_T_ENCLOSE_2`，option `回%1` 保存 StatusTbl=2。
+- 成功後寫入雷附體 counter 與對應 A-tier MOD；熟練度只在成功 path 提升。
+- 雷附體本身不直接造成 damage，也不走 magic dodge / GET_DAMAGE cast path。
+
+### Player physical-hit proc
+- fixed `BATTLE_Attack()` 只在攻擊者是 Player 且 `damage > 0` 時檢查附體。
+- 觸發率=`20 + A-tier ×2`。
+- Thunder 命中狀態 token 是 `电`，映射到 `CHAR_WORK_T_ENCLOSE`。
+- Thunder 強制有效回合為 1，因此 StatusTbl stored=2。
+- `CHAR_WORK_T_ENCLOSE` 被 fixed `BATTLE_CanMoveCheck()` 視為不可行動狀態；因此雷附體命中後封鎖 1 回合，再在下一次該角色的 StatusSeq 後解除。
+- on-hit animation：img1=101697、img2=101700。
+
+### Fire mapping correction included in V2.72
+本版同時把 V2.71 的錯誤 Fire Enclose model 校正回 fixed C：`炎` 建立 `_F_ENCLOSE_2`，`燒` 才建立 `_F_ENCLOSE`。因此後續 Ice Enclose（Skill 17）可以直接沿同一套 F/I/T `_2` aura 模型接續。
+
+### Regression / CI
+- `tools/check_v271_profession_fire_enclose_runtime.mjs`：Fire mapping correction。
+- `tools/check_v272_profession_thunder_enclose_runtime.mjs`：Skill 16 row、Dex、A-tier、counter、on-hit chance、Thunder one-turn status、img2=101700。
+- CI workflow 已把 V2.72 regression 加入 push path 與執行步驟。
+
+save schema 維持 **30**。
+
+V2.73 已接續完成 Skill 17「冰附體」，沿 fixed `冻 → CHAR_WORK_I_ENCLOSE_2` / `霜 → CHAR_WORK_I_ENCLOSE` mapping 實作，並補上 FIXDEX 90% StatusSeq lifecycle。
+
+
+---
+
+## V2.76 Skill 21 PROFESSION_TRANSPOSE / 移形換位 live
+
+V2.76 將 Skill 21「移形換位」從 V2.75 的 source-parity core 接進主戰鬥 command pipeline。
+
+### Fixed C 行為
+- PROFESSION_TRANSPOSE 對應 BATTLE_COM_S_TRANSPOSE。
+- fixed C 使用 PROFESSION_CHANGE_SKILL_LEVEL_M()：
+  - Lv1～5：回避 10 / 25 / 30，持續 3 回合。
+  - Lv6～9：回避 45 / 50 / 60，持續 4 回合。
+  - Lv10：回避 70，持續 5 回合。
+- C 實際保存 CHAR_MYSKILLDUCK=turn+1，由自己的 StatusSeq 每回合遞減。
+- CHAR_MYSKILLDUCKPOWER 進入獨立 skill-duck 判定，先於普通 BATTLE_DuckCheck()。
+- BATTLE_MultiList(defNo2) 與 charaindex == toindex 的 fixed target filter 均保留；因此這個 command 最終只讓施術者自身取得臨時閃避 Work。
+- cast animation 保留 img1=101697、img2=101695。
+
+### Web live pipeline
+- sourceProfessionBattleFunctionSupported() 現在接受 PROFESSION_TRANSPOSE。
+- sourceProfessionBattleSkillExecute() 在 generic same-side direct-target gate 之前處理 Skill 21。
+- 玩家 battle view 暴露 skillDuckPower / skillDuckTurns。
+- resetBattleStatuses() 清除 Skill 21 battle-local Work。
+- game.html 更新為 PLAYABLE CORE V2.76。
+- save schema 維持 30。
+
+### Regression / CI
+- tools/check_v275_profession_transpose_runtime.mjs 修正為 fixed C 的 3 / 4 / 5 回合。
+- tools/check_v276_profession_transpose_live.mjs 鎖定 row、M-tier、dispatcher、raw turn+1 counter、StatusSeq decrement、independent skill-duck dodge 與 reset wiring。
+- 新增 .github/workflows/v276-profession-transpose-live.yml。
+
+
+
+---
+
+## V2.79 — Enemy PETFLG source parity / PetSkill source-missing boundary
+
+這一版不新增沒有固定來源證據的戰鬥效果；重點是把 Enemy → PetSkill 的資料契約鎖死，避免後續 refactor 把 V1.24 的 fail-closed 邊界重新打開。
+
+### ENEMY_PETFLG
+
+固定 enemy.h 的 ENEMY_DATAINT 順序把 ENEMY_PETFLG 放在 ENEMY_STYLE 後；enemy.c::ENEMY_createEnemy() 會把該欄位寫入 CHAR_WORK_PETFLG。
+
+generated encounter runtime 的 enemyPetFlg 已與 pinned enemy1.txt 逐筆比對：
+
+- 2,958 / 2,958 EnemyID 完整對應。
+- PETFLG=0：1,557 筆。
+- PETFLG=1：1,401 筆。
+- 無 missing、extra 或 value mismatch。
+
+### BecomeFox
+
+makeEnemyUnit() 透過 sourceEnemyPetFlg(resolvedEnemyId) 把 source-backed PETFLG 放進 battle Enemy；625 媚惑術只在這個資料存在時依 fixed RAND(0,99) < 31 進入變狐。
+
+資料缺失仍保持 fail-closed，不用圖號／名稱／範圍猜測。
+
+### 582 / 642 / 643
+
+玩家出戰 PetSkill runtime 中：
+
+- 582 PETSKILL_SelfExplodeAttack
+- 642 PETSKILL_Awaken
+- 643 PETSKILL_Temptation
+
+這三個 exact function name 仍不在 fixed PETSKILL_functbl；其中 Temptation 雖可在 battle_event.c 找到 BATTLE_S_Temptation()，但 pinned battle dispatcher 搜不到對應的 BATTLE_COM_S_TEMPTATION case，因此仍不能把它推定成一個可從 PETSKILL_Use() 進入的 handler。
+
+V2.79 只鎖定這個 source-missing 邊界。
+
+### Regression
+
+新增 tools/check_v279_enemy_petflg_source_parity.mjs。
+
+save schema 維持 30。
+## V2.78 — Player Pet RANDOMACT / PETSKILL_StatusChange 通用狀態 token 完整化
+
+V2.77 完成 Hunter 非戰鬥職業技能後，繼續回到玩家出戰 Pet 的低忠誠 `RANDOMACT` source fallback。這次沒有新增一個不存在的 PetSkill，而是把 fixed `PETSKILL_StatusChange()` 已經存在、但 Web parser 尚未完整解析的 `aszStatus` token 補齊。
+
+### Fixed source 規則
+
+固定：
+
+`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+
+`PETSKILL_StatusChange()` 會從 option 字串逐字掃描 `aszStatus[1..BATTLE_ST_END-1]`，找到第一個狀態 token 後寫入：
+
+- `CHAR_WORKBATTLECOM1 = BATTLE_COM_S_STATUSCHANGE`
+- `CHAR_WORKBATTLECOM2 = toindex`
+- `CHAR_WORKBATTLECOM3 low = status index`
+- `CHAR_WORKBATTLECOM3 high = turn`
+- `WORKATTACKPOWER = FIXSTR + trunc(FIXSTR × 攻% / 100)`
+- `WORKDEFENCEPOWER = FIXTOUGH + trunc(FIXTOUGH × 防% / 100)`
+
+`battle_event.c` 的通用 StatusChange 執行再以 `BATTLE_StatusAttackCheck(attackindex, defindex, status, Success=40, range=40, Bai=2.0)` 做成功判定，成功後寫 `StatusTbl[status] = turn + 1`；酒醉、毒煞與不能行動的特殊 side-effect 仍由固定 C 各自處理。
+
+### V2.78 接入內容
+
+現有 `stoneage_petskill_runtime.json` 中 12 筆 generic `PETSKILL_StatusChange`：
+
+- 60／61：毒攻擊
+- 80／708：石化攻擊
+- 90／709：混亂攻擊
+- 100：泥醉攻擊
+- 110／710：催眠攻擊
+- 707：`剧 turn 6 攻%+20`
+- 711：`虚 turn 9 攻%+60`
+- 712：`麻 turn 1 攻%+70`
+
+其中 707 的 `剧` 必須解析成 `deepPoison`，不能因 option 內同時包含「毒」而誤判為普通 `poison`。
+
+V2.78 現在同時支援 fixed `aszStatus` 裡的：
+
+`麻 → paralysis`  
+`虚 → weaken`  
+`剧 → deepPoison`  
+`障 → barrier`  
+`默 → nocast`  
+`煞 → sars`
+
+parser 採「option 內最早出現 token」策略，貼近 fixed C 從字串起點逐字掃描的行為。
+
+### 不混用專用 PetSkill
+
+V1.78 已經獨立接好：
+
+- `PETSKILL_Weaken`
+- `PETSKILL_Deeppoison`
+- `PETSKILL_Barrier`
+- `PETSKILL_Nocast`
+
+這些 function 的 command／stored-turn 規則與 generic `PETSKILL_StatusChange` 不完全相同。
+
+因此 V2.78 只擴充 generic `sourcePetStatusSkillType()` 與其通用 supported-type allowlist；不把 specialized handlers 的 `turn+2`、`turn` 等規則灌進 generic path。
+
+### Regression
+
+新增：
+
+`tools/check_v278_petskill_statuschange_runtime.mjs`
+
+檢查：
+
+- 12 筆 fixed generic StatusChange row
+- `剧／虚／麻／障／默／煞` token mapping
+- `剧毒` 不誤判成 `毒`
+- turn / 攻% parser
+- generic `paralysis / weaken / deepPoison / barrier / nocast / sars` dispatcher path
+- 舊有 `poison / drunk / sleep / stone / confusion` mapping 不回歸
+- `game.js` syntax 與 V2.78 marker
+
+### commits
+
+- V2.78 已落在本次單一主線 commit，並由 GitHub Actions 驗證 regression。
+
+## V2.77 Hunter non-battle profession skills / 追尋敵蹤・回避戰鬥
+
+V2.77 接回固定 C 中尚未有操作入口的兩個 Hunter 非戰鬥職業技能：Skill 44「追尋敵蹤」與 Skill 45「回避戰鬥」。這一版不是另外發明遇敵公式，而是把既有的 `CHAR_ENCOUNT_FIX`／`CHAR_ENCOUNT_NUM` source-backed encounter pipeline 正式接到玩家 UI。
+
+### Fixed C 行為
+
+固定 `profession_skill.c`：
+
+- Skill 44：`PROFESSION_TRACK`，option=`倍%5|升`，MP 13，非戰鬥技能；display skill level 先做整數 `level/10`，再乘 option 的 rate 5，因此 Work 修正為 `+floor(displayLevel/10)×5%`。
+- Skill 45：`PROFESSION_ESCAPE`，option=`倍%5|降`，MP 13，非戰鬥技能；同一套 level/rate 計算，但 Work 修正為負值。
+- 兩者都把 `CHAR_ENCOUNT_NUM` 設為 `time(NULL)+60*3`，也就是 180 秒。
+- 若目前 `CHAR_ENCOUNT_NUM >= time(NULL)`，fixed function 先把 return value 設為 `-1`；但後面仍照常重新計算 `per`、覆寫 `CHAR_ENCOUNT_FIX`、重新設定 180 秒與送出技能動畫，因此 Web 保留這個「protocol return 失敗、Work 仍被覆寫」的來源 quirk。
+- Skill 44 的 client skill animation `img1=101627`；Skill 45 為 `img1=101629`。runtime 同時保留原表 `img2=101629 / 101638` 資料。
+
+### Encounter lifecycle
+
+固定 `char_walk.c` 在真正 `rand()%120 < temp` 前先讀取 `CHAR_ENCOUNT_FIX` 為 `p_cep`；若效果已過期，先清掉 Work 與時間並提示「技能效用结束。」但本次 walk 仍以清除前讀到的 `p_cep` 計算 `temp = cep * (100 + p_cep) / 100`。Web 的 `sourceProfessionEncounterRollPlan()` 保留相同順序，不把過期當下的這一次 walk 改成普通 CEP。
+
+Encounter 本身仍使用原有 CEP min/max clamp、`rand()%120`、No Enemy 裝備 gate 與 Moon／Randenemy 二次 RNG；V2.77 只把 Track/Escape 的 transient Work 正式接進這條既有 pipeline。
+
+### Web live UI
+
+新增「非戰鬥職業技能」操作區：
+
+- 玩家已學 Skill 44／45 時顯示對應按鈕、display level 與 MP cost。
+- 戰鬥中不提供非戰鬥技能按鈕；戰鬥外可直接使用。
+- 施放後即時顯示目前 `+/-Encounter Fix%` 與剩餘秒數。
+- 技能 Work 不進 save schema；沿用既有 battle-free transient globals，讀檔後不虛構歷史中的 Work 狀態。
+- Skill 44/45 的施放仍走既有 profession MP preflight 與 profession skill proficiency post-dispatch lifecycle。
+
+### Regression / CI
+
+新增：
+
+- `tools/check_v277_profession_outofbattle_runtime.mjs`
+- `.github/workflows/v277-profession-outofbattle.yml`
+
+Regression 鎖定：
+
+- Skill 44／45 runtime row、option、MP、img1/img2。
+- level/10 × rate 5 的 +35／-50 等固定來源計算。
+- 180 秒 `CHAR_ENCOUNT_NUM` window。
+- 過期當下 walk 仍使用清除前 `p_cep` 的 source quirk。
+- active effect 期間再次施放的 `ret=-1`，以及 Work 仍被重新寫入的行為。
+- UI listener、render、encounter integration 與 transient globals。
+- `game.js` syntax gate。
+
+V2.77 GitHub Actions regression run **36415712288** 成功。
+
+save schema 維持 **30**。

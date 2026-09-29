@@ -1,0 +1,38 @@
+name: V3.06 GBreak GBreak2 FallGround Acupuncture order
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'docs/changelog/part-07-v1.75-onward.md'
+      - 'tools/check_v297_acupuncture_wakeup_target.mjs'
+      - 'tools/check_v303_guardian_acupuncture_wakeup_order.mjs'
+      - 'tools/check_v304_enemy_player_guardian_acupuncture_wakeup.mjs'
+      - 'tools/check_v305_caller_sensitive_acupuncture_wakeup.mjs'
+      - 'tools/check_v306_gbreak_fallground_acupuncture_order.mjs'
+      - '.github/workflows/v306-gbreak-fallground-acupuncture.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.97 Acupuncture WakeUp audit
+        run: node tools/check_v297_acupuncture_wakeup_target.mjs
+      - name: Run V3.03 Guardian Acupuncture WakeUp audit
+        run: node tools/check_v303_guardian_acupuncture_wakeup_order.mjs
+      - name: Run V3.04 Enemy-to-Player Guardian Acupuncture WakeUp audit
+        run: node tools/check_v304_enemy_player_guardian_acupuncture_wakeup.mjs
+      - name: Run V3.05 caller-sensitive Acupuncture WakeUp audit
+        run: node tools/check_v305_caller_sensitive_acupuncture_wakeup.mjs
+      - name: Run V3.06 GBreak / GBreak2 / FallGround Acupuncture audit
+        run: node tools/check_v306_gbreak_fallground_acupuncture_order.mjs

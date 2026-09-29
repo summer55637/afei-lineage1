@@ -1,0 +1,25 @@
+name: V2.81 PetSkill runtime reachability regression
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'data/generated/stoneage_petskill_runtime.json'
+      - 'data/generated/stoneage_attack_magic_runtime.json'
+      - 'tools/check_v281_petskill_reachability.mjs'
+      - '.github/workflows/v281-petskill-reachability.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.81 PetSkill reachability regression
+        run: node tools/check_v281_petskill_reachability.mjs

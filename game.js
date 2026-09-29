@@ -91,7 +91,7 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
   {level:70,floor:31201,nextCap:75,clue:'精靈王祭壇附近的沒落礦坑'},
   {level:75,floor:40,nextCap:79,clue:'沙姆海底通路的地下水池'}
 ]);
-let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:5,str:5,tgh:5,dex:5}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
+let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
@@ -105,6 +105,8 @@ let battleProfessionScapegoat=null;
 let battlePlayerRawGuardCommand=false;
 let battlePlayerFixedToughWork=null;
 let battlePlayerAvoidWork=null;
+let battlePlayerSkillDuckTurns=0;
+let battlePlayerSkillDuckPower=0;
 let battlePlayerWeaponFocusWork=null;
 let battlePlayerProfessionTrap=null;
 let battlePlayerMySkillStrPower=0;
@@ -1678,12 +1680,14 @@ function sourceProfessionBattleDexRoll(prepared,quick,{randMacro=sourceCRandMacr
     &&command!=='BATTLE_COM_S_ICE_ARROW'
     &&command!=='BATTLE_COM_S_FIRE_SPEAR'
     &&command!=='BATTLE_COM_S_STORM'
+    &&command!=='BATTLE_COM_S_ICE_MIRROR'
+    &&command!=='BATTLE_COM_S_FIRE_ENCLOSE'
     &&command!=='BATTLE_COM_S_ENCLOSE')return battleDexRoll(quick);
   const work=Math.trunc(n(quick))+20;
   let lower=0,upper=work*.3;
   if(command==='BATTLE_COM_S_VOLCANO_SPRINGS'||command==='BATTLE_COM_S_SUMMON_THUNDER'||command==='BATTLE_COM_S_ICE_ARROW')upper=work*.2;
   else if(command==='BATTLE_COM_S_ICE_CRACK'||command==='BATTLE_COM_S_FIRE_BALL'||command==='BATTLE_COM_S_CURRENT')upper=work*.5;
-  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'){lower=work*.2;upper=work*.5}
+  else if(command==='BATTLE_COM_S_ENCLOSE'||command==='BATTLE_COM_S_STORM'||command==='BATTLE_COM_S_FIRE_SPEAR'||command==='BATTLE_COM_S_ICE_MIRROR'||command==='BATTLE_COM_S_FIRE_ENCLOSE'){lower=work*.2;upper=work*.5}
   else if(command==='BATTLE_COM_S_DOOM'){lower=.3;upper=work*.6}
   const roll=randMacro(lower,upper);
   let dex=work-roll;
@@ -2637,6 +2641,61 @@ function sourceProfessionSetPlayerAttackWork(value){
   battlePlayerAttackWork=Math.trunc(n(value));
   return battlePlayerAttackWork;
 }
+function sourceProfessionTransposeProfile(displayLevel){
+  const skillLevel=sourceProfessionMagicLevelM(displayLevel);
+  let avoid=10;
+  if(skillLevel>=10)avoid=70;
+  else if(skillLevel>=9)avoid=60;
+  else if(skillLevel>=8)avoid=50;
+  else if(skillLevel>=6)avoid=45;
+  else if(skillLevel>=5)avoid=30;
+  else if(skillLevel>=3)avoid=25;
+  const turn=skillLevel>=10?5:(skillLevel>=6?4:3);
+  return {skillLevel,avoid,turn};
+}
+function sourceProfessionTransposeStatusSeq(){
+  const before=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns)));
+  if(before<=0)return {active:false,expired:false,turns:0,power:Math.max(0,Math.trunc(n(battlePlayerSkillDuckPower)))};
+  battlePlayerSkillDuckTurns=Math.max(0,before-1);
+  const expired=battlePlayerSkillDuckTurns<=0;
+  if(expired){
+    battlePlayerSkillDuckPower=0;
+    addLog('你的「移形換位」效果結束。');
+  }
+  return {
+    active:!expired,expired,
+    turns:Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))),
+    power:Math.max(0,Math.trunc(n(battlePlayerSkillDuckPower)))
+  };
+}
+function sourceProfessionTransposeExecute(prepared,name='移形換位'){
+  const profile=sourceProfessionTransposeProfile(prepared?.displayLevel);
+  const beforeTurns=Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns)));
+  if(beforeTurns>0){
+    addLog('你再次使用「'+name+'」，但原 CHAR_MYSKILLDUCK 尚在，效果不刷新。');
+    return {
+      handled:true,noAction:true,reason:'existing-skill-duck',
+      skillId:prepared.skillId,functionName:prepared.functionName,
+      targetNo:Math.trunc(n(prepared.toNo)),profile,
+      skillDuckTurns:beforeTurns,skillDuckPower:Math.trunc(n(battlePlayerSkillDuckPower)),
+      sourceTargetExpansion:'BATTLE_MultiList(defNo2)',
+      sourceTargetFilter:'charaindex===toindex'
+    };
+  }
+  battlePlayerSkillDuckTurns=profile.turn+1;
+  battlePlayerSkillDuckPower=profile.avoid;
+  addLog('你使用「'+name+'」：'+profile.avoid+'% 閃避，持續 '+profile.turn+' 回合。','good');
+  return {
+    handled:true,skillId:prepared.skillId,functionName:prepared.functionName,
+    targetNo:Math.trunc(n(prepared.toNo)),profile,
+    skillDuckTurns:battlePlayerSkillDuckTurns,skillDuckPower:battlePlayerSkillDuckPower,
+    sourceTargetExpansion:'BATTLE_MultiList(defNo2)',
+    sourceTargetFilter:'charaindex===toindex',
+    sourceAnimation:'BATTLE_MagicEffect(attackNo,ToList,img1,img2)',
+    img1:101697,img2:101695,
+    noDamage:true,noOrdinaryCounter:true
+  };
+}
 function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
   return functionName==='PROFESSION_VOLCANO_SPRINGS'
     ||functionName==='PROFESSION_SIGN'
@@ -2645,12 +2704,15 @@ function sourceProfessionBattleFunctionSupported(functionName,skillId=null){
     ||functionName==='PROFESSION_SUMMON_THUNDER'
     ||functionName==='PROFESSION_FIRE_BALL'
     ||functionName==='PROFESSION_FIRE_SPEAR'
+    ||functionName==='PROFESSION_ICE_MIRROR'
+    ||functionName==='PROFESSION_FIRE_ENCLOSE'
     ||functionName==='PROFESSION_BLOOD'
     ||functionName==='PROFESSION_ICE_ARROW'
     ||functionName==='PROFESSION_BLOOD_WORMS'
     ||functionName==='PROFESSION_CURRENT'
     ||functionName==='PROFESSION_STORM'
     ||functionName==='PROFESSION_ENCLOSE'
+    ||functionName==='PROFESSION_TRANSPOSE'
     ||functionName==='PROFESSION_BRUST'
     ||functionName==='PROFESSION_CHAIN_ATK'
     ||functionName==='PROFESSION_CHAIN_ATK_2'
@@ -2758,7 +2820,9 @@ function sourceProfessionPhysicalCalcOnlyResult(target,attackOptions={}){
   const calcGuarding=guardian
     ?!!calcTarget.guardThisTurn&&!battleStatusActive(calcDesc,'confusion')
     :originalGuarding;
-  const opts=Object.assign({},attackOptions,{guarding:calcGuarding,disableDodge:true});
+  const opts=Object.assign({},attackOptions,{
+    guarding:calcGuarding,disableDodge:true,skipSuitDodge:true
+  });
   delete opts.attackerOverride;
   const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),opts);
   r.duckRaw=dodge.duckRaw;
@@ -3266,9 +3330,14 @@ function sourcePrepareProfessionTrapReaction(attackerDesc,targetDesc,r,{ignoreDa
     ||!r||r.dodged||r.miss||n(r.damage)<=0){
     return {triggered:false};
   }
+  // fixed BATTLE_Attack sets ContFlg/iRet FALSE from BATTLE_GetDamageReact
+  // before BATTLE_DamageSub. Keep the Counter block even when the throw-weapon branch
+  // later rewrites pRefrect to NONE and leaves TRAP armed.
+  r.sourceCounterBlockedByDamageReact=true;
+
   const attackerView=battleStatusDescView(attackerDesc);
   // fixed BATTLE_DamageSub: TRAP is returned by BATTLE_GetDamageReact, but any throw weapon
-  // rewrites pRefrect back to NONE. The trap remains armed.
+  // rewrites pRefrect back to NONE. The trap remains armed; the pre-existing Counter block stays.
   if(attackerView?.throwWeapon){
     return {triggered:false,throwWeaponBlocked:true};
   }
@@ -3303,7 +3372,8 @@ function sourceFinishProfessionTrapReaction(reaction){
   // observe the attacker rather than the protected Player.
   battleStatusWakeOnDamage(attackerDesc,trapDamage);
   if(before>0&&reaction.attackerAfter<=0&&attackerDesc?.kind==='enemy'&&attackerDesc.unit){
-    sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc]);
+    // fixed caller order defers BATTLE_AddProfit until after ItemCrush.
+    r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false};
   }
   return reaction;
 }
@@ -4515,6 +4585,65 @@ function sourceProfessionAnnexStatusSeq(desc,{
   };
 }
 
+function sourceProfessionFireEncloseSpec(prepared){
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const attackTier=sourceProfessionAttackSkillTier(prepared?.displayLevel);
+  const option=String(row?.option||'');
+  const baseSuccess=sourceProfessionStatusOptionInt(option,'成',0);
+  const rawTurn=Math.max(1,sourceProfessionStatusOptionInt(option,'回',1));
+  const effect=sourceProfessionStatusOptionInt(option,'效',0);
+  return {
+    skillId:Math.trunc(n(prepared?.skillId)),
+    displayLevel:Math.trunc(n(prepared?.displayLevel)),
+    attackTier,
+    baseSuccess,
+    success:baseSuccess+attackTier*4,
+    rawTurn,
+    storedTurns:rawTurn+1,
+    activeDamageTicks:0,
+    effect,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    option,
+    sourceSkillLevelUsesA:true,
+    sourceOnHitTurnFormula:attackTier>=10?3:(attackTier>=5?2:1),
+    sourceOnHitChance:20+attackTier*2,
+    sourceOnHitCounterFieldWritten:true,
+    sourceAuraToken:'炎',
+    sourceOnHitStatusToken:'燒'
+  };
+}
+
+function sourceProfessionFireEncloseAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  return {
+    magicType:-1,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),
+    showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),
+    y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),
+    shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),
+    effect:Math.trunc(n(opt[1])),
+    toNo:Math.trunc(n(toNo)),
+    sourceBattleMagicEffectPath:true
+  };
+}
+
+function sourceProfessionFireEncloseExecute(prepared,name,statusCheck=sourceProfessionStatusAttackCheck){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==15)return {handled:false,reason:'battle-function-unported',skillId};
+  return sourceProfessionEncloseAuraExecute(
+    prepared,
+    name||'火附體',
+    'fire',
+    statusCheck
+  );
+}
+
 function sourceProfessionEncloseAnimation(row,toNo){
   const opt=String(row?.option||'').split('|');
   const out={
@@ -5508,6 +5637,166 @@ function sourceProfessionIceArrowStatusTick(desc,st){
   };
 }
 
+function sourceProfessionIceMirrorAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  const no=Math.trunc(n(toNo));
+  const directPlayerSide=no>=0&&no<10;
+  return {
+    magicType:2,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:101652,
+    showType:Math.trunc(n(opt[1])),showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[directPlayerSide?8:10])),
+    y:Math.trunc(n(opt[directPlayerSide?9:11])),
+    shakeStart:Math.trunc(n(opt[5])),shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),
+    directPlayerSide,
+    sourceImage2Fixed:true
+  };
+}
+
+function sourceProfessionIceMirrorDamage(target,skillLevel){
+  const tier=sourceProfessionMagicLevelM(skillLevel);
+  const defenseRaw=target?.roundDefense??target?.defense;
+  const toughRaw=target?.serverDerived?.charStats?.tgh??target?.sourceToughness??target?.stats?.tgh;
+  const defense=Number(defenseRaw);
+  const toughness=Number(toughRaw);
+  if(!Number.isFinite(defense)||!Number.isFinite(toughness)){
+    return {
+      ok:false,reason:'source-defense-unresolved',tier,
+      defense:defenseRaw,toughness:toughRaw,
+      sourceNpcCapBugUnemulated:true
+    };
+  }
+  const baseDefense=Math.trunc(toughness/100);
+  const rate=tier>=10?60:tier*5+5;
+  const damage=120+Math.trunc(
+    (defense*rate/100)+((defense-baseDefense)*rate/200)
+  );
+  return {
+    ok:true,tier,rate,defense,baseDefense,
+    damage:Math.max(0,Math.trunc(damage)),
+    sourceRidePetNo:-1,
+    sourceRidePetAdjustmentApplied:false,
+    sourceNpcCapBugUnemulated:true,
+    sourceNpcCapWouldUseBrokenDefenseIndex:true
+  };
+}
+
+function sourceProfessionIceMirrorExecute(prepared,name){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  if(skillId!==14)return {handled:false,reason:'battle-function-unported',skillId};
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+
+  if(sourceProfessionPlayerMagicSameSide(rawToNo)){
+    return {handled:true,noAction:true,reason:'same-side-target',skillId,functionName:prepared?.functionName||null,rawToNo};
+  }
+
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName:prepared?.functionName||null,rawToNo,multi};
+  }
+  const toNo=Math.trunc(n(multi.toNo));
+
+  // analysis_profession_parameter() raises Ice Practice before the common magic core,
+  // while this cast continues using the battle-entry Work snapshot.
+  const workSnapshot=sourceProfessionPlayerMagicProficiencyVector();
+  const icePractice=sourceProfessionSpecialSkillProficiencyByFunction(
+    state,'PROFESSION_ICE_PRACTICE',{randInclusive:cRand}
+  );
+  sourceProfessionLogProficiencyResult(icePractice);
+
+  const row=sourceProfessionSkillTemplate(skillId);
+  const animation=sourceProfessionIceMirrorAnimation(row,toNo);
+  const practice=sourceProfessionMagicPracticePower(
+    'BATTLE_COM_S_ICE_MIRROR',prepared.displayLevel,state.hp
+  );
+
+  const hits=[],wakeTargets=[];
+  for(const slot of multi.slots){
+    const target=sourceProfessionEnemyByBattleSlot(slot);
+    if(!target)continue;
+
+    // Ice Mirror uses type=2 magic dodge: Ice proficiency lowers the enemy-side luck.
+    // The pinned source has no command-specific second gate for ICE_MIRROR.
+    const magicDodge=sourceProfessionMagicEnemyDodge(target,{
+      magicType:2,command:'BATTLE_COM_S_ICE_MIRROR',
+      proficiencyVector:workSnapshot
+    });
+    if(magicDodge.miss){
+      hits.push({slot,targetUnitId:target.id,magicDodge,damage:0,magicMiss:true});
+      addLog('「'+name+'」對 '+target.name+' 的 profession magic dodge 判定落空。');
+      continue;
+    }
+
+    // Fixed C has no ICE_MIRROR branch in GET_PRACTICE, so practice power remains 0
+    // after consuming the common critical + M2 RNG. The actual attack power is replaced
+    // by the special defense-derived Ice Mirror formula below.
+    const special=sourceProfessionIceMirrorDamage(target,prepared.displayLevel);
+    if(!special.ok){
+      hits.push({slot,targetUnitId:target.id,magicDodge,special,damage:0,noAction:true});
+      addLog('「'+name+'」無法取得 '+target.name+' 的 fixed Tough/Defense 資料，本次不猜傷害。','bad');
+      continue;
+    }
+
+    // Target enemy entries currently have no modeled Player-only UN_POW_M equipment.
+    const preDamagePower=sourceProfessionMagicPreDamagePower(special.damage,0);
+
+    // Fixed type=2 GET_DAMAGE path reads Thunder proficiency/resist fields.
+    const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+      magicType:2,power:preDamagePower,command:'BATTLE_COM_S_ICE_MIRROR',
+      proficiency:workSnapshot,
+      resist:{fire:0,thunder:0,ice:0},
+      baseSuit:{fire:0,thunder:0,ice:0},
+      equipSuit:{fire:0,thunder:0,ice:0},
+      spirit:{fire:0,thunder:0,ice:0}
+    })));
+
+    // PROFESSION_MAGIC_CHANGE_STATUS always consumes its leading RAND even though
+    // ICE_MIRROR has no extra status case.
+    const unusedChangeStatusRoll=cRand(1,100);
+
+    const before=Math.max(0,Math.trunc(n(target.hp)));
+    target.hp=Math.max(0,before-damage);
+    const after=Math.max(0,Math.trunc(n(target.hp)));
+    if(before>0&&after<=0)sourceMarkEnemyDeathCredit(target,[{kind:'player'}]);
+
+    hits.push({
+      slot,targetUnitId:target.id,magicDodge,special,preDamagePower,damage,
+      hpBefore:before,hpAfter:after,unusedChangeStatusRoll,
+      sourcePracticePowerDefaultZero:true,
+      sourcePracticeVarianceRollNotConsumed:true,
+      sourceDodgeUsesIcePractice:true,
+      sourceDamageType2UsesThunderPracticeBug:true,
+      sourceNpcCapBugUnemulated:true,
+      directHpSubtract:true,noDamageSub:true,noGuardian:true,
+      noDamageReact:true,noItemCrush:true,noCounter:true
+    });
+    wakeTargets.push(target);
+    addLog('你施放「'+name+'」命中 '+target.name+'，造成 '+damage+' 傷害。',after<=0?'bad':'good');
+  }
+
+  const wakes=wakeTargets.map(target=>({
+    targetUnitId:target.id,woke:sourceProfessionMagicWakeTarget(target,name)
+  }));
+  syncEnemyTarget();
+
+  return {
+    handled:true,skillId,functionName:prepared.functionName,
+    rawToNo,toNo,multi,animation,icePractice,workSnapshot,practice,hits,wakes,
+    sourceMagicType:2,
+    sourceIcePracticeBeforePracticePower:true,
+    sourceCurrentCastUsesBattleEntryPracticeSnapshot:true,
+    sourceNoSecondDodgeGate:true,
+    sourceDamageUsesIceMirrorDefenseFormula:true,
+    sourceDamageType2UsesThunderPracticeBug:true,
+    sourcePracticePowerDefaultZero:true,
+    sourcePracticeVarianceRollNotConsumed:true,
+    sourceNpcCapBugUnemulated:true,
+    noOrdinaryCounter:true,noGuardian:true,noItemCrush:true,noDamageSub:true
+  };
+}
+
 function sourceProfessionIceArrowAnimation(row,toNo){
   const opt=String(row?.option||'').split('|');
   const no=Math.trunc(n(toNo));
@@ -6254,8 +6543,12 @@ function sourceProfessionToxinWeaponExecute(prepared,name){
 
     // Custom TOXIN branch uses normal DamageReact / real Guardian and ItemCrush,
     // but it never enters ordinary BATTLE_Attack's SUITPOISON or Counter tail.
+    // fixed BATTLE_COM_S_TOXIN_WEAPON updates caller defindex to Guardian after AttackSeq
+    // and does NOT restore original defNo before BATTLE_DamageWakeUp(); ACUPUNCTURE
+    // therefore wakes the actual Guardian target (or the original target when no Guardian exists).
+    r.sourceAcupunctureWakeTarget='actual';
     const actual=applyFriendlyEnemyHit(
-      'player','你',target,r,null,{suppressSuitPoison:true}
+      'player','你',target,r,null,{suppressSuitPoison:true,sourceAcupunctureWakeTarget:'actual'}
     );
 
     let poison=null,poisonApplied=false;
@@ -7020,6 +7313,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     return {handled:false,reason:'profession-command-not-prepared'};
   }
   const toNo=Math.trunc(n(prepared.toNo));
+  if(prepared.functionName==='PROFESSION_TRANSPOSE'){
+    const transposeRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const transposeName=String(transposeRow?.name||'移形換位');
+    return sourceProfessionTransposeExecute(prepared,transposeName);
+  }
   if(prepared.functionName==='PROFESSION_AVOID'){
     // fixed PROFESSION_avoid() prepares BATTLE_COM_S_AVOID and battle.c routes it
     // into battle_profession_assist_fun(), whose switch has NO S_AVOID case.
@@ -7135,6 +7433,16 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
     const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
     return sourceProfessionBloodExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_ICE_MIRROR'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionIceMirrorExecute(prepared,magicName);
+  }
+  if(prepared.functionName==='PROFESSION_FIRE_ENCLOSE'){
+    const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
+    const magicName=String(magicRow?.name||('Skill '+prepared.skillId));
+    return sourceProfessionFireEncloseExecute(prepared,magicName);
   }
   if(prepared.functionName==='PROFESSION_ICE_ARROW'){
     const magicRow=sourceProfessionSkillTemplate(prepared.skillId);
@@ -7303,7 +7611,11 @@ function sourceProfessionBattleSkillExecute(prepared,actor=null){
     {
       suppressSuitPoison:true,
       // fixed generic profession helper zeroes react for every direct skill except CHAIN_ATK.
-      suppressDamageReact:prepared.functionName!=='PROFESSION_CHAIN_ATK'
+      suppressDamageReact:prepared.functionName!=='PROFESSION_CHAIN_ATK',
+      // CHAIN_ATK preserves DamageReact through BATTLE_DamageSub, then rewrites defindex
+      // to attackindex before BATTLE_DamageWakeUp().
+      sourceAcupunctureWakeTarget:
+        prepared.functionName==='PROFESSION_CHAIN_ATK'?'attacker':null
     }
   );
 
@@ -7415,6 +7727,7 @@ function sourceProfessionOutOfBattleSkillPlan({
   return {
     ok:true,slot:entry.slot,skillId:entry.skillId,functionName:func,
     useFlag:Math.trunc(n(row.useFlag)),displayLevel,level10,rate,encounterFix,
+    img1:Math.trunc(n(row.img1)),img2:Math.trunc(n(row.img2)),
     nowSec,untilSec:nowSec+180,dispatchRet,
     protocolReturn:dispatchRet,
     protocolWouldReject:dispatchRet!==1,
@@ -7452,6 +7765,7 @@ function sourceProfessionOutOfBattleSkillUse({
   return Object.assign({},plan,{
     effectApplied:true,mpAfter:target.mp,
     workFix:professionEncounterFix,workUntilSec:professionEncounterUntilSec,
+    animation:{img1:plan.img1,img2:plan.img2},
     proficiency
   });
 }
@@ -8458,7 +8772,7 @@ function freshState(){
     creationPlayerStats:null,playerCreationStatsConfigured:false,playerCreationStatsLegacyUnknown:false,
     playerStats:{vital:0,str:0,tgh:0,dex:0},
     elements:null,playerElementsConfigured:false,
-    gold:30000,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:false,autoCapture:true,
+    gold:30000,mergeItemCount:0,battles:0,wins:0,mapId:null,encounterId:null,encounterCep:0,virtualWalkSteps:0,lastEncounterRoll:null,auto:true,autoCapture:true,
     petBox:[],team:Array(TEAM_SIZE).fill(null),activePetId:null,
     // fixed setup.cf + _HELP_NEWHAND: ITEM1=24114; exact item name/effect is not guessed.
     inventory:{'24114':1},
@@ -8675,22 +8989,6 @@ function normalizeState(raw){
       s.playerCreationStatsLegacyUnknown=false;
       s.playerStats={vital:0,str:0,tgh:0,dex:0};
       s.attack=0;s.defense=0;s.dex=0;s.maxHp=0;s.hp=0;
-    }
-  }
-
-  // Safety guard for the playable client: a confirmed all-zero creation build produces MaxHP=0,
-  // which is valid as a source-data edge case but not a playable character. Do not let auto-battle
-  // loop forever through defeat()/rest. Re-open creation setup instead.
-  if(s.playerCreationStatsConfigured===true && s.playerCreationStatsLegacyUnknown!==true){
-    const c=s.creationPlayerStats||{};
-    const total=['vital','str','tgh','dex'].reduce((sum,k)=>sum+Math.max(0,Math.floor(n(c[k]))),0);
-    if(total===0){
-      s.playerCreationStatsConfigured=false;
-      s.creationPlayerStats=null;
-      s.playerStats={vital:0,str:0,tgh:0,dex:0};
-      s.attack=0;s.defense=0;s.dex=0;s.maxHp=0;s.hp=0;
-      s.auto=false;
-      s._v270ZeroCreationRecovered=true;
     }
   }
 
@@ -10421,11 +10719,19 @@ function enemyMagicDamageOne(unit,targetDesc,magic,trueMagic,applyFalseMagicPena
 }
 const BATTLE_STATUS_NAMES=Object.freeze({
   poison:'中毒',deepPoison:'劇毒',paralysis:'麻痺',sleep:'睡眠',stone:'石化',drunk:'酒醉',confusion:'混亂',
-  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',thunderEnclose:'雷附體',
+  dizzy:'暈眩',entwine:'樹根纏繞',dragnet:'天羅地網',instigate:'挑撥',iceCrack:'冰爆',iceArrow:'冰箭',fireEnclose:'火附體',thunderEnclose:'雷附體',
   barrier:'魔障',weaken:'虛弱',nocast:'沉默',sars:'毒煞',oblivion:'遺忘',iceArrow:'冰箭',bloodWorms:'嗜血蠱'
 });
 const BATTLE_STATUS_INDEX=Object.freeze({poison:0,paralysis:1,sleep:2,stone:3,drunk:4,confusion:5});
-function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battlePlayerProfessionCharge=null;battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
+// Fixed battle_command.c encodes CHAR_WORKPETFALL into the client battle-entry rideflg.
+// Keep this pure/source-only: the Web runtime still has no proven CHAR_RIDEPET/ride state.
+function sourceBattleCommandRideFlag({petFall=0,foxRound=-1,becomePigSource=0}={}){
+  if(Math.trunc(Number(petFall)||0)!==1)return 0;
+  if(Math.trunc(Number(foxRound)||-1)!==-1)return -2;
+  if(Number(becomePigSource)>120)return -3;
+  return -1;
+}
+function resetBattleStatuses(){sourceDiscardBattleGetItemPool();battleStatuses=new Map();battlePetOutIds=new Set();battlePetDeathProcessedIds=new Set();battlePetFixAiSnapshots=new Map();battlePlayerDeathProcessed=false;battlePlayerDeathResult=null;battleOuterAddProfitPending=false;battlePetChargeStates=new Map();battlePetEarthRoundStates=new Map();battlePetHiddenIds=new Set();battlePetGuardIds=new Set();battlePetAcupunctureIds=new Set();battlePetPowerMods=new Map();battleMagicPetStates=new Map();battleMagicPetRoundStates=new Map();battlePetRecoveryAiIds=new Set();battlePetNoGuardStates=new Map();battlePetVaryStates=new Map();battlePlayerGuardianPetId=null;battleReverseKeys=new Set();battlePropertyKeys=new Set();battleElementWork=new Map();battleDrunkReleaseBoostKeys=new Set();battleWeakenRoundKeys=new Set();battleUltimateWork=new Map();battleUltimateFlags=new Map();battleSarsStates=new Map();battleSarsCarrierKeys=new Set();battleShootSleepStates=new Map();battleDefMagicStates=new Map();battleGetItemPool=[];battleFieldState={attr:'none',power:0,turns:0};battlePlayerProfessionHitState=null;battlePlayerProfessionStatStates={str:null,tgh:null,dex:null};battlePlayerProfessionStatRound=null;battleProfessionScapegoat=null;battlePlayerRawGuardCommand=false;battlePlayerFixedToughWork=null;battlePlayerAvoidWork=null;battlePlayerSkillDuckTurns=0;battlePlayerSkillDuckPower=0;battlePlayerWeaponFocusWork=null;battlePlayerProfessionTrap=null;battlePlayerMySkillStrPower=0;battlePlayerFixedAttackWork=null;battlePlayerAttackWork=null;battlePlayerCaptureMod=0;battleProfessionPetStrStates=new Map();battleProfessionPetStrRoundStates=new Map();battleProfessionPetStrPowerRaw=new Map();battlePlayerProfessionResistState=null;battlePlayerProfessionResistWork={fire:0,ice:0,thunder:0};battlePlayerProfessionResistMod={fire:0,ice:0,thunder:0};battlePlayerProfessionMagicProficiencyWork={fire:0,ice:0,thunder:0};battlePetProfessionOblivionStates=new Map();battleProfessionBoundaryStates=new Map();battleProfessionDoomFearStates=new Map();battlePlayerProfessionCharge=null;battleProfessionAnnexStates=new Map();battleOuterBoundaryActor=null}
 function sourceEnemySkipsPreCommandCompliance(unit){
   // fixed BATTLE_PreCommandSeq clears Guardian first, then EARTHROUND0 immediately continue;
   // no complianceParameter / BATTLE_TurnParam / BATTLE_AttReverse for the hidden actor.
@@ -10752,9 +11058,45 @@ function sourceTrackDamageSubUltimate(desc,rawDamage,beforeHp,result={}){
   }
   return {type,damage,thresholdDamage,before,after,maxHp,threshold,overkill,work,criticalRoll};
 }
+function sourceQueuePendingDeathCredit(r,unit,actors=[]){
+  if(!r||!unit||n(unit.hp)>0)return null;
+  const pending={unit,actors:Array.isArray(actors)?actors.slice():[],processed:false};
+  if(!r.sourcePendingDeathCredit){
+    r.sourcePendingDeathCredit=pending;
+  }else{
+    if(!Array.isArray(r.sourcePendingDeathCredits))r.sourcePendingDeathCredits=[];
+    r.sourcePendingDeathCredits.push(pending);
+  }
+  return pending;
+}
+function sourceFinalizePendingReactionDeathCredit(r){
+  if(!r)return null;
+  const pendings=[];
+  if(r.sourcePendingDeathCredit)pendings.push(r.sourcePendingDeathCredit);
+  if(Array.isArray(r.sourcePendingDeathCredits))pendings.push(...r.sourcePendingDeathCredits);
+  pendings.sort((a,b)=>{
+    const sa=sourceBattleStatusSlot({kind:'enemy',unit:a?.unit});
+    const sb=sourceBattleStatusSlot({kind:'enemy',unit:b?.unit});
+    if(sa<0&&sb<0)return 0;
+    if(sa<0)return 1;
+    if(sb<0)return -1;
+    return sa-sb;
+  });
+  let result=null;
+  for(const pending of pendings){
+    if(!pending||pending.processed)continue;
+    pending.processed=true;
+    const unit=pending.unit;
+    if(!unit||n(unit.hp)>0)continue;
+    const credit=sourceMarkEnemyDeathCredit(unit,pending.actors||[]);
+    if(credit)result=credit;
+  }
+  return result;
+}
 function sourceBattleFinalizeItemCrushRng(r){
   if(!r||r.dodged||r.miss||n(r.damage)<=0)return null;
   if(Object.prototype.hasOwnProperty.call(r,'sourceItemCrushDefenderRoll')){
+    sourceFinalizePendingReactionDeathCredit(r);
     return r.sourceItemCrushDefenderRoll;
   }
   // fixed _TAKE_ITEMDAMAGE:
@@ -10765,6 +11107,7 @@ function sourceBattleFinalizeItemCrushRng(r){
   // RAND requires sourced ITEM_DAMAGECRUSHE / ITEM_MAXDAMAGECRUSHE equipment data.
   const roll=cRand(0,99);
   r.sourceItemCrushDefenderRoll=roll;
+  sourceFinalizePendingReactionDeathCredit(r);
   return roll;
 }
 function sourceBattleModelAliveItemCrushRng(r,targetDesc){
@@ -11188,6 +11531,26 @@ function battleStatusDescView(desc){
   if(desc?.kind==='enemy')return enemyBattleView(desc.unit);
   return null;
 }
+function sourceBattleDamageReactActive(desc){
+  // Currently source-backed Web DamageReact states:
+  // Player TRAP, Pet ACUPUNCTURE, Enemy ACUPUNCTURE.
+  // Do not fabricate VANISH / ABSROB / REFLEC runtime state.
+  if(desc?.kind==='player')return sourceProfessionPlayerTrapActive();
+  if(desc?.kind==='pet')return !!desc.pet&&battlePetAcupunctureIds.has(desc.pet.id);
+  if(desc?.kind==='enemy')return !!desc.unit?.acupunctureActive;
+  return false;
+}
+
+function sourcePreAttackDamageReactCounterBlock(r,attackerDesc,targetDesc){
+  // fixed BATTLE_Attack() sets iRet/ContFlg FALSE before BATTLE_AttackSeq
+  // when either attacker or the ORIGINAL defender already has DamageReact.
+  if(r&&(sourceBattleDamageReactActive(attackerDesc)
+    ||(targetDesc&&sourceBattleDamageReactActive(targetDesc)))){
+    r.sourceCounterBlockedByDamageReact=true;
+  }
+  return r;
+}
+
 function battleStatusActorDesc(actor){
   if(actor?.kind==='player')return {kind:'player'};
   if(actor?.kind==='pet'){
@@ -11285,6 +11648,27 @@ function sourcePlayerSuitStatusSeq(target=state){
     mpBefore,mpAfter:Math.trunc(n(target.mp)),mpActual:Math.trunc(n(target.mp))-mpBefore
   };
 }
+function sourceProfessionFireEncloseStatusTick(desc,st){
+  const cnt=Math.max(0,Math.trunc(n(st?.turns)));
+  const sourcePower=50*cnt;
+  const damage=Math.max(0,Math.trunc(sourceProfessionMagicGetDamage({
+    magicType:1,power:sourcePower,command:'BATTLE_COM_S_FIRE_ENCLOSE',
+    proficiency:{fire:0,thunder:0,ice:0},
+    resist:{fire:0,thunder:0,ice:0},
+    baseSuit:{fire:0,thunder:0,ice:0},
+    equipSuit:{fire:0,thunder:0,ice:0},
+    spirit:{fire:0,thunder:0,ice:0}
+  })));
+  const hpBefore=battleStatusHp(desc);
+  const hpAfter=Math.max(0,hpBefore-damage);
+  return {
+    cnt,sourcePower,damage,hpBefore,hpAfter,
+    sourceType1SelfDamage:true,
+    sourceTargetOwnPracticeAndResistFields:true,
+    sourcePhysicalAuraCounterDeadPath:false
+  };
+}
+
 function processBattleStatusTurn(actor){
   const desc=battleStatusActorDesc(actor);
   if(!desc)return {skip:false,desc:null,status:null};
@@ -11296,7 +11680,10 @@ function processBattleStatusTurn(actor){
   const professionAnnex=sourceProfessionAnnexStatusSeq(desc);
   const professionDoomFear=sourceProfessionDoomFearStatusSeq(desc);
 
-  // fixed BATTLE_StatusSeq tail begins with MYSKILLSTR. ENRAGE_PET shares that raw field.
+  // fixed BATTLE_StatusSeq tail begins with MYSKILLDUCK before MYSKILLSTR.
+  // Transpose stores turn+1 in CHAR_MYSKILLDUCK; the helper decrements it on the actor's turn.
+  const professionTranspose=desc.kind==='player'?sourceProfessionTransposeStatusSeq():null;
+  // fixed BATTLE_StatusSeq tail continues with MYSKILLSTR. ENRAGE_PET shares that raw field.
   // The round WORK/FIX snapshot was already prepared before StatusSeq, so expiry here
   // affects only the next round.
   sourceProfessionPetStrStatusSeq(desc);
@@ -11424,6 +11811,21 @@ function processBattleStatusTurn(actor){
     return finish({skip:blockedBefore,desc,status:st,expired:true,drunkReleaseBoost:st.type==='drunk'});
   }
 
+  if(st.type==='fireEnclose'){
+    // fixed BATTLE_StatusSeq decrements StatusTbl first. The current cnt is therefore
+    // 3 -> 2 -> 1 across the three active ticks after the initial stored value 4.
+    const tick=sourceProfessionFireEncloseStatusTick(desc,st);
+    battleStatusSetHp(desc,tick.hpAfter);
+    const name=battleStatusDescName(desc);
+    if(tick.hpBefore>0&&tick.hpAfter<=0){
+      if(desc.kind==='enemy'&&desc.unit)sourceMarkEnemyDeathCredit(desc.unit,[{kind:'player'}]);
+      addLog(name+' 因「火附體」受到 '+tick.damage+' 傷害並倒下。','bad');
+      return finish({skip:true,desc,status:st,fireEncloseTick:tick});
+    }
+    if(tick.damage>0)addLog(name+' 因「火附體」受到 '+tick.damage+' 傷害。','bad');
+    return finish({skip:false,desc,status:st,fireEncloseTick:tick});
+  }
+
   if(st.type==='iceArrow'){
     const iceArrowTick=sourceProfessionIceArrowStatusTick(desc,st);
     const name=desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標';
@@ -11527,6 +11929,7 @@ function playerBattleView(){
     ?defenseBase:Math.trunc(n(battlePlayerFixedToughWork));
   return {
     type:'player',attack,defense:defenseBase,stone,boundaryKey:battleStatusKey(desc),
+    counterGuarding:!!battlePlayerRawGuardCommand&&!battleStatusActive(desc,'confusion'),
     fixedTough,
     fixedDex:quickBase,quick:battleDrunkQuick(desc,quickBase),
     luck:n(compliance.fixedLuck??state.luck),drunk,
@@ -11538,7 +11941,10 @@ function playerBattleView(){
     arrangePower:sourceProfessionPlayerDeflectArrangePower(compliance),
     professionAvoidActive:!!battlePlayerAvoidWork?.active,
     professionAvoidMod:Math.trunc(n(battlePlayerAvoidWork?.mod)),
+    skillDuckPower:battlePlayerSkillDuckTurns>0?Math.trunc(n(battlePlayerSkillDuckPower)):0,
+    skillDuckTurns:Math.max(0,Math.trunc(n(battlePlayerSkillDuckTurns))),
     rawGuardCommand:!!battlePlayerRawGuardCommand,
+    damageReact:sourceBattleDamageReactActive(desc)?1:0,
     suitCounter:Math.trunc(n(sourcePlayerSuitWork(state).COUNTER)),
     suitDuckPower:Math.trunc(n(sourcePlayerSuitWork(state).WDUCKPOWER)),
     canMove:battleStatusCanMove(desc),
@@ -11585,11 +11991,13 @@ function petBattleView(pet){
   const elements=frozen?.elements?Object.assign({},frozen.elements):battleElementsForDesc(desc);
   return {
     type:'pet',attack,defense,stone,boundaryKey:battleStatusKey(desc),
+    counterGuarding:sourcePlayerPetGuardAdjust(pet),
     duckBonus:n(noGuard?.duckBonus),counterBonus:n(noGuard?.counterBonus),
     fixedTough,fixedDex,workQuickBase,quick:battleDrunkQuick(desc,workQuickBase),
     luck:0,drunk,weaponType:0,weaponCritical:0,throwWeapon:false,
     canMove:battleStatusCanMove(desc),
     battleProperty:sourceBattlePropertyActive(desc),
+    damageReact:sourceBattleDamageReactActive(desc)?1:0,
     level:Math.max(1,Math.trunc(n(pet.level))),elements
   };
 }
@@ -11602,6 +12010,7 @@ function enemyBattleView(unit){
   const quickRaw=n(unit?.roundQuick??unit?.quick);
   return {
     type:'enemy',boundaryKey:battleStatusKey(desc),
+    counterGuarding:!!unit?.guardThisTurn&&!battleStatusActive(desc,'confusion'),
     attack:attackBase,
     defense:defenseRaw,stone,
     fixedDex:n(unit?.roundFixQuick??unit?.quick),
@@ -11614,6 +12023,7 @@ function enemyBattleView(unit){
     superWallPower:n(unit?.superWallTurns)>0?n(unit?.superWallPower):0,
     counterBonus:n(unit?.noGuardCounterBonus),
     duckBonus:n(unit?.noGuardDuckBonus),
+    damageReact:sourceBattleDamageReactActive(desc)?1:0,
     level:Math.max(1,Math.trunc(n(unit?.level))),elements:battleElementsForDesc(desc)
   };
 }
@@ -11759,6 +12169,10 @@ const ENEMY_SOURCE_MISSING_SKILL_IDS=new Set([
 // 582 則完全沒有 PETSKILL_SelfExplodeAttack 函式／註冊項，version.h 也標成不可開。
 // 兩者都會在 PETSKILL_getPetskillFuncPointer() 得到 NULL，PETSKILL_Use() return FALSE。
 const ENEMY_SOURCE_UNREGISTERED_SKILL_IDS=new Set([502,582]);
+// fixed PETSKILL_Fixitem(540) / PETSKILL_Inslay(572) are registered, but both
+// immediately return FALSE for an Enemy actor (not CHAR_TYPEPET), and they also
+// reject a Player/Pet caller while BATTLE_CHARMODE is not NONE.
+const ENEMY_SOURCE_BATTLE_FALSE_SKILL_IDS=new Set([540,572]);
 
 // V1.76 fixed PETSKILL_functbl exact-name audit.
 // These petskill2 rows exist, but their function strings are not registered in this build.
@@ -11767,6 +12181,15 @@ const SOURCE_PLAYER_UNREGISTERED_PETSKILL_FUNCTIONS=new Set([
   'PETSKILL_SelfExplodeAttack',
   'PETSKILL_Awaken',
   'PETSKILL_Temptation'
+]);
+// fixed PETSKILL_Merge / PETSKILL_Fixitem / PETSKILL_Inslay are registered functions,
+// but all three return FALSE during battle because their source precondition requires
+// the owner battle mode to be BATTLE_CHARMODE_NONE. Keep them as exact no-action
+// boundaries rather than pretending they are missing or inventing an in-battle UI.
+const SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS=new Set([
+  'PETSKILL_Merge',
+  'PETSKILL_Fixitem',
+  'PETSKILL_Inslay'
 ]);
 
 // V0.66：這些 PetSkill 在來源中不是 missing / unregistered；PETSKILL_Use 本身會成功，
@@ -11833,6 +12256,14 @@ function enemyChooseAction(unit){
         sourceCWaitReason:'unregistered-function'
       };
     }
+    if(ENEMY_SOURCE_BATTLE_FALSE_SKILL_IDS.has(Number(picked.skillId))){
+      return {
+        kind:'none',spec,
+        skillSlot:picked.skillSlot,skillId:picked.skillId,
+        sourceSkillRejected:true,sourceAiPickedSkill:true,
+        sourceCWaitReason:'battle-function-precondition-false'
+      };
+    }
     const meta=enemyPetSkillMeta(picked.skillId);
     if(meta?.f==='PETSKILL_Sacrifice'&&n(unit?.hp)<=n(unit?.maxHp)*.2){
       // 原 PETSKILL_Sacrifice() 在 AI 階段直接 return FALSE；
@@ -11881,7 +12312,13 @@ function enemyGuardianFor(target,attackerUnit=null){
   const guardian=livingEnemyUnits().find(u=>u.id===guardianId);
   if(!guardian||guardian===target||guardian===attackerUnit||!guardian.guardianReadyThisTurn)return null;
   const desc={kind:'enemy',unit:guardian,unitId:guardian.id};
-  if(!battleStatusCanMove(desc)||battleStatusActive(desc,'confusion'))return null;
+  // fixed BATTLE_GuardianCheck also rejects CHAR_WORKINSTIGATE > 0.
+  // This Web state is source-backed as the battle status type "instigate".
+  // Do NOT map generic chargeState to CHAR_DOOMTIME: current Enemy charge data is PETSKILL_ChargeAttack,
+  // not a source-backed profession DOOM work field.
+  if(!battleStatusCanMove(desc)
+    ||battleStatusActive(desc,'confusion')
+    ||battleStatusActive(desc,'instigate'))return null;
   return guardian;
 }
 function enemyPrepareRoundAction(unit,action){
@@ -11941,6 +12378,15 @@ function enemyPrepareRoundAction(unit,action){
   unit.roundMagicPetPower=magicPet.power;
   unit.roundTghBuffPower=magicPet.stat==='TGH'?magicPet.power:0;
   unit.roundDoomFearApplied=doomFear.active;
+
+  // fixed PETSKILL_Vary writes WORKATTACKPOWER/WORKQUICK from the current FIX snapshot;
+  // the Web keeps that source state across rounds because PreCommandSeq rebuilds FIX first.
+  const persistentVary=battlePetVaryStates.get(unit.id)||null;
+  unit.roundVaryActive=!!persistentVary;
+  if(persistentVary){
+    unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*Math.trunc(n(persistentVary.attackPct))/100);
+    unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*Math.trunc(n(persistentVary.dexPct))/100);
+  }
 
   unit.noGuardDuckBonus=0;
   unit.noGuardCounterBonus=0;
@@ -12031,6 +12477,26 @@ function enemyPrepareRoundAction(unit,action){
     const quickPlus=Math.max(0,enemySkillNumber(meta.o,/\+敏%([0-9.]+)/,0));
     unit.roundAttack=Math.trunc(sourceFixAttack*attackRemain/100);
     unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*quickPlus/100);
+    unit.counterEligibleThisTurn=false;
+  }else if(meta?.f==='PETSKILL_Vary'){
+    const petId=Number(unit?.petId);
+    if(Number.isFinite(petId)&&SOURCE_VARY_WOLF_PETIDS.has(Math.trunc(petId))){
+      const attackPct=Math.trunc(enemySignedSkillPercent(meta.o,'攻%'));
+      const dexPct=Math.trunc(enemySignedSkillPercent(meta.o,'敏%'));
+      battlePetVaryStates.set(unit.id,{
+        skillId:action?.skillId??null,
+        attackPct,dexPct,workTurn:0,sourceImage:101428
+      });
+      unit.roundAttack=sourceFixAttack+Math.trunc(sourceFixAttack*attackPct/100);
+      unit.roundQuick=sourceFixQuick+Math.trunc(sourceFixQuick*dexPct/100);
+      unit.roundVaryActive=true;
+      unit.sourceVaryRejected=false;
+    }else{
+      // fixed PETSKILL_Vary returns FALSE before changing any WORK/COM state.
+      // Keep any previous source-backed Vary state intact instead of inventing one.
+      unit.sourceVaryRejected=true;
+      unit.roundVaryActive=!!persistentVary;
+    }
     unit.counterEligibleThisTurn=false;
   }else if(meta?.f==='PETSKILL_Sars'){
     unit.counterEligibleThisTurn=true;
@@ -12305,7 +12771,7 @@ function enemyActorTarget(actor,unit){
   const commandTarget=enemyActorCommandTarget(actor);
   return sourceEnemyTargetCheck(commandTarget)?commandTarget:sourceEnemyDefaultAttacker();
 }
-function battleDuckChance(attacker,defender){
+function battleDuckChance(attacker,defender,kawashiPara=.02){
   // fixed BATTLE_DuckCheck：At_Dex / Df_Dex / Df_Luck 都是 int。
   // 因此 *=0.8 / *=0.6 的 compound assignment 會立即截斷，不能讓 JS 浮點一路帶到 sqrt。
   let atDex=Math.trunc(n(attacker?.fixedDex??attacker?.quick));
@@ -12318,7 +12784,8 @@ function battleDuckChance(attacker,defender){
   let big,small,wari;
   if(dfDex>=atDex){big=dfDex;small=atDex;wari=1}
   else{big=atDex;small=dfDex;wari=big<=0?0:small/big}
-  let work=(big-small)/.02;if(work<=0)work=0;
+  const divisor=Number.isFinite(Number(kawashiPara))&&Number(kawashiPara)>0?Number(kawashiPara):.02;
+  let work=(big-small)/divisor;if(work<=0)work=0;
   let per=Math.sqrt(work)*wari+dfLuck;
   per*=100;
   if(per>7500)per=7500;
@@ -12410,6 +12877,16 @@ function battleGuardAdjust(damage){
   return Math.trunc(damage);
 }
 function sourceBattleDuckTotal(attacker,defender,options={}){
+  // fixed BATTLE_DuckCheck：
+  // gKawashiPara 預設 0.02；若 defender 的 CHAR_WORKBATTLECOM1 == BATTLE_COM_JYUJYUTU，
+  // 則先改成 0.027，再用它計算 (Big-Small)/gKawashiPara。
+  // Web 不從技能名稱猜 command；只有 caller 明確帶 sourceDefenderBattleCommand，
+  // 或 defender 本身已有 source-backed battleCommand 時，才進入 JYUJYUTU 分支。
+  const sourceDefenderBattleCommand=String(
+    options.sourceDefenderBattleCommand??defender?.battleCommand??''
+  );
+  const kawashiPara=sourceDefenderBattleCommand==='BATTLE_COM_JYUJYUTU'?0.027:.02;
+
   // 原 BATTLE_DuckCheck 的實際順序：
   // base -> gBattleDuckModyfy -> 酒醉 -> BOW +20 -> NoGuard -> BOW +20 -> ×100 / cap 75%。
   // fixed ref 裡 BOW +20 明確重複兩次；V0.73 保留這個來源 bug，不自行去重。
@@ -12417,7 +12894,7 @@ function sourceBattleDuckTotal(attacker,defender,options={}){
   const duckWeaponType=Number.isFinite(sourceOuterWeaponType)
     ?Math.trunc(sourceOuterWeaponType)
     :Math.trunc(n(attacker?.weaponType));
-  let duck=battleDuckChance(attacker,defender);
+  let duck=battleDuckChance(attacker,defender,kawashiPara);
   duck+=n(options.duckBonusPercent)*100;
   if(attacker?.drunk)duck+=cRand(20,30)*100;
   if(duckWeaponType===4)duck+=20*100;
@@ -12473,17 +12950,21 @@ function sourceBattleArrangeCheck(defender,options={}){
 }
 function resolveNormalAttack(attacker,defender,options={}){
   const guarding=!!options.guarding;
-  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / immobility, while the
-  // separate suit-dodge branch below still executes unless this is COMBO/already checked.
+  // fixed BATTLE_DuckCheck returns FALSE immediately for GUARD / DamageReact / immobility,
+  // while the separate suit-dodge branch below still executes unless this is COMBO/already checked.
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
-  if(!disableDodge&&n(defender?.skillDuckPower)>0){
+  const sourceDamageReactBlocksDuck=Math.trunc(n(defender?.damageReact))>0;
+  // BATTLE_DuckCheck checks DamageReact before both CHAR_MYSKILLDUCK and ordinary DuckCheck.
+  // Do not consume either Duck RNG while a source-backed DamageReact is active; _SUIT_ADDPART3
+  // remains independent below, matching the fixed AttackSeq second-dodge branch.
+  if(!disableDodge&&!sourceDamageReactBlocksDuck&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
       return {damage:0,dodged:true,critical:false,miss:false,guarded:guarding,skillDuck:true,skillDuckPower:power,skillDuckRoll:roll};
     }
   }
-  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
+  const duck=(disableDodge||sourceDamageReactBlocksDuck)?0:sourceBattleDuckTotal(attacker,defender,options);
   // 原 BATTLE_DuckCheck：防禦中直接 return FALSE，不進普通閃避判定。
   if(!disableDodge&&cRand(1,10000)<=duck){
     const professionDodge=defender?.type==='player'?sourceProfessionPlayerNormalDodgeEvent(state):null;
@@ -12632,43 +13113,66 @@ function battleCounterCheck(attacker,defender){
   return {success:cRand(1,10000)<=rollPer,raw};
 }
 function counterScaledResult(attacker,defender){
-  const r=resolveNormalAttack(attacker,defender);
+  // fixed BATTLE_Counter() calls BATTLE_AttackSeq() with opt=-1, so the counter hit
+  // honors current GUARD GuardAdjust and also starts with iRet=FALSE whenever either
+  // current counter participant has source-backed DamageReact.
+  const r=resolveNormalAttack(attacker,defender,{
+    guarding:!!defender?.counterGuarding
+  });
+  if(Number(attacker?.damageReact)>0||Number(defender?.damageReact)>0){
+    r.sourceCounterBlockedByDamageReact=true;
+  }
   if(!r.dodged&&!r.miss&&r.damage>0){
     r.damage=Math.trunc(r.damage*.75);
     if(r.damage<1)r.damage=1;
   }
   return r;
 }
-function battleConfusionSideTargets(side,attackerDesc){
-  const list=[];
-  if(side===0){
-    if(state.hp>0)list.push({kind:'player'});
-    const pet=activePet();
-    if(pet&&petIsBattleActive(pet))list.push({kind:'pet',pet,petId:pet.id});
-  }else{
-    for(const unit of targetableEnemyUnits())list.push({kind:'enemy',unit,unitId:unit.id});
-  }
+function battleConfusionSideTargets(side,attackerDesc,startPos=0){
+  const out=[];
   const selfKey=battleStatusKey(attackerDesc);
-  return list.filter(x=>battleStatusKey(x)!==selfKey);
+  let pos=Math.trunc(n(startPos));
+  for(let lop=0;lop<10;lop++){
+    if(++pos>=10)pos=0;
+    const slot=(side?10:0)+pos;
+    const target=sourceBattleStatusDescFromSlot(slot);
+    if(!target||battleStatusKey(target)===selfKey)continue;
+    if(!battleStatusDescAlive(target))continue;
+    out.push({slot,target});
+  }
+  return out;
 }
 function battleConfusionFallbackTarget(attackerDesc){
-  if(attackerDesc?.kind==='enemy'){
-    const chosen=enemyChooseTarget(attackerDesc.unit);
-    if(chosen?.kind==='pet'&&chosen.pet)return {kind:'pet',pet:chosen.pet,petId:chosen.pet.id};
-    if(chosen?.kind==='player')return {kind:'player'};
-    return null;
-  }
-  const unit=targetEnemyUnit();
-  return unit?{kind:'enemy',unit,unitId:unit.id}:null;
+  // Fixed BATTLE_StatusSeq writes COM2=-1 when the chosen side has no valid target.
+  // BATTLE_TargetAdjust then calls BATTLE_DefaultAttacker(1-myside), consuming a fresh
+  // RAND(0,cnt-1). Reuse the same source-backed default-target owner instead of inventing
+  // a second fallback selection rule.
+  return sourceProfessionInstigateDefaultTarget(attackerDesc);
 }
 function battleConfusionChooseTarget(attackerDesc){
-  // 原 BATTLE_StatusSeq 先 RAND(0,1) 選戰場其中一側，再從該側隨機起點循環找存活目標並排除自己。
-  // 放置版沒有 0..9 的實體站位，因此保留「先選側」語意，再在該側存活單位中均勻抽一名。
+  // fixed CHAR_WORKCONFUSION StatusSeq:
+  // RAND(0,1) side -> RAND(0,9) starting position -> ++pos circular scan for the
+  // first TargetCheck-valid entry other than self. There is NO candidate-list RNG.
   const side=cRand(0,1);
-  const candidates=battleConfusionSideTargets(side,attackerDesc);
-  if(candidates.length)return {target:candidates[cRand(0,candidates.length-1)],side,fallback:false};
-  // 原碼找不到該側目標會把 COM2 設 -1，之後 BATTLE_TargetAdjust 退回正常敵對側目標。
-  return {target:battleConfusionFallbackTarget(attackerDesc),side,fallback:true};
+  const startPos=cRand(0,9);
+  const scanned=battleConfusionSideTargets(side,attackerDesc,startPos);
+  if(scanned.length){
+    return {
+      target:scanned[0].target,side,startPos,
+      targetSlot:scanned[0].slot,
+      fallback:false
+    };
+  }
+  // Empty selected side: COM2=-1, then BATTLE_TargetAdjust performs the opposite-side
+  // BATTLE_DefaultAttacker RNG.
+  const fallback=battleConfusionFallbackTarget(attackerDesc);
+  return {target:fallback,side,startPos,targetSlot:-1,fallback:true};
+}
+function sourceBattleSameSideDesc(attackerDesc,targetDesc){
+  const attackerSlot=sourceBattleStatusSlot(attackerDesc);
+  const targetSlot=sourceBattleStatusSlot(targetDesc);
+  if(attackerSlot<0||targetSlot<0)return false;
+  return (attackerSlot<10)===(targetSlot<10);
 }
 function battleConfusionGuarding(targetDesc,options){
   if(battleStatusActive(targetDesc,'confusion'))return false;
@@ -12685,8 +13189,13 @@ function sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r,{counter=fal
     return {triggered:false};
   }
 
+  // fixed BATTLE_Attack sets ContFlg/iRet FALSE from BATTLE_GetDamageReact
+  // BEFORE BATTLE_DamageSub runs. Preserve that pre-DamageSub boundary even when
+  // DamageSub later consumes the reaction or a throw weapon suppresses the effect.
+  r.sourceCounterBlockedByDamageReact=true;
+
   // fixed BATTLE_DamageSub: BATTLE_GetDamageReact may return ACUPUNCTURE, but a throw weapon
-  // forcibly rewrites pRefrect back to NONE. The flag is therefore NOT consumed by throws.
+  // forcibly rewrites pRefrect back to NONE. The pre-existing Counter block remains.
   const attackerView=battleStatusDescView(attackerDesc);
   if(attackerView?.throwWeapon){
     return {triggered:false,throwWeaponBlocked:true};
@@ -12728,7 +13237,10 @@ function sourceFinishAcupunctureReaction(reaction){
     attackerDesc,reflectedDamage,beforeAttacker,reflectResult
   );
   if(beforeAttacker>0&&reaction.attackerAfter<=0&&attackerDesc?.kind==='enemy'&&attackerDesc.unit){
-    sourceMarkEnemyDeathCredit(attackerDesc.unit,[targetDesc]);
+    // fixed BATTLE_Counter/BATTLE_Combo caller order: death is flagged before returning,
+    // but BATTLE_AddProfit is outside the attack routine and ItemCrush runs first.
+    // Keep reward ownership pending until the caller's ItemCrush boundary completes.
+    r.sourcePendingDeathCredit={unit:attackerDesc.unit,actors:[targetDesc],processed:false};
   }
 
   // BATTLE_Counter has a different WakeUp target from primary BATTLE_Attack:
@@ -12767,6 +13279,7 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   const attackerName=battleStatusDescName(attackerDesc);
   const targetName=battleStatusDescName(targetDesc);
   const action=counter?'反擊':(confusion?'因混亂攻擊':'攻擊');
+  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,targetDesc);
 
   // fixed BATTLE_AttackSeq() 在 DuckCheck / Critical / Damage 前就處理主人打自己的 Pet：
   // CHAR_PetAddVariableAi(defindex, AI_FIX_SEKKAN), AI_FIX_SEKKAN = -2*100。
@@ -12798,8 +13311,17 @@ function battleApplyPhysicalHit(attackerDesc,targetDesc,r,{counter=false,confusi
   battleStatusSetHp(targetDesc,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
-  // Primary BATTLE_Attack restores the original defender before WakeUp; Counter does not.
-  if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(targetDesc,r.damage);
+  // fixed primary BATTLE_Attack() source order:
+  // ACUPUNCTURE temporarily redirects defindex to the attacker, then explicitly restores
+  // the ORIGINAL defender before BATTLE_DamageWakeUp(); only after WakeUp does the source
+  // switch defindex back to the attacker for later death/status/item-crush handling.
+  // Counter is different: BATTLE_Counter() keeps the DamageSub ACUPUNCTURE redirect through
+  // its WakeUp step, and sourceFinishAcupunctureReaction() already models that attacker wake.
+  // For Enemy->Player Guardian paths, the resolver preserves originalTargetDesc explicitly.
+  // fixed primary BATTLE_Attack() still restores defindex to the original defNo before WakeUp,
+  // so prefer that source-backed descriptor whenever ACUPUNCTURE actually triggered.
+  const wakeDesc=acupuncture.triggered?(r?.originalTargetDesc||targetDesc):targetDesc;
+  if(!(counter&&acupuncture.triggered))battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=(!counter&&!suppressSuitPoison)
     ?sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r):null;
   if(suitPoison)r.suitPoison=suitPoison;
@@ -12822,7 +13344,8 @@ function battleConfusionCounterEligible(desc,options,forcedAttackerKey){
 }
 function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,options={}){
   if(!attackerDesc||!targetDesc||primaryResult?.critical||primaryResult?.guarded
-    ||primaryResult?.guardian||primaryResult?.sourceCounterBlockedByTrap)return;
+    ||primaryResult?.guardian||primaryResult?.sourceCounterBlockedByTrap
+    ||primaryResult?.sourceCounterBlockedByDamageReact)return;
   const forcedAttackerKey=battleStatusKey(attackerDesc);
   let counterer=targetDesc,target=attackerDesc;
   for(let depth=0;depth<5;depth++){
@@ -12837,6 +13360,7 @@ function resolveConfusionCounterChain(attackerDesc,targetDesc,primaryResult,opti
     const r=counterScaledResult(countererView,targetView);
     battleApplyPhysicalHit(counterer,target,r,{counter:true});
     if(!battleStatusDescAlive(counterer)||!battleStatusDescAlive(target))break;
+    if(r.sourceCounterBlockedByDamageReact||r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
 
     const next=counterer;
@@ -13125,17 +13649,25 @@ function performConfusionAttack(actor,statusTurn,options={}){
   const attackerView=battleStatusDescView(attackerDesc);
   if(!attackerView)return true;
 
-  // V1.75: StatusSeq has already rewritten COM1/COM2 before BATTLE_GetAttackCount.
-  // A Player holding an indirect weapon therefore follows the same BOW/BOOMERANG/
-  // BOUNDTHROW/BREAKTHROW command path even when confusion pointed COM2 back to side 0.
-  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
-    return sourcePerformPlayerRangedConfusionAttack(actor,pick,options)||true;
-  }
-
   const targetDesc=pick.target;
   if(!targetDesc||!battleStatusDescAlive(targetDesc)){
     addLog(battleStatusDescName(attackerDesc)+' 受到混亂影響改為普通攻擊，但沒有可攻擊的目標。');
     return true;
+  }
+
+  // fixed battle.c BATTLE_COM_S_CHAOS:
+  // _PREVENT_TEAMATTACK runs before the normal/ranged AttackSeq branch.
+  // Keep the already-consumed StatusSeq target RNG, but do not consume Duck/Critical/Damage RNG.
+  if(sourceBattleSameSideDesc(attackerDesc,targetDesc)){
+    addLog(battleStatusDescName(attackerDesc)+' 混亂選到同隊目標；依原版同隊攻擊限制，本次不執行攻擊。');
+    return true;
+  }
+
+  // V1.75: StatusSeq has already rewritten COM1/COM2 before BATTLE_GetAttackCount.
+  // A Player holding an indirect weapon therefore follows the same BOW/BOOMERANG/
+  // BOUNDTHROW/BREAKTHROW command path only after the same-side gate has passed.
+  if(attackerDesc.kind==='player'&&attackerView.throwWeapon){
+    return sourcePerformPlayerRangedConfusionAttack(actor,pick,options)||true;
   }
 
   const defenderView=battleStatusDescView(targetDesc);
@@ -13161,7 +13693,8 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
   // 原 BATTLE_Attack()：會心／死亡會把 ContFlg 關掉；MISS、DODGE、NORMAL 仍可進反擊。
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
     ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand
-    ||primaryResult?.sourceCounterBlockedByTrap)return;
+    ||primaryResult?.sourceCounterBlockedByTrap
+    ||primaryResult?.sourceCounterBlockedByDamageReact)return;
 
   let counterer=primaryAttackerKind==='player'?'enemy':'player';
   let target=primaryAttackerKind;
@@ -13222,7 +13755,7 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
     sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(state.hp<=0||unit.hp<=0)break;
-    if(r.sourceCounterBlockedByTrap)break;
+    if(r.sourceCounterBlockedByDamageReact||r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
 
     const next=counterer;
@@ -13232,8 +13765,19 @@ function resolvePlayerEnemyCounterChain(primaryAttackerKind,unit,primaryResult){
 }
 function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,options={}){
   if(!pet||!unit||!enemy||!petIsBattleActive(pet)||unit.hp<=0)return;
+  // fixed BATTLE_Attack seeds iRet=FALSE when either attacker or ORIGINAL defindex
+  // already has a positive DamageReact before AttackSeq. Current source-backed Web
+  // DamageReact is Acupuncture, so mirror only that proven boundary here.
+  const attackerHasDamageReact=primaryAttackerKind==='pet'
+    ?battlePetAcupunctureIds.has(pet.id)
+    :!!unit.acupunctureActive;
+  const targetHasDamageReact=primaryAttackerKind==='pet'
+    ?!!unit.acupunctureActive
+    :battlePetAcupunctureIds.has(pet.id);
+  if(attackerHasDamageReact||targetHasDamageReact)return;
   if(primaryResult?.critical||primaryResult?.guarded||primaryResult?.guardian
-    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand)return;
+    ||primaryResult?.playerGuardian||primaryResult?.sourcePetGuardCommand
+    ||primaryResult?.sourceCounterBlockedByDamageReact)return;
   let counterer=primaryAttackerKind==='enemy'?'pet':'enemy';
   let target=primaryAttackerKind==='enemy'?'enemy':'pet';
   const maxDepth=Number.isFinite(Number(options.maxDepth))?clamp(Math.trunc(Number(options.maxDepth)),0,5):5;
@@ -13277,6 +13821,7 @@ function resolvePetEnemyCounterChain(primaryAttackerKind,pet,unit,primaryResult,
     sourceProcessBattleDeathsAtAddProfit();
     if(enemy)syncEnemyTarget();
     if(!petIsBattleActive(pet)||unit.hp<=0)break;
+    if(r.sourceCounterBlockedByDamageReact||r.sourceCounterBlockedByTrap)break;
     if(r.miss||r.critical)break;
     const next=counterer;counterer=target;target=next;
   }
@@ -13287,33 +13832,23 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
   const originalGuarding=Object.prototype.hasOwnProperty.call(options,'guarding')
     ?!!options.guarding
     :(!!target.guardThisTurn&&!battleStatusActive(targetDesc,'confusion'));
-  const disableDodge=originalGuarding||!!options.disableDodge;
   const originalView=enemyBattleView(target);
-  if(!disableDodge&&originalView?.canMove!==false&&n(originalView?.skillDuckPower)>0){
-    const power=Math.trunc(n(originalView.skillDuckPower));
-    const roll=cRand(0,99);
-    if(roll<=power){
-      return {
-        damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
-        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,
-        actualTarget:target,originalTarget:target
-      };
-    }
-  }
-  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,originalView,options);
-  if(!disableDodge){
-    if(cRand(1,10000)<=duck){
-      return {
-        damage:0,dodged:true,critical:false,miss:false,guarded:originalGuarding,
-        duckRaw:duck,actualTarget:target,originalTarget:target
-      };
-    }
-  }
 
-  // 原 BATTLE_AttackSeq：先讓原目標做 DuckCheck，成功命中後才 GuardianCheck。
-  // Guardian 接手後用 Guardian 自身防禦／會心／屬性結算，且不再做第二次閃避。
-  // 原 BATTLE_GuardianCheck：攻擊者使用 BOW／BOOMERANG／BOUNDTHROW／BREAKTHROW 時，
-  // 忠犬／Guardian 直接無法代擋。這對混亂後 Enemy 打同側 Enemy 也同樣成立。
+  // fixed BATTLE_AttackSeq: original target completes first-dodge phase before GuardianCheck.
+  // V2.98 routes the phase through the shared DamageReact-aware adapter.
+  const dodge=sourceInitialDodgeOnly(attacker,originalView,Object.assign({},options,{
+    guarding:originalGuarding,
+    disableDodge:originalGuarding||!!options.disableDodge
+  }));
+  if(dodge.dodged){
+    dodge.actualTarget=target;
+    dodge.originalTarget=target;
+    return dodge;
+  }
+  const duck=dodge.duckRaw;
+
+  // Guardian takes over only after the original target has completed the first-dodge phase.
+  // Guardian resolution still uses disableDodge + skipSuitDodge to avoid a second suit roll.
   const guardian=attacker?.throwWeapon?null:enemyGuardianFor(target,options.attackerUnit||null);
   const actual=guardian||target;
   const actualDesc={kind:'enemy',unit:actual,unitId:actual.id};
@@ -13321,23 +13856,40 @@ function resolveAttackToEnemyWithGuardian(attacker,target,options={}){
     ?(!!actual.guardThisTurn&&!battleStatusActive(actualDesc,'confusion'))
     :originalGuarding;
   const r=resolveNormalAttack(attacker,enemyBattleView(actual),Object.assign({},options,{
-    guarding:actualGuarding,disableDodge:true
+    guarding:actualGuarding,disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=duck;
   r.actualTarget=actual;
   r.originalTarget=target;
   if(guardian){
-    // BATTLE_AttackSeq 的 Guardian 分支即使原計算傷害為 0，也會強制 NORMAL / damage=1。
     if(r.damage<=0){r.damage=1;r.miss=false}
     r.guardian=guardian;
     r.protectedTarget=target;
   }
+
+  // fixed BATTLE_Attack() checks DamageReact on the ORIGINAL defender before
+  // BATTLE_AttackSeq() / GuardianCheck. If Guardian later substitutes that defender,
+  // the pre-AttackSeq iRet/ContFlg=FALSE boundary must survive the substitution.
+  // Do not re-run or synthesize a second DamageReact check here; only preserve the
+  // already-proven original-target Counter gate.
+  if(sourceBattleDamageReactActive(targetDesc)){
+    r.sourceCounterBlockedByDamageReact=true;
+  }
+
   return r;
 }
 function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=null,options={}){
   const actual=r?.actualTarget||target;
   if(!actual)return null;
   const style=attackerKind==='pet'?'pet':(r.critical?'good':'');
+  const attackerDesc=attackerKind==='pet'
+    ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
+    :{kind:'player'};
+  const originalTargetDesc={kind:'enemy',unit:target,unitId:target.id};
+  // fixed BATTLE_Attack checks DamageReact before Dodge/Miss, so this must precede
+  // both early returns. The original target is used here; Guardian substitution happens later.
+  sourcePreAttackDamageReactCounterBlock(r,attackerDesc,originalTargetDesc);
+  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
   if(r.dodged){
     addLog(target.name+' 閃避了 '+attackerName+' 的攻擊。',attackerKind==='pet'?'pet':'');
     return target;
@@ -13346,11 +13898,6 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
     addLog(attackerName+' 攻擊 '+target.name+'，但沒有造成傷害。',attackerKind==='pet'?'pet':'');
     return actual;
   }
-
-  const attackerDesc=attackerKind==='pet'
-    ?{kind:'pet',pet:state.petBox.find(p=>p.id===attackerPetId)||null,petId:attackerPetId}
-    :{kind:'player'};
-  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
   const acupuncture=options.suppressDamageReact
     ?{triggered:false,suppressed:true}
     :sourcePrepareAcupunctureReaction(attackerDesc,targetDesc,r);
@@ -13358,7 +13905,20 @@ function applyFriendlyEnemyHit(attackerKind,attackerName,target,r,attackerPetId=
   actual.hp=Math.max(0,before-r.damage);
   sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
   sourceFinishAcupunctureReaction(acupuncture);
-  battleStatusWakeOnDamage(targetDesc,r.damage);
+  // Caller-sensitive fixed-C rule:
+  // primary BATTLE_Attack() restores defindex to the ORIGINAL defNo before WakeUp;
+  // special BATTLE_S_AttackDamage-family callers and CHAIN_ATK instead keep defindex on
+  // the attacker after DamageSub. Never globalize one WakeUp target across callers.
+  const wakeTarget=acupuncture.triggered
+    ?(options.sourceAcupunctureWakeTarget==='attacker'||r?.sourceAcupunctureWakeTarget==='attacker'
+      ?'attacker'
+      :(options.sourceAcupunctureWakeTarget==='actual'||r?.sourceAcupunctureWakeTarget==='actual'
+        ?'actual':'original'))
+    :null;
+  const wakeDesc=wakeTarget==='attacker'
+    ?attackerDesc
+    :(wakeTarget==='actual'?targetDesc:(wakeTarget==='original'?originalTargetDesc:targetDesc));
+  battleStatusWakeOnDamage(wakeDesc,r.damage);
   const suitPoison=options.suppressSuitPoison
     ?null:sourcePlayerSuitPoisonAfterPhysicalHit(attackerDesc,targetDesc,r);
   if(suitPoison)r.suitPoison=suitPoison;
@@ -13396,31 +13956,44 @@ function petAttackResult(pet,target=targetEnemyUnit()){
 function sourceInitialDodgeOnly(attacker,defender,options={}){
   const guarding=!!options.guarding;
   const disableDodge=guarding||!!options.disableDodge||defender?.canMove===false;
+  // fixed BATTLE_DuckCheck: target DamageReact returns FALSE before MYSKILLDUCK / ordinary
+  // DuckCheck, but the independent _SUIT_ADDPART3 dodge still executes afterward.
+  const sourceDamageReactBlocksDuck=Math.trunc(n(defender?.damageReact))>0;
 
-  if(!disableDodge&&n(defender?.skillDuckPower)>0){
+  if(!disableDodge&&!sourceDamageReactBlocksDuck&&n(defender?.skillDuckPower)>0){
     const power=Math.trunc(n(defender.skillDuckPower));
     const roll=cRand(0,99);
     if(roll<=power){
       return {
         dodged:true,damage:0,critical:false,miss:false,guarded:guarding,
-        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,duckRaw:0
+        skillDuck:true,skillDuckPower:power,skillDuckRoll:roll,duckRaw:0,
+        sourceDamageReactBlocksDuck:false
       };
     }
   }
 
-  const duck=disableDodge?0:sourceBattleDuckTotal(attacker,defender,options);
-  if(!disableDodge&&cRand(1,10000)<=duck){
+  const duck=(disableDodge||sourceDamageReactBlocksDuck)?0:sourceBattleDuckTotal(attacker,defender,options);
+  if(!disableDodge&&!sourceDamageReactBlocksDuck&&cRand(1,10000)<=duck){
     const professionDodge=defender?.type==='player'?sourceProfessionPlayerNormalDodgeEvent(state):null;
-    return {dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,professionDodge};
+    return {
+      dodged:true,damage:0,critical:false,miss:false,guarded:guarding,
+      duckRaw:duck,professionDodge,sourceDamageReactBlocksDuck:false
+    };
   }
+
+  // Keep the independent suit dodge outside the DamageReact gate.
   const suitDuck=sourceSuitDuckCheck(defender,options);
   if(suitDuck.dodged){
     return {
       dodged:true,damage:0,critical:false,miss:false,guarded:guarding,duckRaw:duck,
-      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll
+      suitDuck:true,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll,
+      sourceDamageReactBlocksDuck
     };
   }
-  return {dodged:false,duckRaw:duck,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll};
+  return {
+    dodged:false,duckRaw:duck,suitDuckPower:suitDuck.power,suitDuckRoll:suitDuck.roll,
+    sourceDamageReactBlocksDuck
+  };
 }
 // fixed BATTLE_AttackSeq() Guardian caller audit (V1.12):
 // - real substitution: BATTLE_Attack, BATTLE_Attack_FIREKILL, BATTLE_BattleModel_ATTACK,
@@ -13448,7 +14021,12 @@ function sourcePlayerGuardianPetForAttack(unit){
 function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null){
   const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
   const original=playerBattleView();
+  const attackerDesc={kind:'enemy',unit,unitId:unit.id};
+  const originalTargetDesc={kind:'player'};
+  const preReact={sourceCounterBlockedByDamageReact:false};
+  sourcePreAttackDamageReactCounterBlock(preReact,attackerDesc,originalTargetDesc);
   const dodge=sourceInitialDodgeOnly(attacker,original,options);
+  if(preReact.sourceCounterBlockedByDamageReact)dodge.sourceCounterBlockedByDamageReact=true;
   if(dodge.dodged){
     dodge.originalTargetDesc={kind:'player'};
     dodge.actualTargetDesc={kind:'player'};
@@ -13466,6 +14044,7 @@ function resolveEnemyDirectAttackToPlayer(unit,options={},attackerOverride=null)
     disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
+  if(preReact.sourceCounterBlockedByDamageReact)r.sourceCounterBlockedByDamageReact=true;
   r.originalTargetDesc={kind:'player'};
   r.actualTargetDesc=actualDesc;
 
@@ -14124,37 +14703,13 @@ function enemyWeaponApplyHit(unit,target,options={},attackOptions={}){
   }
 
   if(target.kind!=='player'||state.hp<=0)return null;
-  const r=enemyAttackResult(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
-  const targetDesc={kind:'player'};
-  const beforeApplyResult=beforeApply?beforeApply({target:'player',targetDesc,r},target):null;
-  const trap=sourcePrepareProfessionTrapReaction(
-    {kind:'enemy',unit,unitId:unit.id},targetDesc,r
+  const r=resolveEnemyDirectAttackToPlayer(unit,Object.assign({},attackOptions,{guarding:playerGuarding}));
+  const targetDesc=enemyDirectActualTarget({kind:'player'},r)||{kind:'player'};
+  const beforeApplyResult=beforeApply?beforeApply({target:'player',actualTargetDesc:targetDesc,r},target):null;
+  battleApplyPhysicalHit(
+    {kind:'enemy',unit,unitId:unit.id},targetDesc,r,
+    {deferItemCrush:true,deferAddProfit:true}
   );
-  if(trap.triggered){
-    sourceFinishProfessionTrapReaction(trap);
-    sourceLogProfessionTrapReaction(trap);
-    return {target:'player',targetDesc:{kind:'enemy',unit,unitId:unit.id},r,beforeApply:beforeApplyResult,trap};
-  }
-  if(playerGuarding){
-    if(r.damage<=0)addLog('你防住了 '+unit.name+' 的攻擊，沒有受到傷害。','good');
-    else{
-      const sourceUltimateBefore=n(state.hp);
-    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
-    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
-      battleStatusWakeOnDamage({kind:'player'},r.damage);
-      addLog('防禦中：'+unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-    }
-  }else if(r.dodged){
-    addLog('你閃避了 '+unit.name+' 的攻擊。','good');
-  }else if(r.miss){
-    addLog(unit.name+' 的攻擊沒有造成傷害。');
-  }else{
-    const sourceUltimateBefore=n(state.hp);
-    state.hp=Math.max(0,sourceUltimateBefore-r.damage);
-    sourceTrackDamageSubUltimate({kind:'player'},r.damage,sourceUltimateBefore,r);
-    battleStatusWakeOnDamage({kind:'player'},r.damage);
-    addLog(unit.name+(r.critical?' 會心一擊 ':' 攻擊 ')+r.damage+'。',state.hp<=0?'bad':'');
-  }
   return {target:'player',targetDesc,r,beforeApply:beforeApplyResult};
 }
 function sourceBreakthrowParalysis(unit,hit){
@@ -14517,7 +15072,10 @@ function enemyApplySkillHit(unit,chosen,r,label,options={}){
       pet.hp=Math.max(0,before-r.damage);
       sourceTrackDamageSubUltimate(targetDesc,r.damage,before,r);
       sourceFinishAcupunctureReaction(acupuncture);
-      battleStatusWakeOnDamage(targetDesc,r.damage);
+      const wakeDesc=acupuncture.triggered&&r?.sourceAcupunctureWakeTarget==='attacker'
+        ?{kind:'enemy',unit,unitId:unit.id}
+        :targetDesc;
+      battleStatusWakeOnDamage(wakeDesc,r.damage);
       addLog(unit.name+' 的'+label+(r.critical?'會心 ':'')+'命中 '+pet.name+'，造成 '+r.damage+' 傷害。',pet.hp<=0?'bad':'');
       sourceLogAcupunctureReaction(acupuncture);
       if(before>0&&pet.hp<=0)addLog(pet.name+' 倒下了，本場後續回合不再行動。','bad');
@@ -14914,8 +15472,50 @@ function resolveEnemyAttackSeqBugToPlayer(unit,options={},attackerOverride=null)
     r.guardianPetId=guardian.id;
     r.guardianSourceBug=String(options.guardianSourceBug||'BATTLE_S_AttackDamage-defindex-not-updated');
   }
+  // Special BATTLE_S_AttackDamage-family callers keep post-DamageSub defindex on attacker
+  // for ACUPUNCTURE WakeUp instead of restoring the original Player/Pet target.
+  r.sourceAcupunctureWakeTarget='attacker';
   return r;
 }
+function resolveEnemyAttackSeqBugToPet(unit,pet,options={},attackerOverride=null){
+  const attacker=Object.assign({},enemyBattleView(unit),attackerOverride||{});
+  const original=petBattleView(pet);
+  if(!original)return null;
+  const guarding=Object.prototype.hasOwnProperty.call(options,'guarding')?!!options.guarding:false;
+  const dodge=sourceInitialDodgeOnly(attacker,original,Object.assign({},options,{guarding}));
+  if(dodge.dodged){
+    dodge.originalTargetDesc={kind:'pet',pet,petId:pet.id};
+    dodge.actualTargetDesc={kind:'pet',pet,petId:pet.id};
+    return dodge;
+  }
+
+  const guardian=attacker?.throwWeapon?null:sourceProfessionScapegoatGuardianForPet(unit,pet);
+  const calcDefender=guardian?playerBattleView():original;
+  const r=resolveNormalAttack(attacker,calcDefender,Object.assign({},options,{
+    guarding:guardian?false:guarding,
+    disableDodge:true,
+    skipSuitDodge:true
+  }));
+  r.duckRaw=dodge.duckRaw;
+  r.originalTargetDesc={kind:'pet',pet,petId:pet.id};
+  r.actualTargetDesc={kind:'pet',pet,petId:pet.id};
+
+  // fixed BATTLE_S_AttackDamage / S_FallGround-family caller contract:
+  // Guardian affects local AttackSeq calculation, but caller defindex is NOT rewritten.
+  // DamageSub therefore still applies to the original Pet; ACUPUNCTURE then rewrites
+  // defindex to attacker before WakeUp.
+  if(guardian){
+    if(r.damage<=0){r.damage=1;r.miss=false}
+    r.guardianCalcOnly=guardian;
+    r.guardianPetId=guardian.id;
+    r.playerGuardian=true;
+    r.guardianSourceBug=String(options.guardianSourceBug||'BATTLE_S_FallGround-defindex-not-updated');
+  }
+  r.sourceAcupunctureWakeTarget='attacker';
+  return r;
+}
+
+
 function resolveEnemyGuardBreak2BugToPlayer(unit,originalGuarding){
   const attacker=enemyBattleView(unit);
   const original=playerBattleView();
@@ -16182,8 +16782,9 @@ function performEnemyGuardBreak2(actor,unit,options,meta){
     }
     if(!r){
       r=resolveNormalAttack(attacker,defender,{
-        guarding:false,disableDodge:true,preGuardDamageMultiplier:multiplier
+        guarding:false,disableDodge:true,skipSuitDodge:!guardCommand,preGuardDamageMultiplier:multiplier
       });
+      r.sourceAcupunctureWakeTarget='attacker';
     }
     r.sourcePetGuardCommand=guardCommand;
     r.guardBreak2Multiplier=multiplier;
@@ -17361,6 +17962,11 @@ function sourcePetRandomSkillPlan(pet){
       // resolves the exact function string. Missing functbl entry => FALSE / no command.
       return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceFunctionMissing:true,targetDesc};
     }
+    if(SOURCE_PLAYER_BATTLE_FALSE_PETSKILL_FUNCTIONS.has(String(meta.f||''))){
+      // fixed PETSKILL_Merge / PETSKILL_Fixitem / PETSKILL_Inslay all reject non-NONE battle mode.
+      // No extra RNG is consumed after this point in PETSKILL_Use().
+      return {kind:'none',slot:iNum,skillId,sourceUseFailed:true,sourceBattlePreconditionFalse:true,targetDesc};
+    }
     return {kind:'skill',slot:iNum,skillId,meta,targetDesc};
   }
   return {kind:'none',slot:iNum,skillId:skills[iNum],sourceSearchExhausted:true,targetDesc};
@@ -17634,12 +18240,14 @@ function sourcePerformPetAttackTarget(pet,targetDesc,options={},meta={}){
 }
 function sourcePetStatusSkillType(meta){
   const option=String(meta?.o||'');
-  if(option.includes('毒'))return 'poison';
-  if(option.includes('醉'))return 'drunk';
-  if(option.includes('眠'))return 'sleep';
-  if(option.includes('石'))return 'stone';
-  if(option.includes('乱')||option.includes('亂'))return 'confusion';
-  return null;
+  // fixed PETSKILL_StatusChange scans aszStatus from the beginning; keep the earliest token.
+  const tokens=[['剧','deepPoison'],['劇','deepPoison'],['虚','weaken'],['虛','weaken'],['麻','paralysis'],['障','barrier'],['默','nocast'],['煞','sars'],['毒','poison'],['醉','drunk'],['眠','sleep'],['石','stone'],['乱','confusion'],['亂','confusion']];
+  let found=null;
+  for(const [token,type] of tokens){
+    const pos=option.indexOf(token);
+    if(pos>=0&&(!found||pos<found.pos))found={pos,type};
+  }
+  return found?.type||null;
 }
 function sourcePetStatusSkillTurn(meta){
   const m=String(meta?.o||'').match(/turn\s*(-?\d+)/i);
@@ -17651,7 +18259,7 @@ function sourcePetStatusSkillAttackPct(meta){
 }
 function sourcePetApplyStatusAttackHit(pet,targetDesc,r,type,turn,label){
   if(!targetDesc||!r||n(r.damage)<=0)return {attempted:false,applied:false};
-  if(!(type==='poison'||type==='deepPoison'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'||type==='sars')){
+  if(!(type==='poison'||type==='deepPoison'||type==='paralysis'||type==='weaken'||type==='barrier'||type==='nocast'||type==='sleep'||type==='stone'||type==='confusion'||type==='drunk'||type==='sars')){
     return {attempted:false,applied:false,unsupportedType:type||null};
   }
   const attackerDesc={kind:'pet',pet,petId:pet.id};
@@ -17873,7 +18481,7 @@ function sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,attackOptions={}
     :originalGuarding;
   const r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),Object.assign({},attackOptions,{
     guarding:calcGuarding,
-    disableDodge:true
+    disableDodge:true,skipSuitDodge:true
   }));
   r.duckRaw=dodge.duckRaw;
   r.actualTarget=target;
@@ -17884,6 +18492,9 @@ function sourcePetAttackDamageCalcOnlyGuardianResult(pet,target,attackOptions={}
     r.guardianCalcOnly=guardian;
     r.guardianSourceBug='BATTLE_S_AttackDamage-defindex-not-updated';
   }
+  // BATTLE_S_AttackDamage does NOT restore original defindex for ACUPUNCTURE before
+  // BATTLE_DamageWakeUp(); its post-DamageSub defindex is the attacker.
+  r.sourceAcupunctureWakeTarget='attacker';
   return r;
 }
 function sourcePetOriginalDamageReact(target){
@@ -17942,7 +18553,8 @@ function sourcePerformPetDamageToHpSkill(pet,action){
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,
     actualTargetUnitId:actual?.id||target.id,r,healed,absorbPct,attackReduceRaw,
-    cIntegerDivision,hadDamageReact,guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+    cIntegerDivision,hadDamageReact,guardianCalcOnlyId:r.guardianCalcOnly?.id||null,
+    sourceNoCounter:true
   };
 }
 function sourcePerformPetDamageToHp2Skill(pet,action){
@@ -18030,7 +18642,8 @@ function sourcePerformPetMpDamageSkill(pet,action){
     handled:true,skillId:action?.skillId,targetUnitId:target.id,
     actualTargetUnitId:actual?.id||target.id,r,
     attackReduceRaw,cIntegerDivision,mpPct,mpDamage,hadDamageReact,
-    sourceTargetType:'enemy',guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+    sourceTargetType:'enemy',guardianCalcOnlyId:r.guardianCalcOnly?.id||null,
+    sourceNoCounter:true
   };
 }
 
@@ -18187,7 +18800,8 @@ function sourcePerformPetLighttakeedSkill(pet,action){
     actualTargetUnitId:actual?.id||target.id,r,
     attack,defense,attackPct:70,defensePct:50,
     requestedReact,hadDamageReact,matchedReact,absorbed,
-    guardianCalcOnlyId:r.guardianCalcOnly?.id||null
+    guardianCalcOnlyId:r.guardianCalcOnly?.id||null,
+    sourceNoCounter:true
   };
 }
 
@@ -19367,6 +19981,7 @@ function sourcePerformPetGuardBreakSkill(pet,action,options={}){
   if(guardian&&r.damage<=0){r.damage=1;r.miss=false}
   r.actualTarget=target;
   r.originalTarget=target;
+  r.sourceAcupunctureWakeTarget='attacker';
   r.guardBreakTargetGuard=true;
   if(guardian){
     r.guardianCalcOnly=guardian;
@@ -19438,6 +20053,7 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
     r=resolveNormalAttack(attacker,enemyBattleView(calcTarget),{
       guarding:false,
       disableDodge:true,
+      skipSuitDodge:true,
       preGuardDamageMultiplier:multiplier
     });
     r.duckRaw=dodge.duckRaw;
@@ -19445,6 +20061,7 @@ function sourcePerformPetGuardBreak2Skill(pet,action,options={}){
     r.originalTarget=target;
     r.guardBreak2Multiplier=multiplier;
     r.guardBreak2LocalGuarding=localGuarding;
+    r.sourceAcupunctureWakeTarget='attacker';
 
     if(guardian){
       if(r.damage<=0){r.damage=1;r.miss=false}
@@ -19681,7 +20298,8 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
     actualTarget:target,
     originalTarget:target,
     guardianCalcOnly:guardian||null,
-    guardianPetId:guardian?.id||null
+    guardianPetId:guardian?.id||null,
+    sourceAcupunctureWakeTarget:'attacker'
   });
   if(guardian)delete r.guardian;
 
@@ -19690,13 +20308,19 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   }
   const actual=applyFriendlyEnemyHit('pet',pet.name,target,r,pet.id);
 
+  const hadDamageReact=sourcePetOriginalDamageReact(target);
   let fallRoll=null,fallSuccess=false,enemyRideRuntime=false;
-  if(r.damage>0&&!r.dodged&&!r.miss){
+  // fixed BATTLE_S_FallGround requires react == 0 before consuming the fall RNG.
+  // Current source-backed Enemy DamageReact is ACUPUNCTURE; do not let a reaction
+  // accidentally advance RAND(0,100) or perform the fall branch.
+  if(!hadDamageReact&&r.damage>0&&!r.dodged&&!r.miss){
     // fixed source consumes RAND(0,100) regardless of whether the Enemy actually has a ride pet.
     fallRoll=cRand(0,100);
     if(fallRoll>50){
-      // _ENEMY_FALLGROUND is compiled on, but current generated Enemy runtime exposes no
-      // CHAR_RIDEPET-equivalent field. Do not invent a mount and do not apply the STR/TOUGH/VITAL *0.7 branch.
+      // _ENEMY_FALLGROUND is compiled on, but fixed enemy.c only converts matching
+      // ridePetTable ride images; it does not assign a positive CHAR_RIDEPET to the Enemy.
+      // Therefore the current generated Enemy runtime has no source-backed ridePetId.
+      // Do not invent a mount and do not apply the STR/TOUGH/VITAL *0.7 branch.
       enemyRideRuntime=Number.isFinite(Number(target?.ridePetId))&&Number(target.ridePetId)>0;
       if(enemyRideRuntime){
         target.ridePetId=-1;
@@ -19715,8 +20339,9 @@ function sourcePerformPetFallGroundSkill(pet,action,options={}){
   // and does not enter the ordinary direct-attack Counter loop.
   return {
     handled:true,skillId:action?.skillId,targetUnitId:target.id,actualTargetUnitId:actual?.id||null,
-    attackPct,baseAttack,attack,guardianCalcOnly:guardian?.id||null,
-    fallRoll,fallSuccess,enemyRideRuntime,r
+    attackPct,baseAttack,attack,hadDamageReact,guardianCalcOnly:guardian?.id||null,
+    fallRoll,fallSuccess,enemyRideRuntime,r,
+    sourceNoCounter:true
   };
 }
 
@@ -19733,7 +20358,8 @@ function sourcePerformPetBattlePropertySkill(pet,action){
   const key=battleStatusKey(desc);
   if(key)battlePropertyKeys.add(key);
   addLog(pet.name+' 使用「'+(meta?.n||'魔之詛咒')+'」：本場戰鬥啟用原 PET_PetskillPropertyEvent 屬性剋制 callback。','pet');
-  return {handled:true,skillId:action?.skillId,battleProperty:true,noAction:true};
+  return {handled:true,skillId:action?.skillId,battleProperty:true,noAction:true,
+    sourceNoCounter:true};
 }
 function sourcePerformPetAntInterSkill(pet,action,options={}){
   // ANTINTER only enters its special branch when COM2 is a dead CHAR_TYPEPET.
@@ -19974,6 +20600,17 @@ function sourceAdvancePetVaryTurn(pet){
   if(vary.workTurn>5){
     battlePetVaryStates.delete(pet.id);
     addLog(pet.name+' 的暗月變身依原 C WORKTURN > 5 結束，攻擊／敏捷回復 FIX 值。','pet');
+    return {expired:true,workTurn:0};
+  }
+  return {expired:false,workTurn:vary.workTurn,attackPct:vary.attackPct,dexPct:vary.dexPct};
+}function sourceAdvanceEnemyVaryTurn(unit){
+  if(!unit)return null;
+  const vary=battlePetVaryStates.get(unit.id);
+  if(!vary)return null;
+  vary.workTurn=Math.trunc(n(vary.workTurn))+1;
+  if(vary.workTurn>5){
+    battlePetVaryStates.delete(unit.id);
+    addLog(unit.name+' 的暗月變身依原 C WORKTURN > 5 結束，攻擊／敏捷回復 FIX 值。','enemy');
     return {expired:true,workTurn:0};
   }
   return {expired:false,workTurn:vary.workTurn,attackPct:vary.attackPct,dexPct:vary.dexPct};
@@ -21110,9 +21747,15 @@ function sourcePerformPetLoyalAction(pet,loyalty,options={}){
   if(action.kind==='none'){
     if(action.sourceIllegal)addLog(pet.name+' 隨機抽到原表標記為 PETSKILL_ILLEGAL 的技能；原 PETSKILL_Use() 對玩家寵直接失敗，本回合不行動。','pet');
     else if(action.sourceFunctionMissing)addLog(pet.name+' 隨機抽到的 PetSkill 在 fixed PETSKILL_functbl 沒有同名函式；原 PETSKILL_Use() 直接 FALSE，本回合不行動。','pet');
+    else if(action.sourceBattlePreconditionFalse)addLog(pet.name+' 隨機抽到的 PetSkill 在 fixed C 戰鬥前置條件下直接 FALSE；本回合不行動，不猜額外效果。','pet');
     else if(action.sourceUseFailed)addLog(pet.name+' 隨機抽到不存在的 PetSkill；原 PETSKILL_Use() 失敗，本回合不行動。','pet');
     else addLog(pet.name+' 本回合沒有行動。','pet');
-    return finish({handled:true,none:true,sourceUseFailed:!!action.sourceUseFailed,sourceFunctionMissing:!!action.sourceFunctionMissing});
+    return finish({
+      handled:true,none:true,
+      sourceUseFailed:!!action.sourceUseFailed,
+      sourceFunctionMissing:!!action.sourceFunctionMissing,
+      sourceBattlePreconditionFalse:!!action.sourceBattlePreconditionFalse
+    });
   }
   if(action.kind==='blocked'){
     addLog(pet.name+' 的原 C 隨機技能流程碰到未定義的 PetSkill array 讀取；不猜記憶體結果，本回合不行動。','pet');
@@ -21581,7 +22224,10 @@ function performEnemyFallGround(actor,unit,options,meta){
 
   let r;
   if(chosen.kind==='pet'&&chosen.pet){
-    r=enemyAttackPetResult(unit,chosen.pet);
+    r=resolveEnemyAttackSeqBugToPet(unit,chosen.pet,{
+      guarding:false,
+      guardianSourceBug:'BATTLE_S_FallGround-defindex-not-updated'
+    });
   }else{
     const guarding=!!options.playerGuarding&&!battleStatusActive({kind:'player'},'confusion');
     r=resolveEnemyAttackSeqBugToPlayer(unit,{
@@ -21678,6 +22324,7 @@ function performEnemyGuardBreak(actor,unit,options,meta){
     r=resolveNormalAttack(enemyBattleView(unit),petBattleView(chosen.pet),{
       guarding:false,disableDodge:true
     });
+    r.sourceAcupunctureWakeTarget='attacker';
     r.sourcePetGuardCommand=true;
   }else{
     r=resolveEnemyAttackSeqBugToPlayer(unit,{
@@ -22043,6 +22690,47 @@ function performEnemyContinuation(actor,unit,options,meta){
   }
   return {kind:'skill',skillId:actor.skillId,hits,lastResult};
 }
+function performEnemyRoar(actor,unit,options,meta){
+  const chosen=enemyActorTarget(actor,unit);
+  const label=meta?.n||'狮王之吼';
+  if(!chosen){
+    addLog(unit.name+' 使用「'+label+'」，但 BATTLE_TargetAdjust 找不到有效目標。');
+    return {kind:'skill',skillId:actor.skillId,noTarget:true};
+  }
+  if(chosen.kind!=='pet'||!chosen.pet||!petIsBattleActive(chosen.pet)){
+    // fixed BATTLE_S_Roar assigns petid=-1 to a player target, so it cannot match
+    // the fusion-pet option list and produces no exit/damage effect.
+    return {kind:'skill',skillId:actor.skillId,target:chosen.kind,roared:false,sourceNoEffect:true};
+  }
+
+  const pet=chosen.pet;
+  const petId=pet.petId==null?null:Number(pet.petId);
+  if(!Number.isFinite(petId)){
+    return {kind:'skill',skillId:actor.skillId,target:'pet',petId:null,roared:false,sourcePetIdMissing:true};
+  }
+  const ids=sourcePetRoarPetIds(meta);
+  if(!ids.includes(Math.trunc(petId))){
+    addLog(unit.name+' 使用「'+label+'」，'+pet.name+' 的 PETID '+Math.trunc(petId)+' 不在原 C 可吼跑清單內。');
+    return {kind:'skill',skillId:actor.skillId,target:'pet',petId:Math.trunc(petId),roared:false};
+  }
+
+  // fixed BATTLE_S_Roar -> BATTLE_Exit(pet): no damage, no kill reward.
+  battlePetOutIds.add(pet.id);
+  sourceClearPetBattleProperty(pet);
+  sourceClearPetVary(pet);
+  battlePetGuardIds.delete(pet.id);
+  battlePetAcupunctureIds.delete(pet.id);
+  battlePetNoGuardStates.delete(pet.id);
+  battleMagicPetStates.delete(pet.id);
+  battleMagicPetRoundStates.delete(pet.id);
+  if(state.activePetId===pet.id)state.activePetId=null;
+
+  addLog(unit.name+' 使用「'+label+'」：'+pet.name+'（PETID '+Math.trunc(petId)+'）被吼聲嚇跑了！','good');
+  return {
+    kind:'skill',skillId:actor.skillId,target:'pet',petId:Math.trunc(petId),roared:true,
+    sourcePlayerPetExit:true,noDamage:true,noKillReward:true,noCounter:true
+  };
+}
 function performEnemyAction(actor,unit,options={}){
   const professionCancel=sourceProfessionEnemyCommandCancelled(unit);
   if(professionCancel){
@@ -22070,6 +22758,12 @@ function performEnemyAction(actor,unit,options={}){
   }
   if(kind==='skill'){
     const meta=enemyPetSkillMeta(actor.skillId);
+    if(ENEMY_SOURCE_BATTLE_FALSE_SKILL_IDS.has(Number(actor.skillId))){
+      const id=Number(actor.skillId);
+      const reason='fixed PETSKILL_Fixitem / PETSKILL_Inslay return FALSE here: Enemy actor is not CHAR_TYPEPET and battle mode is not NONE.';
+      addLog(unit.name+' 使用 '+(meta?.n||('PetSkill '+id))+'；'+reason+' 本回合不行動。');
+      return {kind:'skill',skillId:id,sourceUseFailed:true,sourceBattlePreconditionFalse:true,reason};
+    }
     if(ENEMY_SOURCE_RUNTIME_BLOCKED_SKILL_IDS.has(Number(actor.skillId))){
       const id=Number(actor.skillId);
       let reason='需要原 server 全域 runtime，現版不能靜態唯一決定效果。';
@@ -22114,6 +22808,8 @@ function performEnemyAction(actor,unit,options={}){
     if(meta?.f==='PETSKILL_Mdfyattack')return performEnemyMdfyAttack(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Sonic')return performEnemySonic(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Gyrate')return performEnemyGyrate(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Roar')return performEnemyRoar(actor,unit,options,meta);
+    if(meta?.f==='PETSKILL_Vary')return {kind:'skill',skillId:actor.skillId,vary:true,sourceVaryActive:!!unit.roundVaryActive,sourceVaryRejected:!!unit.sourceVaryRejected,noDamage:true,noCounter:true};
     if(meta?.f==='PETSKILL_Retrace')return performEnemyRetrace(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Weaken')return performEnemyWeaken(actor,unit,options,meta);
     if(meta?.f==='PETSKILL_Deeppoison')return performEnemyDeepPoison(actor,unit,options,meta);
@@ -22415,7 +23111,7 @@ function captureTurn(manual=false){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false});
+      const enemyActionResult=performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:false}); sourceAdvanceEnemyVaryTurn(unit);
     }
 
     sourceProcessBattleActorOuterBoundary();
@@ -22521,15 +23217,6 @@ function winBattle(){
   save();render();
 }
 function defeat(){
-  if(n(state?.maxHp)<=0){
-    state.auto=false;
-    if(!state._v270ZeroCreationWarningShown){
-      state._v270ZeroCreationWarningShown=true;
-      addLog('角色尚未完成可遊玩創角四圍，暫停自動戰鬥。請先完成角色設定。','bad');
-    }
-    save();render();
-    return;
-  }
   const hadBattle=!!enemy;
   if(hadBattle){
     sourceProcessBattleDeathsAtAddProfit();
@@ -22723,7 +23410,7 @@ function sourceComboApplyDamage(target,total,lastResult=null,rewardActors=[]){
     const before=n(target.unit.hp);
     target.unit.hp=Math.max(0,before-damage);
     sourceTrackDamageSubUltimate({kind:'enemy',unit:target.unit,unitId:target.unit.id},damage,before,lastResult||{});
-    if(before>0&&target.unit.hp<=0)sourceMarkEnemyDeathCredit(target.unit,rewardActors);
+    if(before>0&&target.unit.hp<=0)sourceQueuePendingDeathCredit(lastResult||{},target.unit,rewardActors);
     return Math.max(0,before-target.unit.hp);
   }
   return 0;
@@ -22756,9 +23443,9 @@ function sourceComboAcupunctureSegment(actor,target,r,rewardActors=[]){
   sourceFinishAcupunctureReaction(reaction);
   const after=battleStatusHp(target);
   if(before>0&&after<=0&&target.kind==='enemy'&&target.unit){
-    // fixed BATTLE_AddProfit receives the complete combo aAttackList even if BATTLE_Combo
-    // returns early after this immediate reaction kills the target.
-    sourceMarkEnemyDeathCredit(target.unit,rewardActors);
+    // fixed BATTLE_Combo does not grant enemy reward credit here: the caller returns only
+    // after this segment's ItemCrush boundary, then outer BATTLE_AddProfit scans the death.
+    sourceQueuePendingDeathCredit(r,target.unit,rewardActors);
   }
 
   reaction.targetBefore=before;
@@ -22867,15 +23554,14 @@ function sourcePerformCombo(order,index,options={}){
 
   let accumulatedActual=0;
   if(!abortedByTargetDeath){
-    const lastComboResult=hits[hits.length-1]?.r
-      ?Object.assign({},hits[hits.length-1].r,{ultimateCriticalEnemyOnly:true})
-      :{ultimateCriticalEnemyOnly:true};
+    const lastComboResult=hits[hits.length-1]?.r||{ultimateCriticalEnemyOnly:true};
+    lastComboResult.ultimateCriticalEnemyOnly=true;
     accumulatedActual=sourceComboApplyDamage(
       target,accumulatedDamage,lastComboResult,
       hits.map(x=>({kind:x.kind,petId:x.petId||null}))
     );
     if(deferredWake?.damage>0)battleStatusWakeOnDamage(deferredWake.desc,deferredWake.damage);
-    sourceBattleFinalizeItemCrushRng(hits[hits.length-1]?.r);
+    sourceBattleFinalizeItemCrushRng(lastComboResult);
     // fixed BATTLE_Combo returns to the caller, then BATTLE_AddProfit processes the new death.
     sourceProcessBattleDeathsAtAddProfit();
   }
@@ -23277,7 +23963,7 @@ function attackTurn(options={}){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true});
+      const enemyActionResult=performEnemyAction(actor,unit,{playerGuarding:false,allowPlayerCounter:true}); sourceAdvanceEnemyVaryTurn(unit);
     }
 
     sourceProcessBattleActorOuterBoundary();
@@ -23387,7 +24073,7 @@ function guardTurn(){
     }else if(actor.kind==='enemy'){
       const unit=livingEnemyUnits().find(u=>u.id===actor.unitId);
       if(!unit)continue;
-      performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false});
+      const enemyActionResult=performEnemyAction(actor,unit,{playerGuarding:true,allowPlayerCounter:false}); sourceAdvanceEnemyVaryTurn(unit);
     }
 
     sourceProcessBattleActorOuterBoundary();
@@ -23466,15 +24152,6 @@ function tick(){
   if(!sourcePlayerCreationStatsReady(state))return;
   if(!sourcePlayerHometownReady(state))return;
   if(!sourcePlayerElementsConfigured(state))return;
-  if(n(state.maxHp)<=0){
-    state.auto=false;
-    if(!state._v270ZeroCreationWarningShown){
-      state._v270ZeroCreationWarningShown=true;
-      addLog('角色尚未完成可遊玩創角四圍：MaxHP 為 0。請到「角色設定」配置 VITAL／STR／TOUGH／DEX 後再開啟自動戰鬥。','bad');
-    }
-    save();render();
-    return;
-  }
   if(state.hp<=0){defeat();return}
   if(!enemy){
     const map=currentMap();
@@ -23787,82 +24464,39 @@ function renderProfessionBattleActions(){
       +escapeHtml(row.name)+' Lv'+row.displayLevel+' · MP '+row.costMp+'</button>';
   }).join('');
 }
-let uiPixelLastEnemyHp=null;
-let uiPixelLastEnemyId=null;
-function pixelFlash(type, text, value){
-  const stage=document.getElementById('battleStage');
-  if(!stage)return;
-  stage.classList.remove('fx-hit','fx-damage','fx-toast');
-  void stage.offsetWidth;
-  if(type==='hit')stage.classList.add('fx-hit');
-  if(type==='damage'){
-    const d=document.getElementById('damageFx');
-    if(d)d.textContent=String(value!=null?('−'+Math.max(1,Math.trunc(value))):'−');
-    stage.classList.add('fx-damage');
+function renderProfessionOutOfBattleActions(){
+  const info=$('#professionOutOfBattleInfo'),actions=$('#professionOutOfBattleActions');
+  if(!info||!actions)return;
+  const rows=sourceProfessionSkillMenu(state).filter(row=>
+    row&&(
+      row.functionName==='PROFESSION_TRACK'||
+      row.functionName==='PROFESSION_ESCAPE'
+    )
+  );
+  const nowSec=Math.trunc(Date.now()/1000);
+  const activeUntil=Math.trunc(n(professionEncounterUntilSec));
+  const active=activeUntil>nowSec;
+  const remain=Math.max(0,activeUntil-nowSec);
+  const currentFix=Math.trunc(n(professionEncounterFix));
+  if(!rows.length){
+    info.textContent='目前尚未學會「追尋敵蹤」或「回避戰鬥」；兩者都是 Hunter 的非戰鬥職業技能。';
+    actions.innerHTML='';
+    return;
   }
-  if(text){
-    const t=document.getElementById('combatToast');
-    if(t)t.textContent=text;
-    stage.classList.add('fx-toast');
-  }
-  window.setTimeout(()=>stage.classList.remove('fx-hit','fx-damage','fx-toast'),900);
+  info.textContent=active
+    ?'目前遇敵率修正 '+(currentFix>=0?'+':'')+currentFix+'% · 剩餘 '+remain+' 秒。'
+    :'目前沒有啟用中的職業遇敵率修正。';
+  actions.innerHTML=rows.map(row=>{
+    const canUse=state.hp>0&&Math.trunc(n(state.mp))>=row.costMp&&!enemy;
+    const reason=enemy?'戰鬥中不可施放':'';
+    return '<button data-profession-out-slot="'+row.slot+'" '+(!canUse?'disabled':'')+' title="'+escapeHtml(reason)+'">'
+      +escapeHtml(row.name)+' Lv'+row.displayLevel+' · MP '+row.costMp+'</button>';
+  }).join('');
 }
-function renderPixelActors(){
-  const stage=document.getElementById('battleStage');
-  if(!stage||!state)return;
-  const player=document.getElementById('pixelPlayer');
-  const pet=document.getElementById('pixelPet');
-  const enemyActor=document.getElementById('pixelEnemy');
-  const worldMode=document.getElementById('worldMode');
-  const worldCoords=document.getElementById('worldCoords');
-  const miniMapName=document.getElementById('miniMapName');
-  const q=document.getElementById('worldQuestText');
-  const progress=document.getElementById('worldQuestProgress');
-  const map=currentMap();
-  if(map){
-    if(miniMapName)miniMapName.textContent=String(map.name||('Floor '+map.id)).slice(0,15);
-    if(worldMode)worldMode.textContent=state.auto?'自動探索中':'野外探索';
-  }
-  if(enemy){
-    stage.classList.add('in-battle');
-    enemyActor.style.opacity='1';
-    const name=String(enemy.name||'野外敵人');
-    enemyActor.dataset.enemy=name;
-    const v=enemy.entry?.variant;
-    const els=v?.elements||{};
-    const maxKey=['earth','water','fire','wind'].sort((a,b)=>Number(els[b]||0)-Number(els[a]||0))[0];
-    enemyActor.style.filter=maxKey==='water'?'hue-rotate(105deg) drop-shadow(0 10px 0 rgba(0,0,0,.18))':maxKey==='wind'?'hue-rotate(45deg) drop-shadow(0 10px 0 rgba(0,0,0,.18))':maxKey==='earth'?'hue-rotate(-20deg) saturate(.8) drop-shadow(0 10px 0 rgba(0,0,0,.18))':'drop-shadow(0 10px 0 rgba(0,0,0,.18))';
-    const hpNow=n(enemy.hp), previous=uiPixelLastEnemyId===enemy.id?uiPixelLastEnemyHp:null;
-    if(previous!=null&&hpNow<previous){
-      enemyActor.classList.remove('hit');void enemyActor.offsetWidth;enemyActor.classList.add('hit');
-      pixelFlash('hit',null,previous-hpNow);
-      pixelFlash('damage',null,previous-hpNow);
-    }
-    uiPixelLastEnemyHp=hpNow;uiPixelLastEnemyId=enemy.id;
-    if(worldCoords)worldCoords.textContent=enemy.roamX!=null&&enemy.roamY!=null?`${enemy.roamX},${enemy.roamY}`:'野外';
-    if(progress)progress.textContent=`Lv.${enemy.level} 遭遇中`;
-    if(q)q.textContent=`${name} 已出現；${state.auto?'自動戰鬥持續進行。':'可以手動操作。'}`;
-  }else{
-    stage.classList.remove('in-battle');
-    enemyActor.style.opacity='.35';
-    uiPixelLastEnemyHp=null;uiPixelLastEnemyId=null;
-    if(progress)progress.textContent=state.auto?'搜尋敵人':'已暫停';
-    if(q)q.textContent=state.auto?'阿肥正在沿著狩獵區巡邏，等待下一次遭遇。':'開啟自動戰鬥即可開始探索。';
-    if(worldCoords)worldCoords.textContent='巡邏中';
-  }
-  const p=activePet();
-  if(p){pet.style.opacity='1';}else{pet.style.opacity='.28'}
-  if(player)player.classList.toggle('defeated',n(state.hp)<=0&&n(state.maxHp)>0);
-}
+
 
 function render(){
   if(!state)return;
-  try{
-    const configured=sourcePlayerCreationStatsReady(state)&&sourcePlayerHometownReady(state)&&sourcePlayerElementsConfigured(state);
-    document.body.dataset.gameReady=configured?'1':'0';
-    const adv=document.getElementById('advancedPanel');
-    if(adv&&!configured) adv.open=true;
-  }catch(e){}
   $('#level').textContent=state.level;
   $('#exp').textContent=state.level>=playerLevelCap()?(state.exp+' / MAX'):(state.exp+' / '+state.expNext);
   $('#hp').textContent=state.hp+' / '+state.maxHp;
@@ -23890,21 +24524,30 @@ function render(){
 
   const map=currentMap();
   if(map){
-    const mapTitle=$('#mapTitle');
-    if(mapTitle) mapTitle.textContent=map.name||('Floor '+map.id);
-    const eligible=eligibleEntries(map);
-    const allNames=[...new Set((map.entries||[]).map(x=>x.species.clientLabel))];
-    const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
-    $('#mapPetCount').textContent=okNames.length+' / '+Math.max(allNames.length,okNames.length)+' 種可遇';
-    const desc=map.description||'在這片區域探索並尋找野生寵物。';
-    const names=okNames.slice(0,8).join('、')||'暫無可遇寵物';
-    $('#mapInfo').textContent=desc+' 可遇：'+names+(okNames.length>8?'…':'');
+    if(map.questZone){
+      const eligible=eligibleEntries(map);
+      const allNames=[...new Set(map.entries.map(x=>x.species.clientLabel))];
+      const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
+      $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種可遇';
+      $('#mapInfo').textContent=(map.description?map.description+'；':'')+'目前可遇：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'');
+    }else{
+      const encounter=currentEncounter(map);
+      const all=(map.entries||[]).filter(x=>Number(x.route?.encounterId)===Number(encounter?.encounterId));
+      const eligible=all.filter(x=>routeUnlocked(x.route));
+      const allNames=[...new Set(all.map(x=>x.species.clientLabel))];
+      const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
+      const a=encounter?.area||{},groups=encounter?.groups||[],resolved=groups.filter(g=>g.resolved).length;
+      $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種 Lv1';
+      $('#mapInfo').textContent=encounter
+        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+' · 遇敵CEP '+n(state.encounterCep)+'（min '+encounter.encounterMin+' / max '+encounter.encounterMax+'） · 虛擬步數 '+Math.floor(n(state.virtualWalkSteps))+'；每 900ms 放置 tick 模擬 '+IDLE_WALK_STEPS_PER_TICK+' 步，逐步使用原 rand()%120<CEP 規則；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
+        :'此 Floor 沒有可用的 Encounter。';
+    }
   }
   renderMapOptions();
   renderEncounterOptions();
   renderEnemy();
-  renderPixelActors();
   renderProfessionBattleActions();
+  renderProfessionOutOfBattleActions();
   if(playerPigActive()){
     const pigRemain=playerPigRemainingSeconds();
     $('#battleState').textContent+=' · 黑烏力化'+(pigRemain>0?' '+pigRemain+'秒':' · 戰鬥結束後解除');
@@ -23924,16 +24567,16 @@ function renderEnemy(){
     const hometownReady=sourcePlayerHometownReady(state);
     const elementReady=sourcePlayerElementsConfigured(state);
     if(!creationStatsReady){
-      box.innerHTML='<div class="enemy-name">先完成角色建立</div><div class="muted">打開「設定」完成角色屬性，就可以開始冒險。</div>';
-      $('#battleState').textContent='準備角色';
+      box.innerHTML='<div class="enemy-name">等待原服創角四圍</div><div class="muted">固定 _NEW_PLAYER_CF build：VITAL／STR／TOUGH／DEX 各 0～20、合計 ≤20；不再替新角色猜固定 5/5/5/5。</div>';
+      $('#battleState').textContent='等待創角四圍';
     }else if(!hometownReady){
-      box.innerHTML='<div class="enemy-name">選擇出生村</div><div class="muted">完成出生地設定後，就能帶著第一隻寵物踏上旅程。</div>';
-      $('#battleState').textContent='選擇出生村';
+      box.innerHTML='<div class="enemy-name">等待原服出生村選擇</div><div class="muted">請先確認 hometown 0～3；確認後才依原 C 建立對應 Lv1 起始寵。</div>';
+      $('#battleState').textContent='等待出生村';
     }else if(!elementReady){
-      box.innerHTML='<div class="enemy-name">配置元素</div><div class="muted">完成地、水、火、風的元素配點後，就可以出發。</div>';
-      $('#battleState').textContent='配置元素';
+      box.innerHTML='<div class="enemy-name">等待原服創角元素配點</div><div class="muted">舊存檔沒有保存原始地／水／火／風，因此不猜無屬性；請先在角色面板確認合法的 10 點元素。</div>';
+      $('#battleState').textContent='等待元素配點';
     }else{
-      box.innerHTML='<div class="enemy-name">'+(state.auto?'正在尋找敵人…':'準備開始冒險')+'</div><div class="muted">'+(state.auto?'沿著狩獵區巡邏，下一次遭遇即將發生。':'按下自動戰鬥即可開始探索。')+'</div>';
+      box.innerHTML='<div class="enemy-name">等待下一次遭遇</div><div class="muted">'+(state.auto?'自動戰鬥運作中。':'目前已暫停。')+'</div>';
       $('#battleState').textContent=state.auto?'自動中':'已暫停';
     }
     $('#captureChance').textContent='捕獲率：—';
@@ -23948,7 +24591,8 @@ function renderEnemy(){
     const rows=units.map((u,i)=>{
       const hpPct=clamp(u.hp/u.maxHp*100,0,100),dead=u.hp<=0;
       return '<div class="enemy-unit '+(dead?'defeated':'')+'">'+
-        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv.'+u.level+' '+escapeHtml(u.name)+'</b><span>'+u.hp+'/'+u.maxHp+'</span></div>'+
+        '<div class="enemy-unit-head"><b>'+(i+1)+'. Lv'+u.level+' '+escapeHtml(u.name)+(u.isBig?' · 大型':'')+(u.randomEnemy?' · RandomEnemy':'')+'</b><span>EnemyID '+(u.enemyId??'—')+(u.randomEnemy&&u.sourceEnemyId!=null?' ← '+u.sourceEnemyId:'')+'</span></div>'+
+        '<div class="enemy-hp">HP '+u.hp+' / '+u.maxHp+' · 攻 '+u.attack+' · 防 '+u.defense+' · 敏 '+n(u.quick)+(u.serverDerived?' · Server公式':'')+(u.randomChange?' · RandomChange '+u.randomChange.type:'')+'</div>'+
         '<div class="progress"><i style="width:'+hpPct+'%"></i></div></div>';
     }).join('');
     box.innerHTML='<div class="enemy-name">'+(enemy.dynamicGroup?'動態群組':'任務編成')+' · '+alive+' / '+total+' 存活</div>'+
@@ -23960,7 +24604,8 @@ function renderEnemy(){
       '<div class="enemy-units">'+rows+'</div>';
   }else{
     const hpPct=clamp(enemy.hp/enemy.maxHp*100,0,100);
-    box.innerHTML='<div class="enemy-name">Lv.'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
+    box.innerHTML='<div class="enemy-name">Lv'+enemy.level+' '+escapeHtml(enemy.name)+'</div>'+
+      '<div class="enemy-meta"><span class="pill">TempNo '+v.tempNo+'</span><span class="pill">EnemyID '+(v.enemyIds||[]).join(', ')+'</span><span class="pill">E_T_GET '+n(v.captureBase)+'</span></div>'+
       '<div class="enemy-hp">HP '+enemy.hp+' / '+enemy.maxHp+'</div>'+
       '<div class="progress"><i style="width:'+hpPct+'%"></i></div>';
   }
@@ -24629,6 +25274,389 @@ function handleZooAction(action){
   }
   save();render();
 }
+
+/* V272_ENCLOSE_RUNTIME_PATCH
+ * Fixed-source correction + Skill 16 雷附體.
+ *
+ * Pinned C mapping:
+ *   炎 -> CHAR_WORK_F_ENCLOSE_2   (aura counter)
+ *   烧 -> CHAR_WORK_F_ENCLOSE     (burn status)
+ *   击 -> CHAR_WORK_T_ENCLOSE_2   (thunder aura counter)
+ *   电 -> CHAR_WORK_T_ENCLOSE     (one-turn action lock)
+ *
+ * BATTLE_Attack then checks F/I/T _2 counters, chance = 20 + tier*2,
+ * and writes the mapped on-hit status with StatusTbl=effectiveTurn+1.
+ */
+function sourceProfessionThunderEncloseDexRoll(quick,{randMacro=sourceCRandMacroValue}={}){
+  const work=Math.trunc(n(quick))+20;
+  const lower=work*0.2;
+  const upper=work*0.5;
+  const roll=randMacro(lower,upper);
+  let dex=work-roll;
+  if(dex<=0)dex=1;
+  return Math.trunc(dex);
+}
+
+function sourceProfessionIceEncloseDexRoll(quick,{randMacro=sourceCRandMacroValue}={}){
+  const work=Math.trunc(n(quick))+20;
+  const lower=work*0.2;
+  const upper=work*0.5;
+  const roll=randMacro(lower,upper);
+  let dex=work-roll;
+  if(dex<=0)dex=1;
+  return Math.trunc(dex);
+}
+
+function sourceProfessionEncloseAuraSpec(prepared,element='fire'){
+  const row=sourceProfessionSkillTemplate(prepared?.skillId);
+  const attackTier=sourceProfessionAttackSkillTier(prepared?.displayLevel);
+  const option=String(row?.option||'');
+  const baseSuccess=sourceProfessionStatusOptionInt(option,'成',0);
+  const rawTurn=Math.max(1,sourceProfessionStatusOptionInt(option,'回',1));
+  const effect=sourceProfessionStatusOptionInt(option,'效',0);
+  const effectiveOnHitTurn=element==='thunder'
+    ?1
+    :(attackTier>=10?3:(attackTier>=5?2:1));
+  const statusAuraToken=element==='thunder'?'擊':element==='ice'?'凍':'炎';
+  const statusHitToken=element==='thunder'?'電':element==='ice'?'霜':'燒';
+  return {
+    skillId:Math.trunc(n(prepared?.skillId)),
+    displayLevel:Math.trunc(n(prepared?.displayLevel)),
+    attackTier,
+    baseSuccess,
+    success:baseSuccess+attackTier*4,
+    rawTurn,
+    storedTurns:rawTurn+1,
+    effect,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    option,
+    element,
+    statusAuraToken,
+    statusHitToken,
+    onHitTurn:effectiveOnHitTurn,
+    onHitStoredTurns:effectiveOnHitTurn+1,
+    onHitChance:20+attackTier*2
+  };
+}
+
+function sourceProfessionEncloseAnimation(row,toNo){
+  const opt=String(row?.option||'').split('|');
+  return {
+    magicType:-1,attIdx:0,
+    img1:Math.trunc(n(row?.img1)),
+    img2:Math.trunc(n(row?.img2)),
+    showType:Math.trunc(n(opt[1])),
+    showBehind:Math.trunc(n(opt[2])),
+    x:Math.trunc(n(opt[3])),
+    y:Math.trunc(n(opt[4])),
+    shakeStart:Math.trunc(n(opt[5])),
+    shakeEnd:Math.trunc(n(opt[6])),
+    disappear:Math.trunc(n(opt[7])),
+    effect:Math.trunc(n(opt[1])),
+    toNo:Math.trunc(n(toNo)),
+    sourceBattleMagicEffectPath:true
+  };
+}
+
+function sourceProfessionEncloseAuraExecute(prepared,name,element='fire',statusCheck=sourceProfessionStatusAttackCheck){
+  const skillId=Math.trunc(n(prepared?.skillId));
+  const expectedSkillId=element==='thunder'?16:element==='ice'?17:15;
+  const functionName=element==='thunder'
+    ?'PROFESSION_THUNDER_ENCLOSE'
+    :element==='ice'?'PROFESSION_ICE_ENCLOSE':'PROFESSION_FIRE_ENCLOSE';
+  if(skillId!==expectedSkillId)return {handled:false,reason:'battle-function-unported',skillId};
+
+  const rawToNo=Math.trunc(n(prepared?.toNo));
+  const multi=sourceSetMagicPetMultiList(rawToNo);
+  if(!multi.ok||!multi.slots.length){
+    return {handled:true,noAction:true,reason:'target-side-empty',skillId,functionName,rawToNo,multi};
+  }
+
+  const toNo=Math.trunc(n(multi.toNo));
+  const row=sourceProfessionSkillTemplate(skillId);
+  const spec=sourceProfessionEncloseAuraSpec(prepared,element);
+  const animation=sourceProfessionEncloseAnimation(row,toNo);
+  const results=[];
+
+  const tokenName=element==='thunder'?'雷附體':element==='ice'?'冰附體':'火附體';
+  const onHitField=element==='thunder'
+    ?'sourceThunderEncloseOnHitTurns'
+    :element==='ice'?'sourceIceEncloseOnHitTurns':'sourceFireEncloseOnHitTurns';
+  const modField=element==='thunder'
+    ?'sourceThunderEncloseModTier'
+    :element==='ice'?'sourceIceEncloseModTier':'sourceFireEncloseModTier';
+  const activeField=element==='thunder'
+    ?'sourceThunderEncloseAuraActive'
+    :element==='ice'?'sourceIceEncloseAuraActive':'sourceFireEncloseAuraActive';
+
+  for(const slot of multi.slots){
+    const targetDesc=sourceBattleStatusDescFromSlot(slot);
+    if(!targetDesc)continue;
+
+    const targetName=battleStatusDescName(targetDesc);
+    if(targetDesc.kind==='enemy'&&targetDesc.unit&&enemyUnitHidden(targetDesc.unit)){
+      results.push({slot,targetUnitId:targetDesc.unit.id,check:null,applied:false,reason:'target-earthround',sourceRawTargetGate:true});
+      continue;
+    }
+
+    const check=statusCheck(targetDesc,spec.success);
+
+    if(!check.success){
+      results.push({
+        slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+        targetKind:targetDesc.kind,check,applied:false,reason:check.reason,
+        sourceUsesStatusAttackCheck:true
+      });
+      addLog('「'+name+'」未能附著在 '+targetName+' 身上（roll '+check.roll+' / '+check.threshold+'）。');
+      continue;
+    }
+    if(battleHasAnyStatus(targetDesc)){
+      results.push({
+        slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+        targetKind:targetDesc.kind,check,applied:false,reason:'existing-status'
+      });
+      continue;
+    }
+
+    const statusState={
+      type:'encloseAura',
+      element,
+      turns:spec.storedTurns,
+      encloseTier:spec.attackTier,
+      onHitChance:spec.onHitChance,
+      onHitTurn:spec.onHitTurn,
+      sourceProfessionSkillId:skillId
+    };
+    const key=battleStatusKey(targetDesc);
+    if(!key){
+      results.push({
+        slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+        targetKind:targetDesc.kind,check,applied:false,reason:'status-key'
+      });
+      continue;
+    }
+    battleStatuses.set(key,statusState);
+
+    const holder=targetDesc.kind==='player'
+      ?state
+      :(targetDesc.kind==='pet'?targetDesc.pet:targetDesc.unit);
+    if(holder){
+      holder[onHitField]=spec.storedTurns;
+      holder[modField]=spec.attackTier;
+      holder[activeField]=true;
+    }
+
+    const practiceFunction=element==='thunder'
+      ?'PROFESSION_THUNDER_PRACTICE'
+      :element==='ice'?'PROFESSION_ICE_PRACTICE':'PROFESSION_FIRE_PRACTICE';
+    const proficiency=sourceProfessionSpecialSkillProficiencyByFunction(
+      state,practiceFunction,{randInclusive:cRand}
+    );
+    sourceProfessionLogProficiencyResult(proficiency);
+
+    results.push({
+      slot,targetUnitId:targetDesc.kind==='enemy'?targetDesc.unit?.id||null:null,
+      targetKind:targetDesc.kind,check,applied:true,
+      status:'encloseAura',element,
+      storedTurns:spec.storedTurns,
+      sourceCounterFieldWritten:true,
+      sourceModFieldWritten:true,
+      onHitChance:spec.onHitChance,
+      onHitTurn:spec.onHitTurn,
+      onHitStoredTurns:spec.onHitStoredTurns,
+      proficiency,animation,
+      sourceSkillLevelUsesA:true
+    });
+    addLog(
+      '你施放「'+name+'」：'+targetName+' 取得'+tokenName
+      +'，StatusTbl='+spec.storedTurns+'；後續普通物理攻擊依固定 C 的附體機率觸發。','good'
+    );
+  }
+
+  syncEnemyTarget();
+  return {
+    handled:true,skillId,functionName,
+    rawToNo,toNo,multi,spec,animation,results,
+    sourceStatusCommand:true,
+    sourceMagicDodgeNotUsed:true,
+    sourceAttackSkillTier:'A',
+    sourceBaseSuccessPlusTier4:true,
+    sourceStoredTurnPlusOne:true,
+    sourcePracticeNotUsed:false,
+    sourcePhysicalAuraPath:true,
+    sourceCounterFieldWritten:true,
+    sourceModFieldWritten:true
+  };
+}
+
+function sourceProfessionBattleFunctionSupportedV272(functionName,skillId=null){
+  return functionName==='PROFESSION_THUNDER_ENCLOSE'
+    ?Math.trunc(n(skillId))===16
+    :sourceProfessionBattleFunctionSupportedV271(functionName,skillId);
+}
+
+function sourceProfessionBattleDexRollV272(prepared,quick,opts={}){
+  if(String(prepared?.commonCommand||'')==='BATTLE_COM_S_THUNDER_ENCLOSE'){
+    return sourceProfessionThunderEncloseDexRoll(quick,opts);
+  }
+  return sourceProfessionBattleDexRollV271(prepared,quick,opts);
+}
+
+function sourceProfessionBattleSkillExecuteV272(prepared,actor=null){
+  if(prepared?.functionName==='PROFESSION_FIRE_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===15){
+    const row=sourceProfessionSkillTemplate(prepared.skillId);
+    return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'火附體'),'fire');
+  }
+  if(prepared?.functionName==='PROFESSION_THUNDER_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===16){
+    const row=sourceProfessionSkillTemplate(prepared.skillId);
+    return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'雷附體'),'thunder');
+  }
+  return sourceProfessionBattleSkillExecuteV271(prepared,actor);
+}
+
+function sourceProfessionApplyEncloseAuraProc(attackerKind,actual,r){
+  if(attackerKind!=='player'||!actual||!r||n(r.damage)<=0)return null;
+
+  const auraCandidates=[
+    {element:'fire',turnField:'sourceFireEncloseOnHitTurns',modField:'sourceFireEncloseModTier',activeField:'sourceFireEncloseAuraActive',status:'fireEnclose',statusToken:'燒',label:'火附體',img2:101698},
+    {element:'thunder',turnField:'sourceThunderEncloseOnHitTurns',modField:'sourceThunderEncloseModTier',activeField:'sourceThunderEncloseAuraActive',status:'thunderShock',statusToken:'電',label:'雷附體',img2:101700}
+  ];
+
+  // Fixed BATTLE_Attack() scans F/I/T in order and BREAKs on the first active aura.
+  for(const aura of auraCandidates){
+    const turns=Math.trunc(n(state?.[aura.turnField]));
+    if(turns<=0){
+      if(state&&aura.activeField)state[aura.activeField]=false;
+      continue;
+    }
+
+    const tier=Math.trunc(n(state?.[aura.modField]));
+    const chance=20+tier*2;
+    const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
+    const check=sourceProfessionStatusAttackCheck(targetDesc,chance);
+
+    if(!check.success){
+      addLog('「'+aura.label+'」命中附體效果未觸發（roll '+check.roll+' / '+check.threshold+'）。');
+      return {element:aura.element,triggered:false,check,turnsRemaining:turns,tier};
+    }
+
+    const effectiveTurn=aura.element==='thunder'
+      ?1
+      :(tier>=10?3:(tier>=5?2:1));
+    const storedTurns=effectiveTurn+1;
+    const key=battleStatusKey(targetDesc);
+    if(!key){
+      return {element:aura.element,triggered:false,reason:'status-key',check,turnsRemaining:turns,tier};
+    }
+    if(battleHasAnyStatus(targetDesc)){
+      return {element:aura.element,triggered:false,reason:'existing-status',check,turnsRemaining:turns,tier};
+    }
+
+    battleStatuses.set(key,{
+      type:aura.status,
+      turns:storedTurns,
+      encloseElement:aura.element,
+      sourceStatusToken:aura.statusToken,
+      sourceAuraTier:tier
+    });
+
+    addLog(
+      '「'+aura.label+'」觸發：'+actual.name
+      +(aura.element==='fire'
+        ?' 受到燒傷，StatusTbl='+storedTurns+'。'
+        :' 被雷附體命中，限制行動 1 回合。')
+    );
+    return {
+      element:aura.element,triggered:true,check,
+      turnsRemaining:turns,tier,effectiveTurn,storedTurns,
+      status:aura.status,img1:101697,img2:aura.img2
+    };
+  }
+  return null;
+}
+
+(function installV272EncloseRuntimePatch(){
+  const sourceProfessionBattleFunctionSupportedV271=sourceProfessionBattleFunctionSupported;
+  const sourceProfessionBattleDexRollV271=sourceProfessionBattleDexRoll;
+  const sourceProfessionBattleSkillExecuteV271=sourceProfessionBattleSkillExecute;
+  const applyFriendlyEnemyHitV271=applyFriendlyEnemyHit;
+  const processBattleStatusTurnV271=processBattleStatusTurn;
+
+  globalThis.sourceProfessionBattleFunctionSupportedV271=sourceProfessionBattleFunctionSupportedV271;
+  globalThis.sourceProfessionBattleDexRollV271=sourceProfessionBattleDexRollV271;
+  globalThis.sourceProfessionBattleSkillExecuteV271=sourceProfessionBattleSkillExecuteV271;
+
+  sourceProfessionBattleFunctionSupported=function(functionName,skillId=null){
+    if(functionName==='PROFESSION_THUNDER_ENCLOSE')return sourceProfessionBattleFunctionSupportedV272(functionName,skillId);
+    return sourceProfessionBattleFunctionSupportedV271(functionName,skillId);
+  };
+
+  sourceProfessionBattleDexRoll=function(prepared,quick,opts={}){
+    if(String(prepared?.commonCommand||'')==='BATTLE_COM_S_THUNDER_ENCLOSE'){
+      return sourceProfessionThunderEncloseDexRoll(quick,opts);
+    }
+    return sourceProfessionBattleDexRollV271(prepared,quick,opts);
+  };
+
+  sourceProfessionBattleSkillExecute=function(prepared,actor=null){
+    if(prepared?.functionName==='PROFESSION_FIRE_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===15){
+      const row=sourceProfessionSkillTemplate(prepared.skillId);
+      return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'火附體'),'fire');
+    }
+    if(prepared?.functionName==='PROFESSION_THUNDER_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===16){
+      const row=sourceProfessionSkillTemplate(prepared.skillId);
+      return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'雷附體'),'thunder');
+    }
+    return sourceProfessionBattleSkillExecuteV271(prepared,actor);
+  };
+
+  applyFriendlyEnemyHit=function(attackerKind,attackerName,target,r,attackerPetId=null,options={}){
+    const actual=applyFriendlyEnemyHitV271(attackerKind,attackerName,target,r,attackerPetId,options);
+    const proc=sourceProfessionApplyEncloseAuraProc(attackerKind,actual,r);
+    if(proc)r.professionEnclose=proc;
+    return actual;
+  };
+
+  processBattleStatusTurn=function(actor){
+    const desc=battleStatusActorDesc(actor);
+    const st=desc?battleStatusGet(desc):null;
+
+    if(st?.type==='encloseAura'){
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      const holder=desc.kind==='player'
+        ?state
+        :(desc.kind==='pet'?desc.pet:desc.unit);
+      const prefix=st.element==='thunder'?'sourceThunderEnclose':'sourceFireEnclose';
+      if(holder){
+        holder[prefix+'OnHitTurns']=st.turns;
+        holder[prefix+'AuraActive']=st.turns>0;
+      }
+      if(st.turns<=0){
+        battleStatusClear(desc,'encloseAura');
+        if(holder){
+          holder[prefix+'OnHitTurns']=0;
+          holder[prefix+'AuraActive']=false;
+        }
+        addLog((desc.kind==='player'?'你':desc.pet?.name||desc.unit?.name||'目標')
+          +' 的'+(st.element==='thunder'?'雷附體':'火附體')+'效果結束。');
+      }
+      return {skip:false,desc,status:st,encloseAura:true,element:st.element};
+    }
+
+    if(st?.type==='thunderShock'){
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      if(st.turns<=0){
+        battleStatusClear(desc,'thunderShock');
+        return {skip:false,desc,status:st,thunderShock:true,expired:true};
+      }
+      return {skip:true,desc,status:st,thunderShock:true,expired:false};
+    }
+
+    return processBattleStatusTurnV271(actor);
+  };
+})();
+
 $('#mapSelect').addEventListener('change',e=>{
   state.mapId=e.target.value;state.encounterId=null;clearEnemyBattleNoReward();
   const map=currentMap(),enc=currentEncounter(map);
@@ -24655,6 +25683,19 @@ $('#professionBattleActions').addEventListener('click',e=>{
   const slot=Math.trunc(Number(b.dataset.professionBattleSlot));
   if(!Number.isFinite(slot))return;
   attackTurn({professionSlot:slot});
+  save();render();
+});
+
+$('#professionOutOfBattleActions').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-profession-out-slot]');if(!b||b.disabled)return;
+  const slot=Math.trunc(Number(b.dataset.professionOutSlot));
+  if(!Number.isFinite(slot))return;
+  const result=sourceProfessionOutOfBattleSkillUse({slot,target:state});
+  if(!result.ok){
+    addLog('非戰鬥職技無法施放：'+sourceProfessionBattleFailureText(result.reason)+'。','bad');
+  }else if(result.protocolWouldReject){
+    addLog('「'+(result.functionName==='PROFESSION_TRACK'?'追尋敵蹤':'回避戰鬥')+'」已依 fixed C 覆寫現有效果；本次 function return=-1，server protocol 仍視為失敗。','bad');
+  }
   save();render();
 });
 $('#healBtn').addEventListener('click',()=>{
@@ -24749,55 +25790,135 @@ $('#teamGrid').addEventListener('click',e=>{
   const slot=e.target.closest('[data-pet-id]');if(slot)setActivePet(slot.dataset.petId);
 });
 window.addEventListener('beforeunload',save);
-
-/* V2.71 player-facing world API: keep the large source-simulation core intact,
-   while exposing only a small bridge for the visual exploration layer. */
-window.AfeiGameAPI={
-  getState:()=>state,
-  getCurrentMap:()=>currentMap(),
-  getCurrentEncounter:()=>currentEncounter(),
-  hasEnemy:()=>!!enemy,
-  render:()=>render(),
-  save:()=>save(),
-  addLog:(text,type)=>addLog(text,type),
-  moveEncounterStep:()=>walkEncounterStep(),
-  setAuto:(on)=>{ if(!state)return; state.auto=!!on; save(); render(); },
-  setActivePet:(id)=>setActivePet(id),
-  ensureNewPlayerDefaults:()=>{
-    if(!state)return false;
-    const freshCandidate=state.level===1&&state.wins===0&&state.battles===0&&state.gold===30000&&state.petBox.length===0&&!state.playerCreationStatsConfigured&&!state.playerHometownConfigured;
-    if(!freshCandidate)return false;
-    state.creationPlayerStats={vital:5,str:5,tgh:5,dex:5};
-    state.playerStats={vital:5,str:5,tgh:5,dex:5};
-    state.playerCreationStatsConfigured=true;
-    state.playerCreationStatsLegacyUnknown=false;
-    state.elements={earth:100,water:0,fire:0,wind:0};
-    state.playerElementsConfigured=true;
-    state.hometown=0;
-    state.lastTalkElder=0;
-    state.homeFloor=1006;
-    state.homeX=15; state.homeY=22;
-    state.hometownSavePointMask=1;
-    state.playerHometownConfigured=true;
-    state.hometownLegacyUnknown=false;
-    if(!state.petBox.length){
-      const starter=sourceCreateStarterPet(0);
-      if(starter){
-        state.petBox.push(starter);
-        state.team[0]=starter.id;
-      }
-    }
-    state.activePetId=state.team.find(Boolean)||null;
-    state.mapId=maps.find(m=>Number(m.floorId)===1006)?.id||maps.find(m=>!m.questZone)?.id||maps[0]?.id||null;
-    playerComplianceParameter(state);
-    state.hp=state.maxHp; state.mp=state.maxMp;
-    state.auto=false; state.autoCapture=true;
-    addLog('新冒險已建立：阿肥 5/5/5/5，地屬 10，出生於 0 號村；可以直接開始探索。','good');
-    save(); render();
-    return true;
-  }
-};
 boot();
 
-/* V2.70 UI */
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));}
+
+/* V273_ICE_ENCLOSE_RUNTIME_PATCH
+ * Fixed C Skill 17 冰附體:
+ *   冻 -> CHAR_WORK_I_ENCLOSE_2 (on-hit aura counter)
+ *   霜 -> CHAR_WORK_I_ENCLOSE   (DEX -10% status tick)
+ *   chance = 20 + A-tier*2
+ *   effective on-hit turns: tier<5 -> 1, 5-9 -> 2, 10 -> 3
+ *   stored StatusTbl = effective turns + 1
+ */
+function sourceProfessionIceEncloseAuraProc(attackerKind,actual,r){
+  if(attackerKind!=='player'||!actual||!r||n(r.damage)<=0)return null;
+  const turns=Math.trunc(n(state?.sourceIceEncloseOnHitTurns));
+  if(turns<=0){
+    if(state)state.sourceIceEncloseAuraActive=false;
+    return null;
+  }
+  const tier=Math.trunc(n(state?.sourceIceEncloseModTier));
+  const chance=20+tier*2;
+  const targetDesc={kind:'enemy',unit:actual,unitId:actual.id};
+  const check=sourceProfessionStatusAttackCheck(targetDesc,chance);
+  if(!check.success){
+    addLog('「冰附體」命中附體效果未觸發（roll '+check.roll+' / '+check.threshold+'）。');
+    return {element:'ice',triggered:false,check,turnsRemaining:turns,tier};
+  }
+  const effectiveTurn=tier>=10?3:(tier>=5?2:1);
+  const storedTurns=effectiveTurn+1;
+  const key=battleStatusKey(targetDesc);
+  if(!key)return {element:'ice',triggered:false,reason:'status-key',check,turnsRemaining:turns,tier};
+  if(battleHasAnyStatus(targetDesc))return {element:'ice',triggered:false,reason:'existing-status',check,turnsRemaining:turns,tier};
+  battleStatuses.set(key,{
+    type:'iceEnclose',
+    turns:storedTurns,
+    encloseElement:'ice',
+    sourceStatusToken:'霜',
+    sourceAuraTier:tier
+  });
+  addLog('「冰附體」觸發：'+actual.name+' 敏捷下降 10%，StatusTbl='+storedTurns+'。','good');
+  return {
+    element:'ice',triggered:true,check,
+    turnsRemaining:turns,tier,effectiveTurn,storedTurns,
+    status:'iceEnclose',img1:101697,img2:101699
+  };
+}
+
+function sourceProfessionIceEncloseStatusTick(desc,st){
+  const holder=desc?.kind==='player'
+    ?state
+    :(desc?.kind==='pet'?desc.pet:desc?.unit);
+  if(!holder)return {ok:false,reason:'missing-holder'};
+  const baseQuick=Math.max(1,Math.trunc(n(holder?.roundQuick ?? holder?.quick ?? holder?.dex ?? 1)));
+  const fixedBefore=Math.max(1,Math.trunc(n(holder?.roundFixQuick ?? baseQuick)));
+  const fixedAfter=Math.max(1,Math.trunc(baseQuick*0.9));
+  holder.roundFixQuick=fixedAfter;
+  return {
+    ok:true,fixedDexBefore:fixedBefore,fixedDexAfter:fixedAfter,
+    baseDex:baseQuick,roundQuick:Math.trunc(n(holder?.roundQuick ?? baseQuick)),
+    sourceFixedDexOnly:true,sourceNextPreCommandRebuildsFixDex:true,
+    sourceCanMoveUnaffected:true,turnsRemaining:Math.max(0,Math.trunc(n(st?.turns))-1)
+  };
+}
+
+function sourceProfessionBattleFunctionSupportedV273(functionName,skillId=null){
+  return functionName==='PROFESSION_ICE_ENCLOSE'
+    ?Math.trunc(n(skillId))===17
+    :sourceProfessionBattleFunctionSupportedV272(functionName,skillId);
+}
+
+function sourceProfessionBattleDexRollV273(prepared,quick,opts={}){
+  if(String(prepared?.commonCommand||'')==='BATTLE_COM_S_ICE_ENCLOSE'){
+    return sourceProfessionIceEncloseDexRoll(quick,opts);
+  }
+  return sourceProfessionBattleDexRollV272(prepared,quick,opts);
+}
+
+function sourceProfessionBattleSkillExecuteV273(prepared,actor=null){
+  if(prepared?.functionName==='PROFESSION_ICE_ENCLOSE'&&Math.trunc(n(prepared?.skillId))===17){
+    const row=sourceProfessionSkillTemplate(prepared.skillId);
+    return sourceProfessionEncloseAuraExecute(prepared,String(row?.name||'冰附體'),'ice');
+  }
+  return sourceProfessionBattleSkillExecuteV272(prepared,actor);
+}
+
+(function installV273IceEncloseRuntimePatch(){
+  const sourceProfessionBattleFunctionSupportedV272Local=sourceProfessionBattleFunctionSupported;
+  const sourceProfessionBattleDexRollV272Local=sourceProfessionBattleDexRoll;
+  const sourceProfessionBattleSkillExecuteV272Local=sourceProfessionBattleSkillExecute;
+  const applyFriendlyEnemyHitV272Local=applyFriendlyEnemyHit;
+  const processBattleStatusTurnV272Local=processBattleStatusTurn;
+
+  globalThis.sourceProfessionBattleFunctionSupportedV272=sourceProfessionBattleFunctionSupportedV272Local;
+  globalThis.sourceProfessionBattleDexRollV272=sourceProfessionBattleDexRollV272Local;
+  globalThis.sourceProfessionBattleSkillExecuteV272=sourceProfessionBattleSkillExecuteV272Local;
+
+  sourceProfessionBattleFunctionSupported=function(functionName,skillId=null){
+    return sourceProfessionBattleFunctionSupportedV273(functionName,skillId);
+  };
+
+  sourceProfessionBattleDexRoll=function(prepared,quick,opts={}){
+    return sourceProfessionBattleDexRollV273(prepared,quick,opts);
+  };
+
+  sourceProfessionBattleSkillExecute=function(prepared,actor=null){
+    return sourceProfessionBattleSkillExecuteV273(prepared,actor);
+  };
+
+  applyFriendlyEnemyHit=function(attackerKind,attackerName,target,r,attackerPetId=null,options={}){
+    const actual=applyFriendlyEnemyHitV272Local(attackerKind,attackerName,target,r,attackerPetId,options);
+    if(r?.professionEnclose)return actual;
+    const proc=sourceProfessionIceEncloseAuraProc(attackerKind,actual,r);
+    if(proc)r.professionEnclose=proc;
+    return actual;
+  };
+
+  processBattleStatusTurn=function(actor){
+    const desc=battleStatusActorDesc(actor);
+    const st=desc?battleStatusGet(desc):null;
+    if(st?.type==='iceEnclose'){
+      st.turns=Math.max(0,Math.trunc(n(st.turns))-1);
+      const tick=sourceProfessionIceEncloseStatusTick(desc,st);
+      if(st.turns<=0){
+        const key=battleStatusKey(desc);
+        if(key)battleStatuses.delete(key);
+        const holder=desc.kind==='player'?state:(desc.kind==='pet'?desc.pet:desc.unit);
+        if(holder)holder.sourceIceEncloseAuraActive=false;
+      }
+      return tick;
+    }
+    return processBattleStatusTurnV272Local(actor);
+  };
+})();

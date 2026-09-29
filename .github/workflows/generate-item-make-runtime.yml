@@ -105,6 +105,11 @@ on:
       - "tools/check_v267_profession_blood_runtime.mjs"
       - "tools/check_v268_profession_ice_arrow_runtime.mjs"
       - "tools/check_v269_profession_fire_spear_runtime.mjs"
+      - "tools/check_v270_profession_ice_mirror_runtime.mjs"
+      - "tools/check_v271_profession_fire_enclose_runtime.mjs"
+      - "tools/check_v272_profession_thunder_enclose_runtime.mjs"
+      - "tools/check_v273_profession_ice_enclose_runtime.mjs"
+      - "tools/check_v274_profession_magic_practice_runtime.mjs"
       - "game.js"
       - "game.html"
       - "game.css"
@@ -112,6 +117,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  # V2.74 regression CI
   contents: write
 
 jobs:
@@ -434,6 +440,21 @@ jobs:
 
       - name: Run V2.69 Fire Spear charge regression
         run: node tools/check_v269_profession_fire_spear_runtime.mjs
+
+      - name: Run V2.70 Ice Mirror regression
+        run: node tools/check_v270_profession_ice_mirror_runtime.mjs
+
+      - name: Run V2.71 Fire Enclose mapping regression
+        run: node tools/check_v271_profession_fire_enclose_runtime.mjs
+
+      - name: Run V2.72 Thunder Enclose regression
+        run: node tools/check_v272_profession_thunder_enclose_runtime.mjs
+
+      - name: Run V2.73 Ice Enclose regression
+        run: node tools/check_v273_profession_ice_enclose_runtime.mjs
+
+      - name: Run V2.74 magic proficiency regression
+        run: node tools/check_v274_profession_magic_practice_runtime.mjs
 
       - name: Commit generated runtime
         shell: bash

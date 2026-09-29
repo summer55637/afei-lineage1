@@ -1,0 +1,24 @@
+name: V2.82 FallGround DamageReact source regression
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'tools/check_v282_fallground_react.mjs'
+      - '.github/workflows/v282-fallground-react.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.82 FallGround DamageReact regression
+        run: node tools/check_v282_fallground_react.mjs

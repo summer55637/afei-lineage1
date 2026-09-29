@@ -1,0 +1,32 @@
+name: V2.89 Counter GuardAdjust boundary
+
+on:
+  push:
+    paths:
+      - 'game.js'
+      - 'game.html'
+      - 'README.md'
+      - 'tools/check_v288_damagereact_counter_boundary.mjs'
+      - 'tools/check_v289_counter_guard_boundary.mjs'
+      - '.github/workflows/v288-damagereact-counter.yml'
+      - '.github/workflows/v289-counter-guard.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check game.js syntax
+        run: node --check game.js
+      - name: Run V2.88 DamageReact boundary audit
+        run: node tools/check_v288_damagereact_counter_boundary.mjs
+      - name: Run V2.89 Counter GuardAdjust boundary audit
+        run: node tools/check_v289_counter_guard_boundary.mjs
+
+# V2.89 validation trigger: keep workflow on current main marker chain.
+
+# Validation trigger: regression marker fixes are now on main.
