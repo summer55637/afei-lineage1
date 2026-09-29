@@ -1,3 +1,11 @@
+## V3.17 — client RD decoder contract
+
+2026-09-30
+
+- 依 client `unpack.h/unpack.cpp` 固定 `RD_HEADER` 與 raw / legacy RLE decoder。
+- 新增 `src/stoneage_rd_decoder.mjs`：支援 compressFlag 0 與 legacy RLE；>=16 truecolor branch 目前 fail-closed。
+- 新增 `tools/check_v317_rd_decoder.mjs` 與 `.github/workflows/v317-rd-decoder.yml`。
+- 未取得合法 client asset pack 時不發布原版 BIN、不產生假圖；來源鏈暫停在 metadata／pixels decoder。
 ## V3.16 — client image resolver contract
 
 2026-09-30
