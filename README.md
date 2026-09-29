@@ -109,11 +109,13 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 原 C 的逐格 `IsValidImagenumber()` 驗證與 trailing-byte warning 邊界也已記錄；Web parser 目前只解析 container，不猜 image attribute，也不直接修改遊戲 world runtime。
 
-目前已由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，並提供 `floor/x/y → tile/object → battlemap candidates` 的 runtime API；另以 `sourceMapBattleFieldNoAt(...,{randIndex})` 保留 fixed C 的三候選 `RAND(0,2)` 選擇，沒有外部 RNG 就不抽樣。沒有可靠 bytes 的 Floor 仍維持 **fail-closed**，不虛構地圖。
+目前已由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，並提供 `floor/x/y → tile/object → mapset attributes → battlemap candidates` 的 runtime API；另以 `sourceMapBattleFieldNoAt(...,{randIndex})` 保留 fixed C 的三候選 `RAND(0,2)` 選擇，沒有外部 RNG 就不抽樣。沒有可靠 bytes 的 Floor 仍維持 **fail-closed**，不虛構地圖。
 
 來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
 
 另有 `data/generated/stoneage_map_source_catalog.json` 保存 fixed-C `data/map` 的 1284 個 map blob 路徑、大小與 SHA；它是來源索引，不代表每個檔案都已轉成 Web runtime。
+
+`data/generated/stoneage_mapset_runtime.json` 則保存 fixed-C `mapset.txt` 的 20,166 個 image ID 屬性索引，包含 `MAP_WALKABLE`／`MAP_HAVEHEIGHT` 的 C parser 效果。
 
 **V3.13 已驗證真實 Floor map**：Floor 20000＝50×50、Floor 400＝150×149、Floor 2000＝150×150；三張地圖的 tile/object 陣列都由 fixed C `LS2MAP` bytes 產生，並固定保存各自 source blob SHA。
 
