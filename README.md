@@ -109,7 +109,7 @@ V3.13 已正式閉合 fixed C 的 `LS2MAP` binary container 格式，新增 `too
 
 原 C 的逐格 `IsValidImagenumber()` 驗證與 trailing-byte warning 邊界也已記錄；Web parser 目前只解析 container，不猜 image attribute，也不直接修改遊戲 world runtime。
 
-目前已由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，並提供 `floor/x/y → tile/object → battlemap candidates` 的 runtime API；沒有可靠 bytes 的 Floor 仍維持 **fail-closed**，不虛構地圖。
+目前已由 fixed ref 的實際 binary map bytes 產生受控 generated tile JSON，並提供 `floor/x/y → tile/object → battlemap candidates` 的 runtime API；另以 `sourceMapBattleFieldNoAt(...,{randIndex})` 保留 fixed C 的三候選 `RAND(0,2)` 選擇，沒有外部 RNG 就不抽樣。沒有可靠 bytes 的 Floor 仍維持 **fail-closed**，不虛構地圖。
 
 來源筆記：[V3.13 LS2MAP parser contract](docs/reference/v313-ls2map-parser-contract.md)。
 
