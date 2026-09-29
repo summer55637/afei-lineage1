@@ -21,6 +21,8 @@ PLAYABLE CORE V3.09 — current playable baseline; V3.13 remains source/runtime 
 
 - 新增 `sourceMapWalkableAt()`：對齊 fixed C `MAP_walkAbleFromPoint()` 的 ground/object WALKABLE 與 flying HEIGHT 分支，unknown/out-of-range 維持 fail-closed。
 
+- 7 張 verified map 的 tile/object image ID 現在逐格通過 `mapset` 的 `IsValidImagenumber()` 等價驗證，避免解析成功但 image ID 無效的地圖資料。
+
 ## V3.12 — battlefield source contract
 
 2026-09-30
