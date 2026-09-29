@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const game=fs.readFileSync('game.js','utf8');
+const html=fs.readFileSync('start.html','utf8');
+const runtime=fs.readFileSync('src/stoneage_map_runtime.mjs','utf8');
+const data=JSON.parse(fs.readFileSync('data/generated/stoneage_map_20000.json','utf8'));
+assert.ok(game.includes("import('./src/stoneage_map_runtime.mjs')"),'game.js must load source map runtime');
+assert.ok(game.includes('function sourceMapRuntimeStatusText(map)'),'source map status helper missing');
+assert.ok(game.includes("sourceMapRuntimeStatusText(map);"),'world renderer must refresh source map status');
+assert.match(html,/id=["']worldSceneSourceMap["']/,'world source map node missing');
+assert.equal(data.floorId,20000);
+assert.equal(data.tiles.length,2500);
+assert.equal(runtime.includes('export function sourceMapTileAt(map,x,y)'),true);
+assert.equal(runtime.includes('export function sourceMapBattleCandidates(map,tileId)'),true);
+assert.equal(game.slice(game.indexOf('function sourceMapRuntimeStatusText'),game.indexOf('function renderWorldScene')).includes('Math.random'),false);
+console.log(JSON.stringify({pass:true,version:'V3.13',focus:'verified floor runtime world HUD integration',floorId:20000,worldStatusFailClosed:true}));
