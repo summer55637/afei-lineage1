@@ -1,94 +1,107 @@
 #!/usr/bin/env node
 'use strict';
 
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import path from 'node:path';
+import vm from 'node:vm';
 
-const root = process.cwd();
-const gamePath = path.join(root, 'game.js');
-if (!fs.existsSync(gamePath)) throw new Error(`game.js not found under ${root}`);
-const source = fs.readFileSync(gamePath, 'utf8');
+const game=fs.readFileSync('game.js','utf8');
+const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_trophy_runtime.json','utf8'));
+const fixedRef='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 
-const FIXED_C_REF = '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
-if (!source.includes(FIXED_C_REF)) {
-  throw new Error(`game.js does not contain pinned fixed-C ref ${FIXED_C_REF}`);
+function extractFunction(name){
+  const marker=`function ${name}(`;
+  const start=game.indexOf(marker);
+  assert.ok(start>=0,`missing ${name}`);
+  const next=game.indexOf('\nfunction ',start+marker.length);
+  return game.slice(start,next<0?game.length:next);
 }
 
-function extractFunction(name) {
-  const marker = `function ${name}(`;
-  const start = source.indexOf(marker);
-  if (start < 0) throw new Error(`missing ${name}`);
-  const brace = source.indexOf('{', start);
-  if (brace < 0) throw new Error(`missing body for ${name}`);
-  let depth = 0;
-  let quote = null;
-  let escaped = false;
-  for (let i = brace; i < source.length; i += 1) {
-    const ch = source[i];
-    if (quote) {
-      if (escaped) escaped = false;
-      else if (ch === '\\') escaped = true;
-      else if (ch === quote) quote = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'" || ch === '`') {
-      quote = ch;
-      continue;
-    }
-    if (ch === '{') depth += 1;
-    else if (ch === '}') {
-      depth -= 1;
-      if (depth === 0) return source.slice(start, i + 1);
-    }
-  }
-  throw new Error(`unterminated ${name}`);
+assert.equal(runtime.source?.ref,fixedRef);
+assert.equal(runtime.source?.repository,'gavinlinasd/StoneAge');
+assert.equal(runtime.source?.path,'gmsv/src/npc/npc_eventaction.c');
+
+for(const name of ['sourceGmQueActionValue','sourceGmQueRewardType','sourceGmQueBuildPetTemplateIndex','sourceGmQueRewardPetTemplate','sourceGmQueResolveTrophy']){
+  assert.doesNotThrow(()=>extractFunction(name),`missing ${name}`);
 }
 
-function requirePattern(text, pattern, label) {
-  if (!pattern.test(text)) throw new Error(`${label}: missing ${pattern}`);
+const ctx={
+  Math,Number,Object,Array,RegExp,
+  n:value=>Number.isFinite(Number(value))?Number(value):0,
+  gmqueDb:runtime,
+  gmquePetTemplateIndex:{},
+  cRand:(a)=>a,
+  sourceRandModulo:()=>41
+};
+vm.createContext(ctx);
+for(const name of ['sourceGmQueActionValue','sourceGmQueRewardType','sourceGmQueBuildPetTemplateIndex','sourceGmQueRewardPetTemplate','sourceGmQueResolveTrophy']){
+  vm.runInContext(extractFunction(name),ctx);
 }
 
-const action = extractFunction('sourceGmQueActionValue');
-const rewardType = extractFunction('sourceGmQueRewardType');
-const resolve = extractFunction('sourceGmQueResolveTrophy');
+// Fixed observable roll semantics: rand()%100 then zero becomes one.
+assert.equal(ctx.sourceGmQueActionValue(()=>0),1);
+assert.equal(ctx.sourceGmQueActionValue(()=>1),1);
+assert.equal(ctx.sourceGmQueActionValue(()=>41),41);
+assert.equal(ctx.sourceGmQueActionValue(()=>99),99);
 
-// GMQUE_CheckQueStr: fixed source uses rand()%100 and normalizes zero to 1.
-requirePattern(action, /randModulo\(100\)/, 'action roll modulus');
-requirePattern(action, /raw\s*===\s*0\s*\?\s*1\s*:\s*raw/, 'zero-to-one normalization');
+// Reward boundaries are semantic, not source-spelling dependent.
+assert.equal(ctx.sourceGmQueRewardType(1),'gold');
+assert.equal(ctx.sourceGmQueRewardType(40),'gold');
+assert.equal(ctx.sourceGmQueRewardType(41),'item');
+assert.equal(ctx.sourceGmQueRewardType(97),'item');
+assert.equal(ctx.sourceGmQueRewardType(98),'pet');
+assert.equal(ctx.sourceGmQueRewardType(99),'pet');
 
-// GMQUE reward type boundaries: >97 pet, >40 item, otherwise gold.
-requirePattern(rewardType, /gmqueNums\s*>\s*97/, 'pet threshold');
-requirePattern(rewardType, /gmqueNums\s*>\s*40/, 'item threshold');
-requirePattern(rewardType, /['"]pet['"]/, 'pet reward type');
-requirePattern(rewardType, /['"]item['"]/, 'item reward type');
-requirePattern(rewardType, /['"]gold['"]/, 'gold reward type');
+// Gold branch follows the generated source table: 15..30 => 20k, 10..14 => 50k, 0..9 => secondary 2..4 table.
+assert.equal(ctx.sourceGmQueResolveTrophy(1,{randInclusive:()=>15}).gold,20000);
+assert.equal(ctx.sourceGmQueResolveTrophy(1,{randInclusive:()=>10}).gold,50000);
+const goldSecondary=ctx.sourceGmQueResolveTrophy(1,{randInclusive:(a,b)=>a});
 
-// Pet branch: inclusive 0..3 selection and explicit implicit-zero fail-closed path.
-requirePattern(resolve, /petReward/, 'pet reward table');
-requirePattern(resolve, /effectiveIds/, 'effective pet id list');
-requirePattern(resolve, /randInclusive\(0\s*,\s*3\)/, 'pet inclusive index');
-requirePattern(resolve, /implicit-zero-pet-slot/, 'pet zero-slot guard');
+assert.equal(goldSecondary.gold,100000);
+assert.equal(goldSecondary.secondary,2);
+let goldRolls=0;
+const goldSecondaryMax=ctx.sourceGmQueResolveTrophy(1,{randInclusive:(a,b)=>goldRolls++===0?0:b});
+assert.equal(goldSecondaryMax.gold,200000);
+assert.equal(goldSecondaryMax.secondary,4);
 
-// Item branch: five fixed pools selected by the documented primary thresholds.
-requirePattern(resolve, /randInclusive\(0\s*,\s*100\)/, 'item primary inclusive roll');
-for (const pool of [3, 2, 4, 5, 1]) {
-  requirePattern(resolve, new RegExp(`itemID${pool}`), `itemID${pool} pool`);
-}
-for (const threshold of [97, 70, 40]) {
-  requirePattern(resolve, new RegExp(`>=\\s*${threshold}`), `item threshold ${threshold}`);
-}
+// Item branch keeps the five documented pools and an inclusive pool-index roll.
+const item=ctx.sourceGmQueResolveTrophy(41,{randInclusive:()=>0});
+assert.equal(item.ok,true);
+assert.equal(item.type,'item');
+assert.equal(item.pool,'itemID3');
+assert.equal(item.itemId,20282);
 
-// Gold branch: fixed 0..30 primary roll, then the two documented direct branches
-// and the secondary 2..4 table lookup for the low-roll branch.
-requirePattern(resolve, /randInclusive\(0\s*,\s*30\)/, 'gold primary inclusive roll');
-requirePattern(resolve, /20000/, 'gold 20k branch');
-requirePattern(resolve, /50000/, 'gold 50k branch');
-requirePattern(resolve, /randInclusive\(2\s*,\s*4\)/, 'gold secondary inclusive roll');
-requirePattern(resolve, /goldByIndex/, 'gold secondary lookup');
+// Pet branch retains the fixed 0..3 table and remains fail-closed without player-pet templates.
+const petZero=ctx.sourceGmQueResolveTrophy(98,{randInclusive:(_,b)=>b});
+assert.equal(petZero.ok,false);
+assert.equal(petZero.reason,'implicit-zero-pet-slot');
+const petPending=ctx.sourceGmQueResolveTrophy(98,{randInclusive:()=>0});
+assert.equal(petPending.ok,false);
+assert.equal(petPending.reason,'pet-template-pending');
 
-// All source-backed resolver failures remain fail-closed; this prevents a missing
-// generated runtime table from becoming an invented player reward.
-requirePattern(resolve, /runtime-missing/, 'runtime-missing fail-closed');
-requirePattern(resolve, /missing-item-pool/, 'missing item-pool fail-closed');
+// Missing generated runtime is fail-closed rather than silently inventing a reward.
+const runtimeMissing=ctx.sourceGmQueResolveTrophy;
+const saved=ctx.gmqueDb;
+ctx.gmqueDb=null;
+assert.equal(runtimeMissing(41).reason,'runtime-missing');
+ctx.gmqueDb=saved;
+const savedPools=ctx.gmqueDb.itemReward.pools;
+ctx.gmqueDb.itemReward.pools=[];
+assert.equal(runtimeMissing(41).reason,'pool-missing');
+ctx.gmqueDb.itemReward.pools=savedPools;
 
-console.log('V3.10 GMQUE trophy runtime regression PASS');
+assert.deepEqual(runtime.petReward?.effectiveIds,[1642,1636,475,0]);
+assert.deepEqual(runtime.petReward?.selection?.inclusive,[0,3]);
+assert.deepEqual(runtime.goldReward?.branches?.[2]?.secondary?.goldByIndex,{'2':100000,'3':150000,'4':200000});
+assert.equal(runtime.itemReward?.pools?.length,5);
+assert.equal(runtime.itemReward?.pools?.find(x=>x.name==='itemID1')?.ids?.[0],20131);
+
+console.log(JSON.stringify({
+  pass:true,
+  version:'V3.10-groundwork',
+  focus:'GMQUE trophy runtime semantic regression',
+  fixedC:fixedRef,
+  rewardBoundaries:{gold:'1-40',item:'41-97',pet:'98-99'},
+  petRewardIds:[1642,1636,475,0],
+  failClosed:['runtime-missing','pool-missing','pet-template-pending','implicit-zero-pet-slot']
+}));

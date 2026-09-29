@@ -3,7 +3,6 @@ import fs from 'node:fs';
 
 const game=fs.readFileSync('game.js','utf8');
 const runtime=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_trophy_runtime.json','utf8'));
-const html=fs.readFileSync('game.html','utf8');
 const readme=fs.readFileSync('README.md','utf8');
 
 const FIXED_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -18,6 +17,10 @@ assert.ok(game.includes("const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage
 assert.ok(game.includes('function sourceGmQueActionValue('));
 assert.ok(game.includes('function sourceGmQueRewardType('));
 assert.ok(game.includes('function sourceGmQueResolveTrophy('));
+assert.ok(game.includes('function sourceGmQueParseNpcArg('));
+assert.ok(game.includes('function sourceGmQueTaskEntries('));
+assert.equal(game.includes('function sourceGmQueParseTaskString('),false);
+assert.equal(game.includes('function sourceGmQuePetMatchesTask('),false);
 
 const roll=runtime.actionRoll;
 assert.deepEqual(roll.rawRange,[0,99]);
@@ -44,11 +47,10 @@ const gold=runtime.goldReward?.branches||[];
 assert.deepEqual(gold.map(x=>x.gold??null),[20000,50000,null]);
 assert.deepEqual(gold[2].secondary.goldByIndex,{'2':100000,'3':150000,'4':200000});
 
-assert.match(html,/完整 GMQUE 活動 UI／交寵流程尚未啟用/);
 assert.match(readme,/PLAYABLE CORE V3\.09/);
 assert.equal(readme.includes('**目前核心版本：V2.91**'),false);
-assert.match(readme,/sourceRuntimePending:true/);
-assert.match(readme,/下一個證據工作點：GMQUE source closure/);
+assert.match(readme,/sourceRuntimePending/);
+assert.match(readme,/V3\.10 groundwork/);
 assert.match(readme,/V2\.61/);
 
 console.log(JSON.stringify({

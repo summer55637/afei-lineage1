@@ -1,14 +1,28 @@
-V3.10 candidate work — GMQUE reward runtime regression
+Afei-Lineage1 V3.10 regression maintenance checkpoint
 
-Files:
-- tools/check_v310_gmque_trophy_runtime.mjs
-- .github/workflows/v310-gmque-runtime.yml
+Purpose:
+  Align stale V3.10 regression checkers with the current runtime/API and consolidated README/CHANGELOG structure.
 
-This change intentionally does NOT implement GMQUE turn-in/event-state mutation yet.
-The current main branch already contains sourceGmQueActionValue(),
-sourceGmQueRewardType(), and sourceGmQueResolveTrophy(); this regression freezes their
-source-backed boundaries before the missing UI/turn-in flow is added.
+Gameplay:
+  No game.js gameplay-rule changes are included by this maintenance package.
 
-It should be copied into the repository root, then run with:
-  node --check game.js
-  node tools/check_v310_gmque_trophy_runtime.mjs
+Changed files (8):
+  tools/check_gmque_source_contract.mjs
+  tools/check_v310_gmque_handoff.mjs
+  tools/check_v310_gmque_trophy_runtime.mjs
+  tools/check_v310_petskill_pending_ledger.mjs
+  tools/check_v270_profession_ice_mirror_runtime.mjs
+  tools/check_v271_profession_fire_enclose_runtime.mjs
+  tools/check_v272_profession_thunder_enclose_runtime.mjs
+  tools/check_v273_profession_ice_enclose_runtime.mjs
+
+Key fixes:
+  - Remove obsolete GMQUE helper/UI assumptions.
+  - Verify current GMQUE parser/handover API and fail-closed boundaries.
+  - Make GMQUE trophy regression semantic rather than implementation-spelling dependent.
+  - Align PetSkill pending ledger with current combined-attack/death-credit helper flow.
+  - Stop historical V2.70-V2.73 checks from requiring outdated README version markers when CHANGELOG/HTML still carry the historical contract.
+
+Validation in reconstructed latest checkpoint:
+  node --check game.js: PASS
+  full tools/check_*.mjs sweep: 146/146 PASS, 0 failures

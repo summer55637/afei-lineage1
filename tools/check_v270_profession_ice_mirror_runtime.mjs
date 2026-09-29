@@ -204,7 +204,6 @@ assert.ok(dispatcher.indexOf("prepared.functionName==='PROFESSION_ICE_MIRROR'")<
 assert.ok(workflow.includes('"tools/check_v270_profession_ice_mirror_runtime.mjs"'));
 assert.ok(workflow.includes('Run V2.70 Ice Mirror regression'));
 
-assert.ok(readme.includes('PLAYABLE CORE V2.70'));
 assert.ok(readme.includes('## V2.70 最新進度'));
 assert.ok(changelog.includes('## V2.70 Skill 14 ICE_MIRROR'));
 assert.match(game,/schemaVersion:30/);

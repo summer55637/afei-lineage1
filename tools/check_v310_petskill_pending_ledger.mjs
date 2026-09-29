@@ -78,10 +78,17 @@ if (!magicStatusSection.includes('鐵壁') || !magicStatusSection.includes(marke
 }
 
 const combinedSection = section('sourcePerformPetCombinedSkill');
-for (const token of ['SOURCE_COMBINED_MISSING_MAGIC_IDS', 'sourceBattleHandleEnemyDeathCredit', marker]) {
+for (const token of ['SOURCE_COMBINED_MISSING_MAGIC_IDS', 'sourcePerformPetCombinedAttackMagic', marker]) {
   if (!combinedSection.includes(token)) {
     fail(`Combined path lost required source-backed guard/token: ${token}`);
   }
+}
+const combinedAttackOne = section('sourcePetCombinedAttackMagicOne');
+if (!combinedAttackOne.includes('sourceMarkEnemyDeathCredit')) {
+  fail('Combined attack no longer records source-backed pending death credit at the hit boundary');
+}
+if (!game.includes('function sourceBattleFinalizeItemCrushRng(')) {
+  fail('current battle runtime lost the shared ItemCrush finalization boundary');
 }
 
 const fixedCPin = 'gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -89,8 +96,8 @@ if (!readme.includes(fixedCPin) || !changelog.includes(fixedCPin)) {
   fail(`fixed-C pin is no longer present in README/CHANGELOG: ${fixedCPin}`);
 }
 
-if (!/^# .*V3\.09/m.test(changelog)) {
-  fail('CHANGELOG no longer declares V3.09 as the current playable baseline');
+if (!readme.includes('PLAYABLE CORE V3.09') || !changelog.includes('PLAYABLE CORE V3.09')) {
+  fail('README/CHANGELOG no longer declare V3.09 as the current playable baseline');
 }
 
 if (!visualRef.includes('戰鬥') || !visualRef.includes('HUD') || !visualRef.includes('視覺')) {
