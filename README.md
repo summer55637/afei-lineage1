@@ -112,7 +112,7 @@ V3.10 仍保留已完成的 **encounter source closure** 資料邊界；主線�
 ## 📁 專案結構
 
 ```
-game.html              # 遊戲入口
+start.html              # 遊戲入口
 game.js                # 主要 runtime
 game.css               # PC／手機共用介面
 data/generated/        # source-backed generated data
@@ -145,7 +145,7 @@ Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要�
 這是純前端專案，可直接在瀏覽器開啟：
 
 ```
-game.html
+start.html
 ```
 
 開發與驗證時，建議使用桌面瀏覽器；手機則以目前共用 responsive UI 為主要使用方式。
