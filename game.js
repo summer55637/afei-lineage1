@@ -15,6 +15,7 @@ const PROFESSION_SKILL_RUNTIME_URL='data/generated/stoneage_profession_skill_run
 const GMQUE_TROPHY_RUNTIME_URL='data/generated/stoneage_gmque_trophy_runtime.json';
 const ENEMY_WEAPON_RUNTIME_URL='data/generated/stoneage_enemy_weapon_runtime.json';
 const CONDITION_ITEM_URL='data/generated/capture_items.json';
+const SOURCE_MAP_RUNTIME_INDEX_URL='data/generated/stoneage_map_runtime_index.json';
 const ZOO_QUEST_URL='data/generated/zoo_quest.json';
 const SAVE_KEY='afei_stoneage_idle_v01';
 const TEAM_SIZE=5;
@@ -93,6 +94,48 @@ const MAREFIA_MEMORY_ROUTE=Object.freeze([
 ]);
 let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=null, attackMagicDb=null, itemMagicDb=null, itemRelifeDb=null, itemMakeDb=null, itemField2Db=null, itemField2LoadPromise=null, petMergeFixDb=null, petMergeFixLoadPromise=null, professionSkillDb=null, gmqueDb=null, enemyWeaponDb=null, zooQuest=null, maps=[], conditionItems=[], sourceCatalog=new Map(), dynamicGroupCatalog=new Map(), encounterCatalog=new Map(), state=null, enemy=null, timer=null, playerCreationStatsDraft={vital:0,str:0,tgh:0,dex:0}, playerElementDraft={earth:0,water:0,fire:0,wind:0}, battleStatuses=new Map(), battlePetOutIds=new Set(), battlePetDeathProcessedIds=new Set(), battlePetFixAiSnapshots=new Map(), battlePlayerDeathProcessed=false, battlePlayerDeathResult=null, battleOuterAddProfitPending=false, battlePetChargeStates=new Map(), battlePetEarthRoundStates=new Map(), battlePetHiddenIds=new Set(), battlePetGuardIds=new Set(), battlePetAcupunctureIds=new Set(), battlePetPowerMods=new Map(), battleMagicPetStates=new Map(), battleMagicPetRoundStates=new Map(), battlePetRecoveryAiIds=new Set(), battlePetNoGuardStates=new Map(), battlePetVaryStates=new Map(), battlePlayerGuardianPetId=null, battleReverseKeys=new Set(), battlePropertyKeys=new Set(), battleElementWork=new Map(), battleDrunkReleaseBoostKeys=new Set(), battleWeakenRoundKeys=new Set(), battleUltimateWork=new Map(), battleUltimateFlags=new Map(), battleSarsStates=new Map(), battleSarsCarrierKeys=new Set(), battleShootSleepStates=new Map(), battleDefMagicStates=new Map(), battleGetItemPool=[], battleFieldState={attr:'none',power:0,turns:0};
 let sourceEnemyUnitSerial=0;
+let sourceMapRuntimeModulePromise=null,sourceMapRuntimeCache=new Map(),sourceMapRuntimePending=new Set(),sourceMapRuntimeErrors=new Map();
+
+function loadSourceMapRuntimeModule(){
+  if(!sourceMapRuntimeModulePromise){
+    sourceMapRuntimeModulePromise=import('./src/stoneage_map_runtime.mjs').catch(err=>{
+      sourceMapRuntimeModulePromise=null;
+      throw err;
+    });
+  }
+  return sourceMapRuntimeModulePromise;
+}
+
+function sourceMapRuntimeStatusText(map){
+  const el=$('#worldSceneSourceMap');
+  const floor=Math.trunc(n(map?.floorId??map?.id));
+  if(!Number.isFinite(floor)){
+    if(el){el.textContent='原始地圖：尚未綁定 Floor';el.classList.remove('source-ready','source-missing');}
+    return;
+  }
+  const key=String(floor);
+  const ready=sourceMapRuntimeCache.get(key);
+  if(ready){
+    if(el){el.textContent='真實 tile：'+ready.width+'×'+ready.height+' · Floor '+ready.floorId;el.classList.add('source-ready');el.classList.remove('source-missing');}
+    return;
+  }
+  if(sourceMapRuntimeErrors.has(key)){
+    if(el){el.textContent='原始地圖：此 Floor 尚未收錄 verified bytes';el.classList.add('source-missing');el.classList.remove('source-ready');}
+    return;
+  }
+  if(!sourceMapRuntimePending.has(key)){
+    sourceMapRuntimePending.add(key);
+    loadSourceMapRuntimeModule().then(mod=>mod.loadSourceMapRuntime(floor)).then(runtime=>{
+      if(runtime)sourceMapRuntimeCache.set(key,runtime);
+      else sourceMapRuntimeErrors.set(key,'not-indexed');
+    }).catch(()=>sourceMapRuntimeErrors.set(key,'load-failed')).finally(()=>{
+      sourceMapRuntimePending.delete(key);
+      renderWorldScene();
+    });
+  }
+  if(el){el.textContent='原始地圖：查找 verified bytes…';el.classList.remove('source-ready','source-missing');}
+}
+
 const sourceField2SelectedSlots=new Set();
 let sourceMergeCandidateCacheMemo=null;
 let sourceLastMergeTimeSec=0;
@@ -24557,6 +24600,7 @@ function renderWorldScene(){
   const message=$('#worldSceneMessage');
   if(!root||!mapName||!areaName||!mode||!player||!pet||!task||!message||!state)return;
   const map=currentMap();
+  sourceMapRuntimeStatusText(map);
   const encounter=currentEncounter(map);
   const active=activePet();
   mapName.textContent=map?.name||'未知地圖';
