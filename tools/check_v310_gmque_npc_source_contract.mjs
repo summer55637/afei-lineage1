@@ -37,6 +37,8 @@ const good=ctx.sourceGmQueParseNpcArg(
 assert.equal(good.ok,true);
 assert.equal(good.count,4);
 assert.equal(good.taskString,'475-2&1636-3&1642-4&999-5');
+assert.deepEqual(good.tasks.map(x=>x.tempNo),[475,1636,1642,999]);
+assert.deepEqual(good.tasks.map(x=>x.petId),[475,1636,1642,999]);
 assert.deepEqual(calls,[[1,2],[2,2],[1,1],[3,3],[1,1],[4,4],[1,1],[5,5]]);
 
 assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=3|QUEPART0=1=1-1|QUEPART1=2=1-1|QUEPART2=3=1-1').reason,'randgmque-count');
@@ -44,6 +46,8 @@ assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=4|QUEPART0=1=1-1|QUEPART1=2=1
 assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=4|QUEPART0=1=2-1|QUEPART1=2=1-1|QUEPART2=3=1-1|QUEPART3=4=1-1').reason,'quepart-level-order');
 assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=4|QUEPART0=1=1-1,|QUEPART1=2=1-1|QUEPART2=3=1-1|QUEPART3=4=1-1',{randInclusive:()=>99}).reason,'quepart-rng-range');
 assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=4|QUEPART0=0=1-1|QUEPART1=2=1-1|QUEPART2=3=1-1|QUEPART3=4=1-1',{randInclusive:()=>1}).reason,'quepart-number');
+const overflowPage=['1','2','3','4','5','6','7','8','9','10','11','12'].join(',');
+assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=4|QUEPART0='+overflowPage+'|QUEPART1=2=1-1|QUEPART2=3=1-1|QUEPART3=4=1-1',{randInclusive:()=>1}).reason,'quepart-option-overflow');
 assert.equal(ctx.sourceGmQueParseNpcArg('RANDGMQUE=4|QUEPART0=1=1-1|QUEPART0=2=1-1|QUEPART1=2=1-1|QUEPART2=3=1-1|QUEPART3=4=1-1').reason,'npc-arg-duplicate');
 
 let mutated=false;
