@@ -5,7 +5,9 @@ import {loadSourceMapRuntime,sourceMapTileAt,sourceMapBattleCandidates,sourceMap
 const index=fs.readFileSync('data/generated/stoneage_map_runtime_index.json','utf8');
 const map=fs.readFileSync('data/generated/stoneage_map_20000.json','utf8');
 const routes={
+  'data/generated/stoneage_map_runtime_index.json':index,
   './data/generated/stoneage_map_runtime_index.json':index,
+  'data/generated/stoneage_map_20000.json':map,
   './data/generated/stoneage_map_20000.json':map
 };
 const fetchImpl=async url=>{
