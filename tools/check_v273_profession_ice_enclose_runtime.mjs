@@ -230,6 +230,7 @@ assert.ok(workflow.includes('Run V2.73 Ice Enclose regression'));
 assert.ok(html.includes('PLAYABLE CORE V2.73'));
 assert.ok(html.includes('PLAYABLE CORE V2.72'));
 assert.match(readme,/## V2\.73[\s\S]*冰附體/);
+assert.ok(readme.includes('PLAYABLE CORE V2.72'));
 assert.ok(changelog.includes('## V2.73 Skill 17 ICE_ENCLOSE'));
 assert.ok(changelog.includes('PROFESSION_ICE_ENCLOSE'));
 assert.match(game,/schemaVersion:30/);

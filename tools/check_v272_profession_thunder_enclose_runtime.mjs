@@ -119,6 +119,7 @@ assert.ok(game.includes('img2:101700'));
 assert.ok(workflow.includes('tools/check_v272_profession_thunder_enclose_runtime.mjs'));
 assert.match(html,/PLAYABLE CORE V2\.72/);
 assert.match(html,/Skill 16 雷附體/);
+assert.ok(readme.includes('PLAYABLE CORE V2.72'));
 assert.ok(changelog.includes('PROFESSION_THUNDER_ENCLOSE'));
 assert.ok(changelog.includes('20 + A-tier ×2'));
 

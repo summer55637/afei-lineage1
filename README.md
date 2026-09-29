@@ -615,7 +615,8 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；尚不直接刪除寵物或假造缺失 template。
 - V3.10 另外加入 `sourceGmQueParseNpcArg()` source adapter：只接受有證據的 `RANDGMQUE=4 + QUEPART0..3` argument，按 fixed inclusive RNG 生成四段 task string；沒有真實 NPC argument 時不注入預設任務。
 - V3.10 另外加入 `check_v310_gmque_npc_source_locator.mjs`，固定從 `gmsv/data/npc` 等候選 source root 尋找真實 NPC argument；找到候選檔也只標記 candidate，不自動啟用活動。
-- V3.10 另外加入 `check_v310_encounter_source_closure.mjs`，建立 **encounter source closure**，鎖定目前 728 個被引用 Group 中 705 個已解析、23 個 unresolved；目前 28 個 encounter 受影響、沒有整區被堵死，並量化 unresolved Group 正權重占這批受影響 encounter 約 52.57%；Group 1297 / EnemyID 2455 / TempNo 145 仍是缺 template blocker，未取得 pinned source 前不跨版本補怪物。
+- V3.10 另外加入 `check_v310_encounter_source_closure.mjs`，建立 **encounter source closure**，鎖定目前 728 個被引用 Group 中 705 個已解析、23 個 unresolved，以及 Group 1297 / EnemyID 2455 / TempNo 145 的缺 template 邊界；未取得 pinned source 前不跨版本補怪物。
+- `docs/reference/group1-1230-research.md` 記錄 Group `1230` 的外部追查：8.0 啟動紀錄的「有效遇敵組群數 1230」不能直接等同 `GroupID=1230`；SourceForge 8.0 `group1.txt` 只作 candidate evidence，尚未取得可釘定到 fixed ref 的原始 row，因此 `1230` 維持 unresolved。
 - 對任何尚未取得 pinned-source 證據的規則、名稱、能力、數值或事件旗標，維持 **fail-closed**，不自行補數值。
 - 開發流程固定為 **證據 → runtime → regression → CI → 視覺還原**。
 

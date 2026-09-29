@@ -9556,17 +9556,6 @@ function dynamicGroupUnlocked(spec){
   if(block&&hasItem(block))return false;
   return true;
 }
-function sourceEncounterGroupCoverage(encounter){
-  const groups=Array.isArray(encounter?.groups)?encounter.groups:[];
-  let resolvedCount=0,unresolvedCount=0,resolvedWeight=0,unresolvedWeight=0;
-  for(const group of groups){
-    const weight=Math.max(0,n(group?.weight));
-    if(group?.resolved===true){resolvedCount++;resolvedWeight+=weight;}
-    else{unresolvedCount++;unresolvedWeight+=weight;}
-  }
-  const totalWeight=resolvedWeight+unresolvedWeight;
-  return {groupCount:groups.length,resolvedCount,unresolvedCount,resolvedWeight,unresolvedWeight,totalWeight,unresolvedWeightShare:totalWeight>0?unresolvedWeight/totalWeight:0};
-}
 function encounterDynamicFormation(encounter){
   if(!encounter||!dynamicGroupCatalog.size)return null;
   const choices=[];
@@ -9589,8 +9578,7 @@ function encounterDynamicFormation(encounter){
   return Object.assign({},picked.spec,{
     encounterId:encounter.encounterId,
     encounterMax:Math.max(1,Math.floor(n(encounter.enemyMax)||1)
-    ),
-    sourceGroupCoverage:sourceEncounterGroupCoverage(encounter)
+    )
   });
 }
 
@@ -24717,11 +24705,10 @@ function render(){
       const eligible=all.filter(x=>routeUnlocked(x.route));
       const allNames=[...new Set(all.map(x=>x.species.clientLabel))];
       const okNames=[...new Set(eligible.map(x=>x.species.clientLabel))];
-      const a=encounter?.area||{},coverage=sourceEncounterGroupCoverage(encounter);
-      const weightText=coverage.totalWeight>0?(' · source weight '+coverage.resolvedWeight+'/'+coverage.totalWeight+' 可用'):'';
+      const a=encounter?.area||{},groups=encounter?.groups||[],resolved=groups.filter(g=>g.resolved).length;
       $('#mapPetCount').textContent=okNames.length+' / '+allNames.length+' 種 Lv1';
       $('#mapInfo').textContent=encounter
-        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+coverage.resolvedCount+'/'+coverage.groupCount+weightText+' · 遇敵CEP '+n(state.encounterCep)+'（min '+encounter.encounterMin+' / max '+encounter.encounterMax+'） · 虛擬步數 '+Math.floor(n(state.virtualWalkSteps))+'；每 900ms 放置 tick 模擬 '+IDLE_WALK_STEPS_PER_TICK+' 步，逐步使用原 rand()%120<CEP 規則；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
+        ?('Encounter '+encounter.encounterId+' · X '+a.xMin+'–'+a.xMax+' / Y '+a.yMin+'–'+a.yMax+' · zorder '+encounter.zorder+' · enemyMax '+encounter.enemyMax+' · Group '+resolved+'/'+groups.length+' · 遇敵CEP '+n(state.encounterCep)+'（min '+encounter.encounterMin+' / max '+encounter.encounterMax+'） · 虛擬步數 '+Math.floor(n(state.virtualWalkSteps))+'；每 900ms 放置 tick 模擬 '+IDLE_WALK_STEPS_PER_TICK+' 步，逐步使用原 rand()%120<CEP 規則；目前此區 Lv1：'+(okNames.slice(0,12).join('、')||'無')+(okNames.length>12?'…':'')+(okNames.length<allNames.length?'；另有 '+(allNames.length-okNames.length)+' 種需要條件道具。':''))
         :'此 Floor 沒有可用的 Encounter。';
     }
   }

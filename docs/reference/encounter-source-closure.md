@@ -12,11 +12,9 @@ GitHub 的 8.0 repository 結構確認 `gmsv/data` 同時包含 Group、Enemy、
 
 ## Current closure
 
-目前 generated encounter runtime 有 728 個被引用 Group，705 個完成解析，另有 23 個 Group ID 尚未閉合。這些 unresolved rows 目前影響 28 個 encounter；這 28 個都仍有至少一個已解析 Group，因此沒有整個 encounter 被 source closure 堵死。
+目前 generated encounter runtime 有 728 個被引用 Group，705 個完成解析，另有 23 個 Group ID 尚未閉合。
 
 未閉合 Group 不會被 runtime 當成可生成隊伍；這是避免把缺失的 `group1.txt` row 用其他版本資料代替。
-
-目前這 28 個受影響 encounter 的正權重中，resolved Group 合計 1410、unresolved Group 合計 1563，unresolved weight share 約 52.57%；這是「缺失 source 對目前選組權重」的診斷數字，不是新的遊戲掉率。
 
 另有一個明確 template blocker：Group `1297` 的 `EnemyID 2455 / TempNo 145`（水双头狼）缺 `enemybase1.txt` 對應 template。僅有 `stoneage_enemy_ai.json` 的 AI metadata 不足以建立完整 Enemy；因此同樣維持 non-spawnable。
 

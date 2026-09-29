@@ -277,13 +277,5 @@
     "GitHub gavinlinasd/StoneAge 8.0 exposes gmsv/data with group1.txt, enemy1.txt, enemybase1.txt and npc directory.",
     "Public web search did not expose line-addressable fixed-version contents for the missing group rows; no cross-version row was promoted.",
     "Group 1297 contains EnemyID 2455 / TempNo 145 (水双头狼) but enemybase1 template is not currently resolved; AI metadata alone is not promoted."
-  ],
-  "impactSummary": {
-    "affectedEncounterCount": 28,
-    "degradedEncounterCount": 28,
-    "blockingEncounterCount": 0,
-    "positiveWeightResolved": 1410.0,
-    "positiveWeightUnresolved": 1563.0,
-    "unresolvedWeightShare": 0.5257315842583249
-  }
+  ]
 }

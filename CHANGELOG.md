@@ -2,12 +2,6 @@
 
 本輪把目前 encounter data 的未閉合部分固定成 source-closure contract，不因缺資料而跨版本補怪。
 
-### Encounter group availability diagnostics
-
-- 目前 28 個 encounter 會引用 unresolved Group；28 個都有至少一個 resolved Group，因此沒有整個 encounter 因 source closure 而變成空遇敵區。
-- 這 28 個 encounter 的正權重合計中，resolved Group 為 1410、unresolved Group 為 1563；unresolved weight share 約 52.57%。這只是 source completeness 診斷，不是新的掉率規則。
-- runtime 的 encounter info 現在額外顯示 `source weight resolved/total`，讓缺失 Group 對選組權重的影響可以直接被看見。
-
 - pinned source：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 - current generated runtime：728 個 referenced Group、705 個 resolved、23 個 unresolved。
 - Group 1297 明確保留 `EnemyID 2455 / TempNo 145`（水双头狼）的 `enemybase1-missing-temp` blocker。
@@ -17,6 +11,15 @@
 這一輪仍不宣稱 playable core 升版；主線保持 **V3.09**。
 
 # 阿肥石器時代放置版－完整開發紀錄
+
+## V3.10 groundwork：Group 1230 source research
+
+- 追查 Floor `100` Encounter `21`～`25` 共 5 處 Group `1230` 引用；目前每處 weight 都為 `100`，但都仍有其他 resolved Group，因此保持 degraded、非 blocking。
+- We Love SA 公開的 SA GMSV 8.0 啟動紀錄確認該資料集啟動時顯示「有效遇敵組群數是 1230」，但這是有效組群數，不足以證明存在 `GroupID=1230` row。
+- SourceForge `SA80` 公開資料目錄確認 8.0 candidate dataset 含 `group1.txt`、`enemy1.txt`、`enemybase1.txt`、`encount.txt`；因為不是 pinned fixed ref，本輪只作 discovery evidence。
+- `docs/reference/group1-1230-research.md` 固定這次證據邊界；沒有跨版本搬 row，沒有用 EnemyID `1230` 反推 Group row。
+- Group `1230` 目前仍是 `unresolved / non-spawnable`。
+
 
 目前最新可玩核心：**V3.09**
 
