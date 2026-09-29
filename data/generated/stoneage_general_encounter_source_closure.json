@@ -1,0 +1,281 @@
+{
+  "format": "stoneage-general-encounter-source-closure-v1",
+  "status": "partial",
+  "playableCore": "V3.09",
+  "workstream": "V3.10-groundwork",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "source": "encount.txt + group1.txt + enemy1.txt + enemybase1.txt + enemyexptbl.h + exp.txt + enemy.c + battle.c + char.c + char_data.c + setup.cf",
+    "requiredTables": [
+      "gmsv/data/group1.txt",
+      "gmsv/data/enemy1.txt",
+      "gmsv/data/enemybase1.txt"
+    ]
+  },
+  "resolvedGroupCount": 705,
+  "referencedGroupCount": 728,
+  "unresolvedGroupIds": [
+    791,
+    792,
+    793,
+    794,
+    795,
+    796,
+    799,
+    800,
+    801,
+    802,
+    803,
+    804,
+    806,
+    808,
+    809,
+    811,
+    824,
+    826,
+    827,
+    1230,
+    1315,
+    1316,
+    1327
+  ],
+  "impactedReferences": {
+    "791": [
+      {
+        "floorId": 100,
+        "encounterId": 58,
+        "weight": 20
+      }
+    ],
+    "792": [
+      {
+        "floorId": 100,
+        "encounterId": 51,
+        "weight": 60
+      },
+      {
+        "floorId": 100,
+        "encounterId": 52,
+        "weight": 75
+      }
+    ],
+    "793": [
+      {
+        "floorId": 100,
+        "encounterId": 39,
+        "weight": 6
+      }
+    ],
+    "794": [
+      {
+        "floorId": 100,
+        "encounterId": 46,
+        "weight": 9
+      },
+      {
+        "floorId": 100,
+        "encounterId": 47,
+        "weight": 30
+      }
+    ],
+    "795": [
+      {
+        "floorId": 10601,
+        "encounterId": 237,
+        "weight": 35
+      }
+    ],
+    "796": [
+      {
+        "floorId": 10602,
+        "encounterId": 238,
+        "weight": 30
+      }
+    ],
+    "799": [
+      {
+        "floorId": 200,
+        "encounterId": 87,
+        "weight": 45
+      }
+    ],
+    "800": [
+      {
+        "floorId": 200,
+        "encounterId": 167,
+        "weight": 25
+      }
+    ],
+    "801": [
+      {
+        "floorId": 200,
+        "encounterId": 140,
+        "weight": 40
+      }
+    ],
+    "802": [
+      {
+        "floorId": 20102,
+        "encounterId": 212,
+        "weight": 40
+      }
+    ],
+    "803": [
+      {
+        "floorId": 200,
+        "encounterId": 140,
+        "weight": 35
+      }
+    ],
+    "804": [
+      {
+        "floorId": 20104,
+        "encounterId": 214,
+        "weight": 40
+      }
+    ],
+    "806": [
+      {
+        "floorId": 10203,
+        "encounterId": 205,
+        "weight": 45
+      }
+    ],
+    "808": [
+      {
+        "floorId": 200,
+        "encounterId": 164,
+        "weight": 65
+      }
+    ],
+    "809": [
+      {
+        "floorId": 400,
+        "encounterId": 1283,
+        "weight": 15
+      },
+      {
+        "floorId": 400,
+        "encounterId": 1284,
+        "weight": 65
+      }
+    ],
+    "811": [
+      {
+        "floorId": 200,
+        "encounterId": 137,
+        "weight": 45
+      }
+    ],
+    "824": [
+      {
+        "floorId": 300,
+        "encounterId": 379,
+        "weight": 35
+      }
+    ],
+    "826": [
+      {
+        "floorId": 31806,
+        "encounterId": 361,
+        "weight": 2
+      },
+      {
+        "floorId": 31806,
+        "encounterId": 363,
+        "weight": 50
+      }
+    ],
+    "827": [
+      {
+        "floorId": 300,
+        "encounterId": 331,
+        "weight": 100
+      }
+    ],
+    "1230": [
+      {
+        "floorId": 100,
+        "encounterId": 21,
+        "weight": 100
+      },
+      {
+        "floorId": 100,
+        "encounterId": 22,
+        "weight": 100
+      },
+      {
+        "floorId": 100,
+        "encounterId": 23,
+        "weight": 100
+      },
+      {
+        "floorId": 100,
+        "encounterId": 24,
+        "weight": 100
+      },
+      {
+        "floorId": 100,
+        "encounterId": 25,
+        "weight": 100
+      }
+    ],
+    "1315": [
+      {
+        "floorId": 100,
+        "encounterId": 51,
+        "weight": 50
+      }
+    ],
+    "1316": [
+      {
+        "floorId": 100,
+        "encounterId": 51,
+        "weight": 80
+      }
+    ],
+    "1327": [
+      {
+        "floorId": 31806,
+        "encounterId": 361,
+        "weight": 1
+      },
+      {
+        "floorId": 31806,
+        "encounterId": 362,
+        "weight": 20
+      }
+    ]
+  },
+  "invalidTemplateMembers": [
+    {
+      "groupId": 1297,
+      "slot": 1,
+      "enemyId": 2455,
+      "tempNo": 145,
+      "reason": "enemybase1-missing-temp"
+    }
+  ],
+  "closurePolicy": {
+    "unresolvedGroupsRemainNonSpawnable": true,
+    "invalidTemplateMembersRemainNonSpawnable": true,
+    "noCrossVersionFallback": true,
+    "candidateSourcesRequirePinnedProvenance": true
+  },
+  "candidateSearchRoots": [
+    "data/groups",
+    "data/enemy",
+    "gmsv/data",
+    "gmsv/data/npc",
+    "source/data",
+    "vendor/data",
+    "references/data",
+    "reference/data"
+  ],
+  "researchNotes": [
+    "GitHub gavinlinasd/StoneAge 8.0 exposes gmsv/data with group1.txt, enemy1.txt, enemybase1.txt and npc directory.",
+    "Public web search did not expose line-addressable fixed-version contents for the missing group rows; no cross-version row was promoted.",
+    "Group 1297 contains EnemyID 2455 / TempNo 145 (水双头狼) but enemybase1 template is not currently resolved; AI metadata alone is not promoted."
+  ]
+}

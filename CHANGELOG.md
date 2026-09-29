@@ -1,3 +1,15 @@
+## V3.10 groundwork：encounter source closure
+
+本輪把目前 encounter data 的未閉合部分固定成 source-closure contract，不因缺資料而跨版本補怪。
+
+- pinned source：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- current generated runtime：728 個 referenced Group、705 個 resolved、23 個 unresolved。
+- Group 1297 明確保留 `EnemyID 2455 / TempNo 145`（水双头狼）的 `enemybase1-missing-temp` blocker。
+- `stoneage_enemy_ai.json` 只有 AI metadata，不能代替缺失的 `enemybase1.txt` Enemy template。
+- 新增 `tools/check_v310_encounter_source_closure.mjs` 與 `docs/reference/encounter-source-closure.md`；它同步鎖定 unresolved Group impact、template blocker 與 no-cross-version fallback。
+
+這一輪仍不宣稱 playable core 升版；主線保持 **V3.09**。
+
 # 阿肥石器時代放置版－完整開發紀錄
 
 目前最新可玩核心：**V3.09**
