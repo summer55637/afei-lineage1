@@ -31,3 +31,9 @@
 V3.13 的 `sourceMapBattleCandidatesAt(map,x,y)` 將 `sourceMapTileAt()` 與 fixed-C `BATTLE_getBattleFieldNo()` 的 image→battlemap candidate 對照串成一次查詢；它只回傳已存在的 map data，座標越界或未知資料直接 `null`，不生成替代 tile。
 
 `sourceMapBattleFieldNoAt(map,x,y,{randIndex})` 將 fixed C `map[RAND(0,2)]` 的選擇保留為外部 RNG injection：沒有提供 RNG 時不自行抽樣，也不消耗隨機數。
+
+## Walkability runtime
+
+`sourceMapWalkableAt(map,x,y,mapset,{flying})` 依 fixed C `MAP_walkAbleFromPoint()` 對真實 tile/object 做可走性判斷：一般角色先看 object 的 `MAP_WALKABLE`，object 為 1 時還必須 ground 為 1；飛行分支則要求 tile/object 都沒有 `MAP_HAVEHEIGHT`。
+
+目前 generated `mapset` 已經按照 fixed C `MAP_flgSet()` 正規化 `MAP_WALKABLE`，因此 raw 非 0 值都成為 1；API 保留 C 的 switch 結構，但不自行製造不存在的 object walkability mode。
