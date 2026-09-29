@@ -10517,9 +10517,9 @@ function sourceGmQueTaskEntries(taskString,{expectedCount=4}={}){
     const token=String(parts[i]??'').trim();
     const m=/^(-?\d+)-(-?\d+)$/.exec(token);
     if(!m)return {ok:false,reason:'task-token',slot:i,token};
-    const petId=Math.trunc(Number(m[1])),level=Math.trunc(Number(m[2]));
-    if(!Number.isFinite(petId)||!Number.isFinite(level))return {ok:false,reason:'task-number',slot:i,token};
-    entries.push({slot:i,token,petId,level});
+    const tempNo=Math.trunc(Number(m[1])),level=Math.trunc(Number(m[2]));
+    if(!Number.isFinite(tempNo)||tempNo<=0||!Number.isFinite(level))return {ok:false,reason:'task-number',slot:i,token};
+    entries.push({slot:i,token,tempNo,petId:tempNo,level});
   }
   return {ok:true,entries};
 }
