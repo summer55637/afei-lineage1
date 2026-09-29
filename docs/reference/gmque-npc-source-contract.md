@@ -42,4 +42,4 @@
 
 `sourceGmQueParseNpcArg()` 是 pure/source-adapter 層；它不修改 persistent state，也不建立寵物、刪寵或領獎。
 
-目前 `sourceGmQueRewardPetTemplate()` 仍對 `1642 / 1636 / 475` fail-closed，直到 player-pet DB 有完整 `enemyIds` template mapping。
+目前 `sourceGmQueRewardPetTemplate()` 已改用 `data/generated/stoneage_gmque_reward_enemy_templates.json` 的 fixed-C Enemy template；1642 / 1636 / 475 已完成 source closure。
