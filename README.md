@@ -6,7 +6,19 @@
 
 **PLAYABLE CORE V3.09**
 
-歷史 regression markers：**PLAYABLE CORE V3.09** ／ **PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+歷史 regression markers：**PLAYABLE CORE V3.09** ／ **V3.10 groundwork** ／ **PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
+
+## V3.10 groundwork — current draft
+
+V3.10 目前仍是 **draft groundwork**，尚未取代可玩核心 V3.09；這裡只同步倉庫目前已確認的開發邊界，不把未合併的功能說成主線已完成。
+
+- fixed C 基準固定為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- GMQUE reward pet 的 Enemy source chain 已在 V3.10 草稿分支閉合：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`；reward array 的第四槽 `0` 仍是 fixed C 的 implicit-zero。
+- 草稿分支已加入 source-backed reward template 與純建立 adapter，但**尚未合併進 main**，也尚未啟用完整 persistent handover／領獎 mutation。
+- 真實 `RANDGMQUE / QUEPART0..3` NPC arguments 仍待固定來源閉合；沒有來源證據時不注入預設活動參數。
+- 開發流程維持：**fixed C → source data → runtime adapter → regression → CI → playable integration**。
+- 草稿分支：[`v310-gmque-reward-enemy-template-closure`](https://github.com/summer55637/afei-lineage1/tree/v310-gmque-reward-enemy-template-closure)
+- 進度 PR：[PR #3](https://github.com/summer55637/afei-lineage1/pull/3)
 
 ## V3.09 — Combo death credit waits for ItemCrush boundary
 
@@ -603,7 +615,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
 
-**目前核心版本：V2.91**
+**目前核心版本：V3.09**
 
 - V2.70 已完成 Skill 14 冰鏡術核心
 - V2.71 完成 Skill 15 火附體 fixed C mapping correction
@@ -613,6 +625,8 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - V2.75 已完成 Skill 21 移形換位 source-parity core
 - V2.76 已完成 Skill 21 移形換位 live battle execution、StatusSeq 與獨立 skill dodge lifecycle
 - V2.77 已完成 Skill 44／45 追尋敵蹤、回避戰鬥的非戰鬥職技 live UI、180 秒遇敵 Work 與 encounter pipeline lifecycle
+- V3.09 已完成 Combo death credit 延後到同一 command 的 ItemCrush boundary 後 finalize
+- V3.10 目前僅有 draft groundwork，source closure 與 runtime contract 持續在獨立分支驗證
 - 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
 - 不確定的 source 行為維持 fail-closed，不自行補數值
 
