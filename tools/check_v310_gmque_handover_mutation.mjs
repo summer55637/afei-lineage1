@@ -16,17 +16,10 @@ function extractFunction(name){
 }
 
 const itemIds=new Map();
-let randCalls=0;
+let randModuloCalls=0;
 const ctx={
   Math,Number,String,Object,Array,Date,
   n:v=>Number.isFinite(Number(v))?Number(v):0,
-  sourceGmQueActionValue:randModulo=>{
-    randCalls++;
-    let value=Math.trunc(ctx._randModulo(100));
-    value=((value%100)+100)%100;
-    if(value<1)value=1;
-    return value;
-  },
   sourceGmQueRewardType:nums=>{
     const value=Math.trunc(Number(nums));
     if(value>97)return 'pet';
@@ -92,8 +85,8 @@ assert.equal(state.quest.gmque.nums,0);
 assert.equal(state.quest.gmque.handedOver,false);
 
 const checkTask=parsed.taskString;
-randCalls=0;
-ctx._randModulo=()=>0;
+randModuloCalls=0;
+ctx._randModulo=()=>{randModuloCalls++;return 0};
 const missingPetCheck=ctx.sourceGmQueHandoverCheck(
   checkTask,
   [state.petBox[0],state.petBox[1],state.petBox[2]],
@@ -103,10 +96,10 @@ assert.equal(missingPetCheck.ok,false);
 assert.equal(missingPetCheck.reason,'missing-pet');
 assert.equal(missingPetCheck.generatedNums,false);
 assert.equal(missingPetCheck.nums,0);
-assert.equal(randCalls,0,'GMQUENUMS RNG must not run before all four pets match');
+assert.equal(randModuloCalls,0,'GMQUENUMS RNG must not run before all four pets match');
 
-randCalls=0;
-ctx._randModulo=()=>98;
+randModuloCalls=0;
+ctx._randModulo=()=>{randModuloCalls++;return 98};
 const matchedCheck=ctx.sourceGmQueHandoverCheck(
   checkTask,
   state.petBox,
@@ -116,7 +109,7 @@ assert.equal(matchedCheck.ok,true);
 assert.equal(matchedCheck.generatedNums,true);
 assert.equal(matchedCheck.nums,98);
 assert.equal(matchedCheck.type,'pet');
-assert.equal(randCalls,1,'GMQUENUMS RNG runs exactly once after pet validation');
+assert.equal(randModuloCalls,1,'GMQUENUMS RNG runs exactly once after pet validation');
 
 const check={
   ok:true,nums:15,matches:[
