@@ -17,7 +17,7 @@ body{padding-bottom:env(safe-area-inset-bottom)}
 .world-scene-top{position:absolute;z-index:5;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:11px}
 .world-scene-map,.world-scene-mode,.world-scene-hud,.world-scene-chat{border:1px solid #4e5c40;border-radius:10px;background:#151b11dd;backdrop-filter:blur(6px);box-shadow:0 5px 15px #0005}
 .world-scene-map{display:grid;gap:1px;padding:8px 10px;min-width:190px}
-.world-scene-map strong{font-size:18px}.world-scene-map small{font-size:10px;color:var(--muted)}
+.world-scene-map strong{font-size:18px}.world-scene-map small{font-size:10px;color:var(--muted)}.world-scene-source{display:block}.world-scene-source.source-ready{color:#b9cf8a}.world-scene-source.source-missing{color:#c9a48c}
 .world-scene-kicker{font-size:8px;letter-spacing:.16em;color:var(--accent);font-weight:800}
 .world-scene-mode{display:grid;gap:2px;padding:7px 10px;text-align:right}.world-scene-mode span{font-size:8px;color:var(--muted)}.world-scene-mode b{font-size:12px}
 .world-scene-landscape{position:absolute;inset:0;background:
