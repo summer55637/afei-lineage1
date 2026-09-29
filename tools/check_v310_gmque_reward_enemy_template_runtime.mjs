@@ -6,22 +6,10 @@ const game=fs.readFileSync('game.js','utf8');
 const templates=JSON.parse(fs.readFileSync('data/generated/stoneage_gmque_reward_enemy_templates.json','utf8'));
 
 function extractFunction(source,name){
-  const marker='function '+name+'('; const start=source.indexOf(marker); assert.ok(start>=0,'missing '+name);
-  const ps=source.indexOf('(',start); let pd=0,pe=-1,q=null,esc=false,lc=false,bc=false;
-  for(let i=ps;i<source.length;i++){ const c=source[i],n=source[i+1];
-    if(lc){if(c==='\n')lc=false;continue} if(bc){if(c==='*'&&n==='/'){bc=false;i++}continue}
-    if(q){if(esc){esc=false;continue}if(c==='\\'){esc=true;continue}if(c===q)q=null;continue}
-    if(c==="'"||c==='"'||c==='`'){q=c;continue} if(c==='/'&&n==='/'){lc=true;i++;continue} if(c==='/'&&n==='*'){bc=true;i++;continue}
-    if(c==='(')pd++; else if(c===')'&&--pd===0){pe=i;break}
-  }
-  assert.ok(pe>=0,'unterminated params '+name); const bs=source.indexOf('{',pe); let d=0;q=null;esc=false;lc=false;bc=false;
-  for(let i=bs;i<source.length;i++){ const c=source[i],n=source[i+1];
-    if(lc){if(c==='\n')lc=false;continue} if(bc){if(c==='*'&&n==='/'){bc=false;i++}continue}
-    if(q){if(esc){esc=false;continue}if(c==='\\'){esc=true;continue}if(c===q)q=null;continue}
-    if(c==="'"||c==='"'||c==='`'){q=c;continue} if(c==='/'&&n==='/'){lc=true;i++;continue} if(c==='/'&&n==='*'){bc=true;i++;continue}
-    if(c==='{')d++; else if(c==='}'&&--d===0)return source.slice(start,i+1);
-  }
-  assert.fail('unterminated '+name);
+  const marker='function '+name+'('; const start=source.indexOf(marker);
+  assert.ok(start>=0,'missing '+name);
+  const next=source.indexOf('\nfunction ',start+marker.length);
+  return source.slice(start,next<0?source.length:next);
 }
 
 assert.ok(game.includes("const GMQUE_REWARD_ENEMY_TEMPLATE_URL='data/generated/stoneage_gmque_reward_enemy_templates.json';"));
