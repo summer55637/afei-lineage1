@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.13 true floor/x/y → tile runtime** |
+| 下一階段 | **V3.13 true floor/x/y → tile runtime + map loader contract** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -87,6 +87,8 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追�
 **V3.12**：依 fixed C 的 `setup.cf`、`readmap.c/readmap.h`、`battle.c` 與 pinned `battlemap.txt` 建立 battlefield source manifest，固定 220 個 battle map 定義、122 個有效範圍宣告、199 個實際被指定的 battle map，以及原始反向範圍 1 筆。戰鬥 HUD 會顯示 manifest 的 source 狀態；若 manifest 載入失敗則 fail-closed，不猜測目前戰場地形。
 
 目前仍**沒有**完整 floor/x/y → tile runtime，因此 V3.12 不把未證實的 tile／battlemap 強行套入畫面。下一步 V3.13 會繼續解析真正的地圖檔格式與 runtime 接點。
+
+另外，舊版 V2.74～V2.86 regression 仍可能引用歷史 `game.html`；網站正式入口仍只有 `start.html`，CI 會在測試工作目錄暫時建立 compatibility fixture，不會把舊網址重新發布。
 
 來源筆記：[V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)。
 ---
