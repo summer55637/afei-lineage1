@@ -3,14 +3,14 @@ name: V3.10 world HUD
 on:
   push:
     paths:
-      - 'game.html'
+      - 'start.html'
       - 'game.css'
       - 'game.js'
       - 'tools/check_v310_world_hud.mjs'
       - '.github/workflows/v310-world-hud.yml'
   pull_request:
     paths:
-      - 'game.html'
+      - 'start.html'
       - 'game.css'
       - 'game.js'
       - 'tools/check_v310_world_hud.mjs'
@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Provide regression HTML fixture
+        run: cp start.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
