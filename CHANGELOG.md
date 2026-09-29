@@ -1,3 +1,12 @@
+## V3.13 — LS2MAP parser contract
+
+2026-09-30
+
+- 依 fixed C `MAP_readMapOne()` 固定 LS2MAP binary layout：6-byte `LS2MAP`、big-endian floor ID、32-byte show string、big-endian width／height、tile layer、object layer。
+- 新增 `tools/stoneage_ls2map_parser.mjs` 與 `tools/check_v313_ls2map_parser.mjs`。
+- parser 僅處理 binary container，不猜 image attribute；trailing bytes 按 fixed C 行為回報而非硬失敗。
+- 實際原始 map bytes 尚未直接發布到 Web；取得可靠 bytes 後才接 generated tile JSON 與 `floor/x/y → tile → battlemap`，否則維持 fail-closed。
+
 ## V3.12 — battlefield source contract
 
 2026-09-30
