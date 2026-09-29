@@ -9065,7 +9065,58 @@ function save(){
   state.savedAt=Date.now();
   localStorage.setItem(SAVE_KEY,JSON.stringify(state));
 }
+let battlePresentationFx=null;
+function classifyBattlePresentationFx(message,type){
+  const text=String(message||'');
+  const damageMatch=text.match(/(\\d+)\\s*(?:直接 HP )?傷害/);
+  const damage=damageMatch?Math.max(0,Math.trunc(Number(damageMatch[1]))):null;
+  let kind=null,fxText='',tone=String(type||'');
+  if(damage!==null && damage>0){
+    kind='damage';
+    fxText='−'+damage;
+    if(/會心|反擊會心|會心一擊/.test(text)){fxText+=' 會心';tone=tone||'critical';}
+    if(/受到|承受|仍扣|因毒|因劇毒|因火附體|因嗜血蠱/.test(text))tone='bad';
+    else tone=tone||'good';
+  }else if(/沒有造成傷害|未造成傷害|傷害 0|MISS|閃過/.test(text)){
+    kind='miss';fxText='MISS';tone='miss';
+  }else if(/捕獲成功/.test(text)){
+    kind='capture';fxText='捕獲成功';tone='good';
+  }else if(/捕獲失敗/.test(text)){
+    kind='capture';fxText='捕獲失敗';tone='bad';
+  }else if(/睡眠|麻痺|石化|昏迷|混亂|中毒|劇毒|毒煞|凍結|霜|暈/.test(text)){
+    kind='status';fxText='狀態';tone='bad';
+  }else if(/會心/.test(text)){
+    kind='critical';fxText='會心！';tone='critical';
+  }
+  if(!kind)return null;
+  let side='center';
+  if(/(?:你|玩家|出戰寵|忠犬|你的寵物|寵物)\\S*(?:受到|承受|倒下)|(?:受到|承受).*?(?:你|玩家|寵物)/.test(text))side='player';
+  else if(/(?:你以|你施放|你釋放|你反擊|你攻擊|寵物).*?(?:命中|造成)/.test(text))side='enemy';
+  return {kind,text:fxText,side,tone,until:Date.now()+1150};
+}
+function setBattlePresentationFx(message,type){
+  const fx=classifyBattlePresentationFx(message,type);
+  if(!fx){battlePresentationFx=null;renderBattlePresentationFx();return;}
+  battlePresentationFx=fx;
+  renderBattlePresentationFx();
+  clearTimeout(setBattlePresentationFx.timer);
+  setBattlePresentationFx.timer=setTimeout(()=>{
+    if(battlePresentationFx===fx){
+      battlePresentationFx=null;
+      renderBattlePresentationFx();
+    }
+  },1200);
+}
+function renderBattlePresentationFx(){
+  const el=$('#battleStageFx');
+  if(!el)return;
+  const fx=battlePresentationFx;
+  if(!fx||fx.until<Date.now()){el.className='battle-stage-fx';el.textContent='';return;}
+  el.className='battle-stage-fx show '+String(fx.side||'center')+' '+String(fx.tone||'');
+  el.textContent=fx.text;
+}
 function addLog(text,type){
+  setBattlePresentationFx(text,type);
   const stamp=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   state.log.unshift({text:'['+stamp+'] '+text,type:type||''});
   state.log=state.log.slice(0,100);
