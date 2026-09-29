@@ -19,6 +19,8 @@
 
 **V3.09** 是目前正式可玩的主線版本。
 
+<!-- 歷史 regression compatibility markers：PLAYABLE CORE V2.98 · PLAYABLE CORE V2.99 · PLAYABLE CORE V3.00 · PLAYABLE CORE V3.08 · PLAYABLE CORE V3.09。 -->
+
 **V3.10** 正在獨立草稿分支持續做 source closure、runtime contract 與 regression，不提前取代 V3.09。
 
 ---
