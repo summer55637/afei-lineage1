@@ -2,10 +2,12 @@
 
 2026-09-30
 
-- 依 fixed C `MAP_readMapOne()` 固定 LS2MAP binary layout：6-byte `LS2MAP`、big-endian floor ID、32-byte show string、big-endian width／height、tile layer、object layer。
-- 新增 `tools/stoneage_ls2map_parser.mjs` 與 `tools/check_v313_ls2map_parser.mjs`。
-- parser 僅處理 binary container，不猜 image attribute；trailing bytes 按 fixed C 行為回報而非硬失敗。
-- 實際原始 map bytes 尚未直接發布到 Web；取得可靠 bytes 後才接 generated tile JSON 與 `floor/x/y → tile → battlemap`，否則維持 fail-closed。
+- 依 fixed C `MAP_readMapOne()` 固定 LS2MAP binary layout。
+- 新增 `tools/stoneage_ls2map_parser.mjs`、parser regression 與 CI。
+- 新增 verified Floor `20000`：真實 binary map 解析為 50×50、2500 tile、2500 object，並保存 source blob SHA。
+- 新增 `data/generated/stoneage_map_20000.json` 與 `stoneage_map_runtime_index.json`。
+- 新增 `src/stoneage_map_runtime.mjs`：`floor/x/y → tile/object` 與 `tile → battlemap candidates` fail-closed API。
+- 世界 HUD 開始依目前 `floorId` 查詢 verified map；沒有 source bytes 的 Floor 維持明確未收錄狀態，不猜測。
 
 ## V3.12 — battlefield source contract
 
