@@ -6,7 +6,7 @@
 - 新增 `data/generated/stoneage_gmque_reward_enemy_templates.json`，保存 normalized source template 與固定 C creation contract。
 - Web 新增 `sourceCreateGmQueRewardPet()`；只建立純 Pet object，不執行 persistent handover mutation。
 - `sourceGmQueRewardPetTemplate()` 改用 source-backed Enemy template，main player-pet DB 不再是此 reward path 的 source-of-truth。
-- GMQUE `RANDGMQUE / QUEPART0..3` 真實 NPC arguments 仍待 source closure；完整活動 UI／交寵／領獎尚未宣稱 playable。
+- GMQUE `RANDGMQUE / QUEPART0..3` 真實 NPC arguments 仍待 source closure；reward pet template 已閉合，但完整活動 UI／交寵／領獎 persistent mutation 尚未宣稱 playable。
 - regression：`tools/check_v310_gmque_reward_enemy_template_runtime.mjs`
 - CI：`.github/workflows/v310-gmque-reward-enemy-template-runtime.yml`
 
@@ -80,7 +80,7 @@ Data contract：`data/generated/stoneage_gmque_source_closure.json`
 - `GMQUE_DelQueStrPet()` 負責交出匹配寵物；`GMQUE_AddQueStrTrophy()` 才進入 pet / item / gold reward；成功獎勵後才 `GMQUE_cleanQueStr()`。
 - Web runtime 新增 `sourceGmQueTaskEntries()`、`sourceGmQuePetIdentity()`、`sourceGmQueMatchPetToTask()`、`sourceGmQueHandoverCheck()`，目前只實作 source-backed parser / eligibility，不猜缺失的 Enemy template，也不直接改玩家持久狀態。
 - `stoneage_enemy_ai.json` 目前存在 Enemy ID 1642／1636／475 的 AI 索引；但 AI metadata 不能代替 `ENEMY_getEnemyArrayFromId()` 所需的完整 Enemy template。
-- `enemybase1.txt` 的 pinned 檔案直接核對不到 TempNo 1642／1636；因此 GMQUE pet reward 仍 fail-closed。
+- pinned `enemy1.txt`／`enemybase1.txt` 已核對三條 reward source chain：1642→809→瑞里西尔、1636→803→可可恩、475→5→黑乌力；第四個 array slot 的 0 維持 implicit-zero，runtime 對此 fail-closed。
 - `enemyItems=[1642,...]` 出現在現有 encounter group 124／125／128 的掉落欄，是 Enemy 掉落 item ID 的證據，不把這些 occurrence 誤認為 GMQUE reward pet template。
 - 新增 source closure ledger 與 regression，明確守住上述資料層級邊界。
 
