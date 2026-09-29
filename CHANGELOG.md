@@ -1,3 +1,15 @@
+# V3.10 groundwork：GMQUE reward Enemy template source closure
+
+- 固定 C：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+- `GMQUE_AddQueStrTrophy()` 固定 pet reward array `{1642,1636,475,0}`，建立流程是 `ENEMY_getEnemyArrayFromId()` → `ENEMY_createPetFromEnemyIndex()`。
+- pinned `enemy1.txt`／`enemybase1.txt` 完成三條 source chain：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`。
+- 新增 `data/generated/stoneage_gmque_reward_enemy_templates.json`，保存 normalized source template 與固定 C creation contract。
+- Web 新增 `sourceCreateGmQueRewardPet()`；只建立純 Pet object，不執行 persistent handover mutation。
+- `sourceGmQueRewardPetTemplate()` 改用 source-backed Enemy template，main player-pet DB 不再是此 reward path 的 source-of-truth。
+- GMQUE `RANDGMQUE / QUEPART0..3` 真實 NPC arguments 仍待 source closure；完整活動 UI／交寵／領獎尚未宣稱 playable。
+- regression：`tools/check_v310_gmque_reward_enemy_template_runtime.mjs`
+- CI：`.github/workflows/v310-gmque-reward-enemy-template-runtime.yml`
+
 ## V3.10 groundwork：encounter source closure
 
 本輪把目前 encounter data 的未閉合部分固定成 source-closure contract，不因缺資料而跨版本補怪。
@@ -56,9 +68,10 @@ Data contract：`data/generated/stoneage_gmque_source_closure.json`
 
 ## V3.10 groundwork：GMQUE pet reward template guard
 
-- GMQUE reward pet `1642 / 1636 / 475` 現在不再只回傳一個可疑似可用的 Enemy ID。runtime 會先以目前 `DATA_URL` 的 `stoneage_general_lv1_pets.json` 建立 `enemyIds → player-pet variant` reverse index。
-- 本輪核對結果：`1642 / 1636 / 475` 全部沒有 player-pet variant 命中，因此正式回傳 `pet-template-pending`；固定 C 的 implicit-zero index 3 仍維持 `implicit-zero-pet-slot`。
-- 這個 guard 只解除「未來找到真正 template 後如何安全接入」的結構缺口，不捏造名稱、能力、TempNo 或初始數值。
+- fixed C reward IDs `1642 / 1636 / 475` 已完成 Enemy source closure。
+- source chain：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`。
+- implicit-zero fourth slot 保持 `0`，不建立第四隻寵物。
+- runtime 改由 source-backed template artifact 消費；完整 persistent mutation 仍未啟用。
 
 ## V3.10 groundwork：GMQUE source closure / handover parser
 
