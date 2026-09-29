@@ -96,7 +96,14 @@ if (!readme.includes(fixedCPin) || !changelog.includes(fixedCPin)) {
   fail(`fixed-C pin is no longer present in README/CHANGELOG: ${fixedCPin}`);
 }
 
-if (!readme.includes('PLAYABLE CORE V3.09') || !changelog.includes('PLAYABLE CORE V3.09')) {
+const readmeHasPlayableV309 =
+  readme.includes('PLAYABLE CORE V3.09');
+
+const changelogHead = changelog.split('\n').slice(0, 40).join('\n');
+const changelogHasPlayableV309 =
+  changelogHead.includes('V3.09');
+
+if (!readmeHasPlayableV309 || !changelogHasPlayableV309) {
   fail('README/CHANGELOG no longer declare V3.09 as the current playable baseline');
 }
 
