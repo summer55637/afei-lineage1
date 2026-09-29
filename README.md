@@ -6,23 +6,7 @@
 
 **PLAYABLE CORE V3.09**
 
-歷史 regression markers：**PLAYABLE CORE V3.09** ／ **PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90**
-
-## V3.10 development checkpoint — GMQUE handoff runtime
-
-目前仍維持 **PLAYABLE CORE V3.09**；這不是新的 playable-core release。這一輪把 fixed `GMQUE` 的 queue／Check／交寵／領獎生命週期接成 Web source adapter，但不填入尚未找到 fixed NPC arg 的活動任務。
-
-固定 C 已確認：
-
-- `GMACTION=TRUE` 呼叫 `GMQUE_getQueStr()`，活動中不可再次取得任務；`ShowGmque` 顯示目前四個 queue 項目。
-- `RANDGMQUE` 決定 queue 長度，`QUEPART0..` 每欄再以 `RAND(1,nums)` 抽一個 `petID=LVmin-LVmax`，最後保存成 `CHAR_GMQUESTR1` 的 `petID-LV&...` 字串並設 `CHAR_GMQUEFLG=10`。
-- `GMQUE_CheckQueStr()` 對持有寵逐槽比對 exact `CHAR_PETID`／不同 TempNo 時的同名 fallback＋exact Lv；通過後才初始化一次 `CHAR_GMQUENUMS=rand()%100`（0→1），再檢查道具欄／石幣 gate。
-- `GMQUE_DelQueStrPet()` 與 `GMQUE_AddQueStrTrophy()` 是分開的 action；成功領獎後才 `GMQUE_cleanQueStr()`，把 queue／flag／reward roll 清回初始。
-
-Web 現在保留這個 source order，並把沒有完整 Enemy template 的 GMQUE reward pet 維持 **fail-closed**；不從只有 AI row 的資料拼造寵物。
-
-regression：`tools/check_v310_gmque_handoff.mjs`
-GitHub Actions：`.github/workflows/v310-gmque-handoff.yml`
+歷史 regression markers：**PLAYABLE CORE V3.09** ／ **PLAYABLE CORE V3.08** ／ **PLAYABLE CORE V3.07** ／ **PLAYABLE CORE V3.06** ／ **PLAYABLE CORE V3.05** ／ **PLAYABLE CORE V3.04** ／ **PLAYABLE CORE V3.03** ／ **PLAYABLE CORE V3.02** ／ **PLAYABLE CORE V3.01** ／ **PLAYABLE CORE V3.00** ／ **PLAYABLE CORE V2.99** ／ **PLAYABLE CORE V2.98** ／ **PLAYABLE CORE V2.97** ／ **PLAYABLE CORE V2.96** ／ **PLAYABLE CORE V2.95** ／ **PLAYABLE CORE V2.94** ／ **PLAYABLE CORE V2.93** ／ **PLAYABLE CORE V2.92** ／ **PLAYABLE CORE V2.91** ／ **PLAYABLE CORE V2.90** ／ **PLAYABLE CORE V2.89** ／ **PLAYABLE CORE V2.88** ／ **PLAYABLE CORE V2.87** ／ **PLAYABLE CORE V2.86** ／ **PLAYABLE CORE V2.85** ／ **PLAYABLE CORE V2.84** ／ **PLAYABLE CORE V2.83** ／ **PLAYABLE CORE V2.82** ／ **PLAYABLE CORE V2.81** ／ **PLAYABLE CORE V2.80** ／ **PLAYABLE CORE V2.79** ／ **PLAYABLE CORE V2.78**
 
 ## V3.09 — Combo death credit waits for ItemCrush boundary
 
@@ -617,20 +601,47 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 
 ## 開發方向
 
-後續版本會直接沿著 Git history 與 pinned 原 C 行為往下做，不重新發明一套規則。
+目前 `main` 的可玩核心仍以 **V3.09** 為準；這一輪沒有因為建立新工作點就把 playable version 升版。後續開發固定沿著：
 
-**目前核心版本：V2.91**
+**fixed C source → evidence ledger → runtime → regression → CI → 視覺還原**
 
-- V2.70 已完成 Skill 14 冰鏡術核心
-- V2.71 完成 Skill 15 火附體 fixed C mapping correction
-- V2.72 已完成 Skill 16 雷附體 on-hit aura lifecycle
-- V2.73 已完成 Skill 17 冰附體 fixed C mapping、on-hit aura 與 FIXDEX lifecycle
-- V2.74 已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity
-- V2.75 已完成 Skill 21 移形換位 source-parity core
-- V2.76 已完成 Skill 21 移形換位 live battle execution、StatusSeq 與獨立 skill dodge lifecycle
-- V2.77 已完成 Skill 44／45 追尋敵蹤、回避戰鬥的非戰鬥職技 live UI、180 秒遇敵 Work 與 encounter pipeline lifecycle
-- 後續版本依序繼續 fixed C source → runtime → regression → CI → 視覺還原
-- 不確定的 source 行為維持 fail-closed，不自行補數值
+目前已確認的 fixed C pinned source：
+
+- `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
+- 主要戰鬥／PetSkill 來源依各歷史紀錄所標示的 function 與 call-site 為準。
+- GMQUE 目前已有 trophy reward runtime，但完整「NPC 任務資料 → 四寵 queue → Check → 交寵 → 領獎 → cleanup」尚未在 playable core 啟用。
+
+### 目前已收斂
+
+- V3.05～V3.09 的 Acupuncture / Guardian / DamageReact / Combo caller-sensitive source-order 已有對應 regression 與 CI。
+- GMQUE trophy runtime 已依 fixed `GMQUE_AddQueStrTrophy()` 鎖定 gold / item / pet 分支與 Item lifecycle。
+- PetSkill 的已證實 function family 已依 fixed C 分成 live dispatcher、source-unregistered、battle-precondition-false 與 defensive pending 邊界。
+
+### 目前刻意保持 fail-closed 的 7 個 PetSkill 邊界
+
+以下不是「猜一個效果就能完成」的普通 TODO，而是目前 source evidence 不足時必須保留的防線：
+
+1. `sourcePerformPetStatusSkill`：狀態 token 無法唯一解析。
+2. `sourcePerformPetRefreshSkill`：淨化 option 無法解析成 fixed status token。
+3. `sourcePerformPetSpecialStatusSkill`：固定 option 缺少可證明的 status / turn / success。
+4. `sourcePerformPetMagicStatusChangeSkill`：MagicStatus 不是目前已證實的「鐵壁」分支。
+5. `sourcePerformPetBattlePropertySkill`：callback 名稱不是固定 `PET_PetskillPropertyEvent`。
+6. `sourcePerformPetCombinedSkill`：抽到已存在但尚無固定 DirectUse 對應的 magic。
+7. `sourcePerformPetLoyalAction`：玩家側 PetSkill dispatcher 尚未有固定對應。
+
+這 7 個位置目前均保留 `sourceRuntimePending:true`；任何移除都必須先有固定 C 的 function、data row 與 source-order 證據。詳見 `docs/reference/gmque-source-audit.md` 與既有 V2.81／V2.86 closure regression。
+
+### 下一個證據工作點：GMQUE source closure
+
+目前最具體的下一步不是猜 UI 或活動數值，而是補齊：
+
+- 實際 NPC `RANDGMQUE` / `QUEPART0..` 設定資料；
+- `GMQUE_AddQueStrTrophy()` 的 pet reward ID `1642 / 1636 / 475` 對應 Enemy template；
+- 對上述資料建立 source-backed runtime fixture 後，才啟用完整 GMQUE 交寵 UI。
+
+固定 C 已證實的 GMQUE lifecycle 與目前 Web trophy runtime 對照表，集中記錄在 `docs/reference/gmque-source-audit.md`，避免把二手攻略或不同 fork 的資料誤當 pinned source。
+
+不確定的 source 行為維持 fail-closed，不自行補數值。
 
 ## 目前主要系統
 
@@ -668,51 +679,58 @@ README 只保留目前版本、自述與開發方向；詳細技術內容統一�
 
 ## 歷史版本 regression 入口
 
-歷史核心標記：`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`、`PLAYABLE CORE V2.74`、`PLAYABLE CORE V2.75`、`PLAYABLE CORE V2.76`、`PLAYABLE CORE V2.77`。
+README 只保留目前主線索引；詳細歷史內容以 CHANGELOG 與 `docs/changelog/` 為準。
 
-以下歷史版 heading 保留作為 regression／文件索引，詳細內容以 `docs/changelog/part-07-v1.75-onward.md` 為準。
+目前已存在的近期 playable regression markers：
 
-## V2.61 最新進度
-已完成 Skill 5 附身術；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility markers：`PLAYABLE CORE V2.61`、`PLAYABLE CORE V2.62`、`PLAYABLE CORE V2.63`、`PLAYABLE CORE V2.64`、`PLAYABLE CORE V2.65`、`PLAYABLE CORE V2.66`、`PLAYABLE CORE V2.67`、`PLAYABLE CORE V2.68`、`PLAYABLE CORE V2.69`、`PLAYABLE CORE V2.70`、`PLAYABLE CORE V2.71`、`PLAYABLE CORE V2.72`、`PLAYABLE CORE V2.73`。
+
+`V2.61` → `V2.62` → `V2.63` → `V2.64` → `V2.65` → `V2.66` → `V2.67` → `V2.68` → `V2.69` → `V2.70` → `V2.71` → `V2.72` → `V2.73` → `V2.74` → `V2.75` → `V2.76` → `V2.77` → `V2.78` → `V2.79` → `V2.80` → `V2.81` → `V2.82` → `V2.83` → `V2.84` → `V2.85` → `V2.86` → `V2.87` → `V2.88` → `V2.89` → `V2.90` → `V2.91` → `V2.92` → `V2.93` → `V2.94` → `V2.95` → `V2.96` → `V2.97` → `V2.98` → `V2.99` → `V3.00` → `V3.01` → `V3.02` → `V3.03` → `V3.04` → `V3.05` → `V3.06` → `V3.07` → `V3.08` → **`V3.09`**。
+
+完整開發紀錄：
+
+- [專案起點～V0.46](docs/changelog/part-01-intro-to-v0.46.md)
+- [V0.47～V0.72](docs/changelog/part-02-v0.47-to-v0.72.md)
+- [V0.73～V0.96](docs/changelog/part-03-v0.73-to-v0.96.md)
+- [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
+- [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
+- [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
+- [V1.75～V3.09](docs/changelog/part-07-v1.75-onward.md)
+- [完整 CHANGELOG](CHANGELOG.md)
+
+README 不再保留 V2.61～V2.77 的重複完整進度說明；以下兩個 compatibility marker 只保留給舊 regression 的文件契約，內容一律以歷史 changelog 為準。
+
+README 不再保留 V2.61～V2.77 的重複完整進度說明；以下 compatibility markers 只保留給舊 regression 的文件契約，內容一律以歷史 changelog 為準。
 
 ## V2.62 最新進度
-已完成 Skill 6 召雷術；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.62 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.63 最新進度
-已完成 Skill 7 暴風雨；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.63 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.64 最新進度
-已完成 Skill 8 電流術；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.64 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.65 最新進度
-已完成 Skill 9 火星球；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.65 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.66 最新進度
-已完成 Skill 10 嗜血蠱；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.66 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.67 最新進度
-已完成 Skill 11 嗜血成性；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.67 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.68 最新進度
-已完成 Skill 12 冰箭術；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.68 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.69 最新進度
-已完成 Skill 13 火龍槍；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.69 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
 ## V2.70 最新進度
-已完成 Skill 14 冰鏡術；詳見歷史紀錄與對應 regression。
+歷史 regression compatibility marker；V2.70 的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
-## V2.71 最新進度
-已完成 Skill 15 火附體 fixed C mapping correction；V2.72 已把其 on-hit aura lifecycle 校正回固定 C。
+## V2.61 最新進度
+歷史 regression compatibility marker；Skill 5／附身術的完整說明以 `docs/changelog/part-07-v1.75-onward.md` 為準。
 
-## V2.74 最新進度
-已完成 Skills 18～20 火／雷／冰熟練度 fixed C magic-proficiency parity；詳見歷史紀錄與對應 regression。
-
-## V2.75 最新進度
-已完成 Skill 21 移形換位 source-parity core；詳見歷史紀錄與對應 regression。
-
-## V2.76 最新進度
-已完成 Skill 21 移形換位 live battle execution、獨立 skill dodge、StatusSeq lifecycle 與 CI regression；詳見歷史紀錄與對應 regression。
-
-## V2.77 最新進度
-已完成 Skill 44 追尋敵蹤、Skill 45 回避戰鬥的非戰鬥職技 live UI、180 秒 CHAR_ENCOUNT_FIX / CHAR_ENCOUNT_NUM lifecycle 與 encounter regression；詳見歷史紀錄與對應 regression。
+## V2.72 最新進度
+歷史 regression compatibility marker；Skill 17／冰附體的完整技術內容以 `CHANGELOG.md` 與 `docs/changelog/part-07-v1.75-onward.md` 為準。

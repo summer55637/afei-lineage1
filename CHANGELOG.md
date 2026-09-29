@@ -11,6 +11,16 @@
 
 > **原 C 規則優先、不猜數值**
 
+## Unreleased — GMQUE source-closure groundwork
+
+這一輪不升 playable core 版本，僅把下一個有證據的工作點與 regression 基礎補齊：
+
+- 建立 `docs/reference/gmque-source-audit.md`，集中記錄 `GMQUE_InSertQue` → `GMQUE_CheckQueStr` → `GMQUE_DelQueStrPet` → `GMQUE_AddQueStrTrophy` → `GMQUE_cleanQueStr` 的 fixed C lifecycle。
+- 建立 `tools/check_gmque_source_contract.mjs` 與 `.github/workflows/gmque-source-contract.yml`，固定檢查 GMQUE 41/57/2 分支、五個 item pool、`1642/1636/475/0` pet array 與 gold table。
+- README 改回以 V3.09 為現行主線，移除 V2.91 的過時「目前核心版本」說法，並明確列出目前 7 個 `sourceRuntimePending` 防線與下一個 GMQUE source closure 缺口。
+- 重新整理歷史 regression 文件相容 marker；同步把已因後續 source-order / helper refactor 而落後的 V1.88 / V2.33 / V2.43 / V2.44 regression 改成驗證目前已證實的語意，而不是要求舊 helper 呼叫文字。
+- 這輪完整本地 `tools/check_*.mjs` 共 138 個，全部 PASS；不等同 GitHub Actions 已執行，因為本輪沒有 push。
+
 ## 歷史分檔
 
 1. [專案起點～V0.46](docs/changelog/part-01-intro-to-v0.46.md)
@@ -19,22 +29,7 @@
 4. [V0.97～V1.26](docs/changelog/part-04-v0.97-to-v1.26.md)
 5. [V1.27～V1.51](docs/changelog/part-05-v1.27-to-v1.51.md)
 6. [V1.52～V1.74](docs/changelog/part-06-v1.52-to-v1.74.md)
-7. [V1.75～V2.78](docs/changelog/part-07-v1.75-onward.md)
-
-## V3.10 development checkpoint：GMQUE handoff runtime
-
-這一輪不宣稱 playable-core 升版，主線仍為 V3.09。依 fixed `npc_eventaction.c` 把 GMQUE 的四段生命週期接成 Web runtime：
-
-- queue parser：`RANDGMQUE`／`QUEPART0..` → 四個 `petID-LV` token。
-- Check：exact TempNo／exact Lv；不同 TempNo 時只有 source reference name 可用才允許同名 fallback；`GMQUENUMS` 只在通過寵物條件後第一次初始化。
-- handover：保留 Check 與 `DelGmquePet` 的分離邊界，移除符合條件的寵物並清理 active/team reference。
-- reward：保留現有 fixed trophy runtime；gold/item 可直接走現有 source lifecycle，GMQUE reward pet 若沒有完整 Enemy template 則維持 fail-closed。
-- cleanup：只有 reward 成功後才清回 `flag=0 / taskString=NULL / nums=0`。
-
-不填入任何未從 fixed source tree 證實的 NPC 活動任務表。
-
-Regression：`tools/check_v310_gmque_handoff.mjs`
-CI：`.github/workflows/v310-gmque-handoff.yml`
+7. [V1.75～V3.09](docs/changelog/part-07-v1.75-onward.md)
 
 ## V3.09：Combo 死亡獎勵 credit 延後到 ItemCrush 後
 

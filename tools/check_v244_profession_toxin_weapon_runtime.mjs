@@ -109,7 +109,7 @@ assert.ok(execFn.includes('const plan=sourceProfessionToxinWeaponTargetPlan(prep
 assert.ok(execFn.includes('const target=sourceProfessionEnemyByBattleSlot(slot)'));
 assert.equal(execFn.includes('sourcePlayerEnemyTargetableFromBattleSlot(slot)'),false);
 assert.ok(execFn.includes("plan.mode==='boomerang'?{damageMultiplier:.3}:{}"));
-assert.ok(execFn.includes("{suppressSuitPoison:true}"));
+assert.ok(execFn.includes("suppressSuitPoison:true"));
 assert.ok(execFn.includes('const positiveCalculated=!r.dodged&&!r.miss&&n(r.damage)>0'));
 
 const applyAt=execFn.indexOf('applyFriendlyEnemyHit(');

@@ -64,19 +64,6 @@
           <div class="muted dev-note">一般野外 Enemy 建立已接入原 enemy.c／char.c：四圍各自 ±2、再隨機分配 10 點，接著以服務端 atoi 後的 INITNUM／LVUPPOINT 計算參數與 HP／攻／防／敏；Encounter 兩角座標也已依 ENCOUNT_initEncount() 做 min/max 正規化；Enemy 10 格掉落已依 _FIX_ITEMPROB 在建立時逐格生成；一般野怪 EXP 也改走 enemy1／enemybase1／enemyexptbl 與原戰鬥等級差衰減。</div>
         </article>
 
-        <article class="card quest-card" id="gmqueCard" hidden>
-          <div class="section-head">
-            <div>
-              <div class="eyebrow">GMQUE ACTIVITY</div>
-              <h2>抓寵活動</h2>
-            </div>
-            <span id="gmqueBadge" class="pill">未參加</span>
-          </div>
-          <div id="gmqueStatus" class="quest-status"></div>
-          <div id="gmqueActions" class="quest-actions"></div>
-          <div class="muted dev-note">固定 C 的活動 queue 已接入：任務字串、四隻寵的 exact TempNo／等級判定、同名 fallback、Check／交寵／獎勵分段生命週期。實際 NPC 的 RANDGMQUE／QUEPART 設定尚未從 fixed source tree 取得，因此不預填任何活動任務。</div>
-        </article>
-
         <article class="card">
           <div class="section-head">
             <div>
