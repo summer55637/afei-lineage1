@@ -23,21 +23,15 @@
 
 ### Enemy AI
 
-`data/generated/stoneage_enemy_ai.json` 的 `byEnemyId` 存在 `1642`、`1636`、`475` 三個 Enemy ID key；其 `_meta.source` 是 `enemy1.txt + enemybase1.txt`。這只能證明 AI metadata 有索引，不能直接證明 Web 有可用的完整 pet template。
+`data/generated/stoneage_enemy_ai.json` 的 `byEnemyId` 存在 `1642`、`1636`、`475` 三個 Enemy ID key；本輪進一步直接回到 pinned C 的 `GMQUE_AddQueStrTrophy()`，確認 reward path 使用 `ENEMY_getEnemyArrayFromId()`，再以 pinned `enemy1.txt` / `enemybase1.txt` 完成三個 reward Enemy template 的 source closure。逐筆結果見 `data/generated/stoneage_gmque_reward_enemy_templates.json`。
 
 ### EnemyBase
 
-對 pinned `gmsv/data/enemybase1.txt` 的直接核對沒有找到 TempNo `1642` 或 `1636`。因此不能把 `enemy_ai` row 當成 `ENEMY_createPetFromEnemyIndex()` 所需要的完整建立資料。
+舊 audit 曾把 reward ID 直接當成 EnemyBase TempNo 搜尋，因此得到 `1642/1636` not-found。這個搜尋鍵是錯的：fixed C 先用 `ENEMY_getEnemyArrayFromId()`，而 `enemy1.txt` 再提供 TempNo。現在三條 source chain 已閉合：`1642→809→瑞里西尔`、`1636→803→可可恩`、`475→5→黑乌力`。
 
 ### Main player-pet database cross-check
 
-`data/generated/stoneage_general_lv1_pets.json` 是目前 `DATA_URL` 實際載入的玩家寵物資料。把 `species[].wildLv1Variants[].enemyIds` 反向索引後，GMQUE reward IDs `1642`、`1636`、`475` **全部沒有對應**。
-
-因此目前至少有兩層明確證據都不能直接形成 reward Pet template：`stoneage_enemy_ai.json` 只有 AI metadata，而 main player-pet DB 也沒有這三個 Enemy ID 的 variant。runtime 現在會將它們標成 `pet-template-pending`，不再只回傳一個看似可用的 pet ID。
-
-### Encounter 1642 occurrence
-
-目前 Web encounter runtime 的 Group 124、125、128 有 `enemyItems[0]=1642`。這些欄位位於 Enemy 掉落表，代表 **item drop ID**，不是 GMQUE reward pet 的 Enemy ID template；本 audit 特別把這兩個 data layer 分開。
+`data/generated/stoneage_general_lv1_pets.json` 是目前 `DATA_URL` 實際載入的玩家寵物資料。把 `species[].wildLv1Variants[].enemyIds` 反向索引後，三個 reward ID 仍然沒有對應。這表示 Web player-pet DB 尚未收錄它們；不表示 fixed C 沒有 reward template。現在 source template 已閉合，runtime 仍需改成消費 source-backed Enemy chain。
 
 ## Runtime boundary
 
@@ -53,11 +47,10 @@
 ## Explicitly unresolved
 
 - 實際 GMQUE NPC `RANDGMQUE / QUEPART0..` 值。
-- reward pet `1642` 完整 Enemy template。
-- reward pet `1636` 完整 Enemy template。
-- reward pet `475` 完整 reward-template mapping。
+- Web runtime 的 Enemy-ID→TempNo→EnemyBase reward adapter。
+- `ENEMY_createPetFromEnemyIndex()` 對應的 Web persistent pet mutation semantics。
 
-在這四項 source evidence 沒有閉合以前，不建立虛構 NPC 活動內容、不猜寵物名稱／能力／初始數值、不直接清除玩家寵物。
+三個 reward Enemy template 的 source evidence 已閉合；在 runtime adapter 完成前仍不直接啟用 reward mutation。
 
 ## Regression
 
