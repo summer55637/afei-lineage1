@@ -1,6 +1,6 @@
 {
-  "format": "stoneage-gmque-reward-enemy-template-source-v1",
-  "status": "source-resolved-runtime-pending",
+  "format": "stoneage-gmque-reward-enemy-template-source-v2",
+  "status": "source-resolved-runtime-adapter-ready",
   "playableCore": "V3.09",
   "workstream": "V3.10-groundwork",
   "fixedC": {
@@ -50,5 +50,145 @@
     "currentRuntimeSource": "main player-pet database enemyIds reverse index",
     "activationState": "pending-adapter-update",
     "reason": "fixed C rewards resolve from Enemy ID via ENEMY_getEnemyArrayFromId; the evidence above is not the same data contract as main player-pet wildLv1Variants"
+  },
+  "templates": {
+    "475": {
+      "enemyId": 475,
+      "tempNo": 5,
+      "name": "黑乌力",
+      "levelMin": 1,
+      "levelMax": 1,
+      "serverInitNum": 20,
+      "serverLvUpPoint": 4.5,
+      "wildGrowth": 4.5,
+      "stats": {
+        "vital": 22,
+        "str": 22,
+        "tgh": 24,
+        "dex": 27
+      },
+      "elements": {
+        "earth": 50,
+        "water": 0,
+        "fire": 0,
+        "wind": 50
+      },
+      "statusResist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "petSkills": [
+        1,
+        2
+      ],
+      "rare": 1,
+      "critical": 10,
+      "counter": 10,
+      "slot": 7,
+      "imageNumber": 100388,
+      "petFlg": 1,
+      "size": 0,
+      "rank": 1
+    },
+    "1636": {
+      "enemyId": 1636,
+      "tempNo": 803,
+      "name": "可可恩",
+      "levelMin": 1,
+      "levelMax": 1,
+      "serverInitNum": 28,
+      "serverLvUpPoint": 4.5,
+      "wildGrowth": 4.5,
+      "stats": {
+        "vital": 27,
+        "str": 34,
+        "tgh": 20,
+        "dex": 26
+      },
+      "elements": {
+        "earth": 0,
+        "water": 80,
+        "fire": 20,
+        "wind": 0
+      },
+      "statusResist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "petSkills": [
+        1,
+        2
+      ],
+      "rare": 0,
+      "critical": 1,
+      "counter": 1,
+      "slot": 4,
+      "imageNumber": 100898,
+      "petFlg": 1,
+      "size": 1,
+      "rank": 0
+    },
+    "1642": {
+      "enemyId": 1642,
+      "tempNo": 809,
+      "name": "瑞里西尔",
+      "levelMin": 1,
+      "levelMax": 1,
+      "serverInitNum": 20,
+      "serverLvUpPoint": 4.5,
+      "wildGrowth": 4.5,
+      "stats": {
+        "vital": 24,
+        "str": 20,
+        "tgh": 10,
+        "dex": 36
+      },
+      "elements": {
+        "earth": 60,
+        "water": 0,
+        "fire": 0,
+        "wind": 40
+      },
+      "statusResist": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "petSkills": [
+        1,
+        2,
+        210
+      ],
+      "rare": 1,
+      "critical": 1,
+      "counter": 1,
+      "slot": 6,
+      "imageNumber": 100904,
+      "petFlg": 1,
+      "size": 0,
+      "rank": 2
+    }
+  },
+  "runtimeContract": {
+    "lookup": "reward Enemy ID -> normalized source template",
+    "cCreation": "ENEMY_createPetFromEnemyIndex",
+    "rngOrder": [
+      "level RAND(enemy LV_MIN,enemy LV_MAX)",
+      "four RAND(0,4)-2 stat rolls",
+      "ten RAND(0,3) allocation rolls",
+      "PETMAIL_EFFECT RAND(0,1)"
+    ],
+    "persistentMutation": "not performed by adapter"
   }
 }
