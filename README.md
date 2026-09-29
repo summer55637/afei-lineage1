@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.13 true tile runtime** |
+| 下一階段 | **V3.13 true floor/x/y → tile runtime** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -76,37 +76,19 @@ V3.09 — Combo death credit waits for ItemCrush boundary
 
 ---
 
-## 🔬 V3.10 groundwork
+## 🔬 V3.10～V3.12 presentation／source groundwork
 
-GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**。
+GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追尋 RANDGMQUE / QUEPART0..3，也不建立替代任務資料或 live handover／領獎 UI。既有 fixed-C 研究僅保留歷史參考。
 
-- 不再追尋真實 `RANDGMQUE / QUEPART0..3` NPC data。
-- 不建立替代或猜測的 GMQUE 任務資料。
-- 不建立 GMQUE live NPC、handover、領獎 UI。
-- GMQUE 既有 fixed-C 研究資料保留作歷史參考，但不再是版本 blocker，也不會自動重新啟用。
+**V3.10**：完成 encounter source closure 與戰鬥／世界 presentation shell，包括 battle HUD、battle-stage feedback、world HUD；不虛構原版 sprite、map tile、NPC 或 world coordinate。
 
-V3.10 已完成 encounter source closure 與基礎 battle presentation；V3.11 主線改為**戰鬥畫面互動提示 presentation layer**：把現有 Player／出戰 Pet／Enemy runtime data 呈現在接近經典戰鬥配置的場景中；這一層不改 battle order、傷害、CaptureCheck 或 RNG。
+**V3.11**：延續既有 `targetEnemyUnit()`，把目前戰鬥目標做成明確的「目標」標記；不建立第二份 target state，不改 RNG 或 battle runtime。
 
-V3.10 已在既有戰鬥場景上新增 **battle HUD**：右上固定指令窗、回合／目標資訊，以及玩家／出戰寵的 HP／MP；未有 source-backed runtime 的指令只作視覺佔位，不偽造玩法。 本輪再加入 **battle-stage feedback**：將既有戰鬥 log 的傷害／會心／MISS／捕獲／狀態結果短暫疊到戰場上；只轉譯已發生的結果，不重新計算。 並完成 **world HUD shell**：以現有 map／encounter／Player／Pet／system log 資料建立世界主畫面的場景與四周常駐 HUD；樹、岩石、水路等目前只屬 presentation-only，不冒充原始地圖資料。
+**V3.12**：依 fixed C 的 `setup.cf`、`readmap.c/readmap.h`、`battle.c` 與 pinned `battlemap.txt` 建立 battlefield source manifest，固定 220 個 battle map 定義、122 個有效範圍宣告、199 個實際被指定的 battle map，以及原始反向範圍 1 筆。戰鬥 HUD 會顯示 manifest 的 source 狀態；若 manifest 載入失敗則 fail-closed，不猜測目前戰場地形。
 
-介面來源筆記：[V3.10 battle UI source notes](docs/reference/v310-battle-ui-source-notes.md)。
-固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+目前仍**沒有**完整 floor/x/y → tile runtime，因此 V3.12 不把未證實的 tile／battlemap 強行套入畫面。下一步 V3.13 會繼續解析真正的地圖檔格式與 runtime 接點。
 
-## 🧭 開發原則
-
-> **原 C 規則優先，不猜數值。**
-
-固定流程：
-
-**Source → Data → Runtime → Regression → CI → Playable Integration**
-
-外部資料主要分成兩類：
-
-- **GitHub／原始碼**：確認規則、資料表、函式流程、RNG、封包與結構。
-- **公開資料／Google**：補充舊版介面、流程、截圖、遊戲操作與 source 沒有描述的視覺資訊。
-
-來源互相衝突時，以已確認的固定原 C 行為為核心。
-
+來源筆記：[V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)。
 ---
 
 ## 📁 專案結構
@@ -135,6 +117,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - PetSkill source reachability
 - Encounter / Enemy source closure
 - GMQUE 永久停用政策與 battle presentation regression
+- V3.12 battlefield source contract／source-status HUD
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -158,7 +141,7 @@ start.html
 - [歷史開發紀錄](docs/changelog/)
 - [Source Reference](docs/reference/)
 - [固定原 C：StoneAge](https://github.com/gavinlinasd/StoneAge/tree/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56)
-- [目前 V3.10 開發分支](https://github.com/summer55637/afei-lineage1/tree/v310-battle-presentation)
+- [V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)
 
 ---
 
