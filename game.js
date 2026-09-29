@@ -10476,7 +10476,9 @@ function sourceGmQueParseNpcArg(npcArg,{randInclusive=cRand,expectedCount=4}={})
     const page=fields[key];
     if(page==null||page==='')return {ok:false,reason:'quepart-missing',index:i,key,tasks:[]};
     const options=page.split(',').map(x=>String(x).trim()).filter(Boolean);
+    // fixed GMQUE_InSertQue counts j=1..11 only; option 12+ is not visible to the C picker.
     if(options.length===0)return {ok:false,reason:'quepart-empty',index:i,key,tasks:[]};
+    if(options.length>11)return {ok:false,reason:'quepart-option-overflow',index:i,key,optionCount:options.length,maxOptions:11,tasks:[]};
 
     let rawPick=Number(randInclusive(1,options.length));
     if(!Number.isFinite(rawPick))return {ok:false,reason:'quepart-rng-invalid',index:i,key,tasks:[]};
@@ -10487,11 +10489,11 @@ function sourceGmQueParseNpcArg(npcArg,{randInclusive=cRand,expectedCount=4}={})
     const picked=options[optionIndex];
     const eq=picked.indexOf('=');
     if(eq<=0)return {ok:false,reason:'quepart-format',index:i,key,token:picked,tasks:[]};
-    const petId=Math.trunc(Number(picked.slice(0,eq).trim()));
+    const tempNo=Math.trunc(Number(picked.slice(0,eq).trim()));
     const range=picked.slice(eq+1).trim().split('-').map(x=>x.trim());
     if(range.length!==2)return {ok:false,reason:'quepart-level-range',index:i,key,token:picked,tasks:[]};
     const minLv=Math.trunc(Number(range[0])),maxLv=Math.trunc(Number(range[1]));
-    if(!Number.isFinite(petId)||petId<=0||!Number.isFinite(minLv)||!Number.isFinite(maxLv)){
+    if(!Number.isFinite(tempNo)||tempNo<=0||!Number.isFinite(minLv)||!Number.isFinite(maxLv)){
       return {ok:false,reason:'quepart-number',index:i,key,token:picked,tasks:[]};
     }
     if(minLv<0||maxLv<minLv)return {ok:false,reason:'quepart-level-order',index:i,key,token:picked,tasks:[]};
@@ -10501,7 +10503,7 @@ function sourceGmQueParseNpcArg(npcArg,{randInclusive=cRand,expectedCount=4}={})
     level=Math.trunc(level);
     if(level<minLv||level>maxLv)return {ok:false,reason:'quepart-level-rng-range',index:i,key,level,minLv,maxLv,tasks:[]};
 
-    tasks.push({slot:i,petId,level,raw:petId+'-'+level,optionIndex,optionCount:options.length});
+    tasks.push({slot:i,tempNo,petId:tempNo,level,raw:tempNo+'-'+level,optionIndex,optionCount:options.length});
   }
   return {ok:true,count,tasks,taskString:tasks.map(x=>x.raw).join('&')};
 }
