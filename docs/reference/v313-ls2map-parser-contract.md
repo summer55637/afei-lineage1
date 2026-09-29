@@ -18,11 +18,11 @@
 
 原 C 會將 tile/object 每格轉成 host order，並逐格以 `IsValidImagenumber()` 驗證；檔案若有額外 bytes 只會印出大小警告，不會在此處當成硬失敗。
 
-## Web parser boundary
+## Verified maps\n\n目前已產生 7 張 verified map runtime：`200、400、2000、5507、10406、10702、20000`。每張都保留 fixed-C source blob SHA、原始路徑、尺寸、tile/object 陣列，以及 tile image → battlemap candidate 對照。\n\n## Web parser boundary
 
 `tools/stoneage_ls2map_parser.mjs` 僅解析 binary container 結構，使用 `Uint8Array` 與 big-endian u16；它不猜測 image attributes，也不替 `mapset.txt` 補資料。
 
-目前因原始地圖檔是 binary，connector 無法直接取得其 bytes，因此本版用 synthetic fixture 驗證 parser；真正 map bytes 後續可由 CI 在 fixed ref 下抓取，再產生受控的 generated JSON。
+原始地圖檔為 binary，但 GitHub connector 可用 base64 讀取；目前已對上述 7 張地圖實際取得 bytes，產生受控 generated JSON，並以 CI regression 驗證尺寸、陣列長度與 battlemap candidate coverage。
 
 此外，其他 reverse-engineered client 分支存在不同 `.dat` map container 實作，本專案不把那些格式直接當成 gmsv `LS2MAP` 的格式。
 
