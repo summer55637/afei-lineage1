@@ -32,6 +32,7 @@ const ctx={
   gmqueDb:runtime,
   gmquePetTemplateIndex:{},
   gmqueRewardEnemyTemplatesDb:rewardTemplates,
+  gmqueRewardEnemyTemplatesDb:rewardTemplates,
   cRand:(a)=>a,
   sourceRandModulo:()=>41
 };
