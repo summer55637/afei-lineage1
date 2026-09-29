@@ -1,0 +1,32 @@
+name: V3.16 client image resolver
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_client_image_runtime.mjs'
+      - 'tools/check_v316_adrnbin_parser.mjs'
+      - 'docs/reference/v316-client-image-resolver-contract.md'
+      - '.github/workflows/v316-client-image-resolver.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_client_image_runtime.mjs'
+      - 'tools/check_v316_adrnbin_parser.mjs'
+      - 'docs/reference/v316-client-image-resolver-contract.md'
+      - '.github/workflows/v316-client-image-resolver.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check ADRNBIN resolver syntax
+        run: node --check src/stoneage_client_image_runtime.mjs
+      - name: Run V3.16 ADRNBIN parser regression
+        run: node tools/check_v316_adrnbin_parser.mjs
