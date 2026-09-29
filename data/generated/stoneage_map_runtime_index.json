@@ -73,7 +73,8 @@
       "height": 50,
       "tileCount": 2500,
       "objectCount": 2500,
-      "sourceBlobSha": "b730f5aca60347f0b5b1bda497f6e65740706dc1"
+      "sourceBlobSha": "b730f5aca60347f0b5b1bda497f6e65740706dc1",
+      "sourcePath": "gmsv/data/map/20000"
     }
   }
 }
