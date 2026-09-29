@@ -93,9 +93,9 @@ assert.equal(zeroRoll.ok,false); assert.equal(zeroRoll.reason,'implicit-zero-pet
 
 let check=ctx.sourceGmQueHandoverCheck('1642-10&1636-11&475-12&1642-13',pets,{gmqueNums:98,bagHasSpace:true,gold:0,expectedNames:{1636:'B'}});
 assert.equal(check.ok,true); assert.equal(check.type,'pet'); assert.equal(check.nums,98);
-check=ctx.sourceGmQueHandoverCheck('1642-10&1636-11&475-12&1642-13',pets,{gmqueNums:57,bagHasSpace:false,gold:0});
+check=ctx.sourceGmQueHandoverCheck('1642-10&1636-11&475-12&1642-13',pets,{gmqueNums:57,bagHasSpace:false,gold:0,expectedNames:{1636:'B'}});
 assert.equal(check.ok,false); assert.equal(check.reason,'item-full');
-check=ctx.sourceGmQueHandoverCheck('1642-10&1636-11&475-12&1642-13',pets,{gmqueNums:40,bagHasSpace:true,gold:800000});
+check=ctx.sourceGmQueHandoverCheck('1642-10&1636-11&475-12&1642-13',pets,{gmqueNums:40,bagHasSpace:true,gold:800000,expectedNames:{1636:'B'}});
 assert.equal(check.ok,false); assert.equal(check.reason,'gold-cap');
 
 // Fail-closed guarantee for absent source names: ID mismatch does not become a match.
