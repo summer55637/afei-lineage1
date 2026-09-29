@@ -113,7 +113,8 @@ assert.ok(directPet.includes('if(r.damage<=0){r.damage=1;r.miss=false}'));
 const petResult=extractFunction(game,'enemyAttackPetResult');
 assert.ok(petResult.includes('options.sourceGuardianReal===true'));
 const fall=extractFunction(game,'performEnemyFallGround',true);
-assert.ok(fall.includes('enemyAttackPetResult(unit,chosen.pet)'));
+assert.ok(fall.includes('resolveEnemyAttackSeqBugToPet(unit,chosen.pet,{')),
+assert.ok(fall.includes("guardianSourceBug:'BATTLE_S_FallGround-defindex-not-updated'"));
 assert.equal(fall.includes('sourceGuardianReal:true'),false);
 
 // FIREKILL is a fixed real-defindex caller, so Pet target uses direct Guardian.
