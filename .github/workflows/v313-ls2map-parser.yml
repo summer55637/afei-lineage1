@@ -3,6 +3,10 @@ name: V3.13 LS2MAP parser contract
 on:
   push:
     paths:
+      - 'data/generated/stoneage_map_10702.json'
+      - 'data/generated/stoneage_map_10406.json'
+      - 'data/generated/stoneage_map_5507.json'
+      - 'data/generated/stoneage_map_200.json'
       - 'tools/check_v313_verified_maps_runtime.mjs'
       - 'data/generated/stoneage_map_2000.json'
       - 'data/generated/stoneage_map_400.json'
