@@ -10551,17 +10551,11 @@ function sourceGmQueMatchPetToTask(pet,task,{expectedName=null}={}){
 function sourceGmQueHandoverCheck(taskString,pets,{gmqueNums=0,randModulo=sourceRandModulo,bagHasSpace=true,gold=0,expectedNames=null}={}){
   const parsed=sourceGmQueTaskEntries(taskString,{expectedCount:4});
   if(!parsed.ok)return Object.assign({ok:false},parsed);
-  let nums=Math.trunc(n(gmqueNums));
-  let generatedNums=false;
-  // fixed GMQUE_CheckQueStr initializes GMQUENUMS before item/gold gate checks.
-  if(nums<=0){nums=sourceGmQueActionValue(randModulo);generatedNums=true;}
-  const type=sourceGmQueRewardType(nums);
-  if(type==='item'&&!bagHasSpace){
-    return {ok:false,reason:'item-full',type,nums,generatedNums,entries:parsed.entries,matches:[]};
-  }
-  if(type==='gold'&&Math.trunc(n(gold))>=800000){
-    return {ok:false,reason:'gold-cap',type,nums,generatedNums,entries:parsed.entries,matches:[]};
-  }
+
+  // fixed GMQUE_CheckQueStr source order: validate all four required pets first.
+  // Only after every slot matches does C initialize GMQUENUMS and evaluate the
+  // item/gold reward gate. This ordering matters because the initialization uses
+  // the global rand()%100 stream.
   const sourceNames=expectedNames&&typeof expectedNames==='object'?expectedNames:{};
   const matches=parsed.entries.map(task=>{
     const expectedName=sourceNames[String(task.petId)]??sourceNames[task.petId]??null;
@@ -10573,11 +10567,26 @@ function sourceGmQueHandoverCheck(taskString,pets,{gmqueNums=0,randModulo=source
     return Object.assign({},task,{candidates});
   });
   const matchedTaskCount=matches.filter(x=>x.candidates.length>0).length;
+  if(matchedTaskCount!==parsed.entries.length){
+    return {
+      ok:false,reason:'missing-pet',type:null,nums:Math.trunc(n(gmqueNums)),generatedNums:false,
+      entries:parsed.entries,matches,matchedTaskCount,matchedAll:false
+    };
+  }
+
+  let nums=Math.trunc(n(gmqueNums));
+  let generatedNums=false;
+  // fixed GMQUE_CheckQueStr initializes GMQUENUMS only after the four-pet check.
+  if(nums<=0){nums=sourceGmQueActionValue(randModulo);generatedNums=true;}
+  const type=sourceGmQueRewardType(nums);
+  if(type==='item'&&!bagHasSpace){
+    return {ok:false,reason:'item-full',type,nums,generatedNums,entries:parsed.entries,matches,matchedTaskCount,matchedAll:true};
+  }
+  if(type==='gold'&&Math.trunc(n(gold))>=800000){
+    return {ok:false,reason:'gold-cap',type,nums,generatedNums,entries:parsed.entries,matches,matchedTaskCount,matchedAll:true};
+  }
   return {
-    ok:matchedTaskCount===parsed.entries.length,
-    reason:matchedTaskCount===parsed.entries.length?null:'missing-pet',
-    type,nums,generatedNums,entries:parsed.entries,matches,matchedTaskCount,
-    matchedAll:matchedTaskCount===parsed.entries.length
+    ok:true,reason:null,type,nums,generatedNums,entries:parsed.entries,matches,matchedTaskCount,matchedAll:true
   };
 }
 
