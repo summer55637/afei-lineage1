@@ -3,6 +3,8 @@ name: V3.13 LS2MAP parser contract
 on:
   push:
     paths:
+      - 'tools/check_v313_mapset_runtime.mjs'
+      - 'data/generated/stoneage_mapset_runtime.json'
       - 'tools/check_v313_map_source_catalog.mjs'
       - 'data/generated/stoneage_map_source_catalog.json'
       - 'data/generated/stoneage_map_10702.json'
@@ -56,5 +58,7 @@ jobs:
         run: node tools/check_v313_verified_maps_runtime.mjs
       - name: Run V3.13 map source catalog regression
         run: node tools/check_v313_map_source_catalog.mjs
+      - name: Run V3.13 mapset attribute regression
+        run: node tools/check_v313_mapset_runtime.mjs
       - name: Run V3.13 source map world HUD regression
         run: node tools/check_v313_source_map_world_hud.mjs
