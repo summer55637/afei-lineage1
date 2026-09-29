@@ -4,6 +4,19 @@
 
 ## Fixed source
 
+## Source discovery contract
+
+## External layout evidence
+
+公開 8.0 生態的資料位置可交叉確認 NPC data 是獨立層：`alrightlook/stoneage-2` 的 `setup.cf` 指向 `npcdir=data/npc`；另一份 8.0 source archive 也列出 `gmsv/npc/npc_eventaction.c`。這些資料只能證明常見 layout，不能直接證明本專案缺失的 `RANDGMQUE / QUEPART0..3` 實際內容。
+
+- GitHub layout reference: https://github.com/alrightlook/stoneage-2/blob/master/setup.cf
+- 8.0 source archive listing: https://www.dssz.com/477838.html
+
+目前實際活動參數仍未納入 playable data。下一輪 source closure 先固定搜尋下列 NPC data root：`data/npc`、`gmsv/data/npc`、`source/data/npc`、`vendor/data/npc`、`references/data/npc`、`reference/data/npc`。
+
+`tools/check_v310_gmque_npc_source_locator.mjs` 只負責掃描候選檔是否同時出現 `RANDGMQUE` 與 `QUEPART0..3`，找到後標為 candidate；它不會因為找到字串就自動啟用活動。候選 source 必須再經 pinned source provenance 與內容 regression 才能把 `gmqueNpcArguments` 從 `pending-source` 升級。
+
 - repository: `gavinlinasd/StoneAge`
 - ref: `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
 - path: `gmsv/src/npc/npc_eventaction.c`

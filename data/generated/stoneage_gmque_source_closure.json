@@ -125,5 +125,18 @@
     "petRewardTemplateResolver": "sourceGmQueRewardPetTemplate",
     "petRewardTemplateIndexBuilder": "sourceGmQueBuildPetTemplateIndex",
     "npcArgParser": "sourceGmQueParseNpcArg"
+  },
+  "discovery": {
+    "npcCandidateRoots": [
+      "data/npc",
+      "gmsv/data/npc",
+      "source/data/npc",
+      "vendor/data/npc",
+      "references/data/npc",
+      "reference/data/npc"
+    ],
+    "locator": "tools/check_v310_gmque_npc_source_locator.mjs",
+    "candidatePromotion": "requires-pinned-provenance-and-regression",
+    "currentCandidateCount": 0
   }
 }

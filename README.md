@@ -614,6 +614,7 @@ V2.69 為 Skill 13「火龍槍」歷史核心版本，完成：
 - `sourceGmQueRewardPetTemplate()` 已要求真正的 player-pet template mapping；只有 Enemy ID 被 AI metadata 或 encounter drop table 提到時，不會自動把它提升成可領取寵物。
 - GMQUE handover parser 現在只接受四段 `petID-LV` source task string，並實作 fixed C 的 exact-ID / source-name fallback 判斷；尚不直接刪除寵物或假造缺失 template。
 - V3.10 另外加入 `sourceGmQueParseNpcArg()` source adapter：只接受有證據的 `RANDGMQUE=4 + QUEPART0..3` argument，按 fixed inclusive RNG 生成四段 task string；沒有真實 NPC argument 時不注入預設任務。
+- V3.10 另外加入 `check_v310_gmque_npc_source_locator.mjs`，固定從 `gmsv/data/npc` 等候選 source root 尋找真實 NPC argument；找到候選檔也只標記 candidate，不自動啟用活動。
 - 對任何尚未取得 pinned-source 證據的規則、名稱、能力、數值或事件旗標，維持 **fail-closed**，不自行補數值。
 - 開發流程固定為 **證據 → runtime → regression → CI → 視覺還原**。
 

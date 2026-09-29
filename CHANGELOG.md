@@ -11,6 +11,13 @@
 
 > **原 C 規則優先、不猜數值**
 
+## V3.10 groundwork：GMQUE NPC source locator
+
+- 以公開 8.0 source layout 的 `gmsv/data/npc` 為 canonical discovery root，另外保留 `data/npc`、`source/data/npc`、`vendor/data/npc`、`references/data/npc`、`reference/data/npc` 候選位置。
+- 新增 `tools/check_v310_gmque_npc_source_locator.mjs`：只掃描同時含 `RANDGMQUE` 與 `QUEPART0..3` 的候選檔，不把 generated adapter 自己誤認成 live NPC data。
+- locator 找到候選檔時只回報 `candidate-found`，不自動升級 ledger、不啟用 GMQUE 活動；後續仍需 pinned source provenance + content regression。
+- 本輪沒有找到真實活動參數，因此 `gmqueNpcArguments` 維持 `pending-source`，playable core 維持 V3.09。
+
 ## V3.10 groundwork：GMQUE NPC argument source adapter
 
 這一輪把 fixed `GMQUE_InSertQue()` 的 NPC argument grammar 落成 pure source adapter，但不填入任何未找到證據的實際活動參數。
