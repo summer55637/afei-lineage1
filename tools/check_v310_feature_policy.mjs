@@ -12,7 +12,7 @@ assert.equal(manifest.policy?.disabledFeaturesAreNotVersionBlockers,true);
 assert.equal(manifest.policy?.doNotInventReplacementNpcData,true);
 assert.equal(manifest.policy?.doNotAutoEnableDisabledFeatures,true);
 
-const html=fs.readFileSync('game.html','utf8');
+const html=fs.readFileSync('start.html','utf8');
 assert.ok(!/id=["'][^"']*gmque/i.test(html),'GMQUE must not have live UI ids');
 assert.ok(!/GMACTION|ShowGmque|DelGmquePet|GetGmPrize|CleanGmque/i.test(html),'GMQUE action handlers must not be wired in UI');
 
