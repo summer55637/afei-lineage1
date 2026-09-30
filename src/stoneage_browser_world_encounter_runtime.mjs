@@ -119,6 +119,7 @@ function prepareBrowserWorldEncounter(state,index,{position=null,encounterId=nul
     enemyMax:Number(row.enemyMax),
     zorder:Number(row.zorder??0),
     groupIds:row.groupIds.map(Number),
+    groupProbs:Array.isArray(row.groupProbs)?row.groupProbs.map(v=>v==null?null:Number(v)):[],
     enemyIds:Array.isArray(row.enemyIds)?row.enemyIds.map(Number):[],
     sourceSelection:resolved.selection
   };
