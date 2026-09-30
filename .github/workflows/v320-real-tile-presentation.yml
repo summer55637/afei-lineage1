@@ -7,6 +7,9 @@ on:
       - 'src/stoneage_palette_runtime.mjs'
       - 'tools/check_v320_tile_presentation.mjs'
       - 'docs/reference/v320-real-tile-presentation.md'
+      - 'game.js'
+      - 'start.html'
+      - 'game.css'
       - '.github/workflows/v320-real-tile-presentation.yml'
   pull_request:
     paths:
@@ -31,3 +34,5 @@ jobs:
         run: node --check src/stoneage_tile_presentation.mjs
       - name: Run V3.20 tile presentation regression
         run: node tools/check_v320_tile_presentation.mjs
+      - name: Check game runtime syntax
+        run: node --check game.js
