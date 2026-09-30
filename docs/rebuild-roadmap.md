@@ -4,6 +4,16 @@
 
 
 
+## 2026-10-01 新增：V3.77 Browser World WarpPoint execution
+
+V3.77 將 fixed-C `mapwarp.txt` 的 first-route exact source warp rows 接入 canonical Browser State Controller，新增 `WORLD_WARPPOINT_EXECUTE`。
+
+固定 C 的 `MAPPOINT_getMapWarpGoal()` 要求當前 from floor/x/y 與 source warp point 完全一致，再驗證 destination coordinate，最後由 `MAPPOINT_MapWarpHandle()` 呼叫 `CHAR_warpToSpecificPoint()`。Browser runtime 保持這個 boundary，只增加 canonical Save Envelope transaction。
+
+V3.77 與 V3.75 的 NPC Warp 分離：NPC `npcgen_warp` 仍由 `NPC_WARP_EXECUTE` 處理；map warp point 則由本輪 `WORLD_WARPPOINT_EXECUTE` 處理。
+
+目前 8 個 first-route portal groups / 37 個 source rows 全部保留；能否從玩家路徑走到 source point 仍由 V3.76 movement / reachability closure 決定，4000→200 不用 runtime 繞過。
+
 ## 2026-10-01 新增：V3.76 Browser World Movement Step
 
 V3.76 將固定 C 的 `MAP_walkAbleFromPoint()` 與 `CHAR_walk()` movement gate 接入唯一 Browser State Controller，新增 `WORLD_MOVE_STEP`。
