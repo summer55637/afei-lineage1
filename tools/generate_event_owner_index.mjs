@@ -41,9 +41,30 @@ for(const p of files){
     const line=lines[i].trim();
     if(!line||line.startsWith('#'))continue;
     for(const [role,rx] of patterns){
-      for(const m of line.matchAll(rx))add(refs,Number(m[1]),{path:rel(p),line:i+1,role,expression:m[0],raw:line.slice(0,800)});
+      for(const m of line.matchAll(rx)){
+        const id=Number(m[1]);
+        if(id>=0)add(refs,id,{path:rel(p),line:i+1,role,expression:m[0],raw:line.slice(0,800)});
+      }
     }
   }
+}
+
+
+const encountPath=path.join(root,'gmsv/data/encount.txt');
+const encounterEventRefs=[];
+if(fs.existsSync(encountPath)){
+  let lineNo=0;
+  for(const raw of fs.readFileSync(encountPath,'utf8').replace(/\r/g,'').split('\n')){
+    lineNo++;
+    const line=raw.trim();
+    if(!line||line.startsWith('#'))continue;
+    const cols=line.split(',');
+    for(const [idx,role] of [[30,'EncounterEventNow'],[31,'EncounterEventEnd']]){
+      const id=Number((cols[idx]??'').trim());
+      if(Number.isInteger(id)&&id>=0) encounterEventRefs.push({path:'gmsv/data/encount.txt',line:lineNo,role,id,expression:role+'='+id,raw:line.slice(0,800)});
+    }
+  }
+  for(const row of encounterEventRefs)add(refs,row.id,row);
 }
 
 const missionPath=path.join(root,'gmsv/data/mission.txt');
@@ -87,7 +108,8 @@ const rows=[...refs.values()].map(x=>({
 const allIds=rows.map(r=>r.eventId);
 const unresolved=allIds.filter(id=>!missionIds.has(id)&&!jobIds.has(id));
 const startupOnly=unresolved.filter(id=>startupEnd.includes(id)||startupNow.includes(id));
-const ownerless=unresolved.filter(id=>!startupEnd.includes(id)&&!startupNow.includes(id));
+const encounterOwned=unresolved.filter(id=>rows.find(r=>r.eventId===id)?.roles.some(x=>x==='EncounterEventNow'||x==='EncounterEventEnd'));
+const ownerless=unresolved.filter(id=>!startupEnd.includes(id)&&!startupNow.includes(id)&&!encounterOwned.includes(id));
 
 const index={
   format:'stoneage-event-owner-index-v1',
@@ -101,11 +123,14 @@ const index={
     jobdailyMatchedIds:rows.filter(r=>r.sourceBuckets.jobdaily).length,
     unresolvedFromMissionJobdaily:unresolved.length,
     startupDefaultMatchedUnresolvedIds:startupOnly.length,
+    encounterOwnedUnresolvedIds:encounterOwned.length,
     ownerlessUnresolvedIds:ownerless.length
   },
   startupDefaults:{eventEnd:[...new Set(startupEnd)].sort((a,b)=>a-b),eventNow:[...new Set(startupNow)].sort((a,b)=>a-b)},
   events:rows,
   unresolvedEventIds:unresolved.sort((a,b)=>a-b),
+  startupOwnedUnresolvedIds:startupOnly.sort((a,b)=>a-b),
+  encounterOwnedUnresolvedIds:encounterOwned.sort((a,b)=>a-b),
   ownerlessUnresolvedIds:ownerless.sort((a,b)=>a-b),
   policies:{
     startupDefaultArraysAreContextOnly:true,
