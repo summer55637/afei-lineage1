@@ -13,10 +13,10 @@
   },
   "statistics": {
     "totalNpcInstancesOnStartFloors": 46,
-    "coordinateResolvedInstances": 16,
+    "coordinateResolvedInstances": 20,
     "reachableCoordinateResolvedInstances": 16,
     "unreachableCoordinateResolvedInstances": 0,
-    "unresolvedCoordinateInstances": 30,
+    "unresolvedCoordinateInstances": 26,
     "coordinateResolved": 4,
     "coordinateUnresolved": 26,
     "interactionAuditedReachable": 16,
@@ -334,7 +334,7 @@
       "interactionStatus": "not_audited_same_cell"
     }
   ],
-  "policy": "Coordinate resolution from fixed-C source does not imply interaction reachability. The four xinshou changeevent NPC coordinates are now source-resolved, but same-cell placement at the player spawn is kept as not_audited until the dedicated changeevent interaction contract is confirmed.",
+  "policy": "Coordinate resolution from fixed-C source does not imply interaction reachability. The four xinshou changeevent NPC coordinates are source-resolved, but same-cell placement at the player spawn is kept as not_audited until the dedicated changeevent interaction contract is confirmed.",
   "sourceEvidence": {
     "newPlayerEventOwner": {
       "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
