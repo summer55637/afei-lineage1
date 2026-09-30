@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-flow-index-v1",
+  "format": "stoneage-start-flow-index-v4",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -16,7 +16,12 @@
     "npcInstancesOnStartFloors": 46,
     "serviceCounts": {
       "movement": 8
-    }
+    },
+    "coordinateResolvedNpcInstances": 46,
+    "coordinateUnresolvedNpcInstances": 0,
+    "coordinateResolvedFromSourceCreate": 46,
+    "coordinateResolvedFromSourceCreateThisPass": 30,
+    "changeeventTemplateUnresolvedInstances": 5
   },
   "hometowns": [
     {
@@ -93,41 +98,77 @@
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
       "blockIndex": 0,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 22,
+      "y": 15,
       "name": "�������ֽӴ�Ա",
       "templateName": "changeevent",
-      "fileRef": "almark/xinshou/xinshoujd.arg"
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 0,
+        "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "changeevent",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
       "blockIndex": 1,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 23,
+      "y": 18,
       "name": "�������ֽӴ�Ա",
       "templateName": "changeevent",
-      "fileRef": "almark/xinshou/xinshoujd.arg"
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 1,
+        "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "changeevent",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
       "blockIndex": 2,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 15,
+      "y": 22,
       "name": "�������ֽӴ�Ա",
       "templateName": "changeevent",
-      "fileRef": "almark/xinshou/xinshoujd.arg"
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 2,
+        "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "changeevent",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
       "blockIndex": 3,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 14,
+      "y": 20,
       "name": "�������ֽӴ�Ա",
       "templateName": "changeevent",
-      "fileRef": "almark/xinshou/xinshoujd.arg"
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 3,
+        "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "changeevent",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/family/bankman.create",
@@ -213,221 +254,419 @@
       "path": "gmsv/data/npc/family/fmdengon.create",
       "blockIndex": 0,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 16,
+      "y": 19,
       "name": "�������԰�",
       "templateName": "npcgen_fmdengon",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/family/fmdengon.create",
+        "blockIndex": 0,
+        "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_fmdengon",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/family/fmdengon.create",
       "blockIndex": 1,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 23,
+      "y": 19,
       "name": "�������԰�",
       "templateName": "npcgen_fmdengon",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/family/fmdengon.create",
+        "blockIndex": 1,
+        "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_fmdengon",
+      "sourceDir": 4
     },
     {
       "path": "gmsv/data/npc/family/fmdengon.create",
       "blockIndex": 2,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 18,
+      "y": 17,
       "name": "�������԰�",
       "templateName": "npcgen_fmdengon",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/family/fmdengon.create",
+        "blockIndex": 2,
+        "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_fmdengon",
+      "sourceDir": 4
     },
     {
       "path": "gmsv/data/npc/family/fmdengon.create",
       "blockIndex": 3,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 19,
+      "y": 18,
       "name": "�������԰�",
       "templateName": "npcgen_fmdengon",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/family/fmdengon.create",
+        "blockIndex": 3,
+        "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_fmdengon",
+      "sourceDir": 4
     },
     {
       "path": "gmsv/data/npc/genout/shop_m.create",
       "blockIndex": 12,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 18,
+      "y": 22,
       "name": "��ķ�����Ĵ峤",
       "templateName": "changeevent",
-      "fileRef": "genout/msg_1006_18_22"
+      "fileRef": "genout/msg_1006_18_22",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m.create",
+        "blockIndex": 12,
+        "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "changeevent",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/genout/shop_m.create",
       "blockIndex": 13,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 16,
+      "y": 16,
       "name": "�峤�ҵĳ�ʦ",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_1006_16_16"
+      "fileRef": "genout/msg_1006_16_16",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m.create",
+        "blockIndex": 13,
+        "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/genout/shop_m.create",
       "blockIndex": 93,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 20,
+      "y": 8,
       "name": "������˿�Ĵ峤",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_2006_20_14"
+      "fileRef": "genout/msg_2006_20_14",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m.create",
+        "blockIndex": 93,
+        "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 4
     },
     {
       "path": "gmsv/data/npc/genout/shop_m.create",
       "blockIndex": 94,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 16,
+      "y": 9,
       "name": "�峤�Ķ���",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_2006_23_14"
+      "fileRef": "genout/msg_2006_23_14",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m.create",
+        "blockIndex": 94,
+        "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 4
     },
     {
       "path": "gmsv/data/npc/genout/shop_m2.create",
       "blockIndex": 13,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 20,
+      "y": 14,
       "name": "�ӼӵĴ峤",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_3006_20_14"
+      "fileRef": "genout/msg_3006_20_14",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m2.create",
+        "blockIndex": 13,
+        "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 4
     },
     {
       "path": "gmsv/data/npc/genout/shop_m2.create",
       "blockIndex": 14,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 14,
+      "y": 16,
       "name": "�峤������",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_3006_14_16"
+      "fileRef": "genout/msg_3006_14_16",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m2.create",
+        "blockIndex": 14,
+        "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/genout/shop_m2.create",
       "blockIndex": 93,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 17,
+      "y": 20,
       "name": "��³���ǵĴ峤",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_4006_17_20"
+      "fileRef": "genout/msg_4006_17_20",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m2.create",
+        "blockIndex": 93,
+        "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/genout/shop_m2.create",
       "blockIndex": 94,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 16,
+      "y": 27,
       "name": "�峤լ�ĳ�ʦ",
       "templateName": "npcgen_man",
-      "fileRef": "genout/msg_4006_16_27"
+      "fileRef": "genout/msg_4006_16_27",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/shop_m2.create",
+        "blockIndex": 94,
+        "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/genout/warp_y.create",
       "blockIndex": 23,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 10,
+      "y": 20,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y.create",
+        "blockIndex": 23,
+        "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y.create",
       "blockIndex": 25,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 10,
+      "y": 21,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y.create",
+        "blockIndex": 25,
+        "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y.create",
       "blockIndex": 153,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 20,
+      "y": 21,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y.create",
+        "blockIndex": 153,
+        "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y.create",
       "blockIndex": 155,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 21,
+      "y": 21,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y.create",
+        "blockIndex": 155,
+        "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y2.create",
       "blockIndex": 17,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 20,
+      "y": 21,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y2.create",
+        "blockIndex": 17,
+        "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y2.create",
       "blockIndex": 18,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 21,
+      "y": 21,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y2.create",
+        "blockIndex": 18,
+        "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y2.create",
       "blockIndex": 63,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 10,
+      "y": 20,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y2.create",
+        "blockIndex": 63,
+        "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/genout/warp_y2.create",
       "blockIndex": 65,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 10,
+      "y": 21,
       "name": null,
       "templateName": "npcgen_warp",
-      "fileRef": null
+      "fileRef": null,
+      "coordinateSource": {
+        "path": "gmsv/data/npc/genout/warp_y2.create",
+        "blockIndex": 65,
+        "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_warp",
+      "sourceDir": 0
     },
     {
       "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
       "blockIndex": 0,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 12,
+      "y": 14,
       "name": "���굽��",
       "templateName": "npcgen_man",
-      "fileRef": "my/cunzhang/shuohua2.arg"
+      "fileRef": "my/cunzhang/shuohua2.arg",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+        "blockIndex": 0,
+        "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
       "blockIndex": 25,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 23,
+      "y": 13,
       "name": null,
       "templateName": "npcgen_man",
-      "fileRef": "my/cunzhang/shuohua3.arg"
+      "fileRef": "my/cunzhang/shuohua3.arg",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+        "blockIndex": 25,
+        "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "npcgen_man",
+      "sourceDir": 6
     },
     {
       "path": "gmsv/data/npc/newguest/familyman.create",
@@ -473,41 +712,77 @@
       "path": "gmsv/data/npc/sainasu/uranai.create",
       "blockIndex": 0,
       "floorId": 1006,
-      "x": 0,
-      "y": null,
+      "x": 12,
+      "y": 13,
       "name": "ռ��ʦ",
       "templateName": "luckyman",
-      "fileRef": "sainasu/uranai"
+      "fileRef": "sainasu/uranai",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/sainasu/uranai.create",
+        "blockIndex": 0,
+        "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "luckyman",
+      "sourceDir": 5
     },
     {
       "path": "gmsv/data/npc/sainasu/uranai.create",
       "blockIndex": 1,
       "floorId": 2006,
-      "x": 0,
-      "y": null,
+      "x": 25,
+      "y": 15,
       "name": "ռ��ʦ",
       "templateName": "luckyman",
-      "fileRef": "sainasu/uranai"
+      "fileRef": "sainasu/uranai",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/sainasu/uranai.create",
+        "blockIndex": 1,
+        "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "luckyman",
+      "sourceDir": 5
     },
     {
       "path": "gmsv/data/npc/sainasu/uranai.create",
       "blockIndex": 2,
       "floorId": 3006,
-      "x": 0,
-      "y": null,
+      "x": 25,
+      "y": 13,
       "name": "ռ��ʦ",
       "templateName": "luckyman",
-      "fileRef": "sainasu/uranai"
+      "fileRef": "sainasu/uranai",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/sainasu/uranai.create",
+        "blockIndex": 2,
+        "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "luckyman",
+      "sourceDir": 5
     },
     {
       "path": "gmsv/data/npc/sainasu/uranai.create",
       "blockIndex": 3,
       "floorId": 4006,
-      "x": 0,
-      "y": null,
+      "x": 17,
+      "y": 15,
       "name": "ռ��ʦ",
       "templateName": "luckyman",
-      "fileRef": "sainasu/uranai"
+      "fileRef": "sainasu/uranai",
+      "coordinateSource": {
+        "path": "gmsv/data/npc/sainasu/uranai.create",
+        "blockIndex": 3,
+        "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+        "field": "borncorner"
+      },
+      "coordinateResolvedFromPinnedSource": true,
+      "sourceTemplateName": "luckyman",
+      "sourceDir": 5
     },
     {
       "path": "gmsv/data/npc/sainasu/windowman.create",
@@ -550,5 +825,5 @@
       "fileRef": null
     }
   ],
-  "policy": "Source reconstruction only; start-flow order and gameplay pacing are not inferred from coordinates."
+  "policy": "NPC coordinates are derived from the exact fixed-C NPCCREATE borncorner of the indexed create block. A resolved coordinate does not imply the template module is active; unknown template names remain unresolved and are never silently promoted."
 }
