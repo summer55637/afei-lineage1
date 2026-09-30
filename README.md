@@ -11,7 +11,7 @@
 
 - 最新 commit：62dbefa — Add automatic README maintenance
 - 最後更新時間：2026-09-30T15:50:55+08:00
-- 版本線最高 regression workflow：V342
+- 版本線最高 regression workflow：V3.42
 - Canonical browser entry：index.html；root HTML 入口目前為 1 個
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
