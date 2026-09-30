@@ -75,6 +75,17 @@
 已新增 canonical persistent state schema：schema 1；固定 26 格 profession skills、24 格 player item slots、PetBox / Team / ActivePet 分層，以及 legacy schema 30 的 known-field migration。`tools/check_persistent_state_schema.mjs` 已通過 GitHub Actions。
 
 同時已新增 Idle Loop Contract：disabled → moving → encounter_pending → in_battle → settlement → supply_check / moving，另處理 dead 與 offline_resume。Idle / battleSettings 明確屬於放置版產品層，不冒充 fixed-C 規則。
+## First idle route catalog 更新（2026-09-30）
+
+新增 data/generated/stoneage_first_idle_route_catalog.json 與 tools/generate_first_idle_route_catalog.mjs，將已閉合的 map / world-exit / encounter path 串成可交給 Idle Loop 的 route skeleton。
+
+- hometown 0：1000 → 100 → Encounter 65，path closed。
+- hometown 1：2000 → 100 → Encounter 28，path closed。
+- hometown 2：3000 → 200 → Encounter 91，path closed，但 landing (587,318) 不可走。
+- hometown 3：4000 → 200 目前 source blocked；不加入可玩 idle route。
+
+Battle strategy、補給、捕捉、背包滿、死亡恢復與 offline accrual 尚未被 route catalog 視為完成；它們仍屬 Idle Loop product policy boundary。
+
 ## 現代 3D 卡通化最終視覺目標
 
 最終作品不再以舊版 2D 網頁畫面作為終點。世界地圖、角色、寵物、戰鬥與 UI 都要進化到現代 3D 卡通手遊的完成度：斜俯視 3D 世界、卡通角色與寵物、集中式戰鬥場景、手機 RPG 式 HUD、技能／普攻／防禦／召喚／AUTO 等操作，以及完整的村莊與 NPC 互動框架。詳細規格已寫入 `docs/reference/modern-3d-mobile-visual-ui-target.md`。
