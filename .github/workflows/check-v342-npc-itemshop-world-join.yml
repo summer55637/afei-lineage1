@@ -1,0 +1,35 @@
+name: Check V3.42 NPC ItemShop world join
+
+on:
+  push:
+    paths:
+      - 'tools/check_v342_npc_itemshop_world_join.mjs'
+      - 'tools/generate_world_data_catalog.mjs'
+      - 'tools/generate_npc_itemshop_runtime.mjs'
+      - 'data/generated/stoneage_npc_service_index.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - '.github/workflows/check-v342-npc-itemshop-world-join.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  join:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Checkout pinned fixed-C StoneAge source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: stoneage-source
+          fetch-depth: 1
+
+      - name: Run NPC ItemShop world join
+        run: node tools/check_v342_npc_itemshop_world_join.mjs stoneage-source
