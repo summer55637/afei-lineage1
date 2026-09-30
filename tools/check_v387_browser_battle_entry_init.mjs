@@ -16,7 +16,7 @@ const team=[
 ];
 
 assert.deepEqual(SOURCE_ENTRY_INIT,{escape:0,getitem:[-1,-1,-1]});
-assert.deepEqual(SOURCE_BATTLE_INIT,{use:true,mode:'init',turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
+assert.deepEqual(SOURCE_BATTLE_INIT,{use:true,mode:1,turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
 
 const result=buildBattleContext({
   player:state.player,
@@ -27,7 +27,7 @@ const result=buildBattleContext({
 });
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.deepEqual(result.context.sourceEntryInit,{escape:0,getitem:[-1,-1,-1]});
-assert.deepEqual(result.context.sourceBattleInit,{use:true,mode:'init',turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
+assert.deepEqual(result.context.sourceBattleInit,{use:true,mode:1,turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
 assert.equal(result.context.use,true);
 assert.equal(result.context.mode,'init');
 assert.equal(result.context.turn,0);
