@@ -126,7 +126,15 @@ function selectEventBranch(branches,context={}){
     const normalized=normalizeEventBranch(branches[index]);
     if(!normalized.ok)return {...normalized,index};
     const evaluation=evaluateConditionExpression(normalized.branch.condition,context);
-    if(!evaluation.ok)return {...evaluation,index,branch:normalized.branch};
+    if(!evaluation.ok)return {
+      ok:false,
+      matched:false,
+      reason:'unsupported-event-condition',
+      detailReason:evaluation.reason??null,
+      errors:evaluation.errors??null,
+      index,
+      branch:normalized.branch
+    };
     candidates.push({index,branch:normalized.branch,evaluation});
     if(evaluation.matched)return {ok:true,matched:true,index,branch:normalized.branch,evaluation,candidates};
   }
