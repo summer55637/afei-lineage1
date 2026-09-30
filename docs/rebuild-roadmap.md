@@ -1042,3 +1042,33 @@ Battle Context 本身不進 Persistent State；只保存 Idle mode 的狀態。B
 
 V3.86 仍未執行 turn、AI、status、damage、reward、capture、death settlement。下一階段應先把 battleFieldNo source join 與 existing battle presentation/model input 對齊，再進入真正的 battle turn lifecycle。
 
+## 2026-10-01 V3.87 Browser Battle Entry Initialization
+
+V3.87 在 V3.86 transient Battle Context topology 上，補齊 fixed-C 明確寫出的 Battle / Entry initialization。
+
+EntryInit：
+- charaindex = -1（browser 用 transient characterId 表示）
+- bid = -1（真正寫入時由 entry slot 計算）
+- escape = 0
+- getitem[0..2] = -1
+
+BATTLE_CreateBattle：
+- use = TRUE
+- mode = BATTLE_MODE_INIT
+- turn = 0
+- dpbattle = 0
+- norisk = 0
+- flg = 0
+- field_att = BATTLE_ATTR_NONE
+- att_count = 0
+
+V3.87 不增加新的 battle rule；只補初始化 state，供後續 Battle Turn / Status / AI runtime 直接接手。
+
+新增：
+- `data/generated/stoneage_browser_battle_entry_init_schema.json`
+- `tools/check_v387_browser_battle_entry_init.mjs`
+- `docs/reference/v387-browser-battle-entry-init.md`
+- `.github/workflows/check-v387-browser-battle-entry-init.yml`
+
+Persistent State 不儲存完整 Battle Context；battle context 仍由 controller memory 管理，battle finish / disable 後清除。
+
