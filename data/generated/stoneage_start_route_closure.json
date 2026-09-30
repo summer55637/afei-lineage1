@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v3",
+  "format": "stoneage-start-route-closure-v4",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -14,8 +14,8 @@
   "status": {
     "sourceRouteSpine": "closed",
     "fullFirstRoute": "partial",
-    "definition": "Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed only for NPC instances with resolved numeric coordinates and verified interaction semantics. Four xinshou changeevent NPCs are coordinate-resolved but their same-cell interaction stance is not yet source-closed. Full first-route closure remains open until remaining NPC coordinates, changeevent interaction stance, destination-map walkability, and reward-reference closures are complete.",
-    "coordinateResolvedTownServices": "closed_for_resolved_instances"
+    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are now source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because the pinned npctemplate.c functionSet has no changeevent entry. Full first-route closure remains open until destination-map walkability and reward-reference definitions are closed.",
+    "coordinateResolvedTownServices": "closed_for_resolved_active_templates"
   },
   "statistics": {
     "hometowns": 4,
@@ -24,16 +24,17 @@
     "reachableDirectWarpExits": 8,
     "hometownsWithStartFloorServices": 4,
     "hometownsWithDepth1EncounterEvidence": 4,
-    "coordinateResolvedNpcInstances": 20,
-    "reachableCoordinateResolvedNpcInstances": 16,
-    "unresolvedNpcCoordinateInstances": 26,
-    "coordinateResolvedButInteractionNotAudited": 4
+    "coordinateResolvedNpcInstances": 46,
+    "reachableCoordinateResolvedNpcInstances": 41,
+    "unresolvedNpcCoordinateInstances": 0,
+    "coordinateResolvedButInteractionNotAudited": 5,
+    "templateModuleUnresolvedNpcInstances": 5,
+    "startNpcCoordinateClosure": "46/46"
   },
   "remainingWork": [
-    "Resolve source coordinates for the remaining start-floor NPC instances without guessing.",
-    "Audit destination-map walkability at each first warp landing coordinate and the first encounter region.",
-    "Confirm dedicated changeevent/xinshou interaction stance and convert the four coordinate-resolved-but-not-audited NPCs into reachable/unreachable evidence.",
-    "Close new-player event reward definitions for item/pet references without promoting unresolved IDs."
+    "Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.",
+    "Audit destination-map walkability and first unconditional encounter regions with exact fixed-source maps.",
+    "Close new-player event reward item/pet definition references without promoting unresolved IDs."
   ],
   "towns": [
     {
@@ -112,8 +113,8 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 4,
-        "reachableCoordinateResolved": 4,
+        "totalCoordinateResolved": 12,
+        "reachableCoordinateResolved": 10,
         "unreachableCoordinateResolved": 0,
         "rows": [
           {
@@ -160,7 +161,8 @@
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
             "blockIndex": 0
           }
-        ]
+        ],
+        "moduleUnresolved": 2
       }
     },
     {
@@ -239,8 +241,8 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 4,
-        "reachableCoordinateResolved": 4,
+        "totalCoordinateResolved": 13,
+        "reachableCoordinateResolved": 13,
         "unreachableCoordinateResolved": 0,
         "rows": [
           {
@@ -287,7 +289,8 @@
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
             "blockIndex": 1
           }
-        ]
+        ],
+        "moduleUnresolved": 0
       }
     },
     {
@@ -366,8 +369,8 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 4,
-        "reachableCoordinateResolved": 4,
+        "totalCoordinateResolved": 9,
+        "reachableCoordinateResolved": 9,
         "unreachableCoordinateResolved": 0,
         "rows": [
           {
@@ -414,7 +417,8 @@
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
             "blockIndex": 2
           }
-        ]
+        ],
+        "moduleUnresolved": 0
       }
     },
     {
@@ -493,8 +497,8 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 4,
-        "reachableCoordinateResolved": 4,
+        "totalCoordinateResolved": 12,
+        "reachableCoordinateResolved": 9,
         "unreachableCoordinateResolved": 0,
         "rows": [
           {
@@ -541,7 +545,8 @@
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
             "blockIndex": 3
           }
-        ]
+        ],
+        "moduleUnresolved": 3
       }
     }
   ],
@@ -554,5 +559,14 @@
   },
   "nextActions": [
     "Resolve changeevent/xinshou interaction stance rule before counting the four spawn-overlapping NPCs as reachable service interactions."
-  ]
+  ],
+  "sourceEvidence": {
+    "startNpcCoordinateClosure": "data/generated/stoneage_start_npc_coordinate_closure.json",
+    "startNpcReachability": "data/generated/stoneage_start_npc_reachability.json",
+    "changeeventTemplateCheck": {
+      "path": "gmsv/src/npc/npctemplate.c",
+      "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
+      "changeeventPresent": false
+    }
+  }
 }
