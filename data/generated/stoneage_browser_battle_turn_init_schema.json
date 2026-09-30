@@ -1,0 +1,21 @@
+{
+  "format": "stoneage-v392-browser-battle-turn-init-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_TURN_INITIALIZE",
+  "fixedC": {
+    "source": "gmsv/src/battle/battle.c::BATTLE_Init + BATTLE_PreCommandSeq + BATTLE_AllCharaCWaitSet + BATTLE_TurnParam",
+    "battleMode": 2,
+    "characterMode": 2,
+    "commandNone": 0,
+    "statDecay": "mod *= 0.8; last += mod*0.01",
+    "playerCharm": "modCharm decays once with FIXCHARM, then once again without last",
+    "guardian": "set guardian=-1 before parameter pass"
+  },
+  "boundary": {
+    "surpriseCheck": "separate source RNG boundary; not consumed here",
+    "damage": false,
+    "ai": false,
+    "status": false,
+    "persistentMutation": false
+  }
+}
