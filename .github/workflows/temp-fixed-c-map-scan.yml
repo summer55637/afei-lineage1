@@ -11,6 +11,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Scan pinned fixed-C map headers
         shell: bash
         run: |
@@ -26,103 +27,60 @@ jobs:
 
           REF="1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
           ROOT="gmsv/data/map"
+          mapset=json.load(open("data/generated/stoneage_mapset_runtime.json",encoding="utf-8"))
+          walk=mapset.get("walkableByImageId",{})
 
           def blob_sha(b):
               return hashlib.sha1(("blob %d\0"%len(b)).encode()+b).hexdigest()
 
           def parse_map(path):
               b=open(path,"rb").read()
-              if len(b)<44 or b[:6]!=b"LS2MAP":
-                  return None
+              if len(b)<44 or b[:6]!=b"LS2MAP": return None
               floor,width,height=struct.unpack(">HHH",b[6:8]+b[40:42]+b[42:44])
               n=width*height
-              if len(b)!=(44+4*n):
-                  return {"path":path,"floorId":floor,"width":width,"height":height,"blobSha":blob_sha(b),"sizeMatchesHeader":False}
+              if len(b)!=(44+4*n): return None
               off=44
-              tiles=list(struct.unpack(">%dH"%n,b[off:off+2*n]))
-              off+=2*n
+              tiles=list(struct.unpack(">%dH"%n,b[off:off+2*n])); off+=2*n
               objs=list(struct.unpack(">%dH"%n,b[off:off+2*n]))
-              return {"path":path,"floorId":floor,"width":width,"height":height,"blobSha":blob_sha(b),"sizeMatchesHeader":True,"tiles":tiles,"objects":objs}
+              return {"path":path,"floorId":floor,"width":width,"height":height,"blobSha":blob_sha(b),"tiles":tiles,"objects":objs}
 
           maps=[]
           for dp,_,fs in os.walk(ROOT):
               for fn in fs:
-                  p=os.path.join(dp,fn)
-                  m=parse_map(p)
-                  if m and m.get("sizeMatchesHeader"):
-                      maps.append(m)
+                  p=os.path.join(dp,fn); m=parse_map(p)
+                  if m: maps.append(m)
 
-          # Parse mapset walkability from the same fixed source.
-          walk={}
-          with open("gmsv/data/map/mapset.txt","r",encoding="gb18030",errors="ignore") as f:
-              for raw in f:
-                  raw=raw.strip()
-                  if not raw or raw.startswith("#"): continue
-                  p=raw.split(",")
-                  if not p: continue
-                  try: image=int(p[0])
-                  except: continue
-                  # Fixed-C MAP_getImageInt() treats MAP_WALKABLE as a flag field.
-                  # mapset rows in this source store walkability in the flag column.
-                  vals=[]
-                  for v in p[1:]:
-                      try: vals.append(int(v))
-                      except: vals.append(0)
-                  walk[image]=1 if 1 in vals else 0
-
-          # Use the known fixed-C group/encounter sources.
           groups={}
-          with open("gmsv/data/group1.txt","r",encoding="gb18030",errors="ignore") as f:
-              for raw in f:
-                  raw=raw.rstrip("\n\r")
-                  if not raw: continue
-                  p=raw.split(",")
-                  if len(p)<4: continue
-                  try: gid=int(p[1])
-                  except: continue
-                  vals=[]
-                  for v in p[1:]:
-                      try: vals.append(int(v))
-                      except: vals.append(None)
-                  groups[gid]={
-                    "appearByItemId":vals[1],
-                    "notAppearByItemId":vals[2],
-                    "enemyIds":[x for x in vals[3:13] if x is not None]
-                  }
+          with open("StoneAge/gmsv/data/group1.txt",encoding="gb18030",errors="ignore") as f:
+            for raw in f:
+              raw=raw.rstrip("\r\n"); p=raw.split(",")
+              if len(p)<4: continue
+              try: gid=int(p[1])
+              except: continue
+              vals=[]
+              for v in p[1:]:
+                try: vals.append(int(v))
+                except: vals.append(None)
+              groups[gid]={"appearByItemId":vals[1],"notAppearByItemId":vals[2],"enemyIds":[x for x in vals[3:13] if x is not None]}
 
-          enc={}
-          with open("gmsv/data/encount.txt","r",encoding="gb18030",errors="ignore") as f:
-              for ln,raw in enumerate(f,1):
-                  raw=raw.rstrip("\n\r")
-                  if not raw or raw.startswith("#"): continue
-                  p=raw.split(",")
-                  if len(p)<10: continue
-                  try: floor=int(p[1])
-                  except: continue
-                  if floor not in (100,200): continue
-                  gids=[]
-                  for v in p[10:20]:
-                      try:
-                          x=int(v)
-                          if x>=0: gids.append(x)
-                      except: pass
-                  if not gids: continue
-                  rows={
-                    "line":ln,"index":int(p[0]),"floor":floor,
-                    "x1":int(p[2]),"y1":int(p[3]),"x2":int(p[4]),"y2":int(p[5]),
-                    "probMin":int(p[6]),"probMax":int(p[7]),"enemyMax":int(p[8]),
-                    "groupIds":gids
-                  }
-                  rows["rect"]={"x1":min(rows["x1"],rows["x2"]),"y1":min(rows["y1"],rows["y2"]),
-                                "x2":max(rows["x1"],rows["x2"]),"y2":max(rows["y1"],rows["y2"])}
-                  rows["unconditionalGroupIds"]=[
-                    gid for gid in gids
-                    if gid in groups
-                    and groups[gid]["appearByItemId"] in (-1,None)
-                    and groups[gid]["notAppearByItemId"] in (-1,None)
-                  ]
-                  rows["hasUnconditionalGroup"]=len(rows["unconditionalGroupIds"])>0 and rows["probMax"]>0
-                  enc[rows["index"]]=rows
+          encounters=[]
+          with open("StoneAge/gmsv/data/encount.txt",encoding="gb18030",errors="ignore") as f:
+            for ln,raw in enumerate(f,1):
+              raw=raw.rstrip("\r\n"); p=raw.split(",")
+              if len(p)<10: continue
+              try: floor=int(p[1]); probMax=int(p[7])
+              except: continue
+              if floor not in (100,200) or probMax<=0: continue
+              gids=[]
+              for v in p[10:20]:
+                try:
+                  gid=int(v)
+                  if gid>=0: gids.append(gid)
+                except: pass
+              if not gids: continue
+              rect=(min(int(p[2]),int(p[4])),min(int(p[3]),int(p[5])),max(int(p[2]),int(p[4])),max(int(p[3]),int(p[5])))
+              unc=[gid for gid in gids if gid in groups and groups[gid]["appearByItemId"]==-1 and groups[gid]["notAppearByItemId"]==-1]
+              encounters.append({"line":ln,"index":int(p[0]),"floor":floor,"rect":rect,"probMin":int(p[6]),"probMax":probMax,"enemyMax":int(p[8]),"groupIds":gids,"unconditionalGroupIds":unc,"hasUnconditionalGroup":bool(unc)})
 
           route_landings={
             100:[
@@ -139,52 +97,66 @@ jobs:
             ]
           }
 
-          focus={}
-          for floor,landings in route_landings.items():
-              fm=[m for m in maps if m["floorId"]==floor]
-              focus[str(floor)]={
-                "mapCandidates":[{k:v for k,v in m.items() if k in ("path","blobSha","floorId","width","height","sizeMatchesHeader")} for m in fm]
-              }
-              if len(fm)!=1:
-                  focus[str(floor)]["status"]="ambiguous_map_floor"
-                  continue
-              m=fm[0]
-              results=[]
-              for item in landings:
-                  x,y=item["to"]
-                  inb=0<=x<m["width"] and 0<=y<m["height"]
-                  if not inb:
-                      results.append({**item,"inBounds":False})
-                      continue
-                  i=y*m["width"]+x
-                  tile,ob=m["tiles"][i],m["objects"][i]
-                  results.append({
-                    **item,"inBounds":True,"tile":tile,"object":ob,
-                    "tileWalkable":walk.get(tile,0)==1,
-                    "objectWalkable":walk.get(ob,0)==1,
-                    "walkable":walk.get(tile,0)==1 and walk.get(ob,0)==1,
-                    "encounterRowsContainingLanding":[
-                      {"index":r["index"],"line":r["line"],"rect":r["rect"],"hasUnconditionalGroup":r["hasUnconditionalGroup"],
-                       "unconditionalGroupIds":r["unconditionalGroupIds"],"probMin":r["probMin"],"probMax":r["probMax"],"enemyMax":r["enemyMax"],"groupIds":r["groupIds"]}
-                      for r in enc.values()
-                      if r["x1"]<=x<=r["x2"] and r["y1"]<=y<=r["y2"] and r["probMax"]>0
-                    ]
-                  })
-              focus[str(floor)]["landings"]=results
-              focus[str(floor)]["allLandingWalkable"]=all(x.get("walkable",False) for x in results)
-              focus[str(floor)]["allLandingsHaveUnconditionalEncounter"]=all(
-                  any(r["hasUnconditionalGroup"] for r in x.get("encounterRowsContainingLanding",[]))
-                  for x in results
-              )
+          def is_walk(m,x,y):
+              if x<0 or y<0 or x>=m["width"] or y>=m["height"]: return False
+              i=y*m["width"]+x
+              return walk.get(str(m["tiles"][i]),0)==1 and walk.get(str(m["objects"][i]),0)==1
 
-          # Record all duplicate focus IDs and the exact reason floor 200's large map matters.
-          byfloor=defaultdict(list)
-          for m in maps: byfloor[m["floorId"]].append({k:v for k,v in m.items() if k in ("path","blobSha","floorId","width","height","sizeMatchesHeader")})
+          def containing_rows(floor,x,y):
+              return [r for r in encounters if r["floor"]==floor and r["rect"][0]<=x<=r["rect"][2] and r["rect"][1]<=y<=r["rect"][3]]
+
+          focus={}
+          for floor,items in route_landings.items():
+              candidates=[m for m in maps if m["floorId"]==floor]
+              # Select the source map that can contain every first-route destination coordinate.
+              valid=[m for m in candidates if all(0<=it["to"][0]<m["width"] and 0<=it["to"][1]<m["height"] for it in items)]
+              focus[str(floor)]={"mapCandidates":[{k:v for k,v in m.items() if k in ("path","floorId","width","height","blobSha")} for m in candidates]}
+              if len(valid)!=1:
+                focus[str(floor)]["status"]="ambiguous_or_missing_containing_map"
+                continue
+              m=valid[0]; land=[]
+              for item in items:
+                x,y=item["to"]; i=y*m["width"]+x
+                directWalk=is_walk(m,x,y)
+                rows=containing_rows(floor,x,y)
+                # Find the nearest walkable cell reachable from the warp landing, allowing the landing cell itself to be non-walkable.
+                q=deque([(x,y,0)]); seen={(x,y)}; firstWalk=None
+                while q and firstWalk is None:
+                  cx,cy,dist=q.popleft()
+                  if dist>0 and is_walk(m,cx,cy):
+                    firstWalk=(cx,cy,dist)
+                    break
+                  for nx,ny in ((cx+1,cy),(cx-1,cy),(cx,cy+1),(cx,cy-1)):
+                    if 0<=nx<m["width"] and 0<=ny<m["height"] and (nx,ny) not in seen:
+                      seen.add((nx,ny)); q.append((nx,ny,dist+1))
+                encounterWalkable=None
+                if rows and firstWalk:
+                  # Use BFS from first walkable cell until an unconditional encounter rectangle is reached.
+                  q=deque([(firstWalk[0],firstWalk[1],firstWalk[2])]); seen={(firstWalk[0],firstWalk[1])}
+                  hit=None
+                  targetRects=[r for r in rows if r["hasUnconditionalGroup"]]
+                  while q and hit is None:
+                    cx,cy,dist=q.popleft()
+                    if any(rr["rect"][0]<=cx<=rr["rect"][2] and rr["rect"][1]<=cy<=rr["rect"][3] for rr in targetRects):
+                      hit=(cx,cy,dist); break
+                    for nx,ny in ((cx+1,cy),(cx-1,cy),(cx,cy+1),(cx,cy-1)):
+                      if 0<=nx<m["width"] and 0<=ny<m["height"] and (nx,ny) not in seen and is_walk(m,nx,ny):
+                        seen.add((nx,ny)); q.append((nx,ny,dist+1))
+                  if hit: encounterWalkable={"hit":[hit[0],hit[1]],"walkStepsFromLanding":hit[2]}
+                land.append({**item,"tile":m["tiles"][i],"object":m["objects"][i],"directWalkable":directWalk,
+                             "nearestWalkableAfterWarp":firstWalk,
+                             "encounterRowsContainingLanding":[{"index":r["index"],"line":r["line"],"rect":r["rect"],"hasUnconditionalGroup":r["hasUnconditionalGroup"],"unconditionalGroupIds":r["unconditionalGroupIds"]} for r in rows],
+                             "unconditionalEncounterReachable":encounterWalkable})
+              focus[str(floor)]["selectedMap"]={k:v for k,v in m.items() if k in ("path","floorId","width","height","blobSha")}
+              focus[str(floor)]["landings"]=land
+              focus[str(floor)]["allDirectLandingWalkable"]=all(x["directWalkable"] for x in land)
+              focus[str(floor)]["allPostWarpHasWalkableCell"]=all(x["nearestWalkableAfterWarp"] is not None for x in land)
+              focus[str(floor)]["allPostWarpReachesUnconditionalEncounter"]=all(x["unconditionalEncounterReachable"] is not None for x in land)
+
           print(json.dumps({
             "fixedSource":REF,
             "mapFileCount":len(maps),
-            "duplicateFloorIds":{str(k):v for k,v in byfloor.items() if len(v)>1},
-            "focusFloors":{str(k):byfloor.get(k,[]) for k in (100,200,1000,2000,3000,4000)},
-            "firstRouteWorldLandingAudit":focus
+            "focusFloors":{str(k):focus.get(str(k),{}) for k in (100,200)},
+            "duplicateFocusMapIds":{"200":[{k:v for k,v in m.items() if k in ("path","floorId","width","height","blobSha")} for m in maps if m["floorId"]==200]}
           },ensure_ascii=False))
           PY
