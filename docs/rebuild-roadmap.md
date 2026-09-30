@@ -8,9 +8,9 @@
 
 本輪沒有建立 playable HTML，也沒有把未閉合 NPC／任務資料硬塞成 gameplay。
 
-另外完成 World NPC Index 與 mapwarp source validation：7,979 create blocks 已全部閉合到 template；27 個 file/arg 參照維持 unresolved；5,457 筆 mapwarp 全部通過 source map header 的 floor/座標範圍驗證。
+另外完成 World NPC Index、NPC Service Index、World Graph 與 NPC Event Action Index：7,979 create blocks 已全部閉合到 template；27 個 file/arg 參照維持 unresolved；5,457 筆 mapwarp 全部通過 source map header 的 floor/座標範圍驗證；world graph 已形成 1,139 個 floor nodes、2,182 條 directed floor edges；NPC service bindings 共 9,335；NPC event DSL 掃描找到 4,860 次 source action-key matches。另已整理 mission、jobdaily、ride、title、question、raceman、racequiz、member shop/pet 等 auxiliary world data。
 
-下一步直接進入 **world-npc-index**：從固定 NPC tree 中建立可追蹤的 NPC instance index，優先閉合地圖、位置、template、functionset 與 arg 的關係，再向 shop / quest / warp / service 擴展。
+下一步不直接做 playable UI，改進入 **item-acquisition / quest-event closure**：把 NPC Event DSL 的 item／pet／gold references 與 itemset6、任務狀態、NPC service 做關聯，優先閉合玩家從出生到第一輪打怪／補給／任務的完整資料鏈。
 
 ## 目的
 
