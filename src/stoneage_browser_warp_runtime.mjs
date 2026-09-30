@@ -117,7 +117,7 @@ async function executeBrowserWarp(state,npc,player,{
   if(!committed.ok)return {...committed,handled:false,stage:'save',state:clone(state)};
   const verified=await parseAndValidateSaveEnvelope(committed.envelope,{now});
   if(!verified.ok)return {ok:false,handled:false,stage:'save-verify',reason:verified.reason??'warp-save-verification-failed',errors:verified.errors??[],state:clone(state)};
-  return {ok:true,handled:true,stage:'warp',format:BROWSER_WARP_RUNTIME_FORMAT,sourceKey:binding.sourceKey??sourceKey(binding.binding),origin:binding.binding.origin?clone(binding.binding.origin):clone(actor.npcCell),target:clone(binding.target),envelope:committed.envelope,verification:verified,state:clone(verified.state)};
+  return {ok:true,handled:true,stage:'warp',format:BROWSER_WARP_RUNTIME_FORMAT,sourceKey:binding.sourceKey??sourceKey(binding.binding),origin:binding.binding.origin?clone(binding.binding.origin):clone(actor.npcCell),target:binding.binding.target?clone(binding.binding.target):clone(binding.target),envelope:committed.envelope,verification:verified,state:clone(verified.state)};
 }
 
 function createBrowserWarpRuntime({warpCatalog=null}={}){
