@@ -12,6 +12,16 @@ V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipelin
 
 這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
 
+## 2026-09-30 新增：V3.53 Starter Item 24114 build closure audit
+
+V3.53 將 Item 24114 最後的 build-path 疑點正式機器化。固定 `itemset6.txt` 共 10,737 個 non-blank rows，最大 source Item ID = 23009；非 `_IMPOROVE_ITEMTABLE` loader 依 `ITEM_tblen=maxid+1` 建表，因此 `ITEM_tblen=23010`。
+
+pinned `gmsv/src/Makefile` 與 `gmsv/src/item/makefile` 都只定義 `CFLAGS=-w -O3 $(INCFLAGS)`，沒有 repository-defined `-D_IMPOROVE_ITEMTABLE`；`version.h` 的 `_IMPOROVE_ITEMTABLE` 也是註解狀態。
+
+因此 configured `ITEM1=24114` 在 fixed-C lookup 時首先就超過 `ITEM_tbl` boundary；即使忽略 boundary，pinned data 中 24114 仍只是 `imagenumber`，source Item ID 是 11817。V3.53 regression 同時鎖定 source blob SHA、build flags、table boundary、唯一資料列與 generated catalog。
+
+目前 Starter Item 24114 正式維持 fail-closed，不建立 synthetic remap。V3.50 creation → Save pending/resume contract 保持不變。
+
 ## 2026-09-30 新增：V3.52 Starter Item 24114 exhaustive execution audit
 
 V3.52 在 V3.51 的 source-ID mapping audit 上再往下閉合一層：固定 `itemset6.txt` 是唯一正式 Item runtime input；`.bak` 不參與 `init.c` 的 `ITEM_readItemConfFile(getItemfile())`；`chatmagic.c` reload 也使用相同 loader。
