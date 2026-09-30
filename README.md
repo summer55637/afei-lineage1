@@ -387,3 +387,22 @@ V3.39 新增唯一 `index.html` canonical browser shell 與 `src/stoneage_canoni
 V3.39 shell 目前是開發殼層，不冒充完整放置遊戲；它可以執行 1006 新手接待員的 strict / compatibility NPC probe，實際 reward / save / event semantics 都沿用既有 source-backed runtime。
 
 V3.39 regression 已納入 GitHub Actions。
+
+
+## V3.40 Browser ItemShop / Item Economy Integration
+
+新增 `src/stoneage_browser_itemshop_runtime.mjs`，並把 `NPC_ITEMSHOP_OPEN / BUY / SELL` 接進既有 `stoneage_browser_state_controller.mjs`。
+
+正式資料流：
+
+`Browser action → interaction gate → NPC ItemShop catalog → source Item template / price → source Item allocator → Item/Economy transaction → canonical persistent state`
+
+- Open 只讀取 shop / offer，不修改 canonical revision。
+- Buy 先確認 ItemShop offer，再解析 source Item base cost，建立 source Item 後才扣 Gold。
+- Sell 從 canonical existing Item 的 source data 讀取 Item ID / Cost / Type，套用 `LimitItemType / LimitItemNo / special_item / special_rate`，再交給既有 `sellShopItem()`。
+- transactionId 保留既有 idempotency；interaction distance / facing gate 也沿用 fixed-C boundary。
+- strict `changeevent` module policy 完全不變，沒有為了商店功能放寬 V3.39 的 fail-closed。
+
+新增 `tools/check_v340_browser_itemshop_runtime.mjs`、synthetic ItemShop fixture 與 GitHub Actions regression。Canonical `index.html` 同一入口新增 ItemShop probe，但明確標示 fixture 不代表完整 336 個正式 ItemShop bindings。
+
+詳細邊界：`docs/reference/v340-browser-itemshop-runtime.md`。
