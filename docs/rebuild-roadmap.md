@@ -2,6 +2,14 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 進度
+
+已完成第一版 **World Data Source Catalog**：固定 source `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` 的 5,764 個 blob files、3,960 個 NPC data files，以及主要世界資料檔案已建立 machine-readable inventory。NPC 的 template → create → floor/region → argument 關係也已用 pinned C 的載入／生成流程固定。
+
+本輪沒有建立 playable HTML，也沒有把未閉合 NPC／任務資料硬塞成 gameplay。
+
+下一步直接進入 **world-npc-index**：從固定 NPC tree 中建立可追蹤的 NPC instance index，優先閉合地圖、位置、template、functionset 與 arg 的關係，再向 shop / quest / warp / service 擴展。
+
 ## 目的
 
 本文件不是可玩前端規格，而是「在重新建立唯一遊戲入口以前，先把資料、來源證據與核心系統補齊」的工作順序。
