@@ -28,6 +28,31 @@ assert.equal(pending.state.world.position.x,15);
 assert.equal(pending.state.world.position.y,22);
 assert.deepEqual(validatePersistentState(pending.state),[]);
 
+const resumed=await runNewPlayerCreationSave(pending.state,{
+  seed,
+  hometown:0,
+  randInclusive:()=>{throw new Error('resume path must not roll Starter Pet RNG again');},
+  idFactory:()=>{throw new Error('resume path must not allocate another Starter Pet id');},
+  itemGrantAdapter:async (state,{itemId})=>{
+    assert.equal(itemId,24114);
+    state.inventory.playerItemSlots[9]=1;
+    state.inventory.itemRuntime.slots['1']={fixture:true,itemId:24114,source:'test-only-resume'};
+    return {ok:true,state};
+  },
+  now:()=> '2026-09-30T18:00:30.000Z'
+});
+assert.equal(resumed.ok,true);
+assert.equal(resumed.resumedItemStage,true);
+assert.equal(resumed.state.creation.completed,true);
+assert.equal(resumed.state.creation.starterPetGranted,true);
+assert.equal(resumed.state.creation.starterItemGranted,true);
+assert.equal(resumed.state.pets.petBox.length,1);
+assert.equal(resumed.state.world.position.floorId,1006);
+assert.equal(resumed.state.revision,1);
+assert.equal(resumed.verification.ok,true);
+assert.equal(resumed.state.pets.petBox[0].id,'starter-pet-v350');
+
+
 const fullBase=freshPersistentState({playerId:'v350-fixture'});
 const full=await runNewPlayerCreationSave(fullBase,{
   seed, hometown:0,
@@ -73,6 +98,7 @@ console.log(JSON.stringify({
   format:'stoneage-new-player-creation-save-regression-v1',
   homePositionPersisted:[1006,15,22],
   pendingItem24114:true,
+  itemStageResume:true,
   starterPetPersisted:true,
   fixtureFullSaveRoundTrip:true,
   revisionGuard:true
