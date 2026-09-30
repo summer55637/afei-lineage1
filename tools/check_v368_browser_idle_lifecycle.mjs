@@ -29,7 +29,7 @@ const invalid=await controller.dispatch({
   now:()=> '2026-09-30T08:00:00Z'
 });
 assert.equal(invalid.ok,false);
-assert.equal(invalid.reason,'invalid-offline-window');
+assert.equal(invalid.reason,'invalid-time-window');
 assert.equal(controller.getState().revision,0);
 
 const resumed=await controller.dispatch({
