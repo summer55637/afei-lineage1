@@ -58,5 +58,14 @@
   "sourceEvidence": {
     "goldField": "state.gold is an existing runtime state field; fresh-state history records source-backed initial Gold separately from defaultPlayer.h",
     "caution": "current canonical freshState keeps structural gold=0 until the create-character transaction is wired; initial creation value is not silently hardcoded here."
-  }
+  },
+  "idleOfflineFields": [
+    "eligible",
+    "lastClosedAt",
+    "lastResumedAt",
+    "elapsedSeconds",
+    "accruedSeconds",
+    "resumePending",
+    "rewardsApplied"
+  ]
 }
