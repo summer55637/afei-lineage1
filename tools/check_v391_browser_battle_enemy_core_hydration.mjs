@@ -105,7 +105,23 @@ assert.equal(result.state.battleContext,undefined);
 assert.ok(controller.getBattleContext());
 assert.equal(result.idleCommit.verification.ok,true);
 
-const missingRolls=await controller.dispatch({
+const missingState=freshPersistentState({playerId:'v391-missing'});
+missingState.player.hp=100;
+missingState.player.maxHp=100;
+missingState.world.position={floorId:100,x:610,y:538};
+missingState.idle.enabled=true;
+missingState.idle.mode='encounter_pending';
+missingState.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+const missingController=createBrowserStateController({
+  state:missingState,
+  idleRouteCatalog:routeCatalog,
+  encounterTargetIndex:{
+    format:'stoneage-start-encounter-target-index-v1',
+    fixedSource:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56'},
+    floors:{100:{unconditionalRows:[{encounterId:65,rect:[568,538,610,578],probMin:1,probMax:5,enemyMax:4,zorder:30,groupIds:[89,92,94],groupProbs:[1,1,1],enemyIds:[120,123]}],mixedRows:[]}}
+  }
+});
+const missingRolls=await missingController.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   enemyTeam:team,
   materializeEnemyStats:true,
@@ -116,7 +132,7 @@ const missingRolls=await controller.dispatch({
 });
 assert.equal(missingRolls.ok,false);
 assert.equal(missingRolls.reason,'enemy-stat-rolls-required');
-assert.equal(controller.getState().revision,1);
+assert.equal(missingController.getState().revision,0);
 
 console.log(JSON.stringify({
   pass:true,
