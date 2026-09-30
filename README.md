@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.20 真實 tile presentation → verified map 擴充** |
+| 下一階段 | **V3.21 verified map 擴充 → tile camera／多格世界 presentation** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -210,6 +210,18 @@ V3.16 從公開 client source 閉合 tile 圖像來源鏈：`tile image ID → r
 
 來源筆記：[V3.16 client image resolver contract](docs/reference/v316-client-image-resolver-contract.md)。
 
+## 🔬 V3.20 真實 tile presentation
+
+V3.20 把已完成的 source/runtime 鏈第一次接到 WORLD scene 的 Canvas，但限制在「目前 Encounter Floor/X/Y 的單格 tile/object preview」，不假裝已完成整張世界地圖 camera 與角色 z-order。
+
+新增 `src/stoneage_tile_presentation.mjs`，固定：`tile/object image ID → authorized client asset pack → 80-byte ADRNBIN → Real offset/size → RD pixels → Palet_1.sap BGR → RGBA → Canvas`。
+
+公開 client `map.cpp::drawMap()` 已確認同一格是先畫 tile、再處理 `parts` object，因此 preview 也採 `tile → object`。沒有 operator-supplied 授權素材包時，Canvas 維持隱藏，不生成替代假圖。
+
+WORLD scene 現在會在 source tile 驗證完成後嘗試顯示 real tile preview；預設 repo 仍無原版 client binary，所以目前 Pages 只會顯示 fail-closed 狀態訊息。
+
+來源筆記：[V3.20 real tile presentation contract](docs/reference/v320-real-tile-presentation.md)。
+
 ## 🔬 V3.19 palette／顏色映射 runtime
 
 V3.19 接續 V3.18 asset pack adapter，依 fixed client `InitPalette()` 與公開工具鏈固定 `Palet_1.sap` 的 224×3 BGR palette mapping。
@@ -276,6 +288,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.17 client RD decoder（RD raw/RLE pixels、truecolor branch fail-closed）
 - V3.18 authorized client asset pack adapter（operator-supplied ADRNBIN／Real、digest pin、fail-closed）
 - V3.19 palette runtime（SAP 672-byte BGR → 256-color RGBA、indexed pixel conversion）
+- V3.20 real tile presentation（Encounter tile/object → Canvas；缺授權素材維持 fail-closed）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -319,4 +332,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.19 palette／顏色映射 → V3.20 真實 tile presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
+**目前開發方向：V3.20 真實 tile presentation → V3.21 verified map 擴充／多格 camera → battle map selection → runtime regression → playable integration**
