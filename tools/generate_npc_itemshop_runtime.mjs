@@ -168,6 +168,7 @@ shops.sort((a,b)=>a.source.create.path.localeCompare(b.source.create.path)||a.so
 const byShopId=Object.fromEntries(shops.map(x=>[x.shopId,x]));
 const itemIndex={};
 for(const shop of shops){
+  if(shop.sellOnly)continue;
   shop.itemIds.forEach((itemId,offerIndex)=>{
     (itemIndex[String(itemId)]??=[]).push({shopId:shop.shopId,offerIndex,buyRate:shop.buyRate,source:shop.source});
   });
