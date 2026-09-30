@@ -1,0 +1,138 @@
+{
+  "format": "stoneage-first-idle-route-catalog-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "inputs": {
+    "startRoute": "data/generated/stoneage_start_route_closure.json",
+    "worldExitReachability": "data/generated/stoneage_start_world_exit_reachability.json",
+    "encounterPathClosure": "data/generated/stoneage_start_encounter_path_closure.json",
+    "encounterTargets": "data/generated/stoneage_start_encounter_target_index.json"
+  },
+  "policy": {
+    "routeEligible": "Direct hometown -> destination landing -> next-floor portal -> unconditional encounter target must have source-backed path evidence.",
+    "productBoundary": "Battle strategy, supply thresholds, capture policy, inventory-full behavior, death recovery, and offline accrual are not implied by route closure.",
+    "blockedRoutes": "A source-level floor edge without coordinate-level path proof is not an eligible idle route."
+  },
+  "routes": [
+    {
+      "hometown": 0,
+      "name": "samugiru",
+      "entryFloor": 1000,
+      "encounterFloor": 100,
+      "status": "path_closed_battle_policy_pending",
+      "variants": [
+        {
+          "portalId": "1000_to_100_a",
+          "originPathMin": 120,
+          "encounterId": 65,
+          "landingPathMin": 71,
+          "usableLandingCount": 4,
+          "totalLandingCount": 4,
+          "totalWalkBeforeEncounterMin": 191
+        },
+        {
+          "portalId": "1000_to_100_b",
+          "originPathMin": 104,
+          "encounterId": 65,
+          "landingPathMin": 146,
+          "usableLandingCount": 5,
+          "totalLandingCount": 5,
+          "totalWalkBeforeEncounterMin": 250
+        }
+      ]
+    },
+    {
+      "hometown": 1,
+      "name": "marinasu",
+      "entryFloor": 2000,
+      "encounterFloor": 100,
+      "status": "path_closed_battle_policy_pending",
+      "variants": [
+        {
+          "portalId": "2000_to_100_a",
+          "originPathMin": 33,
+          "encounterId": 28,
+          "landingPathMin": 0,
+          "usableLandingCount": 4,
+          "totalLandingCount": 4,
+          "totalWalkBeforeEncounterMin": 33
+        },
+        {
+          "portalId": "2000_to_100_b",
+          "originPathMin": 82,
+          "encounterId": 28,
+          "landingPathMin": 0,
+          "usableLandingCount": 4,
+          "totalLandingCount": 4,
+          "totalWalkBeforeEncounterMin": 82
+        }
+      ]
+    },
+    {
+      "hometown": 2,
+      "name": "jaja",
+      "entryFloor": 3000,
+      "encounterFloor": 200,
+      "status": "path_closed_with_unusable_landing_battle_policy_pending",
+      "variants": [
+        {
+          "portalId": "3000_to_200_a",
+          "originPathMin": 91,
+          "encounterId": 91,
+          "landingPathMin": 55,
+          "usableLandingCount": 4,
+          "totalLandingCount": 4,
+          "totalWalkBeforeEncounterMin": 146
+        },
+        {
+          "portalId": "3000_to_200_b",
+          "originPathMin": 19,
+          "encounterId": 91,
+          "landingPathMin": 72,
+          "usableLandingCount": 5,
+          "totalLandingCount": 6,
+          "totalWalkBeforeEncounterMin": 91,
+          "unusableLandingPoints": [
+            [
+              587,
+              318
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "hometown": 3,
+      "name": "karutarna",
+      "entryFloor": 4000,
+      "encounterFloor": 200,
+      "status": "source_blocked_before_portal",
+      "variants": [
+        {
+          "portalId": "4000_to_200_a",
+          "usableLandingCount": 0,
+          "totalLandingCount": 2,
+          "reason": "portal origins disconnected from direct landing component on floor 4000"
+        },
+        {
+          "portalId": "4000_to_200_b",
+          "usableLandingCount": 0,
+          "totalLandingCount": 2,
+          "reason": "portal origins disconnected from direct landing component on floor 4000"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "towns": 4,
+    "pathClosedTowns": 3,
+    "sourceBlockedTowns": 1,
+    "routeVariants": 8,
+    "eligibleRouteVariants": 6,
+    "routesNeedingLandingExclusion": 1,
+    "battlePolicyPendingAll": true
+  }
+}
