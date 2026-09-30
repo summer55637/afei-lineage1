@@ -3,13 +3,13 @@
   "generatedAt":"2026-09-30",
   "fixedSource":{"repository":"gavinlinasd/StoneAge","ref":"1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
   "bySourceKey":{
-    "fixture/savepoint.create#0":{
+    "genout/sp.create#20":{
       "functionSet":"SavePoint",
-      "elderId":2,
-      "id":2,
-      "born":{"floorId":3006,"x":21,"y":16},
-      "mode":"no-item",
-      "rawArg":"ID=2\nBorn=3006,21,16\nNOITEM\n"
+      "elderId":33,
+      "id":33,
+      "born":{"floorId":30691,"x":85,"y":60},
+      "mode":"confirm-only",
+      "rawArg":"ID:33\nBorn:30691,85,60\nNomalMsg:%s已经记录了，之后也请加油喔！\nRequestMsg:你确定要记录吗？\nOkMsg:好啦！以后你就可以自由进出了。\nRealyMsg:记录的话，下次登入就从这里开始啰～\n"
     }
   }
 }
