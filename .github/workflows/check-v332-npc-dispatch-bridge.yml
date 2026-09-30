@@ -5,6 +5,9 @@ on:
     paths:
       - 'src/stoneage_npc_interaction_runtime.mjs'
       - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'tools/check_v333_npc_module_registry_runtime.mjs'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
       - 'src/stoneage_first_route_save.mjs'
       - 'src/stoneage_first_route_reward_handlers.mjs'
       - 'src/stoneage_npc_event_orchestrator.mjs'
@@ -32,6 +35,10 @@ jobs:
         run: |
           node --check src/stoneage_npc_interaction_runtime.mjs
           node --check src/stoneage_npc_dispatch_runtime.mjs
+          node --check src/stoneage_npc_module_registry_runtime.mjs
           node --check tools/check_v332_npc_dispatch_bridge.mjs
+          node --check tools/check_v333_npc_module_registry_runtime.mjs
+      - name: Run V3.33 audited module registry regression
+        run: node tools/check_v333_npc_module_registry_runtime.mjs
       - name: Run V3.32 dispatch regression
         run: node tools/check_v332_npc_dispatch_bridge.mjs
