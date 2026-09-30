@@ -11,7 +11,7 @@ V3.27 把 V3.24 Pet、V3.25 Item、V3.26 Event Flag 三條已閉合 source runti
 - `GetItem` → shared 66-field Item allocator → canonical backpack。
 - `GetPet` → fixed-C Enemy ID → EnemyBase TempNo Pet factory。
 - `EndSetFlg` / `NowSetFlg` → fixed-C bitset event flag runtime。
-- `Charm`：明確標記 unsupported，絕不假設語意。
+- `Charm` → pinned `npc_exchangeman.c` 的 source-gated rule：`CHAR_CHARM<100 && EvNo>0` 才增加，上限 100；因此 `xinshoujd.arg` 的 `EventNo:-1` 是 no-op。
 
 ## Atomic execution
 
@@ -21,9 +21,7 @@ bundle 可以直接交給 V3.22 `applyNpcEventActionPlan()`。
 
 因此現在的實際邊界是：
 
-`NPC Event → Branch → Action Plan → Item/Pet/EventFlag mutation = closed`
-
-`Charm = unresolved`
+`NPC Event → Branch → Action Plan → Item/Pet/EventFlag/Charm-rule mutation = closed`
 
 `changeevent functionSet activation = unresolved`
 
@@ -31,6 +29,6 @@ bundle 可以直接交給 V3.22 `applyNpcEventActionPlan()`。
 
 ## Next
 
-下一步應集中在 `Charm` 與正式 `changeevent` module 的 source closure；若兩者補齊，就能讓 V3.27 bundle 直接執行四段 first-route branch，再交給 Save Transaction。
+下一步集中在正式 `changeevent` module 的 source closure；reward mutation chain 已可供四段 first-route branch 使用，再交給 Save Transaction。
 
 仍不建立 playable HTML。
