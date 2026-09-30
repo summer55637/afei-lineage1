@@ -5,6 +5,7 @@ import path from 'node:path';
 const args=process.argv.slice(2);
 const root=path.resolve(args[args.indexOf('--source-root')+1] || '/tmp/StoneAge');
 const out=path.resolve(args[args.indexOf('--out')+1] || 'data/generated/stoneage_item_reward_gap_clusters.json');
+const ref='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const itemPath=path.join(root,'gmsv/data/itemset6.txt');
 const npcRoot=path.join(root,'gmsv/data/npc');
 
