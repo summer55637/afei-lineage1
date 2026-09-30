@@ -46,6 +46,7 @@ const applied=applyNpcEventActionPlan(state,syntheticPlan,{
   transactionId:'first-route-bundle-1',
   now:()=> '2026-09-30T06:30:00.000Z'
 });
+console.log('DEBUG_APPLIED',JSON.stringify({ok:applied.ok,reason:applied.reason,role:applied.role,transaction:applied.transaction?.reason,txRole:applied.transaction?.role,detail:applied.detail}));
 assert.equal(applied.applied,true);
 assert.equal(applied.actionCount,5);
 assert.deepEqual(applied.state.inventory.playerItemSlots.slice(9,11),[1,2]);
