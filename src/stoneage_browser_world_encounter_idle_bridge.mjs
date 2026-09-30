@@ -16,6 +16,7 @@ function commitWorldEncounterRollToIdle(state,encounterTargetIndex,{
   position=null,encounterId=null,cep=null,rng120=null,expectedRevision=null,
   savedAt=()=>new Date().toISOString(),source='browser-world-encounter-idle'
 }={}){
+  const clock=typeof savedAt==='function'?savedAt:()=>String(savedAt??new Date().toISOString());
   const stateErrors=validatePersistentState(state);
   if(stateErrors.length)return Promise.resolve({ok:false,handled:false,stage:'persistent-state-validation',reason:'persistent-state-invalid',errors:stateErrors,state:clone(state)});
   const idleMode=String(state?.idle?.mode??'');
@@ -38,16 +39,16 @@ function commitWorldEncounterRollToIdle(state,encounterTargetIndex,{
       y:roll.encounter.y,
       encounterId:roll.encounter.encounterId
     }:null
-  },{now:savedAt});
+  },{now:clock});
   if(!idleApplied.ok)return {...idleApplied,handled:false,stage:'idle-bridge',state:clone(state)};
   const commit=commitSave(state,idleApplied.state,{
     expectedRevision:expectedRevision==null?Number(state?.revision??0):Number(expectedRevision),
-    savedAt,
+    savedAt:clock,
     source
   });
   return commit.then(async saved=>{
     if(!saved.ok)return {...saved,handled:false,stage:'save',state:clone(state)};
-    const verification=await parseAndValidateSaveEnvelope(saved.envelope,{now:savedAt});
+    const verification=await parseAndValidateSaveEnvelope(saved.envelope,{now:clock});
     if(!verification.ok)return {...verification,ok:false,handled:false,stage:'save-verify',state:clone(state)};
     return {
       ...roll,
