@@ -1,0 +1,7 @@
+buy_rate:1.0
+sell_rate:0.2
+ItemList:42,43,44,45-46
+LimitItemType:OFFENCE
+LimitItemNo:
+special_rate:1.5
+special_item:
