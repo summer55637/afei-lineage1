@@ -40,11 +40,11 @@ jobs:
           python3 - <<'PY'
 from pathlib import Path
 p=Path('/tmp/StoneAge/gmsv/data/itemset6.txt')
-lines=p.read_text(encoding='utf-8', errors='strict').splitlines()
+lines=p.read_bytes().splitlines()
 target=[]
 configured=[]
-for lineno,line in enumerate(lines,1):
-    tokens=line.split(',')
+for lineno,raw in enumerate(lines,1):
+    tokens=raw.decode('latin1').split(',')
     if len(tokens) >= 20 and tokens[16].strip() == '11817':
         if tokens[17].strip() == '24114' and tokens[18].strip() == '9900' and tokens[19].strip() == '16':
             target.append((lineno,tokens[16].strip(),tokens[17].strip(),tokens[18].strip(),tokens[19].strip()))
