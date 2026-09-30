@@ -2124,12 +2124,6 @@
     "titleconfigfile": "./data/titleconfig.txt",
     "invinciblefile": "data/inv.txt",
     "appearpositionfile": "data/appear.txt",
-    "npcdir": "data/npc",
-    "petskill2file": "./data/petskill3.txt",
-    "setpetskillfile": "./data/setpetskill.txt"
-  },
-  "notes": [
-    "petskill2file is an active setup.cf key present in the pinned config.",
-    "petskillfile2/petskillfile1 appear inside preprocessor-template text in setup.cf and are also recognized by configfile.c; they are not active key/value lines in this setup.cf parse."
-  ]
+    "npcdir": "data/npc"
+  }
 }
