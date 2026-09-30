@@ -48,11 +48,12 @@
 - 8/8 direct hometown warp exits 可由出生座標以 source walkability 到達。
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 4/4 hometown start floors 都已存在 NPC service index。
+- 16/16 已解析數值座標的 NPC 互動點都可達；30 個 NPC 座標仍維持 unresolved。
 - 4/4 direct destination floors 都已有 depth-1 encounter evidence。
 
 因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
 
-這仍不是完整的 first-route gameplay closure：town service 的實際 NPC 座標與互動、第一個 destination map 的 walkability，以及新玩家 quest/event owner 還沒有全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`。
+這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合；第一個 destination map 的 walkability，以及新玩家 quest/event owner 也尚未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
 
 ## 現階段優先事項
 
