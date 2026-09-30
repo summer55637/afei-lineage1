@@ -4,8 +4,6 @@ import { execFileSync } from 'node:child_process';
 
 const sourceRoot=process.argv[2] ?? '/tmp/StoneAge';
 const fixedRef='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
-const worldOut='/tmp/stoneage_world_npc_index.json';
-const itemShopOut='/tmp/stoneage_npc_itemshop_runtime.json';
 const serviceIndexPath='data/generated/stoneage_npc_service_index.json';
 
 function run(file,args,out){
@@ -19,7 +17,7 @@ execFileSync('node',['tools/generate_world_data_catalog.mjs','--source-root',sou
 execFileSync('node',['tools/generate_npc_itemshop_runtime.mjs','--source-root',sourceRoot,'--out','/tmp/v342-world/stoneage_npc_itemshop_runtime.json'],{stdio:'inherit'});
 
 const world=JSON.parse(fs.readFileSync('/tmp/v342-world/stoneage_world_npc_index.json','utf8'));
-const catalog=JSON.parse(fs.readFileSync(itemShopOut,'utf8'));
+const catalog=JSON.parse(fs.readFileSync('/tmp/v342-world/stoneage_npc_itemshop_runtime.json','utf8'));
 const service=JSON.parse(fs.readFileSync(serviceIndexPath,'utf8'));
 const serviceShop=service.services.find(x=>String(x.functionSet).toLowerCase()==='itemshop');
 if(!serviceShop)fail('repo service index missing ItemShop');
