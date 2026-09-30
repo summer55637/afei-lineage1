@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-destination-closure-v3",
+  "format": "stoneage-start-destination-closure-v4",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -42,6 +42,19 @@
       "blobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
       "byteLength": 0,
       "rowCount": 0
+    },
+    "fixedSourceTree": {
+      "repository": "gavinlinasd/StoneAge",
+      "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+      "recursiveTreeChecked": true,
+      "numericMapBlobCount": 851,
+      "exactDestinationMapBasenamesPresent": {
+        "1000": false,
+        "2000": true,
+        "3000": false,
+        "4000": false
+      },
+      "note": "1000/3000/4000 have no exact numeric map blob in the pinned commit; 2000 is the only direct destination map currently closed to runtime."
     }
   },
   "statistics": {
@@ -59,7 +72,19 @@
     "itemGateIdsUnresolved": [
       20216,
       20219
-    ]
+    ],
+    "unconditionalCandidateFloors": {
+      "100": {
+        "totalRowCount": 46,
+        "placeholderRowCount": 1,
+        "rowsWithAtLeastOneUnconditionalGroup": 44
+      },
+      "200": {
+        "totalRowCount": 114,
+        "placeholderRowCount": 0,
+        "rowsWithAtLeastOneUnconditionalGroup": 113
+      }
+    }
   },
   "towns": [
     {
@@ -117,7 +142,13 @@
           1000,
           100
         ],
-        "depth": 1
+        "depth": 1,
+        "encounterEvidence": {
+          "floor": 100,
+          "totalRowCount": 46,
+          "placeholderRowCount": 1,
+          "rowsWithAtLeastOneUnconditionalGroup": 44
+        }
       }
     },
     {
@@ -257,7 +288,13 @@
           2000,
           100
         ],
-        "depth": 1
+        "depth": 1,
+        "encounterEvidence": {
+          "floor": 100,
+          "totalRowCount": 46,
+          "placeholderRowCount": 1,
+          "rowsWithAtLeastOneUnconditionalGroup": 44
+        }
       }
     },
     {
@@ -357,7 +394,13 @@
           3000,
           200
         ],
-        "depth": 1
+        "depth": 1,
+        "encounterEvidence": {
+          "floor": 200,
+          "totalRowCount": 114,
+          "placeholderRowCount": 0,
+          "rowsWithAtLeastOneUnconditionalGroup": 113
+        }
       }
     },
     {
@@ -415,7 +458,13 @@
           4000,
           200
         ],
-        "depth": 1
+        "depth": 1,
+        "encounterEvidence": {
+          "floor": 200,
+          "totalRowCount": 114,
+          "placeholderRowCount": 0,
+          "rowsWithAtLeastOneUnconditionalGroup": 113
+        }
       }
     }
   ],
@@ -425,5 +474,5 @@
     "genericEncounterRoute": "closed_at_floor_level",
     "fullFirstRoute": "partial"
   },
-  "policy": "Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. In the pinned source, itemset6.txt is empty, so encounter gates 20216/20219 remain source-unresolved. Missing fixed-source maps and item definitions remain unresolved and are never replaced by guessed or cross-version data."
+  "policy": "Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. In the pinned source, itemset6.txt is empty, so groups gated by 20216/20219 remain source-unresolved. Missing exact destination maps remain unresolved and are never replaced by guessed or cross-version data. Generic encounter candidates are only closed at floor level until their destination map, landing coordinates and walkable region are separately verified."
 }
