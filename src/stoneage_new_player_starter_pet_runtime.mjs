@@ -1,6 +1,14 @@
 const NEW_PLAYER_STARTER_PET_GRANT_FORMAT='stoneage-new-player-starter-pet-grant-v1';
 const PET_MAX_HAVE=5;
 const BASE_RNG_ROLLS=16;
+const SOURCE_PET_RANK_TABLE=[
+  {num:100,rank:0},
+  {num:95,rank:1},
+  {num:90,rank:2},
+  {num:85,rank:3},
+  {num:80,rank:4},
+  {num:0,rank:5}
+];
 
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const intOr=(v,f=0)=>Number.isFinite(Number(v))?Math.trunc(Number(v)):f;
@@ -9,6 +17,16 @@ function defaultRandInclusive(min,max){
   if(!Number.isFinite(lo)||!Number.isFinite(hi)||hi<lo)throw new RangeError('invalid inclusive RNG bounds');
   return lo+Math.floor(Math.random()*(hi-lo+1));
 }
+function resolveSourcePetRank(template){
+  if(!isObject(template)||!isObject(template.baseStats))return {ok:false,reason:'starter-pet-rank-source-stats-missing'};
+  const values=['vital','str','tgh','dex'].map(key=>Number(template.baseStats[key]));
+  if(values.some(value=>!Number.isInteger(value)))return {ok:false,reason:'starter-pet-rank-source-stats-invalid'};
+  const paramsum=values.reduce((sum,value)=>sum+value,0);
+  const row=SOURCE_PET_RANK_TABLE.find(item=>paramsum>=item.num);
+  if(!row)return {ok:false,reason:'starter-pet-rank-table-no-match'};
+  return {ok:true,petRank:row.rank,paramsum,threshold:row.num,table:SOURCE_PET_RANK_TABLE};
+}
+
 function getStarterEntry(seed,hometown){
   if(!isObject(seed)||seed.format!=='stoneage-new-player-seed-runtime-v1')return null;
   return seed.starterPet?.entries?.find(x=>Number(x.hometown)===Number(hometown))??null;
@@ -19,6 +37,12 @@ function createSourceStarterPet(seed,hometown,{randInclusive=defaultRandInclusiv
   if(typeof randInclusive!=='function')return {ok:false,reason:'randInclusive-function-required'};
   if(typeof idFactory!=='function')return {ok:false,reason:'pet-canonical-id-factory-required'};
   const t=entry.template;
+  const rank=resolveSourcePetRank(t);
+  if(!rank.ok)return rank;
+  const declaredRank=intOr(entry.sourceRank,-1);
+  if(declaredRank!==rank.petRank)return {ok:false,reason:'starter-pet-rank-seed-mismatch',declaredRank,computedRank:rank.petRank};
+  const declaredParamSum=intOr(entry.sourceRankParamsum,-1);
+  if(declaredParamSum!==rank.paramsum)return {ok:false,reason:'starter-pet-rank-paramsum-seed-mismatch',declaredParamSum,computedParamSum:rank.paramsum};
   const lvRange=Array.isArray(entry.lvRange)&&entry.lvRange.length===2?entry.lvRange:[1,1];
   const level=intOr(randInclusive(lvRange[0],lvRange[1]),-1);
   if(level<lvRange[0]||level>lvRange[1])return {ok:false,reason:'invalid-starter-pet-level-roll'};
@@ -66,6 +90,15 @@ function createSourceStarterPet(seed,hometown,{randInclusive=defaultRandInclusiv
     maxHp,
     variableAi:0,
     petMailEffect,
+    petRank:rank.petRank,
+    sourceRankResolved:true,
+    sourceRankEvidence:{
+      function:'gmsv/src/char/enemy.c::ENEMY_getRank',
+      fixedCRef:seed.fixedSource.ref,
+      paramsum:rank.paramsum,
+      threshold:rank.threshold,
+      rankTable:rank.table
+    },
     stats,
     sourceStats:{
       randomized:randomizedBase,
@@ -83,7 +116,6 @@ function createSourceStarterPet(seed,hometown,{randInclusive=defaultRandInclusiv
     imageNumber:intOr(t.imageNumber,0),
     modAi:intOr(t.modAi,0),
     limitLevel:intOr(t.limitLevel,0),
-    sourceRankResolved:false,
     sourceIdentity:{
       fixedCRef:seed.fixedSource.ref,
       hometown:Number(hometown),
