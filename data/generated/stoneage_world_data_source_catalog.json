@@ -316,7 +316,7 @@
     {
       "id": "world-npc-index",
       "priority": "P0",
-      "status": "next",
+      "status": "completed",
       "scope": "Map NPC placement and template/create/arg linkage"
     },
     {
@@ -334,8 +334,8 @@
     {
       "id": "map-connectivity",
       "priority": "P0",
-      "status": "next",
-      "scope": "mapwarp, warp NPCs, doors/caves/building entrances"
+      "status": "partial-completed",
+      "scope": "mapwarp rows validated against source map headers; next integrate NPC warp/door/cave connectivity"
     },
     {
       "id": "item-acquisition",
@@ -379,5 +379,28 @@
       "status": "source-anomaly",
       "decision": "do-not-fabricate; investigate historical/conditional source before runtime promotion"
     }
-  ]
+  ],
+  "researchResults": {
+    "worldNpcIndex": {
+      "status": "completed-partial-closure",
+      "createBlocks": 7979,
+      "templateBlocks": 215,
+      "argFiles": 1189,
+      "unresolvedTemplateRefs": 0,
+      "unresolvedFileRefs": 27,
+      "uniqueFloors": 1031
+    },
+    "functionSetAudit": {
+      "dataFunctionSets": 75,
+      "known": 55,
+      "unknown": 20
+    },
+    "mapwarpValidation": {
+      "rows": 5457,
+      "mapHeaderFloors": 1250,
+      "missingMapFloorRows": 0,
+      "outOfBoundsRows": 0,
+      "oneWayRows": 2351
+    }
+  }
 }
