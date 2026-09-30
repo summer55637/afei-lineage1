@@ -1,0 +1,27 @@
+name: Check V3.43 cross-contract closure
+
+on:
+  push:
+    paths:
+      - 'tools/check_v343_cross_contract_closure.mjs'
+      - 'data/generated/stoneage_start_route_closure.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - 'data/generated/stoneage_4000_exit_component_audit.json'
+      - '.github/workflows/check-v343-cross-contract-closure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  closure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.43 cross-contract closure regression
+        run: node tools/check_v343_cross_contract_closure.mjs
