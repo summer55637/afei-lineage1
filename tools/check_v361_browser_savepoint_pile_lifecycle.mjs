@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_NPC_SAVEPOINT_SET,
+  ACTION_NPC_SAVEPOINT_CONFIRM,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   consumeSavePointItems,
   createBrowserSavePointRuntime,
