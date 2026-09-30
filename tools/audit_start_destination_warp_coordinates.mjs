@@ -40,6 +40,14 @@ function exactRows(spec){
   const hits=rows.filter(r=>r.type==='NONE'&&r.condition==='NULL'&&r.fromFloor===spec.fromFloor&&r.toFloor===spec.toFloor)
     .filter(r=>spec.sourceLines.includes(r.line));
   if(hits.length!==spec.sourceLines.length)throw new Error(`source row count mismatch for ${spec.id}: expected ${spec.sourceLines.length}, got ${hits.length}`);
+  const expectedCount=spec.from.length;
+  if(expectedCount!==hits.length)throw new Error(`expected coordinate count mismatch for ${spec.id}`);
+  hits.forEach((r,i)=>{
+    const expectedFrom=spec.from[i], expectedTo=spec.to[i];
+    if(r.fromX!==expectedFrom[0]||r.fromY!==expectedFrom[1]||r.toX!==expectedTo[0]||r.toY!==expectedTo[1]){
+      throw new Error(`coordinate mismatch for ${spec.id} line ${r.line}: got ${r.fromX},${r.fromY}->${r.toX},${r.toY}`);
+    }
+  });
   return hits;
 }
 
