@@ -118,7 +118,6 @@ function buildWorldNpcPointIndex(worldNpcIndex){
 function materializeNpc(row,enemyIndex=0){
   const enemy=row?.enemies?.[enemyIndex]??row?.enemies?.[0]??null;
   if(!enemy)return null;
-  const candidate=enemy.templateCandidates?.find(c=>c?.functionSet!=null)??null;
   const sourceFunctionSets=Array.isArray(row?.sourceFunctionSets) ? row.sourceFunctionSets : [];
   const services=[];
   for(const sourceEnemy of row?.enemies??[]){
