@@ -12,6 +12,13 @@ V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipelin
 
 這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
 
+## 2026-09-30 新增：V3.55 Browser World NPC point runtime
+
+V3.55 新增 `stoneage_browser_world_npc_runtime.mjs`，將 fixed-C World NPC create blocks 的固定點位轉成 browser 可解析的 source NPC instance。位置只接受 `borncorner` 中 `x1=x2,y1=y2` 的 exact point；非退化 spawn area 不猜即時座標。
+
+canonical Browser State Controller 新增 `NPC_RESOLVE_AT`，並讓 `NPC_TALK` / `NPC_ITEMSHOP_*` 在沒有直接提供 NPC object 時，可從 `targetCell` 解析 source NPC。解析完成後，ItemShop 繼續沿 V3.54 的 `path + blockIndex` binding 取得正式 shop，interaction gate 仍照原 contract 執行。
+
+V3.55 仍是 headless runtime；沒有建立 playable HTML，也沒有修改 Starter Item 24114、changeevent、4000→200 或永久停用 GMQUE 的既有判定。
 ## 2026-09-30 新增：V3.54 browser ItemShop → World NPC binding closure
 
 V3.54 將既有的 browser ItemShop transaction 與 V3.42 的 336-instance World NPC + ItemShop source join 正式接到 canonical browser state controller。

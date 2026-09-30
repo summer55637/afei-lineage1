@@ -1,0 +1,42 @@
+name: Check V3.55 browser World NPC runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_world_npc_runtime.mjs'
+      - 'src/stoneage_browser_world_itemshop_runtime.mjs'
+      - 'src/stoneage_browser_itemshop_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_npc_itemshop_runtime.mjs'
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'src/stoneage_item_economy_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_world_npc_index.json'
+      - 'data/generated/stoneage_npc_itemshop_runtime.json'
+      - 'tools/fixtures/npc-itemshop/world-index.json'
+      - 'tools/check_v355_browser_world_npc_runtime.mjs'
+      - 'docs/reference/v355-browser-world-npc-runtime.md'
+      - '.github/workflows/check-v355-browser-world-npc-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.55 browser World NPC regression
+        run: node tools/check_v355_browser_world_npc_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_world_npc_runtime.mjs
+          node --check src/stoneage_browser_world_itemshop_runtime.mjs
+          node --check src/stoneage_browser_itemshop_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v355_browser_world_npc_runtime.mjs
