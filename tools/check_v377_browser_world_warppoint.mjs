@@ -79,7 +79,7 @@ assert.equal(wrong.ok,false);
 assert.equal(wrong.reason,'warppoint-id-not-at-position');
 
 const mismatch=freshPersistentState({playerId:'v377-mismatch'});
-mismatch.world.position={floorId:1000,x:49,y:117};
+mismatch.world.position={floorId:1000,x:48,y:116};
 const mismatchResult=await runtime.execute(mismatch,{portalId:'1000_to_100_a',expectedRevision:0});
 assert.equal(mismatchResult.ok,false);
 assert.equal(mismatchResult.reason,'warppoint-id-not-at-position');
