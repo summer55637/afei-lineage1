@@ -36,10 +36,24 @@ jobs:
           grep -q '#define ITEM_ID_TOKEN_INDEX 17' /tmp/StoneAge/gmsv/src/item/item.c
           grep -q 'ITEM_readItemConfFile( getItemfile())' /tmp/StoneAge/gmsv/src/init.c
           grep -q 'ITEM_readItemConfFile( getItemfile())' /tmp/StoneAge/gmsv/src/char/chatmagic.c
-          test "$(grep -F ',11817,24114,9900,16,' /tmp/StoneAge/gmsv/data/itemset6.txt | wc -l)" -eq 1
-          if [ "$(cut -d',' -f17 /tmp/StoneAge/gmsv/data/itemset6.txt | grep -Fx '24114' | wc -l)" -ne 0 ]; then
-            echo 'ERROR: pinned itemset6.txt contains source Item ID 24114 in token 17'
-            exit 1
-          fi
+          test "$(git -C /tmp/StoneAge hash-object gmsv/data/itemset6.txt)" = "eac985796b59286c547db2abce7b3d604a5e6226"
+          python3 - <<'PY'
+from pathlib import Path
+p=Path('/tmp/StoneAge/gmsv/data/itemset6.txt')
+lines=p.read_text(encoding='utf-8', errors='strict').splitlines()
+target=[]
+configured=[]
+for lineno,line in enumerate(lines,1):
+    tokens=line.split(',')
+    if len(tokens) >= 20 and tokens[16].strip() == '11817':
+        if tokens[17].strip() == '24114' and tokens[18].strip() == '9900' and tokens[19].strip() == '16':
+            target.append((lineno,tokens[16].strip(),tokens[17].strip(),tokens[18].strip(),tokens[19].strip()))
+    if len(tokens) >= 17 and tokens[16].strip() == '24114':
+        configured.append(lineno)
+assert len(target) == 1, target
+assert target[0] == (3602,'11817','24114','9900','16'), target
+assert configured == [], configured
+print({'targetRow': target[0], 'configuredIdToken17Matches': len(configured)})
+PY
       - name: Run V3.52 regression
         run: node tools/check_v352_starter_item_24114_exhaustive_execution_audit.mjs
