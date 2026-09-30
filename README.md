@@ -38,9 +38,9 @@
 
 ## 現階段優先事項
 
-World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index、auxiliary world data index，以及 Item / Quest Event Closure。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。最新 item closure 顯示 NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 仍 unresolved；另有 42 個 event ID 尚未從 mission / jobdaily 直接關閉。
+World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index、auxiliary world data index、Item / Quest Event Closure、NPC Item Acquisition Graph 與 Start Flow Index。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。最新 item closure 顯示 NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 仍 unresolved；另有 42 個 event ID 尚未從 mission / jobdaily 直接關閉。
 
-現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂；新手出生位置與起始 NPC 關聯也已進入 source-backed index：
+現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂；四個 hometown 的出生座標、新手寵物選擇與出生村 NPC 已進入 source-backed Start Flow Index：
 
 1. World Data Catalog：NPC、任務、商店、傳送、服務、事件等。
 2. Map Coverage Expansion：主要世界地圖與地圖連接。
@@ -65,5 +65,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/gmque-source-closure.md`
 
 Item / Quest Event Closure 正在進行；reward gap clustering 與 event owner closure 已建立 source-backed index。
+
+目前第一條明確 source-backed 起始鏈為：character creation → hometown → elder spawn → town services → warp exits → world graph / encounter；下一步進入四個出生村的 first-route closure。
 
 最後整理：2026-09-30。
