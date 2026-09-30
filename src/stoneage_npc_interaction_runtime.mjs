@@ -71,17 +71,19 @@ function canInteractWithNpc(npc,player,{interactionRule=null,maxDistance=null}={
 }
 
 function buildInteractionRequest(npc,player,{interactionRule,maxDistance,action='talk'}={}){
-  const gate=canInteractWithNpc(npc,player,{interactionRule,maxDistance});
+  const normalizedNpc=normalizeNpc(npc);
+  if(!normalizedNpc)return {ok:false,interactable:false,reason:'invalid-npc-coordinate',action:String(action),request:null};
+  const gate=canInteractWithNpc(normalizedNpc,player,{interactionRule,maxDistance});
   if(!gate.ok||!gate.interactable)return {...gate,action,request:null};
   return {
     ok:true,
     interactable:true,
     action:String(action),
     request:{
-      npcId:npc.path?npc.path+'#'+intOr(npc.blockIndex,0):String(npc.id??''),
-      template:npc.template??npc.templateName??null,
+      npcId:normalizedNpc.path?normalizedNpc.path+'#'+intOr(normalizedNpc.blockIndex,0):String(normalizedNpc.id??''),
+      template:normalizedNpc.template??normalizedNpc.templateName??null,
       action:String(action),
-      point:{...gate.npc.point},
+      point:{...normalizedNpc.point},
       distance:gate.distance
     }
   };
