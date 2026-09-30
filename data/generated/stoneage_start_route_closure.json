@@ -64,7 +64,6 @@
     "Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.",
     "Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.",
     "Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.",
-    "Close new-player event reward item/pet definitions without promoting unresolved IDs.",
     "Advance Persistent State Schema for player, pet, inventory, equipment, skills, quests, map position, idle settings and save/migration."
   ],
   "towns": [
