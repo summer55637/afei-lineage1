@@ -32,7 +32,7 @@ const blocked=await dispatchNpcInteraction(state,changeevent,{floor:1006,x:15,y:
 });
 assert.equal(blocked.ok,true);
 assert.equal(blocked.handled,false);
-assert.equal(blocked.stage,'interaction-gate');
+assert.equal(blocked.stage,'module-resolution');
 assert.equal(blocked.reason,'npc-runtime-module-unresolved');
 
 const bank=reachability.rows.find(r=>r.template==='bankman'&&r.hometown===0);
