@@ -295,13 +295,13 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 ## 建議的下一個實際工作順序
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
-2. **Start Route Closure**：source-route spine 已 closed；16 個已解析 NPC 互動點已完成 reachability，下一步做剩餘 NPC 座標 closure → destination-map walkability → first encounter region → quest/event owner closure。
+2. **Start Route Closure**：source-route spine 已 closed；16 個已解析 NPC 互動點已完成 reachability；下一步做剩餘 NPC 座標 closure → destination-map source／walkability closure → active encounter region → quest/event owner closure。
 3. **Map Coverage Expansion**：由 7 張 verified map 擴到能形成主要世界路線的完整地圖群。
 4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
 5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
 7. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
-8. **Authorized Asset Integration**：有合法 client assets 時再打開真實 sprite / tile。
+8. **Authorized Asset Integration**：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
 9. **唯一可玩入口**：前面資料與系統成熟後，才重新建立新的遊戲頁。
 
 ## 判定標準
