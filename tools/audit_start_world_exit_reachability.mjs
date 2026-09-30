@@ -65,11 +65,23 @@ const result = {
   sourceContracts:{walkability:'src/stoneage_map_runtime.mjs::sourceMapWalkableAt',portalSource:'data/generated/stoneage_start_destination_warp_coordinates.json',mapRuntime:'data/generated/stoneage_map_runtime_index.json'},
   policy:{routeProof:'Do not promote a floor edge to a playable route unless at least one exact source portal origin is reachable from a direct landing on the fixed runtime map.',unresolvedFloor200:'Do not use data/generated/stoneage_map_200.json as the world-map runtime for 3000/4000 -> 200 exits.'},
   audits,
-  worldFloor200Resolution:{
-    status:'source-path-identified-runtime-unverified',
-    fixedSourceCandidate:{path:'gmsv/data/map/jyaruga/jalga',blobSha:'dcbb20f0212192fc852e1489a29a0d6d8d4c95ce',size:3840044},
-    conflictingCurrentRuntime:{path:'data/generated/stoneage_map_200.json',sourcePath:'gmsv/data/map/extra/200',sourceBlobSha:'d08e8fea4dffd127c26f764d51231ec75ec73f98',width:30,height:30,reason:'cannot contain fixed-C world portal coordinates reaching at least x=588 and y=1008'}
-  },
+  worldFloor200Resolution:(() => {
+    const e=index.maps?.['200'];
+    const verified=!!e && e.sourcePath==='gmsv/data/map/jyaruga/jalga' && e.sourceBlobSha==='dcbb20f0212192fc852e1489a29a0d6d8d4c95ce' && e.width===800 && e.height===1200;
+    return verified ? {
+      status:'verified',
+      path:e.path,
+      sourcePath:e.sourcePath,
+      sourceBlobSha:e.sourceBlobSha,
+      width:e.width,
+      height:e.height,
+      note:'floor 200 world runtime is now generated from the fixed-C jalga binary; the separate gmsv/data/map/extra/200 30x30 fixture remains non-world.'
+    } : {
+      status:'unresolved',
+      indexed:e ?? null,
+      fixedSourceCandidate:{path:'gmsv/data/map/jyaruga/jalga',blobSha:'dcbb20f0212192fc852e1489a29a0d6d8d4c95ce',size:3840044}
+    };
+  })(),
   summary:{destinationFloors:audits.length,allDirectLandingsWalkable:audits.every(a=>a.directLandings.every(p=>p.walkable)),usablePortalGroups:audits.reduce((n,a)=>n+a.portalAudits.filter(p=>p.portalUsableFromDirectLanding).length,0),totalPortalGroups:audits.reduce((n,a)=>n+a.portalAudits.length,0),blockedPortalGroups:audits.flatMap(a=>a.portalAudits.filter(p=>!p.portalUsableFromDirectLanding).map(p=>({hometown:a.hometown,destinationFloor:a.destinationFloor,portalId:p.id}))),status:audits.every(a=>a.portalAudits.every(p=>p.portalUsableFromDirectLanding))?'closed':'partial'}
 };
 fs.mkdirSync(path.dirname(out),{recursive:true});
