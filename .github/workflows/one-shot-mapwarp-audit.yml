@@ -1,0 +1,90 @@
+name: one-shot-mapwarp-audit
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout fixed StoneAge source
+        run: |
+          rm -rf /tmp/StoneAge
+          git clone --quiet https://github.com/gavinlinasd/StoneAge.git /tmp/StoneAge
+          cd /tmp/StoneAge
+          git checkout --quiet 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          test "$(git rev-parse HEAD)" = "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+      - name: Audit mapwarp against map headers
+        run: |
+          node <<'NODE'
+          const fs=require('fs'), path=require('path');
+          const root='/tmp/StoneAge/gmsv/data';
+          function walk(dir,out=[]){
+            for(const e of fs.readdirSync(dir,{withFileTypes:true})){
+              const p=path.join(dir,e.name);
+              if(e.isDirectory()) walk(p,out);
+              else if(e.isFile()) out.push(p);
+            }
+            return out;
+          }
+          const maps=new Map();
+          for(const p of walk(path.join(root,'map'))){
+            const b=fs.readFileSync(p);
+            if(b.length<44 || b.toString('ascii',0,6)!=='LS2MAP') continue;
+            const floor=b.readUInt16BE(6), width=b.readUInt16BE(40), height=b.readUInt16BE(42);
+            maps.set(floor,{width,height,path:path.relative(root,p).replaceAll(path.sep,'/')});
+          }
+          const rows=[]; const mapwarp=fs.readFileSync(path.join(root,'map/mapwarp.txt'),'utf8').replace(/\r/g,'');
+          let lineNo=0;
+          for(const raw of mapwarp.split('\n')){
+            lineNo++;
+            const line=raw.trim(); if(!line||line.startsWith('#')) continue;
+            const p=line.split(':'); if(p.length<4) continue;
+            const point=s=>{const a=s.split(',').map(Number); return a.length===3&&a.every(Number.isFinite)?{floor:a[0],x:a[1],y:a[2]}:null};
+            rows.push({line:lineNo,pointType:p[0],eventType:p[1],from:point(p[2]),to:point(p[3]),raw:line});
+          }
+          const inside=(pt)=>{const m=pt&&maps.get(pt.floor); return !!(m && pt.x>=0&&pt.y>=0&&pt.x<m.width&&pt.y<m.height);};
+          const countBy=(field)=>Object.fromEntries(Object.entries(rows.reduce((a,r)=>(a[r[field]]=(a[r[field]]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]));
+          const missingFloorRows=rows.filter(r=>!r.from||!r.to||!maps.has(r.from.floor)||!maps.has(r.to.floor));
+          const outBoundsRows=rows.filter(r=>(r.from&&!inside(r.from))||(r.to&&!inside(r.to)));
+          const fromFloors=[...new Set(rows.map(r=>r.from?.floor).filter(Number.isFinite))];
+          const toFloors=[...new Set(rows.map(r=>r.to?.floor).filter(Number.isFinite))];
+          const symmetricKey=r=>r.from&&r.to?String(r.from.floor)+','+r.from.x+','+r.from.y+'->'+r.to.floor+','+r.to.x+','+r.to.y:null;
+          const keySet=new Set(rows.map(symmetricKey).filter(Boolean));
+          const oneWay=[];
+          for(const r of rows){
+            if(!r.from||!r.to) continue;
+            const reverse=String(r.to.floor)+','+r.to.x+','+r.to.y+'->'+r.from.floor+','+r.from.x+','+r.from.y;
+            if(!keySet.has(reverse)) oneWay.push(r);
+          }
+          console.log(JSON.stringify({
+            pass:true,
+            mapHeaderFloors:maps.size,
+            mapwarpRows:rows.length,
+            pointTypes:countBy('pointType'),
+            eventTypes:countBy('eventType'),
+            uniqueFromFloors:fromFloors.length,
+            uniqueToFloors:toFloors.length,
+            missingMapFloorRows:missingFloorRows.length,
+            outOfBoundsRows:outBoundsRows.length,
+            oneWayRows:oneWay.length,
+            oneWaySample:oneWay.slice(0,25).map(r=>({line:r.line,from:r.from,to:r.to,pointType:r.pointType,eventType:r.eventType}))
+          }));
+          NODE
+      - name: Remove one-shot workflow
+        run: |
+          rm -f .github/workflows/one-shot-mapwarp-audit.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/one-shot-mapwarp-audit.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "ci: remove one-shot mapwarp audit"
+          git push origin HEAD:main
