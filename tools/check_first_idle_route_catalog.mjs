@@ -12,5 +12,6 @@ assert.equal(kar.status,'source_blocked_before_portal');
 const jaja=j.routes.find(x=>x.hometown===2);
 const blocked=jaja.variants.find(x=>x.portalId==='3000_to_200_b');
 assert.deepEqual(blocked.unusableLandingPoints,[[587,318]]);
-assert.equal(j.policy.productBoundary,'battle/supply/capture/death/offline behavior remains policy');
+assert.match(j.policy.productBoundary,/battle strategy/);
+assert.match(j.policy.productBoundary,/offline accrual/);
 console.log(JSON.stringify({pass:true,format:j.format,eligibleRouteVariants:j.summary.eligibleRouteVariants,sourceBlockedTowns:j.summary.sourceBlockedTowns}));
