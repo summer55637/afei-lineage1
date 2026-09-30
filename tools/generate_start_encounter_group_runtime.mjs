@@ -11,7 +11,8 @@ const out=path.resolve(value('--out','data/generated/stoneage_start_encounter_gr
 const FIXED='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const SOURCES={
   group:{path:'gmsv/data/group1.txt',sha:'1be75eb3e56ab16d4b433146ec59538ad651c874'},
-  enemy:{path:'gmsv/data/enemy1.txt',sha:'bf245a391adeace09915b6e425754b54ab69a8f6'}
+  enemy:{path:'gmsv/data/enemy1.txt',sha:'bf245a391adeace09915b6e425754b54ab69a8f6'},
+  enemyBase:{path:'gmsv/data/enemybase1.txt',sha:'a19a508975e3a982fada323861b35b2edab79349'}
 };
 const fail=m=>{console.error('Start encounter Group generation FAILED:',m);process.exit(1);};
 const gitBlobSha=bytes=>crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length+'\0','utf8'),bytes])).digest('hex');
@@ -27,7 +28,7 @@ const toInt=value=>{
   const m=s.match(/^[+-]?\d+/);
   return m?Number(m[0]):null;
 };
-const groupSource=readFixed(SOURCES.group), enemySource=readFixed(SOURCES.enemy);
+const groupSource=readFixed(SOURCES.group), enemySource=readFixed(SOURCES.enemy), enemyBaseSource=readFixed(SOURCES.enemyBase);
 const target=JSON.parse(fs.readFileSync(targetPath,'utf8'));
 if(target.format!=='stoneage-start-encounter-target-index-v1')fail('target index format mismatch');
 if(target.fixedSource?.repository!=='gavinlinasd/StoneAge'||target.fixedSource?.ref!==FIXED)fail('target index fixed source mismatch');
@@ -48,7 +49,15 @@ for(const raw of groupSource.content.split(/\r?\n/)){
   }
   groupMap.set(id,{groupId:id,name:String(p[0]).trim(),appearByItemId:toInt(p[2]),notAppearByItemId:toInt(p[3]),members});
 }
-const enemyMap=new Map();
+const enemyMap=new Map();const enemyBaseByTempNo=new Map();
+for(const raw of enemyBaseSource.content.split(/\r?\n/)){
+  const p=raw.split(',');
+  if(p.length<39||!p[0]||p[0].startsWith('#'))continue;
+  const tempNo=toInt(p[6]);
+  if(tempNo==null)continue;
+  enemyBaseByTempNo.set(tempNo,{tempNo,size:toInt(p[38]),name:String(p[0]).trim()});
+}
+
 for(const raw of enemySource.content.split(/\r?\n/)){
   const p=raw.split(',');
   if(p.length<14||!p[0]||p[0].startsWith('#'))continue;
@@ -66,7 +75,7 @@ const groups=referencedIds.map(groupId=>{
   if(!group)return {groupId,status:'unresolved'};
   const members=group.members.map(m=>{
     const enemy=enemyMap.get(m.enemyId);
-    return {...m,enemy:enemy??null,templateResolved:!!enemy};
+    const enemyBase=enemy?enemyBaseByTempNo.get(enemy.tempNo):null; return {...m,enemy:enemy?{...enemy,base:enemyBase??null}:null,templateResolved:!!enemy&&!!enemyBase};
   });
   return {groupId,status:'resolved',appearByItemId:group.appearByItemId,notAppearByItemId:group.notAppearByItemId,members};
 });
@@ -80,7 +89,7 @@ if(summary.groupsWithMissingEnemy!==0)fail('one or more referenced Groups contai
 const result={
   format:'stoneage-start-encounter-group-runtime-v1',
   generatedAt:new Date().toISOString().slice(0,10),
-  fixedSource:{repository:'gavinlinasd/StoneAge',ref:FIXED,groupBlobSha:SOURCES.group.sha,enemyBlobSha:SOURCES.enemy.sha},
+  fixedSource:{repository:'gavinlinasd/StoneAge',ref:FIXED,groupBlobSha:SOURCES.group.sha,enemyBlobSha:SOURCES.enemy.sha,enemyBaseBlobSha:SOURCES.enemyBase.sha},
   inputs:{targetIndex:targetPath.replace(process.cwd()+'/','').replaceAll('\\','/'),targetIndexFormat:target.format},
   policy:{
     purpose:'source-backed Group member selection inputs for start encounter',
