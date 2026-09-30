@@ -151,7 +151,11 @@
           "itemId": 77
         }
       ],
-      "sourceFlags": {}
+      "sourceFlags": {
+        "limitShop": true,
+        "sellOnly": true
+      },
+      "sellOnly": true
     }
   },
   "itemIndex": {
