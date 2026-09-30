@@ -61,7 +61,7 @@ for(const shop of Object.values(catalog.shops)){
 }
 for(const row of catalog.unresolved||[]){
   catalogBindings.push({
-    key:row.source.path+'#'+row.source.blockIndex,
+    key:npcRelativePath(row.source.path)+'#'+row.source.blockIndex,
     path:row.source.path,
     blockIndex:row.source.blockIndex,
     floorId:null,
@@ -73,7 +73,7 @@ for(const row of catalog.unresolved||[]){
 }
 
 const worldByKey=new Map(worldBindings.map(x=>[x.key,x]));
-const expectedUnresolvedKey='gmsv/data/npc/my/magicdou/daochang.create#8';
+const expectedUnresolvedKey='my/magicdou/daochang.create#8';
 const unexpectedWorld=worldBindings.filter(x=>!catalogBindings.some(y=>y.key===x.key));
 const unexpectedCatalog=catalogBindings.filter(x=>!worldByKey.has(x.key));
 if(worldBindings.length!==336)fail('world ItemShop candidate refs expected 336, got '+worldBindings.length);
