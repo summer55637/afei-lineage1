@@ -41,9 +41,15 @@ jobs:
           grep -q '#define RANGE 2' fixed-c-source/gmsv/src/npc/npc_savepoint.c
           grep -q 'CHAR_LASTTALKELDER' fixed-c-source/gmsv/src/npc/npc_savepoint.c
           grep -q 'NPC_UsedCheck' fixed-c-source/gmsv/src/npc/npc_savepoint.c
+      - name: Upload generated SavePoint source catalog
+        uses: actions/upload-artifact@v4
+        with:
+          name: v358-savepoint-source-catalog
+          path: data/generated/stoneage_npc_savepoint_source_index.json
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_savepoint_runtime.mjs
           node --check src/stoneage_browser_state_controller.mjs
           node --check tools/generate_savepoint_source_catalog.mjs
           node --check tools/check_v358_browser_savepoint_runtime.mjs
+
