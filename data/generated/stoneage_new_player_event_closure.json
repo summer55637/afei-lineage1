@@ -182,10 +182,52 @@
     "petDefinitionSource": {
       "path": "gmsv/data/enemy1.txt",
       "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6",
-      "directEnemyIdMatches": [],
-      "status": "not_directly_resolved_by_enemy1_enemy_id"
+      "requestedEnemyIds": [
+        341,
+        2057,
+        1645,
+        1479,
+        2547
+      ],
+      "directEnemyIdMatches": [
+        {
+          "enemyId": 341,
+          "tempNo": 274,
+          "name": "朵拉比斯",
+          "petFlg": 1
+        },
+        {
+          "enemyId": 2057,
+          "tempNo": 1047,
+          "name": "水魔兽",
+          "petFlg": 1
+        },
+        {
+          "enemyId": 1645,
+          "tempNo": 812,
+          "name": "斑尼迪克",
+          "petFlg": 1
+        },
+        {
+          "enemyId": 1479,
+          "tempNo": 718,
+          "name": "玛蕾菲雅",
+          "petFlg": 1
+        },
+        {
+          "enemyId": 2547,
+          "tempNo": 401,
+          "name": "玛蕾菲雅",
+          "petFlg": 1
+        }
+      ],
+      "enemyBaseSource": {
+        "path": "gmsv/data/enemybase1.txt",
+        "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+      },
+      "status": "source-closed"
     },
-    "status": "partial"
+    "status": "item-source-pending"
   },
   "semantics": {
     "ownerClosed": false,
@@ -195,7 +237,7 @@
     "scriptReferenceClosed": true,
     "runtimeModuleClosed": false
   },
-  "policy": "Create/script references are source-closed, but runtime module resolution is not: pinned npctemplate.c has no changeevent functionSet and npccreate.c rejects an unknown template name. Reward definitions remain unresolved where the pinned source provides no corresponding definition rows; no alternative version or guessed mapping is promoted.",
+  "policy": "Create/script references are source-closed, runtime module resolution is now closed for the new-player Pet reward path; item definitions remain unresolved under the active ITEMSET6 source. No alternative version or guessed mapping is promoted.",
   "moduleSource": {
     "path": "gmsv/src/npc/npctemplate.c",
     "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
