@@ -3,6 +3,7 @@ import { applyRewardTransaction } from './stoneage_reward_transaction.mjs';
 import { supplyRequired, deathRecoveryDecision, offlineResumeWindow, sourceHealerRecovery } from './stoneage_idle_policy.mjs';
 import { commitSave } from './stoneage_save_transaction.mjs';
 import { adaptSourceBattleResult, assertBattleResultForIdle, BATTLE_RESULT_FORMAT } from './stoneage_battle_result_adapter.mjs';
+import { prepareOfflineResume, commitOfflineResume } from './stoneage_offline_resume.mjs';
 
 const SIMULATION_FORMAT='stoneage-idle-simulation-v1';
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -86,6 +87,13 @@ function simulateOfflineResume(state,closedAt,resumedAt,{maxSeconds=null}={}){
   return {ok:true,simulation:SIMULATION_FORMAT,offline:window,rewardsSimulated:false,state:next};
 }
 
+async function commitOfflineSimulationResume(state,closedAt,resumedAt,{maxSeconds=null,expectedRevision=null,savedAt=()=>new Date().toISOString(),save=true}={}) {
+  const prepared=prepareOfflineResume(state,closedAt,resumedAt,{maxSeconds});
+  if(!prepared.ok)return prepared;
+  if(!save)return prepared;
+  return commitOfflineResume(state,prepared,{expectedRevision:expectedRevision==null?intOr(state.revision):expectedRevision,savedAt});
+}
+
 function recoverAtHealer(state){return sourceHealerRecovery(state);}
 
-export { SIMULATION_FORMAT, BATTLE_RESULT_FORMAT, routeVariantKey, normalizeSimulationBattleResult, simulateFirstEncounter, simulateOfflineResume, recoverAtHealer };
+export { SIMULATION_FORMAT, BATTLE_RESULT_FORMAT, routeVariantKey, normalizeSimulationBattleResult, simulateFirstEncounter, simulateOfflineResume, commitOfflineSimulationResume, recoverAtHealer };
