@@ -959,3 +959,30 @@ Encounter 65 的固定 C Group 89 / 92 / 94 均已由 pinned `group1.txt + enemy
 
 V3.83 不改 Persistent State、不啟動 battle、不決定本戰人數、不執行 Enemy random replacement、不處理 big-enemy ordering。下一階段才閉合 selected Group → entryMax → Enemy slot weighted generation。
 
+## 2026-10-01 V3.84 Browser World Encounter Enemy Generation
+
+V3.84 在 V3.83 selected Group 之後，開始閉合 fixed-C `ENEMY_getEnemy()` 的 roster generation：
+
+`selected Group → enemyEntryMax → entryMax → CREATEPROB weighted slot selection → duplicate CREATEMAXNUM gate → big-enemy ordering`
+
+固定 C 規則：
+- `enemyEntryMax = min(encounter.enemyMax, sum(CREATEMAXNUM))`
+- `entryMax = RAND(1, enemyEntryMax)`
+- 每個 roster loop 以 `RAND(0, sum(CREATEPROB)-1)` 選 Enemy。
+- 同一 Enemy 已達 `CREATEMAXNUM × sameCount` 時，該次抽選作廢。
+- 最多 100 次 loop。
+- `E_T_SIZE_BIG` 最多 5 隻；第 6 格之後若抽到 big，先把前五格中的第一個 normal 移到目前位置，再把 big 放到該 normal 的位置。
+
+V3.84 新增：
+- src/stoneage_browser_world_encounter_enemy_runtime.mjs
+- data/generated/stoneage_browser_world_encounter_enemy_schema.json
+- tools/check_v384_browser_world_encounter_enemy_runtime.mjs
+- docs/reference/v384-browser-world-encounter-enemy.md
+- .github/workflows/check-v384-browser-world-encounter-enemy.yml
+
+V3.83 Group catalog 同步加入 EnemyBase provenance；156 個起始路線 Group 解析出 47 個 EnemyBase TempNo，size 分布為 normal 162 / big 37 個 member。
+
+特殊 `ENEMY_RandomEnemyArray()` range 945–956、964–969 目前仍 fail-closed，尚未自行拼裝 replacement RNG table。
+
+V3.84 仍不修改 Persistent State、不啟動 battle、不計算 damage、不處理 reward/capture/death。下一階段再把 generated roster 轉成 battle context，並閉合 Enemy stat / AI / battlefield 初始化的來源鏈。
+
