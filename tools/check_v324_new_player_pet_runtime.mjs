@@ -50,9 +50,10 @@ assert.equal(pet.petId,274);
 assert.equal(pet.enemyId,341);
 assert.equal(pet.name,'朵拉比斯');
 assert.equal(pet.rngCalls,16);
+assert.equal(pet.sourceBaseStats.multiplier,23);
 assert.deepEqual(pet.sourceBaseStats.randomized,{vital:26,str:33,tgh:22,dex:32});
 assert.deepEqual(pet.sourceBaseStats.allocationCounts,{vital:10,str:0,tgh:0,dex:0});
-assert.deepEqual(pet.stats,{vital:598,str:759,tgh:506,dex:736});
+assert.deepEqual(pet.stats,{vital:828,str:759,tgh:506,dex:736});
 assert.equal(pet.petMailEffect,1);
 
 const state={pets:{petBox:[],team:[],activePetId:null}};
