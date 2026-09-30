@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'game.js'
-      - 'start.html'
+      - 'index.html'
       - 'README.md'
       - 'tools/check_v282_fallground_react.mjs'
       - '.github/workflows/v282-fallground-react.yml'
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Provide regression HTML fixture
-        run: cp start.html game.html
+        run: cp index.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
