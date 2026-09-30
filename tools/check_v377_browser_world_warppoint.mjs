@@ -28,7 +28,9 @@ assert.ok(eventSource.includes('MAPPOINT_MapWarpHandle'));
 
 assert.equal(catalog.format,'stoneage-start-destination-warp-coordinates-v2');
 assert.deepEqual(catalog.fixedSource,{repository:'gavinlinasd/StoneAge',ref:fixedRef,path:'gmsv/data/map/mapwarp.txt',blobSha:'617d2d02cbf17561d0eafc379a015d949055e922'});
-const groups=[...(catalog.nextFloorPortals?.to100??[]),...(catalog.nextFloorPortals?.to200??[])];
+const groups=Array.isArray(catalog.nextFloorPortals)
+  ? catalog.nextFloorPortals
+  : [...(catalog.nextFloorPortals?.to100??[]),...(catalog.nextFloorPortals?.to200??[])];
 assert.equal(groups.length,8);
 const rowCount=groups.reduce((n,g)=>n+(g.rows?.length??0),0);
 assert.equal(rowCount,37);
@@ -47,7 +49,7 @@ state.world.position={floorId:1000,x:49,y:116};
 const controller=createBrowserStateController({
   state,
   worldNpcIndex:null,
-  warpCatalog:null,
+  warpCatalog:catalog,
   worldMovementOptions:{loadMap:async()=>null,loadMapset:async()=>({})},
   worldWarpPointOptions:{loadMap}
 });
