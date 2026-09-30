@@ -1,0 +1,54 @@
+{
+  "format": "stoneage-v390-browser-enemy-core-stat-v1",
+  "generatedAt": "2026-10-01",
+  "action": "ENEMY_CORE_STAT_MATERIALIZE",
+  "fixedC": {
+    "sourceFunction": "gmsv/src/char/enemy.c::ENEMY_createEnemy(int array,int baselevel)",
+    "rngOrder": [
+      "level RAND(LV_MIN,LV_MAX)",
+      "4 x base stat RAND(0,4) then -2",
+      "10 x allocation RAND(0,3)"
+    ],
+    "statFormula": "((level-1)*E_T_LVUPPOINT + E_T_INITNUM) * allocatedBaseStat",
+    "maxHpFormula": "floor((VITAL*4 + STR + TOUGH + DEX) * 0.01)",
+    "maxMpFormula": "CHAR_complianceParameter copies CHAR_MAXMP into WORKMAXMP; ENEMY_createEnemy does not write CHAR_MAXMP directly"
+  },
+  "complianceDerived": {
+    "fixDex": "floor(DEX*0.01)",
+    "fixVital": "floor(VITAL*0.01)",
+    "fixStr": "floor(STR*0.01 + TOUGH*0.01*0.1 + VITAL*0.01*0.1 + DEX*0.01*0.05)",
+    "fixTgh": "floor(TOUGH*0.01 + STR*0.01*0.1 + VITAL*0.01*0.1 + DEX*0.01*0.05)",
+    "attackPower": "fixStr",
+    "defencePower": "fixTgh",
+    "quick": "fixDex"
+  },
+  "rank": {
+    "sourceFunction": "gmsv/src/char/enemy.c::ENEMY_getRank",
+    "input": "original EnemyBase BASEVITAL+BASESTR+BASETGH+BASEDEX",
+    "thresholds": [
+      100,
+      95,
+      90,
+      85,
+      80,
+      0
+    ],
+    "ranks": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "boundary": {
+    "rng": "caller-injected; 15 rolls",
+    "itemDrops": false,
+    "weaponStyle": false,
+    "enemyRandomChange": false,
+    "maxMp": "pending default-char source join",
+    "persistentMutation": false,
+    "battleStarted": false
+  }
+}
