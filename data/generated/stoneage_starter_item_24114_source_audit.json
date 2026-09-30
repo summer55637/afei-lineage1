@@ -1,0 +1,54 @@
+{
+  "format": "stoneage-starter-item-24114-source-audit-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "requestedItem": {
+    "configKey": "ITEM1",
+    "itemId": 24114,
+    "creationPath": "CHAR_loginAddItemForNew -> ITEM_makeItemAndRegist -> ITEM_makeItem -> ITEM_CHECKITEMTABLE"
+  },
+  "compileFlags": {
+    "itemset6Txt": true,
+    "itemset5Txt": true
+  },
+  "sourceFiles": {
+    "setup": {
+      "path": "gmsv/setup.cf",
+      "blobSha": "90f1f4a6c7b4e36f32eeb8cc5a3b4f2bf40f9f6b"
+    },
+    "version": {
+      "path": "gmsv/src/include/version.h",
+      "blobSha": "7d8d0e3f5fd6a5ad2c5ecb3bb0e2e9d6b08db5cf"
+    },
+    "configfile": {
+      "path": "gmsv/src/configfile.c",
+      "blobSha": "4f7f44b8d1a03c9c5cc5cfc59b2fbb7f1fbe9a3d"
+    },
+    "item": {
+      "path": "gmsv/src/item/item.c",
+      "blobSha": "4d1f0d0d5f1aa07c9f6f54f8b4a0b7af3d9d8f2a"
+    },
+    "itemset6": {
+      "path": "gmsv/data/itemset6.txt",
+      "blobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
+      "sizeBytes": 0
+    }
+  },
+  "evidence": {
+    "setupItem1": "ITEM1=24114",
+    "selectedItemFile": "itemset6file=data/itemset6.txt",
+    "configSelection": "with _ITEMSET6_TXT enabled, config.itemfile is assigned by itemset6file",
+    "itemLoader": "ITEM_readItemConfFile(getItemfile()) scans the selected file for item rows; if maxid <= 0 it returns FALSE before a usable item table is populated",
+    "itemMaker": "ITEM_makeItem(number) first requires ITEM_CHECKITEMTABLE(number); then it copies ITEM_tbl[number].itm",
+    "conclusion": "24114 has source configuration/creation-path evidence, but no item template row is present in the pinned selected Item data file. The runtime must remain fail-closed."
+  },
+  "resolution": {
+    "sourceTemplateResolved": false,
+    "allocatorPathResolved": false,
+    "browserBuyPromotion": false,
+    "syntheticTemplateAllowed": false
+  }
+}
