@@ -315,8 +315,8 @@ function planFirstRoute(state,{routeId=null,hometown=null,portalId=null,routeCat
     if(!startTile)return {ok:false,reason:'route-start-coordinate-invalid',position:statePosition};
     const checked=choosePortalAndEncounterPaths(statePosition,entryMap,encounterMap,mapset,group,target,{maxVisited});
     if(!checked.ok)return checked;
-    if(Number.isFinite(Number(variant.originPathMin))&&checked.portalDistance!==Number(variant.originPathMin))return {ok:false,stage:'route-catalog-crosscheck',reason:'portal-path-length-mismatch',expected:Number(variant.originPathMin),actual:checked.portalDistance,portalId:variant.portalId};
-    if(Number.isFinite(Number(variant.landingPathMin))&&checked.landingDistance!==Number(variant.landingPathMin))return {ok:false,stage:'route-catalog-crosscheck',reason:'landing-path-length-mismatch',expected:Number(variant.landingPathMin),actual:checked.landingDistance,portalId:variant.portalId};
+    if(Number.isFinite(Number(variant.originPathMin))&&checked.portalDistance<Number(variant.originPathMin))return {ok:false,stage:'route-catalog-crosscheck',reason:'portal-path-below-catalog-minimum',expectedMinimum:Number(variant.originPathMin),actual:checked.portalDistance,portalId:variant.portalId};
+    if(Number.isFinite(Number(variant.landingPathMin))&&checked.landingDistance<Number(variant.landingPathMin))return {ok:false,stage:'route-catalog-crosscheck',reason:'landing-path-below-catalog-minimum',expectedMinimum:Number(variant.landingPathMin),actual:checked.landingDistance,portalId:variant.portalId};
     const revision=Number(state?.revision??0);
     if(!Number.isInteger(revision)||revision<0)return {ok:false,reason:'route-state-revision-invalid'};
     const movementToPortal=actionPathFromStart(checked.portalPath,route.entryFloor,statePosition,revision);
