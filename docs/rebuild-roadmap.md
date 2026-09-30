@@ -1157,3 +1157,35 @@ V3.90 也重新對齊 `ENEMY_getRank()`：使用原始 EnemyBase 四圍總和，
 
 下一階段是把 V3.90 materialized core stats 寫入 V3.86 transient Battle Context 的 Enemy entry；之後才能讓 Battle Model 取得實際 HP/四圍，而不再使用 null placeholder。
 
+## 2026-10-01 V3.91 Browser Battle Enemy Core Hydration
+
+V3.91 將 V3.90 Enemy Core Stat Runtime 接入 V3.86 transient Battle Context。
+
+啟用條件：
+- `materializeEnemyStats=true`
+- 每隻 Enemy 提供 1 個 levelRoll + 4 個 baseStatRolls + 10 個 allocationRolls，共 15 rolls。
+
+Battle Context Enemy entry 現在可取得：
+- level
+- HP / MaxHP
+- VITAL / STR / TOUGH / DEX
+- FIXVITAL / FIXSTR / FIXTOUGH / FIXDEX
+- Attack / Defence / Quick
+- PetRank
+- elements / status resist
+- sourceCoreStats provenance
+
+V3.91 的 first-route regression 已用 fixed Group 94：
+- Enemy 120：Lv2、448/390/331/487、MaxHP 30、rank 5
+- Enemy 123：Lv2、611/470/376/658、MaxHP 39、rank 5
+
+MaxMP 仍為 null，因 fixed-C `ENEMY_createEnemy()` 不直接寫 `CHAR_MAXMP`，而完整 `CHAR_getDefaultChar()` default field join 尚未閉合。
+
+新增：
+- `data/generated/stoneage_browser_battle_enemy_core_hydration_schema.json`
+- `tools/check_v391_browser_battle_enemy_core_hydration.mjs`
+- `docs/reference/v391-browser-battle-enemy-core-hydration.md`
+- `.github/workflows/check-v391-browser-battle-enemy-core-hydration.yml`
+
+下一階段是 Battle Turn initialization：先閉合 `BATTLE_TurnParam()` / initial WORK fields 與第一回合 Entry order，仍然不直接執行傷害。
+
