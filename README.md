@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：fca7743 — match fixed-C SavePoint NOITEM detection
-- 最後更新時間：2026-09-30T18:16:12+08:00
+- 最新 commit：84a0358 — resolve extensionless SavePoint source argument files
+- 最後更新時間：2026-09-30T18:18:18+08:00
 - 版本線最高 regression workflow：V3.58
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
