@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import { dispatchNpcInteraction } from '../src/stoneage_npc_dispatch_runtime.mjs';
 import { createFirstRouteRewardHandlers } from '../src/stoneage_first_route_reward_handlers.mjs';
-import { createAuditedNpcModuleRegistry, createCompatibilityNpcModuleRegistry } from '../src/stoneage_npc_module_registry_runtime.mjs';
+import { createAuditedNpcModuleRegistry } from '../src/stoneage_npc_module_registry_runtime.mjs';
 const reachability=JSON.parse(fs.readFileSync('data/generated/stoneage_start_npc_reachability.json','utf8'));
 const closure=JSON.parse(fs.readFileSync('data/generated/stoneage_new_player_event_closure.json','utf8'));
 const audit=JSON.parse(fs.readFileSync('data/generated/stoneage_world_npc_functionset_audit.json','utf8'));
@@ -21,7 +21,8 @@ const strict=await dispatchNpcInteraction(strictState,npc,player,{interactionRul
 assert.equal(strict.ok,true); assert.equal(strict.handled,false); assert.equal(strict.stage,'module-resolution');
 const bundle=createFirstRouteRewardHandlers({itemRewardCatalog,itemMakeCatalog,petCatalog,petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,itemCapacity:1000,itemCursor:700,randInclusive:(a,b)=>a===b?a:0});
 assert.equal(bundle.ok,true);
-const compatibilityRegistry=createCompatibilityNpcModuleRegistry(audit,compatibility,{allowExternalCompatibilityAliases:true,modules:{ExChangeMan:{script:closure.script,kind:'changeevent-compatible'}}});
+const runtimeConfig={compatibilityMode:true,allowExternalCompatibilityAliases:true,defaultInteractionAction:'talk',sourceProfile:'fixed-c'};
+const compatibilityModule={ExChangeMan:{script:closure.script,kind:'changeevent-compatible'}};
 const state=freshPersistentState({playerId:'compat-enabled'}); state.player.level=1; state.player.transmigration=0; state.player.charm=60;
 const enabled=await dispatchNpcInteraction(state,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:compatibilityRegistry,handlerFactory:()=>bundle.handlers,transactionId:'compat-1',now:()=> '2026-09-30T11:00:00.000Z'});
 assert.equal(enabled.ok,true); assert.equal(enabled.handled,true); assert.equal(enabled.execution.applied,true);
