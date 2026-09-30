@@ -158,7 +158,6 @@ function sellShopItem(state,request){
       if(next.inventory.piles[itemId]===0)delete next.inventory.piles[itemId];
     }
   }else{
-    slots===next.inventory.playerItemSlots;
     next.inventory.playerItemSlots[normalized.slot]=null;
     delete next.inventory.itemRuntime.slots[String(existingIndex)];
     const itemId=item.itemId!=null?String(item.itemId):null;
