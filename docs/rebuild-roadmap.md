@@ -12,6 +12,13 @@ V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipelin
 
 這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
 
+## 2026-09-30 新增：V3.56 Browser World NPC service routing
+
+V3.56 在 V3.55 的固定 NPC point resolver 上增加 source functionSet routing。Browser-resolved NPC instance 現在保留 selected `functionSet` 與 source service candidate 清單，並可用 `serviceFunctionSet` / `functionSet` 指定要解析的固定 C service；不符合就 fail-closed，不自動改選其他服務。
+
+這一層仍是 routing contract，不宣稱 55 個 active fixed-C functionSet 都已有 browser module。真正的 service execution 仍需逐項完成 source functionSet → audited module → handler → state transaction。
+
+V3.56 沒有改動 ItemShop pricing、Gold、Persistent State、Starter Item 24114、changeevent、4000→200 或 GMQUE 永久停用政策，也沒有建立 playable HTML。
 ## 2026-09-30 新增：V3.55 Browser World NPC point runtime
 
 V3.55 新增 `stoneage_browser_world_npc_runtime.mjs`，將 fixed-C World NPC create blocks 的固定點位轉成 browser 可解析的 source NPC instance。位置只接受 `borncorner` 中 `x1=x2,y1=y2` 的 exact point；非退化 spawn area 不猜即時座標。

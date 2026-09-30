@@ -1,0 +1,39 @@
+name: Check V3.56 browser World NPC service routing
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_world_npc_runtime.mjs'
+      - 'src/stoneage_browser_world_itemshop_runtime.mjs'
+      - 'src/stoneage_browser_itemshop_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'data/generated/stoneage_world_npc_index.json'
+      - 'data/generated/stoneage_npc_itemshop_runtime.json'
+      - 'tools/fixtures/npc-itemshop/world-index.json'
+      - 'tools/check_v356_browser_world_npc_service_routing.mjs'
+      - 'docs/reference/v356-browser-world-npc-service-routing.md'
+      - '.github/workflows/check-v356-browser-world-npc-service-routing.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.56 browser World NPC service routing regression
+        run: node tools/check_v356_browser_world_npc_service_routing.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_world_npc_runtime.mjs
+          node --check src/stoneage_browser_world_itemshop_runtime.mjs
+          node --check src/stoneage_browser_itemshop_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v356_browser_world_npc_service_routing.mjs

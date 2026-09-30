@@ -83,6 +83,7 @@ function buildWorldNpcPointIndex(worldNpcIndex){
     }));
     const npc={
       floor:point.floor,
+      sourceFunctionSets:Array.isArray(worldNpcIndex.sourceFunctionSets)?worldNpcIndex.sourceFunctionSets.slice():[],
       npc:[point.x,point.y],
       x:point.x,
       y:point.y,
@@ -117,6 +118,24 @@ function buildWorldNpcPointIndex(worldNpcIndex){
 function materializeNpc(row,enemyIndex=0){
   const enemy=row?.enemies?.[enemyIndex]??row?.enemies?.[0]??null;
   if(!enemy)return null;
+  const candidate=enemy.templateCandidates?.find(c=>c?.functionSet!=null)??null;
+  const sourceFunctionSets=Array.isArray(row?.sourceFunctionSets) ? row.sourceFunctionSets : [];
+  const services=[];
+  for(const sourceEnemy of row?.enemies??[]){
+    for(const item of sourceEnemy.templateCandidates??[]){
+      const functionSet=String(item?.functionSet??'').trim();
+      if(!functionSet)continue;
+      if(!services.some(x=>x.functionSet.toLowerCase()===functionSet.toLowerCase())){
+        services.push({
+          functionSet,
+          templateName:sourceEnemy.templateName??null,
+          templatePath:item.path??null,
+          templateBlockIndex:intOr(item.blockIndex,-1),
+          sourceStatus:sourceFunctionSets.some(x=>String(x).toLowerCase()===functionSet.toLowerCase())?'known':'unknown'
+        });
+      }
+    }
+  }
   const template=enemy.templateName??null;
   const candidate=enemy.templateCandidates?.[0]??null;
   return {
@@ -134,18 +153,26 @@ function materializeNpc(row,enemyIndex=0){
     fileRef:enemy.fileRef??null,
     sourceEnemy:clone(enemy),
     sourceTemplateCandidate:clone(candidate),
+    functionSet:candidate?.functionSet??null,
+    services,
     runtimeModuleStatus: candidate?.functionSet ? 'source_template_reference_present' : 'unresolved_in_world_npc_index'
   };
 }
 
-function resolveWorldNpcAt(index,position,{template=null}={}){
+function resolveWorldNpcAt(index,position,{template=null,functionSet=null}={}){
   const cell=normalizeCell(position);
   if(!cell)return {ok:false,reason:'world-npc-target-cell-required'};
   const rows=index?.byCell?.[cellKey(cell.floor,cell.x,cell.y)]??[];
   let candidates=rows;
   if(template!=null){
     const wanted=String(template).trim().toLowerCase();
-    candidates=rows.filter(row=>row.enemies?.some(enemy=>String(enemy.templateName??'').trim().toLowerCase()===wanted));
+    candidates=candidates.filter(row=>row.enemies?.some(enemy=>String(enemy.templateName??'').trim().toLowerCase()===wanted));
+  }
+  if(functionSet!=null){
+    const wanted=String(functionSet).trim().toLowerCase();
+    candidates=candidates.filter(row=>row.enemies?.some(enemy=>
+      (enemy.templateCandidates??[]).some(candidate=>String(candidate?.functionSet??'').trim().toLowerCase()===wanted)
+    ));
   }
   if(candidates.length===0)return {ok:false,reason:'npc-not-found-at-cell',cell,npcs:[]};
   if(candidates.length>1){
@@ -157,9 +184,18 @@ function resolveWorldNpcAt(index,position,{template=null}={}){
     };
   }
   const row=candidates[0];
-  const enemyIndex=template!=null
-    ? Math.max(0,row.enemies.findIndex(enemy=>String(enemy.templateName??'').trim().toLowerCase()===String(template).trim().toLowerCase()))
-    : 0;
+  let enemyIndex=0;
+  if(functionSet!=null){
+    const wanted=String(functionSet).trim().toLowerCase();
+    const found=row.enemies.findIndex(enemy=>
+      (enemy.templateCandidates??[]).some(candidate=>String(candidate?.functionSet??'').trim().toLowerCase()===wanted)
+    );
+    enemyIndex=found>=0?found:0;
+  } else if(template!=null){
+    const wanted=String(template).trim().toLowerCase();
+    const found=row.enemies.findIndex(enemy=>String(enemy.templateName??'').trim().toLowerCase()===wanted);
+    enemyIndex=found>=0?found:0;
+  }
   return {ok:true,cell,npc:materializeNpc(row,enemyIndex)};
 }
 

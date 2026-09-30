@@ -62,7 +62,10 @@ function createBrowserStateController({
         if(worldNpcRuntime.ok!==true){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:worldNpcRuntime.reason??'world-npc-runtime-invalid',errors:worldNpcRuntime.errors??[],state:clone(currentState)};
         }
-        const located=resolveWorldNpcAt(worldNpcRuntime.index,targetCell,{});
+        const located=resolveWorldNpcAt(worldNpcRuntime.index,targetCell,{
+          template:action.template??null,
+          functionSet:action.serviceFunctionSet??action.functionSet??null
+        });
         if(!located.ok){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:located.reason,npcs:located.npcs??[],state:clone(currentState)};
         }
