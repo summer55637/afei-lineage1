@@ -456,4 +456,6 @@ V3.24 已完成 new-player Pet source closure：`GetPet Enemy ID → enemy1 row 
 V3.27 first-route handler bundle 已完成並通過 atomic execution / rollback regression；V3.28 再把 V3.24 Pet、V3.25 Item、V3.26 Event Flag 與 V3.27 source-gated Charm adapter 直接接進 V3.23 orchestrator，形成可重播的 Lv1 new-player reward transaction。固定-C 的 Charm concrete rule 已查明：`CHAR_CHARM<100 && EvNo>0` 才增加，`EventNo:-1` 因此為 no-op。
 下一階段集中閉合 pinned source 的 `changeevent` template registration / instantiation（`npctemplate.c/functionSet[]`），再把已閉合的 first-route transaction 接到 browser NPC interaction 與 Save Transaction；不再新增平行 reward engine。
 
-V3.29 已完成 `changeevent` module audit：pinned `npctemplate.c/functionSet[]` 沒有 `changeevent`，`npccreate.c` 對 unknown template 直接不掛 template；公開文件只能證明 changeevent 的 DSL 用途，不能補出缺失的 pinned C module。Reward mutation chain 已閉合，因此下一階段切到 Save Transaction integration 與可測試的 synthetic NPC interaction boundary，同時保留正式 `changeevent` instantiation unresolved。
+V3.29 已完成 `changeevent` module audit：
+V3.30 已完成 first-route Save integration：`condition → reward adapters → atomic NPC event transaction → existing Save Envelope → reload parity`。reward mutation chain 現在可持久化；正式 `changeevent` template registration 仍 unresolved，browser NPC interaction 仍是後續邊界。
+pinned `npctemplate.c/functionSet[]` 沒有 `changeevent`，`npccreate.c` 對 unknown template 直接不掛 template；公開文件只能證明 changeevent 的 DSL 用途，不能補出缺失的 pinned C module。Reward mutation chain 已閉合，因此下一階段切到 Save Transaction integration 與可測試的 synthetic NPC interaction boundary，同時保留正式 `changeevent` instantiation unresolved。
