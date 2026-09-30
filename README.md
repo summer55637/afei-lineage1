@@ -412,3 +412,10 @@ V3.39 regression 已納入 GitHub Actions。
 
 新增 `.github/workflows/check-v341-full-npc-itemshop-catalog.yml`。CI 會固定 checkout pinned StoneAge source、重跑 ItemShop generator，要求 336 個 ItemShop bindings、0 個 unresolved binding，並交叉確認所有正式 offer Item ID 都有本 repo 的 source Item template；生成 catalog 會保存為 Actions artifact，供後續 world/NPC join 使用。
 
+
+
+## V3.42 NPC ItemShop / World Join Verification
+
+新增 `tools/check_v342_npc_itemshop_world_join.mjs` 與對應 CI。它會用同一個 pinned fixed-C checkout 同時重建 World NPC index 與 ItemShop catalog，逐筆比對 `create path#blockIndex`、floor、ItemShop template 與 arg fileRef；同時確認 service index 的 336 個 ItemShop instances 與 190 個 floors。
+
+目前仍明確保留 1 筆 fixed-C source anomaly：`gmsv/data/npc/my/magicdou/daochang.create#8` 引用不存在的 `my/ruieryasi/yao.arg`。這筆不以猜測或替代檔案補回，而是列為 known source anomaly，其餘 bindings 必須完整 join。
