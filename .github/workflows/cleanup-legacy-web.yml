@@ -31,9 +31,7 @@ jobs:
           for remote_ref in $(git for-each-ref --format='%(refname)' refs/remotes/origin/); do
             branch="${remote_ref#refs/remotes/origin/}"
             [ "$branch" = "main" ] && continue
-            case "$branch" in
-              'HEAD') continue ;;
-            esac
+            [ "$branch" = "HEAD" ] && continue
 
             safe="$(echo "$branch" | tr '/ ' '__')"
             workdir="$RUNNER_TEMP/cleanup-$safe"
@@ -42,11 +40,14 @@ jobs:
 
             (
               cd "$workdir"
-              find . -maxdepth 1 -type f \\
-                \\( -name '*.html' -o -name '*.htm' -o -name 'app.js' -o -name 'game.js' -o -name 'game.css' -o -name 'styles.css' \\) \\
-                -print -delete
+              changed=0
+              for file in ./*.html ./*.htm ./app.js ./game.js ./game.css ./styles.css; do
+                [ -e "$file" ] || continue
+                rm -f "$file"
+                changed=1
+              done
 
-              if [ -n "$(git status --porcelain)" ]; then
+              if [ "$changed" -eq 1 ]; then
                 git add -u
                 git commit -m "Remove legacy playable web files"
                 git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${branch}"
