@@ -43,7 +43,7 @@ const applied=applyNpcEventActionPlan(base,plan,{
   now:()=> '2026-09-30T05:01:00.000Z'
 });
 assert.equal(applied.applied,true);
-assert.equal(applied.actionCount,6);
+assert.equal(applied.actionCount,7);
 assert.deepEqual(applied.state.runtimeTest.items,[20145,2849,20228,18537]);
 assert.deepEqual(applied.state.runtimeTest.pets,[341]);
 assert.equal(applied.state.runtimeTest.charm,1);
@@ -95,7 +95,7 @@ console.log(JSON.stringify({
   pass:true,
   format:NPC_EVENT_TRANSACTION_FORMAT,
   sourceBranch:'TRANS=0&LV<100&ENDEV!=366',
-  actionsApplied:6,
+  actionsApplied:7,
   atomicRollback:true,
   idempotent:true,
   allMutationRolesExplicit:true
