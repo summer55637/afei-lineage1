@@ -112,7 +112,8 @@ function createBrowserIdleRuntime({routeCatalog=null}={}){
             routeId:state?.idle?.routeId??null,
             mode:state?.idle?.mode??null,
             enabled:state?.idle?.enabled===true,
-            idle:clone(state?.idle??null)
+            idle:clone(state?.idle??null),
+            offline:clone(state?.idle?.offline??null)
           },state:clone(state)};
       }
       if(type===ACTION_IDLE_OFFLINE_RESUME){
