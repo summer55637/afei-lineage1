@@ -105,7 +105,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 
 新增 `tools/generate_verified_map_runtime.mjs` 與 synthetic fixture `tools/check_verified_map_runtime_generator.mjs`，正式固定「LS2MAP binary → exact Git blob SHA → mapset image validation → battlemap candidates → verified runtime/index」的批量生成介面。工具不會用猜測資料補 map。
 
-新增 `data/generated/stoneage_start_destination_warp_coordinates.json`，將 first-route 下一層 exact source warp portal 座標獨立保存。`1000→100`、`2000→100`、`3000→200`、`4000→200` 均已有 source row 證據；但 destination map 的實際 walkability 仍需逐張 map runtime 驗證。
+新增 `data/generated/stoneage_start_destination_warp_coordinates.json`，將 first-route 下一層 exact source warp portal 座標獨立保存。`1000→100`、`2000→100`、`3000→200`、`4000→200` 均已有 source row；四個 destination map 現在也都有 exact verified runtime，7/7 warp landing points 均 walkable。
 
 ## 本輪新手事件 closure（2026-09-30）
 
@@ -121,3 +121,10 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 ## Start-floor closure 最新狀態（2026-09-30）
 
 目前 46/46 start-floor NPC coordinates 均已由 fixed-C exact `NPCCREATE borncorner` source 解出。`stoneage_start_npc_reachability.json` 已完成 41/46 interaction reachability，0 個 unreachable；剩餘 5 個（4 個 xinshou + 1 個薩姆吉爾村長）都是 `changeevent`，而 pinned `gmsv/src/npc/npctemplate.c::functionSet[]` 沒有 `changeevent`，所以依 `gmsv/src/npc/npccreate.c` 的 unknown-template 行為維持 runtime-unresolved，不把它們偽裝成已可玩的 NPC。
+
+
+## Destination map closure 更新（2026-09-30）
+
+四個 hometown 的 direct destination map 已全部從 pinned fixed-C source 找到並轉成 verified runtime：`1000=samugiru/samugiru`、`2000=marinasu/2000`、`3000=jaja/jaja`、`4000=karutana/karutana`。這也修正了先前只看檔名而漏掉 nonnumeric map filename 的判斷。
+
+四個 destination floor 共 7 個 landing points，現在 7/7 都通過 exact tile/object walkability。`2000` 的 landing points 位於 conditional encounter region；`3000` 也是 conditional encounter region。1000/4000 direct destination 的 encounter row 只是 placeholder。
