@@ -1,0 +1,38 @@
+name: Check V3.74 Browser NPC Event execution
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'src/stoneage_first_route_save.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/check_v364_changeevent_source_resolution.mjs'
+      - 'tools/check_v374_browser_npc_event_execution.mjs'
+      - 'docs/reference/v374-browser-npc-event-execution.md'
+      - 'data/generated/stoneage_browser_npc_event_schema.json'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v374-browser-npc-event-execution.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.74 regression
+        run: node tools/check_v374_browser_npc_event_execution.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_npc_event_runtime.mjs
+          node --check src/stoneage_npc_event_orchestrator.mjs
+          node --check src/stoneage_npc_event_transaction.mjs
+          node --check src/stoneage_first_route_save.mjs
+          node --check tools/check_v374_browser_npc_event_execution.mjs
