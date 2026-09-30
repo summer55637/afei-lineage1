@@ -1,11 +1,15 @@
 import { canInteractWithNpc } from './stoneage_npc_interaction_runtime.mjs';
 import { executeAndSaveNpcSourceEvent } from './stoneage_first_route_save.mjs';
+import { resolveAuditedNpcModule } from './stoneage_npc_module_registry_runtime.mjs';
 
 const NPC_DISPATCH_RUNTIME_FORMAT='stoneage-npc-dispatch-runtime-v1';
 
-function resolveInteractionModule(npc,{modules={}}={}){
+function resolveInteractionModule(npc,{modules={},moduleRegistry=null}={}){
   const name=String(npc?.template??npc?.templateName??'').trim();
   if(!name)return {ok:false,reason:'npc-template-name-required'};
+  if(moduleRegistry){
+    return resolveAuditedNpcModule(moduleRegistry,name);
+  }
   const module=modules[name]??modules[name.toLowerCase()]??null;
   if(!module)return {ok:true,resolved:false,reason:'npc-runtime-module-unresolved',template:name};
   return {ok:true,resolved:true,template:name,module};
@@ -20,6 +24,7 @@ async function dispatchNpcInteraction(
     maxDistance=null,
     action='talk',
     modules={},
+    moduleRegistry=null,
     handlerFactory=null,
     now=()=>new Date().toISOString(),
     transactionId=null
@@ -28,7 +33,7 @@ async function dispatchNpcInteraction(
   const gate=canInteractWithNpc(npc,player,{interactionRule,maxDistance});
   if(!gate.ok)return {ok:false,stage:'interaction-gate',reason:gate.reason,state};
   if(!gate.interactable)return {ok:true,handled:false,stage:'interaction-gate',reason:gate.reason,state};
-  const resolved=resolveInteractionModule(npc,{modules});
+  const resolved=resolveInteractionModule(npc,{modules,moduleRegistry});
   if(!resolved.ok)return {ok:false,stage:'module-resolution',reason:resolved.reason,state};
   if(!resolved.resolved)return {ok:true,handled:false,stage:'module-resolution',reason:resolved.reason,template:resolved.template,state};
   if(action!=='talk')return {ok:true,handled:false,stage:'dispatch',reason:'unsupported-npc-action',action,template:resolved.template,state};
