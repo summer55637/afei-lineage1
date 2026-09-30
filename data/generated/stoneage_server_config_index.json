@@ -1,0 +1,2129 @@
+{
+  "format": "stoneage-server-config-index-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/setup.cf",
+    "sha256": "13a52f3b66821fd74eacdd848356154139a63b0b68d2cfc4214c9356e106d9b0",
+    "sizeBytes": 17597
+  },
+  "statistics": {
+    "pairCount": 261,
+    "uniqueKeyCount": 261,
+    "duplicateKeyCount": 0
+  },
+  "keyIndex": [
+    {
+      "line": 3,
+      "key": "runlevel",
+      "value": "0"
+    },
+    {
+      "line": 6,
+      "key": "CPUUSE",
+      "value": "1"
+    },
+    {
+      "line": 9,
+      "key": "recvbuffer",
+      "value": "64"
+    },
+    {
+      "line": 11,
+      "key": "sendbuffer",
+      "value": "64"
+    },
+    {
+      "line": 13,
+      "key": "recvlowatbuffer",
+      "value": "128"
+    },
+    {
+      "line": 21,
+      "key": "debuglevel",
+      "value": "3"
+    },
+    {
+      "line": 24,
+      "key": "NOFAMEMAP",
+      "value": "60054"
+    },
+    {
+      "line": 27,
+      "key": "allowerrornum2",
+      "value": "1"
+    },
+    {
+      "line": 30,
+      "key": "petskill2file",
+      "value": "./data/petskill3.txt"
+    },
+    {
+      "line": 32,
+      "key": "setpetskillfile",
+      "value": "./data/setpetskill.txt"
+    },
+    {
+      "line": 38,
+      "key": "LCSDV",
+      "value": "86400"
+    },
+    {
+      "line": 41,
+      "key": "PETUPGETEXP",
+      "value": "0"
+    },
+    {
+      "line": 44,
+      "key": "gm1",
+      "value": "12345"
+    },
+    {
+      "line": 45,
+      "key": "gm2",
+      "value": ""
+    },
+    {
+      "line": 46,
+      "key": "gm3",
+      "value": ""
+    },
+    {
+      "line": 47,
+      "key": "gm4",
+      "value": ""
+    },
+    {
+      "line": 50,
+      "key": "REPORTITEM1",
+      "value": "-1"
+    },
+    {
+      "line": 51,
+      "key": "REPORTITEM2",
+      "value": "-1"
+    },
+    {
+      "line": 52,
+      "key": "REPORTITEM3",
+      "value": "-1"
+    },
+    {
+      "line": 53,
+      "key": "REPORTITEM4",
+      "value": "-1"
+    },
+    {
+      "line": 54,
+      "key": "REPORTITEM5",
+      "value": "-1"
+    },
+    {
+      "line": 56,
+      "key": "VIPREPORTITEM1",
+      "value": "-1"
+    },
+    {
+      "line": 57,
+      "key": "VIPREPORTITEM2",
+      "value": "-1"
+    },
+    {
+      "line": 58,
+      "key": "VIPREPORTITEM3",
+      "value": "-1"
+    },
+    {
+      "line": 59,
+      "key": "VIPREPORTITEM4",
+      "value": "-1"
+    },
+    {
+      "line": 60,
+      "key": "VIPREPORTITEM5",
+      "value": "-1"
+    },
+    {
+      "line": 62,
+      "key": "reportlv",
+      "value": "140"
+    },
+    {
+      "line": 64,
+      "key": "reportta",
+      "value": "5"
+    },
+    {
+      "line": 67,
+      "key": "LUAFILE",
+      "value": "./data/npc/lua/init.lua"
+    },
+    {
+      "line": 68,
+      "key": "ITEMLUAFILE",
+      "value": "./data/npc/lua/itemlua.lua"
+    },
+    {
+      "line": 71,
+      "key": "TEAMADDEXP",
+      "value": "0"
+    },
+    {
+      "line": 74,
+      "key": "EXPSHARE",
+      "value": "100"
+    },
+    {
+      "line": 77,
+      "key": "TRANS7POINT",
+      "value": "64"
+    },
+    {
+      "line": 80,
+      "key": "DEXFIXPER",
+      "value": "15"
+    },
+    {
+      "line": 83,
+      "key": "NOTRANSPET",
+      "value": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 86,
+      "key": "battlegetitemcf",
+      "value": "0"
+    },
+    {
+      "line": 89,
+      "key": "charlooptime",
+      "value": "15"
+    },
+    {
+      "line": 92,
+      "key": "takedownnonopower",
+      "value": "1"
+    },
+    {
+      "line": 94,
+      "key": "Connectnum",
+      "value": "40"
+    },
+    {
+      "line": 95,
+      "key": "PetEnemyDevelopUp",
+      "value": "0"
+    },
+    {
+      "line": 99,
+      "key": "FirstLockItem",
+      "value": "1,2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 102,
+      "key": "dammagecalc",
+      "value": "70"
+    },
+    {
+      "line": 105,
+      "key": "serverip",
+      "value": ""
+    },
+    {
+      "line": 108,
+      "key": "streetvendortrans",
+      "value": "0"
+    },
+    {
+      "line": 111,
+      "key": "sameiponlinenum",
+      "value": "10"
+    },
+    {
+      "line": 114,
+      "key": "battletime",
+      "value": "50"
+    },
+    {
+      "line": 117,
+      "key": "nohelpmap",
+      "value": "40001,40002,40003,40004,40005,40006,40007,40008,40009,40010,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 120,
+      "key": "vipbattleexp",
+      "value": "1"
+    },
+    {
+      "line": 123,
+      "key": "CANCELANGLETRANS",
+      "value": "1"
+    },
+    {
+      "line": 126,
+      "key": "PETSKILLSHOPPATH",
+      "value": "data/ablua/freepetskillshop.lua"
+    },
+    {
+      "line": 129,
+      "key": "FIMALYPKTIME",
+      "value": "20"
+    },
+    {
+      "line": 132,
+      "key": "PLAYEROVERLAPPK",
+      "value": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 135,
+      "key": "NOTESCAPE",
+      "value": "12345,142,40001,40002,40003,40004,40005,40006,40007,40008,40009,40010,8252,8253,8254,8256,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 138,
+      "key": "DELNEEDITEM",
+      "value": "0"
+    },
+    {
+      "line": 143,
+      "key": "PETTRANSABILITY",
+      "value": "0"
+    },
+    {
+      "line": 146,
+      "key": "PETTRANSABILITY1",
+      "value": "155"
+    },
+    {
+      "line": 148,
+      "key": "PETTRANSABILITY2",
+      "value": "200"
+    },
+    {
+      "line": 150,
+      "key": "PETTRANSABILITY3",
+      "value": "250"
+    },
+    {
+      "line": 154,
+      "key": "ALLSERVTRANS",
+      "value": "5"
+    },
+    {
+      "line": 156,
+      "key": "ALLSERVLEVEL",
+      "value": "140"
+    },
+    {
+      "line": 158,
+      "key": "ALLSERVSNED",
+      "value": "1"
+    },
+    {
+      "line": 161,
+      "key": "DISABLEPROFESSION",
+      "value": "2000,100"
+    },
+    {
+      "line": 164,
+      "key": "TALKCHECKMIN",
+      "value": "50"
+    },
+    {
+      "line": 165,
+      "key": "TALKCHECKMAX",
+      "value": "100"
+    },
+    {
+      "line": 168,
+      "key": "SAVEFAME",
+      "value": "1"
+    },
+    {
+      "line": 171,
+      "key": "ITEMPETLOCKED",
+      "value": "1"
+    },
+    {
+      "line": 174,
+      "key": "STREETVENDORPOINT",
+      "value": "0,5,5,5,5,5"
+    },
+    {
+      "line": 177,
+      "key": "NOSTWENEMY",
+      "value": "0"
+    },
+    {
+      "line": 179,
+      "key": "NOSTWENEMYGOLD",
+      "value": "0"
+    },
+    {
+      "line": 186,
+      "key": "POOLITEMBUG",
+      "value": "1"
+    },
+    {
+      "line": 187,
+      "key": "POOLITEM",
+      "value": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 191,
+      "key": "STWSENDTYPE",
+      "value": "3"
+    },
+    {
+      "line": 193,
+      "key": "STWSENDPOINT",
+      "value": "100"
+    },
+    {
+      "line": 196,
+      "key": "TRANSPOINTUP",
+      "value": "-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 199,
+      "key": "UNLAWTHISLOGOUT",
+      "value": "142,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 202,
+      "key": "MAPBATTLELOOP",
+      "value": "20"
+    },
+    {
+      "line": 205,
+      "key": "VIPBOUNDTIME",
+      "value": "0"
+    },
+    {
+      "line": 207,
+      "key": "UNBOUNDTIMETRANS",
+      "value": "0"
+    },
+    {
+      "line": 208,
+      "key": "UNBOUNDTIMELEVEL",
+      "value": "120"
+    },
+    {
+      "line": 210,
+      "key": "UNBOUNDTIMEMAP",
+      "value": "2000,65,65"
+    },
+    {
+      "line": 215,
+      "key": "BATTLEGETITEMRATE",
+      "value": "-1"
+    },
+    {
+      "line": 217,
+      "key": "BATTLEGETITEMRATEMAP",
+      "value": "0"
+    },
+    {
+      "line": 220,
+      "key": "NOJOINFLOOR",
+      "value": "1042,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 224,
+      "key": "LUCKSTARTIME",
+      "value": "1000"
+    },
+    {
+      "line": 226,
+      "key": "LUCKSTARCHANCES",
+      "value": "100"
+    },
+    {
+      "line": 230,
+      "key": "BTPET",
+      "value": "1"
+    },
+    {
+      "line": 232,
+      "key": "BTITEM",
+      "value": "1"
+    },
+    {
+      "line": 235,
+      "key": "AUTODELPET",
+      "value": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 238,
+      "key": "AUTODELITEM",
+      "value": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 241,
+      "key": "SPECIALMAP",
+      "value": "-1,-1,-1,-1"
+    },
+    {
+      "line": 244,
+      "key": "AUTOPK",
+      "value": "16"
+    },
+    {
+      "line": 246,
+      "key": "AUTOPKTRANS",
+      "value": "5"
+    },
+    {
+      "line": 248,
+      "key": "AUTOPKLV",
+      "value": "140"
+    },
+    {
+      "line": 250,
+      "key": "AUTOPKPOINT",
+      "value": "100"
+    },
+    {
+      "line": 252,
+      "key": "KILLPOINT",
+      "value": "10"
+    },
+    {
+      "line": 255,
+      "key": "PKMAP",
+      "value": "10,20,30,40"
+    },
+    {
+      "line": 257,
+      "key": "PKMAPCOST",
+      "value": "10"
+    },
+    {
+      "line": 264,
+      "key": "LOGINDISPLAY",
+      "value": "3"
+    },
+    {
+      "line": 267,
+      "key": "THEWORLDTRANS",
+      "value": "5"
+    },
+    {
+      "line": 268,
+      "key": "THEWORLDLEVEL",
+      "value": "140"
+    },
+    {
+      "line": 269,
+      "key": "THEWORLDSNED",
+      "value": "1"
+    },
+    {
+      "line": 272,
+      "key": "MAPHEAL",
+      "value": "2000,100,12345,1042,2032,3032,4032,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 275,
+      "key": "RIDEPETLEVEL",
+      "value": "140"
+    },
+    {
+      "line": 278,
+      "key": "JOINFAMILYTIME",
+      "value": "0"
+    },
+    {
+      "line": 281,
+      "key": "CHECKPEPEAT",
+      "value": "0"
+    },
+    {
+      "line": 285,
+      "key": "FUSIONBEIT",
+      "value": "0"
+    },
+    {
+      "line": 288,
+      "key": "ENEMYACTION",
+      "value": "10"
+    },
+    {
+      "line": 291,
+      "key": "FMPOINTPK",
+      "value": "1"
+    },
+    {
+      "line": 298,
+      "key": "RIDEMODE",
+      "value": "0"
+    },
+    {
+      "line": 301,
+      "key": "PLAYERNUM",
+      "value": "10"
+    },
+    {
+      "line": 304,
+      "key": "GIVEVIPPOINT",
+      "value": "0"
+    },
+    {
+      "line": 307,
+      "key": "ANGELPLAYERTIME",
+      "value": "5000"
+    },
+    {
+      "line": 309,
+      "key": "ANGELPLAYERMUN",
+      "value": "1000"
+    },
+    {
+      "line": 312,
+      "key": "BATTLEGOLD",
+      "value": "1"
+    },
+    {
+      "line": 318,
+      "key": "SHOWVIP",
+      "value": "0"
+    },
+    {
+      "line": 321,
+      "key": "PMOVE",
+      "value": "0"
+    },
+    {
+      "line": 324,
+      "key": "PANNOUNCE",
+      "value": "1"
+    },
+    {
+      "line": 327,
+      "key": "CHARLOOPS",
+      "value": "1"
+    },
+    {
+      "line": 330,
+      "key": "RIDELEVEL",
+      "value": "10"
+    },
+    {
+      "line": 332,
+      "key": "RIDETRANS",
+      "value": "1"
+    },
+    {
+      "line": 335,
+      "key": "SKILLUPPOINT",
+      "value": "3"
+    },
+    {
+      "line": 338,
+      "key": "POINT",
+      "value": "0"
+    },
+    {
+      "line": 340,
+      "key": "TRANS0",
+      "value": "5"
+    },
+    {
+      "line": 341,
+      "key": "TRANS1",
+      "value": "5"
+    },
+    {
+      "line": 342,
+      "key": "TRANS2",
+      "value": "5"
+    },
+    {
+      "line": 343,
+      "key": "TRANS3",
+      "value": "5"
+    },
+    {
+      "line": 344,
+      "key": "TRANS4",
+      "value": "5"
+    },
+    {
+      "line": 345,
+      "key": "TRANS5",
+      "value": "5"
+    },
+    {
+      "line": 346,
+      "key": "TRANS6",
+      "value": "5"
+    },
+    {
+      "line": 347,
+      "key": "TRANS7",
+      "value": "5"
+    },
+    {
+      "line": 350,
+      "key": "ANNOUNCETIME",
+      "value": "0"
+    },
+    {
+      "line": 352,
+      "key": "ANNOUNCEPATH",
+      "value": "loopannounce.txt"
+    },
+    {
+      "line": 355,
+      "key": "BATTLEFLOOR",
+      "value": "0"
+    },
+    {
+      "line": 357,
+      "key": "BATTLEFLOORCF",
+      "value": "-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 360,
+      "key": "WATCHFLOOR",
+      "value": "0"
+    },
+    {
+      "line": 362,
+      "key": "WATCHFLOOR1",
+      "value": ""
+    },
+    {
+      "line": 363,
+      "key": "WATCHFLOOR2",
+      "value": ""
+    },
+    {
+      "line": 364,
+      "key": "WATCHFLOOR3",
+      "value": ""
+    },
+    {
+      "line": 365,
+      "key": "WATCHFLOOR4",
+      "value": ""
+    },
+    {
+      "line": 366,
+      "key": "WATCHFLOOR5",
+      "value": ""
+    },
+    {
+      "line": 369,
+      "key": "PETUP",
+      "value": "0"
+    },
+    {
+      "line": 371,
+      "key": "ITEMUP",
+      "value": "1"
+    },
+    {
+      "line": 374,
+      "key": "LOCKIP",
+      "value": "lockip.txt"
+    },
+    {
+      "line": 377,
+      "key": "UNLAWWARPFLOOR",
+      "value": "32021,8213,850,30695,60034,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    },
+    {
+      "line": 380,
+      "key": "NAME1",
+      "value": "GM"
+    },
+    {
+      "line": 381,
+      "key": "NAME2",
+      "value": ";"
+    },
+    {
+      "line": 382,
+      "key": "NAME3",
+      "value": "|"
+    },
+    {
+      "line": 383,
+      "key": "NAME4",
+      "value": ","
+    },
+    {
+      "line": 384,
+      "key": "NAME5",
+      "value": "#"
+    },
+    {
+      "line": 387,
+      "key": "USEREXP",
+      "value": "data/exp.txt"
+    },
+    {
+      "line": 391,
+      "key": "CHARTRANS",
+      "value": "5"
+    },
+    {
+      "line": 393,
+      "key": "PETTRANS",
+      "value": "-1"
+    },
+    {
+      "line": 396,
+      "key": "REVLEVEL",
+      "value": "1"
+    },
+    {
+      "line": 398,
+      "key": "MAXLEVEL",
+      "value": "140"
+    },
+    {
+      "line": 400,
+      "key": "LEVEL",
+      "value": "140"
+    },
+    {
+      "line": 403,
+      "key": "battleexp",
+      "value": "100"
+    },
+    {
+      "line": 406,
+      "key": "TRANS",
+      "value": "1"
+    },
+    {
+      "line": 409,
+      "key": "LV",
+      "value": "1"
+    },
+    {
+      "line": 412,
+      "key": "NPRIDE",
+      "value": "3"
+    },
+    {
+      "line": 414,
+      "key": "PET1",
+      "value": ""
+    },
+    {
+      "line": 415,
+      "key": "PET2",
+      "value": ""
+    },
+    {
+      "line": 416,
+      "key": "PET3",
+      "value": ""
+    },
+    {
+      "line": 417,
+      "key": "PET4",
+      "value": ""
+    },
+    {
+      "line": 420,
+      "key": "ITEM1",
+      "value": "24114"
+    },
+    {
+      "line": 421,
+      "key": "ITEM2",
+      "value": ""
+    },
+    {
+      "line": 422,
+      "key": "ITEM3",
+      "value": ""
+    },
+    {
+      "line": 423,
+      "key": "ITEM4",
+      "value": ""
+    },
+    {
+      "line": 424,
+      "key": "ITEM5",
+      "value": ""
+    },
+    {
+      "line": 425,
+      "key": "ITEM6",
+      "value": ""
+    },
+    {
+      "line": 426,
+      "key": "ITEM7",
+      "value": ""
+    },
+    {
+      "line": 427,
+      "key": "ITEM8",
+      "value": ""
+    },
+    {
+      "line": 428,
+      "key": "ITEM9",
+      "value": ""
+    },
+    {
+      "line": 429,
+      "key": "ITEM10",
+      "value": ""
+    },
+    {
+      "line": 430,
+      "key": "ITEM11",
+      "value": ""
+    },
+    {
+      "line": 431,
+      "key": "ITEM12",
+      "value": ""
+    },
+    {
+      "line": 432,
+      "key": "ITEM13",
+      "value": ""
+    },
+    {
+      "line": 433,
+      "key": "ITEM14",
+      "value": ""
+    },
+    {
+      "line": 434,
+      "key": "ITEM15",
+      "value": ""
+    },
+    {
+      "line": 437,
+      "key": "PETLV",
+      "value": "1"
+    },
+    {
+      "line": 440,
+      "key": "GOLD",
+      "value": "30000"
+    },
+    {
+      "line": 444,
+      "key": "usememoryunit",
+      "value": "128"
+    },
+    {
+      "line": 448,
+      "key": "usememoryunitnum",
+      "value": "15000000"
+    },
+    {
+      "line": 455,
+      "key": "acserv",
+      "value": "127.0.0.1"
+    },
+    {
+      "line": 460,
+      "key": "acservport",
+      "value": "9301"
+    },
+    {
+      "line": 463,
+      "key": "acpasswd",
+      "value": "test"
+    },
+    {
+      "line": 467,
+      "key": "gameservname",
+      "value": "公益石器"
+    },
+    {
+      "line": 470,
+      "key": "gameservid",
+      "value": "1"
+    },
+    {
+      "line": 476,
+      "key": "apid",
+      "value": ""
+    },
+    {
+      "line": 478,
+      "key": "apport",
+      "value": ""
+    },
+    {
+      "line": 480,
+      "key": "looptime",
+      "value": ""
+    },
+    {
+      "line": 482,
+      "key": "enableservice",
+      "value": ""
+    },
+    {
+      "line": 488,
+      "key": "allowmanorpk",
+      "value": "1"
+    },
+    {
+      "line": 491,
+      "key": "port",
+      "value": "1234"
+    },
+    {
+      "line": 495,
+      "key": "servernumber",
+      "value": "1"
+    },
+    {
+      "line": 500,
+      "key": "reuseaddr",
+      "value": "1"
+    },
+    {
+      "line": 504,
+      "key": "nodelay",
+      "value": "0"
+    },
+    {
+      "line": 510,
+      "key": "log_write_time",
+      "value": "0"
+    },
+    {
+      "line": 512,
+      "key": "log_io_time",
+      "value": "0"
+    },
+    {
+      "line": 514,
+      "key": "log_game_time",
+      "value": "0"
+    },
+    {
+      "line": 519,
+      "key": "log_netloop_faster",
+      "value": "0"
+    },
+    {
+      "line": 522,
+      "key": "saacwritenum",
+      "value": "10000"
+    },
+    {
+      "line": 525,
+      "key": "saacreadnum",
+      "value": "10000"
+    },
+    {
+      "line": 529,
+      "key": "fdnum",
+      "value": "700"
+    },
+    {
+      "line": 531,
+      "key": "charnum",
+      "value": "710"
+    },
+    {
+      "line": 534,
+      "key": "petnum",
+      "value": "20000"
+    },
+    {
+      "line": 537,
+      "key": "othercharnum",
+      "value": "45000"
+    },
+    {
+      "line": 541,
+      "key": "objnum",
+      "value": "15000"
+    },
+    {
+      "line": 545,
+      "key": "itemnum",
+      "value": "25000"
+    },
+    {
+      "line": 549,
+      "key": "battlenum",
+      "value": "150"
+    },
+    {
+      "line": 552,
+      "key": "topdir",
+      "value": "."
+    },
+    {
+      "line": 554,
+      "key": "mapdir",
+      "value": "data/map"
+    },
+    {
+      "line": 556,
+      "key": "maptilefile",
+      "value": "data/map/mapset.txt"
+    },
+    {
+      "line": 559,
+      "key": "battlemapfile",
+      "value": "data/map/battlemap.txt"
+    },
+    {
+      "line": 562,
+      "key": "itemset6file",
+      "value": "data/itemset6.txt"
+    },
+    {
+      "line": 563,
+      "key": "itemset5file",
+      "value": "data/itemset5.txt"
+    },
+    {
+      "line": 564,
+      "key": "itemset4file",
+      "value": "data/itemset4.txt"
+    },
+    {
+      "line": 565,
+      "key": "itemset3file",
+      "value": "data/itemset3.txt"
+    },
+    {
+      "line": 584,
+      "key": "invinciblefile",
+      "value": "data/inv.txt"
+    },
+    {
+      "line": 587,
+      "key": "appearpositionfile",
+      "value": "data/appear.txt"
+    },
+    {
+      "line": 590,
+      "key": "titlenamefile",
+      "value": "data/titlename.txt"
+    },
+    {
+      "line": 593,
+      "key": "titleconfigfile",
+      "value": "./data/titleconfig.txt"
+    },
+    {
+      "line": 596,
+      "key": "encountfile",
+      "value": "./data/encount.txt"
+    },
+    {
+      "line": 599,
+      "key": "enemyfile",
+      "value": "./data/enemy1.txt"
+    },
+    {
+      "line": 602,
+      "key": "enemybasefile",
+      "value": "./data/enemybase1.txt"
+    },
+    {
+      "line": 605,
+      "key": "groupfile",
+      "value": "./data/group1.txt"
+    },
+    {
+      "line": 608,
+      "key": "magicfile",
+      "value": "./data/magic.txt"
+    },
+    {
+      "line": 611,
+      "key": "attmagicfile",
+      "value": "./data/attmagic.bin"
+    },
+    {
+      "line": 615,
+      "key": "petskillfile2",
+      "value": "./data/petskill2.txt"
+    },
+    {
+      "line": 617,
+      "key": "petskillfile1",
+      "value": "./data/petskill.txt"
+    },
+    {
+      "line": 621,
+      "key": "itematomfile",
+      "value": "./data/itematom.txt"
+    },
+    {
+      "line": 623,
+      "key": "effectfile",
+      "value": "data/effect.txt"
+    },
+    {
+      "line": 625,
+      "key": "quizfile",
+      "value": "data/question.txt"
+    },
+    {
+      "line": 629,
+      "key": "gmsetfile",
+      "value": "./data/gmset.txt"
+    },
+    {
+      "line": 634,
+      "key": "storedir",
+      "value": "../saac/char"
+    },
+    {
+      "line": 637,
+      "key": "npcdir",
+      "value": "data/npc"
+    },
+    {
+      "line": 640,
+      "key": "logdir",
+      "value": "./log"
+    },
+    {
+      "line": 643,
+      "key": "logconfname",
+      "value": "log.cf"
+    },
+    {
+      "line": 645,
+      "key": "chatmagicpasswd",
+      "value": "gm"
+    },
+    {
+      "line": 651,
+      "key": "chatmagiccdkeycheck",
+      "value": "1"
+    },
+    {
+      "line": 654,
+      "key": "filesearchnum",
+      "value": "10000"
+    },
+    {
+      "line": 657,
+      "key": "npctemplatenum",
+      "value": "256"
+    },
+    {
+      "line": 660,
+      "key": "npccreatenum",
+      "value": "10000"
+    },
+    {
+      "line": 664,
+      "key": "walkinterval",
+      "value": "5000"
+    },
+    {
+      "line": 668,
+      "key": "CAinterval",
+      "value": "5000"
+    },
+    {
+      "line": 672,
+      "key": "CDinterval",
+      "value": "5000"
+    },
+    {
+      "line": 675,
+      "key": "CharSaveinterval",
+      "value": "180"
+    },
+    {
+      "line": 678,
+      "key": "Onelooptime",
+      "value": "5"
+    },
+    {
+      "line": 682,
+      "key": "Petdeletetime",
+      "value": "30"
+    },
+    {
+      "line": 686,
+      "key": "Itemdeletetime",
+      "value": "20"
+    },
+    {
+      "line": 690,
+      "key": "Golddeletetime",
+      "value": "1800"
+    },
+    {
+      "line": 693,
+      "key": "addressbookoffmesgnum",
+      "value": "500"
+    },
+    {
+      "line": 696,
+      "key": "protocolreadfrequency",
+      "value": "3000"
+    },
+    {
+      "line": 699,
+      "key": "allowerrornum",
+      "value": "100"
+    },
+    {
+      "line": 702,
+      "key": "loghour",
+      "value": "0"
+    },
+    {
+      "line": 705,
+      "key": "battledebugmsg",
+      "value": "0"
+    },
+    {
+      "line": 709,
+      "key": "encodekey",
+      "value": "1"
+    },
+    {
+      "line": 711,
+      "key": "acwritesize",
+      "value": "1048576"
+    },
+    {
+      "line": 713,
+      "key": "acwbsize",
+      "value": "1048576"
+    },
+    {
+      "line": 715,
+      "key": "erruser_down",
+      "value": "1"
+    },
+    {
+      "line": 738,
+      "key": "profession",
+      "value": "./data/profession.txt"
+    },
+    {
+      "line": 742,
+      "key": "itemquitparty",
+      "value": "./data/itemquitparty.txt"
+    }
+  ],
+  "valuesByKey": {
+    "runlevel": [
+      "0"
+    ],
+    "CPUUSE": [
+      "1"
+    ],
+    "recvbuffer": [
+      "64"
+    ],
+    "sendbuffer": [
+      "64"
+    ],
+    "recvlowatbuffer": [
+      "128"
+    ],
+    "debuglevel": [
+      "3"
+    ],
+    "NOFAMEMAP": [
+      "60054"
+    ],
+    "allowerrornum2": [
+      "1"
+    ],
+    "petskill2file": [
+      "./data/petskill3.txt"
+    ],
+    "setpetskillfile": [
+      "./data/setpetskill.txt"
+    ],
+    "LCSDV": [
+      "86400"
+    ],
+    "PETUPGETEXP": [
+      "0"
+    ],
+    "gm1": [
+      "12345"
+    ],
+    "gm2": [
+      ""
+    ],
+    "gm3": [
+      ""
+    ],
+    "gm4": [
+      ""
+    ],
+    "REPORTITEM1": [
+      "-1"
+    ],
+    "REPORTITEM2": [
+      "-1"
+    ],
+    "REPORTITEM3": [
+      "-1"
+    ],
+    "REPORTITEM4": [
+      "-1"
+    ],
+    "REPORTITEM5": [
+      "-1"
+    ],
+    "VIPREPORTITEM1": [
+      "-1"
+    ],
+    "VIPREPORTITEM2": [
+      "-1"
+    ],
+    "VIPREPORTITEM3": [
+      "-1"
+    ],
+    "VIPREPORTITEM4": [
+      "-1"
+    ],
+    "VIPREPORTITEM5": [
+      "-1"
+    ],
+    "reportlv": [
+      "140"
+    ],
+    "reportta": [
+      "5"
+    ],
+    "LUAFILE": [
+      "./data/npc/lua/init.lua"
+    ],
+    "ITEMLUAFILE": [
+      "./data/npc/lua/itemlua.lua"
+    ],
+    "TEAMADDEXP": [
+      "0"
+    ],
+    "EXPSHARE": [
+      "100"
+    ],
+    "TRANS7POINT": [
+      "64"
+    ],
+    "DEXFIXPER": [
+      "15"
+    ],
+    "NOTRANSPET": [
+      "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "battlegetitemcf": [
+      "0"
+    ],
+    "charlooptime": [
+      "15"
+    ],
+    "takedownnonopower": [
+      "1"
+    ],
+    "Connectnum": [
+      "40"
+    ],
+    "PetEnemyDevelopUp": [
+      "0"
+    ],
+    "FirstLockItem": [
+      "1,2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "dammagecalc": [
+      "70"
+    ],
+    "serverip": [
+      ""
+    ],
+    "streetvendortrans": [
+      "0"
+    ],
+    "sameiponlinenum": [
+      "10"
+    ],
+    "battletime": [
+      "50"
+    ],
+    "nohelpmap": [
+      "40001,40002,40003,40004,40005,40006,40007,40008,40009,40010,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "vipbattleexp": [
+      "1"
+    ],
+    "CANCELANGLETRANS": [
+      "1"
+    ],
+    "PETSKILLSHOPPATH": [
+      "data/ablua/freepetskillshop.lua"
+    ],
+    "FIMALYPKTIME": [
+      "20"
+    ],
+    "PLAYEROVERLAPPK": [
+      "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "NOTESCAPE": [
+      "12345,142,40001,40002,40003,40004,40005,40006,40007,40008,40009,40010,8252,8253,8254,8256,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "DELNEEDITEM": [
+      "0"
+    ],
+    "PETTRANSABILITY": [
+      "0"
+    ],
+    "PETTRANSABILITY1": [
+      "155"
+    ],
+    "PETTRANSABILITY2": [
+      "200"
+    ],
+    "PETTRANSABILITY3": [
+      "250"
+    ],
+    "ALLSERVTRANS": [
+      "5"
+    ],
+    "ALLSERVLEVEL": [
+      "140"
+    ],
+    "ALLSERVSNED": [
+      "1"
+    ],
+    "DISABLEPROFESSION": [
+      "2000,100"
+    ],
+    "TALKCHECKMIN": [
+      "50"
+    ],
+    "TALKCHECKMAX": [
+      "100"
+    ],
+    "SAVEFAME": [
+      "1"
+    ],
+    "ITEMPETLOCKED": [
+      "1"
+    ],
+    "STREETVENDORPOINT": [
+      "0,5,5,5,5,5"
+    ],
+    "NOSTWENEMY": [
+      "0"
+    ],
+    "NOSTWENEMYGOLD": [
+      "0"
+    ],
+    "POOLITEMBUG": [
+      "1"
+    ],
+    "POOLITEM": [
+      "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "STWSENDTYPE": [
+      "3"
+    ],
+    "STWSENDPOINT": [
+      "100"
+    ],
+    "TRANSPOINTUP": [
+      "-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "UNLAWTHISLOGOUT": [
+      "142,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "MAPBATTLELOOP": [
+      "20"
+    ],
+    "VIPBOUNDTIME": [
+      "0"
+    ],
+    "UNBOUNDTIMETRANS": [
+      "0"
+    ],
+    "UNBOUNDTIMELEVEL": [
+      "120"
+    ],
+    "UNBOUNDTIMEMAP": [
+      "2000,65,65"
+    ],
+    "BATTLEGETITEMRATE": [
+      "-1"
+    ],
+    "BATTLEGETITEMRATEMAP": [
+      "0"
+    ],
+    "NOJOINFLOOR": [
+      "1042,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "LUCKSTARTIME": [
+      "1000"
+    ],
+    "LUCKSTARCHANCES": [
+      "100"
+    ],
+    "BTPET": [
+      "1"
+    ],
+    "BTITEM": [
+      "1"
+    ],
+    "AUTODELPET": [
+      "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "AUTODELITEM": [
+      "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "SPECIALMAP": [
+      "-1,-1,-1,-1"
+    ],
+    "AUTOPK": [
+      "16"
+    ],
+    "AUTOPKTRANS": [
+      "5"
+    ],
+    "AUTOPKLV": [
+      "140"
+    ],
+    "AUTOPKPOINT": [
+      "100"
+    ],
+    "KILLPOINT": [
+      "10"
+    ],
+    "PKMAP": [
+      "10,20,30,40"
+    ],
+    "PKMAPCOST": [
+      "10"
+    ],
+    "LOGINDISPLAY": [
+      "3"
+    ],
+    "THEWORLDTRANS": [
+      "5"
+    ],
+    "THEWORLDLEVEL": [
+      "140"
+    ],
+    "THEWORLDSNED": [
+      "1"
+    ],
+    "MAPHEAL": [
+      "2000,100,12345,1042,2032,3032,4032,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "RIDEPETLEVEL": [
+      "140"
+    ],
+    "JOINFAMILYTIME": [
+      "0"
+    ],
+    "CHECKPEPEAT": [
+      "0"
+    ],
+    "FUSIONBEIT": [
+      "0"
+    ],
+    "ENEMYACTION": [
+      "10"
+    ],
+    "FMPOINTPK": [
+      "1"
+    ],
+    "RIDEMODE": [
+      "0"
+    ],
+    "PLAYERNUM": [
+      "10"
+    ],
+    "GIVEVIPPOINT": [
+      "0"
+    ],
+    "ANGELPLAYERTIME": [
+      "5000"
+    ],
+    "ANGELPLAYERMUN": [
+      "1000"
+    ],
+    "BATTLEGOLD": [
+      "1"
+    ],
+    "SHOWVIP": [
+      "0"
+    ],
+    "PMOVE": [
+      "0"
+    ],
+    "PANNOUNCE": [
+      "1"
+    ],
+    "CHARLOOPS": [
+      "1"
+    ],
+    "RIDELEVEL": [
+      "10"
+    ],
+    "RIDETRANS": [
+      "1"
+    ],
+    "SKILLUPPOINT": [
+      "3"
+    ],
+    "POINT": [
+      "0"
+    ],
+    "TRANS0": [
+      "5"
+    ],
+    "TRANS1": [
+      "5"
+    ],
+    "TRANS2": [
+      "5"
+    ],
+    "TRANS3": [
+      "5"
+    ],
+    "TRANS4": [
+      "5"
+    ],
+    "TRANS5": [
+      "5"
+    ],
+    "TRANS6": [
+      "5"
+    ],
+    "TRANS7": [
+      "5"
+    ],
+    "ANNOUNCETIME": [
+      "0"
+    ],
+    "ANNOUNCEPATH": [
+      "loopannounce.txt"
+    ],
+    "BATTLEFLOOR": [
+      "0"
+    ],
+    "BATTLEFLOORCF": [
+      "-1,-1,-1,-1,-1"
+    ],
+    "WATCHFLOOR": [
+      "0"
+    ],
+    "WATCHFLOOR1": [
+      ""
+    ],
+    "WATCHFLOOR2": [
+      ""
+    ],
+    "WATCHFLOOR3": [
+      ""
+    ],
+    "WATCHFLOOR4": [
+      ""
+    ],
+    "WATCHFLOOR5": [
+      ""
+    ],
+    "PETUP": [
+      "0"
+    ],
+    "ITEMUP": [
+      "1"
+    ],
+    "LOCKIP": [
+      "lockip.txt"
+    ],
+    "UNLAWWARPFLOOR": [
+      "32021,8213,850,30695,60034,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+    ],
+    "NAME1": [
+      "GM"
+    ],
+    "NAME2": [
+      ";"
+    ],
+    "NAME3": [
+      "|"
+    ],
+    "NAME4": [
+      ","
+    ],
+    "NAME5": [
+      "#"
+    ],
+    "USEREXP": [
+      "data/exp.txt"
+    ],
+    "CHARTRANS": [
+      "5"
+    ],
+    "PETTRANS": [
+      "-1"
+    ],
+    "REVLEVEL": [
+      "1"
+    ],
+    "MAXLEVEL": [
+      "140"
+    ],
+    "LEVEL": [
+      "140"
+    ],
+    "battleexp": [
+      "100"
+    ],
+    "TRANS": [
+      "1"
+    ],
+    "LV": [
+      "1"
+    ],
+    "NPRIDE": [
+      "3"
+    ],
+    "PET1": [
+      ""
+    ],
+    "PET2": [
+      ""
+    ],
+    "PET3": [
+      ""
+    ],
+    "PET4": [
+      ""
+    ],
+    "ITEM1": [
+      "24114"
+    ],
+    "ITEM2": [
+      ""
+    ],
+    "ITEM3": [
+      ""
+    ],
+    "ITEM4": [
+      ""
+    ],
+    "ITEM5": [
+      ""
+    ],
+    "ITEM6": [
+      ""
+    ],
+    "ITEM7": [
+      ""
+    ],
+    "ITEM8": [
+      ""
+    ],
+    "ITEM9": [
+      ""
+    ],
+    "ITEM10": [
+      ""
+    ],
+    "ITEM11": [
+      ""
+    ],
+    "ITEM12": [
+      ""
+    ],
+    "ITEM13": [
+      ""
+    ],
+    "ITEM14": [
+      ""
+    ],
+    "ITEM15": [
+      ""
+    ],
+    "PETLV": [
+      "1"
+    ],
+    "GOLD": [
+      "30000"
+    ],
+    "usememoryunit": [
+      "128"
+    ],
+    "usememoryunitnum": [
+      "15000000"
+    ],
+    "acserv": [
+      "127.0.0.1"
+    ],
+    "acservport": [
+      "9301"
+    ],
+    "acpasswd": [
+      "test"
+    ],
+    "gameservname": [
+      "公益石器"
+    ],
+    "gameservid": [
+      "1"
+    ],
+    "apid": [
+      ""
+    ],
+    "apport": [
+      ""
+    ],
+    "looptime": [
+      ""
+    ],
+    "enableservice": [
+      ""
+    ],
+    "allowmanorpk": [
+      "1"
+    ],
+    "port": [
+      "1234"
+    ],
+    "servernumber": [
+      "1"
+    ],
+    "reuseaddr": [
+      "1"
+    ],
+    "nodelay": [
+      "0"
+    ],
+    "log_write_time": [
+      "0"
+    ],
+    "log_io_time": [
+      "0"
+    ],
+    "log_game_time": [
+      "0"
+    ],
+    "log_netloop_faster": [
+      "0"
+    ],
+    "saacwritenum": [
+      "10000"
+    ],
+    "saacreadnum": [
+      "10000"
+    ],
+    "fdnum": [
+      "700"
+    ],
+    "charnum": [
+      "710"
+    ],
+    "petnum": [
+      "20000"
+    ],
+    "othercharnum": [
+      "45000"
+    ],
+    "objnum": [
+      "15000"
+    ],
+    "itemnum": [
+      "25000"
+    ],
+    "battlenum": [
+      "150"
+    ],
+    "topdir": [
+      "."
+    ],
+    "mapdir": [
+      "data/map"
+    ],
+    "maptilefile": [
+      "data/map/mapset.txt"
+    ],
+    "battlemapfile": [
+      "data/map/battlemap.txt"
+    ],
+    "itemset6file": [
+      "data/itemset6.txt"
+    ],
+    "itemset5file": [
+      "data/itemset5.txt"
+    ],
+    "itemset4file": [
+      "data/itemset4.txt"
+    ],
+    "itemset3file": [
+      "data/itemset3.txt"
+    ],
+    "invinciblefile": [
+      "data/inv.txt"
+    ],
+    "appearpositionfile": [
+      "data/appear.txt"
+    ],
+    "titlenamefile": [
+      "data/titlename.txt"
+    ],
+    "titleconfigfile": [
+      "./data/titleconfig.txt"
+    ],
+    "encountfile": [
+      "./data/encount.txt"
+    ],
+    "enemyfile": [
+      "./data/enemy1.txt"
+    ],
+    "enemybasefile": [
+      "./data/enemybase1.txt"
+    ],
+    "groupfile": [
+      "./data/group1.txt"
+    ],
+    "magicfile": [
+      "./data/magic.txt"
+    ],
+    "attmagicfile": [
+      "./data/attmagic.bin"
+    ],
+    "petskillfile2": [
+      "./data/petskill2.txt"
+    ],
+    "petskillfile1": [
+      "./data/petskill.txt"
+    ],
+    "itematomfile": [
+      "./data/itematom.txt"
+    ],
+    "effectfile": [
+      "data/effect.txt"
+    ],
+    "quizfile": [
+      "data/question.txt"
+    ],
+    "gmsetfile": [
+      "./data/gmset.txt"
+    ],
+    "storedir": [
+      "../saac/char"
+    ],
+    "npcdir": [
+      "data/npc"
+    ],
+    "logdir": [
+      "./log"
+    ],
+    "logconfname": [
+      "log.cf"
+    ],
+    "chatmagicpasswd": [
+      "gm"
+    ],
+    "chatmagiccdkeycheck": [
+      "1"
+    ],
+    "filesearchnum": [
+      "10000"
+    ],
+    "npctemplatenum": [
+      "256"
+    ],
+    "npccreatenum": [
+      "10000"
+    ],
+    "walkinterval": [
+      "5000"
+    ],
+    "CAinterval": [
+      "5000"
+    ],
+    "CDinterval": [
+      "5000"
+    ],
+    "CharSaveinterval": [
+      "180"
+    ],
+    "Onelooptime": [
+      "5"
+    ],
+    "Petdeletetime": [
+      "30"
+    ],
+    "Itemdeletetime": [
+      "20"
+    ],
+    "Golddeletetime": [
+      "1800"
+    ],
+    "addressbookoffmesgnum": [
+      "500"
+    ],
+    "protocolreadfrequency": [
+      "3000"
+    ],
+    "allowerrornum": [
+      "100"
+    ],
+    "loghour": [
+      "0"
+    ],
+    "battledebugmsg": [
+      "0"
+    ],
+    "encodekey": [
+      "1"
+    ],
+    "acwritesize": [
+      "1048576"
+    ],
+    "acwbsize": [
+      "1048576"
+    ],
+    "erruser_down": [
+      "1"
+    ],
+    "profession": [
+      "./data/profession.txt"
+    ],
+    "itemquitparty": [
+      "./data/itemquitparty.txt"
+    ]
+  },
+  "wiring": {
+    "mapdir": "data/map",
+    "maptilefile": "data/map/mapset.txt",
+    "battlemapfile": "data/map/battlemap.txt",
+    "itemset6file": "data/itemset6.txt",
+    "encountfile": "./data/encount.txt",
+    "groupfile": "./data/group1.txt",
+    "enemyfile": "./data/enemy1.txt",
+    "enemybasefile": "./data/enemybase1.txt",
+    "magicfile": "./data/magic.txt",
+    "petskillfile2": "./data/petskill2.txt",
+    "profession": "./data/profession.txt",
+    "itematomfile": "./data/itematom.txt",
+    "effectfile": "data/effect.txt",
+    "quizfile": "data/question.txt",
+    "titlenamefile": "data/titlename.txt",
+    "titleconfigfile": "./data/titleconfig.txt",
+    "invinciblefile": "data/inv.txt",
+    "appearpositionfile": "data/appear.txt",
+    "npcdir": "data/npc"
+  }
+}
