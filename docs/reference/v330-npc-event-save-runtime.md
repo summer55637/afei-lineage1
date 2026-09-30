@@ -19,7 +19,7 @@ V3.30 把 V3.23 orchestrator + V3.28 first-route reward mutation 接到既有 Sa
 - EndSetFlg 366
 - Charm 60 保持不變，因 source `EventNo:-1` 不觸發 pinned Charm rule
 
-Save Envelope payload 的 revision = 1。
+整個 branch 共有 7 個 action：4 Item + 1 Pet + 1 Charm-rule + 1 EndSetFlg。Save Envelope payload 的 revision = 1。
 
 重送同一 transactionId 時只回傳 idempotent，不再次發放獎勵；對已完成 EndSetFlg 366 的 branch 使用新的 transactionId 時，condition 不再匹配。
 
