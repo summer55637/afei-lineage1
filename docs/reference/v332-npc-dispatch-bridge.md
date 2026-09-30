@@ -8,13 +8,13 @@ V3.32 建立唯一的 NPC interaction → module → service/event runtime bridg
 
 `player/NPC position → interaction gate → template module resolution → handler factory → first-route Save-backed event`
 
-`dispatchNpcInteraction()` 先使用 V3.31 interaction gate，再要求 caller 提供 explicit `modules` registry。module 找不到時只回傳 `npc-runtime-module-unresolved`，不執行任何 state mutation。
+`dispatchNpcInteraction()` 先使用 V3.31 interaction gate；production caller 可以再提供 V3.33 audited module registry，讓 template 必須存在於 pinned `functionSet[]` 才能進 dispatch。module 找不到時只回傳 `npc-runtime-module-unresolved`，不執行任何 state mutation。
 
 Resolved module 必須自行提供 script 與 handler factory；dispatcher 不從模板名稱猜 `ExChangeMan`、`Action` 或其他 module。
 
 ## changeevent
 
-目前 pinned `changeevent` 沒有 functionSet registry entry，因此 browser interaction 仍會停在 module-resolution gate。這是刻意的 source boundary，不是 UI 遺漏。
+目前 pinned `changeevent` 沒有 functionSet registry entry，因此使用 V3.33 audited registry 時 browser interaction 仍會停在 module-resolution gate。這是刻意的 source boundary，不是 UI 遺漏。
 
 ## Synthetic integration
 
