@@ -115,7 +115,7 @@ for(const row of [[100,2.5],[95,2],[90,1.5],[85,1],[80,0.5],[0,0]]){
   if(!enemyRankFunction.includes('{ '+row[0]+', '+row[1]+'}'))fail('ENEMY_getRank rank table row drifted: '+row[0]);
 }
 for(const token of ['E_T_BASEVITAL','E_T_BASESTR','E_T_BASETGH','E_T_BASEDEX']){
-  if(!enemyRankFunction.includes('* ( tp + '+token+')'))fail('ENEMY_getRank paramsum source logic drifted: '+token);
+  if(!enemyRankFunction.includes('*( tp + '+token+')'))fail('ENEMY_getRank paramsum source logic drifted: '+token);
 }
 if(!enemyRankFunction.includes('paramsum  ='))fail('ENEMY_getRank paramsum assignment missing');
 const enemyRankSource={path:'gmsv/src/char/enemy.c',blobSha:gitBlobSha(enemyRankBytes),function:'ENEMY_getRank'};
