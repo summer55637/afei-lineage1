@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/stoneage_npc_dispatch_runtime.mjs'
       - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'src/stoneage_npc_runtime_config.mjs'
       - 'src/stoneage_npc_interaction_runtime.mjs'
       - 'src/stoneage_first_route_save.mjs'
       - 'src/stoneage_first_route_reward_handlers.mjs'
