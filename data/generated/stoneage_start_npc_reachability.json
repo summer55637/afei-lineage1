@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-npc-reachability-v1",
+  "format": "stoneage-start-npc-reachability-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -16,7 +16,11 @@
     "coordinateResolvedInstances": 16,
     "reachableCoordinateResolvedInstances": 16,
     "unreachableCoordinateResolvedInstances": 0,
-    "unresolvedCoordinateInstances": 30
+    "unresolvedCoordinateInstances": 30,
+    "coordinateResolved": 4,
+    "coordinateUnresolved": 26,
+    "interactionAuditedReachable": 16,
+    "coordinateResolvedButInteractionNotAudited": 4
   },
   "sourceValidation": [
     {
@@ -272,7 +276,70 @@
       ],
       "reachableInteraction": true,
       "minPathToInteraction": 5
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floorId": 1006,
+      "x": 15,
+      "y": 22,
+      "name": "炎龍新手接待員",
+      "templateName": "changeevent",
+      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 2,
+      "sharedScript": "almark/xinshou/xinshoujd.arg",
+      "resolutionStatus": "coordinate_resolved_from_pinned_source",
+      "interactionStatus": "not_audited_same_cell"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floorId": 2006,
+      "x": 22,
+      "y": 15,
+      "name": "炎龍新手接待員",
+      "templateName": "changeevent",
+      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 0,
+      "sharedScript": "almark/xinshou/xinshoujd.arg",
+      "resolutionStatus": "coordinate_resolved_from_pinned_source",
+      "interactionStatus": "not_audited_same_cell"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floorId": 3006,
+      "x": 23,
+      "y": 18,
+      "name": "炎龍新手接待員",
+      "templateName": "changeevent",
+      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 1,
+      "sharedScript": "almark/xinshou/xinshoujd.arg",
+      "resolutionStatus": "coordinate_resolved_from_pinned_source",
+      "interactionStatus": "not_audited_same_cell"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floorId": 4006,
+      "x": 14,
+      "y": 20,
+      "name": "炎龍新手接待員",
+      "templateName": "changeevent",
+      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 3,
+      "sharedScript": "almark/xinshou/xinshoujd.arg",
+      "resolutionStatus": "coordinate_resolved_from_pinned_source",
+      "interactionStatus": "not_audited_same_cell"
     }
   ],
-  "policy": "This audit uses exact pinned hometown maps and only NPC instances with resolved numeric coordinates. Interaction is modeled as reaching at least one walkable orthogonal stance cell adjacent to the NPC, matching NPC_Util_charIsInFrontOfChar distance=1 used by Familyman, Bankman and Windowman. NPC instances without a resolved numeric coordinate remain unresolved and are not guessed."
+  "policy": "Coordinate resolution from fixed-C source does not imply interaction reachability. The four xinshou changeevent NPC coordinates are now source-resolved, but same-cell placement at the player spawn is kept as not_audited until the dedicated changeevent interaction contract is confirmed.",
+  "sourceEvidence": {
+    "newPlayerEventOwner": {
+      "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "addedCoordinateResolvedCount": 4
+    }
+  }
 }
