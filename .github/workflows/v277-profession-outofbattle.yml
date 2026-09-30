@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'game.js'
-      - 'start.html'
+      - 'index.html'
       - 'data/generated/stoneage_profession_skill_runtime.json'
       - 'tools/check_v277_profession_outofbattle_runtime.mjs'
       - '.github/workflows/v277-profession-outofbattle.yml'
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Provide regression HTML fixture
-        run: cp start.html game.html
+        run: cp index.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
