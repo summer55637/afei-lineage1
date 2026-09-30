@@ -97,7 +97,7 @@ assert.equal(enemy123.level,2);
 assert.deepEqual(enemy123.stats,{vital:611,str:470,tgh:376,dex:658});
 assert.equal(enemy123.maxHp,39);
 assert.equal(enemy123.hp,39);
-assert.equal(enemy123.rank,5);
+assert.equal(enemy123.rank,4);
 assert.equal(enemy123.maxMp,null);
 assert.equal(enemy123.mp,null);
 
@@ -125,7 +125,7 @@ console.log(JSON.stringify({
   enemyIds:[120,123],
   hydratedRollCount:30,
   enemy120:{level:2,stats:{vital:448,str:390,tgh:331,dex:487},maxHp:30,rank:5},
-  enemy123:{level:2,stats:{vital:611,str:470,tgh:376,dex:658},maxHp:39,rank:5},
+  enemy123:{level:2,stats:{vital:611,str:470,tgh:376,dex:658},maxHp:39,rank:4},
   maxMpPending:true,
   persistentBattleContext:false,
   battleDamageExecuted:false
