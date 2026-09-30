@@ -1,0 +1,23 @@
+name: Check persistent state schema
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_persistent_state_schema.json'
+      - 'tools/check_persistent_state_schema.mjs'
+      - '.github/workflows/check-persistent-state.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run persistent state regression
+        run: node tools/check_persistent_state_schema.mjs
