@@ -1,11 +1,11 @@
 {
-  "format": "stoneage-v377-browser-world-warppoint-execution-v1",
+  "format": "stoneage-v317-browser-world-warppoint-execution-v1",
   "generatedAt": "2026-10-01",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
     "path": "gmsv/data/map/mapwarp.txt",
-    "blobSha": "617d2d02cbf17561d0eafc379a015d949055e922"
+    "blobSha": "617d2d02cbf17561d0eafc319a015d949055e922"
   },
   "action": "WORLD_WARPPOINT_EXECUTE",
   "input": {
@@ -26,7 +26,7 @@
   },
   "scope": {
     "firstRoutePortalGroups": 8,
-    "portalRows": 37,
+    "portalRows": 31,
     "productionWorldWarpRows": "first-route mapwarp subset"
   },
   "failClosed": [
