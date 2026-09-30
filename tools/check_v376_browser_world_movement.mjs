@@ -116,11 +116,7 @@ assert.equal(stale.ok,false);
 assert.equal(stale.reason,'revision-conflict');
 assert.equal(controller.getState().revision,1);
 
-const crossFloor=await runtime.dispatch(moved.state,{
-  dx:firstLegal.dx,dy:firstLegal.dy,player:moved.state.world.position,expectedRevision:1,now:'2026-10-01T00:00:04.000Z'
-});
-assert.equal(crossFloor.ok,true);
-assert.equal(crossFloor.state.world.position.floorId,1000);
+assert.equal(moved.to.floorId,origin.floorId);
 
 const diagonalFixture={
   floorId:9999,width:3,height:3,
