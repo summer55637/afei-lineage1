@@ -61,9 +61,9 @@ async function runNewPlayerCreationSave(state,{
 
   let itemResult;
   try{itemResult=await itemGrantAdapter(clone(petState),{seed,hometown,itemId:Number(seed.sourceConfig?.itemSlots?.ITEM1??0)||null,now});}
-  catch(error){return {ok:false,stage:'starter-item',reason:'starter-item-adapter-error',error:String(error?.message??error),state:pet.state};}
+  catch(error){return {ok:false,stage:'starter-item',reason:'starter-item-adapter-error',error:String(error?.message??error),state:petState};}
   if(!isObject(itemResult)||itemResult.ok!==true||!isObject(itemResult.state)){
-    return {ok:false,stage:'starter-item',reason:itemResult?.reason??'starter-item-adapter-rejected',state:pet.state,adapterResult:itemResult??null};
+    return {ok:false,stage:'starter-item',reason:itemResult?.reason??'starter-item-adapter-rejected',state:petState,adapterResult:itemResult??null};
   }
 
   const completed=clone(itemResult.state);
@@ -90,7 +90,7 @@ async function runNewPlayerCreationSave(state,{
     verification:parsed,
     stages:{creationInput:true,starterPet:true,starterItem:true,save:true},
     pet:petResult.pet,
-    creation:prepared.creation,
+    creation:prepared.creation ?? {resumedItemStage:true},
   };
 }
 
