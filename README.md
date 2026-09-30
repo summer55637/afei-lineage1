@@ -10,6 +10,7 @@
 - 視覺與操作流程：以 `docs/reference/video-001-visual-reference.md` 為重要還原基準。
 - 放置版新增規則：與原版 source 規則分層，明確標記，不混在 source parity。
 - 最終網站：只保留一個 canonical playable entry，不再累積多個 HTML 入口。
+- 最終呈現：採現代 3D 卡通化 MMORPG／回合 RPG 等級的世界、角色、戰鬥與 UI；參考《石器時代M》《石器時代：覺醒》等現代石器手遊的資訊架構與操作體驗，但使用本專案自己的 UI、模型、貼圖與動畫。
 
 ## 目前狀態
 
@@ -55,6 +56,12 @@
 
 這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合；第一個 destination map 的 walkability，以及新玩家 quest/event owner 也尚未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
 
+## 現代 3D 卡通化最終視覺目標
+
+最終作品不再以舊版 2D 網頁畫面作為終點。世界地圖、角色、寵物、戰鬥與 UI 都要進化到現代 3D 卡通手遊的完成度：斜俯視 3D 世界、卡通角色與寵物、集中式戰鬥場景、手機 RPG 式 HUD、技能／普攻／防禦／召喚／AUTO 等操作，以及完整的村莊與 NPC 互動框架。詳細規格已寫入 `docs/reference/modern-3d-mobile-visual-ui-target.md`。
+
+這裡的「一模一樣」目標轉換為「體驗與完成度接近現代石器手遊」：可以高度參考構圖、資訊層級、操作流程與視覺語言，但不直接複製商業遊戲的逐像素 UI、模型、貼圖、icon、字體與動畫。
+
 ## 現階段優先事項
 
 World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index、auxiliary world data index、Item / Quest Event Closure、NPC Item Acquisition Graph 與 Start Flow Index。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。NPC service bindings 共 9,335；NPC event DSL 掃描找到 4,860 次 source action-key matches。
@@ -85,6 +92,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/v320-real-tile-presentation.md`
 - `docs/reference/encounter-source-closure.md`
 - `docs/reference/gmque-source-closure.md`
+- `docs/reference/modern-3d-mobile-visual-ui-target.md`
 - `data/generated/stoneage_start_route_closure.json`
 
 最後整理：2026-09-30。
