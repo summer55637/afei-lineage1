@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.49 Starter Item 24114 source audit
+
+V3.49 沿 pinned fixed-C `gmsv/setup.cf → _ITEMSET6_TXT → itemset6file → config.itemfile → ITEM_readItemConfFile → ITEM_makeItem` 重新驗證新手 Item1=24114。
+
+fixed build 開啟 `_ITEMSET6_TXT`，因此實際 Item data file 是 `gmsv/data/itemset6.txt`。該檔案在 pinned commit 是 0 bytes，沒有任何 Item row；`ITEM_readItemConfFile()` 對空表會在 `maxid <= 0` 直接回傳 FALSE。`ITEM_makeItem()` 又要求 `ITEM_CHECKITEMTABLE(number)` 成立後才能複製 `ITEM_tbl[number].itm`。
+
+因此 Item 24114 現在可明確分層：source config / creation path closed；allocator implementation closed，但 24114 template row 未閉合，因此 24114 的實際 grant 仍 fail-closed。不得從其他版本、其他 StoneAge port 或外部資料補名稱、效果、價格、分類或其他 template 欄位。
+
+下一步仍是同一 pinned source 的 Item data / packaging / migration evidence search；只有取得同版本可直接對應 24114 的 template，才升格到 starter-item allocator grant。
+
 ## 2026-09-30 新增：V3.48 fixed-C Starter Pet rank closure
 
 V3.48 已把 pinned C 的 `gmsv/src/char/enemy.c::ENEMY_getRank` 正式接回 starter Pet runtime。
