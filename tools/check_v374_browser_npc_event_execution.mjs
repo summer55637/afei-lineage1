@@ -27,7 +27,7 @@ const controller=createBrowserStateController({state,moduleAudit:audit,modules:{
 
 const result=await controller.dispatch({type:ACTION_NPC_EVENT_EXECUTE,targetCell:[1006,15,22],player:{floor:1006,x:15,y:21,facingCell:[1006,15,22]},transactionId:'v374-new-player-event'});
 assert.equal(result.ok,true); assert.equal(result.handled,true); assert.equal(result.event,true); assert.equal(result.stage,'npc-event');
-assert.equal(result.execution.applied,true); assert.equal(result.execution.plan.eventNo,-1); assert.equal(result.state.revision,1);
+assert.equal(result.execution.applied,true); assert.equal(result.execution.execution.plan.eventNo,-1); assert.equal(result.state.revision,1);
 assert.equal(result.state.inventory.itemRuntime.slots['900'].itemId,20145); assert.equal(result.state.inventory.itemRuntime.slots['901'].itemId,2849); assert.equal(result.state.inventory.itemRuntime.slots['902'].itemId,20228); assert.equal(result.state.inventory.itemRuntime.slots['903'].itemId,18537);
 assert.equal(result.state.pets.petBox.length,1); assert.equal(result.state.pets.petBox[0].petId,274);
 assert.equal(result.state.events.endWords[11],16384); assert.equal(result.state.player.charm,60);
