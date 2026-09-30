@@ -85,7 +85,7 @@
     "gmsvSetupConfig": {
       "path": "gmsv/setup.cf",
       "status": "present",
-      "sizeBytes": 26030
+      "sizeBytes": 17597
     }
   },
   "npcModel": {
