@@ -1,0 +1,25 @@
+name: one-shot-npc-services
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  services:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate NPC service index
+        run: node tools/analyze_npc_services.mjs
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm -f .github/workflows/one-shot-npc-services.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_npc_service_index.json tools/analyze_npc_services.mjs .github/workflows/one-shot-npc-services.yml
+          git commit -m "data: generate NPC service index"
+          git push origin HEAD:main
