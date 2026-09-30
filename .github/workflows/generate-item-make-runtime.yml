@@ -113,7 +113,7 @@ on:
       - "tools/check_v273_profession_ice_enclose_runtime.mjs"
       - "tools/check_v274_profession_magic_practice_runtime.mjs"
       - "game.js"
-      - "start.html"
+      - "index.html"
       - "game.css"
       - ".github/workflows/generate-item-make-runtime.yml"
       # README/CHANGELOG are regression inputs; keep this workflow triggered by doc contract updates.
@@ -132,7 +132,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Provide regression HTML fixture
-        run: cp start.html game.html
+        run: cp index.html game.html
 
       - name: Set up Python
         uses: actions/setup-python@v5
