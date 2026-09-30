@@ -11,7 +11,7 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.19 palette／顏色映射 → 真實 tile presentation** |
+| 下一階段 | **V3.20 真實 tile presentation → verified map 擴充** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
@@ -210,6 +210,16 @@ V3.16 從公開 client source 閉合 tile 圖像來源鏈：`tile image ID → r
 
 來源筆記：[V3.16 client image resolver contract](docs/reference/v316-client-image-resolver-contract.md)。
 
+## 🔬 V3.19 palette／顏色映射 runtime
+
+V3.19 接續 V3.18 asset pack adapter，依 fixed client `InitPalette()` 與公開工具鏈固定 `Palet_1.sap` 的 224×3 BGR palette mapping。
+
+新增 `src/stoneage_palette_runtime.mjs`，可將 SAP 672 bytes 轉成 256 色 RGBA table，並把 RD indexed pixels 轉成真正 RGBA；index 0 依 client 32-bit palette path 預設視為透明。
+
+repo 不發布原版 `Palet_1.sap`，只保留 parser、固定色盤與 synthetic regression。
+
+來源筆記：[V3.19 palette runtime contract](docs/reference/v319-palette-runtime-contract.md)。
+
 ## 🔬 V3.18 authorized client asset pack adapter
 
 V3.18 接續 V3.16 ADRNBIN resolver 與 V3.17 RD decoder，新增可由部署者自行提供的 client asset pack adapter。
@@ -265,6 +275,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.16 client image resolver（ADRNBIN 80-byte metadata contract、Real binary asset fail-closed）
 - V3.17 client RD decoder（RD raw/RLE pixels、truecolor branch fail-closed）
 - V3.18 authorized client asset pack adapter（operator-supplied ADRNBIN／Real、digest pin、fail-closed）
+- V3.19 palette runtime（SAP 672-byte BGR → 256-color RGBA、indexed pixel conversion）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
@@ -308,4 +319,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.18 合法 client asset pack adapter → palette／顏色映射 → 真實 tile presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
+**目前開發方向：V3.19 palette／顏色映射 → V3.20 真實 tile presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
