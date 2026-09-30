@@ -96,6 +96,7 @@ let db=null, encounterRuntime=null, enemyAiDb=null, petSkillDb=null, petModAiDb=
 let sourceEnemyUnitSerial=0;
 let sourceMapRuntimeModulePromise=null,sourceMapRuntimeCache=new Map(),sourceMapRuntimePending=new Set(),sourceMapRuntimeErrors=new Map();
 let sourceMapsetRuntimeCache=null,sourceMapsetRuntimePending=false,sourceMapProbeCache=new Map(),sourceMapProbePending=new Set();
+let sourceMapClientVisualModulePromise=null,sourceMapClientVisualRuntime=null,sourceMapClientVisualError=null;
 
 function sourceMapProbeKey(map,x,y){return String(Math.trunc(n(map?.floorId??map?.id)))+':'+String(Math.trunc(n(x)))+':'+String(Math.trunc(n(y)));}
 
@@ -163,6 +164,86 @@ function sourceMapEncounterProbeStatus(map){
   el.textContent='Encounter 座標來源：解析中…';
 }
 
+
+function loadSourceMapClientVisualRuntime(){
+  if(!sourceMapClientVisualModulePromise){
+    sourceMapClientVisualModulePromise=import('./src/stoneage_tile_presentation.mjs').catch(err=>{
+      sourceMapClientVisualModulePromise=null;
+      throw err;
+    });
+  }
+  return sourceMapClientVisualModulePromise;
+}
+
+function sourceMapClientVisualStatus(map){
+  const status=$('#worldSceneSourceVisual');
+  const canvas=$('#worldSceneTileCanvas');
+  if(!status||!canvas)return;
+  const x=Number(enemy?.roamX),y=Number(enemy?.roamY);
+  const floor=Math.trunc(n(map?.floorId??map?.id));
+  if(!Number.isFinite(floor)||!Number.isFinite(x)||!Number.isFinite(y)){
+    canvas.hidden=true;
+    status.textContent='真實圖像：等待已發生的 Encounter 座標';
+    status.classList.remove('source-ready','source-missing');
+    return;
+  }
+  const key=sourceMapProbeKey(map,x,y);
+  const probe=sourceMapProbeCache.get(key);
+  if(!probe||probe.tile==null){
+    canvas.hidden=true;
+    status.textContent='真實圖像：等待 tile source 驗證';
+    status.classList.remove('source-ready');status.classList.add('source-missing');
+    return;
+  }
+  if(sourceMapClientVisualError){
+    canvas.hidden=true;
+    status.textContent='真實圖像：授權素材包未可用';
+    status.classList.remove('source-ready');status.classList.add('source-missing');
+    return;
+  }
+  if(!sourceMapClientVisualRuntime){
+    if(!sourceMapClientVisualModulePromise){
+      sourceMapClientVisualModulePromise=loadSourceMapClientVisualRuntime().then(mod=>mod.loadClientTilePresentation()).then(presentation=>{
+        sourceMapClientVisualRuntime=presentation;
+        if(presentation?.status!=='ready')sourceMapClientVisualError=String(presentation?.reason||'presentation-unavailable');
+        return presentation;
+      }).catch(err=>{
+        sourceMapClientVisualError=String(err?.message||err||'presentation-load-failed');
+        return null;
+      }).finally(()=>renderWorldScene());
+    }
+    canvas.hidden=true;
+    status.textContent='真實圖像：素材解析中…';
+    status.classList.remove('source-ready','source-missing');
+    return;
+  }
+  if(sourceMapClientVisualRuntime.status!=='ready'){
+    canvas.hidden=true;
+    status.textContent='真實圖像：授權素材包未提供';
+    status.classList.remove('source-ready');status.classList.add('source-missing');
+    return;
+  }
+  loadSourceMapClientVisualRuntime().then(mod=>{
+    const ctx=canvas.getContext('2d');
+    if(!ctx)throw new Error('canvas-2d-unavailable');
+    const result=mod.renderSourceTileObjectPreview(ctx,sourceMapClientVisualRuntime,{
+      tileId:probe.tile,objectId:probe.object,scale:1,showLabels:true
+    });
+    if(result?.status==='ready'){
+      canvas.hidden=false;
+      status.textContent='真實圖像：Tile '+probe.tile+' · Object '+(probe.object>0?probe.object:'無')+' · tile→object';
+      status.classList.add('source-ready');status.classList.remove('source-missing');
+    }else{
+      canvas.hidden=true;
+      status.textContent='真實圖像：此 image ID 無法由授權素材解碼';
+      status.classList.remove('source-ready');status.classList.add('source-missing');
+    }
+  }).catch(err=>{
+    canvas.hidden=true;
+    status.textContent='真實圖像：解碼失敗 · '+String(err?.message||err);
+    status.classList.remove('source-ready');status.classList.add('source-missing');
+  });
+}
 
 function loadSourceMapRuntimeModule(){
   if(!sourceMapRuntimeModulePromise){
@@ -24670,6 +24751,7 @@ function renderWorldScene(){
   const map=currentMap();
   sourceMapRuntimeStatusText(map);
   sourceMapEncounterProbeStatus(map);
+  sourceMapClientVisualStatus(map);
   const encounter=currentEncounter(map);
   const active=activePet();
   mapName.textContent=map?.name||'未知地圖';
