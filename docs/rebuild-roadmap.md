@@ -933,3 +933,29 @@ world.encounter.cep
 
 V3.82 仍不建立 battle，不計算 Enemy team，不加入 profession modifier / MoonAct 額外 RNG。下一階段才把 triggered=true 接回 Idle Loop 的 encounter_pending → encounter_rolled → in_battle，並在 battle context 前閉合 ENEMY_getEnemy() 的 Group / Enemy selection。
 
+## 2026-10-01 V3.83 Browser World Encounter Group Selection
+
+V3.83 接在 V3.80 / V3.81 / V3.82 encounter boundary 後，閉合 fixed-C `ENEMY_getEnemy()` 的第一個 battle-side selection：
+
+`WORLD_ENCOUNTER_GROUP_SELECT`
+
+流程是 read-only：
+1. 由目前 Persistent State 世界座標解析 prepared encounter。
+2. 讀取 fixed-C Encounter 的 `groupIds + groupProbs`。
+3. 依 Group 的 `GROUP_APPEARBYITEMID / GROUP_NOTAPPEARBYITEMID` 檢查玩家 inventory。
+4. 排除 zero-weight / unresolved / item-gated 不符合的 Group。
+5. 由 caller 注入一次 `RAND(0, sum(weight)-1)` 對應的 `groupRoll`，選出唯一 Group。
+
+新增：
+- src/stoneage_browser_world_encounter_group_runtime.mjs
+- data/generated/stoneage_start_encounter_group_runtime.json
+- data/generated/stoneage_browser_world_encounter_group_schema.json
+- tools/generate_start_encounter_group_runtime.mjs
+- tools/check_v383_browser_world_encounter_group_runtime.mjs
+- .github/workflows/check-v383-browser-world-encounter-group-select.yml
+- docs/reference/v383-browser-world-encounter-group-select.md
+
+Encounter 65 的固定 C Group 89 / 92 / 94 均已由 pinned `group1.txt + enemy1.txt` 完整閉合；Group probability 為 `1/1/1`，因此 groupRoll 0/1/2 分別選 89/92/94。
+
+V3.83 不改 Persistent State、不啟動 battle、不決定本戰人數、不執行 Enemy random replacement、不處理 big-enemy ordering。下一階段才閉合 selected Group → entryMax → Enemy slot weighted generation。
+
