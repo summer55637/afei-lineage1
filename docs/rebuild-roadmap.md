@@ -23,14 +23,14 @@
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 固定 C 的 `CHAR_walk_move` 先做 `MAP_walkAble`，NPC warp 再透過 `CHAR_ISOVERED` 與 `NPC_WarpWatch` 接收成功的 `CHAR_ACTWALK`；因此 warp NPC 的占位不會讓原本可走的 map cell 變成不可走。
 
-目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；目前 46 個 start-floor NPC 已有 numeric coordinate；41 個 active-template NPC 已完成 interaction reachability，5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 module 而維持 runtime-unresolved，因此目前標記：
+目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；目前 46 個 start-floor NPC 已有 numeric coordinate；41 個 active-template NPC 已完成 interaction reachability，0 個 unreachable；5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 module 而維持 runtime-unresolved，因此目前標記：
 
 - `sourceRouteSpine = closed`
 - `fullFirstRoute = partial`
 
-這裡的 closed 只代表 source-level route spine 已閉合，不代表已經可以直接做 playable gameplay。完整 first-route 仍要補齊剩餘 NPC 座標與實際互動、destination map / first encounter region 的 walkability，以及新玩家 quest/event owner closure。
+這裡的 closed 只代表 source-level route spine 已閉合，不代表已經可以直接做 playable gameplay。完整 first-route 還要處理 5 個 `changeevent` runtime-module discrepancy、destination map / first encounter region 的 walkability，以及新玩家 reward definition closure。
 
-下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 ownerless event IDs 仍需 closure。最高優先仍是四個出生村的 first-route closure。
+下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 ownerless event IDs 仍需 closure。最高優先仍是四個出生村的 first-route closure，但 start-floor coordinate 本身已不再是 blocker。
 
 ## 新增最終目標：現代 3D 卡通手遊化
 
@@ -345,3 +345,10 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 原本 Start Flow Index 的 30 個 unresolved coordinates 是索引層未反解 `borncorner`，不是 fixed-C source 沒有位置。現在已全部由 exact create blocks 解出，形成 `data/generated/stoneage_start_npc_coordinate_closure.json`。
 
 之後套用 fixed-C template / interaction contract 後，41/46 NPC 已可驗證從出生點到合法互動站位；5 個 `changeevent` blocks（4 個 xinshou + 1 個薩姆吉爾村長）因 `gmsv/src/npc/npctemplate.c` 的 `functionSet[]` 不存在 `changeevent`，並依 `gmsv/src/npc/npccreate.c` 的 unknown-template rejection 規則維持 runtime-unresolved，不視為已實例化 NPC。
+
+
+## 2026-09-30 最新校正：Start-floor NPC 不是座標缺口，而是 template 缺口
+
+`data/generated/stoneage_start_npc_coordinate_closure.json` 已把 46/46 start-floor NPC 的座標全部從 exact `borncorner` source 解出；`data/generated/stoneage_start_npc_reachability.json` 再以 fixed-C interaction contract 驗證 41/46 可達、0 個 unreachable。
+
+剩餘 5 個不是座標問題，而是 `changeevent` runtime module 問題：4 個 `xinshou` 新手接待員加上 1 個薩姆吉爾村長，均由 source create 宣告 `enemy=changeevent|...`，但 pinned `gmsv/src/npc/npctemplate.c` 的 `functionSet[]` 找不到 `changeevent`。依 `gmsv/src/npc/npccreate.c::NPC_templateGetTemplateIndex` 的 unknown-template 行為，這些 block 不應被當成已實例化、可互動的 NPC。
