@@ -14,6 +14,8 @@ if(j.fixedSource?.rootTreeSha!=='33f71a5f804480cec28edee4bd6a6d1851ba2dab') fail
 
 const inv=j.sourceInventory;
 if(inv?.totalBlobFiles!==5764) fail('source blob count drift');
+if(inv?.gmsvSetupConfig?.path!=='gmsv/setup.cf') fail('setup.cf path missing');
+if(inv?.gmsvSetupConfig?.sizeBytes!==17597) fail('setup.cf size drift');
 if(inv?.gmsvDataTopLevelFiles!==49) fail('top-level data file count drift');
 if(inv?.npcDataFiles!==3960) fail('NPC file count drift');
 if(inv?.npcDataByExtension?.['.arg']!==1161) fail('NPC .arg count drift');
