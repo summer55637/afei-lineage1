@@ -75,6 +75,7 @@ assert.equal(denied.state.player.level,0);
 const deniedRoute=applyIdleEventToPersistentState(freshPersistentState(),IDLE_EVENTS.ENABLE,{});
 assert.equal(deniedRoute.ok,false);
 assert.equal(deniedRoute.reason,'route_required');
+assert.equal(deniedRoute.idle.state,IDLE_STATES.DISABLED);
 
 const deniedTransition=applyIdleEventToPersistentState(freshPersistentState(),IDLE_EVENTS.BATTLE_FINISHED,{});
 assert.equal(deniedTransition.ok,false);

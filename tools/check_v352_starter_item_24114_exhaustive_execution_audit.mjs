@@ -22,5 +22,5 @@ assert.equal(audit.requestedIdEvidence.selectedFileToken18ExactMatches,1);
 assert.equal(audit.resolution.configuredIdDirectTemplateResolved,false);
 assert.equal(audit.resolution.allocatorExecutableForConfiguredId,false);
 assert.equal(audit.exhaustiveExecutionAudit.effectiveResult.includes('ITEM_makeItemAndRegist(24114)'),true);
-assert.equal(audit.exhaustiveExecutionAudit.effectiveResult.includes('no second loaded item-data file'),true);
+assert.match(audit.exhaustiveExecutionAudit.effectiveResult,/no second loaded item-data file/i);
 console.log(JSON.stringify({pass:true,format:audit.format,configuredItemId:24114,effectiveSourceItemId:11817,imageNumber:24114,catalogHas11817:true,catalogHas24114:false,failClosed:true}));
