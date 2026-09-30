@@ -1,0 +1,32 @@
+name: Check V3.34 new-player branch matrix
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'src/stoneage_first_route_reward_handlers.mjs'
+      - 'src/stoneage_first_route_save.mjs'
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_charm_runtime.mjs'
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'tools/check_v334_new_player_branch_matrix.mjs'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v334-new-player-branch-matrix.yml'
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax
+        run: node --check tools/check_v334_new_player_branch_matrix.mjs
+      - name: Run V3.34 branch matrix
+        run: node tools/check_v334_new_player_branch_matrix.mjs
