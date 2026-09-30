@@ -9,9 +9,9 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：1c1b882 — correct V3.58 SavePoint roadmap source modes
-- 最後更新時間：2026-09-30T18:24:03+08:00
-- 版本線最高 regression workflow：V3.58
+- 最新 commit：349bf1e — add V3.59 SavePoint GetItem transaction runtime
+- 最後更新時間：2026-09-30T18:33:59+08:00
+- 版本線最高 regression workflow：V3.59
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
