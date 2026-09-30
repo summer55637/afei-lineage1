@@ -27,7 +27,7 @@ assert.ok(eventSource.includes('OBJECT_getType(o) == OBJTYPE_WARPPOINT'));
 assert.ok(eventSource.includes('MAPPOINT_MapWarpHandle'));
 
 assert.equal(catalog.format,'stoneage-start-destination-warp-coordinates-v2');
-assert.deepEqual(catalog.fixedSource,{repository:'gavinlinasd/StoneAge',ref:fixedRef,path:'gmsv/data/map/mapwarp.txt',blobSha:'617d2d02cbf17561d0eafc319a015d949055e922'});
+assert.deepEqual(catalog.fixedSource,{repository:'gavinlinasd/StoneAge',ref:fixedRef,path:'gmsv/data/map/mapwarp.txt',blobSha:'617d2d02cbf17561d0eafc379a015d949055e922'});
 const groups=Array.isArray(catalog.nextFloorPortals)
   ? catalog.nextFloorPortals
   : [...(catalog.nextFloorPortals?.to100??[]),...(catalog.nextFloorPortals?.to200??[])];
