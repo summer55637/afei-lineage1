@@ -24,7 +24,7 @@
 
 ## Fail-closed
 
-unknown existing item index、非 24 格玩家背包、重複 item index、空 transactionId 都拒絕 commit。
+unknown existing item index、缺少 runtime existing item、非 enemy-owned existing item、非 24 格玩家 item slots、重複 item index、空 transactionId 都拒絕 commit。
 
 Inventory full 不做部分 commit；transaction 必須整體成功或整體不寫入。
 
