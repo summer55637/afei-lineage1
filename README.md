@@ -157,7 +157,7 @@ GMQUE／抓寵活動已於 2026-09-29 正式決定**永久停用**；不再追�
 
 V3.13 已經開始有真正的 floor/x/y → tile runtime：`20000` 已從 fixed C 的 binary map 產生 50×50 verified tile/object JSON，並以 `sourceMapTileAt(floor,x,y)` 與 `sourceMapBattleCandidates(tile)` 提供 fail-closed 查詢。未知 Floor 不會被替換成假地圖。
 
-另外，舊版 V1.72～V2.86 regression 仍可能引用歷史 `game.html`；網站正式入口仍只有 `start.html`，CI 會在測試工作目錄暫時建立 compatibility fixture，不會把舊網址重新發布。舊 regression 若因 runtime 重構而引用過時 helper 名稱，會優先修正測試契約，不回退正式 runtime。自訂 Pages workflow 已停用自動 push deploy，避免與 GitHub Pages managed deployment 重複競爭 artifact；正式 Pages deployment 以 managed workflow 為準。
+另外，舊版 V1.72～V2.86 regression 仍可能引用歷史 `game.html`；網站正式入口現在統一為根目錄的 `index.html`，CI 會在測試工作目錄暫時建立 compatibility fixture，不會把舊網址重新發布。舊 regression 若因 runtime 重構而引用過時 helper 名稱，會優先修正測試契約，不回退正式 runtime。自訂 Pages workflow 已停用自動 push deploy，避免與 GitHub Pages managed deployment 重複競爭 artifact；正式 Pages deployment 以 managed workflow 為準。
 
 來源筆記：[V3.12 battlefield source contract](docs/reference/v312-battlefield-source-contract.md)。
 ---
@@ -255,7 +255,7 @@ V3.17 再往下閉合 client `Real binary` 的最後一層 parser：`RD_HEADER �
 ## 📁 專案結構
 
 ```
-start.html              # 遊戲入口
+index.html              # 唯一正式遊戲入口
 game.js                # 主要 runtime
 game.css               # PC／手機共用介面
 data/generated/        # source-backed generated data（含 fixed-C map source catalog）
@@ -299,7 +299,7 @@ Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要�
 這是純前端專案，可直接在瀏覽器開啟：
 
 ```
-start.html
+index.html
 ```
 
 開發與驗證時，建議使用桌面瀏覽器；手機則以目前共用 responsive UI 為主要使用方式。
