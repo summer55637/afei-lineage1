@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v1",
+  "format": "stoneage-start-route-closure-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -8,12 +8,14 @@
   "inputContracts": {
     "startWalkability": "data/generated/stoneage_start_walkability_audit.json",
     "routeCandidates": "data/generated/stoneage_start_route_candidates.json",
-    "npcServices": "data/generated/stoneage_npc_service_index.json"
+    "npcServices": "data/generated/stoneage_npc_service_index.json",
+    "npcReachability": "data/generated/stoneage_start_npc_reachability.json"
   },
   "status": {
     "sourceRouteSpine": "closed",
     "fullFirstRoute": "partial",
-    "definition": "Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Full first-route closure remains open until service coordinates/interactions, destination-map walkability, and player-specific quest/event ownership are closed."
+    "definition": "Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed only for NPC instances with resolved numeric coordinates. Full first-route closure remains open until unresolved NPC coordinates, destination-map walkability, and player-specific quest/event ownership are closed.",
+    "coordinateResolvedTownServices": "closed_for_resolved_instances"
   },
   "statistics": {
     "hometowns": 4,
@@ -21,10 +23,13 @@
     "directWarpExits": 8,
     "reachableDirectWarpExits": 8,
     "hometownsWithStartFloorServices": 4,
-    "hometownsWithDepth1EncounterEvidence": 4
+    "hometownsWithDepth1EncounterEvidence": 4,
+    "coordinateResolvedNpcInstances": 16,
+    "reachableCoordinateResolvedNpcInstances": 16,
+    "unresolvedNpcCoordinateInstances": 30
   },
   "remainingWork": [
-    "Resolve coordinate-level reachability and intended interaction for the required town service NPCs.",
+    "Resolve source coordinates for the remaining start-floor NPC instances without guessing.",
     "Audit destination-map walkability at each first warp landing coordinate and the first encounter region.",
     "Close new-player quest/event ownership without promoting ownerless event IDs."
   ],
@@ -101,7 +106,59 @@
         "firstEncounterFloorEvidence": true,
         "coordinateLevelServiceReachability": false,
         "destinationMapWalkability": false,
-        "questEventOwnerClosure": false
+        "questEventOwnerClosure": false,
+        "coordinateResolvedNpcReachability": true
+      },
+      "coordinateResolvedNpcReachability": {
+        "totalCoordinateResolved": 4,
+        "reachableCoordinateResolved": 4,
+        "unreachableCoordinateResolved": 0,
+        "rows": [
+          {
+            "template": "bankman",
+            "npc": [
+              18,
+              30
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 10,
+            "npcPath": "gmsv/data/npc/family/bankman.create",
+            "blockIndex": 9
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              18,
+              24
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 4,
+            "npcPath": "gmsv/data/npc/family/familyman.create",
+            "blockIndex": 0
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              15,
+              13
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 10,
+            "npcPath": "gmsv/data/npc/newguest/familyman.create",
+            "blockIndex": 0
+          },
+          {
+            "template": "windowman",
+            "npc": [
+              18,
+              26
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+            "blockIndex": 0
+          }
+        ]
       }
     },
     {
@@ -176,7 +233,59 @@
         "firstEncounterFloorEvidence": true,
         "coordinateLevelServiceReachability": false,
         "destinationMapWalkability": false,
-        "questEventOwnerClosure": false
+        "questEventOwnerClosure": false,
+        "coordinateResolvedNpcReachability": true
+      },
+      "coordinateResolvedNpcReachability": {
+        "totalCoordinateResolved": 4,
+        "reachableCoordinateResolved": 4,
+        "unreachableCoordinateResolved": 0,
+        "rows": [
+          {
+            "template": "bankman",
+            "npc": [
+              29,
+              20
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 12,
+            "npcPath": "gmsv/data/npc/family/bankman.create",
+            "blockIndex": 10
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              29,
+              16
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 8,
+            "npcPath": "gmsv/data/npc/family/familyman.create",
+            "blockIndex": 1
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              17,
+              14
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 4,
+            "npcPath": "gmsv/data/npc/newguest/familyman.create",
+            "blockIndex": 1
+          },
+          {
+            "template": "windowman",
+            "npc": [
+              14,
+              18
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 7,
+            "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+            "blockIndex": 1
+          }
+        ]
       }
     },
     {
@@ -251,7 +360,59 @@
         "firstEncounterFloorEvidence": true,
         "coordinateLevelServiceReachability": false,
         "destinationMapWalkability": false,
-        "questEventOwnerClosure": false
+        "questEventOwnerClosure": false,
+        "coordinateResolvedNpcReachability": true
+      },
+      "coordinateResolvedNpcReachability": {
+        "totalCoordinateResolved": 4,
+        "reachableCoordinateResolved": 4,
+        "unreachableCoordinateResolved": 0,
+        "rows": [
+          {
+            "template": "bankman",
+            "npc": [
+              27,
+              20
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 9,
+            "npcPath": "gmsv/data/npc/family/bankman.create",
+            "blockIndex": 11
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              25,
+              16
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 3,
+            "npcPath": "gmsv/data/npc/family/familyman.create",
+            "blockIndex": 2
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              14,
+              13
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 9,
+            "npcPath": "gmsv/data/npc/newguest/familyman.create",
+            "blockIndex": 2
+          },
+          {
+            "template": "windowman",
+            "npc": [
+              27,
+              15
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+            "blockIndex": 2
+          }
+        ]
       }
     },
     {
@@ -326,7 +487,59 @@
         "firstEncounterFloorEvidence": true,
         "coordinateLevelServiceReachability": false,
         "destinationMapWalkability": false,
-        "questEventOwnerClosure": false
+        "questEventOwnerClosure": false,
+        "coordinateResolvedNpcReachability": true
+      },
+      "coordinateResolvedNpcReachability": {
+        "totalCoordinateResolved": 4,
+        "reachableCoordinateResolved": 4,
+        "unreachableCoordinateResolved": 0,
+        "rows": [
+          {
+            "template": "bankman",
+            "npc": [
+              16,
+              30
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 11,
+            "npcPath": "gmsv/data/npc/family/bankman.create",
+            "blockIndex": 12
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              18,
+              23
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "npcPath": "gmsv/data/npc/family/familyman.create",
+            "blockIndex": 3
+          },
+          {
+            "template": "familyman",
+            "npc": [
+              16,
+              25
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "npcPath": "gmsv/data/npc/newguest/familyman.create",
+            "blockIndex": 3
+          },
+          {
+            "template": "windowman",
+            "npc": [
+              13,
+              15
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 5,
+            "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+            "blockIndex": 3
+          }
+        ]
       }
     }
   ]
