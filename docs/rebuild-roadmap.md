@@ -3,6 +3,13 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 新增：V3.73 Persistent State structural container validation
+
+V3.73 將 Persistent State v1 的結構驗證補齊：sourceProfile / revision、player.stats、inventory piles / itemRuntime、equipment、quests、events、titles、world.position、idle.offline 與 battleSettings / runtimeMeta 現在都有 canonical object / scalar shape gate。
+
+所有 equipment / quest / event / title / battleSettings 內部內容仍保持 opaque；本輪只驗證 container contract 並加入完整 Save Envelope round-trip regression，不把未閉合資料解讀成新的遊戲規則。
+
+這讓 `player / pet / inventory / equipment / skills / quests / map position / idle settings / save` 可以在同一 canonical validation boundary 下進一步接 runtime，且 malformed container 會 fail-closed。
 ## 2026-10-01 新增：V3.72 4000→200 fixed-C source transition audit
 
 V3.72 對已知 4000→200 blocker 做第二層 source closure：固定 source `mapwarp.txt` 沒有 direct 4000→200 row；`gmsv/data/npc/**/*.create` 只找到既有 `200warp.create` 的 4 個 `floorid=4000 → npcgen_warp|200|...` rows，正好對應兩組雙格出口。
