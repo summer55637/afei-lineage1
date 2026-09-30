@@ -25,6 +25,7 @@ import { createBrowserWorldEncounterGroupRuntime, ACTION_WORLD_ENCOUNTER_GROUP_S
 import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_enemy_runtime.mjs';
 import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT, BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT } from './stoneage_browser_world_encounter_idle_bridge.mjs';
 import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT } from './stoneage_browser_battle_context_runtime.mjs';
+import { createBrowserBattleTurnRuntime, ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } from './stoneage_browser_battle_turn_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -90,6 +91,7 @@ function createBrowserStateController({
   const worldEncounterEnemyRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterEnemyRuntime({groupCatalog:encounterGroupCatalog}) : null;
   const worldEncounterIdleBridge=encounterTargetIndex ? createBrowserWorldEncounterIdleBridge({encounterTargetIndex}) : null;
   const battleFieldRuntime=createBrowserBattleFieldRuntime({mapRuntimeOptions:battleFieldRuntimeOptions});
+  const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -188,6 +190,15 @@ function createBrowserStateController({
           warpBlocked:action.warpBlocked===true
         });
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_BATTLE_TURN_INITIALIZE){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-turn',reason:'battle-context-required',state:clone(currentState)};
+        if(battleTurnRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-turn',reason:'browser-battle-turn-runtime-invalid',state:clone(currentState)};
+        const wrapper={format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)};
+        const result=battleTurnRuntime.initialize(wrapper,{chargeEntries:Array.isArray(action.chargeEntries)?action.chargeEntries:[]});
+        if(!result.ok)return {...result,state:clone(currentState)};
+        battleContext=clone(result.context);
+        return {...result,stage:'battle-turn-initialized',format:BROWSER_BATTLE_TURN_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_FIELD_RESOLVE){
         if(battleFieldRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-field',reason:'browser-battle-field-runtime-invalid',state:clone(currentState)};
@@ -501,6 +512,7 @@ export {
   ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT,
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   ACTION_BATTLE_FIELD_RESOLVE,
+  ACTION_BATTLE_TURN_INITIALIZE,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
@@ -514,6 +526,7 @@ export {
   BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT,
   BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,
   BROWSER_BATTLE_FIELD_RUNTIME_FORMAT,
+  BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
