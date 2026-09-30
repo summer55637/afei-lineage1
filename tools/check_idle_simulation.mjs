@@ -15,7 +15,7 @@ assert.equal(rawAdapter.battleResult.outcome,'victory');
 
 const win=await simulateFirstEncounter(base,route,variant,{
   encounter:{floorId:100,encounterId:65},
-  battleResult:{outcome:'win',player:{hp:80,mp:45},reward:{transactionId:'sim-1',source:'battle:65',playerExp:20,gold:15,items:[],petCredits:[]}},
+  sourceBattleResult:{battleIndex:65,winside:0,finished:true,player:{hp:80,mp:45},reward:{transactionId:'sim-1',source:'battle:65',playerExp:20,gold:15,items:[],petCredits:[]}},
   knownExistingItemIds:new Set(),
   now:()=> '2026-09-30T05:00:00.000Z',
   save:true
@@ -32,7 +32,7 @@ assert.equal(typeof win.save.envelope.payloadHash,'string');
 
 const second=await simulateFirstEncounter(win.state,route,variant,{
   encounter:{floorId:100,encounterId:65},
-  battleResult:{outcome:'defeat',player:{hp:0,mp:0}},
+  sourceBattleResult:{battleIndex:66,winside:1,finished:true,player:{hp:0,mp:0}},
   policy:{death:{recoveryMode:'manual'}},
   now:()=> '2026-09-30T06:00:00.000Z',
   save:false
