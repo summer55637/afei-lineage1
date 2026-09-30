@@ -1,0 +1,52 @@
+name: Check V3.28 new-player first-route adapters
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_charm_runtime.mjs'
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'src/stoneage_new_player_event_adapters.mjs'
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'tools/check_v326_event_flag_runtime.mjs'
+      - 'tools/check_v327_source_charm_runtime.mjs'
+      - 'tools/check_v328_new_player_first_route.mjs'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v328-new-player-first-route.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_event_flag_runtime.mjs
+          node --check src/stoneage_charm_runtime.mjs
+          node --check src/stoneage_new_player_pet_runtime.mjs
+          node --check src/stoneage_new_player_item_reward_runtime.mjs
+          node --check src/stoneage_new_player_event_adapters.mjs
+          node --check src/stoneage_npc_event_runtime.mjs
+          node --check src/stoneage_npc_event_transaction.mjs
+          node --check src/stoneage_npc_event_orchestrator.mjs
+          node --check tools/check_v326_event_flag_runtime.mjs
+          node --check tools/check_v327_source_charm_runtime.mjs
+          node --check tools/check_v328_new_player_first_route.mjs
+      - name: Run V3.26 flag regression
+        run: node tools/check_v326_event_flag_runtime.mjs
+      - name: Run V3.27 Charm regression
+        run: node tools/check_v327_source_charm_runtime.mjs
+      - name: Run V3.28 first-route regression
+        run: node tools/check_v328_new_player_first_route.mjs
