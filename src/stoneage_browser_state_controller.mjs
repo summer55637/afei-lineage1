@@ -18,6 +18,7 @@ import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, 
 import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT } from './stoneage_browser_world_movement_runtime.mjs';
 import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT } from './stoneage_browser_world_warppoint_runtime.mjs';
 import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
+import { createBrowserWorldFirstRouteExecutionRuntime, ACTION_WORLD_FIRST_ROUTE_EXECUTE, BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_execution_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -70,6 +71,7 @@ function createBrowserStateController({
   const worldFirstRouteRuntime=(idleRouteCatalog&&warpCatalog&&encounterTargetIndex)
     ? createBrowserWorldFirstRouteRuntime({routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,...worldFirstRouteOptions})
     : null;
+  const worldFirstRouteExecutionRuntime=createBrowserWorldFirstRouteExecutionRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -100,6 +102,37 @@ function createBrowserStateController({
           portalId:action.portalId??null
         });
         return {...result,state:clone(currentState)};
+      }
+      if(type===ACTION_WORLD_FIRST_ROUTE_EXECUTE){
+        if(!worldFirstRouteRuntime)return {ok:false,handled:false,stage:'first-route-execute',reason:'browser-world-first-route-runtime-not-configured',state:clone(currentState)};
+        if(worldFirstRouteRuntime.ok!==true)return {ok:false,handled:false,stage:'first-route-execute',reason:worldFirstRouteRuntime.reason??'browser-world-first-route-runtime-invalid',errors:worldFirstRouteRuntime.errors??[],state:clone(currentState)};
+        const plan=await worldFirstRouteRuntime.plan(currentState,{
+          routeId:action.routeId??null,
+          hometown:action.hometown??null,
+          portalId:action.portalId??null
+        });
+        if(!plan.ok)return {...plan,stage:plan.stage??'first-route-plan',state:clone(currentState)};
+        const execution=await worldFirstRouteExecutionRuntime.execute(plan,{
+          initialRevision:Number(currentState?.revision??0),
+          dispatchMove:async routeAction=>{
+            const result=await worldMovementRuntime.dispatch(currentState,routeAction,{now:routeAction.now??now});
+            if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+            return {...result,state:clone(result.state??currentState)};
+          },
+          dispatchWarp:async routeAction=>{
+            const result=await worldWarpPointRuntime.execute(currentState,{
+              portalId:routeAction.portalId??null,
+              position:routeAction.player??routeAction.position??null,
+              expectedRevision:routeAction.expectedRevision==null?Number(currentState?.revision??0):routeAction.expectedRevision,
+              savedAt:routeAction.savedAt??routeAction.now??now,
+              now:routeAction.now??now,
+              source:'browser-world-first-route'
+            });
+            if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+            return {...result,state:clone(result.state??currentState)};
+          }
+        });
+        return {...execution,state:clone(execution.state??currentState)};
       }
       if(type===ACTION_WORLD_MOVE_STEP){
         if(worldMovementRuntime.ok!==true)return {ok:false,handled:false,stage:'movement-runtime',reason:worldMovementRuntime.reason??'browser-world-movement-runtime-invalid',errors:worldMovementRuntime.errors??[],state:clone(currentState)};
@@ -270,11 +303,13 @@ export {
   ACTION_WORLD_MOVE_STEP,
   ACTION_WORLD_WARPPOINT_EXECUTE,
   ACTION_WORLD_FIRST_ROUTE_PLAN,
+  ACTION_WORLD_FIRST_ROUTE_EXECUTE,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
   BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT,
   BROWSER_WORLD_ROUTE_RUNTIME_FORMAT,
+  BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
