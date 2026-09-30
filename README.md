@@ -150,7 +150,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 
 四個 hometown 的 direct destination map 已全部從 pinned fixed-C source 找到並轉成 verified runtime：`1000=samugiru/samugiru`、`2000=marinasu/2000`、`3000=jaja/jaja`、`4000=karutana/karutana`。這也修正了先前只看檔名而漏掉 nonnumeric map filename 的判斷。
 
-四個 destination floor 共 7 個 landing points，現在 7/7 都通過 exact tile/object walkability。`2000` 的 landing points 位於 conditional encounter region；`3000` 也是 conditional encounter region。1000/4000 direct destination 的 encounter row 只是 placeholder。
+四個 destination floor 共 7 個 landing points，現在 7/7 都通過 exact tile/object walkability。floor 100 與 world floor 200 的 fixed-C binary runtime 也已完成 verified；floor 100 / 200 的 incoming portal → unconditional encounter path 已完成 8/8 group closure。2000/3000 的 direct encounter 仍受 item gate 影響；1000/4000 direct destination row 仍是 placeholder。
 
 ## Map source identity update（2026-09-30）
 
