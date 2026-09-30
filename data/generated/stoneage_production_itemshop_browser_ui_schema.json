@@ -1,0 +1,36 @@
+{
+  "format": "stoneage-v371-production-itemshop-browser-ui-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "productionInputs": [
+    "pinned source-generated World NPC index",
+    "pinned source-generated NPC ItemShop catalog",
+    "repo Item source runtime catalog"
+  ],
+  "expectedJoin": {
+    "worldItemShopBindings": 336,
+    "resolvedBindings": 335,
+    "unresolvedBindings": 1,
+    "knownUnresolved": "gmsv/data/npc/my/magicdou/daochang.create#8"
+  },
+  "flow": "production World NPC point -> source ItemShop binding -> Browser UI OPEN -> SELECT_OFFER -> SET_QUANTITY -> existing NPC_ITEMSHOP_BUY -> existing Item allocator / Economy -> Persistent State",
+  "guards": [
+    "World NPC and ItemShop catalog fixedSource must match",
+    "known unresolved ItemShop anomaly must remain unresolved",
+    "production shop must have a resolved buy offer",
+    "interaction gate remains authoritative",
+    "UI state actions do not increment Persistent State revision",
+    "purchase uses existing ItemShop / Item / Economy runtime"
+  ],
+  "noNewRules": [
+    "item price",
+    "item template",
+    "currency",
+    "inventory slot policy",
+    "shop binding",
+    "Gold cap"
+  ]
+}
