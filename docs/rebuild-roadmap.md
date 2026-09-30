@@ -12,6 +12,20 @@ V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipelin
 
 這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
 
+## 2026-09-30 新增：V3.54 browser ItemShop → World NPC binding closure
+
+V3.54 將既有的 browser ItemShop transaction 與 V3.42 的 336-instance World NPC + ItemShop source join 正式接到 canonical browser state controller。
+
+新增 `stoneage_browser_world_itemshop_runtime.mjs`，以 World NPC 的 `path + blockIndex` 作為唯一 source key；World NPC index 與 ItemShop catalog 必須使用相同 pinned repository/ref。Controller 可由 NPC instance 自動解析正式 `shopId`，caller 不需要再猜測 shop binding。
+
+production checkpoint 維持 336 個 World ItemShop bindings、335 個 resolved catalog shops、1 個 unresolved source anomaly（`my/magicdou/daochang.create#8`）。未能 join 的 instance 直接回傳 unresolved，完全不修改 Gold、inventory 或 Persistent State。若 caller 額外提供 `shopId`，必須與 source-resolved binding 完全一致。
+
+因此目前主線可明確寫成：
+
+`NPC instance → World ItemShop binding → interaction gate → ItemShop → Item source template → allocator → Gold → Persistent State`
+
+本輪只完成 headless runtime / regression / CI；仍不建立 playable HTML，也不改動 Starter Item 24114 的 fail-closed 判定。
+
 ## 2026-09-30 新增：V3.53 Starter Item 24114 build closure audit
 
 V3.53 將 Item 24114 最後的 build-path 疑點正式機器化。固定 `itemset6.txt` 共 10,737 個 non-blank rows，最大 source Item ID = 23009；非 `_IMPOROVE_ITEMTABLE` loader 依 `ITEM_tblen=maxid+1` 建表，因此 `ITEM_tblen=23010`。

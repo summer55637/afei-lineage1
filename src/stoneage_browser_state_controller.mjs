@@ -24,12 +24,15 @@ function createBrowserStateController({
   transactionPrefix='browser-npc',
   itemShopCatalog=null,
   itemMakeCatalog=null,
+  worldNpcIndex=null,
   itemShopRuntimeOptions={}
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
-    ? createBrowserItemShopRuntime({catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
+    ? (worldNpcIndex
+      ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
+      : createBrowserItemShopRuntime({catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions}))
     : null;
   let sequence=0;
   return {

@@ -1,0 +1,39 @@
+name: Check V3.54 browser ItemShop world runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_world_itemshop_runtime.mjs'
+      - 'src/stoneage_browser_itemshop_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_npc_itemshop_runtime.mjs'
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'src/stoneage_item_economy_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_npc_itemshop_runtime.json'
+      - 'data/generated/stoneage_world_npc_index.json'
+      - 'tools/check_v354_browser_itemshop_world_runtime.mjs'
+      - 'tools/fixtures/npc-itemshop/world-index.json'
+      - 'docs/reference/v354-browser-itemshop-world-runtime.md'
+      - '.github/workflows/check-v354-browser-itemshop-world-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.54 browser ItemShop world runtime regression
+        run: node tools/check_v354_browser_itemshop_world_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_world_itemshop_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v354_browser_itemshop_world_runtime.mjs
