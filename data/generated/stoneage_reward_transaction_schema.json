@@ -9,9 +9,9 @@
     "transactionId": "string",
     "source": "string",
     "playerExp": "nonNegative integer",
-    "petCredits": "array<{petId:string,exp:integer,gold:integer}>",
+    "petCredits": "array<{petId:string,exp:nonNegative integer}>",
     "gold": "nonNegative integer",
-    "items": "array<{existingIndex:integer,count:positive integer}> max 3"
+    "items": "array<{existingIndex:integer,count:positive integer}> max 3; existingIndex must resolve to an existing runtime slot owned by enemy:<unitId>"
   },
   "sourceBoundaries": {
     "deathCredit": "created on first Enemy HP zero with player-side credit",
@@ -23,7 +23,14 @@
     "invalid 24-slot inventory",
     "duplicate existing item index",
     "missing transactionId",
-    "inventory full"
+    "inventory full",
+    "missing existing runtime slot",
+    "existing item owner is not enemy:<unitId>"
   ],
-  "idempotency": "transactionId"
+  "idempotency": "transactionId",
+  "playerBackpack": {
+    "totalItemSlots": 24,
+    "backpackStart": 9,
+    "backpackEndExclusive": 24
+  }
 }
