@@ -33,15 +33,7 @@
 
 尺寸只有 30×30；但 fixed-C "200warp.create" 的 world portals 已使用到至少 x=588、y=1008，因此 30×30 圖不可能容納這些傳送點。
 
-fixed source tree 裡另有：
-
-"gmsv/data/map/jyaruga/jalga"
-
-size = 3,840,044 bytes，blob SHA = "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce"。
-
-公開的石器地圖編號資料也把 floor 200（加魯卡）對應到 "./data/map/jyaruga/jalga"。citeturn592731search0turn735247search1
-
-但這裡仍不把它直接升格成 verified runtime：本次工具鏈能拿到 fixed-source path / blob SHA，卻不能在目前 connector 上直接解碼這個 binary map header。因此 "jalga" 目前標記為 **source-path identified / runtime-unverified**。
+fixed source tree 裡另有 gmsv/data/map/jyaruga/jalga，size = 3,840,044 bytes，blob SHA = dcbb20f0212192fc852e1489a29a0d6d8d4c95ce。GitHub Actions 已直接 checkout 這個 fixed-C binary，並由現有 generate_verified_map_runtime.mjs 通過 Git blob SHA、LS2MAP header 與 mapset/battlemap validation，因此 floor 200 現在已升格為 verified runtime：800×1200。公開地圖索引與 SourceForge 的固定資料樹也都把 jalga 對應到加魯卡 floor 200；這些外部來源只作 path/identity corroboration。citeturn679721search4turn679721search5
 
 ## 下一步
 
@@ -51,6 +43,14 @@ size = 3,840,044 bytes，blob SHA = "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce"�
 4. 若 fixed source 最終證明 "4000" 確實沒有可達出口，就把它記成 source-proven route exception，而不是自行修改世界規則。
 
 對應 generated result："data/generated/stoneage_start_world_exit_reachability.json"；重跑工具："tools/audit_start_world_exit_reachability.mjs"。
+
+## Floor 100 / 200 encounter path closure
+
+新增 data/generated/stoneage_start_encounter_path_closure.json：
+
+- floor 100：4 組 incoming portal groups 全部有 walkable landing，且全部 landing 均可走到 unconditional encounter rectangle。
+- floor 200：4 組 incoming portal groups 全部至少有可用 landing 可走到 unconditional encounter rectangle；其中 4000→200 兩組 landing 直接落在 Encounter 95；3000→200 第二組有 5/6 landing 可走，(587,318) 不可走。
+- 這裡的 route closure 是「landing → unconditional encounter region」closure，不會把 mixed 或 unresolved group 當成 unconditional。
 
 ## 4000 component audit
 
