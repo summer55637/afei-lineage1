@@ -1,0 +1,39 @@
+name: Check V3.26 event flag runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'tools/check_v326_event_flag_runtime.mjs'
+      - 'tools/check_npc_event_runtime.mjs'
+      - 'tools/check_npc_event_transaction.mjs'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - '.github/workflows/check-v326-event-flag-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_event_flag_runtime.mjs
+          node --check src/stoneage_npc_event_runtime.mjs
+          node --check src/stoneage_npc_event_transaction.mjs
+          node --check tools/check_v326_event_flag_runtime.mjs
+          node --check tools/check_npc_event_runtime.mjs
+          node --check tools/check_npc_event_transaction.mjs
+      - name: Run V3.26 event flag regression
+        run: node tools/check_v326_event_flag_runtime.mjs
+      - name: Run V3.21 event-plan regression
+        run: node tools/check_npc_event_runtime.mjs
+      - name: Run V3.22 event-transaction regression
+        run: node tools/check_npc_event_transaction.mjs
