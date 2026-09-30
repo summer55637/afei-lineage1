@@ -15,7 +15,7 @@ const intOr=value=>{const s=String(value??'').trim();if(s==='')return null;const
 
 const SOURCE_ENTRY_INIT=Object.freeze({escape:0,getitem:[-1,-1,-1]});
 const SOURCE_BATTLE_INIT=Object.freeze({use:true,mode:1,turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
-const entryInit=()=>({escape:0,getitem:[-1,-1,-1]});
+const SOURCE_BATTLE_ENTRY_RUNTIME_INIT=Object.freeze({battleCharMode:1,battleFlg:0,battleCommands:[-1,-1,-1],modAttack:0,modDefence:0,modQuick:0,damageAbsorb:0,damageReflect:0,damageVanish:0,modCapture:0,isAttacked:1,battleWatch:0});
 
 function buildEnemyEntryLayout(team){
   if(!Array.isArray(team)||team.length<1)return {ok:false,reason:'enemy-team-required'};
@@ -67,6 +67,19 @@ function buildBattleContext({
     mp:intOr(player.mp)??0,
     maxMp:intOr(player.maxMp)??0,
     battleMode:'init',
+    sourceBattleCharMode:1,
+    battleSide:BATTLE_S_TYPE_PLAYER,
+    battleFlg:0,
+    battleCommands:[-1,-1,-1],
+    modAttack:0,
+    modDefence:0,
+    modQuick:0,
+    damageAbsorb:0,
+    damageReflect:0,
+    damageVanish:0,
+    modCapture:0,
+    isAttacked:1,
+    battleWatch:0,
     escape:0,
     getitem:[-1,-1,-1]
   };
@@ -86,6 +99,19 @@ function buildBattleContext({
     mp:intOr(activePet.mp)??0,
     maxMp:intOr(activePet.maxMp)??0,
     battleMode:'init',
+    sourceBattleCharMode:1,
+    battleSide:BATTLE_S_TYPE_PLAYER,
+    battleFlg:0,
+    battleCommands:[-1,-1,-1],
+    modAttack:0,
+    modDefence:0,
+    modQuick:0,
+    damageAbsorb:0,
+    damageReflect:0,
+    damageVanish:0,
+    modCapture:0,
+    isAttacked:1,
+    battleWatch:0,
     escape:0,
     getitem:[-1,-1,-1]
   }:null;
@@ -106,6 +132,19 @@ function buildBattleContext({
       mp:null,
       maxMp:null,
       battleMode:'init',
+      sourceBattleCharMode:1,
+      battleSide:BATTLE_S_TYPE_ENEMY,
+      battleFlg:0,
+      battleCommands:[-1,-1,-1],
+      modAttack:0,
+      modDefence:0,
+      modQuick:0,
+      damageAbsorb:0,
+      damageReflect:0,
+      damageVanish:0,
+      modCapture:0,
+      isAttacked:1,
+      battleWatch:0,
       escape:0,
       getitem:[-1,-1,-1]
     };
@@ -129,6 +168,8 @@ function buildBattleContext({
       attCount:0,
       sourceBattleInit:clone(SOURCE_BATTLE_INIT),
       sourceEntryInit:clone(SOURCE_ENTRY_INIT),
+      sourceBattleEntryRuntimeInit:clone(SOURCE_BATTLE_ENTRY_RUNTIME_INIT),
+      conditionalResetsOmitted:['PROFESSION_SKILL','PETSKILL_ACUPUNCTURE','PETSKILL_RETRACE','PETSKILL_BECOMEFOX','PROFESSION_ADDSKILL'],
       leaderId:playerEntry.characterId,
       sourceEncounter:{
         encounterId:intOr(encounter?.encounterId),
@@ -184,6 +225,7 @@ export {
   SIDE_OFFSET,
   SOURCE_ENTRY_INIT,
   SOURCE_BATTLE_INIT,
+  SOURCE_BATTLE_ENTRY_RUNTIME_INIT,
   buildEnemyEntryLayout,
   buildBattleContext,
   validateBattleContext
