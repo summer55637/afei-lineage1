@@ -195,7 +195,7 @@
     "scriptReferenceClosed": true,
     "runtimeModuleClosed": false
   },
-  "policy": "The fixed-C create file and shared arg script close the source declaration and branch logic, but the pinned npctemplate.c has no changeevent functionSet and npccreate.c rejects unknown template names. Therefore the four xinshou blocks are recorded as source-declared but not active NPC runtime instances for this pinned build. Reward item/pet definitions remain unresolved where the pinned source does not provide the corresponding definition rows; no alternative version or guessed mapping is promoted.",
+  "policy": "Create/script references are source-closed, but runtime module resolution is not: pinned npctemplate.c has no changeevent functionSet and npccreate.c rejects an unknown template name. Reward definitions remain unresolved where the pinned source provides no corresponding definition rows; no alternative version or guessed mapping is promoted.",
   "moduleSource": {
     "path": "gmsv/src/npc/npctemplate.c",
     "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
@@ -203,8 +203,8 @@
   },
   "runtimeResolution": {
     "status": "unresolved",
-    "reason": "changeevent is absent from pinned gmsv/src/npc/npctemplate.c functionSet[]",
-    "createParser": "gmsv/src/npc/npccreate.c::NPC_templateGetTemplateIndex; unknown template returns -1 and block is rejected at block close",
+    "reason": "changeevent absent from pinned npctemplate.c functionSet[]",
+    "createParser": "gmsv/src/npc/npccreate.c::NPC_templateGetTemplateIndex rejects unknown template",
     "affectedStartFloorInstances": 4
   }
 }
