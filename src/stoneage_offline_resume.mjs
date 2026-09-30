@@ -19,6 +19,7 @@ function prepareOfflineResume(state,closedAt,resumedAt,{maxSeconds=null}={}){
     lastResumedAt:String(resumedAt),
     elapsedSeconds:window.elapsedSeconds,
     accruedSeconds:0,
+    accrualCapSeconds:window.accruedSeconds,
     resumePending:true,
     rewardsApplied:false
   };
@@ -35,7 +36,10 @@ async function commitOfflineResume(state,prepared,{expectedRevision=null,savedAt
 function markOfflineRewardsApplied(state,{accruedSeconds=0}={}){
   const next=JSON.parse(JSON.stringify(state));
   if(!isObject(next?.idle?.offline))return {ok:false,reason:'offline-state-missing',state};
-  next.idle.offline.accruedSeconds=Math.max(0,Math.trunc(Number(accruedSeconds)||0));
+  const value=Math.max(0,Math.trunc(Number(accruedSeconds)||0));
+  const cap=Number(next.idle.offline.accrualCapSeconds);
+  if(Number.isFinite(cap)&&value>cap)return {ok:false,reason:'accrued-seconds-exceed-checkpoint-cap',state};
+  next.idle.offline.accruedSeconds=value;
   next.idle.offline.resumePending=false;
   next.idle.offline.rewardsApplied=true;
   return {ok:true,state:next};
