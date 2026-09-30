@@ -84,7 +84,7 @@ assert.equal(listResult.ok,false);
 assert.equal(listResult.failedItemId,999);
 assert.equal(rollback.inventory.playerItemSlots.filter(v=>v!==null).length,1);
 assert.equal(rollback.inventory.itemRuntime.slots['21']?.itemId,20145);
-assert.equal(rolls.length,66);
+assert.equal(rolls.length,132);
 
 console.log(JSON.stringify({
   pass:true,
