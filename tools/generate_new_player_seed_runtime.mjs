@@ -111,9 +111,13 @@ const enemySource={path:'gmsv/data/enemy1.txt',blobSha:gitBlobSha(enemyBytes)};
 const baseSource={path:'gmsv/data/enemybase1.txt',blobSha:gitBlobSha(baseBytes)};
 const enemyRankBytes=bytes('gmsv/src/char/enemy.c');
 const enemyRankFunction=extractFunctionSource(enemyRankBytes.toString('utf8').replace(/\r/g,''),'int ENEMY_getRank( int array, int tarray )');
-const rankTableFromSource=[...enemyRankFunction.matchAll(/\\{\\s*(\\d+)\\s*,\\s*([0-9]+(?:\\.[0-9]+)?)\\s*\\}/g)].map(m=>({num:Number(m[1]),rank:Number(m[2])}));
-if(JSON.stringify(rankTableFromSource)!==JSON.stringify(SOURCE_PET_RANK_TABLE))fail('ENEMY_getRank rank table drifted from pinned source');
-if(!/paramsum\\s*=\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASEVITAL\\s*\\)\\s*\\+\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASESTR\\s*\\)\\s*\\+\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASETGH\\s*\\)\\s*\\+\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASEDEX\\s*\\)/.test(enemyRankFunction))fail('ENEMY_getRank paramsum source logic drifted');
+for(const row of [[100,2.5],[95,2],[90,1.5],[85,1],[80,0.5],[0,0]]){
+  if(!enemyRankFunction.includes('{ '+row[0]+', '+row[1]+'}'))fail('ENEMY_getRank rank table row drifted: '+row[0]);
+}
+for(const token of ['E_T_BASEVITAL','E_T_BASESTR','E_T_BASETGH','E_T_BASEDEX']){
+  if(!enemyRankFunction.includes('* ( tp + '+token+')'))fail('ENEMY_getRank paramsum source logic drifted: '+token);
+}
+if(!enemyRankFunction.includes('paramsum  ='))fail('ENEMY_getRank paramsum assignment missing');
 const enemyRankSource={path:'gmsv/src/char/enemy.c',blobSha:gitBlobSha(enemyRankBytes),function:'ENEMY_getRank'};
 const enemyRows=[];
 for(const raw of enemyBytes.toString('utf8').replace(/\r/g,'').split('\n')){
@@ -134,6 +138,14 @@ for(const raw of baseBytes.toString('utf8').replace(/\r/g,'').split('\n')){
   byTempNo[String(tempNo)]={name:clean(p[0]),tempNo,initNum:atoi(p[7]),lvUpPoint:atoi(p[8]),baseStats:{vital:atoi(p[9]),str:atoi(p[10]),tgh:atoi(p[11]),dex:atoi(p[12])},modAi:atoi(p[13]),get:atoi(p[14]),elements:{earth:atoi(p[15]),water:atoi(p[16]),fire:atoi(p[17]),wind:atoi(p[18])},status:{poison:atoi(p[19]),paralysis:atoi(p[20]),sleep:atoi(p[21]),stone:atoi(p[22]),drunk:atoi(p[23]),confusion:atoi(p[24])},petSkills:Array.from({length:7},(_,i)=>atoi(p[25+i])),rare:atoi(p[32]),critical:atoi(p[33]),counter:atoi(p[34]),slot:atoi(p[35]),imageNumber:atoi(p[36]),petFlg:atoi(p[37]),limitLevel:atoi(p[54])};
 }
 for(const id of [1,2,3,4])if(!byTempNo[String(byEnemyId[String(id)].tempNo)])fail('starter EnemyBase missing for EnemyID '+id);
+function starterPetRankForEnemyId(id){
+  const template=byTempNo[String(byEnemyId[String(id)].tempNo)];
+  if(!template)fail('starter EnemyBase template missing for rank: '+id);
+  const paramsum=template.baseStats.vital+template.baseStats.str+template.baseStats.tgh+template.baseStats.dex;
+  const sourceRank=resolveSourcePetRank(paramsum);
+  if(sourceRank==null)fail('starter EnemyBase rank could not be resolved: '+id);
+  return {sourceRank,sourceRankParamsum:paramsum};
+}
 
 const trans=textOf('gmsv/src/npc/npc_transmigration.c');
 const em2=trans.match(/char \*elder\[4\]\s*=\s*\{([^}]+)\}/);
@@ -170,7 +182,7 @@ const output={
   },
   hometowns:positions.map((p,i)=>({...p,elderIndex:i,fallbackPet:{hometown:i,lastTalkElder:i,enemyId:i+1,tempNo:byEnemyId[String(i+1)].tempNo,enemyName:byEnemyId[String(i+1)].name,lvRange:[byEnemyId[String(i+1)].lvMin,byEnemyId[String(i+1)].lvMax],template:byTempNo[String(byEnemyId[String(i+1)].tempNo)]}})),
   starterItem:{itemId:24114,sourceConfigKey:'ITEM1',sourceCreation:'CHAR_loginAddItemForNew -> ITEM_makeItemAndRegist(getNewplayergiveitem(i))',allocatorRequired:true,itemTemplatePromoted:false},
-  starterPet:{configuredSlot0:-1,fallbackRule:'CHAR_LASTTALKELDER: 1->EnemyID2, 2->EnemyID3, 3->EnemyID4, otherwise EnemyID1',initialLevel:configValue.petLevel,maxPetHave:5,sourceClosed:true,entries:positions.map((_,i)=>{const id=i+1;return {hometown:i,lastTalkElder:i,enemyId:id,tempNo:byEnemyId[String(id)].tempNo,enemyName:byEnemyId[String(id)].name,lvRange:[byEnemyId[String(id)].lvMin,byEnemyId[String(id)].lvMax],template:byTempNo[String(byEnemyId[String(id)].tempNo)]};})},
+  starterPet:{configuredSlot0:-1,fallbackRule:'CHAR_LASTTALKELDER: 1->EnemyID2, 2->EnemyID3, 3->EnemyID4, otherwise EnemyID1',initialLevel:configValue.petLevel,maxPetHave:5,sourceClosed:true,entries:positions.map((_,i)=>{const id=i+1;return {hometown:i,lastTalkElder:i,enemyId:id,tempNo:byEnemyId[String(id)].tempNo,enemyName:byEnemyId[String(id)].name,lvRange:[byEnemyId[String(id)].lvMin,byEnemyId[String(id)].lvMax],...starterPetRankForEnemyId(id),template:byTempNo[String(byEnemyId[String(id)].tempNo)]};})},
   policy:{fixedCIsAuthoritative:true,noInventedItemTemplate:true,itemAllocatorRequired:true,noNpridePromotion:true,noPlayableHtml:true,productLayerSeparated:true}
 };
 fs.mkdirSync(path.dirname(out),{recursive:true});
