@@ -37,5 +37,26 @@
     "player item slot count 24",
     "pet/team reference integrity",
     "world floorId shape"
-  ]
+  ],
+  "playerFields": [
+    "id",
+    "name",
+    "level",
+    "exp",
+    "transmigration",
+    "hp",
+    "maxHp",
+    "mp",
+    "maxMp",
+    "luck",
+    "charm",
+    "duelPoint",
+    "gold",
+    "stats",
+    "profession"
+  ],
+  "sourceEvidence": {
+    "goldField": "state.gold is an existing runtime state field; fresh-state history records source-backed initial Gold separately from defaultPlayer.h",
+    "caution": "current canonical freshState keeps structural gold=0 until the create-character transaction is wired; initial creation value is not silently hardcoded here."
+  }
 }
