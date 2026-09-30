@@ -23,6 +23,7 @@ assert.equal(win.state.player.exp,20);
 assert.equal(win.state.player.gold,15);
 assert.equal(win.state.revision,1);
 assert.equal(win.save.ok,true);
+assert.equal(win.save.state.revision,1);
 assert.equal(typeof win.save.envelope.payloadHash,'string');
 
 const second=await simulateFirstEncounter(win.state,route,variant,{
