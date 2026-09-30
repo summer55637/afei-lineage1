@@ -3,7 +3,7 @@ name: V3.11 battle target marker
 on:
   push:
     paths:
-      - 'start.html'
+      - 'index.html'
       - 'game.css'
       - 'game.js'
       - 'tools/check_v311_battle_target_marker.mjs'
@@ -11,7 +11,7 @@ on:
       - '.github/workflows/v311-battle-target-marker.yml'
   pull_request:
     paths:
-      - 'start.html'
+      - 'index.html'
       - 'game.css'
       - 'game.js'
       - 'tools/check_v311_battle_target_marker.mjs'
