@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：5363fe2 — Document V3.79 first-route execution
-- 最後更新時間：2026-10-01T04:49:43+08:00
+- 最新 commit：aefc81e — Add V3.79 first-route execution regression
+- 最後更新時間：2026-10-01T04:49:57+08:00
 - 版本線最高 regression workflow：V3.78
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
