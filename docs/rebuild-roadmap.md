@@ -358,17 +358,17 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 - 3000→200：2/2 portal groups usable；第二組 6 個 source origins 中 5 個可達，(73,59) 因 object image 2 不可走。
 - 4000→200：0/2 portal groups usable；兩組 source portal origins 都是 walkable cell，但都與 direct landing component 不連通，因此不能直接升格成 playable route。
 
-同時確認目前 `data/generated/stoneage_map_200.json` 是 `gmsv/data/map/extra/200` 的 30×30 map，不能容納 fixed-C world portal 的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`，blob SHA=`dcbb20f0212192fc852e1489a29a0d6d8d4c95ce`、size=3,840,044 bytes；公開地圖編號資料亦把 floor 200（加魯卡）對應到此 path。這一點目前只作 research corroboration，`jalga` 仍標記為 source-path identified / runtime-unverified，沒有用猜測資料產生 runtime。
+同時確認目前 `data/generated/stoneage_map_200.json` 是 `gmsv/data/map/extra/200` 的 30×30 map，不能容納 fixed-C world portal 的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`，blob SHA=`dcbb20f0212192fc852e1489a29a0d6d8d4c95ce`、size=3,840,044 bytes；公開地圖編號資料亦把 floor 200（加魯卡）對應到此 path。這一點現在已完成 fixed-C binary verification；`jalga` 已成為 floor 200 的 verified runtime，沒有使用猜測或跨版本資料。
 
-因此 first-route 下一階段不再只看 world graph，而是以「可從 direct landing 實際走到 source portal」作為 route promotion 條件。4000 需先完成 disconnected component 分析；floor 200 需先取得正確 world-map verified runtime，再繼續接 3000/4000 的 200 層路徑。
+因此 first-route 現在以「可從 direct landing 實際走到 source portal / encounter target」作為 route promotion 條件。4000 仍需完成 disconnected source-transition 分析；3000→200 的單一不可走 landing 維持明確例外，其餘 path closure 已成立。
 ## 2026-09-30 新增：ordinary encounter target 座標索引
 
 新增 data/generated/stoneage_start_encounter_target_index.json 與 tools/generate_start_encounter_target_index.mjs，把 fixed-C encount/group 的 floor 100、200 encounter rectangle 變成可供後續 path testing 的 target set。
 
 - floor 100：46 rows；32 unconditional、1 mixed、11 unresolved group、1 conditional item、1 placeholder。
 - floor 200：114 rows；103 unconditional、5 mixed、5 unresolved group、1 conditional item。
-- floor 100 source map identity 已由 fixed source catalog / public map index 對齊到 gmsv/data/map/sainasu/sainasu；其 LS2MAP runtime 仍待 binary-level verification。
-- floor 200 仍待 gmsv/data/map/jyaruga/jalga 的 binary-level runtime verification。
+- floor 100 source map identity 已由 fixed source catalog 對齊到 gmsv/data/map/sainasu/sainasu，並已完成 800×800 binary-level runtime verification。
+- floor 200 的 gmsv/data/map/jyaruga/jalga 已完成 800×1200 binary-level runtime verification。
 
 這一層只做 source-coordinate closure，不把 rectangle 當成玩家一定能走到的可玩刷怪區。下一階段須把 incoming portal landing → encounter rectangle 做 exact walkability/path proof。unresolved group 與 mixed rows 繼續分層處理，不跨版本補值。
 ## 2026-09-30 最新校正：Start-floor NPC 不是座標缺口，而是 template 缺口
@@ -379,7 +379,7 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 
 ## 2026-09-30 更新：四張 destination maps 全部閉合
 
-fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destination floor 都有 exact map：1000 為 `sainasu/samugiru/samugiru`、2000 為 `sainasu/marinasu/2000`、3000 為 `jyaruga/jaja/jaja`、4000 為 `jyaruga/karutana/karutana`。目前 10 張 map runtime 已完成 verified index。
+fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destination floor 都有 exact map：1000 為 `sainasu/samugiru/samugiru`、2000 為 `sainasu/marinasu/2000`、3000 為 `jyaruga/jaja/jaja`、4000 為 `jyaruga/karutana/karutana`。目前 11 張 map runtime 已完成 verified index。
 
 四個 destination 共 7 個 landing points 全部通過 tile/object walkability。這表示 destination map source 與 landing walkability 已經不是 blocker；接下來要處理的是 encounter 條件、一般掛機 region、changeevent runtime discrepancy 與 reward data closure。
 
@@ -388,10 +388,10 @@ fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destinatio
 目前已完成四村起點 → direct warp → destination map 的 source-backed closure：四村出生點、8 個 direct warp exits、46 個 start-floor NPC coordinates、41/46 active-template NPC interactions，以及 4/4 destination map runtimes、7/7 landing walkability 均已有固定 C 證據。剩餘 blocker 已縮成三類：
 
 1. `changeevent` 在 pinned `npctemplate.c` 不存在，5 個 start-floor blocks 因此維持 runtime-unresolved；
-2. 2000/3000 direct encounter 是 item-gated，而 pinned `itemset6.txt` 為空；1000/4000 direct encounter 是 placeholder，需要沿 exact world graph 找真正的 unconditional encounter region；
+2. 2000/3000 direct encounter 仍是 item-gated，而 pinned `itemset6.txt` 為空；1000/4000 direct destination rows 是 placeholder，但可經 world exit path 接到已驗證的 floor 100 / 200 unconditional encounter target；
 3. 新玩家 event 的 reward item/pet definitions 尚未全部在 pinned source 中閉合。
 
-這個 checkpoint 之後，Map Coverage 的工作由「找第一張 destination map」轉向「找可執行的 ordinary encounter region 與其座標級路徑」，再進入 Persistent State / Idle Loop，而不是回頭建立 playable HTML。
+這個 checkpoint 之後，Map Coverage 的 first-route groundwork 已完成一個可執行的 ordinary encounter path closure layer，現在正式進入 Persistent State / Idle Loop；仍不回頭建立多個 playable HTML。
 ## 2026-09-30 Persistent State Schema v1
 
 新增 `src/stoneage_persistent_state.mjs`、`docs/reference/persistent-state-schema.md`、`data/generated/stoneage_persistent_state_schema.json` 與 `tools/check_persistent_state_schema.mjs`。
