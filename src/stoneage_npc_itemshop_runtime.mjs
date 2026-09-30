@@ -63,6 +63,7 @@ function expandConstraintToken(entry,{sourceBuyRangeBug=false}={}){
 }
 
 function shopBuyItemIds(shop){
+  if(shop?.sellOnly===true)return [];
   if(Array.isArray(shop.itemIds))return shop.itemIds.slice();
   if(Array.isArray(shop.itemEntries)){
     const out=[];
