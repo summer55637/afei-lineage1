@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v6",
+  "format": "stoneage-start-route-closure-v7",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -11,7 +11,8 @@
     "npcServices": "data/generated/stoneage_npc_service_index.json",
     "npcReachability": "data/generated/stoneage_start_npc_reachability.json",
     "worldExitReachability": "data/generated/stoneage_start_world_exit_reachability.json",
-    "worldExitComponentAudit": "data/generated/stoneage_4000_exit_component_audit.json"
+    "worldExitComponentAudit": "data/generated/stoneage_4000_exit_component_audit.json",
+    "encounterTargetIndex": "data/generated/stoneage_start_encounter_target_index.json"
   },
   "status": {
     "sourceRouteSpine": "closed",
@@ -36,13 +37,21 @@
     "walkableDirectDestinationLandings": "7/7",
     "worldExitPortalGroups": 8,
     "worldExitPortalGroupsUsable": 6,
-    "worldExitPortalGroupsBlocked": 2
+    "worldExitPortalGroupsBlocked": 2,
+    "firstRouteEncounterTargetFloors": "2 (100, 200)",
+    "floor100UnconditionalEncounterRows": 32,
+    "floor100MixedEncounterRows": 1,
+    "floor100UnresolvedGroupRows": 11,
+    "floor200UnconditionalEncounterRows": 103,
+    "floor200MixedEncounterRows": 5,
+    "floor200UnresolvedGroupRows": 5
   },
   "remainingWork": [
     "Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.",
-    "Replace the non-world floor-200 runtime alias with a verified gmsv/data/map/jyaruga/jalga runtime before promoting 3000/4000 -> 200 as a playable world route.",
+    "Build exact fixed-C verified runtime for floor 100 from gmsv/data/map/sainasu/sainasu and for world floor 200 from gmsv/data/map/jyaruga/jalga.",
     "Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.",
-    "Audit ordinary unconditional encounter regions on the usable 1000/2000/3000 exits and close new-player event reward item/pet definitions without promoting unresolved IDs."
+    "Path-test the source-coordinate encounter target sets now indexed for floors 100 and 200; keep mixed and unresolved-group rows explicitly non-unconditional.",
+    "Close new-player event reward item/pet definitions without promoting unresolved IDs."
   ],
   "towns": [
     {
@@ -1109,10 +1118,11 @@
     }
   },
   "nextActions": [
-    "Resolve the five changeevent module/template discrepancies.",
-    "Verify floor 200 jalga runtime from fixed-C binary.",
-    "Complete 4000 component analysis and verify whether the disconnected route is source-proven or requires an alternate in-source transition.",
-    "Close ordinary encounter region coordinates and reward definitions for the now-reachable first-route branches."
+    "Verify floor 100 sainasu LS2MAP runtime.",
+    "Verify floor 200 jalga LS2MAP runtime.",
+    "Path-test incoming landing points to unconditional encounter rectangles.",
+    "Recheck 4000 component and source transitions.",
+    "Close reward definitions and changeevent module stance."
   ],
   "sourceEvidence": {
     "startNpcCoordinateClosure": "data/generated/stoneage_start_npc_coordinate_closure.json",
