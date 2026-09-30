@@ -1,0 +1,48 @@
+{
+  "format": "stoneage-v387-browser-battle-entry-init-v1",
+  "generatedAt": "2026-10-01",
+  "action": "ENCOUNTER_BATTLE_CONTEXT_BUILD",
+  "fixedC": {
+    "sourceFunction": "gmsv/src/battle/battle.c::EntryInit",
+    "entryInit": {
+      "charaindex": -1,
+      "bid": -1,
+      "escape": 0,
+      "getitem": [
+        -1,
+        -1,
+        -1
+      ]
+    },
+    "battleCreateInit": {
+      "use": true,
+      "mode": 1,
+      "turn": 0,
+      "dpbattle": 0,
+      "norisk": 0,
+      "flg": 0,
+      "fieldAtt": 0,
+      "attCount": 0
+    }
+  },
+  "browserMapping": {
+    "charaindex": "transient characterId; no server-side character array index is invented",
+    "battleindex": "null until a real browser battle identity exists",
+    "mode": 1,
+    "entryDefaults": {
+      "escape": 0,
+      "getitem": [
+        -1,
+        -1,
+        -1
+      ]
+    }
+  },
+  "boundary": {
+    "persistentMutation": "Idle state save only",
+    "battleDamage": false,
+    "battleTurn": false,
+    "battleStatus": false,
+    "battleAi": false
+  }
+}
