@@ -89,6 +89,7 @@ async function runNewPlayerCreationSave(state,{
     envelope:committed.envelope,
     verification:parsed,
     stages:{creationInput:true,starterPet:true,starterItem:true,save:true},
+    resumedItemStage:canResumeItemStage,
     pet:petResult.pet,
     creation:prepared.creation ?? {resumedItemStage:true},
   };
