@@ -59,7 +59,7 @@ async function simulateFirstEncounter(state,route,variant,{encounter,battleResul
   nextState.idle.mode=supply.required?'supply_check':'moving';
   nextState.idle.routeId=routeId;
   nextState.idle.lastSimulatedAt=clock;
-  if(save){const saved=commitSave(state,nextState,{expectedRevision:intOr(state.revision),savedAt:()=>clock,source:'idle-simulation'});if(!saved.ok)return {ok:false,reason:saved.reason,errors:saved.errors??[],state};nextState=saved.state;return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:false,supply,reward:rewardApplied,state:nextState,save:saved};}
+  if(save){const saved=await commitSave(state,nextState,{expectedRevision:intOr(state.revision),savedAt:()=>clock,source:'idle-simulation'});if(!saved.ok)return {ok:false,reason:saved.reason??'save-failed',errors:saved.errors??[],state};nextState=saved.state;return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:false,supply,reward:rewardApplied,state:nextState,save:saved};}
   return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:false,supply,reward:rewardApplied,state:nextState,save:null};
 }
 
