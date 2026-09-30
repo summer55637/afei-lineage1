@@ -1,0 +1,27 @@
+name: Check V3.90 Browser Enemy core stat
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs'
+      - 'data/generated/stoneage_start_encounter_group_runtime.json'
+      - 'data/generated/stoneage_browser_world_encounter_enemy_core_stat_schema.json'
+      - 'tools/check_v390_browser_world_encounter_enemy_core_stat.mjs'
+      - 'docs/reference/v390-browser-enemy-core-stat.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v390-browser-world-encounter-enemy-core-stat.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.90 Enemy core stat regression
+        run: node tools/check_v390_browser_world_encounter_enemy_core_stat.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs
+          node --check tools/check_v390_browser_world_encounter_enemy_core_stat.mjs
