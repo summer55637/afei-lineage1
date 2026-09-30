@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-candidates-v5",
+  "format": "stoneage-start-route-candidates-v6",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -23,7 +23,10 @@
     "itemGateIdsUnresolved": [
       20216,
       20219
-    ]
+    ],
+    "verifiedDestinationMaps": 4,
+    "destinationLandingPoints": 7,
+    "destinationLandingPointsWalkable": 7
   },
   "routes": [
     {
@@ -89,7 +92,17 @@
           }
         }
       ],
-      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json.",
+      "destinationMap": {
+        "floor": 1000,
+        "path": "gmsv/data/map/sainasu/samugiru/samugiru",
+        "blobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
+        "runtimePath": "data/generated/stoneage_map_1000.json",
+        "verifiedRuntime": true,
+        "width": 160,
+        "height": 160,
+        "landingWalkable": true
+      }
     },
     {
       "hometown": 1,
@@ -267,7 +280,17 @@
           }
         }
       ],
-      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json.",
+      "destinationMap": {
+        "floor": 2000,
+        "path": "gmsv/data/map/sainasu/marinasu/2000",
+        "blobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
+        "runtimePath": "data/generated/stoneage_map_2000.json",
+        "verifiedRuntime": true,
+        "width": 150,
+        "height": 150,
+        "landingWalkable": true
+      }
     },
     {
       "hometown": 2,
@@ -572,7 +595,17 @@
           }
         }
       ],
-      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json.",
+      "destinationMap": {
+        "floor": 3000,
+        "path": "gmsv/data/map/jyaruga/jaja/jaja",
+        "blobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
+        "runtimePath": "data/generated/stoneage_map_3000.json",
+        "verifiedRuntime": true,
+        "width": 150,
+        "height": 150,
+        "landingWalkable": true
+      }
     },
     {
       "hometown": 3,
@@ -846,8 +879,18 @@
           }
         }
       ],
-      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json.",
+      "destinationMap": {
+        "floor": 4000,
+        "path": "gmsv/data/map/jyaruga/karutana/karutana",
+        "blobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
+        "runtimePath": "data/generated/stoneage_map_4000.json",
+        "verifiedRuntime": true,
+        "width": 150,
+        "height": 150,
+        "landingWalkable": true
+      }
     }
   ],
-  "policy": "Route candidates use source warp connectivity. Direct destination encounters distinguish placeholder rows and conditional item-gated groups. Generic encounter candidates are only floor-level until exact destination maps, landing walkability and encounter-region coordinates are verified. Exact next-floor warp portals are recorded separately. Missing maps/items are never guessed."
+  "policy": "Direct warp and destination map closure now include exact LS2MAP source identity and seven verified walkable landing points. Encounter candidates are still gated by fixed-C item/event conditions; floor-level unconditional candidates do not imply an executable route until exact portal landings on those later maps are verified."
 }
