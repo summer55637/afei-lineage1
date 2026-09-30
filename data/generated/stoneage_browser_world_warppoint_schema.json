@@ -1,0 +1,54 @@
+{
+  "format": "stoneage-v377-browser-world-warppoint-execution-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/data/map/mapwarp.txt",
+    "blobSha": "617d2d02cbf17561d0eafc379a015d949055e922"
+  },
+  "action": "WORLD_WARPPOINT_EXECUTE",
+  "input": {
+    "position": "canonical world.position must equal an exact mapwarp from coordinate",
+    "portalId": "optional; required only when multiple bindings share a source cell",
+    "expectedRevision": "optional optimistic-concurrency guard"
+  },
+  "sourceContract": {
+    "parser": "TYPE:CONDITION:fromFloor,X,Y:toFloor,X,Y",
+    "fixedRuntime": "gmsv/src/map/map_warppoint.c::MAPPOINT_getMapWarpGoal + MAPPOINT_MapWarpHandle",
+    "eventLookup": "gmsv/src/char/event.c::EVENT_main finds OBJTYPE_WARPPOINT and calls MAPPOINT_MapWarpHandle"
+  },
+  "semantics": {
+    "sourceMatch": "exact fromFloor/fromX/fromY match",
+    "destination": "source destination must resolve to a valid generated map coordinate",
+    "mutation": "world.position only, through commitSave",
+    "condition": "only the generated TYPE=NONE / CONDITION=NULL first-route catalog is exposed"
+  },
+  "scope": {
+    "firstRoutePortalGroups": 8,
+    "portalRows": 37,
+    "productionWorldWarpRows": "first-route mapwarp subset"
+  },
+  "failClosed": [
+    "catalog fixed-source mismatch",
+    "position invalid",
+    "source warp point not found",
+    "ambiguous warp point",
+    "destination map unresolved",
+    "destination coordinate invalid",
+    "revision conflict",
+    "Save Envelope verification failure"
+  ],
+  "notMutated": [
+    "player",
+    "pets",
+    "inventory",
+    "equipment",
+    "quests",
+    "events",
+    "titles",
+    "world.savePoint",
+    "idle",
+    "battleSettings"
+  ]
+}
