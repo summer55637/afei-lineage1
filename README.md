@@ -68,4 +68,6 @@ Item / Quest Event Closure 正在進行；reward gap clustering 與 event owner 
 
 目前第一條明確 source-backed 起始鏈為：character creation → hometown → elder spawn → town services → warp exits → world graph / encounter；下一步進入四個出生村的 first-route closure。
 
+目前已完成 World / NPC / Item / Quest 的第一輪 source-backed closure，以及四個 hometown 的 Start Flow Index；下一階段進入四個出生村 first-route closure。
+
 最後整理：2026-09-30。
