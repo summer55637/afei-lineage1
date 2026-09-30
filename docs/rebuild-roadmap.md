@@ -141,7 +141,7 @@ source map
 - encounter region
 - battle field 對應
 
-目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的；下一個要補的是四個 destination floor 的 exact map source / landing coordinate / first encounter region，不能只停在 floor-level connectivity。
+目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的。新增 `stoneage_start_destination_closure.json` 後，destination 層已進一步拆成 exact source map、landing walkability 與 active encounter：目前 2000 已完全閉合到兩個 landing points 都 walkable 且位於 active encounter region；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中取得，因此維持 unresolved。1000、4000 的 direct destination encounter row 沒有實際 group／機率，不能繼續當成可掛機區；要沿 source world graph 找真正 active encounter floor。
 
 ## C. 玩家／寵物完整資料模型：高優先
 
@@ -322,3 +322,5 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 - 哪些是 fixed C，哪些是影片還原，哪些是本專案新增的放置版規則？
 
 只要這些問題還有大面積空白，就先繼續做資料與 contract，而不是急著寫首頁。
+
+Destination closure checkpoint：`data/generated/stoneage_start_destination_closure.json`；審計工具：`tools/audit_start_destination_closure.mjs`。
