@@ -81,7 +81,7 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 - Encounter Floor/X/Y → tile/object probe
 - client image → ADRNBIN → Real → RD decoder → palette → RGBA 的資料鏈
 
-目前已有 10 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。四張 first-route destination maps 已經加入這 10 張 verified runtime。
+目前已有 10 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。另已開始做 direct landing → 下一層 portal origin 的座標級可達性，避免把 floor-level world edge 誤當成玩家可走路線。四張 first-route destination maps 已經加入這 10 張 verified runtime。
 
 四個 hometown 的原始 LS2MAP 已完成 exact pinned-source walkability audit，但這四張目前仍不代表完整世界地圖 coverage；下一階段仍要把 destination maps 與主要世界 route 逐步轉成 verified runtime。
 
@@ -295,7 +295,7 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 ## 建議的下一個實際工作順序
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
-2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability、0 個 unreachable，5 個 `changeevent` runtime-unresolved。destination-map source／landing walkability 也已 4/4、7/7 closed；下一步集中在 active encounter eligibility／一般掛機 region、changeevent module discrepancy 與 reward definitions。
+2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability、0 個 unreachable，5 個 `changeevent` runtime-unresolved。destination-map source／landing walkability 也已 4/4、7/7 closed；本輪進一步完成 8 組下一層 portal group 的座標級 reachability：1000/2000 全部可達、3000 兩組至少各有可達 origin、4000→200 是兩組明確 disconnected blocker。下一步集中在 active encounter eligibility／一般掛機 region、floor 200 正確 world runtime、changeevent module discrepancy 與 reward definitions。
 3. **Map Coverage Expansion**：由目前 10 張 verified map 繼續擴到能形成主要世界路線的完整地圖群。
 4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
 5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
@@ -347,6 +347,20 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 之後套用 fixed-C template / interaction contract 後，41/46 NPC 已可驗證從出生點到合法互動站位；5 個 `changeevent` blocks（4 個 xinshou + 1 個薩姆吉爾村長）因 `gmsv/src/npc/npctemplate.c` 的 `functionSet[]` 不存在 `changeevent`，並依 `gmsv/src/npc/npccreate.c` 的 unknown-template rejection 規則維持 runtime-unresolved，不視為已實例化 NPC。
 
 
+## 2026-09-30 新增：world exit 座標級可達性與 floor 200 衝突
+
+新增 `data/generated/stoneage_start_world_exit_reachability.json` 與 `tools/audit_start_world_exit_reachability.mjs`，把 direct destination → 下一層 world portal 從 floor-level edge 降到固定 map runtime 的座標級 path proof。
+
+結果：
+
+- 1000→100：2/2 portal groups usable，最短 120 / 104 步。
+- 2000→100：2/2 portal groups usable，最短 33 / 82 步。
+- 3000→200：2/2 portal groups usable；第二組 6 個 source origins 中 5 個可達，(73,59) 因 object image 2 不可走。
+- 4000→200：0/2 portal groups usable；兩組 source portal origins 都是 walkable cell，但都與 direct landing component 不連通，因此不能直接升格成 playable route。
+
+同時確認目前 `data/generated/stoneage_map_200.json` 是 `gmsv/data/map/extra/200` 的 30×30 map，不能容納 fixed-C world portal 的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`，blob SHA=`dcbb20f0212192fc852e1489a29a0d6d8d4c95ce`、size=3,840,044 bytes；公開地圖編號資料亦把 floor 200（加魯卡）對應到此 path。這一點目前只作 research corroboration，`jalga` 仍標記為 source-path identified / runtime-unverified，沒有用猜測資料產生 runtime。
+
+因此 first-route 下一階段不再只看 world graph，而是以「可從 direct landing 實際走到 source portal」作為 route promotion 條件。4000 需先完成 disconnected component 分析；floor 200 需先取得正確 world-map verified runtime，再繼續接 3000/4000 的 200 層路徑。
 ## 2026-09-30 最新校正：Start-floor NPC 不是座標缺口，而是 template 缺口
 
 `data/generated/stoneage_start_npc_coordinate_closure.json` 已把 46/46 start-floor NPC 的座標全部從 exact `borncorner` source 解出；`data/generated/stoneage_start_npc_reachability.json` 再以 fixed-C interaction contract 驗證 41/46 可達、0 個 unreachable。
