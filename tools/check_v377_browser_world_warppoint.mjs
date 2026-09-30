@@ -72,9 +72,11 @@ assert.deepEqual(moved.state.world.position,{floorId:100,x:637,y:491});
 assert.equal(validatePersistentState(moved.state).length,0);
 assert.equal(moved.verification.ok,true);
 
-const wrong=await runtime.execute(state,{portalId:'1000_to_100_a',expectedRevision:0});
+const unknownSourceState=freshPersistentState({playerId:'v377-unknown-source'});
+unknownSourceState.world.position={floorId:1000,x:0,y:0};
+const wrong=await runtime.execute(unknownSourceState,{portalId:'1000_to_100_a',expectedRevision:0});
 assert.equal(wrong.ok,false);
-assert.equal(wrong.reason,'warppoint-position-invalid');
+assert.equal(wrong.reason,'warppoint-id-not-at-position');
 
 const mismatch=freshPersistentState({playerId:'v377-mismatch'});
 mismatch.world.position={floorId:1000,x:49,y:117};
