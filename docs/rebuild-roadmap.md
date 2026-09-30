@@ -1244,3 +1244,33 @@ V3.93 將 fixed-C `BATTLE_SurpriseCheck()` 獨立來源化。
 
 下一階段是把 surprise result 按 fixed-C 順序放進 Battle Context，再進 V3.92 pre-command / Turn initialization。
 
+## 2026-10-01 V3.94 Browser Battle Initialize
+
+V3.94 將 fixed-C `BATTLE_Init()` 的初始化順序正式串成單一 boundary：
+
+`BATTLE_MODE_BATTLE=2`
+→ `BATTLE_SurpriseCheck()`
+→ `BSIDE_FLG_SURPRISE`
+→ `BATTLE_PreCommandSeq()`
+→ `BATTLE_AllCharaCWaitSet()`
+→ `BATTLE_TurnParam()`
+
+新增：
+- `src/stoneage_browser_battle_initialize_runtime.mjs`
+- `data/generated/stoneage_browser_battle_initialize_schema.json`
+- `tools/check_v394_browser_battle_initialize_runtime.mjs`
+- `docs/reference/v394-browser-battle-initialize.md`
+- `.github/workflows/check-v394-browser-battle-initialize.yml`
+
+V3.94 不直接重算 surprise；固定 luck 仍由 V3.93 caller-injected transient Work 值提供。完成後 Battle Context 會同時帶：
+- sourceMode = 2
+- Surprise side flags
+- Actor C_WAIT mode
+- command reset
+- 第一輪 Attack/Defence/Quick modifier decay
+- player charm double-decay
+
+仍不執行 AI、Status、Damage、Reward、Capture、Death。
+
+下一階段是把 Battle Context 接到既有 Battle Model 的 command collection，先處理 `BATTLE_CommandWait()` / 第一回合可操作 actor，再進 Enemy AI。
+
