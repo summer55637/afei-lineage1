@@ -1,0 +1,167 @@
+
+{
+  "format": "stoneage-browser-start-warp-catalog-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "template": {
+      "path": "gmsv/data/npc/genout/npcgen.template",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "blobSha": "82df67b07e0376c439d8af2478b3964bf94083a6"
+    },
+    "runtimeInit": {
+      "path": "gmsv/src/npc/npc_warp.c",
+      "function": "NPC_WarpInit"
+    },
+    "runtimeWatch": {
+      "path": "gmsv/src/npc/npc_warp.c",
+      "function": "NPC_WarpWatch"
+    },
+    "runtimeExecute": {
+      "path": "gmsv/src/npc/npc_warp.c",
+      "function": "NPC_WarpWarpCharacter",
+      "argument": "floor|x|y"
+    }
+  },
+  "scope": {
+    "startFloors": [1006, 2006, 3006, 4006]
+  },
+  "statistics": {
+    "rowCount": 8,
+    "unresolvedCount": 0,
+    "sourceCreateCount": 2,
+    "hometownFloorCount": 4
+  },
+  "policy": {
+    "activation": "NPC_WarpWatch receives CHAR_ACTWALK when the player walks onto the Warp NPC cell",
+    "execution": "NPC_WarpWarpCharacter reads the Warp NPC standard floor|x|y argument and calls CHAR_warpToSpecificPoint after coordinate validation",
+    "unsupported": "FREEMORE/conditional multi-destination Warp arguments are not interpreted in this catalog and remain fail-closed",
+    "browserBoundary": "Browser runtime persists only world.position and Save Envelope; server-side chat/drop-stake side effects are outside this state boundary"
+  },
+  "rows": [
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y.create#23",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y.create",
+      "createBlockIndex": 23,
+      "startLine": 214,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 1006, "x": 10, "y": 20},
+      "target": {"floorId": 1000, "x": 98, "y": 44},
+      "standardArg": "1000|98|44",
+      "rawEnemy": "npcgen_warp|1000|98|44"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y.create#25",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y.create",
+      "createBlockIndex": 25,
+      "startLine": 232,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 1006, "x": 10, "y": 21},
+      "target": {"floorId": 1000, "x": 98, "y": 45},
+      "standardArg": "1000|98|45",
+      "rawEnemy": "npcgen_warp|1000|98|45"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y.create#153",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y.create",
+      "createBlockIndex": 153,
+      "startLine": 1384,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 2006, "x": 20, "y": 21},
+      "target": {"floorId": 2000, "x": 56, "y": 48},
+      "standardArg": "2000|56|48",
+      "rawEnemy": "npcgen_warp|2000|56|48"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y.create#155",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y.create",
+      "createBlockIndex": 155,
+      "startLine": 1402,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 2006, "x": 21, "y": 21},
+      "target": {"floorId": 2000, "x": 57, "y": 48},
+      "standardArg": "2000|57|48",
+      "rawEnemy": "npcgen_warp|2000|57|48"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y2.create#17",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y2.create",
+      "createBlockIndex": 17,
+      "startLine": 160,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 3006, "x": 20, "y": 21},
+      "target": {"floorId": 3000, "x": 90, "y": 60},
+      "standardArg": "3000|90|60",
+      "rawEnemy": "npcgen_warp|3000|90|60"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y2.create#18",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y2.create",
+      "createBlockIndex": 18,
+      "startLine": 169,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 3006, "x": 21, "y": 21},
+      "target": {"floorId": 3000, "x": 90, "y": 60},
+      "standardArg": "3000|90|60",
+      "rawEnemy": "npcgen_warp|3000|90|60"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y2.create#63",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y2.create",
+      "createBlockIndex": 63,
+      "startLine": 574,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 4006, "x": 10, "y": 20},
+      "target": {"floorId": 4000, "x": 80, "y": 90},
+      "standardArg": "4000|80|90",
+      "rawEnemy": "npcgen_warp|4000|80|90"
+    },
+    {
+      "format": "stoneage-browser-start-warp-row-v1",
+      "sourceKey": "genout/warp_y2.create#65",
+      "fixedSource": {"repository": "gavinlinasd/StoneAge", "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+      "createPath": "genout/warp_y2.create",
+      "createBlockIndex": 65,
+      "startLine": 592,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "templateName": "npcgen_warp",
+      "functionSet": "Warp",
+      "origin": {"floorId": 4006, "x": 10, "y": 21},
+      "target": {"floorId": 4000, "x": 80, "y": 91},
+      "standardArg": "4000|80|91",
+      "rawEnemy": "npcgen_warp|4000|80|91"
+    }
+  ]
+}
