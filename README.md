@@ -102,9 +102,9 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 
 1. World Data Catalog：NPC、任務、商店、傳送、服務、事件等。
 2. Map Coverage Expansion：主要世界地圖與地圖連接；目前已補上 first-route 下一層 warp portal coordinate evidence，並開始建立可批量產生 verified map runtime 的工具。
-3. Persistent State Schema：玩家、寵物、裝備、背包、技能、任務與掛機狀態。
-4. Idle Loop Contract：自動遇敵、戰鬥、結算、補給、死亡、離線／恢復。
-5. Battle Presentation Contract：真實戰場、站位、動畫事件與 UI。
+3. Persistent State Schema：玩家、寵物、裝備、背包、技能、任務與掛機狀態；canonical schema v1 已建立。
+4. Reward Transaction：battle result → source reward credit → atomic EXP/Gold/Item/Pet commit；不重抽 RNG。
+5. Idle Loop Contract：自動移動、遇敵、戰鬥、結算、補給、死亡、離線恢復；state machine 與 policy boundary 已建立。
 6. NPC / Economy Runtime：互動、取得來源、商店、製作與任務。
 7. Authorized Asset Integration：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
 8. 唯一可玩入口：以上資料與 contract 成熟後才建立。
@@ -168,3 +168,9 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 這一輪確認了一個重要 source 規則：fixed-C `gmsv/data/map` 的檔名不一定等於 floor ID。`1000` 使用 `sainasu/samugiru/samugiru`、`3000` 使用 `jyaruga/jaja/jaja`、`4000` 使用 `jyaruga/karutana/karutana`；真正的 floor identity 以 LS2MAP header 為準。這三張圖已直接由 pinned binary 產生 verified runtime；加上 floor 100 與正確的 world floor 200 jalga runtime，目前專案共有 11 張 verified maps。
 
 `tools/generate_verified_map_runtime.mjs` 已固定這套流程；battlemap candidate 不足三個時依 fixed-C `readmap.c` 的初始化行為以 `0` 補足三個 slot，不會自行創造戰場編號。
+
+## Reward / Idle runtime update（2026-09-30）
+
+新增 `src/stoneage_reward_transaction.mjs`：把 fixed-C `BATTLE_AddProfit / BATTLE_AddExpItem` 的 reward boundary 轉成 transaction。一次只提交已決定的 player EXP、Pet credit、Gold、existing-item；transactionId 提供 idempotent commit，背包滿時不做部分提交。
+
+新增 `src/stoneage_idle_policy.mjs`：Healer recovery 已來源化為玩家 HP/MP 全補；補給門檻、死亡 recovery mode、offline max seconds 必須由明確 policy 提供，不偷渡成固定 C 規則。
