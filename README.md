@@ -131,6 +131,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/idle-loop-contract.md`
 - `docs/reference/save-envelope-contract.md`
 - `docs/reference/reward-transaction-contract.md`
+- `docs/reference/item-economy-runtime.md`
 - `docs/reference/idle-supply-death-offline-policy.md`
 - `docs/reference/idle-simulation-runner.md`
 - `docs/reference/persistent-state-schema.md`
