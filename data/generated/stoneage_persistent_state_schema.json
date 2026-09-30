@@ -13,6 +13,7 @@
   },
   "sections": [
     "sourceProfile",
+    "creation",
     "player",
     "inventory",
     "equipment",
@@ -36,7 +37,9 @@
     "profession skill slot count 26",
     "player item slot count 24",
     "pet/team reference integrity",
-    "world floorId shape"
+    "world floorId shape",
+    "creation hometown shape",
+    "creation stat/element container presence when configured"
   ],
   "playerFields": [
     "id",
@@ -57,7 +60,8 @@
   ],
   "sourceEvidence": {
     "goldField": "state.gold is an existing runtime state field; fresh-state history records source-backed initial Gold separately from defaultPlayer.h",
-    "caution": "current canonical freshState keeps structural gold=0 until the create-character transaction is wired; initial creation value is not silently hardcoded here."
+    "caution": "current canonical freshState keeps structural gold=0 until the create-character transaction is wired; initial creation value is not silently hardcoded here.",
+    "creation": "Creation input is source-backed; values are only applied by the new-player creation runtime after explicit player selection."
   },
   "idleOfflineFields": [
     "eligible",
@@ -67,5 +71,20 @@
     "accruedSeconds",
     "resumePending",
     "rewardsApplied"
+  ],
+  "creationFields": [
+    "hometown",
+    "hometownConfigured",
+    "hometownLegacyUnknown",
+    "playerCreationStats",
+    "playerCreationStatsConfigured",
+    "playerCreationStatsLegacyUnknown",
+    "elements",
+    "elementsConfigured",
+    "elementsLegacyUnknown",
+    "starterPetGranted",
+    "starterItemGranted",
+    "completed",
+    "source"
   ]
 }

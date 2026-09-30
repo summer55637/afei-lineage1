@@ -22,6 +22,21 @@ function freshPersistentState({ now = () => new Date().toISOString(), playerId =
       fixedCRef: '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       legacySaveSchema: SOURCE_LEGACY_SAVE_SCHEMA_VERSION
     },
+    creation: {
+      hometown: null,
+      hometownConfigured: false,
+      hometownLegacyUnknown: false,
+      playerCreationStats: null,
+      playerCreationStatsConfigured: false,
+      playerCreationStatsLegacyUnknown: false,
+      elements: null,
+      elementsConfigured: false,
+      elementsLegacyUnknown: false,
+      starterPetGranted: false,
+      starterItemGranted: false,
+      completed: false,
+      source: null
+    },
     player: {
       id: playerId,
       name: String(playerName),
@@ -133,6 +148,35 @@ function normalizePersistentState(raw, { now = () => new Date().toISOString() } 
   }
   const current = freshPersistentState({ now });
   const sourceSchema = intOr(raw.schemaVersion, 0);
+  if (isObject(raw.creation)) {
+    current.creation = {
+      ...current.creation,
+      hometown: raw.creation.hometown == null ? null : nonNegativeInt(raw.creation.hometown, null),
+      hometownConfigured: raw.creation.hometownConfigured === true,
+      hometownLegacyUnknown: raw.creation.hometownLegacyUnknown === true,
+      playerCreationStats: isObject(raw.creation.playerCreationStats) ? {
+        vital: nonNegativeInt(raw.creation.playerCreationStats.vital),
+        str: nonNegativeInt(raw.creation.playerCreationStats.str),
+        tgh: nonNegativeInt(raw.creation.playerCreationStats.tgh),
+        dex: nonNegativeInt(raw.creation.playerCreationStats.dex)
+      } : null,
+      playerCreationStatsConfigured: raw.creation.playerCreationStatsConfigured === true,
+      playerCreationStatsLegacyUnknown: raw.creation.playerCreationStatsLegacyUnknown === true,
+      elements: isObject(raw.creation.elements) ? {
+        earth: nonNegativeInt(raw.creation.elements.earth),
+        water: nonNegativeInt(raw.creation.elements.water),
+        fire: nonNegativeInt(raw.creation.elements.fire),
+        wind: nonNegativeInt(raw.creation.elements.wind)
+      } : null,
+      elementsConfigured: raw.creation.elementsConfigured === true,
+      elementsLegacyUnknown: raw.creation.elementsLegacyUnknown === true,
+      starterPetGranted: raw.creation.starterPetGranted === true,
+      starterItemGranted: raw.creation.starterItemGranted === true,
+      completed: raw.creation.completed === true,
+      source: isObject(raw.creation.source) ? clone(raw.creation.source) : null
+    };
+  }
+
   current.player = copyKnownLegacyPlayer(raw);
 
   const inventoryRaw = isObject(raw.inventory) ? raw.inventory : {};
@@ -173,7 +217,7 @@ function normalizePersistentState(raw, { now = () => new Date().toISOString() } 
   current.runtimeMeta = { ...current.runtimeMeta, ...(isObject(raw.runtimeMeta) ? clone(raw.runtimeMeta) : {}), updatedAt: String(now()) };
 
   const knownTopLevel = new Set([
-    'schemaVersion','revision','sourceProfile','player','id','name','level','exp','transmigration','hp','maxHp','mp','maxMp','luck','charm','duelPoint',
+    'schemaVersion','revision','sourceProfile','creation','player','id','name','level','exp','transmigration','hp','maxHp','mp','maxMp','luck','charm','duelPoint',
     'playerStats','stats','gold','professionClass','professionLevel','professionSkillPoint','professionSkills','playerItemSlots','inventory','itemRuntime',
     'petBox','team','activePetId','pets','quests','events','titles','world','position','savePoint','idle','battleSettings','equipment','runtimeMeta'
   ]);
@@ -198,6 +242,12 @@ function validatePersistentState(state) {
     if (isObject(player.profession) && (!Array.isArray(player.profession.skills) || player.profession.skills.length !== PROFESSION_SKILL_SLOT_COUNT)) errors.push('profession.skills must contain exactly 26 slots');
   }
   if (!isObject(state.inventory) || !Array.isArray(state.inventory.playerItemSlots) || state.inventory.playerItemSlots.length !== PLAYER_ITEM_SLOT_COUNT) errors.push('inventory.playerItemSlots must contain exactly 24 slots');
+  if (!isObject(state.creation)) errors.push('creation must be an object');
+  if (isObject(state.creation)) {
+    if (state.creation.hometown != null && (!Number.isInteger(state.creation.hometown) || state.creation.hometown < 0 || state.creation.hometown > 3)) errors.push('creation.hometown invalid');
+    if (state.creation.playerCreationStatsConfigured && !isObject(state.creation.playerCreationStats)) errors.push('creation.playerCreationStats required when configured');
+    if (state.creation.elementsConfigured && !isObject(state.creation.elements)) errors.push('creation.elements required when configured');
+  }
   if (isObject(state.inventory) && Array.isArray(state.inventory.playerItemSlots) && isObject(state.inventory.itemRuntime) && isObject(state.inventory.itemRuntime.slots)) {
     for (let index = 9; index < PLAYER_ITEM_SLOT_COUNT; index++) {
       const ref = state.inventory.playerItemSlots[index];

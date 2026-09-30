@@ -2,6 +2,10 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.46 player creation runtime
+
+V3.46 把 fixed-C 創角輸入正式接進 canonical Persistent State：四圍 0..20 / 總和≤20、元素總和10 / 最多兩屬性 / Earth+Fire 與 Water+Wind 禁配，並保存 hometown、creationPlayerStats、elements 與 starter grant 狀態。加入 `src/stoneage_player_creation_runtime.mjs` 與 regression；仍不新增 playable HTML。
+
 ## 2026-09-30 新增：V3.45 new-player seed runtime
 
 V3.45 將 fixed-C setup.cf 出生 seed 正式獨立：TRANS=1、LV=1、PETLV=1、GOLD=30000、ITEM1=24114；並把 PET1 → config slot 1 而 getter(0) 讀 slot 0 的 parser quirk 明確寫入 contract。四個 hometown fallback starter pet 由 pinned enemy1.txt + enemybase1.txt 閉合為 EnemyID 1/2/3/4、TempNo 2/112/102/34。24114 只完成 source item-ID / creation-path closure，不猜 item template。新增 seed generator、V3.45 regression 與 pinned-source rebuild CI；仍保持 0 個 playable HTML。
