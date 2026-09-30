@@ -1,0 +1,47 @@
+
+name: Check V3.63 ChangeEvent three-layer source closure
+
+on:
+  push:
+    paths:
+      - 'data/generated/stoneage_changeevent_module_audit.json'
+      - 'data/generated/stoneage_start_route_closure.json'
+      - 'tools/check_v363_changeevent_three_layer_closure.mjs'
+      - 'docs/reference/v363-changeevent-three-layer-closure.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v363-changeevent-three-layer-closure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Check parser and loader symbols
+        run: |
+          grep -q 'templateindex= NPC_templateGetTemplateIndex(enemyname);' fixed-c-source/gmsv/src/npc/npccreate.c
+          grep -q 'if( templateindex != -1 )' fixed-c-source/gmsv/src/npc/npccreate.c
+          grep -q 'if( enemyreadindex == 0 )' fixed-c-source/gmsv/src/npc/npccreate.c
+          grep -q 'BOOL NPC_readNPCTemplateFiles' fixed-c-source/gmsv/src/npc/npctemplate.c
+          grep -q 'int NPC_templateGetTemplateIndex' fixed-c-source/gmsv/src/npc/npctemplate.c
+      - name: Check pinned template registry has no changeevent entry
+        run: |
+          if grep -RinE --include='*.template' 'templatename[[:space:]]*=[[:space:]]*changeevent' fixed-c-source/gmsv/data/npc; then exit 1; fi
+          if grep -RinE --include='*.template' 'functionset[[:space:]]*=[[:space:]]*changeevent' fixed-c-source/gmsv/data/npc; then exit 1; fi
+      - name: Run V3.63 closure regression
+        run: node tools/check_v363_changeevent_three_layer_closure.mjs fixed-c-source
+      - name: Check JavaScript syntax
+        run: node --check tools/check_v363_changeevent_three_layer_closure.mjs

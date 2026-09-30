@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.63 ChangeEvent three-layer source closure
+
+V3.63 修正並升級舊 V3.29 changeevent audit 的證據模型。真正的 fixed-C registration chain 是 NPCCREATE enemy= → NPC_templateGetTemplateIndex() → recursively loaded NPC template registry，而不是單看 npctemplate.c/functionSet[]。固定 source 的 NPC_readNPCTemplateFiles() 會遞迴掃描 template files；lookup 只有 exact registered template name 才成功，unknown name 回 -1。NPC_readCreateFile() 對 unknown enemy 不寫入 cr.templateindex[]，enemyreadindex 維持 0，block close 亦拒絕該 create block。
+
+V3.63 pinned-source scan 再確認 gmsv/data/npc/**/*.template 沒有 templatename=changeevent，也沒有 functionset=changeevent。因此目前 5 個 start-floor enemy=changeevent|... instance（4 個 xinshou + 1 個薩姆吉爾的村長）應分類為 source-proven non-instantiable in pinned build，而不是可互動但尚未接 handler。
+
+外部資料確實可見 changeevent 的任務型 DSL，也有 compatibility source 將 templateName=changeevent 對到 functionset=ExChangeMan；但那不是 pinned C evidence。嚴格 fixed-C runtime 仍 fail-closed；只有 compatibility mode 顯式提供 alias catalog 時才可執行。
+
+V3.63 不新增假的 changeevent template、不把 ExChangeMan 提升成 strict alias、不改 5 個 source create block。下一階段正式把這 5 個 instance 從「待找 source module」視為「pinned build 已證明不能實例化」，把工程量轉回 Persistent State / Idle Loop / 可玩入口 closure。
+
 ## 2026-09-30 新增：V3.62 4000→200 source movement parity audit
 
 V3.62 沿 pinned fixed-C `char_walk.c` / `map_deal.c` 重新核對 4000→200 blocker。固定 C 的斜向移動在 `CHAR_walk()` 不允許單純 corner-cutting：目的格必須 `MAP_walkAble()`，且起點往 X / Y 正交方向的兩個 side cells 也必須通過 `MAP_walkAble()`。因此以 4-neighbor walkable connected components 做 blocker proof 不會漏掉合法斜向穿越。

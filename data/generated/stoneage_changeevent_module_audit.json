@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-changeevent-module-audit-v1",
+  "format": "stoneage-changeevent-module-audit-v2",
   "auditedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -7,62 +7,145 @@
   },
   "target": {
     "templateName": "changeevent",
-    "createReference": "gmsv/data/npc/almark/xinshou/xinshou.create|enemy=changeevent|file:almark/xinshou/xinshoujd.arg",
-    "affectedNewPlayerInstances": 4,
-    "additionalKnownStartFloorInstance": "薩姆吉爾的村長"
+    "startFloorInstanceCount": 5,
+    "knownInstances": [
+      {
+        "hometown": 0,
+        "floorId": 1006,
+        "npc": [
+          15,
+          22
+        ],
+        "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 2,
+        "fileRef": "almark/xinshou/xinshoujd.arg"
+      },
+      {
+        "hometown": 1,
+        "floorId": 2006,
+        "npc": [
+          22,
+          15
+        ],
+        "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 0,
+        "fileRef": "almark/xinshou/xinshoujd.arg"
+      },
+      {
+        "hometown": 2,
+        "floorId": 3006,
+        "npc": [
+          23,
+          18
+        ],
+        "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 1,
+        "fileRef": "almark/xinshou/xinshoujd.arg"
+      },
+      {
+        "hometown": 3,
+        "floorId": 4006,
+        "npc": [
+          14,
+          20
+        ],
+        "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blockIndex": 3,
+        "fileRef": "almark/xinshou/xinshoujd.arg"
+      },
+      {
+        "hometown": 0,
+        "floorId": 1006,
+        "npc": [
+          18,
+          22
+        ],
+        "createPath": "gmsv/data/npc/genout/shop_m.create",
+        "blockIndex": 12,
+        "fileRef": "genout/msg_1006_18_22"
+      }
+    ]
   },
   "evidence": [
     {
-      "source": "gmsv/src/npc/npctemplate.c",
-      "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
-      "check": "functionSet[]",
-      "finding": "changeevent is absent",
-      "consequence": "NPC_templateGetTemplateIndex('changeevent') returns -1 unless a matching template is registered elsewhere."
-    },
-    {
+      "layer": "create-parser",
       "source": "gmsv/src/npc/npccreate.c",
       "blobSha": "28651f52060b6417758dd0d7ae5755ee1f94e8e2",
-      "check": "NPC_readCreateFile enemy parser",
-      "finding": "templateindex=NPC_templateGetTemplateIndex(enemyname); only templateindex!=-1 is stored; else it logs missing module and does not attach the enemy template",
-      "consequence": "An unknown changeevent template cannot become an active NPC instance in the pinned runtime."
+      "checks": [
+        "enemy= parses first | token as enemyname",
+        "enemyname is passed to NPC_templateGetTemplateIndex",
+        "only templateindex!=-1 is stored in cr.templateindex",
+        "unknown template leaves enemyreadindex unchanged",
+        "block close rejects enemyreadindex==0"
+      ],
+      "finding": "unknown enemy/template cannot become a stored NPC create record"
     },
     {
+      "layer": "template-registry-loader",
+      "source": "gmsv/src/npc/npctemplate.c",
+      "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
+      "checks": [
+        "NPC_readNPCTemplateFiles recursively scans topdirectory",
+        "NPC_readTemplateFile registers valid templates",
+        "NPC_templateGetTemplateIndex requires exact registered template name and otherwise returns -1"
+      ],
+      "finding": "runtime lookup domain is recursively loaded NPC template registry"
+    },
+    {
+      "layer": "pinned-registry-scan",
+      "source": "gmsv/data/npc/**/*.template",
+      "checks": [
+        "no templatename=changeevent",
+        "no functionset=changeevent"
+      ],
+      "finding": "no pinned NPC template registry entry named changeevent"
+    },
+    {
+      "layer": "source-create",
       "source": "gmsv/data/npc/almark/xinshou/xinshou.create",
       "blobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
-      "check": "enemy directive",
-      "finding": "new-player NPC references changeevent with file:almark/xinshou/xinshoujd.arg",
-      "consequence": "script reference is present even though runtime registry entry is absent."
+      "finding": "four hometown new-player NPC blocks use enemy=changeevent|file:almark/xinshou/xinshoujd.arg"
     },
     {
+      "layer": "source-create",
+      "source": "gmsv/data/npc/genout/shop_m.create",
+      "blobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+      "finding": "floor 1006 block 12 uses enemy=changeevent|file:genout/msg_1006_18_22"
+    },
+    {
+      "layer": "event-script",
       "source": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
       "blobSha": "62dec9dc760731a90f6f0c2ab3c0a01cf5c6b0c9",
-      "check": "event script",
-      "finding": "contains 4 ACCEPT reward branches with GetItem/GetPet/Charm/EndSetFlg",
-      "consequence": "the data-side event DSL is recoverable independently of the missing template module."
+      "finding": "event DSL remains recoverable: EventNo / TYPE / EVENT / GetItem / GetPet / Charm / EndSetFlg / EventEnd"
     }
   ],
   "aliasChecks": [
     {
       "candidate": "ExChangeMan",
-      "status": "not-promoted",
-      "reason": "pinned registry contains ExChangeMan and separate npc_exchangeman.c behavior, but no source evidence equates changeevent to ExChangeMan."
+      "status": "external-compatibility-only",
+      "reason": "external compatibility sources can map changeevent to ExChangeMan, but pinned source has no changeevent template registry entry"
     },
     {
       "candidate": "Charm",
       "status": "not-promoted",
-      "reason": "Charm is a distinct function-set entry and therefore cannot substitute the missing changeevent template."
+      "reason": "distinct pinned module/template semantics"
     },
     {
       "candidate": "Action",
       "status": "not-promoted",
-      "reason": "Action is a separate function-set entry with different callbacks."
+      "reason": "distinct pinned module/template semantics"
     }
   ],
-  "publicCrossCheck": {
-    "source": "web",
-    "finding": "public StoneAge documentation describes changeevent as a task-NPC module and shows EventNo/TYPE/EVENT/GetItem/GetPet/EndSetFlg script structure",
-    "limitation": "public documentation does not establish that the pinned StoneAge 8.0 tree contains the same module implementation or registry entry."
+  "externalCrossCheck": {
+    "sources": [
+      "https://www.shiqisifu.cc/Article/5/News_21.html",
+      "https://www.shiqisifu.cc/Article/5/News_20.html"
+    ],
+    "finding": "public StoneAge references describe changeevent as a task-NPC type and expose the EventNo/TYPE/EVENT/GetItem/GetPet/EndSetFlg DSL",
+    "limitation": "public material does not prove that pinned 8.0 source contains a matching changeevent template registration"
   },
   "status": "runtime-module-unresolved",
-  "promotionPolicy": "Do not synthesize or alias-register changeevent without exact pinned-source module/registry evidence."
+  "closureClass": "source-proven-non-instantiable-in-pinned-build",
+  "strictPolicy": "Do not synthesize a changeevent template, do not alias-register ExChangeMan in strict fixed-C mode, and do not mark the five source create blocks as active interactive NPCs.",
+  "compatibilityPolicy": "An explicit external compatibility catalog may opt in changeevent→ExChangeMan outside strict fixed-C parity; this is not pinned-source evidence."
 }
