@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-candidates-v4",
+  "format": "stoneage-start-route-candidates-v5",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -10,7 +10,8 @@
     "encounter": "gmsv/src/char/encount.c::ENCOUNT_initEncount",
     "encounterActiveDefinition": "gmsv/src/char/encount.c::ENCOUNT_initEncount; active means probMax > 0 and at least one numeric group id",
     "encounterGate": "gmsv/src/char/enemy.c::ENEMY_getEnemy checks GROUP_APPEARBYITEMID / GROUP_NOTAPPEARBYITEMID",
-    "itemSource": "gmsv/setup.cf::itemset6file + gmsv/src/item/item.c"
+    "itemSource": "gmsv/setup.cf::itemset6file + gmsv/src/item/item.c",
+    "destinationWarpCoordinates": "data/generated/stoneage_start_destination_warp_coordinates.json"
   },
   "statistics": {
     "hometowns": 4,
@@ -87,7 +88,8 @@
             "rowsWithAtLeastOneUnconditionalGroup": 44
           }
         }
-      ]
+      ],
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
     },
     {
       "hometown": 1,
@@ -248,17 +250,6 @@
           "status": "empty_fixed_source"
         }
       },
-      "nearestActiveEncounterRoutes": [
-        {
-          "floor": 2000,
-          "depth": 1,
-          "path": [
-            2006,
-            2000
-          ],
-          "encounterCount": 1
-        }
-      ],
       "nearestUnconditionalEncounterRoutes": [
         {
           "floor": 100,
@@ -275,7 +266,8 @@
             "rowsWithAtLeastOneUnconditionalGroup": 44
           }
         }
-      ]
+      ],
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
     },
     {
       "hometown": 2,
@@ -563,17 +555,6 @@
           "status": "empty_fixed_source"
         }
       },
-      "nearestActiveEncounterRoutes": [
-        {
-          "floor": 3000,
-          "depth": 1,
-          "path": [
-            3006,
-            3000
-          ],
-          "encounterCount": 1
-        }
-      ],
       "nearestUnconditionalEncounterRoutes": [
         {
           "floor": 200,
@@ -590,7 +571,8 @@
             "rowsWithAtLeastOneUnconditionalGroup": 113
           }
         }
-      ]
+      ],
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
     },
     {
       "hometown": 3,
@@ -863,8 +845,9 @@
             "rowsWithAtLeastOneUnconditionalGroup": 113
           }
         }
-      ]
+      ],
+      "encounterRouteSemantics": "nearestUnconditionalEncounterRoutes are floor-level source candidates only; exact portal coordinates are in stoneage_start_destination_warp_coordinates.json."
     }
   ],
-  "policy": "Route candidates use source warp connectivity. Direct destination encounters are classified with the fixed C group inventory gate. Groups requiring item IDs 20216/20219 remain source-unresolved because pinned itemset6.txt is empty. Generic hunting candidates are floors reached in the directed world graph that contain at least one encounter row with an unconditional group. No map, item, NPC or quest data is guessed."
+  "policy": "Route candidates use source warp connectivity. Direct destination encounters distinguish placeholder rows and conditional item-gated groups. Generic encounter candidates are only floor-level until exact destination maps, landing walkability and encounter-region coordinates are verified. Exact next-floor warp portals are recorded separately. Missing maps/items are never guessed."
 }
