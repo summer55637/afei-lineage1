@@ -76,11 +76,14 @@ const bigState=freshPersistentState({playerId:'v384-big'});
 const group349=groupCatalog.groups.find(g=>g.groupId===349);
 assert.ok(group349);
 const bigEncounter={floorId:200,x:371,y:866,encounterId:222,enemyMax:5,groupIds:[349],groupProbs:[1]};
-const bigResult=generateEnemyRoster(bigEncounter,{...group349,groupId:349,weight:1},{entryMaxRoll:4,enemyRolls:[10,10,10,10]});
+const bigResult=generateEnemyRoster(bigEncounter,{...group349,groupId:349,weight:1},{entryMaxRoll:4,enemyRolls:[10,10,0,0]});
 assert.equal(bigResult.ok,true,JSON.stringify(bigResult));
 assert.equal(bigResult.team.length,4);
-assert.deepEqual(bigResult.team.map(x=>x.enemyId),[474,474,474,474]);
-assert.ok(bigResult.team.every(x=>x.size===1));
+assert.deepEqual(bigResult.team.map(x=>x.enemyId),[474,474,473,473]);
+assert.equal(bigResult.team[0].size,1);
+assert.equal(bigResult.team[1].size,1);
+assert.equal(bigResult.team[2].size,0);
+assert.equal(bigResult.team[3].size,0);
 
 const special=generateEnemyRoster({encounterId:1,enemyMax:1},{groupId:1,weight:1,members:[{slot:1,enemyId:945,createProb:1,enemy:{enemyId:945,createMaxNum:1,createMinNum:1,base:{size:0}}}]},{entryMaxRoll:1,enemyRolls:[0]});
 assert.equal(special.ok,false);
@@ -92,7 +95,7 @@ console.log(JSON.stringify({
   format:BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT,
   action:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   encounter65Group94:{entryMax:4,team:[120,120,123,123]},
-  encounter222Group349BigTeam:[474,474,474,474],
+  encounter222Group349BigTeam:[474,474,473,473],
   randomEnemyFailClosed:true,
   persistentMutation:false,
   battleStarted:false
