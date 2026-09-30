@@ -1,4 +1,5 @@
 name: Check V3.84 Browser World Encounter Enemy generation
+# Re-run against latest catalog/runtime after source-boundary updates.
 on:
   push:
     paths:
