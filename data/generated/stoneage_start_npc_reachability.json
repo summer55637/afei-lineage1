@@ -1,0 +1,278 @@
+{
+  "format": "stoneage-start-npc-reachability-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "startFlow": "data/generated/stoneage_start_flow_index.json",
+    "mapParser": "tools/stoneage_ls2map_parser.mjs",
+    "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
+    "interaction": "gmsv/src/npc/npcutil.c::NPC_Util_charIsInFrontOfChar"
+  },
+  "statistics": {
+    "totalNpcInstancesOnStartFloors": 46,
+    "coordinateResolvedInstances": 16,
+    "reachableCoordinateResolvedInstances": 16,
+    "unreachableCoordinateResolvedInstances": 0,
+    "unresolvedCoordinateInstances": 30
+  },
+  "sourceValidation": [
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "sourcePath": "gmsv/data/map/sainasu/samugiru/1006",
+      "sourceBlobSha": "a95ff591d6d64a3e00d0cd9a8f308955078ed489",
+      "blobShaVerified": true
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "sourcePath": "gmsv/data/map/sainasu/marinasu/2006",
+      "sourceBlobSha": "3d4266aa56915ebcba1317cb6f8af0bbba5f45c9",
+      "blobShaVerified": true
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "sourcePath": "gmsv/data/map/jyaruga/jaja/3006",
+      "sourceBlobSha": "7e321345229c684ba88a24ac72900fd5777732e6",
+      "blobShaVerified": true
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "sourcePath": "gmsv/data/map/jyaruga/karutarna/4006",
+      "sourceBlobSha": "bbdeb0d1bef3ec3993afc75d6416599c3bd5cf46",
+      "blobShaVerified": true
+    }
+  ],
+  "rows": [
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "bankman",
+      "npcPath": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 9,
+      "npc": [
+        18,
+        30
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 10
+    },
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 0,
+      "npc": [
+        18,
+        24
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 4
+    },
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 0,
+      "npc": [
+        15,
+        13
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 10
+    },
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 0,
+      "npc": [
+        18,
+        26
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "bankman",
+      "npcPath": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 10,
+      "npc": [
+        29,
+        20
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 12
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 1,
+      "npc": [
+        29,
+        16
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 8
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 1,
+      "npc": [
+        17,
+        14
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 4
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 1,
+      "npc": [
+        14,
+        18
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 7
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "bankman",
+      "npcPath": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 11,
+      "npc": [
+        27,
+        20
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 9
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 2,
+      "npc": [
+        25,
+        16
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 3
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 2,
+      "npc": [
+        14,
+        13
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 9
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 2,
+      "npc": [
+        27,
+        15
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "elder": "karutarna",
+      "template": "bankman",
+      "npcPath": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 12,
+      "npc": [
+        16,
+        30
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 11
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "elder": "karutarna",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 3,
+      "npc": [
+        18,
+        23
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "elder": "karutarna",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 3,
+      "npc": [
+        16,
+        25
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "elder": "karutarna",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 3,
+      "npc": [
+        13,
+        15
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 5
+    }
+  ],
+  "policy": "This audit uses exact pinned hometown maps and only NPC instances with resolved numeric coordinates. Interaction is modeled as reaching at least one walkable orthogonal stance cell adjacent to the NPC, matching NPC_Util_charIsInFrontOfChar distance=1 used by Familyman, Bankman and Windowman. NPC instances without a resolved numeric coordinate remain unresolved and are not guessed."
+}
