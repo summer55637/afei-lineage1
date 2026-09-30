@@ -28,7 +28,8 @@ const itemMakeFixture={
     '44':{b:[0,44,2,200],w:[]},
     '45':{b:[0,45,2,300],w:[]},
     '46':{b:[0,46,2,400],w:[]},
-    '50':{b:[0,50,2,20],w:[]}
+    '50':{b:[0,50,2,20],w:[]},
+    '51':{b:[0,51,2,0],w:[]}
   }
 };
 
@@ -91,6 +92,13 @@ assert.equal(buyReq.ok,true);
 assert.equal(buyReq.transaction.baseCost,100);
 assert.equal(buyReq.transaction.buyRate,1);
 assert.equal(buyReq.transaction.quantity,2);
+
+const zeroCatalog=JSON.parse(JSON.stringify(fixture));
+zeroCatalog.shops['fixture.create#0'].itemIds=[51];
+const zeroReq=resolveNpcShopBuyRequest({catalog:zeroCatalog,itemMakeCatalog:itemMakeFixture,shopId:'fixture.create#0',itemId:51,quantity:1});
+assert.equal(zeroReq.ok,true);
+assert.equal(zeroReq.transaction.baseCost,0);
+assert.equal(zeroReq.transaction.buyRate,1);
 
 const index=buildItemShopAcquisitionIndex(fixture);
 assert.equal(index.ok,true);
