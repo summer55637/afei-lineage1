@@ -8,6 +8,8 @@
 
 本輪沒有建立 playable HTML，也沒有把未閉合 NPC／任務資料硬塞成 gameplay。
 
+另外完成 World NPC Index 與 mapwarp source validation：7,979 create blocks 已全部閉合到 template；27 個 file/arg 參照維持 unresolved；5,457 筆 mapwarp 全部通過 source map header 的 floor/座標範圍驗證。
+
 下一步直接進入 **world-npc-index**：從固定 NPC tree 中建立可追蹤的 NPC instance index，優先閉合地圖、位置、template、functionset 與 arg 的關係，再向 shop / quest / warp / service 擴展。
 
 ## 目的
