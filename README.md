@@ -340,6 +340,17 @@ V3.28 regression 已納入 GitHub Actions。
 
 V3.29 audit regression 已納入 GitHub Actions。
 
+## V3.30 NPC Event Save Runtime
+
+新增 `src/stoneage_npc_event_save_runtime.mjs`、`tools/check_v330_npc_event_save_runtime.mjs`、`.github/workflows/check-v330-npc-event-save-runtime.yml` 與 `docs/reference/v330-npc-event-save-runtime.md`。
+
+- first-route reward transaction 現在接到既有 Save Envelope / revision guard。
+- Lv1 branch 0 一次提交 4 Item + 1 Pet + Charm-rule + EndSetFlg 366，共 7 actions。
+- Save Envelope revision 固定為 1；同 transactionId 重播不重複發獎，已完成 366 分支的新 transactionId 會被條件阻擋。
+- event / save 任一層失敗都不會提交 canonical state。
+
+V3.30 regression 已納入 GitHub Actions。
+
 ## V3.30 First-route Save Integration
 
 新增 `src/stoneage_first_route_save.mjs`、`tools/check_v330_first_route_save.mjs`、`.github/workflows/check-v330-first-route-save.yml` 與 `docs/reference/v330-first-route-save.md`。
