@@ -79,7 +79,7 @@ function applyRewardTransaction(state, packet, { knownExistingItemIds = null, no
     const key = String(item.existingIndex);
     const existing = next.inventory.itemRuntime?.slots?.[key];
     if (!existing) return { applied: false, reason: 'existing-item-runtime-missing', transactionId: validation.packet.transactionId, state };
-    if (existing.owner && existing.owner !== 'enemy:' + validation.packet.transactionId && existing.owner !== 'enemy' && existing.owner !== 'source-pending') {
+    if (typeof existing.owner !== 'string' || !existing.owner.startsWith('enemy:')) {
       return { applied: false, reason: 'existing-item-not-transferable', transactionId: validation.packet.transactionId, state };
     }
     const slots = emptySlots();
