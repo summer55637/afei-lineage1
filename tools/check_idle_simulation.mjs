@@ -16,7 +16,6 @@ const win=await simulateFirstEncounter(base,route,variant,{
   now:()=> '2026-09-30T05:00:00.000Z',
   save:true
 });
-if(!win.ok) console.log('SIM_WIN_DEBUG',JSON.stringify(win));
 assert.equal(win.ok,true);
 assert.equal(win.idleState.state,'moving');
 assert.equal(win.state.player.hp,80);
@@ -24,6 +23,7 @@ assert.equal(win.state.player.exp,20);
 assert.equal(win.state.player.gold,15);
 assert.equal(win.state.revision,1);
 assert.equal(win.save.ok,true);
+assert.equal(typeof win.save.envelope.payloadHash,'string');
 
 const second=await simulateFirstEncounter(win.state,route,variant,{
   encounter:{floorId:100,encounterId:65},
