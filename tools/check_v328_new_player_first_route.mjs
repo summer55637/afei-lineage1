@@ -95,7 +95,7 @@ assert.equal(failed.ok,false);
 assert.equal(failed.applied,false);
 assert.equal(failed.transaction.role,'GetPet');
 assert.equal(failed.state.revision,0);
-assert.equal(failed.state.inventory.playerItemSlots.filter(v=>v!==null).length,4);
+assert.equal(failed.state.inventory.playerItemSlots.filter(v=>v!==null).length,0);
 assert.equal(failed.state.pets.petBox.length,0);
 assert.equal(stagedFailureBase.inventory.playerItemSlots.filter(v=>v!==null).length,0);
 assert.equal(stagedFailureBase.pets.petBox.length,0);
