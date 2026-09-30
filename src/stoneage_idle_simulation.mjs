@@ -2,6 +2,7 @@ import { transitionIdle, IDLE_EVENTS, IDLE_STATES, idleInitialState } from './st
 import { applyRewardTransaction } from './stoneage_reward_transaction.mjs';
 import { supplyRequired, deathRecoveryDecision, offlineResumeWindow, sourceHealerRecovery } from './stoneage_idle_policy.mjs';
 import { commitSave } from './stoneage_save_transaction.mjs';
+import { adaptSourceBattleResult, assertBattleResultForIdle, BATTLE_RESULT_FORMAT } from './stoneage_battle_result_adapter.mjs';
 
 const SIMULATION_FORMAT='stoneage-idle-simulation-v1';
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -10,6 +11,17 @@ const intOr=(value,fallback=0)=>Number.isFinite(Number(value))?Math.trunc(Number
 function routeVariantKey(route,variant){return `hometown-${route?.hometown}/floor-${route?.entryFloor}-to-${route?.encounterFloor}/${variant?.portalId??'unknown'}`;}
 
 function advanceClock(iso,seconds){const t=Date.parse(String(iso));if(!Number.isFinite(t))throw new Error('invalid simulation clock');return new Date(t+Math.max(0,intOr(seconds,0))*1000).toISOString();}
+
+function normalizeSimulationBattleResult(battleResult,sourceBattleResult){
+  if(sourceBattleResult!=null){
+    const adapted=adaptSourceBattleResult(sourceBattleResult);
+    if(!adapted.ok)return {ok:false,reason:adapted.reason};
+    return {ok:true,battleResult:adapted.result};
+  }
+  const checked=assertBattleResultForIdle(battleResult);
+  if(!checked.ok)return {ok:false,reason:checked.reason};
+  return {ok:true,battleResult};
+}
 
 function applyBattleExitSnapshot(state,battleResult){
   const next=JSON.parse(JSON.stringify(state));
@@ -21,10 +33,12 @@ function applyBattleExitSnapshot(state,battleResult){
   return next;
 }
 
-async function simulateFirstEncounter(state,route,variant,{encounter,battleResult,policy={},knownExistingItemIds=null,now=()=>new Date().toISOString(),save=true}={}){
+async function simulateFirstEncounter(state,route,variant,{encounter,battleResult=null,sourceBattleResult=null,policy={},knownExistingItemIds=null,now=()=>new Date().toISOString(),save=true}={}){
   if(!isObject(state)||!route||!variant)return {ok:false,reason:'missing-simulation-input'};
   if(!Number.isFinite(Number(variant.originPathMin))||!Number.isFinite(Number(variant.landingPathMin)))return {ok:false,reason:'route-path-time-missing'};
-  if(battleResult==null)return {ok:false,reason:'battle-result-required'};
+  const normalizedBattle=normalizeSimulationBattleResult(battleResult,sourceBattleResult);
+  if(!normalizedBattle.ok)return {ok:false,reason:normalizedBattle.reason};
+  battleResult=normalizedBattle.battleResult;
   const startAt=String(now());
   let clock=startAt;
   let idle=idleInitialState();
@@ -74,4 +88,4 @@ function simulateOfflineResume(state,closedAt,resumedAt,{maxSeconds=null}={}){
 
 function recoverAtHealer(state){return sourceHealerRecovery(state);}
 
-export { SIMULATION_FORMAT, routeVariantKey, simulateFirstEncounter, simulateOfflineResume, recoverAtHealer };
+export { SIMULATION_FORMAT, BATTLE_RESULT_FORMAT, routeVariantKey, normalizeSimulationBattleResult, simulateFirstEncounter, simulateOfflineResume, recoverAtHealer };
