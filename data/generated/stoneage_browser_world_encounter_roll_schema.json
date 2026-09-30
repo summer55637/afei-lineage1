@@ -1,0 +1,21 @@
+{
+  "format": "stoneage-v381-browser-world-encounter-roll-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_ENCOUNTER_ROLL",
+  "runtime": "src/stoneage_browser_world_encounter_runtime.mjs",
+  "sourceBoundary": "V3.80 prepared unconditional encounter record",
+  "fixedC": {
+    "roll": "rand()%120 < cep",
+    "cepClamp": "min/max encounter probability",
+    "miss": "cep increments up to probMax",
+    "hit": "cep resets to probMin"
+  },
+  "semantics": {
+    "rng120": "caller-injected integer 0..119",
+    "persistentStateMutation": false,
+    "battleStarted": false,
+    "noEnemy": "skip RNG and preserve clamped CEP",
+    "battleModeNone": "required for roll; otherwise skip RNG",
+    "warpBlocked": "RNG is consumed; a hit does not trigger battle and CEP does not increment"
+  }
+}
