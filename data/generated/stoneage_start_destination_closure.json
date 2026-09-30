@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-destination-closure-v2",
+  "format": "stoneage-start-destination-closure-v3",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -10,21 +10,38 @@
     "encountFile": "gmsv/data/encount.txt",
     "mapRuntime": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
     "mapSourceCatalog": "data/generated/stoneage_map_source_catalog.json",
-    "worldGraph": "data/generated/stoneage_world_graph_index.json::directedFloorEdges"
+    "worldGraph": "data/generated/stoneage_world_graph_index.json::directedFloorEdges",
+    "group": "gmsv/src/char/enemy.c::GROUP_initGroup",
+    "enemySelection": "gmsv/src/char/enemy.c::ENEMY_getEnemy",
+    "itemset6": "gmsv/setup.cf::itemset6file + gmsv/src/item/item.c"
   },
   "sourceEvidence": {
     "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
     "encountRowsTotal": 1197,
-    "activeEncounterDefinition": "probMax > 0 AND at least one numeric group id",
+    "activeEncounterDefinition": "row probMax > 0 AND at least one group id",
     "itemSourcePath": "gmsv/data/itemset6.txt",
     "itemSourceBlobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
     "groupSourcePath": "gmsv/data/group1.txt",
     "groupSourceBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874",
     "encounterGateDefinitions": {
       "placeholder": "probMax <= 0 OR no group id",
-      "unconditional": "active encounter row with at least one group having appearByItemId=-1 and notAppearByItemId=-1 and no encounter event gate",
-      "conditionalItem": "active encounter row whose usable group requires an inventory item",
-      "unresolvedItemGate": "conditional item ID is not found in fixed-source itemset6"
+      "unconditional": "active row with at least one group having appearByItemId=-1 and notAppearByItemId=-1 and no event gate",
+      "conditionalItem": "active row whose group requires an inventory item",
+      "unresolvedItemGate": "required item id is absent from pinned itemset6 source"
+    },
+    "encount": {
+      "path": "gmsv/data/encount.txt",
+      "blobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f"
+    },
+    "group1": {
+      "path": "gmsv/data/group1.txt",
+      "blobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874"
+    },
+    "itemset6": {
+      "path": "gmsv/data/itemset6.txt",
+      "blobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
+      "byteLength": 0,
+      "rowCount": 0
     }
   },
   "statistics": {
@@ -36,7 +53,13 @@
     "activeEncounterDestinationFloors": 0,
     "placeholderOnlyDestinationFloors": 2,
     "unresolvedDestinationMaps": 3,
-    "conditionalEncounterDestinationFloors": 2
+    "conditionalEncounterDestinationFloors": 2,
+    "unconditionalEncounterDestinationFloors": 0,
+    "itemset6Rows": 0,
+    "itemGateIdsUnresolved": [
+      20216,
+      20219
+    ]
   },
   "towns": [
     {
@@ -138,7 +161,21 @@
             ]
           }
         ],
-        "classification": "active"
+        "classification": "conditional_unresolved_item_source",
+        "groupGate": {
+          "groupId": 1018,
+          "name": "Óæ´å°¬ÃÛ",
+          "appearByItemId": 20219,
+          "notAppearByItemId": -1,
+          "itemFoundInItemset6": false,
+          "enemyIds": [
+            1911
+          ],
+          "enemyName": "艾蜜(可抓)",
+          "enemyTempNo": 961,
+          "levelMin": 79,
+          "levelMax": 79
+        }
       },
       "landingAudit": [
         {
@@ -264,7 +301,21 @@
             ]
           }
         ],
-        "classification": "active"
+        "classification": "conditional_unresolved_item_source",
+        "groupGate": {
+          "groupId": 1015,
+          "name": "¼Ó¼Ó°¬ÃÛ",
+          "appearByItemId": 20216,
+          "notAppearByItemId": -1,
+          "itemFoundInItemset6": false,
+          "enemyIds": [
+            1904
+          ],
+          "enemyName": "艾蜜(1掉乌鲁力)",
+          "enemyTempNo": 952,
+          "levelMin": 79,
+          "levelMax": 79
+        }
       },
       "landingAudit": [
         {
@@ -371,8 +422,8 @@
   "status": {
     "destinationWalkability": "partial",
     "directDestinationEncounter": "partial",
-    "fullFirstRoute": "partial",
-    "unconditionalEncounterRoute": "partial"
+    "genericEncounterRoute": "closed_at_floor_level",
+    "fullFirstRoute": "partial"
   },
-  "policy": "Do not treat zero-probability/no-group rows as active encounters. Active groups with appearByItemId/notAppearByItemId are conditional and cannot be promoted to a normal idle route until the item/event gate is source-closed. Missing fixed-source destination map blobs remain unresolved and are never replaced by guessed or cross-version maps."
+  "policy": "Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. In the pinned source, itemset6.txt is empty, so encounter gates 20216/20219 remain source-unresolved. Missing fixed-source maps and item definitions remain unresolved and are never replaced by guessed or cross-version data."
 }
