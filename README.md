@@ -204,11 +204,21 @@ probe 只讀取已經發生的 Encounter 座標，不重新抽座標，也不消
 
 V3.16 從公開 client source 閉合 tile 圖像來源鏈：`tile image ID → realGetNo() → ADRNBIN graphicNo → Real binary offset/size → decoder()`。
 
-新增 `src/stoneage_client_image_runtime.mjs`，依 client `ADRNBIN` struct 解析固定 **72-byte little-endian record**，提供 image ID → graphic metadata 查詢。
+新增 `src/stoneage_client_image_runtime.mjs`，依 client `ADRNBIN` struct 解析固定 **80-byte little-endian record**，提供 image ID → graphic metadata 查詢。
 
 目前沒有可確認可發布的 `adrn_136.bin`／`real_136.bin` asset pack，因此只做 resolver metadata contract，不把第三方客戶端圖片打包進 Pages；缺少 binary 時維持 fail-closed。
 
 來源筆記：[V3.16 client image resolver contract](docs/reference/v316-client-image-resolver-contract.md)。
+
+## 🔬 V3.18 authorized client asset pack adapter
+
+V3.18 接續 V3.16 ADRNBIN resolver 與 V3.17 RD decoder，新增可由部署者自行提供的 client asset pack adapter。
+
+預設 `client-assets/manifest.json` 維持 `unavailable`；repo 不自動下載、不內嵌原版 `adrn_*.bin`／`real_*.bin`，也不建立假 PNG。
+
+只有在部署者自行提供具使用權的 ADRNBIN／Real binary，並以 manifest 留下 authorization note（可再以 SHA-256 pin）時，adapter 才會把 `image ID → ADRNBIN → Real → RD pixels` 串起來。
+
+V3.18 目前仍是 source/runtime groundwork；下一層會閉合 palette／顏色映射，再進入真實 tile presentation。
 
 ## 🔬 V3.17 client RD decoder
 
@@ -251,7 +261,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.13 fixed-C map source catalog（1284 個原始 map blobs，7 張已 verified）與 mapset normalization regression
 - V3.14 fixed-C map header catalog（可重跑 1284 map headers scanner）
 - V3.15 verified Encounter coordinate source probe（不耗 RNG、fail-closed）
-- V3.16 client image resolver（ADRNBIN 72-byte metadata contract、Real binary asset fail-closed）
+- V3.16 client image resolver（ADRNBIN 80-byte metadata contract、Real binary asset fail-closed）
 - V3.17 client RD decoder（RD raw/RLE pixels、truecolor branch fail-closed）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
@@ -296,4 +306,4 @@ start.html
 ---
 
 **目前正式可玩核心：V3.09**  
-**目前開發方向：V3.17 RD decoder → 合法 client asset pack adapter → 真實 tile presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
+**目前開發方向：V3.18 合法 client asset pack adapter → palette／顏色映射 → 真實 tile presentation → verified map 擴充 → battle map selection → runtime regression → playable integration**
