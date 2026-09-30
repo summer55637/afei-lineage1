@@ -29,10 +29,10 @@ function normalizeBinding(binding){
   const born=isObject(binding.born)?binding.born:null;
   const floorId=intOr(born?.floorId??born?.floor,-1);
   const x=intOr(born?.x,-1),y=intOr(born?.y,-1);
-  if(elderId<0||elderId>30)return {ok:false,reason:'savepoint-elder-id-out-of-supported-source-range'};
+  if(elderId<0||elderId>127)return {ok:false,reason:'savepoint-elder-id-out-of-source-elder-range'};
   if(floorId<0||x<0||y<0)return {ok:false,reason:'savepoint-born-position-required'};
   const mode=normalizeName(binding.mode||'');
-  if(!['no-item','item-required'].includes(mode))return {ok:false,reason:'savepoint-source-item-mode-unresolved'};
+  if(!['no-item','item-required','confirm-only'].includes(mode))return {ok:false,reason:'savepoint-source-item-mode-unresolved'};
   return {ok:true,binding:{elderId,born:{floorId,x,y},mode,rawArg:binding.rawArg??null,sourceKey:binding.sourceKey??null}};
 }
 
@@ -59,13 +59,16 @@ function applySavePoint(state,binding,{now=()=>new Date().toISOString()}={}){
   const b=normalized.binding;
   const existing=state.world?.savePoint;
   if(existing!=null && !isObject(existing))return {applied:false,reason:'existing-savepoint-state-invalid',state};
-  const oldMask=currentUnlockedMask(existing);
-  const mask=(oldMask | (1<<b.elderId)) >>> 0;
+  const oldUnlocked=Array.isArray(existing?.unlockedElderIds) ? existing.unlockedElderIds.map(x=>intOr(x,-1)).filter(x=>x>=0&&x<=127) : [];
+  const unlockedElderIds=[...new Set([...oldUnlocked,b.elderId])].sort((a,c)=>a-c);
+  const oldMask=Number.isInteger(existing?.definedBitmask32)&&existing.definedBitmask32>=0?existing.definedBitmask32:0;
+  const definedBitmask32=b.elderId<31?((oldMask | (1<<b.elderId))>>>0):oldMask;
   const next=clone(state);
   next.world??={position:{floorId:null,x:null,y:null},savePoint:null};
   next.world.savePoint={
     elderId:b.elderId,
-    unlockedMask:mask,
+    unlockedElderIds,
+    definedBitmask32,
     position:{floorId:b.born.floorId,x:b.born.x,y:b.born.y},
     sourceKey:b.sourceKey??null,
     sourceMode:b.mode
@@ -102,8 +105,12 @@ function createBrowserSavePointRuntime({moduleAudit=null,savePointCatalog=null}=
       if(!checked.ok)return {ok:false,handled:false,stage:'source-binding',reason:checked.reason,state};
       const gate=interactionGate(action.npc,action.player);
       if(!gate.ok)return {ok:false,handled:false,...gate,state};
-      if(checked.binding.mode==='item-required')return {ok:false,handled:false,stage:'source-binding',reason:'savepoint-item-requirement-not-yet-closed',state,sourceBinding:checked.binding};
-      if(type===ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-only-applies-to-item-required-source-path',state,sourceBinding:checked.binding};
+      const existingUnlocked=Array.isArray(state?.world?.savePoint?.unlockedElderIds)
+        && state.world.savePoint.unlockedElderIds.some(x=>intOr(x,-1)===checked.binding.elderId);
+      if(checked.binding.mode==='item-required' && !existingUnlocked)return {ok:false,handled:false,stage:'source-binding',reason:'savepoint-item-requirement-not-yet-closed',state,sourceBinding:checked.binding};
+      if(checked.binding.mode==='confirm-only' && type===ACTION_NPC_SAVEPOINT_SET)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-required',state,sourceBinding:checked.binding};
+      if(checked.binding.mode==='item-required' && type===ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'source-binding',reason:'savepoint-item-requirement-not-yet-closed',state,sourceBinding:checked.binding};
+      if(checked.binding.mode==='no-item' && type===ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-not-applicable',state,sourceBinding:checked.binding};
       const result=applySavePoint(state,checked.binding,{now:action.now??options.now??(()=>new Date().toISOString())});
       return {ok:result.applied===true,handled:result.applied===true,stage:'savepoint',reason:result.applied?null:result.reason,result,state:result.state??state,savePoint:result.savePoint??null,gate:gate.gate};
     }
