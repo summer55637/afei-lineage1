@@ -1,0 +1,19 @@
+{
+  "format": "stoneage-v384-browser-world-encounter-enemy-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_ENCOUNTER_ENEMY_GENERATE",
+  "sourceCatalog": "data/generated/stoneage_start_encounter_group_runtime.json",
+  "fixedC": {
+    "entryMax": "min(encounter.enemyMax, sum(selectedGroup member CREATEMAXNUM)); RAND(1, entryMax)",
+    "memberSelection": "RAND(0, sum(CREATEPROB)-1) per accepted/rejected loop",
+    "duplicateLimit": "selected count for Enemy array >= CREATEMAXNUM * sameCount causes rejection",
+    "loopGuard": 100,
+    "bigEnemy": "E_T_SIZE_BIG; max 5 big enemies and promote big enemy into first 5 positions when normal slots exist"
+  },
+  "semantics": {
+    "rng": "caller-injected entryMaxRoll plus enemyRolls",
+    "persistentStateMutation": false,
+    "battleStarted": false,
+    "randomEnemyReplacement": "945..956 and 964..969 remain fail-closed until replacement table is source-catalogued"
+  }
+}
