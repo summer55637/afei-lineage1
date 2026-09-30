@@ -216,10 +216,15 @@ function reconstructToSeed(bfs,startCell){
   const width=bfs.width;
   const startIndex=startCell.y*width+startCell.x;
   if(bfs.dist[startIndex]===-1)return null;
-  const path=[];
-  for(let cur=startIndex;bfs.dist[cur]>0;cur=bfs.parent[cur])path.push({x:cur%width,y:Math.floor(cur/width)});
-  path.reverse();
   const seedIndex=bfs.seed[startIndex];
+  if(seedIndex<0)return null;
+  const path=[];
+  for(let cur=startIndex;cur!==seedIndex;){
+    const next=bfs.parent[cur];
+    if(next<0)return null;
+    cur=next;
+    path.push({x:cur%width,y:Math.floor(cur/width)});
+  }
   return {
     distance:Number(bfs.dist[startIndex]),
     path,
