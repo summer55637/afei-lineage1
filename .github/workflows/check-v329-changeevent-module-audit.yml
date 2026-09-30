@@ -1,0 +1,26 @@
+name: Check V3.29 changeevent module audit
+
+on:
+  push:
+    paths:
+      - 'data/generated/stoneage_changeevent_module_audit.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'tools/check_v329_changeevent_module_audit.mjs'
+      - 'docs/reference/v329-changeevent-module-audit.md'
+      - '.github/workflows/check-v329-changeevent-module-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: node --check tools/check_v329_changeevent_module_audit.mjs
+      - name: Run V3.29 audit regression
+        run: node tools/check_v329_changeevent_module_audit.mjs
