@@ -812,3 +812,29 @@ V3.42 已新增同 pinned fixed-C source 的 World NPC + ItemShop 雙生成 join
 固定 source 目前保留 1 筆明確 anomaly：`gmsv/data/npc/my/magicdou/daochang.create#8` → `my/ruieryasi/yao.arg`。該目錄在 pinned checkout 不存在，故維持 fail-closed，不以猜測檔案內容替代。
 
 下一步不是再造新 engine，而是把通過 join 的正式 catalog 接回 canonical browser shell / world NPC interaction，並讓這一筆 anomaly 維持不可交易狀態直到有新的可證實 source。
+
+## 2026-10-01 V3.78 Browser World First-Route Planning
+
+V3.78 將 V3.76 movement、V3.77 map WarpPoint 與既有 first-idle encounter closure 串成單一唯讀 headless planner：
+
+`direct hometown landing → WORLD_MOVE_STEP* → WORLD_WARPPOINT_EXECUTE → WORLD_MOVE_STEP* → unconditional encounter boundary`
+
+新增：
+
+- `src/stoneage_browser_world_first_route_runtime.mjs`
+- `data/generated/stoneage_browser_world_first_route_schema.json`
+- `tools/check_v378_browser_world_first_route.mjs`
+- `.github/workflows/check-v378-browser-world-first-route.yml`
+- `docs/reference/v378-browser-world-first-route.md`
+
+planner 不建立第二套 movement / warp / battle engine，只產生可直接交給 canonical Browser State Controller 的 action sequence。四方向 BFS 使用既有 `sourceMapWalkableAt()`；這是 browser navigation 的 path choice，不冒充 fixed-C 原始客戶端的 exact input sequence。
+
+Encounter 邊界沿用 pinned fixed-C `ENCOUNT_initEncount()` / `ENCOUNT_getEncountAreaArray()` / `CoordinateInRect()` 語義。Rectangle 為 inclusive；抵達 unconditional encounter rectangle 只代表 route boundary closed，不代表已經消耗 encounter RNG 或啟動戰鬥。
+
+目前 closure：
+
+- 1000→100、2000→100 各 2 組可規劃。
+- 3000→200 兩組仍受既有 landing / source closure 約束，其中 `(587,318)` 維持不可走。
+- 4000→200 兩組仍 `source_blocked_before_portal`，V3.78 不建立 synthetic bridge / manual warp。
+
+V3.78 controller 新增唯讀 action `WORLD_FIRST_ROUTE_PLAN`；plan 不修改 Persistent State revision，也不建立 Save Envelope。
