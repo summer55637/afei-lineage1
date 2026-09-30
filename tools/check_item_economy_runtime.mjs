@@ -45,9 +45,11 @@ const sell=sellShopItem(sellingState,{
 });
 assert.equal(sell.applied,true);
 assert.equal(sell.total,200);
-assert.equal(sell.state.player.gold,1200);
+assert.equal(sell.state.player.gold,900);
 assert.equal(sell.state.inventory.playerItemSlots[9],null);
 assert.equal(sell.state.inventory.itemRuntime.slots['100'],undefined);
+const sellAgain=sellShopItem(sell.state,{transactionId:'sell-1',slot:9,quantity:1,baseCost:1000,sellRate:0.2});
+assert.equal(sellAgain.idempotent,true);
 
 const pileState=freshPersistentState({playerId:'p2'});
 pileState.player.gold=100;
