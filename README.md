@@ -35,7 +35,7 @@
 
 地圖方面已完成 LS2MAP parser、mapset、battlemap、Encounter 座標探測，以及 client image → ADRNBIN → Real → RD → palette → RGBA 的技術鏈。
 
-目前 source catalog 有 1284 個 map blobs，現有 10 張 verified map runtime；因此完整世界地圖與可行路線仍是主要待補區。
+目前 source catalog 有 1284 個 map blobs，現有 12 張 verified map runtime；因此完整世界地圖與可行路線仍是主要待補區。
 
 ## 近期 first-route checkpoint（2026-09-30）
 
@@ -70,6 +70,9 @@
 同時發現原本的 `data/generated/stoneage_map_200.json` 來自 `gmsv/data/map/extra/200`，只有 30×30，不能容納 fixed-C world portal 使用到的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`（3,840,044 bytes），公開地圖編號資料也把 floor 200（加魯卡）對應到這個路徑；但目前仍維持 `source-path identified / runtime-unverified`，不拿未驗證 binary 補成 gameplay runtime。
 
 本輪又新增 `data/generated/stoneage_start_encounter_target_index.json`：把 fixed-C floor 100 / 200 的 encounter rectangles 降成座標級 target。Floor 100 有 32 個 unconditional + 1 個 mixed + 11 個 unresolved group；Floor 200 有 103 個 unconditional + 5 個 mixed + 5 個 unresolved group。這只是 encounter source-coordinate evidence，尚未把它們宣稱成可走的刷怪路線；仍要等 exact map runtime 後做 landing → encounter path proof。
+## Persistent State Schema 起始（2026-09-30）
+
+Map / encounter source inputs 現在已足以開始做與 UI 無關的持久狀態層。下一階段會固定 player / pet / inventory / equipment / skill / quest / map-position / idle-settings 的 schema、validation 與 migration contract，仍不建立多個 playable HTML entry。
 ## 現代 3D 卡通化最終視覺目標
 
 最終作品不再以舊版 2D 網頁畫面作為終點。世界地圖、角色、寵物、戰鬥與 UI 都要進化到現代 3D 卡通手遊的完成度：斜俯視 3D 世界、卡通角色與寵物、集中式戰鬥場景、手機 RPG 式 HUD、技能／普攻／防禦／召喚／AUTO 等操作，以及完整的村莊與 NPC 互動框架。詳細規格已寫入 `docs/reference/modern-3d-mobile-visual-ui-target.md`。
