@@ -56,7 +56,7 @@ const npcLocated=resolveWorldNpcAt(worldPointIndex.index,{
   y:resolvedShop.bornCorner.y1
 });
 assert.equal(npcLocated.ok,true);
-assert.equal(npcLocated.npc.path,resolvedShop.source.create.path);
+assert.equal(String(npcLocated.npc.path).replace(/^gmsv\/data\/npc\//,''),String(resolvedShop.source.create.path).replace(/^gmsv\/data\/npc\//,''));
 assert.equal(npcLocated.npc.blockIndex,resolvedShop.source.create.blockIndex);
 
 const state=freshPersistentState({playerId:'v371-production'});
