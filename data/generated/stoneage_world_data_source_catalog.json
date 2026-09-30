@@ -197,59 +197,59 @@
       "path": "gmsv/data/mission.txt",
       "role": "mission list",
       "loadCondition": "_ANGEL_SUMMON",
-      "status": "cataloged-not-parsed"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/jobdaily.txt",
       "role": "daily task log/config",
       "loadCondition": "_JOBDAILY",
-      "status": "cataloged-not-parsed"
+      "status": "indexed-conditional"
     },
     {
       "path": "gmsv/data/raceman.txt",
       "role": "pet race data",
       "loadCondition": "_RACEMAN",
-      "status": "cataloged-not-parsed"
+      "status": "indexed-conditional"
     },
     {
       "path": "gmsv/data/racequiz.txt",
       "role": "race quiz data",
-      "status": "cataloged-not-parsed"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/question.txt",
       "role": "quiz questions",
-      "status": "loaded-by-init"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/ride.txt",
       "role": "ride definitions",
-      "status": "cataloged-not-parsed"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/leaderride.txt",
       "role": "leader ride settings",
-      "status": "cataloged-not-parsed"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/membershop.txt",
       "role": "member shop rows",
-      "status": "cataloged-not-parsed"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/memberpets.txt",
       "role": "member pet shop rows",
-      "status": "cataloged-not-parsed"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/titleconfig.txt",
       "role": "title rules/config",
-      "status": "loaded-by-init"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/titlename.txt",
       "role": "title names",
-      "status": "loaded-by-init"
+      "status": "indexed"
     },
     {
       "path": "gmsv/data/appear.txt",
@@ -275,13 +275,13 @@
     {
       "path": "gmsv/data/needitemeneny.txt",
       "role": "item/enemy requirement data",
-      "status": "cataloged-not-parsed"
+      "status": "raw-indexed"
     },
     {
       "path": "gmsv/data/contract.txt",
       "role": "contract data",
       "loadCondition": "_CONTRACT",
-      "status": "cataloged-not-parsed"
+      "status": "raw-indexed"
     },
     {
       "path": "gmsv/data/bmitem.txt",
@@ -328,7 +328,7 @@
     {
       "id": "quest-event-index",
       "priority": "P0",
-      "status": "next",
+      "status": "partial-completed",
       "scope": "mission/event arg sources and reward/condition chains"
     },
     {
@@ -401,6 +401,24 @@
       "missingMapFloorRows": 0,
       "outOfBoundsRows": 0,
       "oneWayRows": 2351
+    },
+    "auxWorldData": {
+      "status": "indexed",
+      "counts": {
+        "mission": 4,
+        "jobdaily": 207,
+        "ride": 13,
+        "leaderride": 10,
+        "titleconfig": 1,
+        "titlename": 2,
+        "question": 150,
+        "raceman": 286,
+        "racequiz": 82,
+        "memberpets": 14,
+        "membershop": 12,
+        "needitemeneny": 128,
+        "contract": 1
+      }
     }
   }
 }
