@@ -10,7 +10,7 @@
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
 - 最新 commit：c1f1237 — Strengthen V3.76 blocked-step regression
-- 最後更新時間：2026-10-01T04:00:00+08:00
+- 最後更新時間：2026-10-01T04:15:42+08:00
 - 版本線最高 regression workflow：V3.76
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
