@@ -23,7 +23,7 @@
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 固定 C 的 `CHAR_walk_move` 先做 `MAP_walkAble`，NPC warp 再透過 `CHAR_ISOVERED` 與 `NPC_WarpWatch` 接收成功的 `CHAR_ACTWALK`；因此 warp NPC 的占位不會讓原本可走的 map cell 變成不可走。
 
-目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；目前 46 個 start-floor NPC 已有 numeric coordinate；41 個 active-template NPC 已完成 interaction reachability，0 個 unreachable；5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 module 而維持 runtime-unresolved，因此目前標記：
+目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence、NPC coordinate/reachability 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json` 與 `stoneage_start_npc_coordinate_closure.json`，把全部 46 個 start-floor NPC 的 exact source coordinates 與 interaction status 分開保存。四個 hometown 都已具備 source-route spine 條件；目前 46 個 start-floor NPC 已有 numeric coordinate；41 個 active-template NPC 已完成 interaction reachability，0 個 unreachable；5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 module 而維持 runtime-unresolved，因此目前標記：
 
 - `sourceRouteSpine = closed`
 - `fullFirstRoute = partial`
@@ -81,7 +81,7 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 - Encounter Floor/X/Y → tile/object probe
 - client image → ADRNBIN → Real → RD decoder → palette → RGBA 的資料鏈
 
-目前已有 10 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。
+目前已有 10 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。四張 first-route destination maps 已經加入這 10 張 verified runtime。
 
 四個 hometown 的原始 LS2MAP 已完成 exact pinned-source walkability audit，但這四張目前仍不代表完整世界地圖 coverage；下一階段仍要把 destination maps 與主要世界 route 逐步轉成 verified runtime。
 
@@ -141,7 +141,7 @@ source map
 - encounter region
 - battle field 對應
 
-目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的。新增 destination closure v3 後，destination 層已進一步拆成 exact source map、landing walkability、active/conditional encounter：2000 的兩個 landing points 都 walkable，但它的 Group 1018 需要 item 20219；3000 的 Group 1015 需要 item 20216；fixed source 的 `itemset6.txt` 是空檔，所以兩者都維持 `conditional_unresolved_item_source`。1000、4000 只有 placeholder row。依 source world graph，四個 destination floor 往第一個含 unconditional encounter group 的 floor 分別為 100、100、200、200；這只是 floor-level source candidate，尚未完成目的地座標與實際可走路徑 closure。
+目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的。destination 層也已完成 4/4 exact map source、7/7 landing walkability；1000/3000/4000 是非 numeric filename、由 LS2MAP header 識別 floor。2000 的 Group 1018 需要 item 20219、3000 的 Group 1015 需要 item 20216，而 pinned `itemset6.txt` 是空檔，所以兩者仍是 `conditional_unresolved_item_source`；1000/4000 的 direct destination 僅有 placeholder。下一階段不再花時間補 destination map source，而是把 active encounter region、changeevent module 與 reward closure 往下接。
 
 ## C. 玩家／寵物完整資料模型：高優先
 
@@ -295,7 +295,7 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 ## 建議的下一個實際工作順序
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
-2. **Start Route Closure**：source-route spine 已 closed；16 個已解析 NPC 互動點已完成 reachability；下一步做剩餘 NPC 座標 closure → destination-map source／walkability closure（目前 4/4 destination maps、7/7 landing points 已 closed） → active encounter region → quest/event owner closure。
+2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability、0 個 unreachable，5 個 `changeevent` runtime-unresolved。destination-map source／landing walkability 也已 4/4、7/7 closed；下一步集中在 active encounter eligibility／一般掛機 region、changeevent module discrepancy 與 reward definitions。
 3. **Map Coverage Expansion**：由目前 10 張 verified map 繼續擴到能形成主要世界路線的完整地圖群。
 4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
 5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
@@ -358,3 +358,13 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destination floor 都有 exact map：1000 為 `sainasu/samugiru/samugiru`、2000 為 `sainasu/marinasu/2000`、3000 為 `jyaruga/jaja/jaja`、4000 為 `jyaruga/karutana/karutana`。目前 10 張 map runtime 已完成 verified index。
 
 四個 destination 共 7 個 landing points 全部通過 tile/object walkability。這表示 destination map source 與 landing walkability 已經不是 blocker；接下來要處理的是 encounter 條件、一般掛機 region、changeevent runtime discrepancy 與 reward data closure。
+
+## 2026-09-30 checkpoint：first-route source closure 已進入 encounter / module 階段
+
+目前已完成四村起點 → direct warp → destination map 的 source-backed closure：四村出生點、8 個 direct warp exits、46 個 start-floor NPC coordinates、41/46 active-template NPC interactions，以及 4/4 destination map runtimes、7/7 landing walkability 均已有固定 C 證據。剩餘 blocker 已縮成三類：
+
+1. `changeevent` 在 pinned `npctemplate.c` 不存在，5 個 start-floor blocks 因此維持 runtime-unresolved；
+2. 2000/3000 direct encounter 是 item-gated，而 pinned `itemset6.txt` 為空；1000/4000 direct encounter 是 placeholder，需要沿 exact world graph 找真正的 unconditional encounter region；
+3. 新玩家 event 的 reward item/pet definitions 尚未全部在 pinned source 中閉合。
+
+這個 checkpoint 之後，Map Coverage 的工作由「找第一張 destination map」轉向「找可執行的 ordinary encounter region 與其座標級路徑」，再進入 Persistent State / Idle Loop，而不是回頭建立 playable HTML。
