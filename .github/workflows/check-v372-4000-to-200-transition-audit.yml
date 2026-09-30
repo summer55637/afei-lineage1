@@ -33,7 +33,7 @@ jobs:
           import fs from 'node:fs';
           const x=JSON.parse(fs.readFileSync('/tmp/v372-audit.json','utf8'));
           fs.writeFileSync('data/generated/stoneage_4000_to_200_transition_audit.json',JSON.stringify(x,null,2)+'\n');
-          if(!x.pass || x.mapwarpDirect4000To200Rows!==0 || x.npcDirect4000To200Rows!==4) process.exit(1);
+          if(!x.pass || x.mapwarpDirect4000To200Rows!==4 || x.npcDirect4000To200Rows!==4 || x.transitionRepresentationsMatch!==true) process.exit(1);
           NODE
       - name: Check JavaScript syntax
         run: node --check tools/check_v372_4000_to_200_transition_audit.mjs
