@@ -1,0 +1,37 @@
+name: Check V3.94 Browser Battle Initialize
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_initialize_runtime.mjs'
+      - 'src/stoneage_browser_battle_surprise_runtime.mjs'
+      - 'src/stoneage_browser_battle_turn_runtime.mjs'
+      - 'data/generated/stoneage_browser_battle_initialize_schema.json'
+      - 'tools/check_v393_browser_battle_surprise_runtime.mjs'
+      - 'tools/check_v392_browser_battle_turn_runtime.mjs'
+      - 'tools/check_v394_browser_battle_initialize_runtime.mjs'
+      - 'docs/reference/v393-browser-battle-surprise.md'
+      - 'docs/reference/v392-browser-battle-turn-init.md'
+      - 'docs/reference/v394-browser-battle-initialize.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v394-browser-battle-initialize.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.92 V3.93 V3.94 battle initialization regression
+        run: |
+          node tools/check_v392_browser_battle_turn_runtime.mjs
+          node tools/check_v393_browser_battle_surprise_runtime.mjs
+          node tools/check_v394_browser_battle_initialize_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_initialize_runtime.mjs
+          node --check src/stoneage_browser_battle_surprise_runtime.mjs
+          node --check src/stoneage_browser_battle_turn_runtime.mjs
+          node --check tools/check_v394_browser_battle_initialize_runtime.mjs
