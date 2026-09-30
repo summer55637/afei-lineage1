@@ -425,3 +425,11 @@ Idle 與 battleSettings 明確標示為放置版產品層，不冒充 fixed-C。
 Existing-item reward lifecycle 已依 source 修正為只接收已存在且 enemy-owned 的 runtime item，並只能放入固定 Player backpack slots 9–23；不再由 reward layer 自行建立 existing-item slot。
 
 下一階段：把 source-backed item/economy runtime、battle simulation adapter 與真正的 save/offline resume transaction 接起來，再擴主要 world route coverage；仍不建立多個 playable HTML 入口。
+
+## 2026-09-30 Battle Result Adapter / Offline Resume
+
+新增 `src/stoneage_battle_result_adapter.mjs` 與 regression。fixed-C PvE 的 completed battle result 現在有獨立 adapter，Idle Simulation 不直接接受未標準化的 battle object；PvE `winside=0/1` 分別映射 player victory/defeat，battle result 與 reward RNG 都不在 adapter 重算。
+
+新增 `src/stoneage_offline_resume.mjs` 與 regression。Offline resume 現在可透過 Idle Simulation Runner 發起 checkpoint commit；必須先有 `idle.offline.eligible=true`，時間窗驗證後寫入 Save Envelope。尚未完成 source-backed offline battle/reward simulation，因此 `accruedSeconds=0` 與 `rewardsApplied=false` 是目前的安全邊界。
+
+下一階段可把 source-backed battle simulation output 接到這個 adapter，再決定是否形成真正的 offline reward transaction；同時開始 Item / Economy runtime 與主要 world route coverage。
