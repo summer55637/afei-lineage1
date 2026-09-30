@@ -77,14 +77,14 @@ assert.equal(validatePersistentState(resolved.state).length,0);
 assert.equal(resolved.verification.ok,true);
 assert.deepEqual(controller.getState().world.position,{floorId:1000,x:98,y:44});
 
-const stale=await controller.dispatch({
+const afterWarp=await controller.dispatch({
   type:ACTION_NPC_WARP_EXECUTE,
   npc,
-  player:{floor:first.origin.floorId,x:first.origin.x,y:first.origin.y},
-  expectedRevision:0
+  player:{floor:1000,x:98,y:44},
+  expectedRevision:1
 });
-assert.equal(stale.ok,false);
-assert.equal(stale.reason,'warp-player-not-on-npc-cell');
+assert.equal(afterWarp.ok,false);
+assert.equal(afterWarp.reason,'warp-player-not-on-npc-cell');
 assert.equal(controller.getState().revision,1);
 
 const conflictState=freshPersistentState({playerId:'v375-conflict'});
