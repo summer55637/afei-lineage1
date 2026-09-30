@@ -32,6 +32,14 @@
 
 下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 ownerless event IDs 仍需 closure。最高優先仍是四個出生村的 first-route closure。
 
+## 新增最終目標：現代 3D 卡通手遊化
+
+最終產品目標正式加入現代 3D 卡通化方向。這不是把舊版網頁 UI 換成 3D 圖片，而是把整個 presentation layer 升級：3D 卡通世界、角色／寵物模型、斜俯視鏡頭、現代 RPG HUD、集中式回合戰鬥、技能演出、AUTO／掛機、村莊與 NPC 互動。
+
+《石器時代：覺醒》的官方商店資訊包含回合制策略、上百寵物、職業、野外捕捉與離線掛機；《石器時代：放置冒險》則以放置玩法與寵物成長為產品核心。這些產品可作為我們的現代體驗參考，但本專案不直接複製它們的逐像素 UI 或原始美術資產。
+
+正式規格：`docs/reference/modern-3d-mobile-visual-ui-target.md`。
+
 ## 目的
 
 本文件不是可玩前端規格，而是「在重新建立唯一遊戲入口以前，先把資料、來源證據與核心系統補齊」的工作順序。
