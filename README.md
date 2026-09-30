@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：4bac060 — V3.45: tolerate fixed-C callsite whitespace
-- 最後更新時間：2026-09-30T16:22:56+08:00
+- 最新 commit：9c0171a — V3.45: include seed date in automatic README
+- 最後更新時間：2026-09-30T16:23:49+08:00
 - 版本線最高 regression workflow：V3.45
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -52,6 +52,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 - route closure：2026-09-30
 - persistent state：2026-09-30
 - item/economy schema：2026-09-30
+- new-player seed：2026-09-30
 - idle route catalog：2026-09-30
 - browser ItemShop contract：2026-09-30
 
