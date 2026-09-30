@@ -19,7 +19,7 @@ import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORL
 import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT } from './stoneage_browser_world_warppoint_runtime.mjs';
 import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
 import { createBrowserWorldFirstRouteExecutionRuntime, ACTION_WORLD_FIRST_ROUTE_EXECUTE, BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_execution_runtime.mjs';
-import { createBrowserWorldEncounterRuntime, ACTION_WORLD_ENCOUNTER_PREPARE, BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_runtime.mjs';
+import { createBrowserWorldEncounterRuntime, ACTION_WORLD_ENCOUNTER_PREPARE, ACTION_WORLD_ENCOUNTER_ROLL, BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -155,6 +155,20 @@ function createBrowserStateController({
         const result=await worldEncounterRuntime.prepare(currentState,{
           position:action.position??action.player??null,
           encounterId:action.encounterId??null
+        });
+        return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_ENCOUNTER_ROLL){
+        if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-runtime',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
+        if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-runtime',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
+        const result=await worldEncounterRuntime.roll(currentState,{
+          position:action.position??action.player??null,
+          encounterId:action.encounterId??null,
+          cep:action.cep??0,
+          rng120:action.rng120??null,
+          noEnemy:action.noEnemy===true,
+          battleModeNone:action.battleModeNone!==false,
+          warpBlocked:action.warpBlocked===true
         });
         return {...result,state:clone(result.state??currentState)};
       }
@@ -317,6 +331,7 @@ export {
   ACTION_WORLD_FIRST_ROUTE_PLAN,
   ACTION_WORLD_FIRST_ROUTE_EXECUTE,
   ACTION_WORLD_ENCOUNTER_PREPARE,
+  ACTION_WORLD_ENCOUNTER_ROLL,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
