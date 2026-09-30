@@ -23,7 +23,7 @@ const bundle=createFirstRouteRewardHandlers({
   petIdFactory:(st,created)=>'pet-'+created.petId,
   itemCapacity:1000,
   itemCursor:1,
-  randInclusive:(a,b)=>0
+  randInclusive:(a,b)=>a===b?a:0
 });
 assert.equal(bundle.ok,true);
 assert.equal(bundle.format,FIRST_ROUTE_REWARD_HANDLER_FORMAT);
@@ -46,7 +46,6 @@ const applied=applyNpcEventActionPlan(state,syntheticPlan,{
   transactionId:'first-route-bundle-1',
   now:()=> '2026-09-30T06:30:00.000Z'
 });
-console.log('DEBUG_APPLIED',JSON.stringify({ok:applied.ok,reason:applied.reason,role:applied.role,transaction:applied.transaction?.reason,txRole:applied.transaction?.role,detail:applied.detail}));
 assert.equal(applied.applied,true);
 assert.equal(applied.actionCount,5);
 assert.deepEqual(applied.state.inventory.playerItemSlots.slice(9,11),[1,2]);
