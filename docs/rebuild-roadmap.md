@@ -887,3 +887,22 @@ V3.80 是唯讀 adapter：
 
 下一階段才進入 encounter roll：依 fixed-C `CEP`、min/max clamp 與 `rand()%120 < cep` 建立獨立 RNG-injected runtime；roll 成功後才接既有 Idle Loop `encounter_pending → encounter_rolled → in_battle`，不在 V3.80 偷渡 battle 邏輯。
 
+## 2026-10-01 V3.81 Browser World Encounter Roll
+
+V3.81 在 V3.80 source adapter 之後加入獨立的 encounter probability runtime：
+
+WORLD_ENCOUNTER_PREPARE → WORLD_ENCOUNTER_ROLL
+
+固定 C char_walk.c 的 encounter roll 被拆成可測試的 RNG-injected contract：
+- CEP 先依 encounter probMin / probMax clamp。
+- battle mode 為 none 且 no-enemy gate 未封鎖時，執行 rand()%120 < CEP。
+- miss：CEP +1，但不超過 probMax。
+- hit：triggered=true，CEP 回到 probMin。
+- warp event blocker：仍消耗 roll RNG；命中時不觸發 encounter，也不做 miss increment。
+
+RNG 由 caller 注入 rng120 0..119，runtime 不呼叫 Math.random。V3.81 仍不修改 Persistent State、不寫 Save Envelope、不建立 battle context；它只把 source encounter roll 結果交給下一層。
+
+目前仍保留兩個明確邊界：
+1. profession encounter modifier、MoonAct 額外 RAND 與其他 connection-specific helpers 尚未升格，沒有 pinned build evidence 就不猜。
+2. cepAfter 尚未持久化到 Persistent State；下一階段再接 browser idle encounter_pending / encounter_rolled，並把 triggered 交給 fixed-C Enemy team selection / battle context。
+
