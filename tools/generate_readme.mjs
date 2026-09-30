@@ -79,7 +79,7 @@ const auto = [
   '',
   '- 最新 commit：' + commit.sha + ' — ' + commit.subject,
   '- 最後更新時間：' + commit.iso,
-  '- 版本線最高 regression workflow：V' + (latestWorkflowVersion() ?? '—'),
+  '- 版本線最高 regression workflow：' + (() => { const v = latestWorkflowVersion(); return v == null ? '—' : (String(v).length === 3 ? 'V' + String(v)[0] + '.' + String(v).slice(1) : 'V' + v); })(),
   '- Canonical browser entry：index.html；root HTML 入口目前為 ' + rootHtml.length + ' 個',
   '- 舊入口殘留：' + (oldPresent.length === 0 ? '已清除' : oldPresent.join(', ')),
   '- 固定 source：' + (route.fixedSource?.repository ?? 'unknown') + '@' + (route.fixedSource?.ref ?? 'unknown'),
