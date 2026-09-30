@@ -24,7 +24,7 @@ function readFixed(spec){
 function parseE(s){
   return s.split(/\\r?\\n/).map((raw,i)=>({line:i+1,p:raw.split(',')}))
     .filter(r=>r.p.length>=10&&r.p[0]&&!r.p[0].startsWith('#'))
-    .map(r=>({index:+r.p[0],floor:+r.p[1],x1:+r.p[2],y1:+r.p[3],x2:+r.p[4],y2:+r.p[5],probMin:+r.p[6],probMax:+r.p[7],enemyMax:+r.p[8],zorder:+r.p[9],groupIds:r.p.slice(10,20).filter(Boolean).map(Number),groupProbs:r.p.slice(20,30).map(v=>v===''?null:Number(v)),eventNow:+(r.p[30]||-1),eventEnd:+(r.p[31]||-1),parts:r.p}));
+    .map(r=>({index:+r.p[0],floor:+r.p[1],x1:+r.p[2],y1:+r.p[3],x2:+r.p[4],y2:+r.p[5],probMin:+r.p[6],probMax:+r.p[7],enemyMax:+r.p[8],zorder:+r.p[9],groupIds:r.p.slice(10,20).filter(Boolean).map(Number),groupProbs:r.p.slice(20,30).map(v=>v===''?null:Number(v)),eventNow:+(r.p[30]||-1),eventEnd:+(r.p[31]||-1)}));
 }
 function parseG(s){
   const m=new Map();
@@ -58,7 +58,7 @@ for(const floor of [100,200]){
   const landings=incoming[floor].flatMap(p=>p.points);
   const pack=r=>({
     encounterId:r.index,line:r.line,rect:r.rect,probMin:r.probMin,probMax:r.probMax,enemyMax:r.enemyMax,zorder:r.zorder,
-    groupIds:r.groupIds,groupProbs:r.groupIds.map((_,i)=>r.parts?.[20+i]===''?null:Number(r.parts?.[20+i])),enemyIds:[...new Set(r.groupIds.flatMap(id=>groups.get(id)?.enemyIds||[]))],
+    groupIds:r.groupIds,groupProbs:r.groupProbs,enemyIds:[...new Set(r.groupIds.flatMap(id=>groups.get(id)?.enemyIds||[]))],
     incoming:{containsGroup:incoming[floor].filter(p=>p.points.some(pt=>pt[0]>=r.rect[0]&&pt[0]<=r.rect[2]&&pt[1]>=r.rect[1]&&pt[1]<=r.rect[3])).map(p=>p.id),nearestLandingDistance:landings.length?Math.min(...landings.map(pt=>distance(pt,r.rect))):null}
   });
   floors[String(floor)]={
