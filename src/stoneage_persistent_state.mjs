@@ -1,3 +1,4 @@
+import { sourcePlayerMaxGold } from './stoneage_item_economy_runtime.mjs';
 const CURRENT_STATE_SCHEMA_VERSION = 1;
 const SOURCE_LEGACY_SAVE_SCHEMA_VERSION = 30;
 const PROFESSION_SKILL_SLOT_COUNT = 26;
@@ -192,10 +193,18 @@ function validatePersistentState(state) {
   if (!isObject(player)) errors.push('player must be an object');
   if (isObject(player)) {
     if (nonNegativeInt(player.level, -1) < 1) errors.push('player.level must be >= 1');
+    if (nonNegativeInt(player.gold, -1) > sourcePlayerMaxGold(state)) errors.push('player.gold exceeds source max-gold cap');
     if (!isObject(player.profession)) errors.push('player.profession must be an object');
     if (isObject(player.profession) && (!Array.isArray(player.profession.skills) || player.profession.skills.length !== PROFESSION_SKILL_SLOT_COUNT)) errors.push('profession.skills must contain exactly 26 slots');
   }
   if (!isObject(state.inventory) || !Array.isArray(state.inventory.playerItemSlots) || state.inventory.playerItemSlots.length !== PLAYER_ITEM_SLOT_COUNT) errors.push('inventory.playerItemSlots must contain exactly 24 slots');
+  if (isObject(state.inventory) && Array.isArray(state.inventory.playerItemSlots) && isObject(state.inventory.itemRuntime) && isObject(state.inventory.itemRuntime.slots)) {
+    for (let index = 9; index < PLAYER_ITEM_SLOT_COUNT; index++) {
+      const ref = state.inventory.playerItemSlots[index];
+      if (ref == null) continue;
+      if (!state.inventory.itemRuntime.slots[String(intOr(ref, -1))]) errors.push('inventory player slot '+index+' references missing existing item');
+    }
+  }
   if (!isObject(state.pets) || !Array.isArray(state.pets.petBox) || !Array.isArray(state.pets.team)) errors.push('pets container invalid');
   if (isObject(state.pets)) {
     const ids = new Set((state.pets.petBox ?? []).map(p => p?.id).filter(Boolean));
