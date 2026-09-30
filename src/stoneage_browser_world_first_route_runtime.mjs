@@ -99,11 +99,18 @@ function portalRows(group){
   })).filter(row=>row.from&&row.to&&Number.isInteger(row.line)&&row.line>0);
 }
 
+function normalizeEncounterRect(rect){
+  if(!Array.isArray(rect)||rect.length<4)return null;
+  const [x1,y1,x2,y2]=rect.map(v=>Math.trunc(Number(v)));
+  if(![x1,y1,x2,y2].every(Number.isFinite))return null;
+  return {minX:Math.min(x1,x2),maxX:Math.max(x1,x2),minY:Math.min(y1,y2),maxY:Math.max(y1,y2)};
+}
+
 function rectContains(rect,x,y){
-  if(!Array.isArray(rect)||rect.length<4)return false;
-  const [rx,ry,rw,rh]=rect.map(v=>Number(v));
-  return Number.isFinite(rx)&&Number.isFinite(ry)&&Number.isFinite(rw)&&Number.isFinite(rh)
-    &&rx<=x&&x<=rx+rw&&ry<=y&&y<=ry+rh;
+  const r=normalizeEncounterRect(rect);
+  const xx=Math.trunc(Number(x)),yy=Math.trunc(Number(y));
+  return !!r&&Number.isFinite(xx)&&Number.isFinite(yy)
+    &&r.minX<=xx&&xx<=r.maxX&&r.minY<=yy&&yy<=r.maxY;
 }
 
 function getUnconditionalTarget(index,floorId,encounterId){
@@ -118,10 +125,12 @@ function getUnconditionalTarget(index,floorId,encounterId){
 
 function goalIndicesForRect(map,rect){
   const goals=[];
-  if(!map||!Array.isArray(rect)||rect.length<4)return goals;
-  const [rx,ry,rw,rh]=rect.map(v=>Math.trunc(Number(v)));
-  const minX=Math.max(0,rx),maxX=Math.min(Number(map.width)-1,rx+rw);
-  const minY=Math.max(0,ry),maxY=Math.min(Number(map.height)-1,ry+rh);
+  if(!map)return goals;
+  const r=normalizeEncounterRect(rect);
+  if(!r)return goals;
+  const minX=Math.max(0,r.minX),maxX=Math.min(Number(map.width)-1,r.maxX);
+  const minY=Math.max(0,r.minY),maxY=Math.min(Number(map.height)-1,r.maxY);
+  if(minX>maxX||minY>maxY)return goals;
   for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
     const index=y*Number(map.width)+x;
     goals.push(index);
@@ -382,6 +391,7 @@ export {
   directLandingSet,
   findPortalGroup,
   getUnconditionalTarget,
+  normalizeEncounterRect,
   rectContains,
   bfsFromStart,
   bfsAllFromStart,
