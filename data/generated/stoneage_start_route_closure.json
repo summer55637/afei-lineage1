@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v4",
+  "format": "stoneage-start-route-closure-v5",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -14,7 +14,7 @@
   "status": {
     "sourceRouteSpine": "closed",
     "fullFirstRoute": "partial",
-    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are now source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because the pinned npctemplate.c functionSet has no changeevent entry. Full first-route closure remains open until destination-map walkability and reward-reference definitions are closed.",
+    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because pinned npctemplate.c has no changeevent functionSet. Full first-route closure remains open until destination-map walkability and reward-reference definitions are closed.",
     "coordinateResolvedTownServices": "closed_for_resolved_active_templates"
   },
   "statistics": {
@@ -113,10 +113,25 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 12,
-        "reachableCoordinateResolved": 10,
+        "totalCoordinateResolved": 11,
+        "reachableCoordinateResolved": 9,
         "unreachableCoordinateResolved": 0,
+        "moduleUnresolved": 2,
         "rows": [
+          {
+            "template": "changeevent",
+            "npc": [
+              15,
+              22
+            ],
+            "reachableInteraction": null,
+            "minPathToInteraction": null,
+            "stance": null,
+            "npcPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+            "blockIndex": 2,
+            "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+            "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+          },
           {
             "template": "bankman",
             "npc": [
@@ -125,8 +140,11 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 10,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/bankman.create",
-            "blockIndex": 9
+            "blockIndex": 9,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -136,8 +154,93 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 4,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/familyman.create",
-            "blockIndex": 0
+            "blockIndex": 0,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_fmdengon",
+            "npc": [
+              16,
+              19
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 0,
+            "stance": [
+              15,
+              22
+            ],
+            "npcPath": "gmsv/data/npc/family/fmdengon.create",
+            "blockIndex": 0,
+            "interactionRule": "NPC_Util_CharDistance <= 3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "changeevent",
+            "npc": [
+              18,
+              22
+            ],
+            "reachableInteraction": null,
+            "minPathToInteraction": null,
+            "stance": null,
+            "npcPath": "gmsv/data/npc/genout/shop_m.create",
+            "blockIndex": 12,
+            "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+            "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              16,
+              16
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 4,
+            "stance": [
+              16,
+              19
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m.create",
+            "blockIndex": 13,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              10,
+              20
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 7,
+            "stance": [
+              10,
+              20
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y.create",
+            "blockIndex": 23,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              10,
+              21
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "stance": [
+              10,
+              21
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y.create",
+            "blockIndex": 25,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -147,8 +250,28 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 10,
+            "stance": null,
             "npcPath": "gmsv/data/npc/newguest/familyman.create",
-            "blockIndex": 0
+            "blockIndex": 0,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "luckyman",
+            "npc": [
+              12,
+              13
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 11,
+            "stance": [
+              12,
+              14
+            ],
+            "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+            "blockIndex": 0,
+            "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+            "runtimeModuleStatus": null
           },
           {
             "template": "windowman",
@@ -158,11 +281,13 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 6,
+            "stance": null,
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-            "blockIndex": 0
+            "blockIndex": 0,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           }
-        ],
-        "moduleUnresolved": 2
+        ]
       }
     },
     {
@@ -242,9 +367,24 @@
       },
       "coordinateResolvedNpcReachability": {
         "totalCoordinateResolved": 13,
-        "reachableCoordinateResolved": 13,
+        "reachableCoordinateResolved": 12,
         "unreachableCoordinateResolved": 0,
+        "moduleUnresolved": 1,
         "rows": [
+          {
+            "template": "changeevent",
+            "npc": [
+              22,
+              15
+            ],
+            "reachableInteraction": null,
+            "minPathToInteraction": null,
+            "stance": null,
+            "npcPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+            "blockIndex": 0,
+            "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+            "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+          },
           {
             "template": "bankman",
             "npc": [
@@ -253,8 +393,11 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 12,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/bankman.create",
-            "blockIndex": 10
+            "blockIndex": 10,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -264,8 +407,130 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 8,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/familyman.create",
-            "blockIndex": 1
+            "blockIndex": 1,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_fmdengon",
+            "npc": [
+              23,
+              19
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 0,
+            "stance": [
+              20,
+              16
+            ],
+            "npcPath": "gmsv/data/npc/family/fmdengon.create",
+            "blockIndex": 1,
+            "interactionRule": "NPC_Util_CharDistance <= 3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              20,
+              8
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 5,
+            "stance": [
+              20,
+              11
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m.create",
+            "blockIndex": 93,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              16,
+              9
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 8,
+            "stance": [
+              19,
+              9
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m.create",
+            "blockIndex": 94,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              20,
+              21
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 5,
+            "stance": [
+              20,
+              21
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y.create",
+            "blockIndex": 153,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              21,
+              21
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "stance": [
+              21,
+              21
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y.create",
+            "blockIndex": 155,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              12,
+              14
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 7,
+            "stance": [
+              15,
+              14
+            ],
+            "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
+            "blockIndex": 0,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              23,
+              13
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 3,
+            "stance": [
+              20,
+              13
+            ],
+            "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
+            "blockIndex": 25,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -275,8 +540,28 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 4,
+            "stance": null,
             "npcPath": "gmsv/data/npc/newguest/familyman.create",
-            "blockIndex": 1
+            "blockIndex": 1,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "luckyman",
+            "npc": [
+              25,
+              15
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 5,
+            "stance": [
+              24,
+              15
+            ],
+            "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+            "blockIndex": 1,
+            "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+            "runtimeModuleStatus": null
           },
           {
             "template": "windowman",
@@ -286,11 +571,13 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 7,
+            "stance": null,
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-            "blockIndex": 1
+            "blockIndex": 1,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           }
-        ],
-        "moduleUnresolved": 0
+        ]
       }
     },
     {
@@ -369,10 +656,25 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 9,
-        "reachableCoordinateResolved": 9,
+        "totalCoordinateResolved": 11,
+        "reachableCoordinateResolved": 10,
         "unreachableCoordinateResolved": 0,
+        "moduleUnresolved": 1,
         "rows": [
+          {
+            "template": "changeevent",
+            "npc": [
+              23,
+              18
+            ],
+            "reachableInteraction": null,
+            "minPathToInteraction": null,
+            "stance": null,
+            "npcPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+            "blockIndex": 1,
+            "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+            "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+          },
           {
             "template": "bankman",
             "npc": [
@@ -381,8 +683,11 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 9,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/bankman.create",
-            "blockIndex": 11
+            "blockIndex": 11,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -392,8 +697,96 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 3,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/familyman.create",
-            "blockIndex": 2
+            "blockIndex": 2,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_fmdengon",
+            "npc": [
+              18,
+              17
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 0,
+            "stance": [
+              21,
+              16
+            ],
+            "npcPath": "gmsv/data/npc/family/fmdengon.create",
+            "blockIndex": 2,
+            "interactionRule": "NPC_Util_CharDistance <= 3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              20,
+              14
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 1,
+            "stance": [
+              20,
+              16
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+            "blockIndex": 13,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              14,
+              16
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 4,
+            "stance": [
+              17,
+              16
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+            "blockIndex": 14,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              20,
+              21
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "stance": [
+              20,
+              21
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+            "blockIndex": 17,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              21,
+              21
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 5,
+            "stance": [
+              21,
+              21
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+            "blockIndex": 18,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -403,8 +796,28 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 9,
+            "stance": null,
             "npcPath": "gmsv/data/npc/newguest/familyman.create",
-            "blockIndex": 2
+            "blockIndex": 2,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "luckyman",
+            "npc": [
+              25,
+              13
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "stance": [
+              24,
+              13
+            ],
+            "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+            "blockIndex": 2,
+            "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+            "runtimeModuleStatus": null
           },
           {
             "template": "windowman",
@@ -414,11 +827,13 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 6,
+            "stance": null,
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-            "blockIndex": 2
+            "blockIndex": 2,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           }
-        ],
-        "moduleUnresolved": 0
+        ]
       }
     },
     {
@@ -497,10 +912,25 @@
         "coordinateResolvedNpcReachability": true
       },
       "coordinateResolvedNpcReachability": {
-        "totalCoordinateResolved": 12,
-        "reachableCoordinateResolved": 9,
+        "totalCoordinateResolved": 11,
+        "reachableCoordinateResolved": 10,
         "unreachableCoordinateResolved": 0,
+        "moduleUnresolved": 1,
         "rows": [
+          {
+            "template": "changeevent",
+            "npc": [
+              14,
+              20
+            ],
+            "reachableInteraction": null,
+            "minPathToInteraction": null,
+            "stance": null,
+            "npcPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+            "blockIndex": 3,
+            "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+            "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+          },
           {
             "template": "bankman",
             "npc": [
@@ -509,8 +939,11 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 11,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/bankman.create",
-            "blockIndex": 12
+            "blockIndex": 12,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -520,8 +953,96 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 6,
+            "stance": null,
             "npcPath": "gmsv/data/npc/family/familyman.create",
-            "blockIndex": 3
+            "blockIndex": 3,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_fmdengon",
+            "npc": [
+              19,
+              18
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 4,
+            "stance": [
+              16,
+              18
+            ],
+            "npcPath": "gmsv/data/npc/family/fmdengon.create",
+            "blockIndex": 3,
+            "interactionRule": "NPC_Util_CharDistance <= 3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              17,
+              20
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 0,
+            "stance": [
+              14,
+              20
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+            "blockIndex": 93,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_man",
+            "npc": [
+              16,
+              27
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 6,
+            "stance": [
+              16,
+              24
+            ],
+            "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+            "blockIndex": 94,
+            "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              10,
+              20
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 4,
+            "stance": [
+              10,
+              20
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+            "blockIndex": 63,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "npcgen_warp",
+            "npc": [
+              10,
+              21
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 5,
+            "stance": [
+              10,
+              21
+            ],
+            "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+            "blockIndex": 65,
+            "interactionRule": "NPC_WarpWatch same-cell post-walk",
+            "runtimeModuleStatus": null
           },
           {
             "template": "familyman",
@@ -531,8 +1052,28 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 6,
+            "stance": null,
             "npcPath": "gmsv/data/npc/newguest/familyman.create",
-            "blockIndex": 3
+            "blockIndex": 3,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
+          },
+          {
+            "template": "luckyman",
+            "npc": [
+              17,
+              15
+            ],
+            "reachableInteraction": true,
+            "minPathToInteraction": 7,
+            "stance": [
+              16,
+              15
+            ],
+            "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+            "blockIndex": 3,
+            "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+            "runtimeModuleStatus": null
           },
           {
             "template": "windowman",
@@ -542,11 +1083,13 @@
             ],
             "reachableInteraction": true,
             "minPathToInteraction": 5,
+            "stance": null,
             "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-            "blockIndex": 3
+            "blockIndex": 3,
+            "interactionRule": null,
+            "runtimeModuleStatus": null
           }
-        ],
-        "moduleUnresolved": 3
+        ]
       }
     }
   ],
