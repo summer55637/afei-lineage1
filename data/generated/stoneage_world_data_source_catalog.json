@@ -1,0 +1,365 @@
+{
+  "format": "stoneage-world-data-source-catalog-v1",
+  "updated": "2026-09-30",
+  "purpose": "Source inventory and closure map for world reconstruction. This catalog does not enable gameplay.",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "rootTreeSha": "33f71a5f804480cec28edee4bd6a6d1851ba2dab",
+    "commitDate": "2018-08-21T10:56:03Z"
+  },
+  "sourceInventory": {
+    "totalBlobFiles": 5764,
+    "gmsvDataTopLevelFiles": 49,
+    "npcDataFiles": 3960,
+    "npcDataByExtension": {
+      ".arg": 1161,
+      ".create": 354,
+      ".template": 88,
+      ".arg1": 4,
+      ".arg2": 3,
+      ".arg3": 3,
+      ".arg4": 3,
+      ".arg5": 4,
+      ".arg6": 2,
+      ".arg7": 2,
+      ".arg8": 2,
+      ".arg9": 1,
+      ".arg10": 1,
+      ".conf": 35,
+      ".conf1": 1,
+      ".gen": 5,
+      ".log": 1,
+      ".rar": 1,
+      ".txt": 3,
+      ".menu": 1,
+      ".cf": 1,
+      ".creata": 1,
+      ".arg519": 2,
+      ".arg520": 1,
+      ".templete": 2,
+      "[no-extension]": 2277
+    },
+    "npcTopDirectories": {
+      "100": 35,
+      "200": 19,
+      "300": 36,
+      "400": 4,
+      "777": 33,
+      "9205": 9,
+      "genout": 1329,
+      "my": 309,
+      "eden1": 240,
+      "doujyou": 207,
+      "family": 192,
+      "eden3": 173,
+      "sa70": 152,
+      "eden2": 149,
+      "heroic": 139,
+      "sa50": 108,
+      "jaruga": 107,
+      "giiru": 88,
+      "sainasu": 87,
+      "poru": 84,
+      "sa60": 72,
+      "party": 56,
+      "sa75": 44,
+      "almark": 38,
+      "chatroom": 38,
+      "king": 34,
+      "extra": 32,
+      "new": 25,
+      "sa80": 16,
+      "vipshop": 15,
+      "casino": 14,
+      "freeshop": 11,
+      "pettalk": 9,
+      "roulette": 8,
+      "won": 7,
+      "quiz": 7,
+      "demale": 6,
+      "bank": 5,
+      "seimu": 5,
+      "777.old": 4
+    }
+  },
+  "npcModel": {
+    "loader": "gmsv/src/npc/readnpc.c",
+    "templateLoader": "NPC_readNPCTemplateFiles",
+    "createLoader": "NPC_readNPCCreateFiles",
+    "relationship": "template defines NPC behavior/template properties; create defines floor/region/spawn parameters and references templates/arguments",
+    "createFieldsObserved": [
+      "floorid",
+      "borncenter",
+      "borncorner",
+      "movecenter",
+      "movecorner",
+      "dir",
+      "graphicname",
+      "name",
+      "time",
+      "date",
+      "createnum",
+      "boundary",
+      "ignoreinvincible",
+      "family",
+      "action",
+      "enemy"
+    ],
+    "functionSetCount": 70,
+    "functionSets": [
+      "Sample",
+      "Door",
+      "SimpleShop",
+      "Msg",
+      "Warp",
+      "TownPeople",
+      "Oldman",
+      "SavePoint",
+      "Healer",
+      "FmHealer",
+      "PetMaker",
+      "StoryTeller",
+      "RoomAdminNew",
+      "Dengon",
+      "FmDengon",
+      "ItemCompo",
+      "NPCEnemy",
+      "Action",
+      "Windowman",
+      "WindowHealer",
+      "ItemShop",
+      "Sysinfo",
+      "Duelranking",
+      "PetSkillShop",
+      "PetShop",
+      "SignBoard",
+      "WarpMan",
+      "ExChangeMan",
+      "TimeMan",
+      "BodyLan",
+      "Mic",
+      "LuckyMan",
+      "Bus",
+      "Airplane",
+      "Charm",
+      "Quiz",
+      "PoolItemShop",
+      "CheckMan",
+      "Janken",
+      "Transmigration",
+      "Familyman",
+      "FMWarpMan",
+      "FMPKMan",
+      "FMPKCallMan",
+      "Bankman",
+      "Scheduleman",
+      "ManorSman",
+      "Riderman",
+      "FmLetter",
+      "StoneServiceMan",
+      "NPC_GambleBank",
+      "NPC_GambleRoulette",
+      "NPC_GambleMaster",
+      "TranserMan",
+      "SellsthMan",
+      "MakePair",
+      "PetFusion",
+      "PauctionMan",
+      "ItemchangeMan",
+      "NPC_FreePetSkill",
+      "PetRaceMaster",
+      "PetRacePet",
+      "NPC_NewNpcMan",
+      "NPC_MTradeNpcMan",
+      "BlackMarket",
+      "Alldoman",
+      "Welfare",
+      "VeryWelfare",
+      "Welfare2",
+      "Raceman"
+    ]
+  },
+  "coreDataSources": [
+    {
+      "path": "gmsv/data/mission.txt",
+      "role": "mission list",
+      "loadCondition": "_ANGEL_SUMMON",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/jobdaily.txt",
+      "role": "daily task log/config",
+      "loadCondition": "_JOBDAILY",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/raceman.txt",
+      "role": "pet race data",
+      "loadCondition": "_RACEMAN",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/racequiz.txt",
+      "role": "race quiz data",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/question.txt",
+      "role": "quiz questions",
+      "status": "loaded-by-init"
+    },
+    {
+      "path": "gmsv/data/ride.txt",
+      "role": "ride definitions",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/leaderride.txt",
+      "role": "leader ride settings",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/membershop.txt",
+      "role": "member shop rows",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/memberpets.txt",
+      "role": "member pet shop rows",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/titleconfig.txt",
+      "role": "title rules/config",
+      "status": "loaded-by-init"
+    },
+    {
+      "path": "gmsv/data/titlename.txt",
+      "role": "title names",
+      "status": "loaded-by-init"
+    },
+    {
+      "path": "gmsv/data/appear.txt",
+      "role": "display/appear position data",
+      "status": "loaded-by-init"
+    },
+    {
+      "path": "gmsv/data/inv.txt",
+      "role": "invincible/non-battle areas",
+      "status": "loaded-by-init"
+    },
+    {
+      "path": "gmsv/data/effect.txt",
+      "role": "encounter/effect settings",
+      "status": "loaded-by-init"
+    },
+    {
+      "path": "gmsv/data/map/mapwarp.txt",
+      "role": "map warp-point data",
+      "loadCondition": "_MAP_WARPPOINT",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/needitemeneny.txt",
+      "role": "item/enemy requirement data",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/contract.txt",
+      "role": "contract data",
+      "loadCondition": "_CONTRACT",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/bmitem.txt",
+      "role": "black-market item data",
+      "loadCondition": "_BLACK_MARKET",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/gambleitems.txt",
+      "role": "gambling item data",
+      "status": "cataloged-not-parsed"
+    },
+    {
+      "path": "gmsv/data/skillcode.txt",
+      "role": "skill code mapping",
+      "status": "cataloged-not-parsed"
+    }
+  ],
+  "existingProjectCoverage": {
+    "encounter": "partial; 728 referenced groups, 705 resolved, 23 unresolved",
+    "maps": "partial; fixed source catalog has 1284 map blobs, project has 7 verified map runtimes",
+    "clientImages": "parser/resolver/decoder/palette chain exists; original binaries are operator-supplied and not shipped",
+    "gmque": "permanently disabled by project policy; not a world-data blocker"
+  },
+  "researchTargets": [
+    {
+      "id": "world-npc-index",
+      "priority": "P0",
+      "status": "next",
+      "scope": "Map NPC placement and template/create/arg linkage"
+    },
+    {
+      "id": "npc-service-index",
+      "priority": "P0",
+      "status": "next",
+      "scope": "shop, healer, warp, save point, profession, transmigration, pet shop, skill shop, bank and event NPCs"
+    },
+    {
+      "id": "quest-event-index",
+      "priority": "P0",
+      "status": "next",
+      "scope": "mission/event arg sources and reward/condition chains"
+    },
+    {
+      "id": "map-connectivity",
+      "priority": "P0",
+      "status": "next",
+      "scope": "mapwarp, warp NPCs, doors/caves/building entrances"
+    },
+    {
+      "id": "item-acquisition",
+      "priority": "P1",
+      "status": "next",
+      "scope": "connect item IDs to NPC/shop/quest/event acquisition"
+    },
+    {
+      "id": "pet-service-index",
+      "priority": "P1",
+      "status": "next",
+      "scope": "pet shop, pet skill, fusion, maker, race and special pet services"
+    },
+    {
+      "id": "ride-title-index",
+      "priority": "P1",
+      "status": "next",
+      "scope": "ride definitions, leader ride, title config/name and related services"
+    },
+    {
+      "id": "quiz-event-index",
+      "priority": "P2",
+      "status": "next",
+      "scope": "quiz and race quiz content"
+    },
+    {
+      "id": "conditional-feature-map",
+      "priority": "P2",
+      "status": "next",
+      "scope": "record feature flags so inactive source data is never silently promoted"
+    }
+  ],
+  "confirmedSourceAnomalies": [
+    {
+      "path": "gmsv/data/npc/bank/bankman.template",
+      "references": [
+        "NPC_MemberShop",
+        "NPC_MemberPets"
+      ],
+      "fixedFunctionSetTableContains": false,
+      "status": "source-anomaly",
+      "decision": "do-not-fabricate; investigate historical/conditional source before runtime promotion"
+    }
+  ]
+}
