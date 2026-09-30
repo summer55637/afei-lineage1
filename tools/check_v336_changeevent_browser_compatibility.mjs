@@ -15,9 +15,11 @@ const petCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_new_player_
 const npc=reachability.rows.find(r=>r.template==='changeevent'&&r.floor===1006&&r.hometown===0);
 assert.ok(npc);
 const player={floor:1006,x:15,y:21,facingCell:[1006,15,22]};
+
 const strictRegistry=createAuditedNpcModuleRegistry(audit,{modules:{ExChangeMan:{script:closure.script,kind:'changeevent-source-resolved'}}});
 const strictState=freshPersistentState({playerId:'compat-strict'});
-const strict=await dispatchNpcInteraction(strictState,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:strictRegistry,runtimeConfig:{compatibilityMode:false,allowExternalCompatibilityAliases:false},transactionId:'strict-1'});
+strictState.player.level=1; strictState.player.transmigration=0; strictState.player.charm=60;
+const strict=await dispatchNpcInteraction(strictState,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:strictRegistry,runtimeConfig:{compatibilityMode:false,allowExternalCompatibilityAliases:false},handlerFactory:()=>bundle.handlers,transactionId:'strict-1',now:()=> '2026-09-30T11:00:00.000Z'});
 assert.equal(strict.ok,true); assert.equal(strict.handled,true); assert.equal(strict.stage,'dispatch'); assert.equal(strict.execution.applied,true); assert.equal(strict.state.revision,1);
 const bundle=createFirstRouteRewardHandlers({itemRewardCatalog,itemMakeCatalog,petCatalog,petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,itemCapacity:1000,itemCursor:700,randInclusive:(a,b)=>a===b?a:0});
 assert.equal(bundle.ok,true);
