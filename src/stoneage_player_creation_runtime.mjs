@@ -88,6 +88,9 @@ function applyPlayerCreationInput(state,{seed,hometown,stats,elements,now=()=>ne
   next.creation.starterItemGranted=false;
   next.creation.completed=false;
   next.creation.source={fixedCRef:seed.fixedSource.ref,seedFormat:seed.format};
+  next.world.position.floorId=Number(home.floor);
+  next.world.position.x=Number(home.x);
+  next.world.position.y=Number(home.y);
   next.player.level=Number(seed.sourceConfig.level);
   next.player.transmigration=Number(seed.sourceConfig.transmigration);
   next.player.gold=Number(seed.sourceConfig.gold);
