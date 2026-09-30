@@ -50,7 +50,7 @@ direct=resolveBattleFieldFromMap(map,100,0,0,{battleFieldRoll:3});
 assert.equal(direct.ok,false);
 assert.equal(direct.reason,'battle-field-rng-required-or-out-of-range');
 
-const state=freshPersistentState({playerId:'v388'});
+let state=freshPersistentState({playerId:'v388'});
 state.world.position={floorId:100,x:0,y:0};
 let controller=createBrowserStateController({
   state,
