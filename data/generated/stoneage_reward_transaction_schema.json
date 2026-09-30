@@ -1,0 +1,29 @@
+{
+  "format": "stoneage-reward-transaction-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "fields": {
+    "transactionId": "string",
+    "source": "string",
+    "playerExp": "nonNegative integer",
+    "petCredits": "array<{petId:string,exp:integer,gold:integer}>",
+    "gold": "nonNegative integer",
+    "items": "array<{existingIndex:integer,count:positive integer}> max 3"
+  },
+  "sourceBoundaries": {
+    "deathCredit": "created on first Enemy HP zero with player-side credit",
+    "carriedLoot": "chosen before later AddProfit finalization; do not reroll",
+    "rewardCommit": "after ItemCrush/required battle boundary"
+  },
+  "failClosed": [
+    "unknown existing item index",
+    "invalid 24-slot inventory",
+    "duplicate existing item index",
+    "missing transactionId",
+    "inventory full"
+  ],
+  "idempotency": "transactionId"
+}
