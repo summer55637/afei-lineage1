@@ -67,7 +67,7 @@ assert.equal(pricePerUnit(100,-1),-1);
 assert.equal(ITEMSHOP_MAX_BASE_PRICE,9999);
 
 const full=freshPersistentState({playerId:'full'});
-for(let i=9;i<24;i++)full.inventory.playerItemSlots[i]=1000+i;
+for(let i=9;i<24;i++){full.inventory.playerItemSlots[i]=1000+i;full.inventory.itemRuntime.slots[String(1000+i)]={use:true,itemId:1,owner:'player',pile:1};}
 assert.equal(emptyBackpackSlots(full).length,0);
 const fullBuy=buyShopItem(full,{itemId:1,baseCost:10,buyRate:1,quantity:1},{allocateItem:()=>allocated(900,1)});
 assert.equal(fullBuy.applied,false);
@@ -75,9 +75,12 @@ assert.equal(fullBuy.reason,'inventory-full');
 const noAllocator=buyShopItem(freshPersistentState({playerId:'no-alloc'}),{itemId:1,baseCost:10,buyRate:1,quantity:1});
 assert.equal(noAllocator.applied,false);
 assert.equal(noAllocator.reason,'source-item-allocator-required');
+const unchanged=freshPersistentState({playerId:'atomic'}); unchanged.player.gold=1000; const before=JSON.stringify(unchanged); let calls=0; const partial=buyShopItem(unchanged,{itemId:9,baseCost:10,buyRate:1,quantity:2},{allocateItem:({itemId})=>{calls++;if(calls===2)return null;return allocated(901,itemId);}}); assert.equal(partial.applied,false); assert.equal(partial.reason,'source-item-allocation-failed'); assert.equal(JSON.stringify(unchanged),before);
 
 const cap=freshPersistentState({playerId:'cap'});
 cap.player.gold=999900;
+cap.inventory.playerItemSlots[9]=700;
+cap.inventory.itemRuntime.slots['700']={use:true,itemId:2,owner:'player',pile:1};
 const capSell=sellShopItem(cap,{slot:9,quantity:1,baseCost:500,sellRate:0.2});
 assert.equal(capSell.applied,false,'exactly reaching source cap must be rejected');
 
