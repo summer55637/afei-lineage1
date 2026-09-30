@@ -43,14 +43,13 @@ function simulateFirstEncounter(state,route,variant,{encounter,battleResult,poli
     if(!reward.applied&&!reward.idempotent)return {ok:false,reason:reward.reason??'reward-transaction-failed',errors:reward.errors??[],state};
     nextState=reward.state;
     rewardApplied=reward;
-    idle=transitionIdle(idle,IDLE_EVENTS.REWARD_APPLIED,{reward:battleResult.reward,supplyRequired:false});
   }
   const dead=intOr(nextState.player?.hp,0)<=0;
   if(dead){
     idle=transitionIdle(idle,IDLE_EVENTS.PLAYER_DEAD);
     const death=deathRecoveryDecision(nextState,policy,{savePointAvailable:nextState.world?.savePoint!=null,healerAvailable:false});
     nextState.idle.enabled=false; nextState.idle.mode='dead'; nextState.idle.routeId=routeId; nextState.idle.lastSimulatedAt=clock;
-    if(save){const saved=commitSave(state,nextState,{expectedRevision:intOr(state.revision),savedAt:()=>clock,source:'idle-simulation'});if(saved.ok)nextState=saved.state;return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,deadd:true,death,reward:rewardApplied,state:nextState,save:saved};}
+    if(save){const saved=commitSave(state,nextState,{expectedRevision:intOr(state.revision),savedAt:()=>clock,source:'idle-simulation'});if(saved.ok)nextState=saved.state;return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:true,death,reward:rewardApplied,state:nextState,save:saved};}
     return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:true,death,reward:rewardApplied,state:nextState,save:null};
   }
   const supply=supplyRequired(nextState,policy);
