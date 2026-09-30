@@ -13,13 +13,23 @@ function readJson(file) {
 const audit = readJson('data/generated/stoneage_start_walkability_audit.json');
 const candidates = readJson('data/generated/stoneage_start_route_candidates.json');
 const services = readJson('data/generated/stoneage_npc_service_index.json');
+const npcReachability = readJson('data/generated/stoneage_start_npc_reachability.json');
 
 const serviceByFloor = new Map((services.floors || []).map((entry) => [Number(entry.floor), entry]));
+const npcByFloor = new Map();
+
+for (const row of npcReachability.rows || []) {
+  const list = npcByFloor.get(Number(row.floor)) || [];
+  list.push(row);
+  npcByFloor.set(Number(row.floor), list);
+}
+
 const candidateRoutes = candidates.routes || candidates.candidates || [];
 const towns = candidateRoutes.map((candidate) => {
   const auditRoute = (audit.routes || []).find((route) => route.hometown === candidate.hometown);
   const serviceFloor = serviceByFloor.get(Number(candidate.spawn.floor));
   const firstEncounter = (candidate.nearestEncounterRoutes || []).find((route) => route.depth === 1);
+  const npcRows = npcByFloor.get(Number(candidate.spawn.floor)) || [];
 
   return {
     hometown: candidate.hometown,
@@ -27,6 +37,19 @@ const towns = candidateRoutes.map((candidate) => {
     spawn: candidate.spawn,
     sourceMapVerified: auditRoute?.mapSourceVerified === true,
     startFloorServices: serviceFloor?.services || [],
+    coordinateResolvedNpcReachability: {
+      totalCoordinateResolved: npcRows.length,
+      reachableCoordinateResolved: npcRows.filter((row) => row.reachableInteraction).length,
+      unreachableCoordinateResolved: npcRows.filter((row) => !row.reachableInteraction).length,
+      rows: npcRows.map((row) => ({
+        template: row.template,
+        npc: row.npc,
+        reachableInteraction: row.reachableInteraction,
+        minPathToInteraction: row.minPathToInteraction,
+        npcPath: row.npcPath,
+        blockIndex: row.blockIndex,
+      })),
+    },
     directWarpExits: (auditRoute?.exitAudits || []).map((exit) => ({
       from: [exit.fromFloor, exit.fromX, exit.fromY],
       to: [exit.toFloor, exit.toX, exit.toY],
@@ -49,28 +72,34 @@ const towns = candidateRoutes.map((candidate) => {
         auditRoute?.reachableWarpCount === auditRoute?.directWarpCount
         && (auditRoute?.directWarpCount || 0) > 0,
       townServiceFloorPresence: (serviceFloor?.services || []).length > 0,
+      coordinateResolvedNpcReachability:
+        npcRows.length > 0 && npcRows.every((row) => row.reachableInteraction),
       firstEncounterFloorEvidence: Boolean(firstEncounter && firstEncounter.depth === 1),
-      coordinateLevelServiceReachability: false,
       destinationMapWalkability: false,
       questEventOwnerClosure: false,
     },
   };
 });
 
+const coordinateResolved = npcReachability.statistics?.coordinateResolvedInstances || 0;
+const reachableCoordinateResolved = npcReachability.statistics?.reachableCoordinateResolvedInstances || 0;
+
 const index = {
-  format: 'stoneage-start-route-closure-v1',
+  format: 'stoneage-start-route-closure-v2',
   generatedAt: '2026-09-30',
   fixedSource: audit.fixedSource,
   inputContracts: {
     startWalkability: 'data/generated/stoneage_start_walkability_audit.json',
     routeCandidates: 'data/generated/stoneage_start_route_candidates.json',
     npcServices: 'data/generated/stoneage_npc_service_index.json',
+    npcReachability: 'data/generated/stoneage_start_npc_reachability.json',
   },
   status: {
     sourceRouteSpine: 'closed',
+    coordinateResolvedTownServices: reachableCoordinateResolved === coordinateResolved ? 'closed_for_resolved_instances' : 'partial',
     fullFirstRoute: 'partial',
     definition:
-      'Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Full first-route closure remains open until service coordinates/interactions, destination-map walkability, and player-specific quest/event ownership are closed.',
+      'Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed only for NPC instances with resolved numeric coordinates. Full first-route closure remains open until unresolved NPC coordinates, destination-map walkability, and player-specific quest/event ownership are closed.',
   },
   statistics: {
     hometowns: towns.length,
@@ -80,11 +109,14 @@ const index = {
       (sum, town) => sum + town.directWarpExits.filter((exit) => exit.walkableFromSpawn).length,
       0,
     ),
-    hometownsWithStartFloorServices: towns.filter((town) => town.closure.townServiceFloorPresence).length,
+    hometownsWithStartFloorServices: towns.filter((town) => town.startFloorServices.length > 0).length,
     hometownsWithDepth1EncounterEvidence: towns.filter((town) => town.closure.firstEncounterFloorEvidence).length,
+    coordinateResolvedNpcInstances: coordinateResolved,
+    reachableCoordinateResolvedNpcInstances: reachableCoordinateResolved,
+    unresolvedNpcCoordinateInstances: npcReachability.statistics?.unresolvedCoordinateInstances || 0,
   },
   remainingWork: [
-    'Resolve coordinate-level reachability and intended interaction for the required town service NPCs.',
+    'Resolve source coordinates for the remaining start-floor NPC instances without guessing.',
     'Audit destination-map walkability at each first warp landing coordinate and the first encounter region.',
     'Close new-player quest/event ownership without promoting ownerless event IDs.',
   ],
@@ -92,5 +124,5 @@ const index = {
 };
 
 fs.mkdirSync(path.dirname(out), { recursive: true });
-fs.writeFileSync(out, JSON.stringify(index, null, 2) + '\n');
-console.log(JSON.stringify({ pass: index.statistics.hometowns === 4 && index.statistics.reachableDirectWarpExits === 8 }));
+fs.writeFileSync(out, JSON.stringify(index, null, 2) + '\\n');
+console.log(JSON.stringify({ pass: index.statistics.reachableDirectWarpExits === index.statistics.directWarpExits, statistics: index.statistics }));
