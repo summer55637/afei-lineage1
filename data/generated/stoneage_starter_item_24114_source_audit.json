@@ -17,19 +17,19 @@
   "sourceFiles": {
     "setup": {
       "path": "gmsv/setup.cf",
-      "blobSha": "90f1f4a6c7b4e36f32eeb8cc5a3b4f2bf40f9f6b"
+      "blobSha": "bd834cd1a7dfa3af6e14210d0cdf15b217b0e72f"
     },
     "version": {
       "path": "gmsv/src/include/version.h",
-      "blobSha": "7d8d0e3f5fd6a5ad2c5ecb3bb0e2e9d6b08db5cf"
+      "blobSha": "af6c866fd609a39e2960236275f6bf39e7f47b2c"
     },
     "configfile": {
       "path": "gmsv/src/configfile.c",
-      "blobSha": "4f7f44b8d1a03c9c5cc5cfc59b2fbb7f1fbe9a3d"
+      "blobSha": "7a9892ead091ff2766c44bb4fb8d3605bad3bbb2"
     },
     "item": {
       "path": "gmsv/src/item/item.c",
-      "blobSha": "4d1f0d0d5f1aa07c9f6f54f8b4a0b7af3d9d8f2a"
+      "blobSha": "ff3d18514367905c8dd72316908508dd60272018"
     },
     "itemset6": {
       "path": "gmsv/data/itemset6.txt",
@@ -43,11 +43,12 @@
     "configSelection": "with _ITEMSET6_TXT enabled, config.itemfile is assigned by itemset6file",
     "itemLoader": "ITEM_readItemConfFile(getItemfile()) scans the selected file for item rows; if maxid <= 0 it returns FALSE before a usable item table is populated",
     "itemMaker": "ITEM_makeItem(number) first requires ITEM_CHECKITEMTABLE(number); then it copies ITEM_tbl[number].itm",
-    "conclusion": "24114 has source configuration/creation-path evidence, but no item template row is present in the pinned selected Item data file. The runtime must remain fail-closed."
+    "conclusion": "24114 has source configuration/creation-path evidence and the allocator implementation exists, but no item template row is present in the pinned selected Item data file. The runtime must remain fail-closed for 24114."
   },
   "resolution": {
     "sourceTemplateResolved": false,
-    "allocatorPathResolved": false,
+    "allocatorImplementationResolved": true,
+    "allocatorExecutableFor24114": false,
     "browserBuyPromotion": false,
     "syntheticTemplateAllowed": false
   }
