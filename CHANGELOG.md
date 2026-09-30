@@ -1,5 +1,14 @@
 目前正式可玩的 playable baseline：V3.09。V3.10 之後版本為 source/runtime/presentation groundwork，不取代 V3.09。
 
+## V3.18 — authorized client asset pack adapter
+
+2026-09-30
+
+- 新增 `src/stoneage_client_asset_pack.mjs`，固定 operator-supplied client asset pack manifest 與 `image ID → ADRNBIN → Real → RD pixels` adapter。
+- 預設 manifest 維持 `unavailable`；repo 不自動抓取或發布原版 client BIN。
+- 可選 SHA-256 pin 與 authorization note；缺 asset、digest mismatch 或 decode failure 一律 fail-closed。
+- 新增 V3.18 regression 與 CI；舊 `play.html`／`game-live.html` 入口也建立相容 redirect 到正式 `start.html`。
+
 ## V3.17 — client RD decoder contract
 
 2026-09-30
@@ -13,7 +22,7 @@
 2026-09-30
 
 - 依公開 client source 固定 `tile image ID → realGetNo() → ADRNBIN graphicNo → Real binary offset/size → decoder()`。
-- 新增 `src/stoneage_client_image_runtime.mjs`，將 ADRNBIN 固定為 72-byte little-endian metadata record。
+- 新增 `src/stoneage_client_image_runtime.mjs`，將 ADRNBIN 固定為 80-byte little-endian metadata record，並修正 MAP_ATTR／effect／damy／bmpnumber offset。
 - 新增 `tools/check_v316_adrnbin_parser.mjs` 與 `.github/workflows/v316-client-image-resolver.yml`。
 - 目前沒有確認可發布的 client image binary；resolver 僅提供 metadata contract，缺少 asset 時 fail-closed，不建立假圖。
 - 自訂 Pages workflow 改為手動 fallback，避免與 managed Pages deployment 重複競爭 artifact。
