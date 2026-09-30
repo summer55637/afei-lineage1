@@ -1,5 +1,13 @@
 目前正式可玩的 playable baseline：V3.09。V3.10 之後版本為 source/runtime/presentation groundwork，不取代 V3.09。
 
+## V3.19 — palette runtime contract
+
+2026-09-30
+
+- 新增 `src/stoneage_palette_runtime.mjs`，固定 `Palet_1.sap` 的 672-byte BGR palette mapping。
+- 依 fixed client `InitPalette()` 保留索引 0..15、240..255 的內建色盤，16..239 讀取 SAP；index 0 的 RGBA 輸出預設透明。
+- 新增 V3.19 synthetic regression 與 CI；不發布原版 `Palet_1.sap`。
+
 ## V3.18 — authorized client asset pack adapter
 
 2026-09-30
