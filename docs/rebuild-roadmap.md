@@ -6,6 +6,11 @@
 
 本輪把 first-route closure 的跨 contract 狀態重新對齊：new-player 四段 Item/Pet reward definition 已由 pinned itemset6／enemy1 source closure 驗證完成，因此不再列為 route blocker；changeevent 本身仍維持 strict unresolved，不能因 reward closure 而自動註冊 alias。4000→200 仍依 fixed-C map walkability 保持 disconnected fail-closed。新增 `tools/check_v343_cross_contract_closure.mjs` 與 CI，鎖定 reward closure、4000 component 與 route blocker 不漂移。
 
+## 2026-09-30 新增：V3.44 Persistent State ↔ Save Envelope join
+
+
+V3.44 不新增 playable HTML，先把 canonical Persistent State v1 與 Save Envelope v1 做完整 headless join。新增 `tools/check_v344_persistent_state_save_join.mjs` 與對應 CI，鎖定 26 個 profession skill slots、24 個 player item slots、backpack existing-item references、pet team / activePetId integrity、world / quest / event / idle state round-trip、legacy schema 30 unknown-key preservation，以及 Save Envelope revision guard。此輪只強化資料保存邊界，不把 idle battle policy 或 changeevent compatibility alias 升格成 fixed-C。
+
 ## 2026-09-30 進度
 
 已完成第一版 **World Data Source Catalog**：固定 source `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` 的 5,764 個 blob files、3,960 個 NPC data files，以及主要世界資料檔案已建立 machine-readable inventory。NPC 的 template → create → floor/region → argument 關係也已用 pinned C 的載入／生成流程固定。
