@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-world-exit-reachability-v1",
+  "format": "stoneage-start-world-exit-reachability-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -10,7 +10,8 @@
   "sourceContracts": {
     "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
     "portalSource": "data/generated/stoneage_start_destination_warp_coordinates.json",
-    "mapRuntime": "data/generated/stoneage_map_runtime_index.json"
+    "mapRuntime": "data/generated/stoneage_map_runtime_index.json",
+    "map200Runtime": "data/generated/stoneage_map_200.json"
   },
   "policy": {
     "routeProof": "Do not promote a floor edge to a playable route unless at least one exact source portal origin is reachable from a direct landing on the fixed runtime map.",
@@ -1090,20 +1091,13 @@
     }
   ],
   "worldFloor200Resolution": {
-    "status": "source-path-identified-runtime-unverified",
-    "fixedSourceCandidate": {
-      "path": "gmsv/data/map/jyaruga/jalga",
-      "blobSha": "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce",
-      "size": 3840044
-    },
-    "conflictingCurrentRuntime": {
-      "path": "data/generated/stoneage_map_200.json",
-      "sourcePath": "gmsv/data/map/extra/200",
-      "sourceBlobSha": "d08e8fea4dffd127c26f764d51231ec75ec73f98",
-      "width": 30,
-      "height": 30,
-      "reason": "cannot contain fixed-C world portal coordinates reaching at least x=588 and y=1008"
-    }
+    "status": "verified",
+    "path": "data/generated/stoneage_map_200.json",
+    "sourcePath": "gmsv/data/map/jyaruga/jalga",
+    "sourceBlobSha": "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce",
+    "width": 800,
+    "height": 1200,
+    "note": "Verified by tools/generate_verified_map_runtime.mjs from fixed-C binary. The separate gmsv/data/map/extra/200 30x30 file remains a non-world fixture."
   },
   "summary": {
     "destinationFloors": 4,
