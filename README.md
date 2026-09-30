@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：df5ab67 — add V3.63 ChangeEvent three-layer source closure
-- 最後更新時間：2026-09-30T18:59:08+08:00
+- 最新 commit：53e0195 — wire V3.64 pinned ChangeEvent source binding
+- 最後更新時間：2026-09-30T19:09:04+08:00
 - 版本線最高 regression workflow：V3.63
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -42,9 +42,9 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 ### 主要 blocker
 
-1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
-2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
-3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
+1. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
+2. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
+3. Advance Persistent State Schema for player, pet, inventory, equipment, skills, quests, map position, idle settings and save/migration.
 4. Starter Item 24114：pinned source max ID 23009 → ITEM_tblen 23010，configured 24114 is out of range；source row is id 11817 / imagenumber 24114；keep fail-closed and do not remap.
 
 ### 永久停用
