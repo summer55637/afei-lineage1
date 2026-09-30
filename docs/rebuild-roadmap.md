@@ -1,8 +1,15 @@
 # 重建藍圖：最終目標前的資料與系統補齊
 
-更新日期：2026-09-30
+更新日期：2026-10-01
 
 
+## 2026-10-01 新增：V3.71 Production ItemShop Browser UI penetration
+
+V3.71 將 V3.70 的 ItemShop UI state 從 synthetic fixture regression 推進到 pinned fixed-C production catalog penetration。GitHub Actions 重新 checkout `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，生成 World NPC index + ItemShop catalog，再以 `path#blockIndex` join 找到正式 World ItemShop。
+
+Regression 會從 335 個 resolved production shops 中找到可購買 offer，以正式 Born 座標進入 `NPC_RESOLVE_AT` / `ITEMSHOP_UI_OPEN` 路徑，驗證選取、數量與一次 BUY。UI session 不增加 Persistent State revision；BUY 仍沿既有 Item allocator / Economy transaction。
+
+唯一已知 ItemShop source anomaly `gmsv/data/npc/my/magicdou/daochang.create#8` 仍維持 unresolved，不補猜測資料。V3.71 仍不建立 playable HTML，也不新增 ItemShop / Gold / Inventory 規則。
 ## 2026-09-30 新增：V3.70 Browser ItemShop UI state
 
 V3.70 將 ItemShop 的開店／商品選擇／數量輸入／結果提示做成 Browser State Controller 內的 ephemeral UI state。這一層不寫 Persistent State，不計價，不建立第二套 ItemShop transaction。
