@@ -27,6 +27,7 @@ import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE
 import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT } from './stoneage_browser_battle_context_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
+import { IDLE_EVENTS } from './stoneage_idle_loop.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
