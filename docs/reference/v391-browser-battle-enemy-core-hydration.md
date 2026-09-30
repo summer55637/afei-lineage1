@@ -35,7 +35,7 @@ Enemy entry 現在可得到：
 以 first-route Encounter 65 的 Group 94 為例，固定測試 RNG 可得到：
 
 - Enemy 120：Lv2、VITAL 448 / STR 390 / TOUGH 331 / DEX 487、MaxHP 30、rank 5
-- Enemy 123：Lv2、VITAL 611 / STR 470 / TOUGH 376 / DEX 658、MaxHP 39、rank 5
+- Enemy 123：Lv2、VITAL 611 / STR 470 / TOUGH 376 / DEX 658、MaxHP 39、rank 4
 
 ## 尚未升格
 
