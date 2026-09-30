@@ -35,7 +35,7 @@
 
 地圖方面已完成 LS2MAP parser、mapset、battlemap、Encounter 座標探測，以及 client image → ADRNBIN → Real → RD → palette → RGBA 的技術鏈。
 
-目前 source catalog 有 1284 個 map blobs，現有 12 張 verified map runtime；因此完整世界地圖與可行路線仍是主要待補區。
+目前 source catalog 有 1284 個 map blobs，現有 11 張 verified map runtime；因此完整世界地圖與可行路線仍是主要待補區。
 
 ## 近期 first-route checkpoint（2026-09-30）
 
