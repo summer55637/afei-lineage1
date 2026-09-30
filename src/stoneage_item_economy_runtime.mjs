@@ -81,6 +81,8 @@ function buyShopItem(state,request,{allocateItem}={}){
   if(typeof allocateItem!=='function')return {applied:false,reason:'source-item-allocator-required',state};
   const normalized=normalizeBuyRequest(request);
   if(!normalized)return {applied:false,reason:'invalid-buy-request',state};
+  const transactionId=String(request.transactionId??'').trim();
+  if(transactionId&&state.runtimeMeta?.economyTransactions?.[transactionId])return {applied:false,idempotent:true,transactionId,state};
   const available=emptyBackpackSlots(state);
   const quantity=Math.min(normalized.quantity,available.length);
   if(quantity<=0)return {applied:false,reason:'inventory-full',state};
@@ -110,7 +112,6 @@ function buyShopItem(state,request,{allocateItem}={}){
   }
   next.player.gold-=total;
   next.runtimeMeta.economyTransactions??={};
-  const transactionId=String(request.transactionId??'').trim();
   if(transactionId)next.runtimeMeta.economyTransactions[transactionId]={
     type:'buy',itemId:normalized.itemId,quantity,unitPrice,total
   };
@@ -134,6 +135,8 @@ function sellShopItem(state,request){
   if(!validation.ok)return {applied:false,reason:'invalid-economy-state',errors:validation.errors,state};
   const normalized=normalizeSellRequest(request);
   if(!normalized)return {applied:false,reason:'invalid-sell-request',state};
+  const transactionId=String(request.transactionId??'').trim();
+  if(transactionId&&state.runtimeMeta?.economyTransactions?.[transactionId])return {applied:false,idempotent:true,transactionId,state};
   const slots=backpackSlots(state);
   const existingIndex=intOr(slots[normalized.slot],-1);
   const existing=state.inventory.itemRuntime.slots[String(existingIndex)];
@@ -170,7 +173,6 @@ function sellShopItem(state,request){
   next.player.gold=currentGold+total;
   next.runtimeMeta??={};
   next.runtimeMeta.economyTransactions??={};
-  const transactionId=String(request.transactionId??'').trim();
   if(transactionId)next.runtimeMeta.economyTransactions[transactionId]={
     type:'sell',existingIndex,slot:normalized.slot,quantity:normalized.quantity,unitPrice,total
   };
