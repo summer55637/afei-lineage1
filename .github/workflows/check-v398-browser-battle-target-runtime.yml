@@ -1,0 +1,31 @@
+name: Check V3.98 Browser Battle Target Runtime
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_target_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v398_browser_battle_target_runtime.mjs'
+      - 'data/generated/stoneage_browser_battle_target_schema.json'
+      - 'docs/reference/v398-browser-battle-target-runtime.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v398-browser-battle-target-runtime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.96 through V3.98 command/target regressions
+        run: |
+          node tools/check_v396_browser_battle_player_command_runtime.mjs
+          node tools/check_v397_browser_player_battle_command_preflight.mjs
+          node tools/check_v398_browser_battle_target_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_target_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v398_browser_battle_target_runtime.mjs
