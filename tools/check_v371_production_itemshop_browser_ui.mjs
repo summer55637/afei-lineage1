@@ -47,7 +47,7 @@ const resolvedShop=Object.values(shop.shops??{}).find(row=>
   row?.bornCorner && Number.isFinite(Number(row.bornCorner.x1)) && Number.isFinite(Number(row.bornCorner.y1))
 );
 assert.ok(resolvedShop,'production ItemShop with buy offer and point spawn required');
-const sourceKey=resolvedShop.source?.create?.path+'#'+resolvedShop.source?.create?.blockIndex;
+const sourceKey=String(resolvedShop.source?.create?.path??'').replace(/^gmsv\/data\/npc\//,'')+'#'+resolvedShop.source?.create?.blockIndex;
 assert.equal(joined.byNpcKey?.[sourceKey]?.resolved,true);
 
 const npcLocated=resolveWorldNpcAt(worldPointIndex.index,{
