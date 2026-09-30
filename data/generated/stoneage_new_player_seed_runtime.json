@@ -37,6 +37,11 @@
     "enemyBase": {
       "path": "gmsv/data/enemybase1.txt",
       "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+    },
+    "enemyRank": {
+      "path": "gmsv/src/char/enemy.c",
+      "blobSha": "65e5a2e352253a214407f07425427f539db5e863",
+      "function": "ENEMY_getRank"
     }
   },
   "sourceConfig": {
@@ -78,7 +83,8 @@
     "playerSeed": "gmsv/src/char/char.c::CHAR_makeCharFromOptionAtCreate",
     "starterItem": "gmsv/src/char/char.c::CHAR_loginAddItemForNew",
     "starterPet": "gmsv/src/char/char.c::CHAR_createNewChar -> ENEMY_createPetFromEnemyIndex",
-    "hometown": "gmsv/src/char/char_data.c::CHAR_getInitElderPosition"
+    "hometown": "gmsv/src/char/char_data.c::CHAR_getInitElderPosition",
+    "starterPetRank": "gmsv/src/char/enemy.c::ENEMY_getRank"
   },
   "hometowns": [
     {
@@ -142,7 +148,9 @@
           "petFlg": 1,
           "limitLevel": 0
         }
-      }
+      },
+      "sourceRank": 5,
+      "sourceRankParamsum": 79
     },
     {
       "hometown": 1,
@@ -205,7 +213,9 @@
           "petFlg": 1,
           "limitLevel": 0
         }
-      }
+      },
+      "sourceRank": 5,
+      "sourceRankParamsum": 79
     },
     {
       "hometown": 2,
@@ -268,7 +278,9 @@
           "petFlg": 1,
           "limitLevel": 0
         }
-      }
+      },
+      "sourceRank": 5,
+      "sourceRankParamsum": 79
     },
     {
       "hometown": 3,
@@ -331,7 +343,9 @@
           "petFlg": 1,
           "limitLevel": 0
         }
-      }
+      },
+      "sourceRank": 5,
+      "sourceRankParamsum": 79
     }
   ],
   "starterItem": {
@@ -401,7 +415,9 @@
           "imageNumber": 100251,
           "petFlg": 1,
           "limitLevel": 0
-        }
+        },
+        "sourceRank": 5,
+        "sourceRankParamsum": 79
       },
       {
         "hometown": 1,
@@ -456,7 +472,9 @@
           "imageNumber": 100296,
           "petFlg": 1,
           "limitLevel": 0
-        }
+        },
+        "sourceRank": 5,
+        "sourceRankParamsum": 79
       },
       {
         "hometown": 2,
@@ -511,7 +529,9 @@
           "imageNumber": 100292,
           "petFlg": 1,
           "limitLevel": 0
-        }
+        },
+        "sourceRank": 5,
+        "sourceRankParamsum": 79
       },
       {
         "hometown": 3,
@@ -566,7 +586,9 @@
           "imageNumber": 100266,
           "petFlg": 1,
           "limitLevel": 0
-        }
+        },
+        "sourceRank": 5,
+        "sourceRankParamsum": 79
       }
     ]
   },
