@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const audit=JSON.parse(fs.readFileSync('data/generated/stoneage_starter_item_24114_source_audit.json','utf8'));
+assert.equal(audit.fixedSource.ref,'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56');
+assert.equal(audit.requestedItem.configuredItemId,24114);
+assert.equal(audit.compileFlags.itemset6Txt,true);
+assert.equal(audit.compileFlags.improveItemTable,false);
+assert.equal(audit.sourceFiles.itemset6.sizeBytes,2777181);
+assert.equal(audit.sourceFiles.itemset6.lineCount,10744);
+assert.equal(audit.loaderContract.itemIdTokenIndexOneBased,17);
+assert.equal(audit.requestedIdEvidence.selectedFileExactNumericOccurrences,1);
+assert.equal(audit.requestedIdEvidence.selectedFileToken17ExactMatches,0);
+assert.equal(audit.requestedIdEvidence.selectedFileToken18ExactMatches,1);
+assert.equal(audit.requestedIdEvidence.matchingRow.line,3602);
+assert.equal(audit.requestedIdEvidence.matchingRow.token17SourceId,11817);
+assert.equal(audit.requestedIdEvidence.matchingRow.token18ItemId,24114);
+assert.equal(audit.requestedIdEvidence.matchingRow.imageNumber,24114);
+assert.equal(audit.requestedIdEvidence.sourceTableKeyForImage24114,11817);
+assert.equal(audit.requestedIdEvidence.sourceTableContainsKey24114,false);
+assert.equal(audit.resolution.sourceFileResolved,true);
+assert.equal(audit.resolution.sourceRowResolved,true);
+assert.equal(audit.resolution.configuredIdDirectTemplateResolved,false);
+assert.equal(audit.resolution.allocatorImplementationResolved,true);
+assert.equal(audit.resolution.allocatorExecutableForConfiguredId,false);
+assert.equal(audit.resolution.imageNumberToItemIdRemapAllowed,false);
+assert.equal(audit.resolution.syntheticTemplateAllowed,false);
+assert.equal(audit.resolution.failClosedUntilSourceIdMappingIsClosed,true);
+assert.match(audit.loaderContract.selectedBuildLoader,/token 17/);
+assert.match(audit.loaderContract.improveItemTableDisabled,/_IMPOROVE_ITEMTABLE/);
+console.log(JSON.stringify({pass:true,format:'stoneage-starter-item-24114-source-audit-regression-v2',itemId:24114,sourceItemRowId:11817,imageNumber:24114,itemFileBytes:audit.sourceFiles.itemset6.sizeBytes,token17ExactMatches:audit.requestedIdEvidence.selectedFileToken17ExactMatches,failClosed:true}));
