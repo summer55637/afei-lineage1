@@ -184,3 +184,11 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 新增 `src/stoneage_save_transaction.mjs`、`docs/reference/save-envelope-contract.md` 與 regression：canonical state 以 deterministic JSON + SHA-256 payload hash 包裝，支援 schema validation、legacy migration 與 revision conflict guard；hash 使用 Web Crypto，保持未來 browser runtime 可用。
 
 新增 `src/stoneage_idle_simulation.mjs`、`docs/reference/idle-simulation-runner.md` 與 regression：把 first-idle route skeleton 串到 battle-result injection、reward transaction、supply/death decision 與 save commit。offline resume 目前只計算明確時間窗，不自動發生 offline reward。
+
+## Battle / Offline integration update（2026-09-30）
+
+新增 `src/stoneage_battle_result_adapter.mjs`：固定 C PvE battle 的完成結果現在可以用統一 adapter 交給 Idle Simulation；`BATTLE_Battling` 後的 `BATTLE_OnlyRescue` 結果在 PvE 下映射成 player `victory/defeat`，adapter 不重新計算戰鬥或獎勵。citeturn276757view0
+
+新增 `src/stoneage_offline_resume.mjs`：offline resume 目前以 eligible → time-window → resume checkpoint → Save Envelope 的兩階段 transaction 保存；`accruedSeconds` 在沒有完整 offline reward simulation 前維持 0，不自行產生 EXP / Gold / Item。
+
+`src/stoneage_idle_simulation.mjs` 已整合 fixed-C raw battle result adapter 與 offline resume commit。
