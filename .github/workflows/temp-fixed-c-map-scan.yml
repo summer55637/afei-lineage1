@@ -1,0 +1,66 @@
+name: temporary fixed-C map header scan
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scan pinned fixed-C map headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          REF="1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+          rm -rf StoneAge
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/gavinlinasd/StoneAge.git StoneAge
+          cd StoneAge
+          git -c advice.detachedHead=false checkout --quiet "$REF"
+          python3 - <<'PY'
+          import hashlib, json, os, struct
+          from collections import defaultdict
+
+          root="gmsv/data/map"
+          maps=[]
+          bad=[]
+          for dp,_,fs in os.walk(root):
+            for fn in fs:
+              p=os.path.join(dp,fn)
+              try:
+                b=open(p,'rb').read()
+              except Exception:
+                continue
+              rel=p.replace(os.sep,'/')
+              if len(b)>=44 and b[:6]==b'LS2MAP':
+                floor,width,height=struct.unpack(">HHH",b[6:8]+b[40:42]+b[42:44])
+                expected=44+width*height*4
+                sha=hashlib.sha1(("blob %d\0"%len(b)).encode()+b).hexdigest()
+                maps.append({
+                  "path":rel,"basename":os.path.basename(rel),"size":len(b),
+                  "blobSha":sha,"floorId":floor,"width":width,"height":height,
+                  "sizeMatchesHeader":len(b)==expected
+                })
+                if len(b)!=expected:
+                  bad.append({"path":rel,"expected":expected,"actual":len(b),"floorId":floor})
+          byfloor=defaultdict(list)
+          for m in maps: byfloor[m["floorId"]].append(m)
+          dup={str(k):v for k,v in byfloor.items() if len(v)>1}
+          focus={str(k):v for k,v in byfloor.items() if k in (100,200,1000,2000,3000,4000)}
+          print(json.dumps({
+            "fixedSource":REF,
+            "mapFileCount":len(maps),
+            "badHeaderSizeCount":len(bad),
+            "duplicateFloorIdCount":sum(1 for v in byfloor.values() if len(v)>1),
+            "focusFloors":focus,
+            "allFloor200":byfloor.get(200,[]),
+            "allFloor100":byfloor.get(100,[]),
+            "allFloor1000":byfloor.get(1000,[]),
+            "allFloor2000":byfloor.get(2000,[]),
+            "allFloor3000":byfloor.get(3000,[]),
+            "allFloor4000":byfloor.get(4000,[])
+          },ensure_ascii=False))
+          PY
