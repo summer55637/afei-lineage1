@@ -54,7 +54,7 @@
 
 因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
 
-這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合；第一個 destination map 的 walkability，以及新玩家 quest/event owner 也尚未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
+這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合。新增的 `stoneage_start_destination_closure.json` 顯示四個 destination floor 目前只有 2000 有 exact source map + walkability runtime；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中閉合，因此不能用猜測或跨版本 map 補上。2000 的兩個 landing coordinates 都已確認 walkable，且都落在 active encounter region。1000、4000 的 direct destination 僅有 placeholder encounter row，因此真正 active encounter 要沿 world graph 繼續找；新玩家 quest/event owner 也尚未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
 
 ## 現代 3D 卡通化最終視覺目標
 
@@ -94,5 +94,6 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/gmque-source-closure.md`
 - `docs/reference/modern-3d-mobile-visual-ui-target.md`
 - `data/generated/stoneage_start_route_closure.json`
+- `data/generated/stoneage_start_destination_closure.json`
 
 最後整理：2026-09-30。
