@@ -72,7 +72,7 @@ assert.equal(result.command.code,BATTLE_COM_CAPTURE);
 result=setBattlePlayerCommand(context,{battleSlot:0,command:'pet_in'});
 assert.equal(result.command.code,BATTLE_COM_PETIN);
 
-result=setBattlePlayerCommand(context,{battleSlot:0,command:'pet_out',targetBid:6});
+result=setBattlePlayerCommand(context,{battleSlot:0,command:'pet_out',targetBid:4});
 assert.equal(result.command.code,BATTLE_COM_PETOUT);
 
 const bad=structuredClone(context);
