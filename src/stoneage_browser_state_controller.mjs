@@ -13,6 +13,7 @@ import {
 } from './stoneage_browser_world_npc_runtime.mjs';
 import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_itemshop_runtime.mjs';
 import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
+import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
@@ -34,7 +35,8 @@ function createBrowserStateController({
   itemMakeCatalog=null,
   worldNpcIndex=null,
   itemShopRuntimeOptions={},
-  worldNpcRuntimeOptions={}
+  worldNpcRuntimeOptions={},
+  savePointCatalog=null
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
@@ -42,6 +44,7 @@ function createBrowserStateController({
     ? createBrowserWorldNpcRuntime({worldNpcIndex,...worldNpcRuntimeOptions})
     : null;
   const healerRuntime=moduleAudit ? createBrowserHealerRuntime({moduleAudit}) : null;
+  const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -57,7 +60,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -75,6 +78,15 @@ function createBrowserStateController({
       }
       if(type===ACTION_NPC_RESOLVE_AT){
         return {ok:true,handled:true,stage:'world-npc-resolution',worldNpc:clone(resolvedWorldNpc),state:clone(currentState)};
+      }
+      if(type===ACTION_NPC_SAVEPOINT_SET||type===ACTION_NPC_SAVEPOINT_CONFIRM){
+        if(!savePointRuntime)return {ok:false,handled:false,stage:'savepoint-runtime',reason:'browser-savepoint-runtime-not-configured',state:clone(currentState)};
+        if(savePointRuntime.ok!==true)return {ok:false,handled:false,stage:'savepoint-runtime',reason:savePointRuntime.reason??'browser-savepoint-runtime-invalid',errors:savePointRuntime.errors??[],state:clone(currentState)};
+        const player=action.player??null;
+        const npc=requestedNpc??resolvedWorldNpc;
+        const result=savePointRuntime.dispatch(currentState,{...action,npc,player,savePointCatalog:action.savePointCatalog??savePointCatalog},{now:action.now??now});
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_NPC_HEALER_USE){
         if(!healerRuntime)return {ok:false,handled:false,stage:'healer-runtime',reason:'browser-healer-runtime-not-configured',state:clone(currentState)};
@@ -127,8 +139,11 @@ export {
   ACTION_NPC_ITEMSHOP_BUY,
   ACTION_NPC_ITEMSHOP_SELL,
   ACTION_NPC_HEALER_USE,
+  ACTION_NPC_SAVEPOINT_SET,
+  ACTION_NPC_SAVEPOINT_CONFIRM,
   ACTION_NPC_RESOLVE_AT,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
+  BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   createBrowserStateController
 };
