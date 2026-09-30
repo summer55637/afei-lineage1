@@ -17,7 +17,7 @@
     "reachableCoordinateResolvedInstances": 16,
     "unreachableCoordinateResolvedInstances": 0,
     "unresolvedCoordinateInstances": 26,
-    "coordinateResolved": 4,
+    "coordinateResolved": 20,
     "coordinateUnresolved": 26,
     "interactionAuditedReachable": 16,
     "coordinateResolvedButInteractionNotAudited": 4
