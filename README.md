@@ -9,11 +9,11 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：62dbefa — Add automatic README maintenance
-- 最後更新時間：2026-09-30T15:50:55+08:00
+- 最新 commit：1c2dbdd — V3.43: add generatedAt to item economy schema
+- 最後更新時間：2026-09-30T16:07:09+08:00
 - 版本線最高 regression workflow：V3.42
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
-- 舊 HTML 多入口：已清除
+- 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 
 ### 核心 closure
@@ -40,7 +40,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Close new-player event reward item/pet definitions without promoting unresolved IDs.
+4. Advance Persistent State Schema for player, pet, inventory, equipment, skills, quests, map position, idle settings and save/migration.
 
 ### 永久停用
 
@@ -50,7 +50,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 - route closure：2026-09-30
 - persistent state：2026-09-30
-- item/economy schema：—
+- item/economy schema：2026-09-30
 - idle route catalog：2026-09-30
 - browser ItemShop contract：2026-09-30
 
