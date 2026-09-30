@@ -6,6 +6,9 @@ on:
       - 'src/stoneage_persistent_state.mjs'
       - 'data/generated/stoneage_persistent_state_schema.json'
       - 'tools/check_persistent_state_schema.mjs'
+      - 'src/stoneage_idle_loop.mjs'
+      - 'data/generated/stoneage_idle_loop_contract.json'
+      - 'tools/check_idle_loop_contract.mjs'
       - '.github/workflows/check-persistent-state.yml'
 
 permissions:
@@ -21,3 +24,5 @@ jobs:
           fetch-depth: 1
       - name: Run persistent state regression
         run: node tools/check_persistent_state_schema.mjs
+      - name: Run idle loop regression
+        run: node tools/check_idle_loop_contract.mjs
