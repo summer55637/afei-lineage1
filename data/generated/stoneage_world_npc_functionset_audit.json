@@ -192,7 +192,7 @@
     "sourcePath": "gmsv/src/npc/npctemplate.c",
     "sourceBlobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
     "buildFlagSource": "gmsv/src/include/version.h",
-    "buildFlagBlobSha": "9be9c3d4a3d93f5a764d5f0e4f6392c6c0fc5c4a",
+    "buildFlagBlobSha": "af6c866fd609a39e2960236275f6bf39e7f47b2c",
     "parser": "brace-aware functionSet extraction + active #ifdef evaluation against pinned version.h",
     "activeCount": 55,
     "rawEntryCount": 59,
