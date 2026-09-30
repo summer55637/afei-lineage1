@@ -12,6 +12,7 @@ import {
   BROWSER_WORLD_NPC_RUNTIME_FORMAT
 } from './stoneage_browser_world_npc_runtime.mjs';
 import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_itemshop_runtime.mjs';
+import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
@@ -40,6 +41,7 @@ function createBrowserStateController({
   const worldNpcRuntime=worldNpcIndex
     ? createBrowserWorldNpcRuntime({worldNpcIndex,...worldNpcRuntimeOptions})
     : null;
+  const healerRuntime=moduleAudit ? createBrowserHealerRuntime({moduleAudit}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -55,7 +57,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -73,6 +75,15 @@ function createBrowserStateController({
       }
       if(type===ACTION_NPC_RESOLVE_AT){
         return {ok:true,handled:true,stage:'world-npc-resolution',worldNpc:clone(resolvedWorldNpc),state:clone(currentState)};
+      }
+      if(type===ACTION_NPC_HEALER_USE){
+        if(!healerRuntime)return {ok:false,handled:false,stage:'healer-runtime',reason:'browser-healer-runtime-not-configured',state:clone(currentState)};
+        if(healerRuntime.ok!==true)return {ok:false,handled:false,stage:'healer-runtime',reason:healerRuntime.reason??'browser-healer-runtime-invalid',errors:healerRuntime.errors??[],state:clone(currentState)};
+        const player=action.player??null;
+        const npc=requestedNpc??resolvedWorldNpc;
+        const result=healerRuntime.dispatch(currentState,{...action,npc,player},{maxDistance:action.maxDistance??maxDistance,now:action.now??now});
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if([ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type)){
         if(!itemShopRuntime)return {ok:false,handled:false,stage:'itemshop-runtime',reason:'browser-itemshop-runtime-not-configured',state:clone(currentState)};
@@ -115,7 +126,9 @@ export {
   ACTION_NPC_ITEMSHOP_OPEN,
   ACTION_NPC_ITEMSHOP_BUY,
   ACTION_NPC_ITEMSHOP_SELL,
+  ACTION_NPC_HEALER_USE,
   ACTION_NPC_RESOLVE_AT,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
+  BROWSER_HEALER_RUNTIME_FORMAT,
   createBrowserStateController
 };
