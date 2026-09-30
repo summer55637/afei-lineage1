@@ -123,6 +123,7 @@ const auto = [
   '- route closure：' + (route.generatedAt ?? '—'),
   '- persistent state：' + (state.generatedAt ?? '—'),
   '- item/economy schema：' + (economy.generatedAt ?? '—'),
+  '- new-player seed：' + (seed.generatedAt ?? '—'),
   '- idle route catalog：' + (idle.generatedAt ?? '—'),
   '- browser ItemShop contract：' + (browserDocs.match(/更新日期：([0-9-]+)/)?.[1] ?? '—'),
   '',
