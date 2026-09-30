@@ -117,7 +117,7 @@ function consumeSavePointItems(state,selection){
   const slots=selection?.selectedSlots;
   if(!Array.isArray(slots)||slots.length<1||new Set(slots).size!==slots.length)return {ok:false,reason:'savepoint-item-selection-invalid',state};
   const next=clone(state);
-  const consumed=[];
+  const plan=[];
   for(const slotRaw of slots){
     const slot=intOr(slotRaw,-1);
     if(slot<PLAYER_ITEM_SLOT_START||slot>=PLAYER_ITEM_SLOT_END)return {ok:false,reason:'savepoint-item-selection-slot-invalid',state};
@@ -126,17 +126,28 @@ function consumeSavePointItems(state,selection){
     if(existingIndex<1||!isObject(item))return {ok:false,reason:'savepoint-item-selection-item-missing',slot,state};
     const itemId=intOr(item.itemId??item.data?.[0],-1);
     if(itemId<0)return {ok:false,reason:'savepoint-item-selection-item-id-invalid',slot,state};
-    const pile=Math.max(1,intOr(item.pile,1));
-    next.inventory.playerItemSlots[slot]=null;
-    delete next.inventory.itemRuntime.slots[String(existingIndex)];
+    const pile=intOr(item.pile,-1);
+    if(pile<1)return {ok:false,reason:'savepoint-item-selection-pile-invalid',slot,pile,state};
+    plan.push({slot,existingIndex,itemId,previousPile:pile,remainingPile:pile-1});
+  }
+  const consumed=[];
+  for(const entry of plan){
+    const {slot,existingIndex,itemId,previousPile,remainingPile}=entry;
+    const item=next.inventory.itemRuntime.slots[String(existingIndex)];
+    if(remainingPile>0){
+      item.pile=remainingPile;
+    }else{
+      next.inventory.playerItemSlots[slot]=null;
+      delete next.inventory.itemRuntime.slots[String(existingIndex)];
+    }
     if(isObject(next.inventory.piles)){
       const key=String(itemId);
       if(Object.prototype.hasOwnProperty.call(next.inventory.piles,key)){
-        const remaining=Math.max(0,intOr(next.inventory.piles[key],0)-pile);
-        if(remaining===0)delete next.inventory.piles[key]; else next.inventory.piles[key]=remaining;
+        const aggregateRemaining=Math.max(0,intOr(next.inventory.piles[key],0)-1);
+        if(aggregateRemaining===0)delete next.inventory.piles[key]; else next.inventory.piles[key]=aggregateRemaining;
       }
     }
-    consumed.push({slot,existingIndex,itemId,pile});
+    consumed.push({slot,existingIndex,itemId,previousPile,remainingPile,removed:remainingPile===0});
   }
   return {ok:true,state:next,consumed};
 }

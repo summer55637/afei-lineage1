@@ -2,6 +2,14 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.61 Browser SavePoint pile lifecycle parity
+
+V3.61 修正 V3.59 SavePoint GetItem mutation 與 pinned fixed-C _ITEM_PILENUMS 的堆疊生命週期差異。固定 source version.h 明確啟用 _ITEM_PILENUMS；CHAR_DelItem(talker,i) 實際以 num=1 呼叫 _CHAR_DelItem()，先把 ITEM_USEPILENUMS 減 1，只有 pile <= 0 才清除 player item slot 與 item object。
+
+Browser SavePoint transaction 現在做兩段式 preflight：所有選定 item object 必須存在且 pile >= 1 才開始 mutation；每個 object 只扣 1 pile unit。pile > 1 時保留同一 item object 與 slot reference；pile = 1 才清除 object。inventory.piles mirror 也只減 1。任一 preflight failure 都不會部分消耗 state。
+
+V3.59 regression 更新為新的 source-parity expected lifecycle，另新增 V3.61 regression / reference / CI。沒有新增第二套 inventory engine，也不改 SavePoint OR/AND branch、World join、changeevent、Starter Item 24114 或 GMQUE 永久停用政策。
+
 ## 2026-09-30 新增：V3.60 Browser SavePoint World source join
 
 V3.60 將 28 個 pinned fixed-C SavePoint instances 與 `stoneage_world_npc_index-v1` 做正式 `path#blockIndex` join。CI 同時重建 World catalog / SavePoint catalog，驗證 28/28 binding、26 個 unique floors、template / arg fileRef / elder Born identity，並回歸 V3.59 GetItem transaction contract。

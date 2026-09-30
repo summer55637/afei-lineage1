@@ -1,0 +1,49 @@
+name: Check V3.61 Browser SavePoint pile lifecycle parity
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_savepoint_runtime.mjs'
+      - 'tools/check_v359_browser_savepoint_getitem_transaction.mjs'
+      - 'tools/check_v361_browser_savepoint_pile_lifecycle.mjs'
+      - 'tools/generate_savepoint_source_catalog.mjs'
+      - 'docs/reference/v361-browser-savepoint-pile-lifecycle.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v361-browser-savepoint-pile-lifecycle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Check fixed-C pile feature is enabled
+        run: |
+          grep -q '#define _ITEM_PILENUMS' fixed-c-source/gmsv/src/include/version.h
+          grep -q '#define[[:space:]]*CHAR_DelItem' fixed-c-source/gmsv/src/include/char_base.h
+          grep -q 'ITEM_USEPILENUMS' fixed-c-source/gmsv/src/char/char_base.c
+      - name: Run V3.61 SavePoint pile regression
+        run: node tools/check_v361_browser_savepoint_pile_lifecycle.mjs
+      - name: Run V3.59 SavePoint transaction compatibility regression
+        run: node tools/check_v359_browser_savepoint_getitem_transaction.mjs
+      - name: Run V3.60 SavePoint World join compatibility regression
+        run: node tools/check_v360_savepoint_world_join.mjs fixed-c-source
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_savepoint_runtime.mjs
+          node --check tools/check_v359_browser_savepoint_getitem_transaction.mjs
+          node --check tools/check_v361_browser_savepoint_pile_lifecycle.mjs
+          node --check tools/generate_savepoint_source_catalog.mjs

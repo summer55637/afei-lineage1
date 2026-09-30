@@ -26,10 +26,10 @@ assert.equal(set.itemRequirement.branchIndex,0); assert.deepEqual(set.itemRequir
 assert.equal(state.inventory.playerItemSlots[9],101); assert.equal(state.revision,0);
 const confirmed=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_CONFIRM,npc,player,sourceBinding:itemBinding,now:()=> '2026-09-30T18:40:01+08:00'});
 assert.equal(confirmed.ok,true); assert.equal(confirmed.handled,true);
-assert.deepEqual(confirmed.consumedItems,[{slot:9,existingIndex:101,itemId:1930,pile:5}]);
-assert.equal(confirmed.state.inventory.playerItemSlots[9],null);
-assert.equal(confirmed.state.inventory.itemRuntime.slots['101'],undefined);
-assert.equal(confirmed.state.inventory.piles['1930'],undefined);
+assert.deepEqual(confirmed.consumedItems,[{slot:9,existingIndex:101,itemId:1930,previousPile:5,remainingPile:4,removed:false}]);
+assert.equal(confirmed.state.inventory.playerItemSlots[9],101);
+assert.equal(confirmed.state.inventory.itemRuntime.slots['101'].pile,4);
+assert.equal(confirmed.state.inventory.piles['1930'],4);
 assert.equal(confirmed.state.inventory.playerItemSlots[10],102);
 assert.equal(confirmed.state.world.savePoint.elderId,4);
 assert.deepEqual(confirmed.state.world.savePoint.position,{floorId:1000,x:92,y:99});
