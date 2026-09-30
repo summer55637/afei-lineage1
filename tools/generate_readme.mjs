@@ -56,6 +56,7 @@ const seed = loadJson('data/generated/stoneage_new_player_seed_runtime.json') ??
 const idle = loadJson('data/generated/stoneage_first_idle_route_catalog.json') ?? {};
 const disabled = loadJson('data/generated/stoneage_disabled_features.json') ?? {};
 const starterItemAudit = loadJson('data/generated/stoneage_starter_item_24114_source_audit.json') ?? {};
+const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
 const browserDocs = readText('docs/reference/v340-browser-itemshop-runtime.md');
 const commit = latestCommit();
@@ -108,6 +109,7 @@ const auto = [
   '| Player creation | ' + (schema.sections?.includes('creation') ? '✅ state contract' : '⚠️ missing') + ' | hometown + stats + elements + starter grant status；still headless，no playable HTML |',
   '| Starter Pet grant | ' + (seed.starterPet?.sourceClosed ? '✅ runtime' : '⚠️ pending') + ' | 16 RNG calls；VariableAI 0；HP after compliance；' + starterPetRankSummary + '；team/activePet unchanged |',
   '| Starter Item 24114 | ' + (starterItemAudit.resolution?.sourceTemplateResolved ? '✅ source-closed' : '⚠️ fail-closed') + ' | selected source `gmsv/data/itemset6.txt` is ' + (starterItemAudit.sourceFiles?.itemset6?.sizeBytes ?? '—') + ' bytes；allocator implementation exists but 24114 cannot be executed without a template |',
+  '| New-player creation → Save | ' + (creationSaveRuntimePresent ? '✅ headless pipeline' : '⚠️ missing') + ' | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |',
   '| Idle route catalog | ' + (idleSummary.towns ? '✅ indexed' : '⚠️ missing') + ' | ' + (idleSummary.pathClosedTowns ?? 0) + ' path-closed towns；' + (idleSummary.eligibleRouteVariants ?? 0) + '/' + (idleSummary.routeVariants ?? 0) + ' eligible variants |',
   '',
   '### NPC → ItemShop → Item → Gold → Persistent State',
@@ -137,6 +139,7 @@ const auto = [
   '- item/economy schema：' + (economy.generatedAt ?? '—'),
   '- new-player seed：' + (seed.generatedAt ?? '—'),
   '- starter Item 24114 audit：' + (starterItemAudit.generatedAt ?? '—'),
+  '- V3.50 creation/save runtime：2026-09-30',
   '- idle route catalog：' + (idle.generatedAt ?? '—'),
   '- browser ItemShop contract：' + (browserDocs.match(/更新日期：([0-9-]+)/)?.[1] ?? '—'),
   '',
