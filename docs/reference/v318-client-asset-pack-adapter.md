@@ -8,7 +8,7 @@ V3.18 接續 V3.16 的 ADRNBIN resolver 與 V3.17 的 RD decoder，正式把「�
 
 `map image ID → ADRNBIN bitmapno → graphicNo → adder/size → Real binary → RD raw/RLE pixels`。
 
-公開的 client 重建專案也把 `real.bin`、`adrn.bin` 與 `pal/Palet_1.sap` 列為原版 client data；因此本版不把這些二進位資料直接複製進 Pages。citeturn958999search0turn943447search0
+公開的 client 重建專案也把 `real.bin`、`adrn.bin` 與 `pal/Palet_1.sap` 列為原版 client data；因此本版不把這些二進位資料直接複製進 Pages。參考公開 client source：`https://github.com/BismarckDD/stoneage`；另一個逆向 client 專案 `https://github.com/pioneers-g/StoneAgeClient` 亦列出原版 client data 檔案需求。
 
 ## Web adapter
 
