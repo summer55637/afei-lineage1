@@ -19,6 +19,7 @@ import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORL
 import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT } from './stoneage_browser_world_warppoint_runtime.mjs';
 import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
 import { createBrowserWorldFirstRouteExecutionRuntime, ACTION_WORLD_FIRST_ROUTE_EXECUTE, BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_execution_runtime.mjs';
+import { createBrowserWorldEncounterRuntime, ACTION_WORLD_ENCOUNTER_PREPARE, BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -73,6 +74,7 @@ function createBrowserStateController({
     ? createBrowserWorldFirstRouteRuntime({routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,...worldFirstRouteOptions})
     : null;
   const worldFirstRouteExecutionRuntime=createBrowserWorldFirstRouteExecutionRuntime();
+  const worldEncounterRuntime=encounterTargetIndex ? createBrowserWorldEncounterRuntime({encounterTargetIndex}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -145,6 +147,15 @@ function createBrowserStateController({
         if(worldWarpPointRuntime.ok!==true)return {ok:false,handled:false,stage:'warppoint-runtime',reason:worldWarpPointRuntime.reason??'browser-world-warppoint-runtime-invalid',errors:worldWarpPointRuntime.errors??[],state:clone(currentState)};
         const result=await worldWarpPointRuntime.execute(currentState,{portalId:action.portalId??null,position:action.player??action.position??null,expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,savedAt:clockFactory(action.savedAt??action.now,now),now:clockFactory(action.now,now),source:'browser-world-warppoint'});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_ENCOUNTER_PREPARE){
+        if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-runtime',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
+        if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-runtime',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
+        const result=await worldEncounterRuntime.prepare(currentState,{
+          position:action.position??action.player??null,
+          encounterId:action.encounterId??null
+        });
         return {...result,state:clone(result.state??currentState)};
       }
       const requestedNpc=action?.npc??null;
