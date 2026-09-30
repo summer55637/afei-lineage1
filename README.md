@@ -44,7 +44,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Wire starter-item grant: Item 24114 has source ID/creation-path closure but its item template/allocator is still unresolved.
+4. Wire starter-item grant: Item 24114 has source ID/creation-path closure; allocator implementation exists, but the pinned selected Item file has no 24114 template row, so grant remains fail-closed.
 
 ### 永久停用
 
