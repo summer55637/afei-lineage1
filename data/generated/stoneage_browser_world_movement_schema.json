@@ -1,0 +1,55 @@
+{
+  "format": "stoneage-v376-browser-world-movement-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "action": "WORLD_MOVE_STEP",
+  "input": {
+    "dx": "-1, 0, or 1",
+    "dy": "-1, 0, or 1",
+    "player": "optional; when supplied must equal canonical world.position",
+    "expectedRevision": "optional optimistic-concurrency guard"
+  },
+  "semantics": {
+    "destination": "destination MAP_walkAble result must be true",
+    "diagonal": "destination plus origin-side X and Y orthogonal cells must all be walkable",
+    "floorBoundary": "one action cannot change floorId",
+    "flying": false
+  },
+  "output": {
+    "from": "canonical source cell",
+    "to": "canonical destination cell",
+    "revision": "commitSave increments exactly once",
+    "saveEnvelope": true
+  },
+  "sourceContract": {
+    "walkResolver": "gmsv/src/map/map_deal.c::MAP_walkAbleFromPoint",
+    "movement": "gmsv/src/char/char_walk.c::CHAR_walk",
+    "mapRuntime": "data/generated/stoneage_map_runtime_index.json + stoneage_mapset_runtime.json"
+  },
+  "failClosed": [
+    "missing map/mapset loader",
+    "state/player position mismatch",
+    "invalid direction",
+    "unresolved map",
+    "destination outside map",
+    "destination not walkable",
+    "diagonal side-cell blocked",
+    "revision conflict",
+    "Save Envelope verification failure"
+  ],
+  "notMutated": [
+    "player",
+    "pets",
+    "inventory",
+    "equipment",
+    "quests",
+    "events",
+    "titles",
+    "world.savePoint",
+    "idle",
+    "battleSettings"
+  ]
+}
