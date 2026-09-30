@@ -19,7 +19,7 @@ function parseGetItem(text){
   if(!raw)return {ok:false,reason:'savepoint-getitem-empty'};
   const branches=raw.split(',').map(x=>x.trim()).filter(Boolean).map((branch)=>{
     const items=branch.split('&').map(x=>x.trim()).filter(Boolean).map((token)=>{
-      const m=token.match(/^(\\d+)(?:\\*(\\d+))?$/);
+      const m=token.match(/^(\d+)(?:\*(\d+))?$/);
       if(!m)return {ok:false,token,reason:'savepoint-getitem-token-invalid'};
       const itemId=Number(m[1]);
       const count=m[2]==null?1:Number(m[2]);
