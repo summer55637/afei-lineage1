@@ -20,6 +20,7 @@ import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, set
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
 const ACTION_NPC_RESOLVE_AT='NPC_RESOLVE_AT';
+const ACTION_NPC_EVENT_EXECUTE='NPC_EVENT_EXECUTE';
 const ITEMSHOP_UI_OPEN='ITEMSHOP_UI_OPEN';
 const ITEMSHOP_UI_SELECT_OFFER='ITEMSHOP_UI_SELECT_OFFER';
 const ITEMSHOP_UI_SET_QUANTITY='ITEMSHOP_UI_SET_QUANTITY';
@@ -77,7 +78,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -92,6 +93,27 @@ function createBrowserStateController({
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:located.reason,npcs:located.npcs??[],state:clone(currentState)};
         }
         resolvedWorldNpc=located.npc;
+      }
+      if(type===ACTION_NPC_EVENT_EXECUTE){
+        if(!moduleAudit)return {ok:false,handled:false,stage:'npc-event',reason:'npc-event-module-audit-required',state:clone(currentState)};
+        const npc=requestedNpc??resolvedWorldNpc;
+        if(!npc)return {ok:false,handled:false,stage:'npc-event',reason:'npc-event-npc-required',state:clone(currentState)};
+        const player=action.player??null;
+        const transactionId=String(action.transactionId??`${transactionPrefix}-npc-event-${++sequence}`).trim();
+        const result=await dispatchNpcInteraction(currentState,npc,player,{
+          interactionRule:action.interactionRule??interactionRule,
+          maxDistance:action.maxDistance??maxDistance,
+          action:'talk',
+          modules:action.modules??modules,
+          moduleAudit:action.moduleAudit??moduleAudit,
+          compatibilityCatalog:action.compatibilityCatalog??compatibilityCatalog,
+          runtimeConfig:action.runtimeConfig??config,
+          handlerFactory:action.handlerFactory??handlerFactory,
+          now:action.now??now,
+          transactionId
+        });
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,stage:'npc-event',event:true,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_NPC_RESOLVE_AT){
         return {ok:true,handled:true,stage:'world-npc-resolution',worldNpc:clone(resolvedWorldNpc),state:clone(currentState)};
@@ -190,6 +212,7 @@ export {
   ACTION_NPC_SAVEPOINT_SET,
   ACTION_NPC_SAVEPOINT_CONFIRM,
   ACTION_NPC_RESOLVE_AT,
+  ACTION_NPC_EVENT_EXECUTE,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
