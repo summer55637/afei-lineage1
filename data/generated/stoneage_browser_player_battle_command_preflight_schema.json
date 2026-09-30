@@ -1,0 +1,39 @@
+{
+  "format": "stoneage-v397-browser-player-battle-command-preflight-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_PLAYER_COMMAND_PREFLIGHT",
+  "fixedC": {
+    "function": "gmsv/src/battle/battle_command.c::checkErrorStatus",
+    "blockedStatusFields": [
+      "paralysis",
+      "stone",
+      "sleep",
+      "dizzy",
+      "dragnet"
+    ],
+    "checkedCommands": [
+      "E",
+      "H|target",
+      "G",
+      "T|target",
+      "S|petIndex"
+    ],
+    "blockedFallback": "BattleCommandDispach(fd,\"N\") -> BATTLE_COM_WAIT + BATTLE_CHARMODE_C_OK",
+    "petTransport": "S| parses pet index in -1..CHAR_MAXPETHAVE-1; pinned CHAR_MAXPETHAVE=5"
+  },
+  "browser": {
+    "action": "BATTLE_PLAYER_COMMAND_PREFLIGHT",
+    "persistentMutation": false,
+    "rngConsumed": false,
+    "statusResolution": "Reads canonical battleStatus/status/direct fields when present; absent fields are treated as zero, matching a freshly initialized fixed-C WorkInt.",
+    "petCommand": "pet_in uses petIndex=-1; pet_out requires petIndex 0..4. targetBid remains reserved for battle target commands."
+  },
+  "notIncluded": [
+    "ride-pet exclusion",
+    "STANDBYPET feature flag",
+    "MP deduction",
+    "item/magic/pet-skill/profession checks",
+    "actual command execution",
+    "damage"
+  ]
+}
