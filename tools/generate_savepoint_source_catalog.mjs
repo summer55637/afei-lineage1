@@ -21,7 +21,6 @@ if(!fs.existsSync(sourceRoot))throw new Error('source root missing: '+sourceRoot
 const files=walk(npcRoot);
 const templates=new Map();
 for(const f of files.filter(p=>/\.template$|\.templete$/i.test(p))){ for(const b of parseBlocks(fs.readFileSync(f,'utf8'))){ const name=first(b.keys.templatename); if(name)templates.set(String(name).trim().toLowerCase(),{path:norm(path.relative(npcRoot,f)),blockIndex:b.blockIndex,functionSet:first(b.keys.functionset)}); } }
-const argFiles=new Map(files.filter(p=>/\.arg(?:\d+)?$/i.test(p)).map(p=>[norm(path.relative(npcRoot,p)),p]));
 const rows=[]; const unresolved=[];
 for(const f of files.filter(p=>/\.create$|\.creata$/i.test(p))){
   for(const c of parseBlocks(fs.readFileSync(f,'utf8'))){
@@ -32,8 +31,8 @@ for(const f of files.filter(p=>/\.create$|\.creata$/i.test(p))){
       const template=templates.get('npcgen_savepoint');
       if(!template||String(template.functionSet??'').toLowerCase()!=='savepoint'){ unresolved.push({sourceKey,reason:'savepoint-template-functionset-unresolved'}); continue; }
       if(!enemy.fileRef){ unresolved.push({sourceKey,reason:'savepoint-arg-file-ref-missing'}); continue; }
-      const argPath=argFiles.get(enemy.fileRef);
-      if(!argPath){ unresolved.push({sourceKey,reason:'savepoint-arg-file-missing',fileRef:enemy.fileRef}); continue; }
+      const argPath=path.join(npcRoot,enemy.fileRef);
+      if(!fs.existsSync(argPath)){ unresolved.push({sourceKey,reason:'savepoint-arg-file-missing',fileRef:enemy.fileRef}); continue; }
       const rawArg=fs.readFileSync(argPath,'utf8'); const parsed=parseArg(rawArg);
       const id=Number(parsed.key.ID); const born=parseBorn(parsed.key.Born);
       if(!Number.isInteger(id)||id<0||id>30){ unresolved.push({sourceKey,reason:'savepoint-id-invalid',id:parsed.key.ID??null}); continue; }
