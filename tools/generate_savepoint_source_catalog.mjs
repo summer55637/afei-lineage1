@@ -35,7 +35,7 @@ for(const f of files.filter(p=>/\.create$|\.creata$/i.test(p))){
       if(!fs.existsSync(argPath)){ unresolved.push({sourceKey,reason:'savepoint-arg-file-missing',fileRef:enemy.fileRef}); continue; }
       const rawArg=fs.readFileSync(argPath,'utf8'); const parsed=parseArg(rawArg);
       const id=Number(parsed.key.ID); const born=parseBorn(parsed.key.Born);
-      if(!Number.isInteger(id)||id<0||id>30){ unresolved.push({sourceKey,reason:'savepoint-id-invalid',id:parsed.key.ID??null}); continue; }
+      if(!Number.isInteger(id)||id<0||id>127){ unresolved.push({sourceKey,reason:'savepoint-id-invalid',id:parsed.key.ID??null}); continue; }
       if(!born){ unresolved.push({sourceKey,reason:'savepoint-born-invalid',Born:parsed.key.Born??null}); continue; }
       const mode=parsed.noItem?'no-item':(parsed.key.GetItem!=null?'item-required':'confirm-only');
       if(!mode){ unresolved.push({sourceKey,reason:'savepoint-item-mode-unresolved'}); continue; }
