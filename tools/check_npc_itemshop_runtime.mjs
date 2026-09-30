@@ -12,7 +12,9 @@ import {
   itemTypeMatches,
   parseConstraintToken,
   expandConstraintToken,
-  buyNpcItemShopItem
+  buyNpcItemShopItem,
+  buildItemShopFloorIndex,
+  resolveItemShopsAtFloor
 } from '../src/stoneage_npc_itemshop_runtime.mjs';
 
 const fixture=JSON.parse(fs.readFileSync('tools/fixtures/npc-itemshop/catalog.json','utf8'));
