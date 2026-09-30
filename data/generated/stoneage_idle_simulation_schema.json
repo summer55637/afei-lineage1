@@ -1,0 +1,26 @@
+{
+  "format": "stoneage-idle-simulation-v1",
+  "generatedAt": "2026-09-30",
+  "routeInput": "stoneage-first-idle-route-catalog-v1",
+  "flow": [
+    "route enable",
+    "path duration",
+    "encounter pending",
+    "battle result injection",
+    "reward transaction",
+    "supply/death decision",
+    "save commit"
+  ],
+  "sourceBoundaries": {
+    "route": "verified path closure",
+    "battle": "externally injected result",
+    "reward": "externally resolved packet"
+  },
+  "offline": {
+    "timeWindowOnly": true,
+    "rewardsSimulated": false
+  },
+  "save": {
+    "revisionGuard": true
+  }
+}
