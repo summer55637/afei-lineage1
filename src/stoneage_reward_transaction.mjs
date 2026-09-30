@@ -11,6 +11,7 @@ function normalizeRewardPacket(packet) {
   if (!source) return null;
   const transactionId = String(packet.transactionId ?? '');
   if (!transactionId) return null;
+  const playerExp = nonNegativeInt(packet.playerExp);
   const expByActor = isObject(packet.expByActor) ? Object.fromEntries(Object.entries(packet.expByActor).map(([actor, value]) => [String(actor), nonNegativeInt(value)])) : {};
   const gold = nonNegativeInt(packet.gold);
   const items = Array.isArray(packet.items) ? packet.items.slice(0, MAX_CARRIED_ITEMS).map(item => {
@@ -28,6 +29,7 @@ function normalizeRewardPacket(packet) {
     format: REWARD_TRANSACTION_FORMAT,
     transactionId,
     source,
+    playerExp,
     expByActor,
     gold,
     items,
@@ -61,7 +63,7 @@ function applyRewardTransaction(state, packet, { knownExistingItemIds = null, no
     return { applied: false, idempotent: true, transactionId: validation.packet.transactionId, state: next };
   }
   next.player.gold = nonNegativeInt(next.player.gold) + validation.packet.gold;
-  next.player.exp = nonNegativeInt(next.player.exp) + Object.values(validation.packet.expByActor).filter((_, index) => index === 0).reduce((sum, value) => sum + nonNegativeInt(value), 0);
+  next.player.exp = nonNegativeInt(next.player.exp) + validation.packet.playerExp;
   for (const petCredit of validation.packet.petCredits) {
     const pet = (next.pets?.petBox ?? []).find(p => String(p?.id ?? p?.petId ?? '') === petCredit.petId || String(p?.petId ?? '') === petCredit.petId);
     if (pet) pet.exp = nonNegativeInt(pet.exp) + petCredit.exp;
