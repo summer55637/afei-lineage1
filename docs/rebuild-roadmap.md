@@ -1116,3 +1116,44 @@ V3.89 不升格 compile-time feature branch（PROFESSION_SKILL / PETSKILL_ACUPUN
 
 下一層是 Enemy stat materialization：目前 V3.84 roster 已知道 Enemy ID / TempNo / EnemyBase size，但 Battle Context 的 Enemy HP/MP 尚未由 `ENEMY_createEnemy()` + EnemyBase 計算填入。
 
+## 2026-10-01 V3.90 Browser Enemy Core Stat Materialization
+
+V3.90 將 V3.84 generated Enemy roster 進一步轉成 fixed-C `ENEMY_createEnemy()` 的核心 stat state。
+
+固定 RNG 順序：
+1. level：`RAND(ENEMY_LV_MIN, ENEMY_LV_MAX)`
+2. 四次 base stat：`RAND(0,4)-2`
+3. 十次 allocation：`RAND(0,3)`
+
+共 15 次 caller-injected RNG。
+
+四圍公式：
+`((level-1)*E_T_LVUPPOINT + E_T_INITNUM) * allocatedBaseStat`
+
+再套既有 `CHAR_initcharWorkInt()`：
+- FIXVITAL / FIXSTR / FIXTOUGH / FIXDEX
+- ATTACKPOWER / DEFENCEPOWER / QUICK
+- MAXHP
+
+MAXHP：
+`floor((VITAL*4 + STR + TOUGH + DEX)*0.01)`
+
+V3.90 也重新對齊 `ENEMY_getRank()`：使用原始 EnemyBase 四圍總和，依 `100/95/90/85/80/0` threshold 得到 rank 0..5。
+
+目前仍刻意未升格：
+- `CHAR_getDefaultChar()` 完整 default field join
+- `ITEM_equipEffect()` / suit modifier
+- enemy style weapon
+- `ENEMY_RandomChange()`
+- enemy item drops
+- compile-time profession / PetSkill branches
+
+新增：
+- `src/stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs`
+- `data/generated/stoneage_browser_world_encounter_enemy_core_stat_schema.json`
+- `tools/check_v390_browser_world_encounter_enemy_core_stat.mjs`
+- `docs/reference/v390-browser-enemy-core-stat.md`
+- `.github/workflows/check-v390-browser-world-encounter-enemy-core-stat.yml`
+
+下一階段是把 V3.90 materialized core stats 寫入 V3.86 transient Battle Context 的 Enemy entry；之後才能讓 Battle Model 取得實際 HP/四圍，而不再使用 null placeholder。
+
