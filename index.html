@@ -19,13 +19,19 @@ button{cursor:pointer}pre{white-space:pre-wrap;overflow:auto}.notice{opacity:.78
 <main>
 <section>
 <h1>阿肥石器時代 — Canonical Browser Shell</h1>
-<p class="notice">V3.39 開發殼層。先驗證唯一入口、NPC runtime config、interaction dispatch 與新手 reward transaction；完整地圖、戰鬥、放置循環尚未在此頁啟用。</p>
+<p class="notice">V3.40 canonical 開發殼層。保留 V3.39 唯一入口與 NPC strict/compatibility probe，並新增 ItemShop → Item allocator → Economy transaction 的瀏覽器橋接探針；完整地圖、戰鬥、放置循環尚未在此頁啟用。</p>
 <div class="grid">
 <div class="metric"><div class="label">Shell format</div><div class="value" id="shell-format">loading…</div></div>
 <div class="metric"><div class="label">Source template</div><div class="value" id="source-template">loading…</div></div>
 <div class="metric"><div class="label">Source status</div><div class="value" id="source-status">loading…</div></div>
 <div class="metric"><div class="label">HTML entry count</div><div class="value" id="entry-count">loading…</div></div>
 </div>
+</section>
+<section>
+<h2>ItemShop Runtime Probe</h2>
+<p class="notice">以下使用 repository 內的 synthetic fixture，只驗證 browser bridge contract，不代表正式 336 個 ItemShop bindings 已載入。</p>
+<button id="shop-probe-button" type="button">Run ItemShop buy probe</button>
+<pre id="shop-probe-output">尚未執行。</pre>
 </section>
 <section>
 <h2>NPC Runtime Probe</h2>
