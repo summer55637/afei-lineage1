@@ -1,0 +1,202 @@
+{
+  "format": "stoneage-npc-itemshop-runtime-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "parser": {
+    "createFileGlob": "gmsv/data/npc/**/*.create",
+    "shopTemplate": "npcgen_shop",
+    "argFileReference": "enemy=npcgen_shop|file:..."
+  },
+  "stats": {
+    "shopBindings": 2,
+    "totalOfferRows": 6,
+    "distinctItemIds": 6
+  },
+  "shops": {
+    "fixture.create#0": {
+      "shopId": "fixture.create#0",
+      "floorId": 1001,
+      "bornCorner": {
+        "x1": 17,
+        "y1": 13,
+        "x2": 17,
+        "y2": 13
+      },
+      "name": "Fixture Weapon Shop",
+      "templateName": "npcgen_shop",
+      "source": {
+        "create": {
+          "path": "fixture.create",
+          "blobSha": "fixture-create",
+          "blockIndex": 0,
+          "startLine": 1
+        },
+        "arg": {
+          "path": "genout/ss_fixture_weapon",
+          "blobSha": "fixture-arg1"
+        }
+      },
+      "argKeys": [
+        "ItemList",
+        "LimitItemNo",
+        "LimitItemType",
+        "buy_rate",
+        "sell_rate",
+        "special_item",
+        "special_rate"
+      ],
+      "buyRate": 1,
+      "sellRate": 0.2,
+      "itemListRaw": "42,43,44,45-46",
+      "itemEntries": [
+        {
+          "raw": "42",
+          "kind": "item",
+          "itemId": 42
+        },
+        {
+          "raw": "43",
+          "kind": "item",
+          "itemId": 43
+        },
+        {
+          "raw": "44",
+          "kind": "item",
+          "itemId": 44
+        },
+        {
+          "raw": "45-46",
+          "kind": "range",
+          "start": 45,
+          "end": 46,
+          "inclusive": true
+        }
+      ],
+      "itemIds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "limitItemType": [
+        "OFFENCE"
+      ],
+      "limitItemNo": [],
+      "specialRate": 1.5,
+      "specialItemEntries": [],
+      "sourceFlags": {}
+    },
+    "fixture.create#1": {
+      "shopId": "fixture.create#1",
+      "floorId": 1100,
+      "bornCorner": {
+        "x1": 86,
+        "y1": 107,
+        "x2": 86,
+        "y2": 107
+      },
+      "name": "Fixture Pass Shop",
+      "templateName": "npcgen_shop",
+      "source": {
+        "create": {
+          "path": "fixture.create",
+          "blobSha": "fixture-create",
+          "blockIndex": 1,
+          "startLine": 10
+        },
+        "arg": {
+          "path": "genout/ss_fixture_pass",
+          "blobSha": "fixture-arg2"
+        }
+      },
+      "argKeys": [
+        "ItemList",
+        "LimitItemNo",
+        "LimitItemType",
+        "buy_rate",
+        "sell_rate",
+        "special_item",
+        "special_rate"
+      ],
+      "buyRate": 1,
+      "sellRate": 0.5,
+      "itemListRaw": "50",
+      "itemEntries": [
+        {
+          "raw": "50",
+          "kind": "item",
+          "itemId": 50
+        }
+      ],
+      "itemIds": [
+        50
+      ],
+      "limitItemType": [],
+      "limitItemNo": [
+        {
+          "raw": "77",
+          "kind": "item",
+          "itemId": 77
+        }
+      ],
+      "specialRate": 1.5,
+      "specialItemEntries": [
+        {
+          "raw": "77",
+          "kind": "item",
+          "itemId": 77
+        }
+      ],
+      "sourceFlags": {}
+    }
+  },
+  "itemIndex": {
+    "42": [
+      {
+        "shopId": "fixture.create#0",
+        "offerIndex": 0,
+        "buyRate": 1
+      }
+    ],
+    "43": [
+      {
+        "shopId": "fixture.create#0",
+        "offerIndex": 1,
+        "buyRate": 1
+      }
+    ],
+    "44": [
+      {
+        "shopId": "fixture.create#0",
+        "offerIndex": 2,
+        "buyRate": 1
+      }
+    ],
+    "45": [
+      {
+        "shopId": "fixture.create#0",
+        "offerIndex": 3,
+        "buyRate": 1
+      }
+    ],
+    "46": [
+      {
+        "shopId": "fixture.create#0",
+        "offerIndex": 4,
+        "buyRate": 1
+      }
+    ],
+    "50": [
+      {
+        "shopId": "fixture.create#1",
+        "offerIndex": 0,
+        "buyRate": 1
+      }
+    ]
+  },
+  "unresolved": []
+}
