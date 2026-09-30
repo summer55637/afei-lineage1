@@ -1177,7 +1177,7 @@ Battle Context Enemy entry 現在可取得：
 
 V3.91 的 first-route regression 已用 fixed Group 94：
 - Enemy 120：Lv2、448/390/331/487、MaxHP 30、rank 5
-- Enemy 123：Lv2、611/470/376/658、MaxHP 39、rank 5
+- Enemy 123：Lv2、611/470/376/658、MaxHP 39、rank 4
 
 MaxMP 仍為 null，因 fixed-C `ENEMY_createEnemy()` 不直接寫 `CHAR_MAXMP`，而完整 `CHAR_getDefaultChar()` default field join 尚未閉合。
 
