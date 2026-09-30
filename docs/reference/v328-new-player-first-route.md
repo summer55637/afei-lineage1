@@ -19,7 +19,7 @@ V3.28 把 V3.24 Pet、V3.25 Item、V3.26 Event Flag、V3.27 Charm 四個 source 
 `GetPet 341 → TempNo 274`
 `EndSetFlg 366`
 
-因 pinned `ExChangeMan` Charm handler 要求 `EvNo > 0`，而 `xinshoujd.arg` 是 `EventNo:-1`，`Charm:1` 在這個已證實 rule 下為 no-op，玩家 Charm 不改變。
+因 pinned `npc_exchangeman.c` concrete Charm handler 要求 `EvNo > 0`，而 `xinshoujd.arg` 是 `EventNo:-1`，`Charm:1` 在這個已證實 rule 下為 no-op，玩家 Charm 不改變。
 
 ## Commit boundary
 
