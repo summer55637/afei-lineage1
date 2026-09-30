@@ -1,0 +1,47 @@
+{
+  "format": "stoneage-v390-browser-enemy-stat-runtime-v1",
+  "generatedAt": "2026-10-01",
+  "fixedC": {
+    "sourceFunction": "gmsv/src/char/enemy.c::ENEMY_createEnemy",
+    "level": "baselevel>0 uses baselevel, otherwise RAND(ENEMY_LV_MIN,ENEMY_LV_MAX)",
+    "statRng": [
+      "baseVital += RAND(0,4)-2",
+      "baseStr += RAND(0,4)-2",
+      "baseTgh += RAND(0,4)-2",
+      "baseDex += RAND(0,4)-2"
+    ],
+    "allocation": "10x RAND(0,3), increment selected base stat",
+    "growth": "trunc(((level-1)*E_T_LVUPPOINT+E_T_INITNUM)*mutatedBaseStat)",
+    "maxHp": "trunc((VITAL*4+STR+TOUGH+DEX)*0.01)",
+    "rank": "ENEMY_getRank uses original EnemyBase baseVital+baseStr+baseTgh+baseDex before temporary random mutations",
+    "rngCount": "14 if level is explicit; 15 when level also comes from fixed-C RAND"
+  },
+  "boundary": {
+    "included": [
+      "level",
+      "vital",
+      "str",
+      "tgh",
+      "dex",
+      "maxHp",
+      "hp",
+      "elements",
+      "statusResist",
+      "petSkills",
+      "critical",
+      "counter",
+      "rare",
+      "slot",
+      "imageNo",
+      "petFlg",
+      "petRank"
+    ],
+    "pending": [
+      "CHAR_DEFAULTCHAR(31010) derived CHAR_MAXMP",
+      "ENEMY_RandomChange",
+      "enemy equipment/item effects",
+      "ENEMY_EXP/duel reward"
+    ],
+    "persistentMutation": false
+  }
+}
