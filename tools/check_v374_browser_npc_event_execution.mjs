@@ -39,7 +39,10 @@ assert.equal(loaded.ok,true); assert.equal(loaded.state.revision,1); assert.equa
 const repeat=await controller.dispatch({type:ACTION_NPC_EVENT_EXECUTE,targetCell:[1006,15,22],player:{floor:1006,x:15,y:21,facingCell:[1006,15,22]},transactionId:'v374-new-player-event'});
 assert.equal(repeat.ok,true); assert.equal(repeat.handled,false); assert.equal(repeat.execution.idempotent,true); assert.equal(repeat.state.revision,1);
 
-const far=await controller.dispatch({type:ACTION_NPC_EVENT_EXECUTE,targetCell:[1006,15,22],player:{floor:1006,x:18,y:21,facingCell:[1006,15,22]},transactionId:'v374-far'});
-assert.equal(far.ok,false); assert.equal(far.handled,false); assert.equal(far.stage,'npc-event'); assert.equal(far.reason,'interaction-distance-too-far'); assert.equal(controller.getState().revision,1);
+const farState=freshPersistentState({playerId:'v374-browser-event-far'});
+farState.player.level=1; farState.player.transmigration=0; farState.player.gold=30000; farState.player.charm=60;
+const farController=createBrowserStateController({state:farState,moduleAudit:audit,modules:{ExChangeMan:{script:closure.script,kind:'changeevent-source-resolved'}},handlerFactory:()=>bundle.handlers,worldNpcIndex:world,interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',now:()=> '2026-10-01T02:00:00.000Z'});
+const far=await farController.dispatch({type:ACTION_NPC_EVENT_EXECUTE,targetCell:[1006,15,22],player:{floor:1006,x:18,y:21,facingCell:[1006,15,22]},transactionId:'v374-far'});
+assert.equal(far.ok,false); assert.equal(far.handled,false); assert.equal(far.stage,'npc-event'); assert.equal(far.reason,'interaction-distance-too-far'); assert.equal(farController.getState().revision,0);
 
 console.log(JSON.stringify({pass:true,format:'stoneage-v374-browser-npc-event-execution-v1',productionChangeEventInstance:'floor1006#2',rewardItems:4,starterPet:274,endEventFlagWord11:16384,charmNoOpForEventNoMinus1:true,saveRevision:1,idempotentReplay:true,interactionGateFailClosed:true},null,2));
