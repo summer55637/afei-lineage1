@@ -3,6 +3,17 @@
 更新日期：2026-10-01
 
 
+
+## 2026-10-01 新增：V3.75 Browser start-floor Warp execution
+
+V3.75 把已 source-closed 的 8 個起點 npcgen_warp instances 接入唯一 Browser State Controller，新增 NPC_WARP_EXECUTE。
+
+固定 source chain 為 npcgen.template 的 npcgen_warp → Warp，以及 npc_warp.c 的 NPC_WarpWatch / NPC_WarpWarpCharacter：玩家必須已走到 Warp NPC 的 exact source cell，Browser adapter 才接受標準 floor|x|y destination，並只透過既有 commitSave 寫入 world.position。
+
+四個起點共有 8 個 production Warp rows：1006→1000、2006→2000、3006→3000、4006→4000。catalog 只接受標準 npcgen_warp|floor|x|y；FREEMORE / conditional multi-destination Warp 維持 fail-closed。
+
+V3.75 不新增 talk/facing 規則、不改 economy / quest / battle / encounter 語義，也不建立 playable HTML；Save Envelope verification 與 expectedRevision regression 同時加入。
+
 ## 2026-10-01 新增：V3.74 Browser NPC Event execution
 
 V3.74 將 V3.64 已 source-resolved 的 changeevent → ExChangeMan 正式掛進唯一 Browser State Controller，新增明確 NPC_EVENT_EXECUTE action。
