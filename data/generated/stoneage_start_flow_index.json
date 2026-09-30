@@ -1,0 +1,554 @@
+{
+  "format": "stoneage-start-flow-index-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "creation": "gmsv/src/char/char.c::CHAR_createNewChar",
+    "positionResolver": "gmsv/src/char/char_data.c::CHAR_getInitElderPosition",
+    "elderNames": "gmsv/src/npc/npc_transmigration.c"
+  },
+  "statistics": {
+    "hometowns": 4,
+    "startFloorCount": 4,
+    "npcInstancesOnStartFloors": 46,
+    "serviceCounts": {
+      "movement": 8
+    }
+  },
+  "hometowns": [
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "x": 15,
+      "y": 22,
+      "elder": "samugiru"
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "x": 20,
+      "y": 16,
+      "elder": "marinasu"
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "x": 21,
+      "y": 16,
+      "elder": "jaja"
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "x": 14,
+      "y": 20,
+      "elder": "karutarna"
+    }
+  ],
+  "newPlayerPet": {
+    "enabledBySourceFlag": true,
+    "selection": "default gives pet based on CHAR_LASTTALKELDER: 1=pet 2, 2=pet 3, 3=pet 4, otherwise pet 1",
+    "rules": [
+      {
+        "hometown": 0,
+        "petSelectionRule": "_NEW_PLAYER_CF getNewplayergivepet(0)",
+        "fallbackEnemyId": 1
+      },
+      {
+        "hometown": 1,
+        "petSelectionRule": "_NEW_PLAYER_CF getNewplayergivepet(0)",
+        "fallbackEnemyId": 2
+      },
+      {
+        "hometown": 2,
+        "petSelectionRule": "_NEW_PLAYER_CF getNewplayergivepet(0)",
+        "fallbackEnemyId": 3
+      },
+      {
+        "hometown": 3,
+        "petSelectionRule": "_NEW_PLAYER_CF getNewplayergivepet(0)",
+        "fallbackEnemyId": 4
+      }
+    ]
+  },
+  "museumOverrides": {
+    "delBornPlaceFlag": false,
+    "museumPosition": {
+      "floor": 815,
+      "x": 29,
+      "y": 40,
+      "lastTalkElder": 35
+    },
+    "museumLaterOverride": {
+      "floor": 9000,
+      "x": 40,
+      "y": 40
+    }
+  },
+  "npcInstancesOnStartFloors": [
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 0,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": "�������ֽӴ�Ա",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg"
+    },
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 1,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": "�������ֽӴ�Ա",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg"
+    },
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 2,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": "�������ֽӴ�Ա",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg"
+    },
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": "�������ֽӴ�Ա",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg"
+    },
+    {
+      "path": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 9,
+      "floorId": 1006,
+      "x": 18,
+      "y": 30,
+      "name": "��������",
+      "templateName": "bankman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 10,
+      "floorId": 2006,
+      "x": 29,
+      "y": 20,
+      "name": "��������",
+      "templateName": "bankman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 11,
+      "floorId": 3006,
+      "x": 27,
+      "y": 20,
+      "name": "��������",
+      "templateName": "bankman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/bankman.create",
+      "blockIndex": 12,
+      "floorId": 4006,
+      "x": 16,
+      "y": 30,
+      "name": "��������",
+      "templateName": "bankman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 18,
+      "y": 24,
+      "name": "�������Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 29,
+      "y": 16,
+      "name": "�������Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 25,
+      "y": 16,
+      "name": "�������Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 18,
+      "y": 23,
+      "name": "�������Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": "�������԰�",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": "�������԰�",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": "�������԰�",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": "�������԰�",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 12,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": "��ķ�����Ĵ峤",
+      "templateName": "changeevent",
+      "fileRef": "genout/msg_1006_18_22"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 13,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": "�峤�ҵĳ�ʦ",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_1006_16_16"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 93,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": "������˿�Ĵ峤",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_2006_20_14"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 94,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": "�峤�Ķ���",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_2006_23_14"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 13,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": "�ӼӵĴ峤",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_3006_20_14"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 14,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": "�峤������",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_3006_14_16"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 93,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": "��³���ǵĴ峤",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_4006_17_20"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 94,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": "�峤լ�ĳ�ʦ",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_4006_16_27"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 23,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 25,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 153,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 155,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 17,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 18,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 63,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 65,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 0,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": "���굽��",
+      "templateName": "npcgen_man",
+      "fileRef": "my/cunzhang/shuohua2.arg"
+    },
+    {
+      "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 25,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": null,
+      "templateName": "npcgen_man",
+      "fileRef": "my/cunzhang/shuohua3.arg"
+    },
+    {
+      "path": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 15,
+      "y": 13,
+      "name": "ս��ָ��Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 17,
+      "y": 14,
+      "name": "��������ָ��Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 14,
+      "y": 13,
+      "name": "ս��ָ��Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 16,
+      "y": 25,
+      "name": "ս��ָ��Ա",
+      "templateName": "familyman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 0,
+      "y": null,
+      "name": "ռ��ʦ",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 0,
+      "y": null,
+      "name": "ռ��ʦ",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 0,
+      "y": null,
+      "name": "ռ��ʦ",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 0,
+      "y": null,
+      "name": "ռ��ʦ",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 18,
+      "y": 26,
+      "name": "�����������ͨ",
+      "templateName": "windowman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 14,
+      "y": 18,
+      "name": "�����������ͨ",
+      "templateName": "windowman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 27,
+      "y": 15,
+      "name": "�����������ͨ",
+      "templateName": "windowman",
+      "fileRef": null
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 13,
+      "y": 15,
+      "name": "�����������ͨ",
+      "templateName": "windowman",
+      "fileRef": null
+    }
+  ],
+  "policy": "Source reconstruction only; start-flow order and gameplay pacing are not inferred from coordinates."
+}
