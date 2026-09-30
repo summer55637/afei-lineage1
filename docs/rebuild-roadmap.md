@@ -168,9 +168,11 @@ Persistent State Schema 第一版已開始實作：canonical schema、24 格玩�
 
 ## D. 「放置版」核心循環：高優先
 
-這是最終遊戲與普通 Stone Age 重建之間最重要的產品層。
+Idle Loop Contract 第一版已完成；下一步在這個 contract 上接 reward transaction、supply/death policy、offline resume 與長時間 simulation regression。這是最終遊戲與普通 Stone Age 重建之間最重要的產品層。
 
-需要先定義、再實作：
+目前 route skeleton 已有 3 個 hometown path-closed variants，並保留 4000 source-blocked route exception。
+
+需要再定義、再實作：
 
 進入地圖
 → 自動移動／遇敵
@@ -296,9 +298,9 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
 2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability，5 個 `changeevent` runtime-unresolved。destination maps 4/4 verified、7/7 landing walkability closed；floor 100 / 200 也已完成 verified runtime 與 8/8 encounter landing-path closure。剩餘 blocker 集中在 4000→200 source transition、5 個 changeevent module discrepancy、3000→200 的單一不可走 landing，以及新玩家 reward definitions。
-3. **Map Coverage Expansion**：由目前 11 張 verified map 繼續擴到能形成主要世界路線的完整地圖群；first-route floor 100 / 200 已 verified。
-4. **Persistent State Schema**：第一版 canonical schema 已建立；接著補 source-backed state completeness、save transaction 與 migration regression。
-5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
+3. **Map Coverage Expansion**：由目前 11 張 verified map 繼續擴到主要世界路線的完整地圖群；first-route floor 100 / 200 已 verified，接下來以 route skeleton 對應的 missing map branches 為擴張入口。
+4. **Persistent State Schema**：第一版 canonical schema 已建立；接著補 source-backed state completeness、save transaction、migration regression 與 idle state persistence。
+5. **Idle Loop Contract**：第一版 state machine 已建立；接著實作 encounter/battle/reward/supply/death/offline 的 transaction boundary 與 simulation runner。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
 7. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
 8. **Authorized Asset Integration**：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
@@ -392,6 +394,13 @@ fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destinatio
 3. 新玩家 event 的 reward item/pet definitions 尚未全部在 pinned source 中閉合。
 
 這個 checkpoint 之後，Map Coverage 的 first-route groundwork 已完成一個可執行的 ordinary encounter path closure layer，現在正式進入 Persistent State / Idle Loop；仍不回頭建立多個 playable HTML。
+## 2026-09-30 Idle Loop Contract v1
+
+新增 src/stoneage_idle_loop.mjs、docs/reference/idle-loop-contract.md、data/generated/stoneage_idle_loop_contract.json 與 regression。
+
+Idle state machine 已固定為 disabled → moving → encounter_pending → in_battle → settlement → supply_check / moving，另處理 dead 與 offline_resume。battle result 是輸入，不在 presentation 或 idle orchestration 重新計算。
+
+同步新增 data/generated/stoneage_first_idle_route_catalog.json，將已閉合的 map/portal/encounter path 串成首批 idle route skeleton：3 個 hometown 有 path-closed variants、1 個 hometown（4000）在 source portal 前被 block。battle strategy、補給、捕捉、背包滿、死亡恢復、offline accrual 仍維持 product-policy boundary。
 ## 2026-09-30 Persistent State Schema v1
 
 新增 `src/stoneage_persistent_state.mjs`、`docs/reference/persistent-state-schema.md`、`data/generated/stoneage_persistent_state_schema.json` 與 `tools/check_persistent_state_schema.mjs`。
