@@ -36,6 +36,11 @@ const pointBody=util.slice(utilStart,utilStart+700);
 assert.ok(pointBody.includes('rect->x         <= p->x && p->x <= rect->x + rect->width'));
 assert.ok(pointBody.includes('rect->y         <= p->y && p->y <= rect->y + rect->height'));
 
+assert.equal(rectContains([568,538,610,578],568,538),true);
+assert.equal(rectContains([568,538,610,578],610,578),true);
+assert.equal(rectContains([568,538,610,578],567,538),false);
+assert.equal(rectContains([568,538,610,578],611,578),false);
+
 const encount=read(fixedRoot,'gmsv/src/char/encount.c');
 const areaStart=encount.indexOf('int ENCOUNT_getEncountAreaArray( int floor, int x, int y)');
 assert.ok(areaStart>=0);
