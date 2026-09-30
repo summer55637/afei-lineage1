@@ -906,3 +906,30 @@ RNG 由 caller 注入 rng120 0..119，runtime 不呼叫 Math.random。V3.81 仍�
 1. profession encounter modifier、MoonAct 額外 RAND 與其他 connection-specific helpers 尚未升格，沒有 pinned build evidence 就不猜。
 2. cepAfter 尚未持久化到 Persistent State；下一階段再接 browser idle encounter_pending / encounter_rolled，並把 triggered 交給 fixed-C Enemy team selection / battle context。
 
+## 2026-10-01 V3.82 Browser World Encounter Persistence
+
+V3.82 將 V3.81 的唯讀 encounter roll 接入 canonical Persistent State，但保留原 V3.81 action 的純運算語義。
+
+新增：
+- src/stoneage_browser_world_encounter_persistence_runtime.mjs
+- data/generated/stoneage_browser_world_encounter_persistence_schema.json
+- tools/check_v382_browser_world_encounter_persistence.mjs
+- .github/workflows/check-v382-browser-world-encounter-persistence.yml
+- docs/reference/v382-browser-world-encounter-persistence.md
+
+Persistent field：
+world.encounter.cep
+
+固定 C 的 Connect[fd].CEP 在連線初始化時為 0。原 C 把它作為 connection-scoped encounter counter；V3.82 在單機版本中把「最新 CEP checkpoint」保存到 Persistent State，這是為 save / reload / offline continuity 做的 product-layer adaptation，不宣稱與 C 的 connection lifetime 完全相同。
+
+新增 WORLD_ENCOUNTER_ROLL_COMMIT：
+1. 讀取 persistent CEP。
+2. 呼叫 V3.81 WORLD_ENCOUNTER_ROLL。
+3. 將 cepAfter 寫入 world.encounter.cep。
+4. commitSave。
+5. parseAndValidateSaveEnvelope round-trip verification。
+
+成功 revision +1；revision conflict、invalid encounter、invalid RNG 都 fail-closed，不會半寫入。
+
+V3.82 仍不建立 battle，不計算 Enemy team，不加入 profession modifier / MoonAct 額外 RNG。下一階段才把 triggered=true 接回 Idle Loop 的 encounter_pending → encounter_rolled → in_battle，並在 battle context 前閉合 ENEMY_getEnemy() 的 Group / Enemy selection。
+
