@@ -1,0 +1,49 @@
+name: one-shot-item-ref-focus
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Focus unresolved item refs
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const j=JSON.parse(fs.readFileSync('data/generated/stoneage_item_event_closure_index.json','utf8'));
+          const rows=j.itemReferences||[];
+          const byKind={};
+          for(const r of rows){
+            const k=String(r.kinds?.[0]||'unknown');
+            byKind[k]??={total:0,unresolved:0,ids:new Set(),unresolvedIds:new Set(),samples:[]};
+            const x=byKind[k]; x.total+=r.occurrences||0;
+            if(!r.resolved){x.unresolved+=r.occurrences||0;x.unresolvedIds.add(r.id);if(x.samples.length<12)x.samples.push({id:r.id,occurrences:r.occurrences,samples:r.samples});}
+            x.ids.add(r.id);
+          }
+          const itemRows=Object.values(j.itemReferences||[]);
+          const resolvedIds=itemRows.filter(r=>r.resolved).map(r=>r.id);
+          const unresolvedIds=itemRows.filter(r=>!r.resolved).map(r=>r.id);
+          console.log('ITEM_TABLE_SOURCE',JSON.stringify(j.fixedSource));
+          console.log('ITEM_SOURCE_STATS',JSON.stringify(j.statistics));
+          console.log('MAX_RESOLVED_ITEM_ID',Math.max(...resolvedIds));
+          console.log('MIN_RESOLVED_ITEM_ID',Math.min(...resolvedIds));
+          console.log('UNRESOLVED_BY_KIND');
+          console.log(JSON.stringify(Object.fromEntries(Object.entries(byKind).map(([k,x])=>[k,{total:x.total,unresolved:x.unresolved,uniqueIds:x.ids.size,unresolvedIds:[...x.unresolvedIds].sort((a,b)=>a-b),samples:x.samples}])) ,null,2));
+          NODE
+      - name: Remove one-shot workflow
+        run: |
+          rm -f .github/workflows/one-shot-item-ref-focus.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/one-shot-item-ref-focus.yml
+          git commit -m 'ci: remove one-shot item reference focus'
+          git push origin HEAD:main
