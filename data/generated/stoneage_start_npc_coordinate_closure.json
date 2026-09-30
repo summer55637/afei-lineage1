@@ -1,0 +1,565 @@
+{
+  "format": "stoneage-start-npc-coordinate-closure-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "statistics": {
+    "startFloorNpcInstances": 46,
+    "coordinateResolved": 46,
+    "coordinateUnresolved": 0,
+    "newlyResolvedThisPass": 30
+  },
+  "sourceContract": "gmsv/src/npc/npccreate.c::NPC_readCreateFile reads borncorner into NPC_CREATEBORN*; enemy= token resolves through NPC_templateGetTemplateIndex",
+  "newlyResolved": [
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 0,
+      "floorId": 2006,
+      "x": 22,
+      "y": 15,
+      "dir": 6,
+      "name": "炎龙新手接待员",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "coordinate": [
+        22,
+        15
+      ],
+      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+    },
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 1,
+      "floorId": 3006,
+      "x": 23,
+      "y": 18,
+      "dir": 6,
+      "name": "炎龙新手接待员",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "coordinate": [
+        23,
+        18
+      ],
+      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+    },
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 2,
+      "floorId": 1006,
+      "x": 15,
+      "y": 22,
+      "dir": 6,
+      "name": "炎龙新手接待员",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "coordinate": [
+        15,
+        22
+      ],
+      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+    },
+    {
+      "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 14,
+      "y": 20,
+      "dir": 6,
+      "name": "炎龙新手接待员",
+      "templateName": "changeevent",
+      "fileRef": "almark/xinshou/xinshoujd.arg",
+      "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "coordinate": [
+        14,
+        20
+      ],
+      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 16,
+      "y": 19,
+      "dir": 6,
+      "name": "소痢즛喇경",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null,
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+      "coordinate": [
+        16,
+        19
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 23,
+      "y": 19,
+      "dir": 4,
+      "name": "소痢즛喇경",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null,
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+      "coordinate": [
+        23,
+        19
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 18,
+      "y": 17,
+      "dir": 4,
+      "name": "소痢즛喇경",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null,
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+      "coordinate": [
+        18,
+        17
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 19,
+      "y": 18,
+      "dir": 4,
+      "name": "소痢즛喇경",
+      "templateName": "npcgen_fmdengon",
+      "fileRef": null,
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a",
+      "coordinate": [
+        19,
+        18
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 12,
+      "floorId": 1006,
+      "x": 18,
+      "y": 22,
+      "dir": 6,
+      "name": "萨姆吉尔的村长",
+      "templateName": "changeevent",
+      "fileRef": "genout/msg_1006_18_22",
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+      "coordinate": [
+        18,
+        22
+      ],
+      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 13,
+      "floorId": 1006,
+      "x": 16,
+      "y": 16,
+      "dir": 6,
+      "name": "村长家的厨师",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_1006_16_16",
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+      "coordinate": [
+        16,
+        16
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 93,
+      "floorId": 2006,
+      "x": 20,
+      "y": 8,
+      "dir": 4,
+      "name": "玛丽娜丝的村长",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_2006_20_14",
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+      "coordinate": [
+        20,
+        8
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 94,
+      "floorId": 2006,
+      "x": 16,
+      "y": 9,
+      "dir": 4,
+      "name": "村长的儿子",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_2006_23_14",
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+      "coordinate": [
+        16,
+        9
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 13,
+      "floorId": 3006,
+      "x": 20,
+      "y": 14,
+      "dir": 4,
+      "name": "加加的村长",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_3006_20_14",
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+      "coordinate": [
+        20,
+        14
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 14,
+      "floorId": 3006,
+      "x": 14,
+      "y": 16,
+      "dir": 6,
+      "name": "村长的秘书",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_3006_14_16",
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+      "coordinate": [
+        14,
+        16
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 93,
+      "floorId": 4006,
+      "x": 17,
+      "y": 20,
+      "dir": 6,
+      "name": "卡鲁它那的村长",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_4006_17_20",
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+      "coordinate": [
+        17,
+        20
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 94,
+      "floorId": 4006,
+      "x": 16,
+      "y": 27,
+      "dir": 6,
+      "name": "村长宅的厨师",
+      "templateName": "npcgen_man",
+      "fileRef": "genout/msg_4006_16_27",
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c",
+      "coordinate": [
+        16,
+        27
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 23,
+      "floorId": 1006,
+      "x": 10,
+      "y": 20,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "coordinate": [
+        10,
+        20
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 25,
+      "floorId": 1006,
+      "x": 10,
+      "y": 21,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "coordinate": [
+        10,
+        21
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 153,
+      "floorId": 2006,
+      "x": 20,
+      "y": 21,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "coordinate": [
+        20,
+        21
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 155,
+      "floorId": 2006,
+      "x": 21,
+      "y": 21,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f",
+      "coordinate": [
+        21,
+        21
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 17,
+      "floorId": 3006,
+      "x": 20,
+      "y": 21,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "coordinate": [
+        20,
+        21
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 18,
+      "floorId": 3006,
+      "x": 21,
+      "y": 21,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "coordinate": [
+        21,
+        21
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 63,
+      "floorId": 4006,
+      "x": 10,
+      "y": 20,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "coordinate": [
+        10,
+        20
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 65,
+      "floorId": 4006,
+      "x": 10,
+      "y": 21,
+      "dir": 0,
+      "name": null,
+      "templateName": "npcgen_warp",
+      "fileRef": null,
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5",
+      "coordinate": [
+        10,
+        21
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 0,
+      "floorId": 2006,
+      "x": 12,
+      "y": 14,
+      "dir": 6,
+      "name": "新年到了",
+      "templateName": "npcgen_man",
+      "fileRef": "my/cunzhang/shuohua2.arg",
+      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb",
+      "coordinate": [
+        12,
+        14
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 25,
+      "floorId": 2006,
+      "x": 23,
+      "y": 13,
+      "dir": 6,
+      "name": "",
+      "templateName": "npcgen_man",
+      "fileRef": "my/cunzhang/shuohua3.arg",
+      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb",
+      "coordinate": [
+        23,
+        13
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 0,
+      "floorId": 1006,
+      "x": 12,
+      "y": 13,
+      "dir": 5,
+      "name": "Õ¼²·Ê¦",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai",
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+      "coordinate": [
+        12,
+        13
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 1,
+      "floorId": 2006,
+      "x": 25,
+      "y": 15,
+      "dir": 5,
+      "name": "Õ¼²·Ê¦",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai",
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+      "coordinate": [
+        25,
+        15
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 2,
+      "floorId": 3006,
+      "x": 25,
+      "y": 13,
+      "dir": 5,
+      "name": "Õ¼²·Ê¦",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai",
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+      "coordinate": [
+        25,
+        13
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    },
+    {
+      "path": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 3,
+      "floorId": 4006,
+      "x": 17,
+      "y": 15,
+      "dir": 5,
+      "name": "Õ¼²·Ê¦",
+      "templateName": "luckyman",
+      "fileRef": "sainasu/uranai",
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e",
+      "coordinate": [
+        17,
+        15
+      ],
+      "templateRuntimeStatus": "source_template_reference_present"
+    }
+  ],
+  "sourceCoverage": {
+    "createFiles": [
+      {
+        "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
+        "blobSha": "335470114a567f9d1a2c0a2369fc283043db920b"
+      },
+      {
+        "path": "gmsv/data/npc/family/fmdengon.create",
+        "blobSha": "a59ba60ea44690cbca32967bbefee3152421107a"
+      },
+      {
+        "path": "gmsv/data/npc/genout/shop_m.create",
+        "blobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004"
+      },
+      {
+        "path": "gmsv/data/npc/genout/warp_y.create",
+        "blobSha": "a327660ef1753a204e04e0c204e56de66574b98f"
+      },
+      {
+        "path": "gmsv/data/npc/genout/shop_m2.create",
+        "blobSha": "9ef27666372b5c1cb66e18445c43a201b688757c"
+      },
+      {
+        "path": "gmsv/data/npc/genout/warp_y2.create",
+        "blobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5"
+      },
+      {
+        "path": "gmsv/data/npc/my/cunzhang/xinchong.create",
+        "blobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
+      },
+      {
+        "path": "gmsv/data/npc/sainasu/uranai.create",
+        "blobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+      }
+    ],
+    "blockCoordinateField": "borncorner"
+  },
+  "policy": "No coordinate is inferred from fileRef text or display name. Coordinates are accepted only from the exact indexed create block's borncorner under the pinned source ref. Template runtime status is tracked separately."
+}
