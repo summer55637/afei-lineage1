@@ -32,7 +32,9 @@ function validateOfflineRewardBatch(state,batch){
   if(state.idle.offline.resumePending!==true)errors.push('offline-resume-not-pending');
   if(state.idle.offline.rewardsApplied===true)errors.push('offline-rewards-already-applied');
   const elapsed=Math.max(0,intOr(state.idle.offline.elapsedSeconds,0));
-  if(normalized.accruedSeconds>elapsed)errors.push('accrued-seconds-exceed-checkpoint-window');
+  const persistedCap=Number(state.idle.offline.accrualCapSeconds);
+  const settlementCap=Number.isFinite(persistedCap)?Math.min(elapsed,Math.max(0,intOr(persistedCap,0))):elapsed;
+  if(normalized.accruedSeconds>settlementCap)errors.push('accrued-seconds-exceed-checkpoint-cap');
   if(state.idle.routeId==null||String(state.idle.routeId).trim()==='')errors.push('idle-route-required-for-offline-reward-completion');
   const seen=new Set();
   for(const packet of normalized.rewardPackets){
