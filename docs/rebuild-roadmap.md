@@ -1013,3 +1013,32 @@ V3.85 明確不把 `ENCOUNTER_ROLLED(active=true)` 當成 shortcut，因此不�
 
 下一階段應先閉合現有 battle runtime 的 battle-context input contract，再把 selected Group / generated Enemy roster 接入 `in_battle`，而不是直接在 browser bridge 內重寫 battle engine。
 
+## 2026-10-01 V3.86 Browser Battle Context
+
+V3.86 將 V3.84 generated Enemy roster 接到 fixed-C `BATTLE_CreateVsEnemy()` 的 battle container 拓撲，但仍不重寫 Battle Engine。
+
+新增：
+- `src/stoneage_browser_battle_context_runtime.mjs`
+- `data/generated/stoneage_browser_battle_context_schema.json`
+- `tools/check_v386_browser_battle_context_runtime.mjs`
+- `.github/workflows/check-v386-browser-battle-context.yml`
+- `docs/reference/v386-browser-battle-context.md`
+
+固定 C 對齊：
+- `Side[0]=PLAYER`
+- `Side[1]=ENEMY`
+- `BATTLE_ENTRY_MAX=10`
+- 玩家 slot 0 / bid 0
+- default living pet 位於 owner 後第五格，即 slot 5 / bid 5
+- Enemy bid = 10 + entry slot
+- `BATTLE_CreateVsEnemy()` 最後交換 Enemy Entry[0..4] 與 Entry[5..9]
+
+V3.86 成功條件：
+`encounter_pending` → 建立 transient battle context → `BATTLE_STARTED` → `in_battle`
+
+Battle Context 本身不進 Persistent State；只保存 Idle mode 的狀態。Browser controller memory 持有 context，`battle_finished` / `disable` 後清除。
+
+`battleFieldNo` 必須 caller 注入，因 `BATTLE_getBattleFieldNo()` 的完整 map join 尚未閉合；不自行猜場地。
+
+V3.86 仍未執行 turn、AI、status、damage、reward、capture、death settlement。下一階段應先把 battleFieldNo source join 與 existing battle presentation/model input 對齊，再進入真正的 battle turn lifecycle。
+
