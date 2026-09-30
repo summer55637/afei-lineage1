@@ -47,11 +47,6 @@ function resolveSavePointBinding(npc,savePointCatalog){
   return normalizeBinding({...row,sourceKey:key});
 }
 
-function currentUnlockedMask(savePoint){
-  const mask=savePoint?.unlockedMask;
-  return Number.isInteger(mask)&&mask>=0?mask:0;
-}
-
 function applySavePoint(state,binding,{now=()=>new Date().toISOString()}={}){
   if(!isObject(state))return {applied:false,reason:'state-required',state};
   const normalized=normalizeBinding(binding);
@@ -108,7 +103,7 @@ function createBrowserSavePointRuntime({moduleAudit=null,savePointCatalog=null}=
       const existingUnlocked=Array.isArray(state?.world?.savePoint?.unlockedElderIds)
         && state.world.savePoint.unlockedElderIds.some(x=>intOr(x,-1)===checked.binding.elderId);
       if(checked.binding.mode==='item-required' && !existingUnlocked)return {ok:false,handled:false,stage:'source-binding',reason:'savepoint-item-requirement-not-yet-closed',state,sourceBinding:checked.binding};
-      if(checked.binding.mode==='confirm-only' && type===ACTION_NPC_SAVEPOINT_SET)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-required',state,sourceBinding:checked.binding};
+      if(checked.binding.mode==='confirm-only' && type===ACTION_NPC_SAVEPOINT_SET && !existingUnlocked)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-required',state,sourceBinding:checked.binding};
       if(checked.binding.mode==='item-required' && type===ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'source-binding',reason:'savepoint-item-requirement-not-yet-closed',state,sourceBinding:checked.binding};
       if(checked.binding.mode==='no-item' && type===ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-not-applicable',state,sourceBinding:checked.binding};
       const result=applySavePoint(state,checked.binding,{now:action.now??options.now??(()=>new Date().toISOString())});
