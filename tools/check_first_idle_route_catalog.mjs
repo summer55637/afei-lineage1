@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-const j=JSON.parse(require('node:fs').readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+import fs from 'node:fs';
+const j=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 assert.equal(j.format,'stoneage-first-idle-route-catalog-v1');
 assert.equal(j.summary.towns,4);
 assert.equal(j.summary.pathClosedTowns,3);
