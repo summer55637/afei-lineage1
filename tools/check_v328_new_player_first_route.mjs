@@ -29,8 +29,7 @@ const bundle=createFirstRouteRewardHandlers({
   itemMakeCatalog,
   petCatalog,
   petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,
-  itemRandInclusive:()=>0,
-  petRandInclusive:(min,max)=>min,
+  randInclusive:(a,b)=>a===b?a:0,
   itemCapacity:1000,
   itemCursor:itemHandlerCursor
 });
@@ -86,16 +85,8 @@ const stagedFailureBase=freshPersistentState({playerId:'first-route-fail'});
 stagedFailureBase.player.level=1;
 stagedFailureBase.player.transmigration=0;
 stagedFailureBase.player.charm=60;
-const failingHandlers=createNewPlayerEventHandlers({
-  itemRewardCatalog,
-  itemMakeCatalog,
-  petCatalog,
-  petIdFactory:null,
-  itemRandInclusive:()=>0,
-  petRandInclusive:()=>0,
-  itemCapacity:1000,
-  itemCursor:100
-});
+const failingHandlers={...handlers};
+delete failingHandlers.GetPet;
 const failed=executeNpcSourceEvent(stagedFailureBase,closure.script,{
   handlers:failingHandlers,
   transactionId:'first-route-fail'
@@ -113,7 +104,7 @@ ids.push(...executed.state.inventory.playerItemSlots.slice(9,13).map(index=>exec
 
 console.log(JSON.stringify({
   pass:true,
-  format:NEW_PLAYER_EVENT_ADAPTERS_FORMAT,
+  format:FIRST_ROUTE_REWARD_HANDLER_FORMAT,
   route:'xinshoujd.arg',
   branch:0,
   transactionActions:executed.transaction.actionCount,
