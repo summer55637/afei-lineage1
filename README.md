@@ -64,10 +64,23 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/encounter-source-closure.md`
 - `docs/reference/gmque-source-closure.md`
 
-Item / Quest Event Closure 正在進行；reward gap clustering 與 event owner closure 已建立 source-backed index。
+目前已完成 World / NPC / Item / Quest 的第一輪 source-backed closure，以及四個 hometown 的 Start Flow Index、NPC Item Acquisition Graph。最新資料為：7,979 個 NPC create blocks、9,335 個 NPC service bindings、5,457 筆 mapwarp、2,182 條 floor graph edges、2,301 個 NPC event item IDs（2,065 已閉合、236 unresolved）。
 
-目前第一條明確 source-backed 起始鏈為：character creation → hometown → elder spawn → town services → warp exits → world graph / encounter；下一步進入四個出生村的 first-route closure。
+目前仍不做 playable UI。下一階段直接進入四個出生村的 first-route closure：character creation → hometown → elder spawn → town services → warp exits → first encounter / quest。
 
-目前已完成 World / NPC / Item / Quest 的第一輪 source-backed closure，以及四個 hometown 的 Start Flow Index；下一階段進入四個出生村 first-route closure。
+明確政策：fixed C / source evidence 優先；未知 item、event、NPC functionset 一律維持 unresolved / non-promoted，不用猜測補值。
+
+## 明確停用項目
+
+`data/generated/stoneage_disabled_features.json` 已固定 GMQUE／抓寵活動為永久停用，因此它不再作為主線 blocker，也不會自行恢復。
+
+## 閱讀順序
+
+先看：
+- `docs/rebuild-roadmap.md`
+- `docs/reference/video-001-visual-reference.md`
+- `docs/reference/v320-real-tile-presentation.md`
+- `docs/reference/encounter-source-closure.md`
+- `docs/reference/gmque-source-closure.md`
 
 最後整理：2026-09-30。
