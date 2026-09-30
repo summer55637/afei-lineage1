@@ -29,7 +29,7 @@
 | Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
-| Starter Pet grant | ✅ source-closed | 16 RNG calls；VariableAI 0；HP after compliance；team/activePet unchanged |
+| Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank pending；team/activePet unchanged |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
@@ -43,7 +43,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Wire starter-item grant: Item 24114 has source ID/creation-path closure but its item template/allocator is still unresolved.
+4. Wire starter-item grant: Item 24114 has source ID/creation-path closure but its item template/allocator is still unresolved; starter Pet rank remains a separate source-data boundary.
 
 ### 永久停用
 
