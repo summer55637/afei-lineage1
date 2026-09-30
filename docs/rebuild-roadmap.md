@@ -516,3 +516,18 @@ V3.41 將正式 ItemShop source closure 提升為可重跑的 GitHub Actions job
 
 這一階段先做 source closure / cross-check，不直接把 generated artifact 當成 production world data，也不改變 V3.40 browser fixture contract。
 
+
+
+## 2026-09-30 V3.42 NPC ItemShop / World Join
+
+V3.42 已新增同 pinned fixed-C source 的 World NPC + ItemShop 雙生成 join regression。CI 會：
+
+- 重建 `stoneage_world_npc_index` 與 ItemShop catalog。
+- 驗證 World index / service index 的 ItemShop instance count = 336、unique floors = 190。
+- 驗證 ItemShop catalog 的 335 resolved + 1 unresolved 正好對應 336 個 source create blocks。
+- 逐筆 join `create path#blockIndex`、floor、templateName 與 arg fileRef。
+- 驗證正式 buy offer 的 Item IDs 全部存在於本 repo 的 Item source runtime。
+
+固定 source 目前保留 1 筆明確 anomaly：`gmsv/data/npc/my/magicdou/daochang.create#8` → `my/ruieryasi/yao.arg`。該目錄在 pinned checkout 不存在，故維持 fail-closed，不以猜測檔案內容替代。
+
+下一步不是再造新 engine，而是把通過 join 的正式 catalog 接回 canonical browser shell / world NPC interaction，並讓這一筆 anomaly 維持不可交易狀態直到有新的可證實 source。
