@@ -457,5 +457,6 @@ V3.27 first-route handler bundle 已完成並通過 atomic execution / rollback 
 下一階段集中閉合 pinned source 的 `changeevent` template registration / instantiation（`npctemplate.c/functionSet[]`），再把已閉合的 first-route transaction 接到 browser NPC interaction 與 Save Transaction；不再新增平行 reward engine。
 
 V3.29 已完成 `changeevent` module audit：
+V3.31 將 fixed-C NPC facing / distance 互動 gate 變成獨立 runtime；V3.32 再把 interaction gate、module resolution、handler factory 與既有 first-route Save bridge 接成唯一 dispatch entry point。正式 `changeevent` module 仍以 pinned `npctemplate.c/functionSet[]` 缺失為 source blocker，不偷補 alias。
 V3.30 已完成 first-route Save integration：`condition → reward adapters → atomic NPC event transaction → existing Save Envelope → reload parity`。reward mutation chain 現在可持久化；正式 `changeevent` template registration 仍 unresolved，browser NPC interaction 仍是後續邊界。
 pinned `npctemplate.c/functionSet[]` 沒有 `changeevent`，`npccreate.c` 對 unknown template 直接不掛 template；公開文件只能證明 changeevent 的 DSL 用途，不能補出缺失的 pinned C module。Reward mutation chain 已閉合，因此下一階段切到 Save Transaction integration 與可測試的 synthetic NPC interaction boundary，同時保留正式 `changeevent` instantiation unresolved。
