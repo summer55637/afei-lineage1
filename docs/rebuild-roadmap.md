@@ -10,7 +10,7 @@
 
 另外完成 World NPC Index、NPC Service Index、World Graph 與 NPC Event Action Index：7,979 create blocks 已全部閉合到 template；27 個 file/arg 參照維持 unresolved；5,457 筆 mapwarp 全部通過 source map header 的 floor/座標範圍驗證；world graph 已形成 1,139 個 floor nodes、2,182 條 directed floor edges；NPC service bindings 共 9,335；NPC event DSL 掃描找到 4,860 次 source action-key matches。另已整理 mission、jobdaily、ride、title、question、raceman、racequiz、member shop/pet 等 auxiliary world data。
 
-目前正處於 **item-acquisition / quest-event closure**；reward gap 已改為 direct-source occurrence 掃描，避免用 sample path 估算。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標正在進一步依 `EventNo` / `EventEnd` / NPC-specific script / encounter event owner 反查，不再只用 mission / jobdaily 判定。
+目前正處於 **item-acquisition / quest-event closure**；reward gap 已改為 direct-source occurrence 掃描，避免用 sample path 估算；NPC acquisition graph 也已建立並校正 EventNo -1 sentinel。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標正在進一步依 `EventNo` / `EventEnd` / NPC-specific script / encounter event owner 反查，不再只用 mission / jobdaily 判定。
 
 下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path 與事件 owner 分群；目前 236 個 item IDs 與 38 個真正 ownerless event IDs 仍需 closure。優先閉合新手、城鎮、商店、治療、存點、主要任務與傳送流程。
 
