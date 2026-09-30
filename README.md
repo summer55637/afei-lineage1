@@ -36,11 +36,31 @@
 
 目前 source catalog 有 1284 個 map blobs，但只有 7 張已產生 verified map runtime；因此世界地圖仍是主要待補區。
 
+## 近期 first-route checkpoint（2026-09-30）
+
+前一版 `stoneage-start-walkability-audit-v1` 沒有鎖定四個 hometown map 的 exact pinned source path，而是遞迴掃描 map floor 後取第一個命中，因此不足以作為 fixed-source walkability 的最終結論。
+
+現在已修正為 `stoneage-start-walkability-audit-v2`：四張出生村地圖直接鎖定到 fixed C 的 pinned path，並在審計時驗證 Git blob SHA。
+
+目前結果：
+
+- 4/4 hometown source maps 通過 exact blob SHA 驗證。
+- 8/8 direct hometown warp exits 可由出生座標以 source walkability 到達。
+- 最短出生點→warp NPC 路徑為 4–7 步。
+- 4/4 hometown start floors 都已存在 NPC service index。
+- 4/4 direct destination floors 都已有 depth-1 encounter evidence。
+
+因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
+
+這仍不是完整的 first-route gameplay closure：town service 的實際 NPC 座標與互動、第一個 destination map 的 walkability，以及新玩家 quest/event owner 還沒有全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`。
+
 ## 現階段優先事項
 
-World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index、auxiliary world data index、Item / Quest Event Closure、NPC Item Acquisition Graph 與 Start Flow Index。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。最新 item closure 顯示 NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 仍 unresolved；另有 42 個 event ID 尚未從 mission / jobdaily 直接關閉。
+World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index、auxiliary world data index、Item / Quest Event Closure、NPC Item Acquisition Graph 與 Start Flow Index。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。NPC service bindings 共 9,335；NPC event DSL 掃描找到 4,860 次 source action-key matches。
 
-現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂；四個 hometown 的出生座標、新手寵物選擇與出生村 NPC 已進入 source-backed Start Flow Index：
+最新 item closure 顯示 NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 仍 unresolved；另有 ownerless event IDs 尚未提升為 gameplay 規則。
+
+現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂；四個 hometown 的出生座標、新手寵物選擇、新增的 source-route spine，以及出生村 NPC 已進入 source-backed Start Flow / Start Route closure：
 
 1. World Data Catalog：NPC、任務、商店、傳送、服務、事件等。
 2. Map Coverage Expansion：主要世界地圖與地圖連接。
@@ -58,29 +78,12 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 ## 閱讀順序
 
 先看：
+
 - `docs/rebuild-roadmap.md`
 - `docs/reference/video-001-visual-reference.md`
 - `docs/reference/v320-real-tile-presentation.md`
 - `docs/reference/encounter-source-closure.md`
 - `docs/reference/gmque-source-closure.md`
-
-目前已完成 World / NPC / Item / Quest 的第一輪 source-backed closure，以及四個 hometown 的 Start Flow Index、NPC Item Acquisition Graph。最新資料為：7,979 個 NPC create blocks、9,335 個 NPC service bindings、5,457 筆 mapwarp、2,182 條 floor graph edges、2,301 個 NPC event item IDs（2,065 已閉合、236 unresolved）。
-
-目前仍不做 playable UI。下一階段直接進入四個出生村的 first-route closure：character creation → hometown → elder spawn → town services → warp exits → first encounter / quest。
-
-明確政策：fixed C / source evidence 優先；未知 item、event、NPC functionset 一律維持 unresolved / non-promoted，不用猜測補值。
-
-## 明確停用項目
-
-`data/generated/stoneage_disabled_features.json` 已固定 GMQUE／抓寵活動為永久停用，因此它不再作為主線 blocker，也不會自行恢復。
-
-## 閱讀順序
-
-先看：
-- `docs/rebuild-roadmap.md`
-- `docs/reference/video-001-visual-reference.md`
-- `docs/reference/v320-real-tile-presentation.md`
-- `docs/reference/encounter-source-closure.md`
-- `docs/reference/gmque-source-closure.md`
+- `data/generated/stoneage_start_route_closure.json`
 
 最後整理：2026-09-30。
