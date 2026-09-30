@@ -196,7 +196,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 
 ## 2026-09-30 Item / Economy Runtime v1
 
-新增 `src/stoneage_item_economy_runtime.mjs` 與 `tools/check_item_economy_runtime.mjs`，正式把 Gold 與 Item transaction 接到 canonical persistent state。
+新增 `src/stoneage_item_economy_runtime.mjs` 與 `tools/check_item_economy_runtime.mjs`，正式把 Gold 與 Item transaction 接到 canonical persistent state，並把 Gold cap / dangling existing-item reference 接入 persistent-state validation。
 
 - Gold 上限沿用 fixed-C `CHAR_getMaxHaveGold()`：`1,000,000 + 轉生 × 1,800,000`。
 - Player inventory 固定 24 slots；背包 transaction 只操作 9–23。
