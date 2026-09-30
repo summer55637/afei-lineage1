@@ -82,7 +82,7 @@ function simulateOfflineResume(state,closedAt,resumedAt,{maxSeconds=null}={}){
   const window=offlineResumeWindow(closedAt,resumedAt,{maxSeconds});
   if(!window.ok)return {ok:false,reason:window.reason,state};
   const next=JSON.parse(JSON.stringify(state));
-  next.idle.offline={...(isObject(next.idle?.offline)?next.idle.offline:{}),eligible:true,lastClosedAt:String(closedAt),accruedSeconds:window.accruedSeconds};
+  next.idle.offline={...(isObject(next.idle?.offline)?next.idle.offline:{}),eligible:true,lastClosedAt:String(closedAt),elapsedSeconds:window.elapsedSeconds,accruedSeconds:window.accruedSeconds,accrualCapSeconds:window.accruedSeconds};
   next.idle.lastSimulatedAt=String(resumedAt);
   return {ok:true,simulation:SIMULATION_FORMAT,offline:window,rewardsSimulated:false,state:next};
 }
