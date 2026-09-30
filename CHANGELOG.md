@@ -1,5 +1,12 @@
 目前正式可玩的 playable baseline：V3.09。V3.10 之後版本為 source/runtime/presentation groundwork，不取代 V3.09。
 
+## Maintenance — repository cleanup
+
+2026-09-30
+
+- 移除舊版資料圖鑑頁殘留的 `app.js` 與 `styles.css`；目前正式網站只使用 `index.html` + `game.js` + `game.css`。
+- 保留 `.github/workflows`、`_evidence`、`client-assets`、`data/generated`、`docs`、`src`、`tools`，因為它們仍承擔部署、來源證據、client asset contract、generated source data、研究紀錄、runtime 與 regression/generator 的職責。
+
 ## V3.20 — real tile presentation
 
 2026-09-30
