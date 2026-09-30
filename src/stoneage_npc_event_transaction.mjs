@@ -58,7 +58,7 @@ function applyNpcEventActionPlan(state,plan,{handlers={},transactionId=null,now=
     if(!result.ok)return {applied:false,...result,transactionId:txId||null,state};
   }
   if(actions.charm!=null){
-    const result=invoke('Charm',{value:actions.charm.value,role:actions.charm.role??'Charm',eventPlan:plan});
+    const result=invoke('Charm',{value:actions.charm.value,eventNo:plan.eventNo??null,role:actions.charm.role??'Charm',eventPlan:plan});
     if(!result.ok)return {applied:false,...result,transactionId:txId||null,state};
   }
   for(const action of Array.isArray(actions.setEndEvents)?actions.setEndEvents:[]){
