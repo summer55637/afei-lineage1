@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-new-player-event-closure-v1",
+  "format": "stoneage-new-player-event-closure-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -8,7 +8,8 @@
   "sourceContracts": {
     "owner": "gmsv/data/npc/almark/xinshou/xinshou.create",
     "script": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
-    "itemConfig": "gmsv/src/include/version.h::_ITEMSET6_TXT + gmsv/setup.cf::itemset6file + gmsv/src/init.c::ITEM_readItemConfFile"
+    "itemConfig": "gmsv/src/include/version.h::_ITEMSET6_TXT + gmsv/setup.cf::itemset6file + gmsv/src/init.c::ITEM_readItemConfFile",
+    "templateRuntime": "gmsv/src/npc/npctemplate.c::functionSet[] + gmsv/src/npc/npccreate.c::NPC_readCreateFile"
   },
   "owner": {
     "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
@@ -53,7 +54,8 @@
         "name": "炎龍新手接待員"
       }
     ],
-    "ownerClosure": "closed"
+    "ownerClosure": "script_reference_closed_template_unresolved",
+    "runtimeModuleStatus": "unresolved_in_pinned_npctemplate_functionSet"
   },
   "script": {
     "path": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
@@ -186,10 +188,23 @@
     "status": "partial"
   },
   "semantics": {
-    "ownerClosed": true,
+    "ownerClosed": false,
     "branchLogicSourceClosed": true,
     "rewardDefinitionsSourceClosed": false,
-    "noQuestOrderInference": true
+    "noQuestOrderInference": true,
+    "scriptReferenceClosed": true,
+    "runtimeModuleClosed": false
   },
-  "policy": "The concrete NPC create blocks and shared script establish event ownership and branch conditions. Reward item/pet definitions remain unresolved when the pinned source does not provide the corresponding definition rows; no alternative version or guessed mapping is promoted."
+  "policy": "The fixed-C create file and shared arg script close the source declaration and branch logic, but the pinned npctemplate.c has no changeevent functionSet and npccreate.c rejects unknown template names. Therefore the four xinshou blocks are recorded as source-declared but not active NPC runtime instances for this pinned build. Reward item/pet definitions remain unresolved where the pinned source does not provide the corresponding definition rows; no alternative version or guessed mapping is promoted.",
+  "moduleSource": {
+    "path": "gmsv/src/npc/npctemplate.c",
+    "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
+    "changeeventPresent": false
+  },
+  "runtimeResolution": {
+    "status": "unresolved",
+    "reason": "changeevent is absent from pinned gmsv/src/npc/npctemplate.c functionSet[]",
+    "createParser": "gmsv/src/npc/npccreate.c::NPC_templateGetTemplateIndex; unknown template returns -1 and block is rejected at block close",
+    "affectedStartFloorInstances": 4
+  }
 }
