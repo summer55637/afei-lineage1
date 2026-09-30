@@ -860,3 +860,30 @@ V3.79 是 orchestration layer，不建立第二套 movement、WarpPoint 或 batt
 失敗處理不是跨多步驟 atomic rollback：若中途某個 action 失敗，前面已成功保存的移動會保留，runtime 會回傳失敗 action index 與當前 state，供上層停止或重新規劃。
 
 4000→200 仍維持 source-blocked；V3.79 不以 WarpPoint row 存在就直接跨過 V3.62 的 fixed-C movement reachability blocker。
+
+## 2026-10-01 V3.80 Browser World Encounter Boundary
+
+V3.80 把 V3.79 的 first-route execution 再向 encounter runtime 推進一層，但仍不提前啟動 battle：
+
+`WORLD_FIRST_ROUTE_EXECUTE → WORLD_ENCOUNTER_PREPARE`
+
+新增：
+- `src/stoneage_browser_world_encounter_runtime.mjs`
+- `data/generated/stoneage_browser_world_encounter_schema.json`
+- `tools/check_v380_browser_world_encounter_runtime.mjs`
+- `.github/workflows/check-v380-browser-world-encounter-runtime.yml`
+- `docs/reference/v380-browser-world-encounter-boundary.md`
+
+Encounter adapter 直接使用已完成 source closure 的 `stoneage_start_encounter_target_index.json`，只允許 `unconditionalRows`。輸出固定 C encounter metadata：Encounter ID、inclusive rectangle、probability min/max、enemy max、Group IDs / Enemy IDs 與 zorder selection。
+
+V3.80 是唯讀 adapter：
+- 不消耗 RNG。
+- 不啟動 battle。
+- 不修改 Persistent State revision。
+- 不重建 Enemy team。
+- 不對 mixed / item-gated / unresolved group / placeholder row 做猜測性 promotion。
+
+固定 C 的 `ENCOUNT_getEncountAreaArray()` 會以座標與 rectangle 判定 active encounter row，並以 zorder 處理重疊；V3.80 保留這個 selection contract。指定 Encounter ID 時要求該 ID 必須真的位於玩家目前座標，錯誤即 fail-closed。
+
+下一階段才進入 encounter roll：依 fixed-C `CEP`、min/max clamp 與 `rand()%120 < cep` 建立獨立 RNG-injected runtime；roll 成功後才接既有 Idle Loop `encounter_pending → encounter_rolled → in_battle`，不在 V3.80 偷渡 battle 邏輯。
+
