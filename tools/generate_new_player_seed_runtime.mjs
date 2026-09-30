@@ -25,7 +25,6 @@ if(fs.existsSync(path.join(root,'.git'))){
 }
 const bytes=rel=>read(rel);
 const textOf=rel=>bytes(rel).toString('utf8').replace(/\r/g,'');
-const sha256=b=>crypto.createHash('sha256').update(b).digest('hex');
 const gitBlobSha=b=>crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+b.length+'\\0','utf8'),b])).digest('hex');
 const atoi=v=>{const m=String(v??'').trim().match(/^[+-]?\d+/);return m?Number(m[0]):0;};
 const clean=v=>String(v??'').trim();
@@ -84,14 +83,14 @@ if(positions.length!==4)fail('expected four starter hometowns');
 
 const enemyBytes=bytes('gmsv/data/enemy1.txt');
 const baseBytes=bytes('gmsv/data/enemybase1.txt');
-const enemySource={path:'gmsv/data/enemy1.txt',blobSha:gitBlobSha(enemyBytes),sha256:sha256(enemyBytes)};
-const baseSource={path:'gmsv/data/enemybase1.txt',blobSha:gitBlobSha(baseBytes),sha256:sha256(baseBytes)};
+const enemySource={path:'gmsv/data/enemy1.txt',blobSha:gitBlobSha(enemyBytes)};
+const baseSource={path:'gmsv/data/enemybase1.txt',blobSha:gitBlobSha(baseBytes)};
 const enemyRows=[];
 for(const raw of enemyBytes.toString('utf8').replace(/\r/g,'').split('\n')){
   const line=raw.trim();if(!line||line.startsWith('#'))continue;
   const p=line.split(',');if(p.length<14)continue;
   const id=atoi(p[3]);
-  if([1,2,3,4].includes(id))enemyRows.push({name:clean(p[0]),enemyId:id,tempNo:atoi(p[4]),lvMin:atoi(p[5]),lvMax:atoi(p[6]),petFlg:atoi(p[13]),source:{...enemySource,lineDigest:crypto.createHash('sha1').update(Buffer.from(raw)).digest('hex')}});
+  if([1,2,3,4].includes(id))enemyRows.push({name:clean(p[0]),enemyId:id,tempNo:atoi(p[4]),lvMin:atoi(p[5]),lvMax:atoi(p[6]),petFlg:atoi(p[13])});
 }
 const byEnemyId=Object.fromEntries(enemyRows.map(x=>[String(x.enemyId),x]));
 for(const id of [1,2,3,4])if(!byEnemyId[String(id)])fail('starter EnemyID missing: '+id);
@@ -102,7 +101,7 @@ for(const raw of baseBytes.toString('utf8').replace(/\r/g,'').split('\n')){
   const p=line.split(',');if(p.length<55)continue;
   const tempNo=atoi(p[6]);if(!wantedTemps.includes(tempNo))continue;
   if(byTempNo[String(tempNo)])fail('duplicate starter EnemyBase TempNo '+tempNo);
-  byTempNo[String(tempNo)]={name:clean(p[0]),tempNo,initNum:atoi(p[7]),lvUpPoint:atoi(p[8]),baseStats:{vital:atoi(p[9]),str:atoi(p[10]),tgh:atoi(p[11]),dex:atoi(p[12])},petSkills:Array.from({length:7},(_,i)=>atoi(p[25+i])),imageNumber:atoi(p[36]),petFlg:atoi(p[37]),limitLevel:atoi(p[54]),source:{...baseSource,lineDigest:crypto.createHash('sha1').update(Buffer.from(raw)).digest('hex')}};
+  byTempNo[String(tempNo)]={name:clean(p[0]),tempNo,initNum:atoi(p[7]),lvUpPoint:atoi(p[8]),baseStats:{vital:atoi(p[9]),str:atoi(p[10]),tgh:atoi(p[11]),dex:atoi(p[12])},petSkills:Array.from({length:7},(_,i)=>atoi(p[25+i])),imageNumber:atoi(p[36]),petFlg:atoi(p[37]),limitLevel:atoi(p[54])};
 }
 for(const id of [1,2,3,4])if(!byTempNo[String(byEnemyId[String(id)].tempNo)])fail('starter EnemyBase missing for EnemyID '+id);
 
