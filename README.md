@@ -375,3 +375,15 @@ V3.31–V3.33 interaction / dispatch / audited-module guards 已完成：fixed-C
 
 
 V3.34 new-player branch matrix 已加入：Lv 1–99 / 100–139 / 140–149 / 150 四段 branch 全部以 source-backed reward + Save Envelope 回歸，並鎖定邊界不漂移。
+
+## V3.37–V3.39 Canonical Browser Runtime
+
+V3.37 新增 `src/stoneage_npc_runtime_config.mjs`，把 strict / compatibility policy 收成唯一 runtime config；V3.36 compatibility execution 已改成由 dispatcher 依 config 建立 registry。
+
+V3.38 新增 `src/stoneage_browser_state_controller.mjs`，把 browser `NPC_TALK` action 統一送進 interaction gate → module registry → first-route Save；strict 預設不 mutation，compatibility 必須明確 opt-in。
+
+V3.39 新增唯一 `index.html` canonical browser shell 與 `src/stoneage_canonical_browser_shell.mjs`。repo 目前只允許一個 HTML entry，並由 `tools/check_v339_canonical_browser_shell.mjs` 防止 `game.html` / `game-live.html` / `play.html` 等入口重新分裂。
+
+V3.39 shell 目前是開發殼層，不冒充完整放置遊戲；它可以執行 1006 新手接待員的 strict / compatibility NPC probe，實際 reward / save / event semantics 都沿用既有 source-backed runtime。
+
+V3.39 regression 已納入 GitHub Actions。
