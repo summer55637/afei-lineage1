@@ -92,6 +92,28 @@ function resolveNpcItemShop(catalog,shopId){
   return getShop(catalog,shopId);
 }
 
+function buildItemShopFloorIndex(catalog){
+  const v=validateNpcItemShopCatalog(catalog);
+  if(!v.ok)return {ok:false,reason:'invalid-catalog',errors:v.errors};
+  if(isObject(catalog.floorIndex))return {ok:true,floorIndex:catalog.floorIndex};
+  const floorIndex={};
+  for(const shop of Object.values(catalog.shops)){
+    if(shop.floorId==null)continue;
+    (floorIndex[String(shop.floorId)]??=[]).push(shop.shopId);
+  }
+  for(const rows of Object.values(floorIndex))rows.sort();
+  return {ok:true,floorIndex};
+}
+
+function resolveItemShopsAtFloor(catalog,floorId){
+  const index=buildItemShopFloorIndex(catalog);
+  if(!index.ok)return index;
+  const key=String(intOr(floorId,-1));
+  if(key==='-1')return {ok:false,reason:'invalid-floor-id'};
+  const shopIds=index.floorIndex[key]??[];
+  return {ok:true,floorId:intOr(floorId,-1),shopIds,shops:shopIds.map(id=>catalog.shops[id]).filter(Boolean)};
+}
+
 function resolveShopBuyOffer(catalog,{shopId,itemId}={}){
   const got=getShop(catalog,shopId);
   if(!got.ok)return got;
@@ -193,6 +215,8 @@ export {
   resolveNpcShopBuyRequest,
   buyNpcItemShopItem,
   buildItemShopAcquisitionIndex,
+  buildItemShopFloorIndex,
+  resolveItemShopsAtFloor,
   parseConstraintToken,
   expandConstraintToken,
   itemTypeMatches,
