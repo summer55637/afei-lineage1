@@ -1,0 +1,41 @@
+name: Check V3.58 browser SavePoint runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_savepoint_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_world_npc_runtime.mjs'
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/fixtures/npc-savepoint/savepoint-catalog.json'
+      - 'tools/check_v358_browser_savepoint_runtime.mjs'
+      - 'docs/reference/v358-browser-savepoint-runtime.md'
+      - '.github/workflows/check-v358-browser-savepoint-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Run V3.58 browser SavePoint regression
+        run: node tools/check_v358_browser_savepoint_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_savepoint_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v358_browser_savepoint_runtime.mjs
