@@ -1,3 +1,5 @@
+import { eventFlagContext } from './stoneage_event_flag_runtime.mjs';
+
 const NPC_EVENT_RUNTIME_FORMAT='stoneage-npc-event-runtime-v1';
 
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -39,14 +41,15 @@ function parseConditionExpression(expression){
 }
 
 function defaultContext(state={}){
+  const flags=eventFlagContext(state);
   return {
     level:intOr(state?.player?.level,0),
     transmigration:intOr(state?.player?.transmigration,0),
     gold:intOr(state?.player?.gold,0),
     itemCount:typeof state?.runtimeAdapters?.itemCount==='function' ? state.runtimeAdapters.itemCount : null,
     petCount:typeof state?.runtimeAdapters?.petCount==='function' ? state.runtimeAdapters.petCount : null,
-    isEventEnd:typeof state?.runtimeAdapters?.isEventEnd==='function' ? state.runtimeAdapters.isEventEnd : null,
-    isEventNow:typeof state?.runtimeAdapters?.isEventNow==='function' ? state.runtimeAdapters.isEventNow : null
+    isEventEnd:typeof state?.runtimeAdapters?.isEventEnd==='function' ? state.runtimeAdapters.isEventEnd : flags.isEventEnd,
+    isEventNow:typeof state?.runtimeAdapters?.isEventNow==='function' ? state.runtimeAdapters.isEventNow : flags.isEventNow
   };
 }
 
