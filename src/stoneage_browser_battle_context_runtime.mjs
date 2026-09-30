@@ -47,7 +47,8 @@ function buildEnemyEntryLayout(team){
       enemyId,
       size:intOr(enemy.size)??0,
       createMaxNum:intOr(enemy.createMaxNum)??null,
-      sourceTempNo:intOr(enemy.enemy?.tempNo)??null
+      sourceTempNo:intOr(enemy.enemy?.tempNo)??null,
+      coreStats:enemy.coreStats?clone(enemy.coreStats):null
     };
   }
   const entries=Array(BATTLE_ENTRY_MAX).fill(null);
