@@ -75,7 +75,6 @@ assert.equal(repeat.save,null);
 assert.equal(repeat.state.revision,1);
 
 const blocked=await executeAndSaveNpcSourceEvent(result.state,closure.script,{
-  context,
   handlers:bundle.handlers,
   transactionId:'first-route-save-2'
 });
