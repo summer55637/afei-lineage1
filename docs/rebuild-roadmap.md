@@ -69,6 +69,8 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 
 這是目前最重要的缺口。
 
+目前已完成第一輪 NPC → Event DSL → Item / Pet / Event State closure 與四個 hometown Start Flow Index；剩餘工作集中在起始路徑的逐點閉合。
+
 原始 server data 除了已解析的 encounter、enemy、item、magic、petskill、profession、map 外，還存在 NPC、mission、memberpets、membershop、ride、title、question、event 等資料層。
 
 因此下一階段應建立「World Data Catalog」，至少整理：
