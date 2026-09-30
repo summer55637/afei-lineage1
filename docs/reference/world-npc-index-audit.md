@@ -27,7 +27,7 @@ fixed source 的 NPC data 共 3,960 個檔案。
 
 目前全部維持 non-promoted。
 
-外部 Stone Age NPC 教學也與本 source 的核心資料模型一致：`.create` 以 `floorid`、`borncenter`、`dir`、`graphicname`、`name`、`enemy` 等欄位描述 NPC，而 `enemy` 會指向 template / arg；這只能作 corroboration，fixed C 仍是本專案最高來源。 citeturn693953search0turn693953search5
+外部 Stone Age NPC 教學也與本 source 的核心資料模型一致：`.create` 以 `floorid`、`borncenter`、`dir`、`graphicname`、`name`、`enemy` 等欄位描述 NPC，而 `enemy` 會指向 template / arg；這只能作 corroboration，fixed C 仍是本專案最高來源。
 
 ## Mapwarp
 
