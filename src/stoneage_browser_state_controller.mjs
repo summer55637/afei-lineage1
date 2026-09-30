@@ -15,10 +15,15 @@ import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_item
 import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
+import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
 const ACTION_NPC_RESOLVE_AT='NPC_RESOLVE_AT';
+const ITEMSHOP_UI_OPEN='ITEMSHOP_UI_OPEN';
+const ITEMSHOP_UI_SELECT_OFFER='ITEMSHOP_UI_SELECT_OFFER';
+const ITEMSHOP_UI_SET_QUANTITY='ITEMSHOP_UI_SET_QUANTITY';
+const ITEMSHOP_UI_CLOSE='ITEMSHOP_UI_CLOSE';
 const clone=value=>JSON.parse(JSON.stringify(value));
 
 function createBrowserStateController({
@@ -54,7 +59,9 @@ function createBrowserStateController({
       : createBrowserItemShopRuntime({catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions}))
     : null;
   let sequence=0;
+  let itemShopUi=itemShopUiInitialState();
   return {
+    getItemShopUiState(){return clone(itemShopUi);},
     format:BROWSER_STATE_CONTROLLER_FORMAT,
     getConfig(){return clone(config);},
     getState(){return clone(currentState);},
@@ -70,7 +77,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -88,6 +95,34 @@ function createBrowserStateController({
       }
       if(type===ACTION_NPC_RESOLVE_AT){
         return {ok:true,handled:true,stage:'world-npc-resolution',worldNpc:clone(resolvedWorldNpc),state:clone(currentState)};
+      }
+      if(type===ITEMSHOP_UI_OPEN){
+        if(!itemShopRuntime)return {ok:false,handled:false,stage:'itemshop-ui',reason:'browser-itemshop-runtime-not-configured',state:clone(currentState),ui:clone(itemShopUi)};
+        if(itemShopRuntime.ok!==true)return {ok:false,handled:false,stage:'itemshop-ui',reason:'browser-itemshop-runtime-invalid',errors:itemShopRuntime.errors??[],state:clone(currentState),ui:clone(itemShopUi)};
+        const npc=requestedNpc??resolvedWorldNpc;
+        const opened=itemShopRuntime.dispatch(currentState,{...action,type:ACTION_NPC_ITEMSHOP_OPEN,npc,transactionId:action.transactionId},{interactionRule:action.interactionRule??interactionRule,maxDistance:action.maxDistance??maxDistance});
+        if(!opened.ok)return {...opened,handled:false,stage:'shop-ui-open',ui:clone(applyItemShopUiResult(itemShopUi,{action:'open',ok:false,reason:opened.reason,result:opened.result??opened})) ,state:clone(currentState)};
+        const ui=openItemShopUiState(itemShopUi,opened.shop);
+        if(!ui.ok)return {ok:false,handled:false,stage:'shop-ui-open',reason:ui.reason,state:clone(currentState),ui:clone(itemShopUi)};
+        itemShopUi=ui.state;
+        return {...opened,handled:true,stage:'shop-ui-open',format:ITEMSHOP_UI_STATE_FORMAT,ui:clone(itemShopUi),state:clone(currentState)};
+      }
+      if(type===ITEMSHOP_UI_SELECT_OFFER){
+        const selected=selectItemShopUiOffer(itemShopUi,action.itemId);
+        if(!selected.ok)return {ok:false,handled:false,stage:'shop-ui',reason:selected.reason,state:clone(currentState),ui:clone(selected.state)};
+        itemShopUi=selected.state;
+        return {ok:true,handled:true,stage:'shop-ui-select-offer',format:ITEMSHOP_UI_STATE_FORMAT,offer:selected.offer,ui:clone(itemShopUi),state:clone(currentState)};
+      }
+      if(type===ITEMSHOP_UI_SET_QUANTITY){
+        const changed=setItemShopUiQuantity(itemShopUi,action.quantity);
+        if(!changed.ok)return {ok:false,handled:false,stage:'shop-ui',reason:changed.reason,state:clone(currentState),ui:clone(changed.state)};
+        itemShopUi=changed.state;
+        return {ok:true,handled:true,stage:'shop-ui-set-quantity',format:ITEMSHOP_UI_STATE_FORMAT,quantity:changed.quantity,ui:clone(itemShopUi),state:clone(currentState)};
+      }
+      if(type===ITEMSHOP_UI_CLOSE){
+        const closed=closeItemShopUiState(itemShopUi);
+        itemShopUi=closed.state;
+        return {ok:true,handled:true,stage:'shop-ui-close',format:ITEMSHOP_UI_STATE_FORMAT,ui:clone(itemShopUi),state:clone(currentState)};
       }
       if(type===ACTION_NPC_SAVEPOINT_SET||type===ACTION_NPC_SAVEPOINT_CONFIRM){
         if(!savePointRuntime)return {ok:false,handled:false,stage:'savepoint-runtime',reason:'browser-savepoint-runtime-not-configured',state:clone(currentState)};
@@ -111,12 +146,15 @@ function createBrowserStateController({
         if(!itemShopRuntime)return {ok:false,handled:false,stage:'itemshop-runtime',reason:'browser-itemshop-runtime-not-configured',state:clone(currentState)};
         if(itemShopRuntime.ok!==true)return {ok:false,handled:false,stage:'itemshop-runtime',reason:itemShopRuntime.reason??'browser-itemshop-runtime-invalid',errors:itemShopRuntime.errors??[],state:clone(currentState)};
         const transactionId=String(action.transactionId??`${transactionPrefix}-itemshop-${++sequence}`).trim();
-        const result=itemShopRuntime.dispatch(currentState,{...action,npc:requestedNpc??resolvedWorldNpc,transactionId},{
+        const effectiveItemId=type===ACTION_NPC_ITEMSHOP_BUY ? (action.itemId??itemShopUi.selectedItemId) : action.itemId;
+        const effectiveQuantity=type===ACTION_NPC_ITEMSHOP_BUY ? (action.quantity??itemShopUi.quantity) : action.quantity;
+        const result=itemShopRuntime.dispatch(currentState,{...action,npc:requestedNpc??resolvedWorldNpc,transactionId,itemId:effectiveItemId,quantity:effectiveQuantity},{
           interactionRule:action.interactionRule??interactionRule,
           maxDistance:action.maxDistance??maxDistance
         });
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-        return {...result,state:clone(result.state??currentState)};
+        itemShopUi=applyItemShopUiResult(itemShopUi,{action:type,ok:result.ok,reason:result.reason,result:result.result??result});
+        return {...result,ui:clone(itemShopUi),state:clone(result.state??currentState)};
       }
       if(type!==ACTION_NPC_TALK){
         return {ok:false,handled:false,reason:'unsupported-browser-action',type,state:clone(currentState)};
@@ -163,5 +201,9 @@ export {
   ACTION_IDLE_STATUS,
   ACTION_IDLE_OFFLINE_RESUME,
   ACTION_IDLE_OFFLINE_APPLY_REWARDS,
+  ITEMSHOP_UI_OPEN,
+  ITEMSHOP_UI_SELECT_OFFER,
+  ITEMSHOP_UI_SET_QUANTITY,
+  ITEMSHOP_UI_CLOSE,
   createBrowserStateController
 };
