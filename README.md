@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：d45753a — Add V3.75 pinned source Warp catalog generator
-- 最後更新時間：2026-10-01T03:41:12+08:00
+- 最新 commit：784d4b9 — Add V3.75 Browser Warp schema contract
+- 最後更新時間：2026-10-01T03:41:38+08:00
 - 版本線最高 regression workflow：V3.74
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
