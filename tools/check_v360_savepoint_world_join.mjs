@@ -75,7 +75,7 @@ for(const row of rows){
 const anomaly=rows.find(x=>x.sourceArgPath==='genout/sp_200_449_982');
 assert.ok(anomaly);
 assert.ok(anomaly.itemRequirementIssues?.some(x=>x.reason==='savepoint-getitem-zero-count-branch-impossible'));
-assert.equal(anomaly.itemRequirements.length,16);
+assert.equal(anomaly.itemRequirements.length,19);
 
 console.log(JSON.stringify({
   pass:true,
