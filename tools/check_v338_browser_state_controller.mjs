@@ -27,18 +27,20 @@ const strict=createBrowserStateController({
   state:freshPersistentState({playerId:'browser-strict'}),
   moduleAudit:audit,
   compatibilityCatalog:compatibility,
-  modules:{ExChangeMan:{script:closure.script,kind:'changeevent-compatible'}},
+  modules:{ExChangeMan:{script:closure.script,kind:'changeevent-source-resolved'}},
   handlerFactory:()=>bundle.handlers,
-  runtimeConfig:{compatibilityMode:false,allowExternalCompatibilityAliases:true},
+  runtimeConfig:{compatibilityMode:false,allowExternalCompatibilityAliases:false},
   interactionRule:'NPC_Util_charIsInFrontOfChar distance=1'
 });
 assert.equal(strict.format,BROWSER_STATE_CONTROLLER_FORMAT);
 const strictBefore=strict.getState();
 const strictResult=await strict.dispatch({type:ACTION_NPC_TALK,npc:changeeventRows[2],player:{floor:1006,x:15,y:21,facingCell:[1006,15,22]},transactionId:'strict-controller-1'});
 assert.equal(strictResult.ok,true);
-assert.equal(strictResult.handled,false);
-assert.equal(strictResult.stage,'module-resolution');
-assert.deepEqual(strict.getState(),strictBefore);
+assert.equal(strictResult.handled,true);
+assert.equal(strictResult.stage,'dispatch');
+assert.equal(strictResult.execution.applied,true);
+assert.equal(strictResult.state.revision,1);
+assert.notDeepEqual(strict.getState(),strictBefore);
 
 const compatibilityControllers=[];
 for(let i=0;i<changeeventRows.length;i++){
@@ -91,6 +93,6 @@ assert.equal(deniedResult.stage,'runtime-config');
 assert.equal(denied.getState().revision,0);
 
 console.log(JSON.stringify({
-  pass:true,format:BROWSER_STATE_CONTROLLER_FORMAT,strictDefaultBlocked:true,compatibilityOptIn:true,
+  pass:true,format:BROWSER_STATE_CONTROLLER_FORMAT,strictSourceResolved:true,compatibilityOptIn:true,
   fourHometowns:compatibilityControllers,allSavedRevision1:true,reloadParity:true,partialOptInRejected:true
 }));
