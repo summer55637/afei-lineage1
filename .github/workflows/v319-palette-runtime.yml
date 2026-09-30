@@ -1,0 +1,32 @@
+name: V3.19 palette runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_palette_runtime.mjs'
+      - 'tools/check_v319_palette_runtime.mjs'
+      - 'docs/reference/v319-palette-runtime-contract.md'
+      - '.github/workflows/v319-palette-runtime.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_palette_runtime.mjs'
+      - 'tools/check_v319_palette_runtime.mjs'
+      - 'docs/reference/v319-palette-runtime-contract.md'
+      - '.github/workflows/v319-palette-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check palette runtime syntax
+        run: node --check src/stoneage_palette_runtime.mjs
+      - name: Run V3.19 palette regression
+        run: node tools/check_v319_palette_runtime.mjs
