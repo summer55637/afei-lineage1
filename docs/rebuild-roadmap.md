@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.59 Browser SavePoint GetItem transaction closure
+
+V3.59 將固定 C SavePoint 的 GetItem 路徑從 V3.58 的 fail-closed 推進到 source-backed inventory transaction。npc_savepoint.c 明確以逗號做 OR、& 做 AND；itemNo*count 的 count 是符合 ITEM_ID 的 inventory objects 數量，因 NPC_SavePointItemCheck / NPC_SavePointItemDelete 都逐 item slot 掃描並以 CHAR_DelItem 刪除，所以不能拿 canonical pile 代替 source object count。
+
+新增 GetItem source parser，正式 SavePoint catalog 現在包含 itemRequirements；空欄位、非法 token、同一 AND branch 重複 item ID 都 fail-closed。Browser runtime 新增 requirement selector / atomic item consume：NPC_SAVEPOINT_SET 在條件成立時只進確認；NPC_SAVEPOINT_CONFIRM 重新檢查、刪除選定 item objects，再一次性寫入 save point；已解鎖 elder 重訪維持免道具。
+
+新增 V3.59 regression、reference doc 與 GitHub Actions；CI 同時回跑 V3.58 compatibility regression，避免 SavePoint confirm-only 路徑被新 transaction 改壞。
+
+本輪仍不建立 playable HTML，也不改動 4000→200、3000→200 單點 landing、changeevent、Starter Item 24114 或 GMQUE 永久停用政策。
+
 ## 2026-09-30 新增：V3.58 Browser SavePoint service execution
 
 V3.58 將 pinned fixed-C `SavePoint` 從 generic service routing 推進到 headless state mutation。固定 source `gmsv/src/npc/npc_savepoint.c` 明確使用 `RANGE 2`、`CHAR_SAVEPOINT` bit 與 `CHAR_LASTTALKELDER`；`NPC_SavePointInit()` 另以 NPC arg 的 `Born` 建立 elder 的實際 save/復活位置。

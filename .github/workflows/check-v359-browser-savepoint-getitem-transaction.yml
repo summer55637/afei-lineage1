@@ -1,0 +1,57 @@
+name: Check V3.59 browser SavePoint GetItem transaction
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_savepoint_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/generate_savepoint_source_catalog.mjs'
+      - 'tools/check_v358_browser_savepoint_runtime.mjs'
+      - 'tools/check_v359_browser_savepoint_getitem_transaction.mjs'
+      - 'docs/reference/v359-browser-savepoint-getitem-transaction.md'
+      - '.github/workflows/check-v359-browser-savepoint-getitem-transaction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Generate SavePoint source catalog
+        run: node tools/generate_savepoint_source_catalog.mjs --source-root fixed-c-source --out data/generated/stoneage_npc_savepoint_source_index.json
+      - name: Run V3.58 compatibility regression
+        run: node tools/check_v358_browser_savepoint_runtime.mjs
+      - name: Run V3.59 SavePoint GetItem regression
+        run: node tools/check_v359_browser_savepoint_getitem_transaction.mjs
+      - name: Check fixed-C SavePoint GetItem contract
+        run: |
+          grep -q 'NPC_UsedCheck(meindex,talkerindex,0)' fixed-c-source/gmsv/src/npc/npc_savepoint.c
+          grep -q 'NPC_UsedCheck(meindex,talkerindex,1)' fixed-c-source/gmsv/src/npc/npc_savepoint.c
+          grep -q 'NPC_SavePointItemCheck' fixed-c-source/gmsv/src/npc/npc_savepoint.c
+          grep -q 'NPC_SavePointItemDelete' fixed-c-source/gmsv/src/npc/npc_savepoint.c
+          grep -q 'CHAR_DelItem' fixed-c-source/gmsv/src/npc/npc_savepoint.c
+      - name: Upload generated SavePoint source catalog
+        uses: actions/upload-artifact@v4
+        with:
+          name: v359-savepoint-source-catalog
+          path: data/generated/stoneage_npc_savepoint_source_index.json
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_savepoint_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/generate_savepoint_source_catalog.mjs
+          node --check tools/check_v358_browser_savepoint_runtime.mjs
+          node --check tools/check_v359_browser_savepoint_getitem_transaction.mjs
