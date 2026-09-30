@@ -66,8 +66,8 @@ const char=textOf('gmsv/src/char/char.c');
 if(!/ch\.data\[CHAR_TRANSMIGRATION\]\s*=\s*getNewplayertrans\(\)/.test(char))fail('starter transmigration assignment missing');
 if(!/ch\.data\[CHAR_GOLD\]\s*=\s*getNewplayergivegold\(\)/.test(char))fail('starter gold assignment missing');
 if(!/ch\.data\[CHAR_LV\]\s*=\s*getNewplayerlv\(\)/.test(char))fail('starter level assignment missing');
-if(!/CHAR_loginAddItemForNew\( charaindex \)/.test(char))fail('starter item grant path missing');
-if(!/ENEMY_createPetFromEnemyIndex\( charaindex, enemyarray \)/.test(char))fail('starter pet creation path missing');
+if(!/CHAR_loginAddItemForNew\(\s*charaindex\s*\)/.test(char))fail('starter item grant path missing');
+if(!/ENEMY_createPetFromEnemyIndex\(\s*charaindex\s*,\s*enemyarray\s*\)/.test(char))fail('starter pet creation path missing');
 for(const [id,re] of [
   [2,/CHAR_LASTTALKELDER\) == 1[\s\S]{0,180}setNewplayergivepet\(0,2\)/],
   [3,/CHAR_LASTTALKELDER\) == 2[\s\S]{0,180}setNewplayergivepet\(0,3\)/],
