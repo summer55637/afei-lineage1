@@ -1,0 +1,25 @@
+{
+  "format": "stoneage-idle-policy-v1",
+  "generatedAt": "2026-09-30",
+  "sourceBacked": {
+    "healerRecovery": "full player HP and MP"
+  },
+  "productPolicy": {
+    "supplyThresholds": "explicit only",
+    "deathRecoveryMode": "explicit only",
+    "offlineMaxSeconds": "explicit only",
+    "offlineRewardSimulation": "not defined here"
+  },
+  "supportedDeathRecoveryModes": [
+    "disabled",
+    "manual",
+    "save_point",
+    "nearest_healer"
+  ],
+  "prohibitedDefaults": [
+    "automatic resurrection",
+    "automatic return town",
+    "automatic offline rewards",
+    "implicit HP/MP thresholds"
+  ]
+}
