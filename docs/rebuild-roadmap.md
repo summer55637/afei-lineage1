@@ -81,7 +81,7 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 - Encounter Floor/X/Y → tile/object probe
 - client image → ADRNBIN → Real → RD decoder → palette → RGBA 的資料鏈
 
-目前只有 7 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。
+目前已有 10 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。
 
 四個 hometown 的原始 LS2MAP 已完成 exact pinned-source walkability audit，但這四張目前仍不代表完整世界地圖 coverage；下一階段仍要把 destination maps 與主要世界 route 逐步轉成 verified runtime。
 
@@ -295,8 +295,8 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 ## 建議的下一個實際工作順序
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
-2. **Start Route Closure**：source-route spine 已 closed；16 個已解析 NPC 互動點已完成 reachability；下一步做剩餘 NPC 座標 closure → destination-map source／walkability closure → active encounter region → quest/event owner closure。
-3. **Map Coverage Expansion**：由 7 張 verified map 擴到能形成主要世界路線的完整地圖群。
+2. **Start Route Closure**：source-route spine 已 closed；16 個已解析 NPC 互動點已完成 reachability；下一步做剩餘 NPC 座標 closure → destination-map source／walkability closure（目前 4/4 destination maps、7/7 landing points 已 closed） → active encounter region → quest/event owner closure。
+3. **Map Coverage Expansion**：由目前 10 張 verified map 繼續擴到能形成主要世界路線的完整地圖群。
 4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
 5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
@@ -332,7 +332,7 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 
 同時新增 `tools/generate_verified_map_runtime.mjs`：輸入 fixed-C 的 LS2MAP binary 後，會驗證 Git blob SHA、解析 `MAP_readMapOne()` 格式、檢查 mapset image IDs、依 battlefield source manifest 建立 `RAND(0,2)` 的三候選 battlemap resolver，最後寫入 verified runtime 與 runtime index。`tools/check_verified_map_runtime_generator.mjs` 提供 synthetic 1×1 map regression。
 
-目前因為 GitHub connector 在本環境不允許以 bytes 形式取回非 UTF-8 binary blob，尚未直接由這個工具生成新的 destination map runtime；這不是拿跨版本 map 代替 source，而是保留為下一個可執行的批量 pipeline。
+目前已用 fixed-C binary source 直接生成 1000/3000/4000 runtime；1000/3000/4000 的檔名不是 floor ID，而是由 LS2MAP header 精確辨識 floor。
 
 ## 2026-09-30 新增：新玩家 event owner closure
 
@@ -352,3 +352,9 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 `data/generated/stoneage_start_npc_coordinate_closure.json` 已把 46/46 start-floor NPC 的座標全部從 exact `borncorner` source 解出；`data/generated/stoneage_start_npc_reachability.json` 再以 fixed-C interaction contract 驗證 41/46 可達、0 個 unreachable。
 
 剩餘 5 個不是座標問題，而是 `changeevent` runtime module 問題：4 個 `xinshou` 新手接待員加上 1 個薩姆吉爾村長，均由 source create 宣告 `enemy=changeevent|...`，但 pinned `gmsv/src/npc/npctemplate.c` 的 `functionSet[]` 找不到 `changeevent`。依 `gmsv/src/npc/npccreate.c::NPC_templateGetTemplateIndex` 的 unknown-template 行為，這些 block 不應被當成已實例化、可互動的 NPC。
+
+## 2026-09-30 更新：四張 destination maps 全部閉合
+
+fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destination floor 都有 exact map：1000 為 `sainasu/samugiru/samugiru`、2000 為 `sainasu/marinasu/2000`、3000 為 `jyaruga/jaja/jaja`、4000 為 `jyaruga/karutana/karutana`。目前 10 張 map runtime 已完成 verified index。
+
+四個 destination 共 7 個 landing points 全部通過 tile/object walkability。這表示 destination map source 與 landing walkability 已經不是 blocker；接下來要處理的是 encounter 條件、一般掛機 region、changeevent runtime discrepancy 與 reward data closure。
