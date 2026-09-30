@@ -7,6 +7,7 @@ on:
       - 'src/stoneage_item_source_runtime.mjs'
       - 'src/stoneage_item_economy_runtime.mjs'
       - 'src/stoneage_persistent_state.mjs'
+      - 'tools/generate_npc_itemshop_runtime.mjs'
       - 'tools/check_npc_itemshop_runtime.mjs'
       - 'tools/fixtures/npc-itemshop/**'
       - '.github/workflows/check-npc-itemshop-runtime.yml'
