@@ -1,0 +1,516 @@
+{
+  "format": "stoneage-start-destination-warp-coordinates-v2",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/data/map/mapwarp.txt",
+    "blobSha": "617d2d02cbf17561d0eafc379a015d949055e922"
+  },
+  "sourceContract": "gmsv/data/map/mapwarp.txt exact TYPE:CONDITION:fromFloor,X,Y:toFloor,X,Y rows",
+  "directHometownDestinations": [
+    {
+      "hometown": 0,
+      "spawnFloor": 1006,
+      "destinationFloor": 1000,
+      "landings": [
+        {
+          "x": 98,
+          "y": 44
+        },
+        {
+          "x": 98,
+          "y": 45
+        }
+      ]
+    },
+    {
+      "hometown": 1,
+      "spawnFloor": 2006,
+      "destinationFloor": 2000,
+      "landings": [
+        {
+          "x": 56,
+          "y": 48
+        },
+        {
+          "x": 57,
+          "y": 48
+        }
+      ]
+    },
+    {
+      "hometown": 2,
+      "spawnFloor": 3006,
+      "destinationFloor": 3000,
+      "landings": [
+        {
+          "x": 90,
+          "y": 60
+        }
+      ]
+    },
+    {
+      "hometown": 3,
+      "spawnFloor": 4006,
+      "destinationFloor": 4000,
+      "landings": [
+        {
+          "x": 80,
+          "y": 90
+        },
+        {
+          "x": 80,
+          "y": 91
+        }
+      ]
+    }
+  ],
+  "nextFloorPortals": [
+    {
+      "id": "1000_to_100_a",
+      "fromFloor": 1000,
+      "toFloor": 100,
+      "sourceLines": [
+        2611,
+        2612,
+        2613,
+        2614
+      ],
+      "rows": [
+        {
+          "line": 2611,
+          "from": [
+            49,
+            116
+          ],
+          "to": [
+            637,
+            491
+          ]
+        },
+        {
+          "line": 2612,
+          "from": [
+            49,
+            117
+          ],
+          "to": [
+            637,
+            492
+          ]
+        },
+        {
+          "line": 2613,
+          "from": [
+            49,
+            118
+          ],
+          "to": [
+            637,
+            493
+          ]
+        },
+        {
+          "line": 2614,
+          "from": [
+            49,
+            119
+          ],
+          "to": [
+            637,
+            494
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1000_to_100_b",
+      "fromFloor": 1000,
+      "toFloor": 100,
+      "sourceLines": [
+        2620,
+        2621,
+        2622,
+        2623,
+        2624
+      ],
+      "rows": [
+        {
+          "line": 2620,
+          "from": [
+            117,
+            112
+          ],
+          "to": [
+            706,
+            488
+          ]
+        },
+        {
+          "line": 2621,
+          "from": [
+            118,
+            112
+          ],
+          "to": [
+            707,
+            488
+          ]
+        },
+        {
+          "line": 2622,
+          "from": [
+            119,
+            112
+          ],
+          "to": [
+            708,
+            488
+          ]
+        },
+        {
+          "line": 2623,
+          "from": [
+            120,
+            112
+          ],
+          "to": [
+            709,
+            488
+          ]
+        },
+        {
+          "line": 2624,
+          "from": [
+            121,
+            112
+          ],
+          "to": [
+            710,
+            488
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2000_to_100_a",
+      "fromFloor": 2000,
+      "toFloor": 100,
+      "sourceLines": [
+        2629,
+        2630,
+        2631,
+        2632
+      ],
+      "rows": [
+        {
+          "line": 2629,
+          "from": [
+            74,
+            33
+          ],
+          "to": [
+            79,
+            614
+          ]
+        },
+        {
+          "line": 2630,
+          "from": [
+            74,
+            34
+          ],
+          "to": [
+            79,
+            615
+          ]
+        },
+        {
+          "line": 2631,
+          "from": [
+            74,
+            35
+          ],
+          "to": [
+            79,
+            616
+          ]
+        },
+        {
+          "line": 2632,
+          "from": [
+            74,
+            36
+          ],
+          "to": [
+            79,
+            617
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2000_to_100_b",
+      "fromFloor": 2000,
+      "toFloor": 100,
+      "sourceLines": [
+        2637,
+        2638,
+        2639,
+        2640
+      ],
+      "rows": [
+        {
+          "line": 2637,
+          "from": [
+            108,
+            79
+          ],
+          "to": [
+            114,
+            660
+          ]
+        },
+        {
+          "line": 2638,
+          "from": [
+            108,
+            80
+          ],
+          "to": [
+            114,
+            661
+          ]
+        },
+        {
+          "line": 2639,
+          "from": [
+            108,
+            81
+          ],
+          "to": [
+            114,
+            662
+          ]
+        },
+        {
+          "line": 2640,
+          "from": [
+            108,
+            82
+          ],
+          "to": [
+            114,
+            663
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3000_to_200_a",
+      "fromFloor": 3000,
+      "toFloor": 200,
+      "sourceLines": [
+        1838,
+        1839,
+        1840,
+        1841
+      ],
+      "rows": [
+        {
+          "line": 1838,
+          "from": [
+            56,
+            117
+          ],
+          "to": [
+            570,
+            376
+          ]
+        },
+        {
+          "line": 1839,
+          "from": [
+            56,
+            118
+          ],
+          "to": [
+            570,
+            377
+          ]
+        },
+        {
+          "line": 1840,
+          "from": [
+            56,
+            119
+          ],
+          "to": [
+            570,
+            378
+          ]
+        },
+        {
+          "line": 1841,
+          "from": [
+            56,
+            120
+          ],
+          "to": [
+            570,
+            379
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3000_to_200_b",
+      "fromFloor": 3000,
+      "toFloor": 200,
+      "sourceLines": [
+        1848,
+        1849,
+        1850,
+        1851,
+        1852,
+        1853
+      ],
+      "rows": [
+        {
+          "line": 1848,
+          "from": [
+            73,
+            54
+          ],
+          "to": [
+            587,
+            313
+          ]
+        },
+        {
+          "line": 1849,
+          "from": [
+            73,
+            55
+          ],
+          "to": [
+            587,
+            314
+          ]
+        },
+        {
+          "line": 1850,
+          "from": [
+            73,
+            56
+          ],
+          "to": [
+            587,
+            315
+          ]
+        },
+        {
+          "line": 1851,
+          "from": [
+            73,
+            57
+          ],
+          "to": [
+            587,
+            316
+          ]
+        },
+        {
+          "line": 1852,
+          "from": [
+            73,
+            58
+          ],
+          "to": [
+            587,
+            317
+          ]
+        },
+        {
+          "line": 1853,
+          "from": [
+            73,
+            59
+          ],
+          "to": [
+            587,
+            318
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4000_to_200_a",
+      "fromFloor": 4000,
+      "toFloor": 200,
+      "sourceLines": [
+        1856,
+        1857
+      ],
+      "rows": [
+        {
+          "line": 1856,
+          "from": [
+            104,
+            55
+          ],
+          "to": [
+            304,
+            599
+          ]
+        },
+        {
+          "line": 1857,
+          "from": [
+            104,
+            56
+          ],
+          "to": [
+            304,
+            600
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4000_to_200_b",
+      "fromFloor": 4000,
+      "toFloor": 200,
+      "sourceLines": [
+        1860,
+        1861
+      ],
+      "rows": [
+        {
+          "line": 1860,
+          "from": [
+            101,
+            96
+          ],
+          "to": [
+            301,
+            640
+          ]
+        },
+        {
+          "line": 1861,
+          "from": [
+            101,
+            97
+          ],
+          "to": [
+            301,
+            641
+          ]
+        }
+      ]
+    }
+  ],
+  "policy": "Exact fixed-source warp coordinates only. These rows establish source portals, not walkability, quest priority, encounter eligibility, or an optimal route."
+}
