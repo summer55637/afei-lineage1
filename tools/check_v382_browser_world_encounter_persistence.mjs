@@ -16,6 +16,8 @@ const targetIndex=readJson('data/generated/stoneage_start_encounter_target_index
 let state=freshPersistentState({playerId:'v382-persist'});
 assert.equal(state.world.encounter.cep,0);
 assert.equal(validatePersistentState(state).length,0);
+state.world.position={floorId:100,x:610,y:538};
+assert.equal(validatePersistentState(state).length,0);
 
 const controller=createBrowserStateController({
   state,
