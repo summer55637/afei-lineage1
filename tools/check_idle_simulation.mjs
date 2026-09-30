@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
-import { simulateFirstEncounter, simulateOfflineResume, routeVariantKey } from '../src/stoneage_idle_simulation.mjs';
+import { simulateFirstEncounter, simulateOfflineResume, routeVariantKey, normalizeSimulationBattleResult, BATTLE_RESULT_FORMAT } from '../src/stoneage_idle_simulation.mjs';
 
 const base=freshPersistentState({now:()=> '2026-09-30T05:00:00.000Z',playerId:'p1'});
 base.player.maxHp=100;base.player.hp=100;base.player.maxMp=50;base.player.mp=50;
 const route={hometown:0,name:'samugiru',entryFloor:1000,encounterFloor:100};
 const variant={portalId:'1000_to_100_a',originPathMin:120,landingPathMin:71,totalWalkBeforeEncounterMin:191,encounterId:65};
 assert.equal(routeVariantKey(route,variant),'hometown-0/floor-1000-to-100/1000_to_100_a');
+const rawAdapter=normalizeSimulationBattleResult(null,{battleIndex:99,winside:0,finished:true,player:{hp:90,mp:40}});
+assert.equal(rawAdapter.ok,true);
+assert.equal(rawAdapter.battleResult.format,BATTLE_RESULT_FORMAT);
+assert.equal(rawAdapter.battleResult.outcome,'victory');
 
 const win=await simulateFirstEncounter(base,route,variant,{
   encounter:{floorId:100,encounterId:65},
