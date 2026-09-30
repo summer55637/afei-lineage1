@@ -58,6 +58,19 @@ assert.equal(sellNo.matchedBy.kind,'number');
 assert.equal(sellNo.sellRate,1.5);
 assert.equal(sellNo.special,true);
 
+const fallbackCatalog=JSON.parse(JSON.stringify(fixture));
+fallbackCatalog.shops['fixture.create#1'].specialRate=null;
+const fallbackSell=resolveShopSellPolicy(fallbackCatalog,{shopId:'fixture.create#1',itemId:77,itemType:99});
+assert.equal(fallbackSell.ok,true);
+assert.equal(fallbackSell.sellRate,1.2);
+assert.equal(fallbackSell.special,true);
+
+const duplicateCatalog=JSON.parse(JSON.stringify(fixture));
+duplicateCatalog.shops['fixture.create#0'].itemIds=[42,42];
+const duplicateIndex=buildItemShopAcquisitionIndex(duplicateCatalog);
+assert.equal(duplicateIndex.itemIndex['42'].length,2);
+assert.deepEqual(duplicateIndex.itemIndex['42'].map(x=>x.offerIndex),[0,1]);
+
 assert.equal(itemTypeMatches(4,'OFFENCE'),true);
 assert.equal(itemTypeMatches(6,'DEFENCE'),true);
 assert.equal(itemTypeMatches(12,'ACCESSORY'),true);
