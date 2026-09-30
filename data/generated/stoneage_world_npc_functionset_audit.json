@@ -130,7 +130,7 @@
       "status": "registry-missing-no-exact-module-found"
     }
   ],
-  "policy": "Unknown functionsets are never promoted into playable runtime until exact pinned-source reachability is established.",
+  "policy": "Unknown functionsets are never promoted into playable runtime until exact pinned-source reachability is established. Source-backed template bindings are canonical and may resolve only to an audited pinned functionSet module.",
   "sourceFunctionSets": [
     "Sample",
     "Door",
@@ -202,5 +202,19 @@
       "VeryWelfare",
       "Welfare2"
     ]
-  }
+  },
+  "sourceTemplateBindings": [
+    {
+      "templateName": "changeevent",
+      "normalizedTemplateName": "changeevent",
+      "functionset": "ExChangeMan",
+      "normalizedFunctionSet": "exchangeman",
+      "sourcePath": "gmsv/data/npc/jaruga/event/event.template",
+      "sourceBlobSha": "99ed9d950cd1ee4d59726a07dc6f50d9d78fa423",
+      "makeAtNoBody": 1,
+      "makeAtNoSee": 1,
+      "graphicName": 0
+    }
+  ],
+  "sourceTemplateBindingCount": 1
 }

@@ -16,14 +16,14 @@
   "statistics": {
     "totalNpcInstancesOnStartFloors": 46,
     "coordinateResolvedInstances": 46,
-    "reachableCoordinateResolvedInstances": 41,
+    "reachableCoordinateResolvedInstances": 46,
     "unreachableCoordinateResolvedInstances": 0,
     "unresolvedCoordinateInstances": 0,
     "coordinateResolved": 46,
     "coordinateUnresolved": 0,
-    "interactionAuditedReachable": 41,
-    "coordinateResolvedButInteractionNotAudited": 5,
-    "templateModuleUnresolvedInstances": 5,
+    "interactionAuditedReachable": 46,
+    "coordinateResolvedButInteractionNotAudited": 0,
+    "templateModuleUnresolvedInstances": 0,
     "duplicateRowsRemoved": 4
   },
   "sourceValidation": [
@@ -69,10 +69,10 @@
         15
       ],
       "npcCellWalkable": true,
-      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
-      "reachableInteraction": null,
+      "interactionRule": "NPC_Util_charIsInFrontOfChar distance=1",
+      "reachableInteraction": true,
       "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
-      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet",
+      "runtimeModuleStatus": "source_resolved_in_pinned_template_functionSet",
       "sharedScript": "almark/xinshou/xinshoujd.arg"
     },
     {
@@ -87,10 +87,10 @@
         18
       ],
       "npcCellWalkable": true,
-      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
-      "reachableInteraction": null,
+      "interactionRule": "NPC_Util_charIsInFrontOfChar distance=1",
+      "reachableInteraction": true,
       "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
-      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet",
+      "runtimeModuleStatus": "source_resolved_in_pinned_template_functionSet",
       "sharedScript": "almark/xinshou/xinshoujd.arg"
     },
     {
@@ -105,10 +105,10 @@
         22
       ],
       "npcCellWalkable": true,
-      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
-      "reachableInteraction": null,
+      "interactionRule": "NPC_Util_charIsInFrontOfChar distance=1",
+      "reachableInteraction": true,
       "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
-      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet",
+      "runtimeModuleStatus": "source_resolved_in_pinned_template_functionSet",
       "sharedScript": "almark/xinshou/xinshoujd.arg"
     },
     {
@@ -123,10 +123,10 @@
         20
       ],
       "npcCellWalkable": true,
-      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
-      "reachableInteraction": null,
+      "interactionRule": "NPC_Util_charIsInFrontOfChar distance=1",
+      "reachableInteraction": true,
       "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
-      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet",
+      "runtimeModuleStatus": "source_resolved_in_pinned_template_functionSet",
       "sharedScript": "almark/xinshou/xinshoujd.arg"
     },
     {
@@ -337,10 +337,10 @@
         22
       ],
       "npcCellWalkable": true,
-      "reachableInteraction": null,
-      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+      "reachableInteraction": true,
+      "interactionRule": "NPC_Util_charIsInFrontOfChar distance=1",
       "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
-      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+      "runtimeModuleStatus": "source_resolved_in_pinned_template_functionSet"
     },
     {
       "hometown": 0,
@@ -896,7 +896,7 @@
       "minPathToInteraction": 5
     }
   ],
-  "policy": "All 46 start-floor NPC coordinates are now derived from exact fixed-C NPCCREATE borncorner. Interaction reachability is source-derived per active template contract. The five changeevent blocks (four xinshou + Samugil village chief) are coordinate-resolved but remain runtime-module-unresolved because changeevent is absent from the pinned npctemplate.c functionSet; they are not counted as active/reachable.",
+  "policy": "This audit treats an NPC interaction as source-reachable when the player can walk from the pinned hometown spawn to at least one walkable orthogonal stance cell adjacent to the NPC. NPC template/module status is source-derived from the pinned NPC template registry; changeevent is source-resolved through jaruga/event/event.template → ExChangeMan.",
   "sourceEvidence": {
     "newPlayerEventOwner": {
       "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",

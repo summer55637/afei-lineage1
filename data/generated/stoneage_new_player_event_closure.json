@@ -54,8 +54,8 @@
         "name": "炎龍新手接待員"
       }
     ],
-    "ownerClosure": "script_reference_closed_template_unresolved",
-    "runtimeModuleStatus": "unresolved_in_pinned_npctemplate_functionSet"
+    "ownerClosure": "script_reference_closed_template_resolved",
+    "runtimeModuleStatus": "resolved_in_pinned_template_functionSet"
   },
   "script": {
     "path": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
@@ -259,19 +259,23 @@
     }
   },
   "semantics": {
-    "ownerClosed": false,
+    "ownerClosed": true,
     "branchLogicSourceClosed": true,
     "rewardDefinitionsSourceClosed": true,
     "noQuestOrderInference": true,
     "scriptReferenceClosed": true,
-    "runtimeModuleClosed": false,
-    "rewardMutationChainClosed": true
+    "runtimeModuleClosed": true,
+    "rewardMutationChainClosed": true,
+    "sourceTemplateBound": true
   },
   "policy": "Create/script references and new-player Item/Pet/Event-flag reward mutation are source-closed. Charm numeric semantics are source-closed from pinned ExChangeMan handler; because xinshoujd.arg uses EventNo:-1, that concrete rule is a no-op. The actual changeevent template activation remains unresolved in pinned npctemplate functionSet.",
   "moduleSource": {
-    "path": "gmsv/src/npc/npctemplate.c",
-    "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
-    "changeeventPresent": false
+    "path": "gmsv/data/npc/jaruga/event/event.template",
+    "blobSha": "99ed9d950cd1ee4d59726a07dc6f50d9d78fa423",
+    "template": "changeevent",
+    "functionset": "ExChangeMan",
+    "functionSourcePath": "gmsv/src/npc/npc_exchangeman.c",
+    "functionSourceBlobSha": "5d74290ed6f27163e0698b4375d5dc5e187c77c4"
   },
   "runtimeResolution": {
     "status": "unresolved",

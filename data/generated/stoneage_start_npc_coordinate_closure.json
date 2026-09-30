@@ -28,7 +28,7 @@
         22,
         15
       ],
-      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+      "templateRuntimeStatus": "resolved_in_pinned_template_functionSet"
     },
     {
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
@@ -45,7 +45,7 @@
         23,
         18
       ],
-      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+      "templateRuntimeStatus": "resolved_in_pinned_template_functionSet"
     },
     {
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
@@ -62,7 +62,7 @@
         15,
         22
       ],
-      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+      "templateRuntimeStatus": "resolved_in_pinned_template_functionSet"
     },
     {
       "path": "gmsv/data/npc/almark/xinshou/xinshou.create",
@@ -79,7 +79,7 @@
         14,
         20
       ],
-      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+      "templateRuntimeStatus": "resolved_in_pinned_template_functionSet"
     },
     {
       "path": "gmsv/data/npc/family/fmdengon.create",
@@ -164,7 +164,7 @@
         18,
         22
       ],
-      "templateRuntimeStatus": "unresolved_in_npctemplate_functionSet"
+      "templateRuntimeStatus": "resolved_in_pinned_template_functionSet"
     },
     {
       "path": "gmsv/data/npc/genout/shop_m.create",

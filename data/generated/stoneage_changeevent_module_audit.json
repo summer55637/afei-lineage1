@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-changeevent-module-audit-v2",
+  "format": "stoneage-changeevent-module-audit-v3",
   "auditedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -89,16 +89,16 @@
         "NPC_readTemplateFile registers valid templates",
         "NPC_templateGetTemplateIndex requires exact registered template name and otherwise returns -1"
       ],
-      "finding": "runtime lookup domain is recursively loaded NPC template registry"
+      "finding": "runtime lookup domain is recursively loaded NPC template registry; changeevent is present and exact-matches the pinned template"
     },
     {
       "layer": "pinned-registry-scan",
-      "source": "gmsv/data/npc/**/*.template",
+      "source": "gmsv/data/npc/jaruga/event/event.template",
       "checks": [
-        "no templatename=changeevent",
-        "no functionset=changeevent"
+        "templatename=changeevent",
+        "functionset=ExChangeMan"
       ],
-      "finding": "no pinned NPC template registry entry named changeevent"
+      "finding": "pinned NPC template registry explicitly binds changeevent to ExChangeMan"
     },
     {
       "layer": "source-create",
@@ -122,8 +122,8 @@
   "aliasChecks": [
     {
       "candidate": "ExChangeMan",
-      "status": "external-compatibility-only",
-      "reason": "external compatibility sources can map changeevent to ExChangeMan, but pinned source has no changeevent template registry entry"
+      "status": "source-backed-canonical",
+      "reason": "pinned event.template explicitly binds templatename=changeevent to functionset=ExChangeMan"
     },
     {
       "candidate": "Charm",
@@ -142,10 +142,23 @@
       "https://www.shiqisifu.cc/Article/5/News_20.html"
     ],
     "finding": "public StoneAge references describe changeevent as a task-NPC type and expose the EventNo/TYPE/EVENT/GetItem/GetPet/EndSetFlg DSL",
-    "limitation": "public material does not prove that pinned 8.0 source contains a matching changeevent template registration"
+    "limitation": "public compatibility material is no longer needed to establish the pinned changeevent→ExChangeMan binding",
+    "purpose": "historical corroboration only"
   },
-  "status": "runtime-module-unresolved",
-  "closureClass": "source-proven-non-instantiable-in-pinned-build",
-  "strictPolicy": "Do not synthesize a changeevent template, do not alias-register ExChangeMan in strict fixed-C mode, and do not mark the five source create blocks as active interactive NPCs.",
-  "compatibilityPolicy": "An explicit external compatibility catalog may opt in changeevent→ExChangeMan outside strict fixed-C parity; this is not pinned-source evidence."
+  "status": "runtime-module-resolved",
+  "closureClass": "source-resolved-pinned-template-and-module",
+  "strictPolicy": "changeevent resolves through its pinned template binding to the audited ExChangeMan module; no synthetic alias is required",
+  "compatibilityPolicy": "external changeevent→ExChangeMan material remains corroboration only; source-backed binding takes precedence and is not marked compatibilityAlias",
+  "pinnedTemplate": {
+    "templateName": "changeevent",
+    "functionset": "ExChangeMan",
+    "sourcePath": "gmsv/data/npc/jaruga/event/event.template",
+    "sourceBlobSha": "99ed9d950cd1ee4d59726a07dc6f50d9d78fa423",
+    "registration": "pinned NPC template registry"
+  },
+  "pinnedModule": {
+    "functionset": "ExChangeMan",
+    "sourcePath": "gmsv/src/npc/npc_exchangeman.c",
+    "sourceBlobSha": "5d74290ed6f27163e0698b4375d5dc5e187c77c4"
+  }
 }

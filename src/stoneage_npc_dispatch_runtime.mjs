@@ -47,7 +47,7 @@ async function dispatchNpcInteraction(
   const resolved=resolveInteractionModule(npc,{modules,resolvedRegistry,moduleRegistry:resolvedRegistry});
   if(!resolved.ok)return {ok:false,stage:'module-resolution',reason:resolved.reason,state};
   if(!resolved.resolved)return {ok:true,handled:false,stage:'module-resolution',reason:resolved.reason,template:resolved.template,state};
-  const gateNpc=resolved.compatibilityAlias ? {...npc,runtimeModuleStatus:'resolved_compatibility_alias'} : npc;
+  const gateNpc=(resolved.compatibilityAlias || resolved.sourceBackedTemplate) ? {...npc,runtimeModuleStatus:'resolved_pinned_template'} : npc;
   const gate=canInteractWithNpc(gateNpc,player,{interactionRule,maxDistance});
   if(!gate.ok)return {ok:false,stage:'interaction-gate',reason:gate.reason,state};
   if(!gate.interactable)return {ok:true,handled:false,stage:'interaction-gate',reason:gate.reason,state};
