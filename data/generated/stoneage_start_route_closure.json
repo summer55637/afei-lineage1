@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v5",
+  "format": "stoneage-start-route-closure-v6",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -9,12 +9,14 @@
     "startWalkability": "data/generated/stoneage_start_walkability_audit.json",
     "routeCandidates": "data/generated/stoneage_start_route_candidates.json",
     "npcServices": "data/generated/stoneage_npc_service_index.json",
-    "npcReachability": "data/generated/stoneage_start_npc_reachability.json"
+    "npcReachability": "data/generated/stoneage_start_npc_reachability.json",
+    "worldExitReachability": "data/generated/stoneage_start_world_exit_reachability.json",
+    "worldExitComponentAudit": "data/generated/stoneage_4000_exit_component_audit.json"
   },
   "status": {
     "sourceRouteSpine": "closed",
     "fullFirstRoute": "partial",
-    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because pinned npctemplate.c has no changeevent functionSet. Full first-route closure remains open until destination-map walkability and reward-reference definitions are closed.",
+    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because pinned npctemplate.c has no changeevent functionSet. All seven direct destination landings are walkable. Coordinate-level world-exit audit shows 6/8 next-floor portal groups usable from direct landings; both 4000→200 portal groups are disconnected from the direct landing component. Floor 200 world runtime remains unresolved because the currently indexed 30x30 extra/200 map cannot contain the fixed-C world portal coordinates and jalga is not yet binary-header verified.",
     "coordinateResolvedTownServices": "closed_for_resolved_active_templates"
   },
   "statistics": {
@@ -29,12 +31,18 @@
     "unresolvedNpcCoordinateInstances": 0,
     "coordinateResolvedButInteractionNotAudited": 5,
     "templateModuleUnresolvedNpcInstances": 5,
-    "startNpcCoordinateClosure": "46/46"
+    "startNpcCoordinateClosure": "46/46",
+    "directDestinationLandings": 7,
+    "walkableDirectDestinationLandings": "7/7",
+    "worldExitPortalGroups": 8,
+    "worldExitPortalGroupsUsable": 6,
+    "worldExitPortalGroupsBlocked": 2
   },
   "remainingWork": [
     "Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.",
-    "Audit destination-map walkability and first unconditional encounter regions with exact fixed-source maps.",
-    "Close new-player event reward item/pet definition references without promoting unresolved IDs."
+    "Replace the non-world floor-200 runtime alias with a verified gmsv/data/map/jyaruga/jalga runtime before promoting 3000/4000 -> 200 as a playable world route.",
+    "Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.",
+    "Audit ordinary unconditional encounter regions on the usable 1000/2000/3000 exits and close new-player event reward item/pet definitions without promoting unresolved IDs."
   ],
   "towns": [
     {
@@ -1101,7 +1109,10 @@
     }
   },
   "nextActions": [
-    "Resolve changeevent/xinshou interaction stance rule before counting the four spawn-overlapping NPCs as reachable service interactions."
+    "Resolve the five changeevent module/template discrepancies.",
+    "Verify floor 200 jalga runtime from fixed-C binary.",
+    "Complete 4000 component analysis and verify whether the disconnected route is source-proven or requires an alternate in-source transition.",
+    "Close ordinary encounter region coordinates and reward definitions for the now-reachable first-route branches."
   ],
   "sourceEvidence": {
     "startNpcCoordinateClosure": "data/generated/stoneage_start_npc_coordinate_closure.json",
