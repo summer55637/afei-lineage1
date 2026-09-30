@@ -2,6 +2,7 @@ import { createSourceItemAllocator } from './stoneage_item_source_runtime.mjs';
 import { createSourcePetGetPetHandler } from './stoneage_new_player_pet_runtime.mjs';
 import { createNewPlayerItemRewardHandler } from './stoneage_new_player_item_reward_runtime.mjs';
 import { createEventFlagHandlers } from './stoneage_event_flag_runtime.mjs';
+import { createSourceCharmHandler } from './stoneage_charm_runtime.mjs';
 
 const FIRST_ROUTE_REWARD_HANDLER_FORMAT='stoneage-first-route-reward-handlers-v1';
 
@@ -57,19 +58,21 @@ function createFirstRouteRewardHandlers({
       GetPet:true,
       EndSetFlg:true,
       NowSetFlg:true,
-      Charm:false
+      Charm:true
     },
     handlers:{
       GetItem:itemHandler,
       GetPet:petHandler,
+      Charm:createSourceCharmHandler(),
       ...createEventFlagHandlers()
     },
     allocator,
     unsupported:{
       Charm:{
-        reason:'pinned-c-source-handler-not-identified',
-        sourceModule:'gmsv/src/npc/npc_eventaction.c',
-        action:'Charm'
+        sourceModule:'gmsv/src/npc/npc_exchangeman.c',
+        rule:'apply only when EvNo > 0; cap CHAR_CHARM at 100',
+        newPlayerEventNo:-1,
+        newPlayerBehavior:'no-op under this pinned rule'
       }
     }
   };
