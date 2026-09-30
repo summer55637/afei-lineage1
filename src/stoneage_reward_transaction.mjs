@@ -14,7 +14,7 @@ function normalizeRewardPacket(packet) {
   const playerExp = nonNegativeInt(packet.playerExp);
   const expByActor = isObject(packet.expByActor) ? Object.fromEntries(Object.entries(packet.expByActor).map(([actor, value]) => [String(actor), nonNegativeInt(value)])) : {};
   const gold = nonNegativeInt(packet.gold);
-  const items = Array.isArray(packet.items) ? packet.items.slice(0, MAX_CARRIED_ITEMS).map(item => {
+  const items = Array.isArray(packet.items) ? packet.items.map(item => {
     if (!isObject(item)) return null;
     const existingIndex = intOr(item.existingIndex, -1);
     const count = nonNegativeInt(item.count || 1);
@@ -23,7 +23,7 @@ function normalizeRewardPacket(packet) {
   }).filter(Boolean) : [];
   const petCredits = Array.isArray(packet.petCredits) ? packet.petCredits.map(row => {
     if (!isObject(row) || row.petId == null) return null;
-    return { petId: String(row.petId), exp: nonNegativeInt(row.exp), gold: nonNegativeInt(row.gold) };
+    return { petId: String(row.petId), exp: nonNegativeInt(row.exp) };
   }).filter(Boolean) : [];
   return {
     format: REWARD_TRANSACTION_FORMAT,
