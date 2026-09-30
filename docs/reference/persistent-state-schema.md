@@ -39,6 +39,8 @@ src/stoneage_persistent_state.mjs 提供 fresh / normalize / validate。
 
 目前固定硬結構：profession skills = 26 slots；player item slots = 24 slots。Item / Economy runtime 另外驗證 Gold 不超過 fixed-C maxGold，以及 backpack 9–23 的 existing-item reference 必須存在。
 
+V3.73 再加入 canonical container validation：equipment.sourceSlotRefs、quests.missions/daily、events、titles、battleSettings.strategy/sourceParity 必須保持 object shape；world position 的 floor/x/y 在存在時必須為整數；offline accruedSeconds 不得超過 accrualCapSeconds。這些內容的內部語義仍保持 opaque，不因 schema 驗證而猜測 source 規則。
+
 Regression：tools/check_persistent_state_schema.mjs
 
 Generated contract：data/generated/stoneage_persistent_state_schema.json
