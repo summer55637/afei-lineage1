@@ -1,0 +1,37 @@
+name: Check V3.32 NPC dispatch bridge
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'src/stoneage_first_route_save.mjs'
+      - 'src/stoneage_first_route_reward_handlers.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'tools/check_v331_npc_interaction_runtime.mjs'
+      - 'tools/check_v330_first_route_save.mjs'
+      - 'tools/check_v332_npc_dispatch_bridge.mjs'
+      - 'data/generated/stoneage_start_npc_reachability.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v332-npc-dispatch-bridge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_npc_interaction_runtime.mjs
+          node --check src/stoneage_npc_dispatch_runtime.mjs
+          node --check tools/check_v332_npc_dispatch_bridge.mjs
+      - name: Run V3.32 dispatch regression
+        run: node tools/check_v332_npc_dispatch_bridge.mjs
