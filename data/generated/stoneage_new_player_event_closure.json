@@ -169,8 +169,29 @@
     "itemDefinitionsSource": {
       "path": "gmsv/data/itemset6.txt",
       "blobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
-      "byteLength": 0,
-      "status": "source_file_empty_under_active_ITEMSET6_build"
+      "generatedCatalogPath": "data/generated/stoneage_item_make_runtime.json",
+      "generatedCatalogFormat": "stoneage-item-make-runtime-v2",
+      "focusedCatalogPath": "data/generated/stoneage_new_player_item_reward_runtime.json",
+      "resolvedItemIds": [
+        20145,
+        2849,
+        20228,
+        18537,
+        20866,
+        2912,
+        2909,
+        2911,
+        20867,
+        19567,
+        19568,
+        19569,
+        20615,
+        20616,
+        20617,
+        20635
+      ],
+      "resolvedCount": 16,
+      "status": "source-closed-via-item-make-runtime"
     },
     "petIds": [
       341,
@@ -227,17 +248,17 @@
       },
       "status": "source-closed"
     },
-    "status": "item-source-pending"
+    "status": "item-and-pet-source-closed-charm-and-changeevent-pending"
   },
   "semantics": {
     "ownerClosed": false,
     "branchLogicSourceClosed": true,
-    "rewardDefinitionsSourceClosed": false,
+    "rewardDefinitionsSourceClosed": true,
     "noQuestOrderInference": true,
     "scriptReferenceClosed": true,
     "runtimeModuleClosed": false
   },
-  "policy": "Create/script references are source-closed, runtime module resolution is now closed for the new-player Pet reward path; item definitions remain unresolved under the active ITEMSET6 source. No alternative version or guessed mapping is promoted.",
+  "policy": "Create/script references are source-closed. All 16 new-player Item definitions and all 5 Pet definitions are now source-closed through pinned generated runtimes. Charm semantics and the changeevent template runtime module remain unresolved; no guessed mapping is promoted.",
   "moduleSource": {
     "path": "gmsv/src/npc/npctemplate.c",
     "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
