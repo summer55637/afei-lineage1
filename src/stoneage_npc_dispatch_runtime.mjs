@@ -1,6 +1,7 @@
 import { canInteractWithNpc } from './stoneage_npc_interaction_runtime.mjs';
 import { executeAndSaveNpcSourceEvent } from './stoneage_first_route_save.mjs';
-import { resolveAuditedNpcModule } from './stoneage_npc_module_registry_runtime.mjs';
+import { resolveAuditedNpcModule, createAuditedNpcModuleRegistry, createCompatibilityNpcModuleRegistry } from './stoneage_npc_module_registry_runtime.mjs';
+import { assertBrowserCompatibilityPolicy, createNpcModuleRegistryOptions } from './stoneage_npc_runtime_config.mjs';
 
 const NPC_DISPATCH_RUNTIME_FORMAT='stoneage-npc-dispatch-runtime-v1';
 
@@ -25,12 +26,25 @@ async function dispatchNpcInteraction(
     action='talk',
     modules={},
     moduleRegistry=null,
+    moduleAudit=null,
+    compatibilityCatalog=null,
+    runtimeConfig=null,
     handlerFactory=null,
     now=()=>new Date().toISOString(),
     transactionId=null
   }={}
 ){
-  const resolved=resolveInteractionModule(npc,{modules,moduleRegistry});
+  const policy=assertBrowserCompatibilityPolicy(runtimeConfig??{});
+  if(!policy.ok)return {ok:false,stage:'runtime-config',reason:policy.reason,state};
+  let resolvedRegistry=moduleRegistry;
+  if(!resolvedRegistry&&moduleAudit){
+    const registryOptions=createNpcModuleRegistryOptions(policy.config);
+    resolvedRegistry=registryOptions.allowExternalCompatibilityAliases&&compatibilityCatalog
+      ? createCompatibilityNpcModuleRegistry(moduleAudit,compatibilityCatalog,{modules,allowExternalCompatibilityAliases:true})
+      : createAuditedNpcModuleRegistry(moduleAudit,{modules});
+    if(!resolvedRegistry.ok)return {ok:false,stage:'module-registry',reason:resolvedRegistry.reason,state};
+  }
+  const resolved=resolveInteractionModule(npc,{modules,resolvedRegistry,moduleRegistry:resolvedRegistry});
   if(!resolved.ok)return {ok:false,stage:'module-resolution',reason:resolved.reason,state};
   if(!resolved.resolved)return {ok:true,handled:false,stage:'module-resolution',reason:resolved.reason,template:resolved.template,state};
   const gateNpc=resolved.compatibilityAlias ? {...npc,runtimeModuleStatus:'resolved_compatibility_alias'} : npc;
