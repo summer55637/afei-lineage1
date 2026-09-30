@@ -6,9 +6,9 @@
 
 ## Source-backed ordering
 
-固定研究已確認：Enemy 第一次 HP 歸 0 時建立 death credit；source reward pool 在 ItemCrush boundary 後由 AddProfit-side processing 收尾。Carried item 的選擇在 death-credit 階段決定，勝利結算不重新跑同一顆 reservoir RNG。citeturn0search0turn0search2
+固定研究已確認：Enemy 第一次 HP 歸 0 時建立 death credit；source reward pool 在 ItemCrush boundary 後由 AddProfit-side processing 收尾。Carried item 的選擇在 death-credit 階段決定，勝利結算不重新跑同一顆 reservoir RNG。證據來源：docs/changelog/part-04-v0.97-to-v1.26.md、docs/changelog/part-06-v1.52-to-v1.74.md。
 
-同時，player-side reward 只對具有 player-side death credit 的 Enemy 生效；enemy-side 自滅不自動產生玩家 EXP／掉落。Pet 若已取得 death credit，相關 Pet EXP 使用對應的 pet credit，而不是重新以 activePetId 猜測。citeturn0search1turn0search4
+同時，player-side reward 只對具有 player-side death credit 的 Enemy 生效；enemy-side 自滅不自動產生玩家 EXP／掉落。Pet 若已取得 death credit，相關 Pet EXP 使用對應的 pet credit，而不是重新以 activePetId 猜測。證據來源：docs/changelog/part-04-v0.97-to-v1.26.md。
 
 ## Packet
 
