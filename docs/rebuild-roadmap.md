@@ -3,6 +3,14 @@
 更新日期：2026-09-30
 
 
+## 2026-09-30 新增：V3.68 Browser Idle lifecycle / offline checkpoint
+
+V3.68 新增 `IDLE_STATUS` 與 `IDLE_OFFLINE_RESUME` 到 canonical Browser State Controller。前者唯讀；後者沿既有 `prepareOfflineResume()` → `commitOfflineResume()` → Save Envelope verify，把 offline checkpoint 寫進 Persistent State。
+
+目前只保存合法 elapsed/accrued window metadata，`rewardsSimulated=false`、`rewardsApplied=false`、`resumePending=true`；不自行生成 offline EXP / Gold / Item，也不猜戰鬥結果。
+
+Regression 鎖定 invalid time window、checkpoint revision、save round-trip 與 stale expectedRevision fail-closed。
+
 ## 2026-09-30 新增：V3.67 Browser Idle first-encounter simulation bridge
 
 V3.67 將既有 `stoneage_idle_simulation.mjs` 接入 Browser Idle runtime，新增 `IDLE_SIMULATE_FIRST_ENCOUNTER`。route variant 先通過 first-idle-route-catalog eligibility，Battle result 必須由 caller 注入；Browser runtime 不抽 encounter RNG、不計算戰鬥結果。

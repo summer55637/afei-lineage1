@@ -4,12 +4,16 @@ import {
   IDLE_PERSISTENT_STATE_RUNTIME_FORMAT
 } from './stoneage_idle_persistent_state_runtime.mjs';
 import { simulateFirstEncounter } from './stoneage_idle_simulation.mjs';
+import { prepareOfflineResume, commitOfflineResume, OFFLINE_RESUME_FORMAT } from './stoneage_offline_resume.mjs';
+import { parseAndValidateSaveEnvelope } from './stoneage_save_transaction.mjs';
 
 const BROWSER_IDLE_RUNTIME_FORMAT='stoneage-browser-idle-runtime-v1';
 const ACTION_IDLE_LIST_ROUTES='IDLE_LIST_ROUTES';
 const ACTION_IDLE_ENABLE='IDLE_ENABLE';
 const ACTION_IDLE_EVENT='IDLE_EVENT';
 const ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER='IDLE_SIMULATE_FIRST_ENCOUNTER';
+const ACTION_IDLE_STATUS='IDLE_STATUS';
+const ACTION_IDLE_OFFLINE_RESUME='IDLE_OFFLINE_RESUME';
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -100,7 +104,31 @@ function createBrowserIdleRuntime({routeCatalog=null}={}){
       if(!isObject(action))return {ok:false,handled:false,stage:'action',reason:'invalid-browser-idle-action',state};
       const type=String(action.type??'').trim();
       if(type===ACTION_IDLE_LIST_ROUTES)return {ok:true,handled:true,stage:'route-catalog',routes:listUsableRoutes(routeCatalog),state:clone(state)};
-      if(type===ACTION_IDLE_ENABLE){
+
+      if(type===ACTION_IDLE_STATUS){
+        return {ok:true,handled:true,stage:'idle-status',
+          status:{
+            persistentRevision:Number(state?.revision??0),
+            routeId:state?.idle?.routeId??null,
+            mode:state?.idle?.mode??null,
+            enabled:state?.idle?.enabled===true,
+            idle:clone(state?.idle??null)
+          },state:clone(state)};
+      }
+      if(type===ACTION_IDLE_OFFLINE_RESUME){
+        const closedAt=String(action.closedAt??'').trim();
+        const resumedAt=String(action.resumedAt??'').trim();
+        if(!closedAt||!resumedAt)return {ok:false,handled:false,stage:'offline-resume',reason:'offline-resume-times-required',state:clone(state)};
+        const prepared=prepareOfflineResume(state,closedAt,resumedAt,{maxSeconds:action.maxSeconds??null});
+        if(!prepared.ok)return {ok:false,handled:false,stage:'offline-resume',reason:prepared.reason,state:clone(state)};
+        const expectedRevision=action.expectedRevision==null?Number(state?.revision??0):Number(action.expectedRevision);
+        if(expectedRevision!==Number(state?.revision??0))return {ok:false,handled:false,stage:'save',reason:'revision-conflict',currentRevision:Number(state?.revision??0),expectedRevision,state:clone(state)};
+        const committed=await commitOfflineResume(state,prepared,{expectedRevision,savedAt:action.savedAt??action.now??options.now??(()=>new Date().toISOString())});
+        if(!committed.ok)return {ok:false,handled:false,stage:'save',reason:committed.reason??'offline-resume-save-failed',errors:committed.errors??[],currentRevision:committed.state?.revision??state?.revision,state:clone(state)};
+        const verified=await parseAndValidateSaveEnvelope(committed.save.envelope,{now:action.now??options.now??(()=>new Date().toISOString())});
+        if(!verified.ok)return {ok:false,handled:false,stage:'save-verify',reason:verified.reason??'offline-resume-save-verify-failed',errors:verified.errors??[],state:clone(state)};
+        return {ok:true,handled:true,stage:'offline-resume',format:OFFLINE_RESUME_FORMAT,offline:clone(committed.window),rewardsSimulated:false,rewardCompletionPending:true,envelope:committed.save.envelope,verification:verified,state:clone(verified.state)};
+      }      if(type===ACTION_IDLE_ENABLE){
         const selection=normalizeRouteSelection(routeCatalog,action);
         if(!selection.ok)return {ok:false,handled:false,stage:'route-selection',reason:selection.reason,state:clone(state)};
         if(selection.route.status==='source_blocked_before_portal'||Number(selection.variant.usableLandingCount)<=0){
@@ -166,6 +194,8 @@ export {
   ACTION_IDLE_ENABLE,
   ACTION_IDLE_EVENT,
   ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER,
+  ACTION_IDLE_STATUS,
+  ACTION_IDLE_OFFLINE_RESUME,
   SOURCE_REPOSITORY,
   SOURCE_REF,
   IDLE_PERSISTENT_STATE_RUNTIME_FORMAT,
