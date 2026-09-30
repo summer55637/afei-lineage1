@@ -350,3 +350,12 @@ V3.29 audit regression 已納入 GitHub Actions。
 
 V3.30 regression 已納入 GitHub Actions。
 
+## V3.31–V3.32 NPC Interaction / Dispatch Boundary
+
+新增 `src/stoneage_npc_interaction_runtime.mjs`、`src/stoneage_npc_dispatch_runtime.mjs`、對應 regression / CI 與 reference docs。
+
+- V3.31 保留 fixed-C `NPC_Util_charIsInFrontOfChar` 的 same-floor / distance / facing gate。
+- V3.32 建立唯一 dispatch bridge：`interaction gate → template module resolution → handler factory → event/save`。
+- pinned `changeevent` 沒有 `functionSet[]` entry，所以 production interaction 仍 fail-closed；synthetic module 只用來驗證 bridge，本身不進 world registry。
+
+
