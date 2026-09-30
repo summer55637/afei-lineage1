@@ -38,7 +38,9 @@
 
 ## 現階段優先事項
 
-現在先不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂：
+第一輪 World Data Source Catalog 已完成：固定 source 約 5,764 個 blob files，其中 NPC data 約 3,960 個檔案；已建立 `data/generated/stoneage_world_data_source_catalog.json` 與對應 regression。現在進入 NPC instance index 與世界連接資料整理。
+
+現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂：
 
 1. World Data Catalog：NPC、任務、商店、傳送、服務、事件等。
 2. Map Coverage Expansion：主要世界地圖與地圖連接。
