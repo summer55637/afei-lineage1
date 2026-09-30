@@ -14,8 +14,8 @@
 
 | hometown | spawn | direct exit | destination encounter status |
 |---:|---|---|---|
-| 0 / samugiru | 1006,15,22 | 1000,98,44 / 98,45 | 1000：placeholder；沿 graph 首個 active floor = 100 |
-| 1 / marinasu | 2006,20,16 | 2000,56,48 / 57,48 | 2000：active，Group 1018 |
+| 0 / samugiru | 1006,15,22 | 1000,98,44 / 98,45 | 1000：placeholder；沿 graph 首個含 unconditional group 的 floor = 100 |
+| 1 / marinasu | 2006,20,16 | 2000,56,48 / 57,48 | 2000：conditional；Group 1018，需要 item 20219；沿 graph 首個含 unconditional group 的 floor = 100 |
 | 2 / jaja | 3006,21,16 | 3000,90,60 | 3000（1 hop）；200（2 hop） |
 | 3 / karutarna | 4006,14,20 | 4000,80,90 / 80,91 | 4000（1 hop）；200（2 hop） |
 
@@ -42,3 +42,8 @@ data/generated/stoneage_start_destination_closure.json 已將 destination floor 
 目前只有 2000 三項中的前兩項已閉合；其兩個 landing points (56,48)、(57,48) 都 walkable，且都位於 active encounter rectangle (1,1)-(150,150)、Group 1018。3000 已確認 source encount.txt 存在 active Group 1015，但 fixed-source map blob 尚未在目前 source catalog 中閉合。1000 與 4000 的 direct destination 只有 placeholder row（probability 0、無 group），不能視為可掛機遇敵區。
 
 缺少的 map source 不以其他版本或猜測資料替代。
+
+
+### 來源條件（2026-09-30）
+
+fixed C 的 `gmsv/src/char/enemy.c::ENEMY_getEnemy` 會先依 `GROUP_APPEARBYITEMID` / `GROUP_NOTAPPEARBYITEMID` 檢查玩家背包，再進入 encounter group 選擇。因此本文件不再把「encount row 有 group」直接等同於一般野外遇敵。\n
