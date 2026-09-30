@@ -361,3 +361,6 @@ V3.31–V3.33 interaction / dispatch / audited-module guards 已完成：fixed-C
 - pinned `changeevent` 沒有 `functionSet[]` entry，所以 production interaction 仍 fail-closed；synthetic module 只用來驗證 bridge，本身不進 world registry。
 
 
+
+
+V3.34 new-player branch matrix 已加入：Lv 1–99 / 100–139 / 140–149 / 150 四段 branch 全部以 source-backed reward + Save Envelope 回歸，並鎖定邊界不漂移。
