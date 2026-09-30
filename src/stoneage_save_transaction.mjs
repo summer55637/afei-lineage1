@@ -40,11 +40,13 @@ async function buildSaveEnvelope(state,{savedAt=()=>new Date().toISOString(),sou
 async function parseAndValidateSaveEnvelope(envelope,{now=()=>new Date().toISOString(),allowMigration=true}={}){
   if(!isObject(envelope)||envelope.format!==SAVE_ENVELOPE_FORMAT)return {ok:false,reason:'invalid-envelope-format'};
   if(envelope.schemaVersion!==CURRENT_STATE_SCHEMA_VERSION)return {ok:false,reason:'unsupported-envelope-schema',schemaVersion:envelope.schemaVersion};
+  if(!Number.isInteger(envelope.revision)||envelope.revision<0)return {ok:false,reason:'invalid-envelope-revision'};
   if(typeof envelope.payload!=='string'||typeof envelope.payloadHash!=='string')return {ok:false,reason:'missing-payload'};
   if(await sha256(envelope.payload)!==envelope.payloadHash)return {ok:false,reason:'payload-hash-mismatch'};
   let raw;
   try{raw=JSON.parse(envelope.payload);}catch{return {ok:false,reason:'invalid-payload-json'};}
   if(!isObject(raw))return {ok:false,reason:'payload-not-object'};
+  if(!Number.isInteger(raw.revision)||raw.revision!==envelope.revision)return {ok:false,reason:'revision-mismatch'};
   if(allowMigration){
     const migrated=normalizePersistentState(raw,{now});
     const errors=validatePersistentState(migrated.state);
