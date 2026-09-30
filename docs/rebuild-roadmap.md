@@ -447,4 +447,4 @@ Item / Economy 已從「資料研究」進入 canonical state transaction 層：
 Regression：`tools/check_item_economy_runtime.mjs`。
 Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`。
 
-下一階段會把這個 transaction layer 與 source Item allocator / Item template runtime、NPC shop data、製作與 reward path 接起來；不把未閉合 Item ID 或 NPC-specific price 猜成 gameplay。
+下一階段會把這個 transaction layer 與 source Item allocator / Item template runtime、NPC shop data、製作與 reward path 接起來；persistent state 現在也會拒絕超過 source Gold cap 或 dangling existing-item references。不把未閉合 Item ID 或 NPC-specific price 猜成 gameplay。
