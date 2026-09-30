@@ -1,0 +1,27 @@
+name: one-shot-world-graph
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  graph:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate world graph
+        run: node tools/analyze_world_graph.mjs
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm -f .github/workflows/one-shot-world-graph.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_world_graph_index.json \
+                  tools/analyze_world_graph.mjs \
+                  .github/workflows/one-shot-world-graph.yml
+          git commit -m "data: generate source-backed world floor graph"
+          git push origin HEAD:main
