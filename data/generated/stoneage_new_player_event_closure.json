@@ -248,7 +248,15 @@
       },
       "status": "source-closed"
     },
-    "status": "item-and-pet-source-closed-charm-and-changeevent-pending"
+    "status": "reward-source-closed-changeevent-template-pending",
+    "charmSource": {
+      "sourceModule": "gmsv/src/npc/npc_exchangeman.c",
+      "rule": "CHAR_CHARM<100 && EvNo>0; next=min(100,current+atoi(Charm))",
+      "runtimePath": "src/stoneage_charm_runtime.mjs",
+      "newPlayerEventNo": -1,
+      "behavior": "no-op under pinned concrete rule",
+      "status": "source-rule-closed-not-changeevent-module-proven"
+    }
   },
   "semantics": {
     "ownerClosed": false,
@@ -256,9 +264,10 @@
     "rewardDefinitionsSourceClosed": true,
     "noQuestOrderInference": true,
     "scriptReferenceClosed": true,
-    "runtimeModuleClosed": false
+    "runtimeModuleClosed": false,
+    "rewardMutationChainClosed": true
   },
-  "policy": "Create/script references are source-closed. All 16 new-player Item definitions and all 5 Pet definitions are now source-closed through pinned generated runtimes. Charm semantics and the changeevent template runtime module remain unresolved; no guessed mapping is promoted.",
+  "policy": "Create/script references and new-player Item/Pet/Event-flag reward mutation are source-closed. Charm numeric semantics are source-closed from pinned ExChangeMan handler; because xinshoujd.arg uses EventNo:-1, that concrete rule is a no-op. The actual changeevent template activation remains unresolved in pinned npctemplate functionSet.",
   "moduleSource": {
     "path": "gmsv/src/npc/npctemplate.c",
     "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
