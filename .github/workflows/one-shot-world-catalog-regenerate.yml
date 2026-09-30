@@ -1,0 +1,38 @@
+name: one-shot-world-catalog-regenerate
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout fixed StoneAge source
+        run: |
+          rm -rf /tmp/StoneAge
+          git clone --quiet https://github.com/gavinlinasd/StoneAge.git /tmp/StoneAge
+          cd /tmp/StoneAge
+          git checkout --quiet 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          test "$(git rev-parse HEAD)" = "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+      - name: Regenerate source indexes
+        run: node tools/generate_world_data_catalog.mjs --source-root /tmp/StoneAge --out-dir data/generated
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm -f .github/workflows/one-shot-world-catalog-regenerate.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_world_npc_index.json \
+                  data/generated/stoneage_server_config_index.json \
+                  data/generated/stoneage_mapwarp_source_index.json \
+                  tools/generate_world_data_catalog.mjs \
+                  .github/workflows/one-shot-world-catalog-regenerate.yml
+          git commit -m "data: regenerate world source indexes with corrected NPC geometry"
+          git push origin HEAD:main
