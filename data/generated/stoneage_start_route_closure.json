@@ -1,0 +1,333 @@
+{
+  "format": "stoneage-start-route-closure-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "inputContracts": {
+    "startWalkability": "data/generated/stoneage_start_walkability_audit.json",
+    "routeCandidates": "data/generated/stoneage_start_route_candidates.json",
+    "npcServices": "data/generated/stoneage_npc_service_index.json"
+  },
+  "status": {
+    "sourceRouteSpine": "closed",
+    "fullFirstRoute": "partial",
+    "definition": "Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Full first-route closure remains open until service coordinates/interactions, destination-map walkability, and player-specific quest/event ownership are closed."
+  },
+  "statistics": {
+    "hometowns": 4,
+    "verifiedStartMaps": 4,
+    "directWarpExits": 8,
+    "reachableDirectWarpExits": 8,
+    "hometownsWithStartFloorServices": 4,
+    "hometownsWithDepth1EncounterEvidence": 4
+  },
+  "remainingWork": [
+    "Resolve coordinate-level reachability and intended interaction for the required town service NPCs.",
+    "Audit destination-map walkability at each first warp landing coordinate and the first encounter region.",
+    "Close new-player quest/event ownership without promoting ownerless event IDs."
+  ],
+  "towns": [
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "spawn": {
+        "hometown": 0,
+        "floor": 1006,
+        "x": 15,
+        "y": 22,
+        "elder": "samugiru"
+      },
+      "sourceMapVerified": true,
+      "startFloorServices": [
+        "Bankman",
+        "ExChangeMan",
+        "Familyman",
+        "FmDengon",
+        "LuckyMan",
+        "TownPeople",
+        "Warp",
+        "Windowman"
+      ],
+      "directWarpExits": [
+        {
+          "from": [
+            1006,
+            10,
+            20
+          ],
+          "to": [
+            1000,
+            98,
+            44
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 7,
+          "source": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 23,
+          "startLine": 214
+        },
+        {
+          "from": [
+            1006,
+            10,
+            21
+          ],
+          "to": [
+            1000,
+            98,
+            45
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 6,
+          "source": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 25,
+          "startLine": 232
+        }
+      ],
+      "firstEncounterFloorEvidence": {
+        "floor": 1000,
+        "depth": 1,
+        "encounterCount": 1,
+        "floorPath": [
+          1006,
+          1000
+        ]
+      },
+      "closure": {
+        "spawnToWarpSourceWalkability": true,
+        "townServiceFloorPresence": true,
+        "firstEncounterFloorEvidence": true,
+        "coordinateLevelServiceReachability": false,
+        "destinationMapWalkability": false,
+        "questEventOwnerClosure": false
+      }
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "spawn": {
+        "hometown": 1,
+        "floor": 2006,
+        "x": 20,
+        "y": 16,
+        "elder": "marinasu"
+      },
+      "sourceMapVerified": true,
+      "startFloorServices": [
+        "Bankman",
+        "ExChangeMan",
+        "Familyman",
+        "FmDengon",
+        "LuckyMan",
+        "TownPeople",
+        "Warp",
+        "Windowman"
+      ],
+      "directWarpExits": [
+        {
+          "from": [
+            2006,
+            20,
+            21
+          ],
+          "to": [
+            2000,
+            56,
+            48
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 5,
+          "source": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 153,
+          "startLine": 1384
+        },
+        {
+          "from": [
+            2006,
+            21,
+            21
+          ],
+          "to": [
+            2000,
+            57,
+            48
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 6,
+          "source": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 155,
+          "startLine": 1402
+        }
+      ],
+      "firstEncounterFloorEvidence": {
+        "floor": 2000,
+        "depth": 1,
+        "encounterCount": 2,
+        "floorPath": [
+          2006,
+          2000
+        ]
+      },
+      "closure": {
+        "spawnToWarpSourceWalkability": true,
+        "townServiceFloorPresence": true,
+        "firstEncounterFloorEvidence": true,
+        "coordinateLevelServiceReachability": false,
+        "destinationMapWalkability": false,
+        "questEventOwnerClosure": false
+      }
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "spawn": {
+        "hometown": 2,
+        "floor": 3006,
+        "x": 21,
+        "y": 16,
+        "elder": "jaja"
+      },
+      "sourceMapVerified": true,
+      "startFloorServices": [
+        "Bankman",
+        "ExChangeMan",
+        "Familyman",
+        "FmDengon",
+        "LuckyMan",
+        "TownPeople",
+        "Warp",
+        "Windowman"
+      ],
+      "directWarpExits": [
+        {
+          "from": [
+            3006,
+            20,
+            21
+          ],
+          "to": [
+            3000,
+            90,
+            60
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 6,
+          "source": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 17,
+          "startLine": 160
+        },
+        {
+          "from": [
+            3006,
+            21,
+            21
+          ],
+          "to": [
+            3000,
+            90,
+            60
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 5,
+          "source": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 18,
+          "startLine": 169
+        }
+      ],
+      "firstEncounterFloorEvidence": {
+        "floor": 3000,
+        "depth": 1,
+        "encounterCount": 3,
+        "floorPath": [
+          3006,
+          3000
+        ]
+      },
+      "closure": {
+        "spawnToWarpSourceWalkability": true,
+        "townServiceFloorPresence": true,
+        "firstEncounterFloorEvidence": true,
+        "coordinateLevelServiceReachability": false,
+        "destinationMapWalkability": false,
+        "questEventOwnerClosure": false
+      }
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "spawn": {
+        "hometown": 3,
+        "floor": 4006,
+        "x": 14,
+        "y": 20,
+        "elder": "karutarna"
+      },
+      "sourceMapVerified": true,
+      "startFloorServices": [
+        "Bankman",
+        "ExChangeMan",
+        "Familyman",
+        "FmDengon",
+        "LuckyMan",
+        "TownPeople",
+        "Warp",
+        "Windowman"
+      ],
+      "directWarpExits": [
+        {
+          "from": [
+            4006,
+            10,
+            20
+          ],
+          "to": [
+            4000,
+            80,
+            90
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 4,
+          "source": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 63,
+          "startLine": 574
+        },
+        {
+          "from": [
+            4006,
+            10,
+            21
+          ],
+          "to": [
+            4000,
+            80,
+            91
+          ],
+          "walkableFromSpawn": true,
+          "pathLength": 5,
+          "source": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 65,
+          "startLine": 592
+        }
+      ],
+      "firstEncounterFloorEvidence": {
+        "floor": 4000,
+        "depth": 1,
+        "encounterCount": 1,
+        "floorPath": [
+          4006,
+          4000
+        ]
+      },
+      "closure": {
+        "spawnToWarpSourceWalkability": true,
+        "townServiceFloorPresence": true,
+        "firstEncounterFloorEvidence": true,
+        "coordinateLevelServiceReachability": false,
+        "destinationMapWalkability": false,
+        "questEventOwnerClosure": false
+      }
+    }
+  ]
+}
