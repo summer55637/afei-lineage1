@@ -1,0 +1,41 @@
+name: Check V3.25 new-player Item reward runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'tools/generate_item_make_runtime.py'
+      - 'tools/generate_new_player_item_reward_runtime.mjs'
+      - 'tools/check_v325_new_player_item_reward_runtime.mjs'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - '.github/workflows/check-v325-new-player-item-reward-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_item_source_runtime.mjs
+          node --check src/stoneage_new_player_item_reward_runtime.mjs
+          node --check tools/generate_new_player_item_reward_runtime.mjs
+          node --check tools/check_v325_new_player_item_reward_runtime.mjs
+      - name: Run V3.25 Item reward regression
+        run: node tools/check_v325_new_player_item_reward_runtime.mjs
+      - name: Rebuild focused Item reward catalog from current generated Item runtime
+        run: |
+          node tools/generate_new_player_item_reward_runtime.mjs \
+            --item-make data/generated/stoneage_item_make_runtime.json \
+            --closure data/generated/stoneage_new_player_event_closure.json \
+            --out /tmp/stoneage_new_player_item_reward_runtime.json
+          node -e "const x=require('/tmp/stoneage_new_player_item_reward_runtime.json'); if(x.stats.requestedItemIds!==16||x.stats.resolvedItemIds!==16||x.fixedSource.gitBlobSha!=='eac985796b59286c547db2abce7b3d604a5e6226') process.exit(1); console.log(JSON.stringify({generatorPass:true,stats:x.stats}))"
