@@ -299,8 +299,8 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
 2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability，5 個 `changeevent` runtime-unresolved。destination maps 4/4 verified、7/7 landing walkability closed；floor 100 / 200 也已完成 verified runtime 與 8/8 encounter landing-path closure。剩餘 blocker 集中在 4000→200 source transition、5 個 changeevent module discrepancy、3000→200 的單一不可走 landing，以及新玩家 reward definitions。
 3. **Map Coverage Expansion**：由目前 11 張 verified map 繼續擴到主要世界路線的完整地圖群；first-route floor 100 / 200 已 verified，接下來以 route skeleton 對應的 missing map branches 為擴張入口。
-4. **Persistent State Schema**：第一版 canonical schema 已建立；接著補 source-backed state completeness、save transaction、migration regression 與 idle state persistence。
-5. **Idle Loop Contract**：第一版 state machine 已建立；接著實作 encounter/battle/reward/supply/death/offline 的 transaction boundary 與 simulation runner。
+4. **Persistent State Schema**：第一版 canonical schema 已建立；本輪補上 Gold、reward transaction persistence 與 idle state containers。
+5. **Idle Loop Contract**：state machine 已建立，reward transaction 與 supply/death/offline policy boundary 已建立；下一步是 simulation runner、save commit 與 offline resume。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
 7. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
 8. **Authorized Asset Integration**：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
@@ -408,3 +408,10 @@ Idle state machine 已固定為 disabled → moving → encounter_pending → in
 Canonical state schema = 1；fixed-C legacy save schema provenance = 30。固定 structural contracts：profession skill slots 26、player item slots 24。PetBox / Team / ActivePet 分離保存；legacy migration 採 known-field copy，未知 top-level keys 進 preservedUnknownKeys，不猜語義。
 
 Idle 與 battleSettings 明確標示為放置版產品層，不冒充 fixed-C。
+## 2026-09-30 Reward Transaction v1
+
+新增 `src/stoneage_reward_transaction.mjs`、`docs/reference/reward-transaction-contract.md`、`data/generated/stoneage_reward_transaction_schema.json` 與 regression。Reward layer 只接受 battle/source runtime 已決定的 EXP / Gold / existing-item / Pet credit，不重新抽 reward RNG。固定 source 的 AddProfit 邊界與 carried loot ordering 已映射到 atomic transaction；inventory full 不做 partial commit，同 transactionId 重複提交不重複發獎勵。
+
+## 2026-09-30 Idle Supply / Death / Offline Policy v1
+
+新增 `src/stoneage_idle_policy.mjs`、`docs/reference/idle-supply-death-offline-policy.md`、`data/generated/stoneage_idle_policy_schema.json` 與 regression。Healer 的 player HP/MP full recovery 是 source-backed；supply threshold、death recovery mode、offline cap 與 offline reward simulation 維持 explicit product policy，不自行設定。
