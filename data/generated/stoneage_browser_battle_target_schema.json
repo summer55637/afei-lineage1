@@ -1,0 +1,28 @@
+{
+  "format": "stoneage-v398-browser-battle-target-runtime-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_TARGET_RESOLVE",
+  "fixedC": {
+    "function": "gmsv/src/battle/battle.c::BATTLE_TargetCheck",
+    "validBidRange": [
+      0,
+      19
+    ],
+    "checks": [
+      "BATTLE_No2Index resolves bid",
+      "battle character mode != 0",
+      "CHAR_ISDIE != TRUE",
+      "CHAR_HP > 0",
+      "CHAR_ISATTACKED == TRUE",
+      "battle mode != BATTLE_CHARMODE_RESCUE"
+    ],
+    "invalidTargetFallback": "BATTLE_TargetAdjust -> BATTLE_DefaultAttacker(battleindex,1-myside)",
+    "bowExpansion": "handled by BATTLE_TargetListSet/BATTLE_GetWepon and not promoted in V3.98"
+  },
+  "browser": {
+    "output": "executionTargetBid + targetList [bid,-1]",
+    "invalidTarget": "returns defaultAttackerRequired=true but does not execute resolver",
+    "persistentMutation": false,
+    "rngConsumed": false
+  }
+}
