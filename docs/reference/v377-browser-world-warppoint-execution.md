@@ -47,7 +47,7 @@ V3.77 不建立自動導航、不選「最佳」portal、不修改 encounter pro
 
 ## Regression
 
-`tools/check_v317_browser_world_warppoint.mjs`：
+`tools/check_v377_browser_world_warppoint.mjs`：
 
 - fixed-C source function evidence
 - 8 portal groups / exact row count
