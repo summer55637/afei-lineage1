@@ -18,7 +18,7 @@ const repeated=header(1,8,1,repeatedPayload.length);
 repeated.set(repeatedPayload,16);
 assert.deepEqual([...decodeStoneAgeRd(repeated).pixels],[77,77,77,77,77,77,77,77]);
 
-assert.deepEqual([...decodeAuthorizedClientGraphic(b,{adder:16,size:22}).pixels],[1,2,3,4,5,6]);
+assert.deepEqual([...decodeAuthorizedClientGraphic(b,{adder:0,size:22}).pixels],[1,2,3,4,5,6]);
 assert.throws(()=>decodeStoneAgeRd(header(16,1,1,0)),/unsupported RD color compression/);
 assert.throws(()=>decodeStoneAgeRd(new Uint8Array([82,68,0])),/truncated/);
 
