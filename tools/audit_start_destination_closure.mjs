@@ -10,8 +10,11 @@ const sourceRoot = path.resolve(sourceRootArg >= 0 ? args[sourceRootArg + 1] : '
 const out = path.resolve(outArg >= 0 ? args[outArg + 1] : 'data/generated/stoneage_start_destination_closure.json');
 
 const FIXED_REF = '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
-const ENCOUNT_PATH = 'gmsv/data/encount.txt';
-const ENCOUNT_SHA = '89da97a15ea866a36f26ec3bb7ab5490f3eccc5f';
+const SOURCES = {
+  encount: { path: 'gmsv/data/encount.txt', sha: '89da97a15ea866a36f26ec3bb7ab5490f3eccc5f' },
+  group: { path: 'gmsv/data/group1.txt', sha: '1be75eb3e56ab16d4b433146ec59538ad651c874' },
+  itemset6: { path: 'gmsv/data/itemset6.txt', sha: 'eac985796b59286c547db2abce7b3d604a5e6226' }
+};
 
 function readText(file) {
   return fs.readFileSync(file, 'utf8');
@@ -19,11 +22,25 @@ function readText(file) {
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
-function sha1(content) {
-  return crypto.createHash('sha1').update(content).digest('hex');
+function gitBlobSha(content) {
+  const body = Buffer.from(content, 'utf8');
+  return crypto.createHash('sha1')
+    .update(Buffer.from(`blob ${body.length}\0`, 'utf8'))
+    .update(body)
+    .digest('hex');
+}
+function verifySource(root, spec, label) {
+  const file = path.join(root, spec.path);
+  const content = readText(file);
+  const actual = gitBlobSha(content);
+  if (actual !== spec.sha) {
+    throw new Error(`${label} fixed-source blob SHA mismatch: expected ${spec.sha}, got ${actual}`);
+  }
+  return { path: spec.path, blobSha: actual, byteLength: Buffer.byteLength(content, 'utf8'), content };
 }
 function parseEncount(text) {
-  return text.split(/\r?\n/).map((line, idx) => ({line: idx + 1, raw: line, parts: line.split(',')}))
+  return text.split(/\r?\n/)
+    .map((raw, idx) => ({ line: idx + 1, raw, parts: raw.split(',') }))
     .filter(r => r.raw && !r.raw.startsWith('#') && r.parts.length >= 10)
     .map(r => ({
       line: r.line,
@@ -37,10 +54,44 @@ function parseEncount(text) {
       probMax: Number(r.parts[7]),
       enemyMax: Number(r.parts[8]),
       zorder: Number(r.parts[9]),
-      groups: r.parts.slice(10, 20)
-        .map(v => v === '' ? null : Number(v))
-        .filter(v => v !== null && Number.isFinite(v))
+      groupIds: r.parts.slice(10, 20).map(v => v === '' ? null : Number(v)).filter(v => v !== null && Number.isFinite(v)),
+      groupProbs: r.parts.slice(20, 30).map(v => v === '' ? null : Number(v)),
+      eventNow: Number(r.parts[30] || -1),
+      eventEnd: Number(r.parts[31] || -1),
+      enemyGroup: Number(r.parts[32] || -1)
     }));
+}
+function parseGroups(text) {
+  const map = new Map();
+  for (const raw of text.split(/\r?\n/)) {
+    if (!raw) continue;
+    const p = raw.split(',');
+    if (p.length < 4) continue;
+    const id = Number(p[1]);
+    if (!Number.isFinite(id)) continue;
+    const ints = p.slice(1).map(v => v === '' ? null : Number(v));
+    map.set(id, {
+      name: p[0],
+      groupId: id,
+      appearByItemId: ints[1],
+      notAppearByItemId: ints[2],
+      enemyIds: ints.slice(3, 13).filter(v => v !== null && Number.isFinite(v)),
+      createProbs: ints.slice(13, 23).filter(v => v !== null && Number.isFinite(v))
+    });
+  }
+  return map;
+}
+function parseItemIds(text) {
+  const ids = new Set();
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  for (const raw of lines) {
+    const p = raw.split(',');
+    if (p.length >= 17) {
+      const id = Number(p[16]);
+      if (Number.isFinite(id)) ids.add(id);
+    }
+  }
+  return { ids, rowCount: lines.length };
 }
 function normalizeRect(row) {
   return {
@@ -70,38 +121,133 @@ function walkableAt(map, mapset, x, y) {
     walkable: groundWalk && objectWalk
   };
 }
+function groupCondition(group, itemIds) {
+  if (!group) return { status: 'unresolved_group', group: null };
+  const hasItemGate = group.appearByItemId !== null && group.appearByItemId !== -1;
+  const hasNotItemGate = group.notAppearByItemId !== null && group.notAppearByItemId !== -1;
+  const missingItemGateIds = [group.appearByItemId, group.notAppearByItemId]
+    .filter(v => v !== null && v !== -1 && !itemIds.has(v));
+  if (missingItemGateIds.length > 0) {
+    return {
+      status: 'conditional_unresolved_item_source',
+      hasItemGate,
+      hasNotItemGate,
+      gateItemIds: missingItemGateIds
+    };
+  }
+  if (hasItemGate || hasNotItemGate) {
+    return {
+      status: 'conditional_item',
+      hasItemGate,
+      hasNotItemGate,
+      gateItemIds: [group.appearByItemId, group.notAppearByItemId].filter(v => v !== null && v !== -1)
+    };
+  }
+  return { status: 'unconditional', hasItemGate: false, hasNotItemGate: false, gateItemIds: [] };
+}
+function classifyRow(row, groups, itemIds) {
+  if (row.probMax <= 0 || row.groupIds.length === 0) return 'placeholder';
+  const conditions = row.groupIds.map(id => {
+    const group = groups.get(id);
+    return { groupId: id, ...(groupCondition(group, itemIds)), ...(group ? {
+      enemyIds: group.enemyIds,
+      name: group.name
+    } : {})
+    };
+  });
+  if (row.eventNow > 0 || row.eventEnd > 0) return 'event_conditional';
+  if (conditions.some(v => v.status === 'unresolved_group')) return 'unresolved_group';
+  if (conditions.some(v => v.status === 'unconditional')) {
+    return conditions.some(v => v.status !== 'unconditional') ? 'mixed' : 'unconditional';
+  }
+  return 'conditional_unresolved_item_source';
+}
 
 const route = readJson('data/generated/stoneage_start_route_candidates.json');
 const sourceCatalog = readJson('data/generated/stoneage_map_source_catalog.json');
 const runtimeIndex = readJson('data/generated/stoneage_map_runtime_index.json');
 const mapset = readJson('data/generated/stoneage_mapset_runtime.json');
-const encountText = readText(path.join(sourceRoot, ENCOUNT_PATH));
-const actualEncountSha = sha1(encountText);
-if (actualEncountSha !== ENCOUNT_SHA) {
-  throw new Error(`fixed-source encount SHA mismatch: expected ${ENCOUNT_SHA}, got ${actualEncountSha}`);
-}
+const graph = readJson('data/generated/stoneage_world_graph_index.json');
 
-const encountRows = parseEncount(encountText);
-const activeRowsByFloor = new Map();
+const encountSource = verifySource(sourceRoot, SOURCES.encount, 'encount');
+const groupSource = verifySource(sourceRoot, SOURCES.group, 'group1');
+const itemSource = verifySource(sourceRoot, SOURCES.itemset6, 'itemset6');
+const encountRows = parseEncount(encountSource.content);
+const groups = parseGroups(groupSource.content);
+const itemCatalog = parseItemIds(itemSource.content);
+
+const rowClassByIndex = new Map();
+const rowsByFloor = new Map();
 for (const row of encountRows) {
-  if (row.probMax > 0 && row.groups.length > 0) {
-    const list = activeRowsByFloor.get(row.floor) || [];
-    list.push(row);
-    activeRowsByFloor.set(row.floor, list);
-  }
+  row.sourceClassification = classifyRow(row, groups, itemCatalog.ids);
+  rowClassByIndex.set(row.index, row.sourceClassification);
+  const list = rowsByFloor.get(row.floor) || [];
+  list.push(row);
+  rowsByFloor.set(row.floor, list);
 }
 
 const mapCatalogByFloor = new Map();
 for (const m of sourceCatalog.maps || []) {
   const floor = Number(m.basename);
-  if (Number.isFinite(floor)) {
-    mapCatalogByFloor.set(floor, m);
+  if (Number.isFinite(floor)) mapCatalogByFloor.set(floor, m);
+}
+
+const adjacency = new Map();
+for (const edge of graph.directedFloorEdges || []) {
+  const a = Number(edge.fromFloor), b = Number(edge.toFloor);
+  const list = adjacency.get(a) || [];
+  list.push(b);
+  adjacency.set(a, list);
+}
+const dedupAdjacency = new Map([...adjacency.entries()].map(([k,v]) => [k,[...new Set(v)]]));
+const genericFloorCache = new Map();
+function floorSummary(floor) {
+  const rows = rowsByFloor.get(floor) || [];
+  return {
+    floor,
+    totalRowCount: rows.length,
+    placeholderRowCount: rows.filter(r => r.sourceClassification === 'placeholder').length,
+    unconditionalRowCount: rows.filter(r => ['unconditional','mixed'].includes(r.sourceClassification)).length,
+    conditionalRowCount: rows.filter(r => ['conditional_unresolved_item_source','conditional_item','event_conditional'].includes(r.sourceClassification)).length,
+    rows: rows.map(r => ({
+      index: r.index, line: r.line, rect: normalizeRect(r),
+      probMin: r.probMin, probMax: r.probMax, enemyMax: r.enemyMax, zorder: r.zorder,
+      classification: r.sourceClassification,
+      groupIds: r.groupIds
+    }))
+  };
+}
+const genericFloors = new Set(encountRows.filter(r => ['unconditional','mixed'].includes(r.sourceClassification)).map(r => r.floor));
+function nearestGeneric(start) {
+  if (genericFloorCache.has(start)) return genericFloorCache.get(start);
+  const q = [[start, [start]]];
+  const seen = new Set([start]);
+  while (q.length) {
+    const [floor, floorPath] = q.shift();
+    if (floor !== start && genericFloors.has(floor)) {
+      const result = {
+        floor,
+        path: floorPath,
+        depth: floorPath.length - 1,
+        encounter: floorSummary(floor)
+      };
+      genericFloorCache.set(start, result);
+      return result;
+    }
+    for (const next of dedupAdjacency.get(floor) || []) {
+      if (!seen.has(next)) {
+        seen.add(next);
+        q.push([next, [...floorPath, next]]);
+      }
+    }
   }
+  genericFloorCache.set(start, null);
+  return null;
 }
 
 const towns = (route.routes || []).map(entry => {
   const destinationFloor = Number(entry.directWarpExits?.[0]?.toFloor);
-  const landings = entry.directWarpExits.map(exit => ({x:Number(exit.toX), y:Number(exit.toY)}));
+  const landings = entry.directWarpExits.map(exit => ({ x: Number(exit.toX), y: Number(exit.toY) }));
   const sourceMap = mapCatalogByFloor.get(destinationFloor) || null;
   const runtime = runtimeIndex.maps?.[String(destinationFloor)] || null;
   let map = null;
@@ -109,27 +255,58 @@ const towns = (route.routes || []).map(entry => {
     const file = runtime.path.startsWith('./') ? runtime.path.slice(2) : runtime.path;
     if (fs.existsSync(file)) map = readJson(file);
   }
-  const sourceMapVerified =
-    !!sourceMap &&
-    !!runtime &&
-    sourceMap.verifiedRuntime === true &&
-    runtime.sourceBlobSha === sourceMap.blobSha;
+  const exactBlobMatch = !!sourceMap && !!runtime && sourceMap.verifiedRuntime === true && runtime.sourceBlobSha === sourceMap.blobSha;
+  const allRows = rowsByFloor.get(destinationFloor) || [];
+  const classifications = allRows.map(row => row.sourceClassification);
   const landingAudit = landings.map(p => {
     const walk = map ? walkableAt(map, mapset, p.x, p.y) : null;
-    const activeRects = (activeRowsByFloor.get(destinationFloor) || []).map(row => ({
-      index: row.index,
-      line: row.line,
-      rect: normalizeRect(row),
-      containsLanding: inRect(p.x, p.y, normalizeRect(row)),
-      probMin: row.probMin,
-      probMax: row.probMax,
-      enemyMax: row.enemyMax,
-      groups: row.groups
-    }));
-    return { ...p, walkability: walk, activeEncounterRegions: activeRects };
+    const encounterRegions = allRows
+      .filter(row => row.probMax > 0 && row.groupIds.length > 0)
+      .map(row => {
+        const rect = normalizeRect(row);
+        return {
+          index: row.index,
+          line: row.line,
+          rect,
+          containsLanding: inRect(p.x, p.y, rect),
+          classification: row.sourceClassification,
+          probMin: row.probMin,
+          probMax: row.probMax,
+          enemyMax: row.enemyMax,
+          groupIds: row.groupIds
+        };
+      });
+    return { ...p, walkability: walk, encounterRegions };
   });
-  const allRows = encountRows.filter(row => row.floor === destinationFloor);
-  const activeRows = activeRowsByFloor.get(destinationFloor) || [];
+  const directEncounter = {
+    allRowCount: allRows.length,
+    placeholderRowCount: classifications.filter(v => v === 'placeholder').length,
+    unconditionalRowCount: classifications.filter(v => ['unconditional','mixed'].includes(v)).length,
+    conditionalRowCount: classifications.filter(v => ['conditional_unresolved_item_source','conditional_item','event_conditional'].includes(v)).length,
+    classifications,
+    rows: allRows.map(row => ({
+      index: row.index, line: row.line, rect: normalizeRect(row),
+      probMin: row.probMin, probMax: row.probMax, enemyMax: row.enemyMax,
+      zorder: row.zorder, classification: row.sourceClassification,
+      groups: row.groupIds.map(groupId => {
+        const group = groups.get(groupId);
+        return group ? {
+          groupId,
+          name: group.name,
+          appearByItemId: group.appearByItemId,
+          notAppearByItemId: group.notAppearByItemId,
+          condition: groupCondition(group, itemCatalog.ids),
+          enemyIds: group.enemyIds,
+          createProbs: group.createProbs
+        } : { groupId, condition: { status:'unresolved_group' } };
+      })
+    }))
+  };
+  let status = 'none';
+  if (directEncounter.unconditionalRowCount > 0) status = 'unconditional_active';
+  else if (directEncounter.conditionalRowCount > 0) status = 'conditional_unresolved_or_gated';
+  else if (directEncounter.placeholderRowCount > 0) status = 'placeholder_only';
+
   return {
     hometown: entry.hometown,
     elder: entry.elder,
@@ -142,94 +319,61 @@ const towns = (route.routes || []).map(entry => {
       verifiedRuntime: sourceMap?.verifiedRuntime ?? false,
       runtimePath: runtime?.path ?? null,
       runtimePresent: !!runtime,
-      exactBlobMatch: sourceMapVerified,
-      status: sourceMapVerified ? 'verified' : 'unresolved'
+      exactBlobMatch,
+      status: exactBlobMatch ? 'verified' : 'unresolved'
     },
-    encounterEvidence: {
-      allRowCount: allRows.length,
-      activeRowCount: activeRows.length,
-      activeRows: activeRows.map(row => ({
-        index: row.index,
-        line: row.line,
-        rect: normalizeRect(row),
-        probMin: row.probMin,
-        probMax: row.probMax,
-        enemyMax: row.enemyMax,
-        groups: row.groups
-      })),
-      classification: activeRows.length > 0 ? 'active' : allRows.length > 0 ? 'placeholder_only' : 'none'
-    },
-    landingAudit
+    encounterEvidence: directEncounter,
+    landingAudit,
+    nearestUnconditionalEncounter: nearestGeneric(destinationFloor)
   };
 });
-
-const activeFloorSet = new Set(activeRowsByFloor.keys());
-const adjacency = new Map();
-for (const edge of readJson('data/generated/stoneage_world_graph_index.json').directedFloorEdges || []) {
-  const a = Number(edge.fromFloor), b = Number(edge.toFloor);
-  const list = adjacency.get(a) || [];
-  list.push(b);
-  adjacency.set(a, list);
-}
-function nearestActive(start) {
-  const q = [[start, [start]]];
-  const seen = new Set([start]);
-  while (q.length) {
-    const [floor, p] = q.shift();
-    if (floor !== start && activeFloorSet.has(floor)) return {floor, path:p};
-    for (const next of adjacency.get(floor) || []) {
-      if (!seen.has(next)) {
-        seen.add(next);
-        q.push([next, [...p, next]]);
-      }
-    }
-  }
-  return null;
-}
-
-for (const town of towns) {
-  town.nearestActiveEncounter = town.encounterEvidence.classification === 'active'
-    ? {floor: town.destinationFloor, path:[town.destinationFloor], depth:0, reason:'direct destination has active encounter row'}
-    : nearestActive(town.destinationFloor);
-}
 
 const statistics = {
   hometowns: towns.length,
   destinationFloors: towns.length,
   exactSourceMaps: towns.filter(t => t.sourceMap.status === 'verified').length,
-  landingPoints: towns.reduce((n,t)=>n+t.landingAudit.length,0),
-  walkabilityVerifiedPoints: towns.reduce((n,t)=>n+t.landingAudit.filter(p=>p.walkability?.walkable === true).length,0),
-  activeEncounterDestinationFloors: towns.filter(t=>t.encounterEvidence.classification === 'active').length,
-  placeholderOnlyDestinationFloors: towns.filter(t=>t.encounterEvidence.classification === 'placeholder_only').length,
-  unresolvedDestinationMaps: towns.filter(t=>t.sourceMap.status !== 'verified').length
+  landingPoints: towns.reduce((n,t) => n + t.landingAudit.length, 0),
+  walkabilityVerifiedPoints: towns.reduce((n,t) => n + t.landingAudit.filter(p => p.walkability?.walkable === true).length, 0),
+  unconditionalDestinationFloors: towns.filter(t => t.encounterEvidence.unconditionalRowCount > 0).length,
+  conditionalDestinationFloors: towns.filter(t => t.encounterEvidence.conditionalRowCount > 0).length,
+  placeholderOnlyDestinationFloors: towns.filter(t => t.encounterEvidence.placeholderRowCount > 0 && t.encounterEvidence.unconditionalRowCount === 0 && t.encounterEvidence.conditionalRowCount === 0).length,
+  unresolvedDestinationMaps: towns.filter(t => t.sourceMap.status !== 'verified').length,
+  itemset6Rows: itemCatalog.rowCount,
+  itemGateIdsUnresolved: [...new Set(towns.flatMap(t => t.encounterEvidence.rows.flatMap(r => r.groups || []).flatMap(g => g.condition?.gateItemIds || [])))].sort((a,b) => a-b)
 };
 
 const result = {
-  format: 'stoneage-start-destination-closure-v1',
+  format: 'stoneage-start-destination-closure-v3',
   generatedAt: '2026-09-30',
-  fixedSource: { repository:'gavinlinasd/StoneAge', ref:FIXED_REF },
+  fixedSource: { repository: 'gavinlinasd/StoneAge', ref: FIXED_REF },
   sourceContracts: {
     encount: 'gmsv/src/char/encount.c::ENCOUNT_initEncount',
-    encountFile: ENCOUNT_PATH,
+    group: 'gmsv/src/char/enemy.c::GROUP_initGroup',
+    enemySelection: 'gmsv/src/char/enemy.c::ENEMY_getEnemy',
+    itemset6: 'gmsv/setup.cf::itemset6file + gmsv/src/item/item.c',
     mapRuntime: 'src/stoneage_map_runtime.mjs::sourceMapWalkableAt',
     mapSourceCatalog: 'data/generated/stoneage_map_source_catalog.json',
     worldGraph: 'data/generated/stoneage_world_graph_index.json::directedFloorEdges'
   },
   sourceEvidence: {
-    encountBlobSha: ENCOUNT_SHA,
-    encountRowsTotal: encountRows.length,
-    activeEncounterDefinition: 'probMax > 0 AND at least one numeric group id'
+    encount: encountSource,
+    group1: groupSource,
+    itemset6: { path: itemSource.path, blobSha: itemSource.blobSha, byteLength: itemSource.byteLength, rowCount: itemCatalog.rowCount },
+    activeEncounterDefinition: 'row probMax > 0 and has group id',
+    unconditionalGroupDefinition: 'GROUP_APPEARBYITEMID == -1 and GROUP_NOTAPPEARBYITEMID == -1, with no encounter event gate',
+    itemGateStatus: 'conditional groups whose gate item ID is absent from pinned itemset6 remain unresolved_item_source; no assumption is made that the gate is impossible or available'
   },
   statistics,
   towns,
   status: {
     destinationWalkability: statistics.exactSourceMaps === statistics.destinationFloors && statistics.walkabilityVerifiedPoints === statistics.landingPoints ? 'closed' : 'partial',
-    directDestinationEncounter: statistics.activeEncounterDestinationFloors === statistics.destinationFloors ? 'closed' : 'partial',
+    directDestinationEncounter: statistics.unconditionalDestinationFloors === statistics.destinationFloors ? 'closed' : 'partial',
+    genericEncounterRoute: towns.every(t => t.nearestUnconditionalEncounter) ? 'closed_at_floor_level' : 'partial',
     fullFirstRoute: 'partial'
   },
-  policy: 'Do not treat zero-probability/no-group encounter placeholders as active encounters. Missing fixed-source destination map blobs remain unresolved and are never replaced by guessed or cross-version maps.'
+  policy: 'Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. Missing fixed-source maps and item definitions remain unresolved and are never replaced by guessed or cross-version data.'
 };
 
-fs.mkdirSync(path.dirname(out), {recursive:true});
+fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, JSON.stringify(result, null, 2) + '\n');
-console.log(JSON.stringify({out, statistics}, null, 2));
+console.log(JSON.stringify({ out, statistics }, null, 2));
