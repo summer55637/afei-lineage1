@@ -12,7 +12,25 @@
 
 目前正處於 **item-acquisition / quest-event closure**；reward gap 已改為 direct-source occurrence 掃描，避免用 sample path 估算；NPC acquisition graph 已建立並校正 EventNo -1 sentinel；Start Flow Index 也已完成，正式鎖定四個 hometown 出生座標與新手寵物選擇規則。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標正在進一步依 `EventNo` / `EventEnd` / NPC-specific script / encounter event owner 反查，不再只用 mission / jobdaily 判定。
 
-下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 38 個真正 ownerless event IDs 仍需 closure。最高優先是四個出生村的 first-route：出生長老 → 必要 town service → warp exit → 第一個 encounter / 任務節點。
+### First-route checkpoint（2026-09-30）
+
+已修正 hometown walkability audit 的 source-selection 問題。舊版 audit 沒有鎖定四個 hometown map 的 exact pinned source path，而是遞迴掃描 map floor 後取第一個命中；這不足以作為 fixed-source walkability 的最終結論。
+
+新版 `stoneage_start_walkability_audit.json` 已鎖定四個固定 source map path，並在審計時驗證 Git blob SHA。結果為：
+
+- 4/4 hometown source maps 通過 exact blob SHA 驗證。
+- 8/8 direct hometown warp exits 可由出生座標透過 source walkability 到達。
+- 最短出生點→warp NPC 路徑為 4–7 步。
+- 固定 C 的 `CHAR_walk_move` 先做 `MAP_walkAble`，NPC warp 再透過 `CHAR_ISOVERED` 與 `NPC_WarpWatch` 接收成功的 `CHAR_ACTWALK`；因此 warp NPC 的占位不會讓原本可走的 map cell 變成不可走。
+
+目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence。四個 hometown 都已具備這三個資料層條件，因此目前標記：
+
+- `sourceRouteSpine = closed`
+- `fullFirstRoute = partial`
+
+這裡的 closed 只代表 source-level route spine 已閉合，不代表已經可以直接做 playable gameplay。完整 first-route 仍要補齊 town service 的座標與實際互動、destination map / first encounter region 的 walkability，以及新玩家 quest/event owner closure。
+
+下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 ownerless event IDs 仍需 closure。最高優先仍是四個出生村的 first-route closure。
 
 ## 目的
 
@@ -56,6 +74,8 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 - client image → ADRNBIN → Real → RD decoder → palette → RGBA 的資料鏈
 
 目前只有 7 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。
+
+四個 hometown 的原始 LS2MAP 已完成 exact pinned-source walkability audit，但這四張目前仍不代表完整世界地圖 coverage；下一階段仍要把 destination maps 與主要世界 route 逐步轉成 verified runtime。
 
 ### 4. 原版客戶端圖像技術鏈
 
@@ -113,7 +133,7 @@ source map
 - encounter region
 - battle field 對應
 
-這樣才有可能做出真正「世界」，而不是只顯示幾張測試地圖。
+目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的；下一個要補的是四個 destination floor 的 exact map source / landing coordinate / first encounter region，不能只停在 floor-level connectivity。
 
 ## C. 玩家／寵物完整資料模型：高優先
 
@@ -267,8 +287,8 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 ## 建議的下一個實際工作順序
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
-2. **Start Route Closure**：四個 hometown → town NPC service → warp exit → first encounter / quest。
-3. **Map Coverage Expansion**：由 7 張 verified map 擴到可形成主要世界路線的完整地圖群。
+2. **Start Route Closure**：source-route spine 已 closed；下一步做 town service coordinate reachability → destination-map walkability → first encounter region → quest/event owner closure。
+3. **Map Coverage Expansion**：由 7 張 verified map 擴到能形成主要世界路線的完整地圖群。
 4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
 5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
@@ -294,16 +314,3 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 - 哪些是 fixed C，哪些是影片還原，哪些是本專案新增的放置版規則？
 
 只要這些問題還有大面積空白，就先繼續做資料與 contract，而不是急著寫首頁。
-
-
-  
-### Start Route Candidates（2026-09-30）
-
-已建立 `stoneage_start_route_candidates.json`。固定 source 共解析 3,943 個 warp edges、1,197 個 encounter rows、675 個 encounter floors。
-
-- hometown 0 / samugiru：1006 → 1000（98,44 / 98,45）；1 步後找到含 encounter row 的 1000。
-- hometown 1 / marinasu：2006 → 2000（56,48 / 57,48）；1 步後找到含 encounter rows 的 2000。
-- hometown 2 / jaja：3006 → 3000（90,60）；1 步後找到含 encounter rows 的 3000；2 步後還可達 200（114 rows）。
-- hometown 3 / karutarna：4006 → 4000（80,90 / 80,91）；1 步後找到含 encounter row 的 4000；2 步後還可達 200（114 rows）。
-
-這些是 source connectivity candidates，不等於 walkable-only route，也不等於唯一新手路線。下一步要再疊加 map walkability、NPC service intent、encounter group 與新手 event owner，形成真正 first-route closure。
