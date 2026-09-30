@@ -72,10 +72,10 @@ function buildWorldItemShopBindingIndex(worldNpcIndex,catalog){
         errors.push('duplicate ItemShop world binding: '+key);
         continue;
       }
-      const shop=catalog.shops?.[key]??null;
+      const shop=Object.values(catalog.shops??{}).find(row=>npcSourceKey(row?.source?.create)===key)??null;
       const binding={
         npcKey:key,
-        shopId:key,
+        shopId:shop?.shopId??key,
         floorId:create.floorId??null,
         templateName:enemy.templateName??null,
         fileRef:enemy.fileRef??null,
