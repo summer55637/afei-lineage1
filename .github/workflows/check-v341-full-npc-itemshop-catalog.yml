@@ -38,8 +38,12 @@ jobs:
           import fs from 'node:fs';
           const catalog=JSON.parse(fs.readFileSync('/tmp/stoneage_npc_itemshop_runtime.json','utf8'));
           const itemMake=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
-          if(catalog.stats.shopBindings!==336) throw new Error('expected 336 ItemShop bindings, got '+catalog.stats.shopBindings);
-          if(catalog.stats.unresolvedBindings!==0) throw new Error('unresolved ItemShop bindings: '+catalog.stats.unresolvedBindings);
+          const totalBindings=catalog.stats.shopBindings+catalog.stats.unresolvedBindings;
+          if(totalBindings!==336) throw new Error('expected 336 ItemShop bindings including unresolved, got '+totalBindings+' (resolved '+catalog.stats.shopBindings+', unresolved '+catalog.stats.unresolvedBindings+')');
+          if(catalog.stats.unresolvedBindings!==0) {
+            console.error('Unresolved ItemShop bindings:', JSON.stringify(catalog.unresolved,null,2));
+            throw new Error('unresolved ItemShop bindings: '+catalog.stats.unresolvedBindings);
+          }
           const missing=[...new Set(Object.keys(catalog.itemIndex).map(Number).filter(id=>!itemMake.byItemId?.[String(id)]))];
           if(missing.length) throw new Error('ItemShop offers missing source Item templates: '+missing.slice(0,50).join(','));
           const floors=Object.keys(catalog.floorIndex);
