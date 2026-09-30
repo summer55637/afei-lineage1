@@ -1,0 +1,33 @@
+name: Check V3.50 new-player creation save pipeline
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_new_player_creation_save_runtime.mjs'
+      - 'src/stoneage_player_creation_runtime.mjs'
+      - 'src/stoneage_new_player_starter_pet_runtime.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_new_player_seed_runtime.json'
+      - 'tools/check_v350_new_player_creation_save_pipeline.mjs'
+      - '.github/workflows/check-v350-new-player-creation-save-pipeline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  creation-save:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check syntax
+        run: |
+          node --check src/stoneage_new_player_creation_save_runtime.mjs
+          node --check src/stoneage_player_creation_runtime.mjs
+          node --check src/stoneage_new_player_starter_pet_runtime.mjs
+          node --check tools/check_v350_new_player_creation_save_pipeline.mjs
+      - name: Run V3.50 regression
+        run: node tools/check_v350_new_player_creation_save_pipeline.mjs
