@@ -1,0 +1,35 @@
+name: one-shot-item-reward-gap-clusters-v2
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Checkout fixed source
+        run: |
+          rm -rf /tmp/StoneAge
+          git clone --quiet https://github.com/gavinlinasd/StoneAge.git /tmp/StoneAge
+          cd /tmp/StoneAge
+          git checkout --quiet 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          test "$(git rev-parse HEAD)" = "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+      - name: Generate precise reward gap report
+        run: node tools/generate_item_reward_gap_clusters.mjs --source-root /tmp/StoneAge --out data/generated/stoneage_item_reward_gap_clusters.json
+      - name: Commit output and remove workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/one-shot-item-reward-gap-clusters-v2.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/generated/stoneage_item_reward_gap_clusters.json tools/generate_item_reward_gap_clusters.mjs .github/workflows/one-shot-item-reward-gap-clusters-v2.yml
+          git commit -m 'data: generate precise item reward gap clusters'
+          git push origin HEAD:main
