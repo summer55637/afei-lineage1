@@ -99,10 +99,14 @@ function normalizeEventBranch(branch){
   if(!condition)return {ok:false,reason:'event-branch-condition-required'};
   const parsed=parseConditionExpression(condition);
   if(!parsed.ok)return {ok:false,reason:'unsupported-event-condition',condition,errors:parsed.errors};
-  const itemActions=Array.isArray(branch.getItem)?branch.getItem.map(v=>intOr(v,-1)).filter(v=>v>=0):[];
-  const petActions=Array.isArray(branch.getPet)?branch.getPet.map(v=>intOr(v,-1)).filter(v=>v>=0):[];
-  const endEvents=Array.isArray(branch.endSetFlg)?branch.endSetFlg.map(v=>intOr(v,-1)).filter(v=>v>=0):[];
-  const nowEvents=Array.isArray(branch.nowSetFlg)?branch.nowSetFlg.map(v=>intOr(v,-1)).filter(v=>v>=0):[];
+  const toIntArray=value=>{
+    const raw=Array.isArray(value)?value:(value==null?[]:[value]);
+    return raw.map(v=>intOr(v,-1)).filter(v=>v>=0);
+  };
+  const itemActions=toIntArray(branch.getItem);
+  const petActions=toIntArray(branch.getPet);
+  const endEvents=toIntArray(branch.endSetFlg);
+  const nowEvents=toIntArray(branch.nowSetFlg);
   const charm=branch.charm==null?null:intOr(branch.charm,0);
   return {ok:true,branch:{
     type:String(branch.type??'UNKNOWN'),
