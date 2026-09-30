@@ -27,7 +27,9 @@ assert.equal(strict.ok,true); assert.equal(strict.handled,true); assert.equal(st
 const runtimeConfig={compatibilityMode:true,allowExternalCompatibilityAliases:true,defaultInteractionAction:'talk',sourceProfile:'fixed-c'};
 const compatibilityModule={ExChangeMan:{script:closure.script,kind:'changeevent-source-resolved'}};
 const state=freshPersistentState({playerId:'compat-enabled'}); state.player.level=1; state.player.transmigration=0; state.player.charm=60;
-const enabled=await dispatchNpcInteraction(state,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',modules:compatibilityModule,moduleAudit:audit,compatibilityCatalog:compatibility,runtimeConfig,handlerFactory:()=>bundle.handlers,transactionId:'compat-1',now:()=> '2026-09-30T11:00:00.000Z'});
+const compatibilityBundle=createFirstRouteRewardHandlers({itemRewardCatalog,itemMakeCatalog,petCatalog,petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,itemCapacity:1000,itemCursor:700,randInclusive:(a,b)=>a===b?a:0});
+assert.equal(compatibilityBundle.ok,true);
+const enabled=await dispatchNpcInteraction(state,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',modules:compatibilityModule,moduleAudit:audit,compatibilityCatalog:compatibility,runtimeConfig,handlerFactory:()=>compatibilityBundle.handlers,transactionId:'compat-1',now:()=> '2026-09-30T11:00:00.000Z'});
 assert.equal(enabled.ok,true); assert.equal(enabled.handled,true); assert.equal(enabled.execution.applied,true);
 assert.equal(enabled.execution.execution.plan.eventNo,-1);
 assert.equal(enabled.state.inventory.itemRuntime.slots['700'].itemId,20145);
