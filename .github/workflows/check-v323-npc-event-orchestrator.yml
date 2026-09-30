@@ -1,0 +1,40 @@
+name: Check V3.23 NPC event orchestrator
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'tools/check_npc_event_runtime.mjs'
+      - 'tools/check_npc_event_transaction.mjs'
+      - 'tools/check_npc_event_orchestrator.mjs'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'docs/reference/v323-npc-event-orchestrator.md'
+      - '.github/workflows/check-v323-npc-event-orchestrator.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_npc_event_runtime.mjs
+          node --check src/stoneage_npc_event_transaction.mjs
+          node --check src/stoneage_npc_event_orchestrator.mjs
+          node --check tools/check_npc_event_runtime.mjs
+          node --check tools/check_npc_event_transaction.mjs
+          node --check tools/check_npc_event_orchestrator.mjs
+      - name: Run V3.21 event-plan regression
+        run: node tools/check_npc_event_runtime.mjs
+      - name: Run V3.22 event-transaction regression
+        run: node tools/check_npc_event_transaction.mjs
+      - name: Run V3.23 event-orchestrator regression
+        run: node tools/check_npc_event_orchestrator.mjs
