@@ -1,0 +1,38 @@
+name: V3.18 client asset pack adapter
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_client_asset_pack.mjs'
+      - 'src/stoneage_client_image_runtime.mjs'
+      - 'src/stoneage_rd_decoder.mjs'
+      - 'tools/check_v318_client_asset_pack.mjs'
+      - 'docs/reference/v318-client-asset-pack-adapter.md'
+      - 'client-assets/manifest.json'
+      - '.github/workflows/v318-client-asset-pack.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_client_asset_pack.mjs'
+      - 'src/stoneage_client_image_runtime.mjs'
+      - 'src/stoneage_rd_decoder.mjs'
+      - 'tools/check_v318_client_asset_pack.mjs'
+      - 'docs/reference/v318-client-asset-pack-adapter.md'
+      - 'client-assets/manifest.json'
+      - '.github/workflows/v318-client-asset-pack.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check adapter syntax
+        run: node --check src/stoneage_client_asset_pack.mjs
+      - name: Run V3.18 asset pack regression
+        run: node tools/check_v318_client_asset_pack.mjs
