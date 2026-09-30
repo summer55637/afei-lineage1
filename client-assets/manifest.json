@@ -1,0 +1,17 @@
+{
+  "format": "stoneage-client-asset-pack-v1",
+  "status": "unavailable",
+  "source": {
+    "kind": "operator-supplied",
+    "authorizationNote": "This repository does not ship original client binaries. Enable this manifest only when the operator has the right to use the supplied client assets."
+  },
+  "files": {
+    "adrn": null,
+    "real": null
+  },
+  "notes": [
+    "Set status to ready only when both ADRNBIN and Real binary are supplied by the operator.",
+    "Use optional sha256 fields to pin the exact supplied binaries.",
+    "The repository never downloads or embeds an original client asset automatically."
+  ]
+}
