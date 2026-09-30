@@ -15,12 +15,13 @@ function persistentIdleProjection(state){
 }
 
 function syncIdlePersistence(state,nextIdle,event,{now}={}){
+  const clock=typeof now==='function'?now:()=>String(now??new Date().toISOString());
   const next=clone(state);
   next.idle??={};
   next.idle.enabled=!([IDLE_STATES.DISABLED,IDLE_STATES.DEAD,IDLE_STATES.OFFLINE_RESUME].includes(nextIdle.state));
   next.idle.mode=nextIdle.state;
   next.idle.routeId=nextIdle.routeId??null;
-  const stamp=String((now??(()=>new Date().toISOString()))());
+  const stamp=String(clock());
   next.idle.lastSimulatedAt=stamp;
   if(!isObject(next.idle.offline))next.idle.offline={eligible:false,lastClosedAt:null,lastResumedAt:null,elapsedSeconds:0,accruedSeconds:0,resumePending:false,rewardsApplied:false};
   if(event===IDLE_EVENTS.OFFLINE_RESUME){
@@ -63,11 +64,12 @@ async function commitIdleEvent(state,event,payload={},{
   expectedRevision=null,
   source='idle-loop'
 }={}){
-  const applied=applyIdleEventToPersistentState(state,event,payload,{now});
+  const clock=typeof now==='function'?now:()=>String(now??new Date().toISOString());
+  const applied=applyIdleEventToPersistentState(state,event,payload,{now:clock});
   if(!applied.ok)return applied;
-  const committed=await commitSave(state,applied.state,{expectedRevision,savedAt:now,source});
+  const committed=await commitSave(state,applied.state,{expectedRevision,savedAt:clock,source});
   if(!committed.ok)return {...committed,stage:'save',state:clone(state)};
-  const verified=await parseAndValidateSaveEnvelope(committed.envelope,{now});
+  const verified=await parseAndValidateSaveEnvelope(committed.envelope,{now:clock});
   if(!verified.ok)return {...verified,ok:false,stage:'save-verify',state:clone(state)};
   return {
     ok:true,
