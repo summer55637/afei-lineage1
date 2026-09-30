@@ -13,6 +13,10 @@ const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(valu
 const clone=value=>JSON.parse(JSON.stringify(value));
 const intOr=value=>{const s=String(value??'').trim();if(s==='')return null;const m=s.match(/^[+-]?\d+/);return m?Number(m[0]):null;};
 
+const SOURCE_ENTRY_INIT=Object.freeze({escape:0,getitem:[-1,-1,-1]});
+const SOURCE_BATTLE_INIT=Object.freeze({use:true,mode:'init',turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
+const entryInit=()=>({escape:0,getitem:[-1,-1,-1]});
+
 function buildEnemyEntryLayout(team){
   if(!Array.isArray(team)||team.length<1)return {ok:false,reason:'enemy-team-required'};
   if(team.length>BATTLE_ENTRY_MAX)return {ok:false,reason:'enemy-team-entry-max-exceeded',count:team.length};
@@ -62,7 +66,9 @@ function buildBattleContext({
     maxHp:intOr(player.maxHp)??0,
     mp:intOr(player.mp)??0,
     maxMp:intOr(player.maxMp)??0,
-    battleMode:'init'
+    battleMode:'init',
+    escape:0,
+    getitem:[-1,-1,-1]
   };
   if(activePet&&isObject(activePet)&&(intOr(activePet.hp)??0)<=0)return {ok:false,handled:false,stage:'battle-context',reason:'active-pet-dead-cannot-start-battle'};
   const petEntry=activePet&&isObject(activePet)?{
@@ -79,7 +85,9 @@ function buildBattleContext({
     maxHp:intOr(activePet.maxHp)??0,
     mp:intOr(activePet.mp)??0,
     maxMp:intOr(activePet.maxMp)??0,
-    battleMode:'init'
+    battleMode:'init',
+    escape:0,
+    getitem:[-1,-1,-1]
   }:null;
   const enemyEntries=enemyLayout.entries.map((entry,slot)=>{
     if(!entry)return null;
@@ -97,7 +105,9 @@ function buildBattleContext({
       maxHp:null,
       mp:null,
       maxMp:null,
-      battleMode:'init'
+      battleMode:'init',
+      escape:0,
+      getitem:[-1,-1,-1]
     };
   });
   return {
@@ -111,6 +121,13 @@ function buildBattleContext({
       type:BATTLE_TYPE_P_VS_E,
       fieldNo:field,
       turn:0,
+      dpbattle:0,
+      norisk:0,
+      flg:0,
+      fieldAtt:0,
+      attCount:0,
+      sourceBattleInit:clone(SOURCE_BATTLE_INIT),
+      sourceEntryInit:clone(SOURCE_ENTRY_INIT),
       leaderId:playerEntry.characterId,
       sourceEncounter:{
         encounterId:intOr(encounter?.encounterId),
@@ -164,6 +181,8 @@ export {
   BATTLE_ENTRY_MAX,
   BATTLE_PLAYER_MAX,
   SIDE_OFFSET,
+  SOURCE_ENTRY_INIT,
+  SOURCE_BATTLE_INIT,
   buildEnemyEntryLayout,
   buildBattleContext,
   validateBattleContext
