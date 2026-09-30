@@ -1,0 +1,36 @@
+name: Check V3.57 browser Healer service runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_healer_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_world_npc_runtime.mjs'
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_idle_policy.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/fixtures/npc-healer/world-index.json'
+      - 'tools/check_v357_browser_healer_runtime.mjs'
+      - 'docs/reference/v357-browser-healer-service-runtime.md'
+      - '.github/workflows/check-v357-browser-healer-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.57 browser Healer regression
+        run: node tools/check_v357_browser_healer_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_healer_runtime.mjs
+          node --check src/stoneage_browser_world_npc_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v357_browser_healer_runtime.mjs
