@@ -35,7 +35,7 @@
 
 地圖方面已完成 LS2MAP parser、mapset、battlemap、Encounter 座標探測，以及 client image → ADRNBIN → Real → RD → palette → RGBA 的技術鏈。
 
-目前 source catalog 有 1284 個 map blobs，但只有 7 張已產生 verified map runtime；因此世界地圖仍是主要待補區。
+目前 source catalog 有 1284 個 map blobs，現有 10 張 verified map runtime；因此完整世界地圖與可行路線仍是主要待補區。
 
 ## 近期 first-route checkpoint（2026-09-30）
 
@@ -56,6 +56,18 @@
 
 這仍不是完整的 first-route gameplay closure：目前 46 個 start-floor NPC 座標已全部從 exact fixed-C `borncorner` 解出，其中 41 個 active-template NPC 已完成 interaction reachability、0 個 unreachable；5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 template 而維持 runtime-unresolved。新增的 `stoneage_start_destination_closure.json` 顯示四個 destination floor 目前只有 2000 有 exact source map + walkability runtime；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中閉合，因此不能用猜測或跨版本 map 補上。2000 的兩個 landing coordinates 都已確認 walkable。遇敵也已進一步依 fixed C 的 group item gate 分級：2000 的 Group 1018 要求 item 20219、3000 的 Group 1015 要求 item 20216，而 pinned `itemset6.txt` 是空檔，因此兩者目前都是 conditional_unresolved_item_source，不可直接當成一般掛機區。依 source world graph，四個 destination floor 往第一個具至少一個 unconditional encounter group 的候選 floor 分別是 100、100、200、200。新玩家 event 的 source create + shared script reference 已閉合，但 pinned fixed-C 的 `npctemplate.c` 沒有 `changeevent` module，且 `npccreate.c` 會拒絕 unknown template，因此目前標記為 `script_reference_closed_template_unresolved`；獎勵物品／寵物定義仍未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
 
+## First-route world exit reachability 更新（2026-09-30）
+
+本輪新增 `tools/audit_start_world_exit_reachability.mjs` 與 `data/generated/stoneage_start_world_exit_reachability.json`，將 floor-level world graph 再往下驗證成「direct landing 是否真的走得到下一層 source portal」。
+
+結果：
+
+- 1000→100：兩組 portal 都可達，最短 120 / 104 步。
+- 2000→100：兩組 portal 都可達，最短 33 / 82 步。
+- 3000→200：兩組 portal 均至少有一條可達路徑；其中一個 source origin `(73,59)` 因 object image 2 不可走。
+- 4000→200：兩組 portal 的 source origins 雖然各自是 walkable cell，但都與 hometown 3 的 direct landing component 不連通，因此目前是座標級 route blocker。
+
+同時發現原本的 `data/generated/stoneage_map_200.json` 來自 `gmsv/data/map/extra/200`，只有 30×30，不能容納 fixed-C world portal 使用到的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`（3,840,044 bytes），公開地圖編號資料也把 floor 200（加魯卡）對應到這個路徑；但目前仍維持 `source-path identified / runtime-unverified`，不拿未驗證 binary 補成 gameplay runtime。
 ## 現代 3D 卡通化最終視覺目標
 
 最終作品不再以舊版 2D 網頁畫面作為終點。世界地圖、角色、寵物、戰鬥與 UI 都要進化到現代 3D 卡通手遊的完成度：斜俯視 3D 世界、卡通角色與寵物、集中式戰鬥場景、手機 RPG 式 HUD、技能／普攻／防禦／召喚／AUTO 等操作，以及完整的村莊與 NPC 互動框架。詳細規格已寫入 `docs/reference/modern-3d-mobile-visual-ui-target.md`。
