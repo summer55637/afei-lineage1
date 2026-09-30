@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：7b0edf9 — refresh README Item 24114 mapping status
-- 最後更新時間：2026-09-30T17:24:35+08:00
+- 最新 commit：37ee794 — fix README generator persistent schema variable
+- 最後更新時間：2026-09-30T17:26:18+08:00
 - 版本線最高 regression workflow：V3.51
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -30,22 +30,22 @@
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
-| Starter Item 24114 | ⚠️ fail-closed | pinned itemset6.txt = 2,777,181 bytes；row exists as source id 11817 / imagenumber 24114；configured ID 24114 has no direct source-table resolution |
-| New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；pending Item stage 可 resume；completed only after Item adapter succeeds |
+| Starter Item 24114 | ⚠️ fail-closed | source file 2777181 bytes；row exists as id 11817 / imagenumber 24114；configured ID 24114 still has no direct source-table resolution |
+| New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
 
 Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State
 
-目前 source 文件記錄完整 336 個 ItemShop binding。Browser ItemShop bridge 使用同一條 contract，不另建第二套商店或貨幣規則。
+目前 source 文件記錄完整 336 個 ItemShop binding。 Browser ItemShop bridge 使用同一條 contract，不另建第二套商店或貨幣規則。
 
 ### 主要 blocker
 
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Starter Item 24114：pinned row is source id 11817 with imagenumber 24114；_IMPOROVE_ITEMTABLE is disabled, so do not remap imageNumber to Item ID；keep grant fail-closed.
+4. Starter Item 24114：pinned Item source row exists as id 11817 with imagenumber 24114；fixed-C configured ID 24114 is still unresolved，keep fail-closed and do not remap.
 
 ### 永久停用
 
@@ -58,6 +58,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 - item/economy schema：2026-09-30
 - new-player seed：2026-09-30
 - starter Item 24114 audit：2026-09-30；mapping audit v2
+- V3.50 creation/save runtime：2026-09-30
 - idle route catalog：2026-09-30
 - browser ItemShop contract：2026-09-30
 
