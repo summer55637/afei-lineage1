@@ -53,7 +53,7 @@ function validateDependencies({routeCatalog=null,warpCatalog=null,encounterTarge
 }
 
 function routeIdForVariant(route,variant){
-  return \`hometown-\${route?.hometown}/floor-\${route?.entryFloor}-to-\${route?.encounterFloor}/\${variant?.portalId??'unknown'}\`;
+  return `hometown-${route?.hometown}/floor-${route?.entryFloor}-to-${route?.encounterFloor}/${variant?.portalId??'unknown'}`;
 }
 
 function findRoute(routeCatalog,{routeId=null,hometown=null,portalId=null}={}){
