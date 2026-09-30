@@ -257,3 +257,14 @@ V3.21 regression 已納入 GitHub Actions。
 - unresolved Item / Pet definition 與 Charm semantics 不在這層猜測。
 
 V3.22 regression 已納入 GitHub Actions。
+
+## V3.23 NPC Event Orchestrator
+
+新增 `src/stoneage_npc_event_orchestrator.mjs`、`tools/check_npc_event_orchestrator.mjs`、`.github/workflows/check-v323-npc-event-orchestrator.yml` 與 `docs/reference/v323-npc-event-orchestrator.md`。
+
+- 將 V3.21 branch selection + V3.22 atomic event transaction 合成單一 `executeNpcSourceEvent()`。
+- `execute:false` 只產生 source action plan；`execute:true` 才透過 explicit handlers 在 staged clone 上執行。
+- transactionId、revision 與完成分支阻擋都由同一入口處理。
+- unresolved Item / Pet / Charm semantics 仍不會被 orchestrator 偷換成遊戲規則。
+
+V3.23 regression 已納入 GitHub Actions。
