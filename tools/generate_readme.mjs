@@ -56,6 +56,7 @@ const seed = loadJson('data/generated/stoneage_new_player_seed_runtime.json') ??
 const idle = loadJson('data/generated/stoneage_first_idle_route_catalog.json') ?? {};
 const disabled = loadJson('data/generated/stoneage_disabled_features.json') ?? {};
 const starterItemAudit = loadJson('data/generated/stoneage_starter_item_24114_source_audit.json') ?? {};
+const starterItemBuildAudit = loadJson('data/generated/stoneage_starter_item_24114_build_closure_audit.json') ?? {};
 const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
 const browserDocs = readText('docs/reference/v340-browser-itemshop-runtime.md');
@@ -108,7 +109,7 @@ const auto = [
   '| New-player seed | ' + (seed.format ? '✅ source-closed' : '⚠️ missing') + ' | trans ' + (seed.sourceConfig?.transmigration ?? '—') + '；lv ' + (seed.sourceConfig?.level ?? '—') + '；pet lv ' + (seed.sourceConfig?.petLevel ?? '—') + '；gold ' + (seed.sourceConfig?.gold ?? '—') + '；item1 ' + (seed.sourceConfig?.itemSlots?.ITEM1 ?? '—') + ' |',
   '| Player creation | ' + (state.sections?.includes('creation') ? '✅ state contract' : '⚠️ missing') + ' | hometown + stats + elements + starter grant status；still headless，no playable HTML |',
   '| Starter Pet grant | ' + (seed.starterPet?.sourceClosed ? '✅ runtime' : '⚠️ pending') + ' | 16 RNG calls；VariableAI 0；HP after compliance；' + starterPetRankSummary + '；team/activePet unchanged |',
-  '| Starter Item 24114 | ' + (starterItemAudit.resolution?.configuredIdDirectTemplateResolved ? '✅ source-closed' : '⚠️ fail-closed') + ' | source file ' + (starterItemAudit.sourceFiles?.itemset6?.sizeBytes ?? '—') + ' bytes；row exists as id ' + (starterItemAudit.requestedIdEvidence?.matchingRow?.token17SourceId ?? '—') + ' / imagenumber ' + (starterItemAudit.requestedIdEvidence?.matchingRow?.imageNumber ?? '—') + '；configured ID 24114 still has no direct source-table resolution |',
+  '| Starter Item 24114 | ' + (starterItemBuildAudit.resolution?.status === 'fail-closed' ? '⚠️ fail-closed' : '✅ source-closed') + ' | source max ID ' + (starterItemBuildAudit.itemSource?.maxSourceItemId ?? '—') + ' → ITEM_tblen ' + (starterItemBuildAudit.itemSource?.derivedItemTableLength ?? '—') + '；configured 24114 越界；actual row id ' + (starterItemBuildAudit.exactRow?.sourceItemId ?? '—') + ' / imagenumber ' + (starterItemBuildAudit.exactRow?.imageNumber ?? '—') + ' |',
   '| New-player creation → Save | ' + (creationSaveRuntimePresent ? '✅ headless pipeline' : '⚠️ missing') + ' | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |',
   '| Idle route catalog | ' + (idleSummary.towns ? '✅ indexed' : '⚠️ missing') + ' | ' + (idleSummary.pathClosedTowns ?? 0) + ' path-closed towns；' + (idleSummary.eligibleRouteVariants ?? 0) + '/' + (idleSummary.routeVariants ?? 0) + ' eligible variants |',
   '',
@@ -124,7 +125,7 @@ const auto = [
   '### 主要 blocker',
   '',
   ...(route.remainingWork ?? []).slice(0, 3).map((item, index) => (index + 1) + '. ' + item),
-  ...(!starterItemAudit.resolution?.configuredIdDirectTemplateResolved ? ['4. Starter Item 24114：pinned Item source row exists as id ' + (starterItemAudit.requestedIdEvidence?.matchingRow?.token17SourceId ?? '—') + ' with imagenumber 24114；fixed-C configured ID 24114 is still unresolved，keep fail-closed and do not remap.'] : []),
+  ...(!starterItemBuildAudit.resolution?.productionStarterGrantAllowed ? ['4. Starter Item 24114：pinned source max ID ' + (starterItemBuildAudit.itemSource?.maxSourceItemId ?? '—') + ' → ITEM_tblen ' + (starterItemBuildAudit.itemSource?.derivedItemTableLength ?? '—') + '，configured 24114 is out of range；source row is id ' + (starterItemBuildAudit.exactRow?.sourceItemId ?? '—') + ' / imagenumber 24114；keep fail-closed and do not remap.'] : []),
   '',
   '### 永久停用',
   '',
@@ -138,7 +139,7 @@ const auto = [
   '- persistent state：' + (state.generatedAt ?? '—'),
   '- item/economy schema：' + (economy.generatedAt ?? '—'),
   '- new-player seed：' + (seed.generatedAt ?? '—'),
-  '- starter Item 24114 audit：' + (starterItemAudit.generatedAt ?? '—') + '；mapping audit v2',
+  '- starter Item 24114 audit：' + (starterItemAudit.generatedAt ?? '—') + '；mapping audit v2 / build closure v1：' + (starterItemBuildAudit.generatedAt ?? '—'),
   '- V3.50 creation/save runtime：2026-09-30',
   '- idle route catalog：' + (idle.generatedAt ?? '—'),
   '- browser ItemShop contract：' + (browserDocs.match(/更新日期：([0-9-]+)/)?.[1] ?? '—'),
