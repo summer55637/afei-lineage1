@@ -1,4 +1,5 @@
 import { NPC_EVENT_RUNTIME_FORMAT } from './stoneage_npc_event_runtime.mjs';
+import { createEventFlagHandlers } from './stoneage_event_flag_runtime.mjs';
 
 const NPC_EVENT_TRANSACTION_FORMAT='stoneage-npc-event-transaction-v1';
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -24,6 +25,7 @@ function applyNpcEventActionPlan(state,plan,{handlers={},transactionId=null,now=
   const valid=validatePlan(plan);
   if(!valid.ok)return {applied:false,reason:valid.reason,state};
   const next=clone(state);
+  const mergedHandlers={...createEventFlagHandlers(),...(isObject(handlers)?handlers:{})};
   next.runtimeMeta??={};
   next.runtimeMeta.npcEventTransactions??={};
   const txId=String(transactionId??'').trim();
@@ -33,7 +35,7 @@ function applyNpcEventActionPlan(state,plan,{handlers={},transactionId=null,now=
 
   const actionLedger=[];
   const invoke=(role,payload)=>{
-    const handler=handlerFor(handlers,role);
+    const handler=handlerFor(mergedHandlers,role);
     if(!handler)return {ok:false,reason:'event-action-handler-required',role,payload};
     try{
       const result=handler(next,payload);
