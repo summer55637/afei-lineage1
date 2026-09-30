@@ -448,4 +448,5 @@ Regression：`tools/check_item_economy_runtime.mjs`。
 Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`。
 
 Source Item allocator / Item template runtime 已接通：fixed-C 66-field Item make lifecycle、existing-index allocator、ITEM_INITFUNC callback boundary 與 Item / Economy Buy adapter 均已建立，並由 tools/check_item_source_runtime.mjs + CI regression 固定。
-下一階段改為 NPC shop data / price / acquisition graph、crafting、quest reward path 的 source closure；persistent state 與 reward transaction 繼續沿用同一套 existing-item identity，不把未閉合 Item ID、NPC-specific price 或缺少 callback 的行為猜成 gameplay。
+NPC ItemShop Runtime v1 也已接通：固定 `npcgen_shop` → `.arg` → `ItemList/buy_rate/sell_rate` 的 source parser、shop→item 與 item→shop acquisition index、sell limits，以及 Item template cost → Economy Buy adapter 均已建立；由 tools/check_npc_itemshop_runtime.mjs + CI regression 固定。完整 pinned source checkout 仍必須作為 generator input，未在 repo 內假稱已完成 336 個 binding 的資料落盤。
+下一階段改為 NPC/World Graph → shop/service → Item / quest acquisition graph，再進 crafting、quest reward path 的 source closure；persistent state 與 reward transaction 繼續沿用同一套 existing-item identity，不把未閉合 Item ID、NPC-specific price 或缺少 callback 的行為猜成 gameplay。
