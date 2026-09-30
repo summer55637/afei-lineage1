@@ -1,0 +1,44 @@
+{
+  "format": "stoneage-v374-browser-npc-event-execution-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "flow": "World NPC point -> source template changeevent -> ExChangeMan module binding -> NPC interaction gate -> source event branch -> existing first-route reward handlers -> Save Envelope",
+  "explicitAction": "NPC_EVENT_EXECUTE",
+  "productionInstance": {
+    "floor": 1006,
+    "blockIndex": 2,
+    "coordinate": [
+      15,
+      22
+    ]
+  },
+  "expectedMutation": {
+    "items": [
+      20145,
+      2849,
+      20228,
+      18537
+    ],
+    "petId": 274,
+    "endEventId": 366,
+    "charmNoOp": true
+  },
+  "boundaries": [
+    "branch conditions remain source script driven",
+    "GetItem/GetPet/EventFlag handlers remain existing adapters",
+    "Save uses existing commitSave",
+    "transactionId idempotency remains authoritative"
+  ],
+  "failClosed": [
+    "missing module audit",
+    "unresolved event module",
+    "interaction distance failure",
+    "missing handler factory",
+    "unsupported source branch",
+    "save failure"
+  ],
+  "noNewQuestRules": true
+}
