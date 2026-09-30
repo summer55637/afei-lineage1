@@ -14,11 +14,11 @@ const SOURCES={
   group:{path:'gmsv/data/group1.txt',sha:'1be75eb3e56ab16d4b433146ec59538ad651c874'}
 };
 
-const sha=c=>crypto.createHash('sha1').update(Buffer.from(\`blob \${Buffer.byteLength(c,'utf8')}\\0\`)).update(c).digest('hex');
+const sha=c=>crypto.createHash('sha1').update(Buffer.from(`blob ${Buffer.byteLength(c,'utf8')}\\0`)).update(c).digest('hex');
 function readFixed(spec){
   const content=fs.readFileSync(path.join(root,spec.path),'utf8');
   const got=sha(content);
-  if(got!==spec.sha)throw new Error(\`fixed source SHA mismatch for \${spec.path}: \${got}\`);
+  if(got!==spec.sha)throw new Error(`fixed source SHA mismatch for ${spec.path}: ${got}`);
   return content;
 }
 function parseE(s){
