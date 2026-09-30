@@ -67,12 +67,14 @@
 - 3000→200：兩組 portal 均至少有一條可達路徑；其中一個 source origin `(73,59)` 因 object image 2 不可走。
 - 4000→200：兩組 portal 的 source origins 雖然各自是 walkable cell，但都與 hometown 3 的 direct landing component 不連通，因此目前是座標級 route blocker。
 
-同時發現原本的 `data/generated/stoneage_map_200.json` 來自 `gmsv/data/map/extra/200`，只有 30×30，不能容納 fixed-C world portal 使用到的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`（3,840,044 bytes），公開地圖編號資料也把 floor 200（加魯卡）對應到這個路徑；但目前仍維持 `source-path identified / runtime-unverified`，不拿未驗證 binary 補成 gameplay runtime。
+同時發現原本的 `data/generated/stoneage_map_200.json` 來自 `gmsv/data/map/extra/200`，只有 30×30，不能容納 fixed-C world portal 使用到的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`（3,840,044 bytes）；本輪已由 GitHub Actions 直接 checkout fixed-C binary，完成 blob SHA、LS2MAP header、mapset 與 battlemap validation，floor 200 現在是 verified runtime（800×1200）。
 
-本輪又新增 `data/generated/stoneage_start_encounter_target_index.json`：把 fixed-C floor 100 / 200 的 encounter rectangles 降成座標級 target。Floor 100 有 32 個 unconditional + 1 個 mixed + 11 個 unresolved group；Floor 200 有 103 個 unconditional + 5 個 mixed + 5 個 unresolved group。這只是 encounter source-coordinate evidence，尚未把它們宣稱成可走的刷怪路線；仍要等 exact map runtime 後做 landing → encounter path proof。
-## Persistent State Schema 起始（2026-09-30）
+本輪又新增 `data/generated/stoneage_start_encounter_target_index.json` 與 `data/generated/stoneage_start_encounter_path_closure.json`：Floor 100 有 32 個 unconditional rows；Floor 200 有 103 個 unconditional rows。兩張 world map 都已完成 exact runtime，且 8/8 incoming portal groups 都至少有一個 landing 能走到 unconditional encounter rectangle；mixed / unresolved rows 不會被當成無條件刷怪規則。
+## Persistent State Schema / Idle Loop 更新（2026-09-30）
 
-Map / encounter source inputs 現在已足以開始做與 UI 無關的持久狀態層。下一階段會固定 player / pet / inventory / equipment / skill / quest / map-position / idle-settings 的 schema、validation 與 migration contract，仍不建立多個 playable HTML entry。
+已新增 canonical persistent state schema：schema 1；固定 26 格 profession skills、24 格 player item slots、PetBox / Team / ActivePet 分層，以及 legacy schema 30 的 known-field migration。`tools/check_persistent_state_schema.mjs` 已通過 GitHub Actions。
+
+同時已新增 Idle Loop Contract：disabled → moving → encounter_pending → in_battle → settlement → supply_check / moving，另處理 dead 與 offline_resume。Idle / battleSettings 明確屬於放置版產品層，不冒充 fixed-C 規則。
 ## 現代 3D 卡通化最終視覺目標
 
 最終作品不再以舊版 2D 網頁畫面作為終點。世界地圖、角色、寵物、戰鬥與 UI 都要進化到現代 3D 卡通手遊的完成度：斜俯視 3D 世界、卡通角色與寵物、集中式戰鬥場景、手機 RPG 式 HUD、技能／普攻／防禦／召喚／AUTO 等操作，以及完整的村莊與 NPC 互動框架。詳細規格已寫入 `docs/reference/modern-3d-mobile-visual-ui-target.md`。
@@ -115,6 +117,8 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `data/generated/stoneage_new_player_event_closure.json`
 - `docs/reference/start-world-exit-reachability.md`
 - `docs/reference/start-encounter-target-index.md`
+- `docs/reference/idle-loop-contract.md`
+- `docs/reference/persistent-state-schema.md`
 - `data/generated/stoneage_start_destination_warp_coordinates.json`
 
 最後整理：2026-09-30。
@@ -150,6 +154,6 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 
 ## Map source identity update（2026-09-30）
 
-這一輪確認了一個重要 source 規則：fixed-C `gmsv/data/map` 的檔名不一定等於 floor ID。`1000` 使用 `sainasu/samugiru/samugiru`、`3000` 使用 `jyaruga/jaja/jaja`、`4000` 使用 `jyaruga/karutana/karutana`；真正的 floor identity 以 LS2MAP header 為準。這三張圖已直接由 pinned binary 產生 verified runtime，因此現在專案共有 10 張 verified maps。
+這一輪確認了一個重要 source 規則：fixed-C `gmsv/data/map` 的檔名不一定等於 floor ID。`1000` 使用 `sainasu/samugiru/samugiru`、`3000` 使用 `jyaruga/jaja/jaja`、`4000` 使用 `jyaruga/karutana/karutana`；真正的 floor identity 以 LS2MAP header 為準。這三張圖已直接由 pinned binary 產生 verified runtime；加上 floor 100 與正確的 world floor 200 jalga runtime，目前專案共有 11 張 verified maps。
 
 `tools/generate_verified_map_runtime.mjs` 已固定這套流程；battlemap candidate 不足三個時依 fixed-C `readmap.c` 的初始化行為以 `0` 補足三個 slot，不會自行創造戰場編號。
