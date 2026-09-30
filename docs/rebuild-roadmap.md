@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.58 Browser SavePoint service execution
+
+V3.58 將 pinned fixed-C `SavePoint` 從 generic service routing 推進到 headless state mutation。固定 source `gmsv/src/npc/npc_savepoint.c` 明確使用 `RANGE 2`、`CHAR_SAVEPOINT` bit 與 `CHAR_LASTTALKELDER`；`NPC_SavePointInit()` 另以 NPC arg 的 `Born` 建立 elder 的實際 save/復活位置。
+
+新增 `src/stoneage_browser_savepoint_runtime.mjs`、`tools/generate_savepoint_source_catalog.mjs`、fixture、regression 與 CI。Source catalog 以 `path#blockIndex` join create block 與 arg file，預期固定 source 目前的 28 個 SavePoint instances；`NOITEM` path 可直接寫入 `world.savePoint`，`GetItem` path 暫時維持 fail-closed，避免在 inventory stack/delete semantics 尚未完整閉合時猜測。
+
+Canonical Browser State Controller 現在可由 `targetCell + serviceFunctionSet=SavePoint` 導流到 SavePoint runtime。設定 save point 不立即修改 `world.position`，也不做 teleport；它只更新持久化 save/復活目標與已解鎖 elder mask。
+
+本輪沒有改動 Healer、ItemShop、changeevent、Starter Item 24114、4000→200、3000→200 單點 landing 或 GMQUE 永久停用政策。
+
 ## 2026-09-30 新增：V3.57 Browser Healer service execution
 
 V3.57 將 pinned fixed-C `Healer` 從 generic service routing 推進到第一個具體 browser service execution。固定 source `gmsv/src/npc/npc_healer.c` 明確使用 `NPC_Util_CharDistance` 距離 2，且 `NPC_HealerAllHeal()` 將角色 HP/MP 補滿並處理角色持有寵物的 HP/MP。
