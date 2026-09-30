@@ -14,6 +14,13 @@ function npcRelativePath(p){
   const value=String(p??'').replaceAll('\\\\','/');
   return value.startsWith('gmsv/data/npc/')?value.slice('gmsv/data/npc/'.length):value;
 }
+function fixedShopTemplateName(path,blockIndex){
+  const normalized=npcRelativePath(path);
+  if(normalized!=='genout/npcgen.template')return null;
+  if(Number(blockIndex)===8)return 'npcgen_shop';
+  if(Number(blockIndex)===9)return 'npcgen_limitshop';
+  return null;
+}
 
 fs.rmSync('/tmp/v342-world',{recursive:true,force:true});
 fs.mkdirSync('/tmp/v342-world',{recursive:true});
@@ -86,7 +93,8 @@ if(unexpectedCatalog.length)fail('catalog bindings missing from world index: '+u
 for(const row of catalog.shops ? Object.values(catalog.shops) : []){
   const worldRow=worldByKey.get(npcRelativePath(row.source.create.path)+'#'+row.source.create.blockIndex);
   if(worldRow.floorId!==row.floorId)fail('floor join mismatch '+row.shopId+': world='+worldRow.floorId+' catalog='+row.floorId);
-  if(worldRow.templateName.toLowerCase()!==row.templateName.toLowerCase())fail('template join mismatch '+row.shopId);
+  const worldTemplateName=fixedShopTemplateName(worldRow.candidatePath,worldRow.candidateBlockIndex) ?? worldRow.templateName ?? null;
+  if(!worldTemplateName || worldTemplateName.toLowerCase()!==row.templateName.toLowerCase())fail('template join mismatch '+row.shopId+': world='+worldTemplateName+' catalog='+row.templateName);
   if(row.source.arg?.path!==worldRow.fileRef)fail('arg fileRef join mismatch '+row.shopId+': world='+worldRow.fileRef+' catalog='+row.source.arg?.path);
 }
 
