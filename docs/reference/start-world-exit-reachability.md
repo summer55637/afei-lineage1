@@ -38,9 +38,9 @@ fixed source tree 裡另有 gmsv/data/map/jyaruga/jalga，size = 3,840,044 bytes
 ## 下一步
 
 1. 把 "jalga" binary 轉成 verified map runtime，並確認其 LS2MAP header、dimensions、tile/object walkability。
-2. 在 "4000" 上做 connected-component / blocked-cell 分析，確認兩組 portal 為何與 direct landing component 不連通；不用人工 warp 修正。
-3. "1000 / 2000 / 3000" 已有 world-exit coordinate evidence，可接著做 ordinary encounter region 的座標級閉合。
-4. 若 fixed source 最終證明 "4000" 確實沒有可達出口，就把它記成 source-proven route exception，而不是自行修改世界規則。
+2. 在 4000 上繼續做 connected-component / blocked-cell 與 source-transition 分析，確認兩組 portal 為何與 direct landing component 不連通；不用人工 warp 修正。
+3. 1000 / 2000 / 3000 / 4000 的 encounter landing → unconditional rectangle 已完成 floor 100/200 path closure；接下來把這些 closure 接到 Idle Loop。
+4. 若 fixed source 最終證明 4000 確實沒有可達 200 號 portal 出口，就把它記成 source-proven route exception，而不是自行修改世界規則。
 
 對應 generated result："data/generated/stoneage_start_world_exit_reachability.json"；重跑工具："tools/audit_start_world_exit_reachability.mjs"。
 
