@@ -73,6 +73,7 @@ function findRoute(routeCatalog,{routeId=null,hometown=null,portalId=null}={}){
 }
 
 function getPortalGroups(warpCatalog){
+  if(Array.isArray(warpCatalog?.nextFloorPortals))return warpCatalog.nextFloorPortals;
   return [
     ...(warpCatalog?.nextFloorPortals?.to100??[]),
     ...(warpCatalog?.nextFloorPortals?.to200??[])
@@ -285,7 +286,7 @@ function actionPathFromStart(path,floorId,currentStart,revision){
     const current={floorId:Number(floorId),x:Number(cell.x),y:Number(cell.y)};
     const dx=current.x-previous.x,dy=current.y-previous.y;
     if(Math.abs(dx)+Math.abs(dy)!==1)throw new Error('planned route step is not 4-neighbor');
-    actions.push({type:ACTION_WORLD_MOVE_STEP,dx,dy,player:clone(previous),expectedRevision:revision+actions.length+1});
+    actions.push({type:ACTION_WORLD_MOVE_STEP,dx,dy,player:clone(previous),expectedRevision:revision+actions.length});
     previous=current;
   }
   return actions;
@@ -320,7 +321,7 @@ function planFirstRoute(state,{routeId=null,hometown=null,portalId=null,routeCat
     const revision=Number(state?.revision??0);
     if(!Number.isInteger(revision)||revision<0)return {ok:false,reason:'route-state-revision-invalid'};
     const movementToPortal=actionPathFromStart(checked.portalPath,route.entryFloor,statePosition,revision);
-    const portalAction={type:ACTION_WORLD_WARPPOINT_EXECUTE,portalId:String(variant.portalId),player:clone(checked.portalRow.from),expectedRevision:revision+movementToPortal.length+1};
+    const portalAction={type:ACTION_WORLD_WARPPOINT_EXECUTE,portalId:String(variant.portalId),player:clone(checked.portalRow.from),expectedRevision:revision+movementToPortal.length};
     const movementToEncounter=actionPathFromStart(checked.landingPath,route.encounterFloor,checked.portalRow.to,revision+movementToPortal.length+1);
     const allActions=[...movementToPortal,portalAction,...movementToEncounter.map((action,index)=>({...action,expectedRevision:portalAction.expectedRevision+1+index}))];
     const finalPosition=checked.landingPath.length?checked.landingPath[checked.landingPath.length-1]:checked.portalRow.to;
