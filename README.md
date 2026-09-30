@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：5ef5055 — add V3.61 SavePoint pile lifecycle parity
-- 最後更新時間：2026-09-30T18:49:18+08:00
+- 最新 commit：e6496d1 — fix V3.61 SavePoint regression import
+- 最後更新時間：2026-09-30T18:50:26+08:00
 - 版本線最高 regression workflow：V3.61
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
