@@ -181,7 +181,7 @@ function resolveNpcShopBuyRequest({catalog,itemMakeCatalog,shopId,itemId,quantit
   const cost=resolveItemBaseCost(itemMakeCatalog,offer.itemId);
   if(!cost.ok)return {...cost,shopId:offer.shopId};
   const unitPrice=Math.trunc(cost.baseCost*offer.buyRate);
-  if(unitPrice<=0)return {ok:false,reason:'non-positive-source-buy-price',shopId:offer.shopId,itemId:offer.itemId,baseCost:cost.baseCost,buyRate:offer.buyRate};
+  if(unitPrice<0)return {ok:false,reason:'negative-source-buy-price',shopId:offer.shopId,itemId:offer.itemId,baseCost:cost.baseCost,buyRate:offer.buyRate};
   return {ok:true,transaction:{itemId:offer.itemId,baseCost:cost.baseCost,buyRate:offer.buyRate,quantity:Math.max(1,intOr(quantity,1))},offer};
 }
 
