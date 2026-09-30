@@ -1,0 +1,33 @@
+name: V3.20 real tile presentation
+on:
+  push:
+    paths:
+      - 'src/stoneage_tile_presentation.mjs'
+      - 'src/stoneage_client_asset_pack.mjs'
+      - 'src/stoneage_palette_runtime.mjs'
+      - 'tools/check_v320_tile_presentation.mjs'
+      - 'docs/reference/v320-real-tile-presentation.md'
+      - '.github/workflows/v320-real-tile-presentation.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_tile_presentation.mjs'
+      - 'src/stoneage_client_asset_pack.mjs'
+      - 'src/stoneage_palette_runtime.mjs'
+      - 'tools/check_v320_tile_presentation.mjs'
+      - 'docs/reference/v320-real-tile-presentation.md'
+      - '.github/workflows/v320-real-tile-presentation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check tile presentation syntax
+        run: node --check src/stoneage_tile_presentation.mjs
+      - name: Run V3.20 tile presentation regression
+        run: node tools/check_v320_tile_presentation.mjs
