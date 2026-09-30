@@ -361,6 +361,16 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 同時確認目前 `data/generated/stoneage_map_200.json` 是 `gmsv/data/map/extra/200` 的 30×30 map，不能容納 fixed-C world portal 的 x=588、y=1008 等座標。fixed source tree 另有 `gmsv/data/map/jyaruga/jalga`，blob SHA=`dcbb20f0212192fc852e1489a29a0d6d8d4c95ce`、size=3,840,044 bytes；公開地圖編號資料亦把 floor 200（加魯卡）對應到此 path。這一點目前只作 research corroboration，`jalga` 仍標記為 source-path identified / runtime-unverified，沒有用猜測資料產生 runtime。
 
 因此 first-route 下一階段不再只看 world graph，而是以「可從 direct landing 實際走到 source portal」作為 route promotion 條件。4000 需先完成 disconnected component 分析；floor 200 需先取得正確 world-map verified runtime，再繼續接 3000/4000 的 200 層路徑。
+## 2026-09-30 新增：ordinary encounter target 座標索引
+
+新增 data/generated/stoneage_start_encounter_target_index.json 與 tools/generate_start_encounter_target_index.mjs，把 fixed-C encount/group 的 floor 100、200 encounter rectangle 變成可供後續 path testing 的 target set。
+
+- floor 100：46 rows；32 unconditional、1 mixed、11 unresolved group、1 conditional item、1 placeholder。
+- floor 200：114 rows；103 unconditional、5 mixed、5 unresolved group、1 conditional item。
+- floor 100 source map identity 已由 fixed source catalog / public map index 對齊到 gmsv/data/map/sainasu/sainasu；其 LS2MAP runtime 仍待 binary-level verification。
+- floor 200 仍待 gmsv/data/map/jyaruga/jalga 的 binary-level runtime verification。
+
+這一層只做 source-coordinate closure，不把 rectangle 當成玩家一定能走到的可玩刷怪區。下一階段須把 incoming portal landing → encounter rectangle 做 exact walkability/path proof。unresolved group 與 mixed rows 繼續分層處理，不跨版本補值。
 ## 2026-09-30 最新校正：Start-floor NPC 不是座標缺口，而是 template 缺口
 
 `data/generated/stoneage_start_npc_coordinate_closure.json` 已把 46/46 start-floor NPC 的座標全部從 exact `borncorner` source 解出；`data/generated/stoneage_start_npc_reachability.json` 再以 fixed-C interaction contract 驗證 41/46 可達、0 個 unreachable。
