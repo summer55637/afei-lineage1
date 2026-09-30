@@ -10,9 +10,9 @@
 
 另外完成 World NPC Index、NPC Service Index、World Graph 與 NPC Event Action Index：7,979 create blocks 已全部閉合到 template；27 個 file/arg 參照維持 unresolved；5,457 筆 mapwarp 全部通過 source map header 的 floor/座標範圍驗證；world graph 已形成 1,139 個 floor nodes、2,182 條 directed floor edges；NPC service bindings 共 9,335；NPC event DSL 掃描找到 4,860 次 source action-key matches。另已整理 mission、jobdaily、ride、title、question、raceman、racequiz、member shop/pet 等 auxiliary world data。
 
-目前正處於 **item-acquisition / quest-event closure**；reward gap 已改為 direct-source occurrence 掃描，避免用 sample path 估算；NPC acquisition graph 也已建立並校正 EventNo -1 sentinel。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標正在進一步依 `EventNo` / `EventEnd` / NPC-specific script / encounter event owner 反查，不再只用 mission / jobdaily 判定。
+目前正處於 **item-acquisition / quest-event closure**；reward gap 已改為 direct-source occurrence 掃描，避免用 sample path 估算；NPC acquisition graph 已建立並校正 EventNo -1 sentinel；Start Flow Index 也已完成，正式鎖定四個 hometown 出生座標與新手寵物選擇規則。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標正在進一步依 `EventNo` / `EventEnd` / NPC-specific script / encounter event owner 反查，不再只用 mission / jobdaily 判定。
 
-下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path 與事件 owner 分群；目前 236 個 item IDs 與 38 個真正 ownerless event IDs 仍需 closure。優先閉合新手、城鎮、商店、治療、存點、主要任務與傳送流程。
+下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 38 個真正 ownerless event IDs 仍需 closure。最高優先是四個出生村的 first-route：出生長老 → 必要 town service → warp exit → 第一個 encounter / 任務節點。
 
 ## 目的
 
@@ -264,14 +264,15 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 
 ## 建議的下一個實際工作順序
 
-1. **World Data Catalog**：先把 fixed C 的 NPC / mission / shop / warp / event data 全面盤點與來源定位。
-2. **Map Coverage Expansion**：由 7 張 verified map 擴到可形成主要世界路線的完整地圖群。
-3. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
-4. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
-5. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
-6. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
-7. **Authorized Asset Integration**：有合法 client assets 時再打開真實 sprite / tile。
-8. **唯一可玩入口**：前面資料與系統成熟後，才重新建立新的遊戲頁。
+1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
+2. **Start Route Closure**：四個 hometown → town NPC service → warp exit → first encounter / quest。
+3. **Map Coverage Expansion**：由 7 張 verified map 擴到可形成主要世界路線的完整地圖群。
+4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
+5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
+6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
+7. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
+8. **Authorized Asset Integration**：有合法 client assets 時再打開真實 sprite / tile。
+9. **唯一可玩入口**：前面資料與系統成熟後，才重新建立新的遊戲頁。
 
 ## 判定標準
 
