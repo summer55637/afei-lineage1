@@ -173,7 +173,7 @@ function normalizePersistentState(raw, { now = () => new Date().toISOString() } 
 
   const knownTopLevel = new Set([
     'schemaVersion','revision','sourceProfile','player','id','name','level','exp','transmigration','hp','maxHp','mp','maxMp','luck','charm','duelPoint',
-    'playerStats','stats','professionClass','professionLevel','professionSkillPoint','professionSkills','playerItemSlots','inventory','itemRuntime',
+    'playerStats','stats','gold','professionClass','professionLevel','professionSkillPoint','professionSkills','playerItemSlots','inventory','itemRuntime',
     'petBox','team','activePetId','pets','quests','events','titles','world','position','savePoint','idle','battleSettings','equipment','runtimeMeta'
   ]);
   const preservedUnknownKeys = Object.keys(raw).filter(key => !knownTopLevel.has(key));
