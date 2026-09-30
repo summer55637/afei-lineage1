@@ -17,7 +17,7 @@ assert.ok(npc);
 const player={floor:1006,x:15,y:21,facingCell:[1006,15,22]};
 const strictRegistry=createAuditedNpcModuleRegistry(audit,{modules:{}});
 const strictState=freshPersistentState({playerId:'compat-strict'});
-const strict=await dispatchNpcInteraction(strictState,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:strictRegistry,transactionId:'strict-1'});
+const strict=await dispatchNpcInteraction(strictState,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:strictRegistry,runtimeConfig:{compatibilityMode:false,allowExternalCompatibilityAliases:false},transactionId:'strict-1'});
 assert.equal(strict.ok,true); assert.equal(strict.handled,false); assert.equal(strict.stage,'module-resolution');
 const bundle=createFirstRouteRewardHandlers({itemRewardCatalog,itemMakeCatalog,petCatalog,petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,itemCapacity:1000,itemCursor:700,randInclusive:(a,b)=>a===b?a:0});
 assert.equal(bundle.ok,true);
