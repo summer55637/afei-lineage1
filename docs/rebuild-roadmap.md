@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.50 new-player creation → save pipeline
+
+V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipeline：`creation input → hometown world.position → Starter Pet → starter-item adapter boundary → creation.completed → Save Envelope → reload verification`。
+
+`applyPlayerCreationInput()` 現在會將 fixed-C hometown 的 floor/x/y 正式寫進 `state.world.position`；Starter Pet 使用 V3.48 的 rank-closed runtime 寫入 `pets.petBox`；Save 使用既有 `commitSave()` / `parseAndValidateSaveEnvelope()`。
+
+`creation.completed=true` 只有在 starter-item adapter 成功後才設定。因 Item 24114 的 template 仍未閉合，production path 目前會在 `starter-item-template-unresolved` fail-closed，返回可檢查但未完成的 headless state，不產生 completed save。
+
+這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
+
 ## 2026-09-30 新增：V3.49 Starter Item 24114 source audit
 
 V3.49 沿 pinned fixed-C `gmsv/setup.cf → _ITEMSET6_TXT → itemset6file → config.itemfile → ITEM_readItemConfFile → ITEM_makeItem` 重新驗證新手 Item1=24114。
