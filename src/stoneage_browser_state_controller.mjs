@@ -1,160 +1,208 @@
-import { dispatchNpcInteraction } from './stoneage_npc_dispatch_runtime.mjs';
-import { normalizeNpcRuntimeConfig } from './stoneage_npc_runtime_config.mjs';
 import {
-  createBrowserItemShopRuntime,
-  ACTION_NPC_ITEMSHOP_OPEN,
-  ACTION_NPC_ITEMSHOP_BUY,
-  ACTION_NPC_ITEMSHOP_SELL
-} from './stoneage_browser_itemshop_runtime.mjs';
-import {
-  createBrowserWorldNpcRuntime,
-  resolveWorldNpcAt,
-  BROWSER_WORLD_NPC_RUNTIME_FORMAT
-} from './stoneage_browser_world_npc_runtime.mjs';
-import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_itemshop_runtime.mjs';
-import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
-import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
-import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
+  commitIdleEvent,
+  IDLE_EVENTS,
+  IDLE_PERSISTENT_STATE_RUNTIME_FORMAT
+} from './stoneage_idle_persistent_state_runtime.mjs';
+import { simulateFirstEncounter } from './stoneage_idle_simulation.mjs';
+import { prepareOfflineResume, commitOfflineResume, OFFLINE_RESUME_FORMAT } from './stoneage_offline_resume.mjs';
+import { commitOfflineRewardBatch, OFFLINE_REWARD_BATCH_FORMAT } from './stoneage_offline_reward_batch.mjs';
+import { parseAndValidateSaveEnvelope } from './stoneage_save_transaction.mjs';
 
-const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
-const ACTION_NPC_TALK='NPC_TALK';
-const ACTION_NPC_RESOLVE_AT='NPC_RESOLVE_AT';
+const BROWSER_IDLE_RUNTIME_FORMAT='stoneage-browser-idle-runtime-v1';
+const ACTION_IDLE_LIST_ROUTES='IDLE_LIST_ROUTES';
+const ACTION_IDLE_ENABLE='IDLE_ENABLE';
+const ACTION_IDLE_EVENT='IDLE_EVENT';
+const ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER='IDLE_SIMULATE_FIRST_ENCOUNTER';
+const ACTION_IDLE_STATUS='IDLE_STATUS';
+const ACTION_IDLE_OFFLINE_RESUME='IDLE_OFFLINE_RESUME';
+const ACTION_IDLE_OFFLINE_APPLY_REWARDS='IDLE_OFFLINE_APPLY_REWARDS';
+const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
+const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
+const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const clone=value=>JSON.parse(JSON.stringify(value));
 
-function createBrowserStateController({
-  state,
-  moduleAudit=null,
-  compatibilityCatalog=null,
-  modules={},
-  handlerFactory=null,
-  runtimeConfig={},
-  interactionRule=null,
-  maxDistance=null,
-  now=()=>new Date().toISOString(),
-  transactionPrefix='browser-npc',
-  itemShopCatalog=null,
-  itemMakeCatalog=null,
-  worldNpcIndex=null,
-  itemShopRuntimeOptions={},
-  worldNpcRuntimeOptions={},
-  savePointCatalog=null,
-  idleRouteCatalog=null
-}={}){
-  let currentState=state;
-  const config=normalizeNpcRuntimeConfig(runtimeConfig);
-  const worldNpcRuntime=worldNpcIndex
-    ? createBrowserWorldNpcRuntime({worldNpcIndex,...worldNpcRuntimeOptions})
-    : null;
-  const healerRuntime=moduleAudit ? createBrowserHealerRuntime({moduleAudit}) : null;
-  const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
-  const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
-  const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
-    ? (worldNpcIndex
-      ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
-      : createBrowserItemShopRuntime({catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions}))
-    : null;
-  let sequence=0;
+const STATE_EVENTS=new Set([
+  IDLE_EVENTS.DISABLE,
+  IDLE_EVENTS.MOVE_TICK,
+  IDLE_EVENTS.ENCOUNTER_ROLLED,
+  IDLE_EVENTS.BATTLE_STARTED,
+  IDLE_EVENTS.BATTLE_FINISHED,
+  IDLE_EVENTS.REWARD_APPLIED,
+  IDLE_EVENTS.SUPPLY_REQUIRED,
+  IDLE_EVENTS.SUPPLY_DONE,
+  IDLE_EVENTS.PLAYER_DEAD,
+  IDLE_EVENTS.REVIVE_READY
+]);
+
+function routeIdForVariant(route,variant){
+  return `hometown-${route?.hometown}/floor-${route?.entryFloor}-to-${route?.encounterFloor}/${variant?.portalId??'unknown'}`;
+}
+
+function normalizeRouteSelection(catalog,selection={}){
+  if(!isObject(catalog)||catalog.format!=='stoneage-first-idle-route-catalog-v1')return {ok:false,reason:'idle-route-catalog-invalid'};
+  const routeList=Array.isArray(catalog.routes)?catalog.routes:[];
+  if(selection.routeId!=null){
+    const id=String(selection.routeId).trim();
+    for(const route of routeList)for(const variant of Array.isArray(route.variants)?route.variants:[]){
+      if(routeIdForVariant(route,variant)===id)return {ok:true,route,variant,routeId:id};
+    }
+    return {ok:false,reason:'idle-route-not-found',routeId:id};
+  }
+  const hometown=Number.isFinite(Number(selection.hometown))?Math.trunc(Number(selection.hometown)):null;
+  const portalId=selection.portalId==null?null:String(selection.portalId).trim();
+  const route=routeList.find(x=>hometown!=null&&Number(x.hometown)===hometown);
+  if(!route)return {ok:false,reason:'idle-hometown-route-not-found',hometown};
+  const variant=(route.variants??[]).find(x=>portalId==null||String(x.portalId)===portalId);
+  if(!variant)return {ok:false,reason:'idle-route-variant-not-found',hometown,portalId};
+  return {ok:true,route,variant,routeId:routeIdForVariant(route,variant)};
+}
+
+function validateBrowserIdleDependencies({routeCatalog=null}={}){
+  const errors=[];
+  if(!isObject(routeCatalog))errors.push('first idle route catalog required');
+  if(routeCatalog?.format!=='stoneage-first-idle-route-catalog-v1')errors.push('first idle route catalog format mismatch');
+  if(routeCatalog?.fixedSource?.repository!==SOURCE_REPOSITORY)errors.push('fixed source repository mismatch');
+  if(routeCatalog?.fixedSource?.ref!==SOURCE_REF)errors.push('fixed source ref mismatch');
+  const variants=(routeCatalog?.routes??[]).flatMap(route=>(route.variants??[]).map(variant=>({route,variant})));
+  const usable=variants.filter(({route,variant})=>route?.status!=='source_blocked_before_portal'&&Number(variant?.usableLandingCount)>0);
+  if(usable.length<1)errors.push('no source-backed usable idle route variants');
+  return {ok:errors.length===0,errors,usableCount:usable.length};
+}
+
+function listUsableRoutes(catalog){
+  return (catalog.routes??[]).flatMap(route=>(route.variants??[]).map(variant=>({
+    hometown:route.hometown,
+    name:route.name,
+    entryFloor:route.entryFloor,
+    encounterFloor:route.encounterFloor,
+    routeId:routeIdForVariant(route,variant),
+    portalId:variant.portalId,
+    encounterId:variant.encounterId??null,
+    totalWalkBeforeEncounterMin:variant.totalWalkBeforeEncounterMin??null,
+    usableLandingCount:variant.usableLandingCount??0,
+    totalLandingCount:variant.totalLandingCount??0,
+    eligible:route.status!=='source_blocked_before_portal'&&Number(variant.usableLandingCount)>0
+  }))).filter(x=>x.eligible);
+}
+
+function validateActionPayload(event,payload){
+  if(!STATE_EVENTS.has(event))return {ok:false,reason:'idle-event-not-browser-boundary',event};
+  if(event===IDLE_EVENTS.MOVE_TICK&&typeof payload.encounterTriggered!=='boolean')return {ok:false,reason:'idle-move-tick-encounter-trigger-required'};
+  if(event===IDLE_EVENTS.ENCOUNTER_ROLLED&&typeof payload.active!=='boolean')return {ok:false,reason:'idle-encounter-active-required'};
+  if(event===IDLE_EVENTS.REWARD_APPLIED&&typeof payload.supplyRequired!=='boolean')return {ok:false,reason:'idle-reward-supply-required'};
+  return {ok:true};
+}
+
+function createBrowserIdleRuntime({routeCatalog=null}={}){
+  const deps=validateBrowserIdleDependencies({routeCatalog});
+  if(!deps.ok)return {ok:false,format:BROWSER_IDLE_RUNTIME_FORMAT,reason:'dependency-validation-failed',errors:deps.errors};
   return {
-    format:BROWSER_STATE_CONTROLLER_FORMAT,
-    getConfig(){return clone(config);},
-    getState(){return clone(currentState);},
-    async dispatch(action={}){
-      const type=String(action?.type??'').trim();
-      if(type===ACTION_IDLE_LIST_ROUTES||type===ACTION_IDLE_ENABLE||type===ACTION_IDLE_EVENT||type===ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER||type===ACTION_IDLE_STATUS||type===ACTION_IDLE_OFFLINE_RESUME){
-        if(!idleRuntime)return {ok:false,handled:false,stage:'idle-runtime',reason:'browser-idle-runtime-not-configured',state:clone(currentState)};
-        if(idleRuntime.ok!==true)return {ok:false,handled:false,stage:'idle-runtime',reason:idleRuntime.reason??'browser-idle-runtime-invalid',errors:idleRuntime.errors??[],state:clone(currentState)};
-        const result=await idleRuntime.dispatch(currentState,action,{now:action.now??now});
-        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-        return {...result,state:clone(result.state??currentState)};
+    ok:true,
+    format:BROWSER_IDLE_RUNTIME_FORMAT,
+    routeCatalogFormat:routeCatalog.format,
+    usableRouteCount:deps.usableCount,
+    listRoutes:()=>listUsableRoutes(routeCatalog),
+    dispatch:async(state,action={},options={})=>{
+      if(!isObject(action))return {ok:false,handled:false,stage:'action',reason:'invalid-browser-idle-action',state};
+      const type=String(action.type??'').trim();
+      if(type===ACTION_IDLE_LIST_ROUTES)return {ok:true,handled:true,stage:'route-catalog',routes:listUsableRoutes(routeCatalog),state:clone(state)};
+
+      if(type===ACTION_IDLE_STATUS){
+        return {ok:true,handled:true,stage:'idle-status',
+          status:{
+            persistentRevision:Number(state?.revision??0),
+            routeId:state?.idle?.routeId??null,
+            mode:state?.idle?.mode??null,
+            enabled:state?.idle?.enabled===true,
+            idle:clone(state?.idle??null),
+            offline:clone(state?.idle?.offline??null)
+          },state:clone(state)};
       }
-      const requestedNpc=action?.npc??null;
-      const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
-      let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type))) && targetCell){
-        if(!worldNpcRuntime){
-          return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
+      if(type===ACTION_IDLE_OFFLINE_RESUME){
+        const closedAt=String(action.closedAt??'').trim();
+        const resumedAt=String(action.resumedAt??'').trim();
+        if(!closedAt||!resumedAt)return {ok:false,handled:false,stage:'offline-resume',reason:'offline-resume-times-required',state:clone(state)};
+        const prepared=prepareOfflineResume(state,closedAt,resumedAt,{maxSeconds:action.maxSeconds??null});
+        if(!prepared.ok)return {ok:false,handled:false,stage:'offline-resume',reason:prepared.reason,state:clone(state)};
+        const expectedRevision=action.expectedRevision==null?Number(state?.revision??0):Number(action.expectedRevision);
+        if(expectedRevision!==Number(state?.revision??0))return {ok:false,handled:false,stage:'save',reason:'revision-conflict',currentRevision:Number(state?.revision??0),expectedRevision,state:clone(state)};
+        const committed=await commitOfflineResume(state,prepared,{expectedRevision,savedAt:action.savedAt??action.now??options.now??(()=>new Date().toISOString())});
+        if(!committed.ok)return {ok:false,handled:false,stage:'save',reason:committed.reason??'offline-resume-save-failed',errors:committed.errors??[],currentRevision:committed.state?.revision??state?.revision,state:clone(state)};
+        const verified=await parseAndValidateSaveEnvelope(committed.save.envelope,{now:action.now??options.now??(()=>new Date().toISOString())});
+        if(!verified.ok)return {ok:false,handled:false,stage:'save-verify',reason:verified.reason??'offline-resume-save-verify-failed',errors:verified.errors??[],state:clone(state)};
+        return {ok:true,handled:true,stage:'offline-resume',format:OFFLINE_RESUME_FORMAT,offline:clone(committed.window),rewardsSimulated:false,rewardCompletionPending:true,envelope:committed.save.envelope,verification:verified,state:clone(verified.state)};
+      }      if(type===ACTION_IDLE_OFFLINE_APPLY_REWARDS){
+        if(state?.idle?.routeId==null)return {ok:false,handled:false,stage:'offline-reward-completion',reason:'idle-route-required-for-offline-reward-completion',state:clone(state)};
+        const routeCheck=normalizeRouteSelection(routeCatalog,{routeId:String(state.idle.routeId)});
+        if(!routeCheck.ok)return {ok:false,handled:false,stage:'offline-reward-completion',reason:'idle-state-route-not-in-catalog',routeId:state.idle.routeId,state:clone(state)};
+        const batch=action.rewardBatch??action.batch??null;
+        const expectedRevision=action.expectedRevision==null?Number(state?.revision??0):Number(action.expectedRevision);
+        if(expectedRevision!==Number(state?.revision??0))return {ok:false,handled:false,stage:'save',reason:'revision-conflict',currentRevision:Number(state?.revision??0),expectedRevision,state:clone(state)};
+        const committed=await commitOfflineRewardBatch(state,batch,{knownExistingItemIds:action.knownExistingItemIds??null,expectedRevision,savedAt:action.savedAt??action.now??options.now??(()=>new Date().toISOString()),save:action.save!==false});
+        if(!committed.ok)return {...committed,handled:false,stage:committed.stage??'offline-reward-completion',state:clone(committed.state??state)};
+        return {...committed,handled:true,stage:'offline-reward-completion',format:OFFLINE_REWARD_BATCH_FORMAT,route:clone(routeCheck.route),variant:clone(routeCheck.variant),state:clone(committed.state??state)};
+      }
+      if(type===ACTION_IDLE_ENABLE){
+        const selection=normalizeRouteSelection(routeCatalog,action);
+        if(!selection.ok)return {ok:false,handled:false,stage:'route-selection',reason:selection.reason,state:clone(state)};
+        if(selection.route.status==='source_blocked_before_portal'||Number(selection.variant.usableLandingCount)<=0){
+          return {ok:false,handled:false,stage:'route-selection',reason:'idle-route-not-eligible',routeId:selection.routeId,state:clone(state)};
         }
-        if(worldNpcRuntime.ok!==true){
-          return {ok:false,handled:false,stage:'world-npc-resolution',reason:worldNpcRuntime.reason??'world-npc-runtime-invalid',errors:worldNpcRuntime.errors??[],state:clone(currentState)};
-        }
-        const located=resolveWorldNpcAt(worldNpcRuntime.index,targetCell,{
-          template:action.template??null,
-          functionSet:action.serviceFunctionSet??action.functionSet??null
+        const committed=await commitIdleEvent(state,IDLE_EVENTS.ENABLE,{routeId:selection.routeId},{
+          now:action.now??options.now??(()=>new Date().toISOString()),
+          expectedRevision:action.expectedRevision==null?Number(state?.revision??0):action.expectedRevision,
+          source:'browser-idle'
         });
-        if(!located.ok){
-          return {ok:false,handled:false,stage:'world-npc-resolution',reason:located.reason,npcs:located.npcs??[],state:clone(currentState)};
+        return {...committed,handled:committed.ok===true,stage:committed.ok===true?'idle-enable':'save',route:clone(selection.route),variant:clone(selection.variant),routeId:selection.routeId};
+      }
+      if(type===ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER){
+        const selection=normalizeRouteSelection(routeCatalog,action);
+        if(!selection.ok)return {ok:false,handled:false,stage:'route-selection',reason:selection.reason,state:clone(state)};
+        if(selection.route.status==='source_blocked_before_portal'||Number(selection.variant.usableLandingCount)<=0){
+          return {ok:false,handled:false,stage:'route-selection',reason:'idle-route-not-eligible',routeId:selection.routeId,state:clone(state)};
         }
-        resolvedWorldNpc=located.npc;
-      }
-      if(type===ACTION_NPC_RESOLVE_AT){
-        return {ok:true,handled:true,stage:'world-npc-resolution',worldNpc:clone(resolvedWorldNpc),state:clone(currentState)};
-      }
-      if(type===ACTION_NPC_SAVEPOINT_SET||type===ACTION_NPC_SAVEPOINT_CONFIRM){
-        if(!savePointRuntime)return {ok:false,handled:false,stage:'savepoint-runtime',reason:'browser-savepoint-runtime-not-configured',state:clone(currentState)};
-        if(savePointRuntime.ok!==true)return {ok:false,handled:false,stage:'savepoint-runtime',reason:savePointRuntime.reason??'browser-savepoint-runtime-invalid',errors:savePointRuntime.errors??[],state:clone(currentState)};
-        const player=action.player??null;
-        const npc=requestedNpc??resolvedWorldNpc;
-        const result=savePointRuntime.dispatch(currentState,{...action,npc,player,savePointCatalog:action.savePointCatalog??savePointCatalog},{now:action.now??now});
-        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-        return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
-      }
-      if(type===ACTION_NPC_HEALER_USE){
-        if(!healerRuntime)return {ok:false,handled:false,stage:'healer-runtime',reason:'browser-healer-runtime-not-configured',state:clone(currentState)};
-        if(healerRuntime.ok!==true)return {ok:false,handled:false,stage:'healer-runtime',reason:healerRuntime.reason??'browser-healer-runtime-invalid',errors:healerRuntime.errors??[],state:clone(currentState)};
-        const player=action.player??null;
-        const npc=requestedNpc??resolvedWorldNpc;
-        const result=healerRuntime.dispatch(currentState,{...action,npc,player},{maxDistance:action.maxDistance??maxDistance,now:action.now??now});
-        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-        return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
-      }
-      if([ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type)){
-        if(!itemShopRuntime)return {ok:false,handled:false,stage:'itemshop-runtime',reason:'browser-itemshop-runtime-not-configured',state:clone(currentState)};
-        if(itemShopRuntime.ok!==true)return {ok:false,handled:false,stage:'itemshop-runtime',reason:itemShopRuntime.reason??'browser-itemshop-runtime-invalid',errors:itemShopRuntime.errors??[],state:clone(currentState)};
-        const transactionId=String(action.transactionId??`${transactionPrefix}-itemshop-${++sequence}`).trim();
-        const result=itemShopRuntime.dispatch(currentState,{...action,npc:requestedNpc??resolvedWorldNpc,transactionId},{
-          interactionRule:action.interactionRule??interactionRule,
-          maxDistance:action.maxDistance??maxDistance
+        const expectedRevision=action.expectedRevision==null?Number(state?.revision??0):Number(action.expectedRevision);
+        if(expectedRevision!==Number(state?.revision??0)){
+          return {ok:false,handled:false,stage:'save',reason:'revision-conflict',currentRevision:Number(state?.revision??0),expectedRevision,state:clone(state)};
+        }
+        const simulation=await simulateFirstEncounter(state,selection.route,selection.variant,{
+          encounter:action.encounter??{floorId:selection.route.encounterFloor,encounterId:selection.variant.encounterId??null},
+          battleResult:action.battleResult??null,
+          sourceBattleResult:action.sourceBattleResult??null,
+          policy:isObject(action.policy)?action.policy:{},
+          knownExistingItemIds:action.knownExistingItemIds??null,
+          now:action.now??options.now??(()=>new Date().toISOString()),
+          save:action.save!==false
         });
-        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-        return {...result,state:clone(result.state??currentState)};
+        if(!simulation.ok){
+          return {ok:false,handled:false,stage:'idle-simulation',reason:simulation.reason??'idle-simulation-failed',errors:simulation.errors??[],state:clone(simulation.state??state),route:clone(selection.route),variant:clone(selection.variant),routeId:selection.routeId};
+        }
+        return {ok:true,handled:true,stage:'idle-simulation',route:clone(selection.route),variant:clone(selection.variant),routeId:selection.routeId,simulation,state:clone(simulation.state??state)};
       }
-      if(type!==ACTION_NPC_TALK){
-        return {ok:false,handled:false,reason:'unsupported-browser-action',type,state:clone(currentState)};
+      if(type===ACTION_IDLE_EVENT){
+        const event=String(action.event??'').trim();
+        const payload=isObject(action.payload)?clone(action.payload):{};
+        const checked=validateActionPayload(event,payload);
+        if(!checked.ok)return {ok:false,handled:false,stage:'event-validation',reason:checked.reason,event,state:clone(state)};
+        if(isObject(state?.idle)&&state.idle.routeId!=null){
+          const routeCheck=normalizeRouteSelection(routeCatalog,{routeId:String(state.idle.routeId)});
+          if(!routeCheck.ok&&event!==IDLE_EVENTS.DISABLE)return {ok:false,handled:false,stage:'route-binding',reason:'idle-state-route-not-in-catalog',routeId:state.idle.routeId,state:clone(state)};
+        }else if(event!==IDLE_EVENTS.DISABLE){
+          return {ok:false,handled:false,stage:'route-binding',reason:'idle-route-not-enabled',state:clone(state)};
+        }
+        const committed=await commitIdleEvent(state,event,payload,{
+          now:action.now??options.now??(()=>new Date().toISOString()),
+          expectedRevision:action.expectedRevision==null?Number(state?.revision??0):action.expectedRevision,
+          source:'browser-idle'
+        });
+        return {...committed,handled:committed.ok===true,stage:committed.ok===true?'idle-event':'save'};
       }
-      const transactionId=String(action.transactionId??`${transactionPrefix}-${++sequence}`).trim();
-      const player=action.player??null;
-      const npc=requestedNpc??resolvedWorldNpc;
-      const result=await dispatchNpcInteraction(currentState,npc,player,{
-        interactionRule:action.interactionRule??interactionRule,
-        maxDistance:action.maxDistance??maxDistance,
-        action:'talk',
-        modules:action.modules??modules,
-        moduleAudit:action.moduleAudit??moduleAudit,
-        compatibilityCatalog:action.compatibilityCatalog??compatibilityCatalog,
-        runtimeConfig:action.runtimeConfig??config,
-        handlerFactory:action.handlerFactory??handlerFactory,
-        now:action.now??now,
-        transactionId
-      });
-      if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-      return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
+      return {ok:false,handled:false,stage:'action',reason:'unsupported-browser-idle-action',type,state:clone(state)};
     }
   };
 }
 
 export {
-  BROWSER_STATE_CONTROLLER_FORMAT,
-  ACTION_NPC_TALK,
-  ACTION_NPC_ITEMSHOP_OPEN,
-  ACTION_NPC_ITEMSHOP_BUY,
-  ACTION_NPC_ITEMSHOP_SELL,
-  ACTION_NPC_HEALER_USE,
-  ACTION_NPC_SAVEPOINT_SET,
-  ACTION_NPC_SAVEPOINT_CONFIRM,
-  ACTION_NPC_RESOLVE_AT,
-  BROWSER_WORLD_NPC_RUNTIME_FORMAT,
-  BROWSER_HEALER_RUNTIME_FORMAT,
-  BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
   ACTION_IDLE_LIST_ROUTES,
   ACTION_IDLE_ENABLE,
@@ -162,5 +210,14 @@ export {
   ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER,
   ACTION_IDLE_STATUS,
   ACTION_IDLE_OFFLINE_RESUME,
-  createBrowserStateController
+  ACTION_IDLE_OFFLINE_APPLY_REWARDS,
+  SOURCE_REPOSITORY,
+  SOURCE_REF,
+  IDLE_PERSISTENT_STATE_RUNTIME_FORMAT,
+  routeIdForVariant,
+  normalizeRouteSelection,
+  validateBrowserIdleDependencies,
+  listUsableRoutes,
+  validateActionPayload,
+  createBrowserIdleRuntime
 };
