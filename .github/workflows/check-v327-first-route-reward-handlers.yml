@@ -1,0 +1,35 @@
+name: Check V3.27 first-route reward handlers
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_first_route_reward_handlers.mjs'
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'tools/check_v327_first_route_reward_handlers.mjs'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v327-first-route-reward-handlers.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_first_route_reward_handlers.mjs
+          node --check src/stoneage_event_flag_runtime.mjs
+          node --check src/stoneage_npc_event_transaction.mjs
+          node --check tools/check_v327_first_route_reward_handlers.mjs
+      - name: Run V3.27 first-route handler regression
+        run: node tools/check_v327_first_route_reward_handlers.mjs
