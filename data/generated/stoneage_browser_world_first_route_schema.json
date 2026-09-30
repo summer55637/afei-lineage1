@@ -1,0 +1,46 @@
+{
+  "format": "stoneage-v378-browser-world-first-route-planning-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "inputs": {
+    "routeCatalog": "data/generated/stoneage_first_idle_route_catalog.json",
+    "warpPointCatalog": "data/generated/stoneage_start_destination_warp_coordinates.json",
+    "encounterTargetIndex": "data/generated/stoneage_start_encounter_target_index.json",
+    "mapRuntime": "src/stoneage_map_runtime.mjs"
+  },
+  "action": "WORLD_FIRST_ROUTE_PLAN",
+  "semantics": {
+    "mode": "read-only headless browser navigation plan",
+    "entry": "canonical world.position must equal a verified direct hometown landing",
+    "movement": "planner emits four-neighbor WORLD_MOVE_STEP actions only",
+    "portal": "planner emits one exact WORLD_WARPPOINT_EXECUTE action at a source mapwarp row",
+    "encounterBoundary": "final position must be inside the selected unconditional encounter rectangle",
+    "rngConsumed": false,
+    "battleStarted": false,
+    "stateMutation": "none"
+  },
+  "sourceBackedBoundaries": {
+    "routeEligibility": "Only variants already marked usable by the first-idle-route catalog are accepted.",
+    "walkability": "Path search uses sourceMapWalkableAt with flying=false.",
+    "rectangleInclusion": "Matches fixed-C CoordinateInRect inclusive bounds.",
+    "originalRouteClaim": "Planner path ordering is a browser navigation product choice, not a claim about the original client's exact input sequence."
+  },
+  "scope": {
+    "eligibleVariants": 6,
+    "portalGroups": 8,
+    "portalRows": 37,
+    "blockedHometown": 4000
+  },
+  "failClosed": [
+    "invalid or mismatched source catalogs",
+    "route not found or not eligible",
+    "state not at a direct hometown landing",
+    "entry/destination map unresolved",
+    "portal origin unreachable",
+    "portal destination cannot reach the selected unconditional encounter rectangle",
+    "encounter target missing"
+  ]
+}
