@@ -43,13 +43,17 @@ const canWalk=(x,y)=>{
   if(x<0||y<0||x>=width||y>=height)return false;
   const i=y*width+x;
   const tile=Number(map.tiles?.[i]),obj=Number(map.objects?.[i]);
-  const objectWalk=imageAttrs(obj)===1;
-  const tileWalk=imageAttrs(tile)===1;
-  const rule=objectWalk ? (tileWalk?1:0) : 0;
-  const objectMode=(mapset?.walkableByImageId?.[String(obj)]??null);
-  const objectWalkMode=Number(objectMode);
-  const result=Object.prototype.hasOwnProperty.call(mapset?.walkableByImageId||{},String(obj)) ? (objectWalkMode===2 || (objectWalkMode===1 && tileWalk)) : false;
-  return result && rule===result;
+  const objectKey=String(obj),tileKey=String(tile);
+  if(!Object.prototype.hasOwnProperty.call(mapset?.walkableByImageId||{},objectKey))return false;
+  if(!Object.prototype.hasOwnProperty.call(mapset?.walkableByImageId||{},tileKey))return false;
+  const objectMode=Number(mapset.walkableByImageId[objectKey]);
+  const tileWalk=Number(mapset.walkableByImageId[tileKey])===1;
+  switch(objectMode){
+    case 0:return false;
+    case 1:return tileWalk;
+    case 2:return true;
+    default:return false;
+  }
 };
 for(let i=0;i<n;i++){ const x=i%width,y=Math.floor(i/width); if(canWalk(x,y)) walkable[i]=1; }
 
@@ -70,7 +74,7 @@ for(let s=0;s<n;s++){
 }
 
 const componentAt=(x,y)=>walkable[y*width+x] ? comp[y*width+x] : -1;
-const direct=[...[80,90],[80,91]];
+const direct=[[80,90],[80,91]];
 const portals=[[104,55],[104,56],[101,96],[101,97]];
 const directComponents=[...new Set(direct.map(([x,y])=>componentAt(x,y)))];
 const portalComponents=[...new Set(portals.map(([x,y])=>componentAt(x,y)))];
