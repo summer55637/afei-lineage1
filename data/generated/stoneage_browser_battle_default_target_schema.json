@@ -1,0 +1,19 @@
+{
+  "format": "stoneage-v399-browser-battle-default-target-runtime-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_DEFAULT_TARGET_RESOLVE",
+  "fixedC": {
+    "function": "gmsv/src/battle/battle.c::BATTLE_DefaultAttacker",
+    "scan": "for i=0..BATTLE_ENTRY_MAX-1 on requested side",
+    "eligibility": "entry exists -> not RESCUE -> BATTLE_TargetCheck passes",
+    "rng": "RAND(0,candidateCount-1)",
+    "emptyResult": -1,
+    "bidFormula": "slot + side * SIDE_OFFSET"
+  },
+  "browser": {
+    "rng": "defaultTargetRoll 0..candidateCount-1 caller injected",
+    "persistentMutation": false,
+    "damageExecuted": false,
+    "integration": "V3.98 invalid target reports defaultAttackerRequired; V3.99 resolves it without changing context"
+  }
+}
