@@ -2,13 +2,13 @@
 
 更新日期：2026-09-30。
 
-V3.47 將 V3.45 source-closed starter Pet 真正寫入 canonical Persistent State。
+V3.47 將 V3.45 source-closed starter Pet seed 接到 canonical Persistent State。
 
 ## Fixed-C execution
 
 `ENEMY_createPetFromEnemyIndex` 的 RNG 與建立順序維持：1 次 level + 4 次 base stat + 10 次 allocation + 1 次 PetMailEffect = 16 次。Pet 的 VariableAI 由 source 明確設為 0；compliance 後 HP 設為 MaxHP。
 
-Starter Pet 的四個 hometown mapping：0→EnemyID1/TempNo2、1→2/112、2→3/102、3→4/34。
+Starter Pet 的四個 hometown mapping：0→EnemyID1/TempNo2、1→2/112、2→3/102、3→4/34。Enemy / EnemyBase 建立欄位與 RNG 已接入；`ENEMY_getRank` 尚未接入，因此 pet rank 明確保持 pending。
 
 ## State boundary
 
