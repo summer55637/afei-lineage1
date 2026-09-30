@@ -32,7 +32,8 @@ function isEventFlagSet(state,kind,eventId){
   const events=normalizeEventState(state);
   const words=kind==='end'?events.endWords:kind==='now'?events.nowWords:null;
   if(!words)return false;
-  return (Number(words[loc.array]??0)&loc.mask)===loc.mask;
+  const word=Number(words[loc.array]??0);
+  return Number.isFinite(word) && Math.floor(word/loc.mask)%2===1;
 }
 
 function setEventFlag(state,kind,eventId,value=true){
@@ -43,7 +44,8 @@ function setEventFlag(state,kind,eventId,value=true){
   if(!words)return {ok:false,reason:'invalid-event-flag-kind',kind};
   ensureWord(words,loc.array);
   const before=Number(words[loc.array]??0);
-  const after=value?(before|loc.mask):(before&~loc.mask);
+  const currentlySet=Math.floor(before/loc.mask)%2===1;
+  const after=value?(currentlySet?before:before+loc.mask):(currentlySet?before-loc.mask:before);
   words[loc.array]=after;
   return {ok:true,changed:before!==after,eventId:loc.eventId,array:loc.array,shift:loc.shift,mask:loc.mask,value:Boolean(value)};
 }
