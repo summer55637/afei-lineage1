@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.57 Browser Healer service execution
+
+V3.57 將 pinned fixed-C `Healer` 從 generic service routing 推進到第一個具體 browser service execution。固定 source `gmsv/src/npc/npc_healer.c` 明確使用 `NPC_Util_CharDistance` 距離 2，且 `NPC_HealerAllHeal()` 將角色 HP/MP 補滿並處理角色持有寵物的 HP/MP。
+
+新增 `src/stoneage_browser_healer_runtime.mjs` 與 `NPC_HEALER_USE`。Runtime 先驗證 audited `Healer` functionSet 與固定 repository/ref，再過距離 gate，最後寫入 Persistent State；寵物採 canonical `pets.petBox`，缺少 max HP/MP 就 fail-closed，避免 partial recovery。
+
+Canonical Browser State Controller 現在可由 `targetCell + serviceFunctionSet=Healer` 自動解析 World NPC 後執行恢復。加入 fixture、regression、CI 與 V3.57 reference doc。
+
+本輪仍不宣稱 fixed-C party-wide healer parity，也沒有建立 playable HTML；changeevent、Starter Item 24114、4000→200、3000→200 單點 landing 與 GMQUE 政策均不變。
+
 ## 2026-09-30 新增：V3.50 new-player creation → save pipeline
 
 V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipeline：`creation input → hometown world.position → Starter Pet → starter-item adapter boundary → creation.completed → Save Envelope → reload verification`。
