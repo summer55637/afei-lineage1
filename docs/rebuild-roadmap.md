@@ -12,6 +12,16 @@ V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipelin
 
 這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
 
+## 2026-09-30 新增：V3.52 Starter Item 24114 exhaustive execution audit
+
+V3.52 在 V3.51 的 source-ID mapping audit 上再往下閉合一層：固定 `itemset6.txt` 是唯一正式 Item runtime input；`.bak` 不參與 `init.c` 的 `ITEM_readItemConfFile(getItemfile())`；`chatmagic.c` reload 也使用相同 loader。
+
+repo 內的 `stoneage_item_make_runtime.json` 使用同一 pinned Item blob SHA，10,737 個 templates 中 `byItemId[11817]` 正確保留 `imagenumber=24114`，而 `byItemId[24114]` 不存在。這一層正式鎖定「generated catalog 沒有把 imageNumber 當成 Item ID」。
+
+因此 fixed-C 的 `CHAR_loginAddItemForNew()` → `ITEM_makeItemAndRegist(24114)` → `ITEM_makeItem()` → `ITEM_CHECKITEMTABLE(24114)` 仍沒有合法的 source-ID mapping。V3.52 regression 與 GitHub Actions 會同時驗證 source data、loader call site、generated catalog 與 final resolution。
+
+結論維持 fail-closed：不把 11817 改成 24114，不用其他版本／port／外部資料補 template，不建立 playable HTML。
+
 ## 2026-09-30 新增：V3.51 Starter Item 24114 source mapping audit
 
 V3.51 修正 V3.49 的錯誤資料判讀：固定 pinned commit 的 `gmsv/data/itemset6.txt` 並非 0 bytes，而是 2,777,181 bytes、10,744 行。
