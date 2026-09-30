@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 import { parseLS2Map } from './stoneage_ls2map_parser.mjs';
 import { sourceMapWalkableAt } from '../src/stoneage_map_runtime.mjs';
@@ -29,7 +30,7 @@ function walk(dir, files = []) {
 }
 
 function gitBlobSha(buffer) {
-  return require('node:crypto').createHash('sha1')
+  return crypto.createHash('sha1')
     .update(Buffer.from('blob ' + buffer.length + String.fromCharCode(0), 'utf8'))
     .update(buffer)
     .digest('hex');
