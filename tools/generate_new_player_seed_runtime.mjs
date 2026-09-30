@@ -111,7 +111,7 @@ const enemySource={path:'gmsv/data/enemy1.txt',blobSha:gitBlobSha(enemyBytes)};
 const baseSource={path:'gmsv/data/enemybase1.txt',blobSha:gitBlobSha(baseBytes)};
 const enemyRankBytes=bytes('gmsv/src/char/enemy.c');
 const enemyRankFunction=extractFunctionSource(enemyRankBytes.toString('utf8').replace(/\r/g,''),'int ENEMY_getRank( int array, int tarray )');
-for(const row of [[100,2.5],[95,2],[90,1.5],[85,1],[80,0.5],[0,0]]){
+for(const row of [[100,'2.5'],[95,'2.0'],[90,'1.5'],[85,'1.0'],[80,'0.5'],[0,'0.0']]){
   if(!enemyRankFunction.includes('{ '+row[0]+', '+row[1]+'}'))fail('ENEMY_getRank rank table row drifted: '+row[0]);
 }
 for(const token of ['E_T_BASEVITAL','E_T_BASESTR','E_T_BASETGH','E_T_BASEDEX']){
