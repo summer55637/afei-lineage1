@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v2",
+  "format": "stoneage-start-route-closure-v3",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -542,5 +542,15 @@
         ]
       }
     }
+  ],
+  "coordinateResolution": {
+    "newPlayerEventOwner": {
+      "ownerClosed": true,
+      "coordinateResolvedHometowns": 4,
+      "interactionContract": "not_yet_closed"
+    }
+  },
+  "nextActions": [
+    "Resolve changeevent/xinshou interaction stance rule before counting the four spawn-overlapping NPCs as reachable service interactions."
   ]
 }
