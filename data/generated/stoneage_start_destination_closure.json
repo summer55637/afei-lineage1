@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-destination-closure-v1",
+  "format": "stoneage-start-destination-closure-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -15,7 +15,17 @@
   "sourceEvidence": {
     "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
     "encountRowsTotal": 1197,
-    "activeEncounterDefinition": "probMax > 0 AND at least one numeric group id"
+    "activeEncounterDefinition": "probMax > 0 AND at least one numeric group id",
+    "itemSourcePath": "gmsv/data/itemset6.txt",
+    "itemSourceBlobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
+    "groupSourcePath": "gmsv/data/group1.txt",
+    "groupSourceBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874",
+    "encounterGateDefinitions": {
+      "placeholder": "probMax <= 0 OR no group id",
+      "unconditional": "active encounter row with at least one group having appearByItemId=-1 and notAppearByItemId=-1 and no encounter event gate",
+      "conditionalItem": "active encounter row whose usable group requires an inventory item",
+      "unresolvedItemGate": "conditional item ID is not found in fixed-source itemset6"
+    }
   },
   "statistics": {
     "hometowns": 4,
@@ -23,9 +33,10 @@
     "exactSourceMaps": 1,
     "landingPoints": 7,
     "walkabilityVerifiedPoints": 2,
-    "activeEncounterDestinationFloors": 2,
+    "activeEncounterDestinationFloors": 0,
     "placeholderOnlyDestinationFloors": 2,
-    "unresolvedDestinationMaps": 3
+    "unresolvedDestinationMaps": 3,
+    "conditionalEncounterDestinationFloors": 2
   },
   "towns": [
     {
@@ -76,6 +87,14 @@
         ],
         "depth": 1,
         "reason": "first reachable floor with active encounter evidence in directed world graph"
+      },
+      "nearestUnconditionalEncounter": {
+        "floor": 100,
+        "path": [
+          1000,
+          100
+        ],
+        "depth": 1
       }
     },
     {
@@ -194,6 +213,14 @@
         ],
         "depth": 0,
         "reason": "direct destination has active encounter row"
+      },
+      "nearestUnconditionalEncounter": {
+        "floor": 100,
+        "path": [
+          2000,
+          100
+        ],
+        "depth": 1
       }
     },
     {
@@ -272,6 +299,14 @@
         ],
         "depth": 0,
         "reason": "direct destination has active encounter row"
+      },
+      "nearestUnconditionalEncounter": {
+        "floor": 200,
+        "path": [
+          3000,
+          200
+        ],
+        "depth": 1
       }
     },
     {
@@ -322,13 +357,22 @@
         ],
         "depth": 1,
         "reason": "first reachable floor with active encounter evidence in directed world graph"
+      },
+      "nearestUnconditionalEncounter": {
+        "floor": 200,
+        "path": [
+          4000,
+          200
+        ],
+        "depth": 1
       }
     }
   ],
   "status": {
     "destinationWalkability": "partial",
     "directDestinationEncounter": "partial",
-    "fullFirstRoute": "partial"
+    "fullFirstRoute": "partial",
+    "unconditionalEncounterRoute": "partial"
   },
-  "policy": "Do not treat zero-probability/no-group encounter placeholders as active encounters. Missing fixed-source destination map blobs remain unresolved and are never replaced by guessed or cross-version maps."
+  "policy": "Do not treat zero-probability/no-group rows as active encounters. Active groups with appearByItemId/notAppearByItemId are conditional and cannot be promoted to a normal idle route until the item/event gate is source-closed. Missing fixed-source destination map blobs remain unresolved and are never replaced by guessed or cross-version maps."
 }
