@@ -1,0 +1,19 @@
+{
+  "format": "stoneage-v382-browser-world-encounter-persistence-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_ENCOUNTER_ROLL_COMMIT",
+  "persistentField": "world.encounter.cep",
+  "initialValue": 0,
+  "fixedCReference": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "netBlobSha": "91b7911e48b9fc8e76eec9cc400efebbd7b1ef48",
+    "connectionField": "Connect[fd].CEP"
+  },
+  "semantics": {
+    "singlePlayerAdaptation": "persist the latest connection-scoped CEP for save/offline continuity",
+    "rollSource": "V3.81 WORLD_ENCOUNTER_ROLL",
+    "save": "commitSave plus Save Envelope verification",
+    "battleStarted": false
+  }
+}
