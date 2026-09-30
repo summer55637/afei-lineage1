@@ -36,7 +36,7 @@ jobs:
           grep -q '#define ITEM_ID_TOKEN_INDEX 17' /tmp/StoneAge/gmsv/src/item/item.c
           grep -q 'ITEM_readItemConfFile( getItemfile())' /tmp/StoneAge/gmsv/src/init.c
           grep -q 'ITEM_readItemConfFile( getItemfile())' /tmp/StoneAge/gmsv/src/char/chatmagic.c
-          line="$(sed -n '3602p' /tmp/StoneAge/gmsv/data/itemset6.txt)"
-          printf '%s\n' "$line" | awk -F',' '$17=="11817" && $18=="24114" && $19=="9900" && $20=="16" {ok=1} END {exit ok?0:1}'
+          awk -F',' '$17=="11817" && $18=="24114" && $19=="9900" && $20=="16" {found=1;count++} END {exit (found && count==1)?0:1}' /tmp/StoneAge/gmsv/data/itemset6.txt
+          awk -F',' '$17=="24114" {found=1} END {exit found?1:0}' /tmp/StoneAge/gmsv/data/itemset6.txt
       - name: Run V3.52 regression
         run: node tools/check_v352_starter_item_24114_exhaustive_execution_audit.mjs
