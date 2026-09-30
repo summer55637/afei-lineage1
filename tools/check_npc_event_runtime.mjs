@@ -42,6 +42,7 @@ assert.equal(selected120.matched,true);
 assert.equal(selected120.index,1);
 assert.deepEqual(selected120.branch.getItem,[20866,2912,2909,2911]);
 assert.deepEqual(selected120.branch.getPet,[2057]);
+assert.deepEqual(selected120.branch.endSetFlg,[365]);
 
 const ctx150={
   level:150,
