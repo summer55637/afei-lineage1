@@ -3,6 +3,14 @@
 更新日期：2026-09-30
 
 
+## 2026-09-30 新增：V3.65 Idle Loop → Persistent State binding
+
+V3.65 將既有 Idle Loop state machine 正式綁到 canonical Persistent State。新增 `stoneage_idle_persistent_state_runtime.mjs`：每個合法 Idle event 都先驗證 Persistent State，再以既有 `transitionIdle()` 取得 transition，最後同步 `state.idle.enabled/mode/routeId/lastSimulatedAt/offline`。pending encounter/battle/reward 保留為 ephemeral runtime payload，不偷偷擴充持久 schema。
+
+新增 `commitIdleEvent()`，使用既有 `commitSave()` → Save Envelope → `parseAndValidateSaveEnvelope()`，revision 只在真正 commit 時增加一次；expectedRevision 不符直接 fail-closed。這讓 Idle Loop 與 NPC / Item / SavePoint 同樣遵守 canonical state transaction boundary。
+
+V3.65 不定義新的戰鬥結果、不計算 encounter probability、不指定 offline reward、補給、捕捉或背包滿規則；那些仍是 product-policy / battle-runtime slots。
+
 ## 2026-09-30 新增：V3.64 ChangeEvent source resolution
 
 pinned fixed-C 的 jaruga/event/event.template 實際綁定 changeevent → ExChangeMan。V3.64 將這條 source-backed binding 接入 strict module registry、dispatcher、reachability 與 Browser State Controller；五個 start-floor changeevent instances 恢復為 source-resolved active interactions。

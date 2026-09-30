@@ -29,5 +29,24 @@
     "invent unresolved encounter groups",
     "promote mixed encounter rows to unconditional",
     "treat product policy as fixed-C parity"
-  ]
+  ],
+  "persistentStateBindings": [
+    "idle.enabled",
+    "idle.mode",
+    "idle.routeId",
+    "idle.lastSimulatedAt",
+    "idle.offline.resumePending",
+    "idle.offline.lastResumedAt",
+    "idle.offline.lastClosedAt",
+    "idle.offline.elapsedSeconds",
+    "idle.offline.accruedSeconds",
+    "idle.offline.rewardsApplied"
+  ],
+  "ephemeralRuntimePayloads": [
+    "pendingEncounter",
+    "pendingBattle",
+    "pendingReward"
+  ],
+  "saveBoundary": "commitSave -> Save Envelope SHA-256 -> parseAndValidateSaveEnvelope",
+  "revisionBoundary": "Idle state mutation does not silently increment revision; committed idle events increment through commitSave exactly once"
 }
