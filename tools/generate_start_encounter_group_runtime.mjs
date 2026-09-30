@@ -55,7 +55,7 @@ for(const raw of enemyBaseSource.content.split(/\r?\n/)){
   if(p.length<39||!p[0]||p[0].startsWith('#'))continue;
   const tempNo=toInt(p[6]);
   if(tempNo==null)continue;
-  enemyBaseByTempNo.set(tempNo,{tempNo,size:toInt(p[38]),name:String(p[0]).trim()});
+  enemyBaseByTempNo.set(tempNo,{tempNo,size:toInt(p[38]),name:String(p[0]).trim(),initNum:toInt(p[7]),lvupPoint:Number(p[8]),baseVital:toInt(p[9]),baseStr:toInt(p[10]),baseTgh:toInt(p[11]),baseDex:toInt(p[12]),modAi:toInt(p[13]),get:toInt(p[14]),earth:toInt(p[15]),water:toInt(p[16]),fire:toInt(p[17]),wind:toInt(p[18]),poison:toInt(p[19]),paralysis:toInt(p[20]),sleep:toInt(p[21]),stone:toInt(p[22]),drunk:toInt(p[23]),confusion:toInt(p[24]),petSkills:p.slice(25,32).map(v=>toInt(v)),rare:toInt(p[32]),critical:toInt(p[33]),counter:toInt(p[34]),slot:toInt(p[35]),imageNo:toInt(p[36]),petFlg:toInt(p[37])});
 }
 
 for(const raw of enemySource.content.split(/\r?\n/)){
