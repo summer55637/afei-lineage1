@@ -14,7 +14,7 @@
   "status": {
     "sourceRouteSpine": "closed",
     "fullFirstRoute": "partial",
-    "definition": "Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed only for NPC instances with resolved numeric coordinates and verified interaction semantics. Four xinshou changeevent NPCs are coordinate-resolved but their same-cell interaction stance is not yet source-closed. Full first-route closure remains open until remaining NPC coordinates, changeevent interaction stance, destination-map walkability, and reward/quest ownership closures are complete.",
+    "definition": "Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed only for NPC instances with resolved numeric coordinates and verified interaction semantics. Four xinshou changeevent NPCs are coordinate-resolved but their same-cell interaction stance is not yet source-closed. Full first-route closure remains open until remaining NPC coordinates, changeevent interaction stance, destination-map walkability, and reward-reference closures are complete.",
     "coordinateResolvedTownServices": "closed_for_resolved_instances"
   },
   "statistics": {
@@ -32,8 +32,8 @@
   "remainingWork": [
     "Resolve source coordinates for the remaining start-floor NPC instances without guessing.",
     "Audit destination-map walkability at each first warp landing coordinate and the first encounter region.",
-    "Close new-player quest/event ownership without promoting ownerless event IDs.",
-    "Confirm dedicated changeevent/xinshou interaction stance and convert the four coordinate-resolved-but-not-audited NPCs into reachable/unreachable evidence."
+    "Confirm dedicated changeevent/xinshou interaction stance and convert the four coordinate-resolved-but-not-audited NPCs into reachable/unreachable evidence.",
+    "Close new-player event reward definitions for item/pet references without promoting unresolved IDs."
   ],
   "towns": [
     {
