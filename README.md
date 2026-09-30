@@ -9,9 +9,9 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：9c0171a — V3.45: include seed date in automatic README
-- 最後更新時間：2026-09-30T16:23:49+08:00
-- 版本線最高 regression workflow：V3.45
+- 最新 commit：7fb024b — V3.46: close player creation input state contract
+- 最後更新時間：2026-09-30T16:31:42+08:00
+- 版本線最高 regression workflow：V3.46
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
