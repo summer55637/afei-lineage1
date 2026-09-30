@@ -22,6 +22,7 @@ import { createBrowserWorldFirstRouteExecutionRuntime, ACTION_WORLD_FIRST_ROUTE_
 import { createBrowserWorldEncounterRuntime, ACTION_WORLD_ENCOUNTER_PREPARE, ACTION_WORLD_ENCOUNTER_ROLL, BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_runtime.mjs';
 import { createBrowserWorldEncounterPersistenceRuntime, ACTION_WORLD_ENCOUNTER_ROLL_COMMIT, BROWSER_WORLD_ENCOUNTER_PERSISTENCE_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_persistence_runtime.mjs';
 import { createBrowserWorldEncounterGroupRuntime, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_group_runtime.mjs';
+import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_enemy_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -80,6 +81,7 @@ function createBrowserStateController({
   const worldEncounterRuntime=encounterTargetIndex ? createBrowserWorldEncounterRuntime({encounterTargetIndex}) : null;
   const worldEncounterPersistenceRuntime=encounterTargetIndex ? createBrowserWorldEncounterPersistenceRuntime({encounterTargetIndex}) : null;
   const worldEncounterGroupRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterGroupRuntime({groupCatalog:encounterGroupCatalog}) : null;
+  const worldEncounterEnemyRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterEnemyRuntime({groupCatalog:encounterGroupCatalog}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -176,6 +178,19 @@ function createBrowserStateController({
           warpBlocked:action.warpBlocked===true
         });
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE){
+        if(!worldEncounterEnemyRuntime)return {ok:false,handled:false,stage:'encounter-enemy-runtime',reason:'browser-world-encounter-enemy-runtime-not-configured',state:clone(currentState)};
+        if(worldEncounterEnemyRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-enemy-runtime',reason:worldEncounterEnemyRuntime.reason??'browser-world-encounter-enemy-runtime-invalid',errors:worldEncounterEnemyRuntime.errors??[],state:clone(currentState)};
+        if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-resolution',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
+        if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-resolution',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
+        const prepared=await worldEncounterRuntime.prepare(currentState,{position:action.position??action.player??null,encounterId:action.encounterId??null});
+        if(!prepared.ok)return {...prepared,stage:prepared.stage??'encounter-resolution',state:clone(prepared.state??currentState)};
+        const result=worldEncounterEnemyRuntime.generate(prepared.encounter,action.groupId,currentState,{
+          entryMaxRoll:action.entryMaxRoll??null,
+          enemyRolls:Array.isArray(action.enemyRolls)?action.enemyRolls:[]
+        });
+        return {...result,preparedEncounter:prepared.encounter,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_GROUP_SELECT){
         if(!worldEncounterGroupRuntime)return {ok:false,handled:false,stage:'encounter-group-runtime',reason:'browser-world-encounter-group-runtime-not-configured',state:clone(currentState)};
@@ -367,6 +382,7 @@ export {
   ACTION_WORLD_ENCOUNTER_ROLL,
   ACTION_WORLD_ENCOUNTER_ROLL_COMMIT,
   ACTION_WORLD_ENCOUNTER_GROUP_SELECT,
+  ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
@@ -376,6 +392,7 @@ export {
   BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_PERSISTENCE_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT,
+  BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
