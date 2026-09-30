@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-destination-closure-v5",
+  "format": "stoneage-start-destination-closure-v7",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -55,18 +55,44 @@
         "3000": false,
         "4000": false
       },
-      "note": "1000/3000/4000 have no exact numeric map blob in the pinned commit; 2000 is the only direct destination map currently closed to runtime."
+      "note": "All four direct destination floors now have verified exact LS2MAP runtimes; 1000/3000/4000 use nonnumeric filenames whose LS2MAP headers identify the floor."
+    },
+    "destinationMapHeaders": {
+      "1000": {
+        "path": "gmsv/data/map/sainasu/samugiru/samugiru",
+        "blobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
+        "width": 160,
+        "height": 160
+      },
+      "2000": {
+        "path": "gmsv/data/map/sainasu/marinasu/2000",
+        "blobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
+        "width": 150,
+        "height": 150
+      },
+      "3000": {
+        "path": "gmsv/data/map/jyaruga/jaja/jaja",
+        "blobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
+        "width": 150,
+        "height": 150
+      },
+      "4000": {
+        "path": "gmsv/data/map/jyaruga/karutana/karutana",
+        "blobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
+        "width": 150,
+        "height": 150
+      }
     }
   },
   "statistics": {
     "hometowns": 4,
     "destinationFloors": 4,
-    "exactSourceMaps": 1,
+    "exactSourceMaps": 4,
     "landingPoints": 7,
-    "walkabilityVerifiedPoints": 2,
+    "walkabilityVerifiedPoints": 7,
     "activeEncounterDestinationFloors": 0,
     "placeholderOnlyDestinationFloors": 2,
-    "unresolvedDestinationMaps": 3,
+    "unresolvedDestinationMaps": 0,
     "conditionalEncounterDestinationFloors": 2,
     "unconditionalEncounterDestinationFloors": 0,
     "itemset6Rows": 0,
@@ -87,7 +113,8 @@
       }
     },
     "exactDestinationWarpPortalSets": 8,
-    "directDestinationLandings": 7
+    "directDestinationLandings": 7,
+    "destinationMapRuntimeVerified": 4
   },
   "towns": [
     {
@@ -101,14 +128,16 @@
       },
       "destinationFloor": 1000,
       "sourceMap": {
-        "catalogPresent": false,
-        "sourcePath": null,
-        "sourceBlobSha": null,
-        "verifiedRuntime": false,
-        "runtimePath": null,
-        "runtimePresent": false,
-        "exactBlobMatch": false,
-        "status": "unresolved"
+        "catalogPresent": true,
+        "sourcePath": "gmsv/data/map/sainasu/samugiru/samugiru",
+        "sourceBlobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
+        "verifiedRuntime": true,
+        "runtimePath": "data/generated/stoneage_map_1000.json",
+        "runtimePresent": true,
+        "exactBlobMatch": true,
+        "status": "verified",
+        "width": 160,
+        "height": 160
       },
       "encounterEvidence": {
         "allRowCount": 1,
@@ -120,14 +149,30 @@
         {
           "x": 98,
           "y": 44,
-          "walkability": null,
-          "activeEncounterRegions": []
+          "walkability": {
+            "tile": 414,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "encounterRegions": []
         },
         {
           "x": 98,
           "y": 45,
-          "walkability": null,
-          "activeEncounterRegions": []
+          "walkability": {
+            "tile": 822,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "encounterRegions": []
         }
       ],
       "nearestActiveEncounter": {
@@ -172,7 +217,9 @@
         "runtimePath": "data/generated/stoneage_map_2000.json",
         "runtimePresent": true,
         "exactBlobMatch": true,
-        "status": "verified"
+        "status": "verified",
+        "width": 150,
+        "height": 150
       },
       "encounterEvidence": {
         "allRowCount": 2,
@@ -224,7 +271,7 @@
             "objectHeight": false,
             "walkable": true
           },
-          "activeEncounterRegions": [
+          "encounterRegions": [
             {
               "index": 831,
               "line": 793,
@@ -235,10 +282,11 @@
                 "y2": 150
               },
               "containsLanding": true,
+              "classification": "conditional_unresolved_item_source",
               "probMin": 1,
               "probMax": 5,
               "enemyMax": 1,
-              "groups": [
+              "groupIds": [
                 1018
               ]
             }
@@ -256,7 +304,7 @@
             "objectHeight": false,
             "walkable": true
           },
-          "activeEncounterRegions": [
+          "encounterRegions": [
             {
               "index": 831,
               "line": 793,
@@ -267,10 +315,11 @@
                 "y2": 150
               },
               "containsLanding": true,
+              "classification": "conditional_unresolved_item_source",
               "probMin": 1,
               "probMax": 5,
               "enemyMax": 1,
-              "groups": [
+              "groupIds": [
                 1018
               ]
             }
@@ -311,14 +360,16 @@
       },
       "destinationFloor": 3000,
       "sourceMap": {
-        "catalogPresent": false,
-        "sourcePath": null,
-        "sourceBlobSha": null,
-        "verifiedRuntime": false,
-        "runtimePath": null,
-        "runtimePresent": false,
-        "exactBlobMatch": false,
-        "status": "unresolved"
+        "catalogPresent": true,
+        "sourcePath": "gmsv/data/map/jyaruga/jaja/jaja",
+        "sourceBlobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
+        "verifiedRuntime": true,
+        "runtimePath": "data/generated/stoneage_map_3000.json",
+        "runtimePresent": true,
+        "exactBlobMatch": true,
+        "status": "verified",
+        "width": 150,
+        "height": 150
       },
       "encounterEvidence": {
         "allRowCount": 3,
@@ -361,8 +412,16 @@
         {
           "x": 90,
           "y": 60,
-          "walkability": null,
-          "activeEncounterRegions": [
+          "walkability": {
+            "tile": 2174,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "encounterRegions": [
             {
               "index": 828,
               "line": 790,
@@ -373,10 +432,11 @@
                 "y2": 150
               },
               "containsLanding": true,
+              "classification": "conditional_unresolved_item_source",
               "probMin": 1,
               "probMax": 5,
               "enemyMax": 1,
-              "groups": [
+              "groupIds": [
                 1015
               ]
             }
@@ -417,14 +477,16 @@
       },
       "destinationFloor": 4000,
       "sourceMap": {
-        "catalogPresent": false,
-        "sourcePath": null,
-        "sourceBlobSha": null,
-        "verifiedRuntime": false,
-        "runtimePath": null,
-        "runtimePresent": false,
-        "exactBlobMatch": false,
-        "status": "unresolved"
+        "catalogPresent": true,
+        "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana",
+        "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
+        "verifiedRuntime": true,
+        "runtimePath": "data/generated/stoneage_map_4000.json",
+        "runtimePresent": true,
+        "exactBlobMatch": true,
+        "status": "verified",
+        "width": 150,
+        "height": 150
       },
       "encounterEvidence": {
         "allRowCount": 1,
@@ -436,14 +498,30 @@
         {
           "x": 80,
           "y": 90,
-          "walkability": null,
-          "activeEncounterRegions": []
+          "walkability": {
+            "tile": 117,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "encounterRegions": []
         },
         {
           "x": 80,
           "y": 91,
-          "walkability": null,
-          "activeEncounterRegions": []
+          "walkability": {
+            "tile": 109,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "encounterRegions": []
         }
       ],
       "nearestActiveEncounter": {
@@ -472,11 +550,12 @@
     }
   ],
   "status": {
-    "destinationWalkability": "partial",
+    "destinationWalkability": "closed",
     "directDestinationEncounter": "partial",
     "genericEncounterRoute": "closed_at_floor_level",
     "fullFirstRoute": "partial",
-    "destinationWarpCoordinates": "closed"
+    "destinationWarpCoordinates": "closed",
+    "destinationMapSource": "closed"
   },
-  "policy": "Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. In the pinned source, itemset6.txt is empty, so groups gated by 20216/20219 remain source-unresolved. Missing exact destination maps remain unresolved and are never replaced by guessed or cross-version data. Generic encounter candidates are only closed at floor level until their destination map, landing coordinates and walkable region are separately verified. Exact next-floor portal coordinate rows are separately recorded in data/generated/stoneage_start_destination_warp_coordinates.json; coordinate portal presence is not treated as walkability."
+  "policy": "Exact destination map source, LS2MAP header and landing walkability are now closed for all four hometown destination floors and all seven landing points. Direct encounter rows remain governed by fixed-C group/item/event gates: 2000 Group 1018 requires item 20219, 3000 Group 1015 requires item 20216, and pinned itemset6.txt is empty. Placeholder rows on 1000/4000 are not treated as hunting regions. First-route remains partial until an ordinary encounter region and quest/reward path are source-closed."
 }
