@@ -49,4 +49,12 @@ const brokenTeam = JSON.parse(JSON.stringify(state));
 brokenTeam.pets.team = ['missing'];
 assert.ok(validatePersistentState(brokenTeam).includes('team references missing pet: missing'));
 
+const overGold = JSON.parse(JSON.stringify(state));
+overGold.player.gold = 1000001;
+assert.ok(validatePersistentState(overGold).includes('player.gold exceeds source max-gold cap'));
+
+const danglingItem = JSON.parse(JSON.stringify(state));
+danglingItem.inventory.playerItemSlots[9] = 123;
+assert.ok(validatePersistentState(danglingItem).includes('inventory player slot 9 references missing existing item'));
+
 console.log(JSON.stringify({ pass: true, format: 'stoneage-persistent-state-schema-v1', schemaVersion: CURRENT_STATE_SCHEMA_VERSION, legacySaveSchema: SOURCE_LEGACY_SAVE_SCHEMA_VERSION, professionSkillSlots: PROFESSION_SKILL_SLOT_COUNT, playerItemSlots: PLAYER_ITEM_SLOT_COUNT, migration: 'known-field-copy with preserved unknown keys' }));
