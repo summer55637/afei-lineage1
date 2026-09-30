@@ -1,0 +1,31 @@
+{
+  "format": "stoneage-itemshop-ui-state-v1",
+  "generatedAt": "2026-09-30",
+  "purpose": "Ephemeral browser-facing ItemShop session state; does not define prices, inventory rules, or a second transaction engine.",
+  "fields": [
+    "open",
+    "shop",
+    "selectedItemId",
+    "quantity",
+    "status",
+    "lastAction",
+    "message",
+    "lastResult"
+  ],
+  "actions": {
+    "open": "resolve source-backed ItemShop offers through existing browser ItemShop runtime",
+    "selectOffer": "select only a resolved source-backed offer",
+    "setQuantity": "store positive integer requested by UI; transaction layer remains authoritative for inventory/gold limits",
+    "close": "reset ephemeral session without Persistent State mutation"
+  },
+  "transactionBoundary": "UI session -> existing NPC ItemShop runtime -> existing Item allocator / Economy transaction -> Persistent State",
+  "noGuessing": [
+    "item price",
+    "buy/sell policy",
+    "inventory capacity",
+    "gold rules",
+    "item template",
+    "transaction outcome"
+  ],
+  "persistence": "ephemeral-controller-session; not written to canonical Persistent State"
+}
