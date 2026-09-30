@@ -11,13 +11,13 @@
 | 項目 | 狀態 |
 |---|---|
 | 可玩核心 | **V3.09** |
-| 下一階段 | **V3.15 verified Encounter coordinate probe → 真實地圖 presentation** |
+| 下一階段 | **V3.19 palette／顏色映射 → 真實 tile presentation** |
 | 執行方式 | 純前端、瀏覽器直接執行 |
 | 主要平台 | PC／手機 |
 | 原 C 基準 | [gavinlinasd/StoneAge](https://github.com/gavinlinasd/StoneAge) |
 | 固定 Source Ref | `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` |
 
-**V3.09** 是目前正式可玩的主線版本。V3.10～V3.15 目前屬 source/runtime groundwork，不取代這個 playable baseline。
+**V3.09** 是目前正式可玩的主線版本。V3.10～V3.19 目前屬 source/runtime/presentation groundwork，不取代這個 playable baseline。
 
 固定 C regression pin：`gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 
@@ -238,6 +238,7 @@ game.js                # 主要 runtime
 game.css               # PC／手機共用介面
 data/generated/        # source-backed generated data（含 fixed-C map source catalog）
 tools/                 # data generator／regression／map parser
+client-assets/         # operator-supplied client asset manifest（不含原版 BIN）
 docs/reference/        # source closure／研究紀錄
 docs/changelog/        # 詳細版本開發紀錄
 CHANGELOG.md           # 最新與歷史開發總表
@@ -263,6 +264,7 @@ CHANGELOG.md           # 最新與歷史開發總表
 - V3.15 verified Encounter coordinate source probe（不耗 RNG、fail-closed）
 - V3.16 client image resolver（ADRNBIN 80-byte metadata contract、Real binary asset fail-closed）
 - V3.17 client RD decoder（RD raw/RLE pixels、truecolor branch fail-closed）
+- V3.18 authorized client asset pack adapter（operator-supplied ADRNBIN／Real、digest pin、fail-closed）
 
 Regression 本體保留在 `tools/`，CI 則以 `.github/workflows/` 的必要生成、核心回歸與 V3.10 source checks 為主；V2.88～V3.09 的重複 workflow 已整合成單一 matrix regression workflow。
 
