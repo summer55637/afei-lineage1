@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import { executeNpcSourceEvent, NPC_EVENT_ORCHESTRATOR_FORMAT } from '../src/stoneage_npc_event_orchestrator.mjs';
 import {
-  NEW_PLAYER_EVENT_ADAPTERS_FORMAT,
-  createNewPlayerEventHandlers
-} from '../src/stoneage_new_player_event_adapters.mjs';
+  FIRST_ROUTE_REWARD_HANDLER_FORMAT,
+  createFirstRouteRewardHandlers
+} from '../src/stoneage_first_route_reward_handlers.mjs';
 import { isEventFlagSet } from '../src/stoneage_event_flag_runtime.mjs';
 
 const closure=JSON.parse(fs.readFileSync('data/generated/stoneage_new_player_event_closure.json','utf8'));
@@ -14,7 +14,7 @@ const itemRewardCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_new_
 const itemMakeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
 const petCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_new_player_pet_runtime.json','utf8'));
 
-assert.equal(NEW_PLAYER_EVENT_ADAPTERS_FORMAT,'stoneage-new-player-event-adapters-v1');
+assert.equal(FIRST_ROUTE_REWARD_HANDLER_FORMAT,'stoneage-first-route-reward-handlers-v1');
 assert.equal(NPC_EVENT_ORCHESTRATOR_FORMAT,'stoneage-npc-event-orchestrator-v1');
 
 const state=freshPersistentState({playerId:'new-player-first-route'});
@@ -24,7 +24,7 @@ state.player.charm=60;
 
 const ids=[];
 const itemHandlerCursor=100;
-const handlers=createNewPlayerEventHandlers({
+const bundle=createFirstRouteRewardHandlers({
   itemRewardCatalog,
   itemMakeCatalog,
   petCatalog,
@@ -34,6 +34,8 @@ const handlers=createNewPlayerEventHandlers({
   itemCapacity:1000,
   itemCursor:itemHandlerCursor
 });
+assert.equal(bundle.ok,true);
+const handlers=bundle.handlers;
 
 const dry=executeNpcSourceEvent(state,closure.script,{handlers,transactionId:'dry-run',execute:false});
 assert.equal(dry.ok,true);
