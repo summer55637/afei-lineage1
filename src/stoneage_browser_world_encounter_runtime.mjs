@@ -136,6 +136,92 @@ function prepareBrowserWorldEncounter(state,index,{position=null,encounterId=nul
   };
 }
 
+function rollPreparedWorldEncounter(encounter,{cep=0,rng120=null,noEnemy=false,battleModeNone=true,warpBlocked=false}={}){
+  if(!isObject(encounter))return {ok:false,reason:'prepared-encounter-required'};
+  const probMin=intOr(encounter.probMin),probMax=intOr(encounter.probMax);
+  if(probMin==null||probMax==null||probMin<0||probMax<probMin)return {ok:false,reason:'encounter-probability-range-invalid'};
+  const initialCep=intOr(cep);
+  if(initialCep==null||initialCep<0)return {ok:false,reason:'encounter-cep-invalid'};
+  const clampedCep=Math.min(probMax,Math.max(probMin,initialCep));
+  if(noEnemy===true)return {
+    ok:true,
+    outcome:'skipped',
+    reason:'encounter-disabled-noenemy',
+    encounter:clone(encounter),
+    cepBefore:initialCep,
+    cepAfter:clampedCep,
+    rngConsumed:false,
+    triggered:false,
+    battleStarted:false
+  };
+  if(battleModeNone!==true)return {
+    ok:true,
+    outcome:'skipped',
+    reason:'battle-mode-not-none',
+    encounter:clone(encounter),
+    cepBefore:initialCep,
+    cepAfter:clampedCep,
+    rngConsumed:false,
+    triggered:false,
+    battleStarted:false
+  };
+  const roll=intOr(rng120);
+  if(roll==null||roll<0||roll>119)return {ok:false,reason:'encounter-rng120-required'};
+  const hit=roll<clampedCep;
+  if(hit&&warpBlocked===true)return {
+    ok:true,
+    outcome:'roll-hit-blocked',
+    reason:'warp-event-blocked',
+    encounter:clone(encounter),
+    rng120:roll,
+    cepBefore:initialCep,
+    cepAfter:clampedCep,
+    rngConsumed:true,
+    triggered:false,
+    battleStarted:false
+  };
+  if(hit)return {
+    ok:true,
+    outcome:'encounter',
+    reason:'encounter-triggered',
+    encounter:clone(encounter),
+    rng120:roll,
+    cepBefore:initialCep,
+    cepAfter:probMin,
+    rngConsumed:true,
+    triggered:true,
+    battleStarted:false
+  };
+  return {
+    ok:true,
+    outcome:'no-encounter',
+    reason:'encounter-roll-miss',
+    encounter:clone(encounter),
+    rng120:roll,
+    cepBefore:initialCep,
+    cepAfter:Math.min(probMax,clampedCep+1),
+    rngConsumed:true,
+    triggered:false,
+    battleStarted:false
+  };
+}
+
+function rollBrowserWorldEncounter(state,index,{position=null,encounterId=null,cep=0,rng120=null,noEnemy=false,battleModeNone=true,warpBlocked=false}={}){
+  const prepared=prepareBrowserWorldEncounter(state,index,{position,encounterId});
+  if(!prepared.ok)return prepared;
+  const rolled=rollPreparedWorldEncounter(prepared.encounter,{cep,rng120,noEnemy,battleModeNone,warpBlocked});
+  return {
+    ...rolled,
+    handled:rolled.ok===true,
+    stage:'encounter-roll',
+    format:BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT,
+    source:clone(prepared.source),
+    position:clone(prepared.position),
+    readyForRoll:true,
+    state:clone(state)
+  };
+}
+
 function createBrowserWorldEncounterRuntime({encounterTargetIndex=null}={}){
   const deps=validateEncounterTargetIndex(encounterTargetIndex);
   if(!deps.ok)return {ok:false,format:BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT,reason:'dependency-validation-failed',errors:deps.errors};
@@ -144,7 +230,8 @@ function createBrowserWorldEncounterRuntime({encounterTargetIndex=null}={}){
     format:BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT,
     rowCount:deps.rowCount,
     resolve:(position,options={})=>resolveWorldEncounterTarget(position,encounterTargetIndex,options),
-    prepare:(state,options={})=>prepareBrowserWorldEncounter(state,encounterTargetIndex,options)
+    prepare:(state,options={})=>prepareBrowserWorldEncounter(state,encounterTargetIndex,options),
+    roll:(state,options={})=>rollBrowserWorldEncounter(state,encounterTargetIndex,options)
   };
 }
 
@@ -163,5 +250,7 @@ export {
   validateEncounterTargetIndex,
   resolveWorldEncounterTarget,
   prepareBrowserWorldEncounter,
+  rollPreparedWorldEncounter,
+  rollBrowserWorldEncounter,
   createBrowserWorldEncounterRuntime
 };
