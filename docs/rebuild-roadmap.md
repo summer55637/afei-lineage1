@@ -2,6 +2,10 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.45 new-player seed runtime
+
+V3.45 將 fixed-C setup.cf 出生 seed 正式獨立：TRANS=1、LV=1、PETLV=1、GOLD=30000、ITEM1=24114；並把 PET1 → config slot 1 而 getter(0) 讀 slot 0 的 parser quirk 明確寫入 contract。四個 hometown fallback starter pet 由 pinned enemy1.txt + enemybase1.txt 閉合為 EnemyID 1/2/3/4、TempNo 2/112/102/34。24114 只完成 source item-ID / creation-path closure，不猜 item template。新增 seed generator、V3.45 regression 與 pinned-source rebuild CI；仍保持 0 個 playable HTML。
+
 ## 2026-09-30 新增：V3.43 cross-contract closure
 
 本輪把 first-route closure 的跨 contract 狀態重新對齊：new-player 四段 Item/Pet reward definition 已由 pinned itemset6／enemy1 source closure 驗證完成，因此不再列為 route blocker；changeevent 本身仍維持 strict unresolved，不能因 reward closure 而自動註冊 alias。4000→200 仍依 fixed-C map walkability 保持 disconnected fail-closed。新增 `tools/check_v343_cross_contract_closure.mjs` 與 CI，鎖定 reward closure、4000 component 與 route blocker 不漂移。

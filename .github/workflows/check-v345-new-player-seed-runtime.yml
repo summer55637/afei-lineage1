@@ -1,0 +1,39 @@
+name: Check V3.45 new-player seed runtime
+
+on:
+  push:
+    paths:
+      - 'tools/generate_new_player_seed_runtime.mjs'
+      - 'tools/check_v345_new_player_seed_runtime.mjs'
+      - 'data/generated/stoneage_new_player_seed_runtime.json'
+      - 'data/generated/stoneage_server_config_index.json'
+      - 'data/generated/stoneage_start_flow_index.json'
+      - '.github/workflows/check-v345-new-player-seed-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/gavinlinasd/StoneAge.git /tmp/StoneAge
+          git -C /tmp/StoneAge fetch --depth 1 origin 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          git -C /tmp/StoneAge checkout --detach 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+      - name: Check generator and regression syntax
+        run: |
+          node --check tools/generate_new_player_seed_runtime.mjs
+          node --check tools/check_v345_new_player_seed_runtime.mjs
+      - name: Rebuild seed contract from pinned source
+        run: |
+          node tools/generate_new_player_seed_runtime.mjs --source-root /tmp/StoneAge --out /tmp/stoneage_new_player_seed_runtime.json
+          cmp -s /tmp/stoneage_new_player_seed_runtime.json data/generated/stoneage_new_player_seed_runtime.json
+      - name: Run V3.45 seed regression
+        run: node tools/check_v345_new_player_seed_runtime.mjs
