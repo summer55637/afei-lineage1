@@ -23,7 +23,7 @@
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 固定 C 的 `CHAR_walk_move` 先做 `MAP_walkAble`，NPC warp 再透過 `CHAR_ISOVERED` 與 `NPC_WarpWatch` 接收成功的 `CHAR_ACTWALK`；因此 warp NPC 的占位不會讓原本可走的 map cell 變成不可走。
 
-目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；目前共有 20 個 NPC 已有 numeric coordinate；其中 16 個已完成 interaction reachability，4 個 `xinshou` changeevent NPC 已解出座標但互動尚未審計，另外 26 個 NPC 座標仍 unresolved，因此目前標記：
+目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；目前 46 個 start-floor NPC 已有 numeric coordinate；41 個 active-template NPC 已完成 interaction reachability，5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 module 而維持 runtime-unresolved，因此目前標記：
 
 - `sourceRouteSpine = closed`
 - `fullFirstRoute = partial`
@@ -339,3 +339,9 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 四個 hometown 的 `炎龍新手接待員` source owner 已閉合到 `gmsv/data/npc/almark/xinshou/xinshou.create`，共用 `almark/xinshou/xinshoujd.arg`。腳本的四段等級／轉生分支與對應 EndSetFlg 已納入 `data/generated/stoneage_new_player_event_closure.json`，並由 `tools/audit_new_player_event_closure.mjs` 驗證。
 
 其中四個 source 座標原本在 Start Flow Index 中無法安全解析，現在已從 pinned `xinshou.create` 解出；由於其座標與出生點重疊，互動是否可在同格或必須站鄰格不能套用其他 NPC service 規則，暫維持未審計。
+
+## 2026-09-30 修正：Start-floor NPC coordinate / runtime closure
+
+原本 Start Flow Index 的 30 個 unresolved coordinates 是索引層未反解 `borncorner`，不是 fixed-C source 沒有位置。現在已全部由 exact create blocks 解出，形成 `data/generated/stoneage_start_npc_coordinate_closure.json`。
+
+之後套用 fixed-C template / interaction contract 後，41/46 NPC 已可驗證從出生點到合法互動站位；5 個 `changeevent` blocks（4 個 xinshou + 1 個薩姆吉爾村長）因 `gmsv/src/npc/npctemplate.c` 的 `functionSet[]` 不存在 `changeevent`，並依 `gmsv/src/npc/npccreate.c` 的 unknown-template rejection 規則維持 runtime-unresolved，不視為已實例化 NPC。
