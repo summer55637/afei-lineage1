@@ -1,0 +1,21 @@
+name: Check V3.35 changeevent compatibility alias
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'data/generated/stoneage_changeevent_compatibility_reference.json'
+      - 'tools/check_v335_changeevent_compatibility_alias.mjs'
+      - 'docs/reference/v335-changeevent-compatibility-alias.md'
+      - '.github/workflows/check-v335-changeevent-compatibility-alias.yml'
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          node --check src/stoneage_npc_module_registry_runtime.mjs
+          node --check tools/check_v335_changeevent_compatibility_alias.mjs
+      - run: node tools/check_v335_changeevent_compatibility_alias.mjs
