@@ -406,3 +406,9 @@ V3.39 regression 已納入 GitHub Actions。
 新增 `tools/check_v340_browser_itemshop_runtime.mjs`、synthetic ItemShop fixture 與 GitHub Actions regression。Canonical `index.html` 同一入口新增 ItemShop probe，但明確標示 fixture 不代表完整 336 個正式 ItemShop bindings。
 
 詳細邊界：`docs/reference/v340-browser-itemshop-runtime.md`。
+
+
+## V3.41 Full NPC ItemShop Source Catalog Verification
+
+新增 `.github/workflows/check-v341-full-npc-itemshop-catalog.yml`。CI 會固定 checkout pinned StoneAge source、重跑 ItemShop generator，要求 336 個 ItemShop bindings、0 個 unresolved binding，並交叉確認所有正式 offer Item ID 都有本 repo 的 source Item template；生成 catalog 會保存為 Actions artifact，供後續 world/NPC join 使用。
+
