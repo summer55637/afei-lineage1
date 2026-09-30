@@ -2,18 +2,26 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 
 const args=process.argv.slice(2);
 const value=(name,fallback=null)=>{const i=args.indexOf(name);return i>=0?args[i+1]:fallback;};
 const root=path.resolve(value('--source-root','/tmp/StoneAge'));
 const out=path.resolve(value('--out','data/generated/stoneage_npc_itemshop_runtime.json'));
-const ref='1f90cb6cb57c1df70f39cde77a5a8ccd98b66cde7b3d604a5e6226'; // overwritten below if source pin is not valid
 const fixedRef='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 
 function fail(m){console.error('NPC ItemShop generation FAILED:',m);process.exit(1);}
 if(!fs.existsSync(root))fail('source root missing: '+root);
 const npcRoot=path.join(root,'gmsv/data/npc');
 if(!fs.existsSync(npcRoot))fail('NPC root missing: '+npcRoot);
+if(fs.existsSync(path.join(root,'.git'))){
+  try{
+    const head=execFileSync('git',['-C',root,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+    if(head!==fixedRef)fail('source checkout HEAD must equal pinned ref '+fixedRef+'; got '+head);
+  }catch(error){
+    fail('could not verify source checkout ref: '+String(error?.message??error));
+  }
+}
 
 function walk(dir,out=[]){
   for(const e of fs.readdirSync(dir,{withFileTypes:true})){
@@ -121,7 +129,8 @@ for(const f of walk(npcRoot).sort()){
         continue;
       }
       const argBytes=fs.readFileSync(argPath);
-      const arg=parseArg(argBytes.toString('utf8'));
+      const argText=argBytes.toString('utf8');
+      const arg=parseArg(argText);
       const list=parseList(arg.ItemList);
       const shopId=rel(f)+'#'+b.blockIndex;
       shops.push({
@@ -145,9 +154,9 @@ for(const f of walk(npcRoot).sort()){
         specialRate:numberOrNull(arg.special_rate),
         specialItemEntries:(arg.special_item??'').split(',').map(parseEntry).filter(Boolean),
         sourceFlags:{
-          limitShop:typeof arg.LIMITSHOP!=='undefined',
-          event:typeof arg.EVENT!=='undefined',
-          express:typeof arg.EXPRESS!=='undefined'
+          limitShop:argText.includes('LIMITSHOP'),
+          event:argText.includes('EVENT'),
+          express:argText.includes('EXPRESS')
         }
       });
     }
