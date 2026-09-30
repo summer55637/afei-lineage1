@@ -10,6 +10,10 @@ function run(file,args,out){
   execFileSync('node',[file,'--source-root',sourceRoot,'--out-dir',out],{stdio:'inherit'});
 }
 function fail(msg){throw new Error(msg);}
+function npcRelativePath(p){
+  const value=String(p??'').replaceAll('\\\\','/');
+  return value.startsWith('gmsv/data/npc/')?value.slice('gmsv/data/npc/'.length):value;
+}
 
 fs.rmSync('/tmp/v342-world',{recursive:true,force:true});
 fs.mkdirSync('/tmp/v342-world',{recursive:true});
@@ -28,7 +32,7 @@ for(const create of world.creates||[]){
     const candidates=(enemy.templateCandidates||[]).filter(t=>String(t.functionSet??'').toLowerCase()==='itemshop');
     for(const candidate of candidates){
       worldBindings.push({
-        key:create.path+'#'+create.blockIndex,
+        key:npcRelativePath(create.path)+'#'+create.blockIndex,
         path:create.path,
         blockIndex:create.blockIndex,
         floorId:create.floorId,
@@ -45,7 +49,7 @@ for(const create of world.creates||[]){
 const catalogBindings=[];
 for(const shop of Object.values(catalog.shops)){
   catalogBindings.push({
-    key:shop.source.create.path+'#'+shop.source.create.blockIndex,
+    key:npcRelativePath(shop.source.create.path)+'#'+shop.source.create.blockIndex,
     path:shop.source.create.path,
     blockIndex:shop.source.create.blockIndex,
     floorId:shop.floorId,
@@ -80,7 +84,7 @@ if(unexpectedWorld.length)fail('world ItemShop refs missing from catalog: '+unex
 if(unexpectedCatalog.length)fail('catalog bindings missing from world index: '+unexpectedCatalog.map(x=>x.key).join(','));
 
 for(const row of catalog.shops ? Object.values(catalog.shops) : []){
-  const worldRow=worldByKey.get(row.source.create.path+'#'+row.source.create.blockIndex);
+  const worldRow=worldByKey.get(npcRelativePath(row.source.create.path)+'#'+row.source.create.blockIndex);
   if(worldRow.floorId!==row.floorId)fail('floor join mismatch '+row.shopId+': world='+worldRow.floorId+' catalog='+row.floorId);
   if(worldRow.templateName.toLowerCase()!==row.templateName.toLowerCase())fail('template join mismatch '+row.shopId);
   if(row.source.arg?.path!==worldRow.fileRef)fail('arg fileRef join mismatch '+row.shopId+': world='+worldRow.fileRef+' catalog='+row.source.arg?.path);
@@ -89,7 +93,7 @@ for(const row of catalog.shops ? Object.values(catalog.shops) : []){
 const unresolved=catalog.unresolved||[];
 if(unresolved.length!==1)fail('expected exactly one unresolved source anomaly, got '+unresolved.length);
 const u=unresolved[0];
-if(u.source?.path+'#'+u.source?.blockIndex!==expectedUnresolvedKey || u.reason!=='shop-arg-file-missing' || u.fileRef!=='my/ruieryasi/yao.arg'){
+if(npcRelativePath(u.source?.path)+'#'+u.source?.blockIndex!==expectedUnresolvedKey || u.reason!=='shop-arg-file-missing' || u.fileRef!=='my/ruieryasi/yao.arg'){
   fail('known unresolved source anomaly drifted: '+JSON.stringify(u));
 }
 const unresolvedWorld=worldByKey.get(expectedUnresolvedKey);
@@ -98,7 +102,8 @@ if(unresolvedWorld.floorId!==7102)fail('unresolved source floor drift: '+unresol
 
 const resolvedFloors=[...new Set(Object.values(catalog.shops).map(x=>x.floorId).filter(Number.isFinite))];
 const worldItemShopFloors=[...new Set(worldBindings.map(x=>x.floorId).filter(Number.isFinite))];
-const missingSourceItems=[...new Set(Object.keys(catalog.itemIndex).map(Number).filter(id=>!JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8')).byItemId?.[String(id)]))];
+const itemMake=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
+const missingSourceItems=[...new Set(Object.keys(catalog.itemIndex).map(Number).filter(id=>!itemMake.byItemId?.[String(id)]))];
 if(missingSourceItems.length)fail('formal buy offer Item source templates missing: '+missingSourceItems.slice(0,50).join(','));
 
 console.log(JSON.stringify({
