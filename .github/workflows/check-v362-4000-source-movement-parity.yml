@@ -1,0 +1,44 @@
+name: Check V3.62 4000 to 200 source movement parity
+
+on:
+  push:
+    paths:
+      - 'tools/check_v362_4000_source_movement_parity.mjs'
+      - 'src/stoneage_map_runtime.mjs'
+      - 'data/generated/stoneage_map_4000.json'
+      - 'data/generated/stoneage_mapset_runtime.json'
+      - 'data/generated/stoneage_4000_exit_component_audit.json'
+      - 'docs/reference/v362-4000-source-movement-parity.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v362-4000-source-movement-parity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Check exact fixed-C movement source
+        run: |
+          grep -q 'BOOL MAP_walkAbleFromPoint' fixed-c-source/gmsv/src/map/map_deal.c
+          grep -q 'MAP_getImageInt( map\[1\], MAP_WALKABLE )' fixed-c-source/gmsv/src/map/map_deal.c
+          grep -q 'xflg = MAP_walkAble' fixed-c-source/gmsv/src/char/char_walk.c
+          grep -q 'yflg = MAP_walkAble' fixed-c-source/gmsv/src/char/char_walk.c
+          grep -q 'if( !xflg || !yflg )' fixed-c-source/gmsv/src/char/char_walk.c
+      - name: Run V3.62 movement parity regression
+        run: node tools/check_v362_4000_source_movement_parity.mjs fixed-c-source
+      - name: Check JavaScript syntax
+        run: node --check tools/check_v362_4000_source_movement_parity.mjs

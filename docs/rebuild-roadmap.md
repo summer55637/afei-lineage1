@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.62 4000→200 source movement parity audit
+
+V3.62 沿 pinned fixed-C `char_walk.c` / `map_deal.c` 重新核對 4000→200 blocker。固定 C 的斜向移動在 `CHAR_walk()` 不允許單純 corner-cutting：目的格必須 `MAP_walkAble()`，且起點往 X / Y 正交方向的兩個 side cells 也必須通過 `MAP_walkAble()`。因此以 4-neighbor walkable connected components 做 blocker proof 不會漏掉合法斜向穿越。
+
+V3.62 regression 直接 checkout pinned source，鎖定 `MAP_walkAbleFromPoint()` 的 tile/object walkability contract、`CHAR_walk()` 的 diagonal side-cell gate，並將 4000 runtime 的 actual walkable cells 做 4-neighbor components + C-legal diagonal bridge exhaustive audit。現有 direct landing component 與兩組 4000→200 portal-origin component 仍不相同，且沒有任何合法 diagonal bridge 能跨 component。
+
+因此 4000→200 目前可由 source movement semantics 證明為 route exception：不是現有 BFS 選錯鄰接規則，也不是 portal origin 本身不可走。若未來要解除 blocker，必須找到 fixed-source 版本／資料中的正式 transition evidence；不能用 synthetic bridge、manual teleport 或放寬 diagonal corner rule。
+
+本輪不改 4000 map binary、不修改 mapset walkability、不改 mapwarp 座標，也不建立 playable HTML；只把既有 blocker 從「component blocker」提升為「source movement-parity verified exception」。
+
 ## 2026-09-30 新增：V3.61 Browser SavePoint pile lifecycle parity
 
 V3.61 修正 V3.59 SavePoint GetItem mutation 與 pinned fixed-C _ITEM_PILENUMS 的堆疊生命週期差異。固定 source version.h 明確啟用 _ITEM_PILENUMS；CHAR_DelItem(talker,i) 實際以 num=1 呼叫 _CHAR_DelItem()，先把 ITEM_USEPILENUMS 減 1，只有 pile <= 0 才清除 player item slot 與 item object。
