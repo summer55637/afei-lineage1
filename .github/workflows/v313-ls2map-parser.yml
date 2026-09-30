@@ -18,7 +18,7 @@ on:
       - 'tools/check_v313_source_map_runtime_api.mjs'
       - 'tools/check_v313_source_map_world_hud.mjs'
       - 'game.css'
-      - 'start.html'
+      - 'index.html'
       - 'game.js'
       - 'tools/stoneage_ls2map_parser.mjs'
       - 'tools/check_v313_ls2map_parser.mjs'
