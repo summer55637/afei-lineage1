@@ -1,0 +1,22 @@
+{
+  "format": "stoneage-v395-browser-battle-command-wait-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_COMMAND_WAIT_STATUS",
+  "fixedC": {
+    "source": "gmsv/src/battle/battle.c::BATTLE_CommandWait",
+    "enemySide": "BATTLE_S_TYPE_ENEMY returns TRUE",
+    "playerSide": {
+      "deadEntry": "ignored",
+      "cOk": "counts as ready",
+      "cWait": "blocks command phase",
+      "initRescueWatch": "does not block"
+    },
+    "timeout": "existing BATTLECOMMAND_TIME can force command phase forward"
+  },
+  "browserBoundary": {
+    "timeoutExpired": "caller-provided compatibility signal",
+    "mutation": false,
+    "rngConsumed": false,
+    "damageExecuted": false
+  }
+}
