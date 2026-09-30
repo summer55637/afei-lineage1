@@ -1,0 +1,48 @@
+name: Check V3.30 NPC event save runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_event_save_runtime.mjs'
+      - 'src/stoneage_first_route_reward_handlers.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_charm_runtime.mjs'
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'tools/check_v330_npc_event_save_runtime.mjs'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v330-npc-event-save-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_npc_event_save_runtime.mjs
+          node --check src/stoneage_first_route_reward_handlers.mjs
+          node --check src/stoneage_npc_event_orchestrator.mjs
+          node --check src/stoneage_npc_event_transaction.mjs
+          node --check src/stoneage_npc_event_runtime.mjs
+          node --check src/stoneage_save_transaction.mjs
+          node --check src/stoneage_event_flag_runtime.mjs
+          node --check src/stoneage_charm_runtime.mjs
+          node --check src/stoneage_new_player_pet_runtime.mjs
+          node --check src/stoneage_new_player_item_reward_runtime.mjs
+          node --check tools/check_v330_npc_event_save_runtime.mjs
+      - name: Run V3.30 regression
+        run: node tools/check_v330_npc_event_save_runtime.mjs
