@@ -132,6 +132,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/save-envelope-contract.md`
 - `docs/reference/reward-transaction-contract.md`
 - `docs/reference/item-economy-runtime.md`
+- `docs/reference/item-source-runtime.md`
 - `docs/reference/idle-supply-death-offline-policy.md`
 - `docs/reference/idle-simulation-runner.md`
 - `docs/reference/persistent-state-schema.md`
@@ -206,3 +207,15 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - 買賣 transaction 具 idempotency bookkeeping；allocation failure 不污染原 state。
 
 Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`；詳細邊界：`docs/reference/item-economy-runtime.md`。
+
+## 2026-09-30 Source Item Runtime / Allocator v1
+
+新增 `src/stoneage_item_source_runtime.mjs`、`tools/check_item_source_runtime.mjs` 與 `docs/reference/item-source-runtime.md`，正式把 fixed-C 的 `ITEM_makeItem()` / `ITEM_makeItemAndRegist()` 66-field lifecycle 接到上一階段的 Item / Economy transaction。
+
+- exact Item template 必須存在於 generated `stoneage_item_make_runtime-v2` catalog；缺失 template fail-closed 且 0 RNG。
+- 每次 Item creation 固定消耗 66 次 inclusive RNG，包含 width=0 的欄位；完成後 `ITEM_LEAKLEVEL=1`。
+- existing item index 掃描沿用 fixed-C `Sindex` 概念，allocator instance 保存 cursor，不把 engine cursor污染到 persistent save。
+- `ITEM_INITFUNC` 不猜行為；沒有明確 source callback handler 時 fail-closed，避免把 callback-sensitive item 當普通 item。
+- `buyShopItem()` 可直接接 `createSourceItemAllocator(...).allocate`，因此 Economy Buy 現在有完整 source Item creation adapter path。
+
+詳細邊界：`docs/reference/item-source-runtime.md`。
