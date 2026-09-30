@@ -295,3 +295,15 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 
 只要這些問題還有大面積空白，就先繼續做資料與 contract，而不是急著寫首頁。
 
+
+  
+### Start Route Candidates（2026-09-30）
+
+已建立 `stoneage_start_route_candidates.json`。固定 source 共解析 3,943 個 warp edges、1,197 個 encounter rows、675 個 encounter floors。
+
+- hometown 0 / samugiru：1006 → 1000（98,44 / 98,45）；1 步後找到含 encounter row 的 1000。
+- hometown 1 / marinasu：2006 → 2000（56,48 / 57,48）；1 步後找到含 encounter rows 的 2000。
+- hometown 2 / jaja：3006 → 3000（90,60）；1 步後找到含 encounter rows 的 3000；2 步後還可達 200（114 rows）。
+- hometown 3 / karutarna：4006 → 4000（80,90 / 80,91）；1 步後找到含 encounter row 的 4000；2 步後還可達 200（114 rows）。
+
+這些是 source connectivity candidates，不等於 walkable-only route，也不等於唯一新手路線。下一步要再疊加 map walkability、NPC service intent、encounter group 與新手 event owner，形成真正 first-route closure。
