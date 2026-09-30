@@ -1,0 +1,115 @@
+{
+  "format": "stoneage-start-world-exit-reachability-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
+    "portalSource": "data/generated/stoneage_start_destination_warp_coordinates.json",
+    "mapRuntime": "data/generated/stoneage_map_runtime_index.json"
+  },
+  "policy": {
+    "routeProof": "Do not promote a floor edge to a playable route unless at least one exact source portal origin is reachable from a direct landing on the fixed runtime map.",
+    "unresolvedFloor200": "Do not use data/generated/stoneage_map_200.json as the world-map runtime for the 3000/4000 -> 200 exits."
+  },
+  "audits": [
+    {
+      "hometown": 0,
+      "destinationFloor": 1000,
+      "runtime": {
+        "path": "data/generated/stoneage_map_1000.json",
+        "sourcePath": "gmsv/data/map/sainasu/samugiru/samugiru",
+        "sourceBlobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
+        "width": 160,
+        "height": 160
+      },
+      "directLandings": [[98,44],[98,45]],
+      "portalGroups": {
+        "1000_to_100_a": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":120},
+        "1000_to_100_b": {"originCount":5,"reachableOriginPoints":5,"allReachable":true,"minPathLength":104}
+      }
+    },
+    {
+      "hometown": 1,
+      "destinationFloor": 2000,
+      "runtime": {
+        "path": "data/generated/stoneage_map_2000.json",
+        "sourcePath": "gmsv/data/map/sainasu/marinasu/2000",
+        "sourceBlobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
+        "width": 150,
+        "height": 150
+      },
+      "directLandings": [[56,48],[57,48]],
+      "portalGroups": {
+        "2000_to_100_a": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":33},
+        "2000_to_100_b": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":82}
+      }
+    },
+    {
+      "hometown": 2,
+      "destinationFloor": 3000,
+      "runtime": {
+        "path": "data/generated/stoneage_map_3000.json",
+        "sourcePath": "gmsv/data/map/jyaruga/jaja/jaja",
+        "sourceBlobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
+        "width": 150,
+        "height": 150
+      },
+      "directLandings": [[90,60]],
+      "portalGroups": {
+        "3000_to_200_a": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":91},
+        "3000_to_200_b": {"originCount":6,"reachableOriginPoints":5,"allReachable":false,"minPathLength":19,"blockedOrigin":[73,59],"blockedReason":"object image 2 is not walkable"}
+      }
+    },
+    {
+      "hometown": 3,
+      "destinationFloor": 4000,
+      "runtime": {
+        "path": "data/generated/stoneage_map_4000.json",
+        "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana",
+        "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
+        "width": 150,
+        "height": 150
+      },
+      "directLandings": [[80,90],[80,91]],
+      "portalGroups": {
+        "4000_to_200_a": {"originCount":2,"reachableOriginPoints":0,"allReachable":false,"portalUsable":false,"origins":[[104,55],[104,56]],"reason":"walkable portal cells are disconnected from both direct landings"},
+        "4000_to_200_b": {"originCount":2,"reachableOriginPoints":0,"allReachable":false,"portalUsable":false,"origins":[[101,96],[101,97]],"reason":"walkable portal cells are disconnected from both direct landings"}
+      }
+    }
+  ],
+  "worldFloor200Resolution": {
+    "status": "source-path-identified-runtime-unverified",
+    "fixedSourceCandidate": {
+      "path": "gmsv/data/map/jyaruga/jalga",
+      "blobSha": "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce",
+      "size": 3840044
+    },
+    "conflictingCurrentRuntime": {
+      "path": "data/generated/stoneage_map_200.json",
+      "sourcePath": "gmsv/data/map/extra/200",
+      "sourceBlobSha": "d08e8fea4dffd127c26f764d51231ec75ec73f98",
+      "width": 30,
+      "height": 30,
+      "reason": "cannot contain fixed-C world portal coordinates reaching at least x=588 and y=1008"
+    },
+    "externalCorroboration": {
+      "url": "https://www.shiqi.tv/shiqi153.htm",
+      "claim": "Public map-index references map floor 200 (加魯卡) to ./data/map/jyaruga/jalga.",
+      "role": "research corroboration only; not promoted to verified fixed-source runtime in this pass."
+    }
+  },
+  "summary": {
+    "destinationFloors": 4,
+    "allDirectLandingsWalkable": true,
+    "usablePortalGroups": 6,
+    "totalPortalGroups": 8,
+    "blockedPortalGroups": [
+      {"hometown":3,"destinationFloor":4000,"portalId":"4000_to_200_a"},
+      {"hometown":3,"destinationFloor":4000,"portalId":"4000_to_200_b"}
+    ],
+    "status": "partial"
+  }
+}
