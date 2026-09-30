@@ -25,6 +25,8 @@ assert.equal(state.player.hp,31); assert.equal(state.pets.petBox[0].hp,12);
 
 const tooFar=runtime.dispatch(state,{type:ACTION_NPC_HEALER_USE,npc:{floor:1000,npc:[10,10],functionSet:'Healer',template:'npcgen_healer',services:[{functionSet:'Healer',sourceStatus:'known'}]},player:{floor:1000,x:14,y:10}});
 assert.equal(tooFar.ok,false); assert.equal(tooFar.stage,'interaction-gate'); assert.equal(tooFar.reason,'out-of-range');
+const widened=runtime.dispatch(state,{type:ACTION_NPC_HEALER_USE,npc:{floor:1000,npc:[10,10],functionSet:'Healer',template:'npcgen_healer',services:[{functionSet:'Healer',sourceStatus:'known'}]},player:{floor:1000,x:14,y:10},maxDistance:10});
+assert.equal(widened.ok,false); assert.equal(widened.reason,'out-of-range');
 assert.equal(state.player.hp,31);
 
 const unresolved=runtime.dispatch(state,{type:ACTION_NPC_HEALER_USE,npc:{floor:1000,npc:[10,10],functionSet:'Bankman',template:'npcgen_bankman'},player:{floor:1000,x:11,y:10}});
