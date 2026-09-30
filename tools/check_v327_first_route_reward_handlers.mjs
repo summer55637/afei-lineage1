@@ -27,7 +27,7 @@ const bundle=createFirstRouteRewardHandlers({
 });
 assert.equal(bundle.ok,true);
 assert.equal(bundle.format,FIRST_ROUTE_REWARD_HANDLER_FORMAT);
-assert.deepEqual(bundle.capability,{GetItem:true,GetPet:true,EndSetFlg:true,NowSetFlg:true,Charm:false});
+assert.deepEqual(bundle.capability,{GetItem:true,GetPet:true,EndSetFlg:true,NowSetFlg:true,Charm:true});
 
 const syntheticPlan={
   format:'stoneage-npc-event-runtime-v1',
@@ -47,7 +47,7 @@ const applied=applyNpcEventActionPlan(state,syntheticPlan,{
   now:()=> '2026-09-30T06:30:00.000Z'
 });
 assert.equal(applied.applied,true);
-assert.equal(applied.actionCount,5);
+assert.equal(applied.actionCount,6);
 assert.deepEqual(applied.state.inventory.playerItemSlots.slice(9,11),[1,2]);
 assert.equal(applied.state.inventory.itemRuntime.slots['1'].itemId,20145);
 assert.equal(applied.state.inventory.itemRuntime.slots['2'].itemId,2849);
@@ -57,6 +57,16 @@ assert.equal(applied.state.pets.petBox[0].petId,274);
 assert.equal(applied.state.events.endWords[11],16384);
 assert.equal(applied.state.events.nowWords[11],32768);
 assert.equal(applied.state.revision,1);
+assert.equal(applied.state.player.charm,-1);
+
+const positiveCharmPlan={
+  ...syntheticPlan,
+  eventNo:174,
+  actions:{...syntheticPlan.actions,charm:{value:1,role:'Charm'}}
+};
+const charmApplied=applyNpcEventActionPlan(freshPersistentState({playerId:'first-route-charm'}),positiveCharmPlan,{handlers:bundle.handlers,transactionId:'first-route-charm-1'});
+assert.equal(charmApplied.applied,true);
+assert.equal(charmApplied.state.player.charm,0);
 
 const rollbackPlan={
   ...syntheticPlan,
@@ -68,7 +78,9 @@ const rollbackPlan={
     setNowEvents:[]
   }
 };
-const rejected=applyNpcEventActionPlan(state,rollbackPlan,{handlers:bundle.handlers,transactionId:'first-route-bundle-fail'});
+const incompleteHandlers={...bundle.handlers};
+delete incompleteHandlers.Charm;
+const rejected=applyNpcEventActionPlan(state,rollbackPlan,{handlers:incompleteHandlers,transactionId:'first-route-bundle-fail'});
 assert.equal(rejected.applied,false);
 assert.equal(rejected.reason,'event-action-handler-required');
 assert.equal(rejected.role,'Charm');
@@ -82,5 +94,6 @@ console.log(JSON.stringify({
   format:FIRST_ROUTE_REWARD_HANDLER_FORMAT,
   capabilities:bundle.capability,
   syntheticActionsCommitted:applied.actionCount,
-  atomicRollbackOnUnresolvedCharm:true
+  charmSourceGated:true,
+  atomicRollbackOnMissingCharmHandler:true
 }));
