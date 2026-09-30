@@ -26,7 +26,12 @@ jobs:
           path: fixed-c-source
           fetch-depth: 1
       - name: Run V3.72 transition audit
-        run: node tools/check_v372_4000_to_200_transition_audit.mjs fixed-c-source | tee /tmp/v372-audit.json
+        run: |
+          set +e
+          node tools/check_v372_4000_to_200_transition_audit.mjs fixed-c-source > /tmp/v372-audit.json
+          status=$?
+          cat /tmp/v372-audit.json || true
+          exit $status
       - name: Validate audit output
         run: |
           node --input-type=module <<'NODE'
