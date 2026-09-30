@@ -27,13 +27,13 @@ assert.ok(eventSource.includes('OBJECT_getType(o) == OBJTYPE_WARPPOINT'));
 assert.ok(eventSource.includes('MAPPOINT_MapWarpHandle'));
 
 assert.equal(catalog.format,'stoneage-start-destination-warp-coordinates-v2');
-assert.deepEqual(catalog.fixedSource,{repository:'gavinlinasd/StoneAge',ref:fixedRef,path:'gmsv/data/map/mapwarp.txt',blobSha:'617d2d02cbf17561d0eafc379a015d949055e922'});
+assert.deepEqual(catalog.fixedSource,{repository:'gavinlinasd/StoneAge',ref:fixedRef,path:'gmsv/data/map/mapwarp.txt',blobSha:'617d2d02cbf17561d0eafc319a015d949055e922'});
 const groups=Array.isArray(catalog.nextFloorPortals)
   ? catalog.nextFloorPortals
   : [...(catalog.nextFloorPortals?.to100??[]),...(catalog.nextFloorPortals?.to200??[])];
 assert.equal(groups.length,8);
 const rowCount=groups.reduce((n,g)=>n+(g.rows?.length??0),0);
-assert.equal(rowCount,37);
+assert.equal(rowCount,31);
 
 const loadMap=async floorId=>Number(floorId)===100?map100:(Number(floorId)===200?map200:null);
 const runtime=createBrowserWorldWarpPointRuntime({catalog,loadMap});
@@ -42,9 +42,9 @@ assert.equal(runtime.format,'stoneage-browser-world-warppoint-runtime-v1');
 
 const binding=resolveWorldWarpPointBinding({floorId:1000,x:49,y:116},catalog,{portalId:'1000_to_100_a'});
 assert.equal(binding.ok,true);
-assert.deepEqual(binding.binding.to,{floorId:100,x:637,y:491});
+assert.deepEqual(binding.binding.to,{floorId:100,x:631,y:491});
 
-const state=freshPersistentState({playerId:'v377'});
+const state=freshPersistentState({playerId:'v317'});
 state.world.position={floorId:1000,x:49,y:116};
 const controller=createBrowserStateController({
   state,
@@ -66,9 +66,9 @@ assert.equal(moved.handled,true);
 assert.equal(moved.stage,'warppoint');
 assert.equal(moved.format,BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT);
 assert.deepEqual(moved.from,{floorId:1000,x:49,y:116});
-assert.deepEqual(moved.to,{floorId:100,x:637,y:491});
+assert.deepEqual(moved.to,{floorId:100,x:631,y:491});
 assert.equal(moved.state.revision,1);
-assert.deepEqual(moved.state.world.position,{floorId:100,x:637,y:491});
+assert.deepEqual(moved.state.world.position,{floorId:100,x:631,y:491});
 assert.equal(validatePersistentState(moved.state).length,0);
 assert.equal(moved.verification.ok,true);
 
@@ -76,7 +76,7 @@ const wrong=await runtime.execute(state,{portalId:'1000_to_100_a',expectedRevisi
 assert.equal(wrong.ok,false);
 assert.equal(wrong.reason,'warppoint-position-invalid');
 
-const mismatch=freshPersistentState({playerId:'v377-mismatch'});
+const mismatch=freshPersistentState({playerId:'v317-mismatch'});
 mismatch.world.position={floorId:1000,x:49,y:117};
 const mismatchResult=await runtime.execute(mismatch,{portalId:'1000_to_100_a',expectedRevision:0});
 assert.equal(mismatchResult.ok,false);
@@ -86,7 +86,7 @@ const stale=await runtime.execute(moved.state,{portalId:'1000_to_100_a',expected
 assert.equal(stale.ok,false);
 assert.equal(stale.reason,'warppoint-id-not-at-position');
 
-const badRevisionState=freshPersistentState({playerId:'v377-stale'});
+const badRevisionState=freshPersistentState({playerId:'v317-stale'});
 badRevisionState.world.position={floorId:1000,x:49,y:116};
 const staleRevision=await runtime.execute(badRevisionState,{portalId:'1000_to_100_a',expectedRevision:1});
 assert.equal(staleRevision.ok,false);
@@ -104,13 +104,13 @@ assert.deepEqual(kar.binding.to,{floorId:200,x:304,y:599});
 const jaja=resolveWorldWarpPointBinding({floorId:3000,x:73,y:59},catalog,{portalId:'3000_to_200_b'});
 assert.equal(jaja.ok,true);
 assert.deepEqual(jaja.binding.to,{floorId:200,x:587,y:318});
-const jajaState=freshPersistentState({playerId:'v377-jaja'});
+const jajaState=freshPersistentState({playerId:'v317-jaja'});
 jajaState.world.position={floorId:3000,x:73,y:59};
 const jajaResult=await runtime.execute(jajaState,{portalId:'3000_to_200_b',expectedRevision:0});
 assert.equal(jajaResult.ok,true);
 assert.deepEqual(jajaResult.state.world.position,{floorId:200,x:587,y:318});
 
-const unresolved=await runtime.execute(freshPersistentState({playerId:'v377-unresolved'}),{portalId:'1000_to_100_a',expectedRevision:0});
+const unresolved=await runtime.execute(freshPersistentState({playerId:'v317-unresolved'}),{portalId:'1000_to_100_a',expectedRevision:0});
 assert.equal(unresolved.ok,false);
 
 console.log(JSON.stringify({
