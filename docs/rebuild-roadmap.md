@@ -2,6 +2,14 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.60 Browser SavePoint World source join
+
+V3.60 將 28 個 pinned fixed-C SavePoint instances 與 `stoneage_world_npc_index-v1` 做正式 `path#blockIndex` join。CI 同時重建 World catalog / SavePoint catalog，驗證 28/28 binding、26 個 unique floors、template / arg fileRef / elder Born identity，並回歸 V3.59 GetItem transaction contract。
+
+`genout/sp_200_449_982` 的原始 malformed token `1991*` 不修補；catalog 保留 zero-count branch anomaly，該 branch 在固定 C 語意下不可成立，runtime 只跳過它而不修改 source data。
+
+本輪沒有新增平行 SavePoint engine，也不建立新的 playable HTML 入口。
+
 ## 2026-09-30 新增：V3.59 Browser SavePoint GetItem transaction closure
 
 V3.59 將固定 C SavePoint 的 GetItem 路徑從 V3.58 的 fail-closed 推進到 source-backed inventory transaction。npc_savepoint.c 明確以逗號做 OR、& 做 AND；itemNo*count 的 count 是符合 ITEM_ID 的 inventory objects 數量，因 NPC_SavePointItemCheck / NPC_SavePointItemDelete 都逐 item slot 掃描並以 CHAR_DelItem 刪除，所以不能拿 canonical pile 代替 source object count。
