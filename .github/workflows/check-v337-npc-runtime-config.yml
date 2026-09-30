@@ -1,0 +1,20 @@
+name: Check V3.37 NPC runtime configuration
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_runtime_config.mjs'
+      - 'tools/check_v337_npc_runtime_config.mjs'
+      - 'docs/reference/v337-npc-runtime-config.md'
+      - '.github/workflows/check-v337-npc-runtime-config.yml'
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          node --check src/stoneage_npc_runtime_config.mjs
+          node --check tools/check_v337_npc_runtime_config.mjs
+      - run: node tools/check_v337_npc_runtime_config.mjs
