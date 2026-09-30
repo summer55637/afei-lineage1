@@ -1,0 +1,14 @@
+{
+  "format": "stoneage-v385-browser-world-encounter-idle-bridge-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_ENCOUNTER_ROLL_IDLE_COMMIT",
+  "sourceRuntime": "V3.81 WORLD_ENCOUNTER_ROLL",
+  "idleRuntime": "src/stoneage_idle_persistent_state_runtime.mjs",
+  "semantics": {
+    "rollHit": "MOVE_TICK(encounterTriggered=true) -> encounter_pending",
+    "rollMiss": "MOVE_TICK(encounterTriggered=false) -> moving",
+    "cep": "V3.81 cepAfter is persisted in world.encounter.cep in the same save",
+    "battleStarted": false,
+    "battleContext": "not created in V3.85"
+  }
+}
