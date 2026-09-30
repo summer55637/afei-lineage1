@@ -4,6 +4,7 @@ import {
   sourceMapTileAt,
   sourceMapWalkableAt
 } from './stoneage_map_runtime.mjs';
+import { ACTION_WORLD_MOVE_STEP } from './stoneage_browser_world_movement_runtime.mjs';
 
 const BROWSER_WORLD_ROUTE_RUNTIME_FORMAT='stoneage-browser-world-first-route-runtime-v1';
 const ROUTE_CATALOG_FORMAT='stoneage-first-idle-route-catalog-v1';
