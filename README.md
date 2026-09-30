@@ -64,4 +64,6 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `docs/reference/encounter-source-closure.md`
 - `docs/reference/gmque-source-closure.md`
 
+Item / Quest Event Closure 正在進行；reward gap clustering 與 event owner closure 已建立 source-backed index。
+
 最後整理：2026-09-30。
