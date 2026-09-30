@@ -5,12 +5,13 @@
     "repository": "gavinlinasd/StoneAge",
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
     "groupBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874",
-    "enemyBlobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+    "enemyBlobSha": "bf245a391adeace09915b6e425754b54ab69a8f6",
+    "enemyBaseBlobSha": "a19a508975e3a982fada323861b35b2edab79349"
   },
   "policy": {
     "purpose": "source-backed Group member selection inputs for start encounter",
     "unresolvedGroup": "never promoted",
-    "missingEnemyTemplate": "never spawned",
+    "missingEnemyTemplate": "never promoted",
     "itemGate": "appearByItemId requires player inventory; not auto-satisfied"
   },
   "summary": {
@@ -37,7 +38,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 113,
+              "size": 0,
+              "name": "昆伊"
+            }
           },
           "templateResolved": true
         }
@@ -60,7 +66,12 @@
             "levelMax": 3,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 113,
+              "size": 0,
+              "name": "昆伊"
+            }
           },
           "templateResolved": true
         }
@@ -83,7 +94,12 @@
             "levelMax": 5,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 113,
+              "size": 0,
+              "name": "昆伊"
+            }
           },
           "templateResolved": true
         }
@@ -106,7 +122,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 114,
+              "size": 0,
+              "name": "凯比特"
+            }
           },
           "templateResolved": true
         }
@@ -129,7 +150,12 @@
             "levelMax": 3,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 114,
+              "size": 0,
+              "name": "凯比特"
+            }
           },
           "templateResolved": true
         }
@@ -152,7 +178,12 @@
             "levelMax": 5,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 114,
+              "size": 0,
+              "name": "凯比特"
+            }
           },
           "templateResolved": true
         }
@@ -175,7 +206,12 @@
             "levelMax": 3,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 113,
+              "size": 0,
+              "name": "昆伊"
+            }
           },
           "templateResolved": true
         },
@@ -190,7 +226,12 @@
             "levelMax": 3,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 114,
+              "size": 0,
+              "name": "凯比特"
+            }
           },
           "templateResolved": true
         }
@@ -213,7 +254,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 51,
+              "size": 0,
+              "name": "龟之盾"
+            }
           },
           "templateResolved": true
         }
@@ -236,7 +282,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 52,
+              "size": 0,
+              "name": "绿龟"
+            }
           },
           "templateResolved": true
         }
@@ -259,7 +310,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 51,
+              "size": 0,
+              "name": "龟之盾"
+            }
           },
           "templateResolved": true
         },
@@ -274,7 +330,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 52,
+              "size": 0,
+              "name": "绿龟"
+            }
           },
           "templateResolved": true
         }
@@ -297,7 +358,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 1,
+              "size": 0,
+              "name": "乌力"
+            }
           },
           "templateResolved": true
         }
@@ -320,7 +386,12 @@
             "levelMax": 3,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 1,
+              "size": 0,
+              "name": "乌力"
+            }
           },
           "templateResolved": true
         }
@@ -343,7 +414,12 @@
             "levelMax": 5,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 1,
+              "size": 0,
+              "name": "乌力"
+            }
           },
           "templateResolved": true
         }
@@ -366,7 +442,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 3,
+              "size": 0,
+              "name": "乌力斯坦"
+            }
           },
           "templateResolved": true
         }
@@ -389,7 +470,12 @@
             "levelMax": 3,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 3,
+              "size": 0,
+              "name": "乌力斯坦"
+            }
           },
           "templateResolved": true
         }
@@ -412,7 +498,12 @@
             "levelMax": 5,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 3,
+              "size": 0,
+              "name": "乌力斯坦"
+            }
           },
           "templateResolved": true
         }
@@ -435,7 +526,12 @@
             "levelMax": 2,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         }
@@ -458,7 +554,12 @@
             "levelMax": 4,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         }
@@ -481,7 +582,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         }
@@ -504,7 +610,12 @@
             "levelMax": 2,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         }
@@ -527,7 +638,12 @@
             "levelMax": 4,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         }
@@ -550,7 +666,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         }
@@ -573,7 +694,12 @@
             "levelMax": 4,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         },
@@ -588,7 +714,12 @@
             "levelMax": 4,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         }
@@ -611,7 +742,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         },
@@ -626,7 +762,12 @@
             "levelMax": 6,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         }
@@ -649,7 +790,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 331,
+              "size": 1,
+              "name": "邦洛洛克斯"
+            }
           },
           "templateResolved": true
         }
@@ -672,7 +818,12 @@
             "levelMax": 10,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 331,
+              "size": 1,
+              "name": "邦洛洛克斯"
+            }
           },
           "templateResolved": true
         }
@@ -695,7 +846,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 11,
+              "size": 0,
+              "name": "布比"
+            }
           },
           "templateResolved": true
         }
@@ -718,7 +874,12 @@
             "levelMax": 10,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 11,
+              "size": 0,
+              "name": "布比"
+            }
           },
           "templateResolved": true
         }
@@ -741,7 +902,12 @@
             "levelMax": 11,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 11,
+              "size": 0,
+              "name": "布比"
+            }
           },
           "templateResolved": true
         }
@@ -764,7 +930,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 13,
+              "size": 0,
+              "name": "布伊"
+            }
           },
           "templateResolved": true
         }
@@ -794,7 +965,12 @@
             "levelMax": 12,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 13,
+              "size": 0,
+              "name": "布伊"
+            }
           },
           "templateResolved": true
         }
@@ -817,7 +993,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 13,
+              "size": 0,
+              "name": "布伊"
+            }
           },
           "templateResolved": true
         }
@@ -840,7 +1021,12 @@
             "levelMax": 10,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 11,
+              "size": 0,
+              "name": "布比"
+            }
           },
           "templateResolved": true
         },
@@ -855,7 +1041,12 @@
             "levelMax": 11,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 13,
+              "size": 0,
+              "name": "布伊"
+            }
           },
           "templateResolved": true
         }
@@ -878,7 +1069,12 @@
             "levelMax": 11,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 11,
+              "size": 0,
+              "name": "布比"
+            }
           },
           "templateResolved": true
         },
@@ -893,7 +1089,12 @@
             "levelMax": 12,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 13,
+              "size": 0,
+              "name": "布伊"
+            }
           },
           "templateResolved": true
         }
@@ -916,7 +1117,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 72,
+              "size": 0,
+              "name": "呼拔拔"
+            }
           },
           "templateResolved": true
         }
@@ -939,7 +1145,12 @@
             "levelMax": 14,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 74,
+              "size": 0,
+              "name": "鲁尼帖斯"
+            }
           },
           "templateResolved": true
         }
@@ -962,7 +1173,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 72,
+              "size": 0,
+              "name": "呼拔拔"
+            }
           },
           "templateResolved": true
         },
@@ -977,7 +1193,12 @@
             "levelMax": 14,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 74,
+              "size": 0,
+              "name": "鲁尼帖斯"
+            }
           },
           "templateResolved": true
         }
@@ -1000,7 +1221,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         }
@@ -1023,7 +1249,12 @@
             "levelMax": 14,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         }
@@ -1046,7 +1277,12 @@
             "levelMax": 16,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         }
@@ -1069,7 +1305,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         }
@@ -1092,7 +1333,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1115,7 +1361,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1138,7 +1389,12 @@
             "levelMax": 15,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1161,7 +1417,12 @@
             "levelMax": 19,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1184,7 +1445,12 @@
             "levelMax": 14,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         },
@@ -1199,7 +1465,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1222,7 +1493,12 @@
             "levelMax": 16,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         },
@@ -1237,7 +1513,12 @@
             "levelMax": 15,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1260,7 +1541,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 63,
+              "size": 1,
+              "name": "特洛昆"
+            }
           },
           "templateResolved": true
         },
@@ -1275,7 +1561,12 @@
             "levelMax": 19,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 64,
+              "size": 1,
+              "name": "达克尔"
+            }
           },
           "templateResolved": true
         }
@@ -1298,7 +1589,12 @@
             "levelMax": 10,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 291,
+              "size": 0,
+              "name": "火鸡"
+            }
           },
           "templateResolved": true
         }
@@ -1321,7 +1617,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 291,
+              "size": 0,
+              "name": "火鸡"
+            }
           },
           "templateResolved": true
         }
@@ -1344,7 +1645,12 @@
             "levelMax": 14,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 291,
+              "size": 0,
+              "name": "火鸡"
+            }
           },
           "templateResolved": true
         }
@@ -1367,7 +1673,12 @@
             "levelMax": 11,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1390,7 +1701,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1413,7 +1729,12 @@
             "levelMax": 15,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1436,7 +1757,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 291,
+              "size": 0,
+              "name": "火鸡"
+            }
           },
           "templateResolved": true
         },
@@ -1451,7 +1777,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1474,7 +1805,12 @@
             "levelMax": 10,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 291,
+              "size": 0,
+              "name": "火鸡"
+            }
           },
           "templateResolved": true
         },
@@ -1489,7 +1825,12 @@
             "levelMax": 11,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1512,7 +1853,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 291,
+              "size": 0,
+              "name": "火鸡"
+            }
           },
           "templateResolved": true
         },
@@ -1527,7 +1873,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1550,7 +1901,12 @@
             "levelMax": 13,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         },
@@ -1565,7 +1921,12 @@
             "levelMax": 15,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 294,
+              "size": 0,
+              "name": "奇宝"
+            }
           },
           "templateResolved": true
         }
@@ -1588,7 +1949,12 @@
             "levelMax": 20,
             "createMaxNum": 10,
             "createMinNum": 10,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 1,
+              "size": 0,
+              "name": "乌力"
+            }
           },
           "templateResolved": true
         }
@@ -1611,7 +1977,12 @@
             "levelMax": 20,
             "createMaxNum": 10,
             "createMinNum": 10,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 3,
+              "size": 0,
+              "name": "乌力斯坦"
+            }
           },
           "templateResolved": true
         }
@@ -1634,7 +2005,12 @@
             "levelMax": 8,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 51,
+              "size": 0,
+              "name": "龟之盾"
+            }
           },
           "templateResolved": true
         }
@@ -1657,7 +2033,12 @@
             "levelMax": 7,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 52,
+              "size": 0,
+              "name": "绿龟"
+            }
           },
           "templateResolved": true
         }
@@ -1680,7 +2061,12 @@
             "levelMax": 8,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 51,
+              "size": 0,
+              "name": "龟之盾"
+            }
           },
           "templateResolved": true
         },
@@ -1695,7 +2081,12 @@
             "levelMax": 7,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 52,
+              "size": 0,
+              "name": "绿龟"
+            }
           },
           "templateResolved": true
         }
@@ -1718,7 +2109,12 @@
             "levelMax": 7,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         }
@@ -1741,7 +2137,12 @@
             "levelMax": 8,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         }
@@ -1764,7 +2165,12 @@
             "levelMax": 7,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 212,
+              "size": 0,
+              "name": "贝恩达斯"
+            }
           },
           "templateResolved": true
         },
@@ -1779,7 +2185,12 @@
             "levelMax": 8,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 213,
+              "size": 0,
+              "name": "多利凯拉"
+            }
           },
           "templateResolved": true
         }
@@ -1802,7 +2213,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 31,
+              "size": 0,
+              "name": "乌宝宝"
+            }
           },
           "templateResolved": true
         }
@@ -1825,7 +2241,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 32,
+              "size": 0,
+              "name": "威威"
+            }
           },
           "templateResolved": true
         }
@@ -1848,7 +2269,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 31,
+              "size": 0,
+              "name": "乌宝宝"
+            }
           },
           "templateResolved": true
         },
@@ -1863,7 +2289,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 32,
+              "size": 0,
+              "name": "威威"
+            }
           },
           "templateResolved": true
         }
@@ -1886,7 +2317,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 103,
+              "size": 0,
+              "name": "克洛尔"
+            }
           },
           "templateResolved": true
         }
@@ -1909,7 +2345,12 @@
             "levelMax": 4,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 103,
+              "size": 0,
+              "name": "克洛尔"
+            }
           },
           "templateResolved": true
         }
@@ -1932,7 +2373,12 @@
             "levelMax": 5,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 103,
+              "size": 0,
+              "name": "克洛尔"
+            }
           },
           "templateResolved": true
         }
@@ -1955,7 +2401,12 @@
             "levelMax": 2,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 211,
+              "size": 0,
+              "name": "多利诺布斯"
+            }
           },
           "templateResolved": true
         }
@@ -1978,7 +2429,12 @@
             "levelMax": 5,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 211,
+              "size": 0,
+              "name": "多利诺布斯"
+            }
           },
           "templateResolved": true
         }
@@ -2001,7 +2457,12 @@
             "levelMax": 6,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 211,
+              "size": 0,
+              "name": "多利诺布斯"
+            }
           },
           "templateResolved": true
         }
@@ -2024,7 +2485,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         }
@@ -2047,7 +2513,12 @@
             "levelMax": 3,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         }
@@ -2070,7 +2541,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         }
@@ -2093,7 +2569,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -2116,7 +2597,12 @@
             "levelMax": 3,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -2139,7 +2625,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -2162,7 +2653,12 @@
             "levelMax": 3,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         },
@@ -2177,7 +2673,12 @@
             "levelMax": 3,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -2200,7 +2701,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         },
@@ -2215,7 +2721,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -2238,7 +2749,12 @@
             "levelMax": 2,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         }
@@ -2261,7 +2777,12 @@
             "levelMax": 3,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         }
@@ -2284,7 +2805,12 @@
             "levelMax": 2,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 33,
+              "size": 0,
+              "name": "乌卡鲁"
+            }
           },
           "templateResolved": true
         }
@@ -2307,7 +2833,12 @@
             "levelMax": 4,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 33,
+              "size": 0,
+              "name": "乌卡鲁"
+            }
           },
           "templateResolved": true
         }
@@ -2330,7 +2861,12 @@
             "levelMax": 5,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 33,
+              "size": 0,
+              "name": "乌卡鲁"
+            }
           },
           "templateResolved": true
         }
@@ -2353,7 +2889,12 @@
             "levelMax": 2,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 62,
+              "size": 1,
+              "name": "尼可斯"
+            }
           },
           "templateResolved": true
         }
@@ -2376,7 +2917,12 @@
             "levelMax": 5,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 62,
+              "size": 1,
+              "name": "尼可斯"
+            }
           },
           "templateResolved": true
         }
@@ -2399,7 +2945,12 @@
             "levelMax": 6,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 62,
+              "size": 1,
+              "name": "尼可斯"
+            }
           },
           "templateResolved": true
         }
@@ -2422,7 +2973,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         }
@@ -2445,7 +3001,12 @@
             "levelMax": 15,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         }
@@ -2468,7 +3029,12 @@
             "levelMax": 17,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         }
@@ -2491,7 +3057,12 @@
             "levelMax": 18,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         }
@@ -2514,7 +3085,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2537,7 +3113,12 @@
             "levelMax": 14,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2560,7 +3141,12 @@
             "levelMax": 16,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2583,7 +3169,12 @@
             "levelMax": 18,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2606,7 +3197,12 @@
             "levelMax": 15,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         },
@@ -2621,7 +3217,12 @@
             "levelMax": 14,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2644,7 +3245,12 @@
             "levelMax": 17,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         },
@@ -2659,7 +3265,12 @@
             "levelMax": 16,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2682,7 +3293,12 @@
             "levelMax": 18,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 181,
+              "size": 0,
+              "name": "卡克尔"
+            }
           },
           "templateResolved": true
         },
@@ -2697,7 +3313,12 @@
             "levelMax": 18,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 182,
+              "size": 0,
+              "name": "巴克"
+            }
           },
           "templateResolved": true
         }
@@ -2720,7 +3341,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         }
@@ -2743,7 +3369,12 @@
             "levelMax": 16,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         }
@@ -2766,7 +3397,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         }
@@ -2789,7 +3425,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         }
@@ -2812,7 +3453,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -2835,7 +3481,12 @@
             "levelMax": 16,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -2858,7 +3509,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -2881,7 +3537,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -2904,7 +3565,12 @@
             "levelMax": 16,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         },
@@ -2919,7 +3585,12 @@
             "levelMax": 16,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -2942,7 +3613,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         },
@@ -2957,7 +3633,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -2980,7 +3661,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 191,
+              "size": 1,
+              "name": "贝鲁卡"
+            }
           },
           "templateResolved": true
         },
@@ -2995,7 +3681,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 192,
+              "size": 1,
+              "name": "贝鲁伊卡"
+            }
           },
           "templateResolved": true
         }
@@ -3018,7 +3709,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         }
@@ -3041,7 +3737,12 @@
             "levelMax": 13,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         }
@@ -3064,7 +3765,12 @@
             "levelMax": 15,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         }
@@ -3087,7 +3793,12 @@
             "levelMax": 16,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         }
@@ -3110,7 +3821,12 @@
             "levelMax": 1,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3133,7 +3849,12 @@
             "levelMax": 13,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3156,7 +3877,12 @@
             "levelMax": 15,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3179,7 +3905,12 @@
             "levelMax": 16,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3202,7 +3933,12 @@
             "levelMax": 13,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         },
@@ -3217,7 +3953,12 @@
             "levelMax": 13,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3240,7 +3981,12 @@
             "levelMax": 15,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         },
@@ -3255,7 +4001,12 @@
             "levelMax": 15,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3278,7 +4029,12 @@
             "levelMax": 16,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 292,
+              "size": 0,
+              "name": "克克洛斯"
+            }
           },
           "templateResolved": true
         },
@@ -3293,7 +4049,12 @@
             "levelMax": 16,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 293,
+              "size": 0,
+              "name": "霍尔克"
+            }
           },
           "templateResolved": true
         }
@@ -3316,7 +4077,12 @@
             "levelMax": 17,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         }
@@ -3339,7 +4105,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         }
@@ -3362,7 +4133,12 @@
             "levelMax": 17,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 224,
+              "size": 0,
+              "name": "邦恩吉"
+            }
           },
           "templateResolved": true
         }
@@ -3385,7 +4161,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 224,
+              "size": 0,
+              "name": "邦恩吉"
+            }
           },
           "templateResolved": true
         }
@@ -3408,7 +4189,12 @@
             "levelMax": 17,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         },
@@ -3423,7 +4209,12 @@
             "levelMax": 17,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 224,
+              "size": 0,
+              "name": "邦恩吉"
+            }
           },
           "templateResolved": true
         }
@@ -3446,7 +4237,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         },
@@ -3461,7 +4257,12 @@
             "levelMax": 18,
             "createMaxNum": 4,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 224,
+              "size": 0,
+              "name": "邦恩吉"
+            }
           },
           "templateResolved": true
         }
@@ -3484,7 +4285,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         }
@@ -3507,7 +4313,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 103,
+              "size": 0,
+              "name": "克洛尔"
+            }
           },
           "templateResolved": true
         }
@@ -3530,7 +4341,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -3553,7 +4369,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         },
@@ -3568,7 +4389,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 103,
+              "size": 0,
+              "name": "克洛尔"
+            }
           },
           "templateResolved": true
         },
@@ -3583,7 +4409,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         }
@@ -3606,7 +4437,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 14,
+              "size": 0,
+              "name": "布伊比"
+            }
           },
           "templateResolved": true
         }
@@ -3629,7 +4465,12 @@
             "levelMax": 9,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 211,
+              "size": 0,
+              "name": "多利诺布斯"
+            }
           },
           "templateResolved": true
         }
@@ -3652,7 +4493,12 @@
             "levelMax": 9,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 62,
+              "size": 1,
+              "name": "尼可斯"
+            }
           },
           "templateResolved": true
         }
@@ -3675,7 +4521,12 @@
             "levelMax": 12,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 31,
+              "size": 0,
+              "name": "乌宝宝"
+            }
           },
           "templateResolved": true
         }
@@ -3698,7 +4549,12 @@
             "levelMax": 12,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 32,
+              "size": 0,
+              "name": "威威"
+            }
           },
           "templateResolved": true
         }
@@ -3721,7 +4577,12 @@
             "levelMax": 12,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 33,
+              "size": 0,
+              "name": "乌卡鲁"
+            }
           },
           "templateResolved": true
         }
@@ -3744,7 +4605,12 @@
             "levelMax": 12,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 31,
+              "size": 0,
+              "name": "乌宝宝"
+            }
           },
           "templateResolved": true
         },
@@ -3759,7 +4625,12 @@
             "levelMax": 12,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 32,
+              "size": 0,
+              "name": "威威"
+            }
           },
           "templateResolved": true
         },
@@ -3774,7 +4645,12 @@
             "levelMax": 12,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 33,
+              "size": 0,
+              "name": "乌卡鲁"
+            }
           },
           "templateResolved": true
         }
@@ -3797,7 +4673,12 @@
             "levelMax": 20,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 243,
+              "size": 1,
+              "name": "海主人"
+            }
           },
           "templateResolved": true
         }
@@ -3820,7 +4701,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 224,
+              "size": 0,
+              "name": "邦恩吉"
+            }
           },
           "templateResolved": true
         }
@@ -3843,7 +4729,12 @@
             "levelMax": 22,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 509,
+              "size": 0,
+              "name": "山贼"
+            }
           },
           "templateResolved": true
         },
@@ -3858,7 +4749,12 @@
             "levelMax": 18,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 510,
+              "size": 1,
+              "name": "山贼格尔顿"
+            }
           },
           "templateResolved": true
         }
@@ -3881,7 +4777,12 @@
             "levelMax": 22,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 511,
+              "size": 0,
+              "name": "盗贼"
+            }
           },
           "templateResolved": true
         },
@@ -3896,7 +4797,12 @@
             "levelMax": 18,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 513,
+              "size": 0,
+              "name": "盗贼鲁尼帖斯"
+            }
           },
           "templateResolved": true
         }
@@ -3919,7 +4825,12 @@
             "levelMax": 21,
             "createMaxNum": 2,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 523,
+              "size": 0,
+              "name": "逃走呼拔拔"
+            }
           },
           "templateResolved": true
         }
@@ -3942,7 +4853,12 @@
             "levelMax": 15,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 524,
+              "size": 1,
+              "name": "卡特利奴"
+            }
           },
           "templateResolved": true
         }
@@ -3965,7 +4881,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 531,
+              "size": 0,
+              "name": "木"
+            }
           },
           "templateResolved": true
         }
@@ -3988,7 +4909,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 557,
+              "size": 0,
+              "name": "杰洛磨树"
+            }
           },
           "templateResolved": true
         }
@@ -4011,7 +4937,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 557,
+              "size": 0,
+              "name": "杰洛磨树"
+            }
           },
           "templateResolved": true
         }
@@ -4034,7 +4965,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 557,
+              "size": 0,
+              "name": "杰洛磨树"
+            }
           },
           "templateResolved": true
         }
@@ -4057,7 +4993,12 @@
             "levelMax": 90,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 678,
+              "size": 0,
+              "name": "乌力斯坦"
+            }
           },
           "templateResolved": true
         },
@@ -4072,7 +5013,12 @@
             "levelMax": 80,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 1,
+              "size": 0,
+              "name": "乌力"
+            }
           },
           "templateResolved": true
         },
@@ -4087,7 +5033,12 @@
             "levelMax": 80,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 3,
+              "size": 0,
+              "name": "乌力斯坦"
+            }
           },
           "templateResolved": true
         }
@@ -4110,7 +5061,12 @@
             "levelMax": 90,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 679,
+              "size": 0,
+              "name": "加格"
+            }
           },
           "templateResolved": true
         },
@@ -4125,7 +5081,12 @@
             "levelMax": 80,
             "createMaxNum": 10,
             "createMinNum": 1,
-            "petFlg": 0
+            "petFlg": 0,
+            "base": {
+              "tempNo": 221,
+              "size": 0,
+              "name": "克邦凯斯"
+            }
           },
           "templateResolved": true
         }
@@ -4148,7 +5109,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 728,
+              "size": 0,
+              "name": "布依布鲁"
+            }
           },
           "templateResolved": true
         },
@@ -4163,7 +5129,12 @@
             "levelMax": 11,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 11,
+              "size": 0,
+              "name": "布比"
+            }
           },
           "templateResolved": true
         },
@@ -4178,7 +5149,12 @@
             "levelMax": 12,
             "createMaxNum": 3,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 13,
+              "size": 0,
+              "name": "布伊"
+            }
           },
           "templateResolved": true
         }
@@ -4201,7 +5177,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 101,
+              "size": 0,
+              "name": "克雷尔"
+            }
           },
           "templateResolved": true
         },
@@ -4216,7 +5197,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 103,
+              "size": 0,
+              "name": "克洛尔"
+            }
           },
           "templateResolved": true
         },
@@ -4231,7 +5217,12 @@
             "levelMax": 12,
             "createMaxNum": 5,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 104,
+              "size": 0,
+              "name": "里斯基"
+            }
           },
           "templateResolved": true
         },
@@ -4246,7 +5237,12 @@
             "levelMax": 1,
             "createMaxNum": 1,
             "createMinNum": 1,
-            "petFlg": 1
+            "petFlg": 1,
+            "base": {
+              "tempNo": 760,
+              "size": 0,
+              "name": "克达达"
+            }
           },
           "templateResolved": true
         }
