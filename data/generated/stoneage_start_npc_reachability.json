@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-npc-reachability-v2",
+  "format": "stoneage-start-npc-reachability-v3",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -9,18 +9,21 @@
     "startFlow": "data/generated/stoneage_start_flow_index.json",
     "mapParser": "tools/stoneage_ls2map_parser.mjs",
     "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
-    "interaction": "gmsv/src/npc/npcutil.c::NPC_Util_charIsInFrontOfChar"
+    "interaction": "gmsv/src/npc/npcutil.c::NPC_Util_charIsInFrontOfChar",
+    "changeeventTemplate": "gmsv/src/npc/npctemplate.c::functionSet[]",
+    "createParser": "gmsv/src/npc/npccreate.c::NPC_readCreateFile"
   },
   "statistics": {
     "totalNpcInstancesOnStartFloors": 46,
-    "coordinateResolvedInstances": 20,
-    "reachableCoordinateResolvedInstances": 16,
+    "coordinateResolvedInstances": 46,
+    "reachableCoordinateResolvedInstances": 41,
     "unreachableCoordinateResolvedInstances": 0,
-    "unresolvedCoordinateInstances": 26,
-    "coordinateResolved": 20,
-    "coordinateUnresolved": 26,
-    "interactionAuditedReachable": 16,
-    "coordinateResolvedButInteractionNotAudited": 4
+    "unresolvedCoordinateInstances": 0,
+    "coordinateResolved": 46,
+    "coordinateUnresolved": 0,
+    "interactionAuditedReachable": 41,
+    "coordinateResolvedButInteractionNotAudited": 5,
+    "templateModuleUnresolvedInstances": 5
   },
   "sourceValidation": [
     {
@@ -47,7 +50,7 @@
     {
       "hometown": 3,
       "floor": 4006,
-      "sourcePath": "gmsv/data/map/jyaruga/karutarna/4006",
+      "sourcePath": "gmsv/data/map/jyaruga/karutana/4006",
       "sourceBlobSha": "bbdeb0d1bef3ec3993afc75d6416599c3bd5cf46",
       "blobShaVerified": true
     }
@@ -332,14 +335,567 @@
       "sharedScript": "almark/xinshou/xinshoujd.arg",
       "resolutionStatus": "coordinate_resolved_from_pinned_source",
       "interactionStatus": "not_audited_same_cell"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "npcgen_fmdengon",
+      "npcPath": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 0,
+      "npc": [
+        16,
+        19
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_Util_CharDistance <= 3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 0,
+      "stance": [
+        15,
+        22
+      ],
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_fmdengon",
+      "npcPath": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 1,
+      "npc": [
+        23,
+        19
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_Util_CharDistance <= 3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 0,
+      "stance": [
+        20,
+        16
+      ],
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "npcgen_fmdengon",
+      "npcPath": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 2,
+      "npc": [
+        18,
+        17
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_Util_CharDistance <= 3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 0,
+      "stance": [
+        21,
+        16
+      ],
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "npcgen_fmdengon",
+      "npcPath": "gmsv/data/npc/family/fmdengon.create",
+      "blockIndex": 3,
+      "npc": [
+        19,
+        18
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_Util_CharDistance <= 3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 4,
+      "stance": [
+        16,
+        18
+      ],
+      "sourceBlobSha": "a59ba60ea44690cbca32967bbefee3152421107a"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "changeevent",
+      "npcPath": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 12,
+      "npc": [
+        18,
+        22
+      ],
+      "npcCellWalkable": true,
+      "reachableInteraction": null,
+      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004",
+      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 13,
+      "npc": [
+        16,
+        16
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 4,
+      "stance": [
+        16,
+        19
+      ],
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 93,
+      "npc": [
+        20,
+        8
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 5,
+      "stance": [
+        20,
+        11
+      ],
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m.create",
+      "blockIndex": 94,
+      "npc": [
+        16,
+        9
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 8,
+      "stance": [
+        19,
+        9
+      ],
+      "sourceBlobSha": "c5db3b6268dfb54c1f75645af497e067cbcfd004"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 13,
+      "npc": [
+        20,
+        14
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 1,
+      "stance": [
+        20,
+        16
+      ],
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 14,
+      "npc": [
+        14,
+        16
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 4,
+      "stance": [
+        17,
+        16
+      ],
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 93,
+      "npc": [
+        17,
+        20
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 0,
+      "stance": [
+        14,
+        20
+      ],
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/genout/shop_m2.create",
+      "blockIndex": 94,
+      "npc": [
+        16,
+        27
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 6,
+      "stance": [
+        16,
+        24
+      ],
+      "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 0,
+      "npc": [
+        12,
+        14
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 7,
+      "stance": [
+        15,
+        14
+      ],
+      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 25,
+      "npc": [
+        23,
+        13
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 3,
+      "stance": [
+        20,
+        13
+      ],
+      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 0,
+      "npc": [
+        12,
+        13
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 11,
+      "stance": [
+        12,
+        14
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 1,
+      "npc": [
+        25,
+        15
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 5,
+      "stance": [
+        24,
+        15
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 2,
+      "npc": [
+        25,
+        13
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 6,
+      "stance": [
+        24,
+        13
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 3,
+      "npc": [
+        17,
+        15
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 7,
+      "stance": [
+        16,
+        15
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 23,
+      "npc": [
+        10,
+        20
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 7,
+      "stance": [
+        10,
+        20
+      ],
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 25,
+      "npc": [
+        10,
+        21
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 6,
+      "stance": [
+        10,
+        21
+      ],
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 153,
+      "npc": [
+        20,
+        21
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 5,
+      "stance": [
+        20,
+        21
+      ],
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y.create",
+      "blockIndex": 155,
+      "npc": [
+        21,
+        21
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 6,
+      "stance": [
+        21,
+        21
+      ],
+      "sourceBlobSha": "a327660ef1753a204e04e0c204e56de66574b98f"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 17,
+      "npc": [
+        20,
+        21
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 6,
+      "stance": [
+        20,
+        21
+      ],
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 18,
+      "npc": [
+        21,
+        21
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 5,
+      "stance": [
+        21,
+        21
+      ],
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 63,
+      "npc": [
+        10,
+        20
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 4,
+      "stance": [
+        10,
+        20
+      ],
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "npcgen_warp",
+      "npcPath": "gmsv/data/npc/genout/warp_y2.create",
+      "blockIndex": 65,
+      "npc": [
+        10,
+        21
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_WarpWatch same-cell post-walk",
+      "reachableInteraction": true,
+      "minPathToInteraction": 5,
+      "stance": [
+        10,
+        21
+      ],
+      "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5"
     }
   ],
-  "policy": "Coordinate resolution from fixed-C source does not imply interaction reachability. The four xinshou changeevent NPC coordinates are source-resolved, but same-cell placement at the player spawn is kept as not_audited until the dedicated changeevent interaction contract is confirmed.",
+  "policy": "NPC coordinate closure is source-derived from NPCCREATE borncorner. Interaction reachability is source-derived per template: Bankman/Familyman/Windowman/Action use front-of-NPC checks, TownPeople uses NPC_Util_charIsInFrontOfChar distance=3, LuckyMan uses face-to-face/face-to-chara, FmDengon uses distance<=3, Warp uses same-cell post-walk. Five start-floor changeevent create blocks remain runtime-module-unresolved because pinned npctemplate.c has no changeevent functionSet; coordinates for them are source-resolved but not counted as active/reachable.",
   "sourceEvidence": {
     "newPlayerEventOwner": {
       "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
       "blobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
       "addedCoordinateResolvedCount": 4
+    },
+    "coordinateClosure": "data/generated/stoneage_start_npc_coordinate_closure.json",
+    "fixedSourceTemplateFunctionSet": {
+      "path": "gmsv/src/npc/npctemplate.c",
+      "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
+      "changeeventPresent": false
+    },
+    "newResolvedInteractionAudit": {
+      "total": 26,
+      "reachable": 25,
+      "changeeventModuleUnresolved": 1
     }
   }
 }
