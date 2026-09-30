@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：4669b35 — V3.73 harden persistent state container validation
-- 最後更新時間：2026-10-01T03:22:48+08:00
+- 最新 commit：9adb37d — V3.73 update roadmap
+- 最後更新時間：2026-10-01T03:23:16+08:00
 - 版本線最高 regression workflow：V3.72
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -54,7 +54,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 ### 資料時間
 
 - route closure：2026-09-30
-- persistent state：2026-09-30
+- persistent state：2026-10-01
 - item/economy schema：2026-09-30
 - new-player seed：2026-09-30
 - starter Item 24114 audit：2026-09-30；mapping audit v2 / build closure v1：2026-09-30
