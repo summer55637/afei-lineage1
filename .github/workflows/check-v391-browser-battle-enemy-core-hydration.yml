@@ -1,0 +1,36 @@
+name: Check V3.91 Browser Battle Enemy core hydration
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs'
+      - 'data/generated/stoneage_start_encounter_group_runtime.json'
+      - 'data/generated/stoneage_browser_battle_enemy_core_hydration_schema.json'
+      - 'tools/check_v390_browser_world_encounter_enemy_core_stat.mjs'
+      - 'tools/check_v391_browser_battle_enemy_core_hydration.mjs'
+      - 'docs/reference/v390-browser-enemy-core-stat.md'
+      - 'docs/reference/v391-browser-battle-enemy-core-hydration.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v391-browser-battle-enemy-core-hydration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.90 V3.91 Enemy stats/battle context regression
+        run: |
+          node tools/check_v390_browser_world_encounter_enemy_core_stat.mjs
+          node tools/check_v391_browser_battle_enemy_core_hydration.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v390_browser_world_encounter_enemy_core_stat.mjs
+          node --check tools/check_v391_browser_battle_enemy_core_hydration.mjs
