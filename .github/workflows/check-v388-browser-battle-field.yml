@@ -1,0 +1,33 @@
+name: Check V3.88 Browser Battle Field Runtime
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_field_runtime.mjs'
+      - 'src/stoneage_map_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'data/generated/stoneage_battlefield_source_manifest.json'
+      - 'data/generated/stoneage_map_runtime_index.json'
+      - 'data/generated/stoneage_browser_battle_field_schema.json'
+      - 'tools/check_v388_browser_battle_field_runtime.mjs'
+      - 'docs/reference/v388-browser-battle-field-runtime.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v388-browser-battle-field.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.88 field/runtime regression
+        run: node tools/check_v388_browser_battle_field_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_field_runtime.mjs
+          node --check src/stoneage_map_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v388_browser_battle_field_runtime.mjs
