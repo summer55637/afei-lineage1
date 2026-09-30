@@ -1295,33 +1295,3 @@ V3.95 將 fixed-C `BATTLE_CommandWait()` 做成 read-only command gate：
 V3.95 不修改 Battle Context、不消耗 RNG、不執行 AI / Damage。
 
 下一階段才處理 `BATTLE_Command` 的 player command submission，把 `attack/guard/item/pet/change/escape` 等合法 command mapping 接到既有 Battle Model；Enemy AI command 仍維持獨立 source boundary。
-
-## 2026-10-01 V3.90 Browser Enemy Stat Runtime
-
-V3.90 將 fixed-C `ENEMY_createEnemy()` 的可確證戰鬥 stat materialization 接到 browser：
-
-- level：baselevel 或 `RAND(LV_MIN,LV_MAX)`
-- 四圍 temporary variance：4 次 `RAND(0,4)-2`
-- 10 次 allocation：`RAND(0,3)`
-- VITAL / STR / TOUGH / DEX growth formula
-- `MAXHP) / HP
-- 元素、status resistance、PetSkill、critical、counter、rare、slot、image、pet flag
-- pet rank：嚴格使用原始 EnemyBase 四圍
-
-V3.90 的 RNG 全部 caller-injected，避免藏入 `Math.random`。
-
-尚未閉合：
-- `CHAR_DEFAULTCHAR(31010)` 的 CHAR_MAXMP
-- `ENEMY_RandomChange()`
-- Enemy style / item equipment 對 derived battle values 的影響
-- EXP / reward
-
-新增：
-- `src/stoneage_browser_enemy_stat_runtime.mjs`
-- `data/generated/stoneage_browser_enemy_stat_schema.json`
-- `tools/check_v390_browser_enemy_stat_runtime.mjs`
-- `docs/reference/v390-browser-enemy-stat-runtime.md`
-- `.github/workflows/check-v390-browser-enemy-stat-runtime.yml`
-
-V3.90 為 stat-only runtime，不修改 Persistent State，也不執行 Battle Turn。
-
