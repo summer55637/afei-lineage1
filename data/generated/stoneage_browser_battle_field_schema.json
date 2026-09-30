@@ -1,0 +1,22 @@
+{
+  "format": "stoneage-v388-browser-battle-field-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_FIELD_RESOLVE",
+  "fixedC": {
+    "function": "BATTLE_getBattleFieldNo(floor,x,y)",
+    "tileSource": "MAP_getTileAndObjData(floor,x,y) -> tile[0]",
+    "candidateSources": [
+      "MAP_BATTLEMAP",
+      "MAP_BATTLEMAP2",
+      "MAP_BATTLEMAP3"
+    ],
+    "candidateCount": 3,
+    "selection": "RAND(0,2)"
+  },
+  "browser": {
+    "roll": "caller-injected integer 0..2",
+    "mapSource": "existing src/stoneage_map_runtime.mjs",
+    "persistentMutation": false,
+    "fallback": "existing battleFieldNoProvider remains compatibility fallback when source map cannot resolve"
+  }
+}
