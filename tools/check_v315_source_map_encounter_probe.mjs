@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const game=fs.readFileSync('game.js','utf8');
-const html=fs.readFileSync('start.html','utf8');
+const html=fs.readFileSync('index.html','utf8');
 const runtime=fs.readFileSync('src/stoneage_map_runtime.mjs','utf8');
 const index=JSON.parse(fs.readFileSync('data/generated/stoneage_map_runtime_index.json','utf8'));
 
