@@ -433,3 +433,18 @@ Existing-item reward lifecycle 已依 source 修正為只接收已存在且 enem
 新增 `src/stoneage_offline_resume.mjs` 與 regression。Offline resume 現在可透過 Idle Simulation Runner 發起 checkpoint commit；必須先有 `idle.offline.eligible=true`，時間窗驗證後寫入 Save Envelope。尚未完成 source-backed offline battle/reward simulation，因此 `accruedSeconds=0` 與 `rewardsApplied=false` 是目前的安全邊界。
 
 下一階段可把 source-backed battle simulation output 接到這個 adapter，再決定是否形成真正的 offline reward transaction；同時開始 Item / Economy runtime 與主要 world route coverage。
+
+## 2026-09-30 Item / Economy Runtime v1
+
+Item / Economy 已從「資料研究」進入 canonical state transaction 層：
+
+- `sourcePlayerMaxGold()` 固定對齊 fixed-C `CHAR_getMaxHaveGold()` 的轉生金錢上限公式。
+- Buy：source-resolved Item ID / cost / buy_rate → source allocator 建立 existing item → 放入 player backpack 9–23 → 扣 Gold。
+- Sell：source-resolved price → 刪除 player existing item / 扣 pile → 加 Gold；simple-shop base price 9,999 boundary 與 source gold-cap guard 已固定。
+- stack item 在 pile > 0 時保留同一 existing index；pile = 0 才釋放 runtime item。
+- 尚未完成 source Item maker 的完整 browser adapter，因此 Buy 不自行產生 Item；缺少 source allocator 或 Item 來源證據時直接 fail-closed。
+
+Regression：`tools/check_item_economy_runtime.mjs`。
+Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`。
+
+下一階段會把這個 transaction layer 與 source Item allocator / Item template runtime、NPC shop data、製作與 reward path 接起來；不把未閉合 Item ID 或 NPC-specific price 猜成 gameplay。
