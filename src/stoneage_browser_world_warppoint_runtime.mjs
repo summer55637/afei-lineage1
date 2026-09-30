@@ -34,11 +34,13 @@ function sameCell(a,b){
 }
 
 function flattenPortalRows(catalog){
-  const groups=[
-    ...(catalog?.nextFloorPortals?.to100??[]),
-    ...(catalog?.nextFloorPortals?.to200??[])
-  ];
-  return groups.flatMap(group=>(group.rows??[]).map(row=>({
+  const rawGroups=Array.isArray(catalog?.nextFloorPortals)
+    ? catalog.nextFloorPortals
+    : [
+        ...(catalog?.nextFloorPortals?.to100??[]),
+        ...(catalog?.nextFloorPortals?.to200??[])
+      ];
+  return rawGroups.flatMap(group=>(group?.rows??[]).map(row=>({
     portalId:String(group.id),
     fromFloor:Number(group.fromFloor),
     toFloor:Number(group.toFloor),
