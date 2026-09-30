@@ -1,0 +1,32 @@
+name: Check V3.89 Browser Battle Entry reset
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_battle_entry_runtime.mjs'
+      - 'data/generated/stoneage_browser_battle_entry_reset_schema.json'
+      - 'tools/check_v389_browser_battle_entry_reset.mjs'
+      - 'docs/reference/v387-browser-battle-entry-init.md'
+      - 'docs/reference/v389-browser-battle-entry-reset.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v389-browser-battle-entry-reset.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.87 V3.89 entry regressions
+        run: |
+          node tools/check_v387_browser_battle_entry_init.mjs
+          node tools/check_v389_browser_battle_entry_reset.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v387_browser_battle_entry_init.mjs
+          node --check tools/check_v389_browser_battle_entry_reset.mjs
