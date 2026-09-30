@@ -24,6 +24,7 @@ import { createBrowserWorldEncounterPersistenceRuntime, ACTION_WORLD_ENCOUNTER_R
 import { createBrowserWorldEncounterGroupRuntime, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_group_runtime.mjs';
 import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_enemy_runtime.mjs';
 import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT, BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT } from './stoneage_browser_world_encounter_idle_bridge.mjs';
+import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT } from './stoneage_browser_battle_context_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -62,6 +63,7 @@ function createBrowserStateController({
   encounterGroupCatalog=null,
   worldMovementOptions={},
   worldWarpPointOptions={},
+  battleFieldNoProvider=null,
   worldFirstRouteOptions={}
 }={}){
   let currentState=state;
@@ -90,9 +92,11 @@ function createBrowserStateController({
       : createBrowserItemShopRuntime({catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions}))
     : null;
   let sequence=0;
+  let battleContext=null;
   let itemShopUi=itemShopUiInitialState();
   return {
     getItemShopUiState(){return clone(itemShopUi);},
+    getBattleContext(){return battleContext?clone(battleContext):null},
     format:BROWSER_STATE_CONTROLLER_FORMAT,
     getConfig(){return clone(config);},
     getState(){return clone(currentState);},
@@ -180,6 +184,57 @@ function createBrowserStateController({
           warpBlocked:action.warpBlocked===true
         });
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD){
+        const idleMode=String(currentState?.idle?.mode??'');
+        if(idleMode!=='encounter_pending')return {ok:false,handled:false,stage:'battle-context',reason:'idle-state-not-encounter-pending',idleMode,state:clone(currentState)};
+        if(!Array.isArray(action.enemyTeam)||action.enemyTeam.length<1)return {ok:false,handled:false,stage:'battle-context',reason:'enemy-team-required',state:clone(currentState)};
+        const encounter=action.encounter??{
+          floorId:currentState?.world?.position?.floorId??null,
+          x:currentState?.world?.position?.x??null,
+          y:currentState?.world?.position?.y??null,
+          encounterId:null
+        };
+        const player=currentState?.player??null;
+        let activePet=action.activePet??null;
+        if(activePet==null){
+          const activeId=currentState?.pets?.activePetId??null;
+          activePet=activeId==null?null:(currentState?.pets?.petBox??[]).find(p=>String(p?.id??p?.petId??'')===String(activeId))??null;
+        }
+        const battleFieldNo=action.battleFieldNo==null
+          ? (typeof battleFieldNoProvider==='function'?await battleFieldNoProvider(encounter,currentState):battleFieldNoProvider)
+          : action.battleFieldNo;
+        const built=buildBattleContext({
+          playerId:currentState?.player?.id??null,
+          player,
+          activePet,
+          team:action.enemyTeam,
+          encounter,
+          groupId:action.groupId??null,
+          battleFieldNo
+        });
+        if(!built.ok)return {...built,state:clone(currentState)};
+        const check=validateBattleContext(built);
+        if(!check.ok)return {ok:false,handled:false,stage:'battle-context',reason:'battle-context-validation-failed',errors:check.errors,state:clone(currentState)};
+        const committed=await idleRuntime.dispatch(currentState,{
+          type:ACTION_IDLE_EVENT,
+          event:IDLE_EVENTS.BATTLE_STARTED,
+          payload:{battle:built.context}
+        },{now:action.now??now});
+        if(!committed.ok)return {...committed,stage:'battle-start-idle',state:clone(currentState)};
+        currentState=committed.state;
+        battleContext=built.context;
+        return {
+          ...built,
+          ok:true,
+          handled:true,
+          stage:'battle-context-started',
+          format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,
+          idleStateBefore:'encounter_pending',
+          idleStateAfter:currentState.idle?.mode??null,
+          idleCommit:committed,
+          state:clone(currentState)
+        };
       }
       if(type===ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT){
         if(!worldEncounterIdleBridge)return {ok:false,handled:false,stage:'encounter-idle-bridge',reason:'browser-world-encounter-idle-bridge-not-configured',state:clone(currentState)};
@@ -401,6 +456,7 @@ export {
   ACTION_WORLD_ENCOUNTER_GROUP_SELECT,
   ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT,
+  ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
@@ -412,6 +468,7 @@ export {
   BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT,
+  BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
