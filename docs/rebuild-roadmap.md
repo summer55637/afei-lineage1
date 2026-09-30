@@ -12,7 +12,7 @@
 
 目前正處於 **item-acquisition / quest-event closure**。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標正在進一步依 `EventNo` / `EventEnd` / NPC-specific script / encounter event owner 反查，不再只用 mission / jobdaily 判定。
 
-下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path 與事件 owner 分群，優先閉合新手、城鎮、商店、治療、存點、主要任務與傳送流程。
+下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path 與事件 owner 分群；目前 236 個 item IDs 與 38 個真正 ownerless event IDs 仍需 closure。優先閉合新手、城鎮、商店、治療、存點、主要任務與傳送流程。
 
 ## 目的
 
@@ -75,6 +75,7 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 
 - NPC 出現位置與 template/create/arg 關係
 - NPC 對話與條件
+- NPC Event DSL / Event owner closure
 - NPC 商店與購買／出售
 - 任務／事件
 - 地圖傳送與 warp
