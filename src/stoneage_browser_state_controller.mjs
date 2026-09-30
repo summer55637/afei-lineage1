@@ -20,6 +20,7 @@ import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BRO
 import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
 import { createBrowserWorldFirstRouteExecutionRuntime, ACTION_WORLD_FIRST_ROUTE_EXECUTE, BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_execution_runtime.mjs';
 import { createBrowserWorldEncounterRuntime, ACTION_WORLD_ENCOUNTER_PREPARE, ACTION_WORLD_ENCOUNTER_ROLL, BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_runtime.mjs';
+import { createBrowserWorldEncounterPersistenceRuntime, ACTION_WORLD_ENCOUNTER_ROLL_COMMIT, BROWSER_WORLD_ENCOUNTER_PERSISTENCE_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_persistence_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -75,6 +76,7 @@ function createBrowserStateController({
     : null;
   const worldFirstRouteExecutionRuntime=createBrowserWorldFirstRouteExecutionRuntime();
   const worldEncounterRuntime=encounterTargetIndex ? createBrowserWorldEncounterRuntime({encounterTargetIndex}) : null;
+  const worldEncounterPersistenceRuntime=encounterTargetIndex ? createBrowserWorldEncounterPersistenceRuntime({encounterTargetIndex}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -170,6 +172,24 @@ function createBrowserStateController({
           battleModeNone:action.battleModeNone!==false,
           warpBlocked:action.warpBlocked===true
         });
+        return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_ENCOUNTER_ROLL_COMMIT){
+        if(!worldEncounterPersistenceRuntime)return {ok:false,handled:false,stage:'encounter-persistence-runtime',reason:'browser-world-encounter-persistence-runtime-not-configured',state:clone(currentState)};
+        if(worldEncounterPersistenceRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-persistence-runtime',reason:worldEncounterPersistenceRuntime.reason??'browser-world-encounter-persistence-runtime-invalid',errors:worldEncounterPersistenceRuntime.errors??[],state:clone(currentState)};
+        const result=await worldEncounterPersistenceRuntime.commit(currentState,{
+          position:action.position??action.player??null,
+          encounterId:action.encounterId??null,
+          cep:action.cep==null?null:action.cep,
+          rng120:action.rng120??null,
+          noEnemy:action.noEnemy===true,
+          battleModeNone:action.battleModeNone!==false,
+          warpBlocked:action.warpBlocked===true,
+          expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+          savedAt:clockFactory(action.savedAt??action.now,now),
+          source:action.source??'browser-world-encounter'
+        });
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
       const requestedNpc=action?.npc??null;
@@ -332,6 +352,7 @@ export {
   ACTION_WORLD_FIRST_ROUTE_EXECUTE,
   ACTION_WORLD_ENCOUNTER_PREPARE,
   ACTION_WORLD_ENCOUNTER_ROLL,
+  ACTION_WORLD_ENCOUNTER_ROLL_COMMIT,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
@@ -339,6 +360,7 @@ export {
   BROWSER_WORLD_ROUTE_RUNTIME_FORMAT,
   BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT,
+  BROWSER_WORLD_ENCOUNTER_PERSISTENCE_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
