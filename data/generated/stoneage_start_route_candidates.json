@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-candidates-v2",
+  "format": "stoneage-start-route-candidates-v3",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -63,7 +63,19 @@
         "activeRowCount": 0,
         "classification": "placeholder_only",
         "activeRows": []
-      }
+      },
+      "nearestUnconditionalEncounterRoutes": [
+        {
+          "floor": 100,
+          "depth": 2,
+          "path": [
+            1006,
+            1000,
+            100
+          ],
+          "encounterCount": 70
+        }
+      ]
     },
     {
       "hometown": 1,
@@ -189,7 +201,7 @@
       "directDestinationEncounter": {
         "allRowCount": 2,
         "activeRowCount": 1,
-        "classification": "active",
+        "classification": "conditional_unresolved_item",
         "activeRows": [
           {
             "index": 831,
@@ -207,7 +219,17 @@
               1018
             ]
           }
-        ]
+        ],
+        "groupGate": {
+          "groupId": 1018,
+          "appearByItemId": 20219,
+          "itemFoundInItemset6": false,
+          "enemyId": 1911,
+          "enemyName": "艾蜜(可抓)",
+          "enemyTempNo": 961,
+          "levelMin": 79,
+          "levelMax": 79
+        }
       },
       "nearestActiveEncounterRoutes": [
         {
@@ -218,6 +240,18 @@
             2000
           ],
           "encounterCount": 1
+        }
+      ],
+      "nearestUnconditionalEncounterRoutes": [
+        {
+          "floor": 100,
+          "depth": 2,
+          "path": [
+            2006,
+            2000,
+            100
+          ],
+          "encounterCount": 70
         }
       ]
     },
@@ -472,7 +506,7 @@
       "directDestinationEncounter": {
         "allRowCount": 3,
         "activeRowCount": 1,
-        "classification": "active",
+        "classification": "conditional_unresolved_item",
         "activeRows": [
           {
             "index": 828,
@@ -490,7 +524,17 @@
               1015
             ]
           }
-        ]
+        ],
+        "groupGate": {
+          "groupId": 1015,
+          "appearByItemId": 20216,
+          "itemFoundInItemset6": false,
+          "enemyId": 1904,
+          "enemyName": "艾蜜(1掉乌鲁力)",
+          "enemyTempNo": 952,
+          "levelMin": 79,
+          "levelMax": 79
+        }
       },
       "nearestActiveEncounterRoutes": [
         {
@@ -501,6 +545,18 @@
             3000
           ],
           "encounterCount": 1
+        }
+      ],
+      "nearestUnconditionalEncounterRoutes": [
+        {
+          "floor": 200,
+          "depth": 2,
+          "path": [
+            3006,
+            3000,
+            200
+          ],
+          "encounterCount": 114
         }
       ]
     },
@@ -758,8 +814,20 @@
         "activeRowCount": 0,
         "classification": "placeholder_only",
         "activeRows": []
-      }
+      },
+      "nearestUnconditionalEncounterRoutes": [
+        {
+          "floor": 200,
+          "depth": 2,
+          "path": [
+            4006,
+            4000,
+            200
+          ],
+          "encounterCount": 114
+        }
+      ]
     }
   ],
-  "policy": "Route candidates use source warp connectivity only. Encounter evidence is split into all source rows versus active rows; zero-probability/no-group rows are placeholder_only and are not treated as active encounter regions. Walkability, NPC dialogue intent and quest priority are not inferred."
+  "policy": "Route candidates use source warp connectivity. Encounter classification now distinguishes placeholder rows, conditional item-gated groups, and unconditional active rows. First unconditional encounter destinations are floor 100 for hometown 0/1 and floor 200 for hometown 2/3. Coordinate walkability and NPC/quest intent remain separate closures."
 }
