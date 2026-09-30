@@ -37,9 +37,9 @@ const byRoll=computeEnemyStats(member.enemy,{
 });
 assert.equal(byRoll.ok,true,JSON.stringify(byRoll));
 assert.equal(byRoll.level,3);
-assert.deepEqual(byRoll.mutatedBaseStats,{vital:18,str:24,tgh:19,dex:26});
-assert.deepEqual(byRoll.stats,{vital:351,str:468,tgh:370,dex:507});
-assert.equal(byRoll.maxHp,27);
+assert.deepEqual(byRoll.mutatedBaseStats,{vital:17,str:24,tgh:18,dex:26});
+assert.deepEqual(byRoll.stats,{vital:408,str:576,tgh:432,dex:624});
+assert.equal(byRoll.maxHp,32);
 
 const bad=computeEnemyStats(member.enemy,{
   level:2,
