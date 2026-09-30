@@ -64,7 +64,7 @@ function freshPersistentState({ now = () => new Date().toISOString(), playerId =
     quests: { missions: {}, daily: {} },
     events: {},
     titles: {},
-    world: { position: { floorId: null, x: null, y: null }, savePoint: null },
+    world: { position: { floorId: null, x: null, y: null }, savePoint: null, encounter: { cep: 0 } },
     idle: {
       enabled: false,
       mode: 'disabled',
@@ -201,6 +201,7 @@ function normalizePersistentState(raw, { now = () => new Date().toISOString() } 
     current.world.position.y = position.y == null ? null : intOr(position.y, null);
   }
   if (raw.world?.savePoint != null || raw.savePoint != null) current.world.savePoint = clone(raw.world?.savePoint ?? raw.savePoint);
+  if (isObject(raw.world?.encounter)) current.world.encounter = { cep: nonNegativeInt(raw.world.encounter.cep, 0) };
 
   if (isObject(raw.idle)) {
     current.idle.enabled = raw.idle.enabled === true;
@@ -284,6 +285,10 @@ function validatePersistentState(state) {
   }
 
   if (!isObject(state.world)) errors.push('world must be an object');
+  if (isObject(state.world)) {
+    if (!isObject(state.world.encounter)) errors.push('world.encounter must be an object');
+    if (isObject(state.world.encounter) && (!Number.isInteger(state.world.encounter.cep) || state.world.encounter.cep < 0)) errors.push('world.encounter.cep invalid');
+  }
   const pos = state.world?.position;
   if (!isObject(pos)) errors.push('world.position must be an object');
   if (isObject(pos)) {
