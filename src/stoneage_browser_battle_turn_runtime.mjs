@@ -47,6 +47,7 @@ function initializeBattleTurn(context,{chargeEntries=[]}={}){
       next=turnParam(next,'modQuick','fixDex','quick');
       if(next.battleSide===0&&Object.prototype.hasOwnProperty.call(next,'modCharm')){
         next=turnParam(next,'modCharm',null,'fixCharm');
+        next=turnParam(next,'modCharm',null,null);
       }else if(Object.prototype.hasOwnProperty.call(next,'modCharm')){
         next=turnParam(next,'modCharm',null,null);
       }
