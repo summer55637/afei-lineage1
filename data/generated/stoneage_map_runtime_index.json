@@ -26,6 +26,18 @@
       "sourceBlobSha": "acce0b34492112a41684d449afd03f9b0033f4e3",
       "sourcePath": "gmsv/data/map/seimu/400"
     },
+    "1000": {
+      "path": "data/generated/stoneage_map_1000.json",
+      "floorId": 1000,
+      "width": 160,
+      "height": 160,
+      "tileCount": 25600,
+      "objectCount": 25600,
+      "uniqueTileCount": 607,
+      "uniqueObjectCount": 146,
+      "sourceBlobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
+      "sourcePath": "gmsv/data/map/sainasu/samugiru/samugiru"
+    },
     "2000": {
       "path": "data/generated/stoneage_map_2000.json",
       "floorId": 2000,
@@ -35,6 +47,30 @@
       "objectCount": 22500,
       "sourceBlobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
       "sourcePath": "gmsv/data/map/sainasu/marinasu/2000"
+    },
+    "3000": {
+      "path": "data/generated/stoneage_map_3000.json",
+      "floorId": 3000,
+      "width": 150,
+      "height": 150,
+      "tileCount": 22500,
+      "objectCount": 22500,
+      "uniqueTileCount": 881,
+      "uniqueObjectCount": 133,
+      "sourceBlobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
+      "sourcePath": "gmsv/data/map/jyaruga/jaja/jaja"
+    },
+    "4000": {
+      "path": "data/generated/stoneage_map_4000.json",
+      "floorId": 4000,
+      "width": 150,
+      "height": 150,
+      "tileCount": 22500,
+      "objectCount": 22500,
+      "uniqueTileCount": 327,
+      "uniqueObjectCount": 161,
+      "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
+      "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana"
     },
     "5507": {
       "path": "data/generated/stoneage_map_5507.json",
@@ -76,5 +112,7 @@
       "sourceBlobSha": "b730f5aca60347f0b5b1bda497f6e65740706dc1",
       "sourcePath": "gmsv/data/map/20000"
     }
-  }
+  },
+  "format": "stoneage-map-runtime-index-v3",
+  "sourceHeaderResolution": "exact LS2MAP header; map filename is not required to equal floor ID"
 }
