@@ -350,6 +350,8 @@ V3.29 audit regression 已納入 GitHub Actions。
 
 V3.30 regression 已納入 GitHub Actions。
 
+V3.31–V3.33 interaction / dispatch / audited-module guards 已完成：fixed-C facing+distance gate、唯一 NPC dispatch bridge，以及 pinned functionSet registry guard 都已加入 regression。`changeevent` 明確維持 module-unresolved，不用 `ExChangeMan` 等其他 entry 代替。
+
 ## V3.31–V3.32 NPC Interaction / Dispatch Boundary
 
 新增 `src/stoneage_npc_interaction_runtime.mjs`、`src/stoneage_npc_dispatch_runtime.mjs`、對應 regression / CI 與 reference docs。
