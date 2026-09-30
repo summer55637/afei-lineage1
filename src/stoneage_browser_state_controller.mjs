@@ -11,6 +11,7 @@ import {
   resolveWorldNpcAt,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT
 } from './stoneage_browser_world_npc_runtime.mjs';
+import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_itemshop_runtime.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
