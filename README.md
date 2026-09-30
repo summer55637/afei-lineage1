@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：13fd920 — add V3.53 Item 24114 build closure CI
-- 最後更新時間：2026-09-30T17:43:18+08:00
+- 最新 commit：2c71bfe — wire README generator to V3.53 Item build closure
+- 最後更新時間：2026-09-30T17:43:33+08:00
 - 版本線最高 regression workflow：V3.53
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -30,7 +30,7 @@
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
-| Starter Item 24114 | ⚠️ fail-closed | source file 2777181 bytes；row exists as id 11817 / imagenumber 24114；configured ID 24114 still has no direct source-table resolution |
+| Starter Item 24114 | ⚠️ fail-closed | source max ID 23009 → ITEM_tblen 23010；configured 24114 越界；actual row id 11817 / imagenumber 24114 |
 | New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
@@ -45,7 +45,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Starter Item 24114：pinned Item source row exists as id 11817 with imagenumber 24114；fixed-C configured ID 24114 is still unresolved，keep fail-closed and do not remap.
+4. Starter Item 24114：pinned source max ID 23009 → ITEM_tblen 23010，configured 24114 is out of range；source row is id 11817 / imagenumber 24114；keep fail-closed and do not remap.
 
 ### 永久停用
 
@@ -57,7 +57,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 - persistent state：2026-09-30
 - item/economy schema：2026-09-30
 - new-player seed：2026-09-30
-- starter Item 24114 audit：2026-09-30；mapping audit v2
+- starter Item 24114 audit：2026-09-30；mapping audit v2 / build closure v1：2026-09-30
 - V3.50 creation/save runtime：2026-09-30
 - idle route catalog：2026-09-30
 - browser ItemShop contract：2026-09-30
