@@ -1,0 +1,20 @@
+{
+  "format": "stoneage-v380-browser-world-encounter-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_ENCOUNTER_PREPARE",
+  "sourceIndex": "data/generated/stoneage_start_encounter_target_index.json",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
+    "groupBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874"
+  },
+  "semantics": {
+    "mode": "read-only source resolution",
+    "boundary": "position must resolve to an unconditional encounter target",
+    "selection": "explicit encounterId is exact; otherwise highest zorder is selected, ties fail-closed",
+    "rngConsumed": false,
+    "battleStarted": false,
+    "persistentStateMutation": false
+  }
+}
