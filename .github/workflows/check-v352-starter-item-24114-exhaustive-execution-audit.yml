@@ -37,7 +37,6 @@ jobs:
           grep -q 'ITEM_readItemConfFile( getItemfile())' /tmp/StoneAge/gmsv/src/init.c
           grep -q 'ITEM_readItemConfFile( getItemfile())' /tmp/StoneAge/gmsv/src/char/chatmagic.c
           test "$(grep -F ',11817,24114,9900,16,' /tmp/StoneAge/gmsv/data/itemset6.txt | wc -l)" -eq 1
-          test "$(grep -F ',11817,24114,9900,16,' /tmp/StoneAge/data/itemset6.txt 2>/dev/null | wc -l)" -eq 0 || true
           if [ "$(cut -d',' -f17 /tmp/StoneAge/gmsv/data/itemset6.txt | grep -Fx '24114' | wc -l)" -ne 0 ]; then
             echo 'ERROR: pinned itemset6.txt contains source Item ID 24114 in token 17'
             exit 1
