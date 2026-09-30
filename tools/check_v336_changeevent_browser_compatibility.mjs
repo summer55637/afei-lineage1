@@ -16,13 +16,14 @@ const npc=reachability.rows.find(r=>r.template==='changeevent'&&r.floor===1006&&
 assert.ok(npc);
 const player={floor:1006,x:15,y:21,facingCell:[1006,15,22]};
 
+const bundle=createFirstRouteRewardHandlers({itemRewardCatalog,itemMakeCatalog,petCatalog,petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,itemCapacity:1000,itemCursor:700,randInclusive:(a,b)=>a===b?a:0});
+assert.equal(bundle.ok,true);
 const strictRegistry=createAuditedNpcModuleRegistry(audit,{modules:{ExChangeMan:{script:closure.script,kind:'changeevent-source-resolved'}}});
 const strictState=freshPersistentState({playerId:'compat-strict'});
 strictState.player.level=1; strictState.player.transmigration=0; strictState.player.charm=60;
 const strict=await dispatchNpcInteraction(strictState,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:strictRegistry,runtimeConfig:{compatibilityMode:false,allowExternalCompatibilityAliases:false},handlerFactory:()=>bundle.handlers,transactionId:'strict-1',now:()=> '2026-09-30T11:00:00.000Z'});
 assert.equal(strict.ok,true); assert.equal(strict.handled,true); assert.equal(strict.stage,'dispatch'); assert.equal(strict.execution.applied,true); assert.equal(strict.state.revision,1);
-const bundle=createFirstRouteRewardHandlers({itemRewardCatalog,itemMakeCatalog,petCatalog,petIdFactory:(st,created)=>'pet-'+created.petId+'-'+st.pets.petBox.length,itemCapacity:1000,itemCursor:700,randInclusive:(a,b)=>a===b?a:0});
-assert.equal(bundle.ok,true);
+
 const runtimeConfig={compatibilityMode:true,allowExternalCompatibilityAliases:true,defaultInteractionAction:'talk',sourceProfile:'fixed-c'};
 const compatibilityModule={ExChangeMan:{script:closure.script,kind:'changeevent-source-resolved'}};
 const state=freshPersistentState({playerId:'compat-enabled'}); state.player.level=1; state.player.transmigration=0; state.player.charm=60;
