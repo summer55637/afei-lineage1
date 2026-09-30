@@ -1,6 +1,7 @@
 const BROWSER_WORLD_ENCOUNTER_RUNTIME_FORMAT='stoneage-browser-world-encounter-runtime-v1';
 const ENCOUNTER_TARGET_INDEX_FORMAT='stoneage-start-encounter-target-index-v1';
 const ACTION_WORLD_ENCOUNTER_PREPARE='WORLD_ENCOUNTER_PREPARE';
+const ACTION_WORLD_ENCOUNTER_ROLL='WORLD_ENCOUNTER_ROLL';
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const SOURCE_ENCOUNT_BLOB_SHA='89da97a15ea866a36f26ec3bb7ab5490f3eccc5f';
