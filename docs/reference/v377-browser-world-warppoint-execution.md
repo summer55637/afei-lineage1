@@ -32,7 +32,7 @@ V3.77 只接受目前已經生成、且 fixed-source pin 完全一致的 first-r
 
 ## Route boundary
 
-目前 first-route catalog 有 8 個 portal groups，共 37 個 source warp rows。V3.77 把它們全部保留在 source catalog，但「能不能從玩家目前路線走到這個 source point」仍由 V3.76 movement / first-route reachability closure 負責。
+目前 first-route catalog 有 8 個 portal groups，共 31 個 source warp rows。V3.77 把它們全部保留在 source catalog，但「能不能從玩家目前路線走到這個 source point」仍由 V3.76 movement / first-route reachability closure 負責。
 
 所以：
 
@@ -47,7 +47,7 @@ V3.77 不建立自動導航、不選「最佳」portal、不修改 encounter pro
 
 ## Regression
 
-`tools/check_v377_browser_world_warppoint.mjs`：
+`tools/check_v317_browser_world_warppoint.mjs`：
 
 - fixed-C source function evidence
 - 8 portal groups / exact row count
