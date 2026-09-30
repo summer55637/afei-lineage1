@@ -10,14 +10,21 @@ const itemRewardCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_new_
 const itemMakeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
 const petCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_new_player_pet_runtime.json','utf8'));
 const { createFirstRouteRewardHandlers }=await import('../src/stoneage_first_route_reward_handlers.mjs');
+const { createAuditedNpcModuleRegistry }=await import('../src/stoneage_npc_module_registry_runtime.mjs');
+const audit=JSON.parse(fs.readFileSync('data/generated/stoneage_world_npc_functionset_audit.json','utf8'));
 
 assert.equal(NPC_DISPATCH_RUNTIME_FORMAT,'stoneage-npc-dispatch-runtime-v1');
 const changeevent=reachability.rows.find(r=>r.template==='changeevent'&&r.hometown===0);
 assert.ok(changeevent);
-const resolvedAbsent=resolveInteractionModule(changeevent,{modules:{}});
+const registry=createAuditedNpcModuleRegistry(audit,{modules:{ExChangeMan:{marker:'audited'}}});
+assert.equal(registry.ok,true);
+const resolvedAbsent=resolveInteractionModule(changeevent,{moduleRegistry:registry});
 assert.equal(resolvedAbsent.ok,true);
 assert.equal(resolvedAbsent.resolved,false);
 assert.equal(resolvedAbsent.reason,'npc-runtime-module-unresolved');
+const auditedResolved=resolveInteractionModule({templateName:'ExChangeMan'},{moduleRegistry:registry});
+assert.equal(auditedResolved.ok,true);
+assert.equal(auditedResolved.resolved,true);
 
 const state=freshPersistentState({playerId:'dispatch'});
 const blocked=await dispatchNpcInteraction(state,changeevent,{floor:1006,x:15,y:21,facingCell:[1006,15,22]},{
