@@ -7,7 +7,6 @@ on:
       - 'src/stoneage_charm_runtime.mjs'
       - 'src/stoneage_new_player_pet_runtime.mjs'
       - 'src/stoneage_new_player_item_reward_runtime.mjs'
-      - 'src/stoneage_new_player_event_adapters.mjs'
       - 'src/stoneage_npc_event_runtime.mjs'
       - 'src/stoneage_npc_event_transaction.mjs'
       - 'src/stoneage_npc_event_orchestrator.mjs'
@@ -37,7 +36,6 @@ jobs:
           node --check src/stoneage_charm_runtime.mjs
           node --check src/stoneage_new_player_pet_runtime.mjs
           node --check src/stoneage_new_player_item_reward_runtime.mjs
-          node --check src/stoneage_new_player_event_adapters.mjs
           node --check src/stoneage_npc_event_runtime.mjs
           node --check src/stoneage_npc_event_transaction.mjs
           node --check src/stoneage_npc_event_orchestrator.mjs
