@@ -1,0 +1,19 @@
+{
+  "format": "stoneage-v383-browser-world-encounter-group-select-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_ENCOUNTER_GROUP_SELECT",
+  "sourceCatalog": "data/generated/stoneage_start_encounter_group_runtime.json",
+  "encounterSource": "data/generated/stoneage_start_encounter_target_index.json",
+  "fixedC": {
+    "groupGate": "GROUP_APPEARBYITEMID / GROUP_NOTAPPEARBYITEMID",
+    "groupSelection": "RAND(0, sum(group probabilities)-1) with encounter group weights",
+    "zeroWeight": "never selected"
+  },
+  "semantics": {
+    "rng": "caller-injected inclusive integer in 0..totalWeight-1",
+    "persistentStateMutation": false,
+    "battleStarted": false,
+    "unresolvedGroup": "never promoted",
+    "missingEnemyTemplate": "never promoted to a selectable Group member"
+  }
+}
