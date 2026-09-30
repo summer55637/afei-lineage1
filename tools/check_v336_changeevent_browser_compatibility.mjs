@@ -25,7 +25,7 @@ const compatibilityRegistry=createCompatibilityNpcModuleRegistry(audit,compatibi
 const state=freshPersistentState({playerId:'compat-enabled'}); state.player.level=1; state.player.transmigration=0; state.player.charm=60;
 const enabled=await dispatchNpcInteraction(state,npc,player,{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',moduleRegistry:compatibilityRegistry,handlerFactory:()=>bundle.handlers,transactionId:'compat-1',now:()=> '2026-09-30T11:00:00.000Z'});
 assert.equal(enabled.ok,true); assert.equal(enabled.handled,true); assert.equal(enabled.execution.applied,true);
-assert.equal(enabled.execution.plan.eventNo,-1);
+assert.equal(enabled.execution.execution.plan.eventNo,-1);
 assert.equal(enabled.state.inventory.itemRuntime.slots['700'].itemId,20145);
 assert.equal(enabled.state.inventory.itemRuntime.slots['703'].itemId,18537);
 assert.equal(enabled.state.pets.petBox[0].enemyId,341); assert.equal(enabled.state.pets.petBox[0].petId,274);
