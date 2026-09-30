@@ -23,6 +23,7 @@ const legacy = {
   professionClass: 1,
   professionLevel: 2,
   professionSkillPoint: 3,
+  gold: 30000,
   professionSkills: [{ id: 1, lv: 1000 }, null],
   playerItemSlots: Array(24).fill(null),
   inventory: { 101: 2 },
