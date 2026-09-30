@@ -59,6 +59,13 @@ const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
 const browserDocs = readText('docs/reference/v340-browser-itemshop-runtime.md');
 const commit = latestCommit();
 
+const starterPetRanksResolved = Array.isArray(seed.starterPet?.entries)
+  && seed.starterPet.entries.length === 4
+  && seed.starterPet.entries.every(entry => Number.isInteger(entry.sourceRank) && Number.isInteger(entry.sourceRankParamsum));
+const starterPetRankSummary = starterPetRanksResolved
+  ? 'source rank closed；4 hometown templates base stat sum = 79；rank = 5'
+  : 'source rank pending';
+
 const itemShopMatch = itemShopDocs.match(/完整\s+(\d+)\s+個 ItemShop binding/);
 const itemShopBindings = itemShopMatch ? Number(itemShopMatch[1]) : null;
 const rootHtml = fs.readdirSync(ROOT).filter(name => name.endsWith('.html')).sort();
@@ -98,7 +105,7 @@ const auto = [
   '| Item / Economy | ' + (economy.format ? '✅ runtime v1' : '⚠️ missing') + ' | Gold cap ' + (economy.gold?.maxFormula ?? '—') + '；backpack ' + (economy.structure?.backpackStart ?? '—') + ' to ' + ((economy.structure?.backpackEndExclusive ?? 1) - 1) + ' |',
   '| New-player seed | ' + (seed.format ? '✅ source-closed' : '⚠️ missing') + ' | trans ' + (seed.sourceConfig?.transmigration ?? '—') + '；lv ' + (seed.sourceConfig?.level ?? '—') + '；pet lv ' + (seed.sourceConfig?.petLevel ?? '—') + '；gold ' + (seed.sourceConfig?.gold ?? '—') + '；item1 ' + (seed.sourceConfig?.itemSlots?.ITEM1 ?? '—') + ' |',
   '| Player creation | ' + (schema.sections?.includes('creation') ? '✅ state contract' : '⚠️ missing') + ' | hometown + stats + elements + starter grant status；still headless，no playable HTML |',
-  '| Starter Pet grant | ' + (seed.starterPet?.sourceClosed ? '✅ runtime' : '⚠️ pending') + ' | 16 RNG calls；VariableAI 0；HP after compliance；source rank still pending；team/activePet unchanged |',
+  '| Starter Pet grant | ' + (seed.starterPet?.sourceClosed ? '✅ runtime' : '⚠️ pending') + ' | 16 RNG calls；VariableAI 0；HP after compliance；' + starterPetRankSummary + '；team/activePet unchanged |',
   '| Idle route catalog | ' + (idleSummary.towns ? '✅ indexed' : '⚠️ missing') + ' | ' + (idleSummary.pathClosedTowns ?? 0) + ' path-closed towns；' + (idleSummary.eligibleRouteVariants ?? 0) + '/' + (idleSummary.routeVariants ?? 0) + ' eligible variants |',
   '',
   '### NPC → ItemShop → Item → Gold → Persistent State',
