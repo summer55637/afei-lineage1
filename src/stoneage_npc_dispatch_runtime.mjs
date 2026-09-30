@@ -1,0 +1,56 @@
+import { canInteractWithNpc } from './stoneage_npc_interaction_runtime.mjs';
+import { executeAndSaveNpcSourceEvent } from './stoneage_first_route_save.mjs';
+
+const NPC_DISPATCH_RUNTIME_FORMAT='stoneage-npc-dispatch-runtime-v1';
+
+function resolveInteractionModule(npc,{modules={}}={}){
+  const name=String(npc?.template??npc?.templateName??'').trim();
+  if(!name)return {ok:false,reason:'npc-template-name-required'};
+  const module=modules[name]??modules[name.toLowerCase()]??null;
+  if(!module)return {ok:true,resolved:false,reason:'npc-runtime-module-unresolved',template:name};
+  return {ok:true,resolved:true,template:name,module};
+}
+
+async function dispatchNpcInteraction(
+  state,
+  npc,
+  player,
+  {
+    interactionRule=null,
+    maxDistance=null,
+    action='talk',
+    modules={},
+    handlerFactory=null,
+    now=()=>new Date().toISOString(),
+    transactionId=null
+  }={}
+){
+  const gate=canInteractWithNpc(npc,player,{interactionRule,maxDistance});
+  if(!gate.ok)return {ok:false,stage:'interaction-gate',reason:gate.reason,state};
+  if(!gate.interactable)return {ok:true,handled:false,stage:'interaction-gate',reason:gate.reason,state};
+  const resolved=resolveInteractionModule(npc,{modules});
+  if(!resolved.ok)return {ok:false,stage:'module-resolution',reason:resolved.reason,state};
+  if(!resolved.resolved)return {ok:true,handled:false,stage:'module-resolution',reason:resolved.reason,template:resolved.template,state};
+  if(action!=='talk')return {ok:true,handled:false,stage:'dispatch',reason:'unsupported-npc-action',action,template:resolved.template,state};
+  if(typeof handlerFactory!=='function')return {ok:false,stage:'dispatch',reason:'npc-handler-factory-required',template:resolved.template,state};
+  const script=resolved.module?.script??null;
+  if(!script)return {ok:false,stage:'dispatch',reason:'npc-event-script-required',template:resolved.template,state};
+  const handlers=handlerFactory(resolved.module);
+  if(!handlers||typeof handlers!=='object')return {ok:false,stage:'dispatch',reason:'npc-handler-factory-invalid',template:resolved.template,state};
+  const execution=await executeAndSaveNpcSourceEvent(state,script,{
+    handlers,
+    transactionId,
+    now,
+    source:'npc-interaction'
+  });
+  return {
+    ok:execution.ok,
+    handled:execution.applied===true,
+    stage:'dispatch',
+    template:resolved.template,
+    execution,
+    state:execution.state
+  };
+}
+
+export { NPC_DISPATCH_RUNTIME_FORMAT, resolveInteractionModule, dispatchNpcInteraction };
