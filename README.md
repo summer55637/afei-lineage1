@@ -174,3 +174,9 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 新增 `src/stoneage_reward_transaction.mjs`：把 fixed-C `BATTLE_AddProfit / BATTLE_AddExpItem` 的 reward boundary 轉成 transaction。一次只提交已決定的 player EXP、Pet credit、Gold、existing-item；transactionId 提供 idempotent commit，背包滿時不做部分提交。
 
 新增 `src/stoneage_idle_policy.mjs`：Healer recovery 已來源化為玩家 HP/MP 全補；補給門檻、死亡 recovery mode、offline max seconds 必須由明確 policy 提供，不偷渡成固定 C 規則。
+
+## Save / Simulation runtime 更新（2026-09-30）
+
+新增 `src/stoneage_save_transaction.mjs`、`docs/reference/save-envelope-contract.md` 與 regression：canonical state 以 deterministic JSON + SHA-256 payload hash 包裝，支援 schema validation、legacy migration 與 revision conflict guard；hash 使用 Web Crypto，保持未來 browser runtime 可用。
+
+新增 `src/stoneage_idle_simulation.mjs`、`docs/reference/idle-simulation-runner.md` 與 regression：把 first-idle route skeleton 串到 battle-result injection、reward transaction、supply/death decision 與 save commit。offline resume 目前只計算明確時間窗，不自動發生 offline reward。
