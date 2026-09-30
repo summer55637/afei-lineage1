@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-candidates-v1",
+  "format": "stoneage-start-route-candidates-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -7,7 +7,8 @@
   },
   "sourceContracts": {
     "warp": "gmsv/src/npc/npc_warp.c::NPC_WarpInit + NPC_WarpWarpCharacter",
-    "encounter": "gmsv/src/char/encount.c::ENCOUNT_initEncount"
+    "encounter": "gmsv/src/char/encount.c::ENCOUNT_initEncount",
+    "encounterActiveDefinition": "gmsv/src/char/encount.c::ENCOUNT_initEncount; active means probMax > 0 and at least one numeric group id"
   },
   "statistics": {
     "hometowns": 4,
@@ -56,7 +57,13 @@
           ],
           "encounterCount": 1
         }
-      ]
+      ],
+      "directDestinationEncounter": {
+        "allRowCount": 1,
+        "activeRowCount": 0,
+        "classification": "placeholder_only",
+        "activeRows": []
+      }
     },
     {
       "hometown": 1,
@@ -175,6 +182,40 @@
             802,
             803,
             804
+          ],
+          "encounterCount": 1
+        }
+      ],
+      "directDestinationEncounter": {
+        "allRowCount": 2,
+        "activeRowCount": 1,
+        "classification": "active",
+        "activeRows": [
+          {
+            "index": 831,
+            "line": 793,
+            "rect": {
+              "x1": 1,
+              "y1": 1,
+              "x2": 150,
+              "y2": 150
+            },
+            "probMin": 1,
+            "probMax": 5,
+            "enemyMax": 1,
+            "groups": [
+              1018
+            ]
+          }
+        ]
+      },
+      "nearestActiveEncounterRoutes": [
+        {
+          "floor": 2000,
+          "depth": 1,
+          "path": [
+            2006,
+            2000
           ],
           "encounterCount": 1
         }
@@ -424,6 +465,40 @@
             200,
             4000,
             4006
+          ],
+          "encounterCount": 1
+        }
+      ],
+      "directDestinationEncounter": {
+        "allRowCount": 3,
+        "activeRowCount": 1,
+        "classification": "active",
+        "activeRows": [
+          {
+            "index": 828,
+            "line": 790,
+            "rect": {
+              "x1": 1,
+              "y1": 1,
+              "x2": 150,
+              "y2": 150
+            },
+            "probMin": 1,
+            "probMax": 5,
+            "enemyMax": 1,
+            "groups": [
+              1015
+            ]
+          }
+        ]
+      },
+      "nearestActiveEncounterRoutes": [
+        {
+          "floor": 3000,
+          "depth": 1,
+          "path": [
+            3006,
+            3000
           ],
           "encounterCount": 1
         }
@@ -677,8 +752,14 @@
           ],
           "encounterCount": 2
         }
-      ]
+      ],
+      "directDestinationEncounter": {
+        "allRowCount": 1,
+        "activeRowCount": 0,
+        "classification": "placeholder_only",
+        "activeRows": []
+      }
     }
   ],
-  "policy": "Route candidates use source warp connectivity only. Walkability, NPC dialogue intent and quest priority are not inferred."
+  "policy": "Route candidates use source warp connectivity only. Encounter evidence is split into all source rows versus active rows; zero-probability/no-group rows are placeholder_only and are not treated as active encounter regions. Walkability, NPC dialogue intent and quest priority are not inferred."
 }
