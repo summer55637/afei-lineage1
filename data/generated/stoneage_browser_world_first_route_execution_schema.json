@@ -1,0 +1,28 @@
+{
+  "format": "stoneage-v379-browser-world-first-route-execution-v1",
+  "generatedAt": "2026-10-01",
+  "action": "WORLD_FIRST_ROUTE_EXECUTE",
+  "planFormat": "stoneage-browser-world-first-route-runtime-v1",
+  "primitives": [
+    "WORLD_MOVE_STEP",
+    "WORLD_WARPPOINT_EXECUTE"
+  ],
+  "semantics": {
+    "mode": "headless orchestration over existing browser world primitives",
+    "persistence": "each movement or WarpPoint action uses its existing commitSave contract",
+    "revision": "actions consume the current revision in sequence; no synthetic future revision is used",
+    "encounterBoundary": "execution ends at the planned unconditional encounter rectangle",
+    "rngConsumed": false,
+    "battleStarted": false,
+    "rollback": "not atomic across movement actions; already committed progress remains on dispatcher failure"
+  },
+  "failClosed": [
+    "plan invalid",
+    "unsupported action type",
+    "movement dispatcher failure",
+    "WarpPoint dispatcher failure",
+    "final position mismatch",
+    "encounter boundary not closed",
+    "invalid final revision"
+  ]
+}
