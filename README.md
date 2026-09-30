@@ -54,7 +54,7 @@
 
 因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
 
-這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合。新增的 `stoneage_start_destination_closure.json` 顯示四個 destination floor 目前只有 2000 有 exact source map + walkability runtime；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中閉合，因此不能用猜測或跨版本 map 補上。2000 的兩個 landing coordinates 都已確認 walkable。遇敵也已進一步依 fixed C 的 group item gate 分級：2000 的 Group 1018 要求 item 20219、3000 的 Group 1015 要求 item 20216，而 pinned `itemset6.txt` 是空檔，因此兩者目前都是 conditional_unresolved_item_source，不可直接當成一般掛機區。依 source world graph，四個 destination floor 往第一個具至少一個 unconditional encounter group 的候選 floor 分別是 100、100、200、200。新玩家 event owner 現已閉合到 `gmsv/data/npc/almark/xinshou/xinshou.create` + `xinshoujd.arg`；四村共用同一支腳本。獎勵物品／寵物定義與 changeevent 的互動 stance 仍未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
+這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合。新增的 `stoneage_start_destination_closure.json` 顯示四個 destination floor 目前只有 2000 有 exact source map + walkability runtime；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中閉合，因此不能用猜測或跨版本 map 補上。2000 的兩個 landing coordinates 都已確認 walkable。遇敵也已進一步依 fixed C 的 group item gate 分級：2000 的 Group 1018 要求 item 20219、3000 的 Group 1015 要求 item 20216，而 pinned `itemset6.txt` 是空檔，因此兩者目前都是 conditional_unresolved_item_source，不可直接當成一般掛機區。依 source world graph，四個 destination floor 往第一個具至少一個 unconditional encounter group 的候選 floor 分別是 100、100、200、200。新玩家 event 的 source create + shared script reference 已閉合，但 pinned fixed-C 的 `npctemplate.c` 沒有 `changeevent` module，因此目前標記為 `script_reference_closed_template_unresolved`；獎勵物品／寵物定義仍未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
 
 ## 現代 3D 卡通化最終視覺目標
 
@@ -112,3 +112,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 `stoneage_new_player_event_closure.json` 已確認四個 hometown 的 `炎龍新手接待員` 都由同一個 fixed-C `xinshoujd.arg` 驅動，並閉合 4 段 `TRANS/LV/ENDEV` 分支與 `EndSetFlg` 366/365/364/363。這四個 NPC 的 source 座標也已從 `xinshou.create` 解出；不過因為座標直接落在出生點，不能直接套用 Familyman 的 distance=1 互動規則，專用 `changeevent` interaction contract 仍待 source closure。
 
 本輪也新增 `tools/audit_new_player_event_closure.mjs`。
+
+## Start-floor NPC closure 更新（2026-09-30）
+
+`data/generated/stoneage_start_npc_coordinate_closure.json` 已將原本 30 個 coordinate-unresolved rows 全部從 fixed-C NPCCREATE `borncorner` 解出，現在 46/46 start-floor NPC 都有 source coordinate。`data/generated/stoneage_start_npc_reachability.json` 進一步顯示 41/46 active-template NPC 的 interaction reachability 已閉合、0 個 unreachable；5 個 `changeevent` create blocks 仍因 pinned `gmsv/src/npc/npctemplate.c` 沒有 `changeevent` functionSet 而維持 runtime-module unresolved。
