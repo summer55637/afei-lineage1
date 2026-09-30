@@ -986,3 +986,30 @@ V3.83 Group catalog 同步加入 EnemyBase provenance；156 個起始路線 Grou
 
 V3.84 仍不修改 Persistent State、不啟動 battle、不計算 damage、不處理 reward/capture/death。下一階段再把 generated roster 轉成 battle context，並閉合 Enemy stat / AI / battlefield 初始化的來源鏈。
 
+## 2026-10-01 V3.85 Browser World Encounter → Idle Pending Bridge
+
+V3.85 將 V3.81 的 fixed-C encounter roll 正式交給既有 Idle Loop，但只推进到 `encounter_pending`：
+
+`WORLD_ENCOUNTER_ROLL_IDLE_COMMIT`
+→ Encounter source resolve
+→ CEP roll
+→ `world.encounter.cep = cepAfter`
+→ `IDLE_EVENTS.MOVE_TICK`
+→ hit: `encounter_pending`
+→ miss: `moving`
+→ one Save Envelope commit + verification
+
+新增：
+- `src/stoneage_browser_world_encounter_idle_bridge.mjs`
+- `data/generated/stoneage_browser_world_encounter_idle_schema.json`
+- `tools/check_v385_browser_world_encounter_idle_bridge.mjs`
+- `.github/workflows/check-v385-browser-world-encounter-idle-bridge.yml`
+- `docs/reference/v385-browser-world-encounter-idle-bridge.md`
+
+V3.85 明確不把 `ENCOUNTER_ROLLED(active=true)` 當成 shortcut，因此不會在 battle context 尚未成立時錯誤進入 `in_battle`。成功命中後只保存玩家位置、最新 CEP 與 Idle pending boundary；完整 transient battle payload 仍留在下一層 runtime。
+
+目前 encounter chain 已完成：
+`first-route execution → encounter boundary → fixed-C CEP roll → persistent CEP → idle encounter_pending`
+
+下一階段應先閉合現有 battle runtime 的 battle-context input contract，再把 selected Group / generated Enemy roster 接入 `in_battle`，而不是直接在 browser bridge 內重寫 battle engine。
+
