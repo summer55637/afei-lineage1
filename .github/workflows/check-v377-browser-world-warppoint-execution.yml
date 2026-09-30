@@ -1,0 +1,42 @@
+name: Check V3.77 Browser World WarpPoint execution
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_world_warppoint_runtime.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'src/stoneage_map_runtime.mjs'
+      - 'data/generated/stoneage_start_destination_warp_coordinates.json'
+      - 'data/generated/stoneage_map_100.json'
+      - 'data/generated/stoneage_map_200.json'
+      - 'data/generated/stoneage_browser_world_warppoint_schema.json'
+      - 'tools/check_v377_browser_world_warppoint.mjs'
+      - 'docs/reference/v377-browser-world-warppoint-execution.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v377-browser-world-warppoint-execution.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Run V3.77 Browser World WarpPoint regression
+        run: node tools/check_v377_browser_world_warppoint.mjs fixed-c-source
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_browser_world_warppoint_runtime.mjs
+          node --check tools/check_v377_browser_world_warppoint.mjs
