@@ -58,7 +58,7 @@ for(const floor of [100,200]){
   const landings=incoming[floor].flatMap(p=>p.points);
   const pack=r=>({
     encounterId:r.index,line:r.line,rect:r.rect,probMin:r.probMin,probMax:r.probMax,enemyMax:r.enemyMax,zorder:r.zorder,
-    groupIds:r.groupIds,enemyIds:[...new Set(r.groupIds.flatMap(id=>groups.get(id)?.enemyIds||[]))],
+    groupIds:r.groupIds,groupProbs:r.groupIds.map((_,i)=>r.parts?.[20+i]===''?null:Number(r.parts?.[20+i])),enemyIds:[...new Set(r.groupIds.flatMap(id=>groups.get(id)?.enemyIds||[]))],
     incoming:{containsGroup:incoming[floor].filter(p=>p.points.some(pt=>pt[0]>=r.rect[0]&&pt[0]<=r.rect[2]&&pt[1]>=r.rect[1]&&pt[1]<=r.rect[3])).map(p=>p.id),nearestLandingDistance:landings.length?Math.min(...landings.map(pt=>distance(pt,r.rect))):null}
   });
   floors[String(floor)]={
