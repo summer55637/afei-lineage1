@@ -1,0 +1,20 @@
+{
+  "format": "stoneage-v394-browser-battle-initialize-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_INITIALIZE",
+  "sequence": [
+    "BATTLE_MODE_BATTLE=2",
+    "BATTLE_SurpriseCheck RAND(1,100)",
+    "set BSIDE_FLG_SURPRISE on winning side",
+    "BATTLE_PreCommandSeq",
+    "BATTLE_AllCharaCWaitSet",
+    "BATTLE_TurnParam"
+  ],
+  "browserBoundary": {
+    "fixedLuck": "caller-injected transient Work value",
+    "surpriseRoll": "caller-injected 1..100",
+    "turnRng": "none in pre-command stat initialization",
+    "persistentMutation": false,
+    "damageExecuted": false
+  }
+}
