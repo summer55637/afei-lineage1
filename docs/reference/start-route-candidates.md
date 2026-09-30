@@ -12,10 +12,10 @@
 
 ## 四條出生路徑候選
 
-| hometown | spawn | direct exit | nearest encounter candidate |
+| hometown | spawn | direct exit | destination encounter status |
 |---:|---|---|---|
-| 0 / samugiru | 1006,15,22 | 1000,98,44 / 98,45 | 1000（1 hop） |
-| 1 / marinasu | 2006,20,16 | 2000,56,48 / 57,48 | 2000（1 hop） |
+| 0 / samugiru | 1006,15,22 | 1000,98,44 / 98,45 | 1000：placeholder；沿 graph 首個 active floor = 100 |
+| 1 / marinasu | 2006,20,16 | 2000,56,48 / 57,48 | 2000：active，Group 1018 |
 | 2 / jaja | 3006,21,16 | 3000,90,60 | 3000（1 hop）；200（2 hop） |
 | 3 / karutarna | 4006,14,20 | 4000,80,90 / 80,91 | 4000（1 hop）；200（2 hop） |
 
@@ -30,3 +30,15 @@
 下一步需要把 map walkability、warp NPC 實際位置、encounter group、NPC service 與 event owner 疊合。
 
 仍不建立 playable HTML。
+
+## Destination closure checkpoint（2026-09-30）
+
+data/generated/stoneage_start_destination_closure.json 已將 destination floor 分成三個獨立問題：
+
+1. exact fixed-source map 是否存在並可驗證；
+2. warp landing coordinate 是否 walkable；
+3. destination floor 是否真的有 active encounter row。
+
+目前只有 2000 三項中的前兩項已閉合；其兩個 landing points (56,48)、(57,48) 都 walkable，且都位於 active encounter rectangle (1,1)-(150,150)、Group 1018。3000 已確認 source encount.txt 存在 active Group 1015，但 fixed-source map blob 尚未在目前 source catalog 中閉合。1000 與 4000 的 direct destination 只有 placeholder row（probability 0、無 group），不能視為可掛機遇敵區。
+
+缺少的 map source 不以其他版本或猜測資料替代。
