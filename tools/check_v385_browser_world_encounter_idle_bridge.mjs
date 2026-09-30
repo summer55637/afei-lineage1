@@ -55,8 +55,8 @@ result=await missController.dispatch({
 });
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.triggered,false);
-assert.equal(result.persistentCepAfter,1);
-assert.equal(result.state.world.encounter.cep,1);
+assert.equal(result.persistentCepAfter,2);
+assert.equal(result.state.world.encounter.cep,2);
 assert.equal(result.state.idle.mode,'moving');
 assert.equal(result.state.revision,1);
 
@@ -81,7 +81,7 @@ console.log(JSON.stringify({
   hitMode:'encounter_pending',
   missMode:'moving',
   hitCepAfter:1,
-  missCepAfter:1,
+  missCepAfter:2,
   saveAtomic:true,
   battleStarted:false
 },null,2));
