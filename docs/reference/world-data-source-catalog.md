@@ -56,6 +56,12 @@
 
 因此下一版 world catalog 的資料模型應以「NPC instance」為中心，而不是以單一 template 為中心。
 
+## 第一個被確認的全域資料源：setup.cf
+
+fixed C 的 `gmsv/setup.cf` 不是普通設定檔而已；它決定了 server 使用哪些 data files，也包含等級／轉生、出生設定、坐騎、遇敵、戰鬥、不可逃跑地圖、地圖規則等大量會影響最終重建結果的環境參數。因此後續 runtime 不能只解析 `data/*`，必須先把 `setup.cf` 拆成「資料檔 wiring」「feature flag」「gameplay/environment setting」三層。
+
+目前只做 source catalog，不把其中的 server/custom knobs 直接當成遊戲設計結論。
+
 ## 世界資料第一批來源
 
 | Source | 用途 | 目前 |
