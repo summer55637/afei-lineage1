@@ -2,6 +2,16 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.48 fixed-C Starter Pet rank closure
+
+V3.48 已把 pinned C 的 `gmsv/src/char/enemy.c::ENEMY_getRank` 正式接回 starter Pet runtime。
+
+來源函式只把 `E_T_BASEVITAL + E_T_BASESTR + E_T_BASETGH + E_T_BASEDEX` 相加成 `paramsum`，再依 100 / 95 / 90 / 85 / 80 / 0 的 fixed rank table 回傳 0..5。四個 starter EnemyBase 都是 paramsum 79，因此四個 hometown starter Pet 都是 `petRank=5`。
+
+Runtime 現在會重新計算 rank、與 generated seed 的 source rank evidence 做一致性檢查，並把 `sourceRankResolved=true` / `petRank` / `sourceRankEvidence` 保存進 Pet object。rank 計算本身不消耗 RNG，所以原本 16-call starter Pet sequence 不變。
+
+同時校正 `tools/generate_new_player_seed_runtime.mjs` 的生成結果，移除不在 committed artifact 中的 stale `sha256` 欄位，並讓 V3.45 的 seed `cmp` regression 可以與現行 generated JSON 對齊。
+
 ## 2026-09-30 新增：V3.47 starter Pet grant runtime
 
 V3.47 將 V3.45 source-closed starter Pet 接到 canonical Persistent State：沿 fixed-C `ENEMY_createPetFromEnemyIndex` 保留 16 次 RNG、四圍/元素/metadata、PetMailEffect、VariableAI=0 與 compliance HP=MaxHP，並鎖定 duplicate-grant、petBox cap、Save round-trip。Starter Item 24114 仍因 item template 尚未閉合而保持 pending；不新增 playable HTML。
