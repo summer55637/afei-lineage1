@@ -40,15 +40,28 @@ jobs:
           const itemMake=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
           const totalBindings=catalog.stats.shopBindings+catalog.stats.unresolvedBindings;
           if(totalBindings!==336) throw new Error('expected 336 ItemShop bindings including unresolved, got '+totalBindings+' (resolved '+catalog.stats.shopBindings+', unresolved '+catalog.stats.unresolvedBindings+')');
-          if(catalog.stats.unresolvedBindings!==0) {
-            console.error('Unresolved ItemShop bindings:', JSON.stringify(catalog.unresolved,null,2));
-            throw new Error('unresolved ItemShop bindings: '+catalog.stats.unresolvedBindings);
+          const knownSourceAnomaly={
+            path:'gmsv/data/npc/my/magicdou/daochang.create',
+            blockIndex:8,
+            reason:'shop-arg-file-missing',
+            fileRef:'my/ruieryasi/yao.arg'
+          };
+          const unexpected=catalog.unresolved.filter(row =>
+            row.source?.path!==knownSourceAnomaly.path ||
+            row.source?.blockIndex!==knownSourceAnomaly.blockIndex ||
+            row.reason!==knownSourceAnomaly.reason ||
+            row.fileRef!==knownSourceAnomaly.fileRef
+          );
+          if(catalog.stats.unresolvedBindings!==1 || unexpected.length) {
+            console.error('Unexpected unresolved ItemShop bindings:', JSON.stringify(catalog.unresolved,null,2));
+            throw new Error('unexpected unresolved ItemShop bindings');
           }
           const missing=[...new Set(Object.keys(catalog.itemIndex).map(Number).filter(id=>!itemMake.byItemId?.[String(id)]))];
           if(missing.length) throw new Error('ItemShop offers missing source Item templates: '+missing.slice(0,50).join(','));
           const floors=Object.keys(catalog.floorIndex);
           console.log(JSON.stringify({
             pass:true,
+            knownSourceAnomalies:[knownSourceAnomaly],
             shopBindings:catalog.stats.shopBindings,
             unresolvedBindings:catalog.stats.unresolvedBindings,
             totalOfferRows:catalog.stats.totalOfferRows,
@@ -64,3 +77,4 @@ jobs:
           name: stoneage-v341-npc-itemshop-runtime
           path: /tmp/stoneage_npc_itemshop_runtime.json
           if-no-files-found: error
+          if: always()
