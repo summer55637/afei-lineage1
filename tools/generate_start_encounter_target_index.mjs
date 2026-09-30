@@ -24,7 +24,7 @@ function readFixed(spec){
 function parseE(s){
   return s.split(/\\r?\\n/).map((raw,i)=>({line:i+1,p:raw.split(',')}))
     .filter(r=>r.p.length>=10&&r.p[0]&&!r.p[0].startsWith('#'))
-    .map(r=>({index:+r.p[0],floor:+r.p[1],x1:+r.p[2],y1:+r.p[3],x2:+r.p[4],y2:+r.p[5],probMin:+r.p[6],probMax:+r.p[7],enemyMax:+r.p[8],zorder:+r.p[9],groupIds:r.p.slice(10,20).filter(Boolean).map(Number),eventNow:+(r.p[30]||-1),eventEnd:+(r.p[31]||-1)}));
+    .map(r=>({index:+r.p[0],floor:+r.p[1],x1:+r.p[2],y1:+r.p[3],x2:+r.p[4],y2:+r.p[5],probMin:+r.p[6],probMax:+r.p[7],enemyMax:+r.p[8],zorder:+r.p[9],groupIds:r.p.slice(10,20).filter(Boolean).map(Number),groupProbs:r.p.slice(20,30).map(v=>v===''?null:Number(v)),eventNow:+(r.p[30]||-1),eventEnd:+(r.p[31]||-1),parts:r.p}));
 }
 function parseG(s){
   const m=new Map();
