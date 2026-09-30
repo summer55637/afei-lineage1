@@ -3,7 +3,9 @@
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
-    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/data/map/mapwarp.txt",
+    "blobSha": "617d2d02cbf17561d0eafc379a015d949055e922"
   },
   "sourceContracts": {
     "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
@@ -12,7 +14,7 @@
   },
   "policy": {
     "routeProof": "Do not promote a floor edge to a playable route unless at least one exact source portal origin is reachable from a direct landing on the fixed runtime map.",
-    "unresolvedFloor200": "Do not use data/generated/stoneage_map_200.json as the world-map runtime for the 3000/4000 -> 200 exits."
+    "unresolvedFloor200": "Do not use data/generated/stoneage_map_200.json as the world-map runtime for 3000/4000 -> 200 exits."
   },
   "audits": [
     {
@@ -23,13 +25,321 @@
         "sourcePath": "gmsv/data/map/sainasu/samugiru/samugiru",
         "sourceBlobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
         "width": 160,
-        "height": 160
+        "height": 160,
+        "present": true
       },
-      "directLandings": [[98,44],[98,45]],
-      "portalGroups": {
-        "1000_to_100_a": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":120},
-        "1000_to_100_b": {"originCount":5,"reachableOriginPoints":5,"allReachable":true,"minPathLength":104}
-      }
+      "directLandings": [
+        {
+          "x": 98,
+          "y": 44,
+          "walkable": true
+        },
+        {
+          "x": 98,
+          "y": 45,
+          "walkable": true
+        }
+      ],
+      "portalAudits": [
+        {
+          "id": "1000_to_100_a",
+          "toFloor": 100,
+          "sourceLines": [
+            2611,
+            2612,
+            2613,
+            2614
+          ],
+          "destinationPoints": [
+            [
+              637,
+              491
+            ],
+            [
+              637,
+              492
+            ],
+            [
+              637,
+              493
+            ],
+            [
+              637,
+              494
+            ]
+          ],
+          "originCount": 4,
+          "reachableOriginPoints": 4,
+          "allOriginPointsReachable": true,
+          "portalUsableFromDirectLanding": true,
+          "origins": [
+            {
+              "origin": [
+                49,
+                116
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 121
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 120
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 120
+            },
+            {
+              "origin": [
+                49,
+                117
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 122
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 121
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 121
+            },
+            {
+              "origin": [
+                49,
+                118
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 123
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 122
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 122
+            },
+            {
+              "origin": [
+                49,
+                119
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 124
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 123
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 123
+            }
+          ]
+        },
+        {
+          "id": "1000_to_100_b",
+          "toFloor": 100,
+          "sourceLines": [
+            2620,
+            2621,
+            2622,
+            2623,
+            2624
+          ],
+          "destinationPoints": [
+            [
+              706,
+              488
+            ],
+            [
+              707,
+              488
+            ],
+            [
+              708,
+              488
+            ],
+            [
+              709,
+              488
+            ],
+            [
+              710,
+              488
+            ]
+          ],
+          "originCount": 5,
+          "reachableOriginPoints": 5,
+          "allOriginPointsReachable": true,
+          "portalUsableFromDirectLanding": true,
+          "origins": [
+            {
+              "origin": [
+                117,
+                112
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 105
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 104
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 104
+            },
+            {
+              "origin": [
+                118,
+                112
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 106
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 105
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 105
+            },
+            {
+              "origin": [
+                119,
+                112
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 107
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 106
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 106
+            },
+            {
+              "origin": [
+                120,
+                112
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 108
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 107
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 107
+            },
+            {
+              "origin": [
+                121,
+                112
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    98,
+                    44
+                  ],
+                  "pathLength": 109
+                },
+                {
+                  "from": [
+                    98,
+                    45
+                  ],
+                  "pathLength": 108
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 108
+            }
+          ]
+        }
+      ]
     },
     {
       "hometown": 1,
@@ -39,13 +349,291 @@
         "sourcePath": "gmsv/data/map/sainasu/marinasu/2000",
         "sourceBlobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
         "width": 150,
-        "height": 150
+        "height": 150,
+        "present": true
       },
-      "directLandings": [[56,48],[57,48]],
-      "portalGroups": {
-        "2000_to_100_a": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":33},
-        "2000_to_100_b": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":82}
-      }
+      "directLandings": [
+        {
+          "x": 56,
+          "y": 48,
+          "walkable": true
+        },
+        {
+          "x": 57,
+          "y": 48,
+          "walkable": true
+        }
+      ],
+      "portalAudits": [
+        {
+          "id": "2000_to_100_a",
+          "toFloor": 100,
+          "sourceLines": [
+            2629,
+            2630,
+            2631,
+            2632
+          ],
+          "destinationPoints": [
+            [
+              79,
+              614
+            ],
+            [
+              79,
+              615
+            ],
+            [
+              79,
+              616
+            ],
+            [
+              79,
+              617
+            ]
+          ],
+          "originCount": 4,
+          "reachableOriginPoints": 4,
+          "allOriginPointsReachable": true,
+          "portalUsableFromDirectLanding": true,
+          "origins": [
+            {
+              "origin": [
+                74,
+                33
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 37
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 36
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 36
+            },
+            {
+              "origin": [
+                74,
+                34
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 36
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 35
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 35
+            },
+            {
+              "origin": [
+                74,
+                35
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 35
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 34
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 34
+            },
+            {
+              "origin": [
+                74,
+                36
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 34
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 33
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 33
+            }
+          ]
+        },
+        {
+          "id": "2000_to_100_b",
+          "toFloor": 100,
+          "sourceLines": [
+            2637,
+            2638,
+            2639,
+            2640
+          ],
+          "destinationPoints": [
+            [
+              114,
+              660
+            ],
+            [
+              114,
+              661
+            ],
+            [
+              114,
+              662
+            ],
+            [
+              114,
+              663
+            ]
+          ],
+          "originCount": 4,
+          "reachableOriginPoints": 4,
+          "allOriginPointsReachable": true,
+          "portalUsableFromDirectLanding": true,
+          "origins": [
+            {
+              "origin": [
+                108,
+                79
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 83
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 82
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 82
+            },
+            {
+              "origin": [
+                108,
+                80
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 84
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 83
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 83
+            },
+            {
+              "origin": [
+                108,
+                81
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 85
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 84
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 84
+            },
+            {
+              "origin": [
+                108,
+                82
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    56,
+                    48
+                  ],
+                  "pathLength": 86
+                },
+                {
+                  "from": [
+                    57,
+                    48
+                  ],
+                  "pathLength": 85
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 85
+            }
+          ]
+        }
+      ]
     },
     {
       "hometown": 2,
@@ -55,13 +643,276 @@
         "sourcePath": "gmsv/data/map/jyaruga/jaja/jaja",
         "sourceBlobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
         "width": 150,
-        "height": 150
+        "height": 150,
+        "present": true
       },
-      "directLandings": [[90,60]],
-      "portalGroups": {
-        "3000_to_200_a": {"originCount":4,"reachableOriginPoints":4,"allReachable":true,"minPathLength":91},
-        "3000_to_200_b": {"originCount":6,"reachableOriginPoints":5,"allReachable":false,"minPathLength":19,"blockedOrigin":[73,59],"blockedReason":"object image 2 is not walkable"}
-      }
+      "directLandings": [
+        {
+          "x": 90,
+          "y": 60,
+          "walkable": true
+        }
+      ],
+      "portalAudits": [
+        {
+          "id": "3000_to_200_a",
+          "toFloor": 200,
+          "sourceLines": [
+            1838,
+            1839,
+            1840,
+            1841
+          ],
+          "destinationPoints": [
+            [
+              570,
+              376
+            ],
+            [
+              570,
+              377
+            ],
+            [
+              570,
+              378
+            ],
+            [
+              570,
+              379
+            ]
+          ],
+          "originCount": 4,
+          "reachableOriginPoints": 4,
+          "allOriginPointsReachable": true,
+          "portalUsableFromDirectLanding": true,
+          "origins": [
+            {
+              "origin": [
+                56,
+                117
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 91
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 91
+            },
+            {
+              "origin": [
+                56,
+                118
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 92
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 92
+            },
+            {
+              "origin": [
+                56,
+                119
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 93
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 93
+            },
+            {
+              "origin": [
+                56,
+                120
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 94
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 94
+            }
+          ]
+        },
+        {
+          "id": "3000_to_200_b",
+          "toFloor": 200,
+          "sourceLines": [
+            1848,
+            1849,
+            1850,
+            1851,
+            1852,
+            1853
+          ],
+          "destinationPoints": [
+            [
+              587,
+              313
+            ],
+            [
+              587,
+              314
+            ],
+            [
+              587,
+              315
+            ],
+            [
+              587,
+              316
+            ],
+            [
+              587,
+              317
+            ],
+            [
+              587,
+              318
+            ]
+          ],
+          "originCount": 6,
+          "reachableOriginPoints": 5,
+          "allOriginPointsReachable": false,
+          "portalUsableFromDirectLanding": true,
+          "origins": [
+            {
+              "origin": [
+                73,
+                54
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 23
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 23
+            },
+            {
+              "origin": [
+                73,
+                55
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 22
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 22
+            },
+            {
+              "origin": [
+                73,
+                56
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 21
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 21
+            },
+            {
+              "origin": [
+                73,
+                57
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 20
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 20
+            },
+            {
+              "origin": [
+                73,
+                58
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": 19
+                }
+              ],
+              "reachableFromDirectLanding": true,
+              "minPathLength": 19
+            },
+            {
+              "origin": [
+                73,
+                59
+              ],
+              "walkable": false,
+              "paths": [
+                {
+                  "from": [
+                    90,
+                    60
+                  ],
+                  "pathLength": null
+                }
+              ],
+              "reachableFromDirectLanding": false,
+              "minPathLength": null
+            }
+          ]
+        }
+      ]
     },
     {
       "hometown": 3,
@@ -71,13 +922,171 @@
         "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana",
         "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
         "width": 150,
-        "height": 150
+        "height": 150,
+        "present": true
       },
-      "directLandings": [[80,90],[80,91]],
-      "portalGroups": {
-        "4000_to_200_a": {"originCount":2,"reachableOriginPoints":0,"allReachable":false,"portalUsable":false,"origins":[[104,55],[104,56]],"reason":"walkable portal cells are disconnected from both direct landings"},
-        "4000_to_200_b": {"originCount":2,"reachableOriginPoints":0,"allReachable":false,"portalUsable":false,"origins":[[101,96],[101,97]],"reason":"walkable portal cells are disconnected from both direct landings"}
-      }
+      "directLandings": [
+        {
+          "x": 80,
+          "y": 90,
+          "walkable": true
+        },
+        {
+          "x": 80,
+          "y": 91,
+          "walkable": true
+        }
+      ],
+      "portalAudits": [
+        {
+          "id": "4000_to_200_a",
+          "toFloor": 200,
+          "sourceLines": [
+            1856,
+            1857
+          ],
+          "destinationPoints": [
+            [
+              304,
+              599
+            ],
+            [
+              304,
+              600
+            ]
+          ],
+          "originCount": 2,
+          "reachableOriginPoints": 0,
+          "allOriginPointsReachable": false,
+          "portalUsableFromDirectLanding": false,
+          "origins": [
+            {
+              "origin": [
+                104,
+                55
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    80,
+                    90
+                  ],
+                  "pathLength": null
+                },
+                {
+                  "from": [
+                    80,
+                    91
+                  ],
+                  "pathLength": null
+                }
+              ],
+              "reachableFromDirectLanding": false,
+              "minPathLength": null
+            },
+            {
+              "origin": [
+                104,
+                56
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    80,
+                    90
+                  ],
+                  "pathLength": null
+                },
+                {
+                  "from": [
+                    80,
+                    91
+                  ],
+                  "pathLength": null
+                }
+              ],
+              "reachableFromDirectLanding": false,
+              "minPathLength": null
+            }
+          ]
+        },
+        {
+          "id": "4000_to_200_b",
+          "toFloor": 200,
+          "sourceLines": [
+            1860,
+            1861
+          ],
+          "destinationPoints": [
+            [
+              301,
+              640
+            ],
+            [
+              301,
+              641
+            ]
+          ],
+          "originCount": 2,
+          "reachableOriginPoints": 0,
+          "allOriginPointsReachable": false,
+          "portalUsableFromDirectLanding": false,
+          "origins": [
+            {
+              "origin": [
+                101,
+                96
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    80,
+                    90
+                  ],
+                  "pathLength": null
+                },
+                {
+                  "from": [
+                    80,
+                    91
+                  ],
+                  "pathLength": null
+                }
+              ],
+              "reachableFromDirectLanding": false,
+              "minPathLength": null
+            },
+            {
+              "origin": [
+                101,
+                97
+              ],
+              "walkable": true,
+              "paths": [
+                {
+                  "from": [
+                    80,
+                    90
+                  ],
+                  "pathLength": null
+                },
+                {
+                  "from": [
+                    80,
+                    91
+                  ],
+                  "pathLength": null
+                }
+              ],
+              "reachableFromDirectLanding": false,
+              "minPathLength": null
+            }
+          ]
+        }
+      ]
     }
   ],
   "worldFloor200Resolution": {
@@ -94,11 +1103,6 @@
       "width": 30,
       "height": 30,
       "reason": "cannot contain fixed-C world portal coordinates reaching at least x=588 and y=1008"
-    },
-    "externalCorroboration": {
-      "url": "https://www.shiqi.tv/shiqi153.htm",
-      "claim": "Public map-index references map floor 200 (加魯卡) to ./data/map/jyaruga/jalga.",
-      "role": "research corroboration only; not promoted to verified fixed-source runtime in this pass."
     }
   },
   "summary": {
@@ -107,8 +1111,16 @@
     "usablePortalGroups": 6,
     "totalPortalGroups": 8,
     "blockedPortalGroups": [
-      {"hometown":3,"destinationFloor":4000,"portalId":"4000_to_200_a"},
-      {"hometown":3,"destinationFloor":4000,"portalId":"4000_to_200_b"}
+      {
+        "hometown": 3,
+        "destinationFloor": 4000,
+        "portalId": "4000_to_200_a"
+      },
+      {
+        "hometown": 3,
+        "destinationFloor": 4000,
+        "portalId": "4000_to_200_b"
+      }
     ],
     "status": "partial"
   }

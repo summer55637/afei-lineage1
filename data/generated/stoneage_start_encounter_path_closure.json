@@ -1,0 +1,517 @@
+{
+  "format": "stoneage-start-encounter-path-closure-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/data/map/mapwarp.txt",
+    "blobSha": "617d2d02cbf17561d0eafc379a015d949055e922"
+  },
+  "sourceContracts": {
+    "encounterTargets": "data/generated/stoneage_start_encounter_target_index.json",
+    "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
+    "runtimeIndex": "data/generated/stoneage_map_runtime_index.json"
+  },
+  "policy": {
+    "routeClosure": "A landing is route-closed only when it is walkable and a walkable path exists to at least one unconditional encounter rectangle.",
+    "mixedRows": "Mixed encounter rows are excluded from unconditional targets.",
+    "unresolvedRows": "Unresolved-group encounter rows are excluded from unconditional targets."
+  },
+  "floors": {
+    "100": {
+      "runtimePresent": true,
+      "sourcePath": "gmsv/data/map/sainasu/sainasu",
+      "sourceBlobSha": "d79f865265b54f698db03a5a7dc73fd3e33f9768",
+      "width": 800,
+      "height": 800,
+      "unconditionalEncounterCount": 32,
+      "portalGroups": [
+        {
+          "id": "1000_to_100_a",
+          "fromFloor": 1000,
+          "landingCount": 4,
+          "walkableLandingCount": 4,
+          "reachableLandingCount": 4,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 71,
+          "nearestEncounterIds": [
+            65
+          ],
+          "landings": [
+            {
+              "point": [
+                637,
+                491
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 74,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                637,
+                492
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 73,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                637,
+                493
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 72,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                637,
+                494
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 71,
+                "encounterId": 65
+              }
+            }
+          ]
+        },
+        {
+          "id": "1000_to_100_b",
+          "fromFloor": 1000,
+          "landingCount": 5,
+          "walkableLandingCount": 5,
+          "reachableLandingCount": 5,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 146,
+          "nearestEncounterIds": [
+            65
+          ],
+          "landings": [
+            {
+              "point": [
+                706,
+                488
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 146,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                707,
+                488
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 147,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                708,
+                488
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 148,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                709,
+                488
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 149,
+                "encounterId": 65
+              }
+            },
+            {
+              "point": [
+                710,
+                488
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 150,
+                "encounterId": 65
+              }
+            }
+          ]
+        },
+        {
+          "id": "2000_to_100_a",
+          "fromFloor": 2000,
+          "landingCount": 4,
+          "walkableLandingCount": 4,
+          "reachableLandingCount": 4,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 0,
+          "nearestEncounterIds": [
+            28
+          ],
+          "landings": [
+            {
+              "point": [
+                79,
+                614
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            },
+            {
+              "point": [
+                79,
+                615
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            },
+            {
+              "point": [
+                79,
+                616
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            },
+            {
+              "point": [
+                79,
+                617
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            }
+          ]
+        },
+        {
+          "id": "2000_to_100_b",
+          "fromFloor": 2000,
+          "landingCount": 4,
+          "walkableLandingCount": 4,
+          "reachableLandingCount": 4,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 0,
+          "nearestEncounterIds": [
+            28
+          ],
+          "landings": [
+            {
+              "point": [
+                114,
+                660
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            },
+            {
+              "point": [
+                114,
+                661
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            },
+            {
+              "point": [
+                114,
+                662
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            },
+            {
+              "point": [
+                114,
+                663
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 28
+              }
+            }
+          ]
+        }
+      ],
+      "status": "closed"
+    },
+    "200": {
+      "runtimePresent": true,
+      "sourcePath": "gmsv/data/map/jyaruga/jalga",
+      "sourceBlobSha": "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce",
+      "width": 800,
+      "height": 1200,
+      "unconditionalEncounterCount": 103,
+      "portalGroups": [
+        {
+          "id": "3000_to_200_a",
+          "fromFloor": 3000,
+          "landingCount": 4,
+          "walkableLandingCount": 4,
+          "reachableLandingCount": 4,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 55,
+          "nearestEncounterIds": [
+            91
+          ],
+          "landings": [
+            {
+              "point": [
+                570,
+                376
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 57,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                570,
+                377
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 57,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                570,
+                378
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 56,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                570,
+                379
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 55,
+                "encounterId": 91
+              }
+            }
+          ]
+        },
+        {
+          "id": "3000_to_200_b",
+          "fromFloor": 3000,
+          "landingCount": 6,
+          "walkableLandingCount": 5,
+          "reachableLandingCount": 5,
+          "allLandingsWalkable": false,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": false,
+          "minPathLength": 72,
+          "nearestEncounterIds": [
+            91
+          ],
+          "landings": [
+            {
+              "point": [
+                587,
+                313
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 72,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                587,
+                314
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 73,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                587,
+                315
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 74,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                587,
+                316
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 75,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                587,
+                317
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 74,
+                "encounterId": 91
+              }
+            },
+            {
+              "point": [
+                587,
+                318
+              ],
+              "walkable": false,
+              "pathToUnconditional": null
+            }
+          ]
+        },
+        {
+          "id": "4000_to_200_a",
+          "fromFloor": 4000,
+          "landingCount": 2,
+          "walkableLandingCount": 2,
+          "reachableLandingCount": 2,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 0,
+          "nearestEncounterIds": [
+            95
+          ],
+          "landings": [
+            {
+              "point": [
+                304,
+                599
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 95
+              }
+            },
+            {
+              "point": [
+                304,
+                600
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 95
+              }
+            }
+          ]
+        },
+        {
+          "id": "4000_to_200_b",
+          "fromFloor": 4000,
+          "landingCount": 2,
+          "walkableLandingCount": 2,
+          "reachableLandingCount": 2,
+          "allLandingsWalkable": true,
+          "atLeastOneLandingReachesUnconditional": true,
+          "allLandingsReachUnconditional": true,
+          "minPathLength": 0,
+          "nearestEncounterIds": [
+            95
+          ],
+          "landings": [
+            {
+              "point": [
+                301,
+                640
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 95
+              }
+            },
+            {
+              "point": [
+                301,
+                641
+              ],
+              "walkable": true,
+              "pathToUnconditional": {
+                "distance": 0,
+                "encounterId": 95
+              }
+            }
+          ]
+        }
+      ],
+      "status": "closed"
+    }
+  },
+  "summary": {
+    "floorsTested": 2,
+    "closedFloors": 2,
+    "totalPortalGroups": 8,
+    "usablePortalGroups": 8,
+    "status": "closed"
+  }
+}

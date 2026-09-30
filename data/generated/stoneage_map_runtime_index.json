@@ -6,15 +6,29 @@
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
   },
   "maps": {
+    "100": {
+      "path": "data/generated/stoneage_map_100.json",
+      "floorId": 100,
+      "width": 800,
+      "height": 800,
+      "tileCount": 640000,
+      "objectCount": 640000,
+      "uniqueTileCount": 1535,
+      "uniqueObjectCount": 430,
+      "sourceBlobSha": "d79f865265b54f698db03a5a7dc73fd3e33f9768",
+      "sourcePath": "gmsv/data/map/sainasu/sainasu"
+    },
     "200": {
       "path": "data/generated/stoneage_map_200.json",
       "floorId": 200,
-      "width": 30,
-      "height": 30,
-      "tileCount": 900,
-      "objectCount": 900,
-      "sourceBlobSha": "d08e8fea4dffd127c26f764d51231ec75ec73f98",
-      "sourcePath": "gmsv/data/map/extra/200"
+      "width": 800,
+      "height": 1200,
+      "tileCount": 960000,
+      "objectCount": 960000,
+      "uniqueTileCount": 1597,
+      "uniqueObjectCount": 413,
+      "sourceBlobSha": "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce",
+      "sourcePath": "gmsv/data/map/jyaruga/jalga"
     },
     "400": {
       "path": "data/generated/stoneage_map_400.json",
