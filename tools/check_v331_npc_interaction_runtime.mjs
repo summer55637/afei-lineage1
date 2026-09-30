@@ -29,7 +29,7 @@ const far=canInteractWithNpc(bank,{floor:1006,x:18,y:28,facingCell:[1006,18,29]}
 assert.equal(far.interactable,false);
 assert.equal(far.reason,'out-of-range');
 
-const request=buildInteractionRequest(bank,{floor:1006,x:18,y:29,facingCell:[1006,18,y=30]},{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',action:'talk'});
+const request=buildInteractionRequest(bank,{floor:1006,x:18,y:29,facingCell:[1006,18,30]},{interactionRule:'NPC_Util_charIsInFrontOfChar distance=1',action:'talk'});
 assert.equal(request.ok,true);
 assert.equal(request.interactable,true);
 assert.equal(request.request.template,'bankman');
