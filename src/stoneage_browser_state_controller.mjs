@@ -32,6 +32,7 @@ const ITEMSHOP_UI_SELECT_OFFER='ITEMSHOP_UI_SELECT_OFFER';
 const ITEMSHOP_UI_SET_QUANTITY='ITEMSHOP_UI_SET_QUANTITY';
 const ITEMSHOP_UI_CLOSE='ITEMSHOP_UI_CLOSE';
 const clone=value=>JSON.parse(JSON.stringify(value));
+const clockFactory=(value,fallback)=>typeof value==='function'?value:()=>value!=null?String(value):String(fallback());
 
 function createBrowserStateController({
   state,
@@ -124,8 +125,8 @@ function createBrowserStateController({
               portalId:routeAction.portalId??null,
               position:routeAction.player??routeAction.position??null,
               expectedRevision:routeAction.expectedRevision==null?Number(currentState?.revision??0):routeAction.expectedRevision,
-              savedAt:routeAction.savedAt??routeAction.now??now,
-              now:routeAction.now??now,
+              savedAt:clockFactory(routeAction.savedAt??routeAction.now,now),
+              now:clockFactory(routeAction.now,now),
               source:'browser-world-first-route'
             });
             if(result.ok&&result.handled===true&&result.state)currentState=result.state;
@@ -136,13 +137,13 @@ function createBrowserStateController({
       }
       if(type===ACTION_WORLD_MOVE_STEP){
         if(worldMovementRuntime.ok!==true)return {ok:false,handled:false,stage:'movement-runtime',reason:worldMovementRuntime.reason??'browser-world-movement-runtime-invalid',errors:worldMovementRuntime.errors??[],state:clone(currentState)};
-        const result=await worldMovementRuntime.dispatch(currentState,action,{now:action.now??now});
+        const result=await worldMovementRuntime.dispatch(currentState,action,{now:clockFactory(action.now,now),savedAt:clockFactory(action.savedAt??action.now,now)});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_WARPPOINT_EXECUTE){
         if(worldWarpPointRuntime.ok!==true)return {ok:false,handled:false,stage:'warppoint-runtime',reason:worldWarpPointRuntime.reason??'browser-world-warppoint-runtime-invalid',errors:worldWarpPointRuntime.errors??[],state:clone(currentState)};
-        const result=await worldWarpPointRuntime.execute(currentState,{portalId:action.portalId??null,position:action.player??action.position??null,expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,savedAt:action.savedAt??action.now??now,now:action.now??now,source:'browser-world-warppoint'});
+        const result=await worldWarpPointRuntime.execute(currentState,{portalId:action.portalId??null,position:action.player??action.position??null,expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,savedAt:clockFactory(action.savedAt??action.now,now),now:clockFactory(action.now,now),source:'browser-world-warppoint'});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
