@@ -6,7 +6,7 @@ import { normalizeRewardPacket, rewardTransactionValidation, applyRewardTransact
 const state=freshPersistentState({now:()=> '2026-09-30T01:00:00.000Z'});
 state.player.gold=100;
 state.inventory.playerItemSlots[0]=1;
-state.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'source-pending',pile:1};
+state.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'enemy:unit-1',pile:1};
 state.pets.petBox=[{id:'pet-1',petId:101,level:5,exp:10}];
 
 const packet=normalizeRewardPacket({transactionId:'battle-1',source:'battle-result:b1',playerExp:40,gold:25,items:[{existingIndex:201,count:1}],petCredits:[{petId:'pet-1',exp:7}]});
