@@ -30,6 +30,7 @@ import { createBrowserBattleInitializeRuntime, ACTION_BATTLE_INITIALIZE, BROWSER
 import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATUS, BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT } from './stoneage_browser_battle_command_wait_runtime.mjs';
 import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT, preflightPlayerBattleCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
+import { createBrowserBattleDefaultTargetRuntime, ACTION_BATTLE_DEFAULT_TARGET_RESOLVE, BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_default_target_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -96,6 +97,7 @@ function createBrowserStateController({
   const worldEncounterIdleBridge=encounterTargetIndex ? createBrowserWorldEncounterIdleBridge({encounterTargetIndex}) : null;
   const battleFieldRuntime=createBrowserBattleFieldRuntime({mapRuntimeOptions:battleFieldRuntimeOptions});
   const battleTargetRuntime=createBrowserBattleTargetRuntime();
+  const battleDefaultTargetRuntime=createBrowserBattleDefaultTargetRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -263,6 +265,15 @@ function createBrowserStateController({
         if(!result.ok)return {...result,state:clone(currentState)};
         battleContext=clone(result.context);
         return {...result,stage:'battle-turn-initialized',format:BROWSER_BATTLE_TURN_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_DEFAULT_TARGET_RESOLVE){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-default-target',reason:'battle-context-required',state:clone(currentState)};
+        if(battleDefaultTargetRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-default-target',reason:'browser-battle-default-target-runtime-invalid',state:clone(currentState)};
+        const result=battleDefaultTargetRuntime.resolve(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {side:action.side??null,defaultTargetRoll:action.defaultTargetRoll??null}
+        );
+        return {...result,format:BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_TARGET_RESOLVE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-target',reason:'battle-context-required',state:clone(currentState)};
@@ -586,6 +597,7 @@ export {
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   ACTION_BATTLE_FIELD_RESOLVE,
   ACTION_BATTLE_TARGET_RESOLVE,
+  ACTION_BATTLE_DEFAULT_TARGET_RESOLVE,
   ACTION_BATTLE_TURN_INITIALIZE,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
@@ -605,6 +617,7 @@ export {
   BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,
   BROWSER_BATTLE_FIELD_RUNTIME_FORMAT,
   BROWSER_BATTLE_TARGET_RUNTIME_FORMAT,
+  BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,
   BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,
