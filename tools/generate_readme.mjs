@@ -52,6 +52,7 @@ const graph = loadJson('data/generated/stoneage_world_graph_index.json') ?? {};
 const npcService = loadJson('data/generated/stoneage_npc_service_index.json') ?? {};
 const state = loadJson('data/generated/stoneage_persistent_state_schema.json') ?? {};
 const economy = loadJson('data/generated/stoneage_item_economy_runtime_schema.json') ?? {};
+const seed = loadJson('data/generated/stoneage_new_player_seed_runtime.json') ?? {};
 const idle = loadJson('data/generated/stoneage_first_idle_route_catalog.json') ?? {};
 const disabled = loadJson('data/generated/stoneage_disabled_features.json') ?? {};
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
@@ -95,6 +96,7 @@ const auto = [
   '| NPC service index | ' + (npcService.statistics ? '✅ indexed' : '⚠️ missing') + ' | ' + comma(npcService.statistics?.totalServiceInstances) + ' service instances；' + comma(npcService.statistics?.uniqueServiceFloors) + ' floors |',
   '| Persistent State | ' + (state.currentSchemaVersion ? '✅ schema ' + state.currentSchemaVersion : '⚠️ missing') + ' | legacy ' + (state.legacySaveSchemaVersion ?? '—') + '；skills ' + (state.fixedSlotContracts?.professionSkillSlots ?? '—') + '；player items ' + (state.fixedSlotContracts?.playerItemSlots ?? '—') + ' |',
   '| Item / Economy | ' + (economy.format ? '✅ runtime v1' : '⚠️ missing') + ' | Gold cap ' + (economy.gold?.maxFormula ?? '—') + '；backpack ' + (economy.structure?.backpackStart ?? '—') + ' to ' + ((economy.structure?.backpackEndExclusive ?? 1) - 1) + ' |',
+  '| New-player seed | ' + (seed.format ? '✅ source-closed' : '⚠️ missing') + ' | trans ' + (seed.sourceConfig?.transmigration ?? '—') + '；lv ' + (seed.sourceConfig?.level ?? '—') + '；pet lv ' + (seed.sourceConfig?.petLevel ?? '—') + '；gold ' + (seed.sourceConfig?.gold ?? '—') + '；item1 ' + (seed.sourceConfig?.itemSlots?.ITEM1 ?? '—') + ' |',
   '| Idle route catalog | ' + (idleSummary.towns ? '✅ indexed' : '⚠️ missing') + ' | ' + (idleSummary.pathClosedTowns ?? 0) + ' path-closed towns；' + (idleSummary.eligibleRouteVariants ?? 0) + '/' + (idleSummary.routeVariants ?? 0) + ' eligible variants |',
   '',
   '### NPC → ItemShop → Item → Gold → Persistent State',
