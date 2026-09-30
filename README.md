@@ -192,3 +192,16 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 新增 `src/stoneage_offline_resume.mjs`：offline resume 目前以 eligible → time-window → resume checkpoint → Save Envelope 的兩階段 transaction 保存；`accruedSeconds` 在沒有完整 offline reward simulation 前維持 0，不自行產生 EXP / Gold / Item。
 
 `src/stoneage_idle_simulation.mjs` 已整合 fixed-C raw battle result adapter 與 offline resume commit。
+
+## 2026-09-30 Item / Economy Runtime v1
+
+新增 `src/stoneage_item_economy_runtime.mjs` 與 `tools/check_item_economy_runtime.mjs`，正式把 Gold 與 Item transaction 接到 canonical persistent state。
+
+- Gold 上限沿用 fixed-C `CHAR_getMaxHaveGold()`：`1,000,000 + 轉生 × 1,800,000`。
+- Player inventory 固定 24 slots；背包 transaction 只操作 9–23。
+- Shop buy 使用 source-resolved Item ID / cost / buy_rate；真正的 Item creation 必須由 source allocator 提供，沒有 allocator 就 fail-closed，不自行猜 Item template 或 66-field RNG。
+- Shop sell 使用 source-resolved cost / sell_rate；base item cost 上限固定 9,999，賣出後才增加 Gold。
+- Stack sell 保留 existing item：pile 下降仍使用同一 existing index，降到 0 才清 slot / runtime item。
+- 買賣 transaction 具 idempotency bookkeeping；allocation failure 不污染原 state。
+
+Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`；詳細邊界：`docs/reference/item-economy-runtime.md`。
