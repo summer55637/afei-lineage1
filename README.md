@@ -316,3 +316,15 @@ V3.26 regression 已納入 GitHub Actions。
 - `Charm` 沒有 pinned-C concrete handler，因此仍明確 fail-closed；不從其他版本猜語意。
 
 V3.27 regression 已納入 GitHub Actions。
+
+## V3.28 New-player First-route Integration
+
+新增 `src/stoneage_new_player_event_adapters.mjs`、`tools/check_v328_new_player_first_route.mjs`、`.github/workflows/check-v328-new-player-first-route.yml` 與 `docs/reference/v328-new-player-first-route.md`。
+
+- Item / Pet / Charm / EndSetFlg 四個 source adapter 已合成同一條 first-route transaction。
+- `xinshoujd.arg` branch 0 在 Lv1 / TRANS0 下可產生 4 個 Item、1 個 Pet、EndSetFlg 366。
+- `Charm:1` 依 pinned concrete Charm rule + `EventNo:-1` 為 no-op。
+- transaction 失敗時只改 staged clone，不提交 canonical state。
+- EndSetFlg 366 成功後，再用新的 transactionId 重跑會被 branch condition `ENDEV!=366` 阻擋。
+
+V3.28 regression 已納入 GitHub Actions。
