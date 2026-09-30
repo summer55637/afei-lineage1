@@ -17,7 +17,7 @@
     "idle.mode must be offline_resume",
     "idle.offline.resumePending must be true",
     "idle.offline.rewardsApplied must be false",
-    "accruedSeconds <= checkpoint elapsedSeconds",
+    "accruedSeconds <= checkpoint effective accrualCapSeconds",
     "routeId must exist",
     "reward transaction ids must be unique within a batch",
     "expectedRevision must equal current Persistent State revision"
