@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 
 const args=process.argv.slice(2);
 const sourceRoot=path.resolve(args[args.indexOf('--source-root')+1]||'/tmp/StoneAge');
@@ -23,7 +23,7 @@ function norm(v){
   if(s.startsWith('gmsv/data/npc/'))s=s.slice('gmsv/data/npc/'.length);
   return s;
 }
-function gitBlobSha(file){const data=fs.readFileSync(file);return crypto.createHash('sha1').update('blob '+data.length+'\\0').update(data).digest('hex');}
+function gitBlobSha(file){const rel=path.relative(sourceRoot,file).replaceAll(path.sep,'/');return execFileSync('git',['-C',sourceRoot,'rev-parse','HEAD:'+rel],{encoding:'utf8'}).trim();}
 function parseBlocks(text){
   const lines=text.replace(/\r/g,'').split('\n');
   const blocks=[]; let cur=null,index=0;
