@@ -63,5 +63,5 @@ jobs:
           assert configured == [], configured
           print({'targetRow': target[0], 'configuredIdToken17Matches': len(configured)})
 
-                - name: Run V3.52 regression
-                  run: node tools/check_v352_starter_item_24114_exhaustive_execution_audit.mjs
+      - name: Run V3.52 regression
+        run: node tools/check_v352_starter_item_24114_exhaustive_execution_audit.mjs
