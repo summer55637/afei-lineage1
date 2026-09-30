@@ -51,3 +51,9 @@ size = 3,840,044 bytes，blob SHA = "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce"�
 4. 若 fixed source 最終證明 "4000" 確實沒有可達出口，就把它記成 source-proven route exception，而不是自行修改世界規則。
 
 對應 generated result："data/generated/stoneage_start_world_exit_reachability.json"；重跑工具："tools/audit_start_world_exit_reachability.mjs"。
+
+## 4000 component audit
+
+進一步以 4-neighbor connected component 分析 fixed 4000 runtime：出生落點 (80,90) / (80,91) 位於 component 48，大小 457；四個 4000→200 portal origins 全部位於 component 0，大小 12,513。兩個 component 最近的 Manhattan 距離為 4，最近點為 (90,109) → (94,109)，中間是三格連續的不可走 tile：(91,109) tile 409、(92,109) tile 196、(93,109) tile 307。三格的 object 都不是造成 blocker 的主因；真正的阻隔來自 tile image walkability。
+
+這讓目前的 blocker 更具體：不是 pathfinder 找不到路，而是 fixed-C runtime 的可走空間本身把「村內 landing 區」與「200 號 world portal 區」分成兩個 disconnected component。對應細節保存在 data/generated/stoneage_4000_exit_component_audit.json。
