@@ -15,6 +15,7 @@ import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_item
 import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
+import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT } from './stoneage_browser_world_movement_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -47,7 +48,8 @@ function createBrowserStateController({
   worldNpcRuntimeOptions={},
   savePointCatalog=null,
   idleRouteCatalog=null,
-  warpCatalog=null
+  warpCatalog=null,
+  worldMovementOptions={}
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
@@ -58,6 +60,7 @@ function createBrowserStateController({
   const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
   const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
+  const worldMovementRuntime=createBrowserWorldMovementRuntime(worldMovementOptions);
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -76,6 +79,12 @@ function createBrowserStateController({
         if(!idleRuntime)return {ok:false,handled:false,stage:'idle-runtime',reason:'browser-idle-runtime-not-configured',state:clone(currentState)};
         if(idleRuntime.ok!==true)return {ok:false,handled:false,stage:'idle-runtime',reason:idleRuntime.reason??'browser-idle-runtime-invalid',errors:idleRuntime.errors??[],state:clone(currentState)};
         const result=await idleRuntime.dispatch(currentState,action,{now:action.now??now});
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_MOVE_STEP){
+        if(worldMovementRuntime.ok!==true)return {ok:false,handled:false,stage:'movement-runtime',reason:worldMovementRuntime.reason??'browser-world-movement-runtime-invalid',errors:worldMovementRuntime.errors??[],state:clone(currentState)};
+        const result=await worldMovementRuntime.dispatch(currentState,action,{now:action.now??now});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
@@ -233,8 +242,10 @@ export {
   ACTION_NPC_RESOLVE_AT,
   ACTION_NPC_EVENT_EXECUTE,
   ACTION_NPC_WARP_EXECUTE,
+  ACTION_WORLD_MOVE_STEP,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
+  BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
