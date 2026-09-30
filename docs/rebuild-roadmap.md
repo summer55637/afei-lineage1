@@ -3,6 +3,13 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 新增：V3.74 Browser NPC Event execution
+
+V3.74 將 V3.64 已 source-resolved 的 changeevent → ExChangeMan 正式掛進唯一 Browser State Controller，新增明確 NPC_EVENT_EXECUTE action。
+
+成功鏈：World NPC point → source changeevent module → interaction gate → existing event branch / action plan → existing Item / Pet / EventFlag handlers → Save Envelope。相同 transactionId replay 仍由既有 event transaction 保證 idempotent。
+
+V3.74 不新增 quest parser、不猜 mission order、不改 Charm source rule，也不建立 playable HTML。
 ## 2026-10-01 新增：V3.73 Persistent State structural container validation
 
 V3.73 將 Persistent State v1 的結構驗證補齊：sourceProfile / revision、player.stats、inventory piles / itemRuntime、equipment、quests、events、titles、world.position、idle.offline 與 battleSettings / runtimeMeta 現在都有 canonical object / scalar shape gate。
