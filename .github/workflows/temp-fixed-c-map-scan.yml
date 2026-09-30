@@ -27,7 +27,7 @@ jobs:
 
           REF="1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
           ROOT="gmsv/data/map"
-          mapset=json.load(open("data/generated/stoneage_mapset_runtime.json",encoding="utf-8"))
+          mapset=json.load(open("../data/generated/stoneage_mapset_runtime.json",encoding="utf-8"))
           walk=mapset.get("walkableByImageId",{})
 
           def blob_sha(b):
@@ -51,7 +51,7 @@ jobs:
                   if m: maps.append(m)
 
           groups={}
-          with open("StoneAge/gmsv/data/group1.txt",encoding="gb18030",errors="ignore") as f:
+          with open("gmsv/data/group1.txt",encoding="gb18030",errors="ignore") as f:
             for raw in f:
               raw=raw.rstrip("\r\n"); p=raw.split(",")
               if len(p)<4: continue
@@ -64,7 +64,7 @@ jobs:
               groups[gid]={"appearByItemId":vals[1],"notAppearByItemId":vals[2],"enemyIds":[x for x in vals[3:13] if x is not None]}
 
           encounters=[]
-          with open("StoneAge/gmsv/data/encount.txt",encoding="gb18030",errors="ignore") as f:
+          with open("gmsv/data/encount.txt",encoding="gb18030",errors="ignore") as f:
             for ln,raw in enumerate(f,1):
               raw=raw.rstrip("\r\n"); p=raw.split(",")
               if len(p)<10: continue
