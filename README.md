@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：b5730b7 — add V3.68 Browser Idle lifecycle and offline checkpoint
-- 最後更新時間：2026-09-30T19:40:37+08:00
+- 最新 commit：c1db2ed — fix V3.68 regression to use canonical idle route catalog
+- 最後更新時間：2026-09-30T19:41:32+08:00
 - 版本線最高 regression workflow：V3.68
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
