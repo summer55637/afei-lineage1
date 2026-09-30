@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-item-reward-gap-cluster-v1",
+  "format": "stoneage-item-reward-gap-cluster-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -8,287 +8,4379 @@
     "idColumn1Based": 17
   },
   "statistics": {
-    "clusterCount": 1,
-    "totalUnresolvedRewardOccurrences": 468,
-    "uniqueUnresolvedRewardIds": 30
+    "npcFiles": 3960,
+    "totalRewardOccurrences": 2866,
+    "unresolvedRewardOccurrences": 294,
+    "resolvedRewardOccurrences": 2572,
+    "uniqueUnresolvedRewardIds": 163,
+    "roleSummary": {
+      "AddItem": {
+        "uniqueIds": 19,
+        "occurrences": 24
+      },
+      "GetRandItem": {
+        "uniqueIds": 146,
+        "occurrences": 274
+      }
+    },
+    "clusterCount": 3
   },
-  "clusters": [
+  "unresolvedRewardItems": [
     {
-      "pathPrefix": "gmsv/data/npc",
-      "occurrences": 468,
-      "uniqueIds": 163,
+      "id": 2842,
+      "occurrences": 20,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 24,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842",
+          "raw": "GetRandItem:2838,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 46,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842",
+          "raw": "GetRandItem:2838,2839,2840,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        }
+      ]
+    },
+    {
+      "id": 2839,
+      "occurrences": 12,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 46,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842",
+          "raw": "GetRandItem:2838,2839,2840,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 140,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 12,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842,2846",
+          "raw": "GetRandItem:2838,2839,2841,2842,2846"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 56,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842,2843",
+          "raw": "GetRandItem:2838,2839,2840,2842,2843"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        }
+      ]
+    },
+    {
+      "id": 2841,
+      "occurrences": 12,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 24,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842",
+          "raw": "GetRandItem:2838,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 140,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 12,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842,2846",
+          "raw": "GetRandItem:2838,2839,2841,2842,2846"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 78,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        }
+      ]
+    },
+    {
+      "id": 2846,
+      "occurrences": 12,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2845,2846,2847",
+          "raw": "GetRandItem:2843,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842,2846",
+          "raw": "GetRandItem:2838,2839,2841,2842,2846"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 78,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 100,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 134,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2842,2844,2846,2847,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 145,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2843,2844,2846,2847,2880,2881,2882"
+        }
+      ]
+    },
+    {
+      "id": 2838,
+      "occurrences": 11,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 24,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842",
+          "raw": "GetRandItem:2838,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 46,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842",
+          "raw": "GetRandItem:2838,2839,2840,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 140,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 12,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842,2846",
+          "raw": "GetRandItem:2838,2839,2841,2842,2846"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 56,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842,2843",
+          "raw": "GetRandItem:2838,2839,2840,2842,2843"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 78,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 100,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        }
+      ]
+    },
+    {
+      "id": 2840,
+      "occurrences": 11,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 24,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842",
+          "raw": "GetRandItem:2838,2840,2841,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 46,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842",
+          "raw": "GetRandItem:2838,2839,2840,2842"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 140,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 12,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 56,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842,2843",
+          "raw": "GetRandItem:2838,2839,2840,2842,2843"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 100,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        }
+      ]
+    },
+    {
+      "id": 2843,
+      "occurrences": 10,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2845,2846,2847",
+          "raw": "GetRandItem:2843,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 56,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842,2843",
+          "raw": "GetRandItem:2838,2839,2840,2842,2843"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 100,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 145,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2843,2844,2846,2847,2880,2881,2882"
+        }
+      ]
+    },
+    {
+      "id": 2845,
+      "occurrences": 10,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2845,2846,2847",
+          "raw": "GetRandItem:2843,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 78,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 156,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2847,2880,2881,2882",
+          "raw": "GetRandItem:2842,2844,2845,2847,2880,2881,2882"
+        }
+      ]
+    },
+    {
+      "id": 2844,
+      "occurrences": 9,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2845,2846,2847",
+          "raw": "GetRandItem:2843,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 78,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 100,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2840,2842,2843,2844,2846,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 134,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2842,2844,2846,2847,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 145,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2843,2844,2846,2847,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 156,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2847,2880,2881,2882",
+          "raw": "GetRandItem:2842,2844,2845,2847,2880,2881,2882"
+        }
+      ]
+    },
+    {
+      "id": 2847,
+      "occurrences": 8,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2845,2846,2847",
+          "raw": "GetRandItem:2843,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 134,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2842,2844,2846,2847,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 145,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2846,2847,2880,2881,2882",
+          "raw": "GetRandItem:2843,2844,2846,2847,2880,2881,2882"
+        },
+        {
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 156,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2847,2880,2881,2882",
+          "raw": "GetRandItem:2842,2844,2845,2847,2880,2881,2882"
+        }
+      ]
+    },
+    {
+      "id": 21214,
+      "occurrences": 4,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 173,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 183,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 204,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        }
+      ]
+    },
+    {
+      "id": 21215,
+      "occurrences": 4,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 173,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 183,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 204,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        }
+      ]
+    },
+    {
+      "id": 21216,
+      "occurrences": 4,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 173,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 183,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 204,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        }
+      ]
+    },
+    {
+      "id": 21217,
+      "occurrences": 4,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 173,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 183,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        },
+        {
+          "path": "gmsv/data/npc/party/maxs/maxs_luntai",
+          "line": 204,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217",
+          "raw": "GetRandItem:2790,22000,21046,21873,21874,21875,21876,21881,21885,21889,21891,21894,21214,21215,21216,21217"
+        }
+      ]
+    },
+    {
+      "id": 2791,
+      "occurrences": 3,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        },
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 2792,
+      "occurrences": 3,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        },
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 2793,
+      "occurrences": 3,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        },
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 19395,
+      "occurrences": 2,
       "roles": [
         "AddItem",
-        "DelItem",
-        "GetItem",
-        "GetRandItem",
-        "ITEM"
+        "GetRandItem"
       ],
-      "topIds": [
+      "uniqueFiles": 2,
+      "samples": [
         {
-          "id": 4212,
-          "count": 66
+          "path": "gmsv/data/npc/my/mowang/mowang0.arg",
+          "line": 18,
+          "role": "AddItem",
+          "expression": "AddItem:19395",
+          "raw": "AddItem:19395"
         },
         {
-          "id": 2842,
-          "count": 27
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 19396,
+      "occurrences": 2,
+      "roles": [
+        "AddItem",
+        "GetRandItem"
+      ],
+      "uniqueFiles": 2,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang1.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19396",
+          "raw": "AddItem:19396"
         },
         {
-          "id": 2838,
-          "count": 19
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 19402,
+      "occurrences": 2,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang7.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19402,22222,19402",
+          "raw": "AddItem:19402,22222,19402"
         },
         {
-          "id": 2839,
-          "count": 19
+          "path": "gmsv/data/npc/my/mowang/mowang7.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19402,22222,19402",
+          "raw": "AddItem:19402,22222,19402"
+        }
+      ]
+    },
+    {
+      "id": 20800,
+      "occurrences": 2,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 33,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625",
+          "raw": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625"
         },
         {
-          "id": 2841,
-          "count": 19
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706",
+          "raw": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706"
+        }
+      ]
+    },
+    {
+      "id": 20818,
+      "occurrences": 2,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
         },
         {
-          "id": 2846,
-          "count": 19
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 22214,
+      "occurrences": 2,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang8.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22214,22223,22214",
+          "raw": "AddItem:22214,22223,22214"
         },
         {
-          "id": 2840,
-          "count": 18
+          "path": "gmsv/data/npc/my/mowang/mowang8.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22214,22223,22214",
+          "raw": "AddItem:22214,22223,22214"
+        }
+      ]
+    },
+    {
+      "id": 22215,
+      "occurrences": 2,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang9.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22215,22224,22215",
+          "raw": "AddItem:22215,22224,22215"
         },
         {
-          "id": 2843,
-          "count": 17
+          "path": "gmsv/data/npc/my/mowang/mowang9.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22215,22224,22215",
+          "raw": "AddItem:22215,22224,22215"
+        }
+      ]
+    },
+    {
+      "id": 22328,
+      "occurrences": 2,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
         },
         {
-          "id": 2845,
-          "count": 17
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 1663,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 2844,
-          "count": 16
-        },
+          "path": "gmsv/data/npc/party/elder.arg",
+          "line": 39,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:1663,1667,1723,1598,1601,1828,18545,20577,1757,2278",
+          "raw": "GetRandItem:1663,1667,1723,1598,1601,1828,18545,20577,1757,2278"
+        }
+      ]
+    },
+    {
+      "id": 1667,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 2847,
-          "count": 15
-        },
+          "path": "gmsv/data/npc/party/elder.arg",
+          "line": 39,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:1663,1667,1723,1598,1601,1828,18545,20577,1757,2278",
+          "raw": "GetRandItem:1663,1667,1723,1598,1601,1828,18545,20577,1757,2278"
+        }
+      ]
+    },
+    {
+      "id": 1671,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 19395,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/party/elder.arg",
+          "line": 20,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:1671,1722,1863,19627,20593,1602,1758,1831,20580,2283,2289",
+          "raw": "GetRandItem:1671,1722,1863,19627,20593,1602,1758,1831,20580,2283,2289"
+        }
+      ]
+    },
+    {
+      "id": 2794,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 19396,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 2795,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 19402,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 2796,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 21214,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 2797,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 21215,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 2798,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 21216,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 2799,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 21217,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 2800,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 22214,
-          "count": 4
-        },
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 3756,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
         {
-          "id": 22215,
-          "count": 4
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 3757,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 3758,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 3759,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 3760,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 3790,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 3791,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 3802,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 3803,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 3820,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 3821,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 3822,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 3833,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 3850,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 3851,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 3862,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 3863,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4210,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4211,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4212,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4213,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4222,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4223,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4240,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4241,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4252,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4253,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4270,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4271,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4282,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4283,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4300,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4301,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4330,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4331,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4342,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4343,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4360,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4361,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4372,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4373,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4390,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4391,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4402,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4403,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4420,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4421,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4432,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4433,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4450,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4451,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 4462,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 4463,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 11424,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        }
+      ]
+    },
+    {
+      "id": 11433,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        }
+      ]
+    },
+    {
+      "id": 11443,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        }
+      ]
+    },
+    {
+      "id": 11454,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        }
+      ]
+    },
+    {
+      "id": 11463,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        }
+      ]
+    },
+    {
+      "id": 11475,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        }
+      ]
+    },
+    {
+      "id": 19019,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19031,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19035,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19039,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19041,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19067,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19068,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19069,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19070,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19071,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19072,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19073,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19074,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19075,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19076,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 19077,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 19397,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang2.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19397",
+          "raw": "AddItem:19397"
+        }
+      ]
+    },
+    {
+      "id": 19398,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang3.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19398",
+          "raw": "AddItem:19398"
+        }
+      ]
+    },
+    {
+      "id": 19399,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang4.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19399",
+          "raw": "AddItem:19399"
+        }
+      ]
+    },
+    {
+      "id": 19400,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang5.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19400",
+          "raw": "AddItem:19400"
+        }
+      ]
+    },
+    {
+      "id": 19401,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang6.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19401",
+          "raw": "AddItem:19401"
+        }
+      ]
+    },
+    {
+      "id": 19410,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 19411,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 19412,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 19413,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 19414,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 19415,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 19416,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 19417,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 33,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625",
+          "raw": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625"
+        }
+      ]
+    },
+    {
+      "id": 20798,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 20799,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706",
+          "raw": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706"
+        }
+      ]
+    },
+    {
+      "id": 20801,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 20802,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 33,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625",
+          "raw": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625"
+        }
+      ]
+    },
+    {
+      "id": 20803,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706",
+          "raw": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706"
+        }
+      ]
+    },
+    {
+      "id": 21038,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        }
+      ]
+    },
+    {
+      "id": 21129,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/shanhu4/eqmaker2.arg",
+          "line": 55,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:21129,1945",
+          "raw": "GetRandItem:21129,1945"
+        }
+      ]
+    },
+    {
+      "id": 22015,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 22016,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 22017,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 22018,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 22019,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22020,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22089,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22090,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22216,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/mowang1.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22216",
+          "raw": "AddItem:22216"
+        }
+      ]
+    },
+    {
+      "id": 22217,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/mowang2.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22217",
+          "raw": "AddItem:22217"
+        }
+      ]
+    },
+    {
+      "id": 22218,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/mowang3.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22218",
+          "raw": "AddItem:22218"
+        }
+      ]
+    },
+    {
+      "id": 22219,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/mowang4.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22219",
+          "raw": "AddItem:22219"
+        }
+      ]
+    },
+    {
+      "id": 22220,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/mowang5.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22220",
+          "raw": "AddItem:22220"
+        }
+      ]
+    },
+    {
+      "id": 22221,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/mowang6.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22221",
+          "raw": "AddItem:22221"
+        }
+      ]
+    },
+    {
+      "id": 22222,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang7.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19402,22222,19402",
+          "raw": "AddItem:19402,22222,19402"
+        }
+      ]
+    },
+    {
+      "id": 22223,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang8.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22214,22223,22214",
+          "raw": "AddItem:22214,22223,22214"
+        }
+      ]
+    },
+    {
+      "id": 22224,
+      "occurrences": 1,
+      "roles": [
+        "AddItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang/mowang9.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22215,22224,22215",
+          "raw": "AddItem:22215,22224,22215"
+        }
+      ]
+    },
+    {
+      "id": 22225,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22226,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22227,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 22228,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        }
+      ]
+    },
+    {
+      "id": 22229,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22313,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        }
+      ]
+    },
+    {
+      "id": 22315,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22317,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 22322,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22323,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22324,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22325,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22326,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        }
+      ]
+    },
+    {
+      "id": 22327,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 22330,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        }
+      ]
+    },
+    {
+      "id": 22331,
+      "occurrences": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "uniqueFiles": 1,
+      "samples": [
+        {
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        }
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "pathPrefix": "gmsv/data/npc/my",
+      "uniqueIds": 140,
+      "uniqueFiles": 18,
+      "roles": [
+        "AddItem",
+        "GetRandItem"
+      ],
+      "sampleRows": [
+        {
+          "id": 2791,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
         },
         {
           "id": 2791,
-          "count": 3
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "id": 2791,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
         },
         {
           "id": 2792,
-          "count": 3
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        },
+        {
+          "id": 2792,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "id": 2792,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
         },
         {
           "id": 2793,
-          "count": 3
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
         },
         {
-          "id": 19397,
-          "count": 3
+          "id": 2793,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
         },
         {
-          "id": 19398,
-          "count": 3
+          "id": 2793,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
         },
         {
-          "id": 19399,
-          "count": 3
+          "id": 19395,
+          "path": "gmsv/data/npc/my/mowang/mowang0.arg",
+          "line": 18,
+          "role": "AddItem",
+          "expression": "AddItem:19395",
+          "raw": "AddItem:19395"
         },
         {
-          "id": 19400,
-          "count": 3
+          "id": 19395,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
         },
         {
-          "id": 19401,
-          "count": 3
+          "id": 19396,
+          "path": "gmsv/data/npc/my/mowang/mowang1.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19396",
+          "raw": "AddItem:19396"
         },
         {
-          "id": 22216,
-          "count": 3
+          "id": 19396,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
         },
         {
-          "id": 22217,
-          "count": 3
+          "id": 19402,
+          "path": "gmsv/data/npc/my/mowang/mowang7.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19402,22222,19402",
+          "raw": "AddItem:19402,22222,19402"
+        },
+        {
+          "id": 19402,
+          "path": "gmsv/data/npc/my/mowang/mowang7.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:19402,22222,19402",
+          "raw": "AddItem:19402,22222,19402"
+        },
+        {
+          "id": 20800,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 33,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625",
+          "raw": "GetRandItem:19417,20794,20793,20792,20802,20811,20824,22007,22008,22009,21161,21162,21163,21164,21165,21128,20806,20800,20625"
+        },
+        {
+          "id": 20800,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706",
+          "raw": "GetRandItem:20617,20616,20615,20803,20825,20799,20228,19005,19006,21180,21025,21026,21027,20885,20796,20800,20706"
+        },
+        {
+          "id": 20818,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "id": 20818,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 22214,
+          "path": "gmsv/data/npc/my/mowang/mowang8.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22214,22223,22214",
+          "raw": "AddItem:22214,22223,22214"
+        },
+        {
+          "id": 22214,
+          "path": "gmsv/data/npc/my/mowang/mowang8.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22214,22223,22214",
+          "raw": "AddItem:22214,22223,22214"
+        },
+        {
+          "id": 22215,
+          "path": "gmsv/data/npc/my/mowang/mowang9.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22215,22224,22215",
+          "raw": "AddItem:22215,22224,22215"
+        },
+        {
+          "id": 22215,
+          "path": "gmsv/data/npc/my/mowang/mowang9.arg",
+          "line": 16,
+          "role": "AddItem",
+          "expression": "AddItem:22215,22224,22215",
+          "raw": "AddItem:22215,22224,22215"
+        },
+        {
+          "id": 22328,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20619,20618,20804,20798,21036,20288,20289,21180,20290,20291,22225,20808,21180,20766,20767,22020,22328,22323,22325,21180,2790,2791,2792,2793"
+        },
+        {
+          "id": 22328,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 2794,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 2795,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 2796,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 2797,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 2798,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        },
+        {
+          "id": 2799,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        },
+        {
+          "id": 2800,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        },
+        {
+          "id": 3756,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 69,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793",
+          "raw": "GetRandItem:20621,20620,2964,2965,21180,2966,3756,20805,21028,21029,21030,21031,21180,22226,21180,20818,22019,22331,22322,22324,21180,2790,2791,2792,2793"
+        },
+        {
+          "id": 3757,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        },
+        {
+          "id": 3758,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 93,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797",
+          "raw": "GetRandItem:3758,20628,19067,19068,19069,19070,19071,19072,21180,19073,19077,20820,20818,2287,2288,2289,22330,22327,22317,22328,2794,2795,2796,2797"
+        },
+        {
+          "id": 3759,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 105,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800",
+          "raw": "GetRandItem:3759,20614,19041,19039,19035,19031,21180,19026,19019,21180,19075,19076,19074,20821,22313,22016,22017,22018,22015,2800"
+        },
+        {
+          "id": 3760,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 81,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793",
+          "raw": "GetRandItem:20623,20622,3757,3760,21032,21033,21034,21035,19410,19411,19412,19413,19414,21202,21180,20819,22315,22326,22229,22089,22090,2798,2799,2790,2791,2792,2793"
+        },
+        {
+          "id": 3790,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
+        },
+        {
+          "id": 3791,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 21,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426",
+          "raw": "GetRandItem:19416,20801,20812,21038,3803,3791,3833,3821,3863,3851,4223,4211,4253,4241,4283,4271,4213,4301,4343,4331,4373,4361,4403,4391,4433,4421,4463,4451,1426"
+        },
+        {
+          "id": 3802,
+          "path": "gmsv/data/npc/my/mowang2/jiang.arg",
+          "line": 9,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425",
+          "raw": "GetRandItem:19415,22227,22228,19395,19396,3802,3790,3822,3820,3862,3850,4222,4210,4252,4240,4282,4270,4212,4300,4342,4330,4372,4360,4402,4390,4432,4420,4462,4450,1425"
         }
+      ]
+    },
+    {
+      "pathPrefix": "gmsv/data/npc/party",
+      "uniqueIds": 17,
+      "uniqueFiles": 4,
+      "roles": [
+        "GetRandItem"
       ],
-      "samples": [
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
-        {
-          "id": 4212,
-          "path": "gmsv/data/npc/genout/msg_4014_17_19",
-          "line": 20,
-          "role": "ITEM",
-          "expression": "ITEM!=4212"
-        },
+      "sampleRows": [
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 13,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2839,2840,2841,2842"
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 24,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2838,2840,2841,2842"
+          "expression": "GetRandItem:2838,2840,2841,2842",
+          "raw": "GetRandItem:2838,2840,2841,2842"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 35,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2838,2839,2841,2842"
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 46,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2838,2839,2840,2842"
-        },
-        {
-          "id": 2842,
-          "path": "gmsv/data/npc/party/piggod/DEADJOE",
-          "line": 52,
-          "role": "ITEM",
-          "expression": "ITEM=2842"
-        },
-        {
-          "id": 2842,
-          "path": "gmsv/data/npc/party/piggod/DEADJOE",
-          "line": 55,
-          "role": "DelItem",
-          "expression": "DelItem:2842"
+          "expression": "GetRandItem:2838,2839,2840,2842",
+          "raw": "GetRandItem:2838,2839,2840,2842"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 68,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2842,2844,2845,2846,2847"
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 79,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2843,2842,2845,2846,2847"
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 90,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2843,2842,2842,2846,2847"
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
         },
         {
           "id": 2842,
           "path": "gmsv/data/npc/party/piggod/DEADJOE",
           "line": 90,
           "role": "GetRandItem",
-          "expression": "GetRandItem:2843,2842,2842,2846,2847"
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 101,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2842,2847",
+          "raw": "GetRandItem:2843,2842,2845,2842,2847"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 46,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842",
+          "raw": "GetRandItem:2838,2839,2840,2842"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 140,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 12,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842,2846",
+          "raw": "GetRandItem:2838,2839,2841,2842,2846"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 56,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842,2843",
+          "raw": "GetRandItem:2838,2839,2840,2842,2843"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 67,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2840,2843,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "id": 2839,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842",
+          "raw": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 24,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842",
+          "raw": "GetRandItem:2838,2840,2841,2842"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842",
+          "raw": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 140,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 12,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 23,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842,2844",
+          "raw": "GetRandItem:2839,2840,2841,2842,2844"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 34,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842,2845",
+          "raw": "GetRandItem:2838,2840,2841,2842,2845"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 45,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842,2846",
+          "raw": "GetRandItem:2838,2839,2841,2842,2846"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 78,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2838,2841,2842,2844,2845,2846,2880,2881,2882"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 89,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 111,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882",
+          "raw": "GetRandItem:2839,2841,2842,2843,2845,2846,2880,2881,2882"
+        },
+        {
+          "id": 2841,
+          "path": "gmsv/data/npc/party/piggod/piggod",
+          "line": 193,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2841",
+          "raw": "GetRandItem:2838,2839,2840,2841"
+        },
+        {
+          "id": 2846,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 57,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2844,2845,2846,2847",
+          "raw": "GetRandItem:2843,2844,2845,2846,2847"
+        },
+        {
+          "id": 2846,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847",
+          "raw": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "id": 2846,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847",
+          "raw": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "id": 2846,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847",
+          "raw": "GetRandItem:2843,2842,2842,2846,2847"
+        }
+      ]
+    },
+    {
+      "pathPrefix": "gmsv/data/npc/giiru",
+      "uniqueIds": 6,
+      "uniqueFiles": 1,
+      "roles": [
+        "GetRandItem"
+      ],
+      "sampleRows": [
+        {
+          "id": 11424,
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        },
+        {
+          "id": 11433,
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        },
+        {
+          "id": 11443,
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        },
+        {
+          "id": 11454,
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        },
+        {
+          "id": 11463,
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
+        },
+        {
+          "id": 11475,
+          "path": "gmsv/data/npc/giiru/event/nev1_5",
+          "line": 14,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475",
+          "raw": "GetRandItem:51,52,71,148,171,241,271,375,11424,1125,684,11433,11443,11454,11463,11475"
         }
       ]
     }
   ],
-  "policy": "Clusters are descriptive source-data groupings only; no runtime priority is inferred from counts."
+  "policy": "Counts are computed from direct source occurrences. No gameplay priority is inferred from frequency; unresolved IDs remain non-promoted."
 }
