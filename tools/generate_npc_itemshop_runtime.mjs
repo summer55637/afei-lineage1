@@ -32,7 +32,7 @@ function walk(dir,out=[]){
   return out;
 }
 function gitBlobSha(bytes){
-  const header=Buffer.from('blob '+bytes.length+'\\0','utf8');
+  const header=Buffer.from('blob '+bytes.length+'\0','utf8');
   return crypto.createHash('sha1').update(Buffer.concat([header,bytes])).digest('hex');
 }
 function sha256(bytes){return crypto.createHash('sha256').update(bytes).digest('hex');}
@@ -40,7 +40,7 @@ function rel(p){return path.relative(root,p).replaceAll(path.sep,'/');}
 function relNpc(p){return path.relative(npcRoot,p).replaceAll(path.sep,'/');}
 
 function parseBlocks(text){
-  const lines=text.replace(/\\r/g,'').split('\\n');
+  const lines=text.replace(/\r/g,'').split('\n');
   const out=[];let cur=null,blockIndex=0;
   for(let i=0;i<lines.length;i++){
     const line=lines[i].trim();
@@ -69,7 +69,7 @@ function parseEnemy(v){
   const parts=v.split('|');
   const template=parts.shift()?.trim()||null;
   const file=parts.find(x=>x.trim().toLowerCase().startsWith('file:'));
-  return {raw:v,templateName:template,fileRef:file?file.trim().slice(5).replaceAll('\\\\','/'):null};
+  return {raw:v,templateName:template,fileRef:file?file.trim().slice(5).replaceAll('\\','/'):null};
 }
 function parseEntry(raw){
   const token=String(raw??'').trim();if(!token)return null;
@@ -98,7 +98,7 @@ function parseList(text){
 }
 function parseArg(text){
   const obj={};
-  for(const raw of text.replace(/\\r/g,'').split('\\n')){
+  for(const raw of text.replace(/\r/g,'').split('\n')){
     const line=raw.trim();
     if(!line||line.startsWith('#'))continue;
     const idx=line.indexOf(':');
@@ -111,7 +111,7 @@ function parseArg(text){
 const shops=[];
 const unresolved=[];
 for(const f of walk(npcRoot).sort()){
-  if(!/\\.create$/i.test(f))continue;
+  if(!/\.create$/i.test(f))continue;
   const createBytes=fs.readFileSync(f);
   for(const b of parseBlocks(createBytes.toString('utf8'))){
     const k=b.keys;
@@ -208,5 +208,5 @@ const catalog={
 };
 
 fs.mkdirSync(path.dirname(out),{recursive:true});
-fs.writeFileSync(out,JSON.stringify(catalog,null,2)+'\\n');
+fs.writeFileSync(out,JSON.stringify(catalog,null,2)+'\n');
 console.log(JSON.stringify({pass:true,fixedSource:'gavinlinasd/StoneAge@'+fixedRef,stats:catalog.stats,output:out}));
