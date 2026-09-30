@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
-import { createSourceItemAllocator } from '../src/stoneage_item_source_runtime.mjs';
+import { createSourceItemAllocator, resolveSourceItemTemplate } from '../src/stoneage_item_source_runtime.mjs';
 import {
   NEW_PLAYER_ITEM_REWARD_RUNTIME_FORMAT,
   createNewPlayerItemRewardHandler,
@@ -15,6 +15,12 @@ assert.equal(NEW_PLAYER_ITEM_REWARD_RUNTIME_FORMAT,'stoneage-new-player-item-rew
 assert.equal(rewardCatalog.stats.requestedItemIds,16);
 assert.equal(rewardCatalog.stats.resolvedItemIds,16);
 assert.equal(rewardCatalog.source.gitBlobSha,'eac985796b59286c547db2abce7b3d604a5e6226');
+assert.equal(itemMakeCatalog.stats.templates,10737);
+for(const itemId of rewardCatalog.itemIds){
+  const resolved=resolveSourceItemTemplate(itemMakeCatalog,itemId);
+  assert.equal(resolved.ok,true);
+  assert.equal(resolved.baseData[0],itemId);
+}
 
 const state=freshPersistentState({playerId:'new-player-items'});
 const rolls=[];
@@ -77,7 +83,7 @@ const listResult=applyNewPlayerItemRewardList(rollback,[20145,999],{
 assert.equal(listResult.ok,false);
 assert.equal(listResult.failedItemId,999);
 assert.equal(rollback.inventory.playerItemSlots.filter(v=>v!==null).length,1);
-assert.equal(rollback.inventory.itemRuntime.slots['20']?.itemId,20145);
+assert.equal(rollback.inventory.itemRuntime.slots['21']?.itemId,20145);
 assert.equal(rolls.length,66);
 
 console.log(JSON.stringify({
