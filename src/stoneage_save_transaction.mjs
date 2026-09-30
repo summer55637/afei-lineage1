@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { CURRENT_STATE_SCHEMA_VERSION, normalizePersistentState, validatePersistentState } from './stoneage_persistent_state.mjs';
 
 const SAVE_ENVELOPE_FORMAT='stoneage-save-envelope-v1';
@@ -15,9 +14,15 @@ function stableClone(value){
 }
 
 function stableStringify(value){return JSON.stringify(stableClone(value));}
-function sha256(value){return createHash(HASH_ALGORITHM).update(String(value),'utf8').digest('hex');}
+async function sha256(value){
+  const bytes=new TextEncoder().encode(String(value));
+  const subtle=globalThis.crypto?.subtle;
+  if(!subtle) throw new Error('Web Crypto SHA-256 is unavailable');
+  const digest=await subtle.digest('SHA-256',bytes);
+  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+}
 
-function buildSaveEnvelope(state,{savedAt=()=>new Date().toISOString(),source='runtime'}={}){
+async function buildSaveEnvelope(state,{savedAt=()=>new Date().toISOString(),source='runtime'}={}){
   const errors=validatePersistentState(state);
   if(errors.length)return {ok:false,errors};
   const payload=stableStringify(state);
@@ -27,16 +32,16 @@ function buildSaveEnvelope(state,{savedAt=()=>new Date().toISOString(),source='r
     revision:Number.isInteger(state.revision)?state.revision:0,
     savedAt:String(savedAt()),
     source:String(source),
-    payloadHash:sha256(payload),
+    payloadHash:await sha256(payload),
     payload
   }};
 }
 
-function parseAndValidateSaveEnvelope(envelope,{now=()=>new Date().toISOString(),allowMigration=true}={}){
+async function parseAndValidateSaveEnvelope(envelope,{now=()=>new Date().toISOString(),allowMigration=true}={}){
   if(!isObject(envelope)||envelope.format!==SAVE_ENVELOPE_FORMAT)return {ok:false,reason:'invalid-envelope-format'};
   if(envelope.schemaVersion!==CURRENT_STATE_SCHEMA_VERSION)return {ok:false,reason:'unsupported-envelope-schema',schemaVersion:envelope.schemaVersion};
   if(typeof envelope.payload!=='string'||typeof envelope.payloadHash!=='string')return {ok:false,reason:'missing-payload'};
-  if(sha256(envelope.payload)!==envelope.payloadHash)return {ok:false,reason:'payload-hash-mismatch'};
+  if(await sha256(envelope.payload)!==envelope.payloadHash)return {ok:false,reason:'payload-hash-mismatch'};
   let raw;
   try{raw=JSON.parse(envelope.payload);}catch{return {ok:false,reason:'invalid-payload-json'};}
   if(!isObject(raw))return {ok:false,reason:'payload-not-object'};
@@ -50,7 +55,7 @@ function parseAndValidateSaveEnvelope(envelope,{now=()=>new Date().toISOString()
   return errors.length?{ok:false,reason:'state-invalid',errors}:{ok:true,state:raw,migration:null,envelope};
 }
 
-function commitSave(currentState,nextState,{expectedRevision=null,savedAt=()=>new Date().toISOString(),source='runtime'}={}){
+async function commitSave(currentState,nextState,{expectedRevision=null,savedAt=()=>new Date().toISOString(),source='runtime'}={}){
   const currentRevision=Number.isInteger(currentState?.revision)?currentState.revision:0;
   if(expectedRevision!=null&&currentRevision!==expectedRevision)return {ok:false,reason:'revision-conflict',currentRevision,expectedRevision};
   if(!isObject(nextState))return {ok:false,reason:'state-missing'};
