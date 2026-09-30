@@ -10,13 +10,32 @@
     "playerMax": 5,
     "sideOffset": 10,
     "enemyPlacement": "BATTLE_CreateVsEnemy swaps enemy Entry[0..4] with Entry[5..9] after Enemy creation",
-    "defaultPet": "BATTLE_PetDefaultEntry places one living default pet after its owner; player pet therefore occupies slot +5"
+    "defaultPet": "BATTLE_PetDefaultEntry places one living default pet after its owner; player pet therefore occupies slot +5",
+    "explicitBattleCreateInit": {
+      "use": true,
+      "mode": "init",
+      "turn": 0,
+      "dpbattle": 0,
+      "norisk": 0,
+      "flg": 0,
+      "fieldAtt": 0,
+      "attCount": 0
+    },
+    "explicitEntryInit": {
+      "escape": 0,
+      "getitem": [
+        -1,
+        -1,
+        -1
+      ]
+    }
   },
   "productBoundary": {
     "battleIndex": "browser runtime uses null transient identifier; no server battle pool is fabricated",
     "battleFieldNo": "caller-injected; source mapping remains separate",
     "persistentState": "only Idle mode changes; battle context is transient",
     "damage": "not executed",
-    "turn": 0
+    "turn": 0,
+    "entryInit": "Only fields explicitly written by EntryInit are mirrored as defaults; charaindex is represented by browser characterId."
   }
 }
