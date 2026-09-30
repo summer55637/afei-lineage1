@@ -31,6 +31,19 @@ async function executeAndSaveNpcSourceEvent(
       state
     };
   }
+  if(executed.matched===false || executed.applied===false){
+    return {
+      ok:true,
+      applied:false,
+      matched:false,
+      idempotent:executed.idempotent===true,
+      format:FIRST_ROUTE_SAVE_FORMAT,
+      orchestratorFormat:NPC_EVENT_ORCHESTRATOR_FORMAT,
+      save:null,
+      execution:executed,
+      state
+    };
+  }
   if(executed.idempotent){
     return {
       ok:true,
