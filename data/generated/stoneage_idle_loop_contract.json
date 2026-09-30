@@ -1,0 +1,33 @@
+{
+  "format": "stoneage-idle-loop-contract-v1",
+  "generatedAt": "2026-09-30",
+  "states": [
+    "disabled",
+    "moving",
+    "encounter_pending",
+    "in_battle",
+    "settlement",
+    "supply_check",
+    "dead",
+    "offline_resume"
+  ],
+  "sourceBackedBoundaries": [
+    "map path",
+    "encounter target",
+    "battle result"
+  ],
+  "productPolicyBoundaries": [
+    "route choice",
+    "supply policy",
+    "capture policy",
+    "auto-pet policy",
+    "inventory-full policy",
+    "offline accrual"
+  ],
+  "prohibitedBehavior": [
+    "recompute battle result in presentation",
+    "invent unresolved encounter groups",
+    "promote mixed encounter rows to unconditional",
+    "treat product policy as fixed-C parity"
+  ]
+}
