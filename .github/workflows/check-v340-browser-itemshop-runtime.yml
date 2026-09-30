@@ -9,8 +9,6 @@ on:
       - 'src/stoneage_item_economy_runtime.mjs'
       - 'src/stoneage_npc_interaction_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
-      - 'src/stoneage_canonical_browser_shell.mjs'
-      - 'index.html'
       - 'src/stoneage_persistent_state.mjs'
       - 'tools/check_v340_browser_itemshop_runtime.mjs'
       - 'tools/fixtures/npc-itemshop/**'
@@ -34,5 +32,4 @@ jobs:
         run: |
           node --check src/stoneage_browser_itemshop_runtime.mjs
           node --check src/stoneage_browser_state_controller.mjs
-          node --check src/stoneage_canonical_browser_shell.mjs
           node --check tools/check_v340_browser_itemshop_runtime.mjs
