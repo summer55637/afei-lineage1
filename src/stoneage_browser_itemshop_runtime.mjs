@@ -60,7 +60,8 @@ function resolveBrowserItemShopOffers(catalog,itemMakeCatalog,shopId){
   if(!isObject(catalog)||!isObject(catalog.shops))return {ok:false,reason:'invalid-catalog'};
   const shop=catalog.shops[String(shopId)];
   if(!isObject(shop))return {ok:false,reason:'shop-missing',shopId:String(shopId)};
-  const itemIds=catalogShopItemIds(catalog,shop);
+  const rawItemIds=catalogShopItemIds(catalog,shop);
+  const itemIds=shop.sellOnly===true?[]:rawItemIds;
   const offers=itemIds.map((itemId,offerIndex)=>{
     const offer=resolveShopBuyOffer(catalog,{shopId,itemId});
     if(!offer.ok)return {itemId,offerIndex,resolved:false,reason:offer.reason};
@@ -81,6 +82,8 @@ function resolveBrowserItemShopOffers(catalog,itemMakeCatalog,shopId){
     floorId:shop.floorId??null,
     name:shop.name??null,
     templateName:shop.templateName??'npcgen_shop',
+    sellOnly:shop.sellOnly===true,
+    buyEnabled:shop.sellOnly!==true,
     source:shop.source??null,
     offers
   };
