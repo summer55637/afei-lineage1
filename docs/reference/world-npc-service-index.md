@@ -60,6 +60,8 @@ World NPC Index 仍有 20 種 data functionset 沒有直接對應 pinned C 主 r
 
 `World Graph floor → NPC service → NPC arg → item / quest / warp target`
 
+目前 `ItemShop` 已有獨立 source runtime：`npcgen_shop → .arg → ItemList/buy_rate/sell_rate → Item template cost → Economy Buy`，並提供 floor→shop、item→shop 兩種反查。完整 pinned source checkout 仍由 generator 在建置時輸入，未把 336 bindings 假寫進 repo。
+
 先處理真正會影響早期遊戲流程的：
 
 - 出生地與新手 NPC
