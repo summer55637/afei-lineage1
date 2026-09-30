@@ -14,7 +14,7 @@ const itemMakeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_item_m
 assert.equal(NEW_PLAYER_ITEM_REWARD_RUNTIME_FORMAT,'stoneage-new-player-item-reward-runtime-v1');
 assert.equal(rewardCatalog.stats.requestedItemIds,16);
 assert.equal(rewardCatalog.stats.resolvedItemIds,16);
-assert.equal(rewardCatalog.source.gitBlobSha,'eac985796b59286c547db2abce7b3d604a5e6226');
+assert.equal(rewardCatalog.fixedSource.gitBlobSha,'eac985796b59286c547db2abce7b3d604a5e6226');
 assert.equal(itemMakeCatalog.stats.templates,10737);
 for(const itemId of rewardCatalog.itemIds){
   const resolved=resolveSourceItemTemplate(itemMakeCatalog,itemId);
