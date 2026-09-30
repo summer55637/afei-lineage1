@@ -1,0 +1,7 @@
+buy_rate:1.0
+sell_rate:0.5
+ItemList:50
+LimitItemType:
+LimitItemNo:77
+special_rate:1.5
+special_item:77
