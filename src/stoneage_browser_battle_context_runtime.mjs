@@ -14,7 +14,7 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 const intOr=value=>{const s=String(value??'').trim();if(s==='')return null;const m=s.match(/^[+-]?\d+/);return m?Number(m[0]):null;};
 
 const SOURCE_ENTRY_INIT=Object.freeze({escape:0,getitem:[-1,-1,-1]});
-const SOURCE_BATTLE_INIT=Object.freeze({use:true,mode:'init',turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
+const SOURCE_BATTLE_INIT=Object.freeze({use:true,mode:1,turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
 const entryInit=()=>({escape:0,getitem:[-1,-1,-1]});
 
 function buildEnemyEntryLayout(team){
@@ -118,6 +118,7 @@ function buildBattleContext({
       battleindex:null,
       use:true,
       mode:'init',
+      sourceMode:SOURCE_BATTLE_INIT.mode,
       type:BATTLE_TYPE_P_VS_E,
       fieldNo:field,
       turn:0,
