@@ -20,7 +20,7 @@ const routeId=listed.routes.find(r=>r.hometown===0&&r.portalId==='1000_to_100_a'
 const missing=await controller.dispatch({type:ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER,routeId});
 assert.equal(missing.ok,false);
 assert.equal(missing.stage,'idle-simulation');
-assert.equal(missing.reason,'battle-result-missing');
+assert.equal(missing.reason,'battle-result-adapter-format-required');
 assert.equal(controller.getState().revision,0);
 
 const victory=await controller.dispatch({
