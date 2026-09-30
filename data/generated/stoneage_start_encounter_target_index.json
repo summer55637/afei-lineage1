@@ -1,6 +1,6 @@
 {
   "format": "stoneage-start-encounter-target-index-v1",
-  "generatedAt": "2026-09-30",
+  "generatedAt": "2026-10-01",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
@@ -11,7 +11,8 @@
     "unconditionalRow": "probMax > 0, has groups, no encounter event gate, every referenced group is resolved, and every referenced group has appearByItemId == -1 and notAppearByItemId == -1",
     "mixedRow": "contains at least one unconditional group plus one or more item-gated groups; retained as candidate but not advertised as fully unconditional",
     "unresolvedRow": "any referenced group missing from fixed group1.txt; never promoted",
-    "runtimePath": "This index is source-coordinate evidence only. Exact path-to-region closure still requires the matching LS2MAP runtime."
+    "runtimePath": "This index is source-coordinate evidence only. Exact path-to-region closure still requires the matching LS2MAP runtime.",
+    "groupProbability": "groupProbs aligns positionally with groupIds and comes from fixed-C encount.txt columns 21..30"
   },
   "floors": {
     "100": {
@@ -55,7 +56,13 @@
               "2000_to_100_b"
             ],
             "nearestDistance": 0
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 64,
@@ -88,7 +95,14 @@
               "2000_to_100_b"
             ],
             "nearestDistance": 0
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            20,
+            20,
+            10
+          ]
         },
         {
           "encounterId": 65,
@@ -114,7 +128,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 71
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 57,
@@ -139,7 +158,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 88
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 30,
@@ -168,7 +191,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 90
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            20,
+            20
+          ]
         },
         {
           "encounterId": 29,
@@ -197,7 +226,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 94
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 55,
@@ -222,7 +257,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 104
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 54,
@@ -247,7 +286,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 114
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 41,
@@ -278,7 +321,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 155
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            null,
+            null,
+            null
+          ]
         },
         {
           "encounterId": 26,
@@ -304,7 +355,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 157
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            10
+          ]
         },
         {
           "encounterId": 40,
@@ -332,7 +388,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 167
-          }
+          },
+          "groupProbs": [
+            4,
+            4,
+            4,
+            1
+          ]
         },
         {
           "encounterId": 42,
@@ -363,7 +425,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 172
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            null,
+            null,
+            null
+          ]
         },
         {
           "encounterId": 31,
@@ -392,7 +462,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 194
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 27,
@@ -421,7 +497,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 211
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30,
+            30
+          ]
         },
         {
           "encounterId": 33,
@@ -447,7 +529,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 211
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30
+          ]
         },
         {
           "encounterId": 37,
@@ -488,7 +575,19 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 226
-          }
+          },
+          "groupProbs": [
+            1,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ]
         },
         {
           "encounterId": 43,
@@ -519,7 +618,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 236
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            null,
+            null,
+            null
+          ]
         },
         {
           "encounterId": 38,
@@ -558,7 +665,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 250
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            1,
+            1,
+            20,
+            20,
+            20,
+            1
+          ]
         },
         {
           "encounterId": 70,
@@ -591,7 +709,16 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 252
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20
+          ]
         },
         {
           "encounterId": 44,
@@ -617,7 +744,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 256
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20
+          ]
         },
         {
           "encounterId": 66,
@@ -653,7 +785,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 267
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20
+          ]
         },
         {
           "encounterId": 32,
@@ -681,7 +824,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 271
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30
+          ]
         },
         {
           "encounterId": 45,
@@ -717,7 +865,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 283
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20
+          ]
         },
         {
           "encounterId": 68,
@@ -747,7 +906,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 314
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30,
+            30,
+            10
+          ]
         },
         {
           "encounterId": 34,
@@ -776,7 +942,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 319
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 265,
@@ -805,7 +977,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 348
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 67,
@@ -835,7 +1013,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 367
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30,
+            30,
+            10
+          ]
         },
         {
           "encounterId": 224,
@@ -864,7 +1049,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 446
-          }
+          },
+          "groupProbs": [
+            5,
+            5,
+            5,
+            1
+          ]
         },
         {
           "encounterId": 50,
@@ -890,7 +1081,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 494
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30
+          ]
         },
         {
           "encounterId": 223,
@@ -919,7 +1115,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 500
-          }
+          },
+          "groupProbs": [
+            5,
+            5,
+            5,
+            1
+          ]
         },
         {
           "encounterId": 49,
@@ -949,7 +1151,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 515
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 48,
@@ -975,7 +1184,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 574
-          }
+          },
+          "groupProbs": [
+            30,
+            30,
+            30
+          ]
         }
       ],
       "mixedRows": [
@@ -1006,7 +1220,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 79
-          }
+          },
+          "groupProbs": [
+            6,
+            6,
+            4
+          ]
         }
       ],
       "unresolvedGroupRows": [
@@ -1188,7 +1407,14 @@
               "4000_to_200_b"
             ],
             "nearestDistance": 0
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            3,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 196,
@@ -1216,7 +1442,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 23
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 197,
@@ -1244,7 +1476,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 25
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 192,
@@ -1272,7 +1510,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 26
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 98,
@@ -1300,7 +1544,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 29
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 198,
@@ -1328,7 +1578,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 29
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 194,
@@ -1356,7 +1612,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 30
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 96,
@@ -1384,7 +1646,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 34
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 99,
@@ -1412,7 +1680,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 34
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 195,
@@ -1440,7 +1714,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 34
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 193,
@@ -1468,7 +1748,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 37
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 200,
@@ -1496,7 +1782,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 44
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 152,
@@ -1527,7 +1819,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 46
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 201,
@@ -1555,7 +1855,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 47
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 190,
@@ -1583,7 +1889,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 48
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 91,
@@ -1615,7 +1927,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 54
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            5,
+            5,
+            5,
+            1
+          ]
         },
         {
           "encounterId": 199,
@@ -1643,7 +1963,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 64
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 147,
@@ -1681,7 +2007,19 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 71
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            1
+          ]
         },
         {
           "encounterId": 151,
@@ -1717,7 +2055,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 71
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 202,
@@ -1745,7 +2094,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 71
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 89,
@@ -1773,7 +2128,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 75
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            1
+          ]
         },
         {
           "encounterId": 90,
@@ -1805,7 +2166,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 75
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            1,
+            1,
+            5,
+            1
+          ]
         },
         {
           "encounterId": 117,
@@ -1828,7 +2197,10 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 76
-          }
+          },
+          "groupProbs": [
+            1
+          ]
         },
         {
           "encounterId": 186,
@@ -1856,7 +2228,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 79
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 126,
@@ -1882,7 +2260,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 80
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 127,
@@ -1908,7 +2291,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 83
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 133,
@@ -1938,7 +2326,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 83
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 129,
@@ -1964,7 +2359,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 85
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 148,
@@ -2000,7 +2400,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 85
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 92,
@@ -2027,7 +2438,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 90
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 149,
@@ -2063,7 +2479,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 90
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 165,
@@ -2091,7 +2518,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 90
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            1
+          ]
         },
         {
           "encounterId": 128,
@@ -2117,7 +2550,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 92
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 257,
@@ -2152,7 +2590,17 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 93
-          }
+          },
+          "groupProbs": [
+            5,
+            5,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 100,
@@ -2180,7 +2628,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 97
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 101,
@@ -2208,7 +2662,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 97
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 187,
@@ -2238,7 +2698,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 98
-          }
+          },
+          "groupProbs": [
+            3,
+            3,
+            3,
+            3,
+            1
+          ]
         },
         {
           "encounterId": 189,
@@ -2266,7 +2733,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 99
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 114,
@@ -2295,7 +2768,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 100
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            1
+          ]
         },
         {
           "encounterId": 191,
@@ -2323,7 +2802,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 105
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 130,
@@ -2349,7 +2834,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 106
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 131,
@@ -2375,7 +2865,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 115
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 150,
@@ -2413,7 +2908,19 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 118
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            1
+          ]
         },
         {
           "encounterId": 94,
@@ -2440,7 +2947,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 119
-          }
+          },
+          "groupProbs": [
+            10,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 132,
@@ -2466,7 +2978,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 119
-          }
+          },
+          "groupProbs": [
+            10,
+            20,
+            15
+          ]
         },
         {
           "encounterId": 171,
@@ -2491,7 +3008,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 121
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 173,
@@ -2516,7 +3037,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 132
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 161,
@@ -2547,7 +3072,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 138
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 172,
@@ -2572,7 +3105,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 139
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 160,
@@ -2603,7 +3140,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 140
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 188,
@@ -2631,7 +3176,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 146
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            1
+          ]
         },
         {
           "encounterId": 162,
@@ -2662,7 +3213,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 147
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 97,
@@ -2687,7 +3246,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 150
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 110,
@@ -2712,7 +3275,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 153
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 115,
@@ -2744,7 +3311,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 153
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            1,
+            10,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 112,
@@ -2769,7 +3344,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 157
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 106,
@@ -2794,7 +3373,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 159
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 111,
@@ -2819,7 +3402,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 160
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 153,
@@ -2850,7 +3437,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 161
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 136,
@@ -2880,7 +3475,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 162
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 113,
@@ -2905,7 +3507,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 163
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 118,
@@ -2928,7 +3534,10 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 173
-          }
+          },
+          "groupProbs": [
+            1
+          ]
         },
         {
           "encounterId": 156,
@@ -2959,7 +3568,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 173
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 107,
@@ -2984,7 +3601,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 175
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 157,
@@ -3015,7 +3636,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 178
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 176,
@@ -3040,7 +3669,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 178
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 102,
@@ -3068,7 +3701,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 181
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 163,
@@ -3094,7 +3733,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 184
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 108,
@@ -3119,7 +3763,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 185
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 175,
@@ -3144,7 +3792,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 185
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 174,
@@ -3169,7 +3821,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 192
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 134,
@@ -3199,7 +3855,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 193
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 159,
@@ -3230,7 +3893,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 195
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 93,
@@ -3257,7 +3928,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 197
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 158,
@@ -3288,7 +3964,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 197
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 109,
@@ -3313,7 +3997,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 203
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 139,
@@ -3344,7 +4032,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 203
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 135,
@@ -3374,7 +4070,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 204
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 154,
@@ -3405,7 +4108,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 206
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 180,
@@ -3436,7 +4147,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 211
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 155,
@@ -3467,7 +4186,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 212
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 181,
@@ -3498,7 +4225,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 217
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 119,
@@ -3526,7 +4261,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 220
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5
+          ]
         },
         {
           "encounterId": 179,
@@ -3557,7 +4298,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 224
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 182,
@@ -3588,7 +4337,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 226
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 178,
@@ -3619,7 +4376,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 227
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 141,
@@ -3650,7 +4415,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 228
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 166,
@@ -3678,7 +4451,13 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 232
-          }
+          },
+          "groupProbs": [
+            1,
+            10,
+            10,
+            10
+          ]
         },
         {
           "encounterId": 142,
@@ -3709,7 +4488,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 241
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 177,
@@ -3740,7 +4527,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 242
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 170,
@@ -3765,7 +4560,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 259
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 183,
@@ -3796,7 +4595,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 262
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 169,
@@ -3821,7 +4628,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 267
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 103,
@@ -3846,7 +4657,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 272
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 105,
@@ -3871,7 +4686,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 278
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 168,
@@ -3898,7 +4717,12 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 279
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            1
+          ]
         },
         {
           "encounterId": 104,
@@ -3923,7 +4747,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 284
-          }
+          },
+          "groupProbs": [
+            1,
+            1
+          ]
         },
         {
           "encounterId": 222,
@@ -3957,7 +4785,16 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 295
-          }
+          },
+          "groupProbs": [
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
         },
         {
           "encounterId": 184,
@@ -3988,7 +4825,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 298
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 185,
@@ -4019,7 +4864,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 315
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 144,
@@ -4050,7 +4903,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 323
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 145,
@@ -4081,7 +4942,15 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 387
-          }
+          },
+          "groupProbs": [
+            10,
+            10,
+            10,
+            5,
+            5,
+            5
+          ]
         },
         {
           "encounterId": 146,
@@ -4111,7 +4980,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 615
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            1,
+            1
+          ]
         }
       ],
       "mixedRows": [
@@ -4144,7 +5020,13 @@
               "3000_to_200_b"
             ],
             "nearestDistance": 0
-          }
+          },
+          "groupProbs": [
+            1,
+            1,
+            1,
+            3
+          ]
         },
         {
           "encounterId": 116,
@@ -4170,7 +5052,11 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 51
-          }
+          },
+          "groupProbs": [
+            9,
+            1
+          ]
         },
         {
           "encounterId": 398,
@@ -4201,7 +5087,14 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 192
-          }
+          },
+          "groupProbs": [
+            3,
+            3,
+            2,
+            3,
+            3
+          ]
         },
         {
           "encounterId": 143,
@@ -4238,7 +5131,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 218
-          }
+          },
+          "groupProbs": [
+            20,
+            20,
+            20,
+            10,
+            10,
+            10,
+            1,
+            1,
+            10
+          ]
         },
         {
           "encounterId": 138,
@@ -4275,7 +5179,18 @@
           "incoming": {
             "containsPoint": [],
             "nearestDistance": 269
-          }
+          },
+          "groupProbs": [
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            1,
+            1,
+            10
+          ]
         }
       ],
       "unresolvedGroupRows": [
