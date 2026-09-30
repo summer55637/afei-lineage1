@@ -15,12 +15,14 @@ import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_item
 import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
+import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
 const ACTION_NPC_RESOLVE_AT='NPC_RESOLVE_AT';
 const ACTION_NPC_EVENT_EXECUTE='NPC_EVENT_EXECUTE';
+const ACTION_NPC_WARP_EXECUTE='NPC_WARP_EXECUTE';
 const ITEMSHOP_UI_OPEN='ITEMSHOP_UI_OPEN';
 const ITEMSHOP_UI_SELECT_OFFER='ITEMSHOP_UI_SELECT_OFFER';
 const ITEMSHOP_UI_SET_QUANTITY='ITEMSHOP_UI_SET_QUANTITY';
@@ -44,7 +46,8 @@ function createBrowserStateController({
   itemShopRuntimeOptions={},
   worldNpcRuntimeOptions={},
   savePointCatalog=null,
-  idleRouteCatalog=null
+  idleRouteCatalog=null,
+  warpCatalog=null
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
@@ -54,6 +57,7 @@ function createBrowserStateController({
   const healerRuntime=moduleAudit ? createBrowserHealerRuntime({moduleAudit}) : null;
   const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
   const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
+  const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -78,7 +82,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE,ACTION_NPC_WARP_EXECUTE].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -93,6 +97,21 @@ function createBrowserStateController({
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:located.reason,npcs:located.npcs??[],state:clone(currentState)};
         }
         resolvedWorldNpc=located.npc;
+      }
+      if(type===ACTION_NPC_WARP_EXECUTE){
+        if(!warpRuntime)return {ok:false,handled:false,stage:'warp-runtime',reason:'browser-warp-runtime-not-configured',state:clone(currentState)};
+        if(warpRuntime.ok!==true)return {ok:false,handled:false,stage:'warp-runtime',reason:warpRuntime.reason??'browser-warp-runtime-invalid',errors:warpRuntime.errors??[],state:clone(currentState)};
+        const player=action.player??null;
+        const npc=requestedNpc??resolvedWorldNpc;
+        if(!npc)return {ok:false,handled:false,stage:'warp',reason:'warp-npc-required',state:clone(currentState)};
+        const result=await warpRuntime.execute(currentState,npc,player,{
+          expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+          savedAt:action.savedAt??action.now??now,
+          now:action.now??now,
+          source:'browser-warp'
+        });
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,stage:result.stage??'warp',worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_NPC_EVENT_EXECUTE){
         if(!moduleAudit)return {ok:false,handled:false,stage:'npc-event',reason:'npc-event-module-audit-required',state:clone(currentState)};
@@ -213,7 +232,9 @@ export {
   ACTION_NPC_SAVEPOINT_CONFIRM,
   ACTION_NPC_RESOLVE_AT,
   ACTION_NPC_EVENT_EXECUTE,
+  ACTION_NPC_WARP_EXECUTE,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
+  BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
