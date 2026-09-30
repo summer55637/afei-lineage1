@@ -1,0 +1,37 @@
+name: Check V3.36 changeevent browser compatibility execution
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_first_route_save.mjs'
+      - 'src/stoneage_first_route_reward_handlers.mjs'
+      - 'src/stoneage_npc_event_runtime.mjs'
+      - 'src/stoneage_npc_event_transaction.mjs'
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_charm_runtime.mjs'
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'tools/check_v336_changeevent_browser_compatibility.mjs'
+      - 'data/generated/stoneage_start_npc_reachability.json'
+      - 'data/generated/stoneage_changeevent_compatibility_reference.json'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v336-changeevent-browser-compatibility.yml'
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax
+        run: node --check tools/check_v336_changeevent_browser_compatibility.mjs
+      - name: Run compatibility execution regression
+        run: node tools/check_v336_changeevent_browser_compatibility.mjs
