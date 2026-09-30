@@ -32,5 +32,7 @@ assert.equal(conflict.reason,'revision-conflict');
 
 const badEnvelope={...built.envelope,schemaVersion:99};
 assert.equal((await parseAndValidateSaveEnvelope(badEnvelope)).reason,'unsupported-envelope-schema');
+const revisionMismatch={...built.envelope,revision:99};
+assert.equal((await parseAndValidateSaveEnvelope(revisionMismatch)).reason,'revision-mismatch');
 
 await Promise.resolve(console.log(JSON.stringify({pass:true,format:SAVE_ENVELOPE_FORMAT,hash:'sha256',deterministic:true,revisionGuard:true,failClosed:true})));
