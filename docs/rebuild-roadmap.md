@@ -460,3 +460,5 @@ V3.29 已完成 `changeevent` module audit：
 V3.31 將 fixed-C NPC facing / distance 互動 gate 變成獨立 runtime；V3.32 再把 interaction gate、module resolution、handler factory 與既有 first-route Save bridge 接成唯一 dispatch entry point。正式 `changeevent` module 仍以 pinned `npctemplate.c/functionSet[]` 缺失為 source blocker，不偷補 alias。
 V3.30 已完成 first-route Save integration：`condition → reward adapters → atomic NPC event transaction → existing Save Envelope → reload parity`。reward mutation chain 現在可持久化；正式 `changeevent` template registration 仍 unresolved，browser NPC interaction 仍是後續邊界。
 pinned `npctemplate.c/functionSet[]` 沒有 `changeevent`，`npccreate.c` 對 unknown template 直接不掛 template；公開文件只能證明 changeevent 的 DSL 用途，不能補出缺失的 pinned C module。Reward mutation chain 已閉合，因此下一階段切到 Save Transaction integration 與可測試的 synthetic NPC interaction boundary，同時保留正式 `changeevent` instantiation unresolved。
+
+V3.34 已補齊四段 new-player branch matrix regression，鎖定 Lv 1–99 / 100–139 / 140–149 / 150 的 source branch、Item/Pet reward、EndSetFlg 與 Save reload parity；因此下一個工作點回到正式 `changeevent` browser instantiation，而不是再擴 reward logic。
