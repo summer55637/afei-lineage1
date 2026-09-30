@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-npc-reachability-v4",
+  "format": "stoneage-start-npc-reachability-v5",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -23,7 +23,8 @@
     "coordinateUnresolved": 0,
     "interactionAuditedReachable": 41,
     "coordinateResolvedButInteractionNotAudited": 5,
-    "templateModuleUnresolvedInstances": 5
+    "templateModuleUnresolvedInstances": 5,
+    "duplicateRowsRemoved": 4
   },
   "sourceValidation": [
     {
@@ -57,24 +58,6 @@
   ],
   "rows": [
     {
-      "hometown": 0,
-      "elder": "samugiru",
-      "floor": 1006,
-      "template": "changeevent",
-      "npcPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
-      "blockIndex": 2,
-      "npc": [
-        15,
-        22
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
-      "reachableInteraction": null,
-      "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
-      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet",
-      "sharedScript": "almark/xinshou/xinshoujd.arg"
-    },
-    {
       "hometown": 1,
       "elder": "marinasu",
       "floor": 2006,
@@ -102,6 +85,24 @@
       "npc": [
         23,
         18
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
+      "reachableInteraction": null,
+      "sourceBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "runtimeModuleStatus": "unresolved_in_npctemplate_functionSet",
+      "sharedScript": "almark/xinshou/xinshoujd.arg"
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "changeevent",
+      "npcPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blockIndex": 2,
+      "npc": [
+        15,
+        22
       ],
       "npcCellWalkable": true,
       "interactionRule": "unresolved: template name absent from pinned npctemplate.c functionSet[]",
@@ -143,48 +144,6 @@
       "minPathToInteraction": 10
     },
     {
-      "hometown": 0,
-      "floor": 1006,
-      "elder": "samugiru",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/family/familyman.create",
-      "blockIndex": 0,
-      "npc": [
-        18,
-        24
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 4
-    },
-    {
-      "hometown": 0,
-      "floor": 1006,
-      "elder": "samugiru",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/newguest/familyman.create",
-      "blockIndex": 0,
-      "npc": [
-        15,
-        13
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 10
-    },
-    {
-      "hometown": 0,
-      "floor": 1006,
-      "elder": "samugiru",
-      "template": "windowman",
-      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-      "blockIndex": 0,
-      "npc": [
-        18,
-        26
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 6
-    },
-    {
       "hometown": 1,
       "floor": 2006,
       "elder": "marinasu",
@@ -197,48 +156,6 @@
       ],
       "reachableInteraction": true,
       "minPathToInteraction": 12
-    },
-    {
-      "hometown": 1,
-      "floor": 2006,
-      "elder": "marinasu",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/family/familyman.create",
-      "blockIndex": 1,
-      "npc": [
-        29,
-        16
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 8
-    },
-    {
-      "hometown": 1,
-      "floor": 2006,
-      "elder": "marinasu",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/newguest/familyman.create",
-      "blockIndex": 1,
-      "npc": [
-        17,
-        14
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 4
-    },
-    {
-      "hometown": 1,
-      "floor": 2006,
-      "elder": "marinasu",
-      "template": "windowman",
-      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-      "blockIndex": 1,
-      "npc": [
-        14,
-        18
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 7
     },
     {
       "hometown": 2,
@@ -255,48 +172,6 @@
       "minPathToInteraction": 9
     },
     {
-      "hometown": 2,
-      "floor": 3006,
-      "elder": "jaja",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/family/familyman.create",
-      "blockIndex": 2,
-      "npc": [
-        25,
-        16
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 3
-    },
-    {
-      "hometown": 2,
-      "floor": 3006,
-      "elder": "jaja",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/newguest/familyman.create",
-      "blockIndex": 2,
-      "npc": [
-        14,
-        13
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 9
-    },
-    {
-      "hometown": 2,
-      "floor": 3006,
-      "elder": "jaja",
-      "template": "windowman",
-      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-      "blockIndex": 2,
-      "npc": [
-        27,
-        15
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 6
-    },
-    {
       "hometown": 3,
       "floor": 4006,
       "elder": "karutarna",
@@ -311,6 +186,48 @@
       "minPathToInteraction": 11
     },
     {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 0,
+      "npc": [
+        18,
+        24
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 4
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 1,
+      "npc": [
+        29,
+        16
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 8
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/family/familyman.create",
+      "blockIndex": 2,
+      "npc": [
+        25,
+        16
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 3
+    },
+    {
       "hometown": 3,
       "floor": 4006,
       "elder": "karutarna",
@@ -323,90 +240,6 @@
       ],
       "reachableInteraction": true,
       "minPathToInteraction": 6
-    },
-    {
-      "hometown": 3,
-      "floor": 4006,
-      "elder": "karutarna",
-      "template": "familyman",
-      "npcPath": "gmsv/data/npc/newguest/familyman.create",
-      "blockIndex": 3,
-      "npc": [
-        16,
-        25
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 6
-    },
-    {
-      "hometown": 3,
-      "floor": 4006,
-      "elder": "karutarna",
-      "template": "windowman",
-      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
-      "blockIndex": 3,
-      "npc": [
-        13,
-        15
-      ],
-      "reachableInteraction": true,
-      "minPathToInteraction": 5
-    },
-    {
-      "hometown": 0,
-      "elder": "samugiru",
-      "floorId": 1006,
-      "x": 15,
-      "y": 22,
-      "name": "炎龍新手接待員",
-      "templateName": "changeevent",
-      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
-      "blockIndex": 2,
-      "sharedScript": "almark/xinshou/xinshoujd.arg",
-      "resolutionStatus": "coordinate_resolved_from_pinned_source",
-      "interactionStatus": "not_audited_same_cell"
-    },
-    {
-      "hometown": 1,
-      "elder": "marinasu",
-      "floorId": 2006,
-      "x": 22,
-      "y": 15,
-      "name": "炎龍新手接待員",
-      "templateName": "changeevent",
-      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
-      "blockIndex": 0,
-      "sharedScript": "almark/xinshou/xinshoujd.arg",
-      "resolutionStatus": "coordinate_resolved_from_pinned_source",
-      "interactionStatus": "not_audited_same_cell"
-    },
-    {
-      "hometown": 2,
-      "elder": "jaja",
-      "floorId": 3006,
-      "x": 23,
-      "y": 18,
-      "name": "炎龍新手接待員",
-      "templateName": "changeevent",
-      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
-      "blockIndex": 1,
-      "sharedScript": "almark/xinshou/xinshoujd.arg",
-      "resolutionStatus": "coordinate_resolved_from_pinned_source",
-      "interactionStatus": "not_audited_same_cell"
-    },
-    {
-      "hometown": 3,
-      "elder": "karutarna",
-      "floorId": 4006,
-      "x": 14,
-      "y": 20,
-      "name": "炎龍新手接待員",
-      "templateName": "changeevent",
-      "sourcePath": "gmsv/data/npc/almark/xinshou/xinshou.create",
-      "blockIndex": 3,
-      "sharedScript": "almark/xinshou/xinshoujd.arg",
-      "resolutionStatus": "coordinate_resolved_from_pinned_source",
-      "interactionStatus": "not_audited_same_cell"
     },
     {
       "hometown": 0,
@@ -657,132 +490,6 @@
       "sourceBlobSha": "9ef27666372b5c1cb66e18445c43a201b688757c"
     },
     {
-      "hometown": 1,
-      "elder": "marinasu",
-      "floor": 2006,
-      "template": "npcgen_man",
-      "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
-      "blockIndex": 0,
-      "npc": [
-        12,
-        14
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
-      "reachableInteraction": true,
-      "minPathToInteraction": 7,
-      "stance": [
-        15,
-        14
-      ],
-      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
-    },
-    {
-      "hometown": 1,
-      "elder": "marinasu",
-      "floor": 2006,
-      "template": "npcgen_man",
-      "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
-      "blockIndex": 25,
-      "npc": [
-        23,
-        13
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
-      "reachableInteraction": true,
-      "minPathToInteraction": 3,
-      "stance": [
-        20,
-        13
-      ],
-      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
-    },
-    {
-      "hometown": 0,
-      "elder": "samugiru",
-      "floor": 1006,
-      "template": "luckyman",
-      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
-      "blockIndex": 0,
-      "npc": [
-        12,
-        13
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
-      "reachableInteraction": true,
-      "minPathToInteraction": 11,
-      "stance": [
-        12,
-        14
-      ],
-      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
-    },
-    {
-      "hometown": 1,
-      "elder": "marinasu",
-      "floor": 2006,
-      "template": "luckyman",
-      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
-      "blockIndex": 1,
-      "npc": [
-        25,
-        15
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
-      "reachableInteraction": true,
-      "minPathToInteraction": 5,
-      "stance": [
-        24,
-        15
-      ],
-      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
-    },
-    {
-      "hometown": 2,
-      "elder": "jaja",
-      "floor": 3006,
-      "template": "luckyman",
-      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
-      "blockIndex": 2,
-      "npc": [
-        25,
-        13
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
-      "reachableInteraction": true,
-      "minPathToInteraction": 6,
-      "stance": [
-        24,
-        13
-      ],
-      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
-    },
-    {
-      "hometown": 3,
-      "elder": "karutarna",
-      "floor": 4006,
-      "template": "luckyman",
-      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
-      "blockIndex": 3,
-      "npc": [
-        17,
-        15
-      ],
-      "npcCellWalkable": true,
-      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
-      "reachableInteraction": true,
-      "minPathToInteraction": 7,
-      "stance": [
-        16,
-        15
-      ],
-      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
-    },
-    {
       "hometown": 0,
       "elder": "samugiru",
       "floor": 1006,
@@ -949,6 +656,244 @@
         21
       ],
       "sourceBlobSha": "3307d71ee642b87db7e356184b46ba3093cd98a5"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 0,
+      "npc": [
+        12,
+        14
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 7,
+      "stance": [
+        15,
+        14
+      ],
+      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "npcgen_man",
+      "npcPath": "gmsv/data/npc/my/cunzhang/xinchong.create",
+      "blockIndex": 25,
+      "npc": [
+        23,
+        13
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_TownPeopleTalked → NPC_Util_charIsInFrontOfChar distance=3",
+      "reachableInteraction": true,
+      "minPathToInteraction": 3,
+      "stance": [
+        20,
+        13
+      ],
+      "sourceBlobSha": "0d32a83ec760251a4240dd7e5ff7dbe6ef262ddb"
+    },
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 0,
+      "npc": [
+        15,
+        13
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 10
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 1,
+      "npc": [
+        17,
+        14
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 4
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 2,
+      "npc": [
+        14,
+        13
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 9
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "elder": "karutarna",
+      "template": "familyman",
+      "npcPath": "gmsv/data/npc/newguest/familyman.create",
+      "blockIndex": 3,
+      "npc": [
+        16,
+        25
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "floor": 1006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 0,
+      "npc": [
+        12,
+        13
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 11,
+      "stance": [
+        12,
+        14
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "floor": 2006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 1,
+      "npc": [
+        25,
+        15
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 5,
+      "stance": [
+        24,
+        15
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "floor": 3006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 2,
+      "npc": [
+        25,
+        13
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 6,
+      "stance": [
+        24,
+        13
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "floor": 4006,
+      "template": "luckyman",
+      "npcPath": "gmsv/data/npc/sainasu/uranai.create",
+      "blockIndex": 3,
+      "npc": [
+        17,
+        15
+      ],
+      "npcCellWalkable": true,
+      "interactionRule": "NPC_LuckyManTalked → face-to-face<=2 or face-to-chara<=1",
+      "reachableInteraction": true,
+      "minPathToInteraction": 7,
+      "stance": [
+        16,
+        15
+      ],
+      "sourceBlobSha": "f570513bc52ef7a584ac1648d0139a6a81652b1e"
+    },
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "elder": "samugiru",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 0,
+      "npc": [
+        18,
+        26
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "elder": "marinasu",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 1,
+      "npc": [
+        14,
+        18
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 7
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "elder": "jaja",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 2,
+      "npc": [
+        27,
+        15
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 6
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "elder": "karutarna",
+      "template": "windowman",
+      "npcPath": "gmsv/data/npc/sainasu/windowman.create",
+      "blockIndex": 3,
+      "npc": [
+        13,
+        15
+      ],
+      "reachableInteraction": true,
+      "minPathToInteraction": 5
     }
   ],
   "policy": "All 46 start-floor NPC coordinates are now derived from exact fixed-C NPCCREATE borncorner. Interaction reachability is source-derived per active template contract. The five changeevent blocks (four xinshou + Samugil village chief) are coordinate-resolved but remain runtime-module-unresolved because changeevent is absent from the pinned npctemplate.c functionSet; they are not counted as active/reachable.",
@@ -973,6 +918,7 @@
     "createParserBehavior": {
       "path": "gmsv/src/npc/npccreate.c",
       "behavior": "unknown template index causes block rejection at close"
-    }
+    },
+    "rowIdentity": "unique by exact source create path + blockIndex + floor"
   }
 }
