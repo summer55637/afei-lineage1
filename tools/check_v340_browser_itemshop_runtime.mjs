@@ -120,6 +120,15 @@ assert.equal(sellBlocked.ok,false);
 assert.equal(sellBlocked.stage,'sell-policy');
 assert.equal(sellBlocked.reason,'item-not-sellable-to-shop');
 
+const sellOnlyOpen=runtime.dispatch(state,{type:ACTION_NPC_ITEMSHOP_OPEN,npc,player,shopId:'fixture.create#1'});
+assert.equal(sellOnlyOpen.ok,true);
+assert.equal(sellOnlyOpen.shop.sellOnly,true);
+assert.equal(sellOnlyOpen.shop.buyEnabled,false);
+assert.equal(sellOnlyOpen.shop.offers.length,0);
+const sellOnlyBuy=runtime.dispatch(state,{type:ACTION_NPC_ITEMSHOP_BUY,npc,player,shopId:'fixture.create#1',itemId:50,quantity:1,transactionId:'v340-sell-only-buy'});
+assert.equal(sellOnlyBuy.ok,false);
+assert.equal(sellOnlyBuy.reason,'item-not-offered');
+
 const controllerState=freshPersistentState({playerId:'browser-controller'});
 controllerState.player.gold=1000;
 const controller=createBrowserStateController({
