@@ -3,6 +3,13 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 新增：V3.72 4000→200 fixed-C source transition audit
+
+V3.72 對已知 4000→200 blocker 做第二層 source closure：固定 source `mapwarp.txt` 沒有 direct 4000→200 row；`gmsv/data/npc/**/*.create` 只找到既有 `200warp.create` 的 4 個 `floorid=4000 → npcgen_warp|200|...` rows，正好對應兩組雙格出口。
+
+另外對 pinned `gmsv/src` 做 4000 / 200 + warp/floor/transfer context 掃描與 literal 200 warp call corroboration。這些搜尋只作輔助證據，不把文字匹配冒充成完整程式語義證明。
+
+因此目前沒有新的 fixed-source transition 可以解除 blocker。V3.62 movement-parity exception 維持；不新增 synthetic warp、manual teleport 或跨版本資料。
 ## 2026-10-01 新增：V3.71 Production ItemShop Browser UI penetration
 
 V3.71 將 V3.70 的 ItemShop UI state 從 synthetic fixture regression 推進到 pinned fixed-C production catalog penetration。GitHub Actions 重新 checkout `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，生成 World NPC index + ItemShop catalog，再以 `path#blockIndex` join 找到正式 World ItemShop。
