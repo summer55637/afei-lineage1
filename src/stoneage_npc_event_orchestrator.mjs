@@ -62,7 +62,7 @@ function executeNpcSourceEvent(
       state
     };
   }
-  const plan=buildEventActionPlan(selected.branch);
+  const plan=buildEventActionPlan(selected.branch,{eventNo:script.eventNo??null,sourceScript:script.path??null});
   if(!plan.ok)return {ok:false,reason:'event-action-plan-build-failed',detail:plan,state};
   if(!execute){
     return {
