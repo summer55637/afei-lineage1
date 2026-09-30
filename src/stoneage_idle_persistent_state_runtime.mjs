@@ -43,7 +43,7 @@ function applyIdleEventToPersistentState(state,event,payload={},{
   const currentIdle=persistentIdleProjection(state);
   const transitioned=transitionIdle(currentIdle,event,payload);
   if(transitioned.accepted!==true){
-    return {ok:false,reason:transitioned.reason,state:clone(state),idle:currentIdle};
+    return {ok:false,reason:transitioned.lastReason??'no_transition',state:clone(state),idle:currentIdle};
   }
   const next=syncIdlePersistence(state,transitioned,event,{now});
   const nextErrors=validatePersistentState(next);
