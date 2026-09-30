@@ -22,6 +22,12 @@ V3.50 把目前已 source-closed 的新玩家資料正式串成單一 headless p
 
 測試中的 `itemGrantAdapter` 是 test-only synthetic fixture，只用來證明「若未來取得合法 Item adapter，creation → save → reload」這條 contract 能完整跑通；fixture 不會被 promotion 為正式 Item data。
 
+## Pending / resume boundary
+
+第一次執行若缺少合法 Item adapter，會留下 `starterPetGranted=true`、`starterItemGranted=false`、`completed=false` 的 headless checkpoint。再次呼叫同一入口時，若這三個 creation gate 與 hometown / creation input 都已成立，runtime 直接進入 Item stage。
+
+Resume path 不重新執行 player creation，也不重新執行 Starter Pet grant；regression 會用會直接 throw 的 RNG / ID factory 驗證這點。
+
 ## State boundary
 
 完成狀態要求：
