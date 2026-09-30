@@ -1,0 +1,24 @@
+name: Check V3.33 NPC module registry guard
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'tools/check_v333_npc_module_registry_runtime.mjs'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
+      - '.github/workflows/check-v333-npc-module-registry.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax
+        run: |
+          node --check src/stoneage_npc_module_registry_runtime.mjs
+          node --check tools/check_v333_npc_module_registry_runtime.mjs
+      - name: Run module registry regression
+        run: node tools/check_v333_npc_module_registry_runtime.mjs
