@@ -3,7 +3,7 @@ import { buildSaveEnvelope, commitSave, SAVE_ENVELOPE_FORMAT } from './stoneage_
 
 const NPC_EVENT_SAVE_RUNTIME_FORMAT='stoneage-npc-event-save-runtime-v1';
 
-function executeAndPersistNpcSourceEvent(state,script,{
+async function executeAndPersistNpcSourceEvent(state,script,{
   handlers={},
   transactionId=null,
   context=null,
@@ -18,7 +18,7 @@ function executeAndPersistNpcSourceEvent(state,script,{
   if(execution.idempotent){
     return {ok:true,applied:false,idempotent:true,format:NPC_EVENT_SAVE_RUNTIME_FORMAT,orchestratorFormat:NPC_EVENT_ORCHESTRATOR_FORMAT,execution,state:execution.state};
   }
-  const saved=commitSave(state,execution.state,{expectedRevision:Number.isInteger(state?.revision)?state.revision:0,savedAt:now,source});
+  const saved=await commitSave(state,execution.state,{expectedRevision:Number.isInteger(state?.revision)?state.revision:0,savedAt:now,source});
   if(!saved.ok)return {ok:false,stage:'save',reason:saved.reason,errors:saved.errors??[],execution,state};
   return {ok:true,format:NPC_EVENT_SAVE_RUNTIME_FORMAT,orchestratorFormat:NPC_EVENT_ORCHESTRATOR_FORMAT,saveEnvelopeFormat:SAVE_ENVELOPE_FORMAT,applied:true,idempotent:false,execution,state:saved.state,save:saved};
 }
