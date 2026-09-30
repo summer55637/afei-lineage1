@@ -6,6 +6,7 @@ import { normalizeRewardPacket, rewardTransactionValidation, applyRewardTransact
 const state=freshPersistentState({now:()=> '2026-09-30T01:00:00.000Z'});
 state.player.gold=100;
 state.inventory.playerItemSlots[0]=1;
+state.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'source-pending',pile:1};
 state.pets.petBox=[{id:'pet-1',petId:101,level:5,exp:10}];
 
 const packet=normalizeRewardPacket({transactionId:'battle-1',source:'battle-result:b1',playerExp:40,gold:25,items:[{existingIndex:201,count:1}],petCredits:[{petId:'pet-1',exp:7}]});
@@ -25,7 +26,9 @@ const applied=applyRewardTransaction(state,packet,{knownExistingItemIds:new Set(
 assert.equal(applied.applied,true);
 assert.equal(applied.state.player.exp,40);
 assert.equal(applied.state.player.gold,125);
-assert.equal(applied.state.inventory.playerItemSlots[1],201);
+assert.equal(applied.state.inventory.playerItemSlots[1],1);
+assert.equal(applied.state.inventory.playerItemSlots[9],201);
+assert.equal(applied.state.inventory.itemRuntime.slots['201'].owner,'player');
 assert.equal(applied.state.inventory.piles['201'],1);
 assert.equal(applied.state.pets.petBox[0].exp,17);
 assert.equal(applied.state.revision,1);
@@ -40,6 +43,7 @@ assert.equal(unknown.ok,false);
 assert.ok(unknown.errors.some(x=>x.includes('unknown existing item index')));
 
 const full=freshPersistentState({now:()=> '2026-09-30T02:00:00.000Z'});
+full.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'source-pending',pile:1};
 full.inventory.playerItemSlots=Array(24).fill(1);
 const noPartial=applyRewardTransaction(full,{transactionId:'battle-3',source:'x',playerExp:10,gold:5,items:[{existingIndex:201,count:1}]},{knownExistingItemIds:new Set([201])});
 assert.equal(noPartial.applied,false);
