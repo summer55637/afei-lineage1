@@ -1,0 +1,684 @@
+{
+  "format": "stoneage-start-route-candidates-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "warp": "gmsv/src/npc/npc_warp.c::NPC_WarpInit + NPC_WarpWarpCharacter",
+    "encounter": "gmsv/src/char/encount.c::ENCOUNT_initEncount"
+  },
+  "statistics": {
+    "hometowns": 4,
+    "warpEdges": 3943,
+    "encounterRows": 1197,
+    "encounterFloors": 675,
+    "routeHorizonDepth": 8
+  },
+  "routes": [
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "spawn": {
+        "hometown": 0,
+        "floor": 1006,
+        "x": 15,
+        "y": 22,
+        "elder": "samugiru"
+      },
+      "directWarpExits": [
+        {
+          "toFloor": 1000,
+          "toX": 98,
+          "toY": 44,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 23
+        },
+        {
+          "toFloor": 1000,
+          "toX": 98,
+          "toY": 45,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 25
+        }
+      ],
+      "directWarpFloorCount": 1,
+      "nearestEncounterRoutes": [
+        {
+          "floor": 1000,
+          "depth": 1,
+          "path": [
+            1006,
+            1000
+          ],
+          "encounterCount": 1
+        }
+      ]
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "spawn": {
+        "hometown": 1,
+        "floor": 2006,
+        "x": 20,
+        "y": 16,
+        "elder": "marinasu"
+      },
+      "directWarpExits": [
+        {
+          "toFloor": 2000,
+          "toX": 56,
+          "toY": 48,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 153
+        },
+        {
+          "toFloor": 2000,
+          "toX": 57,
+          "toY": 48,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "blockIndex": 155
+        }
+      ],
+      "directWarpFloorCount": 1,
+      "nearestEncounterRoutes": [
+        {
+          "floor": 2000,
+          "depth": 1,
+          "path": [
+            2006,
+            2000
+          ],
+          "encounterCount": 2
+        },
+        {
+          "floor": 811,
+          "depth": 3,
+          "path": [
+            2006,
+            2000,
+            2020,
+            811
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 800,
+          "depth": 4,
+          "path": [
+            2006,
+            2000,
+            2020,
+            811,
+            800
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 801,
+          "depth": 5,
+          "path": [
+            2006,
+            2000,
+            2020,
+            811,
+            800,
+            801
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 802,
+          "depth": 6,
+          "path": [
+            2006,
+            2000,
+            2020,
+            811,
+            800,
+            801,
+            802
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 803,
+          "depth": 7,
+          "path": [
+            2006,
+            2000,
+            2020,
+            811,
+            800,
+            801,
+            802,
+            803
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 804,
+          "depth": 8,
+          "path": [
+            2006,
+            2000,
+            2020,
+            811,
+            800,
+            801,
+            802,
+            803,
+            804
+          ],
+          "encounterCount": 1
+        }
+      ]
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "spawn": {
+        "hometown": 2,
+        "floor": 3006,
+        "x": 21,
+        "y": 16,
+        "elder": "jaja"
+      },
+      "directWarpExits": [
+        {
+          "toFloor": 3000,
+          "toX": 90,
+          "toY": 60,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 17
+        },
+        {
+          "toFloor": 3000,
+          "toX": 90,
+          "toY": 60,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 18
+        }
+      ],
+      "directWarpFloorCount": 1,
+      "nearestEncounterRoutes": [
+        {
+          "floor": 3000,
+          "depth": 1,
+          "path": [
+            3006,
+            3000
+          ],
+          "encounterCount": 3
+        },
+        {
+          "floor": 200,
+          "depth": 2,
+          "path": [
+            3006,
+            3000,
+            200
+          ],
+          "encounterCount": 114
+        },
+        {
+          "floor": 3009,
+          "depth": 2,
+          "path": [
+            3006,
+            3000,
+            3009
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 4000,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            4000
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3200,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            3200
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3100,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            3100
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3300,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            3300
+          ],
+          "encounterCount": 2
+        },
+        {
+          "floor": 3400,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            3400
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20801,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20801
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 10203,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            10203
+          ],
+          "encounterCount": 3
+        },
+        {
+          "floor": 20101,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20101
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20301,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20301
+          ],
+          "encounterCount": 2
+        },
+        {
+          "floor": 20401,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20401
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20501,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20501
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20601,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20601
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20701,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            20701
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 31501,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            31501
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3413,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            3413
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 201,
+          "depth": 3,
+          "path": [
+            3006,
+            3000,
+            200,
+            201
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 4006,
+          "depth": 4,
+          "path": [
+            3006,
+            3000,
+            200,
+            4000,
+            4006
+          ],
+          "encounterCount": 1
+        }
+      ]
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "spawn": {
+        "hometown": 3,
+        "floor": 4006,
+        "x": 14,
+        "y": 20,
+        "elder": "karutarna"
+      },
+      "directWarpExits": [
+        {
+          "toFloor": 4000,
+          "toX": 80,
+          "toY": 90,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 63
+        },
+        {
+          "toFloor": 4000,
+          "toX": 80,
+          "toY": 91,
+          "time": null,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "blockIndex": 65
+        }
+      ],
+      "directWarpFloorCount": 1,
+      "nearestEncounterRoutes": [
+        {
+          "floor": 4000,
+          "depth": 1,
+          "path": [
+            4006,
+            4000
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 200,
+          "depth": 2,
+          "path": [
+            4006,
+            4000,
+            200
+          ],
+          "encounterCount": 114
+        },
+        {
+          "floor": 3000,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            3000
+          ],
+          "encounterCount": 3
+        },
+        {
+          "floor": 3200,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            3200
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3100,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            3100
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3300,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            3300
+          ],
+          "encounterCount": 2
+        },
+        {
+          "floor": 3400,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            3400
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20801,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20801
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 10203,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            10203
+          ],
+          "encounterCount": 3
+        },
+        {
+          "floor": 20101,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20101
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20301,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20301
+          ],
+          "encounterCount": 2
+        },
+        {
+          "floor": 20401,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20401
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20501,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20501
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20601,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20601
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 20701,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            20701
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 31501,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            31501
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3413,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            3413
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 201,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            200,
+            201
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 851,
+          "depth": 3,
+          "path": [
+            4006,
+            4000,
+            4020,
+            851
+          ],
+          "encounterCount": 1
+        },
+        {
+          "floor": 3006,
+          "depth": 4,
+          "path": [
+            4006,
+            4000,
+            200,
+            3000,
+            3006
+          ],
+          "encounterCount": 2
+        }
+      ]
+    }
+  ],
+  "policy": "Route candidates use source warp connectivity only. Walkability, NPC dialogue intent and quest priority are not inferred."
+}
