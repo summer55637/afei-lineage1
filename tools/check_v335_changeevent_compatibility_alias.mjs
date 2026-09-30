@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { createAuditedNpcModuleRegistry, createCompatibilityNpcModuleRegistry, resolveAuditedNpcModule } from '../src/stoneage_npc_module_registry_runtime.mjs';
+const audit=JSON.parse(fs.readFileSync('data/generated/stoneage_world_npc_functionset_audit.json','utf8'));
+const compatibility=JSON.parse(fs.readFileSync('data/generated/stoneage_changeevent_compatibility_reference.json','utf8'));
+assert.equal(compatibility.format,'stoneage-changeevent-compatibility-reference-v1');
+assert.equal(compatibility.pinnedCanonical.status,'unresolved_in_pinned_npctemplate_functionSet');
+const strict=createAuditedNpcModuleRegistry(audit,{modules:{ExChangeMan:{kind:'module'}}});
+assert.equal(strict.ok,true); assert.equal(resolveAuditedNpcModule(strict,'changeevent').resolved,false);
+const disabled=createCompatibilityNpcModuleRegistry(audit,compatibility,{modules:{ExChangeMan:{kind:'module'}},allowExternalCompatibilityAliases:false});
+assert.equal(disabled.ok,true); assert.equal(disabled.compatibilityMode,false);
+assert.equal(resolveAuditedNpcModule(disabled,'changeevent').resolved,false);
+const enabled=createCompatibilityNpcModuleRegistry(audit,compatibility,{modules:{ExChangeMan:{kind:'module'}},allowExternalCompatibilityAliases:true});
+assert.equal(enabled.ok,true); assert.equal(enabled.compatibilityMode,true);
+const changeevent=resolveAuditedNpcModule(enabled,'changeevent');
+assert.equal(changeevent.ok,true); assert.equal(changeevent.resolved,true); assert.equal(changeevent.compatibilityAlias,true);
+assert.equal(changeevent.functionset,'ExChangeMan'); assert.equal(changeevent.module.kind,'module');
+assert.equal(enabled.compatibilityAliases.changeevent.compatibilityOnly,true);
+console.log(JSON.stringify({pass:true,format:'stoneage-changeevent-compatibility-reference-v1',pinnedCanonicalUnresolved:true,strictAliasRejected:true,compatibilityAliasOptIn:true,alias:'changeevent -> ExChangeMan',defaultDisabled:true}));
