@@ -107,7 +107,8 @@ function createBrowserItemShopRuntime({
     catalog:itemMakeCatalog,
     itemCapacity,
     cursor,
-    ...(typeof randInclusive==='function'?{randInclusive}:{})
+    ...(typeof randInclusive==='function'?{randInclusive}:{}),
+    initHandlers
   });
   const dispatch=(state,action={},options={})=>{
     if(!isObject(action))return {ok:false,handled:false,stage:'action',reason:'invalid-browser-itemshop-action',state};
