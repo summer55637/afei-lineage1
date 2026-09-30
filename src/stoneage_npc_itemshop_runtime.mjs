@@ -159,7 +159,9 @@ function resolveShopSellPolicy(catalog,{shopId,itemId,itemType}={}){
   let special=false,specialToken=null;
   if(Array.isArray(got.shop.specialItemEntries)&&got.shop.specialItemEntries.length&&constraintMatches(id,got.shop.specialItemEntries)){
     const sr=finite(got.shop.specialRate);
-    if(sr!=null){sellRate=sr;special=true;specialToken=got.shop.specialItemEntries.find(x=>expandConstraintToken(x).includes(id))?.raw??null;}
+    sellRate=sr!=null?sr:1.2;
+    special=true;
+    specialToken=got.shop.specialItemEntries.find(x=>expandConstraintToken(x).includes(id))?.raw??null;
   }
   if(sellRate==null||sellRate<0)return {ok:false,reason:'invalid-sell-rate',shopId:String(shopId),itemId:id};
   return {ok:true,shopId:String(shopId),itemId:id,itemType:intOr(itemType,-1),sellRate,special,specialToken,matchedBy,source:got.shop.source};
