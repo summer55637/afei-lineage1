@@ -838,3 +838,25 @@ Encounter 邊界沿用 pinned fixed-C `ENCOUNT_initEncount()` / `ENCOUNT_getEnco
 - 4000→200 兩組仍 `source_blocked_before_portal`，V3.78 不建立 synthetic bridge / manual warp。
 
 V3.78 controller 新增唯讀 action `WORLD_FIRST_ROUTE_PLAN`；plan 不修改 Persistent State revision，也不建立 Save Envelope。
+
+## 2026-10-01 V3.79 Browser World First-Route Execution
+
+V3.79 將 V3.78 的唯讀 first-route plan 真正交給 canonical Browser State Controller 逐步執行：
+
+`WORLD_FIRST_ROUTE_EXECUTE → WORLD_MOVE_STEP* → WORLD_WARPPOINT_EXECUTE → WORLD_MOVE_STEP* → unconditional encounter boundary`
+
+新增：
+
+- `src/stoneage_browser_world_first_route_execution_runtime.mjs`
+- `data/generated/stoneage_browser_world_first_route_execution_schema.json`
+- `tools/check_v379_browser_world_first_route_execution.mjs`
+- `.github/workflows/check-v379-browser-world-first-route-execution.yml`
+- `docs/reference/v379-browser-world-first-route-execution.md`
+
+V3.79 是 orchestration layer，不建立第二套 movement、WarpPoint 或 battle engine。每一步直接呼叫既有 V3.76/V3.77 primitive，因此每個成功 movement / WarpPoint 都沿用既有 `commitSave` / Save Envelope / revision contract。
+
+本輪 regression 以 1000→100_a 驗證完整執行鏈；目標是實際把 Persistent State 從 hometown landing 一步步保存到 floor 100 encounter boundary。Encounter 只閉合到「已抵達 unconditional encounter rectangle」，不消耗 RNG、不啟動 battle。
+
+失敗處理不是跨多步驟 atomic rollback：若中途某個 action 失敗，前面已成功保存的移動會保留，runtime 會回傳失敗 action index 與當前 state，供上層停止或重新規劃。
+
+4000→200 仍維持 source-blocked；V3.79 不以 WarpPoint row 存在就直接跨過 V3.62 的 fixed-C movement reachability blocker。
