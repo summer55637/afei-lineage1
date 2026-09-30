@@ -49,12 +49,12 @@
 - 8/8 direct hometown warp exits 可由出生座標以 source walkability 到達。
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 4/4 hometown start floors 都已存在 NPC service index。
-- 20 個 NPC 已有 fixed-C 數值座標，其中 16/20 已完成 interaction reachability；4 個 `xinshou` 坐標已解出但尚未套用專用 `changeevent` 互動規則，另有 26 個 NPC 座標仍 unresolved。
+- 46 個 start-floor NPC 座標現在全部由 fixed-C `borncorner` source 解出；其中 41/46 已完成 interaction reachability，5 個 `changeevent` blocks 因 pinned `npctemplate.c` 沒有 `changeevent` template 而維持 runtime-module unresolved。
 - 4/4 direct destination floors 都有 source encounter row；其中 2/4（2000、3000）為 active encounter，1000、4000 僅為 0 機率／無 group 的 placeholder。
 
 因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
 
-這仍不是完整的 first-route gameplay closure：目前 16 個已解析座標的出生村 NPC 互動點全部可達，但另外 30 個 start-floor NPC 的數值座標仍未從 source 完整閉合。新增的 `stoneage_start_destination_closure.json` 顯示四個 destination floor 目前只有 2000 有 exact source map + walkability runtime；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中閉合，因此不能用猜測或跨版本 map 補上。2000 的兩個 landing coordinates 都已確認 walkable。遇敵也已進一步依 fixed C 的 group item gate 分級：2000 的 Group 1018 要求 item 20219、3000 的 Group 1015 要求 item 20216，而 pinned `itemset6.txt` 是空檔，因此兩者目前都是 conditional_unresolved_item_source，不可直接當成一般掛機區。依 source world graph，四個 destination floor 往第一個具至少一個 unconditional encounter group 的候選 floor 分別是 100、100、200、200。新玩家 event 的 source create + shared script reference 已閉合，但 pinned fixed-C 的 `npctemplate.c` 沒有 `changeevent` module，因此目前標記為 `script_reference_closed_template_unresolved`；獎勵物品／寵物定義仍未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
+這仍不是完整的 first-route gameplay closure：目前 46 個 start-floor NPC 座標已全部從 exact fixed-C `borncorner` 解出，其中 41 個 active-template NPC 已完成 interaction reachability、0 個 unreachable；5 個 `changeevent` instances 因 pinned `npctemplate.c` 缺少 template 而維持 runtime-unresolved。新增的 `stoneage_start_destination_closure.json` 顯示四個 destination floor 目前只有 2000 有 exact source map + walkability runtime；1000、3000、4000 的 fixed-source map blob 尚未在 source catalog 中閉合，因此不能用猜測或跨版本 map 補上。2000 的兩個 landing coordinates 都已確認 walkable。遇敵也已進一步依 fixed C 的 group item gate 分級：2000 的 Group 1018 要求 item 20219、3000 的 Group 1015 要求 item 20216，而 pinned `itemset6.txt` 是空檔，因此兩者目前都是 conditional_unresolved_item_source，不可直接當成一般掛機區。依 source world graph，四個 destination floor 往第一個具至少一個 unconditional encounter group 的候選 floor 分別是 100、100、200、200。新玩家 event 的 source create + shared script reference 已閉合，但 pinned fixed-C 的 `npctemplate.c` 沒有 `changeevent` module，且 `npccreate.c` 會拒絕 unknown template，因此目前標記為 `script_reference_closed_template_unresolved`；獎勵物品／寵物定義仍未全部閉合。對應 checkpoint 已寫入 `data/generated/stoneage_start_route_closure.json`，座標審計則在 `data/generated/stoneage_start_npc_reachability.json`。
 
 ## 現代 3D 卡通化最終視覺目標
 
@@ -116,3 +116,8 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 ## Start-floor NPC closure 更新（2026-09-30）
 
 `data/generated/stoneage_start_npc_coordinate_closure.json` 已將原本 30 個 coordinate-unresolved rows 全部從 fixed-C NPCCREATE `borncorner` 解出，現在 46/46 start-floor NPC 都有 source coordinate。`data/generated/stoneage_start_npc_reachability.json` 進一步顯示 41/46 active-template NPC 的 interaction reachability 已閉合、0 個 unreachable；5 個 `changeevent` create blocks 仍因 pinned `gmsv/src/npc/npctemplate.c` 沒有 `changeevent` functionSet 而維持 runtime-module unresolved。
+
+
+## Start-floor closure 最新狀態（2026-09-30）
+
+目前 46/46 start-floor NPC coordinates 均已由 fixed-C exact `NPCCREATE borncorner` source 解出。`stoneage_start_npc_reachability.json` 已完成 41/46 interaction reachability，0 個 unreachable；剩餘 5 個（4 個 xinshou + 1 個薩姆吉爾村長）都是 `changeevent`，而 pinned `gmsv/src/npc/npctemplate.c::functionSet[]` 沒有 `changeevent`，所以依 `gmsv/src/npc/npccreate.c` 的 unknown-template 行為維持 runtime-unresolved，不把它們偽裝成已可玩的 NPC。
