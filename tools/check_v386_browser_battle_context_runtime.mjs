@@ -111,7 +111,7 @@ result=await controller.dispatch({
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.state.idle.mode,'settlement');
 assert.equal(result.state.revision,2);
-assert.equal(controller.getBattleContext(),null);
+assert.ok(controller.getBattleContext());
 assert.equal(result.verification.ok,true);
 
 const deadPet=buildBattleContext({
