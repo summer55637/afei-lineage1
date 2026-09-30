@@ -16,7 +16,7 @@ const TYPE_ALIASES={
 
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const intOr=(v,f=0)=>Number.isFinite(Number(v))?Math.trunc(Number(v)):f;
-const finite=v=>Number.isFinite(Number(v))?Number(v):null;
+const finite=v=>(v===null||v===undefined||String(v).trim()==='')?null:(Number.isFinite(Number(v))?Number(v):null);
 
 function validateNpcItemShopCatalog(catalog){
   const errors=[];
