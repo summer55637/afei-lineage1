@@ -59,6 +59,9 @@ if(fs.existsSync(actualCatalogPath)){
   assert.deepEqual(catalog.statistics,{savePointInstanceCount:28,unresolvedCount:0,noItemCount:0,itemRequiredCount:27,confirmOnlyCount:1});
   const actual=Object.values(catalog.bySourceKey??{}).find(row=>row.mode==='item-required');
   assert.ok(actual); assert.ok(Array.isArray(actual.itemRequirements)&&actual.itemRequirements.length>0);
+  const malformed=Object.values(catalog.bySourceKey??{}).find(row=>String(row.sourceArgPath??'')==='genout/sp_200_449_982');
+  assert.ok(malformed);
+  assert.ok(Array.isArray(malformed.itemRequirementIssues)&&malformed.itemRequirementIssues.some(x=>x.reason==='savepoint-getitem-zero-count-branch-impossible'));
   assert.ok(Array.isArray(actual.itemRequirements[0])&&actual.itemRequirements[0].length>0);
 }
 

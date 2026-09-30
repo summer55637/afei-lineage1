@@ -17,26 +17,51 @@ function parseEnemy(v){ if(!v)return {templateName:null,fileRef:null,raw:null}; 
 function parseGetItem(text){
   const raw=String(text??'').trim();
   if(!raw)return {ok:false,reason:'savepoint-getitem-empty'};
-  const branches=raw.split(',').map(x=>x.trim()).filter(Boolean).map((branch)=>{
-    const items=branch.split('&').map(x=>x.trim()).filter(Boolean).map((token)=>{
-      const m=token.match(/^(\d+)(?:\*(\d+))?$/);
-      if(!m)return {ok:false,token,reason:'savepoint-getitem-token-invalid'};
-      const itemId=Number(m[1]);
-      const count=m[2]==null?1:Number(m[2]);
-      if(!Number.isInteger(itemId)||itemId<0||!Number.isInteger(count)||count<1)return {ok:false,token,reason:'savepoint-getitem-token-value-invalid'};
-      return {ok:true,itemId,count};
-    });
-    if(items.some(x=>x.ok!==true))return {ok:false,items};
+  const branches=[];
+  const issues=[];
+  for(const [branchIndex,branchRaw] of raw.split(',').map(x=>x.trim()).filter(Boolean).entries()){
+    const items=[];
+    let branchInvalid=false;
+    for(const token of branchRaw.split('&').map(x=>x.trim()).filter(Boolean)){
+      const numeric=token.match(/^(\d+)(?:\*(\d*))?$/);
+      if(!numeric){
+        issues.push({branchIndex,token,reason:'savepoint-getitem-token-invalid'});
+        branchInvalid=true;
+        break;
+      }
+      const itemId=Number(numeric[1]);
+      const count=numeric[2]===undefined?1:(numeric[2]===''?0:Number(numeric[2]));
+      if(!Number.isInteger(itemId)||itemId<0||!Number.isInteger(count)||count<0){
+        issues.push({branchIndex,token,reason:'savepoint-getitem-token-value-invalid',itemId,count});
+        branchInvalid=true;
+        break;
+      }
+      items.push({itemId,count});
+    }
+    if(branchInvalid)continue;
     const seen=new Set();
+    let duplicate=false;
     for(const item of items){
-      if(seen.has(item.itemId))return {ok:false,reason:'savepoint-getitem-duplicate-item-id-in-and-branch',itemId:item.itemId};
+      if(seen.has(item.itemId)){
+        issues.push({branchIndex,itemId:item.itemId,reason:'savepoint-getitem-duplicate-item-id-in-and-branch'});
+        duplicate=true;
+        break;
+      }
       seen.add(item.itemId);
     }
-    return {ok:true,items:items.map(({itemId,count})=>({itemId,count}))};
-  });
-  if(!branches.length)return {ok:false,reason:'savepoint-getitem-branch-empty'};
-  if(branches.some(x=>x.ok!==true))return {ok:false,branches};
-  return {ok:true,branches:branches.map(x=>x.items)};
+    if(duplicate)continue;
+    if(!items.length){
+      issues.push({branchIndex,reason:'savepoint-getitem-branch-empty'});
+      continue;
+    }
+    if(items.some(item=>item.count===0)){
+      issues.push({branchIndex,items,reason:'savepoint-getitem-zero-count-branch-impossible'});
+      continue;
+    }
+    branches.push(items);
+  }
+  if(!branches.length)return {ok:false,reason:'savepoint-getitem-no-satisfiable-branches',issues};
+  return {ok:true,branches,issues};
 }
 function parseArg(text){ const key={}; let noItem=String(text??'').toUpperCase().includes('NOITEM'); for(const raw of text.replace(/\r/g,'').split('\n')){ const line=raw.trim(); if(!line||line.startsWith('#'))continue; if(/^NOITEM\b/i.test(line)){noItem=true;continue;} const m=line.match(/^([A-Za-z][A-Za-z0-9_]*)\s*[:=]\s*(.*)$/); if(!m)continue; key[m[1]]=m[2].trim(); } return {key,noItem}; }
 function parseBorn(v){ if(!v)return null; const a=v.split(',').map(x=>Number(x.trim())); return a.length>=3&&a.slice(0,3).every(Number.isFinite)?{floorId:a[0],x:a[1],y:a[2]}:null; }
@@ -63,14 +88,16 @@ for(const f of files.filter(p=>/\.create$|\.creata$/i.test(p))){
       if(!born){ unresolved.push({sourceKey,reason:'savepoint-born-invalid',Born:parsed.key.Born??null}); continue; }
       const getItemRaw=parsed.key.GetItem??null;
       let itemRequirements=null;
+      let itemRequirementIssues=[];
       if(getItemRaw!=null){
         const parsedRequirements=parseGetItem(getItemRaw);
         if(!parsedRequirements.ok){ unresolved.push({sourceKey,reason:parsedRequirements.reason??'savepoint-getitem-unresolved',detail:parsedRequirements}); continue; }
         itemRequirements=parsedRequirements.branches;
+        if(parsedRequirements.issues.length) itemRequirementIssues=parsedRequirements.issues;
       }
       const mode=parsed.noItem?'no-item':(getItemRaw!=null?'item-required':'confirm-only');
       if(!mode){ unresolved.push({sourceKey,reason:'savepoint-item-mode-unresolved'}); continue; }
-      rows.push({sourceKey,functionSet:'SavePoint',templateName:'npcgen_savepoint',templatePath:template.path,templateBlockIndex:template.blockIndex,createPath:norm(path.relative(npcRoot,f)),createBlockIndex:c.blockIndex,floorId:Number(c.keys.floorid?.[0]??NaN),born,elderId:id,id,mode,getItem:getItemRaw,itemRequirements,rawArg,sourceArgPath:enemy.fileRef});
+      rows.push({sourceKey,functionSet:'SavePoint',templateName:'npcgen_savepoint',templatePath:template.path,templateBlockIndex:template.blockIndex,createPath:norm(path.relative(npcRoot,f)),createBlockIndex:c.blockIndex,floorId:Number(c.keys.floorid?.[0]??NaN),born,elderId:id,id,mode,getItem:getItemRaw,itemRequirements,itemRequirementIssues,rawArg,sourceArgPath:enemy.fileRef});
     }
   }
 }
@@ -81,4 +108,5 @@ if(unresolved.length) { console.error(JSON.stringify({pass:false,reason:'savepoi
 if(catalog.statistics.itemRequiredCount!==27||catalog.statistics.confirmOnlyCount!==1||catalog.statistics.noItemCount!==0) { console.error(JSON.stringify({pass:false,reason:'unexpected-savepoint-source-mode-count',statistics:catalog.statistics})); process.exit(1); }
 const itemRows=rows.filter(x=>x.mode==='item-required');
 if(itemRows.some(x=>!Array.isArray(x.itemRequirements)||x.itemRequirements.length===0)){ console.error(JSON.stringify({pass:false,reason:'savepoint-item-requirements-missing'})); process.exit(1); }
+console.log(JSON.stringify({itemRequirementIssueCount:itemRows.reduce((n,x)=>n+(Array.isArray(x.itemRequirementIssues)?x.itemRequirementIssues.length:0),0)}));
 console.log(JSON.stringify({pass:true,fixedSource:SOURCE_REPOSITORY+'@'+SOURCE_REF,statistics:catalog.statistics,output:out}));

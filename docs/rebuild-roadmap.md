@@ -12,6 +12,8 @@ V3.59 將固定 C SavePoint 的 GetItem 路徑從 V3.58 的 fail-closed 推進�
 
 本輪仍不建立 playable HTML，也不改動 4000→200、3000→200 單點 landing、changeevent、Starter Item 24114 或 GMQUE 永久停用政策。
 
+V3.59 另確認 `genout/sp_200_449_982` 的一個 malformed `GetItem` token `1991*`；固定 C 會把空 count 轉為 0，使該 branch 不成立。catalog 保留 anomaly evidence 並只跳過不可成立 branch，不做資料修補。
+
 ## 2026-09-30 新增：V3.58 Browser SavePoint service execution
 
 V3.58 將 pinned fixed-C `SavePoint` 從 generic service routing 推進到 headless state mutation。固定 source `gmsv/src/npc/npc_savepoint.c` 明確使用 `RANGE 2`、`CHAR_SAVEPOINT` bit 與 `CHAR_LASTTALKELDER`；`NPC_SavePointInit()` 另以 NPC arg 的 `Born` 建立 elder 的實際 save/復活位置。

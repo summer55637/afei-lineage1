@@ -35,7 +35,7 @@ function normalizeBinding(binding){
   if(floorId<0||x<0||y<0)return {ok:false,reason:'savepoint-born-position-required'};
   const mode=normalizeName(binding.mode||'');
   if(!['no-item','item-required','confirm-only'].includes(mode))return {ok:false,reason:'savepoint-source-item-mode-unresolved'};
-  return {ok:true,binding:{elderId,born:{floorId,x,y},mode,rawArg:binding.rawArg??null,sourceKey:binding.sourceKey??null}};
+  return {ok:true,binding:{elderId,born:{floorId,x,y},mode,getItem:binding.getItem??null,itemRequirements:Array.isArray(binding.itemRequirements)?clone(binding.itemRequirements):null,itemRequirementIssues:Array.isArray(binding.itemRequirementIssues)?clone(binding.itemRequirementIssues):[],rawArg:binding.rawArg??null,sourceKey:binding.sourceKey??null}};
 }
 
 function resolveSavePointBinding(npc,savePointCatalog){
@@ -61,19 +61,22 @@ function normalizeItemRequirements(binding){
   if(!Array.isArray(binding?.itemRequirements))return {ok:false,reason:'savepoint-item-requirement-catalog-missing'};
   if(binding.itemRequirements.length<1)return {ok:false,reason:'savepoint-item-requirement-catalog-empty'};
   const branches=[];
-  for(const rawBranch of binding.itemRequirements){
-    if(!Array.isArray(rawBranch)||rawBranch.length<1)return {ok:false,reason:'savepoint-item-requirement-branch-invalid'};
+  const issues=[];
+  for(const [branchIndex,rawBranch] of binding.itemRequirements.entries()){
+    if(!Array.isArray(rawBranch)||rawBranch.length<1){issues.push({branchIndex,reason:'savepoint-item-requirement-branch-invalid'});continue;}
     const seen=new Set(), branch=[];
+    let branchInvalid=false;
     for(const raw of rawBranch){
       const normalized=normalizeItemRequirement(raw);
-      if(!normalized.ok)return normalized;
-      if(seen.has(normalized.requirement.itemId))return {ok:false,reason:'savepoint-item-requirement-duplicate-item-id-in-and-branch',itemId:normalized.requirement.itemId};
+      if(!normalized.ok){issues.push({branchIndex,reason:normalized.reason,itemId:raw?.itemId??null});branchInvalid=true;break;}
+      if(seen.has(normalized.requirement.itemId)){issues.push({branchIndex,reason:'savepoint-item-requirement-duplicate-item-id-in-and-branch',itemId:normalized.requirement.itemId});branchInvalid=true;break;}
       seen.add(normalized.requirement.itemId);
       branch.push(normalized.requirement);
     }
-    branches.push(branch);
+    if(!branchInvalid)branches.push(branch);
   }
-  return {ok:true,branches};
+  if(!branches.length)return {ok:false,reason:'savepoint-item-requirement-no-satisfiable-branches',issues};
+  return {ok:true,branches,issues};
 }
 
 function inventoryItemId(state,slot){

@@ -29,3 +29,5 @@ tools/generate_savepoint_source_catalog.mjs 現在把 GetItem 解析成 itemRequ
 ## Scope
 
 本輪沒有改 CHAR_SAVEPOINT 高 ID 的 32-bit shift 宣稱，也沒有立即 teleport；GMQUE、changeevent、Starter Item 24114、4000→200、3000→200 單點 non-walkable landing 政策均不變。
+
+另外，fixed-C `genout/sp_200_449_982` 的 `GetItem` 有一個原始資料 token `1991*&1992*1`。依 C parser，`atoi("")` 會得到 0，因此該 AND branch 的 requirement count 為 0，`NPC_SavePointItemCheck(...,0)` 不會成立；V3.59 catalog 將此 branch 記為 `zero-count-branch-impossible` 並跳過，保留其他可成立 OR branches，不自行把 `*` 改成 `*1`。
