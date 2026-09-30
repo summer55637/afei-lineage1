@@ -42,8 +42,6 @@ async function commitWorldEncounterRoll(state,encounterRuntime,{position=null,en
   });
   if(!rolled.ok)return {...rolled,handled:false,stage:rolled.stage??'encounter-roll',state:clone(state)};
   const next=applyEncounterRollToPersistentState(state,rolled);
-  next.world.encounter.lastEncounterId=rolled.encounter?.encounterId??null;
-  next.world.encounter.lastOutcome=String(rolled.outcome??'').trim()||null;
   const commit=await commitSave(state,next,{
     expectedRevision:expectedRevision==null?Number(state?.revision??0):Number(expectedRevision),
     savedAt,
