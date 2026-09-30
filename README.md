@@ -339,3 +339,14 @@ V3.28 regression 已納入 GitHub Actions。
 - new-player reward mutation chain 已閉合；目前剩餘的是 NPC module instantiation / browser interaction boundary。
 
 V3.29 audit regression 已納入 GitHub Actions。
+
+## V3.30 First-route Save Integration
+
+新增 `src/stoneage_first_route_save.mjs`、`tools/check_v330_first_route_save.mjs`、`.github/workflows/check-v330-first-route-save.yml` 與 `docs/reference/v330-first-route-save.md`。
+
+- new-player branch 0 已接到既有 Save Envelope / revision guard。
+- Lv1 reward commit 後可 reload 同一 Envelope，Item / Pet / Event flag 保持一致。
+- 同 transactionId 不重複 save；完成 Event 366 後的新 transactionId 不再匹配。
+
+V3.30 regression 已納入 GitHub Actions。
+
