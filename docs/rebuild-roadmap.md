@@ -4,6 +4,16 @@
 
 
 
+## 2026-10-01 新增：V3.76 Browser World Movement Step
+
+V3.76 將固定 C 的 `MAP_walkAbleFromPoint()` 與 `CHAR_walk()` movement gate 接入唯一 Browser State Controller，新增 `WORLD_MOVE_STEP`。
+
+每次只移動同 floor 一格。目的格必須通過 source-backed walkability；斜向移動另外檢查起點沿 X / Y 的兩個 orthogonal side cells，完全對應固定 C 的 diagonal gate。
+
+成功後只透過既有 `commitSave()` 寫入 `world.position`，再做 Save Envelope round-trip verification。Browser movement 不自行 pathfind、不抽 encounter RNG、不觸發 battle/reward，也不改跨 floor 語義。
+
+V3.75 的 `NPC_WARP_EXECUTE` 繼續負責已 source-closed 的跨 floor Warp；V3.72 證明的 4000→200 disconnected route exception 不由 movement runtime 繞過。
+
 ## 2026-10-01 新增：V3.75 Browser start-floor Warp execution
 
 V3.75 把已 source-closed 的 8 個起點 npcgen_warp instances 接入唯一 Browser State Controller，新增 NPC_WARP_EXECUTE。
