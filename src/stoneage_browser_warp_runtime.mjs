@@ -19,7 +19,7 @@ function normalizeSourcePath(value){
 function sourceKey(value){
   if(!isObject(value))return null;
   const path=normalizeSourcePath(value.path??value.createPath??value.sourcePath);
-  const blockIndex=intOr(value.blockIndex,-1);
+  const blockIndex=intOr(value.blockIndex??value.createBlockIndex,-1);
   return path&&blockIndex>=0?path+'#'+blockIndex:null;
 }
 
