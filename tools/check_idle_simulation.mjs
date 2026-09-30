@@ -16,6 +16,7 @@ const win=await simulateFirstEncounter(base,route,variant,{
   now:()=> '2026-09-30T05:00:00.000Z',
   save:true
 });
+if(!win.ok) console.log('SIM_WIN_DEBUG',JSON.stringify(win));
 assert.equal(win.ok,true);
 assert.equal(win.idleState.state,'moving');
 assert.equal(win.state.player.hp,80);
