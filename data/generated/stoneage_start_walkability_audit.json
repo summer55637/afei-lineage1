@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-walkability-audit-v1",
+  "format": "stoneage-start-walkability-audit-v2",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -8,14 +8,70 @@
   "sourceContracts": {
     "mapParser": "tools/stoneage_ls2map_parser.mjs",
     "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
-    "warp": "gmsv/src/npc/npc_warp.c"
+    "movement": "gmsv/src/char/char_walk.c::CHAR_walk_move",
+    "warp": "gmsv/src/npc/npc_warp.c::NPC_WarpWatch"
   },
   "statistics": {
     "startMapsFound": 4,
+    "verifiedSourceMaps": 4,
     "totalDirectWarpExits": 8,
-    "reachableWarpExits": 0,
-    "unreachableWarpExits": 8
+    "reachableWarpExits": 8,
+    "unreachableWarpExits": 0
   },
+  "sourceValidation": [
+    {
+      "hometown": 0,
+      "floor": 1006,
+      "sourcePath": "gmsv/data/map/sainasu/samugiru/1006",
+      "expectedBlobSha": "a95ff591d6d64a3e00d0cd9a8f308955078ed489",
+      "actualBlobSha": "a95ff591d6d64a3e00d0cd9a8f308955078ed489",
+      "blobShaVerified": true,
+      "mapHeader": {
+        "floorId": 1006,
+        "width": 30,
+        "height": 40
+      }
+    },
+    {
+      "hometown": 1,
+      "floor": 2006,
+      "sourcePath": "gmsv/data/map/sainasu/marinasu/2006",
+      "expectedBlobSha": "3d4266aa56915ebcba1317cb6f8af0bbba5f45c9",
+      "actualBlobSha": "3d4266aa56915ebcba1317cb6f8af0bbba5f45c9",
+      "blobShaVerified": true,
+      "mapHeader": {
+        "floorId": 2006,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "hometown": 2,
+      "floor": 3006,
+      "sourcePath": "gmsv/data/map/jyaruga/jaja/3006",
+      "expectedBlobSha": "7e321345229c684ba88a24ac72900fd5777732e6",
+      "actualBlobSha": "7e321345229c684ba88a24ac72900fd5777732e6",
+      "blobShaVerified": true,
+      "mapHeader": {
+        "floorId": 3006,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "hometown": 3,
+      "floor": 4006,
+      "sourcePath": "gmsv/data/map/jyaruga/karutana/4006",
+      "expectedBlobSha": "bbdeb0d1bef3ec3993afc75d6416599c3bd5cf46",
+      "actualBlobSha": "bbdeb0d1bef3ec3993afc75d6416599c3bd5cf46",
+      "blobShaVerified": true,
+      "mapHeader": {
+        "floorId": 4006,
+        "width": 30,
+        "height": 40
+      }
+    }
+  ],
   "routes": [
     {
       "hometown": 0,
@@ -28,7 +84,9 @@
         "y": 22
       },
       "mapFound": true,
+      "mapSourceVerified": true,
       "directWarpCount": 2,
+      "reachableWarpCount": 2,
       "exitAudits": [
         {
           "fromFloor": 1006,
@@ -37,13 +95,48 @@
           "toFloor": 1000,
           "toX": 98,
           "toY": 44,
+          "time": null,
           "blockIndex": 23,
           "path": "gmsv/data/npc/genout/warp_y.create",
           "startLine": 214,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 7,
+            "path": [
+              [
+                15,
+                22
+              ],
+              [
+                14,
+                22
+              ],
+              [
+                13,
+                22
+              ],
+              [
+                12,
+                22
+              ],
+              [
+                11,
+                22
+              ],
+              [
+                11,
+                21
+              ],
+              [
+                10,
+                21
+              ],
+              [
+                10,
+                20
+              ]
+            ],
+            "reason": null
           }
         },
         {
@@ -53,13 +146,44 @@
           "toFloor": 1000,
           "toX": 98,
           "toY": 45,
+          "time": null,
           "blockIndex": 25,
           "path": "gmsv/data/npc/genout/warp_y.create",
           "startLine": 232,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 6,
+            "path": [
+              [
+                15,
+                22
+              ],
+              [
+                14,
+                22
+              ],
+              [
+                13,
+                22
+              ],
+              [
+                12,
+                22
+              ],
+              [
+                11,
+                22
+              ],
+              [
+                11,
+                21
+              ],
+              [
+                10,
+                21
+              ]
+            ],
+            "reason": null
           }
         }
       ]
@@ -75,7 +199,9 @@
         "y": 16
       },
       "mapFound": true,
+      "mapSourceVerified": true,
       "directWarpCount": 2,
+      "reachableWarpCount": 2,
       "exitAudits": [
         {
           "fromFloor": 2006,
@@ -84,13 +210,40 @@
           "toFloor": 2000,
           "toX": 56,
           "toY": 48,
+          "time": null,
           "blockIndex": 153,
           "path": "gmsv/data/npc/genout/warp_y.create",
           "startLine": 1384,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 5,
+            "path": [
+              [
+                20,
+                16
+              ],
+              [
+                20,
+                17
+              ],
+              [
+                20,
+                18
+              ],
+              [
+                20,
+                19
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                20,
+                21
+              ]
+            ],
+            "reason": null
           }
         },
         {
@@ -100,13 +253,44 @@
           "toFloor": 2000,
           "toX": 57,
           "toY": 48,
+          "time": null,
           "blockIndex": 155,
           "path": "gmsv/data/npc/genout/warp_y.create",
           "startLine": 1402,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 6,
+            "path": [
+              [
+                20,
+                16
+              ],
+              [
+                21,
+                16
+              ],
+              [
+                21,
+                17
+              ],
+              [
+                21,
+                18
+              ],
+              [
+                21,
+                19
+              ],
+              [
+                21,
+                20
+              ],
+              [
+                21,
+                21
+              ]
+            ],
+            "reason": null
           }
         }
       ]
@@ -122,7 +306,9 @@
         "y": 16
       },
       "mapFound": true,
+      "mapSourceVerified": true,
       "directWarpCount": 2,
+      "reachableWarpCount": 2,
       "exitAudits": [
         {
           "fromFloor": 3006,
@@ -131,13 +317,44 @@
           "toFloor": 3000,
           "toX": 90,
           "toY": 60,
+          "time": null,
           "blockIndex": 17,
           "path": "gmsv/data/npc/genout/warp_y2.create",
           "startLine": 160,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 6,
+            "path": [
+              [
+                21,
+                16
+              ],
+              [
+                20,
+                16
+              ],
+              [
+                20,
+                17
+              ],
+              [
+                20,
+                18
+              ],
+              [
+                20,
+                19
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                20,
+                21
+              ]
+            ],
+            "reason": null
           }
         },
         {
@@ -147,13 +364,40 @@
           "toFloor": 3000,
           "toX": 90,
           "toY": 60,
+          "time": null,
           "blockIndex": 18,
           "path": "gmsv/data/npc/genout/warp_y2.create",
           "startLine": 169,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 5,
+            "path": [
+              [
+                21,
+                16
+              ],
+              [
+                21,
+                17
+              ],
+              [
+                21,
+                18
+              ],
+              [
+                21,
+                19
+              ],
+              [
+                21,
+                20
+              ],
+              [
+                21,
+                21
+              ]
+            ],
+            "reason": null
           }
         }
       ]
@@ -169,7 +413,9 @@
         "y": 20
       },
       "mapFound": true,
+      "mapSourceVerified": true,
       "directWarpCount": 2,
+      "reachableWarpCount": 2,
       "exitAudits": [
         {
           "fromFloor": 4006,
@@ -178,13 +424,36 @@
           "toFloor": 4000,
           "toX": 80,
           "toY": 90,
+          "time": null,
           "blockIndex": 63,
           "path": "gmsv/data/npc/genout/warp_y2.create",
           "startLine": 574,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 4,
+            "path": [
+              [
+                14,
+                20
+              ],
+              [
+                13,
+                20
+              ],
+              [
+                12,
+                20
+              ],
+              [
+                11,
+                20
+              ],
+              [
+                10,
+                20
+              ]
+            ],
+            "reason": null
           }
         },
         {
@@ -194,17 +463,44 @@
           "toFloor": 4000,
           "toX": 80,
           "toY": 91,
+          "time": null,
           "blockIndex": 65,
           "path": "gmsv/data/npc/genout/warp_y2.create",
           "startLine": 592,
           "walkToWarpNpc": {
-            "reachable": false,
-            "path": null,
-            "reason": "start_or_target_not_walkable"
+            "reachable": true,
+            "pathLength": 5,
+            "path": [
+              [
+                14,
+                20
+              ],
+              [
+                13,
+                20
+              ],
+              [
+                12,
+                20
+              ],
+              [
+                11,
+                20
+              ],
+              [
+                10,
+                20
+              ],
+              [
+                10,
+                21
+              ]
+            ],
+            "reason": null
           }
         }
       ]
     }
   ],
-  "policy": "This checks only tile walkability from the recorded spawn coordinate to the source warp NPC coordinate. It does not infer quest order or designate a best route."
+  "policy": "This audit uses the exact four pinned hometown map paths and verifies their Git blob SHA before walking the map. Fixed C checks MAP_walkAble for the destination cell, permits movement onto occupied CHAR_ISOVERED NPC objects when the map cell is walkable, and invokes NPC_WarpWatch from the post-walk watch event. All 8 direct hometown warp exits are therefore now source-walkability reachable. This tool does not infer quest order or designate a best route."
 }
