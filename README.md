@@ -71,7 +71,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂；四個 hometown 的出生座標、新手寵物選擇、新增的 source-route spine，以及出生村 NPC 已進入 source-backed Start Flow / Start Route closure：
 
 1. World Data Catalog：NPC、任務、商店、傳送、服務、事件等。
-2. Map Coverage Expansion：主要世界地圖與地圖連接。
+2. Map Coverage Expansion：主要世界地圖與地圖連接；目前已補上 first-route 下一層 warp portal coordinate evidence，並開始建立可批量產生 verified map runtime 的工具。
 3. Persistent State Schema：玩家、寵物、裝備、背包、技能、任務與掛機狀態。
 4. Idle Loop Contract：自動遇敵、戰鬥、結算、補給、死亡、離線／恢復。
 5. Battle Presentation Contract：真實戰場、站位、動畫事件與 UI。
@@ -97,3 +97,10 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 - `data/generated/stoneage_start_destination_closure.json`
 
 最後整理：2026-09-30。
+
+
+## 本輪 first-route / map runtime 進度（2026-09-30）
+
+新增 `tools/generate_verified_map_runtime.mjs` 與 synthetic fixture `tools/check_verified_map_runtime_generator.mjs`，正式固定「LS2MAP binary → exact Git blob SHA → mapset image validation → battlemap candidates → verified runtime/index」的批量生成介面。工具不會用猜測資料補 map。
+
+新增 `data/generated/stoneage_start_destination_warp_coordinates.json`，將 first-route 下一層 exact source warp portal 座標獨立保存。`1000→100`、`2000→100`、`3000→200`、`4000→200` 均已有 source row 證據；但 destination map 的實際 walkability 仍需逐張 map runtime 驗證。
