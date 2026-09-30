@@ -9,9 +9,9 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：37dfc8d — V3.48 roadmap starter Pet rank closure
+- 最新 commit：6083734 — V3.49 roadmap starter Item 24114 audit
 - 最後更新時間：2026-09-30T16:30:00+08:00
-- 版本線最高 regression workflow：V3.48
+- 版本線最高 regression workflow：V3.49
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
@@ -30,6 +30,7 @@
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
+| Starter Item 24114 | ⚠️ fail-closed | selected source `gmsv/data/itemset6.txt` is 0 bytes；allocator implementation exists but 24114 cannot execute without a template |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
@@ -55,6 +56,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 - persistent state：2026-09-30
 - item/economy schema：2026-09-30
 - new-player seed：2026-09-30
+- starter Item 24114 audit：2026-09-30
 - idle route catalog：2026-09-30
 - browser ItemShop contract：2026-09-30
 
