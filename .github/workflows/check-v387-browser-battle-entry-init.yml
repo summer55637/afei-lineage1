@@ -1,0 +1,36 @@
+name: Check V3.87 Browser Battle Entry initialization
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_browser_battle_context_schema.json'
+      - 'data/generated/stoneage_browser_battle_entry_init_schema.json'
+      - 'tools/check_v386_browser_battle_context_runtime.mjs'
+      - 'tools/check_v387_browser_battle_entry_init.mjs'
+      - 'docs/reference/v386-browser-battle-context.md'
+      - 'docs/reference/v387-browser-battle-entry-init.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v387-browser-battle-entry-init.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.86 V3.87 battle context regressions
+        run: |
+          node tools/check_v386_browser_battle_context_runtime.mjs
+          node tools/check_v387_browser_battle_entry_init.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v386_browser_battle_context_runtime.mjs
+          node --check tools/check_v387_browser_battle_entry_init.mjs
