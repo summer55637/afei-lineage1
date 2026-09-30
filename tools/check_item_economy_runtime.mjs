@@ -36,6 +36,8 @@ assert.deepEqual(buy.created.map(x=>x.slot),[9,10]);
 assert.equal(buy.state.player.gold,700);
 assert.equal(buy.state.inventory.playerItemSlots[9],100);
 assert.equal(buy.state.inventory.itemRuntime.slots['100'].owner,'player');
+const buyAgain=buyShopItem(buy.state,{transactionId:'buy-1',itemId:42,baseCost:100,buyRate:1.5,quantity:2},{allocateItem:()=>{throw new Error('must not allocate on replay');}});
+assert.equal(buyAgain.idempotent,true);
 
 const sellingState=buy.state;
 const sell=sellShopItem(sellingState,{
@@ -68,6 +70,9 @@ assert.equal(emptyBackpackSlots(full).length,0);
 const fullBuy=buyShopItem(full,{itemId:1,baseCost:10,buyRate:1,quantity:1},{allocateItem:()=>allocated(900,1)});
 assert.equal(fullBuy.applied,false);
 assert.equal(fullBuy.reason,'inventory-full');
+const noAllocator=buyShopItem(freshPersistentState({playerId:'no-alloc'}),{itemId:1,baseCost:10,buyRate:1,quantity:1});
+assert.equal(noAllocator.applied,false);
+assert.equal(noAllocator.reason,'source-item-allocator-required');
 
 const cap=freshPersistentState({playerId:'cap'});
 cap.player.gold=999900;
