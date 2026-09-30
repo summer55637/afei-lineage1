@@ -49,7 +49,7 @@
 - 8/8 direct hometown warp exits 可由出生座標以 source walkability 到達。
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 4/4 hometown start floors 都已存在 NPC service index。
-- 16/16 已解析數值座標的 NPC 互動點都可達；30 個 NPC 座標仍維持 unresolved。
+- 20 個 NPC 已有 fixed-C 數值座標，其中 16/20 已完成 interaction reachability；4 個 `xinshou` 坐標已解出但尚未套用專用 `changeevent` 互動規則，另有 26 個 NPC 座標仍 unresolved。
 - 4/4 direct destination floors 都有 source encounter row；其中 2/4（2000、3000）為 active encounter，1000、4000 僅為 0 機率／無 group 的 placeholder。
 
 因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
