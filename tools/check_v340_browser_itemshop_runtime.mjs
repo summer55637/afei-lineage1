@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
+import { createBrowserStateController } from '../src/stoneage_browser_state_controller.mjs';
 import {
   BROWSER_ITEMSHOP_RUNTIME_FORMAT,
   ACTION_NPC_ITEMSHOP_OPEN,
@@ -118,6 +119,26 @@ const sellBlocked=runtime.dispatch(sell.state,{
 assert.equal(sellBlocked.ok,false);
 assert.equal(sellBlocked.stage,'sell-policy');
 assert.equal(sellBlocked.reason,'item-not-sellable-to-shop');
+
+const controllerState=freshPersistentState({playerId:'browser-controller'});
+controllerState.player.gold=1000;
+const controller=createBrowserStateController({
+  state:controllerState,
+  itemShopCatalog:catalog,
+  itemMakeCatalog,
+  itemShopRuntimeOptions:{itemCapacity:1000,cursor:1,randInclusive:(a,b)=>a},
+  interactionRule:'NPC_Util_charIsInFrontOfChar distance=1'
+});
+const controllerOpen=await controller.dispatch({
+  type:ACTION_NPC_ITEMSHOP_OPEN,npc,player,shopId:'fixture.create#0'
+});
+assert.equal(controllerOpen.ok,true);
+const controllerBuy=await controller.dispatch({
+  type:ACTION_NPC_ITEMSHOP_BUY,npc,player,shopId:'fixture.create#0',itemId:42,quantity:1,transactionId:'v340-controller-buy'
+});
+assert.equal(controllerBuy.ok,true);
+assert.equal(controller.getState().player.gold,900);
+assert.equal(controller.getState().revision,1);
 
 console.log(JSON.stringify({
   pass:true,
