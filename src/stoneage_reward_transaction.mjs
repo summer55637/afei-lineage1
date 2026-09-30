@@ -38,7 +38,7 @@ function normalizeRewardPacket(packet) {
   };
 }
 
-function rewardTransactionValidation(packet, { inventorySlots = [], knownExistingItemIds = null } = {}) {
+function rewardTransactionValidation(packet, { inventorySlots = [], knownExistingItemIds = null, knownPetIds = null } = {}) {
   const normalized = normalizeRewardPacket(packet);
   const errors = [];
   if (!normalized) return { ok: false, errors: ['invalid reward packet'] };
@@ -50,11 +50,13 @@ function rewardTransactionValidation(packet, { inventorySlots = [], knownExistin
     if (knownExistingItemIds instanceof Set && !knownExistingItemIds.has(item.existingIndex)) errors.push('unknown existing item index: ' + item.existingIndex);
   }
   if (!Array.isArray(inventorySlots) || inventorySlots.length !== 24) errors.push('reward application requires 24 player item slots');
+  if (knownPetIds instanceof Set) for (const pet of normalized.petCredits) if (!knownPetIds.has(String(pet.petId))) errors.push('unknown pet credit: ' + pet.petId);
   return { ok: errors.length === 0, errors, packet: normalized };
 }
 
 function applyRewardTransaction(state, packet, { knownExistingItemIds = null, now = () => new Date().toISOString() } = {}) {
-  const validation = rewardTransactionValidation(packet, { inventorySlots: state?.inventory?.playerItemSlots, knownExistingItemIds });
+  const knownPetIds = new Set((state?.pets?.petBox ?? []).map(p => String(p?.id ?? p?.petId ?? '')).filter(Boolean));
+  const validation = rewardTransactionValidation(packet, { inventorySlots: state?.inventory?.playerItemSlots, knownExistingItemIds, knownPetIds });
   if (!validation.ok) return { applied: false, errors: validation.errors, state };
   const next = JSON.parse(JSON.stringify(state));
   next.runtimeMeta ??= {};
