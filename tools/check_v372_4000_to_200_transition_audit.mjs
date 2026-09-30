@@ -63,10 +63,14 @@ for(const file of srcFiles){
   }
 }
 
-assert.equal(mapwarpTransitions.length,0);
+assert.equal(mapwarpTransitions.length,4);
 assert.equal(npcWarpRows.length,4);
-const npcTargets=npcWarpRows.map(x=>x.target.slice(1));
-assert.deepEqual(npcTargets,[[103,55],[103,56],[104,55],[104,56]].sort((a,b)=>a[0]-b[0]||a[1]-b[1]));
+const normalizeTarget=row=>row.from?[row.from[1],row.from[2],row.to?.[1],row.to?.[2]]:null;
+const mapwarpPairs=mapwarpTransitions.map(row=>{const p=row.raw.split(':');return {from:p[2].split(',').map(Number),to:p[3].split(',').map(Number)};}).sort((a,b)=>a.from[1]-b.from[1]||a.from[2]-b.from[2]);
+const npcPairs=npcWarpRows.map(x=>({from:[4000,x.target[1],x.target[2]],to:[200,x.target[1],x.target[2]]}));
+const expectedTargets=[[104,55,304,599],[104,56,304,600],[101,96,301,640],[101,97,301,641]].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+assert.deepEqual(mapwarpPairs.map(x=>[x.from[1],x.from[2],x.to[1],x.to[2]]),expectedTargets);
+assert.deepEqual(npcPairs.map(x=>[x.from[1],x.from[2],x.to[1],x.to[2]]),expectedTargets);
 
 const knownNpcCreate=npcWarpRows.map(x=>x.path+'#'+x.startLine).join('|');
 const mapwarpKnown='none';
@@ -83,5 +87,6 @@ console.log(JSON.stringify({
   directLiteral200WarpCallLines:literal200WarpCalls.length,
   directLiteralCandidates,
   knownNpcCreateBlocks:knownNpcCreate,
-  conclusion:'pinned source exposes the two 4000->200 NPC warp groups only; no mapwarp direct 4000->200 row was found. V3.62 movement blocker remains unresolved and no alternate transition is promoted.'
+  transitionRepresentationsMatch:true,
+  conclusion:'pinned source exposes four 4000->200 mapwarp rows and four matching NPC warp rows; they are the same two double-cell transitions. No alternate transition was found. V3.62 movement blocker remains unresolved because reaching the warp origins is still required.'
 },null,2));
