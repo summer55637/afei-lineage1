@@ -13,7 +13,7 @@ assert.deepEqual(paletteColorRgba(palette,240),[245,195,150,255]);
 assert.equal(stoneAgePaletteSummary(palette).transparentIndex,0);
 
 const rgba=indexedPixelsToRgba(Uint8Array.from([0,16,17,240]),2,2,palette);
-assert.deepEqual([...rgba],[10,20,30,0,10,20,30,255,40,50,60,255,245,195,150,255]);
+assert.deepEqual([...rgba],[0,0,0,0,10,20,30,255,40,50,60,255,245,195,150,255]);
 assert.throws(()=>parseStoneAgeSap(sap.slice(0,-1)),/truncated/);
 assert.throws(()=>indexedPixelsToRgba(Uint8Array.from([16]),2,2,palette),/pixel count mismatch/);
 assert.equal(paletteColorRgba(palette,999),null);
