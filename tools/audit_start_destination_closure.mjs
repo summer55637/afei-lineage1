@@ -356,8 +356,8 @@ const result = {
     worldGraph: 'data/generated/stoneage_world_graph_index.json::directedFloorEdges'
   },
   sourceEvidence: {
-    encount: encountSource,
-    group1: groupSource,
+    encount: { path: encountSource.path, blobSha: encountSource.blobSha, byteLength: encountSource.byteLength },
+    group1: { path: groupSource.path, blobSha: groupSource.blobSha, byteLength: groupSource.byteLength },
     itemset6: { path: itemSource.path, blobSha: itemSource.blobSha, byteLength: itemSource.byteLength, rowCount: itemCatalog.rowCount },
     activeEncounterDefinition: 'row probMax > 0 and has group id',
     unconditionalGroupDefinition: 'GROUP_APPEARBYITEMID == -1 and GROUP_NOTAPPEARBYITEMID == -1, with no encounter event gate',
