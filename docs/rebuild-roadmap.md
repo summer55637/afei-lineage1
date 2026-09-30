@@ -81,9 +81,9 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 - Encounter Floor/X/Y → tile/object probe
 - client image → ADRNBIN → Real → RD decoder → palette → RGBA 的資料鏈
 
-目前已有 10 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。另已開始做 direct landing → 下一層 portal origin 的座標級可達性，避免把 floor-level world edge 誤當成玩家可走路線。四張 first-route destination maps 已經加入這 10 張 verified runtime。
+目前已有 11 張 verified map runtime；source catalog 本身有 1284 個 map blobs，因此「全世界地圖」仍遠未閉合。這 11 張包含四個 hometown destination、floor 100 與正確的 world floor 200 jalga。direct landing → 下一層 portal origin 與 encounter target 已完成座標級檢查，避免把 floor-level world edge 誤當成玩家可走路線。
 
-四個 hometown 的原始 LS2MAP 已完成 exact pinned-source walkability audit，但這四張目前仍不代表完整世界地圖 coverage；下一階段仍要把 destination maps 與主要世界 route 逐步轉成 verified runtime。
+四個 hometown 與 first-route destination 的原始 LS2MAP 已完成 exact pinned-source walkability audit；floor 100 與 world floor 200 亦已完成 fixed-C binary verified runtime。下一階段 Map Coverage 轉為擴張主要世界 route，而不是再處理這批 first-route destination source identity。
 
 ### 4. 原版客戶端圖像技術鏈
 
@@ -119,7 +119,7 @@ Encounter 仍有 23 個 unresolved Group，以及 1 個明確 EnemyBase template
 
 ## B. 完整地圖閉合：最高優先
 
-現在 1284 個 source map blobs 只有 7 張已轉成 verified runtime。
+現在 1284 個 source map blobs 已有 11 張 verified runtime。
 
 下一階段應把 map pipeline 變成可批量產生的流程：
 
@@ -141,11 +141,11 @@ source map
 - encounter region
 - battle field 對應
 
-目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的。destination 層也已完成 4/4 exact map source、7/7 landing walkability；1000/3000/4000 是非 numeric filename、由 LS2MAP header 識別 floor。2000 的 Group 1018 需要 item 20219、3000 的 Group 1015 需要 item 20216，而 pinned `itemset6.txt` 是空檔，所以兩者仍是 `conditional_unresolved_item_source`；1000/4000 的 direct destination 僅有 placeholder。下一階段不再花時間補 destination map source，而是把 active encounter region、changeevent module 與 reward closure 往下接。
+目前 first-route spine 已證明四個出生村的直接 warp 在 pinned source 上是可走的。destination 層 4/4 exact map source、7/7 landing walkability 已 closed。floor 100 / 200 的 fixed-C binary runtime 也已 verified，並完成 incoming landing → unconditional encounter rectangle path closure：8/8 portal groups 都至少有一個可用 landing 可抵達 unconditional encounter。2000 的 Group 1018 仍需要 item 20219、3000 的 Group 1015 仍需要 item 20216，而 pinned itemset6.txt 是空檔；這些 direct encounter 仍維持 conditional_unresolved_item_source，不被當作一般無條件刷怪規則。
 
 ## C. 玩家／寵物完整資料模型：高優先
 
-雖然戰鬥公式研究很多，但要做成長時間運作的遊戲，還需要統一的 persistent state schema：
+Persistent State Schema 第一版已開始實作：canonical schema、24 格玩家 item slots、26 格 profession skill slots、PetBox/Team/ActivePet 分層，以及 legacy schema 30 的 known-field migration 已建立。下一步是把更多 source-backed state 欄位接到正式 runtime，仍不把 unresolved source 語義猜成規則。
 
 - 玩家基本資料
 - 等級／經驗／轉數
@@ -295,9 +295,9 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 ## 建議的下一個實際工作順序
 
 1. **World Data Catalog**：已完成第一輪；目前進入 Start Flow / Item Acquisition / Quest Closure。
-2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability、0 個 unreachable，5 個 `changeevent` runtime-unresolved。destination-map source／landing walkability 也已 4/4、7/7 closed；本輪進一步完成 8 組下一層 portal group 的座標級 reachability：1000/2000 全部可達、3000 兩組至少各有可達 origin、4000→200 是兩組明確 disconnected blocker。下一步集中在 active encounter eligibility／一般掛機 region、floor 200 正確 world runtime、changeevent module discrepancy 與 reward definitions。
-3. **Map Coverage Expansion**：由目前 10 張 verified map 繼續擴到能形成主要世界路線的完整地圖群。
-4. **Persistent State Schema**：整理玩家／寵物／背包／裝備／技能／任務／掛機的統一狀態模型。
+2. **Start Route Closure**：source-route spine 已 closed；46/46 start-floor NPC coordinates 已 source-resolved；41/46 active-template NPC interactions 已完成 reachability，5 個 `changeevent` runtime-unresolved。destination maps 4/4 verified、7/7 landing walkability closed；floor 100 / 200 也已完成 verified runtime 與 8/8 encounter landing-path closure。剩餘 blocker 集中在 4000→200 source transition、5 個 changeevent module discrepancy、3000→200 的單一不可走 landing，以及新玩家 reward definitions。
+3. **Map Coverage Expansion**：由目前 11 張 verified map 繼續擴到能形成主要世界路線的完整地圖群；first-route floor 100 / 200 已 verified。
+4. **Persistent State Schema**：第一版 canonical schema 已建立；接著補 source-backed state completeness、save transaction 與 migration regression。
 5. **Idle Loop Contract**：定義自動遇敵、戰鬥、結算、補給、死亡、停機／離線的正式流程。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
 7. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
@@ -392,3 +392,10 @@ fixed-C recursive tree 與 LS2MAP headers 已確認四個直接離村 destinatio
 3. 新玩家 event 的 reward item/pet definitions 尚未全部在 pinned source 中閉合。
 
 這個 checkpoint 之後，Map Coverage 的工作由「找第一張 destination map」轉向「找可執行的 ordinary encounter region 與其座標級路徑」，再進入 Persistent State / Idle Loop，而不是回頭建立 playable HTML。
+## 2026-09-30 Persistent State Schema v1
+
+新增 `src/stoneage_persistent_state.mjs`、`docs/reference/persistent-state-schema.md`、`data/generated/stoneage_persistent_state_schema.json` 與 `tools/check_persistent_state_schema.mjs`。
+
+Canonical state schema = 1；fixed-C legacy save schema provenance = 30。固定 structural contracts：profession skill slots 26、player item slots 24。PetBox / Team / ActivePet 分離保存；legacy migration 採 known-field copy，未知 top-level keys 進 preservedUnknownKeys，不猜語義。
+
+Idle 與 battleSettings 明確標示為放置版產品層，不冒充 fixed-C。
