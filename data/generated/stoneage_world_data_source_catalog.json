@@ -302,9 +302,10 @@
   ],
   "existingProjectCoverage": {
     "encounter": "partial; 728 referenced groups, 705 resolved, 23 unresolved",
-    "maps": "partial; fixed source catalog has 1284 map blobs, project has 7 verified map runtimes",
+    "maps": "partial; fixed source catalog has 1284 map blobs, project now has 10 verified map runtimes",
     "clientImages": "parser/resolver/decoder/palette chain exists; original binaries are operator-supplied and not shipped",
-    "gmque": "permanently disabled by project policy; not a world-data blocker"
+    "gmque": "permanently disabled by project policy; not a world-data blocker",
+    "startRouteMaps": "4/4 direct hometown destination maps verified; 7/7 landing coordinates walkable"
   },
   "researchTargets": [
     {
