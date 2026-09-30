@@ -28,6 +28,30 @@ const textOf=rel=>bytes(rel).toString('utf8').replace(/\r/g,'');
 const gitBlobSha=b=>crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+b.length+'\\0','utf8'),b])).digest('hex');
 const atoi=v=>{const m=String(v??'').trim().match(/^[+-]?\d+/);return m?Number(m[0]):0;};
 const clean=v=>String(v??'').trim();
+const SOURCE_PET_RANK_TABLE=[
+  {num:100,rank:0},
+  {num:95,rank:1},
+  {num:90,rank:2},
+  {num:85,rank:3},
+  {num:80,rank:4},
+  {num:0,rank:5}
+];
+const resolveSourcePetRank=paramsum=>SOURCE_PET_RANK_TABLE.find(row=>paramsum>=row.num)?.rank ?? null;
+function extractFunctionSource(source,signature){
+  const start=source.indexOf(signature);
+  if(start<0)fail('source function missing: '+signature);
+  const braceStart=source.indexOf('{',start);
+  if(braceStart<0)fail('source function body missing: '+signature);
+  let depth=0;
+  for(let i=braceStart;i<source.length;i++){
+    if(source[i]==='{')depth++;
+    else if(source[i]==='}'){
+      depth--;
+      if(depth===0)return source.slice(start,i+1);
+    }
+  }
+  fail('unterminated source function: '+signature);
+}
 
 const setupPath='gmsv/setup.cf';
 const setupBytes=bytes(setupPath);
@@ -85,6 +109,12 @@ const enemyBytes=bytes('gmsv/data/enemy1.txt');
 const baseBytes=bytes('gmsv/data/enemybase1.txt');
 const enemySource={path:'gmsv/data/enemy1.txt',blobSha:gitBlobSha(enemyBytes)};
 const baseSource={path:'gmsv/data/enemybase1.txt',blobSha:gitBlobSha(baseBytes)};
+const enemyRankBytes=bytes('gmsv/src/char/enemy.c');
+const enemyRankFunction=extractFunctionSource(enemyRankBytes.toString('utf8').replace(/\r/g,''),'int ENEMY_getRank( int array, int tarray )');
+const rankTableFromSource=[...enemyRankFunction.matchAll(/\\{\\s*(\\d+)\\s*,\\s*([0-9]+(?:\\.[0-9]+)?)\\s*\\}/g)].map(m=>({num:Number(m[1]),rank:Number(m[2])}));
+if(JSON.stringify(rankTableFromSource)!==JSON.stringify(SOURCE_PET_RANK_TABLE))fail('ENEMY_getRank rank table drifted from pinned source');
+if(!/paramsum\\s*=\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASEVITAL\\s*\\)\\s*\\+\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASESTR\\s*\\)\\s*\\+\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASETGH\\s*\\)\\s*\\+\\s*\\*\\(\\s*tp\\s*\\+\\s*E_T_BASEDEX\\s*\\)/.test(enemyRankFunction))fail('ENEMY_getRank paramsum source logic drifted');
+const enemyRankSource={path:'gmsv/src/char/enemy.c',blobSha:gitBlobSha(enemyRankBytes),function:'ENEMY_getRank'};
 const enemyRows=[];
 for(const raw of enemyBytes.toString('utf8').replace(/\r/g,'').split('\n')){
   const line=raw.trim();if(!line||line.startsWith('#'))continue;
@@ -115,13 +145,13 @@ const output={
   generatedAt:'2026-09-30',
   fixedSource:{repository:'gavinlinasd/StoneAge',ref:fixedRef},
   sourceFiles:{
-    setup:{path:'gmsv/setup.cf',blobSha:gitBlobSha(setupBytes),sha256:sha256(setupBytes)},
+    setup:{path:'gmsv/setup.cf',blobSha:gitBlobSha(setupBytes)},
     version:{path:'gmsv/src/include/version.h',blobSha:gitBlobSha(read('gmsv/src/include/version.h'))},
     configfile:{path:'gmsv/src/configfile.c',blobSha:gitBlobSha(read('gmsv/src/configfile.c'))},
     creation:{path:'gmsv/src/char/char.c',blobSha:gitBlobSha(read('gmsv/src/char/char.c'))},
     position:{path:'gmsv/src/char/char_data.c',blobSha:gitBlobSha(read('gmsv/src/char/char_data.c'))},
     elderNames:{path:'gmsv/src/npc/npc_transmigration.c',blobSha:gitBlobSha(read('gmsv/src/npc/npc_transmigration.c'))},
-    enemy:enemySource,enemyBase:baseSource
+    enemy:enemySource,enemyBase:baseSource,enemyRank:enemyRankSource
   },
   sourceConfig:{
     newPlayerFlag:true,helpNewHandFlag:true,museumFlag:false,delBornPlaceFlag:false,
@@ -135,6 +165,7 @@ const output={
     playerSeed:'gmsv/src/char/char.c::CHAR_makeCharFromOptionAtCreate',
     starterItem:'gmsv/src/char/char.c::CHAR_loginAddItemForNew',
     starterPet:'gmsv/src/char/char.c::CHAR_createNewChar -> ENEMY_createPetFromEnemyIndex',
+    starterPetRank:'gmsv/src/char/enemy.c::ENEMY_getRank',
     hometown:'gmsv/src/char/char_data.c::CHAR_getInitElderPosition'
   },
   hometowns:positions.map((p,i)=>({...p,elderIndex:i,fallbackPet:{hometown:i,lastTalkElder:i,enemyId:i+1,tempNo:byEnemyId[String(i+1)].tempNo,enemyName:byEnemyId[String(i+1)].name,lvRange:[byEnemyId[String(i+1)].lvMin,byEnemyId[String(i+1)].lvMax],template:byTempNo[String(byEnemyId[String(i+1)].tempNo)]}})),
