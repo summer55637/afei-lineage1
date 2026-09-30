@@ -21,7 +21,7 @@ function applyBattleExitSnapshot(state,battleResult){
   return next;
 }
 
-function simulateFirstEncounter(state,route,variant,{encounter,battleResult,policy={},knownExistingItemIds=null,now=()=>new Date().toISOString(),save=true}={}){
+async function simulateFirstEncounter(state,route,variant,{encounter,battleResult,policy={},knownExistingItemIds=null,now=()=>new Date().toISOString(),save=true}={}){
   if(!isObject(state)||!route||!variant)return {ok:false,reason:'missing-simulation-input'};
   if(!Number.isFinite(Number(variant.originPathMin))||!Number.isFinite(Number(variant.landingPathMin)))return {ok:false,reason:'route-path-time-missing'};
   if(battleResult==null)return {ok:false,reason:'battle-result-required'};
@@ -49,7 +49,7 @@ function simulateFirstEncounter(state,route,variant,{encounter,battleResult,poli
     idle=transitionIdle(idle,IDLE_EVENTS.PLAYER_DEAD);
     const death=deathRecoveryDecision(nextState,policy,{savePointAvailable:nextState.world?.savePoint!=null,healerAvailable:false});
     nextState.idle.enabled=false; nextState.idle.mode='dead'; nextState.idle.routeId=routeId; nextState.idle.lastSimulatedAt=clock;
-    if(save){const saved=commitSave(state,nextState,{expectedRevision:intOr(state.revision),savedAt:()=>clock,source:'idle-simulation'});if(saved.ok)nextState=saved.state;return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:true,death,reward:rewardApplied,state:nextState,save:saved};}
+    if(save){const saved=await commitSave(state,nextState,{expectedRevision:intOr(state.revision),savedAt:()=>clock,source:'idle-simulation'});if(saved.ok)nextState=saved.state;return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:true,death,reward:rewardApplied,state:nextState,save:saved};}
     return {ok:true,simulation:SIMULATION_FORMAT,routeId,clock,idleState:idle,dead:true,death,reward:rewardApplied,state:nextState,save:null};
   }
   const supply=supplyRequired(nextState,policy);
