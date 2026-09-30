@@ -1,0 +1,15 @@
+{
+  "format":"stoneage-npc-savepoint-source-index-v1",
+  "generatedAt":"2026-09-30",
+  "fixedSource":{"repository":"gavinlinasd/StoneAge","ref":"1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"},
+  "bySourceKey":{
+    "fixture/savepoint.create#0":{
+      "functionSet":"SavePoint",
+      "elderId":2,
+      "id":2,
+      "born":{"floorId":3006,"x":21,"y":16},
+      "mode":"no-item",
+      "rawArg":"ID=2\nBorn=3006,21,16\nNOITEM\n"
+    }
+  }
+}
