@@ -25,6 +25,7 @@ import { createBrowserWorldEncounterGroupRuntime, ACTION_WORLD_ENCOUNTER_GROUP_S
 import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_enemy_runtime.mjs';
 import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT, BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT } from './stoneage_browser_world_encounter_idle_bridge.mjs';
 import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT } from './stoneage_browser_battle_context_runtime.mjs';
+import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 import { IDLE_EVENTS } from './stoneage_idle_loop.mjs';
@@ -65,6 +66,7 @@ function createBrowserStateController({
   worldMovementOptions={},
   worldWarpPointOptions={},
   battleFieldNoProvider=null,
+  battleFieldRuntimeOptions={},
   worldFirstRouteOptions={}
 }={}){
   let currentState=state;
@@ -87,6 +89,7 @@ function createBrowserStateController({
   const worldEncounterGroupRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterGroupRuntime({groupCatalog:encounterGroupCatalog}) : null;
   const worldEncounterEnemyRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterEnemyRuntime({groupCatalog:encounterGroupCatalog}) : null;
   const worldEncounterIdleBridge=encounterTargetIndex ? createBrowserWorldEncounterIdleBridge({encounterTargetIndex}) : null;
+  const battleFieldRuntime=createBrowserBattleFieldRuntime({mapRuntimeOptions:battleFieldRuntimeOptions});
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -186,6 +189,21 @@ function createBrowserStateController({
         });
         return {...result,state:clone(result.state??currentState)};
       }
+      if(type===ACTION_BATTLE_FIELD_RESOLVE){
+        if(battleFieldRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-field',reason:'browser-battle-field-runtime-invalid',state:clone(currentState)};
+        const encounter=action.encounter??{
+          floorId:currentState?.world?.position?.floorId??null,
+          x:currentState?.world?.position?.x??null,
+          y:currentState?.world?.position?.y??null
+        };
+        const resolved=await battleFieldRuntime.resolve(
+          encounter?.floorId??currentState?.world?.position?.floorId,
+          encounter?.x??currentState?.world?.position?.x,
+          encounter?.y??currentState?.world?.position?.y,
+          {battleFieldRoll:action.battleFieldRoll??null}
+        );
+        return {...resolved,state:clone(currentState)};
+      }
       if(type===ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD){
         const idleMode=String(currentState?.idle?.mode??'');
         if(idleMode!=='encounter_pending')return {ok:false,handled:false,stage:'battle-context',reason:'idle-state-not-encounter-pending',idleMode,state:clone(currentState)};
@@ -202,9 +220,29 @@ function createBrowserStateController({
           const activeId=currentState?.pets?.activePetId??null;
           activePet=activeId==null?null:(currentState?.pets?.petBox??[]).find(p=>String(p?.id??p?.petId??'')===String(activeId))??null;
         }
-        const battleFieldNo=action.battleFieldNo==null
-          ? (typeof battleFieldNoProvider==='function'?await battleFieldNoProvider(encounter,currentState):battleFieldNoProvider)
-          : action.battleFieldNo;
+        let battleFieldNo=action.battleFieldNo;
+        let battleFieldResolution=null;
+        if(battleFieldNo==null){
+          if(battleFieldRuntime.ok===true){
+            battleFieldResolution=await battleFieldRuntime.resolve(
+              encounter?.floorId??currentState?.world?.position?.floorId,
+              encounter?.x??currentState?.world?.position?.x,
+              encounter?.y??currentState?.world?.position?.y,
+              {battleFieldRoll:action.battleFieldRoll??null}
+            );
+            if(battleFieldResolution.ok===true){
+              battleFieldNo=battleFieldResolution.battleFieldNo;
+            }else if(typeof battleFieldNoProvider==='function'){
+              battleFieldNo=await battleFieldNoProvider(encounter,currentState);
+            }else{
+              return {...battleFieldResolution,state:clone(currentState)};
+            }
+          }else if(typeof battleFieldNoProvider==='function'){
+            battleFieldNo=await battleFieldNoProvider(encounter,currentState);
+          }else{
+            battleFieldNo=battleFieldNoProvider;
+          }
+        }
         const built=buildBattleContext({
           playerId:currentState?.player?.id??null,
           player,
@@ -233,6 +271,7 @@ function createBrowserStateController({
           format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,
           idleStateBefore:'encounter_pending',
           idleStateAfter:currentState.idle?.mode??null,
+          battleFieldResolution,
           idleCommit:committed,
           state:clone(currentState)
         };
@@ -459,6 +498,7 @@ export {
   ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT,
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
+  ACTION_BATTLE_FIELD_RESOLVE,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
@@ -471,6 +511,7 @@ export {
   BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT,
   BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_FIELD_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
