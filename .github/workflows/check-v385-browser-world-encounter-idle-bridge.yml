@@ -1,0 +1,55 @@
+name: Check V3.85 Browser World Encounter Idle bridge
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_world_encounter_runtime.mjs'
+      - 'src/stoneage_browser_world_encounter_idle_bridge.mjs'
+      - 'src/stoneage_idle_persistent_state_runtime.mjs'
+      - 'src/stoneage_idle_loop.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'data/generated/stoneage_start_encounter_target_index.json'
+      - 'data/generated/stoneage_browser_world_encounter_idle_schema.json'
+      - 'tools/check_v385_browser_world_encounter_idle_bridge.mjs'
+      - 'docs/reference/v385-browser-world-encounter-idle-bridge.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v385-browser-world-encounter-idle-bridge.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Verify fixed-C encounter source
+        run: |
+          test "$(git -C fixed-c-source hash-object gmsv/data/encount.txt)" = "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f"
+      - name: Run V3.80 through V3.85 encounter regressions
+        run: |
+          node tools/check_v380_browser_world_encounter_runtime.mjs fixed-c-source
+          node tools/check_v381_browser_world_encounter_roll_runtime.mjs fixed-c-source
+          node tools/check_v382_browser_world_encounter_persistence.mjs fixed-c-source
+          node tools/check_v383_browser_world_encounter_group_runtime.mjs fixed-c-source
+          node tools/check_v384_browser_world_encounter_enemy_runtime.mjs fixed-c-source
+          node tools/check_v385_browser_world_encounter_idle_bridge.mjs fixed-c-source
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_browser_world_encounter_runtime.mjs
+          node --check src/stoneage_browser_world_encounter_persistence_runtime.mjs
+          node --check src/stoneage_browser_world_encounter_group_runtime.mjs
+          node --check src/stoneage_browser_world_encounter_enemy_runtime.mjs
+          node --check src/stoneage_browser_world_encounter_idle_bridge.mjs
+          node --check tools/check_v385_browser_world_encounter_idle_bridge.mjs
