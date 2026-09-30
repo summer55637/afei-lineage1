@@ -26,7 +26,7 @@ const applied=applyRewardTransaction(state,packet,{knownExistingItemIds:new Set(
 assert.equal(applied.applied,true);
 assert.equal(applied.state.player.exp,40);
 assert.equal(applied.state.player.gold,125);
-assert.equal(applied.state.inventory.playerItemSlots[1],1);
+assert.equal(applied.state.inventory.playerItemSlots[1],null);
 assert.equal(applied.state.inventory.playerItemSlots[9],201);
 assert.equal(applied.state.inventory.itemRuntime.slots['201'].owner,'player');
 assert.equal(applied.state.inventory.piles['201'],1);
@@ -43,7 +43,7 @@ assert.equal(unknown.ok,false);
 assert.ok(unknown.errors.some(x=>x.includes('unknown existing item index')));
 
 const full=freshPersistentState({now:()=> '2026-09-30T02:00:00.000Z'});
-full.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'source-pending',pile:1};
+full.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'enemy:unit-2',pile:1};
 full.inventory.playerItemSlots=Array(24).fill(1);
 const noPartial=applyRewardTransaction(full,{transactionId:'battle-3',source:'x',playerExp:10,gold:5,items:[{existingIndex:201,count:1}]},{knownExistingItemIds:new Set([201])});
 assert.equal(noPartial.applied,false);
