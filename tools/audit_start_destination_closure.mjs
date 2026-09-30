@@ -188,8 +188,10 @@ for (const row of encountRows) {
 
 const mapCatalogByFloor = new Map();
 for (const m of sourceCatalog.maps || []) {
-  const floor = Number(m.basename);
-  if (Number.isFinite(floor)) mapCatalogByFloor.set(floor, m);
+  const headerFloor = Number(m.sourceFloorId);
+  const basenameFloor = Number(m.basename);
+  if (Number.isFinite(headerFloor)) mapCatalogByFloor.set(headerFloor, m);
+  else if (Number.isFinite(basenameFloor)) mapCatalogByFloor.set(basenameFloor, m);
 }
 
 const adjacency = new Map();
@@ -250,6 +252,7 @@ const towns = (route.routes || []).map(entry => {
   const landings = entry.directWarpExits.map(exit => ({ x: Number(exit.toX), y: Number(exit.toY) }));
   const sourceMap = mapCatalogByFloor.get(destinationFloor) || null;
   const runtime = runtimeIndex.maps?.[String(destinationFloor)] || null;
+  const runtimeSourcePath = runtime?.sourcePath || runtime?.path || null;
   let map = null;
   if (runtime?.path) {
     const file = runtime.path.startsWith('./') ? runtime.path.slice(2) : runtime.path;
@@ -318,6 +321,7 @@ const towns = (route.routes || []).map(entry => {
       sourceBlobSha: sourceMap?.blobSha ?? null,
       verifiedRuntime: sourceMap?.verifiedRuntime ?? false,
       runtimePath: runtime?.path ?? null,
+      runtimeSourcePath,
       runtimePresent: !!runtime,
       exactBlobMatch,
       status: exactBlobMatch ? 'verified' : 'unresolved'
