@@ -37,12 +37,16 @@
           <small id="worldSceneAreaName">狩獵區</small>
           <small id="worldSceneSourceMap" class="world-scene-source">原始地圖：檢查中…</small>
           <small id="worldSceneSourceTile" class="world-scene-source">Encounter 座標來源：尚無 probe</small>
+          <small id="worldSceneSourceVisual" class="world-scene-source">真實圖像：等待授權素材包</small>
         </div>
         <div class="world-scene-mode">
           <span>模式</span><b id="worldSceneMode">待機</b>
         </div>
       </div>
       <div class="world-scene-landscape">
+        <div class="world-scene-tile-preview" aria-live="polite">
+          <canvas id="worldSceneTileCanvas" width="224" height="176" hidden></canvas>
+        </div>
         <i class="scene-tree t1"></i><i class="scene-tree t2"></i><i class="scene-tree t3"></i>
         <i class="scene-rock r1"></i><i class="scene-rock r2"></i><i class="scene-rock r3"></i>
         <i class="scene-water"></i><i class="scene-road"></i>
