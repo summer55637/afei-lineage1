@@ -17,7 +17,7 @@
 
 | 區域 | 內容 | 層級 |
 | --- | --- | --- |
-| player | id/name/level/exp/transmigration/hp/mp/stats/luck/charm/duelPoint | source-backed fields + structural defaults |
+| player | id/name/level/exp/transmigration/hp/mp/stats/luck/charm/duelPoint/gold | source-backed fields + structural defaults；Gold 受 Item/Economy source cap 驗證 |
 | player.profession | class/level/skillPoint/skills[26] | fixed-C source contract |
 | inventory | playerItemSlots[24]/piles/itemRuntime | source-backed structure |
 | equipment | sourceSlotRefs | 不推導 slot 意義 |
@@ -37,7 +37,7 @@ Migration 不會根據缺失 slot 猜曾經裝備什麼，也不會依 team / pe
 
 src/stoneage_persistent_state.mjs 提供 fresh / normalize / validate。
 
-目前固定硬結構：profession skills = 26 slots；player item slots = 24 slots。
+目前固定硬結構：profession skills = 26 slots；player item slots = 24 slots。Item / Economy runtime 另外驗證 Gold 不超過 fixed-C maxGold，以及 backpack 9–23 的 existing-item reference 必須存在。
 
 Regression：tools/check_persistent_state_schema.mjs
 
