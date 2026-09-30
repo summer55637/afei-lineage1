@@ -11,6 +11,12 @@ on:
       - 'tools/check_idle_loop_contract.mjs'
       - 'data/generated/stoneage_first_idle_route_catalog.json'
       - 'tools/check_first_idle_route_catalog.mjs'
+      - 'data/generated/stoneage_idle_policy_schema.json'
+      - 'data/generated/stoneage_reward_transaction_schema.json'
+      - 'tools/check_idle_policy.mjs'
+      - 'tools/check_reward_transaction.mjs'
+      - 'src/stoneage_idle_policy.mjs'
+      - 'src/stoneage_reward_transaction.mjs'
       - '.github/workflows/check-persistent-state.yml'
 
 permissions:
@@ -30,3 +36,7 @@ jobs:
         run: node tools/check_idle_loop_contract.mjs
       - name: Run first idle route regression
         run: node tools/check_first_idle_route_catalog.mjs
+      - name: Run reward transaction regression
+        run: node tools/check_reward_transaction.mjs
+      - name: Run idle policy regression
+        run: node tools/check_idle_policy.mjs
