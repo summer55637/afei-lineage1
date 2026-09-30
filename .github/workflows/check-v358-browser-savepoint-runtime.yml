@@ -8,6 +8,7 @@ on:
       - 'src/stoneage_browser_world_npc_runtime.mjs'
       - 'src/stoneage_npc_interaction_runtime.mjs'
       - 'src/stoneage_persistent_state.mjs'
+      - 'tools/generate_savepoint_source_catalog.mjs'
       - 'tools/fixtures/npc-savepoint/savepoint-catalog.json'
       - 'tools/check_v358_browser_savepoint_runtime.mjs'
       - 'docs/reference/v358-browser-savepoint-runtime.md'
