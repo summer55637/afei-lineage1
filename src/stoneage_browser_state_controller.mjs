@@ -67,7 +67,7 @@ function createBrowserStateController({
   const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
   const worldMovementRuntime=createBrowserWorldMovementRuntime(worldMovementOptions);
-  const worldWarpPointRuntime=createBrowserWorldWarpPointRuntime(worldWarpPointOptions);
+  const worldWarpPointRuntime=createBrowserWorldWarpPointRuntime({catalog:warpCatalog,...worldWarpPointOptions});
   const worldFirstRouteRuntime=(idleRouteCatalog&&warpCatalog&&encounterTargetIndex)
     ? createBrowserWorldFirstRouteRuntime({routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,...worldFirstRouteOptions})
     : null;
