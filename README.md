@@ -313,7 +313,7 @@ V3.26 regression 已納入 GitHub Actions。
 - V3.24 Pet + V3.25 Item + V3.26 Event Flag 三條已閉合 adapter 已組成單一 handler bundle。
 - 可直接交給 V3.22 atomic event transaction。
 - Item / Pet / Event Flag 在 staged state 成功時可以一起 commit。
-- `Charm` 沒有 pinned-C concrete handler，因此仍明確 fail-closed；不從其他版本猜語意。
+- `Charm` 已有 pinned `npc_exchangeman.c` concrete rule：`EvNo>0` 才加、上限 100；`xinshoujd.arg` 的 `EventNo:-1` 因此 no-op。
 
 V3.27 regression 已納入 GitHub Actions。
 
@@ -321,7 +321,7 @@ V3.27 regression 已納入 GitHub Actions。
 
 新增 `src/stoneage_new_player_event_adapters.mjs`、`tools/check_v328_new_player_first_route.mjs`、`.github/workflows/check-v328-new-player-first-route.yml` 與 `docs/reference/v328-new-player-first-route.md`。
 
-- Item / Pet / Charm / EndSetFlg 四個 source adapter 已合成同一條 first-route transaction。
+- Item / Pet / Charm-rule / EndSetFlg 四個 source adapter 已合成同一條 first-route transaction。
 - `xinshoujd.arg` branch 0 在 Lv1 / TRANS0 下可產生 4 個 Item、1 個 Pet、EndSetFlg 366。
 - `Charm:1` 依 pinned concrete Charm rule + `EventNo:-1` 為 no-op。
 - transaction 失敗時只改 staged clone，不提交 canonical state。
