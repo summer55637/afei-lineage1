@@ -1,0 +1,24 @@
+name: Check V3.93 Browser Battle Surprise
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_surprise_runtime.mjs'
+      - 'data/generated/stoneage_browser_battle_surprise_schema.json'
+      - 'tools/check_v393_browser_battle_surprise_runtime.mjs'
+      - 'docs/reference/v393-browser-battle-surprise.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v393-browser-battle-surprise.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.93 battle surprise regression
+        run: node tools/check_v393_browser_battle_surprise_runtime.mjs
+      - name: Check JavaScript syntax
+        run: node --check src/stoneage_browser_battle_surprise_runtime.mjs
