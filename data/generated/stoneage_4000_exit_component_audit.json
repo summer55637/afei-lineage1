@@ -1,0 +1,40 @@
+{
+  "format": "stoneage-4000-exit-component-audit-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "runtime": {
+    "path": "data/generated/stoneage_map_4000.json",
+    "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana",
+    "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
+    "width": 150,
+    "height": 150
+  },
+  "walkabilityContract": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
+  "components": {
+    "totalWalkableComponents": 65,
+    "directLandingComponent": {"id":48,"size":457,"landings":[[80,90],[80,91]]},
+    "portalComponent": {"id":0,"size":12513,"origins":[[104,55],[104,56],[101,96],[101,97]]},
+    "reachableFromDirectLanding": false
+  },
+  "nearestComponentBoundary": {
+    "manhattanDistance": 4,
+    "directLandingComponentPoint": [90,109],
+    "portalComponentPoint": [94,109],
+    "interveningBlockedCells": [
+      {"x":91,"y":109,"tile":409,"object":27,"tileWalkable":false,"objectWalkable":true},
+      {"x":92,"y":109,"tile":196,"object":27,"tileWalkable":false,"objectWalkable":true},
+      {"x":93,"y":109,"tile":307,"object":0,"tileWalkable":false,"objectWalkable":true}
+    ],
+    "interpretation": "The separation is caused by source map tile walkability, not by the portal object itself. The nearest crossing candidate is a three-cell blocked strip."
+  },
+  "portalOrigins": [
+    {"portalId":"4000_to_200_a","origin":[104,55],"component":0,"walkable":true},
+    {"portalId":"4000_to_200_a","origin":[104,56],"component":0,"walkable":true},
+    {"portalId":"4000_to_200_b","origin":[101,96],"component":0,"walkable":true},
+    {"portalId":"4000_to_200_b","origin":[101,97],"component":0,"walkable":true}
+  ],
+  "conclusion": "Under the fixed-C walkability contract, direct landing and both 4000->200 portal groups are on different walkable connected components. Do not insert a synthetic bridge or manual warp until the fixed-source map semantics are independently rechecked."
+}
