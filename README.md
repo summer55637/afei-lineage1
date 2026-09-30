@@ -245,3 +245,15 @@ Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`�
 - 下一層才將 action plan 接 Item allocator、Pet factory、event-state writer 與 Save Transaction。
 
 V3.21 regression 已納入 GitHub Actions。
+
+## V3.22 NPC Event Action Transaction
+
+新增 `src/stoneage_npc_event_transaction.mjs`、`tools/check_npc_event_transaction.mjs`、`.github/workflows/check-v322-npc-event-transaction.yml` 與 `docs/reference/v322-npc-event-transaction.md`。
+
+- V3.21 action plan 現在有獨立 atomic mutation boundary。
+- `GetItem / GetPet / Charm / EndSetFlg / NowSetFlg` 全部要求 explicit handler。
+- 所有 handler 都只作用在 staged clone；任一 action 失敗，canonical 原 state 不變。
+- transactionId 提供 idempotency，成功後才 revision +1 與寫入 transaction ledger。
+- unresolved Item / Pet definition 與 Charm semantics 不在這層猜測。
+
+V3.22 regression 已納入 GitHub Actions。
