@@ -144,7 +144,7 @@ function selectEventBranch(branches,context={}){
   return {ok:true,matched:false,index:-1,branch:null,candidates};
 }
 
-function buildEventActionPlan(branch){
+function buildEventActionPlan(branch,meta={}){
   const normalized=normalizeEventBranch(branch);
   if(!normalized.ok)return normalized;
   const b=normalized.branch;
@@ -153,6 +153,8 @@ function buildEventActionPlan(branch){
     format:NPC_EVENT_RUNTIME_FORMAT,
     type:b.type,
     condition:b.condition,
+    eventNo:meta.eventNo??null,
+    sourceScript:meta.sourceScript??null,
     actions:{
       literalGetItem:b.getItem.map(itemId=>({itemId,role:'GetItem'})),
       literalGetPet:b.getPet.map(petId=>({petId,role:'GetPet'})),
@@ -177,7 +179,7 @@ function compileSourceEventScript(script){
   for(let index=0;index<branches.length;index++){
     const normalized=normalizeEventBranch(branches[index]);
     if(!normalized.ok)return {...normalized,index};
-    const plan=buildEventActionPlan(normalized.branch);
+    const plan=buildEventActionPlan(normalized.branch,{eventNo:script.eventNo??null,sourceScript:script.path??null});
     if(!plan.ok)return {...plan,index};
     compiled.push({index,branch:normalized.branch,plan});
   }
