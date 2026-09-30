@@ -2,6 +2,10 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.43 cross-contract closure
+
+本輪把 first-route closure 的跨 contract 狀態重新對齊：new-player 四段 Item/Pet reward definition 已由 pinned itemset6／enemy1 source closure 驗證完成，因此不再列為 route blocker；changeevent 本身仍維持 strict unresolved，不能因 reward closure 而自動註冊 alias。4000→200 仍依 fixed-C map walkability 保持 disconnected fail-closed。新增 `tools/check_v343_cross_contract_closure.mjs` 與 CI，鎖定 reward closure、4000 component 與 route blocker 不漂移。
+
 ## 2026-09-30 進度
 
 已完成第一版 **World Data Source Catalog**：固定 source `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` 的 5,764 個 blob files、3,960 個 NPC data files，以及主要世界資料檔案已建立 machine-readable inventory。NPC 的 template → create → floor/region → argument 關係也已用 pinned C 的載入／生成流程固定。
