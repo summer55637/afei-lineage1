@@ -1216,3 +1216,31 @@ V3.92 是 transient-only：
 
 下一步可閉合 `BATTLE_SurpriseCheck()` 的 source RNG，再進入真正第一回合的 command collection / enemy AI。
 
+## 2026-10-01 V3.93 Browser Battle Surprise
+
+V3.93 將 fixed-C `BATTLE_SurpriseCheck()` 獨立來源化。
+
+規則：
+- 只對 `BATTLE_TYPE_P_vs_E` 有效。
+- 讀 Side[0] Player 的 `CHAR_WORKFIXLUCK`。
+- `WinFunc != NULL` 時直接回 0。
+- 消耗一次 `RAND(1,100)`。
+- luck 5：1..20 → result 1。
+- luck 4：1..15 → result 1；16 → result 2。
+- luck 3：1..10 → result 1；11..12 → result 2。
+- luck 2：1..5 → result 1；6..9 → result 2。
+- 其他：1..6 → result 2。
+- result 1 設 Enemy side 的 `BSIDE_FLG_SURPRISE=1`。
+- result 2 設 Player side 的 `BSIDE_FLG_SURPRISE=1`。
+
+`CHAR_WORKFIXLUCK` 屬 transient Work 值；目前 Persistent `player.luck` 不冒充 fixed luck，因此 V3.93 要求 caller 注入 `fixedLuck`。
+
+新增：
+- `src/stoneage_browser_battle_surprise_runtime.mjs`
+- `data/generated/stoneage_browser_battle_surprise_schema.json`
+- `tools/check_v393_browser_battle_surprise_runtime.mjs`
+- `docs/reference/v393-browser-battle-surprise.md`
+- `.github/workflows/check-v393-browser-battle-surprise.yml`
+
+下一階段是把 surprise result 按 fixed-C 順序放進 Battle Context，再進 V3.92 pre-command / Turn initialization。
+
