@@ -19,7 +19,7 @@ V3.73 將 Persistent State v1 的結構驗證補齊：sourceProfile / revision�
 這讓 `player / pet / inventory / equipment / skills / quests / map position / idle settings / save` 可以在同一 canonical validation boundary 下進一步接 runtime，且 malformed container 會 fail-closed。
 ## 2026-10-01 新增：V3.72 4000→200 fixed-C source transition audit
 
-V3.72 對已知 4000→200 blocker 做第二層 source closure：固定 source `mapwarp.txt` 沒有 direct 4000→200 row；`gmsv/data/npc/**/*.create` 只找到既有 `200warp.create` 的 4 個 `floorid=4000 → npcgen_warp|200|...` rows，正好對應兩組雙格出口。
+V3.72 對已知 4000→200 blocker 做第二層 source closure：固定 source `mapwarp.txt` 有 4 筆 direct 4000→200 rows；`gmsv/data/npc/**/*.create` 也找到既有 `200warp.create` 的 4 個 `floorid=4000 → npcgen_warp|200|...` rows，兩份 source 逐一對應，正好代表兩組雙格出口。
 
 另外對 pinned `gmsv/src` 做 4000 / 200 + warp/floor/transfer context 掃描與 literal 200 warp call corroboration。這些搜尋只作輔助證據，不把文字匹配冒充成完整程式語義證明。
 
