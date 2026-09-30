@@ -1,0 +1,26 @@
+name: Check NPC ItemShop runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_itemshop_runtime.mjs'
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'src/stoneage_item_economy_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/check_npc_itemshop_runtime.mjs'
+      - 'tools/fixtures/npc-itemshop/**'
+      - '.github/workflows/check-npc-itemshop-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run NPC ItemShop runtime regression
+        run: node tools/check_npc_itemshop_runtime.mjs
