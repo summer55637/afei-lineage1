@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-candidates-v3",
+  "format": "stoneage-start-route-candidates-v4",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -8,14 +8,21 @@
   "sourceContracts": {
     "warp": "gmsv/src/npc/npc_warp.c::NPC_WarpInit + NPC_WarpWarpCharacter",
     "encounter": "gmsv/src/char/encount.c::ENCOUNT_initEncount",
-    "encounterActiveDefinition": "gmsv/src/char/encount.c::ENCOUNT_initEncount; active means probMax > 0 and at least one numeric group id"
+    "encounterActiveDefinition": "gmsv/src/char/encount.c::ENCOUNT_initEncount; active means probMax > 0 and at least one numeric group id",
+    "encounterGate": "gmsv/src/char/enemy.c::ENEMY_getEnemy checks GROUP_APPEARBYITEMID / GROUP_NOTAPPEARBYITEMID",
+    "itemSource": "gmsv/setup.cf::itemset6file + gmsv/src/item/item.c"
   },
   "statistics": {
     "hometowns": 4,
     "warpEdges": 3943,
     "encounterRows": 1197,
     "encounterFloors": 675,
-    "routeHorizonDepth": 8
+    "routeHorizonDepth": 8,
+    "itemset6Rows": 0,
+    "itemGateIdsUnresolved": [
+      20216,
+      20219
+    ]
   },
   "routes": [
     {
@@ -73,7 +80,12 @@
             1000,
             100
           ],
-          "encounterCount": 70
+          "encounterEvidence": {
+            "floor": 100,
+            "totalRowCount": 46,
+            "placeholderRowCount": 1,
+            "rowsWithAtLeastOneUnconditionalGroup": 44
+          }
         }
       ]
     },
@@ -201,7 +213,7 @@
       "directDestinationEncounter": {
         "allRowCount": 2,
         "activeRowCount": 1,
-        "classification": "conditional_unresolved_item",
+        "classification": "conditional_unresolved_item_source",
         "activeRows": [
           {
             "index": 831,
@@ -229,6 +241,11 @@
           "enemyTempNo": 961,
           "levelMin": 79,
           "levelMax": 79
+        },
+        "itemSource": {
+          "path": "gmsv/data/itemset6.txt",
+          "rowCount": 0,
+          "status": "empty_fixed_source"
         }
       },
       "nearestActiveEncounterRoutes": [
@@ -251,7 +268,12 @@
             2000,
             100
           ],
-          "encounterCount": 70
+          "encounterEvidence": {
+            "floor": 100,
+            "totalRowCount": 46,
+            "placeholderRowCount": 1,
+            "rowsWithAtLeastOneUnconditionalGroup": 44
+          }
         }
       ]
     },
@@ -506,7 +528,7 @@
       "directDestinationEncounter": {
         "allRowCount": 3,
         "activeRowCount": 1,
-        "classification": "conditional_unresolved_item",
+        "classification": "conditional_unresolved_item_source",
         "activeRows": [
           {
             "index": 828,
@@ -534,6 +556,11 @@
           "enemyTempNo": 952,
           "levelMin": 79,
           "levelMax": 79
+        },
+        "itemSource": {
+          "path": "gmsv/data/itemset6.txt",
+          "rowCount": 0,
+          "status": "empty_fixed_source"
         }
       },
       "nearestActiveEncounterRoutes": [
@@ -556,7 +583,12 @@
             3000,
             200
           ],
-          "encounterCount": 114
+          "encounterEvidence": {
+            "floor": 200,
+            "totalRowCount": 114,
+            "placeholderRowCount": 0,
+            "rowsWithAtLeastOneUnconditionalGroup": 113
+          }
         }
       ]
     },
@@ -824,10 +856,15 @@
             4000,
             200
           ],
-          "encounterCount": 114
+          "encounterEvidence": {
+            "floor": 200,
+            "totalRowCount": 114,
+            "placeholderRowCount": 0,
+            "rowsWithAtLeastOneUnconditionalGroup": 113
+          }
         }
       ]
     }
   ],
-  "policy": "Route candidates use source warp connectivity. Encounter classification now distinguishes placeholder rows, conditional item-gated groups, and unconditional active rows. First unconditional encounter destinations are floor 100 for hometown 0/1 and floor 200 for hometown 2/3. Coordinate walkability and NPC/quest intent remain separate closures."
+  "policy": "Route candidates use source warp connectivity. Direct destination encounters are classified with the fixed C group inventory gate. Groups requiring item IDs 20216/20219 remain source-unresolved because pinned itemset6.txt is empty. Generic hunting candidates are floors reached in the directed world graph that contain at least one encounter row with an unconditional group. No map, item, NPC or quest data is guessed."
 }
