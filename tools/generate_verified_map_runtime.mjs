@@ -38,7 +38,8 @@ const assignments=Array.isArray(battle.assignments)?battle.assignments:[];
 const resolveCandidates=(imageId)=>{
   const rows=assignments.filter(row=>Number(imageId)>=Number(row.start)&&Number(imageId)<=Number(row.end));
   if(rows.length!==1) return null;
-  return rows[0].battlemaps.map(Number);
+  const sourceSlots=rows[0].battlemaps.map(Number);
+  return [sourceSlots[0]??0,sourceSlots[1]??0,sourceSlots[2]??0];
 };
 
 const uniqueTiles=[...new Set(Array.from(map.tiles).map(Number))];
