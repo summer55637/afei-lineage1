@@ -23,7 +23,7 @@ function norm(v){
   if(s.startsWith('gmsv/data/npc/'))s=s.slice('gmsv/data/npc/'.length);
   return s;
 }
-function sha256(file){return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');}
+function gitBlobSha(file){const data=fs.readFileSync(file);return crypto.createHash('sha1').update('blob '+data.length+'\\0').update(data).digest('hex');}
 function parseBlocks(text){
   const lines=text.replace(/\r/g,'').split('\n');
   const blocks=[]; let cur=null,index=0;
@@ -62,7 +62,7 @@ const templatePath=path.join(npcRoot,'genout/npcgen.template');
 const warpSourcePath=path.join(sourceRoot,'gmsv/src/npc/npc_warp.c');
 if(!fs.existsSync(templatePath))throw new Error('pinned npcgen template missing');
 if(!fs.existsSync(warpSourcePath))throw new Error('pinned npc_warp.c missing');
-const templateSha=sha256(templatePath);
+const templateSha=gitBlobSha(templatePath);
 const templateBlock=parseBlocks(fs.readFileSync(templatePath,'utf8')).find(b=>String(first(b.keys.templatename)).trim().toLowerCase()==='npcgen_warp');
 if(!templateBlock)throw new Error('npcgen_warp template missing');
 if(String(first(templateBlock.keys.functionset)).trim()!=='Warp')throw new Error('npcgen_warp functionset drift');
@@ -71,7 +71,7 @@ const files=walk(npcRoot).filter(p=>/\.create$|\.creata$/i.test(p)).sort();
 const rows=[]; const unresolved=[];
 for(const file of files){
   const rel=norm(path.relative(npcRoot,file));
-  const blobSha=sha256(file);
+  const blobSha=gitBlobSha(file);
   for(const block of parseBlocks(fs.readFileSync(file,'utf8'))){
     const floor=Number(first(block.keys.floorid));
     if(!startFloors.has(floor))continue;
