@@ -4,7 +4,7 @@
 
 V3.35 不把 `changeevent` 寫回 pinned functionSet registry；它新增的是明確 opt-in 的 cross-repository compatibility mode。
 
-## External corroboration
+## Historical external corroboration
 
 公開 `75912001/sa.desktop` 的 `map/maps/1006/map.entity.yaml` 同時列出 `templateName=changeevent`、`functionset=ExChangeMan`、`enemy=changeevent|file:almark/xinshou/xinshoujd.arg`；3006 map 也使用相同標記。
 
@@ -12,10 +12,9 @@ V3.35 不把 `changeevent` 寫回 pinned functionSet registry；它新增的是�
 
 ## Runtime policy
 
-`createCompatibilityNpcModuleRegistry(..., allowExternalCompatibilityAliases=false)` 預設關閉。
-
-開啟後才允許 `changeevent` 解析成已 audited 的 `ExChangeMan` module；結果明確標記 `compatibilityAlias:true` / `compatibilityOnly:true`。
-
-Strict mode 仍然 `changeevent → unresolved`；compatibility mode 才是 `changeevent → ExChangeMan`。
+pinned source 現已證明 `jaruga/event/event.template` 將 `changeevent` 綁定到 `ExChangeMan`。strict mode 現在直接使用 source-backed template binding，不需要 compatibilityMode 或 external alias。compatibility registry 仍支援舊資料，但 source-backed binding 優先且不標記 `compatibilityAlias`。
 
 下一步：以 1006 新手接待員做 opt-in browser-style dispatch regression；production strict mode 仍不註冊 changeevent。
+
+
+V3.64 後本文件中的「external compatibility」只代表歷史 corroboration，不再是 production strict path 的唯一解析來源。

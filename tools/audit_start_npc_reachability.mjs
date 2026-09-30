@@ -84,6 +84,12 @@ const mapset = JSON.parse(
 const startFlow = JSON.parse(
   fs.readFileSync('data/generated/stoneage_start_flow_index.json', 'utf8'),
 );
+const moduleAudit = JSON.parse(
+  fs.readFileSync('data/generated/stoneage_world_npc_functionset_audit.json', 'utf8'),
+);
+const sourceTemplateBindings = new Map(
+  (moduleAudit.sourceTemplateBindings || []).map((entry) => [String(entry.templateName || '').trim().toLowerCase(), entry]),
+);
 
 const sourceValidation = [];
 const rows = [];
@@ -138,7 +144,14 @@ for (const spec of startMaps) {
       npc: [npc.x, npc.y],
       npcCellWalkable: sourceMapWalkableAt(map, npc.x, npc.y, mapset),
       interactionStances: stanceCells.map(([x, y]) => [x, y]),
+      interactionRule: 'NPC_Util_charIsInFrontOfChar distance=1',
       reachableInteraction: found.length > 0,
+      runtimeModuleStatus: templateBinding
+        ? 'source_resolved_in_pinned_template_functionSet'
+        : 'template_module_unresolved',
+      sourceTemplateBinding: templateBinding
+        ? { templateName: templateBinding.templateName, functionset: templateBinding.functionset, sourcePath: templateBinding.sourcePath, sourceBlobSha: templateBinding.sourceBlobSha }
+        : null,
       minPathToInteraction: found.length > 0
         ? Math.min(...found.map((item) => item.pathLength))
         : null,
@@ -157,6 +170,7 @@ const index = {
   fixedSource: { repository: 'gavinlinasd/StoneAge', ref },
   sourceContracts: {
     startFlow: 'data/generated/stoneage_start_flow_index.json',
+    moduleAudit: 'data/generated/stoneage_world_npc_functionset_audit.json',
     mapParser: 'tools/stoneage_ls2map_parser.mjs',
     walkability: 'src/stoneage_map_runtime.mjs::sourceMapWalkableAt',
     interaction: 'gmsv/src/npc/npcutil.c::NPC_Util_charIsInFrontOfChar',

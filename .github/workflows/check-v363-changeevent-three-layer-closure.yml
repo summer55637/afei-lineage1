@@ -37,10 +37,10 @@ jobs:
           grep -q 'if( enemyreadindex == 0 )' fixed-c-source/gmsv/src/npc/npccreate.c
           grep -q 'BOOL NPC_readNPCTemplateFiles' fixed-c-source/gmsv/src/npc/npctemplate.c
           grep -q 'int NPC_templateGetTemplateIndex' fixed-c-source/gmsv/src/npc/npctemplate.c
-      - name: Check pinned template registry has no changeevent entry
+      - name: Check pinned template registry resolves changeevent
         run: |
-          if grep -RinE --include='*.template' 'templatename[[:space:]]*=[[:space:]]*changeevent' fixed-c-source/gmsv/data/npc; then exit 1; fi
-          if grep -RinE --include='*.template' 'functionset[[:space:]]*=[[:space:]]*changeevent' fixed-c-source/gmsv/data/npc; then exit 1; fi
+          grep -q 'templatename=changeevent' fixed-c-source/gmsv/data/npc/jaruga/event/event.template
+          grep -q 'functionset=ExChangeMan' fixed-c-source/gmsv/data/npc/jaruga/event/event.template
       - name: Run V3.63 closure regression
         run: node tools/check_v363_changeevent_three_layer_closure.mjs fixed-c-source
       - name: Check JavaScript syntax

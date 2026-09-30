@@ -2,6 +2,11 @@
 
 更新日期：2026-09-30
 
+
+## 2026-09-30 新增：V3.64 ChangeEvent source resolution
+
+pinned fixed-C 的 jaruga/event/event.template 實際綁定 changeevent → ExChangeMan。V3.64 將這條 source-backed binding 接入 strict module registry、dispatcher、reachability 與 Browser State Controller；五個 start-floor changeevent instances 恢復為 source-resolved active interactions。
+
 ## 2026-09-30 新增：V3.63 ChangeEvent three-layer source closure
 
 V3.63 修正並升級舊 V3.29 changeevent audit 的證據模型。真正的 fixed-C registration chain 是 NPCCREATE enemy= → NPC_templateGetTemplateIndex() → recursively loaded NPC template registry，而不是單看 npctemplate.c/functionSet[]。固定 source 的 NPC_readNPCTemplateFiles() 會遞迴掃描 template files；lookup 只有 exact registered template name 才成功，unknown name 回 -1。NPC_readCreateFile() 對 unknown enemy 不寫入 cr.templateindex[]，enemyreadindex 維持 0，block close 亦拒絕該 create block。

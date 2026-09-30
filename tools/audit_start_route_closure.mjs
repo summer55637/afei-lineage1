@@ -48,6 +48,9 @@ const towns = candidateRoutes.map((candidate) => {
         minPathToInteraction: row.minPathToInteraction,
         npcPath: row.npcPath,
         blockIndex: row.blockIndex,
+        interactionRule: row.interactionRule ?? null,
+        runtimeModuleStatus: row.runtimeModuleStatus ?? null,
+        sourceTemplateBinding: row.sourceTemplateBinding ?? null,
       })),
     },
     directWarpExits: (auditRoute?.exitAudits || []).map((exit) => ({
@@ -96,10 +99,10 @@ const index = {
   },
   status: {
     sourceRouteSpine: 'closed',
-    coordinateResolvedTownServices: reachableCoordinateResolved === coordinateResolved ? 'closed_for_resolved_instances' : 'partial',
+    coordinateResolvedTownServices: reachableCoordinateResolved === coordinateResolved ? 'closed_for_source_resolved_active_templates' : 'partial',
     fullFirstRoute: 'partial',
     definition:
-      'Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed only for NPC instances with resolved numeric coordinates. Full first-route closure remains open until unresolved NPC coordinates, destination-map walkability, and player-specific quest/event ownership are closed.',
+      'Source-level closure is complete from verified hometown spawn to direct warp exit and a depth-1 encounter floor. Coordinate-level interaction is closed for source-resolved NPC instances with verified numeric coordinates. Full first-route closure remains partial until destination-map walkability and player-specific quest/event ownership are closed.',
   },
   statistics: {
     hometowns: towns.length,
@@ -116,9 +119,9 @@ const index = {
     unresolvedNpcCoordinateInstances: npcReachability.statistics?.unresolvedCoordinateInstances || 0,
   },
   remainingWork: [
-    'Resolve source coordinates for the remaining start-floor NPC instances without guessing.',
+    'Preserve source-derived coordinates and template/module bindings for all start-floor NPC instances.',
     'Audit destination-map walkability at each first warp landing coordinate and the first encounter region.',
-    'Close new-player quest/event ownership without promoting ownerless event IDs.',
+    'Close new-player quest/event ownership without promoting ownerless event IDs.'
   ],
   towns,
 };

@@ -1,0 +1,53 @@
+name: Check V3.64 ChangeEvent source resolution
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_module_registry_runtime.mjs'
+      - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
+      - 'data/generated/stoneage_changeevent_module_audit.json'
+      - 'data/generated/stoneage_changeevent_compatibility_reference.json'
+      - 'data/generated/stoneage_start_npc_reachability.json'
+      - 'data/generated/stoneage_start_npc_coordinate_closure.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'tools/check_v364_changeevent_source_resolution.mjs'
+      - 'tools/audit_start_npc_reachability.mjs'
+      - 'tools/audit_start_route_closure.mjs'
+      - 'docs/reference/v364-changeevent-source-resolution.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v364-changeevent-source-resolution.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout browser repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Verify pinned changeevent template and module
+        run: |
+          grep -q 'templatename=changeevent' fixed-c-source/gmsv/data/npc/jaruga/event/event.template
+          grep -q 'functionset=ExChangeMan' fixed-c-source/gmsv/data/npc/jaruga/event/event.template
+          test -s fixed-c-source/gmsv/src/npc/npc_exchangeman.c
+      - name: Run V3.64 source resolution regression
+        run: node tools/check_v364_changeevent_source_resolution.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_npc_module_registry_runtime.mjs
+          node --check src/stoneage_npc_dispatch_runtime.mjs
+          node --check tools/audit_start_npc_reachability.mjs
+          node --check tools/audit_start_route_closure.mjs
+          node --check tools/check_v364_changeevent_source_resolution.mjs
