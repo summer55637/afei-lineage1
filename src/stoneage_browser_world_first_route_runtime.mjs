@@ -215,42 +215,45 @@ function reconstructToSeed(bfs,startCell){
   };
 }
 
+function bfsAllFromStart(map,mapset,start,{maxVisited=null}={}){
+  const width=Number(map.width),height=Number(map.height),size=width*height;
+  const startIndex=start.y*width+start.x;
+  const parent=new Int32Array(size); parent.fill(-1);
+  const dist=new Int32Array(size); dist.fill(-1);
+  const queue=new Int32Array(size);
+  let head=0,tail=0,visited=0;
+  queue[tail++]=startIndex; dist[startIndex]=0; visited=1;
+  const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  while(head<tail){
+    const index=queue[head++];
+    const x=index%width,y=Math.floor(index/width);
+    for(const [dx,dy] of dirs){
+      const nx=x+dx,ny=y+dy;
+      if(nx<0||ny<0||nx>=width||ny>=height)continue;
+      const next=ny*width+nx;
+      if(dist[next]!==-1)continue;
+      if(!sourceMapWalkableAt(map,nx,ny,mapset,{flying:false}))continue;
+      dist[next]=dist[index]+1;
+      parent[next]=index;
+      queue[tail++]=next;
+      visited++;
+      if(maxVisited!=null&&visited>maxVisited)return {ok:false,reason:'route-bfs-visit-limit'};
+    }
+  }
+  return {ok:true,parent,dist,visited,width,height,startIndex};
+}
+
 function choosePortalAndEncounterPaths(start,mapEntry,mapEncounter,mapset,group,encounterTarget,{maxVisited=null}={}){
   const rows=portalRows(group);
-  const originGoals=rows.map(row=>row.from.y*Number(mapEntry.width)+row.from.x);
-  const toPortal=bfsFromStart(mapEntry,mapset,start,originGoals,{maxVisited});
-  if(!toPortal.ok)return {ok:false,stage:'to-portal',reason:toPortal.reason};
-  const distanceFromStart=new Map();
-  const width=Number(mapEntry.width);
-  const startIndex=start.y*width+start.x;
-  const parent=(()=>{ 
-    const goalSet=new Set(originGoals);
-    const p=new Int32Array(width*Number(mapEntry.height));p.fill(-1);
-    const dist=new Int32Array(width*Number(mapEntry.height));dist.fill(-1);
-    const queue=new Int32Array(width*Number(mapEntry.height));
-    let head=0,tail=0;
-    dist[startIndex]=0;queue[tail++]=startIndex;
-    const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-    while(head<tail){
-      const index=queue[head++];
-      const x=index%width,y=Math.floor(index/width);
-      for(const [dx,dy] of dirs){
-        const nx=x+dx,ny=y+dy;
-        if(nx<0||ny<0||nx>=width||ny>=Number(mapEntry.height))continue;
-        const next=ny*width+nx;
-        if(dist[next]!==-1)continue;
-        if(!sourceMapWalkableAt(mapEntry,nx,ny,mapset,{flying:false}))continue;
-        dist[next]=dist[index]+1;p[next]=index;queue[tail++]=next;
-      }
-      if(goalSet.has(index))distanceFromStart.set(index,dist[index]);
-    }
-    return {parent,dist};
-  })();
+  if(!rows.length)return {ok:false,stage:'to-portal',reason:'portal-group-has-no-valid-rows'};
+  const entryBfs=bfsAllFromStart(mapEntry,mapset,start,{maxVisited});
+  if(!entryBfs.ok)return {ok:false,stage:'to-portal',reason:entryBfs.reason};
   const landingBfs=bfsToRect(mapEncounter,mapset,encounterTarget.rect,{maxVisited});
   if(!landingBfs.ok)return {ok:false,stage:'to-encounter',reason:landingBfs.reason};
+  const width=Number(mapEntry.width);
   const candidates=rows.map(row=>{
-    const sourceIndex=row.from.y*Number(mapEntry.width)+row.from.x;
-    const startDistance=parent.dist[sourceIndex];
+    const sourceIndex=row.from.y*width+row.from.x;
+    const startDistance=entryBfs.dist[sourceIndex];
     const destPath=reconstructToSeed(landingBfs,row.to);
     return {
       row,
@@ -265,27 +268,14 @@ function choosePortalAndEncounterPaths(start,mapEntry,mapEncounter,mapset,group,
   candidates.sort((a,b)=>a.totalDistance-b.totalDistance||a.row.line-b.row.line);
   const chosen=candidates[0];
   const chosenPortalPath=[];
-  const chosenSourceIndex=chosen.row.from.y*Number(mapEntry.width)+chosen.row.from.x;
-  for(let cur=chosenSourceIndex;cur!==startIndex;cur=parent.parent[cur]){
-    chosenPortalPath.push({x:cur%Number(mapEntry.width),y:Math.floor(cur/Number(mapEntry.width))});
+  const startIndex=entryBfs.startIndex;
+  const chosenSourceIndex=chosen.row.from.y*width+chosen.row.from.x;
+  for(let cur=chosenSourceIndex;cur!==startIndex;cur=entryBfs.parent[cur]){
+    if(cur<0) return {ok:false,stage:'to-portal',reason:'portal-path-parent-broken'};
+    chosenPortalPath.push({x:cur%width,y:Math.floor(cur/width)});
   }
   chosenPortalPath.reverse();
   return {ok:true,portalRow:chosen.row,portalPath:chosenPortalPath,portalDistance:chosen.startDistance,landingPath:chosen.destinationPath,landingDistance:chosen.destinationDistance,encounterCell:chosen.encounterCell,totalDistance:chosen.totalDistance};
-}
-
-function buildMoveActions(path,floorId,revision){
-  const actions=[];
-  let previous=null;
-  for(const cell of path){
-    const current={floorId:Number(floorId),x:Number(cell.x),y:Number(cell.y)};
-    if(previous){
-      const dx=current.x-previous.x,dy=current.y-previous.y;
-      if(Math.abs(dx)+Math.abs(dy)!==1)throw new Error('planned movement is not 4-neighbor');
-    }
-    actions.push({type:'WORLD_MOVE_STEP',dx:previous==null?0:current.x-previous.x,dy:previous==null?0:current.y-previous.y,player:clone(previous??current),expectedRevision:revision+actions.length+1});
-    previous=current;
-  }
-  return actions;
 }
 
 function actionPathFromStart(path,floorId,currentStart,revision){
@@ -391,6 +381,7 @@ export {
   getUnconditionalTarget,
   rectContains,
   bfsFromStart,
+  bfsAllFromStart,
   bfsToRect,
   reconstructToSeed,
   planFirstRoute,
