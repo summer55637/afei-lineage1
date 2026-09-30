@@ -1,5 +1,7 @@
 const REWARD_TRANSACTION_FORMAT = 'stoneage-reward-transaction-v1';
 const MAX_CARRIED_ITEMS = 3;
+const PLAYER_BACKPACK_START = 9;
+const PLAYER_ITEM_SLOT_COUNT = 24;
 
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const intOr = (value, fallback = 0) => Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback;
@@ -49,7 +51,7 @@ function rewardTransactionValidation(packet, { inventorySlots = [], knownExistin
     seen.add(item.existingIndex);
     if (knownExistingItemIds instanceof Set && !knownExistingItemIds.has(item.existingIndex)) errors.push('unknown existing item index: ' + item.existingIndex);
   }
-  if (!Array.isArray(inventorySlots) || inventorySlots.length !== 24) errors.push('reward application requires 24 player item slots');
+  if (!Array.isArray(inventorySlots) || inventorySlots.length !== PLAYER_ITEM_SLOT_COUNT) errors.push('reward application requires 24 player item slots');
   if (knownPetIds instanceof Set) for (const pet of normalized.petCredits) if (!knownPetIds.has(String(pet.petId))) errors.push('unknown pet credit: ' + pet.petId);
   return { ok: errors.length === 0, errors, packet: normalized };
 }
@@ -70,16 +72,24 @@ function applyRewardTransaction(state, packet, { knownExistingItemIds = null, no
     const pet = (next.pets?.petBox ?? []).find(p => String(p?.id ?? p?.petId ?? '') === petCredit.petId || String(p?.petId ?? '') === petCredit.petId);
     if (pet) pet.exp = nonNegativeInt(pet.exp) + petCredit.exp;
   }
-  const emptySlots = () => next.inventory.playerItemSlots.map((value, index) => value == null ? index : -1).filter(index => index >= 0);
+  const emptySlots = () => next.inventory.playerItemSlots
+    .map((value, index) => index >= PLAYER_BACKPACK_START && index < PLAYER_ITEM_SLOT_COUNT && value == null ? index : -1)
+    .filter(index => index >= 0);
   for (const item of validation.packet.items) {
+    const key = String(item.existingIndex);
+    const existing = next.inventory.itemRuntime?.slots?.[key];
+    if (!existing) return { applied: false, reason: 'existing-item-runtime-missing', transactionId: validation.packet.transactionId, state };
+    if (existing.owner && existing.owner !== 'enemy:' + validation.packet.transactionId && existing.owner !== 'enemy' && existing.owner !== 'source-pending') {
+      return { applied: false, reason: 'existing-item-not-transferable', transactionId: validation.packet.transactionId, state };
+    }
     const slots = emptySlots();
-    if (!slots.length) return { applied: false, reason: 'inventory-full-before-transaction-commit', transactionId: validation.packet.transactionId, state };
+    if (slots.length < 1) return { applied: false, reason: 'inventory-full-before-transaction-commit', transactionId: validation.packet.transactionId, state };
     const slot = slots[0];
     next.inventory.playerItemSlots[slot] = item.existingIndex;
-    const key = String(item.existingIndex);
-    next.inventory.itemRuntime.slots[key] ??= { existingIndex: item.existingIndex, owner: 'player' };
-    next.inventory.itemRuntime.slots[key].owner = 'player';
-    next.inventory.piles[key] = nonNegativeInt(next.inventory.piles[key]) + item.count;
+    existing.owner = 'player';
+    if (existing.pile == null) existing.pile = item.count;
+    const itemId = existing.itemId != null ? String(existing.itemId) : null;
+    if (itemId) next.inventory.piles[itemId] = nonNegativeInt(next.inventory.piles[itemId]) + 1;
   }
   next.runtimeMeta.rewardTransactions[validation.packet.transactionId] = {
     source: validation.packet.source,
@@ -92,4 +102,4 @@ function applyRewardTransaction(state, packet, { knownExistingItemIds = null, no
   return { applied: true, idempotent: false, transactionId: validation.packet.transactionId, state: next };
 }
 
-export { REWARD_TRANSACTION_FORMAT, MAX_CARRIED_ITEMS, normalizeRewardPacket, rewardTransactionValidation, applyRewardTransaction };
+export { REWARD_TRANSACTION_FORMAT, MAX_CARRIED_ITEMS, PLAYER_BACKPACK_START, PLAYER_ITEM_SLOT_COUNT, normalizeRewardPacket, rewardTransactionValidation, applyRewardTransaction };
