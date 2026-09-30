@@ -29,9 +29,11 @@ async function runNewPlayerCreationSave(state,{
     state.creation?.hometownConfigured === true
     && state.creation?.playerCreationStatsConfigured === true
     && state.creation?.elementsConfigured === true
+    && Number(state.creation.hometown) === Number(hometown)
     && state.creation?.starterPetGranted === true
     && state.creation?.starterItemGranted !== true
-    && state.creation?.completed !== true;
+    && state.creation?.completed !== true
+    && state.creation?.source?.transactionFormat === NEW_PLAYER_CREATION_SAVE_FORMAT;
   if(canResumeItemStage){
     prepared={ok:true,state:clone(state),creation:null};
     petState=clone(state);
@@ -46,6 +48,14 @@ async function runNewPlayerCreationSave(state,{
   }
 
   if(typeof itemGrantAdapter!=='function'){
+    const checkpoint=clone(petState);
+    checkpoint.creation.source={
+      ...(isObject(checkpoint.creation.source)?checkpoint.creation.source:{}),
+      fixedCRef:seed.fixedSource.ref,
+      transactionFormat:NEW_PLAYER_CREATION_SAVE_FORMAT,
+      pendingStage:'starter-item'
+    };
+    petState=checkpoint;
     return {
       ok:false,
       stage:'starter-item',
