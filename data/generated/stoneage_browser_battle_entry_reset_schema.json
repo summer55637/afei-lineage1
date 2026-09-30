@@ -1,0 +1,38 @@
+{
+  "format": "stoneage-v389-browser-battle-entry-reset-v1",
+  "generatedAt": "2026-10-01",
+  "fixedC": {
+    "sourceFunction": "gmsv/src/battle/battle.c::BATTLE_NewEntry()",
+    "sourceCharMode": 1,
+    "unconditionalActorReset": {
+      "battleFlg": 0,
+      "battleCommands": [
+        -1,
+        -1,
+        -1
+      ],
+      "modAttack": 0,
+      "modDefence": 0,
+      "modQuick": 0,
+      "damageAbsorb": 0,
+      "damageReflect": 0,
+      "damageVanish": 0,
+      "modCapture": 0,
+      "isAttacked": 1,
+      "battleWatch": 0
+    },
+    "conditionalBranches": [
+      "PROFESSION_SKILL",
+      "PETSKILL_ACUPUNCTURE",
+      "PETSKILL_RETRACE",
+      "PETSKILL_BECOMEFOX",
+      "PROFESSION_ADDSKILL"
+    ]
+  },
+  "browserBoundary": {
+    "persistentMutation": false,
+    "battleDamage": false,
+    "turnExecution": false,
+    "conditionalBranches": "not promoted until compile-time feature closure is verified"
+  }
+}
