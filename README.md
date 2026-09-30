@@ -5,7 +5,55 @@
 這個倉庫的方向不是把舊網頁程式碼重新堆回去，而是先用固定 source evidence 建立可驗證的資料與 runtime contract，再逐步接成一個唯一、可長時間遊玩的 PC＋手機單機網頁放置遊戲。
 
 <!-- AUTO-README:START -->
-這一段由 GitHub Actions 自動生成。
+## 📌 自動維護狀態
+
+> 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
+
+- 最新 commit：62dbefa — Add automatic README maintenance
+- 最後更新時間：2026-09-30T15:50:55+08:00
+- 版本線最高 regression workflow：V342
+- Canonical browser entry：index.html；root HTML 入口目前為 1 個
+- 舊入口殘留：已清除
+- 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+### 核心 closure
+
+| 區域 | 現況 | 摘要 |
+|---|---|---|
+| First-route spine | ✅ closed | 4/4 hometown maps；8/8 direct warp exits |
+| Full first-route | ⚠️ partial | 6/8 portal groups usable |
+| Verified map runtime | ✅ active | 11 maps；floor identity 以 LS2MAP header 為準 |
+| World graph | ✅ indexed | 1,139 floor nodes；2,182 directed edges |
+| NPC service index | ✅ indexed | 9,335 service instances；1,031 floors |
+| Persistent State | ✅ schema 1 | legacy 30；skills 26；player items 24 |
+| Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
+| Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
+
+### NPC → ItemShop → Item → Gold → Persistent State
+
+Canonical Browser Shell → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State
+
+目前 source 文件記錄完整 336 個 ItemShop binding。 Browser ItemShop bridge 使用同一條 contract，不另建第二套商店或貨幣規則。
+
+### 主要 blocker
+
+1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
+2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
+3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
+4. Close new-player event reward item/pet definitions without promoting unresolved IDs.
+
+### 永久停用
+
+- gmque：維持永久停用，不由後續版本自動恢復。
+
+### 資料時間
+
+- route closure：2026-09-30
+- persistent state：2026-09-30
+- item/economy schema：—
+- idle route catalog：2026-09-30
+- browser ItemShop contract：2026-09-30
+
 <!-- AUTO-README:END -->
 
 ## 最終目標
