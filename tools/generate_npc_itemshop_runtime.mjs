@@ -117,7 +117,7 @@ for(const f of walk(npcRoot).sort()){
     const k=b.keys;
     for(const enemyRaw of (k.enemy??[])){
       const enemy=parseEnemy(enemyRaw);
-      if(!enemy||String(enemy.templateName??'').toLowerCase()!=='npcgen_shop')continue;
+      if(!enemy||!['npcgen_shop','npcgen_limitshop'].includes(String(enemy.templateName??'').toLowerCase()))continue;
       const createSource={path:rel(f),blobSha:gitBlobSha(createBytes),sha256:sha256(createBytes),blockIndex:b.blockIndex,startLine:b.startLine};
       if(!enemy.fileRef){
         unresolved.push({source:createSource,reason:'shop-arg-file-ref-missing'});
@@ -138,7 +138,7 @@ for(const f of walk(npcRoot).sort()){
         floorId:numberOrNull(first(k.floorid)),
         bornCorner:rect(first(k.borncorner)),
         name:first(k.name),
-        templateName:'npcgen_shop',
+        templateName:enemy.templateName,
         source:{
           create:createSource,
           arg:{path:relNpc(argPath),blobSha:gitBlobSha(argBytes),sha256:sha256(argBytes)}
@@ -153,10 +153,12 @@ for(const f of walk(npcRoot).sort()){
         limitItemNo:(arg.LimitItemNo??'').split(',').map(parseEntry).filter(Boolean),
         specialRate:numberOrNull(arg.special_rate),
         specialItemEntries:(arg.special_item??'').split(',').map(parseEntry).filter(Boolean),
+        sellOnly:Object.prototype.hasOwnProperty.call(arg,'sellonly_msg'),
         sourceFlags:{
-          limitShop:argText.includes('LIMITSHOP'),
+          limitShop:argText.includes('LIMITSHOP') || String(enemy.templateName??'').toLowerCase()==='npcgen_limitshop',
           event:argText.includes('EVENT'),
-          express:argText.includes('EXPRESS')
+          express:argText.includes('EXPRESS'),
+          sellOnly:Object.prototype.hasOwnProperty.call(arg,'sellonly_msg')
         }
       });
     }
@@ -184,7 +186,7 @@ const catalog={
   fixedSource:{repository:'gavinlinasd/StoneAge',ref:fixedRef},
   parser:{
     createFileGlob:'gmsv/data/npc/**/*.create',
-    shopTemplate:'npcgen_shop',
+    shopTemplates:['npcgen_shop','npcgen_limitshop'],
     argFileReference:'enemy=npcgen_shop|file:...',
     itemList:'comma-separated ItemList; single IDs and inclusive ranges',
     buyRangeCompatibility:'matches NPC_SetNewItem range ordering, including end++ before reverse-order swap behavior',
@@ -199,7 +201,9 @@ const catalog={
     distinctItemIds:Object.keys(itemIndex).length,
     shopsWithLimitItemType:shops.filter(s=>s.limitItemType.length).length,
     shopsWithLimitItemNo:shops.filter(s=>s.limitItemNo.length).length,
-    shopsWithSpecialSellRate:shops.filter(s=>s.specialItemEntries.length).length
+    shopsWithSpecialSellRate:shops.filter(s=>s.specialItemEntries.length).length,
+    sellOnlyShops:shops.filter(s=>s.sellOnly).length,
+    limitShopTemplates:shops.filter(s=>s.sourceFlags.limitShop).length
   },
   shops:byShopId,
   floorIndex,
