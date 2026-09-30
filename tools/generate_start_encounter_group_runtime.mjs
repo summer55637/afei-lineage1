@@ -42,9 +42,8 @@ for(const raw of groupSource.content.split(/\r?\n/)){
   const members=[];
   for(let i=0;i<10;i++){
     const enemyId=toInt(p[4+i]);
-    const createProb=toInt(p[14+i]);
+    const createProb=toInt(p[14+i])??0;
     if(enemyId==null)continue;
-    if(createProb==null)fail('Group '+id+' has EnemyID without CREATEPROB at slot '+(i+1));
     members.push({slot:i+1,enemyId,createProb});
   }
   groupMap.set(id,{groupId:id,name:String(p[0]).trim(),appearByItemId:toInt(p[2]),notAppearByItemId:toInt(p[3]),members});
