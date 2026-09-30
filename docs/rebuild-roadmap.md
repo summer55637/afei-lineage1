@@ -302,7 +302,7 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 4. **Persistent State Schema**：第一版 canonical schema 已建立；本輪補上 Gold、reward transaction persistence 與 idle state containers。
 5. **Idle Loop Contract**：state machine 已建立，reward transaction 與 supply/death/offline policy boundary 已建立；下一步是 simulation runner、save commit 與 offline resume。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
-7. **NPC / Economy Runtime**：讓世界不是只有打怪，而是能移動、互動、取得資源。
+7. **NPC / Economy Runtime**：Item / Economy transaction v1 已接到 canonical state；下一步是接 source Item allocator、NPC shop data、製作與任務取得路徑。
 8. **Authorized Asset Integration**：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
 9. **唯一可玩入口**：前面資料與系統成熟後，才重新建立新的遊戲頁。
 
