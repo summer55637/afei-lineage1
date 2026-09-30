@@ -59,6 +59,21 @@ const firstBlocked=adjacentDirections
   .find(x=>!x.check.ok);
 assert.ok(firstBlocked,'1000:98,44 should expose at least one blocked adjacent step');
 
+const blockedState=freshPersistentState({playerId:'v376-blocked'});
+blockedState.world.position=origin;
+const blockedRuntime=await runtime.dispatch(blockedState,{
+  type:'WORLD_MOVE_STEP',
+  dx:firstBlocked.dx,
+  dy:firstBlocked.dy,
+  player:origin,
+  expectedRevision:0,
+  now:'2026-10-01T00:00:00.500Z'
+});
+assert.equal(blockedRuntime.ok,false);
+assert.ok(['movement-destination-not-walkable','movement-diagonal-side-cell-blocked'].includes(blockedRuntime.reason));
+assert.equal(blockedRuntime.state.revision,0);
+assert.deepEqual(blockedRuntime.state.world.position,origin);
+
 const state=freshPersistentState({playerId:'v376-move'});
 state.world.position=origin;
 const controller=createBrowserStateController({
