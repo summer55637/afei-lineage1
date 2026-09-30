@@ -1,0 +1,210 @@
+{
+  "format": "stoneage-start-walkability-audit-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "mapParser": "tools/stoneage_ls2map_parser.mjs",
+    "walkability": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
+    "warp": "gmsv/src/npc/npc_warp.c"
+  },
+  "statistics": {
+    "startMapsFound": 4,
+    "totalDirectWarpExits": 8,
+    "reachableWarpExits": 0,
+    "unreachableWarpExits": 8
+  },
+  "routes": [
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "spawn": {
+        "hometown": 0,
+        "elder": "samugiru",
+        "floor": 1006,
+        "x": 15,
+        "y": 22
+      },
+      "mapFound": true,
+      "directWarpCount": 2,
+      "exitAudits": [
+        {
+          "fromFloor": 1006,
+          "fromX": 10,
+          "fromY": 20,
+          "toFloor": 1000,
+          "toX": 98,
+          "toY": 44,
+          "blockIndex": 23,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "startLine": 214,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        },
+        {
+          "fromFloor": 1006,
+          "fromX": 10,
+          "fromY": 21,
+          "toFloor": 1000,
+          "toX": 98,
+          "toY": 45,
+          "blockIndex": 25,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "startLine": 232,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        }
+      ]
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "spawn": {
+        "hometown": 1,
+        "elder": "marinasu",
+        "floor": 2006,
+        "x": 20,
+        "y": 16
+      },
+      "mapFound": true,
+      "directWarpCount": 2,
+      "exitAudits": [
+        {
+          "fromFloor": 2006,
+          "fromX": 20,
+          "fromY": 21,
+          "toFloor": 2000,
+          "toX": 56,
+          "toY": 48,
+          "blockIndex": 153,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "startLine": 1384,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        },
+        {
+          "fromFloor": 2006,
+          "fromX": 21,
+          "fromY": 21,
+          "toFloor": 2000,
+          "toX": 57,
+          "toY": 48,
+          "blockIndex": 155,
+          "path": "gmsv/data/npc/genout/warp_y.create",
+          "startLine": 1402,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        }
+      ]
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "spawn": {
+        "hometown": 2,
+        "elder": "jaja",
+        "floor": 3006,
+        "x": 21,
+        "y": 16
+      },
+      "mapFound": true,
+      "directWarpCount": 2,
+      "exitAudits": [
+        {
+          "fromFloor": 3006,
+          "fromX": 20,
+          "fromY": 21,
+          "toFloor": 3000,
+          "toX": 90,
+          "toY": 60,
+          "blockIndex": 17,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "startLine": 160,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        },
+        {
+          "fromFloor": 3006,
+          "fromX": 21,
+          "fromY": 21,
+          "toFloor": 3000,
+          "toX": 90,
+          "toY": 60,
+          "blockIndex": 18,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "startLine": 169,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        }
+      ]
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "spawn": {
+        "hometown": 3,
+        "elder": "karutarna",
+        "floor": 4006,
+        "x": 14,
+        "y": 20
+      },
+      "mapFound": true,
+      "directWarpCount": 2,
+      "exitAudits": [
+        {
+          "fromFloor": 4006,
+          "fromX": 10,
+          "fromY": 20,
+          "toFloor": 4000,
+          "toX": 80,
+          "toY": 90,
+          "blockIndex": 63,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "startLine": 574,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        },
+        {
+          "fromFloor": 4006,
+          "fromX": 10,
+          "fromY": 21,
+          "toFloor": 4000,
+          "toX": 80,
+          "toY": 91,
+          "blockIndex": 65,
+          "path": "gmsv/data/npc/genout/warp_y2.create",
+          "startLine": 592,
+          "walkToWarpNpc": {
+            "reachable": false,
+            "path": null,
+            "reason": "start_or_target_not_walkable"
+          }
+        }
+      ]
+    }
+  ],
+  "policy": "This checks only tile walkability from the recorded spawn coordinate to the source warp NPC coordinate. It does not infer quest order or designate a best route."
+}
