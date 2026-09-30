@@ -215,7 +215,7 @@ function normalizePersistentState(raw, { now = () => new Date().toISOString() } 
 
   current.schemaVersion = CURRENT_STATE_SCHEMA_VERSION;
   current.revision = nonNegativeInt(raw.revision, 0);
-  current.runtimeMeta = { ...current.runtimeMeta, ...(isObject(raw.runtimeMeta) ? clone(raw.runtimeMeta) : {}), updatedAt: String(now()) };
+  current.runtimeMeta = { ...current.runtimeMeta, ...(isObject(raw.runtimeMeta) ? clone(raw.runtimeMeta) : {}), updatedAt: String(typeof now === 'function' ? now() : (now ?? new Date().toISOString())) };
 
   const knownTopLevel = new Set([
     'schemaVersion','revision','sourceProfile','creation','player','id','name','level','exp','transmigration','hp','maxHp','mp','maxMp','luck','charm','duelPoint',
