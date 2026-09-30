@@ -1321,3 +1321,24 @@ V3.97 在 V3.96 command normalization 上加入 fixed-C `checkErrorStatus()` gat
 
 V3.97 仍不執行 MP 扣除、ride-pet / standby-pet feature gate、item/magic/PetSkill/profession、實際 attack/capture、target expansion 或 damage。
 
+## 2026-10-01 V3.98 Browser Battle Target Runtime
+
+V3.98 將 fixed-C `BATTLE_TargetCheck()` 接到 browser，建立 read-only basic target resolver。
+
+有效條件：
+- bid 0..19
+- entry 存在
+- battle mode != 0
+- `CHAR_ISDIE != TRUE`
+- HP > 0
+- `CHAR_ISATTACKED == TRUE`
+- battle mode != RESCUE
+
+成功輸出：
+- `executionTargetBid`
+- `targetList=[targetBid,-1]`
+
+無效 target 只標記 `defaultAttackerRequired=true`，不執行 `BATTLE_DefaultAttacker()` 的 RNG。
+
+V3.98 目前仍不做 Bow 多目標、Boomerang table、special skill area、Capture policy 或 `BATTLE_Attack()` damage。
+
