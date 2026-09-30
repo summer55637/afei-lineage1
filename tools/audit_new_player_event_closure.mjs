@@ -15,11 +15,15 @@ const sha=(text)=>{
 const read=(p)=>fs.readFileSync(path.join(root,p),'utf8');
 const ownerPath='gmsv/data/npc/almark/xinshou/xinshou.create';
 const scriptPath='gmsv/data/npc/almark/xinshou/xinshoujd.arg';
+const templatePath='gmsv/src/npc/npctemplate.c';
 const owner=read(ownerPath);
 const script=read(scriptPath);
-const ownerSha=sha(owner),scriptSha=sha(script);
+const template=read(templatePath);
+const ownerSha=sha(owner),scriptSha=sha(script),templateSha=sha(template);
 if(ownerSha!=='335470114a567f9d1a2c0a2369fc283043db920b') throw new Error(`owner blob SHA mismatch: ${ownerSha}`);
 if(scriptSha!=='62dec9dc760731a90f6f0c2ab3c0a01cf5c6b0c9') throw new Error(`script blob SHA mismatch: ${scriptSha}`);
+if(templateSha!=='9f487fea0229d6aeaa7d1739fa5a19c4dfc31003') throw new Error(`npctemplate blob SHA mismatch: ${templateSha}`);
+if(/templatename\s*=\s*changeevent/i.test(template)) throw new Error('unexpected changeevent template found in pinned npctemplate.c');
 
 const floors=[1006,2006,3006,4006];
 const ownerChecks=floors.map(floorId=>{
@@ -45,14 +49,15 @@ const enemy1=fs.readFileSync(path.join(root,'gmsv/data/enemy1.txt'),'utf8');
 const itemFound=itemIds.filter(id=>itemset6.split(/\r?\n/).some(line=>Number(line.split(',')[16])===id));
 const petFound=petIds.filter(id=>enemy1.split(/\r?\n/).some(line=>Number(line.split(',')[2])===id));
 const result={
- format:'stoneage-new-player-event-closure-v1',
+ format:'stoneage-new-player-event-closure-v2',
  generatedAt:'2026-09-30',
  fixedSource:{repository:'gavinlinasd/StoneAge',ref},
- source:{ownerPath,ownerBlobSha:ownerSha,scriptPath,scriptBlobSha:scriptSha},
- statistics:{ownerFloorsVerified:ownerChecks.filter(x=>x.count===1).length,itemIds:itemIds.length,itemIdsFoundInItemset6:itemFound.length,petIds:petIds.length,petIdsFoundAsEnemyIds:petFound.length},
+ source:{ownerPath,ownerBlobSha:ownerSha,scriptPath,scriptBlobSha:scriptSha,templatePath,templateBlobSha:templateSha,changeeventPresent:false},
+ statistics:{ownerFloorsVerified:ownerChecks.filter(x=>x.count===1).length,changeeventTemplatePresent:false,itemIds:itemIds.length,itemIdsFoundInItemset6:itemFound.length,petIds:petIds.length,petIdsFoundAsEnemyIds:petFound.length},
  ownerChecks,
  rewardResolution:{itemIdsFoundInItemset6:itemFound,petIdsFoundAsEnemyIds:petFound},
- status:{owner:'closed',branchLogic:'closed',rewardDefinitions:itemFound.length===itemIds.length&&petFound.length===petIds.length?'closed':'partial'}
+ runtimeResolution:{templatePath,templateBlobSha:templateSha,changeeventPresent:false,createParser:'gmsv/src/npc/npccreate.c::NPC_templateGetTemplateIndex',status:'unresolved'},
+ status:{owner:'script_reference_closed_template_unresolved',runtimeModule:'unresolved',branchLogic:'closed',rewardDefinitions:itemFound.length===itemIds.length&&petFound.length===petIds.length?'closed':'partial'}
 };
 fs.mkdirSync(path.dirname(out),{recursive:true});
 fs.writeFileSync(out,JSON.stringify(result,null,2)+'\n');
