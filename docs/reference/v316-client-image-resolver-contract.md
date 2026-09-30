@@ -4,18 +4,16 @@ V3.16 從 fixed client source 把「tile image ID → graphicNo → ADRNBIN meta
 
 ## Source
 
-BismarckDD/Stoneage 的 client source 在 loadrealbin.h 定義 ADRNBIN，包含 bitmapno、adder、size、xoffset、yoffset、width、height 與 MAP_ATTR。
+`client/stoneage/systeminc/loadrealbin.h` 定義 `ADRNBIN` 與 `MAP_ATTR`；同一公開 client 工具鏈的 `tools/ride_sprite_generator/sprite_data.py` 以 **80 bytes** 為 `adrn_136.bin` 單筆 index record，`pack.py` 也以 `<IIIiiII52s>` 追加相同格式。
 
-loadrealbin.cpp::initRealbinFileOpen() 讀取 ADRNBIN records，建立 bitmap-number 到 graphic-number 的索引；realGetNo() 將 map image ID 轉成 graphic number。
+重要欄位為：bitmapno、adder、size、xoffset、yoffset、width、height，以及 MAP_ATTR；`bmpnumber` 位於 record 的第 77～80 bytes。
 
-同一個 loader 的 realGetImage(graphicNo) 依 ADRNBIN 的 adder 與 size 讀取 Real binary，再交給 client decoder() 取得像素與尺寸。
+`loadrealbin.cpp::initRealbinFileOpen()` 以 `attr.bmpnumber` 建立 image-number → graphic-number 的索引；`realGetNo()` 取 graphic number。`realGetImage(graphicNo)` 再依 ADRNBIN 的 adder／size 讀取 Real binary 並交給 `decoder()`。
 
 ## Web contract
 
-src/stoneage_client_image_runtime.mjs 將這個 client record 固定成 72-byte little-endian binary record。
+`src/stoneage_client_image_runtime.mjs` 現在固定為 **80-byte little-endian binary record**，並完整解析 hit、height、effect1/effect2、damy_a/b/c 與 bmpnumber。
 
-它可以建立 image ID → graphic number 的 index，並由 image ID 取得 offset、compressed size、width、height、x/y offset 與 MAP_ATTR 的 hit / height 欄位。
+若 record 長度不是 80 的整數倍，或 record 不足 80 bytes，resolver 直接 fail-closed。
 
-目前 repo 沒有授權可發布的 client image binary，因此這一版不把 client 圖片二進位放入 Pages，也不建立假 PNG。缺少資產時 resolver 返回 null，維持 fail-closed。
-
-Google 搜尋到的舊石器架站資料也交叉證實常見 client 資產檔名為 adrn_136.bin、real_136.bin；這些第三方教學只作檔名／格式佐證，不作本專案素材來源。
+目前 repo 沒有授權可發布的 client image binary，因此這一版仍不把 client 圖片二進位放入 Pages，也不建立假 PNG。
