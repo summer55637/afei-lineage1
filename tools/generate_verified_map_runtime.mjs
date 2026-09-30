@@ -42,7 +42,9 @@ const resolveCandidates=(imageId)=>{
 };
 
 const uniqueTiles=[...new Set(Array.from(map.tiles).map(Number))];
-const unknownMapsetIds=uniqueTiles.filter(id=>!Object.prototype.hasOwnProperty.call(mapset.walkableByImageId||{},String(id)));
+const uniqueObjects=[...new Set(Array.from(map.objects).map(Number))];
+const uniqueImageIds=[...new Set([...uniqueTiles,...uniqueObjects])];
+const unknownMapsetIds=uniqueImageIds.filter(id=>!Object.prototype.hasOwnProperty.call(mapset.walkableByImageId||{},String(id)));
 const missingBattleCandidates=uniqueTiles.filter(id=>!Array.isArray(resolveCandidates(id))||resolveCandidates(id).length!==3);
 if(unknownMapsetIds.length||missingBattleCandidates.length){
   throw new Error(JSON.stringify({unknownMapsetIds,missingBattleCandidates},null,2));
@@ -67,6 +69,9 @@ const result={
   nameRawHex:rawName.toString('hex'),
   tileCount:map.tiles.length,
   objectCount:map.objects.length,
+  uniqueTileCount:uniqueTiles.length,
+  uniqueObjectCount:uniqueObjects.length,
+  uniqueImageCount:uniqueImageIds.length,
   tiles:Array.from(map.tiles),
   objects:Array.from(map.objects),
   battlemapResolver:{
@@ -96,6 +101,8 @@ index.maps[String(map.id)]={
   height:map.height,
   tileCount:map.tiles.length,
   objectCount:map.objects.length,
+  uniqueTileCount:uniqueTiles.length,
+  uniqueObjectCount:uniqueObjects.length,
   sourceBlobSha:actualSha,
   sourcePath
 };
