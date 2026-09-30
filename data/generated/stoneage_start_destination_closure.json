@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-destination-closure-v4",
+  "format": "stoneage-start-destination-closure-v5",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -13,7 +13,8 @@
     "worldGraph": "data/generated/stoneage_world_graph_index.json::directedFloorEdges",
     "group": "gmsv/src/char/enemy.c::GROUP_initGroup",
     "enemySelection": "gmsv/src/char/enemy.c::ENEMY_getEnemy",
-    "itemset6": "gmsv/setup.cf::itemset6file + gmsv/src/item/item.c"
+    "itemset6": "gmsv/setup.cf::itemset6file + gmsv/src/item/item.c",
+    "destinationWarpCoordinates": "data/generated/stoneage_start_destination_warp_coordinates.json"
   },
   "sourceEvidence": {
     "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
@@ -84,7 +85,9 @@
         "placeholderRowCount": 0,
         "rowsWithAtLeastOneUnconditionalGroup": 113
       }
-    }
+    },
+    "exactDestinationWarpPortalSets": 8,
+    "directDestinationLandings": 7
   },
   "towns": [
     {
@@ -472,7 +475,8 @@
     "destinationWalkability": "partial",
     "directDestinationEncounter": "partial",
     "genericEncounterRoute": "closed_at_floor_level",
-    "fullFirstRoute": "partial"
+    "fullFirstRoute": "partial",
+    "destinationWarpCoordinates": "closed"
   },
-  "policy": "Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. In the pinned source, itemset6.txt is empty, so groups gated by 20216/20219 remain source-unresolved. Missing exact destination maps remain unresolved and are never replaced by guessed or cross-version data. Generic encounter candidates are only closed at floor level until their destination map, landing coordinates and walkable region are separately verified."
+  "policy": "Do not treat zero-probability/no-group rows as active encounters. Do not treat item-gated groups as unconditional hunting routes. In the pinned source, itemset6.txt is empty, so groups gated by 20216/20219 remain source-unresolved. Missing exact destination maps remain unresolved and are never replaced by guessed or cross-version data. Generic encounter candidates are only closed at floor level until their destination map, landing coordinates and walkable region are separately verified. Exact next-floor portal coordinate rows are separately recorded in data/generated/stoneage_start_destination_warp_coordinates.json; coordinate portal presence is not treated as walkability."
 }
