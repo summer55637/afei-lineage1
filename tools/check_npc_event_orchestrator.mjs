@@ -51,7 +51,7 @@ assert.deepEqual(petIds,[2057]);
 assert.deepEqual(eventEnd,[365]);
 assert.equal(executed.state.runtimeTest.charm,1);
 assert.equal(executed.state.revision,1);
-assert.equal(calls.length,6+0 ? 7 : 7);
+assert.equal(calls.length,7);
 assert.equal(executed.state.runtimeMeta.npcEventTransactions['orchestrator-1'].actionCount,7);
 
 const repeat=executeNpcSourceEvent(executed.state,script,{
