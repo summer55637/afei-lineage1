@@ -15,7 +15,8 @@
     "goldActionEdges": 0,
     "eventStateActionEdges": 218,
     "itemConditionEdges": 5421,
-    "uniqueEventNoNodes": 125,
+    "uniqueEventNoNodes": 124,
+    "sentinelEventNoMinusOneBlocks": 3340,
     "unresolvedItemActionEdges": 300,
     "unresolvedItemConditionEdges": 105
   },
@@ -45,59 +46,6 @@
     "my/ruieryasi/yao.arg"
   ],
   "eventNoSummary": [
-    {
-      "eventNo": -1,
-      "occurrences": 3340,
-      "types": [
-        "ACCEPT",
-        "CLEAN",
-        "MESSAGE",
-        "REQUEST"
-      ],
-      "uniqueArgFiles": 808,
-      "samples": [
-        {
-          "argPath": "gmsv/data/npc/almark/class/clean",
-          "blockIndex": 0,
-          "event": "CLASS>0"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 0,
-          "event": "NOWEV=63&ITEM=18542"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 1,
-          "event": "NOWEV=63&ITEM=1501&ITEM!=18538"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 2,
-          "event": "ITEM=1512&NOWEV=63&ITEM!=18539&ITEM=18538"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 3,
-          "event": "ITEM=18539*1&ITEM=12667&NOWEV=63&ITEM!=18540"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 4,
-          "event": "ITEM=18540*1&ITEM=12507&NOWEV=63&ITEM!=18541"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 5,
-          "event": "ITEM=18541*1&ITEM=12849&NOWEV=63&ITEM!=18542"
-        },
-        {
-          "argPath": "gmsv/data/npc/poru/samugiru",
-          "blockIndex": 6,
-          "event": "NOWEV=63&ITEM=18541"
-        }
-      ]
-    },
     {
       "eventNo": 28,
       "occurrences": 72,
