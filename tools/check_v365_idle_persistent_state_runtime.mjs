@@ -76,6 +76,7 @@ const deniedRoute=applyIdleEventToPersistentState(freshPersistentState(),IDLE_EV
 assert.equal(deniedRoute.ok,false);
 assert.equal(deniedRoute.reason,'route_required');
 assert.equal(deniedRoute.idle.state,IDLE_STATES.DISABLED);
+assert.equal(deniedRoute.idle.state,IDLE_STATES.DISABLED);
 
 const deniedTransition=applyIdleEventToPersistentState(freshPersistentState(),IDLE_EVENTS.BATTLE_FINISHED,{});
 assert.equal(deniedTransition.ok,false);
