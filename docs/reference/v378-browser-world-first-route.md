@@ -20,7 +20,7 @@ Encounter 邊界則取自：
 - `ENCOUNT_getEncountAreaArray()`
 - `gmsv/src/util.c::CoordinateInRect()`
 
-fixed-C 的 rectangle comparison 是 inclusive，因此 planner 只把最後位置放在該 unconditional row 的矩形內，就宣告「已抵達 encounter boundary」。
+generated encounter target 的 `rect` 採 `[x1,y1,x2,y2]`，planner 先正規化為 min/max，再沿用 fixed-C 的 inclusive rectangle comparison。因此只有最後位置確實落在該 unconditional row 的 source rectangle 內，才宣告「已抵達 encounter boundary」。
 
 這一階段不擲 encounter probability RNG。固定 C 真正的 encounter probability state 是在走路／角色檢查流程中另外處理，因此 planner 不把「進入矩形」偷換成「已經開戰」。
 
