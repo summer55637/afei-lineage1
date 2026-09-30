@@ -1,0 +1,33 @@
+name: Check V3.97 Browser Player Battle Command Preflight
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_player_command_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v396_browser_battle_player_command_runtime.mjs'
+      - 'tools/check_v397_browser_player_battle_command_preflight.mjs'
+      - 'data/generated/stoneage_browser_player_battle_command_preflight_schema.json'
+      - 'docs/reference/v396-browser-player-battle-command.md'
+      - 'docs/reference/v397-browser-player-battle-command-preflight.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v397-browser-player-battle-command-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.96 and V3.97 command regressions
+        run: |
+          node tools/check_v396_browser_battle_player_command_runtime.mjs
+          node tools/check_v397_browser_player_battle_command_preflight.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_player_command_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v396_browser_battle_player_command_runtime.mjs
+          node --check tools/check_v397_browser_player_battle_command_preflight.mjs
