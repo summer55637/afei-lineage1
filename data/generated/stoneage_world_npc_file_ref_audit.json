@@ -1,0 +1,178 @@
+{
+  "format": "stoneage-world-npc-file-ref-audit-v1",
+  "updated": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "statistics": {
+    "unresolvedFileRefs": 27,
+    "resolvedTemplateRefs": 7979,
+    "unresolvedTemplateRefs": 0
+  },
+  "rows": [
+    {
+      "createPath": "genout/1200npc_m.create",
+      "floorId": 1200,
+      "blockIndex": 1,
+      "fileRef": "genout/msg_1200_37_38"
+    },
+    {
+      "createPath": "genout/1200npc_m.create",
+      "floorId": 1200,
+      "blockIndex": 4,
+      "fileRef": "genout/msg_1200_43_39"
+    },
+    {
+      "createPath": "genout/1300npc_m.create",
+      "floorId": 1300,
+      "blockIndex": 7,
+      "fileRef": "genout/msg_1300_40_69"
+    },
+    {
+      "createPath": "genout/1300npc_m.create",
+      "floorId": 1300,
+      "blockIndex": 9,
+      "fileRef": "genout/msg_1300_40_71"
+    },
+    {
+      "createPath": "genout/1400npc_m.create",
+      "floorId": 1400,
+      "blockIndex": 2,
+      "fileRef": "genout/msg_1400_81_93"
+    },
+    {
+      "createPath": "genout/1400npc_m.create",
+      "floorId": 1400,
+      "blockIndex": 4,
+      "fileRef": "genout/msg_1400_78_85"
+    },
+    {
+      "createPath": "genout/3100.create",
+      "floorId": 3100,
+      "blockIndex": 4,
+      "fileRef": "genout/msg_3100_41_82"
+    },
+    {
+      "createPath": "genout/3100.create",
+      "floorId": 3100,
+      "blockIndex": 7,
+      "fileRef": "genout/msg_3100_62_75"
+    },
+    {
+      "createPath": "genout/3200npc_m.create",
+      "floorId": 3200,
+      "blockIndex": 1,
+      "fileRef": "genout/msg_3200_61_51"
+    },
+    {
+      "createPath": "genout/3200npc_m.create",
+      "floorId": 3200,
+      "blockIndex": 2,
+      "fileRef": "genout/msg_3200_54_71"
+    },
+    {
+      "createPath": "genout/3200npc_m.create",
+      "floorId": 3200,
+      "blockIndex": 3,
+      "fileRef": "genout/msg_3200_53_45"
+    },
+    {
+      "createPath": "genout/3300npc_m.create",
+      "floorId": 3300,
+      "blockIndex": 3,
+      "fileRef": "genout/msg_3300_51_69"
+    },
+    {
+      "createPath": "genout/3300npc_m.create",
+      "floorId": 3300,
+      "blockIndex": 4,
+      "fileRef": "genout/msg_3300_64_67"
+    },
+    {
+      "createPath": "genout/3300npc_m.create",
+      "floorId": 3300,
+      "blockIndex": 5,
+      "fileRef": "genout/msg_3300_54_69"
+    },
+    {
+      "createPath": "genout/3400npc_m.create",
+      "floorId": 3400,
+      "blockIndex": 1,
+      "fileRef": "genout/msg_3400_50_81"
+    },
+    {
+      "createPath": "genout/eden_casino.create",
+      "floorId": 7002,
+      "blockIndex": 2,
+      "fileRef": "genout/msg_7002_9_51"
+    },
+    {
+      "createPath": "genout/eden_casino.create",
+      "floorId": 7002,
+      "blockIndex": 4,
+      "fileRef": "genout/msg_7002_54_28"
+    },
+    {
+      "createPath": "genout/eden_casino.create",
+      "floorId": 7002,
+      "blockIndex": 6,
+      "fileRef": "genout/msg_7002_28_63"
+    },
+    {
+      "createPath": "genout/eden_casino.create",
+      "floorId": 7002,
+      "blockIndex": 12,
+      "fileRef": "genout/msg_7002_21_55"
+    },
+    {
+      "createPath": "genout/eden_casino.create",
+      "floorId": 7008,
+      "blockIndex": 23,
+      "fileRef": "genout/"
+    },
+    {
+      "createPath": "my/cunzhang/xinchong.create",
+      "floorId": 2006,
+      "blockIndex": 0,
+      "fileRef": "my/cunzhang/shuohua2.arg"
+    },
+    {
+      "createPath": "my/cunzhang/xinchong.create",
+      "floorId": 2000,
+      "blockIndex": 1,
+      "fileRef": "my/cunzhang/shuohua2.arg"
+    },
+    {
+      "createPath": "my/cunzhang/xinchong.create",
+      "floorId": 2000,
+      "blockIndex": 2,
+      "fileRef": "my/cunzhang/shuohua2.arg"
+    },
+    {
+      "createPath": "my/cunzhang/xinchong.create",
+      "floorId": 1998,
+      "blockIndex": 24,
+      "fileRef": "my/cunzhang/shuohua3.arg"
+    },
+    {
+      "createPath": "my/cunzhang/xinchong.create",
+      "floorId": 2006,
+      "blockIndex": 25,
+      "fileRef": "my/cunzhang/shuohua3.arg"
+    },
+    {
+      "createPath": "my/cunzhang/xinchong.create",
+      "floorId": 1998,
+      "blockIndex": 38,
+      "fileRef": "my/cunzhang/shuohua3.arg"
+    },
+    {
+      "createPath": "my/magicdou/daochang.create",
+      "floorId": 7102,
+      "blockIndex": 8,
+      "fileRef": "my/ruieryasi/yao.arg"
+    }
+  ],
+  "interpretation": "Missing arg targets are preserved as source gaps; no placeholder text or alternate source is injected."
+}
