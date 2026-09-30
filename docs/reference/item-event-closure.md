@@ -66,3 +66,7 @@ NPC data 中掃到 7,728 次 event-reference occurrence，共 158 個 unique eve
 4. 再進入 persistent state schema 與 idle loop contract。
 
 仍不建立 playable HTML。
+
+## Event owner closure (2026-09-30)
+
+另建立 `stoneage_event_owner_index.json` 專門反查事件 owner。NPC Event / owner scan 得到 160 個 unique event IDs 與 10,552 次引用；mission 對上 4 個、jobdaily 對上 117 個。其餘 43 個目前未由這兩張表直接關閉，其中 48、49、50、51 可對到 fixed C startup defaults，1 個可對到 `encount.txt` 的 event 欄位，剩餘 38 個維持 ownerless / non-promoted。
