@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// V3.52 pinned-source execution audit: keep this regression source-backed.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
