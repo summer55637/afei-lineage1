@@ -1,0 +1,56 @@
+name: Final repository reset
+
+on:
+  push:
+    paths:
+      - ".github/workflows/final-reset.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete every non-main branch and obsolete pull refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branches="$(gh api --paginate "repos/${GH_REPO}/branches?per_page=100" --jq '.[].name')"
+          while IFS= read -r branch; do
+            [ -z "$branch" ] && continue
+            [ "$branch" = "main" ] && continue
+            echo "Deleting branch: $branch"
+            gh api -X DELETE "repos/${GH_REPO}/git/refs/heads/${branch}" || true
+          done <<< "$branches"
+
+          for n in $(seq 1 13); do
+            echo "Removing closed PR ref: $n"
+            gh api -X DELETE "repos/${GH_REPO}/git/refs/pull/${n}/head" || true
+          done
+
+      - name: Remove all repository Actions workflows, Pages fallback, changelog and nojekyll
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Commit final reset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          rm -rf .github/workflows
+          rmdir .github 2>/dev/null || true
+          rm -f .nojekyll CHANGELOG.md
+
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Reset repository for new game rebuild"
+            git push origin main
+          fi
