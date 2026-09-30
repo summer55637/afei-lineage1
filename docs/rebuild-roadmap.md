@@ -1091,3 +1091,28 @@ V3.86 `ENCOUNTER_BATTLE_CONTEXT_BUILD` 若未提供手寫 `battleFieldNo`，現�
 
 下一階段可把 selected Group / generated Enemy roster / battle field / player + default Pet 的完整 context 交給既有 Battle Model，開始建立 `in_battle` 的回合初始化邊界。
 
+## 2026-10-01 V3.89 Browser Battle Entry Reset
+
+V3.89 在 V3.86/V3.87 Battle Context 上，接入 fixed-C `BATTLE_NewEntry()` 的無條件 actor reset：
+
+- BATTLE_CHARMODE_INIT = 1
+- battle flag = 0
+- command 1/2/3 = -1
+- attack / defence / quick modifiers = 0
+- damage absorb / reflect / vanish = 0
+- capture modifier = 0
+- CHAR_ISATTACKED = 1
+- battle watch = 0
+
+這些欄位現在會出現在 transient Battle Context 的 Player / Pet / Enemy entry。
+
+V3.89 不升格 compile-time feature branch（PROFESSION_SKILL / PETSKILL_ACUPUNCTURE / PETSKILL_RETRACE / PETSKILL_BECOMEFOX / PROFESSION_ADDSKILL），避免在 feature closure 未完成時偷開功能。
+
+新增：
+- `data/generated/stoneage_browser_battle_entry_reset_schema.json`
+- `tools/check_v389_browser_battle_entry_reset.mjs`
+- `docs/reference/v389-browser-battle-entry-reset.md`
+- `.github/workflows/check-v389-browser-battle-entry-reset.yml`
+
+下一層是 Enemy stat materialization：目前 V3.84 roster 已知道 Enemy ID / TempNo / EnemyBase size，但 Battle Context 的 Enemy HP/MP 尚未由 `ENEMY_createEnemy()` + EnemyBase 計算填入。
+
