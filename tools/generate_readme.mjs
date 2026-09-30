@@ -80,7 +80,7 @@ const auto = [
   '- 最新 commit：' + commit.sha + ' — ' + commit.subject,
   '- 最後更新時間：' + commit.iso,
   '- 版本線最高 regression workflow：' + (() => { const v = latestWorkflowVersion(); return v == null ? '—' : (String(v).length === 3 ? 'V' + String(v)[0] + '.' + String(v).slice(1) : 'V' + v); })(),
-  '- Canonical browser entry：index.html；root HTML 入口目前為 ' + rootHtml.length + ' 個',
+  '- Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口',
   '- 舊入口殘留：' + (oldPresent.length === 0 ? '已清除' : oldPresent.join(', ')),
   '- 固定 source：' + (route.fixedSource?.repository ?? 'unknown') + '@' + (route.fixedSource?.ref ?? 'unknown'),
   '',
@@ -99,7 +99,7 @@ const auto = [
   '',
   '### NPC → ItemShop → Item → Gold → Persistent State',
   '',
-  'Canonical Browser Shell → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State',
+  'Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State',
   '',
   (itemShopBindings
     ? '目前 source 文件記錄完整 ' + comma(itemShopBindings) + ' 個 ItemShop binding。'
