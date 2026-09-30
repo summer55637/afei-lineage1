@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import { ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT, createBrowserSavePointRuntime, applySavePoint, resolveSavePointBinding } from '../src/stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserStateController, BROWSER_STATE_CONTROLLER_FORMAT } from '../src/stoneage_browser_state_controller.mjs';
@@ -12,6 +13,9 @@ const npc={floor:3000,npc:[20,20],path:'fixture/savepoint.create',blockIndex:0,t
 const player={floor:3000,x:20,y:21,facingCell:[3000,20,20]};
 const state=freshPersistentState({now:()=> '2026-09-30T18:20:00+08:00'});
 const runtime=createBrowserSavePointRuntime({moduleAudit,savePointCatalog:fixtureCatalog});
+const generatedPath=new URL('../data/generated/stoneage_npc_savepoint_source_index.json',import.meta.url);
+if(fs.existsSync(generatedPath)){ const generated=JSON.parse(fs.readFileSync(generatedPath,'utf8')); assert.deepEqual(generated.statistics,{savePointInstanceCount:28,unresolvedCount:0,noItemCount:0,itemRequiredCount:27,confirmOnlyCount:1}); }
+
 assert.equal(runtime.ok,true); assert.equal(runtime.format,BROWSER_SAVEPOINT_RUNTIME_FORMAT);
 const bound=resolveSavePointBinding(npc,fixtureCatalog);
 assert.equal(bound.ok,true); assert.equal(bound.binding.elderId,2); assert.deepEqual(bound.binding.born,{floorId:3006,x:21,y:16});
@@ -25,6 +29,10 @@ const far=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_SET,npc,player:{floo
 assert.equal(far.ok,false); assert.equal(far.reason,'out-of-range'); assert.equal(state.world.savePoint,null);
 const itemRequired=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_SET,npc,player,sourceBinding:{elderId:2,born:{floorId:3006,x:21,y:16},mode:'item-required'}});
 assert.equal(itemRequired.ok,false); assert.equal(itemRequired.reason,'savepoint-item-requirement-not-yet-closed'); assert.equal(state.world.savePoint,null);
+const confirmOnly=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_SET,npc,player,sourceBinding:{elderId:33,born:{floorId:30691,x:85,y:60},mode:'confirm-only'}});
+assert.equal(confirmOnly.ok,false); assert.equal(confirmOnly.reason,'savepoint-confirmation-required');
+const confirmed=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_CONFIRM,npc,player,sourceBinding:{elderId:33,born:{floorId:30691,x:85,y:60},mode:'confirm-only'}});
+assert.equal(confirmed.ok,true); assert.deepEqual(confirmed.state.world.savePoint.unlockedElderIds,[33]); assert.equal(confirmed.state.world.savePoint.elderId,33);
 const controller=createBrowserStateController({state,moduleAudit,worldNpcIndex,savePointCatalog:fixtureCatalog});
 assert.equal(controller.format,BROWSER_STATE_CONTROLLER_FORMAT);
 const viaController=await controller.dispatch({type:ACTION_NPC_SAVEPOINT_SET,targetCell:{floor:3000,x:20,y:20},serviceFunctionSet:'SavePoint',player:{floor:3000,x:20,y:21,facingCell:[3000,20,20]}});
