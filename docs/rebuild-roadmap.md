@@ -1274,3 +1274,25 @@ V3.94 不直接重算 surprise；固定 luck 仍由 V3.93 caller-injected transi
 
 下一階段是把 Battle Context 接到既有 Battle Model 的 command collection，先處理 `BATTLE_CommandWait()` / 第一回合可操作 actor，再進 Enemy AI。
 
+## 2026-10-01 V3.95 Browser Battle Command Wait
+
+V3.95 將 fixed-C `BATTLE_CommandWait()` 做成 read-only command gate：
+
+- Enemy side 直接 ready。
+- Player side 存活 actor 為 `C_WAIT` 時阻塞。
+- `C_OK` actor 計入 ready。
+- 死亡 actor 略過。
+- INIT / RESCUE / WATCHINIT 不阻塞。
+- `BATTLECOMMAND_TIME` timeout 以 caller 的 `timeoutExpired` compatibility signal 表示。
+
+新增：
+- `src/stoneage_browser_battle_command_wait_runtime.mjs`
+- `data/generated/stoneage_browser_battle_command_wait_schema.json`
+- `tools/check_v395_browser_battle_command_wait_runtime.mjs`
+- `docs/reference/v395-browser-battle-command-wait.md`
+- `.github/workflows/check-v395-browser-battle-command-wait.yml`
+
+V3.95 不修改 Battle Context、不消耗 RNG、不執行 AI / Damage。
+
+下一階段才處理 `BATTLE_Command` 的 player command submission，把 `attack/guard/item/pet/change/escape` 等合法 command mapping 接到既有 Battle Model；Enemy AI command 仍維持獨立 source boundary。
+
