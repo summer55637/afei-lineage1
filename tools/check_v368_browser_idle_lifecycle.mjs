@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import { ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, createBrowserStateController } from '../src/stoneage_browser_state_controller.mjs';
 import { OFFLINE_RESUME_FORMAT } from '../src/stoneage_offline_resume.mjs';
 
+const catalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 const state=freshPersistentState({playerId:'v368-offline'});
 state.idle.offline.eligible=true;
-const controller=createBrowserStateController({state,now:()=> '2026-09-30T22:00:00.000Z'});
+const controller=createBrowserStateController({state,idleRouteCatalog:catalog,now:()=> '2026-09-30T22:00:00.000Z'});
 
 const status=await controller.dispatch({type:ACTION_IDLE_STATUS});
 assert.equal(status.ok,true);
