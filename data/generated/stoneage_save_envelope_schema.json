@@ -1,0 +1,32 @@
+{
+  "format": "stoneage-save-envelope-v1",
+  "generatedAt": "2026-09-30",
+  "hash": "sha256",
+  "deterministicSerialization": "recursive object keys sorted; arrays preserve order",
+  "fields": [
+    "format",
+    "schemaVersion",
+    "revision",
+    "savedAt",
+    "source",
+    "payloadHash",
+    "payload"
+  ],
+  "migration": "payload canonicalized through persistent-state schema v1; legacy schema 30 known-field migration supported",
+  "failureModes": [
+    "invalid-envelope-format",
+    "unsupported-envelope-schema",
+    "missing-payload",
+    "payload-hash-mismatch",
+    "invalid-payload-json",
+    "migrated-state-invalid",
+    "revision-conflict"
+  ],
+  "noGuessing": [
+    "battle result",
+    "reward RNG",
+    "offline rewards",
+    "death policy",
+    "supply policy"
+  ]
+}
