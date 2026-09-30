@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：7fb024b — V3.46: close player creation input state contract
-- 最後更新時間：2026-09-30T16:31:42+08:00
+- 最新 commit：cc52616 — V3.46: expose player creation in automatic README
+- 最後更新時間：2026-09-30T16:25:00+08:00
 - 版本線最高 regression workflow：V3.46
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -28,6 +28,7 @@
 | Persistent State | ✅ schema 1 | legacy 30；skills 26；player items 24 |
 | Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
+| Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
@@ -41,7 +42,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Advance Persistent State Schema for player, pet, inventory, equipment, skills, quests, map position, idle settings and save/migration.
+4. Wire starter-grant transaction: Item 24114 still needs a source item allocator/template closure; starter Pet source data is closed.
 
 ### 永久停用
 
