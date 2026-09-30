@@ -255,15 +255,59 @@ function validatePersistentState(state) {
       if (!state.inventory.itemRuntime.slots[String(intOr(ref, -1))]) errors.push('inventory player slot '+index+' references missing existing item');
     }
   }
+  if (!isObject(state.sourceProfile)) errors.push('sourceProfile must be an object');
+  if (isObject(state.sourceProfile) && state.sourceProfile.fixedCRef !== '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56') errors.push('sourceProfile.fixedCRef mismatch');
+  if (!Number.isInteger(state.revision) || state.revision < 0) errors.push('revision must be a non-negative integer');
+
+  if (!isObject(player?.stats)) errors.push('player.stats must be an object');
+  if (isObject(player?.stats)) {
+    for (const key of ['str','dex','tgh','vital']) if (!Number.isInteger(player.stats[key]) || player.stats[key] < 0) errors.push('player.stats.'+key+' invalid');
+  }
+
+  if (!isObject(state.inventory) || !isObject(state.inventory.piles)) errors.push('inventory.piles must be an object');
+  if (!isObject(state.inventory) || !isObject(state.inventory.itemRuntime) || !isObject(state.inventory.itemRuntime.slots)) errors.push('inventory.itemRuntime.slots must be an object');
+
+  if (!isObject(state.equipment) || !isObject(state.equipment.sourceSlotRefs)) errors.push('equipment.sourceSlotRefs must be an object');
+  if (!isObject(state.quests)) errors.push('quests must be an object');
+  if (isObject(state.quests)) {
+    if (!isObject(state.quests.missions)) errors.push('quests.missions must be an object');
+    if (!isObject(state.quests.daily)) errors.push('quests.daily must be an object');
+  }
+  if (!isObject(state.events)) errors.push('events must be an object');
+  if (!isObject(state.titles)) errors.push('titles must be an object');
+
   if (!isObject(state.pets) || !Array.isArray(state.pets.petBox) || !Array.isArray(state.pets.team)) errors.push('pets container invalid');
   if (isObject(state.pets)) {
     const ids = new Set((state.pets.petBox ?? []).map(p => p?.id).filter(Boolean));
     for (const teamId of state.pets.team ?? []) if (!ids.has(String(teamId))) errors.push('team references missing pet: ' + teamId);
     if (state.pets.activePetId != null && !ids.has(String(state.pets.activePetId))) errors.push('activePetId references missing pet');
   }
+
+  if (!isObject(state.world)) errors.push('world must be an object');
   const pos = state.world?.position;
-  if (pos && pos.floorId != null && (!Number.isInteger(pos.floorId) || pos.floorId < 0)) errors.push('world.position.floorId invalid');
+  if (!isObject(pos)) errors.push('world.position must be an object');
+  if (isObject(pos)) {
+    if (pos.floorId != null && (!Number.isInteger(pos.floorId) || pos.floorId < 0)) errors.push('world.position.floorId invalid');
+    if (pos.x != null && !Number.isInteger(pos.x)) errors.push('world.position.x invalid');
+    if (pos.y != null && !Number.isInteger(pos.y)) errors.push('world.position.y invalid');
+  }
+
   if (!isObject(state.idle)) errors.push('idle must be an object');
+  if (isObject(state.idle)) {
+    if (!isObject(state.idle.offline)) errors.push('idle.offline must be an object');
+    if (state.idle.offline?.elapsedSeconds != null && (!Number.isInteger(state.idle.offline.elapsedSeconds) || state.idle.offline.elapsedSeconds < 0)) errors.push('idle.offline.elapsedSeconds invalid');
+    if (state.idle.offline?.accruedSeconds != null && (!Number.isInteger(state.idle.offline.accruedSeconds) || state.idle.offline.accruedSeconds < 0)) errors.push('idle.offline.accruedSeconds invalid');
+    if (state.idle.offline?.accrualCapSeconds != null && (!Number.isInteger(state.idle.offline.accrualCapSeconds) || state.idle.offline.accrualCapSeconds < 0)) errors.push('idle.offline.accrualCapSeconds invalid');
+    if (state.idle.offline?.accrualCapSeconds != null && state.idle.offline?.accruedSeconds != null && state.idle.offline.accruedSeconds > state.idle.offline.accrualCapSeconds) errors.push('idle.offline.accruedSeconds exceeds accrualCapSeconds');
+  }
+
+  if (!isObject(state.battleSettings)) errors.push('battleSettings must be an object');
+  if (isObject(state.battleSettings)) {
+    if (!isObject(state.battleSettings.strategy)) errors.push('battleSettings.strategy must be an object');
+    if (!isObject(state.battleSettings.sourceParity)) errors.push('battleSettings.sourceParity must be an object');
+  }
+  if (!isObject(state.runtimeMeta)) errors.push('runtimeMeta must be an object');
+
   return errors;
 }
 
