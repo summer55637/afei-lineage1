@@ -1,0 +1,33 @@
+name: Check V3.40 browser ItemShop runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_itemshop_runtime.mjs'
+      - 'src/stoneage_npc_itemshop_runtime.mjs'
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'src/stoneage_item_economy_runtime.mjs'
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/check_v340_browser_itemshop_runtime.mjs'
+      - 'tools/fixtures/npc-itemshop/**'
+      - 'docs/reference/v340-browser-itemshop-runtime.md'
+      - '.github/workflows/check-v340-browser-itemshop-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.40 browser ItemShop regression
+        run: node tools/check_v340_browser_itemshop_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_itemshop_runtime.mjs
+          node --check tools/check_v340_browser_itemshop_runtime.mjs
