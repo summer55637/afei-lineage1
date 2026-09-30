@@ -28,7 +28,7 @@ import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONT
 import { createBrowserBattleTurnRuntime, ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } from './stoneage_browser_battle_turn_runtime.mjs';
 import { createBrowserBattleInitializeRuntime, ACTION_BATTLE_INITIALIZE, BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT } from './stoneage_browser_battle_initialize_runtime.mjs';
 import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATUS, BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT } from './stoneage_browser_battle_command_wait_runtime.mjs';
-import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT } from './stoneage_browser_battle_player_command_runtime.mjs';
+import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT, preflightPlayerBattleCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -196,6 +196,19 @@ function createBrowserStateController({
           warpBlocked:action.warpBlocked===true
         });
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-player-command-preflight',reason:'battle-context-required',state:clone(currentState)};
+        const result=preflightPlayerBattleCommand(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            battleSlot:action.battleSlot??0,
+            command:action.command??null,
+            targetBid:action.targetBid==null?null:action.targetBid,
+            petIndex:action.petIndex==null?null:action.petIndex
+          }
+        );
+        return {...result,format:BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_PLAYER_COMMAND_SET){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-player-command',reason:'battle-context-required',state:clone(currentState)};
@@ -565,6 +578,7 @@ export {
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
   ACTION_BATTLE_PLAYER_COMMAND_SET,
+  ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
