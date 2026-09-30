@@ -29,8 +29,6 @@ assert.deepEqual(confirmed.state.world.savePoint.position,{floorId:30691,x:85,y:
 assert.equal(confirmed.state.world.position.floorId,null); assert.equal(state.world.savePoint,null);
 const repeat=runtime.dispatch(confirmed.state,{type:ACTION_NPC_SAVEPOINT_SET,npc,player,savePointCatalog:fixtureCatalog});
 assert.equal(repeat.ok,true); assert.equal(repeat.state.world.savePoint.elderId,33); assert.equal(repeat.state.revision,2);
-const confirm=runtime.dispatch(direct.state,{type:ACTION_NPC_SAVEPOINT_CONFIRM,npc,player});
-assert.equal(confirm.ok,false); assert.equal(confirm.stage,'confirmation'); assert.equal(confirm.reason,'savepoint-confirmation-only-applies-to-item-required-source-path');
 const far=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_SET,npc,player:{floor:30691,x:92,y:60,facingCell:[30691,91,60]},savePointCatalog:fixtureCatalog});
 assert.equal(far.ok,false); assert.equal(far.reason,'out-of-range'); assert.equal(state.world.savePoint,null);
 const itemRequired=runtime.dispatch(state,{type:ACTION_NPC_SAVEPOINT_SET,npc,player,sourceBinding:{elderId:2,born:{floorId:3006,x:21,y:16},mode:'item-required'}});
@@ -40,11 +38,11 @@ assert.equal(confirmOnly.ok,false); assert.equal(confirmOnly.reason,'savepoint-c
 const controller=createBrowserStateController({state,moduleAudit,worldNpcIndex,savePointCatalog:fixtureCatalog});
 assert.equal(controller.format,BROWSER_STATE_CONTROLLER_FORMAT);
 const viaController=await controller.dispatch({type:ACTION_NPC_SAVEPOINT_SET,targetCell:{floor:30691,x:87,y:60},serviceFunctionSet:'SavePoint',player:{floor:30691,x:87,y:61,facingCell:[30691,87,60]}});
-assert.equal(viaController.ok,true); assert.equal(viaController.handled,true); assert.equal(viaController.stage,'savepoint');
+assert.equal(viaController.ok,false); assert.equal(viaController.handled,false); assert.equal(viaController.stage,'confirmation');
 assert.equal(viaController.worldNpc.functionSet,'SavePoint');
 assert.equal(viaController.reason,'savepoint-confirmation-required');
 const viaConfirm=await controller.dispatch({type:ACTION_NPC_SAVEPOINT_CONFIRM,targetCell:{floor:30691,x:87,y:60},serviceFunctionSet:'SavePoint',player:{floor:30691,x:87,y:61,facingCell:[30691,87,60]}});
 assert.equal(viaConfirm.ok,true); assert.equal(viaConfirm.worldNpc.functionSet,'SavePoint'); assert.equal(controller.getState().world.savePoint.elderId,33);
 const wrongSource=createBrowserSavePointRuntime({moduleAudit:{...moduleAudit,fixedSource:{...fixedSource,ref:'wrong'}},savePointCatalog:fixtureCatalog});
 assert.equal(wrongSource.ok,false);
-console.log(JSON.stringify({pass:true,format:BROWSER_SAVEPOINT_RUNTIME_FORMAT,source:fixedSource,checks:['ID-to-mask','Born savepoint position','distance<=2 facing gate','no-item set','item-required fail-closed','fixed-source validation']}));
+console.log(JSON.stringify({pass:true,format:BROWSER_SAVEPOINT_RUNTIME_FORMAT,source:fixedSource,checks:['ID-to-normalized-elder-state','Born savepoint position','distance<=2 facing gate','confirmation-only source path','item-required fail-closed','world-npc controller integration','fixed-source validation']}));
