@@ -31,8 +31,8 @@ function validateHealerNpc(npc){
   return {ok:true};
 }
 
-function interactionGate(npc,player,{maxDistance=null}={}){
-  const gate=canInteractWithNpc(npc,player,{interactionRule:'NPC_Util_CharDistance distance=2',maxDistance});
+function interactionGate(npc,player){
+  const gate=canInteractWithNpc(npc,player,{interactionRule:'NPC_Util_CharDistance distance=2',maxDistance:2});
   if(!gate.ok)return {ok:false,reason:gate.reason,stage:'interaction-gate'};
   if(!gate.interactable)return {ok:false,reason:gate.reason,stage:'interaction-gate',gate};
   return {ok:true,gate};
@@ -77,7 +77,7 @@ function createBrowserHealerRuntime({moduleAudit=null}={}){
       if(String(action.type??'').trim()!==ACTION_NPC_HEALER_USE)return {ok:false,handled:false,stage:'action',reason:'unsupported-browser-healer-action',type:action.type,state};
       const npcCheck=validateHealerNpc(action.npc);
       if(!npcCheck.ok)return {ok:false,handled:false,stage:'module-resolution',reason:npcCheck.reason,state};
-      const gate=interactionGate(action.npc,action.player,{maxDistance:action.maxDistance??options.maxDistance??null});
+      const gate=interactionGate(action.npc,action.player);
       if(!gate.ok)return {ok:false,handled:false,...gate,state};
       const result=applyBrowserHealer(state,{now:action.now??options.now??(()=>new Date().toISOString())});
       return {ok:result.applied===true,handled:result.applied===true,stage:'healer',reason:result.applied?null:result.reason,result,state:result.state??state,gate:gate.gate};
