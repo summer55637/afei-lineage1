@@ -1,0 +1,42 @@
+name: Check V3.80 Browser World Encounter boundary
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_world_encounter_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_start_encounter_target_index.json'
+      - 'data/generated/stoneage_browser_world_encounter_schema.json'
+      - 'tools/check_v380_browser_world_encounter_runtime.mjs'
+      - 'docs/reference/v380-browser-world-encounter-boundary.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v380-browser-world-encounter-runtime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Verify fixed-C encounter source identities
+        run: |
+          test "$(git -C fixed-c-source hash-object gmsv/data/encount.txt)" = "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f"
+          test "$(git -C fixed-c-source hash-object gmsv/data/group1.txt)" = "1be75eb3e56ab16d4b433146ec59538ad651c874"
+      - name: Run V3.80 Browser World Encounter regression
+        run: node tools/check_v380_browser_world_encounter_runtime.mjs fixed-c-source
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_browser_world_encounter_runtime.mjs
+          node --check tools/check_v380_browser_world_encounter_runtime.mjs
