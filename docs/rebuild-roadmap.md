@@ -2,6 +2,10 @@
 
 更新日期：2026-09-30
 
+## 2026-09-30 新增：V3.47 starter Pet grant runtime
+
+V3.47 將 V3.45 source-closed starter Pet 接到 canonical Persistent State：沿 fixed-C `ENEMY_createPetFromEnemyIndex` 保留 16 次 RNG、四圍/元素/metadata、PetMailEffect、VariableAI=0 與 compliance HP=MaxHP，並鎖定 duplicate-grant、petBox cap、Save round-trip。Starter Item 24114 仍因 item template 尚未閉合而保持 pending；不新增 playable HTML。
+
 ## 2026-09-30 新增：V3.46 player creation runtime
 
 V3.46 把 fixed-C 創角輸入正式接進 canonical Persistent State：四圍 0..20 / 總和≤20、元素總和10 / 最多兩屬性 / Earth+Fire 與 Water+Wind 禁配，並保存 hometown、creationPlayerStats、elements 與 starter grant 狀態。加入 `src/stoneage_player_creation_runtime.mjs` 與 regression；仍不新增 playable HTML。

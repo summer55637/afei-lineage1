@@ -101,7 +101,7 @@ for(const raw of baseBytes.toString('utf8').replace(/\r/g,'').split('\n')){
   const p=line.split(',');if(p.length<55)continue;
   const tempNo=atoi(p[6]);if(!wantedTemps.includes(tempNo))continue;
   if(byTempNo[String(tempNo)])fail('duplicate starter EnemyBase TempNo '+tempNo);
-  byTempNo[String(tempNo)]={name:clean(p[0]),tempNo,initNum:atoi(p[7]),lvUpPoint:atoi(p[8]),baseStats:{vital:atoi(p[9]),str:atoi(p[10]),tgh:atoi(p[11]),dex:atoi(p[12])},petSkills:Array.from({length:7},(_,i)=>atoi(p[25+i])),imageNumber:atoi(p[36]),petFlg:atoi(p[37]),limitLevel:atoi(p[54])};
+  byTempNo[String(tempNo)]={name:clean(p[0]),tempNo,initNum:atoi(p[7]),lvUpPoint:atoi(p[8]),baseStats:{vital:atoi(p[9]),str:atoi(p[10]),tgh:atoi(p[11]),dex:atoi(p[12])},modAi:atoi(p[13]),get:atoi(p[14]),elements:{earth:atoi(p[15]),water:atoi(p[16]),fire:atoi(p[17]),wind:atoi(p[18])},status:{poison:atoi(p[19]),paralysis:atoi(p[20]),sleep:atoi(p[21]),stone:atoi(p[22]),drunk:atoi(p[23]),confusion:atoi(p[24])},petSkills:Array.from({length:7},(_,i)=>atoi(p[25+i])),rare:atoi(p[32]),critical:atoi(p[33]),counter:atoi(p[34]),slot:atoi(p[35]),imageNumber:atoi(p[36]),petFlg:atoi(p[37]),limitLevel:atoi(p[54])};
 }
 for(const id of [1,2,3,4])if(!byTempNo[String(byEnemyId[String(id)].tempNo)])fail('starter EnemyBase missing for EnemyID '+id);
 

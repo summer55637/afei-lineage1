@@ -1,0 +1,29 @@
+name: Check V3.47 starter Pet grant runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_new_player_starter_pet_runtime.mjs'
+      - 'src/stoneage_player_creation_runtime.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'data/generated/stoneage_new_player_seed_runtime.json'
+      - 'tools/check_v347_starter_pet_grant_runtime.mjs'
+      - '.github/workflows/check-v347-starter-pet-grant-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  starter-pet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - run: |
+          node --check src/stoneage_new_player_starter_pet_runtime.mjs
+          node --check src/stoneage_player_creation_runtime.mjs
+          node --check src/stoneage_persistent_state.mjs
+          node --check tools/check_v347_starter_pet_grant_runtime.mjs
+      - run: node tools/check_v347_starter_pet_grant_runtime.mjs

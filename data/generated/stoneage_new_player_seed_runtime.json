@@ -109,6 +109,22 @@
             "tgh": 11,
             "dex": 23
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 0,
+            "water": 40,
+            "fire": 60,
+            "wind": 0
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -118,6 +134,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 1,
+          "counter": 1,
+          "slot": 6,
           "imageNumber": 100251,
           "petFlg": 1,
           "limitLevel": 0
@@ -152,6 +172,22 @@
             "tgh": 19,
             "dex": 27
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 20,
+            "water": 0,
+            "fire": 0,
+            "wind": 80
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -161,6 +197,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 2,
+          "counter": 0,
+          "slot": 6,
           "imageNumber": 100296,
           "petFlg": 1,
           "limitLevel": 0
@@ -195,6 +235,22 @@
             "tgh": 17,
             "dex": 24
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 0,
+            "water": 70,
+            "fire": 30,
+            "wind": 0
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -204,6 +260,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 0,
+          "counter": 1,
+          "slot": 6,
           "imageNumber": 100292,
           "petFlg": 1,
           "limitLevel": 0
@@ -238,6 +298,22 @@
             "tgh": 15,
             "dex": 29
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 60,
+            "water": 0,
+            "fire": 0,
+            "wind": 40
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -247,6 +323,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 0,
+          "counter": 1,
+          "slot": 6,
           "imageNumber": 100266,
           "petFlg": 1,
           "limitLevel": 0
@@ -289,6 +369,22 @@
             "tgh": 11,
             "dex": 23
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 0,
+            "water": 40,
+            "fire": 60,
+            "wind": 0
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -298,6 +394,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 1,
+          "counter": 1,
+          "slot": 6,
           "imageNumber": 100251,
           "petFlg": 1,
           "limitLevel": 0
@@ -324,6 +424,22 @@
             "tgh": 19,
             "dex": 27
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 20,
+            "water": 0,
+            "fire": 0,
+            "wind": 80
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -333,6 +449,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 2,
+          "counter": 0,
+          "slot": 6,
           "imageNumber": 100296,
           "petFlg": 1,
           "limitLevel": 0
@@ -359,6 +479,22 @@
             "tgh": 17,
             "dex": 24
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 0,
+            "water": 70,
+            "fire": 30,
+            "wind": 0
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -368,6 +504,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 0,
+          "counter": 1,
+          "slot": 6,
           "imageNumber": 100292,
           "petFlg": 1,
           "limitLevel": 0
@@ -394,6 +534,22 @@
             "tgh": 15,
             "dex": 29
           },
+          "modAi": 100,
+          "get": 11,
+          "elements": {
+            "earth": 60,
+            "water": 0,
+            "fire": 0,
+            "wind": 40
+          },
+          "status": {
+            "poison": 0,
+            "paralysis": 0,
+            "sleep": 0,
+            "stone": 0,
+            "drunk": 0,
+            "confusion": 0
+          },
           "petSkills": [
             1,
             2,
@@ -403,6 +559,10 @@
             0,
             0
           ],
+          "rare": 0,
+          "critical": 0,
+          "counter": 1,
+          "slot": 6,
           "imageNumber": 100266,
           "petFlg": 1,
           "limitLevel": 0
