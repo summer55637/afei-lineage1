@@ -16,15 +16,16 @@ const mapwarpTransitions=mapwarp.filter(row=>{const p=row.raw.split(':');return 
 
 function parseCreate(text){
   const lines=text.replace(/\r/g,'').split('\n');
-  const rows=[]; let floor=null; let blockStart=0; let enemy=[]; let inBlock=false;
+  const rows=[]; let floor=null; let bornCorner=null; let blockStart=0; let enemy=[]; let inBlock=false;
   for(let i=0;i<lines.length;i++){
     const line=lines[i].trim();
-    if(line==='{'){inBlock=true;floor=null;enemy=[];blockStart=i+1;continue;}
+    if(line==='{'){inBlock=true;floor=null;bornCorner=null;enemy=[];blockStart=i+1;continue;}
     if(!inBlock)continue;
-    if(line==='}'){rows.push({startLine:blockStart,floor,enemy:enemy.slice()});inBlock=false;continue;}
+    if(line==='}'){rows.push({startLine:blockStart,floor,bornCorner,enemy:enemy.slice()});inBlock=false;continue;}
     const eq=line.indexOf('='); if(eq<=0)continue;
     const k=line.slice(0,eq).trim().toLowerCase(),v=line.slice(eq+1).trim();
     if(k==='floorid')floor=Number(v);
+    if(k==='borncorner')bornCorner=v.split(',').map(Number);
     if(k==='enemy')enemy.push(v);
   }
   return rows;
@@ -37,7 +38,7 @@ for(const file of files.filter(f=>/\.create$/i.test(f))){
       const parts=raw.split('|');
       if(String(parts[0]).trim().toLowerCase()!=='npcgen_warp')continue;
       const targetFloor=Number(parts[1]);
-      if(block.floor===4000&&targetFloor===200)npcWarpRows.push({path:rel,startLine:block.startLine,target:[Number(parts[1]),Number(parts[2]),Number(parts[3])],raw});
+      if(block.floor===4000&&targetFloor===200)npcWarpRows.push({path:rel,startLine:block.startLine,origin:block.bornCorner,target:[Number(parts[1]),Number(parts[2]),Number(parts[3])],raw});
     }
   }
 }
@@ -67,13 +68,13 @@ assert.equal(mapwarpTransitions.length,4);
 assert.equal(npcWarpRows.length,4);
 const normalizeTarget=row=>row.from?[row.from[1],row.from[2],row.to?.[1],row.to?.[2]]:null;
 const mapwarpPairs=mapwarpTransitions.map(row=>{const p=row.raw.split(':');return {from:p[2].split(',').map(Number),to:p[3].split(',').map(Number)};}).sort((a,b)=>a.from[1]-b.from[1]||a.from[2]-b.from[2]);
-const npcPairs=npcWarpRows.map(x=>({from:[4000,x.target[1],x.target[2]],to:[200,x.target[1],x.target[2]]}));
+const npcPairs=npcWarpRows.map(x=>({from:[4000,x.origin?.[0],x.origin?.[1]],to:[200,x.target[1],x.target[2]]})).sort((a,b)=>a.from[1]-b.from[1]||a.from[2]-b.from[2]);
 const expectedTargets=[[104,55,304,599],[104,56,304,600],[101,96,301,640],[101,97,301,641]].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
 assert.deepEqual(mapwarpPairs.map(x=>[x.from[1],x.from[2],x.to[1],x.to[2]]),expectedTargets);
 assert.deepEqual(npcPairs.map(x=>[x.from[1],x.from[2],x.to[1],x.to[2]]),expectedTargets);
 
 const knownNpcCreate=npcWarpRows.map(x=>x.path+'#'+x.startLine).join('|');
-const mapwarpKnown='none';
+const mapwarpKnown=mapwarpTransitions.map(x=>({line:x.line,raw:x.raw}));
 const directLiteralCandidates=sourceTextCandidates.filter(x=>/CHAR_warpToSpecificPoint|npcgen_warp|NPC_Warp|MAP_warp|warpToSpecificPoint/i.test(x.text));
 
 console.log(JSON.stringify({
