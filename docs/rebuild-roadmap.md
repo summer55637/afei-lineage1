@@ -474,3 +474,32 @@ V3.37 將 strict / compatibility policy 統一到 `stoneage_npc_runtime_config`�
 Strict mode 仍維持 pinned `changeevent` unresolved；Compatibility mode 只在明確 opt-in 下使用 external `changeevent → ExChangeMan` corroboration。這不代表 pinned fixed-C 已補回缺失的 `changeevent` functionSet。
 
 下一階段可以開始把 verified world/map presentation 接到這個唯一 shell；reward、save、NPC dispatch 不再另起平行 engine。
+
+
+## 2026-09-30 V3.40 Browser ItemShop / Economy Bridge
+
+V3.40 已把已存在的 Item / Economy Runtime、Source Item Allocator 與 NPC ItemShop Runtime 接進 canonical browser state controller；沒有建立第二套 currency、inventory 或 shop engine。
+
+正式邊界：
+
+`browser action → source interaction gate → NPC ItemShop catalog → source Item price / Item template → allocator → Economy transaction → persistent state`
+
+三個 browser action 已固定：
+
+- `NPC_ITEMSHOP_OPEN)：source catalog lookup，唯讀。
+- `NPC_ITEMSHOP_BUY)：source Item offer / base cost → source allocator → Gold debit。
+- `NPC_ITEMSHOP_SELL)：existing Item source fields → `LimitItemType / LimitItemNo / special_item / special_rate` → Gold credit。
+
+Regression 已加入 `tools/check_v340_browser_itemshop_runtime.mjs` 與 `.github/workflows/check-v340-browser-itemshop-runtime.yml`；canonical `index.html` 的 ItemShop probe 使用 synthetic fixture，只驗證 bridge contract。
+
+本輪沒有把 fixture 升格為完整 world catalog。正式 world ItemShop 仍以 pinned fixed-C source checkout 生成，現有 service index 的 336 ItemShop bindings / 190 floors 仍維持 source-index 證據，不偽造完整 generated catalog。
+
+### V3.40 之後
+
+下一個實際切入點是：
+
+1. 用 pinned fixed-C checkout 生成完整 ItemShop catalog，並把 shop binding 與 world NPC instance / floor 坐標建立正式 join。
+2. 在同一個 browser state controller 上接 shop UI state（開啟店面、offer 選取、數量確認、結果提示）。
+3. 再把正式 ItemShop browser flow 接回地圖中的可互動 NPC。
+
+仍不新增第二個 HTML 入口，也不修改 V3.39 strict `changeevent` fail-closed policy。
