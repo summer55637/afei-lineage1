@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-const html=fs.readFileSync('start.html','utf8');
+const html=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('game.css','utf8');
 const game=fs.readFileSync('game.js','utf8');
 for(const id of ['worldScene','worldSceneMapName','worldSceneAreaName','worldSceneMode','worldScenePlayer','worldScenePet','worldSceneTask','worldSceneMessage'])assert.match(html,new RegExp('id=["\\\']'+id+'["\\\']'));
