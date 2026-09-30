@@ -1,0 +1,27 @@
+name: Check V3.31 NPC interaction runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_npc_interaction_runtime.mjs'
+      - 'tools/check_v331_npc_interaction_runtime.mjs'
+      - 'data/generated/stoneage_start_npc_reachability.json'
+      - '.github/workflows/check-v331-npc-interaction-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_npc_interaction_runtime.mjs
+          node --check tools/check_v331_npc_interaction_runtime.mjs
+      - name: Run V3.31 interaction regression
+        run: node tools/check_v331_npc_interaction_runtime.mjs
