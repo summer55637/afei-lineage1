@@ -305,3 +305,14 @@ V3.25 regression 已納入 GitHub Actions。
 - `Charm:1` 仍未被猜成任何 canonical mutation。
 
 V3.26 regression 已納入 GitHub Actions。
+
+## V3.27 First-route Reward Handler Bundle
+
+新增 `src/stoneage_first_route_reward_handlers.mjs`、`tools/check_v327_first_route_reward_handlers.mjs`、`.github/workflows/check-v327-first-route-reward-handlers.yml` 與 `docs/reference/v327-first-route-reward-handlers.md`。
+
+- V3.24 Pet + V3.25 Item + V3.26 Event Flag 三條已閉合 adapter 已組成單一 handler bundle。
+- 可直接交給 V3.22 atomic event transaction。
+- Item / Pet / Event Flag 在 staged state 成功時可以一起 commit。
+- `Charm` 沒有 pinned-C concrete handler，因此仍明確 fail-closed；不從其他版本猜語意。
+
+V3.27 regression 已納入 GitHub Actions。
