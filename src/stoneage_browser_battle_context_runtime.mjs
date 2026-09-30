@@ -43,6 +43,8 @@ function buildBattleContext({
   playerId=null,player=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null
 }={}){
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-context',reason:'player-runtime-required'};
+  if(intOr(player.hp)===null||intOr(player.maxHp)===null)return {ok:false,handled:false,stage:'battle-context',reason:'player-hp-runtime-required'};
+  if(intOr(player.hp)<=0)return {ok:false,handled:false,stage:'battle-context',reason:'player-dead-cannot-start-battle'};
   const enemyTeam=Array.isArray(team)?team:[];
   const enemyLayout=buildEnemyEntryLayout(enemyTeam);
   if(!enemyLayout.ok)return {ok:false,handled:false,stage:'battle-context',reason:enemyLayout.reason,detail:enemyLayout};
@@ -62,6 +64,7 @@ function buildBattleContext({
     maxMp:intOr(player.maxMp)??0,
     battleMode:'init'
   };
+  if(activePet&&isObject(activePet)&&(intOr(activePet.hp)??0)<=0)return {ok:false,handled:false,stage:'battle-context',reason:'active-pet-dead-cannot-start-battle'};
   const petEntry=activePet&&isObject(activePet)?{
     sourceType:'pet',
     characterId:String(activePet.id??activePet.petId??'pet').trim()||'pet',
