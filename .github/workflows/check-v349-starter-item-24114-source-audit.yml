@@ -1,0 +1,35 @@
+name: Check V3.49 starter Item 24114 source audit
+
+on:
+  push:
+    paths:
+      - 'data/generated/stoneage_starter_item_24114_source_audit.json'
+      - 'tools/check_v349_starter_item_24114_source_audit.mjs'
+      - '.github/workflows/check-v349-starter-item-24114-source-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  starter-item-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/gavinlinasd/StoneAge.git /tmp/StoneAge
+          git -C /tmp/StoneAge fetch --depth 1 origin 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          git -C /tmp/StoneAge checkout --detach 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+      - name: Verify exact pinned source evidence
+        run: |
+          test "$(wc -c < /tmp/StoneAge/gmsv/data/itemset6.txt)" -eq 0
+          grep -q '^ITEM1=24114$' /tmp/StoneAge/gmsv/setup.cf
+          grep -q '^itemset6file=data/itemset6.txt$' /tmp/StoneAge/gmsv/setup.cf
+          grep -q '#define _ITEMSET6_TXT' /tmp/StoneAge/gmsv/src/include/version.h
+          grep -q 'maxid <= 0' /tmp/StoneAge/gmsv/src/item/item.c
+          grep -q 'ITEM_CHECKITEMTABLE(number)' /tmp/StoneAge/gmsv/src/item/item.c
+      - name: Run V3.49 regression
+        run: node tools/check_v349_starter_item_24114_source_audit.mjs
