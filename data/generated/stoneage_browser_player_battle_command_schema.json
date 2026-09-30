@@ -1,0 +1,26 @@
+{
+  "format": "stoneage-v396-browser-player-battle-command-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_PLAYER_COMMAND_SET",
+  "fixedC": {
+    "transport": {
+      "H|target": "BATTLE_COM_ATTACK or BATTLE_COM_BOOMERANG",
+      "G": "BATTLE_COM_GUARD",
+      "N": "BATTLE_COM_WAIT",
+      "E": "BATTLE_COM_ESCAPE",
+      "T|target": "BATTLE_COM_CAPTURE",
+      "S|pet": "BATTLE_COM_PETOUT or BATTLE_COM_PETIN"
+    },
+    "targetRange": "0..19 for target-bearing H/T",
+    "readyMode": "BATTLE_CHARMODE_C_WAIT -> BATTLE_CHARMODE_C_OK"
+  },
+  "browserBoundary": {
+    "command3": "attack sets low-byte-like command3 marker to 1",
+    "mpCost": false,
+    "itemEquip": false,
+    "skillExecution": false,
+    "battleResolution": false,
+    "persistentMutation": false,
+    "rngConsumed": false
+  }
+}
