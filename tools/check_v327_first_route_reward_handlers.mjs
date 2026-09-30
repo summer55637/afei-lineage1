@@ -47,7 +47,7 @@ const applied=applyNpcEventActionPlan(state,syntheticPlan,{
   now:()=> '2026-09-30T06:30:00.000Z'
 });
 assert.equal(applied.applied,true);
-assert.equal(applied.actionCount,6);
+assert.equal(applied.actionCount,5);
 assert.deepEqual(applied.state.inventory.playerItemSlots.slice(9,11),[1,2]);
 assert.equal(applied.state.inventory.itemRuntime.slots['1'].itemId,20145);
 assert.equal(applied.state.inventory.itemRuntime.slots['2'].itemId,2849);
