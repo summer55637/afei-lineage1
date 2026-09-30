@@ -1189,3 +1189,30 @@ MaxMP 仍為 null，因 fixed-C `ENEMY_createEnemy()` 不直接寫 `CHAR_MAXMP`�
 
 下一階段是 Battle Turn initialization：先閉合 `BATTLE_TurnParam()` / initial WORK fields 與第一回合 Entry order，仍然不直接執行傷害。
 
+## 2026-10-01 V3.92 Browser Battle Turn Initialization
+
+V3.92 將 fixed-C `BATTLE_Init()` → `BATTLE_PreCommandSeq()` 的第一回合 pre-command 邊界接入 transient Battle Context：
+
+- Battle mode：`BATTLE_MODE_BATTLE = 2`
+- Actor mode：`BATTLE_CHARMODE_C_WAIT = 2`
+- 非 charge actor command 1：`BATTLE_COM_NONE = 0`
+- guardian reset：`-1`
+- Attack / Defence / Quick 的 modifier：每次乘 `0.8`
+- 有 last field 時再加 `modifier * 0.01`
+- Player 的 charm modifier 按 fixed-C 會執行兩次衰減
+
+V3.92 是 transient-only：
+- 不消耗 RNG
+- SurpriseCheck 仍獨立處理
+- 不執行 AI / Status / Damage
+- 不修改 Persistent State
+
+新增：
+- `src/stoneage_browser_battle_turn_runtime.mjs`
+- `data/generated/stoneage_browser_battle_turn_init_schema.json`
+- `tools/check_v392_browser_battle_turn_runtime.mjs`
+- `docs/reference/v392-browser-battle-turn-init.md`
+- `.github/workflows/check-v392-browser-battle-turn-init.yml`
+
+下一步可閉合 `BATTLE_SurpriseCheck()` 的 source RNG，再進入真正第一回合的 command collection / enemy AI。
+
