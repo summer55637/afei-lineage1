@@ -167,7 +167,8 @@ for(const npc of instances){
   }
 }
 
-const eventSummary=[...eventSeen.values()].map(x=>({eventNo:x.eventNo,occurrences:x.occurrences,types:[...x.types].sort(),uniqueArgFiles:x.argFiles.size,samples:x.sampleEvents})).sort((a,b)=>b.occurrences-a.occurrences||a.eventNo-b.eventNo);
+const eventSummary=[...eventSeen.values()].filter(x=>Number.isInteger(x.eventNo)&&x.eventNo>=0).map(x=>({eventNo:x.eventNo,occurrences:x.occurrences,types:[...x.types].sort(),uniqueArgFiles:x.argFiles.size,samples:x.sampleEvents})).sort((a,b)=>b.occurrences-a.occurrences||a.eventNo-b.eventNo);
+const sentinelEventBlocks=[...eventSeen.values()].find(x=>x.eventNo===-1)?.occurrences||0;
 
 const index={
   format:'stoneage-npc-item-acquisition-graph-v1',
@@ -180,6 +181,7 @@ const index={
     eventStateActionEdges:edges.filter(x=>x.type==='event_state_action').length,
     itemConditionEdges:edges.filter(x=>x.type==='item_condition').length,
     uniqueEventNoNodes:eventSummary.length,
+    sentinelEventNoMinusOneBlocks:sentinelEventBlocks,
     unresolvedItemActionEdges:edges.filter(x=>x.type==='item_action'&&!x.resolved).length,
     unresolvedItemConditionEdges:edges.filter(x=>x.type==='item_condition'&&!x.resolved).length
   },
