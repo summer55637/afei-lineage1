@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-start-route-closure-v7",
+  "format": "stoneage-start-route-closure-v8",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -12,13 +12,17 @@
     "npcReachability": "data/generated/stoneage_start_npc_reachability.json",
     "worldExitReachability": "data/generated/stoneage_start_world_exit_reachability.json",
     "worldExitComponentAudit": "data/generated/stoneage_4000_exit_component_audit.json",
-    "encounterTargetIndex": "data/generated/stoneage_start_encounter_target_index.json"
+    "encounterTargetIndex": "data/generated/stoneage_start_encounter_target_index.json",
+    "encounterPathClosure": "data/generated/stoneage_start_encounter_path_closure.json"
   },
   "status": {
     "sourceRouteSpine": "closed",
     "fullFirstRoute": "partial",
-    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because pinned npctemplate.c has no changeevent functionSet. All seven direct destination landings are walkable. Coordinate-level world-exit audit shows 6/8 next-floor portal groups usable from direct landings; both 4000→200 portal groups are disconnected from the direct landing component. Floor 200 world runtime remains unresolved because the currently indexed 30x30 extra/200 map cannot contain the fixed-C world portal coordinates and jalga is not yet binary-header verified.",
-    "coordinateResolvedTownServices": "closed_for_resolved_active_templates"
+    "definition": "Source-level route spine is closed from the four verified hometown spawns to direct warp exits. All 46 start-floor NPC coordinates are source-resolved from exact fixed-C NPCCREATE borncorner. Interaction closure is complete for 41/46 active-template instances; 5 changeevent instances remain runtime-module-unresolved because pinned npctemplate.c has no changeevent functionSet. All four direct destination maps and all seven direct destination landing points are verified. Floors 100 and 200 now also have fixed-C verified runtimes, and all 8 second-stage portal groups have at least one landing point that reaches an unconditional encounter rectangle; one 3000→200 landing point is itself non-walkable and two 4000→200 portal origins are disconnected from the direct landing component on floor 4000. Full first-route closure remains partial until the 4000 source transition is resolved, changeevent stance is settled, and new-player reward item/pet definitions are closed.",
+    "coordinateResolvedTownServices": "closed_for_resolved_active_templates",
+    "destinationMapRuntime": "closed",
+    "worldExitReachability": "partial",
+    "ordinaryEncounterPath": "closed_for_floor_100_200"
   },
   "statistics": {
     "hometowns": 4,
@@ -44,14 +48,24 @@
     "floor100UnresolvedGroupRows": 11,
     "floor200UnconditionalEncounterRows": 103,
     "floor200MixedEncounterRows": 5,
-    "floor200UnresolvedGroupRows": 5
+    "floor200UnresolvedGroupRows": 5,
+    "verifiedWorldRouteMaps": 2,
+    "verifiedWorldRouteMapFloors": [
+      100,
+      200
+    ],
+    "encounterPathClosureFloors": 2,
+    "encounterPathClosurePortalGroups": 8,
+    "encounterPathClosurePortalGroupsUsable": 8,
+    "floor100EncounterUnconditionalRows": 32,
+    "floor200EncounterUnconditionalRows": 103
   },
   "remainingWork": [
     "Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.",
-    "Build exact fixed-C verified runtime for floor 100 from gmsv/data/map/sainasu/sainasu and for world floor 200 from gmsv/data/map/jyaruga/jalga.",
     "Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.",
-    "Path-test the source-coordinate encounter target sets now indexed for floors 100 and 200; keep mixed and unresolved-group rows explicitly non-unconditional.",
-    "Close new-player event reward item/pet definitions without promoting unresolved IDs."
+    "Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.",
+    "Close new-player event reward item/pet definitions without promoting unresolved IDs.",
+    "Advance Persistent State Schema for player, pet, inventory, equipment, skills, quests, map position, idle settings and save/migration."
   ],
   "towns": [
     {
@@ -1118,11 +1132,11 @@
     }
   },
   "nextActions": [
-    "Verify floor 100 sainasu LS2MAP runtime.",
-    "Verify floor 200 jalga LS2MAP runtime.",
-    "Path-test incoming landing points to unconditional encounter rectangles.",
-    "Recheck 4000 component and source transitions.",
-    "Close reward definitions and changeevent module stance."
+    "Resolve changeevent module/template discrepancies.",
+    "Investigate the 4000 -> 200 disconnected source transition.",
+    "Close new-player reward item/pet definitions.",
+    "Implement Persistent State Schema and migration contract.",
+    "Define Idle Loop Contract against the already-closed encounter/path inputs."
   ],
   "sourceEvidence": {
     "startNpcCoordinateClosure": "data/generated/stoneage_start_npc_coordinate_closure.json",
