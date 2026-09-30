@@ -181,7 +181,7 @@ const output={
     starterPetRank:'gmsv/src/char/enemy.c::ENEMY_getRank'
   },
   hometowns:positions.map((p,i)=>({...p,elderIndex:i,fallbackPet:{hometown:i,lastTalkElder:i,enemyId:i+1,tempNo:byEnemyId[String(i+1)].tempNo,enemyName:byEnemyId[String(i+1)].name,lvRange:[byEnemyId[String(i+1)].lvMin,byEnemyId[String(i+1)].lvMax],template:byTempNo[String(byEnemyId[String(i+1)].tempNo)]},...starterPetRankForEnemyId(i+1)})),
-  starterItem:{itemId:24114,sourceConfigKey:'ITEM1',sourceCreation:'CHAR_loginAddItemForNew -> ITEM_makeItemAndRegist(getNewplayergiveitem(i))',allocatorRequired:true,itemTemplatePromoted:false},
+  starterItem:{itemId:24114,sourceConfigKey:'ITEM1',sourceCreation:'CHAR_loginAddItemForNew -> ITEM_makeItemAndRegist(getNewplayergiveitem(i))',allocatorRequired:true,itemTemplatePromoted:false,sourceIdMappingResolved:false,sourceIdMappingAudit:'data/generated/stoneage_starter_item_24114_source_audit.json'},
   starterPet:{configuredSlot0:-1,fallbackRule:'CHAR_LASTTALKELDER: 1->EnemyID2, 2->EnemyID3, 3->EnemyID4, otherwise EnemyID1',initialLevel:configValue.petLevel,maxPetHave:5,sourceClosed:true,entries:positions.map((_,i)=>{const id=i+1;return {hometown:i,lastTalkElder:i,enemyId:id,tempNo:byEnemyId[String(id)].tempNo,enemyName:byEnemyId[String(id)].name,lvRange:[byEnemyId[String(id)].lvMin,byEnemyId[String(id)].lvMax],template:byTempNo[String(byEnemyId[String(id)].tempNo)],...starterPetRankForEnemyId(id)};})},
   policy:{fixedCIsAuthoritative:true,noInventedItemTemplate:true,itemAllocatorRequired:true,noNpridePromotion:true,noPlayableHtml:true,productLayerSeparated:true}
 };
