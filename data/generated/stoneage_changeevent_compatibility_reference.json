@@ -1,0 +1,45 @@
+{
+  "format": "stoneage-changeevent-compatibility-reference-v1",
+  "generatedAt": "2026-09-30",
+  "pinnedCanonical": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "template": "changeevent",
+    "status": "unresolved_in_pinned_npctemplate_functionSet"
+  },
+  "externalReference": {
+    "repository": "75912001/sa.desktop",
+    "ref": "e9b3f0cfd63b93c11fc77ca5331173dd6c5d2fc8",
+    "purpose": "compatibility corroboration only"
+  },
+  "aliases": [
+    {
+      "templateName": "changeevent",
+      "functionset": "ExChangeMan",
+      "source": {
+        "path": "map/maps/1006/map.entity.yaml",
+        "npcName": "新手接待员",
+        "mapId": 1006,
+        "createFile": "almark/xinshou/xinshou.create",
+        "createBlockIndex": 2,
+        "createLine": 27,
+        "templateFile": "jaruga/event/event.template",
+        "templateLine": 3,
+        "enemy": "changeevent|file:almark/xinshou/xinshoujd.arg",
+        "contentSha": "c3120c435a30b439b7501105821f55b2b8360659057e4aa43b3951ac203fb21b"
+      }
+    },
+    {
+      "templateName": "changeevent",
+      "functionset": "ExChangeMan",
+      "source": {
+        "path": "map/maps/3006/map.entity.yaml",
+        "npcName": "新手接待员",
+        "mapId": 3006,
+        "createFile": "almark/xinshou/xinshou.create",
+        "enemy": "changeevent|file:almark/xinshou/xinshoujd.arg"
+      }
+    }
+  ],
+  "policy": "Never enabled by default. This alias is an external compatibility reference and must not be written back into pinned sourceFunctionSet audit as a canonical entry."
+}
