@@ -10,7 +10,9 @@
 
 另外完成 World NPC Index、NPC Service Index、World Graph 與 NPC Event Action Index：7,979 create blocks 已全部閉合到 template；27 個 file/arg 參照維持 unresolved；5,457 筆 mapwarp 全部通過 source map header 的 floor/座標範圍驗證；world graph 已形成 1,139 個 floor nodes、2,182 條 directed floor edges；NPC service bindings 共 9,335；NPC event DSL 掃描找到 4,860 次 source action-key matches。另已整理 mission、jobdaily、ride、title、question、raceman、racequiz、member shop/pet 等 auxiliary world data。
 
-下一步不直接做 playable UI，改進入 **item-acquisition / quest-event closure**：把 NPC Event DSL 的 item／pet／gold references 與 itemset6、任務狀態、NPC service 做關聯，優先閉合玩家從出生到第一輪打怪／補給／任務的完整資料鏈。
+目前正處於 **item-acquisition / quest-event closure**。Item loader 已依 fixed C 對齊到 `itemset6.txt` 第 17 欄 `ITEM_ID`；NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 unresolved，未閉合引用共 751 次。事件旗標共 158 個 unique IDs，其中 4 個可直接對到 mission.txt、116 個對到 jobdaily rule，42 個仍需從 `EventNo` / `EventEnd` / NPC-specific script 找 owner。
+
+下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path 與事件 owner 分群，優先閉合新手、城鎮、商店、治療、存點、主要任務與傳送流程。
 
 ## 目的
 
@@ -204,6 +206,8 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 仍不把未確認授權的原版 BIN 直接提交到 repository。
 
 ## G. NPC / 任務 / 經濟系統：中高優先
+
+目前已完成第一輪 NPC service 與 event DSL 索引，並建立 Item / Quest Event Closure；下一階段由「知道 NPC 存在」推進到「知道 NPC 會對玩家做什麼」。
 
 要讓遊戲像完整作品，除了打怪還需要：
 
