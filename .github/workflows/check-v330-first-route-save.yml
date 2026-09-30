@@ -1,0 +1,39 @@
+name: Check V3.30 first-route save integration
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_first_route_save.mjs'
+      - 'src/stoneage_save_transaction.mjs'
+      - 'src/stoneage_npc_event_orchestrator.mjs'
+      - 'src/stoneage_first_route_reward_handlers.mjs'
+      - 'src/stoneage_event_flag_runtime.mjs'
+      - 'src/stoneage_charm_runtime.mjs'
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'src/stoneage_new_player_item_reward_runtime.mjs'
+      - 'tools/check_v330_first_route_save.mjs'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - 'data/generated/stoneage_new_player_item_reward_runtime.json'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - '.github/workflows/check-v330-first-route-save.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_first_route_save.mjs
+          node --check src/stoneage_save_transaction.mjs
+          node --check src/stoneage_npc_event_orchestrator.mjs
+          node --check tools/check_v330_first_route_save.mjs
+      - name: Run V3.30 save integration regression
+        run: node tools/check_v330_first_route_save.mjs
