@@ -81,6 +81,11 @@
       "bank": 5,
       "seimu": 5,
       "777.old": 4
+    },
+    "gmsvSetupConfig": {
+      "path": "gmsv/setup.cf",
+      "status": "present",
+      "sizeBytes": 26030
     }
   },
   "npcModel": {
@@ -181,6 +186,13 @@
     ]
   },
   "coreDataSources": [
+    {
+      "path": "gmsv/setup.cf",
+      "role": "server-wide feature flags, data file wiring, level/turn/riding/battle/warp/environment configuration",
+      "status": "source-cataloged-not-parsed",
+      "priority": "P0",
+      "note": "Must be parsed before gameplay runtime because it controls which data files/features are active and contains environment-specific settings."
+    },
     {
       "path": "gmsv/data/mission.txt",
       "role": "mission list",
@@ -295,6 +307,12 @@
     "gmque": "permanently disabled by project policy; not a world-data blocker"
   },
   "researchTargets": [
+    {
+      "id": "server-config-index",
+      "priority": "P0",
+      "status": "next",
+      "scope": "Parse setup.cf into a source-pinned configuration index; separate fixed behavior from server/custom environment knobs."
+    },
     {
       "id": "world-npc-index",
       "priority": "P0",
