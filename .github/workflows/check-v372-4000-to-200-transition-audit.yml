@@ -1,0 +1,45 @@
+name: Check V3.72 4000 to 200 source transition audit
+on:
+  push:
+    paths:
+      - 'tools/check_v372_4000_to_200_transition_audit.mjs'
+      - 'docs/reference/v372-4000-to-200-transition-audit.md'
+      - 'data/generated/stoneage_4000_to_200_transition_audit.json'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v372-4000-to-200-transition-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Checkout pinned fixed-C source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: fixed-c-source
+          fetch-depth: 1
+      - name: Run V3.72 transition audit
+        run: node tools/check_v372_4000_to_200_transition_audit.mjs fixed-c-source | tee /tmp/v372-audit.json
+      - name: Validate audit output
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const x=JSON.parse(fs.readFileSync('/tmp/v372-audit.json','utf8'));
+          fs.writeFileSync('data/generated/stoneage_4000_to_200_transition_audit.json',JSON.stringify(x,null,2)+'\n');
+          if(!x.pass || x.mapwarpDirect4000To200Rows!==0 || x.npcDirect4000To200Rows!==4) process.exit(1);
+          NODE
+      - name: Check JavaScript syntax
+        run: node --check tools/check_v372_4000_to_200_transition_audit.mjs
+      - name: Upload audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: stoneage-v372-4000-to-200-transition-audit
+          path: data/generated/stoneage_4000_to_200_transition_audit.json
+          if-no-files-found: error
