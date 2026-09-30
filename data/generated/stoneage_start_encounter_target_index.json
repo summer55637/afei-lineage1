@@ -1,0 +1,4524 @@
+{
+  "format": "stoneage-start-encounter-target-index-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
+    "groupBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874"
+  },
+  "policy": {
+    "unconditionalRow": "probMax > 0, has groups, no encounter event gate, every referenced group is resolved, and every referenced group has appearByItemId == -1 and notAppearByItemId == -1",
+    "mixedRow": "contains at least one unconditional group plus one or more item-gated groups; retained as candidate but not advertised as fully unconditional",
+    "unresolvedRow": "any referenced group missing from fixed group1.txt; never promoted",
+    "runtimePath": "This index is source-coordinate evidence only. Exact path-to-region closure still requires the matching LS2MAP runtime."
+  },
+  "floors": {
+    "100": {
+      "rowCount": 46,
+      "counts": {
+        "unconditional": 32,
+        "mixed": 1,
+        "conditionalItem": 1,
+        "unresolvedGroup": 11,
+        "eventConditional": 0,
+        "placeholder": 1
+      },
+      "unconditionalRows": [
+        {
+          "encounterId": 28,
+          "rect": [
+            11,
+            567,
+            155,
+            707
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 2,
+          "zorder": 20,
+          "groupIds": [
+            104,
+            107,
+            110,
+            113
+          ],
+          "enemyIds": [
+            140,
+            143,
+            146,
+            149
+          ],
+          "incoming": {
+            "containsPoint": [
+              "2000_to_100_a",
+              "2000_to_100_b"
+            ],
+            "nearestDistance": 0
+          }
+        },
+        {
+          "encounterId": 64,
+          "rect": [
+            11,
+            524,
+            208,
+            708
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 10,
+          "groupIds": [
+            105,
+            108,
+            111,
+            114,
+            116
+          ],
+          "enemyIds": [
+            141,
+            144,
+            147,
+            150
+          ],
+          "incoming": {
+            "containsPoint": [
+              "2000_to_100_a",
+              "2000_to_100_b"
+            ],
+            "nearestDistance": 0
+          }
+        },
+        {
+          "encounterId": 65,
+          "rect": [
+            568,
+            538,
+            610,
+            578
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 4,
+          "zorder": 30,
+          "groupIds": [
+            89,
+            92,
+            94
+          ],
+          "enemyIds": [
+            120,
+            123
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 71
+          }
+        },
+        {
+          "encounterId": 57,
+          "rect": [
+            633,
+            329,
+            662,
+            403
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 50,
+          "groupIds": [
+            169,
+            170
+          ],
+          "enemyIds": [
+            255,
+            256
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 88
+          }
+        },
+        {
+          "encounterId": 30,
+          "rect": [
+            63,
+            392,
+            308,
+            524
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 20,
+          "groupIds": [
+            105,
+            108,
+            89,
+            114
+          ],
+          "enemyIds": [
+            141,
+            144,
+            120,
+            150
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 90
+          }
+        },
+        {
+          "encounterId": 29,
+          "rect": [
+            208,
+            524,
+            308,
+            682
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 20,
+          "groupIds": [
+            89,
+            108,
+            111,
+            114
+          ],
+          "enemyIds": [
+            120,
+            144,
+            147,
+            150
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 94
+          }
+        },
+        {
+          "encounterId": 55,
+          "rect": [
+            614,
+            393,
+            621,
+            403
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 50,
+          "groupIds": [
+            169,
+            170
+          ],
+          "enemyIds": [
+            255,
+            256
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 104
+          }
+        },
+        {
+          "encounterId": 54,
+          "rect": [
+            556,
+            345,
+            621,
+            393
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 50,
+          "groupIds": [
+            169,
+            170
+          ],
+          "enemyIds": [
+            255,
+            256
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 114
+          }
+        },
+        {
+          "encounterId": 41,
+          "rect": [
+            587,
+            331,
+            630,
+            343
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 110,
+          "groupIds": [
+            122,
+            126,
+            129,
+            158,
+            162,
+            166
+          ],
+          "enemyIds": [
+            158,
+            163,
+            192,
+            196
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 155
+          }
+        },
+        {
+          "encounterId": 26,
+          "rect": [
+            425,
+            387,
+            480,
+            554
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 40,
+          "groupIds": [
+            97,
+            100,
+            101
+          ],
+          "enemyIds": [
+            127,
+            130
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 157
+          }
+        },
+        {
+          "encounterId": 40,
+          "rect": [
+            539,
+            297,
+            587,
+            374
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 500,
+          "groupIds": [
+            122,
+            126,
+            129,
+            1130
+          ],
+          "enemyIds": [
+            158,
+            163,
+            1561
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 167
+          }
+        },
+        {
+          "encounterId": 42,
+          "rect": [
+            532,
+            332,
+            595,
+            361
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 110,
+          "groupIds": [
+            122,
+            126,
+            129,
+            158,
+            162,
+            166
+          ],
+          "enemyIds": [
+            158,
+            163,
+            192,
+            196
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 172
+          }
+        },
+        {
+          "encounterId": 31,
+          "rect": [
+            308,
+            524,
+            426,
+            691
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 30,
+          "groupIds": [
+            106,
+            109,
+            111,
+            114
+          ],
+          "enemyIds": [
+            142,
+            145,
+            147,
+            150
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 194
+          }
+        },
+        {
+          "encounterId": 27,
+          "rect": [
+            403,
+            316,
+            526,
+            391
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 20,
+          "groupIds": [
+            90,
+            93,
+            97,
+            100
+          ],
+          "enemyIds": [
+            121,
+            124,
+            127,
+            130
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 211
+          }
+        },
+        {
+          "encounterId": 33,
+          "rect": [
+            308,
+            387,
+            426,
+            524
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 40,
+          "groupIds": [
+            117,
+            115,
+            112
+          ],
+          "enemyIds": [
+            148,
+            151
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 211
+          }
+        },
+        {
+          "encounterId": 37,
+          "rect": [
+            365,
+            440,
+            416,
+            486
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 8,
+          "zorder": 60,
+          "groupIds": [
+            118,
+            119,
+            176,
+            177,
+            117,
+            179,
+            180,
+            101,
+            178,
+            181
+          ],
+          "enemyIds": [
+            153,
+            152,
+            263,
+            265,
+            148,
+            151,
+            262,
+            261,
+            127,
+            130
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 226
+          }
+        },
+        {
+          "encounterId": 43,
+          "rect": [
+            524,
+            325,
+            546,
+            346
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 2,
+          "zorder": 120,
+          "groupIds": [
+            122,
+            126,
+            129,
+            158,
+            162,
+            166
+          ],
+          "enemyIds": [
+            158,
+            163,
+            192,
+            196
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 236
+          }
+        },
+        {
+          "encounterId": 38,
+          "rect": [
+            547,
+            115,
+            699,
+            241
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 100,
+          "groupIds": [
+            122,
+            126,
+            129,
+            120,
+            124,
+            159,
+            163,
+            167,
+            164
+          ],
+          "enemyIds": [
+            158,
+            163,
+            156,
+            160,
+            193,
+            197,
+            196,
+            190,
+            194
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 250
+          }
+        },
+        {
+          "encounterId": 70,
+          "rect": [
+            520,
+            323,
+            538,
+            338
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 2,
+          "zorder": 120,
+          "groupIds": [
+            122,
+            126,
+            129,
+            158,
+            162,
+            166,
+            127
+          ],
+          "enemyIds": [
+            158,
+            163,
+            192,
+            196,
+            164
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 252
+          }
+        },
+        {
+          "encounterId": 44,
+          "rect": [
+            504,
+            298,
+            547,
+            325
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 100,
+          "groupIds": [
+            132,
+            136,
+            140
+          ],
+          "enemyIds": [
+            167,
+            171
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 256
+          }
+        },
+        {
+          "encounterId": 66,
+          "rect": [
+            432,
+            236,
+            546,
+            315
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 5,
+          "groupIds": [
+            132,
+            136,
+            140,
+            121,
+            125,
+            128,
+            157,
+            161,
+            165
+          ],
+          "enemyIds": [
+            167,
+            171,
+            157,
+            161,
+            191,
+            195
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 267
+          }
+        },
+        {
+          "encounterId": 32,
+          "rect": [
+            128,
+            315,
+            202,
+            392
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 30,
+          "groupIds": [
+            115,
+            112,
+            116
+          ],
+          "enemyIds": [
+            151,
+            148,
+            147,
+            150
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 271
+          }
+        },
+        {
+          "encounterId": 45,
+          "rect": [
+            434,
+            237,
+            547,
+            298
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 100,
+          "groupIds": [
+            132,
+            136,
+            140,
+            121,
+            125,
+            128,
+            157,
+            161,
+            165
+          ],
+          "enemyIds": [
+            167,
+            171,
+            157,
+            161,
+            191,
+            195
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 283
+          }
+        },
+        {
+          "encounterId": 68,
+          "rect": [
+            433,
+            310,
+            499,
+            315
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 20,
+          "groupIds": [
+            88,
+            91,
+            89,
+            92,
+            94
+          ],
+          "enemyIds": [
+            119,
+            122,
+            120,
+            123
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 314
+          }
+        },
+        {
+          "encounterId": 34,
+          "rect": [
+            444,
+            299,
+            494,
+            315
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 40,
+          "groupIds": [
+            90,
+            93,
+            97,
+            100
+          ],
+          "enemyIds": [
+            121,
+            124,
+            127,
+            130
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 319
+          }
+        },
+        {
+          "encounterId": 265,
+          "rect": [
+            463,
+            294,
+            480,
+            300
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            90,
+            93,
+            97,
+            100
+          ],
+          "enemyIds": [
+            121,
+            124,
+            127,
+            130
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 348
+          }
+        },
+        {
+          "encounterId": 67,
+          "rect": [
+            433,
+            306,
+            446,
+            315
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 20,
+          "groupIds": [
+            88,
+            91,
+            89,
+            92,
+            94
+          ],
+          "enemyIds": [
+            119,
+            122,
+            120,
+            123
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 367
+          }
+        },
+        {
+          "encounterId": 224,
+          "rect": [
+            363,
+            202,
+            430,
+            252
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 500,
+          "groupIds": [
+            144,
+            148,
+            151,
+            350
+          ],
+          "enemyIds": [
+            175,
+            179,
+            485,
+            486
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 446
+          }
+        },
+        {
+          "encounterId": 50,
+          "rect": [
+            315,
+            120,
+            434,
+            200
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 4,
+          "zorder": 100,
+          "groupIds": [
+            145,
+            149,
+            152
+          ],
+          "enemyIds": [
+            176,
+            180
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 494
+          }
+        },
+        {
+          "encounterId": 223,
+          "rect": [
+            363,
+            122,
+            430,
+            198
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 4,
+          "zorder": 500,
+          "groupIds": [
+            145,
+            149,
+            152,
+            350
+          ],
+          "enemyIds": [
+            176,
+            180,
+            485,
+            486
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 500
+          }
+        },
+        {
+          "encounterId": 49,
+          "rect": [
+            180,
+            120,
+            315,
+            200
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 100,
+          "groupIds": [
+            146,
+            150,
+            153,
+            143,
+            147
+          ],
+          "enemyIds": [
+            177,
+            181,
+            174,
+            178
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 515
+          }
+        },
+        {
+          "encounterId": 48,
+          "rect": [
+            180,
+            25,
+            434,
+            120
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 100,
+          "groupIds": [
+            146,
+            150,
+            153
+          ],
+          "enemyIds": [
+            177,
+            181
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 574
+          }
+        }
+      ],
+      "mixedRows": [
+        {
+          "encounterId": 56,
+          "rect": [
+            621,
+            341,
+            645,
+            412
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 50,
+          "groupIds": [
+            169,
+            170,
+            711
+          ],
+          "enemyIds": [
+            255,
+            256,
+            1305,
+            1309,
+            1310
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 79
+          }
+        }
+      ],
+      "unresolvedGroupRows": [
+        {
+          "encounterId": 21,
+          "rect": [
+            582,
+            399,
+            783,
+            560
+          ],
+          "missingGroupIds": [
+            1230
+          ]
+        },
+        {
+          "encounterId": 22,
+          "rect": [
+            591,
+            552,
+            685,
+            695
+          ],
+          "missingGroupIds": [
+            1230
+          ]
+        },
+        {
+          "encounterId": 23,
+          "rect": [
+            423,
+            552,
+            594,
+            788
+          ],
+          "missingGroupIds": [
+            1230
+          ]
+        },
+        {
+          "encounterId": 24,
+          "rect": [
+            541,
+            375,
+            592,
+            554
+          ],
+          "missingGroupIds": [
+            1230
+          ]
+        },
+        {
+          "encounterId": 25,
+          "rect": [
+            479,
+            355,
+            541,
+            557
+          ],
+          "missingGroupIds": [
+            1230
+          ]
+        },
+        {
+          "encounterId": 39,
+          "rect": [
+            547,
+            241,
+            679,
+            331
+          ],
+          "missingGroupIds": [
+            793
+          ]
+        },
+        {
+          "encounterId": 46,
+          "rect": [
+            434,
+            176,
+            547,
+            237
+          ],
+          "missingGroupIds": [
+            794
+          ]
+        },
+        {
+          "encounterId": 47,
+          "rect": [
+            434,
+            115,
+            547,
+            176
+          ],
+          "missingGroupIds": [
+            794
+          ]
+        },
+        {
+          "encounterId": 51,
+          "rect": [
+            180,
+            200,
+            360,
+            282
+          ],
+          "missingGroupIds": [
+            792,
+            1315,
+            1316
+          ]
+        },
+        {
+          "encounterId": 52,
+          "rect": [
+            360,
+            200,
+            433,
+            314
+          ],
+          "missingGroupIds": [
+            792
+          ]
+        },
+        {
+          "encounterId": 58,
+          "rect": [
+            273,
+            282,
+            353,
+            366
+          ],
+          "missingGroupIds": [
+            791
+          ]
+        }
+      ]
+    },
+    "200": {
+      "rowCount": 114,
+      "counts": {
+        "unconditional": 103,
+        "mixed": 5,
+        "conditionalItem": 1,
+        "unresolvedGroup": 5,
+        "eventConditional": 0,
+        "placeholder": 0
+      },
+      "unconditionalRows": [
+        {
+          "encounterId": 95,
+          "rect": [
+            262,
+            565,
+            333,
+            686
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 2,
+          "zorder": 5,
+          "groupIds": [
+            240,
+            243,
+            246,
+            241,
+            244
+          ],
+          "enemyIds": [
+            382,
+            385,
+            383,
+            386
+          ],
+          "incoming": {
+            "containsPoint": [
+              "4000_to_200_a",
+              "4000_to_200_b"
+            ],
+            "nearestDistance": 0
+          }
+        },
+        {
+          "encounterId": 196,
+          "rect": [
+            561,
+            402,
+            623,
+            409
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 23
+          }
+        },
+        {
+          "encounterId": 197,
+          "rect": [
+            582,
+            392,
+            591,
+            404
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 25
+          }
+        },
+        {
+          "encounterId": 192,
+          "rect": [
+            548,
+            400,
+            565,
+            480
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 26
+          }
+        },
+        {
+          "encounterId": 98,
+          "rect": [
+            333,
+            565,
+            401,
+            666
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 5,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 29
+          }
+        },
+        {
+          "encounterId": 198,
+          "rect": [
+            591,
+            387,
+            600,
+            406
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 29
+          }
+        },
+        {
+          "encounterId": 194,
+          "rect": [
+            540,
+            409,
+            619,
+            416
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 30
+          }
+        },
+        {
+          "encounterId": 96,
+          "rect": [
+            95,
+            499,
+            304,
+            565
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 3,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 34
+          }
+        },
+        {
+          "encounterId": 99,
+          "rect": [
+            304,
+            494,
+            401,
+            565
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 5,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 34
+          }
+        },
+        {
+          "encounterId": 195,
+          "rect": [
+            600,
+            383,
+            626,
+            406
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 34
+          }
+        },
+        {
+          "encounterId": 193,
+          "rect": [
+            523,
+            416,
+            617,
+            427
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 37
+          }
+        },
+        {
+          "encounterId": 200,
+          "rect": [
+            568,
+            423,
+            577,
+            467
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 44
+          }
+        },
+        {
+          "encounterId": 152,
+          "rect": [
+            244,
+            687,
+            332,
+            814
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 46
+          }
+        },
+        {
+          "encounterId": 201,
+          "rect": [
+            575,
+            421,
+            590,
+            460
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 47
+          }
+        },
+        {
+          "encounterId": 190,
+          "rect": [
+            527,
+            425,
+            568,
+            475
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 48
+          }
+        },
+        {
+          "encounterId": 91,
+          "rect": [
+            384,
+            238,
+            516,
+            415
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 1,
+          "groupIds": [
+            236,
+            238,
+            228,
+            231,
+            233,
+            234
+          ],
+          "enemyIds": [
+            380,
+            376,
+            371,
+            374,
+            378
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 54
+          }
+        },
+        {
+          "encounterId": 199,
+          "rect": [
+            588,
+            425,
+            616,
+            441
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 64
+          }
+        },
+        {
+          "encounterId": 147,
+          "rect": [
+            346,
+            667,
+            360,
+            743
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 200,
+          "groupIds": [
+            273,
+            277,
+            280,
+            289,
+            285,
+            292,
+            263,
+            267,
+            270,
+            275
+          ],
+          "enemyIds": [
+            416,
+            420,
+            405,
+            401,
+            409,
+            413,
+            418
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 71
+          }
+        },
+        {
+          "encounterId": 151,
+          "rect": [
+            372,
+            639,
+            473,
+            713
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 200,
+          "groupIds": [
+            273,
+            277,
+            280,
+            289,
+            285,
+            292,
+            263,
+            267,
+            270
+          ],
+          "enemyIds": [
+            416,
+            420,
+            405,
+            401,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 71
+          }
+        },
+        {
+          "encounterId": 202,
+          "rect": [
+            582,
+            438,
+            595,
+            448
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 71
+          }
+        },
+        {
+          "encounterId": 89,
+          "rect": [
+            384,
+            42,
+            605,
+            238
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 1,
+          "groupIds": [
+            228,
+            231,
+            233,
+            235
+          ],
+          "enemyIds": [
+            371,
+            374,
+            379
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 75
+          }
+        },
+        {
+          "encounterId": 90,
+          "rect": [
+            384,
+            42,
+            605,
+            238
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 1,
+          "groupIds": [
+            236,
+            238,
+            228,
+            231,
+            233,
+            237
+          ],
+          "enemyIds": [
+            380,
+            376,
+            371,
+            374,
+            375
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 75
+          }
+        },
+        {
+          "encounterId": 117,
+          "rect": [
+            194,
+            551,
+            250,
+            577
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 15,
+          "groupIds": [
+            248
+          ],
+          "enemyIds": [
+            394
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 76
+          }
+        },
+        {
+          "encounterId": 186,
+          "rect": [
+            590,
+            438,
+            617,
+            479
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 90,
+          "groupIds": [
+            302,
+            303,
+            304,
+            305
+          ],
+          "enemyIds": [
+            428,
+            429,
+            430
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 79
+          }
+        },
+        {
+          "encounterId": 126,
+          "rect": [
+            500,
+            402,
+            513,
+            458
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 80
+          }
+        },
+        {
+          "encounterId": 127,
+          "rect": [
+            497,
+            409,
+            517,
+            444
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 83
+          }
+        },
+        {
+          "encounterId": 133,
+          "rect": [
+            503,
+            462,
+            619,
+            618
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            407,
+            411,
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 83
+          }
+        },
+        {
+          "encounterId": 129,
+          "rect": [
+            515,
+            416,
+            522,
+            428
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 85
+          }
+        },
+        {
+          "encounterId": 148,
+          "rect": [
+            360,
+            667,
+            365,
+            735
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 200,
+          "groupIds": [
+            273,
+            277,
+            280,
+            289,
+            285,
+            292,
+            263,
+            267,
+            270
+          ],
+          "enemyIds": [
+            416,
+            420,
+            405,
+            401,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 85
+          }
+        },
+        {
+          "encounterId": 92,
+          "rect": [
+            384,
+            415,
+            516,
+            528
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 8,
+          "zorder": 1,
+          "groupIds": [
+            236,
+            238,
+            239
+          ],
+          "enemyIds": [
+            380,
+            376,
+            377
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 90
+          }
+        },
+        {
+          "encounterId": 149,
+          "rect": [
+            365,
+            667,
+            372,
+            713
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 200,
+          "groupIds": [
+            273,
+            277,
+            280,
+            289,
+            285,
+            292,
+            263,
+            267,
+            270
+          ],
+          "enemyIds": [
+            416,
+            420,
+            405,
+            401,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 90
+          }
+        },
+        {
+          "encounterId": 165,
+          "rect": [
+            151,
+            673,
+            243,
+            749
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 8,
+          "zorder": 100,
+          "groupIds": [
+            294,
+            297,
+            300,
+            316
+          ],
+          "enemyIds": [
+            423,
+            426,
+            396
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 90
+          }
+        },
+        {
+          "encounterId": 128,
+          "rect": [
+            515,
+            428,
+            527,
+            435
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 92
+          }
+        },
+        {
+          "encounterId": 257,
+          "rect": [
+            327,
+            708,
+            457,
+            813
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 1,
+          "groupIds": [
+            287,
+            283,
+            284,
+            288,
+            291,
+            261,
+            265,
+            268
+          ],
+          "enemyIds": [
+            403,
+            399,
+            400,
+            404,
+            407,
+            411
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 93
+          }
+        },
+        {
+          "encounterId": 100,
+          "rect": [
+            401,
+            506,
+            433,
+            617
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 5,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 97
+          }
+        },
+        {
+          "encounterId": 101,
+          "rect": [
+            401,
+            506,
+            433,
+            617
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 5,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 97
+          }
+        },
+        {
+          "encounterId": 187,
+          "rect": [
+            594,
+            453,
+            661,
+            514
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 500,
+          "groupIds": [
+            302,
+            303,
+            304,
+            305,
+            1131
+          ],
+          "enemyIds": [
+            428,
+            429,
+            430,
+            1593
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 98
+          }
+        },
+        {
+          "encounterId": 189,
+          "rect": [
+            521,
+            435,
+            527,
+            454
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 99
+          }
+        },
+        {
+          "encounterId": 114,
+          "rect": [
+            251,
+            446,
+            396,
+            499
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 5,
+          "groupIds": [
+            256,
+            258,
+            255,
+            257
+          ],
+          "enemyIds": [
+            390,
+            392,
+            389,
+            391
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 100
+          }
+        },
+        {
+          "encounterId": 191,
+          "rect": [
+            532,
+            475,
+            561,
+            484
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            310,
+            311,
+            312,
+            313
+          ],
+          "enemyIds": [
+            435,
+            436,
+            437
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 105
+          }
+        },
+        {
+          "encounterId": 130,
+          "rect": [
+            513,
+            435,
+            520,
+            444
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 106
+          }
+        },
+        {
+          "encounterId": 131,
+          "rect": [
+            513,
+            444,
+            520,
+            458
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 115
+          }
+        },
+        {
+          "encounterId": 150,
+          "rect": [
+            419,
+            619,
+            485,
+            644
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 200,
+          "groupIds": [
+            273,
+            277,
+            280,
+            289,
+            285,
+            292,
+            263,
+            267,
+            270,
+            271
+          ],
+          "enemyIds": [
+            416,
+            420,
+            405,
+            401,
+            409,
+            413,
+            414
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 118
+          }
+        },
+        {
+          "encounterId": 94,
+          "rect": [
+            177,
+            123,
+            441,
+            480
+          ],
+          "probMin": 2,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 2,
+          "groupIds": [
+            239,
+            238,
+            236
+          ],
+          "enemyIds": [
+            377,
+            376,
+            380
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 119
+          }
+        },
+        {
+          "encounterId": 132,
+          "rect": [
+            503,
+            455,
+            527,
+            488
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 119
+          }
+        },
+        {
+          "encounterId": 171,
+          "rect": [
+            441,
+            257,
+            466,
+            324
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 121
+          }
+        },
+        {
+          "encounterId": 173,
+          "rect": [
+            454,
+            324,
+            461,
+            334
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 132
+          }
+        },
+        {
+          "encounterId": 161,
+          "rect": [
+            339,
+            741,
+            345,
+            775
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 138
+          }
+        },
+        {
+          "encounterId": 172,
+          "rect": [
+            441,
+            324,
+            454,
+            338
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 139
+          }
+        },
+        {
+          "encounterId": 160,
+          "rect": [
+            332,
+            750,
+            339,
+            805
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 140
+          }
+        },
+        {
+          "encounterId": 188,
+          "rect": [
+            588,
+            507,
+            598,
+            519
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 10,
+          "zorder": 90,
+          "groupIds": [
+            302,
+            303,
+            304,
+            305
+          ],
+          "enemyIds": [
+            428,
+            429,
+            430
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 146
+          }
+        },
+        {
+          "encounterId": 162,
+          "rect": [
+            345,
+            744,
+            352,
+            761
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 147
+          }
+        },
+        {
+          "encounterId": 97,
+          "rect": [
+            30,
+            327,
+            251,
+            502
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 5,
+          "groupIds": [
+            256,
+            258
+          ],
+          "enemyIds": [
+            390,
+            392
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 150
+          }
+        },
+        {
+          "encounterId": 110,
+          "rect": [
+            410,
+            367,
+            417,
+            377
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 153
+          }
+        },
+        {
+          "encounterId": 115,
+          "rect": [
+            251,
+            327,
+            332,
+            446
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 5,
+          "groupIds": [
+            258,
+            256,
+            254,
+            247,
+            245,
+            242
+          ],
+          "enemyIds": [
+            392,
+            390,
+            388,
+            384,
+            387
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 153
+          }
+        },
+        {
+          "encounterId": 112,
+          "rect": [
+            407,
+            325,
+            422,
+            367
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 157
+          }
+        },
+        {
+          "encounterId": 106,
+          "rect": [
+            422,
+            325,
+            428,
+            359
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 159
+          }
+        },
+        {
+          "encounterId": 111,
+          "rect": [
+            407,
+            367,
+            410,
+            393
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 160
+          }
+        },
+        {
+          "encounterId": 153,
+          "rect": [
+            226,
+            745,
+            244,
+            790
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 161
+          }
+        },
+        {
+          "encounterId": 136,
+          "rect": [
+            466,
+            513,
+            507,
+            618
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            407,
+            411,
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 162
+          }
+        },
+        {
+          "encounterId": 113,
+          "rect": [
+            332,
+            327,
+            407,
+            446
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 163
+          }
+        },
+        {
+          "encounterId": 118,
+          "rect": [
+            91,
+            557,
+            158,
+            572
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 15,
+          "groupIds": [
+            249
+          ],
+          "enemyIds": [
+            395
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 173
+          }
+        },
+        {
+          "encounterId": 156,
+          "rect": [
+            250,
+            814,
+            327,
+            819
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 173
+          }
+        },
+        {
+          "encounterId": 107,
+          "rect": [
+            402,
+            320,
+            414,
+            327
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 175
+          }
+        },
+        {
+          "encounterId": 157,
+          "rect": [
+            284,
+            819,
+            320,
+            830
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 178
+          }
+        },
+        {
+          "encounterId": 176,
+          "rect": [
+            456,
+            253,
+            461,
+            261
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 178
+          }
+        },
+        {
+          "encounterId": 102,
+          "rect": [
+            430,
+            526,
+            439,
+            544
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 5,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 181
+          }
+        },
+        {
+          "encounterId": 163,
+          "rect": [
+            150,
+            750,
+            226,
+            806
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 50,
+          "groupIds": [
+            293,
+            296,
+            299
+          ],
+          "enemyIds": [
+            422,
+            425
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 184
+          }
+        },
+        {
+          "encounterId": 108,
+          "rect": [
+            384,
+            314,
+            402,
+            327
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 185
+          }
+        },
+        {
+          "encounterId": 175,
+          "rect": [
+            451,
+            236,
+            458,
+            257
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 185
+          }
+        },
+        {
+          "encounterId": 174,
+          "rect": [
+            441,
+            226,
+            451,
+            257
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 192
+          }
+        },
+        {
+          "encounterId": 134,
+          "rect": [
+            486,
+            498,
+            496,
+            512
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            407,
+            411,
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 193
+          }
+        },
+        {
+          "encounterId": 159,
+          "rect": [
+            270,
+            819,
+            284,
+            826
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 195
+          }
+        },
+        {
+          "encounterId": 93,
+          "rect": [
+            467,
+            156,
+            506,
+            197
+          ],
+          "probMin": 2,
+          "probMax": 6,
+          "enemyMax": 8,
+          "zorder": 2,
+          "groupIds": [
+            236,
+            238,
+            239
+          ],
+          "enemyIds": [
+            380,
+            376,
+            377
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 197
+          }
+        },
+        {
+          "encounterId": 158,
+          "rect": [
+            320,
+            819,
+            324,
+            825
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 197
+          }
+        },
+        {
+          "encounterId": 109,
+          "rect": [
+            367,
+            305,
+            384,
+            327
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 5,
+          "groupIds": [
+            259,
+            256
+          ],
+          "enemyIds": [
+            393,
+            390
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 203
+          }
+        },
+        {
+          "encounterId": 139,
+          "rect": [
+            451,
+            694,
+            493,
+            922
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 70,
+          "groupIds": [
+            261,
+            265,
+            268,
+            284,
+            288,
+            291
+          ],
+          "enemyIds": [
+            407,
+            411,
+            400,
+            404
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 203
+          }
+        },
+        {
+          "encounterId": 135,
+          "rect": [
+            471,
+            506,
+            493,
+            514
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            283,
+            287,
+            290
+          ],
+          "enemyIds": [
+            407,
+            411,
+            399,
+            403
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 204
+          }
+        },
+        {
+          "encounterId": 154,
+          "rect": [
+            230,
+            790,
+            244,
+            796
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 206
+          }
+        },
+        {
+          "encounterId": 180,
+          "rect": [
+            219,
+            783,
+            232,
+            841
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 211
+          }
+        },
+        {
+          "encounterId": 155,
+          "rect": [
+            236,
+            796,
+            244,
+            803
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 200,
+          "groupIds": [
+            281,
+            278,
+            274,
+            270,
+            263,
+            267
+          ],
+          "enemyIds": [
+            417,
+            421,
+            409,
+            413
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 212
+          }
+        },
+        {
+          "encounterId": 181,
+          "rect": [
+            232,
+            800,
+            243,
+            836
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 217
+          }
+        },
+        {
+          "encounterId": 119,
+          "rect": [
+            314,
+            296,
+            367,
+            327
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 5,
+          "zorder": 5,
+          "groupIds": [
+            242,
+            245,
+            247,
+            255
+          ],
+          "enemyIds": [
+            384,
+            387,
+            389
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 220
+          }
+        },
+        {
+          "encounterId": 179,
+          "rect": [
+            213,
+            783,
+            219,
+            847
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 224
+          }
+        },
+        {
+          "encounterId": 182,
+          "rect": [
+            243,
+            815,
+            249,
+            826
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 226
+          }
+        },
+        {
+          "encounterId": 178,
+          "rect": [
+            205,
+            780,
+            213,
+            864
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 227
+          }
+        },
+        {
+          "encounterId": 141,
+          "rect": [
+            365,
+            805,
+            452,
+            932
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 6,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            268,
+            284,
+            288,
+            291
+          ],
+          "enemyIds": [
+            407,
+            411,
+            400,
+            404
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 228
+          }
+        },
+        {
+          "encounterId": 166,
+          "rect": [
+            40,
+            666,
+            94,
+            719
+          ],
+          "probMin": 2,
+          "probMax": 7,
+          "enemyMax": 10,
+          "zorder": 150,
+          "groupIds": [
+            315,
+            294,
+            297,
+            300
+          ],
+          "enemyIds": [
+            439,
+            423,
+            426
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 232
+          }
+        },
+        {
+          "encounterId": 142,
+          "rect": [
+            339,
+            844,
+            365,
+            944
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 6,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            268,
+            284,
+            288,
+            291
+          ],
+          "enemyIds": [
+            407,
+            411,
+            400,
+            404
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 241
+          }
+        },
+        {
+          "encounterId": 177,
+          "rect": [
+            189,
+            787,
+            205,
+            875
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 242
+          }
+        },
+        {
+          "encounterId": 170,
+          "rect": [
+            422,
+            203,
+            430,
+            211
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 259
+          }
+        },
+        {
+          "encounterId": 183,
+          "rect": [
+            167,
+            791,
+            189,
+            869
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 262
+          }
+        },
+        {
+          "encounterId": 169,
+          "rect": [
+            410,
+            192,
+            422,
+            211
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308
+          ],
+          "enemyIds": [
+            432,
+            431
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 267
+          }
+        },
+        {
+          "encounterId": 103,
+          "rect": [
+            231,
+            248,
+            314,
+            327
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 5,
+          "groupIds": [
+            256,
+            258
+          ],
+          "enemyIds": [
+            390,
+            392
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 272
+          }
+        },
+        {
+          "encounterId": 105,
+          "rect": [
+            320,
+            287,
+            326,
+            296
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 5,
+          "groupIds": [
+            256,
+            258
+          ],
+          "enemyIds": [
+            390,
+            392
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 278
+          }
+        },
+        {
+          "encounterId": 168,
+          "rect": [
+            340,
+            170,
+            410,
+            211
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 3,
+          "groupIds": [
+            309,
+            308,
+            306
+          ],
+          "enemyIds": [
+            432,
+            431,
+            433
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 279
+          }
+        },
+        {
+          "encounterId": 104,
+          "rect": [
+            314,
+            278,
+            320,
+            296
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 6,
+          "zorder": 5,
+          "groupIds": [
+            256,
+            258
+          ],
+          "enemyIds": [
+            390,
+            392
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 284
+          }
+        },
+        {
+          "encounterId": 222,
+          "rect": [
+            371,
+            866,
+            450,
+            926
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 300,
+          "groupIds": [
+            349,
+            261,
+            265,
+            268,
+            284,
+            288,
+            291
+          ],
+          "enemyIds": [
+            473,
+            474,
+            407,
+            411,
+            400,
+            404
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 295
+          }
+        },
+        {
+          "encounterId": 184,
+          "rect": [
+            150,
+            805,
+            167,
+            869
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 298
+          }
+        },
+        {
+          "encounterId": 185,
+          "rect": [
+            94,
+            805,
+            150,
+            875
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 100,
+          "groupIds": [
+            273,
+            277,
+            280,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            416,
+            420,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 315
+          }
+        },
+        {
+          "encounterId": 144,
+          "rect": [
+            155,
+            900,
+            237,
+            964
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 8,
+          "zorder": 50,
+          "groupIds": [
+            263,
+            267,
+            270,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            409,
+            413,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 323
+          }
+        },
+        {
+          "encounterId": 145,
+          "rect": [
+            212,
+            964,
+            237,
+            999
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 8,
+          "zorder": 50,
+          "groupIds": [
+            263,
+            267,
+            270,
+            272,
+            276,
+            279
+          ],
+          "enemyIds": [
+            409,
+            413,
+            415,
+            419
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 387
+          }
+        },
+        {
+          "encounterId": 146,
+          "rect": [
+            63,
+            1067,
+            112,
+            1168
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 10,
+          "zorder": 50,
+          "groupIds": [
+            261,
+            265,
+            268,
+            260,
+            264
+          ],
+          "enemyIds": [
+            407,
+            411,
+            406,
+            410
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 615
+          }
+        }
+      ],
+      "mixedRows": [
+        {
+          "encounterId": 88,
+          "rect": [
+            516,
+            238,
+            772,
+            452
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 4,
+          "zorder": 1,
+          "groupIds": [
+            228,
+            231,
+            233,
+            414
+          ],
+          "enemyIds": [
+            371,
+            374,
+            563
+          ],
+          "incoming": {
+            "containsPoint": [
+              "3000_to_200_a",
+              "3000_to_200_b"
+            ],
+            "nearestDistance": 0
+          }
+        },
+        {
+          "encounterId": 116,
+          "rect": [
+            91,
+            564,
+            250,
+            671
+          ],
+          "probMin": 1,
+          "probMax": 7,
+          "enemyMax": 8,
+          "zorder": 10,
+          "groupIds": [
+            249,
+            712
+          ],
+          "enemyIds": [
+            395,
+            1306,
+            1311
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 51
+          }
+        },
+        {
+          "encounterId": 398,
+          "rect": [
+            360,
+            213,
+            424,
+            284
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 5,
+          "zorder": 10,
+          "groupIds": [
+            309,
+            308,
+            539,
+            540,
+            541
+          ],
+          "enemyIds": [
+            432,
+            431,
+            1074,
+            1075,
+            1076
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 192
+          }
+        },
+        {
+          "encounterId": 143,
+          "rect": [
+            238,
+            859,
+            340,
+            982
+          ],
+          "probMin": 1,
+          "probMax": 6,
+          "enemyMax": 7,
+          "zorder": 50,
+          "groupIds": [
+            262,
+            266,
+            269,
+            285,
+            289,
+            292,
+            272,
+            276,
+            394
+          ],
+          "enemyIds": [
+            408,
+            412,
+            401,
+            405,
+            415,
+            419,
+            539
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 218
+          }
+        },
+        {
+          "encounterId": 138,
+          "rect": [
+            602,
+            616,
+            695,
+            722
+          ],
+          "probMin": 1,
+          "probMax": 5,
+          "enemyMax": 8,
+          "zorder": 70,
+          "groupIds": [
+            288,
+            284,
+            291,
+            287,
+            283,
+            290,
+            286,
+            282,
+            393
+          ],
+          "enemyIds": [
+            404,
+            400,
+            403,
+            399,
+            402,
+            398,
+            538
+          ],
+          "incoming": {
+            "containsPoint": [],
+            "nearestDistance": 269
+          }
+        }
+      ],
+      "unresolvedGroupRows": [
+        {
+          "encounterId": 87,
+          "rect": [
+            550,
+            282,
+            652,
+            403
+          ],
+          "missingGroupIds": [
+            799
+          ]
+        },
+        {
+          "encounterId": 137,
+          "rect": [
+            481,
+            616,
+            695,
+            807
+          ],
+          "missingGroupIds": [
+            811
+          ]
+        },
+        {
+          "encounterId": 140,
+          "rect": [
+            77,
+            806,
+            553,
+            1068
+          ],
+          "missingGroupIds": [
+            803,
+            801
+          ]
+        },
+        {
+          "encounterId": 164,
+          "rect": [
+            39,
+            656,
+            150,
+            804
+          ],
+          "missingGroupIds": [
+            808
+          ]
+        },
+        {
+          "encounterId": 167,
+          "rect": [
+            311,
+            211,
+            441,
+            345
+          ],
+          "missingGroupIds": [
+            800
+          ]
+        }
+      ]
+    }
+  },
+  "incomingPortalGroups": {
+    "100": [
+      {
+        "id": "1000_to_100_a",
+        "fromFloor": 1000,
+        "points": [
+          [
+            637,
+            491
+          ],
+          [
+            637,
+            492
+          ],
+          [
+            637,
+            493
+          ],
+          [
+            637,
+            494
+          ]
+        ]
+      },
+      {
+        "id": "1000_to_100_b",
+        "fromFloor": 1000,
+        "points": [
+          [
+            706,
+            488
+          ],
+          [
+            707,
+            488
+          ],
+          [
+            708,
+            488
+          ],
+          [
+            709,
+            488
+          ],
+          [
+            710,
+            488
+          ]
+        ]
+      },
+      {
+        "id": "2000_to_100_a",
+        "fromFloor": 2000,
+        "points": [
+          [
+            79,
+            614
+          ],
+          [
+            79,
+            615
+          ],
+          [
+            79,
+            616
+          ],
+          [
+            79,
+            617
+          ]
+        ]
+      },
+      {
+        "id": "2000_to_100_b",
+        "fromFloor": 2000,
+        "points": [
+          [
+            114,
+            660
+          ],
+          [
+            114,
+            661
+          ],
+          [
+            114,
+            662
+          ],
+          [
+            114,
+            663
+          ]
+        ]
+      }
+    ],
+    "200": [
+      {
+        "id": "3000_to_200_a",
+        "fromFloor": 3000,
+        "points": [
+          [
+            570,
+            376
+          ],
+          [
+            570,
+            377
+          ],
+          [
+            570,
+            378
+          ],
+          [
+            570,
+            379
+          ]
+        ]
+      },
+      {
+        "id": "3000_to_200_b",
+        "fromFloor": 3000,
+        "points": [
+          [
+            587,
+            313
+          ],
+          [
+            587,
+            314
+          ],
+          [
+            587,
+            315
+          ],
+          [
+            587,
+            316
+          ],
+          [
+            587,
+            317
+          ],
+          [
+            587,
+            318
+          ]
+        ]
+      },
+      {
+        "id": "4000_to_200_a",
+        "fromFloor": 4000,
+        "points": [
+          [
+            304,
+            599
+          ],
+          [
+            304,
+            600
+          ]
+        ]
+      },
+      {
+        "id": "4000_to_200_b",
+        "fromFloor": 4000,
+        "points": [
+          [
+            301,
+            640
+          ],
+          [
+            301,
+            641
+          ]
+        ]
+      }
+    ]
+  }
+}
