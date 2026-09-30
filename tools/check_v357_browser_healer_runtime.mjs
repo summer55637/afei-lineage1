@@ -34,7 +34,7 @@ assert.equal(unresolved.ok,false); assert.equal(unresolved.stage,'module-resolut
 
 const badPet=JSON.parse(JSON.stringify(state)); badPet.pets.petBox=[{id:'pet-bad',hp:1,mp:1}];
 const badPetResult=applyBrowserHealer(badPet,{now:()=> '2026-09-30T18:00:02+08:00'});
-assert.equal(badPetResult.applied,false); assert.equal(badPetResult.reason,'pet-max-hp-mp-required'); assert.equal(badPet.player.hp,31);
+assert.equal(badPetResult.applied,false); assert.equal(badPetResult.reason,'pet-max-hp-mp-required'); assert.equal(badPetResult.state.player.hp,31);
 
 const controller=createBrowserStateController({state,moduleAudit,worldNpcIndex,now:()=> '2026-09-30T18:00:03+08:00'});
 assert.equal(controller.format,BROWSER_STATE_CONTROLLER_FORMAT);
