@@ -12,7 +12,7 @@ V3.77 將 fixed-C `mapwarp.txt` 的 first-route exact source warp rows 接入 ca
 
 V3.77 與 V3.75 的 NPC Warp 分離：NPC `npcgen_warp` 仍由 `NPC_WARP_EXECUTE` 處理；map warp point 則由本輪 `WORLD_WARPPOINT_EXECUTE` 處理。
 
-目前 8 個 first-route portal groups / 37 個 source rows 全部保留；能否從玩家路徑走到 source point 仍由 V3.76 movement / reachability closure 決定，4000→200 不用 runtime 繞過。
+目前 8 個 first-route portal groups / 31 個 source rows 全部保留；能否從玩家路徑走到 source point 仍由 V3.76 movement / reachability closure 決定，4000→200 不用 runtime 繞過。
 
 ## 2026-10-01 新增：V3.76 Browser World Movement Step
 
