@@ -3,6 +3,15 @@
 更新日期：2026-09-30
 
 
+## 2026-09-30 新增：V3.70 Browser ItemShop UI state
+
+V3.70 將 ItemShop 的開店／商品選擇／數量輸入／結果提示做成 Browser State Controller 內的 ephemeral UI state。這一層不寫 Persistent State，不計價，不建立第二套 ItemShop transaction。
+
+UI session 最後沿既有 `NPC_ITEMSHOP_BUY` / `NPC_ITEMSHOP_SELL` 交易；只有真正交易成功才改 canonical Persistent State。`ITEMSHOP_UI_OPEN / SELECT_OFFER / SET_QUANTITY / CLOSE` 本身不增加 revision。
+
+因此目前 ItemShop 主線變成：`NPC → ItemShop source catalog → Item template / allocator → UI session selection → Economy transaction → Gold / Inventory → Persistent State`。
+
+仍保留 source-backed、fail-closed 邊界；不存在的 offer、未 resolved offer、無效數量直接拒絕，UI 不自行補價錢或 Item template。
 ## 2026-09-30 新增：V3.69 Offline reward completion adapter
 
 V3.69 補齊 V3.68 offline checkpoint 的 Phase 3 execution boundary。新增 stoneage-offline-reward-batch-v1：只接受外部已完成的 source-backed Battle / Reward Transaction packets，不自行計算 encounter RNG、battle result、battle 場次、EXP / Gold / Item 規則。
