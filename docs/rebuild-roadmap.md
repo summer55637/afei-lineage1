@@ -333,3 +333,9 @@ Destination closure checkpoint：`data/generated/stoneage_start_destination_clos
 同時新增 `tools/generate_verified_map_runtime.mjs`：輸入 fixed-C 的 LS2MAP binary 後，會驗證 Git blob SHA、解析 `MAP_readMapOne()` 格式、檢查 mapset image IDs、依 battlefield source manifest 建立 `RAND(0,2)` 的三候選 battlemap resolver，最後寫入 verified runtime 與 runtime index。`tools/check_verified_map_runtime_generator.mjs` 提供 synthetic 1×1 map regression。
 
 目前因為 GitHub connector 在本環境不允許以 bytes 形式取回非 UTF-8 binary blob，尚未直接由這個工具生成新的 destination map runtime；這不是拿跨版本 map 代替 source，而是保留為下一個可執行的批量 pipeline。
+
+## 2026-09-30 新增：新玩家 event owner closure
+
+四個 hometown 的 `炎龍新手接待員` source owner 已閉合到 `gmsv/data/npc/almark/xinshou/xinshou.create`，共用 `almark/xinshou/xinshoujd.arg`。腳本的四段等級／轉生分支與對應 EndSetFlg 已納入 `data/generated/stoneage_new_player_event_closure.json`，並由 `tools/audit_new_player_event_closure.mjs` 驗證。
+
+其中四個 source 座標原本在 Start Flow Index 中無法安全解析，現在已從 pinned `xinshou.create` 解出；由於其座標與出生點重疊，互動是否可在同格或必須站鄰格不能套用其他 NPC service 規則，暫維持未審計。
