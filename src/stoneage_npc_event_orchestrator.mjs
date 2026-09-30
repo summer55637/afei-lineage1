@@ -25,6 +25,19 @@ function executeNpcSourceEvent(
   if(!script||!Array.isArray(script.branches)){
     return {ok:false,reason:'source-event-script-required',state};
   }
+  const txId=String(transactionId??'').trim();
+  if(txId && state?.runtimeMeta?.npcEventTransactions?.[txId]){
+    return {
+      ok:true,
+      applied:false,
+      idempotent:true,
+      matched:true,
+      format:NPC_EVENT_ORCHESTRATOR_FORMAT,
+      branchIndex:-1,
+      transactionId:txId,
+      state
+    };
+  }
   const resolvedContext=context??defaultContext(state);
   const selected=selectEventBranch(script.branches,resolvedContext);
   if(!selected.ok){
@@ -63,7 +76,7 @@ function executeNpcSourceEvent(
       state
     };
   }
-  const tx=applyNpcEventActionPlan(state,plan,{handlers,transactionId,now});
+  const tx=applyNpcEventActionPlan(state,plan,{handlers,transactionId:txId||null,now});
   return {
     ok:tx.applied===true||tx.idempotent===true,
     applied:tx.applied===true,
