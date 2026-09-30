@@ -109,7 +109,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 
 ## 本輪新手事件 closure（2026-09-30）
 
-`stoneage_new_player_event_closure.json` 已確認四個 hometown 的 `炎龍新手接待員` 都由同一個 fixed-C `xinshoujd.arg` 驅動，並閉合 4 段 `TRANS/LV/ENDEV` 分支與 `EndSetFlg` 366/365/364/363。這四個 NPC 的 source 座標也已從 `xinshou.create` 解出；不過因為座標直接落在出生點，不能直接套用 Familyman 的 distance=1 互動規則，專用 `changeevent` interaction contract 仍待 source closure。
+`stoneage_new_player_event_closure.json` 已確認四個 hometown 的 `炎龍新手接待員` 都引用同一個 fixed-C `xinshoujd.arg`，並閉合 4 段 `TRANS/LV/ENDEV` 分支與 `EndSetFlg` 366/365/364/363；但 pinned `npctemplate.c` 沒有 `changeevent` functionSet，因此目前是 source script/reference closed、runtime module unresolved，不能當成已實例化的 NPC。
 
 本輪也新增 `tools/audit_new_player_event_closure.mjs`。
 
@@ -128,3 +128,9 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 四個 hometown 的 direct destination map 已全部從 pinned fixed-C source 找到並轉成 verified runtime：`1000=samugiru/samugiru`、`2000=marinasu/2000`、`3000=jaja/jaja`、`4000=karutana/karutana`。這也修正了先前只看檔名而漏掉 nonnumeric map filename 的判斷。
 
 四個 destination floor 共 7 個 landing points，現在 7/7 都通過 exact tile/object walkability。`2000` 的 landing points 位於 conditional encounter region；`3000` 也是 conditional encounter region。1000/4000 direct destination 的 encounter row 只是 placeholder。
+
+## Map source identity update（2026-09-30）
+
+這一輪確認了一個重要 source 規則：fixed-C `gmsv/data/map` 的檔名不一定等於 floor ID。`1000` 使用 `sainasu/samugiru/samugiru`、`3000` 使用 `jyaruga/jaja/jaja`、`4000` 使用 `jyaruga/karutana/karutana`；真正的 floor identity 以 LS2MAP header 為準。這三張圖已直接由 pinned binary 產生 verified runtime，因此現在專案共有 10 張 verified maps。
+
+`tools/generate_verified_map_runtime.mjs` 已固定這套流程；battlemap candidate 不足三個時依 fixed-C `readmap.c` 的初始化行為以 `0` 補足三個 slot，不會自行創造戰場編號。
