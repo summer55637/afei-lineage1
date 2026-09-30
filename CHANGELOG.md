@@ -1,5 +1,15 @@
 目前正式可玩的 playable baseline：V3.09。V3.10 之後版本為 source/runtime/presentation groundwork，不取代 V3.09。
 
+## V3.20 — real tile presentation
+
+2026-09-30
+
+- 新增 `src/stoneage_tile_presentation.mjs`，把 source map 的 tile/object image ID 串到 authorized client asset pack、ADRNBIN、Real、RD、SAP 與 Canvas。
+- `map.cpp::drawMap()` 的同格 draw order 已由公開 client source 固定為 tile → parts/object；V3.20 preview 採同一順序。
+- WORLD scene 新增 current Encounter tile/object Canvas preview；缺少 operator-supplied 授權素材時保持隱藏與 fail-closed。
+- 不修改 Encounter RNG、map runtime、battle runtime、save schema 或 playable baseline。
+- 新增 V3.20 regression、game.js syntax CI 與 source reference。
+
 ## V3.19 — palette runtime contract
 
 2026-09-30
