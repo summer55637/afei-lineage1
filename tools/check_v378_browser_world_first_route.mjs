@@ -63,7 +63,7 @@ const planned=await controller.dispatch({
   type:ACTION_WORLD_FIRST_ROUTE_PLAN,
   routeId:'hometown-0/floor-1000-to-100/1000_to_100_a'
 });
-assert.equal(planned.ok,true);
+assert.equal(planned.ok,true,JSON.stringify(planned));
 assert.equal(planned.handled,true);
 assert.equal(planned.stage,'first-route-plan');
 assert.equal(planned.format,BROWSER_WORLD_ROUTE_RUNTIME_FORMAT);
