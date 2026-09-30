@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'game.css'
-      - 'start.html'
+      - 'index.html'
       - 'data/generated/stoneage_battlefield_source_manifest.json'
       - 'tools/check_v312_battlefield_source_contract.mjs'
       - 'docs/reference/v312-battlefield-source-contract.md'
