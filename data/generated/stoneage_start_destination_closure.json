@@ -1,0 +1,334 @@
+{
+  "format": "stoneage-start-destination-closure-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "encount": "gmsv/src/char/encount.c::ENCOUNT_initEncount",
+    "encountFile": "gmsv/data/encount.txt",
+    "mapRuntime": "src/stoneage_map_runtime.mjs::sourceMapWalkableAt",
+    "mapSourceCatalog": "data/generated/stoneage_map_source_catalog.json",
+    "worldGraph": "data/generated/stoneage_world_graph_index.json::directedFloorEdges"
+  },
+  "sourceEvidence": {
+    "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
+    "encountRowsTotal": 1197,
+    "activeEncounterDefinition": "probMax > 0 AND at least one numeric group id"
+  },
+  "statistics": {
+    "hometowns": 4,
+    "destinationFloors": 4,
+    "exactSourceMaps": 1,
+    "landingPoints": 7,
+    "walkabilityVerifiedPoints": 2,
+    "activeEncounterDestinationFloors": 2,
+    "placeholderOnlyDestinationFloors": 2,
+    "unresolvedDestinationMaps": 3
+  },
+  "towns": [
+    {
+      "hometown": 0,
+      "elder": "samugiru",
+      "spawn": {
+        "floor": 1006,
+        "x": 15,
+        "y": 22,
+        "elder": "samugiru"
+      },
+      "destinationFloor": 1000,
+      "sourceMap": {
+        "catalogPresent": false,
+        "sourcePath": null,
+        "sourceBlobSha": null,
+        "verifiedRuntime": false,
+        "runtimePath": null,
+        "runtimePresent": false,
+        "exactBlobMatch": false,
+        "status": "unresolved"
+      },
+      "encounterEvidence": {
+        "allRowCount": 1,
+        "activeRowCount": 0,
+        "activeRows": [],
+        "classification": "placeholder_only"
+      },
+      "landingAudit": [
+        {
+          "x": 98,
+          "y": 44,
+          "walkability": null,
+          "activeEncounterRegions": []
+        },
+        {
+          "x": 98,
+          "y": 45,
+          "walkability": null,
+          "activeEncounterRegions": []
+        }
+      ],
+      "nearestActiveEncounter": {
+        "floor": 100,
+        "path": [
+          1000,
+          100
+        ],
+        "depth": 1,
+        "reason": "first reachable floor with active encounter evidence in directed world graph"
+      }
+    },
+    {
+      "hometown": 1,
+      "elder": "marinasu",
+      "spawn": {
+        "floor": 2006,
+        "x": 20,
+        "y": 16,
+        "elder": "marinasu"
+      },
+      "destinationFloor": 2000,
+      "sourceMap": {
+        "catalogPresent": true,
+        "sourcePath": "gmsv/data/map/sainasu/marinasu/2000",
+        "sourceBlobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
+        "verifiedRuntime": true,
+        "runtimePath": "data/generated/stoneage_map_2000.json",
+        "runtimePresent": true,
+        "exactBlobMatch": true,
+        "status": "verified"
+      },
+      "encounterEvidence": {
+        "allRowCount": 2,
+        "activeRowCount": 1,
+        "activeRows": [
+          {
+            "index": 831,
+            "line": 793,
+            "rect": {
+              "x1": 1,
+              "y1": 1,
+              "x2": 150,
+              "y2": 150
+            },
+            "probMin": 1,
+            "probMax": 5,
+            "enemyMax": 1,
+            "groups": [
+              1018
+            ]
+          }
+        ],
+        "classification": "active"
+      },
+      "landingAudit": [
+        {
+          "x": 56,
+          "y": 48,
+          "walkability": {
+            "tile": 6020,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "activeEncounterRegions": [
+            {
+              "index": 831,
+              "line": 793,
+              "rect": {
+                "x1": 1,
+                "y1": 1,
+                "x2": 150,
+                "y2": 150
+              },
+              "containsLanding": true,
+              "probMin": 1,
+              "probMax": 5,
+              "enemyMax": 1,
+              "groups": [
+                1018
+              ]
+            }
+          ]
+        },
+        {
+          "x": 57,
+          "y": 48,
+          "walkability": {
+            "tile": 6025,
+            "object": 0,
+            "groundWalk": true,
+            "objectWalk": true,
+            "groundHeight": false,
+            "objectHeight": false,
+            "walkable": true
+          },
+          "activeEncounterRegions": [
+            {
+              "index": 831,
+              "line": 793,
+              "rect": {
+                "x1": 1,
+                "y1": 1,
+                "x2": 150,
+                "y2": 150
+              },
+              "containsLanding": true,
+              "probMin": 1,
+              "probMax": 5,
+              "enemyMax": 1,
+              "groups": [
+                1018
+              ]
+            }
+          ]
+        }
+      ],
+      "nearestActiveEncounter": {
+        "floor": 2000,
+        "path": [
+          2000
+        ],
+        "depth": 0,
+        "reason": "direct destination has active encounter row"
+      }
+    },
+    {
+      "hometown": 2,
+      "elder": "jaja",
+      "spawn": {
+        "floor": 3006,
+        "x": 21,
+        "y": 16,
+        "elder": "jaja"
+      },
+      "destinationFloor": 3000,
+      "sourceMap": {
+        "catalogPresent": false,
+        "sourcePath": null,
+        "sourceBlobSha": null,
+        "verifiedRuntime": false,
+        "runtimePath": null,
+        "runtimePresent": false,
+        "exactBlobMatch": false,
+        "status": "unresolved"
+      },
+      "encounterEvidence": {
+        "allRowCount": 3,
+        "activeRowCount": 1,
+        "activeRows": [
+          {
+            "index": 828,
+            "line": 790,
+            "rect": {
+              "x1": 1,
+              "y1": 1,
+              "x2": 150,
+              "y2": 150
+            },
+            "probMin": 1,
+            "probMax": 5,
+            "enemyMax": 1,
+            "groups": [
+              1015
+            ]
+          }
+        ],
+        "classification": "active"
+      },
+      "landingAudit": [
+        {
+          "x": 90,
+          "y": 60,
+          "walkability": null,
+          "activeEncounterRegions": [
+            {
+              "index": 828,
+              "line": 790,
+              "rect": {
+                "x1": 1,
+                "y1": 1,
+                "x2": 150,
+                "y2": 150
+              },
+              "containsLanding": true,
+              "probMin": 1,
+              "probMax": 5,
+              "enemyMax": 1,
+              "groups": [
+                1015
+              ]
+            }
+          ]
+        }
+      ],
+      "nearestActiveEncounter": {
+        "floor": 3000,
+        "path": [
+          3000
+        ],
+        "depth": 0,
+        "reason": "direct destination has active encounter row"
+      }
+    },
+    {
+      "hometown": 3,
+      "elder": "karutarna",
+      "spawn": {
+        "floor": 4006,
+        "x": 14,
+        "y": 20,
+        "elder": "karutarna"
+      },
+      "destinationFloor": 4000,
+      "sourceMap": {
+        "catalogPresent": false,
+        "sourcePath": null,
+        "sourceBlobSha": null,
+        "verifiedRuntime": false,
+        "runtimePath": null,
+        "runtimePresent": false,
+        "exactBlobMatch": false,
+        "status": "unresolved"
+      },
+      "encounterEvidence": {
+        "allRowCount": 1,
+        "activeRowCount": 0,
+        "activeRows": [],
+        "classification": "placeholder_only"
+      },
+      "landingAudit": [
+        {
+          "x": 80,
+          "y": 90,
+          "walkability": null,
+          "activeEncounterRegions": []
+        },
+        {
+          "x": 80,
+          "y": 91,
+          "walkability": null,
+          "activeEncounterRegions": []
+        }
+      ],
+      "nearestActiveEncounter": {
+        "floor": 200,
+        "path": [
+          4000,
+          200
+        ],
+        "depth": 1,
+        "reason": "first reachable floor with active encounter evidence in directed world graph"
+      }
+    }
+  ],
+  "status": {
+    "destinationWalkability": "partial",
+    "directDestinationEncounter": "partial",
+    "fullFirstRoute": "partial"
+  },
+  "policy": "Do not treat zero-probability/no-group encounter placeholders as active encounters. Missing fixed-source destination map blobs remain unresolved and are never replaced by guessed or cross-version maps."
+}
