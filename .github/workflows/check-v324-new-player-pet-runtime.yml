@@ -1,0 +1,30 @@
+name: Check V3.24 new-player Pet runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_new_player_pet_runtime.mjs'
+      - 'tools/generate_new_player_pet_runtime.mjs'
+      - 'tools/check_v324_new_player_pet_runtime.mjs'
+      - 'data/generated/stoneage_new_player_pet_runtime.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
+      - '.github/workflows/check-v324-new-player-pet-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_new_player_pet_runtime.mjs
+          node --check tools/generate_new_player_pet_runtime.mjs
+          node --check tools/check_v324_new_player_pet_runtime.mjs
+      - name: Run V3.24 Pet runtime regression
+        run: node tools/check_v324_new_player_pet_runtime.mjs
