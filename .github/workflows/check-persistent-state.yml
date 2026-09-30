@@ -9,6 +9,8 @@ on:
       - 'src/stoneage_idle_loop.mjs'
       - 'data/generated/stoneage_idle_loop_contract.json'
       - 'tools/check_idle_loop_contract.mjs'
+      - 'data/generated/stoneage_first_idle_route_catalog.json'
+      - 'tools/check_first_idle_route_catalog.mjs'
       - '.github/workflows/check-persistent-state.yml'
 
 permissions:
@@ -26,3 +28,5 @@ jobs:
         run: node tools/check_persistent_state_schema.mjs
       - name: Run idle loop regression
         run: node tools/check_idle_loop_contract.mjs
+      - name: Run first idle route regression
+        run: node tools/check_first_idle_route_catalog.mjs
