@@ -293,3 +293,15 @@ V3.24 regression 已納入 GitHub Actions。
 - new-player closure 現在標示 Item / Pet definitions 都已 source-closed；`Charm` concrete semantics 與 `changeevent` template runtime 仍 pending。
 
 V3.25 regression 已納入 GitHub Actions。
+
+## V3.26 Event Flag Runtime
+
+新增 `src/stoneage_event_flag_runtime.mjs`、`tools/check_v326_event_flag_runtime.mjs`、`.github/workflows/check-v326-event-flag-runtime.yml` 與 `docs/reference/v326-event-flag-runtime.md`。
+
+- fixed-C `CHAR_ENDEVENT/CHAR_NOWEVENT` 旗標現在以 `eventId / 32` + `eventId % 32` bitset 規則來源化。
+- dynamic `endWords / nowWords` 支援高於前 96 個旗標的 first-route event（例如 363–366），不硬猜固定 word 數。
+- `EndSetFlg / NowSetFlg` 可直接由 V3.22 transaction 使用 source-backed handlers。
+- V3.21 `ENDEV / NOWEV` condition 在沒有 caller override 時會直接讀 canonical event flag runtime。
+- `Charm:1` 仍未被猜成任何 canonical mutation。
+
+V3.26 regression 已納入 GitHub Actions。
