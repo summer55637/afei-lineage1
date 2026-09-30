@@ -23,6 +23,7 @@ import { createBrowserWorldEncounterRuntime, ACTION_WORLD_ENCOUNTER_PREPARE, ACT
 import { createBrowserWorldEncounterPersistenceRuntime, ACTION_WORLD_ENCOUNTER_ROLL_COMMIT, BROWSER_WORLD_ENCOUNTER_PERSISTENCE_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_persistence_runtime.mjs';
 import { createBrowserWorldEncounterGroupRuntime, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_group_runtime.mjs';
 import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_enemy_runtime.mjs';
+import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT, BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT } from './stoneage_browser_world_encounter_idle_bridge.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -82,6 +83,7 @@ function createBrowserStateController({
   const worldEncounterPersistenceRuntime=encounterTargetIndex ? createBrowserWorldEncounterPersistenceRuntime({encounterTargetIndex}) : null;
   const worldEncounterGroupRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterGroupRuntime({groupCatalog:encounterGroupCatalog}) : null;
   const worldEncounterEnemyRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterEnemyRuntime({groupCatalog:encounterGroupCatalog}) : null;
+  const worldEncounterIdleBridge=encounterTargetIndex ? createBrowserWorldEncounterIdleBridge({encounterTargetIndex}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -177,6 +179,21 @@ function createBrowserStateController({
           battleModeNone:action.battleModeNone!==false,
           warpBlocked:action.warpBlocked===true
         });
+        return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT){
+        if(!worldEncounterIdleBridge)return {ok:false,handled:false,stage:'encounter-idle-bridge',reason:'browser-world-encounter-idle-bridge-not-configured',state:clone(currentState)};
+        if(worldEncounterIdleBridge.ok!==true)return {ok:false,handled:false,stage:'encounter-idle-bridge',reason:worldEncounterIdleBridge.reason??'browser-world-encounter-idle-bridge-invalid',errors:worldEncounterIdleBridge.errors??[],state:clone(currentState)};
+        const result=await worldEncounterIdleBridge.commit(currentState,{
+          position:action.position??action.player??null,
+          encounterId:action.encounterId??null,
+          cep:action.cep==null?null:action.cep,
+          rng120:action.rng120??null,
+          expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+          savedAt:clockFactory(action.savedAt??action.now,now),
+          source:action.source??'browser-world-encounter-idle'
+        });
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE){
@@ -383,6 +400,7 @@ export {
   ACTION_WORLD_ENCOUNTER_ROLL_COMMIT,
   ACTION_WORLD_ENCOUNTER_GROUP_SELECT,
   ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
+  ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
@@ -393,6 +411,7 @@ export {
   BROWSER_WORLD_ENCOUNTER_PERSISTENCE_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT,
   BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT,
+  BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
