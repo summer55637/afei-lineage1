@@ -8,12 +8,13 @@
   "statistics": {
     "npcFiles": 3960,
     "uniqueEventIds": 160,
-    "eventReferenceOccurrences": 11707,
+    "eventReferenceOccurrences": 10552,
     "missionMatchedIds": 4,
     "jobdailyMatchedIds": 117,
     "unresolvedFromMissionJobdaily": 43,
     "startupDefaultMatchedUnresolvedIds": 4,
-    "ownerlessUnresolvedIds": 39
+    "encounterOwnedUnresolvedIds": 1,
+    "ownerlessUnresolvedIds": 38
   },
   "startupDefaults": {
     "eventEnd": [
@@ -55,12 +56,13 @@
   },
   "events": [
     {
-      "eventId": -1,
-      "occurrences": 3549,
+      "eventId": 0,
+      "occurrences": 2386,
       "roles": [
-        "EventNo"
+        "EncounterEventEnd",
+        "EncounterEventNow"
       ],
-      "uniqueFiles": 897,
+      "uniqueFiles": 1,
       "sourceBuckets": {
         "mission": false,
         "jobdaily": false,
@@ -69,116 +71,132 @@
       },
       "samples": [
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 9,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 1,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "21,100,582,399,783,560,1,5,2,40,88,91,89,92,1230,,,,,,50,50,10,10,100,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 21,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 1,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "21,100,582,399,783,560,1,5,2,40,88,91,89,92,1230,,,,,,50,50,10,10,100,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 33,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 2,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "22,100,591,552,685,695,1,5,3,20,88,91,89,92,94,1230,,,,,30,30,30,30,10,100,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 45,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 2,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "22,100,591,552,685,695,1,5,3,20,88,91,89,92,94,1230,,,,,30,30,30,30,10,100,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 57,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 3,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "23,100,423,552,594,788,1,5,5,30,90,93,94,1230,,,,,,,30,30,30,100,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 69,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 3,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "23,100,423,552,594,788,1,5,5,30,90,93,94,1230,,,,,,,30,30,30,100,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 81,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 4,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "24,100,541,375,592,554,1,5,4,20,89,92,96,99,95,98,1230,,,,30,30,40,40,5,5,100,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 92,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 4,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "24,100,541,375,592,554,1,5,4,20,89,92,96,99,95,98,1230,,,,30,30,40,40,5,5,100,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 104,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 5,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "25,100,479,355,541,557,1,5,5,30,90,93,97,100,1230,,,,,,20,20,20,20,100,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 116,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 5,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "25,100,479,355,541,557,1,5,5,30,90,93,97,100,1230,,,,,,20,20,20,20,100,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 128,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 6,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "26,100,425,387,480,554,1,5,6,40,97,100,101,,,,,,,,20,20,10,,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 140,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 6,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "26,100,425,387,480,554,1,5,6,40,97,100,101,,,,,,,,20,20,10,,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 152,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 7,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "27,100,403,316,526,391,1,5,5,20,90,93,97,100,,,,,,,30,30,30,30,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 164,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 7,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "27,100,403,316,526,391,1,5,5,20,90,93,97,100,,,,,,,30,30,30,30,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 175,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 8,
+          "role": "EncounterEventNow",
+          "id": 0,
+          "expression": "EncounterEventNow=0",
+          "raw": "28,100,11,567,155,707,1,5,2,20,104,107,110,113,,,,,,,30,30,10,10,,,,,,,,,"
         },
         {
-          "path": "gmsv/data/npc/allhallows/DEADJOE",
-          "line": 186,
-          "role": "EventNo",
-          "expression": "EventNo:-1",
-          "raw": "EventNo:-1"
+          "path": "gmsv/data/encount.txt",
+          "line": 8,
+          "role": "EncounterEventEnd",
+          "id": 0,
+          "expression": "EncounterEventEnd=0",
+          "raw": "28,100,11,567,155,707,1,5,2,20,104,107,110,113,,,,,,,30,30,10,10,,,,,,,,,"
         }
       ]
     },
@@ -3823,6 +3841,137 @@
       ]
     },
     {
+      "eventId": 88,
+      "occurrences": 67,
+      "roles": [
+        "ENDEV",
+        "EncounterEventNow",
+        "EventNo",
+        "NOWEV"
+      ],
+      "uniqueFiles": 25,
+      "sourceBuckets": {
+        "mission": false,
+        "jobdaily": true,
+        "startupEnd": true,
+        "startupNow": false
+      },
+      "samples": [
+        {
+          "path": "gmsv/data/npc/eden2/eden/eden_citizen01",
+          "line": 6,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/eden/eden_citizen02",
+          "line": 6,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/eden/eden_citizen06",
+          "line": 6,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/eden/eden_citizen07",
+          "line": 6,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/eden/eden_citizen11",
+          "line": 6,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/eden/eden_citizen16",
+          "line": 6,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/ev88_02.arg",
+          "line": 18,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "FREE:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/ev88_05.arg",
+          "line": 23,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "FREE:LV>90&ENDEV=81&ENDEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/ev88_07.arg",
+          "line": 23,
+          "role": "NOWEV",
+          "expression": "NOWEV=88",
+          "raw": "FREE:LV>90&ENDEV=81&NOWEV=88"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 19,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&ENDEV=224&NOWEV=225&ITEM=2895"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 29,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&ENDEV=224&NOWEV=225"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 35,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&NOWEV=224"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 41,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&ENDEV=224"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 47,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 56,
+          "role": "ENDEV",
+          "expression": "ENDEV=88",
+          "raw": "EVENT:LV>90&ENDEV=81&ENDEV=88&ENDEV=89"
+        },
+        {
+          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
+          "line": 62,
+          "role": "EventNo",
+          "expression": "EventNo:88",
+          "raw": "EventNo:88"
+        }
+      ]
+    },
+    {
       "eventId": 94,
       "occurrences": 66,
       "roles": [
@@ -4599,136 +4748,6 @@
           "role": "ENDEV",
           "expression": "ENDEV=114",
           "raw": "FREE:LV>89&ENDEV=4&ENDEV=81&ENDEV=112&ENDEV=113&ENDEV=114&NOWEV=115&ITEM=20214|TO:7024,8,19|OVER"
-        }
-      ]
-    },
-    {
-      "eventId": 88,
-      "occurrences": 59,
-      "roles": [
-        "ENDEV",
-        "EventNo",
-        "NOWEV"
-      ],
-      "uniqueFiles": 24,
-      "sourceBuckets": {
-        "mission": false,
-        "jobdaily": true,
-        "startupEnd": true,
-        "startupNow": false
-      },
-      "samples": [
-        {
-          "path": "gmsv/data/npc/eden2/eden/eden_citizen01",
-          "line": 6,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/eden/eden_citizen02",
-          "line": 6,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/eden/eden_citizen06",
-          "line": 6,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/eden/eden_citizen07",
-          "line": 6,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/eden/eden_citizen11",
-          "line": 6,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/eden/eden_citizen16",
-          "line": 6,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/ev88_02.arg",
-          "line": 18,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "FREE:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/ev88_05.arg",
-          "line": 23,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "FREE:LV>90&ENDEV=81&ENDEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/ev88_07.arg",
-          "line": 23,
-          "role": "NOWEV",
-          "expression": "NOWEV=88",
-          "raw": "FREE:LV>90&ENDEV=81&NOWEV=88"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 19,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&ENDEV=224&NOWEV=225&ITEM=2895"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 29,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&ENDEV=224&NOWEV=225"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 35,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&NOWEV=224"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 41,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89&ENDEV=224"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 47,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "EVENT:HERO_I_NOW=2&ENDEV=81&ENDEV=88&ENDEV=89"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 56,
-          "role": "ENDEV",
-          "expression": "ENDEV=88",
-          "raw": "EVENT:LV>90&ENDEV=81&ENDEV=88&ENDEV=89"
-        },
-        {
-          "path": "gmsv/data/npc/eden2/kraken/kraken88_01",
-          "line": 62,
-          "role": "EventNo",
-          "expression": "EventNo:88",
-          "raw": "EventNo:88"
         }
       ]
     },
@@ -15793,7 +15812,7 @@
     }
   ],
   "unresolvedEventIds": [
-    -1,
+    0,
     10,
     11,
     12,
@@ -15837,8 +15856,16 @@
     365,
     366
   ],
+  "startupOwnedUnresolvedIds": [
+    48,
+    49,
+    50,
+    51
+  ],
+  "encounterOwnedUnresolvedIds": [
+    0
+  ],
   "ownerlessUnresolvedIds": [
-    -1,
     10,
     11,
     12,
