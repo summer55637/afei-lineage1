@@ -232,3 +232,16 @@ Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`�
 - 完整 source generator 尚未把固定 C checkout 複製到本 repo，所以目前不宣稱 336 個 ItemShop binding 已全部寫入 generated catalog；現有 service index 已確認 ItemShop = 336 bindings / 190 floors。
 
 詳細邊界：`docs/reference/npc-itemshop-runtime.md`。
+
+## V3.21 NPC Event / Quest Plan Runtime
+
+新增 `src/stoneage_npc_event_runtime.mjs`、`tools/check_npc_event_runtime.mjs`、`.github/workflows/check-v321-npc-event-runtime.yml` 與 `docs/reference/v321-npc-event-plan-runtime.md`。
+
+- source-compatible condition parser：`LV / TRANS / GOLD / ITEM / ENDEV / NOWEV`。
+- condition 組合保留 fixed-C 的 comma alternatives + `&` conjunction。
+- branch selector 直接吃已閉合的 new-player event source。
+- `GetItem / GetPet / Charm / EndSetFlg / NowSetFlg` 先編譯成 literal action plan，不在尚未閉合時猜 mutation 語意。
+- unsupported condition / 缺少 event-state adapter 時 fail-closed。
+- 下一層才將 action plan 接 Item allocator、Pet factory、event-state writer 與 Save Transaction。
+
+V3.21 regression 已納入 GitHub Actions。
