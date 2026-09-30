@@ -31,7 +31,7 @@
 
 ### NPC → ItemShop → Item → Gold → Persistent State
 
-Canonical Browser Shell → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State
+Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State
 
 目前 source 文件記錄完整 336 個 ItemShop binding。 Browser ItemShop bridge 使用同一條 contract，不另建第二套商店或貨幣規則。
 
@@ -86,7 +86,7 @@ docs/reference/video-001-visual-reference.md 是重要的流程與視覺參考�
 
 目前最重要的 runtime 主線：
 
-Player / Canonical Browser Shell
+Player / Browser-facing runtime contract
 → NPC interaction gate
 → NPC ItemShop
 → source Item template
@@ -103,7 +103,7 @@ Browser、NPC、Item、Economy、Persistent State 各自有清楚的 contract；
 
 已建立：
 
-- canonical browser shell：index.html
+- browser-facing runtime contract（不等於可玩 HTML）
 - Persistent State Schema v1
 - Save Envelope / migration contract
 - Idle Loop contract
@@ -112,7 +112,7 @@ Browser、NPC、Item、Economy、Persistent State 各自有清楚的 contract；
 - NPC ItemShop runtime
 - Item source runtime
 - Item / Economy runtime
-- browser ItemShop bridge
+- browser-facing ItemShop bridge（headless contract）
 - first-route / world-exit / encounter path closure
 - verified LS2MAP runtime pipeline
 
@@ -132,9 +132,9 @@ Browser、NPC、Item、Economy、Persistent State 各自有清楚的 contract；
 
 ### 唯一入口
 
-正式可玩階段只保留一個 canonical HTML entry。
+目前刻意不保留任何 HTML playable entry。等資料、runtime contract 與 regression 成熟後，才一次建立唯一 canonical playable entry。
 
-研究工具、generated data、runtime module、測試 regression 與 playable shell 分層，不再累積 game.html、game-live.html、play.html、start.html 等平行入口。
+研究工具、generated data 與 runtime module 維持獨立，不再累積 game.html、game-live.html、play.html、start.html 等平行入口。
 
 ### Fixture 不得冒充 production data
 
@@ -195,7 +195,7 @@ docs/                      roadmap、source contract、視覺與 runtime 文件
 src/                       runtime modules
 tools/                     generator、audit、regression
 .github/workflows/         GitHub Actions regression 與 README 自動維護
-index.html                 唯一 canonical browser shell
+（目前沒有 HTML playable entry）
 README.md                  專案總覽；狀態區由 workflow 自動更新
 
 ## 重要閱讀順序
