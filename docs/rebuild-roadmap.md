@@ -12,15 +12,17 @@ V3.50 把目前已 source-closed 的新玩家流程串成單一 headless pipelin
 
 這個 pipeline 的 staged commit 是產品/runtime transaction boundary，不宣稱 fixed-C `CHAR_createNewChar()` 本身是 atomic transaction。測試中的 Item adapter 是 test-only synthetic fixture，只驗證未來取得正式 Item adapter 後，creation → save → reload contract 能完整工作，不升格為正式 Item data。
 
-## 2026-09-30 新增：V3.49 Starter Item 24114 source audit
+## 2026-09-30 新增：V3.51 Starter Item 24114 source mapping audit
 
-V3.49 沿 pinned fixed-C `gmsv/setup.cf → _ITEMSET6_TXT → itemset6file → config.itemfile → ITEM_readItemConfFile → ITEM_makeItem` 重新驗證新手 Item1=24114。
+V3.51 修正 V3.49 的錯誤資料判讀：固定 pinned commit 的 `gmsv/data/itemset6.txt` 並非 0 bytes，而是 2,777,181 bytes、10,744 行。
 
-fixed build 開啟 `_ITEMSET6_TXT`，因此實際 Item data file 是 `gmsv/data/itemset6.txt`。該檔案在 pinned commit 是 0 bytes，沒有任何 Item row；`ITEM_readItemConfFile()` 對空表會在 `maxid <= 0` 直接回傳 FALSE。`ITEM_makeItem()` 又要求 `ITEM_CHECKITEMTABLE(number)` 成立後才能複製 `ITEM_tbl[number].itm`。
+更重要的是，`ITEM1=24114` 不是該檔案第 17 欄 `id`。固定 build 啟用 `_ITEMSET2_ITEM`，`ITEM_readItemConfFile()` 使用第 17 個 token 作為 `ITEM_ID`；而 pinned `version.h` 沒有定義 `_IMPOROVE_ITEMTABLE`，所以不存在 `ITEM_TransformList` 的 ID remap。
 
-因此 Item 24114 現在可明確分層：source config / creation path closed；allocator implementation closed，但 24114 template row 未閉合，因此 24114 的實際 grant 仍 fail-closed。不得從其他版本、其他 StoneAge port 或外部資料補名稱、效果、價格、分類或其他 template 欄位。
+在 `itemset6.txt` 第 3602 行，24114 的唯一數值 occurrence 位於第 18 欄：`id=11817`、`imagenumber=24114`、`cost=9900`、`type=16`。因此 source Item table key 是 11817，不是 24114。
 
-下一步仍是同一 pinned source 的 Item data / packaging / migration evidence search；只有取得同版本可直接對應 24114 的 template，才升格到 starter-item allocator grant。
+固定 C 的 `CHAR_loginAddItemForNew()` 直接把 `ITEM1=24114` 傳入 `ITEM_makeItemAndRegist(24114)`，而 `ITEM_makeItem()` 先檢查 `ITEM_CHECKITEMTABLE(24114)`。在目前 pinned build 下不能把 imageNumber 24114 自行重映射成 Item ID 24114，否則會改變 fixed-C semantics。
+
+所以目前正確狀態是：Item source file ✅、24114 對應資料 row ✅、allocator implementation ✅，但 configured source Item ID 24114 的執行閉合仍 ❌，因此 starter-item grant 維持 fail-closed。V3.50 的 creation → save pending/resume boundary 不變。
 
 ## 2026-09-30 新增：V3.48 fixed-C Starter Pet rank closure
 
