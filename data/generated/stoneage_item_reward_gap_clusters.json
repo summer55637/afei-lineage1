@@ -1,0 +1,294 @@
+{
+  "format": "stoneage-item-reward-gap-cluster-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "itemPath": "gmsv/data/itemset6.txt",
+    "idColumn1Based": 17
+  },
+  "statistics": {
+    "clusterCount": 1,
+    "totalUnresolvedRewardOccurrences": 468,
+    "uniqueUnresolvedRewardIds": 30
+  },
+  "clusters": [
+    {
+      "pathPrefix": "gmsv/data/npc",
+      "occurrences": 468,
+      "uniqueIds": 163,
+      "roles": [
+        "AddItem",
+        "DelItem",
+        "GetItem",
+        "GetRandItem",
+        "ITEM"
+      ],
+      "topIds": [
+        {
+          "id": 4212,
+          "count": 66
+        },
+        {
+          "id": 2842,
+          "count": 27
+        },
+        {
+          "id": 2838,
+          "count": 19
+        },
+        {
+          "id": 2839,
+          "count": 19
+        },
+        {
+          "id": 2841,
+          "count": 19
+        },
+        {
+          "id": 2846,
+          "count": 19
+        },
+        {
+          "id": 2840,
+          "count": 18
+        },
+        {
+          "id": 2843,
+          "count": 17
+        },
+        {
+          "id": 2845,
+          "count": 17
+        },
+        {
+          "id": 2844,
+          "count": 16
+        },
+        {
+          "id": 2847,
+          "count": 15
+        },
+        {
+          "id": 19395,
+          "count": 4
+        },
+        {
+          "id": 19396,
+          "count": 4
+        },
+        {
+          "id": 19402,
+          "count": 4
+        },
+        {
+          "id": 21214,
+          "count": 4
+        },
+        {
+          "id": 21215,
+          "count": 4
+        },
+        {
+          "id": 21216,
+          "count": 4
+        },
+        {
+          "id": 21217,
+          "count": 4
+        },
+        {
+          "id": 22214,
+          "count": 4
+        },
+        {
+          "id": 22215,
+          "count": 4
+        },
+        {
+          "id": 2791,
+          "count": 3
+        },
+        {
+          "id": 2792,
+          "count": 3
+        },
+        {
+          "id": 2793,
+          "count": 3
+        },
+        {
+          "id": 19397,
+          "count": 3
+        },
+        {
+          "id": 19398,
+          "count": 3
+        },
+        {
+          "id": 19399,
+          "count": 3
+        },
+        {
+          "id": 19400,
+          "count": 3
+        },
+        {
+          "id": 19401,
+          "count": 3
+        },
+        {
+          "id": 22216,
+          "count": 3
+        },
+        {
+          "id": 22217,
+          "count": 3
+        }
+      ],
+      "samples": [
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 4212,
+          "path": "gmsv/data/npc/genout/msg_4014_17_19",
+          "line": 20,
+          "role": "ITEM",
+          "expression": "ITEM!=4212"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 13,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2839,2840,2841,2842"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 24,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2840,2841,2842"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 35,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2841,2842"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 46,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2838,2839,2840,2842"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 52,
+          "role": "ITEM",
+          "expression": "ITEM=2842"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 55,
+          "role": "DelItem",
+          "expression": "DelItem:2842"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 68,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2842,2844,2845,2846,2847"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 79,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2845,2846,2847"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847"
+        },
+        {
+          "id": 2842,
+          "path": "gmsv/data/npc/party/piggod/DEADJOE",
+          "line": 90,
+          "role": "GetRandItem",
+          "expression": "GetRandItem:2843,2842,2842,2846,2847"
+        }
+      ]
+    }
+  ],
+  "policy": "Clusters are descriptive source-data groupings only; no runtime priority is inferred from counts."
+}
