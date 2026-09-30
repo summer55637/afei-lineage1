@@ -1342,3 +1342,26 @@ V3.98 將 fixed-C `BATTLE_TargetCheck()` 接到 browser，建立 read-only basic
 
 V3.98 目前仍不做 Bow 多目標、Boomerang table、special skill area、Capture policy 或 `BATTLE_Attack()` damage。
 
+## 2026-10-01 V3.99 Browser Battle Default Target Runtime
+
+V3.99 將 fixed-C `BATTLE_DefaultAttacker()` 接成 read-only browser runtime。
+
+固定順序：
+1. 掃指定 side 的 10 個 Entry。
+2. 排除不存在的 Entry。
+3. 排除 RESCUE。
+4. 以 `BATTLE_TargetCheck()` 篩掉無效目標。
+5. 無候選時回 `-1`。
+6. 有候選時消耗 `RAND(0,candidateCount-1)`。
+
+Browser 使用 caller-injected `defaultTargetRoll`，因此不在 runtime 內藏 RNG。
+
+新增：
+- `src/stoneage_browser_battle_default_target_runtime.mjs`
+- `data/generated/stoneage_browser_battle_default_target_schema.json`
+- `tools/check_v399_browser_battle_default_target_runtime.mjs`
+- `docs/reference/v399-browser-battle-default-target-runtime.md`
+- `.github/workflows/check-v399-browser-battle-default-target-runtime.yml`
+
+V3.99 仍不修改 Battle Context、不執行 Attack/Damage；下一層再把 resolved target 交給真正的 `BATTLE_Attack()` 前置 boundary。
+
