@@ -94,7 +94,7 @@ function parseList(text){
   if(!text)return {entries:[],itemIds:[]};
   const entries=text.split(',').map(parseEntry).filter(Boolean);
   const ids=[];for(const entry of entries)ids.push(...expandBuy(entry));
-  return {entries,itemIds:[...new Set(ids)]};
+  return {entries,itemIds:ids};
 }
 function parseArg(text){
   const obj={};
