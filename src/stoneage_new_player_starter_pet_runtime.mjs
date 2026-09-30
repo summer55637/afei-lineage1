@@ -143,4 +143,4 @@ function grantSourceStarterPet(state,seed,hometown,{randInclusive=defaultRandInc
   return {ok:true,state:next,pet:created,teamChanged:false,activePetChanged:false};
 }
 
-export { NEW_PLAYER_STARTER_PET_GRANT_FORMAT, createSourceStarterPet, grantSourceStarterPet };
+export { NEW_PLAYER_STARTER_PET_GRANT_FORMAT, SOURCE_PET_RANK_TABLE, resolveSourcePetRank, createSourceStarterPet, grantSourceStarterPet };
