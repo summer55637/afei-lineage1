@@ -54,7 +54,7 @@ function freshPersistentState({ now = () => new Date().toISOString(), playerId =
       mode: 'disabled',
       routeId: null,
       lastSimulatedAt: null,
-      offline: { eligible: false, lastClosedAt: null, accruedSeconds: 0 }
+      offline: { eligible: false, lastClosedAt: null, lastResumedAt: null, elapsedSeconds: 0, accruedSeconds: 0, resumePending: false, rewardsApplied: false }
     },
     battleSettings: { strategy: {}, sourceParity: {} },
     runtimeMeta: { createdAt: timestamp, updatedAt: timestamp, lastSavedAt: null }
