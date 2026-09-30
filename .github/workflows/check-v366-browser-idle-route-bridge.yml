@@ -1,0 +1,35 @@
+name: Check V3.66 Browser Idle route bridge
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_idle_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_idle_persistent_state_runtime.mjs'
+      - 'src/stoneage_idle_loop.mjs'
+      - 'data/generated/stoneage_first_idle_route_catalog.json'
+      - 'tools/check_v366_browser_idle_route_bridge.mjs'
+      - 'docs/reference/v366-browser-idle-route-bridge.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v366-browser-idle-route-bridge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.66 Browser Idle route bridge regression
+        run: node tools/check_v366_browser_idle_route_bridge.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_idle_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_idle_persistent_state_runtime.mjs
+          node --check tools/check_v366_browser_idle_route_bridge.mjs

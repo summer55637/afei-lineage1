@@ -14,6 +14,7 @@ import {
 import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_itemshop_runtime.mjs';
 import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
+import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
@@ -36,7 +37,8 @@ function createBrowserStateController({
   worldNpcIndex=null,
   itemShopRuntimeOptions={},
   worldNpcRuntimeOptions={},
-  savePointCatalog=null
+  savePointCatalog=null,
+  idleRouteCatalog=null
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
@@ -45,6 +47,7 @@ function createBrowserStateController({
     : null;
   const healerRuntime=moduleAudit ? createBrowserHealerRuntime({moduleAudit}) : null;
   const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
+  const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -57,6 +60,13 @@ function createBrowserStateController({
     getState(){return clone(currentState);},
     async dispatch(action={}){
       const type=String(action?.type??'').trim();
+      if(type===ACTION_IDLE_LIST_ROUTES||type===ACTION_IDLE_ENABLE||type===ACTION_IDLE_EVENT){
+        if(!idleRuntime)return {ok:false,handled:false,stage:'idle-runtime',reason:'browser-idle-runtime-not-configured',state:clone(currentState)};
+        if(idleRuntime.ok!==true)return {ok:false,handled:false,stage:'idle-runtime',reason:idleRuntime.reason??'browser-idle-runtime-invalid',errors:idleRuntime.errors??[],state:clone(currentState)};
+        const result=await idleRuntime.dispatch(currentState,action,{now:action.now??now});
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,state:clone(result.state??currentState)};
+      }
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
@@ -145,5 +155,9 @@ export {
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
+  BROWSER_IDLE_RUNTIME_FORMAT,
+  ACTION_IDLE_LIST_ROUTES,
+  ACTION_IDLE_ENABLE,
+  ACTION_IDLE_EVENT,
   createBrowserStateController
 };

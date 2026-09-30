@@ -3,6 +3,14 @@
 更新日期：2026-09-30
 
 
+## 2026-09-30 新增：V3.66 Browser Idle route bridge
+
+V3.66 把 first idle route catalog 接入唯一 Browser State Controller。新增 browser idle runtime，提供只讀 route list、route-qualified ENABLE，以及有限 Idle state-machine event bridge。6/8 source-backed eligible variants 可被啟用；4000→200 兩組 source-blocked variants 仍拒絕。
+
+每個成功 browser idle event 都使用 V3.65 commitIdleEvent → Save Envelope → reload validation。Browser bridge 不自己移動世界、不抽 encounter RNG、不重算 battle、不直接套 reward，不決定補給／死亡／offline policy。
+
+V3.66 regression 同時鎖定 invalid offline event、4000 source-blocked route、stale expectedRevision 與 reward event 不修改 player reward state。
+
 ## 2026-09-30 新增：V3.65 Idle Loop → Persistent State binding
 
 V3.65 將既有 Idle Loop state machine 正式綁到 canonical Persistent State。新增 `stoneage_idle_persistent_state_runtime.mjs`：每個合法 Idle event 都先驗證 Persistent State，再以既有 `transitionIdle()` 取得 transition，最後同步 `state.idle.enabled/mode/routeId/lastSimulatedAt/offline`。pending encounter/battle/reward 保留為 ephemeral runtime payload，不偷偷擴充持久 schema。
