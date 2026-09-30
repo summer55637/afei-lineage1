@@ -1,0 +1,394 @@
+{
+  "format": "stoneage-new-player-pet-runtime-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "buildFlags": {
+    "BATTLENPC_WARP_PLAYER": true,
+    "petMailEffectMax": 1
+  },
+  "sourceContracts": {
+    "eventGetPet": "gmsv/src/npc/npc_eventaction.c::NPC_ActionAddPet uses ENEMY_ID then ENEMY_createPetFromEnemyIndex",
+    "petFactory": "gmsv/src/char/enemy.c::ENEMY_createPetFromEnemyIndex stores ENEMYTEMP E_T_TEMPNO in CHAR_PETID",
+    "enemyParser": "gmsv/src/char/enemy.c::ENEMY_initEnemy with _BATTLENPC_WARP_PLAYER => integer data begins at CSV column 4"
+  },
+  "parser": {
+    "enemyColumns": {
+      "name": 1,
+      "tacticsOption": 2,
+      "actCondition": 3,
+      "enemyId": 4,
+      "tempNo": 5,
+      "lvMin": 6,
+      "lvMax": 7,
+      "petFlg": 14
+    },
+    "enemyBaseColumns": {
+      "name": 1,
+      "tempNo": 7,
+      "initNum": 8,
+      "lvUpPoint": 9,
+      "baseVital": 10,
+      "baseStr": 11,
+      "baseTgh": 12,
+      "baseDex": 13,
+      "imageNumber": 37,
+      "limitLevel": 55
+    },
+    "numericParser": "atoi semantics; fixed-C parses 4.50 as 4",
+    "rngCallsPerPet": "1 level + 4 base-stat rolls + 10 allocation rolls + 1 pet-mail roll = 16"
+  },
+  "petMaxHave": 5,
+  "stats": {
+    "requestedEnemyIds": 5,
+    "resolvedEnemyIds": 5,
+    "resolvedTempNos": 5
+  },
+  "sourceFiles": {
+    "enemy": {
+      "path": "gmsv/data/enemy1.txt",
+      "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+    },
+    "enemyBase": {
+      "path": "gmsv/data/enemybase1.txt",
+      "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+    }
+  },
+  "byEnemyId": {
+    "341": {
+      "name": "朵拉比斯",
+      "enemyId": 341,
+      "tempNo": 274,
+      "lvMin": 1,
+      "lvMax": 1,
+      "createMax": 3,
+      "createMin": 1,
+      "tactics": 1,
+      "exp": -1,
+      "duelPoint": -1,
+      "style": 0,
+      "petFlg": 1,
+      "source": {
+        "path": "gmsv/data/enemy1.txt",
+        "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+      }
+    },
+    "1479": {
+      "name": "玛蕾菲雅",
+      "enemyId": 1479,
+      "tempNo": 718,
+      "lvMin": 1,
+      "lvMax": 1,
+      "createMax": 1,
+      "createMin": 1,
+      "tactics": 1,
+      "exp": -1,
+      "duelPoint": -1,
+      "style": 0,
+      "petFlg": 1,
+      "source": {
+        "path": "gmsv/data/enemy1.txt",
+        "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+      }
+    },
+    "1645": {
+      "name": "斑尼迪克",
+      "enemyId": 1645,
+      "tempNo": 812,
+      "lvMin": 1,
+      "lvMax": 1,
+      "createMax": 1,
+      "createMin": 1,
+      "tactics": 1,
+      "exp": -1,
+      "duelPoint": -1,
+      "style": 0,
+      "petFlg": 1,
+      "source": {
+        "path": "gmsv/data/enemy1.txt",
+        "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+      }
+    },
+    "2057": {
+      "name": "水魔兽",
+      "enemyId": 2057,
+      "tempNo": 1047,
+      "lvMin": 1,
+      "lvMax": 1,
+      "createMax": 1,
+      "createMin": 1,
+      "tactics": 1,
+      "exp": -1,
+      "duelPoint": -1,
+      "style": 0,
+      "petFlg": 1,
+      "source": {
+        "path": "gmsv/data/enemy1.txt",
+        "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+      }
+    },
+    "2547": {
+      "name": "玛蕾菲雅",
+      "enemyId": 2547,
+      "tempNo": 401,
+      "lvMin": 1,
+      "lvMax": 1,
+      "createMax": 1,
+      "createMin": 1,
+      "tactics": 1,
+      "exp": -1,
+      "duelPoint": -1,
+      "style": 0,
+      "petFlg": 1,
+      "source": {
+        "path": "gmsv/data/enemy1.txt",
+        "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6"
+      }
+    }
+  },
+  "byTempNo": {
+    "274": {
+      "name": "朵拉比斯",
+      "tempNo": 274,
+      "initNum": 23,
+      "lvUpPoint": 4,
+      "baseStats": {
+        "vital": 24,
+        "str": 31,
+        "tgh": 20,
+        "dex": 30
+      },
+      "modAi": 300,
+      "get": 1,
+      "elements": {
+        "earth": 0,
+        "water": 0,
+        "fire": 0,
+        "wind": 100
+      },
+      "status": {
+        "poison": 0,
+        "paralysis": 0,
+        "sleep": 0,
+        "stone": 0,
+        "drunk": 0,
+        "confusion": 0
+      },
+      "petSkills": [
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rare": 0,
+      "critical": 1,
+      "counter": 5,
+      "slot": 4,
+      "imageNumber": 100362,
+      "petFlg": 1,
+      "limitLevel": 0,
+      "source": {
+        "path": "gmsv/data/enemybase1.txt",
+        "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+      }
+    },
+    "401": {
+      "name": "玛蕾菲雅",
+      "tempNo": 401,
+      "initNum": 20,
+      "lvUpPoint": 5,
+      "baseStats": {
+        "vital": 25,
+        "str": 25,
+        "tgh": 25,
+        "dex": 25
+      },
+      "modAi": 100,
+      "get": 0,
+      "elements": {
+        "earth": 100,
+        "water": 0,
+        "fire": 0,
+        "wind": 0
+      },
+      "status": {
+        "poison": 10,
+        "paralysis": 10,
+        "sleep": 10,
+        "stone": 50,
+        "drunk": 10,
+        "confusion": 10
+      },
+      "petSkills": [
+        1,
+        2,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "rare": 0,
+      "critical": 5,
+      "counter": 5,
+      "slot": 7,
+      "imageNumber": 100454,
+      "petFlg": 1,
+      "limitLevel": 79,
+      "source": {
+        "path": "gmsv/data/enemybase1.txt",
+        "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+      }
+    },
+    "718": {
+      "name": "玛蕾菲雅",
+      "tempNo": 718,
+      "initNum": 20,
+      "lvUpPoint": 5,
+      "baseStats": {
+        "vital": 25,
+        "str": 25,
+        "tgh": 25,
+        "dex": 25
+      },
+      "modAi": 100,
+      "get": 0,
+      "elements": {
+        "earth": 100,
+        "water": 0,
+        "fire": 0,
+        "wind": 0
+      },
+      "status": {
+        "poison": 10,
+        "paralysis": 10,
+        "sleep": 10,
+        "stone": 50,
+        "drunk": 10,
+        "confusion": 10
+      },
+      "petSkills": [
+        1,
+        2,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "rare": 0,
+      "critical": 5,
+      "counter": 5,
+      "slot": 7,
+      "imageNumber": 100451,
+      "petFlg": 1,
+      "limitLevel": 79,
+      "source": {
+        "path": "gmsv/data/enemybase1.txt",
+        "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+      }
+    },
+    "812": {
+      "name": "斑尼迪克",
+      "tempNo": 812,
+      "initNum": 30,
+      "lvUpPoint": 4,
+      "baseStats": {
+        "vital": 26,
+        "str": 48,
+        "tgh": 21,
+        "dex": 29
+      },
+      "modAi": 300,
+      "get": -5,
+      "elements": {
+        "earth": 0,
+        "water": 0,
+        "fire": 10,
+        "wind": 90
+      },
+      "status": {
+        "poison": 0,
+        "paralysis": 0,
+        "sleep": 0,
+        "stone": 0,
+        "drunk": 0,
+        "confusion": 0
+      },
+      "petSkills": [
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rare": 2,
+      "critical": 1,
+      "counter": 1,
+      "slot": 6,
+      "imageNumber": 100907,
+      "petFlg": 1,
+      "limitLevel": 0,
+      "source": {
+        "path": "gmsv/data/enemybase1.txt",
+        "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+      }
+    },
+    "1047": {
+      "name": "洛奇斯德",
+      "tempNo": 1047,
+      "initNum": 39,
+      "lvUpPoint": 4,
+      "baseStats": {
+        "vital": 28,
+        "str": 41,
+        "tgh": 24,
+        "dex": 24
+      },
+      "modAi": 350,
+      "get": 0,
+      "elements": {
+        "earth": 0,
+        "water": 100,
+        "fire": 0,
+        "wind": 0
+      },
+      "status": {
+        "poison": 0,
+        "paralysis": 0,
+        "sleep": 0,
+        "stone": 0,
+        "drunk": 0,
+        "confusion": 0
+      },
+      "petSkills": [
+        1,
+        2,
+        602,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rare": 0,
+      "critical": 5,
+      "counter": 0,
+      "slot": 7,
+      "imageNumber": 101442,
+      "petFlg": 1,
+      "limitLevel": 0,
+      "source": {
+        "path": "gmsv/data/enemybase1.txt",
+        "blobSha": "a19a508975e3a982fada323861b35b2edab79349"
+      }
+    }
+  },
+  "policy": "Source-backed new-player GetPet identities only. HP/MP compliance, rank and canonical persistent id remain outside source catalog and require explicit runtime/product adapters."
+}
