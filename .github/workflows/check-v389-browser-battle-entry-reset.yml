@@ -3,7 +3,6 @@ on:
   push:
     paths:
       - 'src/stoneage_browser_battle_context_runtime.mjs'
-      - 'src/stoneage_browser_battle_entry_runtime.mjs'
       - 'data/generated/stoneage_browser_battle_entry_reset_schema.json'
       - 'tools/check_v389_browser_battle_entry_reset.mjs'
       - 'docs/reference/v387-browser-battle-entry-init.md'
