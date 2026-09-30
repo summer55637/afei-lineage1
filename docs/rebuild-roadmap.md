@@ -1072,3 +1072,22 @@ V3.87 不增加新的 battle rule；只補初始化 state，供後續 Battle Tur
 
 Persistent State 不儲存完整 Battle Context；battle context 仍由 controller memory 管理，battle finish / disable 後清除。
 
+## 2026-10-01 V3.88 Browser Battle Field Runtime
+
+V3.88 將 fixed-C `BATTLE_getBattleFieldNo(floor,x,y)` 正式接到既有 `src/stoneage_map_runtime.mjs`：
+
+`floor/x/y → tile[0] → MAP_BATTLEMAP/BATTLEMAP2/BATTLEMAP3 → RAND(0,2) → battleFieldNo`
+
+新增：
+- `src/stoneage_browser_battle_field_runtime.mjs`
+- `data/generated/stoneage_browser_battle_field_schema.json`
+- `tools/check_v388_browser_battle_field_runtime.mjs`
+- `docs/reference/v388-browser-battle-field-runtime.md`
+- `.github/workflows/check-v388-browser-battle-field.yml`
+
+V3.88 的 `BATTLE_FIELD_RESOLVE` 使用 caller-injected `battleFieldRoll` 0..2，並直接消費既有 map runtime 的 `battlemapResolver.candidatesByImageId`，不重新解析 map CSV。
+
+V3.86 `ENCOUNTER_BATTLE_CONTEXT_BUILD` 若未提供手寫 `battleFieldNo`，現在優先走 V3.88 source resolver；只有 source-map 無法解析時才退回既有 `battleFieldNoProvider` compatibility path。
+
+下一階段可把 selected Group / generated Enemy roster / battle field / player + default Pet 的完整 context 交給既有 Battle Model，開始建立 `in_battle` 的回合初始化邊界。
+
