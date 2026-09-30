@@ -89,6 +89,7 @@ assert.equal(result.context.sides[0].entries[5].characterId,'pet-1');
 assert.equal(result.context.sides[1].entries[5].enemyId,120);
 assert.equal(result.context.sides[1].entries[8].enemyId,123);
 assert.equal(result.state.battleContext,undefined);
+assert.ok(controller.getBattleContext());
 assert.equal(result.idleCommit.verification.ok,true);
 assert.deepEqual(controller.getBattleContext().sides[1].entries.map(e=>e?.bid??null),[null,null,null,null,null,15,16,17,18,null]);
 
