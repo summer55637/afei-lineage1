@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   NPC_ITEMSHOP_RUNTIME_FORMAT,
   validateNpcItemShopCatalog,
@@ -81,14 +82,8 @@ assert.equal(index.ok,true);
 assert.equal(index.itemIndex['42'][0].shopId,'fixture.create#0');
 assert.equal(index.itemIndex['42'][0].offerIndex,0);
 
-const state={
-  player:{gold:1000},
-  inventory:{
-    itemSlots:Array(24).fill(null),
-    itemRuntime:{slots:{}}
-  },
-  meta:{transactionIds:[]}
-};
+const state=freshPersistentState({playerId:'npc-shop'});
+state.player.gold=1000;
 const calls=[];
 const buy=buyNpcItemShopItem(state,{
   catalog:fixture,
