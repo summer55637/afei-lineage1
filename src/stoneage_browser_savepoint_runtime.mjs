@@ -93,8 +93,8 @@ function createBrowserSavePointRuntime({moduleAudit=null,savePointCatalog=null}=
       const type=String(action.type??'').trim();
       if(type!==ACTION_NPC_SAVEPOINT_SET&&type!==ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'action',reason:'unsupported-browser-savepoint-action',type,state};
       let binding=action.sourceBinding??null;
-      if(!binding && action.savePointCatalog) {
-        const resolved=resolveSavePointBinding(action.npc,action.savePointCatalog);
+      if(!binding && savePointCatalog) {
+        const resolved=resolveSavePointBinding(action.npc,savePointCatalog);
         if(!resolved.ok)return {ok:false,handled:false,stage:'source-binding',reason:resolved.reason,sourceKey:resolved.sourceKey??null,state};
         binding=resolved.binding;
       }
@@ -103,6 +103,7 @@ function createBrowserSavePointRuntime({moduleAudit=null,savePointCatalog=null}=
       const gate=interactionGate(action.npc,action.player);
       if(!gate.ok)return {ok:false,handled:false,...gate,state};
       if(checked.binding.mode==='item-required')return {ok:false,handled:false,stage:'source-binding',reason:'savepoint-item-requirement-not-yet-closed',state,sourceBinding:checked.binding};
+      if(type===ACTION_NPC_SAVEPOINT_CONFIRM)return {ok:false,handled:false,stage:'confirmation',reason:'savepoint-confirmation-only-applies-to-item-required-source-path',state,sourceBinding:checked.binding};
       const result=applySavePoint(state,checked.binding,{now:action.now??options.now??(()=>new Date().toISOString())});
       return {ok:result.applied===true,handled:result.applied===true,stage:'savepoint',reason:result.applied?null:result.reason,result,state:result.state??state,savePoint:result.savePoint??null,gate:gate.gate};
     }
