@@ -1,0 +1,19 @@
+NPCCREATE
+{
+floorid=1001
+borncorner=17,13,17,13
+time=0
+createnum=1
+graphicname=16017
+name=Fixture Weapon Shop
+enemy=npcgen_shop|file:genout/ss_fixture_weapon
+}
+{
+floorid=1100
+borncorner=86,107,86,107
+time=0
+createnum=1
+graphicname=16018
+name=Fixture Pass Shop
+enemy=npcgen_shop|file:genout/ss_fixture_pass
+}
