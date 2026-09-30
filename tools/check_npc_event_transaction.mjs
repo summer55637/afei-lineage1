@@ -49,10 +49,10 @@ assert.deepEqual(applied.state.runtimeTest.pets,[341]);
 assert.equal(applied.state.runtimeTest.charm,1);
 assert.deepEqual(applied.state.runtimeTest.end,[366]);
 assert.equal(applied.state.revision,1);
-assert.equal(applied.state.runtimeMeta.npcEventTransactions['event-tx-1'].actionCount,6);
+assert.equal(applied.state.runtimeMeta.npcEventTransactions['event-tx-1'].actionCount,7);
 assert.deepEqual(base.runtimeTest,undefined);
 assert.equal(base.revision,0);
-assert.equal(calls.length,6);
+assert.equal(calls.length,7);
 
 const idempotent=applyNpcEventActionPlan(applied.state,plan,{
   handlers,
