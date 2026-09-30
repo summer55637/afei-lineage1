@@ -9,9 +9,9 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：62705b4 — trigger V3.52 exhaustive Item audit after CI parser hardening
-- 最後更新時間：2026-09-30T17:35:23+08:00
-- 版本線最高 regression workflow：V3.52
+- 最新 commit：13fd920 — add V3.53 Item 24114 build closure CI
+- 最後更新時間：2026-09-30T17:43:18+08:00
+- 版本線最高 regression workflow：V3.53
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
