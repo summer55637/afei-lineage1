@@ -415,3 +415,13 @@ Idle 與 battleSettings 明確標示為放置版產品層，不冒充 fixed-C。
 ## 2026-09-30 Idle Supply / Death / Offline Policy v1
 
 新增 `src/stoneage_idle_policy.mjs`、`docs/reference/idle-supply-death-offline-policy.md`、`data/generated/stoneage_idle_policy_schema.json` 與 regression。Healer 的 player HP/MP full recovery 是 source-backed；supply threshold、death recovery mode、offline cap 與 offline reward simulation 維持 explicit product policy，不自行設定。
+
+## 2026-09-30 Save Envelope / Simulation v1
+
+新增 `src/stoneage_save_transaction.mjs`：canonical state 現在有 deterministic serialization、SHA-256 hash、schema validation / migration、revision conflict guard。Hash 採 Web Crypto，避免未來瀏覽器 runtime 依賴 Node-only crypto。
+
+新增 `src/stoneage_idle_simulation.mjs`：first-idle route 可被執行成 pure simulation；route path time → encounter → injected battle result → reward transaction → supply/death decision → save commit。Runner 不重算 battle 或 reward RNG。offline resume 目前只計算時間窗與 explicit cap，不自行創造離線收益。
+
+Existing-item reward lifecycle 已依 source 修正為只接收已存在且 enemy-owned 的 runtime item，並只能放入固定 Player backpack slots 9–23；不再由 reward layer 自行建立 existing-item slot。
+
+下一階段：把 source-backed item/economy runtime、battle simulation adapter 與真正的 save/offline resume transaction 接起來，再擴主要 world route coverage；仍不建立多個 playable HTML 入口。
