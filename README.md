@@ -38,7 +38,7 @@
 
 ## 現階段優先事項
 
-第一輪 World Data Source Catalog 已完成：固定 source 約 5,764 個 blob files，其中 NPC data 約 3,960 個檔案；已建立 `data/generated/stoneage_world_data_source_catalog.json` 與對應 regression。現在進入 NPC instance index 與世界連接資料整理。
+World Data Source Catalog 已完成；現在也已完成第一版 World NPC Index、functionset reachability audit 與 mapwarp source validation。固定 source 的 7,979 個 NPC create blocks 全部找到 template，27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證。
 
 現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂：
 
