@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
-import { simulateFirstEncounter, simulateOfflineResume, routeVariantKey, normalizeSimulationBattleResult, BATTLE_RESULT_FORMAT } from '../src/stoneage_idle_simulation.mjs';
+import { simulateFirstEncounter, simulateOfflineResume, commitOfflineSimulationResume, routeVariantKey, normalizeSimulationBattleResult, BATTLE_RESULT_FORMAT } from '../src/stoneage_idle_simulation.mjs';
 
 const base=freshPersistentState({now:()=> '2026-09-30T05:00:00.000Z',playerId:'p1'});
 base.player.maxHp=100;base.player.hp=100;base.player.maxMp=50;base.player.mp=50;
@@ -42,6 +42,14 @@ assert.equal(second.dead,true);
 assert.equal(second.death.action,'await_manual_recovery');
 assert.equal(second.state.idle.mode,'dead');
 assert.equal(second.idleState.state,'dead');
+
+const offlinePreparedState=JSON.parse(JSON.stringify(win.state));
+offlinePreparedState.idle.offline.eligible=true;
+const committedOffline=await commitOfflineSimulationResume(offlinePreparedState,'2026-09-30T06:00:00Z','2026-09-30T08:00:00Z',{maxSeconds:3600,savedAt:()=> '2026-09-30T08:00:00Z'});
+assert.equal(committedOffline.ok,true);
+assert.equal(committedOffline.state.idle.mode,'offline_resume');
+assert.equal(committedOffline.state.revision,2);
+assert.equal(committedOffline.state.idle.offline.accruedSeconds,0);
 
 const off=simulateOfflineResume(win.state,'2026-09-30T06:00:00Z','2026-09-30T08:00:00Z',{maxSeconds:3600});
 assert.equal(off.ok,true);
