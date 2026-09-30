@@ -17,6 +17,7 @@ const win=await simulateFirstEncounter(base,route,variant,{
   save:true
 });
 assert.equal(win.ok,true);
+assert.equal(win.idleState.state,'moving');
 assert.equal(win.state.player.hp,80);
 assert.equal(win.state.player.exp,20);
 assert.equal(win.state.player.gold,15);
@@ -34,6 +35,7 @@ assert.equal(second.ok,true);
 assert.equal(second.dead,true);
 assert.equal(second.death.action,'await_manual_recovery');
 assert.equal(second.state.idle.mode,'dead');
+assert.equal(second.idleState.state,'dead');
 
 const off=simulateOfflineResume(win.state,'2026-09-30T06:00:00Z','2026-09-30T08:00:00Z',{maxSeconds:3600});
 assert.equal(off.ok,true);
