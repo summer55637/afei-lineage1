@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "game.js"
-      - "start.html"
+      - "index.html"
       - "tools/check_v276_profession_transpose_live.mjs"
       - "tools/profession_transpose_runtime.mjs"
       - "data/generated/stoneage_profession_skill_runtime.json"
@@ -21,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Provide regression HTML fixture
-        run: cp start.html game.html
+        run: cp index.html game.html
 
       - name: Set up Node
         uses: actions/setup-node@v4
