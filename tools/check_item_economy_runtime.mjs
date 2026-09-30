@@ -18,8 +18,8 @@ assert.equal(sourcePlayerMaxGold(state),1000000);
 state.player.transmigration=5;
 assert.equal(sourcePlayerMaxGold(state),10000000);
 state.player.transmigration=0;
+state.player.gold=1000;
 
-const allocIds=[];
 const allocated=(existingIndex,itemId,pile=1)=>({
   existingIndex,
   item:{use:true,itemId,owner:null,pile,sourceItemAllocated:true}
@@ -33,12 +33,11 @@ assert.equal(buy.applied,true);
 assert.equal(buy.unitPrice,150);
 assert.equal(buy.total,300);
 assert.deepEqual(buy.created.map(x=>x.slot),[9,10]);
-assert.equal(buy.state.player.gold,0-300+0);
+assert.equal(buy.state.player.gold,700);
 assert.equal(buy.state.inventory.playerItemSlots[9],100);
 assert.equal(buy.state.inventory.itemRuntime.slots['100'].owner,'player');
 
 const sellingState=buy.state;
-sellingState.player.gold=1000;
 const sell=sellShopItem(sellingState,{
   transactionId:'sell-1',slot:9,quantity:1,baseCost:1000,sellRate:0.2
 });
