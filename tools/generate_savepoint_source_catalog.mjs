@@ -37,14 +37,15 @@ for(const f of files.filter(p=>/\.create$|\.creata$/i.test(p))){
       const id=Number(parsed.key.ID); const born=parseBorn(parsed.key.Born);
       if(!Number.isInteger(id)||id<0||id>30){ unresolved.push({sourceKey,reason:'savepoint-id-invalid',id:parsed.key.ID??null}); continue; }
       if(!born){ unresolved.push({sourceKey,reason:'savepoint-born-invalid',Born:parsed.key.Born??null}); continue; }
-      const mode=parsed.noItem?'no-item':(parsed.key.GetItem!=null?'item-required':null);
+      const mode=parsed.noItem?'no-item':(parsed.key.GetItem!=null?'item-required':'confirm-only');
       if(!mode){ unresolved.push({sourceKey,reason:'savepoint-item-mode-unresolved'}); continue; }
       rows.push({sourceKey,functionSet:'SavePoint',templateName:'npcgen_savepoint',templatePath:template.path,templateBlockIndex:template.blockIndex,createPath:norm(path.relative(npcRoot,f)),createBlockIndex:c.blockIndex,floorId:Number(c.keys.floorid?.[0]??NaN),born,elderId:id,id,mode,rawArg,sourceArgPath:enemy.fileRef});
     }
   }
 }
-const catalog={format:'stoneage-npc-savepoint-source-index-v1',generatedAt:'2026-09-30',fixedSource:{repository:SOURCE_REPOSITORY,ref:SOURCE_REF},statistics:{savePointInstanceCount:rows.length,unresolvedCount:unresolved.length,noItemCount:rows.filter(x=>x.mode==='no-item').length,itemRequiredCount:rows.filter(x=>x.mode==='item-required').length},bySourceKey:Object.fromEntries(rows.map(x=>[x.sourceKey,x])),unresolved};
+const catalog={format:'stoneage-npc-savepoint-source-index-v1',generatedAt:'2026-09-30',fixedSource:{repository:SOURCE_REPOSITORY,ref:SOURCE_REF},statistics:{savePointInstanceCount:rows.length,unresolvedCount:unresolved.length,noItemCount:rows.filter(x=>x.mode==='no-item').length,itemRequiredCount:rows.filter(x=>x.mode==='item-required').length,confirmOnlyCount:rows.filter(x=>x.mode==='confirm-only').length},bySourceKey:Object.fromEntries(rows.map(x=>[x.sourceKey,x])),unresolved};
 fs.mkdirSync(path.dirname(out),{recursive:true}); fs.writeFileSync(out,JSON.stringify(catalog,null,2)+'\n');
 if(rows.length+unresolved.length!==28) { console.error(JSON.stringify({pass:false,reason:'unexpected-savepoint-instance-count',statistics:catalog.statistics})); process.exit(1); }
-if(unresolved.length) console.error(JSON.stringify({pass:false,reason:'savepoint-source-unresolved',statistics:catalog.statistics,unresolved}));
-else console.log(JSON.stringify({pass:true,fixedSource:SOURCE_REPOSITORY+'@'+SOURCE_REF,statistics:catalog.statistics,output:out}));
+if(unresolved.length) { console.error(JSON.stringify({pass:false,reason:'savepoint-source-unresolved',statistics:catalog.statistics,unresolved})); process.exit(1); }
+if(catalog.statistics.itemRequiredCount!==27||catalog.statistics.confirmOnlyCount!==1||catalog.statistics.noItemCount!==0) { console.error(JSON.stringify({pass:false,reason:'unexpected-savepoint-source-mode-count',statistics:catalog.statistics})); process.exit(1); }
+console.log(JSON.stringify({pass:true,fixedSource:SOURCE_REPOSITORY+'@'+SOURCE_REF,statistics:catalog.statistics,output:out}));
