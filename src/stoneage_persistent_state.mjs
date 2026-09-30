@@ -14,7 +14,7 @@ function freshProfessionSkills() {
 }
 
 function freshPersistentState({ now = () => new Date().toISOString(), playerId = null, playerName = '' } = {}) {
-  const timestamp = String(now());
+  const timestamp = String(typeof now === 'function' ? now() : (now ?? new Date().toISOString()));
   return {
     schemaVersion: CURRENT_STATE_SCHEMA_VERSION,
     revision: 0,
