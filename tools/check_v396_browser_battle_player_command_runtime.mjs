@@ -22,7 +22,7 @@ for(const [command,code] of [
   ['pet_in',BATTLE_COM_PETIN],
   ['pet_out',BATTLE_COM_PETOUT]
 ]){
-  const target=command==='attack'||command==='capture'?10:null;
+  const target=(command==='attack'||command==='capture')?10:(command==='pet_out'?4:null);
   const n=normalizeCommand(command,target);
   assert.equal(n.ok,true);
   assert.equal(n.commandCode,code);
