@@ -3,11 +3,13 @@ import {
   IDLE_EVENTS,
   IDLE_PERSISTENT_STATE_RUNTIME_FORMAT
 } from './stoneage_idle_persistent_state_runtime.mjs';
+import { simulateFirstEncounter } from './stoneage_idle_simulation.mjs';
 
 const BROWSER_IDLE_RUNTIME_FORMAT='stoneage-browser-idle-runtime-v1';
 const ACTION_IDLE_LIST_ROUTES='IDLE_LIST_ROUTES';
 const ACTION_IDLE_ENABLE='IDLE_ENABLE';
 const ACTION_IDLE_EVENT='IDLE_EVENT';
+const ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER='IDLE_SIMULATE_FIRST_ENCOUNTER';
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -111,6 +113,30 @@ function createBrowserIdleRuntime({routeCatalog=null}={}){
         });
         return {...committed,handled:committed.ok===true,stage:committed.ok===true?'idle-enable':'save',route:clone(selection.route),variant:clone(selection.variant),routeId:selection.routeId};
       }
+      if(type===ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER){
+        const selection=normalizeRouteSelection(routeCatalog,action);
+        if(!selection.ok)return {ok:false,handled:false,stage:'route-selection',reason:selection.reason,state:clone(state)};
+        if(selection.route.status==='source_blocked_before_portal'||Number(selection.variant.usableLandingCount)<=0){
+          return {ok:false,handled:false,stage:'route-selection',reason:'idle-route-not-eligible',routeId:selection.routeId,state:clone(state)};
+        }
+        const expectedRevision=action.expectedRevision==null?Number(state?.revision??0):Number(action.expectedRevision);
+        if(expectedRevision!==Number(state?.revision??0)){
+          return {ok:false,handled:false,stage:'save',reason:'revision-conflict',currentRevision:Number(state?.revision??0),expectedRevision,state:clone(state)};
+        }
+        const simulation=await simulateFirstEncounter(state,selection.route,selection.variant,{
+          encounter:action.encounter??{floorId:selection.route.encounterFloor,encounterId:selection.variant.encounterId??null},
+          battleResult:action.battleResult??null,
+          sourceBattleResult:action.sourceBattleResult??null,
+          policy:isObject(action.policy)?action.policy:{},
+          knownExistingItemIds:action.knownExistingItemIds??null,
+          now:action.now??options.now??(()=>new Date().toISOString()),
+          save:action.save!==false
+        });
+        if(!simulation.ok){
+          return {ok:false,handled:false,stage:'idle-simulation',reason:simulation.reason??'idle-simulation-failed',errors:simulation.errors??[],state:clone(simulation.state??state),route:clone(selection.route),variant:clone(selection.variant),routeId:selection.routeId};
+        }
+        return {ok:true,handled:true,stage:'idle-simulation',route:clone(selection.route),variant:clone(selection.variant),routeId:selection.routeId,simulation,state:clone(simulation.state??state)};
+      }
       if(type===ACTION_IDLE_EVENT){
         const event=String(action.event??'').trim();
         const payload=isObject(action.payload)?clone(action.payload):{};
@@ -139,6 +165,7 @@ export {
   ACTION_IDLE_LIST_ROUTES,
   ACTION_IDLE_ENABLE,
   ACTION_IDLE_EVENT,
+  ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER,
   SOURCE_REPOSITORY,
   SOURCE_REF,
   IDLE_PERSISTENT_STATE_RUNTIME_FORMAT,

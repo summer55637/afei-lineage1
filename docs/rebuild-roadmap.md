@@ -3,6 +3,14 @@
 更新日期：2026-09-30
 
 
+## 2026-09-30 新增：V3.67 Browser Idle first-encounter simulation bridge
+
+V3.67 將既有 `stoneage_idle_simulation.mjs` 接入 Browser Idle runtime，新增 `IDLE_SIMULATE_FIRST_ENCOUNTER`。route variant 先通過 first-idle-route-catalog eligibility，Battle result 必須由 caller 注入；Browser runtime 不抽 encounter RNG、不計算戰鬥結果。
+
+成功路徑沿既有 `simulateFirstEncounter()`：Battle Result Adapter → Player HP/MP snapshot → Reward Transaction → Supply/Death policy → Save Envelope。Browser Controller 不複製 battle/reward/save engine。
+
+Regression 鎖定缺 Battle result、4000→200 source-blocked route、stale revision、victory reward 落地與 defeat/manual-recovery 行為。
+
 ## 2026-09-30 新增：V3.66 Browser Idle route bridge
 
 V3.66 把 first idle route catalog 接入唯一 Browser State Controller。新增 browser idle runtime，提供只讀 route list、route-qualified ENABLE，以及有限 Idle state-machine event bridge。6/8 source-backed eligible variants 可被啟用；4000→200 兩組 source-blocked variants 仍拒絕。

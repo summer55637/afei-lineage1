@@ -1,0 +1,35 @@
+name: Check V3.67 Browser Idle first-encounter simulation bridge
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_idle_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_idle_simulation.mjs'
+      - 'src/stoneage_battle_result_adapter.mjs'
+      - 'data/generated/stoneage_first_idle_route_catalog.json'
+      - 'tools/check_v367_browser_idle_first_encounter.mjs'
+      - 'docs/reference/v367-browser-idle-first-encounter-simulation.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v367-browser-idle-first-encounter.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.67 Browser Idle first-encounter regression
+        run: node tools/check_v367_browser_idle_first_encounter.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_idle_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_idle_simulation.mjs
+          node --check tools/check_v367_browser_idle_first_encounter.mjs
