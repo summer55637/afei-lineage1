@@ -219,3 +219,16 @@ Generated contract：`data/generated/stoneage_item_economy_runtime_schema.json`�
 - `buyShopItem()` 可直接接 `createSourceItemAllocator(...).allocate`，因此 Economy Buy 現在有完整 source Item creation adapter path。
 
 詳細邊界：`docs/reference/item-source-runtime.md`。
+
+## 2026-09-30 NPC ItemShop Runtime v1
+
+新增 `src/stoneage_npc_itemshop_runtime.mjs`、`tools/generate_npc_itemshop_runtime.mjs`、`tools/check_npc_itemshop_runtime.mjs` 與 `docs/reference/npc-itemshop-runtime.md`，把 fixed-C `npcgen_shop` → `.arg` → `ItemList/buy_rate/sell_rate` 正式接到 Item / Economy runtime。
+
+- `ItemList` 支援 source single ID / inclusive range；generator 依 fixed-C `NPC_SetNewItem()` 保留 buy range 展開順序。
+- `itemIndex` 反查單一 Item 可由哪些 shop 買到，避免後續 acquisition / quest / reward 還要人工維護清單。
+- `LimitItemType` / `LimitItemNo` 與 `special_item` / `special_rate` 的 sell policy 已來源化。
+- Buy request 會先由 source Item template 取得 base cost，再乘 NPC `buy_rate`，最後交給既有 `buyShopItem()` 與 Item allocator。
+- generator 只接受 pinned `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`；source checkout 若可驗證 Git HEAD 不同就直接停止。
+- 完整 source generator 尚未把固定 C checkout 複製到本 repo，所以目前不宣稱 336 個 ItemShop binding 已全部寫入 generated catalog；現有 service index 已確認 ItemShop = 336 bindings / 190 floors。
+
+詳細邊界：`docs/reference/npc-itemshop-runtime.md`。
