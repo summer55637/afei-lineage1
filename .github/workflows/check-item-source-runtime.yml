@@ -1,0 +1,23 @@
+name: Check source item runtime
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_item_source_runtime.mjs'
+      - 'tools/check_item_source_runtime.mjs'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - '.github/workflows/check-item-source-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run source item runtime regression
+        run: node tools/check_item_source_runtime.mjs
