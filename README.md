@@ -9,9 +9,9 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：03e7ea5 — V3.47: correct starter Pet rank boundary
+- 最新 commit：37dfc8d — V3.48 roadmap starter Pet rank closure
 - 最後更新時間：2026-09-30T16:30:00+08:00
-- 版本線最高 regression workflow：V3.47
+- 版本線最高 regression workflow：V3.48
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
@@ -29,7 +29,7 @@
 | Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
-| Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank pending；team/activePet unchanged |
+| Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
@@ -43,7 +43,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 1. Resolve the five start-floor changeevent template/module discrepancies against the pinned build or keep them explicitly non-instantiable.
 2. Resolve the 4000 -> 200 disconnected component against fixed-source map semantics; do not add a synthetic bridge or manual warp.
 3. Treat the non-walkable 3000 -> 200 landing point (587,318) as unavailable while retaining the other verified landing points.
-4. Wire starter-item grant: Item 24114 has source ID/creation-path closure but its item template/allocator is still unresolved; starter Pet rank remains a separate source-data boundary.
+4. Wire starter-item grant: Item 24114 has source ID/creation-path closure but its item template/allocator is still unresolved.
 
 ### 永久停用
 
