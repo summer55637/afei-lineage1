@@ -88,6 +88,20 @@ assert.equal(stale.ok,false);
 assert.equal(stale.reason,'warp-player-not-on-npc-cell');
 assert.equal(controller.getState().revision,1);
 
+const conflictState=freshPersistentState({playerId:'v375-conflict'});
+conflictState.world.position={floorId:first.origin.floorId,x:first.origin.x,y:first.origin.y};
+conflictState.revision=1;
+const conflict=await runtime.execute(
+  conflictState,
+  npc,
+  {floor:first.origin.floorId,x:first.origin.x,y:first.origin.y},
+  {expectedRevision:0}
+);
+assert.equal(conflict.ok,false);
+assert.equal(conflict.reason,'revision-conflict');
+assert.equal(conflictState.revision,1);
+assert.deepEqual(conflictState.world.position,{floorId:first.origin.floorId,x:first.origin.x,y:first.origin.y});
+
 const farState=freshPersistentState({playerId:'v375-far'});
 farState.world.position={floorId:first.origin.floorId,x:first.origin.x+1,y:first.origin.y};
 const far=await runtime.execute(
