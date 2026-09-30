@@ -7,6 +7,7 @@ const NEW_PLAYER_CREATION_SAVE_FORMAT='stoneage-new-player-creation-save-v1';
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 
 function clone(value){return JSON.parse(JSON.stringify(value));}
+function stateOrPetStateHasStarterPet(state){return Array.isArray(state?.pets?.petBox)&&state.pets.petBox.length>0;}
 
 async function runNewPlayerCreationSave(state,{
   seed,
@@ -21,11 +22,28 @@ async function runNewPlayerCreationSave(state,{
   source='new-player-creation'
 }={}){
   if(!isObject(state))return {ok:false,stage:'input',reason:'state-required'};
-  const prepared=applyPlayerCreationInput(state,{seed,hometown,stats,elements,now});
-  if(!prepared.ok)return {ok:false,stage:'creation-input',...prepared};
-
-  const pet=grantSourceStarterPet(prepared.state,seed,hometown,{randInclusive,idFactory,now});
-  if(!pet.ok)return {ok:false,stage:'starter-pet',state:prepared.state,...pet};
+  let prepared;
+  let petState;
+  let petResult;
+  const canResumeItemStage =
+    state.creation?.hometownConfigured === true
+    && state.creation?.playerCreationStatsConfigured === true
+    && state.creation?.elementsConfigured === true
+    && state.creation?.starterPetGranted === true
+    && state.creation?.starterItemGranted !== true
+    && state.creation?.completed !== true;
+  if(canResumeItemStage){
+    prepared={ok:true,state:clone(state),creation:null};
+    petState=clone(state);
+    petResult={ok:true,state:clone(state),pet:state.pets?.petBox?.[state.pets.petBox.length-1]??null};
+  }else{
+    prepared=applyPlayerCreationInput(state,{seed,hometown,stats,elements,now});
+    if(!prepared.ok)return {ok:false,stage:'creation-input',...prepared};
+    const pet=grantSourceStarterPet(prepared.state,seed,hometown,{randInclusive,idFactory,now});
+    if(!pet.ok)return {ok:false,stage:'starter-pet',state:prepared.state,...pet};
+    petState=pet.state;
+    petResult=pet;
+  }
 
   if(typeof itemGrantAdapter!=='function'){
     return {
@@ -33,16 +51,16 @@ async function runNewPlayerCreationSave(state,{
       stage:'starter-item',
       reason:'starter-item-template-unresolved',
       sourceClosed:false,
-      state:pet.state,
+      state:petState,
       pendingItemId:Number(seed.sourceConfig?.itemSlots?.ITEM1??0)||null,
-      petGranted:true,
+      petGranted:petResult.ok===true && stateOrPetStateHasStarterPet(petState),
       creationCompleted:false,
       saveCommitted:false
     };
   }
 
   let itemResult;
-  try{itemResult=await itemGrantAdapter(clone(pet.state),{seed,hometown,itemId:Number(seed.sourceConfig?.itemSlots?.ITEM1??0)||null,now});}
+  try{itemResult=await itemGrantAdapter(clone(petState),{seed,hometown,itemId:Number(seed.sourceConfig?.itemSlots?.ITEM1??0)||null,now});}
   catch(error){return {ok:false,stage:'starter-item',reason:'starter-item-adapter-error',error:String(error?.message??error),state:pet.state};}
   if(!isObject(itemResult)||itemResult.ok!==true||!isObject(itemResult.state)){
     return {ok:false,stage:'starter-item',reason:itemResult?.reason??'starter-item-adapter-rejected',state:pet.state,adapterResult:itemResult??null};
@@ -71,7 +89,7 @@ async function runNewPlayerCreationSave(state,{
     envelope:committed.envelope,
     verification:parsed,
     stages:{creationInput:true,starterPet:true,starterItem:true,save:true},
-    pet:pet.pet,
+    pet:petResult.pet,
     creation:prepared.creation,
   };
 }
