@@ -25,7 +25,7 @@
 - 新增 `src/stoneage_client_asset_pack.mjs`，固定 operator-supplied client asset pack manifest 與 `image ID → ADRNBIN → Real → RD pixels` adapter。
 - 預設 manifest 維持 `unavailable`；repo 不自動抓取或發布原版 client BIN。
 - 可選 SHA-256 pin 與 authorization note；缺 asset、digest mismatch 或 decode failure 一律 fail-closed。
-- 新增 V3.18 regression 與 CI；舊 `play.html`／`game-live.html` 入口也建立相容 redirect 到正式 `start.html`。
+- 新增 V3.18 regression 與 CI；刪除舊 `play.html`／`game-live.html`／`start.html`，由根目錄 `index.html` 統一作為唯一正式遊戲入口。
 
 ## V3.17 — client RD decoder contract
 
