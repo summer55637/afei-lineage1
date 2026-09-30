@@ -65,7 +65,7 @@ for(const raw0 of fs.readFileSync(encountPath,'utf8').replace(/\r/g,'').split('\
   if(!raw||raw.startsWith('#'))continue;
   const c=raw.split(',');
   const n=i=>Number((c[i-1]??'').trim());
-  const row={line:lineNo,index:n(1),floor:n(2),x1:n(3),y1:n(4),x2:n(5),y2:n(6),probMin:n(7),probMax:n(8),enemyMax:n(9),zorder:n(10),groupIds:c.slice(10,30).map(x=>Number(x.trim())).filter(Number.isInteger&&false)};
+  const row={line:lineNo,index:n(1),floor:n(2),x1:n(3),y1:n(4),x2:n(5),y2:n(6),probMin:n(7),probMax:n(8),enemyMax:n(9),zorder:n(10)};
   row.groupIds=[];
   for(let i=11;i<=20;i++){const v=n(i);if(Number.isInteger(v))row.groupIds.push(v);}
   row.eventNow=n(31);row.eventEnd=n(32);row.enemyGroup=n(33);
