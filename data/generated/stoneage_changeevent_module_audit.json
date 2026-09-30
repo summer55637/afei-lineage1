@@ -1,0 +1,68 @@
+{
+  "format": "stoneage-changeevent-module-audit-v1",
+  "auditedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "target": {
+    "templateName": "changeevent",
+    "createReference": "gmsv/data/npc/almark/xinshou/xinshou.create|enemy=changeevent|file:almark/xinshou/xinshoujd.arg",
+    "affectedNewPlayerInstances": 4,
+    "additionalKnownStartFloorInstance": "薩姆吉爾的村長"
+  },
+  "evidence": [
+    {
+      "source": "gmsv/src/npc/npctemplate.c",
+      "blobSha": "9f487fea0229d6aeaa7d1739fa5a19c4dfc31003",
+      "check": "functionSet[]",
+      "finding": "changeevent is absent",
+      "consequence": "NPC_templateGetTemplateIndex('changeevent') returns -1 unless a matching template is registered elsewhere."
+    },
+    {
+      "source": "gmsv/src/npc/npccreate.c",
+      "blobSha": "28651f52060b6417758dd0d7ae5755ee1f94e8e2",
+      "check": "NPC_readCreateFile enemy parser",
+      "finding": "templateindex=NPC_templateGetTemplateIndex(enemyname); only templateindex!=-1 is stored; else it logs missing module and does not attach the enemy template",
+      "consequence": "An unknown changeevent template cannot become an active NPC instance in the pinned runtime."
+    },
+    {
+      "source": "gmsv/data/npc/almark/xinshou/xinshou.create",
+      "blobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+      "check": "enemy directive",
+      "finding": "new-player NPC references changeevent with file:almark/xinshou/xinshoujd.arg",
+      "consequence": "script reference is present even though runtime registry entry is absent."
+    },
+    {
+      "source": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
+      "blobSha": "62dec9dc760731a90f6f0c2ab3c0a01cf5c6b0c9",
+      "check": "event script",
+      "finding": "contains 4 ACCEPT reward branches with GetItem/GetPet/Charm/EndSetFlg",
+      "consequence": "the data-side event DSL is recoverable independently of the missing template module."
+    }
+  ],
+  "aliasChecks": [
+    {
+      "candidate": "ExChangeMan",
+      "status": "not-promoted",
+      "reason": "pinned registry contains ExChangeMan and separate npc_exchangeman.c behavior, but no source evidence equates changeevent to ExChangeMan."
+    },
+    {
+      "candidate": "Charm",
+      "status": "not-promoted",
+      "reason": "Charm is a distinct function-set entry and therefore cannot substitute the missing changeevent template."
+    },
+    {
+      "candidate": "Action",
+      "status": "not-promoted",
+      "reason": "Action is a separate function-set entry with different callbacks."
+    }
+  ],
+  "publicCrossCheck": {
+    "source": "web",
+    "finding": "public StoneAge documentation describes changeevent as a task-NPC module and shows EventNo/TYPE/EVENT/GetItem/GetPet/EndSetFlg script structure",
+    "limitation": "public documentation does not establish that the pinned StoneAge 8.0 tree contains the same module implementation or registry entry."
+  },
+  "status": "runtime-module-unresolved",
+  "promotionPolicy": "Do not synthesize or alias-register changeevent without exact pinned-source module/registry evidence."
+}
