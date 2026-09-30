@@ -81,6 +81,13 @@ const index=buildItemShopAcquisitionIndex(fixture);
 assert.equal(index.ok,true);
 assert.equal(index.itemIndex['42'][0].shopId,'fixture.create#0');
 assert.equal(index.itemIndex['42'][0].offerIndex,0);
+const floorIndex=buildItemShopFloorIndex(fixture);
+assert.equal(floorIndex.ok,true);
+assert.deepEqual(floorIndex.floorIndex['1001'],['fixture.create#0']);
+const floorShops=resolveItemShopsAtFloor(fixture,1001);
+assert.equal(floorShops.ok,true);
+assert.equal(floorShops.shops.length,1);
+assert.equal(floorShops.shops[0].shopId,'fixture.create#0');
 
 const state=freshPersistentState({playerId:'npc-shop'});
 state.player.gold=1000;
@@ -109,5 +116,6 @@ console.log(JSON.stringify({
   acquisitionItems:Object.keys(index.itemIndex).length,
   sourceBuyRange:'inclusive',
   sourceSellSpecialRate:'special_item > sell_rate',
-  integratedBuy:true
+  integratedBuy:true,
+  floorLookup:true
 }));
