@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "version": "V3.13",
+  "schemaVersion": 2,
+  "version": "V3.14",
   "source": {
     "repository": "gavinlinasd/StoneAge",
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
@@ -6652,10 +6652,11 @@
     {
       "path": "gmsv/data/map/jyaruga/jaja/jaja",
       "basename": "jaja",
-      "size": 90044,
+      "size": 122061,
       "blobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
-      "verifiedRuntime": false,
-      "generatedPath": null
+      "verifiedRuntime": true,
+      "generatedPath": "data/generated/stoneage_map_3000.json",
+      "sourceFloorId": 3000
     },
     {
       "path": "gmsv/data/map/jyaruga/jalga",
@@ -6772,10 +6773,11 @@
     {
       "path": "gmsv/data/map/jyaruga/karutana/karutana",
       "basename": "karutana",
-      "size": 90044,
+      "size": 122061,
       "blobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
-      "verifiedRuntime": false,
-      "generatedPath": null
+      "verifiedRuntime": true,
+      "generatedPath": "data/generated/stoneage_map_4000.json",
+      "sourceFloorId": 4000
     },
     {
       "path": "gmsv/data/map/jyaruga/kikuku/3403",
@@ -9500,10 +9502,11 @@
     {
       "path": "gmsv/data/map/sainasu/samugiru/samugiru",
       "basename": "samugiru",
-      "size": 102444,
+      "size": 138869,
       "blobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
-      "verifiedRuntime": false,
-      "generatedPath": null
+      "verifiedRuntime": true,
+      "generatedPath": "data/generated/stoneage_map_1000.json",
+      "sourceFloorId": 1000
     },
     {
       "path": "gmsv/data/map/sainasu/sonota/101",
@@ -10285,10 +10288,19 @@
   "verifiedFloorIds": [
     200,
     400,
+    1000,
     2000,
+    3000,
+    4000,
     5507,
     10406,
     10702,
     20000
-  ]
+  ],
+  "headerDerivedFloorAliases": {
+    "1000": "gmsv/data/map/sainasu/samugiru/samugiru",
+    "2000": "gmsv/data/map/sainasu/marinasu/2000",
+    "3000": "gmsv/data/map/jyaruga/jaja/jaja",
+    "4000": "gmsv/data/map/jyaruga/karutana/karutana"
+  }
 }
