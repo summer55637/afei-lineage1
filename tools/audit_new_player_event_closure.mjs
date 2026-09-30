@@ -46,8 +46,9 @@ const itemIds=[20145,2849,20228,18537,20866,2912,2909,2911,20867,19567,19568,195
 const petIds=[341,2057,1645,1479,2547];
 const itemset6=fs.readFileSync(path.join(root,'gmsv/data/itemset6.txt'),'utf8');
 const enemy1=fs.readFileSync(path.join(root,'gmsv/data/enemy1.txt'),'utf8');
+const ENEMY_ID_TOKEN_INDEX=3; // _BATTLENPC_WARP_PLAYER is enabled in pinned version.h
 const itemFound=itemIds.filter(id=>itemset6.split(/\r?\n/).some(line=>Number(line.split(',')[16])===id));
-const petFound=petIds.filter(id=>enemy1.split(/\r?\n/).some(line=>Number(line.split(',')[2])===id));
+const petFound=petIds.filter(id=>enemy1.split(/\r?\n/).some(line=>Number(line.split(',')[ENEMY_ID_TOKEN_INDEX])===id));
 const result={
  format:'stoneage-new-player-event-closure-v2',
  generatedAt:'2026-09-30',
