@@ -281,3 +281,15 @@ V3.23 regression 已納入 GitHub Actions。
 - 新手 event closure 的 Pet definitions 現已標為 source-closed；Item definitions 仍維持 item-source-pending。
 
 V3.24 regression 已納入 GitHub Actions。
+
+## V3.25 New-player Item Reward Runtime
+
+新增 `src/stoneage_new_player_item_reward_runtime.mjs`、`tools/generate_new_player_item_reward_runtime.mjs`、`tools/check_v325_new_player_item_reward_runtime.mjs`、`data/generated/stoneage_new_player_item_reward_runtime.json`、`.github/workflows/check-v325-new-player-item-reward-runtime.yml` 與 `docs/reference/v325-new-player-item-reward-runtime.md`。
+
+- new-player closure 的 16 個 `GetItem` ID 全部在 source-backed `stoneage-item-make-runtime-v2` 找到。
+- `NPC_ActionAddItem()` 的 `ITEM_makeItemAndRegist → CHAR_addItemSpecificItemIndex` 已映射到 canonical Item allocator + player slots 9–23。
+- 每個 reward item 都保留 66-field Item creation lifecycle。
+- focused catalog 只提升 closure 明確引用的 16 個 Item，不擴張成未驗證的完整 quest reward 表。
+- new-player closure 現在標示 Item / Pet definitions 都已 source-closed；`Charm` concrete semantics 與 `changeevent` template runtime 仍 pending。
+
+V3.25 regression 已納入 GitHub Actions。
