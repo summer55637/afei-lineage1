@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：44cf07e — Simplify V3.83 target group probability generation
-- 最後更新時間：2026-10-01T05:25:45+08:00
+- 最新 commit：437299f — Integrate V3.83 encounter Group selection controller
+- 最後更新時間：2026-10-01T05:26:01+08:00
 - 版本線最高 regression workflow：V3.82
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
