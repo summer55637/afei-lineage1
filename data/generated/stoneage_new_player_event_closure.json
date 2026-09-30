@@ -1,0 +1,195 @@
+{
+  "format": "stoneage-new-player-event-closure-v1",
+  "generatedAt": "2026-09-30",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "sourceContracts": {
+    "owner": "gmsv/data/npc/almark/xinshou/xinshou.create",
+    "script": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
+    "itemConfig": "gmsv/src/include/version.h::_ITEMSET6_TXT + gmsv/setup.cf::itemset6file + gmsv/src/init.c::ITEM_readItemConfFile"
+  },
+  "owner": {
+    "createPath": "gmsv/data/npc/almark/xinshou/xinshou.create",
+    "createBlobSha": "335470114a567f9d1a2c0a2369fc283043db920b",
+    "templateName": "changeevent",
+    "fileRef": "almark/xinshou/xinshoujd.arg",
+    "instances": [
+      {
+        "blockIndex": 0,
+        "floorId": 2006,
+        "coord": [
+          22,
+          15
+        ],
+        "name": "炎龍新手接待員"
+      },
+      {
+        "blockIndex": 1,
+        "floorId": 3006,
+        "coord": [
+          23,
+          18
+        ],
+        "name": "炎龍新手接待員"
+      },
+      {
+        "blockIndex": 2,
+        "floorId": 1006,
+        "coord": [
+          15,
+          22
+        ],
+        "name": "炎龍新手接待員"
+      },
+      {
+        "blockIndex": 3,
+        "floorId": 4006,
+        "coord": [
+          14,
+          20
+        ],
+        "name": "炎龍新手接待員"
+      }
+    ],
+    "ownerClosure": "closed"
+  },
+  "script": {
+    "path": "gmsv/data/npc/almark/xinshou/xinshoujd.arg",
+    "blobSha": "62dec9dc760731a90f6f0c2ab3c0a01cf5c6b0c9",
+    "eventNo": -1,
+    "branches": [
+      {
+        "type": "ACCEPT",
+        "condition": "TRANS=0&LV<100&ENDEV!=366",
+        "getItem": [
+          20145,
+          2849,
+          20228,
+          18537
+        ],
+        "getPet": [
+          341
+        ],
+        "charm": 1,
+        "endSetFlg": 366
+      },
+      {
+        "type": "ACCEPT",
+        "condition": "TRANS=0&LV>99&LV<140&ENDEV!=365",
+        "getItem": [
+          20866,
+          2912,
+          2909,
+          2911
+        ],
+        "getPet": [
+          2057
+        ],
+        "charm": 1,
+        "endSetFlg": 365
+      },
+      {
+        "type": "ACCEPT",
+        "condition": "TRANS=0&LV>139&LV<150&ENDEV!=364",
+        "getItem": [
+          20867,
+          19567,
+          19568,
+          19569
+        ],
+        "getPet": [
+          1645
+        ],
+        "charm": 1,
+        "endSetFlg": 364
+      },
+      {
+        "type": "ACCEPT",
+        "condition": "TRANS=0&LV=150&ENDEV!=363",
+        "getItem": [
+          20615,
+          20616,
+          20617,
+          20635
+        ],
+        "getPet": [
+          1479,
+          2547
+        ],
+        "charm": 1,
+        "endSetFlg": 363
+      }
+    ],
+    "messageBranches": [
+      {
+        "type": "MESSAGE",
+        "condition": "TRANS=0&LV<100&ENDEV=366"
+      },
+      {
+        "type": "MESSAGE",
+        "condition": "TRANS=0&LV>99&LV<140&ENDEV=365"
+      },
+      {
+        "type": "MESSAGE",
+        "condition": "TRANS=0&LV>139&LV<150&ENDEV=364"
+      },
+      {
+        "type": "MESSAGE",
+        "condition": "TRANS=0&LV=150&ENDEV=363"
+      },
+      {
+        "type": "MESSAGE",
+        "condition": "TRANS>0"
+      }
+    ]
+  },
+  "rewardClosure": {
+    "itemIds": [
+      20145,
+      2849,
+      20228,
+      18537,
+      20866,
+      2912,
+      2909,
+      2911,
+      20867,
+      19567,
+      19568,
+      19569,
+      20615,
+      20616,
+      20617,
+      20635
+    ],
+    "itemDefinitionsSource": {
+      "path": "gmsv/data/itemset6.txt",
+      "blobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
+      "byteLength": 0,
+      "status": "source_file_empty_under_active_ITEMSET6_build"
+    },
+    "petIds": [
+      341,
+      2057,
+      1645,
+      1479,
+      2547
+    ],
+    "petDefinitionSource": {
+      "path": "gmsv/data/enemy1.txt",
+      "blobSha": "bf245a391adeace09915b6e425754b54ab69a8f6",
+      "directEnemyIdMatches": [],
+      "status": "not_directly_resolved_by_enemy1_enemy_id"
+    },
+    "status": "partial"
+  },
+  "semantics": {
+    "ownerClosed": true,
+    "branchLogicSourceClosed": true,
+    "rewardDefinitionsSourceClosed": false,
+    "noQuestOrderInference": true
+  },
+  "policy": "The concrete NPC create blocks and shared script establish event ownership and branch conditions. Reward item/pet definitions remain unresolved when the pinned source does not provide the corresponding definition rows; no alternative version or guessed mapping is promoted."
+}
