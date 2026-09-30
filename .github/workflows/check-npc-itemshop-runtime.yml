@@ -36,4 +36,4 @@ jobs:
           node tools/generate_npc_itemshop_runtime.mjs \
             --source-root tools/fixtures/npc-itemshop/source \
             --out /tmp/stoneage_npc_itemshop_runtime.json
-          node -e "const x=require('/tmp/stoneage_npc_itemshop_runtime.json'); if(x.stats.shopBindings!==2||x.stats.totalOfferRows!==6||x.floorIndex['1001'][0]!=='fixture.create#0'||x.itemIndex['46'][0].offerIndex!==4) process.exit(1); console.log(JSON.stringify({generatorPass:true,stats:x.stats}))"
+          node -e "const x=require('/tmp/stoneage_npc_itemshop_runtime.json'); if(x.stats.shopBindings!==2||x.stats.totalOfferRows!==6||x.floorIndex['1001'][0]!=='gmsv/data/npc/fixture.create#0'||x.itemIndex['46'][0].offerIndex!==4) process.exit(1); console.log(JSON.stringify({generatorPass:true,stats:x.stats}))"
