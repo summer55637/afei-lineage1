@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'game.js'
-      - 'start.html'
+      - 'index.html'
       - 'README.md'
       - 'CHANGELOG.md'
       - 'docs/changelog/**'
@@ -35,7 +35,7 @@ on:
   pull_request:
     paths:
       - 'game.js'
-      - 'start.html'
+      - 'index.html'
       - 'README.md'
       - 'CHANGELOG.md'
       - 'docs/changelog/**'
@@ -74,7 +74,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Provide regression HTML fixture
-        run: cp start.html game.html
+        run: cp index.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -113,7 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Provide regression HTML fixture
-        run: cp start.html game.html
+        run: cp index.html game.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
