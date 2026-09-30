@@ -8,7 +8,7 @@ on:
       - 'tools/check_v320_tile_presentation.mjs'
       - 'docs/reference/v320-real-tile-presentation.md'
       - 'game.js'
-      - 'start.html'
+      - 'index.html'
       - 'game.css'
       - '.github/workflows/v320-real-tile-presentation.yml'
   pull_request:
@@ -19,7 +19,7 @@ on:
       - 'tools/check_v320_tile_presentation.mjs'
       - 'docs/reference/v320-real-tile-presentation.md'
       - 'game.js'
-      - 'start.html'
+      - 'index.html'
       - 'game.css'
       - '.github/workflows/v320-real-tile-presentation.yml'
   workflow_dispatch:
