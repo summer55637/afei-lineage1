@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-starter-item-24114-source-audit-v2",
+  "format": "stoneage-starter-item-24114-source-audit-v3",
   "generatedAt": "2026-09-30",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
@@ -95,5 +95,38 @@
     "failClosedUntilSourceIdMappingIsClosed": true,
     "noPlayableHtml": true,
     "productLayerSeparated": true
+  },
+  "exhaustiveExecutionAudit": {
+    "itemDataFilesInPinnedTree": [
+      "gmsv/data/itemset6.txt",
+      "gmsv/data/itemset6.txt.bak"
+    ],
+    "selectedRuntimeItemFile": "gmsv/data/itemset6.txt",
+    "selectedRuntimeItemFileReason": "setup.cf itemset6file -> config.itemfile -> init.c ITEM_readItemConfFile(getItemfile())",
+    "loaderCallSites": [
+      "gmsv/src/init.c::init",
+      "gmsv/src/char/chatmagic.c::CHAT_reloadItem"
+    ],
+    "itemIdLookupCallSites": [
+      "gmsv/src/char/char.c::CHAR_loginAddItemForNew -> ITEM_makeItemAndRegist",
+      "gmsv/src/item/item.c::ITEM_makeItem",
+      "gmsv/src/item/item.c::ITEMTBL_getInt/ITEMTBL_getChar/ITEM_CHECKITEMTABLE"
+    ],
+    "sourceTrackedExact24114Matches": {
+      "setup": "gmsv/setup.cf: ITEM1=24114",
+      "itemData": "gmsv/data/itemset6.txt: token 18 imagenumber=24114 on line 3602",
+      "alternateLoadedSource": "none"
+    },
+    "generatedCatalogCrossCheck": {
+      "catalogPath": "data/generated/stoneage_item_make_runtime.json",
+      "catalogFormat": "stoneage-item-make-runtime-v2",
+      "catalogSourceBlobSha": "eac985796b59286c547db2abce7b3d604a5e6226",
+      "templateCount": 10737,
+      "sourceItemId11817Present": true,
+      "sourceItemId11817BaseImageNumber": 24114,
+      "configuredItemId24114Present": false
+    },
+    "effectiveResult": "Within the pinned build, 24114 appears as an imageNumber on source Item ID 11817. No second loaded item-data file or source-ID remap path maps configured ITEM1=24114 to that row. The fixed-C creation call remains a direct ITEM_makeItemAndRegist(24114), so production grant stays fail-closed.",
+    "closedByV352": true
   }
 }
