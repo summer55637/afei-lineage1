@@ -1,0 +1,28 @@
+name: Check V3.92 Browser Battle Turn initialization
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_turn_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'data/generated/stoneage_browser_battle_turn_init_schema.json'
+      - 'tools/check_v392_browser_battle_turn_runtime.mjs'
+      - 'docs/reference/v392-browser-battle-turn-init.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v392-browser-battle-turn-init.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.92 battle turn regression
+        run: node tools/check_v392_browser_battle_turn_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_turn_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v392_browser_battle_turn_runtime.mjs
