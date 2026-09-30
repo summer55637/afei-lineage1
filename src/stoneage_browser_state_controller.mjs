@@ -250,7 +250,9 @@ function createBrowserStateController({
           team:action.enemyTeam,
           encounter,
           groupId:action.groupId??null,
-          battleFieldNo
+          battleFieldNo,
+          materializeEnemyStats:action.materializeEnemyStats===true,
+          enemyStatRolls:Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:[]
         });
         if(!built.ok)return {...built,state:clone(currentState)};
         const check=validateBattleContext(built);
