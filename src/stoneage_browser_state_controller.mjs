@@ -17,6 +17,7 @@ import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAV
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
 import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT } from './stoneage_browser_world_movement_runtime.mjs';
 import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT } from './stoneage_browser_world_warppoint_runtime.mjs';
+import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 
@@ -50,8 +51,10 @@ function createBrowserStateController({
   savePointCatalog=null,
   idleRouteCatalog=null,
   warpCatalog=null,
+  encounterTargetIndex=null,
   worldMovementOptions={},
-  worldWarpPointOptions={}
+  worldWarpPointOptions={},
+  worldFirstRouteOptions={}
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
@@ -64,6 +67,9 @@ function createBrowserStateController({
   const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
   const worldMovementRuntime=createBrowserWorldMovementRuntime(worldMovementOptions);
   const worldWarpPointRuntime=createBrowserWorldWarpPointRuntime(worldWarpPointOptions);
+  const worldFirstRouteRuntime=(idleRouteCatalog&&warpCatalog&&encounterTargetIndex)
+    ? createBrowserWorldFirstRouteRuntime({routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,...worldFirstRouteOptions})
+    : null;
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
       ? createBrowserWorldItemShopRuntime({worldNpcIndex,catalog:itemShopCatalog,itemMakeCatalog,...itemShopRuntimeOptions})
@@ -84,6 +90,16 @@ function createBrowserStateController({
         const result=await idleRuntime.dispatch(currentState,action,{now:action.now??now});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_FIRST_ROUTE_PLAN){
+        if(!worldFirstRouteRuntime)return {ok:false,handled:false,stage:'first-route-plan',reason:'browser-world-first-route-runtime-not-configured',state:clone(currentState)};
+        if(worldFirstRouteRuntime.ok!==true)return {ok:false,handled:false,stage:'first-route-plan',reason:worldFirstRouteRuntime.reason??'browser-world-first-route-runtime-invalid',errors:worldFirstRouteRuntime.errors??[],state:clone(currentState)};
+        const result=await worldFirstRouteRuntime.plan(currentState,{
+          routeId:action.routeId??null,
+          hometown:action.hometown??null,
+          portalId:action.portalId??null
+        });
+        return {...result,state:clone(currentState)};
       }
       if(type===ACTION_WORLD_MOVE_STEP){
         if(worldMovementRuntime.ok!==true)return {ok:false,handled:false,stage:'movement-runtime',reason:worldMovementRuntime.reason??'browser-world-movement-runtime-invalid',errors:worldMovementRuntime.errors??[],state:clone(currentState)};
@@ -253,10 +269,12 @@ export {
   ACTION_NPC_WARP_EXECUTE,
   ACTION_WORLD_MOVE_STEP,
   ACTION_WORLD_WARPPOINT_EXECUTE,
+  ACTION_WORLD_FIRST_ROUTE_PLAN,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
   BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT,
   BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT,
+  BROWSER_WORLD_ROUTE_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
