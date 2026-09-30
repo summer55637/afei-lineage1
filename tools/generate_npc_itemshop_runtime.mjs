@@ -171,6 +171,12 @@ for(const shop of shops){
   });
 }
 for(const rows of Object.values(itemIndex))rows.sort((a,b)=>String(a.shopId).localeCompare(String(b.shopId))||a.offerIndex-b.offerIndex);
+const floorIndex={};
+for(const shop of shops){
+  if(shop.floorId==null)continue;
+  (floorIndex[String(shop.floorId)]??=[]).push(shop.shopId);
+}
+for(const rows of Object.values(floorIndex))rows.sort();
 
 const catalog={
   format:'stoneage-npc-itemshop-runtime-v1',
@@ -196,6 +202,7 @@ const catalog={
     shopsWithSpecialSellRate:shops.filter(s=>s.specialItemEntries.length).length
   },
   shops:byShopId,
+  floorIndex,
   itemIndex,
   unresolved
 };
