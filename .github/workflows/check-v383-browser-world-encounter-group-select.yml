@@ -1,4 +1,5 @@
 name: Check V3.83 Browser World Encounter Group select
+# Re-run on source/runtime changes; Group probabilities are part of the prepared encounter contract.
 on:
   push:
     paths:
