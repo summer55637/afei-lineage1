@@ -1295,3 +1295,29 @@ V3.95 將 fixed-C `BATTLE_CommandWait()` 做成 read-only command gate：
 V3.95 不修改 Battle Context、不消耗 RNG、不執行 AI / Damage。
 
 下一階段才處理 `BATTLE_Command` 的 player command submission，把 `attack/guard/item/pet/change/escape` 等合法 command mapping 接到既有 Battle Model；Enemy AI command 仍維持獨立 source boundary。
+
+## 2026-10-01 V3.97 Browser Player Battle Command Preflight
+
+V3.97 在 V3.96 command normalization 上加入 fixed-C `checkErrorStatus()` gate：
+
+- paralysis
+- stone
+- sleep
+- dizzy
+- dragnet
+
+這些狀態任一有效時，固定 C 會轉走 `N`，即 `BATTLE_COM_WAIT + BATTLE_CHARMODE_C_OK`；Barrier 不在該函式檢查集合內。
+
+另外修正 Pet command transport：
+- `pet_in = -1`
+- `pet_out = 0..4`，因 pinned `CHAR_MAXPETHAVE=5`
+- battle `targetBid` 仍保持 0..19，與 pet slot 分離
+
+新增：
+- `data/generated/stoneage_browser_player_battle_command_preflight_schema.json`
+- `tools/check_v397_browser_player_battle_command_preflight.mjs`
+- `docs/reference/v397-browser-player-battle-command-preflight.md`
+- `.github/workflows/check-v397-browser-player-battle-command-preflight.yml`
+
+V3.97 仍不執行 MP 扣除、ride-pet / standby-pet feature gate、item/magic/PetSkill/profession、實際 attack/capture、target expansion 或 damage。
+
