@@ -22,5 +22,7 @@
   },
   "save": {
     "revisionGuard": true
-  }
+  },
+  "battleInput": "supports fixed-C raw PvE result through stoneage-battle-result-adapter-v1",
+  "offlineCheckpoint": "stoneage-offline-resume-v1"
 }
