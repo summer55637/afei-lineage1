@@ -462,3 +462,15 @@ V3.30 已完成 first-route Save integration：`condition → reward adapters �
 pinned `npctemplate.c/functionSet[]` 沒有 `changeevent`，`npccreate.c` 對 unknown template 直接不掛 template；公開文件只能證明 changeevent 的 DSL 用途，不能補出缺失的 pinned C module。Reward mutation chain 已閉合，因此下一階段切到 Save Transaction integration 與可測試的 synthetic NPC interaction boundary，同時保留正式 `changeevent` instantiation unresolved。
 
 V3.34 已補齊四段 new-player branch matrix regression，鎖定 Lv 1–99 / 100–139 / 140–149 / 150 的 source branch、Item/Pet reward、EndSetFlg 與 Save reload parity；因此下一個工作點回到正式 `changeevent` browser instantiation，而不是再擴 reward logic。
+
+## 2026-09-30 V3.37–V3.39 Canonical Browser Runtime
+
+V3.37 將 strict / compatibility policy 統一到 `stoneage_npc_runtime_config`；V3.38 再將 `NPC_TALK` 接成唯一 browser state controller，且以四個 hometown 的 `xinshou` changeevent rows 做 compatibility execution / Save reload regression。V3.39 建立唯一 `index.html` canonical browser shell，CI 固定 repository 只能存在一個 HTML entry。
+
+目前正式邊界：
+
+`index.html → canonical browser shell → Browser State Controller → NPC Dispatch → interaction gate → audited/compatibility module registry → first-route Save`
+
+Strict mode 仍維持 pinned `changeevent` unresolved；Compatibility mode 只在明確 opt-in 下使用 external `changeevent → ExChangeMan` corroboration。這不代表 pinned fixed-C 已補回缺失的 `changeevent` functionSet。
+
+下一階段可以開始把 verified world/map presentation 接到這個唯一 shell；reward、save、NPC dispatch 不再另起平行 engine。
