@@ -324,3 +324,12 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 只要這些問題還有大面積空白，就先繼續做資料與 contract，而不是急著寫首頁。
 
 Destination closure checkpoint：`data/generated/stoneage_start_destination_closure.json`；審計工具：`tools/audit_start_destination_closure.mjs`。
+
+
+## 2026-09-30 新增：destination portal 與 verified map runtime pipeline
+
+`data/generated/stoneage_start_destination_warp_coordinates.json` 已把 four-town first-route 下一層 exact source portal 座標從 floor graph 拆出，避免只用 floor-level edge 代替真正的座標證據。
+
+同時新增 `tools/generate_verified_map_runtime.mjs`：輸入 fixed-C 的 LS2MAP binary 後，會驗證 Git blob SHA、解析 `MAP_readMapOne()` 格式、檢查 mapset image IDs、依 battlefield source manifest 建立 `RAND(0,2)` 的三候選 battlemap resolver，最後寫入 verified runtime 與 runtime index。`tools/check_verified_map_runtime_generator.mjs` 提供 synthetic 1×1 map regression。
+
+目前因為 GitHub connector 在本環境不允許以 bytes 形式取回非 UTF-8 binary blob，尚未直接由這個工具生成新的 destination map runtime；這不是拿跨版本 map 代替 source，而是保留為下一個可執行的批量 pipeline。
