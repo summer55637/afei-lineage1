@@ -50,7 +50,7 @@
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 4/4 hometown start floors 都已存在 NPC service index。
 - 16/16 已解析數值座標的 NPC 互動點都可達；30 個 NPC 座標仍維持 unresolved。
-- 4/4 direct destination floors 都已有 depth-1 encounter evidence。
+- 4/4 direct destination floors 都有 source encounter row；其中 2/4（2000、3000）為 active encounter，1000、4000 僅為 0 機率／無 group 的 placeholder。
 
 因此目前可把「出生點 → 直接離村 warp → 第一個有 encounter evidence 的 floor」視為 **source-route spine closed**。
 
@@ -76,7 +76,7 @@ World Data Source Catalog 已完成；現在也完成第一版 World NPC Index�
 4. Idle Loop Contract：自動遇敵、戰鬥、結算、補給、死亡、離線／恢復。
 5. Battle Presentation Contract：真實戰場、站位、動畫事件與 UI。
 6. NPC / Economy Runtime：互動、取得來源、商店、製作與任務。
-7. Authorized Asset Integration：有合法 client assets 時再導入真實 sprite / tile。
+7. Authorized Asset Integration：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
 8. 唯一可玩入口：以上資料與 contract 成熟後才建立。
 
 ## 明確停用項目
