@@ -268,3 +268,16 @@ V3.22 regression 已納入 GitHub Actions。
 - unresolved Item / Pet / Charm semantics 仍不會被 orchestrator 偷換成遊戲規則。
 
 V3.23 regression 已納入 GitHub Actions。
+
+## V3.24 New-player Pet Runtime
+
+新增 `src/stoneage_new_player_pet_runtime.mjs`、`tools/generate_new_player_pet_runtime.mjs`、`tools/check_v324_new_player_pet_runtime.mjs`、`data/generated/stoneage_new_player_pet_runtime.json`、`.github/workflows/check-v324-new-player-pet-runtime.yml` 與 `docs/reference/v324-new-player-pet-runtime.md`。
+
+- `xinshoujd.arg` 的 5 個 `GetPet` Enemy ID 已全部 source-closed。
+- fixed-C `NPC_ActionAddPet()` 的 lookup 確認使用 Enemy ID；建立後 `CHAR_PETID` 使用 EnemyBase TempNo。
+- Enemy ID → EnemyBase TempNo / name / image / skills / elements / status 等來源鏈已固定。
+- `ENEMY_createPetFromEnemyIndex()` 的 16 次 RNG lifecycle 與 `atoi()` 數值解析已來源化。
+- canonical Web Pet ID 仍要求 explicit `idFactory`；PetBox 上限固定 5，暫不猜 team / activePet 行為。
+- 新手 event closure 的 Pet definitions 現已標為 source-closed；Item definitions 仍維持 item-source-pending。
+
+V3.24 regression 已納入 GitHub Actions。
