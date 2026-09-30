@@ -90,11 +90,11 @@ const moveActions=planned.actions.filter(a=>a.type==='WORLD_MOVE_STEP');
 const warpAction=planned.actions.find(a=>a.type==='WORLD_WARPPOINT_EXECUTE');
 const preWarpMoves=planned.path.toPortalDistance;
 assert.deepEqual(moveActions[0].player,{floorId:1000,x:98,y:44});
-assert.equal(moveActions[0].expectedRevision,1);
-assert.equal(warpAction.expectedRevision,preWarpMoves+1);
+assert.equal(moveActions[0].expectedRevision,0);
+assert.equal(warpAction.expectedRevision,preWarpMoves);
 assert.equal(warpAction.portalId,'1000_to_100_a');
 assert.deepEqual(warpAction.player,planned.portalFrom);
-if(moveActions.length>preWarpMoves)assert.equal(moveActions[preWarpMoves].expectedRevision,preWarpMoves+2);
+if(moveActions.length>preWarpMoves)assert.equal(moveActions[preWarpMoves].expectedRevision,preWarpMoves+1);
 assert.equal(planned.encounterBoundary.position.floorId,100);
 assert.equal(rectContains(planned.encounter.rect,planned.encounterBoundary.position.x,planned.encounterBoundary.position.y),true);
 
