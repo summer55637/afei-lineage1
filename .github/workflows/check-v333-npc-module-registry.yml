@@ -5,6 +5,10 @@ on:
     paths:
       - 'src/stoneage_npc_module_registry_runtime.mjs'
       - 'tools/check_v333_npc_module_registry_runtime.mjs'
+      - 'src/stoneage_npc_dispatch_runtime.mjs'
+      - 'tools/check_v332_npc_dispatch_bridge.mjs'
+      - 'data/generated/stoneage_start_npc_reachability.json'
+      - 'data/generated/stoneage_new_player_event_closure.json'
       - 'data/generated/stoneage_world_npc_functionset_audit.json'
       - '.github/workflows/check-v333-npc-module-registry.yml'
 
@@ -22,3 +26,5 @@ jobs:
           node --check tools/check_v333_npc_module_registry_runtime.mjs
       - name: Run module registry regression
         run: node tools/check_v333_npc_module_registry_runtime.mjs
+      - name: Run dispatcher regression
+        run: node tools/check_v332_npc_dispatch_bridge.mjs
