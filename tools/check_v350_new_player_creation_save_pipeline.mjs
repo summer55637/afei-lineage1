@@ -27,6 +27,11 @@ assert.equal(pending.state.world.position.floorId,1006);
 assert.equal(pending.state.world.position.x,15);
 assert.equal(pending.state.world.position.y,22);
 assert.deepEqual(validatePersistentState(pending.state),[]);
+assert.equal(pending.state.creation.source.transactionFormat,NEW_PLAYER_CREATION_SAVE_FORMAT);
+assert.equal(pending.state.creation.source.pendingStage,'starter-item');
+const wrongTown=await runNewPlayerCreationSave(pending.state,{seed,hometown:1,stats:{vital:5,str:5,tgh:5,dex:5},elements:{earth:10,water:0,fire:0,wind:0},randInclusive:()=>0,idFactory:()=> 'wrong-town'});
+assert.equal(wrongTown.ok,false);
+assert.equal(wrongTown.stage,'creation-input');
 
 const resumed=await runNewPlayerCreationSave(pending.state,{
   seed,
