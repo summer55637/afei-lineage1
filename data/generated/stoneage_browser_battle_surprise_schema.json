@@ -1,0 +1,57 @@
+{
+  "format": "stoneage-v393-browser-battle-surprise-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_SURPRISE_CHECK",
+  "fixedC": {
+    "source": "gmsv/src/battle/battle_event.c::BATTLE_SurpriseCheck",
+    "applicableType": "BATTLE_TYPE_P_vs_E = 1",
+    "playerSource": "Side[0].Entry[0]",
+    "winFuncBlock": true,
+    "fixedLuckSource": "CHAR_WORKFIXLUCK",
+    "rng": "RAND(1,100)",
+    "cases": {
+      "2": {
+        "a": 5,
+        "b": 5,
+        "result1": "1..5",
+        "result2": "6..9"
+      },
+      "3": {
+        "a": 10,
+        "b": 3,
+        "result1": "1..10",
+        "result2": "11..12"
+      },
+      "4": {
+        "a": 15,
+        "b": 2,
+        "result1": "1..15",
+        "result2": "16"
+      },
+      "5": {
+        "a": 20,
+        "b": 0,
+        "result1": "1..20",
+        "result2": "none"
+      },
+      "default": {
+        "a": 0,
+        "b": 7,
+        "result1": "none",
+        "result2": "1..6"
+      }
+    },
+    "resultMapping": {
+      "0": "no side surprise flag",
+      "1": "Side[1].flg |= BSIDE_FLG_SURPRISE",
+      "2": "Side[0].flg |= BSIDE_FLG_SURPRISE"
+    },
+    "surpriseFlag": 1
+  },
+  "browserBoundary": {
+    "fixedLuck": "caller-injected transient Work value; Persistent player.luck is not substituted",
+    "rng": "caller-injected integer 1..100",
+    "persistentMutation": false,
+    "battleStarted": false
+  }
+}
