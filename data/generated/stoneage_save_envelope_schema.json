@@ -20,7 +20,9 @@
     "payload-hash-mismatch",
     "invalid-payload-json",
     "migrated-state-invalid",
-    "revision-conflict"
+    "revision-conflict",
+    "invalid-envelope-revision",
+    "revision-mismatch"
   ],
   "noGuessing": [
     "battle result",
