@@ -65,7 +65,7 @@ function executeNpcSourceEvent(
   }
   const tx=applyNpcEventActionPlan(state,plan,{handlers,transactionId,now});
   return {
-    ok:tx.applied||tx.idempotent,
+    ok:tx.applied===true||tx.idempotent===true,
     applied:tx.applied===true,
     idempotent:tx.idempotent===true,
     matched:true,
