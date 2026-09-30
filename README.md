@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：ea4ffd2 — V3.45: close fixed-C new-player seed contract
-- 最後更新時間：2026-09-30T16:21:46+08:00
+- 最新 commit：fb55551 — V3.45: expose new-player seed in automatic README
+- 最後更新時間：2026-09-30T16:22:12+08:00
 - 版本線最高 regression workflow：V3.45
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -27,6 +27,7 @@
 | NPC service index | ✅ indexed | 9,335 service instances；1,031 floors |
 | Persistent State | ✅ schema 1 | legacy 30；skills 26；player items 24 |
 | Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
+| New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
