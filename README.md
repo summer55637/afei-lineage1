@@ -38,7 +38,7 @@
 
 ## 現階段優先事項
 
-World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index 與 auxiliary world data index。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；目前 world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。
+World Data Source Catalog 已完成；現在也完成第一版 World NPC Index、functionset reachability audit、NPC Service Index、World Graph、NPC Event Action Index、auxiliary world data index，以及 Item / Quest Event Closure。固定 source 的 7,979 個 NPC create blocks 全部找到 template；27 個 file/arg 參照保留為 unresolved；5,457 筆 mapwarp 全部通過 source map floor/座標範圍驗證；world graph 已整理成 1,139 個 floor nodes、2,182 條 directed edges。最新 item closure 顯示 NPC event 共引用 2,301 個不同 item ID，其中 2,065 已閉合、236 仍 unresolved；另有 42 個 event ID 尚未從 mission / jobdaily 直接關閉。
 
 現在仍不做 playable UI，而是依 `docs/rebuild-roadmap.md` 收斂：
 
