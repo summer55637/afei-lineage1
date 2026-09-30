@@ -25,7 +25,8 @@
   "sourceBackedBoundaries": {
     "routeEligibility": "Only variants already marked usable by the first-idle-route catalog are accepted.",
     "walkability": "Path search uses sourceMapWalkableAt with flying=false.",
-    "rectangleInclusion": "Matches fixed-C CoordinateInRect inclusive bounds.",
+    "rectangleEncoding": "Encounter target rect is [x1,y1,x2,y2], normalized to min/max coordinates.",
+    "rectangleInclusion": "Matches fixed-C CoordinateInRect inclusive bounds after source rectangle normalization.",
     "catalogMinimums": "Computed distances must not be shorter than the fixed source closure minimums; the current player landing may legitimately require more steps.",
     "originalRouteClaim": "Planner path ordering is a browser navigation product choice, not a claim about the original client's exact input sequence."
   },
