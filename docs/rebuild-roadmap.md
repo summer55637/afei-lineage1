@@ -503,3 +503,16 @@ Regression 已加入 `tools/check_v340_browser_itemshop_runtime.mjs` 與 `.githu
 3. 再把正式 ItemShop browser flow 接回地圖中的可互動 NPC。
 
 仍不新增第二個 HTML 入口，也不修改 V3.39 strict `changeevent` fail-closed policy。
+
+
+## 2026-09-30 V3.41 Full NPC ItemShop Source-Catalog Verification
+
+V3.41 將正式 ItemShop source closure 提升為可重跑的 GitHub Actions job：固定 checkout `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`，執行既有 `generate_npc_itemshop_runtime.mjs`，並驗證：
+
+- ItemShop binding 數量必須為 336。
+- source parser 不得留下 unresolved binding。
+- 每個正式 ItemShop offer 的 Item ID 必須能在本 repo 的 `stoneage_item_make_runtime` 找到 source Item template。
+- 生成結果另存為 GitHub Actions artifact，作為後續 browser/world join 的驗證輸入。
+
+這一階段先做 source closure / cross-check，不直接把 generated artifact 當成 production world data，也不改變 V3.40 browser fixture contract。
+
