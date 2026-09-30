@@ -328,3 +328,14 @@ V3.27 regression 已納入 GitHub Actions。
 - EndSetFlg 366 成功後，再用新的 transactionId 重跑會被 branch condition `ENDEV!=366` 阻擋。
 
 V3.28 regression 已納入 GitHub Actions。
+
+## V3.29 ChangeEvent Module Audit
+
+新增 `data/generated/stoneage_changeevent_module_audit.json`、`tools/check_v329_changeevent_module_audit.mjs`、`.github/workflows/check-v329-changeevent-module-audit.yml` 與 `docs/reference/v329-changeevent-module-audit.md`。
+
+- pinned `npctemplate.c/functionSet[]` 沒有 `changeevent`。
+- pinned `npccreate.c` 對 unknown template 不會建立 active template reference。
+- `ExChangeMan` / `Charm` / `Action` 都不被當成 `changeevent` alias。
+- new-player reward mutation chain 已閉合；目前剩餘的是 NPC module instantiation / browser interaction boundary。
+
+V3.29 audit regression 已納入 GitHub Actions。
