@@ -1,0 +1,62 @@
+
+{
+  "format": "stoneage-v375-browser-warp-execution-v1",
+  "generatedAt": "2026-10-01",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "action": "NPC_WARP_EXECUTE",
+  "input": {
+    "npc": "source-resolved npcgen_warp instance",
+    "player": "player position; must equal the Warp NPC exact source cell",
+    "expectedRevision": "optional optimistic-concurrency guard"
+  },
+  "output": {
+    "worldPosition": "source target floor/x/y",
+    "revision": "commitSave increments exactly once",
+    "saveEnvelope": true
+  },
+  "sourceContract": {
+    "templatePath": "gmsv/data/npc/genout/npcgen.template",
+    "templateName": "npcgen_warp",
+    "functionSet": "Warp",
+    "watchPath": "gmsv/src/npc/npc_warp.c::NPC_WarpWatch",
+    "executePath": "gmsv/src/npc/npc_warp.c::NPC_WarpWarpCharacter",
+    "argument": "floor|x|y"
+  },
+  "scope": {
+    "productionStartWarpInstances": 8,
+    "startFloors": [1006,2006,3006,4006]
+  },
+  "stateMutation": [
+    "world.position.floorId",
+    "world.position.x",
+    "world.position.y",
+    "revision",
+    "runtimeMeta.lastSavedAt",
+    "runtimeMeta.updatedAt"
+  ],
+  "notMutated": [
+    "player",
+    "pets",
+    "inventory",
+    "equipment",
+    "quests",
+    "events",
+    "titles",
+    "world.savePoint",
+    "idle",
+    "battleSettings"
+  ],
+  "failClosed": [
+    "fixed-source mismatch",
+    "npcgen_warp template mismatch",
+    "source path#blockIndex missing",
+    "source origin mismatch",
+    "player not on Warp NPC cell",
+    "invalid standard warp target",
+    "revision conflict",
+    "Save Envelope verification failure"
+  ]
+}
