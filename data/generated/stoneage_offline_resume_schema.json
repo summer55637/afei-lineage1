@@ -7,7 +7,8 @@
   "phases": {
     "prepare": "validate eligibility and compute time window",
     "commit": "atomic Save Envelope revision-guarded checkpoint",
-    "rewardCompletion": "external simulation may later mark accruedSeconds and rewardsApplied"
+    "rewardCompletion": "external simulation may later mark accruedSeconds and rewardsApplied",
+    "effectiveAccrualCap": "checkpoint stores the effective max settlement seconds from the explicit maxSeconds policy"
   },
   "safety": {
     "defaultAccruedSeconds": 0,
