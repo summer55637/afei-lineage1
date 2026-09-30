@@ -62,9 +62,10 @@ async function commitSave(currentState,nextState,{expectedRevision=null,savedAt=
   const candidate=JSON.parse(JSON.stringify(nextState));
   candidate.revision=currentRevision+1;
   candidate.runtimeMeta??={};
-  candidate.runtimeMeta.lastSavedAt=String(savedAt());
-  candidate.runtimeMeta.updatedAt=String(savedAt());
-  const built=buildSaveEnvelope(candidate,{savedAt,source});
+  const timestamp=String(savedAt());
+  candidate.runtimeMeta.lastSavedAt=timestamp;
+  candidate.runtimeMeta.updatedAt=timestamp;
+  const built=await buildSaveEnvelope(candidate,{savedAt:()=>timestamp,source});
   if(!built.ok)return built;
   return {ok:true,state:candidate,envelope:built.envelope};
 }
