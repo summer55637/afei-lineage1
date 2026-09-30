@@ -30,12 +30,13 @@ async function dispatchNpcInteraction(
     transactionId=null
   }={}
 ){
-  const gate=canInteractWithNpc(npc,player,{interactionRule,maxDistance});
-  if(!gate.ok)return {ok:false,stage:'interaction-gate',reason:gate.reason,state};
-  if(!gate.interactable)return {ok:true,handled:false,stage:'interaction-gate',reason:gate.reason,state};
   const resolved=resolveInteractionModule(npc,{modules,moduleRegistry});
   if(!resolved.ok)return {ok:false,stage:'module-resolution',reason:resolved.reason,state};
   if(!resolved.resolved)return {ok:true,handled:false,stage:'module-resolution',reason:resolved.reason,template:resolved.template,state};
+  const gateNpc=resolved.compatibilityAlias ? {...npc,runtimeModuleStatus:'resolved_compatibility_alias'} : npc;
+  const gate=canInteractWithNpc(gateNpc,player,{interactionRule,maxDistance});
+  if(!gate.ok)return {ok:false,stage:'interaction-gate',reason:gate.reason,state};
+  if(!gate.interactable)return {ok:true,handled:false,stage:'interaction-gate',reason:gate.reason,state};
   if(action!=='talk')return {ok:true,handled:false,stage:'dispatch',reason:'unsupported-npc-action',action,template:resolved.template,state};
   if(typeof handlerFactory!=='function')return {ok:false,stage:'dispatch',reason:'npc-handler-factory-required',template:resolved.template,state};
   const script=resolved.module?.script??null;
