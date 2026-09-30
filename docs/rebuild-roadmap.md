@@ -23,7 +23,7 @@
 - 最短出生點→warp NPC 路徑為 4–7 步。
 - 固定 C 的 `CHAR_walk_move` 先做 `MAP_walkAble`，NPC warp 再透過 `CHAR_ISOVERED` 與 `NPC_WarpWatch` 接收成功的 `CHAR_ACTWALK`；因此 warp NPC 的占位不會讓原本可走的 map cell 變成不可走。
 
-目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；已解析的 16 個 NPC 互動點也全部可達，但另有 30 個 NPC 座標仍 unresolved，因此目前標記：
+目前新增 `stoneage_start_route_closure.json`，將四個 hometown 的 source-route spine 接到 start-floor service presence 與 depth-1 encounter evidence；另外新增 `stoneage_start_npc_reachability.json`，把已解析座標的出生村 NPC 互動點疊到 source walkability。四個 hometown 都已具備 source-route spine 條件；目前共有 20 個 NPC 已有 numeric coordinate；其中 16 個已完成 interaction reachability，4 個 `xinshou` changeevent NPC 已解出座標但互動尚未審計，另外 26 個 NPC 座標仍 unresolved，因此目前標記：
 
 - `sourceRouteSpine = closed`
 - `fullFirstRoute = partial`
