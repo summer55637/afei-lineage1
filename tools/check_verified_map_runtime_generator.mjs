@@ -15,7 +15,7 @@ try{
 
   const name=Buffer.alloc(32);
   Buffer.from('Generator Test','ascii').copy(name);
-  const bytes=Buffer.alloc(44+4);
+  const bytes=Buffer.alloc(44+8);
   Buffer.from('LS2MAP','ascii').copy(bytes,0);
   bytes.writeUInt16BE(9999,6);
   name.copy(bytes,8);
@@ -23,6 +23,7 @@ try{
   bytes.writeUInt16BE(1,42);
   bytes.writeUInt16BE(0,44);
   bytes.writeUInt16BE(0,46);
+  bytes.writeUInt16BE(8000,48);
   fs.writeFileSync(sourceFile,bytes);
 
   const out=path.join(tmp,'runtime.json');
@@ -46,10 +47,11 @@ try{
   assert.equal(runtime.width,1);
   assert.equal(runtime.height,1);
   assert.equal(runtime.tileCount,1);
-  assert.deepEqual(runtime.tiles,[0]);
-  assert.deepEqual(runtime.objects,[0]);
+  assert.deepEqual(runtime.tiles,[0,8000]);
+  assert.deepEqual(runtime.objects,[0,0]);
   assert.equal(runtime.source.blobSha,blob);
   assert.deepEqual(runtime.battlemapResolver.candidatesByImageId['0'],[1,2,201]);
+  assert.deepEqual(runtime.battlemapResolver.candidatesByImageId['8000'],[199,0,0]);
   assert.equal(runtimeIndex.maps['9999'].sourceBlobSha,blob);
 
   console.log(JSON.stringify({pass:true,focus:'verified-map-runtime-generator',floorId:9999,sourceBlobSha:blob,candidatesForTile0:runtime.battlemapResolver.candidatesByImageId['0']}));
