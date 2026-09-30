@@ -66,6 +66,11 @@ function parseRect(v){
   const a=v.split(',').map(x=>Number(x.trim()));
   return a.length===4 && a.every(Number.isFinite) ? {x1:a[0],y1:a[1],x2:a[2],y2:a[3]} : null;
 }
+function parseCenter(v){
+  if(!v) return null;
+  const a=v.split(',').map(x=>Number(x.trim()));
+  return a.length===4 && a.every(Number.isFinite) ? {x:a[0],y:a[1],width:a[2],height:a[3]} : null;
+}
 function functionSetNamesFromC(c){
   const s=c.indexOf('static FunctionNameSet  functionSet[]={');
   if(s<0) return [];
@@ -126,8 +131,8 @@ for(const f of allFiles){
       const enemy=(k.enemy??[]).map(parseEnemy);
       createRecords.push({
         ...common,blockIndex,startLine:b.startLine,floorId:num(first(k.floorid)),
-        bornCenter:parseRect(first(k.borncenter)),bornCorner:parseRect(first(k.borncorner)),
-        moveCenter:parseRect(first(k.movecenter)),moveCorner:parseRect(first(k.movecorner)),
+        bornCenter:parseCenter(first(k.borncenter)),bornCorner:parseRect(first(k.borncorner)),
+        moveCenter:parseCenter(first(k.movecenter)),moveCorner:parseRect(first(k.movecorner)),
         dir:num(first(k.dir)),graphicName:first(k.graphicname),name:first(k.name),
         time:num(first(k.time)),date:num(first(k.date)),createNum:num(first(k.createnum)),
         boundary:num(first(k.boundary)),ignoreInvincible:num(first(k.ignoreinvincible)),
