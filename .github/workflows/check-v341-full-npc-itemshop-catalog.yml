@@ -1,0 +1,62 @@
+name: Check V3.41 full NPC ItemShop source catalog
+
+on:
+  push:
+    paths:
+      - 'tools/generate_npc_itemshop_runtime.mjs'
+      - 'data/generated/stoneage_item_make_runtime.json'
+      - '.github/workflows/check-v341-full-npc-itemshop-catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Checkout pinned fixed-C StoneAge source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: stoneage-source
+          fetch-depth: 1
+
+      - name: Generate full NPC ItemShop catalog
+        run: |
+          node tools/generate_npc_itemshop_runtime.mjs             --source-root stoneage-source             --out /tmp/stoneage_npc_itemshop_runtime.json
+
+      - name: Validate full catalog against Item source runtime
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const catalog=JSON.parse(fs.readFileSync('/tmp/stoneage_npc_itemshop_runtime.json','utf8'));
+          const itemMake=JSON.parse(fs.readFileSync('data/generated/stoneage_item_make_runtime.json','utf8'));
+          if(catalog.stats.shopBindings!==336) throw new Error('expected 336 ItemShop bindings, got '+catalog.stats.shopBindings);
+          if(catalog.stats.unresolvedBindings!==0) throw new Error('unresolved ItemShop bindings: '+catalog.stats.unresolvedBindings);
+          const missing=[...new Set(Object.keys(catalog.itemIndex).map(Number).filter(id=>!itemMake.byItemId?.[String(id)]))];
+          if(missing.length) throw new Error('ItemShop offers missing source Item templates: '+missing.slice(0,50).join(','));
+          const floors=Object.keys(catalog.floorIndex);
+          console.log(JSON.stringify({
+            pass:true,
+            shopBindings:catalog.stats.shopBindings,
+            unresolvedBindings:catalog.stats.unresolvedBindings,
+            totalOfferRows:catalog.stats.totalOfferRows,
+            distinctItemIds:catalog.stats.distinctItemIds,
+            uniqueFloors:floors.length,
+            missingSourceItems:missing.length
+          }));
+          NODE
+
+      - name: Upload generated catalog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stoneage-v341-npc-itemshop-runtime
+          path: /tmp/stoneage_npc_itemshop_runtime.json
+          if-no-files-found: error
