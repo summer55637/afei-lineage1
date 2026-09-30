@@ -1,0 +1,28 @@
+name: Check V3.95 Browser Battle Command Wait
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_command_wait_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'data/generated/stoneage_browser_battle_command_wait_schema.json'
+      - 'tools/check_v395_browser_battle_command_wait_runtime.mjs'
+      - 'docs/reference/v395-browser-battle-command-wait.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v395-browser-battle-command-wait.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.95 command wait regression
+        run: node tools/check_v395_browser_battle_command_wait_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_command_wait_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v395_browser_battle_command_wait_runtime.mjs
