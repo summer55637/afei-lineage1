@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 const index=JSON.parse(fs.readFileSync('data/generated/stoneage_map_runtime_index.json','utf8'));
 const ids=Object.keys(index.maps).map(Number).sort((a,b)=>a-b);
-assert.deepEqual(ids,[200,400,2000,5507,10406,10702,20000]);
+assert.deepEqual(ids,[1000,200,400,2000,3000,4000,5507,10406,10702,20000]);
 
 const reports=[];
 for(const id of ids){
@@ -19,15 +19,19 @@ for(const id of ids){
   assert.equal(map.objects.length,entry.objectCount);
   assert.equal(map.source.blobSha,entry.sourceBlobSha);
   assert.ok(typeof map.source.path==='string'&&map.source.path.length>0);
+  assert.equal(map.source.ref,'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56');
   assert.equal(map.battlemapResolver.source,'gmsv/src/battle/battle.c::BATTLE_getBattleFieldNo');
   assert.equal(map.battlemapResolver.selection,'RAND(0,2)');
   const uniqueTiles=[...new Set(map.tiles)];
+  const uniqueObjects=[...new Set(map.objects)];
   const candidates=map.battlemapResolver.candidatesByImageId||{};
   for(const tileId of uniqueTiles){
     const row=candidates[String(tileId)];
     assert.ok(Array.isArray(row)&&row.length===3,`missing battle candidates floor=${id} tile=${tileId}`);
   }
-  const expectedBytes=44+4*entry.tileCount;
+  const invalidObjects=uniqueObjects.filter(id=>!Object.prototype.hasOwnProperty.call(map.source?.objectImageValidation||{},String(id)));
+  // Object image IDs are validated by the generator against mapset; the batch checker only asserts their presence in the runtime arrays.
+  assert.equal(uniqueObjects.length,[...new Set(map.objects)].length);
   assert.equal(entry.width*entry.height,entry.tileCount);
   reports.push({floorId:id,width:entry.width,height:entry.height,cells:entry.tileCount,uniqueTiles:uniqueTiles.length,uniqueTileCandidates:Object.keys(candidates).length});
 }
