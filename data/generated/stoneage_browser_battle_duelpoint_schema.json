@@ -1,0 +1,31 @@
+{
+  "format":"stoneage-v411-browser-battle-duelpoint-plan-v1",
+  "generatedAt":"2026-10-01",
+  "action":"BATTLE_DUELPOINT_PLAN",
+  "fixedC":{
+    "function":"BATTLE_GetDuelPoint",
+    "rate":0.1,
+    "maxDuelPoint":100000000,
+    "input":"CHAR_WORKGETEXP",
+    "zeroClamp":"non-zero integer delta is preserved at minimum magnitude 1",
+    "deadCheck":"not performed by BATTLE_GetDuelPoint"
+  },
+  "browser":{
+    "readOnly":true,
+    "battleContextMutation":false,
+    "persistentMutation":false,
+    "uiMutation":false,
+    "dbMutation":false,
+    "eligibleSourceType":"player",
+    "eligibleSideType":"BATTLE_S_TYPE_PLAYER"
+  },
+  "nextBoundary":{
+    "action":"BATTLE_DUELPOINT_COMMIT",
+    "mutations":[
+      "PersistentState.player.duelPoint",
+      "runtime transaction/idempotency",
+      "UI result packet",
+      "DB adapter equivalent"
+    ]
+  }
+}
