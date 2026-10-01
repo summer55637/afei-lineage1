@@ -60,14 +60,14 @@ assert.equal(duck.dodged,false);
 let cri=criticalCheck(
   context.context.sides[0].entries[0],
   context.context.sides[1].entries[0],
-  {criticalRoll:565}
+  {criticalRoll:1414}
 );
 assert.equal(cri.ok,true,JSON.stringify(cri));
 assert.equal(cri.critical,true);
 cri=criticalCheck(
   context.context.sides[0].entries[0],
   context.context.sides[1].entries[0],
-  {criticalRoll:566}
+  {criticalRoll:1415}
 );
 assert.equal(cri.critical,false);
 
@@ -75,7 +75,7 @@ let result=runAttackSeqPrelude(context,{
   attackerBid:0,
   targetBid:10,
   duckRoll:1201,
-  criticalRoll:566
+  criticalRoll:1415
 });
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.stage,'attack-seq-prelude-ready');
@@ -146,7 +146,7 @@ console.log(JSON.stringify({
   format:'stoneage-v401-browser-battle-attack-seq-prelude-v1',
   sourceOrder:['BATTLE_DuckCheck','BATTLE_GuardianCheck','BATTLE_CriticalCheck'],
   duck:{per:1200,rollHit:1200,rollMiss:1201},
-  critical:{rollHit:565,rollMiss:566,strictLessThan:true},
+  critical:{rollHit:1414,rollMiss:1415,strictLessThan:true},
   guardianReplacement:{requested:10,final:12},
   guardianThrowWeaponExcluded:true,
   guardSkipsDuckRng:true,
