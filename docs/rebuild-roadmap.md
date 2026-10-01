@@ -2213,3 +2213,18 @@ Battle outer lifecycle 現在形成：
 `Finish Commit → Reward/EXP/Item/Compliance Commit → Exit Plan → Exit Commit → clear Battle Context`
 
 下一段再處理 Idle `SETTLEMENT → MOVING` 的正式 reward-applied/teardown 接合，以及仍未閉合的 `BATTLE_Finish()` 特殊分支；不提前恢復 playable HTML。
+
+
+## 2026-10-01 V4.25 follow-up：Close Reward Transaction Gold Cap
+
+在 Reward Transaction 收尾 audit 中確認 `applyRewardTransaction()` 原本雖然已由 Persistent State / Item Economy 驗證 Gold 上限，但 commit 本身沒有檢查 `currentGold + rewardGold`，因此理論上可能把 canonical state 寫到超過 fixed-C `CHAR_getMaxHaveGold()` 的狀態。
+
+已依 pinned fixed-C `gmsv/src/char/char_base.c::CHAR_getMaxHaveGold()` 與 battle reward 路徑重新固定：
+- max Gold = `1,000,000 + transmigration × 1,800,000`。
+- Battle reward upstream 應先把可加入 Gold 限制在剩餘個人上限。
+- Browser Reward Transaction 不重新截斷 reward；若 `currentGold + rewardGold` 超過 source cap，直接 fail-closed。
+- 超額交易不寫 Gold、EXP、Pet、Item，也不增加 revision。
+
+新增 regression：`tools/check_reward_transaction.mjs` 覆蓋 max-gold 邊界與 atomic rejection；schema / reference contract 同步記錄這個 boundary。
+
+本輪仍不新增 Gold 數值公式、battle reward RNG 或 bank overflow 語義；只是補上 canonical Persistent State 的最後一道 Gold invariant。
