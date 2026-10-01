@@ -59,7 +59,7 @@ const encounter={encounterId:65,floorId:100,x:610,y:538};
   const c=controller();
   const badOrder=await c.dispatch({type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,encounter,groupId:94,entryMaxRoll:1,enemyRolls:[0]});
   assert.equal(badOrder.ok,false,JSON.stringify(badOrder));
-  assert.equal(badOrder.reason,'enemy-generation-plan-required');
+  assert.equal(badOrder.reason,'encounter-group-selection-required');
 }
 
 console.log(JSON.stringify({pass:true,contract:'encounter-group-enemy-generation-binding',groupRequired:true,enemyRosterBound:true,buildConsumesTransientPlan:true,manualTamperRejected:true},null,2));
