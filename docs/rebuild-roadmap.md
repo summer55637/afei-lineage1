@@ -1933,7 +1933,7 @@ Browser runtime:
 - `BATTLE_PLAYER_EXIT_PLAN` accepts only finish-mode Battle Context and explicit `settlementComplete=true`.
 - side-0 `bid=0` Player HP/MP are read from the transient Battle Context.
 - live Player keeps the battle HP/MP snapshot;
-- dead / HP<=0 Player commits HP 1 and the battle MP snapshot;
+- Player with fixed-C `CHAR_ISDIE` set commits HP 1 and the battle MP snapshot; an HP<=0 snapshot without the death flag is not independently promoted to the death-heal rule.
 - no new damage, reward, EXP, Gold, RNG, or death-recovery policy is introduced.
 
 Commit:
