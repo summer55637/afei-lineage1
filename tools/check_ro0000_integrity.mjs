@@ -307,6 +307,22 @@ assert(isolatedResidueAudit.entries?.filter(x=>x.runtimeEligibility==='unproven'
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='huoyue-bak' && x.runtimeEligibility==='not-canonical'),'ro0000 huoyue residue classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-data' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng data loader classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-hydata' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng hydata loader classification drift');
+const hechengAuditPath=path.join(ROOT,'data/generated/stoneage_ro0000_hecheng_loader_audit.json');
+assert(fs.existsSync(hechengAuditPath),'missing ro0000 hecheng loader audit');
+const hechengAudit=JSON.parse(fs.readFileSync(hechengAuditPath,'utf8'));
+assert(hechengAudit.format==='stoneage-ro0000-hecheng-loader-audit-v1','ro0000 hecheng loader audit format drift');
+assert(hechengAudit.ro0000TreeSha===ro0000TreeSha,'ro0000 hecheng loader audit tree SHA drift');
+assert(hechengAudit.defaultEndpointConfig?.npcdir==='data/npc','ro0000 hecheng default npcdir drift');
+assert(hechengAudit.loaderRules?.createSuffixCreateRequired===false,'ro0000 create suffix rule drift');
+assert(hechengAudit.loaderRules?.templateSuffixTemplateRequired===false,'ro0000 template suffix rule drift');
+assert(hechengAudit.loaderRules?.argFileReferenceIsLiteralRelativeToNpcdir===true,'ro0000 arg path loader rule drift');
+assert(hechengAudit.hecheng?.createVariants?.find(x=>x.path.endsWith('/data/npc/hecheng/neweq.create---') && x.semanticStatus==='zero-create-blocks-because-all-block-lines-are-commented'),'ro0000 hecheng data semantic closure drift');
+assert(hechengAudit.hecheng?.createVariants?.find(x=>x.path.endsWith('/hydata/data/npc/hecheng/neweq.create---') && x.semanticStatus==='two-active-create-blocks-if-hydata-tree-is-selected-as-npcdir'),'ro0000 hecheng hydata semantic closure drift');
+assert(hechengAudit.hecheng?.templateResidue?.every(x=>x.sha==='2eca62cd579298e6393e0ad67f772dd6fb0d52e2' && x.functionset==='ItemchangeMan'),'ro0000 hecheng duplicate template audit drift');
+assert(hechengAudit.hecheng?.argVariants?.length===4,'ro0000 hecheng arg variant audit entry count drift');
+assert(hechengAudit.hecheng?.argVariants?.every(x=>x.formalPathPresent===false && x.residuePathPresent===true),'ro0000 hecheng formal/residue arg presence drift');
+assert(hechengAudit.hecheng?.argVariants?.every(x=>x.argLoaderStatus==='not-directly-loaded-as-an-arg-file-by-world-loader'),'ro0000 hecheng arg loader status drift');
+
 const triageReportPath=path.join(ROOT,'data/generated/stoneage_ro0000_dependency_triage.json');
 if(!fs.existsSync(triageReportPath)) throw new Error('missing generated ro0000 dependency triage report');
 const triageReport=JSON.parse(fs.readFileSync(triageReportPath,'utf8'));
