@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { planBattleExit } from '../src/stoneage_browser_battle_exit_runtime.mjs';
-const context={context:{mode:'finish',sourceMode:3,winnerSide:0}};
-const state={pets:{petBox:[
+const context={context:{mode:'finish',sourceMode:3,winnerSide:0,settlementStartRevision:1,sides:[{side:0,entries:[{bid:0,sourceType:'player',characterId:'p1',isDie:true,getitem:[-1,-1,-1]}]}]}};
+const state={revision:2,runtimeMeta:{battleSettlementReceipts:{'settle-1':{settlementId:'settle-1',startRevision:1,receiptRevision:2,finishMode:'finish',playerId:'p1',encounterId:null,dpbattle:0,playerDead:true,requiredBranches:[],transactions:[]}}},pets:{petBox:[
   {id:'dead',hp:0,maxHp:20,mailMode:0},
   {id:'alive',hp:7,maxHp:20,mailMode:0},
   {id:'mail',hp:0,maxHp:20,mailMode:1},
