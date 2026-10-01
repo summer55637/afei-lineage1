@@ -66,7 +66,7 @@ const finished=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.BATTLE_FINISHED,
   payload:{battle:{resultId:'v422-battle'}},
-  expectedRevision:settlementReceipt.state.revision,
+  expectedRevision:finish.state.revision,
   now:'2026-10-01T12:10:01.000Z'
 });
 assert.equal(finished.ok,true,JSON.stringify(finished));
@@ -97,7 +97,7 @@ const rewardDenied=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.REWARD_APPLIED,
   payload:{reward:{sourceResultId:'v422-battle'},supplyRequired:false},
-  expectedRevision:finished.state.revision,
+  expectedRevision:settlementReceipt.state.revision,
   now:'2026-10-01T12:10:01.100Z'
 });
 assert.equal(rewardDenied.ok,false);
