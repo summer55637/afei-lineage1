@@ -1,0 +1,217 @@
+{
+  "format": "stoneage-endpoint-source-catalog-v1",
+  "purpose": "Provenance and completeness index for the most complete practical deployment corpus. This catalog is distinct from the pinned fixed-C world source catalog.",
+  "provenanceClaim": "依專案已確認來源，VM 一鍵端與手工外網端均為可直接架設石器時代手游之實際部署資料複製件；此 provenance 本身不等同於逐檔 runtime boot proof。",
+  "exactManualExternalRules": [
+    "ro0000/docs/搭建教程.txt",
+    "ro0000/server/merged-source/wwwroot/"
+  ],
+  "vmOneClickRule": "在本 catalog 的原始 endpoint corpus 範圍內，除上述兩個手工外網端路徑外，其餘全部標記為 VM 一鍵端。",
+  "explicitClassificationExample": {
+    "path": "ro0000/server/merged-source/www/wwwroot/",
+    "provenance": "vm-one-click",
+    "reason": "名稱雖含 wwwroot，但不是 ro0000/server/merged-source/wwwroot/ 這個指定手工外網端路徑。"
+  },
+  "fixedSourceRole": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "role": "engine semantics / behavior / lifecycle validation baseline"
+  },
+  "sourceCorpus": {
+    "scopeCount": 6,
+    "fileCount": 8749,
+    "totalBytes": 185166100,
+    "byProvenance": {
+      "manualExternalWeb": {
+        "fileCount": 23,
+        "totalBytes": 1053042
+      },
+      "vmOneClick": {
+        "fileCount": 8726,
+        "totalBytes": 184113058
+      }
+    },
+    "metadataExcluded": [
+      "ro0000/README.md",
+      "ro0000/SOURCE_PROVENANCE.md"
+    ]
+  },
+  "scopes": [
+    {
+      "id": "manual-webroot",
+      "provenance": "manual-external-web",
+      "root": "ro0000/server/merged-source/wwwroot/",
+      "gitPath": "ro0000/server/merged-source/wwwroot",
+      "treeSha": "4365cf5e31f568b6816d5021990c1cb40185bc32",
+      "description": "手工外網端 Web root；這是唯一被指定為手工外網端的 wwwroot 路徑。",
+      "stats": {
+        "fileCount": 22,
+        "totalBytes": 1051398,
+        "extensions": {
+          ".php": 17,
+          ".html": 2,
+          ".csv": 1,
+          ".json": 1,
+          ".png": 1
+        },
+        "topLevelFiles": {
+          "game": 22
+        }
+      }
+    },
+    {
+      "id": "manual-build-guide",
+      "provenance": "manual-external-web",
+      "root": "ro0000/docs/搭建教程.txt",
+      "gitPath": "ro0000/docs/搭建教程.txt",
+      "treeSha": "098a6bd6395bf7cf5b118756ec832ebd8b73ca7f",
+      "description": "手工外網端架設／操作教程。",
+      "stats": {
+        "fileCount": 1,
+        "totalBytes": 1644,
+        "extensions": {
+          ".txt": 1
+        },
+        "topLevelFiles": {
+          "搭建教程.txt": 1
+        }
+      },
+      "blobSha": "098a6bd6395bf7cf5b118756ec832ebd8b73ca7f"
+    },
+    {
+      "id": "vm-merged-source",
+      "provenance": "vm-one-click",
+      "root": "ro0000/server/merged-source/",
+      "gitPath": "ro0000/server/merged-source",
+      "treeSha": "d2963d5e6640fcaf58d68b367a9252aac544968b",
+      "description": "VM 一鍵端 Server/Web 原始快照；唯一排除手工外網 wwwroot 子樹。",
+      "stats": {
+        "fileCount": 8723,
+        "totalBytes": 159019922,
+        "extensions": {
+          "[no-extension]": 6065,
+          ".arg": 942,
+          ".lua": 542,
+          ".create": 422,
+          ".frm": 167,
+          ".ibd": 164,
+          ".txt": 118,
+          ".template": 112,
+          ".conf": 47,
+          ".lua~": 27,
+          ".php": 17,
+          ".bin": 12,
+          ".bak": 7,
+          ".gen": 6,
+          ".arg--": 4,
+          ".arg1": 4,
+          ".arg2": 4,
+          ".arg3": 4,
+          ".arg4": 4,
+          ".arg5": 4,
+          ".csv": 4,
+          ".cf": 3,
+          ".MYD": 3,
+          ".MYI": 3,
+          ".arg~": 2,
+          ".arg6": 2,
+          ".arg7": 2,
+          ".arg8": 2,
+          ".arg9": 2,
+          ".c": 2,
+          ".conf1": 2,
+          ".create---": 2,
+          ".create~": 2,
+          ".html": 2,
+          ".lua--": 2,
+          ".menu": 2,
+          ".new": 2,
+          ".old": 2,
+          ".pl": 2,
+          ".template--": 2,
+          ".templete": 2,
+          ".121": 1,
+          ".json": 1,
+          ".opt": 1,
+          ".png": 1
+        },
+        "topLevelFiles": {
+          "gmsv": 8348,
+          "www": 362,
+          "saac": 13
+        }
+      },
+      "exclusions": [
+        {
+          "exactPathPrefix": "ro0000/server/merged-source/wwwroot/",
+          "provenance": "manual-external-web",
+          "treeSha": "4365cf5e31f568b6816d5021990c1cb40185bc32",
+          "reason": "Only this exact wwwroot subtree is manual external web data."
+        }
+      ]
+    },
+    {
+      "id": "vm-database",
+      "provenance": "vm-one-click",
+      "root": "ro0000/server/database/",
+      "gitPath": "ro0000/server/database",
+      "treeSha": "63ed9e2079b11c3cd7a157a42e9c2e7db7edea3f",
+      "description": "VM 一鍵端資料庫匯出／參考。",
+      "stats": {
+        "fileCount": 1,
+        "totalBytes": 159275,
+        "extensions": {
+          ".sql": 1
+        },
+        "topLevelFiles": {
+          "175sa.sql": 1
+        }
+      }
+    },
+    {
+      "id": "vm-android-client",
+      "provenance": "vm-one-click",
+      "root": "ro0000/client/android/",
+      "gitPath": "ro0000/client/android",
+      "treeSha": "ecf4d0428c533f019b16a3212213ef81d7de0c30",
+      "description": "VM 一鍵端取得的 Android Client 研究資料。",
+      "stats": {
+        "fileCount": 1,
+        "totalBytes": 24931847,
+        "extensions": {
+          ".apk": 1
+        },
+        "topLevelFiles": {
+          "冰河石器-隐盟.apk": 1
+        }
+      }
+    },
+    {
+      "id": "vm-build-guide",
+      "provenance": "vm-one-click",
+      "root": "ro0000/docs/隐盟文本教程.txt",
+      "gitPath": "ro0000/docs/隐盟文本教程.txt",
+      "treeSha": "a445ac76a031fa62ef71db4c77570111dd315472",
+      "description": "VM 一鍵端架設／維運教程。",
+      "stats": {
+        "fileCount": 1,
+        "totalBytes": 2014,
+        "extensions": {
+          ".txt": 1
+        },
+        "topLevelFiles": {
+          "隐盟文本教程.txt": 1
+        }
+      },
+      "blobSha": "a445ac76a031fa62ef71db4c77570111dd315472"
+    }
+  ],
+  "reconstructionOrder": [
+    "Endpoint Provenance",
+    "Exact Identity",
+    "Endpoint Completeness",
+    "Fixed-C Semantic Check",
+    "Evidence / Regression",
+    "Canonical Runtime"
+  ]
+}
