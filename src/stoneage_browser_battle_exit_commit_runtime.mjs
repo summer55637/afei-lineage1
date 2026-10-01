@@ -4,11 +4,14 @@ const TRANSACTION_BUCKET='battleExitTransactions';
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const clone=v=>JSON.parse(JSON.stringify(v));
 const intOr=(v,fallback=null)=>{if(v==null||String(v).trim()==='')return fallback;const n=Number(v);return Number.isFinite(n)?Math.trunc(n):fallback;};
+import { validateSettlementReceiptBinding } from './stoneage_browser_battle_settlement_runtime.mjs';
 
 function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,now=()=>new Date().toISOString()}={}){
   if(!isObject(state)||!isObject(state.pets)||!Array.isArray(state.pets.petBox))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'persistent-pet-box-required',state:clone(state)};
   if(!isObject(plan)||plan.ok!==true||plan.stage!=='battle-exit-plan-ready'||plan.format!=='stoneage-v421-browser-battle-exit-plan-v1')return {ok:false,handled:false,stage:'battle-exit-commit',reason:'plan-invalid',state:clone(state)};
   if(plan.settlementComplete!==true)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'settlement-complete-flag-required',state:clone(state)};
+  const receiptBinding=validateSettlementReceiptBinding(state,plan);
+  if(!receiptBinding.ok)return {ok:false,handled:false,stage:'battle-exit-commit',reason:receiptBinding.reason,receiptId:plan.settlementReceiptId??null,state:clone(state)};
   const tx=String(transactionId??'').trim();
   if(!tx)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'transaction-id-required',state:clone(state)};
   const currentRevision=intOr(state.revision,0);
