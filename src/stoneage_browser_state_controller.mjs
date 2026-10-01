@@ -1159,7 +1159,6 @@ function createBrowserStateController({
           source:action.source??'browser-world-encounter'
         });
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
-        if(result.ok&&result.handled===true&&action.event===IDLE_EVENTS.DISABLE)battleContext=null;
         return {...result,state:clone(result.state??currentState)};
       }
       const requestedNpc=action?.npc??null;
