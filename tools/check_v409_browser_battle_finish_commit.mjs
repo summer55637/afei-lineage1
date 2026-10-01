@@ -136,6 +136,7 @@ assert.equal(finish.ok,true,JSON.stringify(finish));
 assert.equal(finish.battleContext.context.mode,'finish');
 assert.equal(finish.battleContext.context.sourceMode,3);
 assert.equal(finish.battleContext.context.winnerSide,0);
+assert.equal(finish.battleContext.context.finishReason,'enemy-side-empty');
 
 console.log(JSON.stringify({
   pass:true,
