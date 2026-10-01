@@ -107,7 +107,7 @@ assert.equal(build.ok,true,JSON.stringify(build));
 
 const init=await controller.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
 assert.equal(init.ok,true,JSON.stringify(init));
-assert.equal(init.battleContext.context.sourceMode,2);
+assert.equal(init.battleContext.sourceMode,2);
 
 const death=await controller.dispatch({
   type:ACTION_BATTLE_DEATH_PLAN,
