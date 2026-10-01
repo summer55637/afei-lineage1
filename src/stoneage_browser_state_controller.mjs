@@ -177,13 +177,16 @@ function createBrowserStateController({
   let sequence=0;
   let battleContext=null;
   let itemShopUi=itemShopUiInitialState();
+  // Serialize controller dispatches so async state-mutating actions cannot observe the same revision concurrently.
+  let dispatchTail=Promise.resolve();
   return {
     getItemShopUiState(){return clone(itemShopUi);},
     getBattleContext(){return battleContext?clone(battleContext):null},
     format:BROWSER_STATE_CONTROLLER_FORMAT,
     getConfig(){return clone(config);},
     getState(){return clone(currentState);},
-    async dispatch(action={}){
+    dispatch(action={}){
+      const run=async()=>{
       const type=String(action?.type??'').trim();
       if(type===ACTION_IDLE_LIST_ROUTES||type===ACTION_IDLE_ENABLE||type===ACTION_IDLE_EVENT||type===ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER||type===ACTION_IDLE_STATUS||type===ACTION_IDLE_OFFLINE_RESUME||type===ACTION_IDLE_OFFLINE_APPLY_REWARDS){
         if(type===ACTION_IDLE_EVENT&&String(action.event??'').trim()===IDLE_EVENTS.REWARD_APPLIED&&battleContext){
@@ -1377,6 +1380,10 @@ function createBrowserStateController({
       });
       if(result.ok&&result.handled===true&&result.state)currentState=result.state;
       return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
+      };
+      const queued=dispatchTail.then(run,run);
+      dispatchTail=queued.then(()=>undefined,()=>undefined);
+      return queued;
     }
   };
 }
