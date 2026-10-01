@@ -50,6 +50,8 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
     };
   }
 
+  if(currentRevision!==intOr(plan.settlementReceiptRevision,null))return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'settlement-receipt-revision-current-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
+
   const player=plan.player;
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'player-plan-required',state:clone(state)};
   const planPlayerId=String(player?.playerId??'').trim();
@@ -75,6 +77,11 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
   next.runtimeMeta[TRANSACTION_BUCKET]=isObject(next.runtimeMeta[TRANSACTION_BUCKET])?next.runtimeMeta[TRANSACTION_BUCKET]:{};
   next.runtimeMeta[TRANSACTION_BUCKET][tx]={
     committedAt:timestamp,
+    settlementReceiptId:String(plan.settlementReceiptId??'').trim(),
+    settlementStartRevision:intOr(plan.settlementStartRevision,null),
+    settlementReceiptRevision:intOr(plan.settlementReceiptRevision,null),
+    revisionBefore:currentRevision,
+    revisionAfter:currentRevision+1,
     player:{
       playerId:String(player.playerId??next.player.id??'player').trim()||'player',
       hpBefore:persistentHp,
@@ -113,6 +120,31 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
   };
 }
 
+function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,settlementStartRevision=null,settlementReceiptRevision=null,playerId=null}={}){
+  const id=String(settlementReceiptId??'').trim();
+  if(!id)return {ok:false,reason:'settlement-receipt-binding-required'};
+  const bucket=state?.runtimeMeta?.[TRANSACTION_BUCKET];
+  if(!isObject(bucket))return {ok:false,reason:'player-exit-commit-required'};
+  const expectedStart=intOr(settlementStartRevision,null);
+  const expectedReceipt=intOr(settlementReceiptRevision,null);
+  const expectedPlayer=String(playerId??'').trim();
+  const matches=[];
+  for(const [transactionId,record] of Object.entries(bucket)){
+    if(!isObject(record))continue;
+    if(String(record.settlementReceiptId??'').trim()!==id)continue;
+    if(expectedStart!=null&&intOr(record.settlementStartRevision,null)!==expectedStart)continue;
+    if(expectedReceipt!=null&&intOr(record.settlementReceiptRevision,null)!==expectedReceipt)continue;
+    if(expectedPlayer && String(record.player?.playerId??'').trim()!==expectedPlayer)continue;
+    if(intOr(record.revisionBefore,null)!==expectedReceipt)continue;
+    const after=intOr(record.revisionAfter,null);
+    if(after==null||after<=expectedReceipt)continue;
+    matches.push({transactionId,record:clone(record)});
+  }
+  if(matches.length===1)return {ok:true,transactionId:matches[0].transactionId,record:matches[0].record};
+  if(matches.length>1)return {ok:false,reason:'player-exit-commit-ambiguous',transactionIds:matches.map(x=>x.transactionId)};
+  return {ok:false,reason:'player-exit-commit-required'};
+}
+
 function createBrowserBattlePlayerExitCommitRuntime(){
   return {ok:true,format:BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT,commit:commitBattlePlayerExit};
 }
@@ -122,5 +154,6 @@ export {
   ACTION_BATTLE_PLAYER_EXIT_COMMIT,
   TRANSACTION_BUCKET,
   commitBattlePlayerExit,
+  resolveBattlePlayerExitForSettlement,
   createBrowserBattlePlayerExitCommitRuntime
 };
