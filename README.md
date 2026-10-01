@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：5ba2990 — [docs] auto-update README and endpoint evidence
-- 最後更新時間：2026-10-01T11:22:04Z
+- 最新 commit：2a67c86 — ci: validate committed endpoint GMQUE locator result
+- 最後更新時間：2026-10-01T19:22:52+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -32,6 +32,7 @@
 - Endpoint Item seed：⚠️ unresolved；setup `ITEM1=32003`；selected `itemset6.csv` exact token presence=no
 - Endpoint MapWarp：4,734 rows；309 endpoint-only；1,032 fixed-C-only
 - Endpoint Battle data：encount 818；group1 1,199；enemy1 2,296；enemybase1 1,135；Encounter→Group unresolved active IDs=30
+- Endpoint GMQUE locator：pending-source；NPC files scanned=2,384；candidate files=0
 - Endpoint NPC：2,384 files；514 changed blobs；出生城 variants 100=5 / 200=1 / 300=4 / 400=0
 - Endpoint Setup：21 selected-key variants；battleexp=1；TRANS=0；NPRIDE=0；GOLD=99999
 
