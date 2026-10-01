@@ -226,6 +226,8 @@ function createBrowserStateController({
   let itemShopUi=itemShopUiInitialState();
   // Transient encounter pipeline; never persisted. Binds source encounter -> selected group -> generated enemy roster.
   let encounterPipeline=null;
+  // Transient attack plan chain; never persisted. Binds command -> AttackSeq -> Damage -> React -> Counter.
+  let battleAttackPipeline=null;
   // Serialize controller dispatches so async state-mutating actions cannot observe the same revision concurrently.
   let dispatchTail=Promise.resolve();
   return {
@@ -374,6 +376,7 @@ function createBrowserStateController({
         );
         if(!result.ok)return {...result,state:clone(currentState)};
         battleContext=clone(result.battleContext);
+        battleAttackPipeline=null;
         return {...result,format:BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_COMMAND_WAIT_STATUS){
@@ -416,13 +419,21 @@ function createBrowserStateController({
         };
       }
       if(type===ACTION_BATTLE_DAMAGE_PLAN){
-        if(!battleContext)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'battle-context-required',state:clone(currentState)};
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        const pipeline=battleAttackPipeline;
+        if(!pipeline?.prelude)return {ok:false,handled:false,stage:'battle-damage-plan-binding',reason:'attack-seq-plan-required',state:clone(currentState)};
+        const attackerBid=action.attackerBid??null;
+        const targetBid=action.targetBid??null;
+        if(Number(attackerBid)!==Number(pipeline.attackerBid)||Number(targetBid)!==Number(pipeline.finalTargetBid)){
+          return {ok:false,handled:false,stage:'battle-damage-plan-binding',reason:'attack-seq-target-mismatch',attackerBid,targetBid,expectedAttackerBid:pipeline.attackerBid,expectedTargetBid:pipeline.finalTargetBid,state:clone(currentState)};
+        }
         if(battleDamagePlanRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'browser-battle-damage-plan-runtime-invalid',state:clone(currentState)};
         const result=battleDamagePlanRuntime.plan(
           {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
           {
-            attackerBid:action.attackerBid??null,
-            targetBid:action.targetBid??null,
+            attackerBid:pipeline.attackerBid,
+            targetBid:pipeline.finalTargetBid,
             damageRollNear:action.damageRollNear??null,
             damageRollWide:action.damageRollWide??null,
             fieldAtt:action.fieldAtt??(battleContext?.context?.fieldAtt??4),
@@ -430,29 +441,55 @@ function createBrowserStateController({
             includeAttr:action.includeAttr!==false
           }
         );
-        return {...result,format:BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT,state:clone(currentState)};
-      }
-      if(type===ACTION_BATTLE_CRITICAL_DAMAGE_PLAN){
-        if(!battleContext)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'battle-context-required',state:clone(currentState)};
-        if(battleCriticalDamageRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'browser-battle-critical-damage-runtime-invalid',state:clone(currentState)};
-        const result=battleCriticalDamageRuntime.plan(
-          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
-          {
-            attackerBid:action.attackerBid??null,
-            targetBid:action.targetBid??null,
+        if(result.ok===true){
+          battleAttackPipeline.damage=clone(result);
+          battleAttackPipeline.damageInput={
             damageRollNear:action.damageRollNear??null,
             damageRollWide:action.damageRollWide??null,
             fieldAtt:action.fieldAtt??(battleContext?.context?.fieldAtt??4),
             fieldAttrPower:action.fieldAttrPower??(battleContext?.context?.attPow??0),
-            includeAttr:action.includeAttr!==false,
-            critical:action.critical===true,
-            attackSeqPrelude:action.attackSeqPrelude??null,
-            weaponType:action.weaponType??'none',
+            includeAttr:action.includeAttr!==false
+          };
+        }
+        return {...result,format:BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_CRITICAL_DAMAGE_PLAN){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        const pipeline=battleAttackPipeline;
+        if(!pipeline?.prelude)return {ok:false,handled:false,stage:'battle-critical-damage-binding',reason:'attack-seq-plan-required',state:clone(currentState)};
+        if(!pipeline?.damage)return {ok:false,handled:false,stage:'battle-critical-damage-binding',reason:'damage-plan-required',state:clone(currentState)};
+        const attackerBid=action.attackerBid??null;
+        const targetBid=action.targetBid??null;
+        if(Number(attackerBid)!==Number(pipeline.attackerBid)||Number(targetBid)!==Number(pipeline.finalTargetBid)){
+          return {ok:false,handled:false,stage:'battle-critical-damage-binding',reason:'attack-seq-target-mismatch',attackerBid,targetBid,expectedAttackerBid:pipeline.attackerBid,expectedTargetBid:pipeline.finalTargetBid,state:clone(currentState)};
+        }
+        if(battleCriticalDamageRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'browser-battle-critical-damage-runtime-invalid',state:clone(currentState)};
+        const input=pipeline.damageInput??{};
+        const result=battleCriticalDamageRuntime.plan(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            attackerBid:pipeline.attackerBid,
+            targetBid:pipeline.finalTargetBid,
+            damageRollNear:input.damageRollNear,
+            damageRollWide:input.damageRollWide,
+            fieldAtt:input.fieldAtt,
+            fieldAttrPower:input.fieldAttrPower,
+            includeAttr:input.includeAttr!==false,
+            critical:pipeline.prelude?.critical?.critical===true,
+            attackSeqPrelude:clone(pipeline.prelude),
+            weaponType:pipeline.weaponType,
             guardRoll:action.guardRoll??null,
             lowDamageRoll:action.lowDamageRoll??null,
             battleDamageModify:action.battleDamageModify??1
           }
         );
+        if(result.ok===true){
+          if(Number(result.baseDamage)!==Number(pipeline.damage.damage)){
+            return {ok:false,handled:false,stage:'battle-critical-damage-binding',reason:'critical-base-damage-mismatch',expectedDamage:pipeline.damage.damage,actualDamage:result.baseDamage,state:clone(currentState)};
+          }
+          pipeline.criticalDamage=clone(result);
+        }
         return {...result,format:BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_DEATH_PLAN){
@@ -1002,13 +1039,21 @@ function createBrowserStateController({
         };
       }
       if(type===ACTION_BATTLE_COUNTER_PLAN){
-        if(!battleContext)return {ok:false,handled:false,stage:'battle-counter',reason:'battle-context-required',state:clone(currentState)};
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        const pipeline=battleAttackPipeline;
+        if(!pipeline?.damageReact)return {ok:false,handled:false,stage:'battle-counter-binding',reason:'damage-react-plan-required',state:clone(currentState)};
+        const expectedAttacker=Number(pipeline.finalTargetBid);
+        const expectedTarget=Number(pipeline.attackerBid);
+        if(Number(action.attackerBid)!==expectedAttacker||Number(action.targetBid)!==expectedTarget){
+          return {ok:false,handled:false,stage:'battle-counter-binding',reason:'counter-reverse-target-mismatch',attackerBid:action.attackerBid,targetBid:action.targetBid,expectedAttackerBid:expectedAttacker,expectedTargetBid:expectedTarget,state:clone(currentState)};
+        }
         if(battleCounterRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-counter',reason:'browser-battle-counter-runtime-invalid',state:clone(currentState)};
         const result=battleCounterRuntime.plan(
           {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
           {
-            attackerBid:action.attackerBid??null,
-            targetBid:action.targetBid??null,
+            attackerBid:expectedAttacker,
+            targetBid:expectedTarget,
             attackerCommand:action.attackerCommand??null,
             attackerBattleFlg:action.attackerBattleFlg??null,
             attackerWeaponClass:action.attackerWeaponClass??'claw',
@@ -1018,23 +1063,35 @@ function createBrowserStateController({
             noguardCounterAdjust:action.noguardCounterAdjust??0,
             counterRoll:action.counterRoll??null,
             counterPara:action.counterPara??0.08,
-            attackerDamageReact:action.attackerDamageReact===true,
-            defenderDamageReact:action.defenderDamageReact===true
+            attackerDamageReact:pipeline.damageReact.reaction?.code>0,
+            defenderDamageReact:false
           }
         );
+        if(result.ok===true)battleAttackPipeline.counter=clone(result);
         return {...result,format:BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_DAMAGE_REACT_PLAN){
-        if(!battleContext)return {ok:false,handled:false,stage:'battle-damage-react',reason:'battle-context-required',state:clone(currentState)};
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        const pipeline=battleAttackPipeline;
+        if(!pipeline?.criticalDamage)return {ok:false,handled:false,stage:'battle-damage-react-binding',reason:'critical-damage-plan-required',state:clone(currentState)};
+        const attackerBid=action.attackerBid??null;
+        const targetBid=action.targetBid??null;
+        if(Number(attackerBid)!==Number(pipeline.attackerBid)||Number(targetBid)!==Number(pipeline.finalTargetBid)){
+          return {ok:false,handled:false,stage:'battle-damage-react-binding',reason:'attack-seq-target-mismatch',attackerBid,targetBid,expectedAttackerBid:pipeline.attackerBid,expectedTargetBid:pipeline.finalTargetBid,state:clone(currentState)};
+        }
+        if(Number(action.damage??0)!==Number(pipeline.criticalDamage.damage)){
+          return {ok:false,handled:false,stage:'battle-damage-react-binding',reason:'critical-damage-mismatch',expectedDamage:pipeline.criticalDamage.damage,actualDamage:action.damage??0,state:clone(currentState)};
+        }
         if(battleDamageReactRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-damage-react',reason:'browser-battle-damage-react-runtime-invalid',state:clone(currentState)};
         const result=battleDamageReactRuntime.plan(
           {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
           {
-            attackerBid:action.attackerBid??null,
-            targetBid:action.targetBid??null,
-            damage:action.damage??0,
+            attackerBid:pipeline.attackerBid,
+            targetBid:pipeline.finalTargetBid,
+            damage:pipeline.criticalDamage.damage,
             throwWeapon:action.throwWeapon===true,
-            weaponType:action.weaponType??'none',
+            weaponType:pipeline.weaponType,
             attackerRidePet:action.attackerRidePet===true,
             defenderRidePet:action.defenderRidePet===true,
             attackerDefencePower:action.attackerDefencePower??null,
@@ -1049,6 +1106,7 @@ function createBrowserStateController({
             acupuncture:action.acupuncture??null
           }
         );
+        if(result.ok===true)battleAttackPipeline.damageReact=clone(result);
         return {...result,format:BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_ATTACK_SEQ_PRELUDE){
@@ -1076,6 +1134,19 @@ function createBrowserStateController({
             enabledFeatures:Array.isArray(action.enabledFeatures)?action.enabledFeatures:[]
           }
         );
+        if(result.ok===true){
+          battleAttackPipeline={
+            attackerBid:result.attackerBid,
+            requestedTargetBid:result.requestedTargetBid,
+            finalTargetBid:result.finalTargetBid,
+            weaponType:String(action.weaponType??'none').trim().toLowerCase(),
+            prelude:clone(result),
+            damage:null,
+            criticalDamage:null,
+            damageReact:null,
+            counter:null
+          };
+        }
         return {...result,format:BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_ATTACK_PREFLIGHT){
