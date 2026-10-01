@@ -1,3 +1,4 @@
+import { sourcePlayerMaxGold } from './stoneage_item_economy_runtime.mjs';
 const REWARD_TRANSACTION_FORMAT = 'stoneage-reward-transaction-v1';
 const MAX_CARRIED_ITEMS = 3;
 const PLAYER_BACKPACK_START = 9;
@@ -66,7 +67,15 @@ function applyRewardTransaction(state, packet, { knownExistingItemIds = null, no
   if (next.runtimeMeta.rewardTransactions[validation.packet.transactionId]) {
     return { applied: false, idempotent: true, transactionId: validation.packet.transactionId, state: next };
   }
-  next.player.gold = nonNegativeInt(next.player.gold) + validation.packet.gold;
+  const maxGold = sourcePlayerMaxGold(next);
+  const currentGold = nonNegativeInt(next.player.gold);
+  if (currentGold > maxGold) {
+    return { applied: false, reason: 'player-gold-already-exceeds-source-max-gold-cap', currentGold, maxGold, state };
+  }
+  if (validation.packet.gold > maxGold - currentGold) {
+    return { applied: false, reason: 'reward-would-exceed-source-max-gold-cap', currentGold, rewardGold: validation.packet.gold, maxGold, state };
+  }
+  next.player.gold = currentGold + validation.packet.gold;
   next.player.exp = nonNegativeInt(next.player.exp) + validation.packet.playerExp;
   for (const petCredit of validation.packet.petCredits) {
     const pet = (next.pets?.petBox ?? []).find(p => String(p?.id ?? p?.petId ?? '') === petCredit.petId || String(p?.petId ?? '') === petCredit.petId);
