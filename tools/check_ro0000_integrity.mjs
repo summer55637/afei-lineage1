@@ -288,6 +288,14 @@ for(const item of anomalyTriage.setupDependencies){
   if(!expected || expected.classification!==item.classification) throw new Error('dependency triage classification drift for '+item.key);
 }
 
+const reportItemset6=triageReport.variantSemanticProbe?.itemset6;
+if(!Array.isArray(reportItemset6) || reportItemset6.length!==2) throw new Error('dependency triage itemset6 probe missing');
+for(const probe of variantSemanticProbe.itemset6){
+  const expected=reportItemset6.find(x=>x.endpoint===probe.endpoint && x.path===probe.path);
+  if(!expected || expected.sha!==probe.sha || expected.exactNumericToken32003!==probe.exactNumericToken32003 || expected.exactNumericToken24114!==probe.exactNumericToken24114){
+    throw new Error('dependency triage itemset6 semantic probe drift for '+probe.endpoint);
+  }
+}
 const coreFiles=[
   'ro0000/server/merged-source/gmsv/data/encount.txt',
   'ro0000/server/merged-source/gmsv/data/group1.txt',
