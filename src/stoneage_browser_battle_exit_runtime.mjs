@@ -3,14 +3,17 @@ const ACTION_BATTLE_EXIT_PLAN='BATTLE_EXIT_PLAN';
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const clone=v=>JSON.parse(JSON.stringify(v));
 const intOr=(v,fallback=null)=>{if(v==null||String(v).trim()==='')return fallback;const n=Number(v);return Number.isFinite(n)?Math.trunc(n):fallback;};
+import { resolveSettlementReceiptForBattle } from './stoneage_browser_battle_settlement_runtime.mjs';
 
-function planBattleExit(context,state,{settlementComplete=false,petMailModeById=null}={}){
+function planBattleExit(context,state,{settlementComplete=false,petMailModeById=null,settlementReceiptId=null}={}){
   if(!isObject(context)||!isObject(context.context))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-context-required'};
   const mode=String(context.context.mode??'').trim().toLowerCase();
   const sourceMode=intOr(context.context.sourceMode,null);
   if(mode!=='finish'&&sourceMode!==3)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-not-finished'};
   if(settlementComplete!==true)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'settlement-complete-flag-required'};
   if(!isObject(state)||!isObject(state.pets)||!Array.isArray(state.pets.petBox))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'persistent-pet-box-required'};
+  const receipt=resolveSettlementReceiptForBattle(state,context,settlementReceiptId);
+  if(!receipt.ok)return {ok:false,handled:false,stage:'battle-exit-plan',reason:receipt.reason,receiptId:receipt.receiptId??settlementReceiptId??null};
 
   const pets=[];
   for(const pet of state.pets.petBox){
@@ -42,6 +45,10 @@ function planBattleExit(context,state,{settlementComplete=false,petMailModeById=
     battleMode:mode||null,
     sourceMode,
     settlementComplete:true,
+    settlementReceiptBound:true,
+    settlementReceiptId:receipt.receiptId,
+    settlementStartRevision:receipt.receipt.startRevision,
+    settlementReceiptRevision:receipt.receiptRevision,
     pets,
     petMailModeSource:'explicit petMailModeById or persisted pet.mailMode; missing dead-Pet mail mode fails closed',
     petCountScanned:Array.isArray(state.pets.petBox)?state.pets.petBox.length:0,
