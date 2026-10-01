@@ -1564,3 +1564,28 @@ V4.06 仍然是 read-only decision plan：不設定 `CHAR_ISDIE`、不修改 HP�
 Controller integration：
 - `ACTION_BATTLE_DEATH_PLAN`
 - `BROWSER_BATTLE_DEATH_RUNTIME_FORMAT`
+
+## 2026-10-01 V4.07 Browser Battle Death Commit
+
+V4.07 接續 V4.06 Death Plan，將 fixed-C battle death 的 state commit boundary 接入 browser battle context：
+
+- `CHAR_ISDIE = 1` → entry `isDie = true`
+- `CHAR_DEADCOUNT += 1` → entry `deadCount += 1`
+- 保留 V4.06 的 death / ultimate flags 到 battle entry outcome
+- 同一目標重複 commit fail-closed
+- 只修改 ephemeral Battle Context，不修改 HP、Persistent State、Reward、EXP、Gold，也不提前結束 Battle
+- `BATTLE_UltimateExtra()` / `BATTLE_NormalDeadExtra()` 保留為後續 settlement hook
+
+fixed-C 的 `CHAR_ISDIE` 寫入存在多個戰鬥 call-site；V4.07 不假裝把所有技能、復活、特殊死亡分支合併成單一來源，而是先閉合 V4.06 → battle death-state 的共同 boundary。
+
+新增：
+- `src/stoneage_browser_battle_death_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_death_commit_schema.json`
+- `tools/check_v407_browser_battle_death_commit.mjs`
+- `docs/reference/v407-browser-battle-death-commit.md`
+- `.github/workflows/check-v407-browser-battle-death-commit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_DEATH_COMMIT`
+- `BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT`
+
