@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_BATTLE_DEATH_COMMIT,
   BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
@@ -75,7 +77,23 @@ result=commitDeathState(baseContext,{targetBid:10});
 assert.equal(result.ok,false);
 assert.equal(result.reason,'death-plan-required');
 
-const controller=createBrowserStateController({state:{revision:0}});
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
+const controllerState=freshPersistentState({playerId:'v407-player'});
+controllerState.player.name='V407';
+controllerState.player.hp=100;
+controllerState.player.maxHp=100;
+controllerState.player.mp=20;
+controllerState.player.maxMp=20;
+controllerState.idle.enabled=true;
+controllerState.idle.mode='encounter_pending';
+controllerState.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+const controller=createBrowserStateController({
+  state:controllerState,
+  idleRouteCatalog:routeCatalog,
+  encounterTargetIndex:encounterIndex,
+  now:()=> '2026-10-01T12:00:00.000Z'
+});
 const build=await controller.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   playerId:'v407-player',
@@ -99,7 +117,7 @@ assert.equal(build.ok,true,JSON.stringify(build));
 
 const planResult=await controller.dispatch({
   type:ACTION_BATTLE_DEATH_PLAN,
-  targetBid:10,
+  targetBid:15,
   hp:0
 });
 assert.equal(planResult.ok,true,JSON.stringify(planResult));
@@ -107,7 +125,7 @@ assert.equal(planResult.dead,true);
 
 const committed=await controller.dispatch({
   type:CONTROLLER_DEATH_COMMIT,
-  targetBid:10,
+  targetBid:15,
   deathPlan:planResult
 });
 assert.equal(committed.ok,true,JSON.stringify(committed));
