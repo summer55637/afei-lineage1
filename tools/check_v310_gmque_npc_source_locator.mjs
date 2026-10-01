@@ -28,6 +28,9 @@ if (contract.liveNpcDataPresent !== false) fail('liveNpcDataPresent must remain 
 // These are evidence locations used by common StoneAge 8.0 layouts. The locator never
 // treats the current generated adapter files as live NPC data.
 const candidateRoots = [
+  // Complete VM one-click deployment corpus.
+  'ro0000/server/merged-source/gmsv/data/npc',
+  // Historical / alternate layouts.
   'data/npc',
   'gmsv/data/npc',
   'source/data/npc',
