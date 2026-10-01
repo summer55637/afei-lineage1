@@ -1,45 +1,41 @@
 # GMQUE NPC Argument Source Contract
 
-本文件只定義目前 Web runtime 對 fixed C `GMQUE_InSertQue()` NPC argument 的解析契約；它不是實際活動資料。沒有找到真實 NPC argument 時，不產生預設任務、不自動開啟活動。
+本文件定義目前 Web runtime 對 fixed-C `GMQUE_InSertQue()` NPC argument 的解析契約，以及 2026-10-01 後重新開放的 endpoint source discovery 邊界。
 
-## Fixed source
+## Source role
 
-## Source discovery contract
+- pinned fixed-C：負責 parser / RNG / lifecycle semantics。
+- VM 一鍵端＋手工外網端：負責尋找實際部署版本的 `RANDGMQUE / QUEPART0..3` 配置。
+- GitHub / Google：補充定位與交叉證據，不能單獨取代 endpoint 實機資料。
 
-## External layout evidence
+## Current endpoint status
 
-公開 8.0 生態的資料位置可交叉確認 NPC data 是獨立層：`alrightlook/stoneage-2` 的 `setup.cf` 指向 `npcdir=data/npc`；另一份 8.0 source archive 也列出 `gmsv/npc/npc_eventaction.c`。這些資料只能證明常見 layout，不能直接證明本專案缺失的 `RANDGMQUE / QUEPART0..3` 實際內容。
+活動已重新開案，但仍：
 
-- GitHub layout reference: https://github.com/alrightlook/stoneage-2/blob/master/setup.cf
-- 8.0 source archive listing: https://www.dssz.com/477838.html
+`status=reopened-for-source-reconstruction`
 
-目前實際活動參數仍未納入 playable data。下一輪 source closure 先固定搜尋下列 NPC data root：`data/npc`、`gmsv/data/npc`、`source/data/npc`、`vendor/data/npc`、`references/data/npc`、`reference/data/npc`。
+`runtimeEnabled=false`
 
-`tools/check_v310_gmque_npc_source_locator.mjs` 只負責掃描候選檔是否同時出現 `RANDGMQUE` 與 `QUEPART0..3`，找到後標為 candidate；它不會因為找到字串就自動啟用活動。候選 source 必須再經 pinned source provenance 與內容 regression 才能把 `gmqueNpcArguments` 從 `pending-source` 升級。
+`playable=false`
 
-- repository: `gavinlinasd/StoneAge`
-- ref: `1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`
-- path: `gmsv/src/npc/npc_eventaction.c`
-- function: `GMQUE_InSertQue`
+新的 endpoint corpus 是目前最高優先 source；找到候選檔後仍需 exact identity、provenance、content closure 與 regression 才能 admission。
 
 ## Accepted argument grammar
 
 `RANDGMQUE=4|QUEPART0=<option>,<option>|QUEPART1=<option>,...|QUEPART2=<option>,...|QUEPART3=<option>,...`
 
-每個 `<option>` 的目前 adapter grammar 是 `petID=minLv-maxLv`。每個 `QUEPARTi` 先以 fixed inclusive `RAND(1, optionCount)` 選一個 option，再以 fixed inclusive `RAND(minLv, maxLv)` 決定 level，最後生成 `petID-LV`；四槽以 `&` 組成 task string。
-
-目前 Web adapter 只接受 `RANDGMQUE=4`，原因是現有 GMQUE handover contract 固定要求四段 task；這不是宣稱 fixed C 其他數值不存在。
+每個 `<option>` 是 `petID=minLv-maxLv`。每個 `QUEPARTi` 先做 fixed inclusive `RAND(1, optionCount)`，再做 `RAND(minLv,maxLv)`。
 
 ## Fail-closed boundaries
 
-- 缺少 `RANDGMQUE` / `QUEPART0..3`：拒絕。
+- 缺少 `RANDGMQUE / QUEPART0..3`：拒絕。
 - duplicate key、空 option、格式錯誤：拒絕。
-- RNG 回傳不在 fixed inclusive range：拒絕。
-- `petID<=0`、level range 反向：拒絕。
-- 沒有實際 NPC source argument 時，不注入任何預設活動任務。
+- RNG 不在 fixed inclusive range：拒絕。
+- petID<=0、level range 反向：拒絕。
+- 沒有實際 endpoint NPC argument 時，不注入預設活動任務。
 
 ## Runtime boundary
 
-`sourceGmQueParseNpcArg()` 是 pure/source-adapter 層；它不修改 persistent state，也不建立寵物、刪寵或領獎。
+`sourceGmQueParseNpcArg()`、`sourceGmQueMatchPetToTask()`、`sourceGmQueHandoverCheck()` 都仍是 pure/source-adapter scope，不直接修改 persistent state。
 
-目前 `sourceGmQueRewardPetTemplate()` 仍對 `1642 / 1636 / 475` fail-closed，直到 player-pet DB 有完整 `enemyIds` template mapping。
+Reward pet template 必須另外閉合；重開活動不代表 `1642 / 1636 / 475` 已可直接建立。
