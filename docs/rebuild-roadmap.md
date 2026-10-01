@@ -23,7 +23,7 @@ Hydration 仍由既有 ENEMY core-stat runtime 執行，固定 15 calls / enemy 
 
 Group Select 必須先發生；Enemy Generate 必須使用同一個 selected group；Battle Context Build 必須使用同一 revision、同一 canonical encounter、同一 group 以及完全相同的 generated enemyTeam。
 
-Battle Context 成功建立後立即清除這份 transient generation plan，不進 Persistent State。Group / Enemy generation 不重新抽 RNG；本輪只把既有 RNG 結果綁到後續 context。
+Battle Context 成功建立後立即清除這份 transient generation plan，不進 Persistent State。Group / Enemy generation 不重新抽 RNG；core-stat hydration 的 rolls 也綁在同一 generation plan，之後由既有 core-stat runtime 執行，並一路保留到 Battle Initialize。
 
 新增 regression：tools/check_browser_encounter_group_enemy_binding.mjs，驗證正常 group→enemy generation→context、手動替換 enemyTeam 被拒絕，以及未先 Group Select 就 Generate 被拒絕。
 
