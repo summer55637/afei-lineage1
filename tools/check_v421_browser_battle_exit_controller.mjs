@@ -104,7 +104,8 @@ assert.ok(controller.getBattleContext());
 
 const denied=await controller.dispatch({
   type:ACTION_BATTLE_EXIT_PLAN,
-  settlementComplete:false
+  settlementComplete:false,
+  petMailModeById:{'pet-dead':0}
 });
 assert.equal(denied.ok,false);
 assert.equal(denied.reason,'settlement-complete-flag-required');
