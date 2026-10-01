@@ -10,6 +10,7 @@ on:
       - 'data/generated/stoneage_browser_battle_exit_commit_schema.json'
       - 'tools/check_v421_browser_battle_exit.mjs'
       - 'tools/check_v421_browser_battle_exit_commit.mjs'
+      - 'tools/check_v421_browser_battle_exit_controller.mjs'
       - 'docs/reference/v421-browser-battle-exit.md'
       - 'docs/reference/v421-browser-battle-exit-commit.md'
       - 'docs/rebuild-roadmap.md'
@@ -42,3 +43,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: 22}
       - run: node tools/check_v421_browser_battle_exit_commit.mjs
+
+  controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v421_browser_battle_exit_controller.mjs
