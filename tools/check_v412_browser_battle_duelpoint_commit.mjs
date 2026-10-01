@@ -10,7 +10,7 @@ import {
 const battleContext={
   context:{
     sides:[
-      {side:0,type:0,entries:Array.from({length:10},(_,num)=>num===0?{bid:0,sourceType:'player',duelPoint:120,workGetExp:30}:{bid:num,sourceType:'player',duelPoint:0,workGetExp:0})},
+      {side:0,type:0,entries:Array.from({length:10},(_,num)=>num===0?{bid:0,sourceType:'player',characterId:'p1',duelPoint:120,workGetExp:30}:{bid:num,sourceType:'player',duelPoint:0,workGetExp:0})},
       {side:1,type:1,entries:Array(10).fill(null)}
     ]
   }
@@ -53,6 +53,11 @@ const stale=commitDuelPoint(
 );
 assert.equal(stale.ok,false);
 assert.equal(stale.reason,'duelpoint-stale-plan');
+
+const mismatch=commitDuelPoint(
+  state,battleContext,plan,{transactionId:'battle-v412-mismatch',expectedRevision:4,now}
+);
+assert.equal(mismatch.ok,true);
 
 const cappedState=freshPersistentState({now});
 cappedState.player.duelPoint=99999990;
