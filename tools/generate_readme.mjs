@@ -98,173 +98,74 @@ const reopenedFeatureNames = Object.entries(reopenedFeatures.features ?? {})
   .map(([name, value]) => ({ name, status: value.status }));
 const blockerEntries = Object.entries(blockerRegistry.blockers ?? {});
 
-function buildHandoff() {
-  const md = String.fromCharCode(96);
-  const manualRules = endpointCatalog.exactManualExternalRules ?? [
-    'ro0000/docs/搭建教程.txt',
-    'ro0000/server/merged-source/wwwroot/'
-  ];
-  const reopened = reopenedFeatureNames.length
-    ? reopenedFeatureNames.map(item => '- ' + item.name + '：' + item.status + '；目前未啟用。')
-    : ['- 目前沒有重新開案中的 feature。'];
-  const blockers = blockerEntries
-    .filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status))
-    .slice(0, 5)
-    .map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + ' → ' + (item.next ?? '待定'));
+function buildReadme() {
+  const fixedSource = (route.fixedSource?.repository ?? 'gavinlinasd/StoneAge') + '@' + (route.fixedSource?.ref ?? '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56');
+  const workflowVersion = latestWorkflowVersion();
+  const workflowLabel = workflowVersion == null ? '—' : (String(workflowVersion).length === 3 ? 'V' + String(workflowVersion)[0] + '.' + String(workflowVersion).slice(1) : 'V' + workflowVersion);
+  const manual = endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb ?? {};
+  const vm = endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick ?? {};
+  const blockers = blockerEntries.filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status)).slice(0, 5).map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + ' → ' + (item.next ?? '待定'));
+  const reopened = reopenedFeatureNames.map(item => item.name + '：' + item.status + '（未啟用）');
+  const routeLine = routeStatus.sourceRouteSpine === 'closed' ? '✅ 已閉合（' + (routeStats.verifiedStartMaps ?? 0) + '/4 出生城、' + (routeStats.reachableDirectWarpExits ?? 0) + '/' + (routeStats.directWarpExits ?? 0) + ' direct warp）' : '⚠️ 未完成';
+  const fullRouteLine = routeStatus.fullFirstRoute === 'closed' ? '✅ 已閉合' : '⚠️ 部分完成（' + (routeStats.worldExitPortalGroupsUsable ?? 0) + '/' + (routeStats.worldExitPortalGroups ?? 0) + ' portal groups）';
+  const mapCount = Object.keys(maps.maps ?? {}).length;
+  const mapLine = mapCount ? '✅ ' + comma(mapCount) + ' 張' : '⚠️ 未建立';
+  const stateLine = state.currentSchemaVersion ? '✅ Schema ' + state.currentSchemaVersion : '⚠️ 未建立';
+  const economyLine = economy.format ? '✅ Runtime v1' : '⚠️ 未建立';
+  const battleLine = workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel;
+  const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');
+
   return [
-    HANDOFF_START,
-    '## 對話交接／開發自述',
+    '# afei-lineage1',
     '',
-    '> 本段自動生成；每次 main 分支的程式、資料或文件變動後由 GitHub Actions 更新。',
+    '「阿肥石器時代放置版」重建專案。',
     '',
-    '### 目標',
-    '把可實際架設的石器時代手游部署資料還原成 source-backed runtime，最後做成 PC＋手機可長時間遊玩的現代化 3D 石器時代放置遊戲。',
+    '先還原真正可架設的石器時代手游部署資料，再建立 source-backed runtime，最後做成 PC＋手機可長時間遊玩的現代化 3D 放置版。',
     '',
-    '### 資料',
-    '- ' + md + 'ro0000/' + md + ' 是主要實機／部署資料來源，來自可實際架設的部署環境。',
-    '- 手工外網端只有：' + manualRules.map(x => md + x + md).join('、') + '。',
-    '- 其他 ' + md + 'ro0000/' + md + ' 全部是 VM 一鍵端。',
-    '- Endpoint 決定「實際部署有什麼」；pinned fixed-C 驗證「引擎怎麼運作」。',
+    '## 目前狀態',
     '',
-    '### 原則',
-    '- 有證據才做；沒有證據就 fail-closed，不猜、不亂補。',
-    '- Endpoint 與 fixed-C 不同，先判斷 deployment variant，不直接刪除或覆蓋。',
-    '- 原始 snapshot、路徑、exact identity 必須保留。',
-    '- 先 contract / state / transaction / regression，再做 UI。',
-    '- Fixture 只能測試，不能冒充正式 endpoint data。',
-    '- Blocker 可以重開，但不能讓整條主線永久卡住；有新證據才重新調查。',
+    '- 最新 commit：' + commit.sha + ' — ' + commit.subject,
+    '- 更新時間：' + commit.iso,
+    '- Fixed-C：' + fixedSource,
+    '- Regression 最高版本：' + workflowLabel,
+    '- Playable HTML：' + playableLine,
     '',
-    '### 目前狀態',
-    '- 永久停用：目前沒有。',
-    ...reopened,
+    '## 接手摘要',
+    '',
+    '| 項目 | 現況 |',
+    '|---|---|',
+    '| 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |',
+    '| Endpoint | ' + comma(manual.fileCount) + ' files 手工外網端；' + comma(vm.fileCount) + ' files VM；合計 ' + comma(endpointCatalog.sourceCorpus?.fileCount) + ' files |',
+    '| 判定 | Endpoint 決定「實際部署有什麼」；Fixed-C 驗證「引擎怎麼運作」；variant 不互相覆蓋 |',
+    '| 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |',
+    '| 重開案 | ' + (reopened.length ? reopened.join('、') : '目前沒有') + ' |',
+    '',
+    '## 開發進度',
+    '',
+    '| 區域 | 現況 |',
+    '|---|---|',
+    '| First-route spine | ' + routeLine + ' |',
+    '| Full first-route | ' + fullRouteLine + ' |',
+    '| Map runtime | ' + mapLine + ' |',
+    '| Persistent State | ' + stateLine + ' |',
+    '| Item / Economy | ' + economyLine + ' |',
+    '| Battle Pipeline | ' + battleLine + ' |',
+    '| Playable | ' + playableLine + ' |',
+    '',
+    '## Blocker',
+    '',
     ...(blockers.length ? blockers : ['- 目前沒有 active / reopened blocker。']),
-    '- Playable HTML：目前沒有。',
     '',
-    '### 接手方式',
-    '先讀本段與 AUTO-README，再以 ' + md + 'data/generated/' + md + '、' + md + 'docs/' + md + ' 的現行內容為準；不要用歷史文字覆蓋目前 generated state。',
-    HANDOFF_END
+    '## 重要文件',
+    '',
+    '- [Source authority / provenance](docs/source-authority-and-provenance.md)',
+    '- [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)',
+    '- [Rebuild roadmap](docs/rebuild-roadmap.md)',
+    '- [Generated state / evidence](data/generated/)',
+    '',
+    '> README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。'
   ].join('\\n');
 }
-const auto = [
-  START,
-  '## 📌 自動維護狀態',
-  '',
-  '> 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。',
-  '',
-  '- 最新 commit：' + commit.sha + ' — ' + commit.subject,
-  '- 最後更新時間：' + commit.iso,
-  '- 版本線最高 regression workflow：' + (() => { const v = latestWorkflowVersion(); return v == null ? '—' : (String(v).length === 3 ? 'V' + String(v)[0] + '.' + String(v).slice(1) : 'V' + v); })(),
-  '- Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口',
-  '- 舊入口殘留：' + (oldPresent.length === 0 ? '已清除' : oldPresent.join(', ')),
-  '- 固定 source：' + (route.fixedSource?.repository ?? 'unknown') + '@' + (route.fixedSource?.ref ?? 'unknown'),
-  '',
-  '### 來源權威',
-  '',
-  '- 實機／部署資料主來源：VM 一鍵端＋手工外網端（目前最完整、最接近可直接架設版本的部署資料集合）',
-  '- 引擎語義校驗基準：pinned fixed-C；endpoint 與 fixed-C 不一致時先辨識 variant，不自動丟棄 endpoint data',
-  '- Source pipeline：Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime',
-  '',
-  '### Endpoint Corpus',
-  '',
-  '- 手工外網端：' + comma(endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb?.totalBytes) + ' bytes',
-  '- VM 一鍵端：' + comma(endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick?.totalBytes) + ' bytes',
-  '- Corpus 合計：' + comma(endpointCatalog.sourceCorpus?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.totalBytes) + ' bytes',
-  '- Endpoint snapshot completeness：' + (endpointCompletenessAudit.status?.snapshotStructure ?? 'unknown') + '；key artifacts ' + (endpointCompletenessAudit.status?.keyArtifactCoverage ?? '—'),
-  '- Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端',
-  '- Endpoint Item seed：' + (endpointItemSeedAudit.status === 'unresolved' ? '⚠️ unresolved' : '⚠️ candidate') + '；setup `ITEM1=' + (endpointItemSeedAudit.endpointConfig?.item1 ?? '—') + '`；selected `itemset6.csv` exact token presence=' + (endpointItemSeedAudit.keyFindings?.configuredItem1PresentAsExactToken ? 'yes' : 'no'),
-  '- Endpoint MapWarp：' + comma(endpointMapwarpAudit.source?.endpointRows) + ' rows；' + comma(endpointMapwarpAudit.exactSetComparison?.endpointOnly) + ' endpoint-only；' + comma(endpointMapwarpAudit.exactSetComparison?.fixedOnly) + ' fixed-C-only',
-  '- Endpoint Battle data：encount ' + comma(endpointBattleAudit.files?.encount?.comparison?.endpointRows) + '；group1 ' + comma(endpointBattleAudit.files?.group?.comparison?.endpointRows) + '；enemy1 ' + comma(endpointBattleAudit.files?.enemy?.comparison?.endpointRows) + '；enemybase1 ' + comma(endpointBattleAudit.files?.enemybase?.comparison?.endpointRows) + '；Encounter→Group unresolved active IDs=' + comma(endpointBattleAudit.endpointInternalReferences?.unresolvedActiveEncounterGroups?.length),
-  '- Endpoint GMQUE locator：' + (endpointGmqueLocator.status ?? 'unknown') + '；NPC files scanned=' + comma(endpointGmqueLocator.statistics?.filesScanned) + '；candidate files=' + comma(endpointGmqueLocator.statistics?.candidateFiles),
-  '- Endpoint NPC：' + comma(endpointNpcAudit.endpoint?.files) + ' files；' + comma(endpointNpcAudit.comparison?.changedBlob) + ' changed blobs；出生城 variants 100=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === "100")?.changedBlob) + ' / 200=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === "200")?.changedBlob) + ' / 300=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === "300")?.changedBlob) + ' / 400=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === "400")?.changedBlob),
-  '- Endpoint Setup：' + comma(endpointSetupAudit.summary?.changedCount) + ' selected-key variants；battleexp=' + (endpointSetupAudit.selectedKeys?.find(x => x.key === "battleexp")?.endpoint ?? '—') + '；TRANS=' + (endpointSetupAudit.selectedKeys?.find(x => x.key === "TRANS")?.endpoint ?? '—') + '；NPRIDE=' + (endpointSetupAudit.selectedKeys?.find(x => x.key === "NPRIDE")?.endpoint ?? '—') + '；GOLD=' + (endpointSetupAudit.selectedKeys?.find(x => x.key === "GOLD")?.endpoint ?? '—'),
-  '',
-  '### 核心 closure',
-  '',
-  '| 區域 | 現況 | 摘要 |',
-  '|---|---|---|',
-  '| First-route spine | ' + (routeStatus.sourceRouteSpine === 'closed' ? '✅ closed' : '⚠️ partial') + ' | ' + (routeStats.verifiedStartMaps ?? 0) + '/4 hometown maps；' + (routeStats.reachableDirectWarpExits ?? 0) + '/' + (routeStats.directWarpExits ?? 0) + ' direct warp exits |',
-  '| Full first-route | ' + (routeStatus.fullFirstRoute === 'closed' ? '✅ closed' : '⚠️ partial') + ' | ' + (routeStats.worldExitPortalGroupsUsable ?? 0) + '/' + (routeStats.worldExitPortalGroups ?? 0) + ' portal groups usable |',
-  '| Verified map runtime | ' + (Object.keys(maps.maps ?? {}).length ? '✅ active' : '⚠️ missing') + ' | ' + comma(Object.keys(maps.maps ?? {}).length) + ' maps；floor identity 以 LS2MAP header 為準 |',
-  '| World graph | ' + (graph.statistics ? '✅ indexed' : '⚠️ missing') + ' | ' + comma(graph.statistics?.floorNodes) + ' floor nodes；' + comma(graph.statistics?.directedFloorEdges) + ' directed edges |',
-  '| NPC service index | ' + (npcService.statistics ? '✅ indexed' : '⚠️ missing') + ' | ' + comma(npcService.statistics?.totalServiceInstances) + ' service instances；' + comma(npcService.statistics?.uniqueServiceFloors) + ' floors |',
-  '| Persistent State | ' + (state.currentSchemaVersion ? '✅ schema ' + state.currentSchemaVersion : '⚠️ missing') + ' | legacy ' + (state.legacySaveSchemaVersion ?? '—') + '；skills ' + (state.fixedSlotContracts?.professionSkillSlots ?? '—') + '；player items ' + (state.fixedSlotContracts?.playerItemSlots ?? '—') + ' |',
-  '| Item / Economy | ' + (economy.format ? '✅ runtime v1' : '⚠️ missing') + ' | Gold cap ' + (economy.gold?.maxFormula ?? '—') + '；backpack ' + (economy.structure?.backpackStart ?? '—') + ' to ' + ((economy.structure?.backpackEndExclusive ?? 1) - 1) + ' |',
-  '| New-player seed (fixed-C) | ' + (seed.format ? '✅ source-closed' : '⚠️ missing') + ' | trans ' + (seed.sourceConfig?.transmigration ?? '—') + '；lv ' + (seed.sourceConfig?.level ?? '—') + '；pet lv ' + (seed.sourceConfig?.petLevel ?? '—') + '；gold ' + (seed.sourceConfig?.gold ?? '—') + '；item1 ' + (seed.sourceConfig?.itemSlots?.ITEM1 ?? '—') + ' |',
-  '| Player creation | ' + (state.sections?.includes('creation') ? '✅ state contract' : '⚠️ missing') + ' | hometown + stats + elements + starter grant status；still headless，no playable HTML |',
-  '| Starter Pet grant | ' + (seed.starterPet?.sourceClosed ? '✅ runtime' : '⚠️ pending') + ' | 16 RNG calls；VariableAI 0；HP after compliance；' + starterPetRankSummary + '；team/activePet unchanged |',
-  '| Starter Item 24114 (fixed-C) | ' + (starterItemBuildAudit.resolution?.status === 'fail-closed' ? '⚠️ fail-closed' : '✅ source-closed') + ' | source max ID ' + (starterItemBuildAudit.itemSource?.maxSourceItemId ?? '—') + ' → ITEM_tblen ' + (starterItemBuildAudit.itemSource?.derivedItemTableLength ?? '—') + '；configured 24114 越界；actual row id ' + (starterItemBuildAudit.exactRow?.sourceItemId ?? '—') + ' / imagenumber ' + (starterItemBuildAudit.exactRow?.imageNumber ?? '—') + ' |',
-  '| New-player creation → Save | ' + (creationSaveRuntimePresent ? '✅ headless pipeline' : '⚠️ missing') + ' | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |',
-  '| Idle route catalog | ' + (idleSummary.towns ? '✅ indexed' : '⚠️ missing') + ' | ' + (idleSummary.pathClosedTowns ?? 0) + ' path-closed towns；' + (idleSummary.eligibleRouteVariants ?? 0) + '/' + (idleSummary.routeVariants ?? 0) + ' eligible variants |',
-  '| Battle Pipeline | ' + (() => { const v = latestWorkflowVersion(); return v != null && v >= 406 ? '✅ V4.' + String(v).slice(-2) : (v == null ? '⚠️ pending' : '⚠️ V4.' + String(v).slice(-2)); })() + ' | ' + (() => { const v = latestWorkflowVersion(); if (v != null && v >= 425) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan → V4.20 Battle Compliance Commit → V4.22 Battle Player Exit Plan → V4.22 Battle Player Exit Commit → V4.21 Battle Exit Plan → V4.23 Exit Transient Cleanup → V4.24 Settlement Receipt Barrier → V4.25 Receipt-Bound Exit Gate';
-    if (v != null && v >= 424) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan → V4.20 Battle Compliance Commit → V4.22 Battle Player Exit Plan → V4.22 Battle Player Exit Commit → V4.21 Battle Exit Plan → V4.23 Exit Transient Cleanup → V4.24 Settlement Receipt Barrier → V4.21 Battle Exit Commit';
-    if (v != null && v >= 421) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan → V4.20 Battle Compliance Commit → V4.22 Battle Player Exit Plan → V4.22 Battle Player Exit Commit → V4.21 Battle Exit Plan → V4.21 Battle Exit Commit';
-    if (v != null && v >= 420) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan → V4.20 Battle Compliance Commit';
-    if (v != null && v >= 419) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan';
-    if (v != null && v >= 418) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit';
-    if (v != null && v >= 417) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan';
-    if (v != null && v >= 416) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit';
-    if (v != null && v >= 415) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan';
-    if (v != null && v >= 414) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan';
-    if (v != null && v >= 413) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan';
-    if (v != null && v >= 412) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit';
-    if (v != null && v >= 411) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan'; if (v != null && v >= 410) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan'; if (v != null && v >= 409) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit'; if (v != null && v >= 408) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan'; if (v != null && v >= 407) return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit'; return 'V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan'; })() + ' |',
-  '',
-  '### NPC → ItemShop → Item → Gold → Persistent State',
-  '',
-  'Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → source Item template → Item allocator → Item/Economy transaction → Gold debit or credit → canonical Persistent State',
-  '',
-  (itemShopBindings
-    ? '目前 source 文件記錄完整 ' + comma(itemShopBindings) + ' 個 ItemShop binding。'
-    : '目前正式 ItemShop catalog 仍以 pinned source checkout 作為 generator 輸入。')
-    + ' Browser ItemShop bridge 使用同一條 contract，不另建第二套商店或貨幣規則。',
-  '',
-  '### 重新開放追查',
-  '',
-  ...(reopenedFeatureNames.length
-    ? reopenedFeatureNames.map(item => '- ' + item.name + '：' + item.status + '；runtime/playable 不會因為重開追查而自動啟用。')
-    : ['- 目前沒有重新開放追查中的 feature。']),
-  '',
-  '### 目前 Blocker',
-  '',
-  ...(blockerEntries.length
-    ? blockerEntries.map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + '；下一步：' + (item.next ?? '—'))
-    : ['- 目前沒有登錄中的 blocker。']),
-  '',
-  '### 目前停用',
-  '',
-  ...(disabledNames.length
-    ? disabledNames.map(name => '- ' + name + '：目前停用；移出停用清單後仍需重新完成 source closure / regression 才能啟用。')
-    : ['- 目前沒有標記為停用的 feature。']),
-  '',
-  '### 資料時間',
-  '',
-  '- route closure：' + (route.generatedAt ?? '—'),
-  '- persistent state：' + (state.generatedAt ?? '—'),
-  '- item/economy schema：' + (economy.generatedAt ?? '—'),
-  '- new-player seed：' + (seed.generatedAt ?? '—'),
-  '- starter Item 24114 audit：' + (starterItemAudit.generatedAt ?? '—') + '；mapping audit v2 / build closure v1：' + (starterItemBuildAudit.generatedAt ?? '—'),
-  '- V3.50 creation/save runtime：2026-09-30',
-  '- idle route catalog：' + (idle.generatedAt ?? '—'),
-  '- browser ItemShop contract：' + (browserDocs.match(/更新日期：([0-9-]+)/)?.[1] ?? '—'),
-  '',
-  END
-].join('\n');
 
-const current = fs.readFileSync(README, 'utf8');
-const start = current.indexOf(START);
-const end = current.indexOf(END);
-if (start < 0 || end < start) {
-  throw new Error('README.md is missing AUTO-README markers.');
-}
-const handoff = buildHandoff();
-let updated = current.slice(0, start) + auto + current.slice(end + END.length);
-const handoffStart = updated.indexOf(HANDOFF_START);
-const handoffEnd = updated.indexOf(HANDOFF_END);
-if (handoffStart >= 0 && handoffEnd >= handoffStart) {
-  updated = updated.slice(0, handoffStart) + handoff + updated.slice(handoffEnd + HANDOFF_END.length);
-} else {
-  const target = updated.indexOf('## 最終目標');
-  if (target < 0) throw new Error('README.md is missing ## 最終目標.');
-  updated = updated.slice(0, target) + handoff + '\n\n' + updated.slice(target);
-}
-fs.writeFileSync(README, updated.endsWith('\n') ? updated : updated + '\n');
+const updated = buildReadme();
+fs.writeFileSync(README, updated.endsWith('\\n') ? updated : updated + '\\n');
