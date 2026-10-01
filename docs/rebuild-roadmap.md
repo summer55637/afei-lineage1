@@ -1706,5 +1706,52 @@ Controller integration：
 - `ACTION_BATTLE_DUELPOINT_COMMIT`
 - `BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT`
 
-下一個 battle settlement boundary：fixed-C PvE 的 `BATTLE_GetExpGold()`，接 player EXP、pet EXP、Gold，再進 battle item settlement。
+下一個 battle settlement boundary：fixed-C PvE 的 `BATTLE_GetExpGold()`，接 player EXP、pet EXP 與 battle item settlement；一般 PvE Gold 不從這裡憑空生成。
+
+## 2026-10-01 V4.13 Browser Battle EXP Plan
+
+V4.13 將 fixed-C `BATTLE_GetExp()` 拆成 read-only EXP apply plan：
+- `CHAR_WORKGETEXP` 先限制到 `0..1,000,000,000`
+- 可選 item EXP modifier 使用 C int truncation；目前 runtime 預設 0
+- `_GET_BATTLE_EXP` 直接乘 current `setup.cf battleexp=100`
+- `CHAR_MAXUPLEVEL=200` 以上不再增加 EXP
+- `CHAR_AddMaxExp` 最終把 `CHAR_EXP` cap 在 `1,224,160,000`
+- player 與 live pet 分開計算；不重新猜「Pet = Player EXP ×1.5」
+- V4.13 只出 plan，不寫 Persistent State、不做 level-up、不搬 battle item、不生成 Gold
+
+新增：
+- `src/stoneage_browser_battle_exp_runtime.mjs`
+- `data/generated/stoneage_browser_battle_exp_schema.json`
+- `tools/check_v413_browser_battle_exp.mjs`
+- `docs/reference/v413-browser-battle-exp.md`
+- `.github/workflows/check-v413-browser-battle-exp.yml`
+
+Controller integration：
+- `ACTION_BATTLE_EXP_PLAN`
+- `BROWSER_BATTLE_EXP_PLAN_RUNTIME_FORMAT`
+
+## 2026-10-01 V4.14 Browser Battle Level-Up Plan
+
+V4.14 接續 V4.13 的 EXP plan，依 fixed-C `CHAR_LevelUpCheck()` / `CHAR_HandleExp()` 將 current-level EXP 逐門檻消耗，並把後續副作用標記出來：
+- fixed source `gmsv/data/exp.txt` 由 `LoadEXP()` 載入，實際 loader cap 160
+- 現行 `setup.cf`: `LEVEL=140`, `CHARTRANS=5`, `PETTRANS=-1`
+- non-trans player 正常等級 gate 140；轉生達 5 後可繼續走 EXP table boundary
+- player 每升一級 DuelPoint 增加 `newLevel × 10`
+- player 一場只在 `UpLevel>0` 時加一次 Charm +2，cap 100；Skill Point `+3 × UpLevel`
+- pet 逐級輸出 `CHAR_PetLevelUp` 與 `CHAR_PetAddVariableAi(AI_FIX_PETLEVELUP)` 次數，真正 stat/RNG growth 暫不猜測
+- V4.14 仍是 read-only plan，不寫 Persistent State / battle context / UI / DB
+
+新增：
+- `data/generated/stoneage_exp_table.json`
+- `src/stoneage_browser_battle_levelup_runtime.mjs`
+- `data/generated/stoneage_browser_battle_levelup_schema.json`
+- `tools/check_v414_browser_battle_levelup.mjs`
+- `docs/reference/v414-browser-battle-levelup.md`
+- `.github/workflows/check-v414-browser-battle-levelup.yml`
+
+Controller integration：
+- `ACTION_BATTLE_LEVELUP_PLAN`
+- `BROWSER_BATTLE_LEVELUP_PLAN_RUNTIME_FORMAT`
+
+下一步：`BATTLE_LEVELUP_COMMIT`，只提交已驗證的 player EXP/level/DuelPoint/skill/charm 與 pet EXP/level；`CHAR_PetLevelUp()` stat growth 另建 source-backed boundary，battle item transfer 再接續。
 
