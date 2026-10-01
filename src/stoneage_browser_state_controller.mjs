@@ -32,6 +32,7 @@ import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_S
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
 import { createBrowserBattleDefaultTargetRuntime, ACTION_BATTLE_DEFAULT_TARGET_RESOLVE, BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_default_target_runtime.mjs';
 import { createBrowserBattleAttackPreflightRuntime, ACTION_BATTLE_ATTACK_PREFLIGHT, BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT } from './stoneage_browser_battle_attack_preflight_runtime.mjs';
+import { createBrowserBattleAttackSeqPreludeRuntime, ACTION_BATTLE_ATTACK_SEQ_PRELUDE, BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT } from './stoneage_browser_battle_attack_seq_prelude_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -100,6 +101,7 @@ function createBrowserStateController({
   const battleTargetRuntime=createBrowserBattleTargetRuntime();
   const battleDefaultTargetRuntime=createBrowserBattleDefaultTargetRuntime();
   const battleAttackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
+  const battleAttackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -267,6 +269,28 @@ function createBrowserStateController({
         if(!result.ok)return {...result,state:clone(currentState)};
         battleContext=clone(result.context);
         return {...result,stage:'battle-turn-initialized',format:BROWSER_BATTLE_TURN_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_ATTACK_SEQ_PRELUDE){
+        if(!battleContext)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'battle-context-required',state:clone(currentState)};
+        if(battleAttackSeqPreludeRuntime.ok!==true)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'browser-battle-attack-seq-prelude-runtime-invalid',state:clone(currentState)};
+        const result=battleAttackSeqPreludeRuntime.run(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            attackerBid:action.attackerBid??null,
+            targetBid:action.targetBid??null,
+            weaponType:action.weaponType??'none',
+            weaponCritical:action.weaponCritical??0,
+            throwWeapon:action.throwWeapon===true,
+            battleDuckModify:action.battleDuckModify??0,
+            duckRoll:action.duckRoll??null,
+            drunkRoll:action.drunkRoll??null,
+            hitRightRoll:action.hitRightRoll??null,
+            criticalRoll:action.criticalRoll??null,
+            guardianBitMask:action.guardianBitMask??(1<<3),
+            noguardDuckBonus:action.noguardDuckBonus??0
+          }
+        );
+        return {...result,format:BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_ATTACK_PREFLIGHT){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-attack-preflight',reason:'battle-context-required',state:clone(currentState)};
@@ -614,6 +638,7 @@ export {
   ACTION_BATTLE_TARGET_RESOLVE,
   ACTION_BATTLE_DEFAULT_TARGET_RESOLVE,
   ACTION_BATTLE_ATTACK_PREFLIGHT,
+  ACTION_BATTLE_ATTACK_SEQ_PRELUDE,
   ACTION_BATTLE_TURN_INITIALIZE,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
@@ -635,6 +660,7 @@ export {
   BROWSER_BATTLE_TARGET_RUNTIME_FORMAT,
   BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT,
   BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,
   BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,
