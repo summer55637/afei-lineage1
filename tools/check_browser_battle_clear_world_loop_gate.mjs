@@ -32,7 +32,8 @@ const requiredBranches=[
 ];
 
 for(const marker of requiredBranches){
-  const at=controller.indexOf(marker);
+  const branchMarker=marker==='ACTION_NPC_TALK' ? 'if(type!==ACTION_NPC_TALK)' : `if(type===${marker}`;
+  const at=controller.indexOf(branchMarker);
   assert.notEqual(at,-1,`missing branch marker: ${marker}`);
   const window=controller.slice(at,at+1200);
   assert.match(window,/requireBattleContextClearForWorldLoop\(battleContext,type,currentState\)/,`missing Clear gate near ${marker}`);
