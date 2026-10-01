@@ -203,6 +203,12 @@ data/generated/stoneage_disabled_features.json 是永久停用 feature 的正式
 
 目前 GMQUE／抓寵活動維持永久停用，不會因為後續版本更新而自動重新啟用，也不應以人工猜測補上缺失的 RANDGMQUE／QUEPART 設定。
 
+## 外部端參考資料
+
+後續新增的石器時代端參考資料，統一集中放在 `ro0000/`。
+
+`ro0000/` 是獨立的參考資料入口，保持原端目錄結構，方便研究、比對與來源追蹤；不直接等同於本專案 production runtime。
+
 ## Repository 結構
 
 _evidence/                 研究與來源證據
