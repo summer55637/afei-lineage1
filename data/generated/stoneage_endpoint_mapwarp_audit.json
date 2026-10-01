@@ -1,0 +1,217 @@
+{
+  "format": "stoneage-endpoint-mapwarp-audit-v1",
+  "source": {
+    "endpointPath": "ro0000/server/merged-source/gmsv/data/map/mapwarp.txt",
+    "endpointBlobSha": "94231accecadcafc8b69c0b84cbcae65eade8cf7",
+    "endpointRows": 4734,
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "fixedPath": "gmsv/data/map/mapwarp.txt",
+    "fixedRows": 5457
+  },
+  "exactSetComparison": {
+    "intersection": 4425,
+    "endpointOnly": 309,
+    "fixedOnly": 1032
+  },
+  "selectedPairChecks": [
+    {
+      "from": 1006,
+      "to": 1000,
+      "endpoint": 2,
+      "fixed": 2,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 1000,
+      "to": 1006,
+      "endpoint": 2,
+      "fixed": 2,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 2006,
+      "to": 2000,
+      "endpoint": 2,
+      "fixed": 2,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 2006,
+      "to": 1998,
+      "endpoint": 0,
+      "fixed": 1,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 1
+      }
+    },
+    {
+      "from": 3006,
+      "to": 3000,
+      "endpoint": 2,
+      "fixed": 2,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 4006,
+      "to": 4000,
+      "endpoint": 2,
+      "fixed": 2,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 4000,
+      "to": 200,
+      "endpoint": 4,
+      "fixed": 4,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 200,
+      "to": 4000,
+      "endpoint": 4,
+      "fixed": 4,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 3000,
+      "to": 200,
+      "endpoint": 10,
+      "fixed": 10,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 200,
+      "to": 3000,
+      "endpoint": 10,
+      "fixed": 10,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    },
+    {
+      "from": 32003,
+      "to": 32004,
+      "endpoint": 13,
+      "fixed": 13,
+      "exactRowSetDelta": {
+        "endpointOnly": 0,
+        "fixedOnly": 0
+      }
+    }
+  ],
+  "topEndpointOnlyPairs": [
+    {
+      "pair": "8202→8202",
+      "count": 22
+    },
+    {
+      "pair": "8203→8203",
+      "count": 22
+    },
+    {
+      "pair": "8204→8204",
+      "count": 22
+    },
+    {
+      "pair": "8205→8205",
+      "count": 12
+    },
+    {
+      "pair": "8206→8206",
+      "count": 12
+    },
+    {
+      "pair": "8207→8207",
+      "count": 12
+    },
+    {
+      "pair": "8209→8209",
+      "count": 12
+    },
+    {
+      "pair": "8210→8210",
+      "count": 12
+    },
+    {
+      "pair": "8212→8212",
+      "count": 12
+    },
+    {
+      "pair": "8200→8200",
+      "count": 11
+    }
+  ],
+  "topFixedOnlyPairs": [
+    {
+      "pair": "7104→7102",
+      "count": 200
+    },
+    {
+      "pair": "8202→8200",
+      "count": 22
+    },
+    {
+      "pair": "8203→8200",
+      "count": 22
+    },
+    {
+      "pair": "8204→8200",
+      "count": 22
+    },
+    {
+      "pair": "8256→8256",
+      "count": 16
+    },
+    {
+      "pair": "92→92",
+      "count": 13
+    },
+    {
+      "pair": "8205→8200",
+      "count": 12
+    },
+    {
+      "pair": "8206→8200",
+      "count": 12
+    },
+    {
+      "pair": "8207→8200",
+      "count": 12
+    },
+    {
+      "pair": "8211→8200",
+      "count": 12
+    }
+  ],
+  "interpretation": {
+    "endpointWorldRole": "Endpoint mapwarp is deployment-version world data; differences from fixed-C are retained as endpoint variants until reachability / semantics are closed.",
+    "firstRouteDirectWarps": "1006↔1000, 2006↔2000, 3006↔3000, 4006↔4000 are exact-count parity; 4000↔200 and 3000↔200 also retain equal row counts.",
+    "noSyntheticWarp": true
+  }
+}
