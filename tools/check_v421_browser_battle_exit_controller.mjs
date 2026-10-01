@@ -112,7 +112,8 @@ assert.equal(denied.reason,'settlement-complete-flag-required');
 
 const exitPlan=await controller.dispatch({
   type:ACTION_BATTLE_EXIT_PLAN,
-  settlementComplete:true
+  settlementComplete:true,
+  petMailModeById:{'pet-dead':0,'pet-alive':0}
 });
 assert.equal(exitPlan.ok,true,JSON.stringify(exitPlan));
 assert.deepEqual(exitPlan.pets,[{petId:'pet-dead',hpBefore:0,hpAfter:1}]);
