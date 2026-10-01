@@ -105,7 +105,7 @@ function duckCheck(entryAtt,entryDef,{
   };
 }
 
-function guardianCheck(context,attackerBid,targetBid,{throwWeapon=false,guardianBitMask=CHAR_BATTLEFLG_GUARDIAN}={}){
+function guardianCheck(context,attackerBid,targetBid,{throwWeapon=false,guardianBitMask=CHAR_BATTLEFLG_GUARDIAN,enabledFeatures=[]}={}){
   const target=findEntryByBid(context,targetBid);
   if(!target)return {ok:true,guardianBid:-1,reason:'target-entry-missing'};
   const guardian=int(target.guardian??-1);
@@ -116,8 +116,10 @@ function guardianCheck(context,attackerBid,targetBid,{throwWeapon=false,guardian
   if(!g)return {ok:true,guardianBid:-1,reason:'guardian-entry-missing'};
   if(g.isDead===true||g.dead===true||num(g.hp)<=0)return {ok:true,guardianBid:-1,reason:'guardian-dead'};
   if(((int(g.battleFlg)??0)&guardianBitMask)===0)return {ok:true,guardianBid:-1,reason:'guardian-flag-missing'};
-  const blocked=['sleep','confusion','paralysis','stone','barrier','dizzy','dragnet','instigate','doomTime'];
-  const statusBlocked=blocked.some(k=>num(g?.battleStatus?.[k]??g?.[k])>0);
+  const blocked=['sleep','confusion','paralysis','stone','barrier'];
+  const conditional={PROFESSION_SKILL:['dizzy','dragnet','instigate'],PROFESSION_ADDSKILL:['doomTime']};
+  const activeConditional=Object.entries(conditional).filter(([feature])=>enabledFeatures.includes(feature)).flatMap(([,keys])=>keys);
+  const statusBlocked=[...blocked,...activeConditional].some(k=>num(g?.battleStatus?.[k]??g?.[k])>0);
   if(statusBlocked)return {ok:true,guardianBid:-1,reason:'guardian-status-blocked'};
   if(throwWeapon===true)return {ok:true,guardianBid:-1,reason:'throw-weapon'};
   return {ok:true,guardianBid:guardian,reason:'guardian-valid'};
@@ -156,7 +158,7 @@ function criticalCheck(entryAtt,entryDef,{weaponCritical=0,criticalRoll=null}={}
   };
 }
 
-function runAttackSeqPrelude(context,{attackerBid=null,targetBid=null,weaponType='none',weaponCritical=0,throwWeapon=false,battleDuckModify=0,duckRoll=null,drunkRoll=null,hitRightRoll=null,criticalRoll=null,guardianBitMask=CHAR_BATTLEFLG_GUARDIAN}={}){
+function runAttackSeqPrelude(context,{attackerBid=null,targetBid=null,weaponType='none',weaponCritical=0,throwWeapon=false,battleDuckModify=0,duckRoll=null,drunkRoll=null,hitRightRoll=null,criticalRoll=null,guardianBitMask=CHAR_BATTLEFLG_GUARDIAN,enabledFeatures=[]}={}){
   if(!context?.context)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'battle-context-required'};
   const attacker=findEntryByBid(context,attackerBid);
   const requestedTarget=findEntryByBid(context,targetBid);
@@ -171,7 +173,7 @@ function runAttackSeqPrelude(context,{attackerBid=null,targetBid=null,weaponType
     return {ok:true,handled:true,stage:'attack-seq-prelude-dodged',format:BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,action:ACTION_BATTLE_ATTACK_SEQ_PRELUDE,attackerBid:int(attackerBid),requestedTargetBid:int(targetBid),finalTargetBid:int(targetBid),duck,guardian:null,critical:null,outcome:'dodge',rngConsumed:1+(num(attacker.drunk)>0?1:0)+(typeOf(attacker)==='player'&&num(attacker.hitRight)>0?1:0),persistentMutation:false,damageExecuted:false};
   }
 
-  const guardian=guardianCheck(context,attackerBid,targetBid,{throwWeapon,guardianBitMask});
+  const guardian=guardianCheck(context,attackerBid,targetBid,{throwWeapon,guardianBitMask,enabledFeatures});
   if(!guardian.ok)return guardian;
   let finalTargetBid=int(targetBid);
   let guardianEntry=null;
