@@ -1,0 +1,27 @@
+{
+  "format": "stoneage-v409-browser-battle-finish-commit-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_FINISH_COMMIT",
+  "fixedC": {
+    "sourceFunction": "BATTLE_FinishSet",
+    "effect": "BattleArray[battleindex].mode = BATTLE_MODE_FINISH",
+    "modeValue": 3
+  },
+  "browser": {
+    "battleContextMutation": true,
+    "modeMutation": "battle -> finish",
+    "winnerSideRequired": true,
+    "hpMutation": false,
+    "persistentMutation": false,
+    "rewardMutation": false,
+    "battleExitMutation": false,
+    "doubleCommit": "fail-closed"
+  },
+  "nextBoundary": [
+    "BATTLE_Finish",
+    "BATTLE_GetProfit",
+    "BATTLE_UltimateExtra / BATTLE_NormalDeadExtra",
+    "BATTLE_Exit",
+    "Persistent post-battle state"
+  ]
+}
