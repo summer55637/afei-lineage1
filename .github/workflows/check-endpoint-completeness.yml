@@ -1,0 +1,28 @@
+name: Check endpoint completeness audit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ro0000/**'
+      - 'data/generated/stoneage_endpoint_completeness_audit.json'
+      - 'tools/check_endpoint_completeness.mjs'
+      - 'docs/reference/endpoint-completeness-audit.md'
+      - '.github/workflows/check-endpoint-completeness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  endpoint-completeness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check endpoint completeness audit
+        run: node tools/check_endpoint_completeness.mjs --check
