@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Level-Up Commit",
+  "type":"object",
+  "required":["format","action","transactionId","revisionBefore","revisionAfter","persistentMutation","rngPreserved"],
+  "properties":{
+    "format":{"const":"stoneage-v416-browser-battle-levelup-commit-v1"},
+    "action":{"const":"BATTLE_LEVELUP_COMMIT"},
+    "transactionId":{"type":"string","minLength":1},
+    "revisionBefore":{"type":"integer","minimum":0},
+    "revisionAfter":{"type":"integer","minimum":1},
+    "persistentMutation":{"const":true},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false},
+    "rngPreserved":{"const":true},
+    "player":{"type":"object"},
+    "pets":{"type":"array","items":{"type":"object"}}
+  },
+  "additionalProperties":true
+}
