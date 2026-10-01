@@ -17,7 +17,7 @@
     "exactDuplicate": "provenance evidence only; never delete the raw path solely because SHA repeats",
     "formalBaseDifferent": "requires semantic/provenance review; do not replace formal base automatically",
     "isolatedResidue": "highest priority for content-level provenance review",
-    "multipartArg": "preserve as structured fragment until parser/runtime relationship is closed"
+    "multipartArg": "legacy inventory key for numbered .argN paths; suffix does not imply byte concatenation; family manorsman/scheduleman files are indexed NPC initialization records"
   },
   "backupLike": [
     {
@@ -849,7 +849,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg1",
         "sha": "895f1ca71051442ea9629a853b40930b307b300f",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg2",
@@ -864,7 +865,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg2",
         "sha": "7ed7b2637a3ff489f706adce23630fc3acf57d16",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg3",
@@ -879,7 +881,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg3",
         "sha": "b827b1cd49a7a47205fdc917bcc701fe8698dcc4",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg4",
@@ -894,7 +897,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg4",
         "sha": "e590b06d37898ebbdf4eb047c9347ddb3b99b007",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg5",
@@ -911,7 +915,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg5",
         "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg6",
@@ -928,7 +933,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg6",
         "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg7",
@@ -945,7 +951,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg7",
         "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg8",
@@ -962,7 +969,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg8",
         "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg9",
@@ -979,7 +987,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg9",
         "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg1",
@@ -996,7 +1005,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg1",
         "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg2",
@@ -1013,7 +1023,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg2",
         "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg3",
@@ -1030,7 +1041,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg3",
         "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg4",
@@ -1047,7 +1059,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg4",
         "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg5",
@@ -1064,7 +1077,8 @@
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg5",
         "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg1",
@@ -1079,7 +1093,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg1",
         "sha": "7fab5f6abe69ffe8a7861b1af651aaac6078e803",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg2",
@@ -1094,7 +1109,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg2",
         "sha": "191816017ab7fbfa10e051e21d4954ec6d9a59ae",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg3",
@@ -1109,7 +1125,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg3",
         "sha": "de43e3142e6c2c985aec69805a0508ecd3cbd8f0",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg4",
@@ -1124,7 +1141,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg4",
         "sha": "1cccf1873c057f0ae24ec530fa0cc8aea45a5cb8",
         "sameBlob": false
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg5",
@@ -1141,7 +1159,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg5",
         "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg6",
@@ -1158,7 +1177,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg6",
         "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg7",
@@ -1175,7 +1195,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg7",
         "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg8",
@@ -1192,7 +1213,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg8",
         "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg9",
@@ -1209,7 +1231,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg9",
         "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg1",
@@ -1226,7 +1249,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg1",
         "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg2",
@@ -1243,7 +1267,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg2",
         "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg3",
@@ -1260,7 +1285,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg3",
         "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg4",
@@ -1277,7 +1303,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg4",
         "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     },
     {
       "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg5",
@@ -1294,7 +1321,8 @@
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg5",
         "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
         "sameBlob": true
-      }
+      },
+      "argumentKind": "indexed-npc-init-argument-record"
     }
   ]
 }
