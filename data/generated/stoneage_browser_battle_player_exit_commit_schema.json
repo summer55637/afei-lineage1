@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Player Exit Commit",
+  "type":"object",
+  "required":["format","action","transactionId","revisionBefore","revisionAfter","player","persistentMutation","battleContextMutation","rngPreserved"],
+  "properties":{
+    "format":{"const":"stoneage-v422-browser-battle-player-exit-commit-v1"},
+    "action":{"const":"BATTLE_PLAYER_EXIT_COMMIT"},
+    "transactionId":{"type":"string","minLength":1},
+    "revisionBefore":{"type":"integer","minimum":0},
+    "revisionAfter":{"type":"integer","minimum":1},
+    "player":{"type":"object"},
+    "persistentMutation":{"const":true},
+    "battleContextMutation":{"const":false},
+    "rngPreserved":{"const":true}
+  },
+  "additionalProperties":true
+}
