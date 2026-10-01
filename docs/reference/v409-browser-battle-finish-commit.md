@@ -28,6 +28,12 @@ V4.09 只修改 ephemeral Battle Context：
 
 重複 finish commit 直接 fail-closed，避免同一場戰鬥被重複進入結束結算。
 
+## Settlement binding update
+
+The Finish Commit now records `settlementStartRevision` from the canonical Persistent State revision. This is a Browser orchestration boundary, not a fixed-C gameplay mutation: it binds later reward transaction receipts to the specific Finish instance.
+
+`BATTLE_FINISH_COMMIT` therefore remains Persistent-State read-only, while exposing the settlement start revision in the Battle Context.
+
 ## Next boundary
 
 下一層是 fixed-C BATTLE_Finish()：WinFunc / Death Contend / DANTAI 等條件分支、BATTLE_GetProfit()、BATTLE_UltimateExtra() / BATTLE_NormalDeadExtra()、BATTLE_Exit()，最後才接 Persistent post-battle state。
