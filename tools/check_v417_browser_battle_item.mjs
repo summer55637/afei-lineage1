@@ -4,6 +4,7 @@ import { planBattleItems } from '../src/stoneage_browser_battle_item_runtime.mjs
 
 const state=freshPersistentState({now:()=> '2026-10-01T11:20:00+08:00',playerId:'p1'});
 state.inventory.playerItemSlots[9]=100;
+for(let slot=12;slot<24;slot++)state.inventory.playerItemSlots[slot]=9000+slot;
 state.inventory.itemRuntime.slots['100']={use:true,itemId:900,owner:'player',pile:1};
 state.inventory.itemRuntime.slots['201']={use:true,itemId:201,owner:'enemy:unit-1',pile:1};
 state.inventory.itemRuntime.slots['202']={use:true,itemId:202,owner:'enemy:unit-2',pile:2};
