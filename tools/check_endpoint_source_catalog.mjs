@@ -16,6 +16,7 @@ if (catalog.format !== 'stoneage-endpoint-source-catalog-v1') fail('Unexpected c
 if (!Array.isArray(catalog.exactManualExternalRules)) fail('Manual provenance rules missing.');
 
 const expectedManual = [
+  'ro0000/docs/搭建教程.txt',
   'ro0000/server/merged-source/wwwroot/'
 ];
 
@@ -27,7 +28,7 @@ const scopes = Array.isArray(catalog.scopes) ? catalog.scopes : [];
 const byId = new Map(scopes.map(scope => [scope.id, scope]));
 
 const manualWebroot = byId.get('manual-webroot');
-const vmSetupGuide = byId.get('vm-setup-guide');
+const manualBuildGuide = byId.get('manual-build-guide');
 const vmMerged = byId.get('vm-merged-source');
 const vmDatabase = byId.get('vm-database');
 const vmClient = byId.get('vm-android-client');
@@ -35,7 +36,7 @@ const vmGuide = byId.get('vm-build-guide');
 
 for (const [id, scope] of [
   ['manual-webroot', manualWebroot],
-  ['vm-setup-guide', vmSetupGuide],
+  ['manual-build-guide', manualBuildGuide],
   ['vm-merged-source', vmMerged],
   ['vm-database', vmDatabase],
   ['vm-android-client', vmClient],
@@ -46,7 +47,7 @@ for (const [id, scope] of [
 }
 
 if (manualWebroot.provenance !== 'manual-external-web') fail('wwwroot provenance is not manual.');
-if (vmSetupGuide.provenance !== 'vm-one-click') fail('setup guide provenance is not VM one-click.');
+if (manualBuildGuide.provenance !== 'manual-external-web') fail('setup guide provenance is not manual.');
 for (const scope of [vmMerged, vmDatabase, vmClient, vmGuide]) {
   if (scope.provenance !== 'vm-one-click') fail('VM scope lost vm-one-click provenance: ' + scope.id);
 }
@@ -60,8 +61,8 @@ const manualStats = catalog.sourceCorpus.byProvenance?.manualExternalWeb;
 const vmStats = catalog.sourceCorpus.byProvenance?.vmOneClick;
 if (!manualStats || !vmStats) fail('Aggregated provenance stats missing.');
 
-const scopeManual = manualWebroot.stats.fileCount;
-const scopeVm = vmMerged.stats.fileCount + vmDatabase.stats.fileCount + vmClient.stats.fileCount + vmGuide.stats.fileCount + vmSetupGuide.stats.fileCount;
+const scopeManual = manualWebroot.stats.fileCount + manualBuildGuide.stats.fileCount;
+const scopeVm = vmMerged.stats.fileCount + vmDatabase.stats.fileCount + vmClient.stats.fileCount + vmGuide.stats.fileCount;
 
 if (manualStats.fileCount !== scopeManual) fail('Manual aggregate does not match scope totals.');
 if (vmStats.fileCount !== scopeVm) fail('VM aggregate does not match scope totals.');
