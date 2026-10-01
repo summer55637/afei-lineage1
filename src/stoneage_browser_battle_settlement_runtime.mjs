@@ -59,13 +59,54 @@ function validateSettlementReceiptForBattle(state,battleContext,receiptId){
   if(intOr(receipt.startRevision,null)!==expected.startRevision)return {ok:false,reason:'settlement-receipt-start-revision-mismatch'};
   if(expected.playerId && receipt.playerId && String(receipt.playerId)!==expected.playerId)return {ok:false,reason:'settlement-receipt-player-mismatch'};
   if(expected.encounterId!=null && receipt.encounterId!=null && intOr(receipt.encounterId,null)!==expected.encounterId)return {ok:false,reason:'settlement-receipt-encounter-mismatch'};
+  if(String(receipt.finishMode??'').trim().toLowerCase()!=='finish')return {ok:false,reason:'settlement-receipt-finish-mode-mismatch'};
+  const receiptRevision=intOr(receipt.receiptRevision,null);
+  const currentRevision=intOr(state?.revision,0);
+  if(receiptRevision==null||receiptRevision<=expected.startRevision||receiptRevision>currentRevision){
+    return {ok:false,reason:'settlement-receipt-revision-invalid',startRevision:expected.startRevision,receiptRevision,currentRevision};
+  }
   for(const kind of expected.requiredBranches){
     const ref=Array.isArray(receipt.transactions)?receipt.transactions.find(x=>x?.kind===kind):null;
     if(!ref)return {ok:false,reason:'settlement-receipt-branch-missing',kind};
     const tx=findTransaction(state,kind,String(ref.transactionId));
     if(!tx)return {ok:false,reason:'settlement-receipt-transaction-missing',kind};
+    const txAfter=intOr(tx.revisionAfter,null);
+    if(txAfter==null||txAfter<=expected.startRevision||txAfter>receiptRevision){
+      return {ok:false,reason:'settlement-receipt-transaction-revision-invalid',kind,transactionId:String(ref.transactionId),txRevisionAfter:txAfter,startRevision:expected.startRevision,receiptRevision};
+    }
   }
-  return {ok:true,receiptId:id,receipt:clone(receipt)};
+  return {ok:true,receiptId:id,receiptRevision,receipt:clone(receipt)};
+}
+
+function resolveSettlementReceiptForBattle(state,battleContext,receiptId=null){
+  if(!isObject(state))return {ok:false,reason:'persistent-state-required'};
+  const explicit=String(receiptId??'').trim();
+  if(explicit)return validateSettlementReceiptForBattle(state,battleContext,explicit);
+  const bucket=state?.runtimeMeta?.[TRANSACTION_BUCKET];
+  if(!isObject(bucket))return {ok:false,reason:'settlement-receipt-required'};
+  const valid=[];
+  for(const id of Object.keys(bucket)){
+    const check=validateSettlementReceiptForBattle(state,battleContext,id);
+    if(check.ok)valid.push(check);
+  }
+  if(valid.length===1)return valid[0];
+  if(valid.length>1)return {ok:false,reason:'settlement-receipt-ambiguous',receiptIds:valid.map(x=>x.receiptId)};
+  return {ok:false,reason:'settlement-receipt-required'};
+}
+
+function validateSettlementReceiptBinding(state,plan){
+  if(!isObject(plan))return {ok:false,reason:'settlement-receipt-binding-plan-required'};
+  const id=String(plan.settlementReceiptId??'').trim();
+  if(!id||plan.settlementReceiptBound!==true)return {ok:false,reason:'settlement-receipt-binding-required'};
+  const receipt=state?.runtimeMeta?.[TRANSACTION_BUCKET]?.[id];
+  if(!isObject(receipt))return {ok:false,reason:'settlement-receipt-not-found',receiptId:id};
+  const expectedStart=intOr(plan.settlementStartRevision,null);
+  const expectedReceipt=intOr(plan.settlementReceiptRevision,null);
+  if(expectedStart==null||intOr(receipt.startRevision,null)!==expectedStart)return {ok:false,reason:'settlement-receipt-start-revision-mismatch',receiptId:id};
+  if(expectedReceipt==null||intOr(receipt.receiptRevision,null)!==expectedReceipt)return {ok:false,reason:'settlement-receipt-revision-mismatch',receiptId:id};
+  if(String(receipt.settlementId??'').trim()!==id)return {ok:false,reason:'settlement-receipt-id-mismatch',receiptId:id};
+  if(String(receipt.finishMode??'').trim().toLowerCase()!=='finish')return {ok:false,reason:'settlement-receipt-finish-mode-mismatch',receiptId:id};
+  return {ok:true,settlementReceiptId:id,settlementStartRevision:expectedStart,settlementReceiptRevision:expectedReceipt,receipt:clone(receipt)};
 }
 
 function commitBattleSettlementReceipt(state,battleContext,{
@@ -119,4 +160,4 @@ function commitBattleSettlementReceipt(state,battleContext,{
 function createBrowserBattleSettlementRuntime(){
   return {ok:true,format:BROWSER_BATTLE_SETTLEMENT_RUNTIME_FORMAT,commit:(state,battleContext,options={})=>commitBattleSettlementReceipt(state,battleContext,options)};
 }
-export {BROWSER_BATTLE_SETTLEMENT_RUNTIME_FORMAT,ACTION_BATTLE_SETTLEMENT_RECEIPT_COMMIT,TRANSACTION_BUCKET,TX_BUCKETS,requiredSettlementBranches,validateSettlementReceiptForBattle,commitBattleSettlementReceipt,createBrowserBattleSettlementRuntime};
+export {BROWSER_BATTLE_SETTLEMENT_RUNTIME_FORMAT,ACTION_BATTLE_SETTLEMENT_RECEIPT_COMMIT,TRANSACTION_BUCKET,TX_BUCKETS,requiredSettlementBranches,validateSettlementReceiptForBattle,resolveSettlementReceiptForBattle,validateSettlementReceiptBinding,commitBattleSettlementReceipt,createBrowserBattleSettlementRuntime};
