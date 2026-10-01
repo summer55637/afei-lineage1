@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：bf1c87d — [fix] Tighten V4.22 fixed-C death flag parity
-- 最後更新時間：2026-10-01T11:44:32+08:00
+- 最新 commit：1dcff0b — [audit] Lock V4.22 battle finish special-hook evidence
+- 最後更新時間：2026-10-01T11:45:44+08:00
 - 版本線最高 regression workflow：V4.22
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
