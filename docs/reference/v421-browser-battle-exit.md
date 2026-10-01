@@ -12,7 +12,9 @@ The browser plan requires:
 - battle already in finish mode;
 - caller explicitly marks reward settlement complete;
 - every owned Pet is scanned;
-- only HP<=0 Pets are planned for mutation.
+- fixed-C `CHAR_MAILMODE != CHAR_PETMAIL_NONE` Pets are skipped;
+- for any dead/HP<=0 Pet, Mail Mode evidence must be explicitly `CHAR_PETMAIL_NONE`; missing evidence fails closed;
+- only eligible HP<=0 Pets are planned for mutation.
 
 Player HP/MP recovery is outside this boundary and remains unchanged.
 
