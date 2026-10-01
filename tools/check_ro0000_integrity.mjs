@@ -306,6 +306,8 @@ assert(residueStructureAudit.summary?.backupLike===backupLike.length,'ro0000 res
 assert(residueStructureAudit.summary?.backupLikeWithDuplicateElsewhere===44,'ro0000 residue structure duplicate count drift');
 assert(residueStructureAudit.summary?.backupLikeIsolatedSha===10,'ro0000 residue structure isolated SHA count drift');
 assert(residueStructureAudit.summary?.backupLikeWithFormalBase===15,'ro0000 residue structure formal base count drift');
+assert(residueStructureAudit.summary?.backupLikeExactFormalBaseMatch===residueStructureAudit.backupLike.filter(x=>x.sameAsBase).length,'ro0000 residue exact formal-base match count drift');
+assert(residueStructureAudit.summary?.backupLikeExactFormalBaseMatch===0,'unexpected backup-like blob identical to formal base; review deletion safety');
 assert(residueStructureAudit.summary?.multipartArg===multipartArg.length,'ro0000 residue structure multipart count drift');
 assert(residueStructureAudit.summary?.multipartExactCounterpart===20,'ro0000 residue structure exact multipart count drift');
 assert(residueStructureAudit.summary?.multipartVariantCounterpart===8,'ro0000 residue structure variant multipart count drift');
