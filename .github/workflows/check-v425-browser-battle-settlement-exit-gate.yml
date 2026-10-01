@@ -37,4 +37,5 @@ jobs:
       - run: node tools/check_v421_browser_battle_exit.mjs
       - run: node tools/check_v422_browser_battle_player_exit.mjs
       - run: node tools/check_v422_browser_battle_player_exit_commit.mjs
+      - run: node tools/check_v424_browser_battle_settlement_receipt.mjs
       - run: node tools/check_v425_browser_battle_settlement_exit_gate.mjs
