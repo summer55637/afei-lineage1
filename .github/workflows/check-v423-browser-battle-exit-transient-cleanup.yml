@@ -1,0 +1,23 @@
+name: Check V4.23 Browser Battle Exit Transient Cleanup
+
+on:
+  push:
+    paths:
+      - 'data/generated/stoneage_browser_battle_exit_transient_cleanup_audit.json'
+      - 'docs/reference/v423-browser-battle-exit-transient-cleanup.md'
+      - 'tools/check_v423_browser_battle_exit_transient_cleanup.mjs'
+  pull_request:
+    paths:
+      - 'data/generated/stoneage_browser_battle_exit_transient_cleanup_audit.json'
+      - 'docs/reference/v423-browser-battle-exit-transient-cleanup.md'
+      - 'tools/check_v423_browser_battle_exit_transient_cleanup.mjs'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v423_browser_battle_exit_transient_cleanup.mjs
