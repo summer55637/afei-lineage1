@@ -1224,6 +1224,9 @@ function createBrowserStateController({
         }
         const selectedGroupId=Number(action.groupId);
         if(!Number.isInteger(selectedGroupId))return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-group-id-required',state:clone(currentState)};
+        if(encounterGroupCatalog && !encounterPipeline?.selection){
+          return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-group-selection-required',state:clone(currentState)};
+        }
         if(encounterPipeline?.selection?.group?.groupId!=null && Number(encounterPipeline.selection.group.groupId)!==selectedGroupId){
           return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-group-selection-mismatch',selectedGroupId,currentGroupId:Number(encounterPipeline.selection.group.groupId),state:clone(currentState)};
         }
