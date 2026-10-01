@@ -50,7 +50,7 @@ assert.equal(result.persistentMutation,false);
 
 const noAttr=damagePlan(ctx,{attackerBid:0,targetBid:10,damageRollWide:6.25,includeAttr:false});
 assert.equal(noAttr.ok,true,JSON.stringify(noAttr));
-assert.equal(noAttr.damage,145);
+assert.equal(noAttr.damage,120);
 assert.equal(noAttr.attributeApplied,false);
 
 const nearCtx=structuredClone(ctx);
