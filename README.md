@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：b0f98f1 — [docs] auto-update README
-- 最後更新時間：2026-10-01T11:14:16Z
+- 最新 commit：176ccd1 — docs: make README status track reopened features and blockers
+- 最後更新時間：2026-10-01T19:14:56+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -65,9 +65,22 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 3. Advance Persistent State Schema for player, pet, inventory, equipment, skills, quests, map position, idle settings and save/migration.
 4. Starter Item 24114：pinned source max ID 23009 → ITEM_tblen 23010，configured 24114 is out of range；source row is id 11817 / imagenumber 24114；keep fail-closed and do not remap.
 
-### 永久停用
+### 重新開放追查
 
-- 目前沒有標記永久停用的 feature。
+- gmque：reopened-for-source-reconstruction；runtime/playable 不會因為重開追查而自動啟用。
+- world-blockers：reopened-for-endpoint-reaudit；runtime/playable 不會因為重開追查而自動啟用。
+
+### 目前 Blocker
+
+- route-4000-to-200：reopened-for-reaudit；下一步：endpoint LS2MAP walkability + connected components + actual portal-origin reachability
+- route-3000-to-200-landing-587-318：reopened-for-reaudit；下一步：verify endpoint destination-map walkability at (587,318) and compare exact landing rows
+- starter-item-24114-fixed-c：reopened-for-reaudit；下一步：close endpoint Item loader / row semantics before choosing canonical starter item
+- starter-item-endpoint-32003：active；下一步：inspect endpoint loader / transforms and exact Item row identity
+- persistent-state-expansion：active；下一步：expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
+
+### 目前停用
+
+- 目前沒有標記為停用的 feature。
 
 ### 資料時間
 
