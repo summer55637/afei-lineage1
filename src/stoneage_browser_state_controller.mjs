@@ -1095,6 +1095,10 @@ function createBrowserStateController({
           }
           encounter=resolvedEncounter.encounter;
         }
+        const groupIdValue=action.groupId==null?null:Number(action.groupId);
+        if(worldEncounterRuntime?.ok===true && !Number.isInteger(groupIdValue)){
+          return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'encounter-group-id-required',state:clone(currentState)};
+        }
         if(encounterGroupCatalog){
           const pipeline=encounterPipeline;
           const currentRevision=Number(currentState?.revision??0);
@@ -1121,10 +1125,6 @@ function createBrowserStateController({
         if(activePet==null){
           const activeId=currentState?.pets?.activePetId??null;
           activePet=activeId==null?null:(currentState?.pets?.petBox??[]).find(p=>String(p?.id??p?.petId??'')===String(activeId))??null;
-        }
-        const groupIdValue=action.groupId==null?null:Number(action.groupId);
-        if(worldEncounterRuntime?.ok===true && !Number.isInteger(groupIdValue)){
-          return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'encounter-group-id-required',state:clone(currentState)};
         }
         if(worldEncounterRuntime?.ok===true && Array.isArray(encounter?.groupIds) && !encounter.groupIds.map(Number).includes(groupIdValue)){
           return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'group-not-in-encounter',groupId:groupIdValue,encounterId:encounter?.encounterId??null,state:clone(currentState)};
