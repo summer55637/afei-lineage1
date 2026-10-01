@@ -84,13 +84,15 @@
       "sha": "bbc0dac6ca2b4a61a075b3de0625bdab55a03b71",
       "size": 37329,
       "evidence": [
-        "Content implements battle-over and progression logic and references NpcData-driven warps.",
-        "No formal YamaKing.lua sibling exists; sibling MoWang.lua does exist, so this file is not simply an obvious same-name mirror.",
-        "Repository event/item indexes contain MoWang-related source, but no exact YamaKing.lua reference was found."
+        "The 37,329-byte, 774-line payload contains a complete Ten Halls challenge flow, including battle-over progression, floor transitions, reward handling, and the shualou command registration in main().",
+        "A formal counterpart exists at data/ablua/npc/YamaKing/YamaKing.lua, but it is in the data tree rather than the residue's hydata tree; the blobs differ (residue bbc0dac6ca2b4a61a075b3de0625bdab55a03b71; data counterpart 5ce8f4ce790487c25bb8cb35cf1d830e41554109).",
+        "The variants materially differ: cooldown 7200 vs 3600 seconds; base floor-point and random-point arrays differ; TM_FiveSlow is 10 vs 6; TM_DoubleUp is 4 vs 0; the residue gates startup on gameserver name '娱乐互动线' and creates six floor NPCs, while the data counterpart gates on gameserver ID 1 and creates five.",
+        "The residue is under hydata/data/ablua/npc; endpoint setup.cf says npcdir=data/npc. No exact endpoint loader/binding selecting this specific residue was found in the repository, so its runtime eligibility is not established.",
+        "175sa.sql contains a yamakinginfo table with point and award-flag fields, but the snapshot does not by itself prove that this residue version is bound to that table. External exact-name/unique-setting searches did not produce authoritative loader or version provenance."
       ],
-      "classification": "orphan-battle-feature-script-tilde-residue",
+      "classification": "alternate-feature-version-with-cross-root-counterpart",
       "runtimeEligibility": "unproven",
-      "action": "preserve; investigate binding and version relation"
+      "action": "preserve; retain as a distinct endpoint variant; require exact loader/binding and version provenance before runtime admission"
     },
     {
       "id": "battlebet-tilde",
