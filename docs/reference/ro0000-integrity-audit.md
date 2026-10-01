@@ -16,13 +16,13 @@ ro0000 raw snapshot
 
 2026-10-01 的 Git tree 檢測結果：
 
-- ro0000：8,751 個檔案、185,169,695 bytes。
+- ro0000：8,751 個檔案、185,172,647 bytes（含 README 索引更新）。
 - endpoint source catalog 排除 ro0000/README.md 與 ro0000/SOURCE_PROVENANCE.md 後：8,749 個 corpus 檔案。
 - 12 個 key artifacts 全部存在且非空。
 - 手工外網 wwwroot：22 個檔案。
 - VM 端 nested wwwroot：22 個檔案；兩邊 21 個 blob 完全相同、1 個同名檔案內容不同。
 - gmsv/data：4,176 個檔案；hydata/data：4,119 個檔案；同相對路徑 3,839 個 blob 相同、222 個不同，另有 115 / 58 個各自獨有。
-- 備份／編輯殘留樣式：54 個；另有 28 個 .arg1～.arg9 多段參數檔，兩者都不能直接當垃圾。
+- 備份／編輯殘留樣式：54 個；另有 28 個編號 .arg1～.arg9 檔案。其中 family/manorsman 與 scheduleman 已確認為逐筆 NPC 初始化參數，不應視為待串接碎片。
 - 零長度檔案：30 個；零長度本身不代表損壞。
 
 ## 整理規則
@@ -60,7 +60,7 @@ setup.cf 的 data/... 路徑檢查目前會區分 file、directory、missing。�
 - key artifacts 是否完整且非空。
 - gmsv/data 與 hydata/data mirror 統計。
 - 手工 wwwroot 與 VM nested wwwroot 差異。
-- backup-like / multipart argument / zero-size inventory。
+- backup-like / numbered .argN / zero-size inventory。
 - setup.cf data path 參考完整性。
 - gmsvjt ELF magic。
 - Android APK ZIP magic。
@@ -230,12 +230,12 @@ node tools/check_ro0000_integrity.mjs
 
 本輪把原本只有數量統計的 residue 改成逐檔、可回歸的 source inventory：
 
-- `data/generated/stoneage_ro0000_residue_inventory.json`：固定記錄目前 ro0000 tree SHA、54 個 backup/edit-like 檔與 28 個 `.arg1–.arg9` 分段檔的 path / size / blob SHA。
+- `data/generated/stoneage_ro0000_residue_inventory.json`：固定記錄目前 ro0000 tree SHA、54 個 backup/edit-like 檔與 28 個 `.arg1–.arg9` 編號參數檔（family/manorsman 與 scheduleman 為逐筆 NPC 初始化參數）的 path / size / blob SHA。
 - `tools/generate_ro0000_residue_inventory.mjs`：依 Git tree 重新產生相同 inventory；不讀工作區暫存狀態，也不修改 `ro0000/`。
-- backup/edit-like 仍只標成「待 provenance review」，不自動刪除；`.arg1–.arg9` 單獨歸為 multipart argument fragment，先保留。
+- backup/edit-like 仍只標成「待 provenance review」，不自動刪除；編號 `.argN` 檔依內容與 loader 證據分類，不假定它們要串接。
 - inventory 也記錄 data ↔ hydata 同相對路徑的 counterpart 與 blob 是否相同，避免後續把 mirror / variant 當垃圾。
 
-外部交叉資料也符合這個處理原則：公開 StoneAge server-pack 可見正式資料與 `.bak` 並存；公開服務端資料目錄也可見 `npc.arg1`～`npc.arg8` 這類分段檔。這些資料只能作為「副檔名具有歷史／參數檔慣例」的旁證，不能單憑外部慣例決定 ro0000 任一檔案的 runtime eligibility。
+外部交叉資料也符合這個處理原則：公開 StoneAge server-pack 可見正式資料與 `.bak` 並存；公開服務端資料目錄也可見 `npc.arg1`～`npc.arg8` 這類分段檔。這些資料只能作為外部慣例旁證；不能單憑副檔名判定 RO0000 的 `.argN` 是切片，也不能據此決定任一檔案的 runtime eligibility。
 
 下一步可依 runtime 影響度逐檔閉合 residue；沒有新的 authoritative evidence 時，不進行物理刪除。
 
@@ -261,3 +261,21 @@ node tools/check_ro0000_integrity.mjs
 `hydata/data/ablua/npc/YamaKing/YamaKing.lua~`（37,329 bytes、774 行）包含十殿挑戰、戰後推進、獎勵及 `shualou` 指令註冊；不能因 `~` 後綴刪除。它與 `data/ablua/npc/YamaKing/YamaKing.lua` 不同 blob，且存在實質規則差異：殘留版冷卻 7,200 秒、正式 data 版 3,600 秒；`TM_FiveSlow` 為 10/6，`TM_DoubleUp` 為 4/0；殘留版以遊戲線名稱 `娱乐互动线` 建立六層 NPC，正式版以 gameserver ID 1 建立五層 NPC。
 
 `setup.cf` 的 `npcdir=data/npc` 並不能證明 hydata 殘留版會被載入；目前未找到選取該精確路徑的 endpoint loader/binding。`175sa.sql` 雖含 `yamakinginfo` 表及積分／領獎欄位，也不足以單獨證明它對應哪個腳本版本。故分類為 `alternate-feature-version-with-cross-root-counterpart`，`runtimeEligibility=unproven`；保留兩端原始檔，不做改名、覆蓋或 runtime admission。
+
+## family NPC 編號參數檔語義審查
+
+原 inventory 把 `.arg1`～`.arg9` 統稱為 multipart argument。這個名稱只保留作為既有機讀欄位的相容名稱，不代表這些檔案需要依序串接。
+
+目前 `gmsv/data/npc/family/` 與 `gmsv/hydata/data/npc/family/` 下的 28 個編號參數檔，實際集中在兩組：
+
+- `manorsman.arg1`～`manorsman.arg9`：每個檔案各自包含 `id`、`loop`、`manorid`、`challengewait`、`peacewait` 等鍵值。data 端的 ID 為 1～9，對應九筆不同的莊園管理參數。
+- `scheduleman.arg1`～`scheduleman.arg5`：每個檔案各自包含 `id`、`loopinterval`、`challengetimeout`、`settingtimeout`、`fightinterval`。data 端依檔名順序的 ID 為 15、11、12、13、14，因此不能把副檔名序號當成遊戲內 ID。
+
+固定 C 基準 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56` 的 `npc_manorsman.c::NPC_ManorSmanInit` 與 `npc_scheduleman.c::NPC_SchedulemanInit`，會透過 `NPC_Util_GetArgStr` 取得參數字串並讀取上述相同欄位。這支持「逐筆初始化參數」的內容分類；但不單獨證明 RO0000 的每個原始路徑在特定部署組態下都會被選取。
+
+跨資料根比較：
+
+- manorsman：9 組同索引檔案中，5 組 blob 相同、4 組不同。
+- scheduleman：5 組同索引檔案全部 blob 相同。
+
+處理方式：保留 data／hydata 各自的原始路徑與內容；不串接、不改名、不覆蓋。後續只需追查各 endpoint 的 NPC 建立／參數路徑選取方式，並在選定 runtime variant 後驗證 ID 範圍與重複註冊。這一項語義分類已完成，實際 runtime admission 仍須以 endpoint loader 證據為準。
