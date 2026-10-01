@@ -21,6 +21,7 @@ const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_e
 
 const state=freshPersistentState({playerId:'v421-controller'});
 state.player.name='V421';
+state.player.charm=0;
 state.player.hp=100;
 state.player.maxHp=100;
 state.player.mp=20;
