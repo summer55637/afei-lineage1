@@ -1433,3 +1433,34 @@ V4.01 不修改 HP、不執行 DamageCalc、不套用 counter/status/death/rewar
 - `docs/reference/v401-browser-battle-attack-seq-prelude.md`
 - `.github/workflows/check-v401-browser-battle-attack-seq-prelude.yml`
 
+## 2026-10-01 V4.02 Browser Battle Damage Plan
+
+V4.02 將 fixed-C `BATTLE_DamageCalc()` 拆成 read-only deterministic damage plan：
+
+- defense = FIXTOUGH×0.45 + FIXDEX×0.20 + FIXVITAL×0.10
+- 三段基礎 damage branch 與 `D_16=1/16`、`D_8=1/8`、`DAMAGE_RATE=2.0)
+- `BATTLE_AttrAdjust()) 的 SAME/UP/DOWN = 1.0/1.5/0.6
+- ATTR_MAX=100、D_ATTR=1/10000
+- field_att=NONE 時沿 fixed-C default 0.5/0.5，ratio=1
+
+所有 Damage RNG 由 caller 注入；V4.02 不直接修改 HP。
+
+尚未升格的 compile-time / caller-sensitive branch：
+- Ride Pet adjust
+- BATTLE_NEWPOWER
+- MAGIC_SUPERWALL
+- NPCENEMY_ADDPOWER
+- PETSKILL_REGRET
+- EQUIT_NEGLECTGUARD
+- PROFESSION_ADDSKILL 四屬結界
+- ADD_DEAMGEDEFC
+- GuardAdjust
+- DamageReact / Counter / Death / Reward
+
+新增：
+- `src/stoneage_browser_battle_damage_plan_runtime.mjs`
+- `data/generated/stoneage_browser_battle_damage_plan_schema.json`
+- `tools/check_v402_browser_battle_damage_plan.mjs`
+- `docs/reference/v402-browser-battle-damage-plan.md`
+- `.github/workflows/check-v402-browser-battle-damage-plan.yml`
+
