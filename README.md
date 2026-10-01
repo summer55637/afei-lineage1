@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：dbda2ad — fix: normalize exact-file scope labels in endpoint catalog
-- 最後更新時間：2026-10-01T18:40:03+08:00
+- 最新 commit：b872885 — docs: surface endpoint corpus in auto README
+- 最後更新時間：2026-10-01T18:40:48+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -21,6 +21,13 @@
 - 實機／部署資料主來源：VM 一鍵端＋手工外網端（目前最完整、最接近可直接架設版本的部署資料集合）
 - 引擎語義校驗基準：pinned fixed-C；endpoint 與 fixed-C 不一致時先辨識 variant，不自動丟棄 endpoint data
 - Source pipeline：Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime
+
+### Endpoint Corpus
+
+- 手工外網端：23 files；1,053,042 bytes
+- VM 一鍵端：8,726 files；184,113,058 bytes
+- Corpus 合計：8,749 files；185,166,100 bytes
+- Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端
 
 ### 核心 closure
 
