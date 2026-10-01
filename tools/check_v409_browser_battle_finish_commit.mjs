@@ -41,7 +41,7 @@ const finishPlan={
   finishReason:'enemy-side-empty'
 };
 const original=structuredClone(baseContext);
-let result=commitBattleFinish(baseContext,{finishPlan});
+let result=commitBattleFinish(baseContext,{finishPlan,settlementStartRevision:0});
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.action,ACTION_BATTLE_FINISH_COMMIT);
 assert.equal(result.format,BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT);
@@ -53,15 +53,15 @@ assert.equal(result.battleContext.context.sourceMode,3);
 assert.equal(baseContext.context.mode,'battle');
 assert.deepEqual(baseContext,original);
 
-result=commitBattleFinish(result.battleContext,{finishPlan});
+result=commitBattleFinish(result.battleContext,{finishPlan,settlementStartRevision:0});
 assert.equal(result.ok,false);
 assert.equal(result.reason,'battle-already-finished');
 
-result=commitBattleFinish(baseContext,{finishPlan:{ok:true,finished:false,winnerSide:0}});
+result=commitBattleFinish(baseContext,{finishPlan:{ok:true,finished:false,winnerSide:0},settlementStartRevision:0});
 assert.equal(result.ok,false);
 assert.equal(result.reason,'battle-end-plan-not-finished');
 
-result=commitBattleFinish(baseContext,{finishPlan:{ok:true,finished:true,winnerSide:null}});
+result=commitBattleFinish(baseContext,{finishPlan:{ok:true,finished:true,winnerSide:null},settlementStartRevision:0});
 assert.equal(result.ok,false);
 assert.equal(result.reason,'winner-side-required');
 
