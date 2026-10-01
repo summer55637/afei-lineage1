@@ -1,0 +1,42 @@
+name: Check endpoint item seed audit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ro0000/server/merged-source/gmsv/setup.cf'
+      - 'ro0000/server/merged-source/gmsv/data/itemset6.csv'
+      - 'tools/check_endpoint_item_seed_audit.mjs'
+      - 'docs/reference/endpoint-item-seed-audit.md'
+      - '.github/workflows/check-endpoint-item-seed-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  endpoint-item-seed-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Resolve endpoint blobs
+        id: blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "setup_sha=$(git rev-parse HEAD:ro0000/server/merged-source/gmsv/setup.cf)" >> "$GITHUB_OUTPUT"
+          echo "item_sha=$(git rev-parse HEAD:ro0000/server/merged-source/gmsv/data/itemset6.csv)" >> "$GITHUB_OUTPUT"
+
+      - name: Run endpoint Item seed audit
+        env:
+          ENDPOINT_SETUP_BLOB_SHA: ${{ steps.blobs.outputs.setup_sha }}
+          ENDPOINT_ITEMSET6_BLOB_SHA: ${{ steps.blobs.outputs.item_sha }}
+        run: node tools/check_endpoint_item_seed_audit.mjs
+
+      - name: Run endpoint source catalog invariants
+        run: node tools/check_endpoint_source_catalog.mjs
