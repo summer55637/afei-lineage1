@@ -57,6 +57,7 @@ const idle = loadJson('data/generated/stoneage_first_idle_route_catalog.json') ?
 const disabled = loadJson('data/generated/stoneage_disabled_features.json') ?? {};
 const starterItemAudit = loadJson('data/generated/stoneage_starter_item_24114_source_audit.json') ?? {};
 const starterItemBuildAudit = loadJson('data/generated/stoneage_starter_item_24114_build_closure_audit.json') ?? {};
+const endpointCatalog = loadJson('data/generated/stoneage_endpoint_source_catalog.json') ?? {};
 const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
 const browserDocs = readText('docs/reference/v340-browser-itemshop-runtime.md');
@@ -100,6 +101,13 @@ const auto = [
   '- 實機／部署資料主來源：VM 一鍵端＋手工外網端（目前最完整、最接近可直接架設版本的部署資料集合）',
   '- 引擎語義校驗基準：pinned fixed-C；endpoint 與 fixed-C 不一致時先辨識 variant，不自動丟棄 endpoint data',
   '- Source pipeline：Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime',
+  '',
+  '### Endpoint Corpus',
+  '',
+  '- 手工外網端：' + comma(endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb?.totalBytes) + ' bytes',
+  '- VM 一鍵端：' + comma(endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick?.totalBytes) + ' bytes',
+  '- Corpus 合計：' + comma(endpointCatalog.sourceCorpus?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.totalBytes) + ' bytes',
+  '- Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端',
   '',
   '### 核心 closure',
   '',
