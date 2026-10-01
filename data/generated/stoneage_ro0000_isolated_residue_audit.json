@@ -59,13 +59,24 @@
       "sha": "662b212bab1df98d5641dd6a526b3f77cf63b0ca",
       "size": 27456,
       "evidence": [
-        "Content is executable-looking Lua for a second-generation pet-skin/evolution interface.",
-        "No formal petup1.lua sibling exists in ro0000.",
-        "Public StoneAge Lua examples use the same ShowHead/Talked/WindowTalked pattern for pet-skin NPCs, but that is only format corroboration."
+        "A formal PetUp/petup.lua exists in both data and hydata; the data and hydata formal files are distinct endpoint blobs but share the same core structure.",
+        "The residue petup1.lua~ has executable ABLua NPC logic and its own main() creating an NPC named 二代宠物进化.",
+        "The residue creates the same NPC name and metamo 110119 as formal petup.lua, but at 2005,(23,1) instead of the formal 2005,(18,21), indicating a materially different deployment/version placement.",
+        "The residue adds a distinct pet exterior-switch flow while retaining complete-evolution handling; it therefore cannot be treated as a byte-identical backup of petup.lua.",
+        "No repository-side exact loader entry selecting petup1.lua~ was found.",
+        "Public ABLua material corroborates that main() is the startup entry and CreateNpc/setFunctionPointer is the normal NPC creation/binding pattern, but it does not prove this residue was selected by the RO0000 build."
       ],
-      "classification": "orphan-feature-script-tilde-residue",
+      "classification": "alternate-feature-version-with-formal-sibling",
       "runtimeEligibility": "unproven",
-      "action": "preserve; do not canonicalize from public example"
+      "action": "preserve-as-version-residue; do-not-promote-without-ablua-loader-binding",
+      "notes": {
+        "formalSibling": "PetUp/petup.lua",
+        "residueMetamo": 110119,
+        "residueNpcPosition": "2005,23,1,4",
+        "formalNpcPosition": "2005,18,21,6",
+        "addedFeature": "pet exterior switch",
+        "externalSource": "https://www.shiqila.la/tdsq-16982-1-1.html"
+      }
     },
     {
       "id": "YamaKing-tilde",
