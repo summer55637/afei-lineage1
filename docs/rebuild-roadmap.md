@@ -1541,3 +1541,26 @@ V4.05 接續 V4.04，升格 fixed-C `BATTLE_CounterCheck()`、`BATTLE_CounterCal
 Controller integration：
 - `ACTION_BATTLE_COUNTER_PLAN`
 - `BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT`
+## 2026-10-01 V4.06 Browser Battle Death Plan
+
+V4.06 接續 V4.05 Counter，升格 fixed-C `BATTLE_DefDieType()` 的死亡判定 boundary。
+
+- `CHAR_HP <= 0` → `BCF_DEATH`
+- `iRet = FALSE`
+- ABIO → `ULTIMATE_1`
+- non-player + critical → `RAND(1,100) < 50` 可產生 `ULTIMATE_1`
+- `ULTIMATE_2` 沿用前面 `BATTLE_DamageSub()` 的 threshold result
+- pinned LER 例外會取消 ultimate knock-away
+
+V4.06 仍然是 read-only decision plan：不設定 `CHAR_ISDIE`、不修改 HP、不結束 Battle、不發 Reward/EXP/Gold、不寫 Persistent State。
+
+新增：
+- `src/stoneage_browser_battle_death_runtime.mjs`
+- `data/generated/stoneage_browser_battle_death_schema.json`
+- `tools/check_v406_browser_battle_death.mjs`
+- `docs/reference/v406-browser-battle-death.md`
+- `.github/workflows/check-v406-browser-battle-death.yml`
+
+Controller integration：
+- `ACTION_BATTLE_DEATH_PLAN`
+- `BROWSER_BATTLE_DEATH_RUNTIME_FORMAT`
