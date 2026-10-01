@@ -32,11 +32,15 @@ jobs:
           echo "setup_sha=$(git rev-parse HEAD:ro0000/server/merged-source/gmsv/setup.cf)" >> "$GITHUB_OUTPUT"
           echo "item_sha=$(git rev-parse HEAD:ro0000/server/merged-source/gmsv/data/itemset6.csv)" >> "$GITHUB_OUTPUT"
 
-      - name: Run endpoint Item seed audit
-        env:
-          ENDPOINT_SETUP_BLOB_SHA: ${{ steps.blobs.outputs.setup_sha }}
-          ENDPOINT_ITEMSET6_BLOB_SHA: ${{ steps.blobs.outputs.item_sha }}
-        run: node tools/check_endpoint_item_seed_audit.mjs
+      - name: Check committed endpoint Item seed audit
+        run: node tools/check_endpoint_item_seed_audit.mjs --check
+
+      - name: Inspect deployed server binary linkage
+        shell: bash
+        run: |
+          set -euo pipefail
+          file ro0000/server/merged-source/gmsv/gmsvjt
+          strings -a ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM1|itemset6\.csv|itemset6file|ITEM_makeItem|ITEM_readItem' | head -n 80 || true
 
       - name: Run endpoint source catalog invariants
         run: node tools/check_endpoint_source_catalog.mjs
