@@ -34,6 +34,8 @@ state.pets.petBox=[
 ];
 state.pets.team=['pet-alive'];
 state.pets.activePetId='pet-alive';
+state.pets.petBox[0].mailMode=0;
+state.pets.petBox[1].mailMode=0;
 
 const team=[{enemyId:120,size:0,createMaxNum:1,enemy:{tempNo:113}}];
 
