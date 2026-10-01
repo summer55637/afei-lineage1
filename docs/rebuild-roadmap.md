@@ -1488,3 +1488,30 @@ Local regression：V4.02 與 V4.03 checkpoints 均通過。
 Controller integration：
 - ACTION_BATTLE_CRITICAL_DAMAGE_PLAN
 - BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT
+## 2026-10-01 V4.04 Browser Battle DamageReact Plan
+
+V4.04 接續 V4.03 damage result，升格 fixed-C `BATTLE_GetDamageReact()` + `BATTLE_DamageSub()` 的 DamageReact boundary。
+
+- reaction priority：VANISH → ABSORB → REFLECT → TRAP → ACUPUNCTURE
+- throw weapon：source 會阻止 REFLECT / TRAP / ACUPUNCTURE，VANISH / ABSORB 不受此條件阻止
+- VANISH：damage = 0，消耗 1 次 vanish
+- ABSORB：incoming damage 轉成 defender / ride-pet recovery
+- REFLECT：damage 轉向 attacker / ride-pet
+- TRAP：改用 WORKMODTRAP 的 damage 並轉向 attacker
+- ACUPUNCTURE：damage 向上取偶數，先打 defender，再以一半 damage 反打 attacker
+- Ride Pet split 保留 fixed-C 的整數計算
+
+V4.04 不修改 HP、不修改 Persistent State、不抽 RNG；狀態消耗只透過 `stateConsumption` 回傳。
+
+新增：
+- `src/stoneage_browser_battle_damage_react_runtime.mjs`
+- `data/generated/stoneage_browser_battle_damage_react_schema.json`
+- `tools/check_v404_browser_battle_damage_react.mjs`
+- `docs/reference/v404-browser-battle-damage-react.md`
+- `.github/workflows/check-v404-browser-battle-damage-react.yml`
+
+Controller integration：
+- `ACTION_BATTLE_DAMAGE_REACT_PLAN`
+- `BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT`
+
+Local regression：V4.04 checkpoints pass。
