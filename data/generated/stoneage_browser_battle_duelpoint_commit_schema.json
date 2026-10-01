@@ -1,0 +1,22 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"StoneAge Browser Battle DuelPoint Commit",
+ "type":"object",
+ "required":["format","action","transactionId","currentDuelPoint","dpadd","nextDuelPoint","revisionBefore","revisionAfter","persistentMutation"],
+ "properties":{
+   "format":{"const":"stoneage-v412-browser-battle-duelpoint-commit-v1"},
+   "action":{"const":"BATTLE_DUELPOINT_COMMIT"},
+   "transactionId":{"type":"string","minLength":1},
+   "currentDuelPoint":{"type":"integer","minimum":0,"maximum":100000000},
+   "dpadd":{"type":"integer"},
+   "nextDuelPoint":{"type":"integer","minimum":0,"maximum":100000000},
+   "revisionBefore":{"type":"integer","minimum":0},
+   "revisionAfter":{"type":"integer","minimum":1},
+   "persistentMutation":{"const":true},
+   "battleContextMutation":{"const":false},
+   "uiMutation":{"const":false},
+   "dbMutation":{"const":false},
+   "workGetExpPreserved":{"const":true},
+   "sourceSideEffects":{"type":"array","items":{"type":"string"}}
+ },
+ "additionalProperties":true
+}
