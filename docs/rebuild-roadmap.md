@@ -4,6 +4,30 @@
 
 
 
+
+## 2026-10-01 新增：V4.25 Browser Battle Settlement Receipt-Bound Exit Gate
+
+V4.24 已經把 live Battle Context 的 `IDLE_EVENTS.REWARD_APPLIED` 改成必須通過可驗證的 Settlement Receipt；本輪再把同一個證據邊界延伸到 final Player / Pet Exit，避免 `settlementComplete=true` 單獨成為呼叫端宣告。
+
+本輪新增：
+
+- Settlement Receipt validator 現在固定檢查 `finishMode=finish`、`receiptRevision` 與 `settlementStartRevision` 的 revision window。
+- Receipt 內引用的 DuelPoint / LevelUp / Item transaction 必須各自有 `revisionAfter`，而且落在本場 settlement window 內。
+- `resolveSettlementReceiptForBattle()` 只能得到唯一有效 receipt；0 筆或多筆都 fail-closed，不自行猜測。
+- `BATTLE_PLAYER_EXIT_PLAN` 與 `BATTLE_EXIT_PLAN` 都必須綁定有效 receipt，並記錄 `settlementReceiptId / settlementStartRevision / settlementReceiptRevision`。
+- Player / Pet Exit Commit 會再次驗證 receipt binding，防止 plan 在 commit 前被竄改或指向不同 settlement。
+- V4.21 / V4.22 舊 regression fixtures 已同步改成 receipt-backed。
+- 新增 V4.25 regression、schema、reference doc 與 GitHub Actions workflow；workflow 同時重跑 V4.24 settlement receipt regression。
+
+因此 battle outer lifecycle 現在固定為：
+
+`Finish Commit → reward transaction commits → Settlement Receipt Commit → REWARD_APPLIED → Player Exit Plan/Commit → Pet Exit Plan/Commit → clear Battle Context`
+
+這一版不新增 EXP、Gold、Item、RNG 或 death policy，也不放寬 fixed-C 未閉合的特殊 battle branches；它只是把 settlement-to-exit 的信任邊界正式閉合。
+
+固定 source 仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
+
 ## 2026-10-01 新增：V3.77 Browser World WarpPoint execution
 
 V3.77 將 fixed-C `mapwarp.txt` 的 first-route exact source warp rows 接入 canonical Browser State Controller，新增 `WORLD_WARPPOINT_EXECUTE`。
