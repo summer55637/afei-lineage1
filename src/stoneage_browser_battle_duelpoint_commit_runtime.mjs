@@ -105,6 +105,8 @@ function commitDuelPoint(state,battleContext,plan,{
     currentDuelPoint,
     dpadd:intOr(plan.dpadd,0),
     nextDuelPoint,
+    revisionBefore:currentRevision,
+    revisionAfter:currentRevision+1,
     committedAt
   };
   next.runtimeMeta.updatedAt=committedAt;
