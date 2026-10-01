@@ -2,6 +2,39 @@
 
 更新日期：2026-10-01
 
+## 2026-10-01 Source Authority Model v2：完整 endpoint 資料正式成為重建主來源
+
+本輪調整專案最高層的 source reconstruction 規則。
+
+目前已確認手上的 VM 一鍵端 + 手工外網端是最完整的實機／部署資料集合，因此後續 World、NPC、Service、Item、Quest、Event、Warp、Encounter、Database 與 endpoint integration 不再只把它們當成「參考資料」，而是作為首要重建資料來源。
+
+Pinned fixed-C 仍維持固定的引擎語義與行為基準，主要負責：
+
+- 驗證演算法、數值公式、執行順序與 runtime lifecycle。
+- 確認 endpoint 資料所對應的底層 engine semantics。
+- 當 endpoint 與 fixed-C 不一致時，協助判定是否為實際部署 variant。
+
+因此新的 source workflow 固定為：
+
+Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime
+
+而不是把所有 endpoint 差異直接視為需要消除的 parity mismatch。
+
+明確規則：
+
+- VM 一鍵端與手工外網端的原始資料優先保留，不因 fixed-C 不同就覆蓋。
+- 與 fixed-C 相同的資料可作 parity evidence。
+- 與 fixed-C 不同但可證明屬於該 endpoint 的資料，標記為 endpoint variant，不視為錯誤。
+- 無法判定差異來源時，維持 explicit variant / unresolved，禁止猜測。
+- Product idle policy 仍另外分層，不冒充 endpoint 或 fixed-C source rule。
+
+正式 contract：docs/source-authority-and-provenance.md。
+Source provenance：ro0000/SOURCE_PROVENANCE.md。
+
+# 重建藍圖：最終目標前的資料與系統補齊
+
+更新日期：2026-10-01
+
 
 ## 2026-10-01 V4.25 follow-up：Bind AttackSeq → Damage → React → Counter
 
