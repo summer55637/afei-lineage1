@@ -45,7 +45,7 @@ function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,n
   const timestamp=String(typeof now==='function'?now():now);
   next.runtimeMeta=isObject(next.runtimeMeta)?next.runtimeMeta:{};
   next.runtimeMeta[TRANSACTION_BUCKET]=isObject(next.runtimeMeta[TRANSACTION_BUCKET])?next.runtimeMeta[TRANSACTION_BUCKET]:{};
-  next.runtimeMeta[TRANSACTION_BUCKET][tx]={committedAt:timestamp,pets:committed};
+  next.runtimeMeta[TRANSACTION_BUCKET][tx]={committedAt:timestamp,settlementReceiptId:String(plan.settlementReceiptId??'').trim(),settlementStartRevision:intOr(plan.settlementStartRevision,null),settlementReceiptRevision:intOr(plan.settlementReceiptRevision,null),playerExitTransactionId:playerExit.transactionId,playerExitRevision:intOr(playerExit.record.revisionAfter,null),revisionBefore:currentRevision,revisionAfter:currentRevision+1,pets:committed};
   next.runtimeMeta.updatedAt=timestamp;
   next.revision=currentRevision+1;
   return {
