@@ -1515,3 +1515,29 @@ Controller integration：
 - `BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT`
 
 Local regression：V4.04 checkpoints pass。
+## 2026-10-01 V4.05 Browser Battle Counter Plan
+
+V4.05 接續 V4.04，升格 fixed-C `BATTLE_CounterCheck()`、`BATTLE_CounterCalc()` 與 `BATTLE_Counter()` 的 admission / probability boundary。
+
+- pinned `gCounterPara = 0.08`
+- Dex/type adjustment 依 fixed-C `BATTLE_CounterCalc()`
+- Player：CounterCalc × CounterTbl × 0.1 + FIXLUCK + WORKCOUNTER；pinned `_SUIT_ADDENDUM` 已啟用
+- Pet / non-player：使用 CounterCalc，NOGUARD 可再加 caller-provided adjustment
+- attacker / defender 任一方 throw weapon → counter false
+- attacker command 必須為 ATTACK 或 NOGUARD；ABIO attacker 直接 false
+- `RAND(1,10000) <= per × 100`
+
+固定 C 的特殊語意也保留：若 attacker 或 defender 有 DamageReact，`BATTLE_Counter()` 會把 return flag 設為 false，但仍會呼叫 `BATTLE_AttackSeq()`。V4.05 因此同時輸出 `triggered` 與 `sourceReturnFlag`。
+
+反擊實際 damage 不在本版重算；後續沿既有 V4.03 → V4.04 管線，並由 source `BATTLE_Counter()` 再套用 ×0.75、最低 damage 1。
+
+新增：
+- `src/stoneage_browser_battle_counter_runtime.mjs`
+- `data/generated/stoneage_browser_battle_counter_schema.json`
+- `tools/check_v405_browser_battle_counter.mjs`
+- `docs/reference/v405-browser-battle-counter.md`
+- `.github/workflows/check-v405-browser-battle-counter.yml`
+
+Controller integration：
+- `ACTION_BATTLE_COUNTER_PLAN`
+- `BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT`
