@@ -62,7 +62,7 @@ function planBattlePlayerExit(contextInput,state,{settlementComplete=false}={}){
       repository:'gavinlinasd/StoneAge',
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       function:'BATTLE_Exit',
-      playerRule:'on final exit, dead/HP<=0 Player is cleared from death state and HP is set to 1'
+      playerRule:'on final exit, CHAR_ISDIE Player is cleared from death state and HP is set to 1'
     },
     battleMode:mode||null,
     sourceMode,
