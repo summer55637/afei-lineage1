@@ -24,11 +24,11 @@ fixed-C：
 - 86–95 → 40%
 - 96–100 → 50%
 
-Guard RNG 由 caller 注入。
+Guard RNG 由 caller 注入；缺失或超出範圍時 fail-closed。
 
 ## Final handling
 
-若 Guard 後 damage < 1，fixed-C 再抽 `RAND(0,1)`；V4.03 同樣要求 caller 注入。
+若 Guard 後 damage < 1，fixed-C 再抽 `RAND(0,1)`；V4.03 同樣要求 caller 注入，缺失或超出範圍時 fail-closed。
 最後套用 `gBattleDamageModyfy`，預設由 caller 提供 1.0。
 
 ## Boundary
