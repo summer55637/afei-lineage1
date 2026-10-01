@@ -9,7 +9,7 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：4a7da5d — Record V4.05 Counter plan
+- 最新 commit：872c226 — Integrate V4.06 Death plan into state controllernter plan
 - 最後更新時間：2026-10-01T09:06:30+08:00
 - 版本線最高 regression workflow：V4.05
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
@@ -26,7 +26,7 @@
 | World graph | ✅ indexed | 1,139 floor nodes；2,182 directed edges |
 | NPC service index | ✅ indexed | 9,335 service instances；1,031 floors |
 | Persistent State | ✅ schema 1 | legacy 30；skills 26；player items 24 |
-| Battle Pipeline | ✅ V4.05 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter Check |\n| Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
+| Battle Pipeline | ✅ V4.06 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan |n → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter Check |\n| Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
