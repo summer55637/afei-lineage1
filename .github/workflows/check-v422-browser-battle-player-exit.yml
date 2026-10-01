@@ -1,0 +1,53 @@
+name: Check V4.22 Browser Battle Player Exit
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_player_exit_runtime.mjs'
+      - 'src/stoneage_browser_battle_player_exit_commit_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'data/generated/stoneage_browser_battle_player_exit_schema.json'
+      - 'data/generated/stoneage_browser_battle_player_exit_commit_schema.json'
+      - 'tools/check_v422_browser_battle_player_exit.mjs'
+      - 'tools/check_v422_browser_battle_player_exit_commit.mjs'
+      - 'tools/check_v422_browser_battle_player_exit_controller.mjs'
+      - 'docs/reference/v422-browser-battle-player-exit.md'
+      - 'docs/rebuild-roadmap.md'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_player_exit_runtime.mjs'
+      - 'src/stoneage_browser_battle_player_exit_commit_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'data/generated/stoneage_browser_battle_player_exit_schema.json'
+      - 'data/generated/stoneage_browser_battle_player_exit_commit_schema.json'
+      - 'tools/check_v422_browser_battle_player_exit.mjs'
+      - 'tools/check_v422_browser_battle_player_exit_commit.mjs'
+      - 'tools/check_v422_browser_battle_player_exit_controller.mjs'
+      - 'docs/reference/v422-browser-battle-player-exit.md'
+      - 'docs/rebuild-roadmap.md'
+  workflow_dispatch:
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v422_browser_battle_player_exit.mjs
+
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v422_browser_battle_player_exit_commit.mjs
+
+  controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v422_browser_battle_player_exit_controller.mjs
