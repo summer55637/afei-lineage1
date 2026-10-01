@@ -3,6 +3,20 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 V4.25 follow-up：Close Battle Initialize → Turn → Attack phase re-entry
+
+固定 C 的 battle loop 是 BATTLE_MODE_INIT → BATTLE_Init() → BATTLE_MODE_BATTLE → BATTLE_Command()；BATTLE_Init() 將 mode 切到 battle 後再跑 SurpriseCheck / PreCommandSeq。Browser 端原本可以在 Context 已經進入 battle 後再次呼叫 BATTLE_INITIALIZE，也能再次 BATTLE_TURN_INITIALIZE，造成 turn / command 狀態被重新初始化。
+
+現在 Controller 將 lifecycle 鎖成：
+
+Context Build (mode=init) → BATTLE_INITIALIZE → active battle (mode=battle) → player command / target / attack planning
+
+BATTLE_INITIALIZE 只接受 mode=init；BATTLE_TURN_INITIALIZE 也只能從 mode=init 進入，不能在 active battle 期間重跑。Player command、target resolve、default target resolve、attack preflight、AttackSeqPrelude 都要求 context.mode=battle。
+
+這一輪沒有改 damage formula、critical / guard / dodge、reward 或 death policy；只是封住「初始化完成後又從外部重跑前置階段」的 lifecycle bypass。
+
+Regression 繼續放在 tools/check_browser_encounter_group_enemy_binding.mjs，同時驗證：未初始化時 attack 被拒絕、Battle Initialize 成功、第二次 Initialize 被拒絕、active battle 再次 Turn Initialize 被拒絕。
+
 ## 2026-10-01 V4.25 follow-up：Bind Enemy Core Stat Hydration to Generated Roster
 
 本輪繼續往 Enemy Generate → Core Stat Hydration → Battle Initialize 檢查，發現單純綁定 enemyTeam 還不夠：後續 hydration 的 RNG rolls 如果可以任意替換，實際進 Battle Context 的數值就可能與已生成 roster 脫鉤。
