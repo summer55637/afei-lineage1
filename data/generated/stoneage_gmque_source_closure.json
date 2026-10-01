@@ -69,10 +69,10 @@
       475
     ],
     "enemybaseDirectCheck": {
-      "path": "gmsv/data/enemybase1.txt",
-      "1642": "not-found",
+      "475": "template-not-established",
       "1636": "not-found",
-      "475": "template-not-established"
+      "1642": "not-found",
+      "path": "gmsv/data/enemybase1.txt"
     },
     "encounterRuntime1642": {
       "groups": [
@@ -138,5 +138,13 @@
     "locator": "tools/check_v310_gmque_npc_source_locator.mjs",
     "candidatePromotion": "requires-pinned-provenance-and-regression",
     "currentCandidateCount": 0
+  },
+  "updated": "2026-10-01",
+  "investigationStatus": "reopened-for-source-reconstruction",
+  "policyState": {
+    "permanentDisabled": false,
+    "runtimeEnabled": false,
+    "playable": false,
+    "reason": "完整 endpoint corpus 已取得；舊永久停用決定撤回，現在重新取得 endpoint NPC / reward evidence。"
   }
 }
