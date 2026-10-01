@@ -23,6 +23,7 @@ on:
       - 'data/generated/stoneage_browser_battle_exit_commit_schema.json'
       - 'tools/check_v421_browser_battle_exit.mjs'
       - 'tools/check_v421_browser_battle_exit_commit.mjs'
+      - 'tools/check_v421_browser_battle_exit_controller.mjs'
       - 'docs/reference/v421-browser-battle-exit.md'
       - 'docs/reference/v421-browser-battle-exit-commit.md'
       - 'docs/rebuild-roadmap.md'
