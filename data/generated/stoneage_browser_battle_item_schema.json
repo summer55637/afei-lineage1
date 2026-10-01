@@ -1,0 +1,19 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Item Plan",
+  "type":"object",
+  "required":["format","action","accepted","discarded","ignored","persistentStateMutation","rerollAtCommit"],
+  "properties":{
+    "format":{"const":"stoneage-v417-browser-battle-item-plan-v1"},
+    "action":{"const":"BATTLE_ITEM_PLAN"},
+    "accepted":{"type":"array","maxItems":3,"items":{"type":"object"}},
+    "discarded":{"type":"array","items":{"type":"object"}},
+    "ignored":{"type":"array","items":{"type":"object"}},
+    "persistentStateMutation":{"const":false},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false},
+    "rerollAtCommit":{"const":false}
+  },
+  "additionalProperties":true
+}
