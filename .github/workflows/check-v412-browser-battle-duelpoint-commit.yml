@@ -1,0 +1,30 @@
+name: Check V4.12 Browser Battle DuelPoint Commit
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_duelpoint_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_duelpoint_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/check_v412_browser_battle_duelpoint_commit.mjs'
+      - 'data/generated/stoneage_browser_battle_duelpoint_commit_schema.json'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_duelpoint_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_duelpoint_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_persistent_state.mjs'
+      - 'tools/check_v412_browser_battle_duelpoint_commit.mjs'
+      - 'data/generated/stoneage_browser_battle_duelpoint_commit_schema.json'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/check_v412_browser_battle_duelpoint_commit.mjs
