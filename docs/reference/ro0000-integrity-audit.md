@@ -120,3 +120,13 @@ node tools/check_ro0000_integrity.mjs
 外部交叉資料也符合這個處理原則：公開 StoneAge server-pack 可見正式資料與 `.bak` 並存；公開服務端資料目錄也可見 `npc.arg1`～`npc.arg8` 這類分段檔。這些資料只能作為「副檔名具有歷史／參數檔慣例」的旁證，不能單憑外部慣例決定 ro0000 任一檔案的 runtime eligibility。
 
 下一步可依 runtime 影響度逐檔閉合 residue；沒有新的 authoritative evidence 時，不進行物理刪除。
+
+## 本輪孤立 residue 語義追查
+
+目前 54 個 backup/edit-like residue 中有 10 個 blob SHA 沒有任何其他路徑副本。這 10 個不再統一視為垃圾，而是進入內容級 provenance 分層。
+
+- `huoyue.lua.bak`：有正式 `huoyue.lua` 且 repository 有正式路徑引用，因此目前可證明是非 canonical 的歷史／編輯副本。
+- `neweq.create---`（data / hydata）：兩端都有 `NPCCREATE`；data 變體的 NPC block 甚至被 `#` 包住，而 hydata 變體是 active-looking。兩邊都缺 formal `neweq.create`，並引用 `baoxiang.arg` / `baoshi.arg`，但目前只看到 `.arg--` residue，因此不能直接刪或升格。
+- `LY.lua--`、`PetUp/petup1.lua~`、`YamaKing/YamaKing.lua~`、`battlebet.lua--`、`soccer.lua~`、`renwu.lua~`、`ridenpc2.lua~`：都具有實質 Lua 程式內容；其中 soccer 甚至有同目錄 `soccer.txt` companion，ridenpc2 則有正式 `ridenpc.lua` sibling。它們目前全部標成 `runtimeEligibility=unproven`，先保留。
+
+這層證據已固定在 `data/generated/stoneage_ro0000_isolated_residue_audit.json`。未來只有找到新的 authoritative binding / version provenance / loader evidence，才把其中任一項改成 canonical runtime source。

@@ -297,6 +297,14 @@ assert(residueStructureAudit.summary?.backupLikeWithFormalBase===15,'ro0000 resi
 assert(residueStructureAudit.summary?.multipartArg===multipartArg.length,'ro0000 residue structure multipart count drift');
 assert(residueStructureAudit.summary?.multipartExactCounterpart===20,'ro0000 residue structure exact multipart count drift');
 assert(residueStructureAudit.summary?.multipartVariantCounterpart===8,'ro0000 residue structure variant multipart count drift');
+const isolatedResidueAuditPath=path.join(ROOT,'data/generated/stoneage_ro0000_isolated_residue_audit.json');
+assert(fs.existsSync(isolatedResidueAuditPath),'missing ro0000 isolated residue audit');
+const isolatedResidueAudit=JSON.parse(fs.readFileSync(isolatedResidueAuditPath,'utf8'));
+assert(isolatedResidueAudit.format==='stoneage-ro0000-isolated-residue-audit-v1','ro0000 isolated residue audit format drift');
+assert(isolatedResidueAudit.ro0000TreeSha===ro0000TreeSha,'ro0000 isolated residue audit tree SHA drift');
+assert(isolatedResidueAudit.entries?.length===10,'ro0000 isolated residue audit entry count drift');
+assert(isolatedResidueAudit.entries?.filter(x=>x.runtimeEligibility==='unproven').length===9,'ro0000 isolated residue eligibility drift');
+assert(isolatedResidueAudit.entries?.find(x=>x.id==='huoyue-bak' && x.runtimeEligibility==='not-canonical'),'ro0000 huoyue residue classification drift');
 const triageReportPath=path.join(ROOT,'data/generated/stoneage_ro0000_dependency_triage.json');
 if(!fs.existsSync(triageReportPath)) throw new Error('missing generated ro0000 dependency triage report');
 const triageReport=JSON.parse(fs.readFileSync(triageReportPath,'utf8'));
