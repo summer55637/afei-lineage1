@@ -35,6 +35,7 @@ import { createBrowserBattleAttackPreflightRuntime, ACTION_BATTLE_ATTACK_PREFLIG
 import { createBrowserBattleAttackSeqPreludeRuntime, ACTION_BATTLE_ATTACK_SEQ_PRELUDE, BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT } from './stoneage_browser_battle_attack_seq_prelude_runtime.mjs';
 import { createBrowserBattleDamagePlanRuntime, ACTION_BATTLE_DAMAGE_PLAN, BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_plan_runtime.mjs';
 import { createBrowserBattleCriticalDamageRuntime, ACTION_BATTLE_CRITICAL_DAMAGE_PLAN, BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT } from './stoneage_browser_battle_critical_damage_runtime.mjs';
+import { createBrowserBattleDamageReactRuntime, ACTION_BATTLE_DAMAGE_REACT_PLAN, BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -106,6 +107,7 @@ function createBrowserStateController({
   const battleAttackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
   const battleDamagePlanRuntime=createBrowserBattleDamagePlanRuntime();
   const battleCriticalDamageRuntime=createBrowserBattleCriticalDamageRuntime();
+  const battleDamageReactRuntime=createBrowserBattleDamageReactRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -313,6 +315,33 @@ function createBrowserStateController({
           }
         );
         return {...result,format:BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_DAMAGE_REACT_PLAN){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-damage-react',reason:'battle-context-required',state:clone(currentState)};
+        if(battleDamageReactRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-damage-react',reason:'browser-battle-damage-react-runtime-invalid',state:clone(currentState)};
+        const result=battleDamageReactRuntime.plan(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            attackerBid:action.attackerBid??null,
+            targetBid:action.targetBid??null,
+            damage:action.damage??0,
+            throwWeapon:action.throwWeapon===true,
+            weaponType:action.weaponType??'none',
+            attackerRidePet:action.attackerRidePet===true,
+            defenderRidePet:action.defenderRidePet===true,
+            attackerDefencePower:action.attackerDefencePower??null,
+            defenderDefencePower:action.defenderDefencePower??null,
+            attackerPetDefencePower:action.attackerPetDefencePower??null,
+            defenderPetDefencePower:action.defenderPetDefencePower??null,
+            damageVanish:action.damageVanish??null,
+            damageAbsorb:action.damageAbsorb??null,
+            damageReflect:action.damageReflect??null,
+            trap:action.trap??null,
+            modTrap:action.modTrap??null,
+            acupuncture:action.acupuncture??null
+          }
+        );
+        return {...result,format:BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_ATTACK_SEQ_PRELUDE){
         if(!battleContext)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'battle-context-required',state:clone(currentState)};
@@ -686,6 +715,7 @@ export {
   ACTION_BATTLE_ATTACK_SEQ_PRELUDE,
   ACTION_BATTLE_DAMAGE_PLAN,
   ACTION_BATTLE_CRITICAL_DAMAGE_PLAN,
+  ACTION_BATTLE_DAMAGE_REACT_PLAN,
   ACTION_BATTLE_TURN_INITIALIZE,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
@@ -710,6 +740,7 @@ export {
   BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,
   BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT,
   BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT,
+  BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,
   BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,
