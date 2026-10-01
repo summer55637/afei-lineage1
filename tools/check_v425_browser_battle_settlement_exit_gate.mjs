@@ -26,10 +26,10 @@ assert.equal(playerPlan.settlementReceiptBound,true);
 assert.equal(playerPlan.settlementReceiptId,'settle-425');
 assert.equal(playerPlan.settlementReceiptRevision,7);
 
-const petPlan=planBattleExit(context,state,{settlementComplete:true});
-assert.equal(petPlan.ok,true,JSON.stringify(petPlan));
-assert.equal(petPlan.settlementReceiptBound,true);
-assert.equal(petPlan.settlementReceiptId,'settle-425');
+const petBeforePlayer=planBattleExit(context,state,{settlementComplete:true});
+assert.equal(petBeforePlayer.ok,false);
+assert.equal(petBeforePlayer.reason,'player-exit-commit-required');
+
 
 const tamperedPlayer={...playerPlan,settlementReceiptRevision:6};
 const tamperedPlayerCommit=commitBattlePlayerExit(state,tamperedPlayer,{transactionId:'exit-player-425',expectedRevision:7});
@@ -44,10 +44,19 @@ assert.equal(tamperedPetCommit.reason,'settlement-receipt-revision-mismatch');
 const playerDone=commitBattlePlayerExit(state,playerPlan,{transactionId:'exit-player-425',expectedRevision:7});
 assert.equal(playerDone.ok,true,JSON.stringify(playerDone));
 assert.equal(playerDone.state.revision,8);
+assert.equal(playerDone.state.runtimeMeta.battlePlayerExitTransactions['exit-player-425'].settlementReceiptId,'settle-425');
+
+const petPlan=planBattleExit(context,playerDone.state,{settlementComplete:true});
+assert.equal(petPlan.ok,true,JSON.stringify(petPlan));
+assert.equal(petPlan.settlementReceiptBound,true);
+assert.equal(petPlan.settlementReceiptId,'settle-425');
+assert.equal(petPlan.playerExitTransactionId,'exit-player-425');
+assert.equal(petPlan.playerExitRevision,8);
 
 const petDone=commitBattleExit(playerDone.state,petPlan,{transactionId:'exit-pet-425',expectedRevision:8});
 assert.equal(petDone.ok,true,JSON.stringify(petDone));
 assert.equal(petDone.state.revision,9);
 assert.equal(petDone.state.pets.petBox[0].hp,1);
+assert.equal(petDone.state.runtimeMeta.battleExitTransactions['exit-pet-425'].playerExitTransactionId,'exit-player-425');
 
 console.log('V4.25 Browser Battle settlement receipt-bound exit gate regression: PASS');
