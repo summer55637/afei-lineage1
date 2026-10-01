@@ -10,7 +10,7 @@ function fail(m){throw new Error(m);}
 function clean(f){if(!fs.existsSync(f))fail('Missing mapwarp file: '+f);return fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(x=>x&&!x.startsWith('#'));}
 function pairKey(row){const p=row.split(':');return (p[2]?.split(',')[0]??'?')+'→'+(p[3]?.split(',')[0]??'?');}
 function countPair(rows,from,to){return rows.filter(row=>{const p=row.split(':');return p[2]?.startsWith(from+',')&&p[3]?.startsWith(to+',');}).length;}
-function topPairs(rows,limit=40){const m=new Map();for(const row of rows){const k=pairKey(row);m.set(k,(m.get(k)??0)+1);}return [...m.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,limit).map(([pair,count])=>({pair,count}));}
+function topPairs(rows,limit=10){const m=new Map();for(const row of rows){const k=pairKey(row);m.set(k,(m.get(k)??0)+1);}return [...m.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,limit).map(([pair,count])=>({pair,count}));}
 function gitSha(rel){try{return execFileSync('git',['rev-parse','HEAD:'+rel],{cwd:ROOT,encoding:'utf8'}).trim();}catch{return'unknown';}}
 const endpoint=clean(ENDPOINT),fixed=clean(FIXED),es=new Set(endpoint),fs=new Set(fixed);
 const endpointOnly=endpoint.filter(x=>!fs.has(x)),fixedOnly=fixed.filter(x=>!es.has(x));
