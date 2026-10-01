@@ -75,6 +75,19 @@ const ITEMSHOP_UI_CLOSE='ITEMSHOP_UI_CLOSE';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const clockFactory=(value,fallback)=>typeof value==='function'?value:()=>value!=null?String(value):String(fallback());
 
+function requireBattleContextClearForWorldLoop(battleContext,type,state){
+  if(!battleContext)return null;
+  return {
+    ok:false,
+    handled:false,
+    stage:'battle-context-clear-gate',
+    reason:'battle-context-clear-required',
+    type,
+    battleContext:clone(battleContext),
+    state:clone(state)
+  };
+}
+
 function createBrowserStateController({
   state,
   moduleAudit=null,
@@ -186,6 +199,9 @@ function createBrowserStateController({
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_FIRST_ROUTE_PLAN){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldFirstRouteRuntime)return {ok:false,handled:false,stage:'first-route-plan',reason:'browser-world-first-route-runtime-not-configured',state:clone(currentState)};
         if(worldFirstRouteRuntime.ok!==true)return {ok:false,handled:false,stage:'first-route-plan',reason:worldFirstRouteRuntime.reason??'browser-world-first-route-runtime-invalid',errors:worldFirstRouteRuntime.errors??[],state:clone(currentState)};
         const result=await worldFirstRouteRuntime.plan(currentState,{
@@ -196,6 +212,9 @@ function createBrowserStateController({
         return {...result,state:clone(currentState)};
       }
       if(type===ACTION_WORLD_FIRST_ROUTE_EXECUTE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldFirstRouteRuntime)return {ok:false,handled:false,stage:'first-route-execute',reason:'browser-world-first-route-runtime-not-configured',state:clone(currentState)};
         if(worldFirstRouteRuntime.ok!==true)return {ok:false,handled:false,stage:'first-route-execute',reason:worldFirstRouteRuntime.reason??'browser-world-first-route-runtime-invalid',errors:worldFirstRouteRuntime.errors??[],state:clone(currentState)};
         const plan=await worldFirstRouteRuntime.plan(currentState,{
@@ -227,18 +246,27 @@ function createBrowserStateController({
         return {...execution,state:clone(execution.state??currentState)};
       }
       if(type===ACTION_WORLD_MOVE_STEP){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(worldMovementRuntime.ok!==true)return {ok:false,handled:false,stage:'movement-runtime',reason:worldMovementRuntime.reason??'browser-world-movement-runtime-invalid',errors:worldMovementRuntime.errors??[],state:clone(currentState)};
         const result=await worldMovementRuntime.dispatch(currentState,action,{now:clockFactory(action.now,now),savedAt:clockFactory(action.savedAt??action.now,now)});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_WARPPOINT_EXECUTE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(worldWarpPointRuntime.ok!==true)return {ok:false,handled:false,stage:'warppoint-runtime',reason:worldWarpPointRuntime.reason??'browser-world-warppoint-runtime-invalid',errors:worldWarpPointRuntime.errors??[],state:clone(currentState)};
         const result=await worldWarpPointRuntime.execute(currentState,{portalId:action.portalId??null,position:action.player??action.position??null,expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,savedAt:clockFactory(action.savedAt??action.now,now),now:clockFactory(action.now,now),source:'browser-world-warppoint'});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_PREPARE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-runtime',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-runtime',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
         const result=await worldEncounterRuntime.prepare(currentState,{
@@ -248,6 +276,9 @@ function createBrowserStateController({
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_ROLL){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-runtime',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-runtime',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
         const result=await worldEncounterRuntime.roll(currentState,{
@@ -1106,6 +1137,9 @@ function createBrowserStateController({
         };
       }
       if(type===ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldEncounterIdleBridge)return {ok:false,handled:false,stage:'encounter-idle-bridge',reason:'browser-world-encounter-idle-bridge-not-configured',state:clone(currentState)};
         if(worldEncounterIdleBridge.ok!==true)return {ok:false,handled:false,stage:'encounter-idle-bridge',reason:worldEncounterIdleBridge.reason??'browser-world-encounter-idle-bridge-invalid',errors:worldEncounterIdleBridge.errors??[],state:clone(currentState)};
         const result=await worldEncounterIdleBridge.commit(currentState,{
@@ -1121,6 +1155,9 @@ function createBrowserStateController({
         return {...result,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldEncounterEnemyRuntime)return {ok:false,handled:false,stage:'encounter-enemy-runtime',reason:'browser-world-encounter-enemy-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterEnemyRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-enemy-runtime',reason:worldEncounterEnemyRuntime.reason??'browser-world-encounter-enemy-runtime-invalid',errors:worldEncounterEnemyRuntime.errors??[],state:clone(currentState)};
         if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-resolution',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
@@ -1134,6 +1171,9 @@ function createBrowserStateController({
         return {...result,preparedEncounter:prepared.encounter,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_GROUP_SELECT){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldEncounterGroupRuntime)return {ok:false,handled:false,stage:'encounter-group-runtime',reason:'browser-world-encounter-group-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterGroupRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-group-runtime',reason:worldEncounterGroupRuntime.reason??'browser-world-encounter-group-runtime-invalid',errors:worldEncounterGroupRuntime.errors??[],state:clone(currentState)};
         if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-resolution',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
@@ -1144,6 +1184,9 @@ function createBrowserStateController({
         return {...result,preparedEncounter:prepared.encounter,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_ROLL_COMMIT){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!worldEncounterPersistenceRuntime)return {ok:false,handled:false,stage:'encounter-persistence-runtime',reason:'browser-world-encounter-persistence-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterPersistenceRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-persistence-runtime',reason:worldEncounterPersistenceRuntime.reason??'browser-world-encounter-persistence-runtime-invalid',errors:worldEncounterPersistenceRuntime.errors??[],state:clone(currentState)};
         const result=await worldEncounterPersistenceRuntime.commit(currentState,{
