@@ -128,7 +128,9 @@ function commitBattleLevelUp(state,levelPlan,petGrowthPlan,{transactionId=null,e
   next.runtimeMeta[TRANSACTION_BUCKET][tx]={
     committedAt:timestamp,
     player:{levelBefore:playerLevelBefore,levelAfter:nextPlayerLevel,expBefore:playerExpBefore,expAfter:nextPlayerExp,duelPointBefore:playerDpBefore,duelPointAfter:nextPlayerDp},
-    pets:committedPets
+    pets:committedPets,
+    revisionBefore:currentRevision,
+    revisionAfter:currentRevision+1
   };
   next.runtimeMeta.updatedAt=timestamp;
   next.revision=currentRevision+1;
