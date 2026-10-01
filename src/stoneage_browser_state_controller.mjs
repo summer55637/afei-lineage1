@@ -41,6 +41,7 @@ import { createBrowserBattleDeathRuntime, ACTION_BATTLE_DEATH_PLAN, BROWSER_BATT
 import { createBrowserBattleDeathCommitRuntime, ACTION_BATTLE_DEATH_COMMIT, BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_death_commit_runtime.mjs';
 import { createBrowserBattleEndRuntime, ACTION_BATTLE_END_PLAN, BROWSER_BATTLE_END_RUNTIME_FORMAT } from './stoneage_browser_battle_end_runtime.mjs';
 import { createBrowserBattleFinishCommitRuntime, ACTION_BATTLE_FINISH_COMMIT, BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_finish_commit_runtime.mjs';
+import { createBrowserBattleProfitRouteRuntime, ACTION_BATTLE_PROFIT_ROUTE_PLAN, BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_battle_profit_route_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -118,6 +119,7 @@ function createBrowserStateController({
   const battleDeathCommitRuntime=createBrowserBattleDeathCommitRuntime();
   const battleEndRuntime=createBrowserBattleEndRuntime();
   const battleFinishCommitRuntime=createBrowserBattleFinishCommitRuntime();
+  const battleProfitRouteRuntime=createBrowserBattleProfitRouteRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -423,6 +425,20 @@ function createBrowserStateController({
           ...result,
           format:BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
           battleContext:battleContext?clone(battleContext):null,
+          state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_PROFIT_ROUTE_PLAN){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-profit-route',reason:'battle-context-required',state:clone(currentState)};
+        if(battleProfitRouteRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-profit-route',reason:'browser-battle-profit-route-runtime-invalid',state:clone(currentState)};
+        const result=battleProfitRouteRuntime.plan(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {dpbattle:action.dpbattle??null}
+        );
+        return {
+          ...result,
+          format:BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT,
+          battleContext:clone(battleContext),
           state:clone(currentState)
         };
       }
@@ -854,6 +870,7 @@ export {
   ACTION_BATTLE_DEATH_COMMIT,
   ACTION_BATTLE_END_PLAN,
   ACTION_BATTLE_FINISH_COMMIT,
+  ACTION_BATTLE_PROFIT_ROUTE_PLAN,
   ACTION_BATTLE_TURN_INITIALIZE,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
@@ -884,6 +901,7 @@ export {
   BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_END_RUNTIME_FORMAT,
   BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,
   BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,
