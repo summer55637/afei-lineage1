@@ -102,6 +102,31 @@ ro0000 原始 setup／教程包含 credential-like 設定與部署敏感資訊�
 
 ## ridenpc2.lua~ 版本殘留判定
 
+
+## soccer.lua~ 版本／功能殘留判定
+
+`hydata/data/ablua/npc/duqiu/soccer.lua~` 的內容不是空殼，也不是單純設定檔：它的 `main()` 會建立三個 NPC 並綁定對話、窗口、循環事件，且會持續讀寫同目錄的 `soccer.txt`。
+
+因此它必須保留，不能因 `~` 直接刪除。
+
+但目前仍不能把它升格成 canonical runtime，因為還缺兩層關鍵證據：
+
+1. repository 內沒有找到明確選取 `soccer.lua~` 的 ABLua loader / binding。
+2. 腳本依賴 `Soccer` / `SoccerResult` SQL tables，以及 `Home3` / `TotalS3` 等欄位；RO0000 的 `175sa.sql` snapshot 中沒有找到這兩個 table 的 CREATE TABLE，也沒有這些 schema 欄位。
+
+而且該 script + companion data 都在 `hydata/data/ablua`，並不是預設 `npcdir=data/npc` 的資料根。
+
+目前因此固定為：
+
+`runtimeEligibility=unproven`
+
+分類：
+
+`orphan-feature-bundle-with-companion-and-database-gap`
+
+這代表「功能包本身有實質內容，但 provenance / loader / persistence contract 尚未閉合」，不是刪除結論。
+
+
 `hydata/data/ablua/npc/ridenpc/ridenpc2.lua~` 現在確認不是與正式 `ridenpc.lua` 相同 blob，而是一份不同版本的 ABLua 腳本。
 
 正式 `ridenpc.lua` 在 data / hydata 兩端均存在且 blob SHA 相同；兩者都會建立「騎證兌換員」，但 residue 與正式版本的建立位置／圖像與獎勵表不同：
