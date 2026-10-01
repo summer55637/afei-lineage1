@@ -20,9 +20,9 @@ function lsTree(repoRoot,rel){
   });
 }
 function aggregate(files){
-  const ext={};let bytes=0;
-  for(const f of files){bytes+=f.size;const b=f.path.split('/').pop();const i=b.lastIndexOf('.');const e=i>0?b.slice(i).toLowerCase():'[no-extension]';ext[e]=(ext[e]??0)+1;}
-  return{files:files.length,bytes,extensions:Object.fromEntries(Object.entries(ext).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])))};
+  let bytes=0;
+  for(const f of files) bytes+=f.size;
+  return{files:files.length,bytes};
 }
 function compare(endpoint,fixed){
   const fMap=new Map(fixed.map(x=>[x.path,x])),eMap=new Map(endpoint.map(x=>[x.path,x]));
