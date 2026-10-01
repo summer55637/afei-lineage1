@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_BATTLE_END_PLAN,
   BROWSER_BATTLE_END_RUNTIME_FORMAT,
@@ -85,7 +87,18 @@ result=planBattleEnd(missingDeathState);
 assert.equal(result.ok,false);
 assert.equal(result.reason,'death-state-required');
 
-const controller=createBrowserStateController({state:{revision:0}});
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
+const controllerState=freshPersistentState({playerId:'v408-player'});
+controllerState.player.name='V408';
+controllerState.player.hp=100;
+controllerState.player.maxHp=100;
+controllerState.player.mp=20;
+controllerState.player.maxMp=20;
+controllerState.idle.enabled=true;
+controllerState.idle.mode='encounter_pending';
+controllerState.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+const controller=createBrowserStateController({state:controllerState,idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,now:()=> '2026-10-01T12:00:00.000Z'});
 const build=await controller.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   playerId:'v408-player',
@@ -100,7 +113,7 @@ const build=await controller.dispatch({
     luck:0,
     stats:{vital:10,str:10,tgh:10,dex:10}
   },
-  team:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
+  enemyTeam:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
   encounter:{encounterId:1,floorId:1,x:1,y:1},
   groupId:1,
   battleFieldNo:1
@@ -109,14 +122,14 @@ assert.equal(build.ok,true,JSON.stringify(build));
 
 const death=await controller.dispatch({
   type:ACTION_BATTLE_DEATH_PLAN,
-  targetBid:10,
+  targetBid:15,
   hp:0
 });
 assert.equal(death.ok,true,JSON.stringify(death));
 
 const commit=await controller.dispatch({
   type:ACTION_BATTLE_DEATH_COMMIT,
-  targetBid:10,
+  targetBid:15,
   deathPlan:death
 });
 assert.equal(commit.ok,true,JSON.stringify(commit));
