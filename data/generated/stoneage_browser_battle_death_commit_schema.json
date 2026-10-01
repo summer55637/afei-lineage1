@@ -1,0 +1,31 @@
+{
+  "format": "stoneage-v407-browser-battle-death-commit-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_DEATH_COMMIT",
+  "fixedC": {
+    "deathStateFlag": "CHAR_ISDIE = 1",
+    "deadCount": "CHAR_DEADCOUNT += 1",
+    "sourceCallSites": [
+      "BATTLE_AddExpItem",
+      "BATTLE_AddDuelPoint"
+    ],
+    "deferredSettlement": [
+      "BATTLE_UltimateExtra",
+      "BATTLE_NormalDeadExtra"
+    ]
+  },
+  "browser": {
+    "battleContextMutation": true,
+    "hpMutation": false,
+    "persistentMutation": false,
+    "rewardMutation": false,
+    "battleEndMutation": false,
+    "doubleCommit": "fail-closed"
+  },
+  "nextBoundary": [
+    "BATTLE_OnlyRescue / winner-side determination",
+    "BATTLE_FinishSet",
+    "EXP / Gold / Reward settlement",
+    "Persistent post-battle state"
+  ]
+}
