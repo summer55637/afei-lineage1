@@ -764,14 +764,15 @@ function createBrowserStateController({
             ok:true,
             handled:true,
             stage:'battle-context-clear-idempotent',
-          format:BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT,
-          action:ACTION_BATTLE_CONTEXT_CLEAR,
-          idempotent:true,
-          applied:false,
-          battleContextCleared:true,
-          state:clone(currentState),
-          battleContext:null
-        };
+            format:BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT,
+            action:ACTION_BATTLE_CONTEXT_CLEAR,
+            idempotent:true,
+            applied:false,
+            battleContextCleared:true,
+            state:clone(currentState),
+            battleContext:null
+          };
+        }
         if(battleContextClearRuntime.ok!==true)return {
           ok:false,
           handled:false,
