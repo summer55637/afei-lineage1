@@ -101,13 +101,50 @@
       "sha": "bb85d9fcb443218857731ba46c1b0e2c03a8973f",
       "size": 62180,
       "evidence": [
-        "Content actively reads/writes data/ablua/npc/duqiu/soccer.txt.",
-        "A non-tilde soccer.txt companion exists in the same directory.",
-        "No formal soccer.lua sibling exists in ro0000."
+        "The residue is the only soccer.lua script under ro0000: no formal soccer.lua sibling exists in either data or hydata.",
+        "The hydata residue is accompanied by a non-residue soccer.txt in the same duqiu directory; the script reads and writes that exact relative data path.",
+        "The script's main() creates three NPCs and binds talk/window/loop callbacks, so the payload is an executable ABLua feature rather than a text-only artifact.",
+        "The same residue references Soccer and SoccerResult SQL tables, but the ro0000/server/database/175sa.sql snapshot contains no CREATE TABLE for either name and no matching Home3/TotalS3 schema fields.",
+        "No repository-side exact loader entry selecting soccer.lua~ was found.",
+        "The default setup.cf points npcdir at data/npc, while the script and its companion are under hydata/data/ablua; therefore endpoint selection and the missing ABLua loader entry remain unresolved."
       ],
-      "classification": "orphan-feature-script-with-live-companion-data",
+      "classification": "orphan-feature-bundle-with-companion-and-database-gap",
       "runtimeEligibility": "unproven",
-      "action": "preserve; inspect companion data and NPC binding later"
+      "action": "preserve-as-feature-residue; do-not-promote-without-ablua-loader-and-database-provenance",
+      "notes": {
+        "relativeCompanion": "data/ablua/npc/duqiu/soccer.txt",
+        "npcInstances": [
+          {
+            "name": "球赛竞猜",
+            "metamo": 26966,
+            "floor": 2005,
+            "x": 6,
+            "y": 15,
+            "dir": 6
+          },
+          {
+            "name": "球赛竞猜GM专用",
+            "metamo": 100427,
+            "floor": 777,
+            "x": 42,
+            "y": 22,
+            "dir": 8
+          },
+          {
+            "name": "球赛竞猜",
+            "metamo": 100427,
+            "floor": 777,
+            "x": 42,
+            "y": 25,
+            "dir": 8
+          }
+        ],
+        "databaseTables": [
+          "Soccer",
+          "SoccerResult"
+        ],
+        "databaseSchemaFoundIn175sa": false
+      }
     },
     {
       "id": "renwu-tilde",
