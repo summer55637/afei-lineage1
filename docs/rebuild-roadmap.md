@@ -1856,3 +1856,34 @@ Controller integration：
 - `BROWSER_BATTLE_ITEM_COMMIT_RUNTIME_FORMAT`
 
 Battle settlement 已從 V4.01 一路閉合到 V4.18；下一段應處理外層 battle lifecycle / Exit 與 server-derived compliance，而不是再複製同一條 reward mutation。
+
+## 2026-10-01 V4.19 Browser Battle Compliance Plan
+
+V4.19 將 `CHAR_complianceParameter()` 的「已能由目前 browser state + 固定來源直接證明」部分獨立成 read-only plan：
+
+- Player 使用既有創角／source derivation 的 point-unit 公式：
+  - `FIXSTR = STR + TOUGH*0.1 + VITAL*0.1 + DEX*0.05`
+  - `FIXTOUGH = TOUGH + STR*0.1 + VITAL*0.1 + DEX*0.05`
+  - `FIXDEX = DEX`
+  - `MaxHP = VITAL*4 + STR + TOUGH + DEX`
+- Pet 使用 existing Enemy/Pet source-derived stored-integer 轉換：
+  - `FIXSTR = trunc(STR*0.01 + TOUGH*0.001 + VITAL*0.001 + DEX*0.0005)`
+  - `FIXTOUGH = trunc(TOUGH*0.01 + STR*0.001 + VITAL*0.001 + DEX*0.0005)`
+  - `FIXDEX = trunc(DEX*0.01)`
+  - `MaxHP = trunc((VITAL*4 + STR + TOUGH + DEX)*0.01)`
+- plan 只讀 current Persistent State，不抽 RNG、不寫 Persistent State、不改 Battle Context。
+- Legacy Pet 缺少 source-closed raw stats 時 fail-closed。
+- `CHAR_MAXMP / CHAR_getDefaultChar`、HP/MP 實際 mutation、equipment/suit/profession/feature branch 與 network/status send 都維持 deferred，不猜。
+
+新增：
+- `src/stoneage_browser_battle_compliance_runtime.mjs`
+- `data/generated/stoneage_browser_battle_compliance_schema.json`
+- `tools/check_v419_browser_battle_compliance.mjs`
+- `docs/reference/v419-browser-battle-compliance.md`
+- `.github/workflows/check-v419-browser-battle-compliance.yml`
+
+Controller integration：
+- `ACTION_BATTLE_COMPLIANCE_PLAN`
+- `BROWSER_BATTLE_COMPLIANCE_PLAN_RUNTIME_FORMAT`
+
+下一步：`BATTLE_COMPLIANCE_COMMIT`，只提交 source-closed derived fields；MaxMP 與特殊 compliance branches 不在沒有新證據時硬補。
