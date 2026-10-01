@@ -73,7 +73,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 - 外部端參考資料統一放在 `ro0000/`。
 - 目前 `ro0000/` 已整理為：
-  - `server/merged-source/`：來源規則已校正：除 `wwwroot/` 外，其餘快照資料均屬 VM 一鍵端；`wwwroot/` 屬手工外網端。
+  - `server/merged-source/`：來源規則已校正：只有 `wwwroot/` 資料夾屬手工外網端；其餘快照資料均屬 VM 一鍵端。
   - `server/database/175sa.sql`：資料庫參考，屬 VM 一鍵端。
   - `client/android/冰河石器-隐盟.apk`：Android Client 主程式／研究參考。
   - `docs/搭建教程.txt`：手工外網端架設教程。
