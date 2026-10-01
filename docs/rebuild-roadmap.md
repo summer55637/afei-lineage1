@@ -1948,6 +1948,12 @@ Commit:
 Lifecycle 現在為：
 `Finish Commit → IDLE battle_finished → settlement → reward/other commits → V4.22 Player Exit State Commit → V4.21 Pet Exit Plan/Commit → clear Battle Context`
 
+## 2026-10-01 V4.22 Battle Finish Special-Hook Audit
+
+固定 C 的 `BATTLE_Finish()` 不是單一無條件流程。普通世界隨機遭遇透過 `lssproto_EN_recv → BATTLE_CreateVsEnemy(...,0,-1)`，不注入 `WinFunc`；NPC Enemy 則會由 `npc_npcenemy.c` 明確注入 `NPC_NPCEnemy_Dying`。PVP 另有 `PkFunc`，`DANTAI` 另有 `BATTLE_DpCalc`，而 linked `pNext` battle containers 也有專用 teardown。
+
+因此目前 first-idle PVE Browser closure 只宣告 ordinary world encounter path，不自動註冊 NPC WinFunc、PVP PkFunc、DANTAI 或 synthetic linked battle。證據固定於 `data/generated/stoneage_battle_finish_hook_audit.json`，並由 `tools/check_v422_battle_finish_hook_audit.mjs` 回歸。
+
 ## 2026-10-01 V4.21 Browser Battle Exit Closure Regression
 
 V4.21 不新增新的 Battle 規則；本輪補強的是最後一段 lifecycle contract：
