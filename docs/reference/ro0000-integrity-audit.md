@@ -103,6 +103,28 @@ ro0000 原始 setup／教程包含 credential-like 設定與部署敏感資訊�
 ## ridenpc2.lua~ 版本殘留判定
 
 
+
+## PetUp/petup1.lua~ 版本殘留判定
+
+`hydata/data/ablua/npc/PetUp/petup1.lua~` 已確認是實質 ABLua 版本差異，不是與正式 `petup.lua` 完全相同的備份。
+
+兩個版本都建立「二代寵物進化」NPC，且使用 metamo `110119`，但建立位置不同：
+
+- formal `petup.lua`：`2005,(18,21)`
+- residue `petup1.lua~`：`2005,(23,1)`
+
+另外 residue 明確增加寵物「外形切換」流程，因此不能把它直接覆蓋到 formal 版本，也不能從 extension 名稱推導這是應該啟用的版本。
+
+目前 repository 沒找到 `petup1.lua~` 的精確 ABLua loader / binding；而 RO0000 的預設 `data/npc/lua/init.lua` 入口本身缺失，所以 runtime admission 仍保持：
+
+`runtimeEligibility=unproven`
+
+分類：
+
+`alternate-feature-version-with-formal-sibling`
+
+這表示目前已知它是「版本型功能殘留」，但還沒有足夠 source provenance 選定 canonical 版本。公開 ABLua 資料只作為執行模型旁證，不作版本選擇依據。citeturn890430search5turn148163search6
+
 ## soccer.lua~ 版本／功能殘留判定
 
 `hydata/data/ablua/npc/duqiu/soccer.lua~` 的內容不是空殼，也不是單純設定檔：它的 `main()` 會建立三個 NPC 並綁定對話、窗口、循環事件，且會持續讀寫同目錄的 `soccer.txt`。
