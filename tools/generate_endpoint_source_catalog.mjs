@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, 'data', 'generated', 'stoneage_endpoint_source_catalog.json');
-const VM_SETUP_GUIDE = 'ro0000/docs/搭建教程.txt';
+const MANUAL_SETUP_GUIDE = 'ro0000/docs/搭建教程.txt';
 const MANUAL_WWWROOT = 'ro0000/server/merged-source/wwwroot/';
 
 const SCOPES = [
@@ -14,21 +14,21 @@ const SCOPES = [
     provenance: 'manual-external-web',
     root: MANUAL_WWWROOT,
     gitPath: 'ro0000/server/merged-source/wwwroot',
-    description: '手工外網端 Web root；這是唯一被指定為手工外網端的 wwwroot 路徑。'
+    description: '手工外網端 Web root。'
   },
   {
-    id: 'vm-setup-guide',
-    provenance: 'vm-one-click',
-    root: VM_SETUP_GUIDE,
-    gitPath: VM_SETUP_GUIDE,
-    description: 'VM 一鍵端來源中的架設／操作教程；檔名不改變其來源角色。'
+    id: 'manual-build-guide',
+    provenance: 'manual-external-web',
+    root: MANUAL_SETUP_GUIDE,
+    gitPath: MANUAL_SETUP_GUIDE,
+    description: '手工外網端架設／操作教程。'
   },
   {
     id: 'vm-merged-source',
     provenance: 'vm-one-click',
     root: 'ro0000/server/merged-source/',
     gitPath: 'ro0000/server/merged-source',
-    description: 'VM 一鍵端 Server/Web 原始快照；唯一排除手工外網 wwwroot 子樹。'
+    description: 'VM 一鍵端 Server/Web 原始快照；排除指定的手工外網 wwwroot 子樹。'
   },
   {
     id: 'vm-database',
@@ -87,7 +87,7 @@ function parseTree() {
 }
 
 function classify(filePath) {
-  if (filePath === VM_SETUP_GUIDE) return 'vm-setup-guide';
+  if (filePath === MANUAL_SETUP_GUIDE) return 'manual-build-guide';
   if (filePath.startsWith(MANUAL_WWWROOT)) return 'manual-webroot';
   if (filePath.startsWith('ro0000/server/merged-source/')) return 'vm-merged-source';
   if (filePath.startsWith('ro0000/server/database/')) return 'vm-database';
@@ -136,7 +136,7 @@ const scopeResults = SCOPES.map(scope => {
     stats
   };
 
-  if (scope.id === 'vm-setup-guide' || scope.id === 'vm-build-guide') {
+  if (scope.id === 'manual-build-guide' || scope.id === 'vm-build-guide') {
     result.blobSha = files.length === 1 ? files[0].blobSha : null;
   }
 
@@ -145,7 +145,7 @@ const scopeResults = SCOPES.map(scope => {
       exactPathPrefix: MANUAL_WWWROOT,
       provenance: 'manual-external-web',
       treeSha: getTreeSha('ro0000/server/merged-source/wwwroot'),
-      reason: 'Only this exact wwwroot subtree is manual external web data.'
+      reason: 'This exact wwwroot subtree is manual external web data; the separate manual tutorial is classified independently.'
     }];
   }
 
@@ -167,9 +167,10 @@ const catalog = {
   purpose: 'Provenance and completeness index for the most complete practical deployment corpus. This catalog is distinct from the pinned fixed-C world source catalog.',
   provenanceClaim: '依專案已確認來源，VM 一鍵端與手工外網端均為可直接架設石器時代手游之實際部署資料複製件；此 provenance 本身不等同於逐檔 runtime boot proof。',
   exactManualExternalRules: [
+    MANUAL_SETUP_GUIDE,
     MANUAL_WWWROOT
   ],
-  vmOneClickRule: '在本 catalog 的原始 endpoint corpus 範圍內，除唯一手工外網端路徑外，其餘全部標記為 VM 一鍵端。',
+  vmOneClickRule: '在本 catalog 的原始 endpoint corpus 範圍內，除上述兩個手工外網端路徑外，其餘全部標記為 VM 一鍵端。',
   explicitClassificationExample: {
     path: 'ro0000/server/merged-source/www/wwwroot/',
     provenance: 'vm-one-click',
