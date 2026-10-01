@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
+import { sourcePlayerMaxGold } from '../src/stoneage_item_economy_runtime.mjs';
 import { normalizeRewardPacket, rewardTransactionValidation, applyRewardTransaction, MAX_CARRIED_ITEMS } from '../src/stoneage_reward_transaction.mjs';
 
 const state=freshPersistentState({now:()=> '2026-09-30T01:00:00.000Z'});
@@ -38,6 +39,19 @@ assert.equal(duplicate.applied,false);
 assert.equal(duplicate.idempotent,true);
 assert.equal(duplicate.state.player.gold,125);
 
+const goldCap=freshPersistentState({now:()=> '2026-09-30T01:30:00.000Z'});
+const maxGold=sourcePlayerMaxGold(goldCap);
+goldCap.player.gold=maxGold-1;
+const overCap=applyRewardTransaction(goldCap,{transactionId:'battle-gold-over-cap',source:'battle-result:cap-check',playerExp:10,gold:2,items:[],petCredits:[]},{now:()=> '2026-09-30T01:31:00.000Z'});
+assert.equal(overCap.applied,false);
+assert.equal(overCap.reason,'reward-would-exceed-source-max-gold-cap');
+assert.equal(overCap.currentGold,maxGold-1);
+assert.equal(overCap.rewardGold,2);
+assert.equal(overCap.maxGold,maxGold);
+assert.equal(overCap.state.player.gold,maxGold-1);
+assert.equal(overCap.state.player.exp,0);
+assert.equal(overCap.state.revision,0);
+
 const unknown=rewardTransactionValidation({transactionId:'battle-2',source:'x',playerExp:1,items:[{existingIndex:999999,count:1}]},{inventorySlots:Array(24).fill(null),knownExistingItemIds:new Set([201])});
 assert.equal(unknown.ok,false);
 assert.ok(unknown.errors.some(x=>x.includes('unknown existing item index')));
@@ -51,4 +65,4 @@ assert.equal(noPartial.reason,'inventory-full-before-transaction-commit');
 assert.equal(full.player.exp,0);
 assert.equal(full.player.gold,0);
 
-console.log(JSON.stringify({pass:true,format:'stoneage-reward-transaction-v1',idempotent:true,atomicInventoryFull:true,maxCarriedItems:MAX_CARRIED_ITEMS}));
+console.log(JSON.stringify({pass:true,format:'stoneage-reward-transaction-v1',idempotent:true,atomicInventoryFull:true,goldCapGuard:true,maxCarriedItems:MAX_CARRIED_ITEMS}));
