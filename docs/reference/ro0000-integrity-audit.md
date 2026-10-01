@@ -239,7 +239,7 @@ node tools/check_ro0000_integrity.mjs
 
 下一步可依 runtime 影響度逐檔閉合 residue；沒有新的 authoritative evidence 時，不進行物理刪除。
 
-## 本輪孤立 residue 語義追查
+本輪結構稽核另確認：54 個 backup-like residue 中，44 個在其他路徑有相同 blob、10 個為孤立 SHA；15 個存在 formal base candidate，但其中與 formal base blob 完全相同者為 0。換言之，有正式同名底檔並不代表它是可丟棄的 byte-identical 備份；目前仍沒有僅憑 SHA 就能安全刪除的項目。\n\n## 本輪孤立 residue 語義追查
 
 目前 54 個 backup/edit-like residue 中有 10 個 blob SHA 沒有任何其他路徑副本。這 10 個不再統一視為垃圾，而是進入內容級 provenance 分層。
 
