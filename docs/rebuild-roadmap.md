@@ -5,6 +5,13 @@
 
 
 
+## 2026-10-01 V4.25 follow-up：Remove Battle Context Clear bypass
+
+對 Clear gate 做第二次 bypass audit 時發現 controller 舊有 `IDLE_EVENTS.DISABLE → battleContext=null` 路徑可以繞過 Player Exit / Pet Exit。
+
+本輪已移除該直接清除路徑，現在 Battle Context 只有初始化與兩個經過 `BATTLE_CONTEXT_CLEAR` gate 驗證的 clear path 可以設為 `null`。
+
+新增 controller bypass regression，CI 同時檢查 source pattern，避免未來又把 idle disable 當成 battle cleanup。
 ## 2026-10-01 V4.25 follow-up：Explicit Battle Context Clear gate
 
 Player Exit → Pet Exit 已經有 receipt / revision binding；本輪再把最後的 transient cleanup 明確拆成 `BATTLE_CONTEXT_CLEAR` gate。
