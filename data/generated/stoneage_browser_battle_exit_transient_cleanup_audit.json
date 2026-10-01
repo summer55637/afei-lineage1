@@ -1,0 +1,45 @@
+{
+  "format":"stoneage-browser-battle-exit-transient-cleanup-audit-v1",
+  "generatedAt":"2026-10-01",
+  "fixedSource":{
+    "repository":"gavinlinasd/StoneAge",
+    "ref":"1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "function":"BATTLE_Exit"
+  },
+  "playerTransientCleanup":{
+    "battleMode":"BATTLE_CHARMODE_FINAL",
+    "battleIndex":-1,
+    "badStatusClear":"BATTLE_BadStatusAllClr(player)",
+    "compliance":"CHAR_complianceParameter(player)",
+    "skillupSend":true,
+    "positionStatusSend":true,
+    "implementation":"transient Battle Context is discarded only after V4.21 final-exit commit"
+  },
+  "petTransientCleanup":{
+    "battleMode":"BATTLE_CHARMODE_NONE",
+    "battleIndex":-1,
+    "badStatusClear":"BATTLE_BadStatusAllClr(pet)",
+    "compliance":"CHAR_complianceParameter(pet)",
+    "mailPetSkipped":true,
+    "implementation":"Transient pet battle state is discarded with Battle Context; Persistent pet data only receives source-closed HP cleanup through V4.21."
+  },
+  "ridePet":{
+    "source":"CHAR_WORKPETFALL / CHAR_RIDEPET",
+    "behavior":"when CHAR_WORKPETFALL is set, fixed-C clears ride marker to -2, sends status, then normalizes to -1",
+    "browserPersistentRepresentation":null,
+    "policy":"not synthesized because canonical Persistent State has no source-closed ridePetId/ride status"
+  },
+  "becomePig":{
+    "source":"CHAR_BECOMEPIG",
+    "behavior":"when enabled for Player under _PETSKILL_BECOMEPIG, fixed-C restores base image and compliance on final exit",
+    "browserPersistentRepresentation":null,
+    "policy":"not synthesized because current Persistent State has no source-closed image/BecomePig lifecycle field"
+  },
+  "statusSend":{
+    "hpMp":"CHAR_P_STRING_HP | CHAR_P_STRING_MP included",
+    "ridePet":"CHAR_P_STRING_RIDEPET included",
+    "petStatus":"CHAR_K_STRING_* status payload is transient network output",
+    "policy":"network sends are not represented as persistent mutations"
+  },
+  "closureRule":"No persistent field is invented for transient Exit cleanup; clearing the in-memory Battle Context after final commit is the canonical Browser teardown."
+}
