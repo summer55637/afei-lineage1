@@ -59,4 +59,10 @@ assert.equal(petDone.state.revision,9);
 assert.equal(petDone.state.pets.petBox[0].hp,1);
 assert.equal(petDone.state.runtimeMeta.battleExitTransactions['exit-pet-425'].playerExitTransactionId,'exit-player-425');
 
+const petReplay=commitBattleExit(petDone.state,petPlan,{transactionId:'exit-pet-425',expectedRevision:8});
+assert.equal(petReplay.ok,true,JSON.stringify(petReplay));
+assert.equal(petReplay.idempotent,true);
+assert.equal(petReplay.applied,false);
+assert.equal(petReplay.state.revision,9);
+
 console.log('V4.25 Browser Battle settlement receipt-bound exit gate regression: PASS');
