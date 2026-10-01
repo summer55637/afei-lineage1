@@ -6,11 +6,12 @@
   "counts": {
     "trackedFiles": 8751,
     "backupLike": 54,
-    "multipartArg": 28
+    "multipartArg": 28,
+    "indexedNpcInitArgumentRecords": 28
   },
   "rules": {
     "backupLike": "review-required-residue; extension alone is not evidence for deletion",
-    "multipartArg": "preserve-multipart-argument; treat as structured parameter fragments until parser/runtime provenance closes",
+    "multipartArg": "legacy inventory key for numbered .argN paths; do not assume byte fragments; family manorsman/scheduleman files are indexed NPC initialization records",
     "rawSnapshot": "do-not-rearrange-or-delete"
   },
   "backupLike": [
@@ -581,7 +582,7 @@
       "sourceRole": "vm-one-click",
       "size": 61,
       "sha": "7fab5f6abe69ffe8a7861b1af651aaac6078e803",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg1",
         "sha": "895f1ca71051442ea9629a853b40930b307b300f",
@@ -593,7 +594,7 @@
       "sourceRole": "vm-one-click",
       "size": 61,
       "sha": "191816017ab7fbfa10e051e21d4954ec6d9a59ae",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg2",
         "sha": "7ed7b2637a3ff489f706adce23630fc3acf57d16",
@@ -605,7 +606,7 @@
       "sourceRole": "vm-one-click",
       "size": 61,
       "sha": "de43e3142e6c2c985aec69805a0508ecd3cbd8f0",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg3",
         "sha": "b827b1cd49a7a47205fdc917bcc701fe8698dcc4",
@@ -617,7 +618,7 @@
       "sourceRole": "vm-one-click",
       "size": 61,
       "sha": "1cccf1873c057f0ae24ec530fa0cc8aea45a5cb8",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg4",
         "sha": "e590b06d37898ebbdf4eb047c9347ddb3b99b007",
@@ -629,7 +630,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg5",
         "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
@@ -641,7 +642,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg6",
         "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
@@ -653,7 +654,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg7",
         "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
@@ -665,7 +666,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg8",
         "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
@@ -677,7 +678,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg9",
         "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
@@ -689,7 +690,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg1",
         "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
@@ -701,7 +702,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg2",
         "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
@@ -713,7 +714,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg3",
         "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
@@ -725,7 +726,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg4",
         "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
@@ -737,7 +738,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg5",
         "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
@@ -749,7 +750,7 @@
       "sourceRole": "vm-one-click",
       "size": 87,
       "sha": "895f1ca71051442ea9629a853b40930b307b300f",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg1",
         "sha": "7fab5f6abe69ffe8a7861b1af651aaac6078e803",
@@ -761,7 +762,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "7ed7b2637a3ff489f706adce23630fc3acf57d16",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg2",
         "sha": "191816017ab7fbfa10e051e21d4954ec6d9a59ae",
@@ -773,7 +774,7 @@
       "sourceRole": "vm-one-click",
       "size": 86,
       "sha": "b827b1cd49a7a47205fdc917bcc701fe8698dcc4",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg3",
         "sha": "de43e3142e6c2c985aec69805a0508ecd3cbd8f0",
@@ -785,7 +786,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "e590b06d37898ebbdf4eb047c9347ddb3b99b007",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg4",
         "sha": "1cccf1873c057f0ae24ec530fa0cc8aea45a5cb8",
@@ -797,7 +798,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg5",
         "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
@@ -809,7 +810,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg6",
         "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
@@ -821,7 +822,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg7",
         "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
@@ -833,7 +834,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg8",
         "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
@@ -845,7 +846,7 @@
       "sourceRole": "vm-one-click",
       "size": 62,
       "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg9",
         "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
@@ -857,7 +858,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg1",
         "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
@@ -869,7 +870,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg2",
         "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
@@ -881,7 +882,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg3",
         "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
@@ -893,7 +894,7 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg4",
         "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
@@ -905,11 +906,79 @@
       "sourceRole": "vm-one-click",
       "size": 81,
       "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
-      "classification": "multipart-argument-fragment",
+      "classification": "indexed-npc-init-argument-record",
       "counterpart": {
         "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg5",
         "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
         "sameBlob": true
+      }
+    }
+  ],
+  "argumentGroups": [
+    {
+      "stem": "manorsman",
+      "classification": "indexed-npc-init-argument-records",
+      "data": {
+        "count": 9,
+        "indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      "hydata": {
+        "count": 9,
+        "indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      "counterpartComparison": {
+        "sameBlob": 5,
+        "differentBlob": 4,
+        "missing": 0
+      }
+    },
+    {
+      "stem": "scheduleman",
+      "classification": "indexed-npc-init-argument-records",
+      "data": {
+        "count": 5,
+        "indices": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "hydata": {
+        "count": 5,
+        "indices": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "counterpartComparison": {
+        "sameBlob": 5,
+        "differentBlob": 0,
+        "missing": 0
       }
     }
   ]
