@@ -239,6 +239,43 @@ for(const entry of mapFiles){
   else { nonLs2map++; if(mapNonMatches.length<20) mapNonMatches.push(entry.path); }
 }
 
+function exactNumericCellCount(rel, token){
+  const raw=fs.readFileSync(path.join(ROOT,rel),'utf8');
+  let count=0;
+  for(const line of raw.split(/\r?\n/)){
+    for(const cell of line.split(',')){
+      if(cell.trim()===String(token)) count++;
+    }
+  }
+  return count;
+}
+function lineCount(rel){
+  const raw=fs.readFileSync(path.join(ROOT,rel),'utf8');
+  return raw.split(/\r?\n/).filter(Boolean).length;
+}
+const variantSemanticProbe = {
+  itemset6: ['data','hydata'].map(kind=>{
+    const rel=(kind==='data'?dataPrefix:hyPrefix)+'itemset6.csv';
+    return {
+      endpoint:kind,
+      path:rel,
+      sha:(kind==='data'?dataMap.get('itemset6.csv'):hyMap.get('itemset6.csv')).sha,
+      bytes:fs.statSync(path.join(ROOT,rel)).size,
+      rows:lineCount(rel),
+      exactNumericToken32003:exactNumericCellCount(rel,32003),
+      exactNumericToken24114:exactNumericCellCount(rel,24114)
+    };
+  }),
+  highImpactDifferingFiles:['enemy1.txt','enemybase1.txt','group1.txt','map/mapwarp.txt','petskill2.txt','skillcode.txt'].map(rel=>({
+    path:rel,
+    dataSha:dataMap.get(rel)?.sha??null,
+    hydataSha:hyMap.get(rel)?.sha??null,
+    dataBytes:dataMap.get(rel)?.size??null,
+    hydataBytes:hyMap.get(rel)?.size??null,
+    differs:dataMap.has(rel)&&hyMap.has(rel)&&dataMap.get(rel).sha!==hyMap.get(rel).sha
+  }))
+};
+
 const triageReportPath=path.join(ROOT,'data/generated/stoneage_ro0000_dependency_triage.json');
 if(!fs.existsSync(triageReportPath)) throw new Error('missing generated ro0000 dependency triage report');
 const triageReport=JSON.parse(fs.readFileSync(triageReportPath,'utf8'));
@@ -275,6 +312,7 @@ console.log(JSON.stringify({
   rawResidue:{backupLikeFiles:backupLike.length,multipartArgFiles:multipartArg.length,zeroSizeFiles:zeroSize.length,duplicateBlobGroups:duplicateGroups.length,crossGmsvDataHydataDuplicateGroups:crossMirrorDuplicateGroups.length},
   setupDataPathCheck:{references:setupRefs.length,missingCount:setupMissing.length,missing:setupMissing},
   anomalyTriage,
+  variantSemanticProbe,
   binaryChecks,
   sqlCheck,
   coreDataChecks,
