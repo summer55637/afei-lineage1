@@ -1,0 +1,23 @@
+{
+  "format": "stoneage-v400-browser-battle-attack-preflight-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_ATTACK_PREFLIGHT",
+  "fixedC": {
+    "sourceFunction": "gmsv/src/battle/battle_event.c::BATTLE_Attack",
+    "hardGates": [
+      "attack BATTLE_No2Index must resolve",
+      "target BATTLE_No2Index must resolve",
+      "target HP > 0",
+      "attacker HP > 0"
+    ],
+    "damageReact": "BATTLE_GetDamageReact(attacker)>0 or target>0 sets iRet=FALSE but source still calls BATTLE_AttackSeq",
+    "callerChain": "BATTLE_TargetAdjust invalid target -> BATTLE_DefaultAttacker(opposite side) before BATTLE_Attack for ordinary non-bow commands"
+  },
+  "browser": {
+    "chain": "requested target -> target eligibility -> default target fallback if needed -> final HP gate",
+    "defaultTargetRoll": "caller-injected",
+    "persistentMutation": false,
+    "damageExecuted": false,
+    "rngInternal": false
+  }
+}
