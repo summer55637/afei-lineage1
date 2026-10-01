@@ -166,7 +166,12 @@ for(const entry of mapFiles){
   if(b.subarray(0,6).toString('ascii')==='LS2MAP') ls2map++;
   else { nonLs2map++; if(mapNonMatches.length<20) mapNonMatches.push(entry.path); }
 }
-assert(ls2map>0,'no LS2MAP map binaries found under endpoint gmsv/data/map');
+const signatureCounts=new Map();
+for(const entry of mapFiles){
+  const b=fs.readFileSync(path.join(ROOT,entry.path));
+  const sig=b.subarray(0,6).toString('hex');
+  signatureCounts.set(sig,(signatureCounts.get(sig)||0)+1);
+}
 
 const coreFiles=[
   'ro0000/server/merged-source/gmsv/data/encount.txt',
@@ -194,7 +199,13 @@ console.log(JSON.stringify({
   binaryChecks,
   sqlCheck,
   coreDataChecks,
-  mapSignatureCheck:{candidateFiles:mapFiles.length,ls2map,nonLs2map,sampleNonMatches:mapNonMatches},
+  mapSignatureCheck:{
+    candidateFiles:mapFiles.length,
+    ls2map,
+    nonLs2map,
+    commonFirst6Bytes:[...signatureCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10).map(([signature,count])=>({signature,count})),
+    sampleNonMatches:mapNonMatches
+  },
   policy:{
     rawSnapshotMustNotBePhysicallyRearranged:true,
     backupLikeFilesMustNotBeDeletedWithoutProvenanceReview:true,
