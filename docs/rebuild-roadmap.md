@@ -1613,3 +1613,26 @@ Controller integration：
 - `ACTION_BATTLE_END_PLAN`
 - `BROWSER_BATTLE_END_RUNTIME_FORMAT`
 
+## 2026-10-01 V4.09 Browser Battle Finish Commit
+
+V4.09 接續 V4.08 Battle End Plan，升格 fixed-C BATTLE_FinishSet() 的 mode transition：
+
+- battle mode `battle` → `finish`
+- sourceMode 2 → BATTLE_MODE_FINISH = 3
+- 保存 V4.08 winnerSide / finishReason 到 ephemeral Battle Context
+- 重複 finish commit fail-closed
+- 不執行 Reward、EXP、Gold、BATTLE_Exit 或 Persistent State
+
+fixed-C BATTLE_FinishSet() 的核心效果只有 BattleArray[battleindex].mode = BATTLE_MODE_FINISH；V4.09 先閉合這個 state boundary，不把 BATTLE_Finish() 的後續結算混進來。
+
+新增：
+- `src/stoneage_browser_battle_finish_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_finish_commit_schema.json`
+- `tools/check_v409_browser_battle_finish_commit.mjs`
+- `docs/reference/v409-browser-battle-finish-commit.md`
+- `.github/workflows/check-v409-browser-battle-finish-commit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_FINISH_COMMIT`
+- `BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT`
+
