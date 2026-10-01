@@ -579,7 +579,10 @@ function createBrowserStateController({
         };
       }
       if(type===ACTION_BATTLE_EXIT_COMMIT){
-        if(!battleContext)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'battle-context-required',state:clone(currentState)};
+        const replayTx=String(action.transactionId??'').trim();
+        const replayBucket=currentState?.runtimeMeta?.battleExitTransactions;
+        const replayKnown=!!(replayTx && isObject(replayBucket) && replayBucket[replayTx]);
+        if(!battleContext && !replayKnown)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'battle-context-required',state:clone(currentState)};
         if(battleExitCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'browser-battle-exit-commit-runtime-invalid',state:clone(currentState)};
         let exitPlan=action.battleExitPlan??null;
         if(!exitPlan){
