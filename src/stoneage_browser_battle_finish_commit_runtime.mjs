@@ -2,6 +2,8 @@ const BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT='stoneage-v409-browser-battle-
 const ACTION_BATTLE_FINISH_COMMIT='BATTLE_FINISH_COMMIT';
 const BATTLE_MODE_BATTLE=2;
 const BATTLE_MODE_FINISH=3;
+const BATTLE_FINISH_HOOK_AUDIT_FORMAT='stoneage-battle-finish-hook-audit-v1';
+const ORDINARY_WORLD_FINISH_HOOK_PROFILE='ordinary-world-encounter';
 
 const int=value=>{
   if(value==null||String(value).trim()==='')return null;
@@ -39,6 +41,17 @@ function commitBattleFinish(context,{
     return {ok:false,handled:false,stage:'battle-finish-commit',reason:'battle-already-finished',winnerSide:winner};
   }
 
+  const hook=context.context.finishHookProfile;
+  if(!hook||hook.auditFormat!==BATTLE_FINISH_HOOK_AUDIT_FORMAT){
+    return {ok:false,handled:false,stage:'battle-finish-commit',reason:'finish-hook-profile-required'};
+  }
+  if(hook.profile!==ORDINARY_WORLD_FINISH_HOOK_PROFILE){
+    return {ok:false,handled:false,stage:'battle-finish-commit',reason:'finish-hook-profile-not-first-idle-pve',profile:hook.profile??null};
+  }
+  if(hook.winFuncInjected!==false||hook.pkFuncInjected!==false||hook.dantai!==false||Number(hook.linkedBattleCount)!==0){
+    return {ok:false,handled:false,stage:'battle-finish-commit',reason:'finish-hook-special-branch-deferred'};
+  }
+
   const next=clone(context);
   next.context.mode='finish';
   next.context.sourceMode=BATTLE_MODE_FINISH;
@@ -72,7 +85,9 @@ function commitBattleFinish(context,{
     source:{
       repository:'gavinlinasd/StoneAge',
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
-      function:'BATTLE_FinishSet'
+      function:'BATTLE_FinishSet',
+      finishHookAudit:'stoneage-battle-finish-hook-audit-v1',
+      finishHookProfile:'ordinary-world-encounter'
     },
     battleContext:next
   };
