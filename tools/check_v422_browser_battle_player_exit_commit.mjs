@@ -9,7 +9,11 @@ import {
 const state={
   revision:3,
   player:{id:'p1',hp:42,mp:12,maxHp:100,maxMp:20},
-  runtimeMeta:{}
+  runtimeMeta:{
+    battleSettlementReceipts:{
+      'settle-1':{settlementId:'settle-1',startRevision:2,receiptRevision:3,finishMode:'finish',playerId:'p1',encounterId:null,dpbattle:0,playerDead:true,requiredBranches:[],transactions:[]}
+    }
+  }
 };
 const plan={
   ok:true,
@@ -18,6 +22,10 @@ const plan={
   format:'stoneage-v422-browser-battle-player-exit-plan-v1',
   action:'BATTLE_PLAYER_EXIT_PLAN',
   settlementComplete:true,
+  settlementReceiptBound:true,
+  settlementReceiptId:'settle-1',
+  settlementStartRevision:2,
+  settlementReceiptRevision:3,
   player:{
     playerId:'p1',
     persistentHpBefore:42,
