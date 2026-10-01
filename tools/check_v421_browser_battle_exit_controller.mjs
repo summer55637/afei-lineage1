@@ -116,7 +116,7 @@ const exitPlan=await controller.dispatch({
   petMailModeById:{'pet-dead':0,'pet-alive':0}
 });
 assert.equal(exitPlan.ok,true,JSON.stringify(exitPlan));
-assert.deepEqual(exitPlan.pets,[{petId:'pet-dead',hpBefore:0,hpAfter:1}]);
+assert.deepEqual(exitPlan.pets,[{petId:'pet-dead',hpBefore:0,hpAfter:1,mailMode:0}]);
 assert.equal(exitPlan.persistentStateMutation,false);
 assert.equal(exitPlan.battleContext.context.mode,'finish');
 
