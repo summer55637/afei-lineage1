@@ -99,7 +99,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 - `ro0000/` 是目前最完整實機／部署資料的保存入口，不再只視為一般外部參考資料。
 - 目前 `ro0000/` 已整理為：
-  - `server/merged-source/`：來源規則已校正：只有 `wwwroot/` 資料夾屬手工外網端；其餘快照資料均屬 VM 一鍵端。
+  - `server/merged-source/`：其中全部資料均屬 VM 一鍵端；手工外網端只有另外明確指定的 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`。
   - `server/database/175sa.sql`：資料庫參考，屬 VM 一鍵端。
   - `client/android/冰河石器-隐盟.apk`：Android Client 主程式／研究參考。
   - `docs/搭建教程.txt`：手工外網端架設教程。
