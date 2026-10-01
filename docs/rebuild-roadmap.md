@@ -5,6 +5,19 @@
 
 
 
+## 2026-10-01 V4.25 follow-up：Explicit Battle Context Clear gate
+
+Player Exit → Pet Exit 已經有 receipt / revision binding；本輪再把最後的 transient cleanup 明確拆成 `BATTLE_CONTEXT_CLEAR` gate。
+
+- 新增 `stoneage_browser_battle_context_clear_runtime.mjs`。
+- Clear 必須找到同一 settlement、同一 Player Exit transaction、同一 Pet Exit transaction。
+- Player Exit `revisionAfter` 必須等於 Pet Exit `revisionBefore`。
+- Pet Exit `revisionAfter` 必須等於目前 Persistent State revision。
+- `BATTLE_EXIT_COMMIT` 成功後仍使用同一 gate 自動清除 Battle Context，保留既有呼叫相容性。
+- Browser State Controller 同時公開 `BATTLE_CONTEXT_CLEAR`，可作為明確 lifecycle boundary。
+- 新增 schema、reference、regression 與 V4.25 workflow coverage。
+
+這一輪仍沒有新增 EXP、Gold、Item、RNG 或 death policy；只是把 `Player Exit → Pet Exit → Context Clear` 的最後一段做成 source-backed runtime lifecycle contract。
 ## 2026-10-01 V4.25 follow-up：Lock Player Exit → Pet Exit → Battle Context Clear order
 
 V4.25 的 settlement receipt gate 已經證明「這場結算真的存在」；本輪再把 outer lifecycle 的執行順序也做成不可跳步的 runtime contract。
