@@ -6,6 +6,7 @@ import {
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   ACTION_BATTLE_DEATH_PLAN,
   ACTION_BATTLE_DEATH_COMMIT,
+  ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_END_PLAN,
   ACTION_BATTLE_FINISH_COMMIT,
   ACTION_BATTLE_PLAYER_EXIT_PLAN,
@@ -49,6 +50,10 @@ let result=await controller.dispatch({
 });
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.ok(controller.getBattleContext());
+
+result=await controller.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
+assert.equal(result.ok,true,JSON.stringify(result));
+assert.equal(result.battleContext.context.sourceMode,2);
 
 result=await controller.dispatch({type:ACTION_BATTLE_DEATH_PLAN,targetBid:15,hp:0});
 assert.equal(result.ok,true,JSON.stringify(result));
