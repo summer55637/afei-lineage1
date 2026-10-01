@@ -1,0 +1,401 @@
+function ShowReadMe( meindex, talkerindex, page)
+		token = TM_ReadMe[page+1]
+		
+		if maxpage == 0 then
+			button = 8
+		elseif page == 0 and page < maxpage then
+			button = 40
+		elseif page > 0 and page < maxpage then
+			button = 56
+		elseif page == maxpage then
+			button = 24
+		end
+		lssproto.windows(talkerindex, "对话框", button, 1100 + page, char.getWorkInt( meindex, "对象"), token)
+end
+
+function fishsortPointTimeDsc(a, b)
+	if a.fishpoint == b.fishpoint then
+		return a.fishtime < b.fishtime
+	else
+		return a.fishpoint > b.fishpoint
+	end
+end
+
+function fishPaiMing(mycdkey,mypoint)
+	no1pkpoint = 0
+	no1cdkey = ""
+	no1name = ""
+	
+	no2pkpoint = 0
+	no2cdkey = ""
+	no2name = ""
+	
+	no3pkpoint = 0
+	no3cdkey = ""
+	no3name = ""
+	
+	no4pkpoint = 0
+	no4cdkey = ""
+	no4name = ""
+	
+	no5pkpoint = 0
+	no5cdkey = ""
+	no5name = ""
+	if mycdkey ~= "" then
+		for i=1,table.getn(fishwindata) do
+			if mycdkey == fishwindata[i].fishcdkey then
+				fishwindata[i].fishpoint = fishwindata[i].fishpoint + mypoint
+				fishwindata[i].fishtime = other.time()
+				break
+			end
+		end
+	end
+	table.sort(fishwindata, fishsortPointTimeDsc)
+	if table.getn(fishwindata) >= 1 then
+		if fishwindata[1].fishpoint > 0 then
+			no1pkpoint = fishwindata[1].fishpoint
+			no1cdkey = fishwindata[1].fishcdkey
+			no1name = fishwindata[1].fishname
+		end
+	end
+	if table.getn(fishwindata) >= 2 then
+		if fishwindata[2].fishpoint > 0 then
+			no2pkpoint = fishwindata[2].fishpoint
+			no2cdkey = fishwindata[2].fishcdkey
+			no2name = fishwindata[2].fishname
+		end
+	end
+	if table.getn(fishwindata) >= 3 then
+		if fishwindata[3].fishpoint > 0 then
+			no3pkpoint = fishwindata[3].fishpoint
+			no3cdkey = fishwindata[3].fishcdkey
+			no3name = fishwindata[3].fishname
+		end
+	end
+	if table.getn(fishwindata) >= 4 then
+		if fishwindata[4].fishpoint > 0 then
+			no4pkpoint = fishwindata[4].fishpoint
+			no4cdkey = fishwindata[4].fishcdkey
+			no4name = fishwindata[4].fishname
+		end
+	end
+	if table.getn(fishwindata) >= 5 then
+		if fishwindata[5].fishpoint > 0 then
+			no5pkpoint = fishwindata[5].fishpoint
+			no5cdkey = fishwindata[5].fishcdkey
+			no5name = fishwindata[5].fishname
+		end
+	end
+	return 0
+end
+
+function Loop(meindex)
+	--if Hour ==  tonumber(os.date("%H", os.time())) then
+	--if tonumber(os.date("%w", os.time())) == 0 or tonumber(os.date("%w", os.time())) == 2 or tonumber(os.date("%w", os.time())) == 4 or tonumber(os.date("%w", os.time())) == 6 then
+		--if todaydate ~= os.date("%x", os.time()) then
+		--	start = 0
+		--	todaydate = os.date("%x", os.time())
+		--end
+		if (tonumber(os.date("%w", os.time())) == 3 or tonumber(os.date("%w", os.time())) == 6) and tonumber(os.date("%H", os.time())) == 19 then
+			if tonumber(os.date("%M", os.time())) == 0 then
+				buyu(-1,"1")
+			end
+		end
+		if start == 1 and starttime + 1800 < other.time() then
+			buyu(-1,"0")
+		end
+		if num1 < 50 then
+			for ii=1,50 do
+				local rnd = math.random(100)
+				if rnd <= 30 then
+					i = 1
+				elseif rnd <= 50 then
+					i = 2
+				elseif rnd <= 68 then
+					i = 3
+				elseif rnd <= 80 then
+					i = 4
+				elseif rnd <= 88 then
+					i = 5
+				elseif rnd <= 94 then
+					i = 6
+				elseif rnd <= 98 then
+					i = 7
+				elseif rnd <= 100 then
+					i = 8
+				end
+				local fishindex = Create(npcdata[i][1], npcdata[i][2], 60502, math.random(17,34), math.random(15,30), npcdata[i][3],2 )
+				char.setWorkInt(fishindex,"NPC临时1",i)
+			end
+		end
+		if start == 1 then
+			if num2 < 50 then
+				for ii=1,50 do
+					local rnd = math.random(100)
+					if rnd <= 30 then
+						i = 1
+					elseif rnd <= 50 then
+						i = 2
+					elseif rnd <= 68 then
+						i = 3
+					elseif rnd <= 80 then
+						i = 4
+					elseif rnd <= 88 then
+						i = 5
+					elseif rnd <= 94 then
+						i = 6
+					elseif rnd <= 98 then
+						i = 7
+					elseif rnd <= 100 then
+						i = 8
+					end
+					local fishindex = Create(npcdata[i][1], npcdata[i][2], 60503, math.random(17,34), math.random(15,30), npcdata[i][3] * 2,2 )
+					char.setWorkInt(fishindex,"NPC临时1",i)
+				end
+			end
+			char.talkToServer(-1,"[激情捕鱼]每周三、周六19:00-19:30，活动捕鱼正在进行中，快来医院(12.20)参加吧！有稀有鱼类捕获哦！", "随机色")
+			char.talkToServer(-1,"[激情捕鱼]每周三、周六19:00-19:30，活动捕鱼正在进行中，快来医院(12.20)参加吧！有稀有鱼类捕获哦！", "随机色")
+			char.talkToServer(-1,"[激情捕鱼]每周三、周六19:00-19:30，活动捕鱼正在进行中，快来医院(12.20)参加吧！有稀有鱼类捕获哦！", "随机色")
+		end
+	--[[elseif Hour + 1 ==  tonumber(os.date("%H", os.time())) then
+		if num == 0 then
+			if start == 1 then
+				start = 2
+				Create("BOSS", 105009, floorid, 60, 77, 0,3 )
+				char.talkToServer(-1,"[龙域副本]可怕的龙王[烈焰神龙]带着他的2个副将[黑暗魔龙]、[黑暗翼龙]降临了！！！")
+			end
+		elseif num <= 3 then
+			char.talkToServer(-1,"[龙域副本]目前幼龙还有" .. num .. "只，大家速度把他们消灭吧，世界BOSS[烈焰神龙]即将率众赶来。", "随机色")
+		end
+	end]]
+	--else
+	--	start = 0
+	--end
+end
+
+function DelFish(meindex)
+	local myfloorid = char.getInt(meindex,"地图号")
+	npc.DelNpc(meindex)
+	if myfloorid == 60502 then
+		num1 = num1 - 1
+	elseif myfloorid == 60503 then
+		num2 = num2 - 1
+	end
+	return 0
+end
+
+function EnemyLoop(meindex)
+	if start == 1 or char.getInt(meindex,"地图号") == 60502 then
+		if char.getWorkInt(meindex,"NPC临时1") < 1 then
+			char.setInt(meindex, "循环事件时间", math.random(1000,1500))
+		else
+			char.setInt(meindex, "循环事件时间", math.random(npcdata[char.getWorkInt(meindex,"NPC临时1")][4][1],npcdata[char.getWorkInt(meindex,"NPC临时1")][4][2]))
+		end
+		char.RandRandWalk(meindex)
+		if char.getInt(meindex,"坐标Y") >= 35 then
+			DelFish(meindex)
+		end
+	else
+		DelFish(meindex)
+	end
+end
+
+
+
+
+function Talked(meindex, talkerindex , szMes, color )
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		token = "捕鱼达人|副本内有各种各样的鱼类\n玩家可以通过攻击来击杀\n鱼类获得物品|3|进入娱乐捕鱼场|进入活动捕鱼场|查看副本说明"
+		lssproto.windows(talkerindex, "新选择框", "取消", 0, char.getWorkInt( meindex, "对象"), token)
+	end
+end
+
+function WindowTalked ( meindex, talkerindex, seqno, select, data)
+	if select == 2 or select == 8 then
+		return
+	end
+	if seqno == 0 then
+		id = other.atoi(data)
+		if id == 1 then
+			char.AllWarpToSpecificPoint(talkerindex, 60502, 24, 49)
+		elseif id == 2 then
+			--if start > 0 then
+				if char.getWorkInt(talkerindex, "组队") ~= 0 then
+					char.TalkToCli(talkerindex, -1, "请解散团队后进入！", "随机色")
+					return
+				end
+				if table.getn(fishwindata) == 0 then
+					table.insert(fishwindata,{fishcdkey = char.getChar(talkerindex, "账号"),fishname = char.getChar(talkerindex, "名字"),fishpoint = 0,fishtime = other.time()})
+				else
+					local tempjinru = 0
+					for i=1,table.getn(fishwindata) do
+						if fishwindata[i].fishcdkey == char.getChar(talkerindex, "账号") and fishwindata[i].fishname == char.getChar(talkerindex, "名字") then
+							tempjinru = 1
+							break
+						end
+					end
+					if tempjinru == 0 then
+						table.insert(fishwindata,{fishcdkey = char.getChar(talkerindex, "账号"),fishname = char.getChar(talkerindex, "名字"),fishpoint = 0,fishtime = other.time()})
+					end
+				end
+				char.AllWarpToSpecificPoint(talkerindex, 60503, 24, 49)
+				char.TalkToCli(talkerindex, -1, "[温馨提示]激情捕鱼场开放时间每周三、周六 19:00-19：30，击杀激情场鱼类获得捕鱼点数，每次活动前三名有奖励，击杀五级以上鱼类有几率触发稀有鱼类捕捉！记得来参加哦！", "随机色")
+				char.setInt(talkerindex,"计数器",0)
+				char.setInt(talkerindex,"计时器",other.time())
+			--else
+				--token = "                〈 捕鱼达人 〉\n\n"
+				--	 .. "\n　　　　　〈 目前活动捕鱼场尚未开放 〉\n\n　　目前捕鱼娱乐系统正在公测中...\n　　娱乐捕鱼场全天开放 活动场请等待更新"
+				--lssproto.windows(talkerindex, "对话框", "取消", 0, -1, token)
+				--char.TalkToCli(talkerindex, -1, "活动还没开始", "随机色")
+			--	return
+			--end
+		elseif id == 3 then
+			ShowReadMe(meindex, talkerindex, 0)
+		end
+	elseif seqno >= 1100 and seqno < 2000 then
+		id = seqno - 1100
+		if select == 16 then
+			ShowReadMe(meindex, talkerindex, id - 1)
+		elseif select == 32 then
+			ShowReadMe(meindex, talkerindex, id + 1)
+		end
+	end
+end
+
+
+function Create(name, metamo, floorid, x, y, hp,npctype)
+	local dir = 0
+	if npctype == 1 then
+		dir = 6
+	end
+	index = npc.CreateNpc(name, metamo, floorid, x, y, dir)
+	if char.check(index) == 1 then
+		if npctype == 1 then
+			char.setFunctionPointer(index, "对话事件", "Talked", "")
+			char.setFunctionPointer(index, "窗口事件", "WindowTalked", "")
+			char.setFunctionPointer(index, "循环事件", "Loop", "")
+			char.setInt(index, "循环事件时间", 60000)
+		elseif npctype == 2 then
+			if floorid == 60502 then
+				num1 = num1 + 1
+			elseif floorid == 60503 then
+				num2 = num2 + 1
+			end
+			char.setFunctionPointer(index, "循环事件", "EnemyLoop", "")
+			char.setWorkInt(index,"最大HP",hp)
+			char.setInt(index,"HP",hp)
+			char.ToAroundChar(index)
+		end
+		return index
+	end
+	return -1
+end
+
+function buyu(charaindex, data)
+	local TM_data = other.atoi(data)
+	if TM_data == 0 then
+		if start == 1 then
+			start = 0
+			fishPaiMing("","",0)
+			if no1cdkey ~= "" then
+				char.talkToServer(-1,"[激情捕鱼]本次捕鱼活动结束，捕鱼冠军：" .. no1name .. "，共获得" .. no1pkpoint .. "捕鱼点，奖励3000金币。","随机色")
+				sasql.setVipPointForCdkey(no1cdkey,sasql.getVipPointForCdkey(no1cdkey) + 3000)
+			end
+			if no2cdkey ~= "" then
+				char.talkToServer(-1,"[激情捕鱼]本次捕鱼活动结束，捕鱼亚军：" .. no2name .. "，共获得" .. no2pkpoint .. "捕鱼点，奖励2000金币。","随机色")
+				sasql.setVipPointForCdkey(no2cdkey,sasql.getVipPointForCdkey(no2cdkey) + 2000)
+			end
+			if no3cdkey ~= "" then
+				char.talkToServer(-1,"[激情捕鱼]本次捕鱼活动结束，捕鱼季军：" .. no3name .. "，共获得" .. no3pkpoint .. "捕鱼点，奖励1000金币。","随机色")
+				sasql.setVipPointForCdkey(no3cdkey,sasql.getVipPointForCdkey(no3cdkey) + 1000)
+			end
+		end
+		if char.check(charaindex) == 1 then
+			char.TalkToCli(charaindex, -1, "捕鱼已经关闭", "青色")
+		end
+	else
+		if start == 0 then
+			no1pkpoint = 0
+			no1cdkey = ""
+			no1name = ""
+	
+			no2pkpoint = 0
+			no2cdkey = ""
+			no2name = ""
+	
+			no3pkpoint = 0
+			no3cdkey = ""
+			no3name = ""
+	
+			no4pkpoint = 0
+			no4cdkey = ""
+			no4name = ""
+	
+			no5pkpoint = 0
+			no5cdkey = ""
+			no5name = ""
+			start = 1
+			fishwindata = {}
+			starttime = other.time()
+		end
+		if char.check(charaindex) == 1 then
+			char.TalkToCli(charaindex, -1, "捕鱼已经开启", "青色")
+		end
+	end
+end
+
+function data()
+	npcdata = {{"克邦凯斯Lv1", 100339, 10,{1000,1500}}
+						,{"加克拉Lv2", 100340, 18,{900,1400}}
+						,{"加 格Lv3", 100341, 30,{800,1300}}
+						,{"邦恩吉Lv4", 100342, 50,{700,1200}}
+						,{"迪 加Lv5", 100879, 70,{600,1100}}
+						,{"砂 鲨Lv6", 100880, 100,{500,1000}}
+						,{"波波顿Lv7", 100881, 150,{400,900}}
+						,{"梅鲁莎Lv8", 100882, 200,{300,600}}
+						}
+	
+	TM_ReadMe = {
+					"           ≡ 捕鱼副本说明 ≡\n\n这是一个即时战斗类的活动副本，副本内有各色鱼类活动，玩家可以通过攻击动作来击打鱼类，打死可以获得一定的奖励，还有机会触发捕捉1级鱼类的哟，是不是非常好玩呀？\n娱乐捕鱼场 全天候开放 可获大量石币捕普通鱼类 激情活动场每周开放2次 可捕稀有鱼类！",
+					"           ≡ 捕捉鱼类说明 ≡\n\n场地内的鱼类分各个等级，等级越高的鱼类移动速度越快，血量也越高，反击伤害越高，打死得到的奖励也越好，反之级别越低的鱼越容易击杀，所以大家自己选择目标进行进攻哟。",
+					"           ≡ 捕鱼伤害说明 ≡\n\n捕鱼伤害和人物属性无关，所以任何人物都可以进去娱乐，特别推荐新手多玩玩，反击的伤害与人物防御也无关，只与鱼类的级别有关系所以血量少的玩家可以挑选容易的鱼类捕捉。\n\n激情活动场内鱼类反击伤害翻倍！",
+					"           ≡ 鱼类血量说明 ≡\n\n目前娱乐捕鱼场内有八级的鱼类，血量分别是10、18、30、50、70、100、150、200，目前系统设置中不会回血，击杀只计算最后一个攻击的玩家奖励，很多时候还是乱斗模式的哟！\n\n激情活动场内鱼类自身血量翻倍！",
+					"           ≡ 激情活动说明 ≡\n\n激情活动场为限时刷新鱼类，每周三和周六的19:00-19:30可以进入捕鱼，超过时间鱼类自动消失，捕鱼场内击杀五级以上鱼类有几率触发捕获该鱼，激情场内鱼类反击伤害很高，请注意自身血量哦！",
+					"           ≡ 捕鱼达人说明 ≡\n\n友情提示：游戏重在娱乐，心态尤为重要\n　　　　　更多内容还是在游戏中体验吧！\n\n          记得好的好喊朋友一起来玩哦!"
+				}
+	maxpage = table.getn(TM_ReadMe) - 1
+end
+
+function main()
+	start = 0
+	num1 = 0
+	num2 = 0
+	no1pkpoint = 0
+	no1cdkey = ""
+	no1name = ""
+	
+	no2pkpoint = 0
+	no2cdkey = ""
+	no2name = ""
+	
+	no3pkpoint = 0
+	no3cdkey = ""
+	no3name = ""
+	
+	no4pkpoint = 0
+	no4cdkey = ""
+	no4name = ""
+	
+	no5pkpoint = 0
+	no5cdkey = ""
+	no5name = ""
+	fishwindata = {}
+	starttime = 0
+	data()
+	if config.getGameservername() == "娱乐互动线" then
+		Create("捕鱼达人",26705,2005,14,10,0,1)
+	end
+	magic.addLUAListFunction("buyu", "buyu", "", 1, "[buyu 0/1]")
+end
+
+

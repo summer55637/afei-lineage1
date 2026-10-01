@@ -1,0 +1,674 @@
+function ShowHead(meindex, talkerindex)
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		token = "4              「 二代宠皮肤切换 」\n\n\n\n\n\n" 
+--						 .. "                ≡ 宠物外形进化 ≡\n" 
+--						 .. "                ≡ 宠物完全进化 ≡\n" 
+						 .. "                ≡ 宠物外形切换 ≡\n" 
+						 .. "                ≡ 功能介绍说明 ≡\n" 
+--   					 .. "                ≡ 宠物进化一览 ≡" 
+		lssproto.windows(talkerindex, "选择框", 8, 1, char.getWorkInt( meindex, "对象"), token)
+	end
+end
+
+function ShowWindow(meindex, talkerindex, page, maxpage, seqno, token, mytype)
+		TM_NowPage = page
+		
+		if maxpage == 99 then
+			button = 8
+		elseif maxpage == 1 then
+			button = 12
+		elseif page == 1 and page < maxpage then
+			button = 40
+		elseif page > 1 and page < maxpage then
+			button = 56
+		elseif page == maxpage then
+			button = 24
+		end
+		
+		if mytype == 1 then
+			lssproto.windows(talkerindex, "选择框", button, seqno, char.getWorkInt( meindex, "对象"), token)
+		elseif mytype == 2 then
+			lssproto.windows(talkerindex, "对话框", button, seqno, char.getWorkInt( meindex, "对象"), token)
+		elseif mytype == 3 then
+			lssproto.windows(talkerindex, "输入框", button, seqno, char.getWorkInt( meindex, "对象"), token)
+		end
+end
+
+
+
+--NPC对话事件(NPC索引)
+function Talked(meindex, talkerindex , szMes, color )
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		-- if char.getInt(talkerindex,"安全锁") > 0 then
+			-- if char.getInt(talkerindex,"安全锁") == 1 then
+				-- token = "【为了确保您的账号财产安全】\n【请输入您的安全码进行解锁】\n\n「PS」快捷解锁命令：/safe 安全密码"
+			-- elseif char.getInt(talkerindex,"安全锁") == 2 then
+				-- token = "由于您的账号在异地登录。\n系统已经自动帮您上锁，确保账号安全。\n请输入您的安全密码进行解锁。"
+			-- else
+				-- token = "由于您的密码过于简单，并且异地登录。\n例如：密码非常简单或者全包含于账号。\n系统已经自动帮您上锁，确保账号安全。\n请输入您的安全密码进行解锁。"
+			-- end
+			-- lssproto.windows(talkerindex, "输入框", "确定|取消", "安全锁", -1, token)
+			-- return
+		-- end
+		ShowHead(meindex, talkerindex)
+	end
+end
+
+--NPC窗口事件(NPC索引)
+function WindowTalked ( meindex, talkerindex, seqno, select, data)
+--	char.talkToServer(meindex, "Seqno:"..seqno.." | select:"..select.." | data:"..data, "黄色")
+	if select == 0 and other.atoi(data) == 0 then
+		ShowHead(meindex, talkerindex)
+	end
+	
+	if seqno == 1 then
+		num = other.atoi(data)
+		if num == 1 then -- 外形进化
+			local MyPetName = {"没有宠物","没有宠物","没有宠物","没有宠物","没有宠物"}
+			for i=1,5 do
+				local MyPetIndexBuf = char.getCharPet(talkerindex,i-1)
+				if MyPetIndexBuf >= 0 and char.check(MyPetIndexBuf) == 1 then
+					MyPetName[i] = char.getChar(MyPetIndexBuf,"名字")
+				end
+			end
+			token = "2\n　　　 　≡ 请选择您要外形切换的宠物 ≡\n　　\n" 
+					.. "　　　　　　  宠物栏[1]：" ..MyPetName[1].."\n" 
+					.. "　　　　　　　宠物栏[2]：" ..MyPetName[2].."\n"
+					.. "　　　　　　  宠物栏[3]：" ..MyPetName[3].."\n"
+					.. "　　　　　　  宠物栏[4]：" ..MyPetName[4].."\n"
+					.. "　　　　 　　 宠物栏[5]：" ..MyPetName[5]
+			ShowWindow(meindex, talkerindex, 1, 99, 5, token, 1)			
+		elseif num == 2 then -- 完全进化
+			local MyPetName = {"没有宠物","没有宠物","没有宠物","没有宠物","没有宠物"}
+			for i=1,5 do
+				local MyPetIndexBuf = char.getCharPet(talkerindex,i-1)
+				if MyPetIndexBuf >= 0 and char.check(MyPetIndexBuf) == 1 then
+					MyPetName [i] = char.getChar(MyPetIndexBuf,"名字")
+				end
+			end
+			token = "2\n　　　 　≡ 请选择您要完全进化的宠物 ≡\n　　\n" 
+					.. "　　　　　　  宠物栏[1]：" ..MyPetName[1].."\n" 
+					.. "　　　　　　  宠物栏[2]：" ..MyPetName[2].."\n"
+					.. "　　　　　　  宠物栏[3]：" ..MyPetName[3].."\n"
+					.. "　　　　　　  宠物栏[4]：" ..MyPetName[4].."\n"
+					.. "　　　　　　  宠物栏[5]：" ..MyPetName[5]
+			ShowWindow(meindex, talkerindex, 1, 99, 2, token, 1)
+		elseif num == 3 then -- 外形切换
+			local MyPetName = {"没有宠物","没有宠物","没有宠物","没有宠物","没有宠物"}
+			for i=1,5 do
+				local MyPetIndexBuf = char.getCharPet(talkerindex,i-1)
+				if MyPetIndexBuf >= 0 and char.check(MyPetIndexBuf) == 1 then
+					MyPetName[i] = char.getChar(MyPetIndexBuf,"名字")
+				end
+			end
+			token = "2\n　　　 　≡ 请选择您要切换外形的宠物 ≡\n　　\n" 
+					.. "　　　　　　  宠物栏[1]：" ..MyPetName[1].."\n" 
+					.. "　　　　　　  宠物栏[2]：" ..MyPetName[2].."\n"
+					.. "　　　　　　  宠物栏[3]：" ..MyPetName[3].."\n"
+					.. "　　　　　　  宠物栏[4]：" ..MyPetName[4].."\n"
+					.. "　　　　　　  宠物栏[5]：" ..MyPetName[5]
+			ShowWindow(meindex, talkerindex, 1, 99, 8, token, 1)
+		elseif num == 4 then
+			lssproto.windows(talkerindex, "对话框", 40, 15, char.getWorkInt( meindex, "对象"), TM_ReadMe[1])
+		elseif num == 5 then
+			lssproto.windows(talkerindex, "对话框", 40, 11, char.getWorkInt( meindex, "对象"), TM_PetReadMe[1])
+		end
+		
+		
+	elseif seqno == 2 then  -- 完全进化
+		num = other.atoi(data)
+		if num < 1 or num > 5 then
+			return
+		end
+		
+		local MyPetIndexBuf = char.getCharPet(talkerindex,num-1)
+		local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+		local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+		local MyPetName = char.getChar(MyPetIndexBuf,"名字")
+		if MyPetIndexBuf < 0 or char.check(MyPetIndexBuf) ~= 1 or MyPetId <= 0 then
+			char.TalkToCli(talkerindex, -1, "[错误提示]该宠物栏位没有宠物哦，请返回操作！", "黄色")
+			return
+		end
+
+		if MyPetId >= 0 then
+			local booli = 0
+			for i=1,TM_PetNumMax do
+				if MyPetId == TM_PetId[i] and MyPetImage == TM_PetImage[i]  and booli == 0 then
+					local TM_MyPet4v = PetUp_4v(MyPetIndexBuf)
+					local TM_4vBuf = (TM_Pet4v[i] - TM_MyPet4v) * TM_PetVipPoint
+					if TM_4vBuf < 1 then
+						TM_4vBuf = 0
+					end
+					
+					token = "              「 冰川时代宠物进化系统 」\n" 
+							.. "您的 [" ..MyPetName.."] 已开放完全进化\n"
+							.. "进化后可得到1级的 ["..TM_PetName[i].."]\n" 
+							.. "目前宠物四维评分："..TM_MyPet4v.."\n"
+							.. "需要宠物四维评分："..TM_Pet4v[i].."\n"
+					if TM_PetSW[i] > 0 then
+						token = token .. "完全进化需要声望："..TM_PetSW[i].."\n"
+					end
+					if TM_PetHL[i] > 0 then
+						token = token .. "完全进化需要活力："..TM_PetHL[i].."\n"
+					end
+					if TM_4vBuf > 0 then
+						token = token .. "评分少许不足可以向我贿赂点卷哦！"
+					end
+					char.setWorkInt(talkerindex,"NPC临时1",num-1)
+					char.setWorkInt(talkerindex,"NPC临时2",i)
+					booli = 1
+					ShowWindow(meindex, talkerindex, 1, 1, 3, token, 2)
+				end
+			end
+			if booli == 0 then
+				char.TalkToCli(talkerindex, meindex, "您的宠物 [" ..MyPetName.."] 不能完全进化哦!", "黄色")
+			end
+		end
+		
+	elseif seqno == 3 then
+		if select == 4 then
+
+			local DelPet = char.getWorkInt(talkerindex,"NPC临时1")
+			local GetPet = char.getWorkInt(talkerindex,"NPC临时2")
+			local MyPetIndexBuf = char.getCharPet(talkerindex,DelPet)
+			local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+			local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+			local MyPetName = char.getChar(MyPetIndexBuf,"名字")
+			local TM_MyPet4v = PetUp_4v(MyPetIndexBuf)
+			local TM_4vBuf = (TM_Pet4v[GetPet] - TM_MyPet4v) * TM_PetVipPoint
+			if TM_4vBuf < 1 then
+				TM_4vBuf = 0
+			end
+			
+			if char.getInt(MyPetIndexBuf,"转数") ~= 1 or char.getInt(MyPetIndexBuf,"等级") < 135 then
+				char.TalkToCli(talkerindex, -1, "没有达到1转135级的宠物不能完全进化！", "黄色")
+				return
+			end
+			
+			
+			token = "              「 冰川时代宠物进化系统 」\n" 
+							.. "是否确定要将 ≡ "..MyPetName.." ≡\n" 
+							.. "完全进化为 ≡ " .. TM_PetName[GetPet] .. " ≡\n" 
+			if TM_PetSW[GetPet] > 0 then
+				token = token .. "[完全进化] 需要扣除声望："..TM_PetSW[GetPet].."\n"
+			end
+			if TM_PetHL[GetPet] > 0 then
+				token = token .. "[完全进化] 需要扣除活力："..TM_PetHL[GetPet].."\n"
+			end
+			if TM_4vBuf > 0 then
+				token = token .. "[补足评分] 需要扣除点卷："..TM_4vBuf.."\n补足一点评分需要贿赂我50点卷哦！\n"
+			end
+			token = token .. "确认进化请按[确定]       退出请按[取消]"
+			ShowWindow(meindex, talkerindex, 1, 1, 4, token, 2)
+		elseif select == 2 then
+			return
+		elseif MyPetId <= 0 or  MyPetImage <= 0 or MyPetIndexBuf <= 0  then
+			char.TalkToCli(talkerindex, meindex, "编号错误！!", "黄色")
+			return
+		end
+		
+	elseif seqno == 4 then
+	
+		if select == 2 or select == 8 then
+			return
+		end
+		
+		local DelPet = char.getWorkInt(talkerindex,"NPC临时1")
+		local GetPet = char.getWorkInt(talkerindex,"NPC临时2")
+		local MyPetIndexBuf = char.getCharPet(talkerindex,DelPet)
+		local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+		local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+		local MyPetName = char.getChar(MyPetIndexBuf,"名字")		
+
+		if MyPetId > 0 then
+			local TM_MyPet4v = PetUp_4v(MyPetIndexBuf)
+			local TM_MySW = char.getInt(talkerindex, "声望")
+			local TM_MyHL = char.getInt(talkerindex, "活力")
+			local TM_MyVipPoint = sasql.getVipPoint(talkerindex)
+			if char.getInt(MyPetIndexBuf,"转数") ~= 1 or char.getInt(MyPetIndexBuf,"等级") < 135 then
+				char.TalkToCli(talkerindex, -1, "没有达到1转135级的宠物不能完全进化！", "黄色")
+				return
+			end
+			if TM_MyPet4v < TM_PetMin4v then
+				char.TalkToCli(talkerindex, -1, "成长值小于"..TM_PetMin4v.."的宠物无法进化！", "黄色")
+				return
+			end
+			if TM_MySW < TM_PetSW[GetPet]*100 then
+				char.TalkToCli(talkerindex, meindex, "您的声望不够！再接再厉哦！", "黄色")
+				return
+			end
+			if TM_MyHL < TM_PetHL[GetPet] then
+				char.TalkToCli(talkerindex, meindex, "您的活力不够！再接再厉哦！", "黄色")
+				return
+			end
+			local TM_4vBuff = (TM_Pet4v[GetPet] - TM_MyPet4v) * TM_PetVipPoint
+			if TM_4vBuff < 0 then
+				TM_4vBuff = 0
+			end
+			if TM_MyVipPoint < TM_4vBuff then
+				char.TalkToCli(talkerindex, meindex, "您的点卷不够！再接再厉哦！", "黄色")
+				return
+			end
+			local pointnow = sasql.getVipPoint(talkerindex) - TM_4vBuff	
+					
+			if MyPetIndexBuf ~= -1 then
+				sasql.setVipPoint(talkerindex, pointnow)
+				char.setInt(talkerindex, "声望", char.getInt(talkerindex, "声望") - TM_PetSW[GetPet]*100)
+				char.setInt(talkerindex, "活力", char.getInt(talkerindex, "活力") - TM_PetHL[GetPet])
+				char.DelPet(talkerindex, MyPetIndexBuf)
+				npc.AddPet(talkerindex, TM_PetNewId[GetPet])
+				char.TalkToCli(talkerindex, meindex, "交出["..MyPetName.."]", "黄色")
+				if TM_PetSW[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetSW[GetPet].." 声望！", "黄色")
+				end
+				if TM_PetHL[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetHL[GetPet].." 活力！", "黄色")
+				end
+				if TM_4vBuff > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_4vBuff.." 点卷！", "黄色")
+				end
+				char.TalkToCli(talkerindex, meindex, "宠物完全进化成功!", "黄色")
+				return
+			end
+		end
+
+	elseif seqno == 5 then	-- 外形进化
+	
+		num = other.atoi(data)
+		if num < 1 or num > 5 then
+			return
+		end	
+		
+		local MyPetIndexBuf = char.getCharPet(talkerindex,num-1)
+		local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+		local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+		local MyPetName = char.getChar(MyPetIndexBuf,"名字")	
+		if MyPetIndexBuf < 0 or char.check(MyPetIndexBuf) ~= 1 or MyPetId <= 0 then
+			char.TalkToCli(talkerindex, -1, "[错误提示]该宠物栏位没有宠物哦，请返回操作！", "黄色")
+			return
+		end
+		
+		if char.getInt(MyPetIndexBuf,"转数") ~= 1 or char.getInt(MyPetIndexBuf,"等级") < 135 then
+		    char.TalkToCli(talkerindex, -1, "没有达到1转135级的宠物不能外形进化！", "黄色")
+			return
+	    end
+
+		if MyPetId >= 0 then
+			local booli = 0
+			for i=1,TM_PetNumMax do
+				if MyPetId == TM_PetId[i] and MyPetImage == TM_PetImage[i]  and booli == 0 then
+					token = "              「 冰川时代宠物进化系统 」\n" 
+							.. "\n您的 [" ..MyPetName.."] 可以进行外形进化\n"
+							.. "进化后外形转换为 ["..TM_PetName[i].."]\n\n" 
+					if TM_PetWMPoint[i] > 0 then
+						token = token .. "[外形进化] 需要点卷："..TM_PetWMPoint[i].."\n"
+					end
+					if TM_PetWMSW[i] > 0 then
+						token = token .. "[外形进化] 需要声望："..TM_PetWMSW[i].."\n"
+					end
+					if TM_PetWMSW[i] > 0 then
+						token = token .. "[外形进化] 需要活力："..TM_PetWMHL[i]
+					end	
+					char.setWorkInt(talkerindex,"NPC临时1",num-1)
+					char.setWorkInt(talkerindex,"NPC临时2",i)
+					booli = 1
+					ShowWindow(meindex, talkerindex, 1, 1, 6, token, 2)
+				end
+			end
+			
+			if booli == 0 then
+				char.TalkToCli(talkerindex, meindex, "您的宠物 [" ..MyPetName.."] 不能外形进化哦!", "黄色")
+			end	
+		end
+
+	elseif seqno == 6 then	
+	
+		if select == 4 then
+			local DelPet = char.getWorkInt(talkerindex,"NPC临时1")
+			local GetPet = char.getWorkInt(talkerindex,"NPC临时2")
+			local MyPetIndexBuf = char.getCharPet(talkerindex,DelPet)
+			local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+			local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+			local MyPetName = char.getChar(MyPetIndexBuf,"名字")
+			
+			token = "              「 冰川时代宠物进化系统 」\n" 
+							.. "是否确定要将 ≡ "..MyPetName.." ≡\n外形进化为 ≡ " .. TM_PetName[GetPet] .. " ≡\n"
+							.. "外形进化后宠物将[绑定] ⊙ 老虎不能[骑乘]\n"
+			if TM_PetWMPoint[GetPet] > 0 then
+				token = token .. "[外形进化] 扣除点卷："..TM_PetWMPoint[GetPet].."\n"
+			end
+			if TM_PetWMSW[GetPet] > 0 then
+				token = token .. "[外形进化] 扣除声望："..TM_PetWMSW[GetPet].."\n"
+			end
+			if TM_PetWMSW[GetPet] > 0 then
+				token = token .. "[外形进化] 扣除活力："..TM_PetWMSW[GetPet].."\n"
+			end
+			token = token .. "\n确认进化请按[确定]       退出请按[取消]"
+			ShowWindow(meindex, talkerindex, 1, 1, 7, token, 2)
+		elseif select == 2 then
+			return
+		elseif MyPetId <= 0 or  MyPetImage <= 0 or MyPetIndexBuf <= 0  then
+			char.TalkToCli(talkerindex, meindex, "编号错误！!", "黄色")
+			return
+		end
+		
+	elseif seqno == 7 then	
+		if select == 2 or select == 8 then
+			return
+		end
+		
+		local DelPet = char.getWorkInt(talkerindex,"NPC临时1")
+		local GetPet = char.getWorkInt(talkerindex,"NPC临时2")
+		local MyPetIndexBuf = char.getCharPet(talkerindex,DelPet)
+		local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+		local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+		local MyPetName = char.getChar(MyPetIndexBuf,"名字")
+		
+		if MyPetId > 0 then
+			local TM_MySW = char.getInt(talkerindex, "声望")
+			local TM_MyHL = char.getInt(talkerindex, "活力")
+			local TM_MyVipPoint = sasql.getVipPoint(talkerindex)
+
+			if TM_MySW < TM_PetWMSW[GetPet]*100 then
+				char.TalkToCli(talkerindex, meindex, "您的声望不够！再接再厉哦！", "黄色")
+				return
+			end
+			if TM_MyHL < TM_PetWMHL[GetPet] then
+				char.TalkToCli(talkerindex, meindex, "您的活力不够！再接再厉哦！", "黄色")
+				return
+			end
+
+			if TM_MyVipPoint < TM_PetWMPoint[GetPet] then
+				char.TalkToCli(talkerindex, meindex, "您的点卷不够！再接再厉哦！", "黄色")
+				return
+			end
+			
+			local pointnow = sasql.getVipPoint(talkerindex) - TM_PetWMPoint[GetPet]	
+					
+			if MyPetIndexBuf ~= -1 then
+				local oldMyPetName = char.getChar(MyPetIndexBuf, "名字")
+				sasql.setVipPoint(talkerindex, pointnow)
+				char.setInt(talkerindex, "声望", char.getInt(talkerindex, "声望") - TM_PetWMSW[GetPet]*100)
+				char.setInt(talkerindex, "活力", char.getInt(talkerindex, "活力") - TM_PetWMHL[GetPet])
+				char.setInt(MyPetIndexBuf, "宠ID", TM_PetNewId[GetPet])
+				char.setInt(MyPetIndexBuf, "图像号", TM_PetNewImage[GetPet])
+				char.setInt(MyPetIndexBuf, "原图像号", TM_PetNewImage[GetPet])
+				char.setInt(MyPetIndexBuf, "进化", 9)
+				char.setChar(MyPetIndexBuf, "名字", TM_PetName[GetPet])
+				--char.setChar(MyPetIndexBuf, "名字", "*"..MyPetName)
+				if TM_PetWMSW[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetWMSW[GetPet].."声望！", "黄色")
+				end
+				if TM_PetWMHL[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetWMHL[GetPet].." 活力！", "黄色")
+				end
+				if TM_PetWMPoint[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetWMPoint[GetPet].." 点卷！", "黄色")
+				end
+				char.TalkToCli(talkerindex, meindex, "宠物外形进化成功!", "黄色")
+				char.sendStatusString(talkerindex, "K"..DelPet )
+				return
+			end
+		end	
+		
+	elseif seqno == 8 then -- 切换外形
+		
+		num = other.atoi(data)
+		if num < 1 or num > 5 then
+			return
+		end	
+
+		local MyPetIndexBuf = char.getCharPet(talkerindex,num-1)
+		local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+		local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+		local MyPetName = char.getChar(MyPetIndexBuf,"名字")	
+		
+		if MyPetIndexBuf < 0 or char.check(MyPetIndexBuf) ~= 1 or MyPetId <= 0 then
+			char.TalkToCli(talkerindex, -1, "[错误提示]该宠物栏位没有宠物哦，请返回操作！", "黄色")
+			return
+		end
+
+		if MyPetId >= 0 then
+			local booli = 0
+			local NoImageNum = table.getn(TM_NOQH)
+			for j=1,NoImageNum  do
+				if MyPetImage == TM_NOQH[j] then
+					char.TalkToCli(talkerindex, -1, "[错误提示]很抱歉，老虎系不支持外形切换！", "黄色")
+					return
+				end
+			end
+			
+			for i=1,TM_PetNumMax do
+				if MyPetId == TM_PetNewId[i] and booli == 0 then
+					if MyPetImage == TM_PetNewImage[i] then
+						token = "              「 冰川时代宠物皮肤系统 」\n" 
+								.. "\n您的 [" ..MyPetName.."] 可以进行外形切换\n"
+								.. "切换后外形转换为 ["..TM_PetNewName[i].."]\n" 
+						if TM_PetQHPoint[i] > 0 then
+							token = token .. "需要点卷："..TM_PetQHPoint[i].."\n"
+						end
+						if TM_PetQHSW[i] > 0 then
+							token = token .. "需要声望："..TM_PetQHSW[i].."\n"
+						end
+						if TM_PetQHHL[i] > 0 then
+							token = token .. "需要活力："..TM_PetQHHL[i]
+						end
+						char.setWorkInt(talkerindex,"NPC临时1",num-1)
+						char.setWorkInt(talkerindex,"NPC临时2",i)
+						char.setWorkInt(talkerindex,"NPC临时3",1)
+						booli = 1
+					elseif MyPetImage == TM_PetImage[i] then
+						token = "              「 冰川时代宠物皮肤系统 」\n\n" 
+								.. "\n您的 [" ..MyPetName.."] 可以进行外形切换\n"
+								.. "切换后外形转换为 ["..TM_PetName[i].."]\n" 
+						if TM_PetQHPoint[i] > 0 then
+							token = token .. "需要点卷："..TM_PetQHPoint[i].."\n"
+						end
+						if TM_PetQHSW[i] > 0 then
+							token = token .. "需要声望："..TM_PetQHSW[i].."\n"
+						end
+						if TM_PetQHHL[i] > 0 then
+							token = token .. "需要活力："..TM_PetQHHL[i]
+						end
+						char.setWorkInt(talkerindex,"NPC临时1",num-1)
+						char.setWorkInt(talkerindex,"NPC临时2",i)
+						char.setWorkInt(talkerindex,"NPC临时3",2)
+						booli = 1
+					end
+					ShowWindow(meindex, talkerindex, 1, 1, 9, token, 2)
+				end
+			end
+			if booli == 0 then
+				char.TalkToCli(talkerindex, -1, "[错误提示]您的宠物尚未进化，无法进行外形切换哦！", "黄色")
+			end	
+		end		
+		
+	elseif seqno == 9 then
+		if select == 4 then
+			local DelPet = char.getWorkInt(talkerindex,"NPC临时1")
+			local GetPet = char.getWorkInt(talkerindex,"NPC临时2")
+			local QHtype = char.getWorkInt(talkerindex,"NPC临时3")
+			local MyPetIndexBuf = char.getCharPet(talkerindex,DelPet)
+			local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+			local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+			local MyPetName = char.getChar(MyPetIndexBuf,"名字")		
+		
+			local tmpName
+			if QHtype == 1 then
+				tmpName = TM_PetNewName[GetPet]
+			elseif QHtype == 2 then
+				tmpName = TM_PetName[GetPet]
+			end
+			token = "              「 冰川时代宠物皮肤系统 」\n\n" 
+							.. "是否确定要将 ≡ ["..MyPetName.."] ≡ \n"
+							.. "外形切换为 ≡ [" .. tmpName .. "] ≡ \n" 
+			if TM_PetQHPoint[GetPet] > 0 then
+				token = token .. "扣除点卷："..TM_PetQHPoint[GetPet].."\n"
+			end
+			if TM_PetQHSW[GetPet] > 0 then
+				token = token .. "扣除声望："..TM_PetQHSW[GetPet].."\n"
+			end
+			if TM_PetQHHL[GetPet] > 0 then
+				token = token .. "扣除活力："..TM_PetQHHL[GetPet].."\n"
+			end
+			token = token .. "\n确认切换请按[确定]       退出请按[取消]"
+			ShowWindow(meindex, talkerindex, 1, 1, 10, token, 2)
+		elseif select == 2 then
+			return
+		elseif MyPetId <= 0 or  MyPetImage <= 0 or MyPetIndexBuf <= 0  then
+			char.TalkToCli(talkerindex, meindex, "编号错误！!", "黄色")
+			return
+		end		
+	
+	elseif seqno == 10 then
+		if select == 2 or select == 8 then	
+			return 
+		end
+		
+		local DelPet = char.getWorkInt(talkerindex,"NPC临时1")
+		local GetPet = char.getWorkInt(talkerindex,"NPC临时2")
+		local QHtype = char.getWorkInt(talkerindex,"NPC临时3")
+		local MyPetIndexBuf = char.getCharPet(talkerindex,DelPet)
+		local MyPetId = char.getInt(MyPetIndexBuf,"宠ID")
+		local MyPetImage = char.getInt(MyPetIndexBuf,"图像号")
+		local MyPetName = char.getChar(MyPetIndexBuf,"名字")			
+		
+		if MyPetId > 0 then
+			local TM_MySW = char.getInt(talkerindex, "声望")
+			local TM_MyHL = char.getInt(talkerindex, "活力")
+			local TM_MyVipPoint = sasql.getVipPoint(talkerindex)
+
+			if TM_MySW < TM_PetQHSW[GetPet]*100 then
+				char.TalkToCli(talkerindex, meindex, "您的声望不够！再接再厉哦！", "黄色")
+				return
+			end
+			if TM_MyHL < TM_PetQHHL[GetPet] then
+				char.TalkToCli(talkerindex, meindex, "您的活力不够！再接再厉哦！", "黄色")
+				return
+			end
+
+			if TM_MyVipPoint < TM_PetQHPoint[GetPet] then
+				char.TalkToCli(talkerindex, meindex, "您的点卷不够！再接再厉哦！", "黄色")
+				return
+			end
+			
+			local pointnow = sasql.getVipPoint(talkerindex) - TM_PetQHPoint[GetPet]	
+					
+			if MyPetIndexBuf ~= -1 then
+				if QHtype == 1 then
+					char.setInt(MyPetIndexBuf, "图像号", TM_PetImage[GetPet])
+					char.setInt(MyPetIndexBuf, "原图像号", TM_PetImage[GetPet])
+				elseif QHtype == 2 then
+					char.setInt(MyPetIndexBuf, "图像号", TM_PetNewImage[GetPet])
+					char.setInt(MyPetIndexBuf, "原图像号", TM_PetNewImage[GetPet])
+				else
+					char.TalkToCli(talkerindex, meindex, "发生未知错误！", "黄色")
+					return
+				end
+
+				sasql.setVipPoint(talkerindex, pointnow)
+				char.setInt(talkerindex, "声望", char.getInt(talkerindex, "声望") - TM_PetQHSW[GetPet]*100)
+				char.setInt(talkerindex, "活力", char.getInt(talkerindex, "活力") - TM_PetQHHL[GetPet])
+				if TM_PetQHSW[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetQHSW[GetPet].." 声望！", "黄色")
+				end
+				if TM_PetQHHL[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetQHHL[GetPet].." 活力！", "黄色")
+				end
+				if TM_PetQHPoint[GetPet] > 0 then
+					char.TalkToCli(talkerindex, meindex, "扣除 "..TM_PetQHPoint[GetPet].." 点卷！", "黄色")
+				end
+				char.TalkToCli(talkerindex, meindex, "宠物外形切换成功!", "黄色")
+				char.sendStatusString(talkerindex, "K"..DelPet )
+				return
+			end
+		end	
+		
+	elseif seqno == 11 then
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 40, 12, char.getWorkInt( meindex, "对象"), TM_PetReadMe[2])
+	elseif seqno == 12 then
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 40, 13, char.getWorkInt( meindex, "对象"), TM_PetReadMe[3])
+	elseif seqno == 13 then
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 12, 14, char.getWorkInt( meindex, "对象"), TM_PetReadMe[4])
+	elseif seqno == 14 then
+		if select == 2 or select == 8 then return end
+	elseif seqno == 15 then
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 40, 16, char.getWorkInt( meindex, "对象"), TM_ReadMe[2])
+	elseif seqno == 16 then	
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 40, 17, char.getWorkInt( meindex, "对象"), TM_ReadMe[3])
+	elseif seqno == 17 then
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 40, 18, char.getWorkInt( meindex, "对象"), TM_ReadMe[4])
+	elseif seqno == 18 then	
+		if select == 2 or select == 8 then return end
+		lssproto.windows(talkerindex, "对话框", 12, 19, char.getWorkInt( meindex, "对象"), TM_ReadMe[5])
+	elseif seqno == 19 then
+		if select == 2 or select == 8 then return end
+ 	end
+	
+
+	
+end
+
+
+function Create(name, metamo, floor, x, y, dir)
+	--创建NPC(NPC名字，图像号，地图号，坐标X，坐标Y，方向号)将返回一个NPC索引
+	npcindex = npc.CreateNpc(name, metamo, floor, x, y, dir)
+	--设置事件触发(NPC索引，事件，执行函数，执行函数文件路径)
+	char.setFunctionPointer(npcindex, "对话事件", "Talked", "")
+	char.setFunctionPointer(npcindex, "窗口事件", "WindowTalked", "")
+end
+
+function data()
+	TM_PetImage = {113020,113021,113024,113022,113023,101760,100872,101616,101180}--进化前的图像号
+	TM_PetNewImage = {131017,131018,131021,131019,131020,109058,110144,110102,109061}--进化后的图像号
+	TM_PetId = {3001,3002,3003,3004,3005,3033,777,3000,3034}--进化前的编号
+	TM_PetNewId = {3001,3002,3003,3004,3005,3033,777,3000,3034}--进化后的编号
+	TM_Pet4v = {1320,1320,1320,1320,1320}--完全进化所需的评分值
+	TM_PetSW = {6666,6666,6666,6666,6666}--完全进化所需的声望
+	TM_PetHL = {1666,1666,1666,1666,1666}--完全进化所需的活力
+	TM_PetWMPoint = {128000,128000,128000,128000,128000,168000,168000,168000,168000}--外貌进化所需的点卷
+	TM_PetWMSW = {198,198,198,198,198,198,198,198,198}--外貌进化所需的声望
+	TM_PetWMHL = {198,198,198,198,198,198,198,198,198}--外貌进化所需的活力
+	TM_PetQHPoint = {128000,128000,128000,128000,168000,168000,168000,168000,168000}--外貌切换所需的点卷
+	TM_PetQHSW = {198,198,198,198,198,198,198,198,198}--外貌切换所需的声望
+	TM_PetQHHL = {100,100,100,100,100,198,198,198,198}--外貌切换所需的活力
+	TM_NOQH = {100327,100328,100329,100330}--不允许切换外貌的图像号
+	
+	TM_PetName = {"2D利则诺顿","2D扬奇洛斯","2D邦浦洛斯","2D邦奇诺","2D布鲁顿","美拉","佩露夏","菲奇亚","凯恩"}--进化后的宠物名字
+	TM_PetNewName = {"2D利则诺顿","2D扬奇洛斯","2D邦浦洛斯","2D邦奇诺","2D布鲁顿","美拉","佩露夏","菲奇亚","凯恩"}--进化前的宠物名字
+	TM_PetNumMax = 13--有多少只可进化宠
+	TM_PetVipPoint = 50--差1点评分需要补足多少会员点
+	TM_PetMin4v = 0--评分小于多少不能补会员点进化
+	TM_ReadMe = {	
+					"           ≡ 宠物外形切换 ≡\n\n宠物外形进化不改变宠物的任何属性，只改变宠物的外形的一种方式，成本较低，适合极品宠物换个新鲜的样式使用，另外进化成功后使用回炉系统，回炉出来的是进化后的宠物哦！",
+					"           ≡ 宠物外形切换 ≡\n\n进化后的宠物可以使用的功能，可以在进化前和进化后任意切换形象，可以让进化后的宠物保持初代的形象，这样的话，无论是怀旧的玩家还是新奇的玩家都可以得到满足啦！此功能限免中...可以随意切换...",
+					"           ≡ 已开放的种类 ≡\n\n目前已经开放【2D人龙或切换为闪人龙】，【四圣兽可切换为：白虎-->蓝剑齿虎，玄武--->Q版奶牛，青龙-->圣光龙，朱雀-->火剑齿虎，】其它种类将逐步开放，如：机械鸡年皮肤切换，等！敬请期待...",
+					"           ≡  持续开发中  ≡\n\n\n      觉得好玩一定要叫朋友一起来哦！\n           冰川时代的壮大靠大家！\n\n                            www.1xsa.com\n                              荣誉出品"
+				}
+	
+	
+	TM_PetReadMe = {"           ≡ 二代人龙系列 ≡\n\n利则诺顿-->2D利则诺顿  ★纯属性不解释\n扬奇洛斯-->2D扬奇洛斯  评分容易达到\n邦浦洛斯-->2D邦浦洛斯  成长相对较高\n邦 奇 诺-->2D邦 奇 诺  ★纯属性不解释\n布 鲁 顿-->2D布 鲁 顿  ★高攻高敏",
+					"           ≡ 二代老虎系列 ≡\n\n 贝 鲁 卡 -->2D贝 鲁 卡    ★成长均衡\n 贝鲁伊卡 -->2D贝鲁伊卡    ★敏捷优势\n 格鲁西斯 -->2D格鲁西斯    ★攻高敏高\n金格萨贝鲁-->2D金格萨贝鲁  帅的稀里哗啦",
+					"           ≡ 天使威威系列 ≡\n\n 威 威-->天使乌宝依  [推荐]可爱卖萌\n 威 伯-->天使乌拉拉  [推荐]可爱卖萌\n乌宝宝-->天使 威 比  [推荐]可爱卖萌\n乌卡鲁-->天使 威 斯  [推荐]可爱卖萌",
+					"           ≡  持续开发中  ≡\n\n\n      觉得好玩一定要叫朋友一起来哦！\n           冰川时代的壮大靠大家！\n\n                            www.1xsa.com\n                              荣誉出品",
+					"",
+					""
+				}
+end
+
+
+function PetUp_4v(petindex)
+	local Resault = char.getWorkInt(petindex, "最大HP") / 4 + char.getWorkInt(petindex, "攻击") + char.getWorkInt(petindex, "防御") + char.getWorkInt(petindex, "敏捷")
+	return math.floor(Resault)
+end
+
+function main()
+	Create("「宠物皮肤商人」", 131020, 2005, 23, 7, 6)
+	data()
+end

@@ -1,0 +1,25 @@
+function Talked(meindex, talkerindex , szMes, color )
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then
+		local token = char.getChar(meindex, "名字") .. "|我是财政管家，\n你想挑战我吗？\n你真是不知死活\n但如果你打赢我就能得到石币!|1|〖挑战〗" 
+		lssproto.windows(talkerindex, "对话框", "确定|取消", 0, char.getWorkInt( meindex, "对象"), token)
+	end
+end
+
+function WindowTalked ( meindex, talkerindex, seqno, select, data)
+	if npc.isFaceToFace(meindex, talkerindex) == 1 and select ~= 8 then 
+		if seqno == 0 then
+			battle.CreateVsEnemy(talkerindex, meindex, {4584})
+		end
+	end
+end
+
+function Create(name, metamo, floor, x, y, dir)
+	local npcindex = npc.CreateNpc(name, metamo, floor, x, y, dir)
+	char.setFunctionPointer(npcindex, "对话事件", "Talked", "")
+	char.setFunctionPointer(npcindex, "窗口事件", "WindowTalked", "")
+end
+
+function main()
+	Create("石币大财神", 101156, 2005, 8, 23, 6)
+	Create("石币大财神", 101156, 2000, 63, 61, 6)
+end

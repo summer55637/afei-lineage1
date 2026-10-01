@@ -1,0 +1,25 @@
+START_MSG:提炼极限回炉仙丹一千石币1次\n宠物服用后可重生至SSS级!\nPS：回炉仙丹碎片，可通过回炉宠物有机率得到！越高级的宠物获得碎片的机率越大哦！\n1.82回炉50金/次的开始出现1%机率，最高圣兽稀有类回炉2500金/次75%机率出碎片\n九大骑证碎片合成，需要5个书页
+
+MenuHead:客官请选择你要提炼的物品
+NeedHead:极限丹需要50个仙丹碎片，勇士头需要50个残片
+
+####  仙丹 ####
+{
+CHANGEITEM:42010
+NeedItem:42011
+FREE:ITEM=42011*50&GOLD>=1000&reITEM>=1
+DelGold:1000
+DelItem:42011*50
+AddItem:42010
+}
+
+{
+CHANGEITEM:23610
+NeedItem:42012
+FREE:ITEM=42012*50&GOLD>=1000&reITEM>=1
+DelGold:1000
+DelItem:42012*50
+AddItem:23610
+}
+
+

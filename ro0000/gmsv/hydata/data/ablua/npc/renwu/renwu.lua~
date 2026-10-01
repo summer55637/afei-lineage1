@@ -1,0 +1,281 @@
+function RENWUShowList(meindex, talkerindex, page)
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		token = "      『" .. char.getChar(meindex, "名字") .. "』\n"
+		for i = 1, 7 do
+			num = (page - 1) * 7 + i
+			if num > table.getn(eventlist)  then
+				break
+			end
+			
+			if npc.Free(meindex, talkerindex, "ENDEV=" .. eventlist[num][1]) == 1 then
+				token = token .. string.format("%-32s已完成\n", eventlist[num][2])
+			else
+				if npc.Free(meindex, talkerindex, "NOWEV=" .. eventlist[num][1]) == 1 then
+					token = token .. string.format("%-32s进行中\n", eventlist[num][2])
+				else
+					token = token ..string.format("%-32s未进行\n", eventlist[num][2])
+				end
+			end
+			
+		end
+		
+		if maxpage == 1 then
+			button = "确定"
+		elseif page == 1 and page <= maxpage then
+			button = "下一页"
+		elseif page > 1 and page <= maxpage then
+			button = "上一页|下一页"
+		elseif page > maxpage  then
+			button = "上一页"
+		end
+		lssproto.windows(talkerindex, "对话框", button, page, char.getWorkInt( meindex, "对象"), token)
+	end
+end
+
+function checkEmptPetNum(charaindex) --检查宠物空位
+	EmptyPetNum = 0
+	for i = 0, 4 do
+		if char.check(char.getCharPet(charaindex, i)) == 0 then
+			EmptyPetNum = EmptyPetNum + 1
+		end
+	end
+	return EmptyPetNum
+end
+
+function getIntPart(x)
+    if x <= 0 then
+       return math.ceil(x);
+    end
+
+    if math.ceil(x) == x then
+       x = math.ceil(x);
+    else
+       x = math.ceil(x) - 1;
+    end
+    return x;
+end
+
+--NPC对话事件(NPC索引)
+function RENWUTalked(meindex, talkerindex , szMes, color)
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		token = "3\n 『" .. char.getChar(meindex, "名字") .. "』\n\n请问我有什么可以帮到您呢？\n"
+					 .. "   【1.82任务进度】\n"
+					 .. "   【完成成人任务】\n"
+					 .. "   【完成四大任务】\n"
+					 .. "   【完成1.82任务】\n"
+					-- .. "   【完成转宠任务】\n"
+       lssproto.windows(talkerindex, "选择框", "取消", 1, char.getWorkInt( meindex, "对象"), token)
+		
+		
+	end
+end
+function checkHead(meindex, talkerindex)
+   if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		token = "3\n                 『" .. char.getChar(meindex, "名字") .. "』请问我有什么可以帮到您呢？\n"
+					 .. "    【1.82任务进度】\n"
+					 .. "    【完成成人任务】\n"
+					 .. "    【完成四大任务】\n"
+					 .. "    【完成1.82任务】\n"
+					-- .. "    【完成转宠任务】\n"
+       lssproto.windows(talkerindex, "选择框", "取消", 1, char.getWorkInt( meindex, "对象"), token)
+		
+   end
+end
+
+
+--NPC窗口事件(NPC索引)
+function RENWUWindowTalked ( meindex, talkerindex, seqno, select, data)
+  shengwang = getIntPart(char.getInt(talkerindex, "声望"))
+  if select == 16 then
+		RENWUShowList(meindex, talkerindex, seqno - 1)
+	elseif select == 32 then
+		RENWUShowList(meindex, talkerindex, seqno + 1)
+	end	
+	
+	if seqno == 1 then
+		if select == 0 then
+			num = other.atoi(data)
+			if num == 1 then
+				 RENWUShowList(meindex, talkerindex, 1)
+			elseif num == 2 then
+				token = "\n                 『" .. char.getChar(meindex, "名字") .. "』\n"
+								.. "是否需要我帮你完成成人任务\n"
+								.. "该任务免费哦!"
+				lssproto.windows(talkerindex, "对话框", "确定|取消", 2, char.getWorkInt( meindex, "对象"), token)
+			elseif num == 3 then
+				token = "\n                 『" .. char.getChar(meindex, "名字") .. "』\n"
+								.. "是否需要我帮你完成四大任务\n"
+								.. "完成该任务需141级和10W声望!"
+								.. "\n本次扣费：10W声望!"
+				lssproto.windows(talkerindex, "对话框", "确定|取消", 3, char.getWorkInt( meindex, "对象"), token)
+			elseif num == 4 then
+				token = "\n                『" .. char.getChar(meindex, "名字") .. "』\n"
+								.. "是否需要我帮你完成1.82任务\n"
+								.. "完成该任务需要10W声望!\n"
+								.. "如想做蓝暴，请先独立完成蓝暴任务才来!"
+				lssproto.windows(talkerindex, "对话框", "确定|取消", 4, char.getWorkInt( meindex, "对象"), token)				
+			elseif num == 5 then
+				token = "\n                『" .. char.getChar(meindex, "名字") .. "』\n"
+								.. "是否需要我帮你完成转宠任务\n"
+								.. "完成该任务免费!"
+				lssproto.windows(talkerindex, "对话框", "确定|取消", 5, char.getWorkInt( meindex, "对象"), token)	
+			elseif num == 6 then
+				token = "\n                 『" .. char.getChar(meindex, "名字") .. "』\n"
+								.. "\n你目前的环数是:" .. rwl .. "环!\n" 
+								.. "\n兑换需要98环\n" 
+				lssproto.windows(talkerindex, "对话框", "确定|取消", 6, char.getWorkInt( meindex, "对象"), token)	
+			end
+		end
+	elseif seqno == 2 then
+		if select == 1 then
+      if char.getInt(talkerindex,"等级") > 141 then
+       	npc.Event_End(talkerindex, "4")
+     	  char.TalkToCli(talkerindex, -1, "恭喜你,已经帮您完成任务", "黄色")
+      else
+     	  char.TalkToCli(talkerindex, -1, "对不起,请练到141级后再来找我", "黄色")	    
+	    end
+    end
+	elseif seqno == 3 then
+		if select == 1 then
+		  if  shengwang > 11000000  then
+       if char.getInt(talkerindex,"等级") >= 141 then
+         if  checkEmptPetNum(talkerindex) == 0 then
+			        char.TalkToCli(talkerindex, meindex, "宠物栏已满，请宠物栏留有足够的空位！", "黄色")
+					    return
+			    end
+			    --[[
+			     zss = char.getInt(talkerindex,"转数")
+            if zss == 0 then
+               npc.AddPet(talkerindex, 1373)
+            elseif zss == 1 then
+               npc.AddPet(talkerindex, 1374)
+            elseif zss == 2 then
+               npc.AddPet(talkerindex, 1375)
+            elseif zss == 3 then
+               npc.AddPet(talkerindex, 1376)
+            elseif zss == 4 then
+               npc.AddPet(talkerindex, 1373)
+               npc.AddPet(talkerindex, 1374)
+               npc.AddPet(talkerindex, 1375)
+               npc.AddPet(talkerindex, 1376)
+            else
+                char.TalkToCli(talkerindex, meindex, "你的转生数已经超过领取条件！", "黄色")
+            end
+                --]]
+                        
+              	npc.Event_End(talkerindex, "46")
+              	npc.Event_End(talkerindex, "39")
+              	npc.Event_End(talkerindex, "40")
+                npc.Event_End(talkerindex, "41")
+              	npc.Event_End(talkerindex, "42") 
+      char.setInt(talkerindex, "声望", char.getInt(talkerindex, "声望") - 10000000)   
+     	char.TalkToCli(talkerindex, -1, "恭喜你,已经帮您完成任务", "黄色")              	
+	    else
+     	char.TalkToCli(talkerindex, -1, "对不起,请练到131级后再来找我", "黄色")	    
+	    end
+	   else
+	    char.TalkToCli(talkerindex, -1, "对不起，您的声望不够11点哦，只能努力挂声望吧。", "红色")		
+	   end
+	  end  
+	elseif seqno == 4 then
+		if select == 1 then
+      if  shengwang > 11000000  then
+				  for i = 0, 54 do
+				      if i ~= 46 and i ~= 39 and i ~= 40 and i~= 42 and i~= 41 then
+				         npc.Event_End(talkerindex, i)
+				      end
+				   end   
+				  char.setInt(talkerindex, "声望", char.getInt(talkerindex, "声望") - 10000000)   
+					char.TalkToCli(talkerindex, -1, "恭喜你，已经帮您完成任务", "黄色")
+			else 
+					char.TalkToCli(talkerindex, -1, "对不起，您的声望不够11点哦", "红色")			   		
+		  end
+		end  		
+		elseif seqno == 5 then
+		if select == 1 then
+
+				  npc.Event_End(talkerindex, "69")
+				  npc.Event_End(talkerindex, "70")
+					char.TalkToCli(talkerindex, -1, "恭喜你，已经帮您完成任务", "黄色")
+		  end
+		
+	end
+end
+
+function Create(name, metamo, floor, x, y, dir)
+	--创建NPC(NPC名字，图像号，地图号，坐标X，坐标Y，方向号)将返回一个NPC索引
+	npcindex = npc.CreateNpc(name, metamo, floor, x, y, dir)
+   renwuaaa = npcindex
+	--设置事件触发(NPC索引，事件，执行函数，执行函数文件路径)
+	char.setFunctionPointer(npcindex, "对话事件", "RENWUTalked", "")
+
+	char.setFunctionPointer(npcindex, "窗口事件", "RENWUWindowTalked", "")
+end
+
+function RENWUdata()
+	eventlist = {{1,  "※咍罗山的医生(塔姆塔姆)"}
+							,{2,  "※不可思议的贝壳"}
+							,{3,  "　亚姆亚姆的斧头（送斧头）"}
+							,{4,  "※成人仪式"}
+							,{5,  "※亚姆亚姆的斧头(还信）"}
+							,{6,  "　交不可思议的贝壳"}
+							,{7,  "　哥亚山（把花和信给乌力美）"}
+							,{8,  "※哥亚山（回信给乌力斯凯）"}
+							,{9,  "　盗贼事件（柯尔克那一边）"}
+							,{10, "　盗贼事件（霍特尔那一边）"}
+							,{11, "　卡坦的年轻人"}
+							,{12, "  梦德（族长）"}
+							,{13, "　强盗洞窟（三种神器）"}
+							,{15, "※恐龙博士（抓鲁尼帖斯）"}
+							,{16, "※恐龙博士（抓贝鲁卡）"}
+							,{17, "※龙洞任务"}
+							,{18, "　伐木任务"}
+							,{19, "※造斧专家哈恩"}
+							,{20, "　强恩洞窟(找到强恩）"}
+							,{21, "　强恩洞窟(找到吉德的女儿）"}
+							,{22, "※强恩洞窟(把家书给吉德）"}
+							,{23, "　小猪爱情故事(加鲁那）"}
+							,{24, "　小猪爱情故事(加特洛洞）"}
+							,{27, "※暴龙之路"}
+							,{28, "　五兄弟之迷(拿到智慧水晶）"}
+							,{29, "　黄金羚羊之路(拿到守护精灵）"}
+							,{30, "※黄金羚羊之路(拿到心性之镜）"}
+							,{31, "※五兄弟之迷(拿到人龙）"}
+							,{32, "　梦幻洞窟（拿竖琴）"}
+							,{33, "　梦幻洞窟（拿帽子）"}
+							,{34, "※梦幻洞窟（拿衣服）"}
+							,{35, "※卡坦(找4只鲨鱼）"}
+							,{37, "　马祖任务"}
+							,{38, "※水田迷宫"}
+							,{39, "　琉璃洞窟"}
+							,{40, "　深红洞窟"}
+							,{41, "　玄黄洞窟-1"}
+							,{42, "　玄黄洞窟-2"}
+							,{44, "  猜谜3兄弟（拿金猪）"}
+							,{45, "※四宝玉之迷"}
+							,{46, "　碧青洞窟"}
+							,{47, "※猜谜3兄弟（拿蓝暴）"}
+							,{54, "　黄金羚羊之路（拿到黄金羚羊）"}
+							,{55, "　四圣石任务（练鲁乌）"}
+							,{55, "　四圣石任务（练迪欧）"}
+							,{57, "　四圣石任务（练加美）"}
+							,{63, "　红暴任务"}
+							,{64, "　四圣石任务（接任务）"}
+							,{65, "　四圣石任务（拿公文）"}
+							,{66, "　四圣石任务（练鲁乌）"}
+							,{67, "　四圣石任务（练迪欧）"}
+							,{68, "　四圣石任务（练加美）"}
+							,{69, "　精灵王的传说（前传）"}
+							,{70, "　精灵王的传说（转宠）"}
+							,{71, "　精灵王的传说（打封印精灵王）"}
+							,{72, "　精灵王的传说（打完大黑）"}
+							}
+
+	maxpage = math.ceil(table.getn(eventlist) / 7) - 1
+end
+
+function main()
+	Create("快速任务师", 26856, 2000, 63, 61, 4)
+	RENWUdata()
+end
+main()

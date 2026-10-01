@@ -1,0 +1,14 @@
+NPCCREATE
+
+#月老
+#{
+#floorid=100
+#borncorner=412,532,412,532
+#time=0
+#createnum=1
+#dir=4
+#ignoreinvincible=1
+#graphicname=70093
+#name=月老
+#enemy=changeevent|file:mynpc/yuelao/yuelao
+#}

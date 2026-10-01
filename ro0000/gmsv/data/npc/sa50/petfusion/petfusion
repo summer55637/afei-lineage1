@@ -1,0 +1,8 @@
+####　博士弟子…说明员　####
+EventNo:-1
+TYPE:MESSAGE
+EVENT:LV>0
+NomalWindowMsg:究竟神秘商城里面有什么？快点下一页看看.
+NomalWindowMsg1:OH~~ 商城还没开放\n不定期开放神秘商城，看你的运气哦！\n\n。。。10秒后将传送回：你原来下线的地点
+NomalWindowMsg2:关注冰川官网及官方群，可获取更多活动动向唷、\n\n官方QQ交流1群：96412725\n冰川官网地址：www.1xsa.com
+EventEnd

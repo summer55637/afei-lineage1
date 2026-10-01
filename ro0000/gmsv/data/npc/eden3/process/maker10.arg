@@ -1,0 +1,36 @@
+#### 风城金属武器加工师 ####
+
+START_MSG:材料精工需要完成成人任务!你想加工全新装备么？？\n加工一次要一万石币喔。\n金属材料需要各等级的星耀石！\n3个碎片合成瑕疵，3个瑕疵合成优良。3个优良合成完美星耀石\n注意哦！所有星耀石的成功率只有50%成功率\n材料不足请不要点合成，不然会直接收走。无法找回
+
+MenuHead:选择你想要精工的星耀石
+NeedHead:需要的材料
+
+####  碎片合瑕疵 ####
+{
+CHANGEITEM:42701,42700
+NeedItem:42700,42700,42700
+FREE:ENDEV=4&ITEM=42700*3&GOLD>=10000&reITEM>=1
+DelGold:10000
+DelItem:42700*3
+GetRandItem:42701,42700
+}
+
+####  优良 ####
+{
+CHANGEITEM:42702,42701
+NeedItem:42701,42701,42701
+FREE:ENDEV=4&ITEM=42701*3&GOLD>=10000&reITEM>=1
+DelGold:10000
+DelItem:42701*3
+GetRandItem:42702,42701
+}
+
+####  完美 ####
+{
+CHANGEITEM:42703,42702
+NeedItem:42702,42702,42702
+FREE:ENDEV=4&ITEM=42702*3&GOLD>=10000&reITEM>=1
+DelGold:10000
+DelItem:42702*3
+GetRandItem:42703,42702
+}

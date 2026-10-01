@@ -1,0 +1,7 @@
+####　博士弟子…说明员　####
+EventNo:-1
+TYPE:MESSAGE
+EVENT:LV>0
+NomalWindowMsg:神秘活动暂时未开启？本神秘活动会不定时开放哦.
+NomalWindowMsg1:关注冰川官网及官方群，可获取更多活动动向唷、\n\n官方QQ交流1群：96412725\n冰川官网地址：www.1xsa.com
+EventEnd

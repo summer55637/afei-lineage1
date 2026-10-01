@@ -1,0 +1,1294 @@
+function Loop(meindex)
+	if close == true then
+		gamestart = "关闭"
+		close = false
+		hour = -1
+		char.talkToServer(-1, "[竞猜提示]"..match.." : "..home.." VS "..away.."  竞猜关闭", math.random(10))
+		local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+		local token = "球赛1状态=关闭\n"
+		f:read()
+		for i=1,50 do
+			local x = f:read()
+			token = token..x.."\n"
+		end
+		local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+		f2:write(token)
+		f2:close()
+		f:close()
+	elseif closeB == true then
+		gamestartB = "关闭"
+		closeB = false
+		hourB = -1
+		char.talkToServer(-1, "[竞猜提示]"..matchB.." : "..homeB.." VS "..awayB.."  竞猜关闭", math.random(10))
+		local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+		local token = ""
+		for i=1,18 do
+			local x = f:read()
+			token = token..x.."\n"
+		end
+		f:read()
+		token = token.."球赛2状态=关闭\n"
+		for i=20,51 do
+			local x = f:read()
+			token = token..x.."\n"
+		end
+		local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+		f2:write(token)
+		f2:close()
+		f:close()
+	elseif closeC == true then
+		gamestartC = "关闭"
+		closeC = false
+		hourC = -1
+		char.talkToServer(-1, "[竞猜提示]"..matchC.." : "..homeC.." VS "..awayC.."  竞猜关闭", math.random(10))
+		local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+		local token = ""
+		for i=1,36 do
+			local x = f:read()
+			token = token..x.."\n"
+		end
+		f:read()
+		token = token.."球赛3状态=关闭\n"
+		for i=38,51 do
+			local x = f:read()
+			token = token..x.."\n"
+		end
+		local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+		f2:write(token)
+		f2:close()
+		f:close()
+	else
+		if hour == other.atoi(os.date("%H%M",os.time())) and gamestart == "开始" then
+			close = true
+		end
+		if hourB == other.atoi(os.date("%H%M",os.time())) and gamestartB == "开始"then
+			closeB = true
+		end
+		if hourC == other.atoi(os.date("%H%M",os.time())) and gamestartC == "开始"then
+			closeC = true
+		end
+	end
+end
+
+function string_split(str, split_char)
+	local sub_str_tab = {};
+	while (true) do
+		local pos = string.find(str, split_char);
+		if (not pos) then
+			sub_str_tab[#sub_str_tab + 1] = str;
+			break;
+		end
+		local sub_str = string.sub(str, 1, pos - 1);
+		sub_str_tab[#sub_str_tab + 1] = sub_str;
+		str = string.sub(str, pos + 1, #str);
+	end
+	return sub_str_tab;
+end
+
+function ShowWindow(meindex, talkerindex, page)
+	local matchdata = string_split(char.getWorkChar(talkerindex,"NPC临时1"),"/")
+	local maxpage = math.ceil(matchdata[1]/15)
+	local token = {"[style c=4]竞猜总数:"..matchdata[1].."         [/style][style c=6]总赢:"..matchdata[2]
+	.."[/style][style c=5]         总输:"..matchdata[3].."[/style]         总平:"..matchdata[4]
+		.."\n日期   [style c=6]主队[/style]        [style c=5]客队[/style]        [style c=4]让[/style]    [style c=10]竞猜[/style]    [style c=4]金额[/style]    结果\n"}
+	sasql.query("select * from SoccerResult where Account = '"..char.getChar(talkerindex,"账号").."'order by Account desc limit "..((page-1)*15)..",15")
+	sasql.free_result();
+	sasql.store_result();
+	for i=1,sasql.num_rows() do
+		sasql.fetch_row();
+		if sasql.data(5) == nil or sasql.data(5) == "" then
+			table.insert(token, string.format("%-7s[style c=6]%-12s[/style][style c=5]%-12s[/style][style c=4]%-8s[/style][style c=10]%-6s[/style][style c=4]%-9d[/style]"
+			,sasql.data(2),sasql.data(3),sasql.data(4),sasql.data(6),sasql.data(7),sasql.data(8)))
+		else
+			table.insert(token, string.format("%-7s[style c=6]%-12s[/style][style c=5]%-12s[/style][style c=4]%-8s[/style][style c=10]%-6s[/style][style c=4]%-9d[/style]"
+			,sasql.data(2),sasql.data(3),sasql.data(4),sasql.data(5),sasql.data(7),sasql.data(8)))
+		end
+		if sasql.data(9) == "赢" then
+			table.insert(token, "[style c=6]"..sasql.data(9).."[/style]\n")
+		elseif sasql.data(9) == "输" then
+			table.insert(token, "[style c=5]"..sasql.data(9).."[/style]\n")
+		elseif sasql.data(9) == "平" then
+			table.insert(token, sasql.data(9).."\n")
+		else
+			table.insert(token, "[style c=7]"..sasql.data(9).."[/style]\n")
+		end
+	end
+	local button = 8;
+	if maxpage == 1 then
+	elseif page == 1 and page < maxpage then
+		button = 40
+	elseif page > 1 and page < maxpage then
+		button = 56
+	elseif page == maxpage then
+		button = 24;
+	end
+	lssproto.windows(talkerindex, 10, button, page+50, char.getWorkInt(meindex, "对象"), table.concat(token))
+end
+
+function getstarttime (match1,match2,match3)
+	local matchtime = {-1,-1,-1}
+	if gamestart == "结束" then
+		matchtime[1] = "比分"
+	elseif match1 == -1 then
+		matchtime[1] = " -:-"
+	elseif match1 == 0 then
+		matchtime[1] = " 0:00"
+	elseif match1 > 959 then
+		matchtime[1] = string.sub(match1,1,2)..":"..string.sub(match1,3,4)
+	elseif match1 > 99 then
+		matchtime[1] = " "..string.sub(match1,1,1)..":"..string.sub(match1,2,3)
+	else
+		matchtime[1] = " 0:"..match1
+	end
+	if gamestartB == "结束" then
+		matchtime[2] = "比分"
+	elseif match2 == -1 then
+		matchtime[2] = " -:-"
+	elseif match2 == 0 then
+		matchtime[2] = " 0:00"
+	elseif match2 > 959 then
+		matchtime[2] = string.sub(match2,1,2)..":"..string.sub(match2,3,4)
+	elseif match2 > 99 then
+		matchtime[2] = " "..string.sub(match2,1,1)..":"..string.sub(match2,2,3)
+	else
+		matchtime[2] = " 0:"..match2
+	end
+	if gamestartC == "结束" then
+		matchtime[3] = "比分"
+	elseif match3 == -1 then
+		matchtime[3] = " -:-"
+	elseif match3 == 0 then
+		matchtime[3] = " 0:00"
+	elseif match3 > 959 then
+		matchtime[3] = string.sub(match3,1,2)..":"..string.sub(match3,3,4)
+	elseif match3 > 99 then
+		matchtime[3] = " "..string.sub(match3,1,1)..":"..string.sub(match3,2,3)
+	else
+		matchtime[3] = " 0:"..match3
+	end
+	return matchtime
+end
+
+function Talked(meindex, talkerindex , szMes, color )
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then
+		if config.getGameservername() == "娱乐互动线" then
+			local token ="3             [style c=5]欢迎使用球赛竞猜[/style]\n"
+				 .. "  [style c=4]您可以竞猜想要支持的主场队伍或客场队伍[/style]\n" 
+				 .. "            [style c=4]比分将在比赛后公布[/style]\n" 
+				 .. "              [style c=1]【参与竞猜】[/style]\n" 
+				 .. "              [style c=6]【领取奖金】[/style]\n" 
+				 .. "              [style c=2]【查看订单】[/style]\n" 
+				 .. "              [style c=3]【查看规则】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 0, char.getWorkInt(meindex, "对象"), token);
+		else
+			lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), "\n\n\n               [style c=4]请到族战互动线使用[/style]");
+		end
+	end
+end
+
+function WindowTalked ( meindex, talkerindex, seqno, select, data)
+	if npc.isFaceToFace(meindex, talkerindex) ~= 1 or select == 8 and config.getGameservername() ~= "娱乐互动线" then 
+	   return;
+	end
+	if seqno > 49 then
+		if select == 32 then
+			ShowWindow(meindex, talkerindex, seqno-49) 
+		elseif select == 16 then
+			ShowWindow(meindex, talkerindex, seqno-51) 
+		end
+	elseif seqno == 0 then
+		if other.atoi(data) == 1 then
+			local startitem = getstarttime(hour,hourB,hourC)
+			local token = "2\n\n\n" 
+			.. "             "..string.format("[style c=4]%-6s%s[/style]\n",startitem[1],match)
+			.. "             "..string.format("[style c=5]%-6s%s[/style]\n",startitem[2],matchB)
+			.. "             "..string.format("[style c=1]%-6s%s[/style]",startitem[3],matchC)
+			lssproto.windows(talkerindex, 2, 8, 1, char.getWorkInt(meindex, "对象"), token);
+		elseif other.atoi(data) == 2 then
+			sasql.query("select * from Soccer where Account = '"..char.getChar(talkerindex,"账号").."'")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				sasql.fetch_row();
+				local checkout = other.atoi(sasql.data(14))
+				if checkout > 0 then
+					char.TalkToCli(talkerindex, meindex, "恭喜你通过竞猜获得了"..checkout.."水晶", 4);
+					sasql.query("update Soccer SET Reward=0 where Account='"..char.getChar(talkerindex,"账号").."'")
+					sasql.setPetPoint(talkerindex,sasql.getPetPoint(talkerindex)+checkout)
+				else
+					lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), "\n\n\n             [style c=5]您没有赢取任何奖金哦[/style]");
+				end
+			else
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), "\n\n\n             [style c=5]您没有赢取任何奖金哦[/style]");
+			end
+		elseif other.atoi(data) == 3 then
+			local totalmatch,totalwin,totallose,totaldraw = 0,0,0,0
+			sasql.query("select Result from SoccerResult where Account = '"..char.getChar(talkerindex,"账号").."'")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				totalmatch = sasql.num_rows()
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					if sasql.data(1) == "赢" then
+						totalwin = totalwin + 1
+					elseif sasql.data(1) == "输" then
+						totallose = totallose + 1
+					elseif sasql.data(1) == "平" then
+						totaldraw = totaldraw + 1
+					end
+				end
+				char.setWorkChar(talkerindex,"NPC临时1",totalmatch.."/"..totalwin.."/"..totallose.."/"..totaldraw)
+				ShowWindow(meindex, talkerindex, 1)
+			else
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), "\n\n\n              [style c=5]您尚未竞猜过任何比赛[/style]");
+			end
+		elseif other.atoi(data) == 4 then
+			local token = "                   [style c=5]竞猜说明[/style]\n\n" 
+			.. "        [style c=1]每日随机开启一到三场竞猜比赛[/style]\n"
+			.. "        [style c=4]规则由让球或大小球制决定胜负[/style]\n"
+			.. "        [style c=4]比赛详情与结果请查看即时比分[/style]\n"
+			.. "        [style c=2]所得水晶根据本金乘以反还赔率[/style]\n"
+			lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), token);
+		end
+	elseif seqno == 1 then
+		if other.atoi(data) == 1 then
+			if gamestart == "等待" then
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), "\n\n\n             [style c=5]暂时未有可竞猜比赛[/style]\n");
+			elseif gamestart == "开始" then
+				local token = "5                   [style c=1]" .. match .. "[/style]\n" 
+				 .. "      [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "    [style c=6]"..string.format("%-27s",home).."[/style][style c=5]"..string.format("%s",away).."[/style]\n"
+				 .. " 主队返还：".. string.format("%-9.2f",rate1).."[style c=4]".. string.format("%-10s",fix).."[/style]客队返还：".. string.format("%.2f\n",rate2)
+				 .. " 猜大返还：".. string.format("%-6.2f",totalrate1).."[style c=4]大小：".. string.format("%-6s",total).."[/style] 猜小返还：".. string.format("%.2f\n",totalrate2)
+				 .. "              [style c=2]【竞猜主客】[/style]\n" 
+				 .. "              [style c=10]【竞猜大小】[/style]"
+				 lssproto.windows(talkerindex, 2, 8, 2, char.getWorkInt(meindex, "对象"), token);
+			elseif gamestart == "关闭" then
+				local token = "\n                     [style c=1]" .. match .. "[/style]\n" 
+				 .. "         [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "       [style c=6]"..string.format("%-27s",home).."[/style][style c=5]"..string.format("%s",away).."[/style]\n"
+				 .. "                   [style c=5]竞猜已关闭[/style]\n"
+				 .. "                 [style c=5]比赛正在进行中[/style]\n"
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			elseif gamestart == "结束" then
+				local token = "                    [style c=1]" .. match .. "[/style]\n" 
+				 .. "        [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "       [style c=6]"..string.format("%-27s",home).."[/style][style c=5]"..string.format("%s",away).."[/style]\n\n"
+				 .. "             [style c=4 s=28]"..string.format("%-6d",score1)..string.format("%-6s",":")..string.format("%d",score2).."[/style]"
+				 lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			end
+		elseif other.atoi(data) == 2 then
+			if gamestartB == "等待" then
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), "\n\n\n                [style c=5]暂时未有可竞猜比赛[/style]\n")
+			elseif gamestartB == "开始" then
+				local token = "5                   [style c=1]" .. matchB .. "[/style]\n" 
+				 .. "      [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "    [style c=6]"..string.format("%-27s",homeB).."[/style][style c=5]"..string.format("%s",awayB).."[/style]\n"
+				 .. " 主队返还：".. string.format("%-9.2f",rate1B).."[style c=4]".. string.format("%-10s",fixB).."[/style]客队返还：".. string.format("%.2f\n",rate2B)
+				 .. " 猜大返还：".. string.format("%-6.2f",totalrate1B).."[style c=4]大小：".. string.format("%-6s",totalB).."[/style] 猜小返还：".. string.format("%.2f\n",totalrate2B)
+				 .. "              [style c=2]【竞猜主客】[/style]\n" 
+				 .. "              [style c=10]【竞猜大小】[/style]"
+				 lssproto.windows(talkerindex, 2, 8, 3, char.getWorkInt(meindex, "对象"), token);
+			elseif gamestartB == "关闭" then
+				local token = "\n                     [style c=1]" .. matchB .. "[/style]\n" 
+				 .. "         [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "       [style c=6]"..string.format("%-27s",homeB).."[/style][style c=5]"..string.format("%s",awayB).."[/style]\n"
+				 .. "                   [style c=5]竞猜已关闭[/style]\n"
+				 .. "                 [style c=5]比赛正在进行中[/style]\n"
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			elseif gamestartB == "结束" then
+				local token = "                    [style c=1]" .. matchB .. "[/style]\n" 
+				 .. "        [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "       [style c=6]"..string.format("%-27s",homeB).."[/style][style c=5]"..string.format("%s",awayB).."[/style]\n\n"
+				 .. "             [style c=4 s=28]"..string.format("%-6d",score1B)..string.format("%-6s",":")..string.format("%d",score2B).."[/style]"
+				 lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			end
+		elseif other.atoi(data) == 3 then
+			if gamestartC == "等待" then
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), "\n\n\n                [style c=5]暂时未有可竞猜比赛[/style]\n");
+			elseif gamestartC == "开始" then
+				local token = "5                   [style c=1]" .. matchC .. "[/style]\n" 
+				 .. "      [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "    [style c=6]"..string.format("%-27s",homeC).."[/style][style c=5]"..string.format("%s",awayC).."[/style]\n"
+				 .. " 主队返还：".. string.format("%-9.2f",rate1C).."[style c=4]".. string.format("%-10s",fixC).."[/style]客队返还：".. string.format("%.2f\n",rate2C)
+				 .. " 猜大返还：".. string.format("%-6.2f",totalrate1C).."[style c=4]大小：".. string.format("%-6s",totalC).."[/style] 猜小返还：".. string.format("%.2f\n",totalrate2C)
+				 .. "              [style c=2]【竞猜主客】[/style]\n" 
+				 .. "              [style c=10]【竞猜大小】[/style]"
+				 lssproto.windows(talkerindex, 2, 8, 4, char.getWorkInt(meindex, "对象"), token);
+			elseif gamestartC == "关闭" then
+				local token = "\n                     [style c=1]" .. matchC .. "[/style]\n" 
+				 .. "         [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "       [style c=6]"..string.format("%-27s",homeC).."[/style][style c=5]"..string.format("%s",awayC).."[/style]\n"
+				 .. "                   [style c=5]竞猜已关闭[/style]\n"
+				 .. "                 [style c=5]比赛正在进行中[/style]\n"
+				lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			elseif gamestartC == "结束" then
+				local token = "                    [style c=1]" .. matchC .. "[/style]\n" 
+				 .. "        [style c=6]主队[/style]          [style c=4]VS[/style]          [style c=5]客队[/style]\n"
+				 .. "       [style c=6]"..string.format("%-27s",homeC).."[/style][style c=5]"..string.format("%s",awayC).."[/style]\n\n"
+				 .. "             [style c=4 s=28]"..string.format("%-6d",score1C)..string.format("%-6s",":")..string.format("%d",score2C).."[/style]"
+				 lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			end
+		end
+	elseif seqno == 2 then
+		if other.atoi(data) == 1 then
+			local hometotal,awaytotal = 0,0
+			sasql.query("select * from Soccer")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					hometotal = hometotal + other.atoi(sasql.data(2))
+					awaytotal = awaytotal + other.atoi(sasql.data(3))
+				end
+			end
+			local token = "4     "..string.format("[style c=6]%-15s[/style][style c=4]%-10s[/style][style c=5]%s[/style]\n",home,"VS",away)
+			.. "                [style c=4]让球 "..fix.."[/style]\n"
+			.. "  主队返还：".. string.format("%-15.2f",rate1).."客队返还：".. string.format("%.2f\n",rate2)
+			.. "  主队总注：".. string.format("%-14d",hometotal).."客队总注：".. string.format("%d\n",awaytotal)
+			.. "              [style c=6]【竞猜主队】[/style]\n" 
+			.. "              [style c=5]【竞猜客队】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 5, char.getWorkInt(meindex, "对象"), token);
+		elseif other.atoi(data) == 2 then
+			local HStotal,LStotal = 0,0
+			sasql.query("select * from Soccer")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					HStotal = HStotal + other.atoi(sasql.data(4))
+					LStotal = LStotal + other.atoi(sasql.data(5))
+				end
+			end
+			local token = "4     "..string.format("[style c=6]%-15s[/style][style c=4]%-10s[/style][style c=5]%s[/style]\n",home,"VS",away)
+			.. "                [style c=4]大小 "..total.."[/style]\n"
+			.. "  猜大赔率：".. string.format("%-15.2f",totalrate1).."[style c=4][/style]猜小赔率：".. string.format("%.2f\n",totalrate2)
+			.. "  猜大总注：".. string.format("%-14d",HStotal).."[style c=4][/style]猜小总注：".. string.format("%d\n",LStotal)
+			.. "              [style c=2]【竞猜大球】[/style]\n" 
+			.. "              [style c=10]【竞猜小球】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 6, char.getWorkInt(meindex, "对象"), token);
+		end
+	elseif seqno == 3 then
+		if other.atoi(data) == 1 then
+			local hometotalB,awaytotalB = 0,0
+			sasql.query("select * from Soccer")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					hometotalB = hometotalB + other.atoi(sasql.data(6))
+					awaytotalB = awaytotalB + other.atoi(sasql.data(7))
+				end
+			end
+			local token = "4     "..string.format("[style c=6]%-15s[/style][style c=4]%-10s[/style][style c=5]%s[/style]\n",homeB,"VS",awayB)
+			.. "                [style c=4]让球 "..fixB.."[/style]\n"
+			.. "  主队返还：".. string.format("%-15.2f",rate1B).."[style c=4][/style]客队返还：".. string.format("%.2f\n",rate2B)
+			.. "  主队总注：".. string.format("%-14d",hometotalB).."[style c=4][/style]客队总注：".. string.format("%d\n",awaytotalB)
+			.. "              [style c=6]【竞猜主队】[/style]\n" 
+			.. "              [style c=5]【竞猜客队】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 7, char.getWorkInt(meindex, "对象"), token);
+		elseif other.atoi(data) == 2 then
+			local HStotalB,LStotalB = 0,0
+			sasql.query("select * from Soccer")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					HStotalB = HStotalB + other.atoi(sasql.data(8))
+					LStotalB = LStotalB + other.atoi(sasql.data(9))
+				end
+			end
+			local token = "4     "..string.format("[style c=6]%-15s[/style][style c=4]%-10s[/style][style c=5]%s[/style]\n",homeB,"VS",awayB)
+			.. "                [style c=4]大小 "..totalB.."[/style]\n"
+			.. "  猜大赔率：".. string.format("%-15.2f",totalrate1B).."[style c=4][/style]猜小赔率：".. string.format("%.2f\n",totalrate2B)
+			.. "  猜大总注：".. string.format("%-14d",HStotalB).."[style c=4][/style]猜小总注：".. string.format("%d\n",LStotalB)
+			.. "              [style c=2]【竞猜大球】[/style]\n" 
+			.. "              [style c=10]【竞猜小球】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 8, char.getWorkInt(meindex, "对象"), token);
+		end
+	elseif seqno == 4 then
+		if other.atoi(data) == 1 then
+			local hometotalC,awaytotalC = 0,0
+			sasql.query("select * from Soccer")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					hometotalC = hometotalC + other.atoi(sasql.data(10))
+					awaytotalC = awaytotalC + other.atoi(sasql.data(11))
+				end
+			end
+			local token = "4      "..string.format("[style c=6]%-15s[/style][style c=4]%-10s[/style][style c=5]%s[/style]\n",homeC,"VS",awayC)
+			.. "                 [style c=4]让球 "..fixC.."[/style]\n"
+			.. "  主队返还：".. string.format("%-15.2f",rate1C).."[style c=4][/style]客队返还：".. string.format("%.2f\n",rate2C)
+			.. "  主队总注：".. string.format("%-14d",hometotalC).."[style c=4][/style]客队总注：".. string.format("%d\n",awaytotalC)
+			.. "              [style c=6]【竞猜主队】[/style]\n" 
+			.. "              [style c=5]【竞猜客队】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 9, char.getWorkInt(meindex, "对象"), token);
+		elseif other.atoi(data) == 2 then
+			local HStotalC,LStotalC = 0,0
+			sasql.query("select * from Soccer")
+			sasql.free_result();
+			sasql.store_result();
+			if sasql.num_rows() > 0 then
+				for i=1,sasql.num_rows() do
+					sasql.fetch_row();
+					HStotalC = HStotalC + other.atoi(sasql.data(12))
+					LStotalC = LStotalC + other.atoi(sasql.data(13))
+				end
+			end
+			local token = "4    "..string.format("[style c=6]%-15s[/style][style c=4]%-10s[/style][style c=5]%s[/style]\n",homeC,"VS",awayC)
+			.. "               [style c=4]大小 "..totalC.."[/style]\n"
+			.. "  猜大赔率：".. string.format("%-15.2f",totalrate1C).."[style c=4][/style]猜小赔率：".. string.format("%.2f\n",totalrate2C)
+			.. "  猜大总注：".. string.format("%-14d",HStotalC).."[style c=4][/style]猜小总注：".. string.format("%d\n",LStotalC)
+			.. "              [style c=2]【竞猜大球】[/style]\n" 
+			.. "              [style c=10]【竞猜小球】[/style]"
+			lssproto.windows(talkerindex, 2, 8, 10, char.getWorkInt(meindex, "对象"), token);
+		end
+	elseif seqno > 4 and seqno < 11 then
+		local token = "3\n\n\n\n              [style c=4]【使用水晶】[/style]\n             [style c=10]【使用竞猜卡】[/style]\n" 
+		if other.atoi(data) == 1 then
+			lssproto.windows(talkerindex, 2, 8, seqno*2+1, char.getWorkInt(meindex, "对象"), token);
+		elseif other.atoi(data) == 2 then
+			lssproto.windows(talkerindex, 2, 8, seqno*2+2, char.getWorkInt(meindex, "对象"), token);
+		end
+	elseif seqno > 10 and seqno < 23 then
+		local betpoint = -1
+		if other.atoi(data) == 2 and char.Finditem(talkerindex,30350) < 0 then
+			local token = "\n\n\n              [style c=4]您身上没有竞猜积分卡[/style]"
+			lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+			return
+		elseif other.atoi(data) == 2 and char.Finditem(talkerindex,30350) > 0 then
+			local itemindex = char.Finditem(talkerindex, 30350)
+			betpoint = other.atoi(item.getChar(itemindex, "字段"))
+		end
+		local token = ""
+		if seqno == 11 or seqno == 15 or seqno == 19 then
+			local homename = home
+			local fixA = fix
+			local rateA = rate1
+			local paygo = 23
+			if seqno == 15 then
+				homename = homeB
+				fixA = fixB
+				rateA = rate1B
+				paygo = 31
+			elseif seqno == 19 then
+				homename = homeC
+				fixA = fixC
+				rateA = rate1C
+				paygo = 39
+			end
+			if other.atoi(data) == 1 then
+				if fixA*10 >= 0 then
+					token = "\n                 [style c=6]主队："..homename.."[/style]\n"
+					.. "                   [style c=4]主让："..fixA.."[/style]\n"
+				else
+					token = "\n                 [style c=6]主队 "..homename.."[/style]\n"
+						.. "                   [style c=4]客让："..math.abs(fixA).."[/style]\n"
+				end
+					token = token.. "                   赔率："..rateA.."\n\n\n"
+						.. " [style c=5]请输入需要竞猜水晶( ≥ 100)[/style]"
+				lssproto.windows(talkerindex, 1, 12, paygo, char.getWorkInt(meindex, "对象"), token);
+			elseif other.atoi(data) == 2 then
+				if fix*10 >= 0 then
+					token = "\n                 [style c=6]主队 "..homename.."[/style]\n"
+						.. "                   [style c=4]主让："..fixA.."[/style]\n"
+				else
+					token = "\n                 [style c=6]主队 "..homename.."[/style]\n"
+						.. "                   [style c=4]客让："..math.abs(fixA).."[/style]\n"
+				end
+					token = token.. "                   赔率："..rateA.."\n\n"
+						.. " [style c=5]        是否使用『[/style][style c=4]"..betpoint.."[/style][style c=5]』竞猜积分卡参与竞猜[/style]"
+				lssproto.windows(talkerindex, 0, 12, paygo+1, char.getWorkInt(meindex, "对象"), token);
+			end
+		elseif seqno == 12 or seqno == 16 or seqno == 20 then
+			local awayname = away
+			local fixA = fix
+			local rateA = rate2
+			local paygo = 25
+			if seqno == 16 then
+				awayname = awayB
+				fixA = fixB
+				rateA = rate2B
+				paygo = 33
+			elseif seqno == 20 then
+				awayname = awayC
+				fixA = fixC
+				rateA = rate2C
+				paygo = 41
+			end
+			if other.atoi(data) == 1 then
+				if fixA*10 > 0 then
+					token = "\n                 [style c=5]客队 "..awayname.."[/style]\n"
+						.. "                   [style c=4]主让："..fixA.."[/style]\n"
+				else
+					token = "\n                 [style c=5]客队 "..awayname.."[/style]\n"
+						.. "                   [style c=4]客让："..math.abs(fixA).."[/style]\n"
+				end
+					token = token.. "                   赔率："..rateA.."\n\n\n"
+						.. " [style c=5]请输入需要竞猜水晶( ≥ 100)[/style]"
+					lssproto.windows(talkerindex, 1, 12, paygo, char.getWorkInt(meindex, "对象"), token);
+			elseif other.atoi(data) == 2 then
+				if fixA*10 > 0 then
+					token = "\n                 [style c=5]客队 "..awayname.."[/style]\n"
+						.. "                   [style c=4]主让："..fixA.."[/style]\n"
+				else
+					token = "\n                 [style c=5]客队 "..awayname.."[/style]\n"
+						.. "                   [style c=4]客让："..math.abs(fixA).."[/style]\n"
+				end
+					token = token.. "                   赔率："..rateA.."\n\n"
+						.. " [style c=5]        是否使用『[/style][style c=4]"..betpoint.."[/style][style c=5]』竞猜积分卡参与竞猜[/style]"
+				lssproto.windows(talkerindex, 0, 12, paygo+1, char.getWorkInt(meindex, "对象"), token);
+			end
+		elseif seqno == 13 or seqno == 17 or seqno == 21 then
+			local homename = home
+			local awayname = away
+			local totalA = total
+			local rateA = totalrate1
+			local paygo = 27
+			if seqno == 17 then
+				homename = homeB
+				awayname = awayB
+				totalA = totalB
+				rateA = rate1B
+				paygo = 35
+			elseif seqno == 21 then
+				homename = homeC
+				awayname = awayC
+				totalA = totalC
+				rateA = totalrate1C
+				paygo = 43
+			end
+			if other.atoi(data) == 1 then
+				token = "\n      [style c=6]"..string.format("%-16s",homename).."[/style][style c=4]"..string.format("%-12s","VS").."[/style][style c=5]"..string.format("%s",awayname).."[/style]\n"
+						.. "                    [style c=4]大小 "..totalA.."[/style]\n"
+						.. "                  [style c=2]猜大赔率: "..rateA.."[/style]\n\n\n"
+						.. " [style c=5]请输入需要竞猜水晶( ≥ 100)[/style]"
+				lssproto.windows(talkerindex, 1, 12, paygo, char.getWorkInt(meindex, "对象"), token);
+			elseif other.atoi(data) == 2 then
+				token = "\n      [style c=6]"..string.format("%-16s",homename).."[/style][style c=4]"..string.format("%-12s","VS").."[/style][style c=5]"..string.format("%s",awayname).."[/style]\n"
+						.. "                    [style c=4]大小 "..totalA.."[/style]\n"
+						.. "                  [style c=2]猜大赔率: "..rateA.."[/style]\n\n"
+						.. " [style c=5]        是否使用『[/style][style c=4]"..betpoint.."[/style][style c=5]』竞猜积分卡参与竞猜[/style]"
+				lssproto.windows(talkerindex, 0, 12, paygo+1, char.getWorkInt(meindex, "对象"), token);
+			end
+		elseif seqno == 14  or seqno == 18 or seqno == 22 then
+			local homename = home
+			local awayname = away
+			local totalA = total
+			local rateA = totalrate2
+			local paygo = 29
+			if seqno == 18 then
+				homename = homeB
+				awayname = awayB
+				totalA = totalB
+				rateA = totalrate2B
+				paygo = 37
+			elseif seqno == 22 then
+				homename = homeC
+				awayname = awayC
+				totalA = totalC
+				rateA = totalrate2C
+				paygo = 45
+			end
+			if other.atoi(data) == 1 then
+				token = "\n      [style c=6]"..string.format("%-16s",homename).."[/style][style c=4]"..string.format("%-12s","VS").."[/style][style c=5]"..string.format("%s",awayname).."[/style]\n"
+						.. "                    [style c=4]大小 "..totalA.."[/style]\n"
+						.. "                  [style c=10]猜小赔率: "..rateA.."[/style]\n\n\n"
+						.. " [style c=5]请输入需要竞猜水晶( ≥ 100)[/style]"
+				lssproto.windows(talkerindex, 1, 12, paygo, char.getWorkInt(meindex, "对象"), token);
+			elseif other.atoi(data) == 2 then
+				token = "\n      [style c=6]"..string.format("%-16s",homename).."[/style][style c=4]"..string.format("%-12s","VS").."[/style][style c=5]"..string.format("%s",awayname).."[/style]\n"
+						.. "                    [style c=4]大小 "..totalA.."[/style]\n"
+						.. "                  [style c=10]猜小赔率: "..rateA.."[/style]\n\n\n"
+						.. " [style c=5]       是否使用『[/style][style c=4]"..betpoint.."[/style][style c=5]』竞猜积分卡参与竞猜[/style]"
+				lssproto.windows(talkerindex, 0, 12, paygo+1, char.getWorkInt(meindex, "对象"), token);
+			end
+		end
+	elseif seqno > 22 and seqno < 47 then
+		if gamestart == "关闭" and seqno < 31 then
+			return
+		elseif gamestartB == "关闭" and seqno > 30 and seqno < 39 then
+			return
+		elseif gamestartC == "关闭" and seqno > 38 then
+			return
+		end
+		local p,f = math.modf(seqno/2)
+		local amount = tonumber(data)
+		if f > 0 then
+			local expend = sasql.getPetPoint(talkerindex)
+			if amount == nil then
+				char.TalkToCli(talkerindex, meindex, "请勿输入数字外的字符", 4);
+				return;
+			elseif math.floor(amount) < amount then
+				char.TalkToCli(talkerindex, meindex, "请以整数形式输入", 4);
+				return;
+			elseif amount < 100 then
+				char.TalkToCli(talkerindex, meindex, "最少投注金额为10水晶", 4);
+				return;
+			elseif expend < amount then
+				char.TalkToCli(talkerindex, meindex, "您的水晶不足！", 4);
+				return;
+			end
+			sasql.setPetPoint(talkerindex,expend-amount)
+		else
+			if char.Finditem(talkerindex,30350) < 0 then
+				char.TalkToCli(talkerindex, meindex, "您身上并没有竞猜积分卡！", 4);
+				return
+			end
+			local itemindex = char.Finditem(talkerindex, 30350)
+			amount = other.atoi(item.getChar(itemindex, "字段"))
+			npc.DelItem(talkerindex, "30350*1")
+		end
+		local CdKey = char.getChar(talkerindex,"账号")
+		if sasql.query("select * from Soccer where Account = '"..CdKey.."'") == 1 then
+			sasql.free_result();
+			sasql.store_result();
+			if seqno == 23 or seqno == 24 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET Home=Home+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了主队 "..home.." "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',Home="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了主队 "..home.." "..amount.."水晶", 4);
+				end 
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..home.."' and Bet='主' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..home.."' and Bet='主' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Fixed,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..home.."','"..away.."',"..fix..",'主',"..amount..",'未完赛')")
+				end
+			elseif seqno == 25 or seqno == 26 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET Away=Away+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了客队 "..away.." "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',Away="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了客队 "..away.." "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Away='"..away.."' and Bet='客' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Away='"..away.."' and Bet='客' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Fixed,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..home.."','"..away.."',"..fix..",'客',"..amount..",'未完赛')")
+				end
+			elseif seqno == 27 or seqno == 28 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET TotalL=TotalL+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了大球 "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',TotalL="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了大球 "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..home.."' and Bet='大' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..home.."' and Bet='大' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Total,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..home.."','"..away.."',"..total..",'大',"..amount..",'未完赛')")
+				end
+			elseif seqno == 29 or seqno == 30 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET TotalS=TotalS+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了小球 "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',TotalS="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了小球 "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..home.."' and Bet='小' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..home.."' and Bet='小' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Total,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..home.."','"..away.."',"..total..",'小',"..amount..",'未完赛')")
+				end
+			elseif seqno == 31 or seqno == 32 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET Home2=Home2+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了主队 "..homeB.." "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',Home2="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了主队 "..homeB.." "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..homeB.."' and Bet='主' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..homeB.."' and Bet='主' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Fixed,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeB.."','"..awayB.."',"..fixB..",'主',"..amount..",'未完赛')")
+				end
+			elseif seqno == 33 or seqno == 34 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET Away2=Away2+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了客队 "..awayB.." "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',Away2="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了客队 "..awayB.." "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Away='"..awayB.."' and Bet='客' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Away='"..awayB.."' and Bet='客' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Fixed,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeB.."','"..awayB.."',"..fixB..",'客',"..amount..",'未完赛')")
+				end
+			elseif seqno == 35 or seqno == 36 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET TotalL2=TotalL2+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了大球 "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',TotalL2="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了大球 "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..homeB.."' and Bet='大' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..homeB.."' and Bet='大' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Total,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeB.."','"..awayB.."',"..totalB..",'大',"..amount..",'未完赛')")
+				end
+			elseif seqno == 37 or seqno == 38 then
+				if sasql.num_rows() > 0 then
+					sasql.query( "update Soccer SET TotalS2=TotalS2+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了小球 "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',TotalS2="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了小球 "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..homeB.."' and Bet='小' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..homeB.."' and Bet='小' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Total,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeB.."','"..awayB.."',"..totalB..",'小',"..amount..",'未完赛')")
+				end
+			elseif seqno == 39 or seqno == 40 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET Home3=Home3+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了主队 "..homeC.." "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',Home3="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了主队 "..homeC.." "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..homeC.."' and Bet='主' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..homeC.."' and Bet='主' and Result='未完赛' and Account = '"..CdKey.."'")
+				else 
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Fixed,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeC.."','"..awayC.."',"..fixC..",'主',"..amount..",'未完赛')")
+				end
+			elseif seqno == 41 or seqno == 42 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET Away3=Away3+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了客队 "..awayC.." "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',Away3="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了客队 "..awayC.." "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Away='"..awayC.."' and Bet='客' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Away='"..awayC.."' and Bet='客' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Fixed,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeC.."','"..awayC.."',"..fixC..",'客',"..amount..",'未完赛')")
+				end
+			elseif seqno == 43 or seqno == 44 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET TotalL3=TotalL3+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了大球 "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',TotalL3="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了大球 "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..homeC.."' and Bet='大' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..homeC.."' and Bet='大' and Result='未完赛' and Account = '"..CdKey.."'")
+				else
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Total,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeC.."','"..awayC.."',"..totalC..",'大',"..amount..",'未完赛')")
+				end
+			elseif seqno == 45 or seqno == 46 then
+				if sasql.num_rows() > 0 then
+					sasql.query("update Soccer SET TotalS3=TotalS3+"..amount.." where Account='"..CdKey.."'")
+					char.TalkToCli(talkerindex, meindex, "您投注了小球 "..amount.."水晶", 4);
+				else
+					sasql.query("INSERT INTO Soccer SET Account='"..CdKey.."',TotalS3="..amount)
+					char.TalkToCli(talkerindex, meindex, "您投注了小球 "..amount.."水晶", 4);
+				end
+				sasql.query("select * from SoccerResult where Account = '"..CdKey.."' and Home='"..homeC.."' and Bet='小' and Result='未完赛'")
+				sasql.free_result();
+				sasql.store_result();
+				if sasql.num_rows() > 0 then
+					sasql.query("update SoccerResult SET Amount=Amount+"..amount.." where Home='"..homeC.."' and Bet='小' and Result='未完赛' and Account = '"..CdKey.."'")
+				else 
+					sasql.query("INSERT INTO SoccerResult (Account,Date,Home,Away,Total,Bet,Amount,Result)"
+					.."VALUES ('"..CdKey.."',"..os.date("%m%d",os.time())..",'"..homeC.."','"..awayC.."',"..totalC..",'小',"..amount..",'未完赛')")
+				end
+			end
+		end
+	end
+end
+
+function Talked1(meindex, talkerindex , szMes, color )
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then
+		if config.getGameservername() == "娱乐互动线" or char.getChar(talkerindex,"账号") == "sys192519" then
+			local token = char.getChar(meindex, "名字") .. "|GM使用|2|更新比赛|结束比分"
+			lssproto.windows(talkerindex, "新选择框", 8, 0, char.getWorkInt( meindex, "对象"), token)
+		else
+			lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), "\n\n\n               [style c=4]请到族战互动线使用[/style]");
+		end
+	end
+end
+
+function WindowTalked1 ( meindex, talkerindex, seqno, select, data)
+	if npc.isFaceToFace(meindex, talkerindex) == 1 and select ~= 8 then
+		if seqno == 0 then
+			if other.atoi(data) == 1 then
+				gmball()
+				local token = "\n\n\n" 
+				.. "                  [style c=5]赛事已更新[/style]\n"
+				lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), token);
+			elseif other.atoi(data) == 2 then
+				local token = "2\n\n\n" 
+				.. "       "..string.format("[style c=4]%-12s[/style]%-6s[style c=10]%s[/style]\n",home,"VS",away)
+				.. "       "..string.format("[style c=5]%-12s[/style]%-6s[style c=3]%s[/style]\n",homeB,"VS",awayB)
+				.. "       "..string.format("[style c=1]%-12s[/style]%-6s[style c=2]%s[/style]",homeC,"VS",awayC)
+				lssproto.windows(talkerindex, 2, 8, 1, char.getWorkInt(meindex, "对象"), token);
+			end
+		elseif seqno == 1 then
+			local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local gtd = f:read("*all")
+			local line = string_split(gtd,"\n")
+			local title = string_split(line[data+(data-1)*17],"=")
+			if string.match(title[2],"%s*(.-)%s*$") ~= "关闭" then
+				local token = "\n\n\n" 
+				.. "                [style c=5]该比赛尚未结束[/style]\n"
+				lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), token);
+			else
+				local linemsg = {}
+				if other.atoi(data) == 1 then
+					for i=1,15 do
+						local getright = string_split(line[i],"=")
+						table.insert(linemsg,string.match(getright[2],"%s*(.-)%s*$"))
+					end
+					winner = linemsg[12]
+					wintotal = linemsg[13]
+					score1 = linemsg[14]
+					score2 = linemsg[15]
+					local token = "\n\n"
+					.. "          "..string.format("[style c=6]%-12s[/style]%-6s[style c=5]%s[/style]\n",linemsg[3],"VS",linemsg[4])
+					.. "              "..string.format("[style c=6 s=22]%-12s[/style]%-6s[style c=5 s=22]%s[/style]\n\n",linemsg[14]," ",linemsg[15])
+					.. "           "..string.format("[style c=10]%s[/style]%-12s[style c=4]%s[/style]%s","赢方：",linemsg[12],"大小：",linemsg[13])
+					lssproto.windows(talkerindex, 0, 12, 2, char.getWorkInt(meindex, "对象"), token);
+				elseif other.atoi(data) == 2 then
+					for i=19,33 do
+						local getright = string_split(line[i],"=")
+						table.insert(linemsg,string.match(getright[2],"%s*(.-)%s*$"))
+					end
+					winnerB = linemsg[12]
+					wintotalB = linemsg[13]
+					score1B = linemsg[14]
+					score2B = linemsg[15]
+					local token = "\n\n"
+					.. "          "..string.format("[style c=6]%-12s[/style]%-6s[style c=5]%s[/style]\n",linemsg[3],"VS",linemsg[4])
+					.. "              "..string.format("[style c=6 s=22]%-12s[/style]%-6s[style c=5 s=22]%s[/style]\n\n",linemsg[14]," ",linemsg[15])
+					.. "           "..string.format("[style c=10]%s[/style]%-12s[style c=4]%s[/style]%s","赢方：",linemsg[12],"大小：",linemsg[13])
+					lssproto.windows(talkerindex, 0, 12, 3, char.getWorkInt(meindex, "对象"), token);
+				elseif other.atoi(data) == 3 then
+					for i=37,51 do
+						local getright = string_split(line[i],"=")
+						table.insert(linemsg,string.match(getright[2],"%s*(.-)%s*$"))
+					end
+					winnerC = linemsg[12]
+					wintotalC = linemsg[13]
+					score1C = linemsg[14]
+					score2C = linemsg[15]
+					local token = "\n\n"
+					.. "          "..string.format("[style c=6]%-12s[/style]%-6s[style c=5]%s[/style]\n",linemsg[3],"VS",linemsg[4])
+					.. "              "..string.format("[style c=6 s=22]%-12s[/style]%-6s[style c=5 s=22]%s[/style]\n\n",linemsg[14]," ",linemsg[15])
+					.. "           "..string.format("[style c=10]%s[/style]%-12s[style c=4]%s[/style]%s","赢方：",linemsg[12],"大小：",linemsg[13])
+					lssproto.windows(talkerindex, 0, 12, 4, char.getWorkInt(meindex, "对象"), token);
+				end
+			end
+			f:close()
+		elseif seqno == 2 then
+			local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local token = "球赛1状态=结束\n"
+			f2:read()
+			for i=1,50 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			f2:close()
+			local f3 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+			f3:write(token)
+			f3:close()
+			gamestart = "结束"
+			sasql.query("select * from Soccer where Home>0 or Away>0 or TotalL>0 or TotalS>0")
+			sasql.free_result();
+			sasql.store_result();
+			for i=1,sasql.num_rows() do
+				sasql.fetch_row();
+				local reward = other.atoi(sasql.data(14))
+				if winner == "主" and other.atoi(sasql.data(2)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(2))*rate1)+reward
+				elseif winner == "客" and other.atoi(sasql.data(3)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(3))*rate2)+reward
+				elseif winner == "平" then
+					reward = other.atoi(sasql.data(2)) + other.atoi(sasql.data(3)) +reward
+				end
+				if wintotal == "大" and other.atoi(sasql.data(4)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(4))*totalrate1)+reward
+				elseif wintotal == "小" and other.atoi(sasql.data(5)) > 0 then
+					   reward = math.floor(other.atoi(sasql.data(5))*totalrate2)+reward
+				elseif wintotal == "平" then
+					reward = other.atoi(sasql.data(4)) + other.atoi(sasql.data(5)) +reward
+				end
+				sasql.query("update Soccer SET Home=0,Away=0,TotalL=0,TotalS=0,Reward="..reward.." where Account='"..sasql.data(1).."'")
+			end
+			if winner == "主" then
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..home.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='输' where Home='"..home.."' and Bet='客' and Result='未完赛'")
+			elseif winner == "客" then
+				sasql.query("update SoccerResult SET Result='输' where Home='"..home.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..home.."' and Bet='客' and Result='未完赛'")
+			elseif winner == "平" then
+				sasql.query("update SoccerResult SET Result='平' where Home='"..home.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='平' where Home='"..home.."' and Bet='客' and Result='未完赛'")
+			end
+			if wintotal == "大" then
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..home.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='输' where Home='"..home.."' and Bet='小' and Result='未完赛'")
+			elseif wintotal == "小" then
+				sasql.query("update SoccerResult SET Result='输' where Home='"..home.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..home.."' and Bet='小' and Result='未完赛'")
+			elseif wintotal == "平" then
+				sasql.query("update SoccerResult SET Result='平' where Home='"..home.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='平' where Home='"..home.."' and Bet='小' and Result='未完赛'")
+			end
+			char.talkToAllServer("P|P|[竞猜提示]"..match.." : "..home.."  "..score1.." 比 "..score2.."  "..away.."  请及时领取奖金哦","")
+		elseif seqno == 3 then
+			local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local token = ""
+			for i=1,18 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			f2:read()
+			token = token.."球赛2状态=结束\n"
+			for i=20,51 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			local f3 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+			f3:write(token)
+			f2:close()
+			f3:close()
+			gamestartB = "结束"
+			sasql.query("select * from Soccer where Home2>0 or Away2>0 or TotalL2>0 or TotalS2>0")
+			sasql.free_result();
+			sasql.store_result();
+			for i=1,sasql.num_rows() do
+				sasql.fetch_row();
+				local reward = other.atoi(sasql.data(14))
+				if winnerB == "主" and other.atoi(sasql.data(6)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(6))*rate1B)+reward
+				elseif winnerB == "客" and other.atoi(sasql.data(7)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(7))*rate2B)+reward
+				elseif winnerB == "平" then
+					reward = other.atoi(sasql.data(6)) + other.atoi(sasql.data(7)) +reward
+				end
+				if wintotalB == "大" and other.atoi(sasql.data(8)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(8))*totalrate1B)+reward
+				elseif wintotalB == "小" and other.atoi(sasql.data(9)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(9))*totalrate2B)+reward
+				elseif wintotalB == "平" then
+					reward = other.atoi(sasql.data(8)) + other.atoi(sasql.data(9)) +reward
+				end
+				sasql.query("update Soccer SET Home2=0,Away2=0,TotalL2=0,TotalS2=0,Reward="..reward.." where Account='"..sasql.data(1).."'")
+			end
+			if winnerB == "主" then
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeB.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeB.."' and Bet='客' and Result='未完赛'")
+			elseif winnerB == "客" then
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeB.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeB.."' and Bet='客' and Result='未完赛'")
+			elseif winnerB == "平" then
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeB.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeB.."' and Bet='客' and Result='未完赛'")
+			end
+			if wintotalB == "大" then
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeB.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeB.."' and Bet='小' and Result='未完赛'")
+			elseif wintotalB == "小" then
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeB.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeB.."' and Bet='小' and Result='未完赛'")
+			elseif wintotalB == "平" then
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeB.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeB.."' and Bet='小' and Result='未完赛'")
+			end
+			char.talkToAllServer("P|P|[竞猜提示]"..matchB.." : "..homeB.."  "..score1B.." 比 "..score2B.."  "..awayB.."  请及时领取奖金哦","")
+		elseif seqno == 4 then
+			local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local token = ""
+			for i=1,36 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			f2:read()
+			token = token.."球赛3状态=结束\n"
+			for i=38,51 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			local f3 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+			f3:write(token)
+			f2:close()
+			f3:close()
+			gamestartC = "结束"
+			sasql.query("select * from Soccer where Home3>0 or Away3>0 or TotalL3>0 or TotalS3>0")
+			sasql.free_result();
+			sasql.store_result();
+			for i=1,sasql.num_rows() do
+				sasql.fetch_row();
+				local reward = other.atoi(sasql.data(14))
+				if winnerC == "主" and other.atoi(sasql.data(10)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(10))*rate1C)+reward
+				elseif winnerC == "客" and other.atoi(sasql.data(11)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(11))*rate2C)+reward
+				elseif winnerC == "平" then
+					reward = other.atoi(sasql.data(10)) + other.atoi(sasql.data(11)) +reward
+				end
+				if wintotalC == "大" and other.atoi(sasql.data(12)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(12))*totalrate1C)+reward
+				elseif wintotalC == "小" and other.atoi(sasql.data(13)) > 0 then
+					reward = math.floor(other.atoi(sasql.data(13))*totalrate2C)+reward
+				elseif wintotalC == "平" then
+					reward = other.atoi(sasql.data(12)) + other.atoi(sasql.data(13)) +reward
+				end
+				sasql.query("update Soccer SET Home3=0,Away3=0,TotalL3=0,TotalS3=0,Reward="..reward.." where Account='"..sasql.data(1).."'")
+			end
+			char.talkToAllServer("P|P|[竞猜提示]"..matchC.." : "..homeC.."  "..score1C.." 比 "..score2C.."  "..awayC.."  请及时领取奖金哦","")
+			if winnerC == "主" then
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeC.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeC.."' and Bet='客' and Result='未完赛'")
+			elseif winnerC == "客" then
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeC.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeC.."' and Bet='客' and Result='未完赛'")
+			elseif winnerC == "平" then
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeC.."' and Bet='主' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeC.."' and Bet='客' and Result='未完赛'")
+			end
+			if wintotalC == "大" then
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeC.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeC.."' and Bet='小' and Result='未完赛'")
+			elseif wintotalC == "小" then
+				sasql.query("update SoccerResult SET Result='输' where Home='"..homeC.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='赢' where Home='"..homeC.."' and Bet='小' and Result='未完赛'")
+			elseif wintotalC == "平" then
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeC.."' and Bet='大' and Result='未完赛'")
+				sasql.query("update SoccerResult SET Result='平' where Home='"..homeC.."' and Bet='小' and Result='未完赛'")
+			end
+		end
+	end
+end
+
+function gmball()
+	if true then
+		local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+		local gtd = f:read("*all")
+		local line = string_split(gtd,"\n")
+		local linemsg = {}
+		for i=1,15 do
+			local getright = string_split(line[i],"=")
+			table.insert(linemsg,string.match(getright[2],"%s*(.-)%s*$"))
+		end
+		gamestart = linemsg[1]
+		match = linemsg[2]
+		home = linemsg[3]
+		away = linemsg[4]
+		hour = other.atoi(linemsg[5])
+		fix = linemsg[6]
+		rate1 = linemsg[7]
+		rate2 = linemsg[8]
+		total = linemsg[9]
+		totalrate1 = linemsg[10]
+		totalrate2 = linemsg[11]
+		winner = linemsg[12]
+		wintotal = linemsg[13]
+		score1 = linemsg[14]
+		score2 = linemsg[15]
+		if gamestart == "新" then
+			char.talkToAllServer("P|P|[竞猜提示]"..match.." : "..home.." VS "..away.."  竞猜开始了","")
+			gamestart = "开始"
+			local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local token = "球赛1状态=开始\n"
+			f2:read()
+			for i=1,50 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			f2:close()
+			local f3 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+			f3:write(token)
+			f3:close()
+		elseif gamestart == "关闭" then
+			close = false
+			hour = -1
+		end
+		f:close()
+	end
+	if true then
+		local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+		local gtd = f:read("*all")
+		local line = string_split(gtd,"\n")
+		local linemsgB = {}
+		for i=19,33 do
+			local getright = string_split(line[i],"=")
+			table.insert(linemsgB,string.match(getright[2],"%s*(.-)%s*$"))
+		end
+		gamestartB = linemsgB[1]
+		matchB = linemsgB[2]
+		homeB = linemsgB[3]
+		awayB = linemsgB[4]
+		hourB = other.atoi(linemsgB[5])
+		fixB = linemsgB[6]
+		rate1B = linemsgB[7]
+		rate2B = linemsgB[8]
+		totalB = linemsgB[9]
+		totalrate1B = linemsgB[10]
+		totalrate2B = linemsgB[11]
+		winnerB = linemsgB[12]
+		wintotalB = linemsgB[13]
+		score1B = linemsgB[14]
+		score2B = linemsgB[15]
+		if gamestartB == "新" then
+			char.talkToAllServer("P|P|[竞猜提示]"..matchB.." : "..homeB.." VS "..awayB.."  竞猜开始了","")
+			gamestartB = "开始"
+			local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local token = ""
+			for i=1,18 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			f2:read()
+			token = token.."球赛2状态=开始\n"
+			for i=20,51 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			local f3 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+			f3:write(token)
+			f2:close()
+			f3:close()
+		elseif gamestartB == "关闭" then
+			closeB = false
+			hourB = -1
+		end
+		f:close()
+	end
+	if true then
+		local f = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+		local gtd = f:read("*all")
+		local line = string_split(gtd,"\n")
+		local linemsgC = {}
+		for i=37,51 do
+			local getright = string_split(line[i],"=")
+			table.insert(linemsgC,string.match(getright[2],"%s*(.-)%s*$"))
+		end
+		gamestartC = linemsgC[1]
+		matchC = linemsgC[2]
+		homeC = linemsgC[3]
+		awayC = linemsgC[4]
+		hourC = other.atoi(linemsgC[5])
+		fixC = linemsgC[6]
+		rate1C = linemsgC[7]
+		rate2C = linemsgC[8]
+		totalC = linemsgC[9]
+		totalrate1C = linemsgC[10]
+		totalrate2C = linemsgC[11]
+		winnerC = linemsgC[12]
+		wintotalC = linemsgC[13]
+		score1C = linemsgC[14]
+		score2C = linemsgC[15]
+		if gamestartC == "新" then
+			char.talkToAllServer("P|P|[竞猜提示]"..matchC.." : "..homeC.." VS "..awayC.."  竞猜开始了","")
+			gamestartC = "开始"
+			local f2 = io.open("./data/ablua/npc/duqiu/soccer.txt","r")
+			local token = ""
+			for i=1,36 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			f2:read()
+			token = token.."球赛3状态=开始\n"
+			for i=38,51 do
+				local fdata = f2:read()
+				token = token..fdata.."\n"
+			end
+			local f3 = io.open("./data/ablua/npc/duqiu/soccer.txt","w")
+			f3:write(token)
+			f2:close()
+			f3:close()
+		elseif gamestartC == "关闭" then
+			closeC = false
+			hourC = -1
+		end
+		f:close()
+	end
+end
+
+function Create(name, metamo, floor, x, y, dir)
+	local npcindex = npc.CreateNpc(name, metamo, floor, x, y, dir)
+	if x == 42 and y == 22 then
+		char.setFunctionPointer(npcindex, "对话事件", "Talked1", "")
+		char.setFunctionPointer(npcindex, "窗口事件", "WindowTalked1", "")
+	else
+		char.setFunctionPointer(npcindex, "对话事件", "Talked", "")
+		char.setFunctionPointer(npcindex, "窗口事件", "WindowTalked", "")
+		char.setInt(npcindex, "循环事件时间", 15000);
+		char.setFunctionPointer(npcindex, "循环事件", "Loop", "")
+	end
+end
+
+function main()
+	hour,hourB,hourC = -1,-1,-1
+	close,closeB,closeC = false,false,false
+	gamestart,gamestartB,gamestartC = "等待","等待","等待"
+	match,matchB,matchC = "暂未开赛","暂未开赛","暂未开赛"
+	Create("球赛竞猜", 26966, 2005, 6, 15, 6)
+	Create("球赛竞猜GM专用", 100427, 777, 42, 22, 8)
+	Create("球赛竞猜", 100427, 777, 42, 25, 8)
+	gmball()
+end

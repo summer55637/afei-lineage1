@@ -1,0 +1,774 @@
+function checkEmptPetNum(charaindex)
+	EmptyPetNum = 0
+	for i = 0, 4 do
+		if char.check(char.getCharPet(charaindex, i)) == 0 then
+			EmptyPetNum = EmptyPetNum + 1
+		end
+	end
+	return EmptyPetNum
+end
+
+function checkEmptItemNum(charaindex)
+	EmptyItemNum = 0
+	for i = 9, 23 do
+		if char.getItemIndex(charaindex, i) == -1 then
+			EmptyItemNum = EmptyItemNum + 1
+		end
+	end
+	return EmptyItemNum
+end
+
+
+function BattleOver(meindex, battleindex, iswin)
+	for i=0, 4 do
+		charaindex = battle.getCharOne(battleindex, i, 0)
+		if char.check(charaindex) == 1 then
+			local npcid = char.getWorkInt(meindex, "NPC临时15")
+			local TM_LoaclTime = os.time()
+			char.setInt(charaindex, "楼层时间", TM_LoaclTime)
+			if char.getFlg(charaindex, "死亡") == 1 and TM_DieWarp == 1 then
+				char.DischargeParty(charaindex, 1)
+				char.WarpToSpecificPoint(charaindex, 2000, 65, 58)
+			end
+			if iswin == 1 then
+				char.DischargeParty(charaindex, 1)
+				char.WarpToSpecificPoint(charaindex, NpcData[1][npcid+1], NpcData[4][npcid+1][1] - 1, NpcData[4][npcid+1][2])
+				char.TalkToCli(charaindex, meindex, "太可恶了，我的兄弟"..NpcData[3][npcid+1].."在下层等着你！", "随机色")
+			end
+		end
+	end
+end
+
+function ShowReadMe( meindex, talkerindex, page)
+		token = TM_ReadMe[page+1]
+		
+		if maxpage == 0 then
+			button = 8
+		elseif page == 0 and page < maxpage then
+			button = 40
+		elseif page > 0 and page < maxpage then
+			button = 56
+		elseif page == maxpage then
+			button = 24
+		end
+		lssproto.windows(talkerindex, "对话框", button, 1100 + page, char.getWorkInt( meindex, "对象"), token)
+end
+
+--NPC对话事件(NPC索引)
+function Talked(meindex, talkerindex , szMes, color )
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		if char.getWorkInt(meindex, "NPC临时15") == 0 then
+			token = char.getChar(meindex, "名字") .. "|想要进入地狱挑战阎罗么|4|我要接受挑战|缩短进入时间|装备兑换活力|功能介绍说明"
+			lssproto.windows(talkerindex, "新选择框", 8, 1, char.getWorkInt( meindex, "对象"), token)
+		else
+			if char.getWorkInt(talkerindex, "组队") == 2 then
+				--char.TalkToCli(talkerindex, -1, "队员不能使用！", "随机色")
+				return
+			end
+			local npcid = char.getWorkInt(meindex, "NPC临时15")
+			if npcid == 1 then
+				token = char.getChar(meindex, "名字") .. "||1|挑战本殿阎罗"
+			elseif npcid >= 2 and npcid <= 5 then
+				token = char.getChar(meindex, "名字") .. "||2|挑战本殿阎罗|领奖退出挑战"
+			elseif npcid == 6 then
+				token = char.getChar(meindex, "名字") .. "||1|领奖退出挑战"
+			else
+				return
+			end
+			lssproto.windows(talkerindex, "新选择框", 8, 4, char.getWorkInt( meindex, "对象"), token)
+		end
+	end
+end
+
+function getBattleType( battleindex )
+	local battlefloor = battle.getBattleFloor(battleindex)
+	local battlex = battle.getBattleX(battleindex)
+	local battley = battle.getBattleY(battleindex)
+	if battlefloor ~= 2005 then
+		return 0
+	end
+	for i=1,5 do
+		if battlex >= NpcData[5][i][1] and battley >= NpcData[5][i][2] and battlex <= NpcData[5][i][3] and battley <= NpcData[5][i][4] then
+			return i
+		end
+	end
+	return 0
+end
+
+--NPC窗口事件(NPC索引)
+function WindowTalked ( meindex, talkerindex, seqno, select, data)
+--	char.talkToServer(meindex, "Seqno:"..seqno.." | select:"..select.." | data:"..data, "随机色")
+	local TM_LoaclTime = os.time()
+	local TM_LowTime = char.getInt(talkerindex, "楼层时间") + TM_ReTime - TM_LoaclTime
+--	char.talkToServer(meindex, "NowTime:"..TM_LoaclTime.." | ReTime:"..TM_ReTime.. " | 楼层时间：".. char.getInt(talkerindex, "楼层时间") .." | 剩余:"..TM_LowTime, "随机色")
+
+	if npc.isFaceToFace(meindex, talkerindex) == 1 then 
+		if seqno == 0 then
+			if select == 4 then
+				local TM_TeamNum = 0
+				id = char.getWorkInt(meindex, "NPC临时15")
+				if id < 1 or id > 20 then
+					char.TalkToCli(talkerindex, -1, "系统出问题了,请于管理员联系", "随机色")
+					return
+				end
+				
+				if char.getWorkInt(talkerindex, "组队") ~= 0 then
+					local TempIndex = {-1,-1,-1,-1,-1}
+					for i=1,5 do
+						TempIndex[i] = char.getWorkInt(talkerindex, "队员"..i)
+						if char.check(TempIndex[i]) == 1 then
+							TM_TeamNum = TM_TeamNum+1
+							if checkEmptItemNum(TempIndex[i]) == 0 then
+								char.TalkToCli(TempIndex[i], -1, "道具栏已满", "白色")
+								return
+							end
+						end
+					end
+				else
+					TM_TeamNum = 1
+					if checkEmptItemNum(talkerindex) == 0 then
+						char.TalkToCli(talkerindex, -1, "道具栏已满", "白色")
+						return
+					end
+				end
+
+				local MonsterID = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}
+				local MonsterLV = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}
+				local MBL = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}
+				local MSL = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}
+				local MonsterAttribute = {0,0,0,0}
+				local RM = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}
+				local RandMonsterNum = table.getn(BattleBoss[2])
+				local LvStr = ""
+				local IdStr = ""
+				local UserDobule = 0
+				for i = 1,10 do
+					RM[i] = math.random(1,RandMonsterNum)
+					MBL[i] = BattleBoss[3][id] + math.random(0,BattleBoss[3][12])
+					MSL[i] = BattleBoss[4][id] + math.random(0,BattleBoss[4][12])
+				end
+				
+				if shuatype == 0 then
+					if TM_TeamNum == 1 then
+						MonsterID = {BattleBoss[1][id],BattleBoss[2][RM[1]],-1,-1,-1,-1,-1,-1,-1,-1}
+						MonsterLV = {MBL[1],MSL[1],-1,-1,-1,-1,-1,-1,-1,-1}
+					elseif 	TM_TeamNum == 2 then
+						if char.getWorkChar(talkerindex,"MAC") == char.getWorkChar(char.getWorkInt(talkerindex, "队员2"),"MAC") and id < 4 then
+							MonsterID = {BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],-1,-1,-1,-1,-1}
+							MonsterLV = {MBL[1],MSL[1],MSL[2],MSL[3],MSL[4],-1,-1,-1,-1,-1}
+							UserDobule = 1
+						else
+							MonsterID = {BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],-1,-1,-1,-1,-1,-1}
+							MonsterLV = {MBL[1],MSL[1],MSL[2],MSL[3],-1,-1,-1,-1,-1,-1}
+						end
+					elseif 	TM_TeamNum == 3 then
+						MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],-1,-1,-1,-1}
+						MonsterLV = {MBL[1],MBL[2],MSL[1],MSL[2],MSL[3],MSL[4],-1,-1,-1,-1}
+					elseif 	TM_TeamNum == 4 then
+						MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],BattleBoss[2][RM[5]],BattleBoss[2][RM[6]],-1,-1}
+						MonsterLV = {MBL[1],MBL[2],MSL[1],MSL[2],MSL[3],MSL[4],MSL[5],MSL[6],-1,-1}
+					elseif 	TM_TeamNum == 5 then
+						if TM_FiveSlow > id then
+							MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],BattleBoss[2][RM[5]],BattleBoss[2][RM[6]],BattleBoss[2][RM[7]],BattleBoss[2][RM[8]]}
+							MonsterLV = {MBL[1],MBL[2],MSL[8],MSL[1],MSL[2],MSL[3],MSL[4],MSL[5],MSL[6],MSL[7]}
+						else
+							MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],BattleBoss[2][RM[5]],BattleBoss[2][RM[6]],BattleBoss[2][RM[7]]}
+							MonsterLV = {MBL[1],MBL[2],MBL[3],MSL[1],MSL[2],MSL[3],MSL[4],MSL[5],MSL[6],MSL[7]}
+						end
+					end
+				else
+					if TM_TeamNum == 5 then
+						if TM_FiveSlow > id then
+							MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],BattleBoss[2][RM[5]],BattleBoss[2][RM[6]],BattleBoss[2][RM[7]],BattleBoss[2][RM[8]]}
+							MonsterLV = {MBL[1],MBL[2],MSL[8],MSL[1],MSL[2],MSL[3],MSL[4],MSL[5],MSL[6],MSL[7]}
+						else
+							MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],BattleBoss[2][RM[5]],BattleBoss[2][RM[6]],BattleBoss[2][RM[7]]}
+							MonsterLV = {MBL[1],MBL[2],MBL[3],MSL[1],MSL[2],MSL[3],MSL[4],MSL[5],MSL[6],MSL[7]}
+						end
+					else
+						MonsterID = {BattleBoss[1][id],BattleBoss[1][id],BattleBoss[2][RM[1]],BattleBoss[2][RM[2]],BattleBoss[2][RM[3]],BattleBoss[2][RM[4]],BattleBoss[2][RM[5]],BattleBoss[2][RM[6]],-1,-1}
+						MonsterLV = {MBL[1],MBL[2],MSL[1],MSL[2],MSL[3],MSL[4],MSL[5],MSL[6],-1,-1}
+					end
+				end
+				
+				for i=1,10 do
+					if i < 10 then
+						LvStr = LvStr .. MonsterLV[i] .. ","
+						IdStr = IdStr .. MonsterID[i] .. ","
+					else
+						LvStr = LvStr .. MonsterLV[i]
+						IdStr = IdStr .. MonsterID[i]
+					end
+				end
+				
+				battleindex = battle.CreateVsEnemyLv(talkerindex, meindex, IdStr, LvStr)
+				char.TalkToCli(talkerindex, meindex, "哎，现在的人啊，怎么都往地狱钻呢？", "随机色")
+				if shuatype == 1 then
+					char.TalkToCli(talkerindex, -1, "活动提示：目前是刷楼竞赛活动时间，最少刷新2个BOSS，6个小怪。建议四人以上互动挑战。", "随机色")
+				end
+				if UserDobule == 1 then
+					char.talkToParty(talkerindex, meindex, "由于您一机双开，系统给您一个小怪的难度，希望您多和他人合作挑战哦！", "随机色")
+				end
+				
+				local LouCeng = char.getWorkInt(meindex, "NPC临时15")
+				local TempIndex = -1
+				local TypeOne = -1
+				local TypeTwo = -1
+				local Type = {-1,-1,-1,-1}
+				local RandType = math.random(1,100)
+				local TM_Di
+				local TM_Shui
+				local TM_Huo
+				local TM_Feng
+				local TM_Token
+				
+				
+				for i=0,9 do
+					TempIndex = battle.getCharOne(battleindex, i, 1)
+					if char.check(TempIndex) == 1 then
+						if char.getChar(TempIndex,"名字") == NpcData[3][LouCeng] and RandType <= TM_RandType[LouCeng] then
+							--char.TalkToCli(talkerindex, -1, "第"..i.."号索引 名称："..char.getChar(TempIndex,"名字"), "随机色")
+							--char.TalkToCli(talkerindex, -1, "第"..i.."号索引属性随机前 地："..char.getInt(TempIndex,"地") .. " | 水：" .. char.getInt(TempIndex,"水").. " | 火：" .. char.getInt(TempIndex,"火").. " | 风：" .. char.getInt(TempIndex,"风"), "随机色")
+							TypeOne = math.random(1,4)
+							TypeTwo = math.random(1,4)
+							Type = {0,0,0,0}
+							if TypeOne+2 == TypeTwo or TypeOne-2 == TypeTwo then
+								if math.random(1,2) == 1 then
+									TypeTwo = TypeOne+1
+								else
+									TypeTwo = TypeOne-1
+								end
+								if TypeTwo == 0 then
+									TypeTwo = 4
+								elseif TypeTwo == 5 then
+									TypeTwo = 1
+								end
+							end
+							if TypeOne == TypeTwo then
+								Type[TypeOne] = 100									
+							else
+								Type[TypeOne] = math.random(1,2) * 10
+								Type[TypeTwo] = 100 - Type[TypeOne]
+							end
+							char.setInt(TempIndex,"地",Type[1])
+							char.setInt(TempIndex,"水",Type[2])
+							char.setInt(TempIndex,"火",Type[3])
+							char.setInt(TempIndex,"风",Type[4])
+							--char.TalkToCli(talkerindex, -1, "第"..i.."号索引属性随机后 地："..char.getInt(TempIndex,"地") .. " | 水：" .. char.getInt(TempIndex,"水").. " | 火：" .. char.getInt(TempIndex,"火").. " | 风：" .. char.getInt(TempIndex,"风"), "随机色")
+							
+							TM_Di = char.getInt(TempIndex,"地") / 10
+							TM_Shui = char.getInt(TempIndex,"水") / 10
+							TM_Huo = char.getInt(TempIndex,"火") / 10
+							TM_Feng = char.getInt(TempIndex,"风") / 10
+						end
+						if char.getChar(TempIndex,"名字") == NpcData[3][LouCeng] then
+							TM_Token = ""
+							if TM_Di > 0 then
+								TM_Token = TM_Token .. "地:" .. TM_Di .. " "
+							end
+							if TM_Shui > 0 then
+								TM_Token = TM_Token .. "水:" .. TM_Shui .. " "
+							end
+							if TM_Huo > 0 then
+								TM_Token = TM_Token .. "火:" .. TM_Huo .. " "
+							end
+							if TM_Feng > 0 then
+								TM_Token = TM_Token .. "风:" .. TM_Feng .. " "
+							end
+							if TM_Di == 0 and TM_Shui == 0 and TM_Huo == 0 and TM_Feng == 0 then
+								TM_Token = "无属性"
+							end
+							if id < TM_ShowTypeNum then
+								char.TalkToCli(talkerindex, -1, char.getChar(TempIndex,"名字") .. " 当前殿主属性 - " .. TM_Token , "随机色")
+							end
+						end
+					end
+				end
+			end
+		elseif seqno == 1 then
+			if select == 0 then
+				local num = other.atoi(data)
+				if num == 1 then
+					token = char.getChar(meindex, "名字") .. "|想要进入地狱挑战阎罗么|1|正常难度"
+					lssproto.windows(talkerindex, "新选择框", 8, 7, char.getWorkInt( meindex, "对象"), token)
+				elseif num == 2 then
+					if TM_LowTime > 0 then
+						token = "                  " .. char.getChar(meindex, "名字") .. "\n\n"
+								 .. "您那么迫不及待的想去送死么？\n我可以帮你缩短冷却时间的哈！\n收费标准是60活力\n你当前等待时间是 [" .. TM_LowTime .. "] 秒"
+			
+						lssproto.windows(talkerindex, "对话框", 12, 3, char.getWorkInt( meindex, "对象"), token)
+					else
+						char.TalkToCli(talkerindex, meindex, "当前你无需缩短冷却时间，可直下地狱！", "随机色")
+					end
+					
+				elseif num == 3 then
+					lssproto.windows(talkerindex, 1025, 0, 6, char.getWorkInt( meindex, "对象"), "0")
+				elseif num == 4 then
+					ShowReadMe(meindex, talkerindex, 0)
+				end
+			end
+		elseif seqno == 3 then
+			if select == 1 or select == 4 then
+				if TM_LowTime > 0 then
+					if char.getInt(talkerindex, "活力") < 60 then
+						char.newMessageToCli(talkerindex, -1, "活力不足", "随机色")
+						lssproto.windows(talkerindex, 1038, 0, -1, -1, "6")
+						return
+					end
+					char.setInt(talkerindex, "楼层时间", 0)
+					char.setInt(talkerindex, "活力", char.getInt(talkerindex, "活力") - 60)
+					char.setInt(talkerindex,"气势",char.getInt(talkerindex,"气势") + 60 * 100)
+					saacproto.ACFixFMData(talkerindex,12,char.getInt(talkerindex,"气势"),"")
+					other.CallFunction("updateHuoyue", "data/ablua/npc/huoyue/huoyue.lua", {talkerindex,2,60})
+					char.newMessageToCli(talkerindex, -1, "扣除60点活力", "随机色")
+				end
+			end
+		elseif seqno == 4 then
+			local num = other.atoi(data)
+			local npcid = char.getWorkInt(meindex,"NPC临时15")
+			npcindex[npcid] = meindex
+			if npcid == 1 then
+				if num == 1 then
+					token = "准备好了接受阎王的怒火么的??" 
+					lssproto.windows(talkerindex, "对话框", 12, 0, char.getWorkInt( meindex, "对象"), token)
+				end
+			elseif npcid >= 2 and npcid <= 5 then
+				if num == 1 then
+					token = "准备好了接受阎王的怒火么的??" 
+					lssproto.windows(talkerindex, "对话框", 12, 0, char.getWorkInt( meindex, "对象"), token)
+				elseif num == 2 then
+					if checkEmptItemNum(talkerindex) < 1 then
+						char.newMessageToCli(talkerindex, -1, "您的道具栏已满", "随机色")
+						return
+					end
+					char.setWorkInt(talkerindex,"NPC临时11",other.Random(1000,9999))
+					char.setWorkInt(talkerindex,"NPC临时12",other.time())
+					token = "您确定要领奖退出挑战吗|" .. char.getWorkInt(talkerindex,"NPC临时11") 
+					lssproto.windows(talkerindex, 1043, "确定|取消", 5, char.getWorkInt( meindex, "对象"), token)
+				end
+			elseif npcid == 6 then
+				if num == 1 then
+					if checkEmptItemNum(talkerindex) < 1 then
+						char.newMessageToCli(talkerindex, -1, "您的道具栏已满", "随机色")
+						return
+					end
+					char.setWorkInt(talkerindex,"NPC临时11",other.Random(1000,9999))
+					char.setWorkInt(talkerindex,"NPC临时12",other.time())
+					token = "您确定要领奖退出挑战吗|" .. char.getWorkInt(talkerindex,"NPC临时11")
+					lssproto.windows(talkerindex, 1043, "确定|取消", 5, char.getWorkInt( meindex, "对象"), token)
+				end
+			end
+		elseif seqno == 5 then
+			local npcid = char.getWorkInt(meindex,"NPC临时15")
+			if npcid >= 2 and npcid <= 6 then
+				if select == 1 or select == 4 then
+					if char.getWorkInt(talkerindex,"NPC临时12") + 10 < other.time() then
+						char.setWorkInt(talkerindex,"NPC临时11",other.Random(1000,9999))
+						char.setWorkInt(talkerindex,"NPC临时12",other.time())
+						token = "您的验证码已经超时|" .. char.getWorkInt(talkerindex,"NPC临时11")
+						lssproto.windows(talkerindex, 1043, "确定|取消", 5, char.getWorkInt( meindex, "对象"), token)
+						return
+					else
+						if data == "" then
+							char.setWorkInt(talkerindex,"NPC临时11",other.Random(1000,9999))
+							char.setWorkInt(talkerindex,"NPC临时12",other.time())
+							token = "您的验证码输入错误|" .. char.getWorkInt(talkerindex,"NPC临时11")
+							lssproto.windows(talkerindex, 1043, "确定|取消", 5, char.getWorkInt( meindex, "对象"), token)
+							return
+						end
+						if other.atoi(data) ~= char.getWorkInt(talkerindex,"NPC临时11") then
+							char.setWorkInt(talkerindex,"NPC临时11",other.Random(1000,9999))
+							char.setWorkInt(talkerindex,"NPC临时12",other.time())
+							token = "您的验证码输入错误|" .. char.getWorkInt(talkerindex,"NPC临时11")
+							lssproto.windows(talkerindex, 1043, "确定|取消", 5, char.getWorkInt( meindex, "对象"), token)
+							return
+						end
+					end
+					char.setWorkInt(talkerindex,"NPC临时11",0)
+					char.setWorkInt(talkerindex,"NPC临时12",0)
+					if GiveItemList[npcid - 1] ~= nil then
+						local TM_ItemIndex = npc.AddRandItem(talkerindex, GiveItemList[npcid - 1])
+						char.newMessageToCli(talkerindex, -1, "获得" .. item.getChar(TM_ItemIndex, "显示名"), "随机色")
+						if item.getInt(TM_ItemIndex,"序号") == 21113 then
+							token = "insert into `molog` values ('" .. char.getChar(talkerindex,"账号") .. "','" .. char.getChar(talkerindex,"名字") .. "',NOW())"
+							sasql.query(token)
+						end
+						for i=1,table.getn(AllServerItemList) do
+							if item.getInt(TM_ItemIndex,"序号") == AllServerItemList[i] then
+								char.talkToAllServer("P|P|恭喜[" .. char.getChar(talkerindex,"名字") .. "]在挑战阎罗中获得[" .. item.getChar(TM_ItemIndex,"显示名") .. "]","")
+								break
+							end
+						end
+					end
+
+					char.WarpToSpecificPoint(talkerindex, 2000, 65, 58)
+					other.CallFunction("updateHuoyue", "data/ablua/npc/huoyue/huoyue.lua", {talkerindex,11,1})
+				end
+			end
+		elseif seqno == 6 then
+			if data == "" then
+				return
+			end
+			local itemhaveid = {}
+			playerhaveid[talkerindex] = {}
+			for i=1,15 do
+				local itemhaveidbuff = other.getString(data,"|",i)
+				if itemhaveidbuff == "" then
+					break
+				end
+				itemhaveid[table.getn(itemhaveid) + 1] = other.atoi(itemhaveidbuff)
+			end
+			local vigordata = 0
+			for i=1,table.getn(itemhaveid) do
+				if itemhaveid[i] < 9 or itemhaveid[i] > 23 then
+					return
+				end
+				local itemindex = char.getItemIndex(talkerindex,itemhaveid[i])
+				if item.check(itemindex) == 1 then
+					local zhao = 0
+					for j=1,table.getn(itemid) do
+						for k=1,table.getn(itemid[j][2]) do
+							if item.getInt(itemindex,"序号") >= itemid[j][2][k][1] and item.getInt(itemindex,"序号") <= itemid[j][2][k][2] then
+								vigordata = vigordata + itemid[j][1]
+								playerhaveid[talkerindex][table.getn(playerhaveid[talkerindex]) + 1] = itemhaveid[i]
+								zhao = 1
+								break
+							end
+						end
+						if zhao == 1 then
+							break
+						end
+					end
+				end
+			end
+			if vigordata > 0 then
+				token = "您确定要用这些装备兑换" .. vigordata .. "活力吗?"
+				lssproto.windows(talkerindex, "对话框", "确定|取消", 8, char.getWorkInt( meindex, "对象"), token)
+			end
+		elseif seqno == 7 then
+			if data == "" then
+				return
+			end
+			local num = other.atoi(data)
+			if num == 1 then
+				if char.getInt(talkerindex,"转数") < 1 or char.getInt(talkerindex,"等级") < 110 then
+					char.newMessageToCli(talkerindex,-1,"挑战魔王需要1转且110级以上","白色")
+					return
+				end
+				token = "\n确定要进入地狱挑战阎王吗??\n\n"
+						.."挑战需要消耗 地狱通行证 x 1"
+				if shuatype == 1 then
+					token = "\n确定要进入地狱挑战阎王吗??\n\n"
+						.."现在是活动时间，免票进入哦。"
+				end
+				lssproto.windows(talkerindex, "对话框", 12, 12, char.getWorkInt( meindex, "对象"), token)
+			end
+		elseif seqno == 8 then
+			if select ~= 1 then
+				return
+			end
+			if playerhaveid[talkerindex] == nil then
+				return
+			end
+			local vigordata = 0
+			for i=1,table.getn(playerhaveid[talkerindex]) do
+				if playerhaveid[talkerindex][i] < 9 or playerhaveid[talkerindex][i] > 23 then
+					playerhaveid[talkerindex] = nil
+					return
+				end
+				local itemindex = char.getItemIndex(talkerindex,playerhaveid[talkerindex][i])
+				if item.check(itemindex) == 1 then
+					local zhao = 0
+					for j=1,table.getn(itemid) do
+						for k=1,table.getn(itemid[j][2]) do
+							if item.getInt(itemindex,"序号") >= itemid[j][2][k][1] and item.getInt(itemindex,"序号") <= itemid[j][2][k][2] then
+								vigordata = vigordata + itemid[j][1]
+								zhao = 1
+								break
+							end
+						end
+						if zhao == 1 then
+							break
+						end
+					end
+					if zhao == 0 then
+						playerhaveid[talkerindex] = nil
+						return
+					end
+				end
+			end
+			if vigordata > 0 then
+				for i=1,table.getn(playerhaveid[talkerindex]) do
+					char.DelItem(talkerindex, playerhaveid[talkerindex][i])
+				end
+				char.setInt(talkerindex,"活力",char.getInt(talkerindex,"活力") + vigordata)
+				char.newMessageToCli(talkerindex,-1,"获得" .. vigordata .. "活力","白色")
+			end
+		elseif seqno == 12 then
+			if select == 8 then
+				return
+			end
+			if char.getWorkInt(talkerindex, "组队") ~= 0 then
+				char.TalkToCli(talkerindex, -1, "请解散团队后进入！", "随机色")
+				return
+			end
+		
+			if TM_LowTime > 0 then
+				char.TalkToCli(talkerindex, meindex, "请在" .. TM_LowTime .. "秒后再来挑战！", "随机色")
+				return
+			end
+			
+			if shuatype == 0 then
+				if npc.Free(meindex, talkerindex, "ITEM=20900") == 1 then
+					npc.DelItem(talkerindex, "20900*1")
+				elseif npc.Free(meindex, talkerindex, "ITEM=22036") == 1 then
+					npc.DelItem(talkerindex, "22036*1")
+				else
+--				char.TalkToCli(talkerindex, meindex, "今日举行阎王挑战大赛，13:30-14:00，无法进入阎王区域，14:00-15:30 无需门票进入，开启活动模式。", "随机色")
+				char.TalkToCli(talkerindex, meindex, "你身上并没有地狱通行证，请在声望商店购买再来吧!", "随机色")
+					return
+				end
+			end
+			
+			
+			char.setInt(talkerindex, "楼层时间", TM_LoaclTime)
+			
+			--char.talkToServer(-1, "[十殿阎罗快讯]勇者 " .. char.getChar(talkerindex, "名字") .. " 参加阎王挑战，你也快来吧！", "随机色")
+			char.WarpToSpecificPoint(talkerindex, NpcData[1][1], NpcData[4][1][1] - 1, NpcData[4][1][2])
+		elseif seqno == 13 then
+			if select == 8 then
+				return
+			end
+			if char.getWorkInt(talkerindex, "组队") ~= 0 then
+				char.TalkToCli(talkerindex, -1, "请解散团队后进入！", "随机色")
+				return
+			end
+		
+			if TM_LowTime > 0 then
+				char.TalkToCli(talkerindex, meindex, "请在" .. TM_LowTime .. "秒后再来挑战！", "随机色")
+				return
+			end
+			
+			
+			char.setInt(talkerindex, "楼层时间", TM_LoaclTime)
+			
+			--char.talkToServer(-1, "[十殿阎罗快讯]勇者 " .. char.getChar(talkerindex, "名字") .. " 参加阎王挑战，你也快来吧！", "随机色")
+			char.WarpToSpecificPoint(talkerindex, NpcData[1][1], NpcData[4][1][1] - 1, NpcData[4][1][2])
+		elseif seqno >= 1000 and seqno <= 1050 then
+			LookWar( meindex, talkerindex, seqno, select, data)
+		elseif seqno >= 1100 and seqno < 2000 then
+			num = seqno - 1100
+			if select == 16 then
+				ShowReadMe(meindex, talkerindex, num - 1)
+			elseif select == 32 then
+				ShowReadMe(meindex, talkerindex, num + 1)
+			end
+			
+			
+		end
+	end
+end
+
+function Create(name, metamo, floor, x, y, dir, flg, lv)
+	--创建NPC(NPC名字，图像号，地图号，坐标X，坐标Y，方向号)将返回一个NPC索引
+	local index = npc.CreateNpc(name, metamo, floor, x, y, dir)
+	--设置事件触发(NPC索引，事件，执行函数，执行函数文件路径)
+	char.setFunctionPointer(index, "对话事件", "Talked", "")
+	char.setFunctionPointer(index, "窗口事件", "WindowTalked", "")
+	char.setFunctionPointer(index, "战后事件", "BattleOver", "")
+	
+	char.setInt(index, "等级", lv)
+	char.setWorkInt(index, "NPC临时15", flg)
+	
+	if flg > 0 and flg <= 10 then
+		npcindex[flg] = index
+	end
+end
+
+function getIntPart(x)
+    if x <= 0 then
+       return math.ceil(x);
+    end
+
+    if math.ceil(x) == x then
+       x = math.ceil(x);
+    else
+       x = math.ceil(x) - 1;
+    end
+    return x;
+end
+
+function shualou(charaindex, data)
+	shuatype = other.atoi(data)
+	if shuatype == 0 then
+		shuatype = 0
+		char.TalkToCli(charaindex, -1, "成功关闭刷楼活动。", "青色")
+		char.talkToServer(-1, "【活动公告】阎王限时竞速挑战活动已经结束，感谢大家的参与，我们下次再见。", "随机色")
+		char.talkToServer(-1, "【活动公告】阎王限时竞速挑战活动已经结束，感谢大家的参与，我们下次再见。", "随机色")
+		char.talkToServer(-1, "【活动公告】阎王限时竞速挑战活动已经结束，感谢大家的参与，我们下次再见。", "随机色")
+	else
+		shuatype = 1
+		char.TalkToCli(charaindex, -1, "成功开启刷楼活动。", "青色")
+		char.talkToServer(-1, "【活动公告】阎王限时竞速挑战活动已经开启，目前进入阎王区域免费，快来挑战吧！", "随机色")
+		char.talkToServer(-1, "【活动公告】阎王限时竞速挑战活动已经开启，目前进入阎王区域免费，快来挑战吧！", "随机色")
+		char.talkToServer(-1, "【活动公告】阎王限时竞速挑战活动已经开启，目前进入阎王区域免费，快来挑战吧！", "随机色")
+	end
+end
+
+function partytype(meindex,toindex)
+	local meindextype = 0
+	local toindextype = 0
+	local meindextype1 = 0
+	local toindextype1 = 0
+	local toindextype2 = 0
+	for i=1,6 do
+		if char.getInt(meindex,"坐标X") >= NpcData[5][i][1] and char.getInt(meindex,"坐标X") <= NpcData[5][i][3] and char.getInt(meindex,"坐标Y") >= NpcData[5][i][2] and char.getInt(meindex,"坐标Y") <= NpcData[5][i][4] then
+			meindextype = i
+			break
+		end
+	end
+	for i=1,6 do
+		if char.getInt(toindex,"坐标X") >= NpcData[5][i][1] and char.getInt(toindex,"坐标X") <= NpcData[5][i][3] and char.getInt(toindex,"坐标Y") >= NpcData[5][i][2] and char.getInt(toindex,"坐标Y") <= NpcData[5][i][4] then
+			toindextype = i
+			break
+		end
+	end
+	
+
+	for i=1,4 do
+		if char.getInt(meindex,"坐标X") >= NpcData[6][i][1] and char.getInt(meindex,"坐标X") <= NpcData[6][i][3] and char.getInt(meindex,"坐标Y") >= NpcData[6][i][2] and char.getInt(meindex,"坐标Y") <= NpcData[6][i][4] then
+			toindextype2 = 1
+			break
+		end
+	end
+	
+	for i=1,4 do
+		if char.getInt(toindex,"坐标X") >= NpcData[6][i][1] and char.getInt(toindex,"坐标X") <= NpcData[6][i][3] and char.getInt(toindex,"坐标Y") >= NpcData[6][i][2] and char.getInt(toindex,"坐标Y") <= NpcData[6][i][4] then
+			toindextype2 = 1
+			break
+		end
+	end
+
+	if toindextype2 == 1 then
+		return 0
+	end
+	if meindextype == toindextype then
+		return 1
+	end
+	return 0
+end
+
+function data()
+	
+	TM_ReTime = 7200 -- 挑战冷却秒数
+	TM_JiFen = {5,6,7,8,10,12,14,16,18,20,25} -- 每层楼奖励保底积分
+	TM_JiFenRand = {2,2,3,4,5,5,6,6,7,8,10} -- 积分浮动范围
+	TM_RandType = {100,100,100,100,100,100,100,100,100,100,100} -- BOSS属性随机开关
+	TM_DieWarp = 0 -- 挑战死亡后是否传送到渔村（0关闭 1开启）
+	TM_ShowTypeNum = 7 -- 第几层之前提示属性（4就是前三层）
+	TM_FiveSlow = 10 -- 第几层以前开放5人降低难度（2BOSS+8小怪,5=1、2、3、4层）
+	TM_DoubleUp = 4 -- 第几层以前开放单人双开增加难度（多1个小怪,4=1、2、3层）
+	
+	BattleBoss = {
+					{4000,4001,4002,4003,4004,4005,4006,4007,4008,4009,4010}, -- 十殿阎罗的编号 1
+					{4011,4012,4013,4014,4011,4012,4013,4014}, -- 小怪的编号 2
+					{95,110,130,140,150,155,160,165,170,175,180,5}, -- 从1-10殿阎罗的等级基数 最后随机范围 3
+				    {90,100,113,120,135,140,155,145,150,155,160,10}, -- 从1-10殿小怪的等级基数 最后随机范围 3
+				}
+				
+	BattleBoss2 = {
+					{4542,4001,4002,4003,4004,4005,4006,4007,4008,4009,4010}, -- 十殿阎罗的编号 1
+					{4543,4543,4543,4543,4543,4543,4543,4543}, -- 小怪的编号 2
+					{95,110,122,130,135,155,160,165,170,175,180,5}, -- 从1-10殿阎罗的等级基数 最后随机范围 3
+					{90,105,113,120,130,140,155,145,150,155,160,10}, -- 从1-10殿小怪的等级基数 最后随机范围 3
+				}
+				
+	NpcData = {
+				{2005,2005,2005,2005,2005,2005}, -- 地图号 1
+				{108001,108001,108002,108002,108002,108002}, -- NPC形象 2
+				{"一殿秦广王","二殿楚江王","三殿宋帝王","四殿五官王","五殿阎罗王","六殿卞城王"}, -- NPC名字 3
+				{{5,27},{5,38},{16,27},{16,38},{27,27},{27,38}},--NPC位置
+				{{2,23,9,30},{2,34,9,41},{13,23,20,30},{13,34,20,41},{24,23,31,30},{24,34,31,41}},--地图坐标范围
+				{{22,20,22,43},{11,20,11,43},{0,32,33,32},{0,21,33,21}}--地图坐标范围
+			}
+
+	itemid = {
+				{10,{{14061,14090},{14361,14390},{14661,14690},{14961,14990},{15261,15290},{15561,15590},{15861,15890},{16161,16190},{16461,16490},{16761,16790},{17101,17150},{17601,17650}}}
+				,{15,{{14091,14120},{14391,14420},{14691,14720},{14991,15020},{15291,15320},{15591,15620},{15891,15920},{16191,16220},{16491,16520},{16791,16820},{17151,17200},{17651,17700}}}
+				,{20,{{14121,14150},{14421,14450},{14721,14750},{15021,15050},{15321,15350},{15621,15650},{15921,15950},{16221,16250},{16521,16550},{16821,16850},{17201,17250},{17701,17750}}}
+				,{25,{{14151,14180},{14451,14480},{14751,14780},{15051,15080},{15351,15380},{15651,15680},{15951,15980},{16251,16280},{16551,16580},{16851,16880},{17251,17300},{17751,17800}}}
+				,{30,{{14181,14210},{14481,14510},{14781,14810},{15081,15110},{15380,15410},{15680,15710},{15981,16010},{16281,16310},{16581,16610},{16881,16910},{17301,17350},{17801,17850}}}
+						}--装备换活力
+	
+	GiveItemList = {
+						--第一层奖励列表  --13
+							"14061-14120,14361-14420,14661-14720,26023,14961-15020,22050,15261-15320,22050,15561-15620,15861-15920,16161-16220,15861-15920,16161-16220,16461-16520,16761-16820,17101-17200,16461-16520,16761-16820,17101-17200,17601-17700,18001-18060,26042,20599,20600,21005,22042,26022",
+						
+						--第二层奖励列表  --13-14
+							"14091-14120,14121-14150,14391-14420,14421-14450,26023,22050,14691-14720,14721-14750,14991-15020,15021-15050,22050,15291-15320,15321-15350,15591-15620,15621-15650,15891-15920,15921-15950,21113,16191-16220,16221-16250,23800,16491-16520,16521-16550,16791-16820,16821-16850,17151-17220,17221-17250,17651-17720,17721-17750,18031-18050,18051-18075,26022,26043,20599,20600,21005,22042,22050",
+						
+						--第三层奖励列表  --14-15
+							"14121-14150,14151-14180,14421-14450,14451-14480,22050,26024,26025,14721-14750,14751-14780,15021-15050,22062,22050,15051-15080,15321-15350,15351-15380,15621-15650,15651-15680,15921-15950,15951-15980,29062,21113,16221-16250,16251-16280,23800,16521-16550,16551-16580,16821-16850,16851-16880,17201-17250,17251-17300,26022,26023,17701-17750,17751-17800,18031-18060,18061-18075,26044,20599,20600,22050",
+						
+						--第四层奖励列表  --15-16
+							"14151-14180,14181-14210,14451-14480,14481-14510,26026,26027,14751-14780,14781-14810,15051-15080,22062,22051,15081-15110,15351-15380,15381-15410,15651-16580,16581-15710,28452,15951-15980,15981-16010,29171,29062,21113,16251-16280,16281-16310,23800,29082,16551-16580,16581-16610,16851-16880,16881-16910,17251-17280,17281-17320,29082,17321-17350,26023,26024,17751-17780,17781-17820,17821-17850,18061-18080,18081-18090,26045,20599,20600,22050,28468",
+						
+						--第五层奖励列表  --16-17
+							"14151-14186,14181-14216,14451-14486,14481-14516,26026,26027,14781-14816,15081-15140,22062,22051,15081-15116,15381-15416,15651-16580,16581-15716,28452,15951-15980,15981-16016,29171,29062,21113,16251-16280,16281-16316,23800,29082,16551-16580,16581-16640,16851-16880,16881-16940,17251-17280,17281-17320,17321-17360,29082,17321-17350,26023,26024,17751-17780,17781-17820,17821-17850,17851-17900,26045,20599,20600,22050,22051,28468,28452"
+						
+					}
+					
+	AllServerItemList = {28468,21113,23800,22050,14151,14152,14153,14154,14155,14156,14157,14158,14159,14160,14161,14162,14163,14164,14165,14166,14167,14168,14169,14170,14171,14172,14173,14174,14175,14176,14177,14178,14179,14180,14181,
+	                     14182,14183,14184,14185,14186,14187,14188,14189,14190,14191,14192,14193,14194,14195,14196,14197,14198,14199,14200,14201,14202,14203,14204,14205,14206,14207,14208,14209,14210,
+						 14451,14452,14453,14454,14455,14456,14457,14458,14459,14460,14461,14462,14463,14464,14465,14466,14467,14468,14469,14470,14471,14472,14473,14474,14475,14476,14477,14478,14479,
+						 14480,14481,14482,14483,14484,14485,14486,14487,14488,14489,14490,14491,14492,14493,14494,14495,14496,14497,14498,14499,14500,14501,14502,14503,14504,14505,14506,14507,14508,14509,14510,
+						 14751,14752,14753,14754,14755,14756,14757,14758,14759,14760,14761,14762,14763,14764,14765,14766,14767,14768,14769,14770,14771,14772,14773,14774,14775,14776,14777,14778,14779,14780,14781,
+						 14782,14783,14784,14785,14786,14787,14788,14789,14790,14791,14792,14793,14794,14795,14796,14797,14798,14799,14800,14801,14802,14803,14804,14805,14806,14807,14808,14809,14810,
+						 15051,15052,15053,15054,15055,15056,15057,15058,15059,15060,15061,15062,15063,15064,15065,15066,15067,15068,15069,15070,15071,15072,15073,15074,15075,15076,15077,15078,15079,
+						 15080,15081,15082,15083,15084,15085,15086,15087,15088,15089,15090,15091,15092,15093,15094,15095,15096,15097,15098,15099,15100,15101,15102,15103,15104,15105,15106,15107,15108,15109,15110,
+						 15351,15352,15353,15354,15355,15356,15357,15358,15359,15360,15361,15362,15363,15364,15365,15366,15367,15368,15369,15370,15371,15372,15373,15374,15375,15376,15377,15378,15379,15380,15381,
+						 15382,15383,15384,15385,15386,15387,15388,15389,15390,15391,15392,15393,15394,15395,15396,15397,15398,15399,15400,15401,15402,15403,15404,15405,15406,15407,15408,15409,15410,
+						 15651,15652,15653,15654,15655,15656,15657,15658,15659,15660,15661,15662,15663,15664,15665,15666,15667,15668,15669,15670,15671,15672,15673,15674,15675,15676,15677,15678,15679,15680,15681,
+						 15682,15683,15684,15685,15686,15687,15688,15689,15690,15691,15692,15693,15694,15695,15696,15697,15698,15699,15700,15701,15702,15703,15704,15705,15706,15707,15708,15709,15710,
+						 15951,15952,15953,15954,15955,15956,15957,15958,15959,15960,15961,15962,15963,15964,15965,15966,15967,15968,15969,15970,15971,15972,15973,15974,15975,15976,15977,15978,15979,15980,15981,
+						 15982,15983,15984,15985,15986,15987,15988,15989,15990,15991,15992,15993,15994,15995,15996,15997,15998,15999,16000,16001,16002,16003,16004,16005,16006,16007,16008,16009,16010,
+						 16251,16252,16253,16254,16255,16256,16257,16258,16259,16260,16261,16262,16263,16264,16265,16266,16267,16268,16269,16270,16271,16272,16273,16274,16275,16276,16277,16278,16279,16280,16281,
+						 16282,16283,16284,16285,16286,16287,16288,16289,16290,16291,16292,16293,16294,16295,16296,16297,16298,16299,16300,16301,16302,16303,16304,16305,16306,16307,16308,16309,16310,
+						 16551,16552,16553,16554,16555,16556,16557,16558,16559,16560,16561,16562,16563,16564,16565,16566,16567,16568,16569,16570,16571,16572,16573,16574,16575,16576,16577,16578,16579,16580,16581,
+						 16582,16583,16584,16585,16586,16587,16588,16589,16590,16591,16592,16593,16594,16595,16596,16597,16598,16599,16600,16601,16602,16603,16604,16605,16606,16607,16608,16609,16610,
+						 16851,16852,16853,16854,16855,16856,16857,16858,16859,16860,16861,16862,16863,16864,16865,16866,16867,16868,16869,16870,16871,16872,16873,16874,16875,16876,16877,16878,16879,16880,16881,
+						 16882,16883,16884,16885,16886,16887,16888,16889,16890,16891,16892,16893,16894,16895,16896,16897,16898,16899,16900,16901,16902,16903,16904,16905,16906,16907,16908,16909,16910,
+						 17251,17252,17253,17254,17255,17256,17257,17258,17259,17260,17261,17262,17263,17264,17265,17266,17267,17268,17269,17270,17271,17272,17273,17274,17275,17276,17277,17278,17279,17280,17281,
+						 17282,17283,17284,17285,17286,17287,17288,17289,17290,17291,17292,17293,17294,17295,17296,17297,17298,17299,17300,17301,17302,17303,17304,17305,17306,17307,17308,17309,17310,17311,17312,
+						 17313,17314,17315,17316,17317,17318,17319,17320,17321,17322,17323,17324,17325,17326,17327,17328,17329,17330,17331,17332,17333,17334,17335,17336,17337,17338,17339,17340,17341,17342,17343,17344,17345,17346,17347,17348,17349,17350,
+						 17751,17752,17753,17754,17755,17756,17757,17758,17759,17760,17761,17762,17763,17764,17765,17766,17767,17768,17769,17770,17771,17772,17773,17774,17775,17776,17777,17778,17779,17780,17781,
+						 17782,17783,17784,17785,17786,17787,17788,17789,17790,17791,17792,17793,17794,17795,17796,17797,17798,17799,17800,17801,17802,17803,17804,17805,17806,17807,17808,17809,17810,17811,17812,
+						 17813,17814,17815,17816,17817,17818,17819,17820,17821,17822,17823,17824,17825,17826,17827,17828,17829,17830,17831,17832,17833,17834,17835,17836,17837,17838,17839,17840,17841,17842,17843,17844,17845,17846,17847,17848,17849,17850,
+						 18076,18077,18078,18079,18080,18081,18082,18083,18084,18085,18086,18087,18088,18089,18090,26021,26022,26023,28452
+						}
+
+	TM_ReadMe = {
+					"           ≡ 挑战阎罗十殿 ≡\n\n这个是个限时的挑战副本,冷却时间为1小时.\n可以使用60活力缩减冷却时间.\n挑战成功后自动回满状态.\n可以选择领奖或者继续挑战.\n目前开放到五殿,奖励逐层递增.\n勇敢的挑战吧！",
+					--"           ≡ 勇士点的获取 ≡\n\n勇士点是挑战十殿阎罗附赠的奖励。\n可以用来在勇士点商店里购物哦。\n一殿至五殿通过，可以分别得到：\n一殿：5-7  勇士点    四殿：8-12  勇士点\n二殿：6-8  勇士点    五殿：10-15 勇士点\n三殿：7-10 勇士点",
+					--"           ≡ 防止脚本功能 ≡\n\n本服的防脚本功能非常强大。\n主要通过增加BOSS的AI设计、验证码、快速战斗检测来实现对刷BOSS脚本的控制。\n阎罗十殿的挑战中会随机触发验证码！必须得输入正确才能继续挑战或领奖哦。\n至于AI设计和快速战斗检测在游戏中体验吧！",
+					"           ≡ 远程观战功能 ≡\n\n这个功能可以查看在地狱的勇者的对战。\n欣赏精彩挑战过程、学习经验的好办法。\n只要输入层数，就可以观战咯，很好玩吧。\n最重要的是，这个功能不收费哦！HOHO～",
+					"           ≡ 阎罗十殿挑战 ≡\n\n友情提示:BOSS的属性不是一成不变的哦,具体的在游戏中体验吧!\n\n         记得好的好喊朋友一起来玩哦!"
+				}
+				
+	math.randomseed( tonumber(tostring(os.time()):reverse():sub(1,6)) )
+	maxpage = table.getn(TM_ReadMe) - 1
+	shuatype = 0
+end
+
+function main()
+	npcindex = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
+	data()
+	if config.getGameservername() == "娱乐互动线" then
+		Create("「 十殿阎罗 」", 109131, 2005, 13, 16, 6, 0, 140)
+		for i = 1,6 do
+			Create(NpcData[3][i], NpcData[2][i], NpcData[1][i], NpcData[4][i][1], NpcData[4][i][2], 6, i, 140) -- 坐标都是 5.5 方向 4 传送进来是 5 10
+		end
+	end
+	playerhaveid = {}
+	magic.addLUAListFunction("shualou", "shualou", "", 1, "[shualou 模式]")
+end

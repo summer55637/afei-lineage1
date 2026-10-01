@@ -1,0 +1,188 @@
+待机,什么也不做,PETSKILL_None,,,,0,1,5,2,500,PETSKILL_NONE
+攻击,通常攻击,PETSKILL_NormalAttack,,,,1,1,6,2,1000,PETSKILL_NORMALATTACK
+防御,通常防御,PETSKILL_NormalGuard,,,,2,1,5,2,1000,PETSKILL_NORMALGUARD
+破除防御,对采取防敌人攻击可能,PETSKILL_GuardBreak,,,,3,1,6,2,1500,PETSKILL_GUARDBREAK
+连续攻击,两次连续攻击,PETSKILL_ContinuationAttack,2,,,10,1,6,2,2000,PETSKILL_CONTINUATIONATTACK1
+三段攻击,3回合连续攻击,PETSKILL_ContinuationAttack,3,,,11,1,6,2,5000,PETSKILL_CONTINUATIONATTACK2
+四段攻击,4回连续攻击,PETSKILL_ContinuationAttack,4,,Te,12,1,6,2,300000,PETSKILL_CONTINUATIONATTACK3
+五段攻击,5回连续攻击,PETSKILL_ContinuationAttack,5,,Tf,13,1,6,2,300000,PETSKILL_CONTINUATIONATTACK4
+六段攻击,6回连续攻击,PETSKILL_ContinuationAttack,6,,,14,1,6,2,225000,PETSKILL_CONTINUATIONATTACK5
+七段攻击,7回连续攻击,PETSKILL_ContinuationAttack,7,,,15,1,6,2,625000,PETSKILL_CONTINUATIONATTACK6
+八段攻击,8回连续攻击,PETSKILL_ContinuationAttack,8,,,16,1,6,2,625000,PETSKILL_CONTINUATIONATTACK7
+九段攻击,9回连续攻击,PETSKILL_ContinuationAttack,9,,,17,1,6,2,1625000,PETSKILL_CONTINUATIONATTACK8
+忠犬,保护主人不受到敌人的直接攻击,PETSKILL_Guardian,攻%-20  COM:攻击,,,20,1,7,2,2500,PETSKILL_GUARDIAN
+突击,1回合储存力量　　　 下次攻击时　　　 就会有两倍的攻击力,PETSKILL_ChargeAttack,1 攻%+90,,,30,1,6,2,4000,PETSKILL_CHARGE1
+双重突击,2回合储存力量 　　　下次攻击时 　　　就会有两倍以上的攻击力,PETSKILL_ChargeAttack,2 攻%+110,,,31,1,6,2,8000,PETSKILL_CHARGE2
+一击必杀,给予两倍的攻击伤害但是命中率下降,PETSKILL_Mighty,倍2 回避40,,,40,1,6,2,2500,PETSKILL_MIGHTY1
+T一击必杀改,给予3倍的攻击伤害但是命中率下降,PETSKILL_Mighty,倍3 回避50,,Ta,41,1,6,2,25000,PETSKILL_MIGHTY2
+背水之战其之１,防御力减30%　　攻击力变成+30%,PETSKILL_PowerBalance,攻%+25 防%-35,,,50,1,6,2,2000,PETSKILL_POWERBALANCE1
+背水之战其之２,防御力减50%　　攻击力变成+50%,PETSKILL_PowerBalance,攻%+45 防%-55,,,51,1,6,2,2500,PETSKILL_POWERBALANCE2
+T背水之战之其３,防御力变成-50%　　攻击力变成+80%,PETSKILL_PowerBalance,攻%+78 防%-52,,Tb,52,1,6,2,10000000,PETSKILL_POWERBALANCE3
+背水之战改３,防御力变成-50%　　攻击力变成+65%,PETSKILL_PowerBalance,攻%+65 防%-50,,Mb,53,1,6,2,30000000,PETSKILL_POWERBALANCE2
+背水之战之其４,防御力变成-70%　　攻击力变成+100%,PETSKILL_PowerBalance,攻%+100 防%-70,,,54,1,6,2,130000,PETSKILL_POWERBALANCE5
+毒攻击,攻击力减30%三回合前后让敌人中毒,PETSKILL_StatusChange,毒 turn 3  攻%-30,,,60,1,6,2,2500,PETSKILL_POISON_ATTACK1
+猛毒攻击,攻击力减50%五回合前后让敌人中毒,PETSKILL_StatusChange,毒 turn 5  攻%-50,,,61,1,6,2,4000,PETSKILL_POISON_ATTACK2
+石化攻击,攻击力减30%三回合前后让敌人石化,PETSKILL_StatusChange,石 turn 3  攻%-30,,,80,1,6,2,2300,PETSKILL_STONE
+混乱攻击,攻击力减30%三回合前后让敌人混乱,PETSKILL_StatusChange,乱 turn 3 攻%-30,,,90,1,6,2,2000,PETSKILL_CONFUSION_ATTACK
+泥醉攻击,攻击力减30%三回合前后让敌人酒醉,PETSKILL_StatusChange,醉 turn 3 攻%-30,,,100,1,6,2,2000,PETSKILL_DRUNK_ATTACK
+催眠攻击,攻击力减30%三回合前后让敌人沉睡,PETSKILL_StatusChange,眠 turn 3  攻%-30,,,110,1,6,2,2500,PETSKILL_SLEEP_ATTACK
+地球一周,一回合从敌人背后以两倍攻击力攻击,PETSKILL_EarthRound,攻%+90,,,120,1,6,2,2000,PETSKILL_EARTHROUND1
+旅程伙伴,把一只恐龙当作是伙伴当场带走,PETSKILL_Abduct,,,,130,1,7,2,3000,PETSKILL_Abduct
+#偷窃,偷窃,PETSKILL_Steal,,,,140,1,7,2,0,PETSKILL_STEAL
+不防守战法,自己不进行攻击　　反击跟回避率　　　　　就会变的非常高,PETSKILL_NoGuard,回避%+30 反击%+50 会心%+20,,,150,1,5,2,3000,PETSKILL_NOGUARD1
+T不防守战法2,自己不进行攻击　　反击跟回避率　　　　　就会变的非常高,PETSKILL_NoGuard,回避%+31 反击%+53 会心%+23,,Tc,151,1,5,2,1000000,PETSKILL_NOGUARD2
+T不防守战法3,自己不进行攻击　　反击跟回避率　　　　　就会变的非常高,PETSKILL_NoGuard,回避%+32 反击%+55 会心%+25,,Td,152,1,5,2,3000000,PETSKILL_NOGUARD3
+加工,合成素材制作道具,PETSKILL_Merge,,,,200,2,0,1,1500,PETSKILL_MERGE
+料理,使用素材制作料理,PETSKILL_Merge,,,,201,2,0,1,1000,PETSKILL_MERGE2
+#捐献,要求对方捐献石币,PETSKILL_StealMoney,,,Aa,211,1,7,2,3500,PETSKILL_STEALMONEY
+岩石撞击,地魔法等级1,PETSKILL_AttackMagic,magic 301 item 19647,,,301,1,7,2,0,PETSKILL_AttactMagic
+落石撞击,地魔法等级2,PETSKILL_AttackMagic,magic 302 item 19648,,,302,1,7,2,0,PETSKILL_AttactMagic
+土石流,地魔法等级3-1,PETSKILL_AttackMagic,magic 303 item 19649,,,303,1,7,2,0,PETSKILL_AttactMagic
+巨岩撞击,地魔法等级3-2,PETSKILL_AttackMagic,magic 304 item 19650,,,304,1,7,2,0,PETSKILL_AttactMagic
+地震,地魔法等级3-3,PETSKILL_AttackMagic,magic 305 item 19651,,,305,1,7,2,0,PETSKILL_AttactMagic
+陨石冲击,地魔法等级4,PETSKILL_AttackMagic,magic 306 item 19652,,,306,1,7,2,0,PETSKILL_AttactMagic
+水柱,水魔法等级1,PETSKILL_AttackMagic,magic 307 item 19653,,,307,1,7,2,0,PETSKILL_AttactMagic
+水刃,水魔法等级2,PETSKILL_AttackMagic,magic 308 item 19654,,,308,1,7,2,0,PETSKILL_AttactMagic
+大冰山,水魔法等级3-1,PETSKILL_AttackMagic,magic 309 item 19655,,,309,1,7,2,0,PETSKILL_AttactMagic
+沸点攻击,水魔法等级3-2,PETSKILL_AttackMagic,magic 310 item 19656,,,310,1,7,2,0,PETSKILL_AttactMagic
+暴风雪,水魔法等级3-3,PETSKILL_AttackMagic,magic 311 item 19657,,,311,1,7,2,0,PETSKILL_AttactMagic
+冰天雪地,水魔法等级4,PETSKILL_AttackMagic,magic 312 item 19658,,,312,1,7,2,0,PETSKILL_AttactMagic
+火球,火魔法等级1,PETSKILL_AttackMagic,magic 313 item 19659,,,313,1,7,2,0,PETSKILL_AttactMagic
+火焰连弹,火魔法等级2,PETSKILL_AttackMagic,magic 314 item 19660,,,314,1,7,2,0,PETSKILL_AttactMagic
+蒸汽喷射,火魔法等级3-1,PETSKILL_AttackMagic,magic 315 item 19661,,,315,1,7,2,0,PETSKILL_AttactMagic
+火焰风爆,火魔法等级3-2,PETSKILL_AttackMagic,magic 316 item 19662,,,316,1,7,2,0,PETSKILL_AttactMagic
+熔岩爆发,火魔法等级3-3,PETSKILL_AttackMagic,magic 317 item 19663,,,317,1,7,2,0,PETSKILL_AttactMagic
+火山爆发,火魔法等级4,PETSKILL_AttackMagic,magic 318 item 19664,,,318,1,7,2,0,PETSKILL_AttactMagic
+风刃,风魔法等级1,PETSKILL_AttackMagic,magic 319 item 19665,,,319,1,7,2,0,PETSKILL_AttactMagic
+真空刃,风魔法等级2,PETSKILL_AttackMagic,magic 320 item 19666,,,320,1,7,2,0,PETSKILL_AttactMagic
+龙卷风,风魔法等级3-1,PETSKILL_AttackMagic,magic 321 item 19667,,,321,1,7,2,0,PETSKILL_AttactMagic
+暴风烈刃,风魔法等级3-2,PETSKILL_AttackMagic,magic 322 item 19668,,,322,1,7,2,0,PETSKILL_AttactMagic
+暴风冰刃,风魔法等级3-3,PETSKILL_AttackMagic,magic 323 item 19669,,,323,1,7,2,0,PETSKILL_AttactMagic
+南极飓风,风魔法等级4,PETSKILL_AttackMagic,magic 324 item 19670,,,324,1,7,2,0,PETSKILL_AttactMagic
+毁天灭地,魔法等级5,PETSKILL_AttackMagic,magic 325 item 19671,,,325,1,7,2,0,PETSKILL_AttactMagic
+复活术,ENEMY专属复活术等级1,ENEMYSKILL_ReLife,,,Ea,500,1,2,2,0,ENEMYSKILL_RELIFES
+回复技,ENEMY专属回复技等级1,ENEMYSKILL_ReHP,,,Eb,501,1,2,2,0,ENEMYSKILL_RELIFHP
+招唤,ENEMY专属招唤等级1,ENEMYSKILL_EnemyHELP,,,Ec,502,1,2,2,0,ENEMYSKILL_HELP
+嗜血技,攻击力下降20%　　　 并将伤害值的80%化为己用,PETSKILL_DamageToHp,20|80,,Ba,503,1,6,2,2000,PETSKILL_DAMAGETOHP
+嗜血技改,攻击力下降10%　　　 并将伤害值的100%化为己用,PETSKILL_DamageToHp,10|100,,Bb,504,1,6,2,0,PETSKILL_DAMAGETOHP
+嗜血技3,攻击对方弱点　　　 并将伤害值的100%化为己用,PETSKILL_DamageToHp,0|100,,Bc,505,1,6,2,0,PETSKILL_DAMAGETOHP
+MP攻击,攻击力下降50%　　　 并损害对方80%的MP,PETSKILL_MpDamage,30|70,,Bd,506,1,6,2,2000,PETSKILL_MPDAMAGE
+MP攻击2,攻击力下降20%　　　 并损害对方70%的MP,PETSKILL_MpDamage,20|80,,Be,507,1,6,2,0,PETSKILL_MPDAMAGE
+MP攻击3,攻击力下降0%　　　 并损害对方100%的MP,PETSKILL_MpDamage,0|100,,Bf,508,1,6,2,0,PETSKILL_MPDAMAGE
+#修复,修复损坏的道具装备,PETSKILL_Fixitem,,,,540,2,0,1,300,PETSKILL_FIXITEM
+狂暴攻击,防御力减30%　　攻击力加90%　　　　　 命中率下降30%,PETSKILL_WildViolentAttack,攻%+82 防%-30 回避30,,Wa,541,1,6,2,1000,PETSKILL_WILDVIOLENTATTACK
+疾速攻击,防御力减30%　　敏捷变成加+30%,PETSKILL_SpeedyAttack,防%-30 敏%+30,,Qa,542,1,6,2,1000,PETSKILL_SPEEDYATTACK
+破除防御之2,敌防御时攻+30%　　敌非防御时攻-30%,PETSKILL_GuardBreak2,,,Ai,543,1,6,2,1000,PETSKILL_GUARDBREAK2
+暴烈攻击,攻击力提高100%,PETSKILL_FallGround,攻%+100,,,344,1,6,2,500000,PETSKILL_FALLGROUND
+猛毒攻击,攻击力提高100%五回合前后让敌人中毒,PETSKILL_StatusChange,毒 turn 10  攻%+100,,,345,1,6,2,4000,PETSKILL_POISON_ATTACK2
+石化攻击,攻击力提高100%三回合前后让敌人石化,PETSKILL_StatusChange,石 turn 10  攻%+100,,,346,1,6,2,2300,PETSKILL_STONE
+混乱攻击,攻击力提高100%三回合前后让敌人混乱,PETSKILL_StatusChange,乱 turn 10 攻%+100,,,347,1,6,2,2000,PETSKILL_CONFUSION_ATTACK
+泥醉攻击,攻击力提高100%三回合前后让敌人酒醉,PETSKILL_StatusChange,醉 turn 10 攻%+100,,,348,1,6,2,2000,PETSKILL_DRUNK_ATTACK
+催眠攻击,攻击力提高100%三回合前后让敌人沉睡,PETSKILL_StatusChange,眠 turn 10 成 100 攻%-99,,,349,1,6,2,2500,PETSKILL_SLEEP_ATTACK
+狂狮怒吼,使用时攻上升100% 敏上升30% 使敌方宠物受到惊吓回到宠物栏,PETSKILL_2BattleTimid,+攻%100+敏%30命%100,,,350,1,7,2,10000,PETSKILL_NONE
+威吓攻击,攻击力提升100% 敏捷提升30% 有60%的机率使对手麻痹一回合,PETSKILL_Hector,麻 turn 3 攻%+80 敏%+30,,,351,1,1,2,5000,PETSKILL_NONE
+狂暴攻击,防御力提高30%　　攻击力加200%　　　　　 命中率下降80%,PETSKILL_WildViolentAttack,攻%+200 防%+30 回避-10,,,352,1,6,2,1000,PETSKILL_WILDVIOLENTATTACK
+地火+光,地火+光,PETSKILL_Combined2,综合法|4|194|204|214|224,,,353,1,3,2,5000,PETSKILL_NONE
+地火+光,地火+光,PETSKILL_Combined2,综合法|4|194|204|214|224,,,354,1,3,2,5000,PETSKILL_NONE
+地火+光,地火+光,PETSKILL_Combined2,综合法|4|194|204|214|224,,,355,1,3,2,5000,PETSKILL_NONE
+地火+光,地火+光,PETSKILL_Combined2,综合法|4|194|204|214|224,,,355,1,3,2,5000,PETSKILL_NONE
+凤虎乱舞,神之圣兽专有技能 攻击力上升10% 敏捷上升15% 攻击全体附加对方混乱效果2回合,PETSKILL_BattleModel,5|10|乱|3|72|攻%-70 敏%-10|100267 100268 100269 100270,,,356,1,3,3,10000,PETSKILL_NONE
+凤虎乱舞,神之圣兽专有技能 攻击力上升10% 敏捷上升15% 攻击全体附加对方混乱效果2回合,PETSKILL_BattleModel,5|10|石|3|72|攻%-10 敏%10|101814 101814 101814 101814,,,357,1,3,3,10000,PETSKILL_NONE
+凤虎乱舞,神之圣兽专有技能 攻击力上升10% 敏捷上升15% 攻击全体附加对方混乱效果2回合,PETSKILL_BattleModel,5|10|石|3|72|攻%-7 敏%10|101815 101815 101815 101815,,,358,1,3,3,10000,PETSKILL_NONE
+猛毒攻击2,攻击力提高5%五回合前后让敌人中毒,PETSKILL_StatusChange,毒 turn 5  攻%+5,,,359,1,6,2,4000,PETSKILL_POISON_ATTACK2
+石化攻击2,攻击力提高5%三回合前后让敌人石化,PETSKILL_StatusChange,石 turn 3  攻%+5,,,360,1,6,2,2300,PETSKILL_STONE
+混乱攻击2,攻击力提高10%三回合前后让敌人混乱,PETSKILL_StatusChange,乱 turn 3 攻%+10,,,361,1,6,2,2000,PETSKILL_CONFUSION_ATTACK
+泥醉攻击2,攻击力提高10%三回合前后让敌人酒醉,PETSKILL_StatusChange,醉 turn 3 攻%+10,,,362,1,6,2,2000,PETSKILL_DRUNK_ATTACK
+催眠攻击2,攻击力提高5%三回合前后让敌人沉睡,PETSKILL_StatusChange,眠 turn 3 成 30 攻%+5,,,363,1,6,2,2500,PETSKILL_SLEEP_ATTACK
+愤怒一击,2代专属技能 攻击力提高40% 给予敌人猛烈一击,PETSKILL_PowerBalance,攻%+40 防%-5,,,364,1,6,2,2000,PETSKILL_POWERBALANCE1
+地属性强化攻击,对地属性强化20%攻击,PETSKILL_Modifyattack,EA|20,,,544,1,6,2,2000,PETSKILL_MODIFYATT
+水属性强化攻击,对水属性强化20%攻击,PETSKILL_Modifyattack,WA|20,,,545,1,6,2,2000,PETSKILL_MODIFYATT
+火属性强化攻击,对火属性强化20%攻击,PETSKILL_Modifyattack,FI|20,,,546,1,6,2,2000,PETSKILL_MODIFYATT
+风属性强化攻击,对风属性强化20%攻击,PETSKILL_Modifyattack,WI|20,,,547,1,6,2,2000,PETSKILL_MODIFYATT
+#地属性转换攻击,转换自己为地属性,PETSKILL_Mdfyattack,EA|100,,,548,1,6,2,2000,PETSKILL_MDFYATTACK
+#水属性转换攻击,转换自己为水属性,PETSKILL_Mdfyattack,WA|100,,,549,1,6,2,2000,PETSKILL_MDFYATTACK
+#火属性转换攻击,转换自己为火属性,PETSKILL_Mdfyattack,FI|100,,,550,1,6,2,2000,PETSKILL_MDFYATTACK
+#风属性转换攻击,转换自己为风属性,PETSKILL_Mdfyattack,WI|100,,,551,1,6,2,2000,PETSKILL_MDFYATTACK
+铁壁,提高己方全体防御力30%3回合 有机率格档伤害　　,PETSKILL_MagicStatusChange,铁壁|3|30|全,,Af,552,1,2,2,0,PETSKILL_MSTATUSCHANGH
+#镶宝石,将提炼出的宝石镶在精工装备上,PETSKILL_Inslay,,,Da,572,2,0,1,3000,PETSKILL_INSLAY
+救援,牺牲自己50%的HP　　补至他人身上,PETSKILL_Sacrifice,,,,573,1,1,2,0,PETSKILL_SACRIFICE
+#E啮齿术,破坏对方装备武器,PETSKILL_ToothCrushe,,,Ed,574,1,6,2,0,PETSKILL_TOOTHCRUSHE
+虚弱,被攻击者三回合内攻防敏下降20%,PETSKILL_Weaken,虚 turn 3 成 50,,Ga,575,1,6,2,3000,PETSKILL_WEAKEN
+全体虚弱,敌全体三回合内攻防敏下降20%,PETSKILL_Weaken,虚 turn 3 成 50,,,576,1,3,2,0,PETSKILL_WEAKEN
+剧毒,敌单体中毒5回合　　第六回合前未解则阵亡,PETSKILL_Deeppoison,剧 turn 5 成 50,,,577,1,6,2,0,PETSKILL_DEEPPOISON
+全体剧毒,敌全体中毒5回合　　第六回合前未解则阵亡,PETSKILL_Deeppoison,剧 turn 5 成 50,,,578,1,3,2,0,PETSKILL_DEEPPOISON
+魔障,敌全体一回合无法行动,PETSKILL_Barrier,障 turn 1 成 50,,,579,1,3,2,0,PETSKILL_BARRIER
+沉默,敌全体无法使用咒术三回合,PETSKILL_Nocast,默 turn 3 成 50,,Ra,580,1,3,2,1000,PETSKILL_NOCAST
+大吼,对敌方年兽吼叫　　可吓跑年兽　梦宠专用技,PETSKILL_Roar,901|902|903|904|1056|1057|1058|1059,,,581,1,6,2,3000,PETSKILL_Roar
+自爆攻击,牺牲自己　　提高50%命中率　　造成三倍损伤,PETSKILL_SelfExplodeAttack,倍3 回避-50,,,582,1,6,2,5000,PETSKILL_SELFEXPLODEATTACK
+破除沉默,解除沉默状态,PETSKILL_Refresh,默,,Ah,583,1,2,2,2000,PETSKILL_REFRESH
+剧毒治疗,解除剧毒状态,PETSKILL_Refresh,剧,,,584,1,2,2,5000,PETSKILL_REFRESH
+破除魔障,解除魔障状态,PETSKILL_Refresh,障,,,591,1,1,2,5000,PETSKILL_REFRESH
+净化,解除所有异常状态,PETSKILL_Refresh,全,,,592,1,2,2,8000,PETSKILL_REFRESH
+破除虚弱,解除虚弱状态,PETSKILL_Refresh,虚,,,593,1,2,2,5000,PETSKILL_REFRESH
+究极魔障,敌全体三回合无法行动,PETSKILL_Barrier,障 turn 3 成 50,,,594,1,3,2,0,PETSKILL_BARRIER
+闪避术,三回合内闪避率上升60　　有效时间三回合,PETSKILL_SetDuck,3|60,,Ha,595,1,0,2,1000,PETSKILL_SETDUCK
+暗月变身,变身后增加30%的攻击力跟敏捷  魔法防御值减半  有效时间五回合　　　,PETSKILL_Vary,攻%+25 敏%+25 魔防%-50,,Ia,600,1,5,2,1000,PETSKILL_VARY
+大地铠甲,我方全体防御力三回合内提升15%,PETSKILL_SetMagicPet,3|15|TGH,,Ja,601,1,2,2,2500,PETSKILL_SETMAGICPET
+水灵滋润,我方全体体力300回复,PETSKILL_SetMagicPet,3|300|HP,,Ka,602,1,2,2,2500,PETSKILL_SETMAGICPET
+火焰威能,我方全体攻击力三回合内提升10%,PETSKILL_SetMagicPet,3|10|STR,,La,603,1,2,2,2500,PETSKILL_SETMAGICPET
+风之吹息,我方全体敏捷力三回合内提升15%,PETSKILL_SetMagicPet,3|15|DEX,,Ma,604,1,2,2,2500,PETSKILL_SETMAGICPET
+三重突击,3回合储存力量 　　　下次攻击时 　　　就会有三倍以上的攻击力,PETSKILL_ChargeAttack,3 攻%+150,,,605,1,6,2,8500,PETSKILL_CHARGE2
+怯战, 防御力50%下降  命中之敌会逃跑,PETSKILL_2BattleTimid,+攻%1+敏%0命%40,,Na,606,1,7,2,10000,PETSKILL_NONE
+旅程伙伴2,把一只恐龙当作是伙伴当场带走 忠诚度60以下成功率100%,PETSKILL_Abduct,60,,,607,1,7,2,5000,PETSKILL_Abduct
+E旅程伙伴3,把一只恐龙当作是伙伴当场带走 忠诚度80以下成功率100%,PETSKILL_Abduct,80,,,608,1,7,2,3000,PETSKILL_Abduct
+#采光术,将对方之光的精灵吸收到自己身上,PETSKILL_Lighttakeed,ABSROB,,,609,1,7,2,5000,PETSKILL_Light
+破镜重圆,将对方之镜的精灵吸收到自己身上,PETSKILL_Lighttakeed,REFLEC,,,610,1,7,2,5000,PETSKILL_Light
+穿透术,将对方之守的精灵吸收到自己身上,PETSKILL_Lighttakeed,VANISH,,,611,1,7,2,5000,PETSKILL_Light
+#魔之诅咒,待机一回合  可将属性调成克对方属性,PETSKILL_BattleProperty,PET_PetskillPropertyEvent,,Oa,612,1,5,2,3000,PETSKILL_NONE
+狂乱暴走,乱数攻击对手3次 攻20% 防30% 下降,PETSKILL_AttackCrazed,3,,,613,1,1,2,0,PETSKILL_AttCrazed
+#栗子连激,乱数连续投掷栗子5~6颗,PETSKILL_AttackShoot,5|6,,Pa,614,1,1,2,2000,PETSKILL_AttShoot
+撕裂伤口1,撕裂旧伤口 增加20%伤害,PETSKILL_BattleTearDamage,20,,Sa,615,1,1,2,10000,PETSKILL_NONE
+#撕裂伤口2,撕裂旧伤口 增加50%伤害,PETSKILL_BattleTearDamage,50,,Sb,616,1,1,2,10000,PETSKILL_NONE
+毒煞蔓延,让对手中毒 且有机会传染到周围的人,PETSKILL_Sars,煞,,Ua,617,1,1,2,5000,PETSKILL_NONE
+音波冲击,攻击宠物时 可贯穿伤害至人物身上 伤害值为1/2,PETSKILL_Sonic,,,Va,618,1,1,2,3000,PETSKILL_NONE
+回旋攻击,攻击力下降20% 可攻击敌方一排,PETSKILL_Gyrate,攻%-20,,Xa,619,1,1,2,3000,PETSKILL_NONE
+#威吓攻击,攻击力下降30% 敏捷下降30% 有60%的机率使对手麻痹一回合,PETSKILL_Hector,麻 turn 1 攻%+30 敏%+30,,Ya,620,1,1,2,5000,PETSKILL_NONE
+追迹攻击,对手在第一次攻击闪避的话 将会80%的机率发动第二次攻击,PETSKILL_Retrace,攻%+20,,Za,621,1,1,2,3000,PETSKILL_NONE
+针刺外皮,可令攻击者受到1/2的伤害,PETSKILL_Acupuncture,,,Ab,622,1,0,2,5000,PETSKILL_NONE
+浴血狂袭,HP低于50%时使用 攻上升20% 会心一击上升30% 吸收伤害100%转Hp,PETSKILL_DamageToHp2,100,,Aj,623,1,6,2,5000,PETSKILL_NONE
+朱雀毒焰,使火焰强化自身攻击 攻击对手有机率让其被火焰持续性灼伤,PETSKILL_StatusChange,毒 turn 5  攻%+30,,Ad,624,1,6,2,4000,PETSKILL_POISON_ATTACK2
+#媚惑术,使宠物变成小狐狸,PETSKILL_BecomeFox,,,Ae,625,1,1,2,3000,PETSKILL_NONE
+手下留情,使对方Hp剩下一点 不会将对方致死,PETSKILL_ShowMercy,,,,626,1,1,2,10000,PETSKILL_NONE
+回旋攻击T, 可攻击敌方一排,PETSKILL_Gyrate,攻%+5,,,627,1,1,2,3000,PETSKILL_NONE
+#乌力化,在一定时间内使对方变成乌力,PETSKILL_BecomePig,30 180,,,628,1,7,2,5000,PETSKILL_BECOMEPIG
+难得糊涂改,随机让对方产生异常状态,PETSKILL_Combined,综合法|5|139|159|169|189,,Ag,629,1,3,2,2000,PETSKILL_NONE
+#地灵威能,可招唤地精灵魔法威力的技能,PETSKILL_Combined,综合法|1|306,,Ak,630,1,3,2,2000,PETSKILL_NONE
+#乌力化,在一定时间内使对方变成乌力,PETSKILL_BecomePig,30 180,,Al,631,1,7,2,20000,PETSKILL_BECOMEPIG
+逆转,反转属性,PETSKILL_Combined,综合法|1|240,,Am,632,1,1,2,5000,PETSKILL_NONE
+群蝠四窜,吸血,PETSKILL_BatFly,,,,633,1,3,2,5000,PETSKILL_NONE
+分身地裂,全体攻击,PETSKILL_DivideAttack,,,,634,1,3,1,5000,PETSKILL_NONE
+#黑乌力化,在一定时间内使对方变成黑乌力,PETSKILL_BecomePig,30 180 100388,,An,635,1,7,2,20000,PETSKILL_BECOMEPIG
+狂狮怒吼,使用时敏上升30% 使敌方宠物受到惊吓回到宠物栏,PETSKILL_2BattleTimid,+攻%1+敏%30命%30,,Ao,636,1,7,2,10000,PETSKILL_NONE
+净化之舞,全部状态异常回复 (一方全体),PETSKILL_Combined,综合法|1|61,,Ap,637,1,2,2,20000,PETSKILL_NONE
+#群蜂乱舞,攻击力下降30% 全体麻痹一回合,PETSKILL_BattleModel,5|4|麻|1|30|攻%-30|101867 101868,,Aq,638,1,3,3,10000,PETSKILL_NONE
+#分飞湮灭,使敌方死亡宠物回到宠物栏，无法再参与战斗,PETSKILL_AntInter,,,Ar,639,1,10,2,10000,PETSKILL_NONE
+憾甲一击,使时无视敌方装备防御攻击前后方敌人，使用时攻上升30%防御下降50%,PETSKILL_Regret,命%20 攻%30 防-50%,,Re,640,1,7,2,10000,PETSKILL_NONE
+#群蜂乱舞改,攻击力下降30% 全体麻痹两回合,PETSKILL_BattleModel,5|4|麻|2|30|攻%-30|101867 101868,,As,641,1,3,3,10000,PETSKILL_NONE
+#裂地,将战场变为地属性,PETSKILL_Combined,综合法|1|194,,,642,1,2,2,20000,PETSKILL_NONE
+#涌泉,将战场变为水属性,PETSKILL_Combined,综合法|1|204,,,643,1,2,2,20000,PETSKILL_NONE
+#熔炎,将战场变为火属性,PETSKILL_Combined,综合法|1|214,,,644,1,2,2,20000,PETSKILL_NONE
+#激风,将战场变为风属性,PETSKILL_Combined,综合法|1|224,,,645,1,2,2,20000,PETSKILL_NONE
+狂犬病,减少防御50%并提升攻击60%与速度5% 给予敌人猛烈一击,PETSKILL_PowerBalance,攻%+60 防%-55 敏%+5,,,642,1,6,2,10000,PETSKILL_POWERBALANCE4
+致命打击,把防御转化成攻击 给予敌人致命一击,PETSKILL_PowerBalance,攻%+90 防%-90,,,643,1,6,2,2500,PETSKILL_POWERBALANCE2
+致命鬼爪,乱数攻击对手5次 攻+20% 防-30% 下降,PETSKILL_AttackCrazed,5,,,644,1,1,2,0,PETSKILL_AttCrazed
+逆转,反转属性,PETSKILL_Combined,综合法|1|241,,,646,1,2,2,20000,PETSKILL_NONE
+#毒气,利用毒气让敌方中毒,PETSKILL_Combined,综合法|1|412,,,647,1,3,2,5000,PETSKILL_NONE
+#聚石,将敌人包裹在石头里,PETSKILL_Combined,综合法|1|413,,,648,1,3,2,5000,PETSKILL_NONE
+诱惑,诱惑敌人让敌人产生混乱,PETSKILL_Combined,综合法|1|414,,,649,1,3,2,5000,PETSKILL_NONE
+#灌酒,给敌人喝酒,PETSKILL_Combined,综合法|1|415,,,650,1,3,2,5000,PETSKILL_NONE 
+#瞌睡,让敌人睡觉,PETSKILL_Combined,综合法|1|416,,,651,1,3,2,5000,PETSKILL_NONE
+暴虐-背水之战,防御力减40%　　攻击力变成+55%,PETSKILL_PowerBalance,攻%+55 防%-45,,Bl,652,1,6,2,1000000,PETSKILL_POWERBALANCE2
+四连击,乱数攻击对手4次 攻+20% 防-30% 下降,PETSKILL_AttackCrazed,4,,Rl,653,1,1,2,0,PETSKILL_AttCrazed
+体镜光,单体镜光,PETSKILL_Combined2,综合法|2|260|250,,,654,1,1,2,5000,PETSKILL_NONE
+镜光守护,单体镜光守护,PETSKILL_Combined2,综合法|5|260|250|260|250|272,,,655,1,1,2,5000,PETSKILL_NONE
+超级镜光,超级镜光,PETSKILL_Combined2,综合法|5|260|250|250|252|262,,,656,1,1,2,5000,PETSKILL_NONE
+随机放地火,随机放地火,PETSKILL_Combined,综合法|4|194|214|241|241,,,657,1,3,2,5000,PETSKILL_NONE
+随机放风水,随机放风水,PETSKILL_Combined,综合法|4|204|224|241|241,,,658,1,3,2,5000,PETSKILL_NONE
+风水+镜,风水+镜,PETSKILL_Combined2,综合法|4|204|224|260|260,,,659,1,3,2,5000,PETSKILL_NONE
+地火+光,地火+光,PETSKILL_Combined2,综合法|4|194|214|250|250,,,660,1,3,2,5000,PETSKILL_NONE

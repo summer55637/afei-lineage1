@@ -1,0 +1,281 @@
+function Data_Split(str, split_char)
+    local sub_str_tab = {};
+    while (true) do
+        local pos = string.find(str, split_char);
+        if (not pos) then
+            sub_str_tab[#sub_str_tab + 1] = str;
+            break;
+        end
+        local sub_str = string.sub(str, 1, pos - 1);
+        sub_str_tab[#sub_str_tab + 1] = sub_str;
+        str = string.sub(str, pos + 1, #str);
+    end
+    return sub_str_tab;
+end
+
+function checkpetnum(charaindex)
+    local petnum = 0
+    for i=0,4 do
+        if char.check(char.getCharPet(charaindex, i)) == 1 then
+            petnum = petnum+1
+        end
+    end
+    return petnum
+end
+
+function getdata(charaindex)
+	local token = {}
+    local checkempty = 0
+    table.insert(token, checkpetnum(charaindex))
+    sasql.query("select * from ly where account = '"..char.getChar(charaindex,"账号").."'")
+    sasql.free_result();
+    sasql.store_result();
+    if sasql.num_rows() == 1 then
+        sasql.fetch_row();
+        table.insert(token,sasql.data(2))
+        for i=3,12 do
+        	if sasql.data(i) ~= nil and sasql.data(i) ~= "" then
+        		table.insert(token,sasql.data(i))
+                checkempty = checkempty + 1
+            else
+                table.insert(token,"null")
+        	end
+        end
+    end
+    if checkempty == 0 then
+    	sasql.query("select num from lypanel where date = "..os.date("%d",os.time()))
+    	sasql.free_result();
+    	sasql.store_result();
+        sasql.fetch_row();
+		lssproto.windows(charaindex, 2001, 8, 0, char.getWorkInt(npcindex, "对象"), "E|"..(1000-sasql.data(1)));
+    else 
+		lssproto.windows(charaindex, 2001, 8, 3, char.getWorkInt(npcindex, "对象"), table.concat(token,"|"));
+    end
+end
+
+function getlist2(num)
+    local tbl = {}
+    for s=1,num do
+        local rn = math.random(2000)
+        table.insert(tbl,rn)
+    end
+    return tbl
+end
+
+function getlist3(num)
+    local tbl = {}
+    for s=1,num do
+        local rn = math.random(2000)
+        table.insert(tbl,rn)
+    end
+    return tbl
+end
+
+function gettheprice(num,charaindex)
+    local rate2 = 7
+    local rate3 = 38
+    local reward = {}
+    for i=1,num do
+        sasql.query("update lypanel set num =num+1 where date = "..os.date("%d",os.time()))
+        sasql.query("select rate,num from lypanel where date = "..os.date("%d",os.time()))
+        sasql.free_result();
+        sasql.store_result();
+        sasql.fetch_row();
+        if sasql.data(1) == sasql.data(2) then
+            local winpet = lv1[math.random(#lv1)]
+            table.insert(reward,"1/"..winpet[1].."/"..winpet[2])
+            sasql.query("update lypanel set win =1 where date = "..os.date("%d",os.time()))
+            char.talkToAllServer("P|P|全体起立！ 恭喜玩家 "..char.getChar(charaindex,"名字").." 通过[领养活动]抽到了〖"
+            ..enemytemp.getChar(enemytemp.getEnemyTempArrayFromTempNo(winpet[2]), "名字").."〗","")
+        else
+            local list2 = getlist2(rate2)
+            local list3 = getlist3(rate3)
+            local winnum = math.random(2000)
+            local checkwin = true
+            for s=1,#list3 do
+                if winnum == list3[s] then
+                    checkwin = false
+                    local winpet = lv3[math.random(#lv3)]
+                    table.insert(reward,"3/"..winpet[1].."/"..winpet[2])
+                    break
+                end
+            end
+            if other.atoi(sasql.data(2)) > 200 and checkwin then
+                for s=1,#list2 do
+                    if winnum == list2[s] then
+                        sasql.query("select rare from lypanel where date = "..os.date("%d",os.time()))
+                        sasql.free_result();
+                        sasql.store_result();
+                        sasql.fetch_row();
+                        if other.atoi(sasql.data(1)) < 2 then
+                            checkwin = false
+                            local winpet = lv2[math.random(#lv2)]
+                            table.insert(reward,"2/"..winpet[1].."/"..winpet[2])
+                            char.talkToAllServer("P|P|恭喜玩家 "..char.getChar(charaindex,"名字").." 通过[领养活动]抽到了〖"
+                            ..enemytemp.getChar(enemytemp.getEnemyTempArrayFromTempNo(winpet[2]), "名字").."〗","")
+                            sasql.query("update lypanel set rare =rare+1 where date = "..os.date("%d",os.time()))
+                            break
+                        end
+                    end
+                end
+            end
+            if checkwin then
+                local winpet = lv4[math.random(#lv4)]
+                table.insert(reward,"4/"..winpet[1].."/"..winpet[2])
+            end
+        end
+    end
+    return reward
+end
+
+function WindowTalked (meindex, talkerindex, seqno, select, data)
+	if select ~= 8 then
+		if seqno == 0 then
+    		sasql.query("select num from lypanel where date = "..os.date("%d",os.time()))
+    		sasql.free_result();
+    		sasql.store_result();
+        	sasql.fetch_row();
+            local remain = other.atoi(sasql.data(1))
+        	if remain < 1000 then
+            	if data == "one" then
+            	    if sasql.getVipPoint(talkerindex) < single then
+            	        local token = "\n\n\n" 
+            	        .. "        [style c=4]2.5公益区未开通领养宠物哦[/style]"
+            	        lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+            	    else
+            	        local token = "\n\n\n" 
+            	        .. "        是否花费[style c=4]"..single.."[/style]金币抽取[style c=6]1[/style]次宠物"
+            	        lssproto.windows(talkerindex, 0, 12, 1, char.getWorkInt(meindex, "对象"), token);
+            	    end
+            	elseif data == "ten" then
+            	    if sasql.getVipPoint(talkerindex) < multi then
+            	        local token = "\n\n\n" 
+            	        .. "        [style c=4]2.5公益区未开通领养宠物哦[/style]"
+            	        lssproto.windows(talkerindex, 0, 8, -1, char.getWorkInt(meindex, "对象"), token);
+                    elseif remain > 990 then
+						local token = "\n\n\n" 
+						.. "     [style c=4]抽奖次数已快到达1000，请使用单次抽奖[/style]"
+						lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), token);
+            	    else
+            	        local token = "\n\n\n" 
+            	        .. "        是否花费[style c=4]"..multi.."[/style]金币抽取[style c=6]10[/style]次宠物"
+            	        lssproto.windows(talkerindex, 0, 12, 2, char.getWorkInt(meindex, "对象"), token);
+            	    end
+            	end
+            else
+				local token = "\n\n\n" 
+				.. "     [style c=4]今日抽奖次数已达到1000，请明日再来吧[/style]"
+				lssproto.windows(talkerindex, 0, 1, -1, char.getWorkInt(meindex, "对象"), token);
+            end
+        elseif seqno == 1 then
+            if sasql.getVipPoint(talkerindex) >= single then
+                local mypoint = sasql.getVipPoint(talkerindex)
+                local petdata = gettheprice(1,talkerindex)
+                sasql.setVipPoint(talkerindex, mypoint-single)
+                local array = Data_Split(petdata[1],"/")
+                local temp = enemytemp.getEnemyTempArrayFromTempNo(array[3])
+                local mypet = array[1].."/"..array[2].."/"..array[3].."/"..enemytemp.getInt(temp, "形象").."/"..enemytemp.getChar(temp, "名字")
+                if sasql.query("select * from ly where account = '"..char.getChar(talkerindex,"账号").."'") == 1 then
+                    sasql.free_result();
+                    sasql.store_result();
+                    if sasql.num_rows() == 1 then
+                        sasql.fetch_row();
+                        sasql.query("update ly set 1th ='"..mypet.."',num = "..sasql.data(2).."+1 where account='"..char.getChar(talkerindex,"账号").."'")
+                    else
+                        sasql.query("insert into ly (account,num,1th) values ('"..char.getChar(talkerindex,"账号").."',1,'"..mypet.."')")
+                    end
+                end
+                other.CallFunction("setCostData", "data/ablua/npc/huodong/huodong.lua", {talkerindex,single})
+                getdata(talkerindex)
+            end
+        elseif seqno == 2 then
+            if sasql.getVipPoint(talkerindex) >= multi then
+                local mypoint = sasql.getVipPoint(talkerindex)
+                local petdata = gettheprice(10,talkerindex)
+                local mypet = {}
+                sasql.setVipPoint(talkerindex, mypoint-multi)
+                for i=1,#petdata do
+                    local array = Data_Split(petdata[i],"/")
+                    local temp = enemytemp.getEnemyTempArrayFromTempNo(array[3])
+                    table.insert(mypet,array[1].."/"..array[2].."/"..array[3].."/"..enemytemp.getInt(temp, "形象").."/"..enemytemp.getChar(temp, "名字"))
+                end
+                if sasql.query("select * from ly where account = '"..char.getChar(talkerindex,"账号").."'") == 1 then
+                    sasql.free_result();
+                    sasql.store_result();
+                    if sasql.num_rows() == 1 then
+                        sasql.fetch_row();
+                        sasql.query("update ly set 1th ='"..mypet[1].."',2th ='"..mypet[2].."',3th ='"..mypet[3].."',4th ='"..mypet[4]
+                        .."',5th ='"..mypet[5].."',6th ='"..mypet[6].."',7th ='"..mypet[7].."',8th ='"..mypet[8].."',9th ='"..mypet[9]
+                        .."',10th ='"..mypet[10].."',num = "..sasql.data(2).."+10 where account='"..char.getChar(talkerindex,"账号").."'")
+                    else
+                        sasql.query("insert into ly (account,num,1th,2th,3th,4th,5th,6th,7th,8th,9th,10th)"
+                        .."values ('"..char.getChar(talkerindex,"账号").."',10,'"..mypet[1].."','"..mypet[2].."','"..mypet[3].."','"..mypet[4]
+                        .."','"..mypet[5].."','"..mypet[6].."','"..mypet[7].."','"..mypet[8].."','"..mypet[9].."','"..mypet[10].."')")
+                    end
+                end
+                other.CallFunction("setCostData", "data/ablua/npc/huodong/huodong.lua", {talkerindex,multi})
+                getdata(talkerindex)
+            end
+        elseif seqno == 3 then
+            local strdata = Data_Split(data,"|")
+            if strdata[1] == "getpet" then
+                if checkpetnum(talkerindex) < 5 then
+                    if sasql.query("select "..strdata[2].."th from ly where account = '"..char.getChar(talkerindex,"账号").."'") == 1 then
+                        sasql.free_result();
+                        sasql.store_result();
+                        if sasql.num_rows() == 1 then
+                            sasql.fetch_row();
+                            local sqldata = Data_Split(sasql.data(1),"/")
+                            npc.AddPet(talkerindex, sqldata[2])
+                            sasql.query("update ly set "..strdata[2].."th = null where account='"..char.getChar(talkerindex,"账号").."'")
+                            getdata(talkerindex)
+                        end
+                    end
+                end
+            elseif strdata[1] == "delpet" then
+                sasql.query("update ly set "..strdata[2].."th = null where account='"..char.getChar(talkerindex,"账号").."'")
+                getdata(talkerindex)
+            end
+		end
+	end
+end
+
+function Loop()
+	if other.atoi(os.date("%H%M",os.time())) >= 0 and other.atoi(os.date("%H%M",os.time())) < 2 then
+		checksql()
+	end
+end
+
+function checksql()
+	sasql.query("select renew from lypanel where date = "..os.date("%d",os.time()))
+	sasql.free_result();
+	sasql.store_result();
+	sasql.fetch_row();
+	if other.atoi(sasql.data(1)) ~= other.atoi(os.date("%m",os.time())) then
+		sasql.query("update lypanel set win =0, num =0, renew ="..other.atoi(os.date("%m",os.time()))..", rare =0 where date = "..other.atoi(os.date("%d",os.time())))
+	end
+end
+
+function data()
+    single = 1000000
+    multi = 9000000
+    lv1 = {{1610,777},{3034,3034},{3033,3033},{3000,3000},{1980,986},{1979,985},{2057,1047},{2058,1048}}
+    lv2 = {{3052,3052},{3057,3057},{3037,3037},{3038,3038},{3063,3063},{3058,3058},{3035,3035},{3068,3068},{3069,3069}}
+    lv3 = {{1558,725},{3018,3018},{3019,3019},{3021,3021},{3026,3026},{3028,3028},{3029,3029},{3030,3030},{3031,3031},{3032,3032},{3041,3041},{3042,3042},{3043,3043},{3044,3044}
+	,{3126,3126},{3020,3020},{1588,754},{3059,35},{3060,36},{3061,37},{3062,38},{3046,3046},{3047,3047},{1619,786},{1620,787}
+	,{3006,3006},{3008,3008},{3009,3009},{3003,3003},{3010,3010},{2400,117},{2401,118},{2402,119},{2403,120},{1947,969},{1794,901},{1795,902},{1796,903},{1797,904},{1802,908}
+	}
+    lv4 = {{54,91},{57,94},{32,41},{33,42},{34,43},{35,44},{42,61},{39,54},{43,62},{45,64},{46,71},{50,81},{55,92},{56,93},{75,141},{76,142},{77,143},{307,191},{308,192},{309,193},{310,194}
+	,{321,223},{323,231},{324,232},{325,234},{330,251},{331,252},{332,253},{333,254},{339,272},{341,274},{346,291},{347,292},{348,293},{349,294},{350,301},{351,302},{352,303},{1601,768},{1598,765}
+	,{1381,304},{355,312},{359,322},{367,233},{360,323},{361,324},{365,333},{481,95},{484,315},{1624,791},{1617,784},{1618,785},{3126,3126},{1600,767},{1599,766}
+	}
+end
+
+function main()
+	npcindex = npc.CreateNpc("领养系统", 100000, 777, 34, 24, 4)
+	char.setFunctionPointer(npcindex, "窗口事件", "WindowTalked", "")
+    char.setInt(npcindex, "循环事件时间", 60000);
+    char.setFunctionPointer(npcindex, "循环事件", "Loop", "")
+	data()
+    checksql()
+end

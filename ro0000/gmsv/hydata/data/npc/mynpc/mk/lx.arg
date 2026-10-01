@@ -1,0 +1,12 @@
+NEWNPCENEMY
+
+entype:2
+askbattlemsg1:想找我练抗性么？那么就来吧！
+startmsg:来练魔法抗性吧!
+dieact:1
+warpfl:0
+warpx:0
+warpy:0
+enemyno:1690
+onebattle:0
+OVER

@@ -1,0 +1,15 @@
+NPCCREATE
+
+###### 精灵王--练魔抗 ######
+{
+floorid=2000
+borncenter=84,86
+time=0
+createnum=1
+dir=4
+ignoreinvincible=1
+graphicname=100441
+name=精灵王的分身
+enemy=sb_dou|file:mynpc/mk/lx.arg
+}
+

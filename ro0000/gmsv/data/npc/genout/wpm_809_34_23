@@ -1,0 +1,10 @@
+WARP:810,29,26
+FREE:LV>0
+MONEY:-1
+FreeMsg:\n\n从这里可以直接到12楼\n点确定就可以直接去见大师了哦\n想偷懒就点我吧。
+PayMsg:
+PartyMsg:\n不好意思、可以个别的来吗？
+DelItem:2751,2752,2754
+MoneyMsg:
+
+

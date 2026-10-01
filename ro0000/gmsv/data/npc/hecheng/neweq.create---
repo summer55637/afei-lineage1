@@ -1,0 +1,27 @@
+NPCCREATE
+
+
+########晶石爱好者 　#########
+#{
+#name=晶石爱好者
+#floorid=2000
+#borncenter=69,33
+#dir=6
+#time=0
+#createnum=1
+#ignoreinvincible=1
+#graphicname=60122
+#enemy=ITEMCHANGE|file:hecheng/baoxiang.arg
+#}
+
+#{
+#name=晶石女巫
+#floorid=2000
+#borncenter=67,33
+#dir=4
+#time=0
+#createnum=1
+#ignoreinvincible=1
+#graphicname=44903
+#enemy=changeevent|file:hecheng/baoshi.arg
+#}

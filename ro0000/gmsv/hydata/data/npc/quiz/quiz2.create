@@ -1,0 +1,12 @@
+NPCCREATE
+{
+floorid=812
+borncorner=32,24,32,24
+time=0
+createnum=1
+dir=6
+ignoreinvincible=1
+graphicname=100000
+name=大师的弟子
+enemy=changeevent|file:quiz/equiz_04
+}

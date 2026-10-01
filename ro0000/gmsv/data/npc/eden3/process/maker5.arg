@@ -1,0 +1,25 @@
+#### 金属提炼师 ####
+
+START_MSG:你想要合成特殊技能吗？收费1千石币。\n宠物使用特殊技能罐头。就可学习强大的技能!\n可通过回收宠物得到 相对应的结晶石！\n打开【特殊技能包】随机出现各种宠物特技
+MenuHead:客官请选择你要合成的方式
+NeedHead:1个稀有结晶+1个技能结晶 或者 3个技能结晶 进行合成.
+####  技能包 ####
+{
+CHANGEITEM:42106
+NeedItem:42013,42014
+FREE:ITEM=42013&ITEM=42014&GOLD>=1000&reITEM>=1
+DelGold:1000
+DelItem:42013*1,42014*1
+AddItem:42106
+}
+
+{
+CHANGEITEM:42106
+NeedItem:42013,42013,42013
+FREE:ITEM=42013*3&GOLD>=1000&reITEM>=1
+DelGold:1000
+DelItem:42013*3
+AddItem:42106
+}
+
+

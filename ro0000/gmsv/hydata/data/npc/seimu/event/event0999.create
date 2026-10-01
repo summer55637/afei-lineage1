@@ -1,0 +1,18 @@
+NPCCREATE
+
+#########################################################
+#########    Ì´¸¸¤ÎÆ¶·¢¡¡¥¤¥Ù¥ó¥ÈÀßÄê¡¡¡¡################
+#########################################################
+
+
+{
+floorid=41
+borncorner=34,25,34,25
+time=0
+createnum=1
+dir=4
+ignoreinvincible=1
+graphicname=16024
+name=ÃÎ¼ûµÄÏÉÈË
+enemy=changeevent|file:seimu/event/event01_2
+}

@@ -1,0 +1,17 @@
+#### 宝石提炼师 ####
+
+START_MSG:你想要兑换皮肤吗!你有收集时空碎片吗？\n跑环活动可以得到时空碎片喔。\n兑换皮肤碎片需要1个时空碎片\n皮肤碎片可兑换全新永久皮肤
+
+MenuHead:选择要兑换的材料
+NeedHead:皮肤碎片为（绑定）
+
+####  元旦活动 ####
+{
+CHANGEITEM:29082
+NeedItem:28461
+FREE:ITEM=28461&GOLD>=1500&reITEM>=1
+DelGold:1500
+DelItem:28461*1
+AddItem:29082
+}
+
