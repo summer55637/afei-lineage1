@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Level-Up Plan",
+  "type":"object",
+  "required":["format","action","source","player","pets","persistentStateMutation"],
+  "properties":{
+    "format":{"const":"stoneage-v414-browser-battle-levelup-plan-v1"},
+    "action":{"const":"BATTLE_LEVELUP_PLAN"},
+    "source":{"type":"object"},
+    "player":{"type":"object"},
+    "pets":{"type":"array","items":{"type":"object"}},
+    "persistentStateMutation":{"const":false},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false}
+  },
+  "additionalProperties":true
+}
