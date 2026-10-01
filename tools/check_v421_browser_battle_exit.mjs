@@ -10,7 +10,7 @@ const state={revision:2,runtimeMeta:{battleSettlementReceipts:{'settle-1':{settl
 const denied=planBattleExit(context,state);
 assert.equal(denied.ok,false);
 assert.equal(denied.reason,'settlement-complete-flag-required');
-const missingMail=planBattleExit(context,{pets:{petBox:[{id:'unknown',hp:0,maxHp:20}]}},{settlementComplete:true});
+const missingMail=planBattleExit(context,{...state,pets:{petBox:[{id:'unknown',hp:0,maxHp:20}]}},{settlementComplete:true});
 assert.equal(missingMail.ok,false);
 assert.equal(missingMail.reason,'pet-mail-mode-required');
 
