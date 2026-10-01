@@ -1389,7 +1389,7 @@ V4.00 把 fixed-C `BATTLE_Attack()` 的入口 admission boundary 接上 V3.98/V3
 
 `requested target → BATTLE_TargetCheck → invalid 時 BATTLE_DefaultAttacker(opposite side) → final target → attacker/target HP gate → 可進 BATTLE_AttackSeq`
 
-V4.00 明確保留 fixed-C 的 DamageReact 語意：attacker 或 target DamageReact > 0 時先把 `iRet=FALSE)，但來源仍會進 `BATTLE_AttackSeq()`；本版不把它誤判成完全禁止 Attack。
+V4.00 明確保留 fixed-C 的 DamageReact 語意：attacker 或 target DamageReact > 0 時先把 `iRet=FALSE，但來源仍會進 `BATTLE_AttackSeq()`；本版不把它誤判成完全禁止 Attack。
 
 新增：
 - `src/stoneage_browser_battle_attack_preflight_runtime.mjs`
@@ -1399,4 +1399,37 @@ V4.00 明確保留 fixed-C 的 DamageReact 語意：attacker 或 target DamageRe
 - `.github/workflows/check-v400-browser-battle-attack-preflight.yml`
 
 V4.00 仍不執行命中/閃避/Critical RNG、`BATTLE_AttackSeq()`、`BATTLE_DamageCalc()`、Guardian、DamageReact 結算、Status、Death、Reward、Counter；這些保留在後續 source boundary。
+
+## 2026-10-01 V4.01 Browser Battle AttackSeq Prelude
+
+V4.01 將 fixed-C `BATTLE_AttackSeq()` 前三層接成 deterministic browser prelude：
+
+`BATTLE_DuckCheck → BATTLE_GuardianCheck → BATTLE_CriticalCheck`
+
+Duck：
+- normal `gKawashiPara=0.02)
+- JYUJYUTU `gKawashiPara=0.027)
+- `RAND(1,10000) <= per`
+- `KAWASHI_MAX_RATE=75%)
+
+Guardian：
+- `CHAR_BATTLEFLG_GUARDIAN = 1<<3)
+- Guardian 必須存在、存活、flag 有效、未被 source status block
+- 投擲武器不觸發 Guardian replacement
+
+Critical：
+- `gCriticalPara=0.09)
+- Player → non-player defender：DfDex × 0.6
+- Pet → Enemy：DfDex × 0.8
+- non-player → Player / Enemy → Pet：divisor=10、linear mode
+- `RAND(1,10000) < perCri)
+
+V4.01 不修改 HP、不執行 DamageCalc、不套用 counter/status/death/reward，也不自行消耗 hidden RNG。
+
+新增：
+- `src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs`
+- `data/generated/stoneage_browser_battle_attack_seq_prelude_schema.json`
+- `tools/check_v401_browser_battle_attack_seq_prelude.mjs`
+- `docs/reference/v401-browser-battle-attack-seq-prelude.md`
+- `.github/workflows/check-v401-browser-battle-attack-seq-prelude.yml`
 
