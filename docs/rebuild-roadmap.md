@@ -1887,3 +1887,36 @@ Controller integration：
 - `BROWSER_BATTLE_COMPLIANCE_PLAN_RUNTIME_FORMAT`
 
 下一步：`BATTLE_COMPLIANCE_COMMIT`，只提交 source-closed derived fields；MaxMP 與特殊 compliance branches 不在沒有新證據時硬補。
+
+## 2026-10-01 V4.20 Browser Battle Compliance Commit
+
+V4.20 將 V4.19 的 source-closed derived plan 接進 canonical Persistent State，但只提交目前 schema 與來源都能安全證明的 `maxHp`：
+
+- Player：寫入 `state.player.maxHp`
+- Pet：寫入對應 `pet.maxHp`
+- 不修改目前 `hp`、`mp`、`maxMp`
+- 不寫未被 canonical schema 定義的 `serverCombat` persistent object
+- transactionId + expectedRevision + source-stat snapshot 全部驗證
+- 首次 commit revision 只增加一次
+- duplicate transactionId idempotent no-op
+- stale Player/Pet stat snapshot fail-closed
+- 不使用 RNG
+
+仍 deferred：
+- `CHAR_MAXMP / CHAR_getDefaultChar`
+- compliance 後 HP clamp / mutation 的精確時點
+- `Other_DefcharWorkInt` equipment / suit / profession / feature branch
+- network/status send
+
+新增：
+- `src/stoneage_browser_battle_compliance_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_compliance_commit_schema.json`
+- `tools/check_v420_browser_battle_compliance_commit.mjs`
+- `docs/reference/v420-browser-battle-compliance-commit.md`
+- `.github/workflows/check-v420-browser-battle-compliance-commit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_COMPLIANCE_COMMIT`
+- `BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT`
+
+下一步：回到 fixed-C 外層 battle lifecycle，處理 finish 後 `BATTLE_Exit()` 等 battle entry cleanup 與 Idle/World return boundary，不把 transient battle context 永久留在 world state。
