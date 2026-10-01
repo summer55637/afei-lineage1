@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Pet Growth Plan",
+  "type":"object",
+  "required":["format","action","source","pets","persistentStateMutation","rerollAtCommit"],
+  "properties":{
+    "format":{"const":"stoneage-v415-browser-battle-pet-growth-plan-v1"},
+    "action":{"const":"BATTLE_PET_GROWTH_PLAN"},
+    "source":{"type":"object"},
+    "pets":{"type":"array","items":{"type":"object"}},
+    "persistentStateMutation":{"const":false},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false},
+    "rerollAtCommit":{"const":false}
+  },
+  "additionalProperties":true
+}
