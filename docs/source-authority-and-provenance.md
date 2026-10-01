@@ -6,7 +6,7 @@
 
 本專案現在把「來源權威」與「資料完整度」分開管理。
 
-我們手上的 VM 一鍵端 + 手工外網端是目前最完整的實機／部署資料集合，因此它們不再只是被動的「參考資料」，而是 World、NPC、Service、Item、Quest、Event、Warp、Encounter、Database、Web/Client integration 的首要重建資料來源。
+依目前專案已確認的 provenance，VM 一鍵端與手工外網端都是從可直接架設石器時代手游的實際部署資料複製取得，因此它們不是一般網路參考資料，而是目前最接近「完整可部署遊戲版本」的第一手資料集合。它們因此成為 World、NPC、Service、Item、Quest、Event、Warp、Encounter、Database、Web/Client integration 與部署結構的首要重建資料來源。
 
 Pinned fixed-C 仍然非常重要，但它的角色改為：
 
