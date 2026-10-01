@@ -18,6 +18,7 @@ on:
       - 'tools/check_v425_browser_battle_settlement_exit_gate.mjs'
       - 'tools/check_v425_browser_battle_context_clear.mjs'
       - 'tools/check_browser_battle_context_source_binding.mjs'
+      - 'tools/check_browser_encounter_group_enemy_binding.mjs'
       - 'tools/check_browser_battle_context_clear_gate.mjs'
       - 'tools/check_browser_battle_clear_world_loop_gate.mjs'
       - 'tools/check_browser_state_controller_dispatch_serialization.mjs'
@@ -25,6 +26,7 @@ on:
     paths:
       - 'tools/check_browser_battle_clear_world_loop_gate.mjs'
       - 'tools/check_browser_state_controller_dispatch_serialization.mjs'
+      - 'tools/check_browser_encounter_group_enemy_binding.mjs'
       - 'src/stoneage_browser_battle_context_clear_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'data/generated/stoneage_browser_battle_context_clear_schema.json'
@@ -56,6 +58,7 @@ jobs:
       - run: node tools/check_v425_browser_battle_settlement_exit_gate.mjs
       - run: node tools/check_v425_browser_battle_context_clear.mjs
       - run: node tools/check_browser_battle_context_source_binding.mjs
+      - run: node tools/check_browser_encounter_group_enemy_binding.mjs
       - run: node tools/check_browser_battle_context_clear_gate.mjs
       - run: node tools/check_browser_battle_clear_world_loop_gate.mjs
       - run: node tools/check_browser_state_controller_dispatch_serialization.mjs
