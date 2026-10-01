@@ -56,7 +56,8 @@ const SCOPES = [
 function git(args) {
   return execFileSync('git', ['-c', 'core.quotePath=false', ...args], {
     cwd: ROOT,
-    encoding: 'utf8'
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024
   }).trimEnd();
 }
 
