@@ -119,6 +119,11 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 後續 source audit 先依 endpoint provenance 與 exact identity 判定實際部署資料，再用 fixed-C 做 engine semantics / parity 校驗。與 fixed-C 不同但能證明屬於 endpoint 的內容，標記為 endpoint variant，不因 mismatch 自動丟棄。完整順序為：Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime。
 
+### Feature／Blocker 狀態規則
+
+目前功能狀態必須以 generated state 為準，不以歷史文字判斷。`data/generated/stoneage_disabled_features.json` 只代表「現在仍停用」；`data/generated/stoneage_reopened_features.json` 代表「重新開案但尚未啟用」；`data/generated/stoneage_blocker_registry.json` 代表 blocker 的目前狀態與下一步。
+
+因此，新對話接手時，遇到「曾經停用」的功能，不得直接當成現在仍永久停用；先讀目前 generated state，再依新的 endpoint evidence、semantic check、regression 與 runtime admission 判定。
 ### 交接規則
 
 - 新對話開始時，先讀本區與目前 README AUTO-README 狀態。
@@ -273,11 +278,13 @@ LS2MAP binary → exact blob identity → header validation → mapset → battl
 
 等資料與 runtime contract 成熟後，再依實際授權範圍導入正式素材，並保留 asset hash、來源、版本與用途 manifest。
 
-## 明確停用
+## Feature 狀態管理
 
-data/generated/stoneage_disabled_features.json 是永久停用 feature 的正式清單。
+`data/generated/stoneage_disabled_features.json` 只保存目前真正停用的 feature。
 
-目前 GMQUE／抓寵活動維持永久停用，不會因為後續版本更新而自動重新啟用，也不應以人工猜測補上缺失的 RANDGMQUE／QUEPART 設定。
+目前沒有 feature 留在永久停用清單。GMQUE／抓寵活動已移出停用清單，現在是 `reopened-for-source-reconstruction`；這代表重新開放 source archaeology，不代表 runtime 或 playable 已啟用。重新開放的功能仍必須完成 source closure → semantic check → regression → runtime admission，才能進入可玩版本。
+
+`data/generated/stoneage_reopened_features.json` 是重新開案功能的正式狀態來源；`data/generated/stoneage_blocker_registry.json` 則記錄 active / reopened / resolved / retired blocker。舊的永久停用決定可以因新的 authoritative endpoint evidence 被重新開案，但不得因「重新開案」就自動宣稱已完成。
 
 ## 外部端資料
 
