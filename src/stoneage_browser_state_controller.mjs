@@ -51,6 +51,7 @@ import { createBrowserBattleLevelUpCommitRuntime, ACTION_BATTLE_LEVELUP_COMMIT, 
 import { createBrowserBattleItemPlanRuntime, ACTION_BATTLE_ITEM_PLAN, BROWSER_BATTLE_ITEM_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_item_runtime.mjs';
 import { createBrowserBattleItemCommitRuntime, ACTION_BATTLE_ITEM_COMMIT, BROWSER_BATTLE_ITEM_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_item_commit_runtime.mjs';
 import { createBrowserBattleCompliancePlanRuntime, ACTION_BATTLE_COMPLIANCE_PLAN, BROWSER_BATTLE_COMPLIANCE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_runtime.mjs';
+import { createBrowserBattleComplianceCommitRuntime, ACTION_BATTLE_COMPLIANCE_COMMIT, BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_commit_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -138,6 +139,7 @@ function createBrowserStateController({
   const battleItemPlanRuntime=createBrowserBattleItemPlanRuntime();
   const battleItemCommitRuntime=createBrowserBattleItemCommitRuntime();
   const battleCompliancePlanRuntime=createBrowserBattleCompliancePlanRuntime();
+  const battleComplianceCommitRuntime=createBrowserBattleComplianceCommitRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -492,6 +494,31 @@ function createBrowserStateController({
           state:clone(currentState)
         };
       }
+      if(type===ACTION_BATTLE_COMPLIANCE_COMMIT){
+        if(battleComplianceCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-compliance-commit',reason:'browser-battle-compliance-commit-runtime-invalid',state:clone(currentState)};
+        let compliancePlan=action.battleCompliancePlan??null;
+        if(!compliancePlan){
+          compliancePlan=battleCompliancePlanRuntime.plan(clone(currentState),{petIds:action.petIds??null,includePlayer:action.includePlayer!==false});
+        }
+        if(!compliancePlan?.ok)return {...compliancePlan,format:BROWSER_BATTLE_COMPLIANCE_PLAN_RUNTIME_FORMAT,state:clone(currentState)};
+        const result=battleComplianceCommitRuntime.commit(
+          clone(currentState),
+          compliancePlan,
+          {
+            transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)
+          }
+        );
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {
+          ...result,
+          format:BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(result.state??currentState)
+        };
+      }
+
       if(type===ACTION_BATTLE_ITEM_COMMIT){
         if(battleItemCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-item-commit',reason:'browser-battle-item-commit-runtime-invalid',state:clone(currentState)};
         let itemPlan=action.battleItemPlan??null;
