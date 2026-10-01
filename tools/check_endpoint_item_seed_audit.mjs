@@ -53,6 +53,15 @@ for (let rowIndex = 0; rowIndex < lines.length; rowIndex++) {
   }
 }
 
+const matchingRowPreviews = {};
+for (const wanted of [32003, 24114]) {
+  matchingRowPreviews[wanted] = exact.get(wanted).slice(0, 10).map(match => ({
+    line: match.line,
+    positions: match.positions,
+    tokens: lines[match.line - 1].split(',').slice(0, 25)
+  }));
+}
+
 const sortedWidths = [...rowWidthCounts.entries()]
   .sort((a, b) => b[1] - a[1] || a[0] - b[0])
   .map(([columns, rows]) => ({ columns: Number(columns), rows }));
@@ -79,6 +88,7 @@ const result = {
   csvShape: { distinctColumnCounts: sortedWidths, dominantColumnCount: sortedWidths[0]?.columns ?? null },
   exactTokenMatches: { configuredItem1_32003: exact.get(32003), fixedConfiguredItem_24114: exact.get(24114) },
   fieldChecks: { firstField32003: firstField.get(32003), firstField24114: firstField.get(24114), seventeenthField32003: seventeenthField.get(32003), seventeenthField24114: seventeenthField.get(24114) },
+  matchingRowPreviews,
   interpretation: { fixedCFixedItemRuleApplied: false, note: 'Endpoint evidence only; pinned fixed-C Item ID semantics are not assumed.' }
 };
 
