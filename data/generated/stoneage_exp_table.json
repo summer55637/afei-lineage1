@@ -1,0 +1,653 @@
+{
+  "format": "stoneage-fixed-c-exp-table-v1",
+  "fixedCRef": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+  "sourcePath": "gmsv/data/exp.txt",
+  "loadedBy": "LoadEXP()",
+  "loaderCap": 160,
+  "entries": [
+    {
+      "level": 0,
+      "value": 0
+    },
+    {
+      "level": 1,
+      "value": 2
+    },
+    {
+      "level": 2,
+      "value": 6
+    },
+    {
+      "level": 3,
+      "value": 18
+    },
+    {
+      "level": 4,
+      "value": 37
+    },
+    {
+      "level": 5,
+      "value": 67
+    },
+    {
+      "level": 6,
+      "value": 110
+    },
+    {
+      "level": 7,
+      "value": 170
+    },
+    {
+      "level": 8,
+      "value": 246
+    },
+    {
+      "level": 9,
+      "value": 344
+    },
+    {
+      "level": 10,
+      "value": 464
+    },
+    {
+      "level": 11,
+      "value": 610
+    },
+    {
+      "level": 12,
+      "value": 782
+    },
+    {
+      "level": 13,
+      "value": 986
+    },
+    {
+      "level": 14,
+      "value": 1221
+    },
+    {
+      "level": 15,
+      "value": 1491
+    },
+    {
+      "level": 16,
+      "value": 1798
+    },
+    {
+      "level": 17,
+      "value": 2146
+    },
+    {
+      "level": 18,
+      "value": 2534
+    },
+    {
+      "level": 19,
+      "value": 2968
+    },
+    {
+      "level": 20,
+      "value": 3448
+    },
+    {
+      "level": 21,
+      "value": 3978
+    },
+    {
+      "level": 22,
+      "value": 4558
+    },
+    {
+      "level": 23,
+      "value": 5194
+    },
+    {
+      "level": 24,
+      "value": 5885
+    },
+    {
+      "level": 25,
+      "value": 6635
+    },
+    {
+      "level": 26,
+      "value": 7446
+    },
+    {
+      "level": 27,
+      "value": 8322
+    },
+    {
+      "level": 28,
+      "value": 9262
+    },
+    {
+      "level": 29,
+      "value": 10272
+    },
+    {
+      "level": 30,
+      "value": 11352
+    },
+    {
+      "level": 31,
+      "value": 12506
+    },
+    {
+      "level": 32,
+      "value": 13734
+    },
+    {
+      "level": 33,
+      "value": 15042
+    },
+    {
+      "level": 34,
+      "value": 16429
+    },
+    {
+      "level": 35,
+      "value": 17899
+    },
+    {
+      "level": 36,
+      "value": 19454
+    },
+    {
+      "level": 37,
+      "value": 21098
+    },
+    {
+      "level": 38,
+      "value": 22830
+    },
+    {
+      "level": 39,
+      "value": 24656
+    },
+    {
+      "level": 40,
+      "value": 26576
+    },
+    {
+      "level": 41,
+      "value": 28594
+    },
+    {
+      "level": 42,
+      "value": 30710
+    },
+    {
+      "level": 43,
+      "value": 32930
+    },
+    {
+      "level": 44,
+      "value": 35253
+    },
+    {
+      "level": 45,
+      "value": 37683
+    },
+    {
+      "level": 46,
+      "value": 40222
+    },
+    {
+      "level": 47,
+      "value": 42874
+    },
+    {
+      "level": 48,
+      "value": 45638
+    },
+    {
+      "level": 49,
+      "value": 48520
+    },
+    {
+      "level": 50,
+      "value": 51520
+    },
+    {
+      "level": 51,
+      "value": 54642
+    },
+    {
+      "level": 52,
+      "value": 57886
+    },
+    {
+      "level": 53,
+      "value": 61258
+    },
+    {
+      "level": 54,
+      "value": 64757
+    },
+    {
+      "level": 55,
+      "value": 68387
+    },
+    {
+      "level": 56,
+      "value": 72150
+    },
+    {
+      "level": 57,
+      "value": 76050
+    },
+    {
+      "level": 58,
+      "value": 80086
+    },
+    {
+      "level": 59,
+      "value": 84264
+    },
+    {
+      "level": 60,
+      "value": 106110
+    },
+    {
+      "level": 61,
+      "value": 113412
+    },
+    {
+      "level": 62,
+      "value": 121149
+    },
+    {
+      "level": 63,
+      "value": 129352
+    },
+    {
+      "level": 64,
+      "value": 138044
+    },
+    {
+      "level": 65,
+      "value": 147256
+    },
+    {
+      "level": 66,
+      "value": 157019
+    },
+    {
+      "level": 67,
+      "value": 167366
+    },
+    {
+      "level": 68,
+      "value": 178334
+    },
+    {
+      "level": 69,
+      "value": 189958
+    },
+    {
+      "level": 70,
+      "value": 202282
+    },
+    {
+      "level": 71,
+      "value": 215348
+    },
+    {
+      "level": 72,
+      "value": 229205
+    },
+    {
+      "level": 73,
+      "value": 243901
+    },
+    {
+      "level": 74,
+      "value": 259495
+    },
+    {
+      "level": 75,
+      "value": 276041
+    },
+    {
+      "level": 76,
+      "value": 293606
+    },
+    {
+      "level": 77,
+      "value": 312258
+    },
+    {
+      "level": 78,
+      "value": 332071
+    },
+    {
+      "level": 79,
+      "value": 353126
+    },
+    {
+      "level": 80,
+      "value": 375511
+    },
+    {
+      "level": 81,
+      "value": 399318
+    },
+    {
+      "level": 82,
+      "value": 424655
+    },
+    {
+      "level": 83,
+      "value": 451631
+    },
+    {
+      "level": 84,
+      "value": 480370
+    },
+    {
+      "level": 85,
+      "value": 511007
+    },
+    {
+      "level": 86,
+      "value": 543686
+    },
+    {
+      "level": 87,
+      "value": 578571
+    },
+    {
+      "level": 88,
+      "value": 615838
+    },
+    {
+      "level": 89,
+      "value": 655680
+    },
+    {
+      "level": 90,
+      "value": 698312
+    },
+    {
+      "level": 91,
+      "value": 743971
+    },
+    {
+      "level": 92,
+      "value": 792917
+    },
+    {
+      "level": 93,
+      "value": 845443
+    },
+    {
+      "level": 94,
+      "value": 901868
+    },
+    {
+      "level": 95,
+      "value": 962554
+    },
+    {
+      "level": 96,
+      "value": 1027899
+    },
+    {
+      "level": 97,
+      "value": 1098353
+    },
+    {
+      "level": 98,
+      "value": 1174420
+    },
+    {
+      "level": 99,
+      "value": 1256663
+    },
+    {
+      "level": 100,
+      "value": 1345723
+    },
+    {
+      "level": 101,
+      "value": 1442322
+    },
+    {
+      "level": 102,
+      "value": 1547281
+    },
+    {
+      "level": 103,
+      "value": 1661531
+    },
+    {
+      "level": 104,
+      "value": 1786143
+    },
+    {
+      "level": 105,
+      "value": 1922340
+    },
+    {
+      "level": 106,
+      "value": 2071533
+    },
+    {
+      "level": 107,
+      "value": 2235351
+    },
+    {
+      "level": 108,
+      "value": 2415689
+    },
+    {
+      "level": 109,
+      "value": 2614754
+    },
+    {
+      "level": 110,
+      "value": 2835137
+    },
+    {
+      "level": 111,
+      "value": 3079892
+    },
+    {
+      "level": 112,
+      "value": 3352633
+    },
+    {
+      "level": 113,
+      "value": 3657676
+    },
+    {
+      "level": 114,
+      "value": 4000195
+    },
+    {
+      "level": 115,
+      "value": 4386445
+    },
+    {
+      "level": 116,
+      "value": 4824041
+    },
+    {
+      "level": 117,
+      "value": 5322323
+    },
+    {
+      "level": 118,
+      "value": 5892866
+    },
+    {
+      "level": 119,
+      "value": 6550125
+    },
+    {
+      "level": 120,
+      "value": 12326614
+    },
+    {
+      "level": 121,
+      "value": 15496114
+    },
+    {
+      "level": 122,
+      "value": 20025638
+    },
+    {
+      "level": 123,
+      "value": 26821885
+    },
+    {
+      "level": 124,
+      "value": 37698249
+    },
+    {
+      "level": 125,
+      "value": 56734876
+    },
+    {
+      "level": 126,
+      "value": 68097265
+    },
+    {
+      "level": 127,
+      "value": 68290815
+    },
+    {
+      "level": 128,
+      "value": 68487425
+    },
+    {
+      "level": 129,
+      "value": 68687119
+    },
+    {
+      "level": 130,
+      "value": 68889921
+    },
+    {
+      "level": 131,
+      "value": 69095855
+    },
+    {
+      "level": 132,
+      "value": 69304945
+    },
+    {
+      "level": 133,
+      "value": 69517215
+    },
+    {
+      "level": 134,
+      "value": 69732689
+    },
+    {
+      "level": 135,
+      "value": 69951391
+    },
+    {
+      "level": 136,
+      "value": 70173345
+    },
+    {
+      "level": 137,
+      "value": 70398575
+    },
+    {
+      "level": 138,
+      "value": 70627105
+    },
+    {
+      "level": 139,
+      "value": 70858959
+    },
+    {
+      "level": 140,
+      "value": 71244161
+    },
+    {
+      "level": 141,
+      "value": 71342735
+    },
+    {
+      "level": 142,
+      "value": 71584705
+    },
+    {
+      "level": 143,
+      "value": 71830095
+    },
+    {
+      "level": 144,
+      "value": 72078929
+    },
+    {
+      "level": 145,
+      "value": 72331231
+    },
+    {
+      "level": 146,
+      "value": 72587025
+    },
+    {
+      "level": 147,
+      "value": 72846335
+    },
+    {
+      "level": 148,
+      "value": 73109185
+    },
+    {
+      "level": 149,
+      "value": 73615599
+    },
+    {
+      "level": 150,
+      "value": 73655601
+    },
+    {
+      "level": 151,
+      "value": 73929215
+    },
+    {
+      "level": 152,
+      "value": 74206465
+    },
+    {
+      "level": 153,
+      "value": 74487375
+    },
+    {
+      "level": 154,
+      "value": 74771969
+    },
+    {
+      "level": 155,
+      "value": 75060271
+    },
+    {
+      "level": 156,
+      "value": 75352305
+    },
+    {
+      "level": 157,
+      "value": 75648095
+    },
+    {
+      "level": 158,
+      "value": 75947665
+    },
+    {
+      "level": 159,
+      "value": 76421039
+    },
+    {
+      "level": 160,
+      "value": 86421039
+    }
+  ]
+}
