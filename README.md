@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：172f2d8 — [docs] auto-update README
-- 最後更新時間：2026-10-01T10:59:28Z
+- 最新 commit：87ac31f — docs: clarify fixed-C seed scope and endpoint battle status
+- 最後更新時間：2026-10-01T19:00:00+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -30,6 +30,7 @@
 - Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端
 - Endpoint Item seed：⚠️ unresolved；setup `ITEM1=32003`；selected `itemset6.csv` exact token presence=no
 - Endpoint MapWarp：4,734 rows；309 endpoint-only；1,032 fixed-C-only
+- Endpoint Battle data：encount 818；group1 1,199；enemy1 2,296；enemybase1 1,135；Encounter→Group unresolved active IDs=30
 
 ### 核心 closure
 
@@ -42,10 +43,10 @@
 | NPC service index | ✅ indexed | 9,335 service instances；1,031 floors |
 | Persistent State | ✅ schema 1 | legacy 30；skills 26；player items 24 |
 | Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
-| New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
+| New-player seed (fixed-C) | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
-| Starter Item 24114 | ⚠️ fail-closed | source max ID 23009 → ITEM_tblen 23010；configured 24114 越界；actual row id 11817 / imagenumber 24114 |
+| Starter Item 24114 (fixed-C) | ⚠️ fail-closed | source max ID 23009 → ITEM_tblen 23010；configured 24114 越界；actual row id 11817 / imagenumber 24114 |
 | New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
 | Battle Pipeline | ✅ V4.25 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan → V4.20 Battle Compliance Commit → V4.22 Battle Player Exit Plan → V4.22 Battle Player Exit Commit → V4.21 Battle Exit Plan → V4.23 Exit Transient Cleanup → V4.24 Settlement Receipt Barrier → V4.25 Receipt-Bound Exit Gate |
