@@ -1,0 +1,34 @@
+{
+  "format": "stoneage-v402-browser-battle-damage-plan-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_DAMAGE_PLAN",
+  "fixedC": {
+    "function": "gmsv/src/battle/battle_event.c::BATTLE_DamageCalc",
+    "constants": {
+      "DEFENSE_RATE": 0.45,
+      "DEF_QUICK_RATE": 0.2,
+      "DEF_VITAL_RATE": 0.1,
+      "DAMAGE_RATE": 2,
+      "D_16": "1/16",
+      "D_8": "1/8",
+      "AJ_SAME": 1,
+      "AJ_UP": 1.5,
+      "AJ_DOWN": 0.6,
+      "ATTR_MAX": 100,
+      "D_ATTR": "1/10000"
+    },
+    "branches": [
+      "defense <= attack && attack < defense*8/7 -> RAND(0,attack/16)",
+      "defense > attack -> RAND(0,1)",
+      "attack >= defense*8/7 -> RAND(0,attack/8)-attack/16 + (attack-defense)*2"
+    ],
+    "elemental": "BATTLE_AttrAdjust -> BATTLE_AttrCalc after base damage",
+    "field": "BATTLE_FieldAttAdjust default field_att=NONE returns 0.5, so attacker/defender ratio defaults to 1"
+  },
+  "browser": {
+    "rng": "caller injected",
+    "mutation": "read-only damage plan",
+    "ridePet": "not applied",
+    "compileTimeBranches": "not enabled implicitly"
+  }
+}
