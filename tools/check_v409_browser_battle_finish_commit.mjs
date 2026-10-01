@@ -11,6 +11,7 @@ import {
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   ACTION_BATTLE_DEATH_PLAN,
   ACTION_BATTLE_DEATH_COMMIT,
+  ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_END_PLAN,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -103,6 +104,10 @@ const build=await controller.dispatch({
   battleFieldNo:1
 });
 assert.equal(build.ok,true,JSON.stringify(build));
+
+const init=await controller.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
+assert.equal(init.ok,true,JSON.stringify(init));
+assert.equal(init.battleContext.context.sourceMode,2);
 
 const death=await controller.dispatch({
   type:ACTION_BATTLE_DEATH_PLAN,
