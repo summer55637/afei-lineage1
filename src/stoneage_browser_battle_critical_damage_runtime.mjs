@@ -13,8 +13,8 @@ const GUARD_RATES=[
 ];
 
 const clone=value=>JSON.parse(JSON.stringify(value));
-const int=value=>{const n=Number(value);return Number.isFinite(n)?Math.trunc(n):null;};
-const num=(value,fallback=null)=>{const n=Number(value);return Number.isFinite(n)?n:fallback;};
+const int=value=>{if(value==null||String(value).trim()==='')return null;const n=Number(value);return Number.isFinite(n)?Math.trunc(n):null;};
+const num=(value,fallback=null)=>{if(value==null||String(value).trim()==='')return fallback;const n=Number(value);return Number.isFinite(n)?n:fallback;};
 
 function findEntry(context,bid){
   const b=int(bid);
