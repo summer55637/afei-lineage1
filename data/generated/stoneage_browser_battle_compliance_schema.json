@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Compliance Plan",
+  "type":"object",
+  "required":["format","action","characters","persistentStateMutation","rngPreserved"],
+  "properties":{
+    "format":{"const":"stoneage-v419-browser-battle-compliance-plan-v1"},
+    "action":{"const":"BATTLE_COMPLIANCE_PLAN"},
+    "characters":{"type":"array","items":{"type":"object"}},
+    "persistentStateMutation":{"const":false},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false},
+    "rngPreserved":{"const":true},
+    "deferred":{"type":"array","items":{"type":"string"}}
+  },
+  "additionalProperties":true
+}
