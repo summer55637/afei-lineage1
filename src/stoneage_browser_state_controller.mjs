@@ -287,7 +287,8 @@ function createBrowserStateController({
             hitRightRoll:action.hitRightRoll??null,
             criticalRoll:action.criticalRoll??null,
             guardianBitMask:action.guardianBitMask??(1<<3),
-            noguardDuckBonus:action.noguardDuckBonus??0
+            noguardDuckBonus:action.noguardDuckBonus??0,
+            enabledFeatures:Array.isArray(action.enabledFeatures)?action.enabledFeatures:[]
           }
         );
         return {...result,format:BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,state:clone(currentState)};
