@@ -17,6 +17,8 @@ on:
       - 'tools/check_v422_browser_battle_player_exit_commit.mjs'
       - 'tools/check_v425_browser_battle_settlement_exit_gate.mjs'
       - 'tools/check_v425_browser_battle_context_clear.mjs'
+      - 'tools/check_browser_battle_context_source_binding.mjs'
+      - 'tools/check_browser_battle_context_source_binding.mjs'
       - 'tools/check_browser_battle_context_clear_gate.mjs'
       - 'tools/check_browser_battle_clear_world_loop_gate.mjs'
       - 'tools/check_browser_state_controller_dispatch_serialization.mjs'
@@ -54,6 +56,7 @@ jobs:
       - run: node tools/check_v424_browser_battle_settlement_receipt.mjs
       - run: node tools/check_v425_browser_battle_settlement_exit_gate.mjs
       - run: node tools/check_v425_browser_battle_context_clear.mjs
+      - run: node tools/check_browser_battle_context_source_binding.mjs
       - run: node tools/check_browser_battle_context_clear_gate.mjs
       - run: node tools/check_browser_battle_clear_world_loop_gate.mjs
       - run: node tools/check_browser_state_controller_dispatch_serialization.mjs
