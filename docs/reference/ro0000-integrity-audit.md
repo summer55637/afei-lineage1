@@ -99,6 +99,30 @@ gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 ro0000 原始 setup／教程包含 credential-like 設定與部署敏感資訊。這些內容作為 provenance snapshot 保留，但 canonical runtime、README、generated data、公開 UI 與一般文件不應重新散播其中的密碼、token 或內部連線資訊。
 
 
+
+## ridenpc2.lua~ 版本殘留判定
+
+`hydata/data/ablua/npc/ridenpc/ridenpc2.lua~` 現在確認不是與正式 `ridenpc.lua` 相同 blob，而是一份不同版本的 ABLua 腳本。
+
+正式 `ridenpc.lua` 在 data / hydata 兩端均存在且 blob SHA 相同；兩者都會建立「騎證兌換員」，但 residue 與正式版本的建立位置／圖像與獎勵表不同：
+
+- residue：`2005,(28,12)`、metamo `41155`，包含 23805 / 23820 / 29061 / 29117 等騎證。
+- formal：`2005,(28,11)`、metamo `24774`，包含 23825 / 23830 / 23815 / 23810 / 29061 / 29117。
+
+因此不能把 `ridenpc2.lua~` 當成正式檔案的備份副本，也不能直接以內容推導哪一版應該上線。
+
+目前 repository 內沒有找到 `ridenpc2.lua~` 的精確 loader / binding。另一方面，RO0000 的 `setup.cf` 預設 NPC root 是 `data/npc`，而該 residue 位於 `hydata/data/ablua`；且 snapshot 中連 setup 所指定的 `data/npc/lua/init.lua` 入口都不存在。因此目前最嚴謹狀態仍是：
+
+`runtimeEligibility=unproven`
+
+分類改為：
+
+`alternate-version-script-with-formal-sibling`
+
+這不是刪除結論，而是把它固定成「版本殘留，需 ABLua loader evidence 才能決定是否具 runtime 身分」。
+
+公開 ABLua 技術資料可旁證 `main()` 是啟動入口，以及 `npc.CreateNpc` / `char.setFunctionPointer` 是建立與綁定 NPC 的常見模式；但這只能說明腳本的執行模型，不能代替 RO0000 的實際 loader provenance。citeturn148163search6turn890430search0
+
 ## hecheng loader 三層閉合：create / template / arg
 
 這一輪把 hecheng residue 從「副檔名可疑」提升到 fixed-C loader 級別的可驗證結論。
