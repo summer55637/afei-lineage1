@@ -1,0 +1,128 @@
+{
+  "format": "stoneage-ro0000-hecheng-loader-audit-v1",
+  "checkedDate": "2026-10-01",
+  "ro0000TreeSha": "b0df5f41ef9aa35c3e114eefb56ce36d825be254",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "createLoader": "gmsv/src/npc/npccreate.c::NPC_readNPCCreateFiles",
+    "templateLoader": "gmsv/src/npc/npctemplate.c::NPC_readNPCTemplateFiles",
+    "argLoader": "gmsv/src/npc/npcutil.c::NPC_Util_GetArgStr",
+    "argFileResolver": "gmsv/src/npc/npcutil.c::NPC_Util_CheckAssignArgFile"
+  },
+  "loaderRules": {
+    "createFileExclusions": ["trailing ~", "leading #", ".bak suffix"],
+    "templateFileExclusions": ["trailing ~", "leading #", ".bak suffix"],
+    "createSuffixCreateRequired": false,
+    "templateSuffixTemplateRequired": false,
+    "argFileReferenceIsLiteralRelativeToNpcdir": true
+  },
+  "defaultEndpointConfig": {
+    "path": "ro0000/server/merged-source/gmsv/setup.cf",
+    "npcdir": "data/npc",
+    "defaultTopdirectory": "ro0000/server/merged-source/gmsv/data/npc",
+    "hydataSetupCfPresent": false
+  },
+  "hecheng": {
+    "createVariants": [
+      {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/neweq.create---",
+        "sha": "cb9d897b6f922659d53d250ca248972068872f86",
+        "loaderStatus": "file-accepted-by-npc-create-loader",
+        "semanticStatus": "zero-create-blocks-because-all-block-lines-are-commented",
+        "runtimeEligibility": "not-instantiated-under-default-data-root",
+        "bindings": [
+          "ITEMCHANGE|file:hecheng/baoxiang.arg",
+          "changeevent|file:hecheng/baoshi.arg"
+        ]
+      },
+      {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/neweq.create---",
+        "sha": "b69bbfe634581860964ef9d8c48adadc273aabe2",
+        "loaderStatus": "file-accepted-by-npc-create-loader",
+        "semanticStatus": "two-active-create-blocks-if-hydata-tree-is-selected-as-npcdir",
+        "runtimeEligibility": "path-config-sensitive-alternate-variant",
+        "bindings": [
+          "ITEMCHANGE|file:hecheng/baoxiang.arg",
+          "changeevent|file:hecheng/baoshi.arg"
+        ]
+      }
+    ],
+    "templateResidue": [
+      {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/process.template--",
+        "sha": "2eca62cd579298e6393e0ad67f772dd6fb0d52e2",
+        "sameBlobAs": "ro0000/server/merged-source/gmsv/data/npc/eden3/process/process.template",
+        "loaderStatus": "file-accepted-by-npc-template-loader",
+        "semanticStatus": "duplicate-ITEMCHANGE-template-definition",
+        "runtimeRisk": "possible-duplicate-registry-entry-when-scanned-under-same-npcdir",
+        "functionset": "ItemchangeMan"
+      },
+      {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/process.template--",
+        "sha": "2eca62cd579298e6393e0ad67f772dd6fb0d52e2",
+        "sameBlobAs": "ro0000/server/merged-source/gmsv/hydata/data/npc/eden3/process/process.template",
+        "loaderStatus": "file-accepted-by-npc-template-loader",
+        "semanticStatus": "duplicate-ITEMCHANGE-template-definition",
+        "runtimeRisk": "possible-duplicate-registry-entry-when-scanned-under-same-npcdir",
+        "functionset": "ItemchangeMan"
+      }
+    ],
+    "argVariants": [
+      {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoshi.arg--",
+        "sha": "52d1f96d9b24bb40b5f02093c44f5efa790aea79",
+        "referencedBy": "data/npc/hecheng/neweq.create---",
+        "referencedFormalPath": "hecheng/baoshi.arg",
+        "formalPathPresent": false,
+        "residuePathPresent": true,
+        "argLoaderStatus": "not-directly-loaded-as-an-arg-file-by-world-loader",
+        "runtimeStatus": "dangling-formal-arg-reference-under-default-data-root"
+      },
+      {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoxiang.arg--",
+        "sha": "f511a49d5f97a1bd57b483fde2eae71222d4a734",
+        "referencedBy": "data/npc/hecheng/neweq.create---",
+        "referencedFormalPath": "hecheng/baoxiang.arg",
+        "formalPathPresent": false,
+        "residuePathPresent": true,
+        "argLoaderStatus": "not-directly-loaded-as-an-arg-file-by-world-loader",
+        "runtimeStatus": "dangling-formal-arg-reference-under-default-data-root"
+      },
+      {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoshi.arg--",
+        "sha": "52d1f96d9b24bb40b5f02093c44f5efa790aea79",
+        "referencedBy": "hydata/data/npc/hecheng/neweq.create---",
+        "referencedFormalPath": "hecheng/baoshi.arg",
+        "formalPathPresent": false,
+        "residuePathPresent": true,
+        "argLoaderStatus": "not-directly-loaded-as-an-arg-file-by-world-loader",
+        "runtimeStatus": "dangling-formal-arg-reference-if-hydata-tree-is-selected"
+      },
+      {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoxiang.arg--",
+        "sha": "f511a49d5f97a1bd57b483fde2eae71222d4a734",
+        "referencedBy": "hydata/data/npc/hecheng/neweq.create---",
+        "referencedFormalPath": "hecheng/baoxiang.arg",
+        "formalPathPresent": false,
+        "residuePathPresent": true,
+        "argLoaderStatus": "not-directly-loaded-as-an-arg-file-by-world-loader",
+        "runtimeStatus": "dangling-formal-arg-reference-if-hydata-tree-is-selected"
+      }
+    ]
+  },
+  "conclusions": [
+    "The special suffixes .create--- and .template-- are not disabling suffixes in the pinned fixed-C loaders.",
+    "Default gmsv setup uses npcdir=data/npc, so the raw data neweq.create--- is scanned but its two blocks are commented and therefore do not instantiate NPCs.",
+    "The hydata neweq.create--- contains two active NPC blocks, but hydata is not the default npcdir in the pinned setup; treating it as active requires an explicit alternate runtime configuration.",
+    "hecheng/process.template-- is an exact blob duplicate of the formal eden3/process/process.template and is loader-accepted; it should be classified as duplicate residue, not promoted as a second canonical template.",
+    "NPC_Util_CheckAssignArgFile extracts the file: path literally, and NPC_Util_GetArgStr opens getNpcdir()/filename; therefore file:hecheng/baoshi.arg does not fall through to baoshi.arg--.",
+    "The two .arg-- files are currently source-history residues with dangling formal references. Their payloads are valid-looking StoneAge event/ITEMCHANGE DSL, but renaming or promoting them would require explicit provenance evidence."
+  ],
+  "policy": {
+    "rawSnapshotMustNotBePhysicallyRearranged": true,
+    "doNotRenameArgResiduesFromSuffixAlone": true,
+    "doNotPromoteHydataVariantWithoutExplicitNpcdirConfig": true,
+    "doNotDeleteDuplicateTemplateResidueWithoutProvenanceReview": true
+  }
+}
