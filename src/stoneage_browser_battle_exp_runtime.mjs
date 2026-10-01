@@ -76,7 +76,7 @@ function planBattleExp(battleContext,state,{
 
   const playerEntry=resolvePlayerEntry(battleContext);
   if(!playerEntry)return {ok:false,handled:false,stage:'battle-exp-plan',reason:'player-battle-entry-required'};
-  if(playerEntry.isDie===true || intOr(playerEntry.hp,0)<=0){
+  if(playerEntry.isDie===true){
     return {ok:false,handled:false,stage:'battle-exp-plan',reason:'player-dead-no-exp-settlement'};
   }
   const playerId=state.player?.id==null?'':String(state.player.id).trim();
@@ -106,7 +106,8 @@ function planBattleExp(battleContext,state,{
     seen.add(id);
     const petExp=intOr(pet.exp,0);
     const petWorkGetExp=intOr(pet.workGetExp,0);
-    if(pet?.hp!=null&&intOr(pet.hp,0)<=0)continue;
+    if(pet?.isDie===true)continue;
+    if(contextPet?.isDie===true)continue;
     if(petWorkGetExp<=0)continue;
     const contextPet=resolveActivePetEntry(battleContext,id);
     if(contextPet&&contextPet.workGetExp!=null&&petWorkGetExp!==intOr(contextPet.workGetExp,0)){
