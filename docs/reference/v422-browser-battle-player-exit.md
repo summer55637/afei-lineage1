@@ -17,7 +17,7 @@ The fixed-C `BATTLE_Exit()` path also restores a dead Player to HP 1 on final ex
 - Player entry must be the side-0 `bid=0` entry;
 - HP and MP must be present in the battle entry;
 - live Player: commit battle HP/MP;
-- dead or HP<=0 Player: commit HP 1 and the battle MP snapshot;
+- dead Player (`isDie=true`): commit HP 1 and the battle MP snapshot; an HP<=0 entry without the source death flag is fail-closed.
 - no RNG, reward, EXP, Gold, or Battle Context mutation during planning.
 
 ## Commit contract
