@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StoneAge Browser Battle Context Clear Gate",
+  "type": "object",
+  "required": [
+    "format",
+    "action",
+    "settlementReceiptId",
+    "playerExitTransactionId",
+    "petExitTransactionId",
+    "revisionBefore",
+    "revisionAfter",
+    "battleContextCleared"
+  ],
+  "properties": {
+    "format": {
+      "const": "stoneage-v425-browser-battle-context-clear-v1"
+    },
+    "action": {
+      "const": "BATTLE_CONTEXT_CLEAR"
+    },
+    "settlementReceiptId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "playerExitTransactionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "petExitTransactionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revisionBefore": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "revisionAfter": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "battleContextCleared": {
+      "const": true
+    }
+  },
+  "additionalProperties": true
+}
