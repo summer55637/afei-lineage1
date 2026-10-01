@@ -129,3 +129,15 @@ Fixed-C → 把所有 endpoint 差異都丟掉
 - 沒有足夠證據時 fail-closed。
 - 若差異已能證明屬於 endpoint 的實際部署資料，優先建立 variant catalog，而不是把它當 blocker。
 - blocker 仍遵守 README 的「只在有新 evidence 時重新開啟」規則。
+
+## Authority Matrix
+
+| 問題 | 首要依據 | 校驗依據 |
+|---|---|---|
+| 實際部署版本有哪些資料？ | VM 一鍵端＋手工外網端 | Exact identity / completeness |
+| 世界／NPC／Item／Quest／Event 的實際配置？ | VM 一鍵端＋手工外網端 | pinned fixed-C semantics |
+| C engine 怎麼執行？ | pinned fixed-C | endpoint implementation / regression |
+| endpoint 為何與 fixed-C 不同？ | endpoint provenance + exact diff | 不同版本／外部 evidence |
+| 哪些是本專案新增的放置規則？ | afei-lineage1 product policy | 不得冒充 source parity |
+
+這張表是跨新對話與跨版本 audit 的快速判定基準：先確認「我們在回答哪一種問題」，再選對 authority；不能用單一來源包辦所有問題。
