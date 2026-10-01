@@ -72,6 +72,20 @@ setup.cf 的 data/... 路徑檢查目前會區分 file、directory、missing。�
 
 它只會檢測與報告，不會修改 ro0000。
 
+## 本輪 variant 語義探針
+
+目前 222 個 data ↔ hydata 差異已經證明不能做全域覆蓋。針對高影響資料做第一輪內容級比對後：
+
+- itemset6.csv：data 14,502 rows、hydata 14,508 rows；兩邊都沒有 exact numeric 32003，兩邊各有 1 個 24114。因此切換 data / hydata 並不能自行解掉 ITEM1=32003 的 starter item mismatch。
+- enemy1.txt：data 只有 4 行與 hydata 不同、hydata 有 29 行只出現在自身；屬於實際 row membership variant。
+- enemybase1.txt：兩邊都有同名資料但部分 row 的 graphic/base reference 不同，例如相同 2D creature rows 的 reference ID 不一致；不能只看檔案大小判斷。
+- group1.txt：hydata 多 1 行，現階段沒有證據允許把它刪掉或視為錯誤。
+- map/mapwarp.txt：存在座標級差異，例如對應 warp 出現 3000,78,91 與 3000,77,91 的不同來源列；這直接屬於 world connectivity evidence。
+- petskill2.txt：skill 652 的 PowerBalance option 在兩個 variant 間不同（+58 與 +55），所以即使行數幾乎完全一致，仍存在 gameplay semantics 差異。
+- skillcode.txt：兩端 mapping rows 也有差異。
+
+因此下一階段採「按 runtime 影響逐檔閉合」：先處理 starter Item / mapwarp / encounter-battle / petskill，再回頭處理大量 NPC .arg variants；不建立全域 data-over-hydata 覆蓋規則。
+
 ## 本輪 fixed-C 參考
 
 本輪 dependency triage 固定以：
