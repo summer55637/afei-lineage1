@@ -1119,6 +1119,16 @@ function createBrowserStateController({
           if(JSON.stringify(pipeline.generation.team??null)!==JSON.stringify(action.enemyTeam??null)){
             return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-team-generation-mismatch',state:clone(currentState)};
           }
+          if(action.materializeEnemyStats===true){
+            const pipelineRolls=pipeline.generation.coreStatRolls;
+            const actionRolls=Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:null;
+            if(!Array.isArray(pipelineRolls) || pipelineRolls.length!==pipeline.generation.team.length){
+              return {ok:false,handled:false,stage:'enemy-core-stat-binding',reason:'enemy-stat-roll-plan-required',state:clone(currentState)};
+            }
+            if(actionRolls!=null && JSON.stringify(actionRolls)!==JSON.stringify(pipelineRolls)){
+              return {ok:false,handled:false,stage:'enemy-core-stat-binding',reason:'enemy-stat-roll-plan-mismatch',state:clone(currentState)};
+            }
+          }
         }
         const player=currentState?.player??null;
         let activePet=action.activePet??null;
@@ -1161,7 +1171,9 @@ function createBrowserStateController({
           groupId:groupIdValue,
           battleFieldNo,
           materializeEnemyStats:action.materializeEnemyStats===true,
-          enemyStatRolls:Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:[]
+          enemyStatRolls:encounterGroupCatalog && action.materializeEnemyStats===true
+            ? pipeline?.generation?.coreStatRolls
+            : (Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:[])
         });
         if(!built.ok)return {...built,state:clone(currentState)};
         const check=validateBattleContext(built);
@@ -1230,11 +1242,16 @@ function createBrowserStateController({
         if(encounterPipeline?.selection?.group?.groupId!=null && Number(encounterPipeline.selection.group.groupId)!==selectedGroupId){
           return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-group-selection-mismatch',selectedGroupId,currentGroupId:Number(encounterPipeline.selection.group.groupId),state:clone(currentState)};
         }
+        const coreStatRolls=Array.isArray(action.enemyStatRolls)?clone(action.enemyStatRolls):null;
         const result=worldEncounterEnemyRuntime.generate(prepared.encounter,selectedGroupId,currentState,{
           entryMaxRoll:action.entryMaxRoll??null,
           enemyRolls:Array.isArray(action.enemyRolls)?action.enemyRolls:[]
         });
         if(result.ok===true){
+          if(coreStatRolls!=null && coreStatRolls.length!==result.team.length){
+            return {ok:false,handled:false,stage:'enemy-core-stat-binding',reason:'enemy-stat-roll-count-mismatch',expected:result.team.length,actual:coreStatRolls.length,state:clone(currentState)};
+          }
+          result.coreStatRolls=coreStatRolls;
           encounterPipeline={
             revision:currentRevision,
             encounter:clone(prepared.encounter),
