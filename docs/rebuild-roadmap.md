@@ -2,6 +2,26 @@
 
 更新日期：2026-10-01
 
+## 2026-10-01 Endpoint World Data Closure：NPC / Map / Battle Data 已進入獨立 evidence 層
+
+目前已把完整 VM 一鍵端的 World 資料從「一般參考」提升成獨立 endpoint evidence：
+
+- Endpoint Source Corpus：8,749 files / 185,166,100 bytes。
+- Endpoint NPC：2,384 files；與 pinned fixed-C 共 2,317 個同 path，其中 1,803 個 blob 完全相同、514 個為 endpoint variant。
+- 四個 hometown NPC path 完整保留：100 = 35 files、200 = 19、300 = 36、400 = 4；其中 100/200/300 分別有 5/1/4 個 changed blobs，400 完全一致。
+- Endpoint MapWarp：4,734 rows；4,425 與 fixed-C 完全相同、309 endpoint-only。
+- Endpoint Battle data：encount 818、group1 1,199、enemy1 2,296、enemybase1 1,135；Group→Enemy 與 Enemy→EnemyBase 的 endpoint 引用目前全部可解析，Encounter→Group 尚有 30 個 active Group IDs 未在 selected group1.txt 找到。
+- Endpoint Item seed：setup.cf 使用 ITEM1=32003、itemset6file=data/itemset6.csv；selected CSV 找不到 exact token 32003，因此 starter seed 暫時保持 unresolved，不做 remap。
+
+這一層的目的不是立刻替換既有 fixed-C runtime，而是先建立 endpoint version 的真實資料面，再逐項做 loader / semantic closure。
+
+Evidence：
+- data/generated/stoneage_endpoint_source_catalog.json
+- data/generated/stoneage_endpoint_npc_source_audit.json
+- data/generated/stoneage_endpoint_mapwarp_audit.json
+- data/generated/stoneage_endpoint_battle_data_source_audit.json
+- data/generated/stoneage_endpoint_item_seed_audit.json
+
 ## 2026-10-01 Endpoint Item Seed Audit：setup.cf → itemset6.csv 未閉合
 
 完整 VM 一鍵端 audit 首次發現一個不能再只用 pinned fixed-C 描述的實機版本差異：
