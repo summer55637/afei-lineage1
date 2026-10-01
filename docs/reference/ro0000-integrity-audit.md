@@ -41,7 +41,16 @@ ro0000 是來源 snapshot，不是工作區。即使 gmsv/data 與 hydata/data �
 
 ### setup 缺檔先當 evidence gap
 
-setup.cf 的 data/... 路徑檢查目前會區分 file、directory、missing。已知 missing 候選包含 freepetskillshop.lua、itemset3.txt、itemset4.txt、itemset5.txt、appear.txt。這些不能直接刪除或補猜；尤其 itemset3～5 可能受 ITEMSET6 compile-time branch 影響，需要 loader/build semantics 再確認。
+setup.cf 的 data/... 路徑檢查目前會區分 file、directory、missing。這一輪已把 5 個 missing dependency 做固定分類，正式記錄在：
+
+- data/generated/stoneage_ro0000_dependency_triage.json
+
+目前分類不是「缺檔就補」：
+
+- appear.txt：runtime boot blocker candidate。固定 C 的 init.c 會在啟動時直接呼叫 CHAR_initAppearPosition(getAppearfile())，因此這個檔案要先完成來源重建，才能談 boot promotion。
+- freepetskillshop.lua：feature hook gap candidate。固定 C 有 _CFREE_petskill 的 NPC 模組，但 pinned source tree 沒有同名 Lua 檔；不能自行補一份猜測版本。
+- itemset3.txt / itemset4.txt / itemset5.txt：compile-time inactive under itemset6。固定 C 的 configfile.c 在 _ITEMSET6_TXT 路徑註冊 itemset6file，其他 itemset 設定屬不同 compile-time branch，因此目前不把它們視為 endpoint 損壞。
+
 
 ## 測試內容
 
@@ -56,10 +65,20 @@ setup.cf 的 data/... 路徑檢查目前會區分 file、directory、missing。�
 - gmsvjt ELF magic。
 - Android APK ZIP magic。
 - 175sa.sql 基本 MySQL dump 結構。
-- endpoint map 檔案的 LS2MAP signature。
+- endpoint map 檔案的 LS2MAP / LS&MAP signature 分類；目前 1380 個是真正的 LS&MAP binary，另 1 個 map/aaa 被驗證為文字 metadata index，並與 hydata 具有相同 blob。
 - encounter、group、enemy、enemybase、mapwarp 基本資料存在性統計。
+- ro0000 dependency triage report 的 raw tree SHA、map/aaa blob SHA 與 5 個 setup missing classification 一致性。
+
 
 它只會檢測與報告，不會修改 ro0000。
+
+## 本輪 fixed-C 參考
+
+本輪 dependency triage 固定以：
+
+gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+作為 engine semantics / loader / lifecycle baseline。參考檔案包含 gmsv/src/configfile.c、gmsv/src/init.c、gmsv/src/include/version.h、gmsv/src/npc/npc_freepetskillshop.c。這些只用來判定語義，不直接覆蓋 ro0000 endpoint 檔案。
 
 ## 安全注意
 
