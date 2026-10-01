@@ -2,7 +2,7 @@
 
 「阿肥石器時代放置版」重建專案。
 
-這個倉庫的方向不是把舊網頁程式碼重新堆回去，而是先用固定 source evidence 建立可驗證的資料與 runtime contract，再逐步接成一個唯一、可長時間遊玩的 PC＋手機單機網頁放置遊戲。
+這個倉庫的方向不是把舊網頁程式碼重新堆回去，而是先以最完整的 VM 一鍵端＋手工外網端建立可追溯的世界／部署資料，再用 pinned fixed-C 校驗引擎語義與 runtime contract，最後接成一個唯一、可長時間遊玩的 PC＋手機單機網頁放置遊戲。
 
 <!-- AUTO-README:START -->
 ## 📌 自動維護狀態
@@ -79,6 +79,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
   - `docs/搭建教程.txt`：手工外網端架設教程。
   - `docs/隐盟文本教程.txt`：VM 一鍵端架設／維運教程。
 - 原始內容優先保留；後續整理或差異分析不得因檔名相同就假設內容相同。
+- 完整來源角色：VM 一鍵端＋手工外網端是目前最完整的實機／部署資料主來源；pinned fixed-C 是引擎行為與語義校驗基準；詳見 `docs/source-authority-and-provenance.md`。
 
 ### VM／WinSCP 使用狀態
 
@@ -88,9 +89,9 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 ### 下一個主要工作
 
-目前不再繼續手工搬運 VM 檔案。`ro0000/` 的端點 provenance 已固定：只有 `docs/搭建教程.txt` 與 `wwwroot/` 屬手工外網端，其餘資料屬 VM 一鍵端。
+目前不再繼續手工搬運 VM 檔案。`ro0000/` 的 endpoint provenance 已固定，且 VM 一鍵端＋手工外網端正式升級為首要重建資料來源。
 
-後續 source audit 以這個 provenance 分類為第一層，再把各端資料與 pinned fixed-C 做內容／blob SHA 比對；同名不同內容只標記為相對 fixed-C 的 variant，不再把它錯當成兩個未知外部端點的混合物。
+後續 source audit 先依 endpoint provenance 與 exact identity 判定實際部署資料，再用 fixed-C 做 engine semantics / parity 校驗。與 fixed-C 不同但能證明屬於 endpoint 的內容，標記為 endpoint variant，不因 mismatch 自動丟棄。完整順序為：Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime。
 
 ### 交接規則
 
@@ -105,9 +106,9 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 ### Source parity
 
-固定 C / pinned source 是行為、數值、資料格式與執行順序的最高依據。
+來源策略採分層制：完整 endpoint 資料主導「實際部署版本有什麼」，pinned fixed-C 主導「引擎行為應如何運作」。兩者衝突時先辨識 variant，再決定 runtime eligibility；不自動把 endpoint mismatch 當成錯誤。
 
-沒有證據的資料不能猜測、不能跨版本硬補，也不能因為「看起來合理」就直接變成遊戲規則。無法閉合的項目維持 unresolved / fail-closed。
+沒有足夠證據的資料不能猜測、不能跨版本硬補，也不能因為「看起來合理」就直接變成遊戲規則。無法閉合的項目維持 unresolved / fail-closed。
 
 ### 視覺與操作還原
 
@@ -259,19 +260,20 @@ README.md                  專案總覽；狀態區由 workflow 自動更新
 
 ## 重要閱讀順序
 
-1. docs/rebuild-roadmap.md
-2. docs/reference/video-001-visual-reference.md
-3. docs/reference/modern-3d-mobile-visual-ui-target.md
-4. docs/reference/start-world-exit-reachability.md
-5. docs/reference/start-encounter-target-index.md
-6. docs/reference/idle-loop-contract.md
-7. docs/reference/persistent-state-schema.md
-8. docs/reference/save-envelope-contract.md
-9. docs/reference/reward-transaction-contract.md
-10. docs/reference/item-source-runtime.md
-11. docs/reference/item-economy-runtime.md
-12. docs/reference/npc-itemshop-runtime.md
-13. docs/reference/v340-browser-itemshop-runtime.md
+1. docs/source-authority-and-provenance.md
+2. docs/rebuild-roadmap.md
+3. docs/reference/video-001-visual-reference.md
+4. docs/reference/modern-3d-mobile-visual-ui-target.md
+5. docs/reference/start-world-exit-reachability.md
+8. docs/reference/start-encounter-target-index.md
+9. docs/reference/idle-loop-contract.md
+12. docs/reference/persistent-state-schema.md
+13. docs/reference/save-envelope-contract.md
+16. docs/reference/reward-transaction-contract.md
+17. docs/reference/item-source-runtime.md
+20. docs/reference/item-economy-runtime.md
+21. docs/reference/npc-itemshop-runtime.md
+24. docs/reference/v340-browser-itemshop-runtime.md
 
 ## 回歸與版本
 
