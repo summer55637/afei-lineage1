@@ -71,7 +71,7 @@
   "resolution": {
     "status": "unresolved",
     "reason": "setup.cf explicitly configures ITEM1=32003, but selected endpoint itemset6.csv contains no exact numeric token 32003. Do not remap or substitute another item from this evidence alone.",
-    "secondaryEvidence": "The same endpoint itemset6.csv contains exactly one 24114 token occurrence at line 6943 token 18, with token 17=11817, token 19=9900, token 20=16. This is useful evidence for the table layout but does not prove endpoint loader semantics."
+    "secondaryEvidence": "The same endpoint itemset6.csv contains exactly one 24114 token occurrence, so the endpoint data is not simply missing the value 24114."
   },
   "interpretation": {
     "fixedCFixedItemRuleApplied": false,
