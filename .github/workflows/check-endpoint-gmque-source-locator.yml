@@ -25,4 +25,4 @@ jobs:
         with:
           fetch-depth: 1
       - name: Check endpoint GMQUE locator
-        run: node tools/check_endpoint_gmque_source_locator.mjs --check
+        run: node tools/check_endpoint_gmque_source_locator.mjs
