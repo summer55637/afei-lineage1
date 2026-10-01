@@ -73,6 +73,7 @@ function createSourceStarterPet(seed,hometown,{randInclusive=defaultRandInclusiv
   rolls.push({role:'petmail-effect',min:0,max:1,roll:petMailEffect});
   if(rolls.length!==BASE_RNG_ROLLS)return {ok:false,reason:'starter-rng-call-count-drift',actual:rolls.length};
   const maxHp=Math.trunc((stats.vital*4+stats.str+stats.tgh+stats.dex)*0.01);
+  const allocPointPacked=randomizedBase.vital*Math.pow(256,3)+randomizedBase.str*Math.pow(256,2)+randomizedBase.tgh*256+randomizedBase.dex;
   const id=String(idFactory({entry,stats,level})).trim();
   if(!id)return {ok:false,reason:'pet-canonical-id-factory-empty'};
   return {
@@ -91,6 +92,9 @@ function createSourceStarterPet(seed,hometown,{randInclusive=defaultRandInclusiv
     variableAi:0,
     petMailEffect,
     petRank:rank.petRank,
+    allocPointPacked,
+    serverStats:{...stats},
+    serverProgression:true,
     sourceRankResolved:true,
     sourceRankEvidence:{
       function:'gmsv/src/char/enemy.c::ENEMY_getRank',
