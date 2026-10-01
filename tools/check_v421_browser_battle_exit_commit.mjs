@@ -8,6 +8,10 @@ const done=commitBattleExit(state,plan,{transactionId:'battle-v421-1',expectedRe
 assert.equal(done.ok,true); assert.equal(done.applied,true); assert.equal(done.revisionAfter,5);
 assert.equal(done.state.pets.petBox[0].hp,1); assert.equal(done.state.pets.petBox[1].hp,7);
 assert.equal(done.state.player.hp,0); assert.equal(done.state.player.mp,0);
+const badPlan={...plan}; delete badPlan.settlementComplete;
+const blocked=commitBattleExit(state,badPlan,{transactionId:'battle-v421-no-settlement',expectedRevision:4});
+assert.equal(blocked.ok,false);
+assert.equal(blocked.reason,'settlement-complete-flag-required');
 const retry=commitBattleExit(done.state,plan,{transactionId:'battle-v421-1',expectedRevision:4});
 assert.equal(retry.ok,true); assert.equal(retry.idempotent,true); assert.equal(retry.applied,false);
 const stale=commitBattleExit({...state,pets:{petBox:[{id:'dead',hp:2}]}},plan,{transactionId:'battle-v421-stale',expectedRevision:4});
