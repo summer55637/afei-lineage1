@@ -33,7 +33,7 @@
 | Starter Item 24114 | ⚠️ fail-closed | source max ID 23009 → ITEM_tblen 23010；configured 24114 越界；actual row id 11817 / imagenumber 24114 |
 | New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
-| Battle Pipeline | ✅ V4.16 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit |
+| Battle Pipeline | ✅ V4.18 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
 
