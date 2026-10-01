@@ -3,6 +3,17 @@
 更新日期：2026-10-01
 
 
+更新日期：2026-10-01
+
+## 2026-10-01 V4.25 follow-up：Battle Context source encounter binding
+
+在 Context Clear → Idle moving → 下一次 encounter 的回圈 audit 中，發現 ENCOUNTER_BATTLE_CONTEXT_BUILD 原本可以直接接受 caller 提供的 encounter snapshot；只要 idle.mode=encounter_pending，就可能把不相符的 encounter identity 帶進下一個 Battle Context。
+
+現在只要 Controller 有 pinned encounter target index，就會在 Battle Context 建立前重新用目前 world.position 解析 source encounter。Context 最終使用 canonical source snapshot；若 caller 指定的 encounter 不在目前位置，直接 fail-closed。groupId 也必須存在於 canonical encounter 的 groupIds。
+
+新增 regression：tools/check_browser_battle_context_source_binding.mjs，覆蓋 stale encounter rejection、group mismatch rejection，以及 canonical encounter acceptance。
+
+這一輪只收緊 source binding，不新增 encounter probability、enemy RNG、Battle、reward、EXP、Gold、Item 規則。
 ## 2026-10-01 V4.25 follow-up：Serialize Browser Controller dispatch
 
 本輪在 battle context clear → Idle moving → 下一次 encounter 的回圈再做一次 concurrency audit，確認單靠各 runtime 的 expectedRevision 還不足以阻止同一個 Controller 內的兩個 async action 同時讀到相同的 currentState。
