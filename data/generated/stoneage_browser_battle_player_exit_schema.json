@@ -1,0 +1,16 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Player Exit Plan",
+  "type":"object",
+  "required":["format","action","player","settlementComplete","persistentStateMutation","battleContextMutation","rngPreserved"],
+  "properties":{
+    "format":{"const":"stoneage-v422-browser-battle-player-exit-plan-v1"},
+    "action":{"const":"BATTLE_PLAYER_EXIT_PLAN"},
+    "player":{"type":"object"},
+    "settlementComplete":{"const":true},
+    "persistentStateMutation":{"const":false},
+    "battleContextMutation":{"const":false},
+    "rngPreserved":{"const":true}
+  },
+  "additionalProperties":true
+}
