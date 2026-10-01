@@ -3,6 +3,26 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 V4.25 follow-up：Bind AttackSeq → Damage → React → Counter
+
+本輪固定 C audit 確認普通 attack 的核心 pair 是 attackNo / defNo：BATTLE_Attack() 依這兩個 bid 取 attacker / defender；BATTLE_TargetAdjust() 只在 target invalid 時改寫 command target；BATTLE_Counter() 則從原 attack pair 反向進入 counter chain。
+
+Browser Controller 現在建立 transient battleAttackPipeline，不進 Persistent State：
+
+Player Command → AttackSeq Prelude → Damage Plan → Critical Damage Plan → Damage React Plan → Counter Plan
+
+AttackSeq 成功後保存 requestedTarget / finalTarget、weaponType / throw state 與 critical decision。Damage Plan 只能使用同一 attacker + finalTarget，並保存本次 damage RNG / field input。
+
+Critical Damage Plan 必須先有 Damage Plan，並重用已保存的 damage inputs；重新計算出的 baseDamage 若與前一階段不一致則 fail-closed。Critical outcome 直接來自 AttackSeq，不接受 caller 重新指定。
+
+Damage React Plan 必須使用同一 pair 與 Critical Damage 的最終 damage；Counter Plan 第一個 reverse pair 固定為原 target → 原 attacker。
+
+Player command 改變、death commit、finish commit、Pet Exit / Battle Context Clear 都會清除 attack pipeline，避免舊 attack evidence 穿越 lifecycle。
+
+新增 regression：tools/check_browser_battle_attack_pipeline_binding.mjs，驗證各階段順序、target substitution、damage substitution、core result continuity、counter reverse binding，以及 battle pipeline 進入後不可回退。
+
+本輪沒有新增 fixed-C damage / critical / guard / reaction / counter 數值規則；只是把既有 runtime 結果接成同一 execution provenance chain。
+
 ## 2026-10-01 V4.25 follow-up：Close Battle Initialize → Turn → Attack phase re-entry
 
 固定 C 的 battle loop 是 BATTLE_MODE_INIT → BATTLE_Init() → BATTLE_MODE_BATTLE → BATTLE_Command()；BATTLE_Init() 將 mode 切到 battle 後再跑 SurpriseCheck / PreCommandSeq。Browser 端原本可以在 Context 已經進入 battle 後再次呼叫 BATTLE_INITIALIZE，也能再次 BATTLE_TURN_INITIALIZE，造成 turn / command 狀態被重新初始化。
