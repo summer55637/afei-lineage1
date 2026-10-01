@@ -40,7 +40,7 @@ V4.02 目前把 FieldAtt=NONE 視為 fixed-C default 0.5/0.5，ratio=1。實際�
 尚未應用：
 
 - Ride Pet adjust
-- _BATTLE_NEWPOWER branch
+- _BATTLE_NEWPOWER branch：✅ pinned version.h 已啟用
 - _MAGIC_SUPERWALL
 - _NPCENEMY_ADDPOWER
 - _PETSKILL_REGRET
