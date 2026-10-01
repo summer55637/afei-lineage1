@@ -54,10 +54,19 @@ const stale=commitDuelPoint(
 assert.equal(stale.ok,false);
 assert.equal(stale.reason,'duelpoint-stale-plan');
 
+const mismatchContext={
+  context:{
+    sides:[
+      {side:0,type:0,entries:[{bid:0,sourceType:'player',characterId:'p2',duelPoint:120,workGetExp:30},...Array(9).fill(null)]},
+      {side:1,type:1,entries:Array(10).fill(null)}
+    ]
+  }
+};
 const mismatch=commitDuelPoint(
-  state,battleContext,plan,{transactionId:'battle-v412-mismatch',expectedRevision:4,now}
+  state,mismatchContext,plan,{transactionId:'battle-v412-mismatch',expectedRevision:4,now}
 );
-assert.equal(mismatch.ok,true);
+assert.equal(mismatch.ok,false);
+assert.equal(mismatch.reason,'battle-player-identity-mismatch');
 
 const cappedState=freshPersistentState({now});
 cappedState.player.duelPoint=99999990;
