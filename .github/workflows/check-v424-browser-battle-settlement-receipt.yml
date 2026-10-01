@@ -30,4 +30,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: 22}
+      - run: node tools/check_v409_browser_battle_finish_commit.mjs
+      - run: node tools/check_v422_browser_battle_player_exit.mjs
+      - run: node tools/check_v422_browser_battle_player_exit_commit.mjs
+      - run: node tools/check_v421_browser_battle_exit.mjs
       - run: node tools/check_v424_browser_battle_settlement_receipt.mjs
