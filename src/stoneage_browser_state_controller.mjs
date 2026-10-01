@@ -1135,7 +1135,7 @@ function createBrowserStateController({
           activePet,
           team:action.enemyTeam,
           encounter,
-          groupId:action.groupId??null,
+          groupId:groupIdValue,
           battleFieldNo,
           materializeEnemyStats:action.materializeEnemyStats===true,
           enemyStatRolls:Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:[]
