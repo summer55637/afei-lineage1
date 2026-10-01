@@ -103,8 +103,10 @@ function aggregate(files, scope) {
   for (const file of files) {
     extensionCounts[extension(file.path)] = (extensionCounts[extension(file.path)] ?? 0) + 1;
     totalBytes += file.size;
-    const relative = file.path.slice(scope.root.length).replace(/^\//, '');
-    const top = relative.split('/')[0] || path.posix.basename(relative);
+    const relative = scope.root.endsWith('/')
+      ? file.path.slice(scope.root.length)
+      : path.posix.basename(file.path);
+    const top = relative.split('/')[0] || path.posix.basename(file.path);
     topLevelCounts[top] = (topLevelCounts[top] ?? 0) + 1;
   }
 
