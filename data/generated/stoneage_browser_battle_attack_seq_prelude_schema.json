@@ -1,0 +1,45 @@
+{
+  "format": "stoneage-v401-browser-battle-attack-seq-prelude-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_ATTACK_SEQ_PRELUDE",
+  "sourceOrder": [
+    "BATTLE_DuckCheck",
+    "BATTLE_GuardianCheck",
+    "BATTLE_CriticalCheck"
+  ],
+  "duck": {
+    "normalKawashiPara": 0.02,
+    "jyujyutuKawashiPara": 0.027,
+    "maxRatePercent": 75,
+    "finalRoll": "RAND(1,10000) <= per"
+  },
+  "guardian": {
+    "bit": "CHAR_BATTLEFLG_GUARDIAN = 1<<3",
+    "excludedWhenThrowWeapon": true,
+    "blockedStatuses": [
+      "sleep",
+      "confusion",
+      "paralysis",
+      "stone",
+      "barrier",
+      "dizzy",
+      "dragnet",
+      "instigate",
+      "doomTime"
+    ]
+  },
+  "critical": {
+    "parameter": 0.09,
+    "finalRoll": "RAND(1,10000) < perCri",
+    "playerVsNonPlayerDefDexFactor": 0.6,
+    "petVsEnemyDefDexFactor": 0.8,
+    "nonPlayerVsPlayerRootMode": true
+  },
+  "boundary": {
+    "damageExecuted": false,
+    "hpMutation": false,
+    "persistentMutation": false,
+    "rngInternal": false,
+    "conditionalFeatureBranches": "caller-provided fields only; no new feature branch is implicitly enabled"
+  }
+}
