@@ -5,6 +5,19 @@
 
 
 
+## 2026-10-01 V4.25 follow-up：Lock Player Exit → Pet Exit → Battle Context Clear order
+
+V4.25 的 settlement receipt gate 已經證明「這場結算真的存在」；本輪再把 outer lifecycle 的執行順序也做成不可跳步的 runtime contract。
+
+- `BATTLE_PLAYER_EXIT_COMMIT` 現在把 `settlementReceiptId / settlementStartRevision / settlementReceiptRevision` 寫入 Player Exit transaction，並要求 commit 當下 revision 必須正好等於 receipt revision。
+- `BATTLE_EXIT_PLAN` 只能解析到同一 settlement、同一 player 的單一 Player Exit transaction，且該 transaction 的 `revisionAfter` 必須等於當前 Persistent State revision。
+- `BATTLE_EXIT_COMMIT` 會再次驗證 Player Exit transaction id / revision；沒有先完成 Player Exit 就不能直接做 Pet Exit。
+- Pet Exit transaction 同樣留下 settlement 與 Player Exit binding，供後續 trace / regression 使用。
+- State Controller 仍只在 `BATTLE_EXIT_COMMIT` 真正成功後清除 transient Battle Context，因此現在順序被固定為：
+
+NaN
+
+NaN
 ## 2026-10-01 新增：V4.25 Browser Battle Settlement Receipt-Bound Exit Gate
 
 V4.24 已經把 live Battle Context 的 `IDLE_EVENTS.REWARD_APPLIED` 改成必須通過可驗證的 Settlement Receipt；本輪再把同一個證據邊界延伸到 final Player / Pet Exit，避免 `settlementComplete=true` 單獨成為呼叫端宣告。
