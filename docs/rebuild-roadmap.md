@@ -1948,6 +1948,18 @@ Commit:
 Lifecycle 現在為：
 `Finish Commit → IDLE battle_finished → settlement → reward/other commits → V4.22 Player Exit State Commit → V4.21 Pet Exit Plan/Commit → clear Battle Context`
 
+## 2026-10-01 V4.23 Browser Battle Exit Transient Cleanup Contract
+
+本版把 fixed-C `BATTLE_Exit()` 的最後 transient cleanup 明確固定，但不把 Server WorkInt / network output 變成 Persistent State：
+
+- Player transient：`BATTLE_CHARMODE_FINAL`、Battle Index `-1`、`BATTLE_BadStatusAllClr`、`CHAR_complianceParameter`。
+- Pet transient：非 Mail Pet 才進 cleanup；Battle Mode `NONE`、Battle Index `-1`、bad-status clear、compliance。
+- Ride Pet：`CHAR_WORKPETFALL` / `CHAR_RIDEPET` 的離場重置維持 source evidence，但目前 canonical Persistent State 沒有 source-closed ride state，因此不新增 `ridePetId`。
+- BecomePig：fixed-C 在條件編譯下會恢復 base image；目前 canonical Persistent State 沒有足夠 image/BecomePig lifecycle schema，因此不偽造 persistent field。
+- network status send 不進 Persistent State。
+
+V4.23 的 closure owner 仍是 V4.21 final-exit teardown：commit 成功後清除 memory-held Battle Context。新增 audit、regression 與 workflow，避免未來把 transient cleanup 重複實作成存檔資料。
+
 ## 2026-10-01 V4.22 Battle Finish Special-Hook Audit
 
 固定 C 的 `BATTLE_Finish()` 不是單一無條件流程。普通世界隨機遭遇透過 `lssproto_EN_recv → BATTLE_CreateVsEnemy(...,0,-1)`，不注入 `WinFunc`；NPC Enemy 則會由 `npc_npcenemy.c` 明確注入 `NPC_NPCEnemy_Dying`。PVP 另有 `PkFunc`，`DANTAI` 另有 `BATTLE_DpCalc`，而 linked `pNext` battle containers 也有專用 teardown。
