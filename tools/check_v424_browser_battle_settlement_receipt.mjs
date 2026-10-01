@@ -43,6 +43,8 @@ assert.equal(done.ok,true,JSON.stringify(done));
 assert.equal(done.revisionBefore,3);
 assert.equal(done.revisionAfter,4);
 assert.equal(done.state.runtimeMeta.battleSettlementReceipts['settle-1'].startRevision,1);
+assert.equal(done.state.runtimeMeta.battleSettlementReceipts['settle-1'].receiptRevision,4);
+assert.equal(done.state.runtimeMeta.battleSettlementReceipts['settle-1'].settlementId,'settle-1');
 
 const valid=commitBattleSettlementReceipt(done.state,context,{
   settlementId:'settle-1',
