@@ -26,7 +26,7 @@
 | World graph | ✅ indexed | 1,139 floor nodes；2,182 directed edges |
 | NPC service index | ✅ indexed | 9,335 service instances；1,031 floors |
 | Persistent State | ✅ schema 1 | legacy 30；skills 26；player items 24 |
-| Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
+| Battle Pipeline | ✅ V4.05 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter Check |\n| Item / Economy | ✅ runtime v1 | Gold cap 1000000 + transmigration * 1800000；backpack 9 to 23 |
 | New-player seed | ✅ source-closed | trans 1；lv 1；pet lv 1；gold 30000；item1 24114 |
 | Player creation | ✅ state contract | hometown + stats + elements + starter grant status；still headless，no playable HTML |
 | Starter Pet grant | ✅ runtime | 16 RNG calls；VariableAI 0；HP after compliance；source rank closed；4 hometown templates base stat sum = 79；rank = 5；team/activePet unchanged |
