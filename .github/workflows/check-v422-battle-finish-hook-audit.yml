@@ -1,0 +1,23 @@
+name: Check V4.22 Battle Finish Hook Audit
+
+on:
+  push:
+    paths:
+      - 'data/generated/stoneage_battle_finish_hook_audit.json'
+      - 'docs/reference/v422-battle-finish-hook-audit.md'
+      - 'tools/check_v422_battle_finish_hook_audit.mjs'
+  pull_request:
+    paths:
+      - 'data/generated/stoneage_battle_finish_hook_audit.json'
+      - 'docs/reference/v422-battle-finish-hook-audit.md'
+      - 'tools/check_v422_battle_finish_hook_audit.mjs'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v422_battle_finish_hook_audit.mjs
