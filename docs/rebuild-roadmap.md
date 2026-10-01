@@ -11,7 +11,7 @@
 
 Context Build (mode=init) → BATTLE_INITIALIZE → active battle (mode=battle) → player command / target / attack planning
 
-BATTLE_INITIALIZE 只接受 mode=init。固定 C 的 Turn Initialize 是 BATTLE_Init / PreCommandSeq 內部步驟，因此 Controller 不再暴露獨立的 BATTLE_TURN_INITIALIZE 外部 dispatch；低層 turn runtime 仍保留給 direct runtime regression。Player command、target resolve、default target resolve、attack preflight、AttackSeqPrelude 都要求 context.mode=battle。
+BATTLE_INITIALIZE 只接受 mode=init。固定 C 的 Turn Initialize 是 BATTLE_Init / PreCommandSeq 內部步驟，因此 Controller 不再暴露獨立的 BATTLE_TURN_INITIALIZE 外部 dispatch；低層 turn runtime 仍保留給 direct runtime regression。Player command、target resolve、default target resolve、attack preflight、AttackSeqPrelude 都要求 context.mode=battle；AttackSeqPrelude 另外綁定 attacker 當前 ATTACK / BOOMERANG command 與 command target，避免 command 與實際執行 target 脫鉤。
 
 這一輪沒有改 damage formula、critical / guard / dodge、reward 或 death policy；只是封住「初始化完成後又從外部重跑前置階段」的 lifecycle bypass。
 
