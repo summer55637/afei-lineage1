@@ -15,7 +15,7 @@ const sourceCorpus=c.sourceCorpus;
 if(!sourceCorpus || sourceCorpus.fileCount!==8749) throw new Error('Endpoint source catalog file count drifted');
 if(sourceCorpus.totalBytes!==185166100) throw new Error('Endpoint source catalog byte count drifted');
 if(a.corpus?.ro0000TrackedBlobs!==8751) throw new Error('ro0000 tracked blob count drifted');
-if(a.corpus?.ro0000TrackedBytes!==185169695) throw new Error('ro0000 tracked byte count drifted');
+if(a.corpus?.ro0000TrackedBytes!==185172647) throw new Error('ro0000 tracked byte count drifted');
 
 if(a.corpus?.endpointCatalogPresent!==true) throw new Error('Endpoint source catalog is missing');
 if(!a.keyArtifacts.some(x=>x.id==='setup'&&x.path.endsWith('/gmsv/setup.cf')&&x.provenance==='vm-one-click')) throw new Error('Setup key artifact binding drifted');
