@@ -22,6 +22,14 @@ const baseContext={
     type:1,
     mode:'battle',
     sourceMode:2,
+    finishHookProfile:{
+      auditFormat:'stoneage-battle-finish-hook-audit-v1',
+      profile:'ordinary-world-encounter',
+      winFuncInjected:false,
+      pkFuncInjected:false,
+      dantai:false,
+      linkedBattleCount:0
+    },
     turn:0,
     sides:[
       {side:0,type:0,entries:[
@@ -58,6 +66,14 @@ assert.deepEqual(baseContext,original);
 result=commitBattleFinish(result.battleContext,{finishPlan,settlementStartRevision:0});
 assert.equal(result.ok,false);
 assert.equal(result.reason,'battle-already-finished');
+
+result=commitBattleFinish({...baseContext,context:{...baseContext.context,finishHookProfile:undefined}},{finishPlan,settlementStartRevision:0});
+assert.equal(result.ok,false);
+assert.equal(result.reason,'finish-hook-profile-required');
+
+result=commitBattleFinish({...baseContext,context:{...baseContext.context,finishHookProfile:{...baseContext.context.finishHookProfile,winFuncInjected:true}}},{finishPlan,settlementStartRevision:0});
+assert.equal(result.ok,false);
+assert.equal(result.reason,'finish-hook-special-branch-deferred');
 
 result=commitBattleFinish(baseContext,{finishPlan:{ok:true,finished:false,winnerSide:0},settlementStartRevision:0});
 assert.equal(result.ok,false);
