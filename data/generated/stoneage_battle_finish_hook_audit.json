@@ -1,0 +1,46 @@
+{
+  "format":"stoneage-battle-finish-hook-audit-v1",
+  "generatedAt":"2026-10-01",
+  "fixedSource":{
+    "repository":"gavinlinasd/StoneAge",
+    "ref":"1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "worldEncounter":{
+    "entryPoint":"lssproto_EN_recv",
+    "createFunction":"BATTLE_CreateVsEnemy(fd_charaindex,0,-1)",
+    "battleType":"BATTLE_TYPE_P_vs_E",
+    "winFuncInjected":false,
+    "evidence":"Fixed-C call site invokes BATTLE_CreateVsEnemy with mode 0 and npcindex -1; no WinFunc assignment is performed at that call site."
+  },
+  "npcEnemy":{
+    "entryPoint":"NPC_NPCEnemy_BattleIn",
+    "createFunction":"BATTLE_CreateVsEnemy(charaindex,1 or 2,meindex)",
+    "battleType":"BATTLE_TYPE_P_vs_E",
+    "winFuncInjected":true,
+    "winFunc":"NPC_NPCEnemy_Dying",
+    "evidence":"npc_npcenemy.c assigns BattleArray[...].WinFunc = NPC_NPCEnemy_Dying after successful creation."
+  },
+  "pvp":{
+    "createFunction":"BATTLE_CreateVsPlayer",
+    "battleType":"BATTLE_TYPE_P_vs_P",
+    "pkFuncInjected":true,
+    "pkFunc":"NPC_PKLIST_Finish_Exit when _DEATH_CONTEND is enabled",
+    "evidence":"Fixed-C sets PkFunc during BATTLE_CreateVsPlayer under _DEATH_CONTEND."
+  },
+  "dantai":{
+    "condition":"BATTLE_TYPE_P_vs_P && DANTAI",
+    "finishHook":"BATTLE_DpCalc",
+    "evidence":"BATTLE_Finish calls BATTLE_DpCalc only for P_vs_P when DANTAI is enabled."
+  },
+  "linkedBattle":{
+    "finishBehavior":"BATTLE_Finish exits linked pNext side-0 entries, marks battle mode FINAL, then deletes linked Battle containers.",
+    "browserStatus":"not represented in first-idle Browser Battle Context; do not synthesize linked battles.",
+    "evidence":"Fixed-C BATTLE_Finish iterates pNext for BATTLE_Exit, then repeats pNext for BATTLE_DeleteBattle."
+  },
+  "browserPolicy":{
+    "firstIdleWorldEncounter":"winFunc=false, pvp=false, linkedBattleCount=0; ordinary reward/exit pipeline is source-applicable.",
+    "npcEnemyHook":"deferred unless NPC battle source injects an explicit WinFunc identity.",
+    "pvpHooks":"deferred.",
+    "syntheticHookRegistration":false
+  }
+}
