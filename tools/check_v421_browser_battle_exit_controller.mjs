@@ -60,7 +60,7 @@ assert.ok(controller.getBattleContext());
 
 result=await controller.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
 assert.equal(result.ok,true,JSON.stringify(result));
-assert.equal(result.battleContext.context.sourceMode,2);
+assert.equal(result.battleContext.sourceMode,2);
 
 result=await controller.dispatch({type:ACTION_BATTLE_DEATH_PLAN,targetBid:15,hp:0});
 assert.equal(result.ok,true,JSON.stringify(result));
