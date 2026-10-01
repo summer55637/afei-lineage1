@@ -115,7 +115,7 @@ function guardianCheck(context,attackerBid,targetBid,{throwWeapon=false,guardian
   const g=findEntryByBid(context,guardian);
   if(!g)return {ok:true,guardianBid:-1,reason:'guardian-entry-missing'};
   if(g.isDead===true||g.dead===true||num(g.hp)<=0)return {ok:true,guardianBid:-1,reason:'guardian-dead'};
-  if((int(g.battleFlg)??0)&guardianBitMask===0)return {ok:true,guardianBid:-1,reason:'guardian-flag-missing'};
+  if(((int(g.battleFlg)??0)&guardianBitMask)===0)return {ok:true,guardianBid:-1,reason:'guardian-flag-missing'};
   const blocked=['sleep','confusion','paralysis','stone','barrier','dizzy','dragnet','instigate','doomTime'];
   const statusBlocked=blocked.some(k=>num(g?.battleStatus?.[k]??g?.[k])>0);
   if(statusBlocked)return {ok:true,guardianBid:-1,reason:'guardian-status-blocked'};
