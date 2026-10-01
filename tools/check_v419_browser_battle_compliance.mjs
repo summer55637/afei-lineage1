@@ -22,7 +22,7 @@ assert.equal(player.ok,true);
 assert.equal(player.derived.attackPower,6.25);
 assert.equal(player.derived.defencePower,6.25);
 assert.equal(player.derived.quick,5);
-assert.equal(player.derived.maxHp,30);
+assert.equal(player.derived.maxHp,35);
 assert.equal(player.derived.maxMp,null);
 
 const pet=derivePetCompliance(state.pets.petBox[0].stats);
