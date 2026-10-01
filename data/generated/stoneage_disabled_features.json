@@ -1,19 +1,12 @@
 {
-  "format": "stoneage-disabled-features-v1",
-  "updated": "2026-09-29",
-  "features": {
-    "gmque": {
-      "enabled": false,
-      "playable": false,
-      "permanent": true,
-      "scope": "GMQUE／抓寵活動",
-      "reason": "專案決定永久停用；缺失的 live NPC RANDGMQUE／QUEPART 設定不再作為版本還原前置條件。",
-      "sourceArchaeology": "stopped"
-    }
-  },
+  "format": "stoneage-disabled-features-v2",
+  "updated": "2026-10-01",
+  "features": {},
   "policy": {
     "disabledFeaturesAreNotVersionBlockers": true,
+    "disabledFeaturesCanBeReopenedWithEvidence": true,
     "doNotInventReplacementNpcData": true,
-    "doNotAutoEnableDisabledFeatures": true
+    "doNotAutoEnableDisabledFeatures": true,
+    "note": "本清單只保存目前真正停用的 feature。移出本清單不代表立即可玩；重新開放後仍需 source closure、semantic check、regression 與 runtime admission。"
   }
 }
