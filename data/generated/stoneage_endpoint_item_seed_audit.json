@@ -1,0 +1,80 @@
+{
+  "format": "stoneage-endpoint-item-seed-audit-v1",
+  "status": "unresolved",
+  "source": {
+    "setupPath": "ro0000/server/merged-source/gmsv/setup.cf",
+    "setupBlobSha": "e622602627cce66561d5cf941f2723720e66d133",
+    "itemConfig": "ITEM1=32003",
+    "itemset6file": "data/itemset6.csv",
+    "itemset6Path": "ro0000/server/merged-source/gmsv/data/itemset6.csv",
+    "itemset6BlobSha": "d907f508888ea3e3ea6b204eb97f52ae0a9cc6cb",
+    "itemset6Bytes": 3792005,
+    "itemset6Lines": 14502
+  },
+  "endpointConfig": {
+    "item1": 32003,
+    "itemSlots": {
+      "ITEM1": "32003",
+      "ITEM2": "32004",
+      "ITEM3": "32005",
+      "ITEM4": "32006",
+      "ITEM5": "32007",
+      "ITEM6": "32013",
+      "ITEM7": "32008",
+      "ITEM8": "32009",
+      "ITEM9": "32010",
+      "ITEM10": "32011",
+      "ITEM11": "32160",
+      "ITEM12": "22407",
+      "ITEM13": "22077",
+      "ITEM14": "32419",
+      "ITEM15": "32420"
+    }
+  },
+  "csvShape": {
+    "distinctColumnCounts": [
+      {
+        "columns": 95,
+        "rows": 14500
+      },
+      {
+        "columns": 94,
+        "rows": 2
+      }
+    ],
+    "dominantColumnCount": 95
+  },
+  "exactTokenMatches": {
+    "configuredItem1_32003": [],
+    "fixedConfiguredItem_24114": [
+      {
+        "line": 6943,
+        "positions": [
+          18
+        ]
+      }
+    ]
+  },
+  "keyFindings": {
+    "configuredItem1PresentAsExactToken": false,
+    "fixedConfigured24114PresentAsExactToken": true,
+    "fixedConfigured24114Occurrences": [
+      {
+        "line": 6943,
+        "positions": [
+          18
+        ]
+      }
+    ],
+    "endpointSemanticsClosed": false
+  },
+  "resolution": {
+    "status": "unresolved",
+    "reason": "setup.cf explicitly configures ITEM1=32003, but selected endpoint itemset6.csv contains no exact numeric token 32003. Do not remap or substitute another item from this evidence alone.",
+    "secondaryEvidence": "The same endpoint itemset6.csv contains exactly one 24114 token occurrence at line 6943 token 18, with token 17=11817, token 19=9900, token 20=16. This is useful evidence for the table layout but does not prove endpoint loader semantics."
+  },
+  "interpretation": {
+    "fixedCFixedItemRuleApplied": false,
+    "note": "Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics."
+  }
+}
