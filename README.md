@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：33cbcf6 — [ci] Rerun battle finish hook audit on runtime/controller changes
-- 最後更新時間：2026-10-01T12:31:40+08:00
+- 最新 commit：ea700f2 — [test] Lock V4.24 receipt idempotent revision
+- 最後更新時間：2026-10-01T12:32:39+08:00
 - 版本線最高 regression workflow：V4.24
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
