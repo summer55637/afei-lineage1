@@ -10,6 +10,15 @@ import { materializeEnemyCoreStats } from './stoneage_browser_world_encounter_en
 
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
+const BATTLE_FINISH_HOOK_AUDIT_FORMAT='stoneage-battle-finish-hook-audit-v1';
+const ORDINARY_WORLD_FINISH_HOOK_PROFILE=Object.freeze({
+  auditFormat:BATTLE_FINISH_HOOK_AUDIT_FORMAT,
+  profile:'ordinary-world-encounter',
+  winFuncInjected:false,
+  pkFuncInjected:false,
+  dantai:false,
+  linkedBattleCount:0
+});
 
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -287,6 +296,7 @@ function buildBattleContext({
         y:intOr(encounter?.y)
       },
       sourceGroupId:intOr(groupId),
+      finishHookProfile:clone(ORDINARY_WORLD_FINISH_HOOK_PROFILE),
       sides:[
         {
           side:0,type:BATTLE_S_TYPE_PLAYER,entries:[
@@ -314,6 +324,13 @@ function validateBattleContext(context){
   if(!isObject(context))errors.push('battle context must be object');
   if(context?.format!==BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT)errors.push('battle context format mismatch');
   if(context?.context?.type!==BATTLE_TYPE_P_VS_E)errors.push('battle type must be P_vs_E');
+  const hook=context?.context?.finishHookProfile;
+  if(hook?.auditFormat!==BATTLE_FINISH_HOOK_AUDIT_FORMAT)errors.push('finish hook audit format mismatch');
+  if(hook?.profile!=='ordinary-world-encounter')errors.push('finish hook profile must be ordinary-world-encounter');
+  if(hook?.winFuncInjected!==false)errors.push('ordinary world encounter must not inject WinFunc');
+  if(hook?.pkFuncInjected!==false)errors.push('ordinary world encounter must not inject PkFunc');
+  if(hook?.dantai!==false)errors.push('ordinary world encounter must not use DANTAI finish hook');
+  if(hook?.linkedBattleCount!==0)errors.push('ordinary world encounter must not contain linked battles');
   if(!Array.isArray(context?.context?.sides)||context.context.sides.length!==2)errors.push('two battle sides required');
   const side0=context?.context?.sides?.[0],side1=context?.context?.sides?.[1];
   if(side0?.type!==BATTLE_S_TYPE_PLAYER)errors.push('side0 must be PLAYER');
@@ -338,5 +355,7 @@ export {
   hydrateEnemyTeamCoreStats,
   buildEnemyEntryLayout,
   buildBattleContext,
-  validateBattleContext
+  validateBattleContext,
+  BATTLE_FINISH_HOOK_AUDIT_FORMAT,
+  ORDINARY_WORLD_FINISH_HOOK_PROFILE
 };
