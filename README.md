@@ -9,12 +9,18 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：58059e2 — docs: correct ro0000 provenance in roadmap
-- 最後更新時間：2026-10-01T18:16:59+08:00
+- 最新 commit：6a6c642 — ci: make README auto-update race safe
+- 最後更新時間：2026-10-01T18:29:22+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
 - 固定 source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+### 來源權威
+
+- 實機／部署資料主來源：VM 一鍵端＋手工外網端（目前最完整、最接近可直接架設版本的部署資料集合）
+- 引擎語義校驗基準：pinned fixed-C；endpoint 與 fixed-C 不一致時先辨識 variant，不自動丟棄 endpoint data
+- Source pipeline：Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime
 
 ### 核心 closure
 
