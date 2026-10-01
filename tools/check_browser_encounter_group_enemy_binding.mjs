@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
-import { ACTION_IDLE_EVENT, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, ACTION_BATTLE_INITIALIZE, createBrowserStateController } from '../src/stoneage_browser_state_controller.mjs';
+import { ACTION_IDLE_EVENT, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, ACTION_BATTLE_INITIALIZE, ACTION_BATTLE_TURN_INITIALIZE, ACTION_BATTLE_ATTACK_PREFLIGHT, createBrowserStateController } from '../src/stoneage_browser_state_controller.mjs';
 import { IDLE_EVENTS } from '../src/stoneage_idle_loop.mjs';
 
 const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
@@ -49,11 +49,23 @@ const coreStatRolls=[
   assert.equal(build.context.sides[1].entries[8].enemyId,123);
   assert.equal(build.context.sides[1].entries[8].sourceCoreStats.level,2);
   assert.equal(c.getBattleContext().context.sourceGroupId,94);
+  const preInitAttack=await c.dispatch({type:ACTION_BATTLE_ATTACK_PREFLIGHT,attackerBid:0,targetBid:15});
+  assert.equal(preInitAttack.ok,false,JSON.stringify(preInitAttack));
+  assert.equal(preInitAttack.stage,'battle-phase-gate');
+  assert.equal(preInitAttack.reason,'battle-active-phase-required');
   const initialized=await c.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
   assert.equal(initialized.ok,true,JSON.stringify(initialized));
   assert.equal(initialized.battleContext.context.sourceGroupId,94);
   assert.deepEqual(initialized.battleContext.context.sides[1].entries.filter(Boolean).map(x=>x.enemyId),[120,123]);
   assert.equal(initialized.battleContext.context.sides[1].entries[5].sourceCoreStats.level,2);
+  const secondInit=await c.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
+  assert.equal(secondInit.ok,false,JSON.stringify(secondInit));
+  assert.equal(secondInit.stage,'battle-initialize-gate');
+  assert.equal(secondInit.reason,'battle-initialize-requires-init-phase');
+  const secondTurnInit=await c.dispatch({type:ACTION_BATTLE_TURN_INITIALIZE});
+  assert.equal(secondTurnInit.ok,false,JSON.stringify(secondTurnInit));
+  assert.equal(secondTurnInit.stage,'battle-turn-gate');
+  assert.equal(secondTurnInit.reason,'battle-turn-initialize-requires-init-phase');
 }
 
 {
