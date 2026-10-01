@@ -6,11 +6,15 @@ on:
       - 'data/generated/stoneage_battle_finish_hook_audit.json'
       - 'docs/reference/v422-battle-finish-hook-audit.md'
       - 'tools/check_v422_battle_finish_hook_audit.mjs'
+      - 'src/stoneage_browser_battle_finish_commit_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
   pull_request:
     paths:
       - 'data/generated/stoneage_battle_finish_hook_audit.json'
       - 'docs/reference/v422-battle-finish-hook-audit.md'
       - 'tools/check_v422_battle_finish_hook_audit.mjs'
+      - 'src/stoneage_browser_battle_finish_commit_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
   workflow_dispatch:
 
 jobs:
