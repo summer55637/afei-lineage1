@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：1304cdc — ci: auto-refresh endpoint evidence and README on every change
-- 最後更新時間：2026-10-01T19:21:42+08:00
+- 最新 commit：70ffd0f — docs: surface endpoint snapshot completeness in README
+- 最後更新時間：2026-10-01T19:21:54+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -27,6 +27,7 @@
 - 手工外網端：23 files；1,053,042 bytes
 - VM 一鍵端：8,726 files；184,113,058 bytes
 - Corpus 合計：8,749 files；185,166,100 bytes
+- Endpoint snapshot completeness：complete-for-defined-key-artifacts；key artifacts 12/12
 - Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端
 - Endpoint Item seed：⚠️ unresolved；setup `ITEM1=32003`；selected `itemset6.csv` exact token presence=no
 - Endpoint MapWarp：4,734 rows；309 endpoint-only；1,032 fixed-C-only

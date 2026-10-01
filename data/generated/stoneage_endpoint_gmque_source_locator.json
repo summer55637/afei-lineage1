@@ -1,0 +1,23 @@
+{
+  "format": "stoneage-endpoint-gmque-source-locator-v1",
+  "updated": "2026-10-01",
+  "source": {
+    "root": "ro0000/server/merged-source/gmsv/data/npc",
+    "scope": "VM one-click endpoint",
+    "provenance": "vm-one-click"
+  },
+  "status": "pending-source",
+  "statistics": {
+    "filesScanned": 2384,
+    "filesWithRelevantTokens": 0,
+    "candidateFiles": 0
+  },
+  "candidates": [],
+  "policy": {
+    "tokenPresenceIsNotRuntimeAdmission": true,
+    "requiresExactEndpointIdentity": true,
+    "requiresContentClosure": true,
+    "requiresRewardPetClosure": true,
+    "noSyntheticNpcArguments": true
+  }
+}

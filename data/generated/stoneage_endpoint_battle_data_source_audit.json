@@ -42,9 +42,9 @@
       "comparison": {
         "endpointRows": 2296,
         "fixedRows": 2958,
-        "intersection": 1484,
-        "endpointOnly": 812,
-        "fixedOnly": 1474
+        "intersection": 1487,
+        "endpointOnly": 809,
+        "fixedOnly": 1471
       }
     },
     "enemybase": {
@@ -57,9 +57,9 @@
       "comparison": {
         "endpointRows": 1135,
         "fixedRows": 1816,
-        "intersection": 743,
-        "endpointOnly": 392,
-        "fixedOnly": 1073
+        "intersection": 746,
+        "endpointOnly": 389,
+        "fixedOnly": 1070
       }
     }
   },
