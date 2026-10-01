@@ -19,6 +19,7 @@ function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,n
   const next=clone(state);
   const committed=[];
   for(const row of Array.isArray(plan.pets)?plan.pets:[]){
+    if(intOr(row?.mailMode,null)!==0)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-mail-mode-required',petId:String(row?.petId??'').trim(),state:clone(state)};
     const id=String(row?.petId??'').trim();
     const pet=next.pets.petBox.find(p=>String(p?.id??'').trim()===id);
     if(!pet)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'persistent-pet-missing',petId:id,state:clone(state)};
