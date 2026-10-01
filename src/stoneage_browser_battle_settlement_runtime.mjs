@@ -21,6 +21,7 @@ function requiredSettlementBranches(battleContext){
   if(!player)return {ok:false,reason:'battle-player-entry-required'};
   const dead=player.isDie===true;
   const dpbattle=intOr(context.dpbattle,0);
+  if(dpbattle!==0&&dpbattle!==1)return {ok:false,reason:'dpbattle-invalid'};
   const required=[];
   if(dpbattle===1)required.push('duelPoint');
   else if(!dead)required.push('levelUp');
