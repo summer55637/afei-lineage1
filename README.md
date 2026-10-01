@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：a4e24d3 — test: add attack damage react counter binding regression
-- 最後更新時間：2026-10-01T13:57:03+08:00
+- 最新 commit：2124622 — fix: preserve turn exports while closing attack pipeline on exit
+- 最後更新時間：2026-10-01T13:57:25+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
