@@ -62,25 +62,6 @@ assert.equal(finish.ok,true,JSON.stringify(finish));
 assert.equal(finish.battleContext.context.mode,'finish');
 assert.equal(finish.battleContext.context.settlementStartRevision,finish.state.revision);
 
-const settlementCommit=await controller.dispatch({
-  type:'BATTLE_LEVELUP_COMMIT',
-  transactionId:'battle-v422-levelup',
-  expectedRevision:finish.state.revision,
-  now:'2026-10-01T12:10:00.500Z'
-});
-assert.equal(settlementCommit.ok,true,JSON.stringify(settlementCommit));
-assert.equal(settlementCommit.applied,true);
-
-const settlementReceipt=await controller.dispatch({
-  type:'BATTLE_SETTLEMENT_RECEIPT_COMMIT',
-  settlementId:'battle-v422-settlement',
-  transactions:[{kind:'levelUp',transactionId:'battle-v422-levelup'}],
-  expectedRevision:settlementCommit.state.revision,
-  now:'2026-10-01T12:10:00.750Z'
-});
-assert.equal(settlementReceipt.ok,true,JSON.stringify(settlementReceipt));
-assert.equal(settlementReceipt.applied,true);
-
 const finished=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.BATTLE_FINISHED,
@@ -91,6 +72,26 @@ const finished=await controller.dispatch({
 assert.equal(finished.ok,true,JSON.stringify(finished));
 assert.equal(finished.state.idle.mode,IDLE_STATES.SETTLEMENT);
 assert.ok(controller.getBattleContext());
+
+
+const settlementCommit=await controller.dispatch({
+  type:'BATTLE_LEVELUP_COMMIT',
+  transactionId:'battle-v422-levelup',
+  expectedRevision:finished.state.revision,
+  now:'2026-10-01T12:10:01.500Z'
+});
+assert.equal(settlementCommit.ok,true,JSON.stringify(settlementCommit));
+assert.equal(settlementCommit.applied,true);
+
+const settlementReceipt=await controller.dispatch({
+  type:'BATTLE_SETTLEMENT_RECEIPT_COMMIT',
+  settlementId:'battle-v422-settlement',
+  transactions:[{kind:'levelUp',transactionId:'battle-v422-levelup'}],
+  expectedRevision:settlementCommit.state.revision,
+  now:'2026-10-01T12:10:01.750Z'
+});
+assert.equal(settlementReceipt.ok,true,JSON.stringify(settlementReceipt));
+assert.equal(settlementReceipt.applied,true);
 
 const rewardDenied=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
