@@ -145,3 +145,16 @@ Fixed-C → 把所有 endpoint 差異都丟掉
 | 哪些是本專案新增的放置規則？ | afei-lineage1 product policy | 不得冒充 source parity |
 
 這張表是跨新對話與跨版本 audit 的快速判定基準：先確認「我們在回答哪一種問題」，再選對 authority；不能用單一來源包辦所有問題。
+
+## 2026-10-01 State Management Reset
+
+本專案不再把 feature／blocker 狀態設計成不可逆終身判決。
+
+- `stoneage_disabled_features.json`：只保存目前真正停用的 feature。
+- `stoneage_reopened_features.json`：記錄因新 endpoint evidence 而重新開案、但尚未 runtime/playable 啟用的 feature。
+- `stoneage_blocker_registry.json`：記錄 active / reopened / resolved / retired blocker 與下一步。
+- 新 endpoint corpus 可以使舊 fixed-C blocker 重新進入 re-audit；不需要維持「無限卡住」或「永久停用」的歷史結論。
+
+重開仍遵守：
+
+`reopened → source closure → semantic check → regression → runtime admission → playable`
