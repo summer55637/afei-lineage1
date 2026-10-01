@@ -4,13 +4,13 @@
 
 ## 目錄
 
-- `server/merged-source/`：目前從 VM 一鍵端與手工外網端收集、但歷史上曾直接混放的服務端資料；以現有內容為準，不假裝已拆成兩份獨立快照。
+- `server/merged-source/`：來源已按實際端點規則校正：除了 `wwwroot/` 資料外，其餘內容均屬 VM 一鍵端；`wwwroot/` 屬手工外網端。
 - `server/database/`：Server 資料庫匯出／資料庫參考檔。
 - `client/android/`：Android 客戶端主程式 APK。
 - `docs/`：兩套架設／維運教程。
 
 ## 原則
 
-原始內容只重新整理路徑，不任意改寫資料。後續會以檔案內容與 blob SHA 進行 identical / variant / endpoint-specific 比對，再決定哪些資料進入正式 source evidence 與 runtime。
+原始內容只重新整理路徑，不任意改寫資料。`搭建教程.txt` 與 `wwwroot/` 明確標記為手工外網端；其餘 `ro0000/` 參考資料視為 VM 一鍵端。後續若與 pinned fixed-C 做 blob SHA 比對，這屬於「端點 provenance → fixed-C variant」分析，不再把兩個外部端點混稱為未知來源。
 
 `ro0000/` 僅作為研究與來源快照區，不直接等同於 production runtime。
