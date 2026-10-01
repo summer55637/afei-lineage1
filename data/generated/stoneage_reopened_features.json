@@ -1,0 +1,38 @@
+{
+  "format": "stoneage-reopened-features-v1",
+  "updated": "2026-10-01",
+  "policy": {
+    "reopenedMeansArchaeologyOpen": true,
+    "runtimeEnabledByDefault": false,
+    "playableEnabledByDefault": false,
+    "requiresSourceClosureBeforeRuntime": true,
+    "requiresRegressionBeforePlayable": true
+  },
+  "features": {
+    "gmque": {
+      "status": "reopened-for-source-reconstruction",
+      "runtimeEnabled": false,
+      "playable": false,
+      "scope": "GMQUE／抓寵活動",
+      "reason": "完整 VM 一鍵端＋手工外網端已納入 source corpus；先前永久停用決定不再有效。新的 endpoint evidence 必須優先用來重新搜尋 RANDGMQUE／QUEPART 與 reward-pet mapping。",
+      "knownContract": "gmsv/src/npc/npc_eventaction.c::GMQUE_InSertQue / GMQUE_CheckQueStr / GMQUE_DelQueStrPet / GMQUE_AddQueStrTrophy",
+      "nextEvidence": [
+        "endpoint NPC RANDGMQUE / QUEPART0..3 exact arguments",
+        "endpoint reward pet 1642 / 1636 / 475 exact Enemy / EnemyBase mapping",
+        "endpoint NPC-to-feature binding"
+      ]
+    },
+    "world-blockers": {
+      "status": "reopened-for-endpoint-reaudit",
+      "runtimeEnabled": false,
+      "playable": false,
+      "scope": "4000→200、3000→200 landing、Starter Item 24114 / endpoint ITEM1",
+      "reason": "endpoint corpus 已新增 MapWarp、Battle、Item seed 證據；既有 fixed-C blocker 不再視為終局判定，必須重新與 endpoint map/data/loader semantics 比較。",
+      "nextEvidence": [
+        "endpoint LS2MAP walkability and connected components",
+        "endpoint Warp landing reachability",
+        "endpoint Item loader and ITEM1=32003 semantics"
+      ]
+    }
+  }
+}
