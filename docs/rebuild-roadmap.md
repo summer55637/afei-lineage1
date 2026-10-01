@@ -1682,3 +1682,29 @@ Controller integration：
 - `ACTION_BATTLE_DUELPOINT_PLAN`
 - `BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT`
 
+## 2026-10-01 V4.12 Browser Battle DuelPoint Commit
+
+V4.12 將 V4.11 的 read-only DuelPoint plan 接進 canonical Persistent State，形成真正的 settlement commit boundary。
+
+- 只接受 ready V4.11 plan 與 side-0 player entry
+- Persistent State 的當前 DuelPoint 必須與 plan snapshot 完全一致；不一致即 stale-plan fail-closed
+- 只寫入 `state.player.duelPoint = nextDuelPoint`
+- 保留 staged `workGetExp`，不自行猜測 reset 時機
+- 首次 transaction 只增加一次 revision，並在 `runtimeMeta.battleDuelPointTransactions` 記錄 transactionId
+- 重複 transactionId 走 idempotent no-op，不重複增加 DuelPoint 或 revision
+- 固定 C 的 `lssproto_RD_send`、`CHAR_send_DpDBUpdate`、`CHAR_send_DpDBUpdate_AddressBook` 保留為 browser adapter side-effect boundary，headless runtime 不假裝執行 socket / DB
+- Persistent State validator 同步加入 `duelPoint 0..100000000` cap
+
+新增：
+- `src/stoneage_browser_battle_duelpoint_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_duelpoint_commit_schema.json`
+- `tools/check_v412_browser_battle_duelpoint_commit.mjs`
+- `docs/reference/v412-browser-battle-duelpoint-commit.md`
+- `.github/workflows/check-v412-browser-battle-duelpoint-commit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_DUELPOINT_COMMIT`
+- `BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT`
+
+下一個 battle settlement boundary：fixed-C PvE 的 `BATTLE_GetExpGold()`，接 player EXP、pet EXP、Gold，再進 battle item settlement。
+
