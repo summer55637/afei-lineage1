@@ -1296,6 +1296,24 @@ V3.95 不修改 Battle Context、不消耗 RNG、不執行 AI / Damage。
 
 下一階段才處理 `BATTLE_Command` 的 player command submission，把 `attack/guard/item/pet/change/escape` 等合法 command mapping 接到既有 Battle Model；Enemy AI command 仍維持獨立 source boundary。
 
+
+## 2026-10-01 V3.96 Browser Player Battle Command
+
+V3.96 將 fixed-C `BattleCommandDispach()` 的核心玩家 command transport 先做成 transient normalization：
+
+- attack → BATTLE_COM_ATTACK
+- guard → BATTLE_COM_GUARD
+- wait → BATTLE_COM_WAIT
+- escape → BATTLE_COM_ESCAPE
+- capture → BATTLE_COM_CAPTURE
+- pet_in → BATTLE_COM_PETIN
+- pet_out → BATTLE_COM_PETOUT
+- attack + boomerang weapon → BATTLE_COM_BOOMERANG
+
+成功後寫入 command1/2/3，並將 actor `C_WAIT → C_OK)。
+
+V3.96 尚未執行 status blocking、Item/weapon、PetSkill、profession、target expansion 或 damage。
+
 ## 2026-10-01 V3.97 Browser Player Battle Command Preflight
 
 V3.97 在 V3.96 command normalization 上加入 fixed-C `checkErrorStatus()` gate：
