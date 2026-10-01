@@ -12,7 +12,8 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 
 function commitBattleFinish(context,{
   finishPlan=null,
-  winnerSide=null
+  winnerSide=null,
+  settlementStartRevision=null
 }={}){
   if(!context?.context){
     return {ok:false,handled:false,stage:'battle-finish-commit',reason:'battle-context-required'};
@@ -42,6 +43,11 @@ function commitBattleFinish(context,{
   next.context.mode='finish';
   next.context.sourceMode=BATTLE_MODE_FINISH;
   next.context.winnerSide=winner;
+  const startRevision=int(settlementStartRevision);
+  if(startRevision==null||startRevision<0){
+    return {ok:false,handled:false,stage:'battle-finish-commit',reason:'settlement-start-revision-required'};
+  }
+  next.context.settlementStartRevision=startRevision;
   next.context.finishReason=String(finishPlan.finishReason??'battle-end').trim()||'battle-end';
 
   return {
@@ -62,6 +68,7 @@ function commitBattleFinish(context,{
     rewardMutation:false,
     battleExitMutation:false,
     rewardSettlementRequired:true,
+    settlementStartRevision:startRevision,
     source:{
       repository:'gavinlinasd/StoneAge',
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
