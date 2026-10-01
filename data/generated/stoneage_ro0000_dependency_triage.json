@@ -6,7 +6,7 @@
   "mapAaa": {
     "path": "ro0000/server/merged-source/gmsv/data/map/aaa",
     "sha": "8385afadcbe6aec2822daf2edfa7fe28b978fa60",
-    "size": 26598,
+    "size": 30728,
     "hydataPath": "ro0000/server/merged-source/gmsv/hydata/data/map/aaa",
     "hydataSha": "8385afadcbe6aec2822daf2edfa7fe28b978fa60",
     "sameBlobAcrossEndpoints": true,
@@ -72,5 +72,87 @@
     "rawSnapshotMustNotBePhysicallyRearranged": true,
     "missingDependenciesMustNotBeGuessed": true,
     "endpointVariantsMustBePreserved": true
+  },
+  "variantSemanticProbe": {
+    "itemset6": [
+      {
+        "endpoint": "data",
+        "path": "ro0000/server/merged-source/gmsv/data/itemset6.csv",
+        "sha": "d907f508888ea3e3ea6b204eb97f52ae0a9cc6cb",
+        "bytes": 3792005,
+        "rows": 14502,
+        "exactNumericToken32003": 0,
+        "exactNumericToken24114": 1
+      },
+      {
+        "endpoint": "hydata",
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/itemset6.csv",
+        "sha": "6e5fbdc34e277a76903dfdcac13ce5be86af0f0f",
+        "bytes": 3790990,
+        "rows": 14508,
+        "exactNumericToken32003": 0,
+        "exactNumericToken24114": 1
+      }
+    ],
+    "highImpactDifferingFiles": [
+      {
+        "path": "enemy1.txt",
+        "dataSha": "dd7690bf89589ce3faac2b38c31fff864b2a439e",
+        "hydataSha": "30ac9f69c25692d4a82befd624cab8134a2430b3",
+        "dataUniqueLines": 2319,
+        "hydataUniqueLines": 2344,
+        "dataOnlyLines": 4,
+        "hydataOnlyLines": 29,
+        "observation": "semantic row membership differs"
+      },
+      {
+        "path": "enemybase1.txt",
+        "dataSha": "7f91a8492251eea7cba9dc25f8d6696c82d2c4cc",
+        "hydataSha": "929e8450429baeef930e9fc7ad358a6eab0787eb",
+        "dataUniqueLines": 1160,
+        "hydataUniqueLines": 1158,
+        "dataOnlyLines": 29,
+        "hydataOnlyLines": 27,
+        "observation": "same creature rows can carry different graphic/base references, so blob difference is semantic"
+      },
+      {
+        "path": "group1.txt",
+        "dataSha": "4be4a7430ad59d6ef9043a68446026a32f94869e",
+        "hydataSha": "353a45c29294d0db1fd3ad21c388c73cbd8fee69",
+        "dataUniqueLines": 1231,
+        "hydataUniqueLines": 1232,
+        "dataOnlyLines": 0,
+        "hydataOnlyLines": 1,
+        "observation": "hydata has one additional row"
+      },
+      {
+        "path": "map/mapwarp.txt",
+        "dataSha": "94231accecadcafc8b69c0b84cbcae65eade8cf7",
+        "hydataSha": "28926086cd5f6dfee096fd3d0bce2e6fdadd7504",
+        "dataOnlyLines": 195,
+        "hydataOnlyLines": 187,
+        "observation": "coordinate-level warp differences exist, e.g. a 3000,78,91 point versus 3000,77,91 in corresponding rows"
+      },
+      {
+        "path": "petskill2.txt",
+        "dataSha": "fcd854855fa75331184445b80758165be6c38c74",
+        "hydataSha": "9f6da169b12a8c257edeac4ab8e444961b84d752",
+        "dataOnlyLines": 1,
+        "hydataOnlyLines": 1,
+        "observation": "skill 652 PowerBalance option differs between variants"
+      },
+      {
+        "path": "skillcode.txt",
+        "dataSha": "9bc7f0e75ea927603a2b331400cc81f307d800ca",
+        "hydataSha": "c5944244af4f3f9598071224221f84de619ed47d",
+        "dataOnlyLines": 13,
+        "hydataOnlyLines": 15,
+        "observation": "skill mapping rows differ"
+      }
+    ],
+    "interpretation": [
+      "Both itemset6 variants contain zero exact numeric 32003 cells and one exact 24114 cell; switching data versus hydata does not close the starter-item mismatch.",
+      "Battle, warp and pet-skill tables contain real row/content differences, so the 222-file variant set must be semantically reviewed rather than globally collapsed."
+    ]
   }
 }
