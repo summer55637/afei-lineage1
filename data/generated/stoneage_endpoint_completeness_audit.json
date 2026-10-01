@@ -19,11 +19,11 @@
   },
   "keyArtifacts": [
     {
-      "id": "manual-build-guide",
+      "id": "vm-setup-guide",
       "path": "ro0000/docs/搭建教程.txt",
       "sha": "098a6bd6395bf7cf5b118756ec832ebd8b73ca7f",
       "size": 1644,
-      "provenance": "manual-external-web",
+      "provenance": "vm-one-click",
       "present": true
     },
     {

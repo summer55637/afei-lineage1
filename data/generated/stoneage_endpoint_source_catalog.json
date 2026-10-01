@@ -3,10 +3,9 @@
   "purpose": "Provenance and completeness index for the most complete practical deployment corpus. This catalog is distinct from the pinned fixed-C world source catalog.",
   "provenanceClaim": "依專案已確認來源，VM 一鍵端與手工外網端均為可直接架設石器時代手游之實際部署資料複製件；此 provenance 本身不等同於逐檔 runtime boot proof。",
   "exactManualExternalRules": [
-    "ro0000/docs/搭建教程.txt",
     "ro0000/server/merged-source/wwwroot/"
   ],
-  "vmOneClickRule": "在本 catalog 的原始 endpoint corpus 範圍內，除上述兩個手工外網端路徑外，其餘全部標記為 VM 一鍵端。",
+  "vmOneClickRule": "在本 catalog 的原始 endpoint corpus 範圍內，除唯一手工外網端路徑外，其餘全部標記為 VM 一鍵端。",
   "explicitClassificationExample": {
     "path": "ro0000/server/merged-source/www/wwwroot/",
     "provenance": "vm-one-click",
@@ -23,12 +22,12 @@
     "totalBytes": 185166100,
     "byProvenance": {
       "manualExternalWeb": {
-        "fileCount": 23,
-        "totalBytes": 1053042
+        "fileCount": 22,
+        "totalBytes": 1051398
       },
       "vmOneClick": {
-        "fileCount": 8726,
-        "totalBytes": 184113058
+        "fileCount": 8727,
+        "totalBytes": 184114702
       }
     },
     "metadataExcluded": [
@@ -60,12 +59,12 @@
       }
     },
     {
-      "id": "manual-build-guide",
-      "provenance": "manual-external-web",
+      "id": "vm-setup-guide",
+      "provenance": "vm-one-click",
       "root": "ro0000/docs/搭建教程.txt",
       "gitPath": "ro0000/docs/搭建教程.txt",
       "treeSha": "098a6bd6395bf7cf5b118756ec832ebd8b73ca7f",
-      "description": "手工外網端架設／操作教程。",
+      "description": "VM 一鍵端來源中的架設／操作教程；檔名不改變其來源角色。",
       "stats": {
         "fileCount": 1,
         "totalBytes": 1644,
