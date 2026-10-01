@@ -164,8 +164,8 @@ function buildReadme() {
     '- [Generated state / evidence](data/generated/)',
     '',
     '> README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。'
-  ].join('\\n');
+  ].join('\n');
 }
 
 const updated = buildReadme();
-fs.writeFileSync(README, updated.endsWith('\\n') ? updated : updated + '\\n');
+fs.writeFileSync(README, updated.endsWith('\n') ? updated : updated + '\n');
