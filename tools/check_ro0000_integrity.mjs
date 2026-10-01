@@ -306,6 +306,7 @@ assert(isolatedResidueAudit.entries?.length===10,'ro0000 isolated residue audit 
 assert(isolatedResidueAudit.entries?.filter(x=>x.runtimeEligibility==='unproven').length===7,'ro0000 isolated residue eligibility drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='huoyue-bak' && x.runtimeEligibility==='not-canonical'),'ro0000 huoyue residue classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='ridenpc2-tilde' && x.classification==='alternate-version-script-with-formal-sibling' && x.runtimeEligibility==='unproven'),'ro0000 ridenpc2 residue classification drift');
+assert(isolatedResidueAudit.entries?.find(x=>x.id==='soccer-tilde' && x.classification==='orphan-feature-bundle-with-companion-and-database-gap' && x.runtimeEligibility==='unproven'),'ro0000 soccer residue classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-data' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng data loader classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-hydata' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng hydata loader classification drift');
 const hechengAuditPath=path.join(ROOT,'data/generated/stoneage_ro0000_hecheng_loader_audit.json');
