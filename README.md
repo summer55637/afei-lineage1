@@ -155,7 +155,7 @@ Synthetic fixture 可以驗證 bridge contract，但不能冒充完整 fixed-C w
 
 後續只有在出現新的 authoritative source、不同版本的實質資料差異、以前未查過的 evidence layer，或新 runtime 確實把該 blocker 變成必要前置條件時，才重新打開調查。單純重複同一批搜尋結果，不視為新的進展。
 
-目前的 4000→200、3000→200 landing `(587,318)`、Starter Item 24114 等問題依此規則保留；它們是 unresolved boundary，不是整個專案停止的理由。若最終仍沒有足夠 source evidence，維持 fail-closed 也屬於合法 closure，不以猜測、synthetic bridge 或私自 remap 強行完成。
+目前的 4000→200、3000→200 landing (587,318)、Starter Item 24114 等問題依此規則保留；它們是 unresolved boundary，不是整個專案停止的理由。若最終仍沒有足夠 source evidence，維持 fail-closed 也屬於合法 closure，不以猜測、synthetic bridge 或私自 remap 強行完成。
 
 ## 目前工作流
 
@@ -238,6 +238,19 @@ README.md                  專案總覽；狀態區由 workflow 自動更新
 source evidence → generator / adapter → regression → GitHub Actions
 
 版本歷史以 Git commit、docs/changelog/ 與 workflow regression 為主。README 只保留目前狀態、架構與導覽，不再人工堆積大量重複的「本輪新增」段落。
+
+## GitHub / CI 驗證邊界
+
+GitHub 已與 GPT 連線，本專案的 GitHub connector 可以讀取 repository、workflow 檔案、commit 與部分 CI/status 資訊；「拿不到某一次 Actions 的 push-run」不代表 GitHub 沒有連線，也不代表該 run 失敗。
+
+CI 判定必須區分：
+
+- JS parser / 本地語法檢查通過：只代表程式碼可被 JavaScript parser 正常解析。
+- Regression 通過：只代表實際執行的 regression 在該環境成功。
+- GitHub Actions PASS：必須有對應的 GitHub Actions run / check / status 實際結果作為證據。
+- 查不到 push-run：標記為「未取得該次 GitHub Actions 實際結果」，不得寫成 CI PASS，也不得寫成 CI FAIL。
+
+後續開發回報 CI 時，優先使用實際可取得的 GitHub run、check 或 status 證據；若目前 connector 只提供 workflow 檔案或有限的 commit/status 資訊，就明確說明驗證層級，不把「GitHub 已連線」與「這一次 push 的 CI 已 PASS」混為一談。
 
 ## README 自動整理
 
