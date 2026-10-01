@@ -4,7 +4,7 @@
 
 ## 目錄
 
-- `server/merged-source/`：來源已按實際端點規則校正：除了 `wwwroot/` 資料外，其餘內容均屬 VM 一鍵端；`wwwroot/` 屬手工外網端。
+- `server/merged-source/`：來源已按實際端點規則校正：只有 `wwwroot/` 資料夾屬手工外網端；其餘內容均屬 VM 一鍵端。
 - `server/database/`：Server 資料庫匯出／資料庫參考檔。
 - `client/android/`：Android 客戶端主程式 APK。
 - `docs/`：兩套架設／維運教程。
