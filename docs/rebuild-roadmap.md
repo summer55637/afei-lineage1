@@ -11,7 +11,7 @@ Browser State Controller 現在用單一 Promise tail 串行化 dispatch：後�
 
 既有 runtime-level expectedRevision 仍保留；本輪是 Controller-level ordering hardening，不改 fixed-C movement、encounter、battle、reward、EXP、Gold、Item 或 RNG 規則。
 
-新增 regression：tools/check_v426_browser_state_controller_dispatch_serialization.mjs，驗證兩個同時送出的 encounter commit 不會雙重提交，同時驗證舊 expectedRevision 仍 fail-closed。
+新增 regression：tools/check_browser_state_controller_dispatch_serialization.mjs，驗證兩個同時送出的 encounter commit 不會雙重提交，同時驗證舊 expectedRevision 仍 fail-closed。
 
 
 
