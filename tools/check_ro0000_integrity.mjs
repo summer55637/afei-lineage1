@@ -305,6 +305,8 @@ assert(isolatedResidueAudit.ro0000TreeSha===ro0000TreeSha,'ro0000 isolated resid
 assert(isolatedResidueAudit.entries?.length===10,'ro0000 isolated residue audit entry count drift');
 assert(isolatedResidueAudit.entries?.filter(x=>x.runtimeEligibility==='unproven').length===9,'ro0000 isolated residue eligibility drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='huoyue-bak' && x.runtimeEligibility==='not-canonical'),'ro0000 huoyue residue classification drift');
+assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-data' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng data loader classification drift');
+assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-hydata' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng hydata loader classification drift');
 const triageReportPath=path.join(ROOT,'data/generated/stoneage_ro0000_dependency_triage.json');
 if(!fs.existsSync(triageReportPath)) throw new Error('missing generated ro0000 dependency triage report');
 const triageReport=JSON.parse(fs.readFileSync(triageReportPath,'utf8'));

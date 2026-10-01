@@ -130,3 +130,9 @@ node tools/check_ro0000_integrity.mjs
 - `LY.lua--`、`PetUp/petup1.lua~`、`YamaKing/YamaKing.lua~`、`battlebet.lua--`、`soccer.lua~`、`renwu.lua~`、`ridenpc2.lua~`：都具有實質 Lua 程式內容；其中 soccer 甚至有同目錄 `soccer.txt` companion，ridenpc2 則有正式 `ridenpc.lua` sibling。它們目前全部標成 `runtimeEligibility=unproven`，先保留。
 
 這層證據已固定在 `data/generated/stoneage_ro0000_isolated_residue_audit.json`。未來只有找到新的 authoritative binding / version provenance / loader evidence，才把其中任一項改成 canonical runtime source。
+
+## hecheng residue loader 證據
+
+本輪補到 pinned fixed-C loader 證據：`NPC_readNPCCreateFiles()` 先用 `rgetFileName()` 遞迴取得檔名，再逐檔呼叫 `NPC_IsNPCCreateFile()`；後者明確排除 trailing `~`、首字元 `#` 與 `.bak`，沒有看到單獨排除 `.create---`。
+
+因此 `neweq.create---` 不能只用副檔名判定為「loader 絕對不會讀」。data 版本的 NPC block 本身以 `#` 註解掉；hydata 版本則是 active-looking。兩者仍保持 endpoint variant，並與 `baoshi.arg--` / `baoxiang.arg--` 一起保留。

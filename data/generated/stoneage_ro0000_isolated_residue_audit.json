@@ -32,11 +32,12 @@
       "evidence": [
         "File begins with NPCCREATE.",
         "Two NPC blocks are present but wrapped in # comment markers in the data variant.",
-        "Referenced script paths point to hecheng/baoxiang.arg and hecheng/baoshi.arg, whose formal .arg paths are absent and whose .arg-- residues remain."
+        "Referenced script paths point to hecheng/baoxiang.arg and hecheng/baoshi.arg, whose formal .arg paths are absent and whose .arg-- residues remain.",
+        "Pinned fixed-C NPC_readNPCCreateFiles enumerates recursively returned filenames and then calls NPC_IsNPCCreateFile; the helper explicitly excludes only trailing ~, first-character #, and .bak, so the .create--- suffix alone is not proof of loader exclusion."
       ],
       "classification": "historical-or-disabled-create-draft",
-      "runtimeEligibility": "unproven",
-      "action": "preserve; investigate together with hecheng arg residues"
+      "runtimeEligibility": "loader-path-sensitive",
+      "action": "preserve; verify rgetFileName traversal plus the # commented payload and hecheng arg bindings"
     },
     {
       "id": "LY-lua-tilde",
@@ -145,11 +146,27 @@
         "File begins with NPCCREATE.",
         "Two NPC blocks are active-looking and structurally correspond to the data variant.",
         "No formal neweq.create sibling exists.",
-        "The two endpoint variants differ byte-for-byte and therefore cannot be collapsed without semantic review."
+        "The two endpoint variants differ byte-for-byte and therefore cannot be collapsed without semantic review.",
+        "Pinned fixed-C NPC_readNPCCreateFiles enumerates recursively returned filenames and then calls NPC_IsNPCCreateFile; the .create--- suffix alone is not proof of loader exclusion."
       ],
       "classification": "endpoint-create-variant-without-formal-base",
-      "runtimeEligibility": "unproven",
-      "action": "preserve as endpoint variant; investigate with hecheng .arg-- files"
+      "runtimeEligibility": "loader-path-sensitive",
+      "action": "preserve as endpoint variant; verify traversal, then compare active blocks against hecheng arg bindings"
     }
-  ]
+  ],
+  "notes": {
+    "hechengLoaderEvidence": {
+      "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+      "npccreate": "NPC_readNPCCreateFiles calls rgetFileName recursively, then NPC_IsNPCCreateFile",
+      "exclusionObserved": [
+        "filename ending ~",
+        "filename starting #",
+        ".bak suffix"
+      ],
+      "notObservedAsExclusion": [
+        ".create---"
+      ],
+      "consequence": "special suffix alone cannot establish non-runtime status"
+    }
+  }
 }
