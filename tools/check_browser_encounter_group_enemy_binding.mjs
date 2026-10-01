@@ -53,6 +53,10 @@ const coreStatRolls=[
   assert.equal(preInitAttack.ok,false,JSON.stringify(preInitAttack));
   assert.equal(preInitAttack.stage,'battle-phase-gate');
   assert.equal(preInitAttack.reason,'battle-active-phase-required');
+  const directTurnInit=await c.dispatch({type:ACTION_BATTLE_TURN_INITIALIZE});
+  assert.equal(directTurnInit.ok,false,JSON.stringify(directTurnInit));
+  assert.equal(directTurnInit.stage,'battle-turn-gate');
+  assert.equal(directTurnInit.reason,'battle-turn-initialize-internal-only');
   const initialized=await c.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
   assert.equal(initialized.ok,true,JSON.stringify(initialized));
   assert.equal(initialized.battleContext.context.sourceGroupId,94);
@@ -65,7 +69,7 @@ const coreStatRolls=[
   const secondTurnInit=await c.dispatch({type:ACTION_BATTLE_TURN_INITIALIZE});
   assert.equal(secondTurnInit.ok,false,JSON.stringify(secondTurnInit));
   assert.equal(secondTurnInit.stage,'battle-turn-gate');
-  assert.equal(secondTurnInit.reason,'battle-turn-initialize-requires-init-phase');
+  assert.equal(secondTurnInit.reason,'battle-turn-initialize-internal-only');
 }
 
 {
