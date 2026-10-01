@@ -74,7 +74,7 @@ assert.equal(cri.critical,false);
 let result=runAttackSeqPrelude(context,{
   attackerBid:0,
   targetBid:10,
-  duckRoll:3001,
+  duckRoll:1201,
   criticalRoll:1415
 });
 assert.equal(result.ok,true,JSON.stringify(result));
