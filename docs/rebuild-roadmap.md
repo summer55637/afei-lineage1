@@ -1437,9 +1437,10 @@ V4.01 不修改 HP、不執行 DamageCalc、不套用 counter/status/death/rewar
 
 V4.02 將 fixed-C `BATTLE_DamageCalc()` 拆成 read-only deterministic damage plan：
 
-- defense = FIXTOUGH×0.45 + FIXDEX×0.20 + FIXVITAL×0.10
-- 三段基礎 damage branch 與 `D_16=1/16`、`D_8=1/8`、`DAMAGE_RATE=2.0)
-- `BATTLE_AttrAdjust()) 的 SAME/UP/DOWN = 1.0/1.5/0.6
+- pinned `version.h` 已定義 `_BATTLE_NEWPOWER`
+- defense = FIXTOUGH×0.70 + FIXDEX×0.20 + FIXVITAL×0.10
+- 三段基礎 damage branch 與 `D_16=1/16`、`D_8=1/8`、`DAMAGE_RATE=2.0`
+- `BATTLE_AttrAdjust()` 的 SAME/UP/DOWN = 1.0/1.5/0.6
 - ATTR_MAX=100、D_ATTR=1/10000
 - field_att=NONE 時沿 fixed-C default 0.5/0.5，ratio=1
 
@@ -1447,7 +1448,6 @@ V4.02 將 fixed-C `BATTLE_DamageCalc()` 拆成 read-only deterministic damage pl
 
 尚未升格的 compile-time / caller-sensitive branch：
 - Ride Pet adjust
-- BATTLE_NEWPOWER
 - MAGIC_SUPERWALL
 - NPCENEMY_ADDPOWER
 - PETSKILL_REGRET
@@ -1463,19 +1463,7 @@ V4.02 將 fixed-C `BATTLE_DamageCalc()` 拆成 read-only deterministic damage pl
 - `tools/check_v402_browser_battle_damage_plan.mjs`
 - `docs/reference/v402-browser-battle-damage-plan.md`
 - `.github/workflows/check-v402-browser-battle-damage-plan.yml`
-## 2026-10-01 V4.02 Pinned Branch Correction
 
-Source re-audit against pinned gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56 confirmed that gmsv/src/include/version.h defines _BATTLE_NEWPOWER.
-
-因此 V4.02 的一般無騎寵 BATTLE_DamageCalc() 防禦路徑已校正為：
-
-- FIXTOUGH × 0.70
-- FIXDEX × 0.20
-- FIXVITAL × 0.10
-
-原先寫入的 0.45 / 0.20 / 0.10 checkpoint 已移除；regression 改為 attack 100 / defense 50 / quick 20 / fixVital 10 → effective defense 40、base damage 120，Earth → Water elemental case = 180。
-
-Ride Pet、GuardAdjust、DamageReact、Counter、Death、Reward 及其他 caller/compile-time feature branches 仍維持獨立 boundary，尚未假設性啟用。
 ## 2026-10-01 V4.03 Browser Battle Critical Damage Plan
 
 V4.03 接續 V4.01 AttackSeq Prelude 與 V4.02 Damage Plan，升格 fixed-C BATTLE_CriDamageCalc 與 AttackSeq 的後段 read-only settlement。
