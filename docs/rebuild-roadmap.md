@@ -1921,6 +1921,17 @@ Controller integration：
 
 下一步：回到 fixed-C 外層 battle lifecycle，處理 finish 後 `BATTLE_Exit()` 等 battle entry cleanup 與 Idle/World return boundary，不把 transient battle context 永久留在 world state。
 
+## 2026-10-01 V4.21 Browser Battle Exit Closure Regression
+
+V4.21 不新增新的 Battle 規則；本輪補強的是最後一段 lifecycle contract：
+
+- `BATTLE_Exit` commit 必須再次確認 `settlementComplete=true`，避免未完成 reward / settlement 的 fabricated plan 越過 final-exit gate。
+- 新增 Controller regression，實際走 `encounter_pending → in_battle → settlement → moving`，再由 `BATTLE_EXIT_PLAN → BATTLE_EXIT_COMMIT` 完成 dead-Pet `HP 0 → 1` cleanup。
+- regression 同時確認成功 Exit commit 後 memory-held Battle Context 被清除、Persistent State 不保存 `battleContext`、duplicate transactionId 維持 idempotent no-op。
+- 不新增 synthetic world teleport、不把 fixed-C 未證明的 player defeat heal / network side effects 變成 Browser rule。
+
+這一輪仍維持 V4.21 版本線；下一個版本只有在找到新的 source-backed battle boundary 後才建立，不用版本號掩蓋純測試／contract hardening。
+
 ## 2026-10-01 V4.21 Browser Battle Exit Plan / Commit
 
 V4.21 接回固定-C 的整場 `BATTLE_Exit` 最終 Pet cleanup，與中途 `battlePetOutIds` 退場明確分離。
