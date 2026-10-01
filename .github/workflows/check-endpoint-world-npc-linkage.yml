@@ -1,0 +1,36 @@
+name: Check endpoint world NPC linkage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ro0000/server/merged-source/gmsv/data/npc/**'
+      - 'ro0000/server/merged-source/gmsv/data/map/mapwarp.txt'
+      - 'ro0000/server/merged-source/gmsv/setup.cf'
+      - 'tools/generate_world_data_catalog.mjs'
+      - 'tools/check_endpoint_world_npc_linkage.mjs'
+      - '.github/workflows/check-endpoint-world-npc-linkage.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  endpoint-world-npc-linkage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate endpoint world NPC catalog
+        run: |
+          set -euo pipefail
+          rm -rf endpoint-world
+          mkdir -p endpoint-world
+          node tools/generate_world_data_catalog.mjs             --source-root ro0000/server/merged-source             --out-dir endpoint-world             --source-role vm-one-click-endpoint             --source-repo summer55637/afei-lineage1             --source-ref "$GITHUB_SHA"
+
+      - name: Validate endpoint NPC linkage
+        run: node tools/check_endpoint_world_npc_linkage.mjs
