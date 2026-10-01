@@ -1174,6 +1174,7 @@ function createBrowserStateController({
         if(!committed.ok)return {...committed,stage:'battle-start-idle',state:clone(currentState)};
         currentState=committed.state;
         battleContext=built.context;
+        encounterPipeline=null;
         return {
           ...built,
           ok:true,
@@ -1211,6 +1212,7 @@ function createBrowserStateController({
 
         if(!worldEncounterEnemyRuntime)return {ok:false,handled:false,stage:'encounter-enemy-runtime',reason:'browser-world-encounter-enemy-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterEnemyRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-enemy-runtime',reason:worldEncounterEnemyRuntime.reason??'browser-world-encounter-enemy-runtime-invalid',errors:worldEncounterEnemyRuntime.errors??[],state:clone(currentState)};
+        if(String(currentState?.idle?.mode??'')!=='encounter_pending')return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'idle-state-not-encounter-pending',state:clone(currentState)};
         if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-resolution',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-resolution',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
         const prepared=await worldEncounterRuntime.prepare(currentState,{position:action.position??action.player??null,encounterId:action.encounterId??null});
@@ -1245,6 +1247,7 @@ function createBrowserStateController({
 
         if(!worldEncounterGroupRuntime)return {ok:false,handled:false,stage:'encounter-group-runtime',reason:'browser-world-encounter-group-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterGroupRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-group-runtime',reason:worldEncounterGroupRuntime.reason??'browser-world-encounter-group-runtime-invalid',errors:worldEncounterGroupRuntime.errors??[],state:clone(currentState)};
+        if(String(currentState?.idle?.mode??'')!=='encounter_pending')return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'idle-state-not-encounter-pending',state:clone(currentState)};
         if(!worldEncounterRuntime)return {ok:false,handled:false,stage:'encounter-resolution',reason:'browser-world-encounter-runtime-not-configured',state:clone(currentState)};
         if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-resolution',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
         const prepared=await worldEncounterRuntime.prepare(currentState,{position:action.position??action.player??null,encounterId:action.encounterId??null});
