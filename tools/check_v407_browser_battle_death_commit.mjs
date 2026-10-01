@@ -129,8 +129,8 @@ const committed=await controller.dispatch({
   deathPlan:planResult
 });
 assert.equal(committed.ok,true,JSON.stringify(committed));
-assert.equal(committed.battleContext.context.sides[1].entries[0].isDie,true);
-assert.equal(committed.battleContext.context.sides[1].entries[0].deadCount,1);
+assert.equal(committed.battleContext.context.sides[1].entries[5].isDie,true);
+assert.equal(committed.battleContext.context.sides[1].entries[5].deadCount,1);
 
 console.log(JSON.stringify({
   pass:true,
