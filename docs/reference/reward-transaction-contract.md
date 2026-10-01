@@ -1,6 +1,6 @@
 # Reward Transaction Contract
 
-更新日期：2026-09-30
+更新日期：2026-10-01
 
 本 contract 把 fixed-C 的 `BATTLE_AddProfit / BATTLE_AddExpItem` boundary 變成可持久化 transaction；它只接受 battle runtime 已經決定的 reward packet，不重新抽 reward RNG。
 
@@ -25,6 +25,10 @@
 ## Fail-closed
 
 unknown existing item index、缺少 runtime existing item、非 enemy-owned existing item、非 24 格玩家 item slots、重複 item index、空 transactionId 都拒絕 commit。
+
+Gold 也必須維持在 fixed-C 的 `CHAR_getMaxHaveGold()` 上限內。Reward packet 已經是上游決定好的增量；若該增量會讓 `player.gold` 超過 `sourcePlayerMaxGold(state)`，transaction 直接 fail-closed，不自行截斷或重新計算 reward。
+
+固定 C 在 battle gold 路徑會先把可加入的 Gold 限制到剩餘個人上限；Browser transaction 因此不應接受尚未經過該 source boundary 的超額 reward packet。
 
 Inventory full 不做部分 commit；transaction 必須整體成功或整體不寫入。
 
