@@ -110,6 +110,32 @@ function requireBattlePhase(battleContext,type,state){
   return null;
 }
 
+function findBattleEntryByBid(battleContext,bid){
+  const n=Number(bid);
+  if(!Number.isInteger(n)||n<0||n>19)return null;
+  const side=n>=10?1:0;
+  const slot=n>=10?n-10:n;
+  const sideObj=battleContext?.context?.sides?.find(x=>Number(x?.side)===side);
+  return Array.isArray(sideObj?.entries)?sideObj.entries[slot]??null:null;
+}
+
+function requireAttackCommandBinding(battleContext,type,attackerBid,targetBid,state){
+  const attacker=findBattleEntryByBid(battleContext,attackerBid);
+  const a=Number(attackerBid),t=Number(targetBid);
+  if(!attacker||!Number.isInteger(a)||!Number.isInteger(t))return {
+    ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-entry-invalid',attackerBid:attackerBid,targetBid:targetBid,state:clone(state)
+  };
+  const command=Number(attacker?.battleCommands?.[0]);
+  if(![1,8].includes(command))return {
+    ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-required',attackerBid:a,targetBid:t,command:Number.isFinite(command)?command:null,state:clone(state)
+  };
+  const commandTarget=Number(attacker?.battleCommands?.[1]);
+  if(!Number.isInteger(commandTarget)||commandTarget!==t)return {
+    ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-target-mismatch',attackerBid:a,targetBid:t,commandTarget:Number.isFinite(commandTarget)?commandTarget:null,state:clone(state)
+  };
+  return null;
+}
+
 function createBrowserStateController({
   state,
   moduleAudit=null,
@@ -1028,6 +1054,8 @@ function createBrowserStateController({
       if(type===ACTION_BATTLE_ATTACK_SEQ_PRELUDE){
         const phaseGate=requireBattlePhase(battleContext,type,currentState);
         if(phaseGate)return phaseGate;
+        const commandGate=requireAttackCommandBinding(battleContext,type,action.attackerBid??null,action.targetBid??null,currentState);
+        if(commandGate)return commandGate;
         if(!battleContext)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'battle-context-required',state:clone(currentState)};
         if(battleAttackSeqPreludeRuntime.ok!==true)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'browser-battle-attack-seq-prelude-runtime-invalid',state:clone(currentState)};
         const result=battleAttackSeqPreludeRuntime.run(
