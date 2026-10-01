@@ -23,7 +23,13 @@ const nodes = raw ? raw.split('\n').filter(Boolean).map(line => {
   return { mode:m[1], type:m[2], sha:m[3], size:m[4] == null ? null : Number(m[4]), path:m[5] };
 }) : [];
 const files = nodes.filter(x => x.type === 'blob');
-const dirs = new Set(nodes.filter(x => x.type === 'tree').map(x => x.path));
+const dirs = new Set();
+for (const node of nodes) {
+  const parts = node.path.split('/');
+  for (let i = 1; i < parts.length; i++) {
+    dirs.add(parts.slice(0, i).join('/'));
+  }
+}
 const fileByPath = new Map(files.map(x => [x.path, x]));
 const ro0000TreeSha = git(['rev-parse', 'HEAD:' + RO]);
 
