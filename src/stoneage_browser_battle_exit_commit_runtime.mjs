@@ -13,6 +13,12 @@ function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,n
   if(plan.settlementComplete!==true)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'settlement-complete-flag-required',state:clone(state)};
   const receiptBinding=validateSettlementReceiptBinding(state,plan);
   if(!receiptBinding.ok)return {ok:false,handled:false,stage:'battle-exit-commit',reason:receiptBinding.reason,receiptId:plan.settlementReceiptId??null,state:clone(state)};
+  const tx=String(transactionId??'').trim();
+  if(!tx)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'transaction-id-required',state:clone(state)};
+  const currentRevision=intOr(state.revision,0);
+  const bucket=isObject(state.runtimeMeta?.[TRANSACTION_BUCKET])?state.runtimeMeta[TRANSACTION_BUCKET]:{};
+  if(bucket[tx])return {ok:true,handled:true,stage:'battle-exit-commit-idempotent',format:BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT,action:ACTION_BATTLE_EXIT_COMMIT,transactionId:tx,idempotent:true,applied:false,revision:currentRevision,state:clone(state)};
+  if(expectedRevision!=null&&currentRevision!==intOr(expectedRevision,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'revision-conflict',currentRevision,expectedRevision:intOr(expectedRevision,null),state:clone(state)};
   const playerExit=resolveBattlePlayerExitForSettlement(state,{
     settlementReceiptId:plan.settlementReceiptId,
     settlementStartRevision:plan.settlementStartRevision,
@@ -21,12 +27,6 @@ function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,n
   if(!playerExit.ok)return {ok:false,handled:false,stage:'battle-exit-commit',reason:playerExit.reason,receiptId:plan.settlementReceiptId??null,state:clone(state)};
   if(String(plan.playerExitTransactionId??'').trim()!==playerExit.transactionId)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-transaction-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
   if(intOr(plan.playerExitRevision,null)!==intOr(playerExit.record.revisionAfter,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
-  const tx=String(transactionId??'').trim();
-  if(!tx)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'transaction-id-required',state:clone(state)};
-  const currentRevision=intOr(state.revision,0);
-  const bucket=isObject(state.runtimeMeta?.[TRANSACTION_BUCKET])?state.runtimeMeta[TRANSACTION_BUCKET]:{};
-  if(bucket[tx])return {ok:true,handled:true,stage:'battle-exit-commit-idempotent',format:BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT,action:ACTION_BATTLE_EXIT_COMMIT,transactionId:tx,idempotent:true,applied:false,revision:currentRevision,state:clone(state)};
-  if(expectedRevision!=null&&currentRevision!==intOr(expectedRevision,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'revision-conflict',currentRevision,expectedRevision:intOr(expectedRevision,null),state:clone(state)};
   if(currentRevision!==intOr(playerExit.record.revisionAfter,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-current-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
 
   const next=clone(state);
