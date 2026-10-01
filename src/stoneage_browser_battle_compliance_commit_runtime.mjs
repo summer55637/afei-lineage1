@@ -50,15 +50,17 @@ function commitBattleCompliance(state,plan,{transactionId=null,expectedRevision=
       committed.push({kind:'player',characterId:plannedId,maxHp});
     }else if(kind==='pet'){
       const petId=String(character.petId??'').trim();
-      const pet=Array.isArray(state.pets?.petBox)?state.pets.petBox.find(p=>String(p?.id??'').trim()===petId):null;
-      if(!pet)return {ok:false,handled:false,stage:'battle-compliance-commit',reason:'persistent-pet-missing',petId,state:clone(state)};
+      const sourcePet=Array.isArray(state.pets?.petBox)?state.pets.petBox.find(p=>String(p?.id??'').trim()===petId):null;
+      if(!sourcePet)return {ok:false,handled:false,stage:'battle-compliance-commit',reason:'persistent-pet-missing',petId,state:clone(state)};
       const stats=character.statsBefore??{};
       const keys=['vital','str','tgh','dex'];
-      if(keys.some(k=>intOr(pet.stats?.[k]??pet.serverStats?.[k],null)!==intOr(stats[k],null))){
+      if(keys.some(k=>intOr(sourcePet.stats?.[k]??sourcePet.serverStats?.[k],null)!==intOr(stats[k],null))){
         return {ok:false,handled:false,stage:'battle-compliance-commit',reason:'pet-stats-stale-plan',petId,state:clone(state)};
       }
       const maxHp=intOr(character.derived?.maxHp,null);
       if(maxHp==null||maxHp<0)return {ok:false,handled:false,stage:'battle-compliance-commit',reason:'pet-maxhp-invalid',petId,state:clone(state)};
+      const pet=Array.isArray(next.pets?.petBox)?next.pets.petBox.find(p=>String(p?.id??'').trim()===petId):null;
+      if(!pet)return {ok:false,handled:false,stage:'battle-compliance-commit',reason:'persistent-pet-missing-after-clone',petId,state:clone(state)};
       pet.maxHp=maxHp;
       committed.push({kind:'pet',petId,maxHp});
     }else{
