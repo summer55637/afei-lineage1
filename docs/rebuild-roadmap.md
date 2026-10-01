@@ -1589,3 +1589,27 @@ Controller integration：
 - `ACTION_BATTLE_DEATH_COMMIT`
 - `BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT`
 
+## 2026-10-01 V4.08 Browser Battle End Plan
+
+V4.08 接續 V4.07 Death Commit，升格 fixed-C BATTLE_OnlyRescue() / BATTLE_Command() 的 battle-end decision：
+
+- 排除 pet，只計 non-pet 且 CHAR_ISDIE == FALSE 的有效成員
+- _PETSKILL_LER 路徑下 CHAR_WORK_RELIFE > 0 額外計數
+- side 0 count == 0 → winside = 1
+- 否則 side 1 count == 0 → winside = 0
+- 結束時只輸出 finishMode=finish，不提前執行 BATTLE_FinishSet()
+- OnlyRescue cleanup 先以 bid 清單輸出，實際 BATTLE_Exit() 保留到後續 boundary
+
+V4.08 是 read-only plan，不修改 Battle Context、HP、Reward、EXP、Gold 或 Persistent State。
+
+新增：
+- `src/stoneage_browser_battle_end_runtime.mjs`
+- `data/generated/stoneage_browser_battle_end_schema.json`
+- `tools/check_v408_browser_battle_end.mjs`
+- `docs/reference/v408-browser-battle-end.md`
+- `.github/workflows/check-v408-browser-battle-end.yml`
+
+Controller integration：
+- `ACTION_BATTLE_END_PLAN`
+- `BROWSER_BATTLE_END_RUNTIME_FORMAT`
+
