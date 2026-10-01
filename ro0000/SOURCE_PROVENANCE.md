@@ -35,14 +35,19 @@ endpoint provenance → file/blob identity → pinned fixed-C comparison → evi
 
 同名不同內容只表示相對 pinned fixed-C 的 variant，不能再解讀成「來源端點未知」。
 
-## wwwroot 注意事項
+## 路徑判定注意事項
 
-倉庫目前可見兩個 wwwroot 路徑：
+倉庫目前可見兩個名稱包含 wwwroot 的路徑：
 
 - ro0000/server/merged-source/wwwroot/
 - ro0000/server/merged-source/www/wwwroot/
 
-依目前端點規則，只有 ro0000/server/merged-source/wwwroot/ 這個資料夾依本次確認標記為手工外網端。其他名稱包含 wwwroot 但位於不同路徑的資料，不自動套用這個標籤；依「其餘全部屬 VM 一鍵端」規則處理。
+依目前確認，手工外網端只有兩個 exact path：
+
+- ro0000/docs/搭建教程.txt
+- ro0000/server/merged-source/wwwroot/
+
+因此 ro0000/server/merged-source/www/wwwroot/ 雖然名稱也包含 wwwroot，仍依「其餘全部屬 VM 一鍵端」規則標記為 VM 一鍵端。
 
 ## 使用規則
 
