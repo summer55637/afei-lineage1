@@ -11,8 +11,10 @@ function argValue(name, fallback=null){
 const sourceRoot=path.resolve(argValue('--source-root','/tmp/StoneAge'));
 const outDir=path.resolve(argValue('--out-dir','.'));
 const npcRoot=path.join(sourceRoot,'gmsv/data/npc');
-const sourceRef='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
-const sourceRepo='gavinlinasd/StoneAge';
+const sourceRef=argValue('--source-ref','1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56');
+const sourceRepo=argValue('--source-repo','gavinlinasd/StoneAge');
+const sourceRole=argValue('--source-role','pinned-fixed-c');
+
 
 function fail(message){ console.error('World data generation FAILED:',message); process.exit(1); }
 if(!fs.existsSync(sourceRoot)) fail('source root missing: '+sourceRoot);
@@ -198,6 +200,7 @@ for(const raw of readText(configPath).replace(/\r/g,'').split('\n')){
 
 const worldNpc={
   format:'stoneage-world-npc-index-v1',generatedAt:'2026-09-30',
+  sourceRole,
   fixedSource:{repository:sourceRepo,ref:sourceRef},
   statistics:{
     npcFiles:allFiles.length,templateFiles:extCounts['.template']??0,templateBlocks:templateRecords.length,
@@ -216,6 +219,7 @@ const worldNpc={
 
 const serverConfig={
   format:'stoneage-server-config-index-v1',generatedAt:'2026-09-30',
+  sourceRole,
   fixedSource:{repository:sourceRepo,ref:sourceRef,path:'gmsv/setup.cf',sha256:sha256(fs.readFileSync(configPath)),sizeBytes:fs.statSync(configPath).size},
   statistics:{pairCount:configPairs.length,uniqueKeyCount:Object.keys(configMap).length,duplicateKeyCount:Object.values(configMap).filter(a=>a.length>1).length},
   keyIndex:configPairs,valuesByKey:configMap,
@@ -224,6 +228,7 @@ const serverConfig={
 
 const warpIndex={
   format:'stoneage-mapwarp-source-index-v1',generatedAt:'2026-09-30',
+  sourceRole,
   fixedSource:{repository:sourceRepo,ref:sourceRef,path:'gmsv/data/map/mapwarp.txt',sha256:sha256(fs.readFileSync(mapwarpPath)),sizeBytes:fs.statSync(mapwarpPath).size},
   statistics:{
     rows:mapwarp.length,
