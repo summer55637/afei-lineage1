@@ -589,7 +589,10 @@ function createBrowserStateController({
             settlementStartRevision:Number(currentState?.revision??0)
           }
         );
-        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext?.context??result.battleContext);
+        if(result.ok&&result.handled===true&&result.battleContext){
+          battleContext=clone(result.battleContext?.context??result.battleContext);
+          battleAttackPipeline=null;
+        }
         return {
           ...result,
           format:BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
