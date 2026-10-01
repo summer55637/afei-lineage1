@@ -1,0 +1,28 @@
+{
+  "format": "stoneage-v406-browser-battle-death-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_DEATH_PLAN",
+  "fixedC": {
+    "deathCondition": "CHAR_HP <= 0",
+    "returnFlag": "BATTLE_DefDieType sets iRet = FALSE when death condition is met",
+    "flag": "BCF_DEATH",
+    "abio": "CHAR_BATTLEFLG_ABIO forces ULTIMATE_1",
+    "criticalEnemy": "non-player target + BCF_KAISHIN => RAND(1,100) < 50 can force ULTIMATE_1",
+    "lerException": "base image 101813/101814 prevents ultimate knock-away",
+    "ultimate2": "carried from BATTLE_DamageSub when damage threshold was already met"
+  },
+  "browser": {
+    "criticalDeathRng": "caller injected only for non-player critical targets",
+    "hpMutation": false,
+    "charIsDieMutation": false,
+    "persistentMutation": false,
+    "battleEndMutation": false,
+    "rewardMutation": false
+  },
+  "nextBoundary": [
+    "CHAR_ISDIE assignment",
+    "battle-end determination",
+    "EXP / gold / reward settlement",
+    "persistent post-battle state"
+  ]
+}
