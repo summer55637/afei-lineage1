@@ -38,6 +38,10 @@ function planBattlePlayerExit(contextInput,state,{settlementComplete=false}={}){
   if(hp==null)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-player-hp-required'};
   if(mp==null)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-player-mp-required'};
 
+  const battlePlayerId=String(entry.characterId??'').trim();
+  const statePlayerId=String(state.player.id??'').trim();
+  if(battlePlayerId&&statePlayerId&&battlePlayerId!==statePlayerId)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-player-identity-mismatch'};
+
   const persistentHp=intOr(state.player.hp,null);
   const persistentMp=intOr(state.player.mp,null);
   if(persistentHp==null)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'persistent-player-hp-required'};
