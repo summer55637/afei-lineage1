@@ -1,0 +1,135 @@
+{
+  "format": "stoneage-endpoint-completeness-audit-v1",
+  "updated": "2026-10-01",
+  "source": {
+    "root": "ro0000/",
+    "description": "目前最完整、最接近可直接架設版本的實機／部署資料 snapshot"
+  },
+  "status": {
+    "snapshotStructure": "complete-for-defined-key-artifacts",
+    "keyArtifactCoverage": "12/12",
+    "runtimeBehavior": "not-yet-complete",
+    "playablePromotion": "blocked-until-runtime-closure"
+  },
+  "corpus": {
+    "endpointCatalogFiles": 8749,
+    "endpointCatalogBytes": 185166100,
+    "ro0000TrackedBlobs": 8751,
+    "ro0000TrackedBytes": 185169695,
+    "metadataExcluded": [
+      "ro0000/README.md",
+      "ro0000/SOURCE_PROVENANCE.md"
+    ]
+  },
+  "keyArtifacts": [
+    {
+      "id": "manual-build-guide",
+      "path": "ro0000/docs/搭建教程.txt",
+      "sha": "098a6bd6395bf7cf5b118756ec832ebd8b73ca7f",
+      "present": true,
+      "size": 1644,
+      "provenance": "manual-external-web"
+    },
+    {
+      "id": "vm-build-guide",
+      "path": "ro0000/docs/隐盟文本教程.txt",
+      "sha": "a445ac76a031fa62ef71db4c77570111dd315472",
+      "present": true,
+      "size": 2014,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "database",
+      "path": "ro0000/server/database/175sa.sql",
+      "sha": "71d95a30bee55174867274fba31ede1ae1f86b87",
+      "present": true,
+      "size": 159275,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "android",
+      "path": "ro0000/client/android/冰河石器-隐盟.apk",
+      "sha": "eaeb7c513ca0731c4bdeedd0987081b4bf443031",
+      "present": true,
+      "size": 24931847,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "setup",
+      "path": "ro0000/server/merged-source/gmsv/setup.cf",
+      "sha": "e622602627cce66561d5cf941f2723720e66d133",
+      "present": true,
+      "size": 35062,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "server-binary",
+      "path": "ro0000/server/merged-source/gmsv/gmsvjt",
+      "sha": "fe574643d35966f4c22f6b0efd8ea504227ed4cd",
+      "present": true,
+      "size": 5934624,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "item-table",
+      "path": "ro0000/server/merged-source/gmsv/data/itemset6.csv",
+      "sha": "d907f508888ea3e3ea6b204eb97f52ae0a9cc6cb",
+      "present": true,
+      "size": 3792005,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "encounter",
+      "path": "ro0000/server/merged-source/gmsv/data/encount.txt",
+      "sha": "1da076558df40ef5b2f1d191f41e0f05bd033fb8",
+      "present": true,
+      "size": 54899,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "group",
+      "path": "ro0000/server/merged-source/gmsv/data/group1.txt",
+      "sha": "4be4a7430ad59d6ef9043a68446026a32f94869e",
+      "present": true,
+      "size": 67564,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "enemy",
+      "path": "ro0000/server/merged-source/gmsv/data/enemy1.txt",
+      "sha": "dd7690bf89589ce3faac2b38c31fff864b2a439e",
+      "present": true,
+      "size": 235576,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "enemybase",
+      "path": "ro0000/server/merged-source/gmsv/data/enemybase1.txt",
+      "sha": "7f91a8492251eea7cba9dc25f8d6696c82d2c4cc",
+      "present": true,
+      "size": 171087,
+      "provenance": "vm-one-click"
+    },
+    {
+      "id": "mapwarp",
+      "path": "ro0000/server/merged-source/gmsv/data/map/mapwarp.txt",
+      "sha": "94231accecadcafc8b69c0b84cbcae65eade8cf7",
+      "present": true,
+      "size": 176252,
+      "provenance": "vm-one-click"
+    }
+  ],
+  "mergedSourceTop": {
+    "gmsv": 8348,
+    "www": 362,
+    "wwwroot": 22,
+    "saac": 13
+  },
+  "semanticGaps": [
+    "Endpoint LS2MAP walkability / connected-component re-audit for reopened 4000→200 and 3000→200 landing blockers.",
+    "Endpoint Item loader / ITEM1=32003 semantics.",
+    "Endpoint Encounter→Group unresolved active IDs.",
+    "Endpoint GMQUE RANDGMQUE / QUEPART and reward-pet closure.",
+    "Persistent State final long-run field coverage."
+  ]
+}
