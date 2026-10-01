@@ -1476,3 +1476,25 @@ Source re-audit against pinned gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a
 原先寫入的 0.45 / 0.20 / 0.10 checkpoint 已移除；regression 改為 attack 100 / defense 50 / quick 20 / fixVital 10 → effective defense 40、base damage 120，Earth → Water elemental case = 180。
 
 Ride Pet、GuardAdjust、DamageReact、Counter、Death、Reward 及其他 caller/compile-time feature branches 仍維持獨立 boundary，尚未假設性啟用。
+## 2026-10-01 V4.03 Browser Battle Critical Damage Plan
+
+V4.03 接續 V4.01 AttackSeq Prelude 與 V4.02 Damage Plan，升格 fixed-C BATTLE_CriDamageCalc 與 AttackSeq 的後段 read-only settlement。
+
+- 非 Bow critical：base BATTLE_DamageCalc + defencePower × attackerLevel / defenderLevel × 0.5
+- Bow critical：保留 critical result，但 damage 仍走普通 BATTLE_DamageCalc，不套 critical bonus
+- Guard + 非 confusion：升格 BATTLE_GuardAdjust 的 1–100 分段倍率
+- damage < 1：caller 注入 RAND(0,1)
+- 最後套用 caller-provided gBattleDamageModyfy，預設 1.0
+
+V4.03 不重新抽 V4.01 的 critical RNG，也不修改 HP、Persistent State、DamageSub、DamageReact、Counter、Death 或 Reward。
+
+新增：
+- src/stoneage_browser_battle_critical_damage_runtime.mjs
+- data/generated/stoneage_browser_battle_critical_damage_schema.json
+- tools/check_v403_browser_battle_critical_damage.mjs
+- docs/reference/v403-browser-battle-critical-damage.md
+- .github/workflows/check-v403-browser-battle-critical-damage.yml
+
+Controller integration：
+- ACTION_BATTLE_CRITICAL_DAMAGE_PLAN
+- BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT
