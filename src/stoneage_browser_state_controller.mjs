@@ -417,7 +417,7 @@ function createBrowserStateController({
         return {
           ...result,
           format:BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
-          battleContext:battleContext?clone(battleContext):null,
+          battleContext:result.battleContext?clone(result.battleContext):(battleContext?clone(battleContext):null),
           state:clone(currentState)
         };
       }
@@ -461,7 +461,7 @@ function createBrowserStateController({
         return {
           ...result,
           format:BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
-          battleContext:battleContext?clone(battleContext):null,
+          battleContext:result.battleContext?clone(result.battleContext):(battleContext?clone(battleContext):null),
           state:clone(currentState)
         };
       }
