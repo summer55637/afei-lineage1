@@ -55,6 +55,8 @@ const economy = loadJson('data/generated/stoneage_item_economy_runtime_schema.js
 const seed = loadJson('data/generated/stoneage_new_player_seed_runtime.json') ?? {};
 const idle = loadJson('data/generated/stoneage_first_idle_route_catalog.json') ?? {};
 const disabled = loadJson('data/generated/stoneage_disabled_features.json') ?? {};
+const reopenedFeatures = loadJson('data/generated/stoneage_reopened_features.json') ?? {};
+const blockerRegistry = loadJson('data/generated/stoneage_blocker_registry.json') ?? {};
 const starterItemAudit = loadJson('data/generated/stoneage_starter_item_24114_source_audit.json') ?? {};
 const starterItemBuildAudit = loadJson('data/generated/stoneage_starter_item_24114_build_closure_audit.json') ?? {};
 const endpointCatalog = loadJson('data/generated/stoneage_endpoint_source_catalog.json') ?? {};
@@ -86,6 +88,10 @@ const idleSummary = idle.summary ?? {};
 const disabledNames = Object.entries(disabled.features ?? {})
   .filter(([, value]) => value?.disabled === true || value?.playable === false)
   .map(([name]) => name);
+const reopenedFeatureNames = Object.entries(reopenedFeatures.features ?? {})
+  .filter(([, value]) => value?.status)
+  .map(([name, value]) => ({ name, status: value.status }));
+const blockerEntries = Object.entries(blockerRegistry.blockers ?? {});
 
 const auto = [
   START,
@@ -162,11 +168,23 @@ const auto = [
   ...(route.remainingWork ?? []).slice(0, 3).map((item, index) => (index + 1) + '. ' + item),
   ...(!starterItemBuildAudit.resolution?.productionStarterGrantAllowed ? ['4. Starter Item 24114：pinned source max ID ' + (starterItemBuildAudit.itemSource?.maxSourceItemId ?? '—') + ' → ITEM_tblen ' + (starterItemBuildAudit.itemSource?.derivedItemTableLength ?? '—') + '，configured 24114 is out of range；source row is id ' + (starterItemBuildAudit.exactRow?.sourceItemId ?? '—') + ' / imagenumber 24114；keep fail-closed and do not remap.'] : []),
   '',
-  '### 永久停用',
+  '### 重新開放追查',
+  '',
+  ...(reopenedFeatureNames.length
+    ? reopenedFeatureNames.map(item => '- ' + item.name + '：' + item.status + '；runtime/playable 不會因為重開追查而自動啟用。')
+    : ['- 目前沒有重新開放追查中的 feature。']),
+  '',
+  '### 目前 Blocker',
+  '',
+  ...(blockerEntries.length
+    ? blockerEntries.map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + '；下一步：' + (item.next ?? '—'))
+    : ['- 目前沒有登錄中的 blocker。']),
+  '',
+  '### 目前停用',
   '',
   ...(disabledNames.length
-    ? disabledNames.map(name => '- ' + name + '：維持永久停用，不由後續版本自動恢復。')
-    : ['- 目前沒有標記永久停用的 feature。']),
+    ? disabledNames.map(name => '- ' + name + '：目前停用；移出停用清單後仍需重新完成 source closure / regression 才能啟用。')
+    : ['- 目前沒有標記為停用的 feature。']),
   '',
   '### 資料時間',
   '',
