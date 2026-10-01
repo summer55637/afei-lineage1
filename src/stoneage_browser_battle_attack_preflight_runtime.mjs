@@ -3,6 +3,7 @@ const ACTION_BATTLE_ATTACK_PREFLIGHT='BATTLE_ATTACK_PREFLIGHT';
 const BATTLE_COM_ATTACK=1;
 const BATTLE_COM_BOOMERANG=8;
 const SIDE_OFFSET=10;
+import { resolveDefaultTarget } from './stoneage_browser_battle_default_target_runtime.mjs';
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const toInt=value=>{
@@ -45,19 +46,76 @@ function resolveAttackExecutionTarget(context,{attackerBid=null,targetBid=null,d
     !(toInt(target.hp)!=null&&toInt(target.hp)<=0)
   );
   if(!targetEligible){
+    const attackerSide=attackerN>=SIDE_OFFSET?1:0;
+    const fallbackSide=1-attackerSide;
+    const fallback=resolveDefaultTarget(context,{side:fallbackSide,defaultTargetRoll});
+    if(!fallback.ok){
+      return {
+        ok:false,handled:false,stage:'battle-attack-preflight',
+        reason:fallback.reason??'default-target-resolution-failed',
+        attackerBid:attackerN,
+        requestedTargetBid:targetN,
+        defaultAttackerRequired:true,
+        defaultTarget:fallback,
+        persistentMutation:false,
+        rngConsumed:false
+      };
+    }
+    if(fallback.defaultTargetResolved!==true){
+      return {
+        ok:true,handled:true,stage:'battle-attack-preflight-no-target',
+        format:BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT,
+        action:ACTION_BATTLE_ATTACK_PREFLIGHT,
+        attackerBid:attackerN,
+        requestedTargetBid:targetN,
+        finalTargetBid:-1,
+        targetResolved:false,
+        defaultAttackerRequired:true,
+        defaultTarget:fallback,
+        sourceTargetAdjust:true,
+        persistentMutation:false,
+        rngConsumed:fallback.rngConsumed===true,
+        damageExecuted:false
+      };
+    }
+    finalTargetBid=fallback.selectedBid;
+    targetSource='default-attacker';
+    const fallbackTarget=findEntryByBid(context,finalTargetBid);
+    if(!fallbackTarget||toInt(fallbackTarget.hp)==null||toInt(fallbackTarget.hp)<=0){
+      return {
+        ok:false,handled:false,stage:'battle-attack-preflight',
+        reason:'default-target-selected-but-not-attackable',
+        attackerBid:attackerN,
+        selectedTargetBid:finalTargetBid,
+        defaultTarget:fallback,
+        persistentMutation:false,
+        rngConsumed:true
+      };
+    }
+    const damageReactAttacker=Math.max(0,toInt(attacker.damageReact)??0);
+    const damageReactTarget=Math.max(0,toInt(fallbackTarget.damageReact)??0);
     return {
-      ok:true,handled:true,stage:'battle-attack-preflight-target-invalid',
+      ok:true,handled:true,stage:'battle-attack-preflight-ready',
       format:BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT,
       action:ACTION_BATTLE_ATTACK_PREFLIGHT,
       attackerBid:attackerN,
       requestedTargetBid:targetN,
-      finalTargetBid:-1,
-      targetResolved:false,
-      defaultAttackerRequired:true,
-      defaultTargetRoll:defaultTargetRoll==null?null:toInt(defaultTargetRoll),
+      finalTargetBid,
+      targetResolved:true,
+      targetSource,
       sourceTargetAdjust:true,
+      attackerHp:toInt(attacker.hp),
+      targetHp:toInt(fallbackTarget.hp),
+      damageReactSuppressed:damageReactAttacker>0||damageReactTarget>0,
+      damageReact:{attacker:damageReactAttacker,target:damageReactTarget},
+      fixedC:{
+        attackerHpGate:true,
+        targetHpGate:true,
+        damageReactSetsIRetFalseButAttackSeqStillRuns:damageReactAttacker>0||damageReactTarget>0
+      },
+      defaultTarget:fallback,
+      rngConsumed:true,
       persistentMutation:false,
-      rngConsumed:false,
       damageExecuted:false
     };
   }
