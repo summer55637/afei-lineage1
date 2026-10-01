@@ -36,11 +36,6 @@ const tamperedPlayerCommit=commitBattlePlayerExit(state,tamperedPlayer,{transact
 assert.equal(tamperedPlayerCommit.ok,false);
 assert.equal(tamperedPlayerCommit.reason,'settlement-receipt-revision-mismatch');
 
-const tamperedPet={...petPlan,settlementReceiptRevision:6};
-const tamperedPetCommit=commitBattleExit(state,tamperedPet,{transactionId:'exit-pet-425',expectedRevision:7});
-assert.equal(tamperedPetCommit.ok,false);
-assert.equal(tamperedPetCommit.reason,'settlement-receipt-revision-mismatch');
-
 const playerDone=commitBattlePlayerExit(state,playerPlan,{transactionId:'exit-player-425',expectedRevision:7});
 assert.equal(playerDone.ok,true,JSON.stringify(playerDone));
 assert.equal(playerDone.state.revision,8);
@@ -52,6 +47,11 @@ assert.equal(petPlan.settlementReceiptBound,true);
 assert.equal(petPlan.settlementReceiptId,'settle-425');
 assert.equal(petPlan.playerExitTransactionId,'exit-player-425');
 assert.equal(petPlan.playerExitRevision,8);
+
+const tamperedPet={...petPlan,settlementReceiptRevision:6};
+const tamperedPetCommit=commitBattleExit(playerDone.state,tamperedPet,{transactionId:'exit-pet-425',expectedRevision:8});
+assert.equal(tamperedPetCommit.ok,false);
+assert.equal(tamperedPetCommit.reason,'settlement-receipt-revision-mismatch');
 
 const petDone=commitBattleExit(playerDone.state,petPlan,{transactionId:'exit-pet-425',expectedRevision:8});
 assert.equal(petDone.ok,true,JSON.stringify(petDone));
