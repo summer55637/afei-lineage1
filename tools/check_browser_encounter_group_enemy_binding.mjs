@@ -42,6 +42,12 @@ const coreStatRolls=[
   assert.equal(build.ok,true,JSON.stringify(build));
   assert.equal(build.context.sourceGroupId,94);
   assert.deepEqual(build.context.sides[1].entries.filter(Boolean).map(x=>x.enemyId),[120,123]);
+  assert.equal(build.context.enemyCoreStatHydrated,true);
+  assert.equal(build.context.enemyCoreStatRngRollCount,30);
+  assert.equal(build.context.sides[1].entries[5].enemyId,120);
+  assert.equal(build.context.sides[1].entries[5].sourceCoreStats.level,2);
+  assert.equal(build.context.sides[1].entries[8].enemyId,123);
+  assert.equal(build.context.sides[1].entries[8].sourceCoreStats.level,2);
   assert.equal(c.getBattleContext().context.sourceGroupId,94);
 }
 
