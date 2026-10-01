@@ -54,7 +54,7 @@ assert.equal(noAttr.damage,145);
 assert.equal(noAttr.attributeApplied,false);
 
 const nearCtx=structuredClone(ctx);
-nearCtx.context.sides[0].entries[0].attackPower=30;
+nearCtx.context.sides[0].entries[0].attackPower=25;
 nearCtx.context.sides[1].entries[0].defencePower=50;
 nearCtx.context.sides[1].entries[0].quick=0;
 nearCtx.context.sides[1].entries[0].fixVital=0;
@@ -75,7 +75,7 @@ assert.equal(result.rawDamage,1);
 
 const attrCtx=structuredClone(ctx);
 attrCtx.context.sides[0].entries[0].elements={earth:100,water:0,fire:0,wind:0};
-attrCtx.context.sides[1].entries[0].elements={earth:0,water:0,fire:100,wind:0};
+attrCtx.context.sides[1].entries[0].elements={earth:0,water:100,fire:0,wind:0};
 result=damagePlan(attrCtx,{attackerBid:0,targetBid:10,damageRollWide:6.25,includeAttr:true});
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.damageBeforeAttribute,145);
