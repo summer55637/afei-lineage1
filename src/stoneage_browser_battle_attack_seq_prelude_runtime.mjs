@@ -49,9 +49,9 @@ function duckCheck(entryAtt,entryDef,{
   hitRightRoll=null
 }={}){
   const command=int(entryDef?.battleCommands?.[0])??-1;
-  if(command===BATTLE_COM_GUARD)return {ok:true,dodged:false,reason:'defender-guard'};
-  if(num(entryDef?.damageReact)>0)return {ok:true,dodged:false,reason:'defender-damage-react'};
-  if(entryDef?.canMove===false)return {ok:true,dodged:false,reason:'defender-cannot-move'};
+  if(command===BATTLE_COM_GUARD)return {ok:true,dodged:false,rollRequired:false,rngConsumed:false,reason:'defender-guard'};
+  if(num(entryDef?.damageReact)>0)return {ok:true,dodged:false,rollRequired:false,rngConsumed:false,reason:'defender-damage-react'};
+  if(entryDef?.canMove===false)return {ok:true,dodged:false,rollRequired:false,rngConsumed:false,reason:'defender-cannot-move'};
   const flags=int(entryDef?.battleFlg)??0;
   if(flags&CHAR_BATTLEFLG_NODUCK)return {ok:true,dodged:false,reason:'defender-no-duck-flag'};
   if(flags&CHAR_BATTLEFLG_ABIO)return {ok:true,dodged:false,reason:'defender-abio-flag'};
