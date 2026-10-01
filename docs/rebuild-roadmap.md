@@ -3,6 +3,18 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 V4.25 follow-up：Serialize Browser Controller dispatch
+
+本輪在 battle context clear → Idle moving → 下一次 encounter 的回圈再做一次 concurrency audit，確認單靠各 runtime 的 expectedRevision 還不足以阻止同一個 Controller 內的兩個 async action 同時讀到相同的 currentState。
+
+Browser State Controller 現在用單一 Promise tail 串行化 dispatch：後送的 action 必須等前一個 action resolve 或 reject 後才能開始，因此不會有兩個 mutating action 同時從同一個 revision N 建立各自的 revision N+1。
+
+既有 runtime-level expectedRevision 仍保留；本輪是 Controller-level ordering hardening，不改 fixed-C movement、encounter、battle、reward、EXP、Gold、Item 或 RNG 規則。
+
+新增 regression：tools/check_v426_browser_state_controller_dispatch_serialization.mjs，驗證兩個同時送出的 encounter commit 不會雙重提交，同時驗證舊 expectedRevision 仍 fail-closed。
+
+
+
 
 
 ## 2026-10-01 V4.25 follow-up：Remove Battle Context Clear bypass
@@ -48,9 +60,7 @@ V4.25 的 settlement receipt gate 已經證明「這場結算真的存在」；�
 - Pet Exit transaction 同樣留下 settlement 與 Player Exit binding，供後續 trace / regression 使用。
 - State Controller 仍只在 `BATTLE_EXIT_COMMIT` 真正成功後清除 transient Battle Context，因此現在順序被固定為：
 
-NaN
-
-NaN
+Settlement Receipt → Player Exit → Pet Exit → Battle Context Clear → World / NPC / Movement re-entry
 ## 2026-10-01 新增：V4.25 Browser Battle Settlement Receipt-Bound Exit Gate
 
 V4.24 已經把 live Battle Context 的 `IDLE_EVENTS.REWARD_APPLIED` 改成必須通過可驗證的 Settlement Receipt；本輪再把同一個證據邊界延伸到 final Player / Pet Exit，避免 `settlementComplete=true` 單獨成為呼叫端宣告。
