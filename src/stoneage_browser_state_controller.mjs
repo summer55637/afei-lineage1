@@ -1063,6 +1063,9 @@ function createBrowserStateController({
         return {...resolved,state:clone(currentState)};
       }
       if(type===ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         const idleMode=String(currentState?.idle?.mode??'');
         if(idleMode!=='encounter_pending')return {ok:false,handled:false,stage:'battle-context',reason:'idle-state-not-encounter-pending',idleMode,state:clone(currentState)};
         if(!Array.isArray(action.enemyTeam)||action.enemyTeam.length<1)return {ok:false,handled:false,stage:'battle-context',reason:'enemy-team-required',state:clone(currentState)};
@@ -1224,6 +1227,9 @@ function createBrowserStateController({
         resolvedWorldNpc=located.npc;
       }
       if(type===ACTION_NPC_WARP_EXECUTE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!warpRuntime)return {ok:false,handled:false,stage:'warp-runtime',reason:'browser-warp-runtime-not-configured',state:clone(currentState)};
         if(warpRuntime.ok!==true)return {ok:false,handled:false,stage:'warp-runtime',reason:warpRuntime.reason??'browser-warp-runtime-invalid',errors:warpRuntime.errors??[],state:clone(currentState)};
         const player=action.player??null;
@@ -1239,6 +1245,9 @@ function createBrowserStateController({
         return {...result,stage:result.stage??'warp',worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_NPC_EVENT_EXECUTE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!moduleAudit)return {ok:false,handled:false,stage:'npc-event',reason:'npc-event-module-audit-required',state:clone(currentState)};
         const npc=requestedNpc??resolvedWorldNpc;
         if(!npc)return {ok:false,handled:false,stage:'npc-event',reason:'npc-event-npc-required',state:clone(currentState)};
@@ -1260,9 +1269,15 @@ function createBrowserStateController({
         return {...result,stage:'npc-event',event:true,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_NPC_RESOLVE_AT){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         return {ok:true,handled:true,stage:'world-npc-resolution',worldNpc:clone(resolvedWorldNpc),state:clone(currentState)};
       }
       if(type===ITEMSHOP_UI_OPEN){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!itemShopRuntime)return {ok:false,handled:false,stage:'itemshop-ui',reason:'browser-itemshop-runtime-not-configured',state:clone(currentState),ui:clone(itemShopUi)};
         if(itemShopRuntime.ok!==true)return {ok:false,handled:false,stage:'itemshop-ui',reason:'browser-itemshop-runtime-invalid',errors:itemShopRuntime.errors??[],state:clone(currentState),ui:clone(itemShopUi)};
         const npc=requestedNpc??resolvedWorldNpc;
@@ -1274,23 +1289,35 @@ function createBrowserStateController({
         return {...opened,handled:true,stage:'shop-ui-open',format:ITEMSHOP_UI_STATE_FORMAT,ui:clone(itemShopUi),state:clone(currentState)};
       }
       if(type===ITEMSHOP_UI_SELECT_OFFER){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         const selected=selectItemShopUiOffer(itemShopUi,action.itemId);
         if(!selected.ok)return {ok:false,handled:false,stage:'shop-ui',reason:selected.reason,state:clone(currentState),ui:clone(selected.state)};
         itemShopUi=selected.state;
         return {ok:true,handled:true,stage:'shop-ui-select-offer',format:ITEMSHOP_UI_STATE_FORMAT,offer:selected.offer,ui:clone(itemShopUi),state:clone(currentState)};
       }
       if(type===ITEMSHOP_UI_SET_QUANTITY){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         const changed=setItemShopUiQuantity(itemShopUi,action.quantity);
         if(!changed.ok)return {ok:false,handled:false,stage:'shop-ui',reason:changed.reason,state:clone(currentState),ui:clone(changed.state)};
         itemShopUi=changed.state;
         return {ok:true,handled:true,stage:'shop-ui-set-quantity',format:ITEMSHOP_UI_STATE_FORMAT,quantity:changed.quantity,ui:clone(itemShopUi),state:clone(currentState)};
       }
       if(type===ITEMSHOP_UI_CLOSE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         const closed=closeItemShopUiState(itemShopUi);
         itemShopUi=closed.state;
         return {ok:true,handled:true,stage:'shop-ui-close',format:ITEMSHOP_UI_STATE_FORMAT,ui:clone(itemShopUi),state:clone(currentState)};
       }
       if(type===ACTION_NPC_SAVEPOINT_SET||type===ACTION_NPC_SAVEPOINT_CONFIRM){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!savePointRuntime)return {ok:false,handled:false,stage:'savepoint-runtime',reason:'browser-savepoint-runtime-not-configured',state:clone(currentState)};
         if(savePointRuntime.ok!==true)return {ok:false,handled:false,stage:'savepoint-runtime',reason:savePointRuntime.reason??'browser-savepoint-runtime-invalid',errors:savePointRuntime.errors??[],state:clone(currentState)};
         const player=action.player??null;
@@ -1300,6 +1327,9 @@ function createBrowserStateController({
         return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_NPC_HEALER_USE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!healerRuntime)return {ok:false,handled:false,stage:'healer-runtime',reason:'browser-healer-runtime-not-configured',state:clone(currentState)};
         if(healerRuntime.ok!==true)return {ok:false,handled:false,stage:'healer-runtime',reason:healerRuntime.reason??'browser-healer-runtime-invalid',errors:healerRuntime.errors??[],state:clone(currentState)};
         const player=action.player??null;
@@ -1309,6 +1339,9 @@ function createBrowserStateController({
         return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
       }
       if([ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL].includes(type)){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         if(!itemShopRuntime)return {ok:false,handled:false,stage:'itemshop-runtime',reason:'browser-itemshop-runtime-not-configured',state:clone(currentState)};
         if(itemShopRuntime.ok!==true)return {ok:false,handled:false,stage:'itemshop-runtime',reason:itemShopRuntime.reason??'browser-itemshop-runtime-invalid',errors:itemShopRuntime.errors??[],state:clone(currentState)};
         const transactionId=String(action.transactionId??`${transactionPrefix}-itemshop-${++sequence}`).trim();
@@ -1323,6 +1356,9 @@ function createBrowserStateController({
         return {...result,ui:clone(itemShopUi),state:clone(result.state??currentState)};
       }
       if(type!==ACTION_NPC_TALK){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+
         return {ok:false,handled:false,reason:'unsupported-browser-action',type,state:clone(currentState)};
       }
       const transactionId=String(action.transactionId??`${transactionPrefix}-${++sequence}`).trim();
