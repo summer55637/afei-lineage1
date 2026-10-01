@@ -201,6 +201,7 @@ for(const raw of readText(configPath).replace(/\r/g,'').split('\n')){
 const worldNpc={
   format:'stoneage-world-npc-index-v1',generatedAt:'2026-09-30',
   sourceRole,
+  sourceIdentity:{repository:sourceRepo,ref:sourceRef},
   fixedSource:{repository:sourceRepo,ref:sourceRef},
   statistics:{
     npcFiles:allFiles.length,templateFiles:extCounts['.template']??0,templateBlocks:templateRecords.length,
@@ -220,6 +221,7 @@ const worldNpc={
 const serverConfig={
   format:'stoneage-server-config-index-v1',generatedAt:'2026-09-30',
   sourceRole,
+  sourceIdentity:{repository:sourceRepo,ref:sourceRef,path:'gmsv/setup.cf',
   fixedSource:{repository:sourceRepo,ref:sourceRef,path:'gmsv/setup.cf',sha256:sha256(fs.readFileSync(configPath)),sizeBytes:fs.statSync(configPath).size},
   statistics:{pairCount:configPairs.length,uniqueKeyCount:Object.keys(configMap).length,duplicateKeyCount:Object.values(configMap).filter(a=>a.length>1).length},
   keyIndex:configPairs,valuesByKey:configMap,
@@ -229,6 +231,7 @@ const serverConfig={
 const warpIndex={
   format:'stoneage-mapwarp-source-index-v1',generatedAt:'2026-09-30',
   sourceRole,
+  sourceIdentity:{repository:sourceRepo,ref:sourceRef,path:'gmsv/data/map/mapwarp.txt',
   fixedSource:{repository:sourceRepo,ref:sourceRef,path:'gmsv/data/map/mapwarp.txt',sha256:sha256(fs.readFileSync(mapwarpPath)),sizeBytes:fs.statSync(mapwarpPath).size},
   statistics:{
     rows:mapwarp.length,
