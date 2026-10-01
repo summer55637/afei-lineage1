@@ -160,17 +160,16 @@ assert(sqlCheck.dumpCompletedMarker,'175sa.sql missing completed marker');
 
 const mapPrefix='ro0000/server/merged-source/gmsv/data/map/';
 const mapFiles=files.filter(x=>x.path.startsWith(mapPrefix)&&!path.posix.basename(x.path).includes('.'));
-let ls2map=0, nonLs2map=0; const mapNonMatches=[];
-for(const entry of mapFiles){
-  const b=fs.readFileSync(path.join(ROOT,entry.path));
-  if(b.subarray(0,6).toString('ascii')==='LS2MAP') ls2map++;
-  else { nonLs2map++; if(mapNonMatches.length<20) mapNonMatches.push(entry.path); }
-}
+let ls2map=0, lsAndMap=0, nonLs2map=0; const mapNonMatches=[];
 const signatureCounts=new Map();
 for(const entry of mapFiles){
   const b=fs.readFileSync(path.join(ROOT,entry.path));
+  const magic=b.subarray(0,6).toString('ascii');
   const sig=b.subarray(0,6).toString('hex');
   signatureCounts.set(sig,(signatureCounts.get(sig)||0)+1);
+  if(magic==='LS2MAP') ls2map++;
+  else if(magic==='LS&MAP') lsAndMap++;
+  else { nonLs2map++; if(mapNonMatches.length<20) mapNonMatches.push(entry.path); }
 }
 
 const coreFiles=[
@@ -202,6 +201,7 @@ console.log(JSON.stringify({
   mapSignatureCheck:{
     candidateFiles:mapFiles.length,
     ls2map,
+    lsAndMap,
     nonLs2map,
     commonFirst6Bytes:[...signatureCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10).map(([signature,count])=>({signature,count})),
     sampleNonMatches:mapNonMatches
