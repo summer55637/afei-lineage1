@@ -303,7 +303,7 @@ const isolatedResidueAudit=JSON.parse(fs.readFileSync(isolatedResidueAuditPath,'
 assert(isolatedResidueAudit.format==='stoneage-ro0000-isolated-residue-audit-v1','ro0000 isolated residue audit format drift');
 assert(isolatedResidueAudit.ro0000TreeSha===ro0000TreeSha,'ro0000 isolated residue audit tree SHA drift');
 assert(isolatedResidueAudit.entries?.length===10,'ro0000 isolated residue audit entry count drift');
-assert(isolatedResidueAudit.entries?.filter(x=>x.runtimeEligibility==='unproven').length===9,'ro0000 isolated residue eligibility drift');
+assert(isolatedResidueAudit.entries?.filter(x=>x.runtimeEligibility==='unproven').length===7,'ro0000 isolated residue eligibility drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='huoyue-bak' && x.runtimeEligibility==='not-canonical'),'ro0000 huoyue residue classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-data' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng data loader classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-hydata' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng hydata loader classification drift');
