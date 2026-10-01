@@ -20,6 +20,10 @@ function state(){
 function controller(){return createBrowserStateController({state:state(),idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,encounterGroupCatalog:groupCatalog,battleFieldNoProvider:0});}
 
 const encounter={encounterId:65,floorId:100,x:610,y:538};
+const coreStatRolls=[
+  {levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:[0,0,0,0,0,0,0,0,0,0]},
+  {levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:[0,0,0,0,0,0,0,0,0,0]}
+];
 
 {
   const c=controller();
@@ -30,11 +34,11 @@ const encounter={encounterId:65,floorId:100,x:610,y:538};
   const group=await c.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounter,groupRoll:2});
   assert.equal(group.ok,true,JSON.stringify(group));
   assert.equal(group.group.groupId,94);
-  const generated=await c.dispatch({type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,encounter,groupId:94,entryMaxRoll:2,enemyRolls:[0,1]});
+  const generated=await c.dispatch({type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,encounter,groupId:94,entryMaxRoll:2,enemyRolls:[0,1],enemyStatRolls:coreStatRolls});
   assert.equal(generated.ok,true,JSON.stringify(generated));
   assert.equal(generated.team.length,2);
   assert.deepEqual(generated.team.map(x=>x.enemyId),[120,123]);
-  const build=await c.dispatch({type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,encounter,groupId:94,battleFieldNo:0,enemyTeam:generated.team});
+  const build=await c.dispatch({type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,encounter,groupId:94,battleFieldNo:0,enemyTeam:generated.team,materializeEnemyStats:true});
   assert.equal(build.ok,true,JSON.stringify(build));
   assert.equal(build.context.sourceGroupId,94);
   assert.deepEqual(build.context.sides[1].entries.filter(Boolean).map(x=>x.enemyId),[120,123]);
@@ -52,6 +56,12 @@ const encounter={encounterId:65,floorId:100,x:610,y:538};
   assert.equal(rejected.ok,false,JSON.stringify(rejected));
   assert.equal(rejected.stage,'battle-context-encounter-binding');
   assert.equal(rejected.reason,'enemy-team-generation-mismatch');
+  const mismatchedRolls=structuredClone(coreStatRolls);
+  mismatchedRolls[0].levelRoll=1;
+  const rollRejected=await c.dispatch({type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,encounter,groupId:94,battleFieldNo:0,enemyTeam:generated.team,materializeEnemyStats:true,enemyStatRolls:mismatchedRolls});
+  assert.equal(rollRejected.ok,false,JSON.stringify(rollRejected));
+  assert.equal(rollRejected.stage,'enemy-core-stat-binding');
+  assert.equal(rollRejected.reason,'enemy-stat-roll-plan-mismatch');
   assert.equal(c.getState().revision,0);
 }
 
@@ -62,4 +72,4 @@ const encounter={encounterId:65,floorId:100,x:610,y:538};
   assert.equal(badOrder.reason,'encounter-group-selection-required');
 }
 
-console.log(JSON.stringify({pass:true,contract:'encounter-group-enemy-generation-binding',groupRequired:true,enemyRosterBound:true,buildConsumesTransientPlan:true,manualTamperRejected:true},null,2));
+console.log(JSON.stringify({pass:true,contract:'encounter-group-enemy-generation-binding',groupRequired:true,enemyRosterBound:true,coreStatRollsBound:true,buildConsumesTransientPlan:true,manualTamperRejected:true},null,2));
