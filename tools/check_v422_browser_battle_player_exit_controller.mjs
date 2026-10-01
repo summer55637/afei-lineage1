@@ -107,7 +107,7 @@ const reward=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.REWARD_APPLIED,
   payload:{settlementReceiptId:'battle-v422-settlement',reward:{sourceResultId:'v422-battle'},supplyRequired:false},
-  expectedRevision:finished.state.revision,
+  expectedRevision:settlementReceipt.state.revision,
   now:'2026-10-01T12:10:02.000Z'
 });
 assert.equal(reward.ok,true,JSON.stringify(reward));
