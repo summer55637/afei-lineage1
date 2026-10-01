@@ -1921,6 +1921,33 @@ Controller integration：
 
 下一步：回到 fixed-C 外層 battle lifecycle，處理 finish 後 `BATTLE_Exit()` 等 battle entry cleanup 與 Idle/World return boundary，不把 transient battle context 永久留在 world state。
 
+## 2026-10-01 V4.22 Browser Battle Player Exit State Plan / Commit
+
+V4.22 closes the remaining Browser-to-Persistent-State gap for the final Player HP/MP result, while keeping the existing V4.21 Pet cleanup boundary intact.
+
+Fixed-C evidence:
+- `BATTLE_Exit()` final player cleanup clears the death state and sets a dead Player's HP to 1.
+- Existing `stoneage_idle_simulation.mjs` already treats the finished Battle Result Player HP/MP snapshot as battle-runtime output before Save.
+
+Browser runtime:
+- `BATTLE_PLAYER_EXIT_PLAN` accepts only finish-mode Battle Context and explicit `settlementComplete=true`.
+- side-0 `bid=0` Player HP/MP are read from the transient Battle Context.
+- live Player keeps the battle HP/MP snapshot;
+- dead / HP<=0 Player commits HP 1 and the battle MP snapshot;
+- no new damage, reward, EXP, Gold, RNG, or death-recovery policy is introduced.
+
+Commit:
+- validates transactionId, expectedRevision and Persistent Player HP/MP snapshot;
+- mutates only `state.player.hp` / `state.player.mp`;
+- revision increments once;
+- duplicate transactionId is idempotent;
+- stale HP/MP plans fail-closed.
+
+同時修正一個 Controller lifecycle 問題：`IDLE_EVENTS.BATTLE_FINISHED` 只能把 Idle state 由 `in_battle → settlement`，不能提前清掉 memory-held Battle Context。Final Battle Context teardown 由 V4.21 `BATTLE_EXIT_COMMIT` 擁有，確保 Finish → Settlement → Player Exit State → Pet Exit 的順序完整。
+
+Lifecycle 現在為：
+`Finish Commit → IDLE battle_finished → settlement → reward/other commits → V4.22 Player Exit State Commit → V4.21 Pet Exit Plan/Commit → clear Battle Context`
+
 ## 2026-10-01 V4.21 Browser Battle Exit Closure Regression
 
 V4.21 不新增新的 Battle 規則；本輪補強的是最後一段 lifecycle contract：
