@@ -1,0 +1,123 @@
+=========================================================================
+
+隐盟论坛：www.ymlt.vip           www.19ur.com
+
+
+解压密码：www.ymlt.vip
+=========================================================================
+
+
+冰河石器   Linux  搭建教程
+
+测试系统：CentOS 7.6
+
+
+需要13位长度的IP
+
+
+
+安装宝塔：
+
+yum install -y wget && wget -O install.sh https://download.bt.cn/install/install_6.0.sh && sh install.sh
+
+输入y回车确认安装
+
+
+
+安装环境：
+Nginx 1.24
+Mysql 5.7
+php 7.2
+
+
+
+放行端口：1-65535
+
+关闭防火墙
+
+systemctl stop firewalld.service  
+systemctl disable firewalld.service
+
+
+
+上传服务端bhsq.zip到服务器根目录："/"
+
+解压服务端：
+
+cd / && unzip bhsq.zip
+
+
+给予777权限：
+
+chmod -R 777 /home
+
+
+重启Nginx：
+
+/etc/init.d/nginx restart
+
+
+
+
+修改服务端文件IP：替换：192.168.0.45
+
+/www/wwwroot/game/SA25/serverlist.php
+
+
+
+数据库修改root密码：df31c1c74b3e16fa
+
+修改数据库配置：
+
+软件商店 - MySQL 5.7 - 设置 - 配置文件 第26行加入：
+
+lower_case_table_names=1
+
+保存，重载配置 - 重启MySQL
+
+
+导入数据库：
+
+cd /home/175sa && ./sk
+
+
+
+启动服务：
+
+cd /home/175sa && ./start.sh
+
+关闭服务：
+
+cd /home/175sa && ./stop.sh
+
+
+PS：
+
+如果启动失败运行修复命令后再重新启动游戏：
+
+修复命令：
+
+cd /home/175sa
+./fix_ablua_ftype.sh
+
+
+
+客户端修改：
+
+安卓：替换：192.168.8.128
+
+\lib\armeabi-v7a\libStoneage.so
+
+\lib\x86\libStoneage.so
+
+
+
+简易充值后台：
+
+http://IP:89/gm
+
+账号：admin
+
+密码：19ur.com
+
+=========================================================================
