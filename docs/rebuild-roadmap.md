@@ -3,6 +3,18 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 V4.25 follow-up：Bind Enemy Core Stat Hydration to Generated Roster
+
+本輪繼續往 Enemy Generate → Core Stat Hydration → Battle Initialize 檢查，發現單純綁定 enemyTeam 還不夠：後續 hydration 的 RNG rolls 如果可以任意替換，實際進 Battle Context 的數值就可能與已生成 roster 脫鉤。
+
+現在當 encounter group catalog 已配置時，Enemy Generate 可以建立同一個 transient core-stat roll plan；Battle Context 若要求 materializeEnemyStats，必須使用同一份 rolls，或提供與 plan 完全一致的副本。不同 rolls 直接 fail-closed。
+
+Hydration 仍由既有 ENEMY core-stat runtime 執行，固定 15 calls / enemy 的已定義 schema 不變；本輪沒有重新選 enemy，也沒有改 rank、base stats、HP、EXP、Gold、Item 或其他 battle 數值規則。
+
+新增 regression 延伸到 tools/check_browser_encounter_group_enemy_binding.mjs：確認兩名 source enemy 的 core stats 實際進入 Battle Context、roll plan 被竄改會拒絕、Context 建立後 transient plan 不能 replay。
+
+固定 C audit 仍以 pinned gavinlinasd/StoneAge ref 為最高來源。
+
 ## 2026-10-01 V4.25 follow-up：Bind Encounter Group → Enemy Generation → Battle Context
 
 本輪繼續檢查下一場 battle 的 enemy roster provenance，發現即使 encounter / groupId 正確，ENCOUNTER_BATTLE_CONTEXT_BUILD 仍可能直接接受 caller 自己組出的 enemyTeam，導致「選到 Group A、實際打 Group B」的替換風險。
