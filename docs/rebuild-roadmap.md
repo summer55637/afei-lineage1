@@ -1383,3 +1383,20 @@ Browser 使用 caller-injected `defaultTargetRoll`，因此不在 runtime 內藏
 
 V3.99 仍不修改 Battle Context、不執行 Attack/Damage；下一層再把 resolved target 交給真正的 `BATTLE_Attack()` 前置 boundary。
 
+## 2026-10-01 V4.00 Browser Battle Attack Preflight
+
+V4.00 把 fixed-C `BATTLE_Attack()` 的入口 admission boundary 接上 V3.98/V3.99 target chain：
+
+`requested target → BATTLE_TargetCheck → invalid 時 BATTLE_DefaultAttacker(opposite side) → final target → attacker/target HP gate → 可進 BATTLE_AttackSeq`
+
+V4.00 明確保留 fixed-C 的 DamageReact 語意：attacker 或 target DamageReact > 0 時先把 `iRet=FALSE)，但來源仍會進 `BATTLE_AttackSeq()`；本版不把它誤判成完全禁止 Attack。
+
+新增：
+- `src/stoneage_browser_battle_attack_preflight_runtime.mjs`
+- `data/generated/stoneage_browser_battle_attack_preflight_schema.json`
+- `tools/check_v400_browser_battle_attack_preflight.mjs`
+- `docs/reference/v400-browser-battle-attack-preflight.md`
+- `.github/workflows/check-v400-browser-battle-attack-preflight.yml`
+
+V4.00 仍不執行命中/閃避/Critical RNG、`BATTLE_AttackSeq()`、`BATTLE_DamageCalc()`、Guardian、DamageReact 結算、Status、Death、Reward、Counter；這些保留在後續 source boundary。
+
