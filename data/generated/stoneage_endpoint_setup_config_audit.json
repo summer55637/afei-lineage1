@@ -1,0 +1,420 @@
+{
+  "format": "stoneage-endpoint-setup-config-audit-v1",
+  "source": {
+    "endpointPath": "ro0000/server/merged-source/gmsv/setup.cf",
+    "endpointBlobSha": "e622602627cce66561d5cf941f2723720e66d133",
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "fixedPath": "gmsv/setup.cf",
+    "fixedBlobSha": "bd834cd1a7dfa3af6e14210d0cdf15b217b0e72f"
+  },
+  "selectedKeys": [
+    {
+      "key": "CHARTRANS",
+      "endpoint": "5",
+      "fixed": "5",
+      "status": "same"
+    },
+    {
+      "key": "PETTRANS",
+      "endpoint": "-1",
+      "fixed": "-1",
+      "status": "same"
+    },
+    {
+      "key": "REVLEVEL",
+      "endpoint": "1",
+      "fixed": "1",
+      "status": "same"
+    },
+    {
+      "key": "MAXLEVEL",
+      "endpoint": "140",
+      "fixed": "140",
+      "status": "same"
+    },
+    {
+      "key": "LEVEL",
+      "endpoint": "140",
+      "fixed": "140",
+      "status": "same"
+    },
+    {
+      "key": "battleexp",
+      "endpoint": "1",
+      "fixed": "100",
+      "status": "changed"
+    },
+    {
+      "key": "TRANS",
+      "endpoint": "0",
+      "fixed": "1",
+      "status": "changed"
+    },
+    {
+      "key": "LV",
+      "endpoint": "1",
+      "fixed": "1",
+      "status": "same"
+    },
+    {
+      "key": "NPRIDE",
+      "endpoint": "0",
+      "fixed": "3",
+      "status": "changed"
+    },
+    {
+      "key": "PET1",
+      "endpoint": "",
+      "fixed": "",
+      "status": "same"
+    },
+    {
+      "key": "PET2",
+      "endpoint": "",
+      "fixed": "",
+      "status": "same"
+    },
+    {
+      "key": "PET3",
+      "endpoint": "",
+      "fixed": "",
+      "status": "same"
+    },
+    {
+      "key": "PET4",
+      "endpoint": "",
+      "fixed": "",
+      "status": "same"
+    },
+    {
+      "key": "PETLV",
+      "endpoint": "1",
+      "fixed": "1",
+      "status": "same"
+    },
+    {
+      "key": "GOLD",
+      "endpoint": "99999",
+      "fixed": "30000",
+      "status": "changed"
+    },
+    {
+      "key": "ITEM1",
+      "endpoint": "32003",
+      "fixed": "24114",
+      "status": "changed"
+    },
+    {
+      "key": "ITEM2",
+      "endpoint": "32004",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM3",
+      "endpoint": "32005",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM4",
+      "endpoint": "32006",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM5",
+      "endpoint": "32007",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM6",
+      "endpoint": "32013",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM7",
+      "endpoint": "32008",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM8",
+      "endpoint": "32009",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM9",
+      "endpoint": "32010",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM10",
+      "endpoint": "32011",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM11",
+      "endpoint": "32160",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM12",
+      "endpoint": "22407",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM13",
+      "endpoint": "22077",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM14",
+      "endpoint": "32419",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "ITEM15",
+      "endpoint": "32420",
+      "fixed": null,
+      "status": "endpoint-only"
+    },
+    {
+      "key": "mapdir",
+      "endpoint": "data/map",
+      "fixed": "data/map",
+      "status": "same"
+    },
+    {
+      "key": "maptilefile",
+      "endpoint": "data/map/mapset.txt",
+      "fixed": "data/map/mapset.txt",
+      "status": "same"
+    },
+    {
+      "key": "battlemapfile",
+      "endpoint": "data/map/battlemap.txt",
+      "fixed": "data/map/battlemap.txt",
+      "status": "same"
+    },
+    {
+      "key": "itemset6file",
+      "endpoint": "data/itemset6.csv",
+      "fixed": "data/itemset6.txt",
+      "status": "changed"
+    },
+    {
+      "key": "itemset5file",
+      "endpoint": "data/itemset5.txt",
+      "fixed": "data/itemset5.txt",
+      "status": "same"
+    },
+    {
+      "key": "itemset4file",
+      "endpoint": "data/itemset4.txt",
+      "fixed": "data/itemset4.txt",
+      "status": "same"
+    },
+    {
+      "key": "itemset3file",
+      "endpoint": "data/itemset3.txt",
+      "fixed": "data/itemset3.txt",
+      "status": "same"
+    },
+    {
+      "key": "invinciblefile",
+      "endpoint": "data/inv.txt",
+      "fixed": "data/inv.txt",
+      "status": "same"
+    },
+    {
+      "key": "appearpositionfile",
+      "endpoint": "data/appear.txt",
+      "fixed": "data/appear.txt",
+      "status": "same"
+    },
+    {
+      "key": "titlenamefile",
+      "endpoint": "data/titlename.txt",
+      "fixed": "data/titlename.txt",
+      "status": "same"
+    },
+    {
+      "key": "titleconfigfile",
+      "endpoint": "./data/titleconfig.txt",
+      "fixed": "./data/titleconfig.txt",
+      "status": "same"
+    },
+    {
+      "key": "encountfile",
+      "endpoint": "./data/encount.txt",
+      "fixed": "./data/encount.txt",
+      "status": "same"
+    },
+    {
+      "key": "enemyfile",
+      "endpoint": "./data/enemy1.txt",
+      "fixed": "./data/enemy1.txt",
+      "status": "same"
+    },
+    {
+      "key": "enemybasefile",
+      "endpoint": "./data/enemybase1.txt",
+      "fixed": "./data/enemybase1.txt",
+      "status": "same"
+    },
+    {
+      "key": "groupfile",
+      "endpoint": "./data/group1.txt",
+      "fixed": "./data/group1.txt",
+      "status": "same"
+    },
+    {
+      "key": "magicfile",
+      "endpoint": "./data/magic.txt",
+      "fixed": "./data/magic.txt",
+      "status": "same"
+    },
+    {
+      "key": "attmagicfile",
+      "endpoint": "./data/attmagic.bin",
+      "fixed": "./data/attmagic.bin",
+      "status": "same"
+    },
+    {
+      "key": "petskillfile2",
+      "endpoint": "./data/petskill2.txt",
+      "fixed": "./data/petskill2.txt",
+      "status": "same"
+    },
+    {
+      "key": "itematomfile",
+      "endpoint": "./data/itematom.txt",
+      "fixed": "./data/itematom.txt",
+      "status": "same"
+    },
+    {
+      "key": "effectfile",
+      "endpoint": "data/effect.txt",
+      "fixed": "data/effect.txt",
+      "status": "same"
+    },
+    {
+      "key": "quizfile",
+      "endpoint": "data/question.txt",
+      "fixed": "data/question.txt",
+      "status": "same"
+    },
+    {
+      "key": "npcdir",
+      "endpoint": "data/npc",
+      "fixed": "data/npc",
+      "status": "same"
+    },
+    {
+      "key": "profession",
+      "endpoint": "./data/profession.txt",
+      "fixed": "./data/profession.txt",
+      "status": "same"
+    },
+    {
+      "key": "itemquitparty",
+      "endpoint": "./data/itemquitparty.txt",
+      "fixed": "./data/itemquitparty.txt",
+      "status": "same"
+    },
+    {
+      "key": "EXPSHARE",
+      "endpoint": null,
+      "fixed": "100",
+      "status": "fixed-only"
+    }
+  ],
+  "summary": {
+    "selectedKeyCount": 55,
+    "changedCount": 21,
+    "endpointConfiguredItemCount": 15,
+    "endpointConfiguredItems": [
+      {
+        "key": "ITEM1",
+        "value": "32003"
+      },
+      {
+        "key": "ITEM2",
+        "value": "32004"
+      },
+      {
+        "key": "ITEM3",
+        "value": "32005"
+      },
+      {
+        "key": "ITEM4",
+        "value": "32006"
+      },
+      {
+        "key": "ITEM5",
+        "value": "32007"
+      },
+      {
+        "key": "ITEM6",
+        "value": "32013"
+      },
+      {
+        "key": "ITEM7",
+        "value": "32008"
+      },
+      {
+        "key": "ITEM8",
+        "value": "32009"
+      },
+      {
+        "key": "ITEM9",
+        "value": "32010"
+      },
+      {
+        "key": "ITEM10",
+        "value": "32011"
+      },
+      {
+        "key": "ITEM11",
+        "value": "32160"
+      },
+      {
+        "key": "ITEM12",
+        "value": "22407"
+      },
+      {
+        "key": "ITEM13",
+        "value": "22077"
+      },
+      {
+        "key": "ITEM14",
+        "value": "32419"
+      },
+      {
+        "key": "ITEM15",
+        "value": "32420"
+      }
+    ]
+  },
+  "safety": {
+    "sensitiveKeysExcluded": true,
+    "excluded": "passwords, addresses, ports, account/server credentials",
+    "numericMissingValuesAreNotInterpretedAsZero": true
+  },
+  "interpretation": {
+    "endpointConfigIsPrimaryDeploymentConfig": true,
+    "fixedCIsSemanticBaseline": true,
+    "configMismatchIsVariantUntilRuntimeClosure": true,
+    "noRemapFromConfigAlone": true
+  }
+}
