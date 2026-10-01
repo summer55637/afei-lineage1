@@ -5,7 +5,7 @@
   "fixedC": {
     "function": "gmsv/src/battle/battle_event.c::BATTLE_DamageCalc",
     "constants": {
-      "DEFENSE_RATE": 0.45,
+      "DEFENSE_RATE": 0.7,
       "DEF_QUICK_RATE": 0.2,
       "DEF_VITAL_RATE": 0.1,
       "DAMAGE_RATE": 2,
@@ -29,6 +29,8 @@
     "rng": "caller injected",
     "mutation": "read-only damage plan",
     "ridePet": "not applied",
-    "compileTimeBranches": "not enabled implicitly"
+    "compileTimeBranches": {
+      "_BATTLE_NEWPOWER": "enabled-by-pinned-version.h"
+    }
   }
 }
