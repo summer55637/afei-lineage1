@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：5b158cf — [ci] Add V4.19 battle compliance workflow
-- 最後更新時間：2026-10-01T10:34:45+08:00
+- 最新 commit：0b7d8e5 — [docs] Track V4.19 battle compliance in README generator
+- 最後更新時間：2026-10-01T10:35:07+08:00
 - 版本線最高 regression workflow：V4.19
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -33,7 +33,7 @@
 | Starter Item 24114 | ⚠️ fail-closed | source max ID 23009 → ITEM_tblen 23010；configured 24114 越界；actual row id 11817 / imagenumber 24114 |
 | New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
-| Battle Pipeline | ✅ V4.19 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit |
+| Battle Pipeline | ✅ V4.19 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan → V4.11 DuelPoint Plan → V4.12 DuelPoint Commit → V4.13 Battle EXP Plan → V4.14 Battle Level-Up Plan → V4.15 Pet Growth Plan → V4.16 Level-Up Commit → V4.17 Battle Item Plan → V4.18 Battle Item Commit → V4.19 Battle Compliance Plan |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
 
