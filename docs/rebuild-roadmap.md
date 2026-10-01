@@ -2,6 +2,27 @@
 
 更新日期：2026-10-01
 
+## 2026-10-01 Endpoint Item Seed Audit：setup.cf → itemset6.csv 未閉合
+
+完整 VM 一鍵端 audit 首次發現一個不能再只用 pinned fixed-C 描述的實機版本差異：
+
+- VM endpoint `gmsv/setup.cf` 的「自訂出生物品」為 `ITEM1=32003`，後續 ITEM2～ITEM15 也使用 endpoint 自有配置。
+- 同一 endpoint 明確指定 `itemset6file=data/itemset6.csv`。
+- Runner 直接讀取 endpoint `gmsv/data/itemset6.csv`：3,792,005 bytes、14,502 rows；主要資料列為 95 columns。
+- `32003` 在整個 selected CSV 中沒有 exact numeric token。
+- `24114` 則剛好出現 1 次，在 line 6943 / token 18；相鄰 token 17=`11817`、19=`9900`、20=`16`。
+- 因此 endpoint 的 `ITEM1=32003` → selected Item table 目前仍是 unresolved boundary。
+- 這個結果不能直接推論 endpoint 一定無法建立新玩家，因為 endpoint loader / transform semantics 尚未從部署端程式層完整閉合。
+- 也不能把 `24114`、map floor `32003` 或其他現有資料自行 remap 成 endpoint starter item。
+
+這個 audit 是 endpoint-specific evidence；既有 fixed-C 的 `ITEM1=24114` / `itemset6.txt` closure 仍維持其 fixed-C scope，不與 endpoint variant 混用。
+
+Evidence：
+- `tools/check_endpoint_item_seed_audit.mjs`
+- `data/generated/stoneage_endpoint_item_seed_audit.json`
+- `docs/reference/endpoint-item-seed-audit.md`
+- `.github/workflows/check-endpoint-item-seed-audit.yml`
+
 ## 2026-10-01 Source Authority Model v2：完整 endpoint 資料正式成為重建主來源
 
 本輪調整專案最高層的 source reconstruction 規則。
