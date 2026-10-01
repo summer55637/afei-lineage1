@@ -105,7 +105,7 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
     battleContextMutation:false,
     rewardMutation:false,
     rngPreserved:true,
-    sourceSideEffects:['BATTLE_Exit player final-exit death cleanup: dead/HP<=0 -> HP 1'],
+    sourceSideEffects:['BATTLE_Exit player final-exit death cleanup: CHAR_ISDIE=true -> isDie=false and HP=1; HP<=0 alone does not promote the rule'],
     state:next
   };
 }
