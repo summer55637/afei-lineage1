@@ -1,0 +1,33 @@
+name: Check V4.24 Browser Battle Settlement Receipt
+
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_settlement_runtime.mjs'
+      - 'src/stoneage_browser_battle_finish_commit_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_battle_duelpoint_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_levelup_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_item_commit_runtime.mjs'
+      - 'data/generated/stoneage_browser_battle_settlement_receipt_schema.json'
+      - 'tools/check_v424_browser_battle_settlement_receipt.mjs'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_settlement_runtime.mjs'
+      - 'src/stoneage_browser_battle_finish_commit_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_battle_duelpoint_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_levelup_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_item_commit_runtime.mjs'
+      - 'data/generated/stoneage_browser_battle_settlement_receipt_schema.json'
+      - 'tools/check_v424_browser_battle_settlement_receipt.mjs'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node tools/check_v424_browser_battle_settlement_receipt.mjs
