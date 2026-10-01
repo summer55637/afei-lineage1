@@ -15,6 +15,16 @@
 | ro0000/client/android/冰河石器-隐盟.apk | VM 一鍵端 | VM／Server 配套取得的 Android Client 研究參考 |
 | ro0000/docs/隐盟文本教程.txt | VM 一鍵端 | VM／文本端架設／維運參考 |
 
+## 來源角色更新：最完整 endpoint 資料主來源
+
+目前已確認 VM 一鍵端與手工外網端構成我們手上的最完整實機／部署資料集合，因此後續重建不再把它們只視為「參考資料」。
+
+- VM 一鍵端 + 手工外網端：World、NPC、Service、Item、Quest、Event、Warp、Encounter、Database 與 endpoint integration 的首要重建資料來源。
+- pinned fixed-C：引擎行為、演算法、執行順序、資料格式與 C runtime semantics 的校驗基準。
+- endpoint 與 fixed-C 不一致時，不自動刪除 endpoint variant；先判斷它是否是該部署版本的實際差異。
+
+完整規則見 `docs/source-authority-and-provenance.md`。
+
 ## 重要邊界
 
 「VM 一鍵端」與「手工外網端」是本專案的來源 provenance 標籤；它們不是 fixed-C 的同義詞。真正的 source parity 仍以 pinned gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56 為最高行為依據。
