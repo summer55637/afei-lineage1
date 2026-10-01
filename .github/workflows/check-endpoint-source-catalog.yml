@@ -1,0 +1,32 @@
+name: Check endpoint source catalog
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ro0000/**'
+      - 'data/generated/stoneage_endpoint_source_catalog.json'
+      - 'tools/generate_endpoint_source_catalog.mjs'
+      - 'tools/check_endpoint_source_catalog.mjs'
+      - 'docs/reference/endpoint-source-catalog.md'
+      - '.github/workflows/check-endpoint-source-catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-endpoint-source-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check generated endpoint catalog
+        run: node tools/generate_endpoint_source_catalog.mjs --check
+
+      - name: Check provenance invariants
+        run: node tools/check_endpoint_source_catalog.mjs
