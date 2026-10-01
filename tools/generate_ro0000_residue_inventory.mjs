@@ -39,19 +39,49 @@ function counterpart(x){
 function mapEntry(x,classification){
   return {path:x.path,sourceRole:'vm-one-click',size:x.size,sha:x.sha,classification,counterpart:counterpart(x)};
 }
+function isIndexedFamilyArgument(x){
+  return x.path.includes('/npc/family/manorsman.arg') || x.path.includes('/npc/family/scheduleman.arg');
+}
+function argumentClassification(x){
+  return isIndexedFamilyArgument(x)?'indexed-npc-init-argument-record':'numbered-argument-file-unresolved';
+}
+function argumentGroup(stem){
+  const marker='/npc/family/'+stem+'.arg';
+  const entries=multipart.filter(x=>x.path.includes(marker));
+  const index=x=>Number(x.path.slice(-1));
+  const data=entries.filter(x=>x.path.startsWith(dataRoot)).sort((a,b)=>index(a)-index(b));
+  const hydata=entries.filter(x=>x.path.startsWith(hyRoot)).sort((a,b)=>index(a)-index(b));
+  const indices=[...new Set(entries.map(index))].sort((a,b)=>a-b);
+  let sameBlob=0,differentBlob=0,missing=0;
+  for(const i of indices){
+    const a=data.find(x=>index(x)===i),b=hydata.find(x=>index(x)===i);
+    if(!a||!b) missing++;
+    else if(a.sha===b.sha) sameBlob++;
+    else differentBlob++;
+  }
+  return {
+    stem,
+    classification:'indexed-npc-init-argument-records',
+    data:{count:data.length,indices:data.map(index)},
+    hydata:{count:hydata.length,indices:hydata.map(index)},
+    counterpartComparison:{sameBlob,differentBlob,missing}
+  };
+}
+const argumentGroups=['manorsman','scheduleman'].map(argumentGroup);
 const result={
   format:'stoneage-ro0000-residue-inventory-v1',
   checkedDate:new Date().toISOString().slice(0,10),
   ro0000TreeSha:git(['rev-parse','HEAD:'+RO]),
   scope:'ro0000 raw snapshot; deterministic inventory only; no raw-file mutation',
-  counts:{trackedFiles:files.length,backupLike:residue.length,multipartArg:multipart.length},
+  counts:{trackedFiles:files.length,backupLike:residue.length,multipartArg:multipart.length,indexedNpcInitArgumentRecords:multipart.filter(isIndexedFamilyArgument).length},
   rules:{
     backupLike:'review-required-residue; extension alone is not evidence for deletion',
-    multipartArg:'preserve-multipart-argument; treat as structured parameter fragments until parser/runtime provenance closes',
+    multipartArg:'legacy inventory key for numbered .argN paths; do not assume byte fragments; family manorsman/scheduleman files are indexed NPC initialization records',
     rawSnapshot:'do-not-rearrange-or-delete'
   },
   backupLike:residue.map(x=>mapEntry(x,'historical-or-editing-residue')),
-  multipartArg:multipart.map(x=>mapEntry(x,'multipart-argument-fragment'))
+  multipartArg:multipart.map(x=>mapEntry(x,argumentClassification(x))),
+  argumentGroups
 };
 fs.writeFileSync(OUT,JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({format:result.format,ro0000TreeSha:result.ro0000TreeSha,counts:result.counts,out:OUT},null,2));
