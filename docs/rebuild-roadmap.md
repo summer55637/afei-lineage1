@@ -28,6 +28,34 @@ V4.24 已經把 live Battle Context 的 `IDLE_EVENTS.REWARD_APPLIED` 改成必�
 固定 source 仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
 
 
+
+
+## 2026-10-01 V4.25 follow-up：Browser Battle Finish Hook Profile
+
+V4.22 已完成 fixed-C `BATTLE_Finish()` 特殊 hook audit，V4.25 之後再把這份 audit 真正變成 Browser runtime gate。
+
+`ENCOUNTER_BATTLE_CONTEXT_BUILD` 現在為 first-idle ordinary world encounter 建立固定 profile：
+
+- `profile=ordinary-world-encounter`
+- `winFuncInjected=false`
+- `pkFuncInjected=false`
+- `dantai=false`
+- `linkedBattleCount=0`
+
+`BATTLE_FINISH_COMMIT` 在切換到 finish mode 前必須驗證該 profile。缺 profile、NPC WinFunc、PVP PkFunc、DANTAI 或 linked `pNext` battle 都直接 fail-closed。
+
+這個 boundary 只執行 fixed-C audit 已證明的「普通世界隨機遭遇」finish/reward/exit 路徑，不自行註冊特殊 hook，也不新增 EXP、Gold、Item、RNG 或 death policy。
+
+新增：
+- `data/generated/stoneage_browser_battle_finish_hook_profile_schema.json`
+- `tools/check_browser_battle_finish_hook_profile.mjs`
+- `docs/reference/browser-battle-finish-hook-profile.md`
+- `.github/workflows/check-browser-battle-finish-hook-profile.yml`
+
+V4.25 版本線不另加版本號；這是既有 battle lifecycle closure 的 source-enforcement follow-up。
+
+固定 source 仍為 `gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56`。
+
 ## 2026-10-01 新增：V3.77 Browser World WarpPoint execution
 
 V3.77 將 fixed-C `mapwarp.txt` 的 first-route exact source warp rows 接入 canonical Browser State Controller，新增 `WORLD_WARPPOINT_EXECUTE`。
