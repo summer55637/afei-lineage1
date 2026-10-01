@@ -1,0 +1,36 @@
+{
+  "format": "stoneage-v404-browser-battle-damage-react-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_DAMAGE_REACT_PLAN",
+  "fixedC": {
+    "priority": [
+      "BATTLE_MD_VANISH",
+      "BATTLE_MD_ABSROB",
+      "BATTLE_MD_REFLEC",
+      "BATTLE_MD_TRAP",
+      "BATTLE_MD_ACUPUNCTURE"
+    ],
+    "source": [
+      "BATTLE_GetDamageReact",
+      "BATTLE_DamageSub"
+    ],
+    "throwWeapon": {
+      "blocked": ["REFLEC", "TRAP", "ACUPUNCTURE"],
+      "notBlocked": ["VANISH", "ABSROB"]
+    },
+    "mutation": {
+      "vanish": "decrement WORKDAMAGEVANISH by 1",
+      "absorb": "decrement WORKDAMAGEABSROB by 1",
+      "reflect": "decrement WORKDAMAGEREFLEC by 1",
+      "trap": "clear WORKTRAP and WORKMODTRAP",
+      "acupuncture": "clear WORKACUPUNCTURE"
+    }
+  },
+  "browser": {
+    "rngConsumed": 0,
+    "hpMutation": false,
+    "persistentMutation": false,
+    "damageExecuted": false,
+    "all_state_changes_are_returned_as_consumption_plan": true
+  }
+}
