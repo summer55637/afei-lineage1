@@ -539,7 +539,7 @@ function createBrowserStateController({
         const result=battleExitPlanRuntime.plan(
           clone(battleContext),
           clone(currentState),
-          {settlementComplete:action.settlementComplete===true}
+          {settlementComplete:action.settlementComplete===true,petMailModeById:action.petMailModeById??null}
         );
         return {
           ...result,
