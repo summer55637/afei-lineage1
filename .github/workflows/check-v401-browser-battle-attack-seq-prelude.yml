@@ -1,0 +1,34 @@
+name: Check V4.01 Browser Battle AttackSeq Prelude
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_battle_turn_runtime.mjs'
+      - 'tools/check_v400_browser_battle_attack_preflight.mjs'
+      - 'tools/check_v401_browser_battle_attack_seq_prelude.mjs'
+      - 'data/generated/stoneage_browser_battle_attack_seq_prelude_schema.json'
+      - 'docs/reference/v400-browser-battle-attack-preflight.md'
+      - 'docs/reference/v401-browser-battle-attack-seq-prelude.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v401-browser-battle-attack-seq-prelude.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.00 and V4.01 attack regressions
+        run: |
+          node tools/check_v400_browser_battle_attack_preflight.mjs
+          node tools/check_v401_browser_battle_attack_seq_prelude.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_battle_turn_runtime.mjs
+          node --check tools/check_v401_browser_battle_attack_seq_prelude.mjs
