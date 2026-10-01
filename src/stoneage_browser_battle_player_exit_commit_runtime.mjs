@@ -9,11 +9,14 @@ const intOr=(v,fallback=null)=>{
   const n=Number(v);
   return Number.isFinite(n)?Math.trunc(n):fallback;
 };
+import { validateSettlementReceiptBinding } from './stoneage_browser_battle_settlement_runtime.mjs';
 
 function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=null,now=()=>new Date().toISOString()}={}){
   if(!isObject(state)||!isObject(state.player))return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'persistent-player-required',state:clone(state)};
   if(!isObject(plan)||plan.ok!==true||plan.stage!=='battle-player-exit-plan-ready'||plan.format!=='stoneage-v422-browser-battle-player-exit-plan-v1')return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'plan-invalid',state:clone(state)};
   if(plan.settlementComplete!==true)return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'settlement-complete-flag-required',state:clone(state)};
+  const receiptBinding=validateSettlementReceiptBinding(state,plan);
+  if(!receiptBinding.ok)return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:receiptBinding.reason,receiptId:plan.settlementReceiptId??null,state:clone(state)};
 
   const tx=String(transactionId??'').trim();
   if(!tx)return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'transaction-id-required',state:clone(state)};
