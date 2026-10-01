@@ -12,6 +12,19 @@
 本輪已移除該直接清除路徑，現在 Battle Context 只有初始化與兩個經過 `BATTLE_CONTEXT_CLEAR` gate 驗證的 clear path 可以設為 `null`。
 
 新增 controller bypass regression，CI 同時檢查 source pattern，避免未來又把 idle disable 當成 battle cleanup。
+## 2026-10-01 V4.25 follow-up：Block world-loop re-entry before Battle Context Clear
+
+對 Clear 之後回 Idle 的銜接再做一次 bypass audit，發現 World Movement runtime 本身只驗證座標 / walkability / revision，不知道 transient Battle Context。
+
+因此 Browser State Controller 現在要求所有 world / encounter / route / NPC / ItemShop 等玩家世界入口先通過 `BATTLE_CONTEXT_CLEAR` boundary；`ENCOUNTER_BATTLE_CONTEXT_BUILD` 也不能在既有 Battle Context 未清除時再次建立第二個 context。
+
+已新增 world-loop Clear gate regression，固定檢查所有入口都掛在同一個 fail-closed gate 上。
+
+這讓 battle 結束後的外層順序正式收斂成：
+
+NaN
+
+本輪仍未新增任何 fixed-C reward、EXP、Gold、Item 或 RNG 規則。
 ## 2026-10-01 V4.25 follow-up：Explicit Battle Context Clear gate
 
 Player Exit → Pet Exit 已經有 receipt / revision binding；本輪再把最後的 transient cleanup 明確拆成 `BATTLE_CONTEXT_CLEAR` gate。
