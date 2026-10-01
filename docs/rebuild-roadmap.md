@@ -2340,4 +2340,4 @@ Battle outer lifecycle 現在形成：
 
 ## 2026-10-01 Source provenance correction
 
-`ro0000/` 的 endpoint provenance 已校正：只有 `wwwroot/` 資料夾屬手工外網端，其餘資料均屬 VM 一鍵端。後續 source 差異分析先套用這個端點標籤，再與 pinned fixed-C 做內容／blob SHA 比對，不再把 `merged-source` 統稱為來源未知的混合端點。
+`ro0000/` 的 endpoint provenance 已校正：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/` 兩個 exact path 屬手工外網端，其餘資料均屬 VM 一鍵端。這些都是從可實際架設成石器時代手游的實際部署資料複製取得的重要資料；後續 source 差異分析先套用這個端點標籤，再與 pinned fixed-C 做內容／blob SHA 比對，不把 endpoint variant 自動判成錯誤。
