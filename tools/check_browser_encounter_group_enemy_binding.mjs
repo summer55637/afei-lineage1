@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
-import { ACTION_IDLE_EVENT, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, ACTION_BATTLE_INITIALIZE, ACTION_BATTLE_TURN_INITIALIZE, ACTION_BATTLE_ATTACK_PREFLIGHT, createBrowserStateController } from '../src/stoneage_browser_state_controller.mjs';
+import { ACTION_IDLE_EVENT, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, ACTION_BATTLE_INITIALIZE, ACTION_BATTLE_TURN_INITIALIZE, ACTION_BATTLE_ATTACK_PREFLIGHT, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_ATTACK_SEQ_PRELUDE, createBrowserStateController } from '../src/stoneage_browser_state_controller.mjs';
 import { IDLE_EVENTS } from '../src/stoneage_idle_loop.mjs';
 
 const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
@@ -62,6 +62,16 @@ const coreStatRolls=[
   assert.equal(initialized.battleContext.context.sourceGroupId,94);
   assert.deepEqual(initialized.battleContext.context.sides[1].entries.filter(Boolean).map(x=>x.enemyId),[120,123]);
   assert.equal(initialized.battleContext.context.sides[1].entries[5].sourceCoreStats.level,2);
+  const command=await c.dispatch({type:ACTION_BATTLE_PLAYER_COMMAND_SET,battleSlot:0,command:'attack',targetBid:15});
+  assert.equal(command.ok,true,JSON.stringify(command));
+  assert.equal(command.command.targetBid,15);
+  const attackMismatch=await c.dispatch({type:ACTION_BATTLE_ATTACK_SEQ_PRELUDE,attackerBid:0,targetBid:16,duckRoll:10000,criticalRoll:10000});
+  assert.equal(attackMismatch.ok,false,JSON.stringify(attackMismatch));
+  assert.equal(attackMismatch.stage,'attack-command-binding');
+  assert.equal(attackMismatch.reason,'attack-command-target-mismatch');
+  const attackReady=await c.dispatch({type:ACTION_BATTLE_ATTACK_SEQ_PRELUDE,attackerBid:0,targetBid:15,duckRoll:10000,criticalRoll:10000});
+  assert.equal(attackReady.ok,true,JSON.stringify(attackReady));
+  assert.equal(attackReady.finalTargetBid,15);
   const secondInit=await c.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
   assert.equal(secondInit.ok,false,JSON.stringify(secondInit));
   assert.equal(secondInit.stage,'battle-initialize-gate');
