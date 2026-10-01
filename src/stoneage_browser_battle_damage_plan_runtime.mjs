@@ -4,7 +4,7 @@ const ACTION_BATTLE_DAMAGE_PLAN='BATTLE_DAMAGE_PLAN';
 const D_16=1/16;
 const D_8=1/8;
 const DAMAGE_RATE=2.0;
-const DEFENCE_RATE=0.45;
+const DEFENCE_RATE=0.70;
 const DEF_QUICK_RATE=0.20;
 const DEF_VITAL_RATE=0.10;
 const AJ_SAME=1.0;
@@ -132,6 +132,7 @@ function damagePlan(context,{attackerBid=null,targetBid=null,damageRollNear=null
     defenderAttributes:defenderAttr,
     field:{fieldAtt:int(fieldAtt)??null,attPower:num(fieldAttrPower)??0,attackerPower:attackerFieldPower,defenderPower:defenderFieldPower},
     constants:{D_16,D_8,DAMAGE_RATE,DEFENCE_RATE,DEF_QUICK_RATE,DEF_VITAL_RATE,AJ_SAME,AJ_UP,AJ_DOWN,ATTR_MAX,D_ATTR},
+    fixedCFeatureFlags:{_BATTLE_NEWPOWER:true},
     persistentMutation:false,
     hpMutation:false,
     rngConsumed:rollUsed==null?0:1,
