@@ -245,7 +245,7 @@ node tools/check_ro0000_integrity.mjs
 
 - `huoyue.lua.bak`：有正式 `huoyue.lua` 且 repository 有正式路徑引用，因此目前可證明是非 canonical 的歷史／編輯副本。
 - `neweq.create---`（data / hydata）：兩端都有 `NPCCREATE`；data 變體的 NPC block 甚至被 `#` 包住，而 hydata 變體是 active-looking。兩邊都缺 formal `neweq.create`，並引用 `baoxiang.arg` / `baoshi.arg`，但目前只看到 `.arg--` residue，因此不能直接刪或升格。
-- `LY.lua--`、`PetUp/petup1.lua~`、`YamaKing/YamaKing.lua~`、`battlebet.lua--`、`soccer.lua~`、`renwu.lua~`、`ridenpc2.lua~`：都具有實質 Lua 程式內容；其中 soccer 甚至有同目錄 `soccer.txt` companion，ridenpc2 則有正式 `ridenpc.lua` sibling。它們目前全部標成 `runtimeEligibility=unproven`，先保留。
+- `LY.lua--`、`PetUp/petup1.lua~`、`YamaKing/YamaKing.lua~`、`battlebet.lua--`、`soccer.lua~`、`renwu.lua~`、`ridenpc2.lua~`：都具有實質 Lua 程式內容；其中 soccer 有同目錄 `soccer.txt` companion，ridenpc2 有正式 `ridenpc.lua` sibling。它們目前均維持 `runtimeEligibility=unproven`，先保留。YamaKing 殘留版與 data 端正式 `YamaKing.lua` 是跨資料根的不同功能版本：冷卻 7200/3600 秒、樓層積分表、組隊難度門檻及啟動條件均不同；資料庫另有 `yamakinginfo` 表，但尚無證據證明該殘留版的 loader/binding 與表的實際關係。
 
 這層證據已固定在 `data/generated/stoneage_ro0000_isolated_residue_audit.json`。未來只有找到新的 authoritative binding / version provenance / loader evidence，才把其中任一項改成 canonical runtime source。
 
@@ -254,3 +254,10 @@ node tools/check_ro0000_integrity.mjs
 本輪補到 pinned fixed-C loader 證據：`NPC_readNPCCreateFiles()` 先用 `rgetFileName()` 遞迴取得檔名，再逐檔呼叫 `NPC_IsNPCCreateFile()`；後者明確排除 trailing `~`、首字元 `#` 與 `.bak`，沒有看到單獨排除 `.create---`。
 
 因此 `neweq.create---` 不能只用副檔名判定為「loader 絕對不會讀」。data 版本的 NPC block 本身以 `#` 註解掉；hydata 版本則是 active-looking。兩者仍保持 endpoint variant，並與 `baoshi.arg--` / `baoxiang.arg--` 一起保留。
+
+
+### YamaKing 殘留版本差異
+
+`hydata/data/ablua/npc/YamaKing/YamaKing.lua~`（37,329 bytes、774 行）包含十殿挑戰、戰後推進、獎勵及 `shualou` 指令註冊；不能因 `~` 後綴刪除。它與 `data/ablua/npc/YamaKing/YamaKing.lua` 不同 blob，且存在實質規則差異：殘留版冷卻 7,200 秒、正式 data 版 3,600 秒；`TM_FiveSlow` 為 10/6，`TM_DoubleUp` 為 4/0；殘留版以遊戲線名稱 `娱乐互动线` 建立六層 NPC，正式版以 gameserver ID 1 建立五層 NPC。
+
+`setup.cf` 的 `npcdir=data/npc` 並不能證明 hydata 殘留版會被載入；目前未找到選取該精確路徑的 endpoint loader/binding。`175sa.sql` 雖含 `yamakinginfo` 表及積分／領獎欄位，也不足以單獨證明它對應哪個腳本版本。故分類為 `alternate-feature-version-with-cross-root-counterpart`，`runtimeEligibility=unproven`；保留兩端原始檔，不做改名、覆蓋或 runtime admission。
