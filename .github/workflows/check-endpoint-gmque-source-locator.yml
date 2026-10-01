@@ -1,0 +1,28 @@
+name: Check endpoint GMQUE source locator
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ro0000/server/merged-source/gmsv/data/npc/**'
+      - 'data/generated/stoneage_endpoint_gmque_source_locator.json'
+      - 'tools/check_endpoint_gmque_source_locator.mjs'
+      - 'docs/reference/gmque-source-closure.md'
+      - 'docs/reference/gmque-npc-source-contract.md'
+      - '.github/workflows/check-endpoint-gmque-source-locator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  endpoint-gmque-source-locator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check endpoint GMQUE locator
+        run: node tools/check_endpoint_gmque_source_locator.mjs --check
