@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-v386-browser-battle-context-v1",
+  "format": "stoneage-v411-browser-battle-context-v1",
   "generatedAt": "2026-10-01",
   "action": "ENCOUNTER_BATTLE_CONTEXT_BUILD",
   "fixedC": {
@@ -28,6 +28,20 @@
         -1,
         -1
       ]
+    },
+    "explicitEntryRuntimeFields": {
+      "battleState": [
+        "isDie",
+        "deadCount",
+        "battleOutcomeFlags",
+        "ultimate",
+        "relife"
+      ],
+      "settlementInputs": [
+        "duelPoint",
+        "workGetExp"
+      ],
+      "sourceBoundary": "battle death / DuelPoint fields are ephemeral browser mirror values; source EntryInit remains escape/getitem only"
     }
   },
   "productBoundary": {
@@ -36,6 +50,7 @@
     "persistentState": "only Idle mode changes; battle context is transient",
     "damage": "not executed",
     "turn": 0,
-    "entryInit": "Only fields explicitly written by EntryInit are mirrored as defaults; charaindex is represented by browser characterId."
+    "entryInit": "Only fields explicitly written by EntryInit are mirrored as defaults; charaindex is represented by browser characterId.",
+    "duelPoint": "browser context mirrors player.duelPoint and workGetExp as settlement inputs; GetDuelPoint mutation remains a later boundary"
   }
 }
