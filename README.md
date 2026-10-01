@@ -147,7 +147,15 @@ Browser、NPC、Item、Economy、Persistent State 各自有清楚的 contract；
 
 ### Fixture 不得冒充 production data
 
-Synthetic fixture 可以驗證 bridge contract，但不能冒充完整 fixed-C world catalog。
+Synthetic fixture 可以驗證 bridge contract，但不能冒充完整 fixed-C world catalog.
+
+### Blocker 再檢查規則
+
+同一個 unresolved / fail-closed blocker 不得讓主線無限循環。第一次發現時必須完成 source audit、必要的 GitHub／Google 交叉查找、regression 與 evidence 記錄；若仍缺決定性證據，就先標記 unresolved / fail-closed，讓其他可獨立閉合的 runtime 繼續往前。
+
+後續只有在出現新的 authoritative source、不同版本的實質資料差異、以前未查過的 evidence layer，或新 runtime 確實把該 blocker 變成必要前置條件時，才重新打開調查。單純重複同一批搜尋結果，不視為新的進展。
+
+目前的 4000→200、3000→200 landing `(587,318)`、Starter Item 24114 等問題依此規則保留；它們是 unresolved boundary，不是整個專案停止的理由。若最終仍沒有足夠 source evidence，維持 fail-closed 也屬於合法 closure，不以猜測、synthetic bridge 或私自 remap 強行完成。
 
 ## 目前工作流
 
