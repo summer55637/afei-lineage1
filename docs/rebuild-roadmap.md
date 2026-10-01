@@ -1920,3 +1920,49 @@ Controller integration：
 - `BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT`
 
 下一步：回到 fixed-C 外層 battle lifecycle，處理 finish 後 `BATTLE_Exit()` 等 battle entry cleanup 與 Idle/World return boundary，不把 transient battle context 永久留在 world state。
+
+## 2026-10-01 V4.21 Browser Battle Exit Plan / Commit
+
+V4.21 接回固定-C 的整場 `BATTLE_Exit` 最終 Pet cleanup，與中途 `battlePetOutIds` 退場明確分離。
+
+### V4.21 Exit Plan
+
+- 只接受已進入 `finish` / `BATTLE_MODE_FINISH=3` 的 Battle Context。
+- 呼叫端必須明確提供 `settlementComplete=true`，避免在 EXP / Item / 其他 reward 尚未提交前提早 teardown。
+- 掃描完整 `state.pets.petBox`，不是只掃 active/team。
+- 持有 Pet 若 `hp <= 0`，建立 `hp -> 1` 的 source-backed cleanup plan。
+- alive Pet 不修改。
+- Player HP/MP 不在本版處理；中途 LostEscape / Ultimate 也不提前回血。
+- Plan 不修改 Persistent State、Battle Context，也不抽 RNG。
+
+### V4.21 Exit Commit
+
+- 驗證 transactionId、revision、每一隻 planned Pet 的 HP snapshot。
+- 只把 planned dead Pet 寫成 HP 1。
+- activePetId 保持原值，不因 HP 恢復而自動重新啟用。
+- revision 只增加一次；duplicate transactionId 為 idempotent no-op。
+- stale Pet HP / missing Pet / 非死亡 Pet 在 commit 時 fail-closed。
+- Controller 在成功的 final exit commit 後才清除 memory-held Battle Context；Persistent State 不保存 transient battle context。
+- 不處理玩家戰敗回村補滿 HP/MP、BecomePig、network/status send 等尚未在這個 boundary 完整閉合的效果。
+
+新增：
+- `src/stoneage_browser_battle_exit_runtime.mjs`
+- `src/stoneage_browser_battle_exit_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_exit_schema.json`
+- `data/generated/stoneage_browser_battle_exit_commit_schema.json`
+- `tools/check_v421_browser_battle_exit.mjs`
+- `tools/check_v421_browser_battle_exit_commit.mjs`
+- `docs/reference/v421-browser-battle-exit.md`
+- `docs/reference/v421-browser-battle-exit-commit.md`
+- `.github/workflows/check-v421-browser-battle-exit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_EXIT_PLAN`
+- `ACTION_BATTLE_EXIT_COMMIT`
+- `BROWSER_BATTLE_EXIT_PLAN_RUNTIME_FORMAT`
+- `BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT`
+
+Battle outer lifecycle 現在形成：
+`Finish Commit → Reward/EXP/Item/Compliance Commit → Exit Plan → Exit Commit → clear Battle Context`
+
+下一段再處理 Idle `SETTLEMENT → MOVING` 的正式 reward-applied/teardown 接合，以及仍未閉合的 `BATTLE_Finish()` 特殊分支；不提前恢復 playable HTML。
