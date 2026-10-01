@@ -129,13 +129,26 @@
       "sha": "fa98e94fcab7c6c7caa8b8462e0ad6901e0dee7e",
       "size": 5607,
       "evidence": [
-        "Content implements ride-cert exchange, consuming item 23800 and player fame/vigor then allocating a reward item.",
-        "A formal sibling ridenpc.lua exists, but the special file is ridenpc2.lua~, so filename identity does not prove equivalence.",
-        "No exact ridenpc2.lua~ binding was found."
+        "A formal ridenpc.lua exists in both data and hydata with identical blob SHA 5378cbb6f2bdbd0cb8777ba0c7a71b579e4683f7.",
+        "ridenpc2.lua~ is a distinct blob and not a same-file mirror; it defines its own main() that creates a ride-certificate NPC.",
+        "The residue and formal sibling have materially different NPC instantiation and reward tables: residue creates at 2005,(28,12) with metamo 41155 and offers 23805/23820/29061/29117; formal sibling creates at 2005,(28,11) with metamo 24774 and offers 23825/23830/23815/23810/29061/29117.",
+        "No repository-side exact binding to ridenpc2.lua~ or a loader entry selecting it was found.",
+        "Endpoint setup.cf points the default NPC configuration root at data/npc; the residue is under hydata/data/ablua, so its execution also depends on the separate ABLUA/endpoint loader path.",
+        "Public ABLua documentation describes main() as the startup entry and npc.CreateNpc/char.setFunctionPointer as the NPC binding pattern, which corroborates the script's execution model but does not prove this residue was selected by the ro0000 build."
       ],
-      "classification": "secondary-ride-exchange-script-residue",
+      "classification": "alternate-version-script-with-formal-sibling",
       "runtimeEligibility": "unproven",
-      "action": "preserve; compare against ridenpc.lua and NPC binding"
+      "action": "preserve-as-version-residue; do-not-promote-without-ablua-loader-binding",
+      "notes": {
+        "formalSiblingSha": "5378cbb6f2bdbd0cb8777ba0c7a71b579e4683f7",
+        "residueSha": "fa98e94fcab7c6c7caa8b8462e0ad6901e0dee7e",
+        "defaultNpcdir": "data/npc",
+        "publicAbluaCorroboration": "main() is used as the startup entry; CreateNpc plus setFunctionPointer is the documented NPC creation/binding pattern",
+        "externalSources": [
+          "https://www.shiqisifu.cc/Article/5/News_242.html",
+          "https://www.shiqi.club/shiqi2637.html"
+        ]
+      }
     },
     {
       "id": "neweq-create-hydata",
