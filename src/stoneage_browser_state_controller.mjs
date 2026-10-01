@@ -54,6 +54,8 @@ import { createBrowserBattleCompliancePlanRuntime, ACTION_BATTLE_COMPLIANCE_PLAN
 import { createBrowserBattleComplianceCommitRuntime, ACTION_BATTLE_COMPLIANCE_COMMIT, BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_commit_runtime.mjs';
 import { createBrowserBattleExitPlanRuntime, ACTION_BATTLE_EXIT_PLAN, BROWSER_BATTLE_EXIT_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_runtime.mjs';
 import { createBrowserBattleExitCommitRuntime, ACTION_BATTLE_EXIT_COMMIT, BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_commit_runtime.mjs';
+import { createBrowserBattlePlayerExitRuntime, ACTION_BATTLE_PLAYER_EXIT_PLAN, BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_runtime.mjs';
+import { createBrowserBattlePlayerExitCommitRuntime, ACTION_BATTLE_PLAYER_EXIT_COMMIT, BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_commit_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -144,6 +146,8 @@ function createBrowserStateController({
   const battleComplianceCommitRuntime=createBrowserBattleComplianceCommitRuntime();
   const battleExitPlanRuntime=createBrowserBattleExitPlanRuntime();
   const battleExitCommitRuntime=createBrowserBattleExitCommitRuntime();
+  const battlePlayerExitRuntime=createBrowserBattlePlayerExitRuntime();
+  const battlePlayerExitCommitRuntime=createBrowserBattlePlayerExitCommitRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -483,6 +487,50 @@ function createBrowserStateController({
           format:BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
           battleContext:clone(battleContext),
           state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_PLAYER_EXIT_PLAN){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-context-required',state:clone(currentState)};
+        if(battlePlayerExitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'browser-battle-player-exit-runtime-invalid',state:clone(currentState)};
+        const result=battlePlayerExitRuntime.plan(
+          clone(battleContext),
+          clone(currentState),
+          {settlementComplete:action.settlementComplete===true}
+        );
+        return {
+          ...result,
+          format:BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT,
+          battleContext:clone(battleContext),
+          state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_PLAYER_EXIT_COMMIT){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'battle-context-required',state:clone(currentState)};
+        if(battlePlayerExitCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'browser-battle-player-exit-commit-runtime-invalid',state:clone(currentState)};
+        let playerExitPlan=action.battlePlayerExitPlan??null;
+        if(!playerExitPlan){
+          playerExitPlan=battlePlayerExitRuntime.plan(
+            clone(battleContext),
+            clone(currentState),
+            {settlementComplete:action.settlementComplete===true}
+          );
+        }
+        if(!playerExitPlan?.ok)return {...playerExitPlan,format:BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT,state:clone(currentState)};
+        const result=battlePlayerExitCommitRuntime.commit(
+          clone(currentState),
+          playerExitPlan,
+          {
+            transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)
+          }
+        );
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {
+          ...result,
+          format:BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(result.state??currentState)
         };
       }
       if(type===ACTION_BATTLE_EXIT_PLAN){
@@ -1214,6 +1262,8 @@ export {
   ACTION_BATTLE_DEATH_COMMIT,
   ACTION_BATTLE_END_PLAN,
   ACTION_BATTLE_FINISH_COMMIT,
+  ACTION_BATTLE_PLAYER_EXIT_PLAN,
+  ACTION_BATTLE_PLAYER_EXIT_COMMIT,
   ACTION_BATTLE_PROFIT_ROUTE_PLAN,
   ACTION_BATTLE_DUELPOINT_PLAN,
   ACTION_BATTLE_TURN_INITIALIZE,
@@ -1246,6 +1296,8 @@ export {
   BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_END_RUNTIME_FORMAT,
   BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT,
   BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
