@@ -98,6 +98,53 @@ gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 
 ro0000 原始 setup／教程包含 credential-like 設定與部署敏感資訊。這些內容作為 provenance snapshot 保留，但 canonical runtime、README、generated data、公開 UI 與一般文件不應重新散播其中的密碼、token 或內部連線資訊。
 
+
+## hecheng loader 三層閉合：create / template / arg
+
+這一輪把 hecheng residue 從「副檔名可疑」提升到 fixed-C loader 級別的可驗證結論。
+
+### 1. `neweq.create---`
+
+pinned fixed-C 的 `NPC_readNPCCreateFiles()` 會先對 `npcdir` 做遞迴檔名掃描，再呼叫 `NPC_IsNPCCreateFile()`。該 helper 只明確排除 trailing `~`、首字元 `#`、`.bak`，沒有 `.create` 後綴白名單。
+
+因此 `.create---` 本身不是停用標記：
+
+- data 版 `neweq.create---` 可以通過檔名／magic 檢查，但兩個 NPC block 都以 `#` 開頭，`NPC_readCreateFile()` 會跳過這些行，所以這個檔案在 default `npcdir=data/npc` 下不產生 NPC create record。
+- hydata 版同名檔案有兩個 active-looking block；若有明確 alternate build 把 hydata 選為 `npcdir`，loader 會進一步解析它，因此它必須保留成 endpoint variant，不能因 `---` 後綴直接刪除。
+
+### 2. `process.template--`
+
+pinned fixed-C 的 `NPC_readNPCTemplateFiles()` 與 create loader 採相同的檔名策略：`~`、首字元 `#`、`.bak` 才是明確排除項。
+
+raw 的 `hecheng/process.template--` 與正式 `eden3/process/process.template` 具有完全相同 blob SHA `2eca62cd579298e6393e0ad67f772dd6fb0d52e2`，兩者都定義：
+
+`templatename=ITEMCHANGE` → `functionset=ItemchangeMan`
+
+所以它目前應列為「loader 可接受的 duplicate template residue」，而不是第二份 canonical template。物理刪除仍需 provenance review。
+
+### 3. `.arg--` 與 `file:hecheng/*.arg`
+
+這裡已經可以把 loader chain 封到實際檔案開啟層：
+
+pinned fixed-C 的 `NPC_Util_CheckAssignArgFile()` 直接取出 `file:` 後面的字串；`NPC_Util_GetArgStr()` 再用 `getNpcdir()/filename` 原樣開啟。
+
+因此：
+
+`file:hecheng/baoshi.arg` → 精確尋找 `data/npc/hecheng/baoshi.arg`
+
+不會自動退回：
+
+`data/npc/hecheng/baoshi.arg--`
+
+目前 raw snapshot 的 data / hydata 都不存在正式 `baoshi.arg` 與 `baoxiang.arg`，只有相同內容的 `.arg--` residue。這讓兩個 hecheng create variant 即使被選入 loader，也會在 arg-file resolution 階段形成 dangling formal reference，而不是把 `.arg--` 自動當成正式 runtime input。
+
+對應 payload 仍保留，因為內容本身具有明確 StoneAge event / ITEMCHANGE DSL；但在沒有 authoritative rename / version provenance 前，不把 `.arg--` 改名成 `.arg`。
+
+完整機讀結果固定於：
+
+`data/generated/stoneage_ro0000_hecheng_loader_audit.json`
+
+
 ## CI
 
 check-endpoint-completeness workflow 在 ro0000 變動時，現在會先執行：
