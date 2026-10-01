@@ -133,6 +133,73 @@ for(const line of setup.split(/\r?\n/)){
 }
 const setupMissing=setupRefs.filter(x=>x.kind==='missing');
 
+const fixedSourceEvidence = {
+  repository: 'gavinlinasd/StoneAge',
+  ref: '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
+  paths: [
+    'gmsv/src/configfile.c',
+    'gmsv/src/init.c',
+    'gmsv/src/include/version.h',
+    'gmsv/src/npc/npc_freepetskillshop.c'
+  ]
+};
+
+const setupDependencyClassifications = {
+  appearpositionfile: {
+    classification: 'runtime-boot-blocker-candidate',
+    rationale: 'fixed-C init.c directly calls CHAR_initAppearPosition(getAppearfile()) during startup; endpoint file is missing and therefore must be reconstructed from evidence before boot promotion.',
+    action: 'do-not-guess'
+  },
+  PETSKILLSHOPPATH: {
+    classification: 'feature-hook-gap-candidate',
+    rationale: 'endpoint setup.cf references the Lua hook, but the pinned fixed-C tree has the conditional _CFREE_petskill C NPC module and no matching freepetskillshop.lua file.',
+    action: 'preserve-gap-until-endpoint-hook-is-proven'
+  },
+  itemset3file: {
+    classification: 'compile-time-inactive-under-itemset6',
+    rationale: 'fixed-C configfile.c registers itemset6file when _ITEMSET6_TXT is enabled; itemset3file is only registered under the separate _ITEMSET3_ITEM branch.',
+    action: 'do-not-create-from-absence'
+  },
+  itemset4file: {
+    classification: 'compile-time-inactive-under-itemset6',
+    rationale: 'fixed-C configfile.c registers itemset6file when _ITEMSET6_TXT is enabled; itemset4file is only registered under the separate _ITEMSET4_TXT branch.',
+    action: 'do-not-create-from-absence'
+  },
+  itemset5file: {
+    classification: 'compile-time-inactive-under-itemset6',
+    rationale: 'fixed-C configfile.c registers itemset6file when _ITEMSET6_TXT is enabled; itemset5file is only registered under the fallback _ITEMSET5_TXT branch.',
+    action: 'do-not-create-from-absence'
+  }
+};
+
+const mapAaaPath='ro0000/server/merged-source/gmsv/data/map/aaa';
+const mapAaaFile=fileByPath.get(mapAaaPath);
+const mapAaaHyPath='ro0000/server/merged-source/gmsv/hydata/data/map/aaa';
+const mapAaaHyFile=fileByPath.get(mapAaaHyPath);
+if(!mapAaaFile) throw new Error('missing map/aaa metadata index');
+if(!mapAaaHyFile) throw new Error('missing hydata map/aaa metadata index');
+const anomalyTriage = {
+  mapAaa: {
+    path: mapAaaPath,
+    sha: mapAaaFile.sha,
+    size: mapAaaFile.size,
+    hydataPath: mapAaaHyPath,
+    hydataSha: mapAaaHyFile.sha,
+    sameBlobAcrossEndpoints: mapAaaFile.sha === mapAaaHyFile.sha,
+    classification: 'metadata-index-not-map-binary',
+    rationale: 'first six bytes are text-path data (./extr...) rather than a map binary signature; the matching hydata copy has the same blob identity.',
+    action: 'preserve-as-source-metadata'
+  },
+  setupDependencies: setupMissing.map(x => ({
+    key: x.key,
+    value: x.value,
+    classification: setupDependencyClassifications[x.key]?.classification ?? 'unclassified-gap',
+    rationale: setupDependencyClassifications[x.key]?.rationale ?? 'No fixed-C classification recorded.',
+    action: setupDependencyClassifications[x.key]?.action ?? 'do-not-guess'
+  })),
+  fixedSourceEvidence
+};
+
 function magic(rel, expected){
   const b=fs.readFileSync(path.join(ROOT,rel));
   return {path:rel,size:b.length,signature:b.subarray(0,expected.length).toString('ascii'),matches:b.subarray(0,expected.length).equals(Buffer.from(expected,'ascii'))};
@@ -172,6 +239,18 @@ for(const entry of mapFiles){
   else { nonLs2map++; if(mapNonMatches.length<20) mapNonMatches.push(entry.path); }
 }
 
+const triageReportPath=path.join(ROOT,'data/generated/stoneage_ro0000_dependency_triage.json');
+if(!fs.existsSync(triageReportPath)) throw new Error('missing generated ro0000 dependency triage report');
+const triageReport=JSON.parse(fs.readFileSync(triageReportPath,'utf8'));
+if(triageReport.format!=='stoneage-ro0000-dependency-triage-v1') throw new Error('dependency triage report format drift');
+if(triageReport.ro0000TreeSha!==ro0000TreeSha) throw new Error('dependency triage report raw tree SHA drift');
+if(triageReport.mapAaa?.sha!==anomalyTriage.mapAaa.sha) throw new Error('dependency triage map/aaa SHA drift');
+if(triageReport.mapAaa?.hydataSha!==anomalyTriage.mapAaa.hydataSha) throw new Error('dependency triage hydata map/aaa SHA drift');
+for(const item of anomalyTriage.setupDependencies){
+  const expected=triageReport.setupDependencies?.find(x=>x.key===item.key && x.value===item.value);
+  if(!expected || expected.classification!==item.classification) throw new Error('dependency triage classification drift for '+item.key);
+}
+
 const coreFiles=[
   'ro0000/server/merged-source/gmsv/data/encount.txt',
   'ro0000/server/merged-source/gmsv/data/group1.txt',
@@ -195,6 +274,7 @@ console.log(JSON.stringify({
   webrootMirror:{manualFiles:manualMap.size,nestedVmFiles:nestedMap.size,sameBlob:webSame,differentBlob:webDifferent,manualOnly:webManualOnly,nestedOnly:webNestedOnly,differentPaths:webDifferentPaths},
   rawResidue:{backupLikeFiles:backupLike.length,multipartArgFiles:multipartArg.length,zeroSizeFiles:zeroSize.length,duplicateBlobGroups:duplicateGroups.length,crossGmsvDataHydataDuplicateGroups:crossMirrorDuplicateGroups.length},
   setupDataPathCheck:{references:setupRefs.length,missingCount:setupMissing.length,missing:setupMissing},
+  anomalyTriage,
   binaryChecks,
   sqlCheck,
   coreDataChecks,
