@@ -1,0 +1,15 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Finish Hook Profile",
+  "type":"object",
+  "required":["auditFormat","profile","winFuncInjected","pkFuncInjected","dantai","linkedBattleCount"],
+  "properties":{
+    "auditFormat":{"const":"stoneage-battle-finish-hook-audit-v1"},
+    "profile":{"const":"ordinary-world-encounter"},
+    "winFuncInjected":{"const":false},
+    "pkFuncInjected":{"const":false},
+    "dantai":{"const":false},
+    "linkedBattleCount":{"const":0}
+  },
+  "additionalProperties":false
+}
