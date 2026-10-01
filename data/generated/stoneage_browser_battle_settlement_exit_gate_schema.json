@@ -1,0 +1,13 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Settlement Receipt-Bound Exit Gate",
+  "type":"object",
+  "required":["settlementReceiptBound","settlementReceiptId","settlementStartRevision","settlementReceiptRevision"],
+  "properties":{
+    "settlementReceiptBound":{"const":true},
+    "settlementReceiptId":{"type":"string","minLength":1},
+    "settlementStartRevision":{"type":"integer","minimum":0},
+    "settlementReceiptRevision":{"type":"integer","minimum":1}
+  },
+  "additionalProperties":true
+}
