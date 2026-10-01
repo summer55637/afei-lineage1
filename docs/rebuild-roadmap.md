@@ -1812,3 +1812,47 @@ Controller integration：
 - `BROWSER_BATTLE_LEVELUP_COMMIT_RUNTIME_FORMAT`
 
 下一步：BattleGet item settlement，消費已由 death-credit 階段決定的 `getitem` / battle item pool；不重新抽 carried-item RNG，並保持 fixed-C 的背包滿格／釋放 existing-item 行為。
+## 2026-10-01 V4.17 Browser Battle Item Plan
+
+V4.17 依 fixed-C `BATTLE_GetExpGold()` 把已決定的 `GETITEM_MAX=3` carried item 做 read-only settlement plan：
+- 依 getitem 0..2 順序掃描 existing item index
+- 只接受 canonical item runtime 中 `owner=enemy:*` 的 tracked existing item
+- 玩家背包使用 9..23 的第一個空格
+- 背包中途滿格後，後續 item 標為 source-equivalent discard
+- 不重新抽 carried-item RNG、不重新建立 Item
+
+新增：
+- `src/stoneage_browser_battle_item_runtime.mjs`
+- `data/generated/stoneage_browser_battle_item_schema.json`
+- `tools/check_v417_browser_battle_item.mjs`
+- `docs/reference/v417-browser-battle-item.md`
+- `.github/workflows/check-v417-browser-battle-item.yml`
+
+Controller integration：
+- `ACTION_BATTLE_ITEM_PLAN`
+- `BROWSER_BATTLE_ITEM_PLAN_RUNTIME_FORMAT`
+
+## 2026-10-01 V4.18 Browser Battle Item Commit
+
+V4.18 將 V4.17 accepted/discarded plan 寫入 Persistent State：
+- accepted existing item 轉成 player ownership 並放進規劃好的 player backpack slot
+- inventory-full item 釋放 existing runtime item，對應 `ITEM_endExistItemsOne()`
+- revision 只增加一次
+- `runtimeMeta.battleItemTransactions[transactionId]` 提供 idempotency
+- duplicate transactionId no-op
+- stale revision、missing item、非 enemy ownership、occupied target slot 全部 fail-closed
+- 不重新抽 RNG、不生成新 Item、不偽造 Gold
+- transient battle `getitem[i]=-1` 只留在 battle lifecycle side effect，不寫成 player inventory 狀態
+
+新增：
+- `src/stoneage_browser_battle_item_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_item_commit_schema.json`
+- `tools/check_v418_browser_battle_item_commit.mjs`
+- `docs/reference/v418-browser-battle-item-commit.md`
+- `.github/workflows/check-v418-browser-battle-item-commit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_ITEM_COMMIT`
+- `BROWSER_BATTLE_ITEM_COMMIT_RUNTIME_FORMAT`
+
+Battle settlement 已從 V4.01 一路閉合到 V4.18；下一段應處理外層 battle lifecycle / Exit 與 server-derived compliance，而不是再複製同一條 reward mutation。
