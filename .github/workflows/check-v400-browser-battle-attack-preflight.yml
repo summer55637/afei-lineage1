@@ -1,0 +1,39 @@
+name: Check V4.00 Browser Battle Attack Preflight
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_attack_preflight_runtime.mjs'
+      - 'src/stoneage_browser_battle_target_runtime.mjs'
+      - 'src/stoneage_browser_battle_default_target_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v398_browser_battle_target_runtime.mjs'
+      - 'tools/check_v399_browser_battle_default_target_runtime.mjs'
+      - 'tools/check_v400_browser_battle_attack_preflight.mjs'
+      - 'data/generated/stoneage_browser_battle_attack_preflight_schema.json'
+      - 'docs/reference/v398-browser-battle-target-runtime.md'
+      - 'docs/reference/v399-browser-battle-default-target-runtime.md'
+      - 'docs/reference/v400-browser-battle-attack-preflight.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v400-browser-battle-attack-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V3.98 V3.99 V4.00 target/attack regressions
+        run: |
+          node tools/check_v398_browser_battle_target_runtime.mjs
+          node tools/check_v399_browser_battle_default_target_runtime.mjs
+          node tools/check_v400_browser_battle_attack_preflight.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_attack_preflight_runtime.mjs
+          node --check src/stoneage_browser_battle_target_runtime.mjs
+          node --check src/stoneage_browser_battle_default_target_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v400_browser_battle_attack_preflight.mjs
