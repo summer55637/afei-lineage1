@@ -1,0 +1,28 @@
+{
+  "format": "stoneage-v405-browser-battle-counter-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_COUNTER_PLAN",
+  "fixedC": {
+    "counterPara": 0.08,
+    "counterTableRows": [
+      [10,9,8,8,5],
+      [10,9,7,7,6],
+      [9,8,10,10,7],
+      [8,8,10,10,7],
+      [6,6,8,8,9]
+    ],
+    "throwWeaponRule": "attacker or defender throw weapon => counter false",
+    "playerFormula": "BATTLE_CounterCalc * CounterTbl * 0.1 + FIXLUCK + WORKCOUNTER",
+    "petFormula": "BATTLE_CounterCalc (+ NOGUARD adjust), capped at 100",
+    "roll": "RAND(1,10000) <= per * 100",
+    "counterDamageScale": 0.75,
+    "minimumAfterScale": 1,
+    "damageReact": "BATTLE_Counter sets return flag false when either side has DamageReact, but still executes AttackSeq"
+  },
+  "browser": {
+    "rng": "caller injected",
+    "hpMutation": false,
+    "persistentMutation": false,
+    "damageExecuted": false
+  }
+}
