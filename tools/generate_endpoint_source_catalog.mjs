@@ -114,8 +114,8 @@ function aggregate(files, scope) {
   return {
     fileCount: files.length,
     totalBytes,
-    extensions: Object.fromEntries(Object.entries(extensionCounts).sort((a, b) => b[1] - a[1])),
-    topLevelFiles: Object.fromEntries(Object.entries(topLevelCounts).sort((a, b) => b[1] - a[1]))
+    extensions: Object.fromEntries(Object.entries(extensionCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+    topLevelFiles: Object.fromEntries(Object.entries(topLevelCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])))
   };
 }
 
