@@ -163,11 +163,6 @@ const auto = [
     : '目前正式 ItemShop catalog 仍以 pinned source checkout 作為 generator 輸入。')
     + ' Browser ItemShop bridge 使用同一條 contract，不另建第二套商店或貨幣規則。',
   '',
-  '### 主要 blocker',
-  '',
-  ...(route.remainingWork ?? []).slice(0, 3).map((item, index) => (index + 1) + '. ' + item),
-  ...(!starterItemBuildAudit.resolution?.productionStarterGrantAllowed ? ['4. Starter Item 24114：pinned source max ID ' + (starterItemBuildAudit.itemSource?.maxSourceItemId ?? '—') + ' → ITEM_tblen ' + (starterItemBuildAudit.itemSource?.derivedItemTableLength ?? '—') + '，configured 24114 is out of range；source row is id ' + (starterItemBuildAudit.exactRow?.sourceItemId ?? '—') + ' / imagenumber 24114；keep fail-closed and do not remap.'] : []),
-  '',
   '### 重新開放追查',
   '',
   ...(reopenedFeatureNames.length
