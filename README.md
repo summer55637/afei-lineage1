@@ -240,18 +240,22 @@ data/generated/stoneage_disabled_features.json 是永久停用 feature 的正式
 
 目前 GMQUE／抓寵活動維持永久停用，不會因為後續版本更新而自動重新啟用，也不應以人工猜測補上缺失的 RANDGMQUE／QUEPART 設定。
 
-## 外部端參考資料
+## 外部端資料
 
-後續新增的石器時代端參考資料，統一集中放在 `ro0000/`。
+後續新增的石器時代端資料統一集中放在 `ro0000/`。
 
-`ro0000/` 是獨立的參考資料入口，保持原端目錄結構，方便研究、比對與來源追蹤；不直接等同於本專案 production runtime。
+依目前已確認 provenance，VM 一鍵端＋手工外網端都是從可直接架設石器時代手游的實際部署資料複製取得，因此是目前最完整、最接近完整可部署版本的實機／部署資料主來源。
+
+原始資料必須先保留 provenance 與 exact identity，再經 Endpoint Completeness、pinned fixed-C 語義校驗、evidence 與 regression 後，才轉成 canonical production runtime data。
+
+同一份 endpoint data 即使與 fixed-C 不同，也不能未經分析就刪除；可證明的部署差異標記為 endpoint variant，無法判定則保持 unresolved / fail-closed。
 
 ## Repository 結構
 
 _evidence/                 研究與來源證據
 client-assets/             合法 client asset manifest / adapter
 data/generated/            generated source closure / runtime data / schema
-docs/                      roadmap、source contract、視覺與 runtime 文件
+docs/                      roadmap、source authority、source contract、視覺與 runtime 文件
 src/                       runtime modules
 tools/                     generator、audit、regression
 .github/workflows/         GitHub Actions regression 與 README 自動維護
@@ -265,15 +269,15 @@ README.md                  專案總覽；狀態區由 workflow 自動更新
 3. docs/reference/video-001-visual-reference.md
 4. docs/reference/modern-3d-mobile-visual-ui-target.md
 5. docs/reference/start-world-exit-reachability.md
-8. docs/reference/start-encounter-target-index.md
-9. docs/reference/idle-loop-contract.md
-12. docs/reference/persistent-state-schema.md
-13. docs/reference/save-envelope-contract.md
-16. docs/reference/reward-transaction-contract.md
-17. docs/reference/item-source-runtime.md
-20. docs/reference/item-economy-runtime.md
-21. docs/reference/npc-itemshop-runtime.md
-24. docs/reference/v340-browser-itemshop-runtime.md
+6. docs/reference/start-encounter-target-index.md
+7. docs/reference/idle-loop-contract.md
+8. docs/reference/persistent-state-schema.md
+9. docs/reference/save-envelope-contract.md
+10. docs/reference/reward-transaction-contract.md
+11. docs/reference/item-source-runtime.md
+12. docs/reference/item-economy-runtime.md
+13. docs/reference/npc-itemshop-runtime.md
+14. docs/reference/v340-browser-itemshop-runtime.md
 
 ## 回歸與版本
 
