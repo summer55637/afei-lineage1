@@ -1463,4 +1463,16 @@ V4.02 將 fixed-C `BATTLE_DamageCalc()` 拆成 read-only deterministic damage pl
 - `tools/check_v402_browser_battle_damage_plan.mjs`
 - `docs/reference/v402-browser-battle-damage-plan.md`
 - `.github/workflows/check-v402-browser-battle-damage-plan.yml`
+## 2026-10-01 V4.02 Pinned Branch Correction
 
+Source re-audit against pinned gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56 confirmed that gmsv/src/include/version.h defines _BATTLE_NEWPOWER.
+
+因此 V4.02 的一般無騎寵 BATTLE_DamageCalc() 防禦路徑已校正為：
+
+- FIXTOUGH × 0.70
+- FIXDEX × 0.20
+- FIXVITAL × 0.10
+
+原先寫入的 0.45 / 0.20 / 0.10 checkpoint 已移除；regression 改為 attack 100 / defense 50 / quick 20 / fixVital 10 → effective defense 40、base damage 120，Earth → Water elemental case = 180。
+
+Ride Pet、GuardAdjust、DamageReact、Counter、Death、Reward 及其他 caller/compile-time feature branches 仍維持獨立 boundary，尚未假設性啟用。
