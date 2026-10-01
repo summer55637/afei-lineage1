@@ -1,0 +1,1300 @@
+{
+  "format": "stoneage-ro0000-residue-structure-audit-v1",
+  "checkedDate": "2026-10-01",
+  "ro0000TreeSha": "b0df5f41ef9aa35c3e114eefb56ce36d825be254",
+  "scope": "structural classification from Git tree/blob identity only; no raw-file mutation",
+  "summary": {
+    "trackedFiles": 8751,
+    "backupLike": 54,
+    "backupLikeWithDuplicateElsewhere": 44,
+    "backupLikeIsolatedSha": 10,
+    "backupLikeWithFormalBase": 15,
+    "multipartArg": 28,
+    "multipartExactCounterpart": 20,
+    "multipartVariantCounterpart": 8
+  },
+  "interpretation": {
+    "exactDuplicate": "provenance evidence only; never delete the raw path solely because SHA repeats",
+    "formalBaseDifferent": "requires semantic/provenance review; do not replace formal base automatically",
+    "isolatedResidue": "highest priority for content-level provenance review",
+    "multipartArg": "preserve as structured fragment until parser/runtime relationship is closed"
+  },
+  "backupLike": [
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/Petrecycle/Petrecycle.lua.bak",
+      "size": 12605,
+      "sha": "4f945380118fcf0aec76194d07682ed14fe5b31a",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/Petrecycle/Petrecycle.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/Petrecycle/Petrecycle.lua"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/duanwu/duanwu.lua.bak",
+      "size": 13005,
+      "sha": "d90b2860f023f013cf126fbb6675155a72a0d824",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/duanwu/duanwu.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/duanwu/duanwu.lua"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/familyfb/familyFB.lua.bak",
+      "size": 17973,
+      "sha": "9098fe7ee9c45c5fc82a3ff450d7db640d4b3379",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/familyfb/familyFB.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/familyfb/familyFB.lua~"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/fish/fish.lua.bak",
+      "size": 12586,
+      "sha": "39be8a19ab128afc913f778084afb334349ad17e",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/fish/fish.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/fish/fish.lua~"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/huoyue/huoyue.lua.bak",
+      "size": 13843,
+      "sha": "16d59e61b643658866662ef9932cb360f6ba1296",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/huoyue/huoyue.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jingyandan/jingyandan.lua~",
+      "size": 3359,
+      "sha": "dcabd6e532f1d419ff82e2bd48d57e97c0a0eeb8",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jingyandan/jingyandan.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jingyandan/jingyandan.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jingyandan/jingyandan.lua~",
+        "sha": "dcabd6e532f1d419ff82e2bd48d57e97c0a0eeb8",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua.lua~",
+      "size": 11757,
+      "sha": "65bfe1cff95a0abdb881d29ce8cfebdcf7ddcb39",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua.lua~",
+        "sha": "65bfe1cff95a0abdb881d29ce8cfebdcf7ddcb39",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua2.lua~",
+      "size": 11765,
+      "sha": "c9cabd601a9b524a59c2f653673f8c6b2432c68a",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua2.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua2.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua2.lua~",
+        "sha": "c9cabd601a9b524a59c2f653673f8c6b2432c68a",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua4.lua~",
+      "size": 11707,
+      "sha": "59ac0e585505e02d1c7b3175c430af0e28dce7bc",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua4.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua4.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua4.lua~",
+        "sha": "59ac0e585505e02d1c7b3175c430af0e28dce7bc",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua5.lua~",
+      "size": 11709,
+      "sha": "203cb936a415c253f4d9a2a51d3172a1ae7a1bf8",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua5.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua5.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua5.lua~",
+        "sha": "203cb936a415c253f4d9a2a51d3172a1ae7a1bf8",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua6.lua~",
+      "size": 10815,
+      "sha": "d551e277200ebe039d6e10f3d48d3be88d073a20",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua6.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua6.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua6.lua~",
+        "sha": "d551e277200ebe039d6e10f3d48d3be88d073a20",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua7.lua~",
+      "size": 10822,
+      "sha": "cb9b1e01cc8bdddde1f7d5722c0c79014abb2288",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua7.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua7.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua7.lua~",
+        "sha": "cb9b1e01cc8bdddde1f7d5722c0c79014abb2288",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/shibi/magic2.lua.bak",
+      "size": 943,
+      "sha": "a955a03eb50b3b6d5378698f7a77174170764164",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/shibi/magic2.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/shibi/magic2.lua~"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/shuibao/shuibao.lua.bak",
+      "size": 2039,
+      "sha": "4f24e4d8d076d309cc1fc918ea6b483ad93f48b4",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/ablua/npc/shuibao/shuibao.lua",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/shuibao/shuibao.lua~"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/familyman.conf.new",
+      "size": 12717,
+      "sha": "0094904993753f507732fd55054b79d6d7ba37b0",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/family/familyman.conf",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/familyman.conf.new"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/familyman.conf.new",
+        "sha": "0094904993753f507732fd55054b79d6d7ba37b0",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/riderman.conf.old",
+      "size": 3690,
+      "sha": "52cf65eb37339abd672349263c32954da2bc1972",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/family/riderman.conf",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/riderman.conf.old"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/riderman.conf.old",
+        "sha": "52cf65eb37339abd672349263c32954da2bc1972",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoshi.arg--",
+      "size": 6303,
+      "sha": "52d1f96d9b24bb40b5f02093c44f5efa790aea79",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoshi.arg",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoshi.arg--"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoshi.arg--",
+        "sha": "52d1f96d9b24bb40b5f02093c44f5efa790aea79",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoxiang.arg--",
+      "size": 653,
+      "sha": "f511a49d5f97a1bd57b483fde2eae71222d4a734",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoxiang.arg",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoxiang.arg--"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoxiang.arg--",
+        "sha": "f511a49d5f97a1bd57b483fde2eae71222d4a734",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/neweq.create---",
+      "size": 372,
+      "sha": "cb9d897b6f922659d53d250ca248972068872f86",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/hecheng/neweq.create",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/neweq.create---",
+        "sha": "b69bbfe634581860964ef9d8c48adadc273aabe2",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/process.template--",
+      "size": 113,
+      "sha": "2eca62cd579298e6393e0ad67f772dd6fb0d52e2",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/hecheng/process.template",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 3,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/eden3/process/process.template",
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/eden3/process/process.template",
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/process.template--"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/process.template--",
+        "sha": "2eca62cd579298e6393e0ad67f772dd6fb0d52e2",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/jaruga/menu01.conf1",
+      "size": 1193,
+      "sha": "c8864c854ed32781dff293e6afeaf129f886bbd1",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/jaruga/menu01.conf",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/jaruga/menu01.conf1"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/jaruga/menu01.conf1",
+        "sha": "c8864c854ed32781dff293e6afeaf129f886bbd1",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.arg~",
+      "size": 124,
+      "sha": "36d2aec8eb3c34214c3162a39e149159487d14d9",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.arg",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.arg~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.arg~",
+        "sha": "36d2aec8eb3c34214c3162a39e149159487d14d9",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.create~",
+      "size": 1034,
+      "sha": "654ace74fc92a59e14670e0b3b2833960f4529fe",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.create",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.create~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.create~",
+        "sha": "654ace74fc92a59e14670e0b3b2833960f4529fe",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/300huan/300Event.lua~",
+      "size": 33483,
+      "sha": "830a1d7809b309d0339ff18e2a4410737a6e3348",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/300huan/300Event.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/300huan/300Event.lua"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/LY/LY.lua--",
+      "size": 13391,
+      "sha": "395f9f81e1900669b7622dd90ad13a2ee4512a23",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/LY/LY.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/PetUp/petup1.lua~",
+      "size": 27456,
+      "sha": "662b212bab1df98d5641dd6a526b3f77cf63b0ca",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/PetUp/petup1.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/YamaKing/YamaKing.lua~",
+      "size": 37329,
+      "sha": "bbc0dac6ca2b4a61a075b3de0625bdab55a03b71",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/YamaKing/YamaKing.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/battlebet/battlebet.lua--",
+      "size": 19645,
+      "sha": "8907435d9eeae29f5b8eb2795ca1ae7cc87d402e",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/battlebet/battlebet.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/duanwei/duanwei.lua~",
+      "size": 64476,
+      "sha": "10f892c3e74f8d2e57f4f8c61c03ae0df9c829e1",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/duanwei/duanwei.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/duanwei/duanwei.lua"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/duqiu/soccer.lua~",
+      "size": 62180,
+      "sha": "bb85d9fcb443218857731ba46c1b0e2c03a8973f",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/duqiu/soccer.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/familyfb/familyFB.lua~",
+      "size": 17973,
+      "sha": "9098fe7ee9c45c5fc82a3ff450d7db640d4b3379",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/familyfb/familyFB.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/familyfb/familyFB.lua.bak"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/fish/fish.lua~",
+      "size": 12586,
+      "sha": "39be8a19ab128afc913f778084afb334349ad17e",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/fish/fish.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/fish/fish.lua.bak"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jingyandan/jingyandan.lua~",
+      "size": 3359,
+      "sha": "dcabd6e532f1d419ff82e2bd48d57e97c0a0eeb8",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jingyandan/jingyandan.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jingyandan/jingyandan.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jingyandan/jingyandan.lua~",
+        "sha": "dcabd6e532f1d419ff82e2bd48d57e97c0a0eeb8",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua.lua~",
+      "size": 11757,
+      "sha": "65bfe1cff95a0abdb881d29ce8cfebdcf7ddcb39",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua.lua~",
+        "sha": "65bfe1cff95a0abdb881d29ce8cfebdcf7ddcb39",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua2.lua~",
+      "size": 11765,
+      "sha": "c9cabd601a9b524a59c2f653673f8c6b2432c68a",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua2.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua2.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua2.lua~",
+        "sha": "c9cabd601a9b524a59c2f653673f8c6b2432c68a",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua4.lua~",
+      "size": 11707,
+      "sha": "59ac0e585505e02d1c7b3175c430af0e28dce7bc",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua4.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua4.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua4.lua~",
+        "sha": "59ac0e585505e02d1c7b3175c430af0e28dce7bc",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua5.lua~",
+      "size": 11709,
+      "sha": "203cb936a415c253f4d9a2a51d3172a1ae7a1bf8",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua5.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua5.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua5.lua~",
+        "sha": "203cb936a415c253f4d9a2a51d3172a1ae7a1bf8",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua6.lua~",
+      "size": 10815,
+      "sha": "d551e277200ebe039d6e10f3d48d3be88d073a20",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua6.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua6.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua6.lua~",
+        "sha": "d551e277200ebe039d6e10f3d48d3be88d073a20",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua7.lua~",
+      "size": 10822,
+      "sha": "cb9b1e01cc8bdddde1f7d5722c0c79014abb2288",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/jinhua/jinhua7.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua7.lua~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/ablua/npc/jinhua/jinhua7.lua~",
+        "sha": "cb9b1e01cc8bdddde1f7d5722c0c79014abb2288",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/renwu/renwu.lua~",
+      "size": 9818,
+      "sha": "e07ee3559585caaad2dcf47a0e0bd8ff912224c6",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/renwu/renwu.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/ridenpc/ridenpc2.lua~",
+      "size": 5607,
+      "sha": "fa98e94fcab7c6c7caa8b8462e0ad6901e0dee7e",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/ridenpc/ridenpc2.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/shibi/magic2.lua~",
+      "size": 943,
+      "sha": "a955a03eb50b3b6d5378698f7a77174170764164",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/shibi/magic2.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/shibi/magic2.lua.bak"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/shuibao/shuibao.lua~",
+      "size": 2039,
+      "sha": "4f24e4d8d076d309cc1fc918ea6b483ad93f48b4",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/shuibao/shuibao.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/shuibao/shuibao.lua.bak"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/wenming/wenming.lua~",
+      "size": 48773,
+      "sha": "cd82a8d7cadc7a57f72b300649635c014d455d66",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/wenming/wenming.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/wenming/wenming.lua"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/yiboss/yiyuanboss.lua~",
+      "size": 4783,
+      "sha": "dfaeb69424dc2af5f81a794bf5e9970759e46dfc",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/ablua/npc/yiboss/yiyuanboss.lua",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/ablua/npc/yiboss/yiyuanboss.lua"
+      ],
+      "counterpart": null
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/familyman.conf.new",
+      "size": 12717,
+      "sha": "0094904993753f507732fd55054b79d6d7ba37b0",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/familyman.conf",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/familyman.conf.new"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/familyman.conf.new",
+        "sha": "0094904993753f507732fd55054b79d6d7ba37b0",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/riderman.conf.old",
+      "size": 3690,
+      "sha": "52cf65eb37339abd672349263c32954da2bc1972",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/riderman.conf",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/riderman.conf.old"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/riderman.conf.old",
+        "sha": "52cf65eb37339abd672349263c32954da2bc1972",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoshi.arg--",
+      "size": 6303,
+      "sha": "52d1f96d9b24bb40b5f02093c44f5efa790aea79",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoshi.arg",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoshi.arg--"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoshi.arg--",
+        "sha": "52d1f96d9b24bb40b5f02093c44f5efa790aea79",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoxiang.arg--",
+      "size": 653,
+      "sha": "f511a49d5f97a1bd57b483fde2eae71222d4a734",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/baoxiang.arg",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoxiang.arg--"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/baoxiang.arg--",
+        "sha": "f511a49d5f97a1bd57b483fde2eae71222d4a734",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/neweq.create---",
+      "size": 350,
+      "sha": "b69bbfe634581860964ef9d8c48adadc273aabe2",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/neweq.create",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/neweq.create---",
+        "sha": "cb9d897b6f922659d53d250ca248972068872f86",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/process.template--",
+      "size": 113,
+      "sha": "2eca62cd579298e6393e0ad67f772dd6fb0d52e2",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/hecheng/process.template",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 3,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/eden3/process/process.template",
+        "ro0000/server/merged-source/gmsv/data/npc/hecheng/process.template--",
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/eden3/process/process.template"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/hecheng/process.template--",
+        "sha": "2eca62cd579298e6393e0ad67f772dd6fb0d52e2",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/jaruga/menu01.conf1",
+      "size": 1193,
+      "sha": "c8864c854ed32781dff293e6afeaf129f886bbd1",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/jaruga/menu01.conf",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/jaruga/menu01.conf1"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/jaruga/menu01.conf1",
+        "sha": "c8864c854ed32781dff293e6afeaf129f886bbd1",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.arg~",
+      "size": 124,
+      "sha": "36d2aec8eb3c34214c3162a39e149159487d14d9",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.arg",
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.arg~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.arg~",
+        "sha": "36d2aec8eb3c34214c3162a39e149159487d14d9",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.create~",
+      "size": 1034,
+      "sha": "654ace74fc92a59e14670e0b3b2833960f4529fe",
+      "baseCandidate": "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.create",
+      "baseExists": true,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.create~"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.create~",
+        "sha": "654ace74fc92a59e14670e0b3b2833960f4529fe",
+        "sameBlob": true
+      }
+    }
+  ],
+  "multipartArg": [
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg1",
+      "size": 61,
+      "sha": "7fab5f6abe69ffe8a7861b1af651aaac6078e803",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg1",
+        "sha": "895f1ca71051442ea9629a853b40930b307b300f",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg2",
+      "size": 61,
+      "sha": "191816017ab7fbfa10e051e21d4954ec6d9a59ae",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg2",
+        "sha": "7ed7b2637a3ff489f706adce23630fc3acf57d16",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg3",
+      "size": 61,
+      "sha": "de43e3142e6c2c985aec69805a0508ecd3cbd8f0",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg3",
+        "sha": "b827b1cd49a7a47205fdc917bcc701fe8698dcc4",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg4",
+      "size": 61,
+      "sha": "1cccf1873c057f0ae24ec530fa0cc8aea45a5cb8",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg4",
+        "sha": "e590b06d37898ebbdf4eb047c9347ddb3b99b007",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg5",
+      "size": 62,
+      "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg5"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg5",
+        "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg6",
+      "size": 62,
+      "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg6"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg6",
+        "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg7",
+      "size": 62,
+      "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg7"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg7",
+        "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg8",
+      "size": 62,
+      "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg8"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg8",
+        "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg9",
+      "size": 62,
+      "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg9"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg9",
+        "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg1",
+      "size": 81,
+      "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg1"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg1",
+        "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg2",
+      "size": 81,
+      "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg2"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg2",
+        "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg3",
+      "size": 81,
+      "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg3"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg3",
+        "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg4",
+      "size": 81,
+      "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg4"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg4",
+        "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg5",
+      "size": 81,
+      "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg5"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg5",
+        "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg1",
+      "size": 87,
+      "sha": "895f1ca71051442ea9629a853b40930b307b300f",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg1",
+        "sha": "7fab5f6abe69ffe8a7861b1af651aaac6078e803",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg2",
+      "size": 81,
+      "sha": "7ed7b2637a3ff489f706adce23630fc3acf57d16",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg2",
+        "sha": "191816017ab7fbfa10e051e21d4954ec6d9a59ae",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg3",
+      "size": 86,
+      "sha": "b827b1cd49a7a47205fdc917bcc701fe8698dcc4",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg3",
+        "sha": "de43e3142e6c2c985aec69805a0508ecd3cbd8f0",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg4",
+      "size": 81,
+      "sha": "e590b06d37898ebbdf4eb047c9347ddb3b99b007",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 0,
+      "duplicatePaths": [],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg4",
+        "sha": "1cccf1873c057f0ae24ec530fa0cc8aea45a5cb8",
+        "sameBlob": false
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg5",
+      "size": 62,
+      "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg5"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg5",
+        "sha": "d6dc9ad7a3083f8d2a1b56e4db76260bd4321269",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg6",
+      "size": 62,
+      "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg6"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg6",
+        "sha": "a4833502d08ceecd7c6e1bd956566bbe50e54c4c",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg7",
+      "size": 62,
+      "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg7"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg7",
+        "sha": "a2553746bd34bf6a1a2170d87747b0b8e523e9f5",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg8",
+      "size": 62,
+      "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg8"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg8",
+        "sha": "15113f68c8ba23a23eecab0743c127e1d62d1f3f",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/manorsman.arg9",
+      "size": 62,
+      "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg9"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/manorsman.arg9",
+        "sha": "9602a1d3ae3c52503297c51a55759daa3a2e2a5b",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg1",
+      "size": 81,
+      "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg1"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg1",
+        "sha": "a0fa727851e32d3d3511c20d2317c2a9c66a10b3",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg2",
+      "size": 81,
+      "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg2"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg2",
+        "sha": "9cbcbe84118c234beb0c779daa3ab0512b1a1dc0",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg3",
+      "size": 81,
+      "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg3"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg3",
+        "sha": "72e205a993d4e065ab14ead7a0ac7980a167a45f",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg4",
+      "size": 81,
+      "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg4"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg4",
+        "sha": "5eee6ef99ef5b3c196a9d1cecc359afc0d51b607",
+        "sameBlob": true
+      }
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/scheduleman.arg5",
+      "size": 81,
+      "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
+      "baseCandidate": null,
+      "baseExists": false,
+      "sameAsBase": false,
+      "duplicatePathCount": 1,
+      "duplicatePaths": [
+        "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg5"
+      ],
+      "counterpart": {
+        "path": "ro0000/server/merged-source/gmsv/data/npc/family/scheduleman.arg5",
+        "sha": "7c90a9c86196a6752b9c1b70d04d88b68ff1a6f4",
+        "sameBlob": true
+      }
+    }
+  ]
+}
