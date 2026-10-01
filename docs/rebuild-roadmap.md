@@ -2228,3 +2228,7 @@ Battle outer lifecycle 現在形成：
 新增 regression：`tools/check_reward_transaction.mjs` 覆蓋 max-gold 邊界與 atomic rejection；schema / reference contract 同步記錄這個 boundary。
 
 本輪仍不新增 Gold 數值公式、battle reward RNG 或 bank overflow 語義；只是補上 canonical Persistent State 的最後一道 Gold invariant。
+
+## 2026-10-01 Source provenance correction
+
+`ro0000/` 的 endpoint provenance 已校正：只有 `wwwroot/` 資料夾屬手工外網端，其餘資料均屬 VM 一鍵端。後續 source 差異分析先套用這個端點標籤，再與 pinned fixed-C 做內容／blob SHA 比對，不再把 `merged-source` 統稱為來源未知的混合端點。
