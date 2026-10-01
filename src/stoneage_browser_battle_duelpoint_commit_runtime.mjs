@@ -48,9 +48,6 @@ function commitDuelPoint(state,battleContext,plan,{
   if(!tx)return {ok:false,handled:false,stage:'battle-duelpoint-commit',reason:'transaction-id-required',state:clone(state)};
 
   const currentRevision=intOr(state.revision,0);
-  if(expectedRevision!=null&&currentRevision!==intOr(expectedRevision,null)){
-    return {ok:false,handled:false,stage:'battle-duelpoint-commit',reason:'revision-conflict',currentRevision,expectedRevision:intOr(expectedRevision,null),state:clone(state)};
-  }
 
   const existingState=isObject(state.runtimeMeta)?state.runtimeMeta:null;
   const existingBucket=isObject(existingState?.[TRANSACTION_BUCKET])?existingState[TRANSACTION_BUCKET]:null;
@@ -67,6 +64,10 @@ function commitDuelPoint(state,battleContext,plan,{
       nextDuelPoint:intOr(existingBucket[tx].nextDuelPoint,0),
       state:clone(state)
     };
+  }
+
+  if(expectedRevision!=null&&currentRevision!==intOr(expectedRevision,null)){
+    return {ok:false,handled:false,stage:'battle-duelpoint-commit',reason:'revision-conflict',currentRevision,expectedRevision:intOr(expectedRevision,null),state:clone(state)};
   }
 
   const entry=resolvePlayerEntry(battleContext,{side:plan.side,num:plan.num});
