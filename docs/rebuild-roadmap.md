@@ -3,8 +3,6 @@
 更新日期：2026-10-01
 
 
-更新日期：2026-10-01
-
 ## 2026-10-01 V4.25 follow-up：Battle Context source encounter binding
 
 在 Context Clear → Idle moving → 下一次 encounter 的回圈 audit 中，發現 ENCOUNTER_BATTLE_CONTEXT_BUILD 原本可以直接接受 caller 提供的 encounter snapshot；只要 idle.mode=encounter_pending，就可能把不相符的 encounter identity 帶進下一個 Battle Context。
