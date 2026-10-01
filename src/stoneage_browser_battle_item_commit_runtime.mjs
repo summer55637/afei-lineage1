@@ -73,7 +73,9 @@ function commitBattleItems(state,plan,{transactionId=null,expectedRevision=null,
   next.runtimeMeta[TRANSACTION_BUCKET][tx]={
     committedAt:timestamp,
     transferred:clone(transferred),
-    discarded:clone(discarded)
+    discarded:clone(discarded),
+    revisionBefore:currentRevision,
+    revisionAfter:currentRevision+1
   };
   next.runtimeMeta.updatedAt=timestamp;
   next.revision=currentRevision+1;
