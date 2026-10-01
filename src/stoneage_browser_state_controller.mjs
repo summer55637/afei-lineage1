@@ -413,7 +413,7 @@ function createBrowserStateController({
             ultimate:action.ultimate??plan.ultimate??0
           }
         );
-        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext);
+        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext?.context??result.battleContext);
         return {
           ...result,
           format:BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
@@ -457,7 +457,7 @@ function createBrowserStateController({
             settlementStartRevision:Number(currentState?.revision??0)
           }
         );
-        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext);
+        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext?.context??result.battleContext);
         return {
           ...result,
           format:BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
