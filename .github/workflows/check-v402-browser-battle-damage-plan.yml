@@ -1,0 +1,33 @@
+name: Check V4.02 Browser Battle Damage Plan
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_damage_plan_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v401_browser_battle_attack_seq_prelude.mjs'
+      - 'tools/check_v402_browser_battle_damage_plan.mjs'
+      - 'data/generated/stoneage_browser_battle_damage_plan_schema.json'
+      - 'docs/reference/v401-browser-battle-attack-seq-prelude.md'
+      - 'docs/reference/v402-browser-battle-damage-plan.md'
+      - 'docs/rebuild-roadmap.md'
+      - '.github/workflows/check-v402-browser-battle-damage-plan.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.01 and V4.02 attack regressions
+        run: |
+          node tools/check_v401_browser_battle_attack_seq_prelude.mjs
+          node tools/check_v402_browser_battle_damage_plan.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_damage_plan_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v402_browser_battle_damage_plan.mjs
