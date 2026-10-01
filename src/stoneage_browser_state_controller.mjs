@@ -1072,17 +1072,39 @@ function createBrowserStateController({
         const idleMode=String(currentState?.idle?.mode??'');
         if(idleMode!=='encounter_pending')return {ok:false,handled:false,stage:'battle-context',reason:'idle-state-not-encounter-pending',idleMode,state:clone(currentState)};
         if(!Array.isArray(action.enemyTeam)||action.enemyTeam.length<1)return {ok:false,handled:false,stage:'battle-context',reason:'enemy-team-required',state:clone(currentState)};
-        const encounter=action.encounter??{
+        let encounter=action.encounter??{
           floorId:currentState?.world?.position?.floorId??null,
           x:currentState?.world?.position?.x??null,
           y:currentState?.world?.position?.y??null,
           encounterId:null
         };
+        if(worldEncounterRuntime?.ok===true){
+          const resolvedEncounter=await worldEncounterRuntime.prepare(currentState,{
+            position:encounter,
+            encounterId:encounter?.encounterId??null
+          });
+          if(!resolvedEncounter.ok){
+            return {
+              ...resolvedEncounter,
+              stage:'battle-context-encounter-binding',
+              reason:resolvedEncounter.reason??'encounter-binding-failed',
+              state:clone(currentState)
+            };
+          }
+          encounter=resolvedEncounter.encounter;
+        }
         const player=currentState?.player??null;
         let activePet=action.activePet??null;
         if(activePet==null){
           const activeId=currentState?.pets?.activePetId??null;
           activePet=activeId==null?null:(currentState?.pets?.petBox??[]).find(p=>String(p?.id??p?.petId??'')===String(activeId))??null;
+        }
+        const groupIdValue=action.groupId==null?null:Number(action.groupId);
+        if(worldEncounterRuntime?.ok===true && !Number.isInteger(groupIdValue)){
+          return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'encounter-group-id-required',state:clone(currentState)};
+        }
+        if(worldEncounterRuntime?.ok===true && Array.isArray(encounter?.groupIds) && !encounter.groupIds.map(Number).includes(groupIdValue)){
+          return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'group-not-in-encounter',groupId:groupIdValue,encounterId:encounter?.encounterId??null,state:clone(currentState)};
         }
         let battleFieldNo=action.battleFieldNo;
         let battleFieldResolution=null;
