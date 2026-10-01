@@ -48,7 +48,7 @@ const coreStatRolls=[
 {
   const c=controller();
   await c.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounter,groupRoll:2});
-  const generated=await c.dispatch({type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,encounter,groupId:94,entryMaxRoll:2,enemyRolls:[0,1]});
+  const generated=await c.dispatch({type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,encounter,groupId:94,entryMaxRoll:2,enemyRolls:[0,1],enemyStatRolls:coreStatRolls});
   assert.equal(generated.ok,true,JSON.stringify(generated));
   const tampered=structuredClone(generated.team);
   tampered[1]={...tampered[1],enemyId:120};
