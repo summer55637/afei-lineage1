@@ -220,3 +220,4 @@ const coreStatRolls=[
     hpMutation:false,
     persistentMutation:false
   },null,2));
+}
