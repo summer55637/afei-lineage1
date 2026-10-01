@@ -23,7 +23,10 @@
       "attack >= defense*8/7 -> RAND(0,attack/8)-attack/16 + (attack-defense)*2"
     ],
     "elemental": "BATTLE_AttrAdjust -> BATTLE_AttrCalc after base damage",
-    "field": "BATTLE_FieldAttAdjust default field_att=NONE returns 0.5, so attacker/defender ratio defaults to 1"
+    "field": "BATTLE_FieldAttAdjust default field_att=NONE returns 0.5, so attacker/defender ratio defaults to 1",
+    "compileFlags": {
+      "_BATTLE_NEWPOWER": true
+    }
   },
   "browser": {
     "rng": "caller injected",
