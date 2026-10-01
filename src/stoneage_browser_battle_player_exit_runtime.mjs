@@ -8,6 +8,7 @@ const intOr=(v,fallback=null)=>{
   const n=Number(v);
   return Number.isFinite(n)?Math.trunc(n):fallback;
 };
+import { resolveSettlementReceiptForBattle } from './stoneage_browser_battle_settlement_runtime.mjs';
 
 function unwrapBattleContext(input){
   if(!isObject(input))return null;
@@ -21,7 +22,7 @@ function findPlayerEntry(context){
   return entries.find(entry=>isObject(entry)&&intOr(entry.bid,null)===0&&String(entry.sourceType??'')==='player')??null;
 }
 
-function planBattlePlayerExit(contextInput,state,{settlementComplete=false}={}){
+function planBattlePlayerExit(contextInput,state,{settlementComplete=false,settlementReceiptId=null}={}){
   const context=unwrapBattleContext(contextInput);
   if(!context)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-context-required'};
   const mode=String(context.mode??'').trim().toLowerCase();
@@ -29,6 +30,8 @@ function planBattlePlayerExit(contextInput,state,{settlementComplete=false}={}){
   if(mode!=='finish'&&sourceMode!==3)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-not-finished'};
   if(settlementComplete!==true)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'settlement-complete-flag-required'};
   if(!isObject(state)||!isObject(state.player))return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'persistent-player-required'};
+  const receipt=resolveSettlementReceiptForBattle(state,{context},settlementReceiptId);
+  if(!receipt.ok)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:receipt.reason,receiptId:receipt.receiptId??settlementReceiptId??null};
 
   const entry=findPlayerEntry(context);
   if(!entry)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-player-entry-required'};
@@ -67,6 +70,10 @@ function planBattlePlayerExit(contextInput,state,{settlementComplete=false}={}){
     battleMode:mode||null,
     sourceMode,
     settlementComplete:true,
+    settlementReceiptBound:true,
+    settlementReceiptId:receipt.receiptId,
+    settlementStartRevision:receipt.receipt.startRevision,
+    settlementReceiptRevision:receipt.receiptRevision,
     player:{
       playerId:String(entry.characterId??state.player.id??'player').trim()||'player',
       persistentHpBefore:persistentHp,
