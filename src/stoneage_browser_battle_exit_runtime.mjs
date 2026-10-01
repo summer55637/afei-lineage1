@@ -4,7 +4,7 @@ const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const clone=v=>JSON.parse(JSON.stringify(v));
 const intOr=(v,fallback=null)=>{if(v==null||String(v).trim()==='')return fallback;const n=Number(v);return Number.isFinite(n)?Math.trunc(n):fallback;};
 
-function planBattleExit(context,state,{settlementComplete=false}={}){
+function planBattleExit(context,state,{settlementComplete=false,petMailModeById=null}={}){
   if(!isObject(context)||!isObject(context.context))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-context-required'};
   const mode=String(context.context.mode??'').trim().toLowerCase();
   const sourceMode=intOr(context.context.sourceMode,null);
@@ -19,7 +19,14 @@ function planBattleExit(context,state,{settlementComplete=false}={}){
     if(!petId)continue;
     const hp=intOr(pet.hp,null);
     if(hp==null)continue;
-    if(hp<=0)pets.push({petId,hpBefore:hp,hpAfter:1});
+    const declaredMailMode = petMailModeById && Object.prototype.hasOwnProperty.call(petMailModeById,petId)
+      ? intOr(petMailModeById[petId],null)
+      : intOr(pet.mailMode??null,null);
+    if(hp<=0){
+      if(declaredMailMode==null)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'pet-mail-mode-required',petId};
+      if(declaredMailMode!==0)continue;
+      pets.push({petId,hpBefore:hp,hpAfter:1,mailMode:declaredMailMode});
+    }
   }
 
   return {
@@ -30,12 +37,13 @@ function planBattleExit(context,state,{settlementComplete=false}={}){
       repository:'gavinlinasd/StoneAge',
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       function:'BATTLE_Exit',
-      playerExitRule:'scan all owned Pet slots; dead or HP<=0 -> isDie=false and HP=1'
+      playerExitRule:'scan all owned Pet slots; skip CHAR_MAILMODE != CHAR_PETMAIL_NONE; dead Pet -> isDie=false and HP=1'
     },
     battleMode:mode||null,
     sourceMode,
     settlementComplete:true,
     pets,
+    petMailModeSource:'explicit petMailModeById or persisted pet.mailMode; missing dead-Pet mail mode fails closed',
     petCountScanned:Array.isArray(state.pets.petBox)?state.pets.petBox.length:0,
     onlyDeadPetsMutated:true,
     activePetIdPreserved:true,
