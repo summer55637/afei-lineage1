@@ -1,3 +1,38 @@
+## 2026-10-01 Blocker / Disabled Policy Reset：完整 endpoint corpus 讓舊結論重新可驗證
+
+本日開始，專案不再把「永久停用」、「明確停用」、「卡住」、「反覆卡住」視為不可逆狀態。
+
+### Feature policy
+
+`data/generated/stoneage_disabled_features.json` 只保存目前真正需要停用的 feature。
+
+移出停用清單不代表立即啟用，而是重新進入 source reconstruction；必須經 source closure、semantic check、regression、runtime admission 才能進 playable。
+
+2026-10-01：GMQUE／抓寵活動已移出永久停用，進入 `reopened-for-source-reconstruction`。目前 runtime/playable 仍為 false。
+
+### Blocker policy
+
+任何舊 blocker，只要有新的 authoritative endpoint evidence、不同版本的實質資料差異、此前未查過的 evidence layer，或新的 runtime prerequisite，都可以重新開案。
+
+因此目前以下舊 blocker 全部重新進入 re-audit：
+
+- 4000→200 disconnected component：endpoint `mapwarp.txt` 已確認 4000↔200 row 存在，下一步改查 endpoint LS2MAP / component / portal-origin reachability。
+- 3000→200 `(587,318)`：原本是 fixed-C walkability 結論，現在必須重新核對 endpoint destination map。
+- Starter Item 24114：不再只看 fixed-C；endpoint `setup.cf` 改為 `ITEM1=32003` 且選 `itemset6.csv`，兩端必須分開閉合。
+- GMQUE：不再以永久停用結束，而是重新尋找 endpoint `RANDGMQUE / QUEPART0..3` 與 reward pet mapping。
+
+### 不變的底線
+
+重開 ≠ 通過。
+
+仍然禁止：猜測、synthetic bridge、私自 remap、用 fixture 冒充 production、把 variant 自動判成錯誤。
+
+新的主流程仍是：
+
+Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime
+
+本節為 2026-10-01 起的現行政策；更早的 changelog / milestone 文字保留歷史當時判定，不視為目前政策。
+
 # 重建藍圖：最終目標前的資料與系統補齊
 
 更新日期：2026-10-01
