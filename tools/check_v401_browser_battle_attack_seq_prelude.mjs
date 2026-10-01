@@ -45,15 +45,15 @@ context.context.sides[1].entries[0]=e(10,'enemy',20);
 let duck=duckCheck(
   context.context.sides[0].entries[0],
   context.context.sides[1].entries[0],
-  {duckRoll:3000}
+  {duckRoll:1200}
 );
 assert.equal(duck.ok,true,JSON.stringify(duck));
-assert.equal(duck.per,3000);
+assert.equal(duck.per,1200);
 assert.equal(duck.dodged,true);
 duck=duckCheck(
   context.context.sides[0].entries[0],
   context.context.sides[1].entries[0],
-  {duckRoll:3001}
+  {duckRoll:1201}
 );
 assert.equal(duck.dodged,false);
 
@@ -145,7 +145,7 @@ console.log(JSON.stringify({
   pass:true,
   format:'stoneage-v401-browser-battle-attack-seq-prelude-v1',
   sourceOrder:['BATTLE_DuckCheck','BATTLE_GuardianCheck','BATTLE_CriticalCheck'],
-  duck:{per:3000,rollHit:3000,rollMiss:3001},
+  duck:{per:1200,rollHit:1200,rollMiss:1201},
   critical:{rollHit:1414,rollMiss:1415,strictLessThan:true},
   guardianReplacement:{requested:10,final:12},
   guardianThrowWeaponExcluded:true,
