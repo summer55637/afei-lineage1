@@ -3,9 +3,10 @@
   "purpose": "Provenance and completeness index for the most complete practical deployment corpus. This catalog is distinct from the pinned fixed-C world source catalog.",
   "provenanceClaim": "依專案已確認來源，VM 一鍵端與手工外網端均為可直接架設石器時代手游之實際部署資料複製件；此 provenance 本身不等同於逐檔 runtime boot proof。",
   "exactManualExternalRules": [
+    "ro0000/docs/搭建教程.txt",
     "ro0000/server/merged-source/wwwroot/"
   ],
-  "vmOneClickRule": "在本 catalog 的原始 endpoint corpus 範圍內，除唯一手工外網端路徑外，其餘全部標記為 VM 一鍵端。",
+  "vmOneClickRule": "在本 catalog 的原始 endpoint corpus 範圍內，除上述兩個手工外網端路徑外，其餘全部標記為 VM 一鍵端。",
   "explicitClassificationExample": {
     "path": "ro0000/server/merged-source/www/wwwroot/",
     "provenance": "vm-one-click",
@@ -22,12 +23,12 @@
     "totalBytes": 185166100,
     "byProvenance": {
       "manualExternalWeb": {
-        "fileCount": 22,
-        "totalBytes": 1051398
+        "fileCount": 23,
+        "totalBytes": 1053042
       },
       "vmOneClick": {
-        "fileCount": 8727,
-        "totalBytes": 184114702
+        "fileCount": 8726,
+        "totalBytes": 184113058
       }
     },
     "metadataExcluded": [
@@ -42,7 +43,7 @@
       "root": "ro0000/server/merged-source/wwwroot/",
       "gitPath": "ro0000/server/merged-source/wwwroot",
       "treeSha": "4365cf5e31f568b6816d5021990c1cb40185bc32",
-      "description": "手工外網端 Web root；這是唯一被指定為手工外網端的 wwwroot 路徑。",
+      "description": "手工外網端 Web root。",
       "stats": {
         "fileCount": 22,
         "totalBytes": 1051398,
@@ -59,12 +60,12 @@
       }
     },
     {
-      "id": "vm-setup-guide",
-      "provenance": "vm-one-click",
+      "id": "manual-build-guide",
+      "provenance": "manual-external-web",
       "root": "ro0000/docs/搭建教程.txt",
       "gitPath": "ro0000/docs/搭建教程.txt",
       "treeSha": "098a6bd6395bf7cf5b118756ec832ebd8b73ca7f",
-      "description": "VM 一鍵端來源中的架設／操作教程；檔名不改變其來源角色。",
+      "description": "手工外網端架設／操作教程。",
       "stats": {
         "fileCount": 1,
         "totalBytes": 1644,
@@ -83,7 +84,7 @@
       "root": "ro0000/server/merged-source/",
       "gitPath": "ro0000/server/merged-source",
       "treeSha": "d2963d5e6640fcaf58d68b367a9252aac544968b",
-      "description": "VM 一鍵端 Server/Web 原始快照；唯一排除手工外網 wwwroot 子樹。",
+      "description": "VM 一鍵端 Server/Web 原始快照；排除指定的手工外網 wwwroot 子樹。",
       "stats": {
         "fileCount": 8723,
         "totalBytes": 159019922,
@@ -145,7 +146,7 @@
           "exactPathPrefix": "ro0000/server/merged-source/wwwroot/",
           "provenance": "manual-external-web",
           "treeSha": "4365cf5e31f568b6816d5021990c1cb40185bc32",
-          "reason": "Only this exact wwwroot subtree is manual external web data."
+          "reason": "This exact wwwroot subtree is manual external web data; the separate manual tutorial is classified independently."
         }
       ]
     },

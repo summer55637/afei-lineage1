@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：9462c51 — [provenance] mark setup guide as VM one-click
-- 最後更新時間：2026-10-02T07:33:56+08:00
+- 最新 commit：daf9cdc — [provenance] classify setup tutorial as manual external
+- 最後更新時間：2026-10-02T07:38:18+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -24,8 +24,8 @@
 
 ### Endpoint Corpus
 
-- 手工外網端：22 files；1,051,398 bytes
-- VM 一鍵端：8,727 files；184,114,702 bytes
+- 手工外網端：23 files；1,053,042 bytes
+- VM 一鍵端：8,726 files；184,113,058 bytes
 - Corpus 合計：8,749 files；185,166,100 bytes
 - Endpoint snapshot completeness：complete-for-defined-key-artifacts；key artifacts 12/12
 - Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端
