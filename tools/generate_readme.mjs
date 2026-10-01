@@ -64,6 +64,7 @@ const endpointItemSeedAudit = loadJson('data/generated/stoneage_endpoint_item_se
 const endpointMapwarpAudit = loadJson('data/generated/stoneage_endpoint_mapwarp_audit.json') ?? {};
 const endpointBattleAudit = loadJson('data/generated/stoneage_endpoint_battle_data_source_audit.json') ?? {};
 const endpointNpcAudit = loadJson('data/generated/stoneage_endpoint_npc_source_audit.json') ?? {};
+const endpointCompletenessAudit = loadJson('data/generated/stoneage_endpoint_completeness_audit.json') ?? {};
 const endpointSetupAudit = loadJson('data/generated/stoneage_endpoint_setup_config_audit.json') ?? {};
 const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
@@ -118,6 +119,7 @@ const auto = [
   '- 手工外網端：' + comma(endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb?.totalBytes) + ' bytes',
   '- VM 一鍵端：' + comma(endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick?.totalBytes) + ' bytes',
   '- Corpus 合計：' + comma(endpointCatalog.sourceCorpus?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.totalBytes) + ' bytes',
+  '- Endpoint snapshot completeness：' + (endpointCompletenessAudit.status?.snapshotStructure ?? 'unknown') + '；key artifacts ' + (endpointCompletenessAudit.status?.keyArtifactCoverage ?? '—'),
   '- Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端',
   '- Endpoint Item seed：' + (endpointItemSeedAudit.status === 'unresolved' ? '⚠️ unresolved' : '⚠️ candidate') + '；setup `ITEM1=' + (endpointItemSeedAudit.endpointConfig?.item1 ?? '—') + '`；selected `itemset6.csv` exact token presence=' + (endpointItemSeedAudit.keyFindings?.configuredItem1PresentAsExactToken ? 'yes' : 'no'),
   '- Endpoint MapWarp：' + comma(endpointMapwarpAudit.source?.endpointRows) + ' rows；' + comma(endpointMapwarpAudit.exactSetComparison?.endpointOnly) + ' endpoint-only；' + comma(endpointMapwarpAudit.exactSetComparison?.fixedOnly) + ' fixed-C-only',
