@@ -9,6 +9,7 @@ on:
       - 'src/stoneage_browser_battle_exit_runtime.mjs'
       - 'src/stoneage_browser_battle_exit_commit_runtime.mjs'
       - 'src/stoneage_browser_battle_context_clear_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
       - 'data/generated/stoneage_browser_battle_context_clear_schema.json'
       - 'data/generated/stoneage_browser_battle_settlement_exit_gate_schema.json'
       - 'tools/check_v421_browser_battle_exit.mjs'
@@ -16,6 +17,7 @@ on:
       - 'tools/check_v422_browser_battle_player_exit_commit.mjs'
       - 'tools/check_v425_browser_battle_settlement_exit_gate.mjs'
       - 'tools/check_v425_browser_battle_context_clear.mjs'
+      - 'tools/check_browser_battle_context_clear_gate.mjs'
   pull_request:
     paths:
       - 'src/stoneage_browser_battle_settlement_runtime.mjs'
@@ -43,3 +45,4 @@ jobs:
       - run: node tools/check_v424_browser_battle_settlement_receipt.mjs
       - run: node tools/check_v425_browser_battle_settlement_exit_gate.mjs
       - run: node tools/check_v425_browser_battle_context_clear.mjs
+      - run: node tools/check_browser_battle_context_clear_gate.mjs
