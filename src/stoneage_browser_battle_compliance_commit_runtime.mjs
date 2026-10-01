@@ -73,7 +73,9 @@ function commitBattleCompliance(state,plan,{transactionId=null,expectedRevision=
   next.runtimeMeta[TRANSACTION_BUCKET]=isObject(next.runtimeMeta[TRANSACTION_BUCKET])?next.runtimeMeta[TRANSACTION_BUCKET]:{};
   next.runtimeMeta[TRANSACTION_BUCKET][tx]={
     committedAt:timestamp,
-    characters:committed
+    characters:committed,
+    revisionBefore:currentRevision,
+    revisionAfter:currentRevision+1
   };
   next.runtimeMeta.updatedAt=timestamp;
   next.revision=currentRevision+1;
