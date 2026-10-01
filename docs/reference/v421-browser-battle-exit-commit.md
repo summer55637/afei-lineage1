@@ -2,6 +2,9 @@
 
 V4.21 commits only the source-closed Pet final-exit cleanup from the V4.21 plan.
 
+Before mutation, the commit boundary also requires the plan to carry `settlementComplete=true`; otherwise the commit fails closed.
+
+
 On success:
 - each planned dead/HP<=0 owned Pet becomes HP 1;
 - alive Pet HP is unchanged;
