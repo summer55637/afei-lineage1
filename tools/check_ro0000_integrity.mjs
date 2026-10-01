@@ -308,6 +308,7 @@ assert(isolatedResidueAudit.entries?.find(x=>x.id==='huoyue-bak' && x.runtimeEli
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='ridenpc2-tilde' && x.classification==='alternate-version-script-with-formal-sibling' && x.runtimeEligibility==='unproven'),'ro0000 ridenpc2 residue classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='soccer-tilde' && x.classification==='orphan-feature-bundle-with-companion-and-database-gap' && x.runtimeEligibility==='unproven'),'ro0000 soccer residue classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='PetUp1-tilde' && x.classification==='alternate-feature-version-with-formal-sibling' && x.runtimeEligibility==='unproven'),'ro0000 PetUp1 residue classification drift');
+assert(isolatedResidueAudit.entries?.find(x=>x.id==='YamaKing-tilde' && x.classification==='alternate-feature-version-with-cross-root-counterpart' && x.runtimeEligibility==='unproven' && x.evidence?.some(v=>v.includes('7200 vs 3600 seconds'))),'ro0000 YamaKing variant classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-data' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng data loader classification drift');
 assert(isolatedResidueAudit.entries?.find(x=>x.id==='neweq-create-hydata' && x.runtimeEligibility==='loader-path-sensitive'),'ro0000 hecheng hydata loader classification drift');
 const hechengAuditPath=path.join(ROOT,'data/generated/stoneage_ro0000_hecheng_loader_audit.json');
