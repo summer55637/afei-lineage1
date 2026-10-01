@@ -98,8 +98,8 @@ for(const [rel,x] of manualMap){
 }
 for(const rel of nestedMap.keys()) if(!manualMap.has(rel)) webNestedOnly++;
 
-const backupLike=files.filter(x=>/(?:\\.bak|\\.old|\\.new|\\.tmp|~|\\.arg--|\\.create---|\\.template--|\\.conf1|\\.lua--)$/i.test(x.path));
-const multipartArg=files.filter(x=>/\\.arg[1-9]$/i.test(x.path));
+const backupLike=files.filter(x=>/(?:\.bak|\.old|\.new|\.tmp|~|\.arg--|\.create---|\.template--|\.conf1|\.lua--)$/i.test(x.path));
+const multipartArg=files.filter(x=>/\.arg[1-9]$/i.test(x.path));
 const zeroSize=files.filter(x=>(x.size??0)===0);
 
 const shaGroups=new Map();
@@ -114,13 +114,13 @@ const crossMirrorDuplicateGroups=duplicateGroups.filter(v=>v.some(p=>p.startsWit
 const setup=fs.readFileSync(path.join(GMSV,'setup.cf'),'utf8');
 const treePaths=new Set(nodes.map(x=>x.path));
 const setupRefs=[];
-for(const line of setup.split(/\\r?\\n/)){
-  if(!line || /^\\s*#/.test(line)) continue;
+for(const line of setup.split(/\r?\n/)){
+  if(!line || /^\s*#/.test(line)) continue;
   const m=line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.+)$/);
   if(!m || !/(file|dir|path)$/i.test(m[1])) continue;
   const value=m[2].trim();
-  if(!/^(?:\\.\\/)?data\\//.test(value)) continue;
-  const clean=value.replace(/^\\.\\//,'').split(/[,#\\s]/)[0];
+  if(!/^(?:\.\/)?data\//.test(value)) continue;
+  const clean=value.replace(/^\.\//,'').split(/[,#\s]/)[0];
   if(!clean) continue;
   const p='ro0000/server/merged-source/gmsv/'+clean;
   setupRefs.push({key:m[1],value:clean,kind:fileByPath.has(p)?'file':dirs.has(p)?'directory':'missing'});
@@ -132,13 +132,13 @@ function magic(rel, expected){
   return {path:rel,size:b.length,signature:b.subarray(0,expected.length).toString('ascii'),matches:b.subarray(0,expected.length).equals(Buffer.from(expected,'ascii'))};
 }
 const binaryChecks=[
-  magic('ro0000/server/merged-source/gmsv/gmsvjt', '\\x7fELF'),
-  magic('ro0000/client/android/冰河石器-隐盟.apk', 'PK\\x03\\x04')
+  magic('ro0000/server/merged-source/gmsv/gmsvjt', '\x7fELF'),
+  magic('ro0000/client/android/冰河石器-隐盟.apk', 'PK\x03\x04')
 ];
 assert(binaryChecks.every(x=>x.matches),'binary signature check failed');
 
 const sql=fs.readFileSync(path.join(ROOT,'ro0000/server/database/175sa.sql'),'utf8');
-const tables=[...sql.matchAll(/CREATE TABLE\\s+(?:IF NOT EXISTS\\s+)?[\\\`'"]?([A-Za-z0-9_]+)[\\\`'"]?/gi)].map(m=>m[1]);
+const tables=[...sql.matchAll(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?[\\`'"]?([A-Za-z0-9_]+)[\\`'"]?/gi)].map(m=>m[1]);
 const sqlCheck={
   mysqlDumpHeader:/^-- MySQL dump/m.test(sql),
   createTableStatements:tables.length,
@@ -171,7 +171,7 @@ const coreFiles=[
 ];
 const coreDataChecks=coreFiles.map(rel=>{
   const c=fs.readFileSync(path.join(ROOT,rel),'utf8');
-  return {path:rel,bytes:Buffer.byteLength(c),nonEmptyLines:c.split(/\\r?\\n/).filter(Boolean).length};
+  return {path:rel,bytes:Buffer.byteLength(c),nonEmptyLines:c.split(/\r?\n/).filter(Boolean).length};
 });
 
 console.log(JSON.stringify({
