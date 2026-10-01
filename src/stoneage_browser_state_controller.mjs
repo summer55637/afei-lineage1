@@ -445,7 +445,8 @@ function createBrowserStateController({
           {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
           {
             finishPlan:plan,
-            winnerSide:action.winnerSide??plan.winnerSide??null
+            winnerSide:action.winnerSide??plan.winnerSide??null,
+            settlementStartRevision:Number(currentState?.revision??0)
           }
         );
         if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext);
