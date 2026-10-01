@@ -67,7 +67,7 @@ const build=await controller.dispatch({
 });
 assert.equal(build.ok,true,JSON.stringify(build));
 controller.getBattleContext().context.dpbattle=0;
-const route=await controller.dispatch({type:CONTROLLER_PROFIT_ROUTE_PLAN});
+const route=await controller.dispatch({type:CONTROLLER_PROFIT_ROUTE_PLAN,dpbattle:0});
 assert.equal(route.ok,true,JSON.stringify(route));
 assert.equal(route.route,'exp-gold');
 assert.equal(route.fixedCFunction,'BATTLE_GetExpGold');
