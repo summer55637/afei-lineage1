@@ -34,6 +34,11 @@ assert.equal(committed.state.revision,5);
 assert.equal(committed.state.player.gold,0);
 
 const retry=commitDuelPoint(committed.state,battleContext,plan,{transactionId:'battle-v412-1',expectedRevision:5,now});
+const retryOldRevision=commitDuelPoint(committed.state,battleContext,plan,{transactionId:'battle-v412-1',expectedRevision:4,now});
+assert.equal(retryOldRevision.ok,true);
+assert.equal(retryOldRevision.idempotent,true);
+assert.equal(retryOldRevision.state.player.duelPoint,150);
+assert.equal(retryOldRevision.state.revision,5);
 assert.equal(retry.ok,true);
 assert.equal(retry.idempotent,true);
 assert.equal(retry.applied,false);
