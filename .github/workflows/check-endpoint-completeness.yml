@@ -8,7 +8,9 @@ on:
       - 'ro0000/**'
       - 'data/generated/stoneage_endpoint_completeness_audit.json'
       - 'tools/check_endpoint_completeness.mjs'
+      - 'tools/check_ro0000_integrity.mjs'
       - 'docs/reference/endpoint-completeness-audit.md'
+      - 'docs/reference/ro0000-integrity-audit.md'
       - '.github/workflows/check-endpoint-completeness.yml'
   workflow_dispatch:
 
@@ -23,6 +25,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Check raw ro0000 integrity
+        run: node tools/check_ro0000_integrity.mjs
 
       - name: Check endpoint completeness audit
         run: node tools/check_endpoint_completeness.mjs --check
