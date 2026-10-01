@@ -50,4 +50,9 @@ assert.equal(livePlan.ok,true,JSON.stringify(livePlan));
 assert.equal(livePlan.player.hpAfter,33);
 assert.equal(livePlan.player.mpAfter,9);
 
+const inconsistent=planBattlePlayerExit({mode:'finish',sourceMode:3,sides:[{side:0,entries:[{bid:0,sourceType:'player',characterId:'p1',hp:0,maxHp:100,mp:9,maxMp:20,isDie:false}]}]},state,{settlementComplete:true});
+assert.equal(inconsistent.ok,true,JSON.stringify(inconsistent));
+assert.equal(inconsistent.player.hpAfter,0);
+assert.equal(inconsistent.player.battleIsDie,false);
+
 console.log('V4.22 Browser Battle player exit plan regression: PASS');
