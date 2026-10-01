@@ -177,6 +177,8 @@ function createBrowserStateController({
   let sequence=0;
   let battleContext=null;
   let itemShopUi=itemShopUiInitialState();
+  // Transient encounter pipeline; never persisted. Binds source encounter -> selected group -> generated enemy roster.
+  let encounterPipeline=null;
   // Serialize controller dispatches so async state-mutating actions cannot observe the same revision concurrently.
   let dispatchTail=Promise.resolve();
   return {
@@ -1093,6 +1095,27 @@ function createBrowserStateController({
           }
           encounter=resolvedEncounter.encounter;
         }
+        if(encounterGroupCatalog){
+          const pipeline=encounterPipeline;
+          const currentRevision=Number(currentState?.revision??0);
+          if(!pipeline?.generation)return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-generation-plan-required',state:clone(currentState)};
+          if(Number(pipeline.revision)!==currentRevision){
+            encounterPipeline=null;
+            return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-generation-plan-revision-stale',state:clone(currentState)};
+          }
+          if(Number(pipeline.encounter?.encounterId)!==Number(encounter?.encounterId)
+            || Number(pipeline.encounter?.floorId)!==Number(encounter?.floorId)
+            || Number(pipeline.encounter?.x)!==Number(encounter?.x)
+            || Number(pipeline.encounter?.y)!==Number(encounter?.y)){
+            return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-generation-encounter-mismatch',state:clone(currentState)};
+          }
+          if(Number(pipeline.generation.group?.groupId)!==Number(groupIdValue)){
+            return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-generation-group-mismatch',state:clone(currentState)};
+          }
+          if(JSON.stringify(pipeline.generation.team??null)!==JSON.stringify(action.enemyTeam??null)){
+            return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-team-generation-mismatch',state:clone(currentState)};
+          }
+        }
         const player=currentState?.player??null;
         let activePet=action.activePet??null;
         if(activePet==null){
@@ -1192,10 +1215,28 @@ function createBrowserStateController({
         if(worldEncounterRuntime.ok!==true)return {ok:false,handled:false,stage:'encounter-resolution',reason:worldEncounterRuntime.reason??'browser-world-encounter-runtime-invalid',errors:worldEncounterRuntime.errors??[],state:clone(currentState)};
         const prepared=await worldEncounterRuntime.prepare(currentState,{position:action.position??action.player??null,encounterId:action.encounterId??null});
         if(!prepared.ok)return {...prepared,stage:prepared.stage??'encounter-resolution',state:clone(prepared.state??currentState)};
-        const result=worldEncounterEnemyRuntime.generate(prepared.encounter,action.groupId,currentState,{
+        const currentRevision=Number(currentState?.revision??0);
+        if(encounterPipeline && encounterPipeline.revision!==currentRevision){
+          encounterPipeline=null;
+          return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-pipeline-revision-stale',state:clone(currentState)};
+        }
+        const selectedGroupId=Number(action.groupId);
+        if(!Number.isInteger(selectedGroupId))return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-group-id-required',state:clone(currentState)};
+        if(encounterPipeline?.selection?.group?.groupId!=null && Number(encounterPipeline.selection.group.groupId)!==selectedGroupId){
+          return {ok:false,handled:false,stage:'encounter-pipeline-binding',reason:'encounter-group-selection-mismatch',selectedGroupId,currentGroupId:Number(encounterPipeline.selection.group.groupId),state:clone(currentState)};
+        }
+        const result=worldEncounterEnemyRuntime.generate(prepared.encounter,selectedGroupId,currentState,{
           entryMaxRoll:action.entryMaxRoll??null,
           enemyRolls:Array.isArray(action.enemyRolls)?action.enemyRolls:[]
         });
+        if(result.ok===true){
+          encounterPipeline={
+            revision:currentRevision,
+            encounter:clone(prepared.encounter),
+            selection:encounterPipeline?.selection??null,
+            generation:clone(result)
+          };
+        }
         return {...result,preparedEncounter:prepared.encounter,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_GROUP_SELECT){
@@ -1209,6 +1250,14 @@ function createBrowserStateController({
         const prepared=await worldEncounterRuntime.prepare(currentState,{position:action.position??action.player??null,encounterId:action.encounterId??null});
         if(!prepared.ok)return {...prepared,stage:prepared.stage??'encounter-resolution',state:clone(prepared.state??currentState)};
         const result=worldEncounterGroupRuntime.select(prepared.encounter,currentState,{groupRoll:action.groupRoll??null});
+        if(result.ok===true){
+          encounterPipeline={
+            revision:Number(currentState?.revision??0),
+            encounter:clone(prepared.encounter),
+            selection:clone(result),
+            generation:null
+          };
+        }
         return {...result,preparedEncounter:prepared.encounter,state:clone(result.state??currentState)};
       }
       if(type===ACTION_WORLD_ENCOUNTER_ROLL_COMMIT){
