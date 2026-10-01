@@ -1636,3 +1636,25 @@ Controller integration：
 - `ACTION_BATTLE_FINISH_COMMIT`
 - `BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT`
 
+## 2026-10-01 V4.10 Browser Battle Profit Route Plan
+
+V4.10 接續 V4.09 Finish Commit，先閉合 fixed-C `BATTLE_GetProfit()` 的結算分流，不提前實作 EXP/Gold/DuelPoint mutation：
+
+- `dpbattle = 1` → `BATTLE_GetDuelPoint`
+- `dpbattle = 0` → `BATTLE_GetExpGold`
+- 缺失或非 0/1 → fail-closed
+- V4.10 read-only；不修改 Battle Context、EXP、Gold、DuelPoint 或 Persistent State
+
+這個拆分是刻意的：fixed-C `BATTLE_GetProfit()` 自身只是 route selector，真正的 EXP/Gold/DuelPoint 行為在下一層函式。
+
+新增：
+- `src/stoneage_browser_battle_profit_route_runtime.mjs`
+- `data/generated/stoneage_browser_battle_profit_route_schema.json`
+- `tools/check_v410_browser_battle_profit_route.mjs`
+- `docs/reference/v410-browser-battle-profit-route.md`
+- `.github/workflows/check-v410-browser-battle-profit-route.yml`
+
+Controller integration：
+- `ACTION_BATTLE_PROFIT_ROUTE_PLAN`
+- `BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT`
+
