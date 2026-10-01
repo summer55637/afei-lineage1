@@ -78,15 +78,26 @@ assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.battleContext.context.mode,'finish');
 assert.equal(result.battleContext.context.sourceMode,3);
 
-result=await controller.dispatch({
+const finished=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
-  event:IDLE_EVENTS.REWARD_APPLIED,
-  payload:{reward:{sourceResultId:'v421-controller-battle'},supplyRequired:false},
+  event:IDLE_EVENTS.BATTLE_FINISHED,
+  payload:{battle:{resultId:'v421-controller-battle'}},
   expectedRevision:result.state.revision,
   now:'2026-10-01T11:30:01.000Z'
 });
-assert.equal(result.ok,true,JSON.stringify(result));
-assert.equal(result.state.idle.mode,IDLE_STATES.MOVING);
+assert.equal(finished.ok,true,JSON.stringify(finished));
+assert.equal(finished.state.idle.mode,IDLE_STATES.SETTLEMENT);
+assert.ok(controller.getBattleContext());
+
+const reward=await controller.dispatch({
+  type:ACTION_IDLE_EVENT,
+  event:IDLE_EVENTS.REWARD_APPLIED,
+  payload:{reward:{sourceResultId:'v421-controller-battle'},supplyRequired:false},
+  expectedRevision:finished.state.revision,
+  now:'2026-10-01T11:30:02.000Z'
+});
+assert.equal(reward.ok,true,JSON.stringify(reward));
+assert.equal(reward.state.idle.mode,IDLE_STATES.MOVING);
 assert.ok(controller.getBattleContext());
 
 const denied=await controller.dispatch({
