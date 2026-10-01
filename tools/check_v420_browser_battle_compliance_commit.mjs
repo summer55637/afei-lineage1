@@ -26,6 +26,8 @@ assert.equal(committed.state.player.hp,27);
 assert.equal(committed.state.player.mp,10);
 assert.equal(committed.state.pets.petBox[0].maxHp,20);
 assert.equal(committed.state.pets.petBox[0].hp,12);
+assert.equal(state.player.maxHp,25);
+assert.equal(state.pets.petBox[0].maxHp,18);
 assert.equal(committed.maxMpDeferred,true);
 assert.equal(committed.specialComplianceDeferred,true);
 
