@@ -9,10 +9,10 @@ import {
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_END_PLAN,
   ACTION_BATTLE_FINISH_COMMIT,
-  ACTION_BATTLE_EXIT_PLAN,
   ACTION_IDLE_EVENT,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
+import { ACTION_BATTLE_EXIT_PLAN } from '../src/stoneage_browser_battle_exit_runtime.mjs';
 import { ACTION_BATTLE_EXIT_COMMIT } from '../src/stoneage_browser_battle_exit_commit_runtime.mjs';
 import { IDLE_EVENTS, IDLE_STATES } from '../src/stoneage_idle_loop.mjs';
 
