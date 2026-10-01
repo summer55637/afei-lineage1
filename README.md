@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：ce76b34 — Add V4.10 battle profit route CI
-- 最後更新時間：2026-10-01T09:21:52+08:00
+- 最新 commit：333d891 — Record V4.10 battle profit route boundary
+- 最後更新時間：2026-10-01T09:28:38.000+08:00
 - 版本線最高 regression workflow：V4.10
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -33,7 +33,7 @@
 | Starter Item 24114 | ⚠️ fail-closed | source max ID 23009 → ITEM_tblen 23010；configured 24114 越界；actual row id 11817 / imagenumber 24114 |
 | New-player creation → Save | ✅ headless pipeline | creation → hometown position → Starter Pet → Item adapter boundary → Save Envelope → reload verification；`completed` only after Item adapter succeeds |
 | Idle route catalog | ✅ indexed | 3 path-closed towns；6/8 eligible variants |
-| Battle Pipeline | ✅ V4.10 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit |
+| Battle Pipeline | ✅ V4.10 | V4.01 AttackSeq Prelude → V4.02 Damage Plan → V4.03 Critical/Guard → V4.04 DamageReact → V4.05 Counter → V4.06 Death Plan → V4.07 Death Commit → V4.08 Battle End Plan → V4.09 Finish Commit → V4.10 Profit Route Plan |
 
 ### NPC → ItemShop → Item → Gold → Persistent State
 
