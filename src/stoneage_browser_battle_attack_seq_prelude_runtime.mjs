@@ -198,7 +198,8 @@ function runAttackSeqPrelude(context,{attackerBid=null,targetBid=null,weaponType
     outcome:critical.critical?'critical':'normal',
     rngConsumed:(1+(num(attacker.drunk)>0?1:0)+(typeOf(attacker)==='player'&&num(attacker.hitRight)>0?1:0)+1),
     persistentMutation:false,
-    damageExecuted:false
+    damageExecuted:false,
+    sourceOrder:['BATTLE_DuckCheck','BATTLE_GuardianCheck','BATTLE_CriticalCheck']
   };
 }
 
