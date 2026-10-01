@@ -7,6 +7,7 @@ const BATTLE_ENTRY_MAX=10;
 const BATTLE_PLAYER_MAX=5;
 const SIDE_OFFSET=10;
 import { materializeEnemyCoreStats } from './stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs';
+import { derivePlayerCombatStats } from './stoneage_player_creation_runtime.mjs';
 
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -14,6 +15,22 @@ const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const clone=value=>JSON.parse(JSON.stringify(value));
 const intOr=value=>{const s=String(value??'').trim();if(s==='')return null;const m=s.match(/^[+-]?\d+/);return m?Number(m[0]):null;};
+function playerWorkFromState(player){
+  const derived=derivePlayerCombatStats(player?.stats??null);
+  if(!derived.ok)return {ok:false,reason:'player-combat-stats-invalid',errors:derived.errors};
+  return {ok:true,fixStr:derived.sourceWork.fixStr,fixTgh:derived.sourceWork.fixTough,fixDex:derived.sourceWork.fixDex,fixLuck:intOr(player?.luck)??0};
+}
+function petWorkFromState(pet){
+  const st=pet?.stats;
+  if(!st||typeof st!=='object')return {ok:false,reason:'pet-combat-stats-required'};
+  const vital=intOr(st.vital),str=intOr(st.str),tgh=intOr(st.tgh),dex=intOr(st.dex);
+  if([vital,str,tgh,dex].some(v=>v==null))return {ok:false,reason:'pet-combat-stats-invalid'};
+  const fixDex=Math.trunc(dex*0.01);
+  const fixStr=Math.trunc(str*0.01+tgh*0.01*0.1+vital*0.01*0.1+dex*0.01*0.05);
+  const fixTgh=Math.trunc(tgh*0.01+str*0.01*0.1+vital*0.01*0.1+dex*0.01*0.05);
+  return {ok:true,fixStr,fixTgh,fixDex,fixLuck:0};
+}
+
 
 const SOURCE_ENTRY_INIT=Object.freeze({escape:0,getitem:[-1,-1,-1]});
 const SOURCE_BATTLE_INIT=Object.freeze({use:true,mode:1,turn:0,dpbattle:0,norisk:0,flg:0,fieldAtt:0,attCount:0});
@@ -77,6 +94,8 @@ function buildBattleContext({
   if(!enemyLayout.ok)return {ok:false,handled:false,stage:'battle-context',reason:enemyLayout.reason,detail:enemyLayout};
   const field=intOr(battleFieldNo);
   if(field==null||field<0)return {ok:false,handled:false,stage:'battle-context',reason:'battle-field-no-required'};
+  const playerWork=playerWorkFromState(player);
+  if(!playerWork.ok)return {ok:false,handled:false,stage:'battle-context',reason:playerWork.reason,detail:playerWork};
   const playerEntry={
     sourceType:'player',
     characterId:String(playerId??player.id??'player').trim()||'player',
@@ -104,9 +123,21 @@ function buildBattleContext({
     isAttacked:1,
     battleWatch:0,
     escape:0,
-    getitem:[-1,-1,-1]
+    getitem:[-1,-1,-1],
+    fixStr:playerWork.fixStr,
+    fixTgh:playerWork.fixTgh,
+    fixDex:playerWork.fixDex,
+    fixLuck:playerWork.fixLuck,
+    quick:playerWork.fixDex,
+    attackPower:playerWork.fixStr,
+    defencePower:playerWork.fixTgh
   };
   if(activePet&&isObject(activePet)&&(intOr(activePet.hp)??0)<=0)return {ok:false,handled:false,stage:'battle-context',reason:'active-pet-dead-cannot-start-battle'};
+  let petWork=null;
+  if(activePet&&isObject(activePet)){
+    petWork=petWorkFromState(activePet);
+    if(!petWork.ok)return {ok:false,handled:false,stage:'battle-context',reason:petWork.reason,detail:petWork};
+  }
   const petEntry=activePet&&isObject(activePet)?{
     sourceType:'pet',
     characterId:String(activePet.id??activePet.petId??'pet').trim()||'pet',
@@ -136,7 +167,14 @@ function buildBattleContext({
     isAttacked:1,
     battleWatch:0,
     escape:0,
-    getitem:[-1,-1,-1]
+    getitem:[-1,-1,-1],
+    fixStr:petWork?.fixStr??0,
+    fixTgh:petWork?.fixTgh??0,
+    fixDex:petWork?.fixDex??0,
+    fixLuck:petWork?.fixLuck??0,
+    quick:petWork?.fixDex??0,
+    attackPower:petWork?.fixStr??0,
+    defencePower:petWork?.fixTgh??0
   }:null;
   const enemyEntries=enemyLayout.entries.map((entry,slot)=>{
     if(!entry)return null;
@@ -180,7 +218,14 @@ function buildBattleContext({
       isAttacked:1,
       battleWatch:0,
       escape:0,
-      getitem:[-1,-1,-1]
+      getitem:[-1,-1,-1],
+      fixStr:entry.coreStats?.derived?.fixStr??null,
+      fixTgh:entry.coreStats?.derived?.fixTgh??null,
+      fixDex:entry.coreStats?.derived?.fixDex??null,
+      fixLuck:0,
+      quick:entry.coreStats?.derived?.fixDex??null,
+      attackPower:entry.coreStats?.derived?.fixStr??null,
+      defencePower:entry.coreStats?.derived?.fixTgh??null
     };
   });
   return {
