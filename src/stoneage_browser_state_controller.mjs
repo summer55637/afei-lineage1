@@ -49,6 +49,7 @@ import { createBrowserBattleLevelUpPlanRuntime, ACTION_BATTLE_LEVELUP_PLAN, BROW
 import { createBrowserBattlePetGrowthPlanRuntime, ACTION_BATTLE_PET_GROWTH_PLAN, BROWSER_BATTLE_PET_GROWTH_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_pet_growth_runtime.mjs';
 import { createBrowserBattleLevelUpCommitRuntime, ACTION_BATTLE_LEVELUP_COMMIT, BROWSER_BATTLE_LEVELUP_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_levelup_commit_runtime.mjs';
 import { createBrowserBattleItemPlanRuntime, ACTION_BATTLE_ITEM_PLAN, BROWSER_BATTLE_ITEM_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_item_runtime.mjs';
+import { createBrowserBattleItemCommitRuntime, ACTION_BATTLE_ITEM_COMMIT, BROWSER_BATTLE_ITEM_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_item_commit_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -134,6 +135,7 @@ function createBrowserStateController({
   const battlePetGrowthPlanRuntime=createBrowserBattlePetGrowthPlanRuntime();
   const battleLevelUpCommitRuntime=createBrowserBattleLevelUpCommitRuntime();
   const battleItemPlanRuntime=createBrowserBattleItemPlanRuntime();
+  const battleItemCommitRuntime=createBrowserBattleItemCommitRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -473,6 +475,35 @@ function createBrowserStateController({
           format:BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
           battleContext:clone(battleContext),
           state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_ITEM_COMMIT){
+        if(battleItemCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-item-commit',reason:'browser-battle-item-commit-runtime-invalid',state:clone(currentState)};
+        let itemPlan=action.battleItemPlan??null;
+        if(!itemPlan){
+          if(!battleContext)return {ok:false,handled:false,stage:'battle-item-commit',reason:'battle-context-required',state:clone(currentState)};
+          itemPlan=battleItemPlanRuntime.plan(
+            {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+            clone(currentState),
+            {getitem:action.getitem??null}
+          );
+        }
+        if(!itemPlan?.ok)return {...itemPlan,format:BROWSER_BATTLE_ITEM_PLAN_RUNTIME_FORMAT,state:clone(currentState)};
+        const result=battleItemCommitRuntime.commit(
+          clone(currentState),
+          itemPlan,
+          {
+            transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)
+          }
+        );
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {
+          ...result,
+          format:BROWSER_BATTLE_ITEM_COMMIT_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(result.state??currentState)
         };
       }
       if(type===ACTION_BATTLE_ITEM_PLAN){
