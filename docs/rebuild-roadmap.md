@@ -1755,3 +1755,33 @@ Controller integration：
 
 下一步：`BATTLE_LEVELUP_COMMIT`，只提交已驗證的 player EXP/level/DuelPoint/skill/charm 與 pet EXP/level；`CHAR_PetLevelUp()` stat growth 另建 source-backed boundary，battle item transfer 再接續。
 
+## 2026-10-01 V4.15 Browser Battle Pet Growth Plan
+
+V4.15 接續 V4.14 的 level-up plan，依 fixed-C `CHAR_PetLevelUp()` 產生 deterministic growth plan：
+
+- `CHAR_ALLOCPOINT` 解成 VITAL/STR/TOUGH/DEX 四個 byte
+- 每個 Pet level-up 精確消耗 10 次 `RAND(0,3)` 分配點數
+- 再依 `CHAR_PETRANK` 消耗 1 次 inclusive rank RNG；Rank 0..5 範圍為 450–500、470–520、490–540、510–560、530–580、550–600
+- 四項 stat 增量按照 C `float` 計算後再 cast 為 int，最後才加到現有 Pet raw stats
+- 同一次 `CHAR_PetLevelUp()` 讀取相同的 stored `CHAR_ALLOCPOINT`；此函式本身不重寫 `CHAR_ALLOCPOINT`
+- RNG 必須作為 evidence 傳入；V4.15 不在 plan/commit 階段重新抽 RNG
+- `CHAR_complianceParameter()` 仍 deferred，不自行猜 HP/MP/derived combat
+- Legacy Pet 缺少 `allocPointPacked` / `petRank` / raw stats 時 fail-closed
+
+另外 starter-pet runtime 現在保留：
+- `allocPointPacked`
+- `serverStats`
+- `serverProgression=true`
+
+新增：
+- `src/stoneage_browser_battle_pet_growth_runtime.mjs`
+- `data/generated/stoneage_browser_battle_pet_growth_schema.json`
+- `tools/check_v415_browser_battle_pet_growth.mjs`
+- `docs/reference/v415-browser-battle-pet-growth.md`
+- `.github/workflows/check-v415-browser-battle-pet-growth.yml`
+
+Controller integration：
+- `ACTION_BATTLE_PET_GROWTH_PLAN`
+- `BROWSER_BATTLE_PET_GROWTH_PLAN_RUNTIME_FORMAT`
+
+下一步：`BATTLE_LEVELUP_COMMIT`，把 V4.13/V4.14/V4.15 已驗證的 player/Pet state mutation 一次性提交，並保留 transaction idempotency。
