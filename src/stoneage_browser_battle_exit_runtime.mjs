@@ -4,6 +4,7 @@ const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const clone=v=>JSON.parse(JSON.stringify(v));
 const intOr=(v,fallback=null)=>{if(v==null||String(v).trim()==='')return fallback;const n=Number(v);return Number.isFinite(n)?Math.trunc(n):fallback;};
 import { resolveSettlementReceiptForBattle } from './stoneage_browser_battle_settlement_runtime.mjs';
+import { resolveBattlePlayerExitForSettlement } from './stoneage_browser_battle_player_exit_commit_runtime.mjs';
 
 function planBattleExit(context,state,{settlementComplete=false,petMailModeById=null,settlementReceiptId=null}={}){
   if(!isObject(context)||!isObject(context.context))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-context-required'};
@@ -14,6 +15,14 @@ function planBattleExit(context,state,{settlementComplete=false,petMailModeById=
   if(!isObject(state)||!isObject(state.pets)||!Array.isArray(state.pets.petBox))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'persistent-pet-box-required'};
   const receipt=resolveSettlementReceiptForBattle(state,context,settlementReceiptId);
   if(!receipt.ok)return {ok:false,handled:false,stage:'battle-exit-plan',reason:receipt.reason,receiptId:receipt.receiptId??settlementReceiptId??null};
+  const player=context.context?.sides?.[0]?.entries?.find(entry=>isObject(entry)&&intOr(entry.bid,null)===0&&String(entry.sourceType??'')==='player');
+  const playerExit=resolveBattlePlayerExitForSettlement(state,{
+    settlementReceiptId:receipt.receiptId,
+    settlementStartRevision:receipt.receipt.startRevision,
+    settlementReceiptRevision:receipt.receiptRevision,
+    playerId:player?.characterId??receipt.receipt.playerId??null
+  });
+  if(!playerExit.ok)return {ok:false,handled:false,stage:'battle-exit-plan',reason:playerExit.reason,receiptId:receipt.receiptId,settlementReceiptRevision:receipt.receiptRevision};
 
   const pets=[];
   for(const pet of state.pets.petBox){
@@ -49,6 +58,8 @@ function planBattleExit(context,state,{settlementComplete=false,petMailModeById=
     settlementReceiptId:receipt.receiptId,
     settlementStartRevision:receipt.receipt.startRevision,
     settlementReceiptRevision:receipt.receiptRevision,
+    playerExitTransactionId:playerExit.transactionId,
+    playerExitRevision:playerExit.record.revisionAfter,
     pets,
     petMailModeSource:'explicit petMailModeById or persisted pet.mailMode; missing dead-Pet mail mode fails closed',
     petCountScanned:Array.isArray(state.pets.petBox)?state.pets.petBox.length:0,
