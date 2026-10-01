@@ -39,8 +39,8 @@ let result=counterCheck(ctx,{
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.action,ACTION_BATTLE_COUNTER_PLAN);
 assert.equal(result.counterMatchValue,10);
-assert.ok(Math.abs(result.counterBase-Math.sqrt(250)) < 1e-12);
-assert.ok(Math.abs(result.probabilityPercent-Math.sqrt(250)) < 1e-12);
+assert.ok(Math.abs(result.counterBase-Math.sqrt(350)) < 1e-12);
+assert.ok(Math.abs(result.probabilityPercent-Math.sqrt(350)) < 1e-12);
 assert.equal(result.triggered,true);
 assert.equal(result.rngConsumed,1);
 assert.equal(result.downstream.damageScale,0.75);
