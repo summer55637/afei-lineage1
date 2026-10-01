@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 const ROOT=process.cwd();
 const OUT=path.join(ROOT,'data/generated/stoneage_endpoint_completeness_audit.json');
 const KEY=[
- ['vm-setup-guide','ro0000/docs/搭建教程.txt','vm-one-click'],
+ ['manual-build-guide','ro0000/docs/搭建教程.txt','manual-external-web'],
  ['vm-build-guide','ro0000/docs/隐盟文本教程.txt','vm-one-click'],
  ['database','ro0000/server/database/175sa.sql','vm-one-click'],
  ['android','ro0000/client/android/冰河石器-隐盟.apk','vm-one-click'],
