@@ -49,6 +49,9 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
 
   const player=plan.player;
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'player-plan-required',state:clone(state)};
+  const planPlayerId=String(player?.playerId??'').trim();
+  const statePlayerId=String(state.player.id??'').trim();
+  if(planPlayerId&&statePlayerId&&planPlayerId!==statePlayerId)return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'player-identity-mismatch',state:clone(state)};
 
   const persistentHp=intOr(state.player.hp,null);
   const persistentMp=intOr(state.player.mp,null);
