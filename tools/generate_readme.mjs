@@ -61,6 +61,7 @@ const endpointCatalog = loadJson('data/generated/stoneage_endpoint_source_catalo
 const endpointItemSeedAudit = loadJson('data/generated/stoneage_endpoint_item_seed_audit.json') ?? {};
 const endpointMapwarpAudit = loadJson('data/generated/stoneage_endpoint_mapwarp_audit.json') ?? {};
 const endpointBattleAudit = loadJson('data/generated/stoneage_endpoint_battle_data_source_audit.json') ?? {};
+const endpointNpcAudit = loadJson('data/generated/stoneage_endpoint_npc_source_audit.json') ?? {};
 const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
 const browserDocs = readText('docs/reference/v340-browser-itemshop-runtime.md');
@@ -114,6 +115,7 @@ const auto = [
   '- Endpoint Item seed：' + (endpointItemSeedAudit.status === 'unresolved' ? '⚠️ unresolved' : '⚠️ candidate') + '；setup `ITEM1=' + (endpointItemSeedAudit.endpointConfig?.item1 ?? '—') + '`；selected `itemset6.csv` exact token presence=' + (endpointItemSeedAudit.keyFindings?.configuredItem1PresentAsExactToken ? 'yes' : 'no'),
   '- Endpoint MapWarp：' + comma(endpointMapwarpAudit.source?.endpointRows) + ' rows；' + comma(endpointMapwarpAudit.exactSetComparison?.endpointOnly) + ' endpoint-only；' + comma(endpointMapwarpAudit.exactSetComparison?.fixedOnly) + ' fixed-C-only',
   '- Endpoint Battle data：encount ' + comma(endpointBattleAudit.files?.encount?.comparison?.endpointRows) + '；group1 ' + comma(endpointBattleAudit.files?.group?.comparison?.endpointRows) + '；enemy1 ' + comma(endpointBattleAudit.files?.enemy?.comparison?.endpointRows) + '；enemybase1 ' + comma(endpointBattleAudit.files?.enemybase?.comparison?.endpointRows) + '；Encounter→Group unresolved active IDs=' + comma(endpointBattleAudit.endpointInternalReferences?.unresolvedActiveEncounterGroups?.length),
+  '- Endpoint NPC：' + comma(endpointNpcAudit.endpoint?.files) + ' files；' + comma(endpointNpcAudit.comparison?.changedBlob) + ' changed blobs；出生城 variants 100=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === \'100\')?.changedBlob) + ' / 200=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === \'200\')?.changedBlob) + ' / 300=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === \'300\')?.changedBlob) + ' / 400=' + comma(endpointNpcAudit.hometownFloors?.find(x => x.floor === \'400\')?.changedBlob),
   '',
   '### 核心 closure',
   '',
