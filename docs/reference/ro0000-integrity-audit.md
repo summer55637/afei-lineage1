@@ -71,6 +71,6 @@ check-endpoint-completeness workflow 在 ro0000 變動時，現在會先執行�
 
 node tools/check_ro0000_integrity.mjs
 
-然後再執行原有 endpoint completeness check。
+然後再執行原有 endpoint completeness check。舊 checker 的欄位漂移也已同步修正，避免拿舊 JSON schema 判錯目前 snapshot。
 
 因此 ro0000 每次變更都會先通過「原始資料完整性」這一層，再進 semantic／runtime audit。
