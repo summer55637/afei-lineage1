@@ -27,9 +27,23 @@
 
 這代表 Starter Item 24114 現在不能繼續只以 fixed-C blocker 描述；它至少同時存在一個「endpoint deployment variant」待閉合。
 
+## 目前實際結果
+
+目前 Runner 直接讀取 endpoint 原始 CSV：
+
+- `setup.cf`：`ITEM1=32003`
+- `itemset6file`：`data/itemset6.csv`
+- CSV：3,792,005 bytes；14,502 rows；主要資料列為 95 columns
+- exact numeric token `32003`：0 次
+- exact numeric token `24114`：1 次，line 6943 / token 18；相鄰 token 17 = `11817`、token 19 = `9900`、token 20 = `16`
+
+因此目前 **endpoint seed = unresolved**：配置指定的 32003 在它所指定的 Item table 中沒有找到 exact token。
+
+這不能直接證明遊戲部署一定無法建立新玩家，因為 endpoint 的 loader / transform semantics 尚未從實際 endpoint 程式層完整閉合；但也不能把 24114 或其他 Item 偷換成 32003。
+
 ## 判定規則
 
 - 找到 `ITEM1=32003` 且 endpoint Item table 有一致 row evidence：建立 endpoint item evidence。
 - 找不到：維持 endpoint seed unresolved，不猜測。
-- 即使 32003 存在，也要繼續閉合 endpoint loader／row semantics，才能正式進 canonical Item runtime。
+- 即使 endpoint CSV 存在某個看似相近的 Item，也必須先閉合 endpoint loader／row semantics 才能正式進 canonical Item runtime。
 - audit 不輸出 setup.cf 的 password、server IP 或其他敏感設定。
