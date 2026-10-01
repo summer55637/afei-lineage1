@@ -1474,7 +1474,9 @@ V4.03 接續 V4.01 AttackSeq Prelude 與 V4.02 Damage Plan，升格 fixed-C BATT
 - damage < 1：caller 注入 RAND(0,1)
 - 最後套用 caller-provided gBattleDamageModyfy，預設 1.0
 
-V4.03 不重新抽 V4.01 的 critical RNG，也不修改 HP、Persistent State、DamageSub、DamageReact、Counter、Death 或 Reward。
+V4.03 不重新抽 V4.01 的 critical RNG；缺失/超範圍 RNG 會 fail-closed。仍不修改 HP、Persistent State、DamageSub、DamageReact、Counter、Death 或 Reward。
+
+Local regression：V4.02 與 V4.03 checkpoints 均通過。
 
 新增：
 - src/stoneage_browser_battle_critical_damage_runtime.mjs
