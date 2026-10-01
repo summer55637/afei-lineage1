@@ -382,16 +382,14 @@ function createBrowserStateController({
         return {...result,stage:'battle-initialized',format:BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_TURN_INITIALIZE){
-        if(!battleContext)return {ok:false,handled:false,stage:'battle-turn',reason:'battle-context-required',state:clone(currentState)};
-        if(String(battleContext?.context?.mode??'').trim()!=='init'){
-          return {ok:false,handled:false,stage:'battle-turn-gate',reason:'battle-turn-initialize-requires-init-phase',mode:String(battleContext?.context?.mode??''),state:clone(currentState)};
-        }
-        if(battleTurnRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-turn',reason:'browser-battle-turn-runtime-invalid',state:clone(currentState)};
-        const wrapper={format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)};
-        const result=battleTurnRuntime.initialize(wrapper,{chargeEntries:Array.isArray(action.chargeEntries)?action.chargeEntries:[]});
-        if(!result.ok)return {...result,state:clone(currentState)};
-        battleContext=clone(result.context);
-        return {...result,stage:'battle-turn-initialized',format:BROWSER_BATTLE_TURN_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
+        return {
+          ok:false,
+          handled:false,
+          stage:'battle-turn-gate',
+          reason:'battle-turn-initialize-internal-only',
+          state:clone(currentState),
+          battleContext:battleContext?clone(battleContext):null
+        };
       }
       if(type===ACTION_BATTLE_DAMAGE_PLAN){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'battle-context-required',state:clone(currentState)};
