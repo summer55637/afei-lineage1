@@ -72,6 +72,11 @@ function commitDuelPoint(state,battleContext,plan,{
 
   const entry=resolvePlayerEntry(battleContext,{side:plan.side,num:plan.num});
   if(!entry)return {ok:false,handled:false,stage:'battle-duelpoint-commit',reason:'player-battle-entry-required',state:clone(state)};
+  const persistentPlayerId=state.player?.id==null?null:String(state.player.id).trim();
+  const battleCharacterId=entry.characterId==null?null:String(entry.characterId).trim();
+  if(persistentPlayerId&&battleCharacterId&&persistentPlayerId!==battleCharacterId){
+    return {ok:false,handled:false,stage:'battle-duelpoint-commit',reason:'battle-player-identity-mismatch',persistentPlayerId,battleCharacterId,state:clone(state)};
+  }
 
   const currentDuelPoint=intOr(state.player?.duelPoint,null);
   if(currentDuelPoint==null||currentDuelPoint<0||currentDuelPoint>MAX_DUELPOINT){
