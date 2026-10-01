@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Item Commit",
+  "type":"object",
+  "required":["format","action","transactionId","revisionBefore","revisionAfter","transferred","discarded","persistentMutation","rerollAtCommit"],
+  "properties":{
+    "format":{"const":"stoneage-v418-browser-battle-item-commit-v1"},
+    "action":{"const":"BATTLE_ITEM_COMMIT"},
+    "transactionId":{"type":"string","minLength":1},
+    "revisionBefore":{"type":"integer","minimum":0},
+    "revisionAfter":{"type":"integer","minimum":1},
+    "transferred":{"type":"array","items":{"type":"object"}},
+    "discarded":{"type":"array","items":{"type":"object"}},
+    "persistentMutation":{"const":true},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false},
+    "rerollAtCommit":{"const":false}
+  },
+  "additionalProperties":true
+}
