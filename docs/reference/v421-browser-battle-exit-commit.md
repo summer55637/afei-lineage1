@@ -6,7 +6,8 @@ Before mutation, the commit boundary also requires the plan to carry `settlement
 
 
 On success:
-- each planned dead/HP<=0 owned Pet becomes HP 1;
+- each planned eligible dead/HP<=0 owned Pet becomes HP 1;
+- the commit requires the plan to carry `mailMode=CHAR_PETMAIL_NONE` for every planned Pet;
 - alive Pet HP is unchanged;
 - Player HP/MP is unchanged;
 - revision increments once;
