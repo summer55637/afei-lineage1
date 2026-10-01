@@ -1,0 +1,31 @@
+{
+  "format": "stoneage-v408-browser-battle-end-v1",
+  "generatedAt": "2026-10-01",
+  "action": "BATTLE_END_PLAN",
+  "fixedC": {
+    "sourceFunction": "BATTLE_OnlyRescue",
+    "aliveCriteria": "non-pet CHAR_ISDIE == FALSE",
+    "relifeCriteria": "CHAR_WORK_RELIFE > 0 when _PETSKILL_LER is enabled",
+    "winnerOrder": [
+      "side 0 count == 0 -> winside 1",
+      "else side 1 count == 0 -> winside 0"
+    ],
+    "finishSet": "BATTLE_FinishSet sets BattleArray[battleindex].mode = BATTLE_MODE_FINISH",
+    "onlyRescueCleanup": "dead entries are later BATTLE_Exit'ed when OnlyRescue flag is 1"
+  },
+  "browser": {
+    "readOnly": true,
+    "battleContextMutation": false,
+    "persistentMutation": false,
+    "hpMutation": false,
+    "rewardMutation": false,
+    "watchModeSeparate": true,
+    "missingDeathState": "fail-closed"
+  },
+  "nextBoundary": [
+    "BATTLE_FinishSet state transition",
+    "BATTLE_Finish reward/EXP/Gold settlement",
+    "BATTLE_Exit and post-battle character state",
+    "Persistent post-battle state"
+  ]
+}
