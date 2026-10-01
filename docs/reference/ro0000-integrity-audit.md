@@ -107,3 +107,16 @@ node tools/check_ro0000_integrity.mjs
 然後再執行原有 endpoint completeness check。舊 checker 的欄位漂移也已同步修正，避免拿舊 JSON schema 判錯目前 snapshot。
 
 因此 ro0000 每次變更都會先通過「原始資料完整性」這一層，再進 semantic／runtime audit。
+
+## 本輪 residue inventory
+
+本輪把原本只有數量統計的 residue 改成逐檔、可回歸的 source inventory：
+
+- `data/generated/stoneage_ro0000_residue_inventory.json`：固定記錄目前 ro0000 tree SHA、54 個 backup/edit-like 檔與 28 個 `.arg1–.arg9` 分段檔的 path / size / blob SHA。
+- `tools/generate_ro0000_residue_inventory.mjs`：依 Git tree 重新產生相同 inventory；不讀工作區暫存狀態，也不修改 `ro0000/`。
+- backup/edit-like 仍只標成「待 provenance review」，不自動刪除；`.arg1–.arg9` 單獨歸為 multipart argument fragment，先保留。
+- inventory 也記錄 data ↔ hydata 同相對路徑的 counterpart 與 blob 是否相同，避免後續把 mirror / variant 當垃圾。
+
+外部交叉資料也符合這個處理原則：公開 StoneAge server-pack 可見正式資料與 `.bak` 並存；公開服務端資料目錄也可見 `npc.arg1`～`npc.arg8` 這類分段檔。這些資料只能作為「副檔名具有歷史／參數檔慣例」的旁證，不能單憑外部慣例決定 ro0000 任一檔案的 runtime eligibility。
+
+下一步可依 runtime 影響度逐檔閉合 residue；沒有新的 authoritative evidence 時，不進行物理刪除。

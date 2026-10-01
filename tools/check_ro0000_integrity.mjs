@@ -276,6 +276,14 @@ const variantSemanticProbe = {
   }))
 };
 
+const residueInventoryPath=path.join(ROOT,'data/generated/stoneage_ro0000_residue_inventory.json');
+assert(fs.existsSync(residueInventoryPath),'missing ro0000 residue inventory');
+const residueInventory=JSON.parse(fs.readFileSync(residueInventoryPath,'utf8'));
+assert(residueInventory.format==='stoneage-ro0000-residue-inventory-v1','ro0000 residue inventory format drift');
+assert(residueInventory.ro0000TreeSha===ro0000TreeSha,'ro0000 residue inventory tree SHA drift');
+assert(residueInventory.counts?.trackedFiles===files.length,'ro0000 residue inventory tracked file count drift');
+assert(residueInventory.counts?.backupLike===backupLike.length,'ro0000 residue inventory backup-like count drift');
+assert(residueInventory.counts?.multipartArg===multipartArg.length,'ro0000 residue inventory multipart arg count drift');
 const triageReportPath=path.join(ROOT,'data/generated/stoneage_ro0000_dependency_triage.json');
 if(!fs.existsSync(triageReportPath)) throw new Error('missing generated ro0000 dependency triage report');
 const triageReport=JSON.parse(fs.readFileSync(triageReportPath,'utf8'));
