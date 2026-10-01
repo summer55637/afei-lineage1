@@ -88,6 +88,29 @@ function requireBattleContextClearForWorldLoop(battleContext,type,state){
   };
 }
 
+function requireBattlePhase(battleContext,type,state){
+  if(!battleContext)return {
+    ok:false,
+    handled:false,
+    stage:'battle-phase-gate',
+    reason:'battle-context-required',
+    type,
+    state:clone(state)
+  };
+  const mode=String(battleContext?.context?.mode??'').trim();
+  if(mode!=='battle')return {
+    ok:false,
+    handled:false,
+    stage:'battle-phase-gate',
+    reason:'battle-active-phase-required',
+    type,
+    mode,
+    battleContext:clone(battleContext),
+    state:clone(state)
+  };
+  return null;
+}
+
 function createBrowserStateController({
   state,
   moduleAudit=null,
@@ -311,6 +334,8 @@ function createBrowserStateController({
         return {...result,format:BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_PLAYER_COMMAND_SET){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
         if(!battleContext)return {ok:false,handled:false,stage:'battle-player-command',reason:'battle-context-required',state:clone(currentState)};
         if(battlePlayerCommandRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-player-command',reason:'browser-battle-player-command-runtime-invalid',state:clone(currentState)};
         const result=battlePlayerCommandRuntime.set(
@@ -338,6 +363,9 @@ function createBrowserStateController({
       }
       if(type===ACTION_BATTLE_INITIALIZE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-initialize',reason:'battle-context-required',state:clone(currentState)};
+        if(String(battleContext?.context?.mode??'').trim()!=='init'){
+          return {ok:false,handled:false,stage:'battle-initialize-gate',reason:'battle-initialize-requires-init-phase',mode:String(battleContext?.context?.mode??''),state:clone(currentState)};
+        }
         if(battleInitializeRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-initialize',reason:'browser-battle-initialize-runtime-invalid',state:clone(currentState)};
         const result=battleInitializeRuntime.initialize(
           {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
@@ -355,6 +383,9 @@ function createBrowserStateController({
       }
       if(type===ACTION_BATTLE_TURN_INITIALIZE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-turn',reason:'battle-context-required',state:clone(currentState)};
+        if(String(battleContext?.context?.mode??'').trim()!=='init'){
+          return {ok:false,handled:false,stage:'battle-turn-gate',reason:'battle-turn-initialize-requires-init-phase',mode:String(battleContext?.context?.mode??''),state:clone(currentState)};
+        }
         if(battleTurnRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-turn',reason:'browser-battle-turn-runtime-invalid',state:clone(currentState)};
         const wrapper={format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)};
         const result=battleTurnRuntime.initialize(wrapper,{chargeEntries:Array.isArray(action.chargeEntries)?action.chargeEntries:[]});
@@ -999,6 +1030,8 @@ function createBrowserStateController({
         return {...result,format:BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_ATTACK_SEQ_PRELUDE){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
         if(!battleContext)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'battle-context-required',state:clone(currentState)};
         if(battleAttackSeqPreludeRuntime.ok!==true)return {ok:false,handled:false,stage:'attack-seq-prelude',reason:'browser-battle-attack-seq-prelude-runtime-invalid',state:clone(currentState)};
         const result=battleAttackSeqPreludeRuntime.run(
@@ -1022,6 +1055,8 @@ function createBrowserStateController({
         return {...result,format:BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_ATTACK_PREFLIGHT){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
         if(!battleContext)return {ok:false,handled:false,stage:'battle-attack-preflight',reason:'battle-context-required',state:clone(currentState)};
         if(battleAttackPreflightRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-attack-preflight',reason:'browser-battle-attack-preflight-runtime-invalid',state:clone(currentState)};
         const result=battleAttackPreflightRuntime.preflight(
@@ -1035,6 +1070,8 @@ function createBrowserStateController({
         return {...result,format:BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_DEFAULT_TARGET_RESOLVE){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
         if(!battleContext)return {ok:false,handled:false,stage:'battle-default-target',reason:'battle-context-required',state:clone(currentState)};
         if(battleDefaultTargetRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-default-target',reason:'browser-battle-default-target-runtime-invalid',state:clone(currentState)};
         const result=battleDefaultTargetRuntime.resolve(
@@ -1044,6 +1081,8 @@ function createBrowserStateController({
         return {...result,format:BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_TARGET_RESOLVE){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
         if(!battleContext)return {ok:false,handled:false,stage:'battle-target',reason:'battle-context-required',state:clone(currentState)};
         if(battleTargetRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-target',reason:'browser-battle-target-runtime-invalid',state:clone(currentState)};
         const result=battleTargetRuntime.resolve(
