@@ -1658,3 +1658,27 @@ Controller integration：
 - `ACTION_BATTLE_PROFIT_ROUTE_PLAN`
 - `BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT`
 
+## 2026-10-01 V4.11 Browser Battle DuelPoint Plan
+
+V4.11 接續 V4.10 Profit Route Plan，閉合 fixed-C `BATTLE_GetDuelPoint()` 的純計算 boundary。
+
+- 只接受 player-side 的 player entry；Pet fail-closed
+- 不檢查 `CHAR_ISDIE`，忠實保留 fixed-C 行為
+- `dpadd = CHAR_WORKGETEXP`
+- `dpnow = CHAR_DUELPOINT + dpadd`
+- `dpnow` clamp 到 `0..100000000`
+- V4.11 只輸出 plan，不寫 Persistent State、不發 UI、不做 DB update
+
+固定源 `CHAR_MAXDUELPOINT = 100000000`、`DUELPOINT_RATE = 0.1` 已一併保留；`DUELPOINT_RATE` 在 `BATTLE_GetDuelPoint()` 本身不使用，而是在其他 PvP / loss redistribution call-site 使用，因此不把 10% 搶分規則誤套到這裡。
+
+新增：
+- `src/stoneage_browser_battle_duelpoint_runtime.mjs`
+- `data/generated/stoneage_browser_battle_duelpoint_schema.json`
+- `tools/check_v411_browser_battle_duelpoint.mjs`
+- `docs/reference/v411-browser-battle-duelpoint.md`
+- `.github/workflows/check-v411-browser-battle-duelpoint.yml`
+
+Controller integration：
+- `ACTION_BATTLE_DUELPOINT_PLAN`
+- `BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT`
+
