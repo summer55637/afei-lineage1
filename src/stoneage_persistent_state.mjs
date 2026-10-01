@@ -239,6 +239,7 @@ function validatePersistentState(state) {
   if (isObject(player)) {
     if (nonNegativeInt(player.level, -1) < 1) errors.push('player.level must be >= 1');
     if (nonNegativeInt(player.gold, -1) > sourcePlayerMaxGold(state)) errors.push('player.gold exceeds source max-gold cap');
+    if (!Number.isInteger(player.duelPoint) || player.duelPoint < 0 || player.duelPoint > 100000000) errors.push('player.duelPoint must be an integer within 0..100000000');
     if (!isObject(player.profession)) errors.push('player.profession must be an object');
     if (isObject(player.profession) && (!Array.isArray(player.profession.skills) || player.profession.skills.length !== PROFESSION_SKILL_SLOT_COUNT)) errors.push('profession.skills must contain exactly 26 slots');
   }
