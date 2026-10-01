@@ -1,7 +1,8 @@
 {
   "format": "stoneage-world-data-source-catalog-v1",
   "updated": "2026-09-30",
-  "purpose": "Source inventory and closure map for world reconstruction. This catalog does not enable gameplay.",
+  "sourceRole": "pinned-fixed-c",
+  "purpose": "Pinned fixed-C world source inventory and closure map. This catalog covers the fixed-C source corpus only; it does not represent the VM one-click / manual external deployment endpoint corpus and does not enable gameplay.",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
