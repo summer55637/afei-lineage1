@@ -105,58 +105,46 @@ function buildHandoff() {
     'ro0000/server/merged-source/wwwroot/'
   ];
   const reopened = reopenedFeatureNames.length
-    ? reopenedFeatureNames.map(item => '- ' + item.name + '：' + item.status + '；尚未啟用 runtime / playable。')
+    ? reopenedFeatureNames.map(item => '- ' + item.name + '：' + item.status + '；目前未啟用。')
     : ['- 目前沒有重新開案中的 feature。'];
   const blockers = blockerEntries
     .filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status))
-    .map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + '；下一步：' + (item.next ?? '—'));
-  const disabledLine = disabledNames.length ? disabledNames.join('、') : '目前沒有';
+    .slice(0, 5)
+    .map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + ' → ' + (item.next ?? '待定'));
   return [
     HANDOFF_START,
     '## 對話交接／開發自述',
     '',
-    '> 本段由 tools/generate_readme.mjs 自動維護。每次 main 分支的程式、資料或文件變動後，GitHub Actions 會重新生成。',
+    '> 本段自動生成；每次 main 分支的程式、資料或文件變動後由 GitHub Actions 更新。',
     '',
-    '### 我們要做什麼',
+    '### 目標',
+    '把可實際架設的石器時代手游部署資料還原成 source-backed runtime，最後做成 PC＋手機可長時間遊玩的現代化 3D 石器時代放置遊戲。',
     '',
-    '把真正可架設的石器時代手游部署資料還原成 source-backed runtime，再做成 PC＋手機都能長時間遊玩的現代化 3D 石器時代放置遊戲。',
-    '',
-    '### 我們用什麼資料',
-    '',
-    '- ' + md + 'ro0000/' + md + '：從可實際架設成石器時代手游的實際部署資料複製取得，是主要實機／部署資料來源。',
+    '### 資料',
+    '- ' + md + 'ro0000/' + md + ' 是主要實機／部署資料來源，來自可實際架設的部署環境。',
     '- 手工外網端只有：' + manualRules.map(x => md + x + md).join('、') + '。',
-    '- 其他 ' + md + 'ro0000/' + md + ' 資料全部是 VM 一鍵端；' + md + 'www/wwwroot/' + md + ' 也屬 VM 一鍵端。',
-    '- Endpoint 用來判定「這個實際部署版本有什麼」；pinned fixed-C 用來校驗「引擎應該怎麼運作」。',
+    '- 其他 ' + md + 'ro0000/' + md + ' 全部是 VM 一鍵端。',
+    '- Endpoint 決定「實際部署有什麼」；pinned fixed-C 驗證「引擎怎麼運作」。',
     '',
-    '### 我們怎麼做',
+    '### 原則',
+    '- 有證據才做；沒有證據就 fail-closed，不猜、不亂補。',
+    '- Endpoint 與 fixed-C 不同，先判斷 deployment variant，不直接刪除或覆蓋。',
+    '- 原始 snapshot、路徑、exact identity 必須保留。',
+    '- 先 contract / state / transaction / regression，再做 UI。',
+    '- Fixture 只能測試，不能冒充正式 endpoint data。',
+    '- Blocker 可以重開，但不能讓整條主線永久卡住；有新證據才重新調查。',
     '',
-    'Endpoint Provenance → Exact Identity → Completeness → Fixed-C Semantic Check → Evidence / Regression → Runtime',
-    '',
-    '### 不可違反的原則',
-    '',
-    '- **有證據才做；沒有證據就 fail-closed，不猜、不亂補。**',
-    '- **Endpoint 與 fixed-C 不同，不代表資料錯；先判斷是否為實際 deployment variant。**',
-    '- **原始 snapshot、路徑與 exact identity 必須保留，不因整理方便覆蓋或刪除。**',
-    '- **先 contract / state / transaction / regression，再做 UI。**',
-    '- **Fixture 只能做測試，不能冒充正式 endpoint data。**',
-    '- **Blocker 可以重新開案，但不能讓整條主線永久卡住；有新證據才重新調查。**',
-    '',
-    '### 現在的狀態',
-    '',
-    '- 永久停用：' + disabledLine + '。',
+    '### 目前狀態',
+    '- 永久停用：目前沒有。',
     ...reopened,
-    ...(blockers.length ? [''].concat(blockers) : ['','- 目前沒有 active / reopened blocker。']),
-    '- Playable HTML：目前沒有，尚未進入最終 playable admission。',
+    ...(blockers.length ? blockers : ['- 目前沒有 active / reopened blocker。']),
+    '- Playable HTML：目前沒有。',
     '',
-    '### 新對話接手規則',
-    '',
-    '先看本段，再看 AUTO-README 與 generated state；不要重問 GitHub 已經記錄的答案，也不要把歷史上的「曾停用」直接當成現在仍停用。',
-    '',
-    '詳細 source authority、runtime contract、blocker 與 audit 以 ' + md + 'docs/' + md + '、' + md + 'data/generated/' + md + ' 為準。',
+    '### 接手方式',
+    '先讀本段與 AUTO-README，再以 ' + md + 'data/generated/' + md + '、' + md + 'docs/' + md + ' 的現行內容為準；不要用歷史文字覆蓋目前 generated state。',
     HANDOFF_END
   ].join('\\n');
 }
-
 const auto = [
   START,
   '## 📌 自動維護狀態',
