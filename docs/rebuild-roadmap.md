@@ -3,6 +3,20 @@
 更新日期：2026-10-01
 
 
+## 2026-10-01 V4.25 follow-up：Bind Encounter Group → Enemy Generation → Battle Context
+
+本輪繼續檢查下一場 battle 的 enemy roster provenance，發現即使 encounter / groupId 正確，ENCOUNTER_BATTLE_CONTEXT_BUILD 仍可能直接接受 caller 自己組出的 enemyTeam，導致「選到 Group A、實際打 Group B」的替換風險。
+
+現在當 Controller 配置了 encounter group catalog 時，Group Select → Enemy Generate → Battle Context Build 會形成單一暫態 pipeline：
+
+Group Select 必須先發生；Enemy Generate 必須使用同一個 selected group；Battle Context Build 必須使用同一 revision、同一 canonical encounter、同一 group 以及完全相同的 generated enemyTeam。
+
+Battle Context 成功建立後立即清除這份 transient generation plan，不進 Persistent State。Group / Enemy generation 不重新抽 RNG；本輪只把既有 RNG 結果綁到後續 context。
+
+新增 regression：tools/check_browser_encounter_group_enemy_binding.mjs，驗證正常 group→enemy generation→context、手動替換 enemyTeam 被拒絕，以及未先 Group Select 就 Generate 被拒絕。
+
+本輪仍不新增 fixed-C battle、reward、EXP、Gold、Item 規則。
+
 ## 2026-10-01 V4.25 follow-up：Battle Context source encounter binding
 
 在 Context Clear → Idle moving → 下一次 encounter 的回圈 audit 中，發現 ENCOUNTER_BATTLE_CONTEXT_BUILD 原本可以直接接受 caller 提供的 encounter snapshot；只要 idle.mode=encounter_pending，就可能把不相符的 encounter identity 帶進下一個 Battle Context。
