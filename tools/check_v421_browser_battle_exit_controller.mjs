@@ -79,13 +79,33 @@ result=await controller.dispatch({
 assert.equal(result.ok,true,JSON.stringify(result));
 assert.equal(result.battleContext.context.mode,'finish');
 assert.equal(result.battleContext.context.sourceMode,3);
+assert.equal(result.battleContext.context.settlementStartRevision,result.state.revision);
+
+const settlementCommit=await controller.dispatch({
+  type:'BATTLE_LEVELUP_COMMIT',
+  transactionId:'battle-v421-levelup',
+  expectedRevision:result.state.revision,
+  now:'2026-10-01T11:30:01.500Z'
+});
+assert.equal(settlementCommit.ok,true,JSON.stringify(settlementCommit));
+assert.equal(settlementCommit.applied,true);
+
+const settlementReceipt=await controller.dispatch({
+  type:'BATTLE_SETTLEMENT_RECEIPT_COMMIT',
+  settlementId:'battle-v421-settlement',
+  transactions:[{kind:'levelUp',transactionId:'battle-v421-levelup'}],
+  expectedRevision:settlementCommit.state.revision,
+  now:'2026-10-01T11:30:01.750Z'
+});
+assert.equal(settlementReceipt.ok,true,JSON.stringify(settlementReceipt));
+assert.equal(settlementReceipt.applied,true);
 
 const finished=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.BATTLE_FINISHED,
   payload:{battle:{resultId:'v421-controller-battle'}},
-  expectedRevision:result.state.revision,
-  now:'2026-10-01T11:30:01.000Z'
+  expectedRevision:settlementReceipt.state.revision,
+  now:'2026-10-01T11:30:02.000Z'
 });
 assert.equal(finished.ok,true,JSON.stringify(finished));
 assert.equal(finished.state.idle.mode,IDLE_STATES.SETTLEMENT);
@@ -94,9 +114,9 @@ assert.ok(controller.getBattleContext());
 const reward=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.REWARD_APPLIED,
-  payload:{reward:{sourceResultId:'v421-controller-battle'},supplyRequired:false},
+  payload:{settlementReceiptId:'battle-v421-settlement',reward:{sourceResultId:'v421-controller-battle'},supplyRequired:false},
   expectedRevision:finished.state.revision,
-  now:'2026-10-01T11:30:02.000Z'
+  now:'2026-10-01T11:30:02.500Z'
 });
 assert.equal(reward.ok,true,JSON.stringify(reward));
 assert.equal(reward.state.idle.mode,IDLE_STATES.MOVING);
