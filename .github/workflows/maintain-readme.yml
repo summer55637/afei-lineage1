@@ -24,19 +24,40 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Refresh README
-        run: node tools/generate_readme.mjs
-
-      - name: Commit README when changed
+      - name: Refresh README safely
         shell: bash
         run: |
-          if git diff --quiet -- README.md; then
-            echo "README is already up to date."
-            exit 0
-          fi
+          set -euo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git commit -m "[docs] auto-update README"
-          git push
+
+          for attempt in 1 2 3; do
+            echo "README refresh attempt $attempt"
+
+            # The triggering commit may already be behind main because another
+            # source commit / README refresh landed concurrently. Rebuild from
+            # the latest main each attempt instead of rebasing a stale README.
+            git fetch origin main
+            git reset --hard origin/main
+
+            node tools/generate_readme.mjs
+
+            if git diff --quiet -- README.md; then
+              echo "README is already up to date."
+              exit 0
+            fi
+
+            git add README.md
+            git commit -m "[docs] auto-update README"
+
+            if git push origin HEAD:main; then
+              echo "README update pushed."
+              exit 0
+            fi
+
+            echo "Push raced with another main update; retrying from latest origin/main."
+          done
+
+          echo "README update could not be pushed after 3 attempts."
+          exit 1
