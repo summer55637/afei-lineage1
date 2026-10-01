@@ -7,7 +7,6 @@ const BATTLE_ENTRY_MAX=10;
 const BATTLE_PLAYER_MAX=5;
 const SIDE_OFFSET=10;
 import { materializeEnemyCoreStats } from './stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs';
-import { derivePlayerCombatStats } from './stoneage_player_creation_runtime.mjs';
 
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -16,9 +15,17 @@ const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(valu
 const clone=value=>JSON.parse(JSON.stringify(value));
 const intOr=value=>{const s=String(value??'').trim();if(s==='')return null;const m=s.match(/^[+-]?\d+/);return m?Number(m[0]):null;};
 function playerWorkFromState(player){
-  const derived=derivePlayerCombatStats(player?.stats??null);
-  if(!derived.ok)return {ok:false,reason:'player-combat-stats-invalid',errors:derived.errors};
-  return {ok:true,fixStr:derived.sourceWork.fixStr,fixTgh:derived.sourceWork.fixTough,fixDex:derived.sourceWork.fixDex,fixLuck:intOr(player?.luck)??0};
+  const stats=player?.stats;
+  if(!stats||typeof stats!=='object')return {ok:false,reason:'player-combat-stats-required'};
+  const vital=intOr(stats.vital),str=intOr(stats.str),tgh=intOr(stats.tgh),dex=intOr(stats.dex);
+  if([vital,str,tgh,dex].some(v=>v==null||v<0))return {ok:false,reason:'player-combat-stats-invalid'};
+  return {
+    ok:true,
+    fixStr:Math.trunc(str+tgh*0.1+vital*0.1+dex*0.05),
+    fixTgh:Math.trunc(tgh+str*0.1+vital*0.1+dex*0.05),
+    fixDex:dex,
+    fixLuck:intOr(player?.luck)??0
+  };
 }
 function petWorkFromState(pet){
   const st=pet?.stats;
