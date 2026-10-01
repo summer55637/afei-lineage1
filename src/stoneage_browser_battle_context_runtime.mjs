@@ -29,13 +29,13 @@ function playerWorkFromState(player){
 }
 function petWorkFromState(pet){
   const st=pet?.stats;
-  if(!st||typeof st!=='object')return {ok:false,reason:'pet-combat-stats-required'};
+  if(!st||typeof st!=='object')return {ok:true,fixStr:null,fixTgh:null,fixDex:null,fixLuck:0,snapshotPending:true};
   const vital=intOr(st.vital),str=intOr(st.str),tgh=intOr(st.tgh),dex=intOr(st.dex);
-  if([vital,str,tgh,dex].some(v=>v==null))return {ok:false,reason:'pet-combat-stats-invalid'};
+  if([vital,str,tgh,dex].some(v=>v==null||v<0))return {ok:true,fixStr:null,fixTgh:null,fixDex:null,fixLuck:0,snapshotPending:true,reason:'pet-combat-stats-invalid'};
   const fixDex=Math.trunc(dex*0.01);
   const fixStr=Math.trunc(str*0.01+tgh*0.01*0.1+vital*0.01*0.1+dex*0.01*0.05);
   const fixTgh=Math.trunc(tgh*0.01+str*0.01*0.1+vital*0.01*0.1+dex*0.01*0.05);
-  return {ok:true,fixStr,fixTgh,fixDex,fixLuck:0};
+  return {ok:true,fixStr,fixTgh,fixDex,fixLuck:0,snapshotPending:false};
 }
 
 
