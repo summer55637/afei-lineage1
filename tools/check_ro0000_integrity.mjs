@@ -106,6 +106,8 @@ for(const rel of nestedMap.keys()) if(!manualMap.has(rel)) webNestedOnly++;
 
 const backupLike=files.filter(x=>/(?:\.bak|\.old|\.new|\.tmp|~|\.arg--|\.create---|\.template--|\.conf1|\.lua--)$/i.test(x.path));
 const multipartArg=files.filter(x=>/\.arg[1-9]$/i.test(x.path));
+const isIndexedFamilyArgument=x=>x.path.includes('/npc/family/manorsman.arg')||x.path.includes('/npc/family/scheduleman.arg');
+const expectedArgumentKind=x=>isIndexedFamilyArgument(x)?'indexed-npc-init-argument-record':'numbered-argument-file-unresolved';
 const zeroSize=files.filter(x=>(x.size??0)===0);
 
 const shaGroups=new Map();
@@ -284,6 +286,16 @@ assert(residueInventory.ro0000TreeSha===ro0000TreeSha,'ro0000 residue inventory 
 assert(residueInventory.counts?.trackedFiles===files.length,'ro0000 residue inventory tracked file count drift');
 assert(residueInventory.counts?.backupLike===backupLike.length,'ro0000 residue inventory backup-like count drift');
 assert(residueInventory.counts?.multipartArg===multipartArg.length,'ro0000 residue inventory multipart arg count drift');
+assert(residueInventory.counts?.indexedNpcInitArgumentRecords===multipartArg.filter(isIndexedFamilyArgument).length,'ro0000 indexed NPC argument count drift');
+assert(residueInventory.multipartArg.every(x=>x.classification===expectedArgumentKind(x)),'ro0000 residue inventory argument classification drift');
+for(const [stem,count,same,different] of [['manorsman',9,5,4],['scheduleman',5,5,0]]){
+  const group=residueInventory.argumentGroups?.find(x=>x.stem===stem);
+  assert(!!group,'missing indexed NPC argument group: '+stem);
+  assert(group.data?.count===count&&group.hydata?.count===count,'indexed NPC argument group count drift: '+stem);
+  assert(group.data?.indices?.join(',')===Array.from({length:count},(_,i)=>i+1).join(','),'data argument indices drift: '+stem);
+  assert(group.hydata?.indices?.join(',')===Array.from({length:count},(_,i)=>i+1).join(','),'hydata argument indices drift: '+stem);
+  assert(group.counterpartComparison?.sameBlob===same&&group.counterpartComparison?.differentBlob===different&&group.counterpartComparison?.missing===0,'indexed NPC argument counterpart drift: '+stem);
+}
 const residueStructureAuditPath=path.join(ROOT,'data/generated/stoneage_ro0000_residue_structure_audit.json');
 assert(fs.existsSync(residueStructureAuditPath),'missing ro0000 residue structure audit');
 const residueStructureAudit=JSON.parse(fs.readFileSync(residueStructureAuditPath,'utf8'));
@@ -297,6 +309,7 @@ assert(residueStructureAudit.summary?.backupLikeWithFormalBase===15,'ro0000 resi
 assert(residueStructureAudit.summary?.multipartArg===multipartArg.length,'ro0000 residue structure multipart count drift');
 assert(residueStructureAudit.summary?.multipartExactCounterpart===20,'ro0000 residue structure exact multipart count drift');
 assert(residueStructureAudit.summary?.multipartVariantCounterpart===8,'ro0000 residue structure variant multipart count drift');
+assert(residueStructureAudit.multipartArg.every(x=>x.argumentKind===expectedArgumentKind(x)),'ro0000 residue structure argument classification drift');
 const isolatedResidueAuditPath=path.join(ROOT,'data/generated/stoneage_ro0000_isolated_residue_audit.json');
 assert(fs.existsSync(isolatedResidueAuditPath),'missing ro0000 isolated residue audit');
 const isolatedResidueAudit=JSON.parse(fs.readFileSync(isolatedResidueAuditPath,'utf8'));
