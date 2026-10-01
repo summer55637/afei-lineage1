@@ -23,6 +23,8 @@ const deadDuelContext={context:{mode:'finish',sourceMode:3,settlementStartRevisi
 const deadDuelBranches=requiredSettlementBranches(deadDuelContext);
 assert.deepEqual(deadDuelBranches.requiredBranches,['duelPoint']);
 
+state.revision=3;
+
 const missing=commitBattleSettlementReceipt(state,context,{
   settlementId:'settle-missing',
   transactions:[{kind:'levelUp',transactionId:'lvl-1'}],
@@ -31,7 +33,6 @@ const missing=commitBattleSettlementReceipt(state,context,{
 assert.equal(missing.ok,false);
 assert.equal(missing.reason,'settlement-transaction-required');
 
-state.revision=3;
 const done=commitBattleSettlementReceipt(state,context,{
   settlementId:'settle-1',
   transactions:[{kind:'levelUp',transactionId:'lvl-1'},{kind:'item',transactionId:'item-1'}],
