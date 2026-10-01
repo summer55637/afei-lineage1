@@ -117,7 +117,9 @@ fixed-C mismatch ≠ 自動刪除 endpoint data
 
 Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Semantic Check → Evidence / Regression → Canonical Runtime
 
-完整 endpoint corpus 由 `data/generated/stoneage_endpoint_source_catalog.json` 保存，執行規則由 `tools/generate_endpoint_source_catalog.mjs` 與 `tools/check_endpoint_source_catalog.mjs` 固定。既有 `data/generated/stoneage_world_data_source_catalog.json` 則只代表 pinned fixed-C world source，不與 endpoint corpus 混用。
+完整 endpoint corpus 由 `data/generated/stoneage_endpoint_source_catalog.json` 保存，執行規則由 `tools/generate_endpoint_source_catalog.mjs` 與 `tools/check_endpoint_source_catalog.mjs` 固定。
+
+World-specific endpoint evidence 目前另有：`stoneage_endpoint_mapwarp_audit.json`、`stoneage_endpoint_item_seed_audit.json`、`stoneage_endpoint_battle_data_source_audit.json`、`stoneage_endpoint_npc_source_audit.json`；這些均屬 endpoint scope，不能與 pinned fixed-C generated catalog 混用。既有 `data/generated/stoneage_world_data_source_catalog.json` 則只代表 pinned fixed-C world source，不與 endpoint corpus 混用。
 
 不是：
 
