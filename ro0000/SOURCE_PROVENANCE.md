@@ -32,7 +32,7 @@ endpoint provenance → file/blob identity → pinned fixed-C comparison → evi
 - ro0000/server/merged-source/wwwroot/
 - ro0000/server/merged-source/www/wwwroot/
 
-依目前端點規則，凡位於 wwwroot 目錄內的資料均標記為手工外網端資料；實際要進 production runtime 前仍需另外完成檔案用途、依賴與授權／安全審查。
+依目前端點規則，只有 ro0000/server/merged-source/wwwroot/ 這個資料夾依本次確認標記為手工外網端。其他名稱包含 wwwroot 但位於不同路徑的資料，不自動套用這個標籤；依「其餘全部屬 VM 一鍵端」規則處理。
 
 ## 使用規則
 
