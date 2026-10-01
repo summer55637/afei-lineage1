@@ -48,6 +48,7 @@ import { createBrowserBattleExpPlanRuntime, ACTION_BATTLE_EXP_PLAN, BROWSER_BATT
 import { createBrowserBattleLevelUpPlanRuntime, ACTION_BATTLE_LEVELUP_PLAN, BROWSER_BATTLE_LEVELUP_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_levelup_runtime.mjs';
 import { createBrowserBattlePetGrowthPlanRuntime, ACTION_BATTLE_PET_GROWTH_PLAN, BROWSER_BATTLE_PET_GROWTH_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_pet_growth_runtime.mjs';
 import { createBrowserBattleLevelUpCommitRuntime, ACTION_BATTLE_LEVELUP_COMMIT, BROWSER_BATTLE_LEVELUP_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_levelup_commit_runtime.mjs';
+import { createBrowserBattleItemPlanRuntime, ACTION_BATTLE_ITEM_PLAN, BROWSER_BATTLE_ITEM_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_item_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -132,6 +133,7 @@ function createBrowserStateController({
   const battleLevelUpPlanRuntime=createBrowserBattleLevelUpPlanRuntime();
   const battlePetGrowthPlanRuntime=createBrowserBattlePetGrowthPlanRuntime();
   const battleLevelUpCommitRuntime=createBrowserBattleLevelUpCommitRuntime();
+  const battleItemPlanRuntime=createBrowserBattleItemPlanRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -469,6 +471,21 @@ function createBrowserStateController({
         return {
           ...result,
           format:BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
+          battleContext:clone(battleContext),
+          state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_ITEM_PLAN){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-item-plan',reason:'battle-context-required',state:clone(currentState)};
+        if(battleItemPlanRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-item-plan',reason:'browser-battle-item-plan-runtime-invalid',state:clone(currentState)};
+        const result=battleItemPlanRuntime.plan(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          clone(currentState),
+          {getitem:action.getitem??null}
+        );
+        return {
+          ...result,
+          format:BROWSER_BATTLE_ITEM_PLAN_RUNTIME_FORMAT,
           battleContext:clone(battleContext),
           state:clone(currentState)
         };
