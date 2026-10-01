@@ -53,3 +53,4 @@ jobs:
       - run: node tools/check_v425_browser_battle_settlement_exit_gate.mjs
       - run: node tools/check_v425_browser_battle_context_clear.mjs
       - run: node tools/check_browser_battle_context_clear_gate.mjs
+      - run: node tools/check_browser_battle_clear_world_loop_gate.mjs
