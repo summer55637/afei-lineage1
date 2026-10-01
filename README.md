@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：b8890cc — Record V4.16 level-up commit boundary
-- 最後更新時間：2026-10-01T10:17:51+08:00
+- 最新 commit：7eb37e5 — Add V4.17 battle item settlement plan
+- 最後更新時間：2026-10-01T10:18:41+08:00
 - 版本線最高 regression workflow：V4.16
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
