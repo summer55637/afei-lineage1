@@ -91,7 +91,7 @@ const finished=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.BATTLE_FINISHED,
   payload:{battle:{resultId:'v421-controller-battle'}},
-  expectedRevision:finish.state.revision,
+  expectedRevision:result.state.revision,
   now:'2026-10-01T11:30:01.000Z'
 });
 assert.equal(finished.ok,true,JSON.stringify(finished));
