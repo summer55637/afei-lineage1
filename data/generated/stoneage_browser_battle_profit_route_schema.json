@@ -1,0 +1,23 @@
+{
+  "format":"stoneage-v410-browser-battle-profit-route-v1",
+  "generatedAt":"2026-10-01",
+  "action":"BATTLE_PROFIT_ROUTE_PLAN",
+  "fixedC":{
+    "sourceFunction":"BATTLE_GetProfit",
+    "route":"dpbattle == 1 ? BATTLE_GetDuelPoint : BATTLE_GetExpGold",
+    "dpbattle":1,
+    "dpbattle0":"EXP/GOLD"
+  },
+  "browser":{
+    "readOnly":true,
+    "battleContextMutation":false,
+    "persistentMutation":false,
+    "rewardMutation":false,
+    "goldMutation":false,
+    "duelPointMutation":false,
+    "nextActions":[
+      "BATTLE_DUEL_POINT_PLAN",
+      "BATTLE_EXP_GOLD_PLAN"
+    ]
+  }
+}
