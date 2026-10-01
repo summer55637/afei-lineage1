@@ -77,7 +77,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 ### Source snapshot
 
-- 外部端參考資料統一放在 `ro0000/`。
+- `ro0000/` 是目前最完整實機／部署資料的保存入口，不再只視為一般外部參考資料。
 - 目前 `ro0000/` 已整理為：
   - `server/merged-source/`：來源規則已校正：只有 `wwwroot/` 資料夾屬手工外網端；其餘快照資料均屬 VM 一鍵端。
   - `server/database/175sa.sql`：資料庫參考，屬 VM 一鍵端。
@@ -174,7 +174,12 @@ Browser、NPC、Item、Economy、Persistent State 各自有清楚的 contract；
 
 ### Source-backed、fail-closed
 
-固定 source 找不到，就標記 unresolved。
+先判定 endpoint 是否有足夠的原始資料與 exact identity；再用 pinned fixed-C 做引擎語義校驗。
+
+任何一層缺少決定性證據，都不能猜測或偷偷補規則：
+- endpoint 資料缺證據 → unresolved / fail-closed
+- endpoint 與 fixed-C 不一致但能證明是部署 variant → 保留 variant，不視為錯誤
+- engine semantics 無法閉合 → unresolved / fail-closed
 
 不建立「方便測試所以先亂補」的替代規則。
 
@@ -190,7 +195,13 @@ Browser、NPC、Item、Economy、Persistent State 各自有清楚的 contract；
 
 ### Fixture 不得冒充 production data
 
-Synthetic fixture 可以驗證 bridge contract，但不能冒充完整 fixed-C world catalog.
+Synthetic fixture 只能驗證 contract、transaction、state transition 與 regression。
+
+它不能冒充：
+- 完整 VM／手工外網部署資料
+- endpoint variant
+- canonical world catalog
+- fixed-C source evidence
 
 ### Blocker 再檢查規則
 
@@ -204,7 +215,9 @@ Synthetic fixture 可以驗證 bridge contract，但不能冒充完整 fixed-C w
 
 ### World Data / Source Closure
 
-持續整理 NPC、Event DSL、Item、Quest、Shop、Warp、Service、Encounter、Map 與世界關係。
+第一優先先建立完整 VM 一鍵端＋手工外網端的 source catalog，再依 endpoint provenance、exact identity 與 completeness 轉成 normalized/generated data。
+
+接著用 pinned fixed-C 校驗 NPC、Event DSL、Item、Quest、Shop、Warp、Service、Encounter、Map 與世界關係的 engine semantics。
 
 ### First Route
 
@@ -334,7 +347,11 @@ main 分支每次非 README push：
 - 任務／事件怎麼保存？
 - 掛機怎麼循環？
 - offline resume 的邊界在哪裡？
-- 哪些規則來自 fixed-C，哪些來自影片還原，哪些是本專案新增的 idle product policy？
+- 哪些資料來自 VM 一鍵端／手工外網端，哪些是 endpoint variant？
+- 哪些引擎行為來自 pinned fixed-C？
+- 哪些流程來自影片／視覺參考？
+- 哪些規則是本專案新增的 idle product policy？
+- endpoint 資料與 runtime 之間是否保留了 provenance、exact identity 與可回溯證據？
 
 只要還有大面積空白，就繼續補資料與 contract，不急著把 UI 當成完成品。
 
