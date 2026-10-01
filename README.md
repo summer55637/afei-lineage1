@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：0232af8 — [ro0000] audit isolated residue provenance
-- 最後更新時間：2026-10-01T20:14:56+08:00
+- 最新 commit：330bb29 — [ro0000] bind hecheng residue to NPC loader evidence
+- 最後更新時間：2026-10-01T20:16:21+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
