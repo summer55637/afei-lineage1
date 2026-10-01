@@ -9,6 +9,7 @@
     "backupLikeWithDuplicateElsewhere": 44,
     "backupLikeIsolatedSha": 10,
     "backupLikeWithFormalBase": 15,
+    "backupLikeExactFormalBaseMatch": 0,
     "multipartArg": 28,
     "multipartExactCounterpart": 20,
     "multipartVariantCounterpart": 8
