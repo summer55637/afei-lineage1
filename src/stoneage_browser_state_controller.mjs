@@ -1356,11 +1356,10 @@ function createBrowserStateController({
         return {...result,ui:clone(itemShopUi),state:clone(result.state??currentState)};
       }
       if(type!==ACTION_NPC_TALK){
-        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
-        if(clearGate)return clearGate;
-
         return {ok:false,handled:false,reason:'unsupported-browser-action',type,state:clone(currentState)};
       }
+      const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+      if(clearGate)return clearGate;
       const transactionId=String(action.transactionId??`${transactionPrefix}-${++sequence}`).trim();
       const player=action.player??null;
       const npc=requestedNpc??resolvedWorldNpc;
