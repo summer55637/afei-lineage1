@@ -14,6 +14,7 @@ import {
   ACTION_IDLE_EVENT,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
+import { ACTION_BATTLE_EXIT_PLAN } from '../src/stoneage_browser_battle_exit_runtime.mjs';
 import { IDLE_EVENTS, IDLE_STATES } from '../src/stoneage_idle_loop.mjs';
 
 const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
@@ -144,7 +145,7 @@ assert.equal(commit.state.player.mp,20);
 assert.equal(commit.state.idle.mode,IDLE_STATES.MOVING);
 assert.ok(controller.getBattleContext());
 
-const exitPlan=await controller.dispatch({type:'ACTION_BATTLE_EXIT_PLAN',settlementComplete:true});
+const exitPlan=await controller.dispatch({type:ACTION_BATTLE_EXIT_PLAN,settlementComplete:true});
 assert.equal(exitPlan.ok,true,JSON.stringify(exitPlan));
 
 console.log(JSON.stringify({
