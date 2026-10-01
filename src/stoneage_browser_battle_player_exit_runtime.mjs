@@ -47,8 +47,9 @@ function planBattlePlayerExit(contextInput,state,{settlementComplete=false}={}){
   if(persistentHp==null)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'persistent-player-hp-required'};
   if(persistentMp==null)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'persistent-player-mp-required'};
 
-  const dead=entry.isDie===true||hp<=0;
-  const hpAfter=dead?1:Math.max(0,hp);
+  if(hp<0)return {ok:false,handled:false,stage:'battle-player-exit-plan',reason:'battle-player-hp-invalid'};
+  const dead=entry.isDie===true;
+  const hpAfter=dead?1:hp;
   const mpAfter=Math.max(0,mp);
 
   return {
