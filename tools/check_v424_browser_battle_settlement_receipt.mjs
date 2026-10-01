@@ -54,6 +54,7 @@ const valid=commitBattleSettlementReceipt(done.state,context,{
 });
 assert.equal(valid.ok,true);
 assert.equal(valid.idempotent,true);
+assert.equal(valid.state.revision,4);
 
 const oldState=freshPersistentState({playerId:'p1'});
 oldState.revision=3;
