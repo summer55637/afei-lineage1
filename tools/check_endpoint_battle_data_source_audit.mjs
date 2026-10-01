@@ -32,6 +32,18 @@ const endpoint={},fixed={};
 for(const [key,[ep,fx]] of Object.entries(FILES)){endpoint[key]=clean(path.join(ROOT,ep));fixed[key]=clean(path.join(FIXED_ROOT,fx));}
 const result={format:'stoneage-endpoint-battle-data-source-audit-v1',fixedSource:'gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',files:Object.fromEntries(Object.entries(FILES).map(([k,[ep,fx,fxSha]])=>[k,{endpointPath:ep,endpointBlobSha:sha(ep),fixedPath:fx,fixedBlobSha:fxSha,endpointBytes:blobSize(ROOT,ep),fixedBytes:blobSize(FIXED_ROOT,fx),comparison:compare(endpoint[k],fixed[k])}])),endpointInternalReferences:internal(endpoint.encount,endpoint.group,endpoint.enemy,endpoint.enemybase),fixedInternalReferences:internal(fixed.encount,fixed.group,fixed.enemy,fixed.enemybase),interpretation:{endpointIsPrimaryDataSource:true,fixedCIsSemanticValidationBaseline:true,variantIsNotError:true,syntheticSubstitutionForbidden:true,note:'Internal field positions are reported as format evidence based on the existing pinned-C parser contract; endpoint loader semantics still require explicit closure before canonical runtime promotion.'}};
 const text=JSON.stringify(result,null,2)+'\n';
-if(process.argv.includes('--check')){if(!fs.existsSync(OUT))fail('Missing generated endpoint battle audit.');if(fs.readFileSync(OUT,'utf8')!==text)fail('Endpoint battle audit is stale.');process.stdout.write('endpoint-battle-data-source-audit-check-ok\n');}
+if(process.argv.includes('--check')){
+  if(!fs.existsSync(OUT))fail('Missing generated endpoint battle audit.');
+  const current=fs.readFileSync(OUT,'utf8');
+  if(current!==text){
+    let first=-1;
+    for(let i=0;i<Math.min(current.length,text.length);i++){if(current[i]!==text[i]){first=i;break;}}
+    const context=first>=0?JSON.stringify({first,expected:text.slice(Math.max(0,first-180),first+420),current:current.slice(Math.max(0,first-180),first+420)}):'length-only mismatch';
+    console.error('Endpoint battle audit is stale. expectedLen='+text.length+' currentLen='+current.length);
+    console.error(context);
+    fail('Endpoint battle audit is stale.');
+  }
+  process.stdout.write('endpoint-battle-data-source-audit-check-ok\n');
+}
 else if(process.argv.includes('--write')){fs.mkdirSync(path.dirname(OUT),{recursive:true});fs.writeFileSync(OUT,text);process.stdout.write(text);}
 else process.stdout.write(text);
