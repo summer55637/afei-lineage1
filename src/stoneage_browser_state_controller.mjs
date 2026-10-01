@@ -46,6 +46,7 @@ import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROW
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
 import { createBrowserBattleExpPlanRuntime, ACTION_BATTLE_EXP_PLAN, BROWSER_BATTLE_EXP_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exp_runtime.mjs';
 import { createBrowserBattleLevelUpPlanRuntime, ACTION_BATTLE_LEVELUP_PLAN, BROWSER_BATTLE_LEVELUP_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_levelup_runtime.mjs';
+import { createBrowserBattlePetGrowthPlanRuntime, ACTION_BATTLE_PET_GROWTH_PLAN, BROWSER_BATTLE_PET_GROWTH_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_pet_growth_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -128,6 +129,7 @@ function createBrowserStateController({
   const battleDuelPointCommitRuntime=createBrowserBattleDuelPointCommitRuntime();
   const battleExpPlanRuntime=createBrowserBattleExpPlanRuntime();
   const battleLevelUpPlanRuntime=createBrowserBattleLevelUpPlanRuntime();
+  const battlePetGrowthPlanRuntime=createBrowserBattlePetGrowthPlanRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -465,6 +467,41 @@ function createBrowserStateController({
         return {
           ...result,
           format:BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
+          battleContext:clone(battleContext),
+          state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_PET_GROWTH_PLAN){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-pet-growth-plan',reason:'battle-context-required',state:clone(currentState)};
+        if(battlePetGrowthPlanRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-pet-growth-plan',reason:'browser-battle-pet-growth-plan-runtime-invalid',state:clone(currentState)};
+        let levelPlan=action.battleLevelUpPlan??null;
+        if(!levelPlan){
+          levelPlan=battleLevelUpPlanRuntime.plan(
+            action.battleExpPlan??battleExpPlanRuntime.plan(
+              {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+              clone(currentState),
+              {
+                itemExpModifierPercent:action.itemExpModifierPercent??0,
+                battleExpMultiplier:action.battleExpMultiplier??100
+              }
+            ),
+            clone(currentState),
+            {
+              playerNormalLevelCap:action.playerNormalLevelCap??140,
+              chartrans:action.chartrans??5,
+              pettrans:action.pettrans??-1
+            }
+          );
+          if(!levelPlan.ok)return {...levelPlan,format:BROWSER_BATTLE_LEVELUP_PLAN_RUNTIME_FORMAT,state:clone(currentState)};
+        }
+        const result=battlePetGrowthPlanRuntime.plan(
+          levelPlan,
+          clone(currentState),
+          {rngEvidenceByPetId:action.rngEvidenceByPetId??{}}
+        );
+        return {
+          ...result,
+          format:BROWSER_BATTLE_PET_GROWTH_PLAN_RUNTIME_FORMAT,
           battleContext:clone(battleContext),
           state:clone(currentState)
         };
