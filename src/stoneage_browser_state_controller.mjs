@@ -38,6 +38,7 @@ import { createBrowserBattleCriticalDamageRuntime, ACTION_BATTLE_CRITICAL_DAMAGE
 import { createBrowserBattleDamageReactRuntime, ACTION_BATTLE_DAMAGE_REACT_PLAN, BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_runtime.mjs';
 import { createBrowserBattleCounterRuntime, ACTION_BATTLE_COUNTER_PLAN, BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT } from './stoneage_browser_battle_counter_runtime.mjs';
 import { createBrowserBattleDeathRuntime, ACTION_BATTLE_DEATH_PLAN, BROWSER_BATTLE_DEATH_RUNTIME_FORMAT } from './stoneage_browser_battle_death_runtime.mjs';
+import { createBrowserBattleDeathCommitRuntime, ACTION_BATTLE_DEATH_COMMIT, BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_death_commit_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -112,6 +113,7 @@ function createBrowserStateController({
   const battleDamageReactRuntime=createBrowserBattleDamageReactRuntime();
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
   const battleDeathRuntime=createBrowserBattleDeathRuntime();
+  const battleDeathCommitRuntime=createBrowserBattleDeathCommitRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -337,6 +339,45 @@ function createBrowserStateController({
           }
         );
         return {...result,format:BROWSER_BATTLE_DEATH_RUNTIME_FORMAT,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_DEATH_COMMIT){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-death-commit',reason:'battle-context-required',state:clone(currentState)};
+        if(battleDeathCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-death-commit',reason:'browser-battle-death-commit-runtime-invalid',state:clone(currentState)};
+
+        let plan=action.deathPlan??null;
+        if(!plan){
+          plan=battleDeathRuntime.plan(
+            {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+            {
+              targetBid:action.targetBid??null,
+              hp:action.hp??null,
+              battleFlags:action.battleFlags??0,
+              critical:action.critical===true,
+              criticalFlag:action.criticalFlag??null,
+              ultimateFromDamage:action.ultimateFromDamage??0,
+              lerImmune:action.lerImmune===true,
+              deathRoll:action.deathRoll??null
+            }
+          );
+          if(!plan.ok)return {...plan,format:BROWSER_BATTLE_DEATH_RUNTIME_FORMAT,state:clone(currentState)};
+        }
+
+        const result=battleDeathCommitRuntime.commit(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            targetBid:action.targetBid??plan.targetBid??null,
+            deathPlan:plan,
+            clientFlags:action.clientFlags??plan.clientFlags??0,
+            ultimate:action.ultimate??plan.ultimate??0
+          }
+        );
+        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext);
+        return {
+          ...result,
+          format:BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(currentState)
+        };
       }
       if(type===ACTION_BATTLE_COUNTER_PLAN){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-counter',reason:'battle-context-required',state:clone(currentState)};
@@ -763,6 +804,7 @@ export {
   ACTION_BATTLE_DAMAGE_REACT_PLAN,
   ACTION_BATTLE_COUNTER_PLAN,
   ACTION_BATTLE_DEATH_PLAN,
+  ACTION_BATTLE_DEATH_COMMIT,
   ACTION_BATTLE_TURN_INITIALIZE,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
@@ -790,6 +832,7 @@ export {
   BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,
   BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT,
   BROWSER_BATTLE_DEATH_RUNTIME_FORMAT,
+  BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,
   BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,
