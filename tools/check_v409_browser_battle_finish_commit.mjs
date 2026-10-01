@@ -10,7 +10,6 @@ import {
   ACTION_BATTLE_DEATH_PLAN,
   ACTION_BATTLE_DEATH_COMMIT,
   ACTION_BATTLE_END_PLAN,
-  ACTION_BATTLE_FINISH_COMMIT,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
 
