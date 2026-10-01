@@ -1,7 +1,7 @@
 {
   "format": "stoneage-ro0000-residue-inventory-v1",
   "checkedDate": "2026-10-01",
-  "ro0000TreeSha": "b0df5f41ef9aa35c3e114eefb56ce36d825be254",
+  "ro0000TreeSha": "4c7275b8764926d5c689fff37ce62bb99ea617c4",
   "scope": "ro0000 raw snapshot; deterministic inventory only; no raw-file mutation",
   "counts": {
     "trackedFiles": 8751,
