@@ -1,0 +1,22 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"StoneAge Browser Battle Compliance Commit",
+  "type":"object",
+  "required":["format","action","transactionId","revisionBefore","revisionAfter","persistentMutation","rngPreserved"],
+  "properties":{
+    "format":{"const":"stoneage-v420-browser-battle-compliance-commit-v1"},
+    "action":{"const":"BATTLE_COMPLIANCE_COMMIT"},
+    "transactionId":{"type":"string","minLength":1},
+    "revisionBefore":{"type":"integer","minimum":0},
+    "revisionAfter":{"type":"integer","minimum":1},
+    "persistentMutation":{"const":true},
+    "battleContextMutation":{"const":false},
+    "uiMutation":{"const":false},
+    "dbMutation":{"const":false},
+    "rngPreserved":{"const":true},
+    "characters":{"type":"array","items":{"type":"object"}},
+    "maxMpDeferred":{"const":true},
+    "specialComplianceDeferred":{"const":true}
+  },
+  "additionalProperties":true
+}
