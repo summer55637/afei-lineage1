@@ -81,10 +81,22 @@ assert.equal(result.battleContext.context.mode,'finish');
 assert.equal(result.battleContext.context.sourceMode,3);
 assert.equal(result.battleContext.context.settlementStartRevision,result.state.revision);
 
+const finished=await controller.dispatch({
+  type:ACTION_IDLE_EVENT,
+  event:IDLE_EVENTS.BATTLE_FINISHED,
+  payload:{battle:{resultId:'v421-controller-battle'}},
+  expectedRevision:result.state.revision,
+  now:'2026-10-01T11:30:01.000Z'
+});
+assert.equal(finished.ok,true,JSON.stringify(finished));
+assert.equal(finished.state.idle.mode,IDLE_STATES.SETTLEMENT);
+assert.ok(controller.getBattleContext());
+
+
 const settlementCommit=await controller.dispatch({
   type:'BATTLE_LEVELUP_COMMIT',
   transactionId:'battle-v421-levelup',
-  expectedRevision:result.state.revision,
+  expectedRevision:finished.state.revision,
   now:'2026-10-01T11:30:01.500Z'
 });
 assert.equal(settlementCommit.ok,true,JSON.stringify(settlementCommit));
@@ -99,17 +111,6 @@ const settlementReceipt=await controller.dispatch({
 });
 assert.equal(settlementReceipt.ok,true,JSON.stringify(settlementReceipt));
 assert.equal(settlementReceipt.applied,true);
-
-const finished=await controller.dispatch({
-  type:ACTION_IDLE_EVENT,
-  event:IDLE_EVENTS.BATTLE_FINISHED,
-  payload:{battle:{resultId:'v421-controller-battle'}},
-  expectedRevision:settlementReceipt.state.revision,
-  now:'2026-10-01T11:30:02.000Z'
-});
-assert.equal(finished.ok,true,JSON.stringify(finished));
-assert.equal(finished.state.idle.mode,IDLE_STATES.SETTLEMENT);
-assert.ok(controller.getBattleContext());
 
 const rewardDenied=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
