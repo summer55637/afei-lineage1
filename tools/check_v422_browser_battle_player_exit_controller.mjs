@@ -92,6 +92,16 @@ assert.equal(finished.ok,true,JSON.stringify(finished));
 assert.equal(finished.state.idle.mode,IDLE_STATES.SETTLEMENT);
 assert.ok(controller.getBattleContext());
 
+const rewardDenied=await controller.dispatch({
+  type:ACTION_IDLE_EVENT,
+  event:IDLE_EVENTS.REWARD_APPLIED,
+  payload:{reward:{sourceResultId:'v422-battle'},supplyRequired:false},
+  expectedRevision:finished.state.revision,
+  now:'2026-10-01T12:10:01.100Z'
+});
+assert.equal(rewardDenied.ok,false);
+assert.equal(rewardDenied.reason,'settlement-receipt-required');
+
 const reward=await controller.dispatch({
   type:ACTION_IDLE_EVENT,
   event:IDLE_EVENTS.REWARD_APPLIED,
