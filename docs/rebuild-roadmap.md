@@ -22,7 +22,7 @@
 
 這讓 battle 結束後的外層順序正式收斂成：
 
-NaN
+`Settlement Receipt → Player Exit → Pet Exit → Battle Context Clear → World / NPC / Movement re-entry`
 
 本輪仍未新增任何 fixed-C reward、EXP、Gold、Item 或 RNG 規則。
 ## 2026-10-01 V4.25 follow-up：Explicit Battle Context Clear gate
