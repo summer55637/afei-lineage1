@@ -65,6 +65,45 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 <!-- AUTO-README:END -->
 
+## 對話交接／開發自述
+
+這一區是跨新對話的工作交接基準。開始新的 ChatGPT 對話時，先讀本區，再以 GitHub 實際內容為準接續，不要求使用者重新貼之前已確認的長篇檔案清單。
+
+### Source snapshot
+
+- 外部端參考資料統一放在 `ro0000/`。
+- 目前 `ro0000/` 已整理為：
+  - `server/merged-source/`：目前從 VM 一鍵端與手工外網端收集、但歷史上曾直接混放的服務端資料。
+  - `server/database/175sa.sql`：資料庫參考。
+  - `client/android/冰河石器-隐盟.apk`：Android Client 主程式／研究參考。
+  - `docs/搭建教程.txt`：手工外網端架設教程。
+  - `docs/隐盟文本教程.txt`：VM／文本端架設教程。
+- 原始內容優先保留；後續整理或差異分析不得因檔名相同就假設內容相同。
+
+### VM／WinSCP 使用狀態
+
+- 目前 VM 與 WinSCP 已完成第一輪來源盤點。
+- 沒有進一步需要時可以關閉 VM 與 WinSCP，但不要刪除 VM、原始檔案或來源環境。
+- 若之後發現 `ro0000` 漏檔或需要驗證原始內容，再重新開啟 VM／WinSCP。
+
+### 下一個主要工作
+
+目前不再繼續手工搬運 VM 檔案。下一階段先做 `ro0000/server/merged-source/` 的 source 差異分析：
+
+1. 同名同內容 → identical source
+2. 同名但內容不同 → variant，需要保留並記錄差異
+3. 只有單邊存在 → endpoint-specific source
+4. 再把有決定性價值的差異轉入 `_evidence/`、docs、generated data 或 runtime contract
+
+### 交接規則
+
+- 新對話開始時，先讀本區與目前 README AUTO-README 狀態。
+- 不重問使用者已經在 GitHub 留下答案的問題。
+- 不要求使用者重新貼已經完成的長篇目錄清單；優先直接讀 GitHub。
+- 若需要重新取得原始端資料，只在 GitHub 現有 snapshot 缺失且 VM／WinSCP 能提供新 evidence 時才回到 VM。
+- 使用 GitHub／Google 做 source audit 時，避免重複同一批無新決定性證據的搜尋，遵守本 README 的 blocker 再檢查規則。
+- README 中本區是工作交接基準；實際程式狀態仍以 repository、commit、regression 與 evidence 為準。
+
 ## 最終目標
 
 ### Source parity
