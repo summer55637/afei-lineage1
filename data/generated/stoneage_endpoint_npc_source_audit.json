@@ -1,0 +1,210 @@
+{
+  "format": "stoneage-endpoint-npc-source-audit-v1",
+  "source": {
+    "endpointRoot": "ro0000/server/merged-source/gmsv/data/npc",
+    "endpointTreeSha": "a2b6eb8520a4ad4cba3a40f8ac36c16ae81406bc",
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "fixedRoot": "gmsv/data/npc",
+    "fixedTreeSha": "951f43846fd6783dd3e11ec557538887f98ead93"
+  },
+  "endpoint": {
+    "files": 2384,
+    "bytes": 2635314,
+    "extensions": {
+      "[no-extension]": 1612,
+      ".arg": 454,
+      ".create": 210,
+      ".template": 56,
+      ".conf": 21,
+      ".gen": 3,
+      ".arg1": 2,
+      ".arg2": 2,
+      ".arg3": 2,
+      ".arg4": 2,
+      ".arg5": 2,
+      ".arg6": 1,
+      ".arg7": 1,
+      ".arg8": 1,
+      ".arg9": 1,
+      ".arg--": 2,
+      ".txt": 2,
+      ".c": 1,
+      ".new": 1,
+      ".old": 1,
+      ".templete": 1,
+      ".create---": 1,
+      ".template--": 1,
+      ".conf1": 1,
+      ".menu": 1,
+      ".arg~": 1,
+      ".create~": 1
+    }
+  },
+  "fixed": {
+    "files": 3960,
+    "bytes": 4135763,
+    "extensions": {
+      "[no-extension]": 2277,
+      ".arg": 1161,
+      ".create": 354,
+      ".template": 88,
+      ".conf": 35,
+      ".gen": 5,
+      ".arg1": 4,
+      ".arg2": 3,
+      ".arg3": 3,
+      ".arg4": 3,
+      ".arg5": 4,
+      ".arg6": 2,
+      ".arg7": 2,
+      ".arg8": 2,
+      ".arg9": 2,
+      ".arg10": 1,
+      ".arg519": 2,
+      ".arg520": 1,
+      ".arg--": 1,
+      ".txt": 3,
+      ".c": 1,
+      ".log": 1,
+      ".rar": 1,
+      ".templete": 2,
+      ".conf1": 1,
+      ".menu": 1,
+      ".creata": 1,
+      ".cf": 1
+    }
+  },
+  "comparison": {
+    "commonPathFiles": 2317,
+    "sameBlob": 1803,
+    "changedBlob": 514,
+    "endpointOnly": 67,
+    "fixedOnly": 1643
+  },
+  "hometownFloors": [
+    {
+      "floor": "100",
+      "endpointFiles": 35,
+      "fixedFiles": 35,
+      "commonPathFiles": 35,
+      "sameBlob": 30,
+      "changedBlob": 5,
+      "endpointOnly": 0,
+      "fixedOnly": 0,
+      "changedFiles": [
+        {
+          "path": "100/sb_gd.create",
+          "endpointSha": "0b7cdb11cd75ac10ce0c5cdb993a4dfaab9a3c72",
+          "endpointSize": 358,
+          "fixedSha": "962c7211245f47612b55329aa86fecec25b625d1",
+          "fixedSize": 358
+        },
+        {
+          "path": "100/sb_nusu.create",
+          "endpointSha": "42684675b0a8cf3c71954bfcb1e4d5721e7f5f15",
+          "endpointSize": 525,
+          "fixedSha": "b8a1427bcf2d9d9ff05cd49cd1cac86ec1bd8a6c",
+          "fixedSize": 557
+        },
+        {
+          "path": "100/sb_nusu1.arg",
+          "endpointSha": "371e27d54298400fab766fecbbbd6000aa7b79c5",
+          "endpointSize": 275,
+          "fixedSha": "130a6cdbd1fe507fec850f0f8063dd17ec2d66bf",
+          "fixedSize": 277
+        },
+        {
+          "path": "100/sb_nusu2.arg",
+          "endpointSha": "9cd975173297f54edcdb7f9696fc16422632b4fd",
+          "endpointSize": 284,
+          "fixedSha": "d693850ab214e565dc587b33a8366d23255f73a3",
+          "fixedSize": 288
+        },
+        {
+          "path": "100/sb_nusu3.arg",
+          "endpointSha": "097ccb3fc92ee96a8ef21a3daee903237c299596",
+          "endpointSize": 322,
+          "fixedSha": "a729037d90fae27685e7d6be264eb678fcf2978a",
+          "fixedSize": 324
+        }
+      ]
+    },
+    {
+      "floor": "200",
+      "endpointFiles": 19,
+      "fixedFiles": 19,
+      "commonPathFiles": 19,
+      "sameBlob": 18,
+      "changedBlob": 1,
+      "endpointOnly": 0,
+      "fixedOnly": 0,
+      "changedFiles": [
+        {
+          "path": "200/sb_dtp.arg",
+          "endpointSha": "71288637197c1aeb0ebdc34be97b4970741fa341",
+          "endpointSize": 316,
+          "fixedSha": "fbe5e39d218b152273bd5f02326df20be85d4f34",
+          "fixedSize": 280
+        }
+      ]
+    },
+    {
+      "floor": "300",
+      "endpointFiles": 36,
+      "fixedFiles": 36,
+      "commonPathFiles": 36,
+      "sameBlob": 32,
+      "changedBlob": 4,
+      "endpointOnly": 0,
+      "fixedOnly": 0,
+      "changedFiles": [
+        {
+          "path": "300/sb_bac.arg",
+          "endpointSha": "29630e33cc1ab4af0f0736f2deb46c80520663c3",
+          "endpointSize": 227,
+          "fixedSha": "2d676d2bee16f28b5a9c6e484e95b5468aefd8e4",
+          "fixedSize": 229
+        },
+        {
+          "path": "300/sb_bac.create",
+          "endpointSha": "22cb3161631e1158c6f74b8a2b2557e13ae50205",
+          "endpointSize": 341,
+          "fixedSha": "1bb0278bfd4be1bae8fdba591a6fefbf2adfb2de",
+          "fixedSize": 190
+        },
+        {
+          "path": "300/sb_hag.arg",
+          "endpointSha": "03e0564c369cf575a8b800d687f4d5a9e19f531",
+          "endpointSize": 188,
+          "fixedSha": "663023cce4862a7e953cc1ac0c81416d94283154",
+          "fixedSize": 191
+        },
+        {
+          "path": "300/sb_hag.create",
+          "endpointSha": "353b43a322f396f4d2bfc0b5201bba22870597bb",
+          "endpointSize": 196,
+          "fixedSha": "9531765d023fe6cb26b73b7ec78932b29aa30403",
+          "fixedSize": 196
+        }
+      ]
+    },
+    {
+      "floor": "400",
+      "endpointFiles": 4,
+      "fixedFiles": 4,
+      "commonPathFiles": 4,
+      "sameBlob": 4,
+      "changedBlob": 0,
+      "endpointOnly": 0,
+      "fixedOnly": 0,
+      "changedFiles": []
+    }
+  ],
+  "interpretation": {
+    "endpointIsPrimaryDeploymentData": true,
+    "fixedCIsEngineSemanticBaseline": true,
+    "endpointVariantRetention": true,
+    "playableRuntimePromotionRequiresSemanticClosure": true,
+    "note": "Exact path/blob comparison only; blob difference is not itself a gameplay-rule decision."
+  }
+}
