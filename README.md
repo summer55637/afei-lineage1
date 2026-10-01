@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：10fb700 — [docs] auto-update README and endpoint evidence
-- 最後更新時間：2026-10-01T23:39:08Z
+- 最新 commit：bb80058 — [docs] auto-generate concise handoff self-description
+- 最後更新時間：2026-10-02T07:49:18+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -132,6 +132,8 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 - 若需要重新取得原始端資料，只在 GitHub 現有 snapshot 缺失且 VM／WinSCP 能提供新 evidence 時才回到 VM。
 - 使用 GitHub／Google 做 source audit 時，避免重複同一批無新決定性證據的搜尋，遵守本 README 的 blocker 再檢查規則。
 - README 中本區是工作交接基準；實際程式狀態仍以 repository、commit、regression 與 evidence 為準。
+
+<!-- SELF-DESCRIPTION:START -->\n## 對話交接／開發自述\n\n> 本段由 tools/generate_readme.mjs 自動維護。每次 main 分支的程式、資料或文件變動後，GitHub Actions 會重新生成。\n\n### 我們要做什麼\n\n把真正可架設的石器時代手游部署資料還原成 source-backed runtime，再做成 PC＋手機都能長時間遊玩的現代化 3D 石器時代放置遊戲。\n\n### 我們用什麼資料\n\n- `ro0000/`：從可實際架設成石器時代手游的實際部署資料複製取得，是主要實機／部署資料來源。\n- 手工外網端只有：`ro0000/docs/搭建教程.txt`、`ro0000/server/merged-source/wwwroot/`。\n- 其他 `ro0000/` 資料全部是 VM 一鍵端；`www/wwwroot/` 也屬 VM 一鍵端。\n- Endpoint 用來判定「這個實際部署版本有什麼」；pinned fixed-C 用來校驗「引擎應該怎麼運作」。\n\n### 我們怎麼做\n\nEndpoint Provenance → Exact Identity → Completeness → Fixed-C Semantic Check → Evidence / Regression → Runtime\n\n### 不可違反的原則\n\n- **有證據才做；沒有證據就 fail-closed，不猜、不亂補。**\n- **Endpoint 與 fixed-C 不同，不代表資料錯；先判斷是否為實際 deployment variant。**\n- **原始 snapshot、路徑與 exact identity 必須保留，不因整理方便覆蓋或刪除。**\n- **先 contract / state / transaction / regression，再做 UI。**\n- **Fixture 只能做測試，不能冒充正式 endpoint data。**\n- **Blocker 可以重新開案，但不能讓整條主線永久卡住；有新證據才重新調查。**\n\n### 現在的狀態\n\n- 永久停用：目前沒有。\n- gmque：reopened-for-source-reconstruction；尚未啟用 runtime / playable。\n- world-blockers：reopened-for-endpoint-reaudit；尚未啟用 runtime / playable。\n\n- route-4000-to-200：reopened-for-reaudit；下一步：endpoint LS2MAP walkability + connected components + actual portal-origin reachability\n- route-3000-to-200-landing-587-318：reopened-for-reaudit；下一步：verify endpoint destination-map walkability at (587,318) and compare exact landing rows\n- starter-item-24114-fixed-c：reopened-for-reaudit；下一步：close endpoint Item loader / row semantics before choosing canonical starter item\n- starter-item-endpoint-32003：active；下一步：inspect endpoint loader / transforms and exact Item row identity\n- persistent-state-expansion：active；下一步：expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics\n- Playable HTML：目前沒有，尚未進入最終 playable admission。\n\n### 新對話接手規則\n\n先看本段，再看 AUTO-README 與 generated state；不要重問 GitHub 已經記錄的答案，也不要把歷史上的「曾停用」直接當成現在仍停用。\n\n詳細 source authority、runtime contract、blocker 與 audit 以 `docs/`、`data/generated/` 為準。\n<!-- SELF-DESCRIPTION:END -->
 
 ## 最終目標
 
