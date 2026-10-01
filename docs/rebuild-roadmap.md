@@ -1948,6 +1948,20 @@ Commit:
 Lifecycle 現在為：
 `Finish Commit → IDLE battle_finished → settlement → reward/other commits → V4.22 Player Exit State Commit → V4.21 Pet Exit Plan/Commit → clear Battle Context`
 
+## 2026-10-01 V4.24 Battle Settlement Receipt Barrier
+
+目前 `IDLE_EVENTS.REWARD_APPLIED` 原本只要求 `supplyRequired` boolean，仍可能在沒有真正 reward/EXP transaction commit 的情況下提前進入 `MOVING`。V4.24 將這個 boolean claim 改成可驗證 receipt：
+
+- Finish Commit 記錄本場 `settlementStartRevision`。
+- DuelPoint / LevelUp / Item transaction commit 都記錄 `revisionBefore/revisionAfter`。
+- 普通 live PVE：`dpbattle=1` 必須存在本場 DuelPoint transaction；否則必須存在本場 LevelUp/EXP transaction。
+- 若 live Player 仍有 carried item slots，必須有本場 Item transaction。
+- 每個 transaction 的 `revisionAfter` 必須大於 `settlementStartRevision` 且不晚於 receipt 建立前的 current revision，因此上一場的 transaction 不能冒充本場。
+- Controller 在 Battle Context 存在時，`IDLE REWARD_APPLIED` 沒有 matching settlement receipt 就 fail-closed。
+- Receipt 自己是一個 idempotent Persistent-State commit；成功後才允許 Idle 由 `settlement → moving`。
+
+這不改 fixed-C reward 數值，只把 Browser 分離式 settlement 接合從「呼叫端宣告」提升成可驗證的 transaction window contract。
+
 ## 2026-10-01 V4.23 Browser Battle Exit Transient Cleanup Contract
 
 本版把 fixed-C `BATTLE_Exit()` 的最後 transient cleanup 明確固定，但不把 Server WorkInt / network output 變成 Persistent State：
