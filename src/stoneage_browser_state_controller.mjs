@@ -567,7 +567,7 @@ function createBrowserStateController({
         if(!battleContext)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-context-required',state:clone(currentState)};
         if(battleExitPlanRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'browser-battle-exit-plan-runtime-invalid',state:clone(currentState)};
         const result=battleExitPlanRuntime.plan(
-          clone(battleContext),
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
           clone(currentState),
           {settlementComplete:action.settlementComplete===true,petMailModeById:action.petMailModeById??null}
         );
@@ -584,7 +584,7 @@ function createBrowserStateController({
         let exitPlan=action.battleExitPlan??null;
         if(!exitPlan){
           exitPlan=battleExitPlanRuntime.plan(
-            clone(battleContext),
+            {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
             clone(currentState),
             {settlementComplete:action.settlementComplete===true}
           );
