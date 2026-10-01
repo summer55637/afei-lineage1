@@ -30,13 +30,10 @@ function resolveAttackExecutionTarget(context,{attackerBid=null,targetBid=null,d
   if(toInt(attacker.hp)!=null&&toInt(attacker.hp)<=0)return {ok:false,handled:false,stage:'battle-attack-preflight',reason:'attacker-hp-not-positive',attackerBid:attackerN};
 
   const target=findEntryByBid(context,targetN);
-  if(!target){
-    return {ok:false,handled:false,stage:'battle-attack-preflight',reason:'target-entry-missing-or-bid-invalid',attackerBid:attackerN,targetBid:targetN};
-  }
 
   let finalTargetBid=targetN;
   let targetSource='explicit-target';
-  const targetEligible=(
+  const targetEligible=!!target&&(
     toInt(target.sourceBattleCharMode)!==0 &&
     toInt(target.sourceBattleCharMode)!==5 &&
     target.isAttacked!==false &&
