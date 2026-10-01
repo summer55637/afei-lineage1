@@ -1785,3 +1785,30 @@ Controller integration：
 - `BROWSER_BATTLE_PET_GROWTH_PLAN_RUNTIME_FORMAT`
 
 下一步：`BATTLE_LEVELUP_COMMIT`，把 V4.13/V4.14/V4.15 已驗證的 player/Pet state mutation 一次性提交，並保留 transaction idempotency。
+
+## 2026-10-01 V4.16 Browser Battle Level-Up Commit
+
+V4.16 將 V4.13/V4.14/V4.15 的已驗證 plan 接進 canonical Persistent State：
+
+- 提交前完整檢查 Player EXP/Level、DuelPoint、Skill Point、Charm snapshot
+- 每個 Pet 的 EXP/Level 與 V4.15 raw-stat snapshot 必須一致
+- Player 與 Pet 所有變更在同一個 cloned state 中提交
+- 首次提交只增加一次 `revision`
+- `runtimeMeta.battleLevelUpTransactions[transactionId]` 提供 idempotency
+- 重送相同 transactionId 即 no-op
+- stale snapshot / revision conflict fail-closed
+- V4.15 RNG evidence 不在 commit 階段重新抽
+- `CHAR_complianceParameter()` 的 derived HP/MP/combat side effect 保持獨立 deferred boundary
+
+新增：
+- `src/stoneage_browser_battle_levelup_commit_runtime.mjs`
+- `data/generated/stoneage_browser_battle_levelup_commit_schema.json`
+- `tools/check_v416_browser_battle_levelup_commit.mjs`
+- `docs/reference/v416-browser-battle-levelup-commit.md`
+- `.github/workflows/check-v416-browser-battle-levelup-commit.yml`
+
+Controller integration：
+- `ACTION_BATTLE_LEVELUP_COMMIT`
+- `BROWSER_BATTLE_LEVELUP_COMMIT_RUNTIME_FORMAT`
+
+下一步：BattleGet item settlement，消費已由 death-credit 階段決定的 `getitem` / battle item pool；不重新抽 carried-item RNG，並保持 fixed-C 的背包滿格／釋放 existing-item 行為。
