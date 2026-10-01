@@ -73,11 +73,11 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 - 外部端參考資料統一放在 `ro0000/`。
 - 目前 `ro0000/` 已整理為：
-  - `server/merged-source/`：目前從 VM 一鍵端與手工外網端收集、但歷史上曾直接混放的服務端資料。
-  - `server/database/175sa.sql`：資料庫參考。
+  - `server/merged-source/`：來源規則已校正：除 `wwwroot/` 外，其餘快照資料均屬 VM 一鍵端；`wwwroot/` 屬手工外網端。
+  - `server/database/175sa.sql`：資料庫參考，屬 VM 一鍵端。
   - `client/android/冰河石器-隐盟.apk`：Android Client 主程式／研究參考。
   - `docs/搭建教程.txt`：手工外網端架設教程。
-  - `docs/隐盟文本教程.txt`：VM／文本端架設教程。
+  - `docs/隐盟文本教程.txt`：VM 一鍵端架設／維運教程。
 - 原始內容優先保留；後續整理或差異分析不得因檔名相同就假設內容相同。
 
 ### VM／WinSCP 使用狀態
@@ -88,12 +88,9 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
 
 ### 下一個主要工作
 
-目前不再繼續手工搬運 VM 檔案。下一階段先做 `ro0000/server/merged-source/` 的 source 差異分析：
+目前不再繼續手工搬運 VM 檔案。`ro0000/` 的端點 provenance 已固定：只有 `docs/搭建教程.txt` 與 `wwwroot/` 屬手工外網端，其餘資料屬 VM 一鍵端。
 
-1. 同名同內容 → identical source
-2. 同名但內容不同 → variant，需要保留並記錄差異
-3. 只有單邊存在 → endpoint-specific source
-4. 再把有決定性價值的差異轉入 `_evidence/`、docs、generated data 或 runtime contract
+後續 source audit 以這個 provenance 分類為第一層，再把各端資料與 pinned fixed-C 做內容／blob SHA 比對；同名不同內容只標記為相對 fixed-C 的 variant，不再把它錯當成兩個未知外部端點的混合物。
 
 ### 交接規則
 
