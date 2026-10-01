@@ -16,7 +16,8 @@
   "sourceBoundaries": {
     "deathCredit": "created on first Enemy HP zero with player-side credit",
     "carriedLoot": "chosen before later AddProfit finalization; do not reroll",
-    "rewardCommit": "after ItemCrush/required battle boundary"
+    "rewardCommit": "after ItemCrush/required battle boundary",
+    "gold": "Battle reward packet must arrive already source-resolved; transaction commit refuses any delta that would make player.gold exceed sourcePlayerMaxGold(state)."
   },
   "failClosed": [
     "unknown existing item index",
@@ -25,7 +26,8 @@
     "missing transactionId",
     "inventory full",
     "missing existing runtime slot",
-    "existing item owner is not enemy:<unitId>"
+    "existing item owner is not enemy:<unitId>",
+    "reward gold would exceed fixed-C player max-gold cap"
   ],
   "idempotency": "transactionId",
   "playerBackpack": {
