@@ -9,6 +9,7 @@ import {
 const context={
   mode:'finish',
   sourceMode:3,
+  settlementStartRevision:2,
   sides:[{
     side:0,
     entries:[{
@@ -23,7 +24,7 @@ const context={
     }]
   }]
 };
-const state={revision:3,player:{id:'p1',hp:42,mp:12,maxHp:100,maxMp:20}};
+const state={revision:3,runtimeMeta:{battleSettlementReceipts:{'settle-1':{settlementId:'settle-1',startRevision:2,receiptRevision:3,finishMode:'finish',playerId:'p1',encounterId:null,dpbattle:0,playerDead:true,requiredBranches:['levelUp'],transactions:[{kind:'levelUp',transactionId:'lvl-1'}]}},battleLevelUpTransactions:{'lvl-1':{revisionBefore:2,revisionAfter:3}}},player:{id:'p1',hp:42,mp:12,maxHp:100,maxMp:20}};
 
 const denied=planBattlePlayerExit(context,state,{settlementComplete:false});
 assert.equal(denied.ok,false);
@@ -44,6 +45,7 @@ assert.equal(plan.rngPreserved,true);
 const livePlan=planBattlePlayerExit({
   mode:'finish',
   sourceMode:3,
+  settlementStartRevision:2,
   sides:[{side:0,entries:[{bid:0,sourceType:'player',characterId:'p1',hp:33,maxHp:100,mp:9,maxMp:20,isDie:false}]}]
 },state,{settlementComplete:true});
 assert.equal(livePlan.ok,true,JSON.stringify(livePlan));
