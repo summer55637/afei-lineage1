@@ -22,4 +22,4 @@ Read-only; no RNG and no Persistent State mutation.
 
 ## Next boundary
 
-`BATTLE_EXIT_COMMIT`.
+`BATTLE_PLAYER_EXIT_PLAN` / `BATTLE_PLAYER_EXIT_COMMIT`；完成 Player HP/MP 回寫後，再進入既有 `BATTLE_EXIT_COMMIT`. 
