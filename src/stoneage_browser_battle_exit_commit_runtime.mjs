@@ -8,6 +8,7 @@ const intOr=(v,fallback=null)=>{if(v==null||String(v).trim()==='')return fallbac
 function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,now=()=>new Date().toISOString()}={}){
   if(!isObject(state)||!isObject(state.pets)||!Array.isArray(state.pets.petBox))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'persistent-pet-box-required',state:clone(state)};
   if(!isObject(plan)||plan.ok!==true||plan.stage!=='battle-exit-plan-ready'||plan.format!=='stoneage-v421-browser-battle-exit-plan-v1')return {ok:false,handled:false,stage:'battle-exit-commit',reason:'plan-invalid',state:clone(state)};
+  if(plan.settlementComplete!==true)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'settlement-complete-flag-required',state:clone(state)};
   const tx=String(transactionId??'').trim();
   if(!tx)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'transaction-id-required',state:clone(state)};
   const currentRevision=intOr(state.revision,0);
