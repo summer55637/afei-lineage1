@@ -128,6 +128,7 @@ function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,se
   const expectedStart=intOr(settlementStartRevision,null);
   const expectedReceipt=intOr(settlementReceiptRevision,null);
   const expectedPlayer=String(playerId??'').trim();
+  const currentRevision=intOr(state?.revision,0);
   const matches=[];
   for(const [transactionId,record] of Object.entries(bucket)){
     if(!isObject(record))continue;
@@ -137,7 +138,7 @@ function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,se
     if(expectedPlayer && String(record.player?.playerId??'').trim()!==expectedPlayer)continue;
     if(intOr(record.revisionBefore,null)!==expectedReceipt)continue;
     const after=intOr(record.revisionAfter,null);
-    if(after==null||after<=expectedReceipt)continue;
+    if(after==null||after<=expectedReceipt||after!==currentRevision)continue;
     matches.push({transactionId,record:clone(record)});
   }
   if(matches.length===1)return {ok:true,transactionId:matches[0].transactionId,record:matches[0].record};
