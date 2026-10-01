@@ -59,6 +59,7 @@ const starterItemAudit = loadJson('data/generated/stoneage_starter_item_24114_so
 const starterItemBuildAudit = loadJson('data/generated/stoneage_starter_item_24114_build_closure_audit.json') ?? {};
 const endpointCatalog = loadJson('data/generated/stoneage_endpoint_source_catalog.json') ?? {};
 const endpointItemSeedAudit = loadJson('data/generated/stoneage_endpoint_item_seed_audit.json') ?? {};
+const endpointMapwarpAudit = loadJson('data/generated/stoneage_endpoint_mapwarp_audit.json') ?? {};
 const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
 const browserDocs = readText('docs/reference/v340-browser-itemshop-runtime.md');
@@ -110,6 +111,7 @@ const auto = [
   '- Corpus 合計：' + comma(endpointCatalog.sourceCorpus?.fileCount) + ' files；' + comma(endpointCatalog.sourceCorpus?.totalBytes) + ' bytes',
   '- Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端',
   '- Endpoint Item seed：' + (endpointItemSeedAudit.status === 'unresolved' ? '⚠️ unresolved' : '⚠️ candidate') + '；setup `ITEM1=' + (endpointItemSeedAudit.endpointConfig?.item1 ?? '—') + '`；selected `itemset6.csv` exact token presence=' + (endpointItemSeedAudit.keyFindings?.configuredItem1PresentAsExactToken ? 'yes' : 'no'),
+  '- Endpoint MapWarp：' + comma(endpointMapwarpAudit.source?.endpointRows) + ' rows；' + comma(endpointMapwarpAudit.exactSetComparison?.endpointOnly) + ' endpoint-only；' + comma(endpointMapwarpAudit.exactSetComparison?.fixedOnly) + ' fixed-C-only',
   '',
   '### 核心 closure',
   '',
