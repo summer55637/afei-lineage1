@@ -14,8 +14,8 @@ const ATTR_MAX=100;
 const D_ATTR=1/(ATTR_MAX*ATTR_MAX);
 
 const clone=value=>JSON.parse(JSON.stringify(value));
-const int=value=>{const n=Number(value);return Number.isFinite(n)?Math.trunc(n):null;};
-const num=value=>{const n=Number(value);return Number.isFinite(n)?n:null;};
+const int=value=>{if(value==null||String(value).trim()==='')return null;const n=Number(value);return Number.isFinite(n)?Math.trunc(n):null;};
+const num=value=>{if(value==null||String(value).trim()==='')return null;const n=Number(value);return Number.isFinite(n)?n:null;};
 
 function findEntry(context,bid){
   const b=int(bid);
