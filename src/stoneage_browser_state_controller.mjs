@@ -542,7 +542,10 @@ function createBrowserStateController({
             ultimate:action.ultimate??plan.ultimate??0
           }
         );
-        if(result.ok&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext?.context??result.battleContext);
+        if(result.ok&&result.handled===true&&result.battleContext){
+          battleContext=clone(result.battleContext?.context??result.battleContext);
+          battleAttackPipeline=null;
+        }
         return {
           ...result,
           format:BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
@@ -740,7 +743,10 @@ function createBrowserStateController({
               {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
               {petExitTransactionId:action.transactionId??result.transactionId??null}
             );
-            if(contextClear.ok===true&&contextClear.battleContextCleared===true)battleContext=null;
+            if(contextClear.ok===true&&contextClear.battleContextCleared===true){
+              battleContext=null;
+              battleAttackPipeline=null;
+            }
           }
         }
         return {
@@ -752,10 +758,12 @@ function createBrowserStateController({
         };
       }
       if(type===ACTION_BATTLE_CONTEXT_CLEAR){
-        if(!battleContext)return {
-          ok:true,
-          handled:true,
-          stage:'battle-context-clear-idempotent',
+        if(!battleContext){
+          battleAttackPipeline=null;
+          return {
+            ok:true,
+            handled:true,
+            stage:'battle-context-clear-idempotent',
           format:BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT,
           action:ACTION_BATTLE_CONTEXT_CLEAR,
           idempotent:true,
