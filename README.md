@@ -9,8 +9,8 @@
 
 > 本區由 tools/generate_readme.mjs 產生。main 分支每次非 README push 都會由 GitHub Actions 自動刷新。
 
-- 最新 commit：4d51486 — data: record endpoint mapwarp audit
-- 最後更新時間：2026-10-01T18:51:41+08:00
+- 最新 commit：0ec2dfb — docs: surface endpoint mapwarp status in README
+- 最後更新時間：2026-10-01T18:52:04+08:00
 - 版本線最高 regression workflow：V4.25
 - Playable HTML entry：目前刻意為 0 個；待資料與 runtime contract 成熟後才重新建立唯一入口
 - 舊入口殘留：已清除
@@ -29,6 +29,7 @@
 - Corpus 合計：8,749 files；185,166,100 bytes
 - Exact manual rule：只有 `docs/搭建教程.txt` 與 `server/merged-source/wwwroot/`；`server/merged-source/www/wwwroot/` 維持 VM 一鍵端
 - Endpoint Item seed：⚠️ unresolved；setup `ITEM1=32003`；selected `itemset6.csv` exact token presence=no
+- Endpoint MapWarp：4,734 rows；309 endpoint-only；1,032 fixed-C-only
 
 ### 核心 closure
 
