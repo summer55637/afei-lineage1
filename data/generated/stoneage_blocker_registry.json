@@ -1,0 +1,66 @@
+{
+  "format": "stoneage-blocker-registry-v1",
+  "updated": "2026-10-01",
+  "policy": {
+    "statusValues": [
+      "active",
+      "reopened-for-reaudit",
+      "resolved",
+      "retired"
+    ],
+    "reopenRule": "任何新的 authoritative endpoint evidence、不同版本實質差異、以前未查過的 evidence layer 或新的 runtime prerequisite，都可以讓舊 blocker 重新進入 re-audit；無需維持永久封存。",
+    "noGuessing": true,
+    "noSyntheticBridge": true,
+    "noAutoResolve": true
+  },
+  "blockers": {
+    "route-4000-to-200": {
+      "status": "reopened-for-reaudit",
+      "scope": "first-route",
+      "previousEvidence": "fixed-C floor 4000 connected components",
+      "newEvidence": [
+        "endpoint mapwarp exact rows exist: 4000↔200 endpoint 4 / fixed-C 4",
+        "endpoint corpus is now the primary deployment-data source"
+      ],
+      "next": "endpoint LS2MAP walkability + connected components + actual portal-origin reachability"
+    },
+    "route-3000-to-200-landing-587-318": {
+      "status": "reopened-for-reaudit",
+      "scope": "first-route",
+      "previousEvidence": "fixed-C landing (587,318) non-walkable",
+      "newEvidence": [
+        "endpoint MapWarp corpus is now available for endpoint-specific coordinate audit"
+      ],
+      "next": "verify endpoint destination-map walkability at (587,318) and compare exact landing rows"
+    },
+    "starter-item-24114-fixed-c": {
+      "status": "reopened-for-reaudit",
+      "scope": "new-player seed / fixed-C",
+      "previousEvidence": "fixed-C configured ITEM1=24114 is outside ITEM_tbl source max",
+      "newEvidence": [
+        "endpoint setup.cf uses a different ITEM1=32003",
+        "endpoint uses itemset6.csv",
+        "endpoint item audit finds 24114 once but no exact 32003"
+      ],
+      "next": "close endpoint Item loader / row semantics before choosing canonical starter item"
+    },
+    "starter-item-endpoint-32003": {
+      "status": "active",
+      "scope": "new-player seed / endpoint",
+      "previousEvidence": "endpoint setup.cf ITEM1=32003",
+      "newEvidence": [
+        "selected endpoint itemset6.csv contains zero exact 32003 tokens"
+      ],
+      "next": "inspect endpoint loader / transforms and exact Item row identity"
+    },
+    "persistent-state-expansion": {
+      "status": "active",
+      "scope": "persistent-state",
+      "previousEvidence": "schema v1 is structural but not final long-run player/pet/quest/world save model",
+      "newEvidence": [
+        "endpoint deployment corpus adds more data surfaces that can define persisted fields"
+      ],
+      "next": "expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics"
+    }
+  }
+}
