@@ -10,6 +10,13 @@ const FILES={encount:['ro0000/server/merged-source/gmsv/data/encount.txt','gmsv/
 function fail(m){throw new Error(m);}
 function clean(f){if(!fs.existsSync(f))fail('Missing '+f);return fs.readFileSync(f,'utf8').split(/\r?\n/).map(x=>x.trim()).filter(x=>x&&!x.startsWith('#'));}
 function sha(rel){try{return execFileSync('git',['rev-parse','HEAD:'+rel],{cwd:ROOT,encoding:'utf8'}).trim();}catch{return'unknown';}}
+function blobSize(repoRoot, rel){
+  try{
+    return Number(execFileSync('git',['-C',repoRoot,'cat-file','-s','HEAD:'+rel],{cwd:ROOT,encoding:'utf8'}).trim());
+  }catch{
+    return null;
+  }
+}
 function compare(E,F){const es=new Set(E),fs=new Set(F);return{endpointRows:E.length,fixedRows:F.length,intersection:E.filter(x=>fs.has(x)).length,endpointOnly:E.filter(x=>!fs.has(x)).length,fixedOnly:F.filter(x=>!es.has(x))?.length??0};}
 function num(v){return /^-?\d+$/.test(String(v).trim())?Number(String(v).trim()):null;}
 function internal(E,G,N,B){
@@ -23,7 +30,7 @@ function internal(E,G,N,B){
 }
 const endpoint={},fixed={};
 for(const [key,[ep,fx]] of Object.entries(FILES)){endpoint[key]=clean(path.join(ROOT,ep));fixed[key]=clean(path.join(FIXED_ROOT,fx));}
-const result={format:'stoneage-endpoint-battle-data-source-audit-v1',fixedSource:'gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',files:Object.fromEntries(Object.entries(FILES).map(([k,[ep,fx,fxSha]])=>[k,{endpointPath:ep,endpointBlobSha:sha(ep),fixedPath:fx,fixedBlobSha:fxSha,endpointBytes:fs.statSync(path.join(ROOT,ep)).size,fixedBytes:fs.statSync(path.join(FIXED_ROOT,fx)).size,comparison:compare(endpoint[k],fixed[k])}])),endpointInternalReferences:internal(endpoint.encount,endpoint.group,endpoint.enemy,endpoint.enemybase),fixedInternalReferences:internal(fixed.encount,fixed.group,fixed.enemy,fixed.enemybase),interpretation:{endpointIsPrimaryDataSource:true,fixedCIsSemanticValidationBaseline:true,variantIsNotError:true,syntheticSubstitutionForbidden:true,note:'Internal field positions are reported as format evidence based on the existing pinned-C parser contract; endpoint loader semantics still require explicit closure before canonical runtime promotion.'}};
+const result={format:'stoneage-endpoint-battle-data-source-audit-v1',fixedSource:'gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',files:Object.fromEntries(Object.entries(FILES).map(([k,[ep,fx,fxSha]])=>[k,{endpointPath:ep,endpointBlobSha:sha(ep),fixedPath:fx,fixedBlobSha:fxSha,endpointBytes:blobSize(ROOT,ep),fixedBytes:blobSize(FIXED_ROOT,fx),comparison:compare(endpoint[k],fixed[k])}])),endpointInternalReferences:internal(endpoint.encount,endpoint.group,endpoint.enemy,endpoint.enemybase),fixedInternalReferences:internal(fixed.encount,fixed.group,fixed.enemy,fixed.enemybase),interpretation:{endpointIsPrimaryDataSource:true,fixedCIsSemanticValidationBaseline:true,variantIsNotError:true,syntheticSubstitutionForbidden:true,note:'Internal field positions are reported as format evidence based on the existing pinned-C parser contract; endpoint loader semantics still require explicit closure before canonical runtime promotion.'}};
 const text=JSON.stringify(result,null,2)+'\n';
 if(process.argv.includes('--check')){if(!fs.existsSync(OUT))fail('Missing generated endpoint battle audit.');if(fs.readFileSync(OUT,'utf8')!==text)fail('Endpoint battle audit is stale.');process.stdout.write('endpoint-battle-data-source-audit-check-ok\n');}
 else if(process.argv.includes('--write')){fs.mkdirSync(path.dirname(OUT),{recursive:true});fs.writeFileSync(OUT,text);process.stdout.write(text);}
