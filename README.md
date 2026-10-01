@@ -79,7 +79,7 @@ Browser-facing runtime contract → NPC interaction gate → NPC ItemShop → so
   - `docs/搭建教程.txt`：手工外網端架設教程。
   - `docs/隐盟文本教程.txt`：VM 一鍵端架設／維運教程。
 - 原始內容優先保留；後續整理或差異分析不得因檔名相同就假設內容相同。
-- 完整來源角色：VM 一鍵端＋手工外網端是目前最完整的實機／部署資料主來源；pinned fixed-C 是引擎行為與語義校驗基準；詳見 `docs/source-authority-and-provenance.md`。
+- 完整來源角色：依目前已確認 provenance，VM 一鍵端＋手工外網端是從可直接架設石器時代手游的實際部署資料複製取得，因此是目前最完整、最接近完整可部署版本的實機／部署資料主來源；pinned fixed-C 是引擎行為與語義校驗基準；詳見 `docs/source-authority-and-provenance.md`。
 
 ### VM／WinSCP 使用狀態
 
