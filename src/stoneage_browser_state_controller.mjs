@@ -57,6 +57,7 @@ import { createBrowserBattleExitCommitRuntime, ACTION_BATTLE_EXIT_COMMIT, BROWSE
 import { createBrowserBattlePlayerExitRuntime, ACTION_BATTLE_PLAYER_EXIT_PLAN, BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_runtime.mjs';
 import { createBrowserBattlePlayerExitCommitRuntime, ACTION_BATTLE_PLAYER_EXIT_COMMIT, BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_commit_runtime.mjs';
 import { createBrowserBattleSettlementRuntime, ACTION_BATTLE_SETTLEMENT_RECEIPT_COMMIT, BROWSER_BATTLE_SETTLEMENT_RUNTIME_FORMAT, validateSettlementReceiptForBattle } from './stoneage_browser_battle_settlement_runtime.mjs';
+import { createBrowserBattleContextClearRuntime, ACTION_BATTLE_CONTEXT_CLEAR, BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT } from './stoneage_browser_battle_context_clear_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
@@ -150,6 +151,7 @@ function createBrowserStateController({
   const battlePlayerExitRuntime=createBrowserBattlePlayerExitRuntime();
   const battlePlayerExitCommitRuntime=createBrowserBattlePlayerExitCommitRuntime();
   const battleSettlementRuntime=createBrowserBattleSettlementRuntime();
+  const battleContextClearRuntime=createBrowserBattleContextClearRuntime();
   const battleTurnRuntime=createBrowserBattleTurnRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
@@ -602,15 +604,58 @@ function createBrowserStateController({
             now:clockFactory(action.now,now)
           }
         );
+        let contextClear=null;
         if(result.ok&&result.handled===true&&result.state){
           currentState=result.state;
-          if(result.stage==='battle-exit-commit-applied')battleContext=null;
+          if(result.stage==='battle-exit-commit-applied'&&battleContext){
+            contextClear=battleContextClearRuntime.clear(
+              clone(currentState),
+              {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+              {petExitTransactionId:action.transactionId??result.transactionId??null}
+            );
+            if(contextClear.ok===true&&contextClear.battleContextCleared===true)battleContext=null;
+          }
         }
         return {
           ...result,
           format:BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT,
+          battleContextClear:contextClear?clone(contextClear):null,
           battleContext:battleContext?clone(battleContext):null,
           state:clone(result.state??currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_CONTEXT_CLEAR){
+        if(!battleContext)return {
+          ok:true,
+          handled:true,
+          stage:'battle-context-clear-idempotent',
+          format:BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT,
+          action:ACTION_BATTLE_CONTEXT_CLEAR,
+          idempotent:true,
+          applied:false,
+          battleContextCleared:true,
+          state:clone(currentState),
+          battleContext:null
+        };
+        if(battleContextClearRuntime.ok!==true)return {
+          ok:false,
+          handled:false,
+          stage:'battle-context-clear',
+          reason:'browser-battle-context-clear-runtime-invalid',
+          state:clone(currentState),
+          battleContext:clone(battleContext)
+        };
+        const clearResult=battleContextClearRuntime.clear(
+          clone(currentState),
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {petExitTransactionId:action.petExitTransactionId??null}
+        );
+        if(clearResult.ok===true&&clearResult.battleContextCleared===true)battleContext=null;
+        return {
+          ...clearResult,
+          format:BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT,
+          state:clone(currentState),
+          battleContext:battleContext?clone(battleContext):null
         };
       }
       if(type===ACTION_BATTLE_COMPLIANCE_PLAN){
@@ -1298,6 +1343,7 @@ export {
   ACTION_BATTLE_PLAYER_EXIT_PLAN,
   ACTION_BATTLE_PLAYER_EXIT_COMMIT,
   ACTION_BATTLE_SETTLEMENT_RECEIPT_COMMIT,
+  ACTION_BATTLE_CONTEXT_CLEAR,
   ACTION_BATTLE_PROFIT_ROUTE_PLAN,
   ACTION_BATTLE_DUELPOINT_PLAN,
   ACTION_BATTLE_TURN_INITIALIZE,
@@ -1332,6 +1378,7 @@ export {
   BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT,
   BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT,
   BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
