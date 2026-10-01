@@ -155,7 +155,7 @@ const exitPlan=await controller.dispatch({
 assert.equal(exitPlan.ok,true,JSON.stringify(exitPlan));
 assert.deepEqual(exitPlan.pets,[{petId:'pet-dead',hpBefore:0,hpAfter:1,mailMode:0}]);
 assert.equal(exitPlan.persistentStateMutation,false);
-assert.equal(exitPlan.battleContext.context.mode,'finish');
+assert.equal(exitPlan.battleContext.mode,'finish');
 
 const exitCommit=await controller.dispatch({
   type:ACTION_BATTLE_EXIT_COMMIT,
