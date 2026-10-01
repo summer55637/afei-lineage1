@@ -1,1 +1,52 @@
-# afei-lineage1\n\n「阿肥石器時代放置版」重建專案。\n\n先還原真正可架設的石器時代手游部署資料，再建立 source-backed runtime，最後做成 PC＋手機可長時間遊玩的現代化 3D 放置版。\n\n## 目前狀態\n\n- 最新 commit：646d0b1 — [docs] simplify README generator layout\n- 更新時間：2026-10-02T07:54:31+08:00\n- Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56\n- Regression 最高版本：V4.25\n- Playable HTML：⏸️ 尚未建立（刻意保留）\n\n## 接手摘要\n\n| 項目 | 現況 |\n|---|---|\n| 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |\n| Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |\n| 判定 | Endpoint 決定「實際部署有什麼」；Fixed-C 驗證「引擎怎麼運作」；variant 不互相覆蓋 |\n| 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |\n| 重開案 | gmque：reopened-for-source-reconstruction（未啟用）、world-blockers：reopened-for-endpoint-reaudit（未啟用） |\n\n## 開發進度\n\n| 區域 | 現況 |\n|---|---|\n| First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |\n| Full first-route | ⚠️ 部分完成（6/8 portal groups） |\n| Map runtime | ✅ 11 張 |\n| Persistent State | ✅ Schema 1 |\n| Item / Economy | ✅ Runtime v1 |\n| Battle Pipeline | ✅ V4.25 |\n| Playable | ⏸️ 尚未建立（刻意保留） |\n\n## Blocker\n\n- route-4000-to-200：reopened-for-reaudit → endpoint LS2MAP walkability + connected components + actual portal-origin reachability\n- route-3000-to-200-landing-587-318：reopened-for-reaudit → verify endpoint destination-map walkability at (587,318) and compare exact landing rows\n- starter-item-24114-fixed-c：reopened-for-reaudit → close endpoint Item loader / row semantics before choosing canonical starter item\n- starter-item-endpoint-32003：active → inspect endpoint loader / transforms and exact Item row identity\n- persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics\n\n## 重要文件\n\n- [Source authority / provenance](docs/source-authority-and-provenance.md)\n- [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)\n- [Rebuild roadmap](docs/rebuild-roadmap.md)\n- [Generated state / evidence](data/generated/)\n\n> README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。\n
+# afei-lineage1
+
+「阿肥石器時代放置版」重建專案。
+
+先還原真正可架設的石器時代手游部署資料，再建立 source-backed runtime，最後做成 PC＋手機可長時間遊玩的現代化 3D 放置版。
+
+## 目前狀態
+
+- 最新 commit：e12e1dd — [docs] fix README line breaks
+- 更新時間：2026-10-02T07:55:13+08:00
+- Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+- Regression 最高版本：V4.25
+- Playable HTML：⏸️ 尚未建立（刻意保留）
+
+## 接手摘要
+
+| 項目 | 現況 |
+|---|---|
+| 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |
+| Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
+| 判定 | Endpoint 決定「實際部署有什麼」；Fixed-C 驗證「引擎怎麼運作」；variant 不互相覆蓋 |
+| 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
+| 重開案 | gmque：reopened-for-source-reconstruction（未啟用）、world-blockers：reopened-for-endpoint-reaudit（未啟用） |
+
+## 開發進度
+
+| 區域 | 現況 |
+|---|---|
+| First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
+| Full first-route | ⚠️ 部分完成（6/8 portal groups） |
+| Map runtime | ✅ 11 張 |
+| Persistent State | ✅ Schema 1 |
+| Item / Economy | ✅ Runtime v1 |
+| Battle Pipeline | ✅ V4.25 |
+| Playable | ⏸️ 尚未建立（刻意保留） |
+
+## Blocker
+
+- route-4000-to-200：reopened-for-reaudit → endpoint LS2MAP walkability + connected components + actual portal-origin reachability
+- route-3000-to-200-landing-587-318：reopened-for-reaudit → verify endpoint destination-map walkability at (587,318) and compare exact landing rows
+- starter-item-24114-fixed-c：reopened-for-reaudit → close endpoint Item loader / row semantics before choosing canonical starter item
+- starter-item-endpoint-32003：active → inspect endpoint loader / transforms and exact Item row identity
+- persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
+
+## 重要文件
+
+- [Source authority / provenance](docs/source-authority-and-provenance.md)
+- [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)
+- [Rebuild roadmap](docs/rebuild-roadmap.md)
+- [Generated state / evidence](data/generated/)
+
+> README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。
