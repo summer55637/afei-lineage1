@@ -321,3 +321,64 @@ battleNNN.sabex
 ~~~
 
 This closes the identifier and table topology, but not the actual target `adrn.bin` / `real.bin` / `.sabex` payload contents.
+
+## Target Real-image decoder closure
+
+Target x86 `decoder()` @ `0x2f5410` is now directly rechecked from the retrieved native ELF. It is the final decoder called by `realGetImage()`.
+
+### RD container
+
+First two bytes are interpreted as little-endian magic `0x4452`, i.e. `RD`. The target reads the following 16-byte header:
+
+| Offset | Size | Meaning |
+|---:|---:|---|
+| `0x00` | 2 | `RD` magic |
+| `0x02` | 1 | compression flag |
+| `0x03` | 1 | reserved / unused by the observed decoder |
+| `0x04` | 4 | width, little-endian |
+| `0x08` | 4 | height, little-endian |
+| `0x0c` | 4 | stored record size, little-endian |
+
+Observed target branches:
+
+1. `compression flag == 0`: copies `width * height` bytes directly from `+0x10`; output size is one byte per pixel.
+2. `compression flag == 0x20`: allocates/declares `width * height * 4` output bytes and calls zlib `uncompress` on the payload from `+0x10` with source length `size - 0x10`. This is a four-byte-per-pixel path.
+3. Any other non-zero compression flag enters the custom RLE decoder.
+
+### Custom RLE
+
+The target control byte uses the same bit assignments already represented in `src/stoneage_rd_decoder.mjs`:
+
+~~~text
+bit 7 (0x80) = repeat run
+bit 6 (0x40) = repeat value is zero
+bit 5 (0x20) = extended 3-byte repeat count
+bit 4 (0x10) = extended 2-byte count
+~~~
+
+For repeat runs the target optionally reads one repeat-value byte, then forms the count from low four control bits plus either zero, one, or two following count bytes. Literal runs use the same low-four-bit base with optional 2-byte count when bit 4 is set.
+
+The target rejects counts reaching/exceeding `0xfffff` in the observed guard and returns failure. The final decoded cursor is compared against the expected image area by the reconstructed decoder.
+
+### Alternate `gG` / PNG carrier
+
+If the first two bytes are not `RD`, target `decoder()` checks little-endian magic `0x4767`, i.e. bytes `gG`. On this branch it calls `decoderPng()` @ `0x2f5310`.
+
+`decoderPng()` treats the same header layout as width/height/size metadata, passes the payload at `+0x10` with length `size - 0x10` to `IMG_LoadPNG_MEM`, writes width and height, and reports output length as `width * height * 4`.
+
+Therefore the target Real-image decoder has two independently observed containers:
+
+~~~text
+RD  -> raw / custom RLE / zlib RGBA
+gG  -> in-memory PNG -> RGBA
+~~~
+
+The `gG` path is classified by `src/stoneage_rd_decoder.mjs` but remains intentionally non-decoding there because the browser runtime still needs an explicit memory-PNG decoder implementation.
+
+### Existing project decoder correction
+
+The target recheck found one previous Web contract mismatch: the old project decoder rejected every compression flag >= `0x10`. That was too strict. The target explicitly accepts `0x20` as its zlib/4-byte-pixel branch and sends other non-zero flags through the RLE branch.
+
+`src/stoneage_rd_decoder.mjs` has now been corrected to mirror this target branching. `tools/check_v317_rd_decoder.mjs` now covers raw, RLE, zlib `0x20`, RD magic, and `gG` classification.
+
+The actual target `real.bin` payload is still unavailable, so this closes the decoder **contract**, not a concrete target image.
