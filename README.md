@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：83772ed — fix: derive NoGuard counter adjustment from battle entry
-- 更新時間：2026-10-02T16:41:48+08:00
+- 最新 commit：c82b371 — test: assert enemy NoGuard counter binding correctly
+- 更新時間：2026-10-02T16:42:36+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.37
 - Playable HTML：⏸️ 尚未建立（刻意保留）
