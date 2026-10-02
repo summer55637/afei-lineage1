@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_BATTLE_PROFIT_ROUTE_PLAN,
   BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT,
@@ -7,6 +9,8 @@ import {
 } from '../src/stoneage_browser_battle_profit_route_runtime.mjs';
 import {
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
+  ACTION_WORLD_ENCOUNTER_GROUP_SELECT,
+  ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   ACTION_BATTLE_PROFIT_ROUTE_PLAN as CONTROLLER_PROFIT_ROUTE_PLAN,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -45,7 +49,37 @@ result=planBattleProfitRoute(context(2));
 assert.equal(result.ok,false);
 assert.equal(result.reason,'dpbattle-invalid');
 
-const controller=createBrowserStateController({state:{revision:0}});
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
+const encounterGroupCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
+const state=freshPersistentState({playerId:'v410-player'});
+state.player.name='V410';
+state.player.hp=100;
+state.player.maxHp=100;
+state.player.mp=20;
+state.player.maxMp=20;
+state.world.position={floorId:100,x:610,y:538};
+state.idle.enabled=true;
+state.idle.mode='encounter_pending';
+state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+const controller=createBrowserStateController({
+  state,
+  idleRouteCatalog:routeCatalog,
+  encounterTargetIndex:encounterIndex,
+  encounterGroupCatalog,
+  battleFieldNoProvider:1
+});
+const encounter={encounterId:65,floorId:100,x:610,y:538};
+const group=await controller.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounter,groupRoll:0});
+assert.equal(group.ok,true,JSON.stringify(group));
+const generated=await controller.dispatch({
+  type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
+  encounter,
+  groupId:group.group.groupId,
+  entryMaxRoll:1,
+  enemyRolls:[0]
+});
+assert.equal(generated.ok,true,JSON.stringify(generated));
 const build=await controller.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   playerId:'v410-player',
@@ -60,9 +94,9 @@ const build=await controller.dispatch({
     luck:0,
     stats:{vital:10,str:10,tgh:10,dex:10}
   },
-  team:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
-  encounter:{encounterId:1,floorId:1,x:1,y:1},
-  groupId:1,
+  enemyTeam:generated.team,
+  encounter,
+  groupId:group.group.groupId,
   battleFieldNo:1
 });
 assert.equal(build.ok,true,JSON.stringify(build));
