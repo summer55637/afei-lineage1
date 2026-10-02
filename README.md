@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2ab88f9 — [docs] reflect Android map4 Lua loader finding
-- 更新時間：2026-10-02T18:36:02+08:00
+- 最新 commit：8777df9 — [docs] specify map4 Lua bundle record layout
+- 更新時間：2026-10-02T18:38:55+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
