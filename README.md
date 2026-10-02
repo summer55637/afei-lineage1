@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：f4c5c82 — ci: add V4.39 enemy ChargeAttack regression
-- 更新時間：2026-10-02T16:56:01+08:00
+- 最新 commit：72eec1c — docs: record V4.39 enemy ChargeAttack milestone
+- 更新時間：2026-10-02T16:56:30+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.39
 - Playable HTML：⏸️ 尚未建立（刻意保留）
