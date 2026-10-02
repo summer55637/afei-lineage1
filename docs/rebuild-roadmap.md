@@ -820,11 +820,11 @@ V3.44 不新增 playable HTML，先把 canonical Persistent State v1 與 Save En
 
 下一步不直接做 playable UI，而是把 unresolved item / event 依 NPC path、事件 owner 與起始 floor 分群；目前 236 個 item IDs 與 ownerless event IDs 仍需 closure。最高優先仍是四個出生村的 first-route closure，但 start-floor coordinate 本身已不再是 blocker。
 
-## 新增最終目標：現代 3D 卡通手遊化
+## 最終產品方向：現代化 2D 高品質重製＋放置版
 
-最終產品目標正式加入現代 3D 卡通化方向。這不是把舊版網頁 UI 換成 3D 圖片，而是把整個 presentation layer 升級：3D 卡通世界、角色／寵物模型、斜俯視鏡頭、現代 RPG HUD、集中式回合戰鬥、技能演出、AUTO／掛機、村莊與 NPC 互動。依目前授權前提，授權範圍內的石器時代手游原始 UI／模型／貼圖／icon／字體／動畫等資產可以直接納入正式版本，以高還原為實作目標。
+本專案最終不是把石器時代改造成真正的 3D 遊戲，而是以既有 2D 石器時代 client／手游的視覺語言為基礎，做高品質的現代化 2D 重製，再疊加本專案的 Idle Loop 與長時間放置玩法。
 
-《石器時代：覺醒》的官方商店資訊包含回合制策略、上百寵物、職業、野外捕捉與離線掛機；《石器時代：放置冒險》則以放置玩法與寵物成長為產品核心。現代產品的參考程度，以及能否直接採用其特定 UI／美術資產，改由實際授權範圍決定；不在授權範圍的外部素材仍只作研究參考。
+《石器時代：覺醒》與《石器時代：放置冒險》等現代產品只作玩法、資訊架構與視覺方向的參考，不改變本專案的 2D 產品定位；特定外部 UI／美術是否採用，仍由實際授權範圍決定。
 
 正式規格：`docs/reference/modern-2d-mobile-visual-ui-target.md`。
 
@@ -1091,7 +1091,7 @@ V3.16～V3.20 的技術鏈已經夠用了，但目前沒有可直接使用的 cl
 5. **Idle Loop Contract**：state machine 已建立，reward transaction 與 supply/death/offline policy boundary 已建立；下一步是 simulation runner、save commit 與 offline resume。
 6. **Battle Presentation Contract**：把已驗證 battle result 接到完整場景與動畫事件。
 7. **NPC / Economy Runtime**：Item / Economy transaction v1 已接到 canonical state；下一步是接 source Item allocator、NPC shop data、製作與任務取得路徑。
-8. **Authorized Asset Integration**：依實際授權範圍導入石器時代原始 client／3D／UI assets，並建立來源、授權狀態、版本與用途 manifest。
+8. **Authorized Asset Integration**：依實際授權範圍導入石器時代原始 client／2D 美術／UI assets，並建立來源、授權狀態、版本與用途 manifest。
 9. **唯一可玩入口**：前面資料與系統成熟後，才重新建立新的遊戲頁。
 
 ## 判定標準
