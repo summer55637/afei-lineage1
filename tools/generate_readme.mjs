@@ -125,7 +125,7 @@ function buildReadme() {
   const stateLine = state.currentSchemaVersion ? '✅ Schema ' + state.currentSchemaVersion : '⚠️ 未建立';
   const economyLine = economy.format ? '✅ Runtime v1' : '⚠️ 未建立';
   const androidLine = androidClientAudit.source?.sha256
-    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（ZIP / Manifest 已稽核；遊戲地圖語義待解）'
+    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（ZIP / Manifest / native path 已稽核；map data 語義待解）'
     : '⚠️ APK 尚未完成封裝稽核';
   const battleLine = workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel;
   const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');

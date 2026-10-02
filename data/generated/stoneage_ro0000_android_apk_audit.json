@@ -62,13 +62,56 @@
     "assets/data/skin/61430.png",
     "assets/data/skin/jdt.png"
   ],
-  "embeddedMapOrGameplayPathCandidates": [],
+  "archivePathCandidates": [],
+  "embeddedNativeResourcePathStrings": {
+    "classes.dex": [
+      "BuglyLog.txt",
+      "BuglyNativeLog.txt",
+      "GCloudVoice/config.json",
+      "map_record.txt",
+      "reg_record.txt"
+    ],
+    "libStoneage.so": [
+      "02d.TXT",
+      "03d.png",
+      "d.dat",
+      "d.png",
+      "d.txt",
+      "data/auto.dat",
+      "data/channel.dat",
+      "data/char.bin",
+      "data/chathis.dat",
+      "data/chatreg.dat",
+      "data/rules.dat",
+      "data/savedata.dat",
+      "data/sensitivewords_android.txt",
+      "data/serverdata.dat",
+      "data/skin/61428.png",
+      "data/skin/61429.png",
+      "data/skin/61430.png",
+      "data/skin/jdt.png",
+      "data/storage.bin",
+      "data/task.bin",
+      "data/tempshare.png",
+      "data/update/list.dat",
+      "data/usd.dat",
+      "path/map4/real.bin",
+      "recvdata.txt",
+      "s.ini",
+      "s/adrn.bin",
+      "s/real.bin",
+      "s/spr.bin",
+      "s/spradrn.bin"
+    ]
+  },
   "assessment": {
-    "status": "archive-and-manifest-audited",
-    "statement": "No obvious map/tile/gameplay file names were found in archive paths. This does not prove that maps or gameplay data are absent; they may be embedded in native code, opaque assets, or acquired at runtime.",
+    "status": "archive-manifest-and-native-string-audited",
+    "statement": "APK archive has no obvious map/tile/gameplay file path entries, but native Stoneage library contains path strings such as path/map4/real.bin, s/real.bin, s/spr.bin, data/serverdata.dat, and data/update/list.dat. These strings are path references, not proof the referenced files are packaged or downloaded.",
     "notVerified": [
       "APK signing certificate identity",
-      "native library contents and symbols",
+      "native library disassembly and call sites",
+      "content/format of referenced map and sprite files",
+      "whether referenced data is downloaded or bundled separately",
       "client map/collision semantics",
       "server endpoints and update protocol",
       "in-game operation and screenshots"
@@ -76,7 +119,7 @@
   },
   "auditWorkflow": {
     "name": "Audit RO0000 Android client evidence",
-    "runId": 36971497713,
-    "runUrl": "https://github.com/summer55637/afei-lineage1/actions/runs/36971497713"
+    "runId": 36971769026,
+    "runUrl": "https://github.com/summer55637/afei-lineage1/actions/runs/36971769026"
   }
 }

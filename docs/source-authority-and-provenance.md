@@ -158,9 +158,9 @@ Fixed-C → 把所有 endpoint 差異都丟掉
 
 ### Android APK first-pass audit (2026-10-02)
 
-已對 ro0000/client/android/冰河石器-隐盟.apk 執行 ZIP／Manifest 稽核，固定 SHA-256：6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c；Git blob：eaeb7c513ca0731c4bdeedd0987081b4bf443031。Manifest package 為 com.newssa.stoneage.ko，versionCode 1、versionName 1.0、minSdk 21、targetSdk 29；ZIP CRC 檢查通過，共 38 個項目。可見資料以字型、skin 圖片、DEX 及 SDL／Stoneage 原生函式庫為主，封裝路徑未找到明顯 map/tile/gameplay 檔名。
+已對 ro0000/client/android/冰河石器-隐盟.apk 執行 ZIP／Manifest 稽核，固定 SHA-256：6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c；Git blob：eaeb7c513ca0731c4bdeedd0987081b4bf443031。Manifest package 為 com.newssa.stoneage.ko，versionCode 1、versionName 1.0、minSdk 21、targetSdk 29；ZIP CRC 檢查通過，共 38 個項目。可見資料以字型、skin 圖片、DEX 及 SDL／Stoneage 原生函式庫為主，APK archive path 未找到明顯 map/tile/gameplay 檔名；但掃描 classes.dex 與 libStoneage.so 的原生字串後，已辨識 path/map4/real.bin、s/real.bin、s/adrn.bin、s/spr.bin、s/spradrn.bin、data/serverdata.dat、data/update/list.dat 等路徑參照。
 
-目前只代表 archive identity 與 manifest 已驗證；地圖是否由 native library、加密／封裝資料或伺服器供應仍未定。稽核結果見 data/generated/stoneage_ro0000_android_apk_audit.json；後續 CI 會以此 SHA／Manifest 作 baseline，APK 變動需重新審核。
+目前只代表 archive identity 與 manifest 已驗證；這些是程式內路徑參照，不代表檔案存在於 APK 或一定由伺服器下載；地圖是否由 native library、另置資料、加密／封裝資料或伺服器供應仍未定。稽核結果見 data/generated/stoneage_ro0000_android_apk_audit.json；後續 CI 會以此 SHA／Manifest 作 baseline，APK 變動需重新審核。
 
 ## 2026-10-02 Client Evidence and Product Repair Boundary
 
