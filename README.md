@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：a9189e8 — test: supply idle route for V4.11 battle context
-- 更新時間：2026-10-02T17:31:06+08:00
+- 最新 commit：21a3715 — feat: integrate enemy Steal WAZA transactions
+- 更新時間：2026-10-02T17:42:46+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.41
+- Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.41 |
+| Battle Pipeline | ✅ V4.42 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
