@@ -1426,6 +1426,7 @@ function createBrowserStateController({
         const built=buildBattleContext({
           playerId:currentState?.player?.id??null,
           player,
+          playerElements:currentState?.creation?.elements??null,
           activePet,
           team:action.enemyTeam,
           encounter,
