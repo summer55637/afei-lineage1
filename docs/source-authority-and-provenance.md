@@ -10,6 +10,13 @@
 
 授權狀態屬專案前提，與「目前是否已取得某個具體檔案」是兩件不同的事：有授權 ≠ 該資產已經在手；資產未找到也不得反推為「不能做」。
 
+### 授權資料的使用資格
+
+- 在已確認的授權範圍內，RO0000、授權取得的 client / server 資產，以及專案方提供的其他原作資料，不應只標記為「參考資料」；它們可以直接進入 production reconstruction，並在完成 identity / integrity / variant 驗證後成為 canonical runtime / product asset 的候選來源。
+- 「考據」在本專案中的意思是確認來源與版本，不代表只能觀看、不能使用。符合授權範圍的原作資料，研究用途與最終產品使用用途分開標記，但不得因「reference」字樣而自動降級成不可直接採用。
+- GitHub / Google / 網站等**外部資料不是因為公開可見就自動取得本專案授權**。外部資料必須逐項確認其授權、來源、使用條件與是否允許再散布／商用；已確認可使用者，才能提升為可直接採用的 production source，其餘維持 cross-reference evidence。
+- 因此後續狀態至少分為：`authorized source`、`verified usable external source`、`reference-only`、`unresolved`；不能把所有資料一律塞進「參考資料」。
+
 ## 核心修正
 
 本專案現在把「來源權威」與「資料完整度」分開管理。
