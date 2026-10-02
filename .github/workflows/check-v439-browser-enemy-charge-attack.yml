@@ -45,7 +45,7 @@ jobs:
           node tools/check_v439_browser_enemy_charge_attack.mjs
           node tools/check_v386_browser_battle_context_runtime.mjs
           node tools/check_browser_battle_attack_pipeline_binding.mjs
-          node tools/check_v405_browser_battle_counter_runtime.mjs
+          node tools/check_v405_browser_battle_counter.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_enemy_ai_runtime.mjs
