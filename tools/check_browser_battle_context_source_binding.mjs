@@ -35,7 +35,7 @@ const enemyTeam=[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}];
   });
   assert.equal(stale.ok,false,JSON.stringify(stale));
   assert.equal(stale.stage,'battle-context-encounter-binding');
-  assert.equal(stale.reason,'unconditional-encounter-not-at-position');
+  assert.equal(stale.reason,'encounter-player-state-mismatch');
   assert.equal(c.getState().revision,0);
 }
 
