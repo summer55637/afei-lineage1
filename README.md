@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：db5b88a — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T08:14:04Z
+- 最新 commit：57cc0bf — docs: record V4.33 dead enemy AI lifecycle
+- 更新時間：2026-10-02T16:15:50+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.32
+- Regression 最高版本：V4.33
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.32 |
+| Battle Pipeline | ✅ V4.33 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
