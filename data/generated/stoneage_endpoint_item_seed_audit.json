@@ -66,18 +66,24 @@
       "   232: 00000000009ed960     8 OBJECT  GLOBAL DEFAULT   25 ITEM_tbl",
       "   427: 00000000005848fb   397 FUNC    GLOBAL DEFAULT   13 ITEM_makeItem",
       "   857: 0000000000584a88   103 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemAndRegist",
+      "   887: 0000000000439572    56 FUNC    GLOBAL DEFAULT   13 getNewplayergiveitem",
       "  1237: 00000000005837bc  4078 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemStatusString",
       "  1974: 000000000058484c   175 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseStringWithNum",
       "  2029: 0000000000582b33  2765 FUNC    GLOBAL DEFAULT   13 ITEM_readItemConfFile",
       "  2142: 00000000005847aa   162 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseString",
+      "  2518: 0000000000486e9a   314 FUNC    GLOBAL DEFAULT   13 CHAR_loginAddItemForNew",
+      "  2565: 00000000004395ca    49 FUNC    GLOBAL DEFAULT   13 getNewplayergivegold",
       "   704: 00000000009ed970     4 OBJECT  LOCAL  DEFAULT   25 ITEM_tblen",
       "  2250: 00000000005848fb   397 FUNC    GLOBAL DEFAULT   13 ITEM_makeItem",
       "  2480: 00000000005847aa   162 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseString",
       "  2638: 00000000009ed960     8 OBJECT  GLOBAL DEFAULT   25 ITEM_tbl",
       "  2669: 00000000005837bc  4078 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemStatusString",
+      "  2982: 0000000000486e9a   314 FUNC    GLOBAL DEFAULT   13 CHAR_loginAddItemForNew",
       "  3070: 000000000058484c   175 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseStringWithNum",
+      "  3782: 0000000000439572    56 FUNC    GLOBAL DEFAULT   13 getNewplayergiveitem",
       "  3805: 0000000000582b33  2765 FUNC    GLOBAL DEFAULT   13 ITEM_readItemConfFile",
-      "  5032: 0000000000584a88   103 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemAndRegist"
+      "  5032: 0000000000584a88   103 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemAndRegist",
+      "  6231: 00000000004395ca    49 FUNC    GLOBAL DEFAULT   13 getNewplayergivegold"
     ],
     "interestingStrings": [
       "ITEM_makeItem",
@@ -243,10 +249,52 @@
         "  584a10:\t48 8b 0d 49 8f 46 00 \tmov    rcx,QWORD PTR [rip+0x468f49]        # 9ed960 <ITEM_tbl>"
       ]
     },
+    "newPlayerGrant": {
+      "grantItemCalls": [
+        "  486f1b:\te8 52 26 fb ff       \tcall   439572 <getNewplayergiveitem>",
+        "  486f2c:\te8 41 26 fb ff       \tcall   439572 <getNewplayergiveitem>",
+        "  486f33:\te8 50 db 0f 00       \tcall   584a88 <ITEM_makeItemAndRegist>"
+      ],
+      "getterWindow": [
+        "",
+        "/home/runner/work/afei-lineage1/afei-lineage1/ro0000/server/merged-source/gmsv/gmsvjt:     file format elf64-x86-64",
+        "",
+        "",
+        "Disassembly of section .init:",
+        "",
+        "Disassembly of section .plt:",
+        "",
+        "Disassembly of section .text:",
+        "",
+        "0000000000439572 <getNewplayergiveitem>:",
+        "  439572:\t55                   \tpush   rbp",
+        "  439573:\t48 89 e5             \tmov    rbp,rsp",
+        "  439576:\t89 7d fc             \tmov    DWORD PTR [rbp-0x4],edi",
+        "  439579:\t8b 45 fc             \tmov    eax,DWORD PTR [rbp-0x4]",
+        "  43957c:\t48 98                \tcdqe",
+        "  43957e:\t48 05 44 02 00 00    \tadd    rax,0x244",
+        "  439584:\t8b 04 85 24 18 b4 02 \tmov    eax,DWORD PTR [rax*4+0x2b41824]",
+        "  43958b:\t85 c0                \ttest   eax,eax",
+        "  43958d:\t7e 14                \tjle    4395a3 <getNewplayergiveitem+0x31>",
+        "  43958f:\t8b 45 fc             \tmov    eax,DWORD PTR [rbp-0x4]",
+        "  439592:\t48 98                \tcdqe",
+        "  439594:\t48 05 44 02 00 00    \tadd    rax,0x244",
+        "  43959a:\t8b 04 85 24 18 b4 02 \tmov    eax,DWORD PTR [rax*4+0x2b41824]",
+        "  4395a1:\teb 05                \tjmp    4395a8 <getNewplayergiveitem+0x36>",
+        "  4395a3:\tb8 ff ff ff ff       \tmov    eax,0xffffffff",
+        "  4395a8:\t5d                   \tpop    rbp",
+        "  4395a9:\tc3                   \tret",
+        "",
+        "Disassembly of section .fini:",
+        ""
+      ]
+    },
     "interpretation": {
       "purpose": "Observe compiled endpoint loader and make-item lookup behavior without assuming fixed-C source semantics.",
       "token17IsProven": true,
       "directMakeItemTransformObserved": false,
+      "newPlayerGrantChainObserved": true,
+      "newPlayerItemGetterObserved": true,
       "caution": "Compiled binary evidence is correlated with symbols and callsites; absence of a transform symbol is evidence against that implementation, not proof that every possible mapping mechanism is absent."
     }
   },
