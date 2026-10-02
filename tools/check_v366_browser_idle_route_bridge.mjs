@@ -19,6 +19,12 @@ assert.equal(routes.ok,true);
 assert.equal(routes.handled,true);
 assert.equal(routes.routes.length,8);
 assert.equal(routes.routes.filter(r=>r.hometown===3&&r.productRepairId==='karutarna-4000-road-access-v1').length,2);
+const repairedRoute=routes.routes.find(r=>r.hometown===3&&r.portalId==='4000_to_200_a');
+const repairedEnableController=createBrowserStateController({state:freshPersistentState({playerId:'v366-repaired-enable'}),idleRouteCatalog:catalog,now});
+const repairedEnable=await repairedEnableController.dispatch({type:ACTION_IDLE_ENABLE,routeId:repairedRoute.routeId,now});
+assert.equal(repairedEnable.ok,true,JSON.stringify(repairedEnable));
+assert.equal(repairedEnable.state.idle.enabled,true);
+assert.equal(repairedEnable.state.idle.routeId,repairedRoute.routeId);
 assert.equal(routes.routes.every(r=>r.eligible),true);
 
 const routeId=routes.routes.find(r=>r.hometown===1&&r.portalId==='2000_to_100_a').routeId;
@@ -54,9 +60,6 @@ assert.equal(badEvent.ok,false);
 assert.equal(badEvent.reason,'idle-event-not-browser-boundary');
 assert.equal(controller.getState().revision,6);
 
-const blocked=await controller.dispatch({type:ACTION_IDLE_ENABLE,routeId:'hometown-3/floor-4000-to-200/4000_to_200_a',now});
-assert.equal(blocked.ok,false);
-assert.equal(blocked.reason,'idle-route-not-eligible');
 assert.equal(controller.getState().revision,6);
 
 const conflict=await controller.dispatch({type:ACTION_IDLE_EVENT,event:IDLE_EVENTS.MOVE_TICK,payload:{encounterTriggered:false},expectedRevision:0,now});
@@ -71,4 +74,4 @@ const noRouteController=createBrowserStateController({state:freshPersistentState
 const noRoute=await noRouteController.dispatch({type:ACTION_IDLE_EVENT,event:IDLE_EVENTS.MOVE_TICK,payload:{encounterTriggered:false},now});
 assert.equal(noRoute.ok,false); assert.equal(noRoute.reason,'idle-route-not-enabled'); assert.equal(noRouteController.getState().revision,0);
 
-console.log(JSON.stringify({pass:true,format:BROWSER_IDLE_RUNTIME_FORMAT,usableRoutes:routes.routes.length,enableRevision:1,lifecycleRevisions:[2,3,4,5,6],blocked4000:true,rewardNotAppliedByStateBridge:true,offlineNotImplicit:true,revisionConflictFailClosed:true,disableRevision:7}));
+console.log(JSON.stringify({pass:true,format:BROWSER_IDLE_RUNTIME_FORMAT,usableRoutes:routes.routes.length,enableRevision:1,lifecycleRevisions:[2,3,4,5,6],karutarnaRepairAvailable:true,rewardNotAppliedByStateBridge:true,offlineNotImplicit:true,revisionConflictFailClosed:true,disableRevision:7}));

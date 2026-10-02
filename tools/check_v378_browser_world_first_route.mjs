@@ -167,5 +167,5 @@ console.log(JSON.stringify({
   encounterId:planned.encounter.id,
   encounterBoundary:planned.encounterBoundary,
   readonlyRevision:listedAfter.revision,
-  4000ProductRepair:true,disabledOverlayFailClosed:true
+  repaired4000Route:true,disabledOverlayFailClosed:true
 },null,2));
