@@ -1,7 +1,7 @@
 {
   "format": "ro0000-android-native-resource-focus-v1",
-  "workflowRunId": 37031923568,
-  "sourceCommit": "c3d501d07402b69a09563d737951cb2074b2aaaa",
+  "workflowRunId": 37031930259,
+  "sourceCommit": "707f5f4be2b248e9b9a5437e89a8e760c1b0f6c6",
   "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
   "libraries": [
     {
@@ -16,6 +16,9 @@
           "size": 164,
           "disassemblyStatus": "ok",
           "instructionLineCount": 71,
+          "disassemblyLineCount": 78,
+          "disassemblySha256": "4770b0fafd00642ddf27937b6c3e4b74b7afd6d1f1325d6d36229c8f4d6cd23e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "000e5a88 <UnZipFile(char const*)@@Base>:",
             "   e5a9a:\t4920      \tldr\tr1, [pc, #128]\t@ (e5b1c <UnZipFile(char const*)@@Base+0x94>)",
@@ -49,6 +52,9 @@
           "size": 3428,
           "disassemblyStatus": "ok",
           "instructionLineCount": 1353,
+          "disassemblyLineCount": 1360,
+          "disassemblySha256": "72bf07342a758029940c99849a6a23741e5a0f0d5a7e07bd5381d7bbd68e7eab",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "000e8198 <ReadBattleMap(int)@@Base>:",
             "   e81a2:\tf8df 2b9c \tldr.w\tr2, [pc, #2972]\t@ e8d40 <ReadBattleMap(int)@@Base+0xba8>",
@@ -616,6 +622,9 @@
           "size": 1176,
           "disassemblyStatus": "ok",
           "instructionLineCount": 518,
+          "disassemblyLineCount": 525,
+          "disassemblySha256": "ea0a931bf6f4ab853fe178df9f3549840e645f10328d95220946ab23e9a013d8",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "000e8f00 <DrawBattleMap()@@Base>:",
             "   e8f04:\tb094      \tsub\tsp, #80\t@ 0x50",
@@ -787,6 +796,9 @@
           "size": 1432,
           "disassemblyStatus": "ok",
           "instructionLineCount": 537,
+          "disassemblyLineCount": 544,
+          "disassemblySha256": "930a85fb1e8ede81748b8e201efef87830650cd7d335b6fc2ded9081fc4f4cf3",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00117290 <SpecAnim(int)@@Base>:",
             "  117298:\tf8df 2508 \tldr.w\tr2, [pc, #1288]\t@ 1177a4 <SpecAnim(int)@@Base+0x514>",
@@ -929,6 +941,9 @@
           "size": 328,
           "disassemblyStatus": "ok",
           "instructionLineCount": 146,
+          "disassemblyLineCount": 153,
+          "disassemblySha256": "b7f1acc3c84a5fe72f9f7306b0864d26cfaeef4bd4c3bc3d8957ece84e5ca6e4",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00118168 <ReadAniFile(int)@@Base>:",
             "  118170:\t4a45      \tldr\tr2, [pc, #276]\t@ (118288 <ReadAniFile(int)@@Base+0x120>)",
@@ -977,6 +992,9 @@
           "size": 96,
           "disassemblyStatus": "ok",
           "instructionLineCount": 43,
+          "disassemblyLineCount": 50,
+          "disassemblySha256": "d71ed148c6ae3c8537e225dddd1832939f8cdaf1b4c442e3d1f5ddeda74f72bc",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0017d63c <setEventMemory(int, int, unsigned short)@@Base>:",
             "  17d650:\t490e      \tldr\tr1, [pc, #56]\t@ (17d68c <setEventMemory(int, int, unsigned short)@@Base+0x50>)",
@@ -992,6 +1010,9 @@
           "size": 52,
           "disassemblyStatus": "ok",
           "instructionLineCount": 25,
+          "disassemblyLineCount": 32,
+          "disassemblySha256": "abf01d84de67162db87e67d11e5102ca60603edaed5a1d7816cb0802e8b92e7d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0017f4b8 <EndWarpMap()@@Base>:",
             "  17f4b8:\t4809      \tldr\tr0, [pc, #36]\t@ (17f4e0 <EndWarpMap()@@Base+0x28>)",
@@ -1011,6 +1032,9 @@
           "size": 320,
           "disassemblyStatus": "ok",
           "instructionLineCount": 129,
+          "disassemblyLineCount": 136,
+          "disassemblySha256": "6db8d0b47b5361bae7d7b6b4bfc632d5016f1d2f509b2f14c38f6ffa53defa3e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00180934 <setWarpMap(int, int)@@Base>:",
             "  180944:\t493a      \tldr\tr1, [pc, #232]\t@ (180a30 <setWarpMap(int, int)@@Base+0xfc>)",
@@ -1044,6 +1068,9 @@
           "size": 1944,
           "disassemblyStatus": "ok",
           "instructionLineCount": 779,
+          "disassemblyLineCount": 786,
+          "disassemblySha256": "4113042b068ec221f81ffaa8ac9d0e514c445983d9d1421789e58904c9a6134d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00180b80 <ddrawBattleMap()@@Base>:",
             "  180b8a:\tf8df 0688 \tldr.w\tr0, [pc, #1672]\t@ 181214 <ddrawBattleMap()@@Base+0x694>",
@@ -1247,6 +1274,9 @@
           "size": 2268,
           "disassemblyStatus": "ok",
           "instructionLineCount": 922,
+          "disassemblyLineCount": 929,
+          "disassemblySha256": "a9e7db9480bf3f91914f99a47d21a1aa0fae22393023d4c2fa88cb278abde910",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00182014 <drawMap()@@Base>:",
             "  18201a:\tf8df 076c \tldr.w\tr0, [pc, #1900]\t@ 182788 <drawMap()@@Base+0x774>",
@@ -1492,6 +1522,9 @@
           "size": 512,
           "disassemblyStatus": "ok",
           "instructionLineCount": 203,
+          "disassemblyLineCount": 210,
+          "disassemblySha256": "a0987f1e366522215a75d2843d77b58661b8fc120328f029e2c348a216dbbf18",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00183000 <mapCheckSum(int, int, int, int, int, int, int, int)@@Base>:",
             "  183006:\tf5ad 5d02 \tsub.w\tsp, sp, #8320\t@ 0x2080",
@@ -1559,6 +1592,9 @@
           "size": 344,
           "disassemblyStatus": "ok",
           "instructionLineCount": 144,
+          "disassemblyLineCount": 151,
+          "disassemblySha256": "43c66180ab867c5fbbdd8a6fdf9ddc7eb2f007b3d471f12935a73d57a23643ea",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001849c0 <updateMapArea()@@Base>:",
             "  1849c0:\t483e      \tldr\tr0, [pc, #248]\t@ (184abc <updateMapArea()@@Base+0xfc>)",
@@ -1611,6 +1647,9 @@
           "size": 1844,
           "disassemblyStatus": "ok",
           "instructionLineCount": 740,
+          "disassemblyLineCount": 747,
+          "disassemblySha256": "6d9b104e7f6306d320d396409c8aca7dc3cbf9b43bd9f704a29fcdc978510596",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00184bec <getRouteMap()@@Base>:",
             "  184bf2:\tf8df 06a0 \tldr.w\tr0, [pc, #1696]\t@ 185294 <getRouteMap()@@Base+0x6a8>",
@@ -1832,6 +1871,9 @@
           "size": 456,
           "disassemblyStatus": "ok",
           "instructionLineCount": 148,
+          "disassemblyLineCount": 155,
+          "disassemblySha256": "02997c7ce6bb54966d4aa39d0f654834fc8f9d95e09629abd19578986bda97ec",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00185978 <setMapMovePoint(int, int)@@Base>:",
             "  185982:\tf8df c194 \tldr.w\tip, [pc, #404]\t@ 185b18 <setMapMovePoint(int, int)@@Base+0x1a0>",
@@ -1877,6 +1919,9 @@
           "size": 432,
           "disassemblyStatus": "ok",
           "instructionLineCount": 145,
+          "disassemblyLineCount": 152,
+          "disassemblySha256": "47e2904b35818805c2de963bfdda5db8c65b3eb0b48adcf19b695d3320cfa091",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0018600c <_setMapMovePoint(int, int)@@Base>:",
             "  186016:\tf8df c17c \tldr.w\tip, [pc, #380]\t@ 186194 <_setMapMovePoint(int, int)@@Base+0x188>",
@@ -1920,6 +1965,9 @@
           "size": 124,
           "disassemblyStatus": "ok",
           "instructionLineCount": 59,
+          "disassemblyLineCount": 66,
+          "disassemblySha256": "a900bf7b7a39b8659d43fcbe8e3208f82571a0815d5aa94ab7db57e461beb0e1",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00187bfc <drawAutoMap(int, int)@@Base>:",
             "  187c0a:\t4815      \tldr\tr0, [pc, #84]\t@ (187c60 <drawAutoMap(int, int)@@Base+0x64>)",
@@ -1944,6 +1992,9 @@
           "size": 52,
           "disassemblyStatus": "ok",
           "instructionLineCount": 21,
+          "disassemblyLineCount": 28,
+          "disassemblySha256": "4b4101adabefee46e1a4ce85f21516458ece06abf1d46a352e410497294d517f",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00188560 <drawMapEffect()@@Base>:",
             "  188564:\t4809      \tldr\tr0, [pc, #36]\t@ (18858c <drawMapEffect()@@Base+0x2c>)",
@@ -1964,6 +2015,9 @@
           "size": 176,
           "disassemblyStatus": "ok",
           "instructionLineCount": 69,
+          "disassemblyLineCount": 76,
+          "disassemblySha256": "586ff92e510b6103ebd72920bd2216832810e5c17012a262b722bf390388c47b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00188594 <mapEffectProc()@@Base>:",
             "  1885ac:\tf8df e078 \tldr.w\tlr, [pc, #120]\t@ 188628 <mapEffectProc()@@Base+0x94>",
@@ -2004,6 +2058,9 @@
           "size": 256,
           "disassemblyStatus": "ok",
           "instructionLineCount": 108,
+          "disassemblyLineCount": 115,
+          "disassemblySha256": "d4dbc5f027e3e034dec914899daab3cd6c33dc15916a6451b3a45fff496a09d3",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0018f1f8 <MakeAnimDisp(int, int, int, int, bool)@@Base>:",
             "  18f22c:\td103      \tbne.n\t18f236 <MakeAnimDisp(int, int, int, int, bool)@@Base+0x3e>",
@@ -2038,6 +2095,9 @@
           "size": 204,
           "disassemblyStatus": "ok",
           "instructionLineCount": 89,
+          "disassemblyLineCount": 96,
+          "disassemblySha256": "897e10f0ea3e0828beca37f5fa727c038b9dd2e7b61432fde48f0edde8e0623e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0018faac <MakeHitBox(int, int, int, int, int)@@Base>:",
             "  18faca:\t4826      \tldr\tr0, [pc, #152]\t@ (18fb64 <MakeHitBox(int, int, int, int, int)@@Base+0xb8>)",
@@ -2075,6 +2135,9 @@
           "size": 928,
           "disassemblyStatus": "ok",
           "instructionLineCount": 386,
+          "disassemblyLineCount": 393,
+          "disassemblySha256": "09ef2c0709f4b95282026adcec6b43cb767840f8cad0c872e35ae8d075f2662b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001a0724 <mapWndProc()@@Base>:",
             "  1a072c:\t48d3      \tldr\tr0, [pc, #844]\t@ (1a0a7c <mapWndProc()@@Base+0x358>)",
@@ -2194,6 +2257,9 @@
           "size": 108,
           "disassemblyStatus": "ok",
           "instructionLineCount": 48,
+          "disassemblyLineCount": 55,
+          "disassemblySha256": "27f0ab9cb75da7f790f8cdf9f17c277bed76f223d6f7135c71cb7fd85649ffc2",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001f7f24 <PutTileBmp()@@Base>:",
             "  1f7f2a:\t4815      \tldr\tr0, [pc, #84]\t@ (1f7f80 <PutTileBmp()@@Base+0x5c>)",
@@ -2224,6 +2290,9 @@
           "size": 1632,
           "disassemblyStatus": "ok",
           "instructionLineCount": 682,
+          "disassemblyLineCount": 689,
+          "disassemblySha256": "c07dfe7ad60f3f917b7c732032f49b53eee9bab6b109e3cc007f056ed9999205",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001f7f90 <PutBmp()@@Base>:",
             "  1f7f96:\tb094      \tsub\tsp, #80\t@ 0x50",
@@ -2531,6 +2600,9 @@
           "size": 564,
           "disassemblyStatus": "ok",
           "instructionLineCount": 236,
+          "disassemblyLineCount": 243,
+          "disassemblySha256": "2d1c32387e600fe6facbdf7358c1f7f994d4420f8f30a5f55c7bc9a0bff255cf",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001f94a4 <StockDispBuffer(int, int, unsigned char, int, int, std::function<void (void*, int)>, void*, int)@@Base>:",
             "  1f94c0:\tf8df b1fc \tldr.w\tfp, [pc, #508]\t@ 1f96c0 <StockDispBuffer(int, int, unsigned char, int, int, std::function<void (void*, int)>, void*, int)@@Base+0x21c>",
@@ -2605,6 +2677,9 @@
           "size": 404,
           "disassemblyStatus": "ok",
           "instructionLineCount": 174,
+          "disassemblyLineCount": 181,
+          "disassemblySha256": "e5eb7bacc2980729319382ef912535b186baaed545a6b6487c1784e71b66a9a2",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001fae98 <HotUpdatePutbmp()@@Base>:",
             "  1fae9e:\t4856      \tldr\tr0, [pc, #344]\t@ (1faff8 <HotUpdatePutbmp()@@Base+0x160>)",
@@ -2655,6 +2730,9 @@
           "size": 56,
           "disassemblyStatus": "ok",
           "instructionLineCount": 25,
+          "disassemblyLineCount": 32,
+          "disassemblySha256": "7ec783fcceae48407653cd1e6f31519265ccebb754a370f635040e9e9149a9e6",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001fc358 <InitSpriteInfo()@@Base>:",
             "  1fc35e:\te7ff      \tb.n\t1fc360 <InitSpriteInfo()@@Base+0x8>",
@@ -2675,6 +2753,9 @@
           "size": 180,
           "disassemblyStatus": "ok",
           "instructionLineCount": 79,
+          "disassemblyLineCount": 86,
+          "disassemblySha256": "36d30b83a532dc0a4dfb86a9f83f1f3b3ef2b9343dc7dc668d001d303714e5bc",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001fc390 <LoadBmp(int)@@Base>:",
             "  1fc3a6:\td304      \tbcc.n\t1fc3b2 <LoadBmp(int)@@Base+0x22>",
@@ -2709,6 +2790,9 @@
           "size": 144,
           "disassemblyStatus": "ok",
           "instructionLineCount": 64,
+          "disassemblyLineCount": 71,
+          "disassemblySha256": "94c40f5ff7dfd3831655c89f79b4e44b662c5a6754866ca011f3ff797991bdcb",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001ff8c0 <decoderPng(RD_HEADER*, unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base>:",
             "  1ff8e8:\t4818      \tldr\tr0, [pc, #96]\t@ (1ff94c <decoderPng(RD_HEADER*, unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base+0x8c>)",
@@ -2728,6 +2812,9 @@
           "size": 760,
           "disassemblyStatus": "ok",
           "instructionLineCount": 329,
+          "disassemblyLineCount": 336,
+          "disassemblySha256": "776ff4b9f7e0dd612cd4cdb0015e2bdadd39dbe82a43d2253638dcdb99dc0af7",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001ff950 <decoder(unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base>:",
             "  1ff964:\tf8df 82d4 \tldr.w\tr8, [pc, #724]\t@ 1ffc3c <decoder(unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base+0x2ec>",
@@ -2819,6 +2906,9 @@
           "size": 516,
           "disassemblyStatus": "ok",
           "instructionLineCount": 224,
+          "disassemblyLineCount": 231,
+          "disassemblySha256": "6e98e6b4841bf9a12c4190452146999af0531f4fe88082d96b768c5bcdcd462e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001ffc48 <GetBinaryResource()@@Base>:",
             "  1ffc4e:\t486c      \tldr\tr0, [pc, #432]\t@ (1ffe00 <GetBinaryResource()@@Base+0x1b8>)",
@@ -2924,6 +3014,9 @@
           "size": 380,
           "disassemblyStatus": "ok",
           "instructionLineCount": 152,
+          "disassemblyLineCount": 159,
+          "disassemblySha256": "6337fedbbc3a771c7e1ebd82269ad076c3e9eabe4e0ea1368e153a9462ff2588",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "001ffe4c <UpdateAppNewVersion()@@Base>:",
             "  1ffe54:\t4856      \tldr\tr0, [pc, #344]\t@ (1fffb0 <UpdateAppNewVersion()@@Base+0x164>)",
@@ -2996,6 +3089,9 @@
           "size": 624,
           "disassemblyStatus": "ok",
           "instructionLineCount": 290,
+          "disassemblyLineCount": 297,
+          "disassemblySha256": "268c0c24ec62d26265965fd99d24586de5f6a4d7e190e06442247b9ef99196c7",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00200b8c <play_map_bgm(int)@@Base>:",
             "  200b94:\t4a7d      \tldr\tr2, [pc, #500]\t@ (200d8c <play_map_bgm(int)@@Base+0x200>)",
@@ -3095,6 +3191,9 @@
           "size": 352,
           "disassemblyStatus": "ok",
           "instructionLineCount": 142,
+          "disassemblyLineCount": 149,
+          "disassemblySha256": "b8943f0b8eb404e7436f63c9e8a971189bc2adf314e35fdb85488d08bce1954f",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00202c44 <DownLoadIniFile()@@Base>:",
             "  202c4c:\t4850      \tldr\tr0, [pc, #320]\t@ (202d90 <DownLoadIniFile()@@Base+0x14c>)",
@@ -3156,6 +3255,9 @@
           "size": 368,
           "disassemblyStatus": "ok",
           "instructionLineCount": 153,
+          "disassemblyLineCount": 160,
+          "disassemblySha256": "abf6eeb7ae4d569a750ed3024a81568477ac63adc9df1d34343c63ab91a1d090",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00203724 <DownloadResource(char const*)@@Base>:",
             "  20372c:\t4a53      \tldr\tr2, [pc, #332]\t@ (20387c <DownloadResource(char const*)@@Base+0x158>)",
@@ -3237,6 +3339,9 @@
           "size": 2180,
           "disassemblyStatus": "ok",
           "instructionLineCount": 872,
+          "disassemblyLineCount": 879,
+          "disassemblySha256": "674364d65df66291f2f6ce8d1916b2e99236153b7c60afd064f93f9065c3b6d3",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00209f74 <CIniManage::ReadPatchInfo()@@Base>:",
             "  209f7e:\tf8df 2828 \tldr.w\tr2, [pc, #2088]\t@ 20a7a8 <CIniManage::ReadPatchInfo()@@Base+0x834>",
@@ -3720,6 +3825,9 @@
           "size": 116,
           "disassemblyStatus": "ok",
           "instructionLineCount": 47,
+          "disassemblyLineCount": 54,
+          "disassemblySha256": "a053add63a7d5c8a87958e509a7fb3496d500878a15af72c8c8da365514ecc2b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [],
           "controlFlowLines": [
             "  23a46a:\t4288      \tcmp\tr0, r1"
@@ -3731,6 +3839,9 @@
           "size": 116,
           "disassemblyStatus": "ok",
           "instructionLineCount": 47,
+          "disassemblyLineCount": 54,
+          "disassemblySha256": "caefa9a2fa72f5e8aafe8edf69f4b47fe547d7b726904b7393391edc1bb249e2",
+          "excerptTruncated": false,
           "resourceRelevantLines": [],
           "controlFlowLines": [
             "  23a4de:\t4288      \tcmp\tr0, r1"
@@ -3742,6 +3853,9 @@
           "size": 116,
           "disassemblyStatus": "ok",
           "instructionLineCount": 47,
+          "disassemblyLineCount": 54,
+          "disassemblySha256": "af89d8090507d04397911f10f2106b28fe4afef9c1668708a22fec549cf0029b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [],
           "controlFlowLines": [
             "  23a552:\t4288      \tcmp\tr0, r1"
@@ -3753,6 +3867,9 @@
           "size": 204,
           "disassemblyStatus": "ok",
           "instructionLineCount": 81,
+          "disassemblyLineCount": 88,
+          "disassemblySha256": "38d544507fafd9b6ff915aad0810f807377480c5f8fe8529d7141fcbff3218c9",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a5c8:\te7ff      \tb.n\t23a5ca <realGetHitFlag(unsigned int, short*)@@Base+0x1e>"
           ],
@@ -3772,6 +3889,9 @@
           "size": 100,
           "disassemblyStatus": "ok",
           "instructionLineCount": 40,
+          "disassemblyLineCount": 47,
+          "disassemblySha256": "3623c0ecd7d7d83e44438549cf01b8101d9597e79b0829cc6cdf4f0f454da849",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a694:\te7ff      \tb.n\t23a696 <realGetPrioType(unsigned int, short*)@@Base+0x1e>"
           ],
@@ -3786,6 +3906,9 @@
           "size": 84,
           "disassemblyStatus": "ok",
           "instructionLineCount": 35,
+          "disassemblyLineCount": 42,
+          "disassemblySha256": "64f09e7faeec3b80b0f6ce8d157e32c196efa24cff5c608a437e6d5ca24f8d51",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a6f8:\te7ff      \tb.n\t23a6fa <realGetHeightFlag(unsigned int, short*)@@Base+0x1e>",
             "  23a70c:\t4907      \tldr\tr1, [pc, #28]\t@ (23a72c <realGetHeightFlag(unsigned int, short*)@@Base+0x50>)"
@@ -3801,6 +3924,9 @@
           "size": 76,
           "disassemblyStatus": "ok",
           "instructionLineCount": 32,
+          "disassemblyLineCount": 39,
+          "disassemblySha256": "8c2ee219cb4a3fbe240b40d035677a6d724d0025ae663149c0e5da65dbc14040",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a742:\td303      \tbcc.n\t23a74c <realGetSoundEffect(unsigned int)@@Base+0x1c>",
             "  23a766:\tf9b0 0040 \tldrsh.w\tr0, [r0, #64]\t@ 0x40"
@@ -3816,6 +3942,9 @@
           "size": 76,
           "disassemblyStatus": "ok",
           "instructionLineCount": 30,
+          "disassemblyLineCount": 37,
+          "disassemblySha256": "fabf119a068dd4d2456f22c7587faf04cdd540685a05ac5ba60aae9f24faa62a",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a78e:\td304      \tbcc.n\t23a79a <realGetWalkSoundEffect(unsigned int)@@Base+0x1e>",
             "  23a7aa:\tf9b0 0042 \tldrsh.w\tr0, [r0, #66]\t@ 0x42"
@@ -3832,6 +3961,9 @@
           "size": 80,
           "disassemblyStatus": "ok",
           "instructionLineCount": 34,
+          "disassemblyLineCount": 41,
+          "disassemblySha256": "ee92da6b8a7e4bc0f770f62d9920cbbdd8e2d05b93bdde8a6f238b652725e5cc",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a7e4:\te7ff      \tb.n\t23a7e6 <realGetNo(unsigned int, unsigned int*)@@Base+0x1e>",
             "  23a7f0:\te00b      \tb.n\t23a80a <realGetNo(unsigned int, unsigned int*)@@Base+0x42>",
@@ -3848,6 +3980,9 @@
           "size": 364,
           "disassemblyStatus": "ok",
           "instructionLineCount": 157,
+          "disassemblyLineCount": 164,
+          "disassemblySha256": "3f14e00208b29927338043fae40b1b97f7b4139719ea766cafac407474b7e82d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23a826:\t4e4d      \tldr\tr6, [pc, #308]\t@ (23a95c <realGetImage(int, unsigned char**, int*, int*)@@Base+0x144>)",
             "  23a838:\t4849      \tldr\tr0, [pc, #292]\t@ (23a960 <realGetImage(int, unsigned char**, int*, int*)@@Base+0x148>)",
@@ -3883,6 +4018,9 @@
           "size": 232,
           "disassemblyStatus": "ok",
           "instructionLineCount": 97,
+          "disassemblyLineCount": 104,
+          "disassemblySha256": "78b4ebcffe32b512e4e29b787dd211344202652b71c6805547380e9449f54b3e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [],
           "controlFlowLines": [
             "  23a9ae:\tf691 ecba \tblx\tcc324 <sprintf@plt>",
@@ -3903,6 +4041,9 @@
           "size": 712,
           "disassemblyStatus": "ok",
           "instructionLineCount": 295,
+          "disassemblyLineCount": 302,
+          "disassemblySha256": "3df48f986b914f8f59a2d6abf434ec667efca9a63dea92780b839b16e49e022e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23aab0:\td004      \tbeq.n\t23aabc <AdrnInit(char*, char*)@@Base+0x50>",
             "  23aac2:\tf691 ecc0 \tblx\tcc444 <fopen@plt>",
@@ -3967,6 +4108,9 @@
           "size": 1744,
           "disassemblyStatus": "ok",
           "instructionLineCount": 671,
+          "disassemblyLineCount": 678,
+          "disassemblySha256": "7d2e9cfe238c6b7d25a9db618b31deb3e2db0821f68b10c9587f58ce2d3ba0aa",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23ad60:\tf691 eb70 \tblx\tcc444 <fopen@plt>",
             "  23ad68:\td104      \tbne.n\t23ad74 <InitSprBinFileOpen(char*, char*)@@Base+0x40>",
@@ -4075,6 +4219,9 @@
           "size": 96,
           "disassemblyStatus": "ok",
           "instructionLineCount": 39,
+          "disassemblyLineCount": 46,
+          "disassemblySha256": "2be74767b5196be6bdc84642f16c19bc79f398b834cb0e36491177b29173a1b3",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  23b7c0:\tf694 eba4 \tblx\tcff0c <setBlowFishKey(char*)@plt>",
             "  23b7ca:\tf694 eba6 \tblx\tcff18 <fish_decode(unsigned char*, int, int*)@plt>"
@@ -4093,6 +4240,9 @@
           "size": 376,
           "disassemblyStatus": "ok",
           "instructionLineCount": 157,
+          "disassemblyLineCount": 164,
+          "disassemblySha256": "ea65bd0e8962562ded9072973f0e111ab61113f485b7122ea77a991d0a148c6c",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0023dddc <HttpClient::DownloadFile(std::string, std::string, std::function<void (int, int)>, std::function<void (int, std::string)>)@@Base>:",
             "  23dde8:\t4c55      \tldr\tr4, [pc, #340]\t@ (23df40 <HttpClient::DownloadFile(std::string, std::string, std::function<void (int, int)>, std::function<void (int, std::string)>)@@Base+0x164>)",
@@ -4144,6 +4294,9 @@
           "size": 468,
           "disassemblyStatus": "ok",
           "instructionLineCount": 202,
+          "disassemblyLineCount": 209,
+          "disassemblySha256": "904567a8717a4e01aa32f05c6b78aef1e3f041d865db6177a0770555b33eeaa4",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0024e04c <FreeGetBattleMap(int)@@Base>:",
             "  24e050:\tb0d2      \tsub\tsp, #328\t@ 0x148",
@@ -4226,6 +4379,9 @@
           "size": 264,
           "disassemblyStatus": "ok",
           "instructionLineCount": 115,
+          "disassemblyLineCount": 122,
+          "disassemblySha256": "574fae68a3ab3e71776a93653f0965e15cebc2af249e4e5852599beaab263ec8",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0024fd9c <initWorldMap()@@Base>:",
             "  24fda2:\t4834      \tldr\tr0, [pc, #208]\t@ (24fe74 <initWorldMap()@@Base+0xd8>)",
@@ -4280,6 +4436,9 @@
           "size": 436,
           "disassemblyStatus": "ok",
           "instructionLineCount": 186,
+          "disassemblyLineCount": 193,
+          "disassemblySha256": "f53f8f1c0348f887f3a46930b4c8a012c3784906c86ecf780b8b2755037868c4",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0024fea4 <worldMapProc()@@Base>:",
             "  24fea8:\tb0d0      \tsub\tsp, #320\t@ 0x140",
@@ -4354,6 +4513,9 @@
           "size": 380,
           "disassemblyStatus": "ok",
           "instructionLineCount": 186,
+          "disassemblyLineCount": 193,
+          "disassemblySha256": "e1bc69ea41feb91e36a66b867d25c119e2c4b02d37dc7fc1a086f982cc348e26",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00283cb0 <lssproto_EN_recv(int, int, int)@@Base>:",
             "  283cc0:\t4848      \tldr\tr0, [pc, #288]\t@ (283de4 <lssproto_EN_recv(int, int, int)@@Base+0x134>)",
@@ -4425,6 +4587,9 @@
           "size": 1052,
           "disassemblyStatus": "ok",
           "instructionLineCount": 439,
+          "disassemblyLineCount": 446,
+          "disassemblySha256": "c603a1286e6b8e74cece34562af10f8c7c3d0d34693ebdc7884a311bb72bcd42",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00286040 <lssproto_M_recv(int, int, int, int, int, int, char*)@@Base>:",
             "  286046:\tf5ad 3d84 \tsub.w\tsp, sp, #67584\t@ 0x10800",
@@ -4564,6 +4729,9 @@
           "size": 16012,
           "disassemblyStatus": "ok",
           "instructionLineCount": 5726,
+          "disassemblyLineCount": 5733,
+          "disassemblySha256": "eb50b39d210da5c081877ee8b6a24827f6e4c4e278e086e728c7e703ed91b619",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00287460 <lssproto_S_recv(int, char*)@@Base>:",
             "  28746e:\tf8df ce7c \tldr.w\tip, [pc, #3708]\t@ 2882ec <lssproto_S_recv(int, char*)@@Base+0xe8c>",
@@ -6136,6 +6304,9 @@
           "size": 620,
           "disassemblyStatus": "ok",
           "instructionLineCount": 273,
+          "disassemblyLineCount": 280,
+          "disassemblySha256": "d7d5c3eddf9ef8a5560e012720498dab79c8c80e8c59a0b677796611d7f1f87e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0029b59c <DrawAutoMapping(int, int, unsigned char*, int, int)@@Base>:",
             "  29b5b0:\tf8df 8228 \tldr.w\tr8, [pc, #552]\t@ 29b7dc <DrawAutoMapping(int, int, unsigned char*, int, int)@@Base+0x240>",
@@ -6213,6 +6384,9 @@
           "size": 3188,
           "disassemblyStatus": "ok",
           "instructionLineCount": 1392,
+          "disassemblyLineCount": 1399,
+          "disassemblySha256": "069d4ce7124149873185864c5508e5ec7d6935f04e774304d72817cf9fbf40b6",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0029ba24 <DrawMapEffect()@@Base>:",
             "  29ba2c:\tf8df 0bbc \tldr.w\tr0, [pc, #3004]\t@ 29c5ec <DrawMapEffect()@@Base+0xbc8>",
@@ -6520,6 +6694,9 @@
           "size": 333,
           "disassemblyStatus": "ok",
           "instructionLineCount": 89,
+          "disassemblyLineCount": 96,
+          "disassemblySha256": "99e490b9911c143db0245886a79cbea71a3a3e09f2a15053d93b6555876d682a",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "000ef1d0 <UnZipFile(char const*)@@Base>:",
             "   ef1d8:\t83 ec 40             \tsub    $0x40,%esp",
@@ -6559,6 +6736,9 @@
           "size": 4620,
           "disassemblyStatus": "ok",
           "instructionLineCount": 869,
+          "disassemblyLineCount": 876,
+          "disassemblySha256": "eb04e0407657091dbac64927a28f6b36e5262e7b25d8dee8732b5f8b8e2888ab",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "000f3700 <ReadBattleMap(int)@@Base>:",
             "   f370f:\te8 00 00 00 00       \tcall   f3714 <ReadBattleMap(int)@@Base+0x14>",
@@ -7076,6 +7256,9 @@
           "size": 1466,
           "disassemblyStatus": "ok",
           "instructionLineCount": 346,
+          "disassemblyLineCount": 353,
+          "disassemblySha256": "7d06cdcaf5a49465832ebf06b917d47c2750fdae633e082a1d4285659fd0a07c",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "000f4910 <DrawBattleMap()@@Base>:",
             "   f491f:\te8 00 00 00 00       \tcall   f4924 <DrawBattleMap()@@Base+0x14>",
@@ -7277,6 +7460,9 @@
           "size": 1628,
           "disassemblyStatus": "ok",
           "instructionLineCount": 395,
+          "disassemblyLineCount": 402,
+          "disassemblySha256": "1aac2f720a5522a285947f33589c63191bac6ea1e77cf05a05c0971398c1a20d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00145ac0 <SpecAnim(int)@@Base>:",
             "  145ac9:\t83 ec 50             \tsub    $0x50,%esp",
@@ -7473,6 +7659,9 @@
           "size": 479,
           "disassemblyStatus": "ok",
           "instructionLineCount": 121,
+          "disassemblyLineCount": 128,
+          "disassemblySha256": "5e0c4640954ec2b8071bcc4c397724e04b603645d2e5a125bdadf825251e431f",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00147040 <ReadAniFile(int)@@Base>:",
             "  14704c:\te8 00 00 00 00       \tcall   147051 <ReadAniFile(int)@@Base+0x11>",
@@ -7532,6 +7721,9 @@
           "size": 121,
           "disassemblyStatus": "ok",
           "instructionLineCount": 38,
+          "disassemblyLineCount": 45,
+          "disassemblySha256": "a1ca6015fd48df6b5cc5847bb166cf2aca454cdb9d21cd1d7d9133976821e1c6",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0020bd00 <setEventMemory(int, int, unsigned short)@@Base>:",
             "  20bd09:\t83 ec 1c             \tsub    $0x1c,%esp",
@@ -7552,6 +7744,9 @@
           "size": 66,
           "disassemblyStatus": "ok",
           "instructionLineCount": 19,
+          "disassemblyLineCount": 26,
+          "disassemblySha256": "31ea14d9abd52015fb3e30c0c41a7ffb8f2a8fe23caf40ff5cf3b51e46a1179f",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0020f640 <EndWarpMap()@@Base>:",
             "  20f649:\te8 00 00 00 00       \tcall   20f64e <EndWarpMap()@@Base+0xe>",
@@ -7569,6 +7764,9 @@
           "size": 448,
           "disassemblyStatus": "ok",
           "instructionLineCount": 113,
+          "disassemblyLineCount": 120,
+          "disassemblySha256": "4077e304d9fc1d2ad8ae6beb9c1a4ec66809b7bcb8f453c155ba0558ff8977ee",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00211ad0 <setWarpMap(int, int)@@Base>:",
             "  211ad9:\t83 ec 50             \tsub    $0x50,%esp",
@@ -7616,6 +7814,9 @@
           "size": 2937,
           "disassemblyStatus": "ok",
           "instructionLineCount": 604,
+          "disassemblyLineCount": 611,
+          "disassemblySha256": "019404893ab9a16358c7a3377bc6eb5c8ae7c597d47b4a39c98fbad9dc2d59b7",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00211e30 <ddrawBattleMap()@@Base>:",
             "  211e3f:\te8 00 00 00 00       \tcall   211e44 <ddrawBattleMap()@@Base+0x14>",
@@ -7800,6 +8001,9 @@
           "size": 3300,
           "disassemblyStatus": "ok",
           "instructionLineCount": 673,
+          "disassemblyLineCount": 680,
+          "disassemblySha256": "bca87d82aa725c49dc6f484658da64374237146412f48f51eb9346e16a059487",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00213cc0 <drawMap()@@Base>:",
             "  213ccf:\te8 00 00 00 00       \tcall   213cd4 <drawMap()@@Base+0x14>",
@@ -8017,6 +8221,9 @@
           "size": 841,
           "disassemblyStatus": "ok",
           "instructionLineCount": 195,
+          "disassemblyLineCount": 202,
+          "disassemblySha256": "9feeeb7606c64f2504034b7f9b368b3ba2508a5712be05377429c9c68d0681dd",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00215430 <mapCheckSum(int, int, int, int, int, int, int, int)@@Base>:",
             "  215439:\t81 ec b0 20 00 00    \tsub    $0x20b0,%esp",
@@ -8094,6 +8301,9 @@
           "size": 328,
           "disassemblyStatus": "ok",
           "instructionLineCount": 88,
+          "disassemblyLineCount": 95,
+          "disassemblySha256": "272a51b41864b0fa08ab58167583df19018e51e1032032093444a63ff1da7f39",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00217320 <updateMapArea()@@Base>:",
             "  217329:\t83 ec 1c             \tsub    $0x1c,%esp",
@@ -8136,6 +8346,9 @@
           "size": 3087,
           "disassemblyStatus": "ok",
           "instructionLineCount": 638,
+          "disassemblyLineCount": 645,
+          "disassemblySha256": "29a3e85959c78457a723529fbd6b064b85c8ed039d219a90c604ff055741820c",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002175a0 <getRouteMap()@@Base>:",
             "  2175af:\te8 00 00 00 00       \tcall   2175b4 <getRouteMap()@@Base+0x14>",
@@ -8368,6 +8581,9 @@
           "size": 601,
           "disassemblyStatus": "ok",
           "instructionLineCount": 140,
+          "disassemblyLineCount": 147,
+          "disassemblySha256": "17ff986226e959fc5220e3d503940042b1a9c6bb02535b82d87f282f94d401ec",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00218a30 <setMapMovePoint(int, int)@@Base>:",
             "  218a39:\t83 ec 50             \tsub    $0x50,%esp",
@@ -8429,6 +8645,9 @@
           "size": 571,
           "disassemblyStatus": "ok",
           "instructionLineCount": 134,
+          "disassemblyLineCount": 141,
+          "disassemblySha256": "da093a0232c173830540511217ec4993f29b23defd8887525ccdbdf1d4e62033",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002192f0 <_setMapMovePoint(int, int)@@Base>:",
             "  2192f9:\t83 ec 50             \tsub    $0x50,%esp",
@@ -8489,6 +8708,9 @@
           "size": 189,
           "disassemblyStatus": "ok",
           "instructionLineCount": 55,
+          "disassemblyLineCount": 62,
+          "disassemblySha256": "2172723091ba66bbd755e17da87a1f53ecf858ea1ed25f2c2df88c717949615e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0021b840 <drawAutoMap(int, int)@@Base>:",
             "  21b84c:\te8 00 00 00 00       \tcall   21b851 <drawAutoMap(int, int)@@Base+0x11>",
@@ -8518,6 +8740,9 @@
           "size": 71,
           "disassemblyStatus": "ok",
           "instructionLineCount": 22,
+          "disassemblyLineCount": 29,
+          "disassemblySha256": "ce22bd499b96ca5e26b5336da90055a16cc6a1975ee5d5b42cee703b2870154e",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0021c9b0 <drawMapEffect()@@Base>:",
             "  21c9b7:\t83 ec 10             \tsub    $0x10,%esp",
@@ -8538,6 +8763,9 @@
           "size": 205,
           "disassemblyStatus": "ok",
           "instructionLineCount": 53,
+          "disassemblyLineCount": 60,
+          "disassemblySha256": "cb8c5e3c8139acd4c4e45b895e0f836d44699c12725f1c5708d792ac5754b9fa",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0021ca00 <mapEffectProc()@@Base>:",
             "  21ca07:\t83 ec 10             \tsub    $0x10,%esp",
@@ -8574,6 +8802,9 @@
           "size": 433,
           "disassemblyStatus": "ok",
           "instructionLineCount": 108,
+          "disassemblyLineCount": 115,
+          "disassemblySha256": "7abae1fc2023bde5bfee2e2ce54fb43fc5cafd5316c5097fcfb777f77a94cb83",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0022a7f0 <MakeAnimDisp(int, int, int, int, bool)@@Base>:",
             "  22a7f9:\t83 ec 40             \tsub    $0x40,%esp",
@@ -8646,6 +8877,9 @@
           "size": 273,
           "disassemblyStatus": "ok",
           "instructionLineCount": 75,
+          "disassemblyLineCount": 82,
+          "disassemblySha256": "760ab4fdd816164407f10ae300f0165d79eb20db1c8c7fc8e67f03c4e173b6b5",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0022b650 <MakeHitBox(int, int, int, int, int)@@Base>:",
             "  22b659:\t83 ec 40             \tsub    $0x40,%esp",
@@ -8696,6 +8930,9 @@
           "size": 1977,
           "disassemblyStatus": "ok",
           "instructionLineCount": 397,
+          "disassemblyLineCount": 404,
+          "disassemblySha256": "933c93a6aa92042d715db98c710916f6bf50ecaf042ed8bc880ceaf63a34e4c3",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00248af0 <mapWndProc()@@Base>:",
             "  248aff:\te8 00 00 00 00       \tcall   248b04 <mapWndProc()@@Base+0x14>",
@@ -8860,6 +9097,9 @@
           "size": 137,
           "disassemblyStatus": "ok",
           "instructionLineCount": 36,
+          "disassemblyLineCount": 43,
+          "disassemblySha256": "5e2a6edb9cdcb72909b34f8364ceef13ae695d2468f0647d478b90eaae7fd173",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002e7b40 <PutTileBmp()@@Base>:",
             "  2e7b47:\t83 ec 20             \tsub    $0x20,%esp",
@@ -8892,6 +9132,9 @@
           "size": 2999,
           "disassemblyStatus": "ok",
           "instructionLineCount": 621,
+          "disassemblyLineCount": 628,
+          "disassemblySha256": "fb3ecf54e234cb9eb73cfe7e5898322d4612129e311515b6d51c03bd8c1eb006",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002e7bd0 <PutBmp()@@Base>:",
             "  2e7bdf:\te8 00 00 00 00       \tcall   2e7be4 <PutBmp()@@Base+0x14>",
@@ -9218,6 +9461,9 @@
           "size": 826,
           "disassemblyStatus": "ok",
           "instructionLineCount": 199,
+          "disassemblyLineCount": 206,
+          "disassemblySha256": "88bc42068ee60e0ab1039bb6b4b3de9ce833e3013e1a0ba42ea55102d9dea4c6",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002e9c80 <StockDispBuffer(int, int, unsigned char, int, int, std::function<void (void*, int)>, void*, int)@@Base>:",
             "  2e9c8c:\te8 00 00 00 00       \tcall   2e9c91 <StockDispBuffer(int, int, unsigned char, int, int, std::function<void (void*, int)>, void*, int)@@Base+0x11>",
@@ -9324,6 +9570,9 @@
           "size": 610,
           "disassemblyStatus": "ok",
           "instructionLineCount": 157,
+          "disassemblyLineCount": 164,
+          "disassemblySha256": "becc4e32488670d00239e91c6e31087feb017a7c2dec2a60610cc8bf60ad20b2",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002ec7a0 <HotUpdatePutbmp()@@Base>:",
             "  2ec7af:\te8 00 00 00 00       \tcall   2ec7b4 <HotUpdatePutbmp()@@Base+0x14>",
@@ -9366,6 +9615,9 @@
           "size": 86,
           "disassemblyStatus": "ok",
           "instructionLineCount": 24,
+          "disassemblyLineCount": 31,
+          "disassemblySha256": "004b1b04a5d2b0106cc30d7dfea4ef78c1dce80403d056fab8e079e8d82da62a",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002ef1c0 <InitSpriteInfo()@@Base>:",
             "  2ef1c9:\te8 00 00 00 00       \tcall   2ef1ce <InitSpriteInfo()@@Base+0xe>",
@@ -9386,6 +9638,9 @@
           "size": 241,
           "disassemblyStatus": "ok",
           "instructionLineCount": 66,
+          "disassemblyLineCount": 73,
+          "disassemblySha256": "c7363ecc805589f7f44de0321cca3fd11e75a8d5225d7f2d318c9a1e8634fd44",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002ef220 <LoadBmp(int)@@Base>:",
             "  2ef229:\t83 ec 20             \tsub    $0x20,%esp",
@@ -9427,6 +9682,9 @@
           "size": 244,
           "disassemblyStatus": "ok",
           "instructionLineCount": 73,
+          "disassemblyLineCount": 80,
+          "disassemblySha256": "99ac7e079f2011f2447ffd0ce973bf7ae46beb8b6db56b8e138f519508b050b1",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002f5310 <decoderPng(RD_HEADER*, unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base>:",
             "  2f5319:\t83 ec 40             \tsub    $0x40,%esp",
@@ -9467,6 +9725,9 @@
           "size": 1187,
           "disassemblyStatus": "ok",
           "instructionLineCount": 315,
+          "disassemblyLineCount": 322,
+          "disassemblySha256": "ed96c56141f791860c3fe3a25069ef8ed9e8446028e3576c356bb6028bd0f881",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002f5410 <decoder(unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base>:",
             "  2f541f:\te8 00 00 00 00       \tcall   2f5424 <decoder(unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)@@Base+0x14>",
@@ -9587,6 +9848,9 @@
           "size": 849,
           "disassemblyStatus": "ok",
           "instructionLineCount": 196,
+          "disassemblyLineCount": 203,
+          "disassemblySha256": "fdac5854567898292cc6195e2d5ed1f157981f0410fc27671f18df6efa389f46",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002f58d0 <GetBinaryResource()@@Base>:",
             "  2f58de:\te8 00 00 00 00       \tcall   2f58e3 <GetBinaryResource()@@Base+0x13>",
@@ -9676,6 +9940,9 @@
           "size": 812,
           "disassemblyStatus": "ok",
           "instructionLineCount": 209,
+          "disassemblyLineCount": 216,
+          "disassemblySha256": "67877652464aacfc2d5677acef875204a6c1b5e9ad66001bf1c236cc7b3b875b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002f5c30 <UpdateAppNewVersion()@@Base>:",
             "  2f5c3d:\te8 00 00 00 00       \tcall   2f5c42 <UpdateAppNewVersion()@@Base+0x12>",
@@ -9763,6 +10030,9 @@
           "size": 919,
           "disassemblyStatus": "ok",
           "instructionLineCount": 212,
+          "disassemblyLineCount": 219,
+          "disassemblySha256": "f85efcac59e5e464d60e858fbdbbfd994b00b31aa0f281885cf10c3c89a9b14c",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002f7540 <play_map_bgm(int)@@Base>:",
             "  2f7549:\t81 ec 80 01 00 00    \tsub    $0x180,%esp",
@@ -9863,6 +10133,9 @@
           "size": 825,
           "disassemblyStatus": "ok",
           "instructionLineCount": 208,
+          "disassemblyLineCount": 215,
+          "disassemblySha256": "8320559003742adaa22effe10da182526f64aef4d94291a005444335ecb9de29",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002faf30 <DownLoadIniFile()@@Base>:",
             "  2faf3f:\te8 00 00 00 00       \tcall   2faf44 <DownLoadIniFile()@@Base+0x14>",
@@ -9935,6 +10208,9 @@
           "size": 826,
           "disassemblyStatus": "ok",
           "instructionLineCount": 210,
+          "disassemblyLineCount": 217,
+          "disassemblySha256": "54df573cface25c5ee9c8707f4706438f5c2b8ffea4b1e9437d9cd2a67e6aad8",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "002fc730 <DownloadResource(char const*)@@Base>:",
             "  2fc73d:\te8 00 00 00 00       \tcall   2fc742 <DownloadResource(char const*)@@Base+0x12>",
@@ -10029,6 +10305,9 @@
           "size": 6098,
           "disassemblyStatus": "ok",
           "instructionLineCount": 1234,
+          "disassemblyLineCount": 1241,
+          "disassemblySha256": "592e4682f1769a331bfd6e4ecbc17a892bbb953e1cfc36d83376d193c479b95b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0030a2a0 <CIniManage::ReadPatchInfo()@@Base>:",
             "  30a2af:\te8 00 00 00 00       \tcall   30a2b4 <CIniManage::ReadPatchInfo()@@Base+0x14>",
@@ -10521,6 +10800,9 @@
           "size": 163,
           "disassemblyStatus": "ok",
           "instructionLineCount": 49,
+          "disassemblyLineCount": 56,
+          "disassemblySha256": "369a75b9f6b97c55a3d805aa0de4f782a867a4ab315ebceec5ca440aac12b088",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362a58:\t83 ec 20             \tsub    $0x20,%esp",
             "  362a5b:\te8 00 00 00 00       \tcall   362a60 <realGetPos(unsigned int, short*, short*)@@Base+0x10>",
@@ -10550,6 +10832,9 @@
           "size": 163,
           "disassemblyStatus": "ok",
           "instructionLineCount": 49,
+          "disassemblyLineCount": 56,
+          "disassemblySha256": "afb5faeaa3e6ed54f60f6b46439ae82c889ff6621a4d44bed9d9f831934ca264",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362b08:\t83 ec 20             \tsub    $0x20,%esp",
             "  362b0b:\te8 00 00 00 00       \tcall   362b10 <realGetWH(unsigned int, short*, short*)@@Base+0x10>",
@@ -10580,6 +10865,9 @@
           "size": 173,
           "disassemblyStatus": "ok",
           "instructionLineCount": 51,
+          "disassemblyLineCount": 58,
+          "disassemblySha256": "718ed5da01d47fbd21298bafbaceff0f6a6f7c6840f5080fd546e8f9099f292d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362bb8:\t83 ec 20             \tsub    $0x20,%esp",
             "  362bbb:\te8 00 00 00 00       \tcall   362bc0 <realGetHitPoints(unsigned int, short*, short*)@@Base+0x10>",
@@ -10612,6 +10900,9 @@
           "size": 242,
           "disassemblyStatus": "ok",
           "instructionLineCount": 65,
+          "disassemblyLineCount": 72,
+          "disassemblySha256": "bc1f9c6d7c52345b78a5e83294af8facdea1b61c3ea0f97d905c1e6d42e008fe",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362c68:\t83 ec 20             \tsub    $0x20,%esp",
             "  362c6b:\te8 00 00 00 00       \tcall   362c70 <realGetHitFlag(unsigned int, short*)@@Base+0x10>",
@@ -10657,6 +10948,9 @@
           "size": 144,
           "disassemblyStatus": "ok",
           "instructionLineCount": 44,
+          "disassemblyLineCount": 51,
+          "disassemblySha256": "b9b2f58ee9ef6acafa6b99f6ac1a4cfc323f371b32d42d6d3f81ab4d721bb2da",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362d68:\t83 ec 20             \tsub    $0x20,%esp",
             "  362d6b:\te8 00 00 00 00       \tcall   362d70 <realGetPrioType(unsigned int, short*)@@Base+0x10>",
@@ -10683,6 +10977,9 @@
           "size": 121,
           "disassemblyStatus": "ok",
           "instructionLineCount": 35,
+          "disassemblyLineCount": 42,
+          "disassemblySha256": "ce23c1e07174059e6080160742465d2eccee5114b07cbba2d0a043faab8669ad",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362df7:\t83 ec 14             \tsub    $0x14,%esp",
             "  362e14:\t81 7c 24 0c c0 27 09 \tcmpl   $0x927c0,0xc(%esp)",
@@ -10702,6 +10999,9 @@
           "size": 104,
           "disassemblyStatus": "ok",
           "instructionLineCount": 30,
+          "disassemblyLineCount": 37,
+          "disassemblySha256": "5346c30e67eff411e0251ac8b44a65624220d42ba8d2869d6d085fca2691e8f3",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362e77:\t83 ec 14             \tsub    $0x14,%esp",
             "  362e8d:\t81 7c 24 0c a0 86 01 \tcmpl   $0x186a0,0xc(%esp)",
@@ -10724,6 +11024,9 @@
           "size": 106,
           "disassemblyStatus": "ok",
           "instructionLineCount": 32,
+          "disassemblyLineCount": 39,
+          "disassemblySha256": "9cd6c227e11ae692dd9ec325b3929a897af01d48869ed9f38bce057e6310d748",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362ee7:\t83 ec 14             \tsub    $0x14,%esp",
             "  362efd:\t81 7c 24 0c c0 27 09 \tcmpl   $0x927c0,0xc(%esp)",
@@ -10747,6 +11050,9 @@
           "size": 114,
           "disassemblyStatus": "ok",
           "instructionLineCount": 32,
+          "disassemblyLineCount": 39,
+          "disassemblySha256": "710e7f68e16596dbb0cf466a7664b9006444996a4c234085cab3c5e1c9792d11",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362f56:\t83 ec 18             \tsub    $0x18,%esp",
             "  362f6b:\t89 54 24 10          \tmov    %edx,0x10(%esp)",
@@ -10766,6 +11072,9 @@
           "size": 518,
           "disassemblyStatus": "ok",
           "instructionLineCount": 129,
+          "disassemblyLineCount": 136,
+          "disassemblySha256": "fe0e1b45c8a29b2c6449aee1f6c297163c71dc6635519a625cee0e05d45e362d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  362fdf:\te8 00 00 00 00       \tcall   362fe4 <realGetImage(int, unsigned char**, int*, int*)@@Base+0x14>",
             "  362feb:\t8b 4d 14             \tmov    0x14(%ebp),%ecx",
@@ -10824,6 +11133,9 @@
           "size": 398,
           "disassemblyStatus": "ok",
           "instructionLineCount": 98,
+          "disassemblyLineCount": 105,
+          "disassemblySha256": "0d1499149e9f43576627a8c149c14933a13ffeca7251eb720589e144acef7d4c",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  3631ef:\te8 00 00 00 00       \tcall   3631f4 <LoadSprbin(char const*)@@Base+0x14>",
             "  36320b:\t65 8b 3d 14 00 00 00 \tmov    %gs:0x14,%edi",
@@ -10856,6 +11168,9 @@
           "size": 1132,
           "disassemblyStatus": "ok",
           "instructionLineCount": 271,
+          "disassemblyLineCount": 278,
+          "disassemblySha256": "6a73831ee8bcf7f8b048cd357dac30a0eb330bda7b18ac6301ca74e8b0740efb",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  36337f:\te8 00 00 00 00       \tcall   363384 <AdrnInit(char*, char*)@@Base+0x14>",
             "  3633a3:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
@@ -10979,6 +11294,9 @@
           "size": 2725,
           "disassemblyStatus": "ok",
           "instructionLineCount": 613,
+          "disassemblyLineCount": 620,
+          "disassemblySha256": "e396911f2ee63e04665b55fbd88232cc5f7a76314c9479e5c7fefba9c50a8e7d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  3637ef:\te8 00 00 00 00       \tcall   3637f4 <InitSprBinFileOpen(char*, char*)@@Base+0x14>",
             "  363807:\t65 8b 3d 14 00 00 00 \tmov    %gs:0x14,%edi",
@@ -11076,6 +11394,9 @@
           "size": 151,
           "disassemblyStatus": "ok",
           "instructionLineCount": 45,
+          "disassemblyLineCount": 52,
+          "disassemblySha256": "118ad7567bb08f161034ae9b80a229154a6cd83f64cd732f9a69550db3f0691b",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "  36497b:\te8 00 00 00 00       \tcall   364980 <adrnDecode(char*, int)@@Base+0x10>",
             "  36498d:\t65 8b 35 14 00 00 00 \tmov    %gs:0x14,%esi",
@@ -11106,6 +11427,9 @@
           "size": 756,
           "disassemblyStatus": "ok",
           "instructionLineCount": 223,
+          "disassemblyLineCount": 230,
+          "disassemblySha256": "8a6505eb35374714059c36dbaa63237914dc1534f1f6357728a9876585c234a4",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00369b40 <HttpClient::DownloadFile(std::string, std::string, std::function<void (int, int)>, std::function<void (int, std::string)>)@@Base>:",
             "  369b4c:\te8 00 00 00 00       \tcall   369b51 <HttpClient::DownloadFile(std::string, std::string, std::function<void (int, int)>, std::function<void (int, std::string)>)@@Base+0x11>",
@@ -11169,6 +11493,9 @@
           "size": 795,
           "disassemblyStatus": "ok",
           "instructionLineCount": 192,
+          "disassemblyLineCount": 199,
+          "disassemblySha256": "18a2b66a7db40795df59b61ae69af89bb881f581f4681d0fb0d3cd712f40c172",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0038c7c0 <FreeGetBattleMap(int)@@Base>:",
             "  38c7ce:\te8 00 00 00 00       \tcall   38c7d3 <FreeGetBattleMap(int)@@Base+0x13>",
@@ -11240,6 +11567,9 @@
           "size": 426,
           "disassemblyStatus": "ok",
           "instructionLineCount": 104,
+          "disassemblyLineCount": 111,
+          "disassemblySha256": "1f19348762608bf9acca40e30611ab9da8184adda5cd1ddb5681352d0a36643a",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0038fb10 <initWorldMap()@@Base>:",
             "  38fb18:\t81 ec 40 01 00 00    \tsub    $0x140,%esp",
@@ -11290,6 +11620,9 @@
           "size": 758,
           "disassemblyStatus": "ok",
           "instructionLineCount": 184,
+          "disassemblyLineCount": 191,
+          "disassemblySha256": "6fe4e4b165ce917e1a9d9de3d5efc0ad0b4af1c91bb84547422ebfca25bbad3d",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0038fcc0 <worldMapProc()@@Base>:",
             "  38fcce:\te8 00 00 00 00       \tcall   38fcd3 <worldMapProc()@@Base+0x13>",
@@ -11357,6 +11690,9 @@
           "size": 438,
           "disassemblyStatus": "ok",
           "instructionLineCount": 98,
+          "disassemblyLineCount": 105,
+          "disassemblySha256": "2ca4fe49e225bec96ce09dcb08aec11b6fc4f4c604e5bca2b67ba850331ceb6a",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "003f2c90 <lssproto_EN_recv(int, int, int)@@Base>:",
             "  3f2c99:\t83 ec 1c             \tsub    $0x1c,%esp",
@@ -11436,6 +11772,9 @@
           "size": 2017,
           "disassemblyStatus": "ok",
           "instructionLineCount": 406,
+          "disassemblyLineCount": 413,
+          "disassemblySha256": "f6e0e0b6e788ad8c4b26b48f52e853119c03626daea90e31b753d6c93f6e400a",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "003f7630 <lssproto_M_recv(int, int, int, int, int, int, char*)@@Base>:",
             "  3f7639:\t81 ec f0 08 01 00    \tsub    $0x108f0,%esp",
@@ -11577,6 +11916,9 @@
           "size": 34054,
           "disassemblyStatus": "ok",
           "instructionLineCount": 6739,
+          "disassemblyLineCount": 6746,
+          "disassemblySha256": "181204a7311744335c226c08dac64636e592a54042b04393ffba96a240a2e645",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "003fa900 <lssproto_S_recv(int, char*)@@Base>:",
             "  3fa90f:\te8 00 00 00 00       \tcall   3fa914 <lssproto_S_recv(int, char*)@@Base+0x14>",
@@ -13320,6 +13662,9 @@
           "size": 990,
           "disassemblyStatus": "ok",
           "instructionLineCount": 250,
+          "disassemblyLineCount": 257,
+          "disassemblySha256": "18b3d2c6845077166967b4e9ebcc6f0fc49128968a099a9464ce585bef4a4dfb",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "0041fb30 <DrawAutoMapping(int, int, unsigned char*, int, int)@@Base>:",
             "  41fb3f:\te8 00 00 00 00       \tcall   41fb44 <DrawAutoMapping(int, int, unsigned char*, int, int)@@Base+0x14>",
@@ -13400,6 +13745,9 @@
           "size": 6583,
           "disassemblyStatus": "ok",
           "instructionLineCount": 1343,
+          "disassemblyLineCount": 1350,
+          "disassemblySha256": "a9a61f5d6d89be0cf7d749cc3f4a2414e6fa85e03d87a55c5afad171b7f4afa8",
+          "excerptTruncated": false,
           "resourceRelevantLines": [
             "00420370 <DrawMapEffect()@@Base>:",
             "  42037f:\te8 00 00 00 00       \tcall   420384 <DrawMapEffect()@@Base+0x14>",
@@ -14029,5 +14377,25 @@
         }
       ]
     }
-  ]
+  ],
+  "abiFunctionComparison": {
+    "abis": [
+      "armeabi-v7a",
+      "x86"
+    ],
+    "sameFocusedFunctionSet": true,
+    "onlyInFirst": [],
+    "onlyInSecond": [],
+    "note": "Name-set parity only; instruction semantics still require ABI-aware comparison."
+  },
+  "coreFunctionCoverage": {
+    "armeabi-v7a": {
+      "complete": true,
+      "missing": []
+    },
+    "x86": {
+      "complete": true,
+      "missing": []
+    }
+  }
 }
