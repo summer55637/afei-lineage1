@@ -100,7 +100,7 @@ function requireBattlePhase(battleContext,type,state){
     type,
     state:clone(state)
   };
-  const mode=String(battleContext?.context?.mode??'').trim();
+  const mode=String(battleContext?.mode??'').trim();
   if(mode!=='battle')return {
     ok:false,
     handled:false,
@@ -119,7 +119,7 @@ function findBattleEntryByBid(battleContext,bid){
   if(!Number.isInteger(n)||n<0||n>19)return null;
   const side=n>=10?1:0;
   const slot=n>=10?n-10:n;
-  const sideObj=battleContext?.context?.sides?.find(x=>Number(x?.side)===side);
+  const sideObj=battleContext?.sides?.find(x=>Number(x?.side)===side);
   return Array.isArray(sideObj?.entries)?sideObj.entries[slot]??null:null;
 }
 
@@ -421,8 +421,8 @@ function createBrowserStateController({
       }
       if(type===ACTION_BATTLE_INITIALIZE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-initialize',reason:'battle-context-required',state:clone(currentState)};
-        if(String(battleContext?.context?.mode??'').trim()!=='init'){
-          return {ok:false,handled:false,stage:'battle-initialize-gate',reason:'battle-initialize-requires-init-phase',mode:String(battleContext?.context?.mode??''),state:clone(currentState)};
+        if(String(battleContext?.mode??'').trim()!=='init'){
+          return {ok:false,handled:false,stage:'battle-initialize-gate',reason:'battle-initialize-requires-init-phase',mode:String(battleContext?.mode??''),state:clone(currentState)};
         }
         if(battleInitializeRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-initialize',reason:'browser-battle-initialize-runtime-invalid',state:clone(currentState)};
         const result=battleInitializeRuntime.initialize(
@@ -467,8 +467,8 @@ function createBrowserStateController({
             targetBid:pipeline.finalTargetBid,
             damageRollNear:action.damageRollNear??null,
             damageRollWide:action.damageRollWide??null,
-            fieldAtt:action.fieldAtt??(battleContext?.context?.fieldAtt??4),
-            fieldAttrPower:action.fieldAttrPower??(battleContext?.context?.attPow??0),
+            fieldAtt:action.fieldAtt??(battleContext?.fieldAtt??4),
+            fieldAttrPower:action.fieldAttrPower??(battleContext?.attPow??0),
             includeAttr:action.includeAttr!==false
           }
         );
@@ -477,8 +477,8 @@ function createBrowserStateController({
           battleAttackPipeline.damageInput={
             damageRollNear:action.damageRollNear??null,
             damageRollWide:action.damageRollWide??null,
-            fieldAtt:action.fieldAtt??(battleContext?.context?.fieldAtt??4),
-            fieldAttrPower:action.fieldAttrPower??(battleContext?.context?.attPow??0),
+            fieldAtt:action.fieldAtt??(battleContext?.fieldAtt??4),
+            fieldAttrPower:action.fieldAttrPower??(battleContext?.attPow??0),
             includeAttr:action.includeAttr!==false
           };
         }
