@@ -373,7 +373,7 @@ RD  -> raw / custom RLE / zlib RGBA
 gG  -> in-memory PNG -> RGBA
 ~~~
 
-The `gG` path is classified by `src/stoneage_rd_decoder.mjs` but remains intentionally non-decoding there because the browser runtime still needs an explicit memory-PNG decoder implementation.
+The `gG` path is now decoded by `decodeStoneAgePngWrappedAsync()` in the browser using `createImageBitmap()` and Canvas 2D pixel extraction. This closes the Web visual decoder path, but does not claim byte-for-byte equivalence with the target SDL surface's color handling.
 
 ### Existing project decoder correction
 
