@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：118741b — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T08:49:41Z
+- 最新 commit：4bc9925 — fix: parse enemy charge WAZA options
+- 更新時間：2026-10-02T16:55:18+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.38
 - Playable HTML：⏸️ 尚未建立（刻意保留）
