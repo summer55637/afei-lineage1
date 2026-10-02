@@ -87,7 +87,8 @@ const missingElements=run({selectMode:7,targets:[{bid:0,sourceType:'player',hp:2
 assert.equal(missingElements.ok,false);
 assert.equal(missingElements.reason,'enemy-ai-target-elements-required');
 const missingActorElements=run({selectMode:7,actorElements:null,targets:[{bid:0,sourceType:'player',hp:20,sourceAiTargetStats:{str:10,dex:10},sourceAiElements:{earth:1,water:1,fire:1,wind:1}}]},[1]);
-assert.equal(missingActorElements.ok,false);\nassert.equal(missingActorElements.reason,'enemy-ai-subdue-actor-elements-required');
+assert.equal(missingActorElements.ok,false);
+assert.equal(missingActorElements.reason,'enemy-ai-subdue-actor-elements-required');
 const badFilterRng=run({targetType:4,selectMode:1},[]);
 assert.equal(badFilterRng.ok,false);
 assert.equal(badFilterRng.reason,'enemy-ai-leader-filter-rng-required-or-out-of-range');
