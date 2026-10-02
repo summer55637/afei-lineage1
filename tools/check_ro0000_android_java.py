@@ -30,7 +30,7 @@ public class UpdateChecker {
         methods = method_records(source)
         check = next(m for m in methods if m["name"] == "check")
         self.assertIn("this.fetch", check["calls"])
-        self.assertIn("execute", check["calls"])
+        self.assertIn("client.execute", check["calls"])
         serialized = repr(methods)
         self.assertNotIn("secret.example", serialized)
         self.assertNotIn("patch", serialized)
