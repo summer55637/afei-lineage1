@@ -35,22 +35,39 @@ jobs:
         run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
-      - name: Record native-audit run marker
+      - name: Publish focused native resource evidence
         shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          SOURCE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          mkdir -p data/generated
-          cat > data/generated/stoneage_ro0000_android_native_run.json <<EOF
-          {
-            "format": "ro0000-android-native-audit-run-v1",
-            "workflowRunId": ${{ github.run_id }},
-            "commitSha": "${{ github.sha }}"
-          }
-          EOF
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          src = Path("artifacts/ro0000_android_native_elf_audit.json")
+          dst = Path("data/generated/stoneage_ro0000_android_native_resource_focus.json")
+          data = json.loads(src.read_text(encoding="utf-8"))
+          wanted = {"AdrnInit", "adrnDecode", "LoadSprbin", "InitSprBinFileOpen"}
+          keys = ("setBlowFishKey", "fish_decode", "fopen", "fread", "fseek", "memcpy", "memmove", "0x50", "0x31393839", "adrn.bin", "real.bin", "spr.bin", "spradrn.bin")
+          out = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":data["auditedApk"]["sha256"],"libraries":[]}
+          for lib in data.get("nativeLibraries", []):
+              selected=[]
+              for fn in lib.get("focusedSymbols", []):
+                  if fn.get("name") not in wanted: continue
+                  dis=fn.get("disassembly") or {}
+                  lines=dis.get("excerpt", [])
+                  selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)]})
+              if selected: out["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected})
+          dst.parent.mkdir(parents=True, exist_ok=True)
+          dst.write_text(json.dumps(out, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/generated/stoneage_ro0000_android_native_run.json
-          git commit -m "[docs] record Android native audit run" || true
+          git add data/generated/stoneage_ro0000_android_native_resource_focus.json
+          git commit -m "[docs] publish Android native resource focus" || true
           git push origin HEAD:main
       - name: Publish audit artifacts
         uses: actions/upload-artifact@v4
