@@ -13,8 +13,13 @@
   },
   "policy": {
     "routeEligible": "Direct hometown -> destination landing -> next-floor portal -> unconditional encounter target must have source-backed path evidence.",
-    "productBoundary": "Battle strategy, supply thresholds, capture policy, inventory-full behavior, death recovery, and offline accrual are not implied by route closure.",
-    "blockedRoutes": "A source-level floor edge without coordinate-level path proof is not an eligible idle route."
+    "productBoundary": "basic attack strategy v1 is available; complete battle-result execution and supply/capture/death/offline/rotation policies remain separate boundaries",
+    "blockedRoutes": "A source-level floor edge without coordinate-level path proof is not an eligible idle route.",
+    "battleStrategy": {
+      "version": 1,
+      "mode": "basic_attack_only",
+      "targetPolicy": "source-default-random"
+    }
   },
   "routes": [
     {
@@ -133,6 +138,7 @@
     "routeVariants": 8,
     "eligibleRouteVariants": 6,
     "routesNeedingLandingExclusion": 1,
-    "battlePolicyPendingAll": true
+    "battlePolicyPendingAll": true,
+    "basicBattleStrategyAvailable": true
   }
 }
