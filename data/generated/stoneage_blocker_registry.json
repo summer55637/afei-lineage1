@@ -15,7 +15,8 @@
   },
   "blockers": {
     "route-4000-to-200": {
-      "status": "repaired-via-ro0000-overlay",
+      "status": "resolved",
+      "resolution": "repaired-via-ro0000-overlay",
       "scope": "first-route",
       "previousEvidence": "fixed-C floor 4000 connected components",
       "newEvidence": [
