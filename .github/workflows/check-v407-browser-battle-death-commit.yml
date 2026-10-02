@@ -9,8 +9,6 @@ on:
       - 'tools/check_v407_browser_battle_death_commit.mjs'
       - 'data/generated/stoneage_browser_battle_death_commit_schema.json'
       - 'docs/reference/v407-browser-battle-death-commit.md'
-      - 'docs/rebuild-roadmap.md'
-      - 'tools/generate_readme.mjs'
       - '.github/workflows/check-v407-browser-battle-death-commit.yml'
   workflow_dispatch:
 permissions:
