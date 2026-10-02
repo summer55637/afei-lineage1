@@ -7,6 +7,8 @@ import {
   decodeAuthorizedClientGraphic,
   decodeAuthorizedClientGraphicAsync,
   classifyStoneAgeGraphic,
+  decodeStoneAgePngWrappedAsync,
+  decodeAuthorizedClientGraphicAsync,
 } from '../src/stoneage_rd_decoder.mjs';
 
 const u32=(b,p,v)=>{b[p]=v&255;b[p+1]=(v>>>8)&255;b[p+2]=(v>>>16)&255;b[p+3]=(v>>>24)&255};
@@ -42,8 +44,46 @@ assert.deepEqual([...za.pixels],rgba);
 assert.equal(za.bytesPerPixel,4);
 assert.deepEqual(classifyStoneAgeGraphic(new Uint8Array([0x52,0x44])),{format:'RD',decoder:'decodeStoneAgeRd'});
 assert.deepEqual(classifyStoneAgeGraphic(new Uint8Array([0x67,0x47])),{format:'gG',decoder:'decoderPng'});
+
+const pngWrapped=header(0,1,1,4);
+pngWrapped[0]=0x67;
+pngWrapped[1]=0x47;
+pngWrapped.set([0x89,0x50,0x4e,0x47],16);
+const previousCreateImageBitmap=globalThis.createImageBitmap;
+const previousOffscreenCanvas=globalThis.OffscreenCanvas;
+let pngClosed=false;
+globalThis.createImageBitmap=async(blob,options)=>{
+  assert.equal(blob.type,'image/png');
+  assert.deepEqual([...new Uint8Array(await blob.arrayBuffer())],[0x89,0x50,0x4e,0x47]);
+  assert.equal(options.premultiplyAlpha,'none');
+  return {width:1,height:1,close(){pngClosed=true}};
+};
+globalThis.OffscreenCanvas=class {
+  constructor(width,height){this.width=width;this.height=height;}
+  getContext(){
+    return {
+      drawImage(bitmap){assert.equal(bitmap.width,1);},
+      getImageData(){return {data:Uint8ClampedArray.from([12,34,56,255])};}
+    };
+  }
+};
+try{
+  const png=await decodeStoneAgePngWrappedAsync(pngWrapped);
+  assert.equal(png.format,'gG');
+  assert.equal(png.bytesPerPixel,4);
+  assert.deepEqual([...png.pixels],[12,34,56,255]);
+  const wrappedImage=await decodeAuthorizedClientGraphicAsync(pngWrapped,{adder:0,size:pngWrapped.length});
+  assert.equal(wrappedImage.format,'gG');
+  assert.deepEqual([...wrappedImage.pixels],[12,34,56,255]);
+  assert.equal(pngClosed,true);
+}finally{
+  if(previousCreateImageBitmap===undefined)delete globalThis.createImageBitmap;
+  else globalThis.createImageBitmap=previousCreateImageBitmap;
+  if(previousOffscreenCanvas===undefined)delete globalThis.OffscreenCanvas;
+  else globalThis.OffscreenCanvas=previousOffscreenCanvas;
+}
 assert.throws(()=>decodeStoneAgeRd(header(0x20,2,1,0)),/requires decodeStoneAgeRdAsync/);
-assert.throws(()=>decodeStoneAgeRd(header(16,1,1,0)),/literal/);
+assert.throws(()=>decodeStoneAgeRd(header(16,1,1,0)),/decoded size mismatch/);
 assert.throws(()=>decodeStoneAgeRd(new Uint8Array([82,68,0])),/truncated/);
 
 console.log(JSON.stringify({
