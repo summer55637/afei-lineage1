@@ -46,12 +46,16 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"myluaload|DownLoadIniFile|GetBinaryResource|UpdateAppNewVersion|DownloadResource|"
     r"(?:[A-Za-z_]\w*::)*ReadPatchInfo|(?:[A-Za-z_]\w*::)*(?:DownloadFile|UnZipFile)|"
     r"initResources|loadResources|cleanupRealbin|"
-    r"initMap|readMap|writeMap|createMap|setMap|"
+    r"initMap|readMap|writeMap|createMap|setMap|resetMap|redrawMap|drawMap2|drawMapUi|"
     r"lssproto_[A-Za-z0-9_]+_recv|ReadBattleMap|StockDispBuffer|PutBmp|LoadBmp|"
     r"decoderPng|decoder|ReadAniFile|SpecAnim|play_map_bgm|drawMap|setEventMemory|"
     r"DrawBattleMap|ddrawBattleMap|PutTileBmp|DrawAutoMapping|MakeHitBox|MakeAnimDisp|"
-    r"getRouteMap|updateMapArea|setMapMovePoint|_setMapMovePoint|mapCheckSum|"
+    r"getRouteMap|updateMapArea|setMapMovePoint2|setMapMovePoint|_setMapMovePoint|"
+    r"_mapMove|mapMove2|_partyMapMove|mapCheckSum|getMapArea(?:Cnt|X1|X2|Y1|Y2)|"
+    r"createAutoMap|initAutoMapColor|makeAutoMapColor|getAutoMapColor|readAutoMapColor|writeAutoMapColor|"
     r"initWorldMap|worldMapProc|EndWarpMap|setWarpMap|mapWndProc|drawAutoMap|"
+    r"initMapEffect|mapEffectProc2|mapEffectRain2|mapEffectSnow2|mapEffectStar|"
+    r"mapEffectRain|mapEffectSnow|mapEffectKamiFubuki|mapEffectFallingStar|getMapEffectBuf|delMapEffectBuf|"
     r"DrawMapEffect|drawMapEffect|mapEffectProc|HotUpdatePutbmp|InitSpriteInfo|"
     r"FreeGetBattleMap)\s*\(",
     re.IGNORECASE,
@@ -60,7 +64,15 @@ FOCUSED_FUNCTION_RE = re.compile(
 FOCUSED_OBJECTS = {
     "BattleMapFile", "MapWmdFlagBak", "MaxAdrnID", "RealBinHeight",
     "RealBinWidth", "Realbinfp", "adrnbuff", "hitMap", "nextMaxAdrnID",
-    "pRealBinBits",
+    "pRealBinBits", "autoMappingBuf", "autoMappingInitFlag", "fMapBgm",
+    "fMapHeight", "fMapWidth", "mapAreaHeight", "mapAreaWidth",
+    "mapAreaX1", "mapAreaX2", "mapAreaY1", "mapAreaY2", "mapConfigData",
+    "mapEffectDrawFlag", "mapEffectFallingStarFlag", "mapEffectFallingStarTime",
+    "mapEffectKamiFubukiCnt", "mapEffectKamiFubukiLevel", "mapEffectMoveDir",
+    "mapEffectRainCnt", "mapEffectRainLevel", "mapEffectSnowCnt",
+    "mapEffectSnowLevel", "mapEffectStarFlag", "mapEmptyDir", "mapEmptyFlag",
+    "mapEmptyGx", "mapEmptyGy", "mapEmptyStartTime", "masterBufMapEffect",
+    "oldMapEffectRainLevel", "oldMapEffectSnowLevel", "useBufMapEffect",
 }
 
 
