@@ -65,7 +65,7 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"initMapEffect|mapEffectProc2|mapEffectRain2|mapEffectSnow2|mapEffectStar|"
     r"mapEffectRain|mapEffectSnow|mapEffectKamiFubuki|mapEffectFallingStar|getMapEffectBuf|delMapEffectBuf|"
     r"DrawMapEffect|drawMapEffect|mapEffectProc|HotUpdatePutbmp|InitSpriteInfo|"
-    r"FreeGetBattleMap)\s*\(",
+    r"FreeGetBattleMap)(?:\s*\(|$)",
     re.IGNORECASE,
 )
 
