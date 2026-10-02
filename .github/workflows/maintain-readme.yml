@@ -64,6 +64,7 @@ jobs:
             node tools/audit_ro0000_battlemap_selector.mjs
             node tools/test_sabex_decoder.mjs
             node tools/test_sabex_client_image_runtime.mjs
+            python3 tools/test_ro0000_adrn_decoder.py
 
             node tools/generate_readme.mjs
 
