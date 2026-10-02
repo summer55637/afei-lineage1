@@ -262,9 +262,11 @@ A semantic parse of the current RO0000 file finds:
 - 199 distinct BattleMapNo values referenced by those blocks.
 - 21 BattleMapNo values are currently unreferenced by `battlemap.txt`.
 - 61 blocks provide three explicit candidate values, 4 provide two, and 9 provide one.
-- Image-number coverage reaches the large range beginning at 10000 and ending at 120000.
+- Image-number coverage reaches the large range beginning at 10000 and ending at 120000; the current semantic parser counts 119,923 actual image-number assignments (inclusive valid ranges only).
 
 These counts describe the current file contents and parser semantics. An unreferenced BattleMapNo is not proof that its `.sabex` payload is missing; it only means no active numeric mapping to that slot was found in this configuration file.
+
+One malformed-but-present range is `3137 to 1349`. The Fixed-C loop uses `for( i = iFirst; i <= iLast; i++ )`, so this reversed range produces zero assignments. It is therefore retained as an audit finding rather than normalized into a forward range.
 
 ### One explicit duplicate assignment
 
@@ -298,3 +300,7 @@ RO0000 battlemap.txt
 ~~~
 
 This closes the selector/data lineage much further than the previous target-only analysis. The remaining gap is now byte-level payload identity: obtaining one or more actual target `.sabex` files and proving which tile IDs they contain.
+
+## 10. Reproducible selector audit
+
+The parser has now been captured as `tools/audit_ro0000_battlemap_selector.mjs`, with its current result stored in `data/generated/stoneage_ro0000_battlemap_selector_audit.json`. The README maintenance workflow runs this audit before refreshing the project status, so future changes to `battlemap.txt` will be regression-visible.
