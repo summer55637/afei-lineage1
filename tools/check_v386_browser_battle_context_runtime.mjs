@@ -109,7 +109,7 @@ const duplicate=await controller.dispatch({
   encounter:{floorId:100,x:610,y:538,encounterId:65}
 });
 assert.equal(duplicate.ok,false);
-assert.equal(duplicate.reason,'idle-state-not-encounter-pending');
+assert.equal(duplicate.reason,'battle-context-clear-required');
 assert.equal(controller.getState().revision,1);
 
 result=await controller.dispatch({
