@@ -7,6 +7,7 @@ const ROOT = process.cwd();
 const SETUP = path.join(ROOT, 'ro0000/server/merged-source/gmsv/setup.cf');
 const CSV = path.join(ROOT, 'ro0000/server/merged-source/gmsv/data/itemset6.csv');
 const OUT = path.join(ROOT, 'data/generated/stoneage_endpoint_item_seed_audit.json');
+const SERVER_BIN = path.join(ROOT, 'ro0000/server/merged-source/gmsv/gmsvjt');
 
 function fail(message) { throw new Error(message); }
 
@@ -37,6 +38,53 @@ function exactTokenPositions(line, wanted) {
   return line.split(',').flatMap((token, index) =>
     token.trim() === String(wanted) ? [index + 1] : []
   );
+}
+
+function commandText(command, args) {
+  try {
+    return execFileSync(command, args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+  } catch (error) {
+    return 'COMMAND_ERROR: ' + command + ' ' + args.join(' ') + '\n' + (error.stderr ? String(error.stderr) : error.message);
+  }
+}
+
+function probeServerBinary() {
+  if (!fs.existsSync(SERVER_BIN)) {
+    return {
+      present: false,
+      path: 'ro0000/server/merged-source/gmsv/gmsvjt',
+      status: 'missing'
+    };
+  }
+
+  const fileInfo = commandText('file', [SERVER_BIN]).trim();
+  const elfHeader = commandText('readelf', ['-h', SERVER_BIN]).trim();
+  const symbolTable = commandText('readelf', ['-Ws', SERVER_BIN]);
+  const interestingSymbols = symbolTable.split(/\r?\n/)
+    .filter(line => /(ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList)/.test(line))
+    .slice(0, 100);
+
+  const strings = commandText('strings', ['-a', SERVER_BIN]);
+  const interestingStrings = strings.split(/\r?\n/)
+    .filter(line => /(itemset6|ITEM1|ITEM2|ITEM_makeItem|ITEM_readItemConfFile|ITEM_tblen|TransformList|32003|24114)/i.test(line))
+    .slice(0, 200);
+
+  return {
+    present: true,
+    path: 'ro0000/server/merged-source/gmsv/gmsvjt',
+    blobSha: gitSha('ro0000/server/merged-source/gmsv/gmsvjt'),
+    fileInfo,
+    elfType: elfHeader.match(/^\s*Type:\s*(.+)$/m)?.[1] ?? null,
+    machine: elfHeader.match(/^\s*Machine:\s*(.+)$/m)?.[1] ?? null,
+    strippedHint: symbolTable.includes('no symbols') || symbolTable.includes('There are no symbols'),
+    interestingSymbols,
+    interestingStrings,
+    interpretation: {
+      binaryInspectionIsEvidenceOnly: true,
+      macroFlagsCannotBeProvenFromStringsAlone: true,
+      purpose: 'Probe whether the deployed gmsvjt exposes a callable Item loader / transform surface distinct from the pinned source build.'
+    }
+  };
 }
 
 function buildAudit() {
@@ -81,6 +129,36 @@ function buildAudit() {
   const configured32003 = exact.get(32003);
   const fixed24114 = exact.get(24114);
 
+  const rawText = raw.toString('latin1');
+  const substring32003 = [];
+  for (const match of rawText.matchAll(/32003/g)) {
+    const before = Math.max(0, match.index - 24);
+    const after = Math.min(rawText.length, match.index + 29);
+    substring32003.push(rawText.slice(before, after));
+    if (substring32003.length >= 20) break;
+  }
+
+  const token17Stats = {
+    rowsWithToken17: 0,
+    distinctIds: new Set(),
+    duplicateIds: 0,
+    maxId: 0,
+    configured32003: 0,
+    fixed24114: 0
+  };
+  for (const line of lines) {
+    const tokens = line.split(',');
+    if (tokens.length < 17) continue;
+    token17Stats.rowsWithToken17++;
+    const id = Number(tokens[16].trim());
+    if (!Number.isInteger(id)) continue;
+    if (token17Stats.distinctIds.has(id)) token17Stats.duplicateIds++;
+    token17Stats.distinctIds.add(id);
+    token17Stats.maxId = Math.max(token17Stats.maxId, id);
+    if (id === 32003) token17Stats.configured32003++;
+    if (id === 24114) token17Stats.fixed24114++;
+  }
+
   return {
     format: 'stoneage-endpoint-item-seed-audit-v1',
     status: configured32003.length > 0 ? 'endpoint-seed-candidate-found' : 'unresolved',
@@ -100,8 +178,19 @@ function buildAudit() {
     },
     csvShape: {
       distinctColumnCounts: sortedWidths,
-      dominantColumnCount: sortedWidths[0]?.columns ?? null
+      dominantColumnCount: sortedWidths[0]?.columns ?? null,
+      rawSubstring32003Count: (rawText.match(/32003/g) ?? []).length,
+      rawSubstring32003Samples: substring32003,
+      fixedCShapeToken17Probe: {
+        rowsWithToken17: token17Stats.rowsWithToken17,
+        distinctIds: token17Stats.distinctIds.size,
+        duplicateIds: token17Stats.duplicateIds,
+        maxId: token17Stats.maxId,
+        configured32003: token17Stats.configured32003,
+        fixed24114: token17Stats.fixed24114
+      }
     },
+    serverBinaryProbe: probeServerBinary(),
     exactTokenMatches: {
       configuredItem1_32003: configured32003,
       fixedConfiguredItem_24114: fixed24114
@@ -129,7 +218,9 @@ function buildAudit() {
         },
     interpretation: {
       fixedCFixedItemRuleApplied: false,
-      note: 'Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics.'
+      note: 'Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics.',
+      nextClosureBoundary: 'Because configured ITEM1=32003 is absent even as a raw substring from the selected endpoint CSV, the remaining decisive evidence layer is the deployed gmsvjt loader/transform behavior and any endpoint-specific Item data source it consumes.',
+      token17ProbeIsHypothesisOnly: true
     }
   };
 }
