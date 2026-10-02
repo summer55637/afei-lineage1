@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：e20fce9 — [docs] record expanded Android native evidence coverage
-- 更新時間：2026-10-03T04:11:05+08:00
+- 最新 commit：9fcab52 — [audit] publish full focused native symbols and map state
+- 更新時間：2026-10-03T04:17:09+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
