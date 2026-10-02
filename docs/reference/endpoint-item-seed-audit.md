@@ -10,6 +10,26 @@
 
 這不是「不知道 loader 怎麼運作」，而是已經知道它怎麼查，並確認目前 snapshot 沒有這個 Item row。
 
+## 新增：15 個 Endpoint Starter Item 設定的整體交叉檢查
+
+Endpoint `setup.cf` 的 `ITEM1..ITEM15` 設定為：
+
+`32003, 32004, 32005, 32006, 32007, 32013, 32008, 32009, 32010, 32011, 32160, 22407, 22077, 32419, 32420`
+
+對目前 Endpoint `data/itemset6.csv` 做完整原文檢查後：
+
+- 15 個值全部沒有出現在 CSV 原文。
+- 15 個值全部沒有出現在 Loader 使用的第 17 token（Item ID）。
+- 15 個值也全部沒有出現在第 18 token；因此不能由目前 CSV 的 image-number 欄位直接替代。
+- Endpoint `setup.cf` 同時仍明確宣告 `itemset6file=data/itemset6.csv`。
+- Fixed-C 的 `configfile.c` 也證明在 `_ITEMSET6_TXT` 分支下，`itemset6file` 是選中的 Item loader 檔，其他 itemset3/4/5 是不同 compile-time branch。
+
+因此目前更準確的描述是：
+
+**Endpoint Starter Item 設定與目前 Endpoint Item table 存在整組資料版本／部署不一致。**
+
+這比單一 `32003` 缺 row 更嚴重，但也更不能猜測。現階段仍不把任何其他 Item ID、image number 或 fixed-C 24114 映射成這 15 個設定值。
+
 ## Endpoint 設定
 
 | Key | Endpoint | Fixed-C |
