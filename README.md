@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：019e980 — [audit] anchor Android keyboard callback bridge
-- 更新時間：2026-10-03T04:46:21+08:00
+- 最新 commit：71ca866 — [docs] publish Android native and manifest evidence
+- 更新時間：2026-10-02T20:46:52Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
