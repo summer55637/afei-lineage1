@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ce762fe — docs: record idle battle strategy v1 progress
-- 更新時間：2026-10-02T12:30:56+08:00
+- 最新 commit：b72e212 — docs: clarify README battle strategy status
+- 更新時間：2026-10-02T12:31:48+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -27,7 +27,7 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 戰鬥策略待定 |
+| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 完整自動戰鬥待串接（基礎策略已實作） |
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
@@ -44,6 +44,7 @@
 - [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)
 - [Rebuild roadmap](docs/rebuild-roadmap.md)
 - [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
+- [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
 - [Generated state / evidence](data/generated/)
 
 > README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。
