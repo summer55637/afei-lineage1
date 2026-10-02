@@ -48,7 +48,12 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"initResources|loadResources|cleanupRealbin|"
     r"initMap|readMap|writeMap|createMap|setMap|"
     r"lssproto_[A-Za-z0-9_]+_recv|ReadBattleMap|StockDispBuffer|PutBmp|LoadBmp|"
-    r"decoderPng|decoder|ReadAniFile|SpecAnim|play_map_bgm|drawMap|setEventMemory)\s*\(",
+    r"decoderPng|decoder|ReadAniFile|SpecAnim|play_map_bgm|drawMap|setEventMemory|"
+    r"DrawBattleMap|ddrawBattleMap|PutTileBmp|DrawAutoMapping|MakeHitBox|MakeAnimDisp|"
+    r"getRouteMap|updateMapArea|setMapMovePoint|_setMapMovePoint|mapCheckSum|"
+    r"initWorldMap|worldMapProc|EndWarpMap|setWarpMap|mapWndProc|drawAutoMap|"
+    r"DrawMapEffect|drawMapEffect|mapEffectProc|HotUpdatePutbmp|InitSpriteInfo|"
+    r"FreeGetBattleMap)\s*\(",
     re.IGNORECASE,
 )
 
