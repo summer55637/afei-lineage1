@@ -195,7 +195,7 @@ jobs:
               "KeyboardReturn(", "keyBoardProcWnd(", "moveProc(", "onceMoveProc(",
               "partyMoveProc(", "_execEtcEvent(", "_etcEventCheck(", "_sendWarpEvent(",
               "_sendEnemyEvent(", "_checkWarpEvent(", "_checkEnemyEvent(",
-              "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange"
+              "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
               "InitGame(", "SystemTask(", "EndGame(", "checkGuildBoxHit(",
               "InitShapeClickStatus(", "RealTimeToSATime(", "NextScrollPanelRender(",
               "stockDispBtnCls(", "joy_read(", "DoNormalCallback(", "PaletteProc(",
@@ -246,7 +246,7 @@ jobs:
           if not all(item["complete"] for item in focus["publishedSymbolCoverage"].values()):
               raise SystemExit("Focused native symbol publication or disassembly is incomplete.")
           if not all(item["complete"] for item in focus["coreFunctionCoverage"].values()):
-              raise SystemExit("Core Android map/resource native function coverage is incomplete.")
+              raise SystemExit("Core Android map/resource native function coverage is incomplete: " + json.dumps(focus["coreFunctionCoverage"], sort_keys=True))
           dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
           apk = json.loads(Path("artifacts/ro0000_android_apk_audit.json").read_text(encoding="utf-8"))
