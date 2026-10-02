@@ -284,6 +284,7 @@
                 "library": "lib/armeabi-v7a/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -301,6 +302,7 @@
                 "library": "lib/armeabi-v7a/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -318,6 +320,7 @@
                 "library": "lib/armeabi-v7a/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -335,6 +338,7 @@
                 "library": "lib/armeabi-v7a/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -352,6 +356,7 @@
                 "library": "lib/armeabi-v7a/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -369,6 +374,7 @@
                 "library": "lib/armeabi-v7a/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -385,6 +391,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -403,6 +412,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -420,6 +432,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -431,7 +446,10 @@
               "long": "Java_com_tencent_apollo_ApolloVoiceEngine_StartBlueTooth__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -442,7 +460,10 @@
               "long": "Java_com_tencent_apollo_ApolloVoiceEngine_StopBlueTooth__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/apollo/apollovoice/httpclient/SRTTAPIHTTPTaskQueueImp;",
@@ -453,7 +474,10 @@
               "long": "Java_com_tencent_apollo_apollovoice_httpclient_SRTTAPIHTTPTaskQueueImp_callback__I_3BI"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/apollo/apollovoice/httpclient/URLRequest;",
@@ -470,6 +494,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -481,7 +508,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_appendNativeLog__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -492,7 +520,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_appendWholeNativeLog__Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -503,7 +532,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_getNativeKeyValueList__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -514,7 +544,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_getNativeLog__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -525,7 +556,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_putNativeKeyValue__Ljava_lang_String_2Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -536,7 +568,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_regist__Ljava_lang_String_2ZI"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -547,7 +580,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_removeNativeKeyValue__Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -558,7 +592,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_setNativeInfo__ILjava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -569,7 +604,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_testCrash__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -580,7 +616,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_unregist__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -596,6 +633,9 @@
                 "form": "long",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -614,6 +654,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -631,6 +674,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -642,7 +688,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_ChangeRole__I"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -658,6 +707,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -676,6 +728,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -692,6 +747,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -710,6 +768,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -727,6 +788,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -738,7 +802,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_EnableSpeakerOn__Z"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -754,6 +821,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -772,6 +842,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -788,6 +861,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -806,6 +882,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -822,6 +901,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -840,6 +922,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -857,6 +942,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -868,7 +956,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_IsSpeaking__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -884,6 +975,9 @@
                 "form": "long",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -902,6 +996,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -918,6 +1015,9 @@
                 "form": "long",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -936,6 +1036,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -952,6 +1055,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -970,6 +1076,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -986,6 +1095,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1004,6 +1116,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1020,6 +1135,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1038,6 +1156,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1054,6 +1175,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1072,6 +1196,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1089,6 +1216,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1100,7 +1230,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_SetMicVolume__I"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -1116,6 +1249,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1134,6 +1270,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1150,6 +1289,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1168,6 +1310,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1179,7 +1324,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_SetVoiceEffects__I"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -1195,6 +1343,9 @@
                 "form": "long",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1213,6 +1364,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1229,6 +1383,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1247,6 +1404,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1263,6 +1423,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1281,6 +1444,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1297,6 +1463,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -1315,6 +1484,9 @@
                 "library": "lib/armeabi-v7a/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1331,6 +1503,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1349,6 +1524,9 @@
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1365,6 +1543,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1383,6 +1564,9 @@
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1399,6 +1583,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1417,6 +1604,9 @@
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1433,6 +1623,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1451,6 +1644,9 @@
                 "library": "lib/armeabi-v7a/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1467,6 +1663,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1485,6 +1684,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1501,6 +1703,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1519,6 +1724,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1535,6 +1743,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1553,6 +1764,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1569,6 +1783,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1587,6 +1804,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1603,6 +1823,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1621,6 +1844,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1637,6 +1863,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1655,6 +1884,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1671,6 +1903,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1689,6 +1924,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1705,6 +1943,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1723,6 +1964,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1739,6 +1983,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1757,6 +2004,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1773,6 +2023,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1791,6 +2044,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1807,6 +2063,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1825,6 +2084,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1841,6 +2103,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1859,6 +2124,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1875,6 +2143,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1893,6 +2164,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1909,6 +2183,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1927,6 +2204,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1943,6 +2223,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1961,6 +2244,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -1977,6 +2263,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -1995,6 +2284,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2011,6 +2303,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -2029,6 +2324,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2045,6 +2343,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -2063,6 +2364,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2079,6 +2383,9 @@
                 "form": "short",
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -2097,6 +2404,9 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2114,14 +2424,17 @@
                 "library": "lib/armeabi-v7a/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/armeabi-v7a/libSDL2.so"
+            ],
             "status": "static-export-match"
           }
         ],
         "counts": {
           "nativeDeclarations": 115,
           "staticExportMatched": 97,
-          "noStaticExportDynamicRegistrationPossible": 18,
-          "noStaticExportFound": 0,
+          "noStaticExportPackageRelatedJniOnLoad": 8,
+          "noStaticExportOrPackageRelatedJniOnLoad": 10,
           "packagedLibraries": 8
         }
       },
@@ -2306,6 +2619,7 @@
                 "library": "lib/x86/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -2323,6 +2637,7 @@
                 "library": "lib/x86/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -2340,6 +2655,7 @@
                 "library": "lib/x86/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -2357,6 +2673,7 @@
                 "library": "lib/x86/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -2374,6 +2691,7 @@
                 "library": "lib/x86/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -2391,6 +2709,7 @@
                 "library": "lib/x86/libStoneage.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [],
             "status": "static-export-match"
           },
           {
@@ -2407,6 +2726,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2425,6 +2747,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2442,6 +2767,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2453,7 +2781,10 @@
               "long": "Java_com_tencent_apollo_ApolloVoiceEngine_StartBlueTooth__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -2464,7 +2795,10 @@
               "long": "Java_com_tencent_apollo_ApolloVoiceEngine_StopBlueTooth__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/apollo/apollovoice/httpclient/SRTTAPIHTTPTaskQueueImp;",
@@ -2475,7 +2809,10 @@
               "long": "Java_com_tencent_apollo_apollovoice_httpclient_SRTTAPIHTTPTaskQueueImp_callback__I_3BI"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/apollo/apollovoice/httpclient/URLRequest;",
@@ -2492,6 +2829,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2503,7 +2843,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_appendNativeLog__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2514,7 +2855,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_appendWholeNativeLog__Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2525,7 +2867,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_getNativeKeyValueList__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2536,7 +2879,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_getNativeLog__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2547,7 +2891,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_putNativeKeyValue__Ljava_lang_String_2Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2558,7 +2903,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_regist__Ljava_lang_String_2ZI"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2569,7 +2915,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_removeNativeKeyValue__Ljava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2580,7 +2927,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_setNativeInfo__ILjava_lang_String_2"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2591,7 +2939,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_testCrash__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -2602,7 +2951,8 @@
               "long": "Java_com_tencent_bugly_crashreport_crash_jni_NativeCrashHandler_unregist__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [],
+            "status": "no-static-export-or-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -2618,6 +2968,9 @@
                 "form": "long",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2636,6 +2989,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2653,6 +3009,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2664,7 +3023,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_ChangeRole__I"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -2680,6 +3042,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2698,6 +3063,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2714,6 +3082,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2732,6 +3103,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2749,6 +3123,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2760,7 +3137,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_EnableSpeakerOn__Z"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -2776,6 +3156,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2794,6 +3177,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2810,6 +3196,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2828,6 +3217,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2844,6 +3236,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2862,6 +3257,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2879,6 +3277,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2890,7 +3291,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_IsSpeaking__"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -2906,6 +3310,9 @@
                 "form": "long",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2924,6 +3331,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2940,6 +3350,9 @@
                 "form": "long",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2958,6 +3371,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -2974,6 +3390,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -2992,6 +3411,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3008,6 +3430,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3026,6 +3451,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3042,6 +3470,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3060,6 +3491,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3076,6 +3510,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3094,6 +3531,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3111,6 +3551,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3122,7 +3565,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_SetMicVolume__I"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3138,6 +3584,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3156,6 +3605,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3172,6 +3624,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3190,6 +3645,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3201,7 +3659,10 @@
               "long": "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_SetVoiceEffects__I"
             },
             "matches": [],
-            "status": "no-static-export-dynamic-registration-possible"
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
+            "status": "no-static-export-package-related-jni-onload"
           },
           {
             "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3217,6 +3678,9 @@
                 "form": "long",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3235,6 +3699,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3251,6 +3718,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3269,6 +3739,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3285,6 +3758,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3303,6 +3779,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3319,6 +3798,9 @@
                 "form": "short",
                 "library": "lib/x86/libGCloudVoice.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
             ],
             "status": "static-export-match"
           },
@@ -3337,6 +3819,9 @@
                 "library": "lib/x86/libGCloudVoice.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libGCloudVoice.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3353,6 +3838,9 @@
                 "form": "short",
                 "library": "lib/x86/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3371,6 +3859,9 @@
                 "library": "lib/x86/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3387,6 +3878,9 @@
                 "form": "short",
                 "library": "lib/x86/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3405,6 +3899,9 @@
                 "library": "lib/x86/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3421,6 +3918,9 @@
                 "form": "short",
                 "library": "lib/x86/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3439,6 +3939,9 @@
                 "library": "lib/x86/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3455,6 +3958,9 @@
                 "form": "short",
                 "library": "lib/x86/libhidapi.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3473,6 +3979,9 @@
                 "library": "lib/x86/libhidapi.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3489,6 +3998,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3507,6 +4019,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3523,6 +4038,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3541,6 +4059,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3557,6 +4078,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3575,6 +4099,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3591,6 +4118,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3609,6 +4139,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3625,6 +4158,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3643,6 +4179,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3659,6 +4198,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3677,6 +4219,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3693,6 +4238,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3711,6 +4259,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3727,6 +4278,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3745,6 +4299,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3761,6 +4318,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3779,6 +4339,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3795,6 +4358,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3813,6 +4379,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3829,6 +4398,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3847,6 +4419,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3863,6 +4438,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3881,6 +4459,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3897,6 +4478,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3915,6 +4499,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3931,6 +4518,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3949,6 +4539,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3965,6 +4558,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -3983,6 +4579,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -3999,6 +4598,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -4017,6 +4619,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -4033,6 +4638,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -4051,6 +4659,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -4067,6 +4678,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -4085,6 +4699,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -4101,6 +4718,9 @@
                 "form": "short",
                 "library": "lib/x86/libSDL2.so"
               }
+            ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
             ],
             "status": "static-export-match"
           },
@@ -4119,6 +4739,9 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           },
           {
@@ -4136,14 +4759,17 @@
                 "library": "lib/x86/libSDL2.so"
               }
             ],
+            "packageRelatedJniOnLoadLibraries": [
+              "lib/x86/libSDL2.so"
+            ],
             "status": "static-export-match"
           }
         ],
         "counts": {
           "nativeDeclarations": 115,
           "staticExportMatched": 97,
-          "noStaticExportDynamicRegistrationPossible": 18,
-          "noStaticExportFound": 0,
+          "noStaticExportPackageRelatedJniOnLoad": 8,
+          "noStaticExportOrPackageRelatedJniOnLoad": 10,
           "packagedLibraries": 8
         }
       }
