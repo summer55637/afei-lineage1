@@ -8,7 +8,6 @@ import {
   decodeAuthorizedClientGraphicAsync,
   classifyStoneAgeGraphic,
   decodeStoneAgePngWrappedAsync,
-  decodeAuthorizedClientGraphicAsync,
 } from '../src/stoneage_rd_decoder.mjs';
 
 const u32=(b,p,v)=>{b[p]=v&255;b[p+1]=(v>>>8)&255;b[p+2]=(v>>>16)&255;b[p+3]=(v>>>24)&255};
