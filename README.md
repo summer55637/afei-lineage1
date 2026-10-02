@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：d2a34d2 — docs: correct enemy target RNG source parity
-- 更新時間：2026-10-02T16:26:04+08:00
+- 最新 commit：b51e170 — ci: add V4.36 fixed C target parity suite
+- 更新時間：2026-10-02T16:26:41+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.35
+- Regression 最高版本：V4.36
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.35 |
+| Battle Pipeline | ✅ V4.36 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
