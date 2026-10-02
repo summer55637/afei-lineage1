@@ -58,7 +58,140 @@
     "recordSize": 80,
     "idBase": "nextMaxAdrnID = MaxAdrnID before each shard",
     "bitmapNumberIndex": "bitmapnumbertable[attr.bmpnumber] = globalGraphicNo when attr.bmpnumber is nonzero",
-    "realFileIndex": "Realbinfp[globalGraphicNo] = shard Real FILE*"
+    "realFileIndex": "Realbinfp[globalGraphicNo] = shard Real FILE*",
+    "fieldAccessors": {
+      "source": "Target x86 libStoneage.so realGet* accessors; fields below are offsets within one decoded 80-byte ADRNBIN record.",
+      "recordSizeBytes": 80,
+      "fields": [
+        {
+          "offset": "0x0c",
+          "sizeBytes": 4,
+          "storedType": "u32",
+          "accessor": "realGetPos",
+          "outputType": "i16",
+          "output": "first position output",
+          "confirmedOperation": "read u32 at record+0x0c and truncate to low 16 bits"
+        },
+        {
+          "offset": "0x10",
+          "sizeBytes": 4,
+          "storedType": "u32",
+          "accessor": "realGetPos",
+          "outputType": "i16",
+          "output": "second position output",
+          "confirmedOperation": "read u32 at record+0x10 and truncate to low 16 bits"
+        },
+        {
+          "offset": "0x14",
+          "sizeBytes": 4,
+          "storedType": "u32",
+          "accessor": "realGetWH",
+          "outputType": "i16",
+          "output": "first dimension output",
+          "confirmedOperation": "read u32 at record+0x14 and truncate to low 16 bits"
+        },
+        {
+          "offset": "0x18",
+          "sizeBytes": 4,
+          "storedType": "u32",
+          "accessor": "realGetWH",
+          "outputType": "i16",
+          "output": "second dimension output",
+          "confirmedOperation": "read u32 at record+0x18 and truncate to low 16 bits"
+        },
+        {
+          "offset": "0x1c",
+          "sizeBytes": 1,
+          "storedType": "u8",
+          "accessor": "realGetHitPoints",
+          "outputType": "u16",
+          "output": "first occupancy/hit extent output",
+          "confirmedOperation": "zero-extend byte to 16-bit output"
+        },
+        {
+          "offset": "0x1d",
+          "sizeBytes": 1,
+          "storedType": "u8",
+          "accessor": "realGetHitPoints",
+          "outputType": "u16",
+          "output": "second occupancy/hit extent output",
+          "confirmedOperation": "zero-extend byte to 16-bit output"
+        },
+        {
+          "offset": "0x1e",
+          "sizeBytes": 2,
+          "storedType": "u16",
+          "accessor": "realGetHitFlag / realGetPrioType",
+          "confirmedOperation": "ordinary IDs: low two decimal digits (value%100) are returned as hit flag; integer quotient (value/100) is returned as priority. realGetHitFlag has explicit ID exceptions listed below."
+        },
+        {
+          "offset": "0x20",
+          "sizeBytes": 2,
+          "storedType": "u16",
+          "accessor": "realGetHeightFlag",
+          "confirmedOperation": "read 16-bit value directly"
+        },
+        {
+          "offset": "0x40",
+          "sizeBytes": 2,
+          "storedType": "i16",
+          "accessor": "realGetSoundEffect",
+          "confirmedOperation": "returned as signed 16-bit sound/effect value after image-ID -> graphic-number lookup"
+        },
+        {
+          "offset": "0x42",
+          "sizeBytes": 2,
+          "storedType": "i16",
+          "accessor": "realGetWalkSoundEffect",
+          "confirmedOperation": "tested for nonzero; accessor returns boolean rather than the stored sound value"
+        }
+      ],
+      "hitFlagExceptions": {
+        "output": 1,
+        "imageIdRangesInclusive": [
+          [
+            369641,
+            369654
+          ],
+          [
+            369715,
+            369847
+          ]
+        ],
+        "imageIdExact": [
+          369941
+        ],
+        "note": "Exceptions are explicit image-ID branches in realGetHitFlag and do not establish the associated asset's visual meaning."
+      },
+      "accessorBounds": {
+        "realGetPos": "graphicNo < 600000; otherwise writes 0,0 and returns false",
+        "realGetWH": "graphicNo < 600000; otherwise writes 0,0 and returns false",
+        "realGetHitPoints": "graphicNo < 600000; otherwise writes 0,0 and returns false",
+        "realGetHitFlag": "graphicNo < 600000; otherwise writes 0 and returns false",
+        "realGetPrioType": "graphicNo < 600000; otherwise writes 0 and returns false",
+        "realGetHeightFlag": "graphicNo < 600000; otherwise writes 0 and returns false",
+        "realGetSoundEffect": "imageId < 100000; otherwise returns 0",
+        "realGetWalkSoundEffect": "graphicNo < 600000; otherwise returns false",
+        "realGetNo": "imageId < 100000; otherwise writes 0 and returns false"
+      },
+      "incompleteByteRanges": [
+        {
+          "start": "0x00",
+          "endExclusive": "0x0c",
+          "status": "not assigned by the inspected getters; other loader/render accesses may use these bytes"
+        },
+        {
+          "start": "0x22",
+          "endExclusive": "0x40",
+          "status": "not mapped by the inspected getters"
+        },
+        {
+          "start": "0x44",
+          "endExclusive": "0x50",
+          "status": "not mapped by the inspected getters"
+        }
+      ]
+    }
   },
   "spr": {
     "function": "InitSprBinFileOpen",
