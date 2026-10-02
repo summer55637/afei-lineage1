@@ -14,4 +14,7 @@ const blocked=jaja.variants.find(x=>x.portalId==='3000_to_200_b');
 assert.deepEqual(blocked.unusableLandingPoints,[[587,318]]);
 assert.match(j.policy.productBoundary,/Battle strategy/);
 assert.match(j.policy.productBoundary,/offline accrual/);
+assert.equal(j.policy.battleStrategy?.mode,'basic_attack_only');
+assert.equal(j.policy.battleStrategy?.targetPolicy,'source-default-random');
+assert.equal(j.summary.basicBattleStrategyAvailable,true);
 console.log(JSON.stringify({pass:true,format:j.format,eligibleRouteVariants:j.summary.eligibleRouteVariants,sourceBlockedTowns:j.summary.sourceBlockedTowns}));
