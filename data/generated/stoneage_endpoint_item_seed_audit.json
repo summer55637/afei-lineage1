@@ -63,6 +63,7 @@
     "machine": "Advanced Micro Devices X86-64",
     "strippedHint": false,
     "interestingSymbols": [
+      "   232: 00000000009ed960     8 OBJECT  GLOBAL DEFAULT   25 ITEM_tbl",
       "   427: 00000000005848fb   397 FUNC    GLOBAL DEFAULT   13 ITEM_makeItem",
       "   857: 0000000000584a88   103 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemAndRegist",
       "  1237: 00000000005837bc  4078 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemStatusString",
@@ -72,6 +73,7 @@
       "   704: 00000000009ed970     4 OBJECT  LOCAL  DEFAULT   25 ITEM_tblen",
       "  2250: 00000000005848fb   397 FUNC    GLOBAL DEFAULT   13 ITEM_makeItem",
       "  2480: 00000000005847aa   162 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseString",
+      "  2638: 00000000009ed960     8 OBJECT  GLOBAL DEFAULT   25 ITEM_tbl",
       "  2669: 00000000005837bc  4078 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemStatusString",
       "  3070: 000000000058484c   175 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseStringWithNum",
       "  3805: 0000000000582b33  2765 FUNC    GLOBAL DEFAULT   13 ITEM_readItemConfFile",
@@ -158,17 +160,94 @@
         "  5830fa:\t3c 23                \tcmp    al,0x23"
       ]
     ],
-    "constant17Evidence": [],
+    "constant17Evidence": [
+      "  582c03:\tba 11 00 00 00       \tmov    edx,0x11",
+      "  582c1e:\t48 8b 05 13 48 39 00 \tmov    rax,QWORD PTR [rip+0x394813]        # 917438 <stderr@GLIBC_2.2.5>"
+    ],
+    "idScanWindow": [
+      "  582bda:\te8 81 80 eb ff       \tcall   43ac60 <dchop>",
+      "  582bdf:\t48 8d 95 60 fb ff ff \tlea    rdx,[rbp-0x4a0]",
+      "  582be6:\t48 8d 85 a0 fb ff ff \tlea    rax,[rbp-0x460]",
+      "  582bed:\tc7 04 24 95 04 00 00 \tmov    DWORD PTR [rsp],0x495",
+      "  582bf4:\t41 b9 15 82 67 00    \tmov    r9d,0x678215",
+      "  582bfa:\t41 b8 40 00 00 00    \tmov    r8d,0x40",
+      "  582c00:\t48 89 d1             \tmov    rcx,rdx",
+      "  582c03:\tba 11 00 00 00       \tmov    edx,0x11",
+      "  582c08:\tbe cd 83 67 00       \tmov    esi,0x6783cd",
+      "  582c0d:\t48 89 c7             \tmov    rdi,rax",
+      "  582c10:\te8 e3 96 eb ff       \tcall   43c2f8 <getStringFromIndexWithDelim_body>",
+      "  582c15:\t89 45 c4             \tmov    DWORD PTR [rbp-0x3c],eax",
+      "  582c18:\t83 7d c4 00          \tcmp    DWORD PTR [rbp-0x3c],0x0",
+      "  582c1c:\t75 35                \tjne    582c53 <ITEM_readItemConfFile+0x120>",
+      "  582c1e:\t48 8b 05 13 48 39 00 \tmov    rax,QWORD PTR [rip+0x394813]        # 917438 <stderr@GLIBC_2.2.5>",
+      "  582c25:\t8b 4d ec             \tmov    ecx,DWORD PTR [rbp-0x14]",
+      "  582c28:\t48 8b 95 d8 ee ff ff \tmov    rdx,QWORD PTR [rbp-0x1128]",
+      "  582c2f:\t41 89 c9             \tmov    r9d,ecx",
+      "  582c32:\t49 89 d0             \tmov    r8,rdx",
+      "  582c35:\tb9 99 04 00 00       \tmov    ecx,0x499",
+      "  582c3a:\tba 15 82 67 00       \tmov    edx,0x678215",
+      "  582c3f:\tbe 20 84 67 00       \tmov    esi,0x678420",
+      "  582c44:\t48 89 c7             \tmov    rdi,rax",
+      "  582c47:\tb8 00 00 00 00       \tmov    eax,0x0",
+      "  582c4c:\te8 cf 13 eb ff       \tcall   434020 <fprintf@plt>",
+      "  582c51:\teb 24                \tjmp    582c77 <ITEM_readItemConfFile+0x144>",
+      "  582c53:\t48 8d 85 60 fb ff ff \tlea    rax,[rbp-0x4a0]",
+      "  582c5a:\t48 89 c7             \tmov    rdi,rax",
+      "  582c5d:\te8 0e 15 eb ff       \tcall   434170 <atoi@plt>",
+      "  582c62:\t89 45 dc             \tmov    DWORD PTR [rbp-0x24],eax",
+      "  582c65:\t8b 45 dc             \tmov    eax,DWORD PTR [rbp-0x24]",
+      "  582c68:\t3b 45 e0             \tcmp    eax,DWORD PTR [rbp-0x20]",
+      "  582c6b:\t7e 06                \tjle    582c73 <ITEM_readItemConfFile+0x140>",
+      "  582c6d:\t8b 45 dc             \tmov    eax,DWORD PTR [rbp-0x24]",
+      "  582c70:\t89 45 e0             \tmov    DWORD PTR [rbp-0x20],eax",
+      "  582c73:\t83 45 e8 01          \tadd    DWORD PTR [rbp-0x18],0x1",
+      "  582c77:\t48 8b 55 c8          \tmov    rdx,QWORD PTR [rbp-0x38]",
+      "  582c7b:\t48 8d 85 a0 fb ff ff \tlea    rax,[rbp-0x460]",
+      "  582c82:\tbe 00 04 00 00       \tmov    esi,0x400",
+      "  582c87:\t48 89 c7             \tmov    rdi,rax",
+      "  582c8a:\te8 01 15 eb ff       \tcall   434190 <fgets@plt>",
+      "  582c8f:\t48 85 c0             \ttest   rax,rax",
+      "  582c92:\t0f 85 0f ff ff ff    \tjne    582ba7 <ITEM_readItemConfFile+0x74>",
+      "  582c98:\t83 7d e0 00          \tcmp    DWORD PTR [rbp-0x20],0x0",
+      "  582c9c:\t7f 34                \tjg     582cd2 <ITEM_readItemConfFile+0x19f>",
+      "  582c9e:\t48 8b 05 93 47 39 00 \tmov    rax,QWORD PTR [rip+0x394793]        # 917438 <stderr@GLIBC_2.2.5>",
+      "  582ca5:\t48 89 c1             \tmov    rcx,rax",
+      "  582ca8:\tba 0b 00 00 00       \tmov    edx,0xb",
+      "  582cad:\tbe 01 00 00 00       \tmov    esi,0x1",
+      "  582cb2:\tbf 3f 84 67 00       \tmov    edi,0x67843f",
+      "  582cb7:\te8 14 17 eb ff       \tcall   4343d0 <fwrite@plt>",
+      "  582cbc:\t48 8b 45 c8          \tmov    rax,QWORD PTR [rbp-0x38]",
+      "  582cc0:\t48 89 c7             \tmov    rdi,rax",
+      "  582cc3:\te8 c8 10 eb ff       \tcall   433d90 <fclose@plt>",
+      "  582cc8:\tb8 00 00 00 00       \tmov    eax,0x0",
+      "  582ccd:\te9 24 09 00 00       \tjmp    5835f6 <ITEM_readItemConfFile+0xac3>",
+      "  582cd2:\t48 8b 45 c8          \tmov    rax,QWORD PTR [rbp-0x38]",
+      "  582cd6:\tba 00 00 00 00       \tmov    edx,0x0",
+      "  582cdb:\tbe 00 00 00 00       \tmov    esi,0x0",
+      "  582ce0:\t48 89 c7             \tmov    rdi,rax"
+    ],
+    "idScanAtoiCalls": [
+      "  582c5d:\te8 0e 15 eb ff       \tcall   434170 <atoi@plt>"
+    ],
     "itemTblenReferences": [
       "  582d48:\t89 05 22 ac 46 00    \tmov    DWORD PTR [rip+0x46ac22],eax        # 9ed970 <ITEM_tblen>",
       "  582d75:\t8b 05 f5 ab 46 00    \tmov    eax,DWORD PTR [rip+0x46abf5]        # 9ed970 <ITEM_tblen>",
       "  582dd1:\t8b 05 99 ab 46 00    \tmov    eax,DWORD PTR [rip+0x46ab99]        # 9ed970 <ITEM_tblen>",
       "  582e85:\t8b 05 e5 aa 46 00    \tmov    eax,DWORD PTR [rip+0x46aae5]        # 9ed970 <ITEM_tblen>"
     ],
+    "makeItemDisassembly": {
+      "transformCalls": [],
+      "itemTableReferences": [
+        "  58493e:\t48 8b 0d 1b 90 46 00 \tmov    rcx,QWORD PTR [rip+0x46901b]        # 9ed960 <ITEM_tbl>",
+        "  58499a:\t48 8b 0d bf 8f 46 00 \tmov    rcx,QWORD PTR [rip+0x468fbf]        # 9ed960 <ITEM_tbl>",
+        "  584a10:\t48 8b 0d 49 8f 46 00 \tmov    rcx,QWORD PTR [rip+0x468f49]        # 9ed960 <ITEM_tbl>"
+      ]
+    },
     "interpretation": {
-      "purpose": "Observe compiled endpoint loader call arguments without assuming fixed-C source semantics.",
-      "token17IsProven": false,
-      "caution": "A constant 17 near a parser call is evidence only; final ID semantics still require correlating the exact callsite and parsed assignment."
+      "purpose": "Observe compiled endpoint loader and make-item lookup behavior without assuming fixed-C source semantics.",
+      "token17IsProven": true,
+      "directMakeItemTransformObserved": false,
+      "caution": "Compiled binary evidence is correlated with symbols and callsites; absence of a transform symbol is evidence against that implementation, not proof that every possible mapping mechanism is absent."
     }
   },
   "exactTokenMatches": {
