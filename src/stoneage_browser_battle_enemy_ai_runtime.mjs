@@ -195,10 +195,10 @@ function chargeAttackProfile(actor,skillSlot,skillId){
   if(!profile||int(profile.skillId)!==skillId||profile.functionName!=='PETSKILL_ChargeAttack')
     return {ok:false,reason:'enemy-ai-petskill-profile-required',skillSlot,skillId};
   const option=String(profile.option??'');
-  const match=option.match(/^\\s*([+-]?\\d+)/);
+  const match=option.match(/^\s*([+-]?\d+)/);
   let rounds=match?int(match[1]):1;
   if(rounds==null||rounds<1||rounds>10)rounds=1;
-  const attackMatch=option.match(/攻%\\s*([+-]?\\d+)/);
+  const attackMatch=option.match(/攻%\s*([+-]?\d+)/);
   const attackPercent=attackMatch?int(attackMatch[1]):0;
   if(attackPercent==null||attackPercent<0||attackPercent>65535)
     return {ok:false,reason:'enemy-ai-charge-attack-option-invalid',skillSlot,skillId,option};
