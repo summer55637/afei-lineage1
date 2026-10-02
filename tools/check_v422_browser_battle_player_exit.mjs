@@ -30,7 +30,7 @@ const denied=planBattlePlayerExit(context,state,{settlementComplete:false});
 assert.equal(denied.ok,false);
 assert.equal(denied.reason,'settlement-complete-flag-required');
 
-const plan=planBattlePlayerExit(context,state,{settlementComplete:true});
+const plan=planBattlePlayerExit(context,state,{settlementComplete:true,settlementReceiptId:'settle-1'});
 assert.equal(plan.ok,true,JSON.stringify(plan));
 assert.equal(plan.action,ACTION_BATTLE_PLAYER_EXIT_PLAN);
 assert.equal(plan.format,BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT);
@@ -47,12 +47,12 @@ const livePlan=planBattlePlayerExit({
   sourceMode:3,
   settlementStartRevision:2,
   sides:[{side:0,entries:[{bid:0,sourceType:'player',characterId:'p1',hp:33,maxHp:100,mp:9,maxMp:20,isDie:false}]}]
-},state,{settlementComplete:true});
+},state,{settlementComplete:true,settlementReceiptId:'settle-1'});
 assert.equal(livePlan.ok,true,JSON.stringify(livePlan));
 assert.equal(livePlan.player.hpAfter,33);
 assert.equal(livePlan.player.mpAfter,9);
 
-const inconsistent=planBattlePlayerExit({mode:'finish',sourceMode:3,sides:[{side:0,entries:[{bid:0,sourceType:'player',characterId:'p1',hp:0,maxHp:100,mp:9,maxMp:20,isDie:false}]}]},state,{settlementComplete:true});
+const inconsistent=planBattlePlayerExit({mode:'finish',sourceMode:3,sides:[{side:0,entries:[{bid:0,sourceType:'player',characterId:'p1',hp:0,maxHp:100,mp:9,maxMp:20,isDie:false}]}]},state,{settlementComplete:true,settlementReceiptId:'settle-1'});
 assert.equal(inconsistent.ok,true,JSON.stringify(inconsistent));
 assert.equal(inconsistent.player.hpAfter,0);
 assert.equal(inconsistent.player.battleIsDie,false);
