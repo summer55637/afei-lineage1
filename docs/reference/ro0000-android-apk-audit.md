@@ -50,7 +50,7 @@ A separate `UpdateAppNewVersion()` function obtains version/platform/channel inf
 
 ### Current evidence status
 
-This closes the main question of whether the target APK has a real external update/resource mechanism: **yes, verified**. What remains unresolved is the exact patch-list file content, the precise `stPatchNode` member mapping, per-file MD5 admission rules, the full patch sequencing/state machine, and the actual external resource bytes served by that update layer.
+The client-side update/resource mechanism is now documented through its verified patch-list parser, `stPatchNode` field mapping, platform/`common` selector, local MD5 equality gate, six-slot `patch_%d.zip` download/extraction loop, ZIP removal, and failure transition in `ro0000-android-apk-patch-parser-audit.md`. The actual update-list and patch payload bytes remain unavailable, so end-to-end content validation is still open.
 
 The embedded host/address is intentionally omitted from this public audit; the technical path and request parameter semantics are retained.
 
@@ -247,6 +247,20 @@ For `frameCnt == 0`, the target sets the stored per-frame animation duration to 
 
 The target compares the derived slot against 40,000 before continuing. Because the table allocation is 40,000 entries, the inclusive boundary deserves a separate runtime/input validation; this static audit does not claim malformed `sprNo=140000` input is safe. The function also contains target-specific post-load correction branches, so historical public-source fixups must not be copied into the target contract unless independently confirmed against this ELF.
 
+
+### Target sprite post-load fixups
+
+The target x86 and ARMv7 `InitSprBinFileOpen()` implementations contain four explicit post-load correction selectors, based on `spriteSlot = sprNo - 100000`. The branch set and mutations agree across both ABIs:
+
+| Sprite number | Slot | Target mutation |
+|---:|---:|---|
+| 100260 | 260 (0x104) | Animation index 21, frame 5: set `SoundNo = 10001 (0x2711)`. |
+| 100373 | 373 (0x175) | For animation indices `7*i`, `i=0..7`, set frame 8 and 10 `SoundNo=254 (0x00fe)`, and frame 15 `SoundNo=250 (0x00fa)`. |
+| 100382 | 382 (0x17e) | For animation indices `7*i`, `i=0..7`, rebuild each action as a 14-frame sequence. The new list is `calloc(14,12)`; its `BmpNo` values are 14 consecutive IDs starting at the prior first frame ID + 1. Its `dtAnim` is copied from `SpriteData[381].animation[0]`, and the `SoundNo` cues at frame indices 4 and 9 are copied from that template animation. |
+| 100820 | 820 (0x334) | For animation indices `7*i+5`, `i=0..7`, clear `SoundNo` on every frame. |
+
+The file stores 10-byte frame payloads, while the loaded runtime frame list uses a 12-byte stride. The fixup offsets and pointer arithmetic confirm the runtime stride. These selectors close the four explicit special-case branches in this loader; they do not establish the intended artistic/audio purpose of each correction, nor do they rule out mutations in other functions. The machine-readable details are in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
 ## Android Manifest, DEX, and signing
 
 The expanded binary AndroidManifest parser now records the launcher component, application metadata, declared permissions, service declarations, and GL ES feature requirement, not just package/version/SDK fields. The target manifest declares `RenderActivity` as MAIN/LAUNCHER, `StoneageApplication` as the Application class, an exported `DownloadService`, and a required OpenGL ES 2.0 feature. It also requests storage, network, Bluetooth, phone-state, overlay, audio, vibration, logging, and package-install permissions. These declarations are not proof that every permission is granted or used successfully at runtime.
@@ -306,8 +320,8 @@ The APK archive/Manifest, DEX structure, Java wrapper flow, signature verificati
 - The real-world publisher identity behind the embedded certificate fingerprint. Signature verification fails on all tested profiles because of a v1 entry digest mismatch; the APK is intentionally not re-signed.
 - Runtime behavior of launcher/startup, updater scheduling, the three extra exported JNI callbacks, and device-specific permission/install handling.
 - The actual `battleNNN.sabex`, `s/adrn.bin`, `s/real.bin`, `s/spr.bin`, `s/spradrn.bin`, and `path/map4/real.bin` payload bytes, including record instances and resulting real pixels.
-- Remaining field-level semantics across all 80 bytes of ADRNBIN, and the exhaustive list/effect of target-specific sprite post-load fixups.
-- The contents, digest admission rules, and full sequencing of the external resource patch list. The native binary proves a resource-update path exists, but the original patch payloads are not present for end-to-end validation.
+- Remaining field-level semantics across all 80 bytes of ADRNBIN. The four explicit `InitSprBinFileOpen` post-load fixup branches are now enumerated, but their final visual/audio effects need real assets or runtime comparison.
+- The actual update-list contents, patch ZIP payloads, and per-file metadata values for this installation. Parser field mapping, platform admission, local MD5 comparison, and the six-slot download/extraction path are documented separately; missing payloads prevent end-to-end reproduction.
 - A live Android runtime trace and a frame/pixel comparison against the original SDL renderer, including character/NPC z-order and camera behavior.
 
 Do not use this APK audit alone to rewrite server maps or the Fixed-C LS2MAP contract. Keep Android resource semantics separate until actual resource bytes and runtime evidence establish a mapping.
