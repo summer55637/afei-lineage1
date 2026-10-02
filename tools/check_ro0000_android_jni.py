@@ -43,22 +43,26 @@ class JniDeclarationExportTests(unittest.TestCase):
         declarations = [
             {"class": "Lorg/libsdl/app/SDLActivity;", "name": "nativePause", "signature": "nativePause()V"},
             {"class": "Lcom/example/Voice;", "name": "Init", "signature": "Init()I"},
-            {"class": "Lcom/example/Absent;", "name": "missing", "signature": "missing()V"},
+            {"class": "Lcom/example/Voice;", "name": "missingVoiceMethod", "signature": "missingVoiceMethod()V"},
+            {"class": "Lcom/tencent/bugly/NativeCrashHandler;", "name": "nativeLog", "signature": "nativeLog()V"},
         ]
         libraries = {
             "x86": [
                 {"path": "lib/x86/libSDL2.so", "jniExports": [
                     "Java_org_libsdl_app_SDLActivity_nativePause"
-                ], "jniOnLoadExported": False},
-                {"path": "lib/x86/libvoice.so", "jniExports": [], "jniOnLoadExported": True},
+                ], "jniOnLoadExported": True},
+                {"path": "lib/x86/libvoice.so", "jniExports": [
+                    "Java_com_example_Voice_Init"
+                ], "jniOnLoadExported": True},
             ]
         }
         result = compare_all_declarations(declarations, libraries)
         records = result["byAbi"]["x86"]["declarations"]
         self.assertEqual(records[0]["status"], "static-export-match")
-        self.assertEqual(records[1]["status"], "no-static-export-dynamic-registration-possible")
-        self.assertEqual(records[2]["status"], "no-static-export-dynamic-registration-possible")
-        self.assertEqual(result["parity"]["staticExportMatchedInEveryAbi"], 1)
+        self.assertEqual(records[1]["status"], "static-export-match")
+        self.assertEqual(records[2]["status"], "no-static-export-package-related-jni-onload")
+        self.assertEqual(records[3]["status"], "no-static-export-or-package-related-jni-onload")
+        self.assertEqual(result["parity"]["staticExportMatchedInEveryAbi"], 2)
 
     def test_classifies_mismatch_without_assigning_cause(self):
         declared = [{"name": "callbackFoo"}, {"name": "callbackMissing"}]
