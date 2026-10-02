@@ -1,7 +1,7 @@
 {
   "format": "stoneage-ro0000-hecheng-loader-audit-v1",
   "checkedDate": "2026-10-02",
-  "ro0000TreeSha": "4d9b9d244a4a299e3839bed2bd39d7368b579976",
+  "ro0000TreeSha": "cee2cd3662eeba53bc2b540618c2861cf51dc82b",
   "fixedSource": {
     "repository": "gavinlinasd/StoneAge",
     "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",

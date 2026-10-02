@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：d7487bd — audit: include Android APK archive entry inventory
-- 更新時間：2026-10-02T14:00:25+08:00
+- 最新 commit：e129f24 — docs: preserve audited Android APK client evidence baseline
+- 更新時間：2026-10-02T14:02:10+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -18,6 +18,7 @@
 |---|---|
 | 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |
 | Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
+| Android Client | ✅ APK 1.0（ZIP / Manifest 已稽核；遊戲地圖語義待解） |
 | 判定 | Endpoint 決定「實際部署有什麼」；Fixed-C 驗證「引擎怎麼運作」；variant 不互相覆蓋 |
 | 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
 | 重開案 | 目前沒有 |
