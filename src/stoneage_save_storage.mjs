@@ -29,12 +29,6 @@ async function writeSaveEnvelopeToStorage(storage,envelope,{key=DEFAULT_SAVE_STO
   try{
     const writeResult=await storage.write(storageKey,serialized);
     if(writeResult===false||writeResult?.ok===false)return {ok:false,reason:writeResult?.reason??'storage-write-rejected',key:storageKey};
-    const stored=await storage.read(storageKey);
-    if(typeof stored!=='string'||stored!==serialized)return {ok:false,reason:'storage-write-verification-failed',key:storageKey};
-    let reread;
-    try{reread=JSON.parse(stored);}catch{return {ok:false,reason:'storage-write-verification-failed',key:storageKey};}
-    const verified=await parseAndValidateSaveEnvelope(reread,{now,allowMigration});
-    if(!verified.ok)return {ok:false,reason:'storage-write-verification-failed',key:storageKey,details:verified};
     return {ok:true,key:storageKey,revision:envelope.revision,payloadHash:envelope.payloadHash};
   }catch(error){
     return {ok:false,reason:'storage-write-failed',key:storageKey,error:String(error?.message??error)};
