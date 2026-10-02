@@ -572,3 +572,10 @@ The target recheck found one previous Web contract mismatch: the old project dec
 `src/stoneage_rd_decoder.mjs` has now been corrected to mirror this target branching. `tools/check_v317_rd_decoder.mjs` now covers raw, RLE, zlib `0x20`, RD magic, and `gG` classification.
 
 The actual target `real.bin` payload is still unavailable, so this closes the decoder **contract**, not a concrete target image.
+
+
+## Expanded native map/resource evidence coverage
+
+The focused CI evidence now retains the target's map-cache lifecycle (initMap, createMap, setMap, writeMap, readMap), collision and edge-prefetch routines (readHitMap, checkHitMap, checkEmptyMap, checkEmptyMapData, _checkEmptyMap), movement/route helpers, automap/effect helpers, and resource cleanup/loader entry points. Their disassembly is published as supporting evidence; names and instruction excerpts alone are not treated as complete runtime semantics.
+
+The audit gate also compares the focused native function-name sets between the packaged armeabi-v7a and x86 libraries and requires the core map/resource function set to be present in both. This is a symbol-coverage and cross-ABI inventory check, not proof of instruction-level equivalence or successful runtime behavior.
