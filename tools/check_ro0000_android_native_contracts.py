@@ -3,6 +3,7 @@
 import argparse
 import json
 import re
+import unittest
 from pathlib import Path
 
 
@@ -82,6 +83,76 @@ def validate_contracts(native, contracts):
                     actual = ", ".join(s.get("value", "?") for s in matches)
                     errors.append(f"{contract_name}:{path}: {abi} address mismatch for {function}: expected {expected_address}, found {actual}")
     return errors
+
+
+class NativeContractTests(unittest.TestCase):
+    def test_function_matching_accepts_demangled_and_jni_names(self):
+        self.assertTrue(function_matches(
+            {"name": "_Z8GameMainv", "demangled": "GameMain()"}, "GameMain"
+        ))
+        self.assertTrue(function_matches(
+            {"name": "SDL_main", "demangled": "SDL_main"}, "SDL_main"
+        ))
+        self.assertTrue(function_matches(
+            {
+                "name": "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
+                "demangled": "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
+            },
+            "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
+        ))
+        self.assertTrue(function_matches(
+            {"name": "_Z15setMapMovePoint2ii", "demangled": "setMapMovePoint2(int, int)"},
+            "setMapMovePoint2(int,int)",
+        ))
+
+    def test_contract_address_and_build_identity_are_checked(self):
+        native = {
+            "auditedApk": {"sha256": "apk-hash"},
+            "nativeLibraries": [
+                {
+                    "abi": "x86", "sha256": "x86-hash", "buildId": "x86-build",
+                    "focusedSymbols": [{"type": "FUNC", "name": "_Z8GameMainv",
+                                        "demangled": "GameMain()", "value": "0x1000"}],
+                },
+                {
+                    "abi": "armeabi-v7a", "sha256": "arm-hash", "buildId": "arm-build",
+                    "focusedSymbols": [{"type": "FUNC", "name": "_Z8GameMainv",
+                                        "demangled": "GameMain()", "value": "0x2001"}],
+                },
+            ],
+        }
+        contract = {
+            "source": {
+                "x86": {"sha256": "x86-hash", "buildId": "x86-build"},
+                "armeabiV7a": {"sha256": "arm-hash", "buildId": "arm-build"},
+            },
+            "loop": {"function": "GameMain", "address": {"x86": "0x1000", "armeabiV7a": "0x2001"}},
+        }
+        self.assertEqual(validate_contracts(native, [("fixture", contract)]), [])
+
+        contract["loop"]["address"]["x86"] = "0x1001"
+        errors = validate_contracts(native, [("fixture", contract)])
+        self.assertTrue(any("address mismatch" in error for error in errors))
+
+    def test_contract_build_identity_mismatch_is_rejected(self):
+        native = {
+            "auditedApk": {"sha256": "apk-hash"},
+            "nativeLibraries": [
+                {"abi": "x86", "sha256": "wrong", "buildId": "wrong",
+                 "focusedSymbols": []},
+                {"abi": "armeabi-v7a", "sha256": "arm-hash", "buildId": "arm-build",
+                 "focusedSymbols": []},
+            ],
+        }
+        contract = {
+            "source": {
+                "x86": {"sha256": "x86-hash", "buildId": "x86-build"},
+                "armeabiV7a": {"sha256": "arm-hash", "buildId": "arm-build"},
+            }
+        }
+        errors = validate_contracts(native, [("fixture", contract)])
+        self.assertTrue(any("SHA-256 does not match" in error for error in errors))
+        self.assertTrue(any("build ID does not match" in error for error in errors))
 
 
 def main():
