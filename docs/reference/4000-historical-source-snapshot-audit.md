@@ -49,6 +49,32 @@ RO0000 4000 與 fixed-C 4000 的 map payload：
 
 4000 出生 component 48 與 4000→200 portal component 0 仍由這三格連續不可走 tile 分隔。
 
+## 獨立外部副本交叉驗證
+
+另外找到 GitHub 公開倉庫 `Lee-hajin/sking-sasrv` 的 4000 map：
+
+`pack/gmsv/data/map/jyaruga/karutana/karutana`
+
+該檔案也是 **90044 bytes、`LS2MAP`、150×150**。
+
+把該副本完整解碼後與 fixed-C 4000 逐 cell 比較：
+
+- tile layer 有 1,064 cells 不同
+- object layer 有 25 cells 不同
+- 但 blocker 的關鍵座標完全一致：
+  - (91,109) = tile 409 / object 27
+  - (92,109) = tile 196 / object 27
+  - (93,109) = tile 307 / object 0
+  - (94,109) = tile 156 / object 0
+- 該副本自己的 mapset 也把 409 / 196 / 307 定義為不可走，因此同樣形成出生區與出口區的分離。
+
+用該副本自身的 map + mapset 做 4-neighbor walkability audit，仍得到：
+
+- 63 個 walkable components
+- 出生 `(80,90)` / `(80,91)` 在 component 46，大小 476
+- 出口 `(104,55)` / `(104,56)` / `(101,96)` / `(101,97)` 在 component 0，大小 12512
+
+**這不是 2016 SourceForge 歷史原檔本身，不能直接取代歷史快照；但它提供了一個獨立公開副本，證明這三格的 409→196→307 blocker 並不是只出現在 RO0000/fixed-C 單一副本。**
 ## Repair Experiment
 
 V3.63 的虛擬 overlay 已證實：
