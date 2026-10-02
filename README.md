@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：d46805b — test: retain V4.26 replay coverage before V4.27 damage death chain
-- 更新時間：2026-10-02T15:32:29+08:00
+- 最新 commit：6889128 — feat: carry source enemy AI and drop tables into battle context
+- 更新時間：2026-10-02T15:47:51+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.27
 - Playable HTML：⏸️ 尚未建立（刻意保留）
