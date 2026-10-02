@@ -52,7 +52,7 @@ assert.equal(dexMin.commands[0].targetBid,0,'DEX_MIN compares source target DEX'
 const subdue=run({selectMode:7},[1]);
 assert.equal(subdue.ok,true,JSON.stringify(subdue));
 assert.equal(subdue.commands[0].targetBid,1,'Earth-attuned actor selects the target with highest Water attribute: '+JSON.stringify(subdue));
-assert.equal(subdue.commands[0].elementKey,'water');
+assert.equal(subdue.commands[0].targetElementKey,'water');
 
 const subdueTie=run({selectMode:7,targets:[
   {bid:0,sourceType:'player',hp:10,sourceAiTargetStats:{str:1,dex:1},sourceAiElements:{earth:1,water:8,fire:1,wind:1}},
