@@ -8,17 +8,5 @@
     "requiresSourceClosureBeforeRuntime": true,
     "requiresRegressionBeforePlayable": true
   },
-  "features": {
-    "world-blockers": {
-      "status": "reopened-for-endpoint-reaudit",
-      "runtimeEnabled": false,
-      "playable": false,
-      "scope": "3000→200 landing、Starter Item 24114 / endpoint ITEM1",
-      "reason": "endpoint corpus 已新增 Warp、Item seed 證據；既有 fixed-C blocker 經重新核對後保留仍未閉合的項目。",
-      "nextEvidence": [
-        "endpoint Warp landing reachability",
-        "endpoint Item loader and ITEM1=32003 semantics"
-      ]
-    }
-  }
+  "features": {}
 }
