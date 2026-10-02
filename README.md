@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8e49d62 — [docs] record endpoint Item loader evidence
-- 更新時間：2026-10-02T08:03:22+08:00
+- 最新 commit：5b03c88 — [audit] inspect endpoint Item loader token index
+- 更新時間：2026-10-02T08:03:41+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -38,8 +38,8 @@
 
 - route-4000-to-200：reopened-for-reaudit → endpoint LS2MAP walkability + connected components + actual portal-origin reachability
 - route-3000-to-200-landing-587-318：reopened-for-reaudit → verify endpoint destination-map walkability at (587,318) and compare exact landing rows
-- starter-item-24114-fixed-c：reopened-for-reaudit → close endpoint Item loader / row semantics before choosing canonical starter item
-- starter-item-endpoint-32003：active → inspect endpoint loader / transforms and exact Item row identity
+- starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
+- starter-item-endpoint-32003：active → disassemble endpoint gmsvjt ITEM_readItemConfFile and close actual ID token / mapping semantics before choosing canonical starter item
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
 
 ## 重要文件
