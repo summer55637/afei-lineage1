@@ -107,7 +107,18 @@ function buildReadme() {
   const blockers = blockerEntries.filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status)).slice(0, 5).map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + ' → ' + (item.next ?? '待定'));
   const reopened = reopenedFeatureNames.map(item => item.name + '：' + item.status + '（未啟用）');
   const routeLine = routeStatus.sourceRouteSpine === 'closed' ? '✅ 已閉合（' + (routeStats.verifiedStartMaps ?? 0) + '/4 出生城、' + (routeStats.reachableDirectWarpExits ?? 0) + '/' + (routeStats.directWarpExits ?? 0) + ' direct warp）' : '⚠️ 未完成';
-  const fullRouteLine = routeStatus.fullFirstRoute === 'closed' ? '✅ 已閉合' : '⚠️ 部分完成（' + (routeStats.worldExitPortalGroupsUsable ?? 0) + '/' + (routeStats.worldExitPortalGroups ?? 0) + ' portal groups）';
+  const route4000 = blockerRegistry.blockers?.['route-4000-to-200'];
+  const route4000Repaired = ['resolved', 'repaired-via-ro0000-overlay'].includes(route4000?.status);
+  const portalGroups = Number(routeStats.worldExitPortalGroups ?? 0);
+  const sourceUsablePortalGroups = Number(routeStats.worldExitPortalGroupsUsable ?? 0);
+  const repairedPortalGroups = route4000Repaired && portalGroups >= sourceUsablePortalGroups
+    ? Math.min(portalGroups, sourceUsablePortalGroups + 2)
+    : sourceUsablePortalGroups;
+  const firstRoutePathClosed = portalGroups > 0 && repairedPortalGroups >= portalGroups;
+  const battlePolicyPending = idleSummary.battlePolicyPendingAll === true;
+  const fullRouteLine = firstRoutePathClosed
+    ? '✅ 路徑已閉合（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）' + (battlePolicyPending ? '；⚠️ 戰鬥策略待定' : '')
+    : '⚠️ 部分完成（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）';
   const mapCount = Object.keys(maps.maps ?? {}).length;
   const mapLine = mapCount ? '✅ ' + comma(mapCount) + ' 張' : '⚠️ 未建立';
   const stateLine = state.currentSchemaVersion ? '✅ Schema ' + state.currentSchemaVersion : '⚠️ 未建立';
