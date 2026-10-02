@@ -1,0 +1,60 @@
+{
+  "format": "ro0000-android-rd-decoder-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333",
+    "decoderAddress": "0x2f5410",
+    "decoderPngAddress": "0x2f5310"
+  },
+  "header": {
+    "sizeBytes": 16,
+    "magic": {
+      "RD": "0x4452",
+      "gG": "0x4767"
+    },
+    "fields": {
+      "0x00": "magic:u16le",
+      "0x02": "compressionFlag:u8",
+      "0x03": "reserved:u8",
+      "0x04": "width:u32le",
+      "0x08": "height:u32le",
+      "0x0c": "size:u32le",
+      "0x10": "payload"
+    }
+  },
+  "branches": {
+    "raw": {
+      "flag": 0,
+      "bytesPerPixel": 1,
+      "output": "width*height"
+    },
+    "zlibRgba": {
+      "flag": 32,
+      "bytesPerPixel": 4,
+      "output": "width*height*4",
+      "decoder": "zlib uncompress"
+    },
+    "customRle": {
+      "flag": "any nonzero flag other than 0x20",
+      "bytesPerPixel": 1
+    },
+    "png": {
+      "magic": "0x4767",
+      "decoder": "decoderPng",
+      "output": "width*height*4"
+    }
+  },
+  "customRle": {
+    "repeatBit": "0x80",
+    "zeroValueBit": "0x40",
+    "extendedRepeat3ByteCountBit": "0x20",
+    "extendedCount2ByteBit": "0x10",
+    "countGuardExclusive": "0xfffff"
+  },
+  "boundary": {
+    "targetRealBinPayloadAvailable": false,
+    "targetGraphicMagicPayloadSamples": false,
+    "gGBrowserDecoderImplemented": false
+  }
+}
