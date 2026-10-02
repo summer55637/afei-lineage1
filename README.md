@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ac65eb6 — [docs] confirm Android map cache read and write paths
-- 更新時間：2026-10-02T18:44:37+08:00
+- 最新 commit：5b1d8f6 — [docs] record map cache protocol and rendering call sites
+- 更新時間：2026-10-02T18:45:29+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
