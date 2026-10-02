@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：852d9b8 — docs: record V4.36 enemy target parity milestone
-- 更新時間：2026-10-02T16:26:58+08:00
+- 最新 commit：c876bda — test: fix missing-element assertion formatting
+- 更新時間：2026-10-02T16:27:32+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.36
 - Playable HTML：⏸️ 尚未建立（刻意保留）
