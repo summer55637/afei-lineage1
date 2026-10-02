@@ -13,7 +13,7 @@
   },
   "policy": {
     "routeEligible": "Direct hometown -> destination landing -> next-floor portal -> unconditional encounter target must have source-backed path evidence.",
-    "productBoundary": "basic attack strategy v1 is available; complete battle-result execution and supply/capture/death/offline/rotation policies remain separate boundaries",
+    "productBoundary": "Battle strategy v1 basic attack is available; complete battle-result execution and supply/capture/death recovery/offline accrual/route rotation policies remain separate boundaries",
     "blockedRoutes": "A source-level floor edge without coordinate-level path proof is not an eligible idle route.",
     "battleStrategy": {
       "version": 1,
