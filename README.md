@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：229316e — feat: bind player elements into battle context
-- 更新時間：2026-10-02T16:25:17+08:00
+- 最新 commit：d2a34d2 — docs: correct enemy target RNG source parity
+- 更新時間：2026-10-02T16:26:04+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.35
 - Playable HTML：⏸️ 尚未建立（刻意保留）
