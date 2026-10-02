@@ -127,7 +127,7 @@ def relevant_symbol_names(names):
         "adrn", "realbin", "realget", "hitmap", "loadsprbin", "downloadresource",
         "battlemapfile", "maxadrnid", "mapwmflag", "mapwidth", "mapheight",
         "maparea", "mapconfig", "mapempty", "automap", "drawmap", "mapwarp",
-        "mapbgm", "mapeffect", "mapmove", "getmap", "setmap", "initmap", "shiftmap",
+        "mapbgm", "mapeffect", "mapmove", "getmap", "setmap", "initmap", "shiftmap", "loadmap",
     )
     return sorted(name for name in names
                   if name in IO_API_HINTS or any(marker in name.lower() for marker in markers))
