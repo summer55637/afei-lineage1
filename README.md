@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3d1d30b — [docs] fix README generator and expose battle-map audit
-- 更新時間：2026-10-02T21:10:15+08:00
+- 最新 commit：cf26833 — [docs] close upstream BattleMapNo selector rule
+- 更新時間：2026-10-02T21:11:28+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
