@@ -61,7 +61,7 @@ function probeServerBinary() {
   const elfHeader = commandText('readelf', ['-h', SERVER_BIN]).trim();
   const symbolTable = commandText('readelf', ['-Ws', SERVER_BIN]);
   const interestingSymbols = symbolTable.split(/\r?\n/)
-    .filter(line => /(ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList|ITEM_getSIndexFromTransList|ITEM_tbl)/.test(line))
+    .filter(line => /(ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList|ITEM_getSIndexFromTransList|ITEM_tbl|CHAR_loginAddItemForNew|getNewplayergiveitem|getNewplayergivegold)/.test(line))
     .slice(0, 100);
 
   const strings = commandText('strings', ['-a', SERVER_BIN]);
@@ -127,6 +127,16 @@ function probeItemLoaderDisassembly() {
   const makeLines = makeDisassembly.split(/\r?\n/);
   const makeTransformCalls = makeLines.filter(line => /ITEM_getSIndexFromTransList/.test(line)).slice(0, 40);
   const makeItemTableRefs = makeLines.filter(line => /ITEM_tbl/.test(line)).slice(0, 60);
+  const grantDisassembly = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--disassemble=CHAR_loginAddItemForNew', SERVER_BIN
+  ]);
+  const grantLines = grantDisassembly.split(/\r?\n/);
+  const grantItemCalls = grantLines.filter(line => /ITEM_makeItemAndRegist|getNewplayergiveitem/.test(line)).slice(0, 80);
+
+  const getterDisassembly = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--disassemble=getNewplayergiveitem', SERVER_BIN
+  ]);
+  const getterLines = getterDisassembly.split(/\r?\n/);
 
   return {
     available: true,
@@ -141,10 +151,16 @@ function probeItemLoaderDisassembly() {
       transformCalls: makeTransformCalls,
       itemTableReferences: makeItemTableRefs
     },
+    newPlayerGrant: {
+      grantItemCalls,
+      getterWindow: getterLines.slice(0, 100)
+    },
     interpretation: {
       purpose: 'Observe compiled endpoint loader and make-item lookup behavior without assuming fixed-C source semantics.',
       token17IsProven: constantEvidence.length > 0,
       directMakeItemTransformObserved: makeTransformCalls.length > 0,
+      newPlayerGrantChainObserved: grantItemCalls.some(line => /ITEM_makeItemAndRegist/.test(line)),
+      newPlayerItemGetterObserved: getterLines.some(line => /getNewplayergiveitem/.test(line)),
       caution: 'Compiled binary evidence is correlated with symbols and callsites; absence of a transform symbol is evidence against that implementation, not proof that every possible mapping mechanism is absent.'
     }
   };
