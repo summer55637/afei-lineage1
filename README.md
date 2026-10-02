@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：e816b09 — ci: verify 4000 open-road experiment
-- 更新時間：2026-10-02T10:07:58+08:00
+- 最新 commit：59020c1 — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-02T02:08:11Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
