@@ -1,6 +1,6 @@
 {
   "format": "stoneage-blocker-registry-v1",
-  "updated": "2026-10-01",
+  "updated": "2026-10-02",
   "policy": {
     "statusValues": [
       "active",
@@ -40,18 +40,22 @@
       "newEvidence": [
         "endpoint setup.cf uses a different ITEM1=32003",
         "endpoint uses itemset6.csv",
-        "endpoint item audit finds 24114 once but no exact 32003"
+        "endpoint item audit finds 24114 once but no exact 32003",
+        "deployed endpoint gmsvjt exposes Item loader symbols and no observed ITEM_TransformList symbol"
       ],
-      "next": "close endpoint Item loader / row semantics before choosing canonical starter item"
+      "next": "keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed"
     },
     "starter-item-endpoint-32003": {
       "status": "active",
       "scope": "new-player seed / endpoint",
       "previousEvidence": "endpoint setup.cf ITEM1=32003",
       "newEvidence": [
-        "selected endpoint itemset6.csv contains zero exact 32003 tokens"
+        "selected endpoint itemset6.csv contains zero exact 32003 tokens and zero raw substring occurrences",
+        "selected endpoint itemset6.csv contains one 24114 occurrence at token 18, adjacent token 17=11817",
+        "deployed gmsvjt is ELF64 x86-64, not stripped, with debug_info and symbols ITEM_readItemConfFile / ITEM_makeItem / ITEM_makeItemAndRegist / ITEM_tblen",
+        "deployed gmsvjt symbol table currently has no ITEM_TransformList"
       ],
-      "next": "inspect endpoint loader / transforms and exact Item row identity"
+      "next": "disassemble endpoint gmsvjt ITEM_readItemConfFile and close actual ID token / mapping semantics before choosing canonical starter item"
     },
     "persistent-state-expansion": {
       "status": "active",
