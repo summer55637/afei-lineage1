@@ -113,6 +113,29 @@ The following are offsets in the decoded record, not offsets in the APK or an in
 
 These findings establish part of the decoded record layout and the accessor behavior. They do not establish the meaning of unobserved bytes or prove that the decoded record itself is a map tile.
 
+### Additional accessor closure: verified ADRNBIN fields
+
+Target x86 accessors map the following fields in the decoded 80-byte record. The position/dimension accessors read 32-bit values but expose their low 16 bits through `short*`; the two hit-extent fields are bytes and are zero-extended.
+
+| Record offset | Stored type | Target accessor | Verified operation |
+|---:|---|---|---|
+| 0x0C | u32 | `realGetPos` | first position output, truncated to i16 |
+| 0x10 | u32 | `realGetPos` | second position output, truncated to i16 |
+| 0x14 | u32 | `realGetWH` | first dimension output, truncated to i16 |
+| 0x18 | u32 | `realGetWH` | second dimension output, truncated to i16 |
+| 0x1C | u8 | `realGetHitPoints` | first occupancy/hit-extent output, zero-extended |
+| 0x1D | u8 | `realGetHitPoints` | second occupancy/hit-extent output, zero-extended |
+| 0x1E | u16 | `realGetHitFlag`, `realGetPrioType` | ordinary IDs: `value % 100` is the hit-flag result; `value / 100` is the priority result |
+| 0x20 | u16 | `realGetHeightFlag` | direct 16-bit read |
+| 0x40 | i16 | `realGetSoundEffect` | signed sound/effect value, after image-ID to graphic-number lookup |
+| 0x42 | i16 | `realGetWalkSoundEffect` | tested as nonzero; accessor returns a boolean, not the stored number |
+
+`realGetHitFlag` forces its output to 1 for image IDs 369641–369654, 369715–369847, and 369941. These are target-specific numeric exceptions; the binary alone does not establish what each image depicts.
+
+These accessor bounds are also explicit: the graphic-number accessors reject IDs at or above 600,000, while image-number lookups reject IDs at or above 100,000. Rejected output-pointer accessors write zero values and return false; the sound accessors return zero/false on their respective rejected paths.
+
+This closes the listed accessor-visible fields, **not the complete 80-byte record**. Bytes 0x00–0x0B, 0x22–0x3F, and 0x44–0x4F remain unassigned by this getter set; other loader/render call sites may still use them. The complete machine-readable field/accessor summary is in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
 ### Cross-check against published legacy format notes
 
 Third-party legacy-format notes independently describe 80-byte StoneAge Adrn records with 32-bit fields at offsets 0, 4, 8, 12, 16, 20 and 24, followed by east/south occupancy bytes at 28/29, a map-related flag at 30, an unknown region, and a map number near the end. The Android accessors' X/Y and width/height offsets match that description. This makes an Adrn-index interpretation of the decoded records plausible, but the notes are not authoritative for this APK.
@@ -320,7 +343,7 @@ The APK archive/Manifest, DEX structure, Java wrapper flow, signature verificati
 - The real-world publisher identity behind the embedded certificate fingerprint. Signature verification fails on all tested profiles because of a v1 entry digest mismatch; the APK is intentionally not re-signed.
 - Runtime behavior of launcher/startup, updater scheduling, the three extra exported JNI callbacks, and device-specific permission/install handling.
 - The actual `battleNNN.sabex`, `s/adrn.bin`, `s/real.bin`, `s/spr.bin`, `s/spradrn.bin`, and `path/map4/real.bin` payload bytes, including record instances and resulting real pixels.
-- Remaining field-level semantics across all 80 bytes of ADRNBIN. The four explicit `InitSprBinFileOpen` post-load fixup branches are now enumerated, but their final visual/audio effects need real assets or runtime comparison.
+- ADRNBIN accessor-visible fields at 0x0C–0x20 and 0x40–0x42 are documented; bytes 0x00–0x0B, 0x22–0x3F and 0x44–0x4F are not mapped by the inspected getter set. The four explicit `InitSprBinFileOpen` post-load fixup branches are enumerated, but their final visual/audio effects need real assets or runtime comparison.
 - The actual update-list contents, patch ZIP payloads, and per-file metadata values for this installation. Parser field mapping, platform admission, local MD5 comparison, and the six-slot download/extraction path are documented separately; missing payloads prevent end-to-end reproduction.
 - A live Android runtime trace and a frame/pixel comparison against the original SDL renderer, including character/NPC z-order and camera behavior.
 
