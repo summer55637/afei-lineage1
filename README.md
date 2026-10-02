@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ebcf8eb — feat: add basic idle battle strategy runtime
-- 更新時間：2026-10-02T12:28:34+08:00
+- 最新 commit：96e2c2a — feat: wire idle battle strategy into controller
+- 更新時間：2026-10-02T12:29:00+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
