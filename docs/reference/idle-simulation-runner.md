@@ -8,6 +8,8 @@
 
 Runner 只負責產品層 orchestration：route variant 提供已驗證的 path duration，encounter 只提供入口，battle result 必須由外部 runtime 注入。
 
+基礎放置戰鬥策略 v1 已可透過 `BATTLE_IDLE_STRATEGY_APPLY` 對 active Battle Context 下達普通攻擊命令；目標選取使用注入的 source RNG roll，狀態阻擋／無目標則使用 wait，寵物沿用 Fixed-C 預設攻擊。這一步只完成命令策略，不計算完整 battle result；Runner 的外部 battle-result 邊界仍然存在。
+
 Runner 不計算 damage、不決定 encounter RNG、不生成 reward、不重抽 carried loot。
 
 ## 一次 simulation
