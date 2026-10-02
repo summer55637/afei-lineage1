@@ -14,6 +14,13 @@ const BATTLE_COM_S_EARTHROUND0=1009;
 const BATTLE_COM_S_EARTHROUND1=1010;
 const BATTLE_ENEMY_AI_CHARGE_COMMANDS=Object.freeze([BATTLE_COM_S_CHARGE,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1]);
 const BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES=Object.freeze(['paralysis','stone','sleep','barrier']);
+const BATTLE_AI_TARGET_TYPE_LEADER=4;
+const BATTLE_AI_SELECT_HP_MAX=2;
+const BATTLE_AI_SELECT_HP_MIN=3;
+const BATTLE_AI_SELECT_STR_MAX=4;
+const BATTLE_AI_SELECT_DEX_MAX=5;
+const BATTLE_AI_SELECT_DEX_MIN=6;
+const BATTLE_AI_SELECT_ATT_SUBDUE=7;
 const BSIDE_FLG_SURPRISE=1;
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -71,45 +78,109 @@ function selectAction(w,roll){
   }
   return {ok:false,reason:'enemy-ai-action-selection-unresolved',roll,total:w.total};
 }
-function candidatesForTarget(context,opposingSide,targetType){
+function candidatesForTarget(context,opposingSide,targetType,targetRolls,targetCursor){
   const side=context.context.sides.find(x=>int(x?.side)===opposingSide);
   const entries=Array.isArray(side?.entries)?side.entries:[];
-  if(![0,1,2,3].includes(targetType))return {ok:false,reason:'enemy-ai-target-type-not-supported',targetType};
-  const candidates=[];
-  for(let slot=0;slot<entries.length;slot++){
-    const entry=entries[slot];if(!entry||entry.isDie===true)continue;
-    if(int(entry.sourceBattleCharMode)===BATTLE_CHARMODE_RESCUE)continue;
-    const sourceType=String(entry.sourceType??'').toLowerCase();
-    if(targetType===2&&sourceType!=='player')continue;
-    if(targetType===3&&sourceType!=='pet')continue;
-    candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:sourceType||null,hp:int(entry.hp)});
-  }
-  if(candidates.length===0&&(targetType===2||targetType===3)){
-    for(let slot=0;slot<entries.length;slot++){
-      const entry=entries[slot];if(!entry||entry.isDie===true)continue;
-      if(int(entry.sourceBattleCharMode)===BATTLE_CHARMODE_RESCUE)continue;
+  let candidates=[];
+  let cursor=targetCursor;
+  const filterRolls=[];
+  const valid=entry=>entry&&entry.isDie!==true&&int(entry.sourceBattleCharMode)!==BATTLE_CHARMODE_RESCUE;
+  const allCandidates=()=>entries.map((entry,slot)=>({entry,slot})).filter(x=>valid(x.entry)).map(({entry,slot})=>({
+    bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:String(entry.sourceType??'').toLowerCase()||null,
+    hp:int(entry.hp),entry
+  }));
+  if(targetType===2||targetType===3){
+    candidates=entries.map((entry,slot)=>({entry,slot})).filter(({entry})=>{
+      if(!valid(entry))return false;
       const sourceType=String(entry.sourceType??'').toLowerCase();
-      candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:sourceType||null,hp:int(entry.hp)});
+      return targetType===2?sourceType==='player':sourceType==='pet';
+    }).map(({entry,slot})=>({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:String(entry.sourceType??'').toLowerCase()||null,hp:int(entry.hp),entry}));
+  }else if(targetType===BATTLE_AI_TARGET_TYPE_LEADER){
+    for(let slot=0;slot<entries.length;slot++){
+      const entry=entries[slot];if(!valid(entry))continue;
+      const isLeader=int(entry.sourcePartyMode??entry.partyMode)===1;
+      if(isLeader){
+        candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:String(entry.sourceType??'').toLowerCase()||null,hp:int(entry.hp),entry});
+      }else{
+        const selected=nextRoll(targetRolls,cursor,0,2,'enemy-ai-leader-filter');
+        if(!selected.ok)return {...selected,cursor,filterRolls,reason:'enemy-ai-leader-filter-rng-required-or-out-of-range'};
+        cursor=selected.cursor;filterRolls.push({slot,roll:selected.roll});
+        if(selected.roll===0)candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:String(entry.sourceType??'').toLowerCase()||null,hp:int(entry.hp),entry});
+      }
     }
-    return {ok:true,candidates,fallbackToAll:true};
+  }else{
+    // Fixed-C's switch default treats target type 0 and unknown values as ALL.
+    candidates=allCandidates();
   }
-  return {ok:true,candidates,fallbackToAll:false};
+  let fallbackToAll=false;
+  if(candidates.length===0&&(targetType===2||targetType===3||targetType===BATTLE_AI_TARGET_TYPE_LEADER)){
+    candidates=allCandidates();
+    fallbackToAll=true;
+  }
+  return {ok:true,candidates,cursor,filterRolls,fallbackToAll};
 }
-function selectTargetCandidate(candidates,selectMode,targetRolls,targetCursor){
+function numericTargetValue(entry,key){
+  const raw=entry?.sourceAiTargetStats?.[key]??entry?.aiTargetStats?.[key]??entry?.stats?.[key]??entry?.sourceCoreStats?.stats?.[key]??entry?.coreStats?.stats?.[key];
+  if(raw==null||String(raw).trim()==='')return null;
+  const value=Number(raw);return Number.isFinite(value)?value:null;
+}
+function elementalTargetValue(entry,key){
+  const raw=entry?.sourceAiElements?.[key]??entry?.aiElements?.[key]??entry?.elements?.[key]??entry?.sourceCoreStats?.sourceTemplate?.element?.[key]??entry?.coreStats?.sourceTemplate?.element?.[key];
+  if(raw==null||String(raw).trim()==='')return null;
+  const value=Number(raw);return Number.isFinite(value)?value:null;
+}
+function subdueTargetElement(actor){
+  const e=elementalTargetValue(actor,'earth');
+  const w=elementalTargetValue(actor,'water');
+  const f=elementalTargetValue(actor,'fire');
+  const a=elementalTargetValue(actor,'wind');
+  if([e,w,f,a].some(v=>v==null))return {ok:false,reason:'enemy-ai-subdue-actor-elements-required'};
+  // Exact fixed-C GetSubdueAttribute() comparison tree; result is the element to compare on targets.
+  const element=((e>f)?((w>a)?((e>w)?2:3):((e>a)?2:1)):((w>a)?((f>w)?4:3):((f>a)?4:1)));
+  return {ok:true,element,key:({1:'earth',2:'water',3:'fire',4:'wind'})[element]};
+}
+function chooseByValue(candidates,selector,actor){
+  const values=[];
+  let elementKey=null;
+  if(selector===BATTLE_AI_SELECT_ATT_SUBDUE){
+    const subdue=subdueTargetElement(actor);if(!subdue.ok)return subdue;
+    elementKey=subdue.key;
+  }
+  for(const candidate of candidates){
+    let value;
+    if(selector===BATTLE_AI_SELECT_HP_MAX||selector===BATTLE_AI_SELECT_HP_MIN)value=candidate.hp;
+    else if(selector===BATTLE_AI_SELECT_STR_MAX)value=numericTargetValue(candidate.entry,'str');
+    else if(selector===BATTLE_AI_SELECT_DEX_MAX||selector===BATTLE_AI_SELECT_DEX_MIN)value=numericTargetValue(candidate.entry,'dex');
+    else value=elementalTargetValue(candidate.entry,elementKey);
+    if(value==null)return {ok:false,reason:selector===BATTLE_AI_SELECT_HP_MAX||selector===BATTLE_AI_SELECT_HP_MIN?'enemy-ai-target-hp-required':selector===BATTLE_AI_SELECT_ATT_SUBDUE?'enemy-ai-target-elements-required':'enemy-ai-target-stats-required',slot:candidate.slot,selector};
+    values.push(value);
+  }
+  let selectedIndex=0;
+  for(let i=1;i<values.length;i++){
+    const maximize=selector===BATTLE_AI_SELECT_HP_MAX||selector===BATTLE_AI_SELECT_STR_MAX||selector===BATTLE_AI_SELECT_DEX_MAX;
+    if((maximize&&values[i]>values[selectedIndex])||(!maximize&&values[i]<values[selectedIndex]))selectedIndex=i;
+  }
+  return {ok:true,candidate:candidates[selectedIndex],selectedIndex,selectedValue:values[selectedIndex],elementKey};
+}
+function selectTargetCandidate(candidates,selectMode,ai,actor,targetRolls,targetCursor){
   if(selectMode===1){
     const selected=nextRoll(targetRolls,targetCursor,0,candidates.length-1,'enemy-ai-target');
     if(!selected.ok)return selected;
-    return {ok:true,candidate:candidates[selected.roll],targetRoll:selected.roll,cursor:selected.cursor};
+    return {ok:true,candidate:candidates[selected.roll],targetRoll:selected.roll,targetSelectorRoll:null,cursor:selected.cursor,selection:'random'};
   }
-  if(selectMode===2||selectMode===3){
-    let chosen=candidates[0];
-    if(chosen?.hp==null)return {ok:false,reason:'enemy-ai-target-hp-required',slot:chosen?.slot};
-    for(let i=1;i<candidates.length;i++){
-      const candidate=candidates[i];
-      if(candidate?.hp==null)return {ok:false,reason:'enemy-ai-target-hp-required',slot:candidate?.slot};
-      if((selectMode===2&&candidate.hp>chosen.hp)||(selectMode===3&&candidate.hp<chosen.hp))chosen=candidate;
+  if(selectMode>=BATTLE_AI_SELECT_HP_MAX&&selectMode<=BATTLE_AI_SELECT_ATT_SUBDUE){
+    const top=chooseByValue(candidates,selectMode,actor);
+    if(!top.ok)return top;
+    const rn=int(ai?.targetRollRange??1);
+    if(rn==null||rn<0)return {ok:false,reason:'enemy-ai-target-roll-range-invalid',targetRollRange:ai?.targetRollRange};
+    const selectorRoll=nextRoll(targetRolls,targetCursor,0,rn,'enemy-ai-target-selector');
+    if(!selectorRoll.ok)return selectorRoll;
+    if(selectorRoll.roll===0){
+      const random=nextRoll(targetRolls,selectorRoll.cursor,0,candidates.length-1,'enemy-ai-target');
+      if(!random.ok)return {...random,targetSelectorRoll:selectorRoll.roll};
+      return {ok:true,candidate:candidates[random.roll],targetRoll:random.roll,targetSelectorRoll:selectorRoll.roll,cursor:random.cursor,selection:'random-override',selectedValue:top.selectedValue,elementKey:top.elementKey};
     }
-    return {ok:true,candidate:chosen,targetRoll:null,cursor:targetCursor};
+    return {ok:true,candidate:top.candidate,targetRoll:null,targetSelectorRoll:selectorRoll.roll,cursor:selectorRoll.cursor,selection:'top',selectedValue:top.selectedValue,elementKey:top.elementKey};
   }
   return {ok:false,reason:'enemy-ai-target-select-mode-not-supported',selectMode};
 }
@@ -157,10 +228,11 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
       if(!chosen.ok)return {...chosen,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),actionRoll:actionResult.roll};
       let targetBid=-1,targetRoll=null;
       if(chosen.action==='attack'){
-        const targetSelection=candidatesForTarget(context,1-sideNo,int(ai.targetType));
+        const targetSelection=candidatesForTarget(context,1-sideNo,int(ai.targetType),targetRolls,targetCursor);
         if(!targetSelection.ok)return {...targetSelection,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid)};
+        targetCursor=targetSelection.cursor;
         if(targetSelection.candidates.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-valid-targets',actorBid:int(actor.bid),targetType:int(ai.targetType)};
-        const selected=selectTargetCandidate(targetSelection.candidates,int(ai.selectMode),targetRolls,targetCursor);
+        const selected=selectTargetCandidate(targetSelection.candidates,int(ai.selectMode),ai,actor,targetRolls,targetCursor);
         if(!selected.ok)return {...selected,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),candidateCount:targetSelection.candidates.length};
         targetCursor=selected.cursor;targetRoll=selected.targetRoll;targetBid=selected.candidate.bid;
       }
@@ -207,4 +279,4 @@ function applyEnemyAiCommands(context,options={}){
 function createBrowserBattleEnemyAiRuntime(){
   return {ok:true,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,plan:planEnemyAiCommands,commit:commitEnemyAiCommands,apply:applyEnemyAiCommands};
 }
-export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_COM_S_CHARGE,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1,BATTLE_ENEMY_AI_CHARGE_COMMANDS,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
+export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_COM_S_CHARGE,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1,BATTLE_ENEMY_AI_CHARGE_COMMANDS,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,BATTLE_AI_TARGET_TYPE_LEADER,BATTLE_AI_SELECT_HP_MAX,BATTLE_AI_SELECT_HP_MIN,BATTLE_AI_SELECT_STR_MAX,BATTLE_AI_SELECT_DEX_MAX,BATTLE_AI_SELECT_DEX_MIN,BATTLE_AI_SELECT_ATT_SUBDUE,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
