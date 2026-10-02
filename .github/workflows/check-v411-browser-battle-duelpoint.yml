@@ -9,8 +9,6 @@ on:
       - 'tools/check_v411_browser_battle_duelpoint.mjs'
       - 'data/generated/stoneage_browser_battle_duelpoint_schema.json'
       - 'docs/reference/v411-browser-battle-duelpoint.md'
-      - 'docs/rebuild-roadmap.md'
-      - 'tools/generate_readme.mjs'
       - '.github/workflows/check-v411-browser-battle-duelpoint.yml'
   workflow_dispatch:
 permissions:
