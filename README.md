@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8ec53fd — test: correct V4.42 fallback context assertion
-- 更新時間：2026-10-02T17:44:20+08:00
+- 最新 commit：514aa12 — [audit] fix native ELF scanner literals
+- 更新時間：2026-10-02T18:18:27+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
