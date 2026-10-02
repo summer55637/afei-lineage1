@@ -55,7 +55,7 @@ The following are offsets in the decoded record, not offsets in the APK or an in
 |---|---:|---|
 | `realGetPos` | 12, 16 | Reads two 32-bit values and writes them through two `short*` outputs |
 | `realGetWH` | 20, 24 | Reads two 32-bit values and writes them through two `short*` outputs |
-| `realGetHitPoints` | 28, 29 | Reads two bytes and writes them through `short*` outputs |
+| `realGetHitPoints` | 28, 29 | Reads two bytes and writes them through `short*` outputs; the symbol name alone does not establish these bytes as health points |
 | `realGetHitFlag` | 30 | Reads a 16-bit value and, on the ordinary path, returns its remainder after division by 100; there are special ID branches |
 | `realGetPrioType` | 30 | Reads the same 16-bit value and returns its integer quotient after division by 100 |
 | `realGetHeightFlag` | 32 | Reads a 16-bit value |
@@ -63,6 +63,18 @@ The following are offsets in the decoded record, not offsets in the APK or an in
 | `realGetWalkSoundEffect` | 66 | Reads a signed 16-bit value |
 
 These findings establish part of the decoded record layout and the accessor behavior. They do not establish the meaning of unobserved bytes or prove that the decoded record itself is a map tile.
+
+### Cross-check against published legacy format notes
+
+Third-party legacy-format notes independently describe 80-byte StoneAge Adrn records with 32-bit fields at offsets 0, 4, 8, 12, 16, 20 and 24, followed by east/south occupancy bytes at 28/29, a map-related flag at 30, an unknown region, and a map number near the end. The Android accessors' X/Y and width/height offsets match that description. This makes an Adrn-index interpretation of the decoded records plausible, but the notes are not authoritative for this APK.
+
+There is an important mismatch: the legacy note describes offset 30 as a one-byte 0/1 flag, while the Android native accessors load a 16-bit value there and expose a quotient/remainder split by 100, with special-ID handling in the hit-flag accessor. Treat this as a version or encoding discrepancy until matching raw Android resource bytes can be inspected. In particular, do not call offsets 28/29 health values based on the native function name alone; the legacy notes identify these positions as occupancy dimensions.
+
+The same legacy reference describes StoneAge map files as width/height followed by separate 16-bit ground, object, and map-flag arrays. That general map layout is not evidence that Android's `path/map4/real.bin` contains those arrays; `real.bin` is also used as an image-data resource in the documented legacy client formats.
+
+References (community reverse-engineering material; comparison only):
+- [StoneAge client BIN format analysis](https://1.shiqimod.cc/lishi/shiqi182bin.htm)
+- [pioneers-g/StoneAgeClient](https://github.com/pioneers-g/StoneAgeClient) (separate legacy `real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` resource paths)
 
 ### Hit-map runtime
 
