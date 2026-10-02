@@ -2,12 +2,12 @@
 
 「阿肥石器時代放置版」重建專案。
 
-以 RO0000 實際部署系統、舊版客戶端、Fixed-C C 原始碼等資料作為考據來源，重建石器時代核心內容與規則，最終製作成單機 PC＋手機可長時間遊玩的現代化 2D 高品質重製放置版。
+以已獲授權的 RO0000 實際部署系統、舊版客戶端及專案取得的原作資料作為可直接使用的 production source，並以 Fixed-C C 原始碼與外部已核驗資料補足語義與版本考據，重建石器時代核心內容與規則，最終製作成單機 PC＋手機可長時間遊玩的現代化 2D 高品質重製放置版。
 
 ## 目前狀態
 
-- 最新 commit：95d86dc — [docs] distinguish authorized production assets from reference-only web sources
-- 更新時間：2026-10-02T19:38:40+08:00
+- 最新 commit：8a45380 — [docs] make authorization and source-use positioning persistent in README generator
+- 更新時間：2026-10-02T11:41:18.439Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -16,9 +16,11 @@
 
 | 項目 | 現況 |
 |---|---|
+| 授權 | ✅ 專案方確認已取得石器時代手游公司完整授權；授權範圍內原作資料可直接進入 production reconstruction / product |
 | 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |
 | Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
 | Android Client | ✅ APK 1.0（native ELF、tile/parts/event 三層快取及 M 協定對應已確認；map4 Lua bundle 獨立） |
+| 資料使用定位 | 授權原作資料＝可直接採用；外部資料＝依已確認授權／使用條件採用；reference-only 不得假定可進產品 |
 | 來源角色 | RO0000＝實際部署系統與資料；Fixed-C＝可讀的 C 程式行為／語義證據；兩者共同用於考據，不互相覆蓋 |
 | 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
 | 重開案 | 目前沒有 |
