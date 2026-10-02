@@ -150,8 +150,18 @@ After loading the 33 × 33 cell array, the target rendering path uses:
 - inner loop count = 33;
 - outer loop count = 33;
 - horizontal increment = 32 pixels;
-- vertical increment = -24 pixels within each diagonal row;
-- between rows, position advances by +32 / +24.
+- inner-loop horizontal increment = +0x20 = +32 pixels;
+- inner-loop vertical increment = -0x17 = -23 pixels;
+- between outer-loop rows, position advances by +0x20 / +0x17 = +32 / +23 pixels.
+
+The target starts the position accumulator at (-450, 350). For row `r` and column `c`, its unnormalized target coordinate is therefore:
+
+```text
+x = -450 + 32 * (r + c)
+y =  350 + 23 * (r - c)
+```
+
+The Web full-map preview centers this same lattice around cell (16, 16) and fits the resulting sprite bounds to the supplied canvas; its placement step remains 32 / 23, not 32 / 24.
 
 The loaded values are ultimately passed as tile graphic numbers into `StockDispBuffer`.
 
@@ -342,3 +352,19 @@ This proves the SABEX values are not merely metadata: when they are ordinary dra
 The machine-readable closure is stored in `data/generated/stoneage_ro0000_android_battle_render_chain.json`.
 
 Actual RO0000 `.sabex`, `adrn.bin`, and `real.bin` bytes remain outside the repository, so this closes the target code path but not a concrete map's pixel output.
+
+## 13. Browser-side full battle-map preview
+
+The browser runtime now has a dedicated SABEX decoder in `src/stoneage_sabex_decoder.mjs`; it accepts `Uint8Array`, `ArrayBuffer`, and typed-array views without relying on Node's `Buffer` or importing a parser from `tools/`.
+
+`renderBattleSabexPreviewAsync()` in `src/stoneage_tile_presentation.mjs` accepts a complete target SABEX byte array and a ready authorized client asset presentation. It:
+
+- decodes the 4-byte header and 1089 big-endian uint16 cells;
+- skips IDs `<= 99` at the same target render gate used by `StockDispBuffer()`;
+- resolves each distinct drawable image ID once through ADRNBIN → Real → RD/gG → SAP/RGBA;
+- submits cells in target row-major order using the target's horizontal 32 / vertical 23 lattice;
+- auto-fits decoded graphic bounds to the supplied canvas by default;
+- returns `partial` plus unresolved image IDs when any drawable cell lacks a resolvable graphic, rather than substituting placeholder terrain.
+
+The pure `targetBattleCellPosition(row,col)` helper exposes the centered equivalent of the target's positional deltas. The integration test uses a synthetic SABEX byte array and synthetic authorized assets only; it proves decoder-to-canvas wiring, not pixel parity with unavailable production resource bytes.
+
