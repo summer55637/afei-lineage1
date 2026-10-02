@@ -1,10 +1,12 @@
+import { inflateSync } from 'node:zlib';
+
 const RD_HEADER_SIZE=16;
 const BIT_CMP=0x80;
 const BIT_ZERO=0x40;
 const BIT_REP_LARG=0x10;
 const BIT_REP_LARG2=0x20;
 
-const u32le=(b,p)=>((b[p]>>>0)|((b[p+1]>>>0)<<8)|((b[p+2]>>>16)<<16)|((b[p+3]>>>24)*0x1000000))>>>0;
+const u32le=(b,p)=>((b[p]>>>0)|((b[p+1]>>>0)<<8)|((b[p+2]>>>0)<<16)|((b[p+3]>>>0)*0x1000000))>>>0;
 function need(b,p,n,label){if(p<0||n<0||p+n>b.length)throw new Error('RD truncated at '+label);}
 
 export function parseRdHeader(input){
@@ -35,8 +37,7 @@ export function decodeStoneAgeRd(input){
     const outputBytes=checkedArea(h.width,h.height,4);
     const out=new Uint8Array(outputBytes);
     const compressed=b.slice(RD_HEADER_SIZE,h.size);
-    const zlib=requireNodeZlib();
-    const inflated=zlib.inflateSync(compressed);
+    const inflated=inflateSync(compressed);
     if(inflated.byteLength!==outputBytes)throw new Error('RD zlib decoded size mismatch: '+inflated.byteLength+' / '+outputBytes);
     out.set(inflated);
     return {width:h.width,height:h.height,compressFlag:0x20,bytesPerPixel:4,pixels:out};
@@ -68,13 +69,6 @@ export function decodeStoneAgeRd(input){
   return {width:h.width,height:h.height,compressFlag:h.compressFlag,bytesPerPixel:1,pixels:out};
 }
 
-function requireNodeZlib(){
-  try{
-    return require('node:zlib');
-  }catch{
-    throw new Error('zlib is unavailable in this runtime');
-  }
-}
 
 export function classifyStoneAgeGraphic(input){
   const b=input instanceof Uint8Array?input:new Uint8Array(input);
