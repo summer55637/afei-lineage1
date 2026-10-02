@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：382d325 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T00:17:30Z
+- 最新 commit：65b0edd — [audit] support RO0000 LS&MAP endpoint maps
+- 更新時間：2026-10-02T08:18:42+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
