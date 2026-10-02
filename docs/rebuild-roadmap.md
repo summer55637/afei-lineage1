@@ -1,3 +1,11 @@
+## 2026-10-02 V4.33 Dead Enemy AI Entry Lifecycle
+
+對齊 Fixed-C `BATTLE_ai_all()`：仍有效且處於 C_WAIT 的 Dead Enemy 不在 AI callback 前被 HP／死亡旗標預先排除，因此會依 Entry 順序參與 AI action／target RNG，並於成功後提交命令與 C_OK。死亡旗標及 HP 不變；target candidates 仍排除死者，真正的 action execution 仍需由後續階段跳過死亡 entry。
+
+Regression：`tools/check_v433_browser_battle_enemy_ai_dead_entry.mjs`；Workflow 重跑 V4.29–V4.32。
+
+---
+
 ## 2026-10-02 V4.32 Enemy AI Attack Pipeline
 
 以 source-backed encounter 65 / Group 94 建立戰鬥，讓敵方 AI 產生的普通攻擊依序進入 AttackSeqPrelude → DamagePlan → CriticalDamagePlan → DamageReactPlan → DamageDeathCommit，並驗證玩家 HP 在 transient Battle Context 內實際變化、Persistent State revision 不變。
