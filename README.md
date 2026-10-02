@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：30c591a — audit: record 4000 tile-pattern evidence
-- 更新時間：2026-10-02T10:34:21+08:00
+- 最新 commit：df965b9 — docs: sync self-description with resolved 4000 route
+- 更新時間：2026-10-02T11:41:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
