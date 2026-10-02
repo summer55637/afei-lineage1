@@ -46,7 +46,7 @@ The x86 native build now provides direct machine-code evidence that the APK has 
 
 ### Client update path
 
-A separate `UpdateAppNewVersion()` function obtains version/platform/channel information and posts to the embedded `SA25/clientupdate.php` endpoint. The complete response schema and the exact transition from this check into the APK installation path remain to be reconstructed.
+A separate `UpdateAppNewVersion()` path obtains version/platform/channel and posts to the embedded `SA25/clientupdate.php` endpoint. Its response branching, confirmation gate, APK download, basename-derived local path, and transition to Android-native installation are documented in `ro0000-android-apk-client-update-install-audit.md`. The server response schema and exact basename edge cases remain unresolved.
 
 ### Current evidence status
 
@@ -354,7 +354,7 @@ These extra exports are retained as a compatibility discrepancy. They may be unu
 The APK archive/Manifest, DEX structure, Java wrapper flow, signature verification result, and focused x86/ARM native ELF evidence are now reproducible. This remains a static audit, not a complete decompilation or runtime trace. Still unverified:
 
 - The real-world publisher identity behind the embedded certificate fingerprint. Signature verification fails on all tested profiles because of a v1 entry digest mismatch; the APK is intentionally not re-signed.
-- Runtime behavior of launcher/startup, updater scheduling, the three extra exported JNI callbacks, and device-specific permission/install handling.
+- Runtime behavior of launcher/startup and updater scheduling; invocation and side effects of the three extra exported JNI callbacks; and device-specific permission/install behavior. The static APK-install call chain is documented, but actual Android intent behavior has not been exercised on a device.
 - The actual `battleNNN.sabex`, `s/adrn.bin`, `s/real.bin`, `s/spr.bin`, `s/spradrn.bin`, and `path/map4/real.bin` payload bytes, including record instances and resulting real pixels.
 - ADRNBIN accessor-visible fields at 0x0C–0x20 and 0x40–0x42 are documented; bytes 0x00–0x0B, 0x22–0x3F and 0x44–0x4F are not mapped by the inspected getter set. The four explicit `InitSprBinFileOpen` post-load fixup branches are enumerated, but their final visual/audio effects need real assets or runtime comparison.
 - The actual update-list contents, patch ZIP payloads, and per-file metadata values for this installation. Parser field mapping, platform admission, local MD5 comparison, and the six-slot download/extraction path are documented separately; missing payloads prevent end-to-end reproduction.
