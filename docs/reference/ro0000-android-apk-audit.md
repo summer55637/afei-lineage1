@@ -258,6 +258,17 @@ The target `readHitMap` ABI is `readHitMap(x1,y1,x2,y2,tile,parts,event,hitMap)`
 
 The meaning of the output values is operational: `checkHitMap` reports a collision only for state 1 (except the explicit skywalker bypass); state 2 is retained as a different map state and is not treated as blocking by that function. See the battle-map audit's HitMap section for the documented image footprint and direct-code branches.
 
+## Target route and movement flow
+
+The target has a separate routing and coordinate-motion path. This contract is recorded in \`data/generated/stoneage_ro0000_android_map_movement_contract.json\`; addresses are build-specific.
+
+- \`getRouteMap()\` calls \`getRouteData\`, \`checkHitMap\`, and \`getDirData\`, with \`Atan\`/\`AdjustDir\` used in direction calculations. This directly connects route planning to the derived HitMap query, while leaving the server's final movement acceptance outside the client evidence.
+- \`setMapMovePoint(int,int)\` and \`_setMapMovePoint(int,int)\` store the target values, scale them by 64 in the internal floating-point coordinate frame, calculate displacement, normalize a non-zero vector, derive direction through \`Atan\`/\`AdjustDir\`, and call \`setPcDir\`, \`setPcWalkFlag\`, and \`setPcPoint\`.
+- \`_mapMove()\` and \`mapMove2()\` update floating-point position using a movement increment and clamp at the destination when the remaining displacement is reached. The active movement path sets action value 4 and the PC walk flag. The completion path uses action value 3, clears the walk flag, and records \`SDL_GetTicks()+500\`.
+- \`_partyMapMove()\` iterates action records and calls \`charMove2\` for records passing the observed \`0x100\` flag check.
+
+These findings separate three client concerns: route planning consults HitMap, map-edge prefetch requests unread data, and movement routines advance coordinates and animation/action state. They do not prove the server's walkability rules, network acceptance, or persistent coordinates. Browser movement should keep those as separate contracts rather than using cache-read state as collision state.
+
 ## Target SPRADRN / SPR record fields
 
 The target x86 `InitSprBinFileOpen()` at `0x3637e0` reads a 12-byte index record from `spradrn.bin`, subtracts 100,000 from `sprNo` to obtain the SpriteData slot, stores `animSize`, and seeks to the record's `offset` in `spr.bin`.
