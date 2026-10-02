@@ -6,9 +6,9 @@ V4.34 對齊 Fixed-C `BATTLE_ai_all()` 的後置 `BATTLE_CanMoveCheck()`：AI ca
 
 ## 行為
 
-- 阻止行動狀態：`paralysis`、`stone`、`sleep`、`dizzy`、`dragnet`、`barrier`。
+- 阻止行動狀態：`paralysis`、`stone`、`sleep`；`barrier` 僅在 `_MAGIC_BARRIER` 編譯設定啟用時阻擋（本 runtime 目前依可用來源資料將 barrier 視為啟用）。
 - AI action 與攻擊 target 的選取先於 can-move 覆寫，因此必要 action / target RNG 仍會消耗，最後命令才改成 NONE。
-- `confusion`、`nocast`、`poison`、`drunk` 不列入此後置 can-move blocker；其他狀態效果仍由各自的 StatusSeq／命令流程處理。
+- `dizzy`、`dragnet`、`confusion`、`nocast`、`poison`、`drunk` 不列入這個固定 C `BATTLE_CanMoveCheck()` 後置 blocker；其中部分狀態會由其他 player command preflight 或各自 StatusSeq 處理。
 - 狀態可以來自 canonical `battleStatus`、`status` 或 entry direct fields；優先讀取第一個有明確欄位的來源。
 - Dead Enemy Entry 仍依 V4.33 規則走 AI callback；本版只處理命令覆寫，不改動死亡狀態。
 
