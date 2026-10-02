@@ -1,5 +1,6 @@
 import {loadClientAssetPack,resolveClientTilePixels,resolveClientTilePixelsAsync} from './stoneage_client_asset_pack.mjs';
 import {parseStoneAgeSap,indexedPixelsToRgba,stoneAgePaletteSummary} from './stoneage_palette_runtime.mjs';
+import {decodeBattleSabex} from './stoneage_sabex_decoder.mjs';
 
 const SAP_BYTES=672;
 
@@ -44,9 +45,13 @@ function drawGraphic(ctx,canvas,graphic,rgba,scale,originX,originY,label){
   if(w<=0||h<=0)return false;
   const imageBytes=rgba instanceof Uint8ClampedArray?rgba:Uint8ClampedArray.from(rgba);
   const imageData=new ImageData(imageBytes,w,h);
-  const bitmap=document.createElement('canvas');
+  const bitmap=typeof OffscreenCanvas==='function'
+    ?new OffscreenCanvas(w,h)
+    :document.createElement('canvas');
   bitmap.width=w;bitmap.height=h;
-  bitmap.getContext('2d').putImageData(imageData,0,0);
+  const bitmapContext=bitmap.getContext('2d');
+  if(!bitmapContext)throw new Error('2D bitmap canvas context is unavailable');
+  bitmapContext.putImageData(imageData,0,0);
   const dx=Math.round(originX+graphic.xoffset*scale-(w*scale)/2);
   const dy=Math.round(originY+graphic.yoffset*scale-(h*scale)/2);
   ctx.drawImage(bitmap,dx,dy,w*scale,h*scale);
@@ -117,6 +122,157 @@ export async function renderSourceTileObjectPreviewAsync(ctx,presentation,{tileI
     pixelFormats:{tile:tile.bytesPerPixel===4?'rgba':'indexed',object:object?.bytesPerPixel===4?'rgba':object?'indexed':'none'},
     width:tile.width,
     height:tile.height
+  };
+}
+
+export const TARGET_BATTLE_GRID_SIZE=33;
+export const TARGET_BATTLE_HORIZONTAL_STEP=32;
+export const TARGET_BATTLE_VERTICAL_STEP=23;
+const TARGET_BATTLE_BASE_X=-450;
+const TARGET_BATTLE_BASE_Y=350;
+
+export function targetBattleCellPosition(row,col,{originX=0,originY=0,scale=1}={}){
+  const r=Number(row),c=Number(col),s=Number(scale);
+  if(!Number.isInteger(r)||r<0||r>=TARGET_BATTLE_GRID_SIZE)throw new RangeError('battle row must be 0..32');
+  if(!Number.isInteger(c)||c<0||c>=TARGET_BATTLE_GRID_SIZE)throw new RangeError('battle column must be 0..32');
+  if(!Number.isFinite(s)||s<=0)throw new RangeError('battle cell scale must be positive');
+  const centerX=TARGET_BATTLE_BASE_X+TARGET_BATTLE_HORIZONTAL_STEP*32;
+  const centerY=TARGET_BATTLE_BASE_Y;
+  const targetX=TARGET_BATTLE_BASE_X+TARGET_BATTLE_HORIZONTAL_STEP*(r+c);
+  const targetY=TARGET_BATTLE_BASE_Y+TARGET_BATTLE_VERTICAL_STEP*(r-c);
+  return {
+    x:originX+(targetX-centerX)*s,
+    y:originY+(targetY-centerY)*s,
+    targetX,
+    targetY
+  };
+}
+
+export async function renderBattleSabexPreviewAsync(ctx,presentation,sabexInput,{
+  scale=null,
+  fitToCanvas=true,
+  padding=12,
+  requireSabHeader=false,
+  showCellLabels=false
+}={}){
+  const canvas=ctx?.canvas;
+  if(!ctx||!canvas||presentation?.status!=='ready'){
+    return {status:'unavailable',reason:presentation?.reason||'presentation-not-ready'};
+  }
+
+  let decoded;
+  try{
+    decoded=decodeBattleSabex(sabexInput,{requireSabHeader});
+  }catch(error){
+    return {status:'invalid-sabex',error:String(error?.message||error)};
+  }
+
+  const imageIds=[...new Set(decoded.cells.filter(id=>id>99))];
+  const imageEntries=await Promise.all(imageIds.map(async imageId=>[
+    imageId,
+    await resolveClientTilePixelsAsync(presentation.pack,imageId)
+  ]));
+  const images=new Map(imageEntries);
+
+  const cells=[];
+  let skippedInvisibleCount=0;
+  const unresolvedImageIds=new Set();
+  for(let row=0;row<TARGET_BATTLE_GRID_SIZE;row++){
+    for(let col=0;col<TARGET_BATTLE_GRID_SIZE;col++){
+      const index=row*TARGET_BATTLE_GRID_SIZE+col;
+      const imageId=decoded.cells[index];
+      if(imageId<=99){
+        skippedInvisibleCount++;
+        continue;
+      }
+      const graphic=images.get(imageId);
+      if(graphic?.status!=='ready'){
+        unresolvedImageIds.add(imageId);
+        continue;
+      }
+      try{
+        const rgba=graphicPixelsToRgba(graphic,presentation.palette);
+        const position=targetBattleCellPosition(row,col);
+        cells.push({row,col,imageId,graphic,rgba,position});
+      }catch{
+        unresolvedImageIds.add(imageId);
+      }
+    }
+  }
+
+  clearCanvas(ctx,canvas);
+  if(!cells.length){
+    ctx.strokeStyle='rgba(212,180,95,.42)';
+    ctx.strokeRect(.5,.5,canvas.width-1,canvas.height-1);
+    return {
+      status:unresolvedImageIds.size?'unavailable':'ready',
+      reason:unresolvedImageIds.size?'no-battle-tiles-resolved':'no-drawable-battle-tiles',
+      header:decoded.header,
+      grid:decoded.grid,
+      drawnCells:0,
+      skippedInvisibleCount,
+      unresolvedCellCount:decoded.cells.filter(id=>id>99).length,
+      unresolvedImageIds:[...unresolvedImageIds].sort((a,b)=>a-b),
+      scale:0
+    };
+  }
+
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  for(const item of cells){
+    const g=item.graphic,p=item.position;
+    const left=p.x+g.xoffset-g.width/2;
+    const top=p.y+g.yoffset-g.height/2;
+    minX=Math.min(minX,left);
+    minY=Math.min(minY,top);
+    maxX=Math.max(maxX,left+g.width);
+    maxY=Math.max(maxY,top+g.height);
+  }
+  const boundsWidth=Math.max(1,maxX-minX);
+  const boundsHeight=Math.max(1,maxY-minY);
+  const safePadding=Math.max(0,Number(padding)||0);
+  const fitScale=Math.min(
+    4,
+    (canvas.width-2*safePadding)/boundsWidth,
+    (canvas.height-2*safePadding)/boundsHeight
+  );
+  const explicitScale=Number(scale);
+  const drawScale=Number.isFinite(explicitScale)&&explicitScale>0
+    ?explicitScale
+    :fitToCanvas?Math.max(.01,fitScale):1;
+  const shiftX=canvas.width/2-((minX+maxX)/2)*drawScale;
+  const shiftY=canvas.height/2-((minY+maxY)/2)*drawScale;
+
+  // Preserve target ReadBattleMap's row-major StockDispBuffer submission order.
+  for(const item of cells){
+    const x=shiftX+item.position.x*drawScale;
+    const y=shiftY+item.position.y*drawScale;
+    drawGraphic(
+      ctx,canvas,item.graphic,item.rgba,drawScale,x,y,
+      showCellLabels?'('+item.row+','+item.col+') '+item.imageId:null
+    );
+  }
+  ctx.strokeStyle='rgba(212,180,95,.42)';
+  ctx.strokeRect(.5,.5,canvas.width-1,canvas.height-1);
+
+  const drawableCellCount=decoded.cells.filter(id=>id>99).length;
+  const unresolvedCellCount=drawableCellCount-cells.length;
+  return {
+    status:unresolvedCellCount?'partial':'ready',
+    reason:unresolvedCellCount?'some-battle-tiles-unresolved':'ok',
+    header:decoded.header,
+    grid:decoded.grid,
+    drawnCells:cells.length,
+    drawableCellCount,
+    skippedInvisibleCount,
+    unresolvedCellCount,
+    unresolvedImageIds:[...unresolvedImageIds].sort((a,b)=>a-b),
+    scale:drawScale,
+    geometry:{
+      horizontalStep:TARGET_BATTLE_HORIZONTAL_STEP,
+      verticalStep:TARGET_BATTLE_VERTICAL_STEP,
+      submissionOrder:'row-major',
+      coordinateFormula:'x=32*(row+col-32); y=23*(row-col)'
+    }
   };
 }
 
