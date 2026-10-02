@@ -1,0 +1,43 @@
+name: Check V4.26 Browser Battle Damage Commit
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_damage_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_react_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v426_browser_battle_damage_commit.mjs'
+      - 'tools/check_v404_browser_battle_damage_react.mjs'
+      - '.github/workflows/check-v426-browser-battle-damage-commit.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_damage_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_react_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v426_browser_battle_damage_commit.mjs'
+      - 'tools/check_v404_browser_battle_damage_react.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run V4.04 and V4.26 regressions
+        run: |
+          node tools/check_v404_browser_battle_damage_react.mjs
+          node tools/check_v426_browser_battle_damage_commit.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_damage_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_damage_react_runtime.mjs
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v426_browser_battle_damage_commit.mjs
