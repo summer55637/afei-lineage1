@@ -579,3 +579,6 @@ The actual target `real.bin` payload is still unavailable, so this closes the de
 The focused CI evidence now retains the target's map-cache lifecycle (initMap, createMap, setMap, writeMap, readMap), collision and edge-prefetch routines (readHitMap, checkHitMap, checkEmptyMap, checkEmptyMapData, _checkEmptyMap), movement/route helpers, automap/effect helpers, and resource cleanup/loader entry points. Their disassembly is published as supporting evidence; names and instruction excerpts alone are not treated as complete runtime semantics.
 
 The audit gate also compares the focused native function-name sets between the packaged armeabi-v7a and x86 libraries and requires the core map/resource function set to be present in both. This is a symbol-coverage and cross-ABI inventory check, not proof of instruction-level equivalence or successful runtime behavior.
+
+
+The focused artifact now publishes every function selected by the native map/resource symbol filter instead of a second manually maintained name allowlist. It also includes the filtered global object symbols, and CI checks object-name parity across x86 and ARMv7. This prevents newly discovered in-scope symbols from silently disappearing from the published evidence simply because a secondary list was not updated.
