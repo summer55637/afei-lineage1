@@ -28,6 +28,34 @@ const toInt=value=>{
   const m=s.match(/^[+-]?\d+/);
   return m?Number(m[0]):null;
 };
+const parseEnemyAi=raw=>{
+  const fields={};
+  for(const part of String(raw??'').split('|')){
+    const at=part.indexOf(':');
+    if(at<0)continue;
+    fields[part.slice(0,at).trim()]=part.slice(at+1).trim();
+  }
+  const list=key=>String(fields[key]??'').split(';').filter(value=>value.trim()!=='').map(toInt);
+  const attack=list('at'),skills=list('wa');
+  const weight=value=>Math.max(0,toInt(value)??0);
+  return {
+    format:'stoneage-enemy-ai-source-v1',
+    raw:String(raw??''),
+    attackWeight:weight(attack[0]),
+    targetType:toInt(attack[1])??1,
+    selectMode:toInt(attack[2])??1,
+    guardWeight:weight(fields.gu),
+    magicWeight:weight(fields.ma),
+    escapeWeight:weight(fields.es),
+    skillWeights:Array.from({length:7},(_,i)=>weight(skills[i])),
+    targetRollRange:fields.rn==null||fields.rn===''?1:weight(fields.rn)
+  };
+};
+const parseDropTable=p=>Array.from({length:10},(_,i)=>({
+  slot:i+1,itemId:toInt(p[14+i]),probability:toInt(p[24+i])??0
+})).filter(x=>x.itemId!=null&&x.itemId>=0&&x.probability>0)
+ .map(x=>({...x,rollMin:0,rollMax:999,denominator:1000}));
+
 const groupSource=readFixed(SOURCES.group), enemySource=readFixed(SOURCES.enemy), enemyBaseSource=readFixed(SOURCES.enemyBase);
 const target=JSON.parse(fs.readFileSync(targetPath,'utf8'));
 if(target.format!=='stoneage-start-encounter-target-index-v1')fail('target index format mismatch');
@@ -63,7 +91,7 @@ for(const raw of enemySource.content.split(/\r?\n/)){
   const enemyId=toInt(p[3]);
   if(enemyId==null)continue;
   if(enemyMap.has(enemyId))fail('duplicate Enemy ID '+enemyId);
-  enemyMap.set(enemyId,{enemyId,tempNo:toInt(p[4]),levelMin:toInt(p[5]),levelMax:toInt(p[6]),createMaxNum:toInt(p[7]),createMinNum:toInt(p[8]),petFlg:toInt(p[13])});
+  enemyMap.set(enemyId,{enemyId,tempNo:toInt(p[4]),levelMin:toInt(p[5]),levelMax:toInt(p[6]),createMaxNum:toInt(p[7]),createMinNum:toInt(p[8]),petFlg:toInt(p[13]),ai:parseEnemyAi(p[1]),dropTable:parseDropTable(p)});
 }
 const referencedIds=[...new Set(Object.values(target.floors??{}).flatMap(f=>
   [...(f.unconditionalRows??[]),...(f.mixedRows??[]),...(f.conditionalItemRows??[])]
