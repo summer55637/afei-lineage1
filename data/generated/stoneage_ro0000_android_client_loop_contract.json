@@ -74,7 +74,12 @@
         "x86": "0x000edca0",
         "armeabiV7a": "0x000e4fa5"
       },
-      "evidence": "Export exists in both packaged ABI libraries; callback behavior is not inferred from its name."
+      "evidence": "Export exists in both packaged ABI libraries; callback behavior is not inferred from its name.",
+      "observed": [
+        "Checks that the global keyboard/input focus pointer is non-null",
+        "Compares an input-related field at offset 0x24 with 100; the callback path is taken only above 100",
+        "Calls CallbackInputBoxData(int, int) on the active callback path"
+      ]
     },
     "keyboardUi": [
       "keyBoardGetWndFlag",
@@ -92,7 +97,15 @@
       "CleanMouseClick",
       "CheckWndMouse"
     ],
-    "boundary": "SDL event dispatch and exported callbacks are static client evidence; device-specific touch/key event generation and overlay behavior are unverified."
+    "boundary": "SDL event dispatch and exported callbacks are static client evidence; device-specific touch/key event generation and overlay behavior are unverified.",
+    "bridge": {
+      "function": "CallbackInputBoxData(int, int)",
+      "address": {
+        "x86": "0x129d70",
+        "armeabiV7a": "0x107d2d"
+      },
+      "interpretation": "Native input-box data callback reached by the exported Android keyboard-change JNI function."
+    }
   },
   "frameLoop": {
     "function": {
