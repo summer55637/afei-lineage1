@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b7ead5a — docs: defer starter item blockers from mainline gameplay
-- 更新時間：2026-10-02T11:59:49+08:00
+- 最新 commit：71175c3 — docs: sync README with deferred starter item policy
+- 更新時間：2026-10-02T12:01:45+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -35,6 +35,7 @@
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
+
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
 
 ## 重要文件
