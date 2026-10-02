@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3c2a082 — test: fix save storage regression declaration order
-- 更新時間：2026-10-02T12:23:46+08:00
+- 最新 commit：ee05d75 — docs: record verified persistent state save lifecycle
+- 更新時間：2026-10-02T12:24:38+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -36,7 +36,7 @@
 
 ## Blocker
 
-- persistent-state-expansion：持久寫入、Controller 自動保存與 session 還原已實作；待 GitHub Actions 回歸驗證。
+- 目前沒有 active / reopened blocker。
 
 ## 重要文件
 
