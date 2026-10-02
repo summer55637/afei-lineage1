@@ -70,6 +70,8 @@ const route=await controller.dispatch({type:CONTROLLER_PROFIT_ROUTE_PLAN,dpbattl
 assert.equal(route.ok,true,JSON.stringify(route));
 assert.equal(route.route,'exp-gold');
 assert.equal(route.fixedCFunction,'BATTLE_GetExpGold');
+assert.equal(route.mutation,false);
+assert.equal(route.persistentMutation,false);
 
 console.log(JSON.stringify({
   pass:true,
