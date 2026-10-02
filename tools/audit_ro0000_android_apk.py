@@ -33,38 +33,143 @@ def parse_string_pool(data, pos, size, header_size):
     return result
 
 def parse_axml_manifest(data):
-    if len(data)<8 or u16(data,0)!=0x0003: return {'parseStatus':'not-binary-xml'}
-    strings=[]; info={}; pos=u16(data,2); limit=min(len(data),u32(data,4))
+    if len(data)<8 or u16(data,0)!=0x0003:
+        return {'parseStatus':'not-binary-xml'}
+
+    strings=[]
+    info={'permissions':[],'components':[],'features':[],'usesLibraries':[],'queries':[]}
+    application={}
+    current_component=None
+    current_filter=None
+    pos=u16(data,2)
+    limit=min(len(data),u32(data,4))
+
+    def string_at(index):
+        return strings[index] if index is not None and index!=NO_INDEX and 0<=index<len(strings) else None
+
+    def read_attrs(ext,end):
+        attr_start=u16(data,ext+8)
+        attr_size=u16(data,ext+10)
+        attr_count=u16(data,ext+12)
+        attrs={}
+        base=ext+attr_start
+        if attr_size<20 or base+attr_count*attr_size>end:
+            return attrs
+        for n in range(attr_count):
+            a=base+n*attr_size
+            key=string_at(u32(data,a+4)) or ''
+            raw=u32(data,a+8)
+            value_type=data[a+15]
+            value=u32(data,a+16)
+            if raw!=NO_INDEX and string_at(raw) is not None:
+                val=string_at(raw)
+            elif value_type==0x03 and string_at(value) is not None:
+                val=string_at(value)
+            elif value_type==0x10:
+                val=value
+            elif value_type==0x11:
+                val='0x%08x'%value
+            elif value_type==0x12:
+                val=bool(value)
+            elif value_type==0x01:
+                val='@0x%08x'%value
+            else:
+                val=value
+            attrs[key]=val
+        return attrs
+
+    def qualify(name):
+        if not name:
+            return name
+        package=info.get('package','')
+        if name.startswith('.') and package:
+            return package+name
+        if '.' not in name and package:
+            return package+'.'+name
+        return name
+
     while pos+8<=limit:
         typ,header,size=u16(data,pos),u16(data,pos+2),u32(data,pos+4)
-        if size<8 or pos+size>limit: break
+        if size<8 or pos+size>limit:
+            info['parseStatus']='malformed-binary-xml'
+            break
+
         if typ==0x0001:
             strings=parse_string_pool(data,pos,size,header)
         elif typ==0x0102 and strings and pos+header+20<=pos+size:
-            ext=pos+header; name_idx=u32(data,ext+4); tag=strings[name_idx] if name_idx<len(strings) else ''
-            attr_start=u16(data,ext+8); attr_size=u16(data,ext+10); attr_count=u16(data,ext+12)
-            attrs={}; base=ext+attr_start
-            if attr_size<20 or base+attr_count*attr_size>pos+size: pos+=size; continue
-            for n in range(attr_count):
-                a=base+n*attr_size; key_idx=u32(data,a+4); raw=u32(data,a+8)
-                key=strings[key_idx] if key_idx<len(strings) else ''
-                value_type=data[a+15]; value=u32(data,a+16)
-                if raw!=NO_INDEX and raw<len(strings): val=strings[raw]
-                elif value_type==0x03 and value<len(strings): val=strings[value]
-                elif value_type==0x10: val=value
-                elif value_type==0x11: val='0x%08x'%value
-                elif value_type==0x12: val=bool(value)
-                elif value_type==0x01: val='@0x%08x'%value
-                else: val=value
-                attrs[key]=val
+            ext=pos+header
+            tag=string_at(u32(data,ext+4)) or ''
+            attrs=read_attrs(ext,pos+size)
+
             if tag=='manifest':
-                for key in ('package','versionCode','versionCodeMajor','versionName'):
-                    if key in attrs: info[key]=attrs[key]
+                for key in ('package','versionCode','versionCodeMajor','versionName','sharedUserId','installLocation','coreApp'):
+                    if key in attrs:
+                        info[key]=attrs[key]
             elif tag=='uses-sdk':
                 for key in ('minSdkVersion','targetSdkVersion','maxSdkVersion'):
-                    if key in attrs: info[key]=attrs[key]
+                    if key in attrs:
+                        info[key]=attrs[key]
+            elif tag in ('uses-permission','uses-permission-sdk-23','uses-permission-sdk-m'):
+                info['permissions'].append({'tag':tag,**attrs})
+            elif tag=='permission':
+                info.setdefault('declaredPermissions',[]).append(attrs)
+            elif tag=='uses-feature':
+                feature=dict(attrs)
+                feature.setdefault('required',True)
+                info['features'].append(feature)
+            elif tag in ('uses-library','uses-native-library'):
+                info['usesLibraries'].append({'tag':tag,**attrs})
+            elif tag=='application':
+                application.update(attrs)
+                info['application']=application
+            elif tag in ('activity','activity-alias','service','receiver','provider','instrumentation'):
+                component={'type':tag,**attrs}
+                if 'name' in component:
+                    component['name']=qualify(component['name'])
+                if 'targetActivity' in component:
+                    component['targetActivity']=qualify(component['targetActivity'])
+                component['intentFilters']=[]
+                component['metaData']=[]
+                info['components'].append(component)
+                current_component=component
+                current_filter=None
+            elif tag=='intent-filter' and current_component is not None:
+                current_filter={'actions':[],'categories':[],'data':[]}
+                current_component['intentFilters'].append(current_filter)
+            elif tag=='action' and current_filter is not None and 'name' in attrs:
+                current_filter['actions'].append(attrs['name'])
+            elif tag=='category' and current_filter is not None and 'name' in attrs:
+                current_filter['categories'].append(attrs['name'])
+            elif tag=='data' and current_filter is not None:
+                current_filter['data'].append(attrs)
+            elif tag=='meta-data':
+                record=dict(attrs)
+                if current_component is not None:
+                    current_component['metaData'].append(record)
+                else:
+                    info.setdefault('applicationMetaData',[]).append(record)
+            elif tag=='package':
+                info['queries'].append({'tag':tag,**attrs})
+            elif tag=='intent':
+                info['queries'].append({'tag':tag,**attrs})
+
+        elif typ==0x0103 and strings and pos+header+8<=pos+size:
+            ext=pos+header
+            tag=string_at(u32(data,ext+4)) or ''
+            if tag=='intent-filter':
+                current_filter=None
+            elif tag in ('activity','activity-alias','service','receiver','provider','instrumentation'):
+                current_component=None
+
         pos+=size
-    info['parseStatus']='parsed' if info.get('package') else 'partial-or-unparsed'
+
+    if 'application' not in info:
+        info['application']={}
+    if not info.get('components') and not info.get('permissions') and not info.get('features'):
+        # Keep empty arrays explicit: a parsed binary manifest can legitimately
+        # omit optional tags, but callers must distinguish that from parse failure.
+        pass
+    info['parseStatus']='parsed' if info.get('package') else info.get('parseStatus','partial-or-unparsed')
     return info
 
 def resource_name_candidates(data):
