@@ -9,6 +9,10 @@ const BATTLE_COM_NONE=0;
 const BATTLE_COM_ATTACK=1;
 const BATTLE_COM_GUARD=2;
 const BATTLE_COM_ESCAPE=4;
+const BATTLE_COM_S_CHARGE=1005;
+const BATTLE_COM_S_EARTHROUND0=1009;
+const BATTLE_COM_S_EARTHROUND1=1010;
+const BATTLE_ENEMY_AI_CHARGE_COMMANDS=Object.freeze([BATTLE_COM_S_CHARGE,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1]);
 const BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES=Object.freeze(['paralysis','stone','sleep','barrier']);
 const BSIDE_FLG_SURPRISE=1;
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
@@ -129,6 +133,14 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
       const charMode=int(actor.sourceBattleCharMode);
       if(charMode===BATTLE_CHARMODE_C_OK||charMode!==BATTLE_CHARMODE_C_WAIT)continue;
       const before={sourceBattleCharMode:charMode,battleCommands:Array.isArray(actor.battleCommands)?actor.battleCommands.slice():[-1,-1,-1]};
+      const existingCommand=int(actor.battleCommands?.[0]);
+      if(BATTLE_ENEMY_AI_CHARGE_COMMANDS.includes(existingCommand)){
+        commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,
+          action:'charge-retained',commandCode:existingCommand,
+          targetBid:int(actor.battleCommands?.[1])??-1,preserveCommand:true,
+          before,actionRoll:null,targetRoll:null});
+        continue;
+      }
       if(surprised){
         commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,action:'surprised-none',commandCode:BATTLE_COM_NONE,targetBid:-1,before,actionRoll:null,targetRoll:null});
         continue;
@@ -181,8 +193,10 @@ function commitEnemyAiCommands(context,{plan=null}={}){
   const next=clone(context);
   for(const row of plan.commands){
     const actor=findEntryByBid(next,row.actorBid);
-    const commands=Array.isArray(actor.battleCommands)?actor.battleCommands.slice():[-1,-1,-1];
-    commands[0]=row.commandCode;commands[1]=row.targetBid;actor.battleCommands=commands;
+    if(row.preserveCommand!==true){
+      const commands=Array.isArray(actor.battleCommands)?actor.battleCommands.slice():[-1,-1,-1];
+      commands[0]=row.commandCode;commands[1]=row.targetBid;actor.battleCommands=commands;
+    }
     actor.sourceBattleCharMode=BATTLE_CHARMODE_C_OK;actor.battleMode='c_ok';
   }
   return {ok:true,handled:true,stage:'battle-enemy-ai-applied',format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,action:ACTION_BATTLE_ENEMY_AI_APPLY,commandCount:plan.commands.length,commands:clone(plan.commands),rngConsumed:clone(plan.rngConsumed),battleContextMutation:true,persistentMutation:false,damageExecuted:false,battleContext:next};
@@ -193,4 +207,4 @@ function applyEnemyAiCommands(context,options={}){
 function createBrowserBattleEnemyAiRuntime(){
   return {ok:true,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,plan:planEnemyAiCommands,commit:commitEnemyAiCommands,apply:applyEnemyAiCommands};
 }
-export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
+export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_COM_S_CHARGE,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1,BATTLE_ENEMY_AI_CHARGE_COMMANDS,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
