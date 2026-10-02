@@ -1,7 +1,7 @@
 {
   "format": "ro0000-android-native-resource-focus-v1",
-  "workflowRunId": 37028402041,
-  "sourceCommit": "5e46f0c60205fcf01d7d28c37c3fa8913c1dacf5",
+  "workflowRunId": 37028621232,
+  "sourceCommit": "bccfb6a7ae15d9b8d14af09238651a995627e989",
   "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
   "libraries": [
     {
@@ -61,6 +61,18 @@
             "  2037ce:\tab14      \tadd\tr3, sp, #80\t@ 0x50",
             "  2037e0:\ta814      \tadd\tr0, sp, #80\t@ 0x50",
             "  20384a:\ta814      \tadd\tr0, sp, #80\t@ 0x50"
+          ]
+        },
+        {
+          "name": "_ZN10CIniManage13ReadPatchInfoEv",
+          "value": "0x209f75",
+          "size": 2180,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 872,
+          "resourceRelevantLines": [
+            "  20a30a:\t9014      \tstr\tr0, [sp, #80]\t@ 0x50",
+            "  20a30e:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  20a47c:\te7ff      \tb.n\t20a47e <CIniManage::ReadPatchInfo()@@Base+0x50a>"
           ]
         },
         {
@@ -161,6 +173,17 @@
             "  23b7c0:\tf694 eba4 \tblx\tcff0c <setBlowFishKey(char*)@plt>",
             "  23b7ca:\tf694 eba6 \tblx\tcff18 <fish_decode(unsigned char*, int, int*)@plt>"
           ]
+        },
+        {
+          "name": "_ZN10HttpClient12DownloadFileESsSsSt8functionIFviiEES0_IFviSsEE",
+          "value": "0x23dddd",
+          "size": 376,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 157,
+          "resourceRelevantLines": [
+            "  23ddf2:\t9014      \tstr\tr0, [sp, #80]\t@ 0x50",
+            "  23de6a:\tf68e eaec \tblx\tcc444 <fopen@plt>"
+          ]
         }
       ]
     },
@@ -224,6 +247,17 @@
             "  2fc9d3:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
             "  2fc9e4:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
             "  2fca51:\t8b 44 24 50          \tmov    0x50(%esp),%eax"
+          ]
+        },
+        {
+          "name": "_ZN10CIniManage13ReadPatchInfoEv",
+          "value": "0x30a2a0",
+          "size": 6098,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 1234,
+          "resourceRelevantLines": [
+            "  30af35:\t89 54 24 50          \tmov    %edx,0x50(%esp)",
+            "  30af40:\t8b 4c 24 50          \tmov    0x50(%esp),%ecx"
           ]
         },
         {
@@ -303,6 +337,17 @@
           "resourceRelevantLines": [
             "  3649b0:\te8 5b c2 d6 ff       \tcall   d0c10 <setBlowFishKey(char*)@plt>",
             "  3649cf:\te8 4c c2 d6 ff       \tcall   d0c20 <fish_decode(unsigned char*, int, int*)@plt>"
+          ]
+        },
+        {
+          "name": "_ZN10HttpClient12DownloadFileESsSsSt8functionIFviiEES0_IFviSsEE",
+          "value": "0x369b40",
+          "size": 756,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 223,
+          "resourceRelevantLines": [
+            "  369c6c:\te8 6f 21 d6 ff       \tcall   cbde0 <fopen@plt>",
+            "  369d91:\t89 44 24 50          \tmov    %eax,0x50(%esp)"
           ]
         }
       ]
