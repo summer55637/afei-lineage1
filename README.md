@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：3b75f71 — ci: run Android APK audit when its tests change
-- 更新時間：2026-10-02T14:08:09+08:00
+- 最新 commit：aa3fb16 — test: cover transactional battle damage HP commit
+- 更新時間：2026-10-02T14:18:25+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.25
+- Regression 最高版本：V4.26
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.25 |
+| Battle Pipeline | ✅ V4.26 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
