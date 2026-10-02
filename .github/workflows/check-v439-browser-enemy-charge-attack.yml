@@ -41,7 +41,7 @@ jobs:
           node tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs
           node tools/check_v436_browser_battle_enemy_ai_target_parity.mjs
           node tools/check_v437_browser_battle_enemy_ai_waza_lifecycle.mjs
-          node tools/check_v438_browser_enemy_noguard.mjs
+          node tools/check_v438_browser_battle_enemy_noguard.mjs
           node tools/check_v439_browser_enemy_charge_attack.mjs
           node tools/check_v386_browser_battle_context_runtime.mjs
           node tools/check_browser_battle_attack_pipeline_binding.mjs
