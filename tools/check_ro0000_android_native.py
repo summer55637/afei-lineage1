@@ -8,6 +8,7 @@ from audit_ro0000_android_native import (
     parse_symbols,
     relevant_symbol_names,
     relevant_embedded_strings,
+    FOCUSED_FUNCTION_RE,
 )
 
 
@@ -47,6 +48,20 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             parse_elf_header(b"not-elf")
         with self.assertRaises(ValueError):
             parse_elf_header(b"\x7fELF" + b"\x01\x01\x01" + b"\x00" * 20)
+
+    def test_updater_symbol_focus_includes_qualified_methods(self):
+        candidates = [
+            "DownLoadIniFile()",
+            "GetBinaryResource()",
+            "CIniManage::ReadPatchInfo()",
+            "HttpClient::DownloadFile(char const*)",
+            "Decompress::UnZipFile(char const*)",
+            "DownloadResource(char const*)",
+        ]
+        for candidate in candidates:
+            with self.subTest(candidate=candidate):
+                self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
+        self.assertNotRegex("UnrelatedGameplayFunction()", FOCUSED_FUNCTION_RE)
 
     def test_embedded_resource_format_string(self):
         values = relevant_embedded_strings(b"prefix\x00path/map4/%s/real.bin\x00")
