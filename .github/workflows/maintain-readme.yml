@@ -63,6 +63,7 @@ jobs:
             node tools/rebind_ro0000_snapshot_audits.mjs
             node tools/audit_ro0000_battlemap_selector.mjs
             node tools/test_sabex_decoder.mjs
+            node tools/test_sabex_client_image_runtime.mjs
 
             node tools/generate_readme.mjs
 
