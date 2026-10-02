@@ -424,6 +424,23 @@ if (selected[4000]) {
   const reachable = movementReachable(map, mapset, entryPoints, portalOrigins);
   const targetComponents = [...new Set(portalSummary.map(p => p.component).filter(v => v >= 0))];
   const startComponents = [...new Set(entrySummary.map(p => p.component).filter(v => v >= 0))];
+  const alternateEntryComponentWarps = warps
+    .filter(row =>
+      row.from[0] === 4000 &&
+      row.to[0] !== 200 &&
+      walkableAt(map, row.from[1], row.from[2], mapset)
+    )
+    .map(row => ({
+      line: row.line,
+      from: row.from,
+      to: row.to,
+      originComponent: components.component[row.from[2] * map.width + row.from[1]],
+      reachableFromEntryComponent: startComponents.includes(
+        components.component[row.from[2] * map.width + row.from[1]
+        ]
+      )
+    }))
+    .filter(row => row.reachableFromEntryComponent);
   result.checks.floor4000 = {
     map: summarizeCandidate(selected[4000]),
     missingMapsetImageIds: mapsetMissingImageIds(map),
@@ -434,6 +451,7 @@ if (selected[4000]) {
     portalComponents: targetComponents,
     reachableTargets: reachable.reached,
     allPortalOriginsMovementReachable: reachable.allTargetsReached,
+    alternateEntryComponentWarps,
     movementUsesLegalDiagonalRule: true
   };
 } else {
