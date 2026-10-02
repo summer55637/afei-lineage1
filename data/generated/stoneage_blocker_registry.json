@@ -27,9 +27,12 @@
         "therefore the endpoint itself confirms the 4000→200 world-route connectivity blocker",
         "V3.63 virtual-overlay experiment: replacing only (91,109),(92,109),(93,109) with existing walkable tile 321 makes both birth landings (80,90)/(80,91) reach an existing 4000→200 portal origin through normal sourceMapWalkableAt 4-neighbor movement; canonical map remains unchanged",
         "endpoint floor 4020 source map makes (4,12), (11,9), and (12,9) walkable in one component, proving the 4000 → 4020 edge is executable through the mapwarp event system",
-        "world graph shows 4020 only connects to 851 and back to 4000; 851 continues to 840/4020 and this branch does not reach the 4000 component-0 200 portals"
+        "world graph shows 4020 only connects to 851 and back to 4000; 851 continues to 840/4020 and this branch does not reach the 4000 component-0 200 portals",
+        "V3.64 tile-pattern audit: the exact sequence 321→409→196→307→156 occurs only at (90,109), while the prefix 321→409→196 also occurs at (61,107) and the transition 307→156 also occurs at (61,77); this shows the blocker sits inside a recurring source-map terrain pattern rather than proving a missing road tile",
+        "pinned battlefield source manifest names tile 196 as `砂漠の草と土２の境界１`, so 196 is explicitly a terrain-boundary tile",
+        "V3.64 audit therefore does not support replacing all three blocked cells with 321 as an original-art restoration"
       ],
-      "next": "keep active until repair form is chosen; the virtual experiment proves a three-cell terrain opening is sufficient, but do not yet mutate the canonical map or claim source-backed original art"
+      "next": "keep active; three-cell terrain opening remains the smallest verified connectivity repair, but tile replacement is not source-backed. Compare any recoverable historical external map snapshot next; otherwise use a clearly labeled RO0000 repair map. Do not mutate canonical map or movement/warp semantics yet."
     },
     "route-3000-to-200-landing-587-318": {
       "status": "resolved",
