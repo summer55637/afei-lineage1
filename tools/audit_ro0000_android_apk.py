@@ -71,6 +71,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--apk',required=True)
     parser.add_argument('--output',required=True)
+    parser.add_argument('--baseline',default=None,help='Require the APK identity to match the committed evidence snapshot')
     args=parser.parse_args()
     apk=pathlib.Path(args.apk)
     digest=hashlib.sha256()
@@ -99,6 +100,14 @@ def main():
           'mapOrGameplayPathCandidates':map_candidates,
           'scopeNote':'Archive inventory and manifest metadata only; path candidates are not proof of server rules or playable map semantics.'
         }
+    if args.baseline:
+        baseline=json.loads(pathlib.Path(args.baseline).read_text(encoding='utf-8'))
+        expected=baseline.get('source',{}).get('sha256')
+        if expected!=result['sha256']:
+            raise SystemExit('APK SHA-256 differs from committed evidence baseline; re-audit before accepting this APK')
+        for key in ('package','versionCode','versionName','minSdkVersion','targetSdkVersion'):
+            if result['manifest'].get(key)!=baseline.get('manifest',{}).get(key):
+                raise SystemExit('APK manifest differs from committed evidence baseline: '+key)
     out=pathlib.Path(args.output); out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({k:result[k] for k in ('format','fileBytes','sha256','zipIntegrity','archiveEntryCount','manifest','dexFiles','nativeLibraries','topLevelDirectoryCounts')},ensure_ascii=False,indent=2))

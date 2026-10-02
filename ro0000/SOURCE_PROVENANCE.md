@@ -27,6 +27,9 @@
 
 ## Android 客戶端資料邊界（2026-10-02）
 
+已完成首輪封裝稽核，結果固定於 data/generated/stoneage_ro0000_android_apk_audit.json：APK SHA-256 6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c；Manifest package com.newssa.stoneage.ko，versionName 1.0，versionCode 1。ZIP CRC 通過，38 個 archive entries。
+
+
 APK 是客戶端來源，不是伺服器資料來源。未完成檔案雜湊、封裝版本與內容抽取驗證前，只能確認倉庫保存了該 APK，不能宣稱已確認其地圖、碰撞、操作或網路協定內容。經驗證的 APK 資源應另記 client variant，不覆寫 gmsv/data、hydata/data 或 pinned fixed-C。
 
 ## 重要邊界

@@ -1,6 +1,6 @@
 # Source Authority / Provenance Contract
 
-更新日期：2026-10-01
+更新日期：2026-10-02
 
 ## 核心修正
 
@@ -155,6 +155,12 @@ Fixed-C → 把所有 endpoint 差異都丟掉
 | 哪些是本專案新增的放置規則或修復？ | afei-lineage1 product policy／明確 repair overlay | regression；不得冒充 source parity |
 
 這張表是跨新對話與跨版本 audit 的快速判定基準：先確認「我們在回答哪一種問題」，再選對 authority；不能用單一來源包辦所有問題。
+
+### Android APK first-pass audit (2026-10-02)
+
+已對 ro0000/client/android/冰河石器-隐盟.apk 執行 ZIP／Manifest 稽核，固定 SHA-256：6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c；Git blob：eaeb7c513ca0731c4bdeedd0987081b4bf443031。Manifest package 為 com.newssa.stoneage.ko，versionCode 1、versionName 1.0、minSdk 21、targetSdk 29；ZIP CRC 檢查通過，共 38 個項目。可見資料以字型、skin 圖片、DEX 及 SDL／Stoneage 原生函式庫為主，封裝路徑未找到明顯 map/tile/gameplay 檔名。
+
+目前只代表 archive identity 與 manifest 已驗證；地圖是否由 native library、加密／封裝資料或伺服器供應仍未定。稽核結果見 data/generated/stoneage_ro0000_android_apk_audit.json；後續 CI 會以此 SHA／Manifest 作 baseline，APK 變動需重新審核。
 
 ## 2026-10-02 Client Evidence and Product Repair Boundary
 

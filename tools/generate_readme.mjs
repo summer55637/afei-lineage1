@@ -68,6 +68,7 @@ const endpointBattleAudit = loadJson('data/generated/stoneage_endpoint_battle_da
 const endpointGmqueLocator = loadJson('data/generated/stoneage_endpoint_gmque_source_locator.json') ?? {};
 const endpointNpcAudit = loadJson('data/generated/stoneage_endpoint_npc_source_audit.json') ?? {};
 const endpointCompletenessAudit = loadJson('data/generated/stoneage_endpoint_completeness_audit.json') ?? {};
+const androidClientAudit = loadJson('data/generated/stoneage_ro0000_android_apk_audit.json') ?? {};
 const endpointSetupAudit = loadJson('data/generated/stoneage_endpoint_setup_config_audit.json') ?? {};
 const creationSaveRuntimePresent = fs.existsSync(path.join(ROOT, 'src', 'stoneage_new_player_creation_save_runtime.mjs'));
 const itemShopDocs = readText('docs/reference/npc-itemshop-runtime.md');
@@ -123,6 +124,9 @@ function buildReadme() {
   const mapLine = mapCount ? '✅ ' + comma(mapCount) + ' 張' : '⚠️ 未建立';
   const stateLine = state.currentSchemaVersion ? '✅ Schema ' + state.currentSchemaVersion : '⚠️ 未建立';
   const economyLine = economy.format ? '✅ Runtime v1' : '⚠️ 未建立';
+  const androidLine = androidClientAudit.source?.sha256
+    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（ZIP / Manifest 已稽核；遊戲地圖語義待解）'
+    : '⚠️ APK 尚未完成封裝稽核';
   const battleLine = workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel;
   const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');
 
@@ -147,6 +151,7 @@ function buildReadme() {
     '|---|---|',
     '| 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |',
     '| Endpoint | ' + comma(manual.fileCount) + ' files 手工外網端；' + comma(vm.fileCount) + ' files VM；合計 ' + comma(endpointCatalog.sourceCorpus?.fileCount) + ' files |',
+    '| Android Client | ' + androidLine + ' |',
     '| 判定 | Endpoint 決定「實際部署有什麼」；Fixed-C 驗證「引擎怎麼運作」；variant 不互相覆蓋 |',
     '| 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |',
     '| 重開案 | ' + (reopened.length ? reopened.join('、') : '目前沒有') + ' |',

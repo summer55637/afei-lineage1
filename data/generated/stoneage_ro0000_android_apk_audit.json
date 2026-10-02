@@ -1,0 +1,82 @@
+{
+  "format": "ro0000-android-apk-evidence-v1",
+  "auditedAt": "2026-10-02",
+  "source": {
+    "path": "ro0000/client/android/冰河石器-隐盟.apk",
+    "provenance": "VM 一鍵端",
+    "gitBlobSha": "eaeb7c513ca0731c4bdeedd0987081b4bf443031",
+    "sha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "fileBytes": 24931847
+  },
+  "archive": {
+    "zipIntegrity": "pass",
+    "entryCount": 38,
+    "uncompressedTotalBytes": 51837583,
+    "topLevelEntryCounts": {
+      "META-INF": 4,
+      "assets": 9,
+      "lib": 16,
+      "res": 6
+    }
+  },
+  "manifest": {
+    "package": "com.newssa.stoneage.ko",
+    "versionCode": 1,
+    "versionName": "1.0",
+    "minSdkVersion": 21,
+    "targetSdkVersion": 29,
+    "parseStatus": "parsed"
+  },
+  "dexFiles": [
+    {
+      "path": "classes.dex",
+      "uncompressedBytes": 1453136
+    }
+  ],
+  "nativeLibraries": [
+    "lib/armeabi-v7a/libGCloudVoice.so",
+    "lib/armeabi-v7a/libSDL2.so",
+    "lib/armeabi-v7a/libSDL2_image.so",
+    "lib/armeabi-v7a/libSDL2_mixer.so",
+    "lib/armeabi-v7a/libSDL2_ttf.so",
+    "lib/armeabi-v7a/libStoneage.so",
+    "lib/armeabi-v7a/libhidapi.so",
+    "lib/armeabi-v7a/libmpg123.so",
+    "lib/x86/libGCloudVoice.so",
+    "lib/x86/libSDL2.so",
+    "lib/x86/libSDL2_image.so",
+    "lib/x86/libSDL2_mixer.so",
+    "lib/x86/libSDL2_ttf.so",
+    "lib/x86/libStoneage.so",
+    "lib/x86/libhidapi.so",
+    "lib/x86/libmpg123.so"
+  ],
+  "visibleAssets": [
+    "assets/data/font/FZLTZHUNHK.TTF",
+    "assets/data/font/simsun.ttc",
+    "assets/data/skin/3.png",
+    "assets/data/skin/4.png",
+    "assets/data/skin/5.png",
+    "assets/data/skin/61428.png",
+    "assets/data/skin/61429.png",
+    "assets/data/skin/61430.png",
+    "assets/data/skin/jdt.png"
+  ],
+  "embeddedMapOrGameplayPathCandidates": [],
+  "assessment": {
+    "status": "archive-and-manifest-audited",
+    "statement": "No obvious map/tile/gameplay file names were found in archive paths. This does not prove that maps or gameplay data are absent; they may be embedded in native code, opaque assets, or acquired at runtime.",
+    "notVerified": [
+      "APK signing certificate identity",
+      "native library contents and symbols",
+      "client map/collision semantics",
+      "server endpoints and update protocol",
+      "in-game operation and screenshots"
+    ]
+  },
+  "auditWorkflow": {
+    "name": "Audit RO0000 Android client evidence",
+    "runId": 36971497713,
+    "runUrl": "https://github.com/summer55637/afei-lineage1/actions/runs/36971497713"
+  }
+}
