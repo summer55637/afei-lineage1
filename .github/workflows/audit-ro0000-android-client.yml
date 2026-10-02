@@ -114,8 +114,26 @@ jobs:
                   dis=fn.get("disassembly") or {}
                   lines=dis.get("excerpt", [])
                   flow_re = re.compile(r"\b(?:call\w*|j[a-z]{1,3}|blx?|bx|cbz|cbnz|cmp\w*|test\w*)\b", re.IGNORECASE)
-                  selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)],"controlFlowLines":[line for line in lines if flow_re.search(line)]})
+                  selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"disassemblyLineCount":dis.get("disassemblyLineCount"),"disassemblySha256":dis.get("disassemblySha256"),"excerptTruncated":dis.get("excerptTruncated"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)],"controlFlowLines":[line for line in lines if flow_re.search(line)]})
               if selected: focus["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected})
+          # Compare canonical demangled function names across the two target ABIs.
+          abi_names = {lib.get("abi"): {
+              re.sub(r"\s+", " ", fn.get("demangled") or fn.get("name") or "").strip()
+              for fn in lib.get("focusedSymbols", []) if fn.get("type") == "FUNC"
+          } for lib in native.get("nativeLibraries", [])}
+          abi_labels = sorted(abi_names)
+          focus["abiFunctionComparison"] = {
+              "abis": abi_labels,
+              "sameFocusedFunctionSet": len(abi_labels) == 2 and abi_names[abi_labels[0]] == abi_names[abi_labels[1]],
+              "onlyInFirst": sorted(abi_names[abi_labels[0]] - abi_names[abi_labels[1]]) if len(abi_labels) == 2 else [],
+              "onlyInSecond": sorted(abi_names[abi_labels[1]] - abi_names[abi_labels[0]]) if len(abi_labels) == 2 else [],
+              "note": "Name-set parity only; instruction semantics still require ABI-aware comparison."
+          }
+          core = ("AdrnInit(", "InitSprBinFileOpen(", "ReadBattleMap(", "drawMap(", "DrawBattleMap(", "lssproto_S_recv(", "lssproto_M_recv(", "lssproto_EN_recv(", "GetBinaryResource(", "CIniManage::ReadPatchInfo(", "UpdateAppNewVersion(", "realGetImage(", "decoder(")
+          focus["coreFunctionCoverage"] = {abi: {
+              "complete": all(any(name.startswith(prefix) for name in names) for prefix in core),
+              "missing": [prefix for prefix in core if not any(name.startswith(prefix) for name in names)]
+          } for abi, names in abi_names.items()}
           dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
           apk = json.loads(Path("artifacts/ro0000_android_apk_audit.json").read_text(encoding="utf-8"))
