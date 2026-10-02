@@ -206,9 +206,9 @@ def inspect_dex(data):
 
     string_categories = {
         "urlLike": re.compile(r"(?i)https?://"),
-        "androidIntent": re.compile(r"^android\\.intent\\.action\\."),
-        "permission": re.compile(r"^android\\.permission\\."),
-        "resourcePath": re.compile(r"(?i)(?:^|/)(?:map|data|assets|res)/|\\.(?:bin|dat|lua|sabex|zip)$"),
+        "androidIntent": re.compile(r"^android\.intent\.action\."),
+        "permission": re.compile(r"^android\.permission\."),
+        "resourcePath": re.compile(r"(?i)(?:^|/)(?:map|data|assets|res)/|\.(?:bin|dat|lua|sabex|zip)$"),
         "updateTerms": re.compile(r"(?i)update|patch|version|download"),
     }
     indicators = {
@@ -254,7 +254,7 @@ def main():
     reports = []
     with zipfile.ZipFile(apk) as zf:
         for name in sorted(info.filename for info in zf.infolist()
-                           if re.fullmatch(r"classes(?:[2-9][0-9]*)?\\.dex", info.filename)):
+                           if re.fullmatch(r"classes(?:[2-9][0-9]*)?\.dex", info.filename)):
             reports.append({"path": name, **inspect_dex(zf.read(name))})
     if not reports:
         raise SystemExit("APK contains no classes*.dex")
@@ -271,7 +271,7 @@ def main():
     }
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result["summary"], ensure_ascii=False, indent=2))
 
 
