@@ -47,9 +47,9 @@ function blobSha(bytes) {
   return crypto.createHash('sha1').update(header).update(bytes).digest('hex');
 }
 
-function gitSha(rel) {
+function gitSha(rel, cwd = ROOT) {
   try {
-    return execFileSync('git', ['rev-parse', 'HEAD:' + rel], { cwd: ROOT, encoding: 'utf8' }).trim();
+    return execFileSync('git', ['rev-parse', 'HEAD:' + rel], { cwd, encoding: 'utf8' }).trim();
   } catch {
     return null;
   }
@@ -296,7 +296,7 @@ const result = {
     mapsetBlobSha: gitSha('ro0000/server/merged-source/gmsv/data/map/mapset.txt'),
     mapwarpBlobSha: gitSha('ro0000/server/merged-source/gmsv/data/map/mapwarp.txt'),
     fixedSource: 'gavinlinasd/StoneAge@' + FIXED_REF,
-    fixedMapsetBlobSha: fs.existsSync(FIXED_MAPSET) ? gitSha('fixed-c-source/gmsv/data/map/mapset.txt') : null,
+    fixedMapsetBlobSha: fs.existsSync(FIXED_MAPSET) ? gitSha('gmsv/data/map/mapset.txt', FIXED_ROOT) : null,
     mapFormat: 'Endpoint accepts LS&MAP (48-byte show string) and LS2MAP (32-byte show string); endpoint snapshot is currently expected to use LS&MAP.'
   },
   endpointMapset: {
@@ -365,6 +365,12 @@ const landing3000 = floor200?.landingFrom3000to200 || [];
 const target587318 = landing3000.find(p => p.x === 587 && p.y === 318);
 const endpoint4000Closed = Boolean(floor4000 && floor4000.allPortalOriginsMovementReachable);
 const endpoint3000LandingClosed = Boolean(target587318?.walkable);
+const endpointMapEvidenceClosed = Boolean(
+  floor4000 &&
+  floor200 &&
+  floor4000.missingMapsetImageIds.length === 0 &&
+  floor200.missingMapsetImageIds.length === 0
+);
 result.checks.reopenedBlockers = {
   route4000to200: {
     resolved: endpoint4000Closed,
@@ -384,20 +390,24 @@ result.checks.reopenedBlockers = {
   }
 };
 
-if (floor4000 && floor200 && floor4000.missingMapsetImageIds.length === 0 && floor200.missingMapsetImageIds.length === 0) {
-  result.conclusion.status = 'source-evidence-closed';
-} else if (result.conclusion.reasons.length === 0) {
-  result.conclusion.status = 'partial';
+if (!endpointMapEvidenceClosed) {
+  result.conclusion.status = 'unresolved-map-evidence';
+} else if (endpoint4000Closed && endpoint3000LandingClosed) {
+  result.conclusion.status = 'blockers-closed';
+} else {
+  result.conclusion.status = 'audited-open-blockers';
 }
-result.conclusion.reasons.push(...(endpoint4000Closed ? [] : ['Endpoint 4000 portal-origin movement remains unresolved.']));
-result.conclusion.reasons.push(...(endpoint3000LandingClosed ? [] : ['Endpoint 200 landing (587,318) is not walkable or could not be resolved.']));
+result.conclusion.mapEvidenceClosed = endpointMapEvidenceClosed;
+result.conclusion.blockersClosed = endpoint4000Closed && endpoint3000LandingClosed;
+result.conclusion.reasons.push(...(endpoint4000Closed ? [] : ['Endpoint 4000 portal-origin movement remains blocked: entry component and portal-origin component differ.']));
+result.conclusion.reasons.push(...(endpoint3000LandingClosed ? [] : ['Endpoint 200 landing (587,318) is not walkable in the endpoint mapset/map combination.']));
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 const serialized = JSON.stringify(result, null, 2) + '\n';
 if (process.argv.includes('--write')) {
   fs.writeFileSync(OUT, serialized);
   console.log(JSON.stringify({
-    pass: result.conclusion.status === 'source-evidence-closed',
+    pass: result.conclusion.status === 'blockers-closed',
     route4000to200: result.checks.reopenedBlockers.route4000to200.status,
     route3000to200Landing587318: result.checks.reopenedBlockers.route3000to200Landing587318.status,
     endpointMaps: result.endpointMaps.floorCounts
