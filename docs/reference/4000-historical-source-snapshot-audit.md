@@ -86,6 +86,41 @@ V3.63 的虛擬 overlay 已證實：
 
 目前另外確認 tile 156 也能作為 connectivity-only 候選，而且 `(94,109),(95,109)` 本身就是 tile 156；但這仍不足以證明它是原作應有的美術 tile。
 
+## RO0000 Repair Overlay
+
+已實作一個只作用於 floor 4000 的 walkability repair overlay：
+
+`data/generated/stoneage_ro0000_4000_walkability_repair_overlay.json`
+
+runtime：
+
+`src/stoneage_ro0000_4000_repair.mjs`
+
+只宣告三個座標：
+
+- (91,109): tile 409 / object 27
+- (92,109): tile 196 / object 27
+- (93,109): tile 307 / object 0
+
+overlay 不修改 map JSON、tile ID、object ID、NPC 或 warp source；它只在一般角色的 walkability 判定中，對這三個已驗證 source cells 回傳 walkable。
+
+另外有 source-cell guard：若 canonical map 的三格內容和 overlay 記錄的 sourceTile/sourceObject 不一致，repair 直接 fail-closed，不會把未知資料當成可走。
+
+已接入：
+
+- `src/stoneage_browser_world_movement_runtime.mjs`
+- `src/stoneage_browser_world_first_route_runtime.mjs`
+
+專用 regression：
+
+`tools/check_ro0000_4000_walkability_repair.mjs`
+
+專用 workflow：
+
+`.github/workflows/check-ro0000-4000-walkability-repair.yml`
+
+目前專用 regression 已驗證：三格原始 walkability 仍為 false、overlay 後為 true、四個 4000→200 portal origins 的 walkability 未改變、兩個出生落點均可到達既有 4000→200 portal，而且 source mismatch 會 fail-closed。
+
 ## Historical Snapshot Boundary
 
 下一步仍以「取得 2016 SA80 的 `karutana` 原始 bytes」為唯一重要驗證。
