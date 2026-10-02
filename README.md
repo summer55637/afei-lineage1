@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b36c800 — docs: record guarded Karutarna product route repair
-- 更新時間：2026-10-02T13:56:58+08:00
+- 最新 commit：87949d2 — test: align idle route regressions with repair eligibility
+- 更新時間：2026-10-02T13:57:47+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
