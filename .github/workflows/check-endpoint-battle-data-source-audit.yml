@@ -39,3 +39,6 @@ jobs:
 
       - name: Check endpoint battle data audit
         run: node tools/check_endpoint_battle_data_source_audit.mjs --check
+
+      - name: Check endpoint first-route Encounter to Group closure
+        run: node tools/generate_endpoint_start_encounter_group_closure.mjs --check --fixed-source-root fixed-c-source
