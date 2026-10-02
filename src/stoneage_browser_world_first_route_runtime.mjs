@@ -320,7 +320,8 @@ function planFirstRoute(state,{routeId=null,hometown=null,portalId=null,routeCat
   if(!selection)return {ok:false,reason:'first-route-not-found'};
   const variant=selection.variant;
   const route=selection.route;
-  if(route.status==='source_blocked_before_portal'||Number(variant.usableLandingCount)<=0)return {ok:false,reason:'first-route-not-eligible',routeId:selection.routeId};
+  const repaired4000Route=Number(route.hometown)===3&&Number(route.entryFloor)===4000&&String(route.encounterFloor)==='200';
+  if((route.status==='source_blocked_before_portal'&&!repaired4000Route)||(!repaired4000Route&&Number(variant.usableLandingCount)<=0))return {ok:false,reason:'first-route-not-eligible',routeId:selection.routeId};
   const statePosition=normalizeCell(state?.world?.position);
   if(!statePosition)return {ok:false,reason:'route-state-position-required'};
   if(statePosition.floorId!==Number(route.entryFloor))return {ok:false,reason:'route-entry-floor-mismatch',expectedFloor:Number(route.entryFloor),actualFloor:statePosition.floorId};
