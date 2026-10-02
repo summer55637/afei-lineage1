@@ -4,7 +4,7 @@ from audit_ro0000_android_apk import resource_name_candidates
 
 class AndroidApkStringScanTests(unittest.TestCase):
     def test_ascii_resource_path(self):
-        values=resource_name_candidates(b'prefix\\x00path/map4/real.bin\\x00s/spr.bin\\x00')
+        values=resource_name_candidates(b'prefix\x00path/map4/real.bin\x00s/spr.bin\x00')
         self.assertIn('path/map4/real.bin',values)
         self.assertIn('s/spr.bin',values)
 
