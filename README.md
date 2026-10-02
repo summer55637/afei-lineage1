@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b79d2a5 — [audit] capture Android manifest components and permissions
-- 更新時間：2026-10-02T23:09:46+08:00
+- 最新 commit：425b0e9 — [test] cover expanded binary Android manifest parser
+- 更新時間：2026-10-02T23:10:04+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
