@@ -9,6 +9,8 @@ import {
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_END_PLAN,
   ACTION_BATTLE_FINISH_COMMIT,
+  ACTION_BATTLE_PLAYER_EXIT_PLAN,
+  ACTION_BATTLE_PLAYER_EXIT_COMMIT,
   ACTION_IDLE_EVENT,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -138,6 +140,22 @@ const reward=await controller.dispatch({
 assert.equal(reward.ok,true,JSON.stringify(reward));
 assert.equal(reward.state.idle.mode,IDLE_STATES.MOVING);
 assert.ok(controller.getBattleContext());
+
+const playerExitPlan=await controller.dispatch({
+  type:ACTION_BATTLE_PLAYER_EXIT_PLAN,
+  settlementComplete:true
+});
+assert.equal(playerExitPlan.ok,true,JSON.stringify(playerExitPlan));
+const playerExitCommit=await controller.dispatch({
+  type:ACTION_BATTLE_PLAYER_EXIT_COMMIT,
+  battlePlayerExitPlan:playerExitPlan,
+  settlementComplete:true,
+  transactionId:'battle-v421-controller-player-exit',
+  expectedRevision:playerExitPlan.state.revision,
+  now:'2026-10-01T11:30:02.750Z'
+});
+assert.equal(playerExitCommit.ok,true,JSON.stringify(playerExitCommit));
+assert.equal(playerExitCommit.applied,true);
 
 const denied=await controller.dispatch({
   type:ACTION_BATTLE_EXIT_PLAN,
