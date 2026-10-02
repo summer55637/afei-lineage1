@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, collections, hashlib, json, pathlib, re, zipfile
+import argparse, collections, hashlib, json, pathlib, re, zipfile, zlib
 
 NO_INDEX = 0xFFFFFFFF
 
@@ -172,6 +172,19 @@ def parse_axml_manifest(data):
     info['parseStatus']='parsed' if info.get('package') else info.get('parseStatus','partial-or-unparsed')
     return info
 
+def archive_entry_record(zf, info):
+    """Return ZIP metadata plus a digest of the exact uncompressed member bytes."""
+    payload = zf.read(info)
+    return {
+        'path': info.filename,
+        'bytes': info.file_size,
+        'compressedBytes': info.compress_size,
+        'compression': info.compress_type,
+        'encrypted': bool(info.flag_bits & 1),
+        'crc32': '%08x' % (zlib.crc32(payload) & 0xffffffff),
+        'sha256': hashlib.sha256(payload).hexdigest(),
+    }
+
 def resource_name_candidates(data):
     pattern=re.compile(r'(?i)(?:[A-Za-z0-9_.-]+[/\\])*[A-Za-z0-9_.-]+\.(?:map|dat|pak|spr|bmp|png|jpe?g|ini|cfg|csv|txt|bin|xml|json|idx|anm)\b')
     runs=[x.decode('ascii','ignore') for x in re.findall(rb'[\x20-\x7e]{5,}',data)]
@@ -215,7 +228,7 @@ def main():
           'uncompressedTotalBytes':sum(x.file_size for x in infos),'manifestBytes':manifest_info.file_size,
           'manifest':manifest,'dexFiles':dex,'nativeLibraries':native,
           'topLevelDirectoryCounts':dict(sorted(top_dirs.items())),
-          'archiveEntries':[{'path':x.filename,'bytes':x.file_size,'compressedBytes':x.compress_size,'compression':x.compress_type,'encrypted':bool(x.flag_bits&1)} for x in infos],
+          'archiveEntries':[archive_entry_record(zf, x) for x in infos],
           'extensionCounts':dict(sorted(ext_counts.items())),
           'mapOrGameplayPathCandidates':map_candidates,
           'dexAndStoneageNativeResourceStringCandidates':native_string_candidates,
