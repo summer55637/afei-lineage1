@@ -96,7 +96,7 @@ function buildEnemyEntryLayout(team){
 }
 
 function buildBattleContext({
-  playerId=null,player=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null,materializeEnemyStats=false,enemyStatRolls=[]
+  playerId=null,player=null,playerElements=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null,materializeEnemyStats=false,enemyStatRolls=[]
 }={}){
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-context',reason:'player-runtime-required'};
   if(intOr(player.hp)===null||intOr(player.maxHp)===null)return {ok:false,handled:false,stage:'battle-context',reason:'player-hp-runtime-required'};
@@ -116,6 +116,9 @@ function buildBattleContext({
   if(!playerWork.ok)return {ok:false,handled:false,stage:'battle-context',reason:playerWork.reason,detail:playerWork};
   const playerEntry={
     sourceType:'player',
+    sourcePartyMode:0,
+    sourceAiTargetStats:{str:intOr(player?.stats?.str,0)*100,dex:intOr(player?.stats?.dex,0)*100},
+    sourceAiElements:isObject(playerElements)?clone(playerElements):null,
     characterId:String(playerId??player.id??'player').trim()||'player',
     battleSlot:0,
     bid:0,
@@ -166,6 +169,9 @@ function buildBattleContext({
   }
   const petEntry=activePet&&isObject(activePet)?{
     sourceType:'pet',
+    sourcePartyMode:0,
+    sourceAiTargetStats:isObject(activePet.stats)?{str:intOr(activePet.stats.str,0),dex:intOr(activePet.stats.dex,0)}:null,
+    sourceAiElements:isObject(activePet.elements)?clone(activePet.elements):(isObject(activePet.sourceElements)?clone(activePet.sourceElements):null),
     characterId:String(activePet.id??activePet.petId??'pet').trim()||'pet',
     battleSlot:5,
     bid:5,
@@ -214,6 +220,9 @@ function buildBattleContext({
     if(!entry)return null;
     return {
       sourceType:'enemy',
+      sourcePartyMode:0,
+      sourceAiTargetStats:entry.coreStats?.stats?{str:intOr(entry.coreStats.stats.str),dex:intOr(entry.coreStats.stats.dex)}:null,
+      sourceAiElements:entry.coreStats?.sourceTemplate?.element?clone(entry.coreStats.sourceTemplate.element):null,
       characterId:`encounter-${intOr(encounter?.encounterId)??'unknown'}-${entry.sourceRosterIndex}-${entry.enemyId}`,
       sourceRosterIndex:entry.sourceRosterIndex,
       battleSlot:slot,
