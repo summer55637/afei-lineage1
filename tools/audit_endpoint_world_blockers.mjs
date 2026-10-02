@@ -204,6 +204,25 @@ function movementReachable(map, mapset, startPoints, targetPoints) {
   return { starts, reached, allTargetsReached: targetPoints.every(([x, y]) => visited[y * map.width + x] === 1) };
 }
 
+function legalMoveTargetsFromCurrent(map, mapset, x, y) {
+  const out = [];
+  for (const [dx, dy, diagonal] of [
+    [1, 0, false], [-1, 0, false], [0, 1, false], [0, -1, false],
+    [1, 1, true], [1, -1, true], [-1, 1, true], [-1, -1, true]
+  ]) {
+    const nx = x + dx;
+    const ny = y + dy;
+    if (nx < 0 || ny < 0 || nx >= map.width || ny >= map.height) continue;
+    if (!walkableAt(map, nx, ny, mapset)) continue;
+    if (diagonal && (
+      !walkableAt(map, x + dx, y, mapset) ||
+      !walkableAt(map, x, y + dy, mapset)
+    )) continue;
+    out.push({ x: nx, y: ny, diagonal, component: -1 });
+  }
+  return out;
+}
+
 function pointSummary(map, mapset, points, component) {
   return points.map(([x, y]) => {
     const walkable = walkableAt(map, x, y, mapset);
@@ -348,12 +367,33 @@ if (selected[200]) {
   const points4000 = exit4000to200.map(row => [row.to[1], row.to[2]]);
   const points3000 = exit3000to200.map(row => [row.to[1], row.to[2]]);
   const uniquePoints = [...new Map([...points4000, ...points3000].map(p => [p.join(','), p])).values()];
+  const components = connectedComponents(map, mapset);
+  const landing3000 = pointSummary(map, mapset, points3000, components.component);
+  const specialLanding = landing3000.find(p => p.x === 587 && p.y === 318) || null;
+  const escapeTargets = specialLanding
+    ? legalMoveTargetsFromCurrent(map, mapset, specialLanding.x, specialLanding.y).map(target => ({
+        ...target,
+        component: components.component[target.y * map.width + target.x]
+      }))
+    : [];
+  const escapeComponents = [...new Set(escapeTargets.map(target => target.component).filter(v => v >= 0))];
   result.checks.floor200 = {
     map: summarizeCandidate(selected[200]),
     missingMapsetImageIds: mapsetMissingImageIds(map),
-    landingFrom4000to200: pointSummary(map, mapset, points4000, new Int32Array(map.width * map.height)),
-    landingFrom3000to200: pointSummary(map, mapset, points3000, new Int32Array(map.width * map.height)),
-    uniqueLandingCount: uniquePoints.length
+    components: {
+      count: components.componentCount,
+      walkableCells: components.walkableCount
+    },
+    landingFrom4000to200: pointSummary(map, mapset, points4000, components.component),
+    landingFrom3000to200: landing3000,
+    uniqueLandingCount: uniquePoints.length,
+    specialLanding587318: {
+      landing: specialLanding,
+      escapeTargets,
+      escapeComponents,
+      canExitIntoWalkableMap: escapeTargets.length > 0,
+      canEnterMainWalkableComponent: escapeComponents.includes(0)
+    }
   };
 } else {
   result.conclusion.reasons.push('Endpoint floor 200 did not resolve to exactly one LS2MAP file.');
@@ -364,7 +404,11 @@ const floor200 = result.checks.floor200;
 const landing3000 = floor200?.landingFrom3000to200 || [];
 const target587318 = landing3000.find(p => p.x === 587 && p.y === 318);
 const endpoint4000Closed = Boolean(floor4000 && floor4000.allPortalOriginsMovementReachable);
-const endpoint3000LandingClosed = Boolean(target587318?.walkable);
+const specialLanding587318 = floor200?.specialLanding587318;
+const endpoint3000LandingClosed = Boolean(
+  target587318 &&
+  (target587318.walkable || specialLanding587318?.canEnterMainWalkableComponent)
+);
 const endpointMapEvidenceClosed = Boolean(
   floor4000 &&
   floor200 &&
@@ -385,8 +429,14 @@ result.checks.reopenedBlockers = {
   },
   route3000to200Landing587318: {
     resolved: endpoint3000LandingClosed,
-    status: endpoint3000LandingClosed ? 'closed-for-endpoint-landing-walkability' : 'still-blocked',
-    evidence: target587318 || null
+    status: endpoint3000LandingClosed ? 'closed-for-post-warp-movement' : 'still-blocked',
+    evidence: {
+      landing: target587318,
+      warpAllowsNonwalkableDestination: true,
+      escapeTargets: specialLanding587318?.escapeTargets ?? [],
+      canExitIntoWalkableMap: specialLanding587318?.canExitIntoWalkableMap ?? false,
+      canEnterMainWalkableComponent: specialLanding587318?.canEnterMainWalkableComponent ?? false
+    }
   }
 };
 
@@ -400,7 +450,7 @@ if (!endpointMapEvidenceClosed) {
 result.conclusion.mapEvidenceClosed = endpointMapEvidenceClosed;
 result.conclusion.blockersClosed = endpoint4000Closed && endpoint3000LandingClosed;
 result.conclusion.reasons.push(...(endpoint4000Closed ? [] : ['Endpoint 4000 portal-origin movement remains blocked: entry component and portal-origin component differ.']));
-result.conclusion.reasons.push(...(endpoint3000LandingClosed ? [] : ['Endpoint 200 landing (587,318) is not walkable in the endpoint mapset/map combination.']));
+result.conclusion.reasons.push(...(endpoint3000LandingClosed ? [] : ['Endpoint 200 landing (587,318) cannot be followed by a legal first movement into the walkable map component.']));
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 const serialized = JSON.stringify(result, null, 2) + '\n';
