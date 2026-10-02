@@ -36,6 +36,7 @@ public class UpdateChecker {
         self.assertEqual(method["callSites"], 2)
         self.assertEqual(method["uniqueCallIdentifierCount"], 1)
         self.assertEqual(method["calls"], ["client.execute"])
+        self.assertEqual([call["target"] for call in method["callSequence"]], ["client.execute", "client.execute"])
     def test_records_calls_without_literal_values(self):
         source = '''
 package com.newssa.stoneage.update;
