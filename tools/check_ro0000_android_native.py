@@ -63,6 +63,23 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
                 self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
         self.assertNotRegex("UnrelatedGameplayFunction()", FOCUSED_FUNCTION_RE)
 
+    def test_accessor_focus_includes_known_fields(self):
+        candidates = [
+            "realGetPos(unsigned int, short*, short*)",
+            "realGetWH(unsigned int, short*, short*)",
+            "realGetHitPoints(unsigned int, short*, short*)",
+            "realGetHitFlag(unsigned int, short*)",
+            "realGetPrioType(unsigned int, short*)",
+            "realGetHeightFlag(unsigned int, short*)",
+            "realGetSoundEffect(unsigned int)",
+            "realGetWalkSoundEffect(unsigned int)",
+            "realGetNo(unsigned int, unsigned int*)",
+            "realGetImage(int, unsigned char**, int*, int*)",
+        ]
+        for candidate in candidates:
+            with self.subTest(candidate=candidate):
+                self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
+
     def test_embedded_resource_format_string(self):
         values = relevant_embedded_strings(b"prefix\x00path/map4/%s/real.bin\x00")
         self.assertIn("path/map4/%s/real.bin", values)
