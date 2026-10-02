@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：18f00f6 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T08:27:39Z
+- 最新 commit：295d767 — test: expose subdue selection result on failure
+- 更新時間：2026-10-02T16:28:44+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.36
 - Playable HTML：⏸️ 尚未建立（刻意保留）
