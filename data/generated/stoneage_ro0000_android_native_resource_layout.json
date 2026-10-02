@@ -74,7 +74,79 @@
     "frameReadBytes": 10,
     "frameBitmapRule": "globalBmpNo = localFrameBmpNo + nextMaxAdrnID",
     "spriteStart": 100000,
-    "spriteCapacity": 40000
+    "spriteCapacity": 40000,
+    "animHeaderLayout": [
+      {
+        "offset": "0x00",
+        "sizeBytes": 2,
+        "field": "dir",
+        "type": "u16",
+        "meaning": "direction code"
+      },
+      {
+        "offset": "0x02",
+        "sizeBytes": 2,
+        "field": "no",
+        "type": "u16",
+        "meaning": "action/category code"
+      },
+      {
+        "offset": "0x04",
+        "sizeBytes": 4,
+        "field": "dtAnim",
+        "type": "u32",
+        "meaning": "animation duration input"
+      },
+      {
+        "offset": "0x08",
+        "sizeBytes": 4,
+        "field": "frameCnt",
+        "type": "u32",
+        "meaning": "number of frame records"
+      }
+    ],
+    "frameLayout": [
+      {
+        "offset": "0x00",
+        "sizeBytes": 4,
+        "field": "BmpNo",
+        "type": "u32",
+        "rule": "BmpNo + nextMaxAdrnID"
+      },
+      {
+        "offset": "0x04",
+        "sizeBytes": 2,
+        "field": "PosX",
+        "type": "i16",
+        "meaning": "horizontal frame offset"
+      },
+      {
+        "offset": "0x06",
+        "sizeBytes": 2,
+        "field": "PosY",
+        "type": "i16",
+        "meaning": "vertical frame offset"
+      },
+      {
+        "offset": "0x08",
+        "sizeBytes": 2,
+        "field": "SoundNo",
+        "type": "u16",
+        "meaning": "sound/effect cue ID"
+      }
+    ],
+    "targetRules": {
+      "spriteSlot": "sprNo - 100000",
+      "slotGuard": "derived slot <= 40000",
+      "storedAnimationDuration": "frameCnt == 0 ? 0 : dtAnim / frameCnt / 16",
+      "frameAllocation": "frameCnt FRAMELIST records per animation",
+      "abiPaddingSemantic": "unresolved"
+    },
+    "semanticBoundary": {
+      "recordFieldLayout": "closed from target reads and writes",
+      "allHardcodedPostLoadFixups": "not exhaustively enumerated in this summary",
+      "runtimeSoundEffectMeaning": "not runtime-verified"
+    }
   },
   "sabexCompatibility": {
     "cellEncoding": "uint16be",
