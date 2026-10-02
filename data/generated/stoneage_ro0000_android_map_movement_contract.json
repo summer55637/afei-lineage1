@@ -1,0 +1,121 @@
+{
+  "format": "ro0000-android-map-movement-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "x86": {
+      "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+      "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+    },
+    "armeabiV7a": {
+      "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+      "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+    }
+  },
+  "routePlanning": {
+    "function": "getRouteMap",
+    "address": {
+      "x86": "0x2175a0",
+      "armeabiV7a": "0x184bed"
+    },
+    "observedCalls": [
+      "getRouteData",
+      "checkHitMap",
+      "getDirData",
+      "Atan",
+      "AdjustDir"
+    ],
+    "interpretation": "Route planning consults the derived HitMap through checkHitMap; this is distinct from coordinate-step updates.",
+    "boundary": "The full route search algorithm and its interaction with server movement acceptance are not established by this call inventory alone."
+  },
+  "targetPointSetup": [
+    {
+      "function": "setMapMovePoint(int,int)",
+      "address": {
+        "x86": "0x218a30",
+        "armeabiV7a": "0x185979"
+      },
+      "observed": [
+        "Stores two integer target values",
+        "Scales target values by 64 in the internal floating-point coordinate frame",
+        "Computes displacement from current position and Euclidean normalization when nonzero",
+        "Uses Atan and AdjustDir to derive direction",
+        "Calls setPcDir, setPcWalkFlag, and setPcPoint"
+      ]
+    },
+    {
+      "function": "_setMapMovePoint(int,int)",
+      "address": {
+        "x86": "0x2192f0",
+        "armeabiV7a": "0x18600d"
+      },
+      "observed": [
+        "Uses the same 64-unit scaling pattern",
+        "Computes displacement and normalized movement vector",
+        "Uses Atan and AdjustDir",
+        "Calls setPcDir, setPcWalkFlag, and setPcPoint"
+      ]
+    },
+    {
+      "function": "setMapMovePoint2(int,int)",
+      "address": {
+        "x86": "0x21a8c0",
+        "armeabiV7a": "0x1871b0"
+      },
+      "observed": [
+        "Calculates a movement vector from integer inputs",
+        "Uses sqrt, Atan, and AdjustDir",
+        "Calls setPcDir, setPcWalkFlag, and setPcPoint"
+      ],
+      "boundary": "Contains additional branch guards; their full gameplay meaning is not inferred here."
+    }
+  ],
+  "stepUpdates": [
+    {
+      "function": "_mapMove()",
+      "address": {
+        "x86": "0x218f50",
+        "armeabiV7a": "0x185d25"
+      },
+      "observed": [
+        "Advances floating-point position by a movement increment",
+        "Compares the increment with remaining displacement and clamps position to the destination when the increment reaches it",
+        "Uses action value 4 and sets the PC walk flag while moving",
+        "When the movement vector is zero, checks the walk flag; the completion path uses action value 3, clears the walk flag, and stores SDL_GetTicks()+500"
+      ]
+    },
+    {
+      "function": "mapMove2()",
+      "address": {
+        "x86": "0x21abd0",
+        "armeabiV7a": "0x1872fd"
+      },
+      "observed": [
+        "Uses pointLen2 and compares movement increment against remaining displacement",
+        "Updates the floating-point position or clamps at the destination",
+        "Uses action value 4 and sets the PC walk flag while moving",
+        "When no movement increment remains, checks the walk flag; the completion path uses action value 3, clears the walk flag, and stores SDL_GetTicks()+500"
+      ]
+    },
+    {
+      "function": "_partyMapMove()",
+      "address": {
+        "x86": "0x219220",
+        "armeabiV7a": "0x185f7d"
+      },
+      "observed": [
+        "Iterates action records",
+        "Calls charMove2 for records passing the observed 0x100 flag check"
+      ]
+    }
+  ],
+  "relationship": {
+    "collision": "readHitMap builds the derived plane; checkHitMap queries it; getRouteMap calls checkHitMap.",
+    "cachePrefetch": "checkEmptyMapData and _checkEmptyMap prepare/send missing map rectangles independently of HitMap collision state.",
+    "clientVsServer": "This is target-client movement and route evidence only; it does not establish the server's final acceptance or persistence semantics."
+  },
+  "limits": [
+    "Addresses are build-specific and differ between ABIs.",
+    "Name and call evidence does not establish instruction-level equivalence between x86 and ARMv7.",
+    "No genuine Android runtime movement trace was available."
+  ]
+}
