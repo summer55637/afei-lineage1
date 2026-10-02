@@ -284,12 +284,27 @@ The exact update URL and other host/configuration strings remain omitted. The DE
 
 The signature audit preserves the APK unchanged. `apksigner` fails verification for the default, API 24, and API 28 profiles with a v1 `META-INF/MANIFEST.MF` entry digest mismatch. The certificate embedded in `META-INF/CERT.RSA` has SHA-256 fingerprint `a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc`. The certificate fingerprint alone does not identify a real-world publisher. The APK is not re-signed as part of this reconstruction.
 
+## JNI declaration/export cross-check
+
+The DEX declares six native methods on `com.newssa.stoneage.ko.JNILibrary`:
+
+- `callbackKeyboardChange(II)V`
+- `callbackKoLoginFailed()V`
+- `callbackKoLoginSuccess(String,String)V`
+- `callbackOrderCheck(String,int)V`
+- `callbackZipProgress(long,long)V`
+- `refreshBatteryInfo(II)V`
+
+Both target `libStoneage.so` ABIs export all six matching JNI symbol names. Both also export three additional callback names not declared as native methods on this DEX class: `callbackKoLogout`, `callbackWechatShare`, and `callbackYodaOpened`. The exported-name sets match between ARMv7 and x86.
+
+These extra exports are retained as a compatibility discrepancy. They may be unused legacy entrypoints, callable through a different registration path, or associated with a different Java-side version; the static name comparison cannot select among those explanations. The new `tools/audit_ro0000_android_jni.py` emits a machine-readable comparison from the actual DEX audit plus both extracted target libraries, and CI tests the comparison logic. This is a name-level check, not a proof that every callback is invoked or safely handled at runtime.
+
 ## Interpretation boundary and remaining work
 
 The APK archive/Manifest, DEX structure, Java wrapper flow, signature verification result, and focused x86/ARM native ELF evidence are now reproducible. This remains a static audit, not a complete decompilation or runtime trace. Still unverified:
 
 - The real-world publisher identity behind the embedded certificate fingerprint. Signature verification fails on all tested profiles because of a v1 entry digest mismatch; the APK is intentionally not re-signed.
-- Runtime behavior of launcher/startup, updater scheduling, JNI side effects, and device-specific permission/install handling.
+- Runtime behavior of launcher/startup, updater scheduling, the three extra exported JNI callbacks, and device-specific permission/install handling.
 - The actual `battleNNN.sabex`, `s/adrn.bin`, `s/real.bin`, `s/spr.bin`, `s/spradrn.bin`, and `path/map4/real.bin` payload bytes, including record instances and resulting real pixels.
 - Remaining field-level semantics across all 80 bytes of ADRNBIN, and the exhaustive list/effect of target-specific sprite post-load fixups.
 - The contents, digest admission rules, and full sequencing of the external resource patch list. The native binary proves a resource-update path exists, but the original patch payloads are not present for end-to-end validation.
