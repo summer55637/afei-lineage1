@@ -68,17 +68,16 @@ def parse_axml_manifest(data):
     return info
 
 def resource_name_candidates(data):
-    pattern=re.compile(r'(?i)(?:[A-Za-z0-9_.-]+[/\\\\])*[A-Za-z0-9_.-]+\\.(?:map|dat|pak|spr|bmp|png|jpe?g|ini|cfg|csv|txt|bin|xml|json|idx|anm)\\b')
-    runs=[x.decode('ascii','ignore') for x in re.findall(rb'[\\x20-\\x7e]{5,}',data)]
-    runs += [b''.join(re.findall(rb'[\\x20-\\x7e]\\x00',x)).decode('ascii','ignore') for x in []]
+    pattern=re.compile(r'(?i)(?:[A-Za-z0-9_.-]+[/\\])*[A-Za-z0-9_.-]+\.(?:map|dat|pak|spr|bmp|png|jpe?g|ini|cfg|csv|txt|bin|xml|json|idx|anm)\b')
+    runs=[x.decode('ascii','ignore') for x in re.findall(rb'[\x20-\x7e]{5,}',data)]
+    runs += [x[::2].decode('ascii','ignore') for x in re.findall(rb'(?:[\x20-\x7e]\x00){5,}',data)]
     candidates=set()
     for run in runs:
         if '://' in run: continue
         for match in pattern.finditer(run):
-            name=match.group(0).replace('\\\\','/')
+            name=match.group(0).replace('\\','/')
             if len(name)<=160: candidates.add(name)
     return sorted(candidates)[:200]
-
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--apk',required=True)
