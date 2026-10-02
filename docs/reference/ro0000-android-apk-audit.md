@@ -593,3 +593,16 @@ The audit gate compares focused native function and global-object name sets betw
 
 
 The focused artifact now publishes every function selected by the native map/resource symbol filter instead of a second manually maintained name allowlist. It also includes the filtered global object symbols, and CI checks object-name parity across x86 and ARMv7. This prevents newly discovered in-scope symbols from silently disappearing from the published evidence simply because a secondary list was not updated.
+
+
+## SDL client loop, input dispatch, and movement events
+
+The target's SDL entry, frame loop, event dispatcher, keyboard/mouse adapters, socket loop, and movement/event dispatch are now recorded in \`data/generated/stoneage_ro0000_android_client_loop_contract.json\`.
+
+- \`SDL_main\` initializes SDL and client-wide state, prepares directories/conversion support, creates the window, initializes the singleton runtime, enters \`GameMain\`, and performs teardown on return. Initialization and window-creation failure paths call \`SDL_Quit\`.
+- \`GameMain\` coordinates the frame work, including \`networkLoop\`, \`joy_read\`, \`ScriptRunningProcess\`, \`Process\`, \`MouseProc\`, \`AniProc\`, display ordering, \`HitMouseCursor\`, \`PutBmp\`, \`Flip\`, and \`SDL_Delay\`. Resource and battle-map initialization/repair routines also appear in its call path.
+- \`EventProc(unsigned int, SDL_Event*)\` routes keyboard actions including left/right/return/backspace and dispatches mouse point, click, and double-click adapters after coordinate conversion through \`GetRealX\` / \`GetRealY\`. The Android JNI keyboard-change callback is exported by both packaged ABIs; its behavior is not inferred from the exported name.
+- \`networkLoop\` reads from a socket with \`select\`/\`recv\`, appends bytes to the read buffer, dispatches complete messages through \`SaDispatchMessage\`, and sends pending bytes with \`send\`. Echo message senders are called from the loop.
+- \`moveProc\` invokes automatic movement and interaction helpers. \`onceMoveProc\` ties together route lookup, event checks, movement-route sending, map prefetch, local step movement, and map-area updates. \`_execEtcEvent\` branches to warp, encounter, and enemy-event senders; warp and enemy senders reset local map state before the event message is sent.
+
+The evidence distinguishes input dispatch, frame processing, network dispatch, route/collision checks, map-edge streaming, coordinate movement, and server event requests. It does not establish exact device touch behavior, server acceptance, or persistence without runtime/network traces. ABI symbol parity and successful disassembly are extraction-coverage checks only.
