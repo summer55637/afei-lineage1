@@ -244,6 +244,16 @@ Endpoint Provenance → Exact Identity → Endpoint Completeness → Fixed-C Sem
 
 本節為 2026-10-01 起的現行政策；更早的 changelog / milestone 文字保留歷史當時判定，不視為目前政策。
 
+## 2026-10-02 最終產品定位校正：2D 高品質重製＋放置版
+
+目前正式產品定位校正為：**「阿肥石器時代放置版」是石器時代 2D 高品質重製版＋放置玩法，不是實際 3D 遊戲。**
+
+- RO0000 Android 手游端的地圖、tile / parts / event、sprite、palette 與 HitMap 證據均維持 2D client 語義；研究層不再把「畫面更精緻」解讀成 3D。
+- 最終產品維持 2D 世界與 2D 角色／寵物呈現；「現代化」指的是更高品質的美術、動畫、特效、UI / UX、解析度與放置體驗。
+- 既有 World / Battle / Persistent State / Idle Loop / Browser Runtime 工作全部保留，不因本次定位校正而重做。
+- 產品層仍可新增 Idle Loop、AUTO、自動戰鬥、offline、reward、supply / death 等規則；它們與 source reconstruction 分層，不改變 2D 呈現方向。
+- 本次只校正現行定位文字與視覺規格；較早 changelog 中記錄當時「3D」方向的歷史文字保留，不倒改歷史。
+
 # 重建藍圖：最終目標前的資料與系統補齊
 
 更新日期：2026-10-01
