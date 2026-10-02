@@ -54,7 +54,7 @@ assert.equal(committed.persistentMutation,false);
 assert.equal(committed.damageExecuted,false);
 
 const defender=committed.battleContext.context.sides[1].entries[5];
-const attacker={bid:0,sourceType:'enemy',hp:80,fixDex:40,battleCommands:[1,5,-1]};
+const attacker={bid:0,sourceType:'enemy',hp:80,fixDex:60,battleCommands:[1,5,-1]};
 const boostedDuck=duckCheck(attacker,defender,{duckRoll:1});
 const baselineDuck=duckCheck(attacker,{...defender,battleCommands:[0,0,0],noguardDuckBonus:0},{duckRoll:1});
 assert.equal(boostedDuck.ok,true,JSON.stringify(boostedDuck));
