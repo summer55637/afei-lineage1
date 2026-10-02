@@ -40,7 +40,7 @@ for(const [name,branchMarker] of requiredBranches){
 
 assert.match(
   controller,
-  /if\(contextClear\.ok===true&&contextClear\.battleContextCleared===true\)battleContext=null/,
+  /if\(contextClear\.ok===true&&contextClear\.battleContextCleared===true\)\{\s*battleContext=null;/,
   'automatic Battle Context clear must remain gate-driven'
 );
 
