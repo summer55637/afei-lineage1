@@ -279,6 +279,23 @@ function buildAudit() {
 
   const configured32003 = exact.get(32003);
   const fixed24114 = exact.get(24114);
+  const itemLoaderProof = probeItemLoaderDisassembly();
+  const loaderIdAssignmentClosed =
+    itemLoaderProof.idScanAtoiCalls.length > 0
+    && itemLoaderProof.idScanWindow.some(line => /mov\s+DWORD PTR \[rbp-0x24\],eax/.test(line));
+  const makeAndRegDirectForward =
+    itemLoaderProof.makeItemDisassembly.makeAndRegLines.some(line => /call .*<ITEM_makeItem>/.test(line))
+    && itemLoaderProof.makeItemDisassembly.makeAndRegLines.some(line => /mov\s+esi,edx/.test(line));
+  const checkItemTableUsesPresenceFlag =
+    itemLoaderProof.checkItemRange.some(line => /mov\s+eax,DWORD PTR \[rax\]/.test(line))
+    && itemLoaderProof.checkItemRange.some(line => /ITEM_idx/.test(line));
+  const endpointItemIdLookupSemanticsClosed =
+    itemLoaderProof.interpretation.token17IsProven
+    && loaderIdAssignmentClosed
+    && itemLoaderProof.interpretation.itemIndexIsPopulatedByLoader
+    && makeAndRegDirectForward
+    && checkItemTableUsesPresenceFlag
+    && itemLoaderProof.interpretation.newPlayerGrantChainObserved;
 
   const rawText = raw.toString('latin1');
   const substring32003 = [];
@@ -312,7 +329,7 @@ function buildAudit() {
 
   return {
     format: 'stoneage-endpoint-item-seed-audit-v1',
-    status: configured32003.length > 0 ? 'endpoint-seed-candidate-found' : 'unresolved',
+    status: configured32003.length > 0 ? 'endpoint-seed-candidate-found' : (endpointItemIdLookupSemanticsClosed ? 'fail-closed-missing-source-item-id' : 'unresolved'),
     source: {
       setupPath: 'ro0000/server/merged-source/gmsv/setup.cf',
       setupBlobSha: gitSha('ro0000/server/merged-source/gmsv/setup.cf'),
@@ -342,7 +359,7 @@ function buildAudit() {
       }
     },
     serverBinaryProbe: probeServerBinary(),
-    itemLoaderDisassemblyProbe: probeItemLoaderDisassembly(),
+    itemLoaderDisassemblyProbe: itemLoaderProof,
     exactTokenMatches: {
       configuredItem1_32003: configured32003,
       fixedConfiguredItem_24114: fixed24114
@@ -354,25 +371,43 @@ function buildAudit() {
         line: match.line,
         positions: match.positions
       })),
-      endpointSemanticsClosed: false
+      endpointSemanticsClosed: endpointItemIdLookupSemanticsClosed,
+      configuredItem1HasSourceRow: configured32003.length > 0,
+      configuredItem1LookupWouldPass: endpointItemIdLookupSemanticsClosed && configured32003.length > 0,
+      configuredItem1LookupWouldFailClosed: endpointItemIdLookupSemanticsClosed && configured32003.length === 0
     },
     resolution: configured32003.length > 0
       ? {
           status: 'candidate',
-          rule: '32003 exists in selected endpoint itemset6.csv; continue loader/field-semantic audit before canonicalization.'
+          rule: '32003 exists in selected endpoint itemset6.csv; continue field-semantic audit before canonicalization.'
         }
-      : {
-          status: 'unresolved',
-          reason: 'setup.cf explicitly configures ITEM1=32003, but selected endpoint itemset6.csv contains no exact numeric token 32003. Do not remap or substitute another item from this evidence alone.',
-          secondaryEvidence: fixed24114.length > 0
-            ? 'The same endpoint itemset6.csv contains exactly one 24114 token occurrence, so the endpoint data is not simply missing the value 24114.'
-            : 'The selected endpoint Item table contains neither configured 32003 nor 24114 as an exact numeric token.'
-        },
+      : endpointItemIdLookupSemanticsClosed
+        ? {
+            status: 'fail-closed',
+            reason: 'Endpoint loader semantics are closed: token 17 is parsed into the Item-ID variable, ITEM_idx is populated by parsed Item ID plus sequential table index, ITEM_CHECKITEMTABLE checks ITEM_idx[ID], and new-player grant forwards the configured value directly to ITEM_makeItemAndRegist. Because endpoint itemset6.csv contains no source Item ID 32003, ITEM1=32003 fails the endpoint Item table lookup.',
+            secondaryEvidence: fixed24114.length > 0
+              ? 'The same endpoint itemset6.csv contains one 24114 occurrence at token 18; this is not evidence of source Item ID 24114.'
+              : 'The selected endpoint Item table contains neither configured 32003 nor 24114 as an exact numeric token.'
+          }
+        : {
+            status: 'unresolved',
+            reason: 'setup.cf explicitly configures ITEM1=32003, but endpoint loader semantics are not fully closed yet. Do not remap or substitute another item.',
+            secondaryEvidence: fixed24114.length > 0
+              ? 'The same endpoint itemset6.csv contains one 24114 occurrence.'
+              : 'The selected endpoint Item table contains neither configured 32003 nor 24114 as an exact numeric token.'
+          },
     interpretation: {
       fixedCFixedItemRuleApplied: false,
-      note: 'Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics.',
-      nextClosureBoundary: 'Because configured ITEM1=32003 is absent even as a raw substring from the selected endpoint CSV, the remaining decisive evidence layer is the deployed gmsvjt loader/transform behavior and any endpoint-specific Item data source it consumes.',
-      token17ProbeIsHypothesisOnly: true
+      note: 'Endpoint evidence only. Item-ID behavior here is derived from the deployed gmsvjt binary, not copied from fixed-C macro assumptions.',
+      token17IsProven: itemLoaderProof.interpretation.token17IsProven,
+      loaderIdAssignmentClosed,
+      itemIndexIsPopulatedByLoader: itemLoaderProof.interpretation.itemIndexIsPopulatedByLoader,
+      checkItemTableUsesPresenceFlag,
+      makeAndRegDirectForward,
+      endpointItemIdLookupSemanticsClosed,
+      nextClosureBoundary: endpointItemIdLookupSemanticsClosed
+        ? 'Current endpoint snapshot is source-closed for the configured Item lookup. ITEM1=32003 has no source row, so keep starter-item grant fail-closed unless new authoritative endpoint evidence changes the configured ID or mapping.'
+        : 'Continue deployed gmsvjt Item execution audit before resolving the endpoint starter-item boundary.'
     }
   };
 }
