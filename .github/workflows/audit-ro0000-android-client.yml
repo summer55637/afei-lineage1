@@ -121,6 +121,11 @@ jobs:
               "readAutoMapColor", "writeAutoMapColor", "mapEffect", "MapEffect", "HotUpdatePutbmp",
               "InitSpriteInfo", "FreeGetBattleMap", "cleanupRealbin", "InitPteernSeparationBin",
               "loadResources", "initResources", "myluaload", "LoadStoneAgeLUA",
+              "SDL_main", "EventProc", "GameMain", "DispCallProc", "networkLoop",
+              "ScriptRunningProcess", "Process", "MouseProc", "HitMouseCursor",
+              "KeyboardReturn", "keyBoardProcWnd", "moveProc", "onceMoveProc",
+              "partyMoveProc", "_execEtcEvent", "_etcEventCheck", "_sendWarpEvent",
+              "_sendEnemyEvent", "_checkWarpEvent", "_checkEnemyEvent", "callbackKeyboardChange",
           )
           focus = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":native["auditedApk"]["sha256"],"libraries":[]}
           for lib in native.get("nativeLibraries", []):
@@ -170,7 +175,11 @@ jobs:
               "checkEmptyMapData(", "_checkEmptyMap(", "lssproto_S_recv(",
               "lssproto_M_recv(", "lssproto_EN_recv(", "GetBinaryResource(",
               "CIniManage::ReadPatchInfo(", "UpdateAppNewVersion(", "realGetImage(",
-              "decoder("
+              "decoder(", "SDL_main", "EventProc(", "GameMain(", "DispCallProc(",
+              "networkLoop(", "Process(", "MouseProc(", "HitMouseCursor(",
+              "KeyboardReturn(", "keyBoardProcWnd(", "moveProc(", "onceMoveProc(",
+              "partyMoveProc(", "_execEtcEvent(", "_etcEventCheck(", "_sendWarpEvent(",
+              "_sendEnemyEvent(", "_checkWarpEvent(", "_checkEnemyEvent("
           )
           focus["coreFunctionCoverage"] = {abi: {
               "complete": all(any(name.startswith(prefix) for name in names) for prefix in core),
