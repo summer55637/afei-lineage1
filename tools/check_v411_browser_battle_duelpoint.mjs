@@ -60,7 +60,7 @@ result=planDuelPoint(context({sourceType:'pet'}));
 assert.equal(result.ok,false);
 assert.equal(result.reason,'pet-not-eligible');
 
-result=planDuelPoint(context({side:1,sideType:1,sourceType:'enemy'}));
+result=planDuelPoint(context({side:0,sideType:1,sourceType:'player'}));
 assert.equal(result.ok,false);
 assert.equal(result.reason,'non-player-side');
 
