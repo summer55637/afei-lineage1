@@ -16,6 +16,20 @@ APP_PREFIXES = (
     "com.newssa.stoneage.update",
     "org.libsdl.app",
 )
+VENDOR_PREFIXES = (
+    "com.tencent.apollo",
+    "com.tencent.apollovoice.httpclient",
+    "com.tencent.bugly.crashreport.crash.jni",
+    "com.tencent.gcloud.voice",
+)
+VENDOR_NATIVE_OWNERS = {
+    "com.tencent.apollo.ApolloVoiceEngine",
+    "com.tencent.apollovoice.httpclient.SRTTAPIHTTPTaskQueueImp",
+    "com.tencent.apollovoice.httpclient.URLRequest",
+    "com.tencent.bugly.crashreport.crash.jni.NativeCrashHandler",
+    "com.tencent.gcloud.voice.GCloudVoiceEngineHelper",
+}
+SCAN_PREFIXES = APP_PREFIXES + VENDOR_PREFIXES
 METHOD_RE = re.compile(
     r"(?m)^[ \t]*(?:(?:public|protected|private|static|final|synchronized|native|abstract|strictfp|default)\s+)*"
     r"(?:<[^>\n]+>\s*)?[A-Za-z_$][\w$<>, ?.\[\]]*\s+([A-Za-z_$][\w$]*)\s*"
@@ -146,7 +160,30 @@ def method_records(source):
 
 
 def supported_package(package):
-    return any(package == p or package.startswith(p + ".") for p in APP_PREFIXES)
+    return any(package == p or package.startswith(p + ".") for p in SCAN_PREFIXES)
+
+
+def should_include_class(package, class_name):
+    if any(package == p or package.startswith(p + ".") for p in APP_PREFIXES):
+        return True
+    return package + "." + class_name in VENDOR_NATIVE_OWNERS
+
+
+def native_library_load_requests(source):
+    """Extract only safe string-literal arguments to System.loadLibrary calls."""
+    masked = mask_java(source)
+    pattern = re.compile(r"\bSystem\s*\.\s*loadLibrary\s*\(\s*")
+    literal = re.compile(r'"([A-Za-z0-9_]{1,80})"\s*\)')
+    results = []
+    for match in pattern.finditer(masked):
+        value = literal.match(source, match.end())
+        if not value:
+            continue
+        results.append({
+            "line": masked.count("\n", 0, match.start()) + 1,
+            "library": value.group(1),
+        })
+    return results
 
 
 def main():
@@ -173,6 +210,8 @@ def main():
         if not classes:
             continue
         class_name = classes[0]
+        if not should_include_class(package, class_name):
+            continue
         methods = method_records(source)
         records.append({
             "package": package,
@@ -180,6 +219,7 @@ def main():
             "sourcePath": str(path.relative_to(root)),
             "methodCount": len(methods),
             "methods": methods,
+            "nativeLibraryLoadRequests": native_library_load_requests(source),
         })
 
     records.sort(key=lambda r: (r["package"], r["className"], r["sourcePath"]))
@@ -190,10 +230,11 @@ def main():
             "jadxVersion": args.jadx_version,
         },
         "scope": {
-            "packages": list(APP_PREFIXES),
+            "packages": list(SCAN_PREFIXES),
             "sourceFilesScanned": scanned,
             "classCount": len(records),
-            "includedClassPolicy": "all source classes under the declared package prefixes",
+            "includedClassPolicy": "all game/update/SDL classes plus five selected vendor classes that declare DEX native methods",
+            "vendorNativeOwners": sorted(VENDOR_NATIVE_OWNERS),
             "focusedClasses": sorted(FOCUS),
         },
         "classes": records,
@@ -202,7 +243,7 @@ def main():
             "stringAndCharacterLiteralContentsIncluded": False,
             "commentsIncluded": False,
             "urlsAndHostsIncluded": False,
-                        "onlyMethodNamesAndCallIdentifiers": True,
+            "onlyMethodNamesAndCallIdentifiers": True,
             "callSequenceIncluded": True,
             "sourceLineNumbersIncluded": True,
         },
