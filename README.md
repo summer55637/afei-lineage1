@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ceed04f — docs: record V4.37 WAZA lifecycle milestone
-- 更新時間：2026-10-02T16:34:08+08:00
+- 最新 commit：1f80015 — feat: inject pet skill catalog into battle context
+- 更新時間：2026-10-02T16:40:45+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.37
 - Playable HTML：⏸️ 尚未建立（刻意保留）
