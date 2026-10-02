@@ -136,6 +136,7 @@ function connectedComponents(map, mapset) {
   const queue = new Int32Array(n);
   let componentCount = 0;
   let walkableCount = 0;
+  const componentSizes = [];
   for (let i = 0; i < n; i++) {
     const x = i % map.width;
     const y = Math.floor(i / map.width);
@@ -163,9 +164,10 @@ function connectedComponents(map, mapset) {
         queue[tail++] = ni;
       }
     }
+    componentSizes.push(tail);
     componentCount++;
   }
-  return { walkable, component, componentCount, walkableCount };
+  return { walkable, component, componentCount, walkableCount, componentSizes };
 }
 
 function movementReachable(map, mapset, startPoints, targetPoints) {
@@ -377,12 +379,24 @@ if (selected[200]) {
       }))
     : [];
   const escapeComponents = [...new Set(escapeTargets.map(target => target.component).filter(v => v >= 0))];
+  const landingComponent = specialLanding?.component ?? -1;
+  const outgoingWarps200 = warps.filter(row => row.from[0] === 200).map(row => ({
+    line: row.line,
+    from: row.from,
+    to: row.to,
+    originWalkable: walkableAt(map, row.from[1], row.from[2], mapset),
+    originComponent: walkableAt(map, row.from[1], row.from[2], mapset)
+      ? components.component[row.from[2] * map.width + row.from[1]]
+      : -1
+  }));
+  const landingComponentOutgoingWarps = outgoingWarps200.filter(row => row.originComponent === landingComponent);
   result.checks.floor200 = {
     map: summarizeCandidate(selected[200]),
     missingMapsetImageIds: mapsetMissingImageIds(map),
     components: {
       count: components.componentCount,
-      walkableCells: components.walkableCount
+      walkableCells: components.walkableCount,
+      sizes: components.componentSizes.map((size, id) => ({ id, size }))
     },
     landingFrom4000to200: pointSummary(map, mapset, points4000, components.component),
     landingFrom3000to200: landing3000,
@@ -392,7 +406,9 @@ if (selected[200]) {
       escapeTargets,
       escapeComponents,
       canExitIntoWalkableMap: escapeTargets.length > 0,
-      canEnterMainWalkableComponent: escapeComponents.includes(0)
+      canEnterMainWalkableComponent: escapeComponents.includes(0),
+      hasOutgoingWarpInLandingComponent: landingComponentOutgoingWarps.length > 0,
+      outgoingWarpsInLandingComponent: landingComponentOutgoingWarps.slice(0, 100)
     }
   };
 } else {
@@ -435,7 +451,9 @@ result.checks.reopenedBlockers = {
       warpAllowsNonwalkableDestination: true,
       escapeTargets: specialLanding587318?.escapeTargets ?? [],
       canExitIntoWalkableMap: specialLanding587318?.canExitIntoWalkableMap ?? false,
-      canEnterMainWalkableComponent: specialLanding587318?.canEnterMainWalkableComponent ?? false
+      canEnterMainWalkableComponent: specialLanding587318?.canEnterMainWalkableComponent ?? false,
+      hasOutgoingWarpInLandingComponent: specialLanding587318?.hasOutgoingWarpInLandingComponent ?? false,
+      outgoingWarpsInLandingComponent: specialLanding587318?.outgoingWarpsInLandingComponent ?? []
     }
   }
 };
@@ -450,7 +468,7 @@ if (!endpointMapEvidenceClosed) {
 result.conclusion.mapEvidenceClosed = endpointMapEvidenceClosed;
 result.conclusion.blockersClosed = endpoint4000Closed && endpoint3000LandingClosed;
 result.conclusion.reasons.push(...(endpoint4000Closed ? [] : ['Endpoint 4000 portal-origin movement remains blocked: entry component and portal-origin component differ.']));
-result.conclusion.reasons.push(...(endpoint3000LandingClosed ? [] : ['Endpoint 200 landing (587,318) cannot be followed by a legal first movement into the walkable map component.']));
+result.conclusion.reasons.push(...(endpoint3000LandingClosed ? [] : ['Endpoint 200 landing (587,318) cannot reach the main walkable component or another proven outgoing warp.']));
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 const serialized = JSON.stringify(result, null, 2) + '\n';
