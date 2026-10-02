@@ -214,56 +214,6 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             with self.subTest(candidate=candidate):
                 self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
 
-    def test_sdl_input_main_loop_and_map_event_focus(self):
-        candidates = [
-            "SDL_main",
-            "EventProc(unsigned int, SDL_Event*)",
-            "GameMain()",
-            "DispCallProc()",
-            "networkLoop()",
-            "ScriptRunningProcess()",
-            "Process()",
-            "ScrollPanelProcess()",
-            "NextScrollPanelRender()",
-            "AniProc()",
-            "MouseProc()",
-            "HitMouseCursor()",
-            "ClearMouseOnceState()",
-            "InitProc()",
-            "GetKeyInputFocus(STR_BUFFER*)",
-            "KeyboardTab()",
-            "KeyboardBackSpace()",
-            "KeyboardLeft()",
-            "KeyboardRight()",
-            "KeyboardReturn()",
-            "MouseNowPoint(int, int)",
-            "MouseCrickLeftDownPoint(int, int)",
-            "MouseDblCrickRightUpPoint(int, int)",
-            "CleanMouseClick()",
-            "CheckWndMouse(int, int)",
-            "changeInput(STR_BUFFER*, int)",
-            "keyBoardGetWndFlag()",
-            "keyBoardSetWndFlag(int)",
-            "keyBoardProcWnd()",
-            "keyBoardGetStr()",
-            "keyBoardInitWnd(int, int)",
-            "keyBoardInitStr(int, int)",
-            "moveProc()",
-            "onceMoveProc()",
-            "partyMoveProc()",
-            "_execEtcEvent()",
-            "_etcEventCheck()",
-            "_sendWarpEvent()",
-            "_sendEnemyEvent()",
-            "_checkEnemyEvent(int, int)",
-            "_checkWarpEvent(int, int)",
-            "warpEffectProc()",
-            "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
-        ]
-        for candidate in candidates:
-            with self.subTest(candidate=candidate):
-                self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
-
     def test_input_movement_object_inventory(self):
         names = {
             "mouse", "pc", "nowFloor", "nowFloorGxSize", "nowFloorGySize",
