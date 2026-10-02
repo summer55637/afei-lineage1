@@ -137,15 +137,135 @@
     ],
     "targetRules": {
       "spriteSlot": "sprNo - 100000",
-      "slotGuard": "derived slot <= 40000",
+      "slotGuard": "derived slot > 40000 exits; slot == 40000 passes the observed comparison despite only 40000 allocated entries; malformed boundary remains unsafe/unverified",
       "storedAnimationDuration": "frameCnt == 0 ? 0 : dtAnim / frameCnt / 16",
       "frameAllocation": "frameCnt FRAMELIST records per animation",
       "abiPaddingSemantic": "unresolved"
     },
     "semanticBoundary": {
       "recordFieldLayout": "closed from target reads and writes",
-      "allHardcodedPostLoadFixups": "not exhaustively enumerated in this summary",
+      "allHardcodedPostLoadFixups": "all four selector branches in InitSprBinFileOpen are enumerated; runtime visual/audio effects remain unverified",
       "runtimeSoundEffectMeaning": "not runtime-verified"
+    },
+    "runtimeFrameStrideBytes": 12,
+    "postLoadFixups": {
+      "selectorBasis": "spriteSlot = sprNo - 100000",
+      "evidence": {
+        "x86": "InitSprBinFileOpen @ 0x3637e0",
+        "armeabiV7a": "InitSprBinFileOpen @ 0x23ad35",
+        "abiCrossCheck": "all four selectors and their mutations were observed in both x86 and ARMv7 builds"
+      },
+      "cases": [
+        {
+          "spriteSlot": 260,
+          "sprNo": 100260,
+          "selector": "spriteSlot == 0x104",
+          "mutations": [
+            {
+              "animationIndex": 21,
+              "frameIndex": 5,
+              "field": "SoundNo",
+              "value": 10001,
+              "valueHex": "0x2711"
+            }
+          ]
+        },
+        {
+          "spriteSlot": 373,
+          "sprNo": 100373,
+          "selector": "spriteSlot == 0x175",
+          "iteration": {
+            "variable": "i",
+            "inclusiveRange": [
+              0,
+              7
+            ]
+          },
+          "animationIndexFormula": "7 * i",
+          "mutations": [
+            {
+              "frameIndex": 8,
+              "field": "SoundNo",
+              "value": 254,
+              "valueHex": "0x00fe"
+            },
+            {
+              "frameIndex": 10,
+              "field": "SoundNo",
+              "value": 254,
+              "valueHex": "0x00fe"
+            },
+            {
+              "frameIndex": 15,
+              "field": "SoundNo",
+              "value": 250,
+              "valueHex": "0x00fa"
+            }
+          ],
+          "note": "Each of the eight selected animations receives the same three frame sound-cue overwrites."
+        },
+        {
+          "spriteSlot": 382,
+          "sprNo": 100382,
+          "selector": "spriteSlot == 0x17e",
+          "iteration": {
+            "variable": "i",
+            "inclusiveRange": [
+              0,
+              7
+            ]
+          },
+          "animationIndexFormula": "7 * i",
+          "mutations": [
+            {
+              "field": "frameCnt",
+              "value": 14
+            },
+            {
+              "field": "frames",
+              "operation": "free previous frame list; calloc(14, 12); store new pointer"
+            },
+            {
+              "field": "dtAnim",
+              "operation": "copy from SpriteData[381].animation[0].dtAnim"
+            },
+            {
+              "field": "BmpNo",
+              "operation": "fill 14 frames with consecutive IDs starting at the previous first frame BmpNo + 1",
+              "count": 14
+            },
+            {
+              "field": "SoundNo",
+              "operation": "copy frame-index 4 and 9 cue values from SpriteData[381].animation[0]",
+              "frameIndices": [
+                4,
+                9
+              ]
+            }
+          ],
+          "note": "Runtime frame records use a 12-byte stride; calloc zero-initializes the new frame list before the explicit fields are written."
+        },
+        {
+          "spriteSlot": 820,
+          "sprNo": 100820,
+          "selector": "spriteSlot == 0x334",
+          "iteration": {
+            "variable": "i",
+            "inclusiveRange": [
+              0,
+              7
+            ]
+          },
+          "animationIndexFormula": "7 * i + 5",
+          "mutations": [
+            {
+              "field": "SoundNo",
+              "operation": "set to zero for every frame in each selected animation"
+            }
+          ]
+        }
+      ],
+      "boundary": "These are the four selector branches in InitSprBinFileOpen; this does not prove that no other functions modify SpriteData after loading."
     }
   },
   "sabexCompatibility": {
