@@ -12,7 +12,7 @@ function context(status={},statusField='battleStatus'){
   ]}};
 }
 
-for(const key of ['paralysis','stone','sleep','dizzy','dragnet','barrier']){
+for(const key of ['paralysis','stone','sleep','barrier']){
   const input=context({[key]:1});
   const plan=planEnemyAiCommands(input,{actionRolls:[0],targetRolls:[0]});
   assert.equal(plan.ok,true,JSON.stringify({key,plan}));
@@ -31,7 +31,7 @@ for(const key of ['paralysis','stone','sleep','dizzy','dragnet','barrier']){
   assert.equal(actor.battleStatus?.[key]??actor.status?.[key]??actor[key],1);
 }
 
-for(const key of ['confusion','nocast','poison','drunk']){
+for(const key of ['dizzy','dragnet','confusion','nocast','poison','drunk']){
   const plan=planEnemyAiCommands(context({[key]:1},'status'),{actionRolls:[0],targetRolls:[0]});
   assert.equal(plan.ok,true,JSON.stringify({key,plan}));
   assert.equal(plan.commands[0].action,'attack',key+' is not a BATTLE_CanMoveCheck blocker');
