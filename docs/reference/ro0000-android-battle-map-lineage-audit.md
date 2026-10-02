@@ -191,3 +191,110 @@ encounter floor/x/y
 This means the current evidence does **not** support a simple rule such as `BattleMapNo = floor` or `BattleMapNo = floor % 220`. The local Android client is primarily a consumer of the field number selected upstream.
 
 The remaining closure target is the actual values stored in `MAP_BATTLEMAP`, `MAP_BATTLEMAP2`, and `MAP_BATTLEMAP3` for the target deployment, and then byte-level matching of those values to real `.sabex` files.
+
+## 8. RO0000 deployed `battlemap.txt`: concrete tile/image → BattleMapNo mapping
+
+This is the most important new layer because `ro0000/server/merged-source/gmsv/data/map/battlemap.txt` belongs to the preserved RO0000 deployment snapshot rather than an unrelated legacy repository.
+
+The pinned Fixed-C parser shows that this file is read as follows:
+
+~~~text
+$ a b c
+imageNumber or imageNumber to imageNumber
+~~~
+
+For every numeric image-number entry in the active block, the server stores:
+
+~~~text
+MAP_BATTLEMAP  = a
+MAP_BATTLEMAP2 = b
+MAP_BATTLEMAP3 = c
+~~~
+
+and `BATTLE_getBattleFieldNo(floor,x,y)` later chooses one of those three values with `RAND(0,2)`.
+
+### Concrete RO0000 examples
+
+The deployed file contains these mappings:
+
+~~~text
+$ 1 2 201
+0 to 99
+100 to 135
+...
+10000 to 120000
+
+$ 42 43
+534 to 537
+
+$ 45 46 204
+538 to 573
+
+$ 218
+9424 to 9433
+9435
+9440
+9436 to 9439
+
+$ 219
+9434
+~~~
+
+The `$ 218` / `$ 219` entries are especially useful: the deployed configuration directly assigns the top battle-map slots to concrete image-number ranges, rather than deriving them from floor numbers.
+
+### Effective candidate semantics
+
+The parser initializes all three candidate slots to the first value before copying additional values. Therefore:
+
+~~~text
+$ 42 43       -> [42, 43, 42]
+$ 218         -> [218, 218, 218]
+$ 45 46 204   -> [45, 46, 204]
+~~~
+
+So a two-value block is not a simple 50/50 pair: the current parser gives the first value two of the three random slots.
+
+### Configuration coverage observed
+
+A semantic parse of the current RO0000 file finds:
+
+- 74 active `$` mapping blocks.
+- 199 distinct BattleMapNo values referenced by those blocks.
+- 21 BattleMapNo values are currently unreferenced by `battlemap.txt`.
+- 61 blocks provide three explicit candidate values, 4 provide two, and 9 provide one.
+- Image-number coverage reaches the large range beginning at 10000 and ending at 120000.
+
+These counts describe the current file contents and parser semantics. An unreferenced BattleMapNo is not proof that its `.sabex` payload is missing; it only means no active numeric mapping to that slot was found in this configuration file.
+
+### One explicit duplicate assignment
+
+The file ends with:
+
+~~~text
+$ 200
+60317
+~~~
+
+Earlier in the file, image number `60317` falls under the `$ 1 2 201` range. The Fixed-C parser itself detects a duplicate setting and reports an error before writing the later value, so the final loaded value becomes `200` despite the duplicate warning.
+
+This is useful evidence that `battlemap.txt` is executable configuration with actual override/error-detection behavior, not merely documentation.
+
+## 9. Revised RO0000 battle-map chain
+
+The strongest end-to-end chain we can now document is:
+
+~~~text
+RO0000 battlemap.txt
+  -> encounter tile/image number
+  -> MAP_BATTLEMAP / MAP_BATTLEMAP2 / MAP_BATTLEMAP3
+  -> RAND(0,2)
+  -> selected BattleMapNo
+  -> battle field number delivered to Android client
+  -> target BattleMapNo clamp to 0..219
+  -> BattleMapFile[BattleMapNo]
+  -> battle00.sabex ... battle219.sabex
+  -> 4-byte SAB* header + 1089 big-endian uint16 cells
+  -> 33×33 tile rendering
+~~~
+
+This closes the selector/data lineage much further than the previous target-only analysis. The remaining gap is now byte-level payload identity: obtaining one or more actual target `.sabex` files and proving which tile IDs they contain.
