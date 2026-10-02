@@ -105,9 +105,9 @@ The native `createMap`, `readMap`, and `writeMap` functions use the separate loc
 |---:|---:|---|
 | 0 | 4 bytes | First dimension, copied from `createMap` argument 2 |
 | 4 | 4 bytes | Second dimension, copied from `createMap` argument 3 |
-| 8 | 2 \times A \times B bytes | Plane 1: A \times B sequential 16-bit cells |
-| 8+2AB | 2AB bytes | Plane 2: A \times B sequential 16-bit cells |
-| 8+4AB | 2AB bytes | Plane 3: A \times B sequential 16-bit cells |
+| 8 | 2 × A × B bytes | Plane 1: A × B sequential 16-bit cells |
+| 8+2AB | 2AB bytes | Plane 2: A × B sequential 16-bit cells |
+| 8+4AB | 2AB bytes | Plane 3: A × B sequential 16-bit cells |
 
 Here A and B denote the two stored dimensions in argument order; the x/y orientation is not established. The blank cache file produced by `createMap` is therefore 8+6AB bytes, assuming the writes complete successfully. The three planes are initialized with 16-bit zero values.
 
