@@ -8,11 +8,22 @@
     "packages": [
       "com.newssa.stoneage.ko",
       "com.newssa.stoneage.update",
-      "org.libsdl.app"
+      "org.libsdl.app",
+      "com.tencent.apollo",
+      "com.tencent.apollovoice.httpclient",
+      "com.tencent.bugly.crashreport.crash.jni",
+      "com.tencent.gcloud.voice"
     ],
-    "sourceFilesScanned": 45,
-    "classCount": 45,
-    "includedClassPolicy": "all source classes under the declared package prefixes",
+    "sourceFilesScanned": 64,
+    "classCount": 48,
+    "includedClassPolicy": "all game/update/SDL classes plus five selected vendor classes that declare DEX native methods",
+    "vendorNativeOwners": [
+      "com.tencent.apollo.ApolloVoiceEngine",
+      "com.tencent.apollovoice.httpclient.SRTTAPIHTTPTaskQueueImp",
+      "com.tencent.apollovoice.httpclient.URLRequest",
+      "com.tencent.bugly.crashreport.crash.jni.NativeCrashHandler",
+      "com.tencent.gcloud.voice.GCloudVoiceEngineHelper"
+    ],
     "focusedClasses": [
       "AssetsReleaser",
       "CheckUpdateTask",
@@ -374,14 +385,16 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
       "className": "BuildConfig",
       "sourcePath": "com/newssa/stoneage/ko/BuildConfig.java",
       "methodCount": 0,
-      "methods": []
+      "methods": [],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -912,7 +925,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -1283,14 +1297,16 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
       "className": "JNILibrary",
       "sourcePath": "com/newssa/stoneage/ko/JNILibrary.java",
       "methodCount": 0,
-      "methods": []
+      "methods": [],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -1741,7 +1757,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -1783,7 +1800,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -1819,7 +1837,8 @@
           "calls": [],
           "callSequence": []
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -2051,7 +2070,8 @@
           "calls": [],
           "callSequence": []
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -2066,7 +2086,8 @@
           "calls": [],
           "callSequence": []
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -2905,7 +2926,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -4393,7 +4415,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -4592,7 +4615,8 @@
           "calls": [],
           "callSequence": []
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -4676,7 +4700,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.ko",
@@ -5417,7 +5442,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -5473,7 +5499,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -5718,14 +5745,16 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
       "className": "Constants",
       "sourcePath": "com/newssa/stoneage/update/Constants.java",
       "methodCount": 0,
-      "methods": []
+      "methods": [],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -6032,7 +6061,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -6156,7 +6186,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -6289,7 +6320,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -6345,7 +6377,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "com.newssa.stoneage.update",
@@ -6494,7 +6527,1034 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
+    },
+    {
+      "package": "com.tencent.apollo",
+      "className": "ApolloVoiceEngine",
+      "sourcePath": "com/tencent/apollo/ApolloVoiceEngine.java",
+      "methodCount": 0,
+      "methods": [],
+      "nativeLibraryLoadRequests": []
+    },
+    {
+      "package": "com.tencent.bugly.crashreport.crash.jni",
+      "className": "NativeCrashHandler",
+      "sourcePath": "com/tencent/bugly/crashreport/crash/jni/NativeCrashHandler.java",
+      "methodCount": 28,
+      "methods": [
+        {
+          "name": "NativeCrashHandler",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "a",
+            "com.tencent.bugly.crashreport.common.info.a.a",
+            "com.tencent.bugly.crashreport.common.strategy.a.a",
+            "context.getDir",
+            "getAbsolutePath",
+            "z.a"
+          ],
+          "callSequence": [
+            {
+              "line": 52,
+              "target": "z.a"
+            },
+            {
+              "line": 54,
+              "target": "z.a"
+            },
+            {
+              "line": 55,
+              "target": "context.getDir"
+            },
+            {
+              "line": 55,
+              "target": "getAbsolutePath"
+            },
+            {
+              "line": 58,
+              "target": "com.tencent.bugly.crashreport.common.info.a.a"
+            },
+            {
+              "line": 65,
+              "target": "a"
+            },
+            {
+              "line": 65,
+              "target": "com.tencent.bugly.crashreport.common.strategy.a.a"
+            }
+          ]
+        },
+        {
+          "name": "getInstance",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "NativeCrashHandler"
+          ],
+          "callSequence": [
+            {
+              "line": 70,
+              "target": "NativeCrashHandler"
+            }
+          ]
+        },
+        {
+          "name": "getInstance",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": [],
+          "callSequence": []
+        },
+        {
+          "name": "getDumpFilePath",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": [],
+          "callSequence": []
+        },
+        {
+          "name": "setDumpFilePath",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": [],
+          "callSequence": []
+        },
+        {
+          "name": "a",
+          "callSites": 34,
+          "uniqueCallIdentifierCount": 14,
+          "calls": [
+            "Integer.parseInt",
+            "Integer.valueOf",
+            "StringBuilder",
+            "bool.booleanValue",
+            "com.tencent.bugly.crashreport.common.info.a.L",
+            "com.tencent.bugly.crashreport.common.info.a.b",
+            "regist",
+            "replace",
+            "sb.append",
+            "sb.toString",
+            "strRegist.replace",
+            "strReplace3.length",
+            "x.c",
+            "x.d"
+          ],
+          "callSequence": [
+            {
+              "line": 97,
+              "target": "x.d"
+            },
+            {
+              "line": 102,
+              "target": "regist"
+            },
+            {
+              "line": 105,
+              "target": "x.c"
+            },
+            {
+              "line": 106,
+              "target": "replace"
+            },
+            {
+              "line": 107,
+              "target": "replace"
+            },
+            {
+              "line": 108,
+              "target": "strRegist.replace"
+            },
+            {
+              "line": 110,
+              "target": "strReplace3.length"
+            },
+            {
+              "line": 111,
+              "target": "strReplace3.length"
+            },
+            {
+              "line": 112,
+              "target": "StringBuilder"
+            },
+            {
+              "line": 113,
+              "target": "sb.append"
+            },
+            {
+              "line": 116,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 116,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 119,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 119,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 125,
+              "target": "x.d"
+            },
+            {
+              "line": 130,
+              "target": "x.d"
+            },
+            {
+              "line": 136,
+              "target": "StringBuilder"
+            },
+            {
+              "line": 137,
+              "target": "sb.append"
+            },
+            {
+              "line": 139,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 139,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 142,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 142,
+              "target": "Integer.parseInt"
+            },
+            {
+              "line": 147,
+              "target": "sb.append"
+            },
+            {
+              "line": 148,
+              "target": "sb.toString"
+            },
+            {
+              "line": 152,
+              "target": "x.d"
+            },
+            {
+              "line": 157,
+              "target": "x.d"
+            },
+            {
+              "line": 164,
+              "target": "x.c"
+            },
+            {
+              "line": 172,
+              "target": "Integer.valueOf"
+            },
+            {
+              "line": 177,
+              "target": "com.tencent.bugly.crashreport.common.info.a.b"
+            },
+            {
+              "line": 178,
+              "target": "Integer.valueOf"
+            },
+            {
+              "line": 178,
+              "target": "com.tencent.bugly.crashreport.common.info.a.L"
+            },
+            {
+              "line": 182,
+              "target": "com.tencent.bugly.crashreport.common.info.a.b"
+            },
+            {
+              "line": 185,
+              "target": "bool.booleanValue"
+            },
+            {
+              "line": 188,
+              "target": "Integer.valueOf"
+            }
+          ]
+        },
+        {
+          "name": "startNativeMonitor",
+          "callSites": 27,
+          "uniqueCallIdentifierCount": 20,
+          "calls": [
+            "NativeCrashHandler.this.a",
+            "NativeCrashHandler.this.n.a",
+            "Runnable",
+            "a",
+            "b.a",
+            "nativeCrashHandler.setNativeAppVersion",
+            "nativeCrashHandler2.setNativeAppChannel",
+            "nativeCrashHandler3.setNativeAppPackage",
+            "nativeCrashHandler4.c.g",
+            "nativeCrashHandler4.setNativeUserId",
+            "nativeCrashHandler5.c.a",
+            "nativeCrashHandler5.setNativeIsAppForeground",
+            "nativeCrashHandler6.setNativeLaunchTime",
+            "run",
+            "th.printStackTrace",
+            "this.c.getClass",
+            "this.d.a",
+            "x.a",
+            "z.a",
+            "z.b"
+          ],
+          "callSequence": [
+            {
+              "line": 201,
+              "target": "z.a"
+            },
+            {
+              "line": 206,
+              "target": "this.c.getClass"
+            },
+            {
+              "line": 208,
+              "target": "a"
+            },
+            {
+              "line": 211,
+              "target": "a"
+            },
+            {
+              "line": 212,
+              "target": "this.d.a"
+            },
+            {
+              "line": 212,
+              "target": "Runnable"
+            },
+            {
+              "line": 214,
+              "target": "run"
+            },
+            {
+              "line": 215,
+              "target": "z.a"
+            },
+            {
+              "line": 216,
+              "target": "x.a"
+            },
+            {
+              "line": 221,
+              "target": "nativeCrashHandler.setNativeAppVersion"
+            },
+            {
+              "line": 223,
+              "target": "nativeCrashHandler2.setNativeAppChannel"
+            },
+            {
+              "line": 225,
+              "target": "nativeCrashHandler3.setNativeAppPackage"
+            },
+            {
+              "line": 227,
+              "target": "nativeCrashHandler4.setNativeUserId"
+            },
+            {
+              "line": 227,
+              "target": "nativeCrashHandler4.c.g"
+            },
+            {
+              "line": 229,
+              "target": "nativeCrashHandler5.setNativeIsAppForeground"
+            },
+            {
+              "line": 229,
+              "target": "nativeCrashHandler5.c.a"
+            },
+            {
+              "line": 231,
+              "target": "nativeCrashHandler6.setNativeLaunchTime"
+            },
+            {
+              "line": 233,
+              "target": "x.a"
+            },
+            {
+              "line": 234,
+              "target": "th.printStackTrace"
+            },
+            {
+              "line": 237,
+              "target": "b.a"
+            },
+            {
+              "line": 239,
+              "target": "x.a"
+            },
+            {
+              "line": 240,
+              "target": "NativeCrashHandler.this.n.a"
+            },
+            {
+              "line": 241,
+              "target": "NativeCrashHandler.this.n.a"
+            },
+            {
+              "line": 243,
+              "target": "b.a"
+            },
+            {
+              "line": 245,
+              "target": "NativeCrashHandler.this.a"
+            },
+            {
+              "line": 246,
+              "target": "z.b"
+            },
+            {
+              "line": 253,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 19,
+          "uniqueCallIdentifierCount": 15,
+          "calls": [
+            "NativeCrashHandler.this.a",
+            "NativeCrashHandler.this.n.a",
+            "b.a",
+            "nativeCrashHandler.setNativeAppVersion",
+            "nativeCrashHandler2.setNativeAppChannel",
+            "nativeCrashHandler3.setNativeAppPackage",
+            "nativeCrashHandler4.c.g",
+            "nativeCrashHandler4.setNativeUserId",
+            "nativeCrashHandler5.c.a",
+            "nativeCrashHandler5.setNativeIsAppForeground",
+            "nativeCrashHandler6.setNativeLaunchTime",
+            "th.printStackTrace",
+            "x.a",
+            "z.a",
+            "z.b"
+          ],
+          "callSequence": [
+            {
+              "line": 215,
+              "target": "z.a"
+            },
+            {
+              "line": 216,
+              "target": "x.a"
+            },
+            {
+              "line": 221,
+              "target": "nativeCrashHandler.setNativeAppVersion"
+            },
+            {
+              "line": 223,
+              "target": "nativeCrashHandler2.setNativeAppChannel"
+            },
+            {
+              "line": 225,
+              "target": "nativeCrashHandler3.setNativeAppPackage"
+            },
+            {
+              "line": 227,
+              "target": "nativeCrashHandler4.setNativeUserId"
+            },
+            {
+              "line": 227,
+              "target": "nativeCrashHandler4.c.g"
+            },
+            {
+              "line": 229,
+              "target": "nativeCrashHandler5.setNativeIsAppForeground"
+            },
+            {
+              "line": 229,
+              "target": "nativeCrashHandler5.c.a"
+            },
+            {
+              "line": 231,
+              "target": "nativeCrashHandler6.setNativeLaunchTime"
+            },
+            {
+              "line": 233,
+              "target": "x.a"
+            },
+            {
+              "line": 234,
+              "target": "th.printStackTrace"
+            },
+            {
+              "line": 237,
+              "target": "b.a"
+            },
+            {
+              "line": 239,
+              "target": "x.a"
+            },
+            {
+              "line": 240,
+              "target": "NativeCrashHandler.this.n.a"
+            },
+            {
+              "line": 241,
+              "target": "NativeCrashHandler.this.n.a"
+            },
+            {
+              "line": 243,
+              "target": "b.a"
+            },
+            {
+              "line": 245,
+              "target": "NativeCrashHandler.this.a"
+            },
+            {
+              "line": 246,
+              "target": "z.b"
+            }
+          ]
+        },
+        {
+          "name": "a",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "System.load",
+            "System.loadLibrary",
+            "th.getMessage",
+            "x.d"
+          ],
+          "callSequence": [
+            {
+              "line": 261,
+              "target": "System.load"
+            },
+            {
+              "line": 263,
+              "target": "System.loadLibrary"
+            },
+            {
+              "line": 271,
+              "target": "x.d"
+            },
+            {
+              "line": 271,
+              "target": "th.getMessage"
+            },
+            {
+              "line": 272,
+              "target": "x.d"
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "unregist",
+            "x.a",
+            "x.c",
+            "x.d",
+            "z.a"
+          ],
+          "callSequence": [
+            {
+              "line": 283,
+              "target": "x.d"
+            },
+            {
+              "line": 287,
+              "target": "unregist"
+            },
+            {
+              "line": 288,
+              "target": "x.a"
+            },
+            {
+              "line": 293,
+              "target": "z.a"
+            },
+            {
+              "line": 295,
+              "target": "x.a"
+            },
+            {
+              "line": 298,
+              "target": "x.c"
+            },
+            {
+              "line": 304,
+              "target": "x.c"
+            }
+          ]
+        },
+        {
+          "name": "testNativeCrash",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "testCrash",
+            "x.d"
+          ],
+          "callSequence": [
+            {
+              "line": 311,
+              "target": "x.d"
+            },
+            {
+              "line": 313,
+              "target": "testCrash"
+            }
+          ]
+        },
+        {
+          "name": "getNativeExceptionHandler",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": [],
+          "callSequence": []
+        },
+        {
+          "name": "a",
+          "callSites": 14,
+          "uniqueCallIdentifierCount": 14,
+          "calls": [
+            "File",
+            "Integer.valueOf",
+            "Long.parseLong",
+            "file.exists",
+            "file.isDirectory",
+            "file.listFiles",
+            "file2.delete",
+            "file2.getName",
+            "name.indexOf",
+            "name.startsWith",
+            "name.substring",
+            "x.c",
+            "x.e",
+            "z.b"
+          ],
+          "callSequence": [
+            {
+              "line": 323,
+              "target": "z.b"
+            },
+            {
+              "line": 324,
+              "target": "File"
+            },
+            {
+              "line": 325,
+              "target": "file.exists"
+            },
+            {
+              "line": 325,
+              "target": "file.isDirectory"
+            },
+            {
+              "line": 325,
+              "target": "file.listFiles"
+            },
+            {
+              "line": 330,
+              "target": "file2.getName"
+            },
+            {
+              "line": 331,
+              "target": "name.startsWith"
+            },
+            {
+              "line": 333,
+              "target": "name.indexOf"
+            },
+            {
+              "line": 334,
+              "target": "Long.parseLong"
+            },
+            {
+              "line": 334,
+              "target": "name.substring"
+            },
+            {
+              "line": 335,
+              "target": "file2.delete"
+            },
+            {
+              "line": 340,
+              "target": "x.e"
+            },
+            {
+              "line": 344,
+              "target": "x.c"
+            },
+            {
+              "line": 344,
+              "target": "Integer.valueOf"
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "startNativeMonitor"
+          ],
+          "callSequence": [
+            {
+              "line": 350,
+              "target": "startNativeMonitor"
+            }
+          ]
+        },
+        {
+          "name": "isUserOpened",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": [],
+          "callSequence": []
+        },
+        {
+          "name": "c",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "Boolean.valueOf",
+            "x.a"
+          ],
+          "callSequence": [
+            {
+              "line": 365,
+              "target": "x.a"
+            },
+            {
+              "line": 365,
+              "target": "Boolean.valueOf"
+            }
+          ]
+        },
+        {
+          "name": "setUserOpened",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "Boolean.valueOf",
+            "aVarA.c",
+            "b",
+            "c",
+            "com.tencent.bugly.crashreport.common.strategy.a.a",
+            "isUserOpened",
+            "x.a"
+          ],
+          "callSequence": [
+            {
+              "line": 371,
+              "target": "c"
+            },
+            {
+              "line": 372,
+              "target": "isUserOpened"
+            },
+            {
+              "line": 373,
+              "target": "com.tencent.bugly.crashreport.common.strategy.a.a"
+            },
+            {
+              "line": 375,
+              "target": "aVarA.c"
+            },
+            {
+              "line": 378,
+              "target": "x.a"
+            },
+            {
+              "line": 378,
+              "target": "Boolean.valueOf"
+            },
+            {
+              "line": 379,
+              "target": "b"
+            }
+          ]
+        },
+        {
+          "name": "onStrategyChanged",
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "Boolean.valueOf",
+            "b",
+            "c",
+            "com.tencent.bugly.crashreport.common.strategy.a.a",
+            "x.a",
+            "x.d"
+          ],
+          "callSequence": [
+            {
+              "line": 389,
+              "target": "x.d"
+            },
+            {
+              "line": 389,
+              "target": "Boolean.valueOf"
+            },
+            {
+              "line": 391,
+              "target": "com.tencent.bugly.crashreport.common.strategy.a.a"
+            },
+            {
+              "line": 391,
+              "target": "c"
+            },
+            {
+              "line": 397,
+              "target": "x.a"
+            },
+            {
+              "line": 397,
+              "target": "Boolean.valueOf"
+            },
+            {
+              "line": 398,
+              "target": "b"
+            },
+            {
+              "line": 401,
+              "target": "com.tencent.bugly.crashreport.common.strategy.a.a"
+            },
+            {
+              "line": 401,
+              "target": "c"
+            },
+            {
+              "line": 407,
+              "target": "x.a"
+            },
+            {
+              "line": 407,
+              "target": "Boolean.valueOf"
+            },
+            {
+              "line": 408,
+              "target": "b"
+            }
+          ]
+        },
+        {
+          "name": "appendLogToNative",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "appendNativeLog",
+            "bool.booleanValue",
+            "th.printStackTrace",
+            "x.a",
+            "z.a"
+          ],
+          "callSequence": [
+            {
+              "line": 419,
+              "target": "appendNativeLog"
+            },
+            {
+              "line": 421,
+              "target": "z.a"
+            },
+            {
+              "line": 423,
+              "target": "bool.booleanValue"
+            },
+            {
+              "line": 429,
+              "target": "x.a"
+            },
+            {
+              "line": 430,
+              "target": "th.printStackTrace"
+            }
+          ]
+        },
+        {
+          "name": "putKeyValueToNative",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "bool.booleanValue",
+            "putNativeKeyValue",
+            "th.printStackTrace",
+            "x.a",
+            "z.a"
+          ],
+          "callSequence": [
+            {
+              "line": 442,
+              "target": "putNativeKeyValue"
+            },
+            {
+              "line": 444,
+              "target": "z.a"
+            },
+            {
+              "line": 446,
+              "target": "bool.booleanValue"
+            },
+            {
+              "line": 452,
+              "target": "x.a"
+            },
+            {
+              "line": 453,
+              "target": "th.printStackTrace"
+            }
+          ]
+        },
+        {
+          "name": "a",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "setNativeInfo",
+            "th.printStackTrace"
+          ],
+          "callSequence": [
+            {
+              "line": 464,
+              "target": "setNativeInfo"
+            },
+            {
+              "line": 470,
+              "target": "th.printStackTrace"
+            }
+          ]
+        },
+        {
+          "name": "filterSigabrtSysLog",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "a"
+          ],
+          "callSequence": [
+            {
+              "line": 479,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "setNativeAppVersion",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "a"
+          ],
+          "callSequence": [
+            {
+              "line": 483,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "setNativeAppChannel",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "a"
+          ],
+          "callSequence": [
+            {
+              "line": 487,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "setNativeAppPackage",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "a"
+          ],
+          "callSequence": [
+            {
+              "line": 491,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "setNativeUserId",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "a"
+          ],
+          "callSequence": [
+            {
+              "line": 495,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "setNativeIsAppForeground",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "a"
+          ],
+          "callSequence": [
+            {
+              "line": 500,
+              "target": "a"
+            }
+          ]
+        },
+        {
+          "name": "setNativeLaunchTime",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "String.valueOf",
+            "a",
+            "e.printStackTrace",
+            "x.a"
+          ],
+          "callSequence": [
+            {
+              "line": 505,
+              "target": "a"
+            },
+            {
+              "line": 505,
+              "target": "String.valueOf"
+            },
+            {
+              "line": 507,
+              "target": "x.a"
+            },
+            {
+              "line": 510,
+              "target": "e.printStackTrace"
+            }
+          ]
+        }
+      ],
+      "nativeLibraryLoadRequests": []
+    },
+    {
+      "package": "com.tencent.gcloud.voice",
+      "className": "GCloudVoiceEngineHelper",
+      "sourcePath": "com/tencent/gcloud/voice/GCloudVoiceEngineHelper.java",
+      "methodCount": 0,
+      "methods": [],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -6619,14 +7679,16 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
       "className": "HIDDevice",
       "sourcePath": "org/libsdl/app/HIDDevice.java",
       "methodCount": 0,
-      "methods": []
+      "methods": [],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -7874,7 +8936,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -9261,7 +10324,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -9744,7 +10808,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -9876,7 +10941,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -12144,7 +13210,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -12664,14 +13731,16 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
       "className": "SDLClipboardHandler",
       "sourcePath": "org/libsdl/app/SDLClipboardHandler.java",
       "methodCount": 0,
-      "methods": []
+      "methods": [],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -12750,7 +13819,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -12862,7 +13932,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -12940,7 +14011,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13040,7 +14112,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13168,7 +14241,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13380,7 +14454,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13435,7 +14510,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13554,7 +14630,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13576,7 +14653,8 @@
           "calls": [],
           "callSequence": []
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13961,7 +15039,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -13997,7 +15076,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -14067,7 +15147,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     },
     {
       "package": "org.libsdl.app",
@@ -14772,7 +15853,8 @@
             }
           ]
         }
-      ]
+      ],
+      "nativeLibraryLoadRequests": []
     }
   ],
   "redaction": {
