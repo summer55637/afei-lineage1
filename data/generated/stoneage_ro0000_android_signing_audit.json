@@ -1,0 +1,90 @@
+{
+  "format": "ro0000-android-apk-signing-audit-v2",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "sha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "fileBytes": 24931847
+  },
+  "tool": {
+    "name": "apksigner",
+    "version": "0.9"
+  },
+  "verification": {
+    "status": "signature-verification-failed",
+    "profiles": [
+      {
+        "minimumApi": null,
+        "exitCode": 1,
+        "verified": false,
+        "schemes": {
+          "v1": null,
+          "v2": null,
+          "v3": null,
+          "v3.1": null,
+          "v4": null
+        },
+        "signerCount": 0,
+        "signers": [],
+        "verifiesMarker": false,
+        "diagnosticCodes": [
+          "APK_DOES_NOT_VERIFY",
+          "V1_ENTRY_DIGEST_MISMATCH"
+        ]
+      },
+      {
+        "minimumApi": 24,
+        "exitCode": 1,
+        "verified": false,
+        "schemes": {
+          "v1": null,
+          "v2": null,
+          "v3": null,
+          "v3.1": null,
+          "v4": null
+        },
+        "signerCount": 0,
+        "signers": [],
+        "verifiesMarker": false,
+        "diagnosticCodes": [
+          "APK_DOES_NOT_VERIFY",
+          "V1_ENTRY_DIGEST_MISMATCH"
+        ]
+      },
+      {
+        "minimumApi": 28,
+        "exitCode": 1,
+        "verified": false,
+        "schemes": {
+          "v1": null,
+          "v2": null,
+          "v3": null,
+          "v3.1": null,
+          "v4": null
+        },
+        "signerCount": 0,
+        "signers": [],
+        "verifiesMarker": false,
+        "diagnosticCodes": [
+          "APK_DOES_NOT_VERIFY",
+          "V1_ENTRY_DIGEST_MISMATCH"
+        ]
+      }
+    ]
+  },
+  "certificateFingerprints": [
+    {
+      "entry": "META-INF/CERT.RSA",
+      "certificateIndex": 1,
+      "certificateSha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc"
+    }
+  ],
+  "disclosure": {
+    "certificateDnOmitted": true,
+    "reportedIdentity": "SHA-256 fingerprints only"
+  },
+  "limitations": [
+    "Signature verification does not establish the APK publisher's real-world identity.",
+    "A signer fingerprint identifies this certificate only; no external publisher registry is assumed.",
+    "Runtime behavior and external resource availability are outside signature verification."
+  ]
+}
