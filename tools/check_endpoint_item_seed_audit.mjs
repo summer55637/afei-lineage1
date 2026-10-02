@@ -130,6 +130,19 @@ function probeItemLoaderDisassembly() {
     .split(/\r?\n/)
     .filter(line => /ITEM_idx|ITEM_tblen|ITEM_tbl/.test(line))
     .slice(0, 120);
+  const itemIdxLenContexts = commandText('bash', [
+    '-lc',
+    "set -e; objdump -drwC -M intel --section=.text " + SERVER_BIN + " | grep -n -C 12 '9ed974 <ITEM_idxlen>' | head -n 320 || true"
+  ]).split(/\r?\n/);
+  const loaderPopulationRange = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--start-address=0x583300', '--stop-address=0x583590', SERVER_BIN
+  ]).split(/\r?\n/);
+  const makeItemRange = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--start-address=0x5848b0', '--stop-address=0x584a90', SERVER_BIN
+  ]).split(/\r?\n/);
+  const checkItemRange = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--start-address=0x586bd0', '--stop-address=0x586c40', SERVER_BIN
+  ]).split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     if (/ITEM_idx/.test(lines[i])) {
       loaderIndexWindows.push(lines.slice(Math.max(0, i - 8), Math.min(lines.length, i + 12)));
@@ -191,6 +204,10 @@ function probeItemLoaderDisassembly() {
     loaderItemIndexWindows: loaderIndexWindows,
     allItemIndexContexts,
     itemIndexSymbols,
+    itemIdxLenContexts,
+    loaderPopulationRange,
+    makeItemRange,
+    checkItemRange,
     makeItemDisassembly: {
       head: makeHead,
       transformCalls: makeTransformCalls,
@@ -211,6 +228,8 @@ function probeItemLoaderDisassembly() {
       directMakeItemTransformObserved: makeTransformCalls.length > 0,
       directItemTableAccessObserved: makeItemTableRefs.length > 0,
       itemIndexAccessObserved: makeItemIndexRefs.length > 0,
+      itemIndexIsPopulatedByLoader: loaderPopulationRange.some(line => /9ed968 <ITEM_idx>|ITEM_idx/.test(line)),
+      itemIndexLengthObserved: itemIdxLenContexts.length > 0,
       itemCheckTableSymbolObserved: checkSymbolLines.some(line => /_ITEM_CHECKITEMTABLE/.test(line)),
       newPlayerGrantChainObserved: grantItemCalls.some(line => /ITEM_makeItemAndRegist/.test(line)),
       newPlayerItemGetterObserved: getterLines.some(line => /getNewplayergiveitem/.test(line)),
