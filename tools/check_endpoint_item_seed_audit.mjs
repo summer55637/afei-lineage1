@@ -122,6 +122,14 @@ function probeItemLoaderDisassembly() {
   const tblenRefs = lines.filter(line => /ITEM_tblen/.test(line)).slice(0, 40);
   const loaderIndexRefs = lines.filter(line => /ITEM_idx/.test(line)).slice(0, 80);
   const loaderIndexWindows = [];
+  const allItemIndexContexts = commandText('bash', [
+    '-lc',
+    "set -e; objdump -drwC -M intel --section=.text " + SERVER_BIN + " | grep -n -C 10 '9ed968 <ITEM_idx>' | head -n 360 || true"
+  ]).split(/\r?\n/);
+  const itemIndexSymbols = commandText('readelf', ['-Ws', SERVER_BIN])
+    .split(/\r?\n/)
+    .filter(line => /ITEM_idx|ITEM_tblen|ITEM_tbl/.test(line))
+    .slice(0, 120);
   for (let i = 0; i < lines.length; i++) {
     if (/ITEM_idx/.test(lines[i])) {
       loaderIndexWindows.push(lines.slice(Math.max(0, i - 8), Math.min(lines.length, i + 12)));
@@ -181,6 +189,8 @@ function probeItemLoaderDisassembly() {
     itemTblenReferences: tblenRefs,
     loaderItemIndexReferences: loaderIndexRefs,
     loaderItemIndexWindows: loaderIndexWindows,
+    allItemIndexContexts,
+    itemIndexSymbols,
     makeItemDisassembly: {
       head: makeHead,
       transformCalls: makeTransformCalls,
