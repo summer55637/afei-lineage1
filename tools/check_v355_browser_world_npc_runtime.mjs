@@ -76,7 +76,7 @@ const open=await controller.dispatch({
 });
 assert.equal(open.ok,true);
 assert.equal(open.handled,true);
-assert.equal(open.worldNpc.shopId,undefined);
+assert.equal(open.worldNpc,undefined);
 assert.equal(open.shop.offers.length,5);
 
 const buy=await controller.dispatch({
