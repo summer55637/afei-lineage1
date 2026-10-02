@@ -1,3 +1,14 @@
+## 2026-10-02 Battle Regression Audit Follow-up
+
+Repair three legacy battle regression failures surfaced by the V4.41 controller change:
+- V4.11 DuelPoint test: correct the invalid side-type ternary in the test fixture.
+- V4.13 EXP plan: award pet battle EXP only to pets present in the active Battle Context roster; pets in the persistent box but not participating are excluded.
+- V4.14 LevelUp test: align expectations to the pinned Fixed-C `_NEWOPEN_MAXEXP` / `_USER_EXP_CF` sequence: threshold lookup uses `level + 1`, and `CHAR_HandleExp` subtracts that threshold after each level. From level 1 with 100 EXP this yields 3 level-ups, level 4, and 39 remaining EXP (player DP +90; skill points +9).
+
+These are regression/data-eligibility corrections; no new battle feature version and no Persistent State schema change.
+
+---
+
 ## 2026-10-02 V4.41 Enemy PowerBalance WAZA Integration
 
 接入來源 WAZA skill 52（PETSKILL_PowerBalance）：COM1=POWERBALANCE(1007)、COM2=原選定目標；依來源 option 對施技者攻擊／防禦分別套用 `FIXSTR + trunc(FIXSTR * 攻% / 100)` 與 `FIXTOUGH + trunc(FIXTOUGH * 防% / 100)`。此技能沿用普通 AttackSeqPrelude → DamagePlan → CriticalDamagePlan → DamageReactPlan → DamageDeathCommit，不增加技能專屬 RNG、不改 Persistent State。

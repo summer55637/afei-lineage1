@@ -23,7 +23,7 @@ const context=({side=0,sideType=0,sourceType='player',duelPoint=100,workGetExp=2
         {bid:0,sourceType:sourceType,hp:0,isDie,deadCount:0,duelPoint,workGetExp,battleMode:'c_wait'},
         null,null,null,null,null,null,null,null,null
       ]},
-      {side:1,type:side===1?sideType:0:1,entries:[
+      {side:1,type:side===1?sideType:1,entries:[
         {bid:10,sourceType:side===1?sourceType:'enemy',hp:0,isDie:true,deadCount:1,duelPoint:0,workGetExp:0,battleMode:'c_wait'},
         null,null,null,null,null,null,null,null,null
       ]}

@@ -108,7 +108,8 @@ function planBattleExp(battleContext,state,{
     const petWorkGetExp=intOr(pet.workGetExp,0);
     if(pet?.isDie===true)continue;
     const contextPet=resolveActivePetEntry(battleContext,id);
-    if(contextPet?.isDie===true)continue;
+    // Fixed-C awards battle EXP only to participants present in the active battle roster.
+    if(!contextPet||contextPet.isDie===true)continue;
     if(petWorkGetExp<=0)continue;
     if(contextPet&&contextPet.workGetExp!=null&&petWorkGetExp!==intOr(contextPet.workGetExp,0)){
       return {ok:false,handled:false,stage:'battle-exp-plan',reason:'pet-workgetexp-mismatch',petId:id,contextWorkGetExp:intOr(contextPet.workGetExp,0),stateWorkGetExp:petWorkGetExp};
