@@ -213,7 +213,7 @@ const coreStatRolls=[
   const hpBefore=initialized.battleContext.sides.flatMap(side=>side.entries).find(entry=>entry?.bid===15)?.hp;
   assert.ok(Number.isInteger(hpBefore),JSON.stringify(initialized.battleContext.sides));
   const damageCommit=await c.dispatch({
-    type:ACTION_BATTLE_DAMAGE_DEATH_COMMIT,
+    type:ACTION_BATTLE_DAMAGE_COMMIT,
     attackerBid:0,
     targetBid:15,
     transactionId:'attack-pipeline-v426-commit-1'
@@ -241,6 +241,17 @@ const coreStatRolls=[
   });
   assert.equal(staleCommit.ok,false);
   assert.equal(staleCommit.reason,'damage-commit-stale-plan');
+
+  const damageDeathChain=await c.dispatch({
+    type:ACTION_BATTLE_DAMAGE_DEATH_COMMIT,
+    attackerBid:0,
+    targetBid:15,
+    transactionId:'attack-pipeline-v426-commit-1'
+  });
+  assert.equal(damageDeathChain.ok,true,JSON.stringify(damageDeathChain));
+  assert.equal(damageDeathChain.persistentMutation,false);
+  assert.ok(['battle-damage-death-nonlethal','battle-damage-death-committed','battle-damage-death-idempotent'].includes(damageDeathChain.stage));
+
 
 
 
