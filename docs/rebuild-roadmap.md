@@ -1,3 +1,13 @@
+## 2026-10-02 V4.41 Enemy PowerBalance WAZA Integration
+
+接入來源 WAZA skill 52（PETSKILL_PowerBalance）：COM1=POWERBALANCE(1007)、COM2=原選定目標；依來源 option 對施技者攻擊／防禦分別套用 `FIXSTR + trunc(FIXSTR * 攻% / 100)` 與 `FIXTOUGH + trunc(FIXTOUGH * 防% / 100)`。此技能沿用普通 AttackSeqPrelude → DamagePlan → CriticalDamagePlan → DamageReactPlan → DamageDeathCommit，不增加技能專屬 RNG、不改 Persistent State。
+
+Regression：`tools/check_v441_browser_enemy_power_balance.mjs` 以正式 Group 712 / Enemy 1306 / skill 52 驗證來源倍率、攻擊資料傳遞、實際 HP 傷害交易與 Persistent State revision；Workflow 重跑 V4.29–V4.41 及既有 Context、attack binding、Counter 回歸。
+
+StatusChange（60/61/80/90/100/110）尚未接入：Fixed-C 在每個角色實際行動前執行 BATTLE_StatusSeq，當前 browser turn runtime 尚未閉合逐角色行動／狀態遞減順序，故保留 fail-closed，不以不完整狀態持續時間冒充完成。
+
+---
+
 ## 2026-10-02 V4.40 Enemy Mighty WAZA Integration
 
 接入 Enemy WAZA skill 40／41（PETSKILL_Mighty）：依來源 option 編碼 COM1=MIGHTY(1006)、COM2=來源目標、COM3 高 16 位回避修正／低 16 位傷害倍率百分之一。AttackSeqPrelude 讓回避修正進入 DuckCheck；CriticalDamagePlan 依 MIGHTY COM3 套用傷害倍率，並維持普通攻擊的既有傷害計算。保留原始 action／target RNG 順序，不改 Persistent State，也不在 plan 階段提交 HP 傷害。
