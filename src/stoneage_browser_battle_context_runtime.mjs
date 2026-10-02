@@ -81,7 +81,9 @@ function buildEnemyEntryLayout(team){
       size:intOr(enemy.size)??0,
       createMaxNum:intOr(enemy.createMaxNum)??null,
       sourceTempNo:intOr(enemy.enemy?.tempNo)??null,
-      coreStats:enemy.coreStats?clone(enemy.coreStats):null
+      coreStats:enemy.coreStats?clone(enemy.coreStats):null,
+      sourceEnemyAi:enemy.enemy?.ai?clone(enemy.enemy.ai):(enemy.sourceEnemyAi?clone(enemy.sourceEnemyAi):null),
+      sourceDropTable:Array.isArray(enemy.enemy?.dropTable)?clone(enemy.enemy.dropTable):(Array.isArray(enemy.sourceDropTable)?clone(enemy.sourceDropTable):[])
     };
   }
   const entries=Array(BATTLE_ENTRY_MAX).fill(null);
@@ -236,8 +238,8 @@ function buildBattleContext({
       elements:entry.coreStats?clone(entry.coreStats.sourceTemplate.element):null,
       resist:entry.coreStats?clone(entry.coreStats.sourceTemplate.resist):null,
       sourceCoreStats:entry.coreStats?clone(entry.coreStats):null,
-      sourceEnemyAi:entry.enemy?.ai?clone(entry.enemy.ai):null,
-      sourceDropTable:Array.isArray(entry.enemy?.dropTable)?clone(entry.enemy.dropTable):[],
+      sourceEnemyAi:entry.sourceEnemyAi?clone(entry.sourceEnemyAi):null,
+      sourceDropTable:Array.isArray(entry.sourceDropTable)?clone(entry.sourceDropTable):[],
       sourceDropRollsResolved:false,
       sourceBattleCharMode:1,
       battleSide:BATTLE_S_TYPE_ENEMY,
