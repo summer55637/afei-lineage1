@@ -336,3 +336,51 @@ EN result > 0
 ~~~
 
 This is still a cross-source validation rather than direct proof that the RO0000 APK was compiled from that repository.
+
+## 12. 独立 Android 分析实现：解码契约可再交叉校验
+
+另一个公开项目 `flowerjunho/stoneage-light` 的 `StoneAge_Battle_Analysis` 在 commit `e9fb45eef44ae54dc7d6d5428e3921cf803fbe00` 中，以 `libStoneage.so` 分析结果重建了 `ReadBattleMap(int)` 的文件入口，并明确使用：
+
+~~~text
+data/battlemap/battle%02d.sabex
+MAX_BATTLE_MAPS = 220
+~~~
+
+其实现本身没有给出可用于 RO0000 target 的额外 payload bytes，但它与本项目已从 target binary 观察到的三个关键条件一致：
+
+1. battle-map 文件名按 `battleNNN.sabex` 编号；
+2. 有效槽位为 220；
+3. battle-map 数据进入独立的 `ReadBattleMap()` 载入路径。
+
+因此，本轮新增 `tools/parse_sabex.mjs`，把 **target binary 已闭合的格式部分** 固化成可执行 decoder contract：
+
+~~~text
+4-byte header
++
+1089 × big-endian uint16
++
+optional trailing bytes preserved for audit
+~~~
+
+工具会输出：
+
+- 4-byte header 原文与 hex；
+- 是否包含 `SAB` 标记；
+- 实际 payload 长度与超出最小长度的 trailing bytes；
+- 33×33 / 1089-cell 几何；
+- tile ID 的 distinct/min/max/zero/top-frequency 统计；
+- 整个 payload 的 SHA-256；
+- 使用 `--cells` 时输出完整 1089 个 cell 值。
+
+注意：这只是把 **已证实的 target decoder contract** 工具化；当前仓库仍没有任何真实 RO0000 `.sabex` payload，因此不会生成或填入伪造的 tile ID 数据。
+
+同时新增 `tools/test_sabex_decoder.mjs`，使用明确标记的 synthetic buffer 验证：
+
+- 大端 16-bit 解码；
+- 33×33 / 1089 cell 边界；
+- trailing bytes 计数；
+- `SAB` header 检查；
+- 过短 payload 拒绝。
+
+README 维护 workflow 已把这组 regression test 纳入每次 main 更新。
+
