@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：72e84ec — [audit] parse RO0000 LS&MAP header layout
-- 更新時間：2026-10-02T08:19:49+08:00
+- 最新 commit：22c40d3 — [audit] distinguish endpoint evidence closure from blocker closure
+- 更新時間：2026-10-02T08:20:44+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
