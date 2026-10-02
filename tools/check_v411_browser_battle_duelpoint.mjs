@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_BATTLE_DUELPOINT_PLAN,
   BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT,
@@ -72,7 +73,18 @@ result=planDuelPoint(context({duelPoint:-1}));
 assert.equal(result.ok,false);
 assert.equal(result.reason,'duelpoint-required-or-invalid');
 
-const controller=createBrowserStateController({state:{revision:0}});
+const state=freshPersistentState({playerId:'v411-player',playerName:'V411'});
+state.player.level=1;
+state.player.hp=100;state.player.maxHp=100;
+state.player.mp=20;state.player.maxMp=20;
+state.player.luck=0;
+state.player.duelPoint=120;
+state.player.workGetExp=30;
+state.player.stats={vital:10,str:10,tgh:10,dex:10};
+state.world.position={floorId:1,x:1,y:1};
+state.idle.enabled=true;
+state.idle.mode='encounter_pending';
+const controller=createBrowserStateController({state,battleFieldNoProvider:1});
 const build=await controller.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   playerId:'v411-player',
