@@ -7,6 +7,8 @@ on:
     paths:
       - 'ro0000/server/merged-source/gmsv/setup.cf'
       - 'ro0000/server/merged-source/gmsv/data/itemset6.csv'
+      - 'ro0000/server/merged-source/gmsv/gmsvjt'
+      - 'data/generated/stoneage_endpoint_item_seed_audit.json'
       - 'tools/check_endpoint_item_seed_audit.mjs'
       - 'docs/reference/endpoint-item-seed-audit.md'
       - '.github/workflows/check-endpoint-item-seed-audit.yml'
@@ -40,7 +42,8 @@ jobs:
         run: |
           set -euo pipefail
           file ro0000/server/merged-source/gmsv/gmsvjt
-          strings -a ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM1|itemset6\.csv|itemset6file|ITEM_makeItem|ITEM_readItem' | head -n 80 || true
+          readelf -Ws ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList' | head -n 120 || true
+          strings -a ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM1|itemset6\.csv|itemset6file|ITEM_makeItem|ITEM_readItem|ITEM_tblen' | head -n 120 || true
 
       - name: Run endpoint source catalog invariants
         run: node tools/check_endpoint_source_catalog.mjs
