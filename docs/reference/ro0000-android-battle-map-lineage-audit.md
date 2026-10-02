@@ -304,3 +304,20 @@ This closes the selector/data lineage much further than the previous target-only
 ## 10. Reproducible selector audit
 
 The parser has now been captured as `tools/audit_ro0000_battlemap_selector.mjs`, with its current result stored in `data/generated/stoneage_ro0000_battlemap_selector_audit.json`. The README maintenance workflow runs this audit before refreshing the project status, so future changes to `battlemap.txt` will be regression-visible.
+
+## 11. Server/client slot-count closure
+
+The pinned Fixed-C `battle.h` defines `BATTLE_MAP_MAX 219`. `BATTLE_CreateVsEnemy()` rejects a selected field number outside `0..219` and falls back to `RAND(0, BATTLE_MAP_MAX)`.
+
+This independently closes the 220-slot relationship:
+
+~~~text
+server BATTLE_MAP_MAX = 219
+valid field numbers     = 0..219
+target BattleMapFile    = 220 entries
+target last filename    = battle219.sabex
+~~~
+
+The earlier target-binary observation that `ReadBattleMap()` resets an out-of-range filename index to zero is therefore consistent with the server's 0..219 field-number domain.
+
+This does not prove that every one of the 220 slots is active in the deployed `battlemap.txt`: the current RO0000 configuration references 199 distinct slots, while 21 slots have no active numeric mapping in that file. Those unreferenced slots must be treated as valid namespace members whose runtime usage is unresolved, not as missing files.
