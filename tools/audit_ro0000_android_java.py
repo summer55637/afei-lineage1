@@ -121,21 +121,24 @@ def method_records(source):
         body = masked[opening + 1:pos]
         calls = []
         seen = set()
-        call_site_count = 0
+        call_sequence = []
         for call in CALL_RE.finditer(body):
             target = re.sub(r"\s+", "", call.group(1))
             method_name = target.rsplit(".", 1)[-1]
             if method_name in KEYWORDS or method_name == name:
                 continue
-            call_site_count += 1
-            if target not in seen:
-                seen.add(target)
-                calls.append(target)
+            calls.append(target)
+            call_sequence.append({
+                "line": masked.count("\\n", 0, opening + 1 + call.start()) + 1,
+                "target": target,
+            })
+            seen.add(target)
         methods.append({
             "name": name,
-            "callSites": call_site_count,
-            "uniqueCallIdentifierCount": len(calls),
-            "calls": sorted(calls),
+            "callSites": len(call_sequence),
+            "uniqueCallIdentifierCount": len(seen),
+            "calls": sorted(seen),
+            "callSequence": call_sequence,
         })
     # Decompiler can duplicate synthetic bridge methods; preserve their exact count
     # while keeping the summary compact and deterministic.
@@ -199,7 +202,7 @@ def main():
             "stringAndCharacterLiteralContentsIncluded": False,
             "commentsIncluded": False,
             "urlsAndHostsIncluded": False,
-            "onlyMethodNamesAndCallIdentifiers": True,
+            "onlyMethodNamesAndCallIdentifiers": True,\n            "callSequenceIncluded": True,\n            "sourceLineNumbersIncluded": True,
         },
         "limitations": [
             "Static decompiler output only; no Java or native code was executed.",
