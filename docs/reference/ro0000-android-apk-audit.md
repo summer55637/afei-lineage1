@@ -117,14 +117,21 @@ Here A and B denote the two stored dimensions in argument order; the x/y orienta
 
 The `0xAB2`-byte clear size used for some map output buffers is 2,738 bytes, or 1,369 16-bit cells. This is a fixed output/window buffer size in the inspected code and must not be treated as the full map dimensions.
 
-This identifies a native local map-cache format with a header and three planar cell arrays. A closely matching public Android client implementation gives those arrays the names `tile`, `parts`, and `event`, and uses the same `createMap` / `readMap` / `writeMap` API shape. The exact source lineage and version identity between that public source and this APK are not established, so the names are cross-source corroboration rather than proof of byte-for-byte source identity. It still does not prove that this local cache is the authoritative world-map source or establish a mapping to server map IDs. In particular, this `map/%d.dat` cache is separate from the `path/map4/real.bin` Lua loading container and from the server's Fixed-C LS2MAP format.
+This identifies a native local map-cache format with a header and three planar cell arrays. A closely matching public Android client implementation gives these arrays the names `tile`, `parts`, and `event`, and uses the same `createMap` / `readMap` / `writeMap` API shape. The target APK's native `M_recv` call path independently confirms that three buffers are passed to `writeMap` in the same order. The exact source lineage and version identity between that public source and this APK are not established, so the names are cross-source corroboration rather than proof of byte-for-byte source identity. In particular, this `map/%d.dat` cache is separate from the `path/map4/real.bin` Lua loading container and from the server's Fixed-C LS2MAP format.
 
 
 A public Android `netproc.cpp` implementation independently shows `lssproto_M_recv` decoding three comma-separated fields into `unsigned short tile[2048]`, `parts[2048]`, and `event[2048]`, then passing them to `writeMap` in that order. Its `lssproto_S_recv` case `C` reads floor, map dimensions, and origin coordinates before calling `setMap` and `createMap`. This is consistent with the native target's call-site analysis.
 
+The pinned Fixed-C server source explains the matching wire payload: `lssproto_M_recv` asks `MAP_getdataFromRECT` for a clipped rectangle and sends the returned map data. `MAP_getdataFromRECT` serializes the server's `MAP_map.tile` array first, then `MAP_map.obj`, then a third per-cell event array built by scanning map objects for character/warp-point event types (using `CHAR_EVENT_NONE` when no event is present). Thus the client `tile` plane corresponds to server `tile`; client `parts` corresponds to server `obj`; and client `event` receives the dynamic per-cell event value. The Android `writeMap` path additionally ORs `MAP_SEE_FLAG | MAP_READ_FLAG` into its local event plane before persisting it, so the local event cache combines received event data with client-side visibility/read state.
+
+This server/client correspondence identifies the three planes' primary roles, but does not make the local cache a source of original map geometry: the cache is populated in rectangles from the server, and its event plane includes client-side state. It also does not imply that server Fixed-C LS2MAP binary files and Android `map/%d.dat` files share a file format.
+
 Source comparisons (cross-check only):
 - [Android map.cpp](https://github.com/alrightlook/StoneAgeMobileApp/blob/8c870c87ce1305c52fb6713bf824619467847bba/android-project/jni/src/system/map.cpp)
 - [Android netproc.cpp](https://github.com/alrightlook/StoneAgeMobileApp/blob/8c870c87ce1305c52fb6713bf824619467847bba/android-project/jni/src/system/netproc.cpp)
+- [Pinned Fixed-C callfromcli.c](https://github.com/gavinlinasd/StoneAge/blob/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56/gmsv/src/callfromcli.c)
+- [Pinned Fixed-C readmap.c](https://github.com/gavinlinasd/StoneAge/blob/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56/gmsv/src/map/readmap.c)
+- [Pinned Fixed-C map structure](https://github.com/gavinlinasd/StoneAge/blob/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56/gmsv/src/include/readmap.h)
 
 ### Map-cache call sites
 
