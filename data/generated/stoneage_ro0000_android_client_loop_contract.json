@@ -105,7 +105,38 @@
         "armeabiV7a": "0x107d2d"
       },
       "interpretation": "Native input-box data callback reached by the exported Android keyboard-change JNI function."
-    }
+    },
+    "coordinateTransforms": [
+      {
+        "function": "GetRealX(int)",
+        "address": {
+          "x86": "0x20aaa0",
+          "armeabiV7a": "0x17ccc1"
+        },
+        "observed": "Multiplies the incoming x coordinate by an axis-specific scale value, then integer-divides by the current resolution-mode field at offset 0x20."
+      },
+      {
+        "function": "GetRealY(int)",
+        "address": {
+          "x86": "0x20aaf0",
+          "armeabiV7a": "0x17cced"
+        },
+        "observed": "Multiplies the incoming y coordinate by an axis-specific scale value, then integer-divides by the current resolution-mode field at offset 0x24."
+      },
+      {
+        "function": "MouseNowPoint(int, int)",
+        "address": {
+          "x86": "0x2d71f0",
+          "armeabiV7a": "0x1ecde9"
+        },
+        "observed": [
+          "Clamps x values above the current mode field at offset 0x18",
+          "Clamps y values above the current mode field at offset 0x1c",
+          "Stores the resulting x/y at offsets 0 and 4 of the mouse-point state"
+        ],
+        "boundary": "This routine shows upper-bound clamps; it does not show a lower-bound clamp."
+      }
+    ]
   },
   "frameLoop": {
     "function": {
