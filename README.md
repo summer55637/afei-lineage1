@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2703249 — [audit] inspect endpoint landing component exits
-- 更新時間：2026-10-02T08:25:00+08:00
+- 最新 commit：8e32cab — [audit] update endpoint world blocker completeness note
+- 更新時間：2026-10-02T08:26:17+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -36,8 +36,8 @@
 
 ## Blocker
 
-- route-4000-to-200：reopened-for-reaudit → endpoint LS2MAP walkability + connected components + actual portal-origin reachability
-- route-3000-to-200-landing-587-318：reopened-for-reaudit → verify endpoint destination-map walkability at (587,318) and compare exact landing rows
+- route-4000-to-200：active → keep active; inspect whether endpoint contains an alternate source-backed route/warp connection from component 48 to component 0 before changing runtime eligibility
+- route-3000-to-200-landing-587-318：active → keep active; inspect endpoint object/warp placement semantics around component 1 and whether the non-walkable warp origin (588,318) can be triggered without stepping onto it
 - starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
 - starter-item-endpoint-32003：active → keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
