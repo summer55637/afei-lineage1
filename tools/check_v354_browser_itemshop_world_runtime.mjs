@@ -142,7 +142,8 @@ const productionBinding=resolveWorldItemShopBinding(productionIndex,{
   template:productionShop.templateName
 });
 assert.equal(productionBinding.ok,true);
-assert.equal(productionBinding.shopId,productionKey);
+assert.equal(productionBinding.shopId,productionShop.shopId);
+assert.notEqual(productionBinding.shopId,productionKey);
 
 console.log(JSON.stringify({
   pass:true,
