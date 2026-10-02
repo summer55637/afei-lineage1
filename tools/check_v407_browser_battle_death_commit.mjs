@@ -110,8 +110,8 @@ const build=await controller.dispatch({
     stats:{vital:10,str:10,tgh:10,dex:10}
   },
   enemyTeam:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
-  encounter:{encounterId:1,floorId:1,x:1,y:1},
-  groupId:1,
+  encounter:{encounterId:65,floorId:100,x:610,y:538},
+  groupId:94,
   battleFieldNo:1
 });
 assert.equal(build.ok,true,JSON.stringify(build));
