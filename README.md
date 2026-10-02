@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2777dab — feat: add reproducible RO0000 Android APK evidence audit
-- 更新時間：2026-10-02T13:59:36+08:00
+- 最新 commit：d7487bd — audit: include Android APK archive entry inventory
+- 更新時間：2026-10-02T14:00:25+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
