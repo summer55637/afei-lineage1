@@ -157,7 +157,12 @@ export function resolveClientTilePixels(pack,imageId){
   if(!graphic)return {status:'missing-image-id',imageId:Number(imageId)};
   try{
     const decoded=decodeAuthorizedClientGraphic(pack.realBytes,graphic);
-    if(!decoded)return {status:'decode-failed',imageId:Number(imageId),graphicNo:graphic.graphicNo};
+    if(!decoded||!decoded.pixels||!Number.isInteger(decoded.width)||!Number.isInteger(decoded.height)){
+      return {status:'decode-failed',imageId:Number(imageId),graphicNo:graphic.graphicNo};
+    }
+    if(decoded.bytesPerPixel===4){
+      return {status:'decode-failed',imageId:Number(imageId),graphicNo:graphic.graphicNo,error:'async decoder required for RGBA or PNG graphics'};
+    }
     return {
       status:'ready',
       imageId:graphic.imageId,
@@ -165,6 +170,7 @@ export function resolveClientTilePixels(pack,imageId){
       width:decoded.width,
       height:decoded.height,
       pixels:decoded.pixels,
+      bytesPerPixel:decoded.bytesPerPixel??1,
       xoffset:graphic.xoffset,
       yoffset:graphic.yoffset
     };
