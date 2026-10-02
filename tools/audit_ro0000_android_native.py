@@ -53,7 +53,7 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"ScrollPanelProcess|AniProc|MouseProc|HitMouseCursor|PaletteProc|Flip|InitSurfaceInfo|repairMap|"
     r"ClearMouseOnceState|InitProc|GetKeyInputFocus|Keyboard(?:Tab|BackSpace|Left|Right|Return)|"
     r"MouseNowPoint|Mouse(?:DblCrick|Crick)(?:Left|Right)(?:Up|Down)Point|"
-    r"CleanMouseClick|CheckWndMouse|changeInput|keyBoard(?:Get|Set|Proc|Init)[A-Za-z]*|"
+    r"CleanMouseClick|CheckWndMouse|changeInput|CallbackInputBoxData|keyBoard(?:Get|Set|Proc|Init)[A-Za-z]*|"
     r"moveProc|onceMoveProc|partyMoveProc|_sendMoveRoute|setPartyMovePoint|"
     r"getAutoAct|StopAutoWalk|PeekNextPostion|GetNextPostion|CheckOnWarpPoint|"
     r"CheckCurrentGuideRealPosition|_execEtcEvent|_etcEventCheck|_sendWarpEvent|"
