@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b1f54d3 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T15:40:38Z
+- 最新 commit：a1d62c4 — [audit] enumerate Android sprite post-load fixups
+- 更新時間：2026-10-02T23:51:13+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
