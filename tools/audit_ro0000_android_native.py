@@ -256,12 +256,14 @@ def disassemble_function(disassembler, binary_path, symbol, machine_id):
             "status": "no-instruction-output",
             "detail": "\n".join(lines[:8])[:600],
         }
-    limit = 700
+    limit = 10000
     return {
         "status": "ok",
         "instructionLineCount": instruction_count,
+        "disassemblyLineCount": len(lines),
+        "disassemblySha256": hashlib.sha256(result.stdout.encode("utf-8", errors="replace")).hexdigest(),
         "excerpt": lines[:limit],
-        "excerptTruncated": instruction_count > limit,
+        "excerptTruncated": len(lines) > limit,
     }
 
 
