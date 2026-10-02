@@ -26,6 +26,34 @@
 
 These native strings are path references, not proof that the referenced files are packaged in this APK or downloaded at runtime. The data may exist in a separately installed directory or be handled through another resource layer.
 
+## Update / external resource pipeline (2026-10-02)
+
+The x86 native build now provides direct machine-code evidence that the APK has an HTTP patch/resource update pipeline; these are no longer only string-path hypotheses.
+
+### Verified update-list flow
+
+- `DownLoadIniFile()` obtains the installed app version, platform and channel, builds a request to the embedded `SA25/update/list.php` endpoint with `version`, `platform` and `channel` parameters, and calls `HttpClient::DownloadFile`.
+- The returned update list is stored as `data/update/list.dat`.
+- The native code contains `CIniManage::ReadPatchInfo()`, which parses an INI-style patch catalogue with sections named `Patch_%d`.
+- Verified patch fields used by the parser are `FileName`, `FileSave`, `MD5`, `URLCN`, `type`, `size`, plus the platform selector `common`.
+
+### Verified patch/resource application
+
+- `GetBinaryResource()` has a download phase that generates `patch_%d.zip` names and passes them to `DownloadResource()`; the native path iterates through six patch slots in the inspected state machine.
+- The corresponding resource phase opens each `patch_%d.zip` with `UnZipFile()`; a failed extraction causes the client to close the application, while successful extraction proceeds to the resource-completion state.
+- `DownloadResource(const char*)` directly constructs/uses an `HttpClient` and calls its `DownloadFile` implementation, establishing that the patch/resource path performs actual HTTP file transfer rather than merely referencing filenames.
+- The native binary also contains additional resource roots including `data/chardata`, `data/voice`, `data/aiset`, `data/font`, `data/skin` and `data/storage.bin`, indicating that the update layer is broader than the map/sprite files alone.
+
+### Client update path
+
+A separate `UpdateAppNewVersion()` function obtains version/platform/channel information and posts to the embedded `SA25/clientupdate.php` endpoint. The complete response schema and the exact transition from this check into the APK installation path remain to be reconstructed.
+
+### Current evidence status
+
+This closes the main question of whether the target APK has a real external update/resource mechanism: **yes, verified**. What remains unresolved is the exact patch-list file content, the precise `stPatchNode` member mapping, per-file MD5 admission rules, the full patch sequencing/state machine, and the actual external resource bytes served by that update layer.
+
+The embedded host/address is intentionally omitted from this public audit; the technical path and request parameter semantics are retained.
+
 ## Native ELF findings
 
 The APK contains two `libStoneage.so` builds. Both passed ELF parsing and ABI/machine consistency checks.
