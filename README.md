@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8a45380 — [docs] make authorization and source-use positioning persistent in README generator
-- 更新時間：2026-10-02T11:41:18.439Z
+- 最新 commit：89feb1e — [docs] update project positioning for authorized production sources
+- 更新時間：2026-10-02T19:41:20+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
