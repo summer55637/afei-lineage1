@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：61d0d46 — [docs] close map prefetch and SPR layout; record manifest DEX signing scope
-- 更新時間：2026-10-02T23:23:54+08:00
+- 最新 commit：33732d9 — [fix] match qualified Java invoke in redaction regression
+- 更新時間：2026-10-02T23:24:20+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
