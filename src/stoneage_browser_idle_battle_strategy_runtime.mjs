@@ -9,6 +9,7 @@ const BATTLE_COM_ATTACK=1;
 
 import { resolveDefaultTarget } from './stoneage_browser_battle_default_target_runtime.mjs';
 import { preflightPlayerBattleCommand, setBattlePlayerCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
+import { DEFAULT_IDLE_BATTLE_STRATEGY } from './stoneage_persistent_state.mjs';
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const toInt=value=>{
@@ -17,11 +18,6 @@ const toInt=value=>{
   const n=Number(s);
   return Number.isFinite(n)?Math.trunc(n):null;
 };
-
-const DEFAULT_IDLE_BATTLE_STRATEGY=Object.freeze({
-  mode:IDLE_BATTLE_STRATEGY_MODE,
-  targetPolicy:IDLE_BATTLE_TARGET_POLICY
-});
 
 function validateIdleBattleStrategy(strategy){
   const errors=[];
