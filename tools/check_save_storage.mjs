@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   DEFAULT_SAVE_STORAGE_KEY,
@@ -8,6 +9,8 @@ import {
   loadPersistentStateFromStorage,
   commitAndPersistSave
 } from '../src/stoneage_save_storage.mjs';
+import { ACTION_IDLE_ENABLE } from '../src/stoneage_browser_state_controller.mjs';
+import { createPersistentBrowserStateController } from '../src/stoneage_browser_persistent_state_session.mjs';
 
 function memoryStorage(seed={}){
   const values=new Map(Object.entries(seed));
@@ -77,4 +80,58 @@ const readError=await loadPersistentStateFromStorage({read:async()=>{throw new E
 assert.equal(readError.ok,false);
 assert.equal(readError.reason,'storage-read-failed');
 
-console.log(JSON.stringify({pass:true,format:'stoneage-save-storage-port-v1',durableWriteReadback:true,reloadRestore:true,corruptSaveFailClosed:true,storageFailuresFailClosed:true,revisionConflictVerified:true}));
+const idleRouteCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+const usableRoute=idleRouteCatalog.routes.flatMap(route=>(route.variants??[]).map(variant=>({route,variant})))
+  .find(({route,variant})=>route.status!=='source_blocked_before_portal'&&Number(variant.usableLandingCount)>0);
+assert.ok(usableRoute,'regression requires one source-backed usable idle route');
+
+const sessionStorage=memoryStorage();
+const session=await createPersistentBrowserStateController({
+  storage:sessionStorage,
+  storageKey:'controller-session',
+  initialState:initial,
+  idleRouteCatalog,
+  now:()=>now
+});
+assert.equal(session.ok,true);
+assert.equal(session.restored,false);
+const enabled=await session.controller.dispatch({
+  type:ACTION_IDLE_ENABLE,
+  hometown:usableRoute.route.hometown,
+  portalId:usableRoute.variant.portalId,
+  now:()=>now,
+  savedAt:()=>now
+});
+assert.equal(enabled.ok,true);
+assert.equal(enabled.persisted,true);
+assert.equal(enabled.state.revision,1);
+const resumedSession=await createPersistentBrowserStateController({
+  storage:sessionStorage,
+  storageKey:'controller-session',
+  idleRouteCatalog,
+  now:()=>now
+});
+assert.equal(resumedSession.ok,true);
+assert.equal(resumedSession.restored,true);
+assert.deepEqual(resumedSession.state,enabled.state);
+
+const failingSession=await createPersistentBrowserStateController({
+  storage:failWriteStorage,
+  storageKey:'failed-controller-session',
+  initialState:initial,
+  idleRouteCatalog,
+  now:()=>now
+});
+const rejectedEnable=await failingSession.controller.dispatch({
+  type:ACTION_IDLE_ENABLE,
+  hometown:usableRoute.route.hometown,
+  portalId:usableRoute.variant.portalId,
+  now:()=>now,
+  savedAt:()=>now
+});
+assert.equal(rejectedEnable.ok,false);
+assert.equal(rejectedEnable.stage,'save-storage');
+assert.equal(failingSession.controller.getState().revision,0);
+assert.equal(failingSession.controller.getState().idle.enabled,false);
+
+console.log(JSON.stringify({pass:true,format:'stoneage-save-storage-port-v1',durableWrite:true,reloadRestore:true,controllerAutoPersist:true,writeFailureRollback:true,corruptSaveFailClosed:true,storageFailuresFailClosed:true,revisionConflictVerified:true}));
