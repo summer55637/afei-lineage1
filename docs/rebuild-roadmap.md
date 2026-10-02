@@ -1,3 +1,11 @@
+## 2026-10-02 V4.40 Enemy Mighty WAZA Integration
+
+接入 Enemy WAZA skill 40／41（PETSKILL_Mighty）：依來源 option 編碼 COM1=MIGHTY(1006)、COM2=來源目標、COM3 高 16 位回避修正／低 16 位傷害倍率百分之一。AttackSeqPrelude 讓回避修正進入 DuckCheck；CriticalDamagePlan 依 MIGHTY COM3 套用傷害倍率，並維持普通攻擊的既有傷害計算。保留原始 action／target RNG 順序，不改 Persistent State，也不在 plan 階段提交 HP 傷害。
+
+Regression：`tools/check_v440_browser_enemy_mighty.mjs` 使用 Group 711 / Enemy 1305 正式生成資料驗證 skill 41，另以來源 catalog fixture 覆蓋 skill 40；Workflow 重跑 V4.29–V4.40、V3.86 Context、attack pipeline binding 與 V4.05 Counter。
+
+---
+
 ## 2026-10-02 V4.39 Enemy ChargeAttack Integration
 
 將來源 skill 30 ChargeAttack 接入 AI WAZA 與控制器蓄力步進：解析 option 生成 COM1=CHARGE、COM2=原 target、COM3=攻擊百分比／蓄力回合數；依 `BATTLE_Charge()` 扣回合並在歸零時算出攻擊力、改為 CHARGE_OK，接續 AttackSeqPrelude → DamagePlan → CriticalDamagePlan。CHARGE_OK 是本次釋放命令，不屬於跨回合 `BATTLE_IsCharge()` 保留狀態。

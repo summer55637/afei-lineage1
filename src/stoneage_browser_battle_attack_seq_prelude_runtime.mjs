@@ -3,6 +3,7 @@ const ACTION_BATTLE_ATTACK_SEQ_PRELUDE='BATTLE_ATTACK_SEQ_PRELUDE';
 const BATTLE_COM_GUARD=2;
 const BATTLE_COM_JYUJYUTU=2000;
 const BATTLE_COM_S_NOGUARD=1014;
+const BATTLE_COM_S_MIGHTY=1006;
 const BATTLE_CHARMODE_RESCUE=5;
 const CHAR_BATTLEFLG_ABIO=64;
 const CHAR_BATTLEFLG_NODUCK=128;
@@ -73,7 +74,12 @@ function duckCheck(entryAtt,entryDef,{
   else{big=atDex;small=dfDex;wari=big<=0?0:small/big;}
   const para=command===BATTLE_COM_JYUJYUTU?G_KAWASHI_JYUJYUTU:G_KAWASHI_NORMAL;
   let work=(big-small)/para;if(work<=0)work=0;
-  let per=Math.sqrt(work)*wari+dfLuck+num(battleDuckModify);
+  const attackerCommand=int(entryAtt?.battleCommands?.[0])??-1;
+  const attackerCom3=int(entryAtt?.battleCommands?.[2]);
+  const mightyDuck=attackerCommand===BATTLE_COM_S_MIGHTY&&attackerCom3!=null?(attackerCom3>>16):null;
+  const duckModify=attackerCommand===BATTLE_COM_S_MIGHTY?mightyDuck:num(battleDuckModify);
+  if(duckModify==null)return {ok:false,handled:false,stage:'attack-seq-prelude-duck',reason:'mighty-command3-required'};
+  let per=Math.sqrt(work)*wari+dfLuck+duckModify;
   if(num(entryAtt?.drunk)>0){
     const r=int(drunkRoll);
     if(r==null||r<20||r>30)return {ok:false,handled:false,stage:'attack-seq-prelude-duck',reason:'drunk-duck-rng-required-or-out-of-range'};

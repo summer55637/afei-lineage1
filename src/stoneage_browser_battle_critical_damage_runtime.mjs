@@ -3,6 +3,7 @@ import { damagePlan } from './stoneage_browser_battle_damage_plan_runtime.mjs';
 const BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT='stoneage-v403-browser-battle-critical-damage-v1';
 const ACTION_BATTLE_CRITICAL_DAMAGE_PLAN='BATTLE_CRITICAL_DAMAGE_PLAN';
 const BATTLE_COM_GUARD=2;
+const BATTLE_COM_S_MIGHTY=1006;
 const GUARD_RATES=[
   [25,0.00],
   [50,0.10],
@@ -54,7 +55,7 @@ function runCriticalDamagePlan(context,{
   weaponType='none',
   guardRoll=null,
   lowDamageRoll=null,
-  battleDamageModify=1
+  battleDamageModify=null
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'battle-context-required'};
   const attacker=findEntry(context,attackerBid);
@@ -115,9 +116,14 @@ function runCriticalDamagePlan(context,{
     damage=r;
   }
 
-  const modifier=num(battleDamageModify);
-  if(modifier==null){
-    return {ok:false,handled:false,stage:'battle-critical-damage',reason:'battle-damage-modifier-invalid'};
+  let modifier;
+  if(int(attacker.battleCommands?.[0])===BATTLE_COM_S_MIGHTY){
+    const packed=int(attacker.battleCommands?.[2]);
+    if(packed==null)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'mighty-command3-required'};
+    modifier=(packed&0xffff)*0.01;
+  }else{
+    modifier=battleDamageModify==null?1:num(battleDamageModify);
+    if(modifier==null)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'battle-damage-modifier-invalid'};
   }
   const beforeModifier=damage;
   damage=Math.trunc(damage*modifier);

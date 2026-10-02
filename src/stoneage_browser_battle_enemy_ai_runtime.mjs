@@ -11,6 +11,7 @@ const BATTLE_COM_GUARD=2;
 const BATTLE_COM_ESCAPE=4;
 const BATTLE_COM_S_NOGUARD=1014;
 const BATTLE_COM_S_CHARGE=1005;
+const BATTLE_COM_S_MIGHTY=1006;
 const BATTLE_COM_S_CHARGE_OK=1015;
 const BATTLE_COM_S_EARTHROUND0=1009;
 const BATTLE_COM_S_EARTHROUND1=1010;
@@ -215,6 +216,27 @@ function noGuardProfile(actor,skillSlot,skillId){
   const command3=duck*65536+counter*256+critical;
   return {ok:true,duck,counter,critical,command3,skillId,skillSlot,option:profile.option};
 }
+function mightyProfile(actor,skillSlot,skillId){
+  const profile=actor?.sourceEnemyPetSkillProfiles?.[skillSlot];
+  if(!profile||int(profile.skillId)!==skillId||profile.functionName!=='PETSKILL_Mighty')
+    return {ok:false,reason:'enemy-ai-petskill-profile-required',skillSlot,skillId};
+  const option=String(profile.option??'');
+  const multiplierMatch=option.match(/倍\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))/);
+  let multiplierHundredths=0;
+  if(multiplierMatch){
+    const multiplier=Number(multiplierMatch[1]);
+    if(!Number.isFinite(multiplier)||multiplier<0||multiplier>655.35)
+      return {ok:false,reason:'enemy-ai-mighty-multiplier-invalid',skillSlot,skillId,option};
+    multiplierHundredths=Math.trunc(multiplier*100);
+  }
+  const duckMatch=option.match(/避\s*([+-]?\d+)/);
+  const duck=duckMatch?int(duckMatch[1]):0;
+  if(duck==null||duck< -32768||duck>32767)
+    return {ok:false,reason:'enemy-ai-mighty-duck-invalid',skillSlot,skillId,option};
+  const command3=duck*65536+multiplierHundredths;
+  return {ok:true,skillId,skillSlot,multiplierHundredths,damageModifier:multiplierHundredths*0.01,duck,command3,option};
+}
+
 function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
   if(!isObject(context)||!isObject(context.context))return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'battle-context-required'};
   if(String(context.context.mode??'').trim().toLowerCase()!=='battle'||int(context.context.sourceMode)!==BATTLE_MODE_BATTLE)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'battle-active-phase-required'};
@@ -260,7 +282,7 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
       let targetBid=-1,targetRoll=null,targetSelectorRoll=null,targetSelectionMode=null,targetElementKey=null;
       let resolvedAction=chosen.action;
       let resolvedCommandCode=chosen.commandCode??BATTLE_COM_NONE;
-      let sourceAiSkillId=null,noGuard=null,chargeAttack=null;
+      let sourceAiSkillId=null,noGuard=null,chargeAttack=null,mighty=null;
       if(chosen.action==='attack'||chosen.action==='petskill'){
         const targetSelection=candidatesForTarget(context,1-sideNo,int(ai.targetType),targetRolls,targetCursor);
         if(!targetSelection.ok)return {...targetSelection,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid)};
@@ -282,6 +304,11 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
             if(!chargeAttack.ok)return {...chargeAttack,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),targetBid,actionRoll:actionResult.roll,targetRoll,targetSelectorRoll,rngConsumed:{action:actionCursor,target:targetCursor,total:actionCursor+targetCursor}};
             resolvedAction='petskill-charge-attack';
             resolvedCommandCode=BATTLE_COM_S_CHARGE;
+          }else if(sourceAiSkillId===40||sourceAiSkillId===41){
+            mighty=mightyProfile(actor,chosen.skillSlot,sourceAiSkillId);
+            if(!mighty.ok)return {...mighty,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),targetBid,actionRoll:actionResult.roll,targetRoll,targetSelectorRoll,rngConsumed:{action:actionCursor,target:targetCursor,total:actionCursor+targetCursor}};
+            resolvedAction='petskill-mighty';
+            resolvedCommandCode=BATTLE_COM_S_MIGHTY;
           }else if(sourceAiSkillId===0){
             resolvedAction='petskill-none';
             resolvedCommandCode=BATTLE_COM_NONE;
@@ -298,6 +325,7 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
         ...(chosen.action==='petskill'?{sourceAiPickedSkill:true,skillSlot:chosen.skillSlot,skillId:sourceAiSkillId}:{}),
         ...(noGuard?{command3:noGuard.command3,noguardDuckBonus:noGuard.duck,noguardCounterBonus:noGuard.counter,noguardCriticalBonus:noGuard.critical,noGuardOption:noGuard.option}:{}),
         ...(chargeAttack?{command3:chargeAttack.command3,chargeRounds:chargeAttack.rounds,chargeAttackPercent:chargeAttack.attackPercent,chargeOption:chargeAttack.option}:{}),
+        ...(mighty?{command3:mighty.command3,mightyDamageModifier:mighty.damageModifier,mightyDuckModifier:mighty.duck,mightyMultiplierHundredths:mighty.multiplierHundredths,mightyOption:mighty.option}:{}),
         moveBlockedOn:blockedOn,actionRoll:actionResult.roll,targetRoll,targetSelectorRoll,targetSelectionMode,targetElementKey,before});
     }
   }
@@ -330,6 +358,9 @@ function commitEnemyAiCommands(context,{plan=null}={}){
         actor.sourceChargeRounds=int(row.chargeRounds);
         actor.sourceChargeAttackPercent=int(row.chargeAttackPercent);
       }
+      if(row.commandCode===BATTLE_COM_S_MIGHTY&&int(row.command3)!=null){
+        commands[2]=int(row.command3);
+      }
       if(row.commandCode===BATTLE_COM_S_NOGUARD&&int(row.command3)!=null){
         commands[2]=int(row.command3);
         actor.noguardDuckBonus=int(row.noguardDuckBonus)??0;
@@ -349,4 +380,4 @@ function applyEnemyAiCommands(context,options={}){
 function createBrowserBattleEnemyAiRuntime(){
   return {ok:true,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,plan:planEnemyAiCommands,commit:commitEnemyAiCommands,apply:applyEnemyAiCommands};
 }
-export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_COM_S_NOGUARD,BATTLE_COM_S_CHARGE,BATTLE_COM_S_CHARGE_OK,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1,BATTLE_ENEMY_AI_CHARGE_COMMANDS,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,BATTLE_AI_TARGET_TYPE_LEADER,BATTLE_AI_SELECT_HP_MAX,BATTLE_AI_SELECT_HP_MIN,BATTLE_AI_SELECT_STR_MAX,BATTLE_AI_SELECT_DEX_MAX,BATTLE_AI_SELECT_DEX_MIN,BATTLE_AI_SELECT_ATT_SUBDUE,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
+export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_COM_S_MIGHTY,BATTLE_COM_S_NOGUARD,BATTLE_COM_S_CHARGE,BATTLE_COM_S_CHARGE_OK,BATTLE_COM_S_EARTHROUND0,BATTLE_COM_S_EARTHROUND1,BATTLE_ENEMY_AI_CHARGE_COMMANDS,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,BATTLE_AI_TARGET_TYPE_LEADER,BATTLE_AI_SELECT_HP_MAX,BATTLE_AI_SELECT_HP_MIN,BATTLE_AI_SELECT_STR_MAX,BATTLE_AI_SELECT_DEX_MAX,BATTLE_AI_SELECT_DEX_MIN,BATTLE_AI_SELECT_ATT_SUBDUE,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};

@@ -136,7 +136,7 @@ function requireAttackCommandBinding(battleContext,type,attackerBid,targetBid,st
     ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-entry-invalid',attackerBid:attackerBid,targetBid:targetBid,state:clone(state)
   };
   const command=Number(attacker?.battleCommands?.[0]);
-  if(![1,8,1009,1015].includes(command))return {
+  if(![1,8,1006,1009,1015].includes(command))return {
     ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-required',attackerBid:a,targetBid:t,command:Number.isFinite(command)?command:null,state:clone(state)
   };
   const commandTarget=Number(attacker?.battleCommands?.[1]);
@@ -573,7 +573,7 @@ function createBrowserStateController({
             weaponType:pipeline.weaponType,
             guardRoll:action.guardRoll??null,
             lowDamageRoll:action.lowDamageRoll??null,
-            battleDamageModify:action.battleDamageModify??1
+            battleDamageModify:action.battleDamageModify??null
           }
         );
         if(result.ok===true){
