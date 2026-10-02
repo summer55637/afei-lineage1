@@ -38,7 +38,7 @@ RO0000 與 pinned fixed-C 不再用「誰才是引擎」的方式描述。RO0000
 
 ## 重要邊界
 
-「VM 一鍵端」與「手工外網端」是本專案的來源 provenance 標籤；它們不是 fixed-C 的同義詞。真正的 source parity 仍以 pinned gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56 為最高行為依據。
+「VM 一鍵端」與「手工外網端」是本專案的來源 provenance 標籤；它們不是 fixed-C 的同義詞。pinned gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56 只在需要驗證可讀 C 程式行為與語義時作為對應的校驗基準；它不凌駕於 RO0000 的實際部署版本事實。
 
 因此後續分析順序固定為：
 
