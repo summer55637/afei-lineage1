@@ -9,8 +9,6 @@ on:
       - 'tools/check_v410_browser_battle_profit_route.mjs'
       - 'data/generated/stoneage_browser_battle_profit_route_schema.json'
       - 'docs/reference/v410-browser-battle-profit-route.md'
-      - 'docs/rebuild-roadmap.md'
-      - 'tools/generate_readme.mjs'
       - '.github/workflows/check-v410-browser-battle-profit-route.yml'
   workflow_dispatch:
 permissions:
