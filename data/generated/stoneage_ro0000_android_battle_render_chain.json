@@ -1,0 +1,51 @@
+{
+  "format": "ro0000-android-battle-to-render-chain-v1",
+  "source": {
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "chain": [
+    "battleNNN.sabex",
+    "ReadBattleMap()",
+    "33x33 uint16be image IDs",
+    "StockDispBuffer(..., bmpNo)",
+    "target render gate: bmpNo > 99",
+    "realGetNo(imageId)",
+    "bitmapnumbertable[imageId]",
+    "global graphicNo",
+    "LoadBmp(graphicNo)",
+    "realGetImage(graphicNo)",
+    "adrnbuff[graphicNo] + Realbinfp[graphicNo]",
+    "Real payload at adder/size",
+    "decoder(): RD or gG",
+    "decoded image width/height/pixels",
+    "AllocateBmpToSurface(graphicNo)",
+    "PutBmp()/surface renderer"
+  ],
+  "functions": {
+    "ReadBattleMap": "0x0f3700",
+    "StockDispBuffer": "0x2e9c80",
+    "LoadBmp": "0x2ef220",
+    "realGetNo": "0x362f50",
+    "realGetImage": "0x362fd0",
+    "decoderPng": "0x2f5310",
+    "decoder": "0x2f5410",
+    "AllocateBmpToSurface": "0x2eeb80"
+  },
+  "targetFacts": {
+    "imageIdDomain": "0..99999",
+    "graphicNoDomain": "0..599999",
+    "sabexCellDomain": "0..65535",
+    "cgInvisible": 99,
+    "realImageFormats": [
+      "RD",
+      "gG"
+    ]
+  },
+  "boundary": {
+    "realAdrnPayloadBytesAvailable": false,
+    "realBinPayloadBytesAvailable": false,
+    "sabexPayloadBytesAvailable": false,
+    "gGBrowserDecodeAvailable": false
+  }
+}
