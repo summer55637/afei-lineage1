@@ -826,7 +826,7 @@ V3.44 不新增 playable HTML，先把 canonical Persistent State v1 與 Save En
 
 《石器時代：覺醒》的官方商店資訊包含回合制策略、上百寵物、職業、野外捕捉與離線掛機；《石器時代：放置冒險》則以放置玩法與寵物成長為產品核心。現代產品的參考程度，以及能否直接採用其特定 UI／美術資產，改由實際授權範圍決定；不在授權範圍的外部素材仍只作研究參考。
 
-正式規格：`docs/reference/modern-3d-mobile-visual-ui-target.md`。
+正式規格：`docs/reference/modern-2d-mobile-visual-ui-target.md`。
 
 ## 目的
 
