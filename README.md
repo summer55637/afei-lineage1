@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7013850 — [docs] include Android SDL and warp event audit in README
-- 更新時間：2026-10-03T04:33:36+08:00
+- 最新 commit：71dde68 — [docs] record Android SDL loop input and event dispatch
+- 更新時間：2026-10-03T04:35:17+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
