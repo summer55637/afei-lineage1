@@ -4,6 +4,7 @@ import {
   sourceMapWalkableAt,
   sourceMapTileAt
 } from './stoneage_map_runtime.mjs';
+import { ro0000SourceMapWalkableAt } from './stoneage_ro0000_4000_repair.mjs';
 import { commitSave, parseAndValidateSaveEnvelope } from './stoneage_save_transaction.mjs';
 
 const BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT='stoneage-browser-world-movement-runtime-v1';
@@ -39,6 +40,10 @@ function normalizeDirection(dx,dy){
   return {dx:x,dy:y,diagonal:x!==0&&y!==0};
 }
 
+function mapWalkableAtForRo0000(map,x,y,mapset,{flying=false}={}){
+  return ro0000SourceMapWalkableAt(map,x,y,mapset,{flying,sourceMapWalkableAt});
+}
+
 function validateMoveStep(from,direction,map,mapset){
   const origin=normalizeCell(from);
   const dir=normalizeDirection(direction?.dx,direction?.dy);
@@ -50,14 +55,14 @@ function validateMoveStep(from,direction,map,mapset){
   const destination={floorId:origin.floorId,x:origin.x+dir.dx,y:origin.y+dir.dy};
   const destinationTile=sourceMapTileAt(map,destination.x,destination.y);
   if(!destinationTile)return {ok:false,reason:'movement-destination-out-of-map',destination};
-  const destinationWalkable=sourceMapWalkableAt(map,destination.x,destination.y,mapset,{flying:false});
+  const destinationWalkable=mapWalkableAtForRo0000(map,destination.x,destination.y,mapset,{flying:false});
   if(!destinationWalkable)return {ok:false,reason:'movement-destination-not-walkable',from:origin,to:destination,diagonal:dir.diagonal};
   const sideCells=[];
   if(dir.diagonal){
     const xSide={floorId:origin.floorId,x:origin.x+dir.dx,y:origin.y};
     const ySide={floorId:origin.floorId,x:origin.x,y:origin.y+dir.dy};
-    const xSideWalkable=sourceMapWalkableAt(map,xSide.x,xSide.y,mapset,{flying:false});
-    const ySideWalkable=sourceMapWalkableAt(map,ySide.x,ySide.y,mapset,{flying:false});
+    const xSideWalkable=mapWalkableAtForRo0000(map,xSide.x,xSide.y,mapset,{flying:false});
+    const ySideWalkable=mapWalkableAtForRo0000(map,ySide.x,ySide.y,mapset,{flying:false});
     sideCells.push({cell:xSide,walkable:xSideWalkable},{cell:ySide,walkable:ySideWalkable});
     if(!xSideWalkable||!ySideWalkable){
       return {ok:false,reason:'movement-diagonal-side-cell-blocked',from:origin,to:destination,diagonal:true,sideCells};
