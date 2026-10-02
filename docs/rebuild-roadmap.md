@@ -1,3 +1,11 @@
+## 2026-10-02 V4.37 Enemy AI WAZA Target Lifecycle
+
+接入 WAZA 權重抽選、技能槽與 target lifecycle：先依 `at[1]`／`at[2]` 選 target，再呼叫技能 callback。Battle Context 保留 Enemy base `petSkills`；先支援 `PETSKILL_None` 提交 NONE/C_OK。其他未移植技能在目標 RNG 完成後 fail-closed，回報 slot、skill ID、target 與 RNG 消耗；空候選在 callback 前失敗。不執行傷害、不修改 Persistent State。
+
+Regression：`tools/check_v437_browser_battle_enemy_ai_waza_lifecycle.mjs`；Workflow 重跑 V4.29–V4.37、V3.86 Battle Context 與既有 attack pipeline。
+
+---
+
 ## 2026-10-02 V4.36 Enemy AI Target Selection Source Parity
 
 校正 V4.30 對 HP selector RNG 的簡化：Fixed-C `_ENEMY_ATTACK_AI` 下 select mode 2..7 都先消耗 `RAND(0,rn)`；若結果為 0 再消耗 `RAND(0,cnt-1)`，cnt=1 也不省略。補齊 STR_MAX、DEX_MAX、DEX_MIN、ATT_SUBDUE，及 TARGET_LEADER 的非隊長 `RAND(0,2)` 篩選與空集合 fallback。targetType 0／未知值依 switch default 採 ALL。
