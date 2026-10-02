@@ -50,7 +50,6 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
     };
   }
 
-  if(currentRevision!==intOr(plan.settlementReceiptRevision,null))return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'settlement-receipt-revision-current-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
 
   const player=plan.player;
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-player-exit-commit',reason:'player-plan-required',state:clone(state)};
@@ -136,7 +135,8 @@ function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,se
     if(expectedStart!=null&&intOr(record.settlementStartRevision,null)!==expectedStart)continue;
     if(expectedReceipt!=null&&intOr(record.settlementReceiptRevision,null)!==expectedReceipt)continue;
     if(expectedPlayer && String(record.player?.playerId??'').trim()!==expectedPlayer)continue;
-    if(intOr(record.revisionBefore,null)!==expectedReceipt)continue;
+    const before=intOr(record.revisionBefore,null);
+    if(before==null||before<expectedReceipt)continue;
     const after=intOr(record.revisionAfter,null);
     if(after==null||after<=expectedReceipt||after!==currentRevision)continue;
     matches.push({transactionId,record:clone(record)});
