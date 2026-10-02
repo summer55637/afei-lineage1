@@ -16,6 +16,8 @@ on:
       - 'tools/check_idle_policy.mjs'
       - 'tools/check_save_transaction.mjs'
       - 'src/stoneage_save_transaction.mjs'
+      - 'src/stoneage_save_storage.mjs'
+      - 'tools/check_save_storage.mjs'
       - 'tools/check_idle_simulation.mjs'
       - 'src/stoneage_idle_simulation.mjs'
       - 'src/stoneage_offline_resume.mjs'
@@ -55,6 +57,8 @@ jobs:
         run: node tools/check_item_economy_runtime.mjs
       - name: Run save transaction regression
         run: node tools/check_save_transaction.mjs
+      - name: Run save storage regression
+        run: node tools/check_save_storage.mjs
       - name: Run battle result adapter regression
         run: node tools/check_battle_result_adapter.mjs
       - name: Run offline resume regression
