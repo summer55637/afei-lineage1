@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：9a710d0 — docs: remove stale reopened scope from README
-- 更新時間：2026-10-02T12:02:40+08:00
+- 最新 commit：1359682 — docs: summarize active blocker in README
+- 更新時間：2026-10-02T12:12:20+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -36,13 +36,14 @@
 
 ## Blocker
 
-- persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
+- persistent-state-expansion：Schema v1、Save Envelope v1 與交易回歸已存在；目前缺口是持久寫入及重新載入生命週期。
 
 ## 重要文件
 
 - [Source authority / provenance](docs/source-authority-and-provenance.md)
 - [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)
 - [Rebuild roadmap](docs/rebuild-roadmap.md)
+- [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
 - [Generated state / evidence](data/generated/)
 
 > README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。
