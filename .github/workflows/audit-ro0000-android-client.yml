@@ -101,30 +101,6 @@ jobs:
 
           native = json.loads(Path("artifacts/ro0000_android_native_elf_audit.json").read_text(encoding="utf-8"))
           dst = Path("artifacts/stoneage_ro0000_android_native_resource_focus.json")
-          wanted = {
-              "AdrnInit", "adrnDecode", "LoadSprbin", "InitSprBinFileOpen",
-              "DownLoadIniFile", "GetBinaryResource", "ReadPatchInfo", "UpdateAppNewVersion",
-              "DownloadResource", "DownloadFile", "UnZipFile", "realGetPos", "realGetWH",
-              "realGetHitPoints", "realGetHitFlag", "realGetPrioType", "realGetHeightFlag",
-              "realGetSoundEffect", "realGetWalkSoundEffect", "realGetNo", "realGetImage",
-              "ReadBattleMap", "StockDispBuffer", "PutBmp", "LoadBmp", "decoder", "decoderPng",
-              "ReadAniFile", "SpecAnim", "play_map_bgm", "drawMap", "drawMap2", "drawMapUi",
-              "redrawMap", "initMap", "createMap", "setMap", "writeMap", "readMap",
-              "readHitMap", "checkHitMap", "checkEmptyMap", "checkEmptyMapData", "_checkEmptyMap",
-              "setEventMemory", "lssproto_S_recv", "lssproto_M_recv", "lssproto_EN_recv",
-              "DrawBattleMap", "ddrawBattleMap", "PutTileBmp", "DrawAutoMapping",
-              "MakeHitBox", "MakeAnimDisp", "getRouteMap", "updateMapArea", "setMapMovePoint",
-              "setMapMovePoint2", "_setMapMovePoint", "_mapMove", "mapMove2", "_partyMapMove",
-              "mapCheckSum", "initWorldMap", "worldMapProc", "EndWarpMap", "setWarpMap",
-              "mapWndProc", "drawAutoMap", "createAutoMap", "initAutoMapColor", "makeAutoMapColor",
-              "getAutoMapColor", "readAutoMapColor", "writeAutoMapColor", "DrawMapEffect",
-              "drawMapEffect", "initMapEffect", "mapEffectProc", "mapEffectProc2", "mapEffectRain",
-              "mapEffectRain2", "mapEffectSnow", "mapEffectSnow2", "mapEffectStar",
-              "mapEffectKamiFubuki", "mapEffectFallingStar", "getMapEffectBuf", "delMapEffectBuf",
-              "HotUpdatePutbmp", "InitSpriteInfo", "FreeGetBattleMap", "cleanupRealbin",
-              "InitPteernSeparationBin", "loadResources", "initResources", "myluaload",
-              "LoadStoneAgeLUA", "LoadStoneAgeLUAPath", "ReLoadStoneAgeLUA",
-          }
           keys = (
               "setBlowFishKey", "fish_decode", "fopen", "fread", "fseek", "memcpy", "memmove",
               "DownloadFile", "GetBinaryResource", "ReadPatchInfo", "DownLoadIniFile",
@@ -149,19 +125,28 @@ jobs:
           focus = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":native["auditedApk"]["sha256"],"libraries":[]}
           for lib in native.get("nativeLibraries", []):
               selected=[]
+              selected_objects=[]
               for fn in lib.get("focusedSymbols", []):
-                  symbol_name = fn.get("name") or ""
-                  demangled = fn.get("demangled") or ""
-                  if symbol_name not in wanted and not any(name in demangled for name in wanted): continue
+                  symbol_type = fn.get("type")
+                  if symbol_type in ("OBJECT", "NOTYPE"):
+                      selected_objects.append({"name":fn.get("name"),"type":symbol_type,"value":fn.get("value"),"size":fn.get("size")})
+                      continue
+                  if symbol_type != "FUNC":
+                      continue
                   dis=fn.get("disassembly") or {}
                   lines=dis.get("excerpt", [])
                   flow_re = re.compile(r"\b(?:call\w*|j[a-z]{1,3}|blx?|bx|cbz|cbnz|cmp\w*|test\w*)\b", re.IGNORECASE)
                   selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"disassemblyLineCount":dis.get("disassemblyLineCount"),"disassemblySha256":dis.get("disassemblySha256"),"excerptTruncated":dis.get("excerptTruncated"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)],"controlFlowLines":[line for line in lines if flow_re.search(line)]})
-              if selected: focus["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected})
-          # Compare canonical demangled function names across the two target ABIs.
+              if selected or selected_objects:
+                  focus["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected,"objects":selected_objects})
+          # Compare function and object inventories across the two target ABIs.
           abi_names = {lib.get("abi"): {
               re.sub(r"\s+", " ", fn.get("demangled") or fn.get("name") or "").strip()
               for fn in lib.get("focusedSymbols", []) if fn.get("type") == "FUNC"
+          } for lib in native.get("nativeLibraries", [])}
+          abi_objects = {lib.get("abi"): {
+              item.get("name") for item in lib.get("focusedSymbols", [])
+              if item.get("type") in ("OBJECT", "NOTYPE")
           } for lib in native.get("nativeLibraries", [])}
           abi_labels = sorted(abi_names)
           focus["abiFunctionComparison"] = {
@@ -170,6 +155,12 @@ jobs:
               "onlyInFirst": sorted(abi_names[abi_labels[0]] - abi_names[abi_labels[1]]) if len(abi_labels) == 2 else [],
               "onlyInSecond": sorted(abi_names[abi_labels[1]] - abi_names[abi_labels[0]]) if len(abi_labels) == 2 else [],
               "note": "Name-set parity only; instruction semantics still require ABI-aware comparison."
+          }
+          focus["abiObjectComparison"] = {
+              "sameFocusedObjectSet": len(abi_labels) == 2 and abi_objects.get(abi_labels[0]) == abi_objects.get(abi_labels[1]),
+              "onlyInFirst": sorted(abi_objects.get(abi_labels[0], set()) - abi_objects.get(abi_labels[1], set())) if len(abi_labels) == 2 else [],
+              "onlyInSecond": sorted(abi_objects.get(abi_labels[1], set()) - abi_objects.get(abi_labels[0], set())) if len(abi_labels) == 2 else [],
+              "note": "Global object-name parity only; sizes and addresses can differ by ABI."
           }
           core = (
               "AdrnInit(", "InitSprBinFileOpen(", "InitPteernSeparationBin(",
@@ -187,6 +178,8 @@ jobs:
           } for abi, names in abi_names.items()}
           if not focus["abiFunctionComparison"]["sameFocusedFunctionSet"]:
               raise SystemExit("Focused native function names differ across target ABIs; review before publishing.")
+          if not focus["abiObjectComparison"]["sameFocusedObjectSet"]:
+              raise SystemExit("Focused native object names differ across target ABIs; review before publishing.")
           if not all(item["complete"] for item in focus["coreFunctionCoverage"].values()):
               raise SystemExit("Core Android map/resource native function coverage is incomplete.")
           dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
