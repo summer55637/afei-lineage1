@@ -29,10 +29,10 @@
 
 4000→200 的兩組 source portal origins 與出生 direct landing component disconnected，因此目前不能把它建立成正式 idle route。這裡不人工加橋、不手動 teleport。
 
-## 明確未定義的產品規則
+## 放置戰鬥與待定產品規則
 
-route catalog 不代表已完成：battle strategy、補血門檻、捕捉策略、自動換寵、背包滿、死亡恢復、offline accrual、route rotation。
+基礎戰鬥策略 v1 已接入 Browser State Controller：待命中的玩家角色使用普通攻擊，目標依來源預設隨機選取；狀態阻擋或沒有可攻擊目標時使用 wait。寵物沿用 Fixed-C 預設普通攻擊。
 
-這些規則接下來會以 Idle Loop Contract 的 product-policy object 形式逐一建立。
+這是目前明確採用的最小策略，不代表已完成整場自動戰鬥。Battle result 仍由外部 runtime 注入；技能／道具使用、補血門檻、捕捉、自動換寵、背包滿、死亡恢復、offline accrual、route rotation 仍各自待定。
 
 Generated：data/generated/stoneage_first_idle_route_catalog.json
