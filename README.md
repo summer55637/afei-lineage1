@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2fb282d — test: align feature policy with cleared reopened registry
-- 更新時間：2026-10-02T12:01:45+08:00
+- 最新 commit：9a710d0 — docs: remove stale reopened scope from README
+- 更新時間：2026-10-02T12:02:40+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
