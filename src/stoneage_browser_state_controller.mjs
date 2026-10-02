@@ -1247,8 +1247,9 @@ function createBrowserStateController({
         if(worldEncounterRuntime?.ok===true && !Number.isInteger(groupIdValue)){
           return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'encounter-group-id-required',state:clone(currentState)};
         }
+        let pipeline=null;
         if(encounterGroupCatalog){
-          const pipeline=encounterPipeline;
+          pipeline=encounterPipeline;
           const currentRevision=Number(currentState?.revision??0);
           if(!pipeline?.generation)return {ok:false,handled:false,stage:'battle-context-encounter-binding',reason:'enemy-generation-plan-required',state:clone(currentState)};
           if(Number(pipeline.revision)!==currentRevision){
