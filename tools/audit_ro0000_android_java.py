@@ -172,8 +172,8 @@ def should_include_class(package, class_name):
 def native_library_load_requests(source):
     """Extract only safe string-literal arguments to System.loadLibrary calls."""
     masked = mask_java(source)
-    pattern = re.compile(r"\bSystem\s*\.\s*loadLibrary\s*\(\s*")
-    literal = re.compile(r'"([A-Za-z0-9_]{1,80})"\s*\)')
+    pattern = re.compile(r"\bSystem\s*\.\s*loadLibrary\s*\(")
+    literal = re.compile(r'\s*"([A-Za-z0-9_]{1,80})"\s*\)')
     results = []
     for match in pattern.finditer(masked):
         value = literal.match(source, match.end())
