@@ -67,9 +67,9 @@ const coreStatRolls=[
   assert.equal(directTurnInit.reason,'battle-turn-initialize-internal-only');
   const initialized=await c.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:5,surpriseRoll:20});
   assert.equal(initialized.ok,true,JSON.stringify(initialized));
-  assert.equal(initialized.battleContext.context.sourceGroupId,94);
-  assert.deepEqual(initialized.battleContext.context.sides[1].entries.filter(Boolean).map(x=>x.enemyId),[120,123]);
-  assert.equal(initialized.battleContext.context.sides[1].entries[5].sourceCoreStats.level,2);
+  assert.equal(initialized.battleContext.sourceGroupId,94);
+  assert.deepEqual(initialized.battleContext.sides[1].entries.filter(Boolean).map(x=>x.enemyId),[120,123]);
+  assert.equal(initialized.battleContext.sides[1].entries[5].sourceCoreStats.level,2);
   const command=await c.dispatch({type:ACTION_BATTLE_PLAYER_COMMAND_SET,battleSlot:0,command:'attack',targetBid:15});
   assert.equal(command.ok,true,JSON.stringify(command));
   assert.equal(command.command.targetBid,15);
