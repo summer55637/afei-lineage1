@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   DEFAULT_SAVE_STORAGE_KEY,
+  createLocalStorageSavePort,
   validateSaveStoragePort,
   writeSaveEnvelopeToStorage,
   loadPersistentStateFromStorage,
@@ -26,6 +27,19 @@ const storage=memoryStorage();
 const initial=freshPersistentState({now:()=>now,playerId:'save-storage-test',playerName:'contract'});
 assert.deepEqual(validateSaveStoragePort(storage),[]);
 assert.equal((await loadPersistentStateFromStorage(storage)).found,false);
+
+const webValues=new Map();
+const localPort=createLocalStorageSavePort({
+  getItem(key){return webValues.has(key)?webValues.get(key):null;},
+  setItem(key,value){webValues.set(key,value);}
+});
+assert.deepEqual(validateSaveStoragePort(localPort),[]);
+assert.equal(createLocalStorageSavePort(null),null);
+const localCommitted=await commitAndPersistSave(initial,next,{storage:localPort,key:'local-storage-contract',expectedRevision:0,savedAt:()=>now,now:()=>now});
+assert.equal(localCommitted.ok,true);
+const localRestored=await loadPersistentStateFromStorage(localPort,{key:'local-storage-contract',now:()=>now});
+assert.equal(localRestored.ok,true);
+assert.deepEqual(localRestored.state,localCommitted.state);
 
 const next={...initial,player:{...initial.player,gold:30000}};
 const committed=await commitAndPersistSave(initial,next,{storage,expectedRevision:0,savedAt:()=>now,now:()=>now,source:'save-storage-regression'});
@@ -134,4 +148,4 @@ assert.equal(rejectedEnable.stage,'save-storage');
 assert.equal(failingSession.controller.getState().revision,0);
 assert.equal(failingSession.controller.getState().idle.enabled,false);
 
-console.log(JSON.stringify({pass:true,format:'stoneage-save-storage-port-v1',durableWrite:true,reloadRestore:true,controllerAutoPersist:true,writeFailureRollback:true,corruptSaveFailClosed:true,storageFailuresFailClosed:true,revisionConflictVerified:true}));
+console.log(JSON.stringify({pass:true,format:'stoneage-save-storage-port-v1',localStorageAdapter:true,durableWrite:true,reloadRestore:true,controllerAutoPersist:true,writeFailureRollback:true,corruptSaveFailClosed:true,storageFailuresFailClosed:true,revisionConflictVerified:true}));
