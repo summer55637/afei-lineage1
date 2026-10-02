@@ -6,7 +6,7 @@
 
 ## 目前狀態
 
-- 最新 commit：37a97a7 — docs: remove retired GMQUE from README scope
+- 最新 commit：b7ead5a — docs: defer starter item blockers from mainline gameplay
 - 更新時間：2026-10-02T11:59:49+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
@@ -35,9 +35,6 @@
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
-
-- starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
-- starter-item-endpoint-32003：active → keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
 
 ## 重要文件
