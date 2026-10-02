@@ -1,3 +1,19 @@
+## 2026-10-02 V4.26 Battle Damage Commit：一般攻擊開始實際扣血
+
+V4.04 的 DamageReact 保持 read-only plan；V4.26 新增獨立交易提交，將一般 NONE reaction damage 真正寫入 transient Battle Context 的 target HP。
+
+- HP 以 `max(0, hp - damage)` 更新；原始輸入 context 不被原地修改，Persistent State 不變。
+- 加入 damageCommitRevision 與 transaction receipt：重送相同交易不重複扣血；不同 plan 衝突、過期 revision 均拒絕。
+- 角色新增 workUltimate，與死亡結果 ultimate 分開；依 pinned Fixed-C 門檻處理立即必殺與 overkill 累積。
+- 零傷害依來源流程為 no-op；VANISH／ABSORB／REFLECT／TRAP／ACUPUNCTURE 與 ride-pet split 尚未提交，全部 fail-closed。
+- V4.26 專屬 CI 與 V4.04 regression 已通過。
+
+這只完成攻擊鏈的 HP commit 邊界，不代表完整自動戰鬥已端到端完成。後續仍需逐項串接反擊、死亡、回合結束、收益結算與 idle event。
+
+詳細契約：docs/reference/v426-browser-battle-damage-commit.md。
+
+---
+
 ## 2026-10-02 Karutarna route repair overlay：正式接入產品路線
 
 4000→200 的 source route 仍保留 disconnected 的歷史判定；另外加入一個清楚分層的產品修復 overlay，讓 Browser Controller 在不改原始地圖、不新增 warp、不修改 movement semantics 的前提下，於 runtime map copy 將 (91,109)、(92,109)、(93,109) 的 tile 換成既有可走 tile 321。

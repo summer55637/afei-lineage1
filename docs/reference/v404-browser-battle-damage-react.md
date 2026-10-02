@@ -33,3 +33,8 @@ V4.04 是 read-only plan：
 - caller 必須提供 trap damage；缺失時 fail-closed
 
 Regression：`tools/check_v404_browser_battle_damage_react.mjs`
+
+
+## HP mutation boundary (V4.26)
+
+V4.04 remains a read-only reaction plan. The new V4.26 `BATTLE_DAMAGE_COMMIT` only commits the supported ordinary NONE-reaction branch; see [V4.26 Browser Battle Damage Commit](v426-browser-battle-damage-commit.md). Special reaction and ride-pet mutations remain deferred and fail closed.
