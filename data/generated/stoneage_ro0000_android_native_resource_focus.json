@@ -1,7 +1,7 @@
 {
   "format": "ro0000-android-native-resource-focus-v1",
-  "workflowRunId": 37028398090,
-  "sourceCommit": "377e4df4857a083d46f772f9f8319cb92486d83e",
+  "workflowRunId": 37028402041,
+  "sourceCommit": "5e46f0c60205fcf01d7d28c37c3fa8913c1dacf5",
   "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
   "libraries": [
     {
@@ -10,6 +10,59 @@
       "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4",
       "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
       "functions": [
+        {
+          "name": "_Z9UnZipFilePKc",
+          "value": "0xe5a89",
+          "size": 164,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 71,
+          "resourceRelevantLines": []
+        },
+        {
+          "name": "_Z17GetBinaryResourcev",
+          "value": "0x1ffc49",
+          "size": 516,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 224,
+          "resourceRelevantLines": [
+            "  1ffca0:\tf6cc ebd0 \tblx\tcc444 <fopen@plt>",
+            "  1ffd9e:\tf6cc eb52 \tblx\tcc444 <fopen@plt>"
+          ]
+        },
+        {
+          "name": "_Z19UpdateAppNewVersionv",
+          "value": "0x1ffe4d",
+          "size": 380,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 152,
+          "resourceRelevantLines": [
+            "  1ffece:\ta814      \tadd\tr0, sp, #80\t@ 0x50",
+            "  1ffefa:\ta914      \tadd\tr1, sp, #80\t@ 0x50",
+            "  1fff1c:\ta814      \tadd\tr0, sp, #80\t@ 0x50",
+            "  1fff96:\ta814      \tadd\tr0, sp, #80\t@ 0x50"
+          ]
+        },
+        {
+          "name": "_Z15DownLoadIniFilev",
+          "value": "0x202c45",
+          "size": 352,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 142,
+          "resourceRelevantLines": []
+        },
+        {
+          "name": "_Z16DownloadResourcePKc",
+          "value": "0x203725",
+          "size": 368,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 153,
+          "resourceRelevantLines": [
+            "  2037b4:\ta814      \tadd\tr0, sp, #80\t@ 0x50",
+            "  2037ce:\tab14      \tadd\tr3, sp, #80\t@ 0x50",
+            "  2037e0:\ta814      \tadd\tr0, sp, #80\t@ 0x50",
+            "  20384a:\ta814      \tadd\tr0, sp, #80\t@ 0x50"
+          ]
+        },
         {
           "name": "_Z10LoadSprbinPKc",
           "value": "0x23a985",
@@ -117,6 +170,62 @@
       "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333",
       "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
       "functions": [
+        {
+          "name": "_Z9UnZipFilePKc",
+          "value": "0xef1d0",
+          "size": 333,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 89,
+          "resourceRelevantLines": []
+        },
+        {
+          "name": "_Z17GetBinaryResourcev",
+          "value": "0x2f58d0",
+          "size": 849,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 196,
+          "resourceRelevantLines": [
+            "  2f5900:\tc7 44 24 50 06 00 00 \tmovl   $0x6,0x50(%esp)",
+            "  2f59aa:\te8 31 64 dd ff       \tcall   cbde0 <fopen@plt>",
+            "  2f5b62:\te8 79 62 dd ff       \tcall   cbde0 <fopen@plt>"
+          ]
+        },
+        {
+          "name": "_Z19UpdateAppNewVersionv",
+          "value": "0x2f5c30",
+          "size": 812,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 209,
+          "resourceRelevantLines": [
+            "  2f5e6d:\te8 2e d4 25 00       \tcall   5532a0 <__cxxabiv1::__si_class_type_info::__do_upcast(__cxxabiv1::__class_type_info const*, void const*, __cxxabiv1::__class_type_info::__upcast_result&) const@@Base+0x504f0>"
+          ]
+        },
+        {
+          "name": "_Z15DownLoadIniFilev",
+          "value": "0x2faf30",
+          "size": 825,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 208,
+          "resourceRelevantLines": []
+        },
+        {
+          "name": "_Z16DownloadResourcePKc",
+          "value": "0x2fc730",
+          "size": 826,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 210,
+          "resourceRelevantLines": [
+            "  2fc7ce:\te8 cd 6a 25 00       \tcall   5532a0 <__cxxabiv1::__si_class_type_info::__do_upcast(__cxxabiv1::__class_type_info const*, void const*, __cxxabiv1::__class_type_info::__upcast_result&) const@@Base+0x504f0>",
+            "  2fc986:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fc99f:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fc9ac:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fc9b9:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fc9c6:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fc9d3:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fc9e4:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  2fca51:\t8b 44 24 50          \tmov    0x50(%esp),%eax"
+          ]
+        },
         {
           "name": "_Z10LoadSprbinPKc",
           "value": "0x3631e0",
