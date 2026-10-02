@@ -11,30 +11,24 @@ assert.equal(disabled.policy?.doNotAutoEnableDisabledFeatures,true);
 
 const reopened=JSON.parse(fs.readFileSync('data/generated/stoneage_reopened_features.json','utf8'));
 assert.equal(reopened.format,'stoneage-reopened-features-v1');
-
-const gmque=reopened.features?.gmque;
-assert.equal(gmque?.status,'reopened-for-source-reconstruction');
-assert.equal(gmque?.runtimeEnabled,false);
-assert.equal(gmque?.playable,false);
-assert.equal(gmque?.nextEvidence?.includes('endpoint NPC RANDGMQUE / QUEPART0..3 exact arguments'),true);
-
+assert.equal(reopened.features?.gmque,undefined,'GMQUE must not remain in active reopened feature scope after retirement.');
 const world=reopened.features?.['world-blockers'];
 assert.equal(world?.status,'reopened-for-endpoint-reaudit');
 assert.equal(world?.runtimeEnabled,false);
 assert.equal(world?.playable,false);
 
 const html=fs.readFileSync('index.html','utf8');
-assert.ok(!/id=["'][^"']*gmque/i.test(html),'GMQUE must not have live UI ids merely because archaeology was reopened.');
-assert.ok(!/GMACTION|ShowGmque|DelGmquePet|GetGmPrize|CleanGmque/i.test(html),'GMQUE action handlers must not be wired in UI before runtime closure.');
+assert.ok(!/id=["'][^"']*gmque/i.test(html),'GMQUE must not have live UI ids merely because historical archaeology exists.');
+assert.ok(!/GMACTION|ShowGmque|DelGmquePet|GetGmPrize|CleanGmque/i.test(html),'GMQUE action handlers must not be wired in UI.');
 
 const game=fs.readFileSync('game.js','utf8');
-assert.ok(!/GMACTION|ShowGmque|DelGmquePet|GetGmPrize|CleanGmque/i.test(game),'GMQUE NPC action handlers must not be wired in runtime before closure.');
+assert.ok(!/GMACTION|ShowGmque|DelGmquePet|GetGmPrize|CleanGmque/i.test(game),'GMQUE action handlers must not be wired in runtime.');
 
 console.log(JSON.stringify({
   pass:true,
   version:'V3.10 policy reset',
   permanentlyDisabledFeatures:Object.keys(disabled.features??{}),
   reopenedFeatures:Object.keys(reopened.features??{}),
-  gmque:{sourceArchaeology:'reopened',runtimeEnabled:false,playable:false},
+  gmque:'retired-from-active-scope',
   worldBlockers:'reopened-for-endpoint-reaudit'
 }));
