@@ -136,6 +136,19 @@ These accessor bounds are also explicit: the graphic-number accessors reject IDs
 
 This closes the listed accessor-visible fields, **not the complete 80-byte record**. Bytes 0x00–0x0B, 0x22–0x3F, and 0x44–0x4F remain unassigned by this getter set; other loader/render call sites may still use them. The complete machine-readable field/accessor summary is in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
 
+### ADRNBIN initialization corrections
+
+Besides the accessor behavior above, `AdrnInit()` performs a post-decode rewrite of the 16-bit value at record offset `0x1E` for two image-ID ranges:
+
+| Image ID range (inclusive) | Rewritten record field |
+|---|---|
+| `0x3202–0x320B` (12802–12811) | `u16[0x1E] = 300 + (oldValue % 100)` |
+| `0x2794–0x2798` (10132–10136) | `u16[0x1E] = 300 + (oldValue % 100)` |
+
+The rewrite preserves the original value's remainder modulo 100 while forcing its integer quotient by 100 to 3. The same selector ranges and rewrite are present in target x86 `AdrnInit()` and ARMv7 `AdrnInit()`, so this is an ABI-cross-checked target initialization correction rather than a legacy-source guess.
+
+This is distinct from `realGetHitFlag()`'s special image-ID cases, which force the accessor output to 1 without changing the stored record. Neither path establishes the affected assets' visual identity or intended artistic meaning. The machine-readable contract is recorded under `adrn.initializationFixups` in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
 ### Cross-check against published legacy format notes
 
 Third-party legacy-format notes independently describe 80-byte StoneAge Adrn records with 32-bit fields at offsets 0, 4, 8, 12, 16, 20 and 24, followed by east/south occupancy bytes at 28/29, a map-related flag at 30, an unknown region, and a map number near the end. The Android accessors' X/Y and width/height offsets match that description. This makes an Adrn-index interpretation of the decoded records plausible, but the notes are not authoritative for this APK.
