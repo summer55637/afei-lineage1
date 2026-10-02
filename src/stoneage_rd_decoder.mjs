@@ -4,7 +4,7 @@ const BIT_ZERO=0x40;
 const BIT_REP_LARG=0x10;
 const BIT_REP_LARG2=0x20;
 
-const u32le=(b,p)=>((b[p]>>>0)|((b[p+1]>>>0)<<8)|((b[p+2]>>>0)<<16)|((b[p+3]>>>0)*0x1000000))>>>0;
+const u32le=(b,p)=>((b[p]>>>0)|((b[p+1]>>>0)<<8)|((b[p+2]>>>16)<<16)|((b[p+3]>>>24)*0x1000000))>>>0;
 function need(b,p,n,label){if(p<0||n<0||p+n>b.length)throw new Error('RD truncated at '+label);}
 
 export function parseRdHeader(input){
@@ -14,18 +14,36 @@ export function parseRdHeader(input){
   return {id:'RD',compressFlag:b[2],width:u32le(b,4),height:u32le(b,8),size:u32le(b,12)};
 }
 
+function checkedArea(width,height,bytesPerPixel){
+  const area=width*height*bytesPerPixel;
+  if(!Number.isSafeInteger(area)||area<0)throw new Error('invalid RD dimensions');
+  return area;
+}
+
 export function decodeStoneAgeRd(input){
   const b=input instanceof Uint8Array?input:new Uint8Array(input);
   const h=parseRdHeader(b);
   if(h.size<RD_HEADER_SIZE||h.size>b.length)throw new Error('invalid RD size');
-  const pixels=h.width*h.height;
-  if(!Number.isSafeInteger(pixels)||pixels<0)throw new Error('invalid RD dimensions');
+
   if(h.compressFlag===0){
-    need(b,RD_HEADER_SIZE,pixels,'raw payload');
-    return {width:h.width,height:h.height,compressFlag:0,pixels:b.slice(RD_HEADER_SIZE,RD_HEADER_SIZE+pixels)};
+    const outputBytes=checkedArea(h.width,h.height,1);
+    need(b,RD_HEADER_SIZE,outputBytes,'raw payload');
+    return {width:h.width,height:h.height,compressFlag:0,bytesPerPixel:1,pixels:b.slice(RD_HEADER_SIZE,RD_HEADER_SIZE+outputBytes)};
   }
-  if(h.compressFlag>=16)throw new Error('unsupported RD color compression flag '+h.compressFlag);
-  const out=new Uint8Array(pixels);
+
+  if(h.compressFlag===0x20){
+    const outputBytes=checkedArea(h.width,h.height,4);
+    const out=new Uint8Array(outputBytes);
+    const compressed=b.slice(RD_HEADER_SIZE,h.size);
+    const zlib=requireNodeZlib();
+    const inflated=zlib.inflateSync(compressed);
+    if(inflated.byteLength!==outputBytes)throw new Error('RD zlib decoded size mismatch: '+inflated.byteLength+' / '+outputBytes);
+    out.set(inflated);
+    return {width:h.width,height:h.height,compressFlag:0x20,bytesPerPixel:4,pixels:out};
+  }
+
+  const outputBytes=checkedArea(h.width,h.height,1);
+  const out=new Uint8Array(outputBytes);
   let src=RD_HEADER_SIZE,dst=0,end=h.size;
   while(src<end){
     const idx=b[src++];
@@ -47,7 +65,24 @@ export function decodeStoneAgeRd(input){
     }
   }
   if(dst!==out.length)throw new Error('RD decoded size mismatch: '+dst+' / '+out.length);
-  return {width:h.width,height:h.height,compressFlag:h.compressFlag,pixels:out};
+  return {width:h.width,height:h.height,compressFlag:h.compressFlag,bytesPerPixel:1,pixels:out};
+}
+
+function requireNodeZlib(){
+  try{
+    return require('node:zlib');
+  }catch{
+    throw new Error('zlib is unavailable in this runtime');
+  }
+}
+
+export function classifyStoneAgeGraphic(input){
+  const b=input instanceof Uint8Array?input:new Uint8Array(input);
+  need(b,0,2,'graphic magic');
+  const magic=b[0]|(b[1]<<8);
+  if(magic===0x4452)return {format:'RD',decoder:'decodeStoneAgeRd'};
+  if(magic===0x4767)return {format:'gG',decoder:'decoderPng'};
+  throw new Error('unsupported client graphic magic 0x'+magic.toString(16));
 }
 
 export function decodeAuthorizedClientGraphic(realBytes,graphic){
@@ -56,5 +91,8 @@ export function decodeAuthorizedClientGraphic(realBytes,graphic){
   const start=Math.trunc(Number(graphic.adder)),size=Math.trunc(Number(graphic.size));
   if(!Number.isFinite(start)||!Number.isFinite(size)||start<0||size<=0)return null;
   need(b,start,size,'graphic payload');
-  return decodeStoneAgeRd(b.slice(start,start+size));
+  const slice=b.slice(start,start+size);
+  const classification=classifyStoneAgeGraphic(slice);
+  if(classification.format==='RD')return decodeStoneAgeRd(slice);
+  return {format:'gG',decoder:'decoderPng',status:'png-runtime-required'};
 }
