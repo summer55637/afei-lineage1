@@ -128,7 +128,8 @@
           "totalLandingCount": 2,
           "reason": "portal origins disconnected from direct landing component on floor 4000"
         }
-      ]
+      ],
+      "productRepairId": "karutarna-4000-road-access-v1"
     }
   ],
   "summary": {
@@ -136,9 +137,29 @@
     "pathClosedTowns": 3,
     "sourceBlockedTowns": 1,
     "routeVariants": 8,
-    "eligibleRouteVariants": 6,
+    "eligibleRouteVariants": 8,
     "routesNeedingLandingExclusion": 1,
     "battlePolicyPendingAll": true,
-    "basicBattleStrategyAvailable": true
+    "basicBattleStrategyAvailable": true,
+    "sourceEligibleRouteVariants": 6,
+    "productRepairEligibleRouteVariants": 2
+  },
+  "productRepairs": {
+    "karutarna-4000-road-access-v1": {
+      "id": "karutarna-4000-road-access-v1",
+      "status": "runtime-enabled",
+      "overlayId": "karutarna-4000-road-access-v1",
+      "scope": "product-only",
+      "floorId": 4000,
+      "portalIds": [
+        "4000_to_200_a",
+        "4000_to_200_b"
+      ],
+      "usableLandingCountPerVariant": 2,
+      "evidence": [
+        "V3.63 virtual overlay proves the two direct hometown landings can reach the existing 4000→200 portal component after the declared three-cell repair.",
+        "V3.64 tile-pattern audit does not prove tile 321 is original art; the repair remains product-only."
+      ]
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
 } from './stoneage_map_runtime.mjs';
 import { ACTION_WORLD_MOVE_STEP } from './stoneage_browser_world_movement_runtime.mjs';
 import { ACTION_WORLD_WARPPOINT_EXECUTE } from './stoneage_browser_world_warppoint_runtime.mjs';
+import { resolveRouteProductRepair } from './stoneage_world_map_repair_overlay.mjs';
 
 const BROWSER_WORLD_ROUTE_RUNTIME_FORMAT='stoneage-browser-world-first-route-runtime-v1';
 const ROUTE_CATALOG_FORMAT='stoneage-first-idle-route-catalog-v1';
@@ -315,7 +316,9 @@ function planFirstRoute(state,{routeId=null,hometown=null,portalId=null,routeCat
   if(!selection)return {ok:false,reason:'first-route-not-found'};
   const variant=selection.variant;
   const route=selection.route;
-  if(route.status==='source_blocked_before_portal'||Number(variant.usableLandingCount)<=0)return {ok:false,reason:'first-route-not-eligible',routeId:selection.routeId};
+  const sourceEligible=route.status!=='source_blocked_before_portal'&&Number(variant.usableLandingCount)>0;
+  const productRepair=resolveRouteProductRepair(routeCatalog,route,variant);
+  if(!sourceEligible&&!productRepair)return {ok:false,reason:'first-route-not-eligible',routeId:selection.routeId};
   const statePosition=normalizeCell(state?.world?.position);
   if(!statePosition)return {ok:false,reason:'route-state-position-required'};
   if(statePosition.floorId!==Number(route.entryFloor))return {ok:false,reason:'route-entry-floor-mismatch',expectedFloor:Number(route.entryFloor),actualFloor:statePosition.floorId};
@@ -327,6 +330,7 @@ function planFirstRoute(state,{routeId=null,hometown=null,portalId=null,routeCat
   if(!target)return {ok:false,reason:'route-unconditional-encounter-target-missing',floorId:route.encounterFloor,encounterId:variant.encounterId};
   return Promise.all([loadMap(route.entryFloor),loadMap(route.encounterFloor),loadMapset()]).then(([entryMap,encounterMap,mapset])=>{
     if(!entryMap||Number(entryMap.floorId)!==Number(route.entryFloor))return {ok:false,reason:'route-entry-map-unresolved',floorId:route.entryFloor};
+    if(productRepair&&entryMap.repairOverlay?.id!==productRepair.overlayId)return {ok:false,reason:'route-product-repair-overlay-not-applied',routeId:selection.routeId,repairId:productRepair.id};
     if(!encounterMap||Number(encounterMap.floorId)!==Number(route.encounterFloor))return {ok:false,reason:'route-encounter-map-unresolved',floorId:route.encounterFloor};
     const startTile=sourceMapTileAt(entryMap,statePosition.x,statePosition.y);
     if(!startTile)return {ok:false,reason:'route-start-coordinate-invalid',position:statePosition};
@@ -354,6 +358,7 @@ function planFirstRoute(state,{routeId=null,hometown=null,portalId=null,routeCat
       encounterFloor:Number(route.encounterFloor),
       portalId:String(variant.portalId),
       sourceLine:checked.portalRow.line,
+      productRepair:productRepair?{id:productRepair.id,overlayId:productRepair.overlayId,scope:'product-only'}:null,
       portalFrom:clone(checked.portalRow.from),
       portalTo:clone(checked.portalRow.to),
       encounter:{id:Number(target.encounterId),rect:clone(target.rect),probMin:Number(target.probMin),probMax:Number(target.probMax),enemyMax:Number(target.enemyMax),zorder:Number(target.zorder)},

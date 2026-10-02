@@ -7,6 +7,7 @@ import { simulateFirstEncounter } from './stoneage_idle_simulation.mjs';
 import { prepareOfflineResume, commitOfflineResume, OFFLINE_RESUME_FORMAT } from './stoneage_offline_resume.mjs';
 import { commitOfflineRewardBatch, OFFLINE_REWARD_BATCH_FORMAT } from './stoneage_offline_reward_batch.mjs';
 import { parseAndValidateSaveEnvelope } from './stoneage_save_transaction.mjs';
+import { resolveRouteProductRepair } from './stoneage_world_map_repair_overlay.mjs';
 
 const BROWSER_IDLE_RUNTIME_FORMAT='stoneage-browser-idle-runtime-v1';
 const ACTION_IDLE_LIST_ROUTES='IDLE_LIST_ROUTES';
@@ -64,25 +65,21 @@ function validateBrowserIdleDependencies({routeCatalog=null}={}){
   if(routeCatalog?.fixedSource?.repository!==SOURCE_REPOSITORY)errors.push('fixed source repository mismatch');
   if(routeCatalog?.fixedSource?.ref!==SOURCE_REF)errors.push('fixed source ref mismatch');
   const variants=(routeCatalog?.routes??[]).flatMap(route=>(route.variants??[]).map(variant=>({route,variant})));
-  const usable=variants.filter(({route,variant})=>route?.status!=='source_blocked_before_portal'&&Number(variant?.usableLandingCount)>0);
-  if(usable.length<1)errors.push('no source-backed usable idle route variants');
+  const usable=variants.filter(({route,variant})=>(route?.status!=='source_blocked_before_portal'&&Number(variant?.usableLandingCount)>0)||!!resolveRouteProductRepair(routeCatalog,route,variant));
+  if(usable.length<1)errors.push('no eligible usable idle route variants');
   return {ok:errors.length===0,errors,usableCount:usable.length};
 }
 
 function listUsableRoutes(catalog){
-  return (catalog.routes??[]).flatMap(route=>(route.variants??[]).map(variant=>({
-    hometown:route.hometown,
-    name:route.name,
-    entryFloor:route.entryFloor,
-    encounterFloor:route.encounterFloor,
-    routeId:routeIdForVariant(route,variant),
-    portalId:variant.portalId,
-    encounterId:variant.encounterId??null,
-    totalWalkBeforeEncounterMin:variant.totalWalkBeforeEncounterMin??null,
-    usableLandingCount:variant.usableLandingCount??0,
-    totalLandingCount:variant.totalLandingCount??0,
-    eligible:route.status!=='source_blocked_before_portal'&&Number(variant.usableLandingCount)>0
-  }))).filter(x=>x.eligible);
+  return (catalog.routes??[]).flatMap(route=>(route.variants??[]).map(variant=>{
+    const productRepair=resolveRouteProductRepair(catalog,route,variant);
+    const sourceEligible=route.status!=='source_blocked_before_portal'&&Number(variant.usableLandingCount)>0;
+    return {hometown:route.hometown,name:route.name,entryFloor:route.entryFloor,encounterFloor:route.encounterFloor,
+      routeId:routeIdForVariant(route,variant),portalId:variant.portalId,encounterId:variant.encounterId??null,
+      totalWalkBeforeEncounterMin:variant.totalWalkBeforeEncounterMin??null,
+      usableLandingCount:sourceEligible?Number(variant.usableLandingCount):Number(productRepair?.usableLandingCountPerVariant??0),
+      totalLandingCount:variant.totalLandingCount??0,productRepairId:productRepair?.id??null,eligible:sourceEligible||!!productRepair};
+  })).filter(x=>x.eligible);
 }
 
 function validateActionPayload(event,payload){
@@ -145,7 +142,7 @@ function createBrowserIdleRuntime({routeCatalog=null}={}){
       if(type===ACTION_IDLE_ENABLE){
         const selection=normalizeRouteSelection(routeCatalog,action);
         if(!selection.ok)return {ok:false,handled:false,stage:'route-selection',reason:selection.reason,state:clone(state)};
-        if(selection.route.status==='source_blocked_before_portal'||Number(selection.variant.usableLandingCount)<=0){
+        if(!(selection.route.status!=='source_blocked_before_portal'&&Number(selection.variant.usableLandingCount)>0)&&!resolveRouteProductRepair(routeCatalog,selection.route,selection.variant)){
           return {ok:false,handled:false,stage:'route-selection',reason:'idle-route-not-eligible',routeId:selection.routeId,state:clone(state)};
         }
         const committed=await commitIdleEvent(state,IDLE_EVENTS.ENABLE,{routeId:selection.routeId},{

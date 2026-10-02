@@ -16,6 +16,8 @@ import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTI
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
 import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT } from './stoneage_browser_world_movement_runtime.mjs';
+import { loadSourceMapRuntime } from './stoneage_map_runtime.mjs';
+import { KARUTARNA_ROAD_ACCESS_REPAIR_OVERLAY, withWorldMapRepairOverlay } from './stoneage_world_map_repair_overlay.mjs';
 import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT } from './stoneage_browser_world_warppoint_runtime.mjs';
 import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
 import { createBrowserWorldFirstRouteExecutionRuntime, ACTION_WORLD_FIRST_ROUTE_EXECUTE, BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_execution_runtime.mjs';
@@ -167,7 +169,8 @@ function createBrowserStateController({
   worldWarpPointOptions={},
   battleFieldNoProvider=null,
   battleFieldRuntimeOptions={},
-  worldFirstRouteOptions={}
+  worldFirstRouteOptions={},
+  worldMapRepairOverlay=KARUTARNA_ROAD_ACCESS_REPAIR_OVERLAY
 }={}){
   let currentState=state;
   const config=normalizeNpcRuntimeConfig(runtimeConfig);
@@ -178,10 +181,12 @@ function createBrowserStateController({
   const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
   const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
-  const worldMovementRuntime=createBrowserWorldMovementRuntime(worldMovementOptions);
+  const movementMapLoader=withWorldMapRepairOverlay(worldMovementOptions.loadMap??loadSourceMapRuntime,worldMapRepairOverlay);
+  const routeMapLoader=withWorldMapRepairOverlay(worldFirstRouteOptions.loadMap??loadSourceMapRuntime,worldMapRepairOverlay);
+  const worldMovementRuntime=createBrowserWorldMovementRuntime({...worldMovementOptions,loadMap:movementMapLoader});
   const worldWarpPointRuntime=createBrowserWorldWarpPointRuntime({catalog:warpCatalog,...worldWarpPointOptions});
   const worldFirstRouteRuntime=(idleRouteCatalog&&warpCatalog&&encounterTargetIndex)
-    ? createBrowserWorldFirstRouteRuntime({routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,...worldFirstRouteOptions})
+    ? createBrowserWorldFirstRouteRuntime({...worldFirstRouteOptions,routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,loadMap:routeMapLoader})
     : null;
   const worldFirstRouteExecutionRuntime=createBrowserWorldFirstRouteExecutionRuntime();
   const worldEncounterRuntime=encounterTargetIndex ? createBrowserWorldEncounterRuntime({encounterTargetIndex}) : null;
