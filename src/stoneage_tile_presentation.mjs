@@ -82,12 +82,22 @@ export function renderSourceTileObjectPreview(ctx,presentation,{tileId,objectId,
 }
 
 function graphicPixelsToRgba(graphic,palette){
+  const width=Number(graphic?.width),height=Number(graphic?.height);
+  if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<=0||height<=0){
+    throw new Error('invalid client graphic dimensions');
+  }
+  if(!(graphic.pixels instanceof Uint8Array)||graphic.pixels.length===0){
+    throw new Error('client graphic has no pixel bytes');
+  }
   if(graphic.bytesPerPixel===4){
-    const expected=graphic.width*graphic.height*4;
-    if(graphic.pixels.length!==expected)throw new Error('RGBA pixel count mismatch');
+    const expected=width*height*4;
+    if(!Number.isSafeInteger(expected)||graphic.pixels.length!==expected)throw new Error('RGBA pixel count mismatch');
     return Uint8ClampedArray.from(graphic.pixels);
   }
-  return indexedPixelsToRgba(graphic.pixels,graphic.width,graphic.height,palette);
+  if(graphic.bytesPerPixel!=null&&graphic.bytesPerPixel!==1){
+    throw new Error('unsupported client graphic bytes-per-pixel '+graphic.bytesPerPixel);
+  }
+  return indexedPixelsToRgba(graphic.pixels,width,height,palette);
 }
 
 export async function renderSourceTileObjectPreviewAsync(ctx,presentation,{tileId,objectId,scale=1,showLabels=true}={}){
