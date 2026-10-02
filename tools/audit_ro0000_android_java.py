@@ -129,7 +129,7 @@ def method_records(source):
                 continue
             calls.append(target)
             call_sequence.append({
-                "line": masked.count("\\n", 0, opening + 1 + call.start()) + 1,
+                "line": masked.count("\n", 0, opening + 1 + call.start()) + 1,
                 "target": target,
             })
             seen.add(target)
