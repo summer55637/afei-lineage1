@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-world-blocker-audit-v1",
-  "updated": "2026-10-02T00:21:02.827Z",
+  "updated": "2026-10-02T00:23:10.579Z",
   "source": {
     "endpointRoot": "ro0000/server/merged-source/gmsv/data/map",
     "mapsetPath": "ro0000/server/merged-source/gmsv/data/map/mapset.txt",
@@ -402,34 +402,38 @@
         "sourcePath": "ro0000/server/merged-source/gmsv/data/map/jyaruga/jalga"
       },
       "missingMapsetImageIds": [],
+      "components": {
+        "count": 225,
+        "walkableCells": 811839
+      },
       "landingFrom4000to200": [
         {
           "x": 304,
           "y": 599,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 21
         },
         {
           "x": 304,
           "y": 600,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 21
         },
         {
           "x": 301,
           "y": 640,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 21
         },
         {
           "x": 301,
           "y": 641,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 21
         }
       ],
       "landingFrom3000to200": [
@@ -438,63 +442,63 @@
           "y": 376,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 570,
           "y": 377,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 570,
           "y": 378,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 570,
           "y": 379,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 587,
           "y": 313,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 587,
           "y": 314,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 587,
           "y": 315,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 587,
           "y": 316,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 587,
           "y": 317,
           "inBounds": true,
           "walkable": true,
-          "component": 0
+          "component": 1
         },
         {
           "x": 587,
@@ -504,7 +508,41 @@
           "component": -1
         }
       ],
-      "uniqueLandingCount": 14
+      "uniqueLandingCount": 14,
+      "specialLanding587318": {
+        "landing": {
+          "x": 587,
+          "y": 318,
+          "inBounds": true,
+          "walkable": false,
+          "component": -1
+        },
+        "escapeTargets": [
+          {
+            "x": 586,
+            "y": 318,
+            "diagonal": false,
+            "component": 1
+          },
+          {
+            "x": 587,
+            "y": 317,
+            "diagonal": false,
+            "component": 1
+          },
+          {
+            "x": 586,
+            "y": 317,
+            "diagonal": true,
+            "component": 1
+          }
+        ],
+        "escapeComponents": [
+          1
+        ],
+        "canExitIntoWalkableMap": true,
+        "canEnterMainWalkableComponent": false
+      }
     },
     "reopenedBlockers": {
       "route4000to200": {
@@ -570,11 +608,36 @@
         "resolved": false,
         "status": "still-blocked",
         "evidence": {
-          "x": 587,
-          "y": 318,
-          "inBounds": true,
-          "walkable": false,
-          "component": -1
+          "landing": {
+            "x": 587,
+            "y": 318,
+            "inBounds": true,
+            "walkable": false,
+            "component": -1
+          },
+          "warpAllowsNonwalkableDestination": true,
+          "escapeTargets": [
+            {
+              "x": 586,
+              "y": 318,
+              "diagonal": false,
+              "component": 1
+            },
+            {
+              "x": 587,
+              "y": 317,
+              "diagonal": false,
+              "component": 1
+            },
+            {
+              "x": 586,
+              "y": 317,
+              "diagonal": true,
+              "component": 1
+            }
+          ],
+          "canExitIntoWalkableMap": true,
+          "canEnterMainWalkableComponent": false
         }
       }
     }
@@ -583,7 +646,7 @@
     "status": "audited-open-blockers",
     "reasons": [
       "Endpoint 4000 portal-origin movement remains blocked: entry component and portal-origin component differ.",
-      "Endpoint 200 landing (587,318) is not walkable in the endpoint mapset/map combination."
+      "Endpoint 200 landing (587,318) cannot be followed by a legal first movement into the walkable map component."
     ],
     "mapEvidenceClosed": true,
     "blockersClosed": false
