@@ -53,8 +53,8 @@
       "next": "resolved-for-event-warp-recovery; preserve the exact endpoint reverse-Warp source and fixed-C event semantics in the audit; do not remap the landing coordinate"
     },
     "starter-item-24114-fixed-c": {
-      "status": "reopened-for-reaudit",
-      "scope": "new-player seed / fixed-C",
+      "status": "retired",
+      "scope": "deferred starter-item scope",
       "previousEvidence": "fixed-C configured ITEM1=24114 is outside ITEM_tbl source max",
       "newEvidence": [
         "endpoint setup.cf uses a different ITEM1=32003",
@@ -62,11 +62,12 @@
         "endpoint item audit finds 24114 once but no exact 32003",
         "deployed endpoint gmsvjt exposes Item loader symbols and no observed ITEM_TransformList symbol"
       ],
-      "next": "keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed"
+      "next": "deferred by current new-player policy: create character with source-validated Gold first; do not block normal gameplay on Starter Item reconstruction.",
+      "outcome": "deferred-not-a-mainline-blocker"
     },
     "starter-item-endpoint-32003": {
-      "status": "active",
-      "scope": "new-player seed / endpoint",
+      "status": "retired",
+      "scope": "deferred starter-item scope",
       "previousEvidence": "endpoint setup.cf ITEM1=32003",
       "newEvidence": [
         "selected endpoint itemset6.csv contains zero exact 32003 tokens and zero raw substring occurrences",
@@ -78,8 +79,8 @@
         "no observed ITEM_TransformList / ITEM_getSIndexFromTransList transform path",
         "therefore current endpoint ITEM1=32003 has no resolvable source Item row and is fail-closed"
       ],
-      "next": "keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path",
-      "outcome": "fail-closed:configured-item-id-missing"
+      "next": "deferred by current new-player policy: create character with source-validated Gold first; do not block normal gameplay on Starter Item reconstruction.",
+      "outcome": "deferred-not-a-mainline-blocker"
     },
     "persistent-state-expansion": {
       "status": "active",
