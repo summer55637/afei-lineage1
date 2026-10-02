@@ -298,3 +298,47 @@ frame BmpNo + nextMaxAdrnID
 These are related through the shared graphic-number space, but `spr.bin` is not the source of SABEX's 33×33 tile grid.
 
 All numeric layout claims above are recorded in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
+## 12. Target: battle tile → actual surface rendering
+
+Using the retrieved target x86 ELF, the previously established SABEX/image-index chain can now be extended through the renderer.
+
+`StockDispBuffer()` receives the decoded SABEX cell as `bmpNo`. For values above the target `CG_INVISIBLE` threshold 99, it calls `realGetNo()` and `realGetPos()` and stores the resolved graphic number in the display buffer.
+
+`PutBmp()` later calls `LoadBmp(graphicNo)` before rendering a display entry. The target `LoadBmp(int)` @ `0x2ef220` behaves as follows:
+
+~~~text
+LoadBmp(graphicNo)
+  -> if cached surface exists: reuse
+  -> otherwise realGetImage(graphicNo, ...)
+  -> on success store decoded width/height
+  -> AllocateBmpToSurface(graphicNo)
+~~~
+
+`realGetImage()` @ `0x362fd0` reads the 80-byte `adrnbuff[graphicNo]` record, obtains the associated `Realbinfp[graphicNo]`, seeks to `adder`, reads `size` bytes, then calls target `decoder()`.
+
+`AllocateBmpToSurface()` @ `0x2eeb80` then turns the decoded image metadata into the target surface representation. `PutBmp()` subsequently passes the surface information to the renderer.
+
+Thus the target battle-map path is now closed at the rendering boundary:
+
+~~~text
+battleNNN.sabex
+  -> 1089 × uint16be image IDs
+  -> StockDispBuffer
+  -> realGetNo
+  -> bitmapnumbertable
+  -> global graphicNo
+  -> LoadBmp
+  -> realGetImage
+  -> ADRNBIN adder/size + Real FILE*
+  -> decoder (RD / gG)
+  -> decoded pixels + width/height
+  -> AllocateBmpToSurface
+  -> PutBmp renderer
+~~~
+
+This proves the SABEX values are not merely metadata: when they are ordinary drawable IDs, they enter the same target image/surface pipeline used by the actual renderer.
+
+The machine-readable closure is stored in `data/generated/stoneage_ro0000_android_battle_render_chain.json`.
+
+Actual RO0000 `.sabex`, `adrn.bin`, and `real.bin` bytes remain outside the repository, so this closes the target code path but not a concrete map's pixel output.
