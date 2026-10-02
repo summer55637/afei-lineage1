@@ -1,7 +1,7 @@
 {
   "format": "stoneage-ro0000-residue-structure-audit-v1",
   "checkedDate": "2026-10-02",
-  "ro0000TreeSha": "9dd303018eecfbb501976dcbe19729cfaada409e",
+  "ro0000TreeSha": "5ba74974353e2a7a4f9a5546e7bf9df3c4b33f93",
   "scope": "structural classification from Git tree/blob identity only; no raw-file mutation",
   "summary": {
     "trackedFiles": 8751,
