@@ -16,8 +16,8 @@ import {
 
 const groups=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
 const skillCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_petskill_runtime.json','utf8'));
-const sourceGroup=groups.groups.find(g=>g.groupId===712);
-assert.ok(sourceGroup,'source encounter group 712 must exist');
+const sourceGroup=groups.groups.find(g=>g.groupId===711);
+assert.ok(sourceGroup,'source encounter group 711 must exist');
 const member=sourceGroup.members.find(m=>m.enemyId===1305);
 assert.ok(member,'source Enemy 1305 must exist in group 712');
 assert.equal(member.enemy.base.petSkills[0],30,'source Enemy 1305 WAZA slot 0 must be ChargeAttack');
@@ -38,7 +38,7 @@ const enemyTeam=[{enemyId:member.enemyId,size:member.enemy.size,createMaxNum:mem
 const statRoll={levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:Array(10).fill(0)};
 
 const built=await controller.dispatch({
-  type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,enemyTeam,groupId:712,battleFieldNo:0,
+  type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,enemyTeam,groupId:711,battleFieldNo:0,
   encounter,materializeEnemyStats:true,enemyStatRolls:[statRoll]
 });
 assert.equal(built.ok,true,JSON.stringify(built));
