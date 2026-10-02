@@ -7,7 +7,9 @@ on:
       - 'src/stoneage_browser_battle_context_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'tools/check_v426_browser_battle_damage_commit.mjs'
+      - 'tools/check_browser_battle_attack_pipeline_binding.mjs'
       - 'tools/check_v404_browser_battle_damage_react.mjs'
+      - 'tools/check_browser_battle_attack_pipeline_binding.mjs'
       - '.github/workflows/check-v426-browser-battle-damage-commit.yml'
   pull_request:
     paths:
@@ -34,6 +36,7 @@ jobs:
         run: |
           node tools/check_v404_browser_battle_damage_react.mjs
           node tools/check_v426_browser_battle_damage_commit.mjs
+          node tools/check_browser_battle_attack_pipeline_binding.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_damage_commit_runtime.mjs
@@ -41,3 +44,4 @@ jobs:
           node --check src/stoneage_browser_battle_context_runtime.mjs
           node --check src/stoneage_browser_state_controller.mjs
           node --check tools/check_v426_browser_battle_damage_commit.mjs
+          node --check tools/check_browser_battle_attack_pipeline_binding.mjs

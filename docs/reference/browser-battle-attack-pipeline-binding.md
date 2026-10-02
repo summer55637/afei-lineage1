@@ -41,3 +41,6 @@ Fixed-C corroboration：
 Regression：
 
 tools/check_browser_battle_attack_pipeline_binding.mjs
+
+
+V4.26 adds a controller-bound, explicit HP commit after DamageReact. The attack pipeline regression now verifies the matching attacker/target, actual target HP mutation, same-transaction replay, and stale-plan rejection. The commit is still a separate action; this test does not claim full battle-turn automation.

@@ -12,6 +12,7 @@ import {
   ACTION_BATTLE_DAMAGE_PLAN,
   ACTION_BATTLE_CRITICAL_DAMAGE_PLAN,
   ACTION_BATTLE_DAMAGE_REACT_PLAN,
+  ACTION_BATTLE_DAMAGE_COMMIT,
   ACTION_BATTLE_COUNTER_PLAN,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -184,6 +185,38 @@ const coreStatRolls=[
   assert.equal(react.targetBid,15);
   assert.equal(react.reaction.code,0);
 
+  const hpBefore=initialized.battleContext.sides.flatMap(side=>side.entries).find(entry=>entry?.bid===15)?.hp;
+  assert.ok(Number.isInteger(hpBefore),JSON.stringify(initialized.battleContext.sides));
+  const damageCommit=await c.dispatch({
+    type:ACTION_BATTLE_DAMAGE_COMMIT,
+    attackerBid:0,
+    targetBid:15,
+    transactionId:'attack-pipeline-v426-commit-1'
+  });
+  assert.equal(damageCommit.ok,true,JSON.stringify(damageCommit));
+  assert.equal(damageCommit.applied,true);
+  const hpAfter=damageCommit.battleContext.sides.flatMap(side=>side.entries).find(entry=>entry?.bid===15)?.hp;
+  assert.equal(hpAfter,Math.max(0,hpBefore-react.defenderDamage));
+  assert.equal(damageCommit.hpMutation,hpAfter!==hpBefore);
+  const damageReplay=await c.dispatch({
+    type:ACTION_BATTLE_DAMAGE_COMMIT,
+    attackerBid:0,
+    targetBid:15,
+    transactionId:'attack-pipeline-v426-commit-1'
+  });
+  assert.equal(damageReplay.ok,true,JSON.stringify(damageReplay));
+  assert.equal(damageReplay.idempotent,true);
+  assert.equal(damageReplay.applied,false);
+  assert.equal(damageReplay.battleContext.sides.flatMap(side=>side.entries).find(entry=>entry?.bid===15)?.hp,hpAfter);
+  const staleCommit=await c.dispatch({
+    type:ACTION_BATTLE_DAMAGE_COMMIT,
+    attackerBid:0,
+    targetBid:15,
+    transactionId:'attack-pipeline-v426-stale-commit'
+  });
+  assert.equal(staleCommit.ok,false);
+  assert.equal(staleCommit.reason,'damage-commit-stale-plan');
+
   const preCounter=await c.dispatch({
     type:ACTION_BATTLE_COUNTER_PLAN,
     attackerBid:15,
@@ -211,13 +244,15 @@ const coreStatRolls=[
   console.log(JSON.stringify({
     pass:true,
     contract:'attack-seq-damage-react-counter-binding',
-    order:['AttackSeqPrelude','DamagePlan','CriticalDamagePlan','DamageReactPlan','CounterPlan'],
+    order:['AttackSeqPrelude','DamagePlan','CriticalDamagePlan','DamageReactPlan','DamageCommit','CounterPlan'],
+    damageCommitBound:true,
+    damageReplayIdempotent:true,
     target:{requested:15,final:15},
     damagePlanBound:true,
     criticalDamageBound:true,
     damageReactBound:true,
     counterReverseBound:true,
-    hpMutation:false,
+    hpMutation:true,
     persistentMutation:false
   },null,2));
 }
