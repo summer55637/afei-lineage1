@@ -1,0 +1,2910 @@
+{
+  "format": "ro0000-android-jadx-java-flow-audit-v1",
+  "source": {
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "jadxVersion": "1.5.6"
+  },
+  "scope": {
+    "packages": [
+      "com.newssa.stoneage.ko",
+      "com.newssa.stoneage.update",
+      "org.libsdl.app"
+    ],
+    "sourceFilesScanned": 45,
+    "classCount": 24,
+    "focusedClasses": [
+      "AssetsReleaser",
+      "CheckUpdateTask",
+      "Decompress",
+      "DownloadService",
+      "HttpUtils",
+      "JNILibrary",
+      "KoUtil",
+      "RenderActivity",
+      "SDLActivity",
+      "StatusTools",
+      "StoneageApplication",
+      "StorageUtils",
+      "UpdateChecker",
+      "UpdateDialog"
+    ]
+  },
+  "classes": [
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "AssetsReleaser",
+      "sourcePath": "com/newssa/stoneage/ko/AssetsReleaser.java",
+      "methodCount": 8,
+      "methods": [
+        {
+          "name": "ReleasePathFile",
+          "callSites": 20,
+          "calls": [
+            "File",
+            "FileOutputStream",
+            "RenderActivity.showErrorMSG",
+            "StoneageApplication.getAppConext",
+            "assets.list",
+            "assets.open",
+            "file.exists",
+            "file.mkdirs",
+            "file2.exists",
+            "file2.mkdirs",
+            "file3.createNewFile",
+            "file3.exists",
+            "fileOutputStream.close",
+            "fileOutputStream.write",
+            "getAssets",
+            "getStoragePathPrivate",
+            "inputStreamOpen.close",
+            "inputStreamOpen.read",
+            "storagePathPrivate.equals",
+            "workingPath.equals"
+          ]
+        },
+        {
+          "name": "ReleaseFontFile",
+          "callSites": 1,
+          "calls": [
+            "ReleasePathFile"
+          ]
+        },
+        {
+          "name": "ReleaseSkinFile",
+          "callSites": 1,
+          "calls": [
+            "ReleasePathFile"
+          ]
+        },
+        {
+          "name": "getDiskSize",
+          "callSites": 6,
+          "calls": [
+            "RenderActivity.showErrorMSG",
+            "StatFs",
+            "statFs.getBlockSize",
+            "statFs.getBlockSizeLong",
+            "statFs.getFreeBlocks",
+            "statFs.getFreeBlocksLong"
+          ]
+        },
+        {
+          "name": "getStoragePathPrivate",
+          "callSites": 11,
+          "calls": [
+            "Environment.getExternalStorageState",
+            "GetConfig",
+            "SetConfig",
+            "StoneageApplication.getAppConext",
+            "TextUtils.isEmpty",
+            "equals",
+            "externalFilesDir.getAbsolutePath",
+            "filesDir.getAbsolutePath",
+            "getDiskSize",
+            "getExternalFilesDir",
+            "getFilesDir"
+          ]
+        },
+        {
+          "name": "getStoragePath",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "SetConfig",
+          "callSites": 5,
+          "calls": [
+            "StoneageApplication.getActivity",
+            "edit",
+            "editorEdit.commit",
+            "editorEdit.putString",
+            "getSharedPreferences"
+          ]
+        },
+        {
+          "name": "GetConfig",
+          "callSites": 3,
+          "calls": [
+            "StoneageApplication.getActivity",
+            "getSharedPreferences",
+            "getString"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "BuildConfig",
+      "sourcePath": "com/newssa/stoneage/ko/BuildConfig.java",
+      "methodCount": 0,
+      "methods": []
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "Command",
+      "sourcePath": "com/newssa/stoneage/ko/Command.java",
+      "methodCount": 26,
+      "methods": [
+        {
+          "name": "commandCompleted",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "commandTerminated",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "Command",
+          "callSites": 1,
+          "calls": [
+            "createHandler"
+          ]
+        },
+        {
+          "name": "Command",
+          "callSites": 1,
+          "calls": [
+            "createHandler"
+          ]
+        },
+        {
+          "name": "Command",
+          "callSites": 1,
+          "calls": [
+            "createHandler"
+          ]
+        },
+        {
+          "name": "commandOutput",
+          "callSites": 1,
+          "calls": [
+            "RootShell.log"
+          ]
+        },
+        {
+          "name": "commandFinished",
+          "callSites": 8,
+          "calls": [
+            "Bundle",
+            "RootShell.log",
+            "bundle.putInt",
+            "commandCompleted",
+            "finishCommand",
+            "handler.obtainMessage",
+            "messageObtainMessage.setData",
+            "this.mHandler.sendMessage"
+          ]
+        },
+        {
+          "name": "createHandler",
+          "callSites": 3,
+          "calls": [
+            "CommandHandler",
+            "Looper.myLooper",
+            "RootShell.log"
+          ]
+        },
+        {
+          "name": "finish",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "commandFinished"
+          ]
+        },
+        {
+          "name": "finishCommand",
+          "callSites": 1,
+          "calls": [
+            "notifyAll"
+          ]
+        },
+        {
+          "name": "getCommand",
+          "callSites": 5,
+          "calls": [
+            "StringBuilder",
+            "getPath",
+            "sb.append",
+            "sb.toString",
+            "this.context.getFilesDir"
+          ]
+        },
+        {
+          "name": "isExecuting",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isHandlerEnabled",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isFinished",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getExitCode",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "setExitCode",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startExecution",
+          "callSites": 3,
+          "calls": [
+            "ExecutionMonitor",
+            "executionMonitor.setPriority",
+            "this.executionMonitor.start"
+          ]
+        },
+        {
+          "name": "terminate",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "terminated"
+          ]
+        },
+        {
+          "name": "terminate",
+          "callSites": 3,
+          "calls": [
+            "RootShell.log",
+            "Shell.closeAll",
+            "terminated"
+          ]
+        },
+        {
+          "name": "terminated",
+          "callSites": 10,
+          "calls": [
+            "Bundle",
+            "RootShell.log",
+            "bundle.putInt",
+            "bundle.putString",
+            "commandTerminated",
+            "finishCommand",
+            "handler.obtainMessage",
+            "messageObtainMessage.setData",
+            "setExitCode",
+            "this.mHandler.sendMessage"
+          ]
+        },
+        {
+          "name": "output",
+          "callSites": 7,
+          "calls": [
+            "Bundle",
+            "bundle.putInt",
+            "bundle.putString",
+            "commandOutput",
+            "handler.obtainMessage",
+            "messageObtainMessage.setData",
+            "this.mHandler.sendMessage"
+          ]
+        },
+        {
+          "name": "resetCommand",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "ExecutionMonitor",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "run",
+          "callSites": 3,
+          "calls": [
+            "Command.this.terminate",
+            "RootShell.log",
+            "command.wait"
+          ]
+        },
+        {
+          "name": "CommandHandler",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "handleMessage",
+          "callSites": 6,
+          "calls": [
+            "command.commandOutput",
+            "command2.commandCompleted",
+            "command3.commandTerminated",
+            "getInt",
+            "getString",
+            "msg.getData"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "Decompress",
+      "sourcePath": "com/newssa/stoneage/ko/Decompress.java",
+      "methodCount": 6,
+      "methods": [
+        {
+          "name": "Decompress",
+          "callSites": 1,
+          "calls": [
+            "_dirChecker"
+          ]
+        },
+        {
+          "name": "UnZipAssets",
+          "callSites": 22,
+          "calls": [
+            "File",
+            "FileOutputStream",
+            "JNILibrary.callbackZipProgress",
+            "Log.e",
+            "StoneageApplication.getAppConext",
+            "ZipInputStream",
+            "file.exists",
+            "file.mkdirs",
+            "file2.exists",
+            "file2.mkdir",
+            "file3.createNewFile",
+            "file3.exists",
+            "fileOutputStream.close",
+            "fileOutputStream.write",
+            "getAssets",
+            "nextEntry.getName",
+            "nextEntry.getSize",
+            "nextEntry.isDirectory",
+            "open",
+            "zipInputStream.close",
+            "zipInputStream.getNextEntry",
+            "zipInputStream.read"
+          ]
+        },
+        {
+          "name": "unzip",
+          "callSites": 21,
+          "calls": [
+            "Date",
+            "File",
+            "FileInputStream",
+            "FileOutputStream",
+            "JNILibrary.callbackZipProgress",
+            "Log.e",
+            "Log.v",
+            "ZipInputStream",
+            "_dirChecker",
+            "file.exists",
+            "file.mkdirs",
+            "fileOutputStream.close",
+            "fileOutputStream.write",
+            "getTime",
+            "nextEntry.getName",
+            "nextEntry.getSize",
+            "nextEntry.isDirectory",
+            "zipInputStream.close",
+            "zipInputStream.closeEntry",
+            "zipInputStream.getNextEntry",
+            "zipInputStream.read"
+          ]
+        },
+        {
+          "name": "_dirChecker",
+          "callSites": 3,
+          "calls": [
+            "File",
+            "file.isDirectory",
+            "file.mkdirs"
+          ]
+        },
+        {
+          "name": "ProcessZip",
+          "callSites": 3,
+          "calls": [
+            "AssetsReleaser.getStoragePath",
+            "Integer.toString",
+            "UnZipAssets"
+          ]
+        },
+        {
+          "name": "UnZipFile",
+          "callSites": 3,
+          "calls": [
+            "AssetsReleaser.getStoragePath",
+            "Decompress",
+            "unzip"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "JNILibrary",
+      "sourcePath": "com/newssa/stoneage/ko/JNILibrary.java",
+      "methodCount": 0,
+      "methods": []
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "KoUtil",
+      "sourcePath": "com/newssa/stoneage/ko/KoUtil.java",
+      "methodCount": 13,
+      "methods": [
+        {
+          "name": "autoLoginGame",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "checkOrder",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "loginGame",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "logout",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startPayNative",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "OpenUrl",
+          "callSites": 6,
+          "calls": [
+            "Intent",
+            "StoneageApplication.getActivity",
+            "Uri.parse",
+            "intent.setAction",
+            "intent.setData",
+            "startActivity"
+          ]
+        },
+        {
+          "name": "getAppVersion",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getUUID",
+          "callSites": 3,
+          "calls": [
+            "UUID.randomUUID",
+            "replace",
+            "toString"
+          ]
+        },
+        {
+          "name": "copyFileToDir",
+          "callSites": 10,
+          "calls": [
+            "File",
+            "FileInputStream",
+            "FileOutputStream",
+            "file.exists",
+            "file.mkdir",
+            "fileInputStream.close",
+            "fileInputStream.read",
+            "fileOutputStream.close",
+            "fileOutputStream.write",
+            "getName"
+          ]
+        },
+        {
+          "name": "installApk",
+          "callSites": 16,
+          "calls": [
+            "Environment.getExternalStorageDirectory",
+            "File",
+            "Intent",
+            "StoneageApplication.getActivity",
+            "Uri.fromFile",
+            "canWrite",
+            "copyFileToDir",
+            "file2.delete",
+            "file2.exists",
+            "file2.getName",
+            "getAbsolutePath",
+            "intent.addCategory",
+            "intent.addFlags",
+            "intent.setAction",
+            "intent.setDataAndType",
+            "startActivity"
+          ]
+        },
+        {
+          "name": "getMac",
+          "callSites": 20,
+          "calls": [
+            "Byte.valueOf",
+            "InputStreamReader",
+            "LineNumberReader",
+            "Locale.getDefault",
+            "NetworkInterface.getByName",
+            "Runtime.getRuntime",
+            "StoneageApplication.getAppConext",
+            "String.format",
+            "TextUtils.isEmpty",
+            "byName.getHardwareAddress",
+            "exec",
+            "getConnectionInfo",
+            "getInputStream",
+            "getMacAddress",
+            "getSystemService",
+            "line.trim",
+            "lineNumberReader.readLine",
+            "loadFileAsString",
+            "substring",
+            "toUpperCase"
+          ]
+        },
+        {
+          "name": "loadFileAsString",
+          "callSites": 3,
+          "calls": [
+            "FileReader",
+            "fileReader.close",
+            "loadReaderAsString"
+          ]
+        },
+        {
+          "name": "loadReaderAsString",
+          "callSites": 4,
+          "calls": [
+            "StringBuilder",
+            "reader.read",
+            "sb.append",
+            "sb.toString"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "QQGroupHelper",
+      "sourcePath": "com/newssa/stoneage/ko/QQGroupHelper.java",
+      "methodCount": 1,
+      "methods": [
+        {
+          "name": "joinQQGroup",
+          "callSites": 5,
+          "calls": [
+            "Intent",
+            "StoneageApplication.getActivity",
+            "Uri.parse",
+            "intent.setData",
+            "startActivity"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "R",
+      "sourcePath": "com/newssa/stoneage/ko/R.java",
+      "methodCount": 4,
+      "methods": [
+        {
+          "name": "drawable",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "layout",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "string",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "R",
+          "callSites": 0,
+          "calls": []
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "RenderActivity",
+      "sourcePath": "com/newssa/stoneage/ko/RenderActivity.java",
+      "methodCount": 9,
+      "methods": [
+        {
+          "name": "onCreate",
+          "callSites": 11,
+          "calls": [
+            "AssetsReleaser.ReleaseFontFile",
+            "AssetsReleaser.ReleaseSkinFile",
+            "CrashReport.initCrashReport",
+            "GCloudVoiceEngine.getInstance",
+            "SetActivity",
+            "checkMemory",
+            "getApplication",
+            "getApplicationContext",
+            "init",
+            "isRootAvailable",
+            "showErrorMSG"
+          ]
+        },
+        {
+          "name": "onPause",
+          "callSites": 1,
+          "calls": [
+            "StatusTools.readStatus"
+          ]
+        },
+        {
+          "name": "onResume",
+          "callSites": 1,
+          "calls": [
+            "StatusTools.endReadStatus"
+          ]
+        },
+        {
+          "name": "getLibraries",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isRootAvailable",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "checkMemory",
+          "callSites": 4,
+          "calls": [
+            "ActivityManager.MemoryInfo",
+            "activityManager.getMemoryInfo",
+            "getSystemService",
+            "showErrorMSG"
+          ]
+        },
+        {
+          "name": "showErrorMSG",
+          "callSites": 11,
+          "calls": [
+            "AlertDialog.Builder",
+            "DialogInterface.OnClickListener",
+            "StoneageApplication.getActivity",
+            "System.exit",
+            "builder.setCancelable",
+            "builder.setIcon",
+            "builder.setMessage",
+            "builder.setPositiveButton",
+            "builder.setTitle",
+            "builder.show",
+            "onClick"
+          ]
+        },
+        {
+          "name": "onClick",
+          "callSites": 1,
+          "calls": [
+            "System.exit"
+          ]
+        },
+        {
+          "name": "showErrorMSG",
+          "callSites": 0,
+          "calls": []
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "RootDeniedException",
+      "sourcePath": "com/newssa/stoneage/ko/RootDeniedException.java",
+      "methodCount": 1,
+      "methods": [
+        {
+          "name": "RootDeniedException",
+          "callSites": 0,
+          "calls": []
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "RootShell",
+      "sourcePath": "com/newssa/stoneage/ko/RootShell.java",
+      "methodCount": 27,
+      "methods": [
+        {
+          "name": "closeAllShells",
+          "callSites": 1,
+          "calls": [
+            "Shell.closeAll"
+          ]
+        },
+        {
+          "name": "closeCustomShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "closeShell",
+          "callSites": 1,
+          "calls": [
+            "Shell.closeRootShell"
+          ]
+        },
+        {
+          "name": "exists",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "exists",
+          "callSites": 22,
+          "calls": [
+            "ArrayList",
+            "Command",
+            "RootShell.log",
+            "StringBuilder",
+            "add",
+            "arrayList.add",
+            "arrayList.clear",
+            "arrayList.iterator",
+            "arrayList2.addAll",
+            "arrayList2.iterator",
+            "commandOutput",
+            "commandWait",
+            "equals",
+            "getShell",
+            "it.hasNext",
+            "it.next",
+            "it2.hasNext",
+            "it2.next",
+            "sb.append",
+            "sb.toString",
+            "super.commandOutput",
+            "trim"
+          ]
+        },
+        {
+          "name": "commandOutput",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "arrayList.add"
+          ]
+        },
+        {
+          "name": "findBinary",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "findBinary",
+          "callSites": 17,
+          "calls": [
+            "ArrayList",
+            "Collections.reverse",
+            "Command",
+            "RootShell.log",
+            "add",
+            "arrayList.add",
+            "arrayList.isEmpty",
+            "commandOutput",
+            "commandWait",
+            "exists",
+            "getPath",
+            "getShell",
+            "line.contains",
+            "log",
+            "str.endsWith",
+            "str3.endsWith",
+            "super.commandOutput"
+          ]
+        },
+        {
+          "name": "commandOutput",
+          "callSites": 3,
+          "calls": [
+            "RootShell.log",
+            "arrayList.add",
+            "line.contains"
+          ]
+        },
+        {
+          "name": "getCustomShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getPath",
+          "callSites": 3,
+          "calls": [
+            "Arrays.asList",
+            "System.getenv",
+            "split"
+          ]
+        },
+        {
+          "name": "getShell",
+          "callSites": 2,
+          "calls": [
+            "Shell.startRootShell",
+            "Shell.startShell"
+          ]
+        },
+        {
+          "name": "getShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isAccessGiven",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isAccessGiven",
+          "callSites": 14,
+          "calls": [
+            "Arrays.asList",
+            "Command",
+            "HashSet",
+            "Shell.startRootShell",
+            "add",
+            "commandOutput",
+            "commandWait",
+            "contains",
+            "e.printStackTrace",
+            "hashSet.addAll",
+            "line.split",
+            "log",
+            "str.toLowerCase",
+            "super.commandOutput"
+          ]
+        },
+        {
+          "name": "commandOutput",
+          "callSites": 3,
+          "calls": [
+            "Arrays.asList",
+            "hashSet.addAll",
+            "line.split"
+          ]
+        },
+        {
+          "name": "isBusyboxAvailable",
+          "callSites": 2,
+          "calls": [
+            "findBinary",
+            "size"
+          ]
+        },
+        {
+          "name": "isRootAvailable",
+          "callSites": 2,
+          "calls": [
+            "findBinary",
+            "size"
+          ]
+        },
+        {
+          "name": "log",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "log",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "log",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "islog",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "log",
+          "callSites": 6,
+          "calls": [
+            "Log.d",
+            "Log.e",
+            "Log.v",
+            "Log.w",
+            "msg.equals",
+            "type.ordinal"
+          ]
+        },
+        {
+          "name": "commandWait",
+          "callSites": 16,
+          "calls": [
+            "Exception",
+            "Thread.currentThread",
+            "cmd.getCommand",
+            "cmd.isExecuting",
+            "cmd.isFinished",
+            "cmd.wait",
+            "e.printStackTrace",
+            "exc.printStackTrace",
+            "exc.setStackTrace",
+            "exc2.printStackTrace",
+            "exc2.setStackTrace",
+            "exc3.printStackTrace",
+            "exc3.setStackTrace",
+            "getStackTrace",
+            "log",
+            "shell.getCommandQueuePositionString"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "Shell",
+      "sourcePath": "com/newssa/stoneage/ko/Shell.java",
+      "methodCount": 45,
+      "methods": [
+        {
+          "name": "run",
+          "callSites": 17,
+          "calls": [
+            "RootShell.log",
+            "Shell.access$308",
+            "Shell.access$908",
+            "Shell.this.cleanCommands",
+            "Shell.this.commands.get",
+            "Shell.this.commands.size",
+            "Shell.this.commands.wait",
+            "Shell.this.outputStream.flush",
+            "Shell.this.outputStream.write",
+            "command.getCommand",
+            "command.startExecution",
+            "e.getMessage",
+            "e2.getMessage",
+            "shell2.closeQuietly",
+            "shell3.closeQuietly",
+            "shell4.closeQuietly",
+            "shell5.closeQuietly"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 27,
+          "calls": [
+            "Integer.parseInt",
+            "RootShell.log",
+            "Shell.access$1208",
+            "Shell.access$508",
+            "Shell.this.commands.get",
+            "Shell.this.commands.size",
+            "Shell.this.inputStream.readLine",
+            "Shell.this.inputStream.ready",
+            "Shell.this.proc.destroy",
+            "Shell.this.proc.waitFor",
+            "Shell.this.processErrors",
+            "command.commandFinished",
+            "command.output",
+            "command.setExitCode",
+            "command.terminated",
+            "e.getMessage",
+            "e2.getMessage",
+            "line.indexOf",
+            "line.substring",
+            "shell2.closeQuietly",
+            "shell3.closeQuietly",
+            "shell4.closeQuietly",
+            "shell5.closeQuietly",
+            "shell6.closeQuietly",
+            "shell7.closeQuietly",
+            "split",
+            "wait"
+          ]
+        },
+        {
+          "name": "access$1208",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "access$308",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "access$508",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "access$908",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getValue",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "Shell",
+          "callSites": 31,
+          "calls": [
+            "BufferedReader",
+            "InputStreamReader",
+            "Integer.valueOf",
+            "OutputStreamWriter",
+            "RootDeniedException",
+            "RootShell.log",
+            "Runtime.getRuntime",
+            "Thread",
+            "Thread.currentThread",
+            "TimeoutException",
+            "Worker",
+            "closeQuietly",
+            "exec",
+            "getSuVersion",
+            "intValue",
+            "interrupt",
+            "isSELinuxEnforcing",
+            "shellContext.getValue",
+            "suVersion2.endsWith",
+            "this.proc.destroy",
+            "this.proc.getErrorStream",
+            "this.proc.getInputStream",
+            "this.proc.getOutputStream",
+            "this.shellContext.getValue",
+            "thread.setPriority",
+            "thread.start",
+            "thread2.setPriority",
+            "thread2.start",
+            "worker.interrupt",
+            "worker.join",
+            "worker.start"
+          ]
+        },
+        {
+          "name": "add",
+          "callSites": 3,
+          "calls": [
+            "IllegalStateException",
+            "command.resetCommand",
+            "notifyThreads"
+          ]
+        },
+        {
+          "name": "useCWD",
+          "callSites": 3,
+          "calls": [
+            "Command",
+            "add",
+            "context.getApplicationInfo"
+          ]
+        },
+        {
+          "name": "cleanCommands",
+          "callSites": 4,
+          "calls": [
+            "Math.abs",
+            "RootShell.log",
+            "this.commands.remove",
+            "this.commands.size"
+          ]
+        },
+        {
+          "name": "closeQuietly",
+          "callSites": 1,
+          "calls": [
+            "input.close"
+          ]
+        },
+        {
+          "name": "closeQuietly",
+          "callSites": 1,
+          "calls": [
+            "output.close"
+          ]
+        },
+        {
+          "name": "close",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "notifyThreads"
+          ]
+        },
+        {
+          "name": "closeCustomShell",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "shell2.close"
+          ]
+        },
+        {
+          "name": "closeRootShell",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "shell2.close"
+          ]
+        },
+        {
+          "name": "closeShell",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "shell2.close"
+          ]
+        },
+        {
+          "name": "closeAll",
+          "callSites": 4,
+          "calls": [
+            "RootShell.log",
+            "closeCustomShell",
+            "closeRootShell",
+            "closeShell"
+          ]
+        },
+        {
+          "name": "getCommandQueuePosition",
+          "callSites": 1,
+          "calls": [
+            "this.commands.indexOf"
+          ]
+        },
+        {
+          "name": "getCommandQueuePositionString",
+          "callSites": 2,
+          "calls": [
+            "getCommandQueuePosition",
+            "this.commands.size"
+          ]
+        },
+        {
+          "name": "getOpenShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getSuVersion",
+          "callSites": 16,
+          "calls": [
+            "ArrayList",
+            "BufferedReader",
+            "InputStreamReader",
+            "Integer.parseInt",
+            "Runtime.getRuntime",
+            "arrayList.add",
+            "bufferedReader.close",
+            "bufferedReader.readLine",
+            "e.printStackTrace",
+            "e2.printStackTrace",
+            "exec",
+            "processExec.destroy",
+            "processExec.getInputStream",
+            "processExec.waitFor",
+            "r2.hasNext",
+            "str2.contains"
+          ]
+        },
+        {
+          "name": "isShellOpen",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isCustomShellOpen",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isRootShellOpen",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isAnyShellOpen",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isSELinuxEnforcing",
+          "callSites": 7,
+          "calls": [
+            "Boolean.valueOf",
+            "File",
+            "FileInputStream",
+            "exists",
+            "fileInputStream.close",
+            "fileInputStream.read",
+            "this.isSELinuxEnforcing.booleanValue"
+          ]
+        },
+        {
+          "name": "notifyThreads",
+          "callSites": 4,
+          "calls": [
+            "Shell.this.commands.notifyAll",
+            "Thread",
+            "run",
+            "start"
+          ]
+        },
+        {
+          "name": "Thread",
+          "callSites": 2,
+          "calls": [
+            "Shell.this.commands.notifyAll",
+            "run"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "calls": [
+            "Shell.this.commands.notifyAll"
+          ]
+        },
+        {
+          "name": "processErrors",
+          "callSites": 5,
+          "calls": [
+            "RootShell.log",
+            "command.output",
+            "e.getMessage",
+            "this.errorStream.readLine",
+            "this.errorStream.ready"
+          ]
+        },
+        {
+          "name": "runRootCommand",
+          "callSites": 2,
+          "calls": [
+            "add",
+            "startRootShell"
+          ]
+        },
+        {
+          "name": "runCommand",
+          "callSites": 2,
+          "calls": [
+            "add",
+            "startShell"
+          ]
+        },
+        {
+          "name": "startRootShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startRootShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startRootShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startRootShell",
+          "callSites": 3,
+          "calls": [
+            "RootShell.log",
+            "Shell",
+            "rootShell.switchRootShellContext"
+          ]
+        },
+        {
+          "name": "startCustomShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startCustomShell",
+          "callSites": 2,
+          "calls": [
+            "RootShell.log",
+            "Shell"
+          ]
+        },
+        {
+          "name": "startShell",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "startShell",
+          "callSites": 3,
+          "calls": [
+            "IOException",
+            "RootShell.log",
+            "Shell"
+          ]
+        },
+        {
+          "name": "switchRootShellContext",
+          "callSites": 3,
+          "calls": [
+            "RootShell.log",
+            "closeRootShell",
+            "startRootShell"
+          ]
+        },
+        {
+          "name": "Worker",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "run",
+          "callSites": 7,
+          "calls": [
+            "EOFException",
+            "e.getMessage",
+            "equals",
+            "setShellOom",
+            "this.shell.inputStream.readLine",
+            "this.shell.outputStream.flush",
+            "this.shell.outputStream.write"
+          ]
+        },
+        {
+          "name": "setShellOom",
+          "callSites": 8,
+          "calls": [
+            "cls.getDeclaredField",
+            "declaredField.get",
+            "declaredField.setAccessible",
+            "e.printStackTrace",
+            "intValue",
+            "this.shell.outputStream.flush",
+            "this.shell.outputStream.write",
+            "this.shell.proc.getClass"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "StatusTools",
+      "sourcePath": "com/newssa/stoneage/ko/StatusTools.java",
+      "methodCount": 9,
+      "methods": [
+        {
+          "name": "onReceive",
+          "callSites": 2,
+          "calls": [
+            "JNILibrary.refreshBatteryInfo",
+            "intent.getIntExtra"
+          ]
+        },
+        {
+          "name": "onSignalStrengthsChanged",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "readStatus",
+          "callSites": 10,
+          "calls": [
+            "IntentFilter",
+            "JNILibrary.refreshBatteryInfo",
+            "MyPhoneStateListener",
+            "PowerConnectionReceiver",
+            "StoneageApplication.getAppConext",
+            "__getNetworkType",
+            "appConext.getSystemService",
+            "appConext.registerReceiver",
+            "intentRegisterReceiver.getIntExtra",
+            "telephonyManager.listen"
+          ]
+        },
+        {
+          "name": "endReadStatus",
+          "callSites": 3,
+          "calls": [
+            "StoneageApplication.getAppConext",
+            "appConext.unregisterReceiver",
+            "telephonyManager.listen"
+          ]
+        },
+        {
+          "name": "__getNetworkType",
+          "callSites": 5,
+          "calls": [
+            "StoneageApplication.getAppConext",
+            "activeNetworkInfo.getType",
+            "activeNetworkInfo.isConnected",
+            "getActiveNetworkInfo",
+            "getSystemService"
+          ]
+        },
+        {
+          "name": "checkIsReCharging",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getCurrentBattery",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getNetworkType",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getSignalStrengths",
+          "callSites": 0,
+          "calls": []
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "StoneageApplication",
+      "sourcePath": "com/newssa/stoneage/ko/StoneageApplication.java",
+      "methodCount": 6,
+      "methods": [
+        {
+          "name": "getAppConext",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getActivity",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "onCreate",
+          "callSites": 2,
+          "calls": [
+            "__getAppVersion",
+            "getApplicationContext"
+          ]
+        },
+        {
+          "name": "SetActivity",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getAppVersion",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "__getAppVersion",
+          "callSites": 4,
+          "calls": [
+            "TextUtils.isEmpty",
+            "context.getPackageManager",
+            "context.getPackageName",
+            "getPackageInfo"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.ko",
+      "className": "SystemBarTintManager",
+      "sourcePath": "com/newssa/stoneage/ko/SystemBarTintManager.java",
+      "methodCount": 36,
+      "methods": [
+        {
+          "name": "SystemBarTintManager",
+          "callSites": 10,
+          "calls": [
+            "SystemBarConfig",
+            "activity.getWindow",
+            "activity.obtainStyledAttributes",
+            "setupNavBarView",
+            "setupStatusBarView",
+            "systemBarConfig.hasNavigtionBar",
+            "typedArrayObtainStyledAttributes.getBoolean",
+            "typedArrayObtainStyledAttributes.recycle",
+            "window.getAttributes",
+            "window.getDecorView"
+          ]
+        },
+        {
+          "name": "setStatusBarTintEnabled",
+          "callSites": 1,
+          "calls": [
+            "this.mStatusBarTintView.setVisibility"
+          ]
+        },
+        {
+          "name": "setNavigationBarTintEnabled",
+          "callSites": 1,
+          "calls": [
+            "this.mNavBarTintView.setVisibility"
+          ]
+        },
+        {
+          "name": "setTintColor",
+          "callSites": 2,
+          "calls": [
+            "setNavigationBarTintColor",
+            "setStatusBarTintColor"
+          ]
+        },
+        {
+          "name": "setTintResource",
+          "callSites": 2,
+          "calls": [
+            "setNavigationBarTintResource",
+            "setStatusBarTintResource"
+          ]
+        },
+        {
+          "name": "setTintDrawable",
+          "callSites": 2,
+          "calls": [
+            "setNavigationBarTintDrawable",
+            "setStatusBarTintDrawable"
+          ]
+        },
+        {
+          "name": "setTintAlpha",
+          "callSites": 2,
+          "calls": [
+            "setNavigationBarAlpha",
+            "setStatusBarAlpha"
+          ]
+        },
+        {
+          "name": "setStatusBarTintColor",
+          "callSites": 1,
+          "calls": [
+            "this.mStatusBarTintView.setBackgroundColor"
+          ]
+        },
+        {
+          "name": "setStatusBarTintResource",
+          "callSites": 1,
+          "calls": [
+            "this.mStatusBarTintView.setBackgroundResource"
+          ]
+        },
+        {
+          "name": "setStatusBarTintDrawable",
+          "callSites": 1,
+          "calls": [
+            "this.mStatusBarTintView.setBackgroundDrawable"
+          ]
+        },
+        {
+          "name": "setStatusBarAlpha",
+          "callSites": 1,
+          "calls": [
+            "this.mStatusBarTintView.setAlpha"
+          ]
+        },
+        {
+          "name": "setNavigationBarTintColor",
+          "callSites": 1,
+          "calls": [
+            "this.mNavBarTintView.setBackgroundColor"
+          ]
+        },
+        {
+          "name": "setNavigationBarTintResource",
+          "callSites": 1,
+          "calls": [
+            "this.mNavBarTintView.setBackgroundResource"
+          ]
+        },
+        {
+          "name": "setNavigationBarTintDrawable",
+          "callSites": 1,
+          "calls": [
+            "this.mNavBarTintView.setBackgroundDrawable"
+          ]
+        },
+        {
+          "name": "setNavigationBarAlpha",
+          "callSites": 1,
+          "calls": [
+            "this.mNavBarTintView.setAlpha"
+          ]
+        },
+        {
+          "name": "getConfig",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isStatusBarTintEnabled",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isNavBarTintEnabled",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "setupStatusBarView",
+          "callSites": 9,
+          "calls": [
+            "FrameLayout.LayoutParams",
+            "View",
+            "decorViewGroup.addView",
+            "this.mConfig.getNavigationBarWidth",
+            "this.mConfig.getStatusBarHeight",
+            "this.mConfig.isNavigationAtBottom",
+            "this.mStatusBarTintView.setBackgroundColor",
+            "this.mStatusBarTintView.setLayoutParams",
+            "this.mStatusBarTintView.setVisibility"
+          ]
+        },
+        {
+          "name": "setupNavBarView",
+          "callSites": 9,
+          "calls": [
+            "FrameLayout.LayoutParams",
+            "View",
+            "decorViewGroup.addView",
+            "this.mConfig.getNavigationBarHeight",
+            "this.mConfig.getNavigationBarWidth",
+            "this.mConfig.isNavigationAtBottom",
+            "this.mNavBarTintView.setBackgroundColor",
+            "this.mNavBarTintView.setLayoutParams",
+            "this.mNavBarTintView.setVisibility"
+          ]
+        },
+        {
+          "name": "SystemBarConfig",
+          "callSites": 7,
+          "calls": [
+            "activity.getResources",
+            "getActionBarHeight",
+            "getInternalDimensionSize",
+            "getNavigationBarHeight",
+            "getNavigationBarWidth",
+            "getSmallestWidthDp",
+            "resources.getConfiguration"
+          ]
+        },
+        {
+          "name": "getActionBarHeight",
+          "callSites": 6,
+          "calls": [
+            "TypedValue",
+            "TypedValue.complexToDimensionPixelSize",
+            "context.getResources",
+            "context.getTheme",
+            "getDisplayMetrics",
+            "resolveAttribute"
+          ]
+        },
+        {
+          "name": "getNavigationBarHeight",
+          "callSites": 3,
+          "calls": [
+            "context.getResources",
+            "getInternalDimensionSize",
+            "hasNavBar"
+          ]
+        },
+        {
+          "name": "getNavigationBarWidth",
+          "callSites": 3,
+          "calls": [
+            "context.getResources",
+            "getInternalDimensionSize",
+            "hasNavBar"
+          ]
+        },
+        {
+          "name": "hasNavBar",
+          "callSites": 6,
+          "calls": [
+            "ViewConfiguration.get",
+            "context.getResources",
+            "equals",
+            "hasPermanentMenuKey",
+            "resources.getBoolean",
+            "resources.getIdentifier"
+          ]
+        },
+        {
+          "name": "getInternalDimensionSize",
+          "callSites": 2,
+          "calls": [
+            "res.getDimensionPixelSize",
+            "res.getIdentifier"
+          ]
+        },
+        {
+          "name": "getSmallestWidthDp",
+          "callSites": 6,
+          "calls": [
+            "DisplayMetrics",
+            "Math.min",
+            "activity.getWindowManager",
+            "getDefaultDisplay",
+            "getMetrics",
+            "getRealMetrics"
+          ]
+        },
+        {
+          "name": "isNavigationAtBottom",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getStatusBarHeight",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getActionBarHeight",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "hasNavigtionBar",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getNavigationBarHeight",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getNavigationBarWidth",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getPixelInsetTop",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getPixelInsetBottom",
+          "callSites": 1,
+          "calls": [
+            "isNavigationAtBottom"
+          ]
+        },
+        {
+          "name": "getPixelInsetRight",
+          "callSites": 1,
+          "calls": [
+            "isNavigationAtBottom"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "AppUtils",
+      "sourcePath": "com/newssa/stoneage/update/AppUtils.java",
+      "methodCount": 2,
+      "methods": [
+        {
+          "name": "getVersionCode",
+          "callSites": 3,
+          "calls": [
+            "getPackageInfo",
+            "mContext.getPackageManager",
+            "mContext.getPackageName"
+          ]
+        },
+        {
+          "name": "getVersionName",
+          "callSites": 3,
+          "calls": [
+            "getPackageInfo",
+            "mContext.getPackageManager",
+            "mContext.getPackageName"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "CheckUpdateTask",
+      "sourcePath": "com/newssa/stoneage/update/CheckUpdateTask.java",
+      "methodCount": 6,
+      "methods": [
+        {
+          "name": "onPreExecute",
+          "callSites": 4,
+          "calls": [
+            "ProgressDialog",
+            "progressDialog.setMessage",
+            "this.dialog.show",
+            "this.mContext.getString"
+          ]
+        },
+        {
+          "name": "onPostExecute",
+          "callSites": 4,
+          "calls": [
+            "TextUtils.isEmpty",
+            "parseJson",
+            "progressDialog.isShowing",
+            "this.dialog.dismiss"
+          ]
+        },
+        {
+          "name": "parseJson",
+          "callSites": 10,
+          "calls": [
+            "AppUtils.getVersionCode",
+            "JSONObject",
+            "Log.e",
+            "Toast.makeText",
+            "context.getString",
+            "jSONObject.getInt",
+            "jSONObject.getString",
+            "show",
+            "showDialog",
+            "showNotification"
+          ]
+        },
+        {
+          "name": "showDialog",
+          "callSites": 1,
+          "calls": [
+            "UpdateDialog.show"
+          ]
+        },
+        {
+          "name": "showNotification",
+          "callSites": 15,
+          "calls": [
+            "Intent",
+            "NotificationCompat.Builder",
+            "PendingIntent.getService",
+            "build",
+            "context.getApplicationInfo",
+            "context.getString",
+            "context.getSystemService",
+            "intent.putExtra",
+            "intent.setFlags",
+            "notify",
+            "setContentIntent",
+            "setContentText",
+            "setContentTitle",
+            "setSmallIcon",
+            "setTicker"
+          ]
+        },
+        {
+          "name": "doInBackground",
+          "callSites": 1,
+          "calls": [
+            "HttpUtils.get"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "Constants",
+      "sourcePath": "com/newssa/stoneage/update/Constants.java",
+      "methodCount": 0,
+      "methods": []
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "DownloadService",
+      "sourcePath": "com/newssa/stoneage/update/DownloadService.java",
+      "methodCount": 4,
+      "methods": [
+        {
+          "name": "DownloadService",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "onHandleIntent",
+          "callSites": 32,
+          "calls": [
+            "File",
+            "FileOutputStream",
+            "Log.e",
+            "NotificationCompat.Builder",
+            "StorageUtils.getCacheDirectory",
+            "URL",
+            "fileOutputStream.close",
+            "fileOutputStream.write",
+            "fileOutputStream2.close",
+            "getApplicationInfo",
+            "getString",
+            "getSystemService",
+            "httpURLConnection.connect",
+            "httpURLConnection.getContentLength",
+            "httpURLConnection.getInputStream",
+            "httpURLConnection.setConnectTimeout",
+            "httpURLConnection.setDoOutput",
+            "httpURLConnection.setReadTimeout",
+            "httpURLConnection.setRequestMethod",
+            "httpURLConnection.setRequestProperty",
+            "inputStream.close",
+            "inputStream.read",
+            "installAPk",
+            "intent.getStringExtra",
+            "openConnection",
+            "setSmallIcon",
+            "stringExtra.lastIndexOf",
+            "stringExtra.length",
+            "stringExtra.substring",
+            "this.mBuilder.setContentTitle",
+            "this.mNotifyManager.cancel",
+            "updateProgress"
+          ]
+        },
+        {
+          "name": "updateProgress",
+          "callSites": 9,
+          "calls": [
+            "Integer.valueOf",
+            "Intent",
+            "PendingIntent.getActivity",
+            "getString",
+            "setProgress",
+            "this.mBuilder.build",
+            "this.mBuilder.setContentIntent",
+            "this.mBuilder.setContentText",
+            "this.mNotifyManager.notify"
+          ]
+        },
+        {
+          "name": "installAPk",
+          "callSites": 8,
+          "calls": [
+            "Intent",
+            "ProcessBuilder",
+            "Uri.fromFile",
+            "apkFile.toString",
+            "intent.addFlags",
+            "intent.setDataAndType",
+            "start",
+            "startActivity"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "HttpUtils",
+      "sourcePath": "com/newssa/stoneage/update/HttpUtils.java",
+      "methodCount": 1,
+      "methods": [
+        {
+          "name": "get",
+          "callSites": 15,
+          "calls": [
+            "BufferedReader",
+            "InputStreamReader",
+            "Log.e",
+            "StringBuilder",
+            "URL",
+            "bufferedReader.close",
+            "bufferedReader2.close",
+            "bufferedReader2.readLine",
+            "inputStream.close",
+            "openConnection",
+            "sb.append",
+            "sb.toString",
+            "str.disconnect",
+            "str.getInputStream",
+            "str.setRequestMethod"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "StorageUtils",
+      "sourcePath": "com/newssa/stoneage/update/StorageUtils.java",
+      "methodCount": 4,
+      "methods": [
+        {
+          "name": "StorageUtils",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getCacheDirectory",
+          "callSites": 6,
+          "calls": [
+            "Environment.getExternalStorageState",
+            "Log.w",
+            "context.getCacheDir",
+            "equals",
+            "getExternalCacheDir",
+            "hasExternalStoragePermission"
+          ]
+        },
+        {
+          "name": "getExternalCacheDir",
+          "callSites": 8,
+          "calls": [
+            "Environment.getExternalStorageDirectory",
+            "File",
+            "Log.i",
+            "Log.w",
+            "context.getPackageName",
+            "createNewFile",
+            "file.exists",
+            "file.mkdirs"
+          ]
+        },
+        {
+          "name": "hasExternalStoragePermission",
+          "callSites": 1,
+          "calls": [
+            "context.checkCallingOrSelfPermission"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "UpdateChecker",
+      "sourcePath": "com/newssa/stoneage/update/UpdateChecker.java",
+      "methodCount": 2,
+      "methods": [
+        {
+          "name": "checkForDialog",
+          "callSites": 3,
+          "calls": [
+            "CheckUpdateTask",
+            "Log.e",
+            "execute"
+          ]
+        },
+        {
+          "name": "checkForNotification",
+          "callSites": 3,
+          "calls": [
+            "CheckUpdateTask",
+            "Log.e",
+            "execute"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "com.newssa.stoneage.update",
+      "className": "UpdateDialog",
+      "sourcePath": "com/newssa/stoneage/update/UpdateDialog.java",
+      "methodCount": 5,
+      "methods": [
+        {
+          "name": "show",
+          "callSites": 12,
+          "calls": [
+            "AlertDialog.Builder",
+            "DialogInterface.OnClickListener",
+            "Html.fromHtml",
+            "UpdateDialog.goToDownload",
+            "alertDialogCreate.setCanceledOnTouchOutside",
+            "builder.create",
+            "builder.setMessage",
+            "builder.setTitle",
+            "isContextValid",
+            "onClick",
+            "setNegativeButton",
+            "setPositiveButton"
+          ]
+        },
+        {
+          "name": "onClick",
+          "callSites": 1,
+          "calls": [
+            "UpdateDialog.goToDownload"
+          ]
+        },
+        {
+          "name": "onClick",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isContextValid",
+          "callSites": 1,
+          "calls": [
+            "isFinishing"
+          ]
+        },
+        {
+          "name": "goToDownload",
+          "callSites": 4,
+          "calls": [
+            "Intent",
+            "context.getApplicationContext",
+            "context.startService",
+            "intent.putExtra"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLActivity",
+      "sourcePath": "org/libsdl/app/SDLActivity.java",
+      "methodCount": 70,
+      "methods": [
+        {
+          "name": "run",
+          "callSites": 3,
+          "calls": [
+            "SDLActivity.this.getWindow",
+            "getDecorView",
+            "setSystemUiVisibility"
+          ]
+        },
+        {
+          "name": "shouldMinimizeOnFocusLoss",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getArguments",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getMainFunction",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "onUnhandledMessage",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "getMotionListener",
+          "callSites": 3,
+          "calls": [
+            "SDLGenericMotionListener_API12",
+            "SDLGenericMotionListener_API24",
+            "SDLGenericMotionListener_API26"
+          ]
+        },
+        {
+          "name": "getMainSharedObject",
+          "callSites": 3,
+          "calls": [
+            "getApplicationInfo",
+            "getContext",
+            "mSingleton.getLibraries"
+          ]
+        },
+        {
+          "name": "getLibraries",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "loadLibraries",
+          "callSites": 2,
+          "calls": [
+            "SDL.loadLibrary",
+            "getLibraries"
+          ]
+        },
+        {
+          "name": "initialize",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "onCreate",
+          "callSites": 39,
+          "calls": [
+            "AlertDialog.Builder",
+            "DialogInterface.OnClickListener",
+            "HIDDeviceManager.acquire",
+            "Log.v",
+            "RelativeLayout",
+            "SDL.initialize",
+            "SDL.setContext",
+            "SDL.setupJNI",
+            "SDLActivity.mSingleton.finish",
+            "SDLClipboardHandler_API11",
+            "SDLSurface",
+            "System.err.println",
+            "System.getProperty",
+            "Thread.currentThread",
+            "builder.create",
+            "builder.setCancelable",
+            "builder.setMessage",
+            "builder.setPositiveButton",
+            "builder.setTitle",
+            "e.toString",
+            "e2.getMessage",
+            "e3.getMessage",
+            "getApplication",
+            "getCurrentOrientation",
+            "getDecorView",
+            "getIntent",
+            "getPath",
+            "getWindow",
+            "intent.getData",
+            "loadLibraries",
+            "onClick",
+            "onNativeDropFile",
+            "onNativeOrientationChanged",
+            "relativeLayout.addView",
+            "setContentView",
+            "setName",
+            "setOnSystemUiVisibilityChangeListener",
+            "setWindowStyle",
+            "show"
+          ]
+        },
+        {
+          "name": "onClick",
+          "callSites": 1,
+          "calls": [
+            "SDLActivity.mSingleton.finish"
+          ]
+        },
+        {
+          "name": "pauseNativeThread",
+          "callSites": 2,
+          "calls": [
+            "hIDDeviceManager.setFrozen",
+            "handleNativeState"
+          ]
+        },
+        {
+          "name": "resumeNativeThread",
+          "callSites": 2,
+          "calls": [
+            "hIDDeviceManager.setFrozen",
+            "handleNativeState"
+          ]
+        },
+        {
+          "name": "onPause",
+          "callSites": 2,
+          "calls": [
+            "Log.v",
+            "pauseNativeThread"
+          ]
+        },
+        {
+          "name": "onResume",
+          "callSites": 2,
+          "calls": [
+            "Log.v",
+            "resumeNativeThread"
+          ]
+        },
+        {
+          "name": "onStop",
+          "callSites": 2,
+          "calls": [
+            "Log.v",
+            "pauseNativeThread"
+          ]
+        },
+        {
+          "name": "onStart",
+          "callSites": 2,
+          "calls": [
+            "Log.v",
+            "resumeNativeThread"
+          ]
+        },
+        {
+          "name": "getCurrentOrientation",
+          "callSites": 4,
+          "calls": [
+            "getContext",
+            "getDefaultDisplay",
+            "getRotation",
+            "getSystemService"
+          ]
+        },
+        {
+          "name": "onWindowFocusChanged",
+          "callSites": 5,
+          "calls": [
+            "Log.v",
+            "getMotionListener",
+            "handleNativeState",
+            "nativeFocusChanged",
+            "reclaimRelativeMouseModeIfNeeded"
+          ]
+        },
+        {
+          "name": "onLowMemory",
+          "callSites": 2,
+          "calls": [
+            "Log.v",
+            "nativeLowMemory"
+          ]
+        },
+        {
+          "name": "onDestroy",
+          "callSites": 5,
+          "calls": [
+            "HIDDeviceManager.release",
+            "Log.v",
+            "mSDLThread.join",
+            "nativeQuit",
+            "nativeSendQuit"
+          ]
+        },
+        {
+          "name": "onBackPressed",
+          "callSites": 2,
+          "calls": [
+            "nativeGetHint",
+            "strNativeGetHint.equals"
+          ]
+        },
+        {
+          "name": "manualBackButton",
+          "callSites": 1,
+          "calls": [
+            "mSingleton.pressBackButton"
+          ]
+        },
+        {
+          "name": "pressBackButton",
+          "callSites": 4,
+          "calls": [
+            "Runnable",
+            "SDLActivity.this.superOnBackPressed",
+            "run",
+            "runOnUiThread"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "calls": [
+            "SDLActivity.this.superOnBackPressed"
+          ]
+        },
+        {
+          "name": "superOnBackPressed",
+          "callSites": 1,
+          "calls": [
+            "super.onBackPressed"
+          ]
+        },
+        {
+          "name": "dispatchKeyEvent",
+          "callSites": 1,
+          "calls": [
+            "event.getKeyCode"
+          ]
+        },
+        {
+          "name": "handleNativeState",
+          "callSites": 8,
+          "calls": [
+            "SDLMain",
+            "Thread",
+            "mSDLThread.start",
+            "mSurface.enableSensor",
+            "mSurface.handleResume",
+            "nativePause",
+            "nativeResume",
+            "sDLSurface.handlePause"
+          ]
+        },
+        {
+          "name": "SDLCommandHandler",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "handleMessage",
+          "callSites": 19,
+          "calls": [
+            "Log.e",
+            "RelativeLayout.LayoutParams",
+            "SDL.getContext",
+            "SDLActivity.mSurface.getHolder",
+            "SDLActivity.mTextEdit.getWindowToken",
+            "SDLActivity.mTextEdit.setLayoutParams",
+            "context.getSystemService",
+            "getWindow",
+            "hideSoftInputFromWindow",
+            "holder.setFormat",
+            "intValue",
+            "onUnhandledMessage",
+            "setSystemUiVisibility",
+            "setTitle",
+            "window.addFlags",
+            "window.clearFlags",
+            "window2.addFlags",
+            "window2.clearFlags",
+            "window2.getDecorView"
+          ]
+        },
+        {
+          "name": "sendCommand",
+          "callSites": 12,
+          "calls": [
+            "DisplayMetrics",
+            "defaultDisplay.getRealMetrics",
+            "e.printStackTrace",
+            "getContext",
+            "getDefaultDisplay",
+            "getSystemService",
+            "intValue",
+            "mSurface.getHeight",
+            "mSurface.getWidth",
+            "this.commandHandler.obtainMessage",
+            "this.commandHandler.sendMessage",
+            "wait"
+          ]
+        },
+        {
+          "name": "setActivityTitle",
+          "callSites": 1,
+          "calls": [
+            "mSingleton.sendCommand"
+          ]
+        },
+        {
+          "name": "setWindowStyle",
+          "callSites": 2,
+          "calls": [
+            "Integer.valueOf",
+            "mSingleton.sendCommand"
+          ]
+        },
+        {
+          "name": "setOrientation",
+          "callSites": 1,
+          "calls": [
+            "sDLActivity.setOrientationBis"
+          ]
+        },
+        {
+          "name": "setOrientationBis",
+          "callSites": 3,
+          "calls": [
+            "Log.v",
+            "hint.contains",
+            "mSingleton.setRequestedOrientation"
+          ]
+        },
+        {
+          "name": "minimizeWindow",
+          "callSites": 4,
+          "calls": [
+            "Intent",
+            "intent.addCategory",
+            "intent.setFlags",
+            "mSingleton.startActivity"
+          ]
+        },
+        {
+          "name": "isScreenKeyboardShown",
+          "callSites": 3,
+          "calls": [
+            "SDL.getContext",
+            "getSystemService",
+            "isAcceptingText"
+          ]
+        },
+        {
+          "name": "supportsRelativeMouse",
+          "callSites": 3,
+          "calls": [
+            "getMotionListener",
+            "isChromebook",
+            "isDeXMode"
+          ]
+        },
+        {
+          "name": "setRelativeMouseEnabled",
+          "callSites": 2,
+          "calls": [
+            "getMotionListener",
+            "supportsRelativeMouse"
+          ]
+        },
+        {
+          "name": "sendMessage",
+          "callSites": 2,
+          "calls": [
+            "Integer.valueOf",
+            "sDLActivity.sendCommand"
+          ]
+        },
+        {
+          "name": "getContext",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "isAndroidTV",
+          "callSites": 5,
+          "calls": [
+            "Build.MANUFACTURER.equals",
+            "Build.MODEL.equals",
+            "getContext",
+            "getCurrentModeType",
+            "getSystemService"
+          ]
+        },
+        {
+          "name": "isTablet",
+          "callSites": 6,
+          "calls": [
+            "DisplayMetrics",
+            "Math.sqrt",
+            "getContext",
+            "getDefaultDisplay",
+            "getMetrics",
+            "getWindowManager"
+          ]
+        },
+        {
+          "name": "isChromebook",
+          "callSites": 3,
+          "calls": [
+            "getContext",
+            "getPackageManager",
+            "hasSystemFeature"
+          ]
+        },
+        {
+          "name": "isDeXMode",
+          "callSites": 6,
+          "calls": [
+            "cls.getField",
+            "configuration.getClass",
+            "getConfiguration",
+            "getContext",
+            "getInt",
+            "getResources"
+          ]
+        },
+        {
+          "name": "getDisplayDPI",
+          "callSites": 3,
+          "calls": [
+            "getContext",
+            "getDisplayMetrics",
+            "getResources"
+          ]
+        },
+        {
+          "name": "getManifestEnvironmentVariables",
+          "callSites": 12,
+          "calls": [
+            "Log.v",
+            "bundle.get",
+            "bundle.keySet",
+            "e.toString",
+            "getApplicationInfo",
+            "getContext",
+            "getPackageManager",
+            "getPackageName",
+            "nativeSetenv",
+            "str.startsWith",
+            "str.substring",
+            "toString"
+          ]
+        },
+        {
+          "name": "getContentView",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "ShowTextInputTask",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "run",
+          "callSites": 9,
+          "calls": [
+            "DummyEdit",
+            "RelativeLayout.LayoutParams",
+            "SDL.getContext",
+            "SDLActivity.mLayout.addView",
+            "SDLActivity.mTextEdit.requestFocus",
+            "SDLActivity.mTextEdit.setLayoutParams",
+            "SDLActivity.mTextEdit.setVisibility",
+            "getSystemService",
+            "showSoftInput"
+          ]
+        },
+        {
+          "name": "showTextInput",
+          "callSites": 2,
+          "calls": [
+            "ShowTextInputTask",
+            "mSingleton.commandHandler.post"
+          ]
+        },
+        {
+          "name": "isTextInputEvent",
+          "callSites": 3,
+          "calls": [
+            "event.getKeyCode",
+            "event.isCtrlPressed",
+            "event.isPrintingKey"
+          ]
+        },
+        {
+          "name": "getNativeSurface",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "setSurfaceViewFormat",
+          "callSites": 2,
+          "calls": [
+            "Integer.valueOf",
+            "mSingleton.sendCommand"
+          ]
+        },
+        {
+          "name": "initTouch",
+          "callSites": 6,
+          "calls": [
+            "InputDevice.getDevice",
+            "InputDevice.getDeviceIds",
+            "device.getId",
+            "device.getName",
+            "device.getSources",
+            "nativeAddTouch"
+          ]
+        },
+        {
+          "name": "openAPKExpansionInputStream",
+          "callSites": 12,
+          "calls": [
+            "Class.forName",
+            "IOException",
+            "Integer.valueOf",
+            "SDL.getContext",
+            "e.printStackTrace",
+            "e2.printStackTrace",
+            "e3.printStackTrace",
+            "expansionFileMethod.invoke",
+            "getMethod",
+            "invoke",
+            "nativeGetHint",
+            "objInvoke.getClass"
+          ]
+        },
+        {
+          "name": "messageboxShowMessageBox",
+          "callSites": 11,
+          "calls": [
+            "Bundle",
+            "Runnable",
+            "bundle.putInt",
+            "bundle.putIntArray",
+            "bundle.putString",
+            "bundle.putStringArray",
+            "e.printStackTrace",
+            "run",
+            "runOnUiThread",
+            "sDLActivity.showDialog",
+            "this.messageboxSelection.wait"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "calls": [
+            "sDLActivity.showDialog"
+          ]
+        },
+        {
+          "name": "onCreateDialog",
+          "callSites": 40,
+          "calls": [
+            "Button",
+            "Dialog",
+            "DialogInterface.OnDismissListener",
+            "DialogInterface.OnKeyListener",
+            "LinearLayout",
+            "SDLActivity.this.messageboxSelection.notify",
+            "SparseArray",
+            "TextView",
+            "View.OnClickListener",
+            "args.getIntArray",
+            "args.getString",
+            "args.getStringArray",
+            "background.setColorFilter",
+            "button.getBackground",
+            "button.setBackgroundColor",
+            "button.setOnClickListener",
+            "button.setText",
+            "button.setTextColor",
+            "button2.performClick",
+            "dialog.dismiss",
+            "dialog.setCancelable",
+            "dialog.setContentView",
+            "dialog.setOnDismissListener",
+            "dialog.setOnKeyListener",
+            "dialog.setTitle",
+            "event.getAction",
+            "linearLayout.addView",
+            "linearLayout.setGravity",
+            "linearLayout.setOrientation",
+            "linearLayout2.addView",
+            "linearLayout2.setBackgroundColor",
+            "linearLayout2.setOrientation",
+            "onClick",
+            "onDismiss",
+            "onKey",
+            "sparseArray.get",
+            "sparseArray.put",
+            "textView.setGravity",
+            "textView.setText",
+            "textView.setTextColor"
+          ]
+        },
+        {
+          "name": "onDismiss",
+          "callSites": 1,
+          "calls": [
+            "SDLActivity.this.messageboxSelection.notify"
+          ]
+        },
+        {
+          "name": "onClick",
+          "callSites": 1,
+          "calls": [
+            "dialog.dismiss"
+          ]
+        },
+        {
+          "name": "onKey",
+          "callSites": 3,
+          "calls": [
+            "button2.performClick",
+            "event.getAction",
+            "sparseArray.get"
+          ]
+        },
+        {
+          "name": "onSystemUiVisibilityChange",
+          "callSites": 5,
+          "calls": [
+            "getDecorView",
+            "getHandler",
+            "getWindow",
+            "handler.postDelayed",
+            "handler.removeCallbacks"
+          ]
+        },
+        {
+          "name": "clipboardHasText",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "clipboardGetText",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "clipboardSetText",
+          "callSites": 0,
+          "calls": []
+        },
+        {
+          "name": "createCustomCursor",
+          "callSites": 4,
+          "calls": [
+            "Bitmap.createBitmap",
+            "Integer.valueOf",
+            "PointerIcon.create",
+            "mCursors.put"
+          ]
+        },
+        {
+          "name": "setCustomCursor",
+          "callSites": 3,
+          "calls": [
+            "Integer.valueOf",
+            "mCursors.get",
+            "mSurface.setPointerIcon"
+          ]
+        },
+        {
+          "name": "setSystemCursor",
+          "callSites": 3,
+          "calls": [
+            "PointerIcon.getSystemIcon",
+            "SDL.getContext",
+            "mSurface.setPointerIcon"
+          ]
+        }
+      ]
+    }
+  ],
+  "redaction": {
+    "sourceCodeIncluded": false,
+    "stringAndCharacterLiteralContentsIncluded": false,
+    "commentsIncluded": false,
+    "urlsAndHostsIncluded": false,
+    "onlyMethodNamesAndCallIdentifiers": true
+  },
+  "limitations": [
+    "Static decompiler output only; no Java or native code was executed.",
+    "Call identifiers are approximate source-level relationships, not a complete dynamic call graph.",
+    "Obfuscated, reflection-driven, JNI-driven, and dynamically loaded behavior may not be represented."
+  ]
+}
