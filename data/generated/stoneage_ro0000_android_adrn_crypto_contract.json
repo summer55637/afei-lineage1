@@ -1,0 +1,54 @@
+{
+  "format": "ro0000-android-adrn-crypto-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "functions": {
+    "AdrnInit": "0x363370",
+    "adrnDecode": "0x364970",
+    "setBlowFishKey": "0x42ac60",
+    "fish_decode": "0x42af80",
+    "fish_encode": "0x42b1c0"
+  },
+  "adrnContainer": {
+    "headerWordLE": "0x31393839",
+    "payload": "fileBytesAfter4ByteHeader",
+    "decodeCall": "adrnDecode(payload, fileSize - 4)",
+    "recordSizeBytes": 80,
+    "recordCountRule": "floor(decodedLength / 80)"
+  },
+  "key": {
+    "encoding": "ASCII",
+    "lengthBytes": 32,
+    "sha256": "50d2411ac703d8e9ed1293eb0c885cac7102f45660c6d770a673ca9b4030e657",
+    "disclosure": "embedded target constant; literal key intentionally not stored in repository"
+  },
+  "cipher": {
+    "algorithm": "Blowfish",
+    "blockSizeBytes": 8,
+    "keySchedule": "18-word P-array plus four 256-entry S-boxes",
+    "standardPiConstantsVerified": {
+      "P0": "0x243f6a88",
+      "P1": "0x85a308d3",
+      "P2": "0x13198a2e",
+      "P3": "0x03707344"
+    },
+    "encodeRoundOrder": "P[0] through P[17]",
+    "decodeRoundOrder": "P[17] down through P[0]",
+    "fFunction": "S0[MSB] + S1[next] XOR S2[next] + S3[LSB]"
+  },
+  "fishDecodeObservedContract": {
+    "fullBlocks": "floor(inputLength / 8) blocks decoded in place",
+    "remainderHandling": "when inputLength % 8 != 0, the first trailing remainder byte is used as a trim marker",
+    "outputLengthWhenMarkerZero": "inputLength",
+    "outputLengthOtherwise": "inputLength - marker - 1"
+  },
+  "boundary": {
+    "actualAdrnPayloadBytes": false,
+    "actualRealBinBytes": false,
+    "actualSprBinBytes": false,
+    "exactDecodedRecordContents": false
+  }
+}
