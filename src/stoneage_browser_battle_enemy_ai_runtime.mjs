@@ -115,7 +115,6 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
       if(!actor||String(actor.sourceType??'').toLowerCase()!=='enemy')continue;
       const charMode=int(actor.sourceBattleCharMode);
       if(charMode===BATTLE_CHARMODE_C_OK||charMode!==BATTLE_CHARMODE_C_WAIT)continue;
-      if(actor.isDie===true||(int(actor.hp)!=null&&int(actor.hp)<=0))return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-dead-actor-not-supported',actorBid:int(actor.bid)};
       const before={sourceBattleCharMode:charMode,battleCommands:Array.isArray(actor.battleCommands)?actor.battleCommands.slice():[-1,-1,-1]};
       if(surprised){
         commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,action:'surprised-none',commandCode:BATTLE_COM_NONE,targetBid:-1,before,actionRoll:null,targetRoll:null});
