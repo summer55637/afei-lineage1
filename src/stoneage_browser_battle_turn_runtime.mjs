@@ -39,9 +39,15 @@ function initializeBattleTurn(context,{chargeEntries=[]}={}){
       next.sourceBattleCharMode=BATTLE_CHARMODE_C_WAIT;
       if(!charged){
         const commands=Array.isArray(next.battleCommands)?next.battleCommands.slice():[-1,-1,-1];
+        const previousCommand=trunc(n(commands[0]));
         commands[0]=BATTLE_COM_NONE;
+        if(previousCommand===1014)commands[2]=0;
         next.battleCommands=commands;
       }
+      next.noguardDuckBonus=0;
+      next.noguardCounterBonus=0;
+      next.noguardCriticalBonus=0;
+      next.noguardSourceSkillId=null;
       next=turnParam(next,'modAttack','fixStr','attackPower');
       next=turnParam(next,'modDefence','fixTgh','defencePower');
       next=turnParam(next,'modQuick','fixDex','quick');
