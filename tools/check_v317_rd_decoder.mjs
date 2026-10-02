@@ -1,9 +1,12 @@
+(async()=>{
 import assert from 'node:assert/strict';
 import {deflateSync} from 'node:zlib';
 import {
   parseRdHeader,
   decodeStoneAgeRd,
+  decodeStoneAgeRdAsync,
   decodeAuthorizedClientGraphic,
+  decodeAuthorizedClientGraphicAsync,
   classifyStoneAgeGraphic,
 } from '../src/stoneage_rd_decoder.mjs';
 
@@ -28,13 +31,16 @@ const rgba=[1,2,3,4,5,6,7,8];
 const compressed=deflateSync(Buffer.from(rgba));
 const zlibRd=header(0x20,2,1,compressed.length);
 zlibRd.set(compressed,16);
-const z=decodeStoneAgeRd(zlibRd);
+const z=await decodeStoneAgeRdAsync(zlibRd);
 assert.equal(z.bytesPerPixel,4);
 assert.deepEqual([...z.pixels],rgba);
 assert.equal(z.width,2);
 assert.equal(z.height,1);
 
 assert.deepEqual([...decodeAuthorizedClientGraphic(b,{adder:0,size:22}).pixels],[1,2,3,4,5,6]);
+const za=await decodeAuthorizedClientGraphicAsync(zlibRd,{adder:0,size:zlibRd.length});
+assert.deepEqual([...za.pixels],rgba);
+assert.equal(za.bytesPerPixel,4);
 assert.deepEqual(classifyStoneAgeGraphic(new Uint8Array([0x52,0x44])),{format:'RD',decoder:'decodeStoneAgeRd'});
 assert.deepEqual(classifyStoneAgeGraphic(new Uint8Array([0x67,0x47])),{format:'gG',decoder:'decoderPng'});
 assert.throws(()=>decodeStoneAgeRd(header(0x20,2,1,0)),/truncated/);
@@ -49,3 +55,4 @@ console.log(JSON.stringify({
   supportedCompression:['0 raw 1-byte pixels','0x20 zlib 4-byte pixels','legacy custom RLE'],
   alternateGraphicMagic:'gG -> decoderPng',
 }));
+})();
