@@ -101,7 +101,7 @@ const build=await controller.dispatch({
     workGetExp:30,
     stats:{vital:10,str:10,tgh:10,dex:10}
   },
-  team:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
+  enemyTeam:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
   encounter:{encounterId:1,floorId:1,x:1,y:1},
   groupId:1,
   battleFieldNo:1
