@@ -1,3 +1,11 @@
+## 2026-10-02 V4.38 Enemy NoGuard WAZA
+
+依正式 PetSkill catalog 的 `PETSKILL_NoGuard` profile 支援 skill 150–152：COM1=NOGUARD(1014)、COM2=target、COM3 高 16 位回避／低 16 位反擊與會心；DuckCheck／CounterCheck 套用來源中實際生效的回避與反擊，會心加成只保留不套用。不能行動覆寫不生效；下一回合清除本回合加成與過期 COM3，完全不寫 Persistent State。
+
+Regression：`tools/check_v438_browser_battle_enemy_noguard.mjs`；Workflow 重跑 V4.29–V4.38、V3.86 Context、V4.05 Counter 與 attack pipeline binding。
+
+---
+
 ## 2026-10-02 V4.37 Enemy AI WAZA Target Lifecycle
 
 接入 WAZA 權重抽選、技能槽與 target lifecycle：先依 `at[1]`／`at[2]` 選 target，再呼叫技能 callback。Battle Context 保留 Enemy base `petSkills`；先支援 `PETSKILL_None` 提交 NONE/C_OK。其他未移植技能在目標 RNG 完成後 fail-closed，回報 slot、skill ID、target 與 RNG 消耗；空候選在 callback 前失敗。不執行傷害、不修改 Persistent State。
