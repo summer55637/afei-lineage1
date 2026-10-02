@@ -45,7 +45,18 @@ Static disassembly of both ABIs confirms the following call chain:
 4. `AdrnInit` opens the two supplied files. For the first file it reads a four-byte value and compares it with `0x31393839`; on the matching branch it reads the remaining `fileSize - 4` bytes and passes that buffer to `adrnDecode`.
 5. `adrnDecode` calls `setBlowFishKey` followed by `fish_decode`. The returned decoded length is then divided by `0x50` (80), and the resulting records are copied with an 80-byte stride.
 
-The four path templates have not yet been resolved to a verified argument-to-filename mapping. The observed four path strings remain useful leads, but do not establish which concrete file each call opens.
+The four `sprintf` templates were mapped against the x86 ELF string addresses and argument setup; the ARM build confirms the same call sequence:
+
+| Call | Argument | Exact template |
+|---|---|---|
+| `AdrnInit` | 1 | `%s/adrn.bin` |
+| `AdrnInit` | 2 | `%s/real.bin` |
+| `InitSprBinFileOpen` | 1 | `%s/spr.bin` |
+| `InitSprBinFileOpen` | 2 | `%s/spradrn.bin` |
+
+`InitSprBinFileOpen` opens both sprite files and reads a 12-byte header from its second argument (`spradrn.bin`); it then uses indexed records and seeks/reads against the first argument (`spr.bin`). This confirms distinct sprite payload and index inputs, though the full on-disk record semantics are not yet reconstructed.
+
+The separate literal `path/map4/real.bin` is referenced by `LoadStoneAgeLUA`, reached from an `InitGame` startup branch. The loader opens the file, reads a structured stream, XORs decoded words with `0x87091272`, and passes prepared buffers to `myluaload`. `myluaload` calls `luaL_loadbuffer` and `lua_pcall`. This is evidence that the file is consumed by the embedded Lua loading path (possibly as a script container); it does not establish that it contains map tile/collision arrays.
 
 ### Decoded 80-byte record: fields verified by accessors
 
@@ -89,7 +100,8 @@ This confirms that the native client has a distinct HitMap construction/query pa
 This audit now includes static ELF metadata and focused disassembly, but it is not a full decompilation or runtime trace. Still unverified:
 
 - APK signing certificate identity.
-- The exact four path format strings and which file each path denotes.
+- The complete record layout and all semantics of the `spradrn.bin` index.
+- The decoded contents and complete chunk structure of `path/map4/real.bin`.
 - The complete meaning of all 80 bytes in an `adrn` record.
 - The source format and contents of the actual `map4/real.bin`, `s/real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` files.
 - The complete rules in `checkEmptyMapData` and the exact meanings of all `readHitMap` output buffers.
@@ -114,7 +126,8 @@ Native ELF inventory and focused disassembly:
 ```sh
 python3 tools/audit_ro0000_android_native.py \
   --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
-  --output artifacts/ro0000_android_native_elf_audit.json
+  --output artifacts/ro0000_android_native_elf_audit.json \
+  --extract-dir artifacts/native
 ```
 
-CI runs both test suites, checks the archive/Manifest identity against the committed baseline, analyzes both embedded `libStoneage.so` files, and publishes the JSON reports as a 30-day artifact. Latest successful run: https://github.com/summer55637/afei-lineage1/actions/runs/36995299771
+CI runs both test suites, checks the archive/Manifest identity against the committed baseline, analyzes both embedded `libStoneage.so` files, and publishes the JSON reports plus extracted native libraries as a 30-day artifact. Latest successful run: https://github.com/summer55637/afei-lineage1/actions/runs/36996026679
