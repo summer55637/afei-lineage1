@@ -24,7 +24,8 @@ function decodeEndpointMap(bytes) {
   if (magic !== 'LS&MAP' && magic !== 'LS2MAP') throw new Error('invalid endpoint map magic: ' + JSON.stringify(magic));
   let p = 6;
   const id = readU16BE(bytes, p, 'floor id'); p += 2;
-  const nameBytes = bytes.subarray(p, p + 32); p += 32;
+  const nameLength = magic === 'LS&MAP' ? 48 : 32;
+  const nameBytes = bytes.subarray(p, p + nameLength); p += nameLength;
   const zero = nameBytes.indexOf(0);
   const name = nameBytes.subarray(0, zero >= 0 ? zero : 32).toString('utf8');
   const width = readU16BE(bytes, p, 'width'); p += 2;
@@ -237,6 +238,7 @@ function findMaps() {
           width: map.width,
           height: map.height,
           magic: map.magic,
+          headerNameBytes: map.magic === 'LS&MAP' ? 48 : 32,
           name: map.name,
           map
         });
@@ -294,7 +296,8 @@ const result = {
     mapsetBlobSha: gitSha('ro0000/server/merged-source/gmsv/data/map/mapset.txt'),
     mapwarpBlobSha: gitSha('ro0000/server/merged-source/gmsv/data/map/mapwarp.txt'),
     fixedSource: 'gavinlinasd/StoneAge@' + FIXED_REF,
-    fixedMapsetBlobSha: fs.existsSync(FIXED_MAPSET) ? gitSha('fixed-c-source/gmsv/data/map/mapset.txt') : null
+    fixedMapsetBlobSha: fs.existsSync(FIXED_MAPSET) ? gitSha('fixed-c-source/gmsv/data/map/mapset.txt') : null,
+    mapFormat: 'Endpoint accepts LS&MAP (48-byte show string) and LS2MAP (32-byte show string); endpoint snapshot is currently expected to use LS&MAP.'
   },
   endpointMapset: {
     bytes: mapset.bytes, rowCount: mapset.rows.size, maxImageId: mapset.maxImageId,
