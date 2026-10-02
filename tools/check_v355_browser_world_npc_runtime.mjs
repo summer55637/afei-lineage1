@@ -48,7 +48,7 @@ const productionNpc=resolveWorldNpcAt(production.index,{
 });
 assert.equal(productionNpc.ok,true);
 assert.equal(productionNpc.npc.blockIndex,productionShop.source.create.blockIndex);
-assert.equal(productionNpc.npc.path,productionShop.source.create.path);
+assert.equal(productionNpc.npc.path,productionShop.source.create.path.replace(/^gmsv\/data\/npc\//,''));
 
 const state=freshPersistentState({playerId:'v355'});
 state.player.gold=1000;
