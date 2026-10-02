@@ -129,9 +129,12 @@ def relevant_embedded_strings(data):
     runs += [value[::2].decode("ascii", "ignore")
              for value in re.findall(rb"(?:[\x20-\x7e]\x00){4,}", data)]
     pattern = re.compile(
-        r"(?i)(map4|adrn|real|spr|resource|update|[.]bin|[.]dat|%[0-9$]*s)"
+        r"(?i)(?:map4|/(?:adrn|real|spr|spradrn)[.]bin|data/update/list[.]dat)"
     )
-    return sorted({value for value in runs if pattern.search(value)})[:300]
+    return sorted({
+        value for value in runs
+        if len(value) <= 200 and pattern.search(value)
+    })[:100]
 
 
 def relevant_symbol_names(names):
@@ -310,6 +313,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--apk", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument(
+        "--extract-dir",
+        default=None,
+        help="Optionally copy embedded libStoneage.so files under this directory",
+    )
     args = parser.parse_args()
 
     apk = pathlib.Path(args.apk)
@@ -329,6 +337,13 @@ def main():
         )
         if not libraries:
             raise SystemExit("no libStoneage.so entries found in APK")
+        extract_dir = pathlib.Path(args.extract_dir) if args.extract_dir else None
+        if extract_dir:
+            for info in libraries:
+                relative = pathlib.Path(*info.filename.split("/")[1:])
+                destination = extract_dir / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(zf.read(info))
         with tempfile.TemporaryDirectory(prefix="ro0000-native-") as temp_dir:
             results = [
                 inspect_library(zf, info, readelf, cxxfilt, disassembler, temp_dir)
