@@ -1,7 +1,7 @@
 {
   "format": "ro0000-android-native-resource-focus-v1",
-  "workflowRunId": 37027352299,
-  "sourceCommit": "e71f1324710921520548058e5f6f22bd2e5b2b86",
+  "workflowRunId": 37028398090,
+  "sourceCommit": "377e4df4857a083d46f772f9f8319cb92486d83e",
   "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
   "libraries": [
     {
