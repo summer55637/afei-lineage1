@@ -101,7 +101,7 @@ jobs:
 
           native = json.loads(Path("artifacts/ro0000_android_native_elf_audit.json").read_text(encoding="utf-8"))
           dst = Path("artifacts/stoneage_ro0000_android_native_resource_focus.json")
-          wanted = {"AdrnInit", "adrnDecode", "LoadSprbin", "InitSprBinFileOpen"}
+          wanted = {"AdrnInit", "adrnDecode", "LoadSprbin", "InitSprBinFileOpen", "DownLoadIniFile", "GetBinaryResource", "ReadPatchInfo", "UpdateAppNewVersion", "DownloadResource", "DownloadFile", "UnZipFile"}
           keys = ("setBlowFishKey", "fish_decode", "fopen", "fread", "fseek", "memcpy", "memmove", "0x50", "0x31393839", "adrn.bin", "real.bin", "spr.bin", "spradrn.bin")
           focus = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":native["auditedApk"]["sha256"],"libraries":[]}
           for lib in native.get("nativeLibraries", []):
