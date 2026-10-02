@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const RO = 'ro0000';
@@ -16,7 +17,7 @@ const REPORTS = [
 ];
 
 function git(args) {
-  return require('node:child_process').execFileSync(
+  return execFileSync(
     'git',
     ['-c', 'core.quotePath=false', ...args],
     { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
