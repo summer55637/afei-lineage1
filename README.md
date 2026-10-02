@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：a979d34 — fix: preserve enemy WAZA profiles in battle context
-- 更新時間：2026-10-02T17:07:56+08:00
+- 最新 commit：d150783 — fix: correct V4.40 regression script paths
+- 更新時間：2026-10-02T17:11:09+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.39
+- Regression 最高版本：V4.40
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.39 |
+| Battle Pipeline | ✅ V4.40 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
