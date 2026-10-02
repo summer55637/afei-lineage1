@@ -117,7 +117,7 @@ function buildReadme() {
   const firstRoutePathClosed = portalGroups > 0 && repairedPortalGroups >= portalGroups;
   const battlePolicyPending = idleSummary.battlePolicyPendingAll === true;
   const fullRouteLine = firstRoutePathClosed
-    ? '✅ 路徑已閉合（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）' + (battlePolicyPending ? '；⚠️ 戰鬥策略待定' : '')
+    ? '✅ 路徑已閉合（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）' + (battlePolicyPending ? '；⚠️ 完整自動戰鬥待串接（基礎策略已實作）' : '')
     : '⚠️ 部分完成（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）';
   const mapCount = Object.keys(maps.maps ?? {}).length;
   const mapLine = mapCount ? '✅ ' + comma(mapCount) + ' 張' : '⚠️ 未建立';
