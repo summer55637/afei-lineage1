@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：55ce5ad — refactor: share persisted idle battle strategy default
-- 更新時間：2026-10-02T12:32:16+08:00
+- 最新 commit：66cfe8c — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-02T04:32:22Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
