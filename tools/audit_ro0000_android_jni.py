@@ -154,7 +154,6 @@ def compare_all_declarations(declarations, libraries_by_abi):
         for library in libraries:
             for symbol in library["jniExports"]:
                 export_locations.setdefault(symbol, []).append(library["path"])
-        has_onload = any(library["jniOnLoadExported"] for library in libraries)
         records = []
         for method in declarations:
             candidates = jni_symbol_candidates(method["class"], method["name"], method["signature"])
@@ -166,16 +165,25 @@ def compare_all_declarations(declarations, libraries_by_abi):
                         "form": form,
                         "library": library,
                     })
+            class_descriptor = method["class"] or ""
+            owner = class_descriptor[1:-1] if class_descriptor.startswith("L") and class_descriptor.endswith(";") else ""
+            package_prefix = "Java_" + jni_escape(owner.rsplit("/", 1)[0]) + "_" if "/" in owner else ""
+            package_related_libraries = [
+                lib["path"] for lib in libraries
+                if package_prefix and lib["jniOnLoadExported"]
+                and any(symbol.startswith(package_prefix) for symbol in lib["jniExports"])
+            ]
             if matches:
                 status = "static-export-match"
-            elif has_onload:
-                status = "no-static-export-dynamic-registration-possible"
+            elif package_related_libraries:
+                status = "no-static-export-package-related-jni-onload"
             else:
-                status = "no-static-export-found"
+                status = "no-static-export-or-package-related-jni-onload"
             records.append({
                 **method,
                 "jniCandidates": candidates,
                 "matches": matches,
+                "packageRelatedJniOnLoadLibraries": package_related_libraries,
                 "status": status,
             })
         output[abi] = {
@@ -185,10 +193,12 @@ def compare_all_declarations(declarations, libraries_by_abi):
             "counts": {
                 "nativeDeclarations": len(records),
                 "staticExportMatched": sum(r["status"] == "static-export-match" for r in records),
-                "noStaticExportDynamicRegistrationPossible": sum(
-                    r["status"] == "no-static-export-dynamic-registration-possible" for r in records
+                "noStaticExportPackageRelatedJniOnLoad": sum(
+                    r["status"] == "no-static-export-package-related-jni-onload" for r in records
                 ),
-                "noStaticExportFound": sum(r["status"] == "no-static-export-found" for r in records),
+                "noStaticExportOrPackageRelatedJniOnLoad": sum(
+                    r["status"] == "no-static-export-or-package-related-jni-onload" for r in records
+                ),
                 "packagedLibraries": len(libraries),
             },
         }
@@ -203,24 +213,24 @@ def compare_all_declarations(declarations, libraries_by_abi):
         for abi, data in output.items()
     }
     all_abis = set(output)
+    intersections = set.intersection(*(per_abi_matches[a] for a in all_abis)) if all_abis else set()
+    unions = set.union(*(per_abi_matches[a] for a in all_abis)) if all_abis else set()
     return {
         "byAbi": output,
         "parity": {
             "abis": sorted(all_abis),
-            "staticExportMatchedInEveryAbi": len(set.intersection(*(per_abi_matches[a] for a in all_abis))) if all_abis else 0,
+            "staticExportMatchedInEveryAbi": len(intersections),
             "staticExportMatchedInSomeButNotAllAbis": [
                 {
                     "class": key[0], "name": key[1], "signature": key[2],
                     "matchedAbis": sorted(abi for abi in all_abis if key in per_abi_matches[abi]),
                 }
-                for key in sorted(set.union(*(per_abi_matches[a] for a in all_abis)) -
-                                  set.intersection(*(per_abi_matches[a] for a in all_abis)))
-            ] if all_abis else [],
+                for key in sorted(unions - intersections)
+            ],
             "declarationCount": len(declaration_keys),
             "note": "Static JNI symbol matches are ABI-specific. Missing symbol names do not prove failure because a library may register natives dynamically or load them through another path."
         }
     }
-
 
 def main():
     parser = argparse.ArgumentParser()
