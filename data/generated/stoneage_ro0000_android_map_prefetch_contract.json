@@ -1,0 +1,125 @@
+{
+  "format": "ro0000-android-map-prefetch-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "functions": {
+    "checkEmptyMapData": {
+      "address": "0x219c50",
+      "signature": "checkEmptyMapData(int gx,int gy,int dir)"
+    },
+    "checkEmptyMap": {
+      "address": "0x213360",
+      "signature": "checkEmptyMap(int dir)"
+    },
+    "_checkEmptyMap": {
+      "address": "0x218810",
+      "signature": "_checkEmptyMap()"
+    }
+  },
+  "guard": {
+    "minimumMapAreaWidth": 37,
+    "minimumMapAreaHeight": 37,
+    "smallerWindowResult": false
+  },
+  "scan": {
+    "searchArea": 11,
+    "cellsPerEdge": 23,
+    "unreadCondition": "(eventCell & 0x8000) == 0",
+    "worldBounds": "0 <= gx < nowFloorGxSize && 0 <= gy < nowFloorGySize",
+    "maximumRectangles": 2,
+    "behavior": "Scan selected edge(s), stop each edge at the first in-bounds unread cell, build rectangle, clamp with checkAreaLimit."
+  },
+  "directionDeltas": [
+    {
+      "dir": 0,
+      "dx": -1,
+      "dy": 1,
+      "edges": [
+        "left",
+        "bottom"
+      ]
+    },
+    {
+      "dir": 1,
+      "dx": -1,
+      "dy": 0,
+      "edges": [
+        "left"
+      ]
+    },
+    {
+      "dir": 2,
+      "dx": -1,
+      "dy": -1,
+      "edges": [
+        "left",
+        "top"
+      ]
+    },
+    {
+      "dir": 3,
+      "dx": 0,
+      "dy": -1,
+      "edges": [
+        "top"
+      ]
+    },
+    {
+      "dir": 4,
+      "dx": 1,
+      "dy": -1,
+      "edges": [
+        "top",
+        "right"
+      ]
+    },
+    {
+      "dir": 5,
+      "dx": 1,
+      "dy": 0,
+      "edges": [
+        "right"
+      ]
+    },
+    {
+      "dir": 6,
+      "dx": 1,
+      "dy": 1,
+      "edges": [
+        "right",
+        "bottom"
+      ]
+    },
+    {
+      "dir": 7,
+      "dx": 0,
+      "dy": 1,
+      "edges": [
+        "bottom"
+      ]
+    }
+  ],
+  "rectangles": {
+    "left": "x1=gx-1,y1=scanGy-1,x2=initialGx+1,y2=initialGy+23",
+    "top": "x1=scanGx-1,y1=initialGy-1,x2=initialGx+23,y2=initialGy+1",
+    "right": "x1=initialGx,y1=scanGy-1,x2=initialGx+2,y2=initialGy+23",
+    "bottom": "x1=scanGx-1,y1=initialGy,x2=initialGx+23,y2=initialGy+2",
+    "postProcess": "checkAreaLimit clamps each candidate before it is queued"
+  },
+  "protocol": {
+    "sender": "lssproto_M_send(sockfd,nowFloor,x1,y1,x2,y2)",
+    "pendingState": "direction, current grid location, and start time are recorded after request submission"
+  },
+  "separation": {
+    "purpose": "client-side map cache prefetch",
+    "isWalkabilityTest": false,
+    "doesNotCreateMapContent": true
+  },
+  "boundary": {
+    "targetMapServerResponseTraceAvailable": false,
+    "realAndroidRuntimeTraceAvailable": false
+  }
+}
