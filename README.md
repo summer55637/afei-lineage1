@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8017562 — [docs] publish Android native and manifest evidence
-- 更新時間：2026-10-02T20:17:58Z
+- 最新 commit：e1d1c1d — [audit] add Android map movement contract
+- 更新時間：2026-10-03T04:21:12+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
