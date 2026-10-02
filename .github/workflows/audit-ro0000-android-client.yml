@@ -1,0 +1,30 @@
+name: Audit RO0000 Android client evidence
+
+on:
+  push:
+    paths:
+      - 'ro0000/client/android/冰河石器-隐盟.apk'
+      - 'tools/audit_ro0000_android_apk.py'
+      - '.github/workflows/audit-ro0000-android-client.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Audit APK archive and manifest
+        run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json
+      - name: Publish audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ro0000-android-apk-audit
+          path: artifacts/ro0000_android_apk_audit.json
+          if-no-files-found: error
+          retention-days: 30
