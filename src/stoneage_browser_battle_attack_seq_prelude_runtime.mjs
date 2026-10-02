@@ -2,6 +2,7 @@ const BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT='stoneage-v401-browser-battle-att
 const ACTION_BATTLE_ATTACK_SEQ_PRELUDE='BATTLE_ATTACK_SEQ_PRELUDE';
 const BATTLE_COM_GUARD=2;
 const BATTLE_COM_JYUJYUTU=2000;
+const BATTLE_COM_S_NOGUARD=1014;
 const BATTLE_CHARMODE_RESCUE=5;
 const CHAR_BATTLEFLG_ABIO=64;
 const CHAR_BATTLEFLG_NODUCK=128;
@@ -79,8 +80,10 @@ function duckCheck(entryAtt,entryDef,{
     per+=r;
   }
   if(String(weaponType).toLowerCase()==='bow')per+=40;
-  const noguardBonus= num(entryDef?.noguardDuckBonus);
-  if(command===BATTLE_COM_JYUJYUTU)per+=noguardBonus;
+  const packedCom3=int(entryDef?.battleCommands?.[2]);
+  const packedDuck=packedCom3==null?0:Math.floor((packedCom3>>>16)&0xffff);
+  const noguardBonus=num(entryDef?.noguardDuckBonus,command===BATTLE_COM_S_NOGUARD?packedDuck:0);
+  if(command===BATTLE_COM_JYUJYUTU||command===BATTLE_COM_S_NOGUARD)per+=noguardBonus;
   per*=100;
   per=Math.min(per,KAWASHI_MAX_RATE*100);
   if(per<=0)per=1;
