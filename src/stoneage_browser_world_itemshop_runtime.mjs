@@ -75,7 +75,7 @@ function buildWorldItemShopBindingIndex(worldNpcIndex,catalog){
       const shop=Object.values(catalog.shops??{}).find(row=>npcSourceKey(row?.source?.create)===key)??null;
       const binding={
         npcKey:key,
-        shopId:shop ? (npcSourceKey(shop.source?.create) ?? shop.shopId ?? key) : key,
+        shopId:shop ? (String(shop.shopId??'').trim() || npcSourceKey(shop.source?.create) || key) : key,
         floorId:create.floorId??null,
         templateName:enemy.templateName??null,
         fileRef:enemy.fileRef??null,
