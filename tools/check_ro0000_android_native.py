@@ -162,6 +162,7 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             "CleanMouseClick()",
             "CheckWndMouse(int, int)",
             "changeInput(STR_BUFFER*, int)",
+            "CallbackInputBoxData(int, int)",
             "keyBoardGetWndFlag()",
             "keyBoardSetWndFlag(int)",
             "keyBoardProcWnd()",
