@@ -36,6 +36,7 @@ for(const [name,branchMarker] of requiredBranches){
   assert.notEqual(at,-1,`missing branch marker: ${name}`);
   const window=controller.slice(at,at+1200);
   assert.match(window,/requireBattleContextClearForWorldLoop\(battleContext,type,currentState\)/,`missing Clear gate near ${name}`);
+}
 
 assert.match(
   controller,
