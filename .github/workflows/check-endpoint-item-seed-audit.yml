@@ -1,17 +1,13 @@
 name: Check endpoint item seed audit
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Maintain README status
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - 'ro0000/server/merged-source/gmsv/setup.cf'
-      - 'ro0000/server/merged-source/gmsv/data/itemset6.csv'
-      - 'ro0000/server/merged-source/gmsv/gmsvjt'
-      - 'data/generated/stoneage_endpoint_item_seed_audit.json'
-      - 'tools/check_endpoint_item_seed_audit.mjs'
-      - 'docs/reference/endpoint-item-seed-audit.md'
-      - '.github/workflows/check-endpoint-item-seed-audit.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,20 +15,14 @@ permissions:
 
 jobs:
   endpoint-item-seed-audit:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout refreshed main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 1
-
-      - name: Resolve endpoint blobs
-        id: blobs
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "setup_sha=$(git rev-parse HEAD:ro0000/server/merged-source/gmsv/setup.cf)" >> "$GITHUB_OUTPUT"
-          echo "item_sha=$(git rev-parse HEAD:ro0000/server/merged-source/gmsv/data/itemset6.csv)" >> "$GITHUB_OUTPUT"
 
       - name: Check committed endpoint Item seed audit
         run: node tools/check_endpoint_item_seed_audit.mjs --check
@@ -42,8 +32,8 @@ jobs:
         run: |
           set -euo pipefail
           file ro0000/server/merged-source/gmsv/gmsvjt
-          readelf -Ws ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList' | head -n 120 || true
-          strings -a ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM1|itemset6\.csv|itemset6file|ITEM_makeItem|ITEM_readItem|ITEM_tblen' | head -n 120 || true
+          readelf -Ws ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_idxlen|ITEM_idx|ITEM_tbl|ITEM_TransformList|ITEM_getSIndexFromTransList' | head -n 160 || true
+          strings -a ro0000/server/merged-source/gmsv/gmsvjt | grep -E 'ITEM1|itemset6\.csv|itemset6file|ITEM_makeItem|ITEM_readItem|ITEM_tblen|ITEM_idxlen' | head -n 160 || true
 
       - name: Run endpoint source catalog invariants
         run: node tools/check_endpoint_source_catalog.mjs
