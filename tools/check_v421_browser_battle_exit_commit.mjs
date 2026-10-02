@@ -14,6 +14,6 @@ assert.equal(blocked.ok,false);
 assert.equal(blocked.reason,'settlement-complete-flag-required');
 const retry=commitBattleExit(done.state,plan,{transactionId:'battle-v421-1',expectedRevision:4});
 assert.equal(retry.ok,true); assert.equal(retry.idempotent,true); assert.equal(retry.applied,false);
-const stale=commitBattleExit({...state,pets:{petBox:[{id:'dead',hp:2}]}},plan,{transactionId:'battle-v421-stale',expectedRevision:4});
+const stale=commitBattleExit({...state,pets:{petBox:[{id:'dead',hp:2}]}},plan,{transactionId:'battle-v421-stale',expectedRevision:5});
 assert.equal(stale.ok,false); assert.equal(stale.reason,'pet-hp-stale-plan');
 console.log('V4.21 Browser Battle exit commit regression: PASS');
