@@ -20,7 +20,7 @@
 目前已確認 VM 一鍵端與手工外網端構成我們手上的最完整實機／部署資料集合，因此後續重建不再把它們只視為「參考資料」。
 
 - VM 一鍵端 + 手工外網端：World、NPC、Service、Item、Quest、Event、Warp、Encounter、Database 與 endpoint integration 的首要重建資料來源。
-- pinned fixed-C：引擎行為、演算法、執行順序、資料格式與 C runtime semantics 的校驗基準。
+- pinned fixed-C：可讀 C 原始碼中的伺服器核心行為、演算法、執行順序、資料格式與 C runtime semantics 的校驗基準；不等同於 RO0000 的實際部署版本。
 - endpoint 與 fixed-C 不一致時，不自動刪除 endpoint variant；先判斷它是否是該部署版本的實際差異。
 
 完整規則見 `docs/source-authority-and-provenance.md`。
@@ -31,6 +31,10 @@
 
 
 APK 是客戶端來源，不是伺服器資料來源。未完成檔案雜湊、封裝版本與內容抽取驗證前，目前已確認 APK SHA-256 與 Manifest，並從 classes.dex／libStoneage.so 找到 path/map4/real.bin、s/real.bin、s/spr.bin、data/serverdata.dat、data/update/list.dat 等路徑參照；這些不是資源內容證據，仍不能宣稱已確認地圖、碰撞、操作或網路協定。經驗證的 APK 資源應另記 client variant，不覆寫 gmsv/data、hydata/data 或 pinned fixed-C。
+
+## 來源角色校正（2026-10-02）
+
+RO0000 與 pinned fixed-C 不再用「誰才是引擎」的方式描述。RO0000 保存的是實際部署系統快照，包含 gmsvjt 伺服器執行檔、資料、設定、資料庫及 client / web 配套；pinned fixed-C 則提供可閱讀、可追蹤的 C 程式碼，主要用於解析與校驗底層伺服器行為。兩者是互補證據，依問題範圍分工，不互相取代。
 
 ## 重要邊界
 
