@@ -1,0 +1,32 @@
+name: Check RO0000 4000 Walkability Repair
+on:
+  push:
+    paths:
+      - 'src/stoneage_ro0000_4000_repair.mjs'
+      - 'src/stoneage_browser_world_movement_runtime.mjs'
+      - 'src/stoneage_browser_world_first_route_runtime.mjs'
+      - 'src/stoneage_map_runtime.mjs'
+      - 'data/generated/stoneage_ro0000_4000_walkability_repair_overlay.json'
+      - 'data/generated/stoneage_map_4000.json'
+      - 'data/generated/stoneage_mapset_runtime.json'
+      - 'tools/check_ro0000_4000_walkability_repair.mjs'
+      - '.github/workflows/check-ro0000-4000-walkability-repair.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_ro0000_4000_repair.mjs
+          node --check src/stoneage_browser_world_movement_runtime.mjs
+          node --check src/stoneage_browser_world_first_route_runtime.mjs
+          node --check tools/check_ro0000_4000_walkability_repair.mjs
+      - name: Run RO0000 4000 repair regression
+        run: node tools/check_ro0000_4000_walkability_repair.mjs
