@@ -164,6 +164,12 @@ jobs:
             artifacts/ro0000_android_dex_audit.json
             artifacts/ro0000_android_java_flow_audit.json
             artifacts/stoneage_ro0000_android_manifest_audit.json
+            data/generated/stoneage_ro0000_android_adrn_crypto_contract.json
+            data/generated/stoneage_ro0000_android_native_resource_layout.json
+            data/generated/stoneage_ro0000_android_rd_decoder_contract.json
+            data/generated/stoneage_ro0000_android_battle_render_chain.json
+            data/generated/stoneage_ro0000_android_map_prefetch_contract.json
+            data/generated/stoneage_ro0000_android_native_resource_focus.json
             artifacts/native/**/*.so
           if-no-files-found: error
           retention-days: 30
