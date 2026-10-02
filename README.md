@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：9449057 — docs: record V4.35 enemy AI charge retention
-- 更新時間：2026-10-02T16:20:58+08:00
+- 最新 commit：a74efe5 — docs: record V4.35 enemy AI charge retention milestone
+- 更新時間：2026-10-02T16:21:19+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.35
 - Playable HTML：⏸️ 尚未建立（刻意保留）
