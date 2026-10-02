@@ -1635,8 +1635,11 @@ function createBrowserStateController({
         const beforeBattleAttackPipeline=clone(battleAttackPipeline);
         const result=await execute();
         const beforeRevision=Number(beforeState?.revision??0);
-        const afterRevision=Number(currentState?.revision??result?.state?.revision??0);
+        const currentRevision=Number(currentState?.revision??0);
+        const resultRevision=Number(result?.state?.revision??0);
+        const afterRevision=Math.max(currentRevision,resultRevision);
         if(saveStorage&&result?.ok===true&&afterRevision>beforeRevision){
+          if(resultRevision>currentRevision)currentState=clone(result.state);
           const savedAtFactory=clockFactory(action.savedAt??action.now,now);
           const timestamp=String(savedAtFactory());
           const built=await buildSaveEnvelope(currentState,{savedAt:()=>timestamp,source:'browser-state-controller'});
