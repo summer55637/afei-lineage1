@@ -1,0 +1,37 @@
+name: Check V4.31 Browser Battle Enemy AI Controller
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v431_browser_battle_enemy_ai_controller.mjs'
+      - '.github/workflows/check-v431-browser-battle-enemy-ai-controller.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v431_browser_battle_enemy_ai_controller.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run enemy AI target and controller regressions
+        run: |
+          node tools/check_v429_browser_battle_enemy_ai_target_types.mjs
+          node tools/check_v430_browser_battle_enemy_ai_target_selection.mjs
+          node tools/check_v431_browser_battle_enemy_ai_controller.mjs
+          node tools/check_v386_browser_battle_context_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_enemy_ai_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v431_browser_battle_enemy_ai_controller.mjs
