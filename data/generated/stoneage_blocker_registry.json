@@ -83,7 +83,7 @@
       "outcome": "deferred-not-a-mainline-blocker"
     },
     "persistent-state-expansion": {
-      "status": "active",
+      "status": "resolved",
       "scope": "persistent-state",
       "previousEvidence": "原先以廣義 schema expansion 描述；schema v1、Save Envelope v1 與交易回歸已存在。2026-10-02 已新增 storage port、controller auto-persist 與 session restore，現待自動回歸驗證。",
       "newEvidence": [
@@ -96,10 +96,12 @@
         "2026-10-02 新增 src/stoneage_save_storage.mjs：injected read/write port 與 LocalStorage adapter，提供 envelope 寫入及驗證載入",
         "2026-10-02 Browser State Controller 支援注入 storage；成功且 revision 前進的 dispatch 自動保存，寫入失敗回復 canonical / transient state",
         "2026-10-02 新增 browser persistent session restore helper，於建立 controller 前先載入並驗證已存 envelope",
-        "新增 tools/check_save_storage.mjs，並已納入 check-persistent-state workflow；目前尚未取得本次 workflow 實際執行結果"
+        "新增 tools/check_save_storage.mjs，並已納入 check-persistent-state workflow；目前尚未取得本次 workflow 實際執行結果",
+        "2026-10-02 check-persistent-state workflow run 36964366382 on commit 3c2a0821b96796036e9707b8411e488a02f6a73e completed successfully; schema, idle, route, reward, policy, item economy, save transaction, save storage, battle result, offline resume, and idle simulation regressions all passed"
       ],
-      "next": "先確認 check-persistent-state workflow 的 save-storage 與既有 regression 全部通過；通過後關閉 canonical v1 存檔生命週期 blocker。Playable HTML 整合、legacy raw-save 匯入及 opaque 欄位語義分開處理，不作為此 blocker 的前置條件。",
-      "summary": "持久寫入、Controller 自動保存與 session 還原已實作；待 GitHub Actions 回歸驗證。"
+      "next": "Resolved for canonical v1 durable save lifecycle: LocalStorage persistence, Browser Controller auto-persist, session restore, fail-closed loading, and rollback on write failure are implemented and covered by the successful check-persistent-state run. Keep legacy raw-save import, opaque-field semantics, and playable HTML integration as separate scopes.",
+      "summary": "Canonical v1 持久寫入、自動保存與 session 還原已實作，完整 regression 通過。",
+      "resolution": "canonical-v1-save-lifecycle-regression-passed"
     }
   }
 }
