@@ -66,7 +66,8 @@ jobs:
           mkdir -p artifacts
           /tmp/jadx-1.5.6/bin/jadx --no-res -j 2 \
             -d /tmp/ro0000-jadx-sources \
-            'ro0000/client/android/冰河石器-隐盟.apk'           python3 tools/audit_ro0000_android_java.py \
+            'ro0000/client/android/冰河石器-隐盟.apk'
+          python3 tools/audit_ro0000_android_java.py \
             --source-dir /tmp/ro0000-jadx-sources/sources \
             --apk-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')" \
             --jadx-version 1.5.6 \
