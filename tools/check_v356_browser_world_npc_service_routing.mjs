@@ -59,7 +59,7 @@ const productionNpc=resolveWorldNpcAt(production.index,{
 });
 assert.equal(productionNpc.ok,true);
 assert.equal(productionNpc.npc.blockIndex,productionShop.source.create.blockIndex);
-assert.equal(productionNpc.npc.path,productionShop.source.create.path);
+assert.equal(productionNpc.npc.path,productionShop.source.create.path.replace(/^gmsv\/data\/npc\//,''));
 assert.ok(Array.isArray(productionNpc.npc.services));
 assert.ok(productionNpc.npc.services.some(x=>x.functionSet.toLowerCase()==='itemshop'));
 
