@@ -368,7 +368,7 @@ function createBrowserStateController({
         );
         if(result.ok&&result.handled===true&&result.battleContext){
           battleContext=clone(result.battleContext);
-          battleAttackPipeline=null;
+          if(result.command||result.petCommands?.length)battleAttackPipeline=null;
         }
         return {
           ...result,
