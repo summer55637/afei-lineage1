@@ -25,7 +25,7 @@ jobs:
       - name: Install multi-architecture disassembler
         run: |
           sudo apt-get update
-          sudo apt-get install --yes binutils-multiarch
+          sudo apt-get install --yes binutils-multiarch apksigner
           objdump -i
       - name: Test APK string scanner
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_apk_audit.py'
@@ -33,6 +33,14 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native.py'
       - name: Audit APK archive and manifest
         run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
+      - name: Test APK signature audit parser
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_signing.py'
+      - name: Verify APK signature schemes and signer fingerprint
+        run: |
+          python3 tools/audit_ro0000_android_signing.py \
+            --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
+            --output artifacts/ro0000_android_signing_audit.json \
+            --expected-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')"
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
       - name: Publish focused native resource evidence
@@ -68,7 +76,7 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/generated/stoneage_ro0000_android_native_resource_focus.json
+          cp artifacts/ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_signing_audit.json\n          git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json
           git commit -m "[docs] publish Android native resource focus" || true
           git push origin HEAD:main
       - name: Publish audit artifacts
@@ -78,6 +86,7 @@ jobs:
           path: |
             artifacts/ro0000_android_apk_audit.json
             artifacts/ro0000_android_native_elf_audit.json
+            artifacts/ro0000_android_signing_audit.json
             artifacts/native/**/*.so
           if-no-files-found: error
           retention-days: 30
