@@ -186,8 +186,7 @@ function selectTargetCandidate(candidates,selectMode,ai,actor,targetRolls,target
   return {ok:false,reason:'enemy-ai-target-select-mode-not-supported',selectMode};
 }
 function readOptionPercent(option,token){
-  const escaped=token.replace(/[.*+?^${}()|[\]\\]/g,'\\function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){');
-  const match=String(option??'').match(new RegExp(escaped+'%\\s*([+-]?\\d+)'));
+  const match=String(option??'').match(new RegExp(token+'%\\s*([+-]?\\d+)'));
   return match?int(match[1]):0;
 }
 function noGuardProfile(actor,skillSlot,skillId){
