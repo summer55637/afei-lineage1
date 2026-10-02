@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：942fcd8 — [docs] reflect Android local map cache in README
-- 更新時間：2026-10-02T18:42:59+08:00
+- 最新 commit：d54d508 — [docs] normalize map cache dimension notation
+- 更新時間：2026-10-02T18:43:25+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
