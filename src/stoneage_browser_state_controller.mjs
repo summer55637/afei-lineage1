@@ -62,6 +62,8 @@ import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_B
 import { createBrowserWarpRuntime, BROWSER_WARP_RUNTIME_FORMAT } from './stoneage_browser_warp_runtime.mjs';
 import { itemShopUiInitialState, openItemShopUiState, selectItemShopUiOffer, setItemShopUiQuantity, applyItemShopUiResult, closeItemShopUiState, ITEMSHOP_UI_STATE_FORMAT } from './stoneage_browser_itemshop_ui_state.mjs';
 import { IDLE_EVENTS } from './stoneage_idle_loop.mjs';
+import { buildSaveEnvelope } from './stoneage_save_transaction.mjs';
+import { DEFAULT_SAVE_STORAGE_KEY, writeSaveEnvelopeToStorage } from './stoneage_save_storage.mjs';
 
 const BROWSER_STATE_CONTROLLER_FORMAT='stoneage-browser-state-controller-v1';
 const ACTION_NPC_TALK='NPC_TALK';
@@ -139,6 +141,8 @@ function requireAttackCommandBinding(battleContext,type,attackerBid,targetBid,st
 
 function createBrowserStateController({
   state,
+  saveStorage=null,
+  saveStorageKey=DEFAULT_SAVE_STORAGE_KEY,
   moduleAudit=null,
   compatibilityCatalog=null,
   modules={},
@@ -238,7 +242,7 @@ function createBrowserStateController({
     getConfig(){return clone(config);},
     getState(){return clone(currentState);},
     dispatch(action={}){
-      const run=async()=>{
+      const execute=async()=>{
       const type=String(action?.type??'').trim();
       if(type===ACTION_IDLE_LIST_ROUTES||type===ACTION_IDLE_ENABLE||type===ACTION_IDLE_EVENT||type===ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER||type===ACTION_IDLE_STATUS||type===ACTION_IDLE_OFFLINE_RESUME||type===ACTION_IDLE_OFFLINE_APPLY_REWARDS){
         if(type===ACTION_IDLE_EVENT&&String(action.event??'').trim()===IDLE_EVENTS.REWARD_APPLIED&&battleContext){
@@ -1623,6 +1627,37 @@ function createBrowserStateController({
       });
       if(result.ok&&result.handled===true&&result.state)currentState=result.state;
       return {...result,worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,state:clone(result.state??currentState)};
+      };
+      const run=async()=>{
+        const beforeState=clone(currentState);
+        const beforeBattleContext=clone(battleContext);
+        const beforeItemShopUi=clone(itemShopUi);
+        const beforeBattleAttackPipeline=clone(battleAttackPipeline);
+        const result=await execute();
+        const beforeRevision=Number(beforeState?.revision??0);
+        const afterRevision=Number(currentState?.revision??result?.state?.revision??0);
+        if(saveStorage&&result?.ok===true&&afterRevision>beforeRevision){
+          const savedAtFactory=clockFactory(action.savedAt??action.now,now);
+          const timestamp=String(savedAtFactory());
+          const built=await buildSaveEnvelope(currentState,{savedAt:()=>timestamp,source:'browser-state-controller'});
+          if(!built.ok){
+            currentState=beforeState;
+            battleContext=beforeBattleContext;
+            itemShopUi=beforeItemShopUi;
+            battleAttackPipeline=beforeBattleAttackPipeline;
+            return {...result,ok:false,handled:false,stage:'save-storage',reason:'save-envelope-build-failed',errors:built.errors,persisted:false,save:null,state:clone(currentState)};
+          }
+          const persisted=await writeSaveEnvelopeToStorage(saveStorage,built.envelope,{key:saveStorageKey,now:()=>timestamp});
+          if(!persisted.ok){
+            currentState=beforeState;
+            battleContext=beforeBattleContext;
+            itemShopUi=beforeItemShopUi;
+            battleAttackPipeline=beforeBattleAttackPipeline;
+            return {...result,ok:false,handled:false,stage:'save-storage',reason:persisted.reason,persistence:persisted,persisted:false,save:null,state:clone(currentState)};
+          }
+          return {...result,persisted:true,persistence:persisted,state:clone(currentState)};
+        }
+        return result;
       };
       const queued=dispatchTail.then(run,run);
       dispatchTail=queued.then(()=>undefined,()=>undefined);
