@@ -122,7 +122,7 @@ data/update/list.dat
 
 `ReadPatchInfo()` then parses that local catalogue as the `Patch_%d` INI-style structure described above.
 
-A separate `UpdateAppNewVersion()` path uses the embedded client-update endpoint and `HttpClient::PostUrl`; its complete response schema and exact transition into APK installation remain unresolved.
+A separate `UpdateAppNewVersion()` path uses the embedded client-update endpoint and `HttpClient::PostUrl`. Its response branch, confirmation gate, download, basename handling, and transition into `Android_InstallApk` are closed in `ro0000-android-apk-client-update-install-audit.md`; only the exact server response schema and basename edge behavior remain unresolved.
 
 ## What this closes
 
