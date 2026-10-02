@@ -13,6 +13,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: check-endpoint-item-seed-audit-main
+  cancel-in-progress: true
+
 jobs:
   endpoint-item-seed-audit:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
