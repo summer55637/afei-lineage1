@@ -251,22 +251,49 @@ The target compares the derived slot against 40,000 before continuing. Because t
 
 The expanded binary AndroidManifest parser now records the launcher component, application metadata, declared permissions, service declarations, and GL ES feature requirement, not just package/version/SDK fields. The target manifest declares `RenderActivity` as MAIN/LAUNCHER, `StoneageApplication` as the Application class, an exported `DownloadService`, and a required OpenGL ES 2.0 feature. It also requests storage, network, Bluetooth, phone-state, overlay, audio, vibration, logging, and package-install permissions. These declarations are not proof that every permission is granted or used successfully at runtime.
 
-The DEX inventory is a structural inventory of the packaged `classes.dex`: it records class definitions, method references, declared methods, and JNI native declarations. A second static pass uses pinned JADX to summarize only class/method names and call identifiers for the game, updater, and SDL packages. Source code, comments, and string/character literal contents are excluded from the published Java report to keep host/configuration strings out of public evidence. This is not a full decompilation of native code or a runtime call trace.
+The DEX inventory is a structural inventory of the packaged `classes.dex`: DEX 035, 1,410 class definitions, 10,513 declared methods, 13,808 method references, and 115 native-method declarations. The APK contains one `classes.dex`. A pinned JADX 1.5.6 pass successfully scanned 45 Java source files and summarized 24 game, updater, and SDL classes. The published `stoneage_ro0000_android_java_flow_audit.json` contains only class/method names and call identifiers; source code, comments, and string/character literal contents are excluded.
+
+The static Java evidence closes these wrapper-level relationships:
+
+~~~text
+StoneageApplication.onCreate
+  -> cache application context / app version
+
+RenderActivity.onCreate
+  -> set current Activity
+  -> memory / root availability checks
+  -> release packaged font and skin files
+  -> initialize crash / voice SDKs and SDL
+
+UpdateChecker.checkForDialog / checkForNotification
+  -> CheckUpdateTask.execute
+      -> doInBackground -> HttpUtils.get
+      -> onPostExecute -> parseJson
+          -> showDialog -> UpdateDialog.show
+          -> showNotification -> Android notification
+
+UpdateDialog.goToDownload
+  -> start DownloadService
+      -> onHandleIntent
+          -> HTTP connection / stream to local file
+          -> updateProgress -> notification
+          -> installAPk
+~~~
+
+The exact update URL and other host/configuration strings remain omitted. The DEX declares six JNILibrary callbacks covering keyboard state, login result, order-check result, ZIP progress, and battery updates; SDLActivity has its own native lifecycle and input boundary. These are static call/reference relationships only: reflection, native side effects, asynchronous scheduling, and actual network/device behavior are not established by decompilation.
 
 The signature audit preserves the APK unchanged. `apksigner` fails verification for the default, API 24, and API 28 profiles with a v1 `META-INF/MANIFEST.MF` entry digest mismatch. The certificate embedded in `META-INF/CERT.RSA` has SHA-256 fingerprint `a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc`. The certificate fingerprint alone does not identify a real-world publisher. The APK is not re-signed as part of this reconstruction.
 
 ## Interpretation boundary and remaining work
 
-This audit now includes static ELF metadata and focused disassembly, but it is not a full decompilation or runtime trace. Still unverified:
+The APK archive/Manifest, DEX structure, Java wrapper flow, signature verification result, and focused x86/ARM native ELF evidence are now reproducible. This remains a static audit, not a complete decompilation or runtime trace. Still unverified:
 
-- Whether the failing APK signature corresponds to an intended original publisher certificate; the embedded certificate fingerprint is known, but publisher identity is not independently verified.
-- Runtime behavior of the Android launcher, updater, and JNI callbacks; the Java source pass is static and redacted.
-- The actual `path/map4/real.bin` bytes and decoded entry payloads; only its record-reading envelope is known.
-- The complete meaning of all 80 bytes in an `adrn` record.
-- The source format and contents of the actual `s/real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` files.
-- Runtime-confirmation of map prefetch timing and HitMap edge cases on the original Android runtime.
-- Whether the referenced resources are bundled elsewhere, downloaded, or selected through an update list.
-- Server endpoints, update protocol, and in-game behavior/screenshots.
+- The real-world publisher identity behind the embedded certificate fingerprint. Signature verification fails on all tested profiles because of a v1 entry digest mismatch; the APK is intentionally not re-signed.
+- Runtime behavior of launcher/startup, updater scheduling, JNI side effects, and device-specific permission/install handling.
+- The actual `battleNNN.sabex`, `s/adrn.bin`, `s/real.bin`, `s/spr.bin`, `s/spradrn.bin`, and `path/map4/real.bin` payload bytes, including record instances and resulting real pixels.
+- Remaining field-level semantics across all 80 bytes of ADRNBIN, and the exhaustive list/effect of target-specific sprite post-load fixups.
+- The contents, digest admission rules, and full sequencing of the external resource patch list. The native binary proves a resource-update path exists, but the original patch payloads are not present for end-to-end validation.
+- A live Android runtime trace and a frame/pixel comparison against the original SDL renderer, including character/NPC z-order and camera behavior.
 
 Do not use this APK audit alone to rewrite server maps or the Fixed-C LS2MAP contract. Keep Android resource semantics separate until actual resource bytes and runtime evidence establish a mapping.
 
@@ -280,6 +307,22 @@ python3 tools/audit_ro0000_android_apk.py \
   --output artifacts/ro0000_android_apk_audit.json \
   --baseline data/generated/stoneage_ro0000_android_apk_audit.json
 ```
+
+DEX structure inventory:
+
+~~~sh
+python3 tools/audit_ro0000_android_dex.py \
+  --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
+  --output artifacts/ro0000_android_dex_audit.json
+~~~
+
+APK signature verification (read-only):
+
+~~~sh
+python3 tools/audit_ro0000_android_signing.py \
+  --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
+  --output artifacts/ro0000_android_signing_audit.json
+~~~
 
 Native ELF inventory and focused disassembly:
 
