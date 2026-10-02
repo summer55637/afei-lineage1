@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5d4bc6b — docs: record V4.34 enemy AI can-move milestone
-- 更新時間：2026-10-02T16:17:44+08:00
+- 最新 commit：3647027 — test: fix nested enemy battle status assertion
+- 更新時間：2026-10-02T16:18:07+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.34
 - Playable HTML：⏸️ 尚未建立（刻意保留）
