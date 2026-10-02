@@ -12,6 +12,8 @@ on:
       - 'tools/check_ro0000_android_signing.py'
       - 'tools/audit_ro0000_android_dex.py'
       - 'tools/check_ro0000_android_dex.py'
+      - 'tools/audit_ro0000_android_java.py'
+      - 'tools/check_ro0000_android_java.py'
       - '.github/workflows/audit-ro0000-android-client.yml'
   workflow_dispatch:
 
@@ -29,12 +31,14 @@ jobs:
       - name: Install multi-architecture disassembler
         run: |
           sudo apt-get update
-          sudo apt-get install --yes binutils-multiarch apksigner
+          sudo apt-get install --yes binutils-multiarch apksigner default-jre-headless curl unzip
           objdump -i
       - name: Test APK string scanner
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_apk_audit.py'
       - name: Test Android DEX audit parser
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_dex.py'
+      - name: Test Android Java redaction audit
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_java.py'
       - name: Test native ELF audit parsers
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native.py'
       - name: Audit APK archive and manifest
@@ -49,6 +53,25 @@ jobs:
             --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
             --output artifacts/ro0000_android_signing_audit.json \
             --expected-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')"
+      - name: Decompile Java layer with pinned JADX (source stays private to runner)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://github.com/skylot/jadx/releases/download/v1.5.6/jadx-1.5.6.zip \
+            -o /tmp/jadx-1.5.6.zip
+          echo "545ea2be9c242511bc145755cf4bda2485ade42966e096f8b4d3da2a230e8974  /tmp/jadx-1.5.6.zip" | sha256sum --check
+          unzip -q /tmp/jadx-1.5.6.zip -d /tmp/jadx-1.5.6
+          /tmp/jadx-1.5.6/bin/jadx --version
+          mkdir -p artifacts
+          /tmp/jadx-1.5.6/bin/jadx --no-res -j 2 \
+            -d /tmp/ro0000-jadx-sources \
+            'ro0000/client/android/冰河石器-隐盟.apk'           python3 tools/audit_ro0000_android_java.py \
+            --source-dir /tmp/ro0000-jadx-sources/sources \
+            --apk-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')" \
+            --jadx-version 1.5.6 \
+            --output artifacts/ro0000_android_java_flow_audit.json
+          rm -rf /tmp/ro0000-jadx-sources /tmp/jadx-1.5.6 /tmp/jadx-1.5.6.zip
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
       - name: Publish focused APK evidence with retry
@@ -111,9 +134,10 @@ jobs:
             git reset --hard origin/main
             cp artifacts/ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_signing_audit.json
             cp artifacts/ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_dex_audit.json
+            cp artifacts/ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
-            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
+            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -137,6 +161,7 @@ jobs:
             artifacts/ro0000_android_native_elf_audit.json
             artifacts/ro0000_android_signing_audit.json
             artifacts/ro0000_android_dex_audit.json
+            artifacts/ro0000_android_java_flow_audit.json
             artifacts/stoneage_ro0000_android_manifest_audit.json
             artifacts/native/**/*.so
           if-no-files-found: error
