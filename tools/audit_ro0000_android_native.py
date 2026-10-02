@@ -46,7 +46,9 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"myluaload|DownLoadIniFile|GetBinaryResource|UpdateAppNewVersion|DownloadResource|"
     r"(?:[A-Za-z_]\w*::)*ReadPatchInfo|(?:[A-Za-z_]\w*::)*(?:DownloadFile|UnZipFile)|"
     r"initResources|loadResources|cleanupRealbin|"
-    r"initMap|readMap|writeMap|createMap|setMap)\s*\(",
+    r"initMap|readMap|writeMap|createMap|setMap|"
+    r"lssproto_[A-Za-z0-9_]+_recv|ReadBattleMap|StockDispBuffer|PutBmp|LoadBmp|"
+    r"decoderPng|decoder|ReadAniFile|SpecAnim|play_map_bgm|drawMap|setEventMemory)\s*\(",
     re.IGNORECASE,
 )
 
