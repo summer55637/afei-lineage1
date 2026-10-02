@@ -87,6 +87,50 @@ function probeServerBinary() {
   };
 }
 
+function probeItemLoaderDisassembly() {
+  if (!fs.existsSync(SERVER_BIN)) return { available: false };
+
+  const disassembly = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--disassemble=ITEM_readItemConfFile', SERVER_BIN
+  ]);
+
+  if (disassembly.startsWith('COMMAND_ERROR:')) {
+    return { available: false, error: disassembly.slice(0, 1200) };
+  }
+
+  const lines = disassembly.split(/\r?\n/);
+  const around = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (/getStringFromIndexWithDelim/.test(lines[i])) {
+      around.push(lines.slice(Math.max(0, i - 5), Math.min(lines.length, i + 6)));
+      if (around.length >= 8) break;
+    }
+  }
+
+  const constantEvidence = [];
+  for (const block of around) {
+    for (const line of block) {
+      if (/\\b(?:mov|movabs|lea|push)\\b.*(?:0x11|17)/i.test(line)) constantEvidence.push(line);
+    }
+  }
+
+  const tblenRefs = lines.filter(line => /ITEM_tblen/.test(line)).slice(0, 40);
+
+  return {
+    available: true,
+    functionSymbol: 'ITEM_readItemConfFile',
+    callsiteCount: around.length,
+    callsites: around,
+    constant17Evidence: constantEvidence,
+    itemTblenReferences: tblenRefs,
+    interpretation: {
+      purpose: 'Observe compiled endpoint loader call arguments without assuming fixed-C source semantics.',
+      token17IsProven: constantEvidence.length > 0,
+      caution: 'A constant 17 near a parser call is evidence only; final ID semantics still require correlating the exact callsite and parsed assignment.'
+    }
+  };
+}
+
 function buildAudit() {
   if (!fs.existsSync(SETUP)) fail('Missing endpoint setup.cf');
   if (!fs.existsSync(CSV)) fail('Missing endpoint gmsv/data/itemset6.csv');
@@ -191,6 +235,7 @@ function buildAudit() {
       }
     },
     serverBinaryProbe: probeServerBinary(),
+    itemLoaderDisassemblyProbe: probeItemLoaderDisassembly(),
     exactTokenMatches: {
       configuredItem1_32003: configured32003,
       fixedConfiguredItem_24114: fixed24114
