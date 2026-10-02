@@ -321,3 +321,18 @@ target last filename    = battle219.sabex
 The earlier target-binary observation that `ReadBattleMap()` resets an out-of-range filename index to zero is therefore consistent with the server's 0..219 field-number domain.
 
 This does not prove that every one of the 220 slots is active in the deployed `battlemap.txt`: the current RO0000 configuration references 199 distinct slots, while 21 slots have no active numeric mapping in that file. Those unreferenced slots must be treated as valid namespace members whose runtime usage is unresolved, not as missing files.
+
+## 12. Receive-side field contract cross-check
+
+An independent later StoneAge client source (`BismarckDD/Stoneage`) shows `lssproto_EN_recv(result, field)` applying the same 220-slot domain: if `field < 0` or `BATTLE_MAP_FILES <= field`, it resets `BattleMapNo` to zero; otherwise it assigns `BattleMapNo = field`.
+
+Together with `BATTLE_MAP_FILES 220`, this mirrors the target APK's observed client-side field handling and provides a source-level cross-check for the receive contract:
+
+~~~text
+EN result > 0
+  -> field in [0,219]
+  -> BattleMapNo = field
+  -> ReadBattleMap(BattleMapNo)
+~~~
+
+This is still a cross-source validation rather than direct proof that the RO0000 APK was compiled from that repository.
