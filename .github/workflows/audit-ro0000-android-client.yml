@@ -176,10 +176,42 @@ jobs:
               "complete": all(any(name.startswith(prefix) for name in names) for prefix in core),
               "missing": [prefix for prefix in core if not any(name.startswith(prefix) for name in names)]
           } for abi, names in abi_names.items()}
+          # Ensure every function/object selected by the native auditor is actually published.
+          published_by_abi = {lib.get("abi"): lib for lib in focus["libraries"]}
+          focus["publishedSymbolCoverage"] = {}
+          for lib in native.get("nativeLibraries", []):
+              abi = lib.get("abi")
+              source_functions = {fn.get("name") for fn in lib.get("focusedSymbols", []) if fn.get("type") == "FUNC"}
+              source_objects = {fn.get("name") for fn in lib.get("focusedSymbols", []) if fn.get("type") in ("OBJECT", "NOTYPE")}
+              published = published_by_abi.get(abi, {})
+              published_functions = {fn.get("name") for fn in published.get("functions", [])}
+              published_objects = {fn.get("name") for fn in published.get("objects", [])}
+              disassembly_complete = all(
+                  fn.get("disassemblyStatus") == "ok" and not fn.get("excerptTruncated", False)
+                  for fn in published.get("functions", [])
+              )
+              focus["publishedSymbolCoverage"][abi] = {
+                  "functionSymbolCount": len(source_functions),
+                  "publishedFunctionCount": len(published_functions),
+                  "missingFunctions": sorted(source_functions - published_functions),
+                  "extraFunctions": sorted(published_functions - source_functions),
+                  "objectSymbolCount": len(source_objects),
+                  "publishedObjectCount": len(published_objects),
+                  "missingObjects": sorted(source_objects - published_objects),
+                  "extraObjects": sorted(published_objects - source_objects),
+                  "allFunctionDisassemblyComplete": disassembly_complete,
+                  "complete": (
+                      source_functions == published_functions
+                      and source_objects == published_objects
+                      and disassembly_complete
+                  )
+              }
           if not focus["abiFunctionComparison"]["sameFocusedFunctionSet"]:
               raise SystemExit("Focused native function names differ across target ABIs; review before publishing.")
           if not focus["abiObjectComparison"]["sameFocusedObjectSet"]:
               raise SystemExit("Focused native object names differ across target ABIs; review before publishing.")
+          if not all(item["complete"] for item in focus["publishedSymbolCoverage"].values()):
+              raise SystemExit("Focused native symbol publication or disassembly is incomplete.")
           if not all(item["complete"] for item in focus["coreFunctionCoverage"].values()):
               raise SystemExit("Core Android map/resource native function coverage is incomplete.")
           dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
