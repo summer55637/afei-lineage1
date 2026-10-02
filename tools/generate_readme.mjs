@@ -125,7 +125,7 @@ function buildReadme() {
   const stateLine = state.currentSchemaVersion ? '✅ Schema ' + state.currentSchemaVersion : '⚠️ 未建立';
   const economyLine = economy.format ? '✅ Runtime v1' : '⚠️ 未建立';
   const androidLine = androidClientAudit.source?.sha256
-    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（native ELF、map/<id>.dat 的 tile/parts/event 三層快取已確認；與同系原始碼交叉驗證，map4 Lua bundle 獨立）'
+    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（native ELF、tile/parts/event 三層快取及 M 協定對應已確認；map4 Lua bundle 獨立）'
     : '⚠️ APK 尚未完成封裝稽核';
   const battleLine = workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel;
   const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');
