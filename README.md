@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：bd6f3f4 — [audit] include map resource loader symbol hints
-- 更新時間：2026-10-02T18:20:44+08:00
+- 最新 commit：fafbb2a — [audit] install multiarch disassembler for APK ELF analysis
+- 更新時間：2026-10-02T18:22:34+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
