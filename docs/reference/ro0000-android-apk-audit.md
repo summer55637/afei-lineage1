@@ -250,3 +250,74 @@ target adrn.bin
 ~~~
 
 The actual `adrn.bin` and `real.bin` payload bytes are still absent, so decoded record contents remain an evidence gap. No target resource records are being fabricated.
+
+## Target image/sprite resource layout closure
+
+本輪從實體 target x86 ELF 再往下確認了 resource table 的實際容量與 shard 合併方式。
+
+### Global table capacities
+
+| Table | Bytes | Entry size | Entries | Role |
+|---|---:|---:|---:|---|
+| `bitmapnumbertable` | 400,000 | 4 | 100,000 | image/bmp number → graphic number |
+| `adrnbuff` | 48,000,000 | 80 | 600,000 | graphic number → ADRNBIN |
+| `Realbinfp` | 2,400,000 | 4 | 600,000 | graphic number → Real `FILE*` |
+| `SpriteData` | 320,000 | 8 | 40,000 | sprite number → animation data |
+
+The target `realGetNo()` accepts image IDs below 100,000. Since SABEX cells are uint16, the entire raw SABEX domain 0..65,535 is representable inside that image-ID domain.
+
+`StockDispBuffer()` adds a separate render gate: `bmpNo <= 99` is rejected before `realGetNo()`, while values above 99 enter the image resolver path.
+
+### Resource shard tree
+
+`loadResources()` at `0x3647f0` calls `InitPteernSeparationBin("path", true)`. The latter recursively scans directories. `LoadSprbin()` constructs these per-directory resource paths:
+
+~~~text
+%s/adrn.bin
+%s/real.bin
+%s/spradrn.bin
+%s/spr.bin
+~~~
+
+`AdrnInit()` copies the current `MaxAdrnID` into `nextMaxAdrnID` before importing a shard. Each decoded 80-byte ADRNBIN's `bitmapno` is offset by that base before entering `adrnbuff` and `Realbinfp`; non-zero `attr.bmpnumber` is entered into `bitmapnumbertable` against the shifted graphic number.
+
+Thus the target resource tree is a set of shards merged into one global graphic-number namespace, rather than isolated per-directory graphic IDs.
+
+### Sprite animation records
+
+`InitSprBinFileOpen()` independently consumes `spradrn.bin` and `spr.bin`:
+
+~~~text
+spradrn entry = 12 bytes
+  u32 sprNo
+  u32 offset
+  u16 animSize
+  u16 ABI padding
+
+spr.bin
+  12-byte animation header
+  10-byte frame payload
+  ...
+~~~
+
+Each frame bitmap number is offset by the same `nextMaxAdrnID` base before being stored in `SpriteData`. This creates a shared graphic-number address space with ADRNBIN while keeping sprite animation metadata separate from SABEX tile storage.
+
+The new machine-readable summary is `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
+### SABEX boundary
+
+The target battle-map path is therefore now best represented as:
+
+~~~text
+battleNNN.sabex
+  -> uint16 image/bmp ID
+  -> StockDispBuffer render gate
+  -> realGetNo()
+  -> bitmapnumbertable[imageId]
+  -> global graphicNo
+  -> adrnbuff[graphicNo]
+  -> Realbinfp[graphicNo]
+  -> Real binary decoder
+~~~
+
+This closes the identifier and table topology, but not the actual target `adrn.bin` / `real.bin` / `.sabex` payload contents.
