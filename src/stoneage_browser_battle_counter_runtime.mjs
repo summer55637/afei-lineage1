@@ -3,6 +3,7 @@ const ACTION_BATTLE_COUNTER_PLAN='BATTLE_COUNTER_PLAN';
 
 const BATTLE_COM_ATTACK=1;
 const BATTLE_COM_S_NOGUARD=3;
+const BATTLE_COM_S_NOGUARD_SOURCE=1014;
 const CHAR_BATTLEFLG_ABIO=64;
 const COUNTER_PARA=0.08;
 const COUNTER_ROLL_MAX=10000;
@@ -98,7 +99,7 @@ function counterCheck(context,{
   defenderWeaponClass='claw',
   attackerLuck=0,
   attackerCounterBonus=0,
-  noguardCounterAdjust=0,
+  noguardCounterAdjust=null,
   counterRoll=null,
   counterPara=COUNTER_PARA,
   attackerDamageReact=false,
@@ -115,7 +116,8 @@ function counterCheck(context,{
   if(hpD<=0)return {ok:true,handled:true,stage:'battle-counter-rejected',reason:'defender-dead',canCounter:false,rngConsumed:0};
 
   const command=int(attackerCommand??attacker?.battleCommands?.[0]);
-  if(command!==BATTLE_COM_ATTACK&&command!==BATTLE_COM_S_NOGUARD)
+  const isNoGuardCommand=command===BATTLE_COM_S_NOGUARD||command===BATTLE_COM_S_NOGUARD_SOURCE;
+  if(command!==BATTLE_COM_ATTACK&&!isNoGuardCommand)
     return {ok:true,handled:true,stage:'battle-counter-rejected',reason:'attacker-command-not-attack',canCounter:false,rngConsumed:0};
 
   const flags=int(attackerBattleFlg??attacker?.battleFlg)??0;
@@ -143,7 +145,10 @@ function counterCheck(context,{
   const tableValue=COUNTER_TABLE[atWeapon*8+dfWeapon]??0;
   const luck=typeOf(attacker)==='player'?num(attackerLuck,0):0;
   let par=calc.per*tableValue*0.1+luck+num(attackerCounterBonus,0);
-  if(command===BATTLE_COM_S_NOGUARD)par+=num(noguardCounterAdjust,0);
+  const packedCom3=int(attacker?.battleCommands?.[2]);
+  const packedCounter=packedCom3==null?0:Math.floor((packedCom3&0xffff)/256)&0xff;
+  const resolvedNoGuardAdjust=num(noguardCounterAdjust,num(attacker?.noguardCounterBonus,packedCounter));
+  if(isNoGuardCommand)par+=resolvedNoGuardAdjust;
   if(par>100)par=100;
   if(par<=0)par=1;
 
@@ -173,7 +178,7 @@ function counterCheck(context,{
     counterMatchValue:tableValue,
     attackerLuck:luck,
     attackerCounterBonus:num(attackerCounterBonus,0),
-    noguardCounterAdjust:num(noguardCounterAdjust,0),
+    noguardCounterAdjust:resolvedNoGuardAdjust,
     probabilityPercent:par,
     probabilityBasis:par/100,
     roll:finalRoll,
