@@ -7,7 +7,7 @@
 | Blocker | Endpoint 結果 |
 |---|---|
 | 4000 → 200 | **仍阻塞**：4000 的出生入口與 200 入口 portal origins 位於不同 walkable connected components |
-| 3000 → 200 / (587,318) | **仍阻塞**：可由 `(587,318)` 走進 component 1，但無法進入主 component 0，也沒有可用的 component-1 outgoing warp |
+| 3000 → 200 / (587,318) | **已閉合（event warp）**：落點 `(587,318)` 雖不可走，但 `(588,318)` 的反向 Warp 可由相鄰格透過標準 event 流程觸發，無需踩上不可走格 |
 
 ## Endpoint Map Format
 
@@ -54,9 +54,9 @@ Endpoint 有精確 warp row：
 - component 1 與主 component 0 分離。
 - component 1 相關唯一 outgoing warp origin 為 `(200,588,318)` → `(3000,74,59)`，但 `(588,318)` 本身也是不可走。
 
-因此目前沒有證據證明玩家能從這個 landing island 回到主地圖或觸發該 outgoing warp。
+但固定 C 的 `lssproto_EV_recv()` 會接受 3×3 範圍內的 Warp 目標座標；`EVENT_main()` 會對相鄰的 `CHAR_EVENT_WARP` NPC 執行標準 Warp。endpoint `200warp.create` 又明確存在 `(200,588,318) → (3000,74,59)` 的反向 Warp，因此玩家落在 `(587,318)` 後，可以在不踩上 `(588,318)` 的情況下直接用 event 觸發回傳。
 
-目前不把 `(587,318)` 改成 `(587,317)`，也不把 component 1 強行併入 component 0。
+因此這個「不可走落點」不再構成 blocker；目前不改 `(587,318)`，也不把 component 1 強行併入 component 0。
 
 ## Evidence
 
