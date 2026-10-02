@@ -230,7 +230,7 @@ def disassemble_function(disassembler, binary_path, symbol, machine_id):
             "status": "no-instruction-output",
             "detail": "\n".join(lines[:8])[:600],
         }
-    limit = 180
+    limit = 700
     return {
         "status": "ok",
         "instructionLineCount": instruction_count,
