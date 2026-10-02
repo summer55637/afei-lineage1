@@ -1,29 +1,31 @@
 name: Check endpoint completeness audit
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Maintain README status
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - 'ro0000/**'
-      - 'data/generated/stoneage_endpoint_completeness_audit.json'
-      - 'tools/check_endpoint_completeness.mjs'
-      - 'tools/check_ro0000_integrity.mjs'
-      - 'docs/reference/endpoint-completeness-audit.md'
-      - 'docs/reference/ro0000-integrity-audit.md'
-      - '.github/workflows/check-endpoint-completeness.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: check-endpoint-completeness-main
+  cancel-in-progress: true
+
 jobs:
   endpoint-completeness:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout refreshed main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 1
 
       - name: Check raw ro0000 integrity
