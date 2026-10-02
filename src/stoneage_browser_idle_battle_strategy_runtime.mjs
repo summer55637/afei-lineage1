@@ -14,8 +14,8 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 const toInt=value=>{
   const s=String(value??'').trim();
   if(s==='')return null;
-  const m=s.match(/^-?\\d+/);
-  return m?Number(m[0]):null;
+  const n=Number(s);
+  return Number.isFinite(n)?Math.trunc(n):null;
 };
 
 const DEFAULT_IDLE_BATTLE_STRATEGY=Object.freeze({
