@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Inspect native ELF metadata embedded in the RO0000 Android APK.
 
-This is a static inventory, not a decompiler: imported APIs and embedded path
-strings are leads, not proof of their runtime call relationships or semantics.
+This static audit inventories ELF metadata and optionally disassembles focused
+map/resource functions. Disassembly excerpts are leads, not semantic proof.
 """
 import argparse
 import hashlib
@@ -39,6 +39,19 @@ IO_API_HINTS = {
     "SDL_RWseek", "SDL_RWtell", "SDL_LoadBMP_RW",
 }
 
+FOCUSED_FUNCTION_RE = re.compile(
+    r"^(?:AdrnInit|adrnDecode|readHitMap|checkHitMap|checkEmptyMap(?:Data)?|"
+    r"_checkEmptyMap|realGet[A-Za-z]*|LoadSprbin|DownloadResource|"
+    r"initResources|loadResources|cleanupRealbin)\s*\(",
+    re.IGNORECASE,
+)
+
+FOCUSED_OBJECTS = {
+    "BattleMapFile", "MapWmdFlagBak", "MaxAdrnID", "RealBinHeight",
+    "RealBinWidth", "Realbinfp", "adrnbuff", "hitMap", "nextMaxAdrnID",
+    "pRealBinBits",
+}
+
 
 def parse_elf_header(data):
     if len(data) < 16 or data[:4] != b"\x7fELF":
@@ -73,30 +86,51 @@ def parse_needed_libraries(readelf_text):
     return sorted(set(re.findall(r"Shared library: \[(.*?)\]", readelf_text)))
 
 
-def parse_symbols(readelf_text):
-    undefined = set()
-    exported = set()
+def parse_symbol_records(readelf_text):
+    records = []
     for line in readelf_text.splitlines():
         fields = line.split()
         if len(fields) < 8 or not fields[0].endswith(":"):
             continue
         if not fields[0][:-1].isdigit():
             continue
-        bind, visibility, section, name = fields[4], fields[5], fields[6], fields[7]
-        if not name or name == "0":
+        try:
+            size = int(fields[2], 10)
+            value = int(fields[1], 16)
+        except ValueError:
             continue
-        name = name.split("@", 1)[0]
-        if section == "UND":
-            undefined.add(name)
-        elif bind in ("GLOBAL", "WEAK") and visibility == "DEFAULT":
-            exported.add(name)
+        records.append({
+            "value": value,
+            "size": size,
+            "type": fields[3],
+            "bind": fields[4],
+            "visibility": fields[5],
+            "section": fields[6],
+            "name": fields[7].split("@", 1)[0],
+        })
+    return records
+
+
+def parse_symbols(readelf_text):
+    undefined = set()
+    exported = set()
+    for record in parse_symbol_records(readelf_text):
+        if record["section"] == "UND":
+            undefined.add(record["name"])
+        elif record["bind"] in ("GLOBAL", "WEAK") and record["visibility"] == "DEFAULT":
+            exported.add(record["name"])
     return sorted(undefined), sorted(exported)
 
 
 def relevant_symbol_names(names):
-    keywords = ("map", "real", "adrn", "spr", "asset", "resource", "update")
+    markers = (
+        "adrn", "realbin", "realget", "hitmap", "loadsprbin", "downloadresource",
+        "battlemapfile", "maxadrnid", "mapwmflag", "mapwidth", "mapheight",
+        "maparea", "mapconfig", "mapempty", "automap", "drawmap", "mapwarp",
+        "mapbgm", "mapeffect", "mapmove", "getmap", "setmap", "initmap", "shiftmap",
+    )
     return sorted(name for name in names
-                  if name in IO_API_HINTS or any(word in name.lower() for word in keywords))
+                  if name in IO_API_HINTS or any(marker in name.lower() for marker in markers))
 
 
 def run_readelf(readelf, option, binary_path):
@@ -111,11 +145,103 @@ def run_readelf(readelf, option, binary_path):
     return result.stdout
 
 
+def demangle_names(cxxfilt, names):
+    if not cxxfilt or not names:
+        return {name: name for name in names}
+    result = subprocess.run(
+        [cxxfilt], input="\n".join(names) + "\n",
+        check=False, capture_output=True, text=True, errors="replace"
+    )
+    if result.returncode:
+        return {name: name for name in names}
+    demangled = result.stdout.splitlines()
+    if len(demangled) != len(names):
+        return {name: name for name in names}
+    return dict(zip(names, demangled))
+
+
+def focused_symbol_records(records, cxxfilt):
+    names = sorted(set(r["name"] for r in records
+                       if r["section"] != "UND"
+                       and r["bind"] in ("GLOBAL", "WEAK")
+                       and r["visibility"] == "DEFAULT"))
+    demangled = demangle_names(cxxfilt, names)
+    result = []
+    seen = set()
+    for record in records:
+        name = record["name"]
+        if record["section"] == "UND" or record["bind"] not in ("GLOBAL", "WEAK"):
+            continue
+        if record["visibility"] != "DEFAULT":
+            continue
+        display = demangled.get(name, name)
+        is_focus = (
+            record["type"] == "FUNC" and bool(FOCUSED_FUNCTION_RE.match(display))
+        ) or (record["type"] in ("OBJECT", "NOTYPE") and name in FOCUSED_OBJECTS)
+        key = (name, record["value"], record["type"])
+        if is_focus and key not in seen:
+            seen.add(key)
+            result.append({
+                "name": name,
+                "demangled": display,
+                "type": record["type"],
+                "value": "0x%x" % record["value"],
+                "size": record["size"],
+            })
+    return sorted(result, key=lambda item: (int(item["value"], 16), item["name"]))
+
+
+def select_disassembler():
+    llvm = shutil.which("llvm-objdump")
+    if llvm:
+        return {"path": llvm, "kind": "llvm"}
+    objdump = shutil.which("objdump")
+    if objdump:
+        return {"path": objdump, "kind": "gnu"}
+    return None
+
+
+def disassemble_function(disassembler, binary_path, symbol):
+    if not disassembler:
+        return {"status": "unavailable"}
+    if disassembler["kind"] == "llvm":
+        command = [
+            disassembler["path"], "-d", "--demangle",
+            "--disassemble-symbols=" + symbol, str(binary_path)
+        ]
+    else:
+        command = [
+            disassembler["path"], "-d", "--demangle",
+            "--disassemble=" + symbol, str(binary_path)
+        ]
+    result = subprocess.run(
+        command, check=False, capture_output=True, text=True, errors="replace"
+    )
+    if result.returncode:
+        return {
+            "status": "unsupported-or-error",
+            "detail": (result.stderr or result.stdout).strip()[:600],
+        }
+    lines = result.stdout.splitlines()
+    has_instructions = any(re.match(r"\s*[0-9a-fA-F]+:\s", line) for line in lines)
+    if not has_instructions:
+        return {"status": "no-instruction-output"}
+    limit = 180
+    return {
+        "status": "ok",
+        "instructionLineCount": sum(
+            1 for line in lines if re.match(r"\s*[0-9a-fA-F]+:\s", line)
+        ),
+        "excerpt": lines[:limit],
+        "excerptTruncated": len(lines) > limit,
+    }
+
+
 def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def inspect_library(zip_file, info, readelf, temp_dir):
+def inspect_library(zip_file, info, readelf, cxxfilt, disassembler, temp_dir):
     data = zip_file.read(info)
     header = parse_elf_header(data)
     abi = info.filename.split("/")[1] if len(info.filename.split("/")) > 2 else ""
@@ -126,7 +252,17 @@ def inspect_library(zip_file, info, readelf, temp_dir):
     dynamic = run_readelf(readelf, "-dW", binary_path) if readelf else ""
     symbols = run_readelf(readelf, "-Ws", binary_path) if readelf else ""
     notes = run_readelf(readelf, "-nW", binary_path) if readelf else ""
+    records = parse_symbol_records(symbols)
     undefined, exported = parse_symbols(symbols)
+    focused = focused_symbol_records(records, cxxfilt)
+    functions = [
+        item for item in focused
+        if item["type"] == "FUNC"
+    ]
+    for item in functions:
+        item["disassembly"] = disassemble_function(
+            disassembler, binary_path, item["name"]
+        )
     build_id_match = re.search(r"Build ID: ([0-9a-fA-F]+)", notes)
 
     path_candidates = resource_name_candidates(data)
@@ -146,8 +282,11 @@ def inspect_library(zip_file, info, readelf, temp_dir):
         "neededLibraries": parse_needed_libraries(dynamic),
         "undefinedIoAndResourceSymbols": relevant_symbol_names(undefined),
         "exportedMapAndResourceSymbols": relevant_symbol_names(exported),
+        "focusedSymbols": focused,
         "mapResourcePathCandidates": map_resource_candidates,
         "readelfAvailable": bool(readelf),
+        "cxxfiltAvailable": bool(cxxfilt),
+        "disassembler": disassembler["path"] if disassembler else None,
     }
 
 
@@ -164,6 +303,8 @@ def main():
             digest.update(chunk)
 
     readelf = shutil.which("readelf")
+    cxxfilt = shutil.which("c++filt")
+    disassembler = select_disassembler()
     with zipfile.ZipFile(apk) as zf:
         libraries = sorted(
             (info for info in zf.infolist()
@@ -173,7 +314,10 @@ def main():
         if not libraries:
             raise SystemExit("no libStoneage.so entries found in APK")
         with tempfile.TemporaryDirectory(prefix="ro0000-native-") as temp_dir:
-            results = [inspect_library(zf, info, readelf, temp_dir) for info in libraries]
+            results = [
+                inspect_library(zf, info, readelf, cxxfilt, disassembler, temp_dir)
+                for info in libraries
+            ]
 
     result = {
         "format": "ro0000-android-native-elf-audit-v1",
@@ -184,11 +328,13 @@ def main():
         },
         "analysisTools": {
             "readelf": readelf,
-            "disassembler": None,
+            "cxxfilt": cxxfilt,
+            "disassembler": disassembler["path"] if disassembler else None,
         },
         "nativeLibraries": results,
         "interpretationBoundary": [
             "ELF headers, dynamic dependencies, symbol names, and embedded path strings are static observations.",
+            "Function disassembly is limited to named symbol ranges and does not establish callers or runtime behavior.",
             "An imported file API does not identify which resource it opens.",
             "A path string does not prove the referenced file is packaged, downloaded, or successfully loaded.",
             "This report does not establish map tile layout, collision, or walkability semantics.",
@@ -204,7 +350,12 @@ def main():
             "path": item["path"],
             "elf": item["elf"],
             "neededLibraries": item["neededLibraries"],
-            "ioSymbolCount": len(item["undefinedIoAndResourceSymbols"]),
+            "focusedSymbols": [
+                {"name": symbol["name"], "demangled": symbol["demangled"],
+                 "value": symbol["value"], "size": symbol["size"],
+                 "disassemblyStatus": symbol.get("disassembly", {}).get("status")}
+                for symbol in item["focusedSymbols"]
+            ],
             "mapResourcePathCandidates": item["mapResourcePathCandidates"],
         } for item in results],
     }, ensure_ascii=False, indent=2))
