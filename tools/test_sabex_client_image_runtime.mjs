@@ -37,7 +37,9 @@ assert.equal(decoded.grid.height,33);
 assert.equal(decoded.cells.length,1089);
 assert.deepEqual(decoded.cells.slice(0,3),[100,101,99]);
 assert.throws(()=>decodeSabexInput(sabex.subarray(0,SABEX_MIN_BYTES-1)),/too short/);
-assert.throws(()=>decodeSabexInput(sabex,{requireSabHeader:false}).cells.length!==1089);
+const badHeader=sabex.slice();
+badHeader.set([0x58,0x58,0x58,0x58],0);
+assert.throws(()=>decodeSabexInput(badHeader,{requireSabHeader:true}),/does not contain/);
 
 const r=resolveSabexClientImages(sabex,index,{mapNo:7,requireSabHeader:true});
 assert.equal(r.format,'stoneage-sabex-client-image-runtime-v3');
