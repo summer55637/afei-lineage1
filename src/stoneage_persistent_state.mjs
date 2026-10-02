@@ -3,6 +3,7 @@ const CURRENT_STATE_SCHEMA_VERSION = 1;
 const SOURCE_LEGACY_SAVE_SCHEMA_VERSION = 30;
 const PROFESSION_SKILL_SLOT_COUNT = 26;
 const PLAYER_ITEM_SLOT_COUNT = 24;
+const DEFAULT_IDLE_BATTLE_STRATEGY = Object.freeze({ mode: 'basic_attack_only', targetPolicy: 'source-default-random' });
 
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const intOr = (value, fallback = 0) => Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback;
@@ -72,7 +73,7 @@ function freshPersistentState({ now = () => new Date().toISOString(), playerId =
       lastSimulatedAt: null,
       offline: { eligible: false, lastClosedAt: null, lastResumedAt: null, elapsedSeconds: 0, accruedSeconds: 0, accrualCapSeconds: null, resumePending: false, rewardsApplied: false }
     },
-    battleSettings: { strategy: {}, sourceParity: {} },
+    battleSettings: { strategy: { ...DEFAULT_IDLE_BATTLE_STRATEGY }, sourceParity: {} },
     runtimeMeta: { createdAt: timestamp, updatedAt: timestamp, lastSavedAt: null }
   };
 }
@@ -210,7 +211,11 @@ function normalizePersistentState(raw, { now = () => new Date().toISOString() } 
     current.idle.lastSimulatedAt = raw.idle.lastSimulatedAt ?? null;
     if (isObject(raw.idle.offline)) current.idle.offline = clone(raw.idle.offline);
   }
-  if (isObject(raw.battleSettings)) current.battleSettings = clone(raw.battleSettings);
+  if (isObject(raw.battleSettings)) current.battleSettings = { ...current.battleSettings, ...clone(raw.battleSettings) };
+  if (!isObject(current.battleSettings.strategy) || Object.keys(current.battleSettings.strategy).length === 0) {
+    current.battleSettings.strategy = { ...DEFAULT_IDLE_BATTLE_STRATEGY };
+  }
+  if (!isObject(current.battleSettings.sourceParity)) current.battleSettings.sourceParity = {};
   if (isObject(raw.equipment)) current.equipment = clone(raw.equipment);
 
   current.schemaVersion = CURRENT_STATE_SCHEMA_VERSION;
@@ -317,4 +322,4 @@ function validatePersistentState(state) {
   return errors;
 }
 
-export { CURRENT_STATE_SCHEMA_VERSION, SOURCE_LEGACY_SAVE_SCHEMA_VERSION, PROFESSION_SKILL_SLOT_COUNT, PLAYER_ITEM_SLOT_COUNT, freshProfessionSkills, freshPersistentState, normalizeProfessionSkills, normalizePlayerItemSlots, normalizePet, normalizePetBox, normalizePersistentState, validatePersistentState };
+export { CURRENT_STATE_SCHEMA_VERSION, SOURCE_LEGACY_SAVE_SCHEMA_VERSION, PROFESSION_SKILL_SLOT_COUNT, PLAYER_ITEM_SLOT_COUNT, DEFAULT_IDLE_BATTLE_STRATEGY, freshProfessionSkills, freshPersistentState, normalizeProfessionSkills, normalizePlayerItemSlots, normalizePet, normalizePetBox, normalizePersistentState, validatePersistentState };
