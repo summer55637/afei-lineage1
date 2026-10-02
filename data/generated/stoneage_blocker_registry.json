@@ -85,11 +85,17 @@
     "persistent-state-expansion": {
       "status": "active",
       "scope": "persistent-state",
-      "previousEvidence": "schema v1 is structural but not final long-run player/pet/quest/world save model",
+      "previousEvidence": "原先以廣義 schema expansion 描述；盤點後確認 schema v1、Save Envelope v1 與多個 transaction regression 已存在，需將真正未閉合的 lifecycle 明確化。",
       "newEvidence": [
-        "endpoint deployment corpus adds more data surfaces that can define persisted fields"
+        "canonical Persistent State schema v1 已包含 player/inventory/equipment/pets/quests/events/titles/world/idle/battleSettings 容器，並有 normalize / validate",
+        "Save Envelope v1 已提供 deterministic JSON、SHA-256、parse/validation、revision guard 與 commit",
+        "persistent-state schema regression 與 V3.44 save join regression 已覆蓋主要欄位 round-trip、schema 30 known-field migration 及 revision guard",
+        "NPC、ItemShop、SavePoint、World movement/warp、Idle、Battle 等多個 runtime transaction 已使用 commitSave",
+        "Browser State Controller 目前以記憶體 currentState 運作並提供 getState/dispatch；未提供 durable storage adapter 或啟動還原入口",
+        "commitSave 只產生已驗證的 state 與 Save Envelope，不負責寫入可跨 session 保留的儲存介質"
       ],
-      "next": "expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics"
+      "next": "獨立於 playable HTML，建立 injected save-storage port 與 verified startup restore；回歸需覆蓋新 session 還原、壞檔 fail-closed、寫入失敗、revision conflict。各 opaque 欄位只在對應玩法需要且有 source evidence 時再擴充。",
+      "summary": "Schema v1、Save Envelope v1 與交易回歸已存在；目前缺口是持久寫入及重新載入生命週期。"
     }
   }
 }
