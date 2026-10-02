@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：28d0797 — [docs] publish Android native and manifest evidence
-- 更新時間：2026-10-02T15:59:59Z
+- 最新 commit：9a6945a — [fix] count Java source newlines correctly
+- 更新時間：2026-10-03T00:00:20+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
