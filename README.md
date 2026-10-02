@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：f5be613 — fix: retain encounter pipeline scope through battle context build
-- 更新時間：2026-10-02T09:15:29+08:00
+- 最新 commit：b351b8c — fix: match warp event dispatch semantics correctly
+- 更新時間：2026-10-02T09:26:23+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）

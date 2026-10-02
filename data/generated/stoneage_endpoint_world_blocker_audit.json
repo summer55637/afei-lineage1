@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-world-blocker-audit-v1",
-  "updated": "2026-10-02T01:15:56.162Z",
+  "updated": "2026-10-02T01:26:32.282Z",
   "source": {
     "endpointRoot": "ro0000/server/merged-source/gmsv/data/map",
     "mapsetPath": "ro0000/server/merged-source/gmsv/data/map/mapset.txt",
@@ -313,7 +313,8 @@
           318
         ]
       }
-    ]
+    ],
+    "npcWarpSources": 3586
   },
   "checks": {
     "floor4000": {
@@ -1461,7 +1462,38 @@
             "originWalkable": false,
             "originComponent": -1
           }
-        ]
+        ],
+        "manualEventWarpRecovery": {
+          "landing": [
+            587,
+            318
+          ],
+          "triggerWarpNpc": [
+            588,
+            318
+          ],
+          "triggerIsAdjacent": true,
+          "reverseNpcWarpSource": {
+            "sourceFile": "ro0000/server/merged-source/gmsv/data/npc/genout/200warp.create",
+            "sourceLine": 124,
+            "from": [
+              200,
+              588,
+              318
+            ],
+            "to": [
+              3000,
+              74,
+              59
+            ]
+          },
+          "fixedSourceEventSemantics": {
+            "available": true,
+            "adjacentWarpPointGuard": true,
+            "warpNpcDispatch": true
+          },
+          "recoverableWithoutSteppingOnOrigin": true
+        }
       }
     },
     "reopenedBlockers": {
@@ -1525,8 +1557,8 @@
         }
       },
       "route3000to200Landing587318": {
-        "resolved": false,
-        "status": "still-blocked",
+        "resolved": true,
+        "status": "closed-for-post-warp-movement",
         "evidence": {
           "landing": {
             "x": 587,
@@ -1575,7 +1607,38 @@
               "originWalkable": false,
               "originComponent": -1
             }
-          ]
+          ],
+          "manualEventWarpRecovery": {
+            "landing": [
+              587,
+              318
+            ],
+            "triggerWarpNpc": [
+              588,
+              318
+            ],
+            "triggerIsAdjacent": true,
+            "reverseNpcWarpSource": {
+              "sourceFile": "ro0000/server/merged-source/gmsv/data/npc/genout/200warp.create",
+              "sourceLine": 124,
+              "from": [
+                200,
+                588,
+                318
+              ],
+              "to": [
+                3000,
+                74,
+                59
+              ]
+            },
+            "fixedSourceEventSemantics": {
+              "available": true,
+              "adjacentWarpPointGuard": true,
+              "warpNpcDispatch": true
+            },
+            "recoverableWithoutSteppingOnOrigin": true
+          }
         }
       }
     }
@@ -1583,8 +1646,7 @@
   "conclusion": {
     "status": "audited-open-blockers",
     "reasons": [
-      "Endpoint 4000 portal-origin movement remains blocked: entry component and portal-origin component differ.",
-      "Endpoint 200 landing (587,318) cannot reach the main walkable component or another proven outgoing warp."
+      "Endpoint 4000 portal-origin movement remains blocked: entry component and portal-origin component differ."
     ],
     "mapEvidenceClosed": true,
     "blockersClosed": false
