@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：aebd513 — feat: chain battle damage commit into lethal death commit
-- 更新時間：2026-10-02T15:27:57+08:00
+- 最新 commit：f36b6ef — test: add V4.27 battle damage death chain regressions
+- 更新時間：2026-10-02T15:29:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.26
+- Regression 最高版本：V4.27
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.26 |
+| Battle Pipeline | ✅ V4.27 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
