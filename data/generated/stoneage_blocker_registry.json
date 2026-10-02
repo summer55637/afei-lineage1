@@ -81,9 +81,14 @@
         "ITEM_makeItemAndRegist passes the received value directly to ITEM_makeItem",
         "ITEM_makeItem first gates with ITEM_CHECKITEMTABLE and then resolves the sequential table index through ITEM_idx into ITEM_tbl",
         "no observed ITEM_TransformList / ITEM_getSIndexFromTransList transform path",
-        "therefore current endpoint ITEM1=32003 has no resolvable source Item row and is fail-closed"
+        "therefore current endpoint ITEM1=32003 has no resolvable source Item row and is fail-closed",
+        "endpoint setup.cf ITEM1..ITEM15 is a 15-value starter set: 32003,32004,32005,32006,32007,32013,32008,32009,32010,32011,32160,22407,22077,32419,32420",
+        "all 15 configured starter IDs are absent from endpoint itemset6.csv raw text",
+        "all 15 configured starter IDs are absent from endpoint itemset6.csv token 17 Item-ID field",
+        "all 15 configured starter IDs are absent from endpoint itemset6.csv token 18 image-number field",
+        "endpoint setup explicitly selects data/itemset6.csv; itemset3/4/5 are compile-time fallback branches rather than additional sources under the pinned fixed-C configfile.c semantics"
       ],
-      "next": "keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path",
+      "next": "keep endpoint Starter Item fail-closed as an entire 15-value configuration/data mismatch. Reopen only with authoritative endpoint evidence for the correct Item table/version or a proven mapping layer; do not substitute fixed-C IDs or image numbers.",
       "outcome": "fail-closed:configured-item-id-missing"
     },
     "persistent-state-expansion": {
