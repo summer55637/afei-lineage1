@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：482eccb — test: assert baseline idle battle strategy catalog
-- 更新時間：2026-10-02T12:33:29+08:00
+- 最新 commit：71f2606 — test: configure idle dependencies for battle strategy controller
+- 更新時間：2026-10-02T12:34:11+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
