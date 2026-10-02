@@ -25,10 +25,10 @@
         "all four endpoint 4000→200 portal origins (104,55),(104,56),(101,96),(101,97) are walkable in component 0",
         "endpoint movement BFS from the 4000 entry component cannot reach any 4000→200 portal origin",
         "therefore the endpoint itself confirms the 4000→200 world-route connectivity blocker",
-        "endpoint mapwarp adds a source-backed component-48 exit (4000,82,107) → (4020,4,12), in addition to the two component-48 return warps to 4006",
+undefined
         "endpoint floor 4020 source map makes (4,12), (11,9), and (12,9) walkable in one component, proving the 4000 → 4020 edge is executable through the mapwarp event system",
         "world graph shows 4020 only connects to 851 and back to 4000; 851 continues to 840/4020 and this branch does not reach the 4000 component-0 200 portals",
-        "therefore the alternate component-48 source-backed route does not close the 4000 → 200 blocker"
+undefined
       ],
       "next": "keep active; no source-backed component-48 → 4000-component-0 bridge was found. Do not alter runtime eligibility or synthesize a teleport"
     },
