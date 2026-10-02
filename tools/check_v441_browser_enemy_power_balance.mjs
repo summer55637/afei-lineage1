@@ -101,7 +101,7 @@ const committed=await controller.dispatch({
 });
 assert.equal(committed.ok,true,JSON.stringify(committed));
 assert.ok(['battle-damage-death-nonlethal','battle-damage-death-committed','battle-damage-death-idempotent'].includes(committed.stage));
-const target=committed.battleContext.context.sides[0].entries.find(e=>e?.bid===0);
+const target=committed.battleContext.sides[0].entries.find(e=>e?.bid===0);
 assert.ok(target.hp<100000,'PowerBalance-enhanced enemy attack commits HP damage');
 assert.equal(controller.getState().revision,persistentRevisionBefore,'combat damage remains outside Persistent State');
 assert.equal(committed.persistentMutation,false);
