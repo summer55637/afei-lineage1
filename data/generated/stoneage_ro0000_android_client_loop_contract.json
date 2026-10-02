@@ -1,0 +1,258 @@
+{
+  "format": "ro0000-android-client-loop-input-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "x86": {
+      "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+      "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+    },
+    "armeabiV7a": {
+      "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+      "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+    }
+  },
+  "startup": {
+    "entry": {
+      "name": "SDL_main",
+      "address": {
+        "x86": "0x2099c0",
+        "armeabiV7a": "0x17c295"
+      }
+    },
+    "observedCallOrder": [
+      "SDL_Init",
+      "GlobalVariantInit",
+      "InitWorkplace",
+      "CreateFolderStruct",
+      "Init_iconv",
+      "GetMachineCode",
+      "InitResoMode",
+      "SDL_CreateWindow",
+      "ChangeWindowMode",
+      "InitSingleton",
+      "GameMain",
+      "UninitSingleton",
+      "Release_iconv",
+      "SDL_Quit"
+    ],
+    "branchNotes": [
+      "SDL_Init failure exits through SDL_Quit",
+      "Initial machine-code/identity gate can display a confirmation and exit",
+      "SDL_CreateWindow failure exits through SDL_Quit"
+    ],
+    "scope": "Static top-level startup call sequence; no Android device startup was executed."
+  },
+  "input": {
+    "eventDispatcher": {
+      "name": "EventProc(unsigned int, SDL_Event*)",
+      "address": {
+        "x86": "0x20a270",
+        "armeabiV7a": "0x17c8ad"
+      }
+    },
+    "observedCalls": [
+      "KeyboardLeft",
+      "KeyboardRight",
+      "KeyboardReturn",
+      "KeyboardBackSpace",
+      "GetRealX",
+      "GetRealY",
+      "MouseNowPoint",
+      "MouseDblCrickRightUpPoint",
+      "MouseCrickRightDownPoint",
+      "MouseDblCrickLeftUpPoint",
+      "MouseCrickLeftDownPoint",
+      "MouseCrickLeftUpPoint",
+      "MouseCrickRightUpPoint",
+      "SDL_ShowCursor",
+      "SDL_StopTextInput",
+      "ClearChatBuffer"
+    ],
+    "nativeKeyboardCallback": {
+      "name": "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
+      "address": {
+        "x86": "0x000edca0",
+        "armeabiV7a": "0x000e4fa5"
+      },
+      "evidence": "Export exists in both packaged ABI libraries; callback behavior is not inferred from its name."
+    },
+    "keyboardUi": [
+      "keyBoardGetWndFlag",
+      "keyBoardSetWndFlag",
+      "keyBoardProcWnd",
+      "keyBoardGetStr",
+      "keyBoardInitWnd",
+      "keyBoardInitStr",
+      "GetKeyInputFocus",
+      "changeInput"
+    ],
+    "mouseUi": [
+      "MouseProc",
+      "HitMouseCursor",
+      "CleanMouseClick",
+      "CheckWndMouse"
+    ],
+    "boundary": "SDL event dispatch and exported callbacks are static client evidence; device-specific touch/key event generation and overlay behavior are unverified."
+  },
+  "frameLoop": {
+    "function": {
+      "name": "GameMain",
+      "address": {
+        "x86": "0x1561a0",
+        "armeabiV7a": "0x11f711"
+      }
+    },
+    "observedCalls": [
+      "InitGame",
+      "SystemTask",
+      "EndGame",
+      "checkGuildBoxHit",
+      "DispCallProc",
+      "InitShapeClickStatus",
+      "RealTimeToSATime",
+      "NextScrollPanelRender",
+      "stockDispBtnCls",
+      "networkLoop",
+      "cdda_play",
+      "joy_read",
+      "ScriptRunningProcess",
+      "Process",
+      "ScrollPanelProcess",
+      "DoNormalCallback",
+      "MouseProc",
+      "AniProc",
+      "SortDispBuffer",
+      "HitMouseCursor",
+      "ClearMouseOnceState",
+      "PaletteProc",
+      "setEchoTime",
+      "PutBmp",
+      "Flip",
+      "SDL_Delay",
+      "InitSpriteInfo",
+      "InitSurfaceInfo",
+      "ReadBattleMap",
+      "ClearBackSurface",
+      "repairMap"
+    ],
+    "relatedState": "GameMain coordinates network, input, script/process, animation, and render work; exact pacing and lifecycle effects should be validated through runtime tracing before simulation."
+  },
+  "network": {
+    "function": {
+      "name": "networkLoop",
+      "address": {
+        "x86": "0x2d95d0",
+        "armeabiV7a": "0x1ee509"
+      }
+    },
+    "observedCalls": [
+      "select",
+      "recv",
+      "appendReadBuf",
+      "getLineFromReadBuf",
+      "SaDispatchMessage",
+      "send",
+      "shiftWriteBuf",
+      "disconnect_",
+      "lssproto_Echo_send",
+      "lssproto_newEcho_send"
+    ],
+    "interpretation": "The client reads socket data into a buffer, dispatches complete protocol messages, and flushes outgoing buffered data; echo calls are present in this loop.",
+    "boundary": "No endpoint/host values are included; no real network session was run."
+  },
+  "movementAndEvents": {
+    "functions": [
+      {
+        "name": "moveProc",
+        "address": {
+          "x86": "0x215f40",
+          "armeabiV7a": "0x1838c5"
+        },
+        "observed": [
+          "Dispatches automatic/action movement and interaction helpers",
+          "Calls PeekNextPostion and GetNextPostion",
+          "Checks warp points and guide-real-position state",
+          "Invokes onceMoveProc and partyMoveProc"
+        ]
+      },
+      {
+        "name": "onceMoveProc",
+        "address": {
+          "x86": "0x216ae0",
+          "armeabiV7a": "0x1842ad"
+        },
+        "observed": [
+          "Calls _execEtcEvent",
+          "Queries getRouteMap",
+          "Calls _etcEventCheck",
+          "Sends movement-route updates",
+          "Calls _checkEmptyMap for map prefetch",
+          "Updates movement through setMapMovePoint, _mapMove, and updateMapArea"
+        ]
+      },
+      {
+        "name": "partyMoveProc",
+        "address": {
+          "x86": "0x216e30",
+          "armeabiV7a": "0x1845c5"
+        },
+        "observed": [
+          "Updates queued character movement records",
+          "Calls _setMapMovePoint and _charMove",
+          "May advance _mapMove and updateMapArea"
+        ]
+      },
+      {
+        "name": "_execEtcEvent",
+        "address": {
+          "x86": "0x217470",
+          "armeabiV7a": "0x184b19"
+        },
+        "observed": [
+          "Dispatches _sendWarpEvent, _sendEncount, and _sendEnemyEvent"
+        ]
+      },
+      {
+        "name": "_etcEventCheck",
+        "address": {
+          "x86": "0x218420",
+          "armeabiV7a": "0x1854c9"
+        },
+        "observed": [
+          "Calculates direction using Atan and AdjustDir",
+          "Checks _checkEnemyEvent, _checkWarpEvent, and _checkEncount"
+        ]
+      },
+      {
+        "name": "_sendWarpEvent",
+        "address": {
+          "x86": "0x219820",
+          "armeabiV7a": "0x186415"
+        },
+        "observed": [
+          "Calls resetMap",
+          "Sends lssproto_EV_send",
+          "Starts warpEffectProc"
+        ]
+      },
+      {
+        "name": "_sendEnemyEvent",
+        "address": {
+          "x86": "0x2199e0",
+          "armeabiV7a": "0x18659d"
+        },
+        "observed": [
+          "Calls resetMap",
+          "Sends lssproto_EV_send"
+        ]
+      }
+    ],
+    "distinction": "Routing consults the derived HitMap; cache prefetch detects unread edge data; movement advances local coordinates/action state; warp/enemy interaction sends an event message. These are distinct client paths."
+  },
+  "limits": [
+    "Addresses are build-specific; this record includes only the packaged x86 and ARMv7 builds.",
+    "Cross-ABI checks compare symbol names and availability, not semantic equivalence of machine instructions.",
+    "No physical Android runtime, server-side acceptance trace, or live network trace is available.",
+    "No confidential hosts or endpoint values are emitted."
+  ]
+}
