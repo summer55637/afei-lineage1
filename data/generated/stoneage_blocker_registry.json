@@ -15,23 +15,33 @@
   },
   "blockers": {
     "route-4000-to-200": {
-      "status": "reopened-for-reaudit",
+      "status": "active",
       "scope": "first-route",
       "previousEvidence": "fixed-C floor 4000 connected components",
       "newEvidence": [
-        "endpoint mapwarp exact rows exist: 4000↔200 endpoint 4 / fixed-C 4",
-        "endpoint corpus is now the primary deployment-data source"
+        "endpoint floor 4000 is uniquely identified as LS&MAP: ro0000/server/merged-source/gmsv/data/map/jyaruga/karutana/karutana",
+        "endpoint floor 4000 uses endpoint mapset and has 65 walkable connected components",
+        "entry points (80,90) and (80,91) are walkable in component 48",
+        "all four endpoint 4000→200 portal origins (104,55),(104,56),(101,96),(101,97) are walkable in component 0",
+        "endpoint movement BFS from the 4000 entry component cannot reach any 4000→200 portal origin",
+        "therefore the endpoint itself confirms the 4000→200 world-route connectivity blocker"
       ],
-      "next": "endpoint LS2MAP walkability + connected components + actual portal-origin reachability"
+      "next": "keep active; inspect whether endpoint contains an alternate source-backed route/warp connection from component 48 to component 0 before changing runtime eligibility"
     },
     "route-3000-to-200-landing-587-318": {
-      "status": "reopened-for-reaudit",
+      "status": "active",
       "scope": "first-route",
       "previousEvidence": "fixed-C landing (587,318) non-walkable",
       "newEvidence": [
-        "endpoint MapWarp corpus is now available for endpoint-specific coordinate audit"
+        "endpoint floor 200 is uniquely identified as LS&MAP: ro0000/server/merged-source/gmsv/data/map/jyaruga/jalga",
+        "exact endpoint warp row (3000,73,59) → (200,587,318) exists",
+        "endpoint landing cell (587,318) is non-walkable, but fixed-C warp code permits teleport to any valid coordinate without a walkability check",
+        "legal first movement from (587,318) reaches endpoint component 1 at (586,318),(587,317),(586,317)",
+        "component 1 is isolated from the main endpoint walkable component 0",
+        "the only endpoint mapwarp origin found in component 1 is (200,588,318) → (3000,74,59), and that origin is itself non-walkable",
+        "therefore the landing remains unable to enter the main walkable component or reach a proven usable outgoing warp"
       ],
-      "next": "verify endpoint destination-map walkability at (587,318) and compare exact landing rows"
+      "next": "keep active; inspect endpoint object/warp placement semantics around component 1 and whether the non-walkable warp origin (588,318) can be triggered without stepping onto it"
     },
     "starter-item-24114-fixed-c": {
       "status": "reopened-for-reaudit",
