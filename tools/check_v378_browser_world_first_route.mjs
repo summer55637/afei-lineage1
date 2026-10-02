@@ -108,10 +108,10 @@ assert.equal(listedAfter.revision,listedBefore.revision);
 assert.deepEqual(listedAfter.world.position,listedBefore.world.position);
 assert.deepEqual(validatePersistentState(listedAfter),[]);
 
-const blocked=freshPersistentState({playerId:'v378-4000-blocked'});
-blocked.world.position={floorId:4000,x:80,y:90};
-const blockedController=createBrowserStateController({
-  state:blocked,
+const repaired=freshPersistentState({playerId:'v378-4000-repaired'});
+repaired.world.position={floorId:4000,x:80,y:90};
+const repairedController=createBrowserStateController({
+  state:repaired,
   idleRouteCatalog:routeCatalog,
   warpCatalog,
   encounterTargetIndex,
@@ -120,14 +120,23 @@ const blockedController=createBrowserStateController({
     loadMapset:async()=>mapset
   }
 });
-const blockedResult=await blockedController.dispatch({
+const repairedResult=await repairedController.dispatch({
   type:ACTION_WORLD_FIRST_ROUTE_PLAN,
   routeId:'hometown-3/floor-4000-to-200/4000_to_200_a'
 });
-assert.equal(blockedResult.ok,false);
-assert.equal(blockedResult.reason,'first-route-not-eligible');
-assert.equal(blockedController.getState().revision,0);
-assert.deepEqual(blockedController.getState().world.position,{floorId:4000,x:80,y:90});
+assert.equal(repairedResult.ok,true,JSON.stringify(repairedResult));
+assert.equal(repairedResult.handled,true);
+assert.equal(repairedResult.routeId,'hometown-3/floor-4000-to-200/4000_to_200_a');
+assert.equal(repairedResult.entryFloor,4000);
+assert.equal(repairedResult.encounterFloor,200);
+assert.equal(repairedResult.portalId,'4000_to_200_a');
+assert.ok(repairedResult.path.toPortalDistance>0);
+assert.ok(repairedResult.path.toEncounterDistance>=0);
+assert.equal(repairedResult.encounterBoundary.insideUnconditional,true);
+assert.equal(repairedResult.encounterBoundary.rngConsumed,false);
+assert.equal(repairedResult.encounterBoundary.battleStarted,false);
+assert.equal(repairedController.getState().revision,0);
+assert.deepEqual(repairedController.getState().world.position,{floorId:4000,x:80,y:90});
 
 console.log(JSON.stringify({
   pass:true,
@@ -141,5 +150,7 @@ console.log(JSON.stringify({
   encounterId:planned.encounter.id,
   encounterBoundary:planned.encounterBoundary,
   readonlyRevision:listedAfter.revision,
-  blocked4000FailClosed:true
+  repaired4000Route:true,
+  repaired4000PortalDistance:repairedResult.path.toPortalDistance,
+  repaired4000TotalWalkSteps:repairedResult.path.totalWalkSteps
 },null,2));
