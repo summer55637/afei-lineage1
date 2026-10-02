@@ -201,19 +201,19 @@ def select_disassembler():
     return None
 
 
-def disassemble_function(disassembler, binary_path, symbol):
+def disassemble_function(disassembler, binary_path, symbol, machine_id):
     if not disassembler:
         return {"status": "unavailable"}
-    if disassembler["kind"] == "llvm":
-        command = [
-            disassembler["path"], "-d", "--demangle",
-            "--disassemble-symbols=" + symbol, str(binary_path)
-        ]
-    else:
-        command = [
-            disassembler["path"], "-d", "--demangle",
-            "--disassemble=" + symbol, str(binary_path)
-        ]
+    start = int(symbol["value"], 16)
+    if machine_id == 40:
+        start &= ~1  # ARM ELF function values may carry the Thumb state bit.
+    stop = start + max(int(symbol["size"]), 1)
+    command = [
+        disassembler["path"], "-d", "--demangle",
+        "--start-address=0x%x" % start,
+        "--stop-address=0x%x" % stop,
+        str(binary_path),
+    ]
     result = subprocess.run(
         command, check=False, capture_output=True, text=True, errors="replace"
     )
@@ -223,17 +223,19 @@ def disassemble_function(disassembler, binary_path, symbol):
             "detail": (result.stderr or result.stdout).strip()[:600],
         }
     lines = result.stdout.splitlines()
-    has_instructions = any(re.match(r"\s*[0-9a-fA-F]+:\s", line) for line in lines)
-    if not has_instructions:
-        return {"status": "no-instruction-output"}
+    instruction_re = re.compile(r"\s*[0-9a-fA-F]+:\s")
+    instruction_count = sum(1 for line in lines if instruction_re.match(line))
+    if not instruction_count:
+        return {
+            "status": "no-instruction-output",
+            "detail": "\n".join(lines[:8])[:600],
+        }
     limit = 180
     return {
         "status": "ok",
-        "instructionLineCount": sum(
-            1 for line in lines if re.match(r"\s*[0-9a-fA-F]+:\s", line)
-        ),
+        "instructionLineCount": instruction_count,
         "excerpt": lines[:limit],
-        "excerptTruncated": len(lines) > limit,
+        "excerptTruncated": instruction_count > limit,
     }
 
 
@@ -261,7 +263,7 @@ def inspect_library(zip_file, info, readelf, cxxfilt, disassembler, temp_dir):
     ]
     for item in functions:
         item["disassembly"] = disassemble_function(
-            disassembler, binary_path, item["name"]
+            disassembler, binary_path, item, header["machineId"]
         )
     build_id_match = re.search(r"Build ID: ([0-9a-fA-F]+)", notes)
 
