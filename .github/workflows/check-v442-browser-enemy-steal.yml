@@ -3,7 +3,6 @@ on:
   push:
     paths:
       - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
-      - 'src/stoneage_browser_enemy_steal_runtime.mjs'
       - 'src/stoneage_browser_battle_enemy_steal_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'tools/check_v442_browser_enemy_steal.mjs'

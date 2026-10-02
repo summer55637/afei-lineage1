@@ -175,7 +175,7 @@ const fallbackCommit=commitEnemySteal({format:'stoneage-browser-battle-context-r
 });
 assert.equal(fallbackCommit.ok,true,JSON.stringify(fallbackCommit));
 assert.equal(fallbackCommit.stolen,true);
-assert.equal(fallbackCommit.battleContext.sides[1].entries[5],null);
+assert.equal(fallbackCommit.battleContext.context.sides[1].entries[5],null);
 assert.equal(fallbackCommit.exitedEnemy.battleCommands[1],0,'TargetAdjust writes the fallback target before Steal executes');
 
 console.log(JSON.stringify({
