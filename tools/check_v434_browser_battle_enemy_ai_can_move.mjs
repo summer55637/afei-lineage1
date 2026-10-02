@@ -28,7 +28,7 @@ for(const key of ['paralysis','stone','sleep','dizzy','dragnet','barrier']){
   assert.equal(actor.battleCommands[0],0);
   assert.equal(actor.battleCommands[1],0);
   assert.equal(actor.sourceBattleCharMode,3);
-  assert.equal(actor[key],1);
+  assert.equal(actor.battleStatus?.[key]??actor.status?.[key]??actor[key],1);
 }
 
 for(const key of ['confusion','nocast','poison','drunk']){
