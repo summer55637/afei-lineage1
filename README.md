@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：c93f366 — [docs] reflect browser battle map preview in README
-- 更新時間：2026-10-02T22:59:14+08:00
+- 最新 commit：16b2ec1 — [fix] validate decoded graphic dimensions and pixel format
+- 更新時間：2026-10-02T22:59:59+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
