@@ -66,6 +66,7 @@ jobs:
             node tools/test_sabex_client_image_runtime.mjs
             python3 tools/test_ro0000_adrn_decoder.py
             node tools/check_v317_rd_decoder.mjs
+            node tools/check_v320_tile_presentation.mjs
 
             node tools/generate_readme.mjs
 
@@ -83,10 +84,10 @@ jobs:
               data/generated/stoneage_ro0000_isolated_residue_audit.json \
               data/generated/stoneage_ro0000_residue_inventory.json \
               data/generated/stoneage_ro0000_residue_structure_audit.json \
-              data/generated/stoneage_ro0000_battlemap_selector_audit.json
+              data/generated/stoneage_ro0000_battlemap_selector_audit.json \
               data/generated/stoneage_ro0000_android_adrn_crypto_contract.json \
               data/generated/stoneage_ro0000_android_native_resource_layout.json \
-              data/generated/stoneage_ro0000_android_rd_decoder_contract.json
+              data/generated/stoneage_ro0000_android_rd_decoder_contract.json \
               data/generated/stoneage_ro0000_android_battle_render_chain.json
 
             if git diff --cached --quiet; then
