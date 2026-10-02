@@ -1,0 +1,43 @@
+{
+  "format": "stoneage-ro0000-4000-walkability-repair-overlay-v1",
+  "scope": {
+    "repository": "summer55637/afei-lineage1",
+    "branch": "audit/ro0000-4000-historical-snapshot",
+    "floorId": 4000,
+    "reason": "RO0000 4000 entry component is disconnected from existing 4000->200 portal origins by three consecutive non-walkable terrain tiles."
+  },
+  "cells": [
+    {
+      "floorId": 4000,
+      "x": 91,
+      "y": 109,
+      "sourceTile": 409,
+      "sourceObject": 27,
+      "repairWalkable": true
+    },
+    {
+      "floorId": 4000,
+      "x": 92,
+      "y": 109,
+      "sourceTile": 196,
+      "sourceObject": 27,
+      "repairWalkable": true
+    },
+    {
+      "floorId": 4000,
+      "x": 93,
+      "y": 109,
+      "sourceTile": 307,
+      "sourceObject": 0,
+      "repairWalkable": true
+    }
+  ],
+  "policy": {
+    "canonicalMapUnchanged": true,
+    "tileValuesUnchanged": true,
+    "objectValuesUnchanged": true,
+    "npcAndWarpUnchanged": true,
+    "movementSemanticsUnchangedExceptListedCells": true,
+    "historicalOriginalArtUnproven": true
+  }
+}
