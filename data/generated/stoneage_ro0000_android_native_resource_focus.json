@@ -1,7 +1,7 @@
 {
   "format": "ro0000-android-native-resource-focus-v1",
-  "workflowRunId": 37031250449,
-  "sourceCommit": "fe4875a4e605cc9cd3d4a3d1e9889c8b7509ba62",
+  "workflowRunId": 37031394525,
+  "sourceCommit": "ae572af1e7ea44ff4af49bcdd7342c90a78ad651",
   "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
   "libraries": [
     {
@@ -779,6 +779,26 @@
             "  182680:\tf74c ede4 \tblx\tcf24c <play_map_bgm(int)@plt>",
             "  1826b2:\t4288      \tcmp\tr0, r1",
             "  1826e2:\tf74c edcc \tblx\tcf27c <stockCharParts()@plt>"
+          ]
+        },
+        {
+          "name": "_Z13drawMapEffectv",
+          "value": "0x188561",
+          "size": 52,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 21,
+          "resourceRelevantLines": [
+            "00188560 <drawMapEffect()@@Base>:",
+            "  188564:\t4809      \tldr\tr0, [pc, #36]\t@ (18858c <drawMapEffect()@@Base+0x2c>)",
+            "  188570:\td10b      \tbne.n\t18858a <drawMapEffect()@@Base+0x2a>",
+            "  188572:\te7ff      \tb.n\t188574 <drawMapEffect()@@Base+0x14>",
+            "  188574:\tf746 efea \tblx\tcf54c <DrawMapEffect()@plt>",
+            "  188578:\tf8df e014 \tldr.w\tlr, [pc, #20]\t@ 188590 <drawMapEffect()@@Base+0x30>",
+            "  188588:\te7ff      \tb.n\t18858a <drawMapEffect()@@Base+0x2a>"
+          ],
+          "controlFlowLines": [
+            "  18856e:\t2801      \tcmp\tr0, #1",
+            "  188574:\tf746 efea \tblx\tcf54c <DrawMapEffect()@plt>"
           ]
         },
         {
@@ -3911,6 +3931,26 @@
             "  214974:\t0f 85 1e 00 00 00    \tjne    214998 <drawMap()@@Base+0xcd8>",
             "  214993:\te8 e8 73 eb ff       \tcall   cbd80 <_Unwind_Resume@plt>",
             "  21499f:\te8 0c 71 eb ff       \tcall   cbab0 <__stack_chk_fail@plt>"
+          ]
+        },
+        {
+          "name": "_Z13drawMapEffectv",
+          "value": "0x21c9b0",
+          "size": 71,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 22,
+          "resourceRelevantLines": [
+            "0021c9b0 <drawMapEffect()@@Base>:",
+            "  21c9b7:\t83 ec 10             \tsub    $0x10,%esp",
+            "  21c9ba:\te8 00 00 00 00       \tcall   21c9bf <drawMapEffect()@@Base+0xf>",
+            "  21c9d5:\t0f 85 16 00 00 00    \tjne    21c9f1 <drawMapEffect()@@Base+0x41>",
+            "  21c9de:\te8 3d 35 eb ff       \tcall   cff20 <DrawMapEffect()@plt>"
+          ],
+          "controlFlowLines": [
+            "  21c9ba:\te8 00 00 00 00       \tcall   21c9bf <drawMapEffect()@@Base+0xf>",
+            "  21c9cf:\t83 f9 01             \tcmp    $0x1,%ecx",
+            "  21c9d5:\t0f 85 16 00 00 00    \tjne    21c9f1 <drawMapEffect()@@Base+0x41>",
+            "  21c9de:\te8 3d 35 eb ff       \tcall   cff20 <DrawMapEffect()@plt>"
           ]
         },
         {

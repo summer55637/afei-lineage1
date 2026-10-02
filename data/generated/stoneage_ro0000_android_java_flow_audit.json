@@ -3808,83 +3808,83 @@
           ],
           "callSequence": [
             {
-              "line": 490,
+              "line": 491,
               "target": "Runtime.getRuntime"
             },
             {
-              "line": 490,
+              "line": 491,
               "target": "exec"
             },
             {
-              "line": 491,
+              "line": 492,
               "target": "processExec.waitFor"
             },
             {
-              "line": 492,
+              "line": 493,
               "target": "ArrayList"
             },
             {
-              "line": 493,
+              "line": 494,
               "target": "BufferedReader"
             },
             {
-              "line": 493,
+              "line": 494,
               "target": "InputStreamReader"
             },
             {
-              "line": 493,
+              "line": 494,
               "target": "processExec.getInputStream"
             },
             {
-              "line": 496,
+              "line": 497,
               "target": "bufferedReader.readLine"
             },
             {
-              "line": 500,
+              "line": 501,
               "target": "arrayList.add"
             },
             {
-              "line": 504,
+              "line": 505,
               "target": "bufferedReader.close"
             },
             {
-              "line": 505,
+              "line": 506,
               "target": "processExec.destroy"
             },
             {
-              "line": 508,
+              "line": 509,
               "target": "str2.contains"
             },
             {
-              "line": 514,
+              "line": 515,
               "target": "Integer.parseInt"
             },
             {
-              "line": 525,
+              "line": 526,
               "target": "e.printStackTrace"
             },
             {
-              "line": 528,
+              "line": 529,
               "target": "e2.printStackTrace"
             },
             {
-              "line": 534,
+              "line": 538,
               "target": "bufferedReader.close"
             },
             {
-              "line": 537,
+              "line": 541,
               "target": "processExec.destroy"
             },
             {
-              "line": 538,
+              "line": 542,
               "target": "r2.hasNext"
             },
             {
-              "line": 540,
+              "line": 544,
               "target": "str2.contains"
             },
             {
-              "line": 544,
+              "line": 548,
               "target": "Integer.parseInt"
             }
           ]
@@ -3932,39 +3932,39 @@
           ],
           "callSequence": [
             {
-              "line": 574,
+              "line": 578,
               "target": "File"
             },
             {
-              "line": 574,
+              "line": 578,
               "target": "exists"
             },
             {
-              "line": 576,
+              "line": 580,
               "target": "FileInputStream"
             },
             {
-              "line": 578,
+              "line": 582,
               "target": "Boolean.valueOf"
             },
             {
-              "line": 578,
+              "line": 582,
               "target": "fileInputStream.read"
             },
             {
-              "line": 579,
+              "line": 583,
               "target": "fileInputStream.close"
             },
             {
-              "line": 581,
+              "line": 585,
               "target": "fileInputStream.close"
             },
             {
-              "line": 591,
+              "line": 595,
               "target": "Boolean.valueOf"
             },
             {
-              "line": 599,
+              "line": 603,
               "target": "this.isSELinuxEnforcing.booleanValue"
             }
           ]
@@ -3981,19 +3981,19 @@
           ],
           "callSequence": [
             {
-              "line": 603,
+              "line": 607,
               "target": "Thread"
             },
             {
-              "line": 605,
+              "line": 609,
               "target": "run"
             },
             {
-              "line": 607,
+              "line": 611,
               "target": "Shell.this.commands.notifyAll"
             },
             {
-              "line": 610,
+              "line": 614,
               "target": "start"
             }
           ]
@@ -4008,11 +4008,11 @@
           ],
           "callSequence": [
             {
-              "line": 605,
+              "line": 609,
               "target": "run"
             },
             {
-              "line": 607,
+              "line": 611,
               "target": "Shell.this.commands.notifyAll"
             }
           ]
@@ -4026,7 +4026,7 @@
           ],
           "callSequence": [
             {
-              "line": 607,
+              "line": 611,
               "target": "Shell.this.commands.notifyAll"
             }
           ]
@@ -4044,23 +4044,23 @@
           ],
           "callSequence": [
             {
-              "line": 615,
+              "line": 619,
               "target": "this.errorStream.ready"
             },
             {
-              "line": 615,
+              "line": 619,
               "target": "this.errorStream.readLine"
             },
             {
-              "line": 617,
+              "line": 621,
               "target": "command.output"
             },
             {
-              "line": 619,
+              "line": 623,
               "target": "RootShell.log"
             },
             {
-              "line": 619,
+              "line": 623,
               "target": "e.getMessage"
             }
           ]
@@ -4075,11 +4075,11 @@
           ],
           "callSequence": [
             {
-              "line": 626,
+              "line": 630,
               "target": "startRootShell"
             },
             {
-              "line": 626,
+              "line": 630,
               "target": "add"
             }
           ]
@@ -4094,11 +4094,11 @@
           ],
           "callSequence": [
             {
-              "line": 630,
+              "line": 634,
               "target": "startShell"
             },
             {
-              "line": 630,
+              "line": 634,
               "target": "add"
             }
           ]
@@ -4135,51 +4135,51 @@
           ],
           "callSequence": [
             {
-              "line": 649,
-              "target": "RootShell.log"
-            },
-            {
               "line": 653,
               "target": "RootShell.log"
             },
             {
-              "line": 654,
-              "target": "Shell"
+              "line": 657,
+              "target": "RootShell.log"
             },
             {
               "line": 658,
+              "target": "Shell"
+            },
+            {
+              "line": 662,
               "target": "RootShell.log"
             },
             {
-              "line": 665,
+              "line": 669,
               "target": "RootShell.log"
             },
             {
-              "line": 672,
+              "line": 676,
               "target": "RootShell.log"
-            },
-            {
-              "line": 680,
-              "target": "RootShell.log"
-            },
-            {
-              "line": 681,
-              "target": "rootShell.switchRootShellContext"
             },
             {
               "line": 684,
               "target": "RootShell.log"
             },
             {
-              "line": 689,
+              "line": 685,
+              "target": "rootShell.switchRootShellContext"
+            },
+            {
+              "line": 688,
               "target": "RootShell.log"
             },
             {
-              "line": 694,
+              "line": 693,
               "target": "RootShell.log"
             },
             {
-              "line": 699,
+              "line": 698,
+              "target": "RootShell.log"
+            },
+            {
+              "line": 703,
               "target": "RootShell.log"
             }
           ]
@@ -4201,15 +4201,15 @@
           ],
           "callSequence": [
             {
-              "line": 710,
+              "line": 714,
               "target": "RootShell.log"
             },
             {
-              "line": 711,
+              "line": 715,
               "target": "Shell"
             },
             {
-              "line": 713,
+              "line": 717,
               "target": "RootShell.log"
             }
           ]
@@ -4232,19 +4232,19 @@
           ],
           "callSequence": [
             {
-              "line": 725,
+              "line": 729,
               "target": "RootShell.log"
             },
             {
-              "line": 726,
+              "line": 730,
               "target": "Shell"
             },
             {
-              "line": 728,
+              "line": 732,
               "target": "RootShell.log"
             },
             {
-              "line": 732,
+              "line": 736,
               "target": "IOException"
             }
           ]
@@ -4260,19 +4260,19 @@
           ],
           "callSequence": [
             {
-              "line": 739,
+              "line": 743,
               "target": "closeRootShell"
             },
             {
-              "line": 741,
+              "line": 745,
               "target": "RootShell.log"
             },
             {
-              "line": 743,
+              "line": 747,
               "target": "startRootShell"
             },
             {
-              "line": 745,
+              "line": 749,
               "target": "RootShell.log"
             }
           ]
@@ -4299,39 +4299,39 @@
           ],
           "callSequence": [
             {
-              "line": 761,
+              "line": 765,
               "target": "this.shell.outputStream.write"
             },
             {
-              "line": 762,
+              "line": 766,
               "target": "this.shell.outputStream.flush"
             },
             {
-              "line": 764,
+              "line": 768,
               "target": "this.shell.inputStream.readLine"
             },
             {
-              "line": 766,
+              "line": 770,
               "target": "EOFException"
             },
             {
-              "line": 768,
-              "target": "equals"
-            },
-            {
-              "line": 769,
+              "line": 772,
               "target": "equals"
             },
             {
               "line": 773,
+              "target": "equals"
+            },
+            {
+              "line": 777,
               "target": "setShellOom"
             },
             {
-              "line": 780,
+              "line": 784,
               "target": "e.getMessage"
             },
             {
-              "line": 783,
+              "line": 787,
               "target": "e.getMessage"
             }
           ]
@@ -4352,43 +4352,43 @@
           ],
           "callSequence": [
             {
-              "line": 791,
+              "line": 795,
               "target": "this.shell.proc.getClass"
             },
             {
-              "line": 793,
-              "target": "cls.getDeclaredField"
-            },
-            {
-              "line": 795,
-              "target": "cls.getDeclaredField"
-            },
-            {
               "line": 797,
-              "target": "declaredField.setAccessible"
-            },
-            {
-              "line": 798,
-              "target": "declaredField.get"
-            },
-            {
-              "line": 798,
-              "target": "intValue"
+              "target": "cls.getDeclaredField"
             },
             {
               "line": 799,
-              "target": "this.shell.outputStream.write"
-            },
-            {
-              "line": 800,
-              "target": "this.shell.outputStream.write"
+              "target": "cls.getDeclaredField"
             },
             {
               "line": 801,
-              "target": "this.shell.outputStream.flush"
+              "target": "declaredField.setAccessible"
+            },
+            {
+              "line": 802,
+              "target": "declaredField.get"
+            },
+            {
+              "line": 802,
+              "target": "intValue"
             },
             {
               "line": 803,
+              "target": "this.shell.outputStream.write"
+            },
+            {
+              "line": 804,
+              "target": "this.shell.outputStream.write"
+            },
+            {
+              "line": 805,
+              "target": "this.shell.outputStream.flush"
+            },
+            {
+              "line": 807,
               "target": "e.printStackTrace"
             }
           ]
