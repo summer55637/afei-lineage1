@@ -1,0 +1,67 @@
+name: Check V4.36 Browser Battle Enemy AI Target Parity
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v429_browser_battle_enemy_ai_target_types.mjs'
+      - 'tools/check_v430_browser_battle_enemy_ai_target_selection.mjs'
+      - 'tools/check_v431_browser_battle_enemy_ai_controller.mjs'
+      - 'tools/check_v432_browser_battle_enemy_ai_attack_pipeline.mjs'
+      - 'tools/check_v433_browser_battle_enemy_ai_dead_entry.mjs'
+      - 'tools/check_v434_browser_battle_enemy_ai_can_move.mjs'
+      - 'tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs'
+      - 'tools/check_v436_browser_battle_enemy_ai_target_parity.mjs'
+      - '.github/workflows/check-v436-browser-battle-enemy-ai-target-parity.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v429_browser_battle_enemy_ai_target_types.mjs'
+      - 'tools/check_v430_browser_battle_enemy_ai_target_selection.mjs'
+      - 'tools/check_v431_browser_battle_enemy_ai_controller.mjs'
+      - 'tools/check_v432_browser_battle_enemy_ai_attack_pipeline.mjs'
+      - 'tools/check_v433_browser_battle_enemy_ai_dead_entry.mjs'
+      - 'tools/check_v434_browser_battle_enemy_ai_can_move.mjs'
+      - 'tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs'
+      - 'tools/check_v436_browser_battle_enemy_ai_target_parity.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run enemy AI target and lifecycle regressions
+        run: |
+          node tools/check_v429_browser_battle_enemy_ai_target_types.mjs
+          node tools/check_v430_browser_battle_enemy_ai_target_selection.mjs
+          node tools/check_v431_browser_battle_enemy_ai_controller.mjs
+          node tools/check_v432_browser_battle_enemy_ai_attack_pipeline.mjs
+          node tools/check_v433_browser_battle_enemy_ai_dead_entry.mjs
+          node tools/check_v434_browser_battle_enemy_ai_can_move.mjs
+          node tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs
+          node tools/check_v436_browser_battle_enemy_ai_target_parity.mjs
+          node tools/check_v386_browser_battle_context_runtime.mjs
+          node tools/check_browser_battle_attack_pipeline_binding.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_enemy_ai_runtime.mjs
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v429_browser_battle_enemy_ai_target_types.mjs
+          node --check tools/check_v430_browser_battle_enemy_ai_target_selection.mjs
+          node --check tools/check_v431_browser_battle_enemy_ai_controller.mjs
+          node --check tools/check_v432_browser_battle_enemy_ai_attack_pipeline.mjs
+          node --check tools/check_v433_browser_battle_enemy_ai_dead_entry.mjs
+          node --check tools/check_v434_browser_battle_enemy_ai_can_move.mjs
+          node --check tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs
+          node --check tools/check_v436_browser_battle_enemy_ai_target_parity.mjs
