@@ -15,7 +15,7 @@
   },
   "blockers": {
     "route-4000-to-200": {
-      "status": "active",
+      "status": "repaired-via-ro0000-overlay",
       "scope": "first-route",
       "previousEvidence": "fixed-C floor 4000 connected components",
       "newEvidence": [
@@ -30,9 +30,15 @@
         "world graph shows 4020 only connects to 851 and back to 4000; 851 continues to 840/4020 and this branch does not reach the 4000 component-0 200 portals",
         "V3.64 tile-pattern audit: the exact sequence 321→409→196→307→156 occurs only at (90,109), while the prefix 321→409→196 also occurs at (61,107) and the transition 307→156 also occurs at (61,77); this shows the blocker sits inside a recurring source-map terrain pattern rather than proving a missing road tile",
         "pinned battlefield source manifest names tile 196 as `砂漠の草と土２の境界１`, so 196 is explicitly a terrain-boundary tile",
-        "V3.64 audit therefore does not support replacing all three blocked cells with 321 as an original-art restoration"
+        "V3.64 audit therefore does not support replacing all three blocked cells with 321 as an original-art restoration",
+        "RO0000 repair overlay declares only (4000,91,109),(4000,92,109),(4000,93,109) as walkable while preserving source tile/object values",
+        "RO0000 repair overlay has source-cell guard and fails closed on source mismatch",
+        "dedicated RO0000 4000 repair regression passes",
+        "V3.76 Browser World Movement regression passes after overlay integration",
+        "V3.78 Browser World First-Route planning regression passes after overlay integration",
+        "V3.79 Browser World First-Route execution regression passes after overlay integration"
       ],
-      "next": "keep active; three-cell terrain opening remains the smallest verified connectivity repair, but tile replacement is not source-backed. Compare any recoverable historical external map snapshot next; otherwise use a clearly labeled RO0000 repair map. Do not mutate canonical map or movement/warp semantics yet."
+      "next": "keep the RO0000-only three-cell walkability overlay; canonical map/tile/object/NPC/warp data remain unchanged. Historical original-art identity is still unproven, so do not rewrite the canonical map from the overlay."
     },
     "route-3000-to-200-landing-587-318": {
       "status": "resolved",
