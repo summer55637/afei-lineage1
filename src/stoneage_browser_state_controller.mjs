@@ -31,6 +31,7 @@ import { ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } fro
 import { createBrowserBattleInitializeRuntime, ACTION_BATTLE_INITIALIZE, BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT } from './stoneage_browser_battle_initialize_runtime.mjs';
 import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATUS, BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT } from './stoneage_browser_battle_command_wait_runtime.mjs';
 import { createBrowserBattleEnemyAiRuntime, ACTION_BATTLE_ENEMY_AI_APPLY, BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT } from './stoneage_browser_battle_enemy_ai_runtime.mjs';
+import { createBrowserBattleChargeRuntime, ACTION_BATTLE_CHARGE_STEP, BROWSER_BATTLE_CHARGE_RUNTIME_FORMAT } from './stoneage_browser_battle_charge_runtime.mjs';
 import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT, preflightPlayerBattleCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
 import { createBrowserBattleDefaultTargetRuntime, ACTION_BATTLE_DEFAULT_TARGET_RESOLVE, BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_default_target_runtime.mjs';
@@ -135,7 +136,7 @@ function requireAttackCommandBinding(battleContext,type,attackerBid,targetBid,st
     ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-entry-invalid',attackerBid:attackerBid,targetBid:targetBid,state:clone(state)
   };
   const command=Number(attacker?.battleCommands?.[0]);
-  if(![1,8].includes(command))return {
+  if(![1,8,1009,1015].includes(command))return {
     ok:false,handled:false,stage:'attack-command-binding',reason:'attack-command-required',attackerBid:a,targetBid:t,command:Number.isFinite(command)?command:null,state:clone(state)
   };
   const commandTarget=Number(attacker?.battleCommands?.[1]);
@@ -234,6 +235,7 @@ function createBrowserStateController({
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
   const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
+  const battleChargeRuntime=createBrowserBattleChargeRuntime();
   const battlePlayerCommandRuntime=createBrowserBattlePlayerCommandRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
@@ -453,6 +455,30 @@ function createBrowserStateController({
         }
         return {...result,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,
           battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_CHARGE_STEP){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-charge',reason:'battle-context-required',state:clone(currentState)};
+        const waiting=battleCommandWaitRuntime.status(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)}
+        );
+        if(!waiting.ok)return {...waiting,stage:'battle-charge-wait-gate',state:clone(currentState)};
+        if(!waiting.ready)return {
+          ok:false,handled:false,stage:'battle-charge-wait-gate',reason:'battle-commands-not-ready',
+          blockingEntries:waiting.sides.flatMap(side=>side.blockingEntries??[]),
+          battleContext:clone(battleContext),state:clone(currentState)
+        };
+        if(battleChargeRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-charge',reason:'browser-battle-charge-runtime-invalid',state:clone(currentState)};
+        const result=battleChargeRuntime.advance(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {actorBid:action.actorBid??null}
+        );
+        if(result.ok===true&&result.context){
+          battleContext=clone(result.context);
+          battleAttackPipeline=null;
+        }
+        return {...result,format:BROWSER_BATTLE_CHARGE_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_INITIALIZE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-initialize',reason:'battle-context-required',state:clone(currentState)};
@@ -1828,6 +1854,8 @@ export {
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
   ACTION_BATTLE_ENEMY_AI_APPLY,
+  ACTION_BATTLE_CHARGE_STEP,
+  BROWSER_BATTLE_CHARGE_RUNTIME_FORMAT,
   ACTION_BATTLE_PLAYER_COMMAND_SET,
   ACTION_BATTLE_IDLE_STRATEGY_APPLY,
   BROWSER_IDLE_BATTLE_STRATEGY_RUNTIME_FORMAT,
