@@ -1,5 +1,3 @@
-import { inflateSync } from 'node:zlib';
-
 const RD_HEADER_SIZE=16;
 const BIT_CMP=0x80;
 const BIT_ZERO=0x40;
@@ -34,13 +32,7 @@ export function decodeStoneAgeRd(input){
   }
 
   if(h.compressFlag===0x20){
-    const outputBytes=checkedArea(h.width,h.height,4);
-    const out=new Uint8Array(outputBytes);
-    const compressed=b.slice(RD_HEADER_SIZE,h.size);
-    const inflated=inflateSync(compressed);
-    if(inflated.byteLength!==outputBytes)throw new Error('RD zlib decoded size mismatch: '+inflated.byteLength+' / '+outputBytes);
-    out.set(inflated);
-    return {width:h.width,height:h.height,compressFlag:0x20,bytesPerPixel:4,pixels:out};
+    throw new Error('RD zlib branch requires decodeStoneAgeRdAsync in browser-safe runtime');
   }
 
   const outputBytes=checkedArea(h.width,h.height,1);
@@ -77,6 +69,34 @@ export function classifyStoneAgeGraphic(input){
   if(magic===0x4452)return {format:'RD',decoder:'decodeStoneAgeRd'};
   if(magic===0x4767)return {format:'gG',decoder:'decoderPng'};
   throw new Error('unsupported client graphic magic 0x'+magic.toString(16));
+}
+
+export async function decodeStoneAgeRdAsync(input){
+  const b=input instanceof Uint8Array?input:new Uint8Array(input);
+  const h=parseRdHeader(b);
+  if(h.size<RD_HEADER_SIZE||h.size>b.length)throw new Error('invalid RD size');
+
+  if(h.compressFlag!==0x20)return decodeStoneAgeRd(b);
+
+  const outputBytes=checkedArea(h.width,h.height,4);
+  if(typeof DecompressionStream!=='function')throw new Error('Web DecompressionStream is unavailable');
+  const compressed=b.slice(RD_HEADER_SIZE,h.size);
+  const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate'));
+  const inflated=new Uint8Array(await new Response(stream).arrayBuffer());
+  if(inflated.byteLength!==outputBytes)throw new Error('RD zlib decoded size mismatch: '+inflated.byteLength+' / '+outputBytes);
+  return {width:h.width,height:h.height,compressFlag:0x20,bytesPerPixel:4,pixels:inflated};
+}
+
+export async function decodeAuthorizedClientGraphicAsync(realBytes,graphic){
+  if(!graphic||graphic.adder==null||graphic.size==null)return null;
+  const b=realBytes instanceof Uint8Array?realBytes:new Uint8Array(realBytes);
+  const start=Math.trunc(Number(graphic.adder)),size=Math.trunc(Number(graphic.size));
+  if(!Number.isFinite(start)||!Number.isFinite(size)||start<0||size<=0)return null;
+  need(b,start,size,'graphic payload');
+  const slice=b.slice(start,start+size);
+  const classification=classifyStoneAgeGraphic(slice);
+  if(classification.format==='RD')return decodeStoneAgeRdAsync(slice);
+  return {format:'gG',decoder:'decoderPng',status:'png-runtime-required'};
 }
 
 export function decodeAuthorizedClientGraphic(realBytes,graphic){
