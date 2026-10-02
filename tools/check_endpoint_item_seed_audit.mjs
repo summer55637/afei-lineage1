@@ -120,6 +120,13 @@ function probeItemLoaderDisassembly() {
     : [];
   const idScanAtoi = idScanWindow.filter(line => /<atoi(?:@|\b)/.test(line)).slice(0, 10);
   const tblenRefs = lines.filter(line => /ITEM_tblen/.test(line)).slice(0, 40);
+  const loaderIndexRefs = lines.filter(line => /ITEM_idx/.test(line)).slice(0, 80);
+  const loaderIndexWindows = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (/ITEM_idx/.test(lines[i])) {
+      loaderIndexWindows.push(lines.slice(Math.max(0, i - 8), Math.min(lines.length, i + 12)));
+    }
+  }
 
   const makeDisassembly = commandText('objdump', [
     '-drwC', '-M', 'intel', '--disassemble=ITEM_makeItem', SERVER_BIN
@@ -127,12 +134,19 @@ function probeItemLoaderDisassembly() {
   const makeLines = makeDisassembly.split(/\r?\n/);
   const makeTransformCalls = makeLines.filter(line => /ITEM_getSIndexFromTransList/.test(line)).slice(0, 40);
   const makeItemTableRefs = makeLines.filter(line => /ITEM_tbl/.test(line)).slice(0, 60);
+  const makeItemIndexRefs = makeLines.filter(line => /ITEM_idx/.test(line)).slice(0, 60);
   const makeItemTableWindows = [];
   for (let i = 0; i < makeLines.length; i++) {
     if (/ITEM_tbl/.test(makeLines[i])) {
       makeItemTableWindows.push(makeLines.slice(Math.max(0, i - 8), Math.min(makeLines.length, i + 10)));
     }
   }
+
+  const makeHead = makeLines.slice(0, 170);
+  const makeAndRegDisassembly = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--disassemble=ITEM_makeItemAndRegist', SERVER_BIN
+  ]);
+  const makeAndRegLines = makeAndRegDisassembly.split(/\r?\n/);
 
   const checkSymbolDisassembly = commandText('objdump', [
     '-drwC', '-M', 'intel', '--disassemble=_ITEM_CHECKITEMTABLE', SERVER_BIN
@@ -165,10 +179,15 @@ function probeItemLoaderDisassembly() {
     idScanWindow,
     idScanAtoiCalls: idScanAtoi,
     itemTblenReferences: tblenRefs,
+    loaderItemIndexReferences: loaderIndexRefs,
+    loaderItemIndexWindows: loaderIndexWindows,
     makeItemDisassembly: {
+      head: makeHead,
       transformCalls: makeTransformCalls,
       itemTableReferences: makeItemTableRefs,
+      itemIndexReferences: makeItemIndexRefs,
       itemTableWindows: makeItemTableWindows,
+      makeAndRegLines: makeAndRegLines.slice(0, 140),
       checkItemTableDisassembly: checkSymbolLines.slice(0, 140)
     },
     newPlayerGrant: {
@@ -181,6 +200,7 @@ function probeItemLoaderDisassembly() {
       token17IsProven: constantEvidence.length > 0,
       directMakeItemTransformObserved: makeTransformCalls.length > 0,
       directItemTableAccessObserved: makeItemTableRefs.length > 0,
+      itemIndexAccessObserved: makeItemIndexRefs.length > 0,
       itemCheckTableSymbolObserved: checkSymbolLines.some(line => /_ITEM_CHECKITEMTABLE/.test(line)),
       newPlayerGrantChainObserved: grantItemCalls.some(line => /ITEM_makeItemAndRegist/.test(line)),
       newPlayerItemGetterObserved: getterLines.some(line => /getNewplayergiveitem/.test(line)),
