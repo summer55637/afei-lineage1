@@ -6,7 +6,7 @@
 
 ## 目前狀態
 
-- 最新 commit：71175c3 — docs: sync README with deferred starter item policy
+- 最新 commit：2fb282d — test: align feature policy with cleared reopened registry
 - 更新時間：2026-10-02T12:01:45+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
@@ -20,7 +20,7 @@
 | Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
 | 判定 | Endpoint 決定「實際部署有什麼」；Fixed-C 驗證「引擎怎麼運作」；variant 不互相覆蓋 |
 | 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
-| 重開案 | world-blockers：reopened-for-endpoint-reaudit（未啟用） |
+| 重開案 | 目前沒有 |
 
 ## 開發進度
 
