@@ -49,7 +49,7 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             parse_elf_header(b"\x7fELF" + b"\x01\x01\x01" + b"\x00" * 20)
 
     def test_embedded_resource_format_string(self):
-        values = relevant_embedded_strings(b"prefix\\x00path/map4/%s/real.bin\\x00")
+        values = relevant_embedded_strings(b"prefix\x00path/map4/%s/real.bin\x00")
         self.assertIn("path/map4/%s/real.bin", values)
 
     def test_embedded_utf16le_resource_string(self):
