@@ -1,0 +1,24 @@
+name: V3.63 4000 open-road experiment
+
+on:
+  push:
+    paths:
+      - 'tools/check_v363_4000_open_road_experiment.mjs'
+      - 'src/stoneage_map_runtime.mjs'
+      - 'data/generated/stoneage_map_4000.json'
+      - 'data/generated/stoneage_mapset_runtime.json'
+      - '.github/workflows/check-v363-4000-open-road-experiment.yml'
+  workflow_dispatch:
+
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run open-road experiment
+        run: node tools/check_v363_4000_open_road_experiment.mjs
