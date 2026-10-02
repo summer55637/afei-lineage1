@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b4965e1 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T04:18:24Z
+- 最新 commit：ca50f63 — docs: mark save lifecycle implementation pending regression
+- 更新時間：2026-10-02T04:xx:xxZ
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -36,7 +36,7 @@
 
 ## Blocker
 
-- persistent-state-expansion：Schema v1、Save Envelope v1 與交易回歸已存在；目前缺口是持久寫入及重新載入生命週期。
+- persistent-state-expansion：持久寫入、Controller 自動保存與 session 還原已實作；待 GitHub Actions 回歸驗證。
 
 ## 重要文件
 
