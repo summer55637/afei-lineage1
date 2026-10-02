@@ -126,6 +126,12 @@ jobs:
               "KeyboardReturn", "keyBoardProcWnd", "moveProc", "onceMoveProc",
               "partyMoveProc", "_execEtcEvent", "_etcEventCheck", "_sendWarpEvent",
               "_sendEnemyEvent", "_checkWarpEvent", "_checkEnemyEvent", "callbackKeyboardChange",
+              "InitGame", "SystemTask", "EndGame", "networkLoop", "EventProc",
+              "KeyboardReturn", "MouseNowPoint", "MouseCrick", "MouseDblCrick",
+              "GetRealX", "GetRealY", "getAutoAct", "StopAutoWalk", "PeekNextPostion",
+              "GetNextPostion", "CheckOnWarpPoint", "CheckCurrentGuideRealPosition",
+              "_sendMoveRoute", "lssproto_AC_send", "lssproto_EV_send", "lssproto_M_send",
+              "_sendEncount", "_checkEncount",
           )
           focus = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":native["auditedApk"]["sha256"],"libraries":[]}
           for lib in native.get("nativeLibraries", []):
@@ -181,6 +187,14 @@ jobs:
               "partyMoveProc(", "_execEtcEvent(", "_etcEventCheck(", "_sendWarpEvent(",
               "_sendEnemyEvent(", "_checkWarpEvent(", "_checkEnemyEvent(",
               "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange"
+              "InitGame(", "SystemTask(", "EndGame(", "checkGuildBoxHit(",
+              "InitShapeClickStatus(", "RealTimeToSATime(", "NextScrollPanelRender(",
+              "stockDispBtnCls(", "joy_read(", "DoNormalCallback(", "PaletteProc(",
+              "Flip(", "InitSurfaceInfo(", "repairMap(", "getAutoAct(", "StopAutoWalk(",
+              "PeekNextPostion(", "GetNextPostion(", "CheckOnWarpPoint(",
+              "CheckCurrentGuideRealPosition(", "_sendMoveRoute(",
+              "lssproto_AC_send(", "lssproto_EV_send(", "lssproto_M_send(",
+              "_sendEncount(", "_checkEncount(",
           )
           focus["coreFunctionCoverage"] = {abi: {
               "complete": all(any(name.startswith(prefix) for name in names) for prefix in core),
