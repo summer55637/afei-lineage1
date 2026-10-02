@@ -54,8 +54,8 @@ const coreStatRolls=[
   assert.equal(build.context.enemyCoreStatRngRollCount,30);
   assert.equal(build.context.sides[1].entries[5].enemyId,120);
   assert.equal(build.context.sides[1].entries[5].sourceCoreStats.level,2);
-  assert.equal(build.context.sides[1].entries[8].enemyId,123);
-  assert.equal(build.context.sides[1].entries[8].sourceCoreStats.level,2);
+  assert.equal(build.context.sides[1].entries[6].enemyId,123);
+  assert.equal(build.context.sides[1].entries[6].sourceCoreStats.level,2);
   assert.equal(c.getBattleContext().context.sourceGroupId,94);
   const preInitAttack=await c.dispatch({type:ACTION_BATTLE_ATTACK_PREFLIGHT,attackerBid:0,targetBid:15});
   assert.equal(preInitAttack.ok,false,JSON.stringify(preInitAttack));
