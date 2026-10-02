@@ -36,8 +36,8 @@
 
 ## Blocker
 
-- route-4000-to-200：active → keep active; inspect whether endpoint contains an alternate source-backed route/warp connection from component 48 to component 0 before changing runtime eligibility
-- route-3000-to-200-landing-587-318：active → keep active; inspect endpoint object/warp placement semantics around component 1 and whether the non-walkable warp origin (588,318) can be triggered without stepping onto it
+- route-4000-to-200：active → keep active; inspect source-backed alternate connections from component 48 before changing runtime eligibility
+- route-3000-to-200-landing-587-318：✅ resolved → 587,318 可透過相鄰 Warp event 回到 3000，無需踩上不可走的 588,318
 - starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
 - starter-item-endpoint-32003：active → keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
