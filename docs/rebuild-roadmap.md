@@ -1,3 +1,11 @@
+## 2026-10-02 V4.35 Enemy AI Charge Retention
+
+對齊 Fixed-C `BATTLE_IsCharge()`：敵人目前 COM1 是 `BATTLE_COM_S_CHARGE`（1005）、`BATTLE_COM_S_EARTHROUND0`（1009）或 `BATTLE_COM_S_EARTHROUND1`（1010）時，AI pass 保留 COM1／COM2、不重抽行動，只設 C_OK；優先於 Surprise，且不消耗 action／target RNG。不做蓄力倒數、釋放攻擊或持久狀態變更。
+
+Regression：`tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs`；Workflow 重跑 V4.29–V4.35。
+
+---
+
 ## 2026-10-02 V4.34 Enemy AI Can-Move Override
 
 對齊 Fixed-C `BATTLE_ai_all()` 的後置 `BATTLE_CanMoveCheck()`：Enemy AI 已成功選出命令後，若存在 paralysis／stone／sleep，最終命令覆成 NONE、仍提交 C_OK；barrier 依 `_MAGIC_BARRIER` 條件編譯。AI action／target 的先行 RNG 不回退。dizzy、dragnet、confusion、nocast、poison、drunk 不列入這條 fixed C blocker。此版不執行傷害、不修改 Persistent State。
