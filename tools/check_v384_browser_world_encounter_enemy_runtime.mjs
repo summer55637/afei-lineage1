@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
+  ACTION_WORLD_ENCOUNTER_GROUP_SELECT,
   BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -15,7 +16,14 @@ const groupCatalog=readJson('data/generated/stoneage_start_encounter_group_runti
 
 const state=freshPersistentState({playerId:'v384'});
 state.world.position={floorId:100,x:610,y:538};
+state.idle.enabled=true;
+state.idle.mode='encounter_pending';
+state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
 const controller=createBrowserStateController({state,encounterTargetIndex:targetIndex,encounterGroupCatalog:groupCatalog});
+
+let selected=await controller.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounterId:65,groupRoll:2});
+assert.equal(selected.ok,true,JSON.stringify(selected));
+assert.equal(selected.group.groupId,94);
 
 let result=await controller.dispatch({
   type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
@@ -39,6 +47,9 @@ assert.equal(result.battleStarted,false);
 assert.equal(result.persistentMutation,false);
 assert.equal(result.state.revision,0);
 
+selected=await controller.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounterId:65,groupRoll:0});
+assert.equal(selected.ok,true,JSON.stringify(selected));
+assert.equal(selected.group.groupId,89);
 result=await controller.dispatch({
   type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   encounterId:65,
@@ -50,6 +61,8 @@ assert.equal(result.ok,true,JSON.stringify(result));
 assert.deepEqual(result.team.map(x=>x.enemyId),[120]);
 assert.equal(result.enemyEntryMax,4);
 
+selected=await controller.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounterId:65,groupRoll:2});
+assert.equal(selected.ok,true,JSON.stringify(selected));
 result=await controller.dispatch({
   type:ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   encounterId:65,
