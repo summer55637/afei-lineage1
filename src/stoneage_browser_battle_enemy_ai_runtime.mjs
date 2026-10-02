@@ -57,7 +57,7 @@ function selectAction(w,roll){
 function candidatesForTarget(context,opposingSide,targetType){
   const side=context.context.sides.find(x=>int(x?.side)===opposingSide);
   const entries=Array.isArray(side?.entries)?side.entries:[];
-  if(![1,2,3].includes(targetType))return {ok:false,reason:'enemy-ai-target-type-not-supported',targetType};
+  if(![0,1,2,3].includes(targetType))return {ok:false,reason:'enemy-ai-target-type-not-supported',targetType};
   const candidates=[];
   for(let slot=0;slot<entries.length;slot++){
     const entry=entries[slot];if(!entry||entry.isDie===true)continue;
