@@ -61,11 +61,10 @@ const enemyTeam=[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}];
   });
   assert.equal(ok.ok,true,JSON.stringify(ok));
   assert.equal(ok.stage,'battle-context-started');
-  assert.deepEqual(ok.context.encounter,{
-    floorId:100,x:610,y:538,encounterId:65,rect:[568,538,610,578],
-    probMin:1,probMax:5,enemyMax:4,zorder:30,groupIds:[89,92,94],
-    groupProbs:[1,1,1],enemyIds:[120,123],sourceSelection:'exact'
+  assert.deepEqual(ok.context.sourceEncounter,{
+    floorId:100,x:610,y:538,encounterId:65
   });
+  assert.equal(ok.context.sourceGroupId,94);
   assert.equal(ok.state.idle.mode,'in_battle');
   assert.equal(ok.state.revision,1);
 }
