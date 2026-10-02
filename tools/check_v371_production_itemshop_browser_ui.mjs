@@ -78,7 +78,7 @@ const controller=createBrowserStateController({
 });
 
 const opened=await controller.dispatch({type:ITEMSHOP_UI_OPEN,targetCell:[resolvedShop.floorId,Number(resolvedShop.bornCorner.x1),Number(resolvedShop.bornCorner.y1)],player});
-assert.equal(opened.ok,true);
+assert.equal(opened.ok,true,JSON.stringify(opened));
 assert.equal(opened.handled,true);
 assert.equal(opened.format,ITEMSHOP_UI_STATE_FORMAT);
 assert.ok(opened.ui.open);
