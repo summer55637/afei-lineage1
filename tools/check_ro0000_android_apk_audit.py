@@ -18,7 +18,7 @@ def _string_pool(strings):
     entries=[]
     for value in strings:
         raw=value.encode('utf-8')
-        entries.append(_len8(len(value))+_len8(len(raw))+raw+b'\\x00')
+        entries.append(_len8(len(value))+_len8(len(raw))+raw+b'\x00')
     strings_start=28+4*len(strings)
     offsets=[]
     cursor=0
@@ -27,7 +27,7 @@ def _string_pool(strings):
         cursor+=len(entry)
     data=b''.join(entries)
     padding=(-len(data))%4
-    data+=b'\\x00'*padding
+    data+=b'\x00'*padding
     size=strings_start+len(data)
     header=struct.pack('<HHI',0x0001,28,size)
     header+=struct.pack('<IIIII',len(strings),0,0x100,strings_start,0)
@@ -75,7 +75,6 @@ def _manifest_fixture():
     chunks.append(_start_tag(index,'manifest',[
         ('package','com.example.game','string'),('versionCode',1,'int')
     ]))
-    chunks.append(_end_tag(index,'manifest') if False else b'')
     chunks.append(_start_tag(index,'uses-sdk',[
         ('minSdkVersion',21,'int'),('targetSdkVersion',29,'int')
     ]))
@@ -113,7 +112,7 @@ def _manifest_fixture():
 
 class AndroidApkStringScanTests(unittest.TestCase):
     def test_ascii_resource_path(self):
-        values=resource_name_candidates(b'prefix\\x00path/map4/real.bin\\x00s/spr.bin\\x00')
+        values=resource_name_candidates(b'prefix\x00path/map4/real.bin\x00s/spr.bin\x00')
         self.assertIn('path/map4/real.bin',values)
         self.assertIn('s/spr.bin',values)
 
