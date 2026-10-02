@@ -1,4 +1,3 @@
-(async()=>{
 import assert from 'node:assert/strict';
 import {deflateSync} from 'node:zlib';
 import {
@@ -55,4 +54,3 @@ console.log(JSON.stringify({
   supportedCompression:['0 raw 1-byte pixels','0x20 zlib 4-byte pixels','legacy custom RLE'],
   alternateGraphicMagic:'gG -> decoderPng',
 }));
-})();
