@@ -28,6 +28,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Checkout pinned fixed-C StoneAge source
+        uses: actions/checkout@v4
+        with:
+          repository: gavinlinasd/StoneAge
+          ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          path: stoneage-source
+          fetch-depth: 1
+      - name: Generate production ItemShop catalog
+        run: |
+          node tools/generate_npc_itemshop_runtime.mjs --source-root stoneage-source --out data/generated/stoneage_npc_itemshop_runtime.json
       - name: Run V3.56 browser World NPC service routing regression
         run: node tools/check_v356_browser_world_npc_service_routing.mjs
       - name: Check JavaScript syntax
