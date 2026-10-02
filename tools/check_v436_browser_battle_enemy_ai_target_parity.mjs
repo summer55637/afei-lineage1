@@ -17,7 +17,7 @@ function context({targetType=1,selectMode=1,targetRollRange=1,actorElements,targ
   ];
   return {context:{mode:'battle',sourceMode:2,turn:1,sides:[
     {side:0,type:0,entries:rows.map(e=>({...e,sourceAiTargetStats:e.stats,sourceAiElements:e.elements,sourcePartyMode:partyModes[e.bid]??e.sourcePartyMode??0,isDie:e.isDie??false,sourceBattleCharMode:e.sourceBattleCharMode??2}))},
-    {side:1,type:1,flg:0,entries:[{bid:10,sourceType:'enemy',hp:30,isDie:false,sourceBattleCharMode:2,battleCommands:[-1,-1,-1],sourceAiElements:actorElements??{earth:10,water:0,fire:0,wind:0},sourceEnemyAi:ai(targetType,selectMode,targetRollRange)} ,...Array(9).fill(null)]}
+    {side:1,type:1,flg:0,entries:[{bid:10,sourceType:'enemy',hp:30,isDie:false,sourceBattleCharMode:2,battleCommands:[-1,-1,-1],sourceAiElements:actorElements===undefined?{earth:10,water:0,fire:0,wind:0}:actorElements,sourceEnemyAi:ai(targetType,selectMode,targetRollRange)} ,...Array(9).fill(null)]}
   ]}};
 }
 function run(opts,rolls){
