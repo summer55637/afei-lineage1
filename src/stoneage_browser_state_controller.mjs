@@ -30,6 +30,7 @@ import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONT
 import { ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } from './stoneage_browser_battle_turn_runtime.mjs';
 import { createBrowserBattleInitializeRuntime, ACTION_BATTLE_INITIALIZE, BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT } from './stoneage_browser_battle_initialize_runtime.mjs';
 import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATUS, BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT } from './stoneage_browser_battle_command_wait_runtime.mjs';
+import { createBrowserBattleEnemyAiRuntime, ACTION_BATTLE_ENEMY_AI_APPLY, BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT } from './stoneage_browser_battle_enemy_ai_runtime.mjs';
 import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT, preflightPlayerBattleCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
 import { createBrowserBattleDefaultTargetRuntime, ACTION_BATTLE_DEFAULT_TARGET_RESOLVE, BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_default_target_runtime.mjs';
@@ -231,6 +232,7 @@ function createBrowserStateController({
   const battleContextClearRuntime=createBrowserBattleContextClearRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
+  const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
   const battlePlayerCommandRuntime=createBrowserBattlePlayerCommandRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
@@ -427,6 +429,29 @@ function createBrowserStateController({
           {timeoutExpired:action.timeoutExpired===true}
         );
         return {...result,format:BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_ENEMY_AI_APPLY){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        const waiting=battleCommandWaitRuntime.status(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)}
+        );
+        if(!waiting.ok)return {...waiting,stage:'battle-enemy-ai-wait-gate',state:clone(currentState)};
+        if(!waiting.ready)return {
+          ok:false,handled:false,stage:'battle-enemy-ai-wait-gate',reason:'player-commands-not-ready',
+          blockingEntries:waiting.sides.flatMap(side=>side.blockingEntries??[]),
+          battleContext:clone(battleContext),state:clone(currentState)
+        };
+        const result=battleEnemyAiRuntime.apply(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {actionRolls:action.actionRolls??[],targetRolls:action.targetRolls??[]}
+        );
+        if(result.ok===true&&result.battleContext){
+          battleContext=clone(result.battleContext.context??result.battleContext);
+          battleAttackPipeline=null;
+        }
+        return {...result,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_INITIALIZE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-initialize',reason:'battle-context-required',state:clone(currentState)};
@@ -1799,6 +1824,7 @@ export {
   ACTION_BATTLE_TURN_INITIALIZE,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
+  ACTION_BATTLE_ENEMY_AI_APPLY,
   ACTION_BATTLE_PLAYER_COMMAND_SET,
   ACTION_BATTLE_IDLE_STRATEGY_APPLY,
   BROWSER_IDLE_BATTLE_STRATEGY_RUNTIME_FORMAT,
