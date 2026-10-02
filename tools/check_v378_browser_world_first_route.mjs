@@ -108,10 +108,10 @@ assert.equal(listedAfter.revision,listedBefore.revision);
 assert.deepEqual(listedAfter.world.position,listedBefore.world.position);
 assert.deepEqual(validatePersistentState(listedAfter),[]);
 
-const blocked=freshPersistentState({playerId:'v378-4000-blocked'});
-blocked.world.position={floorId:4000,x:80,y:90};
-const blockedController=createBrowserStateController({
-  state:blocked,
+const repaired=freshPersistentState({playerId:'v378-4000-repaired'});
+repaired.world.position={floorId:4000,x:80,y:90};
+const repairedController=createBrowserStateController({
+  state:repaired,
   idleRouteCatalog:routeCatalog,
   warpCatalog,
   encounterTargetIndex,
@@ -120,14 +120,40 @@ const blockedController=createBrowserStateController({
     loadMapset:async()=>mapset
   }
 });
-const blockedResult=await blockedController.dispatch({
+for(const portalId of ['4000_to_200_a','4000_to_200_b']){
+  const repairPlan=await repairedController.dispatch({
+    type:ACTION_WORLD_FIRST_ROUTE_PLAN,
+    routeId:'hometown-3/floor-4000-to-200/'+portalId
+  });
+  assert.equal(repairPlan.ok,true,JSON.stringify(repairPlan));
+  assert.equal(repairPlan.productRepair?.id,'karutarna-4000-road-access-v1');
+  assert.equal(repairPlan.encounterBoundary.insideUnconditional,true);
+  for(const cell of [{x:91,y:109},{x:92,y:109},{x:93,y:109}])
+    assert.ok(repairPlan.path.toPortal.some(point=>point.x===cell.x&&point.y===cell.y),JSON.stringify({portalId,cell}));
+}
+assert.deepEqual([maps[4000].tiles[109*150+91],maps[4000].tiles[109*150+92],maps[4000].tiles[109*150+93]],[409,196,307]);
+
+const noRepair=freshPersistentState({playerId:'v378-4000-no-repair'});
+noRepair.world.position={floorId:4000,x:80,y:90};
+const noRepairController=createBrowserStateController({
+  state:noRepair,
+  idleRouteCatalog:routeCatalog,
+  warpCatalog,
+  encounterTargetIndex,
+  worldMapRepairOverlay:null,
+  worldFirstRouteOptions:{
+    loadMap:async floorId=>maps[Number(floorId)]??null,
+    loadMapset:async()=>mapset
+  }
+});
+const blockedResult=await noRepairController.dispatch({
   type:ACTION_WORLD_FIRST_ROUTE_PLAN,
   routeId:'hometown-3/floor-4000-to-200/4000_to_200_a'
 });
 assert.equal(blockedResult.ok,false);
-assert.equal(blockedResult.reason,'first-route-not-eligible');
-assert.equal(blockedController.getState().revision,0);
-assert.deepEqual(blockedController.getState().world.position,{floorId:4000,x:80,y:90});
+assert.equal(blockedResult.reason,'route-product-repair-overlay-not-applied');
+assert.equal(noRepairController.getState().revision,0);
+assert.deepEqual(noRepairController.getState().world.position,{floorId:4000,x:80,y:90});
 
 console.log(JSON.stringify({
   pass:true,
@@ -141,5 +167,5 @@ console.log(JSON.stringify({
   encounterId:planned.encounter.id,
   encounterBoundary:planned.encounterBoundary,
   readonlyRevision:listedAfter.revision,
-  blocked4000FailClosed:true
+  4000ProductRepair:true,disabledOverlayFailClosed:true
 },null,2));

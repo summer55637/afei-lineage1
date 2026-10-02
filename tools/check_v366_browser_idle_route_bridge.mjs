@@ -17,7 +17,8 @@ assert.equal(controller.format,BROWSER_STATE_CONTROLLER_FORMAT);
 const routes=await controller.dispatch({type:ACTION_IDLE_LIST_ROUTES});
 assert.equal(routes.ok,true);
 assert.equal(routes.handled,true);
-assert.equal(routes.routes.length,6);
+assert.equal(routes.routes.length,8);
+assert.equal(routes.routes.filter(r=>r.hometown===3&&r.productRepairId==='karutarna-4000-road-access-v1').length,2);
 assert.equal(routes.routes.every(r=>r.eligible),true);
 
 const routeId=routes.routes.find(r=>r.hometown===1&&r.portalId==='2000_to_100_a').routeId;

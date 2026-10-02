@@ -82,6 +82,7 @@ async function executeFirstRoutePlan(plan,{dispatchMove=null,dispatchWarp=null,i
     format:BROWSER_WORLD_ROUTE_EXECUTION_RUNTIME_FORMAT,
     routeId:plan.routeId,
     portalId:plan.portalId,
+    productRepair:clone(plan.productRepair??null),
     executedActionCount:plan.actions.length,
     executedMoveCount:plan.actions.filter(action=>action.type===ACTION_WORLD_MOVE_STEP).length,
     executedWarpPointCount:plan.actions.filter(action=>action.type===ACTION_WORLD_WARPPOINT_EXECUTE).length,
