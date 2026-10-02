@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：aa3fb16 — test: cover transactional battle damage HP commit
-- 更新時間：2026-10-02T14:18:25+08:00
+- 最新 commit：6f1e9c0 — fix: escape line break in generated README link list
+- 更新時間：2026-10-02T14:24:17+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.26
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -46,6 +46,7 @@
 - [Rebuild roadmap](docs/rebuild-roadmap.md)
 - [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
 - [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
+    - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)
 - [Generated state / evidence](data/generated/)
 
 > README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。
