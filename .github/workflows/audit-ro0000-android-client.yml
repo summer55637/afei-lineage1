@@ -78,7 +78,7 @@ jobs:
                   lines=dis.get("excerpt", [])
                   selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)]})
               if selected: focus["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected})
-          dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\\n", encoding="utf-8")
+          dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
           apk = json.loads(Path("artifacts/ro0000_android_apk_audit.json").read_text(encoding="utf-8"))
           manifest = apk.get("manifest", {})
@@ -101,7 +101,7 @@ jobs:
               "parseStatus":manifest.get("parseStatus"),
               "scope":"Binary AndroidManifest.xml metadata only; not runtime permission behavior."
           }
-          Path("artifacts/stoneage_ro0000_android_manifest_audit.json").write_text(json.dumps(m,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+          Path("artifacts/stoneage_ro0000_android_manifest_audit.json").write_text(json.dumps(m,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
           PY
 
           git config user.name "github-actions[bot]"
