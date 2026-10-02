@@ -229,3 +229,72 @@ No unobserved resource bytes are being inferred.
 The older public Android source confirms the same filename family and `SAB` header convention, but its 20 × 20 / 400-cell constant is treated only as a historical version comparison.
 
 The current RO0000 target binary takes precedence for the target APK's actual resource layout.
+
+## 11. Target resource table domains and shard separation
+
+The target x86 binary now allows the image-ID and sprite-animation namespaces to be separated precisely.
+
+### Image / Real resource tables
+
+- `bitmapnumbertable` is 400,000 bytes = 100,000 uint32 entries. `realGetNo(imageId)` accepts image IDs below 100,000 and returns `bitmapnumbertable[imageId]`.
+- `adrnbuff` is 48,000,000 bytes = 600,000 records × 80 bytes.
+- `Realbinfp` is 2,400,000 bytes = 600,000 FILE* slots, indexed by the same graphic-number domain.
+
+Therefore the client has two different ID domains:
+
+~~~text
+image/bmp number : 0..99,999
+        ↓
+bitmapnumbertable
+        ↓
+graphic number   : 0..599,999
+        ↓
+adrnbuff + Realbinfp
+~~~
+
+A SABEX cell is a uint16, so its raw range is 0..65,535. This means every raw SABEX cell value is inside the target `realGetNo()` image-ID admission range; values do not need widening before entering the resolver.
+
+The rendering gate is separate: target `StockDispBuffer()` rejects `bmpNo <= 99`, while values above 99 enter `realGetNo()` and then `realGetPos()`. Thus low SABEX cell values should be treated as non-drawable/special codes in a target-faithful renderer rather than automatically being looked up as ordinary graphics.
+
+### Per-directory resource shards
+
+`loadResources()` calls `InitPteernSeparationBin("path", true)`. The target function recursively scans the resource tree and, for qualifying directories, `LoadSprbin()` constructs the four resource paths:
+
+~~~text
+%s/adrn.bin
+%s/real.bin
+%s/spradrn.bin
+%s/spr.bin
+~~~
+
+`AdrnInit()` records the current `MaxAdrnID` into `nextMaxAdrnID` before importing a shard. Each decoded 80-byte ADRNBIN record then has its graphic number shifted by that base before being stored into `adrnbuff` and `Realbinfp`; its nonzero `attr.bmpnumber` is entered into `bitmapnumbertable` against the shifted graphic number.
+
+This means the target client does not treat all `adrn.bin` files as an independent zero-based namespace. They are merged into one global graphic-number space using the running `MaxAdrnID` offset.
+
+### Sprite animation namespace is separate
+
+`InitSprBinFileOpen()` reads a 12-byte SPRADRN entry (`sprNo`, `offset`, `animSize` plus ABI padding), seeks into `spr.bin`, reads 12-byte animation headers and 10-byte frame records, and adds the same `nextMaxAdrnID` base to each frame's bitmap number before storing it in `SpriteData`.
+
+The target `SpriteData` allocation is 320,000 bytes = 40,000 entries, matching the public client's `mxSPRITE 40000` namespace.
+
+Therefore:
+
+~~~text
+SABEX battle tile
+    ↓
+StockDispBuffer
+    ↓
+realGetNo
+    ↓
+bitmapnumbertable / ADRNBIN / Realbin
+
+sprite animation
+    ↓
+SpriteData / spradrn.bin / spr.bin
+    ↓
+frame BmpNo + nextMaxAdrnID
+~~~
+
+These are related through the shared graphic-number space, but `spr.bin` is not the source of SABEX's 33×33 tile grid.
+
+All numeric layout claims above are recorded in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
