@@ -383,4 +383,79 @@ optional trailing bytes preserved for audit
 - 过短 payload 拒绝。
 
 README 维护 workflow 已把这组 regression test 纳入每次 main 更新。
+## 13. SABEX tile ID → client image resolver
 
+The next layer is now partially closed by cross-reading the battle renderer and the client image loader.
+
+In the later public client implementation, `ReadBattleMap()` stores each SABEX cell as a 16-bit value and passes that value directly to:
+
+~~~text
+StockDispBuffer(..., tile[cnt++], 0)
+~~~
+
+The corresponding `StockDispBuffer()` implementation resolves a positive `bmpNo` through:
+
+~~~text
+realGetNo(bmpNo)
+  -> graphicNo
+  -> realGetPos(graphicNo)
+~~~
+
+The existing public client `loadrealbin.cpp` establishes the underlying index relationship:
+
+~~~text
+ADRNBIN.attr.bmpnumber
+        ↓
+image-number → graphic-number index
+        ↓
+realGetNo(image-number)
+        ↓
+ADRNBIN(graphicNo)
+        ├─ adder
+        ├─ size
+        ├─ width / height
+        ├─ offsets
+        └─ MAP_ATTR
+        ↓
+realGetImage(graphicNo)
+        ↓
+Real binary payload
+~~~
+
+Therefore the working interpretation for a decoded SABEX cell is now:
+
+~~~text
+SABEX uint16
+   = client image/bmp number candidate
+   -> realGetNo()
+   -> graphicNo
+   -> ADRNBIN metadata / Real binary payload
+~~~
+
+This is substantially stronger than treating SABEX cell values as opaque "tile numbers". It also explains why the existing `80-byte ADRNBIN` resolver can be connected directly to the new SABEX decoder.
+
+### Evidence boundary
+
+The `ReadBattleMap() -> StockDispBuffer()` and `StockDispBuffer() -> realGetNo()` linkage is corroborated from the public later client source. The target APK independently proves that SABEX cells are passed to `StockDispBuffer`, and independently proves that its map/client collision path uses `realGetNo` for image IDs above the invisible range.
+
+What is **not** yet byte-level closed is the target APK's actual ADRN/resource payload. We still do not have the target's real decoded `adrn` index or `real.bin` bytes, so no specific SABEX tile value is currently being assigned to a concrete target graphic.
+
+### Runtime tool
+
+The new `src/stoneage_sabex_runtime.mjs` connects the two already established contracts:
+
+~~~text
+decoded SABEX 33×33 cells
+        +
+decoded 80-byte ADRNBIN index
+        ↓
+imageId → graphicNo resolution
+        ↓
+mapped / unmapped counts
+        ↓
+resolved metadata (adder/size/WH/offset/hit/height)
+~~~
+
+The implementation deliberately leaves unresolved tile IDs as `null` instead of fabricating a mapping. This keeps the reconstruction fail-closed until the actual target resource bytes are available.
+
+A regression test in `tools/test_sabex_client_image_runtime.mjs` verifies mapped and unmapped cell accounting on a synthetic 1089-cell SABEX grid.
