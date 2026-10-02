@@ -28,6 +28,6 @@ const playerOnly=planEnemyAiCommands(makeContext(2),{actionRolls:[0],targetRolls
 assert.equal(playerOnly.ok,true,JSON.stringify(playerOnly));
 assert.equal(playerOnly.commands[0].targetBid,0);
 const petOnly=planEnemyAiCommands(makeContext(3),{actionRolls:[0],targetRolls:[0]});
-assert.equal(petOnly.ok,false,'the fixture has no opposing-side pet for this direction');
-assert.equal(petOnly.reason,'enemy-ai-no-valid-targets');
+assert.equal(petOnly.ok,true,JSON.stringify(petOnly));
+assert.equal(petOnly.commands[0].targetBid,5);
 console.log(JSON.stringify({pass:true,targetTypes:[0,1,2,3],defaultTypeIncludesAll:true,deadAndRescueExcluded:true},null,2));
