@@ -42,7 +42,8 @@ function clearCanvas(ctx,canvas){
 function drawGraphic(ctx,canvas,graphic,rgba,scale,originX,originY,label){
   const w=graphic.width,h=graphic.height;
   if(w<=0||h<=0)return false;
-  const imageData=new ImageData(rgba,w,h);
+  const imageBytes=rgba instanceof Uint8ClampedArray?rgba:Uint8ClampedArray.from(rgba);
+  const imageData=new ImageData(imageBytes,w,h);
   const bitmap=document.createElement('canvas');
   bitmap.width=w;bitmap.height=h;
   bitmap.getContext('2d').putImageData(imageData,0,0);
