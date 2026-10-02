@@ -1,3 +1,11 @@
+## 2026-10-02 V4.34 Enemy AI Can-Move Override
+
+對齊 Fixed-C `BATTLE_ai_all()` 的後置 `BATTLE_CanMoveCheck()`：Enemy AI 已成功選出命令後，若存在 paralysis／stone／sleep／dizzy／dragnet／barrier，最終命令覆成 NONE、仍提交 C_OK；AI action／target 的先行 RNG 不回退。confusion、nocast、poison、drunk 不列入這條 blocker。此版不執行傷害、不修改 Persistent State。
+
+Regression：`tools/check_v434_browser_battle_enemy_ai_can_move.mjs`；Workflow 重跑 V4.29–V4.34。
+
+---
+
 ## 2026-10-02 V4.33 Dead Enemy AI Entry Lifecycle
 
 對齊 Fixed-C `BATTLE_ai_all()`：仍有效且處於 C_WAIT 的 Dead Enemy 不在 AI callback 前被 HP／死亡旗標預先排除，因此會依 Entry 順序參與 AI action／target RNG，並於成功後提交命令與 C_OK。死亡旗標及 HP 不變；target candidates 仍排除死者，真正的 action execution 仍需由後續階段跳過死亡 entry。
