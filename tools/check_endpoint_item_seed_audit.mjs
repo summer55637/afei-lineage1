@@ -127,6 +127,18 @@ function probeItemLoaderDisassembly() {
   const makeLines = makeDisassembly.split(/\r?\n/);
   const makeTransformCalls = makeLines.filter(line => /ITEM_getSIndexFromTransList/.test(line)).slice(0, 40);
   const makeItemTableRefs = makeLines.filter(line => /ITEM_tbl/.test(line)).slice(0, 60);
+  const makeItemTableWindows = [];
+  for (let i = 0; i < makeLines.length; i++) {
+    if (/ITEM_tbl/.test(makeLines[i])) {
+      makeItemTableWindows.push(makeLines.slice(Math.max(0, i - 8), Math.min(makeLines.length, i + 10)));
+    }
+  }
+
+  const checkSymbolDisassembly = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--disassemble=_ITEM_CHECKITEMTABLE', SERVER_BIN
+  ]);
+  const checkSymbolLines = checkSymbolDisassembly.split(/\r?\n/);
+
   const grantDisassembly = commandText('objdump', [
     '-drwC', '-M', 'intel', '--disassemble=CHAR_loginAddItemForNew', SERVER_BIN
   ]);
@@ -155,7 +167,9 @@ function probeItemLoaderDisassembly() {
     itemTblenReferences: tblenRefs,
     makeItemDisassembly: {
       transformCalls: makeTransformCalls,
-      itemTableReferences: makeItemTableRefs
+      itemTableReferences: makeItemTableRefs,
+      itemTableWindows: makeItemTableWindows,
+      checkItemTableDisassembly: checkSymbolLines.slice(0, 140)
     },
     newPlayerGrant: {
       grantItemCalls,
@@ -166,6 +180,8 @@ function probeItemLoaderDisassembly() {
       purpose: 'Observe compiled endpoint loader and make-item lookup behavior without assuming fixed-C source semantics.',
       token17IsProven: constantEvidence.length > 0,
       directMakeItemTransformObserved: makeTransformCalls.length > 0,
+      directItemTableAccessObserved: makeItemTableRefs.length > 0,
+      itemCheckTableSymbolObserved: checkSymbolLines.some(line => /_ITEM_CHECKITEMTABLE/.test(line)),
       newPlayerGrantChainObserved: grantItemCalls.some(line => /ITEM_makeItemAndRegist/.test(line)),
       newPlayerItemGetterObserved: getterLines.some(line => /getNewplayergiveitem/.test(line)),
       caution: 'Compiled binary evidence is correlated with symbols and callsites; absence of a transform symbol is evidence against that implementation, not proof that every possible mapping mechanism is absent.'
