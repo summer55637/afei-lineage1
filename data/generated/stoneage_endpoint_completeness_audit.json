@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-completeness-audit-v1",
-  "updated": "2026-10-01",
+  "updated": "2026-10-02",
   "source": {
     "root": "ro0000/",
     "description": "目前最完整、最接近可直接架設版本的實機／部署資料 snapshot"

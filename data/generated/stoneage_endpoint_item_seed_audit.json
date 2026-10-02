@@ -42,7 +42,89 @@
         "rows": 2
       }
     ],
-    "dominantColumnCount": 95
+    "dominantColumnCount": 95,
+    "rawSubstring32003Count": 0,
+    "rawSubstring32003Samples": [],
+    "fixedCShapeToken17Probe": {
+      "rowsWithToken17": 14502,
+      "distinctIds": 14416,
+      "duplicateIds": 85,
+      "maxId": 99999,
+      "configured32003": 0,
+      "fixed24114": 0
+    }
+  },
+  "serverBinaryProbe": {
+    "present": true,
+    "path": "ro0000/server/merged-source/gmsv/gmsvjt",
+    "blobSha": "fe574643d35966f4c22f6b0efd8ea504227ed4cd",
+    "fileInfo": "/home/runner/work/afei-lineage1/afei-lineage1/ro0000/server/merged-source/gmsv/gmsvjt: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=9afefbd2c61fc5877b1d21031cefa827d747477e, with debug_info, not stripped",
+    "elfType": "EXEC (Executable file)",
+    "machine": "Advanced Micro Devices X86-64",
+    "strippedHint": false,
+    "interestingSymbols": [
+      "   427: 00000000005848fb   397 FUNC    GLOBAL DEFAULT   13 ITEM_makeItem",
+      "   857: 0000000000584a88   103 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemAndRegist",
+      "  1237: 00000000005837bc  4078 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemStatusString",
+      "  1974: 000000000058484c   175 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseStringWithNum",
+      "  2029: 0000000000582b33  2765 FUNC    GLOBAL DEFAULT   13 ITEM_readItemConfFile",
+      "  2142: 00000000005847aa   162 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseString",
+      "   704: 00000000009ed970     4 OBJECT  LOCAL  DEFAULT   25 ITEM_tblen",
+      "  2250: 00000000005848fb   397 FUNC    GLOBAL DEFAULT   13 ITEM_makeItem",
+      "  2480: 00000000005847aa   162 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseString",
+      "  2669: 00000000005837bc  4078 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemStatusString",
+      "  3070: 000000000058484c   175 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemFalseStringWithNum",
+      "  3805: 0000000000582b33  2765 FUNC    GLOBAL DEFAULT   13 ITEM_readItemConfFile",
+      "  5032: 0000000000584a88   103 FUNC    GLOBAL DEFAULT   13 ITEM_makeItemAndRegist"
+    ],
+    "interestingStrings": [
+      "ITEM_makeItem",
+      "ITEM_makeItemFalseString",
+      "ITEM_makeItemStatusString",
+      "ITEM_makeItemFalseStringWithNum",
+      "ITEM_readItemConfFile",
+      "ITEM_makeItemAndRegist",
+      ": ITEM1:%d ITEM2:%d ITEM3:%d ITEM4:%d ITEM5:%d",
+      "ITEM1:%d ITEM2:%d ITEM3:%d ITEM4:%d ITEM5:%d",
+      "ITEM1:%d ITEM2:%d ITEM3:%d ITEM4:%d ITEM5:%d",
+      "ITEM_CHECKITEMTABLE() number:%d ITEM_tblen:%d !!",
+      "itemset6file",
+      "ITEM1",
+      "ITEM2",
+      "ITEM10",
+      "ITEM11",
+      "ITEM12",
+      "ITEM13",
+      "ITEM14",
+      "ITEM15",
+      "ITEM1",
+      "ITEM2",
+      "ITEM10",
+      "ENEMY_ITEM1",
+      "ENEMY_ITEM2",
+      "ENEMY_ITEM10",
+      "item1",
+      "item2",
+      "ITEM_readItemConfFile",
+      "ITEM_makeItemFalseString",
+      "ITEM_makeItemAndRegist",
+      "ITEM_makeItemStatusString",
+      "ITEM_makeItemFalseStringWithNum",
+      "ITEM_makeItem",
+      "ITEM_tblen",
+      "ITEM_tblen",
+      "ITEM_makeItem",
+      "ITEM_makeItemFalseString",
+      "ITEM_makeItemStatusString",
+      "ITEM_makeItemFalseStringWithNum",
+      "ITEM_readItemConfFile",
+      "ITEM_makeItemAndRegist"
+    ],
+    "interpretation": {
+      "binaryInspectionIsEvidenceOnly": true,
+      "macroFlagsCannotBeProvenFromStringsAlone": true,
+      "purpose": "Probe whether the deployed gmsvjt exposes a callable Item loader / transform surface distinct from the pinned source build."
+    }
   },
   "exactTokenMatches": {
     "configuredItem1_32003": [],
@@ -75,6 +157,8 @@
   },
   "interpretation": {
     "fixedCFixedItemRuleApplied": false,
-    "note": "Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics."
+    "note": "Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics.",
+    "nextClosureBoundary": "Because configured ITEM1=32003 is absent even as a raw substring from the selected endpoint CSV, the remaining decisive evidence layer is the deployed gmsvjt loader/transform behavior and any endpoint-specific Item data source it consumes.",
+    "token17ProbeIsHypothesisOnly": true
   }
 }
