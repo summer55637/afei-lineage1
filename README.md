@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2ff6b35 — test: match enemy slots to two-member roster
-- 更新時間：2026-10-02T12:45:54+08:00
+- 最新 commit：fbbedd9 — test: assert catalog-native production shop id
+- 更新時間：2026-10-02T12:46:37+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
