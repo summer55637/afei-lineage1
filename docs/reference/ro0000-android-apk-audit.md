@@ -225,3 +225,28 @@ python3 tools/audit_ro0000_android_native.py \
 ```
 
 CI runs both test suites, checks the archive/Manifest identity against the committed baseline, analyzes both embedded `libStoneage.so` files, and publishes the JSON reports plus extracted native libraries as a 30-day artifact. Latest successful native-disassembly run: https://github.com/summer55637/afei-lineage1/actions/runs/36996292512
+
+### ADRN cryptographic contract (target x86)
+
+Actual target x86 disassembly now closes the resource-index cipher path more precisely:
+
+- `adrnDecode()` at `0x364970` passes a fixed 32-byte ASCII string from the native `.rodata` section to `setBlowFishKey()`.
+- The literal key is intentionally not copied into the repository. Its SHA-256 fingerprint is `50d2411ac703d8e9ed1293eb0c885cac7102f45660c6d770a673ca9b4030e657`.
+- `setBlowFishKey()` constructs an 18-word P-array and four 256-entry S-boxes.
+- The table begins with the standard Blowfish P-array constants `0x243f6a88`, `0x85a308d3`, `0x13198a2e`, `0x03707344`, and the target F-function has the standard four-S-box addition/XOR/addition form.
+- `fish_decode()` uses 8-byte blocks and reverses the Blowfish P-array order (`P[17]` downward), matching Blowfish decryption rather than the forward encryption order used by the companion `fish_encode()` path.
+- `fish_decode()` processes the full 8-byte block portion in place. When a non-zero-length remainder exists, the first remainder byte is consumed as the target's trim/output-length marker; this exact behavior is preserved in the decoder tool rather than replaced with a guessed standard padding rule.
+- `AdrnInit()` checks the first 4 bytes against the literal word `0x31393839`, decodes the remaining bytes through `adrnDecode()`, and then treats the returned decoded length as a sequence of 80-byte ADRNBIN records.
+
+This means the target resource-index chain is now:
+
+~~~text
+target adrn.bin
+  -> 4-byte magic word
+  -> target Blowfish decode
+  -> decoded 80-byte ADRNBIN records
+  -> bitmap-number -> graphic-number index
+  -> real.bin offsets/sizes
+~~~
+
+The actual `adrn.bin` and `real.bin` payload bytes are still absent, so decoded record contents remain an evidence gap. No target resource records are being fabricated.
