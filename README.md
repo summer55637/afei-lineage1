@@ -2,12 +2,12 @@
 
 「阿肥石器時代放置版」重建專案。
 
-以 RO0000、舊版客戶端與 Fixed-C 等資料作為考據來源，重建石器時代核心內容與規則，最終製作成單機 PC＋手機可長時間遊玩的現代化 3D 放置版。
+以 RO0000、舊版客戶端與 Fixed-C 等資料作為考據來源，重建石器時代核心內容與規則，最終製作成單機 PC＋手機可長時間遊玩的現代化 2D 高品質重製放置版。
 
 ## 目前狀態
 
-- 最新 commit：2191b12 — [docs] correct README product goal
-- 更新時間：2026-10-02T18:59:49+08:00
+- 最新 commit：068d6ab — [docs] remove obsolete 3D visual target document
+- 更新時間：2026-10-02T19:15:19+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
