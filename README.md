@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：71ca866 — [docs] publish Android native and manifest evidence
-- 更新時間：2026-10-02T20:46:52Z
+- 最新 commit：b4761a5 — [docs] describe Android keyboard JNI bridge evidence
+- 更新時間：2026-10-03T04:47:18+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
