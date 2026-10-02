@@ -97,25 +97,25 @@ References (community reverse-engineering material; comparison only):
 - [StoneAge client BIN format analysis](https://1.shiqimod.cc/lishi/shiqi182bin.htm)
 - [pioneers-g/StoneAgeClient](https://github.com/pioneers-g/StoneAgeClient) (separate legacy `real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` resource paths)
 
-### Local map cache: \`map/%d.dat\`
+### Local map cache: `map/%d.dat`
 
-The native \`createMap\`, \`readMap\`, and \`writeMap\` functions use the separate local path template \`map/%d.dat\`. The evidence establishes the following file layout for files created by \`createMap\`:
+The native `createMap`, `readMap`, and `writeMap` functions use the separate local path template `map/%d.dat`. The evidence establishes the following file layout for files created by `createMap`:
 
 | Offset | Size | Stored data |
 |---:|---:|---|
-| 0 | 4 bytes | First dimension, copied from \`createMap\` argument 2 |
-| 4 | 4 bytes | Second dimension, copied from \`createMap\` argument 3 |
-| 8 | \(2 \times A \times B\) bytes | Plane 1: \(A \times B\) sequential 16-bit cells |
-| \(8+2AB\) | \(2AB\) bytes | Plane 2: \(A \times B\) sequential 16-bit cells |
-| \(8+4AB\) | \(2AB\) bytes | Plane 3: \(A \times B\) sequential 16-bit cells |
+| 0 | 4 bytes | First dimension, copied from `createMap` argument 2 |
+| 4 | 4 bytes | Second dimension, copied from `createMap` argument 3 |
+| 8 | 2 \times A \times B bytes | Plane 1: A \times B sequential 16-bit cells |
+| 8+2AB | 2AB bytes | Plane 2: A \times B sequential 16-bit cells |
+| 8+4AB | 2AB bytes | Plane 3: A \times B sequential 16-bit cells |
 
-Here \(A\) and \(B\) denote the two stored dimensions in argument order; the x/y orientation is not established. The blank cache file produced by \`createMap\` is therefore \(8+6AB\) bytes, assuming the writes complete successfully. The three planes are initialized with 16-bit zero values.
+Here A and B denote the two stored dimensions in argument order; the x/y orientation is not established. The blank cache file produced by `createMap` is therefore 8+6AB bytes, assuming the writes complete successfully. The three planes are initialized with 16-bit zero values.
 
-\`readMap\` opens the same path, reads the two 4-byte header values, and then performs three separate row-oriented reads into three \`unsigned short*\` output buffers. The plane bases advance by \(2AB\) bytes each, matching the layout above. It also converts the header dimensions for float outputs by dividing them by two; the higher-level meaning of those float outputs is not established by this function alone.
+`readMap` opens the same path, reads the two 4-byte header values, and then performs three separate row-oriented reads into three `unsigned short*` output buffers. The plane bases advance by 2AB bytes each, matching the layout above. It also converts the header dimensions for float outputs by dividing them by two; the higher-level meaning of those float outputs is not established by this function alone.
 
-The \`0xAB2\)-byte clear size used for some map output buffers is 2,738 bytes, or 1,369 16-bit cells. This is a fixed output/window buffer size in the inspected code and must not be treated as the full map dimensions.
+The `0xAB2-byte clear size used for some map output buffers is 2,738 bytes, or 1,369 16-bit cells. This is a fixed output/window buffer size in the inspected code and must not be treated as the full map dimensions.
 
-This identifies a native local map-cache format with a header and three planar cell arrays. It does not identify the semantics of each plane, prove that these files are the source of authoritative world maps, or establish a mapping to server map IDs. In particular, this \`map/%d.dat\` cache is separate from the \`path/map4/real.bin\` Lua loading container and from the server's Fixed-C LS2MAP format.
+This identifies a native local map-cache format with a header and three planar cell arrays. It does not identify the semantics of each plane, prove that these files are the source of authoritative world maps, or establish a mapping to server map IDs. In particular, this `map/%d.dat` cache is separate from the `path/map4/real.bin` Lua loading container and from the server's Fixed-C LS2MAP format.
 
 ### Hit-map runtime
 
