@@ -65,9 +65,36 @@ function candidatesForTarget(context,opposingSide,targetType){
     const sourceType=String(entry.sourceType??'').toLowerCase();
     if(targetType===2&&sourceType!=='player')continue;
     if(targetType===3&&sourceType!=='pet')continue;
-    candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:sourceType||null});
+    candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:sourceType||null,hp:int(entry.hp)});
   }
-  return {ok:true,candidates};
+  if(candidates.length===0&&(targetType===2||targetType===3)){
+    for(let slot=0;slot<entries.length;slot++){
+      const entry=entries[slot];if(!entry||entry.isDie===true)continue;
+      if(int(entry.sourceBattleCharMode)===BATTLE_CHARMODE_RESCUE)continue;
+      const sourceType=String(entry.sourceType??'').toLowerCase();
+      candidates.push({bid:int(entry.bid)??opposingSide*10+slot,slot,sourceType:sourceType||null,hp:int(entry.hp)});
+    }
+    return {ok:true,candidates,fallbackToAll:true};
+  }
+  return {ok:true,candidates,fallbackToAll:false};
+}
+function selectTargetCandidate(candidates,selectMode,targetRolls,targetCursor){
+  if(selectMode===1){
+    const selected=nextRoll(targetRolls,targetCursor,0,candidates.length-1,'enemy-ai-target');
+    if(!selected.ok)return selected;
+    return {ok:true,candidate:candidates[selected.roll],targetRoll:selected.roll,cursor:selected.cursor};
+  }
+  if(selectMode===2||selectMode===3){
+    let chosen=candidates[0];
+    if(chosen?.hp==null)return {ok:false,reason:'enemy-ai-target-hp-required',slot:chosen?.slot};
+    for(let i=1;i<candidates.length;i++){
+      const candidate=candidates[i];
+      if(candidate?.hp==null)return {ok:false,reason:'enemy-ai-target-hp-required',slot:candidate?.slot};
+      if((selectMode===2&&candidate.hp>chosen.hp)||(selectMode===3&&candidate.hp<chosen.hp))chosen=candidate;
+    }
+    return {ok:true,candidate:chosen,targetRoll:null,cursor:targetCursor};
+  }
+  return {ok:false,reason:'enemy-ai-target-select-mode-not-supported',selectMode};
 }
 function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
   if(!isObject(context)||!isObject(context.context))return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'battle-context-required'};
@@ -109,10 +136,9 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
         const targetSelection=candidatesForTarget(context,1-sideNo,int(ai.targetType));
         if(!targetSelection.ok)return {...targetSelection,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid)};
         if(targetSelection.candidates.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-valid-targets',actorBid:int(actor.bid),targetType:int(ai.targetType)};
-        if(int(ai.selectMode)!==1)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-target-select-mode-not-supported',actorBid:int(actor.bid),selectMode:int(ai.selectMode)};
-        const selected=nextRoll(targetRolls,targetCursor,0,targetSelection.candidates.length-1,'enemy-ai-target');
+        const selected=selectTargetCandidate(targetSelection.candidates,int(ai.selectMode),targetRolls,targetCursor);
         if(!selected.ok)return {...selected,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),candidateCount:targetSelection.candidates.length};
-        targetCursor=selected.cursor;targetRoll=selected.roll;targetBid=targetSelection.candidates[targetRoll].bid;
+        targetCursor=selected.cursor;targetRoll=selected.targetRoll;targetBid=selected.candidate.bid;
       }
       commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,action:chosen.action,commandCode:chosen.commandCode,targetBid,actionRoll:actionResult.roll,targetRoll,before});
     }
