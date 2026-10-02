@@ -41,7 +41,7 @@ IO_API_HINTS = {
 
 
 def parse_elf_header(data):
-    if len(data) < 16 or data[:4] != b"\\x7fELF":
+    if len(data) < 16 or data[:4] != b"\x7fELF":
         raise ValueError("not an ELF file")
     elf_class, data_encoding = data[4], data[5]
     if elf_class not in (1, 2):
@@ -70,7 +70,7 @@ def parse_elf_header(data):
 
 
 def parse_needed_libraries(readelf_text):
-    return sorted(set(re.findall(r"Shared library: \\[([^]]+)\\]", readelf_text)))
+    return sorted(set(re.findall(r"Shared library: \[(.*?)\]", readelf_text)))
 
 
 def parse_symbols(readelf_text):
@@ -167,7 +167,7 @@ def main():
     with zipfile.ZipFile(apk) as zf:
         libraries = sorted(
             (info for info in zf.infolist()
-             if re.fullmatch(r"lib/[^/]+/libStoneage\\.so", info.filename)),
+             if re.fullmatch(r"lib/[^/]+/libStoneage\.so", info.filename)),
             key=lambda info: info.filename
         )
         if not libraries:
@@ -196,7 +196,7 @@ def main():
     }
     output = pathlib.Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
         "format": result["format"],
         "apkSha256": result["auditedApk"]["sha256"],
