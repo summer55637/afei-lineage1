@@ -8,6 +8,7 @@ const ROOT = process.cwd();
 const ENDPOINT_MAP_ROOT = path.join(ROOT, 'ro0000/server/merged-source/gmsv/data/map');
 const ENDPOINT_MAPSET = path.join(ROOT, 'ro0000/server/merged-source/gmsv/data/map/mapset.txt');
 const ENDPOINT_MAPWARP = path.join(ROOT, 'ro0000/server/merged-source/gmsv/data/map/mapwarp.txt');
+const ENDPOINT_NPC_ROOT = path.join(ROOT, 'ro0000/server/merged-source/gmsv/data/npc');
 const OUT = path.join(ROOT, 'data/generated/stoneage_endpoint_world_blocker_audit.json');
 const FIXED_ROOT = path.join(ROOT, 'fixed-c-source');
 const FIXED_MAPSET = path.join(FIXED_ROOT, 'gmsv/data/map/mapset.txt');
@@ -108,6 +109,77 @@ function parseWarps(file) {
     rows.push({ line: i + 1, raw, from, to });
   }
   return rows;
+}
+
+function parseNpcWarpSources(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const rows = [];
+  for (const file of walk(dir)) {
+    if (!file.endsWith('.create')) continue;
+    const lines = fs.readFileSync(file, 'utf8').replace(/\r/g, '').split('\n');
+    let block = null;
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i].trim();
+      if (raw === '{') {
+        block = { sourceFile: path.relative(ROOT, file).replaceAll(path.sep, '/'), sourceLine: i + 1 };
+        continue;
+      }
+      if (!block) continue;
+      if (raw === '}') {
+        if (block.floorid !== undefined && block.borncorner && block.enemy) {
+          const born = block.borncorner.split(',').map(Number);
+          const enemy = block.enemy.split('|').map(value => value.trim());
+          if (
+            born.length >= 2 &&
+            born.slice(0, 2).every(Number.isFinite) &&
+            enemy[0] === 'npcgen_warp' &&
+            enemy.length >= 4 &&
+            [enemy[1], enemy[2], enemy[3]].every(value => Number.isFinite(Number(value)))
+          ) {
+            rows.push({
+              sourceFile: block.sourceFile,
+              sourceLine: block.sourceLine,
+              from: [Number(block.floorid), born[0], born[1]],
+              to: [Number(enemy[1]), Number(enemy[2]), Number(enemy[3])]
+            });
+          }
+        }
+        block = null;
+        continue;
+      }
+      const eq = raw.indexOf('=');
+      if (eq <= 0) continue;
+      const key = raw.slice(0, eq).trim();
+      const value = raw.slice(eq + 1).trim();
+      if (key === 'floorid' || key === 'borncorner' || key === 'enemy') block[key] = value;
+    }
+  }
+  return rows;
+}
+
+function fixedEventWarpSemantics() {
+  const callFromCli = path.join(FIXED_ROOT, 'gmsv/src/callfromcli.c');
+  const eventSource = path.join(FIXED_ROOT, 'gmsv/src/char/event.c');
+  if (!fs.existsSync(callFromCli) || !fs.existsSync(eventSource)) {
+    return {
+      available: false,
+      adjacentWarpPointGuard: false,
+      warpNpcDispatch: false
+    };
+  }
+  const ev = fs.readFileSync(callFromCli, 'utf8');
+  const event = fs.readFileSync(eventSource, 'utf8');
+  return {
+    available: true,
+    adjacentWarpPointGuard:
+      ev.includes('for(i=iy-1;i<=iy+1;i++)') &&
+      ev.includes('for(j=ix-1;j<=ix+1;j++)') &&
+      ev.includes('warp_point_x[warp_point]=j') &&
+      ev.includes('if((x==warp_point_x[i])&& (y==warp_point_y[i]))'),
+    warpNpcDispatch:
+      event.includes('if( etype == event)') &&
+      event.includes('EVENT_onWarpNPC( charaindex, echaraindex, fl,x,y )')
+  };
 }
 
 function walkableAt(map, x, y, mapset) {
@@ -303,6 +375,8 @@ for (const floor of [200, 3000, 4000, 4006]) {
 }
 
 const warps = parseWarps(ENDPOINT_MAPWARP);
+const npcWarpSources = parseNpcWarpSources(ENDPOINT_NPC_ROOT);
+const fixedWarpEventSemantics = fixedEventWarpSemantics();
 const entry4006 = warps.filter(row => row.from[0] === 4006 && row.to[0] === 4000);
 const exit4000to200 = warps.filter(row => row.from[0] === 4000 && row.to[0] === 200);
 const exit3000to200 = warps.filter(row => row.from[0] === 3000 && row.to[0] === 200);
@@ -332,7 +406,8 @@ const result = {
     entry3006to3000: exit3006to3000.map(row => ({ line: row.line, from: row.from, to: row.to })),
     entry4006to4000: entry4006.map(row => ({ line: row.line, from: row.from, to: row.to })),
     exit4000to200: exit4000to200.map(row => ({ line: row.line, from: row.from, to: row.to })),
-    exit3000to200: exit3000to200.map(row => ({ line: row.line, from: row.from, to: row.to }))
+    exit3000to200: exit3000to200.map(row => ({ line: row.line, from: row.from, to: row.to })),
+    npcWarpSources: npcWarpSources.length
   },
   checks: {},
   conclusion: { status: 'unresolved', reasons: [] }
@@ -390,6 +465,18 @@ if (selected[200]) {
       : -1
   }));
   const landingComponentOutgoingWarps = outgoingWarps200.filter(row => row.originComponent === landingComponent);
+  const reverseSpecialWarp = npcWarpSources.find(row =>
+    row.from[0] === 200 && row.from[1] === 588 && row.from[2] === 318 &&
+    row.to[0] === 3000 && row.to[1] === 74 && row.to[2] === 59
+  ) || null;
+  const eventRecoverableSpecialLanding = Boolean(
+    specialLanding &&
+    reverseSpecialWarp &&
+    fixedWarpEventSemantics.adjacentWarpPointGuard &&
+    fixedWarpEventSemantics.warpNpcDispatch &&
+    Math.abs(588 - specialLanding.x) <= 1 &&
+    Math.abs(318 - specialLanding.y) <= 1
+  );
   result.checks.floor200 = {
     map: summarizeCandidate(selected[200]),
     missingMapsetImageIds: mapsetMissingImageIds(map),
@@ -408,7 +495,15 @@ if (selected[200]) {
       canExitIntoWalkableMap: escapeTargets.length > 0,
       canEnterMainWalkableComponent: escapeComponents.includes(0),
       hasOutgoingWarpInLandingComponent: landingComponentOutgoingWarps.length > 0,
-      outgoingWarpsInLandingComponent: landingComponentOutgoingWarps.slice(0, 100)
+      outgoingWarpsInLandingComponent: landingComponentOutgoingWarps.slice(0, 100),
+      manualEventWarpRecovery: {
+        landing: specialLanding ? [specialLanding.x, specialLanding.y] : null,
+        triggerWarpNpc: [588, 318],
+        triggerIsAdjacent: Boolean(specialLanding && Math.abs(588 - specialLanding.x) <= 1 && Math.abs(318 - specialLanding.y) <= 1),
+        reverseNpcWarpSource: reverseSpecialWarp,
+        fixedSourceEventSemantics: fixedWarpEventSemantics,
+        recoverableWithoutSteppingOnOrigin: eventRecoverableSpecialLanding
+      }
     }
   };
 } else {
@@ -423,7 +518,11 @@ const endpoint4000Closed = Boolean(floor4000 && floor4000.allPortalOriginsMoveme
 const specialLanding587318 = floor200?.specialLanding587318;
 const endpoint3000LandingClosed = Boolean(
   target587318 &&
-  (target587318.walkable || specialLanding587318?.canEnterMainWalkableComponent)
+  (
+    target587318.walkable ||
+    specialLanding587318?.canEnterMainWalkableComponent ||
+    specialLanding587318?.manualEventWarpRecovery?.recoverableWithoutSteppingOnOrigin
+  )
 );
 const endpointMapEvidenceClosed = Boolean(
   floor4000 &&
@@ -453,7 +552,8 @@ result.checks.reopenedBlockers = {
       canExitIntoWalkableMap: specialLanding587318?.canExitIntoWalkableMap ?? false,
       canEnterMainWalkableComponent: specialLanding587318?.canEnterMainWalkableComponent ?? false,
       hasOutgoingWarpInLandingComponent: specialLanding587318?.hasOutgoingWarpInLandingComponent ?? false,
-      outgoingWarpsInLandingComponent: specialLanding587318?.outgoingWarpsInLandingComponent ?? []
+      outgoingWarpsInLandingComponent: specialLanding587318?.outgoingWarpsInLandingComponent ?? [],
+      manualEventWarpRecovery: specialLanding587318?.manualEventWarpRecovery ?? null
     }
   }
 };
