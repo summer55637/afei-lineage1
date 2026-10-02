@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：6f1e9c0 — fix: escape line break in generated README link list
-- 更新時間：2026-10-02T14:24:17+08:00
+- 最新 commit：aebd513 — feat: chain battle damage commit into lethal death commit
+- 更新時間：2026-10-02T15:27:57+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.26
 - Playable HTML：⏸️ 尚未建立（刻意保留）
