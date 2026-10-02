@@ -9,6 +9,7 @@ from audit_ro0000_android_native import (
     relevant_symbol_names,
     relevant_embedded_strings,
     FOCUSED_FUNCTION_RE,
+    FOCUSED_OBJECTS,
 )
 
 
@@ -232,6 +233,21 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
         for candidate in candidates:
             with self.subTest(candidate=candidate):
                 self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
+
+    def test_input_movement_object_inventory(self):
+        names = {
+            "mouse", "pc", "nowFloor", "nowFloorGxSize", "nowFloorGySize",
+            "mouseCursorMode", "mouseMapX", "mouseMapY", "mouseMapGx", "mouseMapGy",
+            "ShowMouseFlg", "mouseLeftCrick", "mouseLeftOn", "mouseRightCrick",
+            "mouseRightOn", "moveRoute", "moveRoute2", "moveRouteCnt", "moveRouteCnt2",
+            "moveStackFlag", "moveStackGx", "moveStackGy", "moveRouteDir",
+            "moveRouteGx", "moveRouteGy", "moveLastDir", "eventWarpSendFlag",
+            "eventEnemySendFlag", "_etcEventFlag", "_etcEventStep", "_etcEventMode",
+            "_eventWarpNo", "_warpEventFlag", "_enemyEventFlag", "_enemyEventDir",
+        }
+        self.assertTrue(names.issubset(FOCUSED_OBJECTS))
+        self.assertNotIn("idKey", FOCUSED_OBJECTS)
+        self.assertNotIn("RegKey", FOCUSED_OBJECTS)
 
     def test_embedded_resource_format_string(self):
         values = relevant_embedded_strings(b"prefix\x00path/map4/%s/real.bin\x00")
