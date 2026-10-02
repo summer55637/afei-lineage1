@@ -71,6 +71,12 @@ plan 內容包括：
 
 first-idle-route catalog 的 `originPathMin`、`landingPathMin` 與 `totalWalkBeforeEncounterMin` 是已閉合資料中的全域最小值，不要求每一個合法 direct landing 都得到完全相同的步數。V3.78 對目前玩家實際位置計算 route，並只拒絕「比 catalog minimum 更短」的結果；因此不同 direct landing 出現多幾步是正常的。
 
+## Karutarna product repair overlay
+
+V3.81 起，4000→200 可在 Browser Controller 的產品預設下使用明確的 walkability/art overlay：只將 4000 地圖 (91,109)、(92,109)、(93,109) 的 runtime tile 改為 321，原始 generated map 與 source blob 不變。兩組既有 portal 都必須由真實 BFS 找到路徑；關閉 overlay 時仍 fail-closed。
+
+這不是原作地圖還原，也不是合併 source connected components。完整契約見 karutarna-road-access-repair-overlay.md。
+
 ## Regression
 
 `tools/check_v378_browser_world_first_route.mjs` 鎖定：

@@ -8,6 +8,7 @@ on:
       - 'src/stoneage_browser_world_movement_runtime.mjs'
       - 'src/stoneage_browser_world_warppoint_runtime.mjs'
       - 'src/stoneage_map_runtime.mjs'
+      - 'src/stoneage_world_map_repair_overlay.mjs'
       - 'src/stoneage_persistent_state.mjs'
       - 'src/stoneage_save_transaction.mjs'
       - 'data/generated/stoneage_first_idle_route_catalog.json'

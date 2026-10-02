@@ -13,7 +13,7 @@ const controller=createBrowserStateController({state:base,idleRouteCatalog:catal
 
 const listed=await controller.dispatch({type:ACTION_IDLE_LIST_ROUTES});
 assert.equal(listed.ok,true);
-assert.equal(listed.routes.length,6);
+assert.equal(listed.routes.length,8);
 assert.equal(listed.routes.every(r=>r.eligible),true);
 const routeId=listed.routes.find(r=>r.hometown===0&&r.portalId==='1000_to_100_a').routeId;
 

@@ -33,6 +33,12 @@ V3.79 不做跨多步驟的 rollback transaction。若中途某一步失敗，�
 
 4000→200 仍然維持 source-blocked。V3.79 不允許因為有 WarpPoint row 就直接把角色傳到 200 floor，必須先通過 V3.78 route planner 的 source-backed route eligibility。
 
+## Karutarna product repair overlay
+
+V3.81 起，路線執行器會在相同的預設產品 overlay 下，逐步執行 4000→200 的既有 mapwarp；每步仍使用一般 movement／warp transaction 與 Save Envelope。overlay 關閉或來源 tile／blob 不符時，必須 fail-closed。
+
+此修復只改 runtime map copy，不改原始資料，也不宣稱 tile 321 是原作正確素材。完整契約見 karutarna-road-access-repair-overlay.md。
+
 ## Regression
 
 `tools/check_v379_browser_world_first_route_execution.mjs` 會實際執行 1000→100_a，驗證：
