@@ -1,3 +1,13 @@
+## 2026-10-02 V4.30 Enemy AI Target Selection
+
+V4.30 擴充敵方 NORMAL AI 攻擊目標選擇：加入 HP 最高／最低模式、保持同值時的第一個候選，以及玩家／寵物限定目標無候選時回退全體的來源行為。HP 選取不消耗 target RNG；缺少 HP 與未支援模式仍 fail-closed。
+
+Regression：`tools/check_v430_browser_battle_enemy_ai_target_selection.mjs`（同時執行 V4.29 target type regression）；Workflow：`.github/workflows/check-v430-browser-battle-enemy-ai-target-selection.yml`。
+
+這仍是命令規劃層，不代表魔法、寵物技能或完整回合自動化已閉合。
+
+---
+
 ## 2026-10-02 V4.27 Battle Damage→Death Commit Chain
 
 V4.27 composes V4.26 damage commit with V4.06 death planning and V4.07 death commit. A lethal hit is published to the transient Battle Context only after the death check/commit has succeeded; a critical enemy death RNG requirement therefore fails closed without exposing a half-committed HP=0 context.
