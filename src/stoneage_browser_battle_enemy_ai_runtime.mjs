@@ -226,7 +226,7 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
       actionCursor=actionResult.cursor;
       const chosen=selectAction(weights,actionResult.roll);
       if(!chosen.ok)return {...chosen,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),actionRoll:actionResult.roll};
-      let targetBid=-1,targetRoll=null;
+      let targetBid=-1,targetRoll=null,targetSelectorRoll=null,targetSelectionMode=null,targetElementKey=null;
       if(chosen.action==='attack'){
         const targetSelection=candidatesForTarget(context,1-sideNo,int(ai.targetType),targetRolls,targetCursor);
         if(!targetSelection.ok)return {...targetSelection,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid)};
@@ -234,14 +234,14 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
         if(targetSelection.candidates.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-valid-targets',actorBid:int(actor.bid),targetType:int(ai.targetType)};
         const selected=selectTargetCandidate(targetSelection.candidates,int(ai.selectMode),ai,actor,targetRolls,targetCursor);
         if(!selected.ok)return {...selected,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),candidateCount:targetSelection.candidates.length};
-        targetCursor=selected.cursor;targetRoll=selected.targetRoll;targetBid=selected.candidate.bid;
+        targetCursor=selected.cursor;targetRoll=selected.targetRoll;targetSelectorRoll=selected.targetSelectorRoll;targetSelectionMode=selected.selection;targetElementKey=selected.elementKey??null;targetBid=selected.candidate.bid;
       }
       const blockedOn=enemyCannotMove(actor);
       const cannotMove=blockedOn.length>0;
       commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,
         action:cannotMove?'none':chosen.action,selectedAction:chosen.action,
         commandCode:cannotMove?BATTLE_COM_NONE:chosen.commandCode,targetBid,
-        moveBlockedOn:blockedOn,actionRoll:actionResult.roll,targetRoll,before});
+        moveBlockedOn:blockedOn,actionRoll:actionResult.roll,targetRoll,targetSelectorRoll,targetSelectionMode,targetElementKey,before});
     }
   }
   if(commands.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-waiting-entries'};
