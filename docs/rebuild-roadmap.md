@@ -1,3 +1,11 @@
+## 2026-10-02 V4.32 Enemy AI Attack Pipeline
+
+以 source-backed encounter 65 / Group 94 建立戰鬥，讓敵方 AI 產生的普通攻擊依序進入 AttackSeqPrelude → DamagePlan → CriticalDamagePlan → DamageReactPlan → DamageDeathCommit，並驗證玩家 HP 在 transient Battle Context 內實際變化、Persistent State revision 不變。
+
+Regression：`tools/check_v432_browser_battle_enemy_ai_attack_pipeline.mjs`，並重跑 V4.29–V4.31 及既有 attack pipeline binding regression。這只證明單次一般敵方攻擊鏈，不代表整回合 orchestration、反擊與結算已自動閉合。
+
+---
+
 ## 2026-10-02 V4.31 Enemy AI Controller Binding
 
 新增控制器層回歸，確認 `ACTION_BATTLE_ENEMY_AI_APPLY` 會先經 player command wait gate，再於玩家策略完成後提交 enemy attack command，並將敵方 entry 設為 C_OK。Persistent State revision 不增加，亦不執行傷害。此版只閉合命令入口與 wait 狀態，不代表敵方攻擊已自動串接 AttackSeq 到 Finish。
