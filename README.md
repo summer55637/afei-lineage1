@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：df965b9 — docs: sync self-description with resolved 4000 route
-- 更新時間：2026-10-02T11:41:14+08:00
+- 最新 commit：24feb36 — docs: align 4000-to-200 blocker status with current evidence
+- 更新時間：2026-10-02T11:53:52+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -27,7 +27,7 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 戰鬥策略待定 |
+| Full first-route | ⚠️ 部分完成（6/8 portal groups） |
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
@@ -36,6 +36,7 @@
 
 ## Blocker
 
+- route-4000-to-200：reopened-for-reaudit → keep active-for-reaudit; three-cell terrain opening remains the smallest verified connectivity repair, but tile replacement is not source-backed. Compare any recoverable historical external map snapshot next; otherwise use a clearly labeled RO0000 repair map. Do not mutate canonical map or movement/warp semantics yet.
 - starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
 - starter-item-endpoint-32003：active → keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
