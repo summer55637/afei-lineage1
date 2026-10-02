@@ -255,6 +255,26 @@
         "  486f2c:\te8 41 26 fb ff       \tcall   439572 <getNewplayergiveitem>",
         "  486f33:\te8 50 db 0f 00       \tcall   584a88 <ITEM_makeItemAndRegist>"
       ],
+      "grantCallWindows": [
+        [
+          "  486f16:\t8b 45 ec             \tmov    eax,DWORD PTR [rbp-0x14]",
+          "  486f19:\t89 c7                \tmov    edi,eax",
+          "  486f1b:\te8 52 26 fb ff       \tcall   439572 <getNewplayergiveitem>",
+          "  486f20:\t83 f8 ff             \tcmp    eax,0xffffffff",
+          "  486f23:\t75 02                \tjne    486f27 <CHAR_loginAddItemForNew+0x8d>",
+          "  486f25:\teb 77                \tjmp    486f9e <CHAR_loginAddItemForNew+0x104>",
+          "  486f27:\t8b 45 ec             \tmov    eax,DWORD PTR [rbp-0x14]",
+          "  486f2a:\t89 c7                \tmov    edi,eax",
+          "  486f2c:\te8 41 26 fb ff       \tcall   439572 <getNewplayergiveitem>",
+          "  486f31:\t89 c7                \tmov    edi,eax",
+          "  486f33:\te8 50 db 0f 00       \tcall   584a88 <ITEM_makeItemAndRegist>",
+          "  486f38:\t89 45 e4             \tmov    DWORD PTR [rbp-0x1c],eax",
+          "  486f3b:\t83 7d e4 ff          \tcmp    DWORD PTR [rbp-0x1c],0xffffffff",
+          "  486f3f:\t74 5d                \tje     486f9e <CHAR_loginAddItemForNew+0x104>",
+          "  486f41:\t8b 4d e4             \tmov    ecx,DWORD PTR [rbp-0x1c]",
+          "  486f44:\t8b 55 e8             \tmov    edx,DWORD PTR [rbp-0x18]"
+        ]
+      ],
       "getterWindow": [
         "",
         "/home/runner/work/afei-lineage1/afei-lineage1/ro0000/server/merged-source/gmsv/gmsvjt:     file format elf64-x86-64",

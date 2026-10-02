@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：a486fca — [audit] trace configured new-player Item grant
-- 更新時間：2026-10-02T08:05:13+08:00
+- 最新 commit：632c3b5 — [audit] bind endpoint Item grant argument
+- 更新時間：2026-10-02T08:05:49+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
