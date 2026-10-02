@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：0430509 — docs: record V4.38 enemy NoGuard milestone
-- 更新時間：2026-10-02T16:43:25+08:00
+- 最新 commit：8cf6348 — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-02T08:43:32Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.38
 - Playable HTML：⏸️ 尚未建立（刻意保留）
