@@ -26,6 +26,9 @@ function commitBattleDamageDeathChain(context,{
   if(!damage.ok)return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT};
   const afterDamage=damage.battleContext;
   const target=findEntry(afterDamage,damage.targetBid);
+  if(damage.applied!==true&&damage.idempotent!==true){
+    return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,stage:'battle-damage-death-noop',lethal:false,deathCommitted:false,deathPlan:null,deathCommit:null};
+  }
   if(!target)return {ok:false,handled:false,stage:'battle-damage-death-chain',reason:'committed-target-missing',battleContext:clone(context),hpMutation:false,persistentMutation:false};
   if(int(target.hp)>0){
     return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,

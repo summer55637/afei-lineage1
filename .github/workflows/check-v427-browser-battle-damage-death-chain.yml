@@ -8,6 +8,7 @@ on:
       - 'src/stoneage_browser_battle_death_commit_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'tools/check_v427_browser_battle_damage_death_chain.mjs'
+      - 'tools/check_browser_battle_attack_pipeline_binding.mjs'
       - '.github/workflows/check-v427-browser-battle-damage-death-chain.yml'
   pull_request:
     paths:
@@ -35,8 +36,10 @@ jobs:
           node tools/check_v426_browser_battle_damage_commit.mjs
           node tools/check_v407_browser_battle_death_commit.mjs
           node tools/check_v427_browser_battle_damage_death_chain.mjs
+          node tools/check_browser_battle_attack_pipeline_binding.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_damage_death_chain_runtime.mjs
           node --check src/stoneage_browser_state_controller.mjs
           node --check tools/check_v427_browser_battle_damage_death_chain.mjs
+          node --check tools/check_browser_battle_attack_pipeline_binding.mjs

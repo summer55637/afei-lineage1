@@ -52,6 +52,12 @@ const stale=commitBattleDamage(applied.battleContext,{damageReactPlan:conflictin
 assert.equal(stale.ok,false);
 assert.equal(stale.reason,'damage-commit-stale-plan');
 
+const deadTarget=structuredClone(base);
+deadTarget.context.sides[1].entries[0].isDie=true;
+const targetAlreadyDead=commitBattleDamage(deadTarget,{damageReactPlan:normal,transactionId:'v426-dead-target'});
+assert.equal(targetAlreadyDead.ok,false);
+assert.equal(targetAlreadyDead.reason,'target-already-dead');
+
 const wrongRevision=commitBattleDamage(base,{damageReactPlan:normal,transactionId:'v426-wrong-revision',expectedDamageRevision:1});
 assert.equal(wrongRevision.ok,false);
 assert.equal(wrongRevision.reason,'damage-commit-expected-revision-mismatch');

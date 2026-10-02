@@ -13,6 +13,7 @@ import {
   ACTION_BATTLE_CRITICAL_DAMAGE_PLAN,
   ACTION_BATTLE_DAMAGE_REACT_PLAN,
   ACTION_BATTLE_DAMAGE_COMMIT,
+  ACTION_BATTLE_DAMAGE_DEATH_COMMIT,
   ACTION_BATTLE_COUNTER_PLAN,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -212,7 +213,7 @@ const coreStatRolls=[
   const hpBefore=initialized.battleContext.sides.flatMap(side=>side.entries).find(entry=>entry?.bid===15)?.hp;
   assert.ok(Number.isInteger(hpBefore),JSON.stringify(initialized.battleContext.sides));
   const damageCommit=await c.dispatch({
-    type:ACTION_BATTLE_DAMAGE_COMMIT,
+    type:ACTION_BATTLE_DAMAGE_DEATH_COMMIT,
     attackerBid:0,
     targetBid:15,
     transactionId:'attack-pipeline-v426-commit-1'
@@ -248,6 +249,7 @@ const coreStatRolls=[
     contract:'attack-seq-damage-react-counter-binding',
     order:['AttackSeqPrelude','DamagePlan','CriticalDamagePlan','DamageReactPlan','CounterPlan','DamageCommit'],
     damageCommitBound:true,
+    damageDeathChainBound:true,
     damageReplayIdempotent:true,
     target:{requested:15,final:15},
     damagePlanBound:true,

@@ -64,6 +64,8 @@ function commitBattleDamage(context,{damageReactPlan=null,transactionId=null,exp
       ultimateFromDamage:int(prior.ultimateFromDamage)??0,battleContext:clone(context),
       battleContextMutation:false,hpMutation:false,persistentMutation:false,damageExecuted:false};
   }
+  if(attacker.isDie===true||target.isDie===true)
+    return {ok:false,handled:false,stage:'battle-damage-commit',reason:attacker.isDie===true?'attacker-already-dead':'target-already-dead',attackerBid,targetBid};
   if(planRevision!==currentRevision)
     return {ok:false,handled:false,stage:'battle-damage-commit',reason:'damage-commit-stale-plan',
       expectedDamageRevision:currentRevision,actualDamageRevision:planRevision,transactionId:tx};
