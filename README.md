@@ -2,12 +2,12 @@
 
 「阿肥石器時代放置版」重建專案。
 
-以 RO0000 實際部署系統、舊版客戶端及專案取得的原作資料作為核心 production reconstruction source，並以 Fixed-C C 原始碼與外部已核驗資料補足語義與版本考據，重建石器時代核心內容與規則，最終製作成單機 PC＋手機可長時間遊玩的現代化 2D 高品質重製放置版。
+以RO0000 實際部署系統、舊版客戶端及專案取得的原作資料作為核心 production reconstruction source，並以 Fixed-C C 原始碼與外部已核驗資料補足語義與版本考據，重建石器時代核心內容與規則，最終製作成單機 PC＋手機可長時間遊玩的現代化 2D 高品質重製放置版。
 
 ## 目前狀態
 
-- 最新 commit：89feb1e — [docs] update project positioning for authorized production sources
-- 更新時間：2026-10-02T19:41:20+08:00
+- 最新 commit：b6ad8b6 — [docs] remove confidential authorization details from public project docs
+- 更新時間：2026-10-02T19:48:06+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）

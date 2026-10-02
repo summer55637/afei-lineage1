@@ -15,7 +15,7 @@
     "endpointCatalogFile": "data/generated/stoneage_endpoint_source_catalog.json",
     "endpointCatalogPresent": true,
     "ro0000TrackedBlobs": 8751,
-    "ro0000TrackedBytes": 185175417
+    "ro0000TrackedBytes": 185174857
   },
   "keyArtifacts": [
     {
