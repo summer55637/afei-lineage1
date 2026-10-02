@@ -1,3 +1,13 @@
+## 2026-10-02 V4.42 Enemy Steal WAZA Integration
+
+接入 Enemy WAZA skill 140（PETSKILL_Steal），COM1=STEAL(1013)、COM2=來源目標，不改 COM3。依 Fixed-C `BATTLE_Steal` 保留 RNG 順序與邊界：先 RAND(1,100)<50；成功後 RAND(1,100)<50 選金幣，否則選物品；金幣分支再 RAND(8,12)，物品分支只在背包有有效物品時才 RAND(0,n-1)。非玩家目標成功率為 0；零金幣與空背包皆不視為偷竊成功。
+
+實際偷到金幣時只扣玩家金幣（來源不把金幣轉給敵人）；偷到物品時依來源整個銷毀物品實例／堆疊、清除玩家背包槽並更新 aggregate piles。只有實際偷到資產才呼叫等價的敵方中途 BATTLE_Exit：移除 Battle Entry，但不設死亡、不給擊殺信用或獎勵。失敗／無目標／空物資只保留戰鬥內 attempt receipt，避免同一角色同一回合重抽；不寫 Persistent State。
+
+Regression：`tools/check_v442_browser_enemy_steal.mjs` 使用正式 Group 349 / Enemy 473 / skill 140，覆蓋金幣、物品、49／50 成功邊界、零金幣、空背包、非玩家目標、目標失效後 DefaultAttacker RNG、離場與交易重播。StatusChange 仍待逐角色行動前 StatusSeq 完整整合，不在本版假裝完成。
+
+---
+
 ## 2026-10-02 Battle Regression Audit Follow-up
 
 Repair three legacy battle regression failures surfaced by the V4.41 controller change:

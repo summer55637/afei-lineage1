@@ -31,6 +31,7 @@ import { ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } fro
 import { createBrowserBattleInitializeRuntime, ACTION_BATTLE_INITIALIZE, BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT } from './stoneage_browser_battle_initialize_runtime.mjs';
 import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATUS, BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT } from './stoneage_browser_battle_command_wait_runtime.mjs';
 import { createBrowserBattleEnemyAiRuntime, ACTION_BATTLE_ENEMY_AI_APPLY, BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT } from './stoneage_browser_battle_enemy_ai_runtime.mjs';
+import { createBrowserBattleEnemyStealRuntime, ACTION_BATTLE_ENEMY_STEAL_PLAN, ACTION_BATTLE_ENEMY_STEAL_COMMIT, BROWSER_BATTLE_ENEMY_STEAL_RUNTIME_FORMAT } from './stoneage_browser_battle_enemy_steal_runtime.mjs';
 import { createBrowserBattleChargeRuntime, ACTION_BATTLE_CHARGE_STEP, BROWSER_BATTLE_CHARGE_RUNTIME_FORMAT } from './stoneage_browser_battle_charge_runtime.mjs';
 import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT, preflightPlayerBattleCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
@@ -235,6 +236,7 @@ function createBrowserStateController({
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
   const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
+  const battleEnemyStealRuntime=createBrowserBattleEnemyStealRuntime();
   const battleChargeRuntime=createBrowserBattleChargeRuntime();
   const battlePlayerCommandRuntime=createBrowserBattlePlayerCommandRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
@@ -455,6 +457,53 @@ function createBrowserStateController({
         }
         return {...result,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,
           battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_ENEMY_STEAL_PLAN){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-enemy-steal-plan',reason:'battle-context-required',state:clone(currentState)};
+        if(battleEnemyStealRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-enemy-steal-plan',reason:'browser-battle-enemy-steal-runtime-invalid',state:clone(currentState)};
+        const result=battleEnemyStealRuntime.plan(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          clone(currentState),
+          {attackerBid:action.attackerBid??null,targetBid:action.targetBid??null,
+            defaultTargetRoll:action.defaultTargetRoll??null,stealRolls:action.stealRolls??[]}
+        );
+        return {...result,format:BROWSER_BATTLE_ENEMY_STEAL_RUNTIME_FORMAT,
+          battleContext:clone(battleContext),state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_ENEMY_STEAL_COMMIT){
+        const replayTx=String(action.transactionId??'').trim();
+        const persistentReplay=!!(replayTx&&currentState?.runtimeMeta?.battleStealTransactions?.[replayTx]);
+        if(!battleContext&&!persistentReplay)return {ok:false,handled:false,stage:'battle-enemy-steal-commit',reason:'battle-context-required',state:clone(currentState)};
+        if(battleEnemyStealRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-enemy-steal-commit',reason:'browser-battle-enemy-steal-runtime-invalid',state:clone(currentState)};
+        const phaseGate=battleContext?requireBattlePhase(battleContext,type,currentState):null;
+        if(phaseGate)return phaseGate;
+        let stealPlan=action.battleEnemyStealPlan??null;
+        if(!stealPlan){
+          if(!battleContext)return {ok:false,handled:false,stage:'battle-enemy-steal-commit',reason:'enemy-steal-plan-required',state:clone(currentState)};
+          stealPlan=battleEnemyStealRuntime.plan(
+            {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+            clone(currentState),
+            {attackerBid:action.attackerBid??null,targetBid:action.targetBid??null,
+              defaultTargetRoll:action.defaultTargetRoll??null,stealRolls:action.stealRolls??[]}
+          );
+        }
+        if(!stealPlan?.ok)return {...stealPlan,format:BROWSER_BATTLE_ENEMY_STEAL_RUNTIME_FORMAT,state:clone(currentState)};
+        const result=battleEnemyStealRuntime.commit(
+          battleContext?{format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)}:null,
+          clone(currentState),
+          {plan:stealPlan,transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?int(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)}
+        );
+        if(result.ok&&result.handled===true){
+          if(result.state)currentState=clone(result.state);
+          if(result.battleContext)battleContext=clone(result.battleContext.context??result.battleContext);
+          if(result.actorExited===true)battleAttackPipeline=null;
+        }
+        return {...result,format:BROWSER_BATTLE_ENEMY_STEAL_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_BATTLE_CHARGE_STEP){
         const phaseGate=requireBattlePhase(battleContext,type,currentState);
@@ -1854,6 +1903,8 @@ export {
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
   ACTION_BATTLE_ENEMY_AI_APPLY,
+  ACTION_BATTLE_ENEMY_STEAL_PLAN,
+  ACTION_BATTLE_ENEMY_STEAL_COMMIT,
   ACTION_BATTLE_CHARGE_STEP,
   BROWSER_BATTLE_CHARGE_RUNTIME_FORMAT,
   ACTION_BATTLE_PLAYER_COMMAND_SET,
@@ -1893,6 +1944,7 @@ export {
   BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
   BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,
   BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT,
+  BROWSER_BATTLE_ENEMY_STEAL_RUNTIME_FORMAT,
   BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT,
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,

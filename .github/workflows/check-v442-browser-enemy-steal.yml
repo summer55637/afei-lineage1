@@ -1,0 +1,59 @@
+name: Check V4.42 Browser Enemy Steal WAZA Integration
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'src/stoneage_browser_enemy_steal_runtime.mjs'
+      - 'src/stoneage_browser_battle_enemy_steal_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v442_browser_enemy_steal.mjs'
+      - '.github/workflows/check-v442-browser-enemy-steal.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'src/stoneage_browser_battle_enemy_steal_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v442_browser_enemy_steal.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run enemy AI, Steal, legacy battle and transaction regressions
+        run: |
+          node tools/check_v411_browser_battle_duelpoint.mjs
+          node tools/check_v413_browser_battle_exp.mjs
+          node tools/check_v414_browser_battle_levelup.mjs
+          node tools/check_v418_browser_battle_item_commit.mjs
+          node tools/check_v421_browser_battle_exit.mjs
+          node tools/check_v429_browser_battle_enemy_ai_target_types.mjs
+          node tools/check_v430_browser_battle_enemy_ai_target_selection.mjs
+          node tools/check_v431_browser_battle_enemy_ai_controller.mjs
+          node tools/check_v432_browser_battle_enemy_ai_attack_pipeline.mjs
+          node tools/check_v433_browser_battle_enemy_ai_dead_entry.mjs
+          node tools/check_v434_browser_battle_enemy_ai_can_move.mjs
+          node tools/check_v435_browser_battle_enemy_ai_charge_retention.mjs
+          node tools/check_v436_browser_battle_enemy_ai_target_parity.mjs
+          node tools/check_v437_browser_battle_enemy_ai_waza_lifecycle.mjs
+          node tools/check_v438_browser_battle_enemy_noguard.mjs
+          node tools/check_v439_browser_enemy_charge_attack.mjs
+          node tools/check_v440_browser_enemy_mighty.mjs
+          node tools/check_v441_browser_enemy_power_balance.mjs
+          node tools/check_v442_browser_enemy_steal.mjs
+          node tools/check_v386_browser_battle_context_runtime.mjs
+          node tools/check_browser_battle_attack_pipeline_binding.mjs
+          node tools/check_v405_browser_battle_counter.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_enemy_ai_runtime.mjs
+          node --check src/stoneage_browser_battle_enemy_steal_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v442_browser_enemy_steal.mjs
