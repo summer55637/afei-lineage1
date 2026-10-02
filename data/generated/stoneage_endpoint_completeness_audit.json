@@ -123,7 +123,7 @@
   },
   "semanticGaps": [
     "Endpoint LS2MAP / connected-component re-audit for reopened 4000→200 and 3000→200 landing blockers.",
-    "Endpoint Item loader / ITEM1=32003 semantics.",
+    "Endpoint Item seed is fail-closed in the current endpoint snapshot: deployed loader semantics are closed, but source Item ID 32003 has no row.",
     "Endpoint Encounter→Group unresolved active IDs.",
     "Endpoint GMQUE RANDGMQUE / QUEPART and reward-pet closure.",
     "Persistent State final long-run field coverage."

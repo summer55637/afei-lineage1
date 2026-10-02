@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：cf1e661 — [audit] close endpoint Item seed as fail-closed
-- 更新時間：2026-10-02T08:10:54+08:00
+- 最新 commit：601f50b — [docs] finalize endpoint Item fail-closed evidence
+- 更新時間：2026-10-02T08:11:47+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
