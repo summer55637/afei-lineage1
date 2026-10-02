@@ -47,5 +47,26 @@
     "realBinPayloadBytesAvailable": false,
     "sabexPayloadBytesAvailable": false,
     "gGBrowserDecodeAvailable": false
+  },
+  "geometry": {
+    "gridWidth": 33,
+    "gridHeight": 33,
+    "rowMajorCellIndex": "row*33+column",
+    "targetBase": {
+      "x": -450,
+      "y": 350
+    },
+    "horizontalStep": 32,
+    "innerLoopVerticalStep": -23,
+    "outerLoopVerticalStep": 23,
+    "normalizedCoordinateFormula": "x=32*(row+column-32); y=23*(row-column)",
+    "preview": "center grid at cell 16,16; fit decoded graphic bounds to canvas"
+  },
+  "webPreview": {
+    "module": "src/stoneage_tile_presentation.mjs",
+    "function": "renderBattleSabexPreviewAsync",
+    "browserSafeSabexDecoder": "src/stoneage_sabex_decoder.mjs",
+    "resolvesUniqueImageIdsOnce": true,
+    "unresolvedPolicy": "partial; no placeholder substitution"
   }
 }
