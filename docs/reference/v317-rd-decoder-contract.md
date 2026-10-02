@@ -35,8 +35,10 @@ Target x86 `libStoneage.so` 的 `decoder()` @ `0x2f5410` 直接閉合：
 - `decodeAuthorizedClientGraphic()`；
 - `decodeAuthorizedClientGraphicAsync()`。
 
-瀏覽器 zlib 路徑使用 `DecompressionStream('deflate')`，避免把 Node-only `node:zlib` 帶入 browser bundle。
+瀏覽器 zlib 路徑使用 `DecompressionStream('deflate')`，避免把 Node-only `node:zlib` 帶入 browser bundle。`decodeStoneAgeRdAsync()` 對 `0x20` 分支回傳 4-byte/pixel RGBA；同步 API 對此分支明確 fail-closed，避免同步呼叫者誤把 truecolor 當 indexed pixels。
 
-這一層仍不包含任何 Real binary 資產。只有在合法 client asset bytes 與 ADRNBIN metadata 提供後，才能把 image ID 解成實際像素。
+`gG` 已新增 browser async PNG path：取 wrapper 的 `+0x10` payload，以 `createImageBitmap()` 解碼，經 Canvas 2D `getImageData()` 擷取 RGBA。PNG 解碼依賴 browser image/canvas APIs；在缺少這些 APIs 的環境會回報 unavailable，不會回傳假像素。
 
-目前 `gG` 仍只完成 carrier classification，尚未加入 browser PNG decode implementation；target 的 `decoderPng()` 已確認會把 `+0x10` 起始的 payload 交給 `IMG_LoadPNG_MEM`。
+`stoneage_client_asset_pack.mjs` 提供 `resolveClientTilePixelsAsync()`，`stoneage_tile_presentation.mjs` 提供 `renderSourceTileObjectPreviewAsync()`；預覽會按 `bytesPerPixel` 分流，indexed pixels 才套用 SAP palette，RGBA pixels 直接繪製。共用繪圖入口也會把 `Uint8Array` 轉成 `Uint8ClampedArray`，符合 browser `ImageData` 的型別要求。
+
+這一層仍不包含任何 Real binary 資產。只有在合法 client asset bytes 與 ADRNBIN metadata 提供後，才能把 image ID 解成實際像素；PNG Canvas 取樣是 browser visual decode，不宣稱與原生 SDL surface 的所有色彩處理逐 byte 相同。
