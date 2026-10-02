@@ -191,6 +191,40 @@
           "status": "not mapped by the inspected getters"
         }
       ]
+    },
+    "initializationFixups": {
+      "source": {
+        "x86": "AdrnInit @ 0x363370",
+        "armeabiV7a": "AdrnInit @ 0x23aa6c (Thumb address; function symbol is 0x23aa6d)",
+        "crossAbi": "Equivalent selector ranges and 16-bit field rewrite observed in both target ABI disassemblies."
+      },
+      "recordFieldOffset": "0x1e",
+      "recordFieldType": "u16",
+      "selector": [
+        {
+          "imageIdRangeInclusive": [
+            12802,
+            12811
+          ],
+          "imageIdHex": [
+            "0x3202",
+            "0x320b"
+          ]
+        },
+        {
+          "imageIdRangeInclusive": [
+            10132,
+            10136
+          ],
+          "imageIdHex": [
+            "0x2794",
+            "0x2798"
+          ]
+        }
+      ],
+      "mutation": "record_u16_0x1e = 300 + (record_u16_0x1e % 100)",
+      "effectEstablished": "forces quotient / 100 to 3 while preserving the low two decimal digits / remainder",
+      "semanticBoundary": "This is a target initialization correction; image identity/purpose and visual effect are not inferred."
     }
   },
   "spr": {
