@@ -14,6 +14,9 @@ const groupCatalog=readJson('data/generated/stoneage_start_encounter_group_runti
 
 const state=freshPersistentState({playerId:'v383'});
 state.world.position={floorId:100,x:610,y:538};
+state.idle.enabled=true;
+state.idle.mode='encounter_pending';
+state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
 
 const controller=createBrowserStateController({
   state,
