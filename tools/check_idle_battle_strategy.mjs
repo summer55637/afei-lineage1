@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   freshPersistentState,
   normalizePersistentState
@@ -104,6 +105,8 @@ result=applyIdleBattleStrategy(context,{playerId:'player-1',defaultTargetRoll:0}
 assert.equal(result.ok,false);
 assert.equal(result.reason,'battle-active-phase-required');
 
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
 const state=freshPersistentState({playerId:'idle-strategy-controller',playerName:'IdleStrategy'});
 state.player.hp=100;
 state.player.maxHp=100;
@@ -112,10 +115,11 @@ state.player.maxMp=20;
 state.idle.enabled=true;
 state.idle.mode='encounter_pending';
 state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+state.world.position={floorId:100,x:610,y:538};
 state.pets.petBox=[{id:'pet-controller',petId:120,tempNo:113,name:'Pet',level:3,hp:40,maxHp:40,mp:10,maxMp:20,mailMode:0}];
 state.pets.team=['pet-controller'];
 state.pets.activePetId='pet-controller';
-const controller=createBrowserStateController({state,now:()=> '2026-10-02T04:30:00.000Z'});
+const controller=createBrowserStateController({state,idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,now:()=> '2026-10-02T04:30:00.000Z'});
 const built=await controller.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   enemyTeam:[{enemyId:120,size:0,createMaxNum:1,enemy:{tempNo:113}}],
