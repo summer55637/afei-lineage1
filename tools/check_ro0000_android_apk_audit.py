@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+import hashlib
+import io
 import struct
 import unittest
+import zipfile
+import zlib
 
-from audit_ro0000_android_apk import parse_axml_manifest, resource_name_candidates
+from audit_ro0000_android_apk import archive_entry_record, parse_axml_manifest, resource_name_candidates
 
 
 NO_INDEX = 0xffffffff
@@ -111,6 +115,18 @@ def _manifest_fixture():
 
 
 class AndroidApkStringScanTests(unittest.TestCase):
+    def test_archive_entry_record_includes_crc_and_sha256(self):
+        payload = b"StoneAge packaged skin fixture"
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("assets/data/skin/test.png", payload)
+        stream.seek(0)
+        with zipfile.ZipFile(stream) as archive:
+            record = archive_entry_record(archive, archive.getinfo("assets/data/skin/test.png"))
+        self.assertEqual(record["crc32"], "%08x" % (zlib.crc32(payload) & 0xffffffff))
+        self.assertEqual(record["sha256"], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(record["bytes"], len(payload))
+
     def test_ascii_resource_path(self):
         values=resource_name_candidates(b'prefix\x00path/map4/real.bin\x00s/spr.bin\x00')
         self.assertIn('path/map4/real.bin',values)
