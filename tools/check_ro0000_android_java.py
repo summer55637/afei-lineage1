@@ -15,6 +15,27 @@ class JavaSourceRedactionTests(unittest.TestCase):
         self.assertNotIn("host.example", masked)
         self.assertEqual(masked.count("\n"), source.count("\n"))
 
+    def test_supported_package_scope_includes_sdl_helpers(self):
+        from audit_ro0000_android_java import supported_package
+        self.assertTrue(supported_package("org.libsdl.app"))
+        self.assertTrue(supported_package("org.libsdl.app.SDLController"))
+        self.assertTrue(supported_package("com.newssa.stoneage.update"))
+        self.assertFalse(supported_package("android.app"))
+
+    def test_call_site_count_is_not_deduplicated_identifier_count(self):
+        source = """
+package com.newssa.stoneage.update;
+public class UpdateChecker {
+    public void check() {
+        client.execute();
+        client.execute();
+    }
+}
+"""
+        method = next(m for m in method_records(source) if m["name"] == "check")
+        self.assertEqual(method["callSites"], 2)
+        self.assertEqual(method["uniqueCallIdentifierCount"], 1)
+        self.assertEqual(method["calls"], ["client.execute"])
     def test_records_calls_without_literal_values(self):
         source = '''
 package com.newssa.stoneage.update;
