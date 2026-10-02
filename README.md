@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：a626aa9 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T04:55:18Z
+- 最新 commit：6432ea3 — test: verify controller profit route output contract
+- 更新時間：2026-10-02T12:56:08+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
