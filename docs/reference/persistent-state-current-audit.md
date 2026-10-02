@@ -4,7 +4,7 @@
 
 ## 結論
 
-Canonical Persistent State v1、Save Envelope v1 與多種 runtime transaction 已存在。這一輪已補上 canonical 存檔的持久寫入與重新載入 runtime，且不依賴 playable HTML。
+Canonical Persistent State v1、Save Envelope v1 與多種 runtime transaction 已存在。這一輪已補上 canonical 存檔的持久寫入與重新載入 runtime，且不依賴 playable HTML；`check-persistent-state` workflow run `36964366382` 已於 commit `3c2a082` 全部通過。
 
 ## 已完成
 
@@ -17,13 +17,12 @@ Canonical Persistent State v1、Save Envelope v1 與多種 runtime transaction �
 - `.github/workflows/check-persistent-state.yml`：已納入上述新模組與 regression。
 - 原有 `tools/check_persistent_state_schema.mjs`、`tools/check_save_transaction.mjs`、`tools/check_v344_persistent_state_save_join.mjs` 的 schema、envelope 與交易層測試仍保留。
 
-## 尚待確認的邊界
+## 仍然分離的邊界
 
-1. 新增的 save-storage regression 已納入 GitHub Actions workflow；目前尚未取得這次變更的實際 CI 執行結果，因此暫不宣稱測試通過或自動關閉 blocker。
-2. Playable HTML 尚未接入這個 session factory，這是刻意保留的 UI 整合工作，不是完成 headless Persistent State 的前置條件。
-3. Legacy schema 30 目前只保證 known-field migration；本輪沒有宣稱可直接匯入舊版 LocalStorage 的 raw save。
-4. `equipment.sourceSlotRefs`、任務／每日任務內部內容、events、titles、battleSettings 等部分內容仍採 opaque shape validation。沒有 source evidence 的內部語義不臆造；只有目前啟用的玩法確實需要時才另行閉合。
+1. Playable HTML 尚未接入這個 session factory，這是刻意保留的 UI 整合工作，不是完成 headless Persistent State 的前置條件。
+2. Legacy schema 30 目前只保證 known-field migration；本輪沒有宣稱可直接匯入舊版 LocalStorage 的 raw save。
+3. `equipment.sourceSlotRefs`、任務／每日任務內部內容、events、titles、battleSettings 等部分內容仍採 opaque shape validation。沒有 source evidence 的內部語義不臆造；只有目前啟用的玩法確實需要時才另行閉合。
 
-## 下一步
+## 結論狀態
 
-確認新增 Persistent State workflow 的 regression 結果。若通過，將 canonical v1 的持久寫入／還原生命週期從 blocker 中關閉；legacy raw-save 匯入、opaque 欄位與 playable HTML 整合各自按實際需求另行處理，不再用廣義「expand all state」混在同一 blocker。
+Canonical v1 的持久寫入、自動保存與 session 還原已通過完整 `check-persistent-state` regression，並已從 blocker 中關閉。Legacy raw-save 匯入、opaque 欄位與 playable HTML 整合各自按實際需求另行處理，不再用廣義「expand all state」混在同一 blocker。
