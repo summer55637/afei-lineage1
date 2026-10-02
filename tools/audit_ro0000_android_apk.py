@@ -67,6 +67,18 @@ def parse_axml_manifest(data):
     info['parseStatus']='parsed' if info.get('package') else 'partial-or-unparsed'
     return info
 
+def resource_name_candidates(data):
+    pattern=re.compile(r'(?i)(?:[A-Za-z0-9_.-]+[/\\\\])*[A-Za-z0-9_.-]+\\.(?:map|dat|pak|spr|bmp|png|jpe?g|ini|cfg|csv|txt|bin|xml|json|idx|anm)\\b')
+    runs=[x.decode('ascii','ignore') for x in re.findall(rb'[\\x20-\\x7e]{5,}',data)]
+    runs += [b''.join(re.findall(rb'[\\x20-\\x7e]\\x00',x)).decode('ascii','ignore') for x in []]
+    candidates=set()
+    for run in runs:
+        if '://' in run: continue
+        for match in pattern.finditer(run):
+            name=match.group(0).replace('\\\\','/')
+            if len(name)<=160: candidates.add(name)
+    return sorted(candidates)[:200]
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--apk',required=True)
@@ -89,6 +101,10 @@ def main():
         dex=[{'path':x.filename,'uncompressedBytes':x.file_size} for x in infos if re.fullmatch(r'classes(?:[2-9][0-9]*)?\.dex',x.filename)]
         native=sorted(x.filename for x in infos if x.filename.startswith('lib/') and x.filename.endswith('.so'))
         map_candidates=[{'path':x.filename,'bytes':x.file_size} for x in infos if re.search(r'(map|tile|world|field|npc|monster|battle)',x.filename,re.I) and not x.is_dir()][:200]
+        native_string_candidates={}
+        for name in names:
+            if name=='classes.dex' or (name.startswith('lib/') and name.endswith('/libStoneage.so')):
+                native_string_candidates[name]=resource_name_candidates(zf.read(name))
         result={
           'format':'ro0000-android-apk-audit-v1','apkPath':str(apk),'fileBytes':apk.stat().st_size,
           'sha256':digest.hexdigest(),'zipIntegrity':'pass','archiveEntryCount':len(infos),
@@ -98,6 +114,7 @@ def main():
           'archiveEntries':[{'path':x.filename,'bytes':x.file_size,'compressedBytes':x.compress_size,'compression':x.compress_type,'encrypted':bool(x.flag_bits&1)} for x in infos],
           'extensionCounts':dict(sorted(ext_counts.items())),
           'mapOrGameplayPathCandidates':map_candidates,
+          'dexAndStoneageNativeResourceStringCandidates':native_string_candidates,
           'scopeNote':'Archive inventory and manifest metadata only; path candidates are not proof of server rules or playable map semantics.'
         }
     if args.baseline:
