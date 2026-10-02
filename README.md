@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：fe4875a — [fix] repair Java audit redaction metadata syntax
-- 更新時間：2026-10-03T00:03:01+08:00
+- 最新 commit：0443106 — [audit] retain map renderer and route native evidence
+- 更新時間：2026-10-03T00:04:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
