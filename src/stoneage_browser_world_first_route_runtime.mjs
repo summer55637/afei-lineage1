@@ -141,6 +141,10 @@ function goalIndicesForRect(map,rect){
   return goals;
 }
 
+function mapWalkableAtForRo0000(map,x,y,mapset,{flying=false}={}){
+  return ro0000SourceMapWalkableAt(map,x,y,mapset,{flying,sourceMapWalkableAt});
+}
+
 function bfsFromStart(map,mapset,start,goalIndexes,{maxVisited=null}={}){
   const width=Number(map.width),height=Number(map.height),size=width*height;
   const startIndex=start.y*width+start.x;
