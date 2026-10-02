@@ -160,3 +160,34 @@ The target APK audit establishes the client-side filename selector, 220-slot nam
 The public source comparisons establish historical precedent for the same 1089-cell implementation pattern.
 
 Neither source comparison is sufficient to prove the exact contents or provenance of the RO0000 target's external .sabex files.
+
+## 7. BattleMapNo selector: server-side origin is now closed
+
+The pinned Fixed-C source closes the upstream selector rule in `BATTLE_getBattleFieldNo(floor, x, y)`:
+
+~~~c
+MAP_getTileAndObjData(floor, x, y, &tile[0], &tile[1]);
+map[0] = MAP_getImageInt(tile[0], MAP_BATTLEMAP);
+map[1] = MAP_getImageInt(tile[0], MAP_BATTLEMAP2);
+map[2] = MAP_getImageInt(tile[0], MAP_BATTLEMAP3);
+iRet = map[RAND(0, 2)];
+return iRet;
+~~~
+
+因此 battle-map 編號的目前可證實資料流是：
+
+~~~
+encounter floor/x/y
+  -> tile[0]
+  -> MAP_BATTLEMAP / MAP_BATTLEMAP2 / MAP_BATTLEMAP3
+  -> random select one of three map values
+  -> battle-field number sent through battle result
+  -> Android lssproto receive path
+  -> BattleMapNo = received field (only 0..219 accepted)
+  -> ReadBattleMap(BattleMapNo)
+  -> battle00.sabex ... battle219.sabex
+~~~
+
+This means the current evidence does **not** support a simple rule such as `BattleMapNo = floor` or `BattleMapNo = floor % 220`. The local Android client is primarily a consumer of the field number selected upstream.
+
+The remaining closure target is the actual values stored in `MAP_BATTLEMAP`, `MAP_BATTLEMAP2`, and `MAP_BATTLEMAP3` for the target deployment, and then byte-level matching of those values to real `.sabex` files.
