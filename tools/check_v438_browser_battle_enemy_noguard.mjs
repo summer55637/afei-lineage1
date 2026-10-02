@@ -46,7 +46,7 @@ for(let i=0;i<3;i++){
   assert.equal(actor.battleCommands[0],BATTLE_COM_S_NOGUARD);
   assert.equal(actor.battleCommands[1],0);
   assert.equal(actor.battleCommands[2],plan.commands[i].command3);
-  assert.deepEqual([actor.noguardDuckBonus,actor.noguardCounterBonus,actor.noguardCriticalBonus],plan.commands[i].command3?plan.commands[i].command3===plan.commands[i].command3?[plan.commands[i].noguardDuckBonus,plan.commands[i].noguardCounterBonus,plan.commands[i].noguardCriticalBonus]:[]:[]);
+  assert.deepEqual([actor.noguardDuckBonus,actor.noguardCounterBonus,actor.noguardCriticalBonus],[plan.commands[i].noguardDuckBonus,plan.commands[i].noguardCounterBonus,plan.commands[i].noguardCriticalBonus]);
   assert.equal(actor.noguardSourceSkillId,skillIds[i]);
   assert.equal(actor.sourceBattleCharMode,3);
 }
@@ -63,7 +63,7 @@ assert.equal(boostedDuck.per-baselineDuck.per,3000,'NoGuard +30 adds 30 percenta
 assert.equal(boostedDuck.dodged,true);
 
 const counter=counterCheck(committed.battleContext,{
-  attackerBid:15,targetBid:10,attackerWeaponClass:'claw',defenderWeaponClass:'claw',counterRoll:1
+  attackerBid:15,targetBid:0,attackerWeaponClass:'claw',defenderWeaponClass:'claw',counterRoll:1
 });
 assert.equal(counter.ok,true,JSON.stringify(counter));
 assert.equal(counter.noguardCounterAdjust,50);
