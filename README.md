@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：dfa0a0e — fix: persist newest committed controller state
-- 更新時間：2026-10-02T12:17:09+08:00
+- 最新 commit：37e7244 — docs: update persistent state audit after storage wiring
+- 更新時間：2026-10-02T12:18:19+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
