@@ -1,7 +1,202 @@
 {
   "format": "ro0000-android-native-resource-focus-v1",
-  "workflowRunId": 37018811342,
-  "sourceCommit": "bc3e50ee85cbe48663a5528d95ae627fed9d56d3",
+  "workflowRunId": 37020028030,
+  "sourceCommit": "dcd10da69f0506eec3793497acbf2f8f7723ec9e",
   "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
-  "libraries": []
+  "libraries": [
+    {
+      "path": "lib/armeabi-v7a/libStoneage.so",
+      "abi": "armeabi-v7a",
+      "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4",
+      "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+      "functions": [
+        {
+          "name": "_Z10LoadSprbinPKc",
+          "value": "0x23a985",
+          "size": 232,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 97,
+          "resourceRelevantLines": []
+        },
+        {
+          "name": "_Z8AdrnInitPcS_",
+          "value": "0x23aa6d",
+          "size": 712,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 295,
+          "resourceRelevantLines": [
+            "  23aab0:\td004      \tbeq.n\t23aabc <AdrnInit(char*, char*)@@Base+0x50>",
+            "  23aac2:\tf691 ecc0 \tblx\tcc444 <fopen@plt>",
+            "  23aadc:\tf691 ecb2 \tblx\tcc444 <fopen@plt>",
+            "  23ab00:\tf691 ecac \tblx\tcc45c <fread@plt>",
+            "  23ab2c:\tf691 ec96 \tblx\tcc45c <fread@plt>",
+            "  23ab7e:\t2250      \tmovs\tr2, #80\t@ 0x50",
+            "  23ab80:\tf692 eb38 \tblx\tcd1f4 <__aeabi_memcpy@plt>",
+            "  23ac34:\t2250      \tmovs\tr2, #80\t@ 0x50",
+            "  23ac36:\tf691 ecea \tblx\tcc60c <__aeabi_memcpy4@plt>"
+          ]
+        },
+        {
+          "name": "_Z18InitSprBinFileOpenPcS_",
+          "value": "0x23ad35",
+          "size": 1744,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 671,
+          "resourceRelevantLines": [
+            "  23ad60:\tf691 eb70 \tblx\tcc444 <fopen@plt>",
+            "  23ad7c:\tf691 eb62 \tblx\tcc444 <fopen@plt>",
+            "  23ad92:\t9014      \tstr\tr0, [sp, #80]\t@ 0x50",
+            "  23ad9e:\tf691 eb5e \tblx\tcc45c <fread@plt>",
+            "  23adc0:\t9014      \tstr\tr0, [sp, #80]\t@ 0x50",
+            "  23add2:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23ade0:\t9814      \tldr\tr0, [sp, #80]\t@ 0x50",
+            "  23adee:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23ae06:\tf692 e972 \tblx\tcd0ec <fseek@plt>",
+            "  23ae14:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23ae32:\tf691 eb14 \tblx\tcc45c <fread@plt>",
+            "  23ae3c:\t9b14      \tldr\tr3, [sp, #80]\t@ 0x50",
+            "  23ae58:\t9b14      \tldr\tr3, [sp, #80]\t@ 0x50",
+            "  23ae72:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23ae98:\tf8dd e050 \tldr.w\tlr, [sp, #80]\t@ 0x50",
+            "  23aeb6:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23aece:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23aee6:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23af00:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23af24:\tf691 ea9a \tblx\tcc45c <fread@plt>",
+            "  23af3a:\tf8dd e050 \tldr.w\tlr, [sp, #80]\t@ 0x50",
+            "  23af66:\tf8dd e050 \tldr.w\tlr, [sp, #80]\t@ 0x50",
+            "  23af8a:\tf8dd e050 \tldr.w\tlr, [sp, #80]\t@ 0x50",
+            "  23afae:\tf8dd e050 \tldr.w\tlr, [sp, #80]\t@ 0x50",
+            "  23afe0:\t9814      \tldr\tr0, [sp, #80]\t@ 0x50",
+            "  23b00e:\t9814      \tldr\tr0, [sp, #80]\t@ 0x50",
+            "  23b03c:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23b05c:\t9b14      \tldr\tr3, [sp, #80]\t@ 0x50",
+            "  23b074:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23b0aa:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23b0ca:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23b0e0:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23b0fa:\t9914      \tldr\tr1, [sp, #80]\t@ 0x50",
+            "  23b116:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b136:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b156:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b174:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b18a:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b1a4:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b1be:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b1d8:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b1f2:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b20c:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b226:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b240:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b25a:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b274:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b28e:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b2a8:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b2c4:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b2de:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b31c:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50",
+            "  23b33e:\t9a14      \tldr\tr2, [sp, #80]\t@ 0x50"
+          ]
+        },
+        {
+          "name": "_Z10adrnDecodePci",
+          "value": "0x23b795",
+          "size": 96,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 39,
+          "resourceRelevantLines": [
+            "  23b7c0:\tf694 eba4 \tblx\tcff0c <setBlowFishKey(char*)@plt>",
+            "  23b7ca:\tf694 eba6 \tblx\tcff18 <fish_decode(unsigned char*, int, int*)@plt>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "lib/x86/libStoneage.so",
+      "abi": "x86",
+      "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333",
+      "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+      "functions": [
+        {
+          "name": "_Z10LoadSprbinPKc",
+          "value": "0x3631e0",
+          "size": 398,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 98,
+          "resourceRelevantLines": []
+        },
+        {
+          "name": "_Z8AdrnInitPcS_",
+          "value": "0x363370",
+          "size": 1132,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 271,
+          "resourceRelevantLines": [
+            "  3633a3:\t89 44 24 50          \tmov    %eax,0x50(%esp)",
+            "  3633d3:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  3633ef:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  363406:\te8 d5 89 d6 ff       \tcall   cbde0 <fopen@plt>",
+            "  363422:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  363439:\te8 a2 89 d6 ff       \tcall   cbde0 <fopen@plt>",
+            "  36345c:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  363492:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  3634a0:\te8 5b 89 d6 ff       \tcall   cbe00 <fread@plt>",
+            "  3634a5:\t81 7c 24 74 39 38 39 \tcmpl   $0x31393839,0x74(%esp)",
+            "  3634c1:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  3634f5:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  3634ff:\te8 fc 88 d6 ff       \tcall   cbe00 <fread@plt>",
+            "  363516:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  36353e:\tb8 50 00 00 00       \tmov    $0x50,%eax",
+            "  363560:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  363576:\tbf 50 00 00 00       \tmov    $0x50,%edi",
+            "  363587:\t6b 44 24 54 50       \timul   $0x50,0x54(%esp),%eax",
+            "  3635a5:\tc7 44 24 08 50 00 00 \tmovl   $0x50,0x8(%esp)",
+            "  3635ad:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  3635bd:\te8 8e 8a d6 ff       \tcall   cc050 <memcpy@plt>",
+            "  3635ef:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  363631:\t8b 4c 24 50          \tmov    0x50(%esp),%ecx",
+            "  363680:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  363698:\tb8 50 00 00 00       \tmov    $0x50,%eax",
+            "  3636a1:\t8b 54 24 50          \tmov    0x50(%esp),%edx",
+            "  3636ab:\t6b 7c 24 78 50       \timul   $0x50,0x78(%esp),%edi",
+            "  3636b9:\tc7 44 24 08 50 00 00 \tmovl   $0x50,0x8(%esp)",
+            "  3636c7:\te8 84 89 d6 ff       \tcall   cc050 <memcpy@plt>",
+            "  363720:\t8b 44 24 50          \tmov    0x50(%esp),%eax",
+            "  36372f:\t6b 74 24 78 50       \timul   $0x50,0x78(%esp),%esi",
+            "  363750:\t6b 54 24 78 50       \timul   $0x50,0x78(%esp),%edx",
+            "  363777:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  363796:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx",
+            "  3637d3:\t8b 5c 24 50          \tmov    0x50(%esp),%ebx"
+          ]
+        },
+        {
+          "name": "_Z18InitSprBinFileOpenPcS_",
+          "value": "0x3637e0",
+          "size": 2725,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 613,
+          "resourceRelevantLines": [
+            "  363837:\te8 a4 85 d6 ff       \tcall   cbde0 <fopen@plt>",
+            "  363873:\te8 68 85 d6 ff       \tcall   cbde0 <fopen@plt>",
+            "  3638db:\te8 20 85 d6 ff       \tcall   cbe00 <fread@plt>",
+            "  3639ab:\te8 10 95 d6 ff       \tcall   ccec0 <fseek@plt>",
+            "  363a1a:\t89 4c 24 50          \tmov    %ecx,0x50(%esp)",
+            "  363a1e:\te8 dd 83 d6 ff       \tcall   cbe00 <fread@plt>",
+            "  363bd3:\te8 28 82 d6 ff       \tcall   cbe00 <fread@plt>"
+          ]
+        },
+        {
+          "name": "_Z10adrnDecodePci",
+          "value": "0x364970",
+          "size": 151,
+          "disassemblyStatus": "ok",
+          "instructionLineCount": 45,
+          "resourceRelevantLines": [
+            "  3649b0:\te8 5b c2 d6 ff       \tcall   d0c10 <setBlowFishKey(char*)@plt>",
+            "  3649cf:\te8 4c c2 d6 ff       \tcall   d0c20 <fish_decode(unsigned char*, int, int*)@plt>"
+          ]
+        }
+      ]
+    }
+  ]
 }
