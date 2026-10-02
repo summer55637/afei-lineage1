@@ -173,6 +173,7 @@ function buildReadme() {
     '- [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)',
     '- [Rebuild roadmap](docs/rebuild-roadmap.md)',
     '- [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)',
+    '- [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)',
     '- [Generated state / evidence](data/generated/)',
     '',
     '> README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。'
