@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：a6175b5 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T10:32:31Z
+- 最新 commit：654ff6a — [docs] document Android resource path and Lua loader mapping
+- 更新時間：2026-10-02T18:35:33+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
