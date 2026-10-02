@@ -132,6 +132,12 @@ function probeItemLoaderDisassembly() {
   ]);
   const grantLines = grantDisassembly.split(/\r?\n/);
   const grantItemCalls = grantLines.filter(line => /ITEM_makeItemAndRegist|getNewplayergiveitem/.test(line)).slice(0, 80);
+  const grantCallWindows = [];
+  for (let i = 0; i < grantLines.length; i++) {
+    if (/ITEM_makeItemAndRegist/.test(grantLines[i])) {
+      grantCallWindows.push(grantLines.slice(Math.max(0, i - 10), Math.min(grantLines.length, i + 6)));
+    }
+  }
 
   const getterDisassembly = commandText('objdump', [
     '-drwC', '-M', 'intel', '--disassemble=getNewplayergiveitem', SERVER_BIN
@@ -153,6 +159,7 @@ function probeItemLoaderDisassembly() {
     },
     newPlayerGrant: {
       grantItemCalls,
+      grantCallWindows,
       getterWindow: getterLines.slice(0, 100)
     },
     interpretation: {
