@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：ef51cab — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T08:19:22Z
+- 最新 commit：9449057 — docs: record V4.35 enemy AI charge retention
+- 更新時間：2026-10-02T16:20:58+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.34
+- Regression 最高版本：V4.35
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.34 |
+| Battle Pipeline | ✅ V4.35 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
