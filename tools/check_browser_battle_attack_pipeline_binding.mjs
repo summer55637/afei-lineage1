@@ -185,6 +185,30 @@ const coreStatRolls=[
   assert.equal(react.targetBid,15);
   assert.equal(react.reaction.code,0);
 
+  const preCounter=await c.dispatch({
+    type:ACTION_BATTLE_COUNTER_PLAN,
+    attackerBid:15,
+    targetBid:0,
+    attackerCommand:1,
+    attackerWeaponClass:'claw',
+    defenderWeaponClass:'claw',
+    counterRoll:1
+  });
+  assert.equal(preCounter.ok,true,JSON.stringify(preCounter));
+  assert.equal(preCounter.triggered,true);
+
+  const counterWrongDirection=await c.dispatch({
+    type:ACTION_BATTLE_COUNTER_PLAN,
+    attackerBid:0,
+    targetBid:15,
+    attackerCommand:1,
+    attackerWeaponClass:'claw',
+    defenderWeaponClass:'claw',
+    counterRoll:1
+  });
+  assert.equal(counterWrongDirection.ok,false,JSON.stringify(counterWrongDirection));
+  assert.equal(counterWrongDirection.reason,'counter-reverse-target-mismatch');
+
   const hpBefore=initialized.battleContext.sides.flatMap(side=>side.entries).find(entry=>entry?.bid===15)?.hp;
   assert.ok(Number.isInteger(hpBefore),JSON.stringify(initialized.battleContext.sides));
   const damageCommit=await c.dispatch({
@@ -217,34 +241,12 @@ const coreStatRolls=[
   assert.equal(staleCommit.ok,false);
   assert.equal(staleCommit.reason,'damage-commit-stale-plan');
 
-  const preCounter=await c.dispatch({
-    type:ACTION_BATTLE_COUNTER_PLAN,
-    attackerBid:15,
-    targetBid:0,
-    attackerCommand:1,
-    attackerWeaponClass:'claw',
-    defenderWeaponClass:'claw',
-    counterRoll:1
-  });
-  assert.equal(preCounter.ok,true,JSON.stringify(preCounter));
-  assert.equal(preCounter.triggered,true);
 
-  const counterWrongDirection=await c.dispatch({
-    type:ACTION_BATTLE_COUNTER_PLAN,
-    attackerBid:0,
-    targetBid:15,
-    attackerCommand:1,
-    attackerWeaponClass:'claw',
-    defenderWeaponClass:'claw',
-    counterRoll:1
-  });
-  assert.equal(counterWrongDirection.ok,false,JSON.stringify(counterWrongDirection));
-  assert.equal(counterWrongDirection.reason,'counter-reverse-target-mismatch');
 
   console.log(JSON.stringify({
     pass:true,
     contract:'attack-seq-damage-react-counter-binding',
-    order:['AttackSeqPrelude','DamagePlan','CriticalDamagePlan','DamageReactPlan','DamageCommit','CounterPlan'],
+    order:['AttackSeqPrelude','DamagePlan','CriticalDamagePlan','DamageReactPlan','CounterPlan','DamageCommit'],
     damageCommitBound:true,
     damageReplayIdempotent:true,
     target:{requested:15,final:15},
