@@ -16,6 +16,7 @@ import {
 
 const groups=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
 const skillCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_petskill_runtime.json','utf8'));
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 const sourceGroup=groups.groups.find(g=>g.groupId===711);
 assert.ok(sourceGroup,'source encounter group 711 must exist');
 const member=sourceGroup.members.find(m=>m.enemyId===1305);
@@ -32,7 +33,7 @@ state.world.position={floorId:100,x:610,y:538};
 state.idle.enabled=true;
 state.idle.mode='encounter_pending';
 state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
-const controller=createBrowserStateController({state,petSkillCatalog:skillCatalog,battleFieldNoProvider:0});
+const controller=createBrowserStateController({state,idleRouteCatalog:routeCatalog,petSkillCatalog:skillCatalog,battleFieldNoProvider:0});
 const encounter={encounterId:65,floorId:100,x:610,y:538};
 const enemyTeam=[{enemyId:member.enemyId,size:member.enemy.size,createMaxNum:member.enemy.createMaxNum,enemy:member.enemy}];
 const statRoll={levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:Array(10).fill(0)};
