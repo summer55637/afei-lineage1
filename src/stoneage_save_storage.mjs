@@ -13,6 +13,18 @@ function validateSaveStoragePort(port){
   return errors;
 }
 
+function createLocalStorageSavePort(storage){
+  let target=storage;
+  if(target===undefined){
+    try{target=globalThis.localStorage;}catch{return null;}
+  }
+  if(!target||typeof target.getItem!=='function'||typeof target.setItem!=='function')return null;
+  return {
+    async read(key){return target.getItem(key);},
+    async write(key,value){target.setItem(key,value);return {ok:true};}
+  };
+}
+
 function normalizeKey(key){
   const value=String(key??DEFAULT_SAVE_STORAGE_KEY).trim();
   return value||null;
@@ -63,4 +75,4 @@ async function commitAndPersistSave(currentState,nextState,{storage,key=DEFAULT_
   return {...committed,persisted:true,storage:persisted};
 }
 
-export { SAVE_STORAGE_PORT_FORMAT, DEFAULT_SAVE_STORAGE_KEY, validateSaveStoragePort, writeSaveEnvelopeToStorage, loadPersistentStateFromStorage, commitAndPersistSave };
+export { SAVE_STORAGE_PORT_FORMAT, DEFAULT_SAVE_STORAGE_KEY, createLocalStorageSavePort, validateSaveStoragePort, writeSaveEnvelopeToStorage, loadPersistentStateFromStorage, commitAndPersistSave };
