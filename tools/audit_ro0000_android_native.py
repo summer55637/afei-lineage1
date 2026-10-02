@@ -122,6 +122,18 @@ def parse_symbols(readelf_text):
     return sorted(undefined), sorted(exported)
 
 
+def relevant_embedded_strings(data):
+    """Return bounded ASCII/UTF-16LE strings related to map/resource paths."""
+    runs = [value.decode("ascii", "ignore")
+            for value in re.findall(rb"[\x20-\x7e]{4,}", data)]
+    runs += [value[::2].decode("ascii", "ignore")
+             for value in re.findall(rb"(?:[\x20-\x7e]\x00){4,}", data)]
+    pattern = re.compile(
+        r"(?i)(map4|adrn|real|spr|resource|update|[.]bin|[.]dat|%[0-9$]*s)"
+    )
+    return sorted({value for value in runs if pattern.search(value)})[:300]
+
+
 def relevant_symbol_names(names):
     markers = (
         "adrn", "realbin", "realget", "hitmap", "loadsprbin", "downloadresource",
@@ -268,6 +280,7 @@ def inspect_library(zip_file, info, readelf, cxxfilt, disassembler, temp_dir):
     build_id_match = re.search(r"Build ID: ([0-9a-fA-F]+)", notes)
 
     path_candidates = resource_name_candidates(data)
+    embedded_relevant_strings = relevant_embedded_strings(data)
     map_resource_candidates = [
         value for value in path_candidates
         if any(marker in value.lower() for marker in
@@ -286,6 +299,7 @@ def inspect_library(zip_file, info, readelf, cxxfilt, disassembler, temp_dir):
         "exportedMapAndResourceSymbols": relevant_symbol_names(exported),
         "focusedSymbols": focused,
         "mapResourcePathCandidates": map_resource_candidates,
+        "embeddedRelevantStrings": embedded_relevant_strings,
         "readelfAvailable": bool(readelf),
         "cxxfiltAvailable": bool(cxxfilt),
         "disassembler": disassembler["path"] if disassembler else None,
