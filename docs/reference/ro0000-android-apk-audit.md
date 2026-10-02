@@ -133,6 +133,19 @@ Source comparisons (cross-check only):
 - [Pinned Fixed-C readmap.c](https://github.com/gavinlinasd/StoneAge/blob/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56/gmsv/src/map/readmap.c)
 - [Pinned Fixed-C map structure](https://github.com/gavinlinasd/StoneAge/blob/1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56/gmsv/src/include/readmap.h)
 
+### Derived HitMap and movement collision
+
+The target APK's native \`readHitMap\` builds a separate 16-bit \`hitMap\` from the current \`tile\`, \`parts\`, and \`event\` window. Its output is cleared first; the fixed 2,738-byte clear corresponds to 37 × 37 16-bit cells in this client configuration.
+
+- Tile and parts values above \`CG_INVISIBLE\` (99), plus the special 60–79 range, are resolved through \`realGetNo\` and \`realGetHitFlag\`.
+- For hit flag 0, the client uses \`realGetHitPoints\` to mark the sprite footprint as state 1, without overwriting cells already at state 2.
+- For hit flag 2, the footprint is marked state 2.
+- Certain ordinary tile/parts codes are handled directly: 1, 2, 5, 6, 9, and 10 mark state 1; code 4 marks state 2. Tile code 0 is treated as blocked only when the event plane has \`MAP_SEE_FLAG\` set.
+- Parts IDs 15680–15732 with hit flag 1 mark only their anchor cell as state 1.
+- If the low 12 bits of an event cell equal \`EVENT_NPC\`, that cell is marked state 1.
+
+The target \`checkHitMap\` returns false immediately for \`pc.skywalker\`; otherwise coordinates outside the active map window return true. Inside the window it returns true only when the derived \`hitMap\` cell equals 1. Therefore state 1 is the movement-blocking result; state 2 is a distinct derived state that this query does not treat as blocked. Do not interpret the values 1/2 as raw map tile IDs or copy this client-side algorithm into the server Fixed-C runtime without separate verification.
+
 ### Map-cache call sites
 
 - `lssproto_S_recv` parses incoming fields, calls `setMap`, and then calls `createMap` with the map identifier and two dimension values.
