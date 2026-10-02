@@ -1,0 +1,90 @@
+{
+  "format": "ro0000-android-native-resource-layout-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "loader": {
+    "loadResources": "0x3647f0",
+    "resourceRoot": "path",
+    "initPatternSeparation": "InitPteernSeparationBin(\"path\", true)",
+    "recursiveDirectoryScan": true,
+    "perDirectoryFileTemplates": [
+      "%s/adrn.bin",
+      "%s/real.bin",
+      "%s/spradrn.bin",
+      "%s/spr.bin"
+    ]
+  },
+  "targetTables": {
+    "bitmapnumbertable": {
+      "symbol": "bitmapnumbertable",
+      "address": "0x04e6bdc0",
+      "bytes": 400000,
+      "entrySize": 4,
+      "entryCount": 100000,
+      "role": "image/bmp number -> graphic number"
+    },
+    "adrnbuff": {
+      "symbol": "adrnbuff",
+      "address": "0x05117740",
+      "bytes": 48000000,
+      "entrySize": 80,
+      "entryCount": 600000,
+      "role": "graphic-number -> ADRNBIN metadata"
+    },
+    "Realbinfp": {
+      "symbol": "Realbinfp",
+      "address": "0x04ecd840",
+      "bytes": 2400000,
+      "entrySize": 4,
+      "entryCount": 600000,
+      "role": "graphic-number -> Real binary FILE*"
+    },
+    "SpriteData": {
+      "symbol": "SpriteData",
+      "address": "0x09008bc4",
+      "bytes": 320000,
+      "entrySize": 8,
+      "entryCount": 40000,
+      "role": "sprite-number -> animation data"
+    }
+  },
+  "adrn": {
+    "function": "AdrnInit",
+    "address": "0x363370",
+    "headerWordLE": "0x31393839",
+    "recordSize": 80,
+    "idBase": "nextMaxAdrnID = MaxAdrnID before each shard",
+    "bitmapNumberIndex": "bitmapnumbertable[attr.bmpnumber] = globalGraphicNo when attr.bmpnumber is nonzero",
+    "realFileIndex": "Realbinfp[globalGraphicNo] = shard Real FILE*"
+  },
+  "spr": {
+    "function": "InitSprBinFileOpen",
+    "address": "0x3637e0",
+    "sprAdrnRecordSizeBytes": 12,
+    "sprAdrnLayout": [
+      "u32 sprNo",
+      "u32 offset",
+      "u16 animSize",
+      "u16 ABI padding"
+    ],
+    "animHeaderReadBytes": 12,
+    "frameReadBytes": 10,
+    "frameBitmapRule": "globalBmpNo = localFrameBmpNo + nextMaxAdrnID",
+    "spriteStart": 100000,
+    "spriteCapacity": 40000
+  },
+  "sabexCompatibility": {
+    "cellEncoding": "uint16be",
+    "cellMax": 65535,
+    "realGetNoAcceptedImageIdExclusive": 100000,
+    "conclusion": "every SABEX uint16 cell fits inside realGetNo image-ID admission range",
+    "renderGate": "StockDispBuffer rejects bmpNo <= 99; bmpNo > 99 enters realGetNo path"
+  },
+  "separation": {
+    "sabex": "battle-map tile IDs are passed directly to StockDispBuffer and therefore use the image/bmp resolver path",
+    "spriteAnimation": "spr.bin/spradrn.bin are loaded by a separate SpriteData path and are not the primary SABEX tile resolver"
+  }
+}
