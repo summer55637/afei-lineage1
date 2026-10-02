@@ -121,22 +121,29 @@ def method_records(source):
         body = masked[opening + 1:pos]
         calls = []
         seen = set()
+        call_site_count = 0
         for call in CALL_RE.finditer(body):
             target = re.sub(r"\s+", "", call.group(1))
             method_name = target.rsplit(".", 1)[-1]
             if method_name in KEYWORDS or method_name == name:
                 continue
+            call_site_count += 1
             if target not in seen:
                 seen.add(target)
                 calls.append(target)
         methods.append({
             "name": name,
-            "callSites": len(calls),
-            "calls": sorted(calls)[:80],
+            "callSites": call_site_count,
+            "uniqueCallIdentifierCount": len(calls),
+            "calls": sorted(calls),
         })
     # Decompiler can duplicate synthetic bridge methods; preserve their exact count
     # while keeping the summary compact and deterministic.
     return methods
+
+
+def supported_package(package):
+    return any(package == p or package.startswith(p + ".") for p in APP_PREFIXES)
 
 
 def main():
@@ -156,7 +163,7 @@ def main():
         source = path.read_text(encoding="utf-8", errors="replace")
         package_match = PACKAGE_RE.search(source)
         package = package_match.group(1) if package_match else "(default)"
-        if not any(package == p or package.startswith(p + ".") for p in APP_PREFIXES):
+        if not supported_package(package):
             continue
         scanned += 1
         classes = CLASS_RE.findall(mask_java(source))
@@ -164,14 +171,12 @@ def main():
             continue
         class_name = classes[0]
         methods = method_records(source)
-        if class_name not in FOCUS and not package.startswith("com.newssa.stoneage."):
-            continue
         records.append({
             "package": package,
             "className": class_name,
             "sourcePath": str(path.relative_to(root)),
             "methodCount": len(methods),
-            "methods": methods[:160],
+            "methods": methods,
         })
 
     records.sort(key=lambda r: (r["package"], r["className"], r["sourcePath"]))
@@ -185,6 +190,7 @@ def main():
             "packages": list(APP_PREFIXES),
             "sourceFilesScanned": scanned,
             "classCount": len(records),
+            "includedClassPolicy": "all source classes under the declared package prefixes",
             "focusedClasses": sorted(FOCUS),
         },
         "classes": records,
