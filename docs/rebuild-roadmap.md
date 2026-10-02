@@ -1,3 +1,13 @@
+## 2026-10-02 V4.36 Enemy AI Target Selection Source Parity
+
+校正 V4.30 對 HP selector RNG 的簡化：Fixed-C `_ENEMY_ATTACK_AI` 下 select mode 2..7 都先消耗 `RAND(0,rn)`；若結果為 0 再消耗 `RAND(0,cnt-1)`，cnt=1 也不省略。補齊 STR_MAX、DEX_MAX、DEX_MIN、ATT_SUBDUE，及 TARGET_LEADER 的非隊長 `RAND(0,2)` 篩選與空集合 fallback。targetType 0／未知值依 switch default 採 ALL。
+
+Battle Context 新增 transient source AI target stats／elements／party mode；玩家與單機出戰寵不假設為隊長。缺少 selector 所需資料仍 fail-closed，不增加存檔 schema。
+
+Regression：`tools/check_v436_browser_battle_enemy_ai_target_parity.mjs`，並重跑 V4.29–V4.36、V3.86 Battle Context 與既有 attack pipeline binding。
+
+---
+
 ## 2026-10-02 V4.35 Enemy AI Charge Retention
 
 對齊 Fixed-C `BATTLE_IsCharge()`：敵人目前 COM1 是 `BATTLE_COM_S_CHARGE`（1005）、`BATTLE_COM_S_EARTHROUND0`（1009）或 `BATTLE_COM_S_EARTHROUND1`（1010）時，AI pass 保留 COM1／COM2、不重抽行動，只設 C_OK；優先於 Surprise，且不消耗 action／target RNG。不做蓄力倒數、釋放攻擊或持久狀態變更。
