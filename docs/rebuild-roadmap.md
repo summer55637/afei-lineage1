@@ -1,3 +1,17 @@
+## 2026-10-02 Karutarna route repair overlay：正式接入產品路線
+
+4000→200 的 source route 仍保留 disconnected 的歷史判定；另外加入一個清楚分層的產品修復 overlay，讓 Browser Controller 在不改原始地圖、不新增 warp、不修改 movement semantics 的前提下，於 runtime map copy 將 (91,109)、(92,109)、(93,109) 的 tile 換成既有可走 tile 321。
+
+- Overlay 嚴格綁定 pinned map path、blob SHA、地圖尺寸及三格原始 tile/object 前值；資料不符即拒絕套用。
+- Planner 與逐步 movement 共用同一 overlay；路徑仍由現有 4-neighbor BFS 和一般 Save Envelope movement／warp 執行。
+- Idle route catalog 另外標示 product repair eligibility；source eligibility 仍維持 6 個，產品層可用路線為 8 個 variants。
+- 原始 map snapshot 完全不變。tile 321 是明確的產品修復 tile，不宣稱是原作正確美術。
+- Regression 覆蓋兩組 portal 的規劃、實際路線執行、原始資料未變及停用 overlay 後 fail-closed。
+
+詳細契約：docs/reference/karutarna-road-access-repair-overlay.md。
+
+---
+
 ## 2026-10-02 Battle Regression Recovery：遭遇與離場測試對齊正式介面
 
 這輪對舊版獨立回歸進行前置條件與資料形狀校正，沒有放寬 runtime gate：

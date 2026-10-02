@@ -49,6 +49,15 @@ ro0000/ 中除明確指定的手工外網端以外，全部屬 VM 一鍵端。
 - Web root / website integration
 - 手工部署流程與 endpoint-specific data
 
+#### A3. Android 手游端（RO0000 附帶 APK）
+
+ro0000/client/android/冰河石器-隐盟.apk 是與此部署快照一同保存的 Android 客戶端研究材料。其適用範圍限於可由 APK 本身驗證的客戶端內容，例如畫面、操作流程、客戶端資源與版本線索。
+
+- APK 的存在本身不構成任何地圖、伺服器規則或路線的證據。
+- 必須先記錄 APK 的檔案雜湊、封裝版本與可驗證的資源／程式位置，才可將提取內容納入 client evidence。
+- 客戶端地圖或行為只能證明該客戶端版本呈現／執行了什麼；不能單獨覆蓋伺服器部署資料或 Fixed-C 的伺服器語義。
+- 與伺服器資料不一致時，記為 client variant，保留來源，不直接改寫 endpoint 或 fixed-C。
+
 ### B. Pinned fixed-C
 
 gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
@@ -142,9 +151,16 @@ Fixed-C → 把所有 endpoint 差異都丟掉
 | 世界／NPC／Item／Quest／Event 的實際配置？ | VM 一鍵端＋手工外網端 | pinned fixed-C semantics |
 | C engine 怎麼執行？ | pinned fixed-C | endpoint implementation / regression |
 | endpoint 為何與 fixed-C 不同？ | endpoint provenance + exact diff | 不同版本／外部 evidence |
-| 哪些是本專案新增的放置規則？ | afei-lineage1 product policy | 不得冒充 source parity |
+| 手機客戶端呈現／操作及客戶端資源？ | 有雜湊與版本識別的 RO0000 Android APK evidence | endpoint server data／實機畫面交叉比對；不得推論伺服器規則 |
+| 哪些是本專案新增的放置規則或修復？ | afei-lineage1 product policy／明確 repair overlay | regression；不得冒充 source parity |
 
 這張表是跨新對話與跨版本 audit 的快速判定基準：先確認「我們在回答哪一種問題」，再選對 authority；不能用單一來源包辦所有問題。
+
+## 2026-10-02 Client Evidence and Product Repair Boundary
+
+Android APK 已納入來源矩陣，但仍維持 client-scope。尚未從 APK 擷取並驗證的內容，不得寫成已確認的手機端事實。
+
+地圖通行修復屬產品層例外：只能透過具 ID、來源雜湊、座標、前置 tile、替代 tile 與回歸測試的明確 overlay；原始 map snapshot 不得被改寫。Overlay 只可解決產品路線，不可重新標註為原作道路或原始 source parity。
 
 ## 2026-10-01 State Management Reset
 

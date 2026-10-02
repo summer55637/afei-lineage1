@@ -1,6 +1,6 @@
 # ro0000 Source Provenance
 
-更新日期：2026-10-01
+更新日期：2026-10-02
 
 ## 固定端點規則
 
@@ -12,7 +12,7 @@
 | ro0000/server/merged-source/wwwroot/ | 手工外網端 | 外網端 Web 根目錄資料 |
 | ro0000/server/merged-source/**（排除 wwwroot/） | VM 一鍵端 | VM 一鍵部署取得的 Server／Web 參考資料 |
 | ro0000/server/database/175sa.sql | VM 一鍵端 | VM Server 資料庫參考 |
-| ro0000/client/android/冰河石器-隐盟.apk | VM 一鍵端 | VM／Server 配套取得的 Android Client 研究參考 |
+| ro0000/client/android/冰河石器-隐盟.apk | VM 一鍵端 | Android 客戶端研究材料；需先驗證 APK 雜湊、版本及提取內容才可建立 client evidence |
 | ro0000/docs/隐盟文本教程.txt | VM 一鍵端 | VM／文本端架設／維運參考 |
 
 ## 來源角色更新：最完整 endpoint 資料主來源
@@ -24,6 +24,10 @@
 - endpoint 與 fixed-C 不一致時，不自動刪除 endpoint variant；先判斷它是否是該部署版本的實際差異。
 
 完整規則見 `docs/source-authority-and-provenance.md`。
+
+## Android 客戶端資料邊界（2026-10-02）
+
+APK 是客戶端來源，不是伺服器資料來源。未完成檔案雜湊、封裝版本與內容抽取驗證前，只能確認倉庫保存了該 APK，不能宣稱已確認其地圖、碰撞、操作或網路協定內容。經驗證的 APK 資源應另記 client variant，不覆寫 gmsv/data、hydata/data 或 pinned fixed-C。
 
 ## 重要邊界
 

@@ -107,13 +107,13 @@ function buildReadme() {
   const blockers = blockerEntries.filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status)).slice(0, 5).map(([id, item]) => '- ' + id + '：' + (item.summary ?? item.next ?? '待定'));
   const reopened = reopenedFeatureNames.map(item => item.name + '：' + item.status + '（未啟用）');
   const routeLine = routeStatus.sourceRouteSpine === 'closed' ? '✅ 已閉合（' + (routeStats.verifiedStartMaps ?? 0) + '/4 出生城、' + (routeStats.reachableDirectWarpExits ?? 0) + '/' + (routeStats.directWarpExits ?? 0) + ' direct warp）' : '⚠️ 未完成';
-  const route4000 = blockerRegistry.blockers?.['route-4000-to-200'];
-  const route4000Repaired = ['resolved', 'repaired-via-ro0000-overlay'].includes(route4000?.status);
   const portalGroups = Number(routeStats.worldExitPortalGroups ?? 0);
   const sourceUsablePortalGroups = Number(routeStats.worldExitPortalGroupsUsable ?? 0);
-  const repairedPortalGroups = route4000Repaired && portalGroups >= sourceUsablePortalGroups
-    ? Math.min(portalGroups, sourceUsablePortalGroups + 2)
-    : sourceUsablePortalGroups;
+  const repairCatalog = idle.productRepairs?.['karutarna-4000-road-access-v1'];
+  const productRepairPortalGroups = repairCatalog?.status === 'runtime-enabled'
+    ? (Array.isArray(repairCatalog.portalIds) ? repairCatalog.portalIds.length : 0)
+    : 0;
+  const repairedPortalGroups = Math.min(portalGroups, sourceUsablePortalGroups + productRepairPortalGroups);
   const firstRoutePathClosed = portalGroups > 0 && repairedPortalGroups >= portalGroups;
   const battlePolicyPending = idleSummary.battlePolicyPendingAll === true;
   const fullRouteLine = firstRoutePathClosed
