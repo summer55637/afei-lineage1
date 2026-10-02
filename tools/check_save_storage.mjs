@@ -25,6 +25,7 @@ function memoryStorage(seed={}){
 const now='2026-10-02T04:30:00.000Z';
 const storage=memoryStorage();
 const initial=freshPersistentState({now:()=>now,playerId:'save-storage-test',playerName:'contract'});
+const next={...initial,player:{...initial.player,gold:30000}};
 assert.deepEqual(validateSaveStoragePort(storage),[]);
 assert.equal((await loadPersistentStateFromStorage(storage)).found,false);
 
@@ -41,7 +42,6 @@ const localRestored=await loadPersistentStateFromStorage(localPort,{key:'local-s
 assert.equal(localRestored.ok,true);
 assert.deepEqual(localRestored.state,localCommitted.state);
 
-const next={...initial,player:{...initial.player,gold:30000}};
 const committed=await commitAndPersistSave(initial,next,{storage,expectedRevision:0,savedAt:()=>now,now:()=>now,source:'save-storage-regression'});
 assert.equal(committed.ok,true);
 assert.equal(committed.persisted,true);
