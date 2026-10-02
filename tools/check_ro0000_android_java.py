@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+import tempfile
+import unittest
+from pathlib import Path
+
+from audit_ro0000_android_java import mask_java, method_records
+
+
+class JavaSourceRedactionTests(unittest.TestCase):
+    def test_masks_comments_strings_and_chars(self):
+        source = 'String url = "https://secret.example/path"; // https://comment.example\nchar c = \'x\'; /* host.example */'
+        masked = mask_java(source)
+        self.assertNotIn("secret.example", masked)
+        self.assertNotIn("comment.example", masked)
+        self.assertNotIn("host.example", masked)
+        self.assertEqual(masked.count("\n"), source.count("\n"))
+
+    def test_records_calls_without_literal_values(self):
+        source = '''
+package com.newssa.stoneage.update;
+public class UpdateChecker {
+    public void check() {
+        String endpoint = "https://secret.example/patch";
+        this.fetch();
+        client.execute();
+    }
+    private void fetch() { helper(); }
+}
+'''
+        methods = method_records(source)
+        check = next(m for m in methods if m["name"] == "check")
+        self.assertIn("fetch", check["calls"])
+        self.assertIn("execute", check["calls"])
+        serialized = repr(methods)
+        self.assertNotIn("secret.example", serialized)
+        self.assertNotIn("patch", serialized)
+
+
+if __name__ == "__main__":
+    unittest.main()
