@@ -1,49 +1,83 @@
 # Endpoint Item Seed Audit
 
-更新日期：2026-10-01
+更新日期：2026-10-02
 
 ## 目的
 
-固定 pinned fixed-C 曾經得到 ITEM1=24114，並證明固定 build 的 itemset6.txt 有 id=11817 / imagenumber=24114。但現在既然 VM 一鍵端是實際可部署版本資料，必須先檢查它自己的 Item 設定。
+確認 RO0000 的新玩家 `ITEM1` 到底是直接 Item ID、其他欄位，還是由部署端 loader / transform 轉換。
 
-本 audit 專門驗證：
+固定 boundary：
 
-`ro0000/server/merged-source/gmsv/setup.cf`
-→ `ITEM1`
-→ `itemset6file`
-→ endpoint `gmsv/data/itemset6.csv`
-→ 對應 Item row。
+`setup.cf` → `ITEM1` → `itemset6file` → endpoint Item table → deployed `gmsvjt`
 
-**重要：本 audit 不把 pinned fixed-C 的第 17 欄 Item ID 規則直接套到 endpoint。** endpoint 的欄位語義必須由 endpoint 自己的資料／程式證據閉合。
+## Endpoint 設定
 
-## 已知 endpoint 差異
+| Key | Endpoint | Fixed-C |
+|---|---:|---:|
+| `ITEM1` | `32003` | `24114` |
+| Item file | `data/itemset6.csv` | `data/itemset6.txt` |
 
-目前 endpoint `setup.cf` 與 pinned fixed-C 的已知差異包含：
+本 audit 不把 fixed-C 的欄位位置或 ID transform 直接套到 endpoint。
 
-- endpoint `ITEM1=32003`
-- endpoint `itemset6file=data/itemset6.csv`
-- pinned fixed-C `ITEM1=24114`
-- pinned fixed-C `itemset6file=data/itemset6.txt`
+## 目前資料證據
 
-這代表 Starter Item 24114 現在不能繼續只以 fixed-C blocker 描述；它至少同時存在一個「endpoint deployment variant」待閉合。
+RO0000：
 
-## 目前實際結果
+- `itemset6.csv`：3,792,005 bytes；14,502 rows。
+- 主要資料列：95 columns；另有 2 rows 為 94 columns。
+- 原始檔內容中字串 `32003`：**0 次**。
+- exact numeric token `32003`：**0 次**。
+- `24114`：1 次，line 6943 / token 18；相鄰 token 17=`11817`、19=`9900`、20=`16`。
+- 若暫以 fixed-C 第 17 token 當 Item ID 做「假設性 probe」：最大值為 99999，32003 出現 0 次；這只是 shape probe，不是 endpoint 語義結論。
 
-目前 Runner 直接讀取 endpoint 原始 CSV：
+## Deployed Server Binary
 
-- `setup.cf`：`ITEM1=32003`
-- `itemset6file`：`data/itemset6.csv`
-- CSV：3,792,005 bytes；14,502 rows；主要資料列為 95 columns
-- exact numeric token `32003`：0 次
-- exact numeric token `24114`：1 次，line 6943 / token 18；相鄰 token 17 = `11817`、token 19 = `9900`、token 20 = `16`
+RO0000 的 `gmsvjt`：
 
-因此目前 **endpoint seed = unresolved**：配置指定的 32003 在它所指定的 Item table 中沒有找到 exact token。
+- blob SHA：`fe574643d35966f4c22f6b0efd8ea504227ed4cd`
+- ELF 64-bit x86-64
+- **not stripped**
+- 帶 debug information
+- 可直接看到：
+  - `ITEM_readItemConfFile`
+  - `ITEM_makeItem`
+  - `ITEM_makeItemAndRegist`
+  - `ITEM_tblen`
+- 目前 symbol table 沒有 `ITEM_TransformList`。
 
-這不能直接證明遊戲部署一定無法建立新玩家，因為 endpoint 的 loader / transform semantics 尚未從實際 endpoint 程式層完整閉合；但也不能把 24114 或其他 Item 偷換成 32003。
+這表示我們已經找到 endpoint 本身的 Item loader / makeItem 執行證據入口，而且目前沒有證據顯示部署 binary 使用 fixed-C 那個 `ITEM_TransformList` 機制。
 
-## 判定規則
+但「沒有 `ITEM_TransformList` symbol」只代表**目前尚未觀察到該特定 transform implementation**；不單獨證明 endpoint 完全沒有其他 ID transform。
 
-- 找到 `ITEM1=32003` 且 endpoint Item table 有一致 row evidence：建立 endpoint item evidence。
-- 找不到：維持 endpoint seed unresolved，不猜測。
-- 即使 endpoint CSV 存在某個看似相近的 Item，也必須先閉合 endpoint loader／row semantics 才能正式進 canonical Item runtime。
-- audit 不輸出 setup.cf 的 password、server IP 或其他敏感設定。
+## 目前結論
+
+目前最穩妥的結論是：
+
+`ITEM1=32003` **尚未在 endpoint Item table 中閉合**。
+
+而且問題已從「CSV 找不到 32003」進一步縮小為：
+
+1. endpoint CSV 原始內容沒有 `32003`；
+2. endpoint `gmsvjt` 確實包含獨立的 Item loader / maker；
+3. endpoint binary 目前沒有 `ITEM_TransformList` symbol；
+4. 因此下一個決定性 evidence layer 是 **endpoint `ITEM_readItemConfFile` 的實際 binary semantics**，特別是它讀取哪一個 token 當 ID，以及是否存在其他 mapping。
+
+在這層閉合以前：
+
+- 不把 24114 當成 endpoint ITEM1。
+- 不把 imageNumber 當 Item ID。
+- 不自行建立 32003 → 11817 remap。
+- 不用其他版本／port 補 template。
+- Starter Item runtime 維持 fail-closed。
+
+## Regression / CI
+
+`.github/workflows/check-endpoint-item-seed-audit.yml` 現在會在以下資料改動時重跑：
+
+- endpoint `setup.cf`
+- endpoint `itemset6.csv`
+- endpoint `gmsvjt`
+- committed generated audit
+- audit script / 本文件
+
+並檢查 deployed binary 的 Item loader symbols。
