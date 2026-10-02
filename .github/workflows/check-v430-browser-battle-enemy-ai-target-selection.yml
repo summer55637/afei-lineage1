@@ -1,0 +1,33 @@
+name: Check V4.30 Browser Battle Enemy AI Target Selection
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'tools/check_v430_browser_battle_enemy_ai_target_selection.mjs'
+      - '.github/workflows/check-v430-browser-battle-enemy-ai-target-selection.yml'
+  pull_request:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_ai_runtime.mjs'
+      - 'tools/check_v430_browser_battle_enemy_ai_target_selection.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run V4.29 and V4.30 enemy AI target regressions
+        run: |
+          node tools/check_v429_browser_battle_enemy_ai_target_types.mjs
+          node tools/check_v430_browser_battle_enemy_ai_target_selection.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_enemy_ai_runtime.mjs
+          node --check tools/check_v429_browser_battle_enemy_ai_target_types.mjs
+          node --check tools/check_v430_browser_battle_enemy_ai_target_selection.mjs
