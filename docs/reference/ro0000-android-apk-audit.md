@@ -336,25 +336,41 @@ The signature audit preserves the APK unchanged. `apksigner` fails verification 
 
 ## JNI declaration/export cross-check
 
-The DEX declares six native methods on `com.newssa.stoneage.ko.JNILibrary`:
+The DEX declares 115 native methods across 11 declaring classes. The full audit now extracts each shared library packaged in the APK for both available ABIs and compares declarations against defined, default-visible Java_* exports. The matching logic checks both short and signature-qualified JNI symbol forms.
 
-- `callbackKeyboardChange(II)V`
-- `callbackKoLoginFailed()V`
-- `callbackKoLoginSuccess(String,String)V`
-- `callbackOrderCheck(String,int)V`
-- `callbackZipProgress(long,long)V`
-- `refreshBatteryInfo(II)V`
+Per ABI, the packaged native library set is:
 
-Both target `libStoneage.so` ABIs export all six matching JNI symbol names. Both also export three additional callback names not declared as native methods on this DEX class: `callbackKoLogout`, `callbackWechatShare`, and `callbackYodaOpened`. The exported-name sets match between ARMv7 and x86.
+- libGCloudVoice.so
+- libSDL2.so
+- libSDL2_image.so
+- libSDL2_mixer.so
+- libSDL2_ttf.so
+- libStoneage.so
+- libhidapi.so
+- libmpg123.so
 
-These extra exports are retained as a compatibility discrepancy. They may be unused legacy entrypoints, callable through a different registration path, or associated with a different Java-side version; the static name comparison cannot select among those explanations. The new `tools/audit_ro0000_android_jni.py` emits a machine-readable comparison from the actual DEX audit plus both extracted target libraries, and CI tests the comparison logic. This is a name-level check, not a proof that every callback is invoked or safely handled at runtime.
+The resulting comparison is identical for x86 and ARMv7:
+
+| Result | Count per ABI | Interpretation |
+|---|---:|---|
+| Static JNI export match | 97 / 115 | The matching class/method/signature has a corresponding defined JNI export in a packaged library. |
+| No static export, package-related JNI_OnLoad library present | 8 / 115 | The same package namespace has static exports in a library that also exports JNI_OnLoad; dynamic registration is possible but not proven. |
+| No static export or package-related JNI_OnLoad evidence | 10 / 115 | No matching static export or same-package registration indicator was found among packaged libraries. This does not prove runtime failure. |
+
+The 8 declarations in the second category are two ApolloVoiceEngine Bluetooth methods, SRTTAPIHTTPTaskQueueImp.callback, and five GCloudVoiceEngineHelper methods. They are kept as unresolved dynamic-registration candidates; JNI_OnLoad being exported is not itself proof that a particular method is registered.
+
+The 10 declarations in the third category belong to com.tencent.bugly.crashreport.crash.jni.NativeCrashHandler. No matching Java_* export or same-package JNI_OnLoad association was found in the packaged library set. The APK may have an alternate loading or registration mechanism, but that requires additional evidence; this report does not classify these as broken.
+
+The target libStoneage.so comparison remains separately visible: both x86 and ARMv7 export all six native methods declared on com.newssa.stoneage.ko.JNILibrary. Each also exports the three additional names callbackKoLogout, callbackWechatShare, and callbackYodaOpened, which have no declaration on that DEX class. Those are retained as a compatibility discrepancy, not automatically labelled stale code.
+
+The full machine-readable comparison is data/generated/stoneage_ro0000_android_jni_audit.json. It includes per-library hashes, JNI exports, declaration candidates, ABI-level match results, and package-associated JNI_OnLoad evidence. This remains a static name-level audit; actual registration, invocation, asynchronous effects, and device runtime behavior are not established.
 
 ## Interpretation boundary and remaining work
 
 The APK archive/Manifest, DEX structure, Java wrapper flow, signature verification result, and focused x86/ARM native ELF evidence are now reproducible. This remains a static audit, not a complete decompilation or runtime trace. Still unverified:
 
 - The real-world publisher identity behind the embedded certificate fingerprint. Signature verification fails on all tested profiles because of a v1 entry digest mismatch; the APK is intentionally not re-signed.
-- Runtime behavior of launcher/startup and updater scheduling; invocation and side effects of the three extra exported JNI callbacks; and device-specific permission/install behavior. The static APK-install call chain is documented, but actual Android intent behavior has not been exercised on a device.
+- Runtime behavior of launcher/startup and updater scheduling; the invocation and side effects of the three extra exported Stoneage JNI callbacks; registration/loading behavior for eight package-associated JNI candidates and ten Bugly native declarations without packaged static matches; and device-specific permission/install behavior. The static APK-install call chain is documented, but actual Android intent behavior has not been exercised on a device.
 - The actual `battleNNN.sabex`, `s/adrn.bin`, `s/real.bin`, `s/spr.bin`, `s/spradrn.bin`, and `path/map4/real.bin` payload bytes, including record instances and resulting real pixels.
 - ADRNBIN accessor-visible fields at 0x0C–0x20 and 0x40–0x42 are documented; bytes 0x00–0x0B, 0x22–0x3F and 0x44–0x4F are not mapped by the inspected getter set. The four explicit `InitSprBinFileOpen` post-load fixup branches are enumerated, but their final visual/audio effects need real assets or runtime comparison.
 - The actual update-list contents, patch ZIP payloads, and per-file metadata values for this installation. Parser field mapping, platform admission, local MD5 comparison, and the six-slot download/extraction path are documented separately; missing payloads prevent end-to-end reproduction.
