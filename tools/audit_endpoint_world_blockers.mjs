@@ -178,7 +178,8 @@ function fixedEventWarpSemantics() {
       ev.includes('if((x==warp_point_x[i])&& (y==warp_point_y[i]))'),
     warpNpcDispatch:
       event.includes('if( etype == event)') &&
-      event.includes('EVENT_onWarpNPC( charaindex, echaraindex, fl,x,y )')
+      event.includes('functbl[event]') &&
+      event.includes('EVENT_onWarpNPC')
   };
 }
 
