@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-item-seed-audit-v1",
-  "status": "unresolved",
+  "status": "fail-closed-missing-source-item-id",
   "source": {
     "setupPath": "ro0000/server/merged-source/gmsv/setup.cf",
     "setupBlobSha": "e622602627cce66561d5cf941f2723720e66d133",
@@ -1835,17 +1835,25 @@
         ]
       }
     ],
-    "endpointSemanticsClosed": false
+    "endpointSemanticsClosed": true,
+    "configuredItem1HasSourceRow": false,
+    "configuredItem1LookupWouldPass": false,
+    "configuredItem1LookupWouldFailClosed": true
   },
   "resolution": {
-    "status": "unresolved",
-    "reason": "setup.cf explicitly configures ITEM1=32003, but selected endpoint itemset6.csv contains no exact numeric token 32003. Do not remap or substitute another item from this evidence alone.",
-    "secondaryEvidence": "The same endpoint itemset6.csv contains exactly one 24114 token occurrence, so the endpoint data is not simply missing the value 24114."
+    "status": "fail-closed",
+    "reason": "Endpoint loader semantics are closed: token 17 is parsed into the Item-ID variable, ITEM_idx is populated by parsed Item ID plus sequential table index, ITEM_CHECKITEMTABLE checks ITEM_idx[ID], and new-player grant forwards the configured value directly to ITEM_makeItemAndRegist. Because endpoint itemset6.csv contains no source Item ID 32003, ITEM1=32003 fails the endpoint Item table lookup.",
+    "secondaryEvidence": "The same endpoint itemset6.csv contains one 24114 occurrence at token 18; this is not evidence of source Item ID 24114."
   },
   "interpretation": {
     "fixedCFixedItemRuleApplied": false,
-    "note": "Endpoint evidence only. This audit intentionally does not assume pinned fixed-C ITEM_ID_TOKEN_INDEX or ID-remap semantics.",
-    "nextClosureBoundary": "Because configured ITEM1=32003 is absent even as a raw substring from the selected endpoint CSV, the remaining decisive evidence layer is the deployed gmsvjt loader/transform behavior and any endpoint-specific Item data source it consumes.",
-    "token17ProbeIsHypothesisOnly": true
+    "note": "Endpoint evidence only. Item-ID behavior here is derived from the deployed gmsvjt binary, not copied from fixed-C macro assumptions.",
+    "token17IsProven": true,
+    "loaderIdAssignmentClosed": true,
+    "itemIndexIsPopulatedByLoader": true,
+    "checkItemTableUsesPresenceFlag": true,
+    "makeAndRegDirectForward": true,
+    "endpointItemIdLookupSemanticsClosed": true,
+    "nextClosureBoundary": "Current endpoint snapshot is source-closed for the configured Item lookup. ITEM1=32003 has no source row, so keep starter-item grant fail-closed unless new authoritative endpoint evidence changes the configured ID or mapping."
   }
 }
