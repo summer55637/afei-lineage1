@@ -4,6 +4,7 @@ import {
   sourceMapTileAt,
   sourceMapWalkableAt
 } from './stoneage_map_runtime.mjs';
+import { ro0000SourceMapWalkableAt } from './stoneage_ro0000_4000_repair.mjs';
 import { ACTION_WORLD_MOVE_STEP } from './stoneage_browser_world_movement_runtime.mjs';
 import { ACTION_WORLD_WARPPOINT_EXECUTE } from './stoneage_browser_world_warppoint_runtime.mjs';
 
@@ -160,7 +161,7 @@ function bfsFromStart(map,mapset,start,goalIndexes,{maxVisited=null}={}){
       if(nx<0||ny<0||nx>=width||ny>=height)continue;
       const next=ny*width+nx;
       if(dist[next]!==-1)continue;
-      if(!sourceMapWalkableAt(map,nx,ny,mapset,{flying:false}))continue;
+      if(!mapWalkableAtForRo0000(map,nx,ny,mapset,{flying:false}))continue;
       dist[next]=dist[index]+1;
       parent[next]=index;
       queue[tail++]=next;
@@ -183,7 +184,7 @@ function bfsToRect(map,mapset,rect,{maxVisited=null}={}){
   const queue=new Int32Array(size);
   const goals=goalIndicesForRect(map,rect).filter(index=>{
     const x=index%width,y=Math.floor(index/width);
-    return sourceMapWalkableAt(map,x,y,mapset,{flying:false});
+    return mapWalkableAtForRo0000(map,x,y,mapset,{flying:false});
   });
   let head=0,tail=0,visited=0;
   for(const index of goals){
@@ -200,7 +201,7 @@ function bfsToRect(map,mapset,rect,{maxVisited=null}={}){
       if(nx<0||ny<0||nx>=width||ny>=height)continue;
       const next=ny*width+nx;
       if(dist[next]!==-1)continue;
-      if(!sourceMapWalkableAt(map,nx,ny,mapset,{flying:false}))continue;
+      if(!mapWalkableAtForRo0000(map,nx,ny,mapset,{flying:false}))continue;
       dist[next]=dist[index]+1;
       parent[next]=index;
       seed[next]=seed[index];
@@ -249,7 +250,7 @@ function bfsAllFromStart(map,mapset,start,{maxVisited=null}={}){
       if(nx<0||ny<0||nx>=width||ny>=height)continue;
       const next=ny*width+nx;
       if(dist[next]!==-1)continue;
-      if(!sourceMapWalkableAt(map,nx,ny,mapset,{flying:false}))continue;
+      if(!mapWalkableAtForRo0000(map,nx,ny,mapset,{flying:false}))continue;
       dist[next]=dist[index]+1;
       parent[next]=index;
       queue[tail++]=next;
