@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：bed51a2 — docs: refine V4.34 enemy AI movement source scope
-- 更新時間：2026-10-02T16:19:10+08:00
+- 最新 commit：ef51cab — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-02T08:19:22Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.34
 - Playable HTML：⏸️ 尚未建立（刻意保留）
