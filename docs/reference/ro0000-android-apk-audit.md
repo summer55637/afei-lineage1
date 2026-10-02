@@ -189,16 +189,82 @@ These call sites support describing `map/%d.dat` as a client-side map cache init
 
 This confirms that the native client has a distinct HitMap construction/query path and that cell value 1 is treated as a hit by `checkHitMap`. It does not prove that this value is interchangeable with the server's map tile IDs or Fixed-C walkability rules.
 
+## Target map prefetch and map-buffer contract
+
+The target x86 ELF directly exposes the full map-area prefetch path:
+
+| Function | Address | Meaning |
+|---|---:|---|
+| `checkEmptyMapData(int,int,int)` | `0x219c50` | Detect an unread edge in the next movement direction and prepare bounded map requests |
+| `_checkEmptyMap()` | `0x218810` | Send each prepared rectangle through `lssproto_M_send` and record the pending edge/time state |
+| `checkEmptyMap(int)` | `0x213360` | Related map-empty state/timing path |
+
+The target requires both cached map-window dimensions to be at least 37 cells before it checks for an unloaded edge. It uses `SEARCH_AREA=11`, so each exposed edge scan checks up to 23 cells. An edge cell is considered not yet read when its event-plane `MAP_READ_FLAG` bit (`0x8000`) is clear; world-floor bounds are checked before the cache access.
+
+| Direction | Coordinate delta | Edges checked |
+|---:|---:|---|
+| 0 | (-1,+1) | left + bottom |
+| 1 | (-1,0) | left |
+| 2 | (-1,-1) | left + top |
+| 3 | (0,-1) | top |
+| 4 | (+1,-1) | top + right |
+| 5 | (+1,0) | right |
+| 6 | (+1,+1) | right + bottom |
+| 7 | (0,+1) | bottom |
+
+These directions match the target's eight-entry movement delta table. For each selected edge, the function stops at the first in-bounds event cell whose `MAP_READ_FLAG` is clear, prepares a request rectangle, passes it through `checkAreaLimit`, and increments the pending rectangle count. Cardinal directions can produce one rectangle; diagonal directions can produce up to two. `_checkEmptyMap()` sends the resulting rectangle(s) using the map protocol and records the direction, current grid location, and start time for the pending map-empty state.
+
+This closes the map-edge prefetch decision and its protocol handoff. It is a cache streaming mechanism, not a walkability test; walkability remains in the separate `readHitMap` / `checkHitMap` path. The generated browser/runtime map must not fabricate a successful read flag when no map response was observed.
+
+### HitMap input/output roles
+
+The target `readHitMap` ABI is `readHitMap(x1,y1,x2,y2,tile,parts,event,hitMap)`. The first three 16-bit buffers are input planes from the active map cache; the fourth is a derived 16-bit output plane. The function clears 2,738 bytes (1,369 uint16 cells, or 37×37) in the output before processing the requested rectangle. It uses the tile and parts image IDs, their resolved hit flags/footprints, direct tile-code cases, and the event plane's visibility/NPC bits to write derived states. `checkHitMap` then queries that derived plane; it does not query the original tile IDs directly.
+
+The meaning of the output values is operational: `checkHitMap` reports a collision only for state 1 (except the explicit skywalker bypass); state 2 is retained as a different map state and is not treated as blocking by that function. See the battle-map audit's HitMap section for the documented image footprint and direct-code branches.
+
+## Target SPRADRN / SPR record fields
+
+The target x86 `InitSprBinFileOpen()` at `0x3637e0` reads a 12-byte index record from `spradrn.bin`, subtracts 100,000 from `sprNo` to obtain the SpriteData slot, stores `animSize`, and seeks to the record's `offset` in `spr.bin`.
+
+The target reads each animation header as 12 bytes and each frame record as 10 bytes:
+
+| Record | Offset | Size | Field | Target interpretation |
+|---|---:|---:|---|---|
+| SPRADRN | 0x00 | 4 | `sprNo` | Sprite identifier; target subtracts 100,000 for the table slot |
+| SPRADRN | 0x04 | 4 | `offset` | Byte offset into `spr.bin` |
+| SPRADRN | 0x08 | 2 | `animSize` | Number of animation headers |
+| SPRADRN | 0x0a | 2 | ABI padding | Read as part of the 12-byte record; no semantic use established |
+| ANIM_HEADER | 0x00 | 2 | `dir` | Direction code |
+| ANIM_HEADER | 0x02 | 2 | `no` | Action/category code |
+| ANIM_HEADER | 0x04 | 4 | `dtAnim` | Animation duration input |
+| ANIM_HEADER | 0x08 | 4 | `frameCnt` | Number of frame records |
+| FRAMELIST | 0x00 | 4 | `BmpNo` | Image number; target adds `nextMaxAdrnID` |
+| FRAMELIST | 0x04 | 2 | `PosX` | Signed horizontal frame offset |
+| FRAMELIST | 0x06 | 2 | `PosY` | Signed vertical frame offset |
+| FRAMELIST | 0x08 | 2 | `SoundNo` | Sound/effect cue identifier |
+
+For `frameCnt == 0`, the target sets the stored per-frame animation duration to zero. Otherwise it computes `dtAnim / frameCnt / 16` before storing the per-animation timing value. It allocates `frameCnt` frame records and reads them sequentially. The sprite table remains separate from the SABEX cell array, while frame `BmpNo` values share the global graphic-number namespace used by ADRNBIN/Real.
+
+The target compares the derived slot against 40,000 before continuing. Because the table allocation is 40,000 entries, the inclusive boundary deserves a separate runtime/input validation; this static audit does not claim malformed `sprNo=140000` input is safe. The function also contains target-specific post-load correction branches, so historical public-source fixups must not be copied into the target contract unless independently confirmed against this ELF.
+
+## Android Manifest, DEX, and signing
+
+The expanded binary AndroidManifest parser now records the launcher component, application metadata, declared permissions, service declarations, and GL ES feature requirement, not just package/version/SDK fields. The target manifest declares `RenderActivity` as MAIN/LAUNCHER, `StoneageApplication` as the Application class, an exported `DownloadService`, and a required OpenGL ES 2.0 feature. It also requests storage, network, Bluetooth, phone-state, overlay, audio, vibration, logging, and package-install permissions. These declarations are not proof that every permission is granted or used successfully at runtime.
+
+The DEX inventory is a structural inventory of the packaged `classes.dex`: it records class definitions, method references, declared methods, and JNI native declarations. A second static pass uses pinned JADX to summarize only class/method names and call identifiers for the game, updater, and SDL packages. Source code, comments, and string/character literal contents are excluded from the published Java report to keep host/configuration strings out of public evidence. This is not a full decompilation of native code or a runtime call trace.
+
+The signature audit preserves the APK unchanged. `apksigner` fails verification for the default, API 24, and API 28 profiles with a v1 `META-INF/MANIFEST.MF` entry digest mismatch. The certificate embedded in `META-INF/CERT.RSA` has SHA-256 fingerprint `a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc`. The certificate fingerprint alone does not identify a real-world publisher. The APK is not re-signed as part of this reconstruction.
+
 ## Interpretation boundary and remaining work
 
 This audit now includes static ELF metadata and focused disassembly, but it is not a full decompilation or runtime trace. Still unverified:
 
-- APK signing certificate identity.
-- The complete record layout and all semantics of the `spradrn.bin` index.
+- Whether the failing APK signature corresponds to an intended original publisher certificate; the embedded certificate fingerprint is known, but publisher identity is not independently verified.
+- Runtime behavior of the Android launcher, updater, and JNI callbacks; the Java source pass is static and redacted.
 - The actual `path/map4/real.bin` bytes and decoded entry payloads; only its record-reading envelope is known.
 - The complete meaning of all 80 bytes in an `adrn` record.
 - The source format and contents of the actual `s/real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` files.
-- The complete rules in `checkEmptyMapData` and the exact meanings of all `readHitMap` output buffers.
+- Runtime-confirmation of map prefetch timing and HitMap edge cases on the original Android runtime.
 - Whether the referenced resources are bundled elsewhere, downloaded, or selected through an update list.
 - Server endpoints, update protocol, and in-game behavior/screenshots.
 
