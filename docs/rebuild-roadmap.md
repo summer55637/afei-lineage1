@@ -1,3 +1,19 @@
+## 2026-10-02 V4.27 Battle Damage→Death Commit Chain
+
+V4.27 composes V4.26 damage commit with V4.06 death planning and V4.07 death commit. A lethal hit is published to the transient Battle Context only after the death check/commit has succeeded; a critical enemy death RNG requirement therefore fails closed without exposing a half-committed HP=0 context.
+
+- Nonlethal branch commits HP only.
+- Lethal branch commits HP and death flags/count atomically in the returned context.
+- Required critical-death roll remains caller-injected.
+- Duplicate transaction after death is idempotent; deadCount is not incremented twice.
+- Persistent State remains unchanged; unsupported reactions and ride-pet damage splits remain rejected.
+
+Regression and workflow: tools/check_v427_browser_battle_damage_death_chain.mjs and .github/workflows/check-v427-browser-battle-damage-death-chain.yml.
+
+This closes one hit-to-death boundary, not a complete battle round; enemy AI and round orchestration remain open.
+
+---
+
 ## 2026-10-02 V4.26 Battle Damage Commit：一般攻擊開始實際扣血
 
 V4.04 的 DamageReact 保持 read-only plan；V4.26 新增獨立交易提交，將一般 NONE reaction damage 真正寫入 transient Battle Context 的 target HP。

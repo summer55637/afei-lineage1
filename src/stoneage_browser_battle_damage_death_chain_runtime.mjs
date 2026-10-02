@@ -1,5 +1,5 @@
 import { commitBattleDamage } from './stoneage_browser_battle_damage_commit_runtime.mjs';
-import { planBattleDeath } from './stoneage_browser_battle_death_runtime.mjs';
+import { deathPlan as planBattleDeath } from './stoneage_browser_battle_death_runtime.mjs';
 import { commitDeathState } from './stoneage_browser_battle_death_commit_runtime.mjs';
 
 const BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT='stoneage-v427-browser-battle-damage-death-chain-v1';
