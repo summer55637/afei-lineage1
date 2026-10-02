@@ -1,5 +1,5 @@
 import {parseAdrnIndex,resolveClientImageId} from './stoneage_client_image_runtime.mjs';
-import {decodeAuthorizedClientGraphic} from './stoneage_rd_decoder.mjs';
+import {decodeAuthorizedClientGraphic,decodeAuthorizedClientGraphicAsync} from './stoneage_rd_decoder.mjs';
 
 export const CLIENT_ASSET_PACK_FORMAT='stoneage-client-asset-pack-v1';
 
@@ -120,6 +120,34 @@ export async function loadClientAssetPack({
     return {status:'ready',reason:'ok',manifest,index,adrnBytes,realBytes};
   }catch(error){
     return {status:'unavailable',reason:'asset-load-failed',error:String(error?.message||error),manifest,index:null,adrnBytes:null,realBytes:null};
+  }
+}
+
+export async function resolveClientTilePixelsAsync(pack,imageId){
+  if(!pack||pack.status!=='ready'||!pack.index||!pack.realBytes)return null;
+  const graphic=resolveClientImageId(pack.index,imageId);
+  if(!graphic)return {status:'missing-image-id',imageId:Number(imageId)};
+  try{
+    const decoded=await decodeAuthorizedClientGraphicAsync(pack.realBytes,graphic);
+    if(!decoded)return {status:'decode-failed',imageId:Number(imageId),graphicNo:graphic.graphicNo};
+    return {
+      status:'ready',
+      imageId:graphic.imageId,
+      graphicNo:graphic.graphicNo,
+      width:decoded.width,
+      height:decoded.height,
+      pixels:decoded.pixels,
+      bytesPerPixel:decoded.bytesPerPixel??1,
+      xoffset:graphic.xoffset,
+      yoffset:graphic.yoffset
+    };
+  }catch(error){
+    return {
+      status:'decode-failed',
+      imageId:graphic.imageId,
+      graphicNo:graphic.graphicNo,
+      error:String(error?.message||error)
+    };
   }
 }
 
