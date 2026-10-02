@@ -84,6 +84,9 @@ jobs:
               data/generated/stoneage_ro0000_residue_inventory.json \
               data/generated/stoneage_ro0000_residue_structure_audit.json \
               data/generated/stoneage_ro0000_battlemap_selector_audit.json
+              data/generated/stoneage_ro0000_android_adrn_crypto_contract.json \
+              data/generated/stoneage_ro0000_android_native_resource_layout.json \
+              data/generated/stoneage_ro0000_android_rd_decoder_contract.json
 
             if git diff --cached --quiet; then
               echo "README and source evidence are already up to date."
