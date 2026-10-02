@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import {
   ACTION_BATTLE_DUELPOINT_PLAN,
@@ -12,6 +13,8 @@ import {
   ACTION_BATTLE_DUELPOINT_PLAN as CONTROLLER_DUELPOINT_PLAN,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
+
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 
 const context=({side=0,sideType=0,sourceType='player',duelPoint=100,workGetExp=25,isDie=false}={})=>({
   format:'stoneage-browser-battle-context-runtime-v1',
@@ -81,10 +84,11 @@ state.player.luck=0;
 state.player.duelPoint=120;
 state.player.workGetExp=30;
 state.player.stats={vital:10,str:10,tgh:10,dex:10};
-state.world.position={floorId:1,x:1,y:1};
+state.world.position={floorId:100,x:610,y:538};
+state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
 state.idle.enabled=true;
 state.idle.mode='encounter_pending';
-const controller=createBrowserStateController({state,battleFieldNoProvider:1});
+const controller=createBrowserStateController({state,idleRouteCatalog:routeCatalog,battleFieldNoProvider:1});
 const build=await controller.dispatch({
   type:ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   playerId:'v411-player',
@@ -102,7 +106,7 @@ const build=await controller.dispatch({
     stats:{vital:10,str:10,tgh:10,dex:10}
   },
   enemyTeam:[{enemyId:1,size:1,createMaxNum:1,enemy:{tempNo:1}}],
-  encounter:{encounterId:1,floorId:1,x:1,y:1},
+  encounter:{encounterId:65,floorId:100,x:610,y:538},
   groupId:1,
   battleFieldNo:1
 });
