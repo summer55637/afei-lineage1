@@ -39,6 +39,7 @@ import { createBrowserBattleAttackSeqPreludeRuntime, ACTION_BATTLE_ATTACK_SEQ_PR
 import { createBrowserBattleDamagePlanRuntime, ACTION_BATTLE_DAMAGE_PLAN, BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_plan_runtime.mjs';
 import { createBrowserBattleCriticalDamageRuntime, ACTION_BATTLE_CRITICAL_DAMAGE_PLAN, BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT } from './stoneage_browser_battle_critical_damage_runtime.mjs';
 import { createBrowserBattleDamageReactRuntime, ACTION_BATTLE_DAMAGE_REACT_PLAN, BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_runtime.mjs';
+import { createBrowserBattleDamageCommitRuntime, ACTION_BATTLE_DAMAGE_COMMIT, BROWSER_BATTLE_DAMAGE_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_commit_runtime.mjs';
 import { createBrowserBattleCounterRuntime, ACTION_BATTLE_COUNTER_PLAN, BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT } from './stoneage_browser_battle_counter_runtime.mjs';
 import { createBrowserBattleDeathRuntime, ACTION_BATTLE_DEATH_PLAN, BROWSER_BATTLE_DEATH_RUNTIME_FORMAT } from './stoneage_browser_battle_death_runtime.mjs';
 import { createBrowserBattleDeathCommitRuntime, ACTION_BATTLE_DEATH_COMMIT, BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_death_commit_runtime.mjs';
@@ -203,6 +204,7 @@ function createBrowserStateController({
   const battleDamagePlanRuntime=createBrowserBattleDamagePlanRuntime();
   const battleCriticalDamageRuntime=createBrowserBattleCriticalDamageRuntime();
   const battleDamageReactRuntime=createBrowserBattleDamageReactRuntime();
+  const battleDamageCommitRuntime=createBrowserBattleDamageCommitRuntime();
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
   const battleDeathRuntime=createBrowserBattleDeathRuntime();
   const battleDeathCommitRuntime=createBrowserBattleDeathCommitRuntime();
@@ -539,7 +541,7 @@ function createBrowserStateController({
             battleFlags:action.battleFlags??0,
             critical:action.critical===true,
             criticalFlag:action.criticalFlag??null,
-            ultimateFromDamage:action.ultimateFromDamage??0,
+            ultimateFromDamage:action.ultimateFromDamage??battleAttackPipeline?.damageCommit?.ultimateFromDamage??0,
             lerImmune:action.lerImmune===true,
             deathRoll:action.deathRoll??null
           }
@@ -1157,6 +1159,26 @@ function createBrowserStateController({
         if(result.ok===true)battleAttackPipeline.damageReact=clone(result);
         return {...result,format:BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,state:clone(currentState)};
       }
+      if(type===ACTION_BATTLE_DAMAGE_COMMIT){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        const pipeline=battleAttackPipeline;
+        if(!pipeline?.damageReact)return {ok:false,handled:false,stage:'battle-damage-commit-binding',reason:'damage-react-plan-required',state:clone(currentState)};
+        const expectedAttacker=action.attackerBid??null;
+        const expectedTarget=action.targetBid??null;
+        if(Number(expectedAttacker)!==Number(pipeline.attackerBid)||Number(expectedTarget)!==Number(pipeline.finalTargetBid)){
+          return {ok:false,handled:false,stage:'battle-damage-commit-binding',reason:'attack-seq-target-mismatch',attackerBid:expectedAttacker,targetBid:expectedTarget,expectedAttackerBid:pipeline.attackerBid,expectedTargetBid:pipeline.finalTargetBid,state:clone(currentState)};
+        }
+        const result=battleDamageCommitRuntime.commit(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {damageReactPlan:clone(pipeline.damageReact),transactionId:action.transactionId??null,expectedDamageRevision:action.expectedDamageRevision??pipeline.damageReact.damageCommitRevision}
+        );
+        if(result.ok===true&&result.battleContext){
+          battleContext=clone(result.battleContext.context??result.battleContext);
+          pipeline.damageCommit={transactionId:result.transactionId,damageCommitRevision:result.damageCommitRevision,ultimateFromDamage:result.ultimateFromDamage??0,hpBefore:result.hpBefore??null,hpAfter:result.hpAfter??null,idempotent:result.idempotent===true,applied:result.applied===true};
+        }
+        return {...result,format:BROWSER_BATTLE_DAMAGE_COMMIT_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
+      }
       if(type===ACTION_BATTLE_ATTACK_SEQ_PRELUDE){
         const phaseGate=requireBattlePhase(battleContext,type,currentState);
         if(phaseGate)return phaseGate;
@@ -1731,6 +1753,7 @@ export {
   ACTION_BATTLE_DAMAGE_PLAN,
   ACTION_BATTLE_CRITICAL_DAMAGE_PLAN,
   ACTION_BATTLE_DAMAGE_REACT_PLAN,
+  ACTION_BATTLE_DAMAGE_COMMIT,
   ACTION_BATTLE_COUNTER_PLAN,
   ACTION_BATTLE_DEATH_PLAN,
   ACTION_BATTLE_DEATH_COMMIT,

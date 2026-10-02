@@ -132,12 +132,22 @@ function buildReactionPlan(context,{
     hpMutation:false,
     persistentMutation:false,
     damageExecuted:false,
+    damageCommitRevision:int(context.context.damageCommitRevision??0),
+    attackerRidePet:attackerRidePet===true,
+    defenderRidePet:defenderRidePet===true,
     source:{
       repository:'gavinlinasd/StoneAge',
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       functions:['BATTLE_GetDamageReact','BATTLE_DamageSub']
     }
   };
+
+  if(incoming===0){
+    result.reaction={code:BATTLE_MD_NONE,name:'none',priority:0,flags:{}};
+    result.stage='battle-damage-react-noop';
+    result.notes=['Source BATTLE_DamageSub returns before checking reactions when damage is zero'];
+    return result;
+  }
 
   const splitToDefender=dmg=>splitDamageAcrossRidePet(dmg,{
     ridePet:defenderRidePet===true,
