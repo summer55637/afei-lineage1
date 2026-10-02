@@ -1,0 +1,462 @@
+{
+  "format": "stoneage-endpoint-start-encounter-group-closure-v1",
+  "generatedAt": "2026-10-02",
+  "purpose": "Endpoint-primary source closure for the first verified hunting encounter boundary.",
+  "source": {
+    "endpoint": {
+      "encountPath": "ro0000/server/merged-source/gmsv/data/encount.txt",
+      "groupPath": "ro0000/server/merged-source/gmsv/data/group1.txt",
+      "enemyPath": "ro0000/server/merged-source/gmsv/data/enemy1.txt",
+      "enemybasePath": "ro0000/server/merged-source/gmsv/data/enemybase1.txt",
+      "encountBlobSha": "1da076558df40ef5b2f1d191f41e0f05bd033fb8",
+      "groupBlobSha": "4be4a7430ad59d6ef9043a68446026a32f94869e",
+      "enemyBlobSha": "dd7690bf89589ce3faac2b38c31fff864b2a439e",
+      "enemybaseBlobSha": "7f91a8492251eea7cba9dc25f8d6696c82d2c4cc"
+    },
+    "fixedC": {
+      "repository": "gavinlinasd/StoneAge",
+      "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+      "encountBlobSha": "89da97a15ea866a36f26ec3bb7ab5490f3eccc5f",
+      "groupBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874",
+      "enemyBlobSha": "bf245a391adeace09915b6e425754b54ab69a8f6",
+      "enemybaseBlobSha": "a19a508975e3a982fada323861b35b2edab79349"
+    }
+  },
+  "encounter": {
+    "encounterId": 65,
+    "endpoint": {
+      "id": 65,
+      "floorId": 100,
+      "rect": [
+        568,
+        538,
+        610,
+        578
+      ],
+      "probMin": 1,
+      "probMax": 5,
+      "enemyMax": 4,
+      "zorder": 30,
+      "groupIds": [
+        89,
+        92,
+        94,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "groupProbs": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "line": "65,100,568,538,610,578,1,5,4,30,89,92,94,,,,,,,,1,1,1,,,,,,,,,,"
+    },
+    "fixed": {
+      "id": 65,
+      "floorId": 100,
+      "rect": [
+        568,
+        538,
+        610,
+        578
+      ],
+      "probMin": 1,
+      "probMax": 5,
+      "enemyMax": 4,
+      "zorder": 30,
+      "groupIds": [
+        89,
+        92,
+        94,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "groupProbs": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "line": "65,100,568,538,610,578,1,5,4,30,89,92,94,,,,,,,,1,1,1,,,,,,,,,,"
+    },
+    "exactLineMatch": true,
+    "shapeMatchesVerifiedTarget": true
+  },
+  "groups": [
+    {
+      "groupId": 89,
+      "endpoint": {
+        "groupId": 89,
+        "appearByItemId": -1,
+        "notAppearByItemId": -1,
+        "members": [
+          {
+            "slot": 1,
+            "enemyId": 120,
+            "createProb": 1
+          }
+        ],
+        "line": "sai_e_113_2/3,89,-1,-1,120,,,,,,,,,,1,,,,,,,,,"
+      },
+      "fixed": {
+        "groupId": 89,
+        "appearByItemId": -1,
+        "notAppearByItemId": -1,
+        "members": [
+          {
+            "slot": 1,
+            "enemyId": 120,
+            "createProb": 1
+          }
+        ],
+        "line": "sai_e_113_2/3,89,-1,-1,120,,,,,,,,,,1,,,,,,,,,"
+      },
+      "exactLineMatch": true,
+      "enemyMembersMatch": true,
+      "itemGatesClosed": true,
+      "enemies": [
+        {
+          "enemyId": 120,
+          "endpoint": {
+            "enemyId": 120,
+            "tempNo": 113,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_113_2/3昆依,at:20;1;1|gu:0|es:1,,120,113,2,3,10,1,1,-1,-1,0,1,1234,,,,,,,,,,300,,,,,,,,,"
+          },
+          "fixed": {
+            "enemyId": 120,
+            "tempNo": 113,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_113_2/3昆依,at:20;1;1|gu:0|es:1|wa:0;0;0;0;0;0;0;,,120,113,2,3,10,1,1,-1,-1,0,1,1234,,,,,,,,,,300,,,,,,,,,"
+          },
+          "semanticCoreMatch": true,
+          "base": {
+            "tempNo": 113,
+            "endpoint": {
+              "tempNo": 113,
+              "name": "昆伊",
+              "initNum": 15,
+              "lvupPoint": 4.5,
+              "baseVital": 13,
+              "baseStr": 20,
+              "baseTgh": 17,
+              "baseDex": 25,
+              "line": "昆伊,肉,鱼,串,,,113,15,4.50,13,20,17,25,150,11,0,0,50,50,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100297,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "fixed": {
+              "tempNo": 113,
+              "name": "昆伊",
+              "initNum": 15,
+              "lvupPoint": 4.5,
+              "baseVital": 13,
+              "baseStr": 20,
+              "baseTgh": 17,
+              "baseDex": 25,
+              "line": "昆伊,肉,鱼,串,,,113,15,4.50,13,20,17,25,150,11,0,0,50,50,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100297,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "exactLineMatch": true
+          }
+        }
+      ]
+    },
+    {
+      "groupId": 92,
+      "endpoint": {
+        "groupId": 92,
+        "appearByItemId": -1,
+        "notAppearByItemId": -1,
+        "members": [
+          {
+            "slot": 1,
+            "enemyId": 123,
+            "createProb": 1
+          }
+        ],
+        "line": "sai_e_114_2/3,92,-1,-1,123,,,,,,,,,,1,,,,,,,,,"
+      },
+      "fixed": {
+        "groupId": 92,
+        "appearByItemId": -1,
+        "notAppearByItemId": -1,
+        "members": [
+          {
+            "slot": 1,
+            "enemyId": 123,
+            "createProb": 1
+          }
+        ],
+        "line": "sai_e_114_2/3,92,-1,-1,123,,,,,,,,,,1,,,,,,,,,"
+      },
+      "exactLineMatch": true,
+      "enemyMembersMatch": true,
+      "itemGatesClosed": true,
+      "enemies": [
+        {
+          "enemyId": 123,
+          "endpoint": {
+            "enemyId": 123,
+            "tempNo": 114,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_114_2/3凯比特,at:20;1;1|gu:0|es:1,,123,114,2,3,10,1,1,-1,-1,0,1,1930,,,,,,,,,,300,,,,,,,,,"
+          },
+          "fixed": {
+            "enemyId": 123,
+            "tempNo": 114,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_114_2/3凯比特,at:20;1;1|gu:0|es:1|wa:0;0;0;0;0;0;0;,,123,114,2,3,10,1,1,-1,-1,0,1,1930,,,,,,,,,,300,,,,,,,,,"
+          },
+          "semanticCoreMatch": true,
+          "base": {
+            "tempNo": 114,
+            "endpoint": {
+              "tempNo": 114,
+              "name": "凯比特",
+              "initNum": 19,
+              "lvupPoint": 4.5,
+              "baseVital": 16,
+              "baseStr": 20,
+              "baseTgh": 16,
+              "baseDex": 28,
+              "line": "凯比特,肉,鱼,串,,,114,19,4.50,16,20,16,28,150,9,0,0,0,100,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100298,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "fixed": {
+              "tempNo": 114,
+              "name": "凯比特",
+              "initNum": 19,
+              "lvupPoint": 4.5,
+              "baseVital": 16,
+              "baseStr": 20,
+              "baseTgh": 16,
+              "baseDex": 28,
+              "line": "凯比特,肉,鱼,串,,,114,19,4.50,16,20,16,28,150,9,0,0,0,100,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100298,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "exactLineMatch": true
+          }
+        }
+      ]
+    },
+    {
+      "groupId": 94,
+      "endpoint": {
+        "groupId": 94,
+        "appearByItemId": -1,
+        "notAppearByItemId": -1,
+        "members": [
+          {
+            "slot": 1,
+            "enemyId": 120,
+            "createProb": 1
+          },
+          {
+            "slot": 2,
+            "enemyId": 123,
+            "createProb": 1
+          }
+        ],
+        "line": "sai_e_113&114_2/3,94,-1,-1,120,123,,,,,,,,,1,1,,,,,,,,"
+      },
+      "fixed": {
+        "groupId": 94,
+        "appearByItemId": -1,
+        "notAppearByItemId": -1,
+        "members": [
+          {
+            "slot": 1,
+            "enemyId": 120,
+            "createProb": 1
+          },
+          {
+            "slot": 2,
+            "enemyId": 123,
+            "createProb": 1
+          }
+        ],
+        "line": "sai_e_113&114_2/3,94,-1,-1,120,123,,,,,,,,,1,1,,,,,,,,"
+      },
+      "exactLineMatch": true,
+      "enemyMembersMatch": true,
+      "itemGatesClosed": true,
+      "enemies": [
+        {
+          "enemyId": 120,
+          "endpoint": {
+            "enemyId": 120,
+            "tempNo": 113,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_113_2/3昆依,at:20;1;1|gu:0|es:1,,120,113,2,3,10,1,1,-1,-1,0,1,1234,,,,,,,,,,300,,,,,,,,,"
+          },
+          "fixed": {
+            "enemyId": 120,
+            "tempNo": 113,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_113_2/3昆依,at:20;1;1|gu:0|es:1|wa:0;0;0;0;0;0;0;,,120,113,2,3,10,1,1,-1,-1,0,1,1234,,,,,,,,,,300,,,,,,,,,"
+          },
+          "semanticCoreMatch": true,
+          "base": {
+            "tempNo": 113,
+            "endpoint": {
+              "tempNo": 113,
+              "name": "昆伊",
+              "initNum": 15,
+              "lvupPoint": 4.5,
+              "baseVital": 13,
+              "baseStr": 20,
+              "baseTgh": 17,
+              "baseDex": 25,
+              "line": "昆伊,肉,鱼,串,,,113,15,4.50,13,20,17,25,150,11,0,0,50,50,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100297,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "fixed": {
+              "tempNo": 113,
+              "name": "昆伊",
+              "initNum": 15,
+              "lvupPoint": 4.5,
+              "baseVital": 13,
+              "baseStr": 20,
+              "baseTgh": 17,
+              "baseDex": 25,
+              "line": "昆伊,肉,鱼,串,,,113,15,4.50,13,20,17,25,150,11,0,0,50,50,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100297,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "exactLineMatch": true
+          }
+        },
+        {
+          "enemyId": 123,
+          "endpoint": {
+            "enemyId": 123,
+            "tempNo": 114,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_114_2/3凯比特,at:20;1;1|gu:0|es:1,,123,114,2,3,10,1,1,-1,-1,0,1,1930,,,,,,,,,,300,,,,,,,,,"
+          },
+          "fixed": {
+            "enemyId": 123,
+            "tempNo": 114,
+            "levelMin": 2,
+            "levelMax": 3,
+            "createMaxNum": 10,
+            "createMinNum": 1,
+            "tactics": 1,
+            "exp": -1,
+            "duelPoint": -1,
+            "style": 0,
+            "petFlg": 1,
+            "line": "sai_e_114_2/3凯比特,at:20;1;1|gu:0|es:1|wa:0;0;0;0;0;0;0;,,123,114,2,3,10,1,1,-1,-1,0,1,1930,,,,,,,,,,300,,,,,,,,,"
+          },
+          "semanticCoreMatch": true,
+          "base": {
+            "tempNo": 114,
+            "endpoint": {
+              "tempNo": 114,
+              "name": "凯比特",
+              "initNum": 19,
+              "lvupPoint": 4.5,
+              "baseVital": 16,
+              "baseStr": 20,
+              "baseTgh": 16,
+              "baseDex": 28,
+              "line": "凯比特,肉,鱼,串,,,114,19,4.50,16,20,16,28,150,9,0,0,0,100,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100298,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "fixed": {
+              "tempNo": 114,
+              "name": "凯比特",
+              "initNum": 19,
+              "lvupPoint": 4.5,
+              "baseVital": 16,
+              "baseStr": 20,
+              "baseTgh": 16,
+              "baseDex": 28,
+              "line": "凯比特,肉,鱼,串,,,114,19,4.50,16,20,16,28,150,9,0,0,0,100,0,0,0,0,0,0,1,2,,,,,,0,2,0,6,100298,1,0,,700,700,,700,700,,700,700,,,,,,,,4"
+            },
+            "exactLineMatch": true
+          }
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "status": "closed-for-first-route",
+    "endpointPrimary": true,
+    "fixedCBaselineOnly": true,
+    "crossVersionFallbackUsed": false,
+    "syntheticGroupSubstitution": false,
+    "groupClosure": true
+  }
+}

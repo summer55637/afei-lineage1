@@ -57,6 +57,7 @@ jobs:
             node tools/check_endpoint_item_seed_audit.mjs --write
             node tools/check_endpoint_mapwarp_audit.mjs --write
             node tools/check_endpoint_battle_data_source_audit.mjs --write
+            node tools/generate_endpoint_start_encounter_group_closure.mjs
             node tools/check_endpoint_gmque_source_locator.mjs --write
             node tools/audit_endpoint_world_blockers.mjs --write
             node tools/rebind_ro0000_snapshot_audits.mjs
@@ -69,6 +70,7 @@ jobs:
               data/generated/stoneage_endpoint_item_seed_audit.json \
               data/generated/stoneage_endpoint_mapwarp_audit.json \
               data/generated/stoneage_endpoint_battle_data_source_audit.json \
+              data/generated/stoneage_endpoint_start_encounter_group_closure.json \
               data/generated/stoneage_endpoint_gmque_source_locator.json \
               data/generated/stoneage_endpoint_world_blocker_audit.json \
               data/generated/stoneage_ro0000_dependency_triage.json \

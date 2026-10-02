@@ -10,6 +10,8 @@ on:
       - 'ro0000/server/merged-source/gmsv/data/enemy1.txt'
       - 'ro0000/server/merged-source/gmsv/data/enemybase1.txt'
       - 'data/generated/stoneage_endpoint_battle_data_source_audit.json'
+      - 'data/generated/stoneage_endpoint_start_encounter_group_closure.json'
+      - 'tools/generate_endpoint_start_encounter_group_closure.mjs'
       - 'tools/check_endpoint_battle_data_source_audit.mjs'
       - 'docs/reference/endpoint-battle-data-source-audit.md'
       - '.github/workflows/check-endpoint-battle-data-source-audit.yml'
