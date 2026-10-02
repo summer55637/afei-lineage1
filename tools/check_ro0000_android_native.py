@@ -80,6 +80,24 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             with self.subTest(candidate=candidate):
                 self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
 
+    def test_map_and_renderer_focus_includes_target_functions(self):
+        candidates = [
+            "lssproto_S_recv(int, char*)",
+            "lssproto_M_recv(int, int, int, int, int, int, char*)",
+            "ReadBattleMap(int)",
+            "StockDispBuffer(int, int, int, int, int)",
+            "PutBmp(int, int, int, int)",
+            "LoadBmp(int)",
+            "decoder(unsigned char*, unsigned char**, int*, int*)",
+            "decoderPng(unsigned char*, unsigned char**, int*, int*)",
+            "ReadAniFile(int)",
+            "SpecAnim(int)",
+            "play_map_bgm(int)",
+        ]
+        for candidate in candidates:
+            with self.subTest(candidate=candidate):
+                self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
+
     def test_embedded_resource_format_string(self):
         values = relevant_embedded_strings(b"prefix\x00path/map4/%s/real.bin\x00")
         self.assertIn("path/map4/%s/real.bin", values)
