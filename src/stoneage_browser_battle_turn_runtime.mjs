@@ -3,6 +3,7 @@ const ACTION_BATTLE_TURN_INITIALIZE='BATTLE_TURN_INITIALIZE';
 const BATTLE_MODE_BATTLE=2;
 const BATTLE_CHARMODE_C_WAIT=2;
 const BATTLE_COM_NONE=0;
+const BATTLE_CHARGE_COMMANDS=Object.freeze([1005,1009,1010]);
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 
@@ -32,7 +33,8 @@ function initializeBattleTurn(context,{chargeEntries=[]}={}){
       if(!entry)return null;
       entriesProcessed++;
       const slotKey=`${side.side}:${entry.battleSlot??0}`;
-      const charged=Array.isArray(chargeEntries)&&chargeEntries.includes(slotKey);
+      const priorCommand=trunc(n(entry?.battleCommands?.[0]));
+      const charged=BATTLE_CHARGE_COMMANDS.includes(priorCommand)||(Array.isArray(chargeEntries)&&chargeEntries.includes(slotKey));
       let next={...entry};
       next.guardian=-1;
       next.battleMode='c_wait';
@@ -90,6 +92,7 @@ export {
   BATTLE_MODE_BATTLE,
   BATTLE_CHARMODE_C_WAIT,
   BATTLE_COM_NONE,
+  BATTLE_CHARGE_COMMANDS,
   turnParam,
   initializeBattleTurn,
   createBrowserBattleTurnRuntime
