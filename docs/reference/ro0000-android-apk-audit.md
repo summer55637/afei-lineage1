@@ -56,7 +56,17 @@ The four `sprintf` templates were mapped against the x86 ELF string addresses an
 
 `InitSprBinFileOpen` opens both sprite files and reads a 12-byte header from its second argument (`spradrn.bin`); it then uses indexed records and seeks/reads against the first argument (`spr.bin`). This confirms distinct sprite payload and index inputs, though the full on-disk record semantics are not yet reconstructed.
 
-The separate literal `path/map4/real.bin` is referenced by `LoadStoneAgeLUA`, reached from an `InitGame` startup branch. The loader opens the file, reads a structured stream, XORs decoded words with `0x87091272`, and passes prepared buffers to `myluaload`. `myluaload` calls `luaL_loadbuffer` and `lua_pcall`. This is evidence that the file is consumed by the embedded Lua loading path (possibly as a script container); it does not establish that it contains map tile/collision arrays.
+The separate literal `path/map4/real.bin` is passed to `LoadStoneAgeLUA` from an `InitGame` startup branch. The x86 disassembly establishes this record-reading sequence (also checked against the ARM build):
+
+1. Read a 4-byte word and XOR it with `0x87091272` to obtain a payload length.
+2. Read that many payload bytes into a buffer.
+3. Read another 4-byte word and XOR it with the same constant to obtain a name-word count.
+4. Read that many 4-byte name words, XOR each word, and append a terminating NUL byte.
+5. Test the decoded name for the substring `.lua`. If present, call `myluaload(payload, name, payload_length)`; otherwise free the buffers and continue to the next record.
+
+`myluaload(char*, char*, int)` passes the payload, name, and length into `luaL_loadbuffer`, then calls `lua_pcall`. Thus `path/map4/real.bin` is consumed as a named-entry Lua loading container, not as a directly parsed tile array in this code path. The APK does not include the referenced file, so its actual entries and any nested data remain unverified.
+
+A second, separate loader `LoadStoneAgeLUAPath` opens a directory, skips dot-prefixed entries, loads regular files whose names end in `.lua`, and recursively calls itself for non-regular entries. This confirms that the client also supports loose Lua files in a directory tree; it is not the same mechanism as the `real.bin` record loader.
 
 ### Decoded 80-byte record: fields verified by accessors
 
@@ -101,9 +111,9 @@ This audit now includes static ELF metadata and focused disassembly, but it is n
 
 - APK signing certificate identity.
 - The complete record layout and all semantics of the `spradrn.bin` index.
-- The decoded contents and complete chunk structure of `path/map4/real.bin`.
+- The actual `path/map4/real.bin` bytes and decoded entry payloads; only its record-reading envelope is known.
 - The complete meaning of all 80 bytes in an `adrn` record.
-- The source format and contents of the actual `map4/real.bin`, `s/real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` files.
+- The source format and contents of the actual `s/real.bin`, `adrn.bin`, `spr.bin`, and `spradrn.bin` files.
 - The complete rules in `checkEmptyMapData` and the exact meanings of all `readHitMap` output buffers.
 - Whether the referenced resources are bundled elsewhere, downloaded, or selected through an update list.
 - Server endpoints, update protocol, and in-game behavior/screenshots.
@@ -130,4 +140,4 @@ python3 tools/audit_ro0000_android_native.py \
   --extract-dir artifacts/native
 ```
 
-CI runs both test suites, checks the archive/Manifest identity against the committed baseline, analyzes both embedded `libStoneage.so` files, and publishes the JSON reports plus extracted native libraries as a 30-day artifact. Latest successful run: https://github.com/summer55637/afei-lineage1/actions/runs/36996026679
+CI runs both test suites, checks the archive/Manifest identity against the committed baseline, analyzes both embedded `libStoneage.so` files, and publishes the JSON reports plus extracted native libraries as a 30-day artifact. Latest successful native-disassembly run: https://github.com/summer55637/afei-lineage1/actions/runs/36996292512
