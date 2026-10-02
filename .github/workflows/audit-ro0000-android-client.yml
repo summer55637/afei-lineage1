@@ -97,12 +97,13 @@ jobs:
           python3 - <<'PY'
           import json
           import os
+          import re
           from pathlib import Path
 
           native = json.loads(Path("artifacts/ro0000_android_native_elf_audit.json").read_text(encoding="utf-8"))
           dst = Path("artifacts/stoneage_ro0000_android_native_resource_focus.json")
           wanted = {"AdrnInit", "adrnDecode", "LoadSprbin", "InitSprBinFileOpen", "DownLoadIniFile", "GetBinaryResource", "ReadPatchInfo", "UpdateAppNewVersion", "DownloadResource", "DownloadFile", "UnZipFile"}
-          keys = ("setBlowFishKey", "fish_decode", "fopen", "fread", "fseek", "memcpy", "memmove", "0x50", "0x31393839", "adrn.bin", "real.bin", "spr.bin", "spradrn.bin")
+          keys = ("setBlowFishKey", "fish_decode", "fopen", "fread", "fseek", "memcpy", "memmove", "DownloadFile", "GetBinaryResource", "ReadPatchInfo", "DownLoadIniFile", "UpdateAppNewVersion", "DownloadResource", "UnZipFile", "Patch_", "MD5", "URLCN", "0x50", "0x31393839", "adrn.bin", "real.bin", "spr.bin", "spradrn.bin")
           focus = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":native["auditedApk"]["sha256"],"libraries":[]}
           for lib in native.get("nativeLibraries", []):
               selected=[]
@@ -112,7 +113,8 @@ jobs:
                   if symbol_name not in wanted and not any(name in demangled for name in wanted): continue
                   dis=fn.get("disassembly") or {}
                   lines=dis.get("excerpt", [])
-                  selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)]})
+                  flow_re = re.compile(r"\b(?:call\w*|j[a-z]{1,3}|blx?|bx|cbz|cbnz|cmp\w*|test\w*)\b", re.IGNORECASE)
+                  selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)],"controlFlowLines":[line for line in lines if flow_re.search(line)]})
               if selected: focus["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected})
           dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
 
