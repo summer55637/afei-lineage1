@@ -24,11 +24,10 @@
         "entry points (80,90) and (80,91) are walkable in component 48",
         "all four endpoint 4000→200 portal origins (104,55),(104,56),(101,96),(101,97) are walkable in component 0",
         "endpoint movement BFS from the 4000 entry component cannot reach any 4000→200 portal origin",
-        "therefore the endpoint itself confirms the 4000→200 world-route connectivity blocker",\n        \\"V3.63 virtual-overlay experiment: replacing only (91,109),(92,109),(93,109) with existing walkable tile 321 makes both birth landings (80,90)/(80,91) reach an existing 4000→200 portal origin through normal sourceMapWalkableAt 4-neighbor movement; canonical map remains unchanged\\",
-undefined
+        "therefore the endpoint itself confirms the 4000→200 world-route connectivity blocker",
+        "V3.63 virtual-overlay experiment: replacing only (91,109),(92,109),(93,109) with existing walkable tile 321 makes both birth landings (80,90)/(80,91) reach an existing 4000→200 portal origin through normal sourceMapWalkableAt 4-neighbor movement; canonical map remains unchanged",
         "endpoint floor 4020 source map makes (4,12), (11,9), and (12,9) walkable in one component, proving the 4000 → 4020 edge is executable through the mapwarp event system",
-        "world graph shows 4020 only connects to 851 and back to 4000; 851 continues to 840/4020 and this branch does not reach the 4000 component-0 200 portals",
-undefined
+        "world graph shows 4020 only connects to 851 and back to 4000; 851 continues to 840/4020 and this branch does not reach the 4000 component-0 200 portals"
       ],
       "next": "keep active until repair form is chosen; the virtual experiment proves a three-cell terrain opening is sufficient, but do not yet mutate the canonical map or claim source-backed original art"
     },
@@ -89,4 +88,3 @@ undefined
     }
   }
 }
-
