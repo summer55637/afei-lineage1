@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：86c1e7a — [docs] record 33x33 battle map lineage evidence
-- 更新時間：2026-10-02T21:09:38+08:00
+- 最新 commit：3d1d30b — [docs] fix README generator and expose battle-map audit
+- 更新時間：2026-10-02T21:10:15+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -19,8 +19,7 @@
 | 資料使用定位 | 專案內部來源依 provenance、identity、integrity 與版本驗證決定是否進入 production；外部資料另行核驗使用條件 |
 | 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |
 | Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
-| Android Client | ✅ APK 1.0（native ELF、tile/parts/event 三層快取及 M 協定對應已確認；map4 Lua bundle 獨立） |
-undefined
+| Android Client | ✅ APK 1.0（native ELF、map cache、SABEX 220-slot / 33×33 battle-map path 已確認；map4 Lua bundle 獨立） |
 | 來源角色 | RO0000＝實際部署系統與資料；Fixed-C＝可讀的 C 程式行為／語義證據；兩者共同用於考據，不互相覆蓋 |
 | 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
 | 重開案 | 目前沒有 |
@@ -49,6 +48,7 @@ undefined
 - [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
 - [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
     - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)
+- [Android battle-map 33×33 lineage audit](docs/reference/ro0000-android-battle-map-lineage-audit.md)
 - [Generated state / evidence](data/generated/)
 
 > README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。
