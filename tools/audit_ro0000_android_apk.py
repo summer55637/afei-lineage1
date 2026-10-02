@@ -94,6 +94,7 @@ def main():
           'uncompressedTotalBytes':sum(x.file_size for x in infos),'manifestBytes':manifest_info.file_size,
           'manifest':manifest,'dexFiles':dex,'nativeLibraries':native,
           'topLevelDirectoryCounts':dict(sorted(top_dirs.items())),
+          'archiveEntries':[{'path':x.filename,'bytes':x.file_size,'compressedBytes':x.compress_size,'compression':x.compress_type,'encrypted':bool(x.flag_bits&1)} for x in infos],
           'extensionCounts':dict(sorted(ext_counts.items())),
           'mapOrGameplayPathCandidates':map_candidates,
           'scopeNote':'Archive inventory and manifest metadata only; path candidates are not proof of server rules or playable map semantics.'
