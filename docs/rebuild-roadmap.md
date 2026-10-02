@@ -10,7 +10,7 @@ Persistent State 的 canonical v1 持久生命週期已由 check-persistent-stat
 - 寵物套用 Fixed-C BATTLE_PetDefaultCommand() 的 ATTACK / target -1 / C_OK 行為。
 - action 只修改 transient Battle Context，不修改 Persistent State、不執行 damage。
 
-回歸：tools/check_idle_battle_strategy.mjs，並納入 check-persistent-state workflow。
+回歸：tools/check_idle_battle_strategy.mjs，並納入 check-persistent-state workflow；run 36965383689（commit 479670cdd60c61e9883b50ad5079f0720904d72a）全部通過。另修正 Browser State Controller 對 raw Battle Context 的 phase / entry / field 讀取層級，並由策略整合測試覆蓋初始化後的命令流程。
 
 目前仍未閉合完整自動戰鬥：命令提交後的 AttackSeq / RNG / damage / counter / death / finish 需由現有階段接續；Idle Simulation 仍接受外部 battle result。技能、道具、捕捉、補給、背包滿、死亡恢復及離線收益等產品策略維持分項待定。
 
