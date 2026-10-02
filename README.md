@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：f5e0006 — [audit] close target SPR animation field layout
-- 更新時間：2026-10-02T23:25:21+08:00
+- 最新 commit：5806228 — [docs] clarify Android APK audit scope in README
+- 更新時間：2026-10-02T23:27:07+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -19,7 +19,7 @@
 | 資料使用定位 | 專案內部來源依 provenance、identity、integrity 與版本驗證決定是否進入 production；外部資料另行核驗使用條件 |
 | 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |
 | Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
-| Android Client | ✅ APK 1.0（native ELF、map cache、SABEX 220-slot / 33×33、browser battle preview、image resolver、RD/gG decoder path 已確認；map4 Lua bundle 獨立） |
+| Android Client | ✅ APK 1.0（Manifest/DEX/Java wrapper、雙 ABI native ELF、SABEX 220-slot / 33×33、RD/gG、browser battle preview 已稽核；⚠️ v1 簽章摘要不符；原始資源與真機驗證待補） |
 | 來源角色 | RO0000＝實際部署系統與資料；Fixed-C＝可讀的 C 程式行為／語義證據；兩者共同用於考據，不互相覆蓋 |
 | 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
 | 重開案 | 目前沒有 |
