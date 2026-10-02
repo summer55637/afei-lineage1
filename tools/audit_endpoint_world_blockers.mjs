@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { parseLS2Map, LS2MAP_MAGIC } from './stoneage_ls2map_parser.mjs';
 
 const ROOT = process.cwd();
 const ENDPOINT_MAP_ROOT = path.join(ROOT, 'ro0000/server/merged-source/gmsv/data/map');
@@ -14,6 +13,34 @@ const FIXED_ROOT = path.join(ROOT, 'fixed-c-source');
 const FIXED_MAPSET = path.join(FIXED_ROOT, 'gmsv/data/map/mapset.txt');
 const FIXED_REF = '1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 
+function readU16BE(bytes, offset, label) {
+  if (offset + 2 > bytes.length) throw new Error('truncated ' + label);
+  return (bytes[offset] << 8) | bytes[offset + 1];
+}
+
+function decodeEndpointMap(bytes) {
+  if (bytes.length < 42) throw new Error('endpoint map too small');
+  const magic = bytes.subarray(0, 6).toString('ascii');
+  if (magic !== 'LS&MAP' && magic !== 'LS2MAP') throw new Error('invalid endpoint map magic: ' + JSON.stringify(magic));
+  let p = 6;
+  const id = readU16BE(bytes, p, 'floor id'); p += 2;
+  const nameBytes = bytes.subarray(p, p + 32); p += 32;
+  const zero = nameBytes.indexOf(0);
+  const name = nameBytes.subarray(0, zero >= 0 ? zero : 32).toString('utf8');
+  const width = readU16BE(bytes, p, 'width'); p += 2;
+  const height = readU16BE(bytes, p, 'height'); p += 2;
+  const count = width * height;
+  if (!Number.isSafeInteger(count) || count <= 0) throw new Error('invalid endpoint map dimensions');
+  const bytesPerLayer = count * 2;
+  if (p + bytesPerLayer * 2 > bytes.length) throw new Error('endpoint map truncated');
+  const tiles = new Uint16Array(count);
+  const objects = new Uint16Array(count);
+  for (let i = 0; i < count; i++) tiles[i] = readU16BE(bytes, p + i * 2, 'tile layer');
+  p += bytesPerLayer;
+  for (let i = 0; i < count; i++) objects[i] = readU16BE(bytes, p + i * 2, 'object layer');
+  p += bytesPerLayer;
+  return { magic, id, name, width, height, tiles, objects, bytesConsumed: p, trailingBytes: bytes.length - p };
+}
 function blobSha(bytes) {
   const header = Buffer.from('blob ' + bytes.length + String.fromCharCode(0), 'utf8');
   return crypto.createHash('sha1').update(header).update(bytes).digest('hex');
@@ -193,13 +220,14 @@ function findMaps() {
     const magic = Buffer.alloc(6);
     try {
       const n = fs.readSync(fd, magic, 0, 6, 0);
-      if (n !== 6 || magic.toString('ascii') !== LS2MAP_MAGIC) continue;
+      const signature = magic.toString('ascii');
+      if (n !== 6 || (signature !== 'LS&MAP' && signature !== 'LS2MAP')) continue;
     } finally {
       fs.closeSync(fd);
     }
     try {
       const bytes = fs.readFileSync(file);
-      const map = parseLS2Map(bytes);
+      const map = decodeEndpointMap(bytes);
       if (map.id === 200 || map.id === 4000 || map.id === 3000 || map.id === 4006) {
         candidates.push({
           floorId: map.id,
@@ -208,6 +236,7 @@ function findMaps() {
           size: bytes.length,
           width: map.width,
           height: map.height,
+          magic: map.magic,
           name: map.name,
           map
         });
@@ -225,7 +254,7 @@ function findMaps() {
 
 function summarizeCandidate(c) {
   return c.parseError ? c : {
-    floorId: c.floorId, path: c.path, blobSha: c.blobSha, size: c.size,
+    floorId: c.floorId, magic: c.magic, path: c.path, blobSha: c.blobSha, size: c.size,
     width: c.width, height: c.height, name: c.name, sourcePath: c.path
   };
 }
