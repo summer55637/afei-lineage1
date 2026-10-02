@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：99ce6ef — [audit] map endpoint ITEM_idx references across binary
-- 更新時間：2026-10-02T08:08:33+08:00
+- 最新 commit：10989a7 — [audit] close endpoint ITEM_idx construction semantics
+- 更新時間：2026-10-02T08:09:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
