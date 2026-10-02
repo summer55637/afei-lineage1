@@ -157,7 +157,7 @@ function chooseByValue(candidates,selector,actor){
   }
   let selectedIndex=0;
   for(let i=1;i<values.length;i++){
-    const maximize=selector===BATTLE_AI_SELECT_HP_MAX||selector===BATTLE_AI_SELECT_STR_MAX||selector===BATTLE_AI_SELECT_DEX_MAX;
+    const maximize=selector===BATTLE_AI_SELECT_HP_MAX||selector===BATTLE_AI_SELECT_STR_MAX||selector===BATTLE_AI_SELECT_DEX_MAX||selector===BATTLE_AI_SELECT_ATT_SUBDUE;
     if((maximize&&values[i]>values[selectedIndex])||(!maximize&&values[i]<values[selectedIndex]))selectedIndex=i;
   }
   return {ok:true,candidate:candidates[selectedIndex],selectedIndex,selectedValue:values[selectedIndex],elementKey};
