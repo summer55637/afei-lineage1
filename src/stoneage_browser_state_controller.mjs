@@ -31,6 +31,7 @@ import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATU
 import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_SET, ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT, BROWSER_BATTLE_PLAYER_COMMAND_RUNTIME_FORMAT, preflightPlayerBattleCommand } from './stoneage_browser_battle_player_command_runtime.mjs';
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
 import { createBrowserBattleDefaultTargetRuntime, ACTION_BATTLE_DEFAULT_TARGET_RESOLVE, BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_default_target_runtime.mjs';
+import { createBrowserIdleBattleStrategyRuntime, ACTION_BATTLE_IDLE_STRATEGY_APPLY, BROWSER_IDLE_BATTLE_STRATEGY_RUNTIME_FORMAT } from './stoneage_browser_idle_battle_strategy_runtime.mjs';
 import { createBrowserBattleAttackPreflightRuntime, ACTION_BATTLE_ATTACK_PREFLIGHT, BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT } from './stoneage_browser_battle_attack_preflight_runtime.mjs';
 import { createBrowserBattleAttackSeqPreludeRuntime, ACTION_BATTLE_ATTACK_SEQ_PRELUDE, BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT } from './stoneage_browser_battle_attack_seq_prelude_runtime.mjs';
 import { createBrowserBattleDamagePlanRuntime, ACTION_BATTLE_DAMAGE_PLAN, BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_plan_runtime.mjs';
@@ -191,6 +192,7 @@ function createBrowserStateController({
   const battleFieldRuntime=createBrowserBattleFieldRuntime({mapRuntimeOptions:battleFieldRuntimeOptions});
   const battleTargetRuntime=createBrowserBattleTargetRuntime();
   const battleDefaultTargetRuntime=createBrowserBattleDefaultTargetRuntime();
+  const idleBattleStrategyRuntime=createBrowserIdleBattleStrategyRuntime();
   const battleAttackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
   const battleAttackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
   const battleDamagePlanRuntime=createBrowserBattleDamagePlanRuntime();
@@ -350,6 +352,30 @@ function createBrowserStateController({
           warpBlocked:action.warpBlocked===true
         });
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_BATTLE_IDLE_STRATEGY_APPLY){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(idleBattleStrategyRuntime.ok!==true)return {ok:false,handled:false,stage:'idle-battle-strategy',reason:'browser-idle-battle-strategy-runtime-invalid',state:clone(currentState)};
+        const result=idleBattleStrategyRuntime.apply(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            strategy:action.strategy??currentState?.battleSettings?.strategy??null,
+            playerId:action.playerId??currentState?.player?.id??battleContext?.leaderId??null,
+            defaultTargetRoll:action.defaultTargetRoll??null,
+            weaponKind:action.weaponKind??null
+          }
+        );
+        if(result.ok&&result.handled===true&&result.battleContext){
+          battleContext=clone(result.battleContext);
+          battleAttackPipeline=null;
+        }
+        return {
+          ...result,
+          format:BROWSER_IDLE_BATTLE_STRATEGY_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(currentState)
+        };
       }
       if(type===ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-player-command-preflight',reason:'battle-context-required',state:clone(currentState)};
@@ -1715,6 +1741,8 @@ export {
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
   ACTION_BATTLE_PLAYER_COMMAND_SET,
+  ACTION_BATTLE_IDLE_STRATEGY_APPLY,
+  BROWSER_IDLE_BATTLE_STRATEGY_RUNTIME_FORMAT,
   ACTION_BATTLE_PLAYER_COMMAND_PREFLIGHT,
   BROWSER_WORLD_NPC_RUNTIME_FORMAT,
   BROWSER_WARP_RUNTIME_FORMAT,
