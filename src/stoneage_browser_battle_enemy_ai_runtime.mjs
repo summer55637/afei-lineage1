@@ -73,7 +73,7 @@ function selectAction(w,roll){
   if(w.escape>0&&roll<cursor+w.escape)return {ok:true,action:'escape',commandCode:BATTLE_COM_ESCAPE,total:w.total};
   cursor+=w.escape;
   for(let i=0;i<w.skills.length;i++){
-    if(w.skills[i]>0&&roll<cursor+w.skills[i])return {ok:false,reason:'enemy-ai-petskill-runtime-required',skillIndex:i,roll,total:w.total};
+    if(w.skills[i]>0&&roll<cursor+w.skills[i])return {ok:true,action:'petskill',skillSlot:i,total:w.total};
     cursor+=w.skills[i];
   }
   return {ok:false,reason:'enemy-ai-action-selection-unresolved',roll,total:w.total};
@@ -227,20 +227,31 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
       const chosen=selectAction(weights,actionResult.roll);
       if(!chosen.ok)return {...chosen,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),actionRoll:actionResult.roll};
       let targetBid=-1,targetRoll=null,targetSelectorRoll=null,targetSelectionMode=null,targetElementKey=null;
-      if(chosen.action==='attack'){
+      let resolvedAction=chosen.action;
+      let resolvedCommandCode=chosen.commandCode??BATTLE_COM_NONE;
+      let sourceAiSkillId=null;
+      if(chosen.action==='attack'||chosen.action==='petskill'){
         const targetSelection=candidatesForTarget(context,1-sideNo,int(ai.targetType),targetRolls,targetCursor);
         if(!targetSelection.ok)return {...targetSelection,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid)};
         targetCursor=targetSelection.cursor;
-        if(targetSelection.candidates.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-valid-targets',actorBid:int(actor.bid),targetType:int(ai.targetType)};
+        if(targetSelection.candidates.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-valid-targets',actorBid:int(actor.bid),targetType:int(ai.targetType),rngConsumed:{action:actionCursor,target:targetCursor,total:actionCursor+targetCursor}};
         const selected=selectTargetCandidate(targetSelection.candidates,int(ai.selectMode),ai,actor,targetRolls,targetCursor);
         if(!selected.ok)return {...selected,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),candidateCount:targetSelection.candidates.length};
         targetCursor=selected.cursor;targetRoll=selected.targetRoll;targetSelectorRoll=selected.targetSelectorRoll;targetSelectionMode=selected.selection;targetElementKey=selected.elementKey??null;targetBid=selected.candidate.bid;
+        if(chosen.action==='petskill'){
+          sourceAiSkillId=int(actor.sourceEnemyPetSkills?.[chosen.skillSlot]);
+          if(sourceAiSkillId==null)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-petskill-id-required',actorBid:int(actor.bid),skillSlot:chosen.skillSlot,rngConsumed:{action:actionCursor,target:targetCursor,total:actionCursor+targetCursor}};
+          if(sourceAiSkillId!==0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-petskill-runtime-required',actorBid:int(actor.bid),skillSlot:chosen.skillSlot,skillId:sourceAiSkillId,targetBid,actionRoll:actionResult.roll,targetRoll,targetSelectorRoll,rngConsumed:{action:actionCursor,target:targetCursor,total:actionCursor+targetCursor}};
+          resolvedAction='petskill-none';
+          resolvedCommandCode=BATTLE_COM_NONE;
+        }
       }
       const blockedOn=enemyCannotMove(actor);
       const cannotMove=blockedOn.length>0;
       commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,
-        action:cannotMove?'none':chosen.action,selectedAction:chosen.action,
-        commandCode:cannotMove?BATTLE_COM_NONE:chosen.commandCode,targetBid,
+        action:cannotMove?'none':resolvedAction,selectedAction:chosen.action,
+        commandCode:cannotMove?BATTLE_COM_NONE:resolvedCommandCode,targetBid,
+        ...(chosen.action==='petskill'?{sourceAiPickedSkill:true,skillSlot:chosen.skillSlot,skillId:sourceAiSkillId}:{}),
         moveBlockedOn:blockedOn,actionRoll:actionResult.roll,targetRoll,targetSelectorRoll,targetSelectionMode,targetElementKey,before});
     }
   }
