@@ -79,13 +79,12 @@ jobs:
           rm -rf /tmp/ro0000-jadx-sources /tmp/jadx-1.5.6 /tmp/jadx-1.5.6.zip
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
-      - name: Cross-check app JNI declarations with both native ABIs
+      - name: Cross-check every DEX native declaration against all packaged libraries
         run: |
           python3 tools/audit_ro0000_android_jni.py \
             --dex-audit artifacts/ro0000_android_dex_audit.json \
+            --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
             --apk-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')" \
-            --x86-lib artifacts/native/x86/libStoneage.so \
-            --arm-lib artifacts/native/armeabi-v7a/libStoneage.so \
             --output artifacts/ro0000_android_jni_audit.json
       - name: Publish focused APK evidence with retry
         shell: bash
