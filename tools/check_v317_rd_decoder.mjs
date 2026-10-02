@@ -43,7 +43,7 @@ assert.deepEqual([...za.pixels],rgba);
 assert.equal(za.bytesPerPixel,4);
 assert.deepEqual(classifyStoneAgeGraphic(new Uint8Array([0x52,0x44])),{format:'RD',decoder:'decodeStoneAgeRd'});
 assert.deepEqual(classifyStoneAgeGraphic(new Uint8Array([0x67,0x47])),{format:'gG',decoder:'decoderPng'});
-assert.throws(()=>decodeStoneAgeRd(header(0x20,2,1,0)),/truncated/);
+assert.throws(()=>decodeStoneAgeRd(header(0x20,2,1,0)),/requires decodeStoneAgeRdAsync/);
 assert.throws(()=>decodeStoneAgeRd(header(16,1,1,0)),/literal/);
 assert.throws(()=>decodeStoneAgeRd(new Uint8Array([82,68,0])),/truncated/);
 
