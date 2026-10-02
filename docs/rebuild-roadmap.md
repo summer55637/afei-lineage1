@@ -1,3 +1,23 @@
+## 2026-10-02 Idle Battle Strategy v1：基礎命令策略已接入，完整戰鬥仍待串接
+
+Persistent State 的 canonical v1 持久生命週期已由 check-persistent-state workflow run 36964366382 通過並關閉 blocker。本輪接續處理首批放置路線的戰鬥策略。
+
+新增 BATTLE_IDLE_STRATEGY_APPLY：
+
+- 讀取 Persistent State 的 battleSettings.strategy，預設採 basic_attack_only + source-default-random。
+- active battle 中，只替對應的玩家角色設定普通攻擊；目標遵循 Fixed-C BATTLE_DefaultAttacker() 的候選過濾與隨機選取，roll 仍由 caller 注入。
+- 狀態阻擋時不消耗目標 RNG，直接使用 wait；沒有合法目標時也以 wait 完成命令。
+- 寵物套用 Fixed-C BATTLE_PetDefaultCommand() 的 ATTACK / target -1 / C_OK 行為。
+- action 只修改 transient Battle Context，不修改 Persistent State、不執行 damage。
+
+回歸：tools/check_idle_battle_strategy.mjs，並納入 check-persistent-state workflow。
+
+目前仍未閉合完整自動戰鬥：命令提交後的 AttackSeq / RNG / damage / counter / death / finish 需由現有階段接續；Idle Simulation 仍接受外部 battle result。技能、道具、捕捉、補給、背包滿、死亡恢復及離線收益等產品策略維持分項待定。
+
+詳細契約：docs/reference/idle-battle-strategy-v1.md。
+
+---
+
 ## 2026-10-01 Blocker / Disabled Policy Reset：完整 endpoint corpus 讓舊結論重新可驗證
 
 本日開始，專案不再把「永久停用」、「明確停用」、「卡住」、「反覆卡住」視為不可逆狀態。
