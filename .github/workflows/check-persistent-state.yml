@@ -18,6 +18,8 @@ on:
       - 'src/stoneage_save_transaction.mjs'
       - 'src/stoneage_save_storage.mjs'
       - 'tools/check_save_storage.mjs'
+      - 'src/stoneage_browser_idle_battle_strategy_runtime.mjs'
+      - 'tools/check_idle_battle_strategy.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'src/stoneage_browser_persistent_state_session.mjs'
       - 'tools/check_idle_simulation.mjs'
@@ -61,6 +63,8 @@ jobs:
         run: node tools/check_save_transaction.mjs
       - name: Run save storage regression
         run: node tools/check_save_storage.mjs
+      - name: Run idle battle strategy regression
+        run: node tools/check_idle_battle_strategy.mjs
       - name: Run battle result adapter regression
         run: node tools/check_battle_result_adapter.mjs
       - name: Run offline resume regression
