@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from audit_ro0000_android_java import mask_java, method_records
+from audit_ro0000_android_java import mask_java, method_records, supported_package, should_include_class, native_library_load_requests
 
 
 class JavaSourceRedactionTests(unittest.TestCase):
@@ -38,6 +38,28 @@ public class UpdateChecker {
         self.assertEqual(method["calls"], ["client.execute"])
         self.assertEqual([call["target"] for call in method["callSequence"]], ["client.execute", "client.execute"])
         self.assertEqual([call["line"] for call in method["callSequence"]], [5, 6])
+    def test_vendor_native_owners_are_included_without_all_vendor_classes(self):
+        self.assertTrue(supported_package("com.tencent.gcloud.voice"))
+        self.assertTrue(should_include_class("com.tencent.gcloud.voice", "GCloudVoiceEngineHelper"))
+        self.assertTrue(should_include_class("com.tencent.bugly.crashreport.crash.jni", "NativeCrashHandler"))
+        self.assertFalse(should_include_class("com.tencent.gcloud.voice", "UnrelatedVendorHelper"))
+
+    def test_native_library_load_requests_are_sanitized(self):
+        source = """
+package com.tencent.bugly.crashreport.crash.jni;
+public class NativeCrashHandler {
+    static { System.loadLibrary("Bugly"); }
+    public void load() { System.loadLibrary("safe_lib_2"); }
+    public void fetch() { System.loadLibrary("https://secret.example/native"); }
+    // System.loadLibrary("commented");
+}
+"""
+        requests = native_library_load_requests(source)
+        self.assertEqual([item["library"] for item in requests], ["Bugly", "safe_lib_2"])
+        self.assertEqual([item['line'] for item in requests], [4, 5])
+        self.assertNotIn("secret.example", repr(requests))
+        self.assertNotIn("commented", repr(requests))
+
     def test_records_calls_without_literal_values(self):
         source = '''
 package com.newssa.stoneage.update;
