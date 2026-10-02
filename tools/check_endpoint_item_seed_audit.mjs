@@ -61,7 +61,7 @@ function probeServerBinary() {
   const elfHeader = commandText('readelf', ['-h', SERVER_BIN]).trim();
   const symbolTable = commandText('readelf', ['-Ws', SERVER_BIN]);
   const interestingSymbols = symbolTable.split(/\r?\n/)
-    .filter(line => /(ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList)/.test(line))
+    .filter(line => /(ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_readItemConfFile|ITEM_makeItem|ITEM_makeItemAndRegist|ITEM_tblen|ITEM_TransformList|ITEM_getSIndexFromTransList|ITEM_tbl)/.test(line))
     .slice(0, 100);
 
   const strings = commandText('strings', ['-a', SERVER_BIN]);
@@ -110,11 +110,23 @@ function probeItemLoaderDisassembly() {
   const constantEvidence = [];
   for (const block of around) {
     for (const line of block) {
-      if (/\\b(?:mov|movabs|lea|push)\\b.*(?:0x11|17)/i.test(line)) constantEvidence.push(line);
+      if (/\b(?:mov|movabs|lea|push)\b.*(?:0x11|17)/i.test(line)) constantEvidence.push(line);
     }
   }
 
+  const firstParserIndex = lines.findIndex(line => /getStringFromIndexWithDelim/.test(line));
+  const idScanWindow = firstParserIndex >= 0
+    ? lines.slice(Math.max(0, firstParserIndex - 10), Math.min(lines.length, firstParserIndex + 50))
+    : [];
+  const idScanAtoi = idScanWindow.filter(line => /<atoi(?:@|\b)/.test(line)).slice(0, 10);
   const tblenRefs = lines.filter(line => /ITEM_tblen/.test(line)).slice(0, 40);
+
+  const makeDisassembly = commandText('objdump', [
+    '-drwC', '-M', 'intel', '--disassemble=ITEM_makeItem', SERVER_BIN
+  ]);
+  const makeLines = makeDisassembly.split(/\r?\n/);
+  const makeTransformCalls = makeLines.filter(line => /ITEM_getSIndexFromTransList/.test(line)).slice(0, 40);
+  const makeItemTableRefs = makeLines.filter(line => /ITEM_tbl/.test(line)).slice(0, 60);
 
   return {
     available: true,
@@ -122,11 +134,18 @@ function probeItemLoaderDisassembly() {
     callsiteCount: around.length,
     callsites: around,
     constant17Evidence: constantEvidence,
+    idScanWindow,
+    idScanAtoiCalls: idScanAtoi,
     itemTblenReferences: tblenRefs,
+    makeItemDisassembly: {
+      transformCalls: makeTransformCalls,
+      itemTableReferences: makeItemTableRefs
+    },
     interpretation: {
-      purpose: 'Observe compiled endpoint loader call arguments without assuming fixed-C source semantics.',
+      purpose: 'Observe compiled endpoint loader and make-item lookup behavior without assuming fixed-C source semantics.',
       token17IsProven: constantEvidence.length > 0,
-      caution: 'A constant 17 near a parser call is evidence only; final ID semantics still require correlating the exact callsite and parsed assignment.'
+      directMakeItemTransformObserved: makeTransformCalls.length > 0,
+      caution: 'Compiled binary evidence is correlated with symbols and callsites; absence of a transform symbol is evidence against that implementation, not proof that every possible mapping mechanism is absent.'
     }
   };
 }
