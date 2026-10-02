@@ -606,3 +606,6 @@ The target's SDL entry, frame loop, event dispatcher, keyboard/mouse adapters, s
 - \`moveProc\` invokes automatic movement and interaction helpers. \`onceMoveProc\` ties together route lookup, event checks, movement-route sending, map prefetch, local step movement, and map-area updates. \`_execEtcEvent\` branches to warp, encounter, and enemy-event senders; warp and enemy senders reset local map state before the event message is sent.
 
 The evidence distinguishes input dispatch, frame processing, network dispatch, route/collision checks, map-edge streaming, coordinate movement, and server event requests. It does not establish exact device touch behavior, server acceptance, or persistence without runtime/network traces. ABI symbol parity and successful disassembly are extraction-coverage checks only.
+
+
+The loop and movement contracts are also checked against the current APK's native ELF audit in CI. For every function/address pair in both contracts, the checker verifies presence in the corresponding focused symbol inventory and matches the recorded ABI-specific symbol value, shared-library SHA-256, and Build ID. This guards the evidence anchor itself; semantic observations still require review when the target build changes.
