@@ -1,3 +1,11 @@
+## 2026-10-02 V4.31 Enemy AI Controller Binding
+
+新增控制器層回歸，確認 `ACTION_BATTLE_ENEMY_AI_APPLY` 會先經 player command wait gate，再於玩家策略完成後提交 enemy attack command，並將敵方 entry 設為 C_OK。Persistent State revision 不增加，亦不執行傷害。此版只閉合命令入口與 wait 狀態，不代表敵方攻擊已自動串接 AttackSeq 到 Finish。
+
+Regression：`tools/check_v431_browser_battle_enemy_ai_controller.mjs`；同時重跑 V4.29、V4.30 與 V3.86。
+
+---
+
 ## 2026-10-02 V4.30 Enemy AI Target Selection
 
 V4.30 擴充敵方 NORMAL AI 攻擊目標選擇：加入 HP 最高／最低模式、保持同值時的第一個候選，以及玩家／寵物限定目標無候選時回退全體的來源行為。HP 選取不消耗 target RNG；缺少 HP 與未支援模式仍 fail-closed。
