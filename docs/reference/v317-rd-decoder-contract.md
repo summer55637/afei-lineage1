@@ -1,22 +1,42 @@
 # V3.17 client RD decoder contract
 
-V3.17 閉合 client Real binary 裡 decoder() 使用的 RD header 與 legacy RLE。
+V3.17 閉合 client Real binary 裡 decoder() 使用的 RD header 與 legacy RLE；RO0000 target APK 再以 x86 ELF 直接校正 compression-flag 分支。
 
 ## Fixed client source
 
 `client/stoneage/systeminc/unpack.h` 定義 RD_HEADER：id[2]、compressFlag、width、height、size。
 
-`client/stoneage/system/unpack.cpp::decoder()`：
+`client/stoneage/system/unpack.cpp::decoder()` 的歷史 source branch 可見：
 
-- 驗證 magic 為 RD。
+- RD magic。
 - compressFlag 0：直接複製 width × height bytes。
 - legacy compression：使用 0x80、0x40、0x10、0x20 flags 做 repeat / zero / large-count / literal 解碼。
-- 若編譯啟用 `_NEW_COLOR_`，compressFlag >= 16 走 zlib truecolor path；Web decoder 目前刻意不實作這個分支，遇到時 fail-closed。
+- 某些版本在 `_NEW_COLOR_` 下加入 truecolor / zlib 路徑。
+
+## RO0000 target correction
+
+Target x86 `libStoneage.so` 的 `decoder()` @ `0x2f5410` 直接閉合：
+
+- flag 0 → width × height、1 byte/pixel raw；
+- flag 0x20 → zlib `uncompress`、輸出容量 width × height × 4；
+- 其他非零 flag → custom RLE；
+- 非 RD magic 若為 little-endian `0x4767`（`gG`）→ `decoderPng()`，其輸出長度為 width × height × 4。
+
+因此不能把舊版「compressFlag >= 16 一律走 zlib」直接套到 RO0000；target 的 observed implementation 明確把 **0x20** 單獨作為 zlib RGBA 分支，其餘非零值仍進 RLE。
 
 ## Web
 
-新增 `src/stoneage_rd_decoder.mjs`，提供 raw/RLE decoder，以及 `decodeAuthorizedClientGraphic(realBytes,graphic)`。
+`src/stoneage_rd_decoder.mjs` 現在提供：
 
-這一層不包含任何 Real binary 資產。只有在使用者或部署環境提供合法的 client asset bytes 與 ADRNBIN metadata 時，才可以把 image ID 解成像素。
+- raw RD decoder；
+- target custom RLE decoder；
+- target `0x20` zlib RGBA 的 browser-safe async decoder；
+- RD / gG graphic magic classifier；
+- `decodeAuthorizedClientGraphic()`；
+- `decodeAuthorizedClientGraphicAsync()`。
 
-因此目前 Pages 不會因此自動出現原版圖像；但資料鏈已經完整到 image ID → ADRNBIN → Real payload → RD pixels 的最後 parser 階段。
+瀏覽器 zlib 路徑使用 `DecompressionStream('deflate')`，避免把 Node-only `node:zlib` 帶入 browser bundle。
+
+這一層仍不包含任何 Real binary 資產。只有在合法 client asset bytes 與 ADRNBIN metadata 提供後，才能把 image ID 解成實際像素。
+
+目前 `gG` 仍只完成 carrier classification，尚未加入 browser PNG decode implementation；target 的 `decoderPng()` 已確認會把 `+0x10` 起始的 payload 交給 `IMG_LoadPNG_MEM`。
