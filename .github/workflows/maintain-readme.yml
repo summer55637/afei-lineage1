@@ -58,6 +58,7 @@ jobs:
             node tools/check_endpoint_mapwarp_audit.mjs --write
             node tools/check_endpoint_battle_data_source_audit.mjs --write
             node tools/check_endpoint_gmque_source_locator.mjs --write
+            node tools/audit_endpoint_world_blockers.mjs --write
 
             node tools/generate_readme.mjs
 
@@ -67,7 +68,8 @@ jobs:
               data/generated/stoneage_endpoint_item_seed_audit.json \
               data/generated/stoneage_endpoint_mapwarp_audit.json \
               data/generated/stoneage_endpoint_battle_data_source_audit.json \
-              data/generated/stoneage_endpoint_gmque_source_locator.json
+              data/generated/stoneage_endpoint_gmque_source_locator.json \
+              data/generated/stoneage_endpoint_world_blocker_audit.json
 
             if git diff --cached --quiet; then
               echo "README and source evidence are already up to date."
