@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7eb1924 — ci: generate production ItemShop catalog in browser checks
-- 更新時間：2026-10-02T09:38:00+08:00
+- 最新 commit：d6dbcda — fix: align browser NPC source keys and ItemShop fixture contract
+- 更新時間：2026-10-02T09:39:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
