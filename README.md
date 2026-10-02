@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2651edc — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T20:44:23Z
+- 最新 commit：20179d2 — [test] cover Android keyboard input bridge symbol
+- 更新時間：2026-10-03T04:45:57+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
