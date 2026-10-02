@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-world-blocker-audit-v1",
-  "updated": "2026-10-02T01:26:57.431Z",
+  "updated": "2026-10-02T01:27:46.133Z",
   "source": {
     "endpointRoot": "ro0000/server/merged-source/gmsv/data/map",
     "mapsetPath": "ro0000/server/merged-source/gmsv/data/map/mapset.txt",
@@ -388,6 +388,53 @@
       ],
       "reachableTargets": [],
       "allPortalOriginsMovementReachable": false,
+      "alternateEntryComponentWarps": [
+        {
+          "line": 2006,
+          "from": [
+            4000,
+            80,
+            90
+          ],
+          "to": [
+            4006,
+            10,
+            20
+          ],
+          "originComponent": 48,
+          "reachableFromEntryComponent": true
+        },
+        {
+          "line": 2008,
+          "from": [
+            4000,
+            80,
+            91
+          ],
+          "to": [
+            4006,
+            10,
+            21
+          ],
+          "originComponent": 48,
+          "reachableFromEntryComponent": true
+        },
+        {
+          "line": 2595,
+          "from": [
+            4000,
+            82,
+            107
+          ],
+          "to": [
+            4020,
+            4,
+            12
+          ],
+          "originComponent": 48,
+          "reachableFromEntryComponent": true
+        }
+      ],
       "movementUsesLegalDiagonalRule": true
     },
     "floor200": {
