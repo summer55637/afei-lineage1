@@ -28,11 +28,18 @@ state.pets.petBox=[{
 state.pets.team=['pet-1'];
 state.pets.activePetId='pet-1';
 
+const sourceEnemyAi={
+  format:'stoneage-enemy-ai-source-v1',
+  raw:'at:20;1;1|gu:0|es:1|wa:0;0;0;0;0;0;0;',
+  attackWeight:20,targetType:1,selectMode:1,guardWeight:0,magicWeight:0,escapeWeight:1,
+  skillWeights:[0,0,0,0,0,0,0],targetRollRange:1
+};
+const sourceDropTable=[{slot:1,itemId:1234,probability:300,rollMin:0,rollMax:999,denominator:1000}];
 const team=[
-  {enemyId:120,size:0,createMaxNum:10,enemy:{tempNo:113}},
-  {enemyId:120,size:0,createMaxNum:10,enemy:{tempNo:113}},
-  {enemyId:123,size:0,createMaxNum:10,enemy:{tempNo:114}},
-  {enemyId:123,size:0,createMaxNum:10,enemy:{tempNo:114}}
+  {enemyId:120,size:0,createMaxNum:10,enemy:{tempNo:113,ai:sourceEnemyAi,dropTable:sourceDropTable}},
+  {enemyId:120,size:0,createMaxNum:10,enemy:{tempNo:113,ai:sourceEnemyAi,dropTable:sourceDropTable}},
+  {enemyId:123,size:0,createMaxNum:10,enemy:{tempNo:114,ai:sourceEnemyAi,dropTable:sourceDropTable}},
+  {enemyId:123,size:0,createMaxNum:10,enemy:{tempNo:114,ai:sourceEnemyAi,dropTable:sourceDropTable}}
 ];
 
 const layout=buildEnemyEntryLayout(team);
@@ -96,7 +103,7 @@ assert.deepEqual(result.context.sides[0].entries[0].getitem,[-1,-1,-1]);
 assert.equal(result.context.sides[0].entries[5].characterId,'pet-1');
 assert.equal(result.context.sides[1].entries[5].enemyId,120);
 assert.equal(result.context.sides[1].entries[5].sourceEnemyAi?.format,'stoneage-enemy-ai-source-v1');
-assert.ok(Array.isArray(result.context.sides[1].entries[5].sourceDropTable));
+assert.deepEqual(result.context.sides[1].entries[5].sourceDropTable,sourceDropTable);
 assert.equal(result.context.sides[1].entries[5].sourceDropRollsResolved,false);
 assert.equal(result.context.sides[1].entries[5].escape,0);
 assert.deepEqual(result.context.sides[1].entries[5].getitem,[-1,-1,-1]);
