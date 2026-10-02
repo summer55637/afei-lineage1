@@ -441,6 +441,24 @@ if (selected[4000]) {
       )
     }))
     .filter(row => row.reachableFromEntryComponent);
+  const alternateNpcEntryComponentWarps = npcWarpSources
+    .filter(row =>
+      row.from[0] === 4000 &&
+      row.to[0] !== 200 &&
+      walkableAt(map, row.from[1], row.from[2], mapset)
+    )
+    .map(row => ({
+      sourceFile: row.sourceFile,
+      sourceLine: row.sourceLine,
+      from: row.from,
+      to: row.to,
+      originComponent: components.component[row.from[2] * map.width + row.from[1]],
+      reachableFromEntryComponent: startComponents.includes(
+        components.component[row.from[2] * map.width + row.from[1]
+        ]
+      )
+    }))
+    .filter(row => row.reachableFromEntryComponent);
   result.checks.floor4000 = {
     map: summarizeCandidate(selected[4000]),
     missingMapsetImageIds: mapsetMissingImageIds(map),
@@ -452,6 +470,7 @@ if (selected[4000]) {
     reachableTargets: reachable.reached,
     allPortalOriginsMovementReachable: reachable.allTargetsReached,
     alternateEntryComponentWarps,
+    alternateNpcEntryComponentWarps,
     movementUsesLegalDiagonalRule: true
   };
 } else {
