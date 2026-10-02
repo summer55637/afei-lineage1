@@ -11,7 +11,8 @@
       "org.libsdl.app"
     ],
     "sourceFilesScanned": 45,
-    "classCount": 24,
+    "classCount": 45,
+    "includedClassPolicy": "all source classes under the declared package prefixes",
     "focusedClasses": [
       "AssetsReleaser",
       "CheckUpdateTask",
@@ -38,7 +39,8 @@
       "methods": [
         {
           "name": "ReleasePathFile",
-          "callSites": 20,
+          "callSites": 25,
+          "uniqueCallIdentifierCount": 20,
           "calls": [
             "File",
             "FileOutputStream",
@@ -65,6 +67,7 @@
         {
           "name": "ReleaseFontFile",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "ReleasePathFile"
           ]
@@ -72,6 +75,7 @@
         {
           "name": "ReleaseSkinFile",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "ReleasePathFile"
           ]
@@ -79,6 +83,7 @@
         {
           "name": "getDiskSize",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "RenderActivity.showErrorMSG",
             "StatFs",
@@ -90,7 +95,8 @@
         },
         {
           "name": "getStoragePathPrivate",
-          "callSites": 11,
+          "callSites": 14,
+          "uniqueCallIdentifierCount": 11,
           "calls": [
             "Environment.getExternalStorageState",
             "GetConfig",
@@ -108,11 +114,13 @@
         {
           "name": "getStoragePath",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "SetConfig",
           "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "StoneageApplication.getActivity",
             "edit",
@@ -124,6 +132,7 @@
         {
           "name": "GetConfig",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "StoneageApplication.getActivity",
             "getSharedPreferences",
@@ -148,16 +157,19 @@
         {
           "name": "commandCompleted",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "commandTerminated",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "Command",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "createHandler"
           ]
@@ -165,6 +177,7 @@
         {
           "name": "Command",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "createHandler"
           ]
@@ -172,6 +185,7 @@
         {
           "name": "Command",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "createHandler"
           ]
@@ -179,6 +193,7 @@
         {
           "name": "commandOutput",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "RootShell.log"
           ]
@@ -186,6 +201,7 @@
         {
           "name": "commandFinished",
           "callSites": 8,
+          "uniqueCallIdentifierCount": 8,
           "calls": [
             "Bundle",
             "RootShell.log",
@@ -199,7 +215,8 @@
         },
         {
           "name": "createHandler",
-          "callSites": 3,
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "CommandHandler",
             "Looper.myLooper",
@@ -209,6 +226,7 @@
         {
           "name": "finish",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "commandFinished"
@@ -217,13 +235,15 @@
         {
           "name": "finishCommand",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "notifyAll"
           ]
         },
         {
           "name": "getCommand",
-          "callSites": 5,
+          "callSites": 9,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "StringBuilder",
             "getPath",
@@ -235,31 +255,37 @@
         {
           "name": "isExecuting",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isHandlerEnabled",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isFinished",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getExitCode",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "setExitCode",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startExecution",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "ExecutionMonitor",
             "executionMonitor.setPriority",
@@ -269,6 +295,7 @@
         {
           "name": "terminate",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "terminated"
@@ -277,6 +304,7 @@
         {
           "name": "terminate",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "RootShell.log",
             "Shell.closeAll",
@@ -286,6 +314,7 @@
         {
           "name": "terminated",
           "callSites": 10,
+          "uniqueCallIdentifierCount": 10,
           "calls": [
             "Bundle",
             "RootShell.log",
@@ -302,6 +331,7 @@
         {
           "name": "output",
           "callSites": 7,
+          "uniqueCallIdentifierCount": 7,
           "calls": [
             "Bundle",
             "bundle.putInt",
@@ -315,16 +345,19 @@
         {
           "name": "resetCommand",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "ExecutionMonitor",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "run",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "Command.this.terminate",
             "RootShell.log",
@@ -334,11 +367,13 @@
         {
           "name": "CommandHandler",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "handleMessage",
-          "callSites": 6,
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "command.commandOutput",
             "command2.commandCompleted",
@@ -359,13 +394,15 @@
         {
           "name": "Decompress",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "_dirChecker"
           ]
         },
         {
           "name": "UnZipAssets",
-          "callSites": 22,
+          "callSites": 27,
+          "uniqueCallIdentifierCount": 22,
           "calls": [
             "File",
             "FileOutputStream",
@@ -393,7 +430,8 @@
         },
         {
           "name": "unzip",
-          "callSites": 21,
+          "callSites": 26,
+          "uniqueCallIdentifierCount": 21,
           "calls": [
             "Date",
             "File",
@@ -421,6 +459,7 @@
         {
           "name": "_dirChecker",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "File",
             "file.isDirectory",
@@ -430,6 +469,7 @@
         {
           "name": "ProcessZip",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "AssetsReleaser.getStoragePath",
             "Integer.toString",
@@ -438,7 +478,8 @@
         },
         {
           "name": "UnZipFile",
-          "callSites": 3,
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "AssetsReleaser.getStoragePath",
             "Decompress",
@@ -463,31 +504,37 @@
         {
           "name": "autoLoginGame",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "checkOrder",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "loginGame",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "logout",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startPayNative",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "OpenUrl",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "Intent",
             "StoneageApplication.getActivity",
@@ -500,11 +547,13 @@
         {
           "name": "getAppVersion",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getUUID",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "UUID.randomUUID",
             "replace",
@@ -513,7 +562,8 @@
         },
         {
           "name": "copyFileToDir",
-          "callSites": 10,
+          "callSites": 11,
+          "uniqueCallIdentifierCount": 10,
           "calls": [
             "File",
             "FileInputStream",
@@ -529,7 +579,8 @@
         },
         {
           "name": "installApk",
-          "callSites": 16,
+          "callSites": 20,
+          "uniqueCallIdentifierCount": 16,
           "calls": [
             "Environment.getExternalStorageDirectory",
             "File",
@@ -551,7 +602,8 @@
         },
         {
           "name": "getMac",
-          "callSites": 20,
+          "callSites": 21,
+          "uniqueCallIdentifierCount": 20,
           "calls": [
             "Byte.valueOf",
             "InputStreamReader",
@@ -578,6 +630,7 @@
         {
           "name": "loadFileAsString",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "FileReader",
             "fileReader.close",
@@ -586,7 +639,8 @@
         },
         {
           "name": "loadReaderAsString",
-          "callSites": 4,
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "StringBuilder",
             "reader.read",
@@ -605,6 +659,7 @@
         {
           "name": "joinQQGroup",
           "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "Intent",
             "StoneageApplication.getActivity",
@@ -624,21 +679,25 @@
         {
           "name": "drawable",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "layout",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "string",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "R",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         }
       ]
@@ -651,7 +710,8 @@
       "methods": [
         {
           "name": "onCreate",
-          "callSites": 11,
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 11,
           "calls": [
             "AssetsReleaser.ReleaseFontFile",
             "AssetsReleaser.ReleaseSkinFile",
@@ -669,6 +729,7 @@
         {
           "name": "onPause",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "StatusTools.readStatus"
           ]
@@ -676,6 +737,7 @@
         {
           "name": "onResume",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "StatusTools.endReadStatus"
           ]
@@ -683,16 +745,19 @@
         {
           "name": "getLibraries",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isRootAvailable",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "checkMemory",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "ActivityManager.MemoryInfo",
             "activityManager.getMemoryInfo",
@@ -703,6 +768,7 @@
         {
           "name": "showErrorMSG",
           "callSites": 11,
+          "uniqueCallIdentifierCount": 11,
           "calls": [
             "AlertDialog.Builder",
             "DialogInterface.OnClickListener",
@@ -720,6 +786,7 @@
         {
           "name": "onClick",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "System.exit"
           ]
@@ -727,6 +794,7 @@
         {
           "name": "showErrorMSG",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         }
       ]
@@ -740,6 +808,7 @@
         {
           "name": "RootDeniedException",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         }
       ]
@@ -753,6 +822,7 @@
         {
           "name": "closeAllShells",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "Shell.closeAll"
           ]
@@ -760,11 +830,13 @@
         {
           "name": "closeCustomShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "closeShell",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "Shell.closeRootShell"
           ]
@@ -772,11 +844,13 @@
         {
           "name": "exists",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "exists",
-          "callSites": 22,
+          "callSites": 31,
+          "uniqueCallIdentifierCount": 22,
           "calls": [
             "ArrayList",
             "Command",
@@ -805,6 +879,7 @@
         {
           "name": "commandOutput",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "arrayList.add"
@@ -813,11 +888,13 @@
         {
           "name": "findBinary",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "findBinary",
-          "callSites": 17,
+          "callSites": 25,
+          "uniqueCallIdentifierCount": 17,
           "calls": [
             "ArrayList",
             "Collections.reverse",
@@ -840,7 +917,8 @@
         },
         {
           "name": "commandOutput",
-          "callSites": 3,
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "RootShell.log",
             "arrayList.add",
@@ -850,11 +928,13 @@
         {
           "name": "getCustomShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getPath",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "Arrays.asList",
             "System.getenv",
@@ -864,6 +944,7 @@
         {
           "name": "getShell",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Shell.startRootShell",
             "Shell.startShell"
@@ -872,31 +953,37 @@
         {
           "name": "getShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isAccessGiven",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isAccessGiven",
-          "callSites": 14,
+          "callSites": 17,
+          "uniqueCallIdentifierCount": 14,
           "calls": [
             "Arrays.asList",
             "Command",
@@ -917,6 +1004,7 @@
         {
           "name": "commandOutput",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "Arrays.asList",
             "hashSet.addAll",
@@ -926,6 +1014,7 @@
         {
           "name": "isBusyboxAvailable",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "findBinary",
             "size"
@@ -934,6 +1023,7 @@
         {
           "name": "isRootAvailable",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "findBinary",
             "size"
@@ -942,26 +1032,31 @@
         {
           "name": "log",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "log",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "log",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "islog",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "log",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "Log.d",
             "Log.e",
@@ -973,7 +1068,8 @@
         },
         {
           "name": "commandWait",
-          "callSites": 16,
+          "callSites": 30,
+          "uniqueCallIdentifierCount": 16,
           "calls": [
             "Exception",
             "Thread.currentThread",
@@ -1003,7 +1099,8 @@
       "methods": [
         {
           "name": "run",
-          "callSites": 17,
+          "callSites": 26,
+          "uniqueCallIdentifierCount": 17,
           "calls": [
             "RootShell.log",
             "Shell.access$308",
@@ -1026,7 +1123,8 @@
         },
         {
           "name": "run",
-          "callSites": 27,
+          "callSites": 41,
+          "uniqueCallIdentifierCount": 27,
           "calls": [
             "Integer.parseInt",
             "RootShell.log",
@@ -1060,31 +1158,37 @@
         {
           "name": "access$1208",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "access$308",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "access$508",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "access$908",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getValue",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "Shell",
-          "callSites": 31,
+          "callSites": 51,
+          "uniqueCallIdentifierCount": 31,
           "calls": [
             "BufferedReader",
             "InputStreamReader",
@@ -1122,6 +1226,7 @@
         {
           "name": "add",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "IllegalStateException",
             "command.resetCommand",
@@ -1131,6 +1236,7 @@
         {
           "name": "useCWD",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "Command",
             "add",
@@ -1139,7 +1245,8 @@
         },
         {
           "name": "cleanCommands",
-          "callSites": 4,
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "Math.abs",
             "RootShell.log",
@@ -1150,6 +1257,7 @@
         {
           "name": "closeQuietly",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "input.close"
           ]
@@ -1157,13 +1265,15 @@
         {
           "name": "closeQuietly",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "output.close"
           ]
         },
         {
           "name": "close",
-          "callSites": 2,
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "notifyThreads"
@@ -1172,6 +1282,7 @@
         {
           "name": "closeCustomShell",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "shell2.close"
@@ -1180,6 +1291,7 @@
         {
           "name": "closeRootShell",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "shell2.close"
@@ -1188,6 +1300,7 @@
         {
           "name": "closeShell",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "shell2.close"
@@ -1196,6 +1309,7 @@
         {
           "name": "closeAll",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "RootShell.log",
             "closeCustomShell",
@@ -1206,6 +1320,7 @@
         {
           "name": "getCommandQueuePosition",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.commands.indexOf"
           ]
@@ -1213,6 +1328,7 @@
         {
           "name": "getCommandQueuePositionString",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "getCommandQueuePosition",
             "this.commands.size"
@@ -1221,11 +1337,13 @@
         {
           "name": "getOpenShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getSuVersion",
-          "callSites": 16,
+          "callSites": 20,
+          "uniqueCallIdentifierCount": 16,
           "calls": [
             "ArrayList",
             "BufferedReader",
@@ -1248,26 +1366,31 @@
         {
           "name": "isShellOpen",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isCustomShellOpen",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isRootShellOpen",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isAnyShellOpen",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isSELinuxEnforcing",
-          "callSites": 7,
+          "callSites": 9,
+          "uniqueCallIdentifierCount": 7,
           "calls": [
             "Boolean.valueOf",
             "File",
@@ -1281,6 +1404,7 @@
         {
           "name": "notifyThreads",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "Shell.this.commands.notifyAll",
             "Thread",
@@ -1291,6 +1415,7 @@
         {
           "name": "Thread",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Shell.this.commands.notifyAll",
             "run"
@@ -1299,6 +1424,7 @@
         {
           "name": "run",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "Shell.this.commands.notifyAll"
           ]
@@ -1306,6 +1432,7 @@
         {
           "name": "processErrors",
           "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "RootShell.log",
             "command.output",
@@ -1317,6 +1444,7 @@
         {
           "name": "runRootCommand",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "add",
             "startRootShell"
@@ -1325,6 +1453,7 @@
         {
           "name": "runCommand",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "add",
             "startShell"
@@ -1333,21 +1462,25 @@
         {
           "name": "startRootShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startRootShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startRootShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startRootShell",
-          "callSites": 3,
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "RootShell.log",
             "Shell",
@@ -1357,11 +1490,13 @@
         {
           "name": "startCustomShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startCustomShell",
-          "callSites": 2,
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "RootShell.log",
             "Shell"
@@ -1370,11 +1505,13 @@
         {
           "name": "startShell",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "startShell",
-          "callSites": 3,
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "IOException",
             "RootShell.log",
@@ -1383,7 +1520,8 @@
         },
         {
           "name": "switchRootShellContext",
-          "callSites": 3,
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "RootShell.log",
             "closeRootShell",
@@ -1393,11 +1531,13 @@
         {
           "name": "Worker",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "run",
-          "callSites": 7,
+          "callSites": 9,
+          "uniqueCallIdentifierCount": 7,
           "calls": [
             "EOFException",
             "e.getMessage",
@@ -1410,7 +1550,8 @@
         },
         {
           "name": "setShellOom",
-          "callSites": 8,
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 8,
           "calls": [
             "cls.getDeclaredField",
             "declaredField.get",
@@ -1432,7 +1573,8 @@
       "methods": [
         {
           "name": "onReceive",
-          "callSites": 2,
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "JNILibrary.refreshBatteryInfo",
             "intent.getIntExtra"
@@ -1441,11 +1583,13 @@
         {
           "name": "onSignalStrengthsChanged",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "readStatus",
-          "callSites": 10,
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 10,
           "calls": [
             "IntentFilter",
             "JNILibrary.refreshBatteryInfo",
@@ -1462,6 +1606,7 @@
         {
           "name": "endReadStatus",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "StoneageApplication.getAppConext",
             "appConext.unregisterReceiver",
@@ -1470,7 +1615,8 @@
         },
         {
           "name": "__getNetworkType",
-          "callSites": 5,
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "StoneageApplication.getAppConext",
             "activeNetworkInfo.getType",
@@ -1482,21 +1628,25 @@
         {
           "name": "checkIsReCharging",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getCurrentBattery",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getNetworkType",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getSignalStrengths",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         }
       ]
@@ -1510,16 +1660,19 @@
         {
           "name": "getAppConext",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getActivity",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "onCreate",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "__getAppVersion",
             "getApplicationContext"
@@ -1528,16 +1681,19 @@
         {
           "name": "SetActivity",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getAppVersion",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "__getAppVersion",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "TextUtils.isEmpty",
             "context.getPackageManager",
@@ -1555,7 +1711,8 @@
       "methods": [
         {
           "name": "SystemBarTintManager",
-          "callSites": 10,
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 10,
           "calls": [
             "SystemBarConfig",
             "activity.getWindow",
@@ -1572,6 +1729,7 @@
         {
           "name": "setStatusBarTintEnabled",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mStatusBarTintView.setVisibility"
           ]
@@ -1579,6 +1737,7 @@
         {
           "name": "setNavigationBarTintEnabled",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mNavBarTintView.setVisibility"
           ]
@@ -1586,6 +1745,7 @@
         {
           "name": "setTintColor",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "setNavigationBarTintColor",
             "setStatusBarTintColor"
@@ -1594,6 +1754,7 @@
         {
           "name": "setTintResource",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "setNavigationBarTintResource",
             "setStatusBarTintResource"
@@ -1602,6 +1763,7 @@
         {
           "name": "setTintDrawable",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "setNavigationBarTintDrawable",
             "setStatusBarTintDrawable"
@@ -1610,6 +1772,7 @@
         {
           "name": "setTintAlpha",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "setNavigationBarAlpha",
             "setStatusBarAlpha"
@@ -1618,6 +1781,7 @@
         {
           "name": "setStatusBarTintColor",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mStatusBarTintView.setBackgroundColor"
           ]
@@ -1625,6 +1789,7 @@
         {
           "name": "setStatusBarTintResource",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mStatusBarTintView.setBackgroundResource"
           ]
@@ -1632,6 +1797,7 @@
         {
           "name": "setStatusBarTintDrawable",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mStatusBarTintView.setBackgroundDrawable"
           ]
@@ -1639,6 +1805,7 @@
         {
           "name": "setStatusBarAlpha",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mStatusBarTintView.setAlpha"
           ]
@@ -1646,6 +1813,7 @@
         {
           "name": "setNavigationBarTintColor",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mNavBarTintView.setBackgroundColor"
           ]
@@ -1653,6 +1821,7 @@
         {
           "name": "setNavigationBarTintResource",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mNavBarTintView.setBackgroundResource"
           ]
@@ -1660,6 +1829,7 @@
         {
           "name": "setNavigationBarTintDrawable",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mNavBarTintView.setBackgroundDrawable"
           ]
@@ -1667,6 +1837,7 @@
         {
           "name": "setNavigationBarAlpha",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "this.mNavBarTintView.setAlpha"
           ]
@@ -1674,21 +1845,25 @@
         {
           "name": "getConfig",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isStatusBarTintEnabled",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isNavBarTintEnabled",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "setupStatusBarView",
           "callSites": 9,
+          "uniqueCallIdentifierCount": 9,
           "calls": [
             "FrameLayout.LayoutParams",
             "View",
@@ -1703,7 +1878,8 @@
         },
         {
           "name": "setupNavBarView",
-          "callSites": 9,
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 9,
           "calls": [
             "FrameLayout.LayoutParams",
             "View",
@@ -1719,6 +1895,7 @@
         {
           "name": "SystemBarConfig",
           "callSites": 7,
+          "uniqueCallIdentifierCount": 7,
           "calls": [
             "activity.getResources",
             "getActionBarHeight",
@@ -1732,6 +1909,7 @@
         {
           "name": "getActionBarHeight",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "TypedValue",
             "TypedValue.complexToDimensionPixelSize",
@@ -1744,6 +1922,7 @@
         {
           "name": "getNavigationBarHeight",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "context.getResources",
             "getInternalDimensionSize",
@@ -1753,6 +1932,7 @@
         {
           "name": "getNavigationBarWidth",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "context.getResources",
             "getInternalDimensionSize",
@@ -1761,7 +1941,8 @@
         },
         {
           "name": "hasNavBar",
-          "callSites": 6,
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "ViewConfiguration.get",
             "context.getResources",
@@ -1774,6 +1955,7 @@
         {
           "name": "getInternalDimensionSize",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "res.getDimensionPixelSize",
             "res.getIdentifier"
@@ -1781,7 +1963,8 @@
         },
         {
           "name": "getSmallestWidthDp",
-          "callSites": 6,
+          "callSites": 8,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "DisplayMetrics",
             "Math.min",
@@ -1794,41 +1977,49 @@
         {
           "name": "isNavigationAtBottom",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getStatusBarHeight",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getActionBarHeight",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "hasNavigtionBar",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getNavigationBarHeight",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getNavigationBarWidth",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getPixelInsetTop",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getPixelInsetBottom",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "isNavigationAtBottom"
           ]
@@ -1836,6 +2027,7 @@
         {
           "name": "getPixelInsetRight",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "isNavigationAtBottom"
           ]
@@ -1851,6 +2043,7 @@
         {
           "name": "getVersionCode",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "getPackageInfo",
             "mContext.getPackageManager",
@@ -1860,6 +2053,7 @@
         {
           "name": "getVersionName",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "getPackageInfo",
             "mContext.getPackageManager",
@@ -1877,6 +2071,7 @@
         {
           "name": "onPreExecute",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "ProgressDialog",
             "progressDialog.setMessage",
@@ -1887,6 +2082,7 @@
         {
           "name": "onPostExecute",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "TextUtils.isEmpty",
             "parseJson",
@@ -1896,7 +2092,8 @@
         },
         {
           "name": "parseJson",
-          "callSites": 10,
+          "callSites": 11,
+          "uniqueCallIdentifierCount": 10,
           "calls": [
             "AppUtils.getVersionCode",
             "JSONObject",
@@ -1913,13 +2110,15 @@
         {
           "name": "showDialog",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "UpdateDialog.show"
           ]
         },
         {
           "name": "showNotification",
-          "callSites": 15,
+          "callSites": 16,
+          "uniqueCallIdentifierCount": 15,
           "calls": [
             "Intent",
             "NotificationCompat.Builder",
@@ -1941,6 +2140,7 @@
         {
           "name": "doInBackground",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "HttpUtils.get"
           ]
@@ -1963,11 +2163,13 @@
         {
           "name": "DownloadService",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "onHandleIntent",
-          "callSites": 32,
+          "callSites": 37,
+          "uniqueCallIdentifierCount": 32,
           "calls": [
             "File",
             "FileOutputStream",
@@ -2006,6 +2208,7 @@
         {
           "name": "updateProgress",
           "callSites": 9,
+          "uniqueCallIdentifierCount": 9,
           "calls": [
             "Integer.valueOf",
             "Intent",
@@ -2021,6 +2224,7 @@
         {
           "name": "installAPk",
           "callSites": 8,
+          "uniqueCallIdentifierCount": 8,
           "calls": [
             "Intent",
             "ProcessBuilder",
@@ -2042,7 +2246,8 @@
       "methods": [
         {
           "name": "get",
-          "callSites": 15,
+          "callSites": 23,
+          "uniqueCallIdentifierCount": 15,
           "calls": [
             "BufferedReader",
             "InputStreamReader",
@@ -2072,11 +2277,13 @@
         {
           "name": "StorageUtils",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getCacheDirectory",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "Environment.getExternalStorageState",
             "Log.w",
@@ -2088,7 +2295,8 @@
         },
         {
           "name": "getExternalCacheDir",
-          "callSites": 8,
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 8,
           "calls": [
             "Environment.getExternalStorageDirectory",
             "File",
@@ -2103,6 +2311,7 @@
         {
           "name": "hasExternalStoragePermission",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "context.checkCallingOrSelfPermission"
           ]
@@ -2118,6 +2327,7 @@
         {
           "name": "checkForDialog",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "CheckUpdateTask",
             "Log.e",
@@ -2127,6 +2337,7 @@
         {
           "name": "checkForNotification",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "CheckUpdateTask",
             "Log.e",
@@ -2143,7 +2354,8 @@
       "methods": [
         {
           "name": "show",
-          "callSites": 12,
+          "callSites": 14,
+          "uniqueCallIdentifierCount": 12,
           "calls": [
             "AlertDialog.Builder",
             "DialogInterface.OnClickListener",
@@ -2162,6 +2374,7 @@
         {
           "name": "onClick",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "UpdateDialog.goToDownload"
           ]
@@ -2169,11 +2382,13 @@
         {
           "name": "onClick",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isContextValid",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "isFinishing"
           ]
@@ -2181,11 +2396,1266 @@
         {
           "name": "goToDownload",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "Intent",
             "context.getApplicationContext",
             "context.startService",
             "intent.putExtra"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "DummyEdit",
+      "sourcePath": "org/libsdl/app/DummyEdit.java",
+      "methodCount": 5,
+      "methods": [
+        {
+          "name": "onCheckIsTextEditor",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "DummyEdit",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "setFocusable",
+            "setFocusableInTouchMode",
+            "setOnKeyListener"
+          ]
+        },
+        {
+          "name": "onKey",
+          "callSites": 8,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "SDLActivity.isTextInputEvent",
+            "SDLActivity.onNativeKeyDown",
+            "SDLActivity.onNativeKeyUp",
+            "String.valueOf",
+            "event.getAction",
+            "event.getUnicodeChar",
+            "this.ic.commitText"
+          ]
+        },
+        {
+          "name": "onKeyPreIme",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "SDLActivity.mTextEdit.getVisibility",
+            "SDLActivity.onNativeKeyboardFocusLost",
+            "event.getAction"
+          ]
+        },
+        {
+          "name": "onCreateInputConnection",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "SDLInputConnection"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "HIDDevice",
+      "sourcePath": "org/libsdl/app/HIDDevice.java",
+      "methodCount": 0,
+      "methods": []
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "HIDDeviceBLESteamController",
+      "sourcePath": "org/libsdl/app/HIDDeviceBLESteamController.java",
+      "methodCount": 53,
+      "methods": [
+        {
+          "name": "close",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getManufacturerName",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getProductId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getProductName",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getSerialNumber",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getVendorId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getVersion",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "onDescriptorRead",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "onMtuChanged",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "onReadRemoteRssi",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "onReliableWriteCompleted",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "open",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "GattOperation",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "GattOperation",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "run",
+          "callSites": 20,
+          "uniqueCallIdentifierCount": 13,
+          "calls": [
+            "Log.e",
+            "UUID.fromString",
+            "characteristic.getDescriptor",
+            "characteristic.getProperties",
+            "characteristic2.setValue",
+            "descriptor.setValue",
+            "getCharacteristic",
+            "this.mGatt.readCharacteristic",
+            "this.mGatt.setCharacteristicNotification",
+            "this.mGatt.writeCharacteristic",
+            "this.mGatt.writeDescriptor",
+            "this.mOp.ordinal",
+            "this.mUuid.toString"
+          ]
+        },
+        {
+          "name": "finish",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getCharacteristic",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.mGatt.getService"
+          ]
+        },
+        {
+          "name": "readCharacteristic",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "GattOperation"
+          ]
+        },
+        {
+          "name": "writeCharacteristic",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "GattOperation"
+          ]
+        },
+        {
+          "name": "enableNotification",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "GattOperation"
+          ]
+        },
+        {
+          "name": "HIDDeviceBLESteamController",
+          "callSites": 9,
+          "uniqueCallIdentifierCount": 9,
+          "calls": [
+            "Runnable",
+            "getIdentifier",
+            "getPackageManager",
+            "hasSystemFeature",
+            "manager.getDeviceIDForIdentifier",
+            "run",
+            "this.checkConnectionForChromebookIssue",
+            "this.mHandler.postDelayed",
+            "this.mManager.getContext"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.checkConnectionForChromebookIssue"
+          ]
+        },
+        {
+          "name": "getIdentifier",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "String.format",
+            "this.mDevice.getAddress"
+          ]
+        },
+        {
+          "name": "getGatt",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "connectGatt",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.mManager.getContext"
+          ]
+        },
+        {
+          "name": "connectGatt",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getConnectionState",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "context.getSystemService",
+            "this.mManager.getContext"
+          ]
+        },
+        {
+          "name": "reconnect",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "connectGatt",
+            "getConnectionState",
+            "this.mGatt.disconnect"
+          ]
+        },
+        {
+          "name": "checkConnectionForChromebookIssue",
+          "callSites": 20,
+          "uniqueCallIdentifierCount": 11,
+          "calls": [
+            "Log.v",
+            "Runnable",
+            "connectGatt",
+            "getConnectionState",
+            "isRegistered",
+            "probeService",
+            "run",
+            "size",
+            "this.mGatt.disconnect",
+            "this.mGatt.getServices",
+            "this.mHandler.postDelayed"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.checkConnectionForChromebookIssue"
+          ]
+        },
+        {
+          "name": "isRegistered",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "setRegistered",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "probeService",
+          "callSites": 20,
+          "uniqueCallIdentifierCount": 14,
+          "calls": [
+            "Log.e",
+            "Log.v",
+            "UUID.fromString",
+            "bluetoothGattCharacteristic.getDescriptor",
+            "bluetoothGattCharacteristic.getUuid",
+            "bluetoothGattService.getCharacteristics",
+            "bluetoothGattService.getUuid",
+            "connectGatt",
+            "enableNotification",
+            "equals",
+            "isRegistered",
+            "size",
+            "this.mGatt.disconnect",
+            "this.mGatt.getServices"
+          ]
+        },
+        {
+          "name": "finishCurrentGattOperation",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "executeNextGattOperation",
+            "gattOperation.finish",
+            "this.mOperations.addFirst"
+          ]
+        },
+        {
+          "name": "executeNextGattOperation",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "HIDDeviceBLESteamController.this.mCurrentOperation.run",
+            "Log.e",
+            "Runnable",
+            "run",
+            "this.mHandler.post",
+            "this.mOperations.isEmpty",
+            "this.mOperations.removeFirst"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "Log.e"
+          ]
+        },
+        {
+          "name": "queueGattOperation",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "executeNextGattOperation",
+            "this.mOperations.add"
+          ]
+        },
+        {
+          "name": "enableNotification",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "queueGattOperation"
+          ]
+        },
+        {
+          "name": "writeCharacteristic",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "queueGattOperation"
+          ]
+        },
+        {
+          "name": "readCharacteristic",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "queueGattOperation"
+          ]
+        },
+        {
+          "name": "onConnectionStateChange",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "HIDDeviceBLESteamController.this.mGatt.discoverServices",
+            "Runnable",
+            "isRegistered",
+            "run",
+            "this.mHandler.post"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "HIDDeviceBLESteamController.this.mGatt.discoverServices"
+          ]
+        },
+        {
+          "name": "onServicesDiscovered",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "Log.v",
+            "connectGatt",
+            "gatt.disconnect",
+            "gatt.getServices",
+            "probeService",
+            "size"
+          ]
+        },
+        {
+          "name": "onCharacteristicRead",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "characteristic.getUuid",
+            "characteristic.getValue",
+            "equals",
+            "finishCurrentGattOperation",
+            "getId",
+            "this.mManager.HIDDeviceFeatureReport"
+          ]
+        },
+        {
+          "name": "onCharacteristicWrite",
+          "callSites": 16,
+          "uniqueCallIdentifierCount": 15,
+          "calls": [
+            "Log.v",
+            "characteristic.getUuid",
+            "equals",
+            "finishCurrentGattOperation",
+            "getId",
+            "getIdentifier",
+            "getManufacturerName",
+            "getProductId",
+            "getProductName",
+            "getSerialNumber",
+            "getVendorId",
+            "getVersion",
+            "isRegistered",
+            "setRegistered",
+            "this.mManager.HIDDeviceConnected"
+          ]
+        },
+        {
+          "name": "onCharacteristicChanged",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "characteristic.getUuid",
+            "characteristic.getValue",
+            "equals",
+            "getId",
+            "this.mManager.HIDDeviceInputReport"
+          ]
+        },
+        {
+          "name": "onDescriptorWrite",
+          "callSites": 9,
+          "uniqueCallIdentifierCount": 9,
+          "calls": [
+            "Log.v",
+            "characteristic.setValue",
+            "characteristic2.getService",
+            "characteristic2.getUuid",
+            "descriptor.getCharacteristic",
+            "equals",
+            "finishCurrentGattOperation",
+            "gatt.writeCharacteristic",
+            "getCharacteristic"
+          ]
+        },
+        {
+          "name": "getId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "sendFeatureReport",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "Arrays.copyOfRange",
+            "Log.e",
+            "isRegistered",
+            "probeService",
+            "writeCharacteristic"
+          ]
+        },
+        {
+          "name": "sendOutputReport",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "Log.e",
+            "isRegistered",
+            "probeService",
+            "writeCharacteristic"
+          ]
+        },
+        {
+          "name": "getFeatureReport",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "Log.e",
+            "isRegistered",
+            "probeService",
+            "readCharacteristic"
+          ]
+        },
+        {
+          "name": "setFrozen",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "shutdown",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "bluetoothGatt.close",
+            "bluetoothGatt.disconnect",
+            "close",
+            "this.mOperations.clear"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "HIDDeviceManager",
+      "sourcePath": "org/libsdl/app/HIDDeviceManager.java",
+      "methodCount": 34,
+      "methods": [
+        {
+          "name": "onReceive",
+          "callSites": 11,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "HIDDeviceManager.this.handleUsbDeviceAttached",
+            "HIDDeviceManager.this.handleUsbDeviceDetached",
+            "HIDDeviceManager.this.handleUsbDevicePermission",
+            "action.equals",
+            "intent.getAction",
+            "intent.getBooleanExtra",
+            "intent.getParcelableExtra"
+          ]
+        },
+        {
+          "name": "onReceive",
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "HIDDeviceManager.this.connectBluetoothDevice",
+            "HIDDeviceManager.this.disconnectBluetoothDevice",
+            "HIDDeviceManager.this.isSteamController",
+            "Log.d",
+            "action.equals",
+            "intent.getAction",
+            "intent.getParcelableExtra"
+          ]
+        },
+        {
+          "name": "acquire",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "HIDDeviceManager"
+          ]
+        },
+        {
+          "name": "release",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "hIDDeviceManager.close"
+          ]
+        },
+        {
+          "name": "HIDDeviceManager",
+          "callSites": 20,
+          "uniqueCallIdentifierCount": 20,
+          "calls": [
+            "AlertDialog.Builder",
+            "DialogInterface.OnClickListener",
+            "HIDDeviceRegisterCallback",
+            "Log.w",
+            "SDL.loadLibrary",
+            "builder.setCancelable",
+            "builder.setMessage",
+            "builder.setNegativeButton",
+            "builder.setTitle",
+            "builder.show",
+            "finish",
+            "hasSystemFeature",
+            "initializeBluetooth",
+            "initializeUSB",
+            "onClick",
+            "th.getMessage",
+            "th.toString",
+            "this.mContext.getPackageManager",
+            "this.mContext.getSharedPreferences",
+            "this.mSharedPreferences.getInt"
+          ]
+        },
+        {
+          "name": "onClick",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "finish"
+          ]
+        },
+        {
+          "name": "getContext",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getDeviceIDForIdentifier",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "editorEdit.commit",
+            "editorEdit.putInt",
+            "this.mSharedPreferences.edit",
+            "this.mSharedPreferences.getInt"
+          ]
+        },
+        {
+          "name": "initializeUSB",
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 10,
+          "calls": [
+            "IntentFilter",
+            "handleUsbDeviceAttached",
+            "intentFilter.addAction",
+            "it.hasNext",
+            "it.next",
+            "iterator",
+            "this.mContext.getSystemService",
+            "this.mContext.registerReceiver",
+            "this.mUsbManager.getDeviceList",
+            "values"
+          ]
+        },
+        {
+          "name": "getUSBManager",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "shutdownUSB",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.mContext.unregisterReceiver"
+          ]
+        },
+        {
+          "name": "isHIDDeviceUSB",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "isHIDDeviceInterface",
+            "usbDevice.getInterfaceCount"
+          ]
+        },
+        {
+          "name": "isHIDDeviceInterface",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "isXbox360Controller",
+            "isXboxOneController",
+            "usbDevice.getInterface",
+            "usbInterface.getInterfaceClass"
+          ]
+        },
+        {
+          "name": "isXbox360Controller",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "usbDevice.getVendorId",
+            "usbInterface.getInterfaceClass",
+            "usbInterface.getInterfaceProtocol",
+            "usbInterface.getInterfaceSubclass"
+          ]
+        },
+        {
+          "name": "isXboxOneController",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "usbDevice.getVendorId",
+            "usbInterface.getInterfaceClass",
+            "usbInterface.getInterfaceProtocol",
+            "usbInterface.getInterfaceSubclass"
+          ]
+        },
+        {
+          "name": "handleUsbDeviceAttached",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "connectHIDDeviceUSB",
+            "isHIDDeviceUSB"
+          ]
+        },
+        {
+          "name": "handleUsbDeviceDetached",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "Integer.valueOf",
+            "hIDDeviceUSB.getId",
+            "hIDDeviceUSB.shutdown",
+            "this.mDevicesById.remove",
+            "this.mUSBDevices.get",
+            "this.mUSBDevices.remove"
+          ]
+        },
+        {
+          "name": "handleUsbDevicePermission",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "HIDDeviceOpenResult",
+            "hIDDeviceUSB.getId",
+            "hIDDeviceUSB.open",
+            "this.mUSBDevices.get"
+          ]
+        },
+        {
+          "name": "connectHIDDeviceUSB",
+          "callSites": 15,
+          "uniqueCallIdentifierCount": 15,
+          "calls": [
+            "HIDDeviceConnected",
+            "HIDDeviceUSB",
+            "Integer.valueOf",
+            "hIDDeviceUSB.getId",
+            "hIDDeviceUSB.getIdentifier",
+            "hIDDeviceUSB.getManufacturerName",
+            "hIDDeviceUSB.getProductId",
+            "hIDDeviceUSB.getProductName",
+            "hIDDeviceUSB.getSerialNumber",
+            "hIDDeviceUSB.getVendorId",
+            "hIDDeviceUSB.getVersion",
+            "isHIDDeviceInterface",
+            "this.mDevicesById.put",
+            "this.mUSBDevices.put",
+            "usbDevice.getInterfaceCount"
+          ]
+        },
+        {
+          "name": "initializeBluetooth",
+          "callSites": 18,
+          "uniqueCallIdentifierCount": 15,
+          "calls": [
+            "ArrayList",
+            "Handler",
+            "IntentFilter",
+            "Log.d",
+            "Looper.getMainLooper",
+            "adapter.getBondedDevices",
+            "bluetoothManager.getAdapter",
+            "checkPermission",
+            "connectBluetoothDevice",
+            "intentFilter.addAction",
+            "isSteamController",
+            "this.mContext.getPackageManager",
+            "this.mContext.getPackageName",
+            "this.mContext.getSystemService",
+            "this.mContext.registerReceiver"
+          ]
+        },
+        {
+          "name": "shutdownBluetooth",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.mContext.unregisterReceiver"
+          ]
+        },
+        {
+          "name": "chromebookConnectionHandler",
+          "callSites": 18,
+          "uniqueCallIdentifierCount": 17,
+          "calls": [
+            "ArrayList",
+            "Runnable",
+            "arrayList.add",
+            "arrayList.iterator",
+            "arrayList2.add",
+            "arrayList2.iterator",
+            "connectBluetoothDevice",
+            "connectedDevices.contains",
+            "disconnectBluetoothDevice",
+            "it.hasNext",
+            "it.next",
+            "it2.hasNext",
+            "it2.next",
+            "run",
+            "this.mBluetoothManager.getConnectedDevices",
+            "this.mHandler.postDelayed",
+            "this.mLastBluetoothDevices.contains"
+          ]
+        },
+        {
+          "name": "run",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.chromebookConnectionHandler"
+          ]
+        },
+        {
+          "name": "connectBluetoothDevice",
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 9,
+          "calls": [
+            "HIDDeviceBLESteamController",
+            "Integer.valueOf",
+            "Log.v",
+            "hIDDeviceBLESteamController.getId",
+            "reconnect",
+            "this.mBluetoothDevices.containsKey",
+            "this.mBluetoothDevices.get",
+            "this.mBluetoothDevices.put",
+            "this.mDevicesById.put"
+          ]
+        },
+        {
+          "name": "disconnectBluetoothDevice",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "Integer.valueOf",
+            "hIDDeviceBLESteamController.getId",
+            "hIDDeviceBLESteamController.shutdown",
+            "this.mBluetoothDevices.get",
+            "this.mBluetoothDevices.remove",
+            "this.mDevicesById.remove"
+          ]
+        },
+        {
+          "name": "isSteamController",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "bluetoothDevice.getName",
+            "bluetoothDevice.getType",
+            "equals"
+          ]
+        },
+        {
+          "name": "close",
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 10,
+          "calls": [
+            "HIDDeviceReleaseCallback",
+            "it.hasNext",
+            "it.next",
+            "iterator",
+            "shutdown",
+            "shutdownBluetooth",
+            "shutdownUSB",
+            "this.mBluetoothDevices.clear",
+            "this.mDevicesById.clear",
+            "this.mDevicesById.values"
+          ]
+        },
+        {
+          "name": "setFrozen",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "it.hasNext",
+            "it.next",
+            "iterator",
+            "this.mDevicesById.values"
+          ]
+        },
+        {
+          "name": "getDevice",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "Integer.valueOf",
+            "Log.v",
+            "this.mDevicesById.get",
+            "this.mDevicesById.keySet"
+          ]
+        },
+        {
+          "name": "openDevice",
+          "callSites": 16,
+          "uniqueCallIdentifierCount": 15,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "HIDDeviceOpenPending",
+            "HIDDeviceOpenResult",
+            "Intent",
+            "Log.e",
+            "Log.getStackTraceString",
+            "Log.v",
+            "PendingIntent.getBroadcast",
+            "device2.open",
+            "getDevice",
+            "hIDDeviceUSB.getDevice",
+            "hIDDeviceUSB.getId",
+            "this.mUSBDevices.values",
+            "this.mUsbManager.hasPermission",
+            "this.mUsbManager.requestPermission"
+          ]
+        },
+        {
+          "name": "sendOutputReport",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "Log.e",
+            "Log.getStackTraceString",
+            "Log.v",
+            "getDevice"
+          ]
+        },
+        {
+          "name": "sendFeatureReport",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "Log.e",
+            "Log.getStackTraceString",
+            "Log.v",
+            "getDevice"
+          ]
+        },
+        {
+          "name": "getFeatureReport",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "Log.e",
+            "Log.getStackTraceString",
+            "Log.v",
+            "getDevice"
+          ]
+        },
+        {
+          "name": "closeDevice",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "HIDDeviceDisconnected",
+            "Log.e",
+            "Log.getStackTraceString",
+            "Log.v",
+            "device.close",
+            "getDevice"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "HIDDeviceUSB",
+      "sourcePath": "org/libsdl/app/HIDDeviceUSB.java",
+      "methodCount": 20,
+      "methods": [
+        {
+          "name": "getVersion",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "HIDDeviceUSB",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "getIdentifier",
+            "manager.getDeviceIDForIdentifier"
+          ]
+        },
+        {
+          "name": "getIdentifier",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "Integer.valueOf",
+            "String.format",
+            "this.mDevice.getDeviceName",
+            "this.mDevice.getProductId",
+            "this.mDevice.getVendorId"
+          ]
+        },
+        {
+          "name": "getId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getVendorId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getProductId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getSerialNumber",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getManufacturerName",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "Integer.valueOf",
+            "String.format",
+            "getVendorId"
+          ]
+        },
+        {
+          "name": "getProductName",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "Integer.valueOf",
+            "String.format",
+            "getProductId"
+          ]
+        },
+        {
+          "name": "getDevice",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getDeviceName",
+          "callSites": 8,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "Integer.valueOf",
+            "String.format",
+            "getManufacturerName",
+            "getProductId",
+            "getProductName",
+            "getVendorId"
+          ]
+        },
+        {
+          "name": "open",
+          "callSites": 19,
+          "uniqueCallIdentifierCount": 13,
+          "calls": [
+            "InputThread",
+            "Log.w",
+            "close",
+            "endpoint.getDirection",
+            "getDeviceName",
+            "inputThread.start",
+            "openDevice",
+            "this.mConnection.claimInterface",
+            "this.mDevice.getInterface",
+            "this.mDevice.getInterfaceCount",
+            "this.mManager.getUSBManager",
+            "usbInterface.getEndpoint",
+            "usbInterface.getEndpointCount"
+          ]
+        },
+        {
+          "name": "sendFeatureReport",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "Log.w",
+            "getDeviceName",
+            "this.mConnection.controlTransfer"
+          ]
+        },
+        {
+          "name": "sendOutputReport",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "Log.w",
+            "getDeviceName",
+            "this.mConnection.bulkTransfer"
+          ]
+        },
+        {
+          "name": "getFeatureReport",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "Arrays.copyOfRange",
+            "Log.w",
+            "getDeviceName",
+            "this.mConnection.controlTransfer",
+            "this.mManager.HIDDeviceFeatureReport"
+          ]
+        },
+        {
+          "name": "close",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "this.mConnection.releaseInterface",
+            "this.mDevice.getInterface",
+            "this.mDevice.getInterfaceCount",
+            "this.mInputThread.interrupt",
+            "this.mInputThread.isAlive",
+            "this.mInputThread.join"
+          ]
+        },
+        {
+          "name": "shutdown",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "close"
+          ]
+        },
+        {
+          "name": "setFrozen",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "InputThread",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "run",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "Arrays.copyOfRange",
+            "HIDDeviceUSB.this.mConnection.bulkTransfer",
+            "HIDDeviceUSB.this.mInputEndpoint.getMaxPacketSize",
+            "HIDDeviceUSB.this.mManager.HIDDeviceInputReport",
+            "Log.v"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDL",
+      "sourcePath": "org/libsdl/app/SDL.java",
+      "methodCount": 5,
+      "methods": [
+        {
+          "name": "setupJNI",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "SDLActivity.nativeSetupJNI",
+            "SDLAudioManager.nativeSetupJNI",
+            "SDLControllerManager.nativeSetupJNI"
+          ]
+        },
+        {
+          "name": "initialize",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "setContext"
+          ]
+        },
+        {
+          "name": "setContext",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getContext",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "loadLibrary",
+          "callSites": 14,
+          "uniqueCallIdentifierCount": 7,
+          "calls": [
+            "Objects.requireNonNull",
+            "clsLoadClass.getDeclaredMethod",
+            "getDeclaredMethod",
+            "invoke",
+            "loadClass",
+            "mContext.getClassLoader",
+            "objInvoke.getClass"
           ]
         }
       ]
@@ -2199,6 +3669,7 @@
         {
           "name": "run",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "SDLActivity.this.getWindow",
             "getDecorView",
@@ -2208,26 +3679,31 @@
         {
           "name": "shouldMinimizeOnFocusLoss",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getArguments",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getMainFunction",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "onUnhandledMessage",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "getMotionListener",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "SDLGenericMotionListener_API12",
             "SDLGenericMotionListener_API24",
@@ -2237,6 +3713,7 @@
         {
           "name": "getMainSharedObject",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "getApplicationInfo",
             "getContext",
@@ -2246,11 +3723,13 @@
         {
           "name": "getLibraries",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "loadLibraries",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "SDL.loadLibrary",
             "getLibraries"
@@ -2259,11 +3738,13 @@
         {
           "name": "initialize",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "onCreate",
-          "callSites": 39,
+          "callSites": 48,
+          "uniqueCallIdentifierCount": 39,
           "calls": [
             "AlertDialog.Builder",
             "DialogInterface.OnClickListener",
@@ -2309,6 +3790,7 @@
         {
           "name": "onClick",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "SDLActivity.mSingleton.finish"
           ]
@@ -2316,6 +3798,7 @@
         {
           "name": "pauseNativeThread",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "hIDDeviceManager.setFrozen",
             "handleNativeState"
@@ -2324,6 +3807,7 @@
         {
           "name": "resumeNativeThread",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "hIDDeviceManager.setFrozen",
             "handleNativeState"
@@ -2332,6 +3816,7 @@
         {
           "name": "onPause",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Log.v",
             "pauseNativeThread"
@@ -2340,6 +3825,7 @@
         {
           "name": "onResume",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Log.v",
             "resumeNativeThread"
@@ -2348,6 +3834,7 @@
         {
           "name": "onStop",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Log.v",
             "pauseNativeThread"
@@ -2356,6 +3843,7 @@
         {
           "name": "onStart",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Log.v",
             "resumeNativeThread"
@@ -2364,6 +3852,7 @@
         {
           "name": "getCurrentOrientation",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "getContext",
             "getDefaultDisplay",
@@ -2373,7 +3862,8 @@
         },
         {
           "name": "onWindowFocusChanged",
-          "callSites": 5,
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "Log.v",
             "getMotionListener",
@@ -2385,6 +3875,7 @@
         {
           "name": "onLowMemory",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Log.v",
             "nativeLowMemory"
@@ -2392,7 +3883,8 @@
         },
         {
           "name": "onDestroy",
-          "callSites": 5,
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "HIDDeviceManager.release",
             "Log.v",
@@ -2404,6 +3896,7 @@
         {
           "name": "onBackPressed",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "nativeGetHint",
             "strNativeGetHint.equals"
@@ -2412,6 +3905,7 @@
         {
           "name": "manualBackButton",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "mSingleton.pressBackButton"
           ]
@@ -2419,6 +3913,7 @@
         {
           "name": "pressBackButton",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "Runnable",
             "SDLActivity.this.superOnBackPressed",
@@ -2429,6 +3924,7 @@
         {
           "name": "run",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "SDLActivity.this.superOnBackPressed"
           ]
@@ -2436,6 +3932,7 @@
         {
           "name": "superOnBackPressed",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "super.onBackPressed"
           ]
@@ -2443,13 +3940,15 @@
         {
           "name": "dispatchKeyEvent",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "event.getKeyCode"
           ]
         },
         {
           "name": "handleNativeState",
-          "callSites": 8,
+          "callSites": 9,
+          "uniqueCallIdentifierCount": 8,
           "calls": [
             "SDLMain",
             "Thread",
@@ -2464,11 +3963,13 @@
         {
           "name": "SDLCommandHandler",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "handleMessage",
-          "callSites": 19,
+          "callSites": 29,
+          "uniqueCallIdentifierCount": 19,
           "calls": [
             "Log.e",
             "RelativeLayout.LayoutParams",
@@ -2493,7 +3994,8 @@
         },
         {
           "name": "sendCommand",
-          "callSites": 12,
+          "callSites": 13,
+          "uniqueCallIdentifierCount": 12,
           "calls": [
             "DisplayMetrics",
             "defaultDisplay.getRealMetrics",
@@ -2512,6 +4014,7 @@
         {
           "name": "setActivityTitle",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "mSingleton.sendCommand"
           ]
@@ -2519,6 +4022,7 @@
         {
           "name": "setWindowStyle",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Integer.valueOf",
             "mSingleton.sendCommand"
@@ -2527,13 +4031,15 @@
         {
           "name": "setOrientation",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "sDLActivity.setOrientationBis"
           ]
         },
         {
           "name": "setOrientationBis",
-          "callSites": 3,
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "Log.v",
             "hint.contains",
@@ -2543,6 +4049,7 @@
         {
           "name": "minimizeWindow",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "Intent",
             "intent.addCategory",
@@ -2553,6 +4060,7 @@
         {
           "name": "isScreenKeyboardShown",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "SDL.getContext",
             "getSystemService",
@@ -2562,6 +4070,7 @@
         {
           "name": "supportsRelativeMouse",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "getMotionListener",
             "isChromebook",
@@ -2571,6 +4080,7 @@
         {
           "name": "setRelativeMouseEnabled",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "getMotionListener",
             "supportsRelativeMouse"
@@ -2579,6 +4089,7 @@
         {
           "name": "sendMessage",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Integer.valueOf",
             "sDLActivity.sendCommand"
@@ -2587,11 +4098,13 @@
         {
           "name": "getContext",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "isAndroidTV",
-          "callSites": 5,
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "Build.MANUFACTURER.equals",
             "Build.MODEL.equals",
@@ -2603,6 +4116,7 @@
         {
           "name": "isTablet",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "DisplayMetrics",
             "Math.sqrt",
@@ -2615,6 +4129,7 @@
         {
           "name": "isChromebook",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "getContext",
             "getPackageManager",
@@ -2623,7 +4138,8 @@
         },
         {
           "name": "isDeXMode",
-          "callSites": 6,
+          "callSites": 8,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "cls.getField",
             "configuration.getClass",
@@ -2636,6 +4152,7 @@
         {
           "name": "getDisplayDPI",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "getContext",
             "getDisplayMetrics",
@@ -2644,7 +4161,8 @@
         },
         {
           "name": "getManifestEnvironmentVariables",
-          "callSites": 12,
+          "callSites": 13,
+          "uniqueCallIdentifierCount": 12,
           "calls": [
             "Log.v",
             "bundle.get",
@@ -2663,16 +4181,19 @@
         {
           "name": "getContentView",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "ShowTextInputTask",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "run",
-          "callSites": 9,
+          "callSites": 10,
+          "uniqueCallIdentifierCount": 9,
           "calls": [
             "DummyEdit",
             "RelativeLayout.LayoutParams",
@@ -2688,6 +4209,7 @@
         {
           "name": "showTextInput",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "ShowTextInputTask",
             "mSingleton.commandHandler.post"
@@ -2696,6 +4218,7 @@
         {
           "name": "isTextInputEvent",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "event.getKeyCode",
             "event.isCtrlPressed",
@@ -2705,11 +4228,13 @@
         {
           "name": "getNativeSurface",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "setSurfaceViewFormat",
           "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
           "calls": [
             "Integer.valueOf",
             "mSingleton.sendCommand"
@@ -2718,6 +4243,7 @@
         {
           "name": "initTouch",
           "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
           "calls": [
             "InputDevice.getDevice",
             "InputDevice.getDeviceIds",
@@ -2729,7 +4255,8 @@
         },
         {
           "name": "openAPKExpansionInputStream",
-          "callSites": 12,
+          "callSites": 18,
+          "uniqueCallIdentifierCount": 12,
           "calls": [
             "Class.forName",
             "IOException",
@@ -2747,7 +4274,8 @@
         },
         {
           "name": "messageboxShowMessageBox",
-          "callSites": 11,
+          "callSites": 14,
+          "uniqueCallIdentifierCount": 11,
           "calls": [
             "Bundle",
             "Runnable",
@@ -2765,13 +4293,15 @@
         {
           "name": "run",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "sDLActivity.showDialog"
           ]
         },
         {
           "name": "onCreateDialog",
-          "callSites": 40,
+          "callSites": 46,
+          "uniqueCallIdentifierCount": 40,
           "calls": [
             "Button",
             "Dialog",
@@ -2818,6 +4348,7 @@
         {
           "name": "onDismiss",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "SDLActivity.this.messageboxSelection.notify"
           ]
@@ -2825,6 +4356,7 @@
         {
           "name": "onClick",
           "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
           "calls": [
             "dialog.dismiss"
           ]
@@ -2832,6 +4364,7 @@
         {
           "name": "onKey",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "button2.performClick",
             "event.getAction",
@@ -2841,6 +4374,7 @@
         {
           "name": "onSystemUiVisibilityChange",
           "callSites": 5,
+          "uniqueCallIdentifierCount": 5,
           "calls": [
             "getDecorView",
             "getHandler",
@@ -2852,21 +4386,25 @@
         {
           "name": "clipboardHasText",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "clipboardGetText",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "clipboardSetText",
           "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
           "calls": []
         },
         {
           "name": "createCustomCursor",
           "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
           "calls": [
             "Bitmap.createBitmap",
             "Integer.valueOf",
@@ -2877,6 +4415,7 @@
         {
           "name": "setCustomCursor",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "Integer.valueOf",
             "mCursors.get",
@@ -2886,10 +4425,971 @@
         {
           "name": "setSystemCursor",
           "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
           "calls": [
             "PointerIcon.getSystemIcon",
             "SDL.getContext",
             "mSurface.setPointerIcon"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLAudioManager",
+      "sourcePath": "org/libsdl/app/SDLAudioManager.java",
+      "methodCount": 14,
+      "methods": [
+        {
+          "name": "initialize",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getAudioFormatString",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "Integer.toString"
+          ]
+        },
+        {
+          "name": "open",
+          "callSites": 53,
+          "uniqueCallIdentifierCount": 25,
+          "calls": [
+            "AudioRecord",
+            "AudioRecord.getMinBufferSize",
+            "AudioTrack",
+            "AudioTrack.getMinBufferSize",
+            "Log.e",
+            "Log.v",
+            "Math.max",
+            "StringBuilder",
+            "audioRecord.getState",
+            "audioTrack.getState",
+            "getAudioFormatString",
+            "mAudioRecord.getAudioFormat",
+            "mAudioRecord.getChannelCount",
+            "mAudioRecord.getSampleRate",
+            "mAudioRecord.release",
+            "mAudioRecord.startRecording",
+            "mAudioTrack.getAudioFormat",
+            "mAudioTrack.getChannelCount",
+            "mAudioTrack.getSampleRate",
+            "mAudioTrack.play",
+            "mAudioTrack.release",
+            "sb.append",
+            "sb.toString",
+            "sb2.append",
+            "sb2.toString"
+          ]
+        },
+        {
+          "name": "audioOpen",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "open"
+          ]
+        },
+        {
+          "name": "audioWriteFloatBuffer",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "Log.e",
+            "Log.w",
+            "Thread.sleep",
+            "mAudioTrack.write"
+          ]
+        },
+        {
+          "name": "audioWriteShortBuffer",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "Log.e",
+            "Log.w",
+            "Thread.sleep",
+            "mAudioTrack.write"
+          ]
+        },
+        {
+          "name": "audioWriteByteBuffer",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "Log.e",
+            "Log.w",
+            "Thread.sleep",
+            "mAudioTrack.write"
+          ]
+        },
+        {
+          "name": "captureOpen",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "open"
+          ]
+        },
+        {
+          "name": "captureReadFloatBuffer",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "mAudioRecord.read"
+          ]
+        },
+        {
+          "name": "captureReadShortBuffer",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "mAudioRecord.read"
+          ]
+        },
+        {
+          "name": "captureReadByteBuffer",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "mAudioRecord.read"
+          ]
+        },
+        {
+          "name": "audioClose",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "audioTrack.stop",
+            "mAudioTrack.release"
+          ]
+        },
+        {
+          "name": "captureClose",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "audioRecord.stop",
+            "mAudioRecord.release"
+          ]
+        },
+        {
+          "name": "audioSetThreadPriority",
+          "callSites": 7,
+          "uniqueCallIdentifierCount": 5,
+          "calls": [
+            "Log.v",
+            "Process.setThreadPriority",
+            "Thread.currentThread",
+            "e.toString",
+            "setName"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLClipboardHandler",
+      "sourcePath": "org/libsdl/app/SDLClipboardHandler.java",
+      "methodCount": 0,
+      "methods": []
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLClipboardHandler_API11",
+      "sourcePath": "org/libsdl/app/SDLClipboardHandler_API11.java",
+      "methodCount": 4,
+      "methods": [
+        {
+          "name": "clipboardHasText",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "this.mClipMgr.hasText"
+          ]
+        },
+        {
+          "name": "clipboardGetText",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "text.toString",
+            "this.mClipMgr.getText"
+          ]
+        },
+        {
+          "name": "clipboardSetText",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "this.mClipMgr.addPrimaryClipChangedListener",
+            "this.mClipMgr.removePrimaryClipChangedListener",
+            "this.mClipMgr.setText"
+          ]
+        },
+        {
+          "name": "onPrimaryClipChanged",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "SDLActivity.onNativeClipboardChanged"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLControllerManager",
+      "sourcePath": "org/libsdl/app/SDLControllerManager.java",
+      "methodCount": 7,
+      "methods": [
+        {
+          "name": "initialize",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "SDLHapticHandler",
+            "SDLHapticHandler_API26",
+            "SDLJoystickHandler_API16",
+            "SDLJoystickHandler_API19"
+          ]
+        },
+        {
+          "name": "handleJoystickMotionEvent",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "mJoystickHandler.handleMotionEvent"
+          ]
+        },
+        {
+          "name": "pollInputDevices",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "pollHapticDevices",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "hapticRun",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "mHapticHandler.run"
+          ]
+        },
+        {
+          "name": "hapticStop",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "mHapticHandler.stop"
+          ]
+        },
+        {
+          "name": "isDeviceSDLJoystick",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "InputDevice.getDevice",
+            "device.getSources"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLGenericMotionListener_API12",
+      "sourcePath": "org/libsdl/app/SDLGenericMotionListener_API12.java",
+      "methodCount": 7,
+      "methods": [
+        {
+          "name": "inRelativeMode",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "reclaimRelativeMouseModeIfNeeded",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "setRelativeMouseEnabled",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "supportsRelativeMouse",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "onGenericMotion",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "UnsupportedOperationException"
+          ]
+        },
+        {
+          "name": "getEventX",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "event.getX"
+          ]
+        },
+        {
+          "name": "getEventY",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "event.getY"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLGenericMotionListener_API24",
+      "sourcePath": "org/libsdl/app/SDLGenericMotionListener_API24.java",
+      "methodCount": 6,
+      "methods": [
+        {
+          "name": "supportsRelativeMouse",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "onGenericMotion",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "SDLActivity.onNativeMouse",
+            "event.getActionMasked",
+            "event.getAxisValue",
+            "event.getSource"
+          ]
+        },
+        {
+          "name": "inRelativeMode",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "setRelativeMouseEnabled",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getEventX",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "event.getAxisValue",
+            "event.getX"
+          ]
+        },
+        {
+          "name": "getEventY",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "event.getAxisValue",
+            "event.getY"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLGenericMotionListener_API26",
+      "sourcePath": "org/libsdl/app/SDLGenericMotionListener_API26.java",
+      "methodCount": 7,
+      "methods": [
+        {
+          "name": "onGenericMotion",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "UnsupportedOperationException"
+          ]
+        },
+        {
+          "name": "supportsRelativeMouse",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "SDLActivity.isDeXMode"
+          ]
+        },
+        {
+          "name": "inRelativeMode",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "setRelativeMouseEnabled",
+          "callSites": 5,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "SDLActivity.getContentView",
+            "SDLActivity.isDeXMode",
+            "releasePointerCapture",
+            "requestPointerCapture"
+          ]
+        },
+        {
+          "name": "reclaimRelativeMouseModeIfNeeded",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "SDLActivity.getContentView",
+            "SDLActivity.isDeXMode",
+            "requestPointerCapture"
+          ]
+        },
+        {
+          "name": "getEventX",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "event.getX"
+          ]
+        },
+        {
+          "name": "getEventY",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "event.getY"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLHapticHandler",
+      "sourcePath": "org/libsdl/app/SDLHapticHandler.java",
+      "methodCount": 4,
+      "methods": [
+        {
+          "name": "run",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "getHaptic",
+            "haptic.vib.vibrate"
+          ]
+        },
+        {
+          "name": "stop",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "getHaptic",
+            "haptic.vib.cancel"
+          ]
+        },
+        {
+          "name": "pollHapticDevices",
+          "callSites": 28,
+          "uniqueCallIdentifierCount": 22,
+          "calls": [
+            "ArrayList",
+            "InputDevice.getDevice",
+            "InputDevice.getDeviceIds",
+            "Integer.valueOf",
+            "SDL.getContext",
+            "SDLControllerManager.nativeAddHaptic",
+            "SDLControllerManager.nativeRemoveHaptic",
+            "SDLHaptic",
+            "arrayList.add",
+            "arrayList.get",
+            "arrayList.size",
+            "device.getName",
+            "device.getVibrator",
+            "getHaptic",
+            "getSystemService",
+            "intValue",
+            "this.mHaptics.add",
+            "this.mHaptics.get",
+            "this.mHaptics.remove",
+            "this.mHaptics.size",
+            "vibrator.hasVibrator",
+            "vibrator2.hasVibrator"
+          ]
+        },
+        {
+          "name": "getHaptic",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "this.mHaptics.get",
+            "this.mHaptics.size"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLHapticHandler_API26",
+      "sourcePath": "org/libsdl/app/SDLHapticHandler_API26.java",
+      "methodCount": 1,
+      "methods": [
+        {
+          "name": "run",
+          "callSites": 8,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "Log.d",
+            "Math.round",
+            "VibrationEffect.createOneShot",
+            "getHaptic",
+            "haptic.vib.vibrate",
+            "stop"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLInputConnection",
+      "sourcePath": "org/libsdl/app/SDLInputConnection.java",
+      "methodCount": 5,
+      "methods": [
+        {
+          "name": "SDLInputConnection",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "sendKeyEvent",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "SDLActivity.onNativeSoftReturnKey",
+            "event.getKeyCode"
+          ]
+        },
+        {
+          "name": "commitText",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "SDLActivity.onNativeSoftReturnKey",
+            "nativeCommitText",
+            "nativeGenerateScancodeForUnichar",
+            "text.charAt",
+            "text.length",
+            "text.toString"
+          ]
+        },
+        {
+          "name": "setComposingText",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "nativeSetComposingText",
+            "text.toString"
+          ]
+        },
+        {
+          "name": "deleteSurroundingText",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "KeyEvent",
+            "sendKeyEvent"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLJoystickHandler",
+      "sourcePath": "org/libsdl/app/SDLJoystickHandler.java",
+      "methodCount": 2,
+      "methods": [
+        {
+          "name": "handleMotionEvent",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "pollInputDevices",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLJoystickHandler_API16",
+      "sourcePath": "org/libsdl/app/SDLJoystickHandler_API16.java",
+      "methodCount": 8,
+      "methods": [
+        {
+          "name": "getButtonMask",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getProductId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getVendorId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "compare",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "arg0.getAxis",
+            "arg1.getAxis"
+          ]
+        },
+        {
+          "name": "pollInputDevices",
+          "callSites": 34,
+          "uniqueCallIdentifierCount": 31,
+          "calls": [
+            "ArrayList",
+            "Collections.sort",
+            "InputDevice.getDevice",
+            "InputDevice.getDeviceIds",
+            "Integer.valueOf",
+            "RangeComparator",
+            "SDLControllerManager.isDeviceSDLJoystick",
+            "SDLControllerManager.nativeAddJoystick",
+            "SDLControllerManager.nativeRemoveJoystick",
+            "SDLJoystick",
+            "arrayList.add",
+            "arrayList.get",
+            "arrayList.size",
+            "device.getMotionRanges",
+            "device.getName",
+            "getButtonMask",
+            "getJoystick",
+            "getJoystickDescriptor",
+            "getProductId",
+            "getVendorId",
+            "intValue",
+            "motionRange.getAxis",
+            "motionRange.getSource",
+            "sDLJoystick.axes.add",
+            "sDLJoystick.axes.size",
+            "sDLJoystick.hats.add",
+            "sDLJoystick.hats.size",
+            "this.mJoysticks.add",
+            "this.mJoysticks.get",
+            "this.mJoysticks.remove",
+            "this.mJoysticks.size"
+          ]
+        },
+        {
+          "name": "getJoystick",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "this.mJoysticks.get",
+            "this.mJoysticks.size"
+          ]
+        },
+        {
+          "name": "handleMotionEvent",
+          "callSites": 22,
+          "uniqueCallIdentifierCount": 17,
+          "calls": [
+            "Math.round",
+            "SDLControllerManager.onNativeHat",
+            "SDLControllerManager.onNativeJoy",
+            "event.getActionIndex",
+            "event.getActionMasked",
+            "event.getAxisValue",
+            "event.getDeviceId",
+            "event.getSource",
+            "getAxis",
+            "getJoystick",
+            "joystick.axes.get",
+            "joystick.axes.size",
+            "joystick.hats.get",
+            "joystick.hats.size",
+            "motionRange.getAxis",
+            "motionRange.getMin",
+            "motionRange.getRange"
+          ]
+        },
+        {
+          "name": "getJoystickDescriptor",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "descriptor.isEmpty",
+            "joystickDevice.getDescriptor",
+            "joystickDevice.getName"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLJoystickHandler_API19",
+      "sourcePath": "org/libsdl/app/SDLJoystickHandler_API19.java",
+      "methodCount": 3,
+      "methods": [
+        {
+          "name": "getProductId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getVendorId",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "getButtonMask",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "joystickDevice.hasKeys"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLMain",
+      "sourcePath": "org/libsdl/app/SDLMain.java",
+      "methodCount": 1,
+      "methods": [
+        {
+          "name": "run",
+          "callSites": 11,
+          "uniqueCallIdentifierCount": 9,
+          "calls": [
+            "Log.v",
+            "Process.setThreadPriority",
+            "SDLActivity.mSingleton.finish",
+            "SDLActivity.mSingleton.getArguments",
+            "SDLActivity.mSingleton.getMainFunction",
+            "SDLActivity.mSingleton.getMainSharedObject",
+            "SDLActivity.mSingleton.isFinishing",
+            "SDLActivity.nativeRunMain",
+            "e.toString"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "org.libsdl.app",
+      "className": "SDLSurface",
+      "sourcePath": "org/libsdl/app/SDLSurface.java",
+      "methodCount": 13,
+      "methods": [
+        {
+          "name": "onAccuracyChanged",
+          "callSites": 0,
+          "uniqueCallIdentifierCount": 0,
+          "calls": []
+        },
+        {
+          "name": "SDLSurface",
+          "callSites": 12,
+          "uniqueCallIdentifierCount": 11,
+          "calls": [
+            "SDLActivity.getMotionListener",
+            "addCallback",
+            "context.getSystemService",
+            "getDefaultDisplay",
+            "getHolder",
+            "requestFocus",
+            "setFocusable",
+            "setFocusableInTouchMode",
+            "setOnGenericMotionListener",
+            "setOnKeyListener",
+            "setOnTouchListener"
+          ]
+        },
+        {
+          "name": "handlePause",
+          "callSites": 1,
+          "uniqueCallIdentifierCount": 1,
+          "calls": [
+            "enableSensor"
+          ]
+        },
+        {
+          "name": "handleResume",
+          "callSites": 6,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "enableSensor",
+            "requestFocus",
+            "setFocusable",
+            "setFocusableInTouchMode",
+            "setOnKeyListener",
+            "setOnTouchListener"
+          ]
+        },
+        {
+          "name": "getNativeSurface",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "getHolder",
+            "getSurface"
+          ]
+        },
+        {
+          "name": "surfaceCreated",
+          "callSites": 2,
+          "uniqueCallIdentifierCount": 2,
+          "calls": [
+            "Log.v",
+            "SDLActivity.onNativeSurfaceCreated"
+          ]
+        },
+        {
+          "name": "surfaceDestroyed",
+          "callSites": 3,
+          "uniqueCallIdentifierCount": 3,
+          "calls": [
+            "Log.v",
+            "SDLActivity.handleNativeState",
+            "SDLActivity.onNativeSurfaceDestroyed"
+          ]
+        },
+        {
+          "name": "surfaceChanged",
+          "callSites": 25,
+          "uniqueCallIdentifierCount": 14,
+          "calls": [
+            "DisplayMetrics",
+            "Log.v",
+            "Math.max",
+            "Math.min",
+            "SDLActivity.getContext",
+            "SDLActivity.handleNativeState",
+            "SDLActivity.mSingleton.getRequestedOrientation",
+            "SDLActivity.mSingleton.isInMultiWindowMode",
+            "SDLActivity.nativeSetScreenResolution",
+            "SDLActivity.onNativeResize",
+            "SDLActivity.onNativeSurfaceChanged",
+            "notifyAll",
+            "this.mDisplay.getRealMetrics",
+            "this.mDisplay.getRefreshRate"
+          ]
+        },
+        {
+          "name": "onKey",
+          "callSites": 18,
+          "uniqueCallIdentifierCount": 14,
+          "calls": [
+            "InputDevice.getDevice",
+            "SDLActivity.isTextInputEvent",
+            "SDLActivity.onNativeKeyDown",
+            "SDLActivity.onNativeKeyUp",
+            "SDLControllerManager.isDeviceSDLJoystick",
+            "SDLControllerManager.onNativePadDown",
+            "SDLControllerManager.onNativePadUp",
+            "SDLInputConnection.nativeCommitText",
+            "String.valueOf",
+            "event.getAction",
+            "event.getDeviceId",
+            "event.getSource",
+            "event.getUnicodeChar",
+            "getSources"
+          ]
+        },
+        {
+          "name": "onTouch",
+          "callSites": 36,
+          "uniqueCallIdentifierCount": 19,
+          "calls": [
+            "SDLActivity.getMotionListener",
+            "SDLActivity.onNativeMouse",
+            "SDLActivity.onNativeTouch",
+            "event.getActionIndex",
+            "event.getActionMasked",
+            "event.getClass",
+            "event.getDeviceId",
+            "event.getPointerCount",
+            "event.getPointerId",
+            "event.getPressure",
+            "event.getSource",
+            "event.getX",
+            "event.getY",
+            "getMethod",
+            "intValue",
+            "invoke",
+            "motionListener.getEventX",
+            "motionListener.getEventY",
+            "motionListener.inRelativeMode"
+          ]
+        },
+        {
+          "name": "enableSensor",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "sensorManager.getDefaultSensor",
+            "sensorManager.registerListener",
+            "sensorManager2.getDefaultSensor",
+            "sensorManager2.unregisterListener"
+          ]
+        },
+        {
+          "name": "onSensorChanged",
+          "callSites": 4,
+          "uniqueCallIdentifierCount": 4,
+          "calls": [
+            "SDLActivity.onNativeAccel",
+            "SDLActivity.onNativeOrientationChanged",
+            "event.sensor.getType",
+            "this.mDisplay.getRotation"
+          ]
+        },
+        {
+          "name": "onCapturedPointerEvent",
+          "callSites": 11,
+          "uniqueCallIdentifierCount": 6,
+          "calls": [
+            "SDLActivity.onNativeMouse",
+            "event.getActionMasked",
+            "event.getAxisValue",
+            "event.getButtonState",
+            "event.getX",
+            "event.getY"
           ]
         }
       ]
