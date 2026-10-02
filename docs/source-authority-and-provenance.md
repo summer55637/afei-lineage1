@@ -10,11 +10,11 @@
 
 Pinned fixed-C 仍然非常重要，但它的角色改為：
 
-- 固定的引擎行為與語義基準。
+- 固定的 C 程式行為與伺服器核心語義基準；它是可讀的程式碼證據，不等同於某一個實際部署快照本身。
 - 演算法、執行順序、資料結構邊界與 C runtime 行為的校驗基準。
 - 當實機端資料與 fixed-C 不一致時，用來辨識 endpoint variant，而不是自動把 endpoint 資料判成錯誤。
 
-因此「最完整的資料來源」與「最高的引擎行為依據」不是同一件事。
+因此「實際部署資料」與「可讀程式碼語義」是不同證據角色；不能用單一來源包辦所有問題。
 
 ## 來源層級
 
@@ -64,11 +64,13 @@ gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 
 主要用途：
 
-- 引擎行為
+- 可讀 C 原始碼中的伺服器核心行為
 - C runtime semantics
 - 精確數值公式
 - transaction / lifecycle 順序
 - map / NPC / battle / item 等底層語義
+
+注意：Fixed-C 是程式碼證據來源，不代表 RO0000 實際部署快照，也不取代 endpoint 的版本／資料事實。
 
 ### C. 影片／視覺參考
 
@@ -110,7 +112,7 @@ gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 1. 先保留 endpoint provenance。
 2. 比對 exact file / blob / row / record identity。
 3. 判斷差異是資料 variant、程式 variant、配置 variant 還是版本差異。
-4. fixed-C 用來驗證「引擎應該怎麼運作」。
+4. fixed-C 用來驗證「可讀 C 程式碼呈現的伺服器核心行為與語義」。
 5. endpoint data 用來判斷「這個實機／部署版本實際有什麼」。
 6. 無法判定時，建立 explicit variant / unresolved，不任意覆蓋其中一方。
 
