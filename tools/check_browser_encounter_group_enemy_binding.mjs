@@ -56,7 +56,7 @@ const coreStatRolls=[
   assert.equal(build.context.sides[1].entries[5].sourceCoreStats.level,2);
   assert.equal(build.context.sides[1].entries[6].enemyId,123);
   assert.equal(build.context.sides[1].entries[6].sourceCoreStats.level,2);
-  assert.equal(c.getBattleContext().context.sourceGroupId,94);
+  assert.equal(c.getBattleContext().sourceGroupId,94);
   const preInitAttack=await c.dispatch({type:ACTION_BATTLE_ATTACK_PREFLIGHT,attackerBid:0,targetBid:15});
   assert.equal(preInitAttack.ok,false,JSON.stringify(preInitAttack));
   assert.equal(preInitAttack.stage,'battle-phase-gate');
