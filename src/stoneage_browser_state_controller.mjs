@@ -1138,7 +1138,7 @@ function createBrowserStateController({
             defenderWeaponClass:action.defenderWeaponClass??'claw',
             attackerLuck:action.attackerLuck??0,
             attackerCounterBonus:action.attackerCounterBonus??0,
-            noguardCounterAdjust:action.noguardCounterAdjust??0,
+            noguardCounterAdjust:action.noguardCounterAdjust??null,
             counterRoll:action.counterRoll??null,
             counterPara:action.counterPara??0.08,
             attackerDamageReact:pipeline.damageReact.reaction?.code>0,
