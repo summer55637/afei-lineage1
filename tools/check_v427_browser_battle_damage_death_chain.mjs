@@ -40,6 +40,16 @@ assert.equal(nonlethalResult.battleContext.context.sides[1].entries[0].hp,70);
 assert.equal(nonlethalResult.battleContext.context.sides[1].entries[0].isDie,false);
 assert.equal(nonlethal.context.sides[1].entries[0].hp,100,'input remains immutable');
 
+const zeroAtZero=makeContext({targetHp:0});
+const zeroAtZeroPlan=damagePlan(zeroAtZero,0);
+const zeroAtZeroResult=commitBattleDamageDeathChain(zeroAtZero,{
+  damageReactPlan:zeroAtZeroPlan,transactionId:'v427-zero-at-zero'
+});
+assert.equal(zeroAtZeroResult.ok,true,JSON.stringify(zeroAtZeroResult));
+assert.equal(zeroAtZeroResult.stage,'battle-damage-death-noop');
+assert.equal(zeroAtZeroResult.deathCommitted,false);
+assert.equal(zeroAtZeroResult.battleContext.context.sides[1].entries[0].isDie,false);
+
 const lethal=makeContext({targetHp:10});
 const lethalPlan=damagePlan(lethal,20);
 const lethalResult=commitBattleDamageDeathChain(lethal,{

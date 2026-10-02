@@ -25,22 +25,23 @@ function commitBattleDamageDeathChain(context,{
   const damage=commitBattleDamage(context,{damageReactPlan,transactionId,expectedDamageRevision});
   if(!damage.ok)return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT};
   const afterDamage=damage.battleContext;
-  const target=findEntry(afterDamage,damage.targetBid);
+  const resolvedDamage={...damage,attackerBid:damage.attackerBid??damageReactPlan?.attackerBid??null,targetBid:damage.targetBid??damageReactPlan?.targetBid??null};
+  const target=findEntry(afterDamage,resolvedDamage.targetBid);
   if(damage.applied!==true&&damage.idempotent!==true){
-    return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,stage:'battle-damage-death-noop',lethal:false,deathCommitted:false,deathPlan:null,deathCommit:null};
+    return {...resolvedDamage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,stage:'battle-damage-death-noop',lethal:false,deathCommitted:false,deathPlan:null,deathCommit:null};
   }
   if(!target)return {ok:false,handled:false,stage:'battle-damage-death-chain',reason:'committed-target-missing',battleContext:clone(context),hpMutation:false,persistentMutation:false};
   if(int(target.hp)>0){
-    return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,
+    return {...resolvedDamage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,
       stage:'battle-damage-death-nonlethal',lethal:false,deathCommitted:false,deathPlan:null,deathCommit:null};
   }
   if(target.isDie===true){
-    return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,
+    return {...resolvedDamage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,
       stage:'battle-damage-death-idempotent',lethal:true,deathCommitted:true,deathPlan:null,deathCommit:null,
       idempotent:true,applied:false};
   }
   const deathPlan=planBattleDeath(afterDamage,{
-    targetBid:damage.targetBid,hp:target.hp,battleFlags,critical,criticalFlag,
+    targetBid:resolvedDamage.targetBid,hp:target.hp,battleFlags,critical,criticalFlag,
     ultimateFromDamage:damage.ultimateFromDamage??0,lerImmune:lerImmune===true,deathRoll
   });
   if(!deathPlan.ok){
@@ -49,14 +50,14 @@ function commitBattleDamageDeathChain(context,{
       damagePreview:{hpBefore:damage.hpBefore,hpAfter:damage.hpAfter,ultimateFromDamage:damage.ultimateFromDamage},
       battleContext:clone(context),hpMutation:false,persistentMutation:false,damageExecuted:false};
   }
-  const deathCommit=commitDeathState(afterDamage,{targetBid:damage.targetBid,deathPlan});
+  const deathCommit=commitDeathState(afterDamage,{targetBid:resolvedDamage.targetBid,deathPlan});
   if(!deathCommit.ok){
     return {ok:false,handled:false,stage:'battle-damage-death-commit',
       reason:deathCommit.reason??'death-commit-failed',detail:deathCommit,transactionId:damage.transactionId,
       damagePreview:{hpBefore:damage.hpBefore,hpAfter:damage.hpAfter,ultimateFromDamage:damage.ultimateFromDamage},
       battleContext:clone(context),hpMutation:false,persistentMutation:false,damageExecuted:false};
   }
-  return {...damage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,
+  return {...resolvedDamage,format:BROWSER_BATTLE_DAMAGE_DEATH_CHAIN_FORMAT,
     stage:'battle-damage-death-committed',lethal:true,deathCommitted:true,deathPlan,
     deathCommit:{ok:true,handled:true,targetBid:deathCommit.targetBid,isDie:deathCommit.isDie,
       deadCountBefore:deathCommit.deadCountBefore,deadCountAfter:deathCommit.deadCountAfter,
