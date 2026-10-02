@@ -59,6 +59,7 @@ jobs:
             node tools/check_endpoint_battle_data_source_audit.mjs --write
             node tools/check_endpoint_gmque_source_locator.mjs --write
             node tools/audit_endpoint_world_blockers.mjs --write
+            node tools/rebind_ro0000_snapshot_audits.mjs
 
             node tools/generate_readme.mjs
 
@@ -69,7 +70,12 @@ jobs:
               data/generated/stoneage_endpoint_mapwarp_audit.json \
               data/generated/stoneage_endpoint_battle_data_source_audit.json \
               data/generated/stoneage_endpoint_gmque_source_locator.json \
-              data/generated/stoneage_endpoint_world_blocker_audit.json
+              data/generated/stoneage_endpoint_world_blocker_audit.json \
+              data/generated/stoneage_ro0000_dependency_triage.json \
+              data/generated/stoneage_ro0000_hecheng_loader_audit.json \
+              data/generated/stoneage_ro0000_isolated_residue_audit.json \
+              data/generated/stoneage_ro0000_residue_inventory.json \
+              data/generated/stoneage_ro0000_residue_structure_audit.json
 
             if git diff --cached --quiet; then
               echo "README and source evidence are already up to date."
