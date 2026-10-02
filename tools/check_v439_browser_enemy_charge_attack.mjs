@@ -45,6 +45,9 @@ const built=await controller.dispatch({
 assert.equal(built.ok,true,JSON.stringify(built));
 const initialized=await controller.dispatch({type:ACTION_BATTLE_INITIALIZE,fixedLuck:0,surpriseRoll:100});
 assert.equal(initialized.ok,true,JSON.stringify(initialized));
+const initializedEnemy=initialized.battleContext.sides[1].entries.find(e=>e?.enemyId===1305);
+assert.deepEqual(initializedEnemy.sourceEnemyPetSkills,[30,41,null,null,null,null,null],'source WAZA IDs survive formal battle-context projection');
+assert.deepEqual(initializedEnemy.sourceEnemyPetSkillProfiles.slice(0,2).map(p=>p?.skillId),[30,41],'hydrated WAZA profiles survive formal battle-context projection');
 const player=await controller.dispatch({type:ACTION_BATTLE_IDLE_STRATEGY_APPLY,defaultTargetRoll:0,weaponKind:'none'});
 assert.equal(player.ok,true,JSON.stringify(player));
 const ai=await controller.dispatch({type:ACTION_BATTLE_ENEMY_AI_APPLY,actionRolls:[2],targetRolls:[0]});

@@ -250,6 +250,8 @@ function buildBattleContext({
       resist:entry.coreStats?clone(entry.coreStats.sourceTemplate.resist):null,
       sourceCoreStats:entry.coreStats?clone(entry.coreStats):null,
       sourceEnemyAi:entry.sourceEnemyAi?clone(entry.sourceEnemyAi):null,
+      sourceEnemyPetSkills:Array.isArray(entry.sourceEnemyPetSkills)?clone(entry.sourceEnemyPetSkills):null,
+      sourceEnemyPetSkillProfiles:Array.isArray(entry.sourceEnemyPetSkillProfiles)?clone(entry.sourceEnemyPetSkillProfiles):[],
       sourceDropTable:Array.isArray(entry.sourceDropTable)?clone(entry.sourceDropTable):[],
       sourceDropRollsResolved:false,
       sourceBattleCharMode:1,
