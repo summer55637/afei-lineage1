@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：759ea32 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T08:11:41Z
+- 最新 commit：9219e24 — docs: record V4.32 enemy AI attack pipeline milestone
+- 更新時間：2026-10-02T16:13:57+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.31
+- Regression 最高版本：V4.32
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.31 |
+| Battle Pipeline | ✅ V4.32 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
