@@ -7,6 +7,7 @@ from audit_ro0000_android_native import (
     parse_needed_libraries,
     parse_symbols,
     relevant_symbol_names,
+    relevant_embedded_strings,
 )
 
 
@@ -46,6 +47,15 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             parse_elf_header(b"not-elf")
         with self.assertRaises(ValueError):
             parse_elf_header(b"\x7fELF" + b"\x01\x01\x01" + b"\x00" * 20)
+
+    def test_embedded_resource_format_string(self):
+        values = relevant_embedded_strings(b"prefix\\x00path/map4/%s/real.bin\\x00")
+        self.assertIn("path/map4/%s/real.bin", values)
+
+    def test_embedded_utf16le_resource_string(self):
+        value = "s/%s/adrn.bin"
+        values = relevant_embedded_strings(value.encode("utf-16le"))
+        self.assertIn(value, values)
 
     def test_dynamic_dependencies(self):
         output = """
