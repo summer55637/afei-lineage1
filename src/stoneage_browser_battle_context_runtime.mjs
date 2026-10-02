@@ -66,7 +66,7 @@ function hydrateEnemyTeamCoreStats(team,enemyStatRolls=[]){
   return {ok:true,team:hydrated};
 }
 
-function buildEnemyEntryLayout(team){
+function buildEnemyEntryLayout(team,{petSkillCatalog=null}={}){
   if(!Array.isArray(team)||team.length<1)return {ok:false,reason:'enemy-team-required'};
   if(team.length>BATTLE_ENTRY_MAX)return {ok:false,reason:'enemy-team-entry-max-exceeded',count:team.length};
   const preSwap=Array(BATTLE_ENTRY_MAX).fill(null);
@@ -84,6 +84,7 @@ function buildEnemyEntryLayout(team){
       coreStats:enemy.coreStats?clone(enemy.coreStats):null,
       sourceEnemyAi:enemy.enemy?.ai?clone(enemy.enemy.ai):(enemy.sourceEnemyAi?clone(enemy.sourceEnemyAi):null),
       sourceEnemyPetSkills:Array.isArray(enemy.enemy?.base?.petSkills)?clone(enemy.enemy.base.petSkills):(Array.isArray(enemy.sourceEnemyPetSkills)?clone(enemy.sourceEnemyPetSkills):null),
+      sourceEnemyPetSkillProfiles:(Array.isArray(enemy.enemy?.base?.petSkills)?enemy.enemy.base.petSkills:(Array.isArray(enemy.sourceEnemyPetSkills)?enemy.sourceEnemyPetSkills:[])).map(rawId=>{const id=intOr(rawId);const row=id==null?null:(petSkillCatalog?.[`skill${id}`]??petSkillCatalog?.byId?.[String(id)]??null);return row?{skillId:id,functionName:String(row.f??''),option:String(row.o??''),name:String(row.n??''),useType:intOr(row.useType)}:null;}),
       sourceDropTable:Array.isArray(enemy.enemy?.dropTable)?clone(enemy.enemy.dropTable):(Array.isArray(enemy.sourceDropTable)?clone(enemy.sourceDropTable):[])
     };
   }
@@ -97,7 +98,7 @@ function buildEnemyEntryLayout(team){
 }
 
 function buildBattleContext({
-  playerId=null,player=null,playerElements=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null,materializeEnemyStats=false,enemyStatRolls=[]
+  playerId=null,player=null,playerElements=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null,materializeEnemyStats=false,enemyStatRolls=[],petSkillCatalog=null
 }={}){
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-context',reason:'player-runtime-required'};
   if(intOr(player.hp)===null||intOr(player.maxHp)===null)return {ok:false,handled:false,stage:'battle-context',reason:'player-hp-runtime-required'};
@@ -109,7 +110,7 @@ function buildBattleContext({
     if(!enemyCoreHydration.ok)return {ok:false,handled:false,stage:'battle-context',reason:enemyCoreHydration.reason,detail:enemyCoreHydration};
     enemyTeam=enemyCoreHydration.team;
   }
-  const enemyLayout=buildEnemyEntryLayout(enemyTeam);
+  const enemyLayout=buildEnemyEntryLayout(enemyTeam,{petSkillCatalog});
   if(!enemyLayout.ok)return {ok:false,handled:false,stage:'battle-context',reason:enemyLayout.reason,detail:enemyLayout};
   const field=intOr(battleFieldNo);
   if(field==null||field<0)return {ok:false,handled:false,stage:'battle-context',reason:'battle-field-no-required'};
