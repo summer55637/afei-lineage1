@@ -34,8 +34,10 @@ Endpoint `mapwarp.txt` 有四個 4000 → 200 source rows：
 - 4006 → 4000 landing `(80,90)`、`(80,91)`：component 48。
 - 四個 4000 → 200 portal origins：component 0。
 - endpoint movement BFS 無法從 component 48 到 component 0。
+- component 48 另有兩個返回 4006 的 mapwarp origin，以及一個 endpoint `mapwarp` 出口 `(4000,82,107) → (4020,4,12)`。
+- 4020 的 landing `(4,12)` 可步行到 `(12,9))/`(11,9)`，而 source-backed world graph 只接到 851/840；這條支線沒有把 component 48 接回 4000 的 component 0，也沒有提供通往 200 的新入口。
 
-所以這不是固定-C 才有的 mismatch；RO0000 endpoint 本身也重現同一個 world connectivity blocker。
+所以目前仍不存在 source-backed 的 component 48 → 4000→200 portal-origin bridge。
 
 目前不做 synthetic teleport、component merge 或私自 remap。
 
