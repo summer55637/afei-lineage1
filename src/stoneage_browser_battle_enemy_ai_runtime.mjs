@@ -9,6 +9,7 @@ const BATTLE_COM_NONE=0;
 const BATTLE_COM_ATTACK=1;
 const BATTLE_COM_GUARD=2;
 const BATTLE_COM_ESCAPE=4;
+const BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES=Object.freeze(['paralysis','stone','sleep','dizzy','dragnet','barrier']);
 const BSIDE_FLG_SURPRISE=1;
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -18,6 +19,18 @@ const int=value=>{if(value==null||String(value).trim()==='')return null;const n=
 const isObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const weight=(ai,key)=>{const n=int(ai?.[key]??0);return n!=null&&n>=0?n:null;};
 
+function readEnemyStatusValue(entry,key){
+  for(const source of [entry?.battleStatus,entry?.status,entry]){
+    if(source&&Object.prototype.hasOwnProperty.call(source,key)){
+      const n=int(source[key]);
+      return n==null?0:n;
+    }
+  }
+  return 0;
+}
+function enemyCannotMove(entry){
+  return BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES.filter(key=>readEnemyStatusValue(entry,key)>0);
+}
 function findEntryByBid(context,bid){
   const b=int(bid);if(b==null||b<0||b>19)return null;
   const side=b>=10?1:0,slot=b>=10?b-10:b;
@@ -139,7 +152,12 @@ function planEnemyAiCommands(context,{actionRolls=[],targetRolls=[]}={}){
         if(!selected.ok)return {...selected,handled:false,stage:'battle-enemy-ai-plan',actorBid:int(actor.bid),candidateCount:targetSelection.candidates.length};
         targetCursor=selected.cursor;targetRoll=selected.targetRoll;targetBid=selected.candidate.bid;
       }
-      commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,action:chosen.action,commandCode:chosen.commandCode,targetBid,actionRoll:actionResult.roll,targetRoll,before});
+      const blockedOn=enemyCannotMove(actor);
+      const cannotMove=blockedOn.length>0;
+      commands.push({actorBid:int(actor.bid)??sideNo*10+slot,side:sideNo,slot,
+        action:cannotMove?'none':chosen.action,selectedAction:chosen.action,
+        commandCode:cannotMove?BATTLE_COM_NONE:chosen.commandCode,targetBid,
+        moveBlockedOn:blockedOn,actionRoll:actionResult.roll,targetRoll,before});
     }
   }
   if(commands.length===0)return {ok:false,handled:false,stage:'battle-enemy-ai-plan',reason:'enemy-ai-no-waiting-entries'};
@@ -175,4 +193,4 @@ function applyEnemyAiCommands(context,options={}){
 function createBrowserBattleEnemyAiRuntime(){
   return {ok:true,format:BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,plan:planEnemyAiCommands,commit:commitEnemyAiCommands,apply:applyEnemyAiCommands};
 }
-export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
+export {BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT,ACTION_BATTLE_ENEMY_AI_APPLY,BATTLE_COM_NONE,BATTLE_COM_ATTACK,BATTLE_COM_GUARD,BATTLE_COM_ESCAPE,BATTLE_ENEMY_AI_CANNOT_MOVE_STATUSES,planEnemyAiCommands,commitEnemyAiCommands,applyEnemyAiCommands,createBrowserBattleEnemyAiRuntime};
