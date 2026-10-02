@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7f671c4 — docs: record battle regression recovery
-- 更新時間：2026-10-02T12:58:09+08:00
+- 最新 commit：fc39d8b — feat: integrate explicit Karutarna route repair overlay
+- 更新時間：2026-10-02T13:53:29+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
