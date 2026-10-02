@@ -113,6 +113,8 @@ Here A and B denote the two stored dimensions in argument order; the x/y orienta
 
 `readMap` opens the same path, reads the two 4-byte header values, and then performs three separate row-oriented reads into three `unsigned short*` output buffers. The plane bases advance by 2AB bytes each, matching the layout above. It also converts the header dimensions for float outputs by dividing them by two; the higher-level meaning of those float outputs is not established by this function alone.
 
+`writeMap` opens the same path, reads the header dimensions, adjusts the requested rectangle, and performs three corresponding row-oriented writes at the existing plane offsets. During the write path it may also call `setEventMemory` for qualifying first-plane cells. This confirms that the native code can read and update the three planes, rather than merely creating an empty file.
+
 The `0xAB2-byte clear size used for some map output buffers is 2,738 bytes, or 1,369 16-bit cells. This is a fixed output/window buffer size in the inspected code and must not be treated as the full map dimensions.
 
 This identifies a native local map-cache format with a header and three planar cell arrays. It does not identify the semantics of each plane, prove that these files are the source of authoritative world maps, or establish a mapping to server map IDs. In particular, this `map/%d.dat` cache is separate from the `path/map4/real.bin` Lua loading container and from the server's Fixed-C LS2MAP format.
