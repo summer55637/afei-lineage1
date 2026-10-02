@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7858a68 — test: cover save storage and restore lifecycle
-- 更新時間：2026-10-02T12:14:06+08:00
+- 最新 commit：ab8f63f — ci: run save storage regression
+- 更新時間：2026-10-02T12:14:18+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
