@@ -168,6 +168,7 @@ function createBrowserStateController({
   warpCatalog=null,
   encounterTargetIndex=null,
   encounterGroupCatalog=null,
+  petSkillCatalog=null,
   worldMovementOptions={},
   worldWarpPointOptions={},
   battleFieldNoProvider=null,
@@ -1433,6 +1434,7 @@ function createBrowserStateController({
           groupId:groupIdValue,
           battleFieldNo,
           materializeEnemyStats:action.materializeEnemyStats===true,
+          petSkillCatalog,
           enemyStatRolls:encounterGroupCatalog && action.materializeEnemyStats===true
             ? pipeline?.generation?.coreStatRolls
             : (Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:[])
