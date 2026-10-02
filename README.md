@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：c8b7f4a — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T20:37:34Z
+- 最新 commit：dc03b5f — [docs] publish Android native and manifest evidence
+- 更新時間：2026-10-02T20:38:22Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
