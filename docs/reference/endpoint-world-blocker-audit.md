@@ -20,7 +20,7 @@ RO0000 的 world map 使用 `LS&MAP`，不是 fixed-C 使用的 `LS2MAP`。
 
 Endpoint `LS&MAP` header 的 show-name 欄位為 48 bytes；fixed-C `LS2MAP` 為 32 bytes。
 
-## 4000 → 200
+undefined
 
 Endpoint `mapwarp.txt` 有四個 4000 → 200 source rows：
 
@@ -37,7 +37,7 @@ Endpoint `mapwarp.txt` 有四個 4000 → 200 source rows：
 - component 48 另有兩個返回 4006 的 mapwarp origin，以及一個 endpoint `mapwarp` 出口 `(4000,82,107) → (4020,4,12)`。
 - 4020 的 landing `(4,12)` 可步行到 `(12,9))/`(11,9)`，而 source-backed world graph 只接到 851/840；這條支線沒有把 component 48 接回 4000 的 component 0，也沒有提供通往 200 的新入口。
 
-所以目前仍不存在 source-backed 的 component 48 → 4000→200 portal-origin bridge。
+所以undefined
 
 目前不做 synthetic teleport、component merge 或私自 remap。
 
