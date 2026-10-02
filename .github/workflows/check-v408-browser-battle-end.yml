@@ -10,8 +10,6 @@ on:
       - 'tools/check_v408_browser_battle_end.mjs'
       - 'data/generated/stoneage_browser_battle_end_schema.json'
       - 'docs/reference/v408-browser-battle-end.md'
-      - 'docs/rebuild-roadmap.md'
-      - 'tools/generate_readme.mjs'
       - '.github/workflows/check-v408-browser-battle-end.yml'
   workflow_dispatch:
 permissions:
