@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：d4ba4fe — [docs] record full Java package audit coverage
-- 更新時間：2026-10-02T23:55:20+08:00
+- 最新 commit：51d67e2 — [docs] document verified ADRNBIN accessor fields
+- 更新時間：2026-10-02T23:56:57+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
