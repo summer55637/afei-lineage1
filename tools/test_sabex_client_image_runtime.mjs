@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   classifySabexCell,
   resolveSabexClientImages,
-} from './stoneage_sabex_runtime.mjs';
+} from '../src/stoneage_sabex_runtime.mjs';
 
 const index={
   bitmapnumberToGraphicNo:new Map([[100,500],[101,501]]),
