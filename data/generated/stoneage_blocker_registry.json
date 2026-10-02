@@ -85,21 +85,20 @@
     "persistent-state-expansion": {
       "status": "resolved",
       "scope": "persistent-state",
-      "previousEvidence": "原先以廣義 schema expansion 描述；schema v1、Save Envelope v1 與交易回歸已存在。2026-10-02 已新增 storage port、controller auto-persist 與 session restore，現待自動回歸驗證。",
+      "previousEvidence": "初始盤點曾將 Persistent State 缺口廣義描述為 schema expansion；schema v1、Save Envelope v1 與交易回歸原本已存在。2026-10-02 追加 durable storage、controller auto-persist、session restore 後，該 lifecycle blocker 已由成功的完整 regression 關閉。",
       "newEvidence": [
         "canonical Persistent State schema v1 已包含 player/inventory/equipment/pets/quests/events/titles/world/idle/battleSettings 容器，並有 normalize / validate",
         "Save Envelope v1 已提供 deterministic JSON、SHA-256、parse/validation、revision guard 與 commit",
         "persistent-state schema regression 與 V3.44 save join regression 已覆蓋主要欄位 round-trip、schema 30 known-field migration 及 revision guard",
         "NPC、ItemShop、SavePoint、World movement/warp、Idle、Battle 等多個 runtime transaction 已使用 commitSave",
-        "Browser State Controller 目前以記憶體 currentState 運作並提供 getState/dispatch；未提供 durable storage adapter 或啟動還原入口",
-        "commitSave 只產生已驗證的 state 與 Save Envelope，不負責寫入可跨 session 保留的儲存介質",
+        "2026-10-02 storage wiring 前的初始盤點：Browser State Controller 僅以記憶體 currentState 運作，尚無 durable storage adapter 或啟動還原入口（後續已補足）",
+        "初始存檔交易只產生已驗證的 state 與 Save Envelope，尚未寫入跨 session 儲存介質（後續已由 storage adapter 補足）",
         "2026-10-02 新增 src/stoneage_save_storage.mjs：injected read/write port 與 LocalStorage adapter，提供 envelope 寫入及驗證載入",
         "2026-10-02 Browser State Controller 支援注入 storage；成功且 revision 前進的 dispatch 自動保存，寫入失敗回復 canonical / transient state",
         "2026-10-02 新增 browser persistent session restore helper，於建立 controller 前先載入並驗證已存 envelope",
-        "新增 tools/check_save_storage.mjs，並已納入 check-persistent-state workflow；目前尚未取得本次 workflow 實際執行結果",
         "2026-10-02 check-persistent-state workflow run 36964366382 on commit 3c2a0821b96796036e9707b8411e488a02f6a73e completed successfully; schema, idle, route, reward, policy, item economy, save transaction, save storage, battle result, offline resume, and idle simulation regressions all passed"
       ],
-      "next": "Resolved for canonical v1 durable save lifecycle: LocalStorage persistence, Browser Controller auto-persist, session restore, fail-closed loading, and rollback on write failure are implemented and covered by the successful check-persistent-state run. Keep legacy raw-save import, opaque-field semantics, and playable HTML integration as separate scopes.",
+      "next": "Canonical v1 durable save lifecycle resolved and regression-passed. Legacy raw-save import, opaque-field semantics, and playable HTML integration remain separate scopes.",
       "summary": "Canonical v1 持久寫入、自動保存與 session 還原已實作，完整 regression 通過。",
       "resolution": "canonical-v1-save-lifecycle-regression-passed"
     }
