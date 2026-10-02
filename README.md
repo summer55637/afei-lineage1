@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：cf832a5 — test: preserve explicit AI target fixture fields
-- 更新時間：2026-10-02T16:30:07+08:00
+- 最新 commit：d234bb4 — docs: record V4.37 enemy WAZA lifecycle
+- 更新時間：2026-10-02T16:33:59+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.36
+- Regression 最高版本：V4.37
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.36 |
+| Battle Pipeline | ✅ V4.37 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
