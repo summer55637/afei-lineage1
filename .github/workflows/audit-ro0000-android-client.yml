@@ -34,7 +34,7 @@ jobs:
       - name: Audit APK archive and manifest
         run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
       - name: Audit embedded native ELF binaries
-        run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json
+        run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
       - name: Publish audit artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -42,5 +42,6 @@ jobs:
           path: |
             artifacts/ro0000_android_apk_audit.json
             artifacts/ro0000_android_native_elf_audit.json
+            artifacts/native/**/*.so
           if-no-files-found: error
           retention-days: 30
