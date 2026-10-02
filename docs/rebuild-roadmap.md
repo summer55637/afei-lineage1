@@ -1,3 +1,17 @@
+## 2026-10-02 Battle Regression Recovery：遭遇與離場測試對齊正式介面
+
+這輪對舊版獨立回歸進行前置條件與資料形狀校正，沒有放寬 runtime gate：
+
+- Encounter group / enemy generation 與 V4.08–V4.10 finish/profit 測試改用有效的世界位置、來源遭遇與生成隊伍。
+- V4.21 / V4.22 離場測試對齊 settlement receipt 與玩家離場提交順序。
+- V3.54 / V3.71 ItemShop 回歸使用 catalog 原生 shopId。
+- Battle Context getter / initialize 回傳為 raw context；相關測試已同步。
+- 世界／NPC context-clear gate 的語法與 assertion 已修正。
+
+已觀察到成功的 Actions：V3.54、V3.71、V3.83、V3.84、V3.86、V3.87、V4.08、V4.09、V4.10、V4.21、V4.25，以及 finish-hook profile。個別舊 run 的失敗保留作歷史紀錄，不代表目前回歸仍失敗；仍以各自最新成功 run 為準。
+
+---
+
 ## 2026-10-02 Idle Battle Strategy v1：基礎命令策略已接入，完整戰鬥仍待串接
 
 Persistent State 的 canonical v1 持久生命週期已由 check-persistent-state workflow run 36964366382 通過並關閉 blocker。本輪接續處理首批放置路線的戰鬥策略。
