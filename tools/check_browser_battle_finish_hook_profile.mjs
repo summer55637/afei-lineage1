@@ -24,6 +24,8 @@ const base=buildBattleContext({
   battleFieldNo:0
 });
 assert.equal(base.ok,true,JSON.stringify(base));
+base.context.mode='battle';
+base.context.sourceMode=2;
 assert.equal(validateBattleContext(base).ok,true,JSON.stringify(validateBattleContext(base)));
 assert.equal(base.context.finishHookProfile.profile,'ordinary-world-encounter');
 assert.equal(base.context.finishHookProfile.winFuncInjected,false);
