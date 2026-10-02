@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：95e485c — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T01:13:06Z
+- 最新 commit：9581cf7 — test: complete V4.22 settlement revision fixture
+- 更新時間：2026-10-02T09:13:44+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
