@@ -88,7 +88,7 @@ const coreStatRolls=[
     surpriseRoll:100
   });
   assert.equal(initialized.ok,true,JSON.stringify(initialized));
-  assert.equal(initialized.battleContext.context.mode,'battle');
+  assert.equal(initialized.battleContext.mode,'battle');
 
   const command=await c.dispatch({
     type:ACTION_BATTLE_PLAYER_COMMAND_SET,
