@@ -104,7 +104,7 @@ function buildReadme() {
   const workflowLabel = workflowVersion == null ? '—' : (String(workflowVersion).length === 3 ? 'V' + String(workflowVersion)[0] + '.' + String(workflowVersion).slice(1) : 'V' + workflowVersion);
   const manual = endpointCatalog.sourceCorpus?.byProvenance?.manualExternalWeb ?? {};
   const vm = endpointCatalog.sourceCorpus?.byProvenance?.vmOneClick ?? {};
-  const blockers = blockerEntries.filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status)).slice(0, 5).map(([id, item]) => '- ' + id + '：' + (item.status ?? 'unknown') + ' → ' + (item.next ?? '待定'));
+  const blockers = blockerEntries.filter(([, item]) => ['active', 'reopened-for-reaudit'].includes(item?.status)).slice(0, 5).map(([id, item]) => '- ' + id + '：' + (item.summary ?? item.next ?? '待定'));
   const reopened = reopenedFeatureNames.map(item => item.name + '：' + item.status + '（未啟用）');
   const routeLine = routeStatus.sourceRouteSpine === 'closed' ? '✅ 已閉合（' + (routeStats.verifiedStartMaps ?? 0) + '/4 出生城、' + (routeStats.reachableDirectWarpExits ?? 0) + '/' + (routeStats.directWarpExits ?? 0) + ' direct warp）' : '⚠️ 未完成';
   const route4000 = blockerRegistry.blockers?.['route-4000-to-200'];
@@ -172,6 +172,7 @@ function buildReadme() {
     '- [Source authority / provenance](docs/source-authority-and-provenance.md)',
     '- [Endpoint source catalog](docs/reference/endpoint-source-catalog.md)',
     '- [Rebuild roadmap](docs/rebuild-roadmap.md)',
+    '- [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)',
     '- [Generated state / evidence](data/generated/)',
     '',
     '> README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。'
