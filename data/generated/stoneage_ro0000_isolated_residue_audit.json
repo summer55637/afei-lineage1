@@ -1,7 +1,7 @@
 {
   "format": "stoneage-ro0000-isolated-residue-audit-v1",
   "checkedDate": "2026-10-02",
-  "ro0000TreeSha": "b34f27098f83f54f58c69832d5551c42e9609417",
+  "ro0000TreeSha": "4d9b9d244a4a299e3839bed2bd39d7368b579976",
   "scope": "ten isolated residue blobs identified by exact Git SHA uniqueness; content-level evidence review only; no raw-file mutation",
   "rules": {
     "noDeleteFromExtensionAlone": true,
