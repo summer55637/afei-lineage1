@@ -46,6 +46,14 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"myluaload|DownLoadIniFile|GetBinaryResource|UpdateAppNewVersion|DownloadResource|"
     r"(?:[A-Za-z_]\w*::)*ReadPatchInfo|(?:[A-Za-z_]\w*::)*(?:DownloadFile|UnZipFile)|"
     r"initResources|loadResources|cleanupRealbin|"
+    r"SDL_main|Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange|"
+    r"EventProc|GameMain|DispCallProc|networkLoop|ScriptRunningProcess|Process|"
+    r"ScrollPanelProcess|NextScrollPanelRender|AniProc|MouseProc|HitMouseCursor|"
+    r"ClearMouseOnceState|InitProc|GetKeyInputFocus|Keyboard(?:Tab|BackSpace|Left|Right|Return)|"
+    r"MouseNowPoint|Mouse(?:DblCrick|Crick)(?:Left|Right)(?:Up|Down)Point|"
+    r"CleanMouseClick|CheckWndMouse|changeInput|keyBoard(?:Get|Set|Proc|Init)[A-Za-z]*|"
+    r"moveProc|onceMoveProc|partyMoveProc|_execEtcEvent|_etcEventCheck|"
+    r"_sendWarpEvent|_sendEnemyEvent|_checkEnemyEvent|_checkWarpEvent|warpEffectProc|"
     r"initMap|readMap|writeMap|createMap|setMap|resetMap|redrawMap|drawMap2|drawMapUi|"
     r"lssproto_[A-Za-z0-9_]+_recv|ReadBattleMap|StockDispBuffer|PutBmp|LoadBmp|"
     r"decoderPng|decoder|ReadAniFile|SpecAnim|play_map_bgm|drawMap|setEventMemory|"
@@ -73,6 +81,18 @@ FOCUSED_OBJECTS = {
     "mapEffectSnowLevel", "mapEffectStarFlag", "mapEmptyDir", "mapEmptyFlag",
     "mapEmptyGx", "mapEmptyGy", "mapEmptyStartTime", "masterBufMapEffect",
     "oldMapEffectRainLevel", "oldMapEffectSnowLevel", "useBufMapEffect",
+    "mouse", "pc", "nowFloor", "nowFloorGxSize", "nowFloorGySize",
+    "mouseCursorMode", "mouseMapX", "mouseMapY", "mouseMapGx", "mouseMapGy",
+    "ShowMouseFlg", "mouseLeftCrick", "mouseLeftOn", "mouseRightCrick", "mouseRightOn",
+    "mouseLeftPushTime", "beforeMouseLeftPushTime", "moveRouteCnt", "moveRouteCnt2",
+    "moveStackFlag", "moveStackGx", "moveStackGy", "moveRoute2", "moveRoute",
+    "moveRouteGx", "moveRouteGy", "moveRouteDir", "moveAddTbl", "moveLastDir",
+    "charObjMoveFlag", "floorChangeFlag", "eventWarpSendFlag", "eventWarpSendId",
+    "eventEnemySendFlag", "eventEnemySendId", "eventId", "_etcEventFlag",
+    "_etcEventStep", "_etcEventMode", "_eventWarpNo", "_warpEventFlag",
+    "_enemyEventFlag", "_enemyEventDir", "etcEventFlag", "npcPromptFlag",
+    "userMessageEventType", "mapCenterX", "mapCenterY", "draw_map_bgm_flg",
+    "map_bgm_no", "autoMapColorTbl",
 }
 
 
