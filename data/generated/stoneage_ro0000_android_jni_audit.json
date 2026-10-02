@@ -1,0 +1,114 @@
+{
+  "format": "ro0000-android-jni-declaration-export-audit-v1",
+  "source": {
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c"
+  },
+  "class": "com.newssa.stoneage.ko.JNILibrary",
+  "comparison": {
+    "armeabi-v7a": {
+      "declaredNativeMethods": [
+        "callbackKeyboardChange",
+        "callbackKoLoginFailed",
+        "callbackKoLoginSuccess",
+        "callbackOrderCheck",
+        "callbackZipProgress",
+        "refreshBatteryInfo"
+      ],
+      "exportedJniMethods": [
+        "callbackKeyboardChange",
+        "callbackKoLoginFailed",
+        "callbackKoLoginSuccess",
+        "callbackKoLogout",
+        "callbackOrderCheck",
+        "callbackWechatShare",
+        "callbackYodaOpened",
+        "callbackZipProgress",
+        "refreshBatteryInfo"
+      ],
+      "matched": [
+        "callbackKeyboardChange",
+        "callbackKoLoginFailed",
+        "callbackKoLoginSuccess",
+        "callbackOrderCheck",
+        "callbackZipProgress",
+        "refreshBatteryInfo"
+      ],
+      "declaredWithoutExport": [],
+      "exportedWithoutDexDeclaration": [
+        "callbackKoLogout",
+        "callbackWechatShare",
+        "callbackYodaOpened"
+      ],
+      "counts": {
+        "declared": 6,
+        "exported": 9,
+        "matched": 6,
+        "declaredWithoutExport": 0,
+        "exportedWithoutDexDeclaration": 3
+      },
+      "interpretation": {
+        "missingExportProvesRuntimeFailure": false,
+        "extraExportProvesStaleCode": false,
+        "reason": "JNI exports and DEX declarations are a static name-level comparison; reflection, optional callbacks, and runtime registration are not inferred."
+      }
+    },
+    "x86": {
+      "declaredNativeMethods": [
+        "callbackKeyboardChange",
+        "callbackKoLoginFailed",
+        "callbackKoLoginSuccess",
+        "callbackOrderCheck",
+        "callbackZipProgress",
+        "refreshBatteryInfo"
+      ],
+      "exportedJniMethods": [
+        "callbackKeyboardChange",
+        "callbackKoLoginFailed",
+        "callbackKoLoginSuccess",
+        "callbackKoLogout",
+        "callbackOrderCheck",
+        "callbackWechatShare",
+        "callbackYodaOpened",
+        "callbackZipProgress",
+        "refreshBatteryInfo"
+      ],
+      "matched": [
+        "callbackKeyboardChange",
+        "callbackKoLoginFailed",
+        "callbackKoLoginSuccess",
+        "callbackOrderCheck",
+        "callbackZipProgress",
+        "refreshBatteryInfo"
+      ],
+      "declaredWithoutExport": [],
+      "exportedWithoutDexDeclaration": [
+        "callbackKoLogout",
+        "callbackWechatShare",
+        "callbackYodaOpened"
+      ],
+      "counts": {
+        "declared": 6,
+        "exported": 9,
+        "matched": 6,
+        "declaredWithoutExport": 0,
+        "exportedWithoutDexDeclaration": 3
+      },
+      "interpretation": {
+        "missingExportProvesRuntimeFailure": false,
+        "extraExportProvesStaleCode": false,
+        "reason": "JNI exports and DEX declarations are a static name-level comparison; reflection, optional callbacks, and runtime registration are not inferred."
+      }
+    }
+  },
+  "conclusion": {
+    "abiExportSetsEqual": true,
+    "dexDeclarationSetEqual": true,
+    "stableExportedWithoutDexDeclarationAcrossBothAbis": [
+      "callbackKoLogout",
+      "callbackWechatShare",
+      "callbackYodaOpened"
+    ],
+    "stableDeclaredWithoutExportAcrossBothAbis": []
+  },
+  "scope": "JNI symbol-name comparison against each ABI's libStoneage.so; does not include SDL/GCloud vendor libraries."
+}
