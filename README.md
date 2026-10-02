@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：73da39f — docs: record V4.29 enemy AI target contract
-- 更新時間：2026-10-02T16:07:51+08:00
+- 最新 commit：7cdba44 — docs: record V4.30 enemy AI target selection
+- 更新時間：2026-10-02T16:08:57+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.29
+- Regression 最高版本：V4.30
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -32,7 +32,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.29 |
+| Battle Pipeline | ✅ V4.30 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
