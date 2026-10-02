@@ -83,6 +83,7 @@ function buildEnemyEntryLayout(team){
       sourceTempNo:intOr(enemy.enemy?.tempNo)??null,
       coreStats:enemy.coreStats?clone(enemy.coreStats):null,
       sourceEnemyAi:enemy.enemy?.ai?clone(enemy.enemy.ai):(enemy.sourceEnemyAi?clone(enemy.sourceEnemyAi):null),
+      sourceEnemyPetSkills:Array.isArray(enemy.enemy?.base?.petSkills)?clone(enemy.enemy.base.petSkills):(Array.isArray(enemy.sourceEnemyPetSkills)?clone(enemy.sourceEnemyPetSkills):null),
       sourceDropTable:Array.isArray(enemy.enemy?.dropTable)?clone(enemy.enemy.dropTable):(Array.isArray(enemy.sourceDropTable)?clone(enemy.sourceDropTable):[])
     };
   }
