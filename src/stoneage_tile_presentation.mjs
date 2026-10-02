@@ -1,4 +1,4 @@
-import {loadClientAssetPack,resolveClientTilePixels} from './stoneage_client_asset_pack.mjs';
+import {loadClientAssetPack,resolveClientTilePixels,resolveClientTilePixelsAsync} from './stoneage_client_asset_pack.mjs';
 import {parseStoneAgeSap,indexedPixelsToRgba,stoneAgePaletteSummary} from './stoneage_palette_runtime.mjs';
 
 const SAP_BYTES=672;
@@ -73,6 +73,50 @@ export function renderSourceTileObjectPreview(ctx,presentation,{tileId,objectId,
   if(object&&objectRgba)drawGraphic(ctx,canvas,object,objectRgba,objectScale,ox,oy,showLabels?'O '+oid:null);
   ctx.strokeStyle='rgba(212,180,95,.42)';ctx.strokeRect(.5,.5,canvas.width-1,canvas.height-1);
   return {status:'ready',tileId:Number(tileId),objectId:Number.isFinite(oid)&&oid>0?oid:0,objectDecoded:Boolean(objectRgba),width:tile.width,height:tile.height};
+}
+
+function graphicPixelsToRgba(graphic,palette){
+  if(graphic.bytesPerPixel===4){
+    const expected=graphic.width*graphic.height*4;
+    if(graphic.pixels.length!==expected)throw new Error('RGBA pixel count mismatch');
+    return Uint8ClampedArray.from(graphic.pixels);
+  }
+  return indexedPixelsToRgba(graphic.pixels,graphic.width,graphic.height,palette);
+}
+
+export async function renderSourceTileObjectPreviewAsync(ctx,presentation,{tileId,objectId,scale=1,showLabels=true}={}){
+  const canvas=ctx?.canvas;
+  if(!ctx||!canvas||presentation?.status!=='ready')return {status:'unavailable',reason:presentation?.reason||'presentation-not-ready'};
+  const tile=await resolveClientTilePixelsAsync(presentation.pack,tileId);
+  if(tile?.status!=='ready')return {status:'tile-'+(tile?.status||'missing')};
+  let tileRgba;
+  try{tileRgba=graphicPixelsToRgba(tile,presentation.palette);}
+  catch(error){return {status:'tile-pixel-conversion-failed',error:String(error?.message||error)};}
+
+  let object=null,objectRgba=null;
+  const oid=Math.trunc(Number(objectId));
+  if(Number.isFinite(oid)&&oid>0){
+    object=await resolveClientTilePixelsAsync(presentation.pack,oid);
+    if(object?.status==='ready'){
+      try{objectRgba=graphicPixelsToRgba(object,presentation.palette);}
+      catch{object=null;objectRgba=null;}
+    }
+  }
+  clearCanvas(ctx,canvas);
+  const ox=canvas.width/2,oy=canvas.height/2+12;
+  const tileScale=Math.max(1,Math.min(Number(scale)||1,4));
+  drawGraphic(ctx,canvas,tile,tileRgba,tileScale,ox,oy,showLabels?'T '+tileId:null);
+  if(object&&objectRgba)drawGraphic(ctx,canvas,object,objectRgba,tileScale,ox,oy,showLabels?'O '+oid:null);
+  ctx.strokeStyle='rgba(212,180,95,.42)';ctx.strokeRect(.5,.5,canvas.width-1,canvas.height-1);
+  return {
+    status:'ready',
+    tileId:Number(tileId),
+    objectId:Number.isFinite(oid)&&oid>0?oid:0,
+    objectDecoded:Boolean(objectRgba),
+    pixelFormats:{tile:tile.bytesPerPixel===4?'rgba':'indexed',object:object?.bytesPerPixel===4?'rgba':object?'indexed':'none'},
+    width:tile.width,
+    height:tile.height
+  };
 }
 
 export function clientTilePresentationSummary(presentation){
