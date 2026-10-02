@@ -202,7 +202,9 @@ def main():
             "stringAndCharacterLiteralContentsIncluded": False,
             "commentsIncluded": False,
             "urlsAndHostsIncluded": False,
-            "onlyMethodNamesAndCallIdentifiers": True,\n            "callSequenceIncluded": True,\n            "sourceLineNumbersIncluded": True,
+                        "onlyMethodNamesAndCallIdentifiers": True,
+            "callSequenceIncluded": True,
+            "sourceLineNumbersIncluded": True,
         },
         "limitations": [
             "Static decompiler output only; no Java or native code was executed.",
