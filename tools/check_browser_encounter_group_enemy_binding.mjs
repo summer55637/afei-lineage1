@@ -8,6 +8,7 @@ import { IDLE_EVENTS } from '../src/stoneage_idle_loop.mjs';
 const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
 const groupCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
 const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
+const endpointClosure=JSON.parse(fs.readFileSync('data/generated/stoneage_endpoint_start_encounter_group_closure.json','utf8'));
 
 function state(){
   const s=freshPersistentState({playerId:'pipeline-bind'});
@@ -20,6 +21,13 @@ function state(){
 function controller(){return createBrowserStateController({state:state(),idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,encounterGroupCatalog:groupCatalog,battleFieldNoProvider:0});}
 
 const encounter={encounterId:65,floorId:100,x:610,y:538};
+assert.equal(endpointClosure.conclusion?.status,'closed-for-first-route');
+assert.equal(endpointClosure.encounter?.exactLineMatch,true);
+assert.equal(endpointClosure.encounter?.shapeMatchesVerifiedTarget,true);
+assert.deepEqual(endpointClosure.encounter?.endpoint?.groupIds?.filter(x=>x>0),[89,92,94]);
+assert.deepEqual(endpointClosure.groups.map(x=>x.groupId),[89,92,94]);
+assert.equal(endpointClosure.groups.every(x=>x.exactLineMatch&&x.enemyMembersMatch&&x.itemGatesClosed),true);
+assert.equal(endpointClosure.groups.every(x=>x.enemies.every(e=>e.semanticCoreMatch&&e.base?.exactLineMatch)),true);
 const coreStatRolls=[
   {levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:[0,0,0,0,0,0,0,0,0,0]},
   {levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:[0,0,0,0,0,0,0,0,0,0]}
