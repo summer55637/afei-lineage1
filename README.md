@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：c058068 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T04:56:13Z
+- 最新 commit：e1b95eb — test: build valid source encounter for profit route
+- 更新時間：2026-10-02T12:56:52+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
