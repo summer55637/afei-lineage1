@@ -98,6 +98,41 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             with self.subTest(candidate=candidate):
                 self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
 
+    def test_extended_map_cache_movement_and_effect_focus(self):
+        candidates = [
+            "initMap()",
+            "createMap(int, int, int)",
+            "setMap(int, int, int)",
+            "writeMap(int, int, int, int, int, unsigned short*, unsigned short*, unsigned short*)",
+            "readMap(int, int, int, int, int, unsigned short*, unsigned short*, unsigned short*)",
+            "resetMap()",
+            "redrawMap()",
+            "readHitMap(int, int, int, int, unsigned short*, unsigned short*, unsigned short*, unsigned short*)",
+            "checkHitMap(int, int)",
+            "checkEmptyMap(int)",
+            "checkEmptyMapData(int, int, int)",
+            "_checkEmptyMap()",
+            "setMapMovePoint2(int, int)",
+            "_mapMove()",
+            "mapMove2()",
+            "_partyMapMove()",
+            "createAutoMap(int, int, int)",
+            "initAutoMapColor()",
+            "makeAutoMapColor()",
+            "readAutoMapColor(char*)",
+            "writeAutoMapColor(char*)",
+            "initMapEffect(bool)",
+            "mapEffectProc2(int)",
+            "mapEffectRain2(int)",
+            "mapEffectSnow2(int)",
+            "getMapEffectBuf()",
+            "InitPteernSeparationBin(char const*, bool)",
+            "cleanupRealbin()",
+        ]
+        for candidate in candidates:
+            with self.subTest(candidate=candidate):
+                self.assertRegex(candidate, FOCUSED_FUNCTION_RE)
+
     def test_embedded_resource_format_string(self):
         values = relevant_embedded_strings(b"prefix\x00path/map4/%s/real.bin\x00")
         self.assertIn("path/map4/%s/real.bin", values)
