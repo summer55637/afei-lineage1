@@ -88,7 +88,7 @@ controllerState.player.maxMp=20;
 controllerState.idle.enabled=true;
 controllerState.idle.mode='encounter_pending';
 controllerState.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
-controllerState.world.position={floorId:1,x:1,y:1};
+controllerState.world.position={floorId:100,x:610,y:538};
 const controller=createBrowserStateController({
   state:controllerState,
   idleRouteCatalog:routeCatalog,
