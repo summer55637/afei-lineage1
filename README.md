@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ed19143 — [docs] include Android route and movement audit in README
-- 更新時間：2026-10-03T04:23:44+08:00
+- 最新 commit：1688619 — [audit] enforce complete native focus publication and disassembly
+- 更新時間：2026-10-03T04:25:32+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
