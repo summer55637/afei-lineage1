@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5cfadaa — [docs] record target Android SABEX battle map format and selector flow
-- 更新時間：2026-10-02T20:50:42+08:00
+- 最新 commit：86c1e7a — [docs] record 33x33 battle map lineage evidence
+- 更新時間：2026-10-02T21:09:38+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
