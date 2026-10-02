@@ -22,11 +22,13 @@ const hpMax=plan({selectMode:2},[1]);
 assert.equal(hpMax.ok,true,JSON.stringify(hpMax));
 assert.equal(hpMax.commands[0].targetBid,5,'HP_MAX selects the highest-HP eligible target');
 assert.equal(hpMax.commands[0].targetRoll,null);
-assert.equal(hpMax.commands[0].targetSelectorRoll,1);\nassert.deepEqual(hpMax.rngConsumed,{action:1,target:1,total:2});
+assert.equal(hpMax.commands[0].targetSelectorRoll,1);
+assert.deepEqual(hpMax.rngConsumed,{action:1,target:1,total:2});
 
 const hpMin=plan({selectMode:3,players:[40,40],pets:[80]},[1]);
 assert.equal(hpMin.ok,true,JSON.stringify(hpMin));
 assert.equal(hpMin.commands[0].targetBid,0,'HP_MIN keeps the first target on equal HP');
+assert.deepEqual(hpMin.rngConsumed,{action:1,target:1,total:2});
 
 const playerMax=plan({targetType:2,selectMode:2,players:[40,60],pets:[100]},[1]);
 assert.equal(playerMax.ok,true,JSON.stringify(playerMax));
@@ -40,12 +42,24 @@ const fallback=plan({targetType:2,selectMode:1,players:[],pets:[80]},[0]);
 assert.equal(fallback.ok,true,JSON.stringify(fallback));
 assert.equal(fallback.commands[0].targetBid,5,'empty specific target set falls back to all eligible targets');
 
-const missingHp=plan({selectMode:2,players:[null],pets:[]});
+const missingHp=plan({selectMode:2,players:[null],pets:[]},[1]);
 assert.equal(missingHp.ok,false);
 assert.equal(missingHp.reason,'enemy-ai-target-hp-required');
 
-const randomOverride=plan({selectMode:2},[0,2]);\nassert.equal(randomOverride.ok,true,JSON.stringify(randomOverride));\nassert.equal(randomOverride.commands[0].targetBid,5);\nassert.equal(randomOverride.commands[0].targetSelectorRoll,0);\nassert.equal(randomOverride.commands[0].targetRoll,2);\nassert.deepEqual(randomOverride.rngConsumed,{action:1,target:2,total:3});\n\nconst singleCandidate=plan({targetType:2,selectMode:2,players:[40],pets:[]},[0,0]);\nassert.equal(singleCandidate.ok,true,JSON.stringify(singleCandidate));\nassert.equal(singleCandidate.commands[0].targetBid,0);\nassert.deepEqual(singleCandidate.rngConsumed,{action:1,target:2,total:3},'single-candidate mode 2 retains both source target RNG calls when rn roll is zero');\n\nconst unsupported=plan({selectMode:8});
+const randomOverride=plan({selectMode:2},[0,2]);
+assert.equal(randomOverride.ok,true,JSON.stringify(randomOverride));
+assert.equal(randomOverride.commands[0].targetBid,5);
+assert.equal(randomOverride.commands[0].targetSelectorRoll,0);
+assert.equal(randomOverride.commands[0].targetRoll,2);
+assert.deepEqual(randomOverride.rngConsumed,{action:1,target:2,total:3});
+
+const singleCandidate=plan({targetType:2,selectMode:2,players:[40],pets:[]},[0,0]);
+assert.equal(singleCandidate.ok,true,JSON.stringify(singleCandidate));
+assert.equal(singleCandidate.commands[0].targetBid,0);
+assert.deepEqual(singleCandidate.rngConsumed,{action:1,target:2,total:3},'single-candidate mode 2 retains both source target RNG calls when rn roll is zero');
+
+const unsupported=plan({selectMode:8});
 assert.equal(unsupported.ok,false);
 assert.equal(unsupported.reason,'enemy-ai-target-select-mode-not-supported');
 
-console.log(JSON.stringify({pass:true,format:'stoneage-v430-browser-battle-enemy-ai-target-selection-v1',cases:['HP max','HP min with stable first-match tie','player-only HP max','pet-only HP min','specific-target fallback to all','missing HP fail-closed','unsupported selector fail-closed'],targetRngForHpModes:'RAND(0,rn), plus RAND(0,cnt-1) when first roll is zero'},null,2));
+console.log(JSON.stringify({pass:true,format:'stoneage-v430-browser-battle-enemy-ai-target-selection-v1',cases:['HP max','HP min with stable first-match tie','player-only HP max','pet-only HP min','specific-target fallback to all','missing HP fail-closed','rn random override','single-candidate RNG','unsupported selector fail-closed'],targetRngForHpModes:'RAND(0,rn), plus RAND(0,cnt-1) when first roll is zero'},null,2));
