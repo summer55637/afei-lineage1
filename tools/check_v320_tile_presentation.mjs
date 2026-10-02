@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {loadClientTilePresentation,clientTilePresentationSummary,renderSourceTileObjectPreview} from '../src/stoneage_tile_presentation.mjs';
+import {loadClientTilePresentation,clientTilePresentationSummary,renderSourceTileObjectPreview,renderSourceTileObjectPreviewAsync} from '../src/stoneage_tile_presentation.mjs';
 
 const u32=(b,p,v)=>{b[p]=v&255;b[p+1]=(v>>>8)&255;b[p+2]=(v>>>16)&255;b[p+3]=(v>>>24)&255};
 const adrn=new Uint8Array(80);let p=0;
@@ -27,5 +27,10 @@ globalThis.document={createElement(){return {width:0,height:0,getContext(){retur
 const rendered=renderSourceTileObjectPreview(ctx,presentation,{tileId:4500,objectId:0,scale:2,showLabels:false});
 assert.equal(rendered.status,'ready');
 assert.equal(rendered.tileId,4500);
+const asyncRendered=await renderSourceTileObjectPreviewAsync(ctx,presentation,{tileId:4500,objectId:0,scale:2,showLabels:false});
+assert.equal(asyncRendered.status,'ready');
+assert.equal(asyncRendered.tileId,4500);
+assert.deepEqual(asyncRendered.pixelFormats,{tile:'indexed',object:'none'});
+
 assert.equal(renderSourceTileObjectPreview(ctx,{status:'unavailable'},{tileId:4500}).status,'unavailable');
-console.log(JSON.stringify({pass:true,version:'V3.20',focus:'source tile/object -> ADRN -> Real -> RD -> SAP -> RGBA preview',defaultDrawOrder:'tile then object',originalBinaryShipped:false}));
+console.log(JSON.stringify({pass:true,version:'V3.20',focus:'source tile/object -> ADRN -> Real -> RD/gG async -> SAP/RGBA preview',defaultDrawOrder:'tile then object',originalBinaryShipped:false}));
