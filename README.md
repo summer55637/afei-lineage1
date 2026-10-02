@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：59020c1 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-02T02:08:11Z
+- 最新 commit：30c591a — audit: record 4000 tile-pattern evidence
+- 更新時間：2026-10-02T10:34:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.25
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -36,7 +36,7 @@
 
 ## Blocker
 
-- route-4000-to-200：active → keep active until repair form is chosen; the virtual experiment proves a three-cell terrain opening is sufficient, but do not yet mutate the canonical map or claim source-backed original art
+- route-4000-to-200：active → keep active; three-cell terrain opening remains the smallest verified connectivity repair, but tile replacement is not source-backed. Compare any recoverable historical external map snapshot next; otherwise use a clearly labeled RO0000 repair map. Do not mutate canonical map or movement/warp semantics yet.
 - starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
 - starter-item-endpoint-32003：active → keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
