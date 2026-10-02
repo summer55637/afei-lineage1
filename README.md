@@ -27,7 +27,7 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ⚠️ 部分完成（6/8 portal groups） |
+| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 戰鬥策略待定 |
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
@@ -36,7 +36,6 @@
 
 ## Blocker
 
-- route-4000-to-200：active → keep active; three-cell terrain opening remains the smallest verified connectivity repair, but tile replacement is not source-backed. Compare any recoverable historical external map snapshot next; otherwise use a clearly labeled RO0000 repair map. Do not mutate canonical map or movement/warp semantics yet.
 - starter-item-24114-fixed-c：reopened-for-reaudit → keep fixed-C 24114 fail-closed while endpoint loader semantics are separately closed
 - starter-item-endpoint-32003：active → keep endpoint Starter Item fail-closed; reopen only if new authoritative endpoint evidence provides source Item 32003 or a proven endpoint-specific mapping path
 - persistent-state-expansion：active → expand player/pet/inventory/equipment/skills/quests/map/idle/save-migration using endpoint data where applicable and fixed-C semantics
