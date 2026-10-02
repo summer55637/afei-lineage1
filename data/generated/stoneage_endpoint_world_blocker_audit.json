@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-world-blocker-audit-v1",
-  "updated": "2026-10-02T01:40:53.839Z",
+  "updated": "2026-10-02T01:50:24.475Z",
   "source": {
     "endpointRoot": "ro0000/server/merged-source/gmsv/data/map",
     "mapsetPath": "ro0000/server/merged-source/gmsv/data/map/mapset.txt",
@@ -430,6 +430,56 @@
             4020,
             4,
             12
+          ],
+          "originComponent": 48,
+          "reachableFromEntryComponent": true
+        }
+      ],
+      "alternateNpcEntryComponentWarps": [
+        {
+          "sourceFile": "ro0000/server/merged-source/gmsv/data/npc/genout/quiz.create",
+          "sourceLine": 1513,
+          "from": [
+            4000,
+            82,
+            107
+          ],
+          "to": [
+            4020,
+            4,
+            12
+          ],
+          "originComponent": 48,
+          "reachableFromEntryComponent": true
+        },
+        {
+          "sourceFile": "ro0000/server/merged-source/gmsv/data/npc/genout/warp_y2.create",
+          "sourceLine": 565,
+          "from": [
+            4000,
+            80,
+            90
+          ],
+          "to": [
+            4006,
+            10,
+            20
+          ],
+          "originComponent": 48,
+          "reachableFromEntryComponent": true
+        },
+        {
+          "sourceFile": "ro0000/server/merged-source/gmsv/data/npc/genout/warp_y2.create",
+          "sourceLine": 583,
+          "from": [
+            4000,
+            80,
+            91
+          ],
+          "to": [
+            4006,
+            10,
+            21
           ],
           "originComponent": 48,
           "reachableFromEntryComponent": true
