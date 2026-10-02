@@ -1,3 +1,11 @@
+## 2026-10-02 V4.39 Enemy ChargeAttack Integration
+
+將來源 skill 30 ChargeAttack 接入 AI WAZA 與控制器蓄力步進：解析 option 生成 COM1=CHARGE、COM2=原 target、COM3=攻擊百分比／蓄力回合數；依 `BATTLE_Charge()` 扣回合並在歸零時算出攻擊力、改為 CHARGE_OK，接續 AttackSeqPrelude → DamagePlan → CriticalDamagePlan。CHARGE_OK 是本次釋放命令，不屬於跨回合 `BATTLE_IsCharge()` 保留狀態。
+
+Regression：`tools/check_v439_browser_enemy_charge_attack.mjs` 使用 Group 712 / Enemy 1305 正式生成資料，並重跑 V4.29–V4.39、V3.86 Context、attack pipeline binding 與 V4.05 Counter。
+
+---
+
 ## 2026-10-02 V4.38 Enemy NoGuard WAZA
 
 依正式 PetSkill catalog 的 `PETSKILL_NoGuard` profile 支援 skill 150–152：COM1=NOGUARD(1014)、COM2=target、COM3 高 16 位回避／低 16 位反擊與會心；DuckCheck／CounterCheck 套用來源中實際生效的回避與反擊，會心加成只保留不套用。不能行動覆寫不生效；下一回合清除本回合加成與過期 COM3，完全不寫 Persistent State。
