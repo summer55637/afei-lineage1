@@ -59,7 +59,7 @@
       "function": "setMapMovePoint2(int,int)",
       "address": {
         "x86": "0x21a8c0",
-        "armeabiV7a": "0x1871b0"
+        "armeabiV7a": "0x1870b9"
       },
       "observed": [
         "Calculates a movement vector from integer inputs",
