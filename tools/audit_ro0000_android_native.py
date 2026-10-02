@@ -43,7 +43,8 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"^(?:AdrnInit|adrnDecode|readHitMap|checkHitMap|checkEmptyMap(?:Data)?|"
     r"_checkEmptyMap|realGet[A-Za-z]*|LoadSprbin|InitSprBinFileOpen|"
     r"InitPteernSeparationBin|LoadStoneAgeLUA(?:Path)?|ReLoadStoneAgeLUA|"
-    r"myluaload|DownloadResource|initResources|loadResources|cleanupRealbin)\s*\(",
+    r"myluaload|DownloadResource|initResources|loadResources|cleanupRealbin|"
+    r"initMap|readMap|writeMap|createMap|setMap)\s*\(",
     re.IGNORECASE,
 )
 
