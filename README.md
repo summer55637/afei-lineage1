@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5c275ac — [test] assert comparable ABI target parity field
-- 更新時間：2026-10-03T08:10:51+08:00
+- 最新 commit：01b44f0 — [docs] document Android ABI call-target comparison
+- 更新時間：2026-10-03T08:11:05+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
