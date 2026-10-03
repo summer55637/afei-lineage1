@@ -7,6 +7,7 @@ const BATTLE_ENTRY_MAX=10;
 const BATTLE_PLAYER_MAX=5;
 const SIDE_OFFSET=10;
 import { materializeEnemyCoreStats } from './stoneage_browser_world_encounter_enemy_core_stat_runtime.mjs';
+import { collectPlayerRelifeCandidates } from './stoneage_browser_battle_relife_runtime.mjs';
 
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
@@ -99,7 +100,8 @@ function buildEnemyEntryLayout(team,{petSkillCatalog=null}={}){
 }
 
 function buildBattleContext({
-  playerId=null,player=null,playerElements=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null,materializeEnemyStats=false,enemyStatRolls=[],petSkillCatalog=null
+  playerId=null,player=null,playerElements=null,activePet=null,team=null,encounter=null,groupId=null,battleFieldNo=null,materializeEnemyStats=false,enemyStatRolls=[],petSkillCatalog=null,
+  playerItemSlots=null,playerItemRuntimeSlots=null,playerRelifeCatalog=null
 }={}){
   if(!isObject(player))return {ok:false,handled:false,stage:'battle-context',reason:'player-runtime-required'};
   if(intOr(player.hp)===null||intOr(player.maxHp)===null)return {ok:false,handled:false,stage:'battle-context',reason:'player-hp-runtime-required'};
@@ -115,6 +117,19 @@ function buildBattleContext({
   if(!enemyLayout.ok)return {ok:false,handled:false,stage:'battle-context',reason:enemyLayout.reason,detail:enemyLayout};
   const field=intOr(battleFieldNo);
   if(field==null||field<0)return {ok:false,handled:false,stage:'battle-context',reason:'battle-field-no-required'};
+  const playerRelifeState={
+    inventory:{
+      playerItemSlots:Array.isArray(playerItemSlots)?playerItemSlots:[],
+      itemRuntime:{slots:isObject(playerItemRuntimeSlots)?playerItemRuntimeSlots:{}}
+    }
+  };
+  const hasPlayerEquipmentScanSlot=Array.isArray(playerItemSlots)&&playerItemSlots.slice(0,5).some(v=>intOr(v,-1)>=0);
+  let playerRelifeCandidates={ok:true,candidates:[],scanSlots:[0,1,2,3,4],sourceFormat:null,fixedCRef:null};
+  if(hasPlayerEquipmentScanSlot||playerRelifeCatalog!=null){
+    if(playerRelifeCatalog==null)return {ok:false,handled:false,stage:'battle-context',reason:'player-relife-catalog-required'};
+    playerRelifeCandidates=collectPlayerRelifeCandidates(playerRelifeState,playerRelifeCatalog);
+    if(!playerRelifeCandidates.ok)return {ok:false,handled:false,stage:'battle-context',reason:playerRelifeCandidates.reason,detail:playerRelifeCandidates};
+  }
   const playerWork=playerWorkFromState(player);
   if(!playerWork.ok)return {ok:false,handled:false,stage:'battle-context',reason:playerWork.reason,detail:playerWork};
   const vital=intOr(player?.stats?.vital)??0;
@@ -340,6 +355,12 @@ function buildBattleContext({
       enemyCoreStatHydrated:materializeEnemyStats===true,
       enemyCoreStatRngRollCount:materializeEnemyStats===true?enemyCoreHydration.team.reduce((n,e)=>n+(e.coreStats?.rngConsumedCount??0),0):0,
       conditionalResetsOmitted:['PROFESSION_SKILL','PETSKILL_ACUPUNCTURE','PETSKILL_RETRACE','PETSKILL_BECOMEFOX','PROFESSION_ADDSKILL'],
+      sourcePlayerItemSlotsSnapshot:Array.isArray(playerItemSlots)?playerItemSlots.slice():[],
+      sourcePlayerRelifeCandidates:clone(playerRelifeCandidates.candidates??[]),
+      sourcePlayerRelifeCatalogFormat:playerRelifeCandidates.sourceFormat??null,
+      sourcePlayerRelifeFixedCRef:playerRelifeCandidates.fixedCRef??null,
+      sourceRelifeConsumedExistingIndexes:[],
+      sourceRelifeEvents:[],
       leaderId:playerEntry.characterId,
       sourceEncounter:{
         encounterId:intOr(encounter?.encounterId),
