@@ -323,7 +323,27 @@ function createBrowserStateController({
   const battleAutoRuntime=createBrowserBattleAutoRuntime({
     playerStrategyRuntime:idleBattleStrategyRuntime,
     enemyAiRuntime:battleEnemyAiRuntime,
-    roundRuntime:battleRoundRuntime
+    roundRuntime:battleRoundRuntime,
+    idleRuntime,
+    battleFinishCommitRuntime,
+    battleExpPlanRuntime,
+    battleLevelUpPlanRuntime,
+    battlePetGrowthPlanRuntime,
+    battleLevelUpCommitRuntime,
+    battleItemPlanRuntime,
+    battleItemCommitRuntime,
+    battleDuelPointRuntime,
+    battleDuelPointCommitRuntime,
+    battleDeathExtraCommitRuntime,
+    battleRelifeCommitRuntime,
+    battleSettlementRuntime,
+    battlePlayerExitRuntime,
+    battlePlayerExitCommitRuntime,
+    battlePetExitRuntime,
+    battlePetExitCommitRuntime,
+    battleExitPlanRuntime,
+    battleExitCommitRuntime,
+    battleContextClearRuntime
   });
   const battlePlayerCommandRuntime=createBrowserBattlePlayerCommandRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
@@ -909,23 +929,38 @@ function createBrowserStateController({
         const result=await battleAutoRuntime.run(
           {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
           {
+            state:clone(currentState),
             strategy:action.strategy??undefined,
             playerId:action.playerId??null,
             rounds:Array.isArray(action.rounds)?action.rounds:[],
             maxRounds:action.maxRounds??undefined,
             counterPolicy:action.counterPolicy??'execute',
+            completeLifecycle:action.completeLifecycle===true,
+            settlementId:action.settlementId??null,
+            supplyRequired:action.supplyRequired??false,
+            itemExpModifierPercent:action.itemExpModifierPercent??0,
+            battleExpMultiplier:action.battleExpMultiplier??100,
+            playerNormalLevelCap:action.playerNormalLevelCap??140,
+            chartrans:action.chartrans??5,
+            pettrans:action.pettrans??-1,
+            rngEvidenceByPetId:action.rngEvidenceByPetId??{},
+            petMailModeById:action.petMailModeById??null,
+            now:clockFactory(action.now,now),
             transactionPrefix:String(action.transactionPrefix??`battle-auto-${sequence+1}`)
           }
         );
-        if(result.ok===true&&result.handled===true&&result.context){
+        if(result.ok===true&&result.handled===true&&result.contextCleared===true){
+          battleContext=null;
+          battleAttackPipeline=null;
+        }else if(result.context){
           battleContext=clone(result.context);
         }
         return {
           ...result,
-          format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,
+          format:result.format??BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,
           action:ACTION_BATTLE_AUTO_RUN,
           battleContext:battleContext?clone(battleContext):null,
-          state:clone(currentState)
+          state:clone(result.state??currentState)
         };
       }
       if(type===ACTION_BATTLE_ROUND_RESOLVE){
