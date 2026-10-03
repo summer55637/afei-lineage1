@@ -5,6 +5,91 @@
   },
   "nativeDeclarationCount": 115,
   "classCount": 11,
+  "javaNativeLoadingEvidence": [
+    {
+      "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+      "nativeDeclarationCount": 6,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+      "nativeDeclarationCount": 5,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [
+        {
+          "line": 17,
+          "library": "GCloudVoice"
+        }
+      ],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+      "nativeDeclarationCount": 10,
+      "javaLoaderMethods": [
+        {
+          "method": "a",
+          "callCount": 2,
+          "callSequence": [
+            {
+              "line": 261,
+              "target": "System.load"
+            },
+            {
+              "line": 263,
+              "target": "System.loadLibrary"
+            }
+          ]
+        }
+      ],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+      "nativeDeclarationCount": 45,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lorg/libsdl/app/HIDDeviceManager;",
+      "nativeDeclarationCount": 8,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lorg/libsdl/app/SDLActivity;",
+      "nativeDeclarationCount": 26,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lorg/libsdl/app/SDLAudioManager;",
+      "nativeDeclarationCount": 1,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lorg/libsdl/app/SDLControllerManager;",
+      "nativeDeclarationCount": 9,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    },
+    {
+      "class": "Lorg/libsdl/app/SDLInputConnection;",
+      "nativeDeclarationCount": 3,
+      "javaLoaderMethods": [],
+      "nativeLibraryLoadRequests": [],
+      "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established."
+    }
+  ],
   "stoneageJniLibraryComparison": {
     "armeabi-v7a": {
       "declaredNativeMethods": [
