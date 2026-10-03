@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ecd60e6 — docs: correct README latest commit metadata
-- 更新時間：2026-10-03T22:32:02+08:00
+- 最新 commit：a7ca8b3 — feat: add V4.71 world idle combat loop orchestrator
+- 更新時間：2026-10-03T22:39:36+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.70
 - Playable HTML：⏸️ 尚未建立（刻意保留）
