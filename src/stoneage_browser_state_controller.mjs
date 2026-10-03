@@ -256,6 +256,7 @@ function createBrowserStateController({
     damagePlanRuntime:battleDamagePlanRuntime,
     criticalDamageRuntime:battleCriticalDamageRuntime,
     damageReactRuntime:battleDamageReactRuntime,
+    damageReactCommitRuntime:battleDamageReactCommitRuntime,
     damageDeathChainRuntime:battleDamageDeathChainRuntime
   });
   const battleRoundRuntime=createBrowserBattleRoundRuntime({
