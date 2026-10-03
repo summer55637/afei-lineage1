@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：79fd277 — test: add V4.55 carried loot attack integration
-- 更新時間：2026-10-03T19:15:29+08:00
+- 最新 commit：52f2e9e — ci: add V4.55 carried loot regression workflow
+- 更新時間：2026-10-03T19:15:39+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.54
+- Regression 最高版本：V4.55
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.54 |
+| Battle Pipeline | ✅ V4.55 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
