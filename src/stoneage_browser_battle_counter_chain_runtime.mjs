@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT='stoneage-v454-browser-battle-counter-chain-v1';
+const BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT='stoneage-v455-browser-battle-counter-chain-v1';
 const ACTION_BATTLE_COUNTER_CHAIN_RESOLVE='BATTLE_COUNTER_CHAIN_RESOLVE';
 const MAX_COUNTER_CHAIN=5;
 const BATTLE_COM_ATTACK=1;
@@ -227,6 +227,29 @@ async function resolveCounterChain(context,{
       if(!profitCredit.ok)return {...profitCredit,stage:'battle-counter-chain-profit-credit',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(profitCredit.context);
       record.profitCredit=clone(profitCredit);
+      const creditEvent=Array.isArray(profitCredit.newCredits)
+        ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
+        : null;
+      const carriedItems=carriedLootItemsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootItemsByEnemyBid?.[prelude.finalTargetBid]??null;
+      let carriedLoot=null;
+      if(creditEvent&&Array.isArray(carriedItems)){
+        carriedLoot=await runtimes.carriedLootRuntime.queue(
+          {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+          {
+            enemyBid:prelude.finalTargetBid,
+            ownerBids:creditEvent.creditBids??[],
+            items:carriedItems,
+            ownerRolls:carriedLootOwnerRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootOwnerRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+            replaceRolls:carriedLootReplaceRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+            replaceSlotRolls:carriedLootReplaceSlotRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceSlotRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+            transactionPrefix:transactionPrefix||'counter',
+            now
+          }
+        );
+        if(!carriedLoot.ok)return {...carriedLoot,stage:'battle-counter-chain-carried-loot',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+        next.context=clone(carriedLoot.context);
+      }
+      record.carriedLoot=carriedLoot;
       record.damageReactPlan=clone(reactPlan);
       record.commit=clone(commit);
       record.damageExecuted=commit.damageExecuted===true;
@@ -267,6 +290,29 @@ async function resolveCounterChain(context,{
     if(!profitCredit.ok)return {...profitCredit,stage:'battle-counter-chain-profit-credit',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
     next.context=clone(profitCredit.context);
     record.profitCredit=clone(profitCredit);
+    const creditEvent=Array.isArray(profitCredit.newCredits)
+      ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
+      : null;
+    const carriedItems=carriedLootItemsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootItemsByEnemyBid?.[prelude.finalTargetBid]??null;
+    let carriedLoot=null;
+    if(creditEvent&&Array.isArray(carriedItems)){
+      carriedLoot=await runtimes.carriedLootRuntime.queue(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {
+          enemyBid:prelude.finalTargetBid,
+          ownerBids:creditEvent.creditBids??[],
+          items:carriedItems,
+          ownerRolls:carriedLootOwnerRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootOwnerRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+          replaceRolls:carriedLootReplaceRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+          replaceSlotRolls:carriedLootReplaceSlotRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceSlotRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+          transactionPrefix:transactionPrefix||'counter',
+          now
+        }
+      );
+      if(!carriedLoot.ok)return {...carriedLoot,stage:'battle-counter-chain-carried-loot',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+      next.context=clone(carriedLoot.context);
+    }
+    record.carriedLoot=carriedLoot;
     record.damagePlan=clone(damagePlan);
     record.criticalPlan=clone(criticalPlan);
     record.damageReactPlan=clone(reactPlan);
@@ -320,6 +366,7 @@ async function resolveCounterChain(context,{
 function createBrowserBattleCounterChainRuntime({
   counterRuntime,
   profitCreditRuntime,
+  carriedLootRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
   criticalDamageRuntime,
@@ -327,13 +374,14 @@ function createBrowserBattleCounterChainRuntime({
   damageReactCommitRuntime,
   damageDeathChainRuntime
 }={}){
-  const required=[counterRuntime,profitCreditRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime];
+  const required=[counterRuntime,profitCreditRuntime,carriedLootRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime];
   return {
     ok:required.every(r=>r?.ok===true),
     format:BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT,
     resolve:(context,options={})=>resolveCounterChain(context,options,{
       counterRuntime,
       profitCreditRuntime,
+      carriedLootRuntime,
       attackSeqPreludeRuntime,
       damagePlanRuntime,
       criticalDamageRuntime,
