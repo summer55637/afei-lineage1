@@ -1,3 +1,17 @@
+## 2026-10-03 V4.71 Browser World Idle Loop
+
+把既有 World Movement、Encounter target/roll、Encounter→Idle bridge、Group selection、Enemy generation、Battle Context、Battle Initialize 與 V4.70 Battle Auto Full Lifecycle 組成單一 `WORLD_IDLE_LOOP_TICK` 編排入口。
+
+每個 tick 仍沿用既有 runtime，不新增移動規則、遭遇規則、敵人生成規則或戰鬥公式。成功的普通戰鬥會經 V4.70 完整結算並回到 `MOVING`；若結算要求補給，V4.71 在 `SUPPLY_CHECK` 成功暫停，交由後續補給 runtime 接手。
+
+RNG 全部由 caller 提供；缺少必要 RNG、battle field identity、enemy stat evidence、round input 或 lifecycle clear 都 fail-closed。沒有 encounter target 的移動格視為正常 continuation。
+
+Regression：`tools/check_v471_browser_world_idle_loop.mjs`；Workflow：`.github/workflows/check-v471-browser-world-idle-loop.yml`。
+
+詳細契約：`docs/reference/v471-browser-world-idle-loop.md`。
+
+---
+
 ## 2026-10-03 V4.70 Browser Battle Auto Full Lifecycle
 
 把已完成的 Browser Battle Auto Orchestrator 接上正式 Finish → Settlement → Exit → Idle reward lifecycle。
