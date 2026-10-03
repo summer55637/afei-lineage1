@@ -89,7 +89,6 @@ jobs:
             --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json \
             --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json \
             --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
-            --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
       - name: Publish focused APK evidence with retry
         shell: bash
         env:
