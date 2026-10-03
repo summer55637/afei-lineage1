@@ -57,6 +57,7 @@ async function runBattleAutoLifecycle(context,state,{
   pettrans=-1,
   rngEvidenceByPetId={},
   petMailModeById=null,
+  finishPlan=null,
   now=()=>new Date().toISOString()
 }={}){
   if(!isObject(context)||!isObject(context.context))return fail('battle-auto-lifecycle','battle-context-required',state,context);
@@ -76,11 +77,11 @@ async function runBattleAutoLifecycle(context,state,{
   const addTx=(kind,id)=>transactions.push({kind,transactionId:id});
   const settlementTx=String(settlementId??txId(transactionPrefix,'settlement')).trim();
 
-  const finishPlan=currentContext.context.finishPlan??null;
-  if(!finishPlan?.finished)return fail('battle-auto-finish','finish-plan-required',currentState,currentContext);
+  const resolvedFinishPlan=finishPlan??currentContext.context.finishPlan??null;
+  if(!resolvedFinishPlan?.finished)return fail('battle-auto-finish','finish-plan-required',currentState,currentContext);
   const finish=battleFinishCommitRuntime.commit(
     currentContext,
-    {finishPlan,winnerSide:finishPlan.winnerSide,settlementStartRevision:Number(currentState.revision??0)}
+    {finishPlan:resolvedFinishPlan,winnerSide:resolvedFinishPlan.winnerSide,settlementStartRevision:Number(currentState.revision??0)}
   );
   if(!finish.ok)return fail('battle-auto-finish',finish.reason??'battle-finish-commit-failed',currentState,currentContext,{finish});
   currentContext=clone(finish.battleContext??currentContext);
