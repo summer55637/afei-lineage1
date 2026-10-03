@@ -834,10 +834,32 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_statu
 
 公開 `alrightlook/StoneAgeMobileApp` 的 `oft.cpp`（commit `8c870c87ce1305c52fb6713bf824619467847bba`）僅作 `ATT_DAMAGE`、結果類別與可選功能的語義對照，未宣稱與 target APK 同一來源版本。
 
-### Damage-number ACTION creation
+### Damage-number ACTION creation and lifecycle
 
-`D` 結果路徑呼叫 target 的 `set_damage_num(action*, color, v_pos)`。x86 位於 `0x33d0f0`（855 bytes），ARMv7a 位於 `0x225445`（572 bytes）。它會嘗試以 `GetAction(0x4a,0x264)` 配置顯示 ACTION；配置成功後，安裝飄字 callback、設定顯示優先序與相對位置，並把 damage、pet damage、MP damage／recovery 與相關旗標複製到新 ACTION。飄字每幀 callback `showDamage_num(action*)` 也已定位：x86 `0x33b090`（8,282 bytes），ARMv7a `0x22429d`（4,520 bytes）。 而 `damage_dispx()`（x86 `0x10c210`／ARMv7a `0x0f6679`）會依 ACTION callback 指標派送到這個顯示函式。
+`D` 結果路徑呼叫 target 的 `set_damage_num(action*, color, v_pos)`。x86 位於 `0x33d0f0`（855 bytes），ARMv7a 位於 `0x225445`（572 bytes）。它嘗試以 `GetAction(0x4a,0x264)` 配置飄字 ACTION；配置失敗時直接結束。配置成功後，會設定 `ACTION+0x15=0x59`、將 x 設為來源 ACTION 的 x、將 y 設為來源 y 加上 `v_pos`，並初始化 `ACTION+0x170=24`、`ACTION+0xe0=2`。
 
-這表示 `D` 結果除了修改參與者數值，也建立獨立的呈現 ACTION；它仍是 client-side presentation，不代表 APK 內存在權威傷害公式。飄字 callback 的完整字形、逐幀位移及衰退分支尚未全部轉譯。
+新 ACTION 的 work 欄位會記錄顯示類型（`+0x130=color`）和來源 ACTION 指標（`+0x08`），並複製數值／旗標來源：`+0x12c ← source work+0x58`、`+0x230 ← source work+0x22c`、`+0x234 ← source ACTION+0x1d4`、`+0x238 ← source work+0x238`、`+0x240 ← source work+0x240`。當來源 `work+0x244==1` 時，另複製 `+0x23c` 與 `+0x244`。這些偏移保留為 target-observed 欄位，未因欄位值或公開結構名稱而擴張語義。
 
-Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_command_decode_contract.json`。契約會在 CI 中對照 APK／ELF identity 及 x86、ARMv7a 函式位址。
+另有一個直接可見的附加效果分支：當顯示類型為 3，且來源 graphic（`ACTION+0x180`）是 `0x18db7`（101815）、`0x1d532`（120114）或 `0x19650`（104016）時，函式會嘗試建立 `GetAction(0x47,0x264)`，把 effect graphic 設為 `0x18de2`（102882），以來源 ACTION 為關聯，並將效果位置設為來源 x/y 各加 10、顯示優先序設為來源 `+0x15` 加 1。此處只確認條件、欄位與 graphic 數字，不單靠圖號替效果命名。
+
+### Per-frame state machine
+
+飄字 callback `showDamage_num(action*))：x86 `0x33b090`（8,282 bytes），ARMv7a `0x22429d`（4,520 bytes）。其 work byte `+0x00` 是狀態判斷欄位，`+0x01` 是倒數欄位；work `+0x08` 保存來源 ACTION 指標。這些是依使用方式命名的稽核欄位，不宣稱為原始 C struct 成員名稱。
+
+| work[0] | 每次 callback 的動作 | 狀態轉換 |
+|---|---|---|
+| 0 | `ACTION+0x170 -= 2` | 降至 0 時，設定 `ACTION+0x174=16`，並令 `work[0]=1`。 |
+| 1 | `ACTION+0x170 += 2` | 達到或超過 24 時，設定 `work[1]=60`，並令 `work[0]=2`。 |
+| 2 | 將 `ACTION+0x170` 設為 0，並以 byte 操作遞減 `work[1]` | 倒數遞減結果為 0 時，清除來源 ACTION 的 `+0xd10` 關聯欄位，對飄字 ACTION 呼叫 `DeathAction()`。 |
+
+入口另有一個由兩個 global 值組成的狀態更新閘門：第一個觀察值非零，且第二個觀察值的低兩位非零時，會跳過上述狀態遞進；顯示流程仍可繼續。這兩個 global 的語義名稱尚未由 target 證實，因此不將它們直接標成暫停、加速或其他遊戲機制。
+
+未走到倒數歸零的正常 callback 尾端會呼叫 `pattern(action,0,1)`；歸零分支呼叫 `DeathAction()` 後直接離開，不走一般尾端。x86 與 ARMv7a Thumb 指令對狀態 byte、每次步進 2、門檻 24、倒數 60、清除 `+0xd10` 及死亡釋放流程相互吻合。
+
+### Damage-number rendering boundary
+
+callback 依 work `+0x130` 選擇格式分支，透過 `sprintf` 組合固定 0x100-byte 的暫存文字，再呼叫 `stockFontNumToDamage()`；可見的字型編號為 101（`0x65`）。部分路徑透過 `getFontNumWidthToDamage()` 計算寬度並水平置中；其他路徑使用固定 battle-font mode。work `+0x238` 非零時，會在 y+12 額外提交一組文字（mode 2）；work `+0x234==1` 時，會再於 y+60 提交另一組文字。work `+0x244==1` 則走另一種主文字 mode 3 路徑。
+
+若來源 ACTION 的 `+0xd10==2`，callback 會額外呼叫 `StockDispBuffer()`，位置為飄字 ACTION 的 x+2、y−22。該額外 callback 的實際畫面意義尚未由 target 靜態證據單獨確定。這些繪製呼叫確認的是客戶端呈現管線，不代表伺服器傷害計算。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_command_decode_contract.json`。契約會在 CI 中對照 APK／ELF identity 及 x86、ARMv7a 函式位址；完整字形映射、每個特殊格式分支的視覺等價與裝置端播放仍未完成驗證。
