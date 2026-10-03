@@ -108,7 +108,7 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByPa
     enemyExpResolution:resolved,newCredits:credits,totalCreditEvents:events.length,
     source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
       functions:['BATTLE_AddExpItem','ENEMY_getExp'],boundary:'workGetExp + KILLPETCOUNT after carried getitem queue'},
-    persistentMutation:false,expSettlementDeferred:true,levelUpDeferred:true,ridePetExpDeferred:false,
+    persistentMutation:false,expSettlementDeferred:true,levelUpDeferred:true,ridePetExpDeferred:false,rngConsumed:0,
     context:next.context,transactionPrefix:String(transactionPrefix??'enemy-exp'),now:now??null
   };
 }
