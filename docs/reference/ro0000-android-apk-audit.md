@@ -643,3 +643,17 @@ The evidence distinguishes input dispatch, frame processing, network dispatch, r
 
 
 The loop and movement contracts are also checked against the current APK's native ELF audit in CI. For every function/address pair in both contracts, the checker verifies presence in the corresponding focused symbol inventory and matches the recorded ABI-specific symbol value, shared-library SHA-256, and Build ID. This guards the evidence anchor itself; semantic observations still require review when the target build changes.
+
+## Auto-action bridge: getAutoAct()
+
+Android target 的 getAutoAct() 已確認為實際遊戲互動 hook。
+
+- native 取得 Lua context 後，以 lua_getfield(..., autoactMap) 取得名為 autoactMap 的 Lua 欄位。
+- 欄位必須是 Lua function（type 6），否則結果為 0。
+- 以 lua_pcall(L,0,1,0) 執行；錯誤或非數值結果回傳 0。
+- 數值結果轉成 C int；成功後清除 Lua stack。
+- moveProc() 在觀察到的 mouseLeftCrick 觸發條件下呼叫 getAutoAct()；只有回傳 1 才送出 lssproto_AC_send(playerId,currentX,currentY,0)，之後執行 setPcAction(0)。
+
+這可直接轉成 browser action／interaction contract；Lua autoactMap 本身內容與 AC 封包的 server-side 語義仍未由 APK 單獨證明。
+
+Machine-readable evidence：data/generated/stoneage_ro0000_android_auto_action_contract.json。
