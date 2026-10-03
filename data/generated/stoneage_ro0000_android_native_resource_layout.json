@@ -882,5 +882,128 @@
       "The color-generation contract is static; actual target pixels and the resulting real-image color table cannot be regenerated without the external image payloads.",
       "Named color component bytes are recorded by packed byte order rather than assuming visual channel labels beyond the SDL_Color-like layout."
     ]
+  },
+  "autoMapRendering": {
+    "source": {
+      "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+      "libraries": {
+        "armeabi-v7a": {
+          "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+          "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+        },
+        "x86": {
+          "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+          "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+        }
+      }
+    },
+    "functions": {
+      "drawAutoMap": {
+        "armeabiV7a": "0x187bfd",
+        "x86": "0x21b840"
+      },
+      "createAutoMap": {
+        "armeabiV7a": "0x187c79",
+        "x86": "0x21b900"
+      },
+      "DrawAutoMapping": {
+        "armeabiV7a": "0x29b59d",
+        "x86": "0x41fb30"
+      }
+    },
+    "logicalBuffer": {
+      "symbol": "autoMappingBuf",
+      "width": 54,
+      "height": 54,
+      "entryType": "uint8",
+      "byteSize": 2916,
+      "initialization": "The buffer is zeroed before cache access; failed cache open returns false with a zero buffer.",
+      "viewport": {
+        "x1": "gx - 27",
+        "y1": "gy - 27",
+        "x2Exclusive": "x1 + 54",
+        "y2Exclusive": "y1 + 54",
+        "crop": "Intersect the 54x54 requested rectangle with the cache header's stored width/height. Destination mx/my are shifted when the requested origin is negative. Right/bottom overflow reduces copied width/height.",
+        "cacheRead": "For each plane, seek and fread one clipped row at a time; rows are copied into the matching offset in a zeroed 54x54 uint16 staging array."
+      },
+      "sourcePlanes": [
+        {
+          "plane": 0,
+          "name": "tile",
+          "entryType": "uint16",
+          "stageBufferBytes": 5832,
+          "role": "base visible terrain color"
+        },
+        {
+          "plane": 1,
+          "name": "parts",
+          "entryType": "uint16",
+          "stageBufferBytes": 5832,
+          "role": "visible object/parts overlay"
+        },
+        {
+          "plane": 2,
+          "name": "event",
+          "entryType": "uint16",
+          "stageBufferBytes": 5832,
+          "role": "visibility gate; MAP_SEE_FLAG is 0x4000"
+        }
+      ],
+      "paintOrder": [
+        "Clear all 2916 output bytes to zero.",
+        "For each in-range 54x54 staging cell where (event & 0x4000) != 0, assign autoMapColorTbl[tile] if tile < 100000; otherwise leave zero.",
+        "For each in-range cell where (event & 0x4000) != 0, look up autoMapColorTbl[parts] if parts < 100000. If the result is zero, do not overlay.",
+        "For nonzero parts color, resolve graphic number with realGetNo(parts,&bmpNo) and query realGetHitFlag(bmpNo,&hit). The target does not branch on realGetNo's boolean return before using bmpNo."
+      ],
+      "partsOverlay": {
+        "hitFlagNonzero": "Overwrite only the current output cell with the parts color index.",
+        "hitFlagZero": "Get hitX/hitY from realGetHitPoints(bmpNo). For k=0..hitY-1 and l=0..hitX-1, write the parts color at output row i-k and column j+l, subject to i-k >= 0 and j+l < 54.",
+        "precedence": "Parts writes occur after tile writes and can overwrite previously assigned terrain color indices.",
+        "bounds": "The observed write loop checks the top and right bounds for hitFlag==0 footprints; it does not show a corresponding left/bottom check because the offsets are nonnegative and the iteration begins in the 54x54 viewport."
+      },
+      "result": "Returns false if cache open/reopen fails; otherwise completes the buffer build and returns true. drawAutoMap ignores this boolean and clears autoMappingInitFlag after the attempted call, so callers should not interpret a zero buffer as proof of a fully populated cache."
+    },
+    "raster": {
+      "targetSurface": "CSASurface selected by the target's drawing state; lock descriptor supplies pixel base and pitch.",
+      "pixelFormat": "32-bit packed palette values are read from highColor32Palette and ORed with 0xff000000 before stores.",
+      "originOffsets": {
+        "x": 18,
+        "y": 118
+      },
+      "defaultMode": {
+        "widthArgument": "w",
+        "heightArgument": "h",
+        "inputStrideMultiplier": 1,
+        "logicalToSurface": "For each map cell, write four adjacent 32-bit pixels at p-4, p, p+4, and p-surfacePitch. Move p by -(surfacePitch-8) for each successive column; advance each row start by surfacePitch+8."
+      },
+      "lowResolutionMode": {
+        "condition": "ResoMode == 1",
+        "x": "x / 2",
+        "y": "y / 2",
+        "originOffsets": {
+          "x": "18 / 2 + 1 = 10",
+          "y": "118 / 2 - 1 = 58"
+        },
+        "width": "w / 2",
+        "height": "h / 2",
+        "inputStrideMultiplier": 2,
+        "sampling": "Input coordinates use (i*2, j*2), sampling every second source cell along both axes."
+      },
+      "playerMarker": {
+        "blinkIntervalMilliseconds": 1000,
+        "paletteIndices": [
+          0,
+          255
+        ],
+        "pixelPattern": "Writes four 32-bit palette pixels at p-4, p, p+4, and p-surfacePitch.",
+        "placement": "Derived from the rendered width and height after traversing the map grid; for the normal 54x54 call it is placed at the grid's central projected location."
+      },
+      "presentation": "After successful surface unlock, the target obtains the backing texture and submits an SDL_RenderCopy using identical source/destination rectangles. Lock failure skips rasterization; unlock failure skips the texture render copy."
+    },
+    "boundary": [
+      "Static layout and algorithm only: the actual cache map file bytes are not present in the APK or repository snapshot.",
+      "Color indices are meaningful only together with the actual target palette and generated autoMapColorTbl; absent image payloads prevent exact target pixel reproduction.",
+      "Cross-source public code is structural corroboration only; target addresses and control-flow evidence remain tied to the APK hash and both ELF Build IDs."
+    ]
   }
 }
