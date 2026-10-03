@@ -7,6 +7,11 @@ on:
       - 'tools/audit_ro0000_android_apk.py'
       - 'tools/check_ro0000_android_apk_audit.py'
       - 'tools/audit_ro0000_android_native.py'
+      - 'tools/audit_ro0000_android_battlemap_crosscheck.py'
+      - 'tools/check_ro0000_android_battlemap_crosscheck.py'
+      - 'tools/audit_ro0000_battlemap_selector.mjs'
+      - 'ro0000/server/merged-source/gmsv/data/map/battlemap.txt'
+      - 'data/generated/stoneage_ro0000_battlemap_selector_audit.json'
       - 'tools/check_ro0000_android_native.py'
       - 'tools/check_ro0000_android_native_contracts.py'
       - 'tools/audit_ro0000_android_native_abi.py'
@@ -96,6 +101,14 @@ jobs:
           rm -rf /tmp/ro0000-jadx-sources /tmp/jadx-1.5.6 /tmp/jadx-1.5.6.zip
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
+      - name: Regenerate current server battle-map selector audit
+        run: node tools/audit_ro0000_battlemap_selector.mjs
+      - name: Cross-check server battle-map candidates against Android filename table
+        run: |
+          python3 tools/audit_ro0000_android_battlemap_crosscheck.py \
+            --native-audit artifacts/ro0000_android_native_elf_audit.json \
+            --selector-audit data/generated/stoneage_ro0000_battlemap_selector_audit.json \
+            --output artifacts/ro0000_android_battlemap_selector_crosscheck.json
       - name: Compare reachable Android ARMv7 and x86 native call targets
         run: python3 tools/audit_ro0000_android_native_abi.py --native-audit artifacts/ro0000_android_native_elf_audit.json --arm-binary artifacts/native/armeabi-v7a/libStoneage.so --x86-binary artifacts/native/x86/libStoneage.so --output artifacts/ro0000_android_native_abi_comparison.json
       - name: Verify Android native loop and movement contracts
@@ -298,12 +311,13 @@ jobs:
             git reset --hard origin/main
             cp artifacts/ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_signing_audit.json
             cp artifacts/ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_native_abi_comparison.json
+            cp artifacts/ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
             cp artifacts/ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_dex_audit.json
             cp artifacts/ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json
             cp artifacts/ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_jni_audit.json
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
-            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
+            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -337,6 +351,8 @@ jobs:
             data/generated/stoneage_ro0000_android_map_prefetch_contract.json
             data/generated/stoneage_ro0000_android_native_resource_focus.json
             artifacts/ro0000_android_native_abi_comparison.json
+            artifacts/ro0000_android_battlemap_selector_crosscheck.json
+            data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
             data/generated/stoneage_ro0000_android_native_abi_comparison.json
             artifacts/native/**/*.so
           if-no-files-found: error

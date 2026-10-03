@@ -191,6 +191,14 @@ and the target Android client receives that resulting battlefield number as `fie
 
 This is a useful cross-layer correspondence, but the Android `.sabex` payload is still a client resource and should remain a separate evidence layer from the server LS2MAP/mapset files.
 
+### Cross-check: server candidates versus Android SABEX index
+
+The current workflow now regenerates the RO0000 server `battlemap.txt` selector audit from source, then compares every effective candidate with the target APK's `BattleMapFile` table size in both packaged ABIs. The target table is 112,640 bytes with a 512-byte filename stride, yielding 220 slots (0–219). The current server configuration references 199 distinct candidate numbers, all within that target range; 21 Android slots are not selected by the current configuration.
+
+The cross-check is stored in `data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json`. It also retains the source audit's reversed interval and duplicate image assignment as warnings. The reversed `3137 to 1349` interval produces no iterations in the pinned Fixed-C parser's `for (i = first; i <= last; ++i)` loop; this audit does not silently rewrite source configuration.
+
+This closes the numeric selector-to-filename-table compatibility check only. It does not establish that the corresponding `battleNNN.sabex` payload bytes exist, that a specific selector is exercised at runtime, or that its pixels match the original renderer.
+
 ## 9. What is now closed
 
 The APK battle-map resource path is now closed to this level:
