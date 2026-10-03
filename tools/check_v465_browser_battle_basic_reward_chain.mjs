@@ -158,7 +158,7 @@ assert.equal(attack.profitCredit.newCredits[0].credited,true);
 assert.equal(attack.carriedLoot,null);
 assert.ok(attack.enemyExpCredit,'basic single-hit path must execute Enemy EXP credit');
 assert.equal(attack.enemyExpCredit.newCredits.length,1);
-assert.equal(attack.enemyExpCredit.newCredits[0].participantBid,0);
+assert.equal(attack.enemyExpCredit.newCredits[0].actorBid,0);
 
 assert.ok(attack.relife,'basic single-hit path must execute relife gate before next action');
 assert.equal(attack.relife.applied,false);
