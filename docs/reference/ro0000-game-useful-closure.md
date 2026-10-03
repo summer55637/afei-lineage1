@@ -330,3 +330,21 @@ Machine-readable evidence：
 `data/generated/stoneage_ro0000_maker5_maker6_endpoint_audit.json`
 
 這兩條製作線已完成資料層 closure；後續產品層可決定何時解鎖，不需要再重新解析原始 recipe。
+
+
+## 2026-10-03 騎乘訓練師 runtime 閉合
+
+`family/riderman.conf` 的 data / hydata 完全一致。正式課程：
+
+- 初級：5000 石幣，`LEARNRIDE=40)，寵物等級上限 40。
+- 中級：10000 石幣，需先達 40，完成後 `LEARNRIDE=80)，上限 80。
+- 高級：15000 石幣，需先達 80，完成後 `LEARNRIDE=120)，上限 120。
+- 特級：20000 石幣，需先達 120，完成後 `LEARNRIDE=200)，可騎全部等級。
+
+Pinned Fixed-C `npc_riderman.c` 與 `family.c` 已對上：實際騎乘會檢查 `CHAR_LEARNRIDE >= pet LV)、寵物固定 AI 條件，以及角色／寵物等級差；`_NEW_RIDEPETS` 另提供 `RIDE_PET0..11` 的可騎乘資格碼。
+
+家族收入等多人伺服器副作用不納入單機主循環。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_riderman_endpoint_audit.json`
