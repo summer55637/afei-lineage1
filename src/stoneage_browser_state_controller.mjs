@@ -57,6 +57,7 @@ import { createBrowserBattleCounterChainRuntime, ACTION_BATTLE_COUNTER_CHAIN_RES
 import { createBrowserBattleDamageReactCommitRuntime, ACTION_BATTLE_DAMAGE_REACT_COMMIT, BROWSER_BATTLE_DAMAGE_REACT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleAttackSequenceRuntime, ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE, BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT } from './stoneage_browser_battle_attack_sequence_runtime.mjs';
 import { createBrowserBattleProfitRouteRuntime, ACTION_BATTLE_PROFIT_ROUTE_PLAN, BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_battle_profit_route_runtime.mjs';
+import { createBrowserBattleProfitCreditRuntime } from './stoneage_browser_battle_profit_credit_runtime.mjs';
 import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_runtime.mjs';
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
 import { createBrowserBattleExpPlanRuntime, ACTION_BATTLE_EXP_PLAN, BROWSER_BATTLE_EXP_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exp_runtime.mjs';
@@ -228,7 +229,8 @@ function createBrowserStateController({
     criticalDamageRuntime:battleCriticalDamageRuntime,
     damageReactRuntime:battleDamageReactRuntime,
     damageReactCommitRuntime:battleDamageReactCommitRuntime,
-    damageDeathChainRuntime:battleDamageDeathChainRuntime
+    damageDeathChainRuntime:battleDamageDeathChainRuntime,
+    profitCreditRuntime:battleProfitCreditRuntime
   });
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
   const battleDeathRuntime=createBrowserBattleDeathRuntime();
@@ -236,6 +238,7 @@ function createBrowserStateController({
   const battleEndRuntime=createBrowserBattleEndRuntime();
   const battleFinishCommitRuntime=createBrowserBattleFinishCommitRuntime();
   const battleProfitRouteRuntime=createBrowserBattleProfitRouteRuntime();
+  const battleProfitCreditRuntime=createBrowserBattleProfitCreditRuntime();
   const battleDuelPointRuntime=createBrowserBattleDuelPointRuntime();
   const battleDuelPointCommitRuntime=createBrowserBattleDuelPointCommitRuntime();
   const battleExpPlanRuntime=createBrowserBattleExpPlanRuntime();
@@ -256,6 +259,7 @@ function createBrowserStateController({
   const battleStatusRuntime=createBrowserBattleStatusRuntime();
   const battleCounterChainRuntime=createBrowserBattleCounterChainRuntime({
     counterRuntime:battleCounterRuntime,
+    profitCreditRuntime:battleProfitCreditRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
     damagePlanRuntime:battleDamagePlanRuntime,
     criticalDamageRuntime:battleCriticalDamageRuntime,
