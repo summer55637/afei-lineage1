@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：cfeefb1 — test: correct V4.48 counter reflect scaled damage
-- 更新時間：2026-10-03T18:13:17+08:00
+- 最新 commit：fbb5cfe — docs: record V4.48 special damage react contract
+- 更新時間：2026-10-03T18:13:55+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.48
 - Playable HTML：⏸️ 尚未建立（刻意保留）
