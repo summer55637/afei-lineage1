@@ -543,6 +543,7 @@ async function resolveBattleRound(context,{
 
       const attackRecord={
         attackerBid:actorBid,
+        attackCount:1,
         requestedTargetBid:int(actor.battleCommands?.[1])??-1,
         finalTargetBid:prelude.finalTargetBid,
         commandCode:command,
