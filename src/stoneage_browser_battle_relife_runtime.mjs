@@ -21,7 +21,7 @@ function validateRelifeCatalog(catalog){
   if(!isObject(catalog))return {ok:false,reason:'player-relife-catalog-required'};
   if(catalog.format!=='stoneage-item-relife-runtime-v1')return {ok:false,reason:'player-relife-catalog-format-mismatch'};
   if(catalog?.source?.repository!=='gavinlinasd/StoneAge')return {ok:false,reason:'player-relife-catalog-source-mismatch'};
-  if(catalog?.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1')return {ok:false,reason:'player-relife-catalog-fixed-c-ref-mismatch'};
+  if(catalog?.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56')return {ok:false,reason:'player-relife-catalog-fixed-c-ref-mismatch'};
   if(catalog?.fixedBuild?.itemReLifeAct!==true||catalog?.fixedBuild?.dummyDie!==false)return {ok:false,reason:'player-relife-fixed-build-flags-mismatch'};
   if(!isObject(catalog.byItemId))return {ok:false,reason:'player-relife-catalog-items-required'};
   return {ok:true};
@@ -156,7 +156,7 @@ function applyBattleRelife(context,{
     persistentMutation:false,battleContextMutation:true,
     source:{
       repository:'gavinlinasd/StoneAge',
-      ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
+      ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       functions:['CHECK_ITEM_RELIFE','ITEM_DIErelife','BATTLE_MultiReLife'],
       scanSlots:RELIFE_SCAN_SLOTS.slice(),
       firstValidRelifeItemOnly:true
