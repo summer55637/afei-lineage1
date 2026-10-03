@@ -340,7 +340,7 @@ jobs:
             cp artifacts/ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json
             cp artifacts/ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_jni_audit.json
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
-            cp data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json
+            cp artifacts/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
             git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             if git diff --cached --quiet; then
