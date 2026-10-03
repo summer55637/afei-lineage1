@@ -702,3 +702,21 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_profession_s
 因此，對目前重建專案最安全的模型是：`BATTLESKILL` 與戰鬥中的 `P|...` 職業技能命令分開；前者是非戰鬥的整數技能通道，後者才是 battle target-selection command。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battleskill_protocol_contract.json`。
+
+
+## Android battle receive path: C/P/A/U and command-ring boundary
+
+目標 APK 的 `lssproto_B_recv()` 已直接由 x86/ARMv7a native binary 對照完成。
+
+- x86：`0x3f3470`、453 bytes；ARMv7a：`0x2840dc`、272 bytes。
+- 分支鍵是完整 battle command 的 byte `+1`。target 版本可直接觀察到四種接收分支：`C`、`P`、`A`、`U`。
+- `C`：把完整 command 原樣複製進 BattleStatus receive ring；每槽 0x1000 bytes，共 4 槽，write pointer 以 `(pointer+1)&3` 循環。
+- `P`：從 `command+3` 解析 `%X|%X|%X`，填入玩家戰鬥位置 `BattleMyNo`、battle flag `BattleBpFlag`、玩家戰鬥 MP `BattleMyMp`。
+- `A`：從 `command+3` 解析 `%X|%X`，填入 `BattleAnimFlag`、`BattleSvTurnNo`。當 BattleTurnReceiveFlag 處於啟用狀態時，會同步 `BattleCliTurnNo = BattleSvTurnNo` 並清掉該接收旗標。
+- `U`：直接設置 Battle escape flag。
+- 其他 command：完整原樣複製進獨立的 BattleCmd receive ring，同樣為 4 槽 × 0x1000 bytes，pointer 以 `(pointer+1)&3` 循環。
+- 目標 APK 的該函式內沒有 `Z/F/O` 分支；公開 source 的可選 `PK_SYSTEM_TIMER_BY_ZHU` 回合計時接收分支因此不能直接移植為 target APK 行為。
+
+這一層的意義是：battle status 與 battle action/result command 在 client 端本身就是**兩條分離的 receive queue**；後續真正的 `BattleStatus` / `BattleCmd` 解包仍由其他處理函式負責，不能把這個 receiver 本身誤當成傷害或結算邏輯。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_receive_contract.json`。
