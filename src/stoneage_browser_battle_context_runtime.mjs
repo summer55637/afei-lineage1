@@ -77,6 +77,7 @@ function buildEnemyEntryLayout(team,{petSkillCatalog=null}={}){
     if(enemyId==null)return {ok:false,reason:'enemy-id-required',slot:i};
     preSwap[i]={
       sourceRosterIndex:i,
+      sourceEnemyExp:intOr(enemy.exp)??-1,
       enemyId,
       size:intOr(enemy.size)??0,
       createMaxNum:intOr(enemy.createMaxNum)??null,
