@@ -54,7 +54,9 @@ def run_git(args: list[str], *, check: bool = True, cwd: str | None = None) -> s
 
 
 def normalize_path(path: str) -> str:
-    return path.replace("\\", "/").strip()
+    normalized = path.replace("\\", "/")
+    normalized = re.sub(r"/+", "/", normalized)
+    return normalized.strip()
 
 
 def classify_path(path: str) -> str | None:

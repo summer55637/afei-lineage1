@@ -7,6 +7,10 @@ on:
       - 'tools/audit_ro0000_android_apk.py'
       - 'tools/audit_ro0000_android_git_resource_history.py'
       - 'tools/check_ro0000_android_git_resource_history.py'
+      - 'tools/audit_ro0000_android_signing_cause.py'
+      - 'tools/check_ro0000_android_signing_cause.py'
+      - 'tools/check_ro0000_android_adrn_field_semantics_evidence.py'
+      - 'data/generated/stoneage_ro0000_android_adrn_field_semantics_evidence.json'
       - 'tools/check_ro0000_android_apk_audit.py'
       - 'tools/audit_ro0000_android_native.py'
       - 'tools/audit_ro0000_android_battlemap_crosscheck.py'
@@ -95,6 +99,14 @@ jobs:
             --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
             --output artifacts/ro0000_android_signing_audit.json \
             --expected-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')"
+      - name: Audit JAR v1 signature cause boundary
+        run: |
+          python3 -m unittest discover -s tools -p 'check_ro0000_android_signing_cause.py'
+          python3 tools/audit_ro0000_android_signing_cause.py \
+            --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
+            --output artifacts/ro0000_android_signing_cause_audit.json
+      - name: Test Android ADRN field semantics evidence
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_adrn_field_semantics_evidence.py'
       - name: Decompile Java layer with pinned JADX (source stays private to runner)
         shell: bash
         run: |
@@ -350,7 +362,8 @@ jobs:
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             cp artifacts/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
-            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
+            cp artifacts/ro0000_android_signing_cause_audit.json data/generated/stoneage_ro0000_android_signing_cause_audit.json
+            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_signing_cause_audit.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -386,6 +399,9 @@ jobs:
             data/generated/stoneage_ro0000_android_native_resource_focus.json
             data/generated/stoneage_ro0000_android_lua_container_contract.json
             data/generated/stoneage_ro0000_android_update_request_audit.json
+            data/generated/stoneage_ro0000_android_adrn_field_semantics_evidence.json
+            data/generated/stoneage_ro0000_android_signing_cause_audit.json
+            artifacts/ro0000_android_signing_cause_audit.json
             data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             artifacts/ro0000_android_native_abi_comparison.json
             artifacts/ro0000_android_battlemap_selector_crosscheck.json

@@ -1,0 +1,72 @@
+{
+  "format": "ro0000-android-adrn-field-semantics-evidence-v1",
+  "checkedAt": "2026-10-03",
+  "repository": "summer55637/afei-lineage1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333",
+    "recordSizeBytes": 80
+  },
+  "targetConfirmed": {
+    "directConsumers": [
+      {"function":"realGetPos","address":"0x362a50","offsets":["0x0c","0x10"],"semantics":"x/y offset outputs; target reads u32 and exposes low 16 bits"},
+      {"function":"realGetWH","address":"0x362b00","offsets":["0x14","0x18"],"semantics":"width/height outputs; target reads u32 and exposes low 16 bits"},
+      {"function":"realGetHitPoints","address":"0x362bb0","offsets":["0x1c","0x1d"],"semantics":"two byte hit/occupancy extents, zero-extended to output"},
+      {"function":"realGetHitFlag","address":"0x362c60","offsets":["0x1e"],"semantics":"hit flag = value % 100, with explicit target image-ID exceptions"},
+      {"function":"realGetPrioType","address":"0x362d60","offsets":["0x1e"],"semantics":"priority = value / 100"},
+      {"function":"realGetHeightFlag","address":"0x362df0","offsets":["0x20"],"semantics":"height flag/value read as i16"},
+      {"function":"realGetSoundEffect","address":"0x362e70","offsets":["0x40"],"semantics":"signed 16-bit effect/sound value"},
+      {"function":"realGetWalkSoundEffect","address":"0x362ee0","offsets":["0x42"],"semantics":"signed 16-bit field tested for nonzero; target accessor returns boolean"},
+      {"function":"realGetImage","address":"0x362fd0","offsets":["0x04","0x08"],"semantics":"record adder selects real-bin offset; size selects payload bytes"},
+      {"function":"AdrnInit","address":"0x363370","offsets":["0x00","0x4c"],"semantics":"bitmap base mapping and image/bmp-number table construction"},
+      {"function":"makeAutoMapColor","address":"target-focused-disassembly","offsets":["0x4c"],"semantics":"attr.bmpnumber used to derive auto-map color table entries"}
+    ]
+  },
+  "explicitHitFlagExceptions": {
+    "rangesInclusive": [[369641,369654],[369715,369847]],
+    "exact": [369941],
+    "output": 1
+  },
+  "crossSourceLayout": {
+    "source": {
+      "repository": "alrightlook/StoneAgeMobileApp",
+      "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+      "path": "android-project/jni/src/systeminc/loadrealbin.h",
+      "role": "structural comparison only; source lineage/version identity with target APK is not established"
+    },
+    "offsets": {
+      "0x22":"attr.broken",
+      "0x24":"attr.indamage",
+      "0x26":"attr.outdamage",
+      "0x28":"attr.inpoison",
+      "0x2a":"attr.innumb",
+      "0x2c":"attr.inquiet",
+      "0x2e":"attr.instone",
+      "0x30":"attr.indark",
+      "0x32":"attr.inconfuse",
+      "0x34":"attr.outpoison",
+      "0x36":"attr.outnumb",
+      "0x38":"attr.outquiet",
+      "0x3a":"attr.outstone",
+      "0x3c":"attr.outdark",
+      "0x3e":"attr.outconfuse",
+      "0x44":"attr.damy_a",
+      "0x46":"attr.damy_b",
+      "0x48":"attr.damy_c"
+    },
+    "layoutReason": "MAP_ATTR is embedded at ADRNBIN+0x1c; 0x4a-0x4c is alignment padding before bmpnumber, yielding a 0x50-byte record."
+  },
+  "closure": {
+    "status": "partial-semantic-closure",
+    "closed": "Source-correlated member names and exact byte offsets are established for the previously unknown target ranges.",
+    "remaining": "Direct target gameplay consumer/read/write evidence is still not established for those fields.",
+    "notClaimed": [
+      "The target APK directly consumes every source-correlated field.",
+      "The damy_* fields gameplay semantics are proven in this APK.",
+      "Runtime behavior of any remaining field is verified."
+    ],
+    "nextEvidence": "Target instruction-level consumer with ADRNBIN base plus field offset, or runtime trace using actual production ADRN/REAL resources."
+  }
+}
