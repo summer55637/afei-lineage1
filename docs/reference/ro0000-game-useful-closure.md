@@ -363,3 +363,24 @@ Machine-readable evidence：
 
 `data/generated/stoneage_ro0000_petfusion_endpoint_audit.json`
 
+
+
+## 2026-10-03 Encounter→Group 缺口處理結果
+
+本輪針對 30 個 active Group refs 進行 provenance 追查，包含：RO0000 data / hydata、Pinned Fixed-C 歷史提交、公開 StoneAge 8.0 server data、SA80 8.0 公開資料集，以及其他可取得的公開 server source。
+
+結果沒有取得任何可以同時滿足「可釘定到 RO0000 endpoint 或相容 revision」與「可逐欄核驗完整 Group row」的新增來源。因此：
+
+- 不匯入外部 Group row。
+- 不以 Fixed-C 的 1131 / 1467 / 1500 取代 RO0000 endpoint。
+- 不以其他版本的 Group 反推 791、792、793、794、800、808、809、811 等核心世界 refs。
+- 不以 Group ID 對應 Enemy ID、名稱或攻略資料拼接 Group 成員。
+- unresolved Group 維持 non-spawnable / non-promoted。
+
+這項工作現在正式分類為 endpoint source-boundary / optional encounter coverage gap，不是目前首條 Idle 主線 blocker。首條主線仍使用已 source-closed 的 Encounter 65 / 28 / 91 / 95，因此不需要等待這 30 個 Group 才能繼續產品開發。
+
+這代表本問題已完成「可安全處理的 source closure」：資料缺口本身仍存在，但已確認沒有可靠來源可補，而且 runtime 政策與產品影響已封閉。未來只有出現新的 authoritative endpoint provenance，才重新開啟此項。
+
+Machine-readable evidence：
+
+data/generated/stoneage_endpoint_active_group_gap_triage.json
