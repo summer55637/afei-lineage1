@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
+import { createBrowserBattleDeathExtraCommitRuntime } from '../src/stoneage_browser_battle_death_extra_commit_runtime.mjs';
+import { createBrowserBattleSettlementRuntime } from '../src/stoneage_browser_battle_settlement_runtime.mjs';
+
+const now=()=> '2026-10-03T20:10:00+08:00';
+const state=freshPersistentState({now,playerId:'p1',playerName:'Tester'});
+state.revision=7;
+state.player.charm=20;
+state.player.deadPetCount=0;
+state.pets.petBox=[{
+  id:'pet-1',petId:500,tempNo:500,level:10,exp:100,hp:0,maxHp:100,
+  variableAi:600,modAi:100,allocPointPacked:((10*256+20)*256+30)*256+40
+}];
+
+const battleContext={
+  format:'stoneage-browser-battle-context-runtime-v1',
+  context:{
+    mode:'finish',sourceMode:3,settlementStartRevision:7,
+    dpbattle:0,
+    finishHookProfile:{auditFormat:'stoneage-battle-finish-hook-audit-v1',profile:'ordinary-world-encounter'},
+    sourceDeathExtraEvents:[{
+      kind:'pet-normal-death',
+      actorBid:5,
+      petId:'pet-1',
+      ownerBid:0,
+      ownerPlayerId:'p1',
+      variableAiBefore:600,
+      variableAiAfter:350,
+      variableAiDelta:-250,
+      deadPetCountBefore:0,
+      deadPetCountAfter:1,
+      deadPetCountDelta:1,
+      battleExited:false,
+      persistent:true
+    }],
+    sides:[
+      {side:0,type:0,entries:[
+        {bid:0,sourceType:'player',characterId:'p1',level:10,hp:100,isDie:false,deadPetCount:1,getitem:[-1,-1,-1]}
+      ]},
+      {side:1,type:1,entries:Array(10).fill(null)}
+    ]
+  }
+};
+
+const runtime=createBrowserBattleDeathExtraCommitRuntime();
+assert.equal(runtime.ok,true);
+const committed=runtime.commit(state,battleContext,{transactionId:'death-extra-1',expectedRevision:7,now});
+assert.equal(committed.ok,true,JSON.stringify(committed));
+assert.equal(committed.state.revision,8);
+assert.equal(committed.state.pets.petBox[0].variableAi,350);
+assert.equal(committed.state.player.deadPetCount,1);
+
+const retry=runtime.commit(committed.state,battleContext,{transactionId:'death-extra-1',expectedRevision:7,now});
+assert.equal(retry.ok,true);
+assert.equal(retry.idempotent,true);
+assert.equal(retry.state.revision,8);
+
+const settlement=createBrowserBattleSettlementRuntime();
+const missing=settlement.commit(committed.state,battleContext,{
+  settlementId:'settle-missing-death-extra',
+  transactions:[],
+  expectedRevision:8,
+  now
+});
+assert.equal(missing.ok,false);
+assert.equal(missing.reason,'settlement-transaction-required');
+assert.equal(missing.kind,'deathExtra');
+
+const settled=settlement.commit(committed.state,battleContext,{
+  settlementId:'settle-with-death-extra',
+  transactions:[{kind:'deathExtra',transactionId:'death-extra-1'}],
+  expectedRevision:8,
+  now
+});
+assert.equal(settled.ok,false,'ordinary live PVE also requires levelUp transaction');
+assert.equal(settled.reason,'settlement-transaction-required');
+assert.equal(settled.kind,'levelUp');
+
+console.log(JSON.stringify({
+  pass:true,
+  format:'stoneage-v462-browser-battle-death-extra-commit-v1',
+  revisionAfterDeathExtra:8,
+  petVariableAi:350,
+  deadPetCount:1,
+  transactionIdempotent:true,
+  settlementRequiresDeathExtra:true
+},null,2));
