@@ -161,7 +161,11 @@ function buildBattleContext({
     fixLuck:playerWork.fixLuck,
     quick:playerWork.fixDex,
     attackPower:playerWork.fixStr,
-    defencePower:playerWork.fixTgh
+    defencePower:playerWork.fixTgh,
+    statusRawStats:{vital:vital*100,str:str*100,tgh:tgh*100,dex:dex*100},
+    statusResist:isObject(player?.statusResist)?clone(player.statusResist):{},
+    ridePetActive:player?.ridePetActive===true,
+    ridePetQuick:intOr(player?.ridePetQuick,null)
   };
   if(activePet&&isObject(activePet)&&(intOr(activePet.hp)??0)<=0)return {ok:false,handled:false,stage:'battle-context',reason:'active-pet-dead-cannot-start-battle'};
   let petWork=null;
@@ -216,7 +220,11 @@ function buildBattleContext({
     fixLuck:petWork?.fixLuck??0,
     quick:petWork?.fixDex??0,
     attackPower:petWork?.fixStr??0,
-    defencePower:petWork?.fixTgh??0
+    defencePower:petWork?.fixTgh??0,
+    statusRawStats:activePet.serverStats&&isObject(activePet.serverStats)
+      ?{vital:intOr(activePet.serverStats.vital)??0,str:intOr(activePet.serverStats.str)??0,tgh:intOr(activePet.serverStats.tgh)??0,dex:intOr(activePet.serverStats.dex)??0}
+      :{vital:(intOr(activePet?.stats?.vital)??0)*100,str:(intOr(activePet?.stats?.str)??0)*100,tgh:(intOr(activePet?.stats?.tgh)??0)*100,dex:(intOr(activePet?.stats?.dex)??0)*100},
+    statusResist:isObject(activePet?.statusResist)?clone(activePet.statusResist):{}
   }:null;
   const enemyEntries=enemyLayout.entries.map((entry,slot)=>{
     if(!entry)return null;
@@ -283,7 +291,14 @@ function buildBattleContext({
       fixLuck:0,
       quick:entry.coreStats?.derived?.fixDex??null,
       attackPower:entry.coreStats?.derived?.fixStr??null,
-      defencePower:entry.coreStats?.derived?.fixTgh??null
+      defencePower:entry.coreStats?.derived?.fixTgh??null,
+      statusRawStats:entry.coreStats?{
+        vital:intOr(entry.coreStats.stats?.vital)??0,
+        str:intOr(entry.coreStats.stats?.str)??0,
+        tgh:intOr(entry.coreStats.stats?.tgh)??0,
+        dex:intOr(entry.coreStats.stats?.dex)??0
+      }:null,
+      statusResist:entry.coreStats?clone(entry.coreStats.sourceTemplate?.resist||{}):{}
     };
   });
   return {
