@@ -9,6 +9,8 @@ const AI_FIX_PETDEAD=-500;
 const AI_FIX_PETULTIMATE=-1000;
 const AI_MAX=10000;
 const AI_MIN=-10000;
+const CHARM_MAX=100;
+const CHARM_MIN=0;
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const int=value=>{
@@ -104,7 +106,7 @@ function processBattleDeathExtras(context,{
       const isUltimate=(int(entry.ultimate)??0)>0;
       const charmDelta=(isUltimate?CH_FIX_PLAYERULTIMATE:CH_FIX_PLAYERDEAD)/levelFlag;
       const charmBefore=int(entry.charm)??-1;
-      entry.charm=charmBefore+charmDelta;
+      entry.charm=Math.max(CHARM_MIN,Math.min(CHARM_MAX,charmBefore+charmDelta));
       entry.battleCommands=Array.isArray(entry.battleCommands)?entry.battleCommands.slice():[-1,-1,-1];
       entry.battleCommands[0]=0;
 
@@ -240,6 +242,8 @@ function createBrowserBattleDeathExtraRuntime(){
 
 export {
   BROWSER_BATTLE_DEATH_EXTRA_RUNTIME_FORMAT,
+  CHARM_MAX,
+  CHARM_MIN,
   ACTION_BATTLE_DEATH_EXTRA_APPLY,
   CH_FIX_PLAYERDEAD,
   CH_FIX_PLAYERULTIMATE,
