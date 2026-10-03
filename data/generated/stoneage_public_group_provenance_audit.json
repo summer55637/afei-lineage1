@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-public-group-provenance-audit-v1",
+  "format": "stoneage-public-group-provenance-audit-v2",
   "checkedDate": "2026-10-03",
   "purpose": "Public-web provenance search for the 30 active Encounter->Group references unresolved in the RO0000 endpoint snapshot.",
   "targetGroupIds": [1,196,200,791,792,793,794,795,796,797,800,802,804,805,806,808,809,811,821,823,824,826,827,1131,1315,1316,1327,1328,1467,1500],
@@ -45,11 +45,49 @@
       "targetResult": "None of the 30 target Group IDs are present as Group rows."
     },
     {
+      "source": "GitHub coolicer/sa",
+      "filePath": "gmsv/data/group1.txt",
+      "fileUrl": "https://github.com/coolicer/sa/blob/master/gmsv/data/group1.txt",
+      "targetResult": "Group file is the same 40,176-byte variant as chenmingbiao/stone-age; none of the 30 target Group IDs are present as Group rows."
+    },
+    {
       "source": "GitHub Lee-hajin/sking-sasrv",
       "filePath": "pack/gmsv/data/group1.txt",
       "fileUrl": "https://github.com/Lee-hajin/sking-sasrv/blob/3a3fdb46e0dfdc2aa132a4968327fdcd161c835d/pack/gmsv/data/group1.txt",
       "blobSha": "c0aada9e730bf399ebba2fc977da6e2d6ae4aaca",
       "targetResult": "Group 1131 and Group 1500 are present; the other 28 target Group IDs are absent as Group rows."
+    },
+    {
+      "source": "GitHub BismarckDD/Stoneage",
+      "repoUrl": "https://github.com/BismarckDD/Stoneage",
+      "targetResult": "Repository contains StoneAge GMSV source and references group1.txt through setup.cf, but its tracked tree does not contain a group1.txt data file to inspect."
+    },
+    {
+      "source": "源码中国 / 石器时代2.5服务端",
+      "url": "https://www.ymcn.org/511533.html",
+      "archive": "WIN6.0.rar",
+      "uploadDate": "2012-01-09",
+      "targetResult": "Public index confirms the archive contains gmsv/data/group1.txt, encount.txt and related world/battle data, but the download endpoint requires login, so the Group rows could not be inspected."
+    },
+    {
+      "source": "源码中国 / shiqi8.0",
+      "url": "https://www.ymcn.org/1394357.html",
+      "archiveSize": "20.85mb",
+      "uploadDate": "2012-11-26",
+      "targetResult": "Public index confirms an 8.0 server/source package containing gmsv/data/group1.txt, group.txt, enemy1.txt and enemybase1.txt; the download endpoint requires login, so rows could not be inspected."
+    },
+    {
+      "source": "We Love SA / SAAC WIN端 2013-04-13",
+      "url": "https://www.lab.welovesa.com/viewthread.php?tid=2488",
+      "uploadDate": "2013-04-13",
+      "lineageNote": "The public post states that this mainland 8018 server used '凌宇阁win端单机data' and publishes the archive name plus MD5/SHA1/CRC32, with external download links.",
+      "targetResult": "Strong historical lineage lead toward a 2013 Windows data package, but the public crawl does not expose the archive contents directly."
+    },
+    {
+      "source": "We Love SA / GMSV 8.0 runtime report",
+      "url": "https://lab.welovesa.com/viewthread.php?tid=2429",
+      "buildNote": "Public 2013 runtime log identifies SA GMSV 8.0 for sa_8002 and reports '有效遇敌组群数是 1230'.",
+      "targetResult": "Useful version/runtime corroboration only; no Group rows exposed."
     }
   ],
   "publiclyObservedTargetRows": [
@@ -88,16 +126,16 @@
   ],
   "coverageSummary": {
     "targetIds": 30,
-    "publicSourcesChecked": 5,
+    "publicSourcesChecked": 11,
     "historicallyObservedTargetIds": [1131,1500],
     "targetIdsStillWithoutPublicGroupRow": 28,
     "coreWorldTargetIdsStillWithoutPublicGroupRow": [791,792,793,794,800,808,809,811,824,827,1315,1316],
     "status": "open-provenance-search"
   },
   "conclusion": {
-    "whatChanged": "The public-web search materially expands provenance evidence but does not yet close the RO0000 Group source gap.",
+    "whatChanged": "This round found two additional GitHub repositories in the same GMSV family and several 2012-2013 archive/index records that point to older Windows/Linux StoneAge data packages. None exposed a trustworthy row for the 28 unresolved target IDs.",
     "safePromotion": "No target Group row is promoted into RO0000 runtime from public sources in this audit.",
-    "nextSearchPriority": "Continue searching older/newer GMSV data packages and historical mirrors for exact rows, prioritizing the core-world Group IDs.",
+    "nextSearchPriority": "The most promising unresolved leads are the older 2012 WIN6.0.rar package, the 2012 shiqi8.0 package, and the 2013 凌宇阁 WIN data lineage referenced by We Love SA. Continue toward mirrors or publicly indexed copies of those exact archives rather than generic Group files.",
     "reopenPromotionCondition": "Promote only when an authoritative or strongly compatible revision provides a complete column-verifiable Group row and provenance linking it to the target RO0000 deployment/variant."
   }
 }
