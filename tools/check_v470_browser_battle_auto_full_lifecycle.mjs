@@ -21,6 +21,7 @@ import { createBrowserBattleExitPlanRuntime } from '../src/stoneage_browser_batt
 import { createBrowserBattleExitCommitRuntime } from '../src/stoneage_browser_battle_exit_commit_runtime.mjs';
 import { createBrowserBattleContextClearRuntime } from '../src/stoneage_browser_battle_context_clear_runtime.mjs';
 import { runBattleAutoLifecycle } from '../src/stoneage_browser_battle_auto_lifecycle_runtime.mjs';
+import { createBrowserBattleAutoRuntime } from '../src/stoneage_browser_battle_auto_runtime.mjs';
 
 const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 const now=()=> '2026-10-03T22:35:00+08:00';
@@ -163,6 +164,48 @@ assert.equal(result.state.idle.mode,'moving');
 assert.equal(result.state.idle.enabled,true);
 assert.equal(result.battleExitTransactionId,'v470:battle-exit');
 assert.equal(result.settlementId,'v470-settlement-1');
+
+const factoryState=JSON.parse(JSON.stringify(state));
+const factoryAuto=createBrowserBattleAutoRuntime({
+  playerStrategyRuntime:{ok:true,apply:async ({context})=>({ok:true,handled:true,battleContext:context,command:null})},
+  enemyAiRuntime:{ok:true,apply:async ({context})=>({ok:true,handled:true,battleContext:context,commands:[]})},
+  roundRuntime:{ok:true,resolve:async ({context})=>({
+    ok:true,handled:true,stage:'battle-round-resolved',context,
+    turn:2,finished:true,winnerSide:0,finishReason:'all-enemies-defeated',
+    finishPlan
+  })},
+  idleRuntime,
+  battleFinishCommitRuntime:createBrowserBattleFinishCommitRuntime(),
+  battleExpPlanRuntime:createBrowserBattleExpPlanRuntime(),
+  battleLevelUpPlanRuntime:createBrowserBattleLevelUpPlanRuntime(),
+  battlePetGrowthPlanRuntime:createBrowserBattlePetGrowthPlanRuntime(),
+  battleLevelUpCommitRuntime:createBrowserBattleLevelUpCommitRuntime(),
+  battleDeathExtraCommitRuntime:createBrowserBattleDeathExtraCommitRuntime(),
+  battleRelifeCommitRuntime:createBrowserBattleRelifeCommitRuntime(),
+  battleSettlementRuntime:createBrowserBattleSettlementRuntime(),
+  battlePlayerExitRuntime:createBrowserBattlePlayerExitRuntime(),
+  battlePlayerExitCommitRuntime:createBrowserBattlePlayerExitCommitRuntime(),
+  battleExitPlanRuntime:createBrowserBattleExitPlanRuntime(),
+  battleExitCommitRuntime:createBrowserBattleExitCommitRuntime(),
+  battleContextClearRuntime:createBrowserBattleContextClearRuntime()
+});
+assert.equal(factoryAuto.ok,true);
+const factoryResult=await factoryAuto.run(
+  {format:'stoneage-browser-battle-context-runtime-v1',context:relife.context},
+  {
+    state:factoryState,
+    completeLifecycle:true,
+    settlementId:'v470-factory-settlement-1',
+    transactionPrefix:'v470-factory',
+    supplyRequired:false,
+    now
+  }
+);
+assert.equal(factoryResult.ok,true,JSON.stringify(factoryResult));
+assert.equal(factoryResult.stage,'battle-auto-lifecycle-complete');
+assert.equal(factoryResult.contextCleared,true);
+assert.equal(factoryResult.state.revision,8);
+assert.equal(factoryResult.state.idle.mode,'moving');
 
 console.log(JSON.stringify({
   pass:true,
