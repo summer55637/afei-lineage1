@@ -33,7 +33,7 @@ assert.equal(battleStatusCanMove({battleStatus:{sleep:1}}),false);
 assert.equal(battleStatusCanMove({battleStatus:{drunk:1}}),true);
 
 {
-  const entry={hp:100,statusRawStats:{vital:2500,str:2500,tgh:2500,dex:2500},battleStatus:{}};
+  const entry={hp:100,statusRawStats:{vital:600,str:600,tgh:600,dex:600},battleStatus:{}};
   const damage=battleStatusPoisonDamage(entry);
   assert.equal(damage,1);
   assert.equal(entry.hp,99);
