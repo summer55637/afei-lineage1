@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：461d437 — docs: record RO0000 profession map restrictions
-- 更新時間：2026-10-03T15:51:51+08:00
+- 最新 commit：37f9597 — docs: close RO0000 attack magic binary closure
+- 更新時間：2026-10-03T16:02:16+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
