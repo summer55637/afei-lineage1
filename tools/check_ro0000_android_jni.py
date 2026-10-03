@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 
-from audit_ro0000_android_jni import (parse_jni_exports, parse_all_jni_symbols, parse_jni_onload_symbols, summarize_onload_disassembly, relevant_native_strings, compare_jni_methods, jni_escape, jni_symbol_candidates, compare_all_declarations)
+from audit_ro0000_android_jni import (parse_jni_exports, parse_all_jni_symbols, parse_jni_onload_symbols, summarize_onload_disassembly, relevant_native_strings, summarize_java_native_loaders, compare_jni_methods, jni_escape, jni_symbol_candidates, compare_all_declarations)
 
 
 class JniDeclarationExportTests(unittest.TestCase):
@@ -106,6 +106,43 @@ class JniDeclarationExportTests(unittest.TestCase):
         self.assertEqual(records[2]["status"], "no-static-export-package-related-jni-onload")
         self.assertEqual(records[3]["status"], "no-static-export-or-package-related-jni-onload")
         self.assertEqual(result["parity"]["staticExportMatchedInEveryAbi"], 2)
+
+    def test_correlates_java_native_loader_calls_to_dex_owner(self):
+        declarations = [
+            {"class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+             "name": "appendNativeLog", "signature": "appendNativeLog(Ljava/lang/String;)V"},
+            {"class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+             "name": "testCrash", "signature": "testCrash()V"},
+        ]
+        java_flow = {
+            "source": {"apkSha256": "same-apk"},
+            "classes": [{
+                "package": "com.tencent.bugly.crashreport.crash.jni",
+                "className": "NativeCrashHandler",
+                "methods": [{
+                    "name": "a",
+                    "callSequence": [
+                        {"line": 261, "target": "System.load"},
+                        {"line": 263, "target": "System.loadLibrary"},
+                        {"line": 271, "target": "x.d"},
+                    ],
+                }],
+                "nativeLibraryLoadRequests": [],
+            }],
+        }
+        result = summarize_java_native_loaders(java_flow, declarations)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["nativeDeclarationCount"], 2)
+        self.assertEqual(result[0]["javaLoaderMethods"], [{
+            "method": "a",
+            "callCount": 2,
+            "callSequence": [
+                {"line": 261, "target": "System.load"},
+                {"line": 263, "target": "System.loadLibrary"},
+            ],
+        }])
+        self.assertEqual(result[0]["nativeLibraryLoadRequests"], [])
+        self.assertIn("not established", result[0]["evidenceScope"])
 
     def test_classifies_mismatch_without_assigning_cause(self):
         declared = [{"name": "callbackFoo"}, {"name": "callbackMissing"}]
