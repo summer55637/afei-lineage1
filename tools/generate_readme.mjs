@@ -116,9 +116,16 @@ function buildReadme() {
     : 0;
   const repairedPortalGroups = Math.min(portalGroups, sourceUsablePortalGroups + productRepairPortalGroups);
   const firstRoutePathClosed = portalGroups > 0 && repairedPortalGroups >= portalGroups;
-  const battlePolicyPending = idleSummary.battlePolicyPendingAll === true;
+  const hasV470BattleLifecycle = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_battle_auto_lifecycle_runtime.mjs'));
+  const hasV471WorldIdleLoop = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_world_idle_loop_runtime.mjs'));
+  const hasV472IdleSupply = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_idle_supply_runtime.mjs'));
+  const battlePolicyPending = idleSummary.battlePolicyPendingAll === true && !hasV471WorldIdleLoop;
   const fullRouteLine = firstRoutePathClosed
-    ? '✅ 路徑已閉合（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）' + (battlePolicyPending ? '；⚠️ 完整自動戰鬥待串接（基礎策略已實作）' : '')
+    ? '✅ 路徑已閉合（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）' + (
+        hasV471WorldIdleLoop
+          ? '；✅ 自動戰鬥＋戰後結算＋World Idle Tick 編排已串接（V4.71）'
+          : (battlePolicyPending ? '；⚠️ 完整自動戰鬥待串接（基礎策略已實作）' : '')
+      )
     : '⚠️ 部分完成（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）';
   const mapCount = Object.keys(maps.maps ?? {}).length;
   const mapLine = mapCount ? '✅ ' + comma(mapCount) + ' 張' : '⚠️ 未建立';
@@ -127,7 +134,11 @@ function buildReadme() {
   const androidLine = androidClientAudit.source?.sha256
     ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（遊戲資源格式／載入流程、ADRN/REAL/SPR、SABEX 220-slot / 33×33、map cache/HitMap/prefetch、route/movement/warp、Lua container、battle-map crosscheck 與 4 組 sprite fixup 已靜態稽核；⚠️ 外部 production resource bytes 與真機 runtime 驗證待補）'
     : '⚠️ APK 尚未完成封裝稽核';
-  const battleLine = workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel;
+  const battleMilestones=[];
+  if(hasV470BattleLifecycle)battleMilestones.push('V4.70 戰鬥完整結算');
+  if(hasV471WorldIdleLoop)battleMilestones.push('V4.71 World Idle Loop');
+  if(hasV472IdleSupply)battleMilestones.push('V4.72 Idle Supply');
+  const battleLine = battleMilestones.length ? '✅ ' + battleMilestones.join('；') : (workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel);
   const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');
 
   return [
