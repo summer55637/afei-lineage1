@@ -396,7 +396,7 @@ async function resolveBattleRound(context,{
 
       deferred.push({
         kind:'counter',
-        attackerBid,
+        attackerBid:actorBid,
         defenderBid:prelude.finalTargetBid,
         reason:'v446-basic-round-defers-BATTLE_Counter-chain'
       });
