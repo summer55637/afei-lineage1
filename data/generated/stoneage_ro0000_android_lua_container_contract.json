@@ -1,0 +1,69 @@
+{
+  "format": "ro0000-android-lua-container-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "nativeLibraries": {
+      "armeabi-v7a": {
+        "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+        "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+      },
+      "x86": {
+        "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+        "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+      }
+    }
+  },
+  "targetPath": "path/map4/real.bin",
+  "distinction": {
+    "notTheSameAs": [
+      "per-directory %s/real.bin loaded by AdrnInit",
+      "per-directory %s/adrn.bin loaded by AdrnInit"
+    ],
+    "classification": "named-entry Lua loading container"
+  },
+  "recordEncoding": {
+    "wordSizeBytes": 4,
+    "xorKey": "0x87091272",
+    "lengthWord": {
+      "meaning": "payload byte length after XOR"
+    },
+    "payload": {
+      "meaning": "raw Lua source/buffer bytes loaded by name",
+      "loader": "myluaload(char*, char*, int)"
+    },
+    "nameCountWord": {
+      "meaning": "number of 4-byte name words after XOR"
+    },
+    "nameWords": {
+      "meaning": "each 4-byte word is XOR-decoded and appended to a NUL-terminated name"
+    },
+    "entryFilter": {
+      "condition": "decoded name contains .lua",
+      "acceptedPath": "myluaload(payload, decodedName, payloadLength)",
+      "rejectedPath": "free decoded buffers and continue to the next entry"
+    }
+  },
+  "runtimeLoad": {
+    "function": "myluaload(char*, char*, int)",
+    "luaApi": "luaL_loadbuffer(payload, name, payloadLength)",
+    "execution": "lua_pcall",
+    "interpretation": "the container stores named Lua payloads rather than a directly indexed tile-image array"
+  },
+  "separateLooseLuaLoader": {
+    "function": "LoadStoneAgeLUAPath(char const*)",
+    "behavior": [
+      "opens a directory",
+      "skips dot-prefixed entries",
+      "loads regular files whose names end in .lua",
+      "recurses into non-regular entries"
+    ],
+    "boundary": "separate from the path/map4/real.bin record loader"
+  },
+  "verificationBoundary": {
+    "actualContainerBytes": false,
+    "actualLuaEntryNames": false,
+    "actualLuaPayloadBytes": false,
+    "runtimeExecutionObserved": false
+  }
+}
