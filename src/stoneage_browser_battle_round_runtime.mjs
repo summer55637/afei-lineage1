@@ -459,6 +459,11 @@ async function resolveBattleRound(context,{
               counterRolls:counterRollsByActorBid?.[String(actorBid)]??counterRollsByActorBid?.[actorBid]??[],
               counterAttackRolls:counterAttackRollsByActorBid?.[String(actorBid)]??counterAttackRollsByActorBid?.[actorBid]??[],
               weaponClassByBid,
+              carriedLootItemsByEnemyBid,
+              carriedLootOwnerRollsByEnemyBid,
+              carriedLootReplaceRollsByEnemyBid,
+              carriedLootReplaceSlotRollsByEnemyBid,
+              ridePetBidByParticipantBid,
               transactionPrefix:String(id)+':'+String(actorBid),
               now
             }
