@@ -541,7 +541,7 @@
     ],
     "targetRules": {
       "spriteSlot": "sprNo - 100000",
-      "slotGuard": "derived slot > 40000 exits; slot == 40000 passes the observed comparison despite only 40000 allocated entries; malformed boundary remains unsafe/unverified",
+      "slotGuard": "Both ABIs accept derived slot <= 40000 (ARM: compare against 40001 then pass on signed less-than; x86: compare against 0x9c40 then pass on less-or-equal). SpriteData has exactly 40000 entries of 8 bytes, and the accepted equality case indexes one slot past the allocated object.",
       "storedAnimationDuration": "frameCnt == 0 ? 0 : dtAnim / frameCnt / 16",
       "frameAllocation": "frameCnt FRAMELIST records per animation",
       "abiPaddingSemantic": "unresolved"
@@ -549,7 +549,40 @@
     "semanticBoundary": {
       "recordFieldLayout": "closed from target reads and writes",
       "allHardcodedPostLoadFixups": "all four selector branches in InitSprBinFileOpen are enumerated; runtime visual/audio effects remain unverified",
-      "runtimeSoundEffectMeaning": "not runtime-verified"
+      "runtimeSoundEffectMeaning": "not runtime-verified",
+      "onePastAccess": {
+        "status": "statically-confirmed-potential",
+        "derivedSlot": 40000,
+        "exampleSprNo": 140000,
+        "capacityEntries": 40000,
+        "entrySizeBytes": 8,
+        "allocatedBytes": 320000,
+        "computedByteOffset": 320000,
+        "x86": {
+          "functionAddress": "0x3637e0",
+          "guard": "cmp slot,0x9c40; jle accepts equality",
+          "followingIndexedAccesses": [
+            "write 2-byte value at SpriteData[slot]",
+            "read 2-byte animation count from SpriteData[slot]",
+            "store frame-list pointer at SpriteData[slot]+4"
+          ]
+        },
+        "armeabiV7a": {
+          "functionAddress": "0x23ad35",
+          "guard": "cmp slot,40001; blt accepts slot 40000",
+          "followingIndexedAccess": "read 2-byte animation count from SpriteData + slot*8"
+        },
+        "impact": "A valid 12-byte index record carrying sprNo=140000 can make the target's observed guard accept a one-past slot. Actual malformed resource bytes are absent, so triggering and runtime impact are not observed.",
+        "reconstructionPolicy": {
+          "requireSprNoAtLeast": 100000,
+          "requireDerivedSlotLessThan": 40000,
+          "acceptedSprNoRange": {
+            "minimumInclusive": 100000,
+            "maximumInclusive": 139999
+          },
+          "rejectSprNoAtOrAbove": 140000
+        }
+      }
     },
     "runtimeFrameStrideBytes": 12,
     "postLoadFixups": {
@@ -1208,6 +1241,53 @@
         "crossAniRelease": 1,
         "ReleaseSpecAnim": 1
       }
+    }
+  },
+  "spriteBoundaryAudit": {
+    "source": {
+      "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+      "libraries": {
+        "armeabi-v7a": {
+          "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+          "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+        },
+        "x86": {
+          "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+          "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+        }
+      }
+    },
+    "functions": {
+      "InitSprBinFileOpen": {
+        "x86": "0x3637e0",
+        "armeabiV7a": "0x23ad35"
+      }
+    },
+    "requiredDisassemblyPatterns": {
+      "InitSprBinFileOpen": {
+        "x86": [
+          "cmpl\\s+\\$0x9c40",
+          "\\bjle\\b",
+          "\\(%e[a-z]+,%e[a-z]+,8\\)"
+        ],
+        "armeabiV7a": [
+          "movw\\s+r1,\\s*#40001",
+          "cmp\\s+r0,\\s*r1",
+          "\\bblt(?:\\.n|\\.w)?\\b",
+          "lsl\\s+#3"
+        ]
+      }
+    },
+    "boundary": {
+      "slotCapacity": 40000,
+      "entrySizeBytes": 8,
+      "allocationBytes": 320000,
+      "acceptedTargetUpperBoundInclusive": 40000,
+      "firstOnePastSlot": 40000,
+      "onePastByteOffset": 320000,
+      "exampleSprNo": 140000,
+      "finding": "Both ABI guards accept the first one-past slot; indexed SpriteData accesses follow the guard.",
+      "reconstructionGuard": "0 <= (sprNo - 100000) < 40000"
     }
   }
 }
