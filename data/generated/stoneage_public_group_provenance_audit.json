@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-public-group-provenance-audit-v5",
+  "format": "stoneage-public-group-provenance-audit-v6",
   "checkedDate": "2026-10-03",
   "purpose": "Public-web provenance search for the 30 active Encounter->Group references unresolved in the RO0000 endpoint snapshot.",
   "targetGroupIds": [
@@ -167,6 +167,28 @@
       "status": "candidate-historical-package-body-not-inspected",
       "provenanceAssessment": "The post describes a StoneAge 8.0 WIN package re-uploaded in 2022 and documents V1.0-V1.7 later private-server modifications. It is useful as a potentially recoverable package, but those later modifications make it unsafe to assume its group1.txt represents the original 8.0 or RO0000 deployment.",
       "searchFinding": "No publicly indexed group1.txt rows for the 30 target IDs were exposed from this package or its forum mirrors during this round."
+    },
+    {
+      "source": "源码中国 / 石器时代2.5服务端 WIN6.0.rar",
+      "url": "https://www.ymcn.org/511533.html",
+      "uploadDate": "2012-01-09",
+      "archiveName": "WIN6.0.rar",
+      "archiveSizeBytes": 8040000
+    },
+    {
+      "source": "GitHub Physwf/physwf-c-lab runtime log",
+      "fileUrl": "https://github.com/Physwf/physwf-c-lab/blob/master/stoneage2.5/gmsv/nohup.out",
+      "buildDate": "2013-02-06",
+      "serverBuild": "龙zoro版GMSV_2.5服务端会员版",
+      "groupRuntimeCount": 1230,
+      "groupFileSyntaxErrors": "group1.txt lines 725-729",
+      "significance": "This runtime log proves a 2.5-era data package loaded group1.txt and reported 1230 valid groups, but the count differs from the current Fixed-C group1 blob (1392 numeric rows), so it must not be treated as the same data revision."
+    },
+    {
+      "source": "石器时代group1.txt详解",
+      "url": "https://www.shiqisifu.cc/Article/5/News_27.html",
+      "technicalSemantics": "Public technical reference documents columns 1-24 of group1.txt: group name, group number, required/forbidden item IDs, up to ten enemy IDs, and per-enemy appearance weights.",
+      "significance": "Useful for validating row structure only; it does not provide the missing target rows."
     }
   ],
   "publiclyObservedTargetRows": [
@@ -205,7 +227,7 @@
   ],
   "coverageSummary": {
     "targetIds": 30,
-    "publicSourcesChecked": 14,
+    "publicSourcesChecked": 15,
     "historicallyObservedTargetIds": [
       1131,
       1500
@@ -229,7 +251,7 @@
     "exactFixedBlobCloneRepositories": 10
   },
   "conclusion": {
-    "whatChanged": "This round added a recoverable 2022 mirror lead for a StoneAge 8.0 WIN package and confirmed that its published V1.0-V1.7 history includes many later custom changes. It therefore remains a candidate for physical inspection, not an authoritative Group source.",
+    "whatChanged": "This round added a 2012 WIN6.0 archive index, a 2013 龙ZoRo 2.5 runtime log showing 1230 valid group rows, and a public group1.txt column reference. The 1230 runtime count is materially different from the 1392 numeric rows in the pinned Fixed-C group1 blob, confirming a version boundary rather than a direct match.",
     "safePromotion": "No target Group row is promoted into RO0000 runtime from public sources in this audit.",
     "nextSearchPriority": "The most promising unresolved leads are the older 2012 WIN6.0.rar package, the 2012 shiqi8.0 package, and the 2013 凌宇阁 WIN data lineage referenced by We Love SA. Continue toward mirrors or publicly indexed copies of those exact archives rather than generic Group files.",
     "reopenPromotionCondition": "Promote only when an authoritative or strongly compatible revision provides a complete column-verifiable Group row and provenance linking it to the target RO0000 deployment/variant."
