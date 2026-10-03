@@ -15,6 +15,7 @@ import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 
 const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
 const groupCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
+const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 
 const state=freshPersistentState({playerId:'v452-controller'});
 state.player.name='阿飛';
@@ -28,6 +29,7 @@ state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
 
 const controller=createBrowserStateController({
   state,
+  idleRouteCatalog:routeCatalog,
   encounterTargetIndex:encounterIndex,
   encounterGroupCatalog:groupCatalog,
   battleFieldNoProvider:0
