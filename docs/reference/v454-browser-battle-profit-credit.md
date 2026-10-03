@@ -4,7 +4,7 @@
 
 Pinned fixed-C source:
 - Repository: gavinlinasd/StoneAge
-- Ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1
+- Ref: 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 
 ## Closed boundary
 
