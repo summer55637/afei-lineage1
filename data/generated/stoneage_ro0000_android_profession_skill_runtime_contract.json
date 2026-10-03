@@ -1,0 +1,113 @@
+{
+  "format": "ro0000-android-profession-skill-runtime-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隱盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "armeabiV7aLibSha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d"
+  },
+  "receivePath": {
+    "function": "lssproto_S_recv",
+    "branch": "data[0] == 'S'",
+    "recordCount": 26,
+    "tokensPerRecord": 9,
+    "tokenBaseFormula": "record i uses token positions 1 + i*9 through 9 + i*9",
+    "postProcess": "SortSkill()"
+  },
+  "professionSkillRecord": {
+    "strideBytes": 280,
+    "fieldsDirectlyParsed": {
+      "offset0x00": "useFlag <- integer token 1",
+      "offset0x02": "skillId <- integer token 2",
+      "offset0x04": "target <- integer token 3",
+      "offset0x06": "kind <- integer token 4",
+      "offset0x108": "icon <- integer token 5",
+      "offset0x10c": "costmp <- integer token 6",
+      "offset0x110": "skill_level <- integer token 7",
+      "offset0x008": "name <- escaped string token 8",
+      "offset0x087": "memo <- escaped string token 9"
+    },
+    "derivedField": {
+      "offset0x114": {
+        "producer": "getProfessionSkillType(skillId)",
+        "input": "sign-extended 16-bit skillId from offset 0x02",
+        "returnTypeObserved": "signed int",
+        "downstreamUse": "used by BattleButtonPPLSKILL to construct a battle-skill UI image identifier by adding 0xf4fa"
+      }
+    },
+    "initialization": {
+      "beforeParse": "all 26 records set useFlag=0 and kind=0",
+      "skillIndexArrays": "AdvanceSkill, AssitSkill, BattleSkill reset to -1 before classification"
+    }
+  },
+  "sortSkill": {
+    "function": "SortSkill",
+    "x86Address": "0x2da2a0",
+    "inputRecordCount": 26,
+    "outputArrays": {
+      "BattleSkill": {
+        "kind": 1,
+        "label": "battle",
+        "capacity": 20
+      },
+      "AssitSkill": {
+        "kind": 2,
+        "label": "assist",
+        "capacity": 20
+      },
+      "AdvanceSkill": {
+        "kind": 3,
+        "label": "advanced",
+        "capacity": 20
+      }
+    },
+    "behavior": "Each valid record index is appended in ascending original record-index order to the array matching its kind; unrecognized kind values are skipped.",
+    "ordering": "stable with respect to the original 0..25 profession-skill record index scan"
+  },
+  "battleSkillUiIntegration": {
+    "function": "BattleButtonPPLSKILL",
+    "x86Address": "0x10bd??",
+    "modes": {
+      "0": "AssitSkill",
+      "1": "BattleSkill",
+      "2": "AdvanceSkill"
+    },
+    "grid": "up to 4 columns x 4 rows are iterated for each mode; -1 terminates a row's useful entries",
+    "eligibility": {
+      "useFlag": "must be nonzero",
+      "normalResourceGate": "native resource value must be >= profession_skill.costmp and costmp must be nonzero",
+      "knownHpRestriction": "skillId 40 is blocked when player hp <= 10",
+      "specialZeroCostException": "skillId 11 can pass the zero-cost path in the assist mode"
+    },
+    "selectionResult": "selected skill index stored in prouseskill or the corresponding battle selection state, followed by BattleSetWazaHitBox(profession_skill[target], 1)"
+  },
+  "luaClassificationBridge": {
+    "function": "getProfessionSkillType(int)",
+    "x86Address": "0x393d10",
+    "inputFromReceive": "profession_skill[i].skillId",
+    "luaField": "getProfessionSkillType",
+    "fieldTypeRequired": 6,
+    "callShape": "lua_pushnumber(L, skillId); lua_pcall(L,1,1,0)",
+    "returnRules": {
+      "missingLuaContext": -1,
+      "missingFunction": -1,
+      "pcallError": -1,
+      "nonNumericResult": -1,
+      "numericResult": "Lua numeric result converted with cvttsd2si to signed int after lua_tonumber; stack is cleared"
+    },
+    "errorHandling": "Lua errors are logged through SDL_Log before stack cleanup"
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "rebuild three profession-skill categories using kind",
+      "preserve native record order in each category",
+      "feed browser battle-skill UI from the same 26-record -> 3-array pipeline",
+      "treat getProfessionSkillType as a separate Lua-backed presentation-classification value rather than conflating it with kind"
+    ],
+    "boundaries": [
+      "The body of Lua getProfessionSkillType is not present in the APK and is supplied externally at runtime.",
+      "The semantic meaning of the returned integer is observed from its UI image-number use, not independently named beyond that.",
+      "Server-side skill balance and effect execution remain outside this client-side receive/sort contract."
+    ]
+  }
+}
