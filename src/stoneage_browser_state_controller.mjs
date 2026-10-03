@@ -53,6 +53,7 @@ import { createBrowserBattleDeathCommitRuntime, ACTION_BATTLE_DEATH_COMMIT, BROW
 import { createBrowserBattleEndRuntime, ACTION_BATTLE_END_PLAN, BROWSER_BATTLE_END_RUNTIME_FORMAT } from './stoneage_browser_battle_end_runtime.mjs';
 import { createBrowserBattleFinishCommitRuntime, ACTION_BATTLE_FINISH_COMMIT, BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_finish_commit_runtime.mjs';
 import { createBrowserBattleRoundRuntime, ACTION_BATTLE_ROUND_RESOLVE, BROWSER_BATTLE_ROUND_RUNTIME_FORMAT } from './stoneage_browser_battle_round_runtime.mjs';
+import { createBrowserBattleAutoRuntime, ACTION_BATTLE_AUTO_RUN, BROWSER_BATTLE_AUTO_RUNTIME_FORMAT } from './stoneage_browser_battle_auto_runtime.mjs';
 import { createBrowserBattleCounterChainRuntime, ACTION_BATTLE_COUNTER_CHAIN_RESOLVE, BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT } from './stoneage_browser_battle_counter_chain_runtime.mjs';
 import { createBrowserBattleDamageReactCommitRuntime, ACTION_BATTLE_DAMAGE_REACT_COMMIT, BROWSER_BATTLE_DAMAGE_REACT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleAttackSequenceRuntime, ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE, BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT } from './stoneage_browser_battle_attack_sequence_runtime.mjs';
@@ -314,6 +315,11 @@ function createBrowserStateController({
     carriedLootRuntime:battleCarriedLootRuntime,
     enemyExpRuntime:battleEnemyExpRuntime,
     relifeRuntime:battleRelifeRuntime
+  });
+  const battleAutoRuntime=createBrowserBattleAutoRuntime({
+    playerStrategyRuntime:idleBattleStrategyRuntime,
+    enemyAiRuntime:battleEnemyAiRuntime,
+    roundRuntime:battleRoundRuntime
   });
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
   const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
@@ -893,6 +899,34 @@ function createBrowserStateController({
         );
         if(result.ok===true&&result.handled===true&&result.context)battleContext=clone(result.context);
         return {...result,format:BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_AUTO_RUN){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(battleAutoRuntime.ok!==true){
+          return {ok:false,handled:false,stage:'battle-auto',reason:'browser-battle-auto-runtime-invalid',state:clone(currentState),battleContext:battleContext?clone(battleContext):null};
+        }
+        const result=await battleAutoRuntime.run(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            strategy:action.strategy??undefined,
+            playerId:action.playerId??null,
+            rounds:Array.isArray(action.rounds)?action.rounds:[],
+            maxRounds:action.maxRounds??undefined,
+            counterPolicy:action.counterPolicy??'execute',
+            transactionPrefix:String(action.transactionPrefix??`battle-auto-${sequence+1}`)
+          }
+        );
+        if(result.ok===true&&result.handled===true&&result.context){
+          battleContext=clone(result.context);
+        }
+        return {
+          ...result,
+          format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,
+          action:ACTION_BATTLE_AUTO_RUN,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(currentState)
+        };
       }
       if(type===ACTION_BATTLE_ROUND_RESOLVE){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-round',reason:'battle-context-required',state:clone(currentState)};
@@ -2204,6 +2238,7 @@ export {
   ACTION_BATTLE_DEATH_COMMIT,
   ACTION_BATTLE_END_PLAN,
   ACTION_BATTLE_ROUND_RESOLVE,
+  ACTION_BATTLE_AUTO_RUN,
   ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,
   ACTION_BATTLE_FINISH_COMMIT,
   ACTION_BATTLE_PLAYER_EXIT_PLAN,
