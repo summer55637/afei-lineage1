@@ -50,6 +50,7 @@ function freshPersistentState({ now = () => new Date().toISOString(), playerId =
       maxMp: 0,
       luck: 0,
       charm: -1,
+      deadPetCount: 0,
       duelPoint: 0,
       gold: 0,
       stats: { str: 0, dex: 0, tgh: 0, vital: 0 },
@@ -131,7 +132,7 @@ function normalizePetBox(value) {
 function copyKnownLegacyPlayer(raw) {
   const root = isObject(raw?.player) ? raw.player : raw;
   const p = freshPersistentState().player;
-  for (const key of ['id','name','level','exp','transmigration','hp','maxHp','mp','maxMp','luck','charm','duelPoint','gold']) {
+  for (const key of ['id','name','level','exp','transmigration','hp','maxHp','mp','maxMp','luck','charm','deadPetCount','duelPoint','gold']) {
     if (root?.[key] != null) p[key] = key === 'name' ? String(root[key]) : root[key];
   }
   const stats = root?.playerStats ?? root?.stats;
