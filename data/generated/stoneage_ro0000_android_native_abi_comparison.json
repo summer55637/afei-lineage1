@@ -13,8 +13,8 @@
   },
   "comparison": {
     "sameFunctionNameSet": true,
-    "functionCount": 326,
-    "comparableFunctionCount": 326,
+    "functionCount": 327,
+    "comparableFunctionCount": 327,
     "incompleteFunctionCounts": {
       "armeabi-v7a": 0,
       "x86": 0
@@ -31,8 +31,8 @@
   },
   "abiSummary": {
     "armeabi-v7a": {
-      "functionCount": 326,
-      "completeFunctionCount": 326,
+      "functionCount": 327,
+      "completeFunctionCount": 327,
       "incompleteFunctionCount": 0,
       "indirectCallSiteCount": 2,
       "indirectBranchSiteCount": 12,
@@ -52,8 +52,8 @@
       }
     },
     "x86": {
-      "functionCount": 326,
-      "completeFunctionCount": 326,
+      "functionCount": 327,
+      "completeFunctionCount": 327,
       "incompleteFunctionCount": 0,
       "indirectCallSiteCount": 2,
       "indirectBranchSiteCount": 12,
