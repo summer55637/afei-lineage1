@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：4f7bf56 — feat: apply Battle AddProfit death credit after each counter hit
-- 更新時間：2026-10-03T19:07:35+08:00
+- 最新 commit：0534a8a — test: bind V4.54 profit credit dependency in legacy battle harness
+- 更新時間：2026-10-03T19:08:55+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.53
+- Regression 最高版本：V4.54
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.53 |
+| Battle Pipeline | ✅ V4.54 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
