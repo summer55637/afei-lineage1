@@ -221,7 +221,7 @@ async function resolveCounterChain(context,{
     }
 
     const transactionId=`${transactionPrefix||'counter'}:${step}:${attackerBid}:${targetBid}`;
-    const commit=runtimes.damageDeathChainRuntime.commit(
+    const damageCommit=runtimes.damageDeathChainRuntime.commit(
       {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
       {
         damageReactPlan:reactPlan,
@@ -234,21 +234,21 @@ async function resolveCounterChain(context,{
         lerImmune:bundle.lerImmune===true
       }
     );
-    if(!commit.ok)return {...commit,stage:'battle-counter-chain-damage-death',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+    if(!damageCommit.ok)return {...damageCommit,stage:'battle-counter-chain-damage-death',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
 
-    next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
+    next.context=clone(damageCommit.battleContext?.context??damageCommit.battleContext??next.context);
     record.damagePlan=clone(damagePlan);
     record.criticalPlan=clone(criticalPlan);
     record.damageReactPlan=clone(reactPlan);
-    record.commit=clone(commit);
-    record.damageExecuted=commit.damageExecuted===true;
+    record.commit=clone(damageCommit);
+    record.damageExecuted=damageCommit.damageExecuted===true;
     record.executed=true;
 
     const ordinaryNormal=prelude.outcome==='normal';
     const nonZero=scaled.damage>0;
-    const lethal=commit.deathCommitted===true;
+    const lethal=damageCommit.deathCommitted===true;
     const reactionActive=check.reactSuppressed===true||reactPlan.reaction?.code!==0;
-    if(!ordinaryNormal||!nonZero||lethal||reactionActive||commit.damageExecuted!==true){
+    if(!ordinaryNormal||!nonZero||lethal||reactionActive||damageCommit.damageExecuted!==true){
       record.stopReason=lethal?'target-died':reactionActive?'damage-react-suppressed':!nonZero?'zero-damage':'counter-return-false';
       break;
     }
