@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3580dfc — fix: remove duplicate Pet id declaration
-- 更新時間：2026-10-03T19:46:35+08:00
+- 最新 commit：64561ea — test: cover Pet AI-only settlement planning
+- 更新時間：2026-10-03T19:49:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.60
 - Playable HTML：⏸️ 尚未建立（刻意保留）
