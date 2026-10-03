@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT='stoneage-v455-browser-battle-counter-chain-v1';
+const BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT='stoneage-v457-browser-battle-counter-chain-v1';
 const ACTION_BATTLE_COUNTER_CHAIN_RESOLVE='BATTLE_COUNTER_CHAIN_RESOLVE';
 const MAX_COUNTER_CHAIN=5;
 const BATTLE_COM_ATTACK=1;
@@ -256,7 +256,7 @@ async function resolveCounterChain(context,{
         if(!runtimes.enemyExpRuntime||runtimes.enemyExpRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,reason:'enemy-exp-runtime-required'};
         enemyExpCredit=runtimes.enemyExpRuntime.credit(
           {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-          {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],hitIndex:step,source:'counter-special-react',transactionPrefix:transactionPrefix||'counter',now}
+          {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],ridePetBidByParticipantBid,hitIndex:step,source:'counter-special-react',transactionPrefix:transactionPrefix||'counter',now}
         );
         if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
         next.context=clone(enemyExpCredit.context);
@@ -330,7 +330,7 @@ async function resolveCounterChain(context,{
       if(!runtimes.enemyExpRuntime||runtimes.enemyExpRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,reason:'enemy-exp-runtime-required'};
       enemyExpCredit=runtimes.enemyExpRuntime.credit(
         {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-        {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],hitIndex:step,source:'counter',transactionPrefix:transactionPrefix||'counter',now}
+        {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],ridePetBidByParticipantBid,hitIndex:step,source:'counter',transactionPrefix:transactionPrefix||'counter',now}
       );
       if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(enemyExpCredit.context);
