@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：6aaa13e — ci: trigger V4.66 full settlement chain verification
-- 更新時間：2026-10-03T21:29:11+08:00
+- 最新 commit：d1b136f — ci: re-run V4.64 and V4.65 battle regressions
+- 更新時間：2026-10-03T21:30:09+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.66
 - Playable HTML：⏸️ 尚未建立（刻意保留）
