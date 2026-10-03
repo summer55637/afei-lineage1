@@ -1,3 +1,4 @@
+# re-run guard: current main compatibility
 name: Check V4.47 browser battle counter chain
 on:
   push:
