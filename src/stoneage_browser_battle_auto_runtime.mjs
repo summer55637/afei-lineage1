@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_AUTO_RUNTIME_FORMAT='stoneage-v467-browser-battle-auto-orchestrator-v1';
+const BROWSER_BATTLE_AUTO_RUNTIME_FORMAT='stoneage-v469-browser-battle-auto-controller-v1';
 const ACTION_BATTLE_AUTO_RUN='BATTLE_AUTO_RUN';
 const DEFAULT_MAX_ROUNDS=100;
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -38,7 +38,8 @@ async function runBattleAuto(context,{playerStrategyRuntime=null,enemyAiRuntime=
     history.push({roundIndex,turn:roundResult.turn,strategy:strategyResult?clone(strategyResult):null,enemyAi:clone(enemyAiResult),round:clone(roundResult)});
     if(roundResult.finished===true){finished=true;winnerSide=int(roundResult.winnerSide);finishReason=String(roundResult.finishReason??'').trim()||null;break;}
   }
-  return {ok:true,handled:true,stage:finished?'battle-auto-finished':'battle-auto-round-limit',format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,action:ACTION_BATTLE_AUTO_RUN,finished,winnerSide,finishReason,roundsExecuted:history.length,maxRounds:limit,history,context:next.context,persistentMutation:false,battleContextMutation:true,rngGeneratedInternally:false,source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',functions:['BATTLE_Command','BATTLE_ai_all','BATTLE_Battling','BATTLE_PreCommandSeq','BATTLE_OnlyRescue']},contract:{playerPolicy:'Persistent State battleSettings.strategy -> existing idle battle strategy runtime',enemyPolicy:'Fixed-C source AI runtime',roundPolicy:'existing browser battle round runtime',persistentCommit:'deferred to existing Finish/Settlement transaction boundary'}};
+  const finishPlan=finished && history.length ? clone(history[history.length-1]?.round?.finishPlan??null) : null;
+  return {ok:true,handled:true,stage:finished?'battle-auto-finished':'battle-auto-round-limit',format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,action:ACTION_BATTLE_AUTO_RUN,finished,winnerSide,finishReason,roundsExecuted:history.length,maxRounds:limit,history,context:next.context,finishPlan,persistentMutation:false,battleContextMutation:true,rngGeneratedInternally:false,source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',functions:['BATTLE_Command','BATTLE_ai_all','BATTLE_Battling','BATTLE_PreCommandSeq','BATTLE_OnlyRescue']},contract:{playerPolicy:'Persistent State battleSettings.strategy -> existing idle battle strategy runtime',enemyPolicy:'Fixed-C source AI runtime',roundPolicy:'existing browser battle round runtime',persistentCommit:'deferred to existing Finish/Settlement transaction boundary'}};
 }
 function createBrowserBattleAutoRuntime(deps={}){return {ok:Object.values(deps).every(runtime=>runtime?.ok===true),format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,run:(context,options={})=>runBattleAuto(context,{...deps,...options})};}
 export {BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,ACTION_BATTLE_AUTO_RUN,DEFAULT_MAX_ROUNDS,runBattleAuto,createBrowserBattleAutoRuntime};
