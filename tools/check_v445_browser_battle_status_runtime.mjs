@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   BATTLE_COM_ATTACK,
   battleStatusActive,
@@ -115,6 +116,11 @@ for(const type of ['paralysis','sleep','stone']){
   assert.equal(battleStatusActive(target,'stone'),true);
   assert.equal(battleStatusApply(target,'sleep',3).applied,false);
 }
+
+const controller=fs.readFileSync(new URL('../src/stoneage_browser_state_controller.mjs',import.meta.url),'utf8');
+assert.ok(controller.includes("ACTION_BATTLE_STATUS_TURN"),'StateController must expose the StatusSeq action');
+assert.ok(controller.includes("battleStatusRuntime.process"),'StateController must route the StatusSeq action to the runtime');
+assert.ok(controller.includes("battleContext=clone(result.battleContext.context??result.battleContext)"),'StateController must retain the processed battle context');
 
 console.log(JSON.stringify({
   pass:true,
