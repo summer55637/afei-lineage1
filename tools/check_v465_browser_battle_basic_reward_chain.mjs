@@ -220,7 +220,7 @@ const lethalContext={
     sourceRelifeConsumedExistingIndexes:[],sourceRelifeEvents:[],
     sides:[
       {side:0,type:0,flg:0,entries:[{bid:0,battleSlot:0,battleSide:0,sourceType:'player',characterId:'p1',hp:1,maxHp:300,mp:0,maxMp:0,fixDex:1,quick:1,fixVital:1,attackPower:1,defencePower:1,level:10,fixLuck:0,battleFlg:0,battleCommands:[-1,-1,-1],sourceBattleCharMode:3,battleMode:'c_ok',elements:{fire:0,water:0,earth:0,wind:0},damageVanish:0,damageAbsorb:0,damageReflect:0,damageReact:0,isDie:false,deadCount:0,relife:0,battleOutcomeFlags:0,ultimate:0,charm:20,deadPetCount:0,sourceAddProfitDeathPending:false,sourceDeathExtraProcessed:false},...Array(9).fill(null)]},
-      {side:1,type:1,flg:0,entries:[{bid:10,battleSlot:0,battleSide:1,sourceType:'enemy',characterId:'e10',hp:1000,maxHp:1000,fixDex:100,quick:100,fixVital:1,attackPower:1000,defencePower:1,fixStr:1000,fixTgh:1,level:10,fixLuck:0,battleFlg:0,battleCommands:[1,0,-1],sourceBattleCharMode:3,battleMode:'c_ok',elements:{fire:0,water:0,earth:0,wind:0},damageVanish:0,damageAbsorb:0,damageReflect:0,damageReact:0,isDie:false,deadCount:0,relife:0,battleOutcomeFlags:0,ultimate:0,sourceEnemyExp:-1},...Array(9).fill(null)]}
+      {side:1,type:1,flg:0,entries:[{bid:10,battleSlot:0,battleSide:1,sourceType:'enemy',characterId:'e10',hp:1000,maxHp:1000,fixDex:100,quick:100,fixVital:1,attackPower:100,defencePower:1,fixStr:100,fixTgh:1,level:10,fixLuck:0,battleFlg:0,battleCommands:[1,0,-1],sourceBattleCharMode:3,battleMode:'c_ok',elements:{fire:0,water:0,earth:0,wind:0},damageVanish:0,damageAbsorb:0,damageReflect:0,damageReact:0,isDie:false,deadCount:0,relife:0,battleOutcomeFlags:0,ultimate:0,sourceEnemyExp:-1},...Array(9).fill(null)]}
     ]
   }
 };
