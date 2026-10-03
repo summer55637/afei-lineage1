@@ -264,3 +264,27 @@ Machine-readable evidence：
 Machine-readable evidence：
 
 `data/generated/stoneage_ro0000_mission_list_audit.json`
+
+
+## 2026-10-03 騎寵／隊伍道具政策補充
+
+### `ride.txt`：外觀映射來源
+
+- RO0000 `data/ride.txt` 與 `hydata/data/ride.txt` 完全一致。
+- 表格有 64 個騎寵欄位（00–63）及 12 組角色外觀資料列，保存角色外觀 × 騎寵 × 動畫圖號映射。
+- Pinned Fixed-C 同時存在 `RIDE_PET0..11`、`RIDEPET_getPETindex()`、`RIDEPET_getRIDEno()` 與 `CHAR_RIDEPET / CHAR_LEARNRIDE` 等騎寵 runtime 概念。
+- 目前沒有找到可證明 RO0000 server 直接以 `ride.txt` 作 canonical loader 的證據，因此定位為 **visual mapping source closed / runtime loader unproven**；保留 endpoint 表，不以 Fixed-C hardcoded table 覆蓋。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_ride_endpoint_audit.json`
+
+### `itemquitparty.txt`：隊伍解散道具政策
+
+- endpoint data / hydata 完全一致，目前只列 Item `2171`。
+- Fixed-C startup 載入該清單；隊伍解散時會檢查成員背包並移除符合 ID 的道具。
+- 這是 multiplayer party-dissolution side effect，不是單機放置主循環規則，因此只保留 provenance，不納入單機核心 runtime。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_itemquitparty_audit.json`
