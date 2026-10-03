@@ -155,6 +155,7 @@ function processBattleDeathExtras(context,{
       let marefia=null;
       if(int(entry.petId??entry.tempNo)===718){
         const rolls=deathExtraRandomRollsByBid?.[String(bid)]??deathExtraRandomRollsByBid?.[bid]??null;
+        const packedBefore=int(entry.allocPointPacked)??null;
         const result=nextMarefiaAlloc(entry.allocPointPacked,rolls);
         if(!result.ok)return {...result,handled:false,stage:'battle-death-extra-marefia',action:ACTION_BATTLE_DEATH_EXTRA_APPLY,bid,rngConsumed};
         rngConsumed+=result.rollsConsumed;
@@ -167,7 +168,7 @@ function processBattleDeathExtras(context,{
         marefia={
           petId:718,
           allocPointKnown:result.known,
-          allocPointPackedBefore:int(entry.allocPointPacked)??null,
+          allocPointPackedBefore:packedBefore,
           allocPointPackedAfter:result.allocPointPacked,
           statsAfter:result.stats,
           modAiBefore:modBefore,
