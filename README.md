@@ -29,7 +29,7 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 完整自動戰鬥待串接（基礎策略已實作） |
+| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；✅ 自動戰鬥＋戰後結算＋World Idle Tick 編排已串接（V4.71） |
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
@@ -47,6 +47,7 @@
 - [Rebuild roadmap](docs/rebuild-roadmap.md)
 - [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
 - [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
+- [V4.71 Browser World Idle Loop](docs/reference/v471-browser-world-idle-loop.md)
     - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)
 - [Android battle-map 33×33 lineage audit](docs/reference/ro0000-android-battle-map-lineage-audit.md)
 - [Generated state / evidence](data/generated/)
