@@ -976,19 +976,6 @@
         "inputStrideMultiplier": 1,
         "logicalToSurface": "For each map cell, write four adjacent 32-bit pixels at p-4, p, p+4, and p-surfacePitch. Move p by -(surfacePitch-8) for each successive column; advance each row start by surfacePitch+8."
       },
-      "lowResolutionMode": {
-        "condition": "ResoMode == 1",
-        "x": "x / 2",
-        "y": "y / 2",
-        "originOffsets": {
-          "x": "18 / 2 + 1 = 10",
-          "y": "118 / 2 - 1 = 58"
-        },
-        "width": "w / 2",
-        "height": "h / 2",
-        "inputStrideMultiplier": 2,
-        "sampling": "Input coordinates use (i*2, j*2), sampling every second source cell along both axes."
-      },
       "playerMarker": {
         "blinkIntervalMilliseconds": 1000,
         "paletteIndices": [
@@ -996,14 +983,50 @@
           255
         ],
         "pixelPattern": "Writes four 32-bit palette pixels at p-4, p, p+4, and p-surfacePitch.",
-        "placement": "Derived from the rendered width and height after traversing the map grid; for the normal 54x54 call it is placed at the grid's central projected location."
+        "placement": "Computed from rendered dimensions using placementFormula; no additional resolution scaling is observed in the target.",
+        "placementFormula": "base + (surfacePitch + 4) * h - (surfacePitch - 4) * w, where base is the first map cell destination pointer after origin offsets"
       },
-      "presentation": "After successful surface unlock, the target obtains the backing texture and submits an SDL_RenderCopy using identical source/destination rectangles. Lock failure skips rasterization; unlock failure skips the texture render copy."
+      "presentation": "After successful surface unlock, the target obtains the backing texture and submits an SDL_RenderCopy using identical source/destination rectangles. Lock failure skips rasterization; unlock failure skips the texture render copy.",
+      "targetResolution": {
+        "observed": "Both packaged target ABIs copy x/y, w/h directly into the raster path; the inspected DrawAutoMapping implementations have no ResoMode-specific coordinate, dimension, or source-stride branch.",
+        "x": "x",
+        "y": "y",
+        "originOffsets": {
+          "x": 18,
+          "y": 118
+        },
+        "width": "w",
+        "height": "h",
+        "inputStrideMultiplier": 1
+      },
+      "referenceOnlyResolution": {
+        "source": {
+          "repository": "alrightlook/StoneAgeMobileApp",
+          "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+          "path": "android-project/jni/src/system/directdraw.cpp",
+          "url": "https://github.com/alrightlook/StoneAgeMobileApp/blob/8c870c87ce1305c52fb6713bf824619467847bba/android-project/jni/src/system/directdraw.cpp",
+          "status": "public cross-source reference only; this branch is not present in the inspected target APK DrawAutoMapping functions"
+        },
+        "condition": "ResoMode == 1",
+        "transformation": {
+          "x": "x / 2",
+          "y": "y / 2",
+          "originOffsets": {
+            "x": "18 / 2 + 1 = 10",
+            "y": "118 / 2 - 1 = 58"
+          },
+          "width": "w / 2",
+          "height": "h / 2",
+          "inputStrideMultiplier": 2,
+          "sampling": "Every second source cell in both dimensions"
+        }
+      }
     },
     "boundary": [
       "Static layout and algorithm only: the actual cache map file bytes are not present in the APK or repository snapshot.",
       "Color indices are meaningful only together with the actual target palette and generated autoMapColorTbl; absent image payloads prevent exact target pixel reproduction.",
-      "Cross-source public code is structural corroboration only; target addresses and control-flow evidence remain tied to the APK hash and both ELF Build IDs."
+      "Cross-source public code is structural corroboration only; target addresses and control-flow evidence remain tied to the APK hash and both ELF Build IDs.",
+      "A ResoMode==1 halving branch appears in the pinned public directdraw.cpp reference, but is not present in either target ABI's DrawAutoMapping disassembly and must not be copied as target APK behavior."
     ]
   }
 }
