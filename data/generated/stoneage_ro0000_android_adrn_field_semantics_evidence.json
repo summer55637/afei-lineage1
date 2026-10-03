@@ -20,7 +20,7 @@
       {"function":"realGetSoundEffect","address":"0x362e70","offsets":["0x40"],"semantics":"signed 16-bit effect/sound value"},
       {"function":"realGetWalkSoundEffect","address":"0x362ee0","offsets":["0x42"],"semantics":"signed 16-bit field tested for nonzero; target accessor returns boolean"},
       {"function":"realGetImage","address":"0x362fd0","offsets":["0x04","0x08"],"semantics":"record adder selects real-bin offset; size selects payload bytes"},
-      {"function":"AdrnInit","address":"0x363370","offsets":["0x00","0x4c"],"semantics":"bitmap base mapping and image/bmp-number table construction"},
+      {"function":"AdrnInit","address":"0x363370","offsets":["0x00"],"semantics":"reads the first u32 record field while establishing the shard graphic-ID base; the full 0x50-byte record is then copied into the global table"},
       {"function":"makeAutoMapColor","address":"target-focused-disassembly","offsets":["0x4c"],"semantics":"attr.bmpnumber used to derive auto-map color table entries"}
     ]
   },

@@ -188,7 +188,7 @@
         {
           "start": "0x44",
           "endExclusive": "0x50",
-          "status": "not exposed by the inspected getters; source-only damy fields and alignment padding are candidates, while target AdrnInit separately uses attr.bmpnumber at 0x4c"
+          "status": "not exposed by the inspected getters; source-only damy fields and alignment padding are candidates; direct 0x4c target consumption is established in makeAutoMapColor"
         }
       ]
     },
@@ -330,7 +330,7 @@
           "offset": "0x4c",
           "sizeBytes": 4,
           "member": "attr.bmpnumber",
-          "targetEvidence": "AdrnInit reads this record member and uses nonzero values below 100000 to populate bitmapnumbertable."
+          "targetEvidence": "makeAutoMapColor reads this member and uses it as the auto-map-color table key."
         }
       ],
       "crossSourceOnlyCandidates": [
