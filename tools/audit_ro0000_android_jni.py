@@ -379,9 +379,58 @@ def compare_all_declarations(declarations, libraries_by_abi):
         }
     }
 
+
+def summarize_java_native_loaders(java_flow_audit, declarations):
+    """Correlate DEX native-owner classes with redacted Java load call evidence."""
+    declaration_counts = {}
+    for method in declarations:
+        descriptor = method.get("class") or ""
+        declaration_counts[descriptor] = declaration_counts.get(descriptor, 0) + 1
+    results = []
+    for cls in java_flow_audit.get("classes", []):
+        package = cls.get("package") or ""
+        class_name = cls.get("className") or ""
+        if not package or not class_name:
+            continue
+        descriptor = "L" + package.replace(".", "/") + "/" + class_name + ";"
+        declaration_count = declaration_counts.get(descriptor, 0)
+        if not declaration_count:
+            continue
+        loader_methods = []
+        for method in cls.get("methods", []):
+            sequence = [
+                {"line": item.get("line"), "target": item.get("target")}
+                for item in method.get("callSequence", [])
+                if item.get("target") in ("System.load", "System.loadLibrary")
+            ]
+            if sequence:
+                loader_methods.append({
+                    "method": method.get("name"),
+                    "callCount": len(sequence),
+                    "callSequence": sequence,
+                })
+        results.append({
+            "class": descriptor,
+            "nativeDeclarationCount": declaration_count,
+            "javaLoaderMethods": sorted(
+                loader_methods,
+                key=lambda item: (
+                    item["method"] or "",
+                    item["callSequence"][0]["line"] or 0,
+                ),
+            ),
+            "nativeLibraryLoadRequests": [
+                {"line": item.get("line"), "library": item.get("library")}
+                for item in cls.get("nativeLibraryLoadRequests", [])
+            ],
+            "evidenceScope": "Redacted JADX call sequence only; load success, resolved path, JNI registration, and invocation are not established.",
+        })
+    return sorted(results, key=lambda item: item["class"])
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dex-audit", required=True)
+    parser.add_argument("--java-flow-audit", required=True)
     parser.add_argument("--apk", required=True, help="Original APK containing all packaged ABI libraries")
     parser.add_argument("--apk-sha256", required=True)
     parser.add_argument("--output", required=True)
@@ -392,6 +441,8 @@ def main():
     dex_path = pathlib.Path(args.dex_audit)
     apk_path = pathlib.Path(args.apk)
     dex = json.loads(dex_path.read_text(encoding="utf-8"))
+    java_flow_path = pathlib.Path(args.java_flow_audit)
+    java_flow = json.loads(java_flow_path.read_text(encoding="utf-8"))
     declarations = extract_native_declarations(dex)
     if not declarations:
         raise SystemExit("DEX audit contains no native declarations")
@@ -400,6 +451,9 @@ def main():
     apk_digest = hashlib.sha256(apk_path.read_bytes()).hexdigest()
     if apk_digest.lower() != args.apk_sha256.lower():
         raise SystemExit("APK SHA-256 differs from expected target identity")
+    java_apk_digest = java_flow.get("source", {}).get("apkSha256")
+    if not java_apk_digest or java_apk_digest.lower() != apk_digest.lower():
+        raise SystemExit("Java-flow audit APK SHA-256 differs from the native audit target")
 
     libraries = inspect_apk_libraries(apk_path, args.readelf, args.objdump, declarations)
     comparison = compare_all_declarations(declarations, libraries)
@@ -420,6 +474,7 @@ def main():
         "source": {"apkSha256": apk_digest},
         "nativeDeclarationCount": len(declarations),
         "classCount": len({m["class"] for m in declarations}),
+        "javaNativeLoadingEvidence": summarize_java_native_loaders(java_flow, declarations),
         "stoneageJniLibraryComparison": stoneage_comparison,
         "allNativeDeclarationComparison": comparison,
         "interpretation": {
