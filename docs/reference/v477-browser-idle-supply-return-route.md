@@ -32,7 +32,7 @@ The planner fails closed when the routeId is invalid, the player is not on the r
 
 ## Regression
 
-`tools/check_v477_idle_supply_route_planner.mjs` plans all four first-route variants (two encounter-floor-100 hometown variants and two encounter-floor-200 variants) from a deterministic walkable point discovered inside the verified unconditional encounter rectangle.
+`tools/check_v477_idle_supply_route_planner.mjs` exercises all four first-route variants (two encounter-floor-100 hometown variants and two encounter-floor-200 variants) from deterministic walkable points discovered inside the verified unconditional encounter rectangles. Three variants currently close to a hospital plan; the Karutarna `4000_to_200_a` variant is deliberately expected to fail closed because its 4000 return component is disconnected from the 4000 hospital portal component.
 
 The regression also confirms the planner is read-only and rejects a player positioned on the wrong floor.
 
