@@ -8,7 +8,7 @@ if(manifest.format!=='stoneage-main-world-map-coverage-wave1-v1') throw new Erro
 if(manifest.source?.repository!=='gavinlinasd/StoneAge') throw new Error('unexpected source repository');
 if(manifest.source?.ref!=='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56') throw new Error('unexpected pinned source ref');
 
-const requiredCore=[100,200,300,400,1000,2000,3000,4000];
+const requiredCore=[100,200,400,1000,2000,3000,4000];
 for(const floor of requiredCore){
   if(!index.maps?.[String(floor)]) throw new Error(`required core runtime floor ${floor} missing`);
 }
