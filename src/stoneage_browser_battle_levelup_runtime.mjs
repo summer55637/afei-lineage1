@@ -140,11 +140,15 @@ function planBattleLevelUp(battleExpPlan,state,{
     });
     petPlans.push({
       petId,
+      variableAiBefore:intOr(pet?.variableAi,0),
+      variableAiAfter:intOr(petPlan?.variableAi,intOr(pet?.variableAi,0)),
+      variableAiDelta:intOr(petPlan?.variableAi,intOr(pet?.variableAi,0))-intOr(pet?.variableAi,0),
       ...planned,
-      sourceSideEffects:planned.levelUps>0?[
+      sourceSideEffects:(planned.levelUps>0||intOr(petPlan?.variableAiDelta,0)!==0)?[
         'CHAR_PetLevelUp x levelUps',
         'CHAR_PetAddVariableAi(AI_FIX_PETLEVELUP) x levelUps',
-        'CHAR_complianceParameter(pet)'
+        'CHAR_complianceParameter(pet)',
+        'CHAR_VARIABLEAI += Pet Win AI transient delta'
       ]:[]
     });
   }
