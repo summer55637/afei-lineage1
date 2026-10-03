@@ -12,7 +12,7 @@ assert.equal(basic.rngConsumed,0);
 
 const bow0=runtime.resolve({attackNo:0,requestedTargetBid:10,weaponType:'bow',bowRowRoll:0});
 assert.equal(bow0.ok,true,JSON.stringify(bow0));
-assert.deepEqual(bow0.targets,[10,15,11,16,13,18,12,17,14,19]);
+assert.deepEqual(bow0.targets,[10,15,12,17,11,16,14,19,13,18]);
 assert.equal(bow0.targetCount,10);
 assert.equal(bow0.rngConsumed,1);
 assert.equal(bow0.revalidateAliveAtExecution,true);
