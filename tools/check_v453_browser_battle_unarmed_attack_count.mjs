@@ -32,7 +32,7 @@ assert.equal(lv10LuckBurst.attackCount,8);
 assert.equal(lv10LuckBurst.rngConsumed,2);
 assert.equal(lv10LuckBurst.unarmedPlayer.damageDivisor,1);
 
-const luckClamp=runtime.resolve({itemPresent:false,actorType:'player',level:10,luck:8,fallbackRoll:35});
+const luckClamp=runtime.resolve({itemPresent:false,actorType:'player',level:10,luck:8,fallbackRoll:36});
 assert.equal(luckClamp.ok,true,JSON.stringify(luckClamp));
 assert.equal(luckClamp.unarmedPlayer.luckWork,25);
 assert.equal(luckClamp.attackCount,2);
