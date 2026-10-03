@@ -657,7 +657,7 @@ def build_report(native_audit, binaries=None):
             "semanticNamedCallTargetMismatchCount": len(mismatches),
             "comparableSemanticNamedCallTargetParity": not mismatches and same_names,
             "allFunctionsComparable": len(comparable) == len(arm_names & x86_names),
-            "sameIncompleteFunctionSet": {name for name, item in analyses["armeabi-v7a"].items() if not item["complete"} == {name for name, item in analyses["x86"].items() if not item["complete"},
+            "sameIncompleteFunctionSet": {name for name, item in analyses["armeabi-v7a"].items() if not item["complete"]} == {name for name, item in analyses["x86"].items() if not item["complete"]},
             "switchTableSiteParity": not switch_table_mismatches,
             "switchTableMismatchCount": len(switch_table_mismatches),
             "resolvedSwitchTableSiteCount": sum(totals(abi)["resolvedSwitchTableSiteCount"] for abi in TARGET_ABIS),
