@@ -6,7 +6,7 @@ import {
   ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE,
   ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD,
   ACTION_BATTLE_INITIALIZE,
-  ACTION_BATTLE_IDLE_STRATEGY_APPLY,
+  ACTION_BATTLE_PLAYER_COMMAND_SET,
   ACTION_BATTLE_ROUND_RESOLVE,
   createBrowserStateController
 } from '../src/stoneage_browser_state_controller.mjs';
@@ -71,12 +71,18 @@ const initialized=await controller.dispatch({
 });
 assert.equal(initialized.ok,true,JSON.stringify(initialized));
 
-const strategy=await controller.dispatch({
-  type:ACTION_BATTLE_IDLE_STRATEGY_APPLY,
-  defaultTargetRoll:0,
+const builtContext=controller.getBattleContext();
+const waitingPlayer=builtContext.sides[0].entries[0];
+assert.equal(waitingPlayer.sourceBattleCharMode,2);
+
+const command=await controller.dispatch({
+  type:ACTION_BATTLE_PLAYER_COMMAND_SET,
+  battleSlot:0,
+  command:'attack',
+  targetBid:builtContext.sides[1].entries.find(e=>e?.sourceType==='enemy'&&Number(e.hp)>0)?.bid??10,
   weaponKind:'none'
 });
-assert.equal(strategy.ok,true,JSON.stringify(strategy));
+assert.equal(command.ok,true,JSON.stringify(command));
 
 const before=controller.getBattleContext();
 const enemyEntry=before.sides[1].entries.find(e=>e?.sourceType==='enemy'&&Number(e.hp)>0);
