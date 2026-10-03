@@ -35,7 +35,11 @@ const entry=(bid,sourceType)=>({
   damageVanish:0,
   damageAbsorb:0,
   damageReflect:0,
-  damageReact:0
+  damageReact:0,
+  isDie:false,
+  deadCount:0,
+  relife:0,
+  battleOutcomeFlags:0
 });
 
 const context={
