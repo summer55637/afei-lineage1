@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3614f4b — test: correct luck-adjusted AttackCount fixture
-- 更新時間：2026-10-03T18:59:35+08:00
+- 最新 commit：327fa20 — fix: repair V4.53 round runtime signature
+- 更新時間：2026-10-03T19:00:04+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.53
 - Playable HTML：⏸️ 尚未建立（刻意保留）
