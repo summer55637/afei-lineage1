@@ -141,6 +141,10 @@ const result=await loop.run(state,{
         battleFieldNo:0,
         fixedLuck:0,
         surpriseRoll:100,
+        enemyStatRolls:[
+          {levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:Array(10).fill(0)},
+          {levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:Array(10).fill(0)}
+        ],
         maxRounds:1,
         rounds:[{}]
       },
