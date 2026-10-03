@@ -225,6 +225,243 @@
       "mutation": "record_u16_0x1e = 300 + (record_u16_0x1e % 100)",
       "effectEstablished": "forces quotient / 100 to 3 while preserving the low two decimal digits / remainder",
       "semanticBoundary": "This is a target initialization correction; image identity/purpose and visual effect are not inferred."
+    },
+    "crossSourceFieldLayout": {
+      "source": {
+        "repository": "alrightlook/StoneAgeMobileApp",
+        "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+        "path": "android-project/jni/src/systeminc/loadrealbin.h",
+        "role": "structural comparison only; source lineage/version identity with target APK is not established",
+        "url": "https://github.com/alrightlook/StoneAgeMobileApp/blob/8c870c87ce1305c52fb6713bf824619467847bba/android-project/jni/src/systeminc/loadrealbin.h"
+      },
+      "layout": {
+        "recordSizeBytes": 80,
+        "attrOffset": "0x1c",
+        "attrSizeBytes": 52,
+        "structPadding": [
+          {
+            "start": "0x4a",
+            "endExclusive": "0x4c",
+            "sizeBytes": 2,
+            "reason": "alignment before the source unsigned-int bmpnumber field"
+          }
+        ]
+      },
+      "targetMatchedAnchors": [
+        {
+          "offset": "0x00",
+          "sizeBytes": 4,
+          "member": "bitmapno",
+          "targetEvidence": "AdrnInit adds the current shard graphic-ID base to the first u32 and uses the resulting graphic number to index Realbinfp."
+        },
+        {
+          "offset": "0x04",
+          "sizeBytes": 4,
+          "member": "adder",
+          "targetEvidence": "realGetImage copies the 0x50-byte record and passes the u32 at record+0x04 as the real-bin seek offset."
+        },
+        {
+          "offset": "0x08",
+          "sizeBytes": 4,
+          "member": "size",
+          "targetEvidence": "realGetImage passes the u32 at record+0x08 as the payload byte count to fread."
+        },
+        {
+          "offset": "0x0c",
+          "sizeBytes": 4,
+          "member": "xoffset",
+          "targetEvidence": "realGetPos reads the u32 and truncates the exposed value to i16."
+        },
+        {
+          "offset": "0x10",
+          "sizeBytes": 4,
+          "member": "yoffset",
+          "targetEvidence": "realGetPos reads the u32 and truncates the exposed value to i16."
+        },
+        {
+          "offset": "0x14",
+          "sizeBytes": 4,
+          "member": "width",
+          "targetEvidence": "realGetWH reads the u32 and truncates the exposed value to i16."
+        },
+        {
+          "offset": "0x18",
+          "sizeBytes": 4,
+          "member": "height",
+          "targetEvidence": "realGetWH reads the u32 and truncates the exposed value to i16."
+        },
+        {
+          "offset": "0x1c",
+          "sizeBytes": 1,
+          "member": "attr.atari_x",
+          "targetEvidence": "realGetHitPoints zero-extends the byte to the first short output; source member-name mapping is cross-source."
+        },
+        {
+          "offset": "0x1d",
+          "sizeBytes": 1,
+          "member": "attr.atari_y",
+          "targetEvidence": "realGetHitPoints zero-extends the byte to the second short output; source member-name mapping is cross-source."
+        },
+        {
+          "offset": "0x1e",
+          "sizeBytes": 2,
+          "member": "attr.hit",
+          "targetEvidence": "realGetHitFlag uses the remainder modulo 100; realGetPrioType uses the quotient."
+        },
+        {
+          "offset": "0x20",
+          "sizeBytes": 2,
+          "member": "attr.height",
+          "targetEvidence": "realGetHeightFlag reads a 16-bit value directly."
+        },
+        {
+          "offset": "0x40",
+          "sizeBytes": 2,
+          "member": "attr.effect1",
+          "targetEvidence": "realGetSoundEffect reads a signed 16-bit value after image-ID-to-graphic-number lookup; effect1 name is cross-source."
+        },
+        {
+          "offset": "0x42",
+          "sizeBytes": 2,
+          "member": "attr.effect2",
+          "targetEvidence": "realGetWalkSoundEffect tests the signed 16-bit value for nonzero; effect2 name is cross-source."
+        },
+        {
+          "offset": "0x4c",
+          "sizeBytes": 4,
+          "member": "attr.bmpnumber",
+          "targetEvidence": "AdrnInit reads this record member and uses nonzero values below 100000 to populate bitmapnumbertable."
+        }
+      ],
+      "crossSourceOnlyCandidates": [
+        {
+          "offset": "0x22",
+          "sizeBytes": 2,
+          "member": "attr.broken",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x24",
+          "sizeBytes": 2,
+          "member": "attr.indamage",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x26",
+          "sizeBytes": 2,
+          "member": "attr.outdamage",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x28",
+          "sizeBytes": 2,
+          "member": "attr.inpoison",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x2a",
+          "sizeBytes": 2,
+          "member": "attr.innumb",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x2c",
+          "sizeBytes": 2,
+          "member": "attr.inquiet",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x2e",
+          "sizeBytes": 2,
+          "member": "attr.instone",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x30",
+          "sizeBytes": 2,
+          "member": "attr.indark",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x32",
+          "sizeBytes": 2,
+          "member": "attr.inconfuse",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x34",
+          "sizeBytes": 2,
+          "member": "attr.outpoison",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x36",
+          "sizeBytes": 2,
+          "member": "attr.outnumb",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x38",
+          "sizeBytes": 2,
+          "member": "attr.outquiet",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x3a",
+          "sizeBytes": 2,
+          "member": "attr.outstone",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x3c",
+          "sizeBytes": 2,
+          "member": "attr.outdark",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x3e",
+          "sizeBytes": 2,
+          "member": "attr.outconfuse",
+          "sourceType": "short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x44",
+          "sizeBytes": 2,
+          "member": "attr.damy_a",
+          "sourceType": "unsigned short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x46",
+          "sizeBytes": 2,
+          "member": "attr.damy_b",
+          "sourceType": "unsigned short",
+          "targetConsumer": "not established from current target evidence"
+        },
+        {
+          "offset": "0x48",
+          "sizeBytes": 2,
+          "member": "attr.damy_c",
+          "sourceType": "unsigned short",
+          "targetConsumer": "not established from current target evidence"
+        }
+      ],
+      "boundary": "The source-derived member names and ABI padding are layout candidates, not proof that the target reads or assigns every field. Target-confirmed offsets are kept in targetMatchedAnchors; the existing incompleteByteRanges continue to describe fields not covered by the inspected target getters."
     }
   },
   "spr": {
