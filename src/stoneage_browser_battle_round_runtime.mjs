@@ -154,7 +154,7 @@ async function resolveBattleRound(context,{
   bowTargetListRollByBid={},
   attackCountFallbackRollByBid={},
   attackCountFallbackAttackRollByBid={},
-  runtimes={
+  runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
   if(String(context.context.mode??'').trim().toLowerCase()!=='battle'||int(context.context.sourceMode)!==BATTLE_MODE_BATTLE){
