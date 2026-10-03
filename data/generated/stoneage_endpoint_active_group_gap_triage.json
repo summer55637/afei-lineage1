@@ -699,5 +699,12 @@
         "prob": 1
       }
     ]
+  },
+  "productScope": {
+    "status": "non-blocking-source-boundary",
+    "sourceResolutionAttempt": "exhausted-with-current-authoritative-and-public-evidence",
+    "runtimePolicy": "unresolved-groups-remain-non-spawnable-and-not-promoted",
+    "firstIdleRouteUnaffected": true,
+    "reopenCondition": "only new authoritative endpoint provenance or a pinned compatible revision with a complete, column-verifiable Group row"
   }
 }
