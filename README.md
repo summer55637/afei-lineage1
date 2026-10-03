@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：1d2aa57 — test: build battle context from live player before relife
-- 更新時間：2026-10-03T20:22:16+08:00
+- 最新 commit：ba1eac5 — docs: add V4.64 player relife reference
+- 更新時間：2026-10-03T20:23:16+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.64
 - Playable HTML：⏸️ 尚未建立（刻意保留）
