@@ -64,6 +64,7 @@ function commitDeathState(context,{
 
   entry.isDie=true;
   entry.deadCount=currentDeadCount+1;
+  entry.sourceAddProfitDeathPending=true;
   entry.battleOutcomeFlags=(int(entry.battleOutcomeFlags)??0)|flags;
   entry.ultimate=ult;
 
@@ -85,6 +86,7 @@ function commitDeathState(context,{
     rewardMutation:false,
     battleEndMutation:false,
     postDeathSettlementRequired:true,
+    sourceAddProfitDeathPending:true,
     deferredHooks:
       ult>0?['BATTLE_UltimateExtra']:['BATTLE_NormalDeadExtra'],
     battleContextMutation:true,
