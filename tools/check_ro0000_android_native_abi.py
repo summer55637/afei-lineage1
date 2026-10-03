@@ -100,7 +100,7 @@ class NativeAbiCallParityTests(unittest.TestCase):
             "  1005:\tc3                    \tret",
         ])
         report = build_report(make_audit([arm], [x86]))
-        self.assertFalse(report["comparison"]["semanticNamedCallTargetParity"])
+        self.assertFalse(report["comparison"]["comparableSemanticNamedCallTargetParity"])
         self.assertEqual(report["semanticCallTargetMismatches"], [{
             "function": "sample()", "onlyInArmeabiV7a": ["foo"], "onlyInX86": ["bar"],
         }])
