@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：bc09cfb — [map-coverage] promote main-world wave 1
-- 更新時間：2026-10-03T08:57:10Z
+- 最新 commit：454f92c — docs: record public web provenance search for missing encounter groups
+- 更新時間：2026-10-03T17:10:10+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
