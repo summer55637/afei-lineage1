@@ -1,3 +1,19 @@
+## 2026-10-03 V4.76 Browser WindowHealer
+
+把出生村醫院實際使用的 `npcgen_winhealer` 接入 Browser Controller。以 source `level|hpRate|mpRate|range` 參數建立 WindowHealer runtime；保留低於 healer level 的免費規則，以及達到 healer level 後的 HP/MP 費用計算與金幣不足 fail-closed。
+
+V4.76 不與普通 `Healer` 混用；四個出生村醫院 nurse 是獨立的 WindowHealer service。
+
+---
+## 2026-10-03 V4.77 Browser Idle Supply Return Route
+
+新增唯讀 `idle supply return route planner`：依現有 idle `routeId`，用既有 verified map 的 4-neighbor `sourceMapWalkableAt`，先找 encounter → birth-town 的反向 exact source portal，再找 town → hospital exact portal，最後走到實際 WindowHealer 的 source point 交互距離內。
+
+V4.77 不執行 Warp 或 Move、不修改 Persistent State，也不生成 RNG。Regression 已覆蓋四個 first-route variants：100/0、100/1、200/2 可以規劃；Karutarna `4000_to_200_a` 因 4000 reverse portal component 與 4000 hospital portal component 不連通而 fail-closed，沒有建立 synthetic bridge。
+
+詳細契約：`docs/reference/v477-browser-idle-supply-return-route.md`。
+
+---
 ## 2026-10-03 V4.72 Browser Idle Supply
 
 補上 V4.71 World Idle Loop 在 `SUPPLY_CHECK` 的下一個可驗證邊界：新增 `IDLE_SUPPLY_USE_HEALER`，只在 caller 提供明確 supply policy 且已解析到 Healer、角色位於既有交互距離時執行既有 Healer runtime。
