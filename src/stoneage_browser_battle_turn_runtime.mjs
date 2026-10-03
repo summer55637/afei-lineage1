@@ -4,6 +4,7 @@ const BATTLE_MODE_BATTLE=2;
 const BATTLE_CHARMODE_C_WAIT=2;
 const BATTLE_COM_NONE=0;
 const BATTLE_CHARGE_COMMANDS=Object.freeze([1005,1009,1010]);
+import { processBattleStatusTurn } from './stoneage_browser_battle_status_runtime.mjs';
 const SOURCE_REPOSITORY='gavinlinasd/StoneAge';
 const SOURCE_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 
@@ -36,6 +37,7 @@ function initializeBattleTurn(context,{chargeEntries=[]}={}){
       const priorCommand=trunc(n(entry?.battleCommands?.[0]));
       const charged=BATTLE_CHARGE_COMMANDS.includes(priorCommand)||(Array.isArray(chargeEntries)&&chargeEntries.includes(slotKey));
       let next={...entry};
+      next.battleStatus=(next.battleStatus&&typeof next.battleStatus==='object'&&!Array.isArray(next.battleStatus))?{...next.battleStatus}:{};
       next.guardian=-1;
       next.battleMode='c_wait';
       next.sourceBattleCharMode=BATTLE_CHARMODE_C_WAIT;
@@ -82,7 +84,8 @@ function createBrowserBattleTurnRuntime(){
   return {
     ok:true,
     format:BROWSER_BATTLE_TURN_RUNTIME_FORMAT,
-    initialize:(context,options={})=>initializeBattleTurn(context,options)
+    initialize:(context,options={})=>initializeBattleTurn(context,options),
+    processStatus:(context,options={})=>processBattleStatusTurn(context,options)
   };
 }
 
@@ -95,5 +98,6 @@ export {
   BATTLE_CHARGE_COMMANDS,
   turnParam,
   initializeBattleTurn,
-  createBrowserBattleTurnRuntime
+  createBrowserBattleTurnRuntime,
+  processBattleStatusTurn
 };
