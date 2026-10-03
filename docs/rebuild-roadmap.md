@@ -25,7 +25,7 @@ These are regression/data-eligibility corrections; no new battle feature version
 
 Regression：`tools/check_v441_browser_enemy_power_balance.mjs` 以正式 Group 712 / Enemy 1306 / skill 52 驗證來源倍率、攻擊資料傳遞、實際 HP 傷害交易與 Persistent State revision；Workflow 重跑 V4.29–V4.41 及既有 Context、attack binding、Counter 回歸。
 
-StatusChange（60/61/80/90/100/110）尚未接入：Fixed-C 在每個角色實際行動前執行 BATTLE_StatusSeq，當前 browser turn runtime 尚未閉合逐角色行動／狀態遞減順序，故保留 fail-closed，不以不完整狀態持續時間冒充完成。
+StatusChange（60/61/80/90/100/110）已接入目前 browser battle context：每個 actor 在自身 command 前執行 source-backed StatusSeq，完成 poison／paralysis／stone／confusion／drunk／sleep 的倒數、行動阻擋、毒傷、混亂強制攻擊與酒醉解除邊界；status apply / raw apply / hit chance 亦集中到獨立 runtime。其他職業技能、MagicStatus、SARS、MYSKILL 維持各自 source-backed phase，不混入 generic StatusChange。
 
 ---
 
