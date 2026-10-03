@@ -79,6 +79,8 @@ import { createBrowserBattleExitPlanRuntime, ACTION_BATTLE_EXIT_PLAN, BROWSER_BA
 import { createBrowserBattleExitCommitRuntime, ACTION_BATTLE_EXIT_COMMIT, BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_commit_runtime.mjs';
 import { createBrowserBattlePlayerExitRuntime, ACTION_BATTLE_PLAYER_EXIT_PLAN, BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_runtime.mjs';
 import { createBrowserBattlePlayerExitCommitRuntime, ACTION_BATTLE_PLAYER_EXIT_COMMIT, BROWSER_BATTLE_PLAYER_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_commit_runtime.mjs';
+import { createBrowserBattlePetExitRuntime, ACTION_BATTLE_PET_EXIT_PLAN, BROWSER_BATTLE_PET_EXIT_RUNTIME_FORMAT } from './stoneage_browser_battle_pet_exit_runtime.mjs';
+import { createBrowserBattlePetExitCommitRuntime, ACTION_BATTLE_PET_EXIT_COMMIT, BROWSER_BATTLE_PET_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_pet_exit_commit_runtime.mjs';
 import { createBrowserBattleSettlementRuntime, ACTION_BATTLE_SETTLEMENT_RECEIPT_COMMIT, BROWSER_BATTLE_SETTLEMENT_RUNTIME_FORMAT, validateSettlementReceiptForBattle } from './stoneage_browser_battle_settlement_runtime.mjs';
 import { createBrowserBattleContextClearRuntime, ACTION_BATTLE_CONTEXT_CLEAR, BROWSER_BATTLE_CONTEXT_CLEAR_RUNTIME_FORMAT } from './stoneage_browser_battle_context_clear_runtime.mjs';
 import { createBrowserBattleFieldRuntime, ACTION_BATTLE_FIELD_RESOLVE, BROWSER_BATTLE_FIELD_RUNTIME_FORMAT } from './stoneage_browser_battle_field_runtime.mjs';
@@ -272,6 +274,8 @@ function createBrowserStateController({
   const battleExitCommitRuntime=createBrowserBattleExitCommitRuntime();
   const battlePlayerExitRuntime=createBrowserBattlePlayerExitRuntime();
   const battlePlayerExitCommitRuntime=createBrowserBattlePlayerExitCommitRuntime();
+  const battlePetExitRuntime=createBrowserBattlePetExitRuntime();
+  const battlePetExitCommitRuntime=createBrowserBattlePetExitCommitRuntime();
   const battleSettlementRuntime=createBrowserBattleSettlementRuntime();
   const battleContextClearRuntime=createBrowserBattleContextClearRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
@@ -1060,6 +1064,50 @@ function createBrowserStateController({
           battleContext:battleContext?clone(battleContext):null,
           state:clone(result.state??currentState)
         };
+      }
+      if(type===ACTION_BATTLE_PET_EXIT_PLAN){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-pet-exit-plan',reason:'battle-context-required',state:clone(currentState)};
+        if(battlePetExitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-pet-exit-plan',reason:'browser-battle-pet-exit-runtime-invalid',state:clone(currentState)};
+        const playerExitTransactionId=String(action.playerExitTransactionId??'').trim();
+        const result=battlePetExitRuntime.plan(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          clone(currentState),
+          {
+            settlementComplete:action.settlementComplete===true,
+            settlementReceiptId:action.settlementReceiptId??null,
+            playerExitTransactionId:playerExitTransactionId||null
+          }
+        );
+        return {...result,format:BROWSER_BATTLE_PET_EXIT_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_PET_EXIT_COMMIT){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'battle-context-required',state:clone(currentState)};
+        if(battlePetExitCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'browser-battle-pet-exit-commit-runtime-invalid',state:clone(currentState)};
+        let petExitPlan=action.battlePetExitPlan??null;
+        if(!petExitPlan){
+          petExitPlan=battlePetExitRuntime.plan(
+            {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+            clone(currentState),
+            {
+              settlementComplete:action.settlementComplete===true,
+              settlementReceiptId:action.settlementReceiptId??null,
+              playerExitTransactionId:action.playerExitTransactionId??null
+            }
+          );
+        }
+        if(!petExitPlan?.ok)return {...petExitPlan,format:BROWSER_BATTLE_PET_EXIT_RUNTIME_FORMAT,state:clone(currentState)};
+        const result=battlePetExitCommitRuntime.commit(
+          clone(currentState),
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          petExitPlan,
+          {
+            transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)
+          }
+        );
+        if(result.ok&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,format:BROWSER_BATTLE_PET_EXIT_COMMIT_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(result.state??currentState)};
       }
       if(type===ACTION_BATTLE_EXIT_PLAN){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-context-required',state:clone(currentState)};
