@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：6c49a4c — test: cover source Charm clamp boundaries
-- 更新時間：2026-10-03T20:03:43+08:00
+- 最新 commit：7d8d71b — ci: include V4.62 death-extra commit in death regression
+- 更新時間：2026-10-03T20:03:52+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.62
 - Playable HTML：⏸️ 尚未建立（刻意保留）
