@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3a044b3 — test: bind player exit revision window for pet sync
-- 更新時間：2026-10-03T22:10:44+08:00
+- 最新 commit：ebf52e6 — test: complete player exit transaction fixture
+- 更新時間：2026-10-03T22:11:30+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.68
 - Playable HTML：⏸️ 尚未建立（刻意保留）
