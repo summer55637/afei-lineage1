@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v454-browser-battle-attack-sequence-v1';
+const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v455-browser-battle-attack-sequence-v1';
 const ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE='BATTLE_ATTACK_SEQUENCE_RESOLVE';
 const ITEM_FIST=0;
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -26,10 +26,14 @@ async function resolveAttackSequence(context,{
   hitRollBundles=[],
   damageDivisorOverride=null,
   now=null,
-  transactionPrefix=''
+  transactionPrefix='',
+  carriedLootItemsByEnemyBid={},
+  carriedLootOwnerRollsByEnemyBid={},
+  carriedLootReplaceRollsByEnemyBid={},
+  carriedLootReplaceSlotRollsByEnemyBid={}
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'battle-context-required'};
-  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
+  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime','carriedLootRuntime'];
   const missing=required.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missing)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'attack-sequence-runtime-dependency-invalid',dependency:missing};
   const actorBid=int(attackerBid),initialTarget=int(requestedTargetBid),count=int(attackCount);
@@ -201,6 +205,29 @@ async function resolveAttackSequence(context,{
     if(!profitCredit.ok)return {...profitCredit,stage:'battle-attack-sequence-profit-credit',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
     next.context=clone(profitCredit.context);
     hit.profitCredit=clone(profitCredit);
+    const creditEvent=Array.isArray(profitCredit.newCredits)
+      ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
+      : null;
+    const carriedItems=carriedLootItemsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootItemsByEnemyBid?.[prelude.finalTargetBid]??null;
+    let carriedLoot=null;
+    if(creditEvent&&Array.isArray(carriedItems)){
+      carriedLoot=await runtimes.carriedLootRuntime.queue(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {
+          enemyBid:prelude.finalTargetBid,
+          ownerBids:creditEvent.creditBids??[],
+          items:carriedItems,
+          ownerRolls:carriedLootOwnerRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootOwnerRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+          replaceRolls:carriedLootReplaceRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+          replaceSlotRolls:carriedLootReplaceSlotRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceSlotRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+          transactionPrefix:transactionId,
+          now
+        }
+      );
+      if(!carriedLoot.ok)return {...carriedLoot,stage:'battle-attack-sequence-carried-loot',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
+      next.context=clone(carriedLoot.context);
+    }
+    hit.carriedLoot=carriedLoot;
     hit.damageReactPlan=clone(reactPlan);
     hit.commit=clone(commit);
     hit.damageExecuted=commit.damageExecuted===true;
@@ -247,6 +274,7 @@ async function resolveAttackSequence(context,{
       fistDamageDivisor:true,
       damageDivisorOverrideSupported:true,
       perHitProfitCredit:true,
+      perHitCarriedLootQueue:true,
       bowTargetListInput:true,
       specialDamageReactSupported:true,
       counterExecutionDeferred:true,
