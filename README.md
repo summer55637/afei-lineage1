@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：51635ae — feat: add V4.77 idle supply return route planner
-- 更新時間：2026-10-03T23:08:37+08:00
+- 最新 commit：1bac452 — ci: add V4.77 idle supply route planner regression
+- 更新時間：2026-10-03T23:09:08+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.76
+- Regression 最高版本：V4.77
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
