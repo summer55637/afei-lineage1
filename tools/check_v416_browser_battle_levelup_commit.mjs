@@ -86,4 +86,36 @@ const badPet=commitBattleLevelUp(
 assert.equal(badPet.ok,false);
 assert.equal(badPet.reason,'pet-stats-stale-plan');
 
+const aiPlan={
+  ok:true,stage:'battle-levelup-plan-ready',format:'stoneage-v414-browser-battle-levelup-plan-v1',
+  player:{
+    levelBefore:1,levelAfter:1,expBefore:37,expAfter:37,
+    duelPointBefore:10,duelPointAfter:10,
+    skillPointBefore:4,skillPointAfter:4,
+    charmBefore:20,charmAfter:20
+  },
+  pets:[{
+    petId:'pet-1',levelBefore:1,levelAfter:1,expBefore:37,expAfter:37,levelUps:0,
+    variableAiBefore:0,variableAiAfter:20,variableAiDelta:20
+  }]
+};
+const aiOnly=commitBattleLevelUp(
+  state,aiPlan,{ok:true,stage:'battle-pet-growth-plan-ready',format:'stoneage-v415-browser-battle-pet-growth-plan-v1',pets:[]},
+  {transactionId:'battle-v460-ai-1',expectedRevision:7,now}
+);
+assert.equal(aiOnly.ok,true,JSON.stringify(aiOnly));
+assert.equal(aiOnly.state.pets.petBox[0].variableAi,20);
+assert.equal(aiOnly.state.revision,8);
+assert.equal(aiOnly.state.pets.petBox[0].level,1);
+assert.equal(aiOnly.state.pets.petBox[0].exp,37);
+
+const aiStaleState=JSON.parse(JSON.stringify(state));
+aiStaleState.pets.petBox[0].variableAi=1;
+const aiStale=commitBattleLevelUp(
+  aiStaleState,aiPlan,{ok:true,stage:'battle-pet-growth-plan-ready',format:'stoneage-v415-browser-battle-pet-growth-plan-v1',pets:[]},
+  {transactionId:'battle-v460-ai-stale',expectedRevision:7,now}
+);
+assert.equal(aiStale.ok,false);
+assert.equal(aiStale.reason,'pet-variableai-stale-plan');
+
 console.log('V4.16 Browser Battle level-up commit regression: PASS');
