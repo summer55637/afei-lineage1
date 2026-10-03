@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v455-browser-battle-attack-sequence-v1';
+const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v457-browser-battle-attack-sequence-v1';
 const ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE='BATTLE_ATTACK_SEQUENCE_RESOLVE';
 const ITEM_FIST=0;
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -30,7 +30,8 @@ async function resolveAttackSequence(context,{
   carriedLootItemsByEnemyBid={},
   carriedLootOwnerRollsByEnemyBid={},
   carriedLootReplaceRollsByEnemyBid={},
-  carriedLootReplaceSlotRollsByEnemyBid={}
+  carriedLootReplaceSlotRollsByEnemyBid={},
+  ridePetBidByParticipantBid={}
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'battle-context-required'};
   const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
@@ -234,7 +235,7 @@ async function resolveAttackSequence(context,{
       if(!runtimes.enemyExpRuntime||runtimes.enemyExpRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-attack-sequence-enemy-exp',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,reason:'enemy-exp-runtime-required'};
       enemyExpCredit=runtimes.enemyExpRuntime.credit(
         {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-        {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],hitIndex:i,source:'attack',transactionPrefix:transactionId,now}
+        {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],ridePetBidByParticipantBid,hitIndex:i,source:'attack',transactionPrefix:transactionId,now}
       );
       if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-attack-sequence-enemy-exp',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
       next.context=clone(enemyExpCredit.context);
@@ -288,6 +289,7 @@ async function resolveAttackSequence(context,{
       perHitProfitCredit:true,
       perHitCarriedLootQueue:true,
       perHitEnemyExpCredit:true,
+      ridePetExpCredit:true,
       bowTargetListInput:true,
       specialDamageReactSupported:true,
       counterExecutionDeferred:true,
