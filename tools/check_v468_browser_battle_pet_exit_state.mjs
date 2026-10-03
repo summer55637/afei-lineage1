@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { freshPersistentState } from '../src/stoneage_persistent_state.mjs';
 import { planBattlePetExit } from '../src/stoneage_browser_battle_pet_exit_runtime.mjs';
 import { commitBattlePetExit } from '../src/stoneage_browser_battle_pet_exit_commit_runtime.mjs';
+import { planBattleExit } from '../src/stoneage_browser_battle_exit_runtime.mjs';
+import { commitBattleExit } from '../src/stoneage_browser_battle_exit_commit_runtime.mjs';
 
 const now='2026-10-03T22:10:00+08:00';
 const state=freshPersistentState({now,playerId:'p1',playerName:'V4.68 Pet Exit'});
@@ -42,4 +44,31 @@ state.pets.petBox[0].hp=300;
 const livePlan=planBattlePetExit(liveCtx,state,{settlementComplete:true,settlementReceiptId:'s-468',playerExitTransactionId:'p-468'});
 assert.equal(livePlan.ok,true,JSON.stringify(livePlan));
 assert.equal(livePlan.pets[0].hpAfter,275);
-console.log(JSON.stringify({pass:true,format:'stoneage-v468-browser-battle-pet-exit-state-v1',deadPetClampedToOne:true,alivePetHpSnapshot:true,idempotent:true},null,2));
+const exitPlanMissing=planBattleExit(ctx,state,{settlementComplete:true,settlementReceiptId:'s-468'});
+assert.equal(exitPlanMissing.ok,false);
+assert.equal(exitPlanMissing.reason,'pet-exit-state-transaction-required');
+
+state.pets.petBox[0].hp=1;
+state.pets.petBox[0].isDie=false;
+const exitPlan=planBattleExit(ctx,state,{
+  settlementComplete:true,
+  settlementReceiptId:'s-468',
+  petExitStateTransactionId:'tx-468'
+});
+assert.equal(exitPlan.ok,true,JSON.stringify(exitPlan));
+assert.equal(exitPlan.petExitStateRequired,true);
+assert.equal(exitPlan.petExitStateTransactionId,'tx-468');
+
+const exitCommit=commitBattleExit(state,exitPlan,{transactionId:'battle-exit-468',expectedRevision:5,now});
+assert.equal(exitCommit.ok,true,JSON.stringify(exitCommit));
+assert.equal(exitCommit.state.revision,6);
+assert.equal(exitCommit.state.pets.petBox[0].hp,1);
+
+console.log(JSON.stringify({
+  pass:true,
+  format:'stoneage-v468-browser-battle-pet-exit-state-v1',
+  deadPetClampedToOne:true,
+  alivePetHpSnapshot:true,
+  idempotent:true,
+  finalBattleExitBound:true
+},null,2));
