@@ -1,0 +1,470 @@
+{
+  "format": "stoneage-ro0000-petskill-shop-catalog-v1",
+  "source": "ro0000/server/merged-source/gmsv/data/petskill2.txt + data/npc/genout/psks_*",
+  "endpointPrimary": true,
+  "shops": [
+    {
+      "floor": 1003,
+      "x": 18,
+      "y": 13,
+      "rate": 1,
+      "ids": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        50,
+        200,
+        201,
+        100
+      ],
+      "skills": [
+        {
+          "id": 0,
+          "name": "待机",
+          "comment": "什么也不做",
+          "function": "PETSKILL_None",
+          "cost": 500,
+          "effectiveCost": 500
+        },
+        {
+          "id": 1,
+          "name": "攻击",
+          "comment": "通常攻击",
+          "function": "PETSKILL_NormalAttack",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 2,
+          "name": "防御",
+          "comment": "通常防御",
+          "function": "PETSKILL_NormalGuard",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 3,
+          "name": "破除防御",
+          "comment": "对采取防敌人攻击可能",
+          "function": "PETSKILL_GuardBreak",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 10,
+          "name": "连续攻击",
+          "comment": "两次连续攻击",
+          "function": "PETSKILL_ContinuationAttack",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 50,
+          "name": "背水之战其之１",
+          "comment": "防御力减30%　　攻击力变成+30%",
+          "function": "PETSKILL_PowerBalance",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 200,
+          "name": "加工",
+          "comment": "合成素材制作道具",
+          "function": "PETSKILL_Merge",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 201,
+          "name": "料理",
+          "comment": "使用素材制作料理",
+          "function": "PETSKILL_Merge",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 100,
+          "name": "泥醉攻击",
+          "comment": "攻击力减30%三回合前后让敌人酒醉",
+          "function": "PETSKILL_StatusChange",
+          "cost": 2000,
+          "effectiveCost": 2000
+        }
+      ]
+    },
+    {
+      "floor": 2003,
+      "x": 18,
+      "y": 14,
+      "rate": 1,
+      "ids": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        11,
+        200,
+        20,
+        30,
+        31,
+        40,
+        50,
+        51,
+        120,
+        130,
+        150,
+        61,
+        80,
+        90,
+        100,
+        110
+      ],
+      "skills": [
+        {
+          "id": 0,
+          "name": "待机",
+          "comment": "什么也不做",
+          "function": "PETSKILL_None",
+          "cost": 500,
+          "effectiveCost": 500
+        },
+        {
+          "id": 1,
+          "name": "攻击",
+          "comment": "通常攻击",
+          "function": "PETSKILL_NormalAttack",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 2,
+          "name": "防御",
+          "comment": "通常防御",
+          "function": "PETSKILL_NormalGuard",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 3,
+          "name": "破除防御",
+          "comment": "对采取防敌人攻击可能",
+          "function": "PETSKILL_GuardBreak",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 10,
+          "name": "连续攻击",
+          "comment": "两次连续攻击",
+          "function": "PETSKILL_ContinuationAttack",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 11,
+          "name": "三段攻击",
+          "comment": "3回合连续攻击",
+          "function": "PETSKILL_ContinuationAttack",
+          "cost": 5000,
+          "effectiveCost": 5000
+        },
+        {
+          "id": 200,
+          "name": "加工",
+          "comment": "合成素材制作道具",
+          "function": "PETSKILL_Merge",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 20,
+          "name": "忠犬",
+          "comment": "保护主人不受到敌人的直接攻击",
+          "function": "PETSKILL_Guardian",
+          "cost": 2500,
+          "effectiveCost": 2500
+        },
+        {
+          "id": 30,
+          "name": "突击",
+          "comment": "1回合储存力量　　　 下次攻击时　　　 就会有两倍的攻击力",
+          "function": "PETSKILL_ChargeAttack",
+          "cost": 4000,
+          "effectiveCost": 4000
+        },
+        {
+          "id": 31,
+          "name": "双重突击",
+          "comment": "2回合储存力量 　　　下次攻击时 　　　就会有两倍以上的攻击力",
+          "function": "PETSKILL_ChargeAttack",
+          "cost": 8000,
+          "effectiveCost": 8000
+        },
+        {
+          "id": 40,
+          "name": "一击必杀",
+          "comment": "给予两倍的攻击伤害但是命中率下降",
+          "function": "PETSKILL_Mighty",
+          "cost": 2500,
+          "effectiveCost": 2500
+        },
+        {
+          "id": 50,
+          "name": "背水之战其之１",
+          "comment": "防御力减30%　　攻击力变成+30%",
+          "function": "PETSKILL_PowerBalance",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 51,
+          "name": "背水之战其之２",
+          "comment": "防御力减50%　　攻击力变成+50%",
+          "function": "PETSKILL_PowerBalance",
+          "cost": 2500,
+          "effectiveCost": 2500
+        },
+        {
+          "id": 120,
+          "name": "地球一周",
+          "comment": "一回合从敌人背后以两倍攻击力攻击",
+          "function": "PETSKILL_EarthRound",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 130,
+          "name": "旅程伙伴",
+          "comment": "把一只恐龙当作是伙伴当场带走",
+          "function": "PETSKILL_Abduct",
+          "cost": 3000,
+          "effectiveCost": 3000
+        },
+        {
+          "id": 150,
+          "name": "不防守战法",
+          "comment": "自己不进行攻击　　反击跟回避率　　　　　就会变的非常高",
+          "function": "PETSKILL_NoGuard",
+          "cost": 3000,
+          "effectiveCost": 3000
+        },
+        {
+          "id": 61,
+          "name": "猛毒攻击",
+          "comment": "攻击力减50%五回合前后让敌人中毒",
+          "function": "PETSKILL_StatusChange",
+          "cost": 4000,
+          "effectiveCost": 4000
+        },
+        {
+          "id": 80,
+          "name": "石化攻击",
+          "comment": "攻击力减30%三回合前后让敌人石化",
+          "function": "PETSKILL_StatusChange",
+          "cost": 2300,
+          "effectiveCost": 2300
+        },
+        {
+          "id": 90,
+          "name": "混乱攻击",
+          "comment": "攻击力减30%三回合前后让敌人混乱",
+          "function": "PETSKILL_StatusChange",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 100,
+          "name": "泥醉攻击",
+          "comment": "攻击力减30%三回合前后让敌人酒醉",
+          "function": "PETSKILL_StatusChange",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 110,
+          "name": "催眠攻击",
+          "comment": "攻击力减30%三回合前后让敌人沉睡",
+          "function": "PETSKILL_StatusChange",
+          "cost": 2500,
+          "effectiveCost": 2500
+        }
+      ]
+    },
+    {
+      "floor": 3003,
+      "x": 16,
+      "y": 13,
+      "rate": 1,
+      "ids": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        50,
+        200,
+        201
+      ],
+      "skills": [
+        {
+          "id": 0,
+          "name": "待机",
+          "comment": "什么也不做",
+          "function": "PETSKILL_None",
+          "cost": 500,
+          "effectiveCost": 500
+        },
+        {
+          "id": 1,
+          "name": "攻击",
+          "comment": "通常攻击",
+          "function": "PETSKILL_NormalAttack",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 2,
+          "name": "防御",
+          "comment": "通常防御",
+          "function": "PETSKILL_NormalGuard",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 3,
+          "name": "破除防御",
+          "comment": "对采取防敌人攻击可能",
+          "function": "PETSKILL_GuardBreak",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 10,
+          "name": "连续攻击",
+          "comment": "两次连续攻击",
+          "function": "PETSKILL_ContinuationAttack",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 50,
+          "name": "背水之战其之１",
+          "comment": "防御力减30%　　攻击力变成+30%",
+          "function": "PETSKILL_PowerBalance",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 200,
+          "name": "加工",
+          "comment": "合成素材制作道具",
+          "function": "PETSKILL_Merge",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 201,
+          "name": "料理",
+          "comment": "使用素材制作料理",
+          "function": "PETSKILL_Merge",
+          "cost": 1000,
+          "effectiveCost": 1000
+        }
+      ]
+    },
+    {
+      "floor": 4003,
+      "x": 18,
+      "y": 15,
+      "rate": 1,
+      "ids": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        50,
+        100,
+        200,
+        201
+      ],
+      "skills": [
+        {
+          "id": 0,
+          "name": "待机",
+          "comment": "什么也不做",
+          "function": "PETSKILL_None",
+          "cost": 500,
+          "effectiveCost": 500
+        },
+        {
+          "id": 1,
+          "name": "攻击",
+          "comment": "通常攻击",
+          "function": "PETSKILL_NormalAttack",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 2,
+          "name": "防御",
+          "comment": "通常防御",
+          "function": "PETSKILL_NormalGuard",
+          "cost": 1000,
+          "effectiveCost": 1000
+        },
+        {
+          "id": 3,
+          "name": "破除防御",
+          "comment": "对采取防敌人攻击可能",
+          "function": "PETSKILL_GuardBreak",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 10,
+          "name": "连续攻击",
+          "comment": "两次连续攻击",
+          "function": "PETSKILL_ContinuationAttack",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 50,
+          "name": "背水之战其之１",
+          "comment": "防御力减30%　　攻击力变成+30%",
+          "function": "PETSKILL_PowerBalance",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 100,
+          "name": "泥醉攻击",
+          "comment": "攻击力减30%三回合前后让敌人酒醉",
+          "function": "PETSKILL_StatusChange",
+          "cost": 2000,
+          "effectiveCost": 2000
+        },
+        {
+          "id": 200,
+          "name": "加工",
+          "comment": "合成素材制作道具",
+          "function": "PETSKILL_Merge",
+          "cost": 1500,
+          "effectiveCost": 1500
+        },
+        {
+          "id": 201,
+          "name": "料理",
+          "comment": "使用素材制作料理",
+          "function": "PETSKILL_Merge",
+          "cost": 1000,
+          "effectiveCost": 1000
+        }
+      ]
+    }
+  ]
+}
