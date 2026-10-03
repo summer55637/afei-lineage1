@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：bc16811 — docs: finalize V4.47 counter chain regression evidence
-- 更新時間：2026-10-03T18:02:00+08:00
+- 最新 commit：33ceb1b — test: correct V4.47 source damage evidence
+- 更新時間：2026-10-03T18:02:37+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.47
 - Playable HTML：⏸️ 尚未建立（刻意保留）
