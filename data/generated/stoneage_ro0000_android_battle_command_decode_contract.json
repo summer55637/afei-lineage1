@@ -58,6 +58,28 @@
         "x86": 500,
         "armeabiV7a": 332
       }
+    },
+    "setDamageNum": {
+      "function": "set_damage_num(action*, int, int)",
+      "address": {
+        "x86": "0x33d0f0",
+        "armeabiV7a": "0x225445"
+      },
+      "sizeBytes": {
+        "x86": 855,
+        "armeabiV7a": 572
+      }
+    },
+    "showDamageNum": {
+      "function": "showDamage_num(action*)",
+      "address": {
+        "x86": "0x33b090",
+        "armeabiV7a": "0x22429d"
+      },
+      "sizeBytes": {
+        "x86": 8282,
+        "armeabiV7a": 4520
+      }
     }
   },
   "localHelpers": {
@@ -261,5 +283,16 @@
     "commandQueueAndParserStaticallyReviewed": true,
     "deviceRuntimeBattlePlaybackObserved": false,
     "serverBattleFormulaVerifiedFromApk": false
+  },
+  "damageNumberVisual": {
+    "creation": {
+      "function": "set_damage_num(action*, int, int)",
+      "behavior": "allocates a display ACTION via GetAction(0x4a,0x264); when allocation succeeds, installs the damage-number callback, sets display priority and source-relative position, and copies the source damage/pet-damage/MP/recovery flags into the new action"
+    },
+    "lifetime": {
+      "function": "showDamage_num(action*)",
+      "behavior": "target exports a separate per-frame display callback for the damage-number ACTION; the full rendering/decay state machine is not yet exhaustively translated into the contract"
+    },
+    "boundary": "damage-number ACTION is a presentation child; it does not itself establish server-side hit or damage calculation"
   }
 }
