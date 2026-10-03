@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b2100b8 — feat: add V4.68 browser pet final-exit state sync
-- 更新時間：2026-10-03T22:05:14+08:00
+- 最新 commit：ca6339a — test: bind V4.68 pet sync into battle exit
+- 更新時間：2026-10-03T22:07:07+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.68
 - Playable HTML：⏸️ 尚未建立（刻意保留）
