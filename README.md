@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5a64533 — [audit] record Android APK external resource boundary
-- 更新時間：2026-10-03T10:00:00+08:00
+- 最新 commit：b1716a3 — [docs] refresh Android APK analysis status
+- 更新時間：2026-10-03T09:58:19+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -49,7 +49,6 @@
 - [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
     - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)
 - [Android battle-map 33×33 lineage audit](docs/reference/ro0000-android-battle-map-lineage-audit.md)
-- [Android APK resource boundary audit](docs/reference/ro0000-android-apk-resource-boundary-audit.md)
 - [Generated state / evidence](data/generated/)
 
 > README 由 GitHub Actions 自動維護。狀態以 `data/generated/`、`docs/`、commit、regression 與 evidence 為準。
