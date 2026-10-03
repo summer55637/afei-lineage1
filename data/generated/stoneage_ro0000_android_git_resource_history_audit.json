@@ -1,0 +1,34 @@
+{
+  "format": "ro0000-android-git-resource-history-audit-v1",
+  "source": {
+    "headSha": "e8106bbd6b80b8a53c4101d438d6ff81277c8c5f",
+    "refsScanned": [
+      "refs/remotes/origin/main"
+    ],
+    "historyScanMethod": "git rev-list --objects --all over a full-depth checkout",
+    "scope": "reachable Git history of current repository refs/tags; unreachable/dangling Git objects and external Actions artifacts are outside this audit"
+  },
+  "patterns": {
+    "target_sabex": "(^|/)battle\\d{2,3}\\.sabex$",
+    "legacy_sab": "(^|/)battle\\d{2,3}\\.sab$",
+    "target_adrrsrc": "(^|/)s/(?:adrn|real|spr|spradrn)\\.bin$",
+    "target_map4_real": "(^|/)path/map4/real\\.bin$",
+    "target_palette": "(^|/)data/pal/palet_\\d+\\.sap$",
+    "target_update_list": "(^|/)data/update/list\\.dat$",
+    "target_patch_zip": "(^|/)patch_[0-5]\\.zip$",
+    "target_serverdata": "(^|/)data/serverdata\\.dat$"
+  },
+  "scan": {
+    "reachablePathObjectPairsMatched": 0,
+    "matchedPathCount": 0,
+    "matchedClassCounts": {}
+  },
+  "findings": {
+    "targetClientResourcePathsEverTracked": false,
+    "payloadLikeTargetPathsEverTracked": false,
+    "targetLfsPointerPaths": 0,
+    "targetMatches": [],
+    "nonPayloadLineageMatches": []
+  },
+  "interpretation": "No target client external-resource paths are present in any reachable Git history."
+}

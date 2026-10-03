@@ -1,0 +1,527 @@
+{
+  "format": "ro0000-android-apk-signing-cause-audit-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "fileBytes": 24931847
+  },
+  "v1": {
+    "manifestEntry": "META-INF/MANIFEST.MF",
+    "signatureFileEntry": "META-INF/CERT.SF"
+  },
+  "checks": {
+    "signatureFileMainManifestDigest": [
+      {
+        "algorithm": "sha1",
+        "matchesCurrentManifest": true
+      }
+    ],
+    "signatureFileManifestSections": [
+      {
+        "entry": "lib/armeabi-v7a/libStoneage.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2_image.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "AndroidManifest.xml",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "res/I8.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2_mixer.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/61429.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libGCloudVoice.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libGCloudVoice.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libStoneage.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/jdt.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "res/w6.xml",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/61430.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libmpg123.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libmpg123.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "res/WF.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2_ttf.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "res/xM.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/font/simsun.ttc",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/4.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/5.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libSDL2_image.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/armeabi-v7a/libhidapi.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libhidapi.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "res/5X.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libSDL2.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "res/oO.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libSDL2_mixer.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/font/FZLTZHUNHK.TTF",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/3.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "lib/x86/libSDL2_ttf.so",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "resources.arsc",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "assets/data/skin/61428.png",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "classes.dex",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      },
+      {
+        "entry": "META-INF/com/android/build/gradle/app-metadata.properties",
+        "algorithm": "sha1",
+        "manifestSectionPresent": true,
+        "signatureSectionMatchesCurrentManifest": true
+      }
+    ],
+    "manifestEntryPayloadDigests": [
+      {
+        "entry": "lib/armeabi-v7a/libStoneage.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": false,
+        "expectedDigestHex": "40e2002dc026a3178c228012793ce2717da227b7",
+        "actualDigestHex": "3de4f351fd0bd9a3509b2a9cf6e72bb83c5b46bf"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2_image.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "55fbc65515389cc8cc1feec32e81bcdfb9673d4c",
+        "actualDigestHex": "55fbc65515389cc8cc1feec32e81bcdfb9673d4c"
+      },
+      {
+        "entry": "AndroidManifest.xml",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "3411cb4e70708277f4ede8d66aa8141a399fe7ee",
+        "actualDigestHex": "3411cb4e70708277f4ede8d66aa8141a399fe7ee"
+      },
+      {
+        "entry": "res/I8.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "38c2c7cbb3a4068200f9d5594f5e5876ef04b111",
+        "actualDigestHex": "38c2c7cbb3a4068200f9d5594f5e5876ef04b111"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2_mixer.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "29ee7c15a5ba73aa49bd6ec1e3de636426e28f19",
+        "actualDigestHex": "29ee7c15a5ba73aa49bd6ec1e3de636426e28f19"
+      },
+      {
+        "entry": "assets/data/skin/61429.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "c5730f554cee299eff06aa4213009544946e653b",
+        "actualDigestHex": "c5730f554cee299eff06aa4213009544946e653b"
+      },
+      {
+        "entry": "lib/x86/libGCloudVoice.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "1eabe8e0713310075ae1a6a80c4e497840a5b3bb",
+        "actualDigestHex": "1eabe8e0713310075ae1a6a80c4e497840a5b3bb"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libGCloudVoice.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "e8f43a6c116da472e085a91af8da540ed266d2e6",
+        "actualDigestHex": "e8f43a6c116da472e085a91af8da540ed266d2e6"
+      },
+      {
+        "entry": "lib/x86/libStoneage.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": false,
+        "expectedDigestHex": "760562e44edb1bcf0d37e7ccc7a50ce40d531d72",
+        "actualDigestHex": "3ea4074bdaa12fb2c907f0f46dd1c2e7a271002e"
+      },
+      {
+        "entry": "assets/data/skin/jdt.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "6c085dffad1cf2c7fc5b21b9e73012ae4147a44e",
+        "actualDigestHex": "6c085dffad1cf2c7fc5b21b9e73012ae4147a44e"
+      },
+      {
+        "entry": "res/w6.xml",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "0d78d5c3dfe583485deb1347998d4cf1bc6e1192",
+        "actualDigestHex": "0d78d5c3dfe583485deb1347998d4cf1bc6e1192"
+      },
+      {
+        "entry": "assets/data/skin/61430.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "618bf61377cdce95c3995e69406cdabcd59cfab6",
+        "actualDigestHex": "618bf61377cdce95c3995e69406cdabcd59cfab6"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libmpg123.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "54f9c2a283f30e02a2baecaafd9c4d7479c05bf7",
+        "actualDigestHex": "54f9c2a283f30e02a2baecaafd9c4d7479c05bf7"
+      },
+      {
+        "entry": "lib/x86/libmpg123.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "146de1de35637993c6d4594dac1dcee5ddf73214",
+        "actualDigestHex": "146de1de35637993c6d4594dac1dcee5ddf73214"
+      },
+      {
+        "entry": "res/WF.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "81fcdd69f5114052337ae6a89376694c1cd77c79",
+        "actualDigestHex": "81fcdd69f5114052337ae6a89376694c1cd77c79"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2_ttf.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "23f4f8dec32a5d170064f7a9f27387be55a28db5",
+        "actualDigestHex": "23f4f8dec32a5d170064f7a9f27387be55a28db5"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libSDL2.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "d169597144c1f0dcd1197b9f3d61ff19ed356f19",
+        "actualDigestHex": "d169597144c1f0dcd1197b9f3d61ff19ed356f19"
+      },
+      {
+        "entry": "res/xM.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "5743e78c4a600f2e261c331866766eec2fba178a",
+        "actualDigestHex": "5743e78c4a600f2e261c331866766eec2fba178a"
+      },
+      {
+        "entry": "assets/data/font/simsun.ttc",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "2d346815cfbd4d59701a733b5d6c253f9ca94c05",
+        "actualDigestHex": "2d346815cfbd4d59701a733b5d6c253f9ca94c05"
+      },
+      {
+        "entry": "assets/data/skin/4.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "f246ee35704850aa22b011d4ec7a0c802618434c",
+        "actualDigestHex": "f246ee35704850aa22b011d4ec7a0c802618434c"
+      },
+      {
+        "entry": "assets/data/skin/5.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "f656d83bef4ba929884b51a8b50991a3ad1785e5",
+        "actualDigestHex": "f656d83bef4ba929884b51a8b50991a3ad1785e5"
+      },
+      {
+        "entry": "lib/x86/libSDL2_image.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "0f6acbdcfe3f3928fa85c7ecb4b3bbf32a225df5",
+        "actualDigestHex": "0f6acbdcfe3f3928fa85c7ecb4b3bbf32a225df5"
+      },
+      {
+        "entry": "lib/armeabi-v7a/libhidapi.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "b46cf75c62e60559be5c79941abd89b0c5409904",
+        "actualDigestHex": "b46cf75c62e60559be5c79941abd89b0c5409904"
+      },
+      {
+        "entry": "lib/x86/libhidapi.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "0ae3167acad5e410697f7dd6bc3e833362459aa8",
+        "actualDigestHex": "0ae3167acad5e410697f7dd6bc3e833362459aa8"
+      },
+      {
+        "entry": "res/5X.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "f130a28a184b44d002c46ab8623a65301735b176",
+        "actualDigestHex": "f130a28a184b44d002c46ab8623a65301735b176"
+      },
+      {
+        "entry": "lib/x86/libSDL2.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "32ba546dd8b6e7997ced6e18ab4742cbdbdace83",
+        "actualDigestHex": "32ba546dd8b6e7997ced6e18ab4742cbdbdace83"
+      },
+      {
+        "entry": "res/oO.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "88f3a95ebd2120bc37f320f114392b6ec7d7c118",
+        "actualDigestHex": "88f3a95ebd2120bc37f320f114392b6ec7d7c118"
+      },
+      {
+        "entry": "lib/x86/libSDL2_mixer.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "a7686578deb923f97879db1e2a16cb8a636083f5",
+        "actualDigestHex": "a7686578deb923f97879db1e2a16cb8a636083f5"
+      },
+      {
+        "entry": "assets/data/font/FZLTZHUNHK.TTF",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "839672e4c37d42e1bd0106717aede0471835aa6a",
+        "actualDigestHex": "839672e4c37d42e1bd0106717aede0471835aa6a"
+      },
+      {
+        "entry": "assets/data/skin/3.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "7868d452e8fd8755d8e2a35f66af9faa71a08c0f",
+        "actualDigestHex": "7868d452e8fd8755d8e2a35f66af9faa71a08c0f"
+      },
+      {
+        "entry": "lib/x86/libSDL2_ttf.so",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "8e8a0e9f39eb5a333b819f6344ca53284223930b",
+        "actualDigestHex": "8e8a0e9f39eb5a333b819f6344ca53284223930b"
+      },
+      {
+        "entry": "resources.arsc",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "bc6bcea55645989fbaecb2bffd86fd5493dee63f",
+        "actualDigestHex": "bc6bcea55645989fbaecb2bffd86fd5493dee63f"
+      },
+      {
+        "entry": "assets/data/skin/61428.png",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "47740cf7cf7609b83e70cfe7824664f162783361",
+        "actualDigestHex": "47740cf7cf7609b83e70cfe7824664f162783361"
+      },
+      {
+        "entry": "classes.dex",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "eca15f4850a1780cbcdaea50d03e26e2f6f927d3",
+        "actualDigestHex": "eca15f4850a1780cbcdaea50d03e26e2f6f927d3"
+      },
+      {
+        "entry": "META-INF/com/android/build/gradle/app-metadata.properties",
+        "algorithm": "sha1",
+        "payloadPresent": true,
+        "matchesCurrentPayload": true,
+        "expectedDigestHex": "41f2b1e2cde66b761021742bebb1693b39f2ffcf",
+        "actualDigestHex": "41f2b1e2cde66b761021742bebb1693b39f2ffcf"
+      }
+    ]
+  },
+  "finding": {
+    "status": "manifest-current-but-v1-entry-digests-stale",
+    "mismatchingPayloadEntries": [
+      "lib/armeabi-v7a/libStoneage.so",
+      "lib/x86/libStoneage.so"
+    ],
+    "manifestDigestMatchesCurrent": true,
+    "signatureFileSectionsMatchCurrentManifest": true,
+    "interpretation": "The v1 signature metadata authenticates the current MANIFEST.MF sections, but MANIFEST.MF entry digests do not match current ZIP payload bytes. APK bytes bound the failure to stale entry digests versus post-manifest payload substitution; they do not distinguish which producer stage caused it."
+  },
+  "limitations": [
+    "Does not establish publisher identity.",
+    "Cannot distinguish stale digest generation from later payload substitution when v1 metadata still authenticates the current manifest."
+  ]
+}
