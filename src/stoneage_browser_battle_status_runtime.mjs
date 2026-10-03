@@ -110,11 +110,12 @@ function statusRawStats(entry){
 }
 
 function battleStatusPoisonDamage(entry){
+  const hp=intOr(entry?.hp,0);
+  if(hp<=0)return 0;
   const raw=statusRawStats(entry);
   const total=Math.trunc(raw.vital+raw.str+raw.dex+raw.tgh);
   let damage=Math.trunc((Math.trunc(total/100)-20)/4);
   if(damage<1)damage=1;
-  const hp=intOr(entry?.hp,0);
   if(hp<=damage)damage=hp-1;
   if(damage<0)damage=0;
   entry.hp=Math.max(1,hp-damage);
