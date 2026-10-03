@@ -205,9 +205,9 @@ function createBrowserStateController({
     ? createBrowserWorldNpcRuntime({worldNpcIndex,...worldNpcRuntimeOptions})
     : null;
   const healerRuntime=moduleAudit ? createBrowserHealerRuntime({moduleAudit}) : null;
+  const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const idleSupplyRuntime=(moduleAudit&&idleRouteCatalog) ? createBrowserIdleSupplyRuntime({idleRuntime,healerRuntime}) : null;
   const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
-  const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
   const movementMapLoader=withWorldMapRepairOverlay(worldMovementOptions.loadMap??loadSourceMapRuntime,worldMapRepairOverlay);
   const routeMapLoader=withWorldMapRepairOverlay(worldFirstRouteOptions.loadMap??loadSourceMapRuntime,worldMapRepairOverlay);
