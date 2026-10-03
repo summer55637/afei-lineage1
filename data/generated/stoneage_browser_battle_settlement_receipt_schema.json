@@ -11,6 +11,7 @@
     "transactionWindow":"each referenced reward transaction must have revisionAfter > settlementStartRevision and <= current state revision",
     "idempotency":"runtimeMeta.battleSettlementReceipts[settlementId]",
     "deathExtraTransaction":"runtimeMeta.battleDeathExtraTransactions[transactionId] when sourceDeathExtraEvents are present",
+    "relifeTransaction":"runtimeMeta.battleReLifeTransactions[transactionId] when sourceRelifeEvents are present",
     "rewardAppliedGate":"when a Battle Context is live, IDLE REWARD_APPLIED requires a receipt matching the live battle"
   },
   "notIncluded":[
