@@ -36,7 +36,7 @@ async function resolveAttackSequence(context,{
   defaultPetBidByPlayerBid={0:5}
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'battle-context-required'};
-  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
+  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime','relifeRuntime'];
   const missing=required.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missing)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'attack-sequence-runtime-dependency-invalid',dependency:missing};
   const actorBid=int(attackerBid),initialTarget=int(requestedTargetBid),count=int(attackCount);
@@ -251,6 +251,13 @@ async function resolveAttackSequence(context,{
       next.context=clone(enemyExpCredit.context);
     }
     hit.enemyExpCredit=enemyExpCredit;
+    const relife=runtimes.relifeRuntime.apply(
+      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+      {trigger:'outer-add-profit',now}
+    );
+    if(!relife.ok)return {...relife,stage:'battle-attack-sequence-relife',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
+    next.context=clone(relife.context);
+    hit.relife=clone(relife);
     hit.damageReactPlan=clone(reactPlan);
     hit.commit=clone(commit);
     hit.damageExecuted=commit.damageExecuted===true;
