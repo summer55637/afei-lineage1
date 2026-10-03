@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v453-browser-battle-attack-sequence-v1';
+const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v454-browser-battle-attack-sequence-v1';
 const ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE='BATTLE_ATTACK_SEQUENCE_RESOLVE';
 const ITEM_FIST=0;
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -29,7 +29,7 @@ async function resolveAttackSequence(context,{
   transactionPrefix=''
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'battle-context-required'};
-  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime'];
+  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
   const missing=required.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missing)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'attack-sequence-runtime-dependency-invalid',dependency:missing};
   const actorBid=int(attackerBid),initialTarget=int(requestedTargetBid),count=int(attackCount);
@@ -186,6 +186,20 @@ async function resolveAttackSequence(context,{
     }
     if(!commit.ok)return {...commit,stage:'battle-attack-sequence-commit',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
     next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
+    const profitCredit=runtimes.profitCreditRuntime.apply(
+      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+      {
+        attackerBids:[actorBid],
+        allowPlayerCredit:actorBid<10,
+        hitIndex:i,
+        source:reactPlan.reaction?.code!==0?'attack-special-react':'attack',
+        transactionPrefix:transactionId,
+        now
+      }
+    );
+    if(!profitCredit.ok)return {...profitCredit,stage:'battle-attack-sequence-profit-credit',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
+    next.context=clone(profitCredit.context);
+    hit.profitCredit=clone(profitCredit);
     hit.damageReactPlan=clone(reactPlan);
     hit.commit=clone(commit);
     hit.damageExecuted=commit.damageExecuted===true;
@@ -226,11 +240,12 @@ async function resolveAttackSequence(context,{
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       functions:['BATTLE_GetAttackCount','BATTLE_TargetListSet','BATTLE_Attack','BATTLE_AttackSeq']
     },
-    sourceOrder:['attack count consumed','target list prepared','AttackSeq per hit','FIST gDamageDiv=attack_max','damage/react commit per hit'],
+    sourceOrder:['attack count consumed','target list prepared','AttackSeq per hit','FIST gDamageDiv=attack_max','damage/react commit per hit','BATTLE_AddProfit per hit'],
     scope:{
       basicMultiHit:true,
       fistDamageDivisor:true,
       damageDivisorOverrideSupported:true,
+      perHitProfitCredit:true,
       bowTargetListInput:true,
       specialDamageReactSupported:true,
       counterExecutionDeferred:true,
