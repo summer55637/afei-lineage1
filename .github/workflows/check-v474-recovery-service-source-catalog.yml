@@ -1,0 +1,60 @@
+name: check-v474-recovery-service-source-catalog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/generate_recovery_service_source_catalog.mjs'
+      - 'tools/check_v474_recovery_service_source_catalog.mjs'
+      - 'tools/fixtures/npc-healer/world-index.json'
+      - '.github/workflows/check-v474-recovery-service-source-catalog.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recovery-service-source-catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Clone pinned fixed-C source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/gavinlinasd/StoneAge.git fixed-c-source
+          git -C fixed-c-source fetch --depth 1 origin 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          git -C fixed-c-source checkout --detach 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+      - name: Generate fixed-C World NPC index in temp workspace
+        run: |
+          node tools/generate_world_data_catalog.mjs             --source-root fixed-c-source             --out-dir /tmp/v474-world
+
+      - name: Generate recovery service catalog
+        run: |
+          node tools/generate_recovery_service_source_catalog.mjs             --world-index /tmp/v474-world/stoneage_world_npc_index.json             --out data/generated/stoneage_recovery_service_source_catalog.json
+
+      - name: Run V4.74 regression
+        run: node tools/check_v474_recovery_service_source_catalog.mjs
+
+      - name: Syntax check
+        run: |
+          node --check tools/generate_recovery_service_source_catalog.mjs
+          node --check tools/check_v474_recovery_service_source_catalog.mjs
+
+      - name: Commit generated catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_recovery_service_source_catalog.json
+          if git diff --cached --quiet; then
+            echo "Recovery service catalog already current."
+            exit 0
+          fi
+          git commit -m "[docs] auto-update V4.74 recovery service source catalog"
+          git push origin HEAD:main
