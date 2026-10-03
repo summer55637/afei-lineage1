@@ -116,6 +116,10 @@ function buildBattleContext({
   if(field==null||field<0)return {ok:false,handled:false,stage:'battle-context',reason:'battle-field-no-required'};
   const playerWork=playerWorkFromState(player);
   if(!playerWork.ok)return {ok:false,handled:false,stage:'battle-context',reason:playerWork.reason,detail:playerWork};
+  const vital=intOr(player?.stats?.vital)??0;
+  const str=intOr(player?.stats?.str)??0;
+  const tgh=intOr(player?.stats?.tgh)??0;
+  const dex=intOr(player?.stats?.dex)??0;
   const playerEntry={
     sourceType:'player',
     sourcePartyMode:0,
