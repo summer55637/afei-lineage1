@@ -856,6 +856,25 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_statu
 
 未走到倒數歸零的正常 callback 尾端會呼叫 `pattern(action,0,1)`；歸零分支呼叫 `DeathAction()` 後直接離開，不走一般尾端。x86 與 ARMv7a Thumb 指令對狀態 byte、每次步進 2、門檻 24、倒數 60、清除 `+0xd10` 及死亡釋放流程相互吻合。
 
+### Damage-font character mapping and display-queue dispatch
+
+為避免只依呼叫端推測字型行為，這一輪再追到字元長度、字型圖號映射與顯示佇列 helper：
+
+| Function | x86 | ARMv7a | target-observed role |
+|---|---:|---:|---|
+| `NextCharLength(char const*)` | `0x11d740`（244 bytes） | `0x100c0f`（144 bytes） | 依首 byte 分類 1–6 bytes 或回傳 0 |
+| `getBmpNoFromFont(char*, int)` | `0x38d7c0`（764 bytes） | `0x24e971`（456 bytes） | 經 Lua mapping 取得字元對應 bitmap number |
+| `getFontNumWidthToDamage(char*, fontBattleType)` | `0x150b70`（405 bytes） | `0x11d0fd`（224 bytes） | 逐 glyph 累加圖檔寬度 |
+| `stockFontNumToDamage(int, int, char, fontBattleType, char*, bool)` | `0x150d10`（976 bytes） | `0x11d1dd`（484 bytes） | 逐 glyph 提交顯示佇列並推進 x 游標 |
+
+`NextCharLength()` 以首 byte 位元遮罩決定長度：回傳 1、2、3、4、5、6 或 0。這個函式沒有驗證後續 continuation bytes，也不驗證 Unicode scalar；因此不能將它等同於完整 UTF-8 decoder。其後的傷害字寬與繪字函式只對長度 1 或 3 的單位執行字型映射；長度 2、4、5、6 的單位只推進輸入指標，不計寬、不提交 glyph，遇到長度 0 則停止掃描。
+
+對長度 1／3 的單位，兩條路徑都會將指定 bytes 複製到暫存字串並補 NUL，再呼叫 `getBmpNoFromFont()`。該 mapper 透過 `FindLua()` 取得 Lua state，取出字型 mapping function，要求 Lua 值型別為 function，並以字元字串與 `fontBattleType` 呼叫；回傳值需是 numeric，再轉成 int。缺少 Lua state／函式、呼叫失敗或結果非數字時，回傳 -1。這證實實際字元到圖號的對照仍受外部 Lua 資料影響，不能只從 APK 靜態二進位重建完整 mapping。
+
+mapping 結果非負時，`stockFontNumToDamage()` 會為該 glyph 提交一次顯示。有效 bool 參數的 bit 0 決定使用 `StockFixedDispBuffer()` 或 `StockDispBuffer()`；函式內另有一個觀察到的 global byte bit 0 可強制走 fixed queue。提交後呼叫 `getRealWidthFromMapNo()` 取得 signed 16-bit glyph width，並將該寬度累加至後續 glyph 的 x 游標。相對地，`getFontNumWidthToDamage()` 以相同 mapping 與 width 查詢累計文字寬度，故對支援的 glyph 並非用字數乘固定寬度。
+
+原生程式使用固定大小暫存區，未觀察到對輸入字串及每個暫存 glyph 的明確長度界限。重建端應採安全的長度驗證和有界緩衝區，而不是複製原生 parser 的越界風險。
+
 ### Damage-number rendering boundary
 
 callback 依 work `+0x130` 選擇格式分支，透過 `sprintf` 組合固定 0x100-byte 的暫存文字，再呼叫 `stockFontNumToDamage()`；可見的字型編號為 101（`0x65`）。部分路徑透過 `getFontNumWidthToDamage()` 計算寬度並水平置中；其他路徑使用固定 battle-font mode。work `+0x238` 非零時，會在 y+12 額外提交一組文字（mode 2）；work `+0x234==1` 時，會再於 y+60 提交另一組文字。work `+0x244==1` 則走另一種主文字 mode 3 路徑。
