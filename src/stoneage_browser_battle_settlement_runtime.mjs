@@ -4,7 +4,8 @@ const TRANSACTION_BUCKET='battleSettlementReceipts';
 const TX_BUCKETS={
   duelPoint:'battleDuelPointTransactions',
   levelUp:'battleLevelUpTransactions',
-  item:'battleItemTransactions'
+  item:'battleItemTransactions',
+  deathExtra:'battleDeathExtraTransactions'
 };
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const clone=v=>JSON.parse(JSON.stringify(v));
