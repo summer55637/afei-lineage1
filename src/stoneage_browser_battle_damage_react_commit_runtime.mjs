@@ -206,6 +206,7 @@ function commitSpecialDamageReact(context,{damageReactPlan=null,transactionId=nu
     stateConsumption:clone(plan.stateConsumption??[]),
     deathBids:deathCommits.map(x=>x.bid),
     damageCommitRevision:nextRevision,
+    battleContext:next,
     battleContextMutation:true,
     hpMutation,
     persistentMutation:false,
