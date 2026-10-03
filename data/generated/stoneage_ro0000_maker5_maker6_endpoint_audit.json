@@ -1,0 +1,81 @@
+{
+  "format": "stoneage-ro0000-maker5-maker6-endpoint-audit-v1",
+  "updated": "2026-10-03",
+  "sourceRoot": "ro0000/server/merged-source/gmsv/data/npc/eden3/process",
+  "files": {
+    "maker5": {
+      "dataPath": "ro0000/server/merged-source/gmsv/data/npc/eden3/process/maker5.arg",
+      "dataSha": "32b2be427f321836d922212c2d609b7af677d7c0",
+      "hydataIdentical": true,
+      "recipes": [
+        {
+          "output": 42106,
+          "inputs": "42013*1,42014*1",
+          "gold": 1000,
+          "condition": "ITEM=42013&ITEM=42014&GOLD>=1000&reITEM>=1"
+        },
+        {
+          "output": 42106,
+          "inputs": "42013*3",
+          "gold": 1000,
+          "condition": "ITEM=42013*3&GOLD>=1000&reITEM>=1"
+        }
+      ]
+    },
+    "maker6": {
+      "dataPath": "ro0000/server/merged-source/gmsv/data/npc/eden3/process/maker6.arg",
+      "dataSha": "8620f9536e9068f6bcdfdc594f5ffeaeca2ad504",
+      "hydataIdentical": true,
+      "recipes": [
+        {
+          "output": "42710 or 42711 or 42712 or 42713",
+          "base": "42701*2",
+          "materials": [
+            "16672",
+            "16673",
+            "16674",
+            "16676"
+          ],
+          "gold": 1000,
+          "mode": "GetRandItem"
+        },
+        {
+          "output": 42714,
+          "inputs": "42710*1,42702*2",
+          "gold": 1000,
+          "mode": "GetRandItem"
+        },
+        {
+          "output": 42715,
+          "inputs": "42711*1,42702*2",
+          "gold": 1000,
+          "mode": "GetRandItem"
+        }
+      ]
+    }
+  },
+  "runtime": {
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "eventDsl": "CHANGEITEM/NeedItem/FREE/DelGold/DelItem/AddItem or GetRandItem",
+    "maker5": "Consumes one rare crystal + one skill crystal, or three skill crystals, plus 1000 stone; produces item 42106.",
+    "maker6": "Uses 1000 stone and specified star-stone/upgrade-item materials; GetRandItem resolves success/failure result from the listed result set.",
+    "scope": "Both affect single-player pet-skill/equipment progression and are therefore game-useful endpoint source."
+  },
+  "itemNameEvidence": {
+    "verified": "16672-16676 appear in RO0000 wwwroot item catalog as 合成兜 20 variants.",
+    "unresolvedNames": [
+      "42013",
+      "42014",
+      "42106",
+      "42701",
+      "42702",
+      "42710",
+      "42711",
+      "42712",
+      "42713",
+      "42714",
+      "42715"
+    ],
+    "policy": "Keep exact IDs until a canonical endpoint item catalog source is found; no guessed names."
+  }
+}
