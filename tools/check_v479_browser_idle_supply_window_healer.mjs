@@ -100,7 +100,23 @@ assert.equal(noNeed.mode,'no-healer-needed');
 assert.equal(noNeed.state.idle.mode,'moving');
 assert.equal(noNeedController.getState().revision,1);
 
-const bad=await noNeedController.dispatch({
+const badState=freshPersistentState({now:()=> '2026-10-04T00:50:07+08:00',playerId:'v479-bad-policy'});
+badState.player.hp=50;
+badState.player.maxHp=120;
+badState.player.mp=10;
+badState.player.maxMp=80;
+badState.idle.enabled=true;
+badState.idle.mode='supply_check';
+badState.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+badState.world.position={floorId:1005,x:17,y:15};
+const badController=createBrowserStateController({
+  state:badState,
+  moduleAudit,
+  worldNpcIndex,
+  idleRouteCatalog:routeCatalog,
+  now:()=> '2026-10-04T00:50:08+08:00'
+});
+const bad=await badController.dispatch({
   type:ACTION_IDLE_SUPPLY_USE_WINDOW_HEALER,
   targetCell:{floor:1005,x:17,y:13},
   serviceFunctionSet:'WindowHealer',
