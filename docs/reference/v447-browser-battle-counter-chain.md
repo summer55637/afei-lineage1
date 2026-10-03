@@ -62,7 +62,7 @@ V4.47 round driver 支援：
 
 - 5 次最大 chain。
 - 反擊順序 `10 → 0 → 10 → 0 → 10`。
-- Regression fixture 的每次 counter damage = 14（source damage 19 × 0.75 後截斷）。
+- Regression fixture 的每次 counter damage = 12（source damage 17 × 0.75 後截斷）。反擊順序為 10 → 0 → 10 → 0 → 10，因此 player HP 1000 → 964、enemy HP 1000 → 976。
 - 雙方 HP `1000 → 935`。
 - 缺 RNG 時不自行生成亂數，而是 fail-closed。
 
