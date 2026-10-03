@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：361f051 — fix: define V4.78 WindowHealer regression NPC fixture
-- 更新時間：2026-10-03T23:17:43+08:00
+- 最新 commit：e7effcb — feat: bind V4.79 idle supply WindowHealer completion
+- 更新時間：2026-10-03T23:18:47+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.78
 - Playable HTML：⏸️ 尚未建立（刻意保留）
