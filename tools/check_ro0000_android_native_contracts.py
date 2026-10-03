@@ -286,7 +286,26 @@ class NativeContractTests(unittest.TestCase):
             "source": layout["autoMapColor"]["source"],
             "functions": world_functions,
         }
+        for lib in native["nativeLibraries"]:
+            symbol = next(s for s in lib["focusedSymbols"] if s["name"] == "worldMapProc")
+            instruction = (
+                "  5100:\te8 00 00 00 00 \tcall 6000 <lua_pcall@plt>"
+                if lib["abi"] == "x86"
+                else "  6100:\tf000 f800 \tblx d000 <lua_pcall@plt>"
+            )
+            symbol["disassembly"] = {
+                "status": "ok", "excerptTruncated": False, "excerpt": [instruction],
+            }
+        layout["worldMapRuntime"]["requiredCallCounts"] = {
+            "worldMapProc": {"lua_pcall": 1},
+        }
         self.assertEqual(validate_resource_function_anchors(native, layout), [])
+        x86_proc = next(s for s in native["nativeLibraries"][0]["focusedSymbols"]
+                        if s["name"] == "worldMapProc")
+        x86_proc["disassembly"]["excerpt"] = ["  5100:\te8 00 00 00 00 \tcall 6000 <other@plt>"]
+        errors = validate_resource_function_anchors(native, layout)
+        self.assertTrue(any("call evidence count too low" in error for error in errors))
+        x86_proc["disassembly"]["excerpt"] = ["  5100:\te8 00 00 00 00 \tcall 6000 <lua_pcall@plt>"]
         layout["autoMapRendering"]["functions"]["DrawAutoMapping"]["x86"] = "0x2001"
         errors = validate_resource_function_anchors(native, layout)
         self.assertTrue(any("address mismatch" in error for error in errors))
