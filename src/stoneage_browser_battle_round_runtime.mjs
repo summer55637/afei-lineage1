@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v455-browser-battle-round-runtime-v1';
+const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v457-browser-battle-round-runtime-v1';
 const ACTION_BATTLE_ROUND_RESOLVE='BATTLE_ROUND_RESOLVE';
 
 const BATTLE_MODE_BATTLE=2;
@@ -158,6 +158,7 @@ async function resolveBattleRound(context,{
   carriedLootOwnerRollsByEnemyBid={},
   carriedLootReplaceRollsByEnemyBid={},
   carriedLootReplaceSlotRollsByEnemyBid={},
+  ridePetBidByParticipantBid={},
   runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
@@ -376,6 +377,7 @@ async function resolveBattleRound(context,{
             carriedLootOwnerRollsByEnemyBid,
             carriedLootReplaceRollsByEnemyBid,
             carriedLootReplaceSlotRollsByEnemyBid,
+            ridePetBidByParticipantBid,
             now
           }
         );
@@ -701,6 +703,7 @@ async function resolveBattleRound(context,{
       basicAttackOnly:true,
       playerUnarmedAttackCount:true,
       carriedLootQueue:true,
+      ridePetExpCredit:true,
       sourceAttackCountEmbedded:true,
       bowTargetListEmbedded:true,
       maxAttackCountPerActor:50,
