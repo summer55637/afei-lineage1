@@ -31,9 +31,10 @@ import { createBrowserBattleAutoRuntime } from '../src/stoneage_browser_battle_a
 const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idle_route_catalog.json','utf8'));
 const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
 const groupCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
+const relifeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_item_relife_runtime.json','utf8'));
 const state=freshPersistentState({playerId:'v467-auto',playerName:'V4.67'});
 state.player.hp=1000;state.player.maxHp=1000;state.player.mp=100;state.player.maxMp=100;state.player.stats={str:100,dex:100,tgh:100,vital:100};state.idle.enabled=true;state.idle.mode='encounter_pending';state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';state.world.position={floorId:100,x:610,y:538};
-const controller=createBrowserStateController({state,idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,encounterGroupCatalog:groupCatalog,battleFieldNoProvider:0});
+const controller=createBrowserStateController({state,idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,encounterGroupCatalog:groupCatalog,battleFieldNoProvider:0,playerRelifeCatalog:relifeCatalog});
 const encounter={encounterId:65,floorId:100,x:610,y:538};
 const selected=await controller.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounter,groupRoll:2});assert.equal(selected.ok,true,JSON.stringify(selected));
 const statRolls=[{levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:Array(10).fill(0)},{levelRoll:0,baseStatRolls:[2,2,2,2],allocationRolls:Array(10).fill(0)}];
