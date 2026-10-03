@@ -53,14 +53,17 @@ class JniDeclarationExportTests(unittest.TestCase):
                 "signature": "ChangeRole(I)I",
             },
         ]
-        data = b"prefix\0com/tencent/gcloud/voice/GCloudVoiceEngineHelper\0ChangeRole\0unrelated\0"
-        result = relevant_native_strings(data, declarations)
+        data = b"prefix\0com/tencent/gcloud/voice/GCloudVoiceEngineHelper\0ChangeRole\0/private/vendor/build/path\0unrelated\0"
+        exports = [
+            "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_Init",
+        ]
+        result = relevant_native_strings(data, declarations, exports)
         self.assertEqual(result[0]["class"], declarations[0]["class"])
-        self.assertIn("ChangeRole", result[0]["methodStringCandidates"])
-        self.assertIn(
-            "com/tencent/gcloud/voice/GCloudVoiceEngineHelper",
-            result[0]["classStringCandidates"],
-        )
+        self.assertTrue(result[0]["methodNameLiteralPresent"])
+        self.assertTrue(result[0]["classPathLiteralPresent"])
+        self.assertEqual(result[0]["matchingMethodStringCount"], 1)
+        self.assertNotIn("stringCandidates", result[0])
+        self.assertNotIn("/private/vendor/build/path", str(result))
 
     def test_jni_mangling_and_overloaded_signature_candidates(self):
         self.assertEqual(jni_escape("org/libsdl/app/SDLActivity"), "org_libsdl_app_SDLActivity")
