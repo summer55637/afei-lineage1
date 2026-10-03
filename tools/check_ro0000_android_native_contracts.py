@@ -421,12 +421,15 @@ def main():
     parser.add_argument("--loop-contract", required=True)
     parser.add_argument("--movement-contract", required=True)
     parser.add_argument("--resource-layout", required=True)
+    parser.add_argument("--battle-command-contract")
     args = parser.parse_args()
     native = json.loads(Path(args.native_audit).read_text(encoding="utf-8"))
     contracts = [
         ("client loop contract", json.loads(Path(args.loop_contract).read_text(encoding="utf-8"))),
         ("map movement contract", json.loads(Path(args.movement_contract).read_text(encoding="utf-8"))),
     ]
+    if args.battle_command_contract:
+        contracts.append(("battle command decode contract", json.loads(Path(args.battle_command_contract).read_text(encoding="utf-8"))))
     errors = validate_contracts(native, contracts)
     resource_layout = json.loads(Path(args.resource_layout).read_text(encoding="utf-8"))
     errors.extend(validate_resource_function_anchors(native, resource_layout))
