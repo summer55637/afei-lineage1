@@ -39,7 +39,7 @@ assert.equal(same.context.sides[0].entries[0].workGetExp,100);
 assert.equal(same.context.sides[0].entries[0].killPetCount,1);
 assert.equal(same.context.sides[0].entries[5].workGetExp,60);
 assert.equal(same.context.sides[0].entries[5].killPetCount,1);
-assert.equal(same.context.sides[0].entries[5].variableAi,1);
+assert.equal(same.context.sides[0].entries[5].variableAi,undefined);
 
 const highContext={
   format:'stoneage-browser-battle-context-runtime-v1',
