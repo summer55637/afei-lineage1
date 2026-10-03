@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：c4703fa — feat: bind V4.48 special damage react in rounds
-- 更新時間：2026-10-03T18:07:25+08:00
+- 最新 commit：74f5839 — ci: add V4.48 special damage react regression
+- 更新時間：2026-10-03T18:08:17+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.47
+- Regression 最高版本：V4.48
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.47 |
+| Battle Pipeline | ✅ V4.48 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
