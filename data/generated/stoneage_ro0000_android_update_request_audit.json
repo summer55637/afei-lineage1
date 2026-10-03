@@ -52,7 +52,14 @@
     "updateActionGate": "response != \"1\" and confirmation result == 100",
     "confirmedUpdateState": 8,
     "basenameHelper": "GetDownloadFileName(std::string)",
-    "downloadHelper": "DownloadApk(char const*)"
+    "downloadHelper": "DownloadApk(char const*)",
+    "basenameHelperDetail": {
+      "delimiterByte": "0x2f",
+      "delimiterAscii": "/",
+      "searchPositionArgument": "0xffffffff",
+      "postSearchAdjustment": "returnedPosition + 1",
+      "semanticBoundary": "This establishes slash-based basename slicing; no-slash/trailing-slash/query-suffix edge behavior remains unclaimed."
+    }
   },
   "installationStage": {
     "stateMachineFunction": "UpdateBinaryData()",
