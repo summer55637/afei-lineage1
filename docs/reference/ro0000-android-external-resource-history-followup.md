@@ -64,6 +64,26 @@ Android app
 
 因此這三個公開 source 可繼續作為格式、語義與版本 lineage 的交叉證據，但目前沒有一個能直接提供 target 的實體 resource bytes。
 
+
+## Main first-parent API 交叉檢查（2026-10-03）
+
+由於目前可用的 GitHub workflow 介面無法直接 dispatch 新的 full-depth Actions run，本輪另以 GitHub commit API 沿 `main` 的第一父鏈逐層檢查，從目前 HEAD 往較早歷史共檢查約 96 個 commits。
+
+搜尋條件包含：
+
+- `battleNNN.sabex` / 任何 `.sabex`
+- `adrn.bin` / `real.bin` / `spr.bin` / `spradrn.bin`
+- `Palet_N.sap`
+- `patch_N.zip`
+- `data/update/list.dat`
+- `data/serverdata.dat`
+- 歷史 split-resource `.es` 檔
+- changed/renamed path 的 `previous_filename`
+
+本批第一父鏈歷史中未發現上述 target-resource path 的 commit 變更。
+
+這是比 exact-path REST query 更寬的**歷史交叉證據**，但仍不是 `git rev-list --objects --all` 的完整 DAG 掃描：它不覆蓋其他分支／merge parent、不可達 object、Actions artifact 或不同命名的壓縮容器。因此不能把它宣稱成 full-depth history proof。
+
 ## 證據意義
 
 這可以排除一個具體可能性：
