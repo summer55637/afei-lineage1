@@ -753,3 +753,18 @@ BC participant records 還有兩個 target-native 的 effect 欄位：
 - 因此 `0xd1c/0xd20` 現在可安全視為「BC 指定的兩個特殊 object-effect attachment channel」，而不是普通 battle stat。effect number 的最終圖像/特效資源對應仍要等 production resource bytes 或進一步 runtime verification。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_object_effect_contract.json`。
+
+
+## Battle status effect sprite mapping: set_single_jujutsu()
+
+`set_single_jujutsu(statusId, action)` 已由 target x86 native binary 再往下閉合。
+
+- x86：`0x33ea90`。來源 action hp 在 `+0xb8` 為 0 時直接返回；否則以 target 固定參數 `GetAction(0x47,0x264)` 建立新的 status-effect ACTION。
+- 新 effect ACTION 會繼承來源的部分顯示/定位資料，並以 statusId 寫入其 effect state；其 effect graphic 位於 `+0x180`。
+- target binary 的 status switch 直接可觀察到 1..23 的 effect graphic 常數：`100555,100551,100553,100550,100552,100554,101420,101417,101421,101419,101702,25500,35120,35110,27692,26517,27692,27012,27012,100554,0,0,100551`。
+- status 34 對應到一組特殊 source-graphic transition：target binary 內直接出現 `101814/101815`、`101810/101811`、`101863/101864` 以及 `120113/120114/120115`、`104015/104016/104017` 等相關圖號；部分路徑還會在來源角色尚未進入死亡動作時，把來源 graphic 往前推一級。
+- 這代表 BC 的異常狀態旗標現在可以一路落到「具體 status effect ACTION / sprite number」，而不只是停留在 statusId。
+- status 32/33 的圖號目前仍保留 provenance boundary：公開 source 可對應到 barrier/shock 類效果，但 target switch jump-table 的靜態儲存尚未以足夠信心復原，因此不把這兩個數值宣稱為 target direct mapping。
+- 公開 `alrightlook/StoneAgeMobileApp` 同名函式可作語義對照，但 target 與該 commit 的 build/version identity 不在此處宣稱。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_status_effect_contract.json`。
