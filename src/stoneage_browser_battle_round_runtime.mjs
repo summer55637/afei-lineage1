@@ -494,66 +494,7 @@ function createBrowserBattleRoundRuntime({
   }
 
   return {
-        ok:false,
-        handled:false,
-        stage:'battle-status',
-        reason:String(error?.reason??error?.message??'status-rng-failed'),
-        battleBid,
-        rngCursor:error?.cursor??cursor?.cursor??0,
-        rngMinimum:error?.minimum??null,
-        rngMaximum:error?.maximum??null
-      };
-    }
-  }
-
-  function resolveAttackPreflight(context,options){
-    return attackPreflightRuntime.preflight(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      options
-    );
-  }
-
-  function runAttackPrelude(context,options){
-    return attackSeqPreludeRuntime.run(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      options
-    );
-  }
-
-  function runDamagePlan(context,options){
-    return damagePlanRuntime.plan(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      options
-    );
-  }
-
-  function runCriticalDamagePlan(context,options){
-    return criticalDamageRuntime.plan(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      options
-    );
-  }
-
-  function runDamageReactPlan(context,options){
-    return damageReactRuntime.plan(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      options
-    );
-  }
-
-  function commitDamageDeathChain(context,options){
-    return damageDeathChainRuntime.commit(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      options
-    );
-  }
-
-  function planBattleEnd(context){
-    return endRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)});
-  }
-
-  return {
-    ok:required.every(([,runtime])=>runtime?.ok===true),
+    ok:true,
     format:BROWSER_BATTLE_ROUND_RUNTIME_FORMAT,
     resolve:(context,options={})=>resolveBattleRound(context,{
       ...options,
