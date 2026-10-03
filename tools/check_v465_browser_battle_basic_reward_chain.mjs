@@ -192,7 +192,18 @@ const orderContext={
     ]
   }
 };
-const relifeFirst=relifeRuntime.apply(orderContext,{trigger:'fixed-c-re-life-before-add-profit'});
+const orderProfit=profitCreditRuntime.apply(
+  {format:'stoneage-browser-battle-context-runtime-v1',context:orderContext},
+  {attackerBids:[10],allowPlayerCredit:false,allowCommittedDeath:true,hitIndex:0,source:'ordering-check'}
+);
+assert.equal(orderProfit.ok,true,JSON.stringify(orderProfit));
+assert.equal(orderProfit.deathExtra.newEvents.length,1);
+assert.equal(orderProfit.context.sides[0].entries[0].charm,19);
+
+const relifeFirst=relifeRuntime.apply(
+  {format:'stoneage-browser-battle-context-runtime-v1',context:orderProfit.context},
+  {trigger:'fixed-c-re-life-after-death-extra'}
+);
 assert.equal(relifeFirst.ok,true,JSON.stringify(relifeFirst));
 assert.equal(relifeFirst.applied,true);
 assert.equal(relifeFirst.context.sides[0].entries[0].hp,200);
@@ -205,7 +216,7 @@ const postRelifeProfit=profitCreditRuntime.apply(
 );
 assert.equal(postRelifeProfit.ok,true,JSON.stringify(postRelifeProfit));
 assert.equal(postRelifeProfit.deathExtra.newEvents.length,0);
-assert.equal(postRelifeProfit.context.sides[0].entries[0].charm,20);
+assert.equal(postRelifeProfit.context.sides[0].entries[0].charm,19);
 assert.equal(postRelifeProfit.context.sides[0].entries[0].variableAi,0);
 
 const lethalContext={
