@@ -215,6 +215,8 @@ function createBrowserStateController({
   const battleCriticalDamageRuntime=createBrowserBattleCriticalDamageRuntime();
   const battleDamageReactRuntime=createBrowserBattleDamageReactRuntime();
   const battleDamageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
+  const battleDamageCommitRuntime=createBrowserBattleDamageCommitRuntime();
+  const battleDamageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
   const battleAttackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
@@ -224,8 +226,6 @@ function createBrowserStateController({
     damageReactCommitRuntime:battleDamageReactCommitRuntime,
     damageDeathChainRuntime:battleDamageDeathChainRuntime
   });
-  const battleDamageCommitRuntime=createBrowserBattleDamageCommitRuntime();
-  const battleDamageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
   const battleDeathRuntime=createBrowserBattleDeathRuntime();
   const battleDeathCommitRuntime=createBrowserBattleDeathCommitRuntime();
