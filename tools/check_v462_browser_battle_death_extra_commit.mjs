@@ -79,6 +79,47 @@ assert.equal(settled.applied,true);
 assert.equal(settled.requiredBranches.length,1);
 assert.equal(settled.requiredBranches[0],'deathExtra');
 
+const marefiaState=freshPersistentState({now,playerId:'p1',playerName:'Tester'});
+marefiaState.revision=10;
+marefiaState.player.deadPetCount=0;
+marefiaState.pets.petBox=[{
+  id:'marefia-718',petId:718,tempNo:718,level:10,exp:0,hp:0,maxHp:100,
+  variableAi:600,modAi:100,allocPointPacked:((10*256+20)*256+30)*256+40
+}];
+const marefiaContext={
+  format:'stoneage-browser-battle-context-runtime-v1',
+  context:{
+    mode:'finish',sourceMode:3,settlementStartRevision:10,dpbattle:0,
+    sourceDeathExtraEvents:[{
+      kind:'pet-normal-death',actorBid:5,petId:'marefia-718',ownerBid:0,ownerPlayerId:'p1',
+      variableAiBefore:600,variableAiAfter:350,variableAiDelta:-250,
+      deadPetCountBefore:0,deadPetCountAfter:1,deadPetCountDelta:1,
+      battleExited:false,persistent:true,
+      marefia:{
+        petId:718,allocPointKnown:true,
+        allocPointPackedBefore:((10*256+20)*256+30)*256+40,
+        allocPointPackedAfter:((9*256+18)*256+27)*256+36,
+        modAiBefore:100,modAiAfter:95,modAiDelta:-5,
+        rollsConsumed:4,rolls:[1,2,3,4]
+      }
+    }],
+    sides:[
+      {side:0,type:0,entries:[
+        {bid:0,sourceType:'player',characterId:'p1',level:10,hp:100,isDie:false,deadPetCount:1,getitem:[-1,-1,-1]}
+      ]},
+      {side:1,type:1,entries:Array(10).fill(null)}
+    ]
+  }
+};
+const marefiaCommit=runtime.commit(marefiaState,marefiaContext,{
+  transactionId:'death-extra-marefia-1',expectedRevision:10,now
+});
+assert.equal(marefiaCommit.ok,true,JSON.stringify(marefiaCommit));
+assert.equal(marefiaCommit.state.pets.petBox[0].variableAi,350);
+assert.equal(marefiaCommit.state.pets.petBox[0].allocPointPacked,((9*256+18)*256+27)*256+36);
+assert.equal(marefiaCommit.state.pets.petBox[0].modAi,95);
+assert.equal(marefiaCommit.state.player.deadPetCount,1);
+
 console.log(JSON.stringify({
   pass:true,
   format:'stoneage-v462-browser-battle-death-extra-commit-v1',
