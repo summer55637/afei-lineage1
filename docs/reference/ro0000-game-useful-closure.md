@@ -229,3 +229,18 @@ Machine-readable evidence：
 Machine-readable evidence：
 
 `data/generated/stoneage_ro0000_title_endpoint_audit.json`
+
+
+## 2026-10-03 攻擊性魔法 binary endpoint 閉合
+
+RO0000 active `setup.cf` 在 `__ATTACK_MAGIC` 下指定 `data/attmagic.bin`；本輪完成該 binary 的 endpoint/source closure。
+
+- data / hydata `attmagic.bin` SHA 完全一致：`253ec2620c4a75fd13c16432edb5db350460f829`。
+- 檔案大小 7,128 bytes；Fixed-C `AttMagic` struct 為 132 bytes，因此可解析為 54 個 physical records；loader 讀取後以兩筆為一組，runtime 使用 27 組 attack-magic records。
+- 已確認資料含 32 個 sprite IDs（101120–101151 連續範圍），以及 attack type 0 / 1 / 4 的正式資料。
+- Fixed-C `BATTLE_AttMagicEffect()` 會依攻擊方選擇 pair 的奇／偶 record；`BATTLE_MultiAttMagic()` 會直接使用 `siField[3][5]` 決定單體、列／範圍與全體攻擊的實際受擊清單。
+- 因此這不是單純客戶端演出資料，而是直接參與戰鬥 target selection / battle presentation 的 runtime data，已列入單機戰鬥資料閉合範圍。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_attmagic_endpoint_audit.json`
