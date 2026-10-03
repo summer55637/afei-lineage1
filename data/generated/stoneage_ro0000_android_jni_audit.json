@@ -1183,6 +1183,32 @@
                 ],
                 "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
+            ],
+            "jniRegistrationHelperEvidence": [
+              {
+                "function": "LoadMultiThreadClass",
+                "value": "0xc87a0",
+                "size": 196,
+                "status": "disassembly-ok",
+                "callSummary": {
+                  "instructionLineCount": 49,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "e48c50685979e836e9a388c5af9a12587a95247cfad412f14e905fb5a7f0b0c9"
+                }
+              },
+              {
+                "function": "apollo::JniMethodMgr::Init(_JNIEnv*, char**, int)",
+                "value": "0xf057c",
+                "size": 524,
+                "status": "no-instruction-output",
+                "callSummary": {
+                  "instructionLineCount": 0,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                }
+              }
             ]
           },
           {
@@ -2166,7 +2192,8 @@
                 ],
                 "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
-            ]
+            ],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libSDL2_image.so",
@@ -2174,7 +2201,8 @@
             "byteSize": 551888,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libSDL2_mixer.so",
@@ -2182,7 +2210,8 @@
             "byteSize": 625008,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libSDL2_ttf.so",
@@ -2190,7 +2219,8 @@
             "byteSize": 583128,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libStoneage.so",
@@ -2208,7 +2238,8 @@
               "Java_com_newssa_stoneage_ko_JNILibrary_refreshBatteryInfo"
             ],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libhidapi.so",
@@ -2225,7 +2256,8 @@
               "Java_org_libsdl_app_HIDDeviceManager_HIDDeviceReleaseCallback"
             ],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libmpg123.so",
@@ -2233,7 +2265,8 @@
             "byteSize": 228444,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           }
         ],
         "jniOnLoadLibraries": [
@@ -5406,6 +5439,32 @@
                 ],
                 "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
+            ],
+            "jniRegistrationHelperEvidence": [
+              {
+                "function": "LoadMultiThreadClass",
+                "value": "0xc7fa1",
+                "size": 162,
+                "status": "disassembly-ok",
+                "callSummary": {
+                  "instructionLineCount": 50,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "84bba3c94cb5477185eb0e5a34885d57f5e128fbdb597c03bb7bfb6cf0af710e"
+                }
+              },
+              {
+                "function": "apollo::JniMethodMgr::Init(_JNIEnv*, char**, int)",
+                "value": "0xf44b0",
+                "size": 489,
+                "status": "no-instruction-output",
+                "callSummary": {
+                  "instructionLineCount": 0,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                }
+              }
             ]
           },
           {
@@ -6389,7 +6448,8 @@
                 ],
                 "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
-            ]
+            ],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/x86/libSDL2_image.so",
@@ -6397,7 +6457,8 @@
             "byteSize": 809928,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/x86/libSDL2_mixer.so",
@@ -6405,7 +6466,8 @@
             "byteSize": 956800,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/x86/libSDL2_ttf.so",
@@ -6413,7 +6475,8 @@
             "byteSize": 996760,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/x86/libStoneage.so",
@@ -6431,7 +6494,8 @@
               "Java_com_newssa_stoneage_ko_JNILibrary_refreshBatteryInfo"
             ],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/x86/libhidapi.so",
@@ -6448,7 +6512,8 @@
               "Java_org_libsdl_app_HIDDeviceManager_HIDDeviceReleaseCallback"
             ],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           },
           {
             "path": "lib/x86/libmpg123.so",
@@ -6456,7 +6521,8 @@
             "byteSize": 310300,
             "jniExports": [],
             "jniOnLoadExported": false,
-            "jniOnLoadEvidence": []
+            "jniOnLoadEvidence": [],
+            "jniRegistrationHelperEvidence": []
           }
         ],
         "jniOnLoadLibraries": [
