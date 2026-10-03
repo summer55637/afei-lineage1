@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7eb271c — [audit] remove shadowed native input coverage test
-- 更新時間：2026-10-03T07:45:08+08:00
+- 最新 commit：89d6694 — [audit] add ARMv7 and x86 call-target parity gate
+- 更新時間：2026-10-03T08:10:32+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
