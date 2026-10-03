@@ -1,0 +1,33 @@
+name: check-v479-browser-idle-supply-window-healer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_idle_supply_window_healer_runtime.mjs'
+      - 'src/stoneage_browser_window_healer_runtime.mjs'
+      - 'src/stoneage_browser_idle_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v479_browser_idle_supply_window_healer.mjs'
+      - 'data/generated/stoneage_world_npc_index.json'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
+      - '.github/workflows/check-v479-browser-idle-supply-window-healer.yml'
+  workflow_dispatch:
+
+jobs:
+  idle-supply-window-healer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run V4.79 idle WindowHealer supply completion regression
+        run: node tools/check_v479_browser_idle_supply_window_healer.mjs
+      - name: Syntax check
+        run: |
+          node --check src/stoneage_browser_idle_supply_window_healer_runtime.mjs
+          node --check src/stoneage_browser_window_healer_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v479_browser_idle_supply_window_healer.mjs
