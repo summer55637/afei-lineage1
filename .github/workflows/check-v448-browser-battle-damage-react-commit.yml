@@ -1,0 +1,30 @@
+name: Check V4.48 special damage react commit
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_damage_react_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_react_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v448_browser_battle_damage_react_commit.mjs'
+      - '.github/workflows/check-v448-browser-battle-damage-react-commit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.48 special damage react regression
+        run: node tools/check_v448_browser_battle_damage_react_commit.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_damage_react_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v448_browser_battle_damage_react_commit.mjs
