@@ -280,7 +280,7 @@ async function resolveCounterChain(context,{
     scope:{
       ordinaryBasicCounterOnly:true,
       maxChain:MAX_COUNTER_CHAIN,
-      specialDamageReactionsDeferred:true,
+      specialDamageReactionsDeferred:false,
       ridePetDeferred:true,
       persistentSettlementDeferred:true
     },
@@ -306,6 +306,7 @@ function createBrowserBattleCounterChainRuntime({
       damagePlanRuntime,
       criticalDamageRuntime,
       damageReactRuntime,
+      damageReactCommitRuntime,
       damageDeathChainRuntime
     })
   };
