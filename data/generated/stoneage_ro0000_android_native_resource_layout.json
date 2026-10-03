@@ -682,5 +682,205 @@
   "separation": {
     "sabex": "battle-map tile IDs are passed directly to StockDispBuffer and therefore use the image/bmp resolver path",
     "spriteAnimation": "spr.bin/spradrn.bin are loaded by a separate SpriteData path and are not the primary SABEX tile resolver"
+  },
+  "autoMapColor": {
+    "source": {
+      "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+      "libraries": {
+        "armeabi-v7a": {
+          "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+          "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+        },
+        "x86": {
+          "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+          "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+        }
+      }
+    },
+    "functions": {
+      "initAutoMapColor": {
+        "armeabiV7a": "0x239fbd",
+        "x86": "0x3623b0"
+      },
+      "readAutoMapColor": {
+        "armeabiV7a": "0x239fe9",
+        "x86": "0x362410"
+      },
+      "makeAutoMapColor": {
+        "armeabiV7a": "0x23a0d1",
+        "x86": "0x3625d0"
+      },
+      "writeAutoMapColor": {
+        "armeabiV7a": "0x23a349",
+        "x86": "0x362870"
+      },
+      "getAutoMapColor": {
+        "armeabiV7a": "0x29b809",
+        "x86": "0x41ff10"
+      },
+      "getNearestColorIndex": {
+        "armeabiV7a": "0x29b959",
+        "x86": "0x420130"
+      }
+    },
+    "table": {
+      "symbol": "autoMapColorTbl",
+      "entryCount": 100000,
+      "entryWidthBytes": 1,
+      "byteSize": 100000,
+      "key": "ADRNBIN.attr.bmpnumber at record offset 0x4c",
+      "colorSource": "ADRNBIN.bitmapno at record offset 0x00 is passed to getAutoMapColor for generated image colors"
+    },
+    "cache": {
+      "headerBytes": 2,
+      "headerValue": 0,
+      "payloadBytes": 100000,
+      "writeByteCount": 100002,
+      "readGate": [
+        "open cache file for reading",
+        "read one 2-byte header",
+        "require header value 0",
+        "read one complete 100000-byte item into autoMapColorTbl"
+      ],
+      "acceptsTrailingBytes": true,
+      "writeGate": "The function reports success after opening, attempting to write the 2-byte header and 100000-byte table, and closing; it does not inspect fwrite return counts.",
+      "invalidOrMissingRead": "initAutoMapColor calls makeAutoMapColor and then writeAutoMapColor",
+      "successfulRead": "initAutoMapColor skips regeneration and writing"
+    },
+    "generation": {
+      "adrnbinRecordStrideBytes": 80,
+      "adrnbinRecordCount": 600000,
+      "bmpnumberValidTableDomain": "0..99999",
+      "skipWhenBmpnumberAtLeast": 100000,
+      "generatedColorRanges": [
+        {
+          "start": 100,
+          "endInclusive": 19999,
+          "method": "getAutoMapColor(bitmapno)"
+        },
+        {
+          "start": 34101,
+          "endInclusive": 34999,
+          "method": "getAutoMapColor(bitmapno)"
+        },
+        {
+          "start": 35346,
+          "endInclusive": 36928,
+          "method": "getAutoMapColor(bitmapno)"
+        }
+      ],
+      "presetRange": {
+        "start": 60,
+        "endInclusive": 79,
+        "method": "20-entry inline table; stores low byte of each 32-bit entry"
+      },
+      "presetLowByteMapping": [
+        {
+          "bmpnumber": 60,
+          "colorIndex": 104
+        },
+        {
+          "bmpnumber": 61,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 62,
+          "colorIndex": 40
+        },
+        {
+          "bmpnumber": 63,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 64,
+          "colorIndex": 176
+        },
+        {
+          "bmpnumber": 65,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 66,
+          "colorIndex": 8
+        },
+        {
+          "bmpnumber": 67,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 68,
+          "colorIndex": 136
+        },
+        {
+          "bmpnumber": 69,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 70,
+          "colorIndex": 72
+        },
+        {
+          "bmpnumber": 71,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 72,
+          "colorIndex": 240
+        },
+        {
+          "bmpnumber": 73,
+          "colorIndex": 80
+        },
+        {
+          "bmpnumber": 74,
+          "colorIndex": 4
+        },
+        {
+          "bmpnumber": 75,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 76,
+          "colorIndex": 84
+        },
+        {
+          "bmpnumber": 77,
+          "colorIndex": 0
+        },
+        {
+          "bmpnumber": 78,
+          "colorIndex": 20
+        },
+        {
+          "bmpnumber": 79,
+          "colorIndex": 85
+        }
+      ],
+      "unmatchedBmpnumberBelow100000": "write color index 0",
+      "zeroBmpnumber": "write color index 0"
+    },
+    "imageColor": {
+      "input": "bitmapno passed to realGetImage",
+      "failureResult": 0,
+      "pixelIteration": "row-major over width*height",
+      "transparentPolicy": "pixel index 0 is excluded from channel sums and sample count",
+      "paletteLookup": "Each nonzero pixel index selects a 4-byte SDL_Color-like entry; the first three component bytes are accumulated.",
+      "averages": "integer division of each of the three component sums by the count of nonzero pixels, with byte truncation",
+      "pack": "component byte 0 in bits 0..7, component byte 1 in bits 8..15, component byte 2 in bits 16..23",
+      "emptyVisiblePixelSetResult": 0,
+      "nearestPalette": {
+        "helper": "getNearestColorIndex",
+        "paletteEntries": 256,
+        "candidates": "entry 0 as initial candidate, then entries 16..239",
+        "distance": "sum of squared differences for the first three color component bytes; alpha is not used",
+        "selection": "minimum squared distance; earlier current choice is kept on equal distance"
+      }
+    },
+    "boundary": [
+      "The cache's embedded pathname is intentionally not copied into this public contract.",
+      "Cache acceptance checks its two-byte zero header and a complete 100000-byte table read; no build fingerprint, CRC, or end-of-file check is present in the inspected function.",
+      "The color-generation contract is static; actual target pixels and the resulting real-image color table cannot be regenerated without the external image payloads.",
+      "Named color component bytes are recorded by packed byte order rather than assuming visual channel labels beyond the SDL_Color-like layout."
+    ]
   }
 }
