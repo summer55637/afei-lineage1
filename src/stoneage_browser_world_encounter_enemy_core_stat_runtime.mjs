@@ -113,6 +113,7 @@ function materializeEnemyCoreStats(template,{levelRoll=null,baseStatRolls=[],all
       element:{earth:toInt(base.earth),water:toInt(base.water),fire:toInt(base.fire),wind:toInt(base.wind)},
       resist:{poison:toInt(base.poison),paralysis:toInt(base.paralysis),sleep:toInt(base.sleep),stone:toInt(base.stone),drunk:toInt(base.drunk),confusion:toInt(base.confusion)},
       rare:toInt(base.rare),
+      get:toInt(base.get),
       critical:toInt(base.critical),
       counter:toInt(base.counter),
       slot:toInt(base.slot),
