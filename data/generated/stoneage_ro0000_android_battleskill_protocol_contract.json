@@ -1,0 +1,90 @@
+{
+  "format": "ro0000-android-battleskill-protocol-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "armeabiV7aLibSha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "protocol": {
+    "targetObserved": {
+      "sendFunction": {
+        "x86": {"address": "0x409500", "sizeBytes": 199},
+        "armeabiV7a": {"address": "0x28ee19", "sizeBytes": 128}
+      },
+      "receiveFunction": {
+        "x86": {"address": "0x284f50", "sizeBytes": 98},
+        "armeabiV7a": {"address": "0x1c3db9", "sizeBytes": 60}
+      },
+      "sendMessageType": 110,
+      "sendMessageTypeHex": "0x6e",
+      "sendArguments": ["fd", "skillNum"],
+      "encoding": [
+        "util_mkint(buffer, skillNum)",
+        "checksum += encoded-length/result of util_mkint",
+        "util_mkint(buffer, checksum)",
+        "util_SendMesg(fd, 0x6e, buffer)"
+      ],
+      "receiveBody": [
+        "SDL_atoi(data)",
+        "load active player ACTION pointer from native player state +0x5504",
+        "setCharMind(activePlayerAction, parsedInt)"
+      ],
+      "receiveParsing": "The target body passes the complete received char* directly to SDL_atoi; no delimiter parsing is visible.",
+      "dispatcher": "The target packet dispatcher checksum-validates the framed payload before calling lssproto_BATTLESKILL_recv."
+    }
+  },
+  "scriptPrimitive": {
+    "function": "ScriptFunc_petSkillState",
+    "x86": {
+      "address": "0x39dfe0",
+      "sizeBytes": 34
+    },
+    "armeabiV7a": {
+      "address": "0x256fc9",
+      "sizeBytes": 20
+    },
+    "behavior": {
+      "returnValue": 1,
+      "visibleSideEffects": "none",
+      "arguments": "argument registers/pointers are copied to stack temporaries but not dereferenced for a visible gameplay mutation"
+    },
+    "interpretation": "Target APK evidence only establishes a successful boolean-style script return; exact script-layer meaning is unresolved."
+  },
+  "crossSourceServerComparison": {
+    "source": "BismarckDD/Stoneage",
+    "status": "cross-source-semantic-reference-only",
+    "protocolFraming": {
+      "LSSPROTO_BATTLESKILL_RECV": 111,
+      "payload": "integer iNum with checksum"
+    },
+    "serverHandler": {
+      "name": "GmsvServer_BATTLESKILL_recv",
+      "observedFlow": [
+        "resolve character from client fd",
+        "reject invalid character",
+        "reject while in battle when BATTLE_CHARMODE_NONE is not active",
+        "derive character profession class",
+        "map received skill number through PROFESSION_SKILL_GetArray",
+        "read mapped profession-skill profession class",
+        "require profession class match unless _PROSKILL_OPTIMUM bypass is compiled",
+        "invoke PROFESSION_SKILL_Use(charaindex, iNum, 0, NULL)"
+      ]
+    },
+    "boundary": "This server behavior is not asserted as proven identity/version for the target APK; it is a public source comparison that explains the protocol's apparent non-battle profession-skill role."
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "represent BATTLESKILL as a non-battle integer-skill protocol",
+      "keep it separate from battle W/P command packets",
+      "model the client receive side as setting the active character mind/action field from the parsed integer",
+      "treat ScriptFunc_petSkillState as success-only script bridge until further callers are proven"
+    ],
+    "notProven": [
+      "exact target Lua/script caller semantics for ScriptFunc_petSkillState",
+      "server-side profession-skill effect formulas",
+      "skill cooldown/damage/MP/economy effects"
+    ]
+  }
+}
