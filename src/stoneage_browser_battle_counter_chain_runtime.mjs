@@ -225,6 +225,13 @@ async function resolveCounterChain(context,{
       );
       if(!commit.ok)return {...commit,stage:'battle-counter-chain-special-damage-react',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
+      const relife=runtimes.relifeRuntime.apply(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {trigger:'outer-add-profit-counter-special',now}
+      );
+      if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+      next.context=clone(relife.context);
+      record.relife=clone(relife);
       const profitCredit=runtimes.profitCreditRuntime.apply(
         {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
         {
@@ -276,13 +283,6 @@ async function resolveCounterChain(context,{
         if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
         next.context=clone(enemyExpCredit.context);
       }
-      const relife=runtimes.relifeRuntime.apply(
-        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-        {trigger:'outer-add-profit-counter-special',now}
-      );
-      if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
-      next.context=clone(relife.context);
-      record.relife=clone(relife);
       record.enemyExpCredit=enemyExpCredit;
       record.damageReactPlan=clone(reactPlan);
       record.commit=clone(commit);
@@ -309,6 +309,13 @@ async function resolveCounterChain(context,{
     if(!damageCommit.ok)return {...damageCommit,stage:'battle-counter-chain-damage-death',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
 
     next.context=clone(damageCommit.battleContext?.context??damageCommit.battleContext??next.context);
+    const relife=runtimes.relifeRuntime.apply(
+      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+      {trigger:'outer-add-profit-counter',now}
+    );
+    if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+    next.context=clone(relife.context);
+    record.relife=clone(relife);
     const profitCredit=runtimes.profitCreditRuntime.apply(
       {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
       {
@@ -359,13 +366,6 @@ async function resolveCounterChain(context,{
       if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(enemyExpCredit.context);
     }
-    const relife=runtimes.relifeRuntime.apply(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-      {trigger:'outer-add-profit-counter',now}
-    );
-    if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
-    next.context=clone(relife.context);
-    record.relife=clone(relife);
     record.enemyExpCredit=enemyExpCredit;
     record.damagePlan=clone(damagePlan);
     record.criticalPlan=clone(criticalPlan);
