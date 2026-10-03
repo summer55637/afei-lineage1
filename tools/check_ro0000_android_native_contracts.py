@@ -143,6 +143,38 @@ def validate_resource_function_anchors(native, layout):
                         f"{section_name}: {abi} address mismatch for {function}: "
                         f"expected {expected_address}, found {actual}"
                     )
+    for function, required_targets in section.get("requiredCallCounts", {}).items():
+            if function not in functions:
+                errors.append(f"{section_name}: call evidence references unknown function {function}")
+                continue
+            for abi_key, abi in ABI_KEYS.items():
+                lib = libs.get(abi)
+                if not lib:
+                    continue
+                matches = [
+                    symbol for symbol in lib.get("focusedSymbols", [])
+                    if symbol.get("type") == "FUNC" and function_matches(symbol, function)
+                ]
+                if not matches:
+                    continue
+                symbol = matches[0]
+                disassembly = symbol.get("disassembly") or {}
+                if disassembly.get("status") != "ok" or disassembly.get("excerptTruncated", False):
+                    errors.append(f"{section_name}: missing complete disassembly for call evidence {abi}/{function}")
+                    continue
+                call_lines = [
+                    line for line in disassembly.get("excerpt", [])
+                    if re.search(r"\b(?:blx?(?:\.[a-z]+)?|call\w*)\b", line, re.I)
+                ]
+                for target, minimum in required_targets.items():
+                    actual = sum(1 for line in call_lines if target.lower() in line.lower())
+                    if not isinstance(minimum, int) or minimum < 1:
+                        errors.append(f"{section_name}: invalid required call count for {function}/{target}")
+                    elif actual < minimum:
+                        errors.append(
+                            f"{section_name}: {abi} call evidence count too low for "
+                            f"{function}/{target}: expected at least {minimum}, found {actual}"
+                        )
     return errors
 
 
