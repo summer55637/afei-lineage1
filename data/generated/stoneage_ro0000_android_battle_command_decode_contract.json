@@ -300,7 +300,15 @@
   "damageNumberVisual": {
     "creation": {
       "function": "set_damage_num(action*, int, int)",
-      "behavior": "allocates a display ACTION via GetAction(0x4a,0x264); when allocation succeeds, installs the damage-number callback, sets display priority and source-relative position, and copies the source damage/pet-damage/MP/recovery flags into the new action"
+      "behavior": "allocates a display ACTION via GetAction(0x4a,0x264); when allocation succeeds, installs the damage-number callback, sets display priority and source-relative position, and copies the source damage/pet-damage/MP/recovery flags into the new action",
+      "specialVisualBranch": {
+        "condition": "second argument/type equals 3 and source ACTION graphic at +0x180 equals one of 0x18db7 (101815), 0x1d532 (120114), or 0x19650 (104016)",
+        "effectAction": "GetAction(0x47,0x264); if allocation succeeds, stores the source ACTION in the new effect work field at +0x04 and links the effect ACTION through source work+0x110",
+        "effectGraphic": "0x18de2 (102882)",
+        "position": "source ACTION x+10, y+10",
+        "priority": "source ACTION display priority (+0x15) plus 1",
+        "boundary": "The branch and numeric values are target-observed; the visible effect's gameplay meaning is not inferred from graphic IDs alone."
+      }
     },
     "lifetime": {
       "function": "showDamage_num(action*)",
