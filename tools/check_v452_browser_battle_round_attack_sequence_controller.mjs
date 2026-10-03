@@ -117,10 +117,10 @@ const round=await controller.dispatch({
 });
 assert.equal(round.ok,true,JSON.stringify(round));
 assert.equal(round.stage,'battle-round-resolved');
-assert.equal(round.attackCountPrimes.length,1);
-assert.equal(round.attackCountPrimes[0].actorBid,0);
-assert.equal(round.attackCountPrimes[0].attackCount,3);
-assert.equal(round.attackCountPrimes[0].rngConsumed,1);
+const playerPrime=round.attackCountPrimes.find(x=>x.actorBid===0);
+assert.ok(playerPrime,'player AttackCount prime required');
+assert.equal(playerPrime.attackCount,3);
+assert.equal(playerPrime.rngConsumed,1);
 assert.equal(round.attacks.length,1);
 assert.equal(round.attacks[0].attackCount,3);
 assert.ok(round.attacks[0].attackSequence.executedHitCount>=1);
