@@ -35,12 +35,16 @@ assert.equal(normalPlayer.context.sides[0].entries[0].charm,19);
 assert.equal(normalPlayer.context.sides[0].entries[5].variableAi,-50);
 assert.equal(normalPlayer.newEvents[0].kind,'player-normal-death');
 
-const playerUltimate=runtime.apply(baseContext({playerDead:true,playerUltimate:1}),{defaultPetBidByPlayerBid:{0:5}});
+const playerUltimateContext=baseContext({playerDead:true,playerUltimate:1});
+playerUltimateContext.context.sides[0].entries[0].charm=20;
+playerUltimateContext.context.sides[0].entries[5].sourceAddProfitDeathPending=false;
+const playerUltimate=runtime.apply(playerUltimateContext,{defaultPetBidByPlayerBid:{0:5}});
 assert.equal(playerUltimate.ok,true,JSON.stringify(playerUltimate));
 assert.equal(playerUltimate.context.sides[0].entries[0].charm,18);
 assert.equal(playerUltimate.context.sides[0].entries[5],null);
 assert.equal(playerUltimate.newEvents[0].defaultPetEvent.variableAiDelta,-500);
 assert.equal(playerUltimate.newEvents[0].defaultPetRelationPreserved,true);
+assert.equal(playerUltimate.context.sourceBattleExitedBids.includes(5),true);
 
 const petNormal=runtime.apply(baseContext({petDead:true,petLevel:10,petId:500,variableAi:600}),{});
 assert.equal(petNormal.ok,true,JSON.stringify(petNormal));
