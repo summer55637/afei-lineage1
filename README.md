@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：635be67 — docs: record Android battle object effect attachment chain
-- 更新時間：2026-10-03T13:11:00+08:00
+- 最新 commit：5f2e14c — docs: record Android status effect sprite mapping
+- 更新時間：2026-10-03T13:15:04+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
