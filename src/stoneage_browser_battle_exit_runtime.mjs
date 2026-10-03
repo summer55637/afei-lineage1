@@ -6,7 +6,7 @@ const intOr=(v,fallback=null)=>{if(v==null||String(v).trim()==='')return fallbac
 import { resolveSettlementReceiptForBattle } from './stoneage_browser_battle_settlement_runtime.mjs';
 import { resolveBattlePlayerExitForSettlement } from './stoneage_browser_battle_player_exit_commit_runtime.mjs';
 
-function planBattleExit(context,state,{settlementComplete=false,petMailModeById=null,settlementReceiptId=null}={}){
+function planBattleExit(context,state,{settlementComplete=false,petMailModeById=null,settlementReceiptId=null,petExitStateTransactionId=null}={}){
   if(!isObject(context)||!isObject(context.context))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'battle-context-required'};
   const mode=String(context.context.mode??'').trim().toLowerCase();
   const sourceMode=intOr(context.context.sourceMode,null);
@@ -23,7 +23,17 @@ function planBattleExit(context,state,{settlementComplete=false,petMailModeById=
     playerId:player?.characterId??receipt.receipt.playerId??null
   });
   if(!playerExit.ok)return {ok:false,handled:false,stage:'battle-exit-plan',reason:playerExit.reason,receiptId:receipt.receiptId,settlementReceiptRevision:receipt.receiptRevision};
-
+  const battlePets=Array.isArray(context.context?.sides?.find(x=>intOr(x?.side,null)===0)?.entries)
+    ? context.context.sides.find(x=>intOr(x?.side,null)===0).entries.filter(entry=>isObject(entry)&&String(entry.sourceType??'').trim().toLowerCase()==='pet')
+    : [];
+  const petSyncTx=String(petExitStateTransactionId??'').trim();
+  if(battlePets.length>0){
+    if(!petSyncTx)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'pet-exit-state-transaction-required'};
+    const petSyncRecord=state.runtimeMeta?.battlePetExitStateTransactions?.[petSyncTx];
+    if(!isObject(petSyncRecord))return {ok:false,handled:false,stage:'battle-exit-plan',reason:'pet-exit-state-transaction-not-found',petExitStateTransactionId:petSyncTx};
+    if(String(petSyncRecord.settlementReceiptId??'').trim()!==receipt.receiptId)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'pet-exit-settlement-mismatch',petExitStateTransactionId:petSyncTx};
+    if(String(petSyncRecord.playerExitTransactionId??'').trim()!==playerExit.transactionId)return {ok:false,handled:false,stage:'battle-exit-plan',reason:'pet-exit-player-order-mismatch',petExitStateTransactionId:petSyncTx};
+  }
   const pets=[];
   for(const pet of state.pets.petBox){
     if(!isObject(pet))continue;
@@ -60,6 +70,8 @@ function planBattleExit(context,state,{settlementComplete=false,petMailModeById=
     settlementReceiptRevision:receipt.receiptRevision,
     playerExitTransactionId:playerExit.transactionId,
     playerExitRevision:playerExit.record.revisionAfter,
+    petExitStateTransactionId:petSyncTx||null,
+    petExitStateRequired:battlePets.length>0,
     pets,
     petMailModeSource:'explicit petMailModeById or persisted pet.mailMode; missing dead-Pet mail mode fails closed',
     petCountScanned:Array.isArray(state.pets.petBox)?state.pets.petBox.length:0,
