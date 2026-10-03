@@ -10,6 +10,8 @@ on:
       - 'tools/check_ro0000_android_apk_audit.py'
       - 'tools/audit_ro0000_android_native.py'
       - 'tools/audit_ro0000_android_battlemap_crosscheck.py'
+      - 'tools/audit_ro0000_android_adrn_consumers.py'
+      - 'tools/check_ro0000_android_adrn_consumers.py'
       - 'data/generated/stoneage_ro0000_android_battlemap_table_contract.json'
       - 'tools/check_ro0000_android_battlemap_crosscheck.py'
       - 'tools/audit_ro0000_battlemap_selector.mjs'
