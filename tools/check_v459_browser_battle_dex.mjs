@@ -3,9 +3,17 @@ import assert from 'node:assert/strict';
 import { createBrowserBattleDexRuntime, resolveBattleDex } from '../src/stoneage_browser_battle_dex_runtime.mjs';
 import { createBrowserBattleRidePetAdjustRuntime } from '../src/stoneage_browser_battle_ride_pet_adjust_runtime.mjs';
 import { createBrowserBattleRoundRuntime } from '../src/stoneage_browser_battle_round_runtime.mjs';
+import { createBrowserBattleCarriedLootRuntime } from '../src/stoneage_browser_battle_carried_loot_runtime.mjs';
+import { createBrowserBattleEnemyExpRuntime } from '../src/stoneage_browser_battle_enemy_exp_runtime.mjs';
+import { createBrowserBattleRelifeRuntime } from '../src/stoneage_browser_battle_relife_runtime.mjs';
+import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
 
 const dex=createBrowserBattleDexRuntime();
 const ride=createBrowserBattleRidePetAdjustRuntime();
+const profitCreditRuntime=createBrowserBattleProfitCreditRuntime();
+const carriedLootRuntime=createBrowserBattleCarriedLootRuntime();
+const enemyExpRuntime=createBrowserBattleEnemyExpRuntime();
+const relifeRuntime=createBrowserBattleRelifeRuntime();
 assert.equal(dex.ok,true);
 assert.equal(ride.ok,true);
 
@@ -70,6 +78,10 @@ const round=createBrowserBattleRoundRuntime({
   damageReactRuntime:{ok:true},
   damageReactCommitRuntime:{ok:true},
   damageDeathChainRuntime:{ok:true},
+  profitCreditRuntime,
+  carriedLootRuntime,
+  enemyExpRuntime,
+  relifeRuntime,
   counterChainRuntime:{ok:true},
   statusRuntime:{ok:true,process:()=>({ok:true,battleContext:context.context,skip:false})},
   endRuntime:{ok:true,plan:()=>({ok:true,finished:false,winnerSide:null,finishReason:null})},
