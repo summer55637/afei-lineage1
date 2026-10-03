@@ -87,7 +87,8 @@ jobs:
             --native-audit artifacts/ro0000_android_native_elf_audit.json \
             --loop-contract data/generated/stoneage_ro0000_android_client_loop_contract.json \
             --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json \
-            --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json \\
+            --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json \
+            --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
             --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
       - name: Publish focused APK evidence with retry
         shell: bash
@@ -182,7 +183,7 @@ jobs:
               "DrawBattleMap(", "initMap(", "createMap(", "setMap(", "writeMap(",
               "readMap(", "readHitMap(", "checkHitMap(", "checkEmptyMap(",
               "checkEmptyMapData(", "_checkEmptyMap(", "lssproto_S_recv(",
-              "lssproto_M_recv(", "lssproto_EN_recv(", "GetBinaryResource(",
+              "lssproto_M_recv(", "lssproto_EN_recv(", "BattleProc(", "master(", "get_num(", "get_command_asc(", "GetBinaryResource(",
               "CIniManage::ReadPatchInfo(", "UpdateAppNewVersion(", "realGetImage(",
               "decoder(", "SDL_main", "EventProc(", "GameMain(", "DispCallProc(",
               "networkLoop(", "Process(", "MouseProc(", "HitMouseCursor(",
