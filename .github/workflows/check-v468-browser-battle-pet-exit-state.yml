@@ -1,0 +1,16 @@
+name: Check V4.68 browser battle pet final-exit state sync
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_pet_exit_runtime.mjs'
+      - 'src/stoneage_browser_battle_pet_exit_commit_runtime.mjs'
+      - 'tools/check_v468_browser_battle_pet_exit_state.mjs'
+      - 'docs/reference/v468-browser-battle-pet-exit-state.md'
+      - '.github/workflows/check-v468-browser-battle-pet-exit-state.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.68 Pet final-exit regression
+        run: node tools/check_v468_browser_battle_pet_exit_state.mjs
