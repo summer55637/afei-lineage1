@@ -28,6 +28,7 @@ import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_G
 import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT, BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT } from './stoneage_browser_world_encounter_idle_bridge.mjs';
 import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT } from './stoneage_browser_battle_context_runtime.mjs';
 import { ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } from './stoneage_browser_battle_turn_runtime.mjs';
+import { createBrowserBattleStatusRuntime, ACTION_BATTLE_STATUS_TURN, BROWSER_BATTLE_STATUS_RUNTIME_FORMAT } from './stoneage_browser_battle_status_runtime.mjs';
 import { createBrowserBattleInitializeRuntime, ACTION_BATTLE_INITIALIZE, BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT } from './stoneage_browser_battle_initialize_runtime.mjs';
 import { createBrowserBattleCommandWaitRuntime, ACTION_BATTLE_COMMAND_WAIT_STATUS, BROWSER_BATTLE_COMMAND_WAIT_RUNTIME_FORMAT } from './stoneage_browser_battle_command_wait_runtime.mjs';
 import { createBrowserBattleEnemyAiRuntime, ACTION_BATTLE_ENEMY_AI_APPLY, BROWSER_BATTLE_ENEMY_AI_RUNTIME_FORMAT } from './stoneage_browser_battle_enemy_ai_runtime.mjs';
@@ -234,6 +235,7 @@ function createBrowserStateController({
   const battleSettlementRuntime=createBrowserBattleSettlementRuntime();
   const battleContextClearRuntime=createBrowserBattleContextClearRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
+  const battleStatusRuntime=createBrowserBattleStatusRuntime();
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
   const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
   const battleEnemyStealRuntime=createBrowserBattleEnemyStealRuntime();
@@ -548,6 +550,31 @@ function createBrowserStateController({
         if(!result.ok)return {...result,state:clone(currentState)};
         battleContext=clone(result.context);
         return {...result,stage:'battle-initialized',format:BROWSER_BATTLE_INITIALIZE_RUNTIME_FORMAT,battleContext:clone(battleContext),state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_STATUS_TURN){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-status-turn',reason:'battle-context-required',state:clone(currentState)};
+        if(battleStatusRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-status-turn',reason:'browser-battle-status-runtime-invalid',state:clone(currentState)};
+        const result=battleStatusRuntime.process(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            battleBid:action.battleBid==null?null:action.battleBid,
+            battleSide:action.battleSide==null?null:action.battleSide,
+            battleSlot:action.battleSlot==null?null:action.battleSlot,
+            randomInt:typeof action.randomInt==='function'?action.randomInt:null
+          }
+        );
+        if(result.ok===true&&result.battleContext){
+          battleContext=clone(result.battleContext.context??result.battleContext);
+          battleAttackPipeline=null;
+        }
+        return {
+          ...result,
+          format:BROWSER_BATTLE_STATUS_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(currentState)
+        };
       }
       if(type===ACTION_BATTLE_TURN_INITIALIZE){
         return {
@@ -1900,6 +1927,7 @@ export {
   ACTION_BATTLE_PROFIT_ROUTE_PLAN,
   ACTION_BATTLE_DUELPOINT_PLAN,
   ACTION_BATTLE_TURN_INITIALIZE,
+  ACTION_BATTLE_STATUS_TURN,
   ACTION_BATTLE_INITIALIZE,
   ACTION_BATTLE_COMMAND_WAIT_STATUS,
   ACTION_BATTLE_ENEMY_AI_APPLY,
