@@ -24,29 +24,98 @@
     }
   },
   "targetObservedGraphicAssignments": [
-    {"statusId":1,"effectGraphic":100555},
-    {"statusId":2,"effectGraphic":100551},
-    {"statusId":3,"effectGraphic":100553},
-    {"statusId":4,"effectGraphic":100550},
-    {"statusId":5,"effectGraphic":100552},
-    {"statusId":6,"effectGraphic":100554},
-    {"statusId":7,"effectGraphic":101420},
-    {"statusId":8,"effectGraphic":101417},
-    {"statusId":9,"effectGraphic":101421},
-    {"statusId":10,"effectGraphic":101419},
-    {"statusId":11,"effectGraphic":101702},
-    {"statusId":12,"effectGraphic":25500},
-    {"statusId":13,"effectGraphic":35120},
-    {"statusId":14,"effectGraphic":35110},
-    {"statusId":15,"effectGraphic":27692},
-    {"statusId":16,"effectGraphic":26517},
-    {"statusId":17,"effectGraphic":27692},
-    {"statusId":18,"effectGraphic":27012},
-    {"statusId":19,"effectGraphic":27012},
-    {"statusId":20,"effectGraphic":100554},
-    {"statusId":21,"effectGraphic":0},
-    {"statusId":22,"effectGraphic":0},
-    {"statusId":23,"effectGraphic":100551}
+    {
+      "statusId": 1,
+      "effectGraphic": 100555
+    },
+    {
+      "statusId": 2,
+      "effectGraphic": 100551
+    },
+    {
+      "statusId": 3,
+      "effectGraphic": 100553
+    },
+    {
+      "statusId": 4,
+      "effectGraphic": 100550
+    },
+    {
+      "statusId": 5,
+      "effectGraphic": 100552
+    },
+    {
+      "statusId": 6,
+      "effectGraphic": 100554
+    },
+    {
+      "statusId": 7,
+      "effectGraphic": 101420
+    },
+    {
+      "statusId": 8,
+      "effectGraphic": 101417
+    },
+    {
+      "statusId": 9,
+      "effectGraphic": 101421
+    },
+    {
+      "statusId": 10,
+      "effectGraphic": 101419
+    },
+    {
+      "statusId": 11,
+      "effectGraphic": 101702
+    },
+    {
+      "statusId": 12,
+      "effectGraphic": 25500
+    },
+    {
+      "statusId": 13,
+      "effectGraphic": 35120
+    },
+    {
+      "statusId": 14,
+      "effectGraphic": 35110
+    },
+    {
+      "statusId": 15,
+      "effectGraphic": 27692
+    },
+    {
+      "statusId": 16,
+      "effectGraphic": 26517
+    },
+    {
+      "statusId": 17,
+      "effectGraphic": 27692
+    },
+    {
+      "statusId": 18,
+      "effectGraphic": 27012
+    },
+    {
+      "statusId": 19,
+      "effectGraphic": 27012
+    },
+    {
+      "statusId": 20,
+      "effectGraphic": 100554
+    },
+    {
+      "statusId": 21,
+      "effectGraphic": 0
+    },
+    {
+      "statusId": 22,
+      "effectGraphic": 0
+    },
+    {
+      "statusId": 23,
+      "effectGraphic": 100551
+    }
   ],
   "targetSpecialStatusHandler": {
     "statusId": "34 is reached by the BC status selection path; the switch body contains a special source-graphic transition block",
@@ -110,31 +179,131 @@
     "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
     "sameFunction": "set_single_jujutsu",
     "correlation": [
-      {"statusId":1,"namedEffect":"SPR_poison","targetGraphic":100555},
-      {"statusId":2,"namedEffect":"SPR_shock","targetGraphic":100551},
-      {"statusId":3,"namedEffect":"SPR_sleep","targetGraphic":100553},
-      {"statusId":4,"namedEffect":"SPR_stone","targetGraphic":100550},
-      {"statusId":5,"namedEffect":"SPR_drunk","targetGraphic":100552},
-      {"statusId":6,"namedEffect":"SPR_conf","targetGraphic":100554},
-      {"statusId":7,"namedEffect":"SPR_weaken","targetGraphic":101420},
-      {"statusId":8,"namedEffect":"SPR_deeppoison","targetGraphic":101417},
-      {"statusId":9,"namedEffect":"SPR_barrier","targetGraphic":101421},
-      {"statusId":10,"namedEffect":"SPR_nocast","targetGraphic":101419},
-      {"statusId":11,"namedEffect":"SARS effect","targetGraphic":101702},
-      {"statusId":12,"namedEffect":"profession dizzy hit mark","targetGraphic":25500},
-      {"statusId":13,"namedEffect":"profession entwine","targetGraphic":35120},
-      {"statusId":14,"namedEffect":"profession dragnet","targetGraphic":35110},
-      {"statusId":15,"namedEffect":"profession icecrack","targetGraphic":27692},
-      {"statusId":16,"namedEffect":"profession oblivion","targetGraphic":26517},
-      {"statusId":17,"namedEffect":"profession icearrow","targetGraphic":27692},
-      {"statusId":18,"namedEffect":"profession bloodworms","targetGraphic":27012},
-      {"statusId":19,"namedEffect":"profession sign","targetGraphic":27012},
-      {"statusId":20,"namedEffect":"profession crazy","targetGraphic":100554},
-      {"statusId":21,"namedEffect":"profession fire-enclose-related status","targetGraphic":0},
-      {"statusId":22,"namedEffect":"profession ice-enclose-related status","targetGraphic":0},
-      {"statusId":23,"namedEffect":"profession thunder-enclose-related status","targetGraphic":100551},
-      {"statusId":32,"namedEffect":"profession water effect","targetGraphic":101419},
-      {"statusId":33,"namedEffect":"profession fear effect","targetGraphic":100551}
+      {
+        "statusId": 1,
+        "namedEffect": "SPR_poison",
+        "targetGraphic": 100555
+      },
+      {
+        "statusId": 2,
+        "namedEffect": "SPR_shock",
+        "targetGraphic": 100551
+      },
+      {
+        "statusId": 3,
+        "namedEffect": "SPR_sleep",
+        "targetGraphic": 100553
+      },
+      {
+        "statusId": 4,
+        "namedEffect": "SPR_stone",
+        "targetGraphic": 100550
+      },
+      {
+        "statusId": 5,
+        "namedEffect": "SPR_drunk",
+        "targetGraphic": 100552
+      },
+      {
+        "statusId": 6,
+        "namedEffect": "SPR_conf",
+        "targetGraphic": 100554
+      },
+      {
+        "statusId": 7,
+        "namedEffect": "SPR_weaken",
+        "targetGraphic": 101420
+      },
+      {
+        "statusId": 8,
+        "namedEffect": "SPR_deeppoison",
+        "targetGraphic": 101417
+      },
+      {
+        "statusId": 9,
+        "namedEffect": "SPR_barrier",
+        "targetGraphic": 101421
+      },
+      {
+        "statusId": 10,
+        "namedEffect": "SPR_nocast",
+        "targetGraphic": 101419
+      },
+      {
+        "statusId": 11,
+        "namedEffect": "SARS effect",
+        "targetGraphic": 101702
+      },
+      {
+        "statusId": 12,
+        "namedEffect": "profession dizzy hit mark",
+        "targetGraphic": 25500
+      },
+      {
+        "statusId": 13,
+        "namedEffect": "profession entwine",
+        "targetGraphic": 35120
+      },
+      {
+        "statusId": 14,
+        "namedEffect": "profession dragnet",
+        "targetGraphic": 35110
+      },
+      {
+        "statusId": 15,
+        "namedEffect": "profession icecrack",
+        "targetGraphic": 27692
+      },
+      {
+        "statusId": 16,
+        "namedEffect": "profession oblivion",
+        "targetGraphic": 26517
+      },
+      {
+        "statusId": 17,
+        "namedEffect": "profession icearrow",
+        "targetGraphic": 27692
+      },
+      {
+        "statusId": 18,
+        "namedEffect": "profession bloodworms",
+        "targetGraphic": 27012
+      },
+      {
+        "statusId": 19,
+        "namedEffect": "profession sign",
+        "targetGraphic": 27012
+      },
+      {
+        "statusId": 20,
+        "namedEffect": "profession crazy",
+        "targetGraphic": 100554
+      },
+      {
+        "statusId": 21,
+        "namedEffect": "profession fire-enclose-related status",
+        "targetGraphic": 0
+      },
+      {
+        "statusId": 22,
+        "namedEffect": "profession ice-enclose-related status",
+        "targetGraphic": 0
+      },
+      {
+        "statusId": 23,
+        "namedEffect": "profession thunder-enclose-related status",
+        "targetGraphic": 100551
+      },
+      {
+        "statusId": 32,
+        "namedEffect": "profession water effect",
+        "targetGraphic": 101419
+      },
+      {
+        "statusId": 33,
+        "namedEffect": "profession fear effect",
+        "targetGraphic": 100551
+      }
     ],
     "status34Reference": "public source contains _PETSKILL_LER status 34 special evolution/ultimate visual handling; target binary contains the same family of 101814/101815/101810/101811/101863/101864 constants and source-graphic transition structure"
   },
@@ -155,5 +324,48 @@
       "human-readable product descriptions for every status ID",
       "server-side cause/formula for each BC flag"
     ]
+  },
+  "lifecycle": {
+    "function": {
+      "name": "katino",
+      "x86Address": "0x33d450",
+      "sizeBytes": 1647
+    },
+    "parentResolution": "effect ACTION +0x0c points to ATR_EQU; ATR_BODY_WORK(0) resolves parent/source ACTION",
+    "termination": {
+      "whenParentFuncNull": true,
+      "whenParentStateByte0x00Equals": "0xfc",
+      "whenParentHpOffset0xb8Equals": 0,
+      "onTerminate": [
+        "clear parent JUJUTSU_WORK at parent +0x110",
+        "DeathAction(effect)"
+      ]
+    },
+    "perFrame": {
+      "displayPriority": "effect +0x15 = parent +0x15 + 1",
+      "x": "effect +0x18 = parent +0x18",
+      "defaultY": "effect +0x1c = parent +0x1c - 64",
+      "specialY": {
+        "26517": "parent y - 34",
+        "27692": "parent y - 34",
+        "35110": "parent y - 34",
+        "35120": "parent y - 34",
+        "100551": "parent y",
+        "101702": "parent y - 34"
+      },
+      "effectGraphic25500": "increments target global counter; y offset cycles across 20/40/60/80 counter bands and x+16 in the latter two bands; counter resets after 80",
+      "normalAnimation": "pattern(effect, ANM_NOMAL_SPD, ANM_LOOP)"
+    },
+    "specialOneShot": {
+      "graphics": [
+        101810,
+        101811,
+        101805,
+        101863,
+        101864,
+        101858
+      ],
+      "completion": "pattern(effect, ANM_NOMAL_SPD, ANM_NO_LOOP) nonzero completes the effect, clears parent JUJUTSU_WORK, destroys effect, and performs source graphic/vct transition updates"
+    }
   }
 }
