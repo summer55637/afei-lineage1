@@ -194,9 +194,6 @@ class NativeContractTests(unittest.TestCase):
         contract["loop"]["address"]["x86"] = "0x1001"
         errors = validate_contracts(native, [("fixture", contract)])
         self.assertTrue(any("address mismatch" in error for error in errors))
-        layout["worldMapRuntime"]["functions"]["worldMapProc"]["x86"] = "0x5101"
-        errors = validate_resource_function_anchors(native, layout)
-        self.assertTrue(any("worldMapRuntime: x86 address mismatch for worldMapProc" in error for error in errors))
 
     def test_resource_layout_function_anchors_validate_both_abis(self):
         native = {
@@ -241,6 +238,7 @@ class NativeContractTests(unittest.TestCase):
             "worldMapProc": {"x86": "0x5100", "armeabiV7a": "0x6101"},
             "mapWndProc": {"x86": "0x5200", "armeabiV7a": "0x6201"},
             "EndWarpMap": {"x86": "0x5300", "armeabiV7a": "0x6301"},
+            "setWarpMap": {"x86": "0x5400", "armeabiV7a": "0x6401"},
         }
         native["nativeLibraries"][0]["focusedSymbols"].extend([
             {"type": "FUNC", "name": name, "demangled": name + "()", "value": addresses["x86"]}
@@ -258,6 +256,9 @@ class NativeContractTests(unittest.TestCase):
         layout["autoMapRendering"]["functions"]["DrawAutoMapping"]["x86"] = "0x2001"
         errors = validate_resource_function_anchors(native, layout)
         self.assertTrue(any("address mismatch" in error for error in errors))
+        layout["worldMapRuntime"]["functions"]["worldMapProc"]["x86"] = "0x5101"
+        errors = validate_resource_function_anchors(native, layout)
+        self.assertTrue(any("worldMapRuntime: x86 address mismatch for worldMapProc" in error for error in errors))
 
     def test_contract_build_identity_mismatch_is_rejected(self):
         native = {
