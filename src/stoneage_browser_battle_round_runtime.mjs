@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v446-browser-battle-round-runtime-v1';
+const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v447-browser-battle-round-runtime-v1';
 const ACTION_BATTLE_ROUND_RESOLVE='BATTLE_ROUND_RESOLVE';
 
 const BATTLE_MODE_BATTLE=2;
@@ -145,14 +145,21 @@ async function resolveBattleRound(context,{
   defaultTargetRollByBid={},
   sourceTargetRollByBid={},
   now=null,
+  counterRollsByActorBid={},
+  counterAttackRollsByActorBid={},
+  weaponClassByBid={},
   runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
   if(String(context.context.mode??'').trim().toLowerCase()!=='battle'||int(context.context.sourceMode)!==BATTLE_MODE_BATTLE){
     return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-active-phase-required'};
   }
-  if(String(counterPolicy).trim()!=='defer'){
-    return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'v446-round-counter-policy-must-be-explicit-defer',counterPolicy};
+  const normalizedCounterPolicy=String(counterPolicy).trim();
+  if(normalizedCounterPolicy!=='defer'&&normalizedCounterPolicy!=='execute'){
+    return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'v447-round-counter-policy-invalid',counterPolicy};
+  }
+  if(normalizedCounterPolicy==='execute'&&(!runtimes?.counterChainRuntime||runtimes.counterChainRuntime.ok!==true)){
+    return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'v447-counter-chain-runtime-required'};
   }
   const id=String(roundId??'').trim();
   if(!id||id.length>128)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'round-id-required'};
@@ -210,7 +217,9 @@ async function resolveBattleRound(context,{
   const actions=[];
   const attacks=[];
   const deferred=[];
+  const counterChains=[];
   let damageExecuted=false;
+  let counterExecutedCount=0;
 
   for(const row of order){
     const actorBid=row.bid;
@@ -389,17 +398,45 @@ async function resolveBattleRound(context,{
       attackRecord.damageReactPlan=clone(reactPlan);
       attackRecord.commit=clone(deathCommit);
       attackRecord.damageExecuted=deathCommit.damageExecuted===true;
+      const canResolveCounter=normalizedCounterPolicy==='execute'
+        && prelude.outcome==='normal'
+        && deathCommit.deathCommitted!==true
+        && deathCommit.damageExecuted===true
+        && reactPlan.reaction?.code===0
+        && reactPlan.attackerRidePet!==true
+        && reactPlan.defenderRidePet!==true;
+      if(normalizedCounterPolicy==='execute'&&canResolveCounter){
+        const counterResult=await runtimes.counterChainRuntime.resolve(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(next.context)},
+          {
+            originAttackerBid:actorBid,
+            originTargetBid:prelude.finalTargetBid,
+            counterRolls:counterRollsByActorBid?.[String(actorBid)]??counterRollsByActorBid?.[actorBid]??[],
+            counterAttackRolls:counterAttackRollsByActorBid?.[String(actorBid)]??counterAttackRollsByActorBid?.[actorBid]??[],
+            weaponClassByBid,
+            transactionPrefix:`${id}:${actorBid}`,
+            now
+          }
+        );
+        if(!counterResult.ok){
+          return {...counterResult,stage:'battle-round-counter-chain',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks),counterChains:clone(counterChains)};
+        }
+        next.context=clone(counterResult.context);
+        attackRecord.counterChain=clone(counterResult);
+        counterChains.push(clone(counterResult));
+        counterExecutedCount+=counterResult.chainCount??0;
+      }else if(normalizedCounterPolicy==='defer'){
+        deferred.push({
+          kind:'counter',
+          attackerBid:actorBid,
+          defenderBid:prelude.finalTargetBid,
+          reason:'v447-basic-round-defers-BATTLE_Counter-chain'
+        });
+      }
       attacks.push(attackRecord);
-      actions.push({actorBid,commandCode:command,action:'attack',targetBid:prelude.finalTargetBid,damage:criticalPlan.damage,damageExecuted:deathCommit.damageExecuted===true});
+      actions.push({actorBid,commandCode:command,action:'attack',targetBid:prelude.finalTargetBid,damage:criticalPlan.damage,damageExecuted:deathCommit.damageExecuted===true,counterChain:attackRecord.counterChain?{chainCount:attackRecord.counterChain.chainCount,counterTriggeredCount:attackRecord.counterChain.counterTriggeredCount}:null});
       damageExecuted=damageExecuted||deathCommit.damageExecuted===true;
       if(deathCommit.deathCommitted===true)attackRecord.targetKilled=true;
-
-      deferred.push({
-        kind:'counter',
-        attackerBid:actorBid,
-        defenderBid:prelude.finalTargetBid,
-        reason:'v446-basic-round-defers-BATTLE_Counter-chain'
-      });
       continue;
     }
 
@@ -436,8 +473,10 @@ async function resolveBattleRound(context,{
     actions,
     attacks,
     deferred,
-    counterPolicy:'defer',
+    counterPolicy:normalizedCounterPolicy,
     counterDeferredCount:deferred.length,
+    counterChains,
+    counterExecutedCount,
     damageExecuted,
     finished:endPlan.finished===true,
     winnerSide:endPlan.winnerSide,
@@ -451,7 +490,7 @@ async function resolveBattleRound(context,{
       repository:SOURCE_REPOSITORY,
       ref:SOURCE_REF,
       functions:['BATTLE_Command','BATTLE_Battling','BATTLE_PreCommandSeq','BATTLE_OnlyRescue'],
-      sourceOrder:['turn++','EntrySort','StatusSeq','command execution','end check','PreCommandSeq']
+      sourceOrder:['turn++','EntrySort','StatusSeq','command execution','counter chain (when enabled)','end check','PreCommandSeq']
     },
     scope:{
       basicAttackOnly:true,
@@ -476,6 +515,7 @@ function createBrowserBattleRoundRuntime({
   criticalDamageRuntime,
   damageReactRuntime,
   damageDeathChainRuntime,
+  counterChainRuntime,
   statusRuntime,
   endRuntime
 }={}){
@@ -486,6 +526,7 @@ function createBrowserBattleRoundRuntime({
     ['criticalDamageRuntime',criticalDamageRuntime],
     ['damageReactRuntime',damageReactRuntime],
     ['damageDeathChainRuntime',damageDeathChainRuntime],
+    ['counterChainRuntime',counterChainRuntime],
     ['statusRuntime',statusRuntime],
     ['endRuntime',endRuntime]
   ];
@@ -505,6 +546,7 @@ function createBrowserBattleRoundRuntime({
         criticalDamageRuntime,
         damageReactRuntime,
         damageDeathChainRuntime,
+        counterChainRuntime,
         statusRuntime,
         endRuntime
       }
