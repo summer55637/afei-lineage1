@@ -1,0 +1,23 @@
+name: Check V4.60 browser battle Pet Win AI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_enemy_exp_runtime.mjs'
+      - 'tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs'
+      - 'docs/reference/v460-browser-battle-pet-win-ai.md'
+      - '.github/workflows/check-v460-browser-battle-pet-win-ai.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.60 Pet Win AI regression
+        run: node tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs
+      - name: Check JavaScript syntax
+        run: node --check src/stoneage_browser_battle_enemy_exp_runtime.mjs
