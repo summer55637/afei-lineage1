@@ -79,10 +79,10 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],enemyExpOverri
     actor.killPetCount=beforeKills+1;
     credits.push({enemyBid:eBid,actorBid:bid,exp:calc.nowexp,workGetExpBefore:beforeWork,workGetExpAfter:actor.workGetExp,killPetCountBefore:beforeKills,killPetCountAfter:actor.killPetCount,levelDelta:calc.levelDelta});
   }
-  enemy=findEntry(next,eBid);
-  enemy.sourceExpCreditProcessed=true;
-  enemy.sourceExpCreditParticipants=bids.slice();
-  enemy.sourceEnemyExpResolved=resolved.exp;
+  const enemyNext=findEntry(next,eBid);
+  enemyNext.sourceExpCreditProcessed=true;
+  enemyNext.sourceExpCreditParticipants=bids.slice();
+  enemyNext.sourceEnemyExpResolved=resolved.exp;
   const events=Array.isArray(next.context.sourceEnemyExpCreditEvents)?next.context.sourceEnemyExpCreditEvents.slice():[];
   events.push(...credits.map(x=>({...x,hitIndex:int(hitIndex),source:String(source??'attack').trim()||'attack'})));
   next.context.sourceEnemyExpCreditEvents=events;
