@@ -126,7 +126,7 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByPa
     ok:true,handled:true,stage:'battle-enemy-exp-credited',format:BROWSER_BATTLE_ENEMY_EXP_RUNTIME_FORMAT,
     action:ACTION_BATTLE_ENEMY_EXP_CREDIT,enemyBid:eBid,participantBids:bids,enemyExp:resolved.exp,
     enemyExpResolution:resolved,newCredits:credits,totalCreditEvents:events.length,
-    source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
+    source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       functions:['BATTLE_AddExpItem','ENEMY_getExp','CHAR_PetAddVariableAi'],boundary:'workGetExp + KILLPETCOUNT + PetWin AI after carried getitem queue'},
     persistentMutation:false,expSettlementDeferred:true,levelUpDeferred:true,ridePetExpDeferred:false,petWinAiTransient:true,rngConsumed:0,
     context:next.context,transactionPrefix:String(transactionPrefix??'enemy-exp'),now:now??null
