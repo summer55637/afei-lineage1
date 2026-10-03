@@ -193,7 +193,7 @@ const orderContext={
   }
 };
 const orderProfit=profitCreditRuntime.apply(
-  {format:'stoneage-browser-battle-context-runtime-v1',context:orderContext},
+  orderContext,
   {attackerBids:[10],allowPlayerCredit:false,allowCommittedDeath:true,hitIndex:0,source:'ordering-check'}
 );
 assert.equal(orderProfit.ok,true,JSON.stringify(orderProfit));
