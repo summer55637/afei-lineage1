@@ -1,0 +1,84 @@
+{
+  "format": "ro0000-android-battle-object-effect-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隱盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d"
+  },
+  "producer": {
+    "function": "set_bc",
+    "x86Address": "0x361680",
+    "effectInputFields": {
+      "actionOffset0xd1c": {
+        "parse": "get_bc_num()",
+        "whenPositive": "set_obj_effect(action, value)"
+      },
+      "actionOffset0xd20": {
+        "parse": "get_bc_num()",
+        "whenPositive": "set_obj_effect1(action, value)"
+      }
+    }
+  },
+  "effectFunctions": {
+    "set_obj_effect": {
+      "x86Address": "0x33f2b0",
+      "input": "action, effectNo",
+      "guards": [
+        "source ACTION+0x11c must be null/inactive",
+        "source action hp (+0xb8) must be nonzero"
+      ],
+      "creation": {
+        "GetActionArgs": {
+          "arg0": "0x47",
+          "arg1": "0x264"
+        },
+        "createdActionOffset0x180": "effectNo",
+        "createdActionOffset0x08": "target-observed global value",
+        "createdActionParentSlot": "created action is stored through source ACTION+0x11c",
+        "createdActionByte0x15": "decremented from source action byte 0x15 after creation"
+      },
+      "relationship": "first object-effect attachment slot"
+    },
+    "set_obj_effect1": {
+      "x86Address": "0x33f3a0",
+      "input": "action, effectNo",
+      "guards": [
+        "source ACTION+0x120 must be null/inactive",
+        "source action hp (+0xb8) must be nonzero"
+      ],
+      "creation": {
+        "GetActionArgs": {
+          "arg0": "0x47",
+          "arg1": "0x264"
+        },
+        "createdActionOffset0x180": "effectNo",
+        "createdActionOffset0x08": "different target-observed global value from set_obj_effect",
+        "createdActionParentSlot": "created action is stored through source ACTION+0x120",
+        "createdActionByte0x15": "decremented from source action byte 0x15 after creation"
+      },
+      "relationship": "second object-effect attachment slot"
+    }
+  },
+  "semanticBoundary": {
+    "effectNo": "directly observed as the value written to created effect ACTION+0x180; this is treated as an effect graphic/action identifier only at the structural level",
+    "GetActionArgs": "fixed target values 0x47 and 0x264 are observed constructor/lookup inputs; their human-readable names are not assigned",
+    "slots": "0x11c and 0x120 are only labeled as source action effect attachment slots",
+    "globalValues": "the values written to created ACTION+0x08 differ between the two functions; they are not assigned a product-level name"
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "reserve two independent battle object-effect slots per participant",
+      "spawn an effect ACTION only when source participant is alive and the corresponding slot is empty",
+      "propagate the server-provided BC effect number as the created effect graphic/action identifier",
+      "preserve the source action effect-counter byte decrement behavior"
+    ],
+    "notProven": [
+      "exact visual effect resource identity for every effectNo",
+      "effect lifetime/animation completion policy",
+      "server semantics that generate 0xd1c/0xd20 values"
+    ]
+  },
+  "crossSourceReference": {
+    "status": "target-native semantics first; no public source identity required for the slot/creation observations"
+  }
+}
