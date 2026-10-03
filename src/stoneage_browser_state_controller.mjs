@@ -283,6 +283,7 @@ function createBrowserStateController({
     attackCountRuntime:battleAttackCountRuntime,
     targetListRuntime:battleTargetListRuntime,
     attackSequenceRuntime:battleAttackSequenceRuntime,
+    ridePetAdjustRuntime:battleRidePetAdjustRuntime,
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
     damagePlanRuntime:battleDamagePlanRuntime,
