@@ -1,0 +1,233 @@
+{
+  "format": "ro0000-android-battle-target-protocol-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "armeabiV7aLibSha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d"
+  },
+  "functions": {
+    "x86": {
+      "BattleSetWazaHitBox": {
+        "address": "0x1011c0",
+        "sizeBytes": 7498,
+        "args": {
+          "arg0": "skill index when typeflag=0; otherwise target-mode value",
+          "arg1": "typeflag"
+        }
+      },
+      "BattleTargetSelect": {
+        "address": "0x103c50",
+        "sizeBytes": 7001
+      }
+    }
+  },
+  "recordLayoutObserved": {
+    "petSkill": {
+      "basePointerGlobal": "petSkill",
+      "recordStrideBytes": 154,
+      "perPetStrideBytes": 5390,
+      "targetFieldOffset": "0x06"
+    },
+    "professionSkill": {
+      "basePointerGlobal": "profession_skill",
+      "recordStrideBytes": 280,
+      "targetFieldOffset": "0x04",
+      "costmpFieldOffset": "0x10c",
+      "skillIdFieldOffset": "0x02",
+      "skillIndexListCapacity": 20
+    }
+  },
+  "commandModes": {
+    "0": "attack",
+    "1": "jujutsu",
+    "2": "capture",
+    "3": "item",
+    "4": "petWaza",
+    "5": "professionWaza"
+  },
+  "packetPrefixes": {
+    "attack": "H|%X",
+    "capture": "T|%X",
+    "jujutsu": "J|%X|%X",
+    "item": "I|%X|%X",
+    "petWaza": "W|%X|%X",
+    "professionWaza": "P|%X|%X",
+    "petMapSkill": "W|FF|FF"
+  },
+  "targetModeRouting": {
+    "sharedDirectTargetModes": [0, 1, 6, 7, 9, 10],
+    "ownSideMode": {
+      "targetMode": 2,
+      "protocolCodeWhenBattleMyNoLt10": "0x14",
+      "protocolCodeWhenBattleMyNoGe10": "0x15"
+    },
+    "oppositeSideMode": {
+      "targetMode": 3,
+      "protocolCodeWhenBattleMyNoLt10": "0x15",
+      "protocolCodeWhenBattleMyNoGe10": "0x14"
+    },
+    "allMode": {
+      "targetMode": 4,
+      "protocolCode": "0x16"
+    },
+    "noTargetMode": {
+      "targetMode": 5,
+      "behavior": "send self/active-pet fallback command without target-selection UI"
+    },
+    "specialRowModes": {
+      "targetModes": [8, 11],
+      "selectedSlot0to4": "0x1a",
+      "selectedSlot5to9": "0x19",
+      "selectedSlot10to14": "0x17",
+      "selectedSlot15to19": "0x18"
+    }
+  },
+  "battleSetWazaHitBoxDirectBehavior": {
+    "0": {
+      "label": "self",
+      "hitFlag": "0x00000008",
+      "typeflag1Actor": "BattleMyNo",
+      "typeflag0Actor": "BattleMyNo+5",
+      "commandWhenTypeflag1": 5,
+      "commandWhenTypeflag0": 4
+    },
+    "1": {
+      "label": "other selectable living units",
+      "hitFlag": "0x00000008",
+      "selection": "all non-null units with hp>0"
+    },
+    "2": {
+      "label": "own side",
+      "hitFlag": "0x00002000",
+      "selection": "side determined by BattleMyNo < 10"
+    },
+    "3": {
+      "label": "opposite side",
+      "hitFlag": "0x00004000",
+      "selection": "side opposite BattleMyNo"
+    },
+    "4": {
+      "label": "all living units",
+      "hitFlag": "0x00002000",
+      "selection": "all non-null units with hp>0"
+    },
+    "5": {
+      "label": "none",
+      "behavior": "close battle selection UI and immediately send fallback W/P command using self-side target"
+    },
+    "6": {
+      "label": "other without active pet",
+      "hitFlag": "0x00000008",
+      "selection": "all non-null living units except BattleMyNo+5"
+    },
+    "7": {
+      "label": "other without self or active pet",
+      "hitFlag": "0x00000008",
+      "selection": "all non-null living units except BattleMyNo and BattleMyNo+5"
+    },
+    "8": {
+      "label": "one row",
+      "columns": {
+        "0to4": "0x00200000",
+        "5to9": "0x00100000",
+        "10to14": "0x00040000",
+        "15to19": "0x00080000"
+      },
+      "filter": "non-null, hp>0, travel flag clear"
+    },
+    "9": {
+      "label": "one line",
+      "behavior": "for each living, travel-clear unit, mark it and its +/-5 paired slot with hitFlag 0x8"
+    },
+    "10": {
+      "label": "death target",
+      "hitFlag": "0x00000008",
+      "selection": "all non-null units with hp<=0"
+    },
+    "11": {
+      "label": "one row all",
+      "columns": {
+        "0to4": "0x02000000",
+        "5to9": "0x01000000",
+        "10to14": "0x00400000",
+        "15to19": "0x00800000"
+      },
+      "filter": "non-null, hp>0, travel flag clear"
+    }
+  },
+  "callSites": [
+    {
+      "address": "0x103383",
+      "context": "BattleButtonWaza",
+      "typeflag": 0,
+      "meaning": "pet skill target setup"
+    },
+    {
+      "address": "0x1076e4",
+      "context": "BattleMenuProc",
+      "typeflag": 0,
+      "meaning": "pet skill target setup"
+    },
+    {
+      "address": "0x10bd83",
+      "context": "unnamed local helper near 0x10bcb0",
+      "typeflag": 1,
+      "meaning": "profession skill target setup"
+    },
+    {
+      "address": "0x10be99",
+      "context": "unnamed local helper near 0x10bcb0",
+      "typeflag": 1,
+      "meaning": "profession skill target setup for costmp==0 special skills"
+    }
+  ],
+  "professionSkillAutoSelectionHelper": {
+    "functionStart": "0x10bcb0",
+    "arityObserved": 3,
+    "resourceComparison": "native value at target state +0xc0 is compared with profession_skill.costmp at record +0x10c",
+    "normalSuccessCondition": "resource value >= costmp",
+    "specialInsufficientResourceSkillIds": [75, 76, 77],
+    "specialCondition": "for skillId 75/76/77, selection can still succeed only when costmp == 0",
+    "successEffects": [
+      "store selected profession skill index into target battle-skill selection state",
+      "read profession_skill.target at +0x04",
+      "call BattleSetWazaHitBox(target,1)"
+    ],
+    "failureEffect": "no profession-skill target setup"
+  },
+  "battleTargetSelectDirectEvidence": {
+    "attack": "H|targetIndex",
+    "capture": "T|targetIndex",
+    "jujutsu": "J|skillIndex|targetCode",
+    "item": "I|itemIndex|targetCode",
+    "petWaza": "W|skillIndex|targetCode",
+    "professionWaza": "P|professionSkillIndex|targetCode",
+    "professionTargetCode": {
+      "directModes": "selected target index",
+      "ownSide": "0x14 if BattleMyNo<10 else 0x15",
+      "oppositeSide": "0x15 if BattleMyNo<10 else 0x14",
+      "all": "0x16",
+      "rowSpecialModes": {
+        "0to4": "0x1a",
+        "5to9": "0x19",
+        "10to14": "0x17",
+        "15to19": "0x18"
+      }
+    },
+    "targetSelectionCleanup": "successful command send clears target-selection state and closes the prompt window"
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "browser battle target eligibility and target-mode routing",
+      "pet/profession skill packet construction",
+      "profession-skill automatic nomination gate"
+    ],
+    "notProven": [
+      "server-side interpretation of P/W target codes",
+      "damage, status, MP deduction, cooldown, or skill balance rules",
+      "exact product identity/version of cross-source public code",
+      "meaning of the native +0xc0 resource field beyond the observed comparison"
+    ]
+  }
+}
