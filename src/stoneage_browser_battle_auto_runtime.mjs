@@ -58,6 +58,7 @@ function createBrowserBattleAutoRuntime(deps={}){
         options.state,
         {
           ...options,
+          finishPlan:base.finishPlan??null,
           settlementId:options.settlementId??null,
           transactionPrefix:options.transactionPrefix??'battle-auto',
           supplyRequired:options.supplyRequired??false,
