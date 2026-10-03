@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：fb9ae4a — audit: record 2013 SAAC WIN archive provenance
-- 更新時間：2026-10-03T17:20:23+08:00
+- 最新 commit：de0beb9 — audit: record later 8.0 WIN mirror candidate
+- 更新時間：2026-10-03T17:23:23+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
