@@ -354,7 +354,9 @@ def build_report(native_audit):
             "comparableFunctionCount": len(comparable),
             "incompleteFunctionCounts": {abi: len(incomplete[abi]) for abi in TARGET_ABIS},
             "semanticNamedCallTargetMismatchCount": len(mismatches),
-            "semanticNamedCallTargetParity": not mismatches and same_names,
+            "comparableSemanticNamedCallTargetParity": not mismatches and same_names,
+            "allFunctionsComparable": len(comparable) == len(arm_names & x86_names),
+            "sameIncompleteFunctionSet": {name for name, item in analyses["armeabi-v7a"].items() if not item["complete"]} == {name for name, item in analyses["x86"].items() if not item["complete"]},
             "definition": "Reachable named direct call targets compared as sets. Tail branches, memset/memcpy, and ABI-specific compiler helpers are reported separately. Indirect control flow and incomplete disassemblies are not inferred.",
         },
         "abiSummary": {abi: totals(abi) for abi in TARGET_ABIS},
@@ -400,7 +402,7 @@ def main(argv=None):
     if any(report["functionInventory"]["duplicateNames"].values()):
         print("duplicate focused function names", file=sys.stderr)
         return 1
-    if not comparison["semanticNamedCallTargetParity"]:
+    if not comparison["comparableSemanticNamedCallTargetParity"]:
         print("reachable semantic named call targets differ across ABIs", file=sys.stderr)
         return 1
     return 0
