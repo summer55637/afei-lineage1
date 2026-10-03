@@ -42,7 +42,7 @@
     "persistentMutation": "Idle state save only",
     "battleDamage": false,
     "battleTurn": false,
-    "battleStatus": false,
+    "battleStatus": true,
     "battleAi": false
   }
 }
