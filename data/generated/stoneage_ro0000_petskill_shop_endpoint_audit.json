@@ -1,0 +1,97 @@
+{
+  "format": "stoneage-ro0000-petskill-shop-endpoint-audit-v1",
+  "checkedDate": "2026-10-03",
+  "scope": "RO0000 pet-skill shop data with direct single-player gameplay relevance.",
+  "endpointPrimary": true,
+  "commonNpcTemplate": {
+    "fixedC": "gmsv/data/npc/genout/npcgen.template",
+    "templateName": "npcgen_petskillshop",
+    "functionSet": "PetSkillShop"
+  },
+  "instances": [
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/genout/psks_1003_18_13",
+      "skillRate": 1,
+      "petSkills": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        50,
+        200,
+        201,
+        100
+      ]
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/genout/psks_2003_18_14",
+      "skillRate": 1,
+      "petSkills": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        11,
+        200,
+        20,
+        30,
+        31,
+        40,
+        50,
+        51,
+        120,
+        130,
+        150,
+        61,
+        80,
+        90,
+        100,
+        110
+      ]
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/genout/psks_3003_16_13",
+      "skillRate": 1,
+      "petSkills": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        50,
+        200,
+        201
+      ]
+    },
+    {
+      "path": "ro0000/server/merged-source/gmsv/data/npc/genout/psks_4003_18_15",
+      "skillRate": 1,
+      "petSkills": [
+        0,
+        1,
+        2,
+        3,
+        10,
+        50,
+        100,
+        200,
+        201
+      ]
+    }
+  ],
+  "observations": [
+    "All four endpoint data/hydata look.txt catalogs list the same genout/psks_* bindings; the corresponding endpoint argument files contain explicit skill_rate/main_msg/pet_skill payloads.",
+    "The four entries provide materially different skill catalogs by location; these are gameplay data and should not be globally merged into one shop list.",
+    "The Fixed-C PetSkillShop implementation reads the NPC argstr pet_skill list, resolves each skill through PETSKILL_getPetskillArray, hides illegal skills, and charges the configured skill cost multiplied by skill_rate.",
+    "The Fixed-C template is PetSkillShop, not FreePetSkillShop, for npcgen_petskillshop instances."
+  ],
+  "unresolvedBinding": {
+    "freeShopLuaPath": "data/ablua/freepetskillshop.lua",
+    "endpointPresentLua": "data/ablua/petskillshop.lua",
+    "bothLuaPayloadsAreIdenticalStub": true,
+    "lookCatalogAnomaly": "look.txt lists freeshop/*.arg paths, but direct fetch of freeshop02.arg has a payload with skill 652,12,13,151,152,52 while look.txt advertises skill 210 for that path.",
+    "policy": "Do not treat the look.txt entry alone as live binding; preserve the anomaly until an exact NPC create/template-to-arg admission path is found."
+  }
+}
