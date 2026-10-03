@@ -90,6 +90,35 @@ class BattleCommandDecodeContractTests(unittest.TestCase):
         self.assertIn("not fully translated", rendering["boundary"])
 
 
+
+    def test_damage_font_character_mapping_and_queue(self):
+        visual = self.doc["damageNumberVisual"]
+        helpers = visual["fontHelpers"]
+        expected = {
+            "NextCharLength": ("0x11d740", "0x100c0f", 244, 144),
+            "getBmpNoFromFont": ("0x38d7c0", "0x24e971", 764, 456),
+            "getFontNumWidthToDamage": ("0x150b70", "0x11d0fd", 405, 224),
+            "stockFontNumToDamage": ("0x150d10", "0x11d1dd", 976, 484),
+        }
+        for name, (x86, arm, x86_size, arm_size) in expected.items():
+            self.assertEqual(helpers[name]["x86"]["address"], x86)
+            self.assertEqual(helpers[name]["armeabiV7a"]["address"], arm)
+            self.assertEqual(helpers[name]["x86"]["sizeBytes"], x86_size)
+            self.assertEqual(helpers[name]["armeabiV7a"]["sizeBytes"], arm_size)
+        lengths = {entry["bytes"] for entry in helpers["NextCharLength"]["lengths"]}
+        self.assertEqual(lengths, {0, 1, 2, 3, 4, 5, 6})
+        width = helpers["getFontNumWidthToDamage"]
+        self.assertIn("lengths 1 or 3", width["behavior"])
+        self.assertIn("2, 4, 5 and 6", width["unhandledLengths"])
+        mapper = helpers["getBmpNoFromFont"]
+        self.assertIn("Lua state", mapper["behavior"])
+        self.assertIn("truncated to int", mapper["behavior"])
+        stock = helpers["stockFontNumToDamage"]
+        self.assertIn("StockFixedDispBuffer", stock["queueSelection"])
+        self.assertIn("StockDispBuffer", stock["queueSelection"])
+        self.assertIn("no general UTF-8 guarantees", stock["boundary"])
+
+
     def test_cross_source_boundary_and_runtime_limit(self):
         self.assertEqual(self.doc["crossSourceReference"]["commit"], "8c870c87ce1305c52fb6713bf824619467847bba")
         self.assertEqual(self.doc["crossSourceReference"]["role"], "semantic reference only; exact source/build identity with the audited APK is not established")
