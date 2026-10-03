@@ -1059,6 +1059,10 @@
       "EndWarpMap": {
         "armeabiV7a": "0x17f4b9",
         "x86": "0x20f640"
+      },
+      "setWarpMap": {
+        "armeabiV7a": "0x180935",
+        "x86": "0x211ad0"
       }
     },
     "lua": {
@@ -1147,6 +1151,34 @@
       "A numeric return from worldMapProc is code-level evidence only; its game/UI meaning and exact script return convention require the omitted Lua payload or runtime observation.",
       "The nonnumeric-result branch in worldMapProc does not explicitly clear its pushed result in the inspected target body. Whether repeated calls accumulate stack entries needs runtime validation.",
       "The window state and EndWarpMap counter are recorded by observable conditions/effects; their higher-level names are not inferred from offsets alone."
-    ]
+    ],
+    "warpTransition": {
+      "function": "setWarpMap(int,int)",
+      "inputs": [
+        "x",
+        "y"
+      ],
+      "coordinateStorage": "Both integer arguments are written to dedicated global slots and copied into associated warp-transition state slots.",
+      "floatConversion": {
+        "operation": "signed integer to float, then multiply",
+        "factor": 64,
+        "appliesTo": [
+          "x",
+          "y"
+        ]
+      },
+      "stateReset": {
+        "zeroWords": 2,
+        "oneFloat": 1,
+        "minusOneWords": 4,
+        "shortFlagSetTo": 1,
+        "semanticFieldNamesEstablished": false
+      },
+      "cleanupCalls": [
+        "crossAniRelease()",
+        "ReleaseSpecAnim()"
+      ],
+      "interpretationBoundary": "The two input values are preserved as integer coordinates and also represented in the target's 1/64-step float coordinate frame. The purpose of each reset slot remains unlabeled where symbol/field semantics are not independently established."
+    }
   }
 }
