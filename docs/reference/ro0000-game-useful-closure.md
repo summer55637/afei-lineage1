@@ -348,3 +348,18 @@ Pinned Fixed-C `npc_riderman.c` 與 `family.c` 已對上：實際騎乘會檢查
 Machine-readable evidence：
 
 `data/generated/stoneage_ro0000_riderman_endpoint_audit.json`
+
+
+## 2026-10-03 寵物融合 endpoint 邊界確認
+
+本輪檢查 `sa50/petfusion`：
+
+- data / hydata 的 `petfusion.template` 均存在，宣告 `npc_petfusion` / `PetFusion`。
+- `petfusion.create` 確實引用 `sa50/petfusion/petfusion`，但實際 payload 是 `changeevent` 的訊息殼，只顯示「神秘商城尚未開放」等內容。
+- 正式 `petfusion.arg` 不存在。
+- 因此目前 RO0000 沒有可驗證的 PetFusion 配方／融合分支資料；Fixed-C 的 `FusionTable` 不可直接冒充 endpoint 規則。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_petfusion_endpoint_audit.json`
+
