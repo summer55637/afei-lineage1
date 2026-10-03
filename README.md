@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7d5c555 — [audit] validate SPR one-past instruction evidence
-- 更新時間：2026-10-03T09:05:24+08:00
+- 最新 commit：1a76c8a — [docs] publish Android native and manifest evidence
+- 更新時間：2026-10-03T01:05:59Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
