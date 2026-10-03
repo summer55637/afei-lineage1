@@ -20,7 +20,8 @@ function planBattleExit(context,state,{settlementComplete=false,petMailModeById=
     settlementReceiptId:receipt.receiptId,
     settlementStartRevision:receipt.receipt.startRevision,
     settlementReceiptRevision:receipt.receiptRevision,
-    playerId:player?.characterId??receipt.receipt.playerId??null
+    playerId:player?.characterId??receipt.receipt.playerId??null,
+    allowPetExitStateSync:true
   });
   if(!playerExit.ok)return {ok:false,handled:false,stage:'battle-exit-plan',reason:playerExit.reason,receiptId:receipt.receiptId,settlementReceiptRevision:receipt.receiptRevision};
   const battlePets=Array.isArray(context.context?.sides?.find(x=>intOr(x?.side,null)===0)?.entries)
