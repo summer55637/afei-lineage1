@@ -54,8 +54,11 @@ function planBattlePetExit(contextInput,state,{settlementComplete=false,settleme
     if(hpBefore==null||battleHp==null)return {ok:false,handled:false,stage:'battle-pet-exit-plan',reason:'pet-hp-required',petId};
     if(maxHp==null||maxHp<0)return {ok:false,handled:false,stage:'battle-pet-exit-plan',reason:'pet-maxhp-required',petId};
     if(battleHp<0)return {ok:false,handled:false,stage:'battle-pet-exit-plan',reason:'pet-battle-hp-invalid',petId};
+    const mailMode=intOr(persistent.mailMode,null);
     const dead=entry.isDie===true||battleHp<=0;
-    const hpAfter=dead?1:Math.min(battleHp,maxHp);
+    if(dead&&mailMode==null)return {ok:false,handled:false,stage:'battle-pet-exit-plan',reason:'pet-mail-mode-required',petId};
+    const sourceDeathCleanup=dead&&mailMode===0;
+    const hpAfter=sourceDeathCleanup?1:Math.min(battleHp,maxHp);
     pets.push({
       petId,
       persistentHpBefore:hpBefore,
@@ -63,8 +66,8 @@ function planBattlePetExit(contextInput,state,{settlementComplete=false,settleme
       hpAfter,
       battleIsDie:entry.isDie===true,
       battleMaxHp:maxHp,
-      mailMode:intOr(persistent.mailMode,null),
-      sourceDeathCleanup:dead,
+      mailMode,
+      sourceDeathCleanup,
       stateWrite:true
     });
   }
