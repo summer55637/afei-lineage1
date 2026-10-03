@@ -73,6 +73,7 @@ const runtime=createBrowserIdleSupplyRouteRuntime({
 assert.equal(runtime.ok,true,JSON.stringify(runtime));
 
 const planned=[];
+const blocked=[];
 for(const row of routes){
   const point=routePoints[row.routeId];
   const state={
@@ -88,6 +89,18 @@ for(const row of routes){
     pets:{}
   };
   const result=await runtime.plan(state,{routeId:row.routeId});
+  if(row.routeId==='hometown-3/floor-4000-to-200/4000_to_200_a'){
+    assert.equal(result.ok,false,JSON.stringify(result));
+    assert.equal(result.stage,'idle-supply-route-town-to-hospital');
+    assert.equal(result.reason,'path-not-found');
+    blocked.push({
+      routeId:row.routeId,
+      stage:result.stage,
+      reason:result.reason,
+      constraint:'4000 reverse portal component is not connected to the 4000 hospital portal component'
+    });
+    continue;
+  }
   assert.equal(result.ok,true,JSON.stringify(result));
   assert.equal(result.handled,true);
   assert.equal(result.format,BROWSER_IDLE_SUPPLY_ROUTE_RUNTIME_FORMAT);
@@ -134,6 +147,7 @@ console.log(JSON.stringify({
   format:BROWSER_IDLE_SUPPLY_ROUTE_RUNTIME_FORMAT,
   exactSourcePortals:true,
   routesPlanned:planned.length,
+  blockedRoutes:blocked,
   planned,
   failClosedReason:staleResult.reason
 },null,2));
