@@ -162,6 +162,21 @@ The target's 80-byte record can now be accounted for structurally without treati
 
 Thus the record's storage skeleton is mapped across all 80 bytes by target anchors plus a pinned cross-source layout. The remaining open issue is not byte placement but target-side meaning/use for the +0x22–0x3E status/damage members and +0x44–0x48 `damy` members. No effect is inferred from the member names alone.
 
+### Auto-map color generation and cache
+
+The target now has a separate static contract for auto-map color preparation. `initAutoMapColor()` first attempts to read its existing cache; when the read fails, it calls `makeAutoMapColor()` and then `writeAutoMapColor()`. The cache payload is a 2-byte zero header followed by 100,000 one-byte entries (100,002 bytes total when written). The reader requires the header to equal zero and reads one complete 100,000-byte item; it does not check an end-of-file condition or a build fingerprint. The writer does not test the returned item counts from `fwrite`, so its success return indicates that the file was opened and the write/close path was attempted, not that the full payload was durably persisted.
+
+`makeAutoMapColor()` iterates 600,000 records at an 80-byte stride. It uses the record's `bmpnumber` at +0x4C as the color-table index, while ordinary image-color generation passes the record's leading `bitmapno` (+0x00) to `getAutoMapColor()`. Values at or above 100,000 are outside the byte-table domain and are skipped. For in-domain entries, the target:
+- invokes image-derived color calculation for `bmpnumber` 100–19,999, 34,101–34,999, and 35,346–36,928;
+- uses a built-in 20-entry mapping for 60–79, storing each entry's low byte;
+- writes zero for other in-domain IDs, including zero.
+
+The image-derived path calls `realGetImage(bitmapno,...)`. On success, it traverses the image pixels, excludes palette index zero, sums the first three bytes of the selected 4-byte palette entries, and takes integer averages over nonzero pixels. If no such pixels exist, the result is zero. Otherwise the three averaged bytes are packed into bits 0–7, 8–15, and 16–23 and passed to `getNearestColorIndex(..., 256)`. The nearest-color routine compares the first three color bytes by sum of squared differences; palette entry 0 seeds the result, and entries 16–239 are scanned as alternatives. The alpha byte is not part of this distance.
+
+The inline mapping for IDs 60–79 resolves to the following one-byte results: `[104, 0, 40, 0, 176, 0, 8, 0, 136, 0, 72, 0, 240, 80, 4, 0, 84, 0, 20, 85]`. The x86 and ARMv7 binaries contain the same 80-byte source table, and the target code stores its low byte as the color-table value.
+
+These rules close the auto-map color index/generation and cache format at the code level. They do not reproduce the final 100,000-byte table without the external image payloads, and the actual visual effect still requires those payloads or an original-client runtime comparison. The machine-readable fields are in `data/generated/stoneage_ro0000_android_native_resource_layout.json` under `autoMapColor`.
+
 ### ADRNBIN initialization corrections
 
 Besides the accessor behavior above, `AdrnInit()` performs a post-decode rewrite of the 16-bit value at record offset `0x1E` for two image-ID ranges:
