@@ -341,6 +341,7 @@ jobs:
           path: |
             artifacts/ro0000_android_apk_audit.json
             artifacts/ro0000_android_native_elf_audit.json
+            ro0000/client/android/冰河石器-隐盟.apk
             artifacts/ro0000_android_signing_audit.json
             artifacts/ro0000_android_dex_audit.json
             artifacts/ro0000_android_java_flow_audit.json
