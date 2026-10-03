@@ -92,6 +92,7 @@ assert.equal(result.maxChain,5);
 assert.equal(result.chainCount,5);
 assert.equal(result.counterTriggeredCount,5);
 assert.equal(result.persistentMutation,false);
+assert.ok(result.chain.every(x=>x.check?.noguardCounterAdjust===0),'ordinary Counter must not inherit NoGuard adjustment');
 assert.equal(result.scope.maxChain,5);
 assert.equal(result.scope.ordinaryBasicCounterOnly,true);
 assert.deepEqual(result.chain.map(x=>x.attackerBid),[10,0,10,0,10]);
