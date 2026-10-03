@@ -114,12 +114,13 @@ def summarize_onload_disassembly(disassembly):
         ).hexdigest(),
     }
 
-def relevant_native_strings(binary_data, declarations):
-    """Find class and method names that appear as printable ELF strings."""
+def relevant_native_strings(binary_data, declarations, jni_exports=None):
+    """Report only booleans/counts for declaration strings; never emit raw strings."""
     strings = [
         value.decode("ascii", "ignore")
         for value in re.findall(rb"[\x20-\x7e]{4,}", binary_data)
     ]
+    exports = set(jni_exports or [])
     found = []
     for method in declarations:
         owner = method.get("class") or ""
@@ -129,21 +130,32 @@ def relevant_native_strings(binary_data, declarations):
         owner_path = owner[1:-1] if owner.startswith("L") and owner.endswith(";") else owner
         owner_dot = owner_path.replace("/", ".")
         owner_simple = owner_path.rsplit("/", 1)[-1]
-        class_candidates = [
+        owner_prefix = "Java_" + jni_escape(owner_path) + "_"
+        if exports and not any(symbol.startswith(owner_prefix) for symbol in exports):
+            continue
+        class_path_hits = [
             value for value in strings
-            if owner_path in value or owner_dot in value or owner_simple in value
+            if owner_path and (owner_path in value or owner_dot in value)
         ]
-        method_candidates = [value for value in strings if name in value]
-        if class_candidates or method_candidates:
-            found.append({
-                "class": owner,
-                "name": name,
-                "classStringCandidates": sorted(set(class_candidates))[:8],
-                "methodStringCandidates": sorted(set(method_candidates))[:8],
-            })
+        simple_name_hits = [
+            value for value in strings
+            if owner_simple and re.search(
+                r"(?<![A-Za-z0-9_])" + re.escape(owner_simple) + r"(?![A-Za-z0-9_])",
+                value,
+            )
+        ]
+        method_hits = [value for value in strings if name in value]
+        found.append({
+            "class": owner,
+            "name": name,
+            "classPathLiteralPresent": bool(class_path_hits),
+            "classSimpleNameLiteralPresent": bool(simple_name_hits),
+            "methodNameLiteralPresent": bool(method_hits),
+            "matchingMethodStringCount": len(method_hits),
+        })
     return found
 
-def inspect_jni_onload(binary_path, binary_data, records, objdump, declarations):
+def inspect_jni_onload(binary_path, binary_data, records, objdump, declarations, jni_exports):
     evidence = []
     for record in records:
         command = [
@@ -269,7 +281,7 @@ def inspect_apk_libraries(apk_path, readelf, objdump="objdump", declarations=Non
             onload_evidence = []
             if onload_records:
                 onload_evidence = inspect_jni_onload(
-                    local_path, binary_data, onload_records, objdump, declarations or []
+                    local_path, binary_data, onload_records, objdump, declarations or [], symbols
                 )
             by_abi.setdefault(abi, []).append({
                 "path": info.filename,
