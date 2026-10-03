@@ -16,7 +16,7 @@ function makeContext(status={},overrides={}){
     bid:0,battleSlot:0,battleSide:0,sourceType:'player',
     hp:100,maxHp:100,quick:10,level:10,
     battleCommands:[0,-1,-1],battleStatus:{...status},
-    statusRawStats:{vital:2500,str:2500,tgh:2500,dex:2500},
+    statusRawStats:{vital:600,str:600,tgh:600,dex:600},
     ...overrides.player
   };
   const pet={bid:5,battleSlot:5,battleSide:0,sourceType:'pet',hp:100,maxHp:100,level:10,battleCommands:[0,-1,-1],battleStatus:{},statusRawStats:{vital:2000,str:2000,tgh:2000,dex:2000},...overrides.pet};
@@ -64,7 +64,7 @@ for(const type of ['paralysis','sleep','stone']){
   let r=processBattleStatusTurn(ctx,{battleBid:0});
   assert.equal(r.skip,true,type);
   assert.equal(r.turnsAfter,1,type);
-  r=processBattleStatusTurn(r,{battleBid:0});
+  r=processBattleStatusTurn({format:ctx.format,context:r.battleContext},{battleBid:0});
   assert.equal(r.skip,true,type+' expiry still blocks this turn');
   assert.equal(r.expired,true,type);
   assert.equal(r.battleContext.sides[0].entries[0].battleStatus[type],undefined,type);
