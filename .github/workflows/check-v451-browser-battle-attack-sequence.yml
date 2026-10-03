@@ -13,6 +13,8 @@ on:
       - 'src/stoneage_browser_battle_damage_react_commit_runtime.mjs'
       - 'src/stoneage_browser_battle_damage_death_chain_runtime.mjs'
       - 'tools/check_v451_browser_battle_attack_sequence.mjs'
+      - 'tools/check_v451_browser_battle_attack_sequence_controller.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
       - '.github/workflows/check-v451-browser-battle-attack-sequence.yml'
   workflow_dispatch:
 permissions:
@@ -26,9 +28,13 @@ jobs:
           fetch-depth: 1
       - name: Run V4.51 attack sequence regression
         run: node tools/check_v451_browser_battle_attack_sequence.mjs
+      - name: Run V4.51 controller integration regression
+        run: node tools/check_v451_browser_battle_attack_sequence_controller.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
           node --check src/stoneage_browser_battle_attack_count_runtime.mjs
           node --check src/stoneage_browser_battle_target_list_runtime.mjs
           node --check tools/check_v451_browser_battle_attack_sequence.mjs
+          node --check tools/check_v451_browser_battle_attack_sequence_controller.mjs
+          node --check src/stoneage_browser_state_controller.mjs
