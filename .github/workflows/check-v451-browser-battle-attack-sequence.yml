@@ -1,0 +1,34 @@
+name: Check V4.51 browser battle attack sequence
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_count_runtime.mjs'
+      - 'src/stoneage_browser_battle_target_list_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_preflight_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_plan_runtime.mjs'
+      - 'src/stoneage_browser_battle_critical_damage_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_react_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_react_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_death_chain_runtime.mjs'
+      - 'tools/check_v451_browser_battle_attack_sequence.mjs'
+      - '.github/workflows/check-v451-browser-battle-attack-sequence.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.51 attack sequence regression
+        run: node tools/check_v451_browser_battle_attack_sequence.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_count_runtime.mjs
+          node --check src/stoneage_browser_battle_target_list_runtime.mjs
+          node --check tools/check_v451_browser_battle_attack_sequence.mjs
