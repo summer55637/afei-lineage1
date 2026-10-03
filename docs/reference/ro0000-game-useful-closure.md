@@ -244,3 +244,23 @@ RO0000 active `setup.cf` 在 `__ATTACK_MAGIC` 下指定 `data/attmagic.bin`；�
 Machine-readable evidence：
 
 `data/generated/stoneage_ro0000_attmagic_endpoint_audit.json`
+
+
+## 2026-10-03 任務目錄 endpoint 閉合
+
+本輪只處理 active `mission.txt`，不擴展整個 Angel/Summon 線上配對系統：
+
+- RO0000 `data/mission.txt` 與 `hydata/data/mission.txt` 完全一致。
+- 目前有 4 筆 active mission catalog：
+  1. Lv100，需事件旗標 `4;81;102)：尋找古瓜。
+  2. Lv100，需 `4;81;88;89`：尋找邬莉葉。
+  3. Lv100，需 `4;81;110;111`：尋找赫肯豪國王。
+  4. Lv100，需 `4;81;112;113;114;115`：尋找福列克斯王子。
+- Fixed-C `_ANGEL_SUMMON` 啟用時，startup 由 `init.c` 呼叫 `LoadMissionList()`；`char_angel.c::selectAngel()` 會依等級與事件旗標篩選任務。
+- 目前 endpoint NPC event-action index 沒有找到這 9 個任務旗標對應的直接 `ENDEV` chain，因此不能把它們誤認成已閉合的 NPC 任務流程。
+
+單機定位：保留這 4 筆作為高等級任務內容來源；Angel/勇者配對、account-server mission table、`missionclean.txt` 不納入單機主循環，避免把線上服務依賴帶入產品。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_mission_list_audit.json`
