@@ -80,6 +80,17 @@
         "x86": 8282,
         "armeabiV7a": 4520
       }
+    },
+    "damageDispx": {
+      "function": "damage_dispx()",
+      "address": {
+        "x86": "0x10c210",
+        "armeabiV7a": "0x0f6679"
+      },
+      "sizeBytes": {
+        "x86": 343,
+        "armeabiV7a": 224
+      }
     }
   },
   "localHelpers": {
@@ -293,6 +304,10 @@
       "function": "showDamage_num(action*)",
       "behavior": "target exports a separate per-frame display callback for the damage-number ACTION; the full rendering/decay state machine is not yet exhaustively translated into the contract"
     },
-    "boundary": "damage-number ACTION is a presentation child; it does not itself establish server-side hit or damage calculation"
+    "boundary": "damage-number ACTION is a presentation child; it does not itself establish server-side hit or damage calculation",
+    "dispatch": {
+      "function": "damage_dispx()",
+      "behavior": "compares an ACTION function/name field against the damage-number callback pointer and dispatches matching ACTIONs to showDamage_num(action*) for display"
+    }
   }
 }
