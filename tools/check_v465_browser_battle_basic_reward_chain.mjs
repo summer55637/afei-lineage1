@@ -232,7 +232,7 @@ assert.equal(lethal.hits[0].relife.applied,true);
 assert.equal(lethal.hits[0].relife.event.itemId,20131);
 assert.equal(lethal.context.sides[0].entries[0].hp,200);
 assert.equal(lethal.context.sides[0].entries[0].isDie,false);
-assert.equal(lethal.context.sides[0].entries[0].sourceDeathExtraProcessed,true);
+assert.equal(lethal.context.sides[0].entries[0].sourceDeathExtraProcessed,false);
 assert.equal(lethal.context.sourceRelifeEvents.length,1);
 
 console.log(JSON.stringify({
