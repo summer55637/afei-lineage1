@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：10ea7a2 — [audit] add safe target SPR animation parser
-- 更新時間：2026-10-03T09:03:48+08:00
+- 最新 commit：80cff7f — [test] use an empty SPRADRN index fixture
+- 更新時間：2026-10-03T09:04:42+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
