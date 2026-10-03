@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：454da74 — [docs] record JNI_OnLoad and Java loader evidence
-- 更新時間：2026-10-03T08:58:36+08:00
+- 最新 commit：ebe3df8 — [test] cover JNI registration helper selection
+- 更新時間：2026-10-03T09:00:25+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
