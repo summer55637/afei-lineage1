@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
 import { createBrowserBattleRoundRuntime } from '../src/stoneage_browser_battle_round_runtime.mjs';
 import { createBrowserBattleAttackCountRuntime } from '../src/stoneage_browser_battle_attack_count_runtime.mjs';
 import { createBrowserBattleTargetListRuntime } from '../src/stoneage_browser_battle_target_list_runtime.mjs';
@@ -69,6 +70,7 @@ const context={
 
 const attackCountRuntime=createBrowserBattleAttackCountRuntime();
 const targetListRuntime=createBrowserBattleTargetListRuntime();
+const profitCreditRuntime=createBrowserBattleProfitCreditRuntime();
 const attackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
 const attackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
 const damagePlanRuntime=createBrowserBattleDamagePlanRuntime();
@@ -77,6 +79,7 @@ const damageReactRuntime=createBrowserBattleDamageReactRuntime();
 const damageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
 const damageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
 const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
+  profitCreditRuntime,
   attackPreflightRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
@@ -87,6 +90,7 @@ const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
 });
 const counterRuntime=createBrowserBattleCounterRuntime();
 const counterChainRuntime=createBrowserBattleCounterChainRuntime({
+  profitCreditRuntime,
   counterRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
