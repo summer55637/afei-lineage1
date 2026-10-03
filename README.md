@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：bf8264b — feat: carry Pet death-persistent fields into battle context
-- 更新時間：2026-10-03T19:52:05+08:00
+- 最新 commit：ff2705e — feat: reconstruct AddProfit player and pet death extras
+- 更新時間：2026-10-03T19:53:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.60
 - Playable HTML：⏸️ 尚未建立（刻意保留）
