@@ -111,10 +111,10 @@ def summarize_onload_disassembly(disassembly):
 
 
 def relevant_native_strings(binary_data, declarations):
-    """Find declaration names present as printable strings in a packaged ELF."""
+    """Find class and method names that appear as printable ELF strings."""
     strings = [
         value.decode("ascii", "ignore")
-        for value in re.findall(rb"[\\x20-\\x7e]{4,}", binary_data)
+        for value in re.findall(rb"[\x20-\x7e]{4,}", binary_data)
     ]
     found = []
     for method in declarations:
@@ -122,20 +122,22 @@ def relevant_native_strings(binary_data, declarations):
         name = method.get("name") or ""
         if not name:
             continue
-        owner_text = owner[1:-1].replace("/", ".") if owner.startswith("L") and owner.endswith(";") else owner
-        owner_variants = {owner_text, owner_text.replace(".", "/")}
-        matching = [
+        owner_path = owner[1:-1] if owner.startswith("L") and owner.endswith(";") else owner
+        owner_dot = owner_path.replace("/", ".")
+        owner_simple = owner_path.rsplit("/", 1)[-1]
+        class_candidates = [
             value for value in strings
-            if name in value and (not owner_text or any(x in value for x in owner_variants))
+            if owner_path in value or owner_dot in value or owner_simple in value
         ]
-        if matching:
+        method_candidates = [value for value in strings if name in value]
+        if class_candidates or method_candidates:
             found.append({
                 "class": owner,
                 "name": name,
-                "stringCandidates": sorted(set(matching))[:8],
+                "classStringCandidates": sorted(set(class_candidates))[:8],
+                "methodStringCandidates": sorted(set(method_candidates))[:8],
             })
     return found
-
 
 def inspect_jni_onload(binary_path, binary_data, records, objdump, declarations):
     evidence = []
