@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：35cff01 — [map-coverage] add wave-1 verification workflow
-- 更新時間：2026-10-03T16:55:32+08:00
+- 最新 commit：bc09cfb — [map-coverage] promote main-world wave 1
+- 更新時間：2026-10-03T08:57:10Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -30,7 +30,7 @@
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
 | Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 完整自動戰鬥待串接（基礎策略已實作） |
-| Map runtime | ✅ 11 張 |
+| Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
 | Battle Pipeline | ✅ V4.45 |
