@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3825268 — test: assert explicit relife ultimate skip state
-- 更新時間：2026-10-03T21:26:35+08:00
+- 最新 commit：3e57776 — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-03T13:26:42Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.66
 - Playable HTML：⏸️ 尚未建立（刻意保留）
