@@ -1,0 +1,23 @@
+name: Check V4.49 browser battle attack count
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_attack_count_runtime.mjs'
+      - 'tools/check_v449_browser_battle_attack_count.mjs'
+      - '.github/workflows/check-v449-browser-battle-attack-count.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.49 attack count regression
+        run: node tools/check_v449_browser_battle_attack_count.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_attack_count_runtime.mjs
+          node --check tools/check_v449_browser_battle_attack_count.mjs
