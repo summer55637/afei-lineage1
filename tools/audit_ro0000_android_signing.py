@@ -130,6 +130,7 @@ def audit_v1_manifest_entry_digests(apk):
                 "matchedDigestCount": 0,
                 "mismatchDigestCount": 0,
                 "mismatchEntries": [],
+                "mismatches": [],
                 "missingEntries": [],
                 "unsupportedDigests": [],
                 "invalidDigests": [],
@@ -140,6 +141,7 @@ def audit_v1_manifest_entry_digests(apk):
         digest_count = matched = mismatch_count = 0
         entry_names = set()
         mismatch_entries = set()
+        mismatches = []
         missing_entries = set()
         unsupported = []
         invalid = []
@@ -181,6 +183,12 @@ def audit_v1_manifest_entry_digests(apk):
                 else:
                     mismatch_count += 1
                     mismatch_entries.add(entry_name)
+                    mismatches.append({
+                        "entry": entry_name,
+                        "algorithm": algorithm,
+                        "expectedDigestHex": expected.hex(),
+                        "actualDigestHex": actual.hex(),
+                    })
 
         if mismatch_count or missing_entries or invalid:
             status = "mismatch"
@@ -199,6 +207,7 @@ def audit_v1_manifest_entry_digests(apk):
             "matchedDigestCount": matched,
             "mismatchDigestCount": mismatch_count,
             "mismatchEntries": sorted(mismatch_entries),
+            "mismatches": sorted(mismatches, key=lambda item: (item["entry"], item["algorithm"])),
             "missingEntries": sorted(missing_entries),
             "unsupportedDigests": unsupported,
             "invalidDigests": invalid,

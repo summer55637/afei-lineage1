@@ -75,6 +75,12 @@ Signer #1 key size (bits): 2048
         self.assertEqual(result["status"], "mismatch")
         self.assertEqual(result["mismatchDigestCount"], 1)
         self.assertEqual(result["mismatchEntries"], ["assets/example.bin"])
+        self.assertEqual(result["mismatches"], [{
+            "entry": "assets/example.bin",
+            "algorithm": "sha-256",
+            "expectedDigestHex": hashlib.sha256(b"old").hexdigest(),
+            "actualDigestHex": hashlib.sha256(b"current").hexdigest(),
+        }])
 
     def test_v1_manifest_reports_unsupported_algorithm_and_missing_entry(self):
         with tempfile.TemporaryDirectory() as temp:
