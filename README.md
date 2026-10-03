@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：66155c0 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-03T08:45:00Z
+- 最新 commit：6068b07 — test: verify StatusSeq state-controller integration
+- 更新時間：2026-10-03T16:45:53+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
