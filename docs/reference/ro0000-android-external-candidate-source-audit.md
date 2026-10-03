@@ -54,3 +54,10 @@ RO0000 target production source
 5. 與 RO0000 target evidence 做逐檔比對。
 
 在完成上述 identity check 前，不引用候選包內容補足任何 RO0000 target bytes。
+
+
+## 2026-10-03 availability recheck
+
+The public listing at https://www.mir6.com/mobile/80406.html displays a publication date of 2026-08-15 and a package size of 2.24 GB. It labels access as 30 Mi coins or free for VIP members and carries a learning-only disclaimer; its notice says commercial use requires legitimate authorization.
+
+This check did not obtain the archive bytes or a verifiable manifest/hash for the contained client resources. The listing therefore remains a gated candidate only. Its advertised package size, name, and installation instructions do not establish that its APK, `libStoneage.so`, `.sabex`, ADRN/Real/SPR, palette, or patch payloads match the RO0000 target. No content from it is admitted to reconstruction data.
