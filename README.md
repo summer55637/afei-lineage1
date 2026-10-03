@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：41ae9b6 — fix: keep V4.79 missing-policy fixture in supply_check
-- 更新時間：2026-10-03T23:20:02+08:00
+- 最新 commit：e59f10d — feat: add V4.80 idle supply auto return orchestration
+- 更新時間：2026-10-03T23:21:04+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.79
 - Playable HTML：⏸️ 尚未建立（刻意保留）
