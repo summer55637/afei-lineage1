@@ -1,0 +1,35 @@
+name: Check V4.55 browser battle carried loot
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_carried_loot_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v455_browser_battle_carried_loot.mjs'
+      - 'tools/check_v455_browser_battle_carried_loot_attack_sequence.mjs'
+      - '.github/workflows/check-v455-browser-battle-carried-loot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.55 carried loot runtime regression
+        run: node tools/check_v455_browser_battle_carried_loot.mjs
+      - name: Run V4.55 carried loot attack integration regression
+        run: node tools/check_v455_browser_battle_carried_loot_attack_sequence.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_carried_loot_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v455_browser_battle_carried_loot.mjs
+          node --check tools/check_v455_browser_battle_carried_loot_attack_sequence.mjs
