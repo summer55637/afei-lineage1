@@ -15,10 +15,12 @@ import { createBrowserWorldItemShopRuntime } from './stoneage_browser_world_item
 import { createBrowserHealerRuntime, ACTION_NPC_HEALER_USE, BROWSER_HEALER_RUNTIME_FORMAT } from './stoneage_browser_healer_runtime.mjs';
 import { createBrowserWindowHealerRuntime, ACTION_NPC_WINDOW_HEALER_USE, BROWSER_WINDOW_HEALER_RUNTIME_FORMAT } from './stoneage_browser_window_healer_runtime.mjs';
 import { createBrowserIdleSupplyRuntime, ACTION_IDLE_SUPPLY_USE_HEALER, BROWSER_IDLE_SUPPLY_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_runtime.mjs';
+import { createBrowserIdleSupplyRouteRuntime, BROWSER_IDLE_SUPPLY_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_route_runtime.mjs';
+import { createBrowserIdleSupplyRouteExecutionRuntime, ACTION_IDLE_SUPPLY_RETURN_EXECUTE, BROWSER_IDLE_SUPPLY_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_route_execution_runtime.mjs';
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
 import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT } from './stoneage_browser_world_movement_runtime.mjs';
-import { loadSourceMapRuntime } from './stoneage_map_runtime.mjs';
+import { loadSourceMapRuntime, loadSourceMapsetRuntime } from './stoneage_map_runtime.mjs';
 import { KARUTARNA_ROAD_ACCESS_REPAIR_OVERLAY, withWorldMapRepairOverlay } from './stoneage_world_map_repair_overlay.mjs';
 import { createBrowserWorldWarpPointRuntime, ACTION_WORLD_WARPPOINT_EXECUTE, BROWSER_WORLD_WARPPOINT_RUNTIME_FORMAT } from './stoneage_browser_world_warppoint_runtime.mjs';
 import { createBrowserWorldFirstRouteRuntime, ACTION_WORLD_FIRST_ROUTE_PLAN, BROWSER_WORLD_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_world_first_route_runtime.mjs';
@@ -188,6 +190,8 @@ function createBrowserStateController({
   worldNpcRuntimeOptions={},
   savePointCatalog=null,
   idleRouteCatalog=null,
+  idleSupplyWarpCatalog=null,
+  recoveryServiceCatalog=null,
   warpCatalog=null,
   encounterTargetIndex=null,
   encounterGroupCatalog=null,
@@ -219,6 +223,23 @@ function createBrowserStateController({
     ? createBrowserWorldFirstRouteRuntime({...worldFirstRouteOptions,routeCatalog:idleRouteCatalog,warpCatalog,encounterTargetIndex,loadMap:routeMapLoader})
     : null;
   const worldFirstRouteExecutionRuntime=createBrowserWorldFirstRouteExecutionRuntime();
+  const idleSupplyRouteMapLoader=worldMovementOptions.loadMap??loadSourceMapRuntime;
+  const idleSupplyRouteMapsetLoader=worldMovementOptions.loadMapset??loadSourceMapsetRuntime;
+  const idleSupplyRouteRuntime=(idleRouteCatalog&&idleSupplyWarpCatalog&&recoveryServiceCatalog)
+    ? createBrowserIdleSupplyRouteRuntime({
+      routeCatalog:idleRouteCatalog,
+      supplyWarpCatalog:idleSupplyWarpCatalog,
+      recoveryServiceCatalog,
+      loadMap:idleSupplyRouteMapLoader,
+      loadMapset:idleSupplyRouteMapsetLoader
+    })
+    : null;
+  const idleSupplyRouteExecutionRuntime=(idleSupplyRouteRuntime?.ok===true&&idleSupplyWarpCatalog)
+    ? createBrowserIdleSupplyRouteExecutionRuntime({
+      movementRuntime:worldMovementRuntime,
+      loadMap:idleSupplyRouteMapLoader
+    })
+    : null;
   const worldEncounterRuntime=encounterTargetIndex ? createBrowserWorldEncounterRuntime({encounterTargetIndex}) : null;
   const worldEncounterPersistenceRuntime=encounterTargetIndex ? createBrowserWorldEncounterPersistenceRuntime({encounterTargetIndex}) : null;
   const worldEncounterGroupRuntime=(encounterTargetIndex&&encounterGroupCatalog) ? createBrowserWorldEncounterGroupRuntime({groupCatalog:encounterGroupCatalog}) : null;
@@ -2073,7 +2094,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE,ACTION_NPC_WARP_EXECUTE,ACTION_IDLE_SUPPLY_USE_HEALER,ACTION_NPC_WINDOW_HEALER_USE].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE,ACTION_NPC_WARP_EXECUTE,ACTION_IDLE_SUPPLY_USE_HEALER,ACTION_NPC_WINDOW_HEALER_USE,ACTION_IDLE_SUPPLY_RETURN_EXECUTE].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -2088,6 +2109,46 @@ function createBrowserStateController({
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:located.reason,npcs:located.npcs??[],state:clone(currentState)};
         }
         resolvedWorldNpc=located.npc;
+      }
+      if(type===ACTION_IDLE_SUPPLY_RETURN_EXECUTE){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+        if(!idleSupplyRouteRuntime||idleSupplyRouteRuntime.ok!==true){
+          return {ok:false,handled:false,stage:'idle-supply-route',reason:'browser-idle-supply-route-runtime-not-configured',errors:idleSupplyRouteRuntime?.errors??[],state:clone(currentState)};
+        }
+        if(!idleSupplyRouteExecutionRuntime||idleSupplyRouteExecutionRuntime.ok!==true){
+          return {ok:false,handled:false,stage:'idle-supply-route-execute',reason:'browser-idle-supply-route-execution-runtime-not-configured',errors:idleSupplyRouteExecutionRuntime?.errors??[],state:clone(currentState)};
+        }
+        let plan=action.plan??action.routePlan??null;
+        if(!plan){
+          plan=await idleSupplyRouteRuntime.plan(currentState,{
+            routeId:action.routeId??currentState?.idle?.routeId??null,
+            playerPosition:action.playerPosition??currentState?.world?.position??null
+          });
+        }
+        if(!plan?.ok){
+          return {
+            ...plan,
+            ok:false,
+            handled:false,
+            stage:plan.stage??'idle-supply-route-plan',
+            action:ACTION_IDLE_SUPPLY_RETURN_EXECUTE,
+            state:clone(currentState)
+          };
+        }
+        const result=await idleSupplyRouteExecutionRuntime.execute(currentState,plan,{
+          supplyWarpCatalog:idleSupplyWarpCatalog,
+          transactionPrefix:String(action.transactionPrefix??('idle-supply-return-'+(sequence+1))),
+          now:clockFactory(action.now,now)
+        });
+        if(result.ok===true&&result.handled===true&&result.state)currentState=clone(result.state);
+        return {
+          ...result,
+          format:BROWSER_IDLE_SUPPLY_ROUTE_EXECUTION_RUNTIME_FORMAT,
+          action:ACTION_IDLE_SUPPLY_RETURN_EXECUTE,
+          plan:clone(plan),
+          state:clone(result.state??currentState)
+        };
       }
       if(type===ACTION_NPC_WINDOW_HEALER_USE){
         const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
@@ -2337,6 +2398,7 @@ export {
   ACTION_NPC_HEALER_USE,
   ACTION_NPC_WINDOW_HEALER_USE,
   ACTION_IDLE_SUPPLY_USE_HEALER,
+  ACTION_IDLE_SUPPLY_RETURN_EXECUTE,
   ACTION_NPC_SAVEPOINT_SET,
   ACTION_NPC_SAVEPOINT_CONFIRM,
   ACTION_NPC_RESOLVE_AT,
@@ -2437,6 +2499,8 @@ export {
   BROWSER_HEALER_RUNTIME_FORMAT,
   BROWSER_WINDOW_HEALER_RUNTIME_FORMAT,
   BROWSER_IDLE_SUPPLY_RUNTIME_FORMAT,
+  BROWSER_IDLE_SUPPLY_ROUTE_RUNTIME_FORMAT,
+  BROWSER_IDLE_SUPPLY_ROUTE_EXECUTION_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
   ACTION_IDLE_LIST_ROUTES,
