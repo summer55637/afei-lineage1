@@ -50,9 +50,9 @@ Signer #1 key size (bits): 2048
             zf.writestr("assets/example.bin", payload)
             if include_manifest:
                 manifest = (
-                    "Manifest-Version: 1.0\\r\\n\\r\\n"
-                    "Name: assets/example.bin\\r\\n"
-                    + section_digest + "\\r\\n\\r\\n"
+                    "Manifest-Version: 1.0\r\n\r\n"
+                    "Name: assets/example.bin\r\n"
+                    + section_digest + "\r\n\r\n"
                 )
                 zf.writestr("META-INF/MANIFEST.MF", manifest.encode("utf-8"))
 
@@ -80,12 +80,14 @@ Signer #1 key size (bits): 2048
         with tempfile.TemporaryDirectory() as temp:
             apk = Path(temp) / "incomplete.apk"
             manifest = (
-                "Manifest-Version: 1.0\\r\\n\\r\\n"
-                "Name: assets/missing.bin\\r\\n"
-                "SHA-256-Digest: YWJj\\r\\n"
-                "SHA999-Digest: YWJj\\r\\n\\r\\n"
+                "Manifest-Version: 1.0\r\n\r\n"
+                "Name: assets/missing.bin\r\n"
+                "SHA-256-Digest: YWJj\r\n\r\n"
+                "Name: assets/example.bin\r\n"
+                "SHA999-Digest: YWJj\r\n\r\n"
             )
             with zipfile.ZipFile(apk, "w") as zf:
+                zf.writestr("assets/example.bin", b"hello")
                 zf.writestr("META-INF/MANIFEST.MF", manifest.encode("utf-8"))
             result = audit_v1_manifest_entry_digests(apk)
         self.assertEqual(result["status"], "mismatch")
