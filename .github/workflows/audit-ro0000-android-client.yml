@@ -5,6 +5,8 @@ on:
     paths:
       - 'ro0000/client/android/冰河石器-隐盟.apk'
       - 'tools/audit_ro0000_android_apk.py'
+      - 'tools/audit_ro0000_android_git_resource_history.py'
+      - 'tools/check_ro0000_android_git_resource_history.py'
       - 'tools/check_ro0000_android_apk_audit.py'
       - 'tools/audit_ro0000_android_native.py'
       - 'tools/audit_ro0000_android_battlemap_crosscheck.py'
@@ -44,7 +46,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+      - name: Audit reachable Git history for Android external resources
+        run: |
+          python3 -m unittest discover -s tools -p 'check_ro0000_android_git_resource_history.py'
+          python3 tools/audit_ro0000_android_git_resource_history.py \\
+            --output data/generated/stoneage_ro0000_android_git_resource_history_audit.json
       - name: Install multi-architecture disassembler
         run: |
           sudo apt-get update
@@ -333,8 +340,9 @@ jobs:
             cp artifacts/ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json
             cp artifacts/ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_jni_audit.json
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
+            cp data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
-            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
+            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -368,6 +376,7 @@ jobs:
             data/generated/stoneage_ro0000_android_battle_render_chain.json
             data/generated/stoneage_ro0000_android_map_prefetch_contract.json
             data/generated/stoneage_ro0000_android_native_resource_focus.json
+            data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             artifacts/ro0000_android_native_abi_comparison.json
             artifacts/ro0000_android_battlemap_selector_crosscheck.json
             data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
