@@ -109,6 +109,43 @@ assert.equal(healed.state.player.hp,healed.state.player.maxHp);
 assert.equal(healed.state.player.mp,healed.state.player.maxMp);
 assert.equal(healed.state.idle.mode,'supply_check');
 
+const controllerState=freshPersistentState({
+  now:()=> '2026-10-04T00:20:10+08:00',
+  playerId:'v478-controller',
+  playerName:'V4.78 Controller'
+});
+controllerState.player.hp=80;
+controllerState.player.maxHp=200;
+controllerState.player.mp=40;
+controllerState.player.maxMp=100;
+controllerState.player.gold=30000;
+controllerState.player.level=1;
+controllerState.idle.enabled=true;
+controllerState.idle.mode='supply_check';
+controllerState.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
+controllerState.world.position={floorId:100,x:610,y:538};
+
+const { createBrowserStateController }=await import('../src/stoneage_browser_state_controller.mjs');
+const controller=createBrowserStateController({
+  state:controllerState,
+  idleRouteCatalog:routeCatalog,
+  idleSupplyWarpCatalog:warpCatalog,
+  recoveryServiceCatalog:recoveryCatalog,
+  worldMovementOptions:{loadMap,loadMapset},
+  now:()=> '2026-10-04T00:20:11+08:00'
+});
+const controllerResult=await controller.dispatch({
+  type:ACTION_IDLE_SUPPLY_RETURN_EXECUTE,
+  transactionPrefix:'v478-controller'
+});
+assert.equal(controllerResult.ok,true,JSON.stringify(controllerResult));
+assert.equal(controllerResult.handled,true);
+assert.equal(controllerResult.action,ACTION_IDLE_SUPPLY_RETURN_EXECUTE);
+assert.equal(controllerResult.state.idle.mode,'supply_check');
+assert.deepEqual(controllerResult.state.world.position,{floorId:1005,x:17,y:15});
+assert.equal(controllerResult.plan.routeId,controllerState.idle.routeId);
+assert.equal(controller.getState().revision,controllerResult.state.revision);
+
 console.log(JSON.stringify({
   pass:true,
   format:BROWSER_IDLE_SUPPLY_ROUTE_EXECUTION_RUNTIME_FORMAT,
