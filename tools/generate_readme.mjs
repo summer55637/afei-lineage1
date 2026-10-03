@@ -125,7 +125,7 @@ function buildReadme() {
   const stateLine = state.currentSchemaVersion ? '✅ Schema ' + state.currentSchemaVersion : '⚠️ 未建立';
   const economyLine = economy.format ? '✅ Runtime v1' : '⚠️ 未建立';
   const androidLine = androidClientAudit.source?.sha256
-    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（Manifest/DEX/Java wrapper、JNI/雙 ABI native、更新與補丁流程、SDL input/event loop、map cache/HitMap/prefetch、route/movement/warp、SABEX 220-slot / 33×33、ADRN/SPR/Real decoder 與 4 組 sprite fixup 已靜態稽核；⚠️ v1 簽章摘要不符；外部資源 bytes 與真機驗證待補）'
+    ? '✅ APK ' + (androidClientAudit.manifest?.versionName ?? 'version unknown') + '（遊戲資源格式／載入流程、ADRN/REAL/SPR、SABEX 220-slot / 33×33、map cache/HitMap/prefetch、route/movement/warp、Lua container、battle-map crosscheck 與 4 組 sprite fixup 已靜態稽核；⚠️ 外部 production resource bytes 與真機 runtime 驗證待補）'
     : '⚠️ APK 尚未完成封裝稽核';
   const battleLine = workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel;
   const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');

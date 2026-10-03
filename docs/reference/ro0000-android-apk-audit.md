@@ -378,74 +378,6 @@ The target x86 and ARMv7 `InitSprBinFileOpen()` implementations contain four exp
 
 The file stores 10-byte frame payloads, while the loaded runtime frame list uses a 12-byte stride. The fixup offsets and pointer arithmetic confirm the runtime stride. These selectors close the four explicit special-case branches in this loader; they do not establish the intended artistic/audio purpose of each correction, nor do they rule out mutations in other functions. The machine-readable details are in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
 
-## Android Manifest, DEX, and signing
-
-The expanded binary AndroidManifest parser now records the launcher component, application metadata, declared permissions, service declarations, and GL ES feature requirement, not just package/version/SDK fields. The target manifest declares `RenderActivity` as MAIN/LAUNCHER, `StoneageApplication` as the Application class, an exported `DownloadService`, and a required OpenGL ES 2.0 feature. It also requests storage, network, Bluetooth, phone-state, overlay, audio, vibration, logging, and package-install permissions. These declarations are not proof that every permission is granted or used successfully at runtime.
-
-The DEX inventory is a structural inventory of the packaged `classes.dex`: DEX 035, 1,410 class definitions, 10,513 declared methods, 13,808 method references, and 115 native-method declarations. The APK contains one `classes.dex`. A pinned JADX 1.5.6 pass scans the game, updater and SDL package prefixes and additionally inspects the five vendor classes that own DEX native declarations. The output retains all game/updater/SDL source classes plus those five vendor native-owner classes. It includes class/method names, ordered redacted call identifiers, source line numbers, and only simple safe identifiers passed to `System.loadLibrary`; source code, comments, URL/host strings, and general string/character literal contents are excluded. Per-method `callSites` counts matched call expressions, `callSequence` preserves source order, and `uniqueCallIdentifierCount` / `calls` describe unique call identifiers.
-
-The static Java evidence closes these wrapper-level relationships:
-
-~~~text
-StoneageApplication.onCreate
-  -> cache application context / app version
-
-RenderActivity.onCreate
-  -> set current Activity
-  -> memory / root availability checks
-  -> release packaged font and skin files
-  -> initialize crash / voice SDKs and SDL
-
-UpdateChecker.checkForDialog / checkForNotification
-  -> CheckUpdateTask.execute
-      -> doInBackground -> HttpUtils.get
-      -> onPostExecute -> parseJson
-          -> showDialog -> UpdateDialog.show
-          -> showNotification -> Android notification
-
-UpdateDialog.goToDownload
-  -> start DownloadService
-      -> onHandleIntent
-          -> HTTP connection / stream to local file
-          -> updateProgress -> notification
-          -> installAPk
-~~~
-
-The exact update URL and other host/configuration strings remain omitted. The DEX declares six JNILibrary callbacks covering keyboard state, login result, order-check result, ZIP progress, and battery updates; SDLActivity has its own native lifecycle and input boundary. These are static call/reference relationships only: reflection, native side effects, asynchronous scheduling, and actual network/device behavior are not established by decompilation.
-
-
-## JNI declaration/export cross-check
-
-The DEX declares 115 native methods across 11 declaring classes. The full audit now extracts each shared library packaged in the APK for both available ABIs and compares declarations against defined, default-visible Java_* exports. The matching logic checks both short and signature-qualified JNI symbol forms.
-
-Per ABI, the packaged native library set is:
-
-- libGCloudVoice.so
-- libSDL2.so
-- libSDL2_image.so
-- libSDL2_mixer.so
-- libSDL2_ttf.so
-- libStoneage.so
-- libhidapi.so
-- libmpg123.so
-
-The resulting comparison is identical for x86 and ARMv7:
-
-| Result | Count per ABI | Interpretation |
-|---|---:|---|
-| Static JNI export match | 97 / 115 | The matching class/method/signature has a corresponding defined JNI export in a packaged library. |
-| No static export, package-related JNI_OnLoad library present | 8 / 115 | The same package namespace has static exports in a library that also exports JNI_OnLoad; dynamic registration is possible but not proven. |
-| No static export or package-related JNI_OnLoad evidence | 10 / 115 | No matching static export or same-package registration indicator was found among packaged libraries. This does not prove runtime failure. |
-
-The 8 declarations in the second category are two ApolloVoiceEngine Bluetooth methods, SRTTAPIHTTPTaskQueueImp.callback, and five GCloudVoiceEngineHelper methods. They are kept as unresolved dynamic-registration candidates; JNI_OnLoad being exported is not itself proof that a particular method is registered.
-
-The JNI audit now cross-checks the redacted JADX call-sequence report against the same APK SHA-256 before attaching Java native-loading evidence to the JNI report. For `ApolloVoiceEngine`, the Java flow records a `System.loadLibrary` request for `GCloudVoice` (line 17). In the packaged `libGCloudVoice.so`, both ABIs expose `JNI_OnLoad`; the x86/ARM summaries show calls to `apollo::JniMethodMgr::GetInstance()`, `apollo::JniMethodMgr::Init(_JNIEnv*,char**,int)`, and `LoadMultiThreadClass`, plus two indirect-call sites in each ABI. This is direct evidence of a native method-manager initialization path, but the indirect calls and method-table contents are not resolved to the eight candidate declarations, so per-method registration remains unproven.
-
-The 10 declarations in the third category belong to com.tencent.bugly.crashreport.crash.jni.NativeCrashHandler. No matching Java_* export or same-package JNI_OnLoad association was found in the packaged library set. The APK may have an alternate loading or registration mechanism, but that requires additional evidence; this report does not classify these as broken. The redacted Java call sequence for the same class also contains `System.load` at source line 261 and `System.loadLibrary` at line 263 in its obfuscated `a` method. This makes a Java-driven alternate native-loading path a concrete static lead, but the literal library/path values are omitted and the call sequence does not prove either load succeeded or that the ten methods were registered.
-
-The target libStoneage.so comparison remains separately visible: both x86 and ARMv7 export all six native methods declared on com.newssa.stoneage.ko.JNILibrary. Each also exports the three additional names callbackKoLogout, callbackWechatShare, and callbackYodaOpened, which have no declaration on that DEX class. Those are retained as a compatibility discrepancy, not automatically labelled stale code.
-
-The full machine-readable comparison is data/generated/stoneage_ro0000_android_jni_audit.json. It includes per-library hashes, JNI exports, declaration candidates, ABI-level match results, and package-associated JNI_OnLoad evidence. This remains a static name-level audit; actual registration, invocation, asynchronous effects, and device runtime behavior are not established.
 
 ## Browser-side SPR/SPRADRN parser and safe target fixups
 
@@ -676,17 +608,6 @@ The audit gate compares focused native function and global-object name sets betw
 The focused artifact now publishes every function selected by the native map/resource symbol filter instead of a second manually maintained name allowlist. It also includes the filtered global object symbols, and CI checks object-name parity across x86 and ARMv7. This prevents newly discovered in-scope symbols from silently disappearing from the published evidence simply because a secondary list was not updated.
 
 
-## ABI-aware native call-target comparison (2026-10-03)
-
-The `tools/audit_ro0000_android_native_abi.py` audit follows reachable intraprocedural control flow and compares named direct-call target sets between the packaged ARMv7 and x86 `libStoneage.so` builds. The resolver reads the ELF-backed ARM TBB/TBH and x86 signed-relative jump tables, verifies each recovered target against the function's disassembly range, and traverses those target blocks. Its tests cover conditional flow, unresolved tables, both table encodings, non-returning calls, and unreachable literal-pool bytes.
-
-The latest successful APK audit resolves all 12 switch-table sites in each ABI, covering 143 entries per ABI (286 entries combined). The affected functions are `InitGame()` (7), `Process()` (20), `lssproto_C_recv` (4), `lssproto_STREET_VENDOR_recv` (18), `lssproto_S_recv` (24 + 9), `lssproto_TK_recv` (19), `lssproto_UpdateGold_recv` (7), `mapEffectFallingStar()` (5 + 8 + 6), and `play_map_bgm` (16). All 326 focused functions per ABI now have complete intraprocedural control-flow coverage under the resolver's supported instruction/table rules. The named direct-call target comparison reports zero mismatches across the comparable inventory.
-
-There are still two reachable indirect-call sites per ABI whose call-target identities cannot be recovered from the present evidence. This does not prevent following the post-call continuation, but it does mean those indirect callees are not included in named target parity. Tail branches are retained separately because linker veneers and aliases can obscure their semantic targets.
-
-Memory-operation code generation is reported separately: the x86 excerpts contain 71 `memset` and 8 `memcpy` call sites, while ARM uses `__aeabi_*` memory helpers in the audited functions. These compiler/ABI implementation differences are not counted as semantic call-target mismatches. The machine-readable comparison is published at `data/generated/stoneage_ro0000_android_native_abi_comparison.json`.
-
-This closes the previously untraced switch-dispatch paths in the focused inventory; it is not instruction-level equivalence, complete decompilation of every native function, or proof of identical runtime behavior. External resources, network/server responses, and device behavior remain separate evidence boundaries.
 
 ## World-map Lua bridge and window dispatch
 
