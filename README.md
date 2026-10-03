@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：db99afb — test: align V4.46 round regression with source turn flow
-- 更新時間：2026-10-03T17:50:21+08:00
+- 最新 commit：504005d — test: fix same-enemy HP lookup in V4.46 regression
+- 更新時間：2026-10-03T17:51:22+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.46
 - Playable HTML：⏸️ 尚未建立（刻意保留）
