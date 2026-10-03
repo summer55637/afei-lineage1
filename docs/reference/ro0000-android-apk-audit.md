@@ -134,7 +134,33 @@ Target x86 accessors map the following fields in the decoded 80-byte record. The
 
 These accessor bounds are also explicit: the graphic-number accessors reject IDs at or above 600,000, while image-number lookups reject IDs at or above 100,000. Rejected output-pointer accessors write zero values and return false; the sound accessors return zero/false on their respective rejected paths.
 
-This closes the listed accessor-visible fields, **not the complete 80-byte record**. Bytes 0x00–0x0B, 0x22–0x3F, and 0x44–0x4F remain unassigned by this getter set; other loader/render call sites may still use them. The complete machine-readable field/accessor summary is in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+This closes the listed accessor-visible fields, **not every target-side semantic use of the complete 80-byte record**. The separate loader and image path establish additional fields; a pinned public structure offers names for the remaining regions. See the structural cross-check below and the machine-readable summary in `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
+### ADRNBIN structural field map: target evidence and cross-source candidates
+
+The target's 80-byte record can now be accounted for structurally without treating all member meanings as target-verified:
+
+- The target uses a 0x50-byte record stride. `AdrnInit()` adjusts the leading u32 by the shard graphic-ID base; `realGetImage()` uses the u32 at +0x04 as the RealBin seek offset and the u32 at +0x08 as the payload byte count.
+- The target accessors directly establish the +0x0C through +0x20 position, dimension, hit-extent and hit/height fields, and +0x40/+0x42 effect values.
+- `AdrnInit()` uses the u32 at +0x4C as the nonzero image-number value for populating `bitmapnumbertable` when it is below 100,000.
+- The pinned public [`loadrealbin.h` structure](https://github.com/alrightlook/StoneAgeMobileApp/blob/8c870c87ce1305c52fb6713bf824619467847bba/android-project/jni/src/systeminc/loadrealbin.h) independently defines an 80-byte `ADRNBIN` with a `MAP_ATTR` beginning at +0x1C. Its member offsets align with the target-confirmed accessor anchors above. This is cross-source structural corroboration; the exact source lineage/version of the target APK is not established.
+
+| Offset | Public structure member candidate | Evidence boundary |
+|---:|---|---|
+| 0x00 | `bitmapno` | Target confirms shard-base adjustment and use as graphic-number slot |
+| 0x04 | `adder` | Target confirms seek-offset use in `realGetImage` |
+| 0x08 | `size` | Target confirms payload byte-count use in `realGetImage` |
+| 0x0C, 0x10 | `xoffset`, `yoffset` | Target accessors confirm 32-bit loads exposed as low 16 bits |
+| 0x14, 0x18 | `width`, `height` | Target accessors confirm 32-bit loads exposed as low 16 bits |
+| 0x1C, 0x1D | `attr.atari_x`, `attr.atari_y` | Target confirms byte reads for the two hit-extent outputs; names are cross-source |
+| 0x1E, 0x20 | `attr.hit`, `attr.height` | Target accessor and initialization behavior directly confirmed |
+| 0x22–0x3E | `attr.broken`, `indamage`, `outdamage`, `inpoison`, `innumb`, `inquiet`, `instone`, `indark`, `inconfuse`, `outpoison`, `outnumb`, `outquiet`, `outstone`, `outdark`, `outconfuse` | Member names and 16-bit spacing are source-layout candidates only; target consumers and gameplay effects remain unverified |
+| 0x40, 0x42 | `attr.effect1`, `attr.effect2` | Target confirms signed 16-bit sound/effect reads; names are cross-source |
+| 0x44, 0x46, 0x48 | `attr.damy_a`, `attr.damy_b`, `attr.damy_c` | Unsigned 16-bit source-layout candidates; target consumers remain unverified |
+| 0x4A–0x4B | alignment padding before `attr.bmpnumber` | Implied by the pinned public C structure's 4-byte member alignment; not a target semantic field |
+| 0x4C | `attr.bmpnumber` | Target confirms use in the image-number-to-graphic-number table mapping |
+
+Thus the record's storage skeleton is mapped across all 80 bytes by target anchors plus a pinned cross-source layout. The remaining open issue is not byte placement but target-side meaning/use for the +0x22–0x3E status/damage members and +0x44–0x48 `damy` members. No effect is inferred from the member names alone.
 
 ### ADRNBIN initialization corrections
 
