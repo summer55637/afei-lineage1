@@ -1,0 +1,33 @@
+name: Check V4.54 browser battle AddProfit credit
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_profit_credit_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v454_browser_battle_profit_credit.mjs'
+      - 'tools/check_v454_browser_battle_profit_credit_attack_sequence.mjs'
+      - '.github/workflows/check-v454-browser-battle-profit-credit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.54 profit credit runtime regression
+        run: node tools/check_v454_browser_battle_profit_credit.mjs
+      - name: Run V4.54 per-hit attack profit integration regression
+        run: node tools/check_v454_browser_battle_profit_credit_attack_sequence.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_profit_credit_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v454_browser_battle_profit_credit.mjs
+          node --check tools/check_v454_browser_battle_profit_credit_attack_sequence.mjs
