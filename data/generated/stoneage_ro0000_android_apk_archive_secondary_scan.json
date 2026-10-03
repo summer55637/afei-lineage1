@@ -1,0 +1,10 @@
+{
+  "format":"ro0000-android-apk-archive-secondary-scan-v1",
+  "source":{"apk":"ro0000/client/android/冰河石器-隐盟.apk","sha256":"6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c"},
+  "apk":{"zipEntries":38,"targetProductionResourceNameMatches":[],"assets":["assets/data/font/FZLTZHUNHK.TTF","assets/data/font/simsun.ttc","assets/data/skin/3.png","assets/data/skin/4.png","assets/data/skin/5.png","assets/data/skin/61428.png","assets/data/skin/61429.png","assets/data/skin/61430.png","assets/data/skin/jdt.png"]},
+  "embeddedNativeZipSignatureCheck":{
+    "result":"no_valid_embedded_zip_found",
+    "details":"One x86 libStoneage.so occurrence of PK\\x03\\x04 was found inside executable code at offset 3268561; no PK\\x05\\x06 or ZIP64 end signature follows and the carved tail is not a valid ZIP. Treat it as coincidental executable bytes, not an embedded resource container."
+  },
+  "scope":"APK ZIP entry names and packaged native binaries; this closes the hidden-container check but not external production resources."
+}
