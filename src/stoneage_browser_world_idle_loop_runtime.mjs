@@ -101,6 +101,9 @@ async function runWorldIdleLoop(state,{
   }
 
   for(let tickIndex=0;tickIndex<limit;tickIndex++){
+    if(String(currentState?.idle?.mode??'')!=='moving'){
+      return fail('world-idle-loop-state','idle-state-moving-required',currentState,{tickIndex,history,idleMode:currentState?.idle?.mode??null});
+    }
     const input=isObject(ticks[tickIndex])?ticks[tickIndex]:{};
     const move=input.move??null;
     if(!isObject(move))return fail('world-idle-loop-movement','movement-step-required',currentState,{tickIndex});
@@ -333,6 +336,26 @@ async function runWorldIdleLoop(state,{
     battleContext=null;
     tickRecord.battleAuto=clone(auto);
     history.push(tickRecord);
+    if(String(currentState?.idle?.mode??'')==='supply_check'){
+      return {
+        ok:true,
+        handled:true,
+        stage:'world-idle-loop-paused-supply',
+        format:BROWSER_WORLD_IDLE_LOOP_RUNTIME_FORMAT,
+        action:ACTION_WORLD_IDLE_LOOP_TICK,
+        ticksExecuted:history.length,
+        requestedTicks:limit,
+        history,
+        state:clone(currentState),
+        battleContext:null,
+        persistentMutation:true,
+        rngGeneratedInternally:false,
+        reason:'supply-check-required'
+      };
+    }
+    if(String(currentState?.idle?.mode??'')!=='moving'){
+      return fail('world-idle-loop-continuation','idle-loop-cannot-continue',currentState,{tickIndex,history,idleMode:currentState?.idle?.mode??null});
+    }
   }
 
   return {
