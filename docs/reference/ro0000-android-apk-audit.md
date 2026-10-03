@@ -720,3 +720,22 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battleskill_
 這一層的意義是：battle status 與 battle action/result command 在 client 端本身就是**兩條分離的 receive queue**；後續真正的 `BattleStatus` / `BattleCmd` 解包仍由其他處理函式負責，不能把這個 receiver 本身誤當成傷害或結算邏輯。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_receive_contract.json`。
+
+
+## BattleStatus BC stream → ACTION state decode
+
+這一輪把 target APK 的 `set_bc()` 再往下拆到「每個 BC participant record 實際寫入哪些 ACTION 欄位」以及 battle status flags。
+
+- x86 `set_bc()` 位於 `0x361680`，結束於 `0x3623a3`；其 parser helper 為 `get_bc_num()`=`0x361140`、`get_bc_asc()`=`0x3612e0`、`get_bc_asc_ridepet()`=`0x3614d0`。
+- BC header 第一個 hex integer 會寫入目前 battle master ACTION 的 `+0xe0`。之後每筆 participant 先讀 index，再從 participant ACTION 依序讀 name、freeName/title、graphic number、level、hp、maxHp、battleFlags、ride state、ride pet name、ride pet level、ride pet hp、ride pet max hp。
+- target x86 的直接欄位寫入已確認：graphic `+0x180`、level `+0xc8`、hp `+0xb8`、maxHp `+0xbc`、ride state `+0x1d4`、ride-pet name `+0x1d8`、ride-pet level/hp/maxHp `+0x1ec/+0x1f0/+0x1f4`。name/freeName 分別由 `get_bc_asc(action,0/1)` 寫入 `+0x38/+0x78`。
+- `battleFlags` 不是單純保存值，而是立即驅動 participant 的生命、離場、逆轉屬性與狀態動畫。target 直接可觀察到：`0x1` fresh、`0x2` death、`0x4` pet-ok、`0x200` fade-out、`0x400` reverse。
+- target 的 status mapping 也已逐 bit 追出：`0x8..0x100` → status 1..6；`0x800..0x8000` → 7..11；`0x10000..0x8000000` 依序對應 12..23；`0x40000000` → 34。其後較低優先級的 `0x10000000` 路徑先寫 32、再以同一個 `0x10000000` 測試再寫 33，因此實際 target 的最後結果會覆蓋為 33；這個重複判斷不能被外部 header 的預期 `0x20000000` 自動修正。
+- 當 status id 非 0，target 會呼叫 `set_single_jujutsu(statusId, action)`，並把 status id 寫入 ACTION `+0xcc`；無 status 則寫 0。這是目前最直接的「伺服器回合狀態 → 客戶端異常狀態/動畫」橋樑。
+- target BC record 還有兩個未命名但已確認有效的效果欄位：`ACTION+0xd1c` > 0 時呼叫 `set_obj_effect(action,value)`；`ACTION+0xd20` > 0 時呼叫 `set_obj_effect1(action,value)`。
+- `get_bc_num()` 是 hex stream parser：只接受 `0-9/A-F`，以 16 進位累積，遇到 `|` 回傳；遇到 NUL 則退回一個 cursor 並回傳 -1。字串 helper 則以 `|`/NUL 終止並經過 `makeStringFromEscapedPc`。
+- 公開 `alrightlook/StoneAgeMobileApp` 的 `oft.cpp/vg410.h` 可對照 status flag 名稱與舊版 `set_bc()` 結構，但這裡只作 semantic reference，不宣稱與 target APK 為同一 build/version。
+
+這層現在已足以支援 browser battle runtime 直接還原 BC participant 的 hp/maxHp/level/graphic/ride-pet/status state，不必再把 BC 封包當成黑盒字串。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_status_decode_contract.json`。
