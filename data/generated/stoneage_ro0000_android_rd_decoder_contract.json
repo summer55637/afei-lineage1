@@ -55,9 +55,10 @@
   "boundary": {
     "targetRealBinPayloadAvailable": false,
     "targetGraphicMagicPayloadSamples": false,
-    "gGBrowserDecoderImplemented": false,
+    "gGBrowserDecoderImplemented": true,
     "gGBrowserDecodeAvailable": true,
     "gGBrowserDecodeMethod": "createImageBitmap + Canvas 2D getImageData",
-    "targetPayloadByteParityVerified": false
+    "targetPayloadByteParityVerified": false,
+    "gGBrowserDecoderImplementation": "decodeStoneAgePngWrappedAsync / decodeStoneAgeGraphicAsync"
   }
 }
