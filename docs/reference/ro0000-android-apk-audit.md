@@ -665,6 +665,22 @@ Memory-operation code generation is reported separately: the x86 excerpts contai
 
 This closes the previously untraced switch-dispatch paths in the focused inventory; it is not instruction-level equivalence, complete decompilation of every native function, or proof of identical runtime behavior. External resources, network/server responses, and device behavior remain separate evidence boundaries.
 
+## World-map Lua bridge and window dispatch
+
+The target's world-map path is now recorded separately from tile-map decoding. The APK contains `initWorldMap()`, `worldMapProc()`, and `mapWndProc()` in both packaged ABIs; their build-specific entry addresses are in `data/generated/stoneage_ro0000_android_native_resource_layout.json` under `worldMapRuntime.functions`.
+
+`initWorldMap()` and `worldMapProc()` resolve a Lua context with `FindLua(char*)`. When the context is absent, each chooses between a formatted path buffer and a copied path buffer before resolving it. The concrete path and embedded strings remain intentionally omitted. Both then fetch a Lua field at `LUA_GLOBALSINDEX` (observed numeric index `-10002`) and require `lua_type(...,-1) == 6` (function).
+
+- `initWorldMap()` calls `docall(L,0,1)` for a function-valued field. If the field is not a function, it clears the pushed value with `lua_settop(L,-2)`. The function itself returns void; its visible body does not inspect the local `docall` result.
+- `worldMapProc()` calls `lua_pcall(L,0,1,0)`. A failed protected call reads the top stack value with `lua_tolstring`, sends it to `SDL_Log`, clears the stack to `-2`, and returns 0. On success it checks `lua_isnumber(L,-1)`; numeric results are converted to a signed C `int` (truncation toward zero), the stack is cleared, and the integer is returned. Missing context, a non-function field, and a nonnumeric result all produce 0.
+- A notable unresolved runtime risk is visible in the target body: the successful-but-nonnumeric branch returns 0 without an explicit `lua_settop` call, unlike the function-type error, pcall-error, and numeric-result branches. This may leave the result on the Lua stack; repeated-call accumulation has not been measured in the original runtime and is not asserted as a confirmed leak.
+
+`mapWndProc()` is gated by the high UI flag bit (x86 mask `0x40000000`, equivalent to ARM byte offset 3 / mask `0x40`) and a separate state value equal to 9. The target creates its window through `MakeWindowDisp(0x184,4,248,240,0,-1,false)`; after creation it clears the returned surface and sets a one-byte initialization flag. Each audited ABI submits three `StockFontBuffer` and three `StockDispBuffer` calls for the window's content. A window-state value of 1 enters the `worldMapProc()` call path. The internal state and the returned integer's precise UI meaning are left unlabeled where the native field semantics are not independently established.
+
+The separate `EndWarpMap()` routine tests a state byte's low bit; when set, it increments a counter and clears the byte. The state/counter names are not inferred from offsets alone.
+
+These functions close the Lua bridge and window-dispatch control flow at the static code level. They do not reveal the omitted Lua script body, establish the meaning of its numeric return codes, or demonstrate the resulting map contents. The machine-readable anchors and evidence boundary are in `worldMapRuntime` within `data/generated/stoneage_ro0000_android_native_resource_layout.json`.
+
 ## SDL client loop, input dispatch, and movement events
 
 The target's SDL entry, frame loop, event dispatcher, keyboard/mouse adapters, socket loop, and movement/event dispatch are now recorded in \`data/generated/stoneage_ro0000_android_client_loop_contract.json\`.
