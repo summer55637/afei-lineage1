@@ -124,6 +124,7 @@ function buildReadme() {
   const hasV477SupplyRoutePlan = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_idle_supply_route_runtime.mjs'));
   const hasV478SupplyRouteExecution = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_idle_supply_route_execution_runtime.mjs'));
   const hasV479SupplyWindowHealer = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_idle_supply_window_healer_runtime.mjs'));
+  const hasV480SupplyAutoReturn = fs.existsSync(path.join(ROOT, 'src', 'stoneage_browser_idle_supply_auto_return_runtime.mjs'));
   const battlePolicyPending = idleSummary.battlePolicyPendingAll === true && !hasV471WorldIdleLoop;
   const fullRouteMilestones=[];
   if(hasV471WorldIdleLoop)fullRouteMilestones.push('自動戰鬥＋戰後結算＋World Idle Tick（V4.71）');
@@ -133,6 +134,7 @@ function buildReadme() {
   if(hasV477SupplyRoutePlan)fullRouteMilestones.push('返村→醫院路徑規劃（V4.77）');
   if(hasV478SupplyRouteExecution)fullRouteMilestones.push('返村→醫院逐格執行（V4.78）');
   if(hasV479SupplyWindowHealer)fullRouteMilestones.push('WindowHealer→SUPPLY_DONE（V4.79）');
+  if(hasV480SupplyAutoReturn)fullRouteMilestones.push('返院＋治療＋SUPPLY_DONE 自動閉環（V4.80）');
   const fullRouteLine = firstRoutePathClosed
     ? '✅ 路徑已閉合（' + repairedPortalGroups + '/' + portalGroups + ' portal groups）' + (
         fullRouteMilestones.length
@@ -156,6 +158,7 @@ function buildReadme() {
   if(hasV477SupplyRoutePlan)battleMilestones.push('V4.77 Supply Route Plan');
   if(hasV478SupplyRouteExecution)battleMilestones.push('V4.78 Supply Route Execute');
   if(hasV479SupplyWindowHealer)battleMilestones.push('V4.79 Supply WindowHealer');
+  if(hasV480SupplyAutoReturn)battleMilestones.push('V4.80 Supply Auto Return');
   const battleLine = battleMilestones.length ? '✅ ' + battleMilestones.join('；') : (workflowVersion == null ? '⚠️ 未知' : '✅ ' + workflowLabel);
   const playableLine = oldPresent.length === 0 ? '⏸️ 尚未建立（刻意保留）' : '⚠️ 發現舊入口：' + oldPresent.join(', ');
 
