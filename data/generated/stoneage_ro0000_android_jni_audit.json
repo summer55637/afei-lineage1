@@ -1201,12 +1201,12 @@
                 "function": "apollo::JniMethodMgr::Init(_JNIEnv*, char**, int)",
                 "value": "0xf057c",
                 "size": 524,
-                "status": "no-instruction-output",
+                "status": "disassembly-ok",
                 "callSummary": {
-                  "instructionLineCount": 0,
+                  "instructionLineCount": 131,
                   "directCallTargets": [],
                   "indirectCallSiteCount": 0,
-                  "disassemblySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  "disassemblySha256": "f38991a0fcea7bd61678ad470d51f3a0e94a0d3edf470c0990507d8515da3365"
                 }
               }
             ]
@@ -5457,12 +5457,12 @@
                 "function": "apollo::JniMethodMgr::Init(_JNIEnv*, char**, int)",
                 "value": "0xf44b0",
                 "size": 489,
-                "status": "no-instruction-output",
+                "status": "disassembly-ok",
                 "callSummary": {
-                  "instructionLineCount": 0,
+                  "instructionLineCount": 130,
                   "directCallTargets": [],
                   "indirectCallSiteCount": 0,
-                  "disassemblySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  "disassemblySha256": "4a339fd01990780b3684b961de6e65adc3e8eb50a347337ecbbe3e7f19792a18"
                 }
               }
             ]
