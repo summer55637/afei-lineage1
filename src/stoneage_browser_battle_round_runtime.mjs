@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v453-browser-battle-round-runtime-v1';
+const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v455-browser-battle-round-runtime-v1';
 const ACTION_BATTLE_ROUND_RESOLVE='BATTLE_ROUND_RESOLVE';
 
 const BATTLE_MODE_BATTLE=2;
@@ -154,6 +154,10 @@ async function resolveBattleRound(context,{
   bowTargetListRollByBid={},
   attackCountFallbackRollByBid={},
   attackCountFallbackAttackRollByBid={},
+  carriedLootItemsByEnemyBid={},
+  carriedLootOwnerRollsByEnemyBid={},
+  carriedLootReplaceRollsByEnemyBid={},
+  carriedLootReplaceSlotRollsByEnemyBid={},
   runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
@@ -368,6 +372,10 @@ async function resolveBattleRound(context,{
             hitRollBundles,
             transactionPrefix:String(id),
             damageDivisorOverride:unarmedPlayerAttackCount?1:null,
+            carriedLootItemsByEnemyBid,
+            carriedLootOwnerRollsByEnemyBid,
+            carriedLootReplaceRollsByEnemyBid,
+            carriedLootReplaceSlotRollsByEnemyBid,
             now
           }
         );
@@ -692,6 +700,7 @@ async function resolveBattleRound(context,{
     scope:{
       basicAttackOnly:true,
       playerUnarmedAttackCount:true,
+      carriedLootQueue:true,
       sourceAttackCountEmbedded:true,
       bowTargetListEmbedded:true,
       maxAttackCountPerActor:50,
