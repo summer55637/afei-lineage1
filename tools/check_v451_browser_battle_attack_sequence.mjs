@@ -114,7 +114,7 @@ const bundle=()=>({
 
 {
   const ctx=base();
-  ctx.context.sides[1].entries[0].hp=10;
+  ctx.context.sides[1].entries[0].hp=4;
   const result=await runtime.resolve(ctx,{
     attackerBid:0,
     requestedTargetBid:10,
