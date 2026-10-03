@@ -142,6 +142,7 @@ function processBattleDeathExtras(context,{
         charmAfter:entry.charm,
         charmDelta,
         defaultPetEvent,
+        defaultPetRelationPreserved:true,
         persistent:true
       });
     }else if(type==='pet'){
