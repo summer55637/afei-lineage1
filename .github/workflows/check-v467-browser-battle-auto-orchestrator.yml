@@ -1,0 +1,23 @@
+name: Check V4.67 browser battle auto orchestrator
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_auto_runtime.mjs'
+      - 'tools/check_v467_browser_battle_auto_orchestrator.mjs'
+      - '.github/workflows/check-v467-browser-battle-auto-orchestrator.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.67 auto orchestrator regression
+        run: node tools/check_v467_browser_battle_auto_orchestrator.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_auto_runtime.mjs
+          node --check tools/check_v467_browser_battle_auto_orchestrator.mjs
