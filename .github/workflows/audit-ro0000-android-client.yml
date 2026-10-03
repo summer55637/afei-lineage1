@@ -247,6 +247,7 @@ jobs:
             git reset --hard origin/main
             cp artifacts/ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
+            cp artifacts/stoneage_ro0000_android_adrn_consumer_triage.json data/generated/stoneage_ro0000_android_adrn_consumer_triage.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -282,6 +283,5 @@ jobs:
             artifacts/ro0000_android_battlemap_selector_crosscheck.json
             data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
             artifacts/native/**/*.so
-            artifacts/native-all/**/*.so
           if-no-files-found: error
           retention-days: 30
