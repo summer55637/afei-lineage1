@@ -17,9 +17,10 @@ const allowPartial=args.includes('--allow-partial');
 
 const FIXED_REF='1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56';
 const SOURCE_REPO='gavinlinasd/StoneAge';
-const CORE_WORLD_RUNTIME=[100,200,300,400,1000,2000,3000,4000];
+const CORE_WORLD_RUNTIME=[100,200,400,1000,2000,3000,4000];
 
 const CANDIDATES=[
+  {floor:300,branch:'core-world'},
   {floor:500,branch:'floor-500'},
   {floor:1040,branch:'floor-100-branch'},
   {floor:1100,branch:'floor-100-branch'},
@@ -138,6 +139,7 @@ for(const c of CANDIDATES){
     });
   }catch(error){
     blocked++;
+    console.error(JSON.stringify({floor:c.floor,status:'runtime-generation-blocked',error:String(error?.message||error)},null,2));
     results.push({
       floor:c.floor,
       branch:c.branch,
