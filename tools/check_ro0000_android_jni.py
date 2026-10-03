@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 
-from audit_ro0000_android_jni import (parse_jni_exports, parse_all_jni_symbols, parse_jni_onload_symbols, summarize_onload_disassembly, relevant_native_strings, summarize_java_native_loaders, compare_jni_methods, jni_escape, jni_symbol_candidates, compare_all_declarations)
+from audit_ro0000_android_jni import (parse_jni_exports, parse_all_jni_symbols, parse_jni_onload_symbols, parse_defined_function_records, select_registration_helper_records, summarize_onload_disassembly, relevant_native_strings, summarize_java_native_loaders, compare_jni_methods, jni_escape, jni_symbol_candidates, compare_all_declarations)
 
 
 class JniDeclarationExportTests(unittest.TestCase):
@@ -31,6 +31,30 @@ class JniDeclarationExportTests(unittest.TestCase):
             parse_jni_onload_symbols(output),
             [{"value": "0x1234", "size": 48}],
         )
+
+    def test_selects_only_registration_helper_symbols(self):
+        readelf = """  1: 00001000 40 FUNC GLOBAL DEFAULT 11 _ZN6apollo13JniMethodMgr4InitEP7_JNIEnvPPci
+  2: 00002000 20 FUNC GLOBAL DEFAULT 11 LoadMultiThreadClass
+  3: 00003000 12 FUNC GLOBAL DEFAULT 11 unrelated_helper
+  4: 00000000  0 FUNC GLOBAL DEFAULT UND _ZN6apollo13JniMethodMgr4InitEP7_JNIEnvPPci
+"""
+        records = parse_defined_function_records(readelf)
+        self.assertEqual(len(records), 3)
+        selected = select_registration_helper_records(records, cxxfilt=None)
+        self.assertEqual(
+            [item["rawName"] for item in selected],
+            ["LoadMultiThreadClass"],
+        )
+
+    def test_select_registration_helper_by_demangled_name(self):
+        records = [{
+            "rawName": "_ZN6apollo13JniMethodMgr4InitEP7_JNIEnvPPci",
+            "value": "0x1000",
+            "size": 40,
+        }]
+        selected = select_registration_helper_records(records)
+        self.assertEqual(len(selected), 1)
+        self.assertIn("JniMethodMgr::Init(", selected[0]["demangled"])
 
     def test_summarize_jni_onload_calls_without_publishing_disassembly(self):
         output = """00001000 <JNI_OnLoad>:
