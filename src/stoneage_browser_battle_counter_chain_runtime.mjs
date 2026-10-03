@@ -233,6 +233,7 @@ async function resolveCounterChain(context,{
       const carriedItems=carriedLootItemsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootItemsByEnemyBid?.[prelude.finalTargetBid]??null;
       let carriedLoot=null;
       if(creditEvent&&Array.isArray(carriedItems)){
+        if(!runtimes.carriedLootRuntime||runtimes.carriedLootRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-counter-chain-carried-loot',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,reason:'carried-loot-runtime-required'};
         carriedLoot=await runtimes.carriedLootRuntime.queue(
           {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
           {
