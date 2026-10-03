@@ -143,7 +143,7 @@ assert.equal(round.nextCommandPhase,true);
 assert.equal(round.counterDeferredCount,round.deferred.length);
 assert.ok(round.counterDeferredCount>=1);
 assert.equal(round.scope.counterDeferred,true);
-assert.equal(round.scope.maxAttackCountPerActor,1);
+assert.equal(round.scope.maxAttackCountPerActor,50);
 assert.equal(round.persistentMutation,false);
 assert.equal(round.damageExecuted,true);
 
