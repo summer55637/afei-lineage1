@@ -178,7 +178,7 @@ async function resolveBattleRound(context,{
   const id=String(roundId??'').trim();
   if(!id||id.length>128)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'round-id-required'};
 
-  const runtimeNames=['attackCountRuntime','targetListRuntime','attackSequenceRuntime','attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','statusRuntime','endRuntime'];
+  const runtimeNames=['attackCountRuntime','targetListRuntime','attackSequenceRuntime','attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime','carriedLootRuntime','enemyExpRuntime','relifeRuntime','statusRuntime','endRuntime'];
   const missingRuntime=runtimeNames.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missingRuntime){
     return {
@@ -792,7 +792,11 @@ function createBrowserBattleRoundRuntime({
   damageDeathChainRuntime,
   counterChainRuntime,
   statusRuntime,
-  endRuntime
+  endRuntime,
+  profitCreditRuntime,
+  carriedLootRuntime,
+  enemyExpRuntime,
+  relifeRuntime
 }={}){
   const required=[
     ['attackCountRuntime',attackCountRuntime],
@@ -805,6 +809,10 @@ function createBrowserBattleRoundRuntime({
     ['damageReactRuntime',damageReactRuntime],
     ['damageReactCommitRuntime',damageReactCommitRuntime],
     ['damageDeathChainRuntime',damageDeathChainRuntime],
+    ['profitCreditRuntime',profitCreditRuntime],
+    ['carriedLootRuntime',carriedLootRuntime],
+    ['enemyExpRuntime',enemyExpRuntime],
+    ['relifeRuntime',relifeRuntime],
     ['counterChainRuntime',counterChainRuntime],
     ['statusRuntime',statusRuntime],
     ['endRuntime',endRuntime]
@@ -831,6 +839,10 @@ function createBrowserBattleRoundRuntime({
         damageReactRuntime,
         damageReactCommitRuntime,
         damageDeathChainRuntime,
+        profitCreditRuntime,
+        carriedLootRuntime,
+        enemyExpRuntime,
+        relifeRuntime,
         counterChainRuntime,
         statusRuntime,
         endRuntime
