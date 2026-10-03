@@ -138,17 +138,23 @@ function planBattleLevelUp(battleExpPlan,state,{
       chartrans,
       pettrans
     });
+    const variableAiBefore=intOr(pet?.variableAi,0);
+    const variableAiAfter=intOr(petPlan?.variableAi,variableAiBefore);
+    const variableAiDelta=variableAiAfter-variableAiBefore;
     petPlans.push({
       petId,
-      variableAiBefore:intOr(pet?.variableAi,0),
-      variableAiAfter:intOr(petPlan?.variableAi,intOr(pet?.variableAi,0)),
-      variableAiDelta:intOr(petPlan?.variableAi,intOr(pet?.variableAi,0))-intOr(pet?.variableAi,0),
+      variableAiBefore,
+      variableAiAfter,
+      variableAiDelta,
       ...planned,
-      sourceSideEffects:(planned.levelUps>0||intOr(petPlan?.variableAiDelta,0)!==0)?[
+      sourceSideEffects:(planned.levelUps>0||variableAiDelta!==0)?[
         'CHAR_PetLevelUp x levelUps',
-        'CHAR_PetAddVariableAi(AI_FIX_PETLEVELUP) x levelUps',
-        'CHAR_complianceParameter(pet)',
-        'CHAR_VARIABLEAI += Pet Win AI transient delta'
+        ...(planned.levelUps>0?[
+          'CHAR_PetLevelUp x levelUps',
+          'CHAR_PetAddVariableAi(AI_FIX_PETLEVELUP) x levelUps',
+          'CHAR_complianceParameter(pet)'
+        ]:[]),
+        ...(variableAiDelta!==0?['CHAR_VARIABLEAI += Pet Win AI transient delta']:[])
       ]:[]
     });
   }
