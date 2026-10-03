@@ -1,3 +1,5 @@
+import { createBrowserBattleDeathExtraRuntime } from './stoneage_browser_battle_death_extra_runtime.mjs';
+
 const BROWSER_BATTLE_PROFIT_CREDIT_RUNTIME_FORMAT='stoneage-v454-browser-battle-profit-credit-v1';
 const ACTION_BATTLE_PROFIT_CREDIT_APPLY='BATTLE_PROFIT_CREDIT_APPLY';
 const SIDE_OFFSET=10;
@@ -48,10 +50,18 @@ function applyBattleProfitCredit(context,{
     return {ok:false,handled:false,stage:'battle-profit-credit',action:ACTION_BATTLE_PROFIT_CREDIT_APPLY,reason:'battle-context-required'};
   }
 
+  const deathExtraRuntime=createBrowserBattleDeathExtraRuntime();
+  const deathExtra=deathExtraRuntime.apply(context,{
+    defaultPetBidByPlayerBid,
+    deathExtraRandomRollsByBid,
+    now
+  });
+  if(!deathExtra.ok)return {...deathExtra,stage:'battle-profit-death-extra',action:ACTION_BATTLE_PROFIT_CREDIT_APPLY};
+  const nextWithDeath={format:'stoneage-browser-battle-context-runtime-v1',context:clone(deathExtra.context)};
   const bids=normalizeCreditBids(attackerBids);
   const playerBids=bids.filter(bid=>bid<SIDE_OFFSET);
   const creditEnabled=allowPlayerCredit===true&&playerBids.length>0;
-  const next=clone(context);
+  const next=clone(nextWithDeath);
   const events=Array.isArray(next.context.sourceProfitCreditEvents)
     ? next.context.sourceProfitCreditEvents.slice()
     : [];
@@ -92,8 +102,8 @@ function applyBattleProfitCredit(context,{
     source:{
       repository:'gavinlinasd/StoneAge',
       ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
-      function:'BATTLE_AddProfit',
-      boundary:'BATTLE_AddExpItem first-death credit'
+        function:'BATTLE_AddProfit',
+      boundary:'BATTLE_AddExpItem death-extra scan then first-death reward credit'
     },
     attackerBids:bids,
     playerCreditBids:playerBids,
@@ -105,6 +115,8 @@ function applyBattleProfitCredit(context,{
     rewardNumbersDeferred:true,
     carriedLootRngDeferred:true,
     committedDeathAdapter:allowCommittedDeath===true,
+    deathExtra,
+
     expMutation:false,
     goldMutation:false,
     persistentMutation:false,
