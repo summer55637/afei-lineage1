@@ -124,6 +124,7 @@ assert.equal(retry.ok,true);
 assert.equal(retry.idempotent,true);
 assert.equal(retry.state.revision,1);
 
+state.player.hp=100;
 const missingCatalog=buildBattleContext({
   playerId:state.player.id,
   player:state.player,
