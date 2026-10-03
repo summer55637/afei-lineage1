@@ -18,7 +18,7 @@
         "animationTimer": "createdEffect +0x01 receives statusId byte",
         "inheritA": "createdEffect +0x18 receives source +0x18",
         "inheritB": "createdEffect +0x1c receives source +0x1c minus 0x40",
-        "effectRefCount": "createdEffect byte +0x15 is incremented"
+        "displayPriority": "createdEffect byte +0x15 is incremented; public ACTION layout identifies this byte as dispPrio"
       },
       "switchRange": "statusId 1..34; outside range exits without a status-specific graphic assignment"
     }
