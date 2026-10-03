@@ -104,9 +104,10 @@ For `libGCloudVoice.so`:
 
 - both ABIs export `JNI_OnLoad`;
 - the inspected `JNI_OnLoad` calls `apollo::JniMethodMgr::GetInstance()` and `apollo::JniMethodMgr::Init(...)`;
-- two indirect call sites remain unresolved to exact per-method registration records.
+- `JNI_OnLoad` was disassembled on both target ABIs. It calls `FindClass` and `apollo::JniMethodMgr::Init(...)` to cache JNI class references, but no `RegisterNatives` symbol or `RegisterNatives` string is present in either `libGCloudVoice.so`.
+- The five DEX methods that lack a direct JNI export in GCloud (`ChangeRole`, `EnableSpeakerOn`, `IsSpeaking`, `SetMicVolume`, `SetVoiceEffects`) remain non-exported from the JNI name lookup path; the additional Apollo Bluetooth wrappers are C++-mangled functions that simply return `0`, so they do not supply normal `Java_...` JNI entrypoints.
 
-Thus the remaining JNI uncertainty is now isolated to dynamic registration inside third-party `libGCloudVoice.so` and actual runtime invocation, rather than the game's six direct `JNILibrary` exports.
+Thus the remaining JNI uncertainty is primarily actual Android runtime invocation/lifecycle behavior, not an unresolved `RegisterNatives` table in `libGCloudVoice.so`. The game's six direct `JNILibrary` exports remain fully matched in both target ABIs.
 
 ## 6. Effect on reconstruction
 
@@ -127,7 +128,7 @@ What remains genuinely external to the APK evidence is the **actual production r
 1. Obtain and hash the actual `battle00.sabex` ... `battle219.sabex` payloads, where authorized.
 2. Obtain the actual `adrn.bin` / `real.bin` / sprite-shard bytes needed for pixel-level verification.
 3. Recover per-file update metadata and patch payloads from an authorized captured update session or saved deployment snapshot.
-4. Resolve the remaining third-party `JNI_OnLoad` indirect registration sites.
+4. Determine the runtime callers/usage of the small set of legacy or optional third-party native declarations that have no direct JNI export.
 5. Perform original-device runtime/screen comparison; static evidence alone cannot close this item.
 
 No missing production resource bytes are fabricated or substituted into the target evidence layer.
