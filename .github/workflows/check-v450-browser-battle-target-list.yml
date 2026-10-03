@@ -1,0 +1,23 @@
+name: Check V4.50 browser battle target list
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_target_list_runtime.mjs'
+      - 'tools/check_v450_browser_battle_target_list.mjs'
+      - '.github/workflows/check-v450-browser-battle-target-list.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.50 target list regression
+        run: node tools/check_v450_browser_battle_target_list.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_target_list_runtime.mjs
+          node --check tools/check_v450_browser_battle_target_list.mjs
