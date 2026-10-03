@@ -1,0 +1,41 @@
+{
+  "format": "ro0000-android-apk-archive-resource-boundary-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "sha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "sizeBytes": 24931847,
+    "zipEntryCount": 38
+  },
+  "negativePayloadScan": {
+    "status": "no-target-production-resource-entries",
+    "patterns": [
+      "*.sabex",
+      "real.bin",
+      "adrn.bin",
+      "spr.bin",
+      "spradrn.bin",
+      "data/serverdata.dat",
+      "data/update/list.dat",
+      "pal/*.sap"
+    ],
+    "matches": [],
+    "scope": "APK ZIP entry names only; native embedded strings are analyzed separately."
+  },
+  "packagedGameAssets": [
+    "assets/data/font/FZLTZHUNHK.TTF",
+    "assets/data/font/simsun.ttc",
+    "assets/data/skin/3.png",
+    "assets/data/skin/4.png",
+    "assets/data/skin/5.png",
+    "assets/data/skin/61428.png",
+    "assets/data/skin/61429.png",
+    "assets/data/skin/61430.png",
+    "assets/data/skin/jdt.png"
+  ],
+  "nativeLibraryInventory": {
+    "armeabi-v7a": 8,
+    "x86": 8
+  },
+  "conclusion": "The target APK is a bootstrap/application package. The production map/sprite/image payload tree is external to the APK archive; static native code still contains locators and loaders for that external tree.",
+  "evidenceBoundary": "Absence of payload entries closes the APK-archive question but cannot establish where the external production bytes are stored or delivered."
+}
