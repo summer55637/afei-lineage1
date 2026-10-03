@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b7558b4 — test: account for lethal target stop in V4.52 controller sequence
-- 更新時間：2026-10-03T18:51:46+08:00
+- 最新 commit：dd7cf17 — test: align V4.52 persistent revision baseline
+- 更新時間：2026-10-03T18:52:18+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.52
 - Playable HTML：⏸️ 尚未建立（刻意保留）
