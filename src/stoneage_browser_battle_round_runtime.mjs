@@ -326,7 +326,7 @@ async function resolveBattleRound(context,{
         };
       }
 
-      const tx=\`\${id}:\${actorBid}:\${attacks.length}\`;
+      const tx=`\${id}:\${actorBid}:\${attacks.length}`;
       const deathCommit=commitDamageDeathChain(next,{
         damageReactPlan:reactPlan,
         transactionId:tx,
