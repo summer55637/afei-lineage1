@@ -89,7 +89,7 @@ jobs:
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
       - name: Compare reachable Android ARMv7 and x86 native call targets
-        run: python3 tools/audit_ro0000_android_native_abi.py --native-audit artifacts/ro0000_android_native_elf_audit.json --output artifacts/ro0000_android_native_abi_comparison.json
+        run: python3 tools/audit_ro0000_android_native_abi.py --native-audit artifacts/ro0000_android_native_elf_audit.json --arm-binary artifacts/native/armeabi-v7a-libStoneage.so --x86-binary artifacts/native/x86-libStoneage.so --output artifacts/ro0000_android_native_abi_comparison.json
       - name: Verify Android native loop and movement contracts
         run: |
           python3 tools/check_ro0000_android_native_contracts.py \
