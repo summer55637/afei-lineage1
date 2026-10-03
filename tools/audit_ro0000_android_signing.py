@@ -87,6 +87,124 @@ def _certificate_fingerprints(apk):
     return fingerprints
 
 
+
+def _parse_v1_manifest_sections(data):
+    """Parse JAR manifest sections and unfold RFC-style continuation lines."""
+    text = data.decode("utf-8", errors="replace")
+    logical_lines = []
+    for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        if line.startswith(" ") and logical_lines:
+            logical_lines[-1] += line[1:]
+        else:
+            logical_lines.append(line)
+
+    sections = []
+    current = {}
+    for line in logical_lines:
+        if not line:
+            if current:
+                sections.append(current)
+                current = {}
+            continue
+        key, separator, value = line.partition(": ")
+        if separator:
+            current[key.casefold()] = value
+    if current:
+        sections.append(current)
+    return sections
+
+
+def audit_v1_manifest_entry_digests(apk):
+    """Compare manifest entry digests with the uncompressed ZIP entry bytes."""
+    with zipfile.ZipFile(apk) as zf:
+        manifest_entries = sorted(
+            name for name in zf.namelist()
+            if name.casefold() == "meta-inf/manifest.mf"
+        )
+        if not manifest_entries:
+            return {
+                "status": "no-v1-manifest",
+                "manifestEntry": None,
+                "entryCount": 0,
+                "digestCount": 0,
+                "matchedDigestCount": 0,
+                "mismatchDigestCount": 0,
+                "mismatchEntries": [],
+                "missingEntries": [],
+                "unsupportedDigests": [],
+                "invalidDigests": [],
+            }
+
+        manifest_name = manifest_entries[0]
+        sections = _parse_v1_manifest_sections(zf.read(manifest_name))
+        digest_count = matched = mismatch_count = 0
+        entry_names = set()
+        mismatch_entries = set()
+        missing_entries = set()
+        unsupported = []
+        invalid = []
+
+        for section in sections:
+            entry_name = section.get("name")
+            if not entry_name:
+                continue
+            digest_fields = [
+                (key[:-7], value)
+                for key, value in section.items()
+                if key.endswith("-digest")
+            ]
+            if not digest_fields:
+                continue
+            entry_names.add(entry_name)
+            try:
+                payload = zf.read(entry_name)
+            except KeyError:
+                missing_entries.add(entry_name)
+                digest_count += len(digest_fields)
+                continue
+
+            for algorithm, encoded_digest in digest_fields:
+                digest_count += 1
+                normalized_algorithm = re.sub(r"[^a-z0-9]", "", algorithm.casefold())
+                try:
+                    actual = hashlib.new(normalized_algorithm, payload).digest()
+                except (TypeError, ValueError):
+                    unsupported.append({"entry": entry_name, "algorithm": algorithm})
+                    continue
+                try:
+                    expected = base64.b64decode(encoded_digest.encode("ascii"), validate=True)
+                except (UnicodeEncodeError, ValueError):
+                    invalid.append({"entry": entry_name, "algorithm": algorithm})
+                    continue
+                if actual == expected:
+                    matched += 1
+                else:
+                    mismatch_count += 1
+                    mismatch_entries.add(entry_name)
+
+        if mismatch_count or missing_entries or invalid:
+            status = "mismatch"
+        elif unsupported:
+            status = "incomplete"
+        elif digest_count:
+            status = "match"
+        else:
+            status = "no-entry-digests"
+
+        return {
+            "status": status,
+            "manifestEntry": manifest_name,
+            "entryCount": len(entry_names),
+            "digestCount": digest_count,
+            "matchedDigestCount": matched,
+            "mismatchDigestCount": mismatch_count,
+            "mismatchEntries": sorted(mismatch_entries),
+            "missingEntries": sorted(missing_entries),
+            "unsupportedDigests": unsupported,
+            "invalidDigests": invalid,
+            "scope": "JAR v1 per-entry digest comparison only; this does not verify the signature block or publisher identity.",
+        }
+
 def sha256_file(path):
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -172,6 +290,7 @@ def main():
             "status": status,
             "profiles": profiles,
         },
+        "v1ManifestEntryDigests": audit_v1_manifest_entry_digests(apk),
         "certificateFingerprints": _certificate_fingerprints(apk),
         "disclosure": {
             "certificateDnOmitted": True,
@@ -196,6 +315,7 @@ def main():
             for p in profiles
         ],
         "certificateFingerprints": result["certificateFingerprints"],
+        "v1ManifestEntryDigests": result["v1ManifestEntryDigests"],
         "output": str(out),
     }, ensure_ascii=False, indent=2))
     # This is an evidence audit, not a release gate. Preserve failed results in
