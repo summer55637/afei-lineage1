@@ -52,10 +52,10 @@ const context={format:'stoneage-browser-battle-context-runtime-v1',context:{
   mode:'battle',sourceMode:2,turn:0,damageCommitRevision:0,fieldAtt:4,attPow:0,
   sides:[
     {side:0,type:0,entries:[
-      e(0,100,1,10),null,null,null,null,
+      e(0,100,2,-1),null,null,null,null,
       {...e(5,80,0,-1),sourceType:'pet',hp:0}
     ]},
-    {side:1,type:1,entries:[e(10,100,0,-1),...Array(9).fill(null)]}
+    {side:1,type:1,entries:[e(10,100,2,-1),...Array(9).fill(null)]}
   ]
 }};
 
@@ -81,7 +81,7 @@ assert.equal(round.ok,true);
 const result=await round.resolve(context,{
   roundId:'v459-dex',
   counterPolicy:'defer',
-  attackRolls:[{attackerBid:0,weaponType:'none',throwWeapon:false}],
+  attackRolls:[],
   dexRollByBid:{0:0,10:20},
   ridePetBidByParticipantBid:{0:5}
 });
