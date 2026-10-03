@@ -3,6 +3,7 @@ import {
   loadClientAssetPack,
   normalizeClientAssetPackManifest,
   resolveClientSpriteAnimation,
+  resolveClientSpriteFrameAsync,
   clientAssetPackSummary,
 } from '../src/stoneage_client_asset_pack.mjs';
 
@@ -38,8 +39,19 @@ const oneFrame=(count=1,{first=7,dtAnim=320,soundNo=4}={})=>Array.from({length:c
   }))
 }));
 
-const emptyAdrn=new Uint8Array(80);
-const emptyReal=new Uint8Array(0);
+const spriteAdrn=new Uint8Array(80);
+putU32(spriteAdrn,0,201);
+putU32(spriteAdrn,4,0);
+putU32(spriteAdrn,8,17);
+putU32(spriteAdrn,20,1);
+putU32(spriteAdrn,24,1);
+putU32(spriteAdrn,76,9001);
+const spriteReal=new Uint8Array(17);
+spriteReal.set([0x52,0x44,0x00],0);
+putU32(spriteReal,4,1);
+putU32(spriteReal,8,1);
+putU32(spriteReal,12,17);
+spriteReal[16]=0x5a;
 const shard382=encodeSprite(100382,Array.from({length:50},(_,i)=>({
   dir:1,no:i,dtAnim:320,frames:[{bmpNo:100+i,posX:0,posY:0,soundNo:9}]
 })));
@@ -70,8 +82,8 @@ assert.throws(()=>normalizeClientAssetPackManifest({
 
 const payloads={
   'https://example.test/client-assets/manifest.json':{ok:true,status:200,json:async()=>manifest},
-  'https://example.test/client-assets/adrn.bin':{ok:true,status:200,arrayBuffer:async()=>emptyAdrn.buffer},
-  'https://example.test/client-assets/real.bin':{ok:true,status:200,arrayBuffer:async()=>emptyReal.buffer},
+  'https://example.test/client-assets/adrn.bin':{ok:true,status:200,arrayBuffer:async()=>spriteAdrn.buffer},
+  'https://example.test/client-assets/real.bin':{ok:true,status:200,arrayBuffer:async()=>spriteReal.buffer},
   'https://example.test/client-assets/sprite-382/spradrn.bin':{ok:true,status:200,arrayBuffer:async()=>shard382.spradrn.buffer},
   'https://example.test/client-assets/sprite-382/spr.bin':{ok:true,status:200,arrayBuffer:async()=>shard382.spr.buffer},
   'https://example.test/client-assets/sprite-381/spradrn.bin':{ok:true,status:200,arrayBuffer:async()=>shard381.spradrn.buffer},
@@ -88,6 +100,17 @@ const resolved=resolveClientSpriteAnimation(pack,100382,0);
 assert.equal(resolved.status,'ready');
 assert.equal(resolved.slot,382);
 assert.equal(resolved.animation.frameCount,14);
+const resolvedFrame=await resolveClientSpriteFrameAsync(pack,100382,0,0);
+assert.equal(resolvedFrame.status,'ready');
+assert.equal(resolvedFrame.graphicNo,201);
+assert.equal(resolvedFrame.format,'RD');
+assert.equal(resolvedFrame.width,1);
+assert.equal(resolvedFrame.height,1);
+assert.deepEqual([...resolvedFrame.pixels],[0x5a]);
+assert.deepEqual(resolvedFrame.frameOffset,{x:0,y:0});
+assert.equal(resolvedFrame.soundNo,24);
+assert.equal((await resolveClientSpriteFrameAsync(pack,100382,0,14)).status,'missing-frame');
+assert.equal((await resolveClientSpriteFrameAsync(pack,100382,0,-1)).status,'invalid-frame-reference');
 assert.deepEqual(resolved.animation.frames.map(frame=>frame.bmpNo),
   Array.from({length:14},(_,i)=>201+i));
 assert.equal(resolveClientSpriteAnimation(pack,100999,0).status,'missing-sprite');

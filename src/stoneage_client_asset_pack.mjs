@@ -209,6 +209,51 @@ export function resolveClientSpriteAnimation(pack,sprNo,animationIndex){
   return {status:'ready',sprNo:id,slot:sprite.slot,animationIndex:index,animation};
 }
 
+export async function resolveClientSpriteFrameAsync(pack,sprNo,animationIndex,frameIndex){
+  const resolved=resolveClientSpriteAnimation(pack,sprNo,animationIndex);
+  if(!resolved||resolved.status!=='ready')return resolved;
+  const frameNo=Number(frameIndex);
+  if(!Number.isSafeInteger(frameNo)||frameNo<0){
+    return {status:'invalid-frame-reference',sprNo:resolved.sprNo,animationIndex:resolved.animationIndex,frameIndex};
+  }
+  const frame=resolved.animation.frames[frameNo];
+  if(!frame)return {status:'missing-frame',sprNo:resolved.sprNo,animationIndex:resolved.animationIndex,frameIndex:frameNo};
+  if(!pack.index?.graphicNoToRecord||!pack.realBytes){
+    return {status:'sprite-image-resources-not-loaded',sprNo:resolved.sprNo,animationIndex:resolved.animationIndex,frameIndex:frameNo};
+  }
+  const graphic=pack.index.graphicNoToRecord.get(frame.bmpNo);
+  if(!graphic)return {status:'missing-graphic-no',sprNo:resolved.sprNo,animationIndex:resolved.animationIndex,frameIndex:frameNo,graphicNo:frame.bmpNo};
+  try{
+    const decoded=await decodeAuthorizedClientGraphicAsync(pack.realBytes,graphic);
+    if(!decoded)return {status:'decode-failed',sprNo:resolved.sprNo,animationIndex:resolved.animationIndex,frameIndex:frameNo,graphicNo:frame.bmpNo};
+    return {
+      status:'ready',
+      sprNo:resolved.sprNo,
+      slot:resolved.slot,
+      animationIndex:resolved.animationIndex,
+      frameIndex:frameNo,
+      graphicNo:frame.bmpNo,
+      width:decoded.width,
+      height:decoded.height,
+      pixels:decoded.pixels,
+      bytesPerPixel:decoded.bytesPerPixel??1,
+      frameOffset:{x:frame.posX,y:frame.posY},
+      graphicOffset:{x:graphic.xoffset,y:graphic.yoffset},
+      soundNo:frame.soundNo,
+      format:decoded.format,
+    };
+  }catch(error){
+    return {
+      status:'decode-failed',
+      sprNo:resolved.sprNo,
+      animationIndex:resolved.animationIndex,
+      frameIndex:frameNo,
+      graphicNo:frame.bmpNo,
+      error:String(error?.message||error)
+    };
+  }
+}
+
 export async function resolveClientTilePixelsAsync(pack,imageId){
   if(!pack||pack.status!=='ready'||!pack.index||!pack.realBytes)return null;
   const graphic=resolveClientImageId(pack.index,imageId);
