@@ -70,6 +70,7 @@ const fresh=({playerReflect=false,enemyReflect=false}={})=>{
 {
   const runtimes=runtimeSet();
   const ctx=fresh({enemyReflect:true});
+  ctx.context.sides[1].entries[0].battleCommands=[11,-1,-1];
   const round=await runtimes.roundRuntime.resolve(ctx,{
     roundId:'v448-round-reflect',
     counterPolicy:'execute',
