@@ -218,16 +218,6 @@ function createBrowserStateController({
   const battleDeathCommitRuntime=createBrowserBattleDeathCommitRuntime();
   const battleEndRuntime=createBrowserBattleEndRuntime();
   const battleFinishCommitRuntime=createBrowserBattleFinishCommitRuntime();
-  const battleRoundRuntime=createBrowserBattleRoundRuntime({
-    attackPreflightRuntime:battleAttackPreflightRuntime,
-    attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
-    damagePlanRuntime:battleDamagePlanRuntime,
-    criticalDamageRuntime:battleCriticalDamageRuntime,
-    damageReactRuntime:battleDamageReactRuntime,
-    damageDeathChainRuntime:battleDamageDeathChainRuntime,
-    statusRuntime:battleStatusRuntime,
-    endRuntime:battleEndRuntime
-  });
   const battleProfitRouteRuntime=createBrowserBattleProfitRouteRuntime();
   const battleDuelPointRuntime=createBrowserBattleDuelPointRuntime();
   const battleDuelPointCommitRuntime=createBrowserBattleDuelPointCommitRuntime();
@@ -247,6 +237,16 @@ function createBrowserStateController({
   const battleContextClearRuntime=createBrowserBattleContextClearRuntime();
   const battleInitializeRuntime=createBrowserBattleInitializeRuntime();
   const battleStatusRuntime=createBrowserBattleStatusRuntime();
+  const battleRoundRuntime=createBrowserBattleRoundRuntime({
+    attackPreflightRuntime:battleAttackPreflightRuntime,
+    attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
+    damagePlanRuntime:battleDamagePlanRuntime,
+    criticalDamageRuntime:battleCriticalDamageRuntime,
+    damageReactRuntime:battleDamageReactRuntime,
+    damageDeathChainRuntime:battleDamageDeathChainRuntime,
+    statusRuntime:battleStatusRuntime,
+    endRuntime:battleEndRuntime
+  });
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
   const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
   const battleEnemyStealRuntime=createBrowserBattleEnemyStealRuntime();
