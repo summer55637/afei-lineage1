@@ -1,0 +1,101 @@
+{
+  "format": "stoneage-ro0000-ride-endpoint-audit-v2",
+  "updated": "2026-10-03",
+  "endpoint": {
+    "dataPath": "ro0000/server/merged-source/gmsv/data/ride.txt",
+    "hydataPath": "ro0000/server/merged-source/gmsv/hydata/data/ride.txt",
+    "dataHydataIdentical": true,
+    "columnCount": 64,
+    "riderMappingRows": 12
+  },
+  "fixedRuntime": {
+    "source": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "flag": "_NEW_RIDEPETS",
+    "rideCodes": [
+      {
+        "code": "RIDE_PET0",
+        "petImage": 100374
+      },
+      {
+        "code": "RIDE_PET1",
+        "petImage": 100358
+      },
+      {
+        "code": "RIDE_PET2",
+        "petImage": 100362
+      },
+      {
+        "code": "RIDE_PET3",
+        "petImage": 100279
+      },
+      {
+        "code": "RIDE_PET4",
+        "petImage": 100288
+      },
+      {
+        "code": "RIDE_PET5",
+        "petImage": 100283
+      },
+      {
+        "code": "RIDE_PET6",
+        "petImage": 100346
+      },
+      {
+        "code": "RIDE_PET7",
+        "petImage": 100310
+      },
+      {
+        "code": "RIDE_PET8",
+        "petImage": 100372
+      },
+      {
+        "code": "RIDE_PET9",
+        "petImage": 100373
+      },
+      {
+        "code": "RIDE_PET10",
+        "petImage": 101532
+      },
+      {
+        "code": "RIDE_PET11",
+        "petImage": 101576
+      }
+    ],
+    "characterAppearanceRows": 12,
+    "runtimeFunctions": [
+      "RIDEPET_getPETindex",
+      "RIDEPET_getNOindex",
+      "RIDEPET_getRIDEno"
+    ],
+    "persistence": [
+      "CHAR_RIDEPET",
+      "CHAR_LEARNRIDE",
+      "CHAR_LOWRIDEPETS"
+    ]
+  },
+  "sourceCorrelation": {
+    "rideTxtHeader": "64 ride-pet slots",
+    "rideTxtRows": "12 character appearance rows, each with 64 image values",
+    "correspondence": "The endpoint row structure and Fixed-C RideNoList have the same 12-row × 12-animation-family organization; endpoint values include the same image-number families used by the fixed runtime.",
+    "conclusion": "RO0000 ride.txt is gameplay-relevant ride visual mapping, not mere UI text."
+  },
+  "progression": {
+    "ridermanConf": "family/riderman.conf",
+    "learnRideLevels": [
+      40,
+      80,
+      120,
+      200
+    ],
+    "tuition": [
+      5000,
+      10000,
+      15000,
+      20000
+    ],
+    "petEligibility": "family.c checks learned ride level against pet LV; additional checks include pet FIXAI >=100 and player LV +5 >= pet LV.",
+    "additionalLearningItemPath": "ITEM_useLearnRideCode under _NEW_RIDEPETS can OR-in one of RIDE_PET0..11 into CHAR_LOWRIDEPETS; optional transmigration requirement is read from item argument."
+  },
+  "status": "ride mapping + progression semantics closed; exact generic ride.txt loader callsite not separately identified",
+  "policy": "Preserve endpoint ride table as primary visual mapping. Do not replace its values with historical variants."
+}
