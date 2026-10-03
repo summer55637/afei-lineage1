@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8fa8e98 — docs: close RO0000 pet fusion endpoint audit
-- 更新時間：2026-10-03T16:16:04+08:00
+- 最新 commit：131e95b — docs: record RO0000 pet fusion endpoint boundary
+- 更新時間：2026-10-03T16:16:30+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
