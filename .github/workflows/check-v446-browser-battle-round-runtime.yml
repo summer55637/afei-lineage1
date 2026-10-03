@@ -5,6 +5,7 @@ on:
       - 'src/stoneage_browser_battle_round_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'src/stoneage_browser_battle_status_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
       - 'src/stoneage_browser_battle_attack_preflight_runtime.mjs'
       - 'src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs'
       - 'src/stoneage_browser_battle_damage_plan_runtime.mjs'
