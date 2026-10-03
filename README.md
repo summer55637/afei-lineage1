@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：81b4b17 — feat: add V4.51 basic multi-hit attack sequence
-- 更新時間：2026-10-03T18:18:10+08:00
+- 最新 commit：ea803e3 — ci: add V4.51 attack sequence regression
+- 更新時間：2026-10-03T18:19:10+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.50
+- Regression 最高版本：V4.51
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.50 |
+| Battle Pipeline | ✅ V4.51 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
