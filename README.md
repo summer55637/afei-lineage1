@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：1a114ee — audit: correct archive size provenance wording
-- 更新時間：2026-10-03T17:27:14+08:00
+- 最新 commit：3431b02 — docs: record Group provenance continuity for next session
+- 更新時間：2026-10-03T17:29:50+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
