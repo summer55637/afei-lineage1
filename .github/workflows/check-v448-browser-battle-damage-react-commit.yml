@@ -8,6 +8,7 @@ on:
       - 'src/stoneage_browser_battle_round_runtime.mjs'
       - 'src/stoneage_browser_state_controller.mjs'
       - 'tools/check_v448_browser_battle_damage_react_commit.mjs'
+      - 'tools/check_v448_browser_battle_damage_react_integration.mjs'
       - '.github/workflows/check-v448-browser-battle-damage-react-commit.yml'
   workflow_dispatch:
 permissions:
@@ -21,6 +22,8 @@ jobs:
           fetch-depth: 1
       - name: Run V4.48 special damage react regression
         run: node tools/check_v448_browser_battle_damage_react_commit.mjs
+      - name: Run V4.48 special react integration regression
+        run: node tools/check_v448_browser_battle_damage_react_integration.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_damage_react_commit_runtime.mjs
@@ -28,3 +31,4 @@ jobs:
           node --check src/stoneage_browser_battle_round_runtime.mjs
           node --check src/stoneage_browser_state_controller.mjs
           node --check tools/check_v448_browser_battle_damage_react_commit.mjs
+          node --check tools/check_v448_browser_battle_damage_react_integration.mjs
