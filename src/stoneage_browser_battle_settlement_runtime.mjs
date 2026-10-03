@@ -26,6 +26,7 @@ function requiredSettlementBranches(battleContext){
   const required=[];
   if(dpbattle===1)required.push('duelPoint');
   else if(!dead)required.push('levelUp');
+  if(Array.isArray(context.sourceDeathExtraEvents)&&context.sourceDeathExtraEvents.length>0)required.push('deathExtra');
   if(!dead && Array.isArray(player.getitem) && player.getitem.some(v=>intOr(v,-1)>=0))required.push('item');
   return {ok:true,startRevision,playerId:String(player.characterId??'').trim()||null,encounterId:intOr(context.sourceEncounter?.encounterId,null),requiredBranches:required,dpbattle,playerDead:dead};
 }
