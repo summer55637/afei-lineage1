@@ -163,3 +163,29 @@ RO0000 `setup.cf` 的 active skill file 是：
 
 `data/generated/stoneage_ro0000_singleplayer_core_data_audit.json`
 
+
+
+## 2026-10-03 PetSkillShop endpoint 實例閉合
+
+本輪重新利用 RO0000 `data/npc/look.txt` 發現的 `genout/psks_*` 實際 endpoint argument 檔，補上此前未充分利用的寵技商店 evidence。
+
+Fixed-C 的 `npcgen_petskillshop` template 對應 `PetSkillShop` function set；其 runtime 會從 NPC argstr 讀取 `pet_skill`、`skill_rate`，依 endpoint 提供的技能清單建立商店項目並以技能原始 cost × rate 計價。
+
+已直接取得四個與四城主世界相關的 endpoint 實例：
+
+- `psks_1003_18_13`：rate 1.0，skills `0,1,2,3,10,50,200,201,100`
+- `psks_2003_18_14`：rate 1.0，skills `0,1,2,3,10,11,200,20,30,31,40,50,51,120,130,150,61,80,90,100,110`
+- `psks_3003_16_13`：rate 1.0，skills `0,1,2,3,10,50,200,201`
+- `psks_4003_18_15`：rate 1.0，skills `0,1,2,3,10,50,100,200,201`
+
+這些不是 UI 文字，而是實際 NPC argument payload，因此列入單機 pet progression 的 endpoint source layer。不同地點的 skill catalog 保持原樣，不做全域合併。
+
+另外發現：
+
+- `look.txt` 仍列出 `freeshop/*.arg` 舊／特殊寵技商店路徑。
+- 直接取得的 `freeshop02.arg` payload 卻是 `pet_skill:652,12,13,151,152,52`，而 `look.txt` 同一路徑目前列示為 `pet_skill:210`。
+- 因此這是一個需要保留的 endpoint provenance anomaly；在沒有精確 NPC create → arg admission evidence 前，不把 `freeshop02.arg` 的 652 等資料直接提升為 live binding。
+
+本輪詳細 machine-readable evidence：
+
+`data/generated/stoneage_ro0000_petskill_shop_endpoint_audit.json`
