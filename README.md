@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3e04302 — Fix damage-number lifecycle assertion wording
-- 更新時間：2026-10-03T14:02:04+08:00
+- 最新 commit：a1f6058 — Check Android damage font contract
+- 更新時間：2026-10-03T14:04:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
