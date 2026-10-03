@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b44e913 — docs: add V4.72 idle supply milestone
-- 更新時間：2026-10-03T23:30:00+08:00
+- 最新 commit：b562894 — docs: sync README with V4.72 idle supply
+- 更新時間：2026-10-03T22:45:59+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.72
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.71 |
+| Battle Pipeline | ✅ V4.72 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
