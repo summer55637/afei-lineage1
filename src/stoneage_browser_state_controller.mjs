@@ -72,6 +72,7 @@ import { createBrowserBattleItemPlanRuntime, ACTION_BATTLE_ITEM_PLAN, BROWSER_BA
 import { createBrowserBattleItemCommitRuntime, ACTION_BATTLE_ITEM_COMMIT, BROWSER_BATTLE_ITEM_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_item_commit_runtime.mjs';
 import { createBrowserBattleCompliancePlanRuntime, ACTION_BATTLE_COMPLIANCE_PLAN, BROWSER_BATTLE_COMPLIANCE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_runtime.mjs';
 import { createBrowserBattleComplianceCommitRuntime, ACTION_BATTLE_COMPLIANCE_COMMIT, BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_commit_runtime.mjs';
+import { createBrowserBattleDeathExtraCommitRuntime, ACTION_BATTLE_DEATH_EXTRA_COMMIT, BROWSER_BATTLE_DEATH_EXTRA_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_death_extra_commit_runtime.mjs';
 import { createBrowserBattleExitPlanRuntime, ACTION_BATTLE_EXIT_PLAN, BROWSER_BATTLE_EXIT_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_runtime.mjs';
 import { createBrowserBattleExitCommitRuntime, ACTION_BATTLE_EXIT_COMMIT, BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_commit_runtime.mjs';
 import { createBrowserBattlePlayerExitRuntime, ACTION_BATTLE_PLAYER_EXIT_PLAN, BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_runtime.mjs';
@@ -260,6 +261,7 @@ function createBrowserStateController({
   const battleItemCommitRuntime=createBrowserBattleItemCommitRuntime();
   const battleCompliancePlanRuntime=createBrowserBattleCompliancePlanRuntime();
   const battleComplianceCommitRuntime=createBrowserBattleComplianceCommitRuntime();
+  const battleDeathExtraCommitRuntime=createBrowserBattleDeathExtraCommitRuntime();
   const battleExitPlanRuntime=createBrowserBattleExitPlanRuntime();
   const battleExitCommitRuntime=createBrowserBattleExitCommitRuntime();
   const battlePlayerExitRuntime=createBrowserBattlePlayerExitRuntime();
@@ -1201,6 +1203,21 @@ function createBrowserStateController({
           battleContext:clone(battleContext),
           state:clone(currentState)
         };
+      }
+      if(type===ACTION_BATTLE_DEATH_EXTRA_COMMIT){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'battle-context-required',state:clone(currentState)};
+        if(battleDeathExtraCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'browser-battle-death-extra-commit-runtime-invalid',state:clone(currentState)};
+        const result=battleDeathExtraCommitRuntime.commit(
+          clone(currentState),
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)
+          }
+        );
+        if(result.ok===true&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,format:BROWSER_BATTLE_DEATH_EXTRA_COMMIT_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_BATTLE_LEVELUP_COMMIT){
         if(battleLevelUpCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'browser-battle-levelup-commit-runtime-invalid',state:clone(currentState)};
