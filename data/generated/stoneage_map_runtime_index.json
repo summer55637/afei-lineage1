@@ -88,6 +88,18 @@
       "sourceBlobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
       "sourcePath": "gmsv/data/map/sainasu/samugiru/samugiru"
     },
+    "1005": {
+      "path": "data/generated/stoneage_map_1005.json",
+      "floorId": 1005,
+      "width": 30,
+      "height": 30,
+      "tileCount": 900,
+      "objectCount": 900,
+      "uniqueTileCount": 23,
+      "uniqueObjectCount": 21,
+      "sourceBlobSha": "33a211e37c142679b2ddf9cdd7dfb89cd166c572",
+      "sourcePath": "gmsv/data/map/sainasu/samugiru/1005"
+    },
     "1040": {
       "path": "data/generated/stoneage_map_1040.json",
       "floorId": 1040,
@@ -146,6 +158,18 @@
       "sourceBlobSha": "62b948ee1b4a45e870afa0a5bbb086916abeb6c7",
       "sourcePath": "gmsv/data/map/sainasu/marinasu/2000"
     },
+    "2005": {
+      "path": "data/generated/stoneage_map_2005.json",
+      "floorId": 2005,
+      "width": 30,
+      "height": 30,
+      "tileCount": 900,
+      "objectCount": 900,
+      "uniqueTileCount": 23,
+      "uniqueObjectCount": 28,
+      "sourceBlobSha": "6d53e2db6dd9af5913cdf193cbf6df3426458b63",
+      "sourcePath": "gmsv/data/map/sainasu/marinasu/2005"
+    },
     "3000": {
       "path": "data/generated/stoneage_map_3000.json",
       "floorId": 3000,
@@ -157,6 +181,18 @@
       "uniqueObjectCount": 133,
       "sourceBlobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
       "sourcePath": "gmsv/data/map/jyaruga/jaja/jaja"
+    },
+    "3005": {
+      "path": "data/generated/stoneage_map_3005.json",
+      "floorId": 3005,
+      "width": 30,
+      "height": 30,
+      "tileCount": 900,
+      "objectCount": 900,
+      "uniqueTileCount": 22,
+      "uniqueObjectCount": 20,
+      "sourceBlobSha": "a986b12d6baf558ff8d1c50d0db61379f8b28502",
+      "sourcePath": "gmsv/data/map/jyaruga/jaja/3005"
     },
     "3030": {
       "path": "data/generated/stoneage_map_3030.json",
@@ -229,6 +265,18 @@
       "uniqueObjectCount": 161,
       "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
       "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana"
+    },
+    "4005": {
+      "path": "data/generated/stoneage_map_4005.json",
+      "floorId": 4005,
+      "width": 30,
+      "height": 30,
+      "tileCount": 900,
+      "objectCount": 900,
+      "uniqueTileCount": 23,
+      "uniqueObjectCount": 32,
+      "sourceBlobSha": "961e4ea1e2fc73cccca3fb2716db8e51ee7300be",
+      "sourcePath": "gmsv/data/map/jyaruga/karutana/4005"
     },
     "4030": {
       "path": "data/generated/stoneage_map_4030.json",
