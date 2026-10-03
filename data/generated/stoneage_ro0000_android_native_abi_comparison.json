@@ -1,0 +1,435 @@
+{
+  "format": "ro0000-android-native-abi-call-parity-v1",
+  "source": {
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "armeabiV7a": {
+      "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+      "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+    },
+    "x86": {
+      "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+      "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+    }
+  },
+  "comparison": {
+    "sameFunctionNameSet": true,
+    "functionCount": 326,
+    "comparableFunctionCount": 317,
+    "incompleteFunctionCounts": {
+      "armeabi-v7a": 9,
+      "x86": 9
+    },
+    "semanticNamedCallTargetMismatchCount": 0,
+    "semanticNamedCallTargetParity": true,
+    "definition": "Reachable named direct call targets compared as sets. Tail branches, memset/memcpy, and ABI-specific compiler helpers are reported separately. Indirect control flow and incomplete disassemblies are not inferred."
+  },
+  "abiSummary": {
+    "armeabi-v7a": {
+      "functionCount": 326,
+      "completeFunctionCount": 317,
+      "incompleteFunctionCount": 9,
+      "indirectCallSiteCount": 2,
+      "indirectBranchSiteCount": 11,
+      "memoryHelperCallCounts": {},
+      "abiHelperCallCounts": {
+        "__aeabi_idiv": 1,
+        "__aeabi_idivmod": 10,
+        "__aeabi_memclr": 33,
+        "__aeabi_memclr4": 16,
+        "__aeabi_memcpy": 1,
+        "__aeabi_memcpy4": 4,
+        "__aeabi_memset": 3,
+        "__aeabi_uidiv": 4
+      }
+    },
+    "x86": {
+      "functionCount": 326,
+      "completeFunctionCount": 317,
+      "incompleteFunctionCount": 9,
+      "indirectCallSiteCount": 2,
+      "indirectBranchSiteCount": 11,
+      "memoryHelperCallCounts": {
+        "memcpy": 5,
+        "memset": 57
+      },
+      "abiHelperCallCounts": {}
+    }
+  },
+  "functionInventory": {
+    "onlyInArmeabiV7a": [],
+    "onlyInX86": [],
+    "duplicateNames": {
+      "armeabi-v7a": [],
+      "x86": []
+    }
+  },
+  "semanticCallTargetMismatches": [],
+  "memoryHelperVariances": [
+    {
+      "function": "AdrnInit(char*, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memcpy": 2
+      }
+    },
+    {
+      "function": "CIniManage::ReadPatchInfo()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "DispCallProc()",
+      "armeabiV7a": {},
+      "x86": {
+        "memcpy": 1
+      }
+    },
+    {
+      "function": "DownLoadIniFile()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "EventProc(unsigned int, SDL_Event*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "InitPteernSeparationBin(char const*, bool)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "LoadStoneAgeLUA(char const*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "LoadStoneAgeLUAPath(char const*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "NextScrollPanelRender()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "UpdateAppNewVersion()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "createAutoMap(int, int, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 4
+      }
+    },
+    {
+      "function": "createMap(int, int, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "decoder(unsigned char*, unsigned char**, unsigned int*, unsigned int*, unsigned int*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "initResources()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 4
+      }
+    },
+    {
+      "function": "lssproto_ABI_recv(int, int, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "lssproto_AB_recv(int, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "lssproto_CA_recv(int, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 2
+      }
+    },
+    {
+      "function": "lssproto_C_recv(int, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 2
+      }
+    },
+    {
+      "function": "lssproto_CharList_recv(int, char*, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "lssproto_ClientLogin_recv(int, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "lssproto_MSG_recv(int, int, char*, int, int, char*, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 3
+      }
+    },
+    {
+      "function": "lssproto_MSG_send(int, int, char*, int, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 3
+      }
+    },
+    {
+      "function": "lssproto_PETST_send(int, int, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "lssproto_TD_recv(int, char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 7
+      }
+    },
+    {
+      "function": "lssproto_TK_recv(int, int, char*, int, char*, int, bool)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "lssproto_TK_send(int, int, int, char*, int, int, char*, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 2
+      }
+    },
+    {
+      "function": "lssproto_newEcho_send()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 2
+      }
+    },
+    {
+      "function": "lssproto_writeTask_recv(char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "makeAutoMapColor()",
+      "armeabiV7a": {},
+      "x86": {
+        "memcpy": 1
+      }
+    },
+    {
+      "function": "myluaload(char*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "myluaload(char*, char*, int)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "networkLoop()",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 3
+      }
+    },
+    {
+      "function": "readHitMap(int, int, int, int, unsigned short*, unsigned short*, unsigned short*, unsigned short*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 1
+      }
+    },
+    {
+      "function": "readMap(int, int, int, int, int, unsigned short*, unsigned short*, unsigned short*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memset": 5
+      }
+    },
+    {
+      "function": "realGetImage(int, unsigned char**, int*, int*)",
+      "armeabiV7a": {},
+      "x86": {
+        "memcpy": 1
+      }
+    }
+  ],
+  "incompleteControlFlow": {
+    "armeabi-v7a": [
+      {
+        "function": "InitGame()",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "Process()",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_C_recv(int, char*)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_STREET_VENDOR_recv(int, char*)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_S_recv(int, char*)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_TK_recv(int, int, char*, int, char*, int, bool)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_UpdateGold_recv(int, int)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "mapEffectFallingStar()",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "play_map_bgm(int)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      }
+    ],
+    "x86": [
+      {
+        "function": "InitGame()",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "Process()",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_C_recv(int, char*)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_STREET_VENDOR_recv(int, char*)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_S_recv(int, char*)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_TK_recv(int, int, char*, int, char*, int, bool)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "lssproto_UpdateGold_recv(int, int)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "mapEffectFallingStar()",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      },
+      {
+        "function": "play_map_bgm(int)",
+        "reasons": [
+          "indirect_branch_or_jump_table"
+        ]
+      }
+    ]
+  },
+  "interpretationBoundary": [
+    "Call-target parity is not instruction-level or behavioral equivalence.",
+    "Tail branches are not included in direct-call parity because linker veneers and aliases can obscure their semantic targets.",
+    "Indirect calls are counted but their targets are unresolved.",
+    "Jump tables and other unsupported control flow are listed as incomplete.",
+    "memset/memcpy differences are recorded as ABI/compiler implementation variance and excluded from semantic target parity."
+  ]
+}
