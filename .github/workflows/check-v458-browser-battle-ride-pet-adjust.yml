@@ -1,0 +1,35 @@
+name: Check V4.58 browser battle Ride Pet adjust
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_ride_pet_adjust_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_plan_runtime.mjs'
+      - 'src/stoneage_browser_battle_critical_damage_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v458_browser_battle_ride_pet_adjust.mjs'
+      - '.github/workflows/check-v458-browser-battle-ride-pet-adjust.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.58 Ride Pet adjust regression
+        run: node tools/check_v458_browser_battle_ride_pet_adjust.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_ride_pet_adjust_runtime.mjs
+          node --check src/stoneage_browser_battle_damage_plan_runtime.mjs
+          node --check src/stoneage_browser_battle_critical_damage_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v458_browser_battle_ride_pet_adjust.mjs
