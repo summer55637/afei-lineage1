@@ -92,7 +92,6 @@ function commitBattleLevelUp(state,levelPlan,petGrowthPlan,{transactionId=null,e
       return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'pet-variableai-stale-plan',petId:id,state:clone(state)};
     }
     if(count<=0)continue;
-    const id=String(p?.petId??'').trim();
     const growth=growthById.get(id);
     if(!growth||intOr(growth.levelUps,0)!==count){
       return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'pet-growth-plan-required-for-levelups',petId:id};
