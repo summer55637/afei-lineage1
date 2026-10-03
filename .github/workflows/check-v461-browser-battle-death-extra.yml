@@ -12,6 +12,9 @@ on:
       - 'src/stoneage_browser_state_controller.mjs'
       - 'src/stoneage_browser_battle_context_runtime.mjs'
       - 'tools/check_v461_browser_battle_death_extra.mjs'
+      - 'src/stoneage_browser_battle_death_extra_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_settlement_runtime.mjs'
+      - 'tools/check_v462_browser_battle_death_extra_commit.mjs'
       - '.github/workflows/check-v461-browser-battle-death-extra.yml'
   workflow_dispatch:
 permissions:
@@ -23,6 +26,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run V4.61 death-extra regression
         run: node tools/check_v461_browser_battle_death_extra.mjs
+      - name: Run V4.62 death-extra commit regression
+        run: node tools/check_v462_browser_battle_death_extra_commit.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_death_extra_runtime.mjs
@@ -34,3 +39,6 @@ jobs:
           node --check src/stoneage_browser_state_controller.mjs
           node --check src/stoneage_browser_battle_context_runtime.mjs
           node --check tools/check_v461_browser_battle_death_extra.mjs
+          node --check src/stoneage_browser_battle_death_extra_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_settlement_runtime.mjs
+          node --check tools/check_v462_browser_battle_death_extra_commit.mjs
