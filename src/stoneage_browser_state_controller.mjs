@@ -1044,7 +1044,7 @@ function createBrowserStateController({
           playerExitPlan=battlePlayerExitRuntime.plan(
             clone(battleContext),
             clone(currentState),
-            {settlementComplete:action.settlementComplete===true,petMailModeById:action.petMailModeById??null,petExitStateTransactionId:action.petExitStateTransactionId??null}
+            {settlementComplete:action.settlementComplete===true}
           );
         }
         if(!playerExitPlan?.ok)return {...playerExitPlan,format:BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT,state:clone(currentState)};
@@ -1135,7 +1135,7 @@ function createBrowserStateController({
           exitPlan=battleExitPlanRuntime.plan(
             {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
             clone(currentState),
-            {settlementComplete:action.settlementComplete===true}
+            {settlementComplete:action.settlementComplete===true,petExitStateTransactionId:action.petExitStateTransactionId??null}
           );
         }
         if(!exitPlan?.ok)return {...exitPlan,format:BROWSER_BATTLE_EXIT_PLAN_RUNTIME_FORMAT,state:clone(currentState)};
