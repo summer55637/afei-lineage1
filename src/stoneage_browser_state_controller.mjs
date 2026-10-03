@@ -316,15 +316,15 @@ function createBrowserStateController({
     enemyExpRuntime:battleEnemyExpRuntime,
     relifeRuntime:battleRelifeRuntime
   });
+  const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
+  const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
+  const battleEnemyStealRuntime=createBrowserBattleEnemyStealRuntime();
+  const battleChargeRuntime=createBrowserBattleChargeRuntime();
   const battleAutoRuntime=createBrowserBattleAutoRuntime({
     playerStrategyRuntime:idleBattleStrategyRuntime,
     enemyAiRuntime:battleEnemyAiRuntime,
     roundRuntime:battleRoundRuntime
   });
-  const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
-  const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
-  const battleEnemyStealRuntime=createBrowserBattleEnemyStealRuntime();
-  const battleChargeRuntime=createBrowserBattleChargeRuntime();
   const battlePlayerCommandRuntime=createBrowserBattlePlayerCommandRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
