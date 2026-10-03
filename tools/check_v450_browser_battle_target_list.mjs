@@ -24,7 +24,7 @@ assert.equal(bowSelf.targets[0],-1);
 const bowReverse=runtime.resolve({attackNo:10,requestedTargetBid:15,weaponType:'bow',bowRowRoll:1});
 assert.equal(bowReverse.ok,true,JSON.stringify(bowReverse));
 assert.equal(bowReverse.bowRowRoll,1);
-assert.equal(bowReverse.deftop,10);
+assert.equal(bowReverse.deftop,15);
 
 const missingRoll=runtime.resolve({attackNo:0,requestedTargetBid:10,weaponType:'bow'});
 assert.equal(missingRoll.ok,false);
