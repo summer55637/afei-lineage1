@@ -125,7 +125,9 @@ const attackRolls=executable.map(row=>({
 const playerHpBefore=before.context
   ? before.context.sides[0].entries[0].hp
   : before.sides[0].entries[0].hp;
-const enemyHpBefore=before.sides[1].entries[0].hp;
+const enemyBeforeEntry=before.sides[1].entries.find(e=>e?.sourceType==='enemy'&&Number(e.hp)>0);
+assert.ok(enemyBeforeEntry,'source enemy entry should exist');
+const enemyHpBefore=enemyBeforeEntry.hp;
 
 const round=await controller.dispatch({
   type:ACTION_BATTLE_ROUND_RESOLVE,
@@ -145,7 +147,8 @@ assert.equal(round.damageExecuted,true);
 
 const after=controller.getBattleContext();
 const playerHpAfter=after.sides[0].entries[0].hp;
-const enemyHpAfter=after.sides[1].entries[0].hp;
+const enemyAfterEntry=after.sides[1].entries.find(e=>e?.sourceType==='enemy'&&Number(e.hp)>0);
+const enemyHpAfter=enemyAfterEntry?.hp??0;
 
 assert.ok(playerHpAfter<playerHpBefore,'enemy attack should commit transient player HP damage');
 assert.ok(enemyHpAfter<enemyHpBefore,'player attack should commit transient enemy HP damage');
