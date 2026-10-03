@@ -61,7 +61,6 @@ function commitBattleDeathExtras(state,battleContext,{
         const aiBefore=int(petEvent.variableAiBefore)??0;
         if((int(persistentPet.variableAi)??0)!==aiBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'default-pet-variableai-stale-plan',petId:petEvent.petId,state:clone(state)};
         pet.variableAi=Math.max(AI_MIN,Math.min(AI_MAX,int(petEvent.variableAiAfter)??aiBefore));
-        if(event.kind==='player-ultimate-death'&&String(next.pets.activePetId??'')===String(pet.id))next.pets.activePetId=null;
         committed.push({kind:event.kind,player:true,charmBefore:before,charmAfter:next.player.charm,defaultPetId:pet.id,defaultPetVariableAiBefore:aiBefore,defaultPetVariableAiAfter:pet.variableAi});
       }else{
         committed.push({kind:event.kind,player:true,charmBefore:before,charmAfter:next.player.charm});
