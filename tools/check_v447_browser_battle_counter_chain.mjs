@@ -20,9 +20,9 @@ const entry=(bid,sourceType)=>({
   fixDex:100,
   quick:100,
   fixVital:1,
-  attackPower:10,
+  attackPower:30,
   defencePower:1,
-  fixStr:10,
+  fixStr:30,
   fixTgh:1,
   battleFlg:0,
   battleCommands:[1,bid>=10?0:10,-1],
@@ -97,10 +97,10 @@ assert.equal(result.scope.ordinaryBasicCounterOnly,true);
 assert.deepEqual(result.chain.map(x=>x.attackerBid),[10,0,10,0,10]);
 assert.deepEqual(result.chain.map(x=>x.targetBid),[0,10,0,10,0]);
 assert.ok(result.chain.every(x=>x.damageExecuted===true));
-console.log('V447_CHAIN_DEBUG='+JSON.stringify(result.chain));
-assert.equal(result.context.sides[0].entries[0].hp,935);
-assert.equal(result.context.sides[1].entries[0].hp,935);
-assert.ok(result.chain.every(x=>x.counterDamage===13));
+assert.equal(result.context.sides[0].entries[0].hp,940);
+assert.equal(result.context.sides[1].entries[0].hp,940);
+assert.ok(result.chain.every(x=>x.sourceDamage===19));
+assert.ok(result.chain.every(x=>x.counterDamage===14));
 assert.ok(result.chain.every(x=>x.check.triggered===true));
 assert.ok(result.chain.every(x=>x.prelude.outcome==='normal'));
 
@@ -122,7 +122,7 @@ console.log(JSON.stringify({
   chainCount:result.chainCount,
   triggerCount:result.counterTriggeredCount,
   order:result.chain.map(x=>[x.attackerBid,x.targetBid]),
-  counterDamage:13,
+  counterDamage:14,
   hpAfter:{player:result.context.sides[0].entries[0].hp,enemy:result.context.sides[1].entries[0].hp},
   persistentMutation:false,
   rng:{counterRolls:5,attackBundles:5}
