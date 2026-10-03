@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：ae842bf — test: add V4.78 idle supply route execution regression
-- 更新時間：2026-10-03T23:15:36+08:00
+- 最新 commit：4923d59 — docs: add V4.78 idle supply route execution milestone
+- 更新時間：2026-10-03T23:17:16+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.77
+- Regression 最高版本：V4.78
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -29,11 +29,11 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；✅ 自動戰鬥＋戰後結算＋World Idle Tick 編排已串接（V4.71） |
+| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；✅ 自動戰鬥＋戰後結算＋World Idle Tick（V4.71）；Supply Check（V4.72）；四村醫院地圖（V4.75）；WindowHealer（V4.76）；返村→醫院路徑規劃（V4.77）；返村→醫院逐格執行（V4.78） |
 | Map runtime | ✅ 37 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.70 戰鬥完整結算；V4.71 World Idle Loop；V4.72 Idle Supply |
+| Battle Pipeline | ✅ V4.70 戰鬥完整結算；V4.71 World Idle Loop；V4.72 Idle Supply；V4.75 Hospital Maps；V4.76 WindowHealer；V4.77 Supply Route Plan；V4.78 Supply Route Execute |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
