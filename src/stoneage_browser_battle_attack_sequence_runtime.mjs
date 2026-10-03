@@ -191,6 +191,7 @@ async function resolveAttackSequence(context,{
       {
         attackerBids:[actorBid],
         allowPlayerCredit:actorBid<10,
+        allowCommittedDeath:true,
         hitIndex:i,
         source:reactPlan.reaction?.code!==0?'attack-special-react':'attack',
         transactionPrefix:transactionId,
