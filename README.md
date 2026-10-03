@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：452369a — feat: add V4.78 executable idle supply return route
-- 更新時間：2026-10-03T23:15:12+08:00
+- 最新 commit：ae842bf — test: add V4.78 idle supply route execution regression
+- 更新時間：2026-10-03T23:15:36+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.77
 - Playable HTML：⏸️ 尚未建立（刻意保留）
