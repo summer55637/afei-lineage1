@@ -1,0 +1,745 @@
+{
+  "format": "stoneage-idle-supply-warp-catalog-v1",
+  "generatedAt": "2026-10-03",
+  "purpose": "Exact source-backed portal subset for idle supply return routing. No synthetic portal rows.",
+  "fixedSource": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "path": "gmsv/data/map/mapwarp.txt",
+    "blobSha": "617d2d02cbf17561d0eafc379a015d949055e922"
+  },
+  "sourceContracts": {
+    "reverseEncounterPortals": "data/generated/stoneage_start_destination_warp_coordinates.json, rows reversed without coordinate alteration",
+    "hospitalPortals": "gmsv/data/map/mapwarp.txt exact NONE:NULL pair rows"
+  },
+  "statistics": {
+    "encounterReturnGroupCount": 8,
+    "encounterReturnRowCount": 31,
+    "townHospitalGroupCount": 4,
+    "townHospitalRowCount": 5,
+    "totalGroupCount": 16,
+    "totalRowCount": 44
+  },
+  "groups": [
+    {
+      "id": "100_to_1000_a",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 100,
+      "toFloor": 1000,
+      "sourceLines": [
+        2611,
+        2612,
+        2613,
+        2614
+      ],
+      "rows": [
+        {
+          "line": 2611,
+          "from": [
+            637,
+            491
+          ],
+          "to": [
+            49,
+            116
+          ]
+        },
+        {
+          "line": 2612,
+          "from": [
+            637,
+            492
+          ],
+          "to": [
+            49,
+            117
+          ]
+        },
+        {
+          "line": 2613,
+          "from": [
+            637,
+            493
+          ],
+          "to": [
+            49,
+            118
+          ]
+        },
+        {
+          "line": 2614,
+          "from": [
+            637,
+            494
+          ],
+          "to": [
+            49,
+            119
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "1000_to_100_a"
+    },
+    {
+      "id": "100_to_1000_b",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 100,
+      "toFloor": 1000,
+      "sourceLines": [
+        2620,
+        2621,
+        2622,
+        2623,
+        2624
+      ],
+      "rows": [
+        {
+          "line": 2620,
+          "from": [
+            706,
+            488
+          ],
+          "to": [
+            117,
+            112
+          ]
+        },
+        {
+          "line": 2621,
+          "from": [
+            707,
+            488
+          ],
+          "to": [
+            118,
+            112
+          ]
+        },
+        {
+          "line": 2622,
+          "from": [
+            708,
+            488
+          ],
+          "to": [
+            119,
+            112
+          ]
+        },
+        {
+          "line": 2623,
+          "from": [
+            709,
+            488
+          ],
+          "to": [
+            120,
+            112
+          ]
+        },
+        {
+          "line": 2624,
+          "from": [
+            710,
+            488
+          ],
+          "to": [
+            121,
+            112
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "1000_to_100_b"
+    },
+    {
+      "id": "100_to_2000_a",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 100,
+      "toFloor": 2000,
+      "sourceLines": [
+        2629,
+        2630,
+        2631,
+        2632
+      ],
+      "rows": [
+        {
+          "line": 2629,
+          "from": [
+            79,
+            614
+          ],
+          "to": [
+            74,
+            33
+          ]
+        },
+        {
+          "line": 2630,
+          "from": [
+            79,
+            615
+          ],
+          "to": [
+            74,
+            34
+          ]
+        },
+        {
+          "line": 2631,
+          "from": [
+            79,
+            616
+          ],
+          "to": [
+            74,
+            35
+          ]
+        },
+        {
+          "line": 2632,
+          "from": [
+            79,
+            617
+          ],
+          "to": [
+            74,
+            36
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "2000_to_100_a"
+    },
+    {
+      "id": "100_to_2000_b",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 100,
+      "toFloor": 2000,
+      "sourceLines": [
+        2637,
+        2638,
+        2639,
+        2640
+      ],
+      "rows": [
+        {
+          "line": 2637,
+          "from": [
+            114,
+            660
+          ],
+          "to": [
+            108,
+            79
+          ]
+        },
+        {
+          "line": 2638,
+          "from": [
+            114,
+            661
+          ],
+          "to": [
+            108,
+            80
+          ]
+        },
+        {
+          "line": 2639,
+          "from": [
+            114,
+            662
+          ],
+          "to": [
+            108,
+            81
+          ]
+        },
+        {
+          "line": 2640,
+          "from": [
+            114,
+            663
+          ],
+          "to": [
+            108,
+            82
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "2000_to_100_b"
+    },
+    {
+      "id": "200_to_3000_a",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 200,
+      "toFloor": 3000,
+      "sourceLines": [
+        1838,
+        1839,
+        1840,
+        1841
+      ],
+      "rows": [
+        {
+          "line": 1838,
+          "from": [
+            570,
+            376
+          ],
+          "to": [
+            56,
+            117
+          ]
+        },
+        {
+          "line": 1839,
+          "from": [
+            570,
+            377
+          ],
+          "to": [
+            56,
+            118
+          ]
+        },
+        {
+          "line": 1840,
+          "from": [
+            570,
+            378
+          ],
+          "to": [
+            56,
+            119
+          ]
+        },
+        {
+          "line": 1841,
+          "from": [
+            570,
+            379
+          ],
+          "to": [
+            56,
+            120
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "3000_to_200_a"
+    },
+    {
+      "id": "200_to_3000_b",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 200,
+      "toFloor": 3000,
+      "sourceLines": [
+        1848,
+        1849,
+        1850,
+        1851,
+        1852,
+        1853
+      ],
+      "rows": [
+        {
+          "line": 1848,
+          "from": [
+            587,
+            313
+          ],
+          "to": [
+            73,
+            54
+          ]
+        },
+        {
+          "line": 1849,
+          "from": [
+            587,
+            314
+          ],
+          "to": [
+            73,
+            55
+          ]
+        },
+        {
+          "line": 1850,
+          "from": [
+            587,
+            315
+          ],
+          "to": [
+            73,
+            56
+          ]
+        },
+        {
+          "line": 1851,
+          "from": [
+            587,
+            316
+          ],
+          "to": [
+            73,
+            57
+          ]
+        },
+        {
+          "line": 1852,
+          "from": [
+            587,
+            317
+          ],
+          "to": [
+            73,
+            58
+          ]
+        },
+        {
+          "line": 1853,
+          "from": [
+            587,
+            318
+          ],
+          "to": [
+            73,
+            59
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "3000_to_200_b"
+    },
+    {
+      "id": "200_to_4000_a",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 200,
+      "toFloor": 4000,
+      "sourceLines": [
+        1856,
+        1857
+      ],
+      "rows": [
+        {
+          "line": 1856,
+          "from": [
+            304,
+            599
+          ],
+          "to": [
+            104,
+            55
+          ]
+        },
+        {
+          "line": 1857,
+          "from": [
+            304,
+            600
+          ],
+          "to": [
+            104,
+            56
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "4000_to_200_a"
+    },
+    {
+      "id": "200_to_4000_b",
+      "kind": "encounter-return",
+      "hometown": null,
+      "fromFloor": 200,
+      "toFloor": 4000,
+      "sourceLines": [
+        1860,
+        1861
+      ],
+      "rows": [
+        {
+          "line": 1860,
+          "from": [
+            301,
+            640
+          ],
+          "to": [
+            101,
+            96
+          ]
+        },
+        {
+          "line": 1861,
+          "from": [
+            301,
+            641
+          ],
+          "to": [
+            101,
+            97
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "4000_to_200_b"
+    },
+    {
+      "id": "1000_to_1005_hospital",
+      "kind": "town-to-hospital",
+      "hometown": 0,
+      "fromFloor": 1000,
+      "toFloor": 1005,
+      "sourceLines": [
+        2691,
+        2693
+      ],
+      "rows": [
+        {
+          "line": 2691,
+          "from": [
+            81,
+            66
+          ],
+          "to": [
+            16,
+            21
+          ]
+        },
+        {
+          "line": 2693,
+          "from": [
+            80,
+            66
+          ],
+          "to": [
+            15,
+            21
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "1005_to_1000_hospital_return",
+      "kind": "hospital-to-town",
+      "hometown": 0,
+      "fromFloor": 1005,
+      "toFloor": 1000,
+      "sourceLines": [
+        2692,
+        2694
+      ],
+      "rows": [
+        {
+          "line": 2692,
+          "from": [
+            16,
+            21
+          ],
+          "to": [
+            81,
+            66
+          ]
+        },
+        {
+          "line": 2694,
+          "from": [
+            15,
+            21
+          ],
+          "to": [
+            80,
+            66
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "2000_to_2005_hospital",
+      "kind": "town-to-hospital",
+      "hometown": 1,
+      "fromFloor": 2000,
+      "toFloor": 2005,
+      "sourceLines": [
+        2823
+      ],
+      "rows": [
+        {
+          "line": 2823,
+          "from": [
+            73,
+            92
+          ],
+          "to": [
+            10,
+            16
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "2005_to_2000_hospital_return",
+      "kind": "hospital-to-town",
+      "hometown": 1,
+      "fromFloor": 2005,
+      "toFloor": 2000,
+      "sourceLines": [
+        2822,
+        2824
+      ],
+      "rows": [
+        {
+          "line": 2822,
+          "from": [
+            10,
+            15
+          ],
+          "to": [
+            73,
+            92
+          ]
+        },
+        {
+          "line": 2824,
+          "from": [
+            10,
+            16
+          ],
+          "to": [
+            73,
+            92
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "3000_to_3005_hospital",
+      "kind": "town-to-hospital",
+      "hometown": 2,
+      "fromFloor": 3000,
+      "toFloor": 3005,
+      "sourceLines": [
+        1917
+      ],
+      "rows": [
+        {
+          "line": 1917,
+          "from": [
+            83,
+            106
+          ],
+          "to": [
+            10,
+            15
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "3005_to_3000_hospital_return",
+      "kind": "hospital-to-town",
+      "hometown": 2,
+      "fromFloor": 3005,
+      "toFloor": 3000,
+      "sourceLines": [
+        1918,
+        1919
+      ],
+      "rows": [
+        {
+          "line": 1918,
+          "from": [
+            10,
+            15
+          ],
+          "to": [
+            83,
+            106
+          ]
+        },
+        {
+          "line": 1919,
+          "from": [
+            10,
+            16
+          ],
+          "to": [
+            83,
+            106
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "4000_to_4005_hospital",
+      "kind": "town-to-hospital",
+      "hometown": 3,
+      "fromFloor": 4000,
+      "toFloor": 4005,
+      "sourceLines": [
+        1963
+      ],
+      "rows": [
+        {
+          "line": 1963,
+          "from": [
+            100,
+            80
+          ],
+          "to": [
+            10,
+            15
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    },
+    {
+      "id": "4005_to_4000_hospital_return",
+      "kind": "hospital-to-town",
+      "hometown": 3,
+      "fromFloor": 4005,
+      "toFloor": 4000,
+      "sourceLines": [
+        1964,
+        1965
+      ],
+      "rows": [
+        {
+          "line": 1964,
+          "from": [
+            10,
+            15
+          ],
+          "to": [
+            100,
+            80
+          ]
+        },
+        {
+          "line": 1965,
+          "from": [
+            10,
+            16
+          ],
+          "to": [
+            100,
+            80
+          ]
+        }
+      ],
+      "sourceDerivedFrom": "gmsv/data/map/mapwarp.txt exact pair"
+    }
+  ]
+}
