@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：bcef0b8 — fix: mark V4.61 death fixtures as AddProfit-pending
-- 更新時間：2026-10-03T19:56:07+08:00
+- 最新 commit：6d24a18 — test: close death-extra-only settlement receipt path
+- 更新時間：2026-10-03T19:58:00+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.61
+- Regression 最高版本：V4.62
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.61 |
+| Battle Pipeline | ✅ V4.62 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
