@@ -90,7 +90,7 @@ assert.ok(executed.state.revision>initialRevision);
 const healerRuntime=createBrowserWindowHealerRuntime();
 const nurseRow=recoveryCatalog.instances.find(row=>row.service==='windowhealer'&&Number(row.floorId)===1005&&row.exactPoint);
 assert.ok(nurseRow);
-const nurse={
+const npc={
   floor:1005,
   npc:[Number(nurseRow.exactPoint.x),Number(nurseRow.exactPoint.y)],
   functionSet:'WindowHealer',
