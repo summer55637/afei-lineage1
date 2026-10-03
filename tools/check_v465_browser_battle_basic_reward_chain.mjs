@@ -62,6 +62,14 @@ const context={
     attPow:0,
     norisk:0,
     dpbattle:0,
+    finishHookProfile:{
+      auditFormat:'stoneage-battle-finish-hook-audit-v1',
+      profile:'ordinary-world-encounter',
+      winFuncInjected:false,
+      pkFuncInjected:false,
+      dantai:false,
+      linkedBattleCount:0
+    },
     sides:[
       {side:0,type:0,flg:0,entries:[
         entry(0,{sourceType:'player',hp:1000,maxHp:1000,attackPower:1000,defencePower:1,command:1,target:10}),
