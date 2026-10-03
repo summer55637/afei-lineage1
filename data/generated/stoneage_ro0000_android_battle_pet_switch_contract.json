@@ -126,5 +126,19 @@
       "the exact downstream write site for the accepted current battle pet index in the live runtime",
       "server-side pet-switch policy beyond the separately identified Fixed-C cross-reference"
     ]
+  },
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86": {
+      "library": "lib/x86/libStoneage.so",
+      "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+      "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+    },
+    "armeabiV7a": {
+      "library": "lib/armeabi-v7a/libStoneage.so",
+      "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+      "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+    }
   }
 }
