@@ -151,7 +151,10 @@ function counterCheck(context,{
     packedCounter=(packedCom3&0xffff)>>8;
     if(packedCounter>127)packedCounter-=256;
   }
-  const resolvedNoGuardAdjust=num(noguardCounterAdjust,num(attacker?.noguardCounterBonus,packedCounter));
+  let resolvedNoGuardAdjust=num(noguardCounterAdjust,null);
+  if(resolvedNoGuardAdjust==null){
+    resolvedNoGuardAdjust=num(attacker?.noguardCounterBonus,isNoGuardCommand?packedCounter:0);
+  }
   if(isNoGuardCommand)par+=resolvedNoGuardAdjust;
   if(par>100)par=100;
   if(par<=0)par=1;
