@@ -1,0 +1,159 @@
+{
+  "format": "ro0000-android-battle-single-status-effect-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隱盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d"
+  },
+  "function": {
+    "name": "set_single_jujutsu",
+    "x86Address": "0x33ea90",
+    "behavior": {
+      "deadTargetGuard": "source ACTION +0xb8 == 0 causes immediate return",
+      "effectCreation": "GetAction(0x47,0x264)",
+      "createdEffect": {
+        "sourceLink": "createdEffect +0x04 points to source-side child/action container",
+        "parentEffectSlot": "source-side effect/action link is written at offset +0x110 of the child action",
+        "dispatchValue": "createdEffect +0x08 receives target-global state derived from source action -0x7b8",
+        "animationTimer": "createdEffect +0x01 receives statusId byte",
+        "inheritA": "createdEffect +0x18 receives source +0x18",
+        "inheritB": "createdEffect +0x1c receives source +0x1c minus 0x40",
+        "effectRefCount": "createdEffect byte +0x15 is incremented"
+      },
+      "switchRange": "statusId 1..34; outside range exits without a status-specific graphic assignment"
+    }
+  },
+  "targetObservedGraphicAssignments": [
+    {"statusId":1,"effectGraphic":100555},
+    {"statusId":2,"effectGraphic":100551},
+    {"statusId":3,"effectGraphic":100553},
+    {"statusId":4,"effectGraphic":100550},
+    {"statusId":5,"effectGraphic":100552},
+    {"statusId":6,"effectGraphic":100554},
+    {"statusId":7,"effectGraphic":101420},
+    {"statusId":8,"effectGraphic":101417},
+    {"statusId":9,"effectGraphic":101421},
+    {"statusId":10,"effectGraphic":101419},
+    {"statusId":11,"effectGraphic":101702},
+    {"statusId":12,"effectGraphic":25500},
+    {"statusId":13,"effectGraphic":35120},
+    {"statusId":14,"effectGraphic":35110},
+    {"statusId":15,"effectGraphic":27692},
+    {"statusId":16,"effectGraphic":26517},
+    {"statusId":17,"effectGraphic":27692},
+    {"statusId":18,"effectGraphic":27012},
+    {"statusId":19,"effectGraphic":27012},
+    {"statusId":20,"effectGraphic":100554},
+    {"statusId":21,"effectGraphic":0},
+    {"statusId":22,"effectGraphic":0},
+    {"statusId":23,"effectGraphic":100551}
+  ],
+  "targetSpecialStatusHandler": {
+    "statusId": "34 is reached by the BC status selection path; the switch body contains a special source-graphic transition block",
+    "sourceGraphic100814": {
+      "condition": "source ACTION +0x180 == 101814",
+      "createdEffectGraphic": {
+        "alphaPath": 101810,
+        "nonAlphaPath": 101863
+      },
+      "createdEffectY": "copies source Y position rather than source Y minus 64",
+      "sourceTransition": {
+        "whenSourceOldActionNotDead": {
+          "sourceVctNo": "VCT_NO_DIE",
+          "sourceGraphic": 101813
+        }
+      }
+    },
+    "sourceGraphic100815": {
+      "condition": "source ACTION +0x180 == 101815",
+      "createdEffectGraphic": {
+        "alphaPath": 101811,
+        "nonAlphaPath": 101864
+      },
+      "createdEffectY": "copies source Y position",
+      "sourceTransition": {
+        "whenSourceOldActionNotDead": {
+          "sourceVctNo": "VCT_NO_DIE",
+          "sourceGraphic": 101814
+        }
+      }
+    },
+    "additionalSpecialGraphicTransitionsObserved": [
+      {
+        "sourceGraphic": 101814,
+        "createdEffectGraphic": 101863,
+        "sourceReplacementGraphic": 101813,
+        "condition": "source +0x190 != 2"
+      },
+      {
+        "sourceGraphic": 101815,
+        "createdEffectGraphic": 101864,
+        "sourceReplacementGraphic": 101814,
+        "condition": "source +0x190 != 2"
+      },
+      {
+        "sourceGraphic": 120113,
+        "createdEffectGraphic": 120115,
+        "sourceReplacementGraphic": 120114,
+        "condition": "source +0x190 != 2"
+      },
+      {
+        "sourceGraphic": 104015,
+        "createdEffectGraphic": 104017,
+        "sourceReplacementGraphic": 104016,
+        "condition": "source +0x190 != 2"
+      }
+    ]
+  },
+  "crossSourceCorrelation": {
+    "repository": "alrightlook/StoneAgeMobileApp",
+    "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+    "sameFunction": "set_single_jujutsu",
+    "correlation": [
+      {"statusId":1,"namedEffect":"SPR_poison","targetGraphic":100555},
+      {"statusId":2,"namedEffect":"SPR_shock","targetGraphic":100551},
+      {"statusId":3,"namedEffect":"SPR_sleep","targetGraphic":100553},
+      {"statusId":4,"namedEffect":"SPR_stone","targetGraphic":100550},
+      {"statusId":5,"namedEffect":"SPR_drunk","targetGraphic":100552},
+      {"statusId":6,"namedEffect":"SPR_conf","targetGraphic":100554},
+      {"statusId":7,"namedEffect":"SPR_weaken","targetGraphic":101420},
+      {"statusId":8,"namedEffect":"SPR_deeppoison","targetGraphic":101417},
+      {"statusId":9,"namedEffect":"SPR_barrier","targetGraphic":101421},
+      {"statusId":10,"namedEffect":"SPR_nocast","targetGraphic":101419},
+      {"statusId":11,"namedEffect":"SARS effect","targetGraphic":101702},
+      {"statusId":12,"namedEffect":"profession dizzy hit mark","targetGraphic":25500},
+      {"statusId":13,"namedEffect":"profession entwine","targetGraphic":35120},
+      {"statusId":14,"namedEffect":"profession dragnet","targetGraphic":35110},
+      {"statusId":15,"namedEffect":"profession icecrack","targetGraphic":27692},
+      {"statusId":16,"namedEffect":"profession oblivion","targetGraphic":26517},
+      {"statusId":17,"namedEffect":"profession icearrow","targetGraphic":27692},
+      {"statusId":18,"namedEffect":"profession bloodworms","targetGraphic":27012},
+      {"statusId":19,"namedEffect":"profession sign","targetGraphic":27012},
+      {"statusId":20,"namedEffect":"profession crazy","targetGraphic":100554},
+      {"statusId":21,"namedEffect":"profession fire-enclose-related status","targetGraphic":0},
+      {"statusId":22,"namedEffect":"profession ice-enclose-related status","targetGraphic":0},
+      {"statusId":23,"namedEffect":"profession thunder-enclose-related status","targetGraphic":100551},
+      {"statusId":32,"namedEffect":"profession water effect","targetGraphic":101419},
+      {"statusId":33,"namedEffect":"profession fear effect","targetGraphic":100551}
+    ],
+    "status34Reference": "public source contains _PETSKILL_LER status 34 special evolution/ultimate visual handling; target binary contains the same family of 101814/101815/101810/101811/101863/101864 constants and source-graphic transition structure"
+  },
+  "targetBoundary": {
+    "directGraphicAssignments": "The 1..23 assignments above are direct target constants in the status switch blocks.",
+    "status32And33": "Their graphic constants are only cross-source-correlated here because the target switch jump-table storage is not semantically recoverable from the static artifact with sufficient confidence.",
+    "status34": "The special source-graphic transition structure is directly target-observed; the public source is used only to name the associated feature/status."
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "map battle status IDs 1..23 to exact target effect sprite numbers",
+      "spawn a persistent status-effect ACTION above living participants",
+      "implement target-specific status 34 source-graphic transitions when exact resource IDs are available",
+      "keep status 32/33 graphic selection provenance-marked until the jump table is separately recovered"
+    ],
+    "notProven": [
+      "effect lifetime and cleanup timing",
+      "human-readable product descriptions for every status ID",
+      "server-side cause/formula for each BC flag"
+    ]
+  }
+}
