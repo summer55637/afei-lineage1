@@ -32,7 +32,7 @@ const routeCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_first_idl
 const encounterIndex=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_target_index.json','utf8'));
 const groupCatalog=JSON.parse(fs.readFileSync('data/generated/stoneage_start_encounter_group_runtime.json','utf8'));
 const state=freshPersistentState({playerId:'v467-auto',playerName:'V4.67'});
-state.player.hp=1000;state.player.maxHp=1000;state.player.mp=100;state.player.maxMp=100;state.player.stats={str:100,dex:100,tgh:100,vital:100};
+state.player.hp=1000;state.player.maxHp=1000;state.player.mp=100;state.player.maxMp=100;state.player.stats={str:100,dex:100,tgh:100,vital:100};state.idle.enabled=true;state.idle.mode='encounter_pending';state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
 const controller=createBrowserStateController({state,idleRouteCatalog:routeCatalog,encounterTargetIndex:encounterIndex,encounterGroupCatalog:groupCatalog,battleFieldNoProvider:0});
 const encounter={encounterId:65,floorId:100,x:610,y:538};
 const selected=await controller.dispatch({type:ACTION_WORLD_ENCOUNTER_GROUP_SELECT,encounter,groupRoll:2});assert.equal(selected.ok,true,JSON.stringify(selected));
