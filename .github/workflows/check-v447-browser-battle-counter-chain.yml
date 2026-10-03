@@ -12,6 +12,7 @@ on:
       - 'src/stoneage_browser_battle_damage_react_runtime.mjs'
       - 'src/stoneage_browser_battle_damage_death_chain_runtime.mjs'
       - 'tools/check_v447_browser_battle_counter_chain.mjs'
+      - 'tools/check_v447_browser_battle_round_integration.mjs'
       - '.github/workflows/check-v447-browser-battle-counter-chain.yml'
   workflow_dispatch:
 permissions:
@@ -25,6 +26,8 @@ jobs:
           fetch-depth: 1
       - name: Run V4.47 counter chain regression
         run: node tools/check_v447_browser_battle_counter_chain.mjs
+      - name: Run V4.47 round integration regression
+        run: node tools/check_v447_browser_battle_round_integration.mjs
       - name: Check JavaScript syntax
         run: |
           node --check src/stoneage_browser_battle_counter_runtime.mjs
@@ -32,3 +35,4 @@ jobs:
           node --check src/stoneage_browser_battle_round_runtime.mjs
           node --check src/stoneage_browser_state_controller.mjs
           node --check tools/check_v447_browser_battle_counter_chain.mjs
+          node --check tools/check_v447_browser_battle_round_integration.mjs
