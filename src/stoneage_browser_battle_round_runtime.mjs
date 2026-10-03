@@ -787,8 +787,6 @@ function createBrowserBattleRoundRuntime({
     ['attackCountRuntime',attackCountRuntime],
     ['targetListRuntime',targetListRuntime],
     ['attackSequenceRuntime',attackSequenceRuntime],
-    ['dexRuntime',dexRuntime],
-    ['ridePetAdjustRuntime',ridePetAdjustRuntime],
     ['attackPreflightRuntime',attackPreflightRuntime],
     ['attackSeqPreludeRuntime',attackSeqPreludeRuntime],
     ['damagePlanRuntime',damagePlanRuntime],
