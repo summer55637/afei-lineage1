@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：a43258b — ci: add V4.47 round counter integration regression
-- 更新時間：2026-10-03T18:03:56+08:00
+- 最新 commit：fc62ca7 — test: complete V4.47 battle end fixture state
+- 更新時間：2026-10-03T18:04:34+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.47
 - Playable HTML：⏸️ 尚未建立（刻意保留）
