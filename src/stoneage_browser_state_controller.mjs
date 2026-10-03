@@ -847,6 +847,8 @@ function createBrowserStateController({
             weaponClassByBid:action.weaponClassByBid??{},
             attackCountInputsByBid:action.attackCountInputsByBid??{},
             bowTargetListRollByBid:action.bowTargetListRollByBid??{},
+            attackCountFallbackRollByBid:action.attackCountFallbackRollByBid??{},
+            attackCountFallbackAttackRollByBid:action.attackCountFallbackAttackRollByBid??{},
             now:action.now??null
           }
         );
