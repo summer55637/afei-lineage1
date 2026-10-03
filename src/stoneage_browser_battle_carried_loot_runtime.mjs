@@ -105,7 +105,7 @@ function queueEnemyCarriedLoot(context,{enemyBid=null,ownerBids=[],items=[],owne
     enemyBid:eBid,ownerBids:owners.slice(),items:normalized.map(x=>clone(x)),accepted,discarded,newTransfers:accepted,
     rngConsumed,ownerRollsConsumed:ownerCursor,replaceRollsConsumed:replaceCursor,replaceSlotRollsConsumed:slotCursor,
     allnum,maximumGetitem:MAX_GETITEM,
-    source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',function:'BATTLE_AddExpItem',boundary:'CHAR_setItemIndex -> RAND owner -> getitem[3] -> optional replacement'},
+    source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',function:'BATTLE_AddExpItem',boundary:'CHAR_setItemIndex -> RAND owner -> getitem[3] -> optional replacement'},
     rewardNumbersDeferred:true,dropTableRollDeferred:true,persistentMutation:false,context:next.context,transactionPrefix:String(transactionPrefix??'carried-loot'),now:now??null
   };
 }
