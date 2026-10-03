@@ -107,12 +107,15 @@ data/generated/stoneage_ro0000_android_git_resource_history_audit.json
 ## 目前仍未閉合
 
 - 真正的 `battle00.sabex` ~ `battle219.sabex` bytes
-- target `adrn.bin` / `real.bin` / `spr.bin` / `spradrn.bin`
+- target `adrn.bin` / `real.bin` / `spr.bin` / `spradrn.bin` bytes
+- `path/map4/real.bin` 的實體 container bytes、decoded Lua entry names 與 Lua payloads
 - palette bytes
 - `data/update/list.dat`
 - `patch_0.zip` ~ `patch_5.zip`
 - update endpoint 的實際 response
 - Android 真機的實際下載／解包／載入 runtime trace
 - APK v1 MANIFEST 中兩個 `libStoneage.so` digest mismatch 的來源
+
+其中 `path/map4/real.bin` 的**資源類型與解析入口已閉合**：它是 named-entry Lua loading container，不再列為「未知用途的 RealBin」。尚缺的是其實體 bytes 與其中的 Lua payload。
 
 所有未取得的 production bytes 仍不以推測或 public-source bytes 代替。
