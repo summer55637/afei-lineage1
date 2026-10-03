@@ -42,3 +42,19 @@ BATTLE_IDLE_STRATEGY_APPLY 在 active Battle Context 上套用 Persistent State 
 Pinned source：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56。
 
 Regression：tools/check_idle_battle_strategy.mjs。
+
+
+## Android client AutoBattle source evidence
+
+RO0000 Android target 的 native client 已直接確認 AutoBattle 的 client-side 狀態切換。
+
+- ScriptFunc_AutoBattle 讀取 ScriptArgument* 的第一個 u32；觀察到 selector 0 進入關閉分支、selector 2 進入開啟分支。
+- 關閉分支將目標物件欄位 +0xE8 的 0x1000 bit 清掉，寫入狀態值 0，並送出 lssproto_FS_send(playerId, updatedFlags)。
+- 開啟分支將同一 0x1000 bit 設起來，寫入狀態值 3，並送出相同 FS 封包。
+- BattleCntDownDisp 會遞增 autoBattleCount；遞增後達到 3 時，在相同條件下進入 0x1000 AutoBattle 啟用路徑。
+- lssproto_EN_recv 在第三參數為 2 的路徑會把 autoBattleCount 重設為 0。
+- ScriptFunc_EnemyBattle 另有 selector 0 / 2 的 SaMenu 18 / 17 命令；它被視為 encounter/battle menu bridge，不把這兩個值直接解讀成 server combat rule。
+
+這些是 Android client source evidence，可用來校正 browser idle battle 的 AutoBattle 開關、計數與 encounter reset 模型；不直接把 0x1000 或 FS 封包名稱定義成 server 規則。
+
+Machine-readable evidence：data/generated/stoneage_ro0000_android_auto_battle_contract.json。

@@ -1,0 +1,92 @@
+{
+  "format": "ro0000-android-auto-battle-contract-v1",
+  "target": {
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "armeabiV7aLibSha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d"
+  },
+  "symbols": {
+    "x86": {
+      "ScriptFunc_AutoBattle": {
+        "address": "0x39aff0",
+        "sizeBytes": 288
+      },
+      "ScriptFunc_EnemyBattle": {
+        "address": "0x39af10",
+        "sizeBytes": 210
+      },
+      "BattleCntDownDisp": {
+        "address": "0x1058c0",
+        "sizeBytes": 1869
+      },
+      "lssproto_EN_recv": {
+        "address": "0x3f2c90",
+        "sizeBytes": 438
+      },
+      "autoBattleCount": {
+        "address": "0x9c18f0",
+        "sizeBytes": 4
+      }
+    },
+    "armeabiV7a": {
+      "ScriptFunc_AutoBattle": {
+        "address": "0x255481",
+        "sizeBytes": 216
+      },
+      "ScriptFunc_EnemyBattle": {
+        "address": "0x255419",
+        "sizeBytes": 104
+      },
+      "BattleCntDownDisp": {
+        "address": "0xf2c95",
+        "sizeBytes": 1156
+      },
+      "lssproto_EN_recv": {
+        "address": "0x283cb1",
+        "sizeBytes": 380
+      },
+      "autoBattleCount": {
+        "address": "0x63e910",
+        "sizeBytes": 4
+      }
+    }
+  },
+  "x86Behavior": {
+    "ScriptFunc_AutoBattle": {
+      "selector0": {
+        "stateValue": 0,
+        "clearBit": "0x1000",
+        "send": "lssproto_FS_send(playerId, updatedFlags)"
+      },
+      "selector2": {
+        "stateValue": 3,
+        "setBit": "0x1000",
+        "send": "lssproto_FS_send(playerId, updatedFlags)"
+      },
+      "nextScriptStep": "incremented once before returning true"
+    },
+    "ScriptFunc_EnemyBattle": {
+      "selector0": "lssproto_SaMenu_send(playerId, 18)",
+      "selector2": "lssproto_SaMenu_send(playerId, 17)",
+      "nextScriptStep": "incremented once before returning true"
+    },
+    "BattleCntDownDisp": {
+      "counter": "autoBattleCount increments",
+      "threshold": "3 after increment",
+      "transition": {
+        "stateValue": 3,
+        "setBit": "0x1000",
+        "send": "lssproto_FS_send(playerId, updatedFlags)"
+      }
+    },
+    "lssproto_EN_recv": {
+      "whenThirdArgumentIs2": "autoBattleCount reset to 0; adjacent observed byte flag set to 1"
+    }
+  },
+  "interpretationBoundary": [
+    "The +0xE8 field is retained only as a bitfield location; its complete structure name is not assigned.",
+    "The first ScriptArgument u32 is reported as an observed selector, not assumed to be argc.",
+    "The meaning of FS flag bits and SaMenu values on the server is not inferred.",
+    "This source evidence informs the browser idle-battle adapter but does not replace the existing product-layer battle strategy."
+  ]
+}
