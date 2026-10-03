@@ -104,7 +104,10 @@ async function resolveAttackSequence(context,{
         damageRollWide:bundle.damageRollWide,
         fieldAtt: int(bundle.fieldAtt)??(int(next.context.fieldAtt)??4),
         fieldAttrPower:Number(bundle.fieldAttrPower??next.context.attPow??0),
-        includeAttr:bundle.includeAttr!==false
+        includeAttr:bundle.includeAttr!==false,
+        throwWeapon:bundle.throwWeapon===true,
+        ridePetBidByBid:ridePetBidByParticipantBid,
+        ridePetAdjustRuntime:runtimes.ridePetAdjustRuntime??null
       }
     );
     if(!damagePlan.ok)return {...damagePlan,stage:'battle-attack-sequence-damage-plan',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
@@ -118,6 +121,9 @@ async function resolveAttackSequence(context,{
         fieldAtt:int(bundle.fieldAtt)??(int(next.context.fieldAtt)??4),
         fieldAttrPower:Number(bundle.fieldAttrPower??next.context.attPow??0),
         includeAttr:bundle.includeAttr!==false,
+        throwWeapon:bundle.throwWeapon===true,
+        ridePetBidByBid:ridePetBidByParticipantBid,
+        ridePetAdjustRuntime:runtimes.ridePetAdjustRuntime??null,
         critical:prelude.critical?.critical===true,
         attackSeqPrelude:prelude,
         weaponType,
