@@ -20,7 +20,7 @@ const now=()=> '2026-10-03T20:30:00+08:00';
 
 const state=freshPersistentState({now,playerId:'p1',playerName:'Relife Tester'});
 state.player.level=20;
-state.player.hp=0;
+state.player.hp=100;
 state.player.maxHp=300;
 state.inventory.playerItemSlots[3]=300;
 state.inventory.playerItemSlots[4]=301;
@@ -99,6 +99,7 @@ assert.equal(ultimate.ok,true);
 assert.equal(ultimate.applied,false);
 assert.equal(ultimate.stage,'battle-relife-skipped-ultimate');
 
+state.player.hp=0;
 const committed=commitBattleRelife(state,{
   format:'stoneage-browser-battle-context-runtime-v1',
   context:second.context
