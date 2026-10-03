@@ -768,3 +768,22 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_objec
 - 公開 `alrightlook/StoneAgeMobileApp` 同名函式可作語義對照，但 target 與該 commit 的 build/version identity 不在此處宣稱。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_status_effect_contract.json`。
+
+
+## Persistent battle-status effect lifecycle: katino()
+
+`set_single_jujutsu()` 建立的 status effect ACTION 直接掛到 target 的 `katino()`，這一層現在也已追完主要生命週期。
+
+- x86 `katino()`：`0x33d450`、1647 bytes；其 parent/source action 取自 effect ACTION 的 `ATR_BODY_WORK(0)`。
+- 每幀先檢查 parent：若 parent function 為 NULL、parent 已進入終止狀態（target 看到的 byte `0xfc`），或 parent hp `+0xb8` 為 0，就清除 parent 的 `JUJUTSU_WORK`（`+0x110`）並對 effect 自身執行 `DeathAction`。
+- parent 仍有效時，effect 的 `+0x15` 會設為 parent `+0x15+1`。依公開 ACTION 結構對照，`+0x15` 是 `dispPrio`（display priority），不是 effect counter。
+- effect 每幀跟隨 parent 的 x 座標；大多數狀態使用 parent y-64，但 target 對部分 effect graphic 有直接的特殊 y 偏移：`100551` 使用 parent y、`35120/101702/27692/35110/26517` 使用 parent y-34。
+- effect graphic `25500` 的 target 路徑會遞增一個 global counter，按 20/40/60/80 的區段改變 y 偏移，後兩段還會增加 x+16；到 80 循環回 0。這是 target binary 直接可觀察的動畫位置調整。
+- LER/特殊演化圖號 `101810/101811/101805/101863/101864/101858` 有獨立一次性動畫路徑：當 `pattern(..., ANM_NO_LOOP)` 回傳完成時，清除 parent `JUJUTSU_WORK`、銷毀 effect，並依 source graphic 將 parent 從 `101813→101814→101815` 等狀態推進，同時重置 action/vct/方向。
+- 普通狀態則走 `pattern(effect, normal-speed, loop)`，因此其生命週期由 parent 是否有效以及 status effect 自己的動畫/終止狀態共同決定，而不是由一個固定秒數直接截斷。
+
+這使得目前的 BC → status → effect 鏈已可完整描述為：
+
+`lssproto_B_recv(C)` → `BattleStatus ring` → `set_bc()` → `statusId` → `set_single_jujutsu()` → `katino()` → status effect ACTION / sprite / lifecycle。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_status_effect_contract.json`。
