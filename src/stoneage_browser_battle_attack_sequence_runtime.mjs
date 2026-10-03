@@ -229,6 +229,17 @@ async function resolveAttackSequence(context,{
       next.context=clone(carriedLoot.context);
     }
     hit.carriedLoot=carriedLoot;
+    let enemyExpCredit=null;
+    if(creditEvent){
+      if(!runtimes.enemyExpRuntime||runtimes.enemyExpRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-attack-sequence-enemy-exp',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,reason:'enemy-exp-runtime-required'};
+      enemyExpCredit=runtimes.enemyExpRuntime.credit(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],hitIndex:i,source:'attack',transactionPrefix:transactionId,now}
+      );
+      if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-attack-sequence-enemy-exp',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
+      next.context=clone(enemyExpCredit.context);
+    }
+    hit.enemyExpCredit=enemyExpCredit;
     hit.damageReactPlan=clone(reactPlan);
     hit.commit=clone(commit);
     hit.damageExecuted=commit.damageExecuted===true;
@@ -276,6 +287,7 @@ async function resolveAttackSequence(context,{
       damageDivisorOverrideSupported:true,
       perHitProfitCredit:true,
       perHitCarriedLootQueue:true,
+      perHitEnemyExpCredit:true,
       bowTargetListInput:true,
       specialDamageReactSupported:true,
       counterExecutionDeferred:true,
