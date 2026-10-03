@@ -84,7 +84,7 @@ const combined=damagePlan(rideContext,{
 });
 assert.equal(combined.ok,true,JSON.stringify(combined));
 assert.equal(combined.attack,144);
-assert.equal(combined.defence,39.2);
+assert.ok(Math.abs(combined.defence-39.2)<1e-12);
 assert.equal(combined.ridePetAdjustment.attacker.value,144);
 assert.equal(combined.ridePetAdjustment.defender.value,80);
 
