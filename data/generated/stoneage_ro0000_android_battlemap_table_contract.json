@@ -1,0 +1,29 @@
+{
+  "format": "ro0000-android-battlemap-table-contract-v1",
+  "source": {
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "libraries": {
+      "armeabi-v7a": {
+        "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+        "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+      },
+      "x86": {
+        "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+        "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+      }
+    }
+  },
+  "table": {
+    "filenameEntryStrideBytes": 512,
+    "sizeBytes": 112640,
+    "slotCount": 220,
+    "minimumIndexInclusive": 0,
+    "maximumIndexInclusive": 219,
+    "filenameTemplate": "data/battlemap/battle%03d.sabex"
+  },
+  "evidence": {
+    "x86ReadBattleMap": "0x0f3700",
+    "targetRange": "0..219",
+    "method": "Static disassembly of ReadBattleMap and lssproto_EN_recv; filename table byte extent divided by the 512-byte slot stride."
+  }
+}

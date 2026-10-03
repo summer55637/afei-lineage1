@@ -8,6 +8,7 @@ on:
       - 'tools/check_ro0000_android_apk_audit.py'
       - 'tools/audit_ro0000_android_native.py'
       - 'tools/audit_ro0000_android_battlemap_crosscheck.py'
+      - 'data/generated/stoneage_ro0000_android_battlemap_table_contract.json'
       - 'tools/check_ro0000_android_battlemap_crosscheck.py'
       - 'tools/audit_ro0000_battlemap_selector.mjs'
       - 'ro0000/server/merged-source/gmsv/data/map/battlemap.txt'
@@ -108,6 +109,7 @@ jobs:
           python3 tools/audit_ro0000_android_battlemap_crosscheck.py \
             --native-audit artifacts/ro0000_android_native_elf_audit.json \
             --selector-audit data/generated/stoneage_ro0000_battlemap_selector_audit.json \
+            --table-contract data/generated/stoneage_ro0000_android_battlemap_table_contract.json \
             --output artifacts/ro0000_android_battlemap_selector_crosscheck.json
       - name: Compare reachable Android ARMv7 and x86 native call targets
         run: python3 tools/audit_ro0000_android_native_abi.py --native-audit artifacts/ro0000_android_native_elf_audit.json --arm-binary artifacts/native/armeabi-v7a/libStoneage.so --x86-binary artifacts/native/x86/libStoneage.so --output artifacts/ro0000_android_native_abi_comparison.json

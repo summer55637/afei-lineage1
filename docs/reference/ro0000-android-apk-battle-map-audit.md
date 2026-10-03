@@ -193,7 +193,7 @@ This is a useful cross-layer correspondence, but the Android `.sabex` payload is
 
 ### Cross-check: server candidates versus Android SABEX index
 
-The current workflow now regenerates the RO0000 server `battlemap.txt` selector audit from source, then compares every effective candidate with the target APK's `BattleMapFile` table size in both packaged ABIs. The target table is 112,640 bytes with a 512-byte filename stride, yielding 220 slots (0–219). The current server configuration references 199 distinct candidate numbers, all within that target range; 21 Android slots are not selected by the current configuration.
+The current workflow now regenerates the RO0000 server `battlemap.txt` selector audit from source, then compares every effective candidate with the target APK's hash-anchored `BattleMapFile` table contract. The contract binds the 220-slot table (112,640 bytes with a 512-byte filename stride) to this exact APK and both packaged library hashes/Build IDs, so it must be reviewed when the binary changes. The current server configuration references 199 distinct candidate numbers, all within that target range; 21 Android slots are not selected by the current configuration.
 
 The cross-check is stored in `data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json`. It also retains the source audit's reversed interval and duplicate image assignment as warnings. The reversed `3137 to 1349` interval produces no iterations in the pinned Fixed-C parser's `for (i = first; i <= last; ++i)` loop; this audit does not silently rewrite source configuration.
 

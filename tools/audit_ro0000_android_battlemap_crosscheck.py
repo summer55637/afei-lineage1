@@ -1,51 +1,55 @@
 #!/usr/bin/env python3
-"""Cross-check RO0000 server battle-map selector IDs against Android APK slots."""
+"""Cross-check RO0000 server battle-map selector IDs against the audited Android APK table."""
 import argparse
 import json
 import sys
 from pathlib import Path
 
 TARGET_ABIS = ("armeabi-v7a", "x86")
-BATTLE_MAP_FILENAME_STRIDE = 512
 
 
-def _target_table_capacities(native_audit):
-    capacities = {}
-    table_sizes = {}
-    for library in native_audit.get("nativeLibraries", []):
-        abi = library.get("abi")
-        if abi not in TARGET_ABIS or not library.get("path", "").endswith("/libStoneage.so"):
-            continue
-        matches = [
-            symbol for symbol in library.get("focusedSymbols", [])
-            if symbol.get("name") == "BattleMapFile" and symbol.get("type") in ("OBJECT", "NOTYPE")
-        ]
-        if len(matches) != 1:
-            raise ValueError(
-                "expected exactly one BattleMapFile object in " + abi
-                + "; found " + str(len(matches))
-            )
-        size = matches[0].get("size")
-        if not isinstance(size, int) or size <= 0:
-            raise ValueError("invalid BattleMapFile size in " + abi)
-        if size % BATTLE_MAP_FILENAME_STRIDE:
-            raise ValueError(
-                "BattleMapFile size is not divisible by the 512-byte filename stride in " + abi
-            )
-        table_sizes[abi] = size
-        capacities[abi] = size // BATTLE_MAP_FILENAME_STRIDE
+def _validated_target_table(native_audit, table_contract):
+    if table_contract.get("format") != "ro0000-android-battlemap-table-contract-v1":
+        raise ValueError("Android battle-map table contract format mismatch")
+    source = table_contract.get("source", {})
+    audited_apk_sha = native_audit.get("auditedApk", {}).get("sha256")
+    if not audited_apk_sha or source.get("apkSha256") != audited_apk_sha:
+        raise ValueError("Android battle-map table contract APK SHA-256 mismatch")
 
-    missing = [abi for abi in TARGET_ABIS if abi not in capacities]
-    if missing:
-        raise ValueError("missing target BattleMapFile ABI(s): " + ", ".join(missing))
-    if len(set(capacities.values())) != 1:
-        raise ValueError("BattleMapFile slot capacities differ across target ABIs")
-    return capacities, table_sizes
+    native_libraries = {
+        library.get("abi"): library
+        for library in native_audit.get("nativeLibraries", [])
+        if library.get("abi") in TARGET_ABIS
+        and library.get("path", "").endswith("/libStoneage.so")
+    }
+    expected_libraries = source.get("libraries", {})
+    for abi in TARGET_ABIS:
+        library = native_libraries.get(abi)
+        expected = expected_libraries.get(abi, {})
+        if not library:
+            raise ValueError("missing target libStoneage.so ABI: " + abi)
+        if library.get("sha256") != expected.get("sha256"):
+            raise ValueError("Android battle-map table contract " + abi + " library SHA-256 mismatch")
+        if library.get("buildId") != expected.get("buildId"):
+            raise ValueError("Android battle-map table contract " + abi + " Build ID mismatch")
+
+    table = table_contract.get("table", {})
+    stride = table.get("filenameEntryStrideBytes")
+    count = table.get("slotCount")
+    size = table.get("sizeBytes")
+    if any(not isinstance(value, int) or isinstance(value, bool) or value <= 0
+           for value in (stride, count, size)):
+        raise ValueError("Android battle-map table contract has invalid dimensions")
+    if stride * count != size:
+        raise ValueError("Android battle-map table contract size/count/stride disagree")
+    if table.get("minimumIndexInclusive") != 0 or table.get("maximumIndexInclusive") != count - 1:
+        raise ValueError("Android battle-map table contract index bounds disagree with slot count")
+    return table, native_libraries
 
 
-def build_crosscheck(native_audit, selector_audit):
-    capacities, table_sizes = _target_table_capacities(native_audit)
-    capacity = capacities["x86"]
+def build_crosscheck(native_audit, selector_audit, table_contract):
+    table, libraries = _validated_target_table(native_audit, table_contract)
+    capacity = table["slotCount"]
     blocks = selector_audit.get("selectedRanges")
     if not isinstance(blocks, list):
         raise ValueError("selector audit is missing selectedRanges")
@@ -94,20 +98,14 @@ def build_crosscheck(native_audit, selector_audit):
             "apkSha256": native_audit.get("auditedApk", {}).get("sha256"),
             "serverSelectorSource": selector_audit.get("source"),
             "targetLibraryHashes": {
-                abi: next(
-                    lib.get("sha256") for lib in native_audit.get("nativeLibraries", [])
-                    if lib.get("abi") == abi
-                    and lib.get("path", "").endswith("/libStoneage.so")
-                )
+                abi: {
+                    "sha256": libraries[abi].get("sha256"),
+                    "buildId": libraries[abi].get("buildId"),
+                }
                 for abi in TARGET_ABIS
             },
         },
-        "targetBattleMapTable": {
-            "filenameEntryStrideBytes": BATTLE_MAP_FILENAME_STRIDE,
-            "tableSizeBytes": dict(sorted(table_sizes.items())),
-            "slotCapacity": capacity,
-            "acceptedIndexRange": {"minimumInclusive": 0, "maximumInclusive": capacity - 1},
-        },
+        "targetBattleMapTable": dict(table),
         "serverSelector": {
             "activeBlockCount": len(blocks),
             "distinctCandidateCount": len(candidates),
@@ -119,7 +117,7 @@ def build_crosscheck(native_audit, selector_audit):
             "blocks": block_summaries,
         },
         "interpretationBoundary": [
-            "The check proves that configured server candidate numbers fit the Android BattleMapFile index range.",
+            "The check proves that configured server candidate numbers fit the hash-anchored Android BattleMapFile index range.",
             "It does not prove that the corresponding battleNNN.sabex payloads are present or valid.",
             "The server map selector and the Android SABEX payload format remain separate evidence layers.",
             "Reversed ranges and duplicate image assignments are reported as source-data anomalies and are not silently rewritten.",
@@ -131,16 +129,18 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native-audit", required=True)
     parser.add_argument("--selector-audit", required=True)
+    parser.add_argument("--table-contract", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args(argv)
     native = json.loads(Path(args.native_audit).read_text(encoding="utf-8"))
     selector = json.loads(Path(args.selector_audit).read_text(encoding="utf-8"))
-    report = build_crosscheck(native, selector)
+    contract = json.loads(Path(args.table_contract).read_text(encoding="utf-8"))
+    report = build_crosscheck(native, selector, contract)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
-        "slotCapacity": report["targetBattleMapTable"]["slotCapacity"],
+        "slotCapacity": report["targetBattleMapTable"]["slotCount"],
         "distinctCandidateCount": report["serverSelector"]["distinctCandidateCount"],
         "allCandidatesWithinAndroidTable": report["serverSelector"]["allCandidatesWithinAndroidTable"],
         "reversedRangeCount": len(report["serverSelector"]["reversedRanges"]),
