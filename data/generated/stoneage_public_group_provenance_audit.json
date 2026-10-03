@@ -1,5 +1,5 @@
 {
-  "format": "stoneage-public-group-provenance-audit-v4",
+  "format": "stoneage-public-group-provenance-audit-v5",
   "checkedDate": "2026-10-03",
   "purpose": "Public-web provenance search for the 30 active Encounter->Group references unresolved in the RO0000 endpoint snapshot.",
   "targetGroupIds": [
@@ -155,6 +155,18 @@
       "extractPassword": "bbs.saac.cc",
       "lineageNote": "The post identifies the server as mainland 8018 and explicitly states that the data comes from 凌宇阁 Windows single-server data.",
       "accessStatus": "archive-index-and-checksums-confirmed; archive-body-not-obtained-by-current-web-fetch"
+    },
+    {
+      "source": "2022-2023 mirrored StoneAge 8.0 WIN package",
+      "primaryPost": "https://www.iopq.net/thread-17113619-1-1.html",
+      "mirrorPost": "https://lab.welovesa.com/viewthread.php?tid=3906",
+      "downloadMirror": {
+        "baidu": "https://pan.baidu.com/s/19W_rosIr2XeAMJTW7y-WbA?pwd=nak2",
+        "ctfile": "https://url65.ctfile.com/d/205465-55537406-933dd5?p=1735"
+      },
+      "status": "candidate-historical-package-body-not-inspected",
+      "provenanceAssessment": "The post describes a StoneAge 8.0 WIN package re-uploaded in 2022 and documents V1.0-V1.7 later private-server modifications. It is useful as a potentially recoverable package, but those later modifications make it unsafe to assume its group1.txt represents the original 8.0 or RO0000 deployment.",
+      "searchFinding": "No publicly indexed group1.txt rows for the 30 target IDs were exposed from this package or its forum mirrors during this round."
     }
   ],
   "publiclyObservedTargetRows": [
@@ -193,7 +205,7 @@
   ],
   "coverageSummary": {
     "targetIds": 30,
-    "publicSourcesChecked": 13,
+    "publicSourcesChecked": 14,
     "historicallyObservedTargetIds": [
       1131,
       1500
@@ -217,7 +229,7 @@
     "exactFixedBlobCloneRepositories": 10
   },
   "conclusion": {
-    "whatChanged": "This round narrowed the most promising historical lead to the exact 2013-04-13 SAAC WIN package (SAAC社区WIN端0414.7z), with full archive checksums and download identifiers preserved in the public post. The package is explicitly said to use 凌宇阁 Windows single-server data. The archive body is still not directly obtainable through the current web fetch path, so no Group row can yet be verified.",
+    "whatChanged": "This round added a recoverable 2022 mirror lead for a StoneAge 8.0 WIN package and confirmed that its published V1.0-V1.7 history includes many later custom changes. It therefore remains a candidate for physical inspection, not an authoritative Group source.",
     "safePromotion": "No target Group row is promoted into RO0000 runtime from public sources in this audit.",
     "nextSearchPriority": "The most promising unresolved leads are the older 2012 WIN6.0.rar package, the 2012 shiqi8.0 package, and the 2013 凌宇阁 WIN data lineage referenced by We Love SA. Continue toward mirrors or publicly indexed copies of those exact archives rather than generic Group files.",
     "reopenPromotionCondition": "Promote only when an authoritative or strongly compatible revision provides a complete column-verifiable Group row and provenance linking it to the target RO0000 deployment/variant."
