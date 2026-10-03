@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：15ceabb — [docs] refresh Android APK audit date
-- 更新時間：2026-10-03T09:20:12+08:00
+- 最新 commit：aa0f604 — [audit] cross-check server battle maps against Android index
+- 更新時間：2026-10-03T09:24:36+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
