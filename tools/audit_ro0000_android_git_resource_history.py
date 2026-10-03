@@ -164,6 +164,7 @@ def audit_repository() -> dict:
         "source": {
             "headSha": head,
             "refsScanned": refs,
+            "historyScanMethod": "git rev-list --objects --all over a full-depth checkout",
             "scope": "reachable Git history of current repository refs/tags; unreachable/dangling Git objects and external Actions artifacts are outside this audit",
         },
         "patterns": {
