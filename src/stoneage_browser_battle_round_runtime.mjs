@@ -407,7 +407,7 @@ async function resolveBattleRound(context,{
         && reactPlan.defenderRidePet!==true;
       if(normalizedCounterPolicy==='execute'&&canResolveCounter){
         const counterResult=await runtimes.counterChainRuntime.resolve(
-          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(next.context)},
+          {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
           {
             originAttackerBid:actorBid,
             originTargetBid:prelude.finalTargetBid,
@@ -495,7 +495,7 @@ async function resolveBattleRound(context,{
     scope:{
       basicAttackOnly:true,
       maxAttackCountPerActor:1,
-      counterDeferred:true,
+      counterDeferred:normalizedCounterPolicy==='defer',
       specialDamageReactionsDeferred:true,
       persistentSettlementDeferred:true
     },
