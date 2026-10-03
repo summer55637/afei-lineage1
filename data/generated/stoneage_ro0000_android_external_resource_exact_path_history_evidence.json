@@ -1,0 +1,114 @@
+{
+  "format": "ro0000-android-external-resource-exact-path-history-evidence-v1",
+  "checkedAt": "2026-10-03",
+  "repository": "summer55637/afei-lineage1",
+  "method": "GitHub REST commits?path=... exact-path history queries",
+  "interpretation": "The listed exact paths returned zero commits. This is narrower than the full-depth rev-list audit, which remains CI-generated evidence.",
+  "paths": [
+    {
+      "path": "battle00.sabex",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "battle219.sabex",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/battlemap/battle00.sabex",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/battlemap/battle219.sabex",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/battleMap/battle00.sabex",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/battleMap/battle219.sabex",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "s/adrn.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "s/real.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "s/spr.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "s/spradrn.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "path/map4/real.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/pal/Palet_1.sap",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/update/list.dat",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "patch_0.zip",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "patch_5.zip",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/serverdata.dat",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/adrn.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/real.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/spr.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    },
+    {
+      "path": "data/spradrn.bin",
+      "commitCount": 0,
+      "historyStatus": "no-commit-history-for-exact-path"
+    }
+  ],
+  "conclusion": {
+    "exactPathsFoundInHistory": false,
+    "historicalPayloadEvidence": false,
+    "limitation": "A differently named path, renamed resource, packed container, unreachable Git object, or external Actions artifact is not excluded by these exact-path queries."
+  }
+}
