@@ -273,7 +273,7 @@ Machine-readable evidence：
 - RO0000 `data/ride.txt` 與 `hydata/data/ride.txt` 完全一致。
 - 表格有 64 個騎寵欄位（00–63）及 12 組角色外觀資料列，保存角色外觀 × 騎寵 × 動畫圖號映射。
 - Pinned Fixed-C 同時存在 `RIDE_PET0..11`、`RIDEPET_getPETindex()`、`RIDEPET_getRIDEno()` 與 `CHAR_RIDEPET / CHAR_LEARNRIDE` 等騎寵 runtime 概念。
-- 目前沒有找到可證明 RO0000 server 直接以 `ride.txt` 作 canonical loader 的證據，因此定位為 **visual mapping source closed / runtime loader unproven**；保留 endpoint 表，不以 Fixed-C hardcoded table 覆蓋。
+- 後續交叉核對已確認：RO0000 `ride.txt` 的 64 個騎寵欄位與 12 組角色外觀列，與 Fixed-C `_NEW_RIDEPETS` 的 `RideCodeMode / RideNoList / RPlistMode` 結構及圖號族一一對應。
 
 Machine-readable evidence：
 
