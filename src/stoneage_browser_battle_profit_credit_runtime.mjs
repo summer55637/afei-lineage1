@@ -103,7 +103,7 @@ function applyBattleProfitCredit(context,{
     action:ACTION_BATTLE_PROFIT_CREDIT_APPLY,
     source:{
       repository:'gavinlinasd/StoneAge',
-      ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
+      ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
         function:'BATTLE_AddProfit',
       boundary:'BATTLE_AddExpItem death-extra scan then first-death reward credit'
     },
