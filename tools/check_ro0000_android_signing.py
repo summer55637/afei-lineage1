@@ -92,7 +92,7 @@ Signer #1 key size (bits): 2048
             result = audit_v1_manifest_entry_digests(apk)
         self.assertEqual(result["status"], "mismatch")
         self.assertEqual(result["missingEntries"], ["assets/missing.bin"])
-        self.assertEqual(result["unsupportedDigests"], [{"entry": "assets/missing.bin", "algorithm": "SHA999"}])
+        self.assertEqual(result["unsupportedDigests"], [{"entry": "assets/example.bin", "algorithm": "SHA999"}])
 
     def test_v1_manifest_absence_is_not_claimed_as_verified(self):
         with tempfile.TemporaryDirectory() as temp:
