@@ -38,6 +38,8 @@ import { createBrowserBattlePlayerCommandRuntime, ACTION_BATTLE_PLAYER_COMMAND_S
 import { createBrowserBattleTargetRuntime, ACTION_BATTLE_TARGET_RESOLVE, BROWSER_BATTLE_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_target_runtime.mjs';
 import { createBrowserBattleDefaultTargetRuntime, ACTION_BATTLE_DEFAULT_TARGET_RESOLVE, BROWSER_BATTLE_DEFAULT_TARGET_RUNTIME_FORMAT } from './stoneage_browser_battle_default_target_runtime.mjs';
 import { createBrowserIdleBattleStrategyRuntime, ACTION_BATTLE_IDLE_STRATEGY_APPLY, BROWSER_IDLE_BATTLE_STRATEGY_RUNTIME_FORMAT } from './stoneage_browser_idle_battle_strategy_runtime.mjs';
+import { createBrowserBattleAttackCountRuntime } from './stoneage_browser_battle_attack_count_runtime.mjs';
+import { createBrowserBattleTargetListRuntime } from './stoneage_browser_battle_target_list_runtime.mjs';
 import { createBrowserBattleAttackPreflightRuntime, ACTION_BATTLE_ATTACK_PREFLIGHT, BROWSER_BATTLE_ATTACK_PREFLIGHT_RUNTIME_FORMAT } from './stoneage_browser_battle_attack_preflight_runtime.mjs';
 import { createBrowserBattleAttackSeqPreludeRuntime, ACTION_BATTLE_ATTACK_SEQ_PRELUDE, BROWSER_BATTLE_ATTACK_SEQ_PRELUDE_FORMAT } from './stoneage_browser_battle_attack_seq_prelude_runtime.mjs';
 import { createBrowserBattleDamagePlanRuntime, ACTION_BATTLE_DAMAGE_PLAN, BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_plan_runtime.mjs';
@@ -209,6 +211,8 @@ function createBrowserStateController({
   const battleTargetRuntime=createBrowserBattleTargetRuntime();
   const battleDefaultTargetRuntime=createBrowserBattleDefaultTargetRuntime();
   const idleBattleStrategyRuntime=createBrowserIdleBattleStrategyRuntime();
+  const battleAttackCountRuntime=createBrowserBattleAttackCountRuntime();
+  const battleTargetListRuntime=createBrowserBattleTargetListRuntime();
   const battleAttackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
   const battleAttackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
   const battleDamagePlanRuntime=createBrowserBattleDamagePlanRuntime();
@@ -260,6 +264,9 @@ function createBrowserStateController({
     damageDeathChainRuntime:battleDamageDeathChainRuntime
   });
   const battleRoundRuntime=createBrowserBattleRoundRuntime({
+    attackCountRuntime:battleAttackCountRuntime,
+    targetListRuntime:battleTargetListRuntime,
+    attackSequenceRuntime:battleAttackSequenceRuntime,
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
     damagePlanRuntime:battleDamagePlanRuntime,
@@ -838,6 +845,8 @@ function createBrowserStateController({
             counterRollsByActorBid:action.counterRollsByActorBid??{},
             counterAttackRollsByActorBid:action.counterAttackRollsByActorBid??{},
             weaponClassByBid:action.weaponClassByBid??{},
+            attackCountInputsByBid:action.attackCountInputsByBid??{},
+            bowTargetListRollByBid:action.bowTargetListRollByBid??{},
             now:action.now??null
           }
         );
