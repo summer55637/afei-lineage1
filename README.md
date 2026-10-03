@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：12878c3 — test: add V4.75 hospital map runtime regression
-- 更新時間：2026-10-03T23:02:14+08:00
+- 最新 commit：2cefc1f — [docs] auto-update V4.75 hospital map runtime
+- 更新時間：2026-10-03T15:03:23Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.74
+- Regression 最高版本：V4.75
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -30,7 +30,7 @@
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
 | Full first-route | ✅ 路徑已閉合（8/8 portal groups）；✅ 自動戰鬥＋戰後結算＋World Idle Tick 編排已串接（V4.71） |
-| Map runtime | ✅ 33 張 |
+| Map runtime | ✅ 37 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
 | Battle Pipeline | ✅ V4.70 戰鬥完整結算；V4.71 World Idle Loop；V4.72 Idle Supply |
