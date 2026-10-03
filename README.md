@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：de1324f — feat: add fixed-C Ride Pet EXP credit
-- 更新時間：2026-10-03T19:22:12+08:00
+- 最新 commit：9432cfd — ci: add V4.58 Ride Pet adjust workflow
+- 更新時間：2026-10-03T19:28:33+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.56
+- Regression 最高版本：V4.58
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.56 |
+| Battle Pipeline | ✅ V4.58 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
