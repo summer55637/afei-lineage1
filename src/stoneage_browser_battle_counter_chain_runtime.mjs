@@ -225,13 +225,6 @@ async function resolveCounterChain(context,{
       );
       if(!commit.ok)return {...commit,stage:'battle-counter-chain-special-damage-react',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
-      const relife=runtimes.relifeRuntime.apply(
-        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-        {trigger:'outer-add-profit-counter-special',now}
-      );
-      if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
-      next.context=clone(relife.context);
-      record.relife=clone(relife);
       const profitCredit=runtimes.profitCreditRuntime.apply(
         {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
         {
@@ -249,6 +242,13 @@ async function resolveCounterChain(context,{
       if(!profitCredit.ok)return {...profitCredit,stage:'battle-counter-chain-profit-credit',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(profitCredit.context);
       record.profitCredit=clone(profitCredit);
+      const relife=runtimes.relifeRuntime.apply(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {trigger:'outer-add-profit-counter-special',now}
+      );
+      if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+      next.context=clone(relife.context);
+      record.relife=clone(relife);
       const creditEvent=Array.isArray(profitCredit.newCredits)
         ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
         : null;
@@ -309,13 +309,6 @@ async function resolveCounterChain(context,{
     if(!damageCommit.ok)return {...damageCommit,stage:'battle-counter-chain-damage-death',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
 
     next.context=clone(damageCommit.battleContext?.context??damageCommit.battleContext??next.context);
-    const relife=runtimes.relifeRuntime.apply(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-      {trigger:'outer-add-profit-counter',now}
-    );
-    if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
-    next.context=clone(relife.context);
-    record.relife=clone(relife);
     const profitCredit=runtimes.profitCreditRuntime.apply(
       {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
       {
@@ -331,6 +324,13 @@ async function resolveCounterChain(context,{
     if(!profitCredit.ok)return {...profitCredit,stage:'battle-counter-chain-profit-credit',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
     next.context=clone(profitCredit.context);
     record.profitCredit=clone(profitCredit);
+    const relife=runtimes.relifeRuntime.apply(
+      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+      {trigger:'outer-add-profit-counter',now}
+    );
+    if(!relife.ok)return {...relife,stage:'battle-counter-chain-relife',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+    next.context=clone(relife.context);
+    record.relife=clone(relife);
     const creditEvent=Array.isArray(profitCredit.newCredits)
       ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
       : null;
