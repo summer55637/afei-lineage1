@@ -1,0 +1,35 @@
+name: Check V4.57 browser battle Ride Pet EXP
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_exp_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs'
+      - 'tools/check_v457_browser_battle_ride_pet_attack_sequence.mjs'
+      - '.github/workflows/check-v457-browser-battle-ride-pet-exp.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.57 Ride Pet EXP runtime regression
+        run: node tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs
+      - name: Run V4.57 Ride Pet attack integration regression
+        run: node tools/check_v457_browser_battle_ride_pet_attack_sequence.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_enemy_exp_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs
+          node --check tools/check_v457_browser_battle_ride_pet_attack_sequence.mjs
