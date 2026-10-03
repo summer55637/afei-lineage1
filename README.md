@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8d02c50 — docs: record V4.76 and V4.77 supply route work
-- 更新時間：2026-10-03T23:12:35+08:00
+- 最新 commit：b526eaf — [docs] auto-update V4.77 idle supply warp catalog
+- 更新時間：2026-10-03T15:14:07Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.77
 - Playable HTML：⏸️ 尚未建立（刻意保留）
