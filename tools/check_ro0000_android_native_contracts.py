@@ -143,7 +143,8 @@ def validate_resource_function_anchors(native, layout):
                         f"{section_name}: {abi} address mismatch for {function}: "
                         f"expected {expected_address}, found {actual}"
                     )
-    for function, required_targets in section.get("requiredCallCounts", {}).items():
+
+        for function, required_targets in section.get("requiredCallCounts", {}).items():
             if function not in functions:
                 errors.append(f"{section_name}: call evidence references unknown function {function}")
                 continue
@@ -157,10 +158,11 @@ def validate_resource_function_anchors(native, layout):
                 ]
                 if not matches:
                     continue
-                symbol = matches[0]
-                disassembly = symbol.get("disassembly") or {}
+                disassembly = matches[0].get("disassembly") or {}
                 if disassembly.get("status") != "ok" or disassembly.get("excerptTruncated", False):
-                    errors.append(f"{section_name}: missing complete disassembly for call evidence {abi}/{function}")
+                    errors.append(
+                        f"{section_name}: missing complete disassembly for call evidence {abi}/{function}"
+                    )
                     continue
                 call_lines = [
                     line for line in disassembly.get("excerpt", [])
