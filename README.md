@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：55a06be — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-03T10:05:50Z
+- 最新 commit：c4703fa — feat: bind V4.48 special damage react in rounds
+- 更新時間：2026-10-03T18:07:25+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.47
 - Playable HTML：⏸️ 尚未建立（刻意保留）
