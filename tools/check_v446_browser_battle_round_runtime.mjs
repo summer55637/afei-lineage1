@@ -149,7 +149,7 @@ assert.equal(round.damageExecuted,true);
 
 const after=controller.getBattleContext();
 const playerHpAfter=after.sides[0].entries[0].hp;
-const enemyAfterEntry=after.sides[1].entries.flatMap(s=>s.entries??[]).find(e=>e?.bid===enemyBid);
+const enemyAfterEntry=after.sides[1].entries.find(e=>e?.bid===enemyBid);
 const enemyHpAfter=enemyAfterEntry?.hp??0;
 
 assert.ok(playerHpAfter<playerHpBefore,'enemy attack should commit transient player HP damage');
