@@ -31,7 +31,9 @@ async function resolveAttackSequence(context,{
   carriedLootOwnerRollsByEnemyBid={},
   carriedLootReplaceRollsByEnemyBid={},
   carriedLootReplaceSlotRollsByEnemyBid={},
-  ridePetBidByParticipantBid={}
+  ridePetBidByParticipantBid={},
+  deathExtraRandomRollsByBid={},
+  defaultPetBidByPlayerBid={0:5}
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'battle-context-required'};
   const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
@@ -206,6 +208,8 @@ async function resolveAttackSequence(context,{
         hitIndex:i,
         source:reactPlan.reaction?.code!==0?'attack-special-react':'attack',
         transactionPrefix:transactionId,
+        deathExtraRandomRollsByBid,
+        defaultPetBidByPlayerBid,
         now
       }
     );
