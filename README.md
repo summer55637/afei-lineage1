@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：4c1fb3d — test: retain relife death-state reset contract
-- 更新時間：2026-10-03T21:19:25+08:00
+- 最新 commit：f924132 — docs: document V4.66 full battle settlement chain
+- 更新時間：2026-10-03T21:22:43+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.65
+- Regression 最高版本：V4.66
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.65 |
+| Battle Pipeline | ✅ V4.66 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
