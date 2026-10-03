@@ -1,0 +1,54 @@
+{
+  "format": "ro0000-android-auto-action-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "armeabiV7aLibSha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d"
+  },
+  "functions": {
+    "x86": {
+      "getAutoAct": {
+        "address": "0x390f00",
+        "sizeBytes": 758
+      },
+      "moveProc": {
+        "address": "0x215f40"
+      }
+    },
+    "armeabiV7a": {
+      "getAutoAct": {
+        "address": "0x250975",
+        "sizeBytes": 436
+      }
+    }
+  },
+  "luaBridge": {
+    "function": "getAutoAct",
+    "luaGlobalField": "autoactMap",
+    "fieldTypeRequired": 6,
+    "call": "lua_pcall(L,0,1,0)",
+    "returnRule": {
+      "missingContext": 0,
+      "missingFunction": 0,
+      "pcallError": 0,
+      "nonNumericResult": 0,
+      "numericResult": "lua_tonumber(-1) truncated toward zero to int, then Lua stack cleared"
+    },
+    "exactLiteral": "autoactMap"
+  },
+  "moveIntegration": {
+    "caller": "moveProc",
+    "callerAddress": "0x215f40",
+    "trigger": "tests observed mouseLeftCrick flag before getAutoAct()",
+    "successWhenReturnIs1": {
+      "send": "lssproto_AC_send(playerId,currentX,currentY,0)",
+      "then": "setPcAction(0)"
+    },
+    "noActionWhenReturnIsNot1": true
+  },
+  "reconstructionUse": {
+    "directUse": "source-backed client-side auto-action hook for browser action/interaction contract",
+    "boundary": "does not prove Lua autoactMap body, server meaning of AC, or identity with the product idle policy"
+  }
+}
