@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ca31347 — fix: initialize idle runtime before V4.72 supply runtime
-- 更新時間：2026-10-03T22:46:21+08:00
+- 最新 commit：f1a85aa — fix: derive README milestones from implemented runtimes
+- 更新時間：2026-10-03T22:47:02+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.72
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -29,11 +29,11 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 完整自動戰鬥待串接（基礎策略已實作） |
+| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；✅ 自動戰鬥＋戰後結算＋World Idle Tick 編排已串接（V4.71） |
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.72 |
+| Battle Pipeline | ✅ V4.70 戰鬥完整結算；V4.71 World Idle Loop；V4.72 Idle Supply |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
