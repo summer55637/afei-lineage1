@@ -1,0 +1,87 @@
+{
+  "format": "stoneage-ro0000-singleplayer-core-data-audit-v1",
+  "checkedDate": "2026-10-03",
+  "scope": "Only RO0000 data with direct impact on the single-player StoneAge world, battle, item, skill and runtime behavior.",
+  "files": {
+    "map/mapset.txt": {
+      "endpointDataLines": 16802,
+      "endpointHydataLines": 16802,
+      "dataHydataIdentical": true,
+      "semantics": [
+        "MAP_readMapConfFile loads image-number keyed map attributes.",
+        "MAP_WALKABLE controls walkability.",
+        "MAP_HAVEHEIGHT controls height handling.",
+        "MAP_DEFENCE stores object defence.",
+        "MAP_INTODAMAGE / MAP_OUTOFDAMAGE store map-entry/exit damage.",
+        "MAP_BATTLEMAP / MAP_BATTLEMAP2 / MAP_BATTLEMAP3 store battle-map selectors.",
+        "status-area fields include MAP_INTODARKNESS, MAP_INTOCONFUSION, MAP_OUTOFPOISON, MAP_OUTOFPARALYSIS and related state effects."
+      ],
+      "conclusion": "Endpoint data and hydata are identical; no variant selection is required."
+    },
+    "magic.txt": {
+      "endpointDataLines": 223,
+      "endpointHydataLines": 223,
+      "dataHydataIdentical": true,
+      "semantics": "Loaded by MAGIC_initMagic(getMagicfile()); source rows encode named magic, effect function, power/options and magic category.",
+      "conclusion": "No endpoint variant gap."
+    },
+    "itematom.txt": {
+      "endpointDataLines": 93,
+      "endpointHydataLines": 93,
+      "dataHydataIdentical": true,
+      "semantics": "Loaded by ITEM_initItemAtom(getItematomfile()); material/ingredient atom definitions used by item composition/crafting logic.",
+      "conclusion": "No endpoint variant gap."
+    },
+    "effect.txt": {
+      "endpointDataLines": 847,
+      "endpointHydataLines": 847,
+      "dataHydataIdentical": true,
+      "semantics": "Configured as the encounter/effect configuration file; rows are floor/effect/level/date-time/duration records.",
+      "conclusion": "No endpoint variant gap."
+    },
+    "inv.txt": {
+      "endpointDataBytes": 48,
+      "endpointHydataIdentical": true,
+      "endpointFixedCIdentical": true,
+      "semantics": "Loaded through invinciblefile; parser supports INV/ITM/MAG area kinds controlling invincible zones, no-drop zones and no-magic zones.",
+      "conclusion": "The snapshot content is identical to Fixed-C but decodes to non-readable UTF-8 glyphs rather than valid INV/ITM/MAG text. Do not invent area records."
+    },
+    "battlemap.txt": {
+      "activeBlocks": 74,
+      "oneSlotBlocks": 9,
+      "twoSlotBlocks": 4,
+      "threeSlotBlocks": 61,
+      "distinctBattleMapNos": 199,
+      "semantics": "$ headers define 1-3 candidate battle-map numbers; range rows assign them to image numbers; battle selection chooses among the candidate slots.",
+      "conclusion": "Already source-closed; one reversed range (3137 to 1349) remains invalid source data and must not be silently normalized."
+    },
+    "petskill2.txt": {
+      "endpointDataLines": 189,
+      "endpointHydataLines": 189,
+      "dataHydataIdentical": false,
+      "activeEndpoint": "data/petskill2.txt",
+      "knownVariant": {
+        "skillId": 652,
+        "data": "+58% attack / -45% defence",
+        "hydata": "+55% attack / -45% defence"
+      },
+      "conclusion": "Use endpoint data variant as the primary single-player source; preserve hydata variant."
+    },
+    "skillcode.txt": {
+      "endpointDataLines": 158,
+      "endpointHydataLines": 160,
+      "dataHydataIdentical": false,
+      "semantics": "Fixed-C Load_PetSkillCodes reads ./data/skillcode.txt and stores name, TempNo, PetId and Code. Code participates in special pet-skill eligibility checks.",
+      "knownDifference": {
+        "dataOnly": 13,
+        "hydataOnly": 15
+      },
+      "conclusion": "Use endpoint data/skillcode.txt as primary; do not merge variant mappings."
+    }
+  },
+  "exclusions": [
+    "credentials/server deployment secrets",
+    "historical backups/residue without proven runtime admission",
+    "features with no demonstrated single-player relevance"
+  ]
+}
