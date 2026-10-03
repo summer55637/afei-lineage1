@@ -1,0 +1,108 @@
+{
+  "format": "stoneage-ro0000-petskill-shop-binding-audit-v2",
+  "updated": "2026-10-03",
+  "endpoint": {
+    "setupPath": "ro0000/server/merged-source/gmsv/setup.cf",
+    "configuredFreePath": "data/ablua/freepetskillshop.lua",
+    "actualLua": [
+      "data/ablua/petskillshop.lua"
+    ],
+    "normalShopArgs": [
+      {
+        "path": "data/npc/genout/psks_1003_18_13",
+        "skillRate": 1,
+        "skills": [
+          0,
+          1,
+          2,
+          3,
+          10,
+          50,
+          200,
+          201,
+          100
+        ]
+      },
+      {
+        "path": "data/npc/genout/psks_2003_18_14",
+        "skillRate": 1,
+        "skills": [
+          0,
+          1,
+          2,
+          3,
+          10,
+          11,
+          200,
+          20,
+          30,
+          31,
+          40,
+          50,
+          51,
+          120,
+          130,
+          150,
+          61,
+          80,
+          90,
+          100,
+          110
+        ]
+      },
+      {
+        "path": "data/npc/genout/psks_3003_16_13",
+        "skillRate": 1,
+        "skills": [
+          0,
+          1,
+          2,
+          3,
+          10,
+          50,
+          200,
+          201
+        ]
+      },
+      {
+        "path": "data/npc/genout/psks_4003_18_15",
+        "skillRate": 1,
+        "skills": [
+          0,
+          1,
+          2,
+          3,
+          10,
+          50,
+          100,
+          200,
+          201
+        ]
+      }
+    ],
+    "specialArg": {
+      "path": "data/npc/freeshop/freeshop02.arg",
+      "skillRate": 1,
+      "skills": [
+        652,
+        12,
+        13,
+        151,
+        152,
+        52
+      ]
+    }
+  },
+  "fixedRuntime": {
+    "source": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "enabledFlags": [
+      "__ATTACK_MAGIC",
+      "_CFREE_petskill",
+      "_PETSKILL2_TXT"
+    ],
+    "normalTemplate": "PetSkillShop -> PetSkillShopInit/PetSkillShopTalked/PetSkillShopWindowTalked; reads pet_skill and skill_rate from argstr; prices from PETSKILL_COST * rate; writes skill to pet slot.",
+    "specialTemplate": "NPC_FreePetSkill -> FreePetSkillInit/FreePetSkillTalked/FreePetSkillWindowTalked; validates Code_skill eligibility, FREE conditions, consumes Action_RunDoEventAction items, writes skill, deducts gold, optional warp.",
+    "bindingConclusion": "normal four-town PetSkillShop endpoint arguments are strong source-backed shop data; special free-shop path remains provenance-unproven because setup path points to freepetskillshop.lua while endpoint has petskillshop.lua and the exact loader admission path is not present."
+  },
+  "singlePlayerPolicy": "Use the four normal town PetSkillShop argument catalogs as endpoint-primary pet progression source. Preserve special free-shop 652/etc payload as an unresolved optional feature; do not enable or rename paths without authoritative binding."
+}
