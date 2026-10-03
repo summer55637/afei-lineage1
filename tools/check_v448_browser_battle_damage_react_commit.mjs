@@ -66,8 +66,9 @@ const makePlan=(reactionCode,extra={})=>{
   const {ctx,plan}=makePlan(BATTLE_MD_VANISH);
   const out=commitRuntime.commit(ctx,{damageReactPlan:plan,transactionId:'v448-vanish',expectedDamageRevision:0});
   assert.equal(out.ok,true,JSON.stringify(out));
-  assert.equal(out.damageExecuted,true);
+  assert.equal(out.damageExecuted,false);
   assert.equal(out.hpMutation,false);
+  assert.equal(out.stateConsumption[0].field,'damageVanish');
   assert.equal(out.battleContext.context.sides[1].entries[0].damageVanish,0);
   assert.equal(out.battleContext.context.sides[1].entries[0].hp,100);
 }
