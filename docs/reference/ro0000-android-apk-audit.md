@@ -96,6 +96,18 @@ The separate literal `path/map4/real.bin` is passed to `LoadStoneAgeLUA` from an
 
 A second, separate loader `LoadStoneAgeLUAPath` opens a directory, skips dot-prefixed entries, loads regular files whose names end in `.lua`, and recursively calls itself for non-regular entries. This confirms that the client also supports loose Lua files in a directory tree; it is not the same mechanism as the `real.bin` record loader.
 
+### Resource-boundary clarification: `path/map4/real.bin`
+
+The `path/map4/real.bin` literal must not be conflated with the `%s/real.bin` asset shard opened by `AdrnInit()`. Target x86/ARM control flow shows the former is consumed by the `LoadStoneAgeLUA` record loader: a 4-byte XOR-decoded payload length is read, the payload is buffered, a second XOR-decoded 4-byte count determines the number of name words, each name word is XOR-decoded, and entries whose decoded name contains `.lua` are passed to `myluaload(payload, name, payloadLength)`. `myluaload` loads the buffer with `luaL_loadbuffer` and executes it with `lua_pcall`.
+
+Therefore, at the current evidence level:
+
+- `path/map4/real.bin` = named-entry Lua loading container;
+- `%s/real.bin` = per-directory Real image payload paired with `%s/adrn.bin`;
+- these are distinct resource classes despite sharing the filename suffix `real.bin`.
+
+The actual `path/map4/real.bin` bytes, decoded entry names, and Lua payloads remain unavailable and are not substituted from public source. The machine-readable contract is `data/generated/stoneage_ro0000_android_lua_container_contract.json`.
+
 ### Decoded 80-byte record: fields verified by accessors
 
 The following are offsets in the decoded record, not offsets in the APK or an independently verified on-disk file format.
