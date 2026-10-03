@@ -29,6 +29,8 @@ on:
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
       - 'tools/audit_ro0000_android_signing.py'
       - 'tools/check_ro0000_android_signing.py'
+      - 'tools/check_ro0000_android_update_request_audit.py'
+      - 'data/generated/stoneage_ro0000_android_update_request_audit.json'
       - 'tools/audit_ro0000_android_dex.py'
       - 'tools/check_ro0000_android_dex.py'
       - 'tools/audit_ro0000_android_java.py'
@@ -83,6 +85,8 @@ jobs:
         run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
       - name: Audit APK DEX structure
         run: python3 tools/audit_ro0000_android_dex.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_dex_audit.json
+      - name: Test Android updater request audit
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_update_request_audit.py'
       - name: Test APK signature audit parser
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_signing.py'
       - name: Verify APK signature schemes and signer fingerprint
@@ -381,6 +385,7 @@ jobs:
             data/generated/stoneage_ro0000_android_map_prefetch_contract.json
             data/generated/stoneage_ro0000_android_native_resource_focus.json
             data/generated/stoneage_ro0000_android_lua_container_contract.json
+            data/generated/stoneage_ro0000_android_update_request_audit.json
             data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             artifacts/ro0000_android_native_abi_comparison.json
             artifacts/ro0000_android_battlemap_selector_crosscheck.json
