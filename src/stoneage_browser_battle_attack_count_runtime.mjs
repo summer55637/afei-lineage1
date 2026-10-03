@@ -38,7 +38,7 @@ function resolveAttackCount({
         return {ok:true,handled:true,stage:'battle-attack-count-unarmed-player-resolved',
           format:BROWSER_BATTLE_ATTACK_COUNT_RUNTIME_FORMAT,action:ACTION_BATTLE_ATTACK_COUNT_RESOLVE,
           attackCount:second,rngConsumed:2,sourceItemPresent:false,sourceAttackCount:0,
-          source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',function:'BATTLE_GetAttackCount',
+          source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',function:'BATTLE_GetAttackCount',
             fallback:'PLAYER level>=10 no CHAR_ARM: RAND(1,1000), then RAND(5,10) when threshold passes'},
           unarmedPlayer:{level:lv,luck:int(luck)??0,luckWork,firstRoll:first,secondRoll:second,damageDivisor:1}};
       }
@@ -46,7 +46,7 @@ function resolveAttackCount({
       return {ok:true,handled:true,stage:'battle-attack-count-unarmed-player-resolved',
         format:BROWSER_BATTLE_ATTACK_COUNT_RUNTIME_FORMAT,action:ACTION_BATTLE_ATTACK_COUNT_RESOLVE,
         attackCount,rngConsumed:1,sourceItemPresent:false,sourceAttackCount:0,
-        source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',function:'BATTLE_GetAttackCount',
+        source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',function:'BATTLE_GetAttackCount',
           fallback:'PLAYER level>=10 no CHAR_ARM: threshold table from RAND(1,1000)'},
         unarmedPlayer:{level:lv,luck:int(luck)??0,luckWork,firstRoll:first,secondRoll:null,damageDivisor:1}};
     }
@@ -54,7 +54,7 @@ function resolveAttackCount({
       return {ok:true,handled:true,stage:'battle-attack-count-no-item-fallback',
         format:BROWSER_BATTLE_ATTACK_COUNT_RUNTIME_FORMAT,action:ACTION_BATTLE_ATTACK_COUNT_RESOLVE,
         attackCount:1,rngConsumed:0,sourceItemPresent:false,sourceAttackCount:0,
-        source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
+        source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
           function:'BATTLE_GetAttackCount',fallback:'non-player or PLAYER level<10 -> attack_max=1'}};
     }
     return {ok:true,handled:true,stage:'battle-attack-count-no-item',
