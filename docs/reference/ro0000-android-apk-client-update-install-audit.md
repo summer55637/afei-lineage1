@@ -6,6 +6,19 @@
 
 進一步閉合 target Android APK 的「客戶端版本檢查 → 更新檔下載 → APK 安裝」控制流。本文只記錄 x86 `libStoneage.so` 的可驗證 native call sites；不公開嵌入的內部 host/address，也不把未知伺服器 response 格式擴張成未驗證規格。
 
+## 2026-10-03 exact-binary revalidation
+
+The updater findings were rechecked against the exact x86 target `libStoneage.so` extracted from GitHub Actions run `36996292512` (artifact `11221517905`). The extracted library SHA-256 is the known target `7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d`.
+
+The revalidation closes two request-construction details that were previously only recorded at the control-flow level:
+
+- `DownLoadIniFile()` formats the resource-list URL as `%s?version=%s&platform=%s&channel=%s`, using the embedded `/SA25/update/list.php` endpoint, and downloads the result to `data/update/list.dat`.
+- `UpdateAppNewVersion()` formats the POST body as `platform=%s&version=%s&channel=%s` and passes it to `HttpClient::PostUrl(url, body, callback, false)` for the embedded `/SA25/clientupdate.php` endpoint.
+
+The six hot-update archive slots are still exactly `patch_0.zip` through `patch_5.zip`; each is sent through `DownloadResource()` and then `UnZipFile()`, with `closeApp()` on an extraction failure.
+
+The evidence is recorded in `data/generated/stoneage_ro0000_android_update_request_audit.json`. The record intentionally excludes the embedded host/address.
+
 ## Verified control flow
 
 主要函式：
