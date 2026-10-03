@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v447-browser-battle-round-runtime-v1';
+const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v452-browser-battle-round-runtime-v1';
 const ACTION_BATTLE_ROUND_RESOLVE='BATTLE_ROUND_RESOLVE';
 
 const BATTLE_MODE_BATTLE=2;
@@ -131,6 +131,8 @@ function markNextCommandPhase(context){
     entry.noguardDuckBonus=0;
     entry.noguardCounterBonus=0;
     entry.noguardCriticalBonus=0;
+    delete entry.sourceAttackMax;
+    delete entry.sourceTargetList;
     prepared++;
   }
   next.context.preCommandSequence='fixed-c-pre-command-next-round';
@@ -148,6 +150,8 @@ async function resolveBattleRound(context,{
   counterRollsByActorBid={},
   counterAttackRollsByActorBid={},
   weaponClassByBid={},
+  attackCountInputsByBid={},
+  bowTargetListRollByBid={},
   runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
@@ -164,7 +168,7 @@ async function resolveBattleRound(context,{
   const id=String(roundId??'').trim();
   if(!id||id.length>128)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'round-id-required'};
 
-  const runtimeNames=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','statusRuntime','endRuntime'];
+  const runtimeNames=['attackCountRuntime','targetListRuntime','attackSequenceRuntime','attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','statusRuntime','endRuntime'];
   const missingRuntime=runtimeNames.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missingRuntime){
     return {
@@ -215,6 +219,8 @@ async function resolveBattleRound(context,{
 
   const order=sortTurnEntries(next);
   const statuses=[];
+  const attackCountPrimes=[];
+  const targetListPrimes=[];
   const actions=[];
   const attacks=[];
   const deferred=[];
@@ -238,22 +244,82 @@ async function resolveBattleRound(context,{
     actor=allEntries(next).find(x=>x.bid===actorBid)?.entry;
     if(!actor||!isAlive(actor))continue;
 
+    const actorBundle=bundles.map.get(actorBid)??null;
+    const explicitAttackCountInput=attackCountInputsByBid?.[String(actorBid)]??attackCountInputsByBid?.[actorBid]??null;
+    const embeddedAttackCountInput=actorBundle&&(
+      actorBundle.itemPresent===true ||
+      actorBundle.attackNumMin!=null ||
+      actorBundle.attackNumMax!=null ||
+      actorBundle.attackCountRoll!=null
+    ) ? {
+      itemPresent:actorBundle.itemPresent===true,
+      attackNumMin:actorBundle.attackNumMin??null,
+      attackNumMax:actorBundle.attackNumMax??null,
+      roll:actorBundle.attackCountRoll??null
+    } : null;
+    const attackCountInput=explicitAttackCountInput??embeddedAttackCountInput;
+    let sourceAttackMax=null;
+    if(attackCountInput){
+      const prime=runtimes.attackCountRuntime.resolve({
+        itemPresent:attackCountInput.itemPresent===true,
+        attackNumMin:attackCountInput.attackNumMin??null,
+        attackNumMax:attackCountInput.attackNumMax??null,
+        roll:attackCountInput.roll??null
+      });
+      if(!prime.ok){
+        return {...prime,stage:'battle-round-attack-count',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,attackerBid:actorBid,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks),attackCountPrimes:clone(attackCountPrimes)};
+      }
+      sourceAttackMax=int(prime.attackCount)??0;
+      actor.sourceAttackMax=sourceAttackMax;
+      attackCountPrimes.push({actorBid,...clone(prime)});
+    }
+
+    const command=int(actor.battleCommands?.[0])??BATTLE_COM_NONE;
+    const actorWeaponType=String(
+      explicitAttackCountInput?.weaponType??
+      actorBundle?.weaponType??
+      actor.weaponType??
+      'none'
+    ).trim().toLowerCase();
+    const bowRowRoll=bowTargetListRollByBid?.[String(actorBid)]??bowTargetListRollByBid?.[actorBid]??actorBundle?.bowTargetListRoll??null;
+    let sourceTargetList=null;
+    if(actorWeaponType==='bow'||int(actorWeaponType)===4){
+      const requestedTargetBid=int(actor.battleCommands?.[1]);
+      const targetList=runtimes.targetListRuntime.resolve({
+        attackNo:actorBid,
+        requestedTargetBid:requestedTargetBid==null?-1:requestedTargetBid,
+        weaponType:actorWeaponType,
+        bowRowRoll
+      });
+      if(!targetList.ok){
+        return {...targetList,stage:'battle-round-target-list',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,attackerBid:actorBid,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks),attackCountPrimes:clone(attackCountPrimes),targetListPrimes:clone(targetListPrimes)};
+      }
+      sourceTargetList=clone(targetList);
+      actor.sourceTargetList=clone(targetList.targets??[]);
+      targetListPrimes.push({actorBid,...clone(targetList)});
+    }
+
     if(statusResult.skip===true){
-      actions.push({actorBid,commandCode:BATTLE_COM_NONE,action:'status-blocked',skipped:true});
+      actions.push({
+        actorBid,
+        commandCode:BATTLE_COM_NONE,
+        action:'status-blocked',
+        skipped:true,
+        sourceAttackMax,
+        targetListPrepared:sourceTargetList!=null
+      });
       actor.battleCommands=[BATTLE_COM_NONE,-1,-1];
       actor.sourceBattleCharMode=BATTLE_CHARMODE_C_OK;
       actor.battleMode='c_ok';
       continue;
     }
-
-    const command=int(actor.battleCommands?.[0])??BATTLE_COM_NONE;
     if(SUPPORTED_NOOP_COMMANDS.has(command)){
       actions.push({actorBid,commandCode:command,action:command===BATTLE_COM_GUARD?'guard':command===BATTLE_COM_WAIT?'wait':'none',skipped:false});
       continue;
     }
 
     if(BASIC_ATTACK_COMMANDS.has(command)){
-      const bundle=bundles.map.get(actorBid);
+      const bundle=actorBundle;
       if(!bundle){
         return {
           ok:false,handled:false,stage:'battle-round-attack-input',action:ACTION_BATTLE_ROUND_RESOLVE,
@@ -262,7 +328,98 @@ async function resolveBattleRound(context,{
         };
       }
 
-      const weaponType=String(bundle.weaponType??'none').trim().toLowerCase();
+      const weaponType=actorWeaponType;
+      const sourceAttackCount=Math.max(1,int(sourceAttackMax??bundle.attackCount??1)??1);
+      if(sourceTargetList!=null || sourceAttackCount>1){
+        const rawTargetBid=int(actor.battleCommands?.[1])??-1;
+        const sequenceTargets=sourceTargetList?.targets
+          ? sourceTargetList.targets.slice()
+          : Array.from({length:sourceAttackCount},()=>rawTargetBid);
+        const hitRollBundles=Array.isArray(bundle.hitRollBundles)&&bundle.hitRollBundles.length
+          ? bundle.hitRollBundles
+          : Array.from({length:sourceAttackCount},()=>bundle);
+        const sequenceResult=await runtimes.attackSequenceRuntime.resolve(
+          {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+          {
+            attackerBid:actorBid,
+            requestedTargetBid:rawTargetBid,
+            weaponType,
+            attackCount:sourceAttackCount,
+            targets:sequenceTargets,
+            hitRollBundles,
+            transactionPrefix:String(id),
+            now
+          }
+        );
+        if(!sequenceResult.ok){
+          return {...sequenceResult,stage:'battle-round-attack-sequence',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks),attackCountPrimes:clone(attackCountPrimes),targetListPrimes:clone(targetListPrimes)};
+        }
+        next.context=clone(sequenceResult.context);
+        const executedHits=Array.isArray(sequenceResult.hits)?sequenceResult.hits.filter(x=>x?.executed===true):[];
+        const lastHit=executedHits.length?executedHits[executedHits.length-1]:null;
+        const attackRecord={
+          attackerBid:actorBid,
+          requestedTargetBid:rawTargetBid,
+          finalTargetBid:lastHit?.finalTargetBid??null,
+          commandCode:command,
+          attackCount:sourceAttackCount,
+          sourceAttackCount:clone(attackCountPrimes.find(x=>x.actorBid===actorBid)??null),
+          sourceTargetList:clone(sourceTargetList),
+          attackSequence:clone(sequenceResult),
+          damageExecuted:sequenceResult.damageExecuted===true
+        };
+        const canResolveCounter=normalizedCounterPolicy==='execute'
+          && lastHit?.prelude?.outcome==='normal'
+          && lastHit?.damageExecuted===true
+          && lastHit?.specialReaction!==true
+          && lastHit?.commit?.deathCommitted!==true
+          && lastHit?.damageReactPlan?.reaction?.code===0
+          && lastHit?.damageReactPlan?.attackerRidePet!==true
+          && lastHit?.damageReactPlan?.defenderRidePet!==true
+          && lastHit?.finalTargetBid!=null;
+        if(normalizedCounterPolicy==='execute'&&canResolveCounter){
+          const counterResult=await runtimes.counterChainRuntime.resolve(
+            {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+            {
+              originAttackerBid:actorBid,
+              originTargetBid:lastHit.finalTargetBid,
+              counterRolls:counterRollsByActorBid?.[String(actorBid)]??counterRollsByActorBid?.[actorBid]??[],
+              counterAttackRolls:counterAttackRollsByActorBid?.[String(actorBid)]??counterAttackRollsByActorBid?.[actorBid]??[],
+              weaponClassByBid,
+              transactionPrefix:String(id)+':'+String(actorBid),
+              now
+            }
+          );
+          if(!counterResult.ok){
+            return {...counterResult,stage:'battle-round-counter-chain',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks),counterChains:clone(counterChains)};
+          }
+          next.context=clone(counterResult.context);
+          attackRecord.counterChain=clone(counterResult);
+          counterChains.push(clone(counterResult));
+          counterExecutedCount+=counterResult.chainCount??0;
+        }else if(normalizedCounterPolicy==='defer'){
+          deferred.push({
+            kind:'counter',
+            attackerBid:actorBid,
+            defenderBid:lastHit?.finalTargetBid??null,
+            reason:'v452-multi-hit-counter-deferred-until-sequence-complete'
+          });
+        }
+        attacks.push(attackRecord);
+        actions.push({
+          actorBid,
+          commandCode:command,
+          action:'attack-sequence',
+          targetBid:lastHit?.finalTargetBid??null,
+          attackCount:sourceAttackCount,
+          damageExecuted:sequenceResult.damageExecuted===true,
+          executedHitCount:sequenceResult.executedHitCount,
+          counterChain:attackRecord.counterChain?{chainCount:attackRecord.counterChain.chainCount,counterTriggeredCount:attackRecord.counterChain.counterTriggeredCount}:null
+        });
+        damageExecuted=damageExecuted||sequenceResult.damageExecuted===true;
+        continue;
+      }
+
       const defaultTargetRoll=bundle.defaultTargetRoll??defaultTargetRollByBid?.[String(actorBid)]??defaultTargetRollByBid?.[actorBid]??null;
       const preflight=resolveAttackPreflight(next,{
         attackerBid:actorBid,
@@ -488,6 +645,8 @@ async function resolveBattleRound(context,{
     turn:next.context.turn,
     order:order.map(row=>row.bid),
     statuses,
+    attackCountPrimes,
+    targetListPrimes,
     actions,
     attacks,
     deferred,
@@ -508,11 +667,14 @@ async function resolveBattleRound(context,{
       repository:SOURCE_REPOSITORY,
       ref:SOURCE_REF,
       functions:['BATTLE_Command','BATTLE_Battling','BATTLE_PreCommandSeq','BATTLE_OnlyRescue'],
-      sourceOrder:['turn++','EntrySort','StatusSeq','command execution','counter chain (when enabled)','end check','PreCommandSeq']
+      sourceOrder:['turn++','EntrySort','StatusSeq','BATTLE_GetAttackCount','BATTLE_TargetListSet','command execution','AttackSeq per hit','counter chain (after sequence when enabled)','end check','PreCommandSeq']
     },
     scope:{
       basicAttackOnly:true,
-      maxAttackCountPerActor:1,
+      sourceAttackCountEmbedded:true,
+      bowTargetListEmbedded:true,
+      maxAttackCountPerActor:50,
+      counterAfterMultiHitSequence:true,
       counterDeferred:normalizedCounterPolicy==='defer',
       specialDamageReactionsDeferred:true,
       persistentSettlementDeferred:true
@@ -527,6 +689,9 @@ async function resolveBattleRound(context,{
   factories so the production controller can bind the canonical runtimes.
 */
 function createBrowserBattleRoundRuntime({
+  attackCountRuntime,
+  targetListRuntime,
+  attackSequenceRuntime,
   attackPreflightRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
@@ -539,6 +704,9 @@ function createBrowserBattleRoundRuntime({
   endRuntime
 }={}){
   const required=[
+    ['attackCountRuntime',attackCountRuntime],
+    ['targetListRuntime',targetListRuntime],
+    ['attackSequenceRuntime',attackSequenceRuntime],
     ['attackPreflightRuntime',attackPreflightRuntime],
     ['attackSeqPreludeRuntime',attackSeqPreludeRuntime],
     ['damagePlanRuntime',damagePlanRuntime],
@@ -560,6 +728,9 @@ function createBrowserBattleRoundRuntime({
     resolve:(context,options={})=>resolveBattleRound(context,{
       ...options,
       runtimes:{
+        attackCountRuntime,
+        targetListRuntime,
+        attackSequenceRuntime,
         attackPreflightRuntime,
         attackSeqPreludeRuntime,
         damagePlanRuntime,
