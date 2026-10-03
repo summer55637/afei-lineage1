@@ -659,14 +659,6 @@ async function resolveBattleRound(context,{
       attackRecord.commit=clone(deathCommit);
       attackRecord.damageExecuted=deathCommit.damageExecuted===true;
 
-      const relife=runtimes.relifeRuntime.apply(
-        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-        {trigger:'outer-add-profit-round-basic',now}
-      );
-      if(!relife.ok)return {...relife,stage:'battle-round-relife',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
-      next.context=clone(relife.context);
-      attackRecord.relife=clone(relife);
-
       const profitCredit=runtimes.profitCreditRuntime.apply(
         {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
         {
@@ -686,6 +678,13 @@ async function resolveBattleRound(context,{
       }
       next.context=clone(profitCredit.context);
       attackRecord.profitCredit=clone(profitCredit);
+      const relife=runtimes.relifeRuntime.apply(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {trigger:'outer-add-profit-round-basic',now}
+      );
+      if(!relife.ok)return {...relife,stage:'battle-round-relife',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
+      next.context=clone(relife.context);
+      attackRecord.relife=clone(relife);
 
       const creditEvent=Array.isArray(profitCredit.newCredits)
         ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
