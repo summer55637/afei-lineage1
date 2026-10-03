@@ -213,3 +213,19 @@ Machine-readable evidence：
 `data/generated/stoneage_ro0000_profession_endpoint_audit.json`
 
 本輪刻意沒有把 `question.txt`、`racequiz.txt`、`memberpets.txt`、`membershop.txt` 等資料當成主線解析對象；它們目前沒有證據顯示會直接影響本單機放置版主循環，先維持不深入解析，以符合「只解析對遊戲製作有用內容」原則。
+
+
+## 2026-10-03 角色稱號 endpoint 最小閉合
+
+本輪僅處理 active setup 明確載入、且仍未有獨立 closure 的角色稱號資料：
+
+- `data/titlename.txt`：實際 active entries 只有 `0,サムギルの民`、`1,マリナスの民`。
+- `data/titleconfig.txt`：目前只有 1 條 active condition：`STR>=99999,MAXMP>=99999,TITLE=0`。
+- endpoint data 與 hydata 的兩個檔案均完全一致。
+- Fixed-C `init.c` 會在 startup 載入 title name/config；`TITLE_TitleCheck` 會依角色數值、裝備、持有道具、技能等條件增刪稱號。
+
+這層已完成「目前 endpoint active content + loader semantics」最小閉合；沒有證據的歷史稱號資料不再擴展解析。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_title_endpoint_audit.json`
