@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v451-browser-battle-attack-sequence-v1';
+const BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT='stoneage-v453-browser-battle-attack-sequence-v1';
 const ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE='BATTLE_ATTACK_SEQUENCE_RESOLVE';
 const ITEM_FIST=0;
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -24,6 +24,7 @@ async function resolveAttackSequence(context,{
   attackCount=null,
   targets=[],
   hitRollBundles=[],
+  damageDivisorOverride=null,
   now=null,
   transactionPrefix=''
 }={},runtimes={}){
@@ -122,7 +123,9 @@ async function resolveAttackSequence(context,{
     );
     if(!criticalPlan.ok)return {...criticalPlan,stage:'battle-attack-sequence-critical',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
 
-    const damageDiv=isFist(weaponType)?count:1;
+    const damageDiv=damageDivisorOverride!=null
+      ? Math.max(1,int(damageDivisorOverride)??1)
+      : (isFist(weaponType)?count:1);
     const dividedDamage=damageDiv>1?Math.max(Math.trunc(Number(criticalPlan.damage)/damageDiv),Number(criticalPlan.damage)>0?1:0):int(criticalPlan.damage);
     hit.sourceDamage=int(criticalPlan.damage)??0;
     hit.damageDiv=damageDiv;
@@ -227,6 +230,7 @@ async function resolveAttackSequence(context,{
     scope:{
       basicMultiHit:true,
       fistDamageDivisor:true,
+      damageDivisorOverrideSupported:true,
       bowTargetListInput:true,
       specialDamageReactSupported:true,
       counterExecutionDeferred:true,
