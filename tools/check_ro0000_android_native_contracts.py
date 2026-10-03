@@ -89,7 +89,7 @@ def validate_resource_function_anchors(native, layout):
     errors = []
     apk_sha = native.get("auditedApk", {}).get("sha256")
     libs = {lib.get("abi"): lib for lib in native.get("nativeLibraries", [])}
-    for section_name in ("autoMapColor", "autoMapRendering"):
+    for section_name in ("autoMapColor", "autoMapRendering", "worldMapRuntime"):
         section = layout.get(section_name)
         if not isinstance(section, dict):
             errors.append(f"resource layout missing {section_name}")
@@ -194,6 +194,9 @@ class NativeContractTests(unittest.TestCase):
         contract["loop"]["address"]["x86"] = "0x1001"
         errors = validate_contracts(native, [("fixture", contract)])
         self.assertTrue(any("address mismatch" in error for error in errors))
+        layout["worldMapRuntime"]["functions"]["worldMapProc"]["x86"] = "0x5101"
+        errors = validate_resource_function_anchors(native, layout)
+        self.assertTrue(any("worldMapRuntime: x86 address mismatch for worldMapProc" in error for error in errors))
 
     def test_resource_layout_function_anchors_validate_both_abis(self):
         native = {
@@ -232,6 +235,24 @@ class NativeContractTests(unittest.TestCase):
                 },
                 "functions": {"DrawAutoMapping": {"x86": "0x2000", "armeabiV7a": "0x4001"}},
             },
+        }
+        world_functions = {
+            "initWorldMap": {"x86": "0x5000", "armeabiV7a": "0x6001"},
+            "worldMapProc": {"x86": "0x5100", "armeabiV7a": "0x6101"},
+            "mapWndProc": {"x86": "0x5200", "armeabiV7a": "0x6201"},
+            "EndWarpMap": {"x86": "0x5300", "armeabiV7a": "0x6301"},
+        }
+        native["nativeLibraries"][0]["focusedSymbols"].extend([
+            {"type": "FUNC", "name": name, "demangled": name + "()", "value": addresses["x86"]}
+            for name, addresses in world_functions.items()
+        ])
+        native["nativeLibraries"][1]["focusedSymbols"].extend([
+            {"type": "FUNC", "name": name, "demangled": name + "()", "value": addresses["armeabiV7a"]}
+            for name, addresses in world_functions.items()
+        ])
+        layout["worldMapRuntime"] = {
+            "source": layout["autoMapColor"]["source"],
+            "functions": world_functions,
         }
         self.assertEqual(validate_resource_function_anchors(native, layout), [])
         layout["autoMapRendering"]["functions"]["DrawAutoMapping"]["x86"] = "0x2001"
