@@ -1,0 +1,53 @@
+{
+  "format": "stoneage-ro0000-petfusion-endpoint-audit-v1",
+  "updated": "2026-10-03",
+  "endpoint": {
+    "template": [
+      "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.template",
+      "ro0000/server/merged-source/gmsv/hydata/data/npc/sa50/petfusion/petfusion.template"
+    ],
+    "templateDataHydataIdentical": true,
+    "declaredTemplate": "npc_petfusion",
+    "functionset": "PetFusion",
+    "createPath": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion.create",
+    "activeCreateBindings": [
+      {
+        "floor": 148,
+        "coord": [
+          9,
+          5
+        ],
+        "name": "神秘商人",
+        "binding": "changeevent|file:sa50/petfusion/petfusion"
+      },
+      {
+        "floor": 148,
+        "coord": [
+          5,
+          10
+        ],
+        "name": "活動使者",
+        "binding": "changeevent|file:sa50/petfusion/petfusion"
+      }
+    ],
+    "actualPayload": "ro0000/server/merged-source/gmsv/data/npc/sa50/petfusion/petfusion",
+    "payloadType": "changeevent message shell",
+    "payloadSummary": "EventNo=-1; LV>0; messages say the mysterious shop is not open and may teleport back after 10 seconds",
+    "petfusionArgPresent": false
+  },
+  "serviceIndex": {
+    "progressionFunctionSet": "PetFusion",
+    "observedFloors": [
+      2000,
+      4000,
+      7000
+    ]
+  },
+  "fixedRuntime": {
+    "source": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "featureFlag": "_NPC_FUSION",
+    "semanticBaseline": "Fixed-C contains PetFusion functionset and EVOLUTION/FusionTable semantics, but those are not endpoint evidence for the RO0000 snapshot."
+  },
+  "conclusion": "RO0000 currently provides template/service references for PetFusion but no authoritative endpoint fusion recipe/branch payload. The found active petfusion payload is an informational shell, not a usable fusion rule source.",
+  "singlePlayerPolicy": "Do not implement or claim PetFusion recipes from Fixed-C alone. Preserve this endpoint evidence boundary; resume only if a concrete RO0000 fusion payload is found."
+}
