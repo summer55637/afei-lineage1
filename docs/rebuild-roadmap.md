@@ -1,3 +1,14 @@
+## 2026-10-03 V4.72 Browser Idle Supply
+
+補上 V4.71 World Idle Loop 在 `SUPPLY_CHECK` 的下一個可驗證邊界：新增 `IDLE_SUPPLY_USE_HEALER`，只在 caller 提供明確 supply policy 且已解析到 Healer、角色位於既有交互距離時執行既有 Healer runtime。
+
+V4.72 不自行決定補給門檻、不自動找路、不傳送、不新增死亡復原規則；治療完成後重新檢查同一 policy，只有清除補給需求才提交既有 `SUPPLY_DONE` 回到 `MOVING`。Persistent State schema 不變。
+
+Regression：`tools/check_v472_browser_idle_supply.mjs`；Workflow：`.github/workflows/check-v472-browser-idle-supply.yml`。
+
+詳細契約：`docs/reference/v472-browser-idle-supply.md`。
+
+---
 ## 2026-10-03 V4.71 Browser World Idle Loop
 
 把既有 World Movement、Encounter target/roll、Encounter→Idle bridge、Group selection、Enemy generation、Battle Context、Battle Initialize 與 V4.70 Battle Auto Full Lifecycle 組成單一 `WORLD_IDLE_LOOP_TICK` 編排入口。
