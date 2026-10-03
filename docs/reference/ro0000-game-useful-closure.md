@@ -308,3 +308,25 @@ Machine-readable evidence：
 `data/generated/stoneage_ro0000_crafting_process_endpoint_audit.json`
 
 這批配方已完成 source closure；後續只需要在產品層決定哪些鍛造線進入單機流程，不必再重新解析原始腳本。
+
+
+## 2026-10-03 寵物技能包／裝備突破製作 endpoint 閉合
+
+本輪只納入會直接改變單機養成進程的正式 `maker5.arg`、`maker6.arg`：
+
+### `maker5.arg` — 寵物特殊技能包
+- data / hydata 完全一致。
+- 配方 1：`42013*1 + 42014*1 + 1000 石幣 -> 42106`。
+- 配方 2：`42013*3 + 1000 石幣 -> 42106`。
+- 這條製作線直接連到寵物特殊技能取得，因此列入單機寵物養成 source layer。
+
+### `maker6.arg` — 裝備突破
+- data / hydata 完全一致。
+- 正式配方以 `16672 / 16673 / 16674 / 16676` 等星耀石材料、`42701 / 42702` 及既有裝備為輸入，消耗 1000 石幣，透過 `GetRandItem` 產生突破結果。
+- endpoint item catalog 已直接核到 `16672–16676` 為「合成兜 20」系列；其他新版 Item ID 暫無 canonical catalog 命中，因此維持原 ID。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_maker5_maker6_endpoint_audit.json`
+
+這兩條製作線已完成資料層 closure；後續產品層可決定何時解鎖，不需要再重新解析原始 recipe。
