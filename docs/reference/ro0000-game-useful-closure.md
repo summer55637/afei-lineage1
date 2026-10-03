@@ -1,0 +1,76 @@
+# RO0000 Game-Useful Closure Audit
+
+更新：2026-10-03
+
+## 目的
+
+本文件定義 RO0000 在「阿肥石器時代放置版」中的實際完成標準：
+
+> 只要求所有會影響遊戲製作的資料與語義完成解析；純歷史、備份、殘留或與產品玩法無關的資料不要求逐檔完成。
+
+RO0000 是實際部署 snapshot。VM 一鍵端與手工外網端為實際部署資料的主要來源；Pinned Fixed-C 只用來確認 loader、runtime semantics、資料格式與執行順序，不可自動覆蓋 endpoint variant。
+
+## 已閉合的高價值範圍
+
+- 世界／地圖：主要 source-route、四個 hometown 起始路徑、首條 idle route 的地圖與 landing/encounter path 已建立 source-backed closure；產品專用的 4000 修補維持為獨立 runtime overlay，不修改原始 RO0000。
+- 戰鬥資料鏈：endpoint `encount.txt → group1.txt → enemy1.txt → enemybase1.txt` 的 Group→Enemy 與 Enemy→EnemyBase 引用已閉合；首條 idle route 使用的 Encounter 65／28／91／95 已有 source-backed route closure。
+- NPC：hometown 100/200/300/400 的 NPC path 均完整保留；endpoint variant 與 Fixed-C 不同時以 endpoint 為準。
+- Item/Economy：endpoint `setup.cf`、`itemset6.csv` 與 runtime loader semantics 已解析；`ITEM1=32003` 在目前 endpoint item table 中確實沒有 exact source-ID row，因此不做 24114 或其他 ID 的猜測替換。這是資料邊界已知，不是「尚未找到 parser」。
+- Pet skill / battle variants：`petskill2.txt`、`skillcode.txt` 等已確認存在實際 data/hydata gameplay 差異，不做全域覆蓋。
+- Event / NPC script：已建立 source authority 與 loader admission 規則；對無 authoritative binding 的 residue/variant 保持未啟用，不把猜測版本當成正式 runtime。
+
+## 目前真正仍需保留的「遊戲相關證據缺口」
+
+### 1. Endpoint Encounter→Group 的 30 個 active Group refs
+
+目前 endpoint battle audit 明確列出：
+
+`1, 196, 200, 791, 792, 793, 794, 795, 796, 797, 800, 802, 804, 805, 806, 808, 809, 811, 821, 823, 824, 826, 827, 1131, 1315, 1316, 1327, 1328, 1467, 1500`
+
+其中：
+- Group 1131 在 endpoint `data/group1.txt` 與 `hydata/group1.txt` 均以 `#` 開頭，屬註解／inactive row，不應當成已缺失的正式 active row。
+- Group 1467 在 `hydata/group1.txt` 有正式 active row；endpoint `data/group1.txt` 沒有，這是 data/hydata variant，而不是可以自行補寫的缺檔。
+- 其餘 current endpoint unresolved IDs 在 selected `group1.txt` 內沒有 active row。
+
+這些 refs 分布於 floor 100、200、300、400 與多個特殊／活動／副本 floor。它們不是首條 idle route 的必要 encounter 來源；首條路線目前依 Encounter 65／28／91／95 閉合。因此產品主線不應被這 30 個 optional/variant coverage refs 阻塞。但若日後要求恢復相應地圖的完整野怪覆蓋，仍需另外找到 endpoint-authoritative provenance。
+
+### 2. `appear.txt`
+
+RO0000 endpoint 的 `data/appear.txt` 與 `hydata/data/appear.txt` 均不存在。
+
+Fixed-C 已完整解析此檔案的格式與 runtime 使用：
+- server startup 直接呼叫 `CHAR_initAppearPosition(getAppearfile())`
+- 每個有效行是 `floor x y`
+- `CHAR_isAppearPosition()` 以 floor exact match 取得座標
+- character load 時，命中 appear floor 會回到 `CHAR_LASTTALKELDER` 對應的 elder position
+
+因此「語義」已解析完成；但 RO0000 endpoint 的原始 `appear.txt` bytes 沒有來源，不能用 Fixed-C 或公開其他版本資料冒充 endpoint。
+
+### 3. Pet skill shop Lua hook binding
+
+RO0000 `setup.cf` 指向：
+`data/ablua/freepetskillshop.lua`
+
+RO0000 的 `data` 與 `hydata` 實際存在：
+`data/ablua/petskillshop.lua`
+
+該 Lua payload 已讀取並解析，核心 `FreePetSkillShop()` 直接 `return 1`，其餘 `data()/main()` 為空殼。
+
+Fixed-C 的 `npc_freepetskillshop.c` 也已解析，包含寵物特殊技能條件、gold/item gate、skill slot 寫入與 warp 邏輯。
+
+因此目前缺口是「setup path 與 deployed Lua filename 的 provenance/binding」，不是 Lua 語義未解析。沒有找到 authoritative loader call-site 前，不做 rename/copy。
+
+## 舊報告的口徑修正
+
+- Fixed-C 的一般 encounter closure 曾把 Group 1230 列為 unresolved；但直接核對 RO0000 endpoint 後，Group 1230 實際存在於 endpoint data/hydata，因此不能把它繼續列為 RO0000 缺檔。
+- 舊的 Item/Event 236 unresolved report 是「Fixed-C event references 對 Fixed-C itemset6.txt catalog」的分析，不是 RO0000 endpoint event/item 缺檔清單；不得把 236 直接當成 RO0000 missing items。
+- 因此後續任何「RO0000 未完成」判定，必須優先引用 endpoint-primary audit，而不是固定來源的歷史 closure 統計。
+
+## 完成判定
+
+目前可以宣稱：
+
+> RO0000 對「阿肥石器時代放置版」的主要、已納入產品路線的遊戲資料與 runtime 語義已完成解析；剩餘項目只保留為明確標記的 endpoint provenance / optional coverage 缺口，不以猜測資料補齊。
+
+若產品範圍擴大到「所有 RO0000 特殊地圖／活動的完整原版 encounter coverage」或要求 server 原始 boot 100% 自洽，則上述缺口仍需額外 provenance，不應假裝已閉合。
+
