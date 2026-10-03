@@ -137,7 +137,10 @@ async function resolveCounterChain(context,{
         damageRollWide:bundle.damageRollWide,
         fieldAtt:num(bundle.fieldAtt)??(int(next.context.fieldAtt)??4),
         fieldAttrPower:num(bundle.fieldAttrPower)??(num(next.context.attPow)??0),
-        includeAttr:bundle.includeAttr!==false
+        includeAttr:bundle.includeAttr!==false,
+        throwWeapon:bundle.throwWeapon===true,
+        ridePetBidByBid:ridePetBidByParticipantBid,
+        ridePetAdjustRuntime:runtimes.ridePetAdjustRuntime??null
       }
     );
     if(!damagePlan.ok)return {...damagePlan,stage:'battle-counter-chain-damage-plan',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
@@ -152,6 +155,9 @@ async function resolveCounterChain(context,{
         fieldAtt:num(bundle.fieldAtt)??(int(next.context.fieldAtt)??4),
         fieldAttrPower:num(bundle.fieldAttrPower)??(num(next.context.attPow)??0),
         includeAttr:bundle.includeAttr!==false,
+        throwWeapon:bundle.throwWeapon===true,
+        ridePetBidByBid:ridePetBidByParticipantBid,
+        ridePetAdjustRuntime:runtimes.ridePetAdjustRuntime??null,
         critical:prelude.critical?.critical===true,
         attackSeqPrelude:prelude,
         weaponType,
