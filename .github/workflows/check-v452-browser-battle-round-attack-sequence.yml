@@ -1,3 +1,4 @@
+# re-run guard: current main compatibility
 name: Check V4.52 browser battle round AttackNum and target sequence
 on:
   push:
