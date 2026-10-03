@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b562894 — docs: sync README with V4.72 idle supply
-- 更新時間：2026-10-03T22:45:59+08:00
+- 最新 commit：ca31347 — fix: initialize idle runtime before V4.72 supply runtime
+- 更新時間：2026-10-03T22:46:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.72
 - Playable HTML：⏸️ 尚未建立（刻意保留）
