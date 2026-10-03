@@ -239,6 +239,7 @@ function buildBattleContext({
       sourceAiElements:entry.coreStats?.sourceTemplate?.element?clone(entry.coreStats.sourceTemplate.element):null,
       characterId:`encounter-${intOr(encounter?.encounterId)??'unknown'}-${entry.sourceRosterIndex}-${entry.enemyId}`,
       sourceRosterIndex:entry.sourceRosterIndex,
+      sourceEnemyExp:intOr(entry.sourceEnemyExp)??intOr(entry.coreStats?.sourceTemplate?.exp)??-1,
       battleSlot:slot,
       bid:slot+SIDE_OFFSET,
       enemyId:entry.enemyId,
