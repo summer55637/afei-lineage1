@@ -96,7 +96,7 @@ const ultimateContext={format:'stoneage-browser-battle-context-runtime-v1',conte
 }};
 const ultimate=applyBattleRelife(ultimateContext,{trigger:'outer-add-profit'});
 assert.equal(ultimate.ok,true);
-assert.equal(ultimate.applied,undefined);
+assert.equal(ultimate.applied,false);
 assert.equal(ultimate.stage,'battle-relife-skipped-ultimate');
 assert.equal(ultimate.reason,'ultimate-death-excluded-by-BATTLE_getBattleDieIndex');
 
