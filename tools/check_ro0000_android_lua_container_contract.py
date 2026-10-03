@@ -22,7 +22,7 @@ class LuaContainerContractTests(unittest.TestCase):
 
     def test_container_is_distinct_from_asset_realbin(self):
         self.assertEqual(self.doc["distinction"]["classification"], "named-entry Lua loading container")
-        self.assertIn("%s/real.bin loaded by AdrnInit", self.doc["distinction"]["notTheSameAs"])
+        self.assertIn("per-directory %s/real.bin loaded by AdrnInit", self.doc["distinction"]["notTheSameAs"])
         self.assertIn("%s/adrn.bin loaded by AdrnInit", self.doc["distinction"]["notTheSameAs"])
 
     def test_record_wire_contract(self):
