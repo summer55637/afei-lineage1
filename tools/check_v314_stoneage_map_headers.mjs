@@ -21,7 +21,7 @@ export function parseLS2MapHeader(buffer){
 
 function blobSha(buffer){
   const h=crypto.createHash('sha1');
-  const header=Buffer.from(`blob ${buffer.length}\\0`,'ascii');
+  const header=Buffer.from(`blob ${buffer.length}\0`,'ascii');
   h.update(header);h.update(buffer);
   return h.digest('hex');
 }
