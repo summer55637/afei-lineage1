@@ -55,10 +55,11 @@ function commitBattleDeathExtras(state,battleContext,{
       next.player.charm=Math.max(MIN_CHARM,Math.min(MAX_CHARM,after));
       const petEvent=event.defaultPetEvent;
       if(isObject(petEvent)&&petEvent.petId){
-        const pet=findPet(state,petEvent.petId);
-        if(!pet)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'default-pet-missing',petId:petEvent.petId,state:clone(state)};
+        const persistentPet=findPet(state,petEvent.petId);
+        const pet=findPet(next,petEvent.petId);
+        if(!persistentPet||!pet)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'default-pet-missing',petId:petEvent.petId,state:clone(state)};
         const aiBefore=int(petEvent.variableAiBefore)??0;
-        if((int(pet.variableAi)??0)!==aiBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'default-pet-variableai-stale-plan',petId:petEvent.petId,state:clone(state)};
+        if((int(persistentPet.variableAi)??0)!==aiBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'default-pet-variableai-stale-plan',petId:petEvent.petId,state:clone(state)};
         pet.variableAi=Math.max(AI_MIN,Math.min(AI_MAX,int(petEvent.variableAiAfter)??aiBefore));
         if(event.kind==='player-ultimate-death'&&String(next.pets.activePetId??'')===String(pet.id))next.pets.activePetId=null;
         committed.push({kind:event.kind,player:true,charmBefore:before,charmAfter:next.player.charm,defaultPetId:pet.id,defaultPetVariableAiBefore:aiBefore,defaultPetVariableAiAfter:pet.variableAi});
@@ -66,10 +67,11 @@ function commitBattleDeathExtras(state,battleContext,{
         committed.push({kind:event.kind,player:true,charmBefore:before,charmAfter:next.player.charm});
       }
     }else if(event.kind==='pet-normal-death'||event.kind==='pet-ultimate-death'){
-      const pet=findPet(state,event.petId);
-      if(!pet)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'persistent-pet-missing',petId:event.petId,state:clone(state)};
+      const persistentPet=findPet(state,event.petId);
+      const pet=findPet(next,event.petId);
+      if(!persistentPet||!pet)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'persistent-pet-missing',petId:event.petId,state:clone(state)};
       const aiBefore=int(event.variableAiBefore)??0;
-      if((int(pet.variableAi)??0)!==aiBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'pet-variableai-stale-plan',petId:event.petId,state:clone(state)};
+      if((int(persistentPet.variableAi)??0)!==aiBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'pet-variableai-stale-plan',petId:event.petId,state:clone(state)};
       pet.variableAi=Math.max(AI_MIN,Math.min(AI_MAX,int(event.variableAiAfter)??aiBefore));
       const deadBefore=int(event.deadPetCountBefore)??0;
       if((int(next.player.deadPetCount)??0)!==deadBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'dead-pet-count-stale-plan',state:clone(state)};
@@ -77,12 +79,12 @@ function commitBattleDeathExtras(state,battleContext,{
       if(isObject(event.marefia)){
         const marefia=event.marefia;
         if(marefia.allocPointKnown===true){
-          if(int(pet.allocPointPacked)??null!==int(marefia.allocPointPackedBefore)??null)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'marefia-alloc-stale-plan',petId:event.petId,state:clone(state)};
+          if((int(persistentPet.allocPointPacked)??null)!==(int(marefia.allocPointPackedBefore)??null))return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'marefia-alloc-stale-plan',petId:event.petId,state:clone(state)};
           pet.allocPointPacked=int(marefia.allocPointPackedAfter)??pet.allocPointPacked;
         }
         if(marefia.modAiAfter!=null){
           const modBefore=int(marefia.modAiBefore)??0;
-          if((int(pet.modAi)??0)!==modBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'marefia-modai-stale-plan',petId:event.petId,state:clone(state)};
+          if((int(persistentPet.modAi)??0)!==modBefore)return {ok:false,handled:false,stage:'battle-death-extra-commit',reason:'marefia-modai-stale-plan',petId:event.petId,state:clone(state)};
           pet.modAi=int(marefia.modAiAfter)??pet.modAi;
         }
       }
