@@ -1,3 +1,16 @@
+## 2026-10-03 V4.70 Browser Battle Auto Full Lifecycle
+
+把已完成的 Browser Battle Auto Orchestrator 接上正式 Finish → Settlement → Exit → Idle reward lifecycle。
+
+完整模式 `BATTLE_AUTO_RUN` + `completeLifecycle=true` 現在依既有來源 transaction boundary 執行：Finish Commit → `IDLE_EVENTS.BATTLE_FINISHED` → deathExtra / relife / LevelUp 或 DuelPoint / Item → Settlement Receipt → Player Exit → Pet Exit State（有參戰寵時）→ Battle Exit → Battle Context Clear → `IDLE_EVENTS.REWARD_APPLIED`。
+
+本版不新增戰鬥公式或新的 Persistent State schema；RNG 仍由 caller 注入，補給需求由 `supplyRequired` 明確傳入，Pet Growth RNG 缺失時 fail-closed。
+
+Regression：`tools/check_v470_browser_battle_auto_full_lifecycle.mjs`；Workflow：`.github/workflows/check-v470-browser-battle-auto-full-lifecycle.yml`。
+
+詳細契約：`docs/reference/v470-browser-battle-auto-full-lifecycle.md`。
+
+---
 ## 2026-10-03 V4.69 Browser Battle Auto Controller
 
 把 V4.67 Browser Battle Auto Orchestrator 接入正式 `stoneage_browser_state_controller.mjs`，新增 `BATTLE_AUTO_RUN` 作為 Browser 端單一自動戰鬥入口。
