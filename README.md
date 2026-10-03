@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3bfcb5b — fix: restore Fixed-C relife-before-AddProfit order in basic round
-- 更新時間：2026-10-03T20:27:29+08:00
+- 最新 commit：10f2fa9 — test: bind V4.59 round fixture to current dependencies
+- 更新時間：2026-10-03T20:29:24+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.64
 - Playable HTML：⏸️ 尚未建立（刻意保留）
