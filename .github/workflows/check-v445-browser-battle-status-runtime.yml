@@ -1,0 +1,28 @@
+name: Check V4.45 browser battle status runtime
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_status_runtime.mjs'
+      - 'src/stoneage_browser_battle_turn_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'tools/check_v445_browser_battle_status_runtime.mjs'
+      - 'docs/reference/v445-browser-battle-status-runtime.md'
+      - '.github/workflows/check-v445-browser-battle-status-runtime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.45 battle status regression
+        run: node tools/check_v445_browser_battle_status_runtime.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_status_runtime.mjs
+          node --check src/stoneage_browser_battle_turn_runtime.mjs
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check tools/check_v445_browser_battle_status_runtime.mjs
