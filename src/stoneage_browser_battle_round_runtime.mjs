@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v452-browser-battle-round-runtime-v1';
+const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v453-browser-battle-round-runtime-v1';
 const ACTION_BATTLE_ROUND_RESOLVE='BATTLE_ROUND_RESOLVE';
 
 const BATTLE_MODE_BATTLE=2;
@@ -152,7 +152,9 @@ async function resolveBattleRound(context,{
   weaponClassByBid={},
   attackCountInputsByBid={},
   bowTargetListRollByBid={},
-  runtimes={}
+  attackCountFallbackRollByBid={},
+  attackCountFallbackAttackRollByBid={},
+  runtimes={
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
   if(String(context.context.mode??'').trim().toLowerCase()!=='battle'||int(context.context.sourceMode)!==BATTLE_MODE_BATTLE){
@@ -246,6 +248,8 @@ async function resolveBattleRound(context,{
 
     const actorBundle=bundles.map.get(actorBid)??null;
     const explicitAttackCountInput=attackCountInputsByBid?.[String(actorBid)]??attackCountInputsByBid?.[actorBid]??null;
+    const fallbackRoll=attackCountFallbackRollByBid?.[String(actorBid)]??attackCountFallbackRollByBid?.[actorBid]??null;
+    const fallbackAttackRoll=attackCountFallbackAttackRollByBid?.[String(actorBid)]??attackCountFallbackAttackRollByBid?.[actorBid]??null;
     const embeddedAttackCountInput=actorBundle&&(
       actorBundle.itemPresent===true ||
       actorBundle.attackNumMin!=null ||
@@ -257,20 +261,35 @@ async function resolveBattleRound(context,{
       attackNumMax:actorBundle.attackNumMax??null,
       roll:actorBundle.attackCountRoll??null
     } : null;
-    const attackCountInput=explicitAttackCountInput??embeddedAttackCountInput;
+    const attackCountInput=explicitAttackCountInput??embeddedAttackCountInput??{
+      itemPresent:false,
+      actorType:String(actor?.sourceType??'').trim().toLowerCase(),
+      level:actor?.level??1,
+      luck:actor?.fixLuck??actor?.luck??0
+    };
     let sourceAttackMax=null;
-    if(attackCountInput){
+    let sourceDamageDivisor=1;
+    let unarmedPlayerAttackCount=false;
+    {
       const prime=runtimes.attackCountRuntime.resolve({
         itemPresent:attackCountInput.itemPresent===true,
         attackNumMin:attackCountInput.attackNumMin??null,
         attackNumMax:attackCountInput.attackNumMax??null,
-        roll:attackCountInput.roll??null
+        roll:attackCountInput.roll??null,
+        actorType:attackCountInput.actorType??actor?.sourceType??null,
+        level:attackCountInput.level??actor?.level??null,
+        luck:attackCountInput.luck??actor?.fixLuck??0,
+        fallbackRoll:attackCountInput.fallbackRoll??fallbackRoll,
+        fallbackAttackRoll:attackCountInput.fallbackAttackRoll??fallbackAttackRoll
       });
       if(!prime.ok){
         return {...prime,stage:'battle-round-attack-count',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,attackerBid:actorBid,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks),attackCountPrimes:clone(attackCountPrimes)};
       }
       sourceAttackMax=int(prime.attackCount)??0;
+      unarmedPlayerAttackCount=prime.stage==='battle-attack-count-unarmed-player-resolved';
+      sourceDamageDivisor=unarmedPlayerAttackCount?1:Math.max(1,sourceAttackMax||1);
       actor.sourceAttackMax=sourceAttackMax;
+      actor.sourceDamageDivisor=sourceDamageDivisor;
       attackCountPrimes.push({actorBid,...clone(prime)});
     }
 
@@ -348,6 +367,7 @@ async function resolveBattleRound(context,{
             targets:sequenceTargets,
             hitRollBundles,
             transactionPrefix:String(id),
+            damageDivisorOverride:unarmedPlayerAttackCount?1:null,
             now
           }
         );
@@ -671,6 +691,7 @@ async function resolveBattleRound(context,{
     },
     scope:{
       basicAttackOnly:true,
+      playerUnarmedAttackCount:true,
       sourceAttackCountEmbedded:true,
       bowTargetListEmbedded:true,
       maxAttackCountPerActor:50,
