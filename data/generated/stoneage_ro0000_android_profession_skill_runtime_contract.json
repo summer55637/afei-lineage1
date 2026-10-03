@@ -66,7 +66,7 @@
   },
   "battleSkillUiIntegration": {
     "function": "BattleButtonPPLSKILL",
-    "x86Address": "0x10bd??",
+    "x86Address": "0xff190",
     "modes": {
       "0": "AssitSkill",
       "1": "BattleSkill",
