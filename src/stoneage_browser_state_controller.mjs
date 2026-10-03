@@ -955,6 +955,11 @@ function createBrowserStateController({
         }else if(result.context){
           battleContext=clone(result.context);
         }
+        if(result.ok===true&&result.handled===true&&result.state){
+          const resultRevision=Number(result.state?.revision??currentState?.revision??0);
+          const currentRevision=Number(currentState?.revision??0);
+          if(resultRevision>currentRevision)currentState=clone(result.state);
+        }
         return {
           ...result,
           format:result.format??BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,
