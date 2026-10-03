@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7e18252 — ci: include controller in V4.70 lifecycle guard
-- 更新時間：2026-10-03T22:31:29+08:00
+- 最新 commit：a00a1dd — docs: sync README with V4.70 lifecycle
+- 更新時間：2026-10-03T22:31:51+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.70
 - Playable HTML：⏸️ 尚未建立（刻意保留）
