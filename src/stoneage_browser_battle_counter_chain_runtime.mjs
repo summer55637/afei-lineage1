@@ -217,6 +217,7 @@ async function resolveCounterChain(context,{
         {
           attackerBids:[attackerBid],
           allowPlayerCredit:attackerBid<10,
+          allowCommittedDeath:true,
           hitIndex:step,
           source:'counter-special-react',
           transactionPrefix:transactionPrefix||'counter',
@@ -256,6 +257,7 @@ async function resolveCounterChain(context,{
       {
         attackerBids:[attackerBid],
         allowPlayerCredit:attackerBid<10,
+        allowCommittedDeath:true,
         hitIndex:step,
         source:'counter',
         transactionPrefix:transactionPrefix||'counter',
