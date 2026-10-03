@@ -13,6 +13,8 @@ on:
       - 'tools/check_ro0000_android_native_abi.py'
       - 'src/stoneage_spr_decoder.mjs'
       - 'tools/check_ro0000_android_spr_decoder.mjs'
+      - 'src/stoneage_client_asset_pack.mjs'
+      - 'tools/check_client_spr_asset_pack.mjs'
       - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
       - 'tools/audit_ro0000_android_signing.py'
@@ -58,6 +60,8 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native_abi.py'
       - name: Test Android SPR/SPRADRN parser and target fixups
         run: node tools/check_ro0000_android_spr_decoder.mjs
+      - name: Test authorized client sprite-shard asset loader
+        run: node tools/check_client_spr_asset_pack.mjs
       - name: Audit APK archive and manifest
         run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
       - name: Audit APK DEX structure

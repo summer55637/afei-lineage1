@@ -15,11 +15,17 @@ V3.18 接續 V3.16 的 ADRNBIN resolver 與 V3.17 的 RD decoder，正式把「�
 新增 `src/stoneage_client_asset_pack.mjs`：
 
 - `normalizeClientAssetPackManifest()`：鎖定 manifest schema。
-- `loadClientAssetPack()`：載入 ADRNBIN + Real，必要時驗證 SHA-256，建立 ADRN index。
+- `loadClientAssetPack()`：載入 ADRNBIN + Real，必要時驗證 SHA-256，建立 ADRN index；manifest 可選擇附帶 `files.spriteShards[]`，載入多組 SPRADRN／SPR 檔案。
 - `resolveClientTilePixels()`：把目前 map image ID 串到 V3.16/V3.17 的完整 resolver/decoder。
 - 缺少 manifest、缺少檔案、digest 不符或 decoder 失敗都維持 fail-closed。
 
 預設 `client-assets/manifest.json` 為 `unavailable`，所以目前 Pages 不會自動下載或打包任何原版 client BIN。
+
+## Optional SPR animation shards
+
+若部署者另有可使用的精靈資料，可在 `files.spriteShards[]` 提供多個 shard；每個 shard 必須包含 `spradrn.url`、`spr.url` 與明確的 `nextMaxAdrnID`，SHA-256 為選填。載入器會先載入並解析全部 shard、檢查重複 SpriteData slot，再合併後套用目標程式的四組精靈後處理修正。`resolveClientSpriteAnimation()` 可依 `sprNo` 與動畫索引取回解析結果。
+
+SPRADRN／SPR 是選填資料；只有 ADRN／Real 的既有 manifest 仍可使用。若提供任一個 sprite shard，該 shard 的索引與資料檔都必須完整。資料缺漏、索引越界或跨 shard 修正缺少來源時，載入器會 fail-closed。解析動畫資料不等於已還原實際像素、音效或裝置上的動畫時序。
 
 ## 為什麼還沒有直接畫出真實 tile
 
