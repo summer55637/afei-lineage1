@@ -83,7 +83,7 @@ class NativeAbiCallParityTests(unittest.TestCase):
             "  100a:\tc3                    \tret",
         ])
         report = build_report(make_audit([arm], [x86]))
-        self.assertTrue(report["comparison"]["semanticNamedCallTargetParity"])
+        self.assertTrue(report["comparison"]["comparableSemanticNamedCallTargetParity"])
         self.assertEqual(report["memoryHelperVariances"], [{
             "function": "sample()", "armeabiV7a": {}, "x86": {"memset": 1},
         }])
