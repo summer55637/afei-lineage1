@@ -672,3 +672,18 @@ Android target 的戰鬥目標選擇鏈已再往下閉合，證據直接來自�
 - 目前可以安全用來重建 browser 的「技能目標模式 + 封包組裝 + 職業技能自動提名門檻」。但 server 對 `0x14..0x1a` target code 的最終語義、傷害/狀態/MP 扣除/cooldown，以及 `+0xc0` 的完整結構名稱仍未由 APK 單獨證明。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_target_protocol_contract.json`。
+
+
+## Profession-skill receive, classification, and Lua-backed type
+
+APK 的職業技能資料接收鏈已再閉合一層，這次直接從 target native binary 追到 `lssproto_S_recv('S')` → `SortSkill()` → 戰鬥技能 UI。
+
+- `lssproto_S_recv()` 的 `S` 分支先清空 26 筆職業技能 record，再逐筆以每筆 9 個 token 解析：`useFlag`、`skillId`、`target`、`kind`、`icon`、`costmp`、`skill_level`、`name`、`memo`。
+- x86 target record stride 為 280 bytes；直接解析欄位可定位到 `+0x00`、`+0x02`、`+0x04`、`+0x06`、`+0x108`、`+0x10c`、`+0x110`，另外在 `+0x114` 寫入 `getProfessionSkillType(skillId)` 的回傳值。
+- 收完 26 筆後立即呼叫 `SortSkill()`。native 固定將 `kind=1` 放入 `BattleSkill[]`、`kind=2` 放入 `AssitSkill[]`、`kind=3` 放入 `AdvanceSkill[]`；每組容量 20，並保持原始 record index 的遞增順序。其他 kind 不進這三組。
+- `BattleButtonPPLSKILL()` 再以三組索引陣列分別呈現職業技能選單，最多 4×4 格；實際選取前仍檢查 `useFlag`、MP/costmp，以及 APK 已確認的特殊技能限制。
+- `getProfessionSkillType(int)` 位於 x86 `0x393d10`，輸入就是剛解析的 `skillId`。它會取得 Lua 的 `getProfessionSkillType` 函式，要求 Lua type 6，push skillId 後以 `lua_pcall(L,1,1,0)` 執行；錯誤/非數值回傳 -1，數值以 native 整數轉換後回傳並清理 Lua stack。
+- 該回傳值在 `BattleButtonPPLSKILL()` 中再加上 `0xf4fa`，作為技能 UI 圖像編號來源；因此 `getProfessionSkillType` 與 `kind` 是兩個不同層級的資料：`kind` 負責 Battle/Assist/Advance 分類，Lua type 則參與 UI 圖像選擇。
+- 目前仍不把 Lua `getProfessionSkillType` 的數值表硬推成產品語義，因為對應 Lua 函式本體不在 APK 封裝內。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_profession_skill_runtime_contract.json`。
