@@ -1,0 +1,7 @@
+{
+  "format":"ro0000-android-native-endpoint-resource-evidence-v1",
+  "source":{"apkSha256":"6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c"},
+  "verifiedLiteralPaths":["SA25/update/list.php","data/update/list.dat","Patch_%d","patch_%d.zip","SA25/clientupdate.php","data/char.bin","data/serverdata.dat","data/skin/jdt.png"],
+  "endpointFamilies":["serverlist.php","update/list.php","clientupdate.php","announce.php","bug1.php","kf.php","pay/query.php","pay/queryvivo.php","pay/queryoppo.php","pay/queryu8.php","pay/querya8.php"],
+  "scope":"Executable string evidence only. Embedded host is intentionally redacted; request/response behavior remains a runtime evidence boundary."
+}
