@@ -52,6 +52,7 @@ import { createBrowserBattleEndRuntime, ACTION_BATTLE_END_PLAN, BROWSER_BATTLE_E
 import { createBrowserBattleFinishCommitRuntime, ACTION_BATTLE_FINISH_COMMIT, BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_finish_commit_runtime.mjs';
 import { createBrowserBattleRoundRuntime, ACTION_BATTLE_ROUND_RESOLVE, BROWSER_BATTLE_ROUND_RUNTIME_FORMAT } from './stoneage_browser_battle_round_runtime.mjs';
 import { createBrowserBattleCounterChainRuntime, ACTION_BATTLE_COUNTER_CHAIN_RESOLVE, BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT } from './stoneage_browser_battle_counter_chain_runtime.mjs';
+import { createBrowserBattleDamageReactCommitRuntime, ACTION_BATTLE_DAMAGE_REACT_COMMIT, BROWSER_BATTLE_DAMAGE_REACT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleProfitRouteRuntime, ACTION_BATTLE_PROFIT_ROUTE_PLAN, BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_battle_profit_route_runtime.mjs';
 import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_runtime.mjs';
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
@@ -212,6 +213,7 @@ function createBrowserStateController({
   const battleDamagePlanRuntime=createBrowserBattleDamagePlanRuntime();
   const battleCriticalDamageRuntime=createBrowserBattleCriticalDamageRuntime();
   const battleDamageReactRuntime=createBrowserBattleDamageReactRuntime();
+  const battleDamageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
   const battleDamageCommitRuntime=createBrowserBattleDamageCommitRuntime();
   const battleDamageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
@@ -252,6 +254,7 @@ function createBrowserStateController({
     damagePlanRuntime:battleDamagePlanRuntime,
     criticalDamageRuntime:battleCriticalDamageRuntime,
     damageReactRuntime:battleDamageReactRuntime,
+    damageReactCommitRuntime:battleDamageReactCommitRuntime,
     damageDeathChainRuntime:battleDamageDeathChainRuntime,
     counterChainRuntime:battleCounterChainRuntime,
     statusRuntime:battleStatusRuntime,
@@ -1286,6 +1289,26 @@ function createBrowserStateController({
           state:clone(result.state??currentState)
         };
       }
+      if(type===ACTION_BATTLE_DAMAGE_REACT_COMMIT){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(battleDamageReactCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-damage-react-commit',action:ACTION_BATTLE_DAMAGE_REACT_COMMIT,reason:'browser-special-damage-react-commit-runtime-invalid',state:clone(currentState)};
+        const result=battleDamageReactCommitRuntime.commit(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            damageReactPlan:battleAttackPipeline?.damageReact??action.damageReactPlan??null,
+            transactionId:action.transactionId??null,
+            expectedDamageRevision:action.expectedDamageRevision??null,
+            critical:action.critical===true,
+            criticalFlag:action.criticalFlag??null,
+            battleFlags:action.battleFlags??0,
+            deathRollByBid:action.deathRollByBid??{},
+            lerImmuneByBid:action.lerImmuneByBid??{}
+          }
+        );
+        if(result.ok===true&&result.handled===true&&result.battleContext)battleContext=clone(result.battleContext.context??result.battleContext);
+        return {...result,format:BROWSER_BATTLE_DAMAGE_REACT_COMMIT_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
+      }
       if(type===ACTION_BATTLE_COUNTER_PLAN){
         const phaseGate=requireBattlePhase(battleContext,type,currentState);
         if(phaseGate)return phaseGate;
@@ -1984,6 +2007,7 @@ export {
   ACTION_BATTLE_DAMAGE_COMMIT,
   ACTION_BATTLE_DAMAGE_DEATH_COMMIT,
   ACTION_BATTLE_COUNTER_PLAN,
+  ACTION_BATTLE_DAMAGE_REACT_COMMIT,
   ACTION_BATTLE_DEATH_PLAN,
   ACTION_BATTLE_DEATH_COMMIT,
   ACTION_BATTLE_END_PLAN,
@@ -2031,6 +2055,7 @@ export {
   BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT,
   BROWSER_BATTLE_DAMAGE_REACT_RUNTIME_FORMAT,
   BROWSER_BATTLE_COUNTER_RUNTIME_FORMAT,
+  BROWSER_BATTLE_DAMAGE_REACT_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_DEATH_RUNTIME_FORMAT,
   BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT,
   BROWSER_BATTLE_END_RUNTIME_FORMAT,
