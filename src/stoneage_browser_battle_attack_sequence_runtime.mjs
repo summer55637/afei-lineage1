@@ -33,7 +33,7 @@ async function resolveAttackSequence(context,{
   carriedLootReplaceSlotRollsByEnemyBid={}
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'battle-context-required'};
-  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime','carriedLootRuntime'];
+  const required=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
   const missing=required.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missing)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'attack-sequence-runtime-dependency-invalid',dependency:missing};
   const actorBid=int(attackerBid),initialTarget=int(requestedTargetBid),count=int(attackCount);
@@ -211,6 +211,7 @@ async function resolveAttackSequence(context,{
     const carriedItems=carriedLootItemsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootItemsByEnemyBid?.[prelude.finalTargetBid]??null;
     let carriedLoot=null;
     if(creditEvent&&Array.isArray(carriedItems)){
+      if(!runtimes.carriedLootRuntime||runtimes.carriedLootRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-attack-sequence-carried-loot',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,reason:'carried-loot-runtime-required'};
       carriedLoot=await runtimes.carriedLootRuntime.queue(
         {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
         {
