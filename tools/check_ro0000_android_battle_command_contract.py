@@ -25,6 +25,8 @@ class BattleCommandDecodeContractTests(unittest.TestCase):
             "master": ("0x359eb0", "0x234eb1", 17284, 9348),
             "getNum": ("0x3408e0", "0x22753d", 408, 252),
             "getCommandAsc": ("0x347740", "0x22b1a1", 500, 332),
+            "setDamageNum": ("0x33d0f0", "0x225445", 855, 572),
+            "showDamageNum": ("0x33b090", "0x22429d", 8282, 4520),
         }
         for name, (x86, arm, x86_size, arm_size) in expected.items():
             entry = self.doc["functions"][name]
