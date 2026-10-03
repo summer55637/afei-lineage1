@@ -128,4 +128,43 @@ const legacyPack=await loadClientAssetPack({
 assert.equal(legacyPack.status,'ready');
 assert.equal(legacyPack.spritePack,null);
 assert.equal(resolveClientSpriteAnimation(legacyPack,100382,0).status,'sprite-assets-not-loaded');
+// Fail closed when a supplied shard digest is wrong.
+const badDigestManifest={
+  ...manifest,
+  files:{
+    ...manifest.files,
+    spriteShards:[{
+      ...manifest.files.spriteShards[0],
+      spradrn:{...manifest.files.spriteShards[0].spradrn,sha256:'0'.repeat(64)}
+    }]
+  }
+};
+const badDigestPack=await loadClientAssetPack({
+  manifestUrl:'https://example.test/client-assets/bad-digest.json',
+  fetchFn:async url=>url.endsWith('/bad-digest.json')
+    ?{ok:true,status:200,json:async()=>badDigestManifest}
+    :payloads[url]||{ok:false,status:404}
+});
+assert.equal(badDigestPack.status,'unavailable');
+assert.equal(badDigestPack.reason,'asset-load-failed');
+assert.match(badDigestPack.error,/SPRADRN shard 0 SHA-256 mismatch/);
+
+// A slot repeated by two shard indexes must not silently overwrite earlier data.
+const duplicateManifest={
+  ...manifest,
+  files:{
+    ...manifest.files,
+    spriteShards:[...manifest.files.spriteShards,manifest.files.spriteShards[0]]
+  }
+};
+const duplicatePack=await loadClientAssetPack({
+  manifestUrl:'https://example.test/client-assets/duplicate.json',
+  fetchFn:async url=>url.endsWith('/duplicate.json')
+    ?{ok:true,status:200,json:async()=>duplicateManifest}
+    :payloads[url]||{ok:false,status:404}
+});
+assert.equal(duplicatePack.status,'unavailable');
+assert.equal(duplicatePack.reason,'asset-load-failed');
+assert.match(duplicatePack.error,/duplicate sprite slot across sprite shards: 382/);
+
 console.log('authorized client sprite-shard loader and animation resolver tests passed');
