@@ -13,7 +13,7 @@ state.player.hp=200;state.player.mp=30;
 state.pets.petBox=[{id:'pet-1',name:'Pet-1',hp:300,maxHp:500,mp:20,maxMp:50,isDie:false,mailMode:0,variableAi:0}];
 state.runtimeMeta.battleLevelUpTransactions={'l-468':{revisionAfter:2}};
 state.runtimeMeta.battleSettlementReceipts={'s-468':{settlementId:'s-468',finishMode:'finish',startRevision:0,receiptRevision:3,playerId:'p1',requiredBranches:['levelUp'],transactions:[{kind:'levelUp',transactionId:'l-468'}]}};
-state.runtimeMeta.battlePlayerExitTransactions={'p-468':{revisionBefore:3,revisionAfter:4,settlementReceiptId:'s-468',settlementStartRevision:0,settlementReceiptRevision:3}};
+state.runtimeMeta.battlePlayerExitTransactions={'p-468':{revisionBefore:3,revisionAfter:4,settlementReceiptId:'s-468',settlementStartRevision:0,settlementReceiptRevision:3,player:{playerId:'p1'}}};
 
 const ctx={format:'stoneage-browser-battle-context-runtime-v1',context:{
   mode:'finish',sourceMode:3,settlementStartRevision:0,
