@@ -44,6 +44,8 @@ function applyBattleProfitCredit(context,{
   hitIndex=null,
   source='attack',
   transactionPrefix='profit',
+  deathExtraRandomRollsByBid={},
+  defaultPetBidByPlayerBid={0:5},
   now=null
 }={}){
   if(!context?.context){
