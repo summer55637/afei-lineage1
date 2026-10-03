@@ -28,6 +28,15 @@ function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,n
   if(String(plan.playerExitTransactionId??'').trim()!==playerExit.transactionId)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-transaction-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
   if(intOr(plan.playerExitRevision,null)!==intOr(playerExit.record.revisionAfter,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
   if(currentRevision!==intOr(playerExit.record.revisionAfter,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-current-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
+  const petSyncTx=String(plan.petExitStateTransactionId??'').trim();
+  if(plan.petExitStateRequired===true){
+    if(!petSyncTx)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-state-transaction-required',state:clone(state)};
+    const petSyncRecord=state.runtimeMeta?.battlePetExitStateTransactions?.[petSyncTx];
+    if(!isObject(petSyncRecord))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-state-transaction-not-found',petExitStateTransactionId:petSyncTx,state:clone(state)};
+    if(String(petSyncRecord.settlementReceiptId??'').trim()!==String(plan.settlementReceiptId??'').trim())return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-settlement-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
+    if(String(petSyncRecord.playerExitTransactionId??'').trim()!==playerExit.transactionId)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-player-order-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
+    if(intOr(petSyncRecord.revisionBefore,null)!==currentRevision)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-revision-current-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
+  }
 
   const next=clone(state);
   const committed=[];
