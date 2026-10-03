@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：e314d5e — test: bind V4.48 DamageReactCommit dependency
-- 更新時間：2026-10-03T19:00:54+08:00
+- 最新 commit：223946b — test: preserve no-item enemy zero-RNG fallback
+- 更新時間：2026-10-03T19:01:21+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.53
 - Playable HTML：⏸️ 尚未建立（刻意保留）
