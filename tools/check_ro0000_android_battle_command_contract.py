@@ -68,7 +68,7 @@ class BattleCommandDecodeContractTests(unittest.TestCase):
         self.assertEqual(life["workOffsets"]["stateByte"], "0x00")
         self.assertEqual(life["workOffsets"]["timerByte"], "0x01")
         self.assertEqual(life["workOffsets"]["sourceActionPointer"], "0x08")
-        self.assertIn("action+0x170=0x18 (24)", life["initialization"])
+        self.assertIn("action+0x170 to 0x18 (24)", life["initialization"])
         self.assertEqual([state["workState"] for state in life["states"]], [0, 1, 2])
         self.assertIn("subtract 2", life["states"][0]["perCallback"])
         self.assertIn("action+0x174=16", life["states"][0]["transition"])
