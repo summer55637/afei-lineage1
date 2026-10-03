@@ -82,6 +82,20 @@
       "lib/armeabi-v7a/libStoneage.so",
       "lib/x86/libStoneage.so"
     ],
+    "mismatches": [
+      {
+        "entry": "lib/armeabi-v7a/libStoneage.so",
+        "algorithm": "sha1",
+        "expectedDigestHex": "40e2002dc026a3178c228012793ce2717da227b7",
+        "actualDigestHex": "3de4f351fd0bd9a3509b2a9cf6e72bb83c5b46bf"
+      },
+      {
+        "entry": "lib/x86/libStoneage.so",
+        "algorithm": "sha1",
+        "expectedDigestHex": "760562e44edb1bcf0d37e7ccc7a50ce40d531d72",
+        "actualDigestHex": "3ea4074bdaa12fb2c907f0f46dd1c2e7a271002e"
+      }
+    ],
     "missingEntries": [],
     "unsupportedDigests": [],
     "invalidDigests": [],
