@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：00b329f — [test] exercise ARM and x86 jump-table resolution
-- 更新時間：2026-10-03T08:25:05+08:00
+- 最新 commit：2378f2c — [workflow] correct extracted ELF paths for ABI audit
+- 更新時間：2026-10-03T08:26:10+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
