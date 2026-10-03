@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：12ac7da — fix: align counter RNG and signed NoGuard behavior
-- 更新時間：2026-10-03T17:56:37+08:00
+- 最新 commit：4e4d114 — feat: add V4.47 counter chain runtime
+- 更新時間：2026-10-03T17:57:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.46
 - Playable HTML：⏸️ 尚未建立（刻意保留）
