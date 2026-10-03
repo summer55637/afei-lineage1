@@ -235,6 +235,8 @@ function createBrowserStateController({
   const battleEnemyExpRuntime=createBrowserBattleEnemyExpRuntime();
   const battleRidePetAdjustRuntime=createBrowserBattleRidePetAdjustRuntime();
   const battleDexRuntime=createBrowserBattleDexRuntime();
+  const battleRelifeRuntime=createBrowserBattleRelifeRuntime();
+  const battleRelifeCommitRuntime=createBrowserBattleRelifeCommitRuntime();
   const battleAttackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
@@ -266,8 +268,6 @@ function createBrowserStateController({
   const battleCompliancePlanRuntime=createBrowserBattleCompliancePlanRuntime();
   const battleComplianceCommitRuntime=createBrowserBattleComplianceCommitRuntime();
   const battleDeathExtraCommitRuntime=createBrowserBattleDeathExtraCommitRuntime();
-  const battleRelifeRuntime=createBrowserBattleRelifeRuntime();
-  const battleRelifeCommitRuntime=createBrowserBattleRelifeCommitRuntime();
   const battleExitPlanRuntime=createBrowserBattleExitPlanRuntime();
   const battleExitCommitRuntime=createBrowserBattleExitCommitRuntime();
   const battlePlayerExitRuntime=createBrowserBattlePlayerExitRuntime();
