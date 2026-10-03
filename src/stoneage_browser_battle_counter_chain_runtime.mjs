@@ -45,6 +45,8 @@ async function resolveCounterChain(context,{
   carriedLootReplaceRollsByEnemyBid={},
   carriedLootReplaceSlotRollsByEnemyBid={},
   ridePetBidByParticipantBid={},
+  deathExtraRandomRollsByBid={},
+  defaultPetBidByPlayerBid={0:5},
   now=null,
   transactionPrefix=''
 }={},runtimes={}){
@@ -232,6 +234,8 @@ async function resolveCounterChain(context,{
           hitIndex:step,
           source:'counter-special-react',
           transactionPrefix:transactionPrefix||'counter',
+          deathExtraRandomRollsByBid,
+          defaultPetBidByPlayerBid,
           now
         }
       );
@@ -329,6 +333,8 @@ async function resolveCounterChain(context,{
           replaceRolls:carriedLootReplaceRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceRollsByEnemyBid?.[prelude.finalTargetBid]??[],
           replaceSlotRolls:carriedLootReplaceSlotRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceSlotRollsByEnemyBid?.[prelude.finalTargetBid]??[],
           transactionPrefix:transactionPrefix||'counter',
+          deathExtraRandomRollsByBid,
+          defaultPetBidByPlayerBid,
           now
         }
       );
