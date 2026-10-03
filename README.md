@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：1918db9 — [docs] refresh Android APK unresolved status
-- 更新時間：2026-10-03T10:05:42+08:00
+- 最新 commit：59a8169 — [workflow] audit reachable Android resource history
+- 更新時間：2026-10-03T10:12:07+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
