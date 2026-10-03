@@ -120,6 +120,50 @@ assert.equal(marefiaCommit.state.pets.petBox[0].allocPointPacked,((9*256+18)*256
 assert.equal(marefiaCommit.state.pets.petBox[0].modAi,95);
 assert.equal(marefiaCommit.state.player.deadPetCount,1);
 
+const ultimateState=freshPersistentState({now,playerId:'p1',playerName:'Tester'});
+ultimateState.revision=20;
+ultimateState.player.charm=20;
+ultimateState.pets.activePetId='pet-default';
+ultimateState.pets.petBox=[{id:'pet-default',petId:500,tempNo:500,level:10,exp:0,hp:100,maxHp:100,variableAi:0}];
+const playerUltimateContext={
+  format:'stoneage-browser-battle-context-runtime-v1',
+  context:{
+    mode:'finish',sourceMode:3,settlementStartRevision:20,dpbattle:0,
+    sourceDeathExtraEvents:[{
+      kind:'player-ultimate-death',actorBid:0,playerId:'p1',level:10,levelFlag:2,
+      charmBefore:20,charmAfter:18,charmDelta:-2,
+      defaultPetEvent:{petBid:5,petId:'pet-default',variableAiBefore:0,variableAiAfter:-500,variableAiDelta:-500},
+      defaultPetRelationPreserved:true,persistent:true
+    }],
+    sides:[{side:0,type:0,entries:[{bid:0,sourceType:'player',characterId:'p1',level:10,hp:0,isDie:true}]},{side:1,type:1,entries:Array(10).fill(null)}]
+  }
+};
+const playerUltimateCommit=runtime.commit(ultimateState,playerUltimateContext,{transactionId:'death-extra-player-ultimate',expectedRevision:20,now});
+assert.equal(playerUltimateCommit.ok,true,JSON.stringify(playerUltimateCommit));
+assert.equal(playerUltimateCommit.state.player.charm,18);
+assert.equal(playerUltimateCommit.state.pets.activePetId,'pet-default');
+assert.equal(playerUltimateCommit.state.pets.petBox[0].variableAi,-500);
+
+const petUltimateState=freshPersistentState({now,playerId:'p1',playerName:'Tester'});
+petUltimateState.revision=30;
+petUltimateState.pets.activePetId='pet-ultimate';
+petUltimateState.pets.petBox=[{id:'pet-ultimate',petId:500,tempNo:500,level:10,exp:0,hp:0,maxHp:100,variableAi:0}];
+const petUltimateContext={
+  format:'stoneage-browser-battle-context-runtime-v1',
+  context:{
+    mode:'finish',sourceMode:3,settlementStartRevision:30,dpbattle:0,
+    sourceDeathExtraEvents:[{
+      kind:'pet-ultimate-death',actorBid:5,petId:'pet-ultimate',ownerBid:0,ownerPlayerId:'p1',level:10,
+      variableAiBefore:0,variableAiAfter:-500,variableAiDelta:-500,deadPetCountBefore:0,deadPetCountAfter:1,deadPetCountDelta:1,
+      battleExited:true,persistent:true
+    }],
+    sides:[{side:0,type:0,entries:[{bid:0,sourceType:'player',characterId:'p1',level:10,hp:100,isDie:false,deadPetCount:1}]},{side:1,type:1,entries:Array(10).fill(null)}]
+  }
+};
+const petUltimateCommit=runtime.commit(petUltimateState,petUltimateContext,{transactionId:'death-extra-pet-ultimate',expectedRevision:30,now});
+assert.equal(petUltimateCommit.ok,true,JSON.stringify(petUltimateCommit));
+assert.equal(petUltimateCommit.state.pets.activePetId,null);
+
 console.log(JSON.stringify({
   pass:true,
   format:'stoneage-v462-browser-battle-death-extra-commit-v1',
