@@ -1179,6 +1179,35 @@
         "ReleaseSpecAnim()"
       ],
       "interpretationBoundary": "The two input values are preserved as integer coordinates and also represented in the target's 1/64-step float coordinate frame. The purpose of each reset slot remains unlabeled where symbol/field semantics are not independently established."
+    },
+    "requiredCallCounts": {
+      "initWorldMap": {
+        "FindLua": 1,
+        "lua_getfield": 1,
+        "lua_type": 1,
+        "lua_settop": 1,
+        "docall": 1
+      },
+      "worldMapProc": {
+        "FindLua": 1,
+        "lua_getfield": 1,
+        "lua_type": 1,
+        "lua_settop": 3,
+        "lua_pcall": 1,
+        "SDL_Log": 1,
+        "lua_isnumber": 1,
+        "lua_tonumber": 1
+      },
+      "mapWndProc": {
+        "MakeWindowDisp": 1,
+        "StockFontBuffer": 3,
+        "StockDispBuffer": 3,
+        "worldMapProc": 1
+      },
+      "setWarpMap": {
+        "crossAniRelease": 1,
+        "ReleaseSpecAnim": 1
+      }
     }
   }
 }
