@@ -7,7 +7,7 @@ import { planBattleExit } from '../src/stoneage_browser_battle_exit_runtime.mjs'
 import { commitBattleExit } from '../src/stoneage_browser_battle_exit_commit_runtime.mjs';
 
 const now='2026-10-03T22:10:00+08:00';
-const state=freshPersistentState({now,playerId:'p1',playerName:'V4.68 Pet Exit'});
+let state=freshPersistentState({now,playerId:'p1',playerName:'V4.68 Pet Exit'});
 state.revision=4;
 state.player.hp=200;state.player.mp=30;
 state.pets.petBox=[{id:'pet-1',name:'Pet-1',hp:300,maxHp:500,mp:20,maxMp:50,isDie:false,mailMode:0,variableAi:0}];
@@ -34,8 +34,9 @@ assert.equal(committed.ok,true,JSON.stringify(committed));
 assert.equal(committed.state.revision,5);
 assert.equal(committed.state.pets.petBox[0].hp,1);
 assert.equal(committed.state.pets.petBox[0].isDie,false);
+state=committed.state;
 
-const replay=commitBattlePetExit(committed.state,ctx,plan,{transactionId:'tx-468',expectedRevision:5,now});
+const replay=commitBattlePetExit(state,ctx,plan,{transactionId:'tx-468',expectedRevision:5,now});
 assert.equal(replay.ok,true);
 assert.equal(replay.idempotent,true);
 assert.equal(replay.state.revision,5);
