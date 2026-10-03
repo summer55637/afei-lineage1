@@ -80,9 +80,10 @@ function battleStatusActive(entry,type=null){
 }
 
 function battleStatusCanMove(entry){
-  const st=statusFromEntry(entry);
-  if(!st)return true;
-  return !CANNOT_MOVE_STATUSES.has(st.type);
+  for(const type of CANNOT_MOVE_STATUSES){
+    if(statusFromEntry(entry,type))return false;
+  }
+  return true;
 }
 
 function statusRawStats(entry){
