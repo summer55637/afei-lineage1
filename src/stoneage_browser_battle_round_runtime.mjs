@@ -451,18 +451,30 @@ function createBrowserBattleRoundRuntime({
   }
 
   function processStatus(context,battleBid,cursor){
-    const result=statusRuntime.process(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-      {
-        battleBid,
-        randomInt:(minimum,maximum)=>{
-          const next=nextRandom(cursor,minimum,maximum);
-          if(!next.ok)throw Object.assign(new Error(next.reason),next);
-          return next.roll;
+    try{
+      return statusRuntime.process(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
+        {
+          battleBid,
+          randomInt:(minimum,maximum)=>{
+            const next=nextRandom(cursor,minimum,maximum);
+            if(!next.ok)throw Object.assign(new Error(next.reason),next);
+            return next.roll;
+          }
         }
-      }
-    );
-    return result;
+      );
+    }catch(error){
+      return {
+        ok:false,
+        handled:false,
+        stage:'battle-status',
+        reason:String(error?.reason??error?.message??'status-rng-failed'),
+        battleBid,
+        rngCursor:error?.cursor??cursor?.cursor??0,
+        rngMinimum:error?.minimum??null,
+        rngMaximum:error?.maximum??null
+      };
+    }
   }
 
   function resolveAttackPreflight(context,options){
@@ -510,11 +522,6 @@ function createBrowserBattleRoundRuntime({
   function planBattleEnd(context){
     return endRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)});
   }
-
-  const resolved={
-    ...required.map(([name])=>name),
-    ok:true
-  };
 
   return {
     ok:required.every(([,runtime])=>runtime?.ok===true),
