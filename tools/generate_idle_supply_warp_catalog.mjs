@@ -71,11 +71,11 @@ addReverseStartGroups();
 
 addExactPair({id:'1000_to_1005_hospital',kind:'town-to-hospital',hometown:0,fromFloor:1000,toFloor:1005,expectedCount:2});
 addExactPair({id:'1005_to_1000_hospital_return',kind:'hospital-to-town',hometown:0,fromFloor:1005,toFloor:1000,expectedCount:2});
-addExactPair({id:'2000_to_2005_hospital',kind:'town-to-hospital',hometown:1,fromFloor:2000,toFloor:2005,expectedCount:2});
+addExactPair({id:'2000_to_2005_hospital',kind:'town-to-hospital',hometown:1,fromFloor:2000,toFloor:2005,expectedCount:1});
 addExactPair({id:'2005_to_2000_hospital_return',kind:'hospital-to-town',hometown:1,fromFloor:2005,toFloor:2000,expectedCount:2});
-addExactPair({id:'3000_to_3005_hospital',kind:'town-to-hospital',hometown:2,fromFloor:3000,toFloor:3005,expectedCount:2});
+addExactPair({id:'3000_to_3005_hospital',kind:'town-to-hospital',hometown:2,fromFloor:3000,toFloor:3005,expectedCount:1});
 addExactPair({id:'3005_to_3000_hospital_return',kind:'hospital-to-town',hometown:2,fromFloor:3005,toFloor:3000,expectedCount:2});
-addExactPair({id:'4000_to_4005_hospital',kind:'town-to-hospital',hometown:3,fromFloor:4000,toFloor:4005,expectedCount:2});
+addExactPair({id:'4000_to_4005_hospital',kind:'town-to-hospital',hometown:3,fromFloor:4000,toFloor:4005,expectedCount:1});
 addExactPair({id:'4005_to_4000_hospital_return',kind:'hospital-to-town',hometown:3,fromFloor:4005,toFloor:4000,expectedCount:2});
 
 const encounterReturn=groups.filter(g=>g.kind==='encounter-return');
