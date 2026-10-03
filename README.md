@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b1e5f24 — [asset-pack] load optional SPR animation shards
-- 更新時間：2026-10-03T09:07:54+08:00
+- 最新 commit：a9b8119 — [test] correct sprite shard base and legacy URL fixtures
+- 更新時間：2026-10-03T09:08:23+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
