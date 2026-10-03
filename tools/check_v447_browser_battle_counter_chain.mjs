@@ -11,6 +11,9 @@ import { createBrowserBattleDamageReactRuntime } from '../src/stoneage_browser_b
 import { createBrowserBattleDamageReactCommitRuntime } from '../src/stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleDamageDeathChainRuntime } from '../src/stoneage_browser_battle_damage_death_chain_runtime.mjs';
 import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
+import { createBrowserBattleCarriedLootRuntime } from '../src/stoneage_browser_battle_carried_loot_runtime.mjs';
+import { createBrowserBattleEnemyExpRuntime } from '../src/stoneage_browser_battle_enemy_exp_runtime.mjs';
+import { createBrowserBattleRelifeRuntime } from '../src/stoneage_browser_battle_relife_runtime.mjs';
 
 const entry=(bid,sourceType)=>({
   bid,
@@ -56,13 +59,19 @@ const context={
 
 const runtimes={
   profitCreditRuntime:createBrowserBattleProfitCreditRuntime(),
+  carriedLootRuntime:createBrowserBattleCarriedLootRuntime(),
+  enemyExpRuntime:createBrowserBattleEnemyExpRuntime(),
+  relifeRuntime:createBrowserBattleRelifeRuntime(),
   counterRuntime:createBrowserBattleCounterRuntime(),
   attackSeqPreludeRuntime:createBrowserBattleAttackSeqPreludeRuntime(),
   damagePlanRuntime:createBrowserBattleDamagePlanRuntime(),
   criticalDamageRuntime:createBrowserBattleCriticalDamageRuntime(),
   damageReactRuntime:createBrowserBattleDamageReactRuntime(),
   damageReactCommitRuntime:createBrowserBattleDamageReactCommitRuntime(),
-  damageDeathChainRuntime:createBrowserBattleDamageDeathChainRuntime()
+  damageDeathChainRuntime:createBrowserBattleDamageDeathChainRuntime(),
+  carriedLootRuntime,
+  enemyExpRuntime,
+  relifeRuntime
 };
 const chainRuntime=createBrowserBattleCounterChainRuntime(runtimes);
 assert.equal(chainRuntime.ok,true);
