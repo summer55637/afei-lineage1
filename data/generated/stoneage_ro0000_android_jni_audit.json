@@ -153,7 +153,22 @@
               "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_TestMic",
               "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_UploadRecordedFile"
             ],
-            "jniOnLoadExported": true
+            "jniOnLoadExported": true,
+            "jniOnLoadEvidence": [
+              {
+                "value": "0xc8864",
+                "size": 484,
+                "status": "disassembly-ok",
+                "callSummary": {
+                  "instructionLineCount": 0,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "a049074670517defe15f21ad0b85c96b7ceb7cb7f9203af2e89a175b7657d0a8"
+                },
+                "candidateNativeMethodStrings": [],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
+              }
+            ]
           },
           {
             "path": "lib/armeabi-v7a/libSDL2.so",
@@ -200,28 +215,46 @@
               "Java_org_libsdl_app_SDLInputConnection_nativeGenerateScancodeForUnichar",
               "Java_org_libsdl_app_SDLInputConnection_nativeSetComposingText"
             ],
-            "jniOnLoadExported": true
+            "jniOnLoadExported": true,
+            "jniOnLoadEvidence": [
+              {
+                "value": "0x322b9",
+                "size": 36,
+                "status": "disassembly-ok",
+                "callSummary": {
+                  "instructionLineCount": 0,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "73b95a36b781495e4f70b3ab0699cee1f920547cbb2347dd923cd8dc27850056"
+                },
+                "candidateNativeMethodStrings": [],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
+              }
+            ]
           },
           {
             "path": "lib/armeabi-v7a/libSDL2_image.so",
             "sha256": "6ac937f9e4aa792988b75d025bd73bb9aa6950985d8d0a450155a0dee9d5c04d",
             "byteSize": 551888,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libSDL2_mixer.so",
             "sha256": "79242779a2af362086b8ef36a1f6ade8442979fbfa3ea0fa69e7b5758dc1901d",
             "byteSize": 625008,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libSDL2_ttf.so",
             "sha256": "4401669428c0a131231e7fbdde5f8b444be0bcccc1693a122678f9784ab58331",
             "byteSize": 583128,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libStoneage.so",
@@ -238,7 +271,8 @@
               "Java_com_newssa_stoneage_ko_JNILibrary_callbackZipProgress",
               "Java_com_newssa_stoneage_ko_JNILibrary_refreshBatteryInfo"
             ],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libhidapi.so",
@@ -254,14 +288,16 @@
               "Java_org_libsdl_app_HIDDeviceManager_HIDDeviceRegisterCallback",
               "Java_org_libsdl_app_HIDDeviceManager_HIDDeviceReleaseCallback"
             ],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/armeabi-v7a/libmpg123.so",
             "sha256": "b954c6f81c9e8a224fa12159b584de47fdcc4f00847ebceafdfc2a0e5f76f5d6",
             "byteSize": 228444,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           }
         ],
         "jniOnLoadLibraries": [
@@ -2488,7 +2524,22 @@
               "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_TestMic",
               "Java_com_tencent_gcloud_voice_GCloudVoiceEngineHelper_UploadRecordedFile"
             ],
-            "jniOnLoadExported": true
+            "jniOnLoadExported": true,
+            "jniOnLoadEvidence": [
+              {
+                "value": "0xc8043",
+                "size": 463,
+                "status": "disassembly-ok",
+                "callSummary": {
+                  "instructionLineCount": 0,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "980dea97480edc1e7331064d532cc862a6da594e216f52e7e0ba0422fa00dac5"
+                },
+                "candidateNativeMethodStrings": [],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
+              }
+            ]
           },
           {
             "path": "lib/x86/libSDL2.so",
@@ -2535,28 +2586,46 @@
               "Java_org_libsdl_app_SDLInputConnection_nativeGenerateScancodeForUnichar",
               "Java_org_libsdl_app_SDLInputConnection_nativeSetComposingText"
             ],
-            "jniOnLoadExported": true
+            "jniOnLoadExported": true,
+            "jniOnLoadEvidence": [
+              {
+                "value": "0x41810",
+                "size": 59,
+                "status": "disassembly-ok",
+                "callSummary": {
+                  "instructionLineCount": 0,
+                  "directCallTargets": [],
+                  "indirectCallSiteCount": 0,
+                  "disassemblySha256": "5d551c13160f638f9b5d93dfd54a71fcf6c76a3c98782c209f4a71b6f35b4b55"
+                },
+                "candidateNativeMethodStrings": [],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
+              }
+            ]
           },
           {
             "path": "lib/x86/libSDL2_image.so",
             "sha256": "2cef2fc6b07a2c68194533f0846543d39eea7d84d3ebf964a122199c29cf8898",
             "byteSize": 809928,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/x86/libSDL2_mixer.so",
             "sha256": "86a6c54b05486d927809d1a32fb6019edeeec00367dab2aeda4a83ffaaaa352b",
             "byteSize": 956800,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/x86/libSDL2_ttf.so",
             "sha256": "c708878c1b0a758bfd20684a1f3a52b26a1cd969c6156d88953e24bfed74e698",
             "byteSize": 996760,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/x86/libStoneage.so",
@@ -2573,7 +2642,8 @@
               "Java_com_newssa_stoneage_ko_JNILibrary_callbackZipProgress",
               "Java_com_newssa_stoneage_ko_JNILibrary_refreshBatteryInfo"
             ],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/x86/libhidapi.so",
@@ -2589,14 +2659,16 @@
               "Java_org_libsdl_app_HIDDeviceManager_HIDDeviceRegisterCallback",
               "Java_org_libsdl_app_HIDDeviceManager_HIDDeviceReleaseCallback"
             ],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           },
           {
             "path": "lib/x86/libmpg123.so",
             "sha256": "db8bfc87e4102efa58dd0bbac2ca205dd437c90c486835fa9b74ddbefa1bac7f",
             "byteSize": 310300,
             "jniExports": [],
-            "jniOnLoadExported": false
+            "jniOnLoadExported": false,
+            "jniOnLoadEvidence": []
           }
         ],
         "jniOnLoadLibraries": [
