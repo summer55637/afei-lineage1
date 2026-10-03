@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 
-from audit_ro0000_android_jni import (parse_jni_exports, parse_all_jni_symbols, compare_jni_methods, jni_escape, jni_symbol_candidates, compare_all_declarations)
+from audit_ro0000_android_jni import (parse_jni_exports, parse_all_jni_symbols, parse_jni_onload_symbols, summarize_onload_disassembly, relevant_native_strings, compare_jni_methods, jni_escape, jni_symbol_candidates, compare_all_declarations)
 
 
 class JniDeclarationExportTests(unittest.TestCase):
@@ -21,6 +21,46 @@ class JniDeclarationExportTests(unittest.TestCase):
         symbols, onload = parse_all_jni_symbols(output)
         self.assertEqual(symbols, ["Java_org_libsdl_app_SDLActivity_nativePause"])
         self.assertTrue(onload)
+
+    def test_parse_defined_jni_onload_symbol(self):
+        output = """  7: 00001234 48 FUNC GLOBAL DEFAULT 11 JNI_OnLoad
+  8: 00000000  0 FUNC GLOBAL DEFAULT UND JNI_OnLoad
+  9: 00001234 48 FUNC LOCAL DEFAULT 11 JNI_OnLoad
+"""
+        self.assertEqual(
+            parse_jni_onload_symbols(output),
+            [{"value": "0x1234", "size": 48}],
+        )
+
+    def test_summarize_jni_onload_calls_without_publishing_disassembly(self):
+        output = """00001000 <JNI_OnLoad>:
+    1000: push %ebp
+    1001: call 2000 <FindClass@plt>
+    1006: call *%eax
+    1008: ret
+"""
+        result = summarize_onload_disassembly(output)
+        self.assertEqual(result["instructionLineCount"], 4)
+        self.assertEqual(result["directCallTargets"], ["FindClass"])
+        self.assertEqual(result["indirectCallSiteCount"], 1)
+        self.assertEqual(len(result["disassemblySha256"]), 64)
+
+    def test_relevant_native_strings_keep_class_and_method_candidates_separate(self):
+        declarations = [
+            {
+                "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                "name": "ChangeRole",
+                "signature": "ChangeRole(I)I",
+            },
+        ]
+        data = b"prefix\0com/tencent/gcloud/voice/GCloudVoiceEngineHelper\0ChangeRole\0unrelated\0"
+        result = relevant_native_strings(data, declarations)
+        self.assertEqual(result[0]["class"], declarations[0]["class"])
+        self.assertIn("ChangeRole", result[0]["methodStringCandidates"])
+        self.assertIn(
+            "com/tencent/gcloud/voice/GCloudVoiceEngineHelper",
+            result[0]["classStringCandidates"],
+        )
 
     def test_jni_mangling_and_overloaded_signature_candidates(self):
         self.assertEqual(jni_escape("org/libsdl/app/SDLActivity"), "org_libsdl_app_SDLActivity")
