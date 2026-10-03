@@ -233,7 +233,7 @@ const lethalContext={
     ]
   }
 };
-const lethal=await attackSequenceRuntime.resolve(lethalContext,{attackerBid:10,requestedTargetBid:0,weaponType:'fist',attackCount:1,targets:[0],hitRollBundles:[{weaponCritical:0,throwWeapon:false,duckRoll:10000,criticalRoll:10000,damageRollNear:1,damageRollWide:100,guardRoll:96,lowDamageRoll:1,battleDamageModify:1,includeAttr:false,defaultTargetRoll:0}],transactionPrefix:'v465-lethal-player-relife'});
+const lethal=await attackSequenceRuntime.resolve(lethalContext,{attackerBid:10,requestedTargetBid:0,weaponType:'fist',attackCount:1,targets:[0],hitRollBundles:[{weaponCritical:0,throwWeapon:false,duckRoll:10000,criticalRoll:10000,damageRollNear:1,damageRollWide:12,guardRoll:96,lowDamageRoll:1,battleDamageModify:1,includeAttr:false,defaultTargetRoll:0}],transactionPrefix:'v465-lethal-player-relife'});
 assert.equal(lethal.ok,true,JSON.stringify(lethal));
 assert.equal(lethal.hits.length,1);
 assert.equal(lethal.hits[0].profitCredit.deathExtra.newEvents[0].kind,'player-normal-death');
