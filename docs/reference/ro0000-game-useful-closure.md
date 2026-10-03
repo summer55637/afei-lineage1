@@ -288,3 +288,23 @@ Machine-readable evidence：
 Machine-readable evidence：
 
 `data/generated/stoneage_ro0000_itemquitparty_audit.json`
+
+
+## 2026-10-03 裝備鍛造／製作 endpoint 閉合
+
+本輪只解析正式 active 的 `eden3/process/blacksmith*.arg`，排除所有 `--`、`.bak` 等殘留：
+
+- `blacksmith1.arg`～`blacksmith8.arg` 共 8 個正式 endpoint 腳本。
+- data / hydata 逐檔核對，8 個檔案全部完全一致。
+- 共整理 40 條 `CHANGEITEM + NeedItem + FREE + DelGold + DelItem + AddItem` 配方。
+- `blacksmith1-4`：地／水／火／風魔法戒，使用 `ENDEV=4 & ENDEV=81`。
+- `blacksmith5`：毀天滅地魔法戒，使用 `ENDEV=4 & ENDEV=69`。
+- `blacksmith6`：銅製防具，使用 `ENDEV=4 & ENDEV=69`。
+- `blacksmith7-8`：鐵製武器，使用 `ENDEV=4 & ENDEV=69`。
+- Fixed-C event DSL 與 Item／Gold mutation semantics 已對上，因此這批資料可直接作為單機裝備製作與經濟進程 source layer。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_crafting_process_endpoint_audit.json`
+
+這批配方已完成 source closure；後續只需要在產品層決定哪些鍛造線進入單機流程，不必再重新解析原始腳本。
