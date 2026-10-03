@@ -157,6 +157,8 @@ function buildBattleContext({
     workUltimate:intOr(player?.workUltimate)??0,
     relife:0,
     duelPoint:intOr(player?.duelPoint)??0,
+    charm:intOr(player?.charm)??-1,
+    deadPetCount:intOr(player?.deadPetCount)??0,
     workGetExp:intOr(player?.workGetExp)??0,
     escape:0,
     getitem:[-1,-1,-1],
