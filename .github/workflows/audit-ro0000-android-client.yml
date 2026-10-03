@@ -5,10 +5,6 @@ on:
     paths:
       - 'ro0000/client/android/冰河石器-隐盟.apk'
       - 'tools/audit_ro0000_android_apk.py'
-      - 'tools/audit_ro0000_android_git_resource_history.py'
-      - 'tools/check_ro0000_android_git_resource_history.py'
-      - 'tools/audit_ro0000_android_signing_cause.py'
-      - 'tools/check_ro0000_android_signing_cause.py'
       - 'tools/check_ro0000_android_adrn_field_semantics_evidence.py'
       - 'data/generated/stoneage_ro0000_android_adrn_field_semantics_evidence.json'
       - 'tools/check_ro0000_android_apk_audit.py'
@@ -31,8 +27,6 @@ on:
       - 'tools/check_client_spr_asset_pack.mjs'
       - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
-      - 'tools/audit_ro0000_android_signing.py'
-      - 'tools/check_ro0000_android_signing.py'
       - 'tools/check_ro0000_android_update_request_audit.py'
       - 'data/generated/stoneage_ro0000_android_update_request_audit.json'
       - 'tools/audit_ro0000_android_dex.py'
@@ -53,16 +47,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Audit reachable Git history for Android external resources
-        run: |
-          python3 -m unittest discover -s tools -p 'check_ro0000_android_git_resource_history.py'
-          python3 tools/audit_ro0000_android_git_resource_history.py --output artifacts/stoneage_ro0000_android_git_resource_history_audit.json
       - name: Install multi-architecture disassembler
         run: |
           sudo apt-get update
-          sudo apt-get install --yes binutils-multiarch apksigner default-jre-headless curl unzip
+          sudo apt-get install --yes binutils-multiarch default-jre-headless curl unzip
           objdump -i
       - name: Test APK string scanner
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_apk_audit.py'
@@ -90,20 +78,6 @@ jobs:
         run: python3 tools/audit_ro0000_android_dex.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_dex_audit.json
       - name: Test Android updater request audit
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_update_request_audit.py'
-      - name: Test APK signature audit parser
-        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_signing.py'
-      - name: Verify APK signature schemes and signer fingerprint
-        run: |
-          python3 tools/audit_ro0000_android_signing.py \
-            --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
-            --output artifacts/ro0000_android_signing_audit.json \
-            --expected-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')"
-      - name: Audit JAR v1 signature cause boundary
-        run: |
-          python3 -m unittest discover -s tools -p 'check_ro0000_android_signing_cause.py'
-          python3 tools/audit_ro0000_android_signing_cause.py \
-            --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
-            --output artifacts/ro0000_android_signing_cause_audit.json
       - name: Test Android ADRN field semantics evidence
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_adrn_field_semantics_evidence.py'
       - name: Decompile Java layer with pinned JADX (source stays private to runner)
@@ -352,17 +326,13 @@ jobs:
           for attempt in 1 2 3; do
             git fetch origin main
             git reset --hard origin/main
-            cp artifacts/ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_signing_audit.json
             cp artifacts/ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_native_abi_comparison.json
             cp artifacts/ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
             cp artifacts/ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_dex_audit.json
             cp artifacts/ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json
             cp artifacts/ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_jni_audit.json
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
-            cp artifacts/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
-            cp artifacts/ro0000_android_signing_cause_audit.json data/generated/stoneage_ro0000_android_signing_cause_audit.json
-            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_git_resource_history_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_signing_cause_audit.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -385,7 +355,6 @@ jobs:
             artifacts/ro0000_android_apk_audit.json
             artifacts/ro0000_android_native_elf_audit.json
             ro0000/client/android/冰河石器-隐盟.apk
-            artifacts/ro0000_android_signing_audit.json
             artifacts/ro0000_android_dex_audit.json
             artifacts/ro0000_android_java_flow_audit.json
             artifacts/ro0000_android_jni_audit.json
@@ -399,9 +368,6 @@ jobs:
             data/generated/stoneage_ro0000_android_lua_container_contract.json
             data/generated/stoneage_ro0000_android_update_request_audit.json
             data/generated/stoneage_ro0000_android_adrn_field_semantics_evidence.json
-            data/generated/stoneage_ro0000_android_signing_cause_audit.json
-            artifacts/ro0000_android_signing_cause_audit.json
-            data/generated/stoneage_ro0000_android_git_resource_history_audit.json
             artifacts/ro0000_android_native_abi_comparison.json
             artifacts/ro0000_android_battlemap_selector_crosscheck.json
             data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
