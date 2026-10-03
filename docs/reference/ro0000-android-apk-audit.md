@@ -836,7 +836,7 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_statu
 
 ### Damage-number ACTION creation
 
-`D` 結果路徑呼叫 target 的 `set_damage_num(action*, color, v_pos)`。x86 位於 `0x33d0f0`（855 bytes），ARMv7a 位於 `0x225445`（572 bytes）。它會嘗試以 `GetAction(0x4a,0x264)` 配置顯示 ACTION；配置成功後，安裝飄字 callback、設定顯示優先序與相對位置，並把 damage、pet damage、MP damage／recovery 與相關旗標複製到新 ACTION。飄字每幀 callback `showDamage_num(action*)` 也已定位：x86 `0x33b090`（8,282 bytes），ARMv7a `0x22429d`（4,520 bytes）。
+`D` 結果路徑呼叫 target 的 `set_damage_num(action*, color, v_pos)`。x86 位於 `0x33d0f0`（855 bytes），ARMv7a 位於 `0x225445`（572 bytes）。它會嘗試以 `GetAction(0x4a,0x264)` 配置顯示 ACTION；配置成功後，安裝飄字 callback、設定顯示優先序與相對位置，並把 damage、pet damage、MP damage／recovery 與相關旗標複製到新 ACTION。飄字每幀 callback `showDamage_num(action*)` 也已定位：x86 `0x33b090`（8,282 bytes），ARMv7a `0x22429d`（4,520 bytes）。 而 `damage_dispx()`（x86 `0x10c210`／ARMv7a `0x0f6679`）會依 ACTION callback 指標派送到這個顯示函式。
 
 這表示 `D` 結果除了修改參與者數值，也建立獨立的呈現 ACTION；它仍是 client-side presentation，不代表 APK 內存在權威傷害公式。飄字 callback 的完整字形、逐幀位移及衰退分支尚未全部轉譯。
 
