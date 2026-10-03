@@ -4,7 +4,11 @@ on:
     branches: [main]
     paths:
       - 'src/stoneage_browser_battle_enemy_exp_runtime.mjs'
+      - 'src/stoneage_browser_battle_exp_runtime.mjs'
+      - 'src/stoneage_browser_battle_levelup_runtime.mjs'
+      - 'src/stoneage_browser_battle_levelup_commit_runtime.mjs'
       - 'tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs'
+      - 'tools/check_v416_browser_battle_levelup_commit.mjs'
       - 'docs/reference/v460-browser-battle-pet-win-ai.md'
       - '.github/workflows/check-v460-browser-battle-pet-win-ai.yml'
   workflow_dispatch:
@@ -19,5 +23,11 @@ jobs:
           fetch-depth: 1
       - name: Run V4.60 Pet Win AI regression
         run: node tools/check_v457_browser_battle_enemy_exp_ride_pet.mjs
+      - name: Run V4.60 persistent Pet VariableAI regression
+        run: node tools/check_v416_browser_battle_levelup_commit.mjs
       - name: Check JavaScript syntax
-        run: node --check src/stoneage_browser_battle_enemy_exp_runtime.mjs
+        run: |
+          node --check src/stoneage_browser_battle_enemy_exp_runtime.mjs
+          node --check src/stoneage_browser_battle_exp_runtime.mjs
+          node --check src/stoneage_browser_battle_levelup_runtime.mjs
+          node --check src/stoneage_browser_battle_levelup_commit_runtime.mjs
