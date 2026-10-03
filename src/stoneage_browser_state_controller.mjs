@@ -865,6 +865,7 @@ function createBrowserStateController({
             carriedLootOwnerRollsByEnemyBid:action.carriedLootOwnerRollsByEnemyBid??{},
             carriedLootReplaceRollsByEnemyBid:action.carriedLootReplaceRollsByEnemyBid??{},
             carriedLootReplaceSlotRollsByEnemyBid:action.carriedLootReplaceSlotRollsByEnemyBid??{},
+            ridePetBidByParticipantBid:action.ridePetBidByParticipantBid??{},
             now:action.now??null
           }
         );
