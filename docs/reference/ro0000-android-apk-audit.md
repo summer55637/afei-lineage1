@@ -834,4 +834,10 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_statu
 
 公開 `alrightlook/StoneAgeMobileApp` 的 `oft.cpp`（commit `8c870c87ce1305c52fb6713bf824619467847bba`）僅作 `ATT_DAMAGE`、結果類別與可選功能的語義對照，未宣稱與 target APK 同一來源版本。
 
+### Damage-number ACTION creation
+
+`D` 結果路徑呼叫 target 的 `set_damage_num(action*, color, v_pos)`。x86 位於 `0x33d0f0`（855 bytes），ARMv7a 位於 `0x225445`（572 bytes）。它會嘗試以 `GetAction(0x4a,0x264)` 配置顯示 ACTION；配置成功後，安裝飄字 callback、設定顯示優先序與相對位置，並把 damage、pet damage、MP damage／recovery 與相關旗標複製到新 ACTION。飄字每幀 callback `showDamage_num(action*)` 也已定位：x86 `0x33b090`（8,282 bytes），ARMv7a `0x22429d`（4,520 bytes）。
+
+這表示 `D` 結果除了修改參與者數值，也建立獨立的呈現 ACTION；它仍是 client-side presentation，不代表 APK 內存在權威傷害公式。飄字 callback 的完整字形、逐幀位移及衰退分支尚未全部轉譯。
+
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_command_decode_contract.json`。契約會在 CI 中對照 APK／ELF identity 及 x86、ARMv7a 函式位址。
