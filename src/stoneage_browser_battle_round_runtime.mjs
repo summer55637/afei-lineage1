@@ -291,7 +291,7 @@ async function resolveBattleRound(context,{
       }
 
       const attackRecord={
-        attackerBid,
+        attackerBid:actorBid,
         requestedTargetBid:int(actor.battleCommands?.[1])??-1,
         finalTargetBid:prelude.finalTargetBid,
         commandCode:command,
@@ -307,7 +307,7 @@ async function resolveBattleRound(context,{
       }
 
       const damagePlan=runDamagePlan(next,{
-        attackerBid,
+        attackerBid:actorBid,
         targetBid:prelude.finalTargetBid,
         damageRollNear:bundle.damageRollNear,
         damageRollWide:bundle.damageRollWide,
@@ -320,7 +320,7 @@ async function resolveBattleRound(context,{
       }
 
       const criticalPlan=runCriticalDamagePlan(next,{
-        attackerBid,
+        attackerBid:actorBid,
         targetBid:prelude.finalTargetBid,
         damageRollNear:bundle.damageRollNear,
         damageRollWide:bundle.damageRollWide,
@@ -339,7 +339,7 @@ async function resolveBattleRound(context,{
       }
 
       const reactPlan=runDamageReactPlan(next,{
-        attackerBid,
+        attackerBid:actorBid,
         targetBid:prelude.finalTargetBid,
         damage:criticalPlan.damage,
         throwWeapon:bundle.throwWeapon===true,
@@ -369,7 +369,7 @@ async function resolveBattleRound(context,{
         };
       }
 
-      const tx=`\${id}:\${actorBid}:\${attacks.length}`;
+      const tx=`${id}:${actorBid}:${attacks.length}`;
       const deathCommit=commitDamageDeathChain(next,{
         damageReactPlan:reactPlan,
         transactionId:tx,
