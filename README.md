@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：31aa902 — docs: close RO0000 profession skill endpoint
-- 更新時間：2026-10-03T15:48:12+08:00
+- 最新 commit：634b885 — docs: close RO0000 title endpoint audit
+- 更新時間：2026-10-03T15:50:54+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
