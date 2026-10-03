@@ -1,0 +1,35 @@
+name: Check V4.52 browser battle round AttackNum and target sequence
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_count_runtime.mjs'
+      - 'src/stoneage_browser_battle_target_list_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v452_browser_battle_round_attack_sequence.mjs'
+      - 'tools/check_v452_browser_battle_round_attack_sequence_controller.mjs'
+      - '.github/workflows/check-v452-browser-battle-round-attack-sequence.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.52 round AttackNum / target-list regression
+        run: node tools/check_v452_browser_battle_round_attack_sequence.mjs
+      - name: Run V4.52 controller integration regression
+        run: node tools/check_v452_browser_battle_round_attack_sequence_controller.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_count_runtime.mjs
+          node --check src/stoneage_browser_battle_target_list_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v452_browser_battle_round_attack_sequence.mjs
+          node --check tools/check_v452_browser_battle_round_attack_sequence_controller.mjs
