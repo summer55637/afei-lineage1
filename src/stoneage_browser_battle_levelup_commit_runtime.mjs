@@ -84,6 +84,13 @@ function commitBattleLevelUp(state,levelPlan,petGrowthPlan,{transactionId=null,e
   const growthById=new Map((petGrowthPlan.pets??[]).map(p=>[String(p?.petId??'').trim(),p]));
   for(const p of Array.isArray(levelPlan.pets)?levelPlan.pets:[]){
     const count=intOr(p?.levelUps,0);
+    const id=String(p?.petId??'').trim();
+    const aiBefore=intOr(p?.variableAiBefore,0);
+    const aiAfter=intOr(p?.variableAiAfter,aiBefore);
+    const persistentPet=findPet(state,id);
+    if(persistentPet&&intOr(persistentPet.variableAi,0)!==aiBefore){
+      return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'pet-variableai-stale-plan',petId:id,state:clone(state)};
+    }
     if(count<=0)continue;
     const id=String(p?.petId??'').trim();
     const growth=growthById.get(id);
@@ -105,9 +112,20 @@ function commitBattleLevelUp(state,levelPlan,petGrowthPlan,{transactionId=null,e
   for(const p of Array.isArray(levelPlan.pets)?levelPlan.pets:[]){
     const id=String(p?.petId??'').trim();
     const count=intOr(p?.levelUps,0);
-    if(!id||count<=0)continue;
+    const aiBefore=intOr(p?.variableAiBefore,0);
+    const aiAfter=intOr(p?.variableAiAfter,aiBefore);
+    if(!id)continue;
     const pet=findPet(next,id);
     if(!pet)return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'persistent-pet-missing',petId:id,state:clone(state)};
+    if(intOr(pet.variableAi,0)!==aiBefore){
+      return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'pet-variableai-stale-plan',petId:id,state:clone(state)};
+    }
+    const aiChanged=aiAfter!==aiBefore;
+    if(aiChanged)pet.variableAi=aiAfter;
+    if(count<=0){
+      committedPets.push({petId:id,levelBefore:intOr(pet.level,1),levelAfter:intOr(pet.level,1),expBefore:intOr(pet.exp,0),expAfter:intOr(pet.exp,0),levelUps:0,variableAiBefore:aiBefore,variableAiAfter:aiAfter,variableAiDelta:aiAfter-aiBefore});
+      continue;
+    }
     if(intOr(pet.level,1)!==intOr(p.levelBefore,1) || intOr(pet.exp,0)!==intOr(p.expBefore,0)){
       return {ok:false,handled:false,stage:'battle-levelup-commit',reason:'pet-progression-stale-plan',petId:id,state:clone(state)};
     }
@@ -119,7 +137,7 @@ function commitBattleLevelUp(state,levelPlan,petGrowthPlan,{transactionId=null,e
     pet.exp=intOr(p.expAfter,intOr(p.expBefore,0));
     pet.stats=PET_STAT_KEYS.reduce((o,k)=>(o[k]=intOr(growth.statsAfter?.[k],intOr(pet.stats?.[k],0)),o),{});
     pet.serverStats={...pet.stats};
-    committedPets.push({petId:id,levelBefore:intOr(p.levelBefore,1),levelAfter:pet.level,expBefore:intOr(p.expBefore,0),expAfter:pet.exp});
+    committedPets.push({petId:id,levelBefore:intOr(p.levelBefore,1),levelAfter:pet.level,expBefore:intOr(p.expBefore,0),expAfter:pet.exp,levelUps:count,variableAiBefore:aiBefore,variableAiAfter:pet.variableAi,variableAiDelta:pet.variableAi-aiBefore});
   }
 
   const timestamp=String(typeof now==='function'?now():now);
