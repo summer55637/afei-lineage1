@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT='stoneage-v402-browser-battle-damage-plan-v1';
+const BROWSER_BATTLE_DAMAGE_PLAN_RUNTIME_FORMAT='stoneage-v458-browser-battle-damage-plan-v1';
 const ACTION_BATTLE_DAMAGE_PLAN='BATTLE_DAMAGE_PLAN';
 
 const D_16=1/16;
@@ -54,17 +54,53 @@ function fieldPower(fieldAtt,fieldAttrPower,attackerAttrs){
   return 0.5+(attackerAttrs[key]??0)*a*0.01*0.01*0.5;
 }
 
-function damagePlan(context,{attackerBid=null,targetBid=null,damageRollNear=null,damageRollWide=null,fieldAtt=4,fieldAttrPower=0,includeAttr=true}={}){
+function damagePlan(context,{attackerBid=null,targetBid=null,damageRollNear=null,damageRollWide=null,fieldAtt=4,fieldAttrPower=0,includeAttr=true,throwWeapon=false,ridePetBidByBid={},ridePetAdjustRuntime=null}={}){
   const attacker=findEntry(context,attackerBid);
   const defender=findEntry(context,targetBid);
   if(!attacker||!defender)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'attacker-or-defender-missing'};
-  const attack=num(attacker.attackPower??attacker.fixStr);
+  let attack=num(attacker.attackPower??attacker.fixStr);
   const defencePower=num(defender.defencePower??defender.fixTgh);
   const quick=num(defender.quick??defender.fixDex);
   const fixVital=num(defender.fixVital??defender.fixVitial);
   if(attack==null||defencePower==null||quick==null)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'attack-defence-quick-required'};
   const vital=fixVital==null?0:fixVital;
-  let defence=defencePower*DEFENCE_RATE+quick*DEF_QUICK_RATE+vital*DEF_VITAL_RATE;
+  const attackPetBid=ridePetBidByBid?.[String(attackerBid)]??ridePetBidByBid?.[attackerBid]??null;
+  const defencePetBid=ridePetBidByBid?.[String(targetBid)]??ridePetBidByBid?.[targetBid]??null;
+  let ridePetAttackAdjustment=null;
+  let ridePetDefenceAdjustment=null;
+  if(attackPetBid!=null||defencePetBid!=null){
+    if(!ridePetAdjustRuntime||ridePetAdjustRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'ride-pet-adjust-runtime-required'};
+  }
+  if(attackPetBid!=null){
+    const pet=findEntry(context,attackPetBid);
+    if(!pet)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'attacker-ride-pet-entry-missing',attackerBid:int(attackerBid),ridePetBid:int(attackPetBid)};
+    ridePetAttackAdjustment=ridePetAdjustRuntime.adjust({
+      character:{value:attack},
+      pet:{value:pet.attackPower??pet.fixStr},
+      work:'attack',
+      action:'attack',
+      throwWeapon:throwWeapon===true
+    });
+    if(!ridePetAttackAdjustment.ok)return ridePetAttackAdjustment;
+    attack=ridePetAttackAdjustment.value;
+  }
+  let defence;
+  if(defencePetBid!=null){
+    const pet=findEntry(context,defencePetBid);
+    if(!pet)return {ok:false,handled:false,stage:'battle-damage-plan',reason:'defender-ride-pet-entry-missing',targetBid:int(targetBid),ridePetBid:int(defencePetBid)};
+    ridePetDefenceAdjustment=ridePetAdjustRuntime.adjust({
+      character:{value:defencePower},
+      pet:{value:pet.defencePower??pet.fixTgh},
+      work:'defence',
+      action:'defence',
+      throwWeapon:false
+    });
+    if(!ridePetDefenceAdjustment.ok)return ridePetDefenceAdjustment;
+    defence=ridePetDefenceAdjustment.value*DEFENCE_RATE;
+  }else{
+    // _BATTLE_NEWPOWER path: no ride pet => CHAR_WORKDEFENCEPOWER * 0.70.
+    defence=defencePower*DEFENCE_RATE;
+  }
   let branch,rawDamage,rollUsed=null,rollRange=null,k0=null;
   if(defence<=attack && attack<defence*8/7){
     branch='near';
@@ -120,6 +156,12 @@ function damagePlan(context,{attackerBid=null,targetBid=null,damageRollNear=null
     defencePower,
     quick,
     fixVital:vital,
+    ridePetAdjustment:{
+      attacker:ridePetAttackAdjustment,
+      defender:ridePetDefenceAdjustment,
+      attackerBid:attackPetBid==null?null:int(attackPetBid),
+      defenderBid:defencePetBid==null?null:int(defencePetBid)
+    },
     branch,
     rawDamage,
     damage:adjusted,
@@ -132,12 +174,13 @@ function damagePlan(context,{attackerBid=null,targetBid=null,damageRollNear=null
     defenderAttributes:defenderAttr,
     field:{fieldAtt:int(fieldAtt)??null,attPower:num(fieldAttrPower)??0,attackerPower:attackerFieldPower,defenderPower:defenderFieldPower},
     constants:{D_16,D_8,DAMAGE_RATE,DEFENCE_RATE,DEF_QUICK_RATE,DEF_VITAL_RATE,AJ_SAME,AJ_UP,AJ_DOWN,ATTR_MAX,D_ATTR},
+    fixedCDefensePath:'_BATTLE_NEWPOWER',
     fixedCFeatureFlags:{_BATTLE_NEWPOWER:true},
     persistentMutation:false,
     hpMutation:false,
     rngConsumed:rollUsed==null?0:1,
     damageExecuted:false,
-    source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',function:'BATTLE_DamageCalc'}
+    source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',function:'BATTLE_DamageCalc',ridePetFunction:'BATTLE_adjustRidePet3A'}
   };
 }
 
