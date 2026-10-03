@@ -1,0 +1,31 @@
+name: Check V4.59 browser battle DexCalc
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_dex_runtime.mjs'
+      - 'src/stoneage_browser_battle_ride_pet_adjust_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v459_browser_battle_dex.mjs'
+      - '.github/workflows/check-v459-browser-battle-dex.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.59 DexCalc regression
+        run: node tools/check_v459_browser_battle_dex.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_dex_runtime.mjs
+          node --check src/stoneage_browser_battle_ride_pet_adjust_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v459_browser_battle_dex.mjs
