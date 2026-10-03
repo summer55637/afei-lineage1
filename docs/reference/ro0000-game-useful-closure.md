@@ -189,3 +189,27 @@ Fixed-C 的 `npcgen_petskillshop` template 對應 `PetSkillShop` function set；
 本輪詳細 machine-readable evidence：
 
 `data/generated/stoneage_ro0000_petskill_shop_endpoint_audit.json`
+
+
+## 2026-10-03 職業技能 endpoint 閉合
+
+本輪進一步完成 RO0000 `profession.txt`：
+
+- endpoint `data/profession.txt`：72 個 active rows，ID 1–72。
+- endpoint `hydata/data/profession.txt` 與 data 完全一致；本資料層目前沒有 data/hydata gameplay variant。
+- 四個 profession class（1–4）皆有正式資料。
+- 每筆資料包含職技名稱、說明、runtime function、option、職業類別、target、MP 消耗、kind、圖像欄位、購買價格、升級修正與先修技能／熟練度條件。
+
+Pinned Fixed-C runtime 已確認：
+
+`init.c` → `PROFESSION_initSkill(getProfession())` → `PROFESSION_SKILL_getskillArray(skillid)` → `PROFESSION_SKILL_Use()`。
+
+使用技能時會驗證玩家身分與 profession class、扣除 MP、依資料中的 function name 派發實際技能函式，成功後進行一般職技熟練度升級；職技最大等級為 100。職業等級檢查以目前職業等級 × 70 × 100 為下一級所需總熟練度門檻。
+
+因此 `profession.txt` 現在列為單機角色成長／戰鬥規則的 endpoint-primary 已閉合資料。不要用 Fixed-C 或其他版本 `profession.txt` 覆蓋。
+
+Machine-readable evidence：
+
+`data/generated/stoneage_ro0000_profession_endpoint_audit.json`
+
+本輪刻意沒有把 `question.txt`、`racequiz.txt`、`memberpets.txt`、`membershop.txt` 等資料當成主線解析對象；它們目前沒有證據顯示會直接影響本單機放置版主循環，先維持不深入解析，以符合「只解析對遊戲製作有用內容」原則。
