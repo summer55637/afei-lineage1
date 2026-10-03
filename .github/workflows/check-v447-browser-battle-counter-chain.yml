@@ -1,0 +1,34 @@
+name: Check V4.47 browser battle counter chain
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_counter_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_plan_runtime.mjs'
+      - 'src/stoneage_browser_battle_critical_damage_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_react_runtime.mjs'
+      - 'src/stoneage_browser_battle_damage_death_chain_runtime.mjs'
+      - 'tools/check_v447_browser_battle_counter_chain.mjs'
+      - '.github/workflows/check-v447-browser-battle-counter-chain.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.47 counter chain regression
+        run: node tools/check_v447_browser_battle_counter_chain.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_counter_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v447_browser_battle_counter_chain.mjs
