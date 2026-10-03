@@ -123,12 +123,18 @@ def select_registration_helper_records(records, cxxfilt="c++filt"):
     return selected[:12]
 
 
-def inspect_registration_helpers(binary_path, readelf_output, objdump):
+def inspect_registration_helpers(binary_path, readelf_output, objdump, abi):
     evidence = []
     records = select_registration_helper_records(parse_defined_function_records(readelf_output))
     for record in records:
+        start = int(record["value"], 16)
+        if abi == "armeabi-v7a":
+            start &= ~1  # ELF ARM function values may carry the Thumb state bit.
+        stop = start + max(int(record["size"]), 1)
         command = [
-            objdump, "-d", "--demangle", "--disassemble=" + record["rawName"],
+            objdump, "-d", "--demangle",
+            "--start-address=0x%x" % start,
+            "--stop-address=0x%x" % stop,
             str(binary_path),
         ]
         proc = subprocess.run(
@@ -372,7 +378,7 @@ def inspect_apk_libraries(apk_path, readelf, objdump="objdump", declarations=Non
                 "jniOnLoadExported": has_onload,
                 "jniOnLoadEvidence": onload_evidence,
                 "jniRegistrationHelperEvidence": (
-                    inspect_registration_helpers(local_path, readelf_output, objdump)
+                    inspect_registration_helpers(local_path, readelf_output, objdump, abi)
                     if onload_records else []
                 ),
             })
