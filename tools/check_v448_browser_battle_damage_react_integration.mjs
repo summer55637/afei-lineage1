@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createBrowserBattleRoundRuntime } from '../src/stoneage_browser_battle_round_runtime.mjs';
+import { createBrowserBattleAttackCountRuntime } from '../src/stoneage_browser_battle_attack_count_runtime.mjs';
+import { createBrowserBattleTargetListRuntime } from '../src/stoneage_browser_battle_target_list_runtime.mjs';
+import { createBrowserBattleAttackSequenceRuntime } from '../src/stoneage_browser_battle_attack_sequence_runtime.mjs';
 import { createBrowserBattleCounterChainRuntime } from '../src/stoneage_browser_battle_counter_chain_runtime.mjs';
 import { createBrowserBattleCounterRuntime } from '../src/stoneage_browser_battle_counter_runtime.mjs';
 import { createBrowserBattleAttackPreflightRuntime } from '../src/stoneage_browser_battle_attack_preflight_runtime.mjs';
@@ -25,7 +28,18 @@ const makeEntry=(bid,sourceType)=>({
 });
 
 const runtimeSet=()=>{
-  const counterRuntime=createBrowserBattleCounterRuntime();
+  const attackCountRuntime=createBrowserBattleAttackCountRuntime();
+const targetListRuntime=createBrowserBattleTargetListRuntime();
+const counterRuntime=createBrowserBattleCounterRuntime();
+const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
+  attackPreflightRuntime,
+  attackSeqPreludeRuntime,
+  damagePlanRuntime,
+  criticalDamageRuntime,
+  damageReactRuntime,
+  damageReactCommitRuntime,
+  damageDeathChainRuntime
+});
   const attackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
   const attackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
   const damagePlanRuntime=createBrowserBattleDamagePlanRuntime();
@@ -40,6 +54,9 @@ const runtimeSet=()=>{
     damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime
   });
   const roundRuntime=createBrowserBattleRoundRuntime({
+    attackCountRuntime,
+    targetListRuntime,
+    attackSequenceRuntime,
     attackPreflightRuntime,attackSeqPreludeRuntime,damagePlanRuntime,
     criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,
     damageDeathChainRuntime,counterChainRuntime,statusRuntime,endRuntime
