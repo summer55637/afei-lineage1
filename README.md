@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：194fd50 — [docs] publish game-useful Android resource evidence
-- 更新時間：2026-10-03T05:42:32Z
+- 最新 commit：0593d73 — [ci] audit Android skill target hitbox contract
+- 更新時間：2026-10-03T13:51:34+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
