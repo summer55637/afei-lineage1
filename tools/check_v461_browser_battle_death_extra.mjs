@@ -17,10 +17,10 @@ function baseContext({playerLevel=10,playerDead=false,playerUltimate=0,petId=500
       sides:[
         {side:0,type:0,entries:[
           {bid:0,sourceType:'player',characterId:'p1',level:playerLevel,hp:playerDead?0:100,maxHp:100,isDie:playerDead,ultimate:playerUltimate,
-            charm:20,deadPetCount:0,battleCommands:[1,10,-1],variableAi:0},
+            charm:20,deadPetCount:0,battleCommands:[1,10,-1],variableAi:0,sourceAddProfitDeathPending:playerDead},
           null,null,null,null,
           {bid:5,sourceType:'pet',characterId:'pet-1',petId:petId,tempNo:petId,level:petLevel,hp:petDead?0:100,maxHp:100,isDie:petDead,
-            ultimate:petUltimate,variableAi,modAi,allocPointPacked,battleCommands:[1,10,-1]}
+            ultimate:petUltimate,variableAi,modAi,allocPointPacked,battleCommands:[1,10,-1],sourceAddProfitDeathPending:petDead}
         ]},
         {side:1,type:1,entries:[null,null,null,null,null,null,null,null,null,null]}
       ]
