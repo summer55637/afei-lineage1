@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：40d7ffc — [docs] publish Android native and manifest evidence
-- 更新時間：2026-10-03T00:34:36Z
+- 最新 commit：717f132 — [audit] document Android auto-map composition and raster path
+- 更新時間：2026-10-03T08:37:33+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
