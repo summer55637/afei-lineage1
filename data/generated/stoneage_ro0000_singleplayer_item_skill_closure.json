@@ -1,0 +1,140 @@
+{
+  "format": "stoneage-ro0000-singleplayer-item-skill-closure-v1",
+  "checkedDate": "2026-10-03",
+  "scope": "Only RO0000 content with direct relevance to the single-player StoneAge project.",
+  "itemSeed": {
+    "setupPath": "ro0000/server/merged-source/gmsv/setup.cf",
+    "configured": [
+      [
+        "ITEM1",
+        32003
+      ],
+      [
+        "ITEM2",
+        32004
+      ],
+      [
+        "ITEM3",
+        32005
+      ],
+      [
+        "ITEM4",
+        32006
+      ],
+      [
+        "ITEM5",
+        32007
+      ],
+      [
+        "ITEM6",
+        32013
+      ],
+      [
+        "ITEM7",
+        32008
+      ],
+      [
+        "ITEM8",
+        32009
+      ],
+      [
+        "ITEM9",
+        32010
+      ],
+      [
+        "ITEM10",
+        32011
+      ],
+      [
+        "ITEM11",
+        32160
+      ],
+      [
+        "ITEM12",
+        22407
+      ],
+      [
+        "ITEM13",
+        22077
+      ],
+      [
+        "ITEM14",
+        32419
+      ],
+      [
+        "ITEM15",
+        32420
+      ]
+    ],
+    "tablePath": "ro0000/server/merged-source/gmsv/data/itemset6.csv",
+    "tableRows": 14502,
+    "exactNumericMatches": {
+      "22077": 0,
+      "22407": 0,
+      "32003": 0,
+      "32004": 0,
+      "32005": 0,
+      "32006": 0,
+      "32007": 0,
+      "32008": 0,
+      "32009": 0,
+      "32010": 0,
+      "32011": 0,
+      "32013": 0,
+      "32160": 0,
+      "32419": 0,
+      "32420": 0
+    },
+    "runtimeChain": [
+      "setup.cf ITEM1..ITEM15",
+      "getNewplayergiveitem(i)",
+      "CHAR_loginAddItemForNew() loops i=0..14",
+      "ITEM_makeItemAndRegist(itemId)",
+      "ITEM_makeItem() -> ITEM_CHECKITEMTABLE(itemId)",
+      "failure returns no item insertion"
+    ],
+    "conclusion": "All 15 endpoint starter item IDs are configured but absent from the endpoint item table, so the snapshot provides no source-backed successful starter-item grant."
+  },
+  "petSkills": {
+    "setupPath": "ro0000/server/merged-source/gmsv/setup.cf",
+    "activeFile": "./data/petskill2.txt",
+    "endpointFile": "ro0000/server/merged-source/gmsv/data/petskill2.txt",
+    "alternateFile": "ro0000/server/merged-source/gmsv/hydata/data/petskill2.txt",
+    "skill652": {
+      "endpointData": "+58% attack, -45% defence",
+      "hydata": "+55% attack, -45% defence",
+      "fixedEarlierBaseline": "+55% attack, -45% defence",
+      "endpointPrimary": true
+    },
+    "skillTable": "The endpoint data file has 189 lines and is directly selected by setup.cf.",
+    "conclusion": "For single-player skill semantics, use RO0000 data/petskill2.txt as the endpoint-primary variant; do not collapse it into hydata."
+  },
+  "petSkillCodes": {
+    "endpointFile": "ro0000/server/merged-source/gmsv/data/skillcode.txt",
+    "alternateFile": "ro0000/server/merged-source/gmsv/hydata/data/skillcode.txt",
+    "loaderContract": "Load_PetSkillCodes() reads ./data/skillcode.txt and stores name, TempNo, PetId, Code.",
+    "dataLines": 158,
+    "hydataLines": 160,
+    "dataOnlyLines": 13,
+    "hydataOnlyLines": 15,
+    "gameplayRelevance": "The Code field participates in special pet-skill eligibility checks; the endpoint data version is therefore gameplay-relevant.",
+    "policy": "Preserve both variants, use data/ as endpoint-primary, and do not merge codes across variants without provenance."
+  },
+  "gmque": {
+    "endpointNpcScan": {
+      "root": "ro0000/server/merged-source/gmsv/data/npc",
+      "filesScanned": 2384,
+      "relevantTokenHits": 0,
+      "candidateFiles": 0
+    },
+    "conclusion": "No live endpoint GMQUE task-argument source was found in the scanned endpoint NPC tree. The fixed-C parser and reward semantics are already understood, but endpoint activity configuration is not present as source evidence. Do not invent tasks or reward pets."
+  },
+  "exclusionPolicy": {
+    "excludedFromFurtherParsing": [
+      "pure historical/backups/residue without runtime admission",
+      "server credentials/deployment-only secrets",
+      "features with no demonstrated relevance to the single-player product scope",
+      "generic fixed-C data not needed to interpret a live RO0000 endpoint variant"
+    ]
+  }
+}
