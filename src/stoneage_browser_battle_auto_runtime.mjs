@@ -44,8 +44,8 @@ async function runBattleAuto(context,{playerStrategyRuntime=null,enemyAiRuntime=
 }
 function createBrowserBattleAutoRuntime(deps={}){
   const lifecycleRuntime=deps.lifecycleRuntime??createBrowserBattleAutoLifecycleRuntime(deps);
-  const requiredDeps=Object.entries(deps).filter(([name])=>name!=='lifecycleRuntime');
-  const ok=requiredDeps.every(([,runtime])=>runtime?.ok===true);
+  const baseDeps=['playerStrategyRuntime','enemyAiRuntime','roundRuntime'];
+  const ok=baseDeps.every(name=>deps[name]?.ok===true);
   return {
     ok,
     format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,
