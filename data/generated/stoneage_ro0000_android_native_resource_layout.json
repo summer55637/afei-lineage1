@@ -1028,5 +1028,125 @@
       "Cross-source public code is structural corroboration only; target addresses and control-flow evidence remain tied to the APK hash and both ELF Build IDs.",
       "A ResoMode==1 halving branch appears in the pinned public directdraw.cpp reference, but is not present in either target ABI's DrawAutoMapping disassembly and must not be copied as target APK behavior."
     ]
+  },
+  "worldMapRuntime": {
+    "source": {
+      "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+      "libraries": {
+        "armeabi-v7a": {
+          "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+          "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+        },
+        "x86": {
+          "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+          "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+        }
+      }
+    },
+    "functions": {
+      "initWorldMap": {
+        "armeabiV7a": "0x24fd9d",
+        "x86": "0x38fb10"
+      },
+      "worldMapProc": {
+        "armeabiV7a": "0x24fea5",
+        "x86": "0x38fcc0"
+      },
+      "mapWndProc": {
+        "armeabiV7a": "0x1a0725",
+        "x86": "0x248af0"
+      },
+      "EndWarpMap": {
+        "armeabiV7a": "0x17f4b9",
+        "x86": "0x20f640"
+      }
+    },
+    "lua": {
+      "contextResolution": {
+        "entrypoints": [
+          "initWorldMap",
+          "worldMapProc"
+        ],
+        "resolver": "FindLua(char*)",
+        "branches": "When the cached Lua context is absent, the target chooses between a formatted path buffer and a copied path buffer before calling FindLua; exact embedded strings and path values remain omitted.",
+        "storesResolvedContext": true,
+        "globalLookupIndex": -10002,
+        "requiredFieldTypeCode": 6,
+        "fieldNamePublished": false,
+        "fieldNameBoundary": "The pointer passed to lua_getfield is target data, but its literal is intentionally not copied into this contract."
+      },
+      "initialization": {
+        "function": "initWorldMap",
+        "call": "docall(lua_State*,0,1)",
+        "nonFunctionBehavior": "lua_settop(L,-2), then return from the void function",
+        "callResultHandling": "The local docall return value is not inspected by the visible initWorldMap body."
+      },
+      "processing": {
+        "function": "worldMapProc",
+        "call": "lua_pcall(L,0,1,0)",
+        "outcomes": {
+          "contextUnavailable": 0,
+          "fieldNotFunction": 0,
+          "pcallError": 0,
+          "resultNotNumber": 0,
+          "numericResult": "lua_tonumber(L,-1), converted to signed C int by truncation toward zero, then returned"
+        },
+        "errorPath": "On pcall error, read the top value with lua_tolstring, pass it to SDL_Log, clear the stack to -2, and return 0.",
+        "numericResultPath": "After numeric conversion, clear the stack to -2 before returning the integer.",
+        "nonFunctionPath": "Clear the pushed field to -2 before returning 0.",
+        "nonNumericResultPath": "Returns 0 without an explicit lua_settop call in the target body; the result value may remain on the Lua stack.",
+        "runtimeBoundary": "Static control-flow observation; repeated invocation and Lua-stack effects have not been measured in the original runtime."
+      }
+    },
+    "ui": {
+      "function": "mapWndProc",
+      "entryGate": {
+        "x86Mask": "0x40000000",
+        "armByteOffset": 3,
+        "armMask": "0x40",
+        "equivalence": "The ARM byte mask at byte offset 3 represents the same high bit as the x86 32-bit mask.",
+        "secondaryStateEquals": 9,
+        "semanticNamesEstablished": false
+      },
+      "window": {
+        "createCall": "MakeWindowDisp(int,int,int,int,int,int,bool)",
+        "arguments": [
+          388,
+          4,
+          248,
+          240,
+          0,
+          -1,
+          0
+        ],
+        "clearAfterCreate": "ClearSurface() is called on the returned window surface, then a one-byte initialization flag is set.",
+        "drawSubmissionPerPass": {
+          "StockFontBuffer": 3,
+          "StockDispBuffer": 3
+        }
+      },
+      "callback": {
+        "target": "worldMapProc",
+        "gate": "A window-state value equal to 1 selects the worldMapProc call path.",
+        "resultHandling": "The integer result participates in a subsequent branch; exact UI intent of the internal state and branch is not assigned a semantic label."
+      },
+      "behaviorBoundary": "This procedure prepares and submits world-map UI content; the audited body does not itself decode map payloads or establish server map content."
+    },
+    "warpEnd": {
+      "function": "EndWarpMap",
+      "condition": "A target state byte's bit 0 (mask 0x01) is set.",
+      "effectWhenSet": [
+        "Increment a separate counter by one",
+        "Clear the state byte to zero"
+      ],
+      "otherwise": "No state mutation is visible in the function body.",
+      "stateFieldNamesEstablished": false
+    },
+    "boundary": [
+      "The Lua field-name literal, full script/path strings, and embedded host/configuration values are intentionally omitted.",
+      "A numeric return from worldMapProc is code-level evidence only; its game/UI meaning and exact script return convention require the omitted Lua payload or runtime observation.",
+      "The nonnumeric-result branch in worldMapProc does not explicitly clear its pushed result in the inspected target body. Whether repeated calls accumulate stack entries needs runtime validation.",
+      "The window state and EndWarpMap counter are recorded by observable conditions/effects; their higher-level names are not inferred from offsets alone."
+    ]
   }
 }
