@@ -26,6 +26,7 @@ import { createBrowserWorldEncounterPersistenceRuntime, ACTION_WORLD_ENCOUNTER_R
 import { createBrowserWorldEncounterGroupRuntime, ACTION_WORLD_ENCOUNTER_GROUP_SELECT, BROWSER_WORLD_ENCOUNTER_GROUP_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_group_runtime.mjs';
 import { createBrowserWorldEncounterEnemyRuntime, ACTION_WORLD_ENCOUNTER_ENEMY_GENERATE, BROWSER_WORLD_ENCOUNTER_ENEMY_RUNTIME_FORMAT } from './stoneage_browser_world_encounter_enemy_runtime.mjs';
 import { createBrowserWorldEncounterIdleBridge, ACTION_WORLD_ENCOUNTER_ROLL_IDLE_COMMIT, BROWSER_WORLD_ENCOUNTER_IDLE_BRIDGE_FORMAT } from './stoneage_browser_world_encounter_idle_bridge.mjs';
+import { createBrowserWorldIdleLoopRuntime, ACTION_WORLD_IDLE_LOOP_TICK, BROWSER_WORLD_IDLE_LOOP_RUNTIME_FORMAT } from './stoneage_browser_world_idle_loop_runtime.mjs';
 import { buildBattleContext, validateBattleContext, ACTION_ENCOUNTER_BATTLE_CONTEXT_BUILD, BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT } from './stoneage_browser_battle_context_runtime.mjs';
 import { ACTION_BATTLE_TURN_INITIALIZE, BROWSER_BATTLE_TURN_RUNTIME_FORMAT } from './stoneage_browser_battle_turn_runtime.mjs';
 import { createBrowserBattleStatusRuntime, ACTION_BATTLE_STATUS_TURN, BROWSER_BATTLE_STATUS_RUNTIME_FORMAT } from './stoneage_browser_battle_status_runtime.mjs';
@@ -345,6 +346,19 @@ function createBrowserStateController({
     battleExitCommitRuntime,
     battleContextClearRuntime
   });
+  const worldIdleLoopRuntime=createBrowserWorldIdleLoopRuntime({
+    movementRuntime:worldMovementRuntime,
+    encounterRuntime:worldEncounterRuntime,
+    encounterIdleBridge:worldEncounterIdleBridge,
+    encounterGroupRuntime:worldEncounterGroupRuntime,
+    encounterEnemyRuntime:worldEncounterEnemyRuntime,
+    idleRuntime,
+    battleInitializeRuntime,
+    battleAutoRuntime,
+    petSkillCatalog,
+    playerRelifeCatalog,
+    battleFieldNoProvider
+  });
   const battlePlayerCommandRuntime=createBrowserBattlePlayerCommandRuntime();
   const itemShopRuntime=(itemShopCatalog&&itemMakeCatalog)
     ? (worldNpcIndex
@@ -437,6 +451,32 @@ function createBrowserStateController({
         const result=await worldMovementRuntime.dispatch(currentState,action,{now:clockFactory(action.now,now),savedAt:clockFactory(action.savedAt??action.now,now)});
         if(result.ok&&result.handled===true&&result.state)currentState=result.state;
         return {...result,state:clone(result.state??currentState)};
+      }
+      if(type===ACTION_WORLD_IDLE_LOOP_TICK){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+        if(worldIdleLoopRuntime.ok!==true){
+          return {ok:false,handled:false,stage:'world-idle-loop',reason:'browser-world-idle-loop-runtime-invalid',errors:worldIdleLoopRuntime.errors??[],state:clone(currentState)};
+        }
+        const result=await worldIdleLoopRuntime.run(currentState,{
+          ticks:Array.isArray(action.ticks)?action.ticks:[],
+          maxTicks:action.maxTicks??null,
+          strategy:action.strategy??null,
+          playerId:action.playerId??currentState?.player?.id??null,
+          transactionPrefix:String(action.transactionPrefix??('world-idle-loop-'+(sequence+1))),
+          now:clockFactory(action.now,now)
+        });
+        if(result.ok===true&&result.handled===true&&result.state)currentState=clone(result.state);
+        if(result.battleContext)battleContext=clone(result.battleContext);
+        else if(result.ok===true&&result.handled===true)battleContext=null;
+        battleAttackPipeline=null;
+        return {
+          ...result,
+          format:BROWSER_WORLD_IDLE_LOOP_RUNTIME_FORMAT,
+          action:ACTION_WORLD_IDLE_LOOP_TICK,
+          battleContext:battleContext?clone(battleContext):null,
+          state:clone(result.state??currentState)
+        };
       }
       if(type===ACTION_WORLD_WARPPOINT_EXECUTE){
         const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
