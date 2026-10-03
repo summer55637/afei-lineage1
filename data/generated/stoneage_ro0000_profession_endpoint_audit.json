@@ -21,7 +21,12 @@
     "lookup": "PROFESSION_SKILL_getskillArray",
     "execution": "PROFESSION_SKILL_Use validates player/profession class, consumes MP, dispatches function pointer, then performs normal skill-level-up check",
     "maxSkillLevel": 100,
-    "professionLevelThreshold": "old profession level × 70 × 100 total skill points"
+    "professionLevelThreshold": "old profession level × 70 × 100 total skill points",
+    "disableProfessionMaps": [
+      2000,
+      100
+    ],
+    "disableProfessionSource": "ro0000/server/merged-source/gmsv/setup.cf::DISABLEPROFESSION=2000,100"
   },
   "policy": "Endpoint data is primary; no cross-version replacement."
 }
