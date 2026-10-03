@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.71 |
+| Battle Pipeline | ✅ V4.70；World Idle Loop ✅ V4.71 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
