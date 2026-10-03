@@ -1,0 +1,80 @@
+{
+  "format": "ro0000-android-update-request-audit-v1",
+  "source": {
+    "apkPath": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibStoneageSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86LibStoneageBuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "binaryRevalidation": {
+    "artifactSource": "GitHub Actions run 36996292512 artifact 11221517905",
+    "artifactContainsExactTargetX86LibStoneage": true,
+    "targetHashMatchesKnownIdentity": true
+  },
+  "versionCheck": {
+    "function": "UpdateAppNewVersion()",
+    "addressX86": "0x2f5c30",
+    "installedFieldsCollected": [
+      "appVersion",
+      "platform",
+      "channel"
+    ],
+    "postBodyFormat": "platform=%s&version=%s&channel=%s",
+    "postUrlPath": "/SA25/clientupdate.php",
+    "postCall": "HttpClient::PostUrl(url, body, callback, false)",
+    "hostRedacted": true
+  },
+  "resourceListDownload": {
+    "function": "DownLoadIniFile()",
+    "addressX86": "0x2faf30",
+    "urlFormat": "%s?version=%s&platform=%s&channel=%s",
+    "urlPath": "/SA25/update/list.php",
+    "localFile": "data/update/list.dat",
+    "downloadCall": "HttpClient::DownloadFile(url, localPath, progressCallback, resultCallback)",
+    "hostRedacted": true
+  },
+  "patchSlotHandling": {
+    "function": "GetBinaryResource()",
+    "addressX86": "0x2f58d0",
+    "slotCount": 6,
+    "filenameFormat": "patch_%d.zip",
+    "downloadDelegate": "DownloadResource(char const*)",
+    "downloadDelegateAddressX86": "0x2fc730",
+    "extractor": "UnZipFile(char const*)",
+    "deleteAfterSuccessfulExtraction": true,
+    "failureAction": "closeApp()"
+  },
+  "responseCallback": {
+    "addressX86": "0x2f6f00",
+    "entryStatusRequired": 1,
+    "noUpdateResponseLiteral": "1",
+    "noUpdateAction": "set updater state to 4",
+    "updateActionGate": "response != \"1\" and confirmation result == 100",
+    "confirmedUpdateState": 8,
+    "basenameHelper": "GetDownloadFileName(std::string)",
+    "downloadHelper": "DownloadApk(char const*)"
+  },
+  "installationStage": {
+    "stateMachineFunction": "UpdateBinaryData()",
+    "addressX86": "0x2f6070",
+    "installCallAddressX86": "0x2f62e6",
+    "installCall": "InstallApk(char const*)",
+    "wrapper": "InstallApk(char const*) -> Android_InstallApk(char const*)",
+    "preInstall": [
+      "getcwd()",
+      "append path separator",
+      "append stored basename"
+    ],
+    "postInstall": [
+      "SDL_Delay(1000)",
+      "exit(0)"
+    ]
+  },
+  "interpretationBoundary": [
+    "The embedded server host/address is intentionally omitted.",
+    "The exact server response schema is still not established beyond the observed status/value branches.",
+    "The exact local download-root construction remains partly opaque.",
+    "Android_InstallApk intent/options remain runtime-native details not established here.",
+    "These static client findings do not establish server resource payload identity."
+  ]
+}
