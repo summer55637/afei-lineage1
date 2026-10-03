@@ -1,0 +1,703 @@
+{
+  "format": "stoneage-endpoint-active-group-gap-triage-v1",
+  "checkedDate": "2026-10-03",
+  "purpose": "Endpoint-primary recheck of the 30 active Encounter→Group references previously reported unresolved.",
+  "authority": {
+    "endpoint": "ro0000/server/merged-source/gmsv/data/{encount.txt,group1.txt}",
+    "hydata": "ro0000/server/merged-source/gmsv/hydata/data/{encount.txt,group1.txt}",
+    "fixedC": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56"
+  },
+  "policy": {
+    "endpointPrimary": true,
+    "syntheticGroupSubstitutionForbidden": true,
+    "fixedCUsedForComparisonOnly": true,
+    "mainRouteNotBlockedByUnresolvedOptionalGroups": true
+  },
+  "ids": [
+    1,
+    196,
+    200,
+    791,
+    792,
+    793,
+    794,
+    795,
+    796,
+    797,
+    800,
+    802,
+    804,
+    805,
+    806,
+    808,
+    809,
+    811,
+    821,
+    823,
+    824,
+    826,
+    827,
+    1131,
+    1315,
+    1316,
+    1327,
+    1328,
+    1467,
+    1500
+  ],
+  "statusSummary": {
+    "total": 30,
+    "endpointFormalGroupRows": 0,
+    "endpointCommentedGroupRows": 1,
+    "endpointMissingGroupRows": 29,
+    "hydataFormalGroupRows": 1,
+    "fixedFormalGroupRows": 3,
+    "bothEndpointAndFixedMissingGroupRows": 27
+  },
+  "importantFindings": [
+    "Group 1131 is present in endpoint data/group1.txt and hydata/group1.txt only as a commented row; Fixed-C has it active. It must not be promoted as an active endpoint group without provenance.",
+    "Group 1467 is absent from endpoint data/group1.txt, present as an active row in hydata/group1.txt, and present as a different active row in Fixed-C. This is a deployment variant boundary, not a missing definition that may be copied.",
+    "Group 1500 is absent from both endpoint data and hydata group1.txt, while Fixed-C has an active definition. Endpoint encount uses Group 1500 on floor 5507, so this remains an endpoint source gap.",
+    "For 27 of the 30 IDs, the Group definition is absent from endpoint data, endpoint hydata, and Fixed-C group1.txt. The same IDs are nevertheless referenced by active endpoint/Fix-C encounter rows. This is a shared source-data closure gap, not evidence that a substitute Group should be invented.",
+    "The unresolved IDs include additional encounter regions on core world floors 100, 200, 300, and 400, but the currently closed first idle route does not depend on these unresolved groups; it uses source-closed Encounter 65, 28, 91, and 95."
+  ],
+  "mainWorldCoverage": {
+    "floor100": {
+      "groupIds": [
+        791,
+        792,
+        793,
+        794,
+        1315,
+        1316
+      ]
+    },
+    "floor200": {
+      "groupIds": [
+        800,
+        808,
+        811,
+        1131
+      ]
+    },
+    "floor300": {
+      "groupIds": [
+        824,
+        827
+      ]
+    },
+    "floor400": {
+      "groupIds": [
+        809
+      ]
+    }
+  },
+  "specialCoverage": {
+    "otherFloorGroupIds": [
+      1,
+      196,
+      200,
+      795,
+      796,
+      797,
+      802,
+      804,
+      805,
+      806,
+      821,
+      823,
+      826,
+      1327,
+      1328,
+      1467,
+      1500
+    ]
+  },
+  "encounterEvidence": {
+    "1": [
+      {
+        "encounterId": 854,
+        "floor": 60341,
+        "prob": 1,
+        "enemyMax": 5,
+        "zorder": 10
+      }
+    ],
+    "196": [
+      {
+        "encounterId": 74,
+        "floor": 10003,
+        "prob": 3,
+        "enemyMax": 7,
+        "zorder": 10
+      }
+    ],
+    "200": [
+      {
+        "encounterId": 74,
+        "floor": 10003,
+        "prob": 3,
+        "enemyMax": 7,
+        "zorder": 10
+      }
+    ],
+    "791": [
+      {
+        "encounterId": 58,
+        "floor": 100,
+        "prob": 20,
+        "enemyMax": 10,
+        "zorder": 50
+      }
+    ],
+    "792": [
+      {
+        "encounterId": 51,
+        "floor": 100,
+        "prob": 60,
+        "enemyMax": 3,
+        "zorder": 100
+      },
+      {
+        "encounterId": 52,
+        "floor": 100,
+        "prob": 75,
+        "enemyMax": 3,
+        "zorder": 100
+      }
+    ],
+    "793": [
+      {
+        "encounterId": 39,
+        "floor": 100,
+        "prob": 6,
+        "enemyMax": 4,
+        "zorder": 100
+      }
+    ],
+    "794": [
+      {
+        "encounterId": 46,
+        "floor": 100,
+        "prob": 9,
+        "enemyMax": 5,
+        "zorder": 100
+      },
+      {
+        "encounterId": 47,
+        "floor": 100,
+        "prob": 30,
+        "enemyMax": 5,
+        "zorder": 100
+      }
+    ],
+    "795": [
+      {
+        "encounterId": 237,
+        "floor": 10601,
+        "prob": 35,
+        "enemyMax": 2,
+        "zorder": 1
+      }
+    ],
+    "796": [
+      {
+        "encounterId": 238,
+        "floor": 10602,
+        "prob": 30,
+        "enemyMax": 3,
+        "zorder": 1
+      }
+    ],
+    "797": [
+      {
+        "encounterId": 78,
+        "floor": 10006,
+        "prob": 30,
+        "enemyMax": 10,
+        "zorder": 1
+      }
+    ],
+    "800": [
+      {
+        "encounterId": 167,
+        "floor": 200,
+        "prob": 25,
+        "enemyMax": 5,
+        "zorder": 3
+      }
+    ],
+    "802": [
+      {
+        "encounterId": 212,
+        "floor": 20102,
+        "prob": 40,
+        "enemyMax": 4,
+        "zorder": 1
+      }
+    ],
+    "804": [
+      {
+        "encounterId": 214,
+        "floor": 20104,
+        "prob": 40,
+        "enemyMax": 6,
+        "zorder": 1
+      }
+    ],
+    "805": [
+      {
+        "encounterId": 497,
+        "floor": 20303,
+        "prob": 40,
+        "enemyMax": 8,
+        "zorder": 1
+      },
+      {
+        "encounterId": 500,
+        "floor": 20306,
+        "prob": 10,
+        "enemyMax": 10,
+        "zorder": 1
+      }
+    ],
+    "806": [
+      {
+        "encounterId": 205,
+        "floor": 10203,
+        "prob": 45,
+        "enemyMax": 10,
+        "zorder": 1
+      }
+    ],
+    "808": [
+      {
+        "encounterId": 164,
+        "floor": 200,
+        "prob": 65,
+        "enemyMax": 8,
+        "zorder": 100
+      }
+    ],
+    "809": [
+      {
+        "encounterId": 382,
+        "floor": 400,
+        "prob": 15,
+        "enemyMax": 10,
+        "zorder": 1
+      },
+      {
+        "encounterId": 383,
+        "floor": 400,
+        "prob": 65,
+        "enemyMax": 10,
+        "zorder": 10
+      }
+    ],
+    "811": [
+      {
+        "encounterId": 137,
+        "floor": 200,
+        "prob": 45,
+        "enemyMax": 6,
+        "zorder": 60
+      }
+    ],
+    "821": [
+      {
+        "encounterId": 463,
+        "floor": 30508,
+        "prob": 8,
+        "enemyMax": 10,
+        "zorder": 1
+      }
+    ],
+    "823": [
+      {
+        "encounterId": 386,
+        "floor": 30203,
+        "prob": 30,
+        "enemyMax": 10,
+        "zorder": 1
+      }
+    ],
+    "824": [
+      {
+        "encounterId": 379,
+        "floor": 300,
+        "prob": 35,
+        "enemyMax": 5,
+        "zorder": 100
+      }
+    ],
+    "826": [
+      {
+        "encounterId": 361,
+        "floor": 31806,
+        "prob": 2,
+        "enemyMax": 5,
+        "zorder": 1
+      },
+      {
+        "encounterId": 363,
+        "floor": 31806,
+        "prob": 50,
+        "enemyMax": 5,
+        "zorder": 10
+      }
+    ],
+    "827": [
+      {
+        "encounterId": 331,
+        "floor": 300,
+        "prob": 100,
+        "enemyMax": 5,
+        "zorder": 50
+      }
+    ],
+    "1131": [
+      {
+        "encounterId": 187,
+        "floor": 200,
+        "prob": 3,
+        "enemyMax": 10,
+        "zorder": 500
+      }
+    ],
+    "1315": [
+      {
+        "encounterId": 51,
+        "floor": 100,
+        "prob": 50,
+        "enemyMax": 3,
+        "zorder": 100
+      }
+    ],
+    "1316": [
+      {
+        "encounterId": 51,
+        "floor": 100,
+        "prob": 80,
+        "enemyMax": 3,
+        "zorder": 100
+      }
+    ],
+    "1327": [
+      {
+        "encounterId": 361,
+        "floor": 31806,
+        "prob": 3,
+        "enemyMax": 5,
+        "zorder": 1
+      },
+      {
+        "encounterId": 362,
+        "floor": 31806,
+        "prob": 20,
+        "enemyMax": 5,
+        "zorder": 10
+      }
+    ],
+    "1328": [
+      {
+        "encounterId": 322,
+        "floor": 31101,
+        "prob": 20,
+        "enemyMax": 5,
+        "zorder": 1
+      }
+    ],
+    "1467": [
+      {
+        "encounterId": 1169,
+        "floor": 34567,
+        "prob": 50,
+        "enemyMax": 10,
+        "zorder": 1
+      }
+    ],
+    "1500": [
+      {
+        "encounterId": 658,
+        "floor": 5507,
+        "prob": 20,
+        "enemyMax": 10,
+        "zorder": 2
+      }
+    ]
+  },
+  "fixedComparison": {
+    "196": [
+      {
+        "encounterId": 74,
+        "floor": 10003,
+        "prob": 1
+      }
+    ],
+    "200": [
+      {
+        "encounterId": 74,
+        "floor": 10003,
+        "prob": 1
+      }
+    ],
+    "791": [
+      {
+        "encounterId": 58,
+        "floor": 100,
+        "prob": 20
+      }
+    ],
+    "792": [
+      {
+        "encounterId": 51,
+        "floor": 100,
+        "prob": 60
+      },
+      {
+        "encounterId": 52,
+        "floor": 100,
+        "prob": 75
+      }
+    ],
+    "793": [
+      {
+        "encounterId": 39,
+        "floor": 100,
+        "prob": 6
+      }
+    ],
+    "794": [
+      {
+        "encounterId": 46,
+        "floor": 100,
+        "prob": 9
+      },
+      {
+        "encounterId": 47,
+        "floor": 100,
+        "prob": 30
+      }
+    ],
+    "795": [
+      {
+        "encounterId": 237,
+        "floor": 10601,
+        "prob": 35
+      }
+    ],
+    "796": [
+      {
+        "encounterId": 238,
+        "floor": 10602,
+        "prob": 30
+      }
+    ],
+    "797": [
+      {
+        "encounterId": 78,
+        "floor": 10006,
+        "prob": 30
+      }
+    ],
+    "800": [
+      {
+        "encounterId": 167,
+        "floor": 200,
+        "prob": 25
+      }
+    ],
+    "802": [
+      {
+        "encounterId": 212,
+        "floor": 20102,
+        "prob": 40
+      }
+    ],
+    "804": [
+      {
+        "encounterId": 214,
+        "floor": 20104,
+        "prob": 40
+      }
+    ],
+    "805": [
+      {
+        "encounterId": 497,
+        "floor": 20303,
+        "prob": 40
+      },
+      {
+        "encounterId": 500,
+        "floor": 20306,
+        "prob": 10
+      }
+    ],
+    "806": [
+      {
+        "encounterId": 205,
+        "floor": 10203,
+        "prob": 45
+      }
+    ],
+    "808": [
+      {
+        "encounterId": 164,
+        "floor": 200,
+        "prob": 65
+      }
+    ],
+    "809": [
+      {
+        "encounterId": 1283,
+        "floor": 400,
+        "prob": 15
+      },
+      {
+        "encounterId": 1284,
+        "floor": 400,
+        "prob": 65
+      }
+    ],
+    "811": [
+      {
+        "encounterId": 137,
+        "floor": 200,
+        "prob": 45
+      }
+    ],
+    "821": [
+      {
+        "encounterId": 463,
+        "floor": 30508,
+        "prob": 8
+      }
+    ],
+    "823": [
+      {
+        "encounterId": 386,
+        "floor": 30203,
+        "prob": 30
+      }
+    ],
+    "824": [
+      {
+        "encounterId": 379,
+        "floor": 300,
+        "prob": 35
+      }
+    ],
+    "826": [
+      {
+        "encounterId": 361,
+        "floor": 31806,
+        "prob": 2
+      },
+      {
+        "encounterId": 363,
+        "floor": 31806,
+        "prob": 50
+      }
+    ],
+    "827": [
+      {
+        "encounterId": 331,
+        "floor": 300,
+        "prob": 100
+      }
+    ],
+    "1131": [
+      {
+        "encounterId": 187,
+        "floor": 200,
+        "prob": 1
+      }
+    ],
+    "1315": [
+      {
+        "encounterId": 51,
+        "floor": 100,
+        "prob": 50
+      }
+    ],
+    "1316": [
+      {
+        "encounterId": 51,
+        "floor": 100,
+        "prob": 80
+      }
+    ],
+    "1327": [
+      {
+        "encounterId": 361,
+        "floor": 31806,
+        "prob": 1
+      },
+      {
+        "encounterId": 362,
+        "floor": 31806,
+        "prob": 20
+      }
+    ],
+    "1328": [
+      {
+        "encounterId": 322,
+        "floor": 31101,
+        "prob": 20
+      }
+    ],
+    "1500": [
+      {
+        "encounterId": 1161,
+        "floor": 8120,
+        "prob": 1
+      },
+      {
+        "encounterId": 1273,
+        "floor": 91,
+        "prob": 1
+      },
+      {
+        "encounterId": 1274,
+        "floor": 92,
+        "prob": 1
+      },
+      {
+        "encounterId": 1275,
+        "floor": 93,
+        "prob": 1
+      },
+      {
+        "encounterId": 1276,
+        "floor": 94,
+        "prob": 1
+      },
+      {
+        "encounterId": 1277,
+        "floor": 95,
+        "prob": 1
+      },
+      {
+        "encounterId": 1278,
+        "floor": 96,
+        "prob": 1
+      },
+      {
+        "encounterId": 1279,
+        "floor": 97,
+        "prob": 1
+      },
+      {
+        "encounterId": 1280,
+        "floor": 98,
+        "prob": 1
+      },
+      {
+        "encounterId": 1281,
+        "floor": 99,
+        "prob": 1
+      }
+    ]
+  }
+}
