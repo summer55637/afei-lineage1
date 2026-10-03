@@ -874,6 +874,8 @@ function createBrowserStateController({
             carriedLootReplaceRollsByEnemyBid:action.carriedLootReplaceRollsByEnemyBid??{},
             carriedLootReplaceSlotRollsByEnemyBid:action.carriedLootReplaceSlotRollsByEnemyBid??{},
             ridePetBidByParticipantBid:action.ridePetBidByParticipantBid??{},
+            deathExtraRandomRollsByBid:action.deathExtraRandomRollsByBid??{},
+            defaultPetBidByPlayerBid:action.defaultPetBidByPlayerBid??{0:5},
             dexRollByBid:action.dexRollByBid??{},
             now:action.now??null
           }
