@@ -1,0 +1,29 @@
+name: check-v476-browser-window-healer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_window_healer_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v476_browser_window_healer.mjs'
+      - 'data/generated/stoneage_world_npc_index.json'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
+      - '.github/workflows/check-v476-browser-window-healer.yml'
+  workflow_dispatch:
+
+jobs:
+  window-healer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run V4.76 WindowHealer regression
+        run: node tools/check_v476_browser_window_healer.mjs
+      - name: Syntax check runtime/controller
+        run: |
+          node --check src/stoneage_browser_window_healer_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
