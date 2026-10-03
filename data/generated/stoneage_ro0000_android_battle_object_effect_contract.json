@@ -35,7 +35,7 @@
         "createdActionOffset0x180": "effectNo",
         "createdActionOffset0x08": "target-observed global value",
         "createdActionParentSlot": "created action is stored through source ACTION+0x11c",
-        "createdActionByte0x15": "decremented from source action byte 0x15 after creation"
+        "createdActionByte0x15": "decremented from source ACTION+0x15 (display-priority byte) after creation"
       },
       "relationship": "first object-effect attachment slot"
     },
@@ -54,7 +54,7 @@
         "createdActionOffset0x180": "effectNo",
         "createdActionOffset0x08": "different target-observed global value from set_obj_effect",
         "createdActionParentSlot": "created action is stored through source ACTION+0x120",
-        "createdActionByte0x15": "decremented from source action byte 0x15 after creation"
+        "createdActionByte0x15": "decremented from source ACTION+0x15 (display-priority byte) after creation"
       },
       "relationship": "second object-effect attachment slot"
     }
