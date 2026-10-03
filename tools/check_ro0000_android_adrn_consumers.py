@@ -23,7 +23,7 @@ class AdrnConsumerAuditTests(unittest.TestCase):
             "  1006: 8b 41 22             mov    0x22(%ecx),%eax",
         ]
         found = mod.scan_excerpt("x86", "exampleConsumer", lines)
-        self.assertTrue(any(item["offset"] == "0x22" and item["strength"] == "direct-base-offset" for item in found))
+        self.assertTrue(any(item["offset"] == "0x22" and item["strength"] == "function-base-offset" for item in found))
 
 if __name__ == "__main__":
     unittest.main()
