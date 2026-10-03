@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：f407c6c — test: cover persistent Pet VariableAI settlement
-- 更新時間：2026-10-03T19:45:49+08:00
+- 最新 commit：c5e2168 — ci: verify persistent Pet VariableAI settlement
+- 更新時間：2026-10-03T19:45:58+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.60
 - Playable HTML：⏸️ 尚未建立（刻意保留）
