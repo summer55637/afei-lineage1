@@ -1,0 +1,27 @@
+name: check-v471-browser-world-idle-loop
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_world_idle_loop_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v471_browser_world_idle_loop.mjs'
+      - '.github/workflows/check-v471-browser-world-idle-loop.yml'
+  workflow_dispatch:
+
+jobs:
+  check-v471-browser-world-idle-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check V4.71 world idle loop orchestration
+        run: node tools/check_v471_browser_world_idle_loop.mjs
+      - name: Syntax check runtime/controller
+        run: |
+          node --check src/stoneage_browser_world_idle_loop_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
