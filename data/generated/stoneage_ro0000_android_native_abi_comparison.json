@@ -20,7 +20,9 @@
       "x86": 9
     },
     "semanticNamedCallTargetMismatchCount": 0,
-    "semanticNamedCallTargetParity": true,
+    "comparableSemanticNamedCallTargetParity": true,
+    "allFunctionsComparable": false,
+    "sameIncompleteFunctionSet": true,
     "definition": "Reachable named direct call targets compared as sets. Tail branches, memset/memcpy, and ABI-specific compiler helpers are reported separately. Indirect control flow and incomplete disassemblies are not inferred."
   },
   "abiSummary": {
