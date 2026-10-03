@@ -276,11 +276,13 @@ class NativeContractTests(unittest.TestCase):
                  "focusedSymbols": [
                      {"type": "FUNC", "name": "createAutoMap", "demangled": "createAutoMap(int,int,int)", "value": "0x1000"},
                      {"type": "FUNC", "name": "DrawAutoMapping", "demangled": "DrawAutoMapping(int,int,unsigned char*,int,int)", "value": "0x2000"},
+                     {"type": "FUNC", "name": "InitSprBinFileOpen", "demangled": "InitSprBinFileOpen(char const*,char const*)", "value": "0x7000"},
                  ]},
                 {"abi": "armeabi-v7a", "sha256": "arm-hash", "buildId": "arm-build",
                  "focusedSymbols": [
                      {"type": "FUNC", "name": "createAutoMap", "demangled": "createAutoMap(int,int,int)", "value": "0x3001"},
                      {"type": "FUNC", "name": "DrawAutoMapping", "demangled": "DrawAutoMapping(int,int,unsigned char*,int,int)", "value": "0x4001"},
+                     {"type": "FUNC", "name": "InitSprBinFileOpen", "demangled": "InitSprBinFileOpen(char const*,char const*)", "value": "0x7101"},
                  ]},
             ],
         }
@@ -325,6 +327,37 @@ class NativeContractTests(unittest.TestCase):
             "source": layout["autoMapColor"]["source"],
             "functions": world_functions,
         }
+        layout["spriteBoundaryAudit"] = {
+            "source": layout["autoMapColor"]["source"],
+            "functions": {"InitSprBinFileOpen": {"x86": "0x7000", "armeabiV7a": "0x7101"}},
+            "requiredDisassemblyPatterns": {
+                "InitSprBinFileOpen": {
+                    "x86": [r"cmpl\s+\$0x9c40", r"\bjle\b", r"\(%e[a-z]+,%e[a-z]+,8\)"],
+                    "armeabiV7a": [r"movw\s+r1,\s*#40001", r"cmp\s+r0,\s*r1", r"\bblt(?:\.n|\.w)?\b", r"lsl\s+#3"],
+                },
+            },
+        }
+        for lib in native["nativeLibraries"]:
+            sprite = next(s for s in lib["focusedSymbols"] if s["name"] == "InitSprBinFileOpen")
+            if lib["abi"] == "x86":
+                sprite["disassembly"] = {
+                    "status": "ok", "excerptTruncated": False,
+                    "excerpt": [
+                        "  7000:\t81 ff 40 9c 00 00 \tcmpl $0x9c40,%edi",
+                        "  7006:\t7e 02              \tjle 700a <InitSprBinFileOpen+0xa>",
+                        "  7008:\t8b 04 fa           \tmovzwl (%edx,%edi,8),%eax",
+                    ],
+                }
+            else:
+                sprite["disassembly"] = {
+                    "status": "ok", "excerptTruncated": False,
+                    "excerpt": [
+                        "  7100:\tf245 0101 \tmovw r1, #40001",
+                        "  7104:\t4288      \tcmp r0, r1",
+                        "  7106:\tdbf1      \tblt.n 710c <InitSprBinFileOpen+0xc>",
+                        "  7108:\tf8b2 1000 \tldrh.w r1, [r2, r0, lsl #3]",
+                    ],
+                }
         for lib in native["nativeLibraries"]:
             symbol = next(s for s in lib["focusedSymbols"] if s["name"] == "worldMapProc")
             instruction = (
@@ -339,6 +372,15 @@ class NativeContractTests(unittest.TestCase):
             "worldMapProc": {"lua_pcall": 1},
         }
         self.assertEqual(validate_resource_function_anchors(native, layout), [])
+        arm_sprite = next(s for s in native["nativeLibraries"][1]["focusedSymbols"]
+                          if s["name"] == "InitSprBinFileOpen")
+        arm_sprite["disassembly"]["excerpt"] = [
+            "  7100:\tf245 0101 \tmovw r1, #40001",
+            "  7104:\t4288      \tcmp r0, r1",
+            "  7106:\tbd00      \tpop {pc}",
+        ]
+        errors = validate_resource_function_anchors(native, layout)
+        self.assertTrue(any("instruction evidence missing" in error for error in errors))
         x86_proc = next(s for s in native["nativeLibraries"][0]["focusedSymbols"]
                         if s["name"] == "worldMapProc")
         x86_proc["disassembly"]["excerpt"] = ["  5100:\te8 00 00 00 00 \tcall 6000 <other@plt>"]
