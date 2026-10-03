@@ -44,7 +44,7 @@ async function resolveCounterChain(context,{
   transactionPrefix=''
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-counter-chain',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,reason:'battle-context-required'};
-  const required=['counterRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageDeathChainRuntime'];
+  const required=['counterRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime'];
   const missing=required.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missing)return {ok:false,handled:false,stage:'battle-counter-chain',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,reason:'counter-chain-runtime-dependency-invalid',dependency:missing};
 
@@ -191,8 +191,33 @@ async function resolveCounterChain(context,{
     );
     if(!reactPlan.ok)return {...reactPlan,stage:'battle-counter-chain-damage-react',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
 
-    if(reactPlan.reaction?.code!==0||reactPlan.attackerRidePet===true||reactPlan.defenderRidePet===true){
-      return {ok:false,handled:false,stage:'battle-counter-chain-unsupported-reaction',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,reason:'v447-counter-chain-only-ordinary-non-ride-damage-commit',step,reaction:reactPlan.reaction,partialContext:clone(next.context),chain:clone(chain)};
+    if(reactPlan.attackerRidePet===true||reactPlan.defenderRidePet===true){
+      return {ok:false,handled:false,stage:'battle-counter-chain-unsupported-reaction',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,reason:'v448-counter-chain-ride-pet-special-reaction-deferred',step,reaction:reactPlan.reaction,partialContext:clone(next.context),chain:clone(chain)};
+    }
+
+    let commit;
+    if(reactPlan.reaction?.code!==0){
+      commit=runtimes.damageReactCommitRuntime.commit(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {
+          damageReactPlan:reactPlan,
+          transactionId:`${transactionPrefix||'counter'}:${step}:${attackerBid}:${targetBid}:special`,
+          expectedDamageRevision:reactPlan.damageCommitRevision,
+          critical:prelude.critical?.critical===true,
+          criticalFlag:bundle.criticalFlag??null,
+          battleFlags:int(bundle.battleFlags)??0,
+          deathRollByBid:bundle.deathRollByBid??{},
+          lerImmuneByBid:bundle.lerImmuneByBid??{}
+        }
+      );
+      if(!commit.ok)return {...commit,stage:'battle-counter-chain-special-damage-react',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+      next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
+      record.damageReactPlan=clone(reactPlan);
+      record.commit=clone(commit);
+      record.damageExecuted=commit.damageExecuted===true;
+      record.executed=true;
+      record.stopReason='special-damage-react';
+      break;
     }
 
     const transactionId=`${transactionPrefix||'counter'}:${step}:${attackerBid}:${targetBid}`;
@@ -268,9 +293,10 @@ function createBrowserBattleCounterChainRuntime({
   damagePlanRuntime,
   criticalDamageRuntime,
   damageReactRuntime,
+  damageReactCommitRuntime,
   damageDeathChainRuntime
 }={}){
-  const required=[counterRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageDeathChainRuntime];
+  const required=[counterRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime];
   return {
     ok:required.every(r=>r?.ok===true),
     format:BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT,
