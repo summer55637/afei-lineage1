@@ -74,3 +74,31 @@ Fixed-C 的 `npc_freepetskillshop.c` 也已解析，包含寵物特殊技能條�
 
 若產品範圍擴大到「所有 RO0000 特殊地圖／活動的完整原版 encounter coverage」或要求 server 原始 boot 100% 自洽，則上述缺口仍需額外 provenance，不應假裝已閉合。
 
+
+
+## 2026-10-03 Encounter→Group 深度覆核
+
+新增 `data/generated/stoneage_endpoint_active_group_gap_triage.json`。
+
+這輪不是只檢查 Group row 是否存在，而是把 30 個 unresolved active Group reference 同時對 endpoint `encount.txt`、hydata 與 pinned Fixed-C 的 active Encounter rows 交叉比對。
+
+結果：
+
+- 30 個 Group refs 全部確實被至少一個 active Encounter row 使用。
+- endpoint `group1.txt` 沒有任何正式 active row；Group 1131 只有一條 commented row。
+- hydata `group1.txt` 有正式 Group 1467；其內容與 Fixed-C 的 Group 1467 不同。
+- Fixed-C `group1.txt` 有正式 Group 1131、1467、1500。
+- 其餘 27 個 Group ID 在 endpoint data、endpoint hydata 與 Fixed-C 的 `group1.txt` 都沒有正式 Group definition。
+
+因此目前把這 30 個問題重新定義為 **Encounter coverage source gap**，而不是「找到一個相似 Group 就可以補上」：
+
+- 核心世界 floor 100：791／792／793／794／1315／1316
+- 核心世界 floor 200：800／808／811／1131
+- 核心世界 floor 300：824／827
+- 核心世界 floor 400：809
+- 其餘為特殊地圖／副本／活動相關 floor。
+
+其中 endpoint 與 Fixed-C 的 Encounter 參照本身大多數相同；真正明顯的部署 variant 包含 Group 809 的 floor-400 Encounter 編號與矩形，以及 Group 1500 的 endpoint floor 5507 使用方式。
+
+這批資料對「完整恢復所有原版 encounter coverage」仍有價值，尤其是 100／200／300／400 四個核心世界；但它們目前沒有阻塞首條放置主線，因首條閉合路線使用的 Encounter 65／28／91／95 已完成 source-backed closure。
+
