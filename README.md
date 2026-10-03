@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：790c912 — test: align V4.67 auto round inputs with generated enemies
-- 更新時間：2026-10-03T21:45:49+08:00
+- 最新 commit：233c49c — fix: normalize status runtime context in battle round
+- 更新時間：2026-10-03T21:47:53+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.67
 - Playable HTML：⏸️ 尚未建立（刻意保留）
