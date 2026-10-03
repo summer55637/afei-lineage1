@@ -1,0 +1,33 @@
+name: Check V4.53 browser battle unarmed AttackCount
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_attack_count_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v453_browser_battle_unarmed_attack_count.mjs'
+      - 'tools/check_v453_browser_battle_unarmed_attack_count_controller.mjs'
+      - '.github/workflows/check-v453-browser-battle-unarmed-attack-count.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.53 unarmed AttackCount runtime regression
+        run: node tools/check_v453_browser_battle_unarmed_attack_count.mjs
+      - name: Run V4.53 controller unarmed AttackCount regression
+        run: node tools/check_v453_browser_battle_unarmed_attack_count_controller.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_attack_count_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v453_browser_battle_unarmed_attack_count.mjs
+          node --check tools/check_v453_browser_battle_unarmed_attack_count_controller.mjs
