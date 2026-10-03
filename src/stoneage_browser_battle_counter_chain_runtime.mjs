@@ -325,12 +325,13 @@ function createBrowserBattleCounterChainRuntime({
   damageReactCommitRuntime,
   damageDeathChainRuntime
 }={}){
-  const required=[counterRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime];
+  const required=[counterRuntime,profitCreditRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime];
   return {
     ok:required.every(r=>r?.ok===true),
     format:BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT,
     resolve:(context,options={})=>resolveCounterChain(context,options,{
       counterRuntime,
+      profitCreditRuntime,
       attackSeqPreludeRuntime,
       damagePlanRuntime,
       criticalDamageRuntime,
