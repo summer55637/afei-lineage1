@@ -102,6 +102,21 @@ jobs:
           rm -rf /tmp/ro0000-jadx-sources /tmp/jadx-1.5.6 /tmp/jadx-1.5.6.zip
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
+      - name: Extract every packaged native library for secondary JNI analysis
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          apk = Path('ro0000/client/android/冰河石器-隐盟.apk')
+          out = Path('artifacts/native-all')
+          out.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(apk) as zf:
+              for info in zf.infolist():
+                  if info.filename.startswith('lib/') and info.filename.endswith('.so') and not info.is_dir():
+                      dest = out / Path(*info.filename.split('/')[1:])
+                      dest.parent.mkdir(parents=True, exist_ok=True)
+                      dest.write_bytes(zf.read(info))
+          PY
       - name: Regenerate current server battle-map selector audit
         run: node tools/audit_ro0000_battlemap_selector.mjs
       - name: Cross-check server battle-map candidates against Android filename table
@@ -358,5 +373,6 @@ jobs:
             data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
             data/generated/stoneage_ro0000_android_native_abi_comparison.json
             artifacts/native/**/*.so
+            artifacts/native-all/**/*.so
           if-no-files-found: error
           retention-days: 30
