@@ -63,7 +63,7 @@ assert.equal(high.ok,true,JSON.stringify(high));
 assert.equal(high.newCredits[0].exp,93);
 assert.equal(high.newCredits[0].ridePetCredit.exp,55);
 
-const bad=runtime.credit(context,{
+const bad=runtime.credit({format:'stoneage-browser-battle-context-runtime-v1',context:same.context},{
   enemyBid:10,participantBids:[0],ridePetBidByParticipantBid:{0:7},hitIndex:0
 });
 assert.equal(bad.ok,true,'processed enemy should remain idempotent');
