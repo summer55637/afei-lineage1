@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：62280a3 — test: align Ride Pet defence raw adjustment with Fixed-C
-- 更新時間：2026-10-03T20:38:02+08:00
+- 最新 commit：e9c34a6 — test: cover lethal player relife sequence
+- 更新時間：2026-10-03T21:15:37+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.65
 - Playable HTML：⏸️ 尚未建立（刻意保留）
