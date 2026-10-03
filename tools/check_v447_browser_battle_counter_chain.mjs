@@ -97,6 +97,7 @@ assert.equal(result.scope.ordinaryBasicCounterOnly,true);
 assert.deepEqual(result.chain.map(x=>x.attackerBid),[10,0,10,0,10]);
 assert.deepEqual(result.chain.map(x=>x.targetBid),[0,10,0,10,0]);
 assert.ok(result.chain.every(x=>x.damageExecuted===true));
+console.log('V447_CHAIN_DEBUG='+JSON.stringify(result.chain));
 assert.equal(result.context.sides[0].entries[0].hp,935);
 assert.equal(result.context.sides[1].entries[0].hp,935);
 assert.ok(result.chain.every(x=>x.counterDamage===13));
