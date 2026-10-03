@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：7e7e3b1 — test: wire V4.52 round dependencies into check_v448_browser_battle_damage_react_integration.mjs
-- 更新時間：2026-10-03T18:48:25+08:00
+- 最新 commit：25e731e — test: initialize V4.52 controller encounter state
+- 更新時間：2026-10-03T18:48:49+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.52
 - Playable HTML：⏸️ 尚未建立（刻意保留）
