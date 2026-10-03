@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：15d2e65 — fix: bind V4.46 round attack actor fields
-- 更新時間：2026-10-03T17:49:05+08:00
+- 最新 commit：80e89c3 — fix: bind V4.46 deferred counter actor
+- 更新時間：2026-10-03T17:49:43+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.46
 - Playable HTML：⏸️ 尚未建立（刻意保留）
