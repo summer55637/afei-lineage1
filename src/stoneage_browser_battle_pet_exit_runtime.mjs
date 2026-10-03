@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_PET_EXIT_RUNTIME_FORMAT='stoneage-v468-browser-battle-pet-exit-v1';
+const BROWSER_BATTLE_PET_EXIT_RUNTIME_FORMAT='stoneage-v468-browser-battle-pet-exit-plan-v1';
 const ACTION_BATTLE_PET_EXIT_PLAN='BATTLE_PET_EXIT_PLAN';
 const TRANSACTION_BUCKET='battlePetExitStateTransactions';
 const isObject=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
