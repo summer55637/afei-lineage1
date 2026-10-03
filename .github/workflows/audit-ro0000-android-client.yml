@@ -9,6 +9,8 @@ on:
       - 'tools/audit_ro0000_android_native.py'
       - 'tools/check_ro0000_android_native.py'
       - 'tools/check_ro0000_android_native_contracts.py'
+      - 'tools/audit_ro0000_android_native_abi.py'
+      - 'tools/check_ro0000_android_native_abi.py'
       - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
       - 'tools/audit_ro0000_android_signing.py'
@@ -50,6 +52,8 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native.py'
       - name: Test Android native contract validator
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native_contracts.py'
+      - name: Test Android native ABI call parity audit
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native_abi.py'
       - name: Audit APK archive and manifest
         run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
       - name: Audit APK DEX structure
@@ -84,6 +88,8 @@ jobs:
           rm -rf /tmp/ro0000-jadx-sources /tmp/jadx-1.5.6 /tmp/jadx-1.5.6.zip
       - name: Audit embedded native ELF binaries
         run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
+      - name: Compare reachable Android ARMv7 and x86 native call targets
+        run: python3 tools/audit_ro0000_android_native_abi.py --native-audit artifacts/ro0000_android_native_elf_audit.json --output artifacts/ro0000_android_native_abi_comparison.json
       - name: Verify Android native loop and movement contracts
         run: |
           python3 tools/check_ro0000_android_native_contracts.py \
@@ -281,12 +287,13 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             cp artifacts/ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_signing_audit.json
+            cp artifacts/ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_native_abi_comparison.json
             cp artifacts/ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_dex_audit.json
             cp artifacts/ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json
             cp artifacts/ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_jni_audit.json
             cp artifacts/stoneage_ro0000_android_manifest_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
-            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
+            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_signing_audit.json data/generated/stoneage_ro0000_android_native_abi_comparison.json data/generated/stoneage_ro0000_android_dex_audit.json data/generated/stoneage_ro0000_android_java_flow_audit.json data/generated/stoneage_ro0000_android_jni_audit.json data/generated/stoneage_ro0000_android_manifest_audit.json
             if git diff --cached --quiet; then
               echo "Generated Android evidence is already current."
               exit 0
@@ -319,6 +326,8 @@ jobs:
             data/generated/stoneage_ro0000_android_battle_render_chain.json
             data/generated/stoneage_ro0000_android_map_prefetch_contract.json
             data/generated/stoneage_ro0000_android_native_resource_focus.json
+            artifacts/ro0000_android_native_abi_comparison.json
+            data/generated/stoneage_ro0000_android_native_abi_comparison.json
             artifacts/native/**/*.so
           if-no-files-found: error
           retention-days: 30
